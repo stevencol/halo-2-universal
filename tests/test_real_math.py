@@ -56,6 +56,11 @@ def run(t) -> None:
 
     for vector in vectors:
         t.check("projection_from_vector3d", reals(*vector))
+        if all(component == 0 or 1e-15 < abs(component) < 1e15 for component in vector):
+            t.check("euler_angles2d_from_vector3d", reals(9, 9), reals(*vector))
+            # a length under the vector's, over it, and none
+            for length in (0.0, 0.5, 1.0, 7.0, random_.uniform(0, 20)):
+                t.check("limit3d", reals(*vector), f32(length))
     for _ in range(400):
         # a point, a direction, and a sphere near them or far
         point = [random_.uniform(-5, 5) for _ in range(3)]

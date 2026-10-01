@@ -3,7 +3,7 @@
 import random
 import struct
 
-from difftest import Buffer
+from difftest import Buffer, f32
 
 
 def reals(*values: float) -> Buffer:
@@ -22,6 +22,8 @@ def run(t) -> None:
     # are rounded to the even one
     components = [n / 255 for n in range(256)] + [(n + 0.5) / 255 for n in range(255)]
     for component in components:
+        t.check("real_alpha_to_pixel32", f32(component))
+        t.check("real_alpha_and_rgb_color_to_pixel32", f32(1 - component), reals(component, 1 - component, 0.25))
         t.check("real_rgb_color_to_pixel32", reals(component, 1 - component, component / 2))
         t.check("real_argb_color_to_pixel32", reals(component, 1 - component, component / 2, 1.0))
     # components outside 0 to 1

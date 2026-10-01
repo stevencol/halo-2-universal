@@ -21,5 +21,7 @@ void pixel32_to_real_rgb_color(pixel32 color, real_rgb_color *result);
 
 pixel32 real_argb_color_to_pixel32(const real_argb_color *color);
 pixel32 real_rgb_color_to_pixel32(const real_rgb_color *color);
+pixel32 real_alpha_to_pixel32(real alpha);
+pixel32 real_alpha_and_rgb_color_to_pixel32(real alpha, const real_rgb_color *color);
 
 #endif

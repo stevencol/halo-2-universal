@@ -7,6 +7,7 @@ address,name,source,arguments,returns
 00030bf0,normalize3d,source/math/real_math.c,eax,real:xmm0
 0003ea30,distance3d,source/math/real_math.c,eax ecx,real
 0011d000,perpendicular3d,source/math/real_math.c,ecx eax,void
+000a75d0,limit3d,source/math/real_math.c,eax stack,bool
 000b7360,object_wake,source/objects/objects.c,eax,void
 000b9dd0,object_get_origin,source/objects/objects.c,eax esi,void
 000ba160,object_get_world_matrix,source/objects/objects.c,eax stack,int
@@ -14,6 +15,7 @@ address,name,source,arguments,returns
 000badc0,object_try_and_get_and_verify_type,source/objects/objects.c,eax stack,int
 000baeb0,object_iterator_next,source/objects/objects.c,stack,int
 000baf80,object_get_ultimate_parent,source/objects/objects.c,ecx,int
+0011df30,euler_angles2d_from_vector3d,source/math/real_math.c,eax ecx,void
 0011e5e0,fast_vector_intersects_sphere,source/math/real_math.c,ecx edx eax stack,bool
 00120850,projection_from_vector3d,source/math/real_math.c,eax,short
 00122870,cache_file_header_verify,source/cache/cache_files.c,esi,bool
@@ -21,6 +23,16 @@ address,name,source,arguments,returns
 00131e50,real_argb_color_to_pixel32,source/bitmaps/bitmap_color_conversion.c,stack,int
 00131ed0,real_rgb_color_to_pixel32,source/bitmaps/bitmap_color_conversion.c,stack,int
 0014a280,bsp3d_test_point,source/physics/bsp3d.c,ecx eax edx,int
+0014a300,bsp3d_get_plane_from_designator,source/physics/bsp3d.c,stack edx eax,void
+00131f40,real_alpha_and_rgb_color_to_pixel32,source/bitmaps/bitmap_color_conversion.c,stack stack,int
+00131fc0,real_alpha_to_pixel32,source/bitmaps/bitmap_color_conversion.c,stack,int
+0013fa70,ustrnzcat,source/text/unicode.c,eax edx ecx,void
+0013fac0,ustrnzcpy,source/text/unicode.c,edi ecx esi,void
+0013fae0,ustrnupr,source/text/unicode.c,eax ecx,void
+0013fb90,wchar_string_to_ascii_string,source/text/unicode.c,eax ecx edx,void
+0013fc90,ascii_string_to_wchar_string,source/text/unicode.c,edx ecx eax,void
+0013fcd0,character_in_ranges,source/text/unicode.c,stack ecx stack,bool
+0013fd90,character_is_east_asian,source/text/unicode.c,stack,bool
 00141590,matrix4x3_inverse,source/math/matrix_math.c,ecx eax,void
 001416c0,matrix4x3_translation,source/math/matrix_math.c,eax ecx,void
 00141710,matrix4x3_rotation_from_vectors,source/math/matrix_math.c,ecx edx eax,void

@@ -41,6 +41,15 @@ def run(t) -> None:
     for _ in range(60):
         node_count = random_.choice((1, 2, 5, 20, 100))
         bsp = bsp3d(random_, node_count)
+        # each plane, as it is and facing the other way; the tree has a plane per node
+        for plane_index in random_.sample(range(node_count), min(node_count, 6)):
+            for flags in (0, 0x8000, 0x10000, 0x7FFF8000):
+                t.check(
+                    "bsp3d_get_plane_from_designator",
+                    bsp,
+                    plane_index | flags,
+                    Buffer(struct.pack("<4f", 9, 9, 9, 9), format="<4f"),
+                )
         for _ in range(25):
             point = Buffer(struct.pack("<3f", *(random_.uniform(-15, 15) for _ in range(3))))
             t.check("bsp3d_test_point", bsp, 0, point)

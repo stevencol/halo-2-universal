@@ -135,6 +135,38 @@ void fast_quaternion_normalize(
 	return;
 }
 
+/* 0x000a75d0: makes a vector longer than a length of that length, and tells
+whether it did. As in Halo 1 */
+unsigned char limit3d(
+	real_vector3d *vector,
+	real length)
+{
+	real magnitude_squared= vector->i*vector->i + vector->j*vector->j + vector->k*vector->k;
+
+	if (magnitude_squared>length*length)
+	{
+		real scale= length/sqrtf(magnitude_squared);
+
+		vector->i= scale*vector->i;
+		vector->j= scale*vector->j;
+		vector->k= scale*vector->k;
+		return 1;
+	}
+
+	return 0;
+}
+
+/* 0x0011df30: the yaw and the pitch of a direction. As in Halo 1 */
+void euler_angles2d_from_vector3d(
+	real_euler_angles2d *angles,
+	const real_vector3d *vector)
+{
+	angles->yaw= atan2f(vector->j, vector->i);
+	angles->pitch= atan2f(vector->k, sqrtf(vector->i*vector->i + vector->j*vector->j));
+
+	return;
+}
+
 /* 0x0011d000: a vector at a right angle to one, in the plane of the two
 axes where the vector is longest */
 void perpendicular3d(

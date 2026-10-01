@@ -17,7 +17,11 @@ enum
 {
 	/* in a child of a node: the child is a leaf, not a node */
 	BSP3D_NODE_CHILD_LEAF_FLAG= 0x800000,
-	BSP3D_NODE_CHILD_INDEX_MASK= 0x7FFFFF
+	BSP3D_NODE_CHILD_INDEX_MASK= 0x7FFFFF,
+
+	/* in a plane designator: the plane faces the other way */
+	BSP3D_PLANE_DESIGNATOR_NEGATED_FLAG= 0x8000,
+	BSP3D_PLANE_DESIGNATOR_INDEX_MASK= 0x7FFF
 };
 
 /* ---------- structures */
@@ -43,6 +47,7 @@ typedef char verify_bsp3d_size[
 
 /* ---------- prototypes/BSP3D.C */
 
+void bsp3d_get_plane_from_designator(const struct bsp3d *bsp, long plane_designator, real_plane3d *result);
 long bsp3d_test_point(const struct bsp3d *bsp, long node_index, const real_point3d *point);
 
 #endif

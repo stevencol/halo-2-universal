@@ -26,6 +26,21 @@ pixel32 real_argb_color_to_pixel32(
 	return (pixel32)blue | (pixel32)green<<8 | (pixel32)red<<16 | (pixel32)alpha<<24;
 }
 
+/* 0x00131f40: a color with an alpha apart. The name is a guess */
+pixel32 real_alpha_and_rgb_color_to_pixel32(
+	real alpha,
+	const real_rgb_color *color)
+{
+	return real_rgb_color_to_pixel32(color) | real_alpha_to_pixel32(alpha);
+}
+
+/* 0x00131fc0: as in Halo 1 */
+pixel32 real_alpha_to_pixel32(
+	real alpha)
+{
+	return (pixel32)lrintf(alpha*255.0f)<<24;
+}
+
 /* 0x00131ed0 */
 pixel32 real_rgb_color_to_pixel32(
 	const real_rgb_color *color)

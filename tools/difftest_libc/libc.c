@@ -155,6 +155,14 @@ float cosf(float value)
 	return value;
 }
 
+float atan2f(float y, float x)
+{
+	/* fpatan takes x from the top of the x87 stack and y from under it */
+	__asm__("fpatan" : "+t"(x) : "u"(y) : "st(1)");
+
+	return x;
+}
+
 long lrintf(float value)
 {
 	long result;

@@ -19,6 +19,12 @@ typedef struct real_vector2d
 	real i, j;
 } real_vector2d;
 
+/* in radians */
+typedef struct real_euler_angles2d
+{
+	real yaw, pitch;
+} real_euler_angles2d;
+
 typedef struct real_rgb_color
 {
 	real red, green, blue;
@@ -112,6 +118,8 @@ short projection_from_vector3d(const real_vector3d *vector);
 unsigned char fast_vector_intersects_sphere(const real_point3d *point, const real_vector3d *vector,
 	const real_point3d *center, real radius);
 void fast_quaternion_normalize(real_quaternion *quaternion);
+unsigned char limit3d(real_vector3d *vector, real length);
+void euler_angles2d_from_vector3d(real_euler_angles2d *angles, const real_vector3d *vector);
 
 /* ---------- prototypes/RANDOM_MATH.C */
 
