@@ -14,7 +14,7 @@ import importlib.util
 import sys
 from pathlib import Path
 
-from difftest import ROOT, Buffer, DifftestError, Harness, almost_equal
+from difftest import ROOT, Buffer, DifftestError, FunctionPointer, Harness, Pointer, almost_equal
 
 TESTS = ROOT / "tests"
 GHIDRA_FUNCTIONS = ROOT / "ghidra" / "functions.csv"
@@ -38,7 +38,12 @@ class Tester:
         is compared too."""
         self.cases[name] = self.cases.get(name, 0) + 1
         shown = ", ".join(
-            f"<{len(argument.data)} bytes>" if isinstance(argument, Buffer) else repr(argument) for argument in arguments
+            f"<{len(argument.data)} bytes>"
+            if isinstance(argument, Buffer)
+            else "<pointer>"
+            if isinstance(argument, (Pointer, FunctionPointer))
+            else repr(argument)
+            for argument in arguments
         )
         try:
             original = self.harness.original(name, *arguments, globals=globals)

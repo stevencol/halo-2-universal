@@ -14,10 +14,11 @@ rule link
   description = LINK $out
 
 build build/cache_files.o: cc source/cache/cache_files.c
+build build/binary_search.o: cc source/memory/binary_search.c
 build build/cache_file_reader.o: cc tools/common/cache_file_reader.c
 build build/verify_definitions.o: cc tools/common/verify_definitions.c
 build build/mapinfo.o: cc tools/mapinfo/mapinfo.c
 
-build build/mapinfo.exe: link build/mapinfo.o build/cache_file_reader.o build/cache_files.o
+build build/mapinfo.exe: link build/mapinfo.o build/cache_file_reader.o build/cache_files.o build/binary_search.o
 
 default build/mapinfo.exe build/verify_definitions.o

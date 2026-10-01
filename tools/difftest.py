@@ -120,6 +120,22 @@ class Buffer:
 
 
 @dataclass
+class Pointer:
+    """An argument or the value of a global: an address inside a buffer of the same call."""
+
+    buffer: Buffer
+    offset: int
+
+
+@dataclass
+class FunctionPointer:
+    """An argument that is a function of symbols/functions.csv: the executable's
+    function gets the executable's, and the function of source/ gets that of source/."""
+
+    name: str
+
+
+@dataclass
 class Symbol:
     address: int
     name: str
@@ -393,10 +409,17 @@ class Harness:
         # the buffers of the globals go after those of the arguments
         globals_ = globals_ or {}
         values, buffers = self._place_buffers((*arguments, *globals_.values()))
+        for n, value in enumerate(values):
+            if isinstance(value, Pointer):
+                values[n] = value.buffer.address + value.offset
+            elif isinstance(value, FunctionPointer):
+                values[n] = self.symbols[value.name].address if original else self.functions[value.name]
         for name, value in zip(globals_, values[len(arguments) :]):
+            # "name+offset" is a 32-bit field of a global structure
+            name, _, offset = name.partition("+")
             if name not in self.globals:
                 raise DifftestError(f"symbols/globals.csv does not have '{name}'")
-            address = self.globals[name] if original else self.variables[name]
+            address = (self.globals[name] if original else self.variables[name]) + int(offset or "0", 0)
             self.mu.mem_write(address, struct.pack("<I", value & 0xFFFFFFFF))
         values = values[: len(arguments)]
 

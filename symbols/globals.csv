@@ -1,2 +1,4 @@
 address,name,source
 004e0300,object_header_data,source/objects/objects.c
+004e3b44,global_tag_instances,source/cache/cache_files.c
+005476f8,cache_file_globals,source/cache/cache_files.c

@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Acceso a los tags
+
+Las funciones con las que casi todo el juego llega a sus datos. De 90 se
+pasa a 95, el 0,84 % de las del juego.
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `tag_get` | `0x00122c10` | `cache/cache_files.c` |
+| `tag_iterator_next` | `0x00122c70` | `cache/cache_files.c` |
+| `cache_file_tag_group_compare` | `0x00122cf0` | `cache/cache_files.c` |
+| `cache_file_tag_group_get` | `0x00122d00` | `cache/cache_files.c` |
+| `binary_search` | `0x0013ddd0` | `memory/binary_search.c` |
+
+- Las variables globales `cache_file_globals` (`0x005476f8`) y
+  `global_tag_instances` (`0x004e3b44`).
+- `tests/test_tags.py`: unos 3.700 casos, con índices de tags generados al
+  azar.
+
+### Cambiado
+
+- `tools/difftest.py`: un argumento puede ser un puntero a una función
+  (cada lado recibe la suya), una dirección dentro de un bloque de la misma
+  llamada, y una variable global puede ser un campo de una estructura
+  (`nombre+desplazamiento`).
+
+### Lo que se sabe
+
+- `tag_get` comprueba el tipo del tag pedido: lo acepta si es del grupo
+  pedido o de un grupo que lo tiene como padre o abuelo. Para eso busca el
+  grupo del tag, por búsqueda binaria, en la tabla de grupos.
+- La comparación de grupos es una resta. Solo ordena bien valores cercanos,
+  como son los cuatro caracteres de un grupo; con valores cualesquiera de 32
+  bits la resta se desborda y la búsqueda falla.
+- `cache_file_globals` es la de Halo 1 con un campo más: la dirección de la
+  memoria de los tags, antes de la cabecera.
+- Las funciones que el juego pasa a otras funciones retiran sus argumentos
+  de la pila ellas mismas.
+
+### Nombres supuestos
+
+- `binary_search`, `cache_file_tag_group_get` y
+  `cache_file_tag_group_compare`. `tag_get` y `tag_iterator_next` son los de
+  Halo 1.
+
 ## 2026-10-01 — Cuaterniones y restos de módulos
 
 De 83 funciones se pasa a 90, el 0,80 % de las del juego.

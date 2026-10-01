@@ -28,6 +28,10 @@ address,name,source,arguments,returns
 00120810,project_point3d,source/math/real_math.c,edx ecx stack eax,void
 00120850,projection_from_vector3d,source/math/real_math.c,eax,short
 00122870,cache_file_header_verify,source/cache/cache_files.c,esi,bool
+00122c10,tag_get,source/cache/cache_files.c,ebx ecx,int
+00122c70,tag_iterator_next,source/cache/cache_files.c,edi,int
+00122cf0,cache_file_tag_group_compare,source/cache/cache_files.c,stack stack stack,int
+00122d00,cache_file_tag_group_get,source/cache/cache_files.c,ecx,int
 00131bb0,pixel32_to_real_rgb_color,source/bitmaps/bitmap_utilities.c,ecx eax,void
 00131e50,real_argb_color_to_pixel32,source/bitmaps/bitmap_color_conversion.c,stack,int
 00131ed0,real_rgb_color_to_pixel32,source/bitmaps/bitmap_color_conversion.c,stack,int
@@ -35,6 +39,7 @@ address,name,source,arguments,returns
 0014a300,bsp3d_get_plane_from_designator,source/physics/bsp3d.c,stack edx eax,void
 00131f40,real_alpha_and_rgb_color_to_pixel32,source/bitmaps/bitmap_color_conversion.c,stack stack,int
 00131fc0,real_alpha_to_pixel32,source/bitmaps/bitmap_color_conversion.c,stack,int
+0013ddd0,binary_search,source/memory/binary_search.c,eax stack stack stack stack stack,int
 0013fa70,ustrnzcat,source/text/unicode.c,eax edx ecx,void
 0013fac0,ustrnzcpy,source/text/unicode.c,edi ecx esi,void
 0013fae0,ustrnupr,source/text/unicode.c,eax ecx,void

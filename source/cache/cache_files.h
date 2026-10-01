@@ -145,10 +145,55 @@ typedef char verify_cache_file_tag_group_size[
 typedef char verify_cache_file_tag_instance_size[
 	sizeof(struct cache_file_tag_instance) == 0x10 ? 1 : -1];
 
+/* what the game keeps of the cache file that is loaded. As in Halo 1, with
+the address of the tags' memory added */
+struct cache_file_globals
+{
+	uint8_t tags_loaded;
+	uint8_t pad1[3];
+	/* the block that the tag index and the tag data are read to */
+	void *tag_memory;
+	struct cache_file_header header;
+	struct cache_file_tag_header *tag_header;
+	struct cache_file_structure_bsp_header *structure_bsp_header;
+};
+
+/* goes through the tags of a group, or through all of them */
+struct tag_iterator
+{
+	uint32_t unknown0;
+	uint32_t unknown4;
+	/* of the tag that tag_iterator_next returned */
+	int32_t tag_index;
+	/* the place in the tag instances of the next one to look at; 0 to
+	start */
+	int32_t next_tag_instance_index;
+	/* NONE for the tags of every group */
+	uint32_t group_tag;
+};
+
+#if defined(__i386__)
+typedef char verify_cache_file_globals_size[
+	sizeof(struct cache_file_globals) == 0x810 ? 1 : -1];
+typedef char verify_cache_file_globals_tag_header_offset[
+	offsetof(struct cache_file_globals, tag_header) == 0x808 ? 1 : -1];
+#endif
+typedef char verify_tag_iterator_size[
+	sizeof(struct tag_iterator) == 0x14 ? 1 : -1];
+
 /* ---------- prototypes */
 
 int32_t cache_file_maximum_length(long scenario_type);
 bool cache_file_build_verify(const char *build);
 bool cache_file_header_verify(const struct cache_file_header *header);
+
+struct cache_file_tag_group *cache_file_tag_group_get(uint32_t group_tag);
+void *tag_get(uint32_t group_tag, long tag_index);
+long tag_iterator_next(struct tag_iterator *iterator);
+
+/* ---------- globals */
+
+extern struct cache_file_globals cache_file_globals;
+extern struct cache_file_tag_instance *global_tag_instances;
 
 #endif
