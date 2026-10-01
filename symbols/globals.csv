@@ -11,7 +11,8 @@ address,name,source
 0046880c,cache_file_extension,source/cache/cache_files.c
 004e3b44,global_tag_instances,source/cache/cache_files.c
 004e6420,physical_memory_globals,source/memory/physical_memory.c
-005020d8,cache_file_buffer_globals,source/cache/cache_files.c
+005020d8,xbox_game_state_globals,source/saved games/game_state_xbox.c
+00470050,game_state_file_name_format,source/saved games/game_state_xbox.c
 00510819,cached_map_files_state_changed,source/cache/cache_files.c
 00510a08,cached_map_files_build_number,source/cache/cache_files.c
 005476f8,cache_file_globals,source/cache/cache_files.c

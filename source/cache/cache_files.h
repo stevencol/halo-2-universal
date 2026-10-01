@@ -309,14 +309,6 @@ typedef char verify_cached_map_file_failure_size[
 typedef char verify_cache_file_header_copy_time_offset[
 	offsetof(struct cache_file_header, copy_time) == 0x14C ? 1 : -1];
 
-struct cache_file_buffer_globals
-{
-	uint8_t allocated;
-	uint8_t pad1[3];
-	void *buffer;
-	uint32_t size;
-};
-
 /* goes through the tags of a group, or through all of them */
 struct tag_iterator
 {
@@ -348,7 +340,6 @@ bool cache_file_header_verify(const struct cache_file_header *header);
 
 struct scenario_structure_bsp_reference;
 
-void *cache_file_buffer_allocate(uint32_t size1, uint32_t size2);
 uint32_t cached_map_file_maximum_size(long index);
 void cached_map_file_get_path(char *path, unsigned long size, long index);
 void cached_map_files_delete(long first_index, long end_index);
@@ -395,7 +386,6 @@ long tag_iterator_next(struct tag_iterator *iterator);
 
 extern struct cache_file_globals cache_file_globals;
 extern struct cached_map_file_globals cached_map_file_globals;
-extern struct cache_file_buffer_globals cache_file_buffer_globals;
 extern struct cache_file_tag_instance *global_tag_instances;
 extern const char *cache_file_extension;
 extern struct cached_map_file_copy_globals cached_map_file_copy_globals;

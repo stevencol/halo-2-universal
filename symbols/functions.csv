@@ -151,7 +151,13 @@ address,name,source,arguments,returns
 002d62c4,ReleaseMutex,,stack,int
 002d63fa,WaitForSingleObject,,stack stack,int
 00214ed0,cache_file_maximum_length,source/cache/cache_files.c,ecx,int
-00214f10,cache_file_buffer_allocate,source/cache/cache_files.c,eax ecx,int
+00214f10,game_state_allocate_buffer,source/saved games/game_state_xbox.c,eax ecx,int
+00214f80,game_state_create_or_open_file,source/saved games/game_state_xbox.c,,void
+002150f0,game_state_close_file,source/saved games/game_state_xbox.c,,void
+00215140,game_state_write_finish,source/saved games/game_state_xbox.c,stack stack,void
+00215180,game_state_write_reclaim,source/saved games/game_state_xbox.c,stack stack,void
+002151f0,game_state_write_to_file,source/saved games/game_state_xbox.c,eax,void
+002152e0,game_state_read_from_file,source/saved games/game_state_xbox.c,stack,bool
 001a08f0,async_create_file_work,source/cseries/async.c,stack,int
 001a0fb0,async_write_work,source/cseries/async.c,stack,int
 001a1050,async_write_position,source/cseries/async.c,stack stack stack stack stack stack stack eax ebx,int

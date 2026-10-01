@@ -353,6 +353,7 @@ class Harness:
         # how many bytes of arguments the game's function takes off the
         # stack when it returns
         self._external_cleanup: dict[str, int] = {}
+        self._external_cleanup_ours: dict[str, int] = {}
 
         missing = [name for name, symbol in self.symbols.items() if symbol.source and name not in self.functions]
         if missing:
@@ -423,6 +424,11 @@ class Harness:
         self.mu.hook_add(UC_HOOK_CODE, self._external_hook, user_data=(name, "original"), begin=address, end=address)
         if name in self.functions:
             address = self.functions[name]
+            # a function of source/ that takes its arguments off the stack, as the game's does
+            for instruction in Cs(CS_ARCH_X86, CS_MODE_32).disasm(bytes(self.mu.mem_read(address, 0x2000)), address):
+                if instruction.mnemonic == "ret":
+                    self._external_cleanup_ours[name] = int(instruction.op_str, 0) if instruction.op_str else 0
+                    break
             self.mu.hook_add(UC_HOOK_CODE, self._external_hook, user_data=(name, "ours"), begin=address, end=address)
 
     def _external_hook(self, mu: Uc, address: int, size: int, user_data: tuple) -> None:
@@ -533,7 +539,7 @@ class Harness:
                 else:
                     count = len(symbol.arguments)
                     arguments = list(struct.unpack(f"<{count}I", mu.mem_read(esp + 4, 4 * count)))
-                    cleanup = 0
+                    cleanup = self._external_cleanup_ours.get(name, 0)
                 try:
                     result = self._external_handlers[name](self, arguments)
                 except StopCall:

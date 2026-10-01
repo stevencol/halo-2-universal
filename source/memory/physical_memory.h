@@ -59,6 +59,23 @@ void XPhysicalProtect(void *address, uint32_t size, uint32_t protection);
 
 void physical_memory_initialize(void);
 
+/* ---------- prototypes of functions not decompiled yet */
+
+#define PHYSICAL_MEMORY_CALLBACK __attribute__((stdcall))
+
+/* what the game calls of who has a block of the memory that it lends */
+typedef void (PHYSICAL_MEMORY_CALLBACK *physical_memory_buffer_callback)(void *buffer, long unknown);
+
+/* 0x0012d400: takes a block of the memory that the game lends to what can
+give it back; its address, or NULL. The second function is called when the
+game wants the block back; what the first is for is not known. The name is
+a guess */
+void *physical_memory_buffer_allocate(long unknown1, long size, long unknown2,
+	physical_memory_buffer_callback unknown_callback, physical_memory_buffer_callback reclaim);
+
+/* 0x0012d520: gives such a block back. The name is a guess */
+void physical_memory_buffer_free(void *buffer);
+
 /* ---------- globals */
 
 extern struct physical_memory_globals physical_memory_globals;

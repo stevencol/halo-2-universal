@@ -44,19 +44,6 @@ void GetSystemTimeAsFileTime(struct file_time *time);
 /* 0x003314b0 */
 long GetTickCount(void);
 
-/* ---------- prototypes of functions not decompiled yet */
-
-#define RECLAIM_CALLBACK __attribute__((stdcall))
-
-/* 0x0012d400: takes a block of the memory that the game shares among what
-can give it back; its address, or NULL. The function given is called when
-the game wants the block back. The name is a guess */
-void *physical_memory_buffer_allocate(long unknown1, long size, long unknown2, long unknown3,
-	void (RECLAIM_CALLBACK *reclaim)(long unknown1, long unknown2));
-
-/* 0x0012d520: gives such a block back. The name is a guess */
-void physical_memory_buffer_free(void *buffer);
-
 /* 0x002d1d66 */
 void SetLastError(uint32_t error);
 
@@ -180,27 +167,7 @@ static const long cached_map_file_copy_task_priorities[]= {0, 2, 2, 2, 2, 2, 2};
 static const long cached_map_file_copy_buffer_sizes[]=
 	{0x40000, 0x100000, 0x100000, 0x100000, 0x100000, 0x100000, 0x100000};
 
-/* 0x005020d8: a buffer that the functions at 0x00215180 and 0x002151f0
-use, which are not understood yet. The name is a guess */
-struct cache_file_buffer_globals cache_file_buffer_globals;
-
 /* ---------- code */
-
-/* 0x00214f10: takes the memory of that buffer, of the sum of two sizes;
-its address, or NULL. The name is a guess */
-void *cache_file_buffer_allocate(
-	uint32_t size1,
-	uint32_t size2)
-{
-	uint32_t size= size1+size2;
-	void *buffer= physical_memory_allocate_high(size);
-
-	cache_file_buffer_globals.buffer= buffer;
-	cache_file_buffer_globals.size= size;
-	cache_file_buffer_globals.allocated= 1;
-
-	return buffer;
-}
 
 static inline __attribute__((always_inline)) const struct cached_map_file_size *cached_map_file_size_find(
 	long index)
@@ -1055,12 +1022,12 @@ uint8_t cached_map_file_request(
 
 /* 0x00213fa0: what the game calls to have the memory of the buffer back:
 goes on with the copy until it gives the buffer up */
-void RECLAIM_CALLBACK cached_map_file_copy_buffer_reclaim(
-	long unknown1,
-	long unknown2)
+void PHYSICAL_MEMORY_CALLBACK cached_map_file_copy_buffer_reclaim(
+	void *buffer,
+	long unknown)
 {
-	(void)unknown1;
-	(void)unknown2;
+	(void)buffer;
+	(void)unknown;
 
 	while (cached_map_file_copy_globals.buffer)
 	{
@@ -1085,7 +1052,7 @@ void cached_map_file_copy_buffer_acquire(
 			cached_map_file_copy_globals.buffer= NULL;
 			cached_map_file_copy_globals.buffer_size= 0;
 		}
-		cached_map_file_copy_globals.buffer= physical_memory_buffer_allocate(0, size, 0, 0,
+		cached_map_file_copy_globals.buffer= physical_memory_buffer_allocate(0, size, 0, NULL,
 			cached_map_file_copy_buffer_reclaim);
 		if (cached_map_file_copy_globals.buffer)
 		{

@@ -2,6 +2,67 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Los archivos del estado del juego
+
+Los archivos donde el juego guarda su estado para los puntos de control
+(`n:\savegame0.bin` y `n:\savegame1.bin`): abrirlos, cerrarlos, escribir y
+leer. Es el `game_state_xbox.c` de Halo 1, con los nombres de allí. De 177
+funciones se pasa a 183, el 1,62 % de las del juego (el 0,759 % de sus
+bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_state_create_or_open_file` | `0x00214f80` | `saved games/game_state_xbox.c` |
+| `game_state_close_file` | `0x002150f0` | `saved games/game_state_xbox.c` |
+| `game_state_write_finish` | `0x00215140` | `saved games/game_state_xbox.c` |
+| `game_state_write_reclaim` | `0x00215180` | `saved games/game_state_xbox.c` |
+| `game_state_write_to_file` | `0x002151f0` | `saved games/game_state_xbox.c` |
+| `game_state_read_from_file` | `0x002152e0` | `saved games/game_state_xbox.c` |
+
+- Archivos nuevos: `saved games/game_state.h` y
+  `saved games/game_state_xbox.c`; `tests/test_game_state_xbox.py`.
+
+### Corregido
+
+- `cache_file_buffer_allocate` (`0x00214f10`) no era de los archivos de
+  caché: es `game_state_allocate_buffer`, la que reserva la memoria del
+  estado del juego. Se ha movido a `game_state_xbox.c`, y
+  `cache_file_buffer_globals` pasa a ser `xbox_game_state_globals`, con
+  todos sus campos.
+- `physical_memory_buffer_allocate` recibe dos funciones, no una: la
+  segunda es la que el juego llama para recuperar la memoria.
+
+### Cambiado
+
+- `tools/difftest.py`: al sustituir una función de `source/` que quita sus
+  argumentos de la pila (`stdcall`), la pila queda como la dejaría la
+  función.
+
+### Lo que se sabe
+
+- Hay dos archivos de estado, de 0x40b000 bytes cada uno; el estado ocupa
+  0x3fe000 (0x40000 más 0x3be000).
+- Un punto de control no para el juego: se copia el estado a memoria
+  prestada y una tarea escribe la copia con prioridad 2. Si no hay memoria
+  para la copia, se escribe el estado mismo con prioridad 3 y el juego
+  espera, dibujando la pantalla de carga.
+- Un archivo solo se puede leer si su última escritura llegó entera. Antes
+  de leer o de volver a escribir se espera a la escritura que esté en curso.
+- En Halo 1 había un solo archivo y se escribía y leía sin tareas.
+
+### Sin comprobar
+
+- Los dos argumentos de `game_state_write_reclaim` cuando la llaman
+  `game_state_write_to_file` y `game_state_read_from_file`: la función no
+  los usa, y el compilador de `source/` no los pone. No se comparan.
+
+### Pendiente
+
+- `game_state.c` (`0x00123b30` en adelante): `game_state_initialize`,
+  guardar y volver a un punto de control. Necesita el CRC (`0x00163ba0`).
+
 ## 2026-10-01 — La copia de mapas al disco duro
 
 El juego copia cada mapa del DVD al disco duro en segundo plano, para

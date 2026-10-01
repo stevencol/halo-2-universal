@@ -174,12 +174,12 @@ def run(t) -> None:
                 (0x80000000 | LOW_ADDRESS, 0x00100000),
             ):
                 t.check(
-                    "cache_file_buffer_allocate",
+                    "game_state_allocate_buffer",
                     size1,
                     size2,
                     globals={
                         "physical_memory_globals": physical_memory(stage, low, high & 0xFFFFFFFF),
-                        "cache_file_buffer_globals": random_.randbytes(12),
+                        "xbox_game_state_globals": random_.randbytes(0x28),
                     },
                     externals={"XPhysicalProtect": lambda harness, arguments: 0},
                 )
