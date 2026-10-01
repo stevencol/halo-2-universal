@@ -32,8 +32,11 @@ PART_FLAG_TRIANGLE_LIST = 0x8
 # A position is three reals, or three 16-bit integers if it is compressed, at
 # the start of the vertex; the node indices and the node weights of a vertex
 # that moves with a skeleton follow them
-POSITION_TYPES = {(0x01, 12), (0x0A, 16)}
-COMPRESSED_POSITION_TYPES = {(0x02, 6), (0x04, 8), (0x06, 12), (0x08, 12)}
+POSITION_TYPES = {(0x01, 12)}
+COMPRESSED_POSITION_TYPES = {(0x02, 6), (0x04, 8), (0x06, 12), (0x08, 12), (0x0A, 16)}
+
+# no level reaches this far from the origin: a position beyond it was read wrong
+MAXIMUM_COORDINATE = 100000.0
 # two reals, or two 16-bit integers
 TEXCOORD_TYPES = {(0x18, 8)}
 COMPRESSED_TEXCOORD_TYPES = {(0x19, 4)}
@@ -178,5 +181,8 @@ def read_section(
                 texcoords = [(decompress(u, u0, u1), decompress(v, v0, v1)) for u, v in struct.iter_unpack("<2h", data)]
     if len(positions) != vertex_count or len(texcoords) != vertex_count:
         raise CacheFileError("a geometry section has no positions or no texture coordinates of a type that is read")
+    # a NaN fails the comparison too
+    if not all(abs(coordinate) < MAXIMUM_COORDINATE for position in positions for coordinate in position):
+        raise CacheFileError("a geometry section has positions that are not numbers or are too far away")
 
     return Section(parts, positions, texcoords)

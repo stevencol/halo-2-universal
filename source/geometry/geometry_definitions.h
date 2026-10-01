@@ -79,8 +79,8 @@ enum
 	/* 12 bytes each */
 	_geometry_vertex_buffer_type_compressed_position_skinned_a= 0x06,
 	_geometry_vertex_buffer_type_compressed_position_skinned_b= 0x08,
-	/* three reals and 4 bytes: 16 bytes */
-	_geometry_vertex_buffer_type_position_skinned= 0x0A,
+	/* 16 bytes */
+	_geometry_vertex_buffer_type_compressed_position_skinned_c= 0x0A,
 	/* two reals: 8 bytes */
 	_geometry_vertex_buffer_type_texcoord= 0x18,
 	/* two compressed coordinates: 4 bytes */
