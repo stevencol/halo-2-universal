@@ -13,6 +13,7 @@ game (0x001240b0 to 0x00124490, 0x00124640, 0x00124770 on).
 
 #include "cache/cache_files.h"
 #include "game/game.h"
+#include "main/main.h"
 #include "memory/crc.h"
 #include "memory/physical_memory.h"
 #include "scenario/scenario.h"
@@ -376,7 +377,7 @@ void game_state_revert(
 		}
 	}
 
-	main_reset_map_requested= TRUE;
+	main_globals.reset_map= TRUE;
 }
 
 /* 0x00124520: whether a header is of a state of the game that this game

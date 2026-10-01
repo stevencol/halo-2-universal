@@ -388,7 +388,7 @@ def run(t) -> None:
                 ),
                 "xbox_game_state_globals": xbox_globals(case.get("file_valid", (1, 1)), case.get("write_buffer", 0)),
                 "main_game_globals": GAME if case.get("game", 1) else 0,
-                "main_reset_map_requested": b"\0",
+                "main_globals+0x46": b"\0",
                 "game_state_before_load_procs": procs(0, 5),
                 "game_state_after_load_procs": procs(5, 20),
             },

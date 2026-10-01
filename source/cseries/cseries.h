@@ -58,6 +58,7 @@ char *csnzprintf(char *buffer, unsigned long size, const char *format, ...);
 char *csstrcat256(char *destination, const char *source);
 void file_time_get_current(struct file_time *time);
 void __attribute__((stdcall)) no_operation1(unsigned long unused);
+void no_operation(void);
 long language_from_xbox_language(long xbox_language);
 long csstrcasecmp(const char *s1, const char *s2);
 boolean bit_vector_test_flag(const unsigned long *vector, long bit);

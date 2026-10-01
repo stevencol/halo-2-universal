@@ -30,6 +30,12 @@ void __attribute__((stdcall)) no_operation1(
 	(void)unused;
 }
 
+/* 0x00175f40: does nothing. The same, for a function with no arguments */
+void no_operation(
+	void)
+{
+}
+
 /* 0x00136e70: the time of the console's clock. Where this function goes and
 its name are a guess */
 void file_time_get_current(

@@ -2,6 +2,74 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — El bucle principal y la tabla de sistemas
+
+El bucle principal del juego y, con él, la tabla de las 68 partes del juego
+(objetos, sonido, IA...) que se recorre para prepararlas y desmontarlas. De
+210 funciones se pasa a 224, el 1,99 % de las del juego (el 0,876 % de sus
+bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `main_loop` | `0x0012b690` | `main/main.c` |
+| `main_time_initialize` | `0x0012b070` | `main/main.c` |
+| `main_revert_map_private` | `0x0012ba30` | `main/main.c` |
+| `main_reset_map_private` | `0x0012ba90` | `main/main.c` |
+| `main_revert_map_if_possible_private` | `0x0012bad0` | `main/main.c` |
+| `main_action_pending` | `0x0012be90` | `main/main.c` |
+| `main_cancel_map_copy_and_wait` | `0x0012bf40` | `main/main.c` |
+| `game_initialize` | `0x00137c20` | `game/game.c` |
+| `game_initialize_for_new_map` | `0x00137ca0` | `game/game.c` |
+| `game_options_new` | `0x00137dd0` | `game/game.c` |
+| `game_dispose_from_old_map` | `0x00137d00` | `game/game.c` |
+| `game_initialize_for_new_structure_bsp` | `0x00137d40` | `game/game.c` |
+| `game_dispose_from_old_structure_bsp` | `0x00137da0` | `game/game.c` |
+| `no_operation` | `0x00175f40` | `cseries/cseries.c` |
+
+- La tabla `game_systems` (`0x00440dd8`): 68 partes con hasta 9 funciones
+  cada una. La prueba comprueba que cada casilla tiene la misma función que
+  la del juego.
+- `game_dispose`, que el juego no tiene como función aparte: su código está
+  dentro de `main_loop`.
+- Archivos nuevos: `main/main.{c,h}`; `tests/test_game.py`.
+
+### Cambiado
+
+- `main_reset_map_requested` pasa a ser un campo de `main_globals`
+  (`0x00547f28`), que reúne lo que el juego le pide al bucle.
+- `tools/difftest.py`: los punteros a funciones del juego que `source/` aún
+  no tiene también se comparan por nombre.
+
+### Lo que se sabe
+
+- El bucle (`main_loop`): empieza a contar el tiempo, prepara el juego,
+  repite fotogramas hasta que se pide salir, termina la partida y desmonta
+  el juego.
+- Cada parte del juego puede tener hasta nueve funciones: preparar y
+  desmontar; mapa nuevo y mapa viejo; bsp nuevo y bsp viejo; y tres más
+  para cuando cambia el bsp o lo que está activo. Se preparan en el orden
+  de la tabla y se desmontan en el contrario. En Halo 1 cada función
+  llamaba a las partes por su nombre; aquí es una tabla.
+- `game_state` es la parte 16 de la tabla. De las 166 funciones distintas
+  que hay en ella, solo cinco están descompiladas; el resto están apuntadas
+  por su dirección (`unknown_...`).
+- Lo que el juego le pide al bucle (reiniciar el mapa, volver al punto de
+  control, guardar, cambiar de bsp...) son marcas en `main_globals` que se
+  atienden al principio de cada fotograma.
+
+### Sin comprobar
+
+- Qué hace cada una de las tres últimas funciones de una parte: sus nombres
+  son suposiciones, por cómo las llama `0x0011c1b0`.
+
+### Pendiente
+
+- El cuerpo de un fotograma (`0x0012b450`), que llama a unas 35 funciones.
+- `scenario_switch_structure_bsp` (`0x0011c1b0`), que carga un bsp y usa
+  las funciones de bsp de la tabla.
+
 ## 2026-10-01 — El arranque del juego
 
 Las primeras funciones del ejecutable: por dónde empieza el juego, qué

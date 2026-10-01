@@ -39,7 +39,7 @@ RETURN_ADDRESS = 0x7FFF0000  # a call returns here, where the emulator stops
 KERNEL_ADDRESS = 0x7FFE0000  # the functions of the console's kernel, which the emulator does not have
 KERNEL_SIZE = 0x4000
 MOCK_ADDRESS = 0x7FFD0000  # the functions that a test stands in for
-MOCK_SIZE = 0x1000
+MOCK_SIZE = 0x4000
 # in that memory, from here on: the functions of the game that source/ calls and does not have yet
 EXTERNAL_OFFSET = 0x800
 # where the console maps its memory: the game takes blocks of it by address.
@@ -755,6 +755,9 @@ class Harness:
             for name, symbol in self.symbols.items()
             if symbol.source
         }
+        # and those that source/ does not have, which it calls at an address of the mocks' memory
+        for n, name in enumerate(self.externals):
+            self._function_names[self.symbols[name].address if original else external_address(n)] = name
         # the globals that have pointers to themselves: (key, address, size)
         self._ranges = []
         for n, value in enumerate(values):

@@ -82,7 +82,10 @@ struct d3d_device
 {
 	byte unknown0[0x938];
 	long reference_count;
-	byte unknown93C[0x1B64];
+	byte unknown93C[0x147C];
+	/* called by Direct3D; the game sets it in main_time_initialize */
+	void (*frame_callback)(void);
+	byte unknown1DBC[0x6E4];
 };
 
 typedef char verify_xbox_video_settings_size[
