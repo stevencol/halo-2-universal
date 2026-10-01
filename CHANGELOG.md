@@ -2,6 +2,71 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Tablas de datos y primer vector
+
+Primeras funciones del motor descompiladas con el banco de pruebas. De 3
+funciones se pasa a 21, todas comprobadas contra el ejecutable.
+
+### Añadido
+
+- `source/memory/data.c` y `data.h`: las tablas de datos del motor, donde
+  casi todos los sistemas guardan su estado (objetos, jugadores, efectos).
+  17 funciones:
+
+  | Función | Dirección |
+  | --- | --- |
+  | `data_initialize` | `0x0016b5f0` |
+  | `data_initialize_disconnected` | `0x0016b650` |
+  | `data_make_valid` | `0x0016b790` |
+  | `data_delete_all` | `0x0016b7a0` |
+  | `datum_new` | `0x0016b840` |
+  | `datum_new_at_index` | `0x0016b910` |
+  | `datum_new_at_absolute_index` | `0x0016b990` |
+  | `datum_initialize` | `0x0016ba00` |
+  | `datum_delete` | `0x0016ba40` |
+  | `datum_try_and_get` | `0x0016bae0` |
+  | `datum_try_and_get_absolute` | `0x0016bb20` |
+  | `datum_absolute_index_to_index` | `0x0016bb50` |
+  | `data_iterator_next` | `0x0016bb70` |
+  | `data_next_index` | `0x0016bbc0` |
+  | `data_next_absolute_index` | `0x0016bc00` |
+  | `data_last_index` | `0x0016bc40` |
+  | `data_prev_index` | `0x0016bcc0` |
+
+- `source/math/real_math.c`: `normalize3d` (`0x00030bf0`), la función sin
+  llamadas internas más usada del juego (188 sitios la llaman).
+- `source/cseries/cseries.h`: los tipos base con los nombres de Halo 1.
+- `tests/test_data.py`, `tests/test_real_math.py`: unos 9.600 casos, con
+  tablas generadas al azar.
+- `tools/function_index.py`: consulta el índice de funciones (las más
+  llamadas, las que usan un texto, el pseudocódigo de una).
+- `tools/disassemble.py`: muestra las instrucciones de una función y los
+  valores de los datos que lee.
+
+### Cambiado
+
+- `tools/difftest.py`: los argumentos pueden ser bloques de memoria con
+  punteros a sí mismos y con formato, para comparar reales con tolerancia;
+  lee un real devuelto en un registro SSE.
+
+### Lo que se sabe
+
+- Las tablas de datos siguen el diseño de Halo 1 con cambios: contadores de
+  32 bits, un vector de bits que marca los elementos en uso, alineación de
+  los elementos y un puntero a quien reservó la tabla. La estructura ocupa
+  `0x4C` bytes.
+- El juego mezcla instrucciones x87 y SSE para los reales, y a veces
+  devuelve un real en `xmm0`. Nuestro código usa solo x87, así que los
+  resultados pueden diferir en los últimos bits; la prueba lo tolera.
+- Los nombres `data_initialize_disconnected` y los de índices absolutos no
+  existen en Halo 1: son los más probables, no confirmados.
+
+### Pendiente
+
+- `data_new` (`0x0016b570`) y `data_dispose` (`0x0016b5d0`), que usan el
+  reservador de memoria, y `0x0016b6b0`, que conecta una tabla con
+  elementos que están en otro sitio.
+
 ## 2026-10-01 — Banco de pruebas de funciones
 
 Primera pieza para descompilar el ejecutable a escala: comprobar cada

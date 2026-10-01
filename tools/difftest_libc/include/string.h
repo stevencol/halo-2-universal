@@ -18,5 +18,6 @@ void *memset(void *memory, int value, size_t size);
 int strcmp(const char *a, const char *b);
 size_t strlen(const char *string);
 int strncmp(const char *a, const char *b, size_t size);
+char *strncpy(char *destination, const char *source, size_t size);
 
 #endif

@@ -14,7 +14,7 @@ import importlib.util
 import sys
 from pathlib import Path
 
-from difftest import ROOT, Buffer, DifftestError, Harness
+from difftest import ROOT, Buffer, DifftestError, Harness, almost_equal
 
 TESTS = ROOT / "tests"
 GHIDRA_FUNCTIONS = ROOT / "ghidra" / "functions.csv"
@@ -42,10 +42,20 @@ class Tester:
         except DifftestError as error:
             self._fail(name, f"({shown}): {error}")
             return
-        if original.value != ours.value:
+        if not almost_equal(original.value, ours.value):
             self._fail(name, f"({shown}): the game returns {original.value!r}, source/ returns {ours.value!r}")
-        elif original.buffers != ours.buffers:
-            self._fail(name, f"({shown}): the game and source/ leave different data in a buffer")
+        elif not almost_equal(original.buffers, ours.buffers):
+            self._fail(name, f"({shown}): the game and source/ leave different data in a buffer{self._difference(original.buffers, ours.buffers)}")
+
+    @staticmethod
+    def _difference(original: list, ours: list) -> str:
+        """Where two sets of buffers first differ."""
+        for number, (a, b) in enumerate(zip(original, ours)):
+            for at, (x, y) in enumerate(zip(a, b)):
+                if not almost_equal(x, y):
+                    place = f"value {at}" if isinstance(a, tuple) else f"offset {at:#x}"
+                    return f": buffer {number}, {place}: {x!r} and {y!r}"
+        return ""
 
     def _fail(self, name: str, message: str) -> None:
         self.failures.setdefault(name, [])
@@ -81,6 +91,9 @@ def main() -> None:
             print(f"          {failure}")
 
     tested = sum(1 for name in harness.symbols if tester.cases.get(name) and name not in tester.failures)
+    if wanted:
+        # only some tests were run: no totals
+        sys.exit(1 if failed else 0)
     print(f"\n{len(harness.symbols)} functions decompiled, {tested} of them checked against the game")
     if GHIDRA_FUNCTIONS.exists():
         with GHIDRA_FUNCTIONS.open(newline="") as f:

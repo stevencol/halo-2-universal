@@ -53,8 +53,10 @@ COMPILE_FLAGS = [
     "-fno-pic",
     "-fno-stack-protector",
     "-fno-asynchronous-unwind-tables",
-    # the game's code uses the x87 registers for its reals
+    # the reals in the x87 registers. The game's code uses them and the SSE
+    # registers, so a result can differ in its last bits
     "-mno-sse",
+    "-fno-math-errno",
     "-O2",
     "-std=c11",
     "-Wall",
@@ -93,8 +95,18 @@ class Buffer:
     the data for each call, and what the calls leave in it is compared."""
 
     data: bytes
+    # the offsets in the data of pointers to the buffer itself: each holds an
+    # offset in the buffer, and the emulator gets the address of that place
+    pointers: tuple[int, ...] = ()
+    # a struct format of the data (as "<3f"), to compare it value by value
+    # and take two reals that are almost equal as equal; without it, the
+    # bytes are compared
+    format: str | None = None
     # filled by the harness: the address in the emulator
     address: int = 0
+
+    def values(self, data: bytes) -> tuple | bytes:
+        return struct.unpack(self.format, data) if self.format else data
 
 
 @dataclass
@@ -104,14 +116,26 @@ class Symbol:
     source: str
     # where the executable's function takes each argument: a register or "stack"
     arguments: list[str]
-    # int, bool, short, real, or void
+    # int, bool, short, real, or void. The executable's function returns a
+    # real in the x87 register, or in an SSE register if it is "real:xmm0"
     returns: str
 
 
 @dataclass
 class Result:
     value: object
-    buffers: list[bytes] = field(default_factory=list)
+    # what the call left in each buffer of the arguments: the values of the
+    # buffer's format, or the bytes
+    buffers: list[tuple | bytes] = field(default_factory=list)
+
+
+def almost_equal(a: object, b: object) -> bool:
+    """Whether two results are the same; two reals, whether they differ in their last bits at most."""
+    if isinstance(a, float) and isinstance(b, float):
+        return a == b or (a != a and b != b) or abs(a - b) <= 2e-6 * max(abs(a), abs(b)) + 1e-9
+    if isinstance(a, (tuple, list)) and isinstance(b, (tuple, list)):
+        return len(a) == len(b) and all(almost_equal(x, y) for x, y in zip(a, b))
+    return a == b
 
 
 def read_symbols() -> dict[str, Symbol]:
@@ -301,8 +325,16 @@ class Harness:
             return bool(eax & 0xFF)
         if returns == "short":
             return (eax & 0xFFFF) - (0x10000 if eax & 0x8000 else 0)
+        if returns == "real:xmm0":
+            # the low 32 bits of the register
+            return struct.unpack("<f", (mu.reg_read(x86.UC_X86_REG_XMM0) & 0xFFFFFFFF).to_bytes(4, "little"))[0]
         if returns == "real":
-            mantissa, exponent = mu.reg_read(x86.UC_X86_REG_ST0)
+            # the emulator numbers the x87 registers by where they are, not
+            # from the top of their stack: the status word tells the top.
+            # 80 bits: the mantissa, with its first bit explicit, and the sign
+            # and the exponent
+            top = (mu.reg_read(x86.UC_X86_REG_FPSW) >> 11) & 7
+            mantissa, exponent = mu.reg_read(x86.UC_X86_REG_FP0 + top)
             value = mantissa / (1 << 63) * 2.0 ** ((exponent & 0x7FFF) - 16383) if mantissa else 0.0
             # as the 32-bit real that the game keeps
             return struct.unpack("<f", struct.pack("<f", -value if exponent & 0x8000 else value))[0]
@@ -315,7 +347,10 @@ class Harness:
         for argument in arguments:
             if isinstance(argument, Buffer):
                 argument.address = at
-                self.mu.mem_write(at, argument.data)
+                data = bytearray(argument.data)
+                for offset in argument.pointers:
+                    struct.pack_into("<I", data, offset, struct.unpack_from("<I", data, offset)[0] + at)
+                self.mu.mem_write(at, bytes(data))
                 # some room after each, zeroed, for a function that reads past the end of a string
                 self.mu.mem_write(at + len(argument.data), b"\0" * 64)
                 at += (len(argument.data) + 64 + 15) & ~15
@@ -334,8 +369,12 @@ class Harness:
             registers = {place: value for value, place in zip(values, symbol.arguments) if place != "stack"}
             value = self._call(symbol.address, stack, registers, symbol.returns)
         else:
-            value = self._call(self.functions[symbol.name], values, {}, symbol.returns)
-        return Result(value, [bytes(self.mu.mem_read(buffer.address, len(buffer.data))) for buffer in buffers])
+            # the function of source/ returns as C functions do: a real, in
+            # the x87 register
+            value = self._call(self.functions[symbol.name], values, {}, symbol.returns.split(":")[0])
+        return Result(
+            value, [buffer.values(bytes(self.mu.mem_read(buffer.address, len(buffer.data)))) for buffer in buffers]
+        )
 
     def original(self, name: str, *arguments: object) -> Result:
         """Calls the function of the game's executable."""

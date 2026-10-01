@@ -5,6 +5,7 @@ The C library functions of include/, for the image that the function tests
 run. The image has no other library.
 */
 
+#include <math.h>
 #include <string.h>
 
 /* the linker wants an entry point; nothing calls it */
@@ -102,6 +103,41 @@ size_t strlen(const char *string)
 	}
 
 	return length;
+}
+
+char *strncpy(char *destination, const char *source, size_t size)
+{
+	size_t i;
+
+	for (i= 0; i<size && source[i]; i++)
+	{
+		destination[i]= source[i];
+	}
+	for (; i<size; i++)
+	{
+		destination[i]= 0;
+	}
+
+	return destination;
+}
+
+/* the compiler uses the processor's instructions for these where it can;
+these are for where it calls them */
+#undef sqrtf
+#undef fabsf
+
+float sqrtf(float value)
+{
+	__asm__("fsqrt" : "+t"(value));
+
+	return value;
+}
+
+float fabsf(float value)
+{
+	__asm__("fabs" : "+t"(value));
+
+	return value;
 }
 
 int strncmp(const char *a, const char *b, size_t size)

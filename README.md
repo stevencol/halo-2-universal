@@ -10,7 +10,9 @@ con Halo: Combat Evolved.
 
 **Estado: muy temprano.** El juego no arranca ni está cerca de hacerlo. Hoy
 el proyecto abre los mapas del juego, lista su contenido y exporta los
-niveles y los modelos con su textura principal. Consulta
+niveles y los modelos con su textura principal. Del código del ejecutable
+hay descompiladas 21 funciones de unas 11.265 (el 0,19 %), todas comprobadas
+contra el original. Consulta
 [CHANGELOG.md](CHANGELOG.md) para ver qué hay hecho.
 
 ## En qué se basa
@@ -52,7 +54,7 @@ copia de Halo 2 para Xbox, con `default.xbe` y la carpeta `maps/`.
 | JDK 21 | Lo necesita Ghidra |
 | clang ([llvm-mingw](https://github.com/mstorsjo/llvm-mingw)) y [ninja](https://ninja-build.org/) | Compilar |
 | Python 3 | Scripts de `tools/` |
-| [Unicorn](https://www.unicorn-engine.org/) (`pip install unicorn`) | Emulador de procesador para probar las funciones |
+| [Unicorn](https://www.unicorn-engine.org/) y [Capstone](https://www.capstone-engine.org/) (`pip install unicorn capstone`) | Emulador de procesador para probar las funciones, y desensamblador |
 
 ## Compilar y probar
 
@@ -76,8 +78,10 @@ geometría de cada nivel a `build/obj/`.
 
 ### Descompilar una función
 
-1. Encontrarla en `ghidra/decompiled/all/` (un archivo por función, con
-   `index.jsonl` de índice) o descompilarla con `DecompileFunctions.java`.
+1. Elegirla con `python tools/function_index.py leaves` (las más llamadas) y
+   leerla con `function_index.py show <dirección>` (pseudocódigo) y
+   `python tools/disassemble.py <dirección>` (instrucciones). El pseudocódigo
+   de todas está en `ghidra/decompiled/all/`.
 2. Buscar su equivalente de Halo 1 en `source/` de halo-ce-universal, para
    el nombre y como referencia de lo que hace.
 3. Escribirla en `source/`, en el archivo del sistema al que pertenece, con

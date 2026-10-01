@@ -1,4 +1,22 @@
 address,name,source,arguments,returns
 00012130,cache_file_build_verify,source/cache/cache_files.c,stack,bool
+00030bf0,normalize3d,source/math/real_math.c,eax,real:xmm0
 00122870,cache_file_header_verify,source/cache/cache_files.c,esi,bool
+0016b5f0,data_initialize,source/memory/data.c,stack stack ebx edx ecx stack,void
+0016b650,data_initialize_disconnected,source/memory/data.c,esi stack stack stack stack stack stack,void
+0016b790,data_make_valid,source/memory/data.c,eax,void
+0016b7a0,data_delete_all,source/memory/data.c,esi,void
+0016b840,datum_new,source/memory/data.c,edx,int
+0016b910,datum_new_at_index,source/memory/data.c,edx eax,int
+0016b990,datum_new_at_absolute_index,source/memory/data.c,edx edi,int
+0016ba00,datum_initialize,source/memory/data.c,edx esi,void
+0016ba40,datum_delete,source/memory/data.c,edx eax,void
+0016bae0,datum_try_and_get,source/memory/data.c,esi eax,int
+0016bb20,datum_try_and_get_absolute,source/memory/data.c,esi edx,int
+0016bb50,datum_absolute_index_to_index,source/memory/data.c,edx ecx,int
+0016bb70,data_iterator_next,source/memory/data.c,esi,int
+0016bbc0,data_next_index,source/memory/data.c,esi eax,int
+0016bc00,data_next_absolute_index,source/memory/data.c,ecx edx,int
+0016bc40,data_last_index,source/memory/data.c,stack,int
+0016bcc0,data_prev_index,source/memory/data.c,eax edx,int
 00214ed0,cache_file_maximum_length,source/cache/cache_files.c,ecx,int
