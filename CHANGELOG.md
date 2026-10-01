@@ -25,6 +25,14 @@ Sexta meta: poner en cada nivel los objetos que coloca su escenario.
 - `tools/test_maps.py` cuenta los objetos. Pasan los 30 mapas: 11.177
   objetos colocados, 218 más sin modelo, y 949 texturas.
 
+### Corregido
+
+- Los buffers de vértices de tipo `0x0A` (16 bytes) tienen posiciones
+  comprimidas, no reales: el Jackal y otros modelos salían con posiciones
+  inválidas. `tools/geometry.py` rechaza ahora una sección cuyas posiciones
+  no sean números o estén demasiado lejos, para que la prueba detecte un
+  tipo de vértice mal leído.
+
 ### Lo que se sabe de los objetos
 
 - El escenario tiene, por cada clase de objeto, una lista de colocaciones y
