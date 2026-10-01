@@ -15,6 +15,8 @@ The fields called unknown are not understood yet.
 #include <stddef.h>
 #include <stdint.h>
 
+#include "cseries/cseries.h"
+
 /* ---------- constants */
 
 #define CACHE_FILE_HEADER_SIGNATURE 'head'
@@ -39,12 +41,6 @@ enum
 };
 
 /* ---------- structures */
-
-struct cache_file_time
-{
-	uint32_t low;
-	uint32_t high;
-};
 
 struct cache_file_header
 {
@@ -72,7 +68,9 @@ struct cache_file_header
 	good */
 	uint32_t unknown144;
 	uint32_t unknown148;
-	uint8_t unknown14C[8];
+	/* when the copy of the map on the hard disk was made; empty in the
+	map of the disc */
+	struct file_time copy_time;
 	uint32_t unknown154_count;
 	uint32_t unknown158_offset;
 	uint32_t unknown15C_size;
@@ -92,7 +90,7 @@ struct cache_file_header
 	/* FILETIMEs; the first is this file's, the others are those of the
 	shared maps it takes resources from: the main menu's, the shared one
 	and the single player shared one */
-	struct cache_file_time times[4];
+	struct file_time times[4];
 
 	char name[CACHE_FILE_NAME_LENGTH];
 	uint32_t unknown1B8;
@@ -169,7 +167,57 @@ struct cache_file_globals
 /* the maps that the game has ready to read, with the header of each */
 enum
 {
-	MAXIMUM_CACHED_MAP_FILES= 6
+	MAXIMUM_CACHED_MAP_FILES= 6,
+	MAXIMUM_CACHED_MAP_FILE_FAILURES= 8,
+	MAXIMUM_CACHED_MAP_FILE_FAILURE_COUNT= 3
+};
+
+/* what cached_map_file_status tells of a map */
+enum
+{
+	_cached_map_file_status_none,
+	/* asked for; the copy starts when the one that is being made ends */
+	_cached_map_file_status_pending,
+	_cached_map_file_status_copying,
+	/* the copy is on the hard disk */
+	_cached_map_file_status_cached,
+	_cached_map_file_status_failed
+};
+
+/* the steps of the copy of a map to the hard disk. In those with a name
+that ends in a task, the game waits for the task before the next step */
+enum
+{
+	_cached_map_file_copy_idle,
+	_cached_map_file_copy_open_source,
+	_cached_map_file_copy_check_source,
+	_cached_map_file_copy_read_header,
+	_cached_map_file_copy_check_header,
+	_cached_map_file_copy_get_size,
+	_cached_map_file_copy_check_size,
+	_cached_map_file_copy_erase_header,
+	_cached_map_file_copy_check_erase,
+	_cached_map_file_copy_flush_erase,
+	_cached_map_file_copy_start_data,
+	_cached_map_file_copy_copy_data,
+	_cached_map_file_copy_check_data,
+	_cached_map_file_copy_flush_data,
+	_cached_map_file_copy_write_header,
+	_cached_map_file_copy_check_write,
+	_cached_map_file_copy_finish,
+	_cached_map_file_copy_end,
+	_cached_map_file_copy_close_source,
+	_cached_map_file_copy_clean_up,
+	NUMBER_OF_CACHED_MAP_FILE_COPY_STATES
+};
+
+/* how a copy ended */
+enum
+{
+	_cached_map_file_copy_result_none,
+	_cached_map_file_copy_result_success,
+	_cached_map_file_copy_result_cancelled,
+	_cached_map_file_copy_result_failure
 };
 
 struct cached_map_file
@@ -179,12 +227,23 @@ struct cached_map_file
 	struct cache_file_header header;
 };
 
+/* a map that could not be copied to the hard disk */
+struct cached_map_file_failure
+{
+	/* of the map on the disc; empty in a place that is not in use */
+	char path[256];
+	/* of the last time (GetTickCount) */
+	long time;
+	/* at three, the game does not try again */
+	long count;
+};
+
 struct cached_map_file_globals
 {
 	struct cached_map_file files[MAXIMUM_CACHED_MAP_FILES];
 	/* the map whose tags are loaded; NONE if there is none */
 	long open_map_index;
-	uint8_t unknown301C[0x840];
+	struct cached_map_file_failure failures[MAXIMUM_CACHED_MAP_FILE_FAILURES];
 };
 
 typedef char verify_cached_map_file_size[
@@ -192,23 +251,63 @@ typedef char verify_cached_map_file_size[
 typedef char verify_cached_map_file_globals_open_map_index_offset[
 	offsetof(struct cached_map_file_globals, open_map_index) == 0x3018 ? 1 : -1];
 
-/* 0x0055b4f0: used by the functions that copy a map to the hard disk,
-which are not understood yet. The name is a guess */
+/* a map that the game was asked to copy to the hard disk */
+struct cached_map_file_request
+{
+	/* the path of the map on the disc */
+	char name[256];
+	/* from 0 to 6: the copy that is being made is stopped for one with as
+	much or more */
+	long priority;
+};
+
+/* 0x0055b4f0: the copy of a map of the disc to the hard disk, which is
+made a step at a time. The name is a guess */
 struct cached_map_file_copy_globals
 {
-	uint8_t unknown0[0x810];
-	long unknown810;
-	uint8_t unknown814[8];
-	uint8_t unknown81C;
+	/* of the map that is copied */
+	struct cache_file_header header;
+	/* what the last task that reads, writes or copies did */
+	uint32_t bytes_transferred;
+	long bytes_requested;
+	/* how much of the map is copied */
+	uint32_t offset;
+	uint32_t file_size;
+	/* of the last task */
+	long task_id;
+	long state;
+	long result;
+	/* set when the last task is done */
+	uint8_t done;
 	uint8_t pad81D[3];
-	long unknown820;
-	uint8_t unknown824[0x31C];
+	/* the place in cached_map_file_globals that the copy goes to */
+	long destination_index;
+	uint32_t source_file;
+	/* what is copied goes through here */
+	void *buffer;
+	long buffer_size;
+	/* the game wants the memory of the buffer back */
+	uint8_t release_requested;
+	char source_path[256];
+	uint8_t pad931[3];
+	struct cached_map_file_request current;
+	struct cached_map_file_request pending;
+	/* of what is copied so far */
+	uint32_t checksum;
 };
 
 typedef char verify_cached_map_file_globals_size[
 	sizeof(struct cached_map_file_globals) == 0x385C ? 1 : -1];
+#if defined(__i386__)
 typedef char verify_cached_map_file_copy_globals_size[
 	sizeof(struct cached_map_file_copy_globals) == 0xB40 ? 1 : -1];
+typedef char verify_cached_map_file_copy_globals_current_offset[
+	offsetof(struct cached_map_file_copy_globals, current) == 0x934 ? 1 : -1];
+#endif
+typedef char verify_cached_map_file_failure_size[
+	sizeof(struct cached_map_file_failure) == 0x108 ? 1 : -1];
+typedef char verify_cache_file_header_copy_time_offset[
+	offsetof(struct cache_file_header, copy_time) == 0x14C ? 1 : -1];
 
 struct cache_file_buffer_globals
 {
@@ -256,6 +355,26 @@ void cached_map_files_delete(long first_index, long end_index);
 struct cached_map_file *cached_map_file_shared_get(long shared_index);
 uint8_t cached_map_file_read_header(long index);
 void cached_map_files_open(void);
+uint32_t cache_file_xor_checksum(const void *buffer, uint32_t size);
+uint8_t cache_file_map_paths_equal(const char *name1, const char *name2);
+long cached_map_file_shared_index(long shared_index);
+uint8_t cached_map_file_is_better_place(long best_index, long index);
+long cached_map_file_choose_place(long scenario_type, uint32_t file_length);
+struct cached_map_file_failure *cached_map_file_failure_find(const char *name);
+void cached_map_file_failure_add(const char *name);
+void cached_map_file_failure_remove(const char *name);
+uint8_t cached_map_file_failure_is_final(const char *name);
+long cached_map_file_copy_current_priority(const char *name);
+long cached_map_file_copy_pending_priority(const char *name);
+long cached_map_file_copy_priority(const char *name);
+long cached_map_file_status(const char *name);
+void cached_map_file_copy_cancel(void);
+uint8_t cached_map_file_request(const char *name, long priority);
+void cached_map_file_copy_buffer_acquire(long size);
+void cached_map_file_copy_buffer_release(void);
+uint8_t cached_map_file_copy_get_progress(float *progress);
+float cached_map_file_get_progress(const char *name);
+uint8_t cached_map_file_copy_update(void);
 void cache_files_initialize(void);
 void cache_file_get_map_name(const char *path, char *name);
 void cache_file_get_map_path(const char *scenario_name, char *path);

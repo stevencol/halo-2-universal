@@ -33,10 +33,29 @@ int CloseHandle(uint32_t handle);
 int DeleteFileA(const char *path);
 
 /* 0x00331598 */
-long CompareFileTime(const struct cache_file_time *time1, const struct cache_file_time *time2);
+long CompareFileTime(const struct file_time *time1, const struct file_time *time2);
 
 /* 0x0033039a */
 long XGetLanguage(void);
+
+/* 0x003303f3 */
+void GetSystemTimeAsFileTime(struct file_time *time);
+
+/* 0x003314b0 */
+long GetTickCount(void);
+
+/* ---------- prototypes of functions not decompiled yet */
+
+#define RECLAIM_CALLBACK __attribute__((stdcall))
+
+/* 0x0012d400: takes a block of the memory that the game shares among what
+can give it back; its address, or NULL. The function given is called when
+the game wants the block back. The name is a guess */
+void *physical_memory_buffer_allocate(long unknown1, long size, long unknown2, long unknown3,
+	void (RECLAIM_CALLBACK *reclaim)(long unknown1, long unknown2));
+
+/* 0x0012d520: gives such a block back. The name is a guess */
+void physical_memory_buffer_free(void *buffer);
 
 /* 0x002d1d66 */
 void SetLastError(uint32_t error);
@@ -152,6 +171,14 @@ static const struct cached_map_file_size
 
 /* 0x0046880c */
 const char *cache_file_extension= ".map";
+
+/* 0x00448fd4: the priority of the tasks of a copy, by the priority of who
+asked for the copy */
+static const long cached_map_file_copy_task_priorities[]= {0, 2, 2, 2, 2, 2, 2};
+
+/* 0x00448ff0: the size of the buffer of a copy, the same way */
+static const long cached_map_file_copy_buffer_sizes[]=
+	{0x40000, 0x100000, 0x100000, 0x100000, 0x100000, 0x100000, 0x100000};
 
 /* 0x005020d8: a buffer that the functions at 0x00215180 and 0x002151f0
 use, which are not understood yet. The name is a guess */
@@ -333,6 +360,11 @@ bool cache_file_build_verify(
 bool cache_file_header_verify(
 	const struct cache_file_header *header)
 {
+	struct file_time now;
+
+	/* the game does nothing with the time */
+	GetSystemTimeAsFileTime(&now);
+
 	return
 		header->header_signature==CACHE_FILE_HEADER_SIGNATURE &&
 		header->footer_signature==CACHE_FILE_FOOTER_SIGNATURE &&
@@ -612,9 +644,9 @@ void cache_files_initialize(
 	memset(&cached_map_file_globals, 0, sizeof(cached_map_file_globals));
 	memset(&cached_map_file_copy_globals, 0, sizeof(cached_map_file_copy_globals));
 	cached_map_file_globals.open_map_index= NONE;
-	cached_map_file_copy_globals.unknown81C= 1;
-	cached_map_file_copy_globals.unknown810= NONE;
-	cached_map_file_copy_globals.unknown820= NONE;
+	cached_map_file_copy_globals.done= 1;
+	cached_map_file_copy_globals.task_id= NONE;
+	cached_map_file_copy_globals.destination_index= NONE;
 
 	if (global_language==NONE)
 	{
@@ -634,6 +666,781 @@ void cache_files_initialize(
 	}
 
 	cached_map_files_open();
+}
+
+/* 0x00123110: a checksum of a buffer: all its 32-bit words combined with
+exclusive or, in pairs. A constant is added when the count of pairs is odd.
+The name is a guess */
+uint32_t cache_file_xor_checksum(
+	const void *buffer,
+	uint32_t size)
+{
+	const uint32_t *words= buffer;
+	uint32_t count= size>>3;
+	uint32_t low= 0;
+	uint32_t high= 0;
+	uint32_t index;
+
+	if (count&1)
+	{
+		low= 0x08040201;
+		high= 0x80402010;
+	}
+	for (index= 0; index<count; index++)
+	{
+		low^= words[2*index];
+		high^= words[2*index+1];
+	}
+
+	return low^high;
+}
+
+/* 0x00214e40: whether two scenario names are of the same map file. The
+name is a guess, as those of all the functions from here to
+cached_map_file_copy_update */
+uint8_t cache_file_map_paths_equal(
+	const char *name1,
+	const char *name2)
+{
+	char path1[256];
+	char path2[256];
+
+	path1[0]= 0;
+	path2[0]= 0;
+	cache_file_get_map_path(name1, path1);
+	cache_file_get_map_path(name2, path2);
+
+	return strcmp(path1, path2)==0;
+}
+
+/* 0x00214c70: the place in cached_map_file_globals of one of the shared
+maps, in the order that a map's header has them; NONE if there is no such
+map */
+long cached_map_file_shared_index(
+	long shared_index)
+{
+	switch (shared_index)
+	{
+	case _cache_file_shared_map_main_menu:
+		return _cached_map_file_main_menu;
+	case _cache_file_shared_map_shared:
+		return _cached_map_file_shared;
+	case _cache_file_shared_map_single_player_shared:
+		return _cached_map_file_single_player_shared;
+	}
+
+	return NONE;
+}
+
+/* 0x00214ac0: whether a place is better than the best one found so far to
+put the copy of a map in: the one whose copy was made first, among those of
+the most room */
+uint8_t cached_map_file_is_better_place(
+	long best_index,
+	long index)
+{
+	struct file_time now;
+	struct file_time *best_time;
+	struct file_time *time;
+
+	file_time_get_current(&now);
+	if (best_index==NONE)
+	{
+		return 1;
+	}
+	if (index==NONE)
+	{
+		return 0;
+	}
+
+	best_time= &cached_map_file_globals.files[best_index].header.copy_time;
+	time= &cached_map_file_globals.files[index].header.copy_time;
+	/* a time that is yet to come is not to be trusted */
+	if (CompareFileTime(best_time, &now)>0)
+	{
+		return 0;
+	}
+	if (CompareFileTime(time, &now)>0)
+	{
+		return 1;
+	}
+	if (cached_map_file_maximum_size(best_index)<cached_map_file_maximum_size(index))
+	{
+		return 1;
+	}
+
+	return CompareFileTime(time, best_time)<0;
+}
+
+/* 0x00214b80: the place in cached_map_file_globals to put the copy of a map
+in, by the type of its scenario and its length; NONE if there is none. The
+place of the map that is loaded is not taken */
+long cached_map_file_choose_place(
+	long scenario_type,
+	uint32_t file_length)
+{
+	long first_index= 0;
+	long last_index= 0;
+	long best_index= NONE;
+	long index;
+
+	switch ((short)scenario_type)
+	{
+	case _scenario_type_solo:
+		first_index= 4;
+		last_index= 5;
+		break;
+	case _scenario_type_multiplayer:
+		first_index= last_index= 3;
+		break;
+	case _scenario_type_main_menu:
+		first_index= last_index= _cached_map_file_main_menu;
+		break;
+	case _scenario_type_shared:
+		first_index= last_index= _cached_map_file_shared;
+		break;
+	case _scenario_type_single_player_shared:
+		first_index= last_index= _cached_map_file_single_player_shared;
+		break;
+	}
+
+	for (index= first_index; index<=last_index; index++)
+	{
+		if (index!=cached_map_file_globals.open_map_index &&
+			cached_map_file_maximum_size(index)>=file_length &&
+			cached_map_file_is_better_place(best_index, index))
+		{
+			best_index= index;
+		}
+	}
+
+	return best_index;
+}
+
+/* 0x00214060: what the game keeps of the copies of a map that failed; NULL
+if none did */
+struct cached_map_file_failure *cached_map_file_failure_find(
+	const char *name)
+{
+	char path[256];
+	long index;
+
+	path[0]= 0;
+	cache_file_get_map_path(name, path);
+	for (index= 0; index<MAXIMUM_CACHED_MAP_FILE_FAILURES; index++)
+	{
+		struct cached_map_file_failure *failure= &cached_map_file_globals.failures[index];
+
+		if (strcmp(path, failure->path)==0)
+		{
+			return failure;
+		}
+	}
+
+	return NULL;
+}
+
+/* 0x00214100: counts a copy of a map that failed. If the map has no place
+in the table, it takes one that is not in use, or that of the map that
+failed the longest ago */
+void cached_map_file_failure_add(
+	const char *name)
+{
+	struct cached_map_file_failure *failure;
+	char path[256];
+
+	path[0]= 0;
+	cache_file_get_map_path(name, path);
+	failure= cached_map_file_failure_find(path);
+	if (!failure)
+	{
+		long index;
+
+		for (index= 0; index<MAXIMUM_CACHED_MAP_FILE_FAILURES; index++)
+		{
+			struct cached_map_file_failure *other= &cached_map_file_globals.failures[index];
+
+			if (!other->path[0])
+			{
+				failure= other;
+				break;
+			}
+			if (!failure || other->time<failure->time)
+			{
+				failure= other;
+			}
+		}
+		if (!failure)
+		{
+			return;
+		}
+		memcpy(failure->path, path, sizeof(failure->path));
+		failure->count= 0;
+	}
+
+	failure->time= GetTickCount();
+	failure->count++;
+	/* the game looks for it again and does nothing with it */
+	cached_map_file_failure_find(name);
+}
+
+/* 0x002141b0: forgets the copies of a map that failed */
+void cached_map_file_failure_remove(
+	const char *name)
+{
+	struct cached_map_file_failure *failure= cached_map_file_failure_find(name);
+
+	if (failure)
+	{
+		memset(failure, 0, sizeof(*failure));
+	}
+}
+
+/* 0x002141d0: whether the copy of a map failed so many times that the game
+does not try again */
+uint8_t cached_map_file_failure_is_final(
+	const char *name)
+{
+	struct cached_map_file_failure *failure= cached_map_file_failure_find(name);
+	long count= 0;
+
+	if (failure)
+	{
+		count= failure->count;
+	}
+
+	return count>=MAXIMUM_CACHED_MAP_FILE_FAILURE_COUNT;
+}
+
+/* 0x00213e30: the priority of the copy that is being made, if it is of the
+map; NONE otherwise */
+long cached_map_file_copy_current_priority(
+	const char *name)
+{
+	char path[256];
+	char source_path[256];
+
+	path[0]= 0;
+	cache_file_get_map_path(name, path);
+	source_path[0]= 0;
+	cache_file_get_map_path(cached_map_file_copy_globals.source_path, source_path);
+
+	return csstrcasecmp(path, source_path)==0 ? cached_map_file_copy_globals.current.priority : NONE;
+}
+
+/* 0x00213e90: the priority of the copy that waits for the one that is being
+made, if it is of the map; NONE otherwise */
+long cached_map_file_copy_pending_priority(
+	const char *name)
+{
+	char path[256];
+	char pending_path[256];
+
+	path[0]= 0;
+	cache_file_get_map_path(name, path);
+	pending_path[0]= 0;
+	cache_file_get_map_path(cached_map_file_copy_globals.pending.name, pending_path);
+
+	return csstrcasecmp(path, pending_path)==0 ? cached_map_file_copy_globals.pending.priority : NONE;
+}
+
+/* 0x00213ef0: the priority that a copy of the map was asked for with; NONE
+if none was */
+long cached_map_file_copy_priority(
+	const char *name)
+{
+	long priority= cached_map_file_copy_current_priority(name);
+
+	if (priority==NONE)
+	{
+		priority= cached_map_file_copy_pending_priority(name);
+	}
+
+	return priority;
+}
+
+/* 0x00213f10: what there is of the copy of a map on the hard disk */
+long cached_map_file_status(
+	const char *name)
+{
+	struct cached_map_file_failure *failure;
+	char path[256];
+
+	path[0]= 0;
+	cache_file_get_map_path(name, path);
+	if (cached_map_files_find_map(path)!=NONE)
+	{
+		return _cached_map_file_status_cached;
+	}
+
+	failure= cached_map_file_failure_find(name);
+	if (failure && failure->count>=MAXIMUM_CACHED_MAP_FILE_FAILURE_COUNT)
+	{
+		return _cached_map_file_status_failed;
+	}
+	if (cached_map_file_copy_current_priority(name)!=NONE)
+	{
+		return _cached_map_file_status_copying;
+	}
+
+	return cached_map_file_copy_pending_priority(name)!=NONE;
+}
+
+/* 0x00214990: stops the copy that is being made */
+void cached_map_file_copy_cancel(
+	void)
+{
+	if (cached_map_file_copy_globals.state!=_cached_map_file_copy_idle &&
+		cached_map_file_copy_globals.state<_cached_map_file_copy_end)
+	{
+		cached_map_file_copy_globals.result= _cached_map_file_copy_result_cancelled;
+		cached_map_file_copy_globals.state= _cached_map_file_copy_end;
+	}
+}
+
+/* 0x00213d20: asks for the copy of a map to the hard disk; whether the map
+is copied or will be. Only one map can wait for the copy that is being made:
+the one asked for with the most priority, or the last one. A copy with less
+priority than the one that waits is stopped */
+uint8_t cached_map_file_request(
+	const char *name,
+	long priority)
+{
+	struct cached_map_file_request *current= &cached_map_file_copy_globals.current;
+	struct cached_map_file_request *pending= &cached_map_file_copy_globals.pending;
+	uint8_t result= 0;
+	long status= cached_map_file_status(name);
+	char path[256];
+
+	path[0]= 0;
+	cache_file_get_map_path(name, path);
+	switch (status)
+	{
+	case _cached_map_file_status_none:
+		if (!pending->name[0] || priority>=pending->priority)
+		{
+			memset(pending, 0, sizeof(*pending));
+			strncpy(pending->name, path, sizeof(pending->name));
+			pending->name[sizeof(pending->name)-1]= 0;
+			pending->priority= priority;
+			result= 1;
+		}
+		break;
+	case _cached_map_file_status_copying:
+		if (cache_file_map_paths_equal(path, current->name))
+		{
+			current->priority= priority;
+		}
+		result= 1;
+		break;
+	case _cached_map_file_status_pending:
+		if (cache_file_map_paths_equal(path, pending->name))
+		{
+			pending->priority= priority;
+		}
+		result= 1;
+		break;
+	case _cached_map_file_status_cached:
+		result= 1;
+		break;
+	}
+
+	if (current->name[0] && pending->name[0] && pending->priority>=current->priority)
+	{
+		cached_map_file_copy_cancel();
+	}
+
+	return result;
+}
+
+/* 0x00213fa0: what the game calls to have the memory of the buffer back:
+goes on with the copy until it gives the buffer up */
+void RECLAIM_CALLBACK cached_map_file_copy_buffer_reclaim(
+	long unknown1,
+	long unknown2)
+{
+	(void)unknown1;
+	(void)unknown2;
+
+	while (cached_map_file_copy_globals.buffer)
+	{
+		cached_map_file_copy_globals.release_requested= 1;
+		if (cached_map_file_copy_globals.done)
+		{
+			cached_map_file_copy_update();
+		}
+	}
+}
+
+/* 0x00213fe0: takes the memory of the buffer, of a size; the buffer stays
+NULL if there is none */
+void cached_map_file_copy_buffer_acquire(
+	long size)
+{
+	if (cached_map_file_copy_globals.buffer_size!=size)
+	{
+		if (cached_map_file_copy_globals.buffer)
+		{
+			physical_memory_buffer_free(cached_map_file_copy_globals.buffer);
+			cached_map_file_copy_globals.buffer= NULL;
+			cached_map_file_copy_globals.buffer_size= 0;
+		}
+		cached_map_file_copy_globals.buffer= physical_memory_buffer_allocate(0, size, 0, 0,
+			cached_map_file_copy_buffer_reclaim);
+		if (cached_map_file_copy_globals.buffer)
+		{
+			cached_map_file_copy_globals.buffer_size= size;
+		}
+	}
+}
+
+/* 0x00214030: gives it back */
+void cached_map_file_copy_buffer_release(
+	void)
+{
+	if (cached_map_file_copy_globals.buffer)
+	{
+		physical_memory_buffer_free(cached_map_file_copy_globals.buffer);
+		cached_map_file_copy_globals.buffer= NULL;
+		cached_map_file_copy_globals.buffer_size= 0;
+	}
+}
+
+/* 0x002148b0: how much of the copy is made, from 0 to 1; whether there is a
+copy to make */
+uint8_t cached_map_file_copy_get_progress(
+	float *progress_reference)
+{
+	long state= cached_map_file_copy_globals.state;
+	float progress= 0.0f;
+	uint8_t result= 0;
+
+	if (state==_cached_map_file_copy_idle)
+	{
+		if (cached_map_file_copy_globals.pending.name[0])
+		{
+			result= 1;
+		}
+	}
+	else
+	{
+		if (state>=_cached_map_file_copy_copy_data)
+		{
+			if (state>_cached_map_file_copy_check_data)
+			{
+				progress= 1.0f;
+			}
+			else if (cached_map_file_copy_globals.file_size>0)
+			{
+				/* a division of the x87 registers, in the precision that
+				the game sets them to */
+				progress= (float)((long double)(long)cached_map_file_copy_globals.offset/
+					(long double)cached_map_file_copy_globals.file_size);
+			}
+		}
+
+		result= 1;
+		if (0.0f>progress)
+		{
+			progress= 0.0f;
+		}
+		else if (progress>1.0f)
+		{
+			progress= 1.0f;
+		}
+	}
+
+	if (progress_reference)
+	{
+		*progress_reference= progress;
+	}
+
+	return result;
+}
+
+/* 0x00214940: how much of the copy of a map to the hard disk is made, from 0
+to 1 */
+float cached_map_file_get_progress(
+	const char *name)
+{
+	float progress= 0.0f;
+	long status= cached_map_file_status(name);
+
+	if (status==_cached_map_file_status_cached)
+	{
+		return 1.0f;
+	}
+	if (status==_cached_map_file_status_copying)
+	{
+		if (cache_file_map_paths_equal(cached_map_file_copy_globals.source_path, name))
+		{
+			cached_map_file_copy_get_progress(&progress);
+		}
+		return progress;
+	}
+
+	return 0.0f;
+}
+
+/* 0x002141f0: the next step of the copy of a map to the hard disk; whether
+the step went well. To be called when the task of the step before is done.
+
+The map is read through a buffer and written to the place of a copy that is
+not in use. The header of the copy is erased first and written last, so that
+a copy that was not finished has no header. What is copied is checked against
+the checksum of the header */
+uint8_t cached_map_file_copy_update(
+	void)
+{
+	struct cached_map_file_copy_globals *copy= &cached_map_file_copy_globals;
+	long priority= cached_map_file_copy_task_priorities[copy->current.priority];
+	long state= copy->state;
+	uint8_t success= 1;
+
+	switch (state)
+	{
+	case _cached_map_file_copy_idle:
+		if (copy->pending.name[0] &&
+			!cached_map_file_failure_is_final(copy->pending.name) &&
+			cached_map_file_status(copy->pending.name)!=_cached_map_file_status_cached)
+		{
+			cache_file_get_map_path(copy->pending.name, copy->source_path);
+			memcpy(&copy->current, &copy->pending, sizeof(copy->current));
+			state= _cached_map_file_copy_open_source;
+		}
+		memset(&copy->pending, 0, sizeof(copy->pending));
+		copy->result= _cached_map_file_copy_result_none;
+		copy->state= state;
+		return success;
+
+	case _cached_map_file_copy_open_source:
+		copy->task_id= async_create_file(_async_file_open_existing, copy->source_path, 1, 1, 1, priority,
+			&copy->source_file, &copy->done);
+		copy->state= _cached_map_file_copy_check_source;
+		return success;
+
+	case _cached_map_file_copy_check_source:
+		success= copy->source_file!=INVALID_HANDLE_VALUE;
+		state= _cached_map_file_copy_read_header;
+		break;
+
+	case _cached_map_file_copy_read_header:
+		memset(&copy->header, 0, sizeof(copy->header));
+		copy->task_id= async_read_position(copy->source_file, sizeof(copy->header), 0, 1, priority,
+			(long *)&copy->bytes_transferred, &copy->header, &copy->done);
+		copy->state= _cached_map_file_copy_check_header;
+		return success;
+
+	case _cached_map_file_copy_check_header:
+		file_time_get_current(&copy->header.copy_time);
+		strncpy(copy->header.path, copy->source_path, sizeof(copy->header.path));
+		copy->header.path[sizeof(copy->header.path)-1]= 0;
+		if (copy->bytes_transferred==sizeof(copy->header) && cache_file_header_verify(&copy->header))
+		{
+			long shared_index;
+
+			/* the shared maps that the map takes resources from have to be
+			on the hard disk, and be those that the map was made with */
+			for (shared_index= 0; shared_index<NUMBER_OF_CACHE_FILE_SHARED_MAPS; shared_index++)
+			{
+				if (copy->header.uses_shared_map[shared_index])
+				{
+					struct cached_map_file *shared=
+						&cached_map_file_globals.files[cached_map_file_shared_index(shared_index)];
+
+					if (!shared->header.path[0] ||
+						CompareFileTime(&shared->header.times[0], &copy->header.times[1+shared_index])!=0)
+					{
+						success= 0;
+					}
+				}
+			}
+		}
+		else
+		{
+			success= 0;
+		}
+		state= _cached_map_file_copy_get_size;
+		break;
+
+	case _cached_map_file_copy_get_size:
+		copy->task_id= async_get_file_size(copy->source_file, 1, priority, &copy->file_size, &copy->done);
+		copy->state= _cached_map_file_copy_check_size;
+		return success;
+
+	case _cached_map_file_copy_check_size:
+		success= copy->file_size!=0xFFFFFFFF && copy->file_size>sizeof(copy->header);
+		copy->checksum= 0;
+		state= _cached_map_file_copy_erase_header;
+		break;
+
+	case _cached_map_file_copy_erase_header:
+	{
+		long index= cached_map_file_choose_place(copy->header.scenario_type, (uint32_t)copy->header.file_length);
+		struct cached_map_file *file;
+
+		if (index==NONE)
+		{
+			/* waits for a place */
+			copy->state= state;
+			return success;
+		}
+		copy->destination_index= index;
+		file= &cached_map_file_globals.files[index];
+		memset(&file->header, 0, sizeof(file->header));
+		copy->task_id= async_write_position(file->file, &file->header, sizeof(file->header), 0, 0, 1, priority,
+			&copy->bytes_transferred, &copy->done);
+		copy->state= _cached_map_file_copy_check_erase;
+		return success;
+	}
+
+	case _cached_map_file_copy_check_erase:
+		success= copy->bytes_transferred==sizeof(copy->header);
+		state= _cached_map_file_copy_flush_erase;
+		break;
+
+	case _cached_map_file_copy_flush_erase:
+		copy->task_id= async_flush_file(cached_map_file_globals.files[copy->destination_index].file, 1, priority,
+			&copy->done);
+		copy->state= _cached_map_file_copy_start_data;
+		return success;
+
+	case _cached_map_file_copy_start_data:
+		copy->bytes_transferred= 0;
+		copy->offset= sizeof(copy->header);
+		copy->state= _cached_map_file_copy_copy_data;
+		return success;
+
+	case _cached_map_file_copy_copy_data:
+	{
+		long size;
+
+		cached_map_file_copy_buffer_acquire(cached_map_file_copy_buffer_sizes[copy->current.priority]);
+		if (!copy->buffer)
+		{
+			/* waits for the memory */
+			copy->state= _cached_map_file_copy_copy_data;
+			return success;
+		}
+		size= (long)(copy->file_size-copy->offset);
+		if (copy->buffer_size<=size)
+		{
+			size= copy->buffer_size;
+		}
+		copy->bytes_requested= size;
+		copy->task_id= async_copy_position(copy->source_file,
+			cached_map_file_globals.files[copy->destination_index].file, copy->buffer, (uint32_t)size, copy->offset,
+			copy->offset, 1, priority, &copy->bytes_transferred, &copy->done);
+		copy->state= _cached_map_file_copy_check_data;
+		return success;
+	}
+
+	case _cached_map_file_copy_check_data:
+		success= (uint32_t)copy->bytes_requested==copy->bytes_transferred;
+		copy->checksum^= cache_file_xor_checksum(copy->buffer, copy->bytes_transferred);
+		if (success)
+		{
+			copy->offset+= copy->bytes_transferred;
+			if (copy->offset>=copy->file_size)
+			{
+				success= copy->checksum==copy->header.checksum;
+				state= _cached_map_file_copy_flush_data;
+			}
+			else
+			{
+				state= _cached_map_file_copy_copy_data;
+			}
+		}
+		if (copy->release_requested)
+		{
+			cached_map_file_copy_buffer_release();
+			copy->release_requested= 0;
+		}
+		break;
+
+	case _cached_map_file_copy_flush_data:
+		copy->task_id= async_flush_file(cached_map_file_globals.files[copy->destination_index].file, 1, priority,
+			&copy->done);
+		copy->state= _cached_map_file_copy_write_header;
+		return success;
+
+	case _cached_map_file_copy_write_header:
+	{
+		struct cached_map_file *file= &cached_map_file_globals.files[copy->destination_index];
+
+		file_time_get_current(&copy->header.copy_time);
+		copy->task_id= async_write_position(file->file, &copy->header, sizeof(copy->header), 0, 0, 1, 0,
+			&copy->bytes_transferred, &copy->done);
+		copy->state= _cached_map_file_copy_check_write;
+		return success;
+	}
+
+	case _cached_map_file_copy_check_write:
+		success= copy->bytes_transferred==sizeof(copy->header);
+		state= _cached_map_file_copy_finish;
+		break;
+
+	case _cached_map_file_copy_finish:
+		memcpy(&cached_map_file_globals.files[copy->destination_index].header, &copy->header, sizeof(copy->header));
+		memset(&copy->header, 0, sizeof(copy->header));
+		copy->result= _cached_map_file_copy_result_success;
+		copy->state= _cached_map_file_copy_end;
+		return success;
+
+	case _cached_map_file_copy_end:
+		copy->state= _cached_map_file_copy_close_source;
+		return success;
+
+	case _cached_map_file_copy_close_source:
+		if (copy->source_file!=INVALID_HANDLE_VALUE)
+		{
+			copy->task_id= async_close_file(copy->source_file, 0, CACHED_MAP_FILE_TASK_PRIORITY, &copy->done);
+		}
+		copy->state= _cached_map_file_copy_clean_up;
+		return success;
+
+	case _cached_map_file_copy_clean_up:
+	{
+		struct cached_map_file_request request= copy->current;
+
+		cached_map_file_copy_buffer_release();
+		copy->destination_index= NONE;
+		memset(&copy->header, 0, sizeof(copy->header));
+		memset(&copy->current, 0, sizeof(copy->current));
+		copy->source_path[0]= 0;
+		copy->source_file= INVALID_HANDLE_VALUE;
+		switch (copy->result)
+		{
+		case _cached_map_file_copy_result_success:
+			cached_map_file_failure_remove(request.name);
+			break;
+		case _cached_map_file_copy_result_failure:
+			/* tries again */
+			if (!cached_map_file_failure_is_final(request.name))
+			{
+				cached_map_file_request(request.name, request.priority);
+			}
+			break;
+		}
+		copy->state= _cached_map_file_copy_idle;
+		return success;
+	}
+
+	default:
+		return success;
+	}
+
+	/* after a step that checks what a task did */
+	if (!success)
+	{
+		cached_map_file_failure_add(copy->source_path);
+		copy->state= _cached_map_file_copy_end;
+		copy->result= _cached_map_file_copy_result_failure;
+		return success;
+	}
+	copy->state= state;
+
+	return success;
 }
 
 /* 0x00213760: starts to read a part of a cache file. When the read ends,

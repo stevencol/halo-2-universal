@@ -173,3 +173,34 @@ address,name,source,arguments,returns
 0033039a,XGetLanguage,,,int
 00331598,CompareFileTime,,stack stack,int
 00331a35,CreateDirectoryA,,stack stack,int
+001a0b40,async_create_file,source/cseries/async.c,eax stack stack stack stack stack stack stack,int
+001a1100,async_copy_work,source/cseries/async.c,stack,int
+001a1210,async_copy_position,source/cseries/async.c,stack stack stack stack stack stack stack stack eax ebx,int
+001a1680,async_flush_file_work,source/cseries/async.c,stack,int
+001a16a0,async_flush_file,source/cseries/async.c,stack stack stack ebx,int
+00136e70,file_time_get_current,source/cseries/cseries.c,esi,void
+00123110,cache_file_xor_checksum,source/cache/cache_files.c,stack stack,int
+00214e40,cache_file_map_paths_equal,source/cache/cache_files.c,ecx stack,bool
+00214c70,cached_map_file_shared_index,source/cache/cache_files.c,ecx,int
+00214ac0,cached_map_file_is_better_place,source/cache/cache_files.c,eax ebx,bool
+00214b80,cached_map_file_choose_place,source/cache/cache_files.c,eax stack,int
+00214060,cached_map_file_failure_find,source/cache/cache_files.c,ecx,pointer
+00214100,cached_map_file_failure_add,source/cache/cache_files.c,stack,void
+002141b0,cached_map_file_failure_remove,source/cache/cache_files.c,ecx,void
+002141d0,cached_map_file_failure_is_final,source/cache/cache_files.c,ecx,bool
+00213e30,cached_map_file_copy_current_priority,source/cache/cache_files.c,eax,int
+00213e90,cached_map_file_copy_pending_priority,source/cache/cache_files.c,eax,int
+00213ef0,cached_map_file_copy_priority,source/cache/cache_files.c,esi,int
+00213f10,cached_map_file_status,source/cache/cache_files.c,eax,int
+00214990,cached_map_file_copy_cancel,source/cache/cache_files.c,,void
+00213d20,cached_map_file_request,source/cache/cache_files.c,eax stack,bool
+00213fa0,cached_map_file_copy_buffer_reclaim,source/cache/cache_files.c,stack stack,void
+00213fe0,cached_map_file_copy_buffer_acquire,source/cache/cache_files.c,edi,void
+00214030,cached_map_file_copy_buffer_release,source/cache/cache_files.c,,void
+002148b0,cached_map_file_copy_get_progress,source/cache/cache_files.c,edx,bool
+00214940,cached_map_file_get_progress,source/cache/cache_files.c,esi,real:xmm0
+002141f0,cached_map_file_copy_update,source/cache/cache_files.c,,bool
+0012d400,physical_memory_buffer_allocate,,ecx stack stack stack stack,int
+0012d520,physical_memory_buffer_free,,esi,void
+003303f3,GetSystemTimeAsFileTime,,stack,void
+003314b0,GetTickCount,,,int

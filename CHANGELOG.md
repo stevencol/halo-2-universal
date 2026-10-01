@@ -2,6 +2,110 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — La copia de mapas al disco duro
+
+El juego copia cada mapa del DVD al disco duro en segundo plano, para
+cargarlo más rápido. Queda descompilado todo ese mecanismo: la cola de
+peticiones, la tabla de copias fallidas, la elección del sitio y la máquina
+de veinte pasos que hace la copia. De 150 funciones se pasa a 177, el
+1,57 % de las del juego (el 0,729 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `cached_map_file_copy_update` | `0x002141f0` | `cache/cache_files.c` |
+| `cached_map_file_request` | `0x00213d20` | `cache/cache_files.c` |
+| `cached_map_file_status` | `0x00213f10` | `cache/cache_files.c` |
+| `cached_map_file_copy_current_priority` | `0x00213e30` | `cache/cache_files.c` |
+| `cached_map_file_copy_pending_priority` | `0x00213e90` | `cache/cache_files.c` |
+| `cached_map_file_copy_priority` | `0x00213ef0` | `cache/cache_files.c` |
+| `cached_map_file_copy_cancel` | `0x00214990` | `cache/cache_files.c` |
+| `cached_map_file_copy_buffer_reclaim` | `0x00213fa0` | `cache/cache_files.c` |
+| `cached_map_file_copy_buffer_acquire` | `0x00213fe0` | `cache/cache_files.c` |
+| `cached_map_file_copy_buffer_release` | `0x00214030` | `cache/cache_files.c` |
+| `cached_map_file_copy_get_progress` | `0x002148b0` | `cache/cache_files.c` |
+| `cached_map_file_get_progress` | `0x00214940` | `cache/cache_files.c` |
+| `cached_map_file_failure_find` | `0x00214060` | `cache/cache_files.c` |
+| `cached_map_file_failure_add` | `0x00214100` | `cache/cache_files.c` |
+| `cached_map_file_failure_remove` | `0x002141b0` | `cache/cache_files.c` |
+| `cached_map_file_failure_is_final` | `0x002141d0` | `cache/cache_files.c` |
+| `cached_map_file_is_better_place` | `0x00214ac0` | `cache/cache_files.c` |
+| `cached_map_file_choose_place` | `0x00214b80` | `cache/cache_files.c` |
+| `cached_map_file_shared_index` | `0x00214c70` | `cache/cache_files.c` |
+| `cache_file_map_paths_equal` | `0x00214e40` | `cache/cache_files.c` |
+| `cache_file_xor_checksum` | `0x00123110` | `cache/cache_files.c` |
+| `async_create_file` | `0x001a0b40` | `cseries/async.c` |
+| `async_copy_work` | `0x001a1100` | `cseries/async.c` |
+| `async_copy_position` | `0x001a1210` | `cseries/async.c` |
+| `async_flush_file_work` | `0x001a1680` | `cseries/async.c` |
+| `async_flush_file` | `0x001a16a0` | `cseries/async.c` |
+| `file_time_get_current` | `0x00136e70` | `cseries/cseries.c` |
+
+- `tests/test_map_copy.py`.
+
+### Corregido
+
+- `cache_file_header_verify` (`0x00122870`) pide la hora a la consola antes
+  de comprobar la cabecera, sin usarla. La versión descompilada no lo hacía;
+  salió a la luz al probar la máquina de la copia, que compara las llamadas.
+
+### Cambiado
+
+- `tools/difftest.py`:
+  - Las funciones de la consola de `DEFAULT_EXTERNALS` (por ahora, la hora)
+    se simulan solas si la prueba no las da.
+  - Una función que es solo un salto a una función del kernel se puede
+    sustituir.
+  - `GlobalData` admite `clean`, para dejar fuera de la comparación lo que
+    el juego copia de memoria que nunca escribió.
+  - Un puntero al final exacto de una variable ya no se confunde con el
+    principio de la siguiente.
+- En la cabecera de un mapa, los 8 bytes en `0x14c` son la fecha en que se
+  hizo la copia (`copy_time`).
+- Los 0x840 bytes sin nombre de `cached_map_file_globals` son la tabla de
+  copias fallidas, y `cached_map_file_copy_globals` tiene ya todos sus
+  campos con nombre.
+- `struct cache_file_time` pasa a ser `struct file_time`, en `cseries.h`.
+
+### Lo que se sabe
+
+- Solo se copia un mapa a la vez y solo uno puede esperar: el pedido con
+  más prioridad, o el último. Si el que espera tiene tanta o más prioridad
+  que el que se copia, la copia en curso se cancela.
+- Los pasos: abrir el mapa del disco, leer su cabecera, comprobar que los
+  mapas compartidos que usa están en el disco duro y son los mismos con
+  los que se hizo, medir el archivo, elegir sitio, borrar la cabecera de
+  la copia, copiar los datos por trozos, y escribir la cabecera al final.
+  Así una copia a medias nunca tiene cabecera válida.
+- Lo copiado se comprueba con un checksum: el o-exclusivo de todas las
+  palabras de 32 bits, comparado con el campo `checksum` de la cabecera.
+- Los trozos son de 256 KB con prioridad 0 y de 1 MB con las demás. El
+  buffer es memoria prestada: si el juego la reclama, la copia la devuelve
+  al terminar el trozo y la vuelve a pedir después.
+- Un mapa cuya copia falla tres veces no se vuelve a intentar. La tabla
+  guarda ocho mapas; si se llena, se pierde el fallo más antiguo.
+- El sitio de la copia depende del tipo de escenario: uno fijo para cada
+  mapa compartido, el menú y el multijugador, y dos para la campaña, de
+  los que se elige el de la copia más antigua. Nunca se pisa el mapa que
+  está cargado.
+- La última escritura de la cabecera se pide con prioridad 0, no con la de
+  la copia como las demás.
+
+### Sin comprobar
+
+- Los modos de `async_create_file` por encima de 5 y los tipos de
+  escenario por encima de 4 en `cached_map_file_choose_place`: en el juego
+  saltan a una tabla que no tiene esas entradas, así que no hay nada con
+  qué comparar.
+
+### Pendiente
+
+- Quién llama a `cached_map_file_copy_update` y a `cached_map_file_request`
+  desde fuera (`0x0012b450`, `0x0012bf40`, `0x00163890`).
+- `physical_memory_buffer_allocate` y `physical_memory_buffer_free`
+  (`0x0012d400`, `0x0012d520`), la memoria prestada.
+
 ## 2026-10-01 — Arranque de los archivos de caché
 
 `cache_files_initialize`, lo primero que hace el juego con los mapas al

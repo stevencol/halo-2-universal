@@ -107,6 +107,19 @@ KERNEL_FUNCTIONS = {
 }
 
 
+def external_system_time(harness: object, arguments: list[int]) -> tuple:
+    """GetSystemTimeAsFileTime: the same fixed time."""
+    kernel_query_system_time(harness.mu, arguments[0])
+    return 0, ()
+
+
+# the functions of the console's libraries that a test does not have to stand
+# in for: what each does here
+DEFAULT_EXTERNALS = {
+    "GetSystemTimeAsFileTime": external_system_time,
+}
+
+
 def f32(value: float) -> int:
     """A real as the 32 bits that an argument of type real is."""
     return struct.unpack("<I", struct.pack("<f", value))[0]
@@ -162,6 +175,9 @@ class GlobalData:
     # the offsets where the call can leave a pointer to the global or to a
     # function: what is there is compared as the place it points to
     places: tuple[int, ...] = ()
+    # takes what the call left in the global and returns what to compare of
+    # it: to leave out what the game copies from memory that it never set
+    clean: object = None
 
 
 @dataclass
@@ -395,6 +411,10 @@ class Harness:
             raise DifftestError(f"symbols/functions.csv does not have '{name}'")
         address = self.symbols[name].address
         for instruction in Cs(CS_ARCH_X86, CS_MODE_32).disasm(bytes(self.mu.mem_read(address, 0x2000)), address):
+            if instruction.address == address and instruction.mnemonic == "jmp":
+                # only a jump to a function of the kernel, which takes its arguments off the stack
+                self._external_cleanup[name] = 4 * self.symbols[name].arguments.count("stack")
+                break
             if instruction.mnemonic == "ret":
                 self._external_cleanup[name] = int(instruction.op_str, 0) if instruction.op_str else 0
                 break
@@ -620,8 +640,12 @@ class Harness:
         (difftest.GlobalData) or to a function of source/, as what it points
         to: the game and source/ do not have them at the same address."""
         for key, address, size in self._ranges:
-            if address <= value <= address + size:
+            if address <= value < address + size:
                 return ("pointer", key, value - address)
+        # the end of a global, as a pointer past its last entry
+        for key, address, size in self._ranges:
+            if value == address + size:
+                return ("pointer", key, size)
         name = self._function_names.get(value)
         return ("function", name) if name else value
 
@@ -659,7 +683,7 @@ class Harness:
         # extra ones after them
         globals_ = globals_ or {}
         self._mocks = mocks or []
-        self._external_handlers = externals or {}
+        self._external_handlers = {**DEFAULT_EXTERNALS, **(externals or {})}
         for name in self._external_handlers:
             self._hook_external(name)
         self._running = symbol.name
@@ -686,7 +710,7 @@ class Harness:
                 if value.name not in self.globals:
                     raise DifftestError(f"symbols/globals.csv does not have '{value.name}'")
                 values[n] = self.global_addresses[value.name] + value.offset
-        global_addresses: dict[str, tuple[int, int, tuple[int, ...] | None]] = {}
+        global_addresses: dict[str, tuple] = {}
         for key, value in zip(globals_, values[len(arguments) :]):
             # "name+offset" is a field of a global structure
             name, _, offset = key.partition("+")
@@ -697,7 +721,9 @@ class Harness:
             # 32-bit value. None is a global that the test only wants
             # compared after the call
             places: tuple[int, ...] | None = None
+            clean = None
             if isinstance(value, GlobalData):
+                clean = value.clean
                 data = bytearray(value.data)
                 for offset in value.pointers:
                     struct.pack_into("<I", data, offset, struct.unpack_from("<I", data, offset)[0] + address)
@@ -710,7 +736,7 @@ class Harness:
                 value = bytes(data)
             elif not isinstance(value, bytes):
                 value = struct.pack("<I", (value or 0) & 0xFFFFFFFF)
-            global_addresses[key] = (address, len(value), places)
+            global_addresses[key] = (address, len(value), places, clean)
             self.mu.mem_write(address, value)
         values = values[: len(arguments)]
 
@@ -725,8 +751,10 @@ class Harness:
             # the x87 register
             value = self._call(self.functions[symbol.name], values, {}, symbol.returns.split(":")[0])
         # what the call left in the globals of the test is compared with the calls
-        for key, (address, size, places) in global_addresses.items():
+        for key, (address, size, places, clean) in global_addresses.items():
             data = bytearray(self.mu.mem_read(address, size))
+            if clean:
+                data = bytearray(clean(bytes(data)))
             if places is not None:
                 # the pointers apart, as what they point to
                 pointers = []

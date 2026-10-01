@@ -61,6 +61,12 @@ int CloseHandle(uint32_t handle);
 
 /* ---------- constants */
 
+#define GENERIC_READ 0x80000000
+#define GENERIC_WRITE 0x40000000
+#define FILE_SHARE_READ 1
+#define FILE_FLAG_NO_BUFFERING 0x20000000
+#define FILE_FLAG_RANDOM_ACCESS 0x10000000
+#define FILE_FLAG_SEQUENTIAL_SCAN 0x08000000
 #define INVALID_HANDLE_VALUE 0xFFFFFFFF
 #define INFINITE 0xFFFFFFFF
 #define FILE_BEGIN 0
@@ -768,4 +774,212 @@ long async_get_file_size(
 	task.get_size.size= size;
 
 	return async_task_add(priority, task.parameters, category, async_get_file_size_work, done);
+}
+
+/* 0x001a0b40: starts to open a file; the task's id. The access is bit 0 to
+read and bit 1 to write; the flags are bit 0 for no buffering, bit 1 for
+random access and bit 2 for a sequential scan */
+long async_create_file(
+	long mode,
+	const char *path,
+	uint32_t access_flags,
+	uint32_t file_flags,
+	long category,
+	long priority,
+	uint32_t *file,
+	byte *done)
+{
+	union
+	{
+		struct async_create_file_parameters create;
+		uint32_t parameters[ASYNC_TASK_PARAMETER_COUNT];
+	} task;
+
+	memset(&task, 0, sizeof(task));
+	switch (mode)
+	{
+	case _async_file_open_existing:
+		task.create.creation_disposition= 3;
+		break;
+	case _async_file_create_always:
+		task.create.creation_disposition= 2;
+		break;
+	case _async_file_create_new:
+		task.create.creation_disposition= 1;
+		break;
+	case _async_file_open_always:
+		task.create.creation_disposition= 4;
+		break;
+	case _async_file_open_always_with_directories:
+		task.create.creation_disposition= 4;
+		task.create.create_directories= TRUE;
+		break;
+	case _async_file_truncate_existing:
+		task.create.creation_disposition= 5;
+		break;
+	}
+
+	if (access_flags&1)
+	{
+		task.create.access= GENERIC_READ;
+	}
+	if (access_flags&2)
+	{
+		task.create.access|= GENERIC_WRITE;
+	}
+	else
+	{
+		task.create.share_mode= FILE_SHARE_READ;
+	}
+
+	if (file_flags&1)
+	{
+		task.create.flags= FILE_FLAG_NO_BUFFERING;
+	}
+	if (file_flags&2)
+	{
+		task.create.flags|= FILE_FLAG_RANDOM_ACCESS;
+	}
+	else if (file_flags&4)
+	{
+		task.create.flags|= FILE_FLAG_SEQUENTIAL_SCAN;
+	}
+
+	task.create.path= path;
+	task.create.file= file;
+
+	return async_task_add(priority, task.parameters, category, async_create_file_work, done);
+}
+
+/* 0x001a1100: the function of a task that copies a part of a file to
+another, through a buffer. Each time, either reads a part or writes the part
+that was read */
+long ASYNC_CALLBACK async_copy_work(
+	void *parameters)
+{
+	struct async_copy_parameters *copy= parameters;
+	uint32_t maximum_size= async_read_maximum_size;
+	uint32_t size;
+	uint32_t bytes= 0;
+	long offset_high= 0;
+	long result= _async_task_not_done;
+
+	if (async_write_maximum_size<=maximum_size)
+	{
+		maximum_size= async_write_maximum_size;
+	}
+	size= copy->size-copy->bytes_done;
+	if (size>maximum_size)
+	{
+		size= maximum_size;
+	}
+
+	if (!copy->writing)
+	{
+		if (SetFilePointer(copy->source_file, (long)copy->source_offset, &offset_high, FILE_BEGIN)!=
+			INVALID_SET_FILE_POINTER)
+		{
+			if (!ReadFile(copy->source_file, (byte *)copy->buffer+copy->bytes_done, size, &bytes, NULL))
+			{
+				bytes= 0;
+			}
+			copy->source_offset+= bytes;
+		}
+		if (bytes<size)
+		{
+			result= _async_task_done;
+		}
+		copy->writing= TRUE;
+	}
+	else
+	{
+		if (SetFilePointer(copy->destination_file, (long)copy->destination_offset, &offset_high, FILE_BEGIN)!=
+			INVALID_SET_FILE_POINTER)
+		{
+			if (!WriteFile(copy->destination_file, (byte *)copy->buffer+copy->bytes_done, size, &bytes, NULL))
+			{
+				bytes= 0;
+			}
+			copy->bytes_done+= bytes;
+			copy->destination_offset+= bytes;
+		}
+		if (copy->size==copy->bytes_done || bytes<size)
+		{
+			result= _async_task_done;
+		}
+		copy->writing= FALSE;
+	}
+
+	if (copy->bytes_copied)
+	{
+		*copy->bytes_copied= copy->bytes_done;
+	}
+
+	return result;
+}
+
+/* 0x001a1210: starts to copy a part of a file to another; the task's id */
+long async_copy_position(
+	uint32_t source_file,
+	uint32_t destination_file,
+	void *buffer,
+	uint32_t size,
+	uint32_t source_offset,
+	uint32_t destination_offset,
+	long category,
+	long priority,
+	uint32_t *bytes_copied,
+	byte *done)
+{
+	union
+	{
+		struct async_copy_parameters copy;
+		uint32_t parameters[ASYNC_TASK_PARAMETER_COUNT];
+	} task;
+
+	if (bytes_copied)
+	{
+		*bytes_copied= 0;
+	}
+	memset(&task, 0, sizeof(task));
+	task.copy.source_file= source_file;
+	task.copy.destination_file= destination_file;
+	task.copy.buffer= buffer;
+	task.copy.size= size;
+	task.copy.bytes_copied= bytes_copied;
+	task.copy.source_offset= source_offset;
+	task.copy.destination_offset= destination_offset;
+
+	return async_task_add(priority, task.parameters, category, async_copy_work, done);
+}
+
+/* 0x001a1680: the function of a task that has what was written to a file
+put on the disk */
+long ASYNC_CALLBACK async_flush_file_work(
+	void *parameters)
+{
+	struct async_flush_file_parameters *flush= parameters;
+
+	FlushFileBuffers(flush->file);
+
+	return _async_task_done;
+}
+
+/* 0x001a16a0: starts that; the task's id */
+long async_flush_file(
+	uint32_t file,
+	long category,
+	long priority,
+	byte *done)
+{
+	union
+	{
+		struct async_flush_file_parameters flush;
+		uint32_t parameters[ASYNC_TASK_PARAMETER_COUNT];
+	} task;
+
+	memset(&task, 0, sizeof(task));
+	task.flush.file= file;
+
+	return async_task_add(priority, task.parameters, category, async_flush_file_work, done);
 }

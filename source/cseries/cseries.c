@@ -14,7 +14,23 @@ Where these functions go and their names are a guess.
 #include <string.h>
 #include <wctype.h>
 
+/* ---------- prototypes of functions of the console's libraries */
+
+/* 0x003303f3 */
+void GetSystemTimeAsFileTime(struct file_time *time);
+
 /* ---------- code */
+
+/* 0x00136e70: the time of the console's clock. Where this function goes and
+its name are a guess */
+void file_time_get_current(
+	struct file_time *time)
+{
+	struct file_time now;
+
+	GetSystemTimeAsFileTime(&now);
+	*time= now;
+}
 
 /* 0x000b66f0: writes formatted text to a string of 256 characters; the
 string. The name is a guess */

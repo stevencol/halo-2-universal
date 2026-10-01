@@ -44,11 +44,19 @@ typedef unsigned char byte;
 typedef unsigned short word;
 typedef unsigned char boolean;
 
+/* a time of the console's clock (FILETIME) */
+struct file_time
+{
+	unsigned long low;
+	unsigned long high;
+};
+
 /* ---------- prototypes/CSERIES.C */
 
 char *csprintf256(char *buffer, const char *format, ...);
 char *csnzprintf(char *buffer, unsigned long size, const char *format, ...);
 char *csstrcat256(char *destination, const char *source);
+void file_time_get_current(struct file_time *time);
 long language_from_xbox_language(long xbox_language);
 long csstrcasecmp(const char *s1, const char *s2);
 boolean bit_vector_test_flag(const unsigned long *vector, long bit);

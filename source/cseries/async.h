@@ -84,6 +84,40 @@ struct async_create_file_parameters
 	boolean create_directories;
 };
 
+/* how async_create_file opens a file */
+enum
+{
+	_async_file_open_existing,
+	_async_file_create_always,
+	_async_file_create_new,
+	_async_file_open_always,
+	/* makes the folders of the path too */
+	_async_file_open_always_with_directories,
+	_async_file_truncate_existing,
+	NUMBER_OF_ASYNC_FILE_OPEN_MODES
+};
+
+/* of a task that copies a part of a file to another: async_copy_work */
+struct async_copy_parameters
+{
+	uint32_t source_file;
+	uint32_t destination_file;
+	uint32_t source_offset;
+	uint32_t destination_offset;
+	void *buffer;
+	uint32_t size;
+	/* gets the count of bytes copied so far, if not NULL */
+	uint32_t *bytes_copied;
+	uint32_t bytes_done;
+	/* what was read is in the buffer and has to be written */
+	long writing;
+};
+
+struct async_flush_file_parameters
+{
+	uint32_t file;
+};
+
 /* of a task that writes a file: async_write_work */
 struct async_write_parameters
 {
@@ -192,6 +226,14 @@ long async_read_position(uint32_t file, long size, uint32_t offset, long categor
 	long *bytes_read, void *buffer, uint8_t *done);
 
 long ASYNC_CALLBACK async_create_file_work(void *parameters);
+long async_create_file(long mode, const char *path, uint32_t access_flags, uint32_t file_flags, long category,
+	long priority, uint32_t *file, byte *done);
+long ASYNC_CALLBACK async_copy_work(void *parameters);
+long async_copy_position(uint32_t source_file, uint32_t destination_file, void *buffer, uint32_t size,
+	uint32_t source_offset, uint32_t destination_offset, long category, long priority, uint32_t *bytes_copied,
+	byte *done);
+long ASYNC_CALLBACK async_flush_file_work(void *parameters);
+long async_flush_file(uint32_t file, long category, long priority, byte *done);
 long ASYNC_CALLBACK async_write_work(void *parameters);
 long async_write_position(uint32_t file, const void *buffer, uint32_t size, uint32_t offset, uint32_t flags,
 	long category, long priority, uint32_t *bytes_written, byte *done);
