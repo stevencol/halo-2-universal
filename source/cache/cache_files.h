@@ -226,12 +226,15 @@ bool cache_file_header_verify(const struct cache_file_header *header);
 struct scenario_structure_bsp_reference;
 
 void *cache_file_buffer_allocate(uint32_t size1, uint32_t size2);
+uint32_t cached_map_file_maximum_size(long index);
+void cached_map_file_get_path(char *path, unsigned long size, long index);
+void cached_map_files_delete(long first_index, long end_index);
 void cache_file_get_map_name(const char *path, char *name);
 void cache_file_get_map_path(const char *scenario_name, char *path);
 long cached_map_files_find_map(const char *scenario_name);
 uint8_t cache_file_read_header(struct cache_file_header *header, const char *scenario_name);
 void cache_file_read_async(uint32_t offset, long size, void *buffer, long *bytes_read, uint8_t *done,
-	long unknown1, long unknown2);
+	long category, long priority);
 void cache_file_block_until_not_busy(void);
 uint8_t scenario_load(const char *scenario_name);
 void scenario_tags_unload(void);
@@ -247,5 +250,6 @@ extern struct cache_file_globals cache_file_globals;
 extern struct cached_map_file_globals cached_map_file_globals;
 extern struct cache_file_buffer_globals cache_file_buffer_globals;
 extern struct cache_file_tag_instance *global_tag_instances;
+extern const char *cache_file_extension;
 
 #endif

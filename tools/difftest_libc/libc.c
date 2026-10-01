@@ -172,13 +172,15 @@ wint_t towlower(wint_t character)
 /* writes a character if it fits, and counts it */
 static void print_character(char *buffer, size_t size, size_t *length, char character)
 {
-	if (*length+1<size)
+	if (*length<size)
 	{
 		buffer[*length]= character;
 	}
 	(*length)++;
 }
 
+/* as the game's (_vsnprintf): text that does not fit is cut with no zero
+after it, and the result is then -1 */
 int vsnprintf(char *buffer, size_t size, const char *format, va_list arguments)
 {
 	size_t length= 0;
@@ -322,12 +324,12 @@ int vsnprintf(char *buffer, size_t size, const char *format, va_list arguments)
 	}
 
 done:
-	if (size)
+	if (length<size)
 	{
-		buffer[length<size ? length : size-1]= 0;
+		buffer[length]= 0;
 	}
 
-	return (int)length;
+	return length>size ? -1 : (int)length;
 }
 
 /* the compiler uses the processor's instructions for these where it can;

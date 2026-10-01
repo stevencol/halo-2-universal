@@ -147,6 +147,37 @@ class FunctionPointer:
 
 
 @dataclass
+class GlobalData:
+    """The value of a global that has pointers to itself, as a table whose
+    entries are in a list: the bytes of the global, which is not at the same
+    address in the game and in source/."""
+
+    data: bytes
+    # the offsets in the data of pointers to the global itself: each holds an
+    # offset in the global, and the emulator gets the address of that place
+    pointers: tuple[int, ...] = ()
+    # the offsets in the data of pointers to functions of symbols/functions.csv, by name
+    functions: dict[int, str] = field(default_factory=dict)
+    # the offsets where the call can leave a pointer to the global or to a
+    # function: what is there is compared as the place it points to
+    places: tuple[int, ...] = ()
+
+
+@dataclass
+class GlobalPointer:
+    """An argument or the value of a global: the address of a global of
+    symbols/globals.csv, or of a place in it."""
+
+    name: str
+    offset: int = 0
+
+
+class StopCall(Exception):
+    """What a function that stands in for another raises to end the call there:
+    for a function that never returns."""
+
+
+@dataclass
 class MockCall:
     """A call to a mock: the number of the mock, the registers that it takes arguments in, and its stack arguments."""
 
@@ -289,6 +320,8 @@ class Harness:
         self.mock_call: int | None = None
         self._mocks: list[Mock] = []
         self._calls: list[tuple] = []
+        self._ranges: list[tuple[str, int, int]] = []
+        self._function_names: dict[int, str] = {}
         self.mu.mem_map(MOCK_ADDRESS, MOCK_SIZE)
         self.mu.mem_write(MOCK_ADDRESS, b"\xf4" * MOCK_SIZE)
         self.mu.hook_add(UC_HOOK_CODE, self._mock_hook, begin=MOCK_ADDRESS, end=MOCK_ADDRESS + MOCK_SIZE - 1)
@@ -443,6 +476,7 @@ class Harness:
         mu.reg_write(x86.UC_X86_REG_ESP, esp)
         mu.reg_write(x86.UC_X86_REG_EBP, 0)
 
+        stopped = False
         while True:
             self.kernel_call = None
             self.mock_call = None
@@ -476,10 +510,17 @@ class Harness:
                     count = len(symbol.arguments)
                     arguments = list(struct.unpack(f"<{count}I", mu.mem_read(esp + 4, 4 * count)))
                     cleanup = 0
-                result = self._external_handlers[name](self, arguments)
+                try:
+                    result = self._external_handlers[name](self, arguments)
+                except StopCall:
+                    self._calls.append((name, "stopped"))
+                    stopped = True
+                    break
                 # the handler can give what to compare of the call, when its
                 # arguments have addresses that are not the same in both
-                value, record = result if isinstance(result, tuple) else (result, tuple(arguments))
+                value, record = (
+                    result if isinstance(result, tuple) else (result, tuple(map(self.normalize, arguments)))
+                )
                 self._calls.append((name, record))
                 mu.reg_write(x86.UC_X86_REG_EAX, (value or 0) & 0xFFFFFFFF)
                 mu.reg_write(x86.UC_X86_REG_ESP, esp + 4 + cleanup)
@@ -503,8 +544,19 @@ class Harness:
                     {name: mu.reg_read(REGISTERS[name]) for name in mock.registers},
                     stack_arguments,
                 )
-                self._calls.append((call.mock, tuple(call.registers.items()), tuple(call.stack)))
-                mu.reg_write(x86.UC_X86_REG_EAX, (mock.handler(call) or 0) & 0xFFFFFFFF)
+                self._calls.append(
+                    (
+                        call.mock,
+                        tuple((name, self.normalize(value)) for name, value in call.registers.items()),
+                        tuple(map(self.normalize, call.stack)),
+                    )
+                )
+                try:
+                    result = mock.handler(call)
+                except StopCall:
+                    stopped = True
+                    break
+                mu.reg_write(x86.UC_X86_REG_EAX, (result or 0) & 0xFFFFFFFF)
                 mu.reg_write(x86.UC_X86_REG_ESP, esp + 4 + (4 * mock.stack_arguments if mock.callee_cleans else 0))
                 if address == RETURN_ADDRESS:
                     mu.reg_write(x86.UC_X86_REG_EIP, RETURN_ADDRESS)
@@ -530,12 +582,16 @@ class Harness:
             if address == RETURN_ADDRESS:
                 mu.reg_write(x86.UC_X86_REG_EIP, RETURN_ADDRESS)
                 break
+        if stopped:
+            return None
         if mu.reg_read(x86.UC_X86_REG_EIP) != RETURN_ADDRESS:
             raise DifftestError("the function did not return")
 
         eax = mu.reg_read(x86.UC_X86_REG_EAX)
         if returns == "int":
             return eax - (1 << 32) if eax & 0x80000000 else eax
+        if returns == "pointer":
+            return self.normalize(eax)
         if returns == "bool":
             return bool(eax & 0xFF)
         if returns == "short":
@@ -554,6 +610,16 @@ class Harness:
             # as the 32-bit real that the game keeps
             return struct.unpack("<f", struct.pack("<f", -value if exponent & 0x8000 else value))[0]
         return None
+
+    def normalize(self, value: int) -> object:
+        """A value that can be a pointer to a global that has pointers to itself
+        (difftest.GlobalData) or to a function of source/, as what it points
+        to: the game and source/ do not have them at the same address."""
+        for key, address, size in self._ranges:
+            if address <= value <= address + size:
+                return ("pointer", key, value - address)
+        name = self._function_names.get(value)
+        return ("function", name) if name else value
 
     def _place_buffers(self, arguments: tuple) -> tuple[list[int], list[Buffer]]:
         """Writes the buffers of the arguments to the scratch memory; the arguments as integers."""
@@ -596,15 +662,27 @@ class Harness:
         self._calls = []
         values, buffers = self._place_buffers((*arguments, *globals_.values(), *(extra or ())))
         values = values[: len(arguments) + len(globals_)]
+        # for the functions that stand in for others: where each global of
+        # symbols/globals.csv is in the side that runs
+        self.global_addresses = self.globals if original else {name: self.variables[name] for name in self.globals}
+        # where each function is in the side that runs, to tell a pointer to one
+        self._function_names = {
+            (symbol.address if original else self.functions[name]): name
+            for name, symbol in self.symbols.items()
+            if symbol.source
+        }
+        # the globals that have pointers to themselves: (key, address, size)
+        self._ranges = []
         for n, value in enumerate(values):
             if isinstance(value, Pointer):
                 values[n] = value.buffer.address + value.offset
             elif isinstance(value, FunctionPointer):
                 values[n] = self.symbols[value.name].address if original else self.functions[value.name]
-        # for the functions that stand in for others: where each global of
-        # symbols/globals.csv is in the side that runs
-        self.global_addresses = self.globals if original else {name: self.variables[name] for name in self.globals}
-        global_addresses: dict[str, tuple[int, int]] = {}
+            elif isinstance(value, GlobalPointer):
+                if value.name not in self.globals:
+                    raise DifftestError(f"symbols/globals.csv does not have '{value.name}'")
+                values[n] = self.global_addresses[value.name] + value.offset
+        global_addresses: dict[str, tuple[int, int, tuple[int, ...] | None]] = {}
         for key, value in zip(globals_, values[len(arguments) :]):
             # "name+offset" is a field of a global structure
             name, _, offset = key.partition("+")
@@ -614,9 +692,21 @@ class Harness:
             # bytes are the global itself, of any size; anything else is a
             # 32-bit value. None is a global that the test only wants
             # compared after the call
-            if not isinstance(value, bytes):
+            places: tuple[int, ...] | None = None
+            if isinstance(value, GlobalData):
+                data = bytearray(value.data)
+                for offset in value.pointers:
+                    struct.pack_into("<I", data, offset, struct.unpack_from("<I", data, offset)[0] + address)
+                for offset, function in value.functions.items():
+                    struct.pack_into(
+                        "<I", data, offset, self.symbols[function].address if original else self.functions[function]
+                    )
+                places = value.places
+                self._ranges.append((key, address, len(data)))
+                value = bytes(data)
+            elif not isinstance(value, bytes):
                 value = struct.pack("<I", (value or 0) & 0xFFFFFFFF)
-            global_addresses[key] = (address, len(value))
+            global_addresses[key] = (address, len(value), places)
             self.mu.mem_write(address, value)
         values = values[: len(arguments)]
 
@@ -631,9 +721,19 @@ class Harness:
             # the x87 register
             value = self._call(self.functions[symbol.name], values, {}, symbol.returns.split(":")[0])
         # what the call left in the globals of the test is compared with the calls
-        for key, (address, size) in global_addresses.items():
-            data = bytes(self.mu.mem_read(address, size))
-            self._calls.append(("global", key, struct.unpack("<I", data)[0] if size == 4 else data))
+        for key, (address, size, places) in global_addresses.items():
+            data = bytearray(self.mu.mem_read(address, size))
+            if places is not None:
+                # the pointers apart, as what they point to
+                pointers = []
+                for offset in places:
+                    pointers.append(self.normalize(struct.unpack_from("<I", data, offset)[0]))
+                    struct.pack_into("<I", data, offset, 0)
+                self._calls.append(("global", key, bytes(data), tuple(pointers)))
+            elif size == 4:
+                self._calls.append(("global", key, self.normalize(struct.unpack("<I", data)[0])))
+            else:
+                self._calls.append(("global", key, bytes(data)))
         return Result(
             value,
             [buffer.values(bytes(self.mu.mem_read(buffer.address, len(buffer.data)))) for buffer in buffers],

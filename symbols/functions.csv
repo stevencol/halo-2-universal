@@ -108,7 +108,34 @@ address,name,source,arguments,returns
 001228f0,scenario_load,source/cache/cache_files.c,eax,bool
 00122af0,scenario_tags_unload,source/cache/cache_files.c,,void
 0012b400,physical_memory_initialize,source/memory/physical_memory.c,,void
-001a0f10,async_read_position,,stack stack stack stack stack stack edx ebx,void
+001a0f10,async_read_position,source/cseries/async.c,stack stack stack stack stack stack edx ebx,int
+001a0e70,async_read_work,source/cseries/async.c,stack,int
+001a1720,async_read_goes_before,source/cseries/async.c,ecx edx stack stack stack ebx edi,bool
+001208b0,async_task_allocate,source/cseries/async.c,,pointer
+00120900,async_task_list_insert,source/cseries/async.c,stack,void
+001209c0,async_task_queue,source/cseries/async.c,eax,int
+00120a30,async_task_list_remove,source/cseries/async.c,esi,void
+00120a90,async_initialize,source/cseries/async.c,,void
+00120ba0,async_task_add,source/cseries/async.c,stack stack stack stack ebx,int
+00120bf0,async_task_count,source/cseries/async.c,,int
+00120c30,async_thread_procedure,source/cseries/async.c,,void
+00120c40,async_thread_loop,source/cseries/async.c,,void
+00120ce0,async_task_set_priority,source/cseries/async.c,esi stack,bool
+00120d50,async_wait,source/cseries/async.c,esi ebx,void
+0011c9c0,csnzprintf,source/cseries/cseries.c,esi edi stack stack,int
+0011ca80,language_from_xbox_language,source/cseries/cseries.c,eax,int
+00214c90,cached_map_file_maximum_size,source/cache/cache_files.c,esi,int
+00214cc0,cached_map_file_get_path,source/cache/cache_files.c,ecx eax ebx,void
+002138f0,cached_map_files_delete,source/cache/cache_files.c,eax stack,void
+00125d60,main_loading_idle,,,void
+002d1d66,SetLastError,,stack,void
+002d1fb6,SetThreadPriority,,stack stack,int
+002d21c6,CreateThread,,stack stack stack stack stack stack,int
+002d2488,SetFilePointer,,stack stack stack stack,int
+002d61eb,CreateSemaphoreA,,stack stack stack stack,int
+002d6246,ReleaseSemaphore,,stack stack stack,int
+002d626c,CreateMutexA,,stack stack stack,int
+002d6b6b,DeleteFileA,,stack,int
 00213760,cache_file_read_async,source/cache/cache_files.c,ecx stack stack stack stack stack stack,void
 00213800,cache_file_read_header,source/cache/cache_files.c,eax ecx,bool
 00213890,cache_file_block_until_not_busy,source/cache/cache_files.c,,void

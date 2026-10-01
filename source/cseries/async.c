@@ -3,34 +3,334 @@ ASYNC.C
 
 Decompiled from halo2ship.exe (Xbox, build 02.09.27.09809). Each function
 gives the address it has there.
+
+A thread does the tasks of a list, one at a time: those with more priority
+first, and the reads of the disc of the same priority in the order they have
+on the disc.
 */
 
 #include "async.h"
 
+#include <string.h>
+
+/* ---------- prototypes of functions of the console's libraries */
+
+/* 0x002d626c */
+uint32_t CreateMutexA(void *security_attributes, int initial_owner, const char *name);
+
+/* 0x002d61eb */
+uint32_t CreateSemaphoreA(void *security_attributes, long initial_count, long maximum_count, const char *name);
+
+/* 0x002d6246 */
+int ReleaseSemaphore(uint32_t semaphore, long release_count, long *previous_count);
+
+/* 0x002d21c6 */
+uint32_t CreateThread(void *security_attributes, uint32_t stack_size, void (*start)(void), void *parameter,
+	uint32_t flags, uint32_t *thread_id);
+
+/* 0x002d1fb6 */
+int SetThreadPriority(uint32_t thread, int priority);
+
+/* 0x002d2488 */
+uint32_t SetFilePointer(uint32_t file, long distance, long *distance_high, uint32_t method);
+
+/* 0x002d2241 */
+int ReadFile(uint32_t file, void *buffer, uint32_t size, uint32_t *bytes_read, void *overlapped);
+
 /* ---------- constants */
 
 #define INFINITE 0xFFFFFFFF
+#define FILE_BEGIN 0
+#define INVALID_SET_FILE_POINTER 0xFFFFFFFF
+#define THREAD_PRIORITY_ABOVE_NORMAL 1
+
+enum
+{
+	ASYNC_THREAD_STACK_SIZE= 0x4000
+};
 
 /* ---------- globals */
 
-/* 0x004e035c: the mutex of the list of tasks */
-uint32_t async_mutex;
+/* 0x004e0354 */
+struct async_globals async_globals;
 
-/* 0x004e28ec: the tasks that are not done yet */
-struct async_task *async_task_list;
+/* 0x00510810: the task that the thread works on */
+struct async_task *async_current_task;
+
+/* 0x005020c8 */
+struct async_buffer_globals async_buffer_globals;
+
+/* 0x004fa0c8 */
+byte async_buffer[ASYNC_BUFFER_SIZE];
+
+/* 0x0046e488: the most that a read task reads each time that the thread
+calls it */
+unsigned long async_read_maximum_size= 0x40000;
 
 /* ---------- code */
 
-/* 0x00120b50: whether a task of a category is not done yet. The name is a
-guess */
+/* 0x00120a90: makes the list of the tasks that are not in use and starts the
+thread */
+void async_initialize(
+	void)
+{
+	long index;
+
+	memset(async_globals.tasks, 0, sizeof(async_globals.tasks));
+	for (index= 0; index<MAXIMUM_ASYNC_TASKS; index++)
+	{
+		async_globals.tasks[index].next= &async_globals.tasks[index+1];
+		async_globals.tasks[index].id= NONE;
+	}
+	async_globals.tasks[MAXIMUM_ASYNC_TASKS-1].next= NULL;
+	async_globals.free_list= async_globals.tasks;
+	async_globals.task_list= NULL;
+
+	async_globals.free_list_mutex= CreateMutexA(NULL, FALSE, NULL);
+	async_globals.task_list_mutex= CreateMutexA(NULL, FALSE, NULL);
+	async_globals.semaphore= CreateSemaphoreA(NULL, 0, MAXIMUM_ASYNC_TASKS, NULL);
+
+	async_buffer_globals.unknown0= 0;
+	async_buffer_globals.address= async_buffer;
+	async_buffer_globals.size= ASYNC_BUFFER_SIZE;
+
+	async_globals.thread= CreateThread(NULL, ASYNC_THREAD_STACK_SIZE, async_thread_procedure, NULL, 0, NULL);
+	SetThreadPriority(async_globals.thread, THREAD_PRIORITY_ABOVE_NORMAL);
+}
+
+/* 0x001208b0: takes a task that is not in use; waits for one if there is
+none */
+struct async_task *async_task_allocate(
+	void)
+{
+	struct async_task *task= NULL;
+
+	for (;;)
+	{
+		WaitForSingleObject(async_globals.free_list_mutex, INFINITE);
+		if (async_globals.free_list)
+		{
+			task= async_globals.free_list;
+			async_globals.free_list= task->next;
+			task->next= NULL;
+		}
+		ReleaseMutex(async_globals.free_list_mutex);
+		if (task)
+		{
+			break;
+		}
+		SwitchToThread();
+	}
+
+	return task;
+}
+
+/* 0x001a1720: whether a task goes in the list before the one that is next
+there. A task goes before those with less priority; among those with the
+same, a read goes before what is not a read, and before the reads that are
+further on the disc from where the read before them ends. Also keeps, in the
+state, where the next task ends up if it is a read */
+boolean async_read_goes_before(
+	long next_priority,
+	long task_priority,
+	struct async_read_position_state *state,
+	async_task_function task_function,
+	async_task_function next_function,
+	const struct async_read_parameters *next_parameters,
+	const struct async_read_parameters *task_parameters)
+{
+	boolean result= FALSE;
+
+	if (task_priority>next_priority)
+	{
+		result= TRUE;
+	}
+	else if (task_priority<next_priority)
+	{
+		result= FALSE;
+	}
+	else if (task_function==async_read_work)
+	{
+		if (next_function!=async_read_work)
+		{
+			result= TRUE;
+		}
+		else if (!state->valid)
+		{
+			result= FALSE;
+		}
+		else
+		{
+			uint32_t task_file= task_parameters->file-state->file;
+			uint32_t next_file= next_parameters->file-state->file;
+
+			if (task_file<next_file)
+			{
+				result= TRUE;
+			}
+			else if (task_file>next_file)
+			{
+				result= FALSE;
+			}
+			else
+			{
+				result= task_parameters->offset-state->offset < next_parameters->offset-state->offset;
+			}
+		}
+	}
+	else if (next_function!=async_read_work)
+	{
+		return FALSE;
+	}
+
+	if (next_function==async_read_work)
+	{
+		state->file= next_parameters->file;
+		state->offset= next_parameters->offset;
+		state->valid= TRUE;
+	}
+
+	return result;
+}
+
+/* 0x00120900: puts a task in the list, in its place. The first task of the
+list, which the thread can be working on, only gives up its place to a task
+with more priority */
+void ASYNC_CALLBACK async_task_list_insert(
+	struct async_task *task)
+{
+	struct async_read_position_state state= {0, 0, FALSE};
+	struct async_task *previous= async_globals.task_list;
+
+	if (!previous)
+	{
+		async_globals.task_list= task;
+		task->next= NULL;
+		return;
+	}
+	if (task->priority>previous->priority)
+	{
+		task->next= previous;
+		async_globals.task_list= task;
+		return;
+	}
+
+	while (previous->next)
+	{
+		struct async_task *next= previous->next;
+
+		if (async_read_goes_before(next->priority, task->priority, &state, task->function, next->function,
+			(const struct async_read_parameters *)next->parameters,
+			(const struct async_read_parameters *)task->parameters))
+		{
+			task->next= previous->next;
+			previous->next= task;
+			return;
+		}
+		previous= next;
+	}
+	previous->next= task;
+	task->next= NULL;
+}
+
+/* 0x001209c0: puts a task in the list for the thread to do; the task's id */
+long async_task_queue(
+	struct async_task *task)
+{
+	long previous_count;
+	long id;
+
+	WaitForSingleObject(async_globals.task_list_mutex, INFINITE);
+	async_task_list_insert(task);
+	task->id= (async_globals.generation<<8)|(long)(task-async_globals.tasks);
+	async_globals.generation++;
+	id= task->id;
+	ReleaseMutex(async_globals.task_list_mutex);
+
+	previous_count= 0;
+	ReleaseSemaphore(async_globals.semaphore, 1, &previous_count);
+
+	return id;
+}
+
+static inline __attribute__((always_inline)) void async_task_list_unlink(
+	struct async_task *task)
+{
+	if (async_globals.task_list==task)
+	{
+		async_globals.task_list= task->next;
+	}
+	else
+	{
+		struct async_task *previous= async_globals.task_list;
+
+		while (previous->next!=task)
+		{
+			previous= previous->next;
+		}
+		previous->next= task->next;
+	}
+}
+
+/* 0x00120a30: takes a task off the list; it has to be there */
+void async_task_list_remove(
+	struct async_task *task)
+{
+	WaitForSingleObject(async_globals.task_list_mutex, INFINITE);
+	async_task_list_unlink(task);
+	task->id= NONE;
+	ReleaseMutex(async_globals.task_list_mutex);
+}
+
+/* 0x00120ba0: makes a task and puts it in the list; the task's id. The flag
+is cleared, and set when the task is done */
+long async_task_add(
+	long priority,
+	const uint32_t *parameters,
+	long category,
+	async_task_function function,
+	byte *done)
+{
+	struct async_task *task;
+
+	async_globals.tasks_added++;
+	*done= FALSE;
+	task= async_task_allocate();
+	memcpy(task->parameters, parameters, sizeof(task->parameters));
+	task->priority= priority;
+	task->done= done;
+	task->function= function;
+	task->category= category;
+
+	return async_task_queue(task);
+}
+
+/* 0x00120bf0: how many tasks are not done yet */
+long async_task_count(
+	void)
+{
+	long count= 0;
+	struct async_task *task;
+
+	WaitForSingleObject(async_globals.task_list_mutex, INFINITE);
+	for (task= async_globals.task_list; task; task= task->next)
+	{
+		count++;
+	}
+	ReleaseMutex(async_globals.task_list_mutex);
+
+	return count;
+}
+
+/* 0x00120b50: whether a task of a category is not done yet */
 boolean async_category_busy(
 	long category)
 {
 	boolean busy= FALSE;
 	struct async_task *task;
 
-	WaitForSingleObject(async_mutex, INFINITE);
-	for (task= async_task_list; task; task= task->next)
+	WaitForSingleObject(async_globals.task_list_mutex, INFINITE);
+	for (task= async_globals.task_list; task; task= task->next)
 	{
 		if (task->category==category)
 		{
@@ -38,7 +338,157 @@ boolean async_category_busy(
 			break;
 		}
 	}
-	ReleaseMutex(async_mutex);
+	ReleaseMutex(async_globals.task_list_mutex);
 
 	return busy;
+}
+
+/* 0x00120ce0: gives another priority to a task that is not done yet, and the
+place in the list that goes with it; whether the task was there */
+boolean async_task_set_priority(
+	long id,
+	long priority)
+{
+	boolean changed= FALSE;
+	struct async_task *task;
+
+	WaitForSingleObject(async_globals.task_list_mutex, INFINITE);
+	task= &async_globals.tasks[id&0xFF];
+	if (task->id==id)
+	{
+		async_task_list_unlink(task);
+		task->priority= priority;
+		async_task_list_insert(task);
+		changed= TRUE;
+	}
+	ReleaseMutex(async_globals.task_list_mutex);
+
+	return changed;
+}
+
+/* 0x00120d50: waits for the flag of a task; can draw the loading screen
+meanwhile */
+void async_wait(
+	const volatile byte *done,
+	boolean idle)
+{
+	while (!*done)
+	{
+		SwitchToThread();
+		if (idle)
+		{
+			main_loading_idle();
+		}
+	}
+}
+
+/* 0x00120c30: what the thread runs */
+void async_thread_procedure(
+	void)
+{
+	async_thread_loop();
+	__builtin_trap();
+}
+
+/* 0x00120c40: does the first task of the list, again and again; never
+returns */
+void async_thread_loop(
+	void)
+{
+	for (;;)
+	{
+		struct async_task *task;
+		long previous_count;
+		long result;
+
+		WaitForSingleObject(async_globals.semaphore, INFINITE);
+
+		WaitForSingleObject(async_globals.task_list_mutex, INFINITE);
+		task= async_globals.task_list;
+		ReleaseMutex(async_globals.task_list_mutex);
+
+		async_current_task= task;
+		result= task->function(task->parameters);
+		if (result==_async_task_not_done)
+		{
+			/* the task has more to do */
+			previous_count= 0;
+			ReleaseSemaphore(async_globals.semaphore, 1, &previous_count);
+		}
+		else
+		{
+			if (result==_async_task_done && task->done)
+			{
+				*task->done= TRUE;
+			}
+			async_task_list_remove(task);
+
+			WaitForSingleObject(async_globals.free_list_mutex, INFINITE);
+			task->next= async_globals.free_list;
+			async_globals.free_list= task;
+			ReleaseMutex(async_globals.free_list_mutex);
+		}
+	}
+}
+
+/* 0x001a0e70: the function of a task that reads a file. Reads a part, and
+is done when all is read or the file gives less than what was asked for */
+long ASYNC_CALLBACK async_read_work(
+	void *parameters)
+{
+	struct async_read_parameters *read= parameters;
+	uint32_t size= read->size-read->bytes_done;
+	uint32_t bytes_read= 0;
+	long offset_high= 0;
+
+	if (size>async_read_maximum_size)
+	{
+		size= async_read_maximum_size;
+	}
+
+	if (SetFilePointer(read->file, (long)read->offset, &offset_high, FILE_BEGIN)!=INVALID_SET_FILE_POINTER)
+	{
+		ReadFile(read->file, (byte *)read->buffer+read->bytes_done, size, &bytes_read, NULL);
+		read->bytes_done+= bytes_read;
+		read->offset+= bytes_read;
+		if (read->bytes_read)
+		{
+			*read->bytes_read= (long)read->bytes_done;
+		}
+	}
+
+	if (read->size==read->bytes_done || bytes_read<size)
+	{
+		return _async_task_done;
+	}
+
+	return _async_task_not_done;
+}
+
+/* 0x001a0f10: starts to read a part of a file; the task's id. When the read
+ends, the flag is set; the number of bytes read is kept as the read goes */
+long async_read_position(
+	uint32_t file,
+	long size,
+	uint32_t offset,
+	long category,
+	long priority,
+	long *bytes_read,
+	void *buffer,
+	uint8_t *done)
+{
+	union
+	{
+		struct async_read_parameters read;
+		uint32_t parameters[ASYNC_TASK_PARAMETER_COUNT];
+	} task;
+
+	memset(&task, 0, sizeof(task));
+	task.read.file= file;
+	task.read.buffer= buffer;
+	task.read.size= (uint32_t)size;
+	task.read.offset= offset;
+	task.read.bytes_read= bytes_read;
+
+	return async_task_add(priority, task.parameters, category, async_read_work, done);
 }

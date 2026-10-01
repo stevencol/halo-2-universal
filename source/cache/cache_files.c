@@ -29,6 +29,12 @@ int ReadFile(uint32_t file, void *buffer, uint32_t size, uint32_t *bytes_read, v
 /* 0x002d1f3a */
 int CloseHandle(uint32_t handle);
 
+/* 0x002d6b6b */
+int DeleteFileA(const char *path);
+
+/* 0x002d1d66 */
+void SetLastError(uint32_t error);
+
 /* ---------- constants */
 
 #define GENERIC_READ 0x80000000
@@ -87,6 +93,27 @@ static const char *const cache_file_builds[]=
 	"02.09.27.09809"
 };
 
+/* 0x00448f98: the most that the copy of a map on the hard disk can take,
+for the places of cached_map_file_globals from the first to the last: the
+main menu's, the shared one, the single player shared one, a multiplayer
+map's and those of two solo maps */
+static const struct cached_map_file_size
+{
+	long first_index;
+	long last_index;
+	uint32_t maximum_size;
+} cached_map_file_sizes[]=
+{
+	{2, 2, 0x05000000},
+	{0, 0, 0x0B400000},
+	{1, 1, 0x20800000},
+	{3, 3, 0x05000000},
+	{4, 5, 0x11800000}
+};
+
+/* 0x0046880c */
+const char *cache_file_extension= ".map";
+
 /* 0x005020d8: a buffer that the functions at 0x00215180 and 0x002151f0
 use, which are not understood yet. The name is a guess */
 struct cache_file_buffer_globals cache_file_buffer_globals;
@@ -107,6 +134,82 @@ void *cache_file_buffer_allocate(
 	cache_file_buffer_globals.allocated= 1;
 
 	return buffer;
+}
+
+static inline __attribute__((always_inline)) const struct cached_map_file_size *cached_map_file_size_find(
+	long index)
+{
+	unsigned long size_index;
+
+	for (size_index= 0; size_index<sizeof(cached_map_file_sizes)/sizeof(cached_map_file_sizes[0]); size_index++)
+	{
+		const struct cached_map_file_size *size= &cached_map_file_sizes[size_index];
+
+		if (index>=size->first_index && index<=size->last_index)
+		{
+			return size;
+		}
+	}
+
+	return NULL;
+}
+
+/* 0x00214c90: the most that the copy of a map on the hard disk can take, by
+its place in cached_map_file_globals; 0 if there is no such place. The name
+is a guess */
+uint32_t cached_map_file_maximum_size(
+	long index)
+{
+	const struct cached_map_file_size *size= cached_map_file_size_find(index);
+
+	return size ? size->maximum_size : 0;
+}
+
+/* 0x00214cc0: the path of the copy of a map on the hard disk, by its place
+in cached_map_file_globals: the shared maps on one drive and the others on
+another. Empty if there is no such place. The name is a guess */
+void cached_map_file_get_path(
+	char *path,
+	unsigned long size,
+	long index)
+{
+	const struct cached_map_file_size *file_size= cached_map_file_size_find(index);
+
+	strncpy(path, "", size);
+	path[size-1]= 0;
+	if (file_size)
+	{
+		const char *drive= NULL;
+
+		if (index>=0 && index<=1)
+		{
+			drive= "z:\\";
+		}
+		else if (index>=2 && index<=5)
+		{
+			drive= "n:\\";
+		}
+		csnzprintf(path, size, "%scache%03d%s", drive, index, cache_file_extension);
+	}
+}
+
+/* 0x002138f0: deletes the copies of maps on the hard disk, from a place to
+before another, on both drives. The name is a guess */
+void cached_map_files_delete(
+	long first_index,
+	long end_index)
+{
+	char path[256];
+	long index;
+
+	for (index= first_index; index<end_index; index++)
+	{
+		csnzprintf(path, sizeof(path), "%scache%03d%s", "z:\\", index, cache_file_extension);
+		DeleteFileA(path);
+		csnzprintf(path, sizeof(path), "%scache%03d%s", "n:\\", index, cache_file_extension);
+		DeleteFileA(path);
+	}
+	SetLastError(0);
 }
 
 /* 0x00214ed0 */
@@ -278,8 +381,8 @@ void cache_file_read_async(
 	void *buffer,
 	long *bytes_read,
 	uint8_t *done,
-	long unknown1,
-	long unknown2)
+	long category,
+	long priority)
 {
 	uint32_t file= cached_map_file_globals.files[cached_map_file_globals.open_map_index].file;
 
@@ -296,7 +399,7 @@ void cache_file_read_async(
 		break;
 	}
 
-	async_read_position(file, size, offset&CACHE_FILE_OFFSET_MASK, unknown1, unknown2, bytes_read, buffer, done);
+	async_read_position(file, size, offset&CACHE_FILE_OFFSET_MASK, category, priority, bytes_read, buffer, done);
 }
 
 /* 0x00213890: waits for the reads that were started to end. The name is

@@ -164,8 +164,8 @@ def run(t) -> None:
                 "async_category_busy",
                 category,
                 globals={
-                    "async_mutex": 0x4321,
-                    "async_task_list": Buffer(bytes(tasks), pointers=tuple(pointers)) if categories else 0,
+                    "async_globals+0x8": 0x4321,
+                    "async_globals+0x2598": Buffer(bytes(tasks), pointers=tuple(pointers)) if categories else 0,
                 },
                 externals={
                     "WaitForSingleObject": lambda harness, arguments: 0,
@@ -194,4 +194,29 @@ def run(t) -> None:
         t.check(
             "cache_file_block_until_not_busy",
             externals={"async_category_busy": busy, "SwitchToThread": lambda harness, arguments: 0},
+        )
+
+    # ---------- the copies of the maps on the hard disk
+
+    for size in (1, 2, 8, 16, 64):
+        for format_, argument in ((b"%scache%03d", string(b"z:\\")), (b"%s", string(b"x" * 20)), (b"%05d|", -42), (b"", 0)):
+            t.check("csnzprintf", Buffer(random_.randbytes(64)), size, string(format_), argument)
+
+    for language in range(-2, 13):
+        t.check("language_from_xbox_language", language)
+
+    for index in (*range(-2, 9), 0x7FFFFFFF, 0x80000000):
+        t.check("cached_map_file_maximum_size", index)
+        for size in (64, 12, 4, 1):
+            t.check("cached_map_file_get_path", Buffer(random_.randbytes(64)), size, index)
+
+    def delete_file(harness, arguments):
+        return 1, (read_string(harness, arguments[0]),)
+
+    for first, end in ((0, 6), (2, 3), (4, 4), (5, 2), (0, 1), (-1, 2), (998, 1001)):
+        t.check(
+            "cached_map_files_delete",
+            first,
+            end,
+            externals={"DeleteFileA": delete_file, "SetLastError": lambda harness, arguments: 0},
         )

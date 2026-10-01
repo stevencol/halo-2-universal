@@ -3,8 +3,12 @@ address,name,source
 004e0300,object_header_data,source/objects/objects.c
 004e034c,global_game_globals,source/scenario/scenario.c
 004e0350,global_scenario,source/scenario/scenario.c
-004e035c,async_mutex,source/cseries/async.c
-004e28ec,async_task_list,source/cseries/async.c
+004e0354,async_globals,source/cseries/async.c
+0046e488,async_read_maximum_size,source/cseries/async.c
+004fa0c8,async_buffer,source/cseries/async.c
+005020c8,async_buffer_globals,source/cseries/async.c
+00510810,async_current_task,source/cseries/async.c
+0046880c,cache_file_extension,source/cache/cache_files.c
 004e3b44,global_tag_instances,source/cache/cache_files.c
 004e6420,physical_memory_globals,source/memory/physical_memory.c
 005020d8,cache_file_buffer_globals,source/cache/cache_files.c

@@ -23,6 +23,21 @@ the game only when compiled for a 32-bit target.
 #define FALSE 0
 #endif
 
+/* the languages of the game's text. The names are those of the console's
+languages */
+enum
+{
+	_language_english,
+	_language_japanese,
+	_language_german,
+	_language_french,
+	_language_spanish,
+	_language_italian,
+	_language_korean,
+	_language_chinese,
+	NUMBER_OF_LANGUAGES
+};
+
 /* ---------- types */
 
 typedef unsigned char byte;
@@ -32,6 +47,8 @@ typedef unsigned char boolean;
 /* ---------- prototypes/CSERIES.C */
 
 char *csprintf256(char *buffer, const char *format, ...);
+char *csnzprintf(char *buffer, unsigned long size, const char *format, ...);
+long language_from_xbox_language(long xbox_language);
 long csstrcasecmp(const char *s1, const char *s2);
 boolean bit_vector_test_flag(const unsigned long *vector, long bit);
 void path_remove_last_element(char *path);

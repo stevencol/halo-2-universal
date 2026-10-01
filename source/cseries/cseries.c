@@ -33,6 +33,51 @@ char *csprintf256(
 	return buffer;
 }
 
+/* 0x0011c9c0: writes formatted text to a string of a size; the string. The
+name is that of Halo 1's function */
+char *csnzprintf(
+	char *buffer,
+	unsigned long size,
+	const char *format,
+	...)
+{
+	va_list arguments;
+
+	va_start(arguments, format);
+	vsnprintf(buffer, size-1, format, arguments);
+	va_end(arguments);
+	buffer[size-1]= 0;
+
+	return buffer;
+}
+
+/* 0x0011ca80: the game's language for a language of the console
+(XGetLanguage): English for the ones that the game does not have. The name
+is a guess */
+long language_from_xbox_language(
+	long xbox_language)
+{
+	switch (xbox_language)
+	{
+	case 2:
+		return _language_japanese;
+	case 3:
+		return _language_german;
+	case 4:
+		return _language_french;
+	case 5:
+		return _language_spanish;
+	case 6:
+		return _language_italian;
+	case 7:
+		return _language_korean;
+	case 8:
+		return _language_chinese;
+	}
+
+	return _language_english;
+}
+
 /* 0x0011c920: compares two strings without regard to case; -1, 0 or 1. As
 in Halo 1 */
 long csstrcasecmp(

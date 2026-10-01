@@ -2,6 +2,81 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — El hilo que lee el disco
+
+El juego no lee el disco desde el hilo principal: deja tareas en una lista y
+otro hilo las va haciendo. Ese módulo queda descompilado entero, con la
+lectura de archivos que usa la carga de mapas. De 117 funciones se pasa a
+136, el 1,21 % de las del juego (el 0,584 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `async_initialize` | `0x00120a90` | `cseries/async.c` |
+| `async_task_allocate` | `0x001208b0` | `cseries/async.c` |
+| `async_task_list_insert` | `0x00120900` | `cseries/async.c` |
+| `async_task_queue` | `0x001209c0` | `cseries/async.c` |
+| `async_task_list_remove` | `0x00120a30` | `cseries/async.c` |
+| `async_task_add` | `0x00120ba0` | `cseries/async.c` |
+| `async_task_count` | `0x00120bf0` | `cseries/async.c` |
+| `async_thread_procedure` | `0x00120c30` | `cseries/async.c` |
+| `async_thread_loop` | `0x00120c40` | `cseries/async.c` |
+| `async_task_set_priority` | `0x00120ce0` | `cseries/async.c` |
+| `async_wait` | `0x00120d50` | `cseries/async.c` |
+| `async_read_work` | `0x001a0e70` | `cseries/async.c` |
+| `async_read_position` | `0x001a0f10` | `cseries/async.c` |
+| `async_read_goes_before` | `0x001a1720` | `cseries/async.c` |
+| `csnzprintf` | `0x0011c9c0` | `cseries/cseries.c` |
+| `language_from_xbox_language` | `0x0011ca80` | `cseries/cseries.c` |
+| `cached_map_file_maximum_size` | `0x00214c90` | `cache/cache_files.c` |
+| `cached_map_file_get_path` | `0x00214cc0` | `cache/cache_files.c` |
+| `cached_map_files_delete` | `0x002138f0` | `cache/cache_files.c` |
+
+- `tests/test_async.py`, y más casos en `tests/test_map_files.py`.
+
+### Cambiado
+
+- `tools/difftest.py`:
+  - `GlobalData`: el valor de una variable global que tiene punteros a sí
+    misma. El juego y `source/` no la tienen en la misma dirección, así que
+    los punteros se comparan por el sitio al que apuntan.
+  - `GlobalPointer`: un argumento que es la dirección de una variable global.
+  - `StopCall`: una función simulada puede cortar la llamada, para probar
+    funciones que nunca retornan (el bucle del hilo).
+  - El tipo de retorno `pointer` en `symbols/functions.csv`.
+  - Los punteros a funciones de `source/` se comparan por nombre.
+- `vsnprintf` de la biblioteca C de las pruebas corta el texto como la del
+  juego: sin cero al final cuando no cabe.
+- Las variables sueltas `async_mutex` y `async_task_list` pasan a ser campos
+  de `async_globals`.
+- Los dos argumentos sin nombre de `cache_file_read_async` y
+  `async_read_position` son la categoría y la prioridad de la tarea.
+
+### Lo que se sabe
+
+- Hay 150 tareas como mucho. Cada una tiene prioridad, categoría, diez
+  parámetros, una función y un aviso que se pone a 1 al terminar.
+- La lista se ordena por prioridad. Entre lecturas de la misma prioridad se
+  ordena por archivo y posición a partir de donde acaba la lectura
+  anterior, para que el lector del disco no vaya y venga.
+- La primera tarea de la lista solo cede su sitio a una de más prioridad:
+  es la que el hilo puede tener a medias.
+- Una lectura se hace en trozos de 256 KB como mucho; la función de la
+  tarea devuelve 0 mientras le quede y el hilo la vuelve a llamar.
+- Las copias de los mapas en el disco duro se llaman `cache000.map` a
+  `cache005.map`: las dos compartidas en `z:` y las demás en `n:`. Cada
+  sitio tiene un tamaño máximo.
+- `0x00510834` es un bloque de 0x1e8 bytes que el juego guarda firmado
+  (las preferencias): el idioma está en `+4` y el número de build de las
+  copias de los mapas en `+0x1d4`. `0x00510819` avisa de que cambió.
+
+### Pendiente
+
+- `cache_files_initialize` (`0x002136c0`) y la función que copia los mapas
+  al disco duro (`0x00213970`), que Ghidra no descompila bien.
+- `main_loading_idle` (`0x00125d60`), que `async_wait` llama mientras espera.
+
 ## 2026-10-01 — Carga de los tags de un mapa
 
 La cadena completa con la que el juego carga un mapa: construir la ruta del
