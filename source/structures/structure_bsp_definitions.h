@@ -1,13 +1,14 @@
 /*
 STRUCTURE_BSP_DEFINITIONS.H
 
-The structure bsp (sbsp), the geometry of a level. Only the start of the tag
-is worked out.
+The structure bsp (sbsp), the geometry of a level. Only part of the tag is
+worked out.
 */
 
 #ifndef __STRUCTURE_BSP_DEFINITIONS_H
 #define __STRUCTURE_BSP_DEFINITIONS_H
 
+#include "geometry/geometry_definitions.h"
 #include "math/real_math.h"
 #include "tag_files/tag_groups.h"
 
@@ -40,6 +41,44 @@ struct structure_collision_material
 	struct tag_reference shader;
 };
 
+/* the shader of a part of the geometry that is drawn */
+struct structure_material
+{
+	struct tag_reference old_shader;
+	struct tag_reference shader;
+	uint8_t unknown10[0x10];
+};
+
+/* a piece of the level's geometry, in world space */
+struct structure_cluster
+{
+	struct geometry_section_info section_info;
+	struct geometry_block_info geometry_block_info;
+	uint8_t unknown4C[0x64];
+};
+
+/* geometry that the level has one or more copies of */
+struct structure_instanced_geometry_definition
+{
+	struct geometry_section_info section_info;
+	struct geometry_block_info geometry_block_info;
+	uint8_t unknown4C[0x7C];
+};
+
+/* a copy of an instanced geometry definition; a point of the definition is
+at position + scale*(x*forward + y*left + z*up) */
+struct structure_instanced_geometry_instance
+{
+	real scale;
+	real_vector3d forward;
+	real_vector3d left;
+	real_vector3d up;
+	real_point3d position;
+	int16_t definition_index;
+	uint16_t flags;
+	uint8_t unknown38[0x20];
+};
+
 struct structure_bsp
 {
 	uint8_t unknown0[0xC];
@@ -53,7 +92,13 @@ struct structure_bsp
 	struct tag_block leaves;
 	real_rectangle3d world_bounds;
 	struct tag_block surface_references; /* 8 bytes each */
-	/* the rest of the tag (cluster data, portals, clusters, ...) */
+	uint8_t unknown54[0x48];
+	struct tag_block clusters; /* structure_cluster */
+	struct tag_block materials; /* structure_material */
+	uint8_t unknownAC[0x8C];
+	struct tag_block instanced_geometry_definitions; /* structure_instanced_geometry_definition */
+	struct tag_block instanced_geometry_instances; /* structure_instanced_geometry_instance */
+	/* the rest of the tag */
 };
 
 typedef char verify_cache_file_structure_bsp_header_size[
@@ -66,5 +111,19 @@ typedef char verify_structure_bsp_world_bounds_offset[
 	offsetof(struct structure_bsp, world_bounds) == 0x34 ? 1 : -1];
 typedef char verify_structure_bsp_surface_references_offset[
 	offsetof(struct structure_bsp, surface_references) == 0x4C ? 1 : -1];
+typedef char verify_structure_bsp_clusters_offset[
+	offsetof(struct structure_bsp, clusters) == 0x9C ? 1 : -1];
+typedef char verify_structure_bsp_instanced_geometry_definitions_offset[
+	offsetof(struct structure_bsp, instanced_geometry_definitions) == 0x138 ? 1 : -1];
+typedef char verify_structure_material_size[
+	sizeof(struct structure_material) == 0x20 ? 1 : -1];
+typedef char verify_structure_cluster_size[
+	sizeof(struct structure_cluster) == 0xB0 ? 1 : -1];
+typedef char verify_structure_instanced_geometry_definition_size[
+	sizeof(struct structure_instanced_geometry_definition) == 0xC8 ? 1 : -1];
+typedef char verify_structure_instanced_geometry_instance_size[
+	sizeof(struct structure_instanced_geometry_instance) == 0x58 ? 1 : -1];
+typedef char verify_structure_instanced_geometry_instance_definition_index_offset[
+	offsetof(struct structure_instanced_geometry_instance, definition_index) == 0x34 ? 1 : -1];
 
 #endif

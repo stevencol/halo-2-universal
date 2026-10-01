@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Geometría que dibuja el juego
+
+Tercera meta: leer la geometría de los niveles que se ve en pantalla.
+
+### Añadido
+
+- `source/geometry/geometry_definitions.h`: las secciones de geometría (el
+  bloque `blkh` / `rsrc` / `blkf`, sus recursos, las partes y los buffers de
+  vértices).
+- `source/structures/structure_bsp_definitions.h`: los clusters, los
+  materiales, las definiciones de geometría instanciada y sus instancias.
+- `tools/geometry.py`: lee una sección de geometría.
+- `tools/structure_bsp.py`: lee los structure bsps de un mapa.
+
+### Cambiado
+
+- `tools/bsp2obj.py` exporta ahora la geometría que dibuja el juego, con
+  coordenadas de textura: un objeto por cluster y por instancia. La
+  geometría de colisión se exporta con `--collision`.
+- `tools/cache_file.py` lee bloques de recursos que están en otro mapa
+  (`mainmenu`, `shared`, `single_player_shared`).
+- `tools/test_maps.py` comprueba las dos geometrías. Pasan los 30 mapas:
+  4.191 clusters, 12.961 instancias y 3.551.172 triángulos.
+
+### Lo que se sabe de la geometría
+
+- Cada pieza de geometría tiene sus vértices y triángulos en un bloque del
+  mapa aparte del tag. Los dos bits altos de su posición indican en qué
+  archivo está.
+- Un bloque contiene una "sección" con campos sin dirección y una lista de
+  recursos; cada recurso es el contenido de un campo de la sección.
+- En los structure bsps los triángulos son listas (tres índices cada uno),
+  las posiciones son tres reales y las coordenadas de textura dos reales.
+  Todos los mapas usan esos mismos formatos.
+- Un nivel se compone de clusters, en coordenadas del mundo, y de geometría
+  instanciada: definiciones que se colocan una o más veces con una
+  posición, una rotación y una escala.
+
+### Pendiente
+
+- Las texturas: de cada shader hay que llegar a sus bitmaps y decodificarlos.
+- Los buffers de vértices de tipo `0x1B`, `0x1F` y `0x30` (por tamaño:
+  normales, coordenadas del mapa de luz) no se leen.
+- Las secciones de los modelos (`mode`) usan el mismo formato de bloque pero
+  no se han probado; pueden tener vértices comprimidos y tiras de triángulos.
+
 ## 2026-10-01 — Geometría de colisión de los niveles
 
 Segunda meta: leer la geometría del nivel y verla fuera del juego.

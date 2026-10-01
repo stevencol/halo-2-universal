@@ -10,6 +10,8 @@ SCENARIO_TYPES = ("solo", "multiplayer", "main menu", "shared", "single player s
 # source/cache/cache_files.c, cache_file_maximum_length
 MAXIMUM_LENGTHS = (0x11800000, 0x05000000, 0x05000000, 0x0B400000, 0x20800000)
 NONE = 0xFFFFFFFF
+# the files that hold resources, by the two high bits of a resource's offset; 0 is the map itself
+RESOURCE_FILES = {1: "mainmenu.map", 2: "shared.map", 3: "single_player_shared.map"}
 
 
 def group_tag(text: str) -> int:
@@ -28,6 +30,7 @@ class CacheFile:
     def __init__(self, path: Path) -> None:
         self.path = Path(path)
         self.file = self.path.open("rb")
+        self._shared: dict = {}
 
         header = self.file.read(HEADER_SIZE)
         self.header = header
@@ -95,12 +98,33 @@ class CacheFile:
 
     def close(self) -> None:
         self.file.close()
+        for shared in self._shared.values():
+            shared.close()
+        self._shared.clear()
 
     def read(self, offset: int, size: int) -> bytes:
         self.file.seek(offset)
         data = self.file.read(size)
         if len(data) != size:
             raise CacheFileError("the file is shorter than its header says")
+        return data
+
+    def read_resource(self, offset: int, size: int) -> bytes:
+        """Reads a block of resources. The two high bits of the offset tell the file that holds it."""
+        location = offset >> 30
+        offset &= 0x3FFFFFFF
+        if location == 0:
+            return self.read(offset, size)
+        if location not in self._shared:
+            path = self.path.with_name(RESOURCE_FILES[location])
+            if not path.exists():
+                raise CacheFileError(f"'{path.name}' is needed and is not next to '{self.path.name}'")
+            self._shared[location] = path.open("rb")
+        shared = self._shared[location]
+        shared.seek(offset)
+        data = shared.read(size)
+        if len(data) != size:
+            raise CacheFileError(f"'{RESOURCE_FILES[location]}' is shorter than the resource needs")
         return data
 
     def tag_data(self, address: int, size: int) -> bytes:

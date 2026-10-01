@@ -10,7 +10,7 @@ con Halo: Combat Evolved.
 
 **Estado: muy temprano.** El juego no arranca ni está cerca de hacerlo. Hoy
 el proyecto abre los mapas del juego, lista su contenido y exporta la
-geometría de colisión de los niveles. Consulta
+geometría de los niveles, sin texturas todavía. Consulta
 [CHANGELOG.md](CHANGELOG.md) para ver qué hay hecho.
 
 ## En qué se basa
@@ -62,8 +62,8 @@ python tools/test_maps.py "<carpeta maps del juego>"
 
 `ninja` genera `build/mapinfo.exe` y comprueba los tamaños de las
 estructuras de `source/`. La prueba abre todos los mapas, comprueba que cada
-tag está donde el cargador lo espera y exporta la geometría de colisión de
-cada nivel a `build/obj/`.
+tag está donde el cargador lo espera y exporta la geometría de cada nivel a
+`build/obj/`.
 
 Listar el contenido de un mapa:
 
@@ -71,13 +71,17 @@ Listar el contenido de un mapa:
 build\mapinfo.exe "<carpeta maps>\zanzibar.map" --tags
 ```
 
-Exportar la geometría de colisión de un nivel a un archivo `.obj` (se abre
-en Blender con *File > Import > Wavefront*) y dibujarla como imagen:
+Exportar la geometría de un nivel a un archivo `.obj` (se abre en Blender
+con *File > Import > Wavefront*) y dibujarla como imagen:
 
 ```
 python tools/bsp2obj.py "<carpeta maps>\zanzibar.map" zanzibar.obj
 python tools/obj_preview.py zanzibar.obj zanzibar.png
 ```
+
+El `.obj` lleva la geometría que dibuja el juego, con sus coordenadas de
+textura y un material por shader. Con `--collision` lleva la geometría que
+usa la física.
 
 ### Smart App Control de Windows
 

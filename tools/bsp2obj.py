@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
 
-# writes the collision geometry of a map's structure bsps as a Wavefront OBJ
-# file, with one object per structure bsp and one material per shader
+# writes the geometry of a map's structure bsps as a Wavefront OBJ file, with
+# one material per shader
 #
-# bsp2obj.py <map> <output.obj>
+# bsp2obj.py <map> <output.obj> [--collision]
+#
+# Without --collision the file has the geometry that the game draws, with its
+# texture coordinates: one object per cluster and per instance of instanced
+# geometry. With --collision it has the geometry that the physics uses: one
+# object per structure bsp.
 #
 # The game's z axis points up. The file has y up, as OBJ readers expect:
 # (x, y, z) is written as (x, z, -y).
 #
-# The layouts are those of source/scenario/scenario_definitions.h,
-# source/structures/structure_bsp_definitions.h and
+# The layouts are those of source/structures/structure_bsp_definitions.h and
 # source/physics/collision_bsp_definitions.h.
 
 import struct
@@ -19,10 +23,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TextIO
 
-from cache_file import CacheFile, CacheFileError, group_tag
+import structure_bsp
+from cache_file import CacheFile, CacheFileError
+from geometry import Section, read_section
+from structure_bsp import StructureBsp, obj_name
 
-SCENARIO_STRUCTURE_BSPS_OFFSET = 0x210
-SCENARIO_STRUCTURE_BSP_REFERENCE_SIZE = 0x44
 MAXIMUM_EDGES_PER_COLLISION_SURFACE = 8
 PLANE_DESIGNATOR_NEGATED_FLAG = 0x8000
 
@@ -31,32 +36,50 @@ PLANE_DESIGNATOR_NEGATED_FLAG = 0x8000
 class Totals:
     bsps: int = 0
     vertices: int = 0
+    # collision surfaces, or triangles of the geometry that is drawn
     surfaces: int = 0
+    # collision only
     broken: int = 0
     reversed: int = 0
+    # the geometry that is drawn only
+    clusters: int = 0
+    instances: int = 0
 
 
-class Block:
-    """A structure bsp's block of the cache file."""
+class ObjWriter:
+    def __init__(self, obj: TextIO) -> None:
+        self.obj = obj
+        self.vertex_count = 0
+        self.materials: dict[str, None] = {}
 
-    def __init__(self, data: bytes, address: int) -> None:
-        self.data = data
-        self.address = address
+    def object(self, name: str) -> None:
+        self.obj.write(f"o {obj_name(name)}\n")
 
-    def at(self, address: int, size: int) -> bytes:
-        offset = address - self.address
-        if offset < 0 or offset + size > len(self.data):
-            raise CacheFileError(f"the structure bsp refers to data outside its block (address {address:#010x})")
-        return self.data[offset : offset + size]
+    def material(self, name: str) -> None:
+        self.materials[name] = None
+        self.obj.write(f"usemtl {name}\n")
 
-    def elements(self, tag_block: tuple[int, int], format: str) -> list[tuple]:
-        count, address = tag_block
-        size = struct.calcsize(format)
-        return list(struct.iter_unpack(format, self.at(address, count * size))) if count > 0 else []
+    def vertices(self, positions: list[tuple], texcoords: list[tuple] | None = None) -> int:
+        """Writes the vertices and returns the OBJ index of the first one."""
+        first = self.vertex_count + 1
+        for x, y, z in positions:
+            self.obj.write(f"v {x:.6f} {z:.6f} {-y:.6f}\n")
+        # the texture coordinates have v down; OBJ has it up
+        for u, v in texcoords or ():
+            self.obj.write(f"vt {u:.6f} {1 - v:.6f}\n")
+        self.vertex_count += len(positions)
+        return first
+
+    def write_materials(self, path: Path) -> None:
+        with path.open("w", encoding="utf-8", newline="\n") as mtl:
+            for material in self.materials:
+                # a color from the name, to tell the materials apart
+                color = zlib.crc32(material.encode())
+                red, green, blue = (0.25 + 0.7 * ((color >> shift) & 0xFF) / 255 for shift in (0, 8, 16))
+                mtl.write(f"newmtl {material}\nKd {red:.3f} {green:.3f} {blue:.3f}\n\n")
 
 
-def obj_name(name: str) -> str:
-    return name.replace("\\", "/").replace(" ", "_")
+# ---------- collision
 
 
 def surface_vertices(surface_index: int, first_edge: int, edges: list[tuple], vertex_count: int) -> list[int]:
@@ -100,36 +123,23 @@ def faces_plane(ring: list[int], vertices: list[tuple], planes: list[tuple], pla
     return dot < 0 if plane_designator & PLANE_DESIGNATOR_NEGATED_FLAG else dot > 0
 
 
-def export_structure_bsp(cache: CacheFile, reference: bytes, obj: TextIO, materials_seen: dict, totals: Totals) -> None:
-    block_offset, block_size, block_address = struct.unpack_from("<3I", reference, 0)
-    _, structure_bsp_index = struct.unpack_from("<2I", reference, 0x10)
-    block = Block(cache.read(block_offset, block_size), block_address)
-
-    # cache_file_structure_bsp_header
-    _, structure_bsp_address, _, signature = struct.unpack("<4I", block.at(block_address, 16))
-    if signature != group_tag("sbsp"):
-        raise CacheFileError("the structure bsp block has no 'sbsp' signature")
-
-    # structure_bsp
-    structure_bsp = block.at(structure_bsp_address, 0x54)
-    collision_materials = struct.unpack_from("<iI", structure_bsp, 0x0C)
-    collision_bsp_count, collision_bsp_address = struct.unpack_from("<iI", structure_bsp, 0x14)
+def export_collision(bsp: StructureBsp, writer: ObjWriter, totals: Totals) -> None:
+    cache = bsp.cache
+    # structure_collision_material: old shader, global material, conveyor surface, shader
+    materials = bsp.elements(bsp.tag_block(structure_bsp.COLLISION_MATERIALS_OFFSET), "<2I2h2I")
+    collision_bsp_count, collision_bsp_address = bsp.tag_block(structure_bsp.COLLISION_BSP_OFFSET)
     if collision_bsp_count != 1:
         raise CacheFileError(f"the structure bsp has {collision_bsp_count} collision bsps")
-    # structure_collision_material: old shader, global material, conveyor surface, shader
-    materials = block.elements(collision_materials, "<2I2h2I")
 
     # collision_bsp: eight tag blocks
-    tag_blocks = list(struct.iter_unpack("<iI", block.at(collision_bsp_address, 0x40)))
-    planes = block.elements(tag_blocks[1], "<4f")
-    surfaces = block.elements(tag_blocks[5], "<2H2Bh")
-    edges = block.elements(tag_blocks[6], "<6H")
-    vertices = block.elements(tag_blocks[7], "<3f2H")
+    tag_blocks = list(struct.iter_unpack("<iI", bsp.at(collision_bsp_address, 0x40)))
+    planes = bsp.elements(tag_blocks[1], "<4f")
+    surfaces = bsp.elements(tag_blocks[5], "<2H2Bh")
+    edges = bsp.elements(tag_blocks[6], "<6H")
+    vertices = bsp.elements(tag_blocks[7], "<3f2H")
 
-    name = cache.tag_name(structure_bsp_index)
-    obj.write(f"o {obj_name(name)}\n")
-    for x, y, z, _, _ in vertices:
-        obj.write(f"v {x:.6f} {z:.6f} {-y:.6f}\n")
+    writer.object(bsp.name)
+    first = writer.vertices([vertex[:3] for vertex in vertices])
 
     # the surfaces of each material together; None is the surfaces with no material
     by_material: dict[int | None, list[list[int]]] = {}
@@ -145,60 +155,135 @@ def export_structure_bsp(cache: CacheFile, reference: bytes, obj: TextIO, materi
 
     surface_count = 0
     for key in sorted(by_material, key=lambda k: -1 if k is None else k):
-        material = "none" if key is None else obj_name(cache.tag_name(materials[key][5]))
-        materials_seen[material] = None
-        obj.write(f"usemtl {material}\n")
+        writer.material("none" if key is None else obj_name(cache.tag_name(materials[key][5])))
         for ring in by_material[key]:
-            # OBJ indices start at 1 and count the vertices of the whole file
-            obj.write("f " + " ".join(str(totals.vertices + vertex + 1) for vertex in ring) + "\n")
+            writer.obj.write("f " + " ".join(str(first + vertex) for vertex in ring) + "\n")
         surface_count += len(by_material[key])
 
-    print(f"  {name:<60} {len(vertices):6} vertices {surface_count:6} surfaces")
-    totals.bsps += 1
+    print(f"  {bsp.name:<60} {len(vertices):6} vertices {surface_count:6} surfaces")
     totals.vertices += len(vertices)
     totals.surfaces += surface_count
 
 
-def export_map(map_path: Path, obj_path: Path) -> Totals:
+# ---------- the geometry that is drawn
+
+
+def write_section(
+    writer: ObjWriter, name: str, section: Section, positions: list[tuple], material_names: list[str], totals: Totals
+) -> None:
+    if not section.parts:
+        return
+    writer.object(name)
+    first = writer.vertices(positions, section.texcoords)
+
+    # the triangles of each material together
+    by_material: dict[int, list[int]] = {}
+    for part in section.parts:
+        by_material.setdefault(part.material_index, []).extend(
+            section.indices[part.first_index : part.first_index + part.index_count]
+        )
+    for material_index in sorted(by_material):
+        writer.material(material_names[material_index] if material_index < len(material_names) else "none")
+        indices = by_material[material_index]
+        for n in range(0, len(indices), 3):
+            a, b, c = (first + index for index in indices[n : n + 3])
+            writer.obj.write(f"f {a}/{a} {b}/{b} {c}/{c}\n")
+        totals.surfaces += len(indices) // 3
+    totals.vertices += len(positions)
+
+
+def export_render(bsp: StructureBsp, writer: ObjWriter, totals: Totals) -> None:
+    cache = bsp.cache
+    # structure_material: old shader, shader, ...
+    material_names = [
+        obj_name(cache.tag_name(material[3]))
+        for material in bsp.elements(bsp.tag_block(structure_bsp.MATERIALS_OFFSET), "<4I16x")
+    ]
+    before = (totals.vertices, totals.surfaces)
+
+    clusters = bsp.raw_elements(bsp.tag_block(structure_bsp.CLUSTERS_OFFSET), structure_bsp.CLUSTER_SIZE)
+    for cluster_index, cluster in enumerate(clusters):
+        section = read_section(cache, bsp.at, cluster)
+        write_section(writer, f"{bsp.name}/cluster_{cluster_index}", section, section.positions, material_names, totals)
+
+    # each definition is read once, when the first instance of it is written
+    definitions = bsp.raw_elements(
+        bsp.tag_block(structure_bsp.INSTANCED_GEOMETRY_DEFINITIONS_OFFSET),
+        structure_bsp.INSTANCED_GEOMETRY_DEFINITION_SIZE,
+    )
+    sections: dict[int, Section] = {}
+    # structure_instanced_geometry_instance: scale, forward, left, up, position, definition, flags, ...
+    instances = bsp.elements(bsp.tag_block(structure_bsp.INSTANCED_GEOMETRY_INSTANCES_OFFSET), "<13fhH32x")
+    for instance_index, instance in enumerate(instances):
+        scale = instance[0]
+        fx, fy, fz, lx, ly, lz, ux, uy, uz, px, py, pz = instance[1:13]
+        definition_index = instance[13]
+        if not 0 <= definition_index < len(definitions):
+            raise CacheFileError(f"an instance uses the instanced geometry definition {definition_index}, which is not there")
+        if definition_index not in sections:
+            sections[definition_index] = read_section(cache, bsp.at, definitions[definition_index])
+        section = sections[definition_index]
+        positions = [
+            (
+                px + scale * (x * fx + y * lx + z * ux),
+                py + scale * (x * fy + y * ly + z * uy),
+                pz + scale * (x * fz + y * lz + z * uz),
+            )
+            for x, y, z in section.positions
+        ]
+        write_section(writer, f"{bsp.name}/instance_{instance_index}", section, positions, material_names, totals)
+
+    print(
+        f"  {bsp.name:<60} {len(clusters):3} clusters {len(instances):4} instances "
+        f"{totals.vertices - before[0]:7} vertices {totals.surfaces - before[1]:7} triangles"
+    )
+    totals.clusters += len(clusters)
+    totals.instances += len(instances)
+
+
+# ---------- the file
+
+
+def export_map(map_path: Path, obj_path: Path, collision: bool = False) -> Totals:
     cache = CacheFile(map_path)
     totals = Totals()
-    materials_seen: dict[str, None] = {}
     mtl_path = obj_path.with_suffix(".mtl")
 
-    scenario = cache.scenario()
-    count, address = struct.unpack_from("<iI", scenario, SCENARIO_STRUCTURE_BSPS_OFFSET)
-    references = cache.tag_data(address, count * SCENARIO_STRUCTURE_BSP_REFERENCE_SIZE) if count > 0 else b""
-
-    print(f"{cache.name}: {max(count, 0)} structure bsps")
     with obj_path.open("w", encoding="utf-8", newline="\n") as obj:
-        obj.write(f"# {cache.scenario_path}: collision geometry, written by bsp2obj.py\n")
+        kind = "collision geometry" if collision else "geometry"
+        obj.write(f"# {cache.scenario_path}: {kind}, written by bsp2obj.py\n")
         obj.write(f"mtllib {mtl_path.name}\n")
-        for i in range(max(count, 0)):
-            reference = references[i * SCENARIO_STRUCTURE_BSP_REFERENCE_SIZE :][:SCENARIO_STRUCTURE_BSP_REFERENCE_SIZE]
-            export_structure_bsp(cache, reference, obj, materials_seen, totals)
-
-    with mtl_path.open("w", encoding="utf-8", newline="\n") as mtl:
-        for material in materials_seen:
-            # a color from the name, to tell the materials apart
-            color = zlib.crc32(material.encode())
-            red, green, blue = (0.25 + 0.7 * ((color >> shift) & 0xFF) / 255 for shift in (0, 8, 16))
-            mtl.write(f"newmtl {material}\nKd {red:.3f} {green:.3f} {blue:.3f}\n\n")
+        writer = ObjWriter(obj)
+        print(f"{cache.name}:")
+        for bsp in structure_bsp.structure_bsps(cache):
+            (export_collision if collision else export_render)(bsp, writer, totals)
+            totals.bsps += 1
+    writer.write_materials(mtl_path)
 
     cache.close()
     return totals
 
 
 def main() -> None:
-    if len(sys.argv) < 3:
-        sys.exit("usage: bsp2obj.py <map> <output.obj>")
+    arguments = [argument for argument in sys.argv[1:] if not argument.startswith("--")]
+    collision = "--collision" in sys.argv
+    if len(arguments) < 2:
+        sys.exit("usage: bsp2obj.py <map> <output.obj> [--collision]")
     try:
-        totals = export_map(Path(sys.argv[1]), Path(sys.argv[2]))
+        totals = export_map(Path(arguments[0]), Path(arguments[1]), collision)
     except CacheFileError as error:
         sys.exit(f"bsp2obj: {error}")
+
+    print(f"structure bsps     {totals.bsps}")
     print(f"total vertices     {totals.vertices}")
-    print(f"total surfaces     {totals.surfaces}")
-    print(f"broken surfaces    {totals.broken}")
-    print(f"reversed surfaces  {totals.reversed}")
+    if collision:
+        print(f"total surfaces     {totals.surfaces}")
+        print(f"broken surfaces    {totals.broken}")
+        print(f"reversed surfaces  {totals.reversed}")
+    else:
+        print(f"clusters           {totals.clusters}")
+        print(f"instances          {totals.instances}")
+        print(f"total triangles    {totals.surfaces}")
 
 
 if __name__ == "__main__":

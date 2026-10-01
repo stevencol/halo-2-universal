@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 # runs the tools on every map of the game and checks that each opens, that
-# every tag's data is where the loader expects it, and that the collision
-# geometry of its structure bsps is whole
+# every tag's data is where the loader expects it, and that the geometry of
+# its structure bsps is whole: the collision geometry and the geometry that
+# the game draws
 #
 # test_maps.py <maps folder>
 #
@@ -16,7 +17,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from bsp2obj import export_map
+from bsp2obj import Totals, export_map
 from cache_file import CacheFileError
 
 BUILD = Path(__file__).resolve().parent.parent / "build"
@@ -33,10 +34,11 @@ def main() -> None:
     obj_folder = BUILD / "obj"
     obj_folder.mkdir(parents=True, exist_ok=True)
     failures = 0
+    sums = {"bsps": 0, "surfaces": 0, "clusters": 0, "instances": 0, "triangles": 0}
 
     print(
-        f"{'map':<22} {'type':<21} {'tags':>5} {'bad':>4}   "
-        f"{'bsps':>4} {'vertices':>8} {'surfaces':>8} {'broken':>6} {'reversed':>8}"
+        f"{'map':<22} {'type':<21} {'tags':>5} {'bad':>4}   {'bsps':>4} "
+        f"{'surfaces':>8} {'broken':>6} {'reversed':>8}   {'clusters':>8} {'instances':>9} {'triangles':>9}"
     )
     for path in maps:
         try:
@@ -51,29 +53,39 @@ def main() -> None:
 
         try:
             with contextlib.redirect_stdout(io.StringIO()):
-                totals = export_map(path, obj_folder / (path.stem + ".obj"))
+                collision: Totals = export_map(path, obj_folder / (path.stem + "_collision.obj"), collision=True)
+                render: Totals = export_map(path, obj_folder / (path.stem + ".obj"))
         except (CacheFileError, struct.error) as error:
             print(f"{path.stem:<22} FAILED: {error}")
             failures += 1
             continue
 
-        map_type = field(info.stdout, "type")
         bad = field(info.stdout, "outside (bad)")
         ok = (
             bad == "0"
             and field(info.stdout, "name") == path.stem
-            and totals.broken == 0
-            and totals.reversed == 0
-            and totals.surfaces > 0
+            and collision.broken == 0
+            and collision.reversed == 0
+            and collision.surfaces > 0
+            and render.surfaces > 0
         )
         failures += not ok
+        sums["bsps"] += collision.bsps
+        sums["surfaces"] += collision.surfaces
+        sums["clusters"] += render.clusters
+        sums["instances"] += render.instances
+        sums["triangles"] += render.surfaces
         print(
-            f"{path.stem:<22} {map_type:<21} {field(info.stdout, 'tags'):>5} {bad:>4}   "
-            f"{totals.bsps:>4} {totals.vertices:>8} {totals.surfaces:>8} {totals.broken:>6} {totals.reversed:>8}"
-            f"{'' if ok else '  <-- FAILED'}"
+            f"{path.stem:<22} {field(info.stdout, 'type'):<21} {field(info.stdout, 'tags'):>5} {bad:>4}   "
+            f"{collision.bsps:>4} {collision.surfaces:>8} {collision.broken:>6} {collision.reversed:>8}   "
+            f"{render.clusters:>8} {render.instances:>9} {render.surfaces:>9}{'' if ok else '  <-- FAILED'}"
         )
 
-    print(f"\n{len(maps) - failures} of {len(maps)} maps passed")
+    print(
+        f"\ntotal: {sums['bsps']} structure bsps, {sums['surfaces']} collision surfaces, "
+        f"{sums['clusters']} clusters, {sums['instances']} instances, {sums['triangles']} triangles"
+    )
+    print(f"{len(maps) - failures} of {len(maps)} maps passed")
     sys.exit(1 if failures else 0)
 
 
