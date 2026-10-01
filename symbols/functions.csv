@@ -254,3 +254,34 @@ address,name,source,arguments,returns,convention
 0016f0c0,unknown_0016f0c0,,stack,void
 00226030,unknown_00226030,,stack,void
 00124700,game_state_allocation_allocate,source/saved games/game_state.c,ecx stack,int,thiscall
+00012000,shell_initialize,source/shell/shell.c,,bool
+00012080,shell_dispose,source/shell/shell.c,,void
+00012190,shell_main,source/shell/shell.c,,void
+00012200,shell_platform_initialize,source/shell/shell.c,,bool
+000123b0,shell_get_video_settings,source/shell/shell.c,,void
+00012490,shell_create_device,source/shell/shell.c,,bool
+00012420,shell_test_device,source/shell/shell.c,,bool
+0012b690,main_loop,,,void
+003312cc,VirtualAlloc,,stack stack stack stack,int
+003312fa,VirtualFree,,stack stack stack,int
+002d15ea,XPhysicalFree,,stack,void
+002d0915,XGetLaunchInfo,,stack stack,int
+00330310,XGetVideoStandard,,,int
+00330339,XGetVideoFlags,,,int
+003212d6,_control87,,stack stack,int
+002d5d0a,unknown_002d5d0a,,,int
+003f5240,d3d_create_device,,eax ecx stack,int
+003f9d00,unknown_003f9d00,,eax,void
+003fc530,d3d_device_destroy,,eax,void
+00121350,unknown_00121350,,,void
+00121fc0,unknown_00121fc0,,,void
+00123180,unknown_00123180,,,void
+00012560,unknown_00012560,,,void
+001248b0,unknown_001248b0,,,void
+001253d0,unknown_001253d0,,,void
+00125600,unknown_00125600,,,void
+00124920,unknown_00124920,,,void
+000141c0,unknown_000141c0,,,void
+00123310,unknown_00123310,,,void
+00141190,unknown_00141190,,,void
+00140aa0,unknown_00140aa0,,,void

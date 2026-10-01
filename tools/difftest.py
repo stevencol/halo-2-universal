@@ -379,6 +379,12 @@ class Harness:
         # how many bytes of arguments the game's function takes off the
         # stack when it returns
         self._external_cleanup: dict[str, int] = {}
+        # the sizes of the game's functions, if Ghidra's list of them is there
+        self._game_function_sizes: dict[int, int] = {}
+        sizes_path = ROOT / "ghidra" / "functions.csv"
+        if sizes_path.exists():
+            with sizes_path.open(newline="") as f:
+                self._game_function_sizes = {int(row["address"], 16): int(row["size"]) for row in csv.DictReader(f)}
         self._external_cleanup_ours: dict[str, int] = {}
 
         missing = [name for name, symbol in self.symbols.items() if symbol.source and name not in self.functions]
@@ -437,16 +443,7 @@ class Harness:
         if name not in self.symbols:
             raise DifftestError(f"symbols/functions.csv does not have '{name}'")
         address = self.symbols[name].address
-        for instruction in Cs(CS_ARCH_X86, CS_MODE_32).disasm(bytes(self.mu.mem_read(address, 0x2000)), address):
-            if instruction.address == address and instruction.mnemonic == "jmp":
-                # only a jump to a function of the kernel, which takes its arguments off the stack
-                self._external_cleanup[name] = 4 * self.symbols[name].arguments.count("stack")
-                break
-            if instruction.mnemonic == "ret":
-                self._external_cleanup[name] = int(instruction.op_str, 0) if instruction.op_str else 0
-                break
-        else:
-            raise DifftestError(f"no return found in the game's function {name}")
+        self._external_cleanup[name] = self._game_cleanup(name, address)
         self.mu.hook_add(UC_HOOK_CODE, self._external_hook, user_data=(name, "original"), begin=address, end=address)
         if name in self.functions:
             address = self.functions[name]
@@ -456,6 +453,28 @@ class Harness:
                     self._external_cleanup_ours[name] = int(instruction.op_str, 0) if instruction.op_str else 0
                     break
             self.mu.hook_add(UC_HOOK_CODE, self._external_hook, user_data=(name, "ours"), begin=address, end=address)
+
+    def _game_cleanup(self, name: str, address: int, depth: int = 0) -> int:
+        """How many bytes of arguments a function of the game takes off the stack when it returns."""
+        # as far as the function goes, if its size is known: a function can
+        # end in a jump to another, which is the one that returns
+        size = self._game_function_sizes.get(address, 0x2000)
+        last = None
+        for instruction in Cs(CS_ARCH_X86, CS_MODE_32).disasm(bytes(self.mu.mem_read(address, size)), address):
+            if instruction.address == address and instruction.mnemonic == "jmp" and "[" in instruction.op_str:
+                # only a jump to a function of the kernel, which takes its arguments off the stack
+                return 4 * self.symbols[name].arguments.count("stack")
+            if instruction.mnemonic == "ret":
+                return int(instruction.op_str, 0) if instruction.op_str else 0
+            if instruction.mnemonic != "int3":
+                last = instruction
+        if last is not None and last.mnemonic == "jmp" and last.op_str.startswith("0x") and depth < 8:
+            return self._game_cleanup(name, int(last.op_str, 16), depth + 1)
+        # the size is not always all of the function: the first return after where it starts
+        for instruction in Cs(CS_ARCH_X86, CS_MODE_32).disasm(bytes(self.mu.mem_read(address, 0x2000)), address):
+            if instruction.mnemonic == "ret":
+                return int(instruction.op_str, 0) if instruction.op_str else 0
+        raise DifftestError(f"no return found in the game's function {name}")
 
     def _external_hook(self, mu: Uc, address: int, size: int, user_data: tuple) -> None:
         # a function that a test stands in for; it runs if this test does not

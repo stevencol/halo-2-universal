@@ -2,6 +2,70 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — El arranque del juego
+
+Las primeras funciones del ejecutable: por dónde empieza el juego, qué
+prepara antes de su bucle principal y qué desmonta al salir. Con esto hay
+un hilo desde el punto de entrada hasta casi todo lo descompilado. De 203
+funciones se pasa a 210, el 1,86 % de las del juego (el 0,840 % de sus
+bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `shell_initialize` | `0x00012000` | `shell/shell.c` |
+| `shell_dispose` | `0x00012080` | `shell/shell.c` |
+| `shell_main` | `0x00012190` | `shell/shell.c` |
+| `shell_platform_initialize` | `0x00012200` | `shell/shell.c` |
+| `shell_get_video_settings` | `0x000123b0` | `shell/shell.c` |
+| `shell_test_device` | `0x00012420` | `shell/shell.c` |
+| `shell_create_device` | `0x00012490` | `shell/shell.c` |
+
+- Archivos nuevos: `shell/shell.{c,h}`; `tests/test_shell.py`.
+
+### Cambiado
+
+- `tools/difftest.py`: al sustituir una función del juego que termina
+  saltando a otra, se mira en esa otra cuántos argumentos quita de la pila.
+  Antes se tomaba el primer retorno que hubiera después, que podía ser de
+  otra función (pasaba con `cache_files_initialize`).
+
+### Lo que se sabe
+
+- El orden del arranque (`shell_main`): crear y soltar el dispositivo de
+  Direct3D como prueba, reservar la memoria física, `shell_initialize`, el
+  bucle principal y `shell_dispose`. La función no retorna: acaba en un
+  punto de ruptura.
+- `shell_initialize` prepara, en este orden: una biblioteca de la consola,
+  0x23000 bytes de memoria, la plataforma, el modo de coma flotante
+  (precisión simple), el hilo de tareas, dos sistemas aún sin identificar,
+  los archivos de caché, otro sin identificar, el estado del juego y el
+  rasterizador. Si no hay dispositivo de Direct3D se rinde; si lo hay,
+  prepara dos sistemas más (en Halo 1 son la entrada y el sonido).
+- Al salir no se detiene el hilo de tareas: solo se cierran sus cuatro
+  identificadores.
+- El dispositivo se pide a 640×480 con Z de 24 bits. El modo panorámico y
+  el progresivo salen de los ajustes de la consola; la frecuencia (50 o
+  60 Hz) solo se ajusta en consolas PAL.
+- Si el juego se lanza desde el disco de demos (`XDEMOS`), se anota la
+  palabra `xdemo` en una variable que leerá otra parte del juego.
+
+### Sin comprobar
+
+- Que `shell_initialize` se rinda cuando `shell_platform_initialize`
+  devuelve falso: esa función siempre devuelve verdadero, el compilador de
+  `source/` lo sabe y no mira el resultado. En el juego la comprobación
+  está, pero nunca se cumple.
+- En `shell_create_device`, poner a cero el puntero del dispositivo cuando
+  ya es cero: el juego lo hace y no cambia nada.
+
+### Pendiente
+
+- Los doce sistemas que `shell_initialize` y `shell_dispose` preparan y
+  desmontan y que aún no están descompilados (`unknown_...`), y el bucle
+  principal (`0x0012b690`).
+
 ## 2026-10-01 — El estado del juego y los puntos de control
 
 `game_state.c`: la memoria donde el juego guarda todo lo que hay que

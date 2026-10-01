@@ -106,6 +106,18 @@ static inline void *physical_memory_allocate_low(
 	return result;
 }
 
+/* starts a stage: it has, of the memory, what is free in the stage before
+it. The game has no function for it */
+static inline void physical_memory_stage_push(
+	void)
+{
+	long stage= physical_memory_globals.stage;
+
+	physical_memory_globals.low_address[stage+1]= physical_memory_globals.low_address[stage];
+	physical_memory_globals.high_address[stage+1]= physical_memory_globals.high_address[stage];
+	physical_memory_globals.stage= stage+1;
+}
+
 /* the same, from the high end */
 static inline void *physical_memory_allocate_high(
 	uint32_t size)

@@ -36,3 +36,12 @@ address,name,source
 004686c4,global_structure_bsp_index,source/scenario/scenario.c
 0055e755,crc_table_initialized,source/memory/crc.c
 0055e788,crc_table,source/memory/crc.c
+005107fc,shell_memory_globals,source/shell/shell.c
+00509344,shell_launch_name,source/shell/shell.c
+00485ac0,xbox_video_settings,source/shell/shell.c
+005093b0,global_d3d_device,source/shell/shell.c
+00407488,d3d_device,source/shell/shell.c
+00509350,shell_device_requested,source/shell/shell.c
+0047ffd8,unknown_0047ffd8,source/shell/shell.c
+00484ce8,unknown_00484ce8,source/shell/shell.c
+004e2920,unknown_004e2920,source/shell/shell.c
