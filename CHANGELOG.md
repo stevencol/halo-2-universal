@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Primeras funciones de objetos
+
+Las primeras funciones que usan el estado global del juego. De 59 se pasa a
+66, el 0,59 % de las del juego.
+
+### Añadido
+
+- `source/objects/objects.c` y `objects.h`: la cabecera de un objeto, lo que
+  se conoce de sus datos y siete funciones.
+
+  | Función | Dirección |
+  | --- | --- |
+  | `object_wake` | `0x000b7360` |
+  | `object_get_origin` | `0x000b9dd0` |
+  | `object_get_world_matrix` | `0x000ba160` |
+  | `object_get_location` | `0x000ba300` |
+  | `object_try_and_get_and_verify_type` | `0x000badc0` |
+  | `object_iterator_next` | `0x000baeb0` |
+  | `object_get_ultimate_parent` | `0x000baf80` |
+
+- `symbols/globals.csv`: el registro de variables globales, con su dirección
+  en el ejecutable. La primera es `object_header_data` (`0x004e0300`), la
+  tabla de cabeceras de objetos.
+- `tests/test_objects.py`: unos 4.000 casos, con mundos de objetos generados
+  al azar, algunos enganchados a otros.
+
+### Cambiado
+
+- `tools/difftest.py` y `tools/test_functions.py`: una prueba puede dar
+  valor a variables globales para una llamada (un entero, o un bloque de
+  memoria al que la variable apunta). El valor se escribe en la variable del
+  ejecutable y en la de `source/`.
+
+### Lo que se sabe de los objetos
+
+- La cabecera de un objeto es la de Halo 1: identificador, flags, tipo y la
+  dirección de sus datos.
+- De los datos de un objeto: el objeto al que está enganchado (`0x14`) y el
+  nodo de este (`0x18`), su localización en el nivel (`0x28`), su posición
+  (`0x64`), sus vectores adelante (`0x70`) y arriba (`0x7C`), y dónde están
+  las matrices de sus nodos (`0x116`).
+- Un objeto enganchado a otro tiene su posición relativa al nodo del otro.
+
+### Nombres supuestos
+
+- `object_wake` y el bit de cabecera que activa; `object_get_location` y
+  `object_get_world_matrix`.
+
 ## 2026-10-01 — Flujo de bits y más vectores
 
 De 51 funciones se pasa a 59, el 0,52 % de las del juego.

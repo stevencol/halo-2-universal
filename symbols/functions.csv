@@ -7,6 +7,13 @@ address,name,source,arguments,returns
 00030bf0,normalize3d,source/math/real_math.c,eax,real:xmm0
 0003ea30,distance3d,source/math/real_math.c,eax ecx,real
 0011d000,perpendicular3d,source/math/real_math.c,ecx eax,void
+000b7360,object_wake,source/objects/objects.c,eax,void
+000b9dd0,object_get_origin,source/objects/objects.c,eax esi,void
+000ba160,object_get_world_matrix,source/objects/objects.c,eax stack,int
+000ba300,object_get_location,source/objects/objects.c,ecx eax,void
+000badc0,object_try_and_get_and_verify_type,source/objects/objects.c,eax stack,int
+000baeb0,object_iterator_next,source/objects/objects.c,stack,int
+000baf80,object_get_ultimate_parent,source/objects/objects.c,ecx,int
 0011e5e0,fast_vector_intersects_sphere,source/math/real_math.c,ecx edx eax stack,bool
 00120850,projection_from_vector3d,source/math/real_math.c,eax,short
 00122870,cache_file_header_verify,source/cache/cache_files.c,esi,bool

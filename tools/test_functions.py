@@ -29,16 +29,20 @@ class Tester:
         self.cases: dict[str, int] = {}
         self.failures: dict[str, list[str]] = {}
 
-    def check(self, name: str, *arguments: object) -> None:
+    def check(self, name: str, *arguments: object, globals: dict[str, object] | None = None) -> None:
         """Runs both functions with the arguments and compares what they return and
-        what they leave in the buffers (difftest.Buffer) of the arguments."""
+        what they leave in the buffers (difftest.Buffer) of the arguments.
+
+        `globals` gives global variables of symbols/globals.csv a value for
+        the call: an integer, or a buffer that the variable points to, which
+        is compared too."""
         self.cases[name] = self.cases.get(name, 0) + 1
         shown = ", ".join(
             f"<{len(argument.data)} bytes>" if isinstance(argument, Buffer) else repr(argument) for argument in arguments
         )
         try:
-            original = self.harness.original(name, *arguments)
-            ours = self.harness.ours(name, *arguments)
+            original = self.harness.original(name, *arguments, globals=globals)
+            ours = self.harness.ours(name, *arguments, globals=globals)
         except DifftestError as error:
             self._fail(name, f"({shown}): {error}")
             return
@@ -71,6 +75,8 @@ def main() -> None:
     tester = Tester(harness)
 
     wanted = sys.argv[1] if len(sys.argv) > 1 else None
+    # a test file can take what another one has
+    sys.path.insert(0, str(TESTS))
     for path in sorted(TESTS.glob("test_*.py")):
         if wanted and wanted not in path.stem:
             continue

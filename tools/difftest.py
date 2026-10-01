@@ -24,6 +24,7 @@ from unicorn import x86_const as x86
 ROOT = Path(__file__).resolve().parent.parent
 XBE_PATH = ROOT / "disc" / "default.xbe"
 SYMBOLS_PATH = ROOT / "symbols" / "functions.csv"
+GLOBALS_PATH = ROOT / "symbols" / "globals.csv"
 BUILD = ROOT / "build" / "difftest"
 
 # the emulator's memory
@@ -211,6 +212,13 @@ class Harness:
         if missing:
             raise DifftestError(f"symbols/functions.csv has functions that source/ does not define: {missing}")
 
+        # the global variables: the address of each in the executable
+        with GLOBALS_PATH.open(newline="") as f:
+            self.globals = {row["name"]: int(row["address"], 16) for row in csv.DictReader(f)}
+        missing = [name for name in self.globals if name not in self.variables]
+        if missing:
+            raise DifftestError(f"symbols/globals.csv has variables that source/ does not define: {missing}")
+
     # ---------- loading
 
     def _load_xbe(self, xbe: bytes) -> None:
@@ -268,6 +276,7 @@ class Harness:
             self.mu.mem_write(address, elf[offset : offset + file_size])
 
         functions: dict[str, int] = {}
+        self.variables: dict[str, int] = {}
         sections = [struct.unpack_from("<10I", elf, section_offset + n * section_size) for n in range(section_count)]
         for section in sections:
             if section[1] != 2:  # SHT_SYMTAB
@@ -275,9 +284,10 @@ class Harness:
             strings_offset = sections[section[6]][4]
             for at in range(section[4], section[4] + section[5], 16):
                 name, value, _, info = struct.unpack_from("<3IB", elf, at)
-                if info & 0xF == 2:  # STT_FUNC
+                if info & 0xF in (1, 2):  # STT_OBJECT, STT_FUNC
                     end = elf.index(b"\0", strings_offset + name)
-                    functions[elf[strings_offset + name : end].decode()] = value
+                    table = functions if info & 0xF == 2 else self.variables
+                    table[elf[strings_offset + name : end].decode()] = value
         return functions
 
     # ---------- calling
@@ -374,8 +384,17 @@ class Harness:
                 values.append(argument)
         return values, buffers
 
-    def _run(self, symbol: Symbol, original: bool, arguments: tuple) -> Result:
-        values, buffers = self._place_buffers(arguments)
+    def _run(self, symbol: Symbol, original: bool, arguments: tuple, globals_: dict[str, object] | None) -> Result:
+        # the buffers of the globals go after those of the arguments
+        globals_ = globals_ or {}
+        values, buffers = self._place_buffers((*arguments, *globals_.values()))
+        for name, value in zip(globals_, values[len(arguments) :]):
+            if name not in self.globals:
+                raise DifftestError(f"symbols/globals.csv does not have '{name}'")
+            address = self.globals[name] if original else self.variables[name]
+            self.mu.mem_write(address, struct.pack("<I", value & 0xFFFFFFFF))
+        values = values[: len(arguments)]
+
         if original:
             if len(values) != len(symbol.arguments):
                 raise DifftestError(f"{symbol.name} takes {len(symbol.arguments)} arguments")
@@ -390,10 +409,14 @@ class Harness:
             value, [buffer.values(bytes(self.mu.mem_read(buffer.address, len(buffer.data)))) for buffer in buffers]
         )
 
-    def original(self, name: str, *arguments: object) -> Result:
-        """Calls the function of the game's executable."""
-        return self._run(self.symbols[name], True, arguments)
+    def original(self, name: str, *arguments: object, globals: dict[str, object] | None = None) -> Result:
+        """Calls the function of the game's executable.
 
-    def ours(self, name: str, *arguments: object) -> Result:
+        `globals` gives 32-bit global variables of symbols/globals.csv a
+        value for the call: an integer, or a buffer that the variable points to.
+        """
+        return self._run(self.symbols[name], True, arguments, globals)
+
+    def ours(self, name: str, *arguments: object, globals: dict[str, object] | None = None) -> Result:
         """Calls the function of source/."""
-        return self._run(self.symbols[name], False, arguments)
+        return self._run(self.symbols[name], False, arguments, globals)

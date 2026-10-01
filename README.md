@@ -11,7 +11,7 @@ con Halo: Combat Evolved.
 **Estado: muy temprano.** El juego no arranca ni está cerca de hacerlo. Hoy
 el proyecto abre los mapas del juego, lista su contenido y exporta los
 niveles y los modelos con su textura principal. Del código del ejecutable
-hay descompiladas 59 funciones de unas 11.265 (el 0,52 %), todas comprobadas
+hay descompiladas 66 funciones de unas 11.265 (el 0,59 %), todas comprobadas
 contra el original. Consulta
 [CHANGELOG.md](CHANGELOG.md) para ver qué hay hecho.
 
@@ -88,7 +88,9 @@ geometría de cada nivel a `build/obj/`.
    su dirección en un comentario.
 4. Añadirla a `symbols/functions.csv`, con el lugar de cada argumento en la
    función original (un registro o `stack`).
-5. Añadir sus casos a `tests/` y ejecutar `test_functions.py`.
+5. Si usa una variable global, definirla en `source/` y añadirla a
+   `symbols/globals.csv` con su dirección.
+6. Añadir sus casos a `tests/` y ejecutar `test_functions.py`.
 
 Listar el contenido de un mapa:
 
