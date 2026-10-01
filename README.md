@@ -9,7 +9,8 @@ El objetivo a largo plazo es un port nativo del juego, como el que
 con Halo: Combat Evolved.
 
 **Estado: muy temprano.** El juego no arranca ni está cerca de hacerlo. Hoy
-el proyecto abre los mapas del juego y lista su contenido. Consulta
+el proyecto abre los mapas del juego, lista su contenido y exporta la
+geometría de colisión de los niveles. Consulta
 [CHANGELOG.md](CHANGELOG.md) para ver qué hay hecho.
 
 ## En qué se basa
@@ -59,12 +60,32 @@ ninja
 python tools/test_maps.py "<carpeta maps del juego>"
 ```
 
-`ninja` genera `build/mapinfo.exe`. La prueba abre todos los mapas y
-comprueba que cada tag está donde el cargador lo espera.
+`ninja` genera `build/mapinfo.exe` y comprueba los tamaños de las
+estructuras de `source/`. La prueba abre todos los mapas, comprueba que cada
+tag está donde el cargador lo espera y exporta la geometría de colisión de
+cada nivel a `build/obj/`.
+
+Listar el contenido de un mapa:
 
 ```
 build\mapinfo.exe "<carpeta maps>\zanzibar.map" --tags
 ```
+
+Exportar la geometría de colisión de un nivel a un archivo `.obj` (se abre
+en Blender con *File > Import > Wavefront*) y dibujarla como imagen:
+
+```
+python tools/bsp2obj.py "<carpeta maps>\zanzibar.map" zanzibar.obj
+python tools/obj_preview.py zanzibar.obj zanzibar.png
+```
+
+### Smart App Control de Windows
+
+Con Smart App Control activado, Windows puede negarse a ejecutar los
+programas recién compilados porque no están firmados ("Una directiva de
+Control de aplicaciones bloqueó este archivo"). Por eso las herramientas
+nuevas se escriben en Python. Es un límite real para el futuro: el
+ejecutable del juego, cuando exista, tendrá el mismo problema.
 
 ## Organización
 

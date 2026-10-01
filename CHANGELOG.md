@@ -2,6 +2,56 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Geometría de colisión de los niveles
+
+Segunda meta: leer la geometría del nivel y verla fuera del juego.
+
+### Añadido
+
+- `source/scenario/scenario_definitions.h`: la referencia del escenario a
+  cada structure bsp (bloque `0x210` del tag `scnr`).
+- `source/structures/structure_bsp_definitions.h`: la cabecera del bloque de
+  un structure bsp, el principio del tag `sbsp` y sus materiales de
+  colisión.
+- `source/physics/collision_bsp_definitions.h`: el collision bsp
+  (superficies, aristas, vértices).
+- `source/tag_files/tag_groups.h`, `source/math/real_math.h`: tipos base.
+- `tools/cache_file.py`: lector de mapas para las herramientas en Python.
+- `tools/bsp2obj.py`: exporta la geometría de colisión de todos los
+  structure bsps de un mapa a un `.obj`, con un material por shader.
+- `tools/obj_preview.py`: dibuja un `.obj` como imagen PNG, sin programas
+  externos.
+- `tools/common/`: el lector de mapas en C, separado de `mapinfo`.
+
+### Cambiado
+
+- `tools/test_maps.py` exporta además la geometría de cada mapa y comprueba
+  que ninguna superficie esté rota ni del revés. Pasan los 30 mapas: 80
+  structure bsps y 799.323 superficies en total, 0 rotas, 0 del revés.
+
+### Lo que se sabe de los niveles
+
+- Un structure bsp es un bloque del mapa aparte de los datos de los tags,
+  con una cabecera de 16 bytes y la firma `sbsp`. El juego lo lee
+  (`0x00122b40`) a la dirección que indica el escenario, entre el índice de
+  tags y los datos de los tags.
+- Los mapas de campaña tienen de 1 a 8 structure bsps, todos en la misma
+  dirección: se carga uno a la vez.
+- El collision bsp tiene la organización de Halo 1, con índices de 16 bits
+  en lugar de 32.
+- `shared`, `single_player_shared` y `mainmenu` tienen un structure bsp de
+  relleno: una caja de 6 caras.
+
+### Pendiente
+
+- `0x00122b40`, la función que carga un structure bsp, está identificada
+  pero no reescrita.
+- La geometría que se dibuja (clusters, vértices con texturas) y los mapas
+  de luz (`ltmp`) aún no se leen. Lo exportado es lo que usa la física, sin
+  texturas, e incluye las paredes invisibles que cierran el nivel.
+- Windows (Smart App Control) bloqueó un exportador compilado en C; se
+  reescribió en Python.
+
 ## 2026-10-01 — Cargador de mapas
 
 Primera meta: abrir los mapas del juego como lo hace el ejecutable.

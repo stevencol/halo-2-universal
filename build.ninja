@@ -1,7 +1,7 @@
 # builds the tools of the Halo 2 decompilation; needs clang (llvm-mingw) in the PATH
 
 cc = clang
-cflags = -std=c11 -O2 -g -Wall -Wextra -Wno-four-char-constants -Wno-multichar -Isource/cache
+cflags = -std=c11 -O2 -g -Wall -Wextra -Wno-four-char-constants -Wno-multichar -Isource -Itools/common
 
 rule cc
   command = $cc $cflags -MD -MF $out.d -c $in -o $out
@@ -14,7 +14,10 @@ rule link
   description = LINK $out
 
 build build/cache_files.o: cc source/cache/cache_files.c
+build build/cache_file_reader.o: cc tools/common/cache_file_reader.c
+build build/verify_definitions.o: cc tools/common/verify_definitions.c
 build build/mapinfo.o: cc tools/mapinfo/mapinfo.c
-build build/mapinfo.exe: link build/mapinfo.o build/cache_files.o
 
-default build/mapinfo.exe
+build build/mapinfo.exe: link build/mapinfo.o build/cache_file_reader.o build/cache_files.o
+
+default build/mapinfo.exe build/verify_definitions.o

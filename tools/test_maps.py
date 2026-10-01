@@ -1,16 +1,26 @@
 #!/usr/bin/env python3
 
-# runs mapinfo on every map of the game and checks that each opens and that
-# every tag's data is where the loader expects it
+# runs the tools on every map of the game and checks that each opens, that
+# every tag's data is where the loader expects it, and that the collision
+# geometry of its structure bsps is whole
 #
 # test_maps.py <maps folder>
+#
+# the OBJ files are left in build/obj
 
+import contextlib
+import io
 import re
+import struct
 import subprocess
 import sys
 from pathlib import Path
 
-MAPINFO = Path(__file__).resolve().parent.parent / "build" / "mapinfo.exe"
+from bsp2obj import export_map
+from cache_file import CacheFileError
+
+BUILD = Path(__file__).resolve().parent.parent / "build"
+MAPINFO = BUILD / "mapinfo.exe"
 
 
 def field(output: str, name: str) -> str:
@@ -20,23 +30,47 @@ def field(output: str, name: str) -> str:
 
 def main() -> None:
     maps = sorted(Path(sys.argv[1]).glob("*.map"))
+    obj_folder = BUILD / "obj"
+    obj_folder.mkdir(parents=True, exist_ok=True)
     failures = 0
 
-    print(f"{'map':<26} {'type':<21} {'groups':>6} {'tags':>6} {'here':>6} {'no data':>7} {'bad':>5}")
+    print(
+        f"{'map':<22} {'type':<21} {'tags':>5} {'bad':>4}   "
+        f"{'bsps':>4} {'vertices':>8} {'surfaces':>8} {'broken':>6} {'reversed':>8}"
+    )
     for path in maps:
-        result = subprocess.run([MAPINFO, path], capture_output=True, text=True)
-        if result.returncode != 0:
-            print(f"{path.stem:<26} FAILED: {result.stderr.strip()}")
+        try:
+            info = subprocess.run([MAPINFO, path], capture_output=True, text=True)
+        except OSError as error:
+            # Windows can refuse to start a program that is not signed
+            sys.exit(f"cannot run {MAPINFO.name}: {error}")
+        if info.returncode != 0:
+            print(f"{path.stem:<22} FAILED: {info.stderr.strip()}")
             failures += 1
             continue
 
-        out = result.stdout
-        bad = field(out, "outside (bad)")
-        ok = bad == "0" and field(out, "name") == path.stem
+        try:
+            with contextlib.redirect_stdout(io.StringIO()):
+                totals = export_map(path, obj_folder / (path.stem + ".obj"))
+        except (CacheFileError, struct.error) as error:
+            print(f"{path.stem:<22} FAILED: {error}")
+            failures += 1
+            continue
+
+        map_type = field(info.stdout, "type")
+        bad = field(info.stdout, "outside (bad)")
+        ok = (
+            bad == "0"
+            and field(info.stdout, "name") == path.stem
+            and totals.broken == 0
+            and totals.reversed == 0
+            and totals.surfaces > 0
+        )
         failures += not ok
         print(
-            f"{path.stem:<26} {field(out, 'type'):<21} {field(out, 'tag groups'):>6} {field(out, 'tags'):>6} "
-            f"{field(out, 'in this file'):>6} {field(out, 'no data here'):>7} {bad:>5}{'' if ok else '  <-- FAILED'}"
+            f"{path.stem:<22} {map_type:<21} {field(info.stdout, 'tags'):>5} {bad:>4}   "
+            f"{totals.bsps:>4} {totals.vertices:>8} {totals.surfaces:>8} {totals.broken:>6} {totals.reversed:>8}"
+            f"{'' if ok else '  <-- FAILED'}"
         )
 
     print(f"\n{len(maps) - failures} of {len(maps)} maps passed")
