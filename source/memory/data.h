@@ -40,6 +40,28 @@ enum
 
 /* ---------- structures */
 
+/* what allocates the memory of an array: an object with two functions, which
+take the object in a register and their argument on the stack, and take the
+argument off it */
+#if defined(__i386__)
+#define ALLOCATION_CONVENTION __attribute__((thiscall))
+#else
+#define ALLOCATION_CONVENTION
+#endif
+
+struct allocation;
+
+struct allocation_functions
+{
+	void *(ALLOCATION_CONVENTION *allocate)(struct allocation *allocation, unsigned long size);
+	void (ALLOCATION_CONVENTION *deallocate)(struct allocation *allocation, void *memory);
+};
+
+struct allocation
+{
+	const struct allocation_functions *functions;
+};
+
 struct data_array
 {
 	char name[DATA_ARRAY_NAME_LENGTH+1];
@@ -49,7 +71,8 @@ struct data_array
 	boolean valid;
 	word flags;
 	unsigned long signature;
-	void *allocation;
+	/* NULL for an array that nothing has to free */
+	struct allocation *allocation;
 	/* no element before this one is free */
 	long next_index;
 	/* no element from this one on is in use */
@@ -84,10 +107,13 @@ typedef char verify_data_iterator_size[
 
 /* ---------- prototypes/DATA.C */
 
+struct data_array *data_new(const char *name, long maximum_count, long size, long alignment_bits,
+	struct allocation *allocation);
+void data_dispose(struct data_array *data);
 void data_initialize_disconnected(struct data_array *data, const char *name, long maximum_count, long size,
-	byte alignment_bits, void *allocation, unsigned long *in_use_bit_vector);
+	byte alignment_bits, struct allocation *allocation, unsigned long *in_use_bit_vector);
 void data_initialize(struct data_array *data, const char *name, long maximum_count, long size,
-	long alignment_bits, void *allocation);
+	long alignment_bits, struct allocation *allocation);
 void data_connect(struct data_array *data, long maximum_count, void *datums);
 void data_make_valid(struct data_array *data);
 void data_delete_all(struct data_array *data);

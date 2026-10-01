@@ -3,7 +3,7 @@
 import random
 import struct
 
-from difftest import SCRATCH_ADDRESS, Buffer
+from difftest import SCRATCH_ADDRESS, Buffer, Mock, mock_address
 
 DATA_ARRAY_SIZE = 0x4C
 FILL_DELETED_FLAG = 1 << 3
@@ -143,6 +143,37 @@ def run(t) -> None:
             iterator = struct.pack("<Iii4x", 16, random_.randint(-5, 5), absolute_index)
             data = array(random_, maximum_count, 8, in_use, prefix=iterator)
             t.check("data_iterator_next", Buffer(data.data, pointers=(0, *data.pointers)))
+
+    # an array made by an allocator and freed by it. The allocator is an
+    # object with a table of two functions, which the test stands in for
+    allocator = Buffer(struct.pack("<3I", 4, mock_address(0), mock_address(1)), pointers=(0,))
+    for alignment_bits in (0, 2, 5):
+        for maximum_count, size in ((1, 2), (5, 12), (33, 6), (70, 3)):
+            memory = Buffer(random_.randbytes(0x400))
+            # with memory, and with none
+            for give in (True, False):
+                mocks = [
+                    Mock(lambda call, memory=memory, give=give: memory.address if give else 0, stack_arguments=1, registers=("ecx",)),
+                    Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
+                ]
+                t.check(
+                    "data_new", Buffer(b"some objects\0"), maximum_count, size, alignment_bits, allocator,
+                    mocks=mocks, extra=[memory],
+                )
+    for data, _, _ in arrays(random_, 20):
+        # an array with an allocator, which is after it in the buffer, and one with none
+        for allocated in (True, False):
+            array_ = bytearray(data.data)
+            pointers = list(data.pointers)
+            struct.pack_into("<I", array_, 0x30, len(array_) if allocated else 0)
+            if allocated:
+                pointers += [0x30, len(array_)]
+            array_ += struct.pack("<3I", len(array_) + 4, mock_address(0), mock_address(1))
+            mocks = [
+                Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
+                Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
+            ]
+            t.check("data_dispose", Buffer(bytes(array_), pointers=tuple(pointers)), mocks=mocks)
 
     # a new array: the memory is the array, then room for its elements and its vector of bits
     for alignment_bits in (0, 1, 2, 4, 5, 7):

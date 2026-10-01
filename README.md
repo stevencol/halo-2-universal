@@ -11,7 +11,7 @@ con Halo: Combat Evolved.
 **Estado: muy temprano.** El juego no arranca ni está cerca de hacerlo. Hoy
 el proyecto abre los mapas del juego, lista su contenido y exporta los
 niveles y los modelos con su textura principal. Del código del ejecutable
-hay descompiladas 100 funciones de unas 11.265 (el 0,89 %), todas
+hay descompiladas 104 funciones de unas 11.265 (el 0,92 %), todas
 comprobadas contra el original. Consulta
 [CHANGELOG.md](CHANGELOG.md) para ver qué hay hecho.
 
@@ -64,8 +64,8 @@ python tools/test_functions.py
 python tools/test_maps.py "<carpeta maps del juego>"
 ```
 
-`ninja` genera `build/mapinfo.exe` y comprueba los tamaños de las
-estructuras de `source/`.
+`ninja` comprueba los tamaños de las estructuras de `source/`. No genera
+ningún programa: todas las herramientas son scripts de Python.
 
 `test_functions.py` comprueba el código descompilado: ejecuta en un emulador
 cada función de `source/` y la función del ejecutable de la que salió, con
@@ -90,12 +90,18 @@ geometría de cada nivel a `build/obj/`.
    función original (un registro o `stack`).
 5. Si usa una variable global, definirla en `source/` y añadirla a
    `symbols/globals.csv` con su dirección.
-6. Añadir sus casos a `tests/` y ejecutar `test_functions.py`.
+6. Si llama a una función del juego que aún no está descompilada, añadir
+   esa función a `symbols/functions.csv` sin archivo de origen. La prueba
+   da entonces la misma función simulada a los dos lados
+   (`externals={"nombre": función}`) y compara también las llamadas que
+   recibe. Para un puntero a función dentro de una estructura se usa
+   `Mock`.
+7. Añadir sus casos a `tests/` y ejecutar `test_functions.py`.
 
 Listar el contenido de un mapa:
 
 ```
-build\mapinfo.exe "<carpeta maps>\zanzibar.map" --tags
+python tools/mapinfo.py "<carpeta maps>\zanzibar.map" --tags
 ```
 
 Exportar la geometría de un nivel a un archivo `.obj` (se abre en Blender
@@ -123,8 +129,9 @@ python tools/bitmap2png.py "<carpeta maps>\zanzibar.map" zanzibar_seawall seawal
 
 Con Smart App Control activado, Windows puede negarse a ejecutar los
 programas recién compilados porque no están firmados ("Una directiva de
-Control de aplicaciones bloqueó este archivo"). Por eso las herramientas
-nuevas se escriben en Python. Es un límite real para el futuro: el
+Control de aplicaciones bloqueó este archivo"). Por eso todas las
+herramientas son scripts de Python, y el código de `source/` se prueba
+dentro de un emulador. Es un límite real para el futuro: el
 ejecutable del juego, cuando exista, tendrá el mismo problema.
 
 ## Organización

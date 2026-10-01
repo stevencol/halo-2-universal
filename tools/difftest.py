@@ -18,6 +18,7 @@ import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from capstone import CS_ARCH_X86, CS_MODE_32, Cs
 from unicorn import UC_ARCH_X86, UC_HOOK_CODE, UC_MODE_32, Uc, UcError
 from unicorn import x86_const as x86
 
@@ -36,6 +37,10 @@ STACK_SIZE = 0x00100000
 RETURN_ADDRESS = 0x7FFF0000  # a call returns here, where the emulator stops
 KERNEL_ADDRESS = 0x7FFE0000  # the functions of the console's kernel, which the emulator does not have
 KERNEL_SIZE = 0x4000
+MOCK_ADDRESS = 0x7FFD0000  # the functions that a test stands in for
+MOCK_SIZE = 0x1000
+# in that memory, from here on: the functions of the game that source/ calls and does not have yet
+EXTERNAL_OFFSET = 0x800
 
 KERNEL_THUNK_KEYS = (0x5B6D40B6, 0xEFB1F152)
 MAXIMUM_INSTRUCTIONS = 20_000_000
@@ -136,6 +141,36 @@ class FunctionPointer:
 
 
 @dataclass
+class MockCall:
+    """A call to a mock: the number of the mock, the registers that it takes arguments in, and its stack arguments."""
+
+    mock: int
+    registers: dict[str, int]
+    stack: list[int]
+
+
+@dataclass
+class Mock:
+    """A function that the test stands in for, at the address mock_address(n) for
+    the n-th mock of a call: what a pointer to a function in the data of a test
+    points to. Both functions call it the same way, and the calls are compared.
+
+    The handler takes the call and returns what the function returns.
+    """
+
+    handler: object
+    # the arguments on the stack, and whether the function takes them off
+    stack_arguments: int = 0
+    callee_cleans: bool = True
+    # the registers that the function takes arguments in
+    registers: tuple[str, ...] = ()
+
+
+def mock_address(n: int) -> int:
+    return MOCK_ADDRESS + n * 16
+
+
+@dataclass
 class Symbol:
     address: int
     name: str
@@ -153,6 +188,8 @@ class Result:
     # what the call left in each buffer of the arguments: the values of the
     # buffer's format, or the bytes
     buffers: list[tuple | bytes] = field(default_factory=list)
+    # the calls to the mocks, in order: the mock, its registers and its stack arguments
+    calls: list[tuple] = field(default_factory=list)
 
 
 # with DIFFTEST_TOLERANT=1 in the environment, two reals that differ in
@@ -187,6 +224,15 @@ def read_symbols() -> dict[str, Symbol]:
         }
 
 
+def external_names() -> list[str]:
+    """The functions of symbols/functions.csv with no source: not decompiled, but called by source/."""
+    return [name for name, symbol in read_symbols().items() if not symbol.source]
+
+
+def external_address(n: int) -> int:
+    return MOCK_ADDRESS + EXTERNAL_OFFSET + n * 16
+
+
 def build_image() -> Path:
     """Compiles source/ and links it at IMAGE_ADDRESS, as an ELF file."""
     clang = shutil.which("clang")
@@ -204,9 +250,13 @@ def build_image() -> Path:
             raise DifftestError(f"{source.relative_to(ROOT)} does not compile:\n{result.stderr}")
         objects.append(target)
 
+    # the functions that source/ calls and does not have yet go to addresses
+    # that the emulator stops at
+    externals = [f"--defsym={name}={external_address(n):#x}" for n, name in enumerate(external_names())]
+
     image = BUILD / "image.elf"
     result = subprocess.run(
-        [linker, "-m", "elf_i386", "-static", f"--image-base={IMAGE_ADDRESS:#x}", "-o", image, *objects],
+        [linker, "-m", "elf_i386", "-static", f"--image-base={IMAGE_ADDRESS:#x}", *externals, "-o", image, *objects],
         capture_output=True,
         text=True,
     )
@@ -229,7 +279,32 @@ class Harness:
         self.mu.mem_map(STACK_ADDRESS, STACK_SIZE)
         self.mu.mem_map(RETURN_ADDRESS, 0x1000)
 
-        missing = [name for name in self.symbols if name not in self.functions]
+        self.mock_call: int | None = None
+        self._mocks: list[Mock] = []
+        self._calls: list[tuple] = []
+        self.mu.mem_map(MOCK_ADDRESS, MOCK_SIZE)
+        self.mu.mem_write(MOCK_ADDRESS, b"\xf4" * MOCK_SIZE)
+        self.mu.hook_add(UC_HOOK_CODE, self._mock_hook, begin=MOCK_ADDRESS, end=MOCK_ADDRESS + MOCK_SIZE - 1)
+
+        # the functions that are not decompiled: where source/ calls each,
+        # and how many bytes of arguments the game's function takes off the
+        # stack when it returns
+        self.externals = external_names()
+        self._external_handlers: dict[str, object] = {}
+        self.external_call: str | None = None
+        self._external_cleanup: dict[str, int] = {}
+        disassembler = Cs(CS_ARCH_X86, CS_MODE_32)
+        for name in self.externals:
+            address = self.symbols[name].address
+            for instruction in disassembler.disasm(bytes(self.mu.mem_read(address, 0x2000)), address):
+                if instruction.mnemonic == "ret":
+                    self._external_cleanup[name] = int(instruction.op_str, 0) if instruction.op_str else 0
+                    break
+            else:
+                raise DifftestError(f"no return found in the game's function {name}")
+            self.mu.hook_add(UC_HOOK_CODE, self._external_hook, user_data=name, begin=address, end=address)
+
+        missing = [name for name, symbol in self.symbols.items() if symbol.source and name not in self.functions]
         if missing:
             raise DifftestError(f"symbols/functions.csv has functions that source/ does not define: {missing}")
 
@@ -268,6 +343,22 @@ class Harness:
             self.mu.mem_write(thunk_address, struct.pack("<I", KERNEL_ADDRESS + (entry & 0xFFFF) * 16))
             thunk_address += 4
         self.mu.hook_add(UC_HOOK_CODE, self._kernel_hook, begin=KERNEL_ADDRESS, end=KERNEL_ADDRESS + KERNEL_SIZE - 1)
+
+    def _mock_hook(self, mu: Uc, address: int, size: int, user_data: object) -> None:
+        if address >= MOCK_ADDRESS + EXTERNAL_OFFSET:
+            # source/ calls a function that it does not have
+            self.external_call = self.externals[(address - MOCK_ADDRESS - EXTERNAL_OFFSET) // 16]
+            self._external_side = "ours"
+        else:
+            self.mock_call = (address - MOCK_ADDRESS) // 16
+        mu.emu_stop()
+
+    def _external_hook(self, mu: Uc, address: int, size: int, user_data: object) -> None:
+        # the game's function, if the test stands in for it; otherwise it runs
+        if user_data in self._external_handlers:
+            self.external_call = user_data
+            self._external_side = "original"
+            mu.emu_stop()
 
     def _kernel_hook(self, mu: Uc, address: int, size: int, user_data: object) -> None:
         self.kernel_call = (address - KERNEL_ADDRESS) // 16
@@ -335,12 +426,72 @@ class Harness:
 
         while True:
             self.kernel_call = None
+            self.mock_call = None
+            self.external_call = None
             try:
                 mu.emu_start(address, RETURN_ADDRESS, count=MAXIMUM_INSTRUCTIONS)
             except UcError as error:
                 raise DifftestError(
                     f"the emulator stopped at {mu.reg_read(x86.UC_X86_REG_EIP):#010x}: {error}"
                 ) from error
+
+            if self.external_call is not None:
+                # a function of the game that the test stands in for. The
+                # game's code gives it its arguments where the game's function
+                # takes them; source/ gives them all on the stack
+                name = self.external_call
+                if name not in self._external_handlers:
+                    raise DifftestError(f"source/ calls {name}, which is not decompiled and the test does not stand in for")
+                symbol = self.symbols[name]
+                esp = mu.reg_read(x86.UC_X86_REG_ESP)
+                (address,) = struct.unpack("<I", mu.mem_read(esp, 4))
+                if self._external_side == "original":
+                    stack_count = symbol.arguments.count("stack")
+                    stack = iter(struct.unpack(f"<{stack_count}I", mu.mem_read(esp + 4, 4 * stack_count)))
+                    arguments = [
+                        next(stack) if place == "stack" else mu.reg_read(REGISTERS[place]) & 0xFFFFFFFF
+                        for place in symbol.arguments
+                    ]
+                    cleanup = self._external_cleanup[name]
+                else:
+                    count = len(symbol.arguments)
+                    arguments = list(struct.unpack(f"<{count}I", mu.mem_read(esp + 4, 4 * count)))
+                    cleanup = 0
+                result = self._external_handlers[name](self, arguments)
+                # the handler can give what to compare of the call, when its
+                # arguments have addresses that are not the same in both
+                value, record = result if isinstance(result, tuple) else (result, tuple(arguments))
+                self._calls.append((name, record))
+                mu.reg_write(x86.UC_X86_REG_EAX, (value or 0) & 0xFFFFFFFF)
+                mu.reg_write(x86.UC_X86_REG_ESP, esp + 4 + cleanup)
+                if address == RETURN_ADDRESS:
+                    mu.reg_write(x86.UC_X86_REG_EIP, RETURN_ADDRESS)
+                    break
+                continue
+
+            if self.mock_call is not None:
+                # a function that the test stands in for: its work is the
+                # test's, and it returns as the function it stands for does
+                if self.mock_call >= len(self._mocks):
+                    raise DifftestError(f"the function calls the mock {self.mock_call}, which the test does not give")
+                mock = self._mocks[self.mock_call]
+                esp = mu.reg_read(x86.UC_X86_REG_ESP)
+                address, *stack_arguments = struct.unpack(
+                    f"<{mock.stack_arguments + 1}I", mu.mem_read(esp, 4 * (mock.stack_arguments + 1))
+                )
+                call = MockCall(
+                    self.mock_call,
+                    {name: mu.reg_read(REGISTERS[name]) for name in mock.registers},
+                    stack_arguments,
+                )
+                self._calls.append((call.mock, tuple(call.registers.items()), tuple(call.stack)))
+                mu.reg_write(x86.UC_X86_REG_EAX, (mock.handler(call) or 0) & 0xFFFFFFFF)
+                mu.reg_write(x86.UC_X86_REG_ESP, esp + 4 + (4 * mock.stack_arguments if mock.callee_cleans else 0))
+                if address == RETURN_ADDRESS:
+                    mu.reg_write(x86.UC_X86_REG_EIP, RETURN_ADDRESS)
+                    break
+                continue
+
             if self.kernel_call is None:
                 break
 
@@ -405,22 +556,39 @@ class Harness:
                 values.append(argument)
         return values, buffers
 
-    def _run(self, symbol: Symbol, original: bool, arguments: tuple, globals_: dict[str, object] | None) -> Result:
-        # the buffers of the globals go after those of the arguments
+    def _run(
+        self,
+        symbol: Symbol,
+        original: bool,
+        arguments: tuple,
+        globals_: dict[str, object] | None,
+        mocks: list[Mock] | None = None,
+        extra: list[Buffer] | None = None,
+        externals: dict[str, object] | None = None,
+    ) -> Result:
+        # the buffers of the globals go after those of the arguments, and the
+        # extra ones after them
         globals_ = globals_ or {}
-        values, buffers = self._place_buffers((*arguments, *globals_.values()))
+        self._mocks = mocks or []
+        self._external_handlers = externals or {}
+        self._calls = []
+        values, buffers = self._place_buffers((*arguments, *globals_.values(), *(extra or ())))
+        values = values[: len(arguments) + len(globals_)]
         for n, value in enumerate(values):
             if isinstance(value, Pointer):
                 values[n] = value.buffer.address + value.offset
             elif isinstance(value, FunctionPointer):
                 values[n] = self.symbols[value.name].address if original else self.functions[value.name]
-        for name, value in zip(globals_, values[len(arguments) :]):
+        global_addresses: dict[str, int] = {}
+        for key, value in zip(globals_, values[len(arguments) :]):
             # "name+offset" is a 32-bit field of a global structure
-            name, _, offset = name.partition("+")
+            name, _, offset = key.partition("+")
             if name not in self.globals:
                 raise DifftestError(f"symbols/globals.csv does not have '{name}'")
             address = (self.globals[name] if original else self.variables[name]) + int(offset or "0", 0)
-            self.mu.mem_write(address, struct.pack("<I", value & 0xFFFFFFFF))
+            global_addresses[key] = address
+            # None is a global that the test only wants compared after the call
+            self.mu.mem_write(address, struct.pack("<I", (value or 0) & 0xFFFFFFFF))
         values = values[: len(arguments)]
 
         if original:
@@ -433,18 +601,32 @@ class Harness:
             # the function of source/ returns as C functions do: a real, in
             # the x87 register
             value = self._call(self.functions[symbol.name], values, {}, symbol.returns.split(":")[0])
+        # what the call left in the globals of the test is compared with the calls
+        for key, address in global_addresses.items():
+            self._calls.append(("global", key, struct.unpack("<I", self.mu.mem_read(address, 4))[0]))
         return Result(
-            value, [buffer.values(bytes(self.mu.mem_read(buffer.address, len(buffer.data)))) for buffer in buffers]
+            value,
+            [buffer.values(bytes(self.mu.mem_read(buffer.address, len(buffer.data)))) for buffer in buffers],
+            self._calls,
         )
 
-    def original(self, name: str, *arguments: object, globals: dict[str, object] | None = None) -> Result:
+    def original(self, name: str, *arguments: object, **options: object) -> Result:
         """Calls the function of the game's executable.
 
         `globals` gives 32-bit global variables of symbols/globals.csv a
-        value for the call: an integer, or a buffer that the variable points to.
+        value for the call: an integer, or a buffer that the variable points
+        to. `mocks` are the functions that the test stands in for. `extra`
+        are buffers that are no argument, for the mocks to use. `externals`
+        are functions of the game that are not decompiled, by name, which the
+        test stands in for: each takes the harness and the arguments, in the
+        order of symbols/functions.csv, and returns what the function returns.
         """
-        return self._run(self.symbols[name], True, arguments, globals)
+        return self._run(self.symbols[name], True, arguments, *self._options(options))
 
-    def ours(self, name: str, *arguments: object, globals: dict[str, object] | None = None) -> Result:
+    def ours(self, name: str, *arguments: object, **options: object) -> Result:
         """Calls the function of source/."""
-        return self._run(self.symbols[name], False, arguments, globals)
+        return self._run(self.symbols[name], False, arguments, *self._options(options))
+
+    @staticmethod
+    def _options(options: dict) -> tuple:
+        return options.get("globals"), options.get("mocks"), options.get("extra"), options.get("externals")

@@ -2,6 +2,59 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Lectura del mapa y fin de las tablas de datos
+
+Cuatro funciones más: de 100 se pasa a 104, el 0,92 % de las del juego.
+Son las primeras que llaman a funciones del juego aún sin descompilar.
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `data_new` | `0x0016b570` | `memory/data.c` |
+| `data_dispose` | `0x0016b5d0` | `memory/data.c` |
+| `cache_file_blocking_read` | `0x00122d60` | `cache/cache_files.c` |
+| `cache_file_structure_bsp_load` | `0x00122b40` | `cache/cache_files.c` |
+
+- Con `data_new` y `data_dispose` el módulo de tablas de datos
+  (`memory/data.c`, 20 funciones) queda completo.
+- `tools/mapinfo.py`: lista el contenido de un mapa. Sustituye al programa
+  en C.
+
+### Cambiado
+
+- `tools/difftest.py` puede probar funciones que llaman a otras:
+  - `Mock`: una función simulada para un puntero a función (por ejemplo,
+    las de un asignador de memoria).
+  - Funciones externas: una fila de `symbols/functions.csv` sin archivo de
+    origen es una función del juego sin descompilar. La prueba pone la
+    misma función simulada en el original y en el nuestro.
+  - Las llamadas que reciben las funciones simuladas, con sus argumentos,
+    forman parte de lo que se compara.
+- `build.ninja` solo comprueba los tamaños de las estructuras
+  (`tools/verify_definitions.c`). Ya no genera ningún programa.
+
+### Quitado
+
+- `tools/mapinfo/` y `tools/common/` (el `mapinfo` en C). Smart App Control
+  bloqueó `mapinfo.exe` al recompilarlo. No queda ningún ejecutable propio.
+
+### Lo que se sabe
+
+- Una tabla de datos guarda el asignador con el que se creó: un objeto con
+  dos funciones, reservar y liberar. `data_dispose` libera con él.
+- `cache_file_blocking_read` pide la lectura a `0x00213760` (sin
+  descompilar) y cede el procesador hasta que termina.
+- `cache_file_structure_bsp_load` redondea el tamaño del bloque a sectores
+  de 512 bytes, lo lee en la dirección que dice el escenario, comprueba la
+  firma `sbsp` y da su dirección a los tags del bsp y de su lightmap.
+- `cache_file_globals` tiene en `+4` un puntero a la memoria de los tags.
+
+### Nombres supuestos
+
+- `cache_file_blocking_read`, `cache_file_structure_bsp_load` y
+  `cache_file_read_async` (`0x00213760`).
+
 ## 2026-10-01 — Cien funciones
 
 Cinco funciones sueltas más: de 95 se pasa a 100, el 0,89 % de las del

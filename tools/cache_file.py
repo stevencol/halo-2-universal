@@ -81,6 +81,9 @@ class CacheFile:
             raise CacheFileError("the tag instances are outside the tag index")
         # (group tag, tag index, address, size) per tag
         self.tag_instances = list(struct.iter_unpack("<4I", self.tag_index[offset : offset + self.tag_count * 16]))
+        # (group tag, parent, parent of the parent) per tag group
+        self.tag_groups = list(struct.iter_unpack("<3I", self.tag_index[0x20 : 0x20 + self.tag_group_count * 12]))
+        self.string_id_count = struct.unpack_from("<i", header, 0x164)[0]
 
         # the tag data follows the tag index in the file; in memory it is at
         # the end of the block, after the space for the structure bsp

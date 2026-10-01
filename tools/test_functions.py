@@ -29,13 +29,15 @@ class Tester:
         self.cases: dict[str, int] = {}
         self.failures: dict[str, list[str]] = {}
 
-    def check(self, name: str, *arguments: object, globals: dict[str, object] | None = None) -> None:
+    def check(self, name: str, *arguments: object, **options: object) -> None:
         """Runs both functions with the arguments and compares what they return and
         what they leave in the buffers (difftest.Buffer) of the arguments.
 
         `globals` gives global variables of symbols/globals.csv a value for
         the call: an integer, or a buffer that the variable points to, which
-        is compared too."""
+        is compared too. `mocks` are functions that the test stands in for
+        (difftest.Mock): the calls to them are compared too. `extra` are
+        buffers that are no argument, for the mocks to use; they are compared."""
         self.cases[name] = self.cases.get(name, 0) + 1
         shown = ", ".join(
             f"<{len(argument.data)} bytes>"
@@ -46,13 +48,15 @@ class Tester:
             for argument in arguments
         )
         try:
-            original = self.harness.original(name, *arguments, globals=globals)
-            ours = self.harness.ours(name, *arguments, globals=globals)
+            original = self.harness.original(name, *arguments, **options)
+            ours = self.harness.ours(name, *arguments, **options)
         except DifftestError as error:
             self._fail(name, f"({shown}): {error}")
             return
         if not almost_equal(original.value, ours.value):
             self._fail(name, f"({shown}): the game returns {original.value!r}, source/ returns {ours.value!r}")
+        elif original.calls != ours.calls:
+            self._fail(name, f"({shown}): the game calls {original.calls!r}, source/ calls {ours.calls!r}")
         elif not almost_equal(original.buffers, ours.buffers):
             self._fail(name, f"({shown}): the game and source/ leave different data in a buffer{self._difference(original.buffers, ours.buffers)}")
 
@@ -91,7 +95,10 @@ def main() -> None:
         module.run(tester)
 
     failed = 0
-    for name, symbol in sorted(harness.symbols.items(), key=lambda item: item[1].address):
+    # the functions with no source are those that source/ calls and are not
+    # decompiled: they are not counted
+    decompiled = {name: symbol for name, symbol in harness.symbols.items() if symbol.source}
+    for name, symbol in sorted(decompiled.items(), key=lambda item: item[1].address):
         cases = tester.cases.get(name, 0)
         failures = tester.failures.get(name, [])
         status = "FAILED" if failures else "ok" if cases else "no test"
@@ -101,17 +108,17 @@ def main() -> None:
         for failure in failures:
             print(f"          {failure}")
 
-    tested = sum(1 for name in harness.symbols if tester.cases.get(name) and name not in tester.failures)
+    tested = sum(1 for name in decompiled if tester.cases.get(name) and name not in tester.failures)
     if wanted:
         # only some tests were run: no totals
         sys.exit(1 if failed else 0)
-    print(f"\n{len(harness.symbols)} functions decompiled, {tested} of them checked against the game")
+    print(f"\n{len(decompiled)} functions decompiled, {tested} of them checked against the game")
     if GHIDRA_FUNCTIONS.exists():
         with GHIDRA_FUNCTIONS.open(newline="") as f:
             game = {row["address"]: int(row["size"]) for row in csv.DictReader(f) if row["section"] == ".text"}
-        size = sum(game.get(f"{symbol.address:08x}", 0) for symbol in harness.symbols.values())
+        size = sum(game.get(f"{symbol.address:08x}", 0) for symbol in decompiled.values())
         print(
-            f"of the game's code: {len(harness.symbols) / len(game):.2%} of {len(game)} functions, "
+            f"of the game's code: {len(decompiled) / len(game):.2%} of {len(game)} functions, "
             f"{size / sum(game.values()):.3%} of {sum(game.values()):,} bytes"
         )
     sys.exit(1 if failed else 0)

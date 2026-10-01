@@ -187,6 +187,10 @@ int32_t cache_file_maximum_length(long scenario_type);
 bool cache_file_build_verify(const char *build);
 bool cache_file_header_verify(const struct cache_file_header *header);
 
+struct scenario_structure_bsp_reference;
+
+uint8_t cache_file_blocking_read(long unknown, uint32_t offset, void *buffer, long size);
+uint8_t cache_file_structure_bsp_load(const struct scenario_structure_bsp_reference *reference);
 struct cache_file_tag_group *cache_file_tag_group_get(uint32_t group_tag);
 void *tag_get(uint32_t group_tag, long tag_index);
 long tag_iterator_next(struct tag_iterator *iterator);

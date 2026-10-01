@@ -12,23 +12,16 @@
 
 import contextlib
 import io
-import re
 import struct
-import subprocess
 import sys
 from pathlib import Path
 
 from bsp2obj import Totals, export_map
 from cache_file import CacheFile, CacheFileError, group_tag
+from mapinfo import map_info
 from render_model import RenderModel
 
 BUILD = Path(__file__).resolve().parent.parent / "build"
-MAPINFO = BUILD / "mapinfo.exe"
-
-
-def field(output: str, name: str) -> str:
-    match = re.search(rf"^\s*{re.escape(name)}\s+(.+)$", output, re.MULTILINE)
-    return match.group(1).strip() if match else "?"
 
 
 def check_models(path: Path, seen: set[str], sums: dict[str, int]) -> tuple[int, list[str]]:
@@ -77,16 +70,10 @@ def main() -> None:
     )
     for path in maps:
         try:
-            info = subprocess.run([MAPINFO, path], capture_output=True, text=True)
-        except OSError as error:
-            # Windows can refuse to start a program that is not signed
-            sys.exit(f"cannot run {MAPINFO.name}: {error}")
-        if info.returncode != 0:
-            print(f"{path.stem:<22} FAILED: {info.stderr.strip()}")
-            failures += 1
-            continue
-
-        try:
+            cache = CacheFile(path)
+            info = map_info(cache)
+            name, map_type, tag_count = cache.name, cache.scenario_type, cache.tag_count
+            cache.close()
             with contextlib.redirect_stdout(io.StringIO()):
                 collision: Totals = export_map(path, obj_folder / (path.stem + "_collision.obj"), collision=True)
                 render: Totals = export_map(
@@ -101,10 +88,10 @@ def main() -> None:
             failures += 1
             continue
 
-        bad = field(info.stdout, "outside (bad)")
+        bad = info.outside
         ok = (
-            bad == "0"
-            and field(info.stdout, "name") == path.stem
+            bad == 0
+            and name == path.stem
             and collision.broken == 0
             and collision.reversed == 0
             and collision.surfaces > 0
@@ -121,7 +108,7 @@ def main() -> None:
         sums["objects"] += render.objects
         sums["objects without model"] += render.objects_without_model
         print(
-            f"{path.stem:<22} {field(info.stdout, 'type'):<21} {field(info.stdout, 'tags'):>5} {bad:>4}   "
+            f"{path.stem:<22} {map_type:<21} {tag_count:>5} {bad:>4}   "
             f"{collision.bsps:>4} {collision.surfaces:>8} {collision.broken:>6} {collision.reversed:>8}   "
             f"{render.clusters:>8} {render.instances:>9} {render.surfaces:>9}   "
             f"{render.untextured:>6} {render.texture_failures:>6}   "

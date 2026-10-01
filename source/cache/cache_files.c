@@ -8,8 +8,20 @@ gives the address it has there.
 #include "cache_files.h"
 
 #include "memory/binary_search.h"
+#include "scenario/scenario_definitions.h"
+#include "structures/structure_bsp_definitions.h"
 
 #include <string.h>
+
+/* ---------- prototypes of functions not decompiled yet */
+
+/* 0x00213760: starts to read a part of a cache file. When the read ends,
+the number of bytes read and a flag are set */
+void cache_file_read_async(uint32_t offset, long size, void *buffer, long *bytes_read, uint8_t *done,
+	long unknown1, long unknown2);
+
+/* 0x002d2084, of the console's libraries: lets other threads run */
+int SwitchToThread(void);
 
 /* ---------- constants */
 
@@ -82,6 +94,66 @@ bool cache_file_header_verify(
 		header->file_length<=cache_file_maximum_length(header->scenario_type) &&
 		memchr(header->name, 0, CACHE_FILE_NAME_LENGTH)!=NULL &&
 		header->version==CACHE_FILE_VERSION;
+}
+
+/* 0x00122d60: reads a part of the cache file and waits for it; whether all
+of it was read. The two high bits of the offset tell the file, as in a
+geometry block's offset. The name is a guess */
+uint8_t cache_file_blocking_read(
+	long unknown,
+	uint32_t offset,
+	void *buffer,
+	long size)
+{
+	long bytes_read;
+	volatile uint8_t done= 0;
+
+	(void)unknown;
+
+	cache_file_read_async(offset, size, buffer, &bytes_read, (uint8_t *)&done, 2, 6);
+	while (!done)
+	{
+		SwitchToThread();
+	}
+
+	return bytes_read==size;
+}
+
+/* 0x00122b40: reads a structure bsp of the scenario to its address, and
+gives the tags of the structure bsp and of its lightmap their addresses in
+it. The name is a guess */
+uint8_t cache_file_structure_bsp_load(
+	const struct scenario_structure_bsp_reference *reference)
+{
+	uint32_t size= reference->block_size;
+	struct cache_file_structure_bsp_header *header;
+
+	/* whole sectors of the disc */
+	if (size&0x1FF)
+	{
+		size= (size|0x1FF)+1;
+	}
+
+	if (!cache_file_blocking_read(NONE, reference->block_offset, (void *)(uintptr_t)reference->block_address,
+		(long)size))
+	{
+		return 0;
+	}
+	header= (struct cache_file_structure_bsp_header *)(uintptr_t)reference->block_address;
+	if (header->signature!=CACHE_FILE_STRUCTURE_BSP_HEADER_SIGNATURE)
+	{
+		return 0;
+	}
+
+	cache_file_globals.structure_bsp_header= header;
+	global_tag_instances[(short)reference->structure_bsp.index].address= header->structure_bsp;
+	if (reference->structure_lightmap.index!=(uint32_t)NONE)
+	{
+		global_tag_instances[(short)reference->structure_lightmap.index].address=
+			cache_file_globals.structure_bsp_header->structure_lightmap;
+	}
+
+	return 1;
 }
 
 /* 0x00122cf0: for binary_search; the tag groups are in the order of their

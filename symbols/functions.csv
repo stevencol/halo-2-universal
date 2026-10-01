@@ -31,10 +31,12 @@ address,name,source,arguments,returns
 00120810,project_point3d,source/math/real_math.c,edx ecx stack eax,void
 00120850,projection_from_vector3d,source/math/real_math.c,eax,short
 00122870,cache_file_header_verify,source/cache/cache_files.c,esi,bool
+00122b40,cache_file_structure_bsp_load,source/cache/cache_files.c,eax,bool
 00122c10,tag_get,source/cache/cache_files.c,ebx ecx,int
 00122c70,tag_iterator_next,source/cache/cache_files.c,edi,int
 00122cf0,cache_file_tag_group_compare,source/cache/cache_files.c,stack stack stack,int
 00122d00,cache_file_tag_group_get,source/cache/cache_files.c,ecx,int
+00122d60,cache_file_blocking_read,source/cache/cache_files.c,stack stack edx esi,bool
 00131bb0,pixel32_to_real_rgb_color,source/bitmaps/bitmap_utilities.c,ecx eax,void
 00131e50,real_argb_color_to_pixel32,source/bitmaps/bitmap_color_conversion.c,stack,int
 00131ed0,real_rgb_color_to_pixel32,source/bitmaps/bitmap_color_conversion.c,stack,int
@@ -74,6 +76,8 @@ address,name,source,arguments,returns
 00142da0,matrix3x3_from_angles,source/math/matrix_math.c,eax stack stack stack,void
 00142eb0,matrix3x3_multiply,source/math/matrix_math.c,ecx edx eax,void
 00143070,matrix3x3_transform_vector,source/math/matrix_math.c,edx ecx eax,void
+0016b570,data_new,source/memory/data.c,stack eax stack stack edi,int
+0016b5d0,data_dispose,source/memory/data.c,esi,void
 0016b5f0,data_initialize,source/memory/data.c,stack stack ebx edx ecx stack,void
 0016b650,data_initialize_disconnected,source/memory/data.c,esi stack stack stack stack stack stack,void
 0016b6b0,data_connect,source/memory/data.c,esi eax ecx,void
@@ -98,4 +102,6 @@ address,name,source,arguments,returns
 00195820,bitstream_read_bits,source/networking/bitstream.c,ebx stack stack,void
 001959c0,bitstream_read_integer,source/networking/bitstream.c,edi stack,int
 001d8d60,fast_quaternion_normalize,source/math/real_math.c,ecx,void
+00213760,cache_file_read_async,,ecx stack stack stack stack stack stack,void
+002d2084,SwitchToThread,,,int
 00214ed0,cache_file_maximum_length,source/cache/cache_files.c,ecx,int

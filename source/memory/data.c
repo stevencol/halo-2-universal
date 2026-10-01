@@ -3,9 +3,6 @@ DATA.C
 
 Decompiled from halo2ship.exe (Xbox, build 02.09.27.09809). Each function
 gives the address it has there.
-
-Not decompiled yet: data_new (0x0016b570) and data_dispose (0x0016b5d0),
-which use what allocated the array.
 */
 
 #include "data.h"
@@ -23,6 +20,44 @@ which use what allocated the array.
 
 /* ---------- code */
 
+/* 0x0016b570: an array in memory of its own, for the array, its elements at
+an aligned address and its vector of bits; NULL if there is no memory */
+struct data_array *data_new(
+	const char *name,
+	long maximum_count,
+	long size,
+	long alignment_bits,
+	struct allocation *allocation)
+{
+	unsigned long allocation_size= maximum_count*size +
+		BIT_VECTOR_SIZE_IN_LONGS(maximum_count)*sizeof(unsigned long) +
+		(1UL<<(alignment_bits&31)) + sizeof(struct data_array) - 1;
+	struct data_array *data= allocation->functions->allocate(allocation, allocation_size);
+
+	if (data)
+	{
+		data_initialize(data, name, maximum_count, size, alignment_bits, allocation);
+		data->flags|= FLAG(_data_array_allocated_bit);
+	}
+
+	return data;
+}
+
+/* 0x0016b5d0: clears the array, and frees it if something allocated it */
+void data_dispose(
+	struct data_array *data)
+{
+	struct allocation *allocation= data->allocation;
+
+	memset(data, 0, sizeof(*data));
+	if (allocation)
+	{
+		allocation->functions->deallocate(allocation, data);
+	}
+
+	return;
+}
+
 /* 0x0016b650 */
 void data_initialize_disconnected(
 	struct data_array *data,
@@ -30,7 +65,7 @@ void data_initialize_disconnected(
 	long maximum_count,
 	long size,
 	byte alignment_bits,
-	void *allocation,
+	struct allocation *allocation,
 	unsigned long *in_use_bit_vector)
 {
 	memset(data, 0, sizeof(*data));
@@ -57,7 +92,7 @@ void data_initialize(
 	long maximum_count,
 	long size,
 	long alignment_bits,
-	void *allocation)
+	struct allocation *allocation)
 {
 	unsigned long alignment_mask= (1UL<<alignment_bits)-1;
 	byte *datums= (byte *)(((unsigned long)data+sizeof(struct data_array)+alignment_mask) & ~alignment_mask);

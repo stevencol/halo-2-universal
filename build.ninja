@@ -1,7 +1,12 @@
-# builds the tools of the Halo 2 decompilation; needs clang (llvm-mingw) in the PATH
+# compiles the definitions of source/ for this computer, to check the sizes and
+# the offsets that they declare; needs clang (llvm-mingw) in the PATH
+#
+# No program is built: Windows can refuse to start a program that is not
+# signed, so the tools are in Python. The functions of source/ are compiled
+# and run by tools/test_functions.py, in an emulator.
 
 cc = clang
-cflags = -std=c11 -O2 -g -Wall -Wextra -Wno-four-char-constants -Wno-multichar -Isource -Itools/common
+cflags = -std=c11 -O2 -g -Wall -Wextra -Wno-four-char-constants -Wno-multichar -Isource
 
 rule cc
   command = $cc $cflags -MD -MF $out.d -c $in -o $out
@@ -9,16 +14,6 @@ rule cc
   deps = gcc
   description = CC $in
 
-rule link
-  command = $cc $in -o $out
-  description = LINK $out
+build build/verify_definitions.o: cc tools/verify_definitions.c
 
-build build/cache_files.o: cc source/cache/cache_files.c
-build build/binary_search.o: cc source/memory/binary_search.c
-build build/cache_file_reader.o: cc tools/common/cache_file_reader.c
-build build/verify_definitions.o: cc tools/common/verify_definitions.c
-build build/mapinfo.o: cc tools/mapinfo/mapinfo.c
-
-build build/mapinfo.exe: link build/mapinfo.o build/cache_file_reader.o build/cache_files.o build/binary_search.o
-
-default build/mapinfo.exe build/verify_definitions.o
+default build/verify_definitions.o
