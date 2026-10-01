@@ -15,8 +15,13 @@ address,name,source,arguments,returns
 000badc0,object_try_and_get_and_verify_type,source/objects/objects.c,eax stack,int
 000baeb0,object_iterator_next,source/objects/objects.c,stack,int
 000baf80,object_get_ultimate_parent,source/objects/objects.c,ecx,int
+0011d610,quaternion_normalize,source/math/real_math.c,eax,void
 0011df30,euler_angles2d_from_vector3d,source/math/real_math.c,eax ecx,void
+0011df60,vectors3d_from_euler_angles3d,source/math/real_math.c,edx ecx eax,void
+0011dfb0,vectors3d_from_euler_angles2d,source/math/real_math.c,edx ecx eax,void
 0011e5e0,fast_vector_intersects_sphere,source/math/real_math.c,ecx edx eax stack,bool
+00120790,project_point2d,source/math/real_math.c,edi ebx esi stack eax,void
+00120810,project_point3d,source/math/real_math.c,edx ecx stack eax,void
 00120850,projection_from_vector3d,source/math/real_math.c,eax,short
 00122870,cache_file_header_verify,source/cache/cache_files.c,esi,bool
 00131bb0,pixel32_to_real_rgb_color,source/bitmaps/bitmap_utilities.c,ecx eax,void

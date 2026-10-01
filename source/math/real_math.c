@@ -167,6 +167,118 @@ void euler_angles2d_from_vector3d(
 	return;
 }
 
+/* 0x0011d610: a quaternion of length zero becomes the one of no rotation.
+As in Halo 1 */
+void quaternion_normalize(
+	real_quaternion *quaternion)
+{
+	real magnitude_squared= quaternion->v.i*quaternion->v.i + quaternion->v.j*quaternion->v.j +
+		quaternion->v.k*quaternion->v.k + quaternion->w*quaternion->w;
+
+	if (magnitude_squared>0.0f)
+	{
+		real scale= 1.0f/sqrtf(magnitude_squared);
+
+		quaternion->v.i= scale*quaternion->v.i;
+		quaternion->v.j= scale*quaternion->v.j;
+		quaternion->v.k= scale*quaternion->v.k;
+		quaternion->w= scale*quaternion->w;
+	}
+	else
+	{
+		quaternion->v.i= 0.0f;
+		quaternion->v.j= 0.0f;
+		quaternion->v.k= 0.0f;
+		quaternion->w= 1.0f;
+	}
+
+	return;
+}
+
+/* 0x0011df60: as in Halo 1 */
+void vectors3d_from_euler_angles3d(
+	real_vector3d *forward,
+	real_vector3d *up,
+	const real_euler_angles3d *angles)
+{
+	real_matrix4x3 matrix;
+
+	matrix4x3_rotation_from_angles(&matrix, angles->yaw, angles->pitch, angles->roll);
+	*forward= matrix.forward;
+	*up= matrix.up;
+
+	return;
+}
+
+/* 0x0011dfb0 */
+void vectors3d_from_euler_angles2d(
+	real_vector3d *forward,
+	real_vector3d *up,
+	const real_euler_angles2d *angles)
+{
+	real_matrix4x3 matrix;
+
+	matrix4x3_rotation_from_angles(&matrix, angles->yaw, angles->pitch, 0.0f);
+	*forward= matrix.forward;
+	*up= matrix.up;
+
+	return;
+}
+
+/* 0x00440b94: for each projection (the axis that a plane faces most) and
+each sign of the plane along it, the two axes of the plane's 2D points and
+the axis of the projection */
+static const short projection_axes[3][2][3]=
+{
+	{{2, 1, 0}, {1, 2, 0}},
+	{{0, 2, 1}, {2, 0, 1}},
+	{{1, 0, 2}, {0, 1, 2}}
+};
+
+/* 0x00120810: a point as a 2D point of a plane. As in Halo 1 */
+void project_point3d(
+	const real_point3d *point3d,
+	short projection,
+	unsigned char sign,
+	real_point2d *point2d)
+{
+	const short *axes= projection_axes[projection][sign];
+	const real *coordinates= &point3d->x;
+	real y= coordinates[axes[1]];
+
+	point2d->x= coordinates[axes[0]];
+	point2d->y= y;
+
+	return;
+}
+
+/* 0x00120790: a 2D point of a plane as a point on the plane. As in Halo 1 */
+void project_point2d(
+	const real_point2d *point2d,
+	const real_plane3d *plane,
+	short projection,
+	unsigned char sign,
+	real_point3d *point3d)
+{
+	const short *axes= projection_axes[projection][sign];
+	const real *normal= &plane->n.i;
+	real *coordinates= &point3d->x;
+
+	coordinates[axes[0]]= point2d->x;
+	coordinates[axes[1]]= point2d->y;
+	if (k_real_epsilon>fabsf(normal[projection]))
+	{
+		coordinates[projection]= 0.0f;
+	}
+	else
+	{
+		coordinates[projection]=
+			((plane->d - normal[axes[0]]*point2d->x) - normal[axes[1]]*point2d->y)/normal[projection];
+	}
+
+	return;
+}
+
 /* 0x0011d000: a vector at a right angle to one, in the plane of the two
 axes where the vector is longest */
 void perpendicular3d(

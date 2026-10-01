@@ -2,6 +2,63 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Cadenas anchas y más matemáticas
+
+De 66 funciones se pasa a 83, el 0,74 % de las del juego.
+
+### Añadido
+
+- `source/text/unicode.c` y `unicode.h`: cadenas de caracteres de 16 bits.
+
+  | Función | Dirección |
+  | --- | --- |
+  | `ustrnzcat` | `0x0013fa70` |
+  | `ustrnzcpy` | `0x0013fac0` |
+  | `ustrnupr` | `0x0013fae0` |
+  | `wchar_string_to_ascii_string` | `0x0013fb90` |
+  | `ascii_string_to_wchar_string` | `0x0013fc90` |
+  | `character_in_ranges` | `0x0013fcd0` |
+  | `character_is_east_asian` | `0x0013fd90` |
+
+- En `source/math/real_math.c`:
+
+  | Función | Dirección |
+  | --- | --- |
+  | `limit3d` | `0x000a75d0` |
+  | `quaternion_normalize` | `0x0011d610` |
+  | `euler_angles2d_from_vector3d` | `0x0011df30` |
+  | `vectors3d_from_euler_angles3d` | `0x0011df60` |
+  | `vectors3d_from_euler_angles2d` | `0x0011dfb0` |
+  | `project_point2d` | `0x00120790` |
+  | `project_point3d` | `0x00120810` |
+
+- `bsp3d_get_plane_from_designator` (`0x0014a300`) en `physics/bsp3d.c`.
+- `real_alpha_to_pixel32` (`0x00131fc0`) y
+  `real_alpha_and_rgb_color_to_pixel32` (`0x00131f40`) en
+  `bitmaps/bitmap_color_conversion.c`.
+- `tests/test_unicode.py` y más casos en los demás: unos 12.000 casos nuevos.
+
+### Lo que se sabe
+
+- El módulo de matemáticas reales del juego está entre `0x0011cf50` y
+  `0x00120850`: unas 50 funciones, de las que hay 12 hechas. Las que quedan
+  son más grandes (hasta 1.385 bytes).
+- El código propio del juego está en direcciones múltiplo de 16. Las 2.581
+  funciones que no lo están (394.000 bytes) se concentran en zonas que
+  parecen librerías enlazadas: `0x220000`–`0x260000` y `0x2b0000` en
+  adelante. Havok estará entre ellas.
+- `ustrnupr` pasa a mayúsculas también la é y la ó, las únicas letras
+  acentuadas que trata.
+- Las funciones de proyección usan una tabla de ejes (`0x00440b94`): para
+  cada eje dominante de un plano y cada sentido, qué dos ejes forman sus
+  puntos 2D.
+
+### Nombres supuestos
+
+- `ustrnzcat`, `ustrnzcpy`, las dos conversiones entre cadenas anchas y
+  ASCII, `character_in_ranges`, `character_is_east_asian` y
+  `real_alpha_and_rgb_color_to_pixel32`. Los demás son los de Halo 1.
+
 ## 2026-10-01 — Primeras funciones de objetos
 
 Las primeras funciones que usan el estado global del juego. De 59 se pasa a

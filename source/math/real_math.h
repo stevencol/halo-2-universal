@@ -25,6 +25,16 @@ typedef struct real_euler_angles2d
 	real yaw, pitch;
 } real_euler_angles2d;
 
+typedef struct real_euler_angles3d
+{
+	real yaw, pitch, roll;
+} real_euler_angles3d;
+
+typedef struct real_point2d
+{
+	real x, y;
+} real_point2d;
+
 typedef struct real_rgb_color
 {
 	real red, green, blue;
@@ -120,6 +130,12 @@ unsigned char fast_vector_intersects_sphere(const real_point3d *point, const rea
 void fast_quaternion_normalize(real_quaternion *quaternion);
 unsigned char limit3d(real_vector3d *vector, real length);
 void euler_angles2d_from_vector3d(real_euler_angles2d *angles, const real_vector3d *vector);
+void quaternion_normalize(real_quaternion *quaternion);
+void vectors3d_from_euler_angles3d(real_vector3d *forward, real_vector3d *up, const real_euler_angles3d *angles);
+void vectors3d_from_euler_angles2d(real_vector3d *forward, real_vector3d *up, const real_euler_angles2d *angles);
+void project_point3d(const real_point3d *point3d, short projection, unsigned char sign, real_point2d *point2d);
+void project_point2d(const real_point2d *point2d, const real_plane3d *plane, short projection,
+	unsigned char sign, real_point3d *point3d);
 
 /* ---------- prototypes/RANDOM_MATH.C */
 

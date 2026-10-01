@@ -72,6 +72,24 @@ def run(t) -> None:
         length = random_.choice((1.0, 1.0, 0.01, 30.0))
         t.check("fast_quaternion_normalize", reals(*(random_.uniform(-1, 1) * length for _ in range(4))))
 
+    for _ in range(200):
+        length = random_.choice((1.0, 1.0, 0.01, 30.0, 0.0))
+        t.check("quaternion_normalize", reals(*(random_.uniform(-1, 1) * length for _ in range(4))))
+
+        angles = [random_.uniform(-7, 7) for _ in range(3)]
+        t.check("vectors3d_from_euler_angles3d", reals(9, 9, 9), reals(8, 8, 8), reals(*angles))
+        t.check("vectors3d_from_euler_angles2d", reals(9, 9, 9), reals(8, 8, 8), reals(*angles[:2]))
+
+        # a point and a plane, on each projection and each sign; some planes
+        # do not face the axis of the projection at all
+        point = [random_.uniform(-20, 20) for _ in range(3)]
+        normal = [random_.choice((0.0, 0.00005, random_.uniform(-1, 1))) for _ in range(3)]
+        plane = reals(*normal, random_.uniform(-10, 10))
+        for projection in range(3):
+            for sign in (0, 1):
+                t.check("project_point3d", reals(*point), projection, sign, reals(9, 9))
+                t.check("project_point2d", reals(*point[:2]), plane, projection, sign, reals(9, 9, 9))
+
     for seed in (0, 1, 0xFFFFFFFF, 0x80000000, 0x12345678, *(random_.getrandbits(32) for _ in range(200))):
         t.check("real_seed_random", Buffer(struct.pack("<I", seed)))
         lower = random_.uniform(-100, 100)
