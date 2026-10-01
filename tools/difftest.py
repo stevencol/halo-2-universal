@@ -41,6 +41,10 @@ MOCK_ADDRESS = 0x7FFD0000  # the functions that a test stands in for
 MOCK_SIZE = 0x1000
 # in that memory, from here on: the functions of the game that source/ calls and does not have yet
 EXTERNAL_OFFSET = 0x800
+# where the console maps its memory: the game takes blocks of it by address.
+# A test that uses it has to fill it, as it stays from one call to the next
+PHYSICAL_ADDRESS = 0x80000000
+PHYSICAL_SIZE = 0x00100000
 
 KERNEL_THUNK_KEYS = (0x5B6D40B6, 0xEFB1F152)
 MAXIMUM_INSTRUCTIONS = 20_000_000
@@ -74,6 +78,8 @@ COMPILE_FLAGS = [
     # a product and a sum stay two operations, each rounded
     "-ffp-contract=off",
     "-O2",
+    # a call to a function stays a call, so that a test can stand in for it
+    "-fno-inline",
     "-std=c11",
     "-Wall",
     "-Wno-four-char-constants",
@@ -278,6 +284,7 @@ class Harness:
         self.mu.mem_map(SCRATCH_ADDRESS, SCRATCH_SIZE)
         self.mu.mem_map(STACK_ADDRESS, STACK_SIZE)
         self.mu.mem_map(RETURN_ADDRESS, 0x1000)
+        self.mu.mem_map(PHYSICAL_ADDRESS, PHYSICAL_SIZE)
 
         self.mock_call: int | None = None
         self._mocks: list[Mock] = []
@@ -286,23 +293,16 @@ class Harness:
         self.mu.mem_write(MOCK_ADDRESS, b"\xf4" * MOCK_SIZE)
         self.mu.hook_add(UC_HOOK_CODE, self._mock_hook, begin=MOCK_ADDRESS, end=MOCK_ADDRESS + MOCK_SIZE - 1)
 
-        # the functions that are not decompiled: where source/ calls each,
-        # and how many bytes of arguments the game's function takes off the
-        # stack when it returns
+        # the functions that a test stands in for, by name: those that are
+        # not decompiled, which source/ calls at an address of the mocks'
+        # memory, and any other of symbols/functions.csv. The emulator stops
+        # where each starts, in the game and in source/
         self.externals = external_names()
         self._external_handlers: dict[str, object] = {}
         self.external_call: str | None = None
+        # how many bytes of arguments the game's function takes off the
+        # stack when it returns
         self._external_cleanup: dict[str, int] = {}
-        disassembler = Cs(CS_ARCH_X86, CS_MODE_32)
-        for name in self.externals:
-            address = self.symbols[name].address
-            for instruction in disassembler.disasm(bytes(self.mu.mem_read(address, 0x2000)), address):
-                if instruction.mnemonic == "ret":
-                    self._external_cleanup[name] = int(instruction.op_str, 0) if instruction.op_str else 0
-                    break
-            else:
-                raise DifftestError(f"no return found in the game's function {name}")
-            self.mu.hook_add(UC_HOOK_CODE, self._external_hook, user_data=name, begin=address, end=address)
 
         missing = [name for name, symbol in self.symbols.items() if symbol.source and name not in self.functions]
         if missing:
@@ -353,11 +353,30 @@ class Harness:
             self.mock_call = (address - MOCK_ADDRESS) // 16
         mu.emu_stop()
 
-    def _external_hook(self, mu: Uc, address: int, size: int, user_data: object) -> None:
-        # the game's function, if the test stands in for it; otherwise it runs
-        if user_data in self._external_handlers:
-            self.external_call = user_data
-            self._external_side = "original"
+    def _hook_external(self, name: str) -> None:
+        """Makes the emulator stop where a function starts, the first time that a test stands in for it."""
+        if name in self._external_cleanup:
+            return
+        if name not in self.symbols:
+            raise DifftestError(f"symbols/functions.csv does not have '{name}'")
+        address = self.symbols[name].address
+        for instruction in Cs(CS_ARCH_X86, CS_MODE_32).disasm(bytes(self.mu.mem_read(address, 0x2000)), address):
+            if instruction.mnemonic == "ret":
+                self._external_cleanup[name] = int(instruction.op_str, 0) if instruction.op_str else 0
+                break
+        else:
+            raise DifftestError(f"no return found in the game's function {name}")
+        self.mu.hook_add(UC_HOOK_CODE, self._external_hook, user_data=(name, "original"), begin=address, end=address)
+        if name in self.functions:
+            address = self.functions[name]
+            self.mu.hook_add(UC_HOOK_CODE, self._external_hook, user_data=(name, "ours"), begin=address, end=address)
+
+    def _external_hook(self, mu: Uc, address: int, size: int, user_data: tuple) -> None:
+        # a function that a test stands in for; it runs if this test does not
+        name, side = user_data
+        if name in self._external_handlers and name != self._running:
+            self.external_call = name
+            self._external_side = side
             mu.emu_stop()
 
     def _kernel_hook(self, mu: Uc, address: int, size: int, user_data: object) -> None:
@@ -571,6 +590,9 @@ class Harness:
         globals_ = globals_ or {}
         self._mocks = mocks or []
         self._external_handlers = externals or {}
+        for name in self._external_handlers:
+            self._hook_external(name)
+        self._running = symbol.name
         self._calls = []
         values, buffers = self._place_buffers((*arguments, *globals_.values(), *(extra or ())))
         values = values[: len(arguments) + len(globals_)]
@@ -579,16 +601,23 @@ class Harness:
                 values[n] = value.buffer.address + value.offset
             elif isinstance(value, FunctionPointer):
                 values[n] = self.symbols[value.name].address if original else self.functions[value.name]
-        global_addresses: dict[str, int] = {}
+        # for the functions that stand in for others: where each global of
+        # symbols/globals.csv is in the side that runs
+        self.global_addresses = self.globals if original else {name: self.variables[name] for name in self.globals}
+        global_addresses: dict[str, tuple[int, int]] = {}
         for key, value in zip(globals_, values[len(arguments) :]):
-            # "name+offset" is a 32-bit field of a global structure
+            # "name+offset" is a field of a global structure
             name, _, offset = key.partition("+")
             if name not in self.globals:
                 raise DifftestError(f"symbols/globals.csv does not have '{name}'")
             address = (self.globals[name] if original else self.variables[name]) + int(offset or "0", 0)
-            global_addresses[key] = address
-            # None is a global that the test only wants compared after the call
-            self.mu.mem_write(address, struct.pack("<I", (value or 0) & 0xFFFFFFFF))
+            # bytes are the global itself, of any size; anything else is a
+            # 32-bit value. None is a global that the test only wants
+            # compared after the call
+            if not isinstance(value, bytes):
+                value = struct.pack("<I", (value or 0) & 0xFFFFFFFF)
+            global_addresses[key] = (address, len(value))
+            self.mu.mem_write(address, value)
         values = values[: len(arguments)]
 
         if original:
@@ -602,8 +631,9 @@ class Harness:
             # the x87 register
             value = self._call(self.functions[symbol.name], values, {}, symbol.returns.split(":")[0])
         # what the call left in the globals of the test is compared with the calls
-        for key, address in global_addresses.items():
-            self._calls.append(("global", key, struct.unpack("<I", self.mu.mem_read(address, 4))[0]))
+        for key, (address, size) in global_addresses.items():
+            data = bytes(self.mu.mem_read(address, size))
+            self._calls.append(("global", key, struct.unpack("<I", data)[0] if size == 4 else data))
         return Result(
             value,
             [buffer.values(bytes(self.mu.mem_read(buffer.address, len(buffer.data)))) for buffer in buffers],
@@ -613,12 +643,13 @@ class Harness:
     def original(self, name: str, *arguments: object, **options: object) -> Result:
         """Calls the function of the game's executable.
 
-        `globals` gives 32-bit global variables of symbols/globals.csv a
-        value for the call: an integer, or a buffer that the variable points
-        to. `mocks` are the functions that the test stands in for. `extra`
-        are buffers that are no argument, for the mocks to use. `externals`
-        are functions of the game that are not decompiled, by name, which the
-        test stands in for: each takes the harness and the arguments, in the
+        `globals` gives global variables of symbols/globals.csv a value for
+        the call: an integer, a buffer that the variable points to, or bytes
+        that are the variable itself. `mocks` are the functions that the test
+        stands in for through a pointer. `extra` are buffers that are no
+        argument, for the mocks to use. `externals` are functions of
+        symbols/functions.csv, by name, which the test stands in for,
+        decompiled or not: each takes the harness and the arguments, in the
         order of symbols/functions.csv, and returns what the function returns.
         """
         return self._run(self.symbols[name], True, arguments, *self._options(options))

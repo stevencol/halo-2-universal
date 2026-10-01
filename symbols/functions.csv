@@ -102,6 +102,26 @@ address,name,source,arguments,returns
 00195820,bitstream_read_bits,source/networking/bitstream.c,ebx stack stack,void
 001959c0,bitstream_read_integer,source/networking/bitstream.c,edi stack,int
 001d8d60,fast_quaternion_normalize,source/math/real_math.c,ecx,void
-00213760,cache_file_read_async,,ecx stack stack stack stack stack stack,void
+000b66f0,csprintf256,source/cseries/cseries.c,esi stack stack,int
+0011c920,csstrcasecmp,source/cseries/cseries.c,ecx eax,int
+00120b50,async_category_busy,source/cseries/async.c,esi,bool
+001228f0,scenario_load,source/cache/cache_files.c,eax,bool
+00122af0,scenario_tags_unload,source/cache/cache_files.c,,void
+0012b400,physical_memory_initialize,source/memory/physical_memory.c,,void
+001a0f10,async_read_position,,stack stack stack stack stack stack edx ebx,void
+00213760,cache_file_read_async,source/cache/cache_files.c,ecx stack stack stack stack stack stack,void
+00213800,cache_file_read_header,source/cache/cache_files.c,eax ecx,bool
+00213890,cache_file_block_until_not_busy,source/cache/cache_files.c,,void
+00214a60,cached_map_files_find_map,source/cache/cache_files.c,eax,int
+00214d40,cache_file_get_map_name,source/cache/cache_files.c,eax esi,void
+00214db0,cache_file_get_map_path,source/cache/cache_files.c,edi ebx,void
+002d156a,XPhysicalAlloc,,stack stack stack stack,int
+002d15da,XPhysicalProtect,,stack stack stack,void
+002d1f3a,CloseHandle,,stack,int
 002d2084,SwitchToThread,,,int
+002d2241,ReadFile,,stack stack stack stack stack,int
+002d2750,CreateFileA,,stack stack stack stack stack stack stack,int
+002d62c4,ReleaseMutex,,stack,int
+002d63fa,WaitForSingleObject,,stack stack,int
 00214ed0,cache_file_maximum_length,source/cache/cache_files.c,ecx,int
+00214f10,cache_file_buffer_allocate,source/cache/cache_files.c,eax ecx,int

@@ -6,7 +6,9 @@ run. The image has no other library.
 */
 
 #include <math.h>
+#include <stdio.h>
 #include <string.h>
+#include <wctype.h>
 
 /* the linker wants an entry point; nothing calls it */
 void _start(void)
@@ -119,6 +121,213 @@ char *strncpy(char *destination, const char *source, size_t size)
 	}
 
 	return destination;
+}
+
+char *strrchr(const char *string, int character)
+{
+	const char *last= NULL;
+
+	do
+	{
+		if (*string==(char)character)
+		{
+			last= string;
+		}
+	} while (*string++);
+
+	return (char *)last;
+}
+
+size_t strspn(const char *string, const char *characters)
+{
+	size_t length= 0;
+
+	while (string[length] && memchr(characters, string[length], strlen(characters)))
+	{
+		length++;
+	}
+
+	return length;
+}
+
+char *strpbrk(const char *string, const char *characters)
+{
+	for (; *string; string++)
+	{
+		if (memchr(characters, *string, strlen(characters)))
+		{
+			return (char *)string;
+		}
+	}
+
+	return NULL;
+}
+
+/* as the game's, with no locale set */
+wint_t towlower(wint_t character)
+{
+	return character>='A' && character<='Z' ? character+('a'-'A') : character;
+}
+
+/* writes a character if it fits, and counts it */
+static void print_character(char *buffer, size_t size, size_t *length, char character)
+{
+	if (*length+1<size)
+	{
+		buffer[*length]= character;
+	}
+	(*length)++;
+}
+
+int vsnprintf(char *buffer, size_t size, const char *format, va_list arguments)
+{
+	size_t length= 0;
+
+	for (; *format; format++)
+	{
+		char digits[16];
+		const char *text= digits;
+		size_t text_length= 0;
+		size_t width= 0;
+		size_t precision= (size_t)-1;
+		int left= 0;
+		int zero= 0;
+		int negative= 0;
+
+		if (*format!='%')
+		{
+			print_character(buffer, size, &length, *format);
+			continue;
+		}
+		format++;
+		for (; *format=='-' || *format=='0'; format++)
+		{
+			if (*format=='-')
+			{
+				left= 1;
+			}
+			else
+			{
+				zero= 1;
+			}
+		}
+		for (; *format>='0' && *format<='9'; format++)
+		{
+			width= width*10+(size_t)(*format-'0');
+		}
+		if (*format=='.')
+		{
+			precision= 0;
+			for (format++; *format>='0' && *format<='9'; format++)
+			{
+				precision= precision*10+(size_t)(*format-'0');
+			}
+		}
+		while (*format=='l' || *format=='h')
+		{
+			format++;
+		}
+
+		switch (*format)
+		{
+		case 's':
+			text= va_arg(arguments, const char *);
+			if (!text)
+			{
+				text= "(null)";
+			}
+			while (text_length<precision && text[text_length])
+			{
+				text_length++;
+			}
+			zero= 0;
+			break;
+		case 'c':
+			digits[0]= (char)va_arg(arguments, int);
+			text_length= 1;
+			zero= 0;
+			break;
+		case 'd':
+		case 'i':
+		case 'u':
+		case 'x':
+		case 'X':
+		{
+			unsigned int value= va_arg(arguments, unsigned int);
+			unsigned int base= (*format=='x' || *format=='X') ? 16 : 10;
+			const char *numerals= *format=='X' ? "0123456789ABCDEF" : "0123456789abcdef";
+			char reversed[16];
+			size_t count= 0;
+
+			if ((*format=='d' || *format=='i') && (int)value<0)
+			{
+				negative= 1;
+				value= 0u-value;
+			}
+			do
+			{
+				reversed[count++]= numerals[value%base];
+				value/= base;
+			} while (value);
+			while (count)
+			{
+				digits[text_length++]= reversed[--count];
+			}
+			break;
+		}
+		case '%':
+			digits[0]= '%';
+			text_length= 1;
+			zero= 0;
+			break;
+		default:
+			/* not a conversion that this has: the rest of the format is not written */
+			goto done;
+		}
+
+		{
+			size_t padding= width>text_length+(size_t)negative ? width-text_length-(size_t)negative : 0;
+			size_t i;
+
+			if (!left && !zero)
+			{
+				for (i= 0; i<padding; i++)
+				{
+					print_character(buffer, size, &length, ' ');
+				}
+			}
+			if (negative)
+			{
+				print_character(buffer, size, &length, '-');
+			}
+			if (!left && zero)
+			{
+				for (i= 0; i<padding; i++)
+				{
+					print_character(buffer, size, &length, '0');
+				}
+			}
+			for (i= 0; i<text_length; i++)
+			{
+				print_character(buffer, size, &length, text[i]);
+			}
+			if (left)
+			{
+				for (i= 0; i<padding; i++)
+				{
+					print_character(buffer, size, &length, ' ');
+				}
+			}
+		}
+	}
+
+done:
+	if (size)
+	{
+		buffer[length<size ? length : size-1]= 0;
+	}
+
+	return (int)length;
 }
 
 /* the compiler uses the processor's instructions for these where it can;

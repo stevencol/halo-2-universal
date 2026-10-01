@@ -31,6 +31,8 @@ typedef unsigned char boolean;
 
 /* ---------- prototypes/CSERIES.C */
 
+char *csprintf256(char *buffer, const char *format, ...);
+long csstrcasecmp(const char *s1, const char *s2);
 boolean bit_vector_test_flag(const unsigned long *vector, long bit);
 void path_remove_last_element(char *path);
 

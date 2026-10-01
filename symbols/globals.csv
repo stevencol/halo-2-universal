@@ -1,4 +1,14 @@
 address,name,source
+004686c0,global_scenario_index,source/scenario/scenario.c
 004e0300,object_header_data,source/objects/objects.c
+004e034c,global_game_globals,source/scenario/scenario.c
+004e0350,global_scenario,source/scenario/scenario.c
+004e035c,async_mutex,source/cseries/async.c
+004e28ec,async_task_list,source/cseries/async.c
 004e3b44,global_tag_instances,source/cache/cache_files.c
+004e6420,physical_memory_globals,source/memory/physical_memory.c
+005020d8,cache_file_buffer_globals,source/cache/cache_files.c
+00510819,cached_map_files_state_changed,source/cache/cache_files.c
+00510a08,cached_map_files_build_number,source/cache/cache_files.c
 005476f8,cache_file_globals,source/cache/cache_files.c
+00557c90,cached_map_file_globals,source/cache/cache_files.c

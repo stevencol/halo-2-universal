@@ -11,7 +11,7 @@ con Halo: Combat Evolved.
 **Estado: muy temprano.** El juego no arranca ni está cerca de hacerlo. Hoy
 el proyecto abre los mapas del juego, lista su contenido y exporta los
 niveles y los modelos con su textura principal. Del código del ejecutable
-hay descompiladas 104 funciones de unas 11.265 (el 0,92 %), todas
+hay descompiladas 117 funciones de unas 11.265 (el 1,04 %), todas
 comprobadas contra el original. Consulta
 [CHANGELOG.md](CHANGELOG.md) para ver qué hay hecho.
 
@@ -94,8 +94,9 @@ geometría de cada nivel a `build/obj/`.
    esa función a `symbols/functions.csv` sin archivo de origen. La prueba
    da entonces la misma función simulada a los dos lados
    (`externals={"nombre": función}`) y compara también las llamadas que
-   recibe. Para un puntero a función dentro de una estructura se usa
-   `Mock`.
+   recibe. Así se puede sustituir también una función ya descompilada,
+   para probar solo la que la llama. Para un puntero a función dentro de
+   una estructura se usa `Mock`.
 7. Añadir sus casos a `tests/` y ejecutar `test_functions.py`.
 
 Listar el contenido de un mapa:

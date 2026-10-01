@@ -61,7 +61,9 @@ struct cache_file_header
 	/* the memory the game allocates for that block: the tag index at its
 	start, the tag data at its end, and space for a structure bsp between */
 	uint32_t tag_memory_size;
-	uint8_t unknown20[0x100];
+	/* empty in the file: the game keeps here the path of the file that it
+	read the header from */
+	char path[256];
 
 	char build[32];
 	int16_t scenario_type;
@@ -158,6 +160,40 @@ struct cache_file_globals
 	struct cache_file_structure_bsp_header *structure_bsp_header;
 };
 
+/* the maps that the game has ready to read, with the header of each */
+enum
+{
+	MAXIMUM_CACHED_MAP_FILES= 6
+};
+
+struct cached_map_file
+{
+	/* the handle of the file */
+	uint32_t file;
+	struct cache_file_header header;
+};
+
+struct cached_map_file_globals
+{
+	struct cached_map_file files[MAXIMUM_CACHED_MAP_FILES];
+	/* the map whose tags are loaded; NONE if there is none */
+	long open_map_index;
+	uint8_t unknown301C[0x840];
+};
+
+typedef char verify_cached_map_file_size[
+	sizeof(struct cached_map_file) == 0x804 ? 1 : -1];
+typedef char verify_cached_map_file_globals_open_map_index_offset[
+	offsetof(struct cached_map_file_globals, open_map_index) == 0x3018 ? 1 : -1];
+
+struct cache_file_buffer_globals
+{
+	uint8_t allocated;
+	uint8_t pad1[3];
+	void *buffer;
+	uint32_t size;
+};
+
 /* goes through the tags of a group, or through all of them */
 struct tag_iterator
 {
@@ -189,6 +225,16 @@ bool cache_file_header_verify(const struct cache_file_header *header);
 
 struct scenario_structure_bsp_reference;
 
+void *cache_file_buffer_allocate(uint32_t size1, uint32_t size2);
+void cache_file_get_map_name(const char *path, char *name);
+void cache_file_get_map_path(const char *scenario_name, char *path);
+long cached_map_files_find_map(const char *scenario_name);
+uint8_t cache_file_read_header(struct cache_file_header *header, const char *scenario_name);
+void cache_file_read_async(uint32_t offset, long size, void *buffer, long *bytes_read, uint8_t *done,
+	long unknown1, long unknown2);
+void cache_file_block_until_not_busy(void);
+uint8_t scenario_load(const char *scenario_name);
+void scenario_tags_unload(void);
 uint8_t cache_file_blocking_read(long unknown, uint32_t offset, void *buffer, long size);
 uint8_t cache_file_structure_bsp_load(const struct scenario_structure_bsp_reference *reference);
 struct cache_file_tag_group *cache_file_tag_group_get(uint32_t group_tag);
@@ -198,6 +244,8 @@ long tag_iterator_next(struct tag_iterator *iterator);
 /* ---------- globals */
 
 extern struct cache_file_globals cache_file_globals;
+extern struct cached_map_file_globals cached_map_file_globals;
+extern struct cache_file_buffer_globals cache_file_buffer_globals;
 extern struct cache_file_tag_instance *global_tag_instances;
 
 #endif

@@ -2,6 +2,80 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Carga de los tags de un mapa
+
+La cadena completa con la que el juego carga un mapa: construir la ruta del
+archivo, buscarlo entre los mapas abiertos, reservar memoria, leer el índice
+y los datos de los tags y dejar apuntados el escenario y los globals. De 104
+funciones se pasa a 117, el 1,04 % de las del juego.
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `scenario_load` | `0x001228f0` | `cache/cache_files.c` |
+| `scenario_tags_unload` | `0x00122af0` | `cache/cache_files.c` |
+| `cache_file_read_async` | `0x00213760` | `cache/cache_files.c` |
+| `cache_file_read_header` | `0x00213800` | `cache/cache_files.c` |
+| `cache_file_block_until_not_busy` | `0x00213890` | `cache/cache_files.c` |
+| `cached_map_files_find_map` | `0x00214a60` | `cache/cache_files.c` |
+| `cache_file_get_map_name` | `0x00214d40` | `cache/cache_files.c` |
+| `cache_file_get_map_path` | `0x00214db0` | `cache/cache_files.c` |
+| `cache_file_buffer_allocate` | `0x00214f10` | `cache/cache_files.c` |
+| `physical_memory_initialize` | `0x0012b400` | `memory/physical_memory.c` |
+| `async_category_busy` | `0x00120b50` | `cseries/async.c` |
+| `csstrcasecmp` | `0x0011c920` | `cseries/cseries.c` |
+| `csprintf256` | `0x000b66f0` | `cseries/cseries.c` |
+
+- Archivos nuevos: `memory/physical_memory.{c,h}`, `cseries/async.{c,h}`,
+  `scenario/scenario.{c,h}` (las variables `global_scenario_index`,
+  `global_scenario` y `global_game_globals`).
+- `tests/test_scenario_load.py` y `tests/test_map_files.py`.
+
+### Cambiado
+
+- `tools/difftest.py`:
+  - Una prueba puede sustituir cualquier función de
+    `symbols/functions.csv` por nombre, esté descompilada o no. Así cada
+    función se prueba sola, sin depender de las que llama.
+  - `source/` se compila con `-fno-inline`, para que una llamada siga
+    siendo una llamada y se pueda sustituir.
+  - Una variable global puede recibir bytes (la estructura entera), que se
+    comparan al terminar.
+  - El emulador tiene memoria en `0x80000000`, donde la consola pone su
+    memoria física.
+- La biblioteca C de las pruebas (`tools/difftest_libc`) gana `strrchr`,
+  `strspn`, `strpbrk`, `towlower` y `vsnprintf`.
+- En la cabecera de un mapa, el campo de 256 bytes en `0x20` es la ruta
+  del archivo. En el disco está vacío: lo rellena el juego al abrirlo.
+
+### Lo que se sabe
+
+- El juego pide al arrancar un bloque de memoria física de `0x00061000` a
+  `0x03145000` (unos 49 MB) y lo reparte por los dos extremos, en páginas
+  de 4 KB. Hay cinco etapas; cada una parte de lo que dejó la anterior.
+- Los tags se leen en dos partes dentro del mismo bloque: el índice al
+  principio y los datos al final. En medio queda el hueco del bsp.
+- El juego tiene una tabla de seis mapas abiertos, cada uno con su cabecera.
+  Los tres primeros son `shared`, `single_player_shared` y `mainmenu`. Los
+  dos bits altos de un desplazamiento eligen de cuál se lee.
+- La ruta de un mapa es `d:\maps\<nombre>.map`, con el nombre en
+  minúsculas y sin extensión. Si el nombre empieza por `t:\` o `w:\` se
+  usa tal cual.
+- Si una lectura de los tags falla, el juego pone a cero el número de
+  compilación guardado (`0x00510a08`, normalmente 9809). Eso le hace
+  copiar otra vez los mapas al disco duro.
+- `cache_file_block_until_not_busy` espera a las tareas de las categorías
+  2 a 6.
+
+### Nombres supuestos
+
+- Todos menos `csstrcasecmp`, `cache_file_get_map_path`,
+  `cache_file_block_until_not_busy` y `scenario_tags_unload`, que hacen lo
+  mismo que las de Halo 1 con ese nombre. `scenario_load` reúne lo que en
+  Halo 1 son `scenario_load` y `scenario_tags_load`.
+- La estructura de las tareas (`async_task`) y sus campos.
+
 ## 2026-10-01 — Lectura del mapa y fin de las tablas de datos
 
 Cuatro funciones más: de 100 se pasa a 104, el 0,92 % de las del juego.
