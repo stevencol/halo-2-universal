@@ -2,6 +2,71 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Matrices
+
+El módulo de matrices: de 21 funciones se pasa a 41, el 0,36 % de las del
+juego.
+
+### Añadido
+
+- `source/math/matrix_math.c`: 20 funciones. Son las de `matrix_math.c` de
+  Halo 1, salvo `matrix3x3_from_angles`, que ese juego no tiene.
+
+  | Función | Dirección |
+  | --- | --- |
+  | `matrix4x3_inverse` | `0x00141590` |
+  | `matrix4x3_translation` | `0x001416c0` |
+  | `matrix4x3_rotation_from_vectors` | `0x00141710` |
+  | `matrix4x3_rotation_from_angles` | `0x00141ce0` |
+  | `matrix3x3_rotation_from_quaternion` | `0x00141e10` |
+  | `matrix3x3_rotation_to_quaternion` | `0x00141f60` |
+  | `matrix4x3_from_point_and_vectors` | `0x001420f0` |
+  | `matrix4x3_from_orientation` | `0x001421f0` |
+  | `matrix4x3_transform_point` | `0x00142570` |
+  | `matrix4x3_transform_vector` | `0x00142640` |
+  | `matrix4x3_inverse_transform_point` | `0x00142700` |
+  | `matrix4x3_inverse_transform_vector` | `0x001427f0` |
+  | `matrix4x3_inverse_transform_plane` | `0x001428b0` |
+  | `matrix4x3_transform_points` | `0x001429d0` |
+  | `matrix4x3_multiply` | `0x00142a60` |
+  | `matrix3x3_transpose` | `0x00142b80` |
+  | `matrix3x3_inverse` | `0x00142bf0` |
+  | `matrix3x3_from_forward_and_up` | `0x00142d10` |
+  | `matrix3x3_from_angles` | `0x00142da0` |
+  | `matrix3x3_transform_vector` | `0x00143070` |
+
+- `source/math/real_math.h`: los tipos de cuaternión, orientación y
+  matrices, y `reciprocal_estimate`.
+- `tests/test_matrix_math.py`: unos 3.000 casos.
+
+### Cambiado
+
+- `tools/difftest.py` compila `source/` con los reales en precisión simple
+  (SSE) y pone el procesador emulado en precisión simple, como lo deja
+  Direct3D en la consola. Con eso, **los reales se comparan exactos**: las
+  41 funciones dan los mismos bits que el juego. `DIFFTEST_TOLERANT=1`
+  admite diferencias en los últimos bits, para distinguir un orden de
+  operaciones distinto de un cálculo distinto.
+
+### Lo que se sabe
+
+- `matrix4x3_rotation_from_angles` es la de Halo 1. Confirma la fórmula con
+  la que `tools/scenario_objects.py` orienta los objetos de los niveles.
+- Varias funciones (`matrix4x3_multiply`, `matrix4x3_transform_points`,
+  `matrix4x3_from_orientation`) están escritas a mano con instrucciones
+  SSE. El orden de sus sumas no es el del pseudocódigo: hay que leerlo en
+  las instrucciones.
+- `matrix4x3_from_orientation` usa la estimación del inverso del procesador
+  (`rcpss`) con un paso de refinado. `reciprocal_estimate` da esa
+  instrucción donde existe; en otro procesador el resultado diferiría en
+  los últimos bits.
+
+### Pendiente
+
+- Del mismo módulo: `0x001417b0` (1.317 bytes), `0x00142390`, `0x00142eb0`,
+  `0x00143120`, `0x00143250` (producto de matriz por vector de cualquier
+  tamaño) y `0x00143360`.
+
 ## 2026-10-01 — Tablas de datos y primer vector
 
 Primeras funciones del motor descompiladas con el banco de pruebas. De 3

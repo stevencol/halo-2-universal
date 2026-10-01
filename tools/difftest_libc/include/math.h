@@ -11,6 +11,8 @@ instructions; libc.c defines them for where it does not.
 
 float sqrtf(float value);
 float fabsf(float value);
+float sinf(float value);
+float cosf(float value);
 
 #define sqrtf(value) __builtin_sqrtf(value)
 #define fabsf(value) __builtin_fabsf(value)

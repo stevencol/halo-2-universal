@@ -140,6 +140,21 @@ float fabsf(float value)
 	return value;
 }
 
+/* the game takes sines and cosines with the processor's instructions */
+float sinf(float value)
+{
+	__asm__("fsin" : "+t"(value));
+
+	return value;
+}
+
+float cosf(float value)
+{
+	__asm__("fcos" : "+t"(value));
+
+	return value;
+}
+
 int strncmp(const char *a, const char *b, size_t size)
 {
 	for (; size && *a && *a==*b; size--, a++, b++)

@@ -11,6 +11,7 @@
 # a register, or "stack".
 
 import csv
+import os
 import shutil
 import struct
 import subprocess
@@ -53,10 +54,14 @@ COMPILE_FLAGS = [
     "-fno-pic",
     "-fno-stack-protector",
     "-fno-asynchronous-unwind-tables",
-    # the reals in the x87 registers. The game's code uses them and the SSE
-    # registers, so a result can differ in its last bits
-    "-mno-sse",
+    # the reals in the SSE registers, in single precision, as most of the
+    # game's code has them; the console's processor has SSE and not SSE2
+    "-msse",
+    "-mno-sse2",
+    "-mfpmath=sse",
     "-fno-math-errno",
+    # a product and a sum stay two operations, each rounded
+    "-ffp-contract=off",
     "-O2",
     "-std=c11",
     "-Wall",
@@ -99,8 +104,7 @@ class Buffer:
     # offset in the buffer, and the emulator gets the address of that place
     pointers: tuple[int, ...] = ()
     # a struct format of the data (as "<3f"), to compare it value by value
-    # and take two reals that are almost equal as equal; without it, the
-    # bytes are compared
+    # and say which value differs; without it, the bytes are compared
     format: str | None = None
     # filled by the harness: the address in the emulator
     address: int = 0
@@ -129,10 +133,19 @@ class Result:
     buffers: list[tuple | bytes] = field(default_factory=list)
 
 
+# with DIFFTEST_TOLERANT=1 in the environment, two reals that differ in
+# their last bits are taken as the same: to tell a function that computes in
+# another order from one that computes something else
+TOLERANT = os.environ.get("DIFFTEST_TOLERANT") == "1"
+
+
 def almost_equal(a: object, b: object) -> bool:
-    """Whether two results are the same; two reals, whether they differ in their last bits at most."""
+    """Whether two results are the same. Two reals have to be equal: the functions
+    of source/ compute in single precision and in the order that the game's do."""
     if isinstance(a, float) and isinstance(b, float):
-        return a == b or (a != a and b != b) or abs(a - b) <= 2e-6 * max(abs(a), abs(b)) + 1e-9
+        if a == b or (a != a and b != b):
+            return True
+        return TOLERANT and abs(a - b) <= 2e-6 * max(abs(a), abs(b)) + 1e-9
     if isinstance(a, (tuple, list)) and isinstance(b, (tuple, list)):
         return len(a) == len(b) and all(almost_equal(x, y) for x, y in zip(a, b))
     return a == b
@@ -276,8 +289,9 @@ class Harness:
         for name, value in registers.items():
             mu.reg_write(REGISTERS[name], value & 0xFFFFFFFF)
 
-        # the x87 registers empty, and the control word that the C library sets
-        mu.reg_write(x86.UC_X86_REG_FPCW, 0x27F)
+        # the x87 registers empty, and the control word of the console's
+        # games: single precision, as Direct3D sets it
+        mu.reg_write(x86.UC_X86_REG_FPCW, 0x07F)
         mu.reg_write(x86.UC_X86_REG_FPSW, 0)
         mu.reg_write(x86.UC_X86_REG_FPTAG, 0xFFFF)
 

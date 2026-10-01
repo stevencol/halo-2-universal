@@ -2,6 +2,26 @@ address,name,source,arguments,returns
 00012130,cache_file_build_verify,source/cache/cache_files.c,stack,bool
 00030bf0,normalize3d,source/math/real_math.c,eax,real:xmm0
 00122870,cache_file_header_verify,source/cache/cache_files.c,esi,bool
+00141590,matrix4x3_inverse,source/math/matrix_math.c,ecx eax,void
+001416c0,matrix4x3_translation,source/math/matrix_math.c,eax ecx,void
+00141710,matrix4x3_rotation_from_vectors,source/math/matrix_math.c,ecx edx eax,void
+00141ce0,matrix4x3_rotation_from_angles,source/math/matrix_math.c,eax stack stack stack,void
+00141e10,matrix3x3_rotation_from_quaternion,source/math/matrix_math.c,eax ecx,void
+00141f60,matrix3x3_rotation_to_quaternion,source/math/matrix_math.c,ecx ebx,void
+001420f0,matrix4x3_from_point_and_vectors,source/math/matrix_math.c,edx esi ecx eax,void
+001421f0,matrix4x3_from_orientation,source/math/matrix_math.c,stack stack,void
+00142570,matrix4x3_transform_point,source/math/matrix_math.c,stack eax edx,int
+00142640,matrix4x3_transform_vector,source/math/matrix_math.c,ecx eax edx,int
+00142700,matrix4x3_inverse_transform_point,source/math/matrix_math.c,ecx esi edx,int
+001427f0,matrix4x3_inverse_transform_vector,source/math/matrix_math.c,ecx eax edx,int
+001428b0,matrix4x3_inverse_transform_plane,source/math/matrix_math.c,ecx edx esi,void
+001429d0,matrix4x3_transform_points,source/math/matrix_math.c,stack stack stack stack,void
+00142a60,matrix4x3_multiply,source/math/matrix_math.c,ecx edx stack,void
+00142b80,matrix3x3_transpose,source/math/matrix_math.c,ecx eax,void
+00142bf0,matrix3x3_inverse,source/math/matrix_math.c,eax stack stack,int
+00142d10,matrix3x3_from_forward_and_up,source/math/matrix_math.c,eax edx ecx,void
+00142da0,matrix3x3_from_angles,source/math/matrix_math.c,eax stack stack stack,void
+00143070,matrix3x3_transform_vector,source/math/matrix_math.c,edx ecx eax,void
 0016b5f0,data_initialize,source/memory/data.c,stack stack ebx edx ecx stack,void
 0016b650,data_initialize_disconnected,source/memory/data.c,esi stack stack stack stack stack stack,void
 0016b790,data_make_valid,source/memory/data.c,eax,void
