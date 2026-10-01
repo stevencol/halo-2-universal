@@ -29,6 +29,11 @@ typedef unsigned char byte;
 typedef unsigned short word;
 typedef unsigned char boolean;
 
+/* ---------- prototypes/CSERIES.C */
+
+boolean bit_vector_test_flag(const unsigned long *vector, long bit);
+void path_remove_last_element(char *path);
+
 /* ---------- macros */
 
 #define FLAG(bit) (1<<(bit))

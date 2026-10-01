@@ -10,6 +10,9 @@ REAL_MATH.H
 /* a real with a magnitude under this one is taken as zero */
 #define k_real_epsilon 0.0001f
 
+/* the greatest real */
+#define k_real_max 3.4028234663852886e+38f
+
 /* ---------- structures */
 
 typedef float real;
@@ -121,6 +124,9 @@ typedef char verify_real_matrix4x3_size[
 
 real normalize2d(real_vector2d *vector);
 real normalize3d(real_vector3d *vector);
+real normalize3d_with_default(real_vector3d *vector, const real_vector3d *default_vector);
+real fast_vector_sphere_intersection(const real_point3d *point, const real_vector3d *vector,
+	const real_point3d *center, real radius);
 real magnitude3d(const real_vector3d *vector);
 real distance3d(const real_point3d *a, const real_point3d *b);
 void perpendicular3d(const real_vector3d *vector, real_vector3d *result);

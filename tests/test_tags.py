@@ -94,5 +94,37 @@ def run(t) -> None:
                 iterator = Buffer(struct.pack("<2I2iI", 0x11111111, 0x22222222, 0x33333333, start, wanted))
                 t.check("tag_iterator_next", iterator, globals=globals_())
 
+    # bitmap groups: some tag instances, each with the address of a group
+    # after them in the buffer, or with none; a group has some bitmaps
+    for _ in range(30):
+        tag_count = random_.choice((1, 4, 20))
+        groups_offset = tag_count * 16
+        instance_data = bytearray()
+        group_data = bytearray()
+        pointers = []
+        for n in range(tag_count):
+            if random_.random() < 0.2:
+                instance_data += struct.pack("<4I", 0x6269746D, 0xE1000000 | n, 0, 0)
+                continue
+            bitmap_count = random_.choice((0, 1, 3))
+            group_offset = groups_offset + len(group_data)
+            pointers.append(n * 16 + 8)
+            instance_data += struct.pack("<4I", 0x6269746D, 0xE1000000 | n, group_offset, 0x4C)
+            # the group, with its bitmaps after it
+            group = bytearray(random_.randbytes(0x4C))
+            struct.pack_into("<iI", group, 0x44, bitmap_count, group_offset + 0x4C)
+            pointers.append(group_offset + 0x48)
+            group_data += group + random_.randbytes(bitmap_count * 0x74)
+        data = Buffer(bytes(instance_data) + bytes(group_data), pointers=tuple(pointers))
+        for n in range(tag_count):
+            for bitmap_index in (-1, 0, 1, 2, 3, 0x7FFF, -0x8000):
+                # the identifier of the index is not looked at
+                t.check(
+                    "bitmap_group_get_bitmap",
+                    random_.getrandbits(16) << 16 | n,
+                    bitmap_index,
+                    globals={"global_tag_instances": data},
+                )
+
     # no cache file loaded
     t.check("cache_file_tag_group_get", 0x62697064, globals={TAG_HEADER_GLOBAL: 0})

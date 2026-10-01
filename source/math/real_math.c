@@ -30,6 +30,65 @@ real normalize2d(
 	return magnitude;
 }
 
+/* 0x001201a0: as normalize3d, but a vector too short becomes another one.
+The name is a guess */
+real normalize3d_with_default(
+	real_vector3d *vector,
+	const real_vector3d *default_vector)
+{
+	real magnitude= sqrtf(vector->i*vector->i + vector->j*vector->j + vector->k*vector->k);
+	real scale;
+
+	if (k_real_epsilon>fabsf(magnitude))
+	{
+		*vector= *default_vector;
+		return 0.0f;
+	}
+
+	scale= 1.0f/magnitude;
+	vector->i*= scale;
+	vector->j*= scale;
+	vector->k*= scale;
+
+	return magnitude;
+}
+
+/* 0x0011e6f0: how far along the vector, as a fraction of it, the segment
+from the point first touches the sphere: 0 for a point in the sphere, and
+the greatest real if it does not touch it. The name is a guess */
+real fast_vector_sphere_intersection(
+	const real_point3d *point,
+	const real_vector3d *vector,
+	const real_point3d *center,
+	real radius)
+{
+	real y= point->y-center->y;
+	real z= point->z-center->z;
+	real x= point->x-center->x;
+	real c= (z*z + y*y + x*x) - radius*radius;
+	real a, b, discriminant;
+
+	if (0.0f>c)
+	{
+		return 0.0f;
+	}
+
+	b= vector->k*z + vector->j*y + vector->i*x;
+	if (b>=0.0f)
+	{
+		return k_real_max;
+	}
+
+	a= vector->k*vector->k + vector->j*vector->j + vector->i*vector->i;
+	discriminant= b*b - a*c;
+	if (0.0f>=discriminant)
+	{
+		return k_real_max;
+	}
+
+	return (-b - sqrtf(discriminant))/a;
+}
+
 /* 0x00024590: the game's function uses the x87 instructions, which keep a
 sum of squares too small or too large for a real. For a vector shorter than
 about 1e-19 or longer than about 1e19 this one gives another result; so does

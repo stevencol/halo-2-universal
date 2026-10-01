@@ -2,6 +2,33 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Cien funciones
+
+Cinco funciones sueltas más: de 95 se pasa a 100, el 0,89 % de las del
+juego.
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `bit_vector_test_flag` | `0x000bfe60` | `cseries/cseries.c` |
+| `fast_vector_sphere_intersection` | `0x0011e6f0` | `math/real_math.c` |
+| `normalize3d_with_default` | `0x001201a0` | `math/real_math.c` |
+| `bitmap_group_get_bitmap` | `0x00137550` | `bitmaps/bitmap_group.c` |
+| `path_remove_last_element` | `0x001373c0` | `cseries/cseries.c` |
+
+### Lo que se sabe
+
+- `bitmap_group_get_bitmap` no pasa por `tag_get`: lee la dirección del tag
+  en la tabla de instancias sin comprobar su tipo ni su identificador.
+- `path_remove_last_element` deja la ruta vacía si no tiene ninguna barra
+  invertida.
+
+### Nombres supuestos
+
+- Los cinco. `bitmap_group_get_bitmap` es el nombre de Halo 1 para una
+  función que allí recibe el grupo y no su índice.
+
 ## 2026-10-01 — Acceso a los tags
 
 Las funciones con las que casi todo el juego llega a sus datos. De 90 se

@@ -42,7 +42,16 @@ def run(t) -> None:
         scale = 10.0 ** random_.uniform(-6, 6)
         vectors.append(tuple(random_.uniform(-scale, scale) for _ in range(3)))
 
+    for path in (b"", b"a", b"\\", b"a\\b", b"tags\\objects\\weapons\\rifle", b"no backslash here", b"ends\\", b"\\\\x"):
+        t.check("path_remove_last_element", Buffer(path + b"\0"))
+
+    for _ in range(20):
+        bits = Buffer(random_.randbytes(16))
+        for bit in (0, 1, 31, 32, 33, 63, 64, 127, *(random_.randrange(128) for _ in range(6))):
+            t.check("bit_vector_test_flag", bits, bit)
+
     for vector in vectors:
+        t.check("normalize3d_with_default", reals(*vector), reals(0.25, -0.5, 0.75))
         t.check("normalize3d", reals(*vector))
         t.check("normalize2d", reals(*vector[:2]))
         t.check("perpendicular3d", reals(*vector), reals(9, 9, 9))
@@ -68,6 +77,7 @@ def run(t) -> None:
         center = [random_.uniform(-5, 5) for _ in range(3)]
         radius = random_.choice((0.0, 0.5, 2.0, 6.0, random_.uniform(0, 10)))
         t.check("fast_vector_intersects_sphere", reals(*point), reals(*direction), reals(*center), f32(radius))
+        t.check("fast_vector_sphere_intersection", reals(*point), reals(*direction), reals(*center), f32(radius))
 
         length = random_.choice((1.0, 1.0, 0.01, 30.0))
         t.check("fast_quaternion_normalize", reals(*(random_.uniform(-1, 1) * length for _ in range(4))))

@@ -81,6 +81,10 @@ struct bitmap_group
 	/* the rest of the tag */
 };
 
+/* ---------- prototypes/BITMAP_GROUP.C */
+
+struct bitmap_data *bitmap_group_get_bitmap(long bitmap_group_index, short bitmap_index);
+
 typedef char verify_bitmap_data_size[
 	sizeof(struct bitmap_data) == 0x74 ? 1 : -1];
 typedef char verify_bitmap_data_pixels_offsets_offset[
