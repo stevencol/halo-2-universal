@@ -1,0 +1,4 @@
+address,name,source,arguments,returns
+00012130,cache_file_build_verify,source/cache/cache_files.c,stack,bool
+00122870,cache_file_header_verify,source/cache/cache_files.c,esi,bool
+00214ed0,cache_file_maximum_length,source/cache/cache_files.c,ecx,int

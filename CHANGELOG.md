@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Banco de pruebas de funciones
+
+Primera pieza para descompilar el ejecutable a escala: comprobar cada
+función reescrita contra la original.
+
+### Añadido
+
+- `tools/difftest.py`: carga en un emulador de procesador (Unicorn) el
+  ejecutable del juego y `source/` compilado para x86 de 32 bits, y ejecuta
+  la misma función en los dos con los mismos argumentos. Nada del juego ni
+  de `source/` se ejecuta en el propio ordenador, así que Smart App Control
+  no interviene.
+- `tools/test_functions.py`: ejecuta los casos de `tests/` y compara lo que
+  devuelve cada función y lo que deja en memoria. Informa del avance sobre
+  el total del juego.
+- `symbols/functions.csv`: el registro de funciones descompiladas, con su
+  dirección en el ejecutable y dónde recibe la original cada argumento (un
+  registro o la pila).
+- `tests/test_cache_files.py`: 162 casos para las tres funciones de
+  `cache_files.c`. Coinciden todos.
+- `tools/ghidra_scripts/ExportAllDecompiled.java`: exporta el pseudocódigo
+  de las 11.265 funciones a `ghidra/decompiled/all/`, con un índice de
+  llamadas y cadenas de texto, para buscar en ellas.
+- `tools/difftest_libc/`: las funciones de la librería de C que usa el
+  código del juego, para la imagen de pruebas.
+
+### Lo que se sabe
+
+- Las funciones del juego reciben a menudo sus argumentos en registros que
+  elige el compilador, no según una convención fija. Por eso el registro
+  indica el lugar de cada argumento.
+- El emulador no tiene el kernel de la consola. Cada función del kernel que
+  una prueba necesite hay que darla aparte; de momento solo la que da la
+  hora.
+
 ## 2026-10-01 — Objetos de los niveles
 
 Sexta meta: poner en cada nivel los objetos que coloca su escenario.

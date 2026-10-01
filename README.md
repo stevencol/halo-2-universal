@@ -52,18 +52,39 @@ copia de Halo 2 para Xbox, con `default.xbe` y la carpeta `maps/`.
 | JDK 21 | Lo necesita Ghidra |
 | clang ([llvm-mingw](https://github.com/mstorsjo/llvm-mingw)) y [ninja](https://ninja-build.org/) | Compilar |
 | Python 3 | Scripts de `tools/` |
+| [Unicorn](https://www.unicorn-engine.org/) (`pip install unicorn`) | Emulador de procesador para probar las funciones |
 
 ## Compilar y probar
 
 ```
 ninja
+python tools/test_functions.py
 python tools/test_maps.py "<carpeta maps del juego>"
 ```
 
 `ninja` genera `build/mapinfo.exe` y comprueba los tamaños de las
-estructuras de `source/`. La prueba abre todos los mapas, comprueba que cada
-tag está donde el cargador lo espera y exporta la geometría de cada nivel a
-`build/obj/`.
+estructuras de `source/`.
+
+`test_functions.py` comprueba el código descompilado: ejecuta en un emulador
+cada función de `source/` y la función del ejecutable de la que salió, con
+los casos de `tests/`, y compara los resultados. Necesita `disc/default.xbe`.
+Al final dice qué parte del código del juego está descompilada.
+
+`test_maps.py` comprueba las herramientas de datos: abre todos los mapas,
+comprueba que cada tag está donde el cargador lo espera y exporta la
+geometría de cada nivel a `build/obj/`.
+
+### Descompilar una función
+
+1. Encontrarla en `ghidra/decompiled/all/` (un archivo por función, con
+   `index.jsonl` de índice) o descompilarla con `DecompileFunctions.java`.
+2. Buscar su equivalente de Halo 1 en `source/` de halo-ce-universal, para
+   el nombre y como referencia de lo que hace.
+3. Escribirla en `source/`, en el archivo del sistema al que pertenece, con
+   su dirección en un comentario.
+4. Añadirla a `symbols/functions.csv`, con el lugar de cada argumento en la
+   función original (un registro o `stack`).
+5. Añadir sus casos a `tests/` y ejecutar `test_functions.py`.
 
 Listar el contenido de un mapa:
 
