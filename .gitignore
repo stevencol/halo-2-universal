@@ -1,0 +1,13 @@
+# the game: the executable, the maps and anything made from them
+disc/
+ghidra/
+*.xbe
+*.map
+*.iso
+*.xiso
+
+# build results
+build/
+.ninja_deps
+.ninja_log
+__pycache__/
