@@ -6,62 +6,81 @@
 # obj_preview.py <input.obj> <output.png> [width]
 
 import math
-import struct
 import sys
-import zlib
 from pathlib import Path
+
+from png import read_png, write_png
 
 # the view: degrees around the vertical axis, then degrees down from the horizon
 TURN = 35.0
 TILT = 50.0
 LIGHT = (0.35, 0.85, 0.4)
 BACKGROUND = (24, 26, 32)
+DEFAULT_COLOR = (0.7, 0.7, 0.7)
 
 
-def read_obj(path: Path) -> tuple[list[tuple], list[tuple[list[int], str]], dict[str, tuple]]:
+class Material:
+    def __init__(self) -> None:
+        self.color = DEFAULT_COLOR
+        # (width, height, RGB pixels)
+        self.texture: tuple[int, int, bytes] | None = None
+
+
+def read_materials(path: Path) -> dict[str, Material]:
+    materials: dict[str, Material] = {}
+    if not path.exists():
+        return materials
+    material = None
+    for line in path.read_text(encoding="utf-8").splitlines():
+        parts = line.split(maxsplit=1)
+        if len(parts) < 2:
+            continue
+        if parts[0] == "newmtl":
+            material = materials[parts[1]] = Material()
+        elif parts[0] == "Kd" and material:
+            material.color = tuple(float(value) for value in parts[1].split()[:3])
+        elif parts[0] == "map_Kd" and material:
+            image = path.parent / parts[1]
+            if image.exists():
+                width, height, channels, pixels = read_png(image)
+                if channels == 4:
+                    pixels = bytes(value for n, value in enumerate(pixels) if n % 4 != 3)
+                material.texture = (width, height, pixels)
+    return materials
+
+
+def read_obj(path: Path) -> tuple[list[tuple], list[tuple], list[tuple[list[int], list[int], str]]]:
+    """The vertices, the texture coordinates and the faces: (vertices, texture coordinates, material)."""
     vertices: list[tuple] = []
-    faces: list[tuple[list[int], str]] = []
-    colors: dict[str, tuple] = {}
+    texcoords: list[tuple] = []
+    faces: list[tuple[list[int], list[int], str]] = []
     material = "none"
-
-    mtl = path.with_suffix(".mtl")
-    if mtl.exists():
-        name = None
-        for line in mtl.read_text(encoding="utf-8").splitlines():
-            parts = line.split()
-            if parts[:1] == ["newmtl"]:
-                name = parts[1]
-            elif parts[:1] == ["Kd"] and name:
-                colors[name] = tuple(float(value) for value in parts[1:4])
-
     with path.open(encoding="utf-8") as f:
         for line in f:
             if line.startswith("v "):
                 vertices.append(tuple(float(value) for value in line.split()[1:4]))
+            elif line.startswith("vt "):
+                texcoords.append(tuple(float(value) for value in line.split()[1:3]))
             elif line.startswith("f "):
-                faces.append(([int(value.split("/")[0]) - 1 for value in line.split()[1:]], material))
+                corners = [corner.split("/") for corner in line.split()[1:]]
+                faces.append(
+                    (
+                        [int(corner[0]) - 1 for corner in corners],
+                        [int(corner[1]) - 1 for corner in corners] if all(len(c) > 1 and c[1] for c in corners) else [],
+                        material,
+                    )
+                )
             elif line.startswith("usemtl "):
                 material = line.split()[1]
-    return vertices, faces, colors
-
-
-def write_png(path: Path, width: int, height: int, pixels: bytearray) -> None:
-    def chunk(kind: bytes, data: bytes) -> bytes:
-        return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))
-
-    rows = b"".join(b"\0" + bytes(pixels[y * width * 3 : (y + 1) * width * 3]) for y in range(height))
-    path.write_bytes(
-        b"\x89PNG\r\n\x1a\n"
-        + chunk(b"IHDR", struct.pack(">2I5B", width, height, 8, 2, 0, 0, 0))
-        + chunk(b"IDAT", zlib.compress(rows, 6))
-        + chunk(b"IEND", b"")
-    )
+    return vertices, texcoords, faces
 
 
 def main() -> None:
     if len(sys.argv) < 3:
         sys.exit("usage: obj_preview.py <input.obj> <output.png> [width]")
-    vertices, faces, colors = read_obj(Path(sys.argv[1]))
+    obj_path = Path(sys.argv[1])
+    vertices, texcoords, faces = read_obj(obj_path)
+    materials = read_materials(obj_path.with_suffix(".mtl"))
     width = int(sys.argv[3]) if len(sys.argv) > 3 else 1400
     if not vertices or not faces:
         sys.exit("the OBJ file has no geometry")
@@ -86,8 +105,9 @@ def main() -> None:
     pixels = bytearray(bytes(BACKGROUND) * (width * height))
     depth = [-math.inf] * (width * height)
     light_length = math.sqrt(sum(value * value for value in LIGHT))
+    default_material = Material()
 
-    for ring, material in faces:
+    for ring, uv_ring, material_name in faces:
         # the normal in the file's space, for the shade
         a, b, c = vertices[ring[0]], vertices[ring[1]], vertices[ring[2]]
         ux, uy, uz = b[0] - a[0], b[1] - a[1], b[2] - a[2]
@@ -99,7 +119,14 @@ def main() -> None:
         if length == 0 or rotate(nx, ny, nz)[2] <= 0:
             continue
         shade = 0.3 + 0.7 * abs(nx * LIGHT[0] + ny * LIGHT[1] + nz * LIGHT[2]) / (length * light_length)
-        red, green, blue = (int(255 * shade * value) for value in colors.get(material, (0.7, 0.7, 0.7)))
+
+        material = materials.get(material_name, default_material)
+        texture = material.texture if uv_ring else None
+        flat = bytes(min(int(255 * shade * value), 255) for value in material.color)
+        if texture:
+            texture_width, texture_height, texels = texture
+            # the texels with the shade applied
+            shaded = bytes(min(int(value * shade * 1.15), 255) for value in range(256))
 
         # a fan of triangles, each filled with the nearest surface kept
         for n in range(1, len(ring) - 1):
@@ -107,6 +134,8 @@ def main() -> None:
             area = (bx - ax) * (cy - ay) - (cx - ax) * (by - ay)
             if area == 0:
                 continue
+            if texture:
+                (au, av), (bu, bv), (cu, cv) = texcoords[uv_ring[0]], texcoords[uv_ring[n]], texcoords[uv_ring[n + 1]]
             for py in range(max(int(min(ay, by, cy)), 0), min(int(max(ay, by, cy)) + 1, height)):
                 y = py + 0.5
                 for px in range(max(int(min(ax, bx, cx)), 0), min(int(max(ax, bx, cx)) + 1, width)):
@@ -118,11 +147,19 @@ def main() -> None:
                         continue
                     z = w0 * az + w1 * bz + w2 * cz
                     at = py * width + px
-                    if z > depth[at]:
-                        depth[at] = z
-                        pixels[at * 3 : at * 3 + 3] = bytes((red, green, blue))
+                    if z <= depth[at]:
+                        continue
+                    depth[at] = z
+                    if texture:
+                        # the texture repeats; the file has v up and the image has its top row first
+                        u = w0 * au + w1 * bu + w2 * cu
+                        v = 1 - (w0 * av + w1 * bv + w2 * cv)
+                        texel = (int(v * texture_height) % texture_height * texture_width + int(u * texture_width) % texture_width) * 3
+                        pixels[at * 3 : at * 3 + 3] = texels[texel : texel + 3].translate(shaded)
+                    else:
+                        pixels[at * 3 : at * 3 + 3] = flat
 
-    write_png(Path(sys.argv[2]), width, height, pixels)
+    write_png(Path(sys.argv[2]), width, height, bytes(pixels))
     print(f"{sys.argv[2]}: {width} x {height}, {len(faces)} surfaces")
 
 

@@ -3,12 +3,14 @@
 # writes the geometry of a map's structure bsps as a Wavefront OBJ file, with
 # one material per shader
 #
-# bsp2obj.py <map> <output.obj> [--collision]
+# bsp2obj.py <map> <output.obj> [--collision] [--no-textures]
 #
 # Without --collision the file has the geometry that the game draws, with its
 # texture coordinates: one object per cluster and per instance of instanced
-# geometry. With --collision it has the geometry that the physics uses: one
-# object per structure bsp.
+# geometry. The diffuse map of each shader is written as a PNG image to a
+# folder next to the file, unless --no-textures is given. With --collision
+# the file has the geometry that the physics uses: one object per structure
+# bsp.
 #
 # The game's z axis points up. The file has y up, as OBJ readers expect:
 # (x, y, z) is written as (x, z, -y).
@@ -24,8 +26,10 @@ from pathlib import Path
 from typing import TextIO
 
 import structure_bsp
-from cache_file import CacheFile, CacheFileError
+from bitmap import read_bitmap, shader_diffuse_bitmap
+from cache_file import NONE, CacheFile, CacheFileError
 from geometry import Section, read_section
+from png import write_png
 from structure_bsp import StructureBsp, obj_name
 
 MAXIMUM_EDGES_PER_COLLISION_SURFACE = 8
@@ -44,19 +48,25 @@ class Totals:
     # the geometry that is drawn only
     clusters: int = 0
     instances: int = 0
+    # the textures written, the materials whose shader has no diffuse map
+    # and the materials whose diffuse map could not be read
+    textures: int = 0
+    untextured: int = 0
+    texture_failures: int = 0
 
 
 class ObjWriter:
     def __init__(self, obj: TextIO) -> None:
         self.obj = obj
         self.vertex_count = 0
-        self.materials: dict[str, None] = {}
+        # the materials used, with the index of the shader tag of each
+        self.materials: dict[str, int] = {}
 
     def object(self, name: str) -> None:
         self.obj.write(f"o {obj_name(name)}\n")
 
-    def material(self, name: str) -> None:
-        self.materials[name] = None
+    def material(self, name: str, shader_index: int = NONE) -> None:
+        self.materials[name] = shader_index
         self.obj.write(f"usemtl {name}\n")
 
     def vertices(self, positions: list[tuple], texcoords: list[tuple] | None = None) -> int:
@@ -70,9 +80,13 @@ class ObjWriter:
         self.vertex_count += len(positions)
         return first
 
-    def write_materials(self, path: Path) -> None:
+    def write_materials(self, path: Path, textures: dict[str, str]) -> None:
+        """Writes the materials; `textures` gives the image of each material that has one."""
         with path.open("w", encoding="utf-8", newline="\n") as mtl:
             for material in self.materials:
+                if material in textures:
+                    mtl.write(f"newmtl {material}\nKd 1.000 1.000 1.000\nmap_Kd {textures[material]}\n\n")
+                    continue
                 # a color from the name, to tell the materials apart
                 color = zlib.crc32(material.encode())
                 red, green, blue = (0.25 + 0.7 * ((color >> shift) & 0xFF) / 255 for shift in (0, 8, 16))
@@ -169,7 +183,12 @@ def export_collision(bsp: StructureBsp, writer: ObjWriter, totals: Totals) -> No
 
 
 def write_section(
-    writer: ObjWriter, name: str, section: Section, positions: list[tuple], material_names: list[str], totals: Totals
+    writer: ObjWriter,
+    name: str,
+    section: Section,
+    positions: list[tuple],
+    materials: list[tuple[str, int]],
+    totals: Totals,
 ) -> None:
     if not section.parts:
         return
@@ -183,7 +202,7 @@ def write_section(
             section.indices[part.first_index : part.first_index + part.index_count]
         )
     for material_index in sorted(by_material):
-        writer.material(material_names[material_index] if material_index < len(material_names) else "none")
+        writer.material(*(materials[material_index] if material_index < len(materials) else ("none", NONE)))
         indices = by_material[material_index]
         for n in range(0, len(indices), 3):
             a, b, c = (first + index for index in indices[n : n + 3])
@@ -194,9 +213,9 @@ def write_section(
 
 def export_render(bsp: StructureBsp, writer: ObjWriter, totals: Totals) -> None:
     cache = bsp.cache
-    # structure_material: old shader, shader, ...
+    # structure_material: old shader, shader, ...; the name and the shader tag of each
     material_names = [
-        obj_name(cache.tag_name(material[3]))
+        (obj_name(cache.tag_name(material[3])), material[3])
         for material in bsp.elements(bsp.tag_block(structure_bsp.MATERIALS_OFFSET), "<4I16x")
     ]
     before = (totals.vertices, totals.surfaces)
@@ -244,7 +263,56 @@ def export_render(bsp: StructureBsp, writer: ObjWriter, totals: Totals) -> None:
 # ---------- the file
 
 
-def export_map(map_path: Path, obj_path: Path, collision: bool = False) -> Totals:
+def export_textures(
+    cache: CacheFile, materials: dict[str, int], folder: Path, obj_folder: Path, written: dict[str, str | None], totals: Totals
+) -> dict[str, str]:
+    """Writes the diffuse map of each material's shader as a PNG image in the folder.
+
+    Returns the image of each material that has one, as a path from the OBJ
+    file's folder. `written` keeps the bitmaps written already, by tag name,
+    so that maps exported to the same folder decode each bitmap once.
+    """
+    folder.mkdir(parents=True, exist_ok=True)
+    textures: dict[str, str] = {}
+    for material, shader_index in materials.items():
+        bitmap_index = shader_diffuse_bitmap(cache, shader_index)
+        if bitmap_index == NONE:
+            totals.untextured += 1
+            continue
+        name = cache.tag_name(bitmap_index)
+        if name not in written:
+            path = folder / (name.replace("\\", "_").replace(" ", "_") + ".png")
+            try:
+                image = read_bitmap(cache, bitmap_index)
+            except CacheFileError as error:
+                print(f"  texture not written: {error}")
+                written[name] = None
+            else:
+                # without the alpha, which is not transparency in most diffuse maps
+                rgb = bytes(value for n, value in enumerate(image.pixels) if n % 4 != 3)
+                write_png(path, image.width, image.height, rgb, 3)
+                written[name] = path.relative_to(obj_folder).as_posix()
+                totals.textures += 1
+        if written[name]:
+            textures[material] = written[name]
+        else:
+            totals.texture_failures += 1
+    return textures
+
+
+def export_map(
+    map_path: Path,
+    obj_path: Path,
+    collision: bool = False,
+    textures: bool = True,
+    texture_folder: Path | None = None,
+    written_textures: dict[str, str | None] | None = None,
+) -> Totals:
+    """Writes the OBJ file, its materials and, for the geometry that is drawn, its textures.
+
+    The textures go to a folder next to the OBJ file, or to `texture_folder`,
+    which has to be inside the OBJ file's folder.
+    """
     cache = CacheFile(map_path)
     totals = Totals()
     mtl_path = obj_path.with_suffix(".mtl")
@@ -258,7 +326,18 @@ def export_map(map_path: Path, obj_path: Path, collision: bool = False) -> Total
         for bsp in structure_bsp.structure_bsps(cache):
             (export_collision if collision else export_render)(bsp, writer, totals)
             totals.bsps += 1
-    writer.write_materials(mtl_path)
+
+    material_textures: dict[str, str] = {}
+    if textures and not collision:
+        material_textures = export_textures(
+            cache,
+            writer.materials,
+            texture_folder or obj_path.with_name(obj_path.stem + "_textures"),
+            obj_path.parent,
+            {} if written_textures is None else written_textures,
+            totals,
+        )
+    writer.write_materials(mtl_path, material_textures)
 
     cache.close()
     return totals
@@ -268,9 +347,9 @@ def main() -> None:
     arguments = [argument for argument in sys.argv[1:] if not argument.startswith("--")]
     collision = "--collision" in sys.argv
     if len(arguments) < 2:
-        sys.exit("usage: bsp2obj.py <map> <output.obj> [--collision]")
+        sys.exit("usage: bsp2obj.py <map> <output.obj> [--collision] [--no-textures]")
     try:
-        totals = export_map(Path(arguments[0]), Path(arguments[1]), collision)
+        totals = export_map(Path(arguments[0]), Path(arguments[1]), collision, "--no-textures" not in sys.argv)
     except CacheFileError as error:
         sys.exit(f"bsp2obj: {error}")
 
@@ -284,6 +363,9 @@ def main() -> None:
         print(f"clusters           {totals.clusters}")
         print(f"instances          {totals.instances}")
         print(f"total triangles    {totals.surfaces}")
+        print(f"textures written   {totals.textures}")
+        print(f"no diffuse map     {totals.untextured}")
+        print(f"textures not read  {totals.texture_failures}")
 
 
 if __name__ == "__main__":

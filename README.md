@@ -10,7 +10,7 @@ con Halo: Combat Evolved.
 
 **Estado: muy temprano.** El juego no arranca ni está cerca de hacerlo. Hoy
 el proyecto abre los mapas del juego, lista su contenido y exporta la
-geometría de los niveles, sin texturas todavía. Consulta
+geometría de los niveles con su textura principal. Consulta
 [CHANGELOG.md](CHANGELOG.md) para ver qué hay hecho.
 
 ## En qué se basa
@@ -79,9 +79,15 @@ python tools/bsp2obj.py "<carpeta maps>\zanzibar.map" zanzibar.obj
 python tools/obj_preview.py zanzibar.obj zanzibar.png
 ```
 
-El `.obj` lleva la geometría que dibuja el juego, con sus coordenadas de
-textura y un material por shader. Con `--collision` lleva la geometría que
-usa la física.
+El `.obj` lleva la geometría que dibuja el juego, con un material por shader
+y su textura principal como PNG en una carpeta al lado. Con `--collision`
+lleva la geometría que usa la física.
+
+Sacar una textura suelta (el nombre puede ser el final del nombre del tag):
+
+```
+python tools/bitmap2png.py "<carpeta maps>\zanzibar.map" zanzibar_seawall seawall.png
+```
 
 ### Smart App Control de Windows
 

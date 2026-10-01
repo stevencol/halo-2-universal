@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Texturas
+
+Cuarta meta: ver los niveles con sus texturas.
+
+### Añadido
+
+- `source/bitmaps/bitmap_definitions.h`: el tag `bitm` y cada bitmap que
+  contiene (tamaño, formato, bloques de píxeles).
+- `source/shaders/shader_definitions.h`: el principio del tag `shad`, hasta
+  el mapa difuso.
+- `tools/bitmap.py`: llega del shader a su mapa difuso y decodifica el
+  bitmap a RGBA. Lee DXT1, DXT3, DXT5, Y8, R5G6B5, A4R4G4B4, X8R8G8B8 y
+  A8R8G8B8, y deshace el orden "swizzled" de la consola. A8R8G8B8 está sin
+  probar: ningún mapa difuso de nivel lo usa.
+- `tools/bitmap2png.py`: escribe un bitmap de un mapa como PNG.
+- `tools/png.py`: escribe y lee PNG sin librerías externas.
+
+### Cambiado
+
+- `tools/bsp2obj.py` escribe el mapa difuso de cada shader como PNG en una
+  carpeta junto al `.obj` y lo enlaza en el `.mtl` (`--no-textures` lo
+  evita).
+- `tools/obj_preview.py` dibuja las texturas.
+- `tools/test_maps.py` exporta también las texturas. Pasan los 30 mapas: 614
+  texturas distintas, ninguna sin leer.
+
+### Lo que se sabe de las texturas
+
+- Un shader tiene un bloque con su mapa difuso; el 88 % de los shaders de
+  nivel lo tiene. El resto son cristales, niebla, agua y similares, que
+  usan otros bitmaps.
+- Un bitmap guarda sus píxeles en hasta seis bloques, de más a menos
+  detalle, cada uno seguido de sus mipmaps. Muchos están en `mainmenu.map`,
+  `shared.map` o `single_player_shared.map`.
+- Los bitmaps de los niveles son todos 2D. Los comprimidos son DXT; los no
+  comprimidos están en orden "swizzled".
+
+### Pendiente
+
+- Solo se usa el mapa difuso. Un shader tiene además mapas de detalle, de
+  relieve y otros, y una plantilla (`stem`) que dice cómo se combinan.
+- Los bitmaps 3D y los mapas cúbicos no se leen, ni los formatos que no usan
+  los mapas difusos de los niveles.
+- El canal alfa se descarta al exportar un nivel: en la mayoría de los mapas
+  difusos no es transparencia.
+
 ## 2026-10-01 — Geometría que dibuja el juego
 
 Tercera meta: leer la geometría de los niveles que se ve en pantalla.

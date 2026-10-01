@@ -3,7 +3,7 @@
 # runs the tools on every map of the game and checks that each opens, that
 # every tag's data is where the loader expects it, and that the geometry of
 # its structure bsps is whole: the collision geometry and the geometry that
-# the game draws
+# the game draws, with the textures of its shaders
 #
 # test_maps.py <maps folder>
 #
@@ -35,10 +35,13 @@ def main() -> None:
     obj_folder.mkdir(parents=True, exist_ok=True)
     failures = 0
     sums = {"bsps": 0, "surfaces": 0, "clusters": 0, "instances": 0, "triangles": 0}
+    # the textures go to one folder, and each is decoded once
+    written_textures: dict[str, str | None] = {}
 
     print(
         f"{'map':<22} {'type':<21} {'tags':>5} {'bad':>4}   {'bsps':>4} "
-        f"{'surfaces':>8} {'broken':>6} {'reversed':>8}   {'clusters':>8} {'instances':>9} {'triangles':>9}"
+        f"{'surfaces':>8} {'broken':>6} {'reversed':>8}   {'clusters':>8} {'instances':>9} {'triangles':>9}   "
+        f"{'no map':>6} {'unread':>6}"
     )
     for path in maps:
         try:
@@ -54,7 +57,12 @@ def main() -> None:
         try:
             with contextlib.redirect_stdout(io.StringIO()):
                 collision: Totals = export_map(path, obj_folder / (path.stem + "_collision.obj"), collision=True)
-                render: Totals = export_map(path, obj_folder / (path.stem + ".obj"))
+                render: Totals = export_map(
+                    path,
+                    obj_folder / (path.stem + ".obj"),
+                    texture_folder=obj_folder / "textures",
+                    written_textures=written_textures,
+                )
         except (CacheFileError, struct.error) as error:
             print(f"{path.stem:<22} FAILED: {error}")
             failures += 1
@@ -68,6 +76,7 @@ def main() -> None:
             and collision.reversed == 0
             and collision.surfaces > 0
             and render.surfaces > 0
+            and render.texture_failures == 0
         )
         failures += not ok
         sums["bsps"] += collision.bsps
@@ -78,12 +87,14 @@ def main() -> None:
         print(
             f"{path.stem:<22} {field(info.stdout, 'type'):<21} {field(info.stdout, 'tags'):>5} {bad:>4}   "
             f"{collision.bsps:>4} {collision.surfaces:>8} {collision.broken:>6} {collision.reversed:>8}   "
-            f"{render.clusters:>8} {render.instances:>9} {render.surfaces:>9}{'' if ok else '  <-- FAILED'}"
+            f"{render.clusters:>8} {render.instances:>9} {render.surfaces:>9}   "
+            f"{render.untextured:>6} {render.texture_failures:>6}{'' if ok else '  <-- FAILED'}"
         )
 
     print(
         f"\ntotal: {sums['bsps']} structure bsps, {sums['surfaces']} collision surfaces, "
-        f"{sums['clusters']} clusters, {sums['instances']} instances, {sums['triangles']} triangles"
+        f"{sums['clusters']} clusters, {sums['instances']} instances, {sums['triangles']} triangles, "
+        f"{sum(1 for texture in written_textures.values() if texture)} textures"
     )
     print(f"{len(maps) - failures} of {len(maps)} maps passed")
     sys.exit(1 if failures else 0)
