@@ -30,9 +30,14 @@ enum
 
 enum
 {
-	/* the formats that the diffuse maps of the structure bsps' shaders
-	have */
+	/* the formats that the tools read. The diffuse maps of the shaders of
+	the levels and of their objects have y8, ay8, r5g6b5, a4r4g4b4, x8r8g8b8
+	and the three dxt formats */
+	_bitmap_format_a8= 0,
 	_bitmap_format_y8= 1,
+	/* one value for the alpha and for the luminance */
+	_bitmap_format_ay8= 2,
+	_bitmap_format_a8y8= 3,
 	_bitmap_format_r5g6b5= 6,
 	_bitmap_format_a4r4g4b4= 9,
 	_bitmap_format_x8r8g8b8= 10,

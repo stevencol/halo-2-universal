@@ -14,7 +14,10 @@ BITMAP_DATA_SIZE = 0x74
 BITMAP_TYPE_2D = 0
 BITMAP_FLAG_SWIZZLED = 0x8
 
+FORMAT_A8 = 0
 FORMAT_Y8 = 1
+FORMAT_AY8 = 2
+FORMAT_A8Y8 = 3
 FORMAT_R5G6B5 = 6
 FORMAT_A4R4G4B4 = 9
 FORMAT_X8R8G8B8 = 10
@@ -24,7 +27,16 @@ FORMAT_DXT3 = 15
 FORMAT_DXT5 = 16
 
 # the bytes of a texel of the formats that are not compressed
-TEXEL_SIZES = {FORMAT_Y8: 1, FORMAT_R5G6B5: 2, FORMAT_A4R4G4B4: 2, FORMAT_X8R8G8B8: 4, FORMAT_A8R8G8B8: 4}
+TEXEL_SIZES = {
+    FORMAT_A8: 1,
+    FORMAT_Y8: 1,
+    FORMAT_AY8: 1,
+    FORMAT_A8Y8: 2,
+    FORMAT_R5G6B5: 2,
+    FORMAT_A4R4G4B4: 2,
+    FORMAT_X8R8G8B8: 4,
+    FORMAT_A8R8G8B8: 4,
+}
 # the bytes of a block of 4 x 4 texels of the compressed formats
 BLOCK_SIZES = {FORMAT_DXT1: 8, FORMAT_DXT3: 16, FORMAT_DXT5: 16}
 
@@ -181,6 +193,16 @@ def decode_texels(data: bytes, width: int, height: int, format: int, swizzled: b
     size = TEXEL_SIZES[format]
     if format == FORMAT_Y8:
         colors = [(value, value, value, 255) for value in data[: width * height]]
+    elif format == FORMAT_A8:
+        colors = [(255, 255, 255, value) for value in data[: width * height]]
+    elif format == FORMAT_AY8:
+        # one value for the alpha and for the luminance
+        colors = [(value, value, value, value) for value in data[: width * height]]
+    elif format == FORMAT_A8Y8:
+        colors = [
+            (luminance, luminance, luminance, alpha)
+            for luminance, alpha in struct.iter_unpack("<2B", data[: width * height * 2])
+        ]
     elif format == FORMAT_R5G6B5:
         colors = [color_565(value) + (255,) for (value,) in struct.iter_unpack("<H", data[: width * height * 2])]
     elif format == FORMAT_A4R4G4B4:

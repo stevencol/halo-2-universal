@@ -32,15 +32,8 @@ def export_model(
         obj.write(f"# {model.name}: written by model2obj.py\n")
         obj.write(f"mtllib {mtl_path.name}\n")
         writer = ObjWriter(obj)
-        for region in model.regions:
-            if not region.permutations:
-                continue
-            permutation = region.permutations[0]
-            section_index = model.most_detailed_section(permutation)
-            if section_index < 0:
-                continue
-            section = model.section(section_index)
-            writer.section(f"{region.name}/{permutation.name}", section, section.positions, model.materials)
+        for name, section in model.default_sections():
+            writer.section(name, section, section.positions, model.materials)
 
     material_textures: dict[str, str] = {}
     if textures:

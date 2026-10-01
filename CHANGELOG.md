@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Objetos de los niveles
+
+Sexta meta: poner en cada nivel los objetos que coloca su escenario.
+
+### Añadido
+
+- `source/scenario/scenario_definitions.h`: los bloques de objetos del
+  escenario (escenografía, bípedos, vehículos, equipo, armas, máquinas,
+  controles y cajas), su paleta y el principio común de cada colocación.
+- `source/objects/object_definitions.h`: el camino de un objeto a su modelo
+  (`hlmt`) y de este a su render model (`mode`).
+- `tools/scenario_objects.py`: lee las colocaciones y calcula la posición de
+  cada punto del modelo en el nivel.
+
+### Cambiado
+
+- `tools/bsp2obj.py` escribe también los objetos del nivel, cada uno con su
+  modelo en su sitio (`--no-objects` lo evita).
+- `tools/bitmap.py` lee además los formatos A8, AY8 y A8Y8. A8, A8Y8 y
+  A8R8G8B8 están sin probar: ninguna textura exportada los usa.
+- `tools/test_maps.py` cuenta los objetos. Pasan los 30 mapas: 11.177
+  objetos colocados, 218 más sin modelo, y 949 texturas.
+
+### Lo que se sabe de los objetos
+
+- El escenario tiene, por cada clase de objeto, una lista de colocaciones y
+  una paleta con los tags que usa el nivel. Cada colocación empieza igual:
+  índice en la paleta, nombre, posición, rotación (tres ángulos) y escala.
+- De un objeto se llega a su modelo (`hlmt`) y de este al render model.
+- La rotación se convierte a vectores con la misma fórmula que Halo 1
+  (`matrix4x3_rotation_from_angles` en halo-ce-universal).
+
+### Pendiente
+
+- La rotación está comprobada a simple vista en un nivel, no objeto por
+  objeto. Si Halo 2 cambió el orden de los ángulos, los objetos inclinados
+  saldrían mal orientados.
+- Las armas y los vehículos de los mapas multijugador no salen: no son
+  colocaciones del escenario, sino puntos de aparición de otro bloque.
+- Cada objeto sale con la primera variante de su modelo y en su pose
+  original; las variantes y las poses las decide el juego.
+
 ## 2026-10-01 — Modelos
 
 Quinta meta: leer los modelos de los objetos (personajes, vehículos, armas).

@@ -3,14 +3,15 @@
 # writes the geometry of a map's structure bsps as a Wavefront OBJ file, with
 # one material per shader
 #
-# bsp2obj.py <map> <output.obj> [--collision] [--no-textures]
+# bsp2obj.py <map> <output.obj> [--collision] [--no-textures] [--no-objects]
 #
 # Without --collision the file has the geometry that the game draws, with its
 # texture coordinates: one object per cluster and per instance of instanced
-# geometry. The diffuse map of each shader is written as a PNG image to a
-# folder next to the file, unless --no-textures is given. With --collision
-# the file has the geometry that the physics uses: one object per structure
-# bsp.
+# geometry, and the objects that the scenario places in the level (scenery,
+# machines, crates, vehicles and the like), unless --no-objects is given.
+# The diffuse map of each shader is written as a PNG image to a folder next
+# to the file, unless --no-textures is given. With --collision the file has
+# the geometry that the physics uses: one object per structure bsp.
 #
 # The layouts are those of source/structures/structure_bsp_definitions.h and
 # source/physics/collision_bsp_definitions.h.
@@ -21,9 +22,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import structure_bsp
-from cache_file import CacheFile, CacheFileError
+from cache_file import NONE, CacheFile, CacheFileError
 from geometry import BLOCK_INFO_SIZE, SECTION_INFO_SIZE, Section, read_section
 from obj_writer import ObjWriter, TextureTotals, export_textures, obj_name
+from render_model import RenderModel
+from scenario_objects import object_render_model, scenario_objects
 from structure_bsp import StructureBsp
 
 MAXIMUM_EDGES_PER_COLLISION_SURFACE = 8
@@ -42,6 +45,11 @@ class Totals(TextureTotals):
     # the geometry that is drawn only
     clusters: int = 0
     instances: int = 0
+    # the objects that the scenario places: those written, those with no
+    # model to write, and the triangles of those written
+    objects: int = 0
+    objects_without_model: int = 0
+    object_triangles: int = 0
 
 
 # ---------- collision
@@ -194,6 +202,37 @@ def export_render(bsp: StructureBsp, writer: ObjWriter, totals: Totals) -> None:
     totals.instances += len(instances)
 
 
+def export_objects(cache: CacheFile, writer: ObjWriter, totals: Totals) -> None:
+    """Writes the objects that the scenario places, each as its render model in its place."""
+    models: dict[int, RenderModel | None] = {}
+    before = (writer.vertex_count, writer.triangle_count)
+    for number, placement in enumerate(scenario_objects(cache)):
+        model_index = object_render_model(cache, placement.tag_index)
+        if model_index not in models:
+            models[model_index] = RenderModel(cache, model_index) if model_index != NONE else None
+        model = models[model_index]
+        sections = model.default_sections() if model else []
+        if not sections:
+            totals.objects_without_model += 1
+            continue
+        name = f"{placement.kind}_{number}/{cache.tag_name(placement.tag_index)}"
+        for section_name, section in sections:
+            writer.section(
+                f"{name}/{section_name}",
+                section,
+                [placement.transform(position) for position in section.positions],
+                model.materials,
+            )
+        totals.objects += 1
+
+    print(
+        f"  {totals.objects} objects, {totals.objects_without_model} with no model: "
+        f"{writer.vertex_count - before[0]} vertices {writer.triangle_count - before[1]} triangles"
+    )
+    totals.vertices += writer.vertex_count - before[0]
+    totals.object_triangles += writer.triangle_count - before[1]
+
+
 # ---------- the file
 
 
@@ -204,6 +243,7 @@ def export_map(
     textures: bool = True,
     texture_folder: Path | None = None,
     written_textures: dict[str, str | None] | None = None,
+    objects: bool = True,
 ) -> Totals:
     """Writes the OBJ file, its materials and, for the geometry that is drawn, its textures.
 
@@ -223,6 +263,8 @@ def export_map(
         for bsp in structure_bsp.structure_bsps(cache):
             (export_collision if collision else export_render)(bsp, writer, totals)
             totals.bsps += 1
+        if objects and not collision:
+            export_objects(cache, writer, totals)
 
     material_textures: dict[str, str] = {}
     if textures and not collision:
@@ -244,9 +286,15 @@ def main() -> None:
     arguments = [argument for argument in sys.argv[1:] if not argument.startswith("--")]
     collision = "--collision" in sys.argv
     if len(arguments) < 2:
-        sys.exit("usage: bsp2obj.py <map> <output.obj> [--collision] [--no-textures]")
+        sys.exit("usage: bsp2obj.py <map> <output.obj> [--collision] [--no-textures] [--no-objects]")
     try:
-        totals = export_map(Path(arguments[0]), Path(arguments[1]), collision, "--no-textures" not in sys.argv)
+        totals = export_map(
+            Path(arguments[0]),
+            Path(arguments[1]),
+            collision,
+            "--no-textures" not in sys.argv,
+            objects="--no-objects" not in sys.argv,
+        )
     except CacheFileError as error:
         sys.exit(f"bsp2obj: {error}")
 
@@ -260,6 +308,9 @@ def main() -> None:
         print(f"clusters           {totals.clusters}")
         print(f"instances          {totals.instances}")
         print(f"total triangles    {totals.surfaces}")
+        print(f"objects            {totals.objects}")
+        print(f"objects, no model  {totals.objects_without_model}")
+        print(f"object triangles   {totals.object_triangles}")
         print(f"textures written   {totals.textures}")
         print(f"no diffuse map     {totals.untextured}")
         print(f"textures not read  {totals.texture_failures}")

@@ -101,3 +101,15 @@ class RenderModel:
         """The section of the permutation's highest level of detail, or -1."""
         valid = [index for index in permutation.section_indices if 0 <= index < self.section_count]
         return valid[-1] if valid else -1
+
+    def default_sections(self) -> list[tuple[str, Section]]:
+        """The model as it is when nothing chooses its form: the first permutation
+        of each region, at its highest level of detail. Each with a name."""
+        sections = []
+        for region in self.regions:
+            if not region.permutations:
+                continue
+            section_index = self.most_detailed_section(region.permutations[0])
+            if section_index >= 0:
+                sections.append((f"{region.name}/{region.permutations[0].name}", self.section(section_index)))
+        return sections

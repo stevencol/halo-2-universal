@@ -79,9 +79,10 @@ python tools/bsp2obj.py "<carpeta maps>\zanzibar.map" zanzibar.obj
 python tools/obj_preview.py zanzibar.obj zanzibar.png
 ```
 
-El `.obj` lleva la geometría que dibuja el juego, con un material por shader
-y su textura principal como PNG en una carpeta al lado. Con `--collision`
-lleva la geometría que usa la física.
+El `.obj` lleva la geometría que dibuja el juego y los objetos que el nivel
+coloca (escenografía, máquinas, cajas, vehículos), con un material por
+shader y su textura principal como PNG en una carpeta al lado. Con
+`--collision` lleva la geometría que usa la física.
 
 Sacar un modelo o una textura sueltos (el nombre puede ser el final del
 nombre del tag):

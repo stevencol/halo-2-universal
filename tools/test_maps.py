@@ -64,7 +64,7 @@ def main() -> None:
     obj_folder.mkdir(parents=True, exist_ok=True)
     failures = 0
     sums = {"bsps": 0, "surfaces": 0, "clusters": 0, "instances": 0, "triangles": 0}
-    sums |= {"models": 0, "model sections": 0, "model triangles": 0}
+    sums |= {"models": 0, "model sections": 0, "model triangles": 0, "objects": 0, "objects without model": 0}
     # the textures go to one folder, and each is decoded once
     written_textures: dict[str, str | None] = {}
     # the render models read already, by name: the maps repeat them
@@ -73,7 +73,7 @@ def main() -> None:
     print(
         f"{'map':<22} {'type':<21} {'tags':>5} {'bad':>4}   {'bsps':>4} "
         f"{'surfaces':>8} {'broken':>6} {'reversed':>8}   {'clusters':>8} {'instances':>9} {'triangles':>9}   "
-        f"{'no map':>6} {'unread':>6}   {'models':>6} {'bad':>4}"
+        f"{'no map':>6} {'unread':>6}   {'models':>6} {'bad':>4}   {'objs':>5}"
     )
     for path in maps:
         try:
@@ -118,12 +118,14 @@ def main() -> None:
         sums["clusters"] += render.clusters
         sums["instances"] += render.instances
         sums["triangles"] += render.surfaces
+        sums["objects"] += render.objects
+        sums["objects without model"] += render.objects_without_model
         print(
             f"{path.stem:<22} {field(info.stdout, 'type'):<21} {field(info.stdout, 'tags'):>5} {bad:>4}   "
             f"{collision.bsps:>4} {collision.surfaces:>8} {collision.broken:>6} {collision.reversed:>8}   "
             f"{render.clusters:>8} {render.instances:>9} {render.surfaces:>9}   "
             f"{render.untextured:>6} {render.texture_failures:>6}   "
-            f"{model_count:>6} {len(model_errors):>4}{'' if ok else '  <-- FAILED'}"
+            f"{model_count:>6} {len(model_errors):>4}   {render.objects:>5}{'' if ok else '  <-- FAILED'}"
         )
         for error in model_errors[:5]:
             print(f"    {error}")
@@ -136,6 +138,10 @@ def main() -> None:
     print(
         f"       {sums['models']} render models, {sums['model sections']} sections, "
         f"{sums['model triangles']} triangles"
+    )
+    print(
+        f"       {sums['objects']} objects placed in the levels, "
+        f"{sums['objects without model']} more with no model"
     )
     print(f"{len(maps) - failures} of {len(maps)} maps passed")
     sys.exit(1 if failures else 0)
