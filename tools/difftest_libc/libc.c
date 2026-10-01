@@ -86,6 +86,21 @@ void *memset(void *memory, int value, size_t size)
 	return memory;
 }
 
+char *strchr(const char *string, int character)
+{
+	for (; ; string++)
+	{
+		if (*string==(char)character)
+		{
+			return (char *)string;
+		}
+		if (!*string)
+		{
+			return NULL;
+		}
+	}
+}
+
 int strcmp(const char *a, const char *b)
 {
 	for (; *a && *a==*b; a++, b++)

@@ -2,6 +2,97 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — El estado del juego y los puntos de control
+
+`game_state.c`: la memoria donde el juego guarda todo lo que hay que
+recordar de una partida, y cómo hace un punto de control y vuelve a él. Con
+ello, el CRC de 32 bits. De 183 funciones se pasa a 203, el 1,80 % de las
+del juego (el 0,809 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_state_initialize` | `0x00123b30` | `saved games/game_state.c` |
+| `game_state_dispose` | `0x00123bf0` | `saved games/game_state.c` |
+| `game_state_initialize_for_new_map` | `0x00123c20` | `saved games/game_state.c` |
+| `game_state_buffer_protect` | `0x00123b00` | `saved games/game_state.c` |
+| `game_state_set_structure_bsp_index` | `0x00123d20` | `saved games/game_state.c` |
+| `game_state_malloc` | `0x00123d40` | `saved games/game_state.c` |
+| `game_state_malloc_aligned` | `0x00123d80` | `saved games/game_state.c` |
+| `game_state_save` | `0x00123e20` | `saved games/game_state.c` |
+| `game_state_note_death` | `0x00123ed0` | `saved games/game_state.c` |
+| `game_state_revert` | `0x00123f60` | `saved games/game_state.c` |
+| `game_state_header_valid` | `0x00124520` | `saved games/game_state.c` |
+| `game_state_headers_match` | `0x00124590` | `saved games/game_state.c` |
+| `game_state_set_revert_time` | `0x00124620` | `saved games/game_state.c` |
+| `game_state_allocation_allocate` | `0x00124700` | `saved games/game_state.c` |
+| `game_state_allocation_restore` | `0x00124750` | `saved games/game_state.c` |
+| `game_state_call_before_load_procs` | `0x00199520` | `saved games/game_state.c` |
+| `game_state_call_after_load_procs` | `0x00199540` | `saved games/game_state.c` |
+| `crc_build_table` | `0x00163c00` | `memory/crc.c` |
+| `crc_checksum_buffer` | `0x00163ba0` | `memory/crc.c` |
+| `no_operation1` | `0x00072c70` | `cseries/cseries.c` |
+
+- Archivos nuevos: `saved games/game_state.c`, `memory/crc.{c,h}`,
+  `game/game.{c,h}` (solo las variables y estructuras que hacen falta);
+  `tests/test_game_state.py`.
+
+### Cambiado
+
+- `tools/difftest.py`:
+  - `memory={dirección: Memory(...)}` pone datos en una dirección fija
+    antes de la llamada y los compara después: para lo que el juego alcanza
+    por un puntero de una variable global.
+  - `GlobalRange(tamaño)`: una variable que la prueba no toca, solo para
+    que los punteros a ella se comparen bien.
+  - Columna `convention` en `symbols/functions.csv`: `thiscall` para una
+    función de `source/` que recibe su primer argumento en `ecx`.
+  - La memoria física del emulador pasa de 1 MB a 8 MB, y el límite de
+    instrucciones de 20 a 200 millones (poner a cero el estado son 4 MB).
+- La biblioteca C de las pruebas gana `strchr`.
+- Los tamaños de la memoria del estado estaban al revés: la parte normal es
+  de 0x3be000 bytes y la del final, de 0x40000.
+
+### Lo que se sabe
+
+- La memoria del estado se reparte al arrancar, sin liberar nunca: cada
+  sistema pide su parte con `game_state_malloc`. Los tamaños pedidos van a
+  un CRC; un estado guardado con otro reparto tiene otro CRC y se rechaza.
+- La cabecera del estado (0x1288 bytes) guarda ese CRC, la dirección de la
+  memoria, el mapa, el build, un checksum del mapa, las opciones de la
+  partida y el bsp cargado.
+- Los dos archivos se alternan: cada punto de control se escribe en el que
+  no se escribió la última vez, así siempre queda el anterior.
+- Si el jugador muere cinco veces seguidas, cada una a menos de 8 segundos
+  del punto de control, el juego pasa al punto de control anterior.
+- Para volver a un punto de control se comprueba que sea de la misma
+  partida y del mismo mapa. Si no lo es, o no hay ninguno, se pide
+  reiniciar el mapa. La lectura se repite hasta que lo leído sea el punto
+  de control.
+- Antes de guardar se llama a 4 funciones y después a 1; antes de cargar a
+  5 y después a 20. Solo se conocen cuatro de ellas; las demás están
+  apuntadas por su dirección (`unknown_...`).
+- `game_state_allocation` es un objeto que vive dentro del propio estado y
+  da memoria del estado a quien pide un asignador (los `data_array`). Como
+  al cargar un estado vuelve con la dirección de funciones de cuando se
+  guardó, una de las funciones de después de cargar se la repone.
+
+### Sin comprobar
+
+- En `game_state_header_valid`, que el nombre del mapa no esté vacío: el
+  juego lo comprueba, pero la comprobación siguiente (que tenga una barra)
+  ya lo implica, así que quitarla no cambia ningún resultado.
+- Si la búsqueda de la barra es `strchr` o `strrchr`: la función del juego
+  (`0x003219f0`) no tiene nombre y aquí solo importa si la encuentra.
+
+### Pendiente
+
+- El resto de `game_state.c`: guardar y cargar el estado en un archivo de
+  núcleo y en una partida guardada (`0x001240b0` a `0x00124490`,
+  `0x00124640`, `0x00124770` en adelante).
+- Las 21 funciones de antes y después de guardar y cargar.
+
 ## 2026-10-01 — Los archivos del estado del juego
 
 Los archivos donde el juego guarda su estado para los puntos de control

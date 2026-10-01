@@ -21,6 +21,15 @@ void GetSystemTimeAsFileTime(struct file_time *time);
 
 /* ---------- code */
 
+/* 0x00072c70: does nothing; takes an argument off the stack. The game puts
+it where it has to give a function and has nothing to do. Where this
+function goes and its name are a guess */
+void __attribute__((stdcall)) no_operation1(
+	unsigned long unused)
+{
+	(void)unused;
+}
+
 /* 0x00136e70: the time of the console's clock. Where this function goes and
 its name are a guess */
 void file_time_get_current(

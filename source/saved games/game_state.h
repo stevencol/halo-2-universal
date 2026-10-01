@@ -10,6 +10,8 @@ instead of one.
 #define __GAME_STATE_H
 
 #include "cseries/cseries.h"
+#include "game/game.h"
+#include "memory/data.h"
 
 #include <stdint.h>
 
@@ -19,8 +21,10 @@ enum
 {
 	NUMBER_OF_GAME_STATE_FILES= 2,
 
-	GAME_STATE_CPU_SIZE= 0x40000,
-	GAME_STATE_GPU_SIZE= 0x3BE000,
+	/* the memory of the state: the second part, at the end, is written to
+	with the pages set for it (PAGE_WRITECOMBINE), as in Halo 1 */
+	GAME_STATE_CPU_SIZE= 0x3BE000,
+	GAME_STATE_GPU_SIZE= 0x40000,
 	/* more than the two sizes together, which is what is written */
 	GAME_STATE_FILE_SIZE= 0x40B000,
 
@@ -29,7 +33,74 @@ enum
 	GAME_STATE_TASK_PRIORITY= 6
 };
 
+enum
+{
+	NUMBER_OF_GAME_STATE_BEFORE_SAVE_PROCS= 4,
+	NUMBER_OF_GAME_STATE_AFTER_SAVE_PROCS= 1,
+	NUMBER_OF_GAME_STATE_BEFORE_LOAD_PROCS= 5,
+	NUMBER_OF_GAME_STATE_AFTER_LOAD_PROCS= 20
+};
+
 /* ---------- structures */
+
+/* what the game does before and after it writes or reads its state: each
+takes flags, and takes them off the stack */
+#define GAME_STATE_PROC __attribute__((stdcall))
+typedef void (GAME_STATE_PROC *game_state_proc)(unsigned long flags);
+
+/* at the start of the state of the game: what it is a state of. As in Halo
+1, with the address of the memory and the options of the game added */
+struct game_state_header
+{
+	unsigned long allocation_size_checksum;
+	void *base_address;
+	char map_name[256];
+	char build[32];
+	unsigned long cache_file_checksum;
+	unsigned long unknown12C;
+	struct game_options options;
+	short structure_bsp_index;
+	byte unknown124A[0x3E];
+};
+
+/* 0x004e3b60. As in Halo 1, with the two files and their headers added */
+struct game_state_globals
+{
+	boolean initialized;
+	boolean locked;
+	/* the file that was written last can be gone back to */
+	boolean saved_game_valid;
+	/* the other file can, too */
+	boolean previous_saved_game_valid;
+	/* the file that was written last */
+	short file_index;
+	word pad6;
+	/* the header of the state that each file has */
+	struct game_state_header headers[NUMBER_OF_GAME_STATE_FILES];
+	/* in ticks */
+	unsigned long save_time;
+	short deaths_after_save;
+	word pad251E;
+	void *base_address;
+	long cpu_allocation_size;
+	long gpu_allocation_size;
+	unsigned long allocation_size_checksum;
+	long revert_time;
+	struct game_state_header *header;
+	boolean unknown2538;
+	byte pad2539[7];
+};
+
+#if defined(__i386__)
+typedef char verify_game_state_header_size[
+	sizeof(struct game_state_header) == 0x1288 ? 1 : -1];
+typedef char verify_game_state_header_structure_bsp_index_offset[
+	offsetof(struct game_state_header, structure_bsp_index) == 0x1248 ? 1 : -1];
+typedef char verify_game_state_globals_size[
+	sizeof(struct game_state_globals) == 0x2540 ? 1 : -1];
+typedef char verify_game_state_globals_header_offset[
+	offsetof(struct game_state_globals, header) == 0x2534 ? 1 : -1];
+#endif
 
 /* 0x005020d8. The first fields are those of Halo 1's structure; the names
 of the others are guesses */
@@ -63,15 +134,53 @@ typedef char verify_xbox_game_state_globals_handles_offset[
 
 /* ---------- prototypes/GAME_STATE_XBOX.C */
 
-void *game_state_allocate_buffer(uint32_t cpu_size, uint32_t gpu_size);
+void *game_state_allocate_buffer(uint32_t gpu_size, uint32_t cpu_size);
+boolean game_state_file_valid_for_read(short file_index);
 void game_state_create_or_open_file(void);
 void game_state_close_file(void);
 void game_state_write_to_file(short file_index);
 boolean game_state_read_from_file(short file_index);
 
+/* ---------- prototypes/GAME_STATE.C */
+
+void GAME_STATE_PROC game_state_buffer_protect(unsigned long flags);
+void game_state_initialize(void);
+void game_state_dispose(void);
+void game_state_initialize_for_new_map(void);
+void game_state_set_structure_bsp_index(void);
+void *game_state_malloc(long size);
+void *game_state_malloc_aligned(long size, long alignment_bits);
+void game_state_save(void);
+void game_state_note_death(void);
+void game_state_call_before_load_procs(unsigned long flags);
+void game_state_call_after_load_procs(unsigned long flags);
+void game_state_revert(unsigned long flags);
+boolean game_state_header_valid(const struct game_state_header *header);
+boolean game_state_headers_match(const struct game_state_header *header, const struct game_state_header *other);
+void GAME_STATE_PROC game_state_set_revert_time(unsigned long flags);
+void *ALLOCATION_CONVENTION game_state_allocation_allocate(struct allocation *allocation, unsigned long size);
+void GAME_STATE_PROC game_state_allocation_restore(unsigned long flags);
+
 /* ---------- globals */
 
+extern struct game_state_globals game_state_globals;
+extern struct allocation *game_state_allocation;
+extern const struct allocation_functions game_state_allocation_functions;
+extern game_state_proc game_state_before_save_procs[NUMBER_OF_GAME_STATE_BEFORE_SAVE_PROCS];
+extern game_state_proc game_state_after_save_procs[NUMBER_OF_GAME_STATE_AFTER_SAVE_PROCS];
+extern game_state_proc game_state_before_load_procs[NUMBER_OF_GAME_STATE_BEFORE_LOAD_PROCS];
+extern game_state_proc game_state_after_load_procs[NUMBER_OF_GAME_STATE_AFTER_LOAD_PROCS];
 extern struct xbox_game_state_globals xbox_game_state_globals;
 extern const char *game_state_file_name_format;
+
+/* ---------- inline code */
+
+/* the game has no function for it. As Halo 1's, which also frees the
+memory */
+static inline void game_state_free_buffer(
+	void)
+{
+	xbox_game_state_globals.buffer_allocated= FALSE;
+}
 
 #endif

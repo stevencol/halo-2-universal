@@ -21,3 +21,18 @@ address,name,source
 0047ff38,global_language,source/cache/cache_files.c
 00510838,cached_map_files_language,source/cache/cache_files.c
 0055b4f0,cached_map_file_copy_globals,source/cache/cache_files.c
+004e3b60,game_state_globals,source/saved games/game_state.c
+00510c2c,game_state_allocation,source/saved games/game_state.c
+00453498,game_state_allocation_functions,source/saved games/game_state.c
+0046e320,game_state_before_save_procs,source/saved games/game_state.c
+0046e330,game_state_after_save_procs,source/saved games/game_state.c
+0046e334,game_state_before_load_procs,source/saved games/game_state.c
+0046e348,game_state_after_load_procs,source/saved games/game_state.c
+00485ab0,unknown_00485ab0,source/saved games/game_state.c
+004e6398,unknown_004e6398,source/saved games/game_state.c
+004e6948,main_game_globals,source/game/game.c
+00510c54,game_time_globals,source/game/game.c
+00547f6e,main_reset_map_requested,source/game/game.c
+004686c4,global_structure_bsp_index,source/scenario/scenario.c
+0055e755,crc_table_initialized,source/memory/crc.c
+0055e788,crc_table,source/memory/crc.c

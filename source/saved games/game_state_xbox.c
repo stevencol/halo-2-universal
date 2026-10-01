@@ -60,8 +60,8 @@ static inline __attribute__((always_inline)) void game_state_wait(
 /* 0x00214f10: takes the memory of the state of the game, of the sum of two
 sizes; its address, or NULL */
 void *game_state_allocate_buffer(
-	uint32_t cpu_size,
-	uint32_t gpu_size)
+	uint32_t gpu_size,
+	uint32_t cpu_size)
 {
 	uint32_t size= cpu_size+gpu_size;
 	void *buffer= physical_memory_allocate_high(size);
@@ -227,6 +227,20 @@ void game_state_write_to_file(
 		}
 		globals->file_valid_for_read[file_index]= globals->bytes_written==(uint32_t)globals->buffer_size;
 	}
+}
+
+/* whether one of the files can be read: waits for what is being written.
+The game has no function for it: the code is in game_state_revert and in
+game_state_read_from_file */
+boolean game_state_file_valid_for_read(
+	short file_index)
+{
+	if (xbox_game_state_globals.write_buffer)
+	{
+		game_state_write_reclaim(xbox_game_state_globals.write_buffer, 0);
+	}
+
+	return xbox_game_state_globals.file_valid_for_read[file_index];
 }
 
 /* 0x002152e0: reads the state of the game from one of the files, if it was

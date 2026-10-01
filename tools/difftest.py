@@ -45,10 +45,10 @@ EXTERNAL_OFFSET = 0x800
 # where the console maps its memory: the game takes blocks of it by address.
 # A test that uses it has to fill it, as it stays from one call to the next
 PHYSICAL_ADDRESS = 0x80000000
-PHYSICAL_SIZE = 0x00100000
+PHYSICAL_SIZE = 0x00800000
 
 KERNEL_THUNK_KEYS = (0x5B6D40B6, 0xEFB1F152)
-MAXIMUM_INSTRUCTIONS = 20_000_000
+MAXIMUM_INSTRUCTIONS = 200_000_000
 # of the functions that a test stands in for, in one call: a loop that calls
 # one each time around starts the count of instructions again each time
 MAXIMUM_CALLS = 10_000
@@ -192,6 +192,26 @@ class GlobalPointer:
     offset: int = 0
 
 
+@dataclass
+class Memory:
+    """What a test puts at an address of the emulator's memory before a call
+    (the `memory` of a call, by address) and has compared after it: for what
+    the game reaches through a pointer of a global."""
+
+    data: bytes
+    # the offsets where the call can leave a pointer to a global or to a
+    # function: what is there is compared as the place it points to
+    places: tuple[int, ...] = ()
+
+
+@dataclass
+class GlobalRange:
+    """The value of a global that the test does not set: only tells its size,
+    so that a pointer to it is compared as the place it points to."""
+
+    size: int
+
+
 class StopCall(Exception):
     """What a function that stands in for another raises to end the call there:
     for a function that never returns."""
@@ -237,6 +257,8 @@ class Symbol:
     # int, bool, short, real, or void. The executable's function returns a
     # real in the x87 register, or in an SSE register if it is "real:xmm0"
     returns: str
+    # "thiscall" for a function of source/ that takes its first argument in ecx
+    convention: str = ""
 
 
 @dataclass
@@ -276,6 +298,7 @@ def read_symbols() -> dict[str, Symbol]:
                 row["source"],
                 [argument for argument in row["arguments"].split() if argument],
                 row["returns"],
+                row.get("convention") or "",
             )
             for row in csv.DictReader(f)
         }
@@ -691,6 +714,7 @@ class Harness:
         mocks: list[Mock] | None = None,
         extra: list[Buffer] | None = None,
         externals: dict[str, object] | None = None,
+        memory: dict[int, Memory] | None = None,
     ) -> Result:
         # the buffers of the globals go after those of the arguments, and the
         # extra ones after them
@@ -735,6 +759,9 @@ class Harness:
             # compared after the call
             places: tuple[int, ...] | None = None
             clean = None
+            if isinstance(value, GlobalRange):
+                self._ranges.append((key, address, value.size))
+                continue
             if isinstance(value, GlobalData):
                 clean = value.clean
                 data = bytearray(value.data)
@@ -752,6 +779,8 @@ class Harness:
             global_addresses[key] = (address, len(value), places, clean)
             self.mu.mem_write(address, value)
         values = values[: len(arguments)]
+        for address, block in (memory or {}).items():
+            self.mu.mem_write(address, block.data)
 
         if original:
             if len(values) != len(symbol.arguments):
@@ -762,7 +791,11 @@ class Harness:
         else:
             # the function of source/ returns as C functions do: a real, in
             # the x87 register
-            value = self._call(self.functions[symbol.name], values, {}, symbol.returns.split(":")[0])
+            registers = {}
+            if symbol.convention == "thiscall":
+                registers = {"ecx": values[0]}
+                values = values[1:]
+            value = self._call(self.functions[symbol.name], values, registers, symbol.returns.split(":")[0])
         # what the call left in the globals of the test is compared with the calls
         for key, (address, size, places, clean) in global_addresses.items():
             data = bytearray(self.mu.mem_read(address, size))
@@ -779,6 +812,13 @@ class Harness:
                 self._calls.append(("global", key, self.normalize(struct.unpack("<I", data)[0])))
             else:
                 self._calls.append(("global", key, bytes(data)))
+        for address, block in (memory or {}).items():
+            data = bytearray(self.mu.mem_read(address, len(block.data)))
+            pointers = []
+            for offset in block.places:
+                pointers.append(self.normalize(struct.unpack_from("<I", data, offset)[0]))
+                struct.pack_into("<I", data, offset, 0)
+            self._calls.append(("memory", address, bytes(data), tuple(pointers)))
         return Result(
             value,
             [buffer.values(bytes(self.mu.mem_read(buffer.address, len(buffer.data)))) for buffer in buffers],
@@ -805,4 +845,10 @@ class Harness:
 
     @staticmethod
     def _options(options: dict) -> tuple:
-        return options.get("globals"), options.get("mocks"), options.get("extra"), options.get("externals")
+        return (
+            options.get("globals"),
+            options.get("mocks"),
+            options.get("extra"),
+            options.get("externals"),
+            options.get("memory"),
+        )

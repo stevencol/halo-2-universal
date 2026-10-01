@@ -1,4 +1,4 @@
-address,name,source,arguments,returns
+address,name,source,arguments,returns,convention
 00012130,cache_file_build_verify,source/cache/cache_files.c,stack,bool
 00024590,magnitude3d,source/math/real_math.c,eax,real
 000259a0,real_seed_random,source/math/random_math.c,ecx,real
@@ -210,3 +210,47 @@ address,name,source,arguments,returns
 0012d520,physical_memory_buffer_free,,esi,void
 003303f3,GetSystemTimeAsFileTime,,stack,void
 003314b0,GetTickCount,,,int
+00163c00,crc_build_table,source/memory/crc.c,edx,void
+00163ba0,crc_checksum_buffer,source/memory/crc.c,eax edi stack,void
+00072c70,no_operation1,source/cseries/cseries.c,stack,void
+00123b00,game_state_buffer_protect,source/saved games/game_state.c,stack,void
+00123b30,game_state_initialize,source/saved games/game_state.c,,void
+00123bf0,game_state_dispose,source/saved games/game_state.c,,void
+00123c20,game_state_initialize_for_new_map,source/saved games/game_state.c,,void
+00123d20,game_state_set_structure_bsp_index,source/saved games/game_state.c,,void
+00123d40,game_state_malloc,source/saved games/game_state.c,eax,int
+00123d80,game_state_malloc_aligned,source/saved games/game_state.c,eax ecx,int
+00123e20,game_state_save,source/saved games/game_state.c,,void
+00123ed0,game_state_note_death,source/saved games/game_state.c,,void
+00123f60,game_state_revert,source/saved games/game_state.c,ecx,void
+00124520,game_state_header_valid,source/saved games/game_state.c,eax,bool
+00124590,game_state_headers_match,source/saved games/game_state.c,edi stack,bool
+00124620,game_state_set_revert_time,source/saved games/game_state.c,stack,void
+00124750,game_state_allocation_restore,source/saved games/game_state.c,stack,void
+00199520,game_state_call_before_load_procs,source/saved games/game_state.c,ebx,void
+00199540,game_state_call_after_load_procs,source/saved games/game_state.c,ebx,void
+001384a0,game_options_match,,stack stack,bool
+00138180,game_options_verify,,stack,bool
+0011c1b0,scenario_switch_structure_bsp,,stack stack,bool
+001c3540,unknown_001c3540,,stack,void
+00068090,unknown_00068090,,stack,void
+0016eff0,unknown_0016eff0,,stack,void
+001e6af0,unknown_001e6af0,,stack,void
+001c3590,unknown_001c3590,,stack,void
+001889d0,unknown_001889d0,,stack,void
+00155f10,unknown_00155f10,,stack,void
+00067fb0,unknown_00067fb0,,stack,void
+001264c0,unknown_001264c0,,stack,void
+00188ac0,unknown_00188ac0,,stack,void
+0016f090,unknown_0016f090,,stack,void
+0014b660,unknown_0014b660,,stack,void
+00067fc0,unknown_00067fc0,,stack,void
+00043970,unknown_00043970,,stack,void
+0003d380,unknown_0003d380,,stack,void
+00155360,unknown_00155360,,stack,void
+0024c829,unknown_0024c829,,stack,void
+001c7f80,unknown_001c7f80,,stack,void
+0017d190,unknown_0017d190,,stack,void
+0016f0c0,unknown_0016f0c0,,stack,void
+00226030,unknown_00226030,,stack,void
+00124700,game_state_allocation_allocate,source/saved games/game_state.c,ecx stack,int,thiscall
