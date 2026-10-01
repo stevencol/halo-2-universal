@@ -24,11 +24,6 @@ INSTANCED_GEOMETRY_DEFINITION_SIZE = 0xC8
 INSTANCED_GEOMETRY_INSTANCE_SIZE = 0x58
 
 
-def obj_name(name: str) -> str:
-    """A name with no characters that end a name in an OBJ file."""
-    return name.replace("\\", "/").replace(" ", "_")
-
-
 class StructureBsp:
     """A structure bsp: its block of the cache file, read to the address the scenario gives."""
 

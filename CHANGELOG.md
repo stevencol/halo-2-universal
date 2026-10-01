@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Modelos
+
+Quinta meta: leer los modelos de los objetos (personajes, vehículos, armas).
+
+### Añadido
+
+- `source/models/render_model_definitions.h`: el tag `mode` (regiones,
+  permutaciones, secciones, nodos, materiales, información de compresión).
+- `tools/render_model.py`: lee un modelo.
+- `tools/model2obj.py`: exporta un modelo a `.obj` con sus texturas.
+- `tools/obj_writer.py`: la escritura de `.obj`, materiales y texturas, que
+  comparten `bsp2obj.py` y `model2obj.py`.
+
+### Cambiado
+
+- `tools/geometry.py` lee vértices comprimidos y tiras de triángulos.
+- `tools/cache_file.py` lee los string ids y busca tags por nombre.
+- `tools/test_maps.py` lee todas las secciones de todos los modelos. Pasan
+  los 30 mapas: 927 modelos, 2.978 secciones y 855.353 triángulos.
+
+### Lo que se sabe de los modelos
+
+- Un modelo tiene regiones; cada región, permutaciones (sus variantes); y
+  cada permutación, una sección por nivel de detalle, hasta seis.
+- Las secciones usan el mismo bloque `blkh` que los niveles. Las hay
+  en el propio mapa y en `shared.map` (las del Warthog, por ejemplo).
+- Las posiciones y las coordenadas de textura suelen ir comprimidas en
+  enteros de 16 bits, que cubren el rango que da el modelo.
+- Cada parte indica con un bit si sus índices son una lista de triángulos o
+  una tira. Con esa regla, el número de triángulos coincide con el declarado
+  en todas las secciones del juego, de niveles y de modelos.
+- Los vértices están en el espacio del modelo, en su pose original: no hace
+  falta el esqueleto para exportarlo.
+
+### Pendiente
+
+- El esqueleto (nodos), los pesos de cada vértice y las animaciones (`jmad`).
+- Colocar los objetos en el nivel: el escenario dice qué objetos hay y
+  dónde, y de cada objeto hay que llegar a su modelo.
+- El Jefe Maestro sale blanco: el color de la armadura lo pone el juego.
+
 ## 2026-10-01 — Texturas
 
 Cuarta meta: ver los niveles con sus texturas.

@@ -38,9 +38,19 @@ enum
 
 enum
 {
-	/* the structure bsp's clusters have 0 and its instanced geometry has 1 */
+	/* the structure bsp's clusters have 0 and its instanced geometry has 1;
+	the sections of the render models have 1, 2 or 3, by how their vertices
+	move with the skeleton */
 	_geometry_classification_worldspace,
 	_geometry_classification_rigid
+};
+
+enum
+{
+	/* the part's indices are a list of triangles, three indices each;
+	without it they are a triangle strip. The structure bsps have only
+	lists; the render models have both */
+	_geometry_part_triangle_list_bit= 3
 };
 
 enum
@@ -53,13 +63,30 @@ enum
 	_geometry_block_resource_type_vertex_buffer
 };
 
+/* the types of vertex buffer, with the bytes of a vertex. A compressed
+coordinate is a 16-bit integer, which goes from the least to the greatest
+value that the tag's compression info gives. The types with more bytes than
+the position needs have the node indices and the node weights of a vertex
+after the position */
 enum
 {
-	/* three reals */
+	/* three reals: 12 bytes */
 	_geometry_vertex_buffer_type_position= 0x01,
-	/* two reals */
-	_geometry_vertex_buffer_type_texcoord= 0x18
-	/* seen and not read: 0x1B (12 bytes), 0x1F (4 bytes), 0x30 (4 bytes) */
+	/* three compressed coordinates: 6 bytes */
+	_geometry_vertex_buffer_type_compressed_position= 0x02,
+	/* 8 bytes */
+	_geometry_vertex_buffer_type_compressed_position_rigid_boned= 0x04,
+	/* 12 bytes each */
+	_geometry_vertex_buffer_type_compressed_position_skinned_a= 0x06,
+	_geometry_vertex_buffer_type_compressed_position_skinned_b= 0x08,
+	/* three reals and 4 bytes: 16 bytes */
+	_geometry_vertex_buffer_type_position_skinned= 0x0A,
+	/* two reals: 8 bytes */
+	_geometry_vertex_buffer_type_texcoord= 0x18,
+	/* two compressed coordinates: 4 bytes */
+	_geometry_vertex_buffer_type_compressed_texcoord= 0x19
+	/* seen and not read: 0x1B (12 bytes), 0x1F (4 bytes), 0x2F (3 bytes),
+	0x30 (4 bytes) */
 };
 
 /* ---------- structures */
@@ -106,7 +133,7 @@ struct geometry_section
 	struct tag_block unknown8; /* 8 bytes each */
 	struct tag_block unknown10;
 	struct tag_block unknown18;
-	/* a list of triangles in the structure bsps: three indices each */
+	/* each part has some: a list of triangles or a triangle strip */
 	struct tag_block indices; /* uint16_t */
 	uint8_t unknown28[8]; /* tag data */
 	struct tag_block unknown30; /* 2 bytes each */

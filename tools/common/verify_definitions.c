@@ -6,6 +6,7 @@ checks the sizes and the offsets they declare.
 */
 
 #include "bitmaps/bitmap_definitions.h"
+#include "models/render_model_definitions.h"
 #include "physics/collision_bsp_definitions.h"
 #include "scenario/scenario_definitions.h"
 #include "shaders/shader_definitions.h"

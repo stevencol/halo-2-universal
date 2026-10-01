@@ -9,8 +9,8 @@ El objetivo a largo plazo es un port nativo del juego, como el que
 con Halo: Combat Evolved.
 
 **Estado: muy temprano.** El juego no arranca ni está cerca de hacerlo. Hoy
-el proyecto abre los mapas del juego, lista su contenido y exporta la
-geometría de los niveles con su textura principal. Consulta
+el proyecto abre los mapas del juego, lista su contenido y exporta los
+niveles y los modelos con su textura principal. Consulta
 [CHANGELOG.md](CHANGELOG.md) para ver qué hay hecho.
 
 ## En qué se basa
@@ -83,9 +83,11 @@ El `.obj` lleva la geometría que dibuja el juego, con un material por shader
 y su textura principal como PNG en una carpeta al lado. Con `--collision`
 lleva la geometría que usa la física.
 
-Sacar una textura suelta (el nombre puede ser el final del nombre del tag):
+Sacar un modelo o una textura sueltos (el nombre puede ser el final del
+nombre del tag):
 
 ```
+python tools/model2obj.py "<carpeta maps>\zanzibar.map" warthog\warthog warthog.obj
 python tools/bitmap2png.py "<carpeta maps>\zanzibar.map" zanzibar_seawall seawall.png
 ```
 

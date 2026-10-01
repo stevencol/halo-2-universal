@@ -87,6 +87,14 @@ class CacheFile:
         self.tag_data_address = self.base_address + self.tag_memory_size - self.tag_data_size
         self._tag_data = self.read(self.tag_data_offset + self.tag_index_size, self.tag_data_size)
 
+        string_id_count, string_id_data_size, string_id_index_offset, string_id_data_offset = struct.unpack_from(
+            "<4I", header, 0x164
+        )
+        self._string_id_data = self.read(string_id_data_offset, string_id_data_size)
+        self._string_id_index = struct.unpack(
+            f"<{string_id_count}I", self.read(string_id_index_offset, string_id_count * 4)
+        )
+
         self._tag_name_data = self.read(tag_name_data_offset, tag_name_data_size)
         self._tag_name_index = struct.unpack(
             f"<{tag_name_count}I", self.read(tag_name_index_offset, tag_name_count * 4)
@@ -138,6 +146,25 @@ class CacheFile:
         if tag_index == NONE or (tag_index & 0xFFFF) >= len(self._tag_name_index):
             return "<none>"
         return self._string(self._tag_name_data, self._tag_name_index[tag_index & 0xFFFF], 1024)
+
+    def string(self, string_id: int) -> str:
+        """The text of a string id: its high byte is the length of the text and the rest is its index."""
+        index = string_id & 0xFFFFFF
+        if index >= len(self._string_id_index):
+            return "<none>"
+        return self._string(self._string_id_data, self._string_id_index[index], 256)
+
+    def find_tag(self, group: str, name: str) -> int:
+        """The index of the first tag of a group whose name is, or ends with, the name; NONE if there is none."""
+        wanted = name.replace("/", "\\")
+        tag = group_tag(group)
+        matches = [
+            index
+            for index, instance in enumerate(self.tag_instances)
+            if instance[0] == tag and self.tag_name(index).endswith(wanted)
+        ]
+        exact = [index for index in matches if self.tag_name(index) == wanted]
+        return (exact or matches or [NONE])[0]
 
     def scenario(self) -> bytes:
         _, _, address, size = self.tag_instances[self.scenario_index & 0xFFFF]
