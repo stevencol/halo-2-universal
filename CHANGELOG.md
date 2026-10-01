@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Cuaterniones y restos de módulos
+
+De 83 funciones se pasa a 90, el 0,80 % de las del juego.
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `quaternion_from_vectors3d` | `0x0011d6a0` | `math/real_math.c` |
+| `quaternion_multiply` | `0x0011d820` | `math/real_math.c` |
+| `fast_quaternion_interpolate_and_normalize` | `0x0011d950` | `math/real_math.c` |
+| `rectangle3d_build_vertices` | `0x0011f9a0` | `math/real_math.c` |
+| `matrix4x3_from_plane` | `0x00142390` | `math/matrix_math.c` |
+| `matrix3x3_multiply` | `0x00142eb0` | `math/matrix_math.c` |
+| `data_connect` | `0x0016b6b0` | `memory/data.c` |
+
+### Cambiado
+
+- `tools/difftest.py`: un argumento real puede ir en un registro SSE
+  (`xmm0` a `xmm3`), que es donde lo recibe
+  `fast_quaternion_interpolate_and_normalize`.
+
+### Lo que se sabe
+
+- El módulo de matemáticas reales termina hacia `0x00120890`; lo que sigue
+  (`0x001208b0` en adelante) es otro módulo, con semáforos y colas, que
+  parece la carga de datos en segundo plano.
+- `data_connect` reconstruye el vector de bits de una tabla a partir de los
+  identificadores de sus elementos. Sirve para tablas cuyos elementos vienen
+  ya hechos, como las de un mapa.
+
+### Nombres supuestos
+
+- `quaternion_from_vectors3d`, `quaternion_multiply`,
+  `rectangle3d_build_vertices` y `data_connect`.
+
 ## 2026-10-01 — Cadenas anchas y más matemáticas
 
 De 66 funciones se pasa a 83, el 0,74 % de las del juego.

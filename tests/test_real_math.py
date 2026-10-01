@@ -76,6 +76,28 @@ def run(t) -> None:
         length = random_.choice((1.0, 1.0, 0.01, 30.0, 0.0))
         t.check("quaternion_normalize", reals(*(random_.uniform(-1, 1) * length for _ in range(4))))
 
+        t.check(
+            "quaternion_multiply",
+            reals(*(random_.uniform(-1, 1) for _ in range(4))),
+            reals(*(random_.uniform(-1, 1) for _ in range(4))),
+            reals(9, 9, 9, 9),
+        )
+        t.check(
+            "fast_quaternion_interpolate_and_normalize",
+            reals(*(random_.uniform(-1, 1) for _ in range(4))),
+            reals(*(random_.uniform(-1, 1) for _ in range(4))),
+            f32(random_.choice((0.0, 1.0, 0.5, random_.uniform(0, 1)))),
+            reals(9, 9, 9, 9),
+        )
+        # two directions: any, the same one, and opposite ones
+        direction = random_.choice(vectors[1:6])
+        length = sum(component * component for component in direction) ** 0.5
+        direction = [component / length for component in direction]
+        other = random_.choice((direction, [-component for component in direction], [0.0, 0.6, 0.8], [1.0, 0.0, 0.0]))
+        t.check("quaternion_from_vectors3d", reals(9, 9, 9, 9), reals(*direction), reals(*other))
+        bounds = [random_.uniform(-50, 50) for _ in range(6)]
+        t.check("rectangle3d_build_vertices", reals(*bounds), reals(*([9.0] * 24)))
+
         angles = [random_.uniform(-7, 7) for _ in range(3)]
         t.check("vectors3d_from_euler_angles3d", reals(9, 9, 9), reals(8, 8, 8), reals(*angles))
         t.check("vectors3d_from_euler_angles2d", reals(9, 9, 9), reals(8, 8, 8), reals(*angles[:2]))

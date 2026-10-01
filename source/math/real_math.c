@@ -195,6 +195,111 @@ void quaternion_normalize(
 	return;
 }
 
+/* 0x0011d820: the rotation of b, then that of a. The result can be a or b */
+void quaternion_multiply(
+	const real_quaternion *a,
+	const real_quaternion *b,
+	real_quaternion *result)
+{
+	real_quaternion copy;
+
+	if (a==result)
+	{
+		copy= *a;
+		a= &copy;
+	}
+	if (b==result)
+	{
+		copy= *b;
+		b= &copy;
+	}
+
+	result->v.i= (b->w*a->v.i + b->v.k*a->v.j + a->w*b->v.i) - b->v.j*a->v.k;
+	result->v.j= (a->v.k*b->v.i + b->w*a->v.j + a->w*b->v.j) - a->v.i*b->v.k;
+	result->v.k= (b->w*a->v.k + b->v.j*a->v.i + a->w*b->v.k) - b->v.i*a->v.j;
+	result->w= ((b->w*a->w - a->v.i*b->v.i) - b->v.j*a->v.j) - a->v.k*b->v.k;
+
+	return;
+}
+
+/* 0x0011d6a0: the rotation that takes a direction to another, both of
+length 1. For two opposite directions, half a turn around a perpendicular.
+The name is a guess */
+void quaternion_from_vectors3d(
+	real_quaternion *result,
+	const real_vector3d *a,
+	const real_vector3d *b)
+{
+	real s= (a->j*b->j + a->i*b->i + b->k*a->k + 1.0f)*2.0f;
+
+	if (!(s>0.0f))
+	{
+		s= 0.0f;
+	}
+	s= sqrtf(s);
+
+	if (s<0.001f)
+	{
+		perpendicular3d(a, &result->v);
+		result->w= 0.0f;
+	}
+	else
+	{
+		real reciprocal= 1.0f/s;
+		real k= a->i*b->j - a->j*b->i;
+		real j= b->i*a->k - b->k*a->i;
+		real i= a->j*b->k - a->k*b->j;
+
+		result->v.i= i*reciprocal;
+		result->v.j= j*reciprocal;
+		result->v.k= k*reciprocal;
+		result->w= s*0.5f;
+	}
+
+	return;
+}
+
+/* 0x0011d950: a quaternion between two, by the short way around, of length
+1. As in Halo 1 */
+void fast_quaternion_interpolate_and_normalize(
+	const real_quaternion *a,
+	const real_quaternion *b,
+	real t,
+	real_quaternion *result)
+{
+	real dot= b->v.k*a->v.k + b->v.j*a->v.j + a->w*b->w + a->v.i*b->v.i;
+	real u= 1.0f-t;
+
+	if (0.0f>dot)
+	{
+		t= 0.0f-t;
+	}
+	result->v.i= a->v.i*u + b->v.i*t;
+	result->v.j= b->v.j*t + u*a->v.j;
+	result->v.k= b->v.k*t + u*a->v.k;
+	result->w= a->w*u + t*b->w;
+	quaternion_normalize(result);
+
+	return;
+}
+
+/* 0x0011f9a0: the eight corners of a box, and how many they are */
+long rectangle3d_build_vertices(
+	const real_rectangle3d *bounds,
+	real_point3d *vertices)
+{
+	long index;
+
+	for (index= 0; index<8; index++)
+	{
+		vertices[index].x= index&1 ? bounds->x1 : bounds->x0;
+		vertices[index].y= index&2 ? bounds->y1 : bounds->y0;
+		vertices[index].z= index&4 ? bounds->z1 : bounds->z0;
+	}
+
+	return 8;
+}
+
 /* 0x0011df60: as in Halo 1 */
 void vectors3d_from_euler_angles3d(
 	real_vector3d *forward,

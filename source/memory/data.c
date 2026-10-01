@@ -5,8 +5,7 @@ Decompiled from halo2ship.exe (Xbox, build 02.09.27.09809). Each function
 gives the address it has there.
 
 Not decompiled yet: data_new (0x0016b570) and data_dispose (0x0016b5d0),
-which use what allocated the array, and 0x0016b6b0, which gives an array
-elements that are somewhere else.
+which use what allocated the array.
 */
 
 #include "data.h"
@@ -68,6 +67,54 @@ void data_initialize(
 	data->flags&= ~(FLAG(_data_array_unknown0_bit) | FLAG(_data_array_unknown1_bit));
 	data->data= datums;
 	memset(data->in_use_bit_vector, 0, BIT_VECTOR_SIZE_IN_LONGS(maximum_count)*sizeof(unsigned long));
+
+	return;
+}
+
+/* 0x0016b6b0: gives an array made with data_initialize_disconnected its
+elements, which have their identifiers already: those with an identifier are
+in use. The name is a guess */
+void data_connect(
+	struct data_array *data,
+	long maximum_count,
+	void *datums)
+{
+	long absolute_index;
+
+	data->flags&= ~FLAG(_data_array_unknown1_bit);
+	data->maximum_count= maximum_count;
+	data->data= datums;
+	data->valid= TRUE;
+	data->first_unallocated= 0;
+	data->actual_count= 0;
+	data->next_index= maximum_count;
+	strncpy((char *)&data->next_identifier, data->name, sizeof(data->next_identifier));
+	data->next_identifier|= 0x8000;
+
+	for (absolute_index= 0; absolute_index<data->maximum_count; absolute_index++)
+	{
+		struct datum_header *header= DATUM_GET(data, absolute_index);
+
+		if (header->identifier)
+		{
+			BIT_VECTOR_OR_FLAG(data->in_use_bit_vector, absolute_index);
+			data->first_unallocated= absolute_index+1;
+			data->actual_count++;
+		}
+		else
+		{
+			if (TEST_FLAG(data->flags, _data_array_fill_deleted_bit))
+			{
+				memset(header, 0xBA, data->size);
+				header->identifier= 0;
+			}
+			BIT_VECTOR_AND_FLAG(data->in_use_bit_vector, absolute_index);
+			if (absolute_index<data->next_index)
+			{
+				data->next_index= absolute_index;
+			}
+		}
+	}
 
 	return;
 }

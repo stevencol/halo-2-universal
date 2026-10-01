@@ -95,6 +95,10 @@ def run(t) -> None:
         t.check("matrix3x3_from_angles", garbage(random_, 9), *angles)
 
         matrix3 = matrix[1:10]
+        t.check("matrix3x3_multiply", reals(*matrix3), reals(*other[1:10]), garbage(random_, 9))
+        # a plane that faces any way, and the planes that face along an axis
+        normal = random_.choice((unit(random_), (1.0, 0.0, 0.0), (0.0, -1.0, 0.0), (0.0, 0.0, 1.0)))
+        t.check("matrix4x3_from_plane", garbage(random_, 13), reals(*normal, random_.uniform(-30, 30)))
         t.check("matrix3x3_transpose", reals(*matrix3), garbage(random_, 9))
         t.check("matrix3x3_inverse", reals(*matrix3), f32(random_.choice((1.0, -1.0, 0.5, 7.0))), garbage(random_, 9))
         t.check("matrix3x3_transform_vector", reals(*matrix3), reals(*vector), garbage(random_, 3))

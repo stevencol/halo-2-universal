@@ -3,7 +3,7 @@
 import random
 import struct
 
-from difftest import Buffer
+from difftest import SCRATCH_ADDRESS, Buffer
 
 DATA_ARRAY_SIZE = 0x4C
 FILL_DELETED_FLAG = 1 << 3
@@ -114,6 +114,10 @@ def run(t) -> None:
     for flags in (0, FILL_DELETED_FLAG):
         for data, in_use, maximum_count in arrays(random_, 60, flags=flags):
             t.check("datum_new", data)
+            # the elements where they are, after the array, which is the
+            # first buffer; and fewer of them than the array has
+            for count in {maximum_count, max(maximum_count - 3, 0)}:
+                t.check("data_connect", data, count, SCRATCH_ADDRESS + DATA_ARRAY_SIZE)
             t.check("data_delete_all", data)
             t.check("data_make_valid", data)
             for value in some_indices(random_, in_use, maximum_count)[1:]:

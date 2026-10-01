@@ -47,6 +47,11 @@ REGISTERS = {
     "edx": x86.UC_X86_REG_EDX,
     "esi": x86.UC_X86_REG_ESI,
     "edi": x86.UC_X86_REG_EDI,
+    # a real argument, as its 32 bits, in the low part of an SSE register
+    "xmm0": x86.UC_X86_REG_XMM0,
+    "xmm1": x86.UC_X86_REG_XMM1,
+    "xmm2": x86.UC_X86_REG_XMM2,
+    "xmm3": x86.UC_X86_REG_XMM3,
 }
 
 COMPILE_FLAGS = [

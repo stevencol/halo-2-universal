@@ -88,6 +88,7 @@ void data_initialize_disconnected(struct data_array *data, const char *name, lon
 	byte alignment_bits, void *allocation, unsigned long *in_use_bit_vector);
 void data_initialize(struct data_array *data, const char *name, long maximum_count, long size,
 	long alignment_bits, void *allocation);
+void data_connect(struct data_array *data, long maximum_count, void *datums);
 void data_make_valid(struct data_array *data);
 void data_delete_all(struct data_array *data);
 

@@ -212,6 +212,33 @@ void matrix4x3_from_orientation(
 	return;
 }
 
+/* 0x00142390: a matrix whose up is the plane's normal and whose position is
+the point of the plane nearest to the origin. As in Halo 1 */
+void matrix4x3_from_plane(
+	real_matrix4x3 *matrix,
+	const real_plane3d *plane)
+{
+	real_vector3d forward;
+	real_point3d position;
+
+	perpendicular3d(&plane->n, &forward);
+	normalize3d(&forward);
+	position.x= plane->d*plane->n.i;
+	position.y= plane->n.j*plane->d;
+	position.z= plane->n.k*plane->d;
+
+	matrix->scale= 1.0f;
+	matrix->forward= forward;
+	/* left is up x forward */
+	matrix->left.j= plane->n.k*forward.i - plane->n.i*forward.k;
+	matrix->left.k= plane->n.i*forward.j - plane->n.j*forward.i;
+	matrix->left.i= plane->n.j*forward.k - plane->n.k*forward.j;
+	matrix->up= plane->n;
+	matrix->position= position;
+
+	return;
+}
+
 /* 0x00142570: result can be the point */
 real_point3d *matrix4x3_transform_point(
 	const real_matrix4x3 *matrix,
@@ -491,6 +518,39 @@ real_matrix3x3 *matrix3x3_inverse(
 	}
 
 	return result;
+}
+
+/* 0x00142eb0: a vector goes through a first, then through b. The result can
+be a or b. As in Halo 1 */
+void matrix3x3_multiply(
+	const real_matrix3x3 *a,
+	const real_matrix3x3 *b,
+	real_matrix3x3 *result)
+{
+	real_matrix3x3 copy;
+
+	if (b==result)
+	{
+		copy= *b;
+		b= &copy;
+	}
+	if (a==result)
+	{
+		copy= *a;
+		a= &copy;
+	}
+
+	result->n[0][0]= b->n[0][0]*a->n[0][0] + b->n[1][0]*a->n[0][1] + a->n[0][2]*b->n[2][0];
+	result->n[0][1]= b->n[1][1]*a->n[0][1] + b->n[0][1]*a->n[0][0] + b->n[2][1]*a->n[0][2];
+	result->n[0][2]= b->n[1][2]*a->n[0][1] + b->n[0][2]*a->n[0][0] + b->n[2][2]*a->n[0][2];
+	result->n[1][0]= b->n[1][0]*a->n[1][1] + a->n[1][0]*b->n[0][0] + a->n[1][2]*b->n[2][0];
+	result->n[1][1]= b->n[2][1]*a->n[1][2] + b->n[1][1]*a->n[1][1] + b->n[0][1]*a->n[1][0];
+	result->n[1][2]= b->n[2][2]*a->n[1][2] + b->n[1][2]*a->n[1][1] + b->n[0][2]*a->n[1][0];
+	result->n[2][0]= b->n[0][0]*a->n[2][0] + b->n[1][0]*a->n[2][1] + b->n[2][0]*a->n[2][2];
+	result->n[2][1]= b->n[2][1]*a->n[2][2] + b->n[1][1]*a->n[2][1] + b->n[0][1]*a->n[2][0];
+	result->n[2][2]= b->n[2][2]*a->n[2][2] + b->n[1][2]*a->n[2][1] + b->n[0][2]*a->n[2][0];
+
+	return;
 }
 
 /* 0x00142d10 */

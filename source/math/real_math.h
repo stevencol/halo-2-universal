@@ -131,6 +131,11 @@ void fast_quaternion_normalize(real_quaternion *quaternion);
 unsigned char limit3d(real_vector3d *vector, real length);
 void euler_angles2d_from_vector3d(real_euler_angles2d *angles, const real_vector3d *vector);
 void quaternion_normalize(real_quaternion *quaternion);
+void quaternion_multiply(const real_quaternion *a, const real_quaternion *b, real_quaternion *result);
+void quaternion_from_vectors3d(real_quaternion *result, const real_vector3d *a, const real_vector3d *b);
+void fast_quaternion_interpolate_and_normalize(const real_quaternion *a, const real_quaternion *b, real t,
+	real_quaternion *result);
+long rectangle3d_build_vertices(const real_rectangle3d *bounds, real_point3d *vertices);
 void vectors3d_from_euler_angles3d(real_vector3d *forward, real_vector3d *up, const real_euler_angles3d *angles);
 void vectors3d_from_euler_angles2d(real_vector3d *forward, real_vector3d *up, const real_euler_angles2d *angles);
 void project_point3d(const real_point3d *point3d, short projection, unsigned char sign, real_point2d *point2d);
@@ -199,6 +204,8 @@ void matrix4x3_transform_points(const real_matrix4x3 *matrix, long count, const 
 	real_point3d *results);
 void matrix4x3_multiply(const real_matrix4x3 *a, const real_matrix4x3 *b, real_matrix4x3 *result);
 
+void matrix4x3_from_plane(real_matrix4x3 *matrix, const real_plane3d *plane);
+void matrix3x3_multiply(const real_matrix3x3 *a, const real_matrix3x3 *b, real_matrix3x3 *result);
 void matrix3x3_transpose(const real_matrix3x3 *matrix, real_matrix3x3 *result);
 real_matrix3x3 *matrix3x3_inverse(const real_matrix3x3 *matrix, real determinant, real_matrix3x3 *result);
 void matrix3x3_from_forward_and_up(real_matrix3x3 *matrix, const real_vector3d *forward, const real_vector3d *up);
