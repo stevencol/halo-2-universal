@@ -49,6 +49,9 @@ PHYSICAL_SIZE = 0x00100000
 
 KERNEL_THUNK_KEYS = (0x5B6D40B6, 0xEFB1F152)
 MAXIMUM_INSTRUCTIONS = 20_000_000
+# of the functions that a test stands in for, in one call: a loop that calls
+# one each time around starts the count of instructions again each time
+MAXIMUM_CALLS = 10_000
 
 REGISTERS = {
     "eax": x86.UC_X86_REG_EAX,
@@ -507,7 +510,11 @@ class Harness:
         mu.reg_write(x86.UC_X86_REG_EBP, 0)
 
         stopped = False
+        calls = 0
         while True:
+            calls += 1
+            if calls > MAXIMUM_CALLS:
+                raise DifftestError("the function calls others without end")
             self.kernel_call = None
             self.mock_call = None
             self.external_call = None
