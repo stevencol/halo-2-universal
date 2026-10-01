@@ -14,6 +14,22 @@ REAL_MATH.H
 
 typedef float real;
 
+typedef struct real_vector2d
+{
+	real i, j;
+} real_vector2d;
+
+typedef struct real_rgb_color
+{
+	real red, green, blue;
+} real_rgb_color;
+
+typedef struct real_argb_color
+{
+	real alpha;
+	real_rgb_color rgb;
+} real_argb_color;
+
 typedef struct real_point3d
 {
 	real x, y, z;
@@ -87,7 +103,16 @@ typedef char verify_real_matrix4x3_size[
 
 /* ---------- prototypes/REAL_MATH.C */
 
+real normalize2d(real_vector2d *vector);
 real normalize3d(real_vector3d *vector);
+real magnitude3d(const real_vector3d *vector);
+real distance3d(const real_point3d *a, const real_point3d *b);
+void perpendicular3d(const real_vector3d *vector, real_vector3d *result);
+
+/* ---------- prototypes/RANDOM_MATH.C */
+
+real real_seed_random(unsigned long *seed);
+real real_seed_random_range(unsigned long *seed, real lower_bound, real upper_bound);
 
 /* ---------- public code */
 

@@ -155,6 +155,15 @@ float cosf(float value)
 	return value;
 }
 
+long lrintf(float value)
+{
+	long result;
+
+	__asm__("cvtss2si %1, %0" : "=r"(result) : "x"(value));
+
+	return result;
+}
+
 int strncmp(const char *a, const char *b, size_t size)
 {
 	for (; size && *a && *a==*b; size--, a++, b++)

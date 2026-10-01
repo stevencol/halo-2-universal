@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Vectores, azar, colores y árbol de colisión
+
+Diez funciones sueltas de las más llamadas: de 41 se pasa a 51, el 0,45 %
+de las del juego.
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `magnitude3d` | `0x00024590` | `math/real_math.c` |
+| `normalize2d` | `0x0002b400` | `math/real_math.c` |
+| `distance3d` | `0x0003ea30` | `math/real_math.c` |
+| `perpendicular3d` | `0x0011d000` | `math/real_math.c` |
+| `real_seed_random` | `0x000259a0` | `math/random_math.c` |
+| `real_seed_random_range` | `0x000259d0` | `math/random_math.c` |
+| `pixel32_to_real_rgb_color` | `0x00131bb0` | `bitmaps/bitmap_utilities.c` |
+| `real_argb_color_to_pixel32` | `0x00131e50` | `bitmaps/bitmap_color_conversion.c` |
+| `real_rgb_color_to_pixel32` | `0x00131ed0` | `bitmaps/bitmap_color_conversion.c` |
+| `bsp3d_test_point` | `0x0014a280` | `physics/bsp3d.c` |
+
+- `tests/test_bitmaps.py`, `tests/test_bsp3d.py` y más casos en
+  `tests/test_real_math.py`: unos 6.000 casos nuevos.
+
+### Lo que se sabe
+
+- Los números aleatorios son los de Halo 1: mismas constantes y mismo
+  método.
+- `bsp3d_test_point` es la primera función de colisión: dice en qué hoja
+  del árbol está un punto. El nodo ocupa 8 bytes, con dos hijos de 24 bits,
+  donde el de Halo 1 ocupa 12.
+- Los colores se redondean al entero más cercano, como redondea el
+  procesador, no truncando.
+
+### Límite conocido
+
+- `magnitude3d` y `distance3d` usan en el juego instrucciones x87, que
+  conservan un cuadrado demasiado pequeño o demasiado grande para un real.
+  Para vectores de menos de 1e-19 o más de 1e19 de longitud, las de
+  `source/` dan otro resultado. La prueba excluye esos casos.
+- `real_seed_random` es un nombre supuesto.
+
 ## 2026-10-01 — Matrices
 
 El módulo de matrices: de 21 funciones se pasa a 41, el 0,36 % de las del

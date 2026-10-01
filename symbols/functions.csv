@@ -1,7 +1,17 @@
 address,name,source,arguments,returns
 00012130,cache_file_build_verify,source/cache/cache_files.c,stack,bool
+00024590,magnitude3d,source/math/real_math.c,eax,real
+000259a0,real_seed_random,source/math/random_math.c,ecx,real
+000259d0,real_seed_random_range,source/math/random_math.c,ecx stack stack,real
+0002b400,normalize2d,source/math/real_math.c,eax,real:xmm0
 00030bf0,normalize3d,source/math/real_math.c,eax,real:xmm0
+0003ea30,distance3d,source/math/real_math.c,eax ecx,real
+0011d000,perpendicular3d,source/math/real_math.c,ecx eax,void
 00122870,cache_file_header_verify,source/cache/cache_files.c,esi,bool
+00131bb0,pixel32_to_real_rgb_color,source/bitmaps/bitmap_utilities.c,ecx eax,void
+00131e50,real_argb_color_to_pixel32,source/bitmaps/bitmap_color_conversion.c,stack,int
+00131ed0,real_rgb_color_to_pixel32,source/bitmaps/bitmap_color_conversion.c,stack,int
+0014a280,bsp3d_test_point,source/physics/bsp3d.c,ecx eax edx,int
 00141590,matrix4x3_inverse,source/math/matrix_math.c,ecx eax,void
 001416c0,matrix4x3_translation,source/math/matrix_math.c,eax ecx,void
 00141710,matrix4x3_rotation_from_vectors,source/math/matrix_math.c,ecx edx eax,void
