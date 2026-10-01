@@ -7,6 +7,8 @@ address,name,source,arguments,returns
 00030bf0,normalize3d,source/math/real_math.c,eax,real:xmm0
 0003ea30,distance3d,source/math/real_math.c,eax ecx,real
 0011d000,perpendicular3d,source/math/real_math.c,ecx eax,void
+0011e5e0,fast_vector_intersects_sphere,source/math/real_math.c,ecx edx eax stack,bool
+00120850,projection_from_vector3d,source/math/real_math.c,eax,short
 00122870,cache_file_header_verify,source/cache/cache_files.c,esi,bool
 00131bb0,pixel32_to_real_rgb_color,source/bitmaps/bitmap_utilities.c,ecx eax,void
 00131e50,real_argb_color_to_pixel32,source/bitmaps/bitmap_color_conversion.c,stack,int
@@ -49,4 +51,10 @@ address,name,source,arguments,returns
 0016bc00,data_next_absolute_index,source/memory/data.c,ecx edx,int
 0016bc40,data_last_index,source/memory/data.c,stack,int
 0016bcc0,data_prev_index,source/memory/data.c,eax edx,int
+001955d0,bitstream_write_bits,source/networking/bitstream.c,edx eax stack,void
+00195720,bitstream_write_integer,source/networking/bitstream.c,eax edx stack,void
+001957d0,bitstream_read_bool,source/networking/bitstream.c,edi,bool
+00195820,bitstream_read_bits,source/networking/bitstream.c,ebx stack stack,void
+001959c0,bitstream_read_integer,source/networking/bitstream.c,edi stack,int
+001d8d60,fast_quaternion_normalize,source/math/real_math.c,ecx,void
 00214ed0,cache_file_maximum_length,source/cache/cache_files.c,ecx,int

@@ -54,6 +54,19 @@ def run(t) -> None:
             other = random_.choice(vectors[:11])
             t.check("distance3d", reals(*vector), reals(*other))
 
+    for vector in vectors:
+        t.check("projection_from_vector3d", reals(*vector))
+    for _ in range(400):
+        # a point, a direction, and a sphere near them or far
+        point = [random_.uniform(-5, 5) for _ in range(3)]
+        direction = [random_.uniform(-8, 8) for _ in range(3)]
+        center = [random_.uniform(-5, 5) for _ in range(3)]
+        radius = random_.choice((0.0, 0.5, 2.0, 6.0, random_.uniform(0, 10)))
+        t.check("fast_vector_intersects_sphere", reals(*point), reals(*direction), reals(*center), f32(radius))
+
+        length = random_.choice((1.0, 1.0, 0.01, 30.0))
+        t.check("fast_quaternion_normalize", reals(*(random_.uniform(-1, 1) * length for _ in range(4))))
+
     for seed in (0, 1, 0xFFFFFFFF, 0x80000000, 0x12345678, *(random_.getrandbits(32) for _ in range(200))):
         t.check("real_seed_random", Buffer(struct.pack("<I", seed)))
         lower = random_.uniform(-100, 100)

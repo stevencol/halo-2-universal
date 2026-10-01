@@ -108,6 +108,10 @@ real normalize3d(real_vector3d *vector);
 real magnitude3d(const real_vector3d *vector);
 real distance3d(const real_point3d *a, const real_point3d *b);
 void perpendicular3d(const real_vector3d *vector, real_vector3d *result);
+short projection_from_vector3d(const real_vector3d *vector);
+unsigned char fast_vector_intersects_sphere(const real_point3d *point, const real_vector3d *vector,
+	const real_point3d *center, real radius);
+void fast_quaternion_normalize(real_quaternion *quaternion);
 
 /* ---------- prototypes/RANDOM_MATH.C */
 
@@ -127,11 +131,24 @@ static inline real reciprocal_estimate(
 {
 	return _mm_cvtss_f32(_mm_rcp_ss(_mm_set_ss(value)));
 }
+
+/* the processor's estimate of 1/sqrt(value) */
+static inline real reciprocal_square_root_estimate(
+	real value)
+{
+	return _mm_cvtss_f32(_mm_rsqrt_ss(_mm_set_ss(value)));
+}
 #else
 static inline real reciprocal_estimate(
 	real value)
 {
 	return 1.0f/value;
+}
+
+static inline real reciprocal_square_root_estimate(
+	real value)
+{
+	return 1.0f/__builtin_sqrtf(value);
 }
 #endif
 

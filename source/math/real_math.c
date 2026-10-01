@@ -52,6 +52,89 @@ real distance3d(
 	return sqrtf(x*x + y*y + z*z);
 }
 
+/* 0x00120850: the axis where the vector is longest: 0, 1 or 2. As in Halo 1 */
+short projection_from_vector3d(
+	const real_vector3d *vector)
+{
+	real i= fabsf(vector->i);
+	real j= fabsf(vector->j);
+	real k= fabsf(vector->k);
+
+	if (!(k<j) && !(k<i))
+	{
+		return 2;
+	}
+	else if (!(j<i))
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
+/* 0x0011e5e0: whether the segment from the point along the vector touches
+the sphere. As in Halo 1 */
+unsigned char fast_vector_intersects_sphere(
+	const real_point3d *point,
+	const real_vector3d *vector,
+	const real_point3d *center,
+	real radius)
+{
+	real y= point->y-center->y;
+	real z= point->z-center->z;
+	real x= point->x-center->x;
+	real c= (z*z + y*y + x*x) - radius*radius;
+	real a, b, discriminant, negative_a_minus_b;
+
+	if (0.0f>c)
+	{
+		/* the point is in the sphere */
+		return 1;
+	}
+
+	b= vector->k*z + vector->j*y + vector->i*x;
+	if (b>=0.0f)
+	{
+		/* the vector goes away from the sphere */
+		return 0;
+	}
+
+	a= vector->k*vector->k + vector->j*vector->j + vector->i*vector->i;
+	discriminant= b*b - a*c;
+	if (0.0f>=discriminant)
+	{
+		return 0;
+	}
+
+	negative_a_minus_b= (0.0f-a)-b;
+	if (0.0f>negative_a_minus_b)
+	{
+		return 1;
+	}
+
+	return discriminant>negative_a_minus_b*negative_a_minus_b;
+}
+
+/* 0x001d8d60: written with the processor's SSE instructions in the game,
+which keeps the quaternion at an address that is a multiple of 16. It takes
+the reciprocal of the square root with the processor's estimate and one step
+to refine it. The name is a guess */
+void fast_quaternion_normalize(
+	real_quaternion *quaternion)
+{
+	real magnitude_squared= (quaternion->v.k*quaternion->v.k + quaternion->v.i*quaternion->v.i) +
+		(quaternion->w*quaternion->w + quaternion->v.j*quaternion->v.j);
+	real estimate= reciprocal_square_root_estimate(magnitude_squared);
+	real scale= 0.5f*estimate*(3.0f - magnitude_squared*estimate*estimate);
+
+	quaternion->v.i= scale*quaternion->v.i;
+	quaternion->v.j= scale*quaternion->v.j;
+	quaternion->v.k= scale*quaternion->v.k;
+	quaternion->w= scale*quaternion->w;
+
+	return;
+}
+
 /* 0x0011d000: a vector at a right angle to one, in the plane of the two
 axes where the vector is longest */
 void perpendicular3d(

@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Flujo de bits y más vectores
+
+De 51 funciones se pasa a 59, el 0,52 % de las del juego.
+
+### Añadido
+
+- `source/networking/bitstream.c` y `bitstream.h`: el flujo de bits con el
+  que el código de red empaqueta sus mensajes.
+
+  | Función | Dirección |
+  | --- | --- |
+  | `bitstream_write_bits` | `0x001955d0` |
+  | `bitstream_write_integer` | `0x00195720` |
+  | `bitstream_read_bool` | `0x001957d0` |
+  | `bitstream_read_bits` | `0x00195820` |
+  | `bitstream_read_integer` | `0x001959c0` |
+
+- En `source/math/real_math.c`: `projection_from_vector3d` (`0x00120850`),
+  `fast_vector_intersects_sphere` (`0x0011e5e0`) y
+  `fast_quaternion_normalize` (`0x001d8d60`).
+- `tests/test_bitstream.py` y más casos en `tests/test_real_math.py`: unos
+  3.900 casos nuevos.
+
+### Lo que se sabe
+
+- Halo 1 no tiene flujo de bits: su red es otra. Los nombres de estas
+  funciones son supuestos.
+- Las funciones que escriben en el flujo no borran los bits que pisan: dan
+  por hecho que desde la posición en adelante hay ceros.
+- `bitstream_read_bool` lee también en la posición justo después del final
+  de los datos.
+- `projection_from_vector3d` y `fast_vector_intersects_sphere` son las de
+  Halo 1.
+
 ## 2026-10-01 — Vectores, azar, colores y árbol de colisión
 
 Diez funciones sueltas de las más llamadas: de 41 se pasa a 51, el 0,45 %
