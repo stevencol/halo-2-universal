@@ -152,3 +152,24 @@ address,name,source,arguments,returns
 002d63fa,WaitForSingleObject,,stack stack,int
 00214ed0,cache_file_maximum_length,source/cache/cache_files.c,ecx,int
 00214f10,cache_file_buffer_allocate,source/cache/cache_files.c,eax ecx,int
+001a08f0,async_create_file_work,source/cseries/async.c,stack,int
+001a0fb0,async_write_work,source/cseries/async.c,stack,int
+001a1050,async_write_position,source/cseries/async.c,stack stack stack stack stack stack stack eax ebx,int
+001a12c0,async_set_file_size_work,source/cseries/async.c,stack,int
+001a1310,async_set_file_size,source/cseries/async.c,stack stack stack stack eax ebx,int
+001a1530,async_close_file_work,source/cseries/async.c,stack,int
+001a1550,async_close_file,source/cseries/async.c,stack stack stack ebx,int
+001a15d0,async_get_file_size_work,source/cseries/async.c,stack,int
+001a15f0,async_get_file_size,source/cseries/async.c,stack stack stack eax ebx,int
+00122810,csstrcat256,source/cseries/cseries.c,esi stack,int
+00214c30,cached_map_file_shared_get,source/cache/cache_files.c,ecx,pointer
+002149c0,cached_map_file_read_header,source/cache/cache_files.c,eax,bool
+00213970,cached_map_files_open,source/cache/cache_files.c,,void
+002136c0,cache_files_initialize,source/cache/cache_files.c,,void
+002d232e,WriteFile,,stack stack stack stack stack,int
+002d2404,SetEndOfFile,,stack,int
+002d26b0,FlushFileBuffers,,stack,int
+002d2715,GetFileSize,,stack stack,int
+0033039a,XGetLanguage,,,int
+00331598,CompareFileTime,,stack stack,int
+00331a35,CreateDirectoryA,,stack stack,int

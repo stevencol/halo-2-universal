@@ -32,6 +32,12 @@ int CloseHandle(uint32_t handle);
 /* 0x002d6b6b */
 int DeleteFileA(const char *path);
 
+/* 0x00331598 */
+long CompareFileTime(const struct cache_file_time *time1, const struct cache_file_time *time2);
+
+/* 0x0033039a */
+long XGetLanguage(void);
+
 /* 0x002d1d66 */
 void SetLastError(uint32_t error);
 
@@ -39,6 +45,9 @@ void SetLastError(uint32_t error);
 
 #define GENERIC_READ 0x80000000
 #define OPEN_EXISTING 3
+#define GENERIC_WRITE 0x40000000
+#define OPEN_ALWAYS 4
+#define FILE_FLAG_NO_BUFFERING 0x20000000
 #define INVALID_HANDLE_VALUE 0xFFFFFFFF
 
 enum
@@ -68,6 +77,26 @@ enum
 	_cache_file_offset_single_player_shared
 };
 
+/* the shared maps in the order that a map's header has them */
+enum
+{
+	_cache_file_shared_map_main_menu,
+	_cache_file_shared_map_shared,
+	_cache_file_shared_map_single_player_shared,
+	NUMBER_OF_CACHE_FILE_SHARED_MAPS
+};
+
+enum
+{
+	/* the build of the game */
+	CACHED_MAP_FILES_BUILD_NUMBER= 9809,
+	/* copies with a number from the count of places to here are from
+	another build of the game */
+	MAXIMUM_OLD_CACHED_MAP_FILES= 20,
+	/* of the tasks that the game waits for here */
+	CACHED_MAP_FILE_TASK_PRIORITY= 6
+};
+
 /* ---------- globals */
 
 /* 0x005476f8 */
@@ -83,6 +112,16 @@ long cached_map_files_build_number;
 
 /* 0x00510819: set when something of that structure changes */
 uint8_t cached_map_files_state_changed;
+
+/* 0x00510838: the language that the copies of the maps on the hard disk are
+in. Another field of that structure */
+long cached_map_files_language;
+
+/* 0x0047ff38: the language of the game; NONE until it is asked for */
+long global_language= NONE;
+
+/* 0x0055b4f0 */
+struct cached_map_file_copy_globals cached_map_file_copy_globals;
 
 /* 0x004e3b44: the tag instances of the tag header */
 struct cache_file_tag_instance *global_tag_instances;
@@ -210,6 +249,47 @@ void cached_map_files_delete(
 		DeleteFileA(path);
 	}
 	SetLastError(0);
+}
+
+/* 0x00214c30: the place in cached_map_file_globals of one of the shared
+maps, in the order that a map's header has them; NULL if there is no such
+map. The name is a guess */
+struct cached_map_file *cached_map_file_shared_get(
+	long shared_index)
+{
+	switch (shared_index)
+	{
+	case _cache_file_shared_map_main_menu:
+		return &cached_map_file_globals.files[_cached_map_file_main_menu];
+	case _cache_file_shared_map_shared:
+		return &cached_map_file_globals.files[_cached_map_file_shared];
+	case _cache_file_shared_map_single_player_shared:
+		return &cached_map_file_globals.files[_cached_map_file_single_player_shared];
+	}
+
+	return NULL;
+}
+
+/* 0x002149c0: reads the header of the copy of a map on the hard disk, which
+has to be open; whether it was read and is good. The name is a guess */
+uint8_t cached_map_file_read_header(
+	long index)
+{
+	struct cached_map_file *file= &cached_map_file_globals.files[index];
+	char path[256];
+	long bytes_read= 0;
+	volatile uint8_t done= 0;
+
+	/* the game does nothing with the path */
+	cached_map_file_get_path(path, sizeof(path), index);
+	async_read_position(file->file, sizeof(struct cache_file_header), 0, 0, CACHED_MAP_FILE_TASK_PRIORITY,
+		&bytes_read, &file->header, (uint8_t *)&done);
+	while (!done)
+	{
+		SwitchToThread();
+	}
+
+	return bytes_read==sizeof(struct cache_file_header) && cache_file_header_verify(&file->header);
 }
 
 /* 0x00214ed0 */
@@ -369,6 +449,191 @@ uint8_t cache_file_read_header(
 	CloseHandle(file);
 
 	return result;
+}
+
+static inline __attribute__((always_inline)) void cached_map_file_wait(
+	const volatile uint8_t *done)
+{
+	while (!*done)
+	{
+		SwitchToThread();
+	}
+}
+
+/* 0x00213970: opens the copies of the maps on the hard disk, making those
+that are not there. A copy that does not have the size of its place is
+given it, with an empty header, and so are all the ones after it. The
+header of a copy that cannot be used is left empty. The name is a guess */
+void cached_map_files_open(
+	void)
+{
+	uint8_t shared_map_valid[NUMBER_OF_CACHE_FILE_SHARED_MAPS]= {1, 1, 1};
+	uint8_t delete_rest= 1;
+	long index;
+
+	cached_map_files_delete(MAXIMUM_CACHED_MAP_FILES, MAXIMUM_OLD_CACHED_MAP_FILES);
+	for (index= 0; index<MAXIMUM_CACHED_MAP_FILES; index++)
+	{
+		struct cached_map_file *file= &cached_map_file_globals.files[index];
+		union
+		{
+			struct async_create_file_parameters create;
+			uint32_t parameters[ASYNC_TASK_PARAMETER_COUNT];
+		} task;
+		char path[256];
+		uint32_t maximum_size;
+		uint32_t file_size;
+		volatile uint8_t done;
+		uint8_t keep= 0;
+
+		cached_map_file_get_path(path, sizeof(path), index);
+		maximum_size= cached_map_file_maximum_size(index);
+
+		memset(&task, 0, sizeof(task));
+		task.create.path= path;
+		task.create.access= GENERIC_READ|GENERIC_WRITE;
+		task.create.share_mode= 0;
+		task.create.creation_disposition= OPEN_ALWAYS;
+		task.create.flags= FILE_FLAG_NO_BUFFERING;
+		task.create.file= &file->file;
+		task.create.create_directories= 0;
+		async_task_add(CACHED_MAP_FILE_TASK_PRIORITY, task.parameters, 0, async_create_file_work, (uint8_t *)&done);
+		cached_map_file_wait(&done);
+
+		if (file->file!=INVALID_HANDLE_VALUE)
+		{
+			async_get_file_size(file->file, 0, CACHED_MAP_FILE_TASK_PRIORITY, &file_size, (uint8_t *)&done);
+			cached_map_file_wait(&done);
+
+			if (file_size!=maximum_size)
+			{
+				uint8_t size_set;
+				uint8_t written= 0;
+
+				/* what the copies after this one have is of no use now */
+				if (delete_rest)
+				{
+					cached_map_files_delete(index+1, MAXIMUM_CACHED_MAP_FILES);
+					delete_rest= 0;
+				}
+
+				async_set_file_size(file->file, (long)maximum_size, 0, CACHED_MAP_FILE_TASK_PRIORITY, &size_set,
+					(uint8_t *)&done);
+				cached_map_file_wait(&done);
+				if (size_set)
+				{
+					/* the game writes a header with whatever the stack
+					has, and only empties its strings */
+					struct cache_file_header header;
+					uint32_t bytes_written;
+
+					header.path[0]= 0;
+					header.build[0]= 0;
+					header.name[0]= 0;
+					header.scenario_path[0]= 0;
+					async_write_position(file->file, &header, sizeof(header), 0, 0, 0, CACHED_MAP_FILE_TASK_PRIORITY,
+						&bytes_written, (uint8_t *)&done);
+					cached_map_file_wait(&done);
+					written= bytes_written==sizeof(header);
+				}
+
+				if (!written && file->file!=INVALID_HANDLE_VALUE)
+				{
+					async_close_file(file->file, 0, CACHED_MAP_FILE_TASK_PRIORITY, (uint8_t *)&done);
+					cached_map_file_wait(&done);
+					file->file= INVALID_HANDLE_VALUE;
+				}
+			}
+			else if (cached_map_file_read_header(index))
+			{
+				if (index!=_cached_map_file_single_player_shared)
+				{
+					keep= 1;
+				}
+				else
+				{
+					/* the copy has to be of the map that the disc has */
+					struct cache_file_header disc_header;
+
+					disc_header.path[0]= 0;
+					disc_header.build[0]= 0;
+					disc_header.name[0]= 0;
+					disc_header.scenario_path[0]= 0;
+					if (cache_file_read_header(&disc_header, file->header.path) &&
+						file->header.unknown144==disc_header.unknown144)
+					{
+						keep= 1;
+						/* the game has this here, where the place is always
+						that of a shared map: the copy of another map also
+						has to be of the same shared maps that are there */
+						if (index!=_cached_map_file_shared && index!=_cached_map_file_single_player_shared)
+						{
+							long shared_index;
+
+							for (shared_index= 0; shared_index<NUMBER_OF_CACHE_FILE_SHARED_MAPS; shared_index++)
+							{
+								if (file->header.uses_shared_map[shared_index] && shared_map_valid[shared_index])
+								{
+									keep= CompareFileTime(&cached_map_file_shared_get(shared_index)->header.times[0],
+										&file->header.times[1+shared_index])==0;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if (!keep)
+		{
+			memset(&file->header, 0, sizeof(file->header));
+			switch (index)
+			{
+			case _cached_map_file_shared:
+				shared_map_valid[_cache_file_shared_map_shared]= 0;
+				break;
+			case _cached_map_file_single_player_shared:
+				shared_map_valid[_cache_file_shared_map_single_player_shared]= 0;
+				break;
+			case _cached_map_file_main_menu:
+				shared_map_valid[_cache_file_shared_map_main_menu]= 0;
+				break;
+			}
+		}
+	}
+}
+
+/* 0x002136c0: forgets the maps, deletes their copies on the hard disk if
+they are of another language or of another build of the game, and opens
+them. The name is that of Halo 1's function */
+void cache_files_initialize(
+	void)
+{
+	memset(&cached_map_file_globals, 0, sizeof(cached_map_file_globals));
+	memset(&cached_map_file_copy_globals, 0, sizeof(cached_map_file_copy_globals));
+	cached_map_file_globals.open_map_index= NONE;
+	cached_map_file_copy_globals.unknown81C= 1;
+	cached_map_file_copy_globals.unknown810= NONE;
+	cached_map_file_copy_globals.unknown820= NONE;
+
+	if (global_language==NONE)
+	{
+		global_language= language_from_xbox_language(XGetLanguage());
+	}
+	if (cached_map_files_language!=global_language)
+	{
+		cached_map_files_delete(0, MAXIMUM_CACHED_MAP_FILES);
+		cached_map_files_language= global_language;
+		cached_map_files_state_changed= 1;
+	}
+	if (cached_map_files_build_number!=CACHED_MAP_FILES_BUILD_NUMBER)
+	{
+		cached_map_files_delete(0, MAXIMUM_CACHED_MAP_FILES);
+		cached_map_files_build_number= CACHED_MAP_FILES_BUILD_NUMBER;
+		cached_map_files_state_changed= 1;
+	}
+
+	cached_map_files_open();
 }
 
 /* 0x00213760: starts to read a part of a cache file. When the read ends,

@@ -37,8 +37,31 @@ uint32_t SetFilePointer(uint32_t file, long distance, long *distance_high, uint3
 /* 0x002d2241 */
 int ReadFile(uint32_t file, void *buffer, uint32_t size, uint32_t *bytes_read, void *overlapped);
 
+/* 0x002d2750 */
+uint32_t CreateFileA(const char *path, uint32_t access, uint32_t share_mode, void *security_attributes,
+	uint32_t creation_disposition, uint32_t flags, uint32_t template_file);
+
+/* 0x00331a35 */
+int CreateDirectoryA(const char *path, void *security_attributes);
+
+/* 0x002d232e */
+int WriteFile(uint32_t file, const void *buffer, uint32_t size, uint32_t *bytes_written, void *overlapped);
+
+/* 0x002d26b0 */
+int FlushFileBuffers(uint32_t file);
+
+/* 0x002d2404 */
+int SetEndOfFile(uint32_t file);
+
+/* 0x002d2715 */
+uint32_t GetFileSize(uint32_t file, uint32_t *size_high);
+
+/* 0x002d1f3a */
+int CloseHandle(uint32_t handle);
+
 /* ---------- constants */
 
+#define INVALID_HANDLE_VALUE 0xFFFFFFFF
 #define INFINITE 0xFFFFFFFF
 #define FILE_BEGIN 0
 #define INVALID_SET_FILE_POINTER 0xFFFFFFFF
@@ -66,6 +89,9 @@ byte async_buffer[ASYNC_BUFFER_SIZE];
 /* 0x0046e488: the most that a read task reads each time that the thread
 calls it */
 unsigned long async_read_maximum_size= 0x40000;
+
+/* 0x0046e48c: the same, of a write task */
+unsigned long async_write_maximum_size= 0x40000;
 
 /* ---------- code */
 
@@ -491,4 +517,255 @@ long async_read_position(
 	task.read.bytes_read= bytes_read;
 
 	return async_task_add(priority, task.parameters, category, async_read_work, done);
+}
+
+static inline __attribute__((always_inline)) char *path_next_element(
+	char *path,
+	char **rest)
+{
+	char *element= NULL;
+	char *end= NULL;
+
+	if (path)
+	{
+		element= path+strspn(path, "\\");
+		if (!*element)
+		{
+			element= NULL;
+		}
+	}
+	if (element)
+	{
+		end= strpbrk(element, "\\");
+		if (end)
+		{
+			*end++= 0;
+		}
+	}
+	*rest= end;
+
+	return element;
+}
+
+/* 0x001a08f0: the function of a task that opens a file. If the file cannot
+be opened and the task says so, makes the folders of the path, one after
+another, and tries again */
+long ASYNC_CALLBACK async_create_file_work(
+	void *parameters)
+{
+	struct async_create_file_parameters *create= parameters;
+
+	*create->file= CreateFileA(create->path, create->access, create->share_mode, NULL, create->creation_disposition,
+		create->flags, 0);
+	if (*create->file==INVALID_HANDLE_VALUE && create->create_directories)
+	{
+		char directory[256];
+		char path[256];
+		char *element;
+		char *rest;
+
+		directory[0]= 0;
+		strncpy(path, create->path, sizeof(path));
+		path[sizeof(path)-1]= 0;
+		element= path_next_element(path, &rest);
+		strncpy(directory, "", sizeof(directory));
+		directory[sizeof(directory)-1]= 0;
+		while (element)
+		{
+			csstrcat256(directory, element);
+			element= path_next_element(rest, &rest);
+			if (element)
+			{
+				CreateDirectoryA(directory, NULL);
+			}
+			csstrcat256(directory, "\\");
+		}
+
+		*create->file= CreateFileA(create->path, create->access, create->share_mode, NULL,
+			create->creation_disposition, create->flags, 0);
+	}
+
+	return _async_task_done;
+}
+
+/* 0x001a0fb0: the function of a task that writes a file. Writes a part, and
+is done when all is written or the file takes less than what was given */
+long ASYNC_CALLBACK async_write_work(
+	void *parameters)
+{
+	struct async_write_parameters *write= parameters;
+	uint32_t bytes_written= 0xFFFFFFFF;
+	long offset_high= 0;
+
+	if (SetFilePointer(write->file, (long)write->offset, &offset_high, FILE_BEGIN)!=INVALID_SET_FILE_POINTER)
+	{
+		uint32_t size= write->size-write->bytes_done;
+
+		if (size>async_write_maximum_size)
+		{
+			size= async_write_maximum_size;
+		}
+		WriteFile(write->file, (const byte *)write->buffer+write->bytes_done, size, &bytes_written, NULL);
+		write->offset+= bytes_written;
+		write->bytes_done+= bytes_written;
+		if (write->size!=write->bytes_done && bytes_written>=size)
+		{
+			return _async_task_not_done;
+		}
+		if (write->bytes_written)
+		{
+			*write->bytes_written= write->bytes_done;
+		}
+	}
+
+	if (write->flags&1)
+	{
+		FlushFileBuffers(write->file);
+	}
+
+	return _async_task_done;
+}
+
+/* 0x001a1050: starts to write a part of a file; the task's id. When the
+write ends, the number of bytes written and the flag are set */
+long async_write_position(
+	uint32_t file,
+	const void *buffer,
+	uint32_t size,
+	uint32_t offset,
+	uint32_t flags,
+	long category,
+	long priority,
+	uint32_t *bytes_written,
+	byte *done)
+{
+	union
+	{
+		struct async_write_parameters write;
+		uint32_t parameters[ASYNC_TASK_PARAMETER_COUNT];
+	} task;
+
+	if (bytes_written)
+	{
+		*bytes_written= 0;
+	}
+	memset(&task, 0, sizeof(task));
+	task.write.file= file;
+	task.write.buffer= buffer;
+	task.write.size= size;
+	task.write.offset= offset;
+	task.write.bytes_written= bytes_written;
+	task.write.flags= flags;
+
+	return async_task_add(priority, task.parameters, category, async_write_work, done);
+}
+
+/* 0x001a12c0: the function of a task that sets the size of a file */
+long ASYNC_CALLBACK async_set_file_size_work(
+	void *parameters)
+{
+	struct async_set_file_size_parameters *set_size= parameters;
+	long size_high= 0;
+	boolean success= SetFilePointer(set_size->file, set_size->size, &size_high, FILE_BEGIN)!=INVALID_SET_FILE_POINTER;
+
+	if (success)
+	{
+		success= SetEndOfFile(set_size->file)!=0;
+	}
+	if (set_size->success)
+	{
+		*set_size->success= success;
+	}
+
+	return _async_task_done;
+}
+
+/* 0x001a1310: starts to set the size of a file; the task's id */
+long async_set_file_size(
+	uint32_t file,
+	long size,
+	long category,
+	long priority,
+	boolean *success,
+	byte *done)
+{
+	union
+	{
+		struct async_set_file_size_parameters set_size;
+		uint32_t parameters[ASYNC_TASK_PARAMETER_COUNT];
+	} task;
+
+	if (success)
+	{
+		*success= FALSE;
+	}
+	memset(&task, 0, sizeof(task));
+	task.set_size.file= file;
+	task.set_size.size= size;
+	task.set_size.success= success;
+
+	return async_task_add(priority, task.parameters, category, async_set_file_size_work, done);
+}
+
+/* 0x001a1530: the function of a task that closes a file */
+long ASYNC_CALLBACK async_close_file_work(
+	void *parameters)
+{
+	struct async_close_file_parameters *close= parameters;
+
+	CloseHandle(close->file);
+
+	return _async_task_done;
+}
+
+/* 0x001a1550: starts to close a file; the task's id */
+long async_close_file(
+	uint32_t file,
+	long category,
+	long priority,
+	byte *done)
+{
+	union
+	{
+		struct async_close_file_parameters close;
+		uint32_t parameters[ASYNC_TASK_PARAMETER_COUNT];
+	} task;
+
+	memset(&task, 0, sizeof(task));
+	task.close.file= file;
+
+	return async_task_add(priority, task.parameters, category, async_close_file_work, done);
+}
+
+/* 0x001a15d0: the function of a task that takes the size of a file */
+long ASYNC_CALLBACK async_get_file_size_work(
+	void *parameters)
+{
+	struct async_get_file_size_parameters *get_size= parameters;
+
+	*get_size->size= GetFileSize(get_size->file, NULL);
+
+	return _async_task_done;
+}
+
+/* 0x001a15f0: starts to take the size of a file; the task's id */
+long async_get_file_size(
+	uint32_t file,
+	long category,
+	long priority,
+	uint32_t *size,
+	byte *done)
+{
+	union
+	{
+		struct async_get_file_size_parameters get_size;
+		uint32_t parameters[ASYNC_TASK_PARAMETER_COUNT];
+	} task;
+
+	*size= 0;
+	memset(&task, 0, sizeof(task));
+	task.get_size.file= file;
+	task.get_size.size= size;
+
+	return async_task_add(priority, task.parameters, category, async_get_file_size_work, done);
 }

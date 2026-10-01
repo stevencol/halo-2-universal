@@ -16,3 +16,7 @@ address,name,source
 00510a08,cached_map_files_build_number,source/cache/cache_files.c
 005476f8,cache_file_globals,source/cache/cache_files.c
 00557c90,cached_map_file_globals,source/cache/cache_files.c
+0046e48c,async_write_maximum_size,source/cseries/async.c
+0047ff38,global_language,source/cache/cache_files.c
+00510838,cached_map_files_language,source/cache/cache_files.c
+0055b4f0,cached_map_file_copy_globals,source/cache/cache_files.c

@@ -33,6 +33,23 @@ char *csprintf256(
 	return buffer;
 }
 
+/* 0x00122810: adds a string to the end of a string of 256 characters; the
+string. The name is a guess */
+char *csstrcat256(
+	char *destination,
+	const char *source)
+{
+	unsigned long length;
+
+	for (length= 0; length<256 && destination[length]; length++)
+	{
+	}
+	strncpy(destination+length, source, 256-length);
+	destination[255]= 0;
+
+	return destination;
+}
+
 /* 0x0011c9c0: writes formatted text to a string of a size; the string. The
 name is that of Halo 1's function */
 char *csnzprintf(

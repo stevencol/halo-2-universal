@@ -2,6 +2,75 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Arranque de los archivos de caché
+
+`cache_files_initialize`, lo primero que hace el juego con los mapas al
+arrancar, y todo lo que necesita: abrir las seis copias de mapas del disco
+duro, comprobarlas y rehacer las que no sirven. De 136 funciones se pasa a
+150, el 1,33 % de las del juego (el 0,653 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `cache_files_initialize` | `0x002136c0` | `cache/cache_files.c` |
+| `cached_map_files_open` | `0x00213970` | `cache/cache_files.c` |
+| `cached_map_file_read_header` | `0x002149c0` | `cache/cache_files.c` |
+| `cached_map_file_shared_get` | `0x00214c30` | `cache/cache_files.c` |
+| `async_create_file_work` | `0x001a08f0` | `cseries/async.c` |
+| `async_write_work` | `0x001a0fb0` | `cseries/async.c` |
+| `async_write_position` | `0x001a1050` | `cseries/async.c` |
+| `async_set_file_size_work` | `0x001a12c0` | `cseries/async.c` |
+| `async_set_file_size` | `0x001a1310` | `cseries/async.c` |
+| `async_close_file_work` | `0x001a1530` | `cseries/async.c` |
+| `async_close_file` | `0x001a1550` | `cseries/async.c` |
+| `async_get_file_size_work` | `0x001a15d0` | `cseries/async.c` |
+| `async_get_file_size` | `0x001a15f0` | `cseries/async.c` |
+| `csstrcat256` | `0x00122810` | `cseries/cseries.c` |
+
+- `tests/test_cached_map_files.py`, y más casos en `tests/test_async.py`.
+
+### Cambiado
+
+- `tools/difftest.py` llena la pila de un valor que no es cero antes de cada
+  llamada, para que se note una variable que solo uno de los dos lados
+  inicializa.
+- En la cabecera de un mapa, los tres bytes en `0x174` dicen de cuáles de
+  los mapas compartidos toma recursos (`uses_shared_map`), en el orden de
+  las tres últimas fechas: menú principal, `shared` y
+  `single_player_shared`.
+
+### Lo que se sabe
+
+- Al arrancar, el juego borra las copias `cache006.map` a `cache019.map`
+  (de otras versiones) y abre las seis que usa. Si el idioma de la consola
+  o el número de build cambiaron desde la última vez, las borra todas.
+- Una copia cuyo archivo no tiene el tamaño de su sitio se redimensiona y
+  se le escribe una cabecera vacía; las copias que van detrás se borran,
+  una sola vez.
+- La cabecera vacía que se escribe es memoria de la pila sin inicializar con
+  solo las cuatro cadenas vaciadas. Es un descuido del juego original y
+  está reproducido tal cual.
+- De una copia con el tamaño correcto se lee la cabecera. Solo la de
+  `single_player_shared` se compara además con el mapa del disco (el campo
+  en `0x144`). El código para comparar las fechas de los mapas compartidos
+  está ahí, pero con una condición que nunca se cumple.
+- Las tareas de archivo son cinco: abrir (puede crear las carpetas de la
+  ruta), leer, escribir, cambiar el tamaño y cerrar, más la que mide.
+
+### Sin comprobar
+
+- Que `cached_map_files_open` vacíe la cadena del nombre en las dos
+  cabeceras de la pila: quitar esa línea no cambia ningún resultado que las
+  pruebas vean. El resto de la función sí se comprobó rompiendo líneas una
+  a una.
+
+### Pendiente
+
+- Los que usan `cached_map_file_copy_globals` (`0x0055b4f0`), que copian un
+  mapa del disco al disco duro: `0x002150f0` a `0x002152e0`, `0x00214ac0`.
+- Las preferencias guardadas (`0x00120d80` a `0x00121280`).
+
 ## 2026-10-01 — El hilo que lee el disco
 
 El juego no lee el disco desde el hilo principal: deja tareas en una lista y

@@ -69,6 +69,56 @@ struct async_read_parameters
 	uint32_t bytes_done;
 };
 
+/* the parameters of a task that opens a file: async_create_file_work */
+struct async_create_file_parameters
+{
+	const char *path;
+	uint32_t access;
+	uint32_t share_mode;
+	uint32_t creation_disposition;
+	uint32_t flags;
+	/* gets the handle of the file */
+	uint32_t *file;
+	/* if the file cannot be opened, make the folders of its path and try
+	again */
+	boolean create_directories;
+};
+
+/* of a task that writes a file: async_write_work */
+struct async_write_parameters
+{
+	uint32_t file;
+	const void *buffer;
+	uint32_t size;
+	/* in the file, of the next byte to write */
+	uint32_t offset;
+	/* gets the count of bytes written, when the task is done, if not NULL */
+	uint32_t *bytes_written;
+	uint32_t bytes_done;
+	/* bit 0: flush the file when the task is done */
+	uint32_t flags;
+};
+
+/* of the tasks that take the size of a file, set it and close the file */
+struct async_get_file_size_parameters
+{
+	uint32_t file;
+	uint32_t *size;
+};
+
+struct async_set_file_size_parameters
+{
+	uint32_t file;
+	long size;
+	/* gets whether the size was set, if not NULL */
+	boolean *success;
+};
+
+struct async_close_file_parameters
+{
+	uint32_t file;
+};
+
 /* where the read before a place of the list ends, to put the reads in the
 order they have on the disc */
 struct async_read_position_state
@@ -141,6 +191,17 @@ long ASYNC_CALLBACK async_read_work(void *parameters);
 long async_read_position(uint32_t file, long size, uint32_t offset, long category, long priority,
 	long *bytes_read, void *buffer, uint8_t *done);
 
+long ASYNC_CALLBACK async_create_file_work(void *parameters);
+long ASYNC_CALLBACK async_write_work(void *parameters);
+long async_write_position(uint32_t file, const void *buffer, uint32_t size, uint32_t offset, uint32_t flags,
+	long category, long priority, uint32_t *bytes_written, byte *done);
+long ASYNC_CALLBACK async_set_file_size_work(void *parameters);
+long async_set_file_size(uint32_t file, long size, long category, long priority, boolean *success, byte *done);
+long ASYNC_CALLBACK async_close_file_work(void *parameters);
+long async_close_file(uint32_t file, long category, long priority, byte *done);
+long ASYNC_CALLBACK async_get_file_size_work(void *parameters);
+long async_get_file_size(uint32_t file, long category, long priority, uint32_t *size, byte *done);
+
 /* ---------- prototypes of functions not decompiled yet */
 
 /* 0x00125d60: draws the screen that the game shows while it loads, if it is
@@ -165,5 +226,6 @@ extern struct async_task *async_current_task;
 extern struct async_buffer_globals async_buffer_globals;
 extern byte async_buffer[ASYNC_BUFFER_SIZE];
 extern unsigned long async_read_maximum_size;
+extern unsigned long async_write_maximum_size;
 
 #endif

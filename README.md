@@ -11,7 +11,7 @@ con Halo: Combat Evolved.
 **Estado: muy temprano.** El juego no arranca ni está cerca de hacerlo. Hoy
 el proyecto abre los mapas del juego, lista su contenido y exporta los
 niveles y los modelos con su textura principal. Del código del ejecutable
-hay descompiladas 136 funciones de unas 11.265 (el 1,21 %), todas
+hay descompiladas 150 funciones de unas 11.265 (el 1,33 %), todas
 comprobadas contra el original. Consulta
 [CHANGELOG.md](CHANGELOG.md) para ver qué hay hecho.
 

@@ -68,6 +68,8 @@ struct cache_file_header
 	char build[32];
 	int16_t scenario_type;
 	uint16_t unknown142;
+	/* the same in a map and in its copy on the hard disk, if the copy is
+	good */
 	uint32_t unknown144;
 	uint32_t unknown148;
 	uint8_t unknown14C[8];
@@ -82,10 +84,14 @@ struct cache_file_header
 	uint32_t string_id_data_size;
 	uint32_t string_id_index_offset;
 	uint32_t string_id_data_offset;
-	uint8_t unknown174[4];
+	/* whether the map takes resources from each of the shared maps, in
+	the order of the three last times */
+	uint8_t uses_shared_map[3];
+	uint8_t unknown177;
 
 	/* FILETIMEs; the first is this file's, the others are those of the
-	shared maps it takes resources from */
+	shared maps it takes resources from: the main menu's, the shared one
+	and the single player shared one */
 	struct cache_file_time times[4];
 
 	char name[CACHE_FILE_NAME_LENGTH];
@@ -186,6 +192,24 @@ typedef char verify_cached_map_file_size[
 typedef char verify_cached_map_file_globals_open_map_index_offset[
 	offsetof(struct cached_map_file_globals, open_map_index) == 0x3018 ? 1 : -1];
 
+/* 0x0055b4f0: used by the functions that copy a map to the hard disk,
+which are not understood yet. The name is a guess */
+struct cached_map_file_copy_globals
+{
+	uint8_t unknown0[0x810];
+	long unknown810;
+	uint8_t unknown814[8];
+	uint8_t unknown81C;
+	uint8_t pad81D[3];
+	long unknown820;
+	uint8_t unknown824[0x31C];
+};
+
+typedef char verify_cached_map_file_globals_size[
+	sizeof(struct cached_map_file_globals) == 0x385C ? 1 : -1];
+typedef char verify_cached_map_file_copy_globals_size[
+	sizeof(struct cached_map_file_copy_globals) == 0xB40 ? 1 : -1];
+
 struct cache_file_buffer_globals
 {
 	uint8_t allocated;
@@ -229,6 +253,10 @@ void *cache_file_buffer_allocate(uint32_t size1, uint32_t size2);
 uint32_t cached_map_file_maximum_size(long index);
 void cached_map_file_get_path(char *path, unsigned long size, long index);
 void cached_map_files_delete(long first_index, long end_index);
+struct cached_map_file *cached_map_file_shared_get(long shared_index);
+uint8_t cached_map_file_read_header(long index);
+void cached_map_files_open(void);
+void cache_files_initialize(void);
 void cache_file_get_map_name(const char *path, char *name);
 void cache_file_get_map_path(const char *scenario_name, char *path);
 long cached_map_files_find_map(const char *scenario_name);
@@ -251,5 +279,10 @@ extern struct cached_map_file_globals cached_map_file_globals;
 extern struct cache_file_buffer_globals cache_file_buffer_globals;
 extern struct cache_file_tag_instance *global_tag_instances;
 extern const char *cache_file_extension;
+extern struct cached_map_file_copy_globals cached_map_file_copy_globals;
+extern long global_language;
+extern long cached_map_files_language;
+extern long cached_map_files_build_number;
+extern uint8_t cached_map_files_state_changed;
 
 #endif

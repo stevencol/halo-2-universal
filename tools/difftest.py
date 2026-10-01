@@ -34,6 +34,7 @@ SCRATCH_ADDRESS = 0x60000000  # the buffers of the arguments
 SCRATCH_SIZE = 0x01000000
 STACK_ADDRESS = 0x70000000
 STACK_SIZE = 0x00100000
+STACK_DIRTY_SIZE = 0x4000  # below the arguments, filled before each call
 RETURN_ADDRESS = 0x7FFF0000  # a call returns here, where the emulator stops
 KERNEL_ADDRESS = 0x7FFE0000  # the functions of the console's kernel, which the emulator does not have
 KERNEL_SIZE = 0x4000
@@ -472,6 +473,9 @@ class Harness:
         esp = STACK_ADDRESS + STACK_SIZE - 0x1000
         frame = struct.pack(f"<{len(stack) + 1}I", RETURN_ADDRESS, *(value & 0xFFFFFFFF for value in stack))
         esp -= len(frame)
+        # what the function finds in its stack before it writes there is not
+        # zeros, so that a variable that only one of the two sets shows
+        mu.mem_write(esp - STACK_DIRTY_SIZE, b"\xcd" * STACK_DIRTY_SIZE)
         mu.mem_write(esp, frame)
         mu.reg_write(x86.UC_X86_REG_ESP, esp)
         mu.reg_write(x86.UC_X86_REG_EBP, 0)

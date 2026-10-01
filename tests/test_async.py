@@ -374,3 +374,151 @@ def run(t) -> None:
             globals={"async_globals": async_globals(random_)},
             externals={"async_task_allocate": allocate, "async_task_queue": queue},
         )
+
+    # ---------- the other tasks of files
+
+    def string(text: bytes) -> Buffer:
+        return Buffer(text + b"\0")
+
+    def task_externals() -> dict:
+        return {"async_task_allocate": allocate, "async_task_queue": queue}
+
+    for destination in (b"", b"abc", b"a" * 250, b"b" * 254, b"c" * 255):
+        for source in (b"", b"x", b"\\", b"y" * 10, b"z" * 300):
+            t.check("csstrcat256", Buffer(destination + b"\0" + random_.randbytes(300 - len(destination))), string(source))
+    # a string with no end in its 256 characters
+    t.check("csstrcat256", Buffer(b"d" * 300), string(b"more"))
+
+    def create_directory(harness, arguments):
+        return 1, (bytes(harness.mu.mem_read(arguments[0], 0x200)).split(b"\0", 1)[0], arguments[1])
+
+    paths = [b"z:\\cache000.map", b"t:\\a\\b\\c.bin", b"\\\\lead\\x", b"nodirs", b"a\\", b"", b"\\", b"u:\\saves\\\\double\\f"]
+    paths += [b"d:\\" + b"long\\" * 60 + b"file"]
+    for path in paths:
+        for create_directories in (0, 1, 0x100):
+            for results in ((0x1234, 0x1234), (NONE, 0x4321), (NONE, NONE)):
+                parameters = bytearray(random_.randbytes(0x40))
+                struct.pack_into("<7I", parameters, 0, 0x40, 0xC0000000, 3, 4, 0x20000000, 0x30, create_directories)
+
+                def create_file(harness, arguments, results=results):
+                    record = (bytes(harness.mu.mem_read(arguments[0], 0x200)).split(b"\0", 1)[0], *arguments[1:])
+                    return results[calls_so_far(harness, "CreateFileA")], record
+
+                t.check(
+                    "async_create_file_work",
+                    Buffer(bytes(parameters) + path + b"\0", pointers=(0, 0x14)),
+                    externals={"CreateFileA": create_file, "CreateDirectoryA": create_directory},
+                )
+
+    for maximum in (0x40000, 0x100):
+        for size, bytes_done in ((0x800, 0), (0x100, 0), (0x80, 0x40), (0x1000, 0xF00), (0, 0), (0x100000, 0)):
+            for seek in (True, False):
+                for taken in ("all", "less", "none"):
+                    for with_count in (True, False):
+                        for flags in (0, 1, 0xFE, 0x101):
+                            parameters = bytearray(
+                                struct.pack("<10I", 0x10, 0x60800000, size, 0x12345800, 0x20, bytes_done, flags, 2, 0x55555555, 4)
+                            )
+                            if not with_count:
+                                struct.pack_into("<I", parameters, 0x10, 0)
+
+                            def set_file_pointer(harness, arguments, seek=seek):
+                                file, distance, high, method = arguments
+                                record = (file, distance, struct.unpack("<i", harness.mu.mem_read(high, 4))[0], method)
+                                return (distance if seek else 0xFFFFFFFF), record
+
+                            def write_file(harness, arguments, taken=taken):
+                                file, buffer, size, bytes_written, overlapped = arguments
+                                count = {"all": size, "less": size // 2, "none": 0}[taken]
+                                harness.mu.mem_write(bytes_written, struct.pack("<I", count))
+                                return 1, (file, buffer, size, overlapped)
+
+                            t.check(
+                                "async_write_work",
+                                Buffer(bytes(parameters), pointers=(0x10,) if with_count else ()),
+                                globals={"async_write_maximum_size": maximum},
+                                externals={
+                                    "SetFilePointer": set_file_pointer,
+                                    "WriteFile": write_file,
+                                    "FlushFileBuffers": lambda harness, arguments: 1,
+                                },
+                            )
+
+    for seek in (True, False):
+        for end_of_file in (0, 1, 0x100):
+            for with_success in (True, False):
+                parameters = bytearray(random_.randbytes(0x28))
+                struct.pack_into("<3I", parameters, 0, 0x10, 0x05000000, 0x20 if with_success else 0)
+
+                def set_file_pointer(harness, arguments, seek=seek):
+                    file, distance, high, method = arguments
+                    record = (file, distance, struct.unpack("<i", harness.mu.mem_read(high, 4))[0], method)
+                    return (distance if seek else 0xFFFFFFFF), record
+
+                t.check(
+                    "async_set_file_size_work",
+                    Buffer(bytes(parameters), pointers=(8,) if with_success else ()),
+                    externals={
+                        "SetFilePointer": set_file_pointer,
+                        "SetEndOfFile": lambda harness, arguments, end_of_file=end_of_file: end_of_file,
+                    },
+                )
+
+    for size in (0, 0x05000000, NONE):
+        parameters = bytearray(random_.randbytes(0x28))
+        struct.pack_into("<2I", parameters, 0, 0x10, 0x20)
+        t.check(
+            "async_get_file_size_work",
+            Buffer(bytes(parameters), pointers=(4,)),
+            externals={"GetFileSize": lambda harness, arguments, size=size: size},
+        )
+        t.check(
+            "async_close_file_work",
+            Buffer(random_.randbytes(0x28)),
+            externals={"CloseHandle": lambda harness, arguments: 1},
+        )
+
+    for _ in range(10):
+        file = random_.getrandbits(16)
+        category = random_.randrange(8)
+        priority = random_.randrange(8)
+        done = Buffer(b"\x55")
+        globals_ = {"async_globals": async_globals(random_)}
+        for count in (Buffer(random_.randbytes(4)), 0):
+            t.check(
+                "async_write_position",
+                file,
+                0x80010000,
+                random_.getrandbits(20),
+                random_.getrandbits(30),
+                random_.choice((0, 1, 0x1234)),
+                category,
+                priority,
+                count,
+                done,
+                globals=globals_,
+                externals=task_externals(),
+            )
+        for success in (Buffer(random_.randbytes(4)), 0):
+            t.check(
+                "async_set_file_size",
+                file,
+                random_.getrandbits(28),
+                category,
+                priority,
+                success,
+                done,
+                globals=globals_,
+                externals=task_externals(),
+            )
+        t.check("async_close_file", file, category, priority, done, globals=globals_, externals=task_externals())
+        t.check(
+            "async_get_file_size",
+            file,
+            category,
+            priority,
+            Buffer(random_.randbytes(4)),
+            done,
+            globals=globals_,
+            externals=task_externals(),
+        )
