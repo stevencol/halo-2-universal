@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 80.
+**Última actualización:** 2026-10-02, al terminar el hito 81.
 
 ## Dónde estamos
 
-- **571 funciones descompiladas de 11.265: el 5,07 % del juego** (el
-  2,522 % de los bytes de código).
-- Las 571 están comprobadas contra el ejecutable original
+- **573 funciones descompiladas de 11.265: el 5,09 % del juego** (el
+  2,538 % de los bytes de código).
+- Las 573 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how texts are drawn* (ver `git log`).
+- Último hito: *Decompile the colour of the texts* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -95,9 +95,9 @@ Módulos (funciones hechas / archivo):
       `0x00136710` a `0x001374c0`. Lo que hay justo antes, de `0x00136140`
       a `0x001366d0`, es de los bitmaps)
 - [x] Cadenas anchas — `text\unicode.c` (13)
-- [ ] Dibujar texto — `text\draw_string.c` (10; faltan el color,
-      `0x0013eb60` y `0x0013ec70`, y las que miden y dibujan: `0x0013e9c0`,
-      `0x0013ea60`, `0x0013ef40`, `0x0013f0e0` y `0x0013f700`)
+- [ ] Dibujar texto — `text\draw_string.c` (12; faltan las que miden y
+      dibujan: `0x0013e9c0`, `0x0013ea60`, `0x0013ef40`, `0x0013f0e0` y
+      `0x0013f700`)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
 - [ ] Matemáticas reales — `math\real_math.c` (21 de unas 50)
 - [ ] Matrices — `math\matrix_math.c` (22; quedan 4)

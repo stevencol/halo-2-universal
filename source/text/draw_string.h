@@ -48,6 +48,9 @@ enum
 	_draw_string_wrap_bit= 0
 };
 
+/* the parts of the colour of a text are not all over this */
+#define DRAW_STRING_MAXIMUM_WHITE 0.68f
+
 /* ---------- structures */
 
 /* where a text is gone through: its characters are of 32 bits */
@@ -109,6 +112,8 @@ typedef char verify_text_iterator_element_offset[
 /* ---------- prototypes/DRAW_STRING.C */
 
 void draw_string_set_tab_stops(short count, const short *tab_stops);
+void draw_string_set_color_exact(const real_argb_color *color);
+void draw_string_set_color(const real_argb_color *color);
 void draw_string_set_shadow_color(const real_argb_color *color);
 void draw_string_set_font(long font_index);
 void draw_string_set_font_and_format(long font_index, const real_argb_color *shadow_color, long style,

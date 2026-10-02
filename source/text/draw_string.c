@@ -20,9 +20,6 @@ these functions are of it is a guess, and so are their names.
 it waits for it. NULL if there is none */
 void *unknown_001224c0(long font_slot_index);
 
-/* 0x0013ec70: sets the colour of the texts that are drawn */
-void unknown_0013ec70(const real_argb_color *color);
-
 /* 0x001414d0: gets a character of a font ready to be drawn; whether it
 could */
 boolean unknown_001414d0(long font_index, long character);
@@ -51,6 +48,77 @@ void draw_string_set_tab_stops(
 	{
 		memcpy(draw_string_globals.tab_stops, tab_stops, (unsigned long)count*sizeof(short));
 	}
+}
+
+/* a part of a colour, from 0 to 1 */
+static inline __attribute__((always_inline)) real draw_string_color_part_pin(
+	real part)
+{
+	if (part<0.0f)
+	{
+		return 0.0f;
+	}
+	if (part>1.0f)
+	{
+		return 1.0f;
+	}
+
+	return part;
+}
+
+/* 0x0013eb60: the colour of the texts that are drawn, as it is given: each
+of its parts is taken into 0 to 1 */
+void draw_string_set_color_exact(
+	const real_argb_color *color)
+{
+	boolean valid=
+		color->alpha>=0.0f && color->alpha<=1.0f &&
+		color->rgb.red>=0.0f && color->rgb.red<=1.0f &&
+		color->rgb.green>=0.0f && color->rgb.green<=1.0f &&
+		color->rgb.blue>=0.0f && color->rgb.blue<=1.0f;
+
+	draw_string_globals.color= *color;
+	if (!valid)
+	{
+		draw_string_globals.color.alpha= draw_string_color_part_pin(draw_string_globals.color.alpha);
+		draw_string_globals.color.rgb.red= draw_string_color_part_pin(draw_string_globals.color.rgb.red);
+		draw_string_globals.color.rgb.green= draw_string_color_part_pin(draw_string_globals.color.rgb.green);
+		draw_string_globals.color.rgb.blue= draw_string_color_part_pin(draw_string_globals.color.rgb.blue);
+	}
+}
+
+/* 0x0013ec70: the colour of the texts that are drawn. One that is near white
+is made darker: if its three parts are over 0.68, they are scaled so that the
+least of them is 0.68 */
+void draw_string_set_color(
+	const real_argb_color *color)
+{
+	real_argb_color scaled= *color;
+
+	if (scaled.rgb.red>DRAW_STRING_MAXIMUM_WHITE && scaled.rgb.green>DRAW_STRING_MAXIMUM_WHITE &&
+		scaled.rgb.blue>DRAW_STRING_MAXIMUM_WHITE)
+	{
+		real least= scaled.rgb.green>scaled.rgb.blue ? scaled.rgb.blue : scaled.rgb.green;
+		real scale;
+
+		if (!(scaled.rgb.red>least))
+		{
+			least= scaled.rgb.red;
+		}
+		if (DRAW_STRING_MAXIMUM_WHITE>least)
+		{
+			least= DRAW_STRING_MAXIMUM_WHITE;
+		}
+		else if (least>1.0f)
+		{
+			least= 1.0f;
+		}
+		scale= DRAW_STRING_MAXIMUM_WHITE/least;
+		scaled.rgb.red= scale*scaled.rgb.red;
+		scaled.rgb.green= scale*scaled.rgb.green;
+		scaled.rgb.blue= scale*scaled.rgb.blue;
+	}
+	draw_string_set_color_exact(&scaled);
 }
 
 /* the colour of the shadow of the texts that are drawn; none, if none is
@@ -102,7 +170,7 @@ void draw_string_set_font_and_format(
 	const real_argb_color *color)
 {
 	draw_string_set_font_inline(font_index);
-	unknown_0013ec70(color);
+	draw_string_set_color(color);
 	draw_string_set_shadow_color_inline(shadow_color);
 	draw_string_globals.style= style;
 	draw_string_globals.justification= justification;

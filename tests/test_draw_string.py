@@ -130,7 +130,7 @@ def run(t) -> None:
             globals={"draw_string_globals": how(), "font_slot_indices": fonts()},
             externals={
                 "unknown_001224c0": lambda harness, arguments: 0x80123400,
-                "unknown_0013ec70": lambda harness, arguments: (0, (bytes(harness.mu.mem_read(arguments[0], 16)),)),
+                "draw_string_set_color": lambda harness, arguments: (0, (bytes(harness.mu.mem_read(arguments[0], 16)),)),
             },
         )
 
@@ -178,3 +178,22 @@ def run(t) -> None:
                     "GetTickCount": lambda harness, arguments: 77,
                 },
             )
+
+    # ---------- the colour of the texts
+
+    nan = float("nan")
+    infinite = float("inf")
+    exact = (0.0, 1.0, 0.5, 0.68, 0.6800001, 0.6799999, 0.7, 0.9, 0.999, 1.0000001, 1.5, 2.0, -0.0, -0.001, -3.0, 1e-30, nan, infinite, -infinite)
+    for n in range(500):
+        values = [random_.choice(exact) if random_.random() < 0.6 else random_.uniform(-0.5, 1.5) for _ in range(4)]
+        if n % 3 == 0:
+            # near white: its three parts are over the most
+            values[1:] = [random_.choice((0.6800001, 0.69, 0.7, 0.85, 1.0, 1.2, 3.0, infinite, random_.uniform(0.68, 1.3))) for _ in range(3)]
+        for name in ("draw_string_set_color_exact", "draw_string_set_color"):
+            t.check(name, color(*values), globals={"draw_string_globals": how()})
+    # one part is no number and the others are near white: nothing is scaled
+    for at in (1, 2, 3):
+        for others in (0.7, 0.9, 1.0):
+            values = [0.5, others, others, others]
+            values[at] = nan
+            t.check("draw_string_set_color", color(*values), globals={"draw_string_globals": how()})

@@ -2,6 +2,39 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — El color del texto
+
+Dos funciones. De 571 funciones se pasa a 573, el 5,09 % de las del juego
+(el 2,538 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `draw_string_set_color_exact` | `0x0013eb60` | `text/draw_string.c` |
+| `draw_string_set_color` | `0x0013ec70` | `text/draw_string.c` |
+
+### Lo que se sabe
+
+- El juego **no dibuja texto casi blanco**: si las tres partes del color
+  (rojo, verde y azul) pasan de 0,68, las escala para que la menor quede en
+  0,68. El blanco puro se queda en un gris claro. La opacidad no se toca.
+- Después cada parte se recorta a entre 0 y 1. Una parte que no es un número
+  se deja como está, y basta una así para que no se escale nada.
+- `draw_string_set_color` era la función sin nombre a la que llamaba
+  `draw_string_set_font_and_format`.
+
+### Sin comprobar
+
+- Que las partes tengan que pasar de 0,68 o basta con llegar: con una parte
+  justo en 0,68 la escala es 1 y no cambia nada.
+
+### Mutaciones
+
+34 líneas rotas a propósito: 32 detectadas a la primera, una más con casos
+nuevos (una parte que no es un número y las otras casi blancas), y la otra es
+la de «Sin comprobar».
+
 ## 2026-10-02 — Cómo se dibuja el texto
 
 Siete funciones. De 564 funciones se pasa a 571, el 5,07 % de las del juego
