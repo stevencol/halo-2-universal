@@ -29,9 +29,6 @@ game (0x001240b0 to 0x00124490, 0x00124640, 0x00124770 on).
 /* 0x000593e0: tells the network game that the game changes */
 void unknown_000593e0(void);
 
-/* 0x0018f1c0: goes to the main menu, most likely */
-void unknown_0018f1c0(long unknown);
-
 enum
 {
 	GAME_STATE_HEADER_SIZE= sizeof(struct game_state_header),
@@ -551,7 +548,7 @@ void game_state_load_core(
 		changed= TRUE;
 		if (!main_game_change_immediate(&header.options))
 		{
-			unknown_0018f1c0(0);
+			main_game_goto_main_menu(0);
 
 			return;
 		}
@@ -565,7 +562,7 @@ void game_state_load_core(
 	}
 	else if (changed)
 	{
-		unknown_0018f1c0(0);
+		main_game_goto_main_menu(0);
 	}
 }
 

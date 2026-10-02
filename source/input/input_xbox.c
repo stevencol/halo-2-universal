@@ -78,10 +78,6 @@ enum
 	/* ERROR_IO_PENDING: the console is still at what it was last told */
 	INPUT_FEEDBACK_STATUS_PENDING= 0x3E5,
 
-	/* of the table at 0x0054e8e0: its size, and where its two flags are */
-	UNKNOWN_0054E8E0_SIZE= 0xC70,
-	UNKNOWN_0054E8E0_FLAGS2_OFFSET= 0x114,
-
 	/* how unknown_002184a0 is told of the gamepads that were plugged in */
 	INPUT_GAMEPAD_INSERTION_SHIFT= 12
 };

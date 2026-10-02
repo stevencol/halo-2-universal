@@ -52,7 +52,6 @@ boolean unknown_0014a224(void);
 /* what a frame calls, in the order that it calls them. Their names are not
 known; the three with a name are what the game asked the loop for */
 void unknown_002237d4(void);
-void unknown_0018f1c0(long unknown);
 void unknown_0018e810(void);
 void unknown_0012bbd0(void);
 void unknown_00217c40(void);
@@ -328,7 +327,7 @@ void main_loop_body(
 	if (main_game_load_globals.state!=_main_game_load_map &&
 		main_game_load_globals.state!=_main_game_load_texture_cache && !main_game_load_globals.change_pending)
 	{
-		unknown_0018f1c0(0);
+		main_game_goto_main_menu(0);
 	}
 	unknown_0018e810();
 

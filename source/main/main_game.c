@@ -4,7 +4,7 @@ MAIN_GAME.C
 Decompiled from halo2ship.exe (Xbox, build 02.09.27.09809). Each function
 gives the address it has there.
 
-The names are guesses. Not here: 0x0018e960, 0x0018f0a0 and 0x0018f1c0 on.
+The names are guesses.
 */
 
 #include "main_game.h"
@@ -15,6 +15,7 @@ The names are guesses. Not here: 0x0018e960, 0x0018f0a0 and 0x0018f1c0 on.
 #include "cache/texture_cache.h"
 #include "input/input.h"
 #include "interface/user_interface_memory.h"
+#include "saved games/game_state.h"
 #include "main/main.h"
 #include "memory/data.h"
 #include "memory/physical_memory.h"
@@ -80,8 +81,34 @@ void unknown_000593e0(void);
 /* 0x00149318: whether the change of game has to wait */
 boolean unknown_00149318(void);
 
-/* 0x0018f0a0: after a game of the campaign is started */
-void unknown_0018f0a0(const struct game_options *options);
+/* 0x0019040d, 0x0018fada: of the players' profiles: the second gives the
+one that there is, if there is only one */
+void unknown_0019040d(long unknown);
+long unknown_0018fada(void);
+
+/* 0x001c5ca0, 0x000b3ed0: what is told of a game of the campaign to the
+network game's server: the first writes it, from the options of the game, and
+the second sends it */
+void unknown_001c5ca0(const struct game_options *options, void *report);
+void unknown_000b3ed0(const void *data, long size, const char *content_type);
+
+/* 0x0019c440, 0x0019c270: of the maps of a campaign: which comes after
+one, NONE if it is the last, and what is known of one: its path is 8 bytes
+in */
+long unknown_0019c440(long campaign, long map);
+const char *unknown_0019c270(long campaign, long map);
+
+/* 0x00152450, 0x00152660: of the options of a game that is asked for: the
+players that go on to it, most likely */
+void unknown_00152450(struct game_options *options);
+void unknown_00152660(struct game_options *options);
+
+/* 0x00063f50: whether something else starts the game on the map */
+boolean unknown_00063f50(long campaign, long map, const char *map_name);
+
+/* of the C library */
+long time(long *timer);
+int rand(void);
 
 /* 0x0012bf90, 0x001483c3: after the game of the main menu is started */
 boolean unknown_0012bf90(void);
@@ -110,7 +137,14 @@ enum
 	/* where unknown_004cf770 says that a game is on */
 	UNKNOWN_004CF770_ACTIVE_OFFSET= 0x2F,
 
-	_unknown_0006cd50_state1= 1
+	_unknown_0006cd50_state1= 1,
+
+	/* what unknown_001c5ca0 writes */
+	CAMPAIGN_REPORT_SIZE= 0x33B,
+	CAMPAIGN_MAP_PATH_OFFSET= 8,
+
+	/* what main_game_goto_main_menu is told when a campaign has no more maps */
+	_main_menu_unknown7= 7
 };
 
 /* ---------- globals */
@@ -158,6 +192,18 @@ long unknown_00527334;
 /* 0x0055e757: the game is going to the main menu because a game could not
 be started */
 boolean main_game_load_failing;
+
+/* 0x0054e7cc: a campaign that starts goes on from the saved game of the
+player */
+boolean unknown_0054e7cc;
+
+/* 0x00453c40: the functions of an allocation whose memory is lent by the
+texture cache. The game has one, at 0x0047d8e4, with no procedures */
+const struct allocation_functions main_game_texture_allocation_functions=
+{
+	main_game_texture_allocation_allocate,
+	main_game_texture_allocation_deallocate
+};
 
 /* ---------- code */
 
@@ -586,7 +632,7 @@ boolean main_game_change_immediate(
 	{
 		if (options->game_mode==_game_mode_campaign)
 		{
-			unknown_0018f0a0(options);
+			main_game_campaign_started(options);
 		}
 		else if (options->game_mode==_game_mode_3)
 		{
@@ -679,4 +725,124 @@ void main_game_load_failed(
 		main_game_open_texture_cache();
 		unknown_0012bf00();
 	}
+}
+
+/* 0x0018f0a0: after a game of the campaign is started: if it is to go on
+from a saved game, its state is loaded: that of the only player there is */
+void main_game_campaign_started(
+	const struct game_options *options)
+{
+	if (options->game_mode==_game_mode_campaign && options->unknown18!=NONE)
+	{
+		unknown_0019040d(options->unknown18);
+	}
+	if (!options->coop && unknown_0054e7cc)
+	{
+		long saved_game= NONE;
+		long profile_index= unknown_0018fada();
+
+		if (profile_index!=NONE)
+		{
+			const byte *profile= unknown_0054e8e0[profile_index];
+
+			if (profile[0]&0x10)
+			{
+				memcpy(&saved_game, profile+UNKNOWN_0054E8E0_SAVED_GAME_OFFSET, sizeof(saved_game));
+			}
+		}
+		game_state_load_saved_game(saved_game);
+	}
+}
+
+/* 0x0018f1c0: goes to the main menu: asks for its game, unless it is the
+one that is on */
+void main_game_goto_main_menu(
+	long unknown)
+{
+	struct game_options options;
+
+	if (main_game_globals && main_game_globals->active && main_game_globals->options.game_mode==_game_mode_3)
+	{
+		unknown_001483c3(unknown);
+
+		return;
+	}
+	main_game_launch_main_menu(&options, unknown);
+	main_game_change(&options);
+}
+
+/* 0x0018f260: memory for an allocation, taken from the texture cache: it is
+waited for a short time. After the functions of the allocation are the two
+procedures that the cache calls about the memory */
+void *ALLOCATION_CONVENTION main_game_texture_allocation_allocate(
+	struct allocation *allocation,
+	unsigned long size)
+{
+	const struct main_game_texture_allocation *texture_allocation=
+		(const struct main_game_texture_allocation *)allocation;
+
+	return texture_cache_steal_memory(_texture_cache_steal_wait_short, (long)size, 0,
+		texture_allocation->idle_proc, texture_allocation->reclaim_proc);
+}
+
+/* 0x0018f350: gives the memory back to the texture cache */
+void ALLOCATION_CONVENTION main_game_texture_allocation_deallocate(
+	struct allocation *allocation,
+	void *memory)
+{
+	(void)allocation;
+
+	texture_cache_return_memory(memory);
+}
+
+/* 0x0018e960: a map of the campaign is over: asks for a game on the next
+one, with the options of this one, or goes to the main menu if there is
+none. In a session of the network game, the server is told of the game that
+ends */
+void main_game_next_map(
+	void)
+{
+	struct game_options options;
+	byte report[CAMPAIGN_REPORT_SIZE];
+
+	memcpy(&options, &main_game_globals->options, sizeof(options));
+	if (unknown_00467214!=NONE && unknown_0006cd50(unknown_00467214)==_unknown_0006cd50_state1)
+	{
+		unknown_001c5ca0(&options, report);
+		unknown_000b3ed0(report, sizeof(report), "application/x-halo2campaign");
+	}
+
+	if (options.unknown14!=NONE)
+	{
+		long map= unknown_0019c440(options.unknown14, options.unknown18);
+
+		if (map!=NONE)
+		{
+			const char *data= unknown_0019c270(options.unknown14, map);
+
+			if (data)
+			{
+				const char *map_name= data+CAMPAIGN_MAP_PATH_OFFSET;
+				unsigned long seed;
+
+				options.unknown18= map;
+				strncpy(options.map_name, map_name, GAME_MAP_NAME_LENGTH);
+				options.map_name[GAME_MAP_NAME_LENGTH-1]= 0;
+				options.unknown12D[0]= 0;
+				seed= (unsigned long)time(NULL);
+				seed^= (unsigned long)rand();
+				seed^= GetTickCount();
+				options.random_seed= seed;
+				unknown_00152450(&options);
+				unknown_00152660(&options);
+				if (!unknown_00063f50(options.unknown14, map, map_name))
+				{
+					main_game_change(&options);
+				}
+
+				return;
+			}
+		}
+	}
+	main_game_goto_main_menu(_main_menu_unknown7);
 }

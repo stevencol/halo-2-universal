@@ -7,7 +7,8 @@
 import random
 import struct
 
-from difftest import Buffer, GlobalData
+from difftest import Buffer, GlobalData, Memory, mock_address
+from test_async import calls_so_far
 from test_scenario_load import physical_memory
 
 NONE = 0xFFFFFFFF
@@ -393,7 +394,7 @@ def run(t) -> None:
                 "main_game_unload",
                 "main_game_configure_memory",
                 "main_game_open_texture_cache",
-                "unknown_0018f0a0",
+                "main_game_campaign_started",
                 "unknown_001483c3",
                 "main_game_load_failed",
                 main_game_load_map=random_.random() < 0.8,
@@ -450,3 +451,168 @@ def run(t) -> None:
                     **stand_ins("main_game_unload", "main_game_open_texture_cache", "unknown_0012bf00"),
                 },
             )
+
+    # ---------- what is left
+
+    PROFILE_SIZE = 0xC70
+    PROFILE_SAVED_GAME = 0x1F8
+
+    def profiles() -> bytes:
+        data = bytearray(random_.randbytes(4 * PROFILE_SIZE))
+        for index in range(4):
+            data[index * PROFILE_SIZE] = random_.getrandbits(8) & 0xEF | random_.choice((0, 0x10, 0x10))
+        return bytes(data)
+
+    for _ in range(200):
+        data = bytearray(random_.randbytes(OPTIONS_SIZE))
+        struct.pack_into("<I", data, 0, random_.choice((1, 1, 2, 3)))
+        struct.pack_into("<I", data, 0x18, random_.choice((NONE, NONE, random_.getrandbits(32))))
+        data[0x12C] = random_.choice((0, 0, 0, 1, 0x80))
+        t.check(
+            "main_game_campaign_started",
+            Buffer(bytes(data)),
+            globals={
+                "unknown_0054e7cc": bytes([random_.choice((0, 1, 1, 1, 0x80))]),
+                "unknown_0054e8e0": profiles(),
+            },
+            externals=stand_ins(
+                "unknown_0019040d",
+                "game_state_load_saved_game",
+                unknown_0018fada=random_.choice((NONE, 0, 1, 2, 3)),
+            ),
+        )
+
+    filler = random_.randbytes(OPTIONS_SIZE)
+
+    def new_default(harness, arguments):
+        # the options are in the stack: all of them are written, so that what
+        # the function leaves in them can be compared
+        harness.mu.mem_write(arguments[0], filler)
+        return 0, ()
+
+    def options_given(*before):
+        return lambda harness, arguments: (0, (*before, bytes(harness.mu.mem_read(arguments[-1], OPTIONS_SIZE))))
+
+    for _ in range(60):
+        data = bytearray(random_.randbytes(GAME_SIZE))
+        data[0x1120] = random_.choice((0, 1, 1, 1, 0x80))
+        struct.pack_into("<I", data, 8, random_.choice((1, 2, 3, 3, 3)))
+        t.check(
+            "main_game_goto_main_menu",
+            random_.getrandbits(32) | 0x40000000,
+            globals={"main_game_globals": Buffer(bytes(data)) if random_.random() < 0.85 else 0},
+            externals={
+                "game_options_new_default": new_default,
+                "unknown_00138640": lambda harness, arguments: (0, (arguments[0], bytes(harness.mu.mem_read(arguments[1], OPTIONS_SIZE)))),
+                "main_game_change": options_given(),
+                **stand_ins("unknown_001483c3"),
+            },
+        )
+
+    # the allocation whose memory is the texture cache's. How long it waits
+    # when there is never any is a matter of the processor's clock: here the
+    # memory comes at once or after the cache is given some time
+    CACHE_SIZE = 0x40
+    REGISTERS = 0x80000000
+    for _ in range(80):
+        # 31: after 30 times the console is waited for, once
+        failures = random_.choice((0, 0, 1, 5, 29, 30, 31, 31))
+        address = random_.getrandbits(24) | 0x80000000
+
+        def steal_now(harness, arguments, failures=failures, address=address):
+            return (address if calls_so_far(harness, "texture_cache_steal_memory_now") >= failures else 0), tuple(arguments)
+
+        cache = bytearray(random_.randbytes(CACHE_SIZE))
+        struct.pack_into("<i", cache, 0x30, random_.choice((0, 1, 0x200, 0x200, 0x200, -1)))
+        t.check(
+            "main_game_texture_allocation_allocate",
+            Buffer(struct.pack("<3I", random_.getrandbits(32), mock_address(0), mock_address(1))),
+            random_.choice((0, NONE, 0x80000000, 1, 0x1000, 0x12345, 0x7FFFFFFF)),
+            globals={
+                "texture_cache_globals+0x10": Buffer(bytes(cache)),
+                "d3d_device": Buffer(bytes(0x934) + struct.pack("<I", REGISTERS) + bytes(0x10)),
+            },
+            # the registers of the console: it has things to do
+            memory={REGISTERS + 0x3000: Memory(bytes(0x240) + struct.pack("<2I", 1, 0) + bytes(0x100))},
+            externals={
+                "texture_cache_steal_memory_now": steal_now,
+                **stand_ins("texture_cache_idle", "D3DDevice_KickOff", "SwitchToThread"),
+            },
+        )
+
+    for _ in range(10):
+        t.check(
+            "main_game_texture_allocation_deallocate",
+            Buffer(random_.randbytes(12)),
+            random_.getrandbits(32),
+            externals=stand_ins("texture_cache_return_memory"),
+        )
+
+    # ---------- the next map of the campaign
+
+    REPORT_SIZE = 0x33B
+    MAPS = 0x400
+    report = random_.randbytes(REPORT_SIZE)
+
+    def options_of(harness, address: int) -> bytes:
+        return bytes(harness.mu.mem_read(address, OPTIONS_SIZE))
+
+    def string(harness, address: int) -> bytes:
+        return bytes(harness.mu.mem_read(address, 0x200)).split(b"\0", 1)[0]
+
+    def write_report(harness, arguments):
+        harness.mu.mem_write(arguments[1], report)
+        return 0, (options_of(harness, arguments[0]),)
+
+    def send_report(harness, arguments):
+        data, size, content_type = arguments
+        return 0, (bytes(harness.mu.mem_read(data, REPORT_SIZE)), size, string(harness, content_type))
+
+    def change_options(harness, arguments):
+        # something of the options is changed, to see that they are read after
+        address = arguments[0]
+        harness.mu.mem_write(address + 0x14, bytes(b ^ 0x55 for b in harness.mu.mem_read(address + 0x14, 4)))
+        return 0, (options_of(harness, address),)
+
+    for _ in range(150):
+        data = bytearray(random_.randbytes(GAME_SIZE))
+        struct.pack_into("<I", data, 8 + 0x14, random_.choice((NONE, 0, 1, random_.getrandbits(32))))
+        struct.pack_into("<I", data, 8 + 0x18, random_.choice((NONE, 0, 3, random_.getrandbits(32))))
+        # the maps of the campaign are in a global of the test: what is known
+        # of one is anywhere in it, or nowhere
+        maps = bytearray(random_.randbytes(MAPS))
+        name = random_.choice((b"", b"scenarios\\solo\\03a_oldmombasa\\03a_oldmombasa", b"m" * 0x103, b"n" * 0x104, b"o" * 0x130))
+        offset = random_.randrange(0, 0x100)
+        maps[offset + 8 : offset + 8 + len(name) + 1] = name + b"\0"
+        found = random_.random() < 0.85
+
+        def map_data(harness, arguments, offset=offset, found=found):
+            address = harness.global_addresses["unknown_0054e8e0"] + offset if found else 0
+            return address, tuple(arguments)
+
+        t.check(
+            "main_game_next_map",
+            globals={
+                "main_game_globals": Buffer(bytes(data)),
+                "unknown_00467214": random_.choice((NONE, 0, 5)),
+                "unknown_0054e8e0": bytes(maps),
+            },
+            externals={
+                "unknown_0006cd50": lambda harness, arguments, state=random_.choice((0, 1, 1, 2)): state,
+                "unknown_001c5ca0": write_report,
+                "unknown_000b3ed0": send_report,
+                "unknown_0019c440": lambda harness, arguments, next_=random_.choice((NONE, 0, 1, 7, 7, 7)): next_,
+                "unknown_0019c270": map_data,
+                "time": lambda harness, arguments, value=random_.getrandbits(32): value,
+                "rand": lambda harness, arguments, value=random_.getrandbits(15): value,
+                "GetTickCount": lambda harness, arguments, value=random_.getrandbits(32): value,
+                "unknown_00152450": change_options,
+                "unknown_00152660": lambda harness, arguments: (0, (options_of(harness, arguments[0]),)),
+                "unknown_00063f50": lambda harness, arguments, result=random_.choice((0, 1)): (
+                    result,
+                    (arguments[0], arguments[1], string(harness, arguments[2])),
+                ),
+                "main_game_change": lambda harness, arguments: (0, (options_of(harness, arguments[0]),)),
+                **stand_ins("main_game_goto_main_menu"),
+            },
+        )

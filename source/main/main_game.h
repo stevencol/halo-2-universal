@@ -10,7 +10,9 @@ started on it. Worked out from halo2ship.exe; the names are guesses.
 #define __MAIN_GAME_H
 
 #include "cseries/cseries.h"
+#include "cache/texture_cache.h"
 #include "game/game.h"
+#include "memory/data.h"
 
 /* ---------- constants */
 
@@ -103,6 +105,14 @@ typedef char verify_unknown_004cf770_size[
 	sizeof(struct unknown_004cf770) == 0x10 ? 1 : -1];
 #endif
 
+/* an allocation whose memory is lent by the texture cache */
+struct main_game_texture_allocation
+{
+	struct allocation allocation;
+	texture_cache_stolen_memory_proc idle_proc;
+	texture_cache_stolen_memory_proc reclaim_proc;
+};
+
 /* ---------- prototypes/MAIN_GAME.C */
 
 void main_game_restart(void);
@@ -111,6 +121,11 @@ void main_game_change_update(void);
 boolean main_game_change_immediate(const struct game_options *options);
 boolean main_game_load_map(const struct game_options *options);
 void main_game_load_failed(void);
+void main_game_campaign_started(const struct game_options *options);
+void main_game_goto_main_menu(long unknown);
+void main_game_next_map(void);
+void *ALLOCATION_CONVENTION main_game_texture_allocation_allocate(struct allocation *allocation, unsigned long size);
+void ALLOCATION_CONVENTION main_game_texture_allocation_deallocate(struct allocation *allocation, void *memory);
 void main_game_unload(void);
 void main_game_load_begin(boolean keep_memory);
 void main_game_load_end(boolean keep_caches, const char *map_name);
@@ -137,6 +152,8 @@ extern long unknown_0051ea10;
 extern boolean unknown_00527330;
 extern long unknown_00527334;
 extern boolean main_game_load_failing;
+extern boolean unknown_0054e7cc;
+extern const struct allocation_functions main_game_texture_allocation_functions;
 extern struct data_array *unknown_00502104;
 
 #endif

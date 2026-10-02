@@ -226,3 +226,49 @@ def run(t) -> None:
             data = random_.randbytes(0x24)
             t.check("file_get_last_modification_date", Buffer(random_.randbytes(8)), reference(), externals=attributes_ex(result, data))
             t.check("file_get_size", reference(), Buffer(random_.randbytes(4)), externals=attributes_ex(result, data))
+
+    # ---------- the parts of a path
+
+    split_paths = (
+        b"",
+        b"a",
+        b".",
+        b"\\",
+        b"name",
+        b"name.ext",
+        b"name.",
+        b".ext",
+        b"name.one.two",
+        b"d:\\name.ext",
+        b"d:\\maps\\name.ext",
+        b"d:\\maps\\fonts\\name.ext",
+        b"d:\\maps\\fonts\\name",
+        b"d:\\maps\\fonts\\",
+        b"d:\\maps\\fonts\\\\",
+        b"d:\\maps.old\\fonts\\name",
+        b"d:\\maps.old\\fonts.new\\name.ext",
+        b"d:\\maps\\fonts.new\\",
+        b"\\name.ext",
+        b"\\maps\\name.ext",
+        b".\\name",
+        b"..\\name.ext",
+        b"maps\\.",
+        b"maps\\.\\",
+        b"maps\\name.ext.",
+        b"\\\\",
+        b"\\.\\",
+        b"a\\b",
+        b"a.b\\c.d\\e.f",
+        b"p" * 0xFF,
+    )
+    for path in split_paths:
+        for has_filename in (0, 1):
+            t.check(
+                "file_path_split",
+                Buffer(path + b"\0" + random_.randbytes(8)),
+                Buffer(random_.randbytes(4)),
+                Buffer(random_.randbytes(4)),
+                Buffer(random_.randbytes(4)),
+                Buffer(random_.randbytes(4)),
+                has_filename,
+            )

@@ -102,6 +102,8 @@ typedef char verify_find_files_state_size[
 
 void file_path_add_name(char *path, const char *name);
 void file_path_add_extension(char *path, const char *extension);
+void file_path_split(char *path, char **directory, char **parent_directory, char **filename, char **extension,
+	boolean has_filename);
 void find_files_start(struct find_files_state *state, unsigned long flags, const struct file_reference *directory,
 	const char *pattern);
 

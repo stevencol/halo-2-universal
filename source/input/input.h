@@ -38,6 +38,11 @@ enum
 	GAMEPAD_THUMBSTICK_NEGATIVE_RANGE= 23768,
 
 	NUMBER_OF_INPUT_UNIT_DRIVES= 10,
+
+	/* of the table at 0x0054e8e0: its size, and where things are in it */
+	UNKNOWN_0054E8E0_SIZE= 0xC70,
+	UNKNOWN_0054E8E0_FLAGS2_OFFSET= 0x114,
+	UNKNOWN_0054E8E0_SAVED_GAME_OFFSET= 0x1F8,
 	INPUT_HARD_DISK_DRIVE_LETTER= 'u'
 };
 
@@ -139,5 +144,6 @@ void input_flush_rumble(void);
 
 extern struct input_globals input_globals;
 extern struct input_feedback input_feedbacks[MAXIMUM_GAMEPADS];
+extern byte unknown_0054e8e0[MAXIMUM_GAMEPADS][UNKNOWN_0054E8E0_SIZE];
 
 #endif

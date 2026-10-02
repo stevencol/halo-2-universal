@@ -473,7 +473,7 @@ address,name,source,arguments,returns,convention
 003361a4,unknown_003361a4,,,void
 0014a224,unknown_0014a224,,,bool
 002237d4,unknown_002237d4,,,void
-0018f1c0,unknown_0018f1c0,,stack,void
+0018f1c0,main_game_goto_main_menu,source/main/main_game.c,stack,void
 0018e810,unknown_0018e810,,,void
 0012bd40,main_switch_structure_bsp_private,source/main/main.c,,void
 0012bb20,main_save_map_private,source/main/main.c,,void
@@ -680,7 +680,7 @@ address,name,source,arguments,returns,convention
 0014bac0,unknown_0014bac0,,,void
 000593e0,unknown_000593e0,,,void
 00149318,unknown_00149318,,,bool
-0018f0a0,unknown_0018f0a0,,stack,void
+0018f0a0,main_game_campaign_started,source/main/main_game.c,stack,void
 0012bf90,unknown_0012bf90,,,bool
 001483c3,unknown_001483c3,,stack,void
 0011c840,unknown_0011c840,,,void
@@ -733,3 +733,18 @@ address,name,source,arguments,returns,convention
 00409b6c,XInputGetState,,stack stack,int
 00409bdf,XInputSetState,,stack stack,int
 002184a0,unknown_002184a0,,esi,void
+00137400,file_path_split,source/tag_files/files.c,ebx stack stack esi edi stack,void
+0019040d,unknown_0019040d,,eax,void
+0018fada,unknown_0018fada,,,int
+0018f260,main_game_texture_allocation_allocate,source/main/main_game.c,ecx stack,pointer,thiscall
+0018f350,main_game_texture_allocation_deallocate,source/main/main_game.c,ecx stack,void,thiscall
+0018e960,main_game_next_map,source/main/main_game.c,,void
+001c5ca0,unknown_001c5ca0,,edx stack,void
+000b3ed0,unknown_000b3ed0,,edx stack stack,void
+0019c440,unknown_0019c440,,stack stack,int
+0019c270,unknown_0019c270,,stack stack,pointer
+00152450,unknown_00152450,,eax,void
+00152660,unknown_00152660,,stack,void
+00063f50,unknown_00063f50,,stack stack stack,bool
+00321aae,time,,stack,int
+00321f75,rand,,,int

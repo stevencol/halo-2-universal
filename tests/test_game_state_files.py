@@ -241,6 +241,6 @@ def run(t) -> None:
                 **load_externals(header),
                 "game_state_core_read": core_read,
                 "main_game_change_immediate": change,
-                "unknown_0018f1c0": lambda harness, arguments: 0,
+                "main_game_goto_main_menu": lambda harness, arguments: 0,
             },
         )

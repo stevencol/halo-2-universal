@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-01, al terminar el hito 42.
+**Última actualización:** 2026-10-02, al terminar el hito 43.
 
 ## Dónde estamos
 
-- **402 funciones descompiladas de 11.265: el 3,57 % del juego** (el
-  1,730 % de los bytes de código).
-- Las 402 están comprobadas contra el ejecutable original
+- **408 funciones descompiladas de 11.265: el 3,62 % del juego** (el
+  1,762 % de los bytes de código).
+- Las 408 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the gamepads* (ver `git log`).
+- Último hito: *Decompile the rest of main_game.c and file_path_split* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -73,12 +73,11 @@ Módulos (funciones hechas / archivo):
 - [x] Caché de texturas — `cache\xbox_texture_cache.c` (30, completo)
 - [ ] Caché de geometría — `cache\xbox_geometry_cache.c` (17; falta
       `0x0012e480`, el aviso de que falta geometría)
-- [ ] Cargar y descargar un mapa — `main\main_game.c` (18; faltan
-      `0x0018e960`, `0x0018f0a0` y `0x0018f1c0` en adelante)
+- [x] Cargar y descargar un mapa — `main\main_game.c` (23, completo)
 - [x] Memoria de la interfaz — `interface\user_interface_memory.c` (4)
 - [x] Mandos — `input\input_xbox.c` (10, completo)
-- [ ] Archivos — `tag_files\files.c`, `files_xbox.c` (17; faltan
-      `find_files_next`, `0x00137000`, y `file_path_split`, `0x00137400`)
+- [ ] Archivos — `tag_files\files.c`, `files_xbox.c` (18; falta
+      `find_files_next`, `0x00137000`)
 - [x] Cadenas anchas — `text\unicode.c` (7; quedan 3)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
 - [ ] Matemáticas reales — `math\real_math.c` (21 de unas 50)
@@ -156,9 +155,10 @@ Módulos (funciones hechas / archivo):
       `main\main_game.c`, de `0x0018eb80` a `0x0018f170`.
 - [x] ~~El cambio de partida~~ (hito 39): pedirlo, esperarlo, hacerlo,
       cargar el mapa, y qué pasa si falla.
-- [ ] **Lo que queda de `main_game.c`**: `0x0018e960` (pasar al nivel
-      siguiente, parece), `0x0018f0a0` (tras empezar una campaña),
-      `0x0018f1c0` y `0x0018f260`.
+- [x] ~~Lo que queda de `main_game.c`~~ (hito 43).
+- [ ] **`find_files_next`** (`0x00137000`): lo único que falta de los
+      archivos; usa `FindFirstFileA` (`0x00331b9b`) y `FindNextFileA`
+      (`0x00331ca8`).
 - [x] ~~Fondo de memoria (`memory_pool.c`)~~ (hito 37).
 - [x] ~~El fondo de memoria de la interfaz~~ (hito 38).
 - [ ] **El fondo de la voz** («voice pool», `0x004c995c`): `0x00053290`

@@ -2,6 +2,71 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — El final de `main_game.c` y las partes de una ruta
+
+Lo que quedaba suelto de `main_game.c`, que queda completo, y
+`file_path_split` de los archivos. De 402 funciones se pasa a 408, el
+3,62 % de las del juego (el 1,762 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `file_path_split` | `0x00137400` | `tag_files/files.c` |
+| `main_game_next_map` | `0x0018e960` | `main/main_game.c` |
+| `main_game_campaign_started` | `0x0018f0a0` | `main/main_game.c` |
+| `main_game_goto_main_menu` | `0x0018f1c0` | `main/main_game.c` |
+| `main_game_texture_allocation_allocate` | `0x0018f260` | `main/main_game.c` |
+| `main_game_texture_allocation_deallocate` | `0x0018f350` | `main/main_game.c` |
+
+- `time` (`0x00321aae`) y `rand` (`0x00321f75`), de la biblioteca de C,
+  están en la tabla de símbolos para poder suplirlas en las pruebas.
+
+### Cambiado
+
+- `unknown_0018f1c0`, que el bucle principal y la carga de un estado
+  llamaban sin saber qué era, es `main_game_goto_main_menu`; y
+  `unknown_0018f0a0` es `main_game_campaign_started`.
+- Los tamaños y posiciones de la tabla de `0x0054e8e0` (los perfiles de los
+  jugadores, parece) pasan de `input_xbox.c` a `input.h`, porque
+  `main_game.c` también la lee.
+
+### Lo que se sabe
+
+- Al acabar un mapa de la campaña, el juego pregunta cuál es el siguiente
+  (`0x0019c440`) y pide una partida en él con las mismas opciones, una
+  semilla nueva (`time ^ rand ^ GetTickCount`) y el nombre del mapa. Si no
+  hay siguiente va al menú principal, con el motivo 7.
+- En una sesión de red, antes de eso se escribe un informe de 0x33B bytes
+  de la partida que acaba y se manda al servidor como
+  `application/x-halo2campaign`.
+- Ir al menú principal es pedir una partida de la clase 3 en
+  `scenarios\ui\mainmenu\mainmenu`; si ya se está en ella solo se avisa a
+  la interfaz.
+- Al empezar una campaña de un jugador, si está puesto el indicador de
+  `0x0054e7cc`, se carga la partida guardada del único perfil que hay (la
+  guarda en `+0x1F8`).
+- Hay un asignador de memoria (tabla de funciones en `0x00453c40`, objeto en
+  `0x0047d8e4`) cuya memoria se la presta la caché de texturas, esperando
+  poco: 30 intentos y una décima de segundo.
+- `file_path_split` corta una ruta en sitio: pone ceros donde empiezan el
+  nombre y la extensión. No mira el primer carácter de la ruta.
+
+### Sin comprobar
+
+- En `file_path_split`: si la ruta tiene que medir más de 0 o más de 1 para
+  recorrerla, y la comparación de `*filename!=path` al final: dan lo mismo.
+- En `main_game_next_map`: si el nombre del mapa se copia con 0x104 o con
+  0x103 bytes, porque después se pone el cero final.
+- En el asignador, el caso en que la memoria no llega nunca y se acaba el
+  tiempo: depende del reloj del procesador.
+
+### Mutaciones
+
+96 líneas rotas a propósito: 91 detectadas a la primera, una más con un
+caso nuevo (esperar a la consola tras 30 intentos) y las otras cuatro son
+las de «Sin comprobar».
+
 ## 2026-10-02 — Los mandos
 
 `input_xbox.c`, que ya existía en Halo 1: qué mandos hay enchufados, qué
