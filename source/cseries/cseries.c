@@ -179,6 +179,16 @@ boolean bit_vector_test_flag(
 	return BIT_VECTOR_TEST_FLAG(vector, bit);
 }
 
+/* 0x0012afc0: fills a vector of so many bits with a byte: 0 clears them
+all. The name is a guess */
+void bit_vector_fill(
+	unsigned long *vector,
+	long count,
+	byte value)
+{
+	memset(vector, value, (unsigned long)(((count+31)>>5)<<2));
+}
+
 /* 0x001373c0: takes the last element off a path: the path ends where its
 last backslash was. A path with no backslash becomes empty */
 void path_remove_last_element(

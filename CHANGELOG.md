@@ -2,6 +2,68 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — El arranque del sonido
+
+Las dos funciones que preparan y desmontan el sonido al arrancar y cerrar
+el juego, y dos auxiliares que usan. De 420 funciones se pasa a 424, el
+3,76 % de las del juego (el 1,850 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_initialize` | `0x001253d0` | `sound/sound_manager.c` |
+| `sound_dispose` | `0x00125600` | `sound/sound_manager.c` |
+| `shell_memory_data_new` | `0x0011cc20` | `shell/shell.c` |
+| `bit_vector_fill` | `0x0012afc0` | `cseries/cseries.c` |
+
+- `shell_memory_allocate`, en línea en `shell.h`: el juego la tiene copiada
+  dentro de cada función que pide memoria.
+- Globales con nombre: `sound_initialize_count`, `sound_channels`,
+  `sound_sources`, `looping_sounds`, `sound_voices`, `sound_effects` y la
+  tabla `sound_configuration`.
+
+### Cambiado
+
+- `unknown_001253d0` y `unknown_00125600`, que el arranque y la tabla de
+  sistemas del juego llamaban sin saber qué eran, son `sound_initialize` y
+  `sound_dispose`.
+- En `shell_memory_globals`, los campos `unknown8` y `unknownC` son `size`
+  y `size_checksum`.
+
+### Lo que se sabe
+
+- El bloque de memoria que el juego pide al arrancar (`shell_memory_globals`)
+  es de donde cada sistema toma la suya, uno detrás de otro, en direcciones
+  múltiplo de 4. Con cada petición se actualiza una suma de comprobación de
+  los tamaños. **No** es la memoria del estado de la partida, aunque
+  funciona igual: tiene sus propios contadores.
+- El sonido pide 0x20C bytes para sus globales, una tabla «sound sources»
+  de 384 elementos de 0xBC bytes y 128 canales de 0x24 bytes.
+- Los canales son de tres tipos, y hay 36, 36 y 1 de cada uno (73 de los
+  128); el máximo de voces es 51.
+- El sonido se prepara una sola vez aunque se pida varias: lleva la cuenta,
+  y solo se desmonta cuando se han pedido tantos cierres como arranques.
+- Si alguna de las cinco partes del sonido no se puede preparar, el sonido
+  se queda sin marcar como preparado, pero la cuenta sube igual.
+- Al desmontar solo se ponen a cero los punteros: la memoria no es suya.
+
+### Sin comprobar
+
+- `bit_vector_fill` con una cuenta de bits negativa de más de 31: el juego
+  escribiría casi 4 GB.
+- Que el byte `+0x7D` de los globales se ponga a cero: el bloque entero se
+  acaba de poner a cero.
+- El orden entre pedir la memoria de los canales y guardar el puntero de las
+  fuentes; y si el primer vector de bits mide 128 bits o 160, porque los 32
+  que siguen los borra el segundo.
+
+### Mutaciones
+
+100 líneas rotas a propósito: 94 detectadas a la primera, tres más
+haciendo que las funciones suplidas dejen algo escrito en los globales, y
+las demás son las de «Sin comprobar».
+
 ## 2026-10-02 — Cómo se reproduce un sonido
 
 Las primeras funciones del sonido: las que dicen a qué distancia se oye un

@@ -9,6 +9,8 @@ before its main loop, and what it takes down after it. shell_initialize and
 shell_dispose are those of Halo 1's shell.c; the other names are guesses.
 */
 
+#include "memory/lruv_cache.h"
+#include "sound/sound_definitions.h"
 #include "shell.h"
 
 #include "cache/animation_cache.h"
@@ -66,10 +68,8 @@ the errors, the tag files, the real math, the state of the game, the
 rasterizer, the input and the sound */
 void unknown_00121fc0(void);
 void unknown_00012560(void);
-void unknown_001253d0(void);
 
 /* what shell_dispose takes down */
-void unknown_00125600(void);
 void unknown_000141c0(void);
 void unknown_00141190(void);
 void unknown_00140aa0(void);
@@ -152,7 +152,7 @@ boolean shell_initialize(
 {
 	unknown_002d5d0a();
 	shell_memory_globals.memory= VirtualAlloc(NULL, SHELL_MEMORY_SIZE, MEM_COMMIT, PAGE_READWRITE);
-	shell_memory_globals.unknown8= 0;
+	shell_memory_globals.size= 0;
 
 	if (!shell_platform_initialize())
 	{
@@ -172,7 +172,7 @@ boolean shell_initialize(
 		return FALSE;
 	}
 	input_initialize();
-	unknown_001253d0();
+	sound_initialize();
 
 	return TRUE;
 }
@@ -182,7 +182,7 @@ void shell_dispose(
 	void)
 {
 	game_state_dispose();
-	unknown_00125600();
+	sound_dispose();
 	input_dispose();
 	unknown_000141c0();
 	animation_cache_delete();
@@ -201,8 +201,8 @@ void shell_dispose(
 		VirtualFree(shell_memory_globals.memory, 0, MEM_RELEASE);
 		shell_memory_globals.unknown0= 0;
 		shell_memory_globals.memory= NULL;
-		shell_memory_globals.unknown8= 0;
-		shell_memory_globals.unknownC= 0;
+		shell_memory_globals.size= 0;
+		shell_memory_globals.size_checksum= 0;
 	}
 }
 
@@ -343,4 +343,19 @@ boolean shell_test_device(
 	}
 
 	return created;
+}
+
+/* 0x0011cc20: a data array in the memory that the game takes when it
+starts. The array is not valid yet. The name is a guess */
+struct data_array *shell_memory_data_new(
+	const char *name,
+	long maximum_count,
+	long size)
+{
+	struct data_array *data= shell_memory_allocate(
+		maximum_count*size + ((maximum_count+31)>>5)*4 + (long)sizeof(struct data_array));
+
+	data_initialize(data, name, maximum_count, size, 0, lruv_blocks_allocation);
+
+	return data;
 }

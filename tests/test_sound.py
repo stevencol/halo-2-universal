@@ -7,7 +7,7 @@
 import random
 import struct
 
-from difftest import Buffer, Pointer
+from difftest import Buffer, Memory, Pointer
 
 NONE = 0xFFFFFFFF
 PLAYBACK_SIZE = 0x38
@@ -187,4 +187,106 @@ def run(t) -> None:
                 "players_globals": Buffer(random_.randbytes(0xC) + struct.pack("<4I", *players)),
                 "game_sound_globals": Buffer(bytes(data)),
             },
+        )
+
+    # ---------- setting up and taking down
+
+    for count in (0, 1, 2, 5, 0x80, 0xFFFFFFFF):
+        for value in (0, 0xFF, 1, 0xA5):
+            size = ((count + 31) >> 5) * 4 & 0xFF
+            # the count of 0xFFFFFFFF is -1: no bits
+            data = random_.randbytes(max(size, 4) + 8)
+            t.check("bit_vector_fill", Buffer(data), count if count != 0x80 or value else 0x80, value | random_.getrandbits(24) << 8)
+
+    STATE = 0x80100000
+    STATE_SIZE = 0x14000
+    ALLOCATION = 0x479864
+
+    def shell_memory(allocated: int) -> bytes:
+        return struct.pack("<4I", random_.getrandbits(32), STATE, allocated, random_.getrandbits(32))
+
+    for maximum_count, size in ((1, 4), (32, 0x10), (33, 0x1C), (0x180, 0xBC), (0x80, 0xD4), (0, 8), (64, 1)):
+        for allocated in (0, 0x1290, 0x1291, 0x1292, 0x1293, 0x345):
+            t.check(
+                "shell_memory_data_new",
+                Buffer(random_.choice((b"sound sources", b"x", b"a name that is longer than the array keeps")) + b"\0"),
+                maximum_count,
+                size,
+                globals={"shell_memory_globals": shell_memory(allocated), "lruv_blocks_allocation": ALLOCATION},
+                memory={STATE: Memory(random_.randbytes(STATE_SIZE))},
+            )
+
+    def answers(*values: int) -> dict:
+        names = ("unknown_00219b40", "unknown_0021a0c0", "unknown_0021d490", "unknown_0021dda0", "unknown_0021e4b0")
+
+        def configuration(harness, arguments):
+            return bytes(harness.mu.mem_read(arguments[0], 14))
+
+        def last(harness, arguments, value=values[4]):
+            # leaves something where the vectors of bits are, and around them
+            harness.mu.mem_write(sound_globals(harness) + 0x58, noise)
+            return value, (configuration(harness, arguments),)
+
+        result = {}
+        for name, value in zip(names, values):
+            if name == "unknown_0021e4b0":
+                result[name] = last
+            elif name == "unknown_0021dda0":
+                result[name] = lambda harness, arguments, value=value: (value, (configuration(harness, arguments),))
+            else:
+                result[name] = lambda harness, arguments, value=value: value
+        return result
+
+    noise = bytes(b | 1 for b in random_.randbytes(0x30))
+
+    def sound_globals(harness) -> int:
+        return struct.unpack("<I", harness.mu.mem_read(harness.global_addresses["game_sound_globals"], 4))[0]
+
+    def console_sound(harness, arguments):
+        # what the globals are when the sound of the console is set up, and
+        # it leaves something in them
+        address = sound_globals(harness)
+        record = address, bytes(harness.mu.mem_read(address, 0x20C))
+        harness.mu.mem_write(address + 0x7C, noise[:4])
+        return 0, record
+
+    cases = [(1, 1, 1, 1, 1)] * 6 + [tuple(int(n != index) for n in range(5)) for index in range(5)]
+    cases += [(0x80, 0x100 | 1, 2, 0xFF00 | 1, 0xFF)]
+    for n, values in enumerate(cases):
+        for count in (0, 0, 1, 3, 0xFFFFFFFF):
+            t.check(
+                "sound_initialize",
+                globals={
+                    "sound_initialize_count": count,
+                    "shell_memory_globals": shell_memory(random_.choice((0x1290, 0x1291, 0x2003, 0x10, 0))),
+                    "lruv_blocks_allocation": ALLOCATION,
+                    "game_sound_globals": random_.getrandbits(32),
+                    "sound_channels": random_.getrandbits(32),
+                    "sound_sources": random_.getrandbits(32),
+                },
+                memory={STATE: Memory(random_.randbytes(STATE_SIZE))},
+                externals={**answers(*values), "unknown_002185d0": console_sound},
+            )
+
+    def array(valid: int) -> Buffer:
+        data = bytearray(random_.randbytes(0x4C))
+        data[0x29] = valid
+        return Buffer(bytes(data))
+
+    for n in range(60):
+        pointer = lambda: random_.choice((0, random_.getrandbits(32) | 1))
+        t.check(
+            "sound_dispose",
+            globals={
+                "sound_initialize_count": random_.choice((1, 1, 1, 2, 0, 5)),
+                "sound_effects": random_.choice((0, array(1))),
+                "sound_voices": random_.choice((0, array(1), array(1))),
+                "looping_sounds": random_.choice((0, array(1))),
+                "unknown_0051ebd8": pointer(),
+                "unknown_0051ebdc": pointer(),
+                "game_sound_globals": pointer(),
+                "sound_sources": random_.choice((0, array(1), array(1))),
+                "sound_channels": pointer(),
+            },
+            externals={"unknown_002186b0": lambda harness, arguments: 0, "unknown_0021eae0": lambda harness, arguments: 0},
         )

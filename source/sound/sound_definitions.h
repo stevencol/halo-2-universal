@@ -13,6 +13,7 @@ guesses.
 
 #include "cseries/cseries.h"
 #include "math/real_math.h"
+#include "memory/data.h"
 #include "tag_files/tag_groups.h"
 
 /* ---------- constants */
@@ -34,6 +35,14 @@ enum
 	_sound_source_inner_cone_angle_bit= 4,
 	_sound_source_outer_cone_angle_bit= 5,
 	_sound_source_outer_cone_gain_bit= 6
+};
+
+enum
+{
+	NUMBER_OF_SOUND_CHANNEL_TYPES= 3,
+	MAXIMUM_SOUND_CHANNELS= 128,
+	MAXIMUM_SOUND_SOURCES= 384,
+	SOUND_SOURCE_DATUM_SIZE= 0xBC
 };
 
 /* the flags of a sound class */
@@ -120,6 +129,35 @@ struct sound_listener
 	byte unknown7[0x41];
 };
 
+/* 0x0044a0c8: how much of each thing the sound has */
+struct sound_configuration
+{
+	short unknown0;
+	short unknown2;
+	short unknown4;
+	/* of each of the three types */
+	short channel_counts[NUMBER_OF_SOUND_CHANNEL_TYPES];
+	short maximum_voices;
+};
+
+/* what plays a sound */
+struct sound_channel
+{
+	long unknown0;
+	long unknown4;
+	char type;
+	byte unknown9;
+	byte unknownA;
+	byte unknownB;
+	short unknownC;
+	short unknownE;
+	byte unknown10[0xC];
+	long unknown1C;
+	long unknown20;
+};
+
+typedef char verify_sound_channel_size[
+	sizeof(struct sound_channel) == 0x24 ? 1 : -1];
 typedef char verify_sound_playback_parameters_size[
 	sizeof(struct sound_playback_parameters) == 0x38 ? 1 : -1];
 typedef char verify_sound_class_size[
@@ -145,10 +183,21 @@ real sound_get_outer_cone_gain(const struct sound_source *source, long sound_ind
 real sound_definition_random_gain(const struct sound_definition *sound);
 real sound_definition_random_pitch(const struct sound_definition *sound, unsigned long *seed);
 struct sound_listener *sound_first_local_listener(void);
+void sound_initialize(void);
+void sound_dispose(void);
 
 /* ---------- globals */
 
 extern struct sound_cache_file_gestalt *global_sound_cache_file_gestalt;
 extern byte *game_sound_globals;
+extern long sound_initialize_count;
+extern struct sound_channel *sound_channels;
+extern struct data_array *sound_sources;
+extern struct data_array *looping_sounds;
+extern struct data_array *sound_voices;
+extern struct data_array *sound_effects;
+extern void *unknown_0051ebd8;
+extern void *unknown_0051ebdc;
+extern const struct sound_configuration sound_configuration;
 
 #endif

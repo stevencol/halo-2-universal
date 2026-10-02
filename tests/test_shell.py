@@ -16,10 +16,10 @@ SHELL_MEMORY = 0x00D00000
 
 INITIALIZE = (
     "unknown_002d5d0a async_initialize global_preferences_initialize unknown_00121fc0 cache_files_initialize animation_cache_new "
-    "game_state_initialize input_initialize unknown_001253d0"
+    "game_state_initialize input_initialize sound_initialize"
 ).split()
 DISPOSE = (
-    "game_state_close_file unknown_00125600 input_dispose unknown_000141c0 animation_cache_delete unknown_00141190 "
+    "game_state_close_file sound_dispose input_dispose unknown_000141c0 animation_cache_delete unknown_00141190 "
     "unknown_00140aa0"
 ).split()
 

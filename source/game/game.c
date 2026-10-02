@@ -10,6 +10,7 @@ The names are those of Halo 1's game.c where it has them; there, each of
 these functions calls the parts by name.
 */
 
+#include "sound/sound_definitions.h"
 #include "game.h"
 
 #include "main/main.h"
@@ -80,8 +81,6 @@ void unknown_0010aab0(void);
 void unknown_0011be20(void);
 void unknown_0011be40(void);
 void unknown_0011cc10(void);
-void unknown_001253d0(void);
-void unknown_00125600(void);
 void unknown_00125690(void);
 void unknown_001257b0(void);
 void unknown_00125920(void);
@@ -289,7 +288,7 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{no_operation, no_operation, no_operation, no_operation, unknown_0003f2b0, no_operation},
 	{no_operation, no_operation, unknown_00211030, no_operation},
 	{unknown_00221850, unknown_002218f0, unknown_002218a0, unknown_002218e0},
-	{unknown_001253d0, unknown_00125600, unknown_00125690, unknown_001257b0, unknown_00125920, no_operation},
+	{sound_initialize, sound_dispose, unknown_00125690, unknown_001257b0, unknown_00125920, no_operation},
 	{unknown_0020aee0, unknown_0020af50, unknown_0020af90, no_operation},
 	{unknown_001887d0, unknown_00188850, unknown_00188870, unknown_00188940, unknown_00188980, no_operation},
 	{unknown_00225a40, no_operation, unknown_00225a80, no_operation},

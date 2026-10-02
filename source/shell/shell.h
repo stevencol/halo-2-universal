@@ -9,6 +9,7 @@ executable.
 #ifndef __SHELL_H
 #define __SHELL_H
 
+#include "memory/data.h"
 #include "cseries/cseries.h"
 
 #include <stdint.h>
@@ -46,14 +47,15 @@ struct xbox_video_settings
 	boolean progressive_scan;
 };
 
-/* 0x005107fc: memory that the game takes when it starts. What it is for is
-not known */
+/* 0x005107fc: memory that the game takes when it starts, and that its
+systems take their own from, one after another: how much is taken, and a
+checksum of the sizes */
 struct shell_memory_globals
 {
 	long unknown0;
 	void *memory;
-	long unknown8;
-	long unknownC;
+	long size;
+	unsigned long size_checksum;
 };
 
 /* what Direct3D is asked to make the device with (D3DPRESENT_PARAMETERS) */
@@ -107,6 +109,8 @@ void shell_get_video_settings(void);
 boolean shell_create_device(void);
 boolean shell_test_device(void);
 
+struct data_array *shell_memory_data_new(const char *name, long maximum_count, long size);
+
 /* ---------- globals */
 
 extern struct shell_memory_globals shell_memory_globals;
@@ -115,5 +119,25 @@ extern struct xbox_video_settings xbox_video_settings;
 extern struct d3d_device *global_d3d_device;
 extern struct d3d_device *d3d_device;
 extern boolean application_paused;
+
+/* ---------- inline code */
+
+void crc_checksum_buffer(const void *buffer, long size, unsigned long *checksum);
+
+/* memory of that which the game takes when it starts, at an address that is
+a multiple of 4: what is skipped to get to it is taken too. The name is a
+guess */
+static inline __attribute__((always_inline)) void *shell_memory_allocate(
+	long size)
+{
+	byte *end= (byte *)shell_memory_globals.memory+shell_memory_globals.size;
+	byte *pointer= (byte *)(((uintptr_t)end+3)&~(uintptr_t)3);
+
+	size+= (long)(pointer-end);
+	shell_memory_globals.size+= size;
+	crc_checksum_buffer(&size, sizeof(size), &shell_memory_globals.size_checksum);
+
+	return pointer;
+}
 
 #endif

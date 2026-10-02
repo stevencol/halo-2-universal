@@ -278,8 +278,6 @@ address,name,source,arguments,returns,convention
 00123180,animation_cache_new,source/cache/xbox_animation_cache.c,,void
 00012560,unknown_00012560,,,void
 001248b0,input_initialize,source/input/input_xbox.c,,bool
-001253d0,unknown_001253d0,,,void
-00125600,unknown_00125600,,,void
 00124920,input_dispose,source/input/input_xbox.c,,void
 000141c0,unknown_000141c0,,,void
 00123310,animation_cache_delete,source/cache/xbox_animation_cache.c,,void
@@ -762,3 +760,15 @@ address,name,source,arguments,returns,convention
 001252f0,sound_definition_random_pitch,source/sound/sound_manager.c,eax ecx,real
 00125360,sound_first_local_listener,source/sound/sound_manager.c,,pointer
 00221810,sound_class_get,source/sound/sound_classes.c,stack,pointer
+0012afc0,bit_vector_fill,source/cseries/cseries.c,edx ecx eax,void
+0011cc20,shell_memory_data_new,source/shell/shell.c,stack eax stack,pointer
+001253d0,sound_initialize,source/sound/sound_manager.c,,void
+00125600,sound_dispose,source/sound/sound_manager.c,,void
+002185d0,unknown_002185d0,,,void
+002186b0,unknown_002186b0,,,void
+00219b40,unknown_00219b40,,,bool
+0021a0c0,unknown_0021a0c0,,,bool
+0021d490,unknown_0021d490,,,bool
+0021dda0,unknown_0021dda0,,eax,bool
+0021e4b0,unknown_0021e4b0,,stack,bool
+0021eae0,unknown_0021eae0,,,void
