@@ -26,7 +26,7 @@ CORE_NAME = 0x6
 PLAIN = (
     "unknown_002237d4 unknown_0018f1c0 unknown_0018e810 main_revert_map_if_possible_private "
     "main_revert_map_private main_reset_map_private main_switch_structure_bsp_private main_save_map_private "
-    "unknown_0012bbd0 main_unknown4E_private unknown_00124950 unknown_00217c40 unknown_002164c0 unknown_00121120 "
+    "unknown_0012bbd0 main_unknown4E_private unknown_00124950 unknown_00217c40 unknown_002164c0 global_preferences_flush "
     "unknown_001406b0 cached_map_file_copy_update unknown_00163820 unknown_001479c3 unknown_00155f80 "
     "unknown_00092f80 unknown_0008df50 unknown_000680f0 unknown_00059940 unknown_001870a0 unknown_0008dfc0 "
     "unknown_00137ed0 unknown_001554b0 unknown_0016f280 unknown_00222a70 unknown_00223240 unknown_00125b40 "
@@ -158,7 +158,7 @@ def run(t) -> None:
                 "unknown_0055c14d": bytes([random_.randrange(2)]),
                 "unknown_0051ea14": random_.choice((UNKNOWN_0051EA14, 0)),
                 "unknown_0055c150": random_.choice((0, 1, 2, 3, NONE)),
-                "cached_map_files_state_changed": bytes([random_.randrange(2)]),
+                "global_preferences_globals+0x1": bytes([random_.randrange(2)]),
                 "async_globals": random_.randbytes(0x25A0),
                 "cached_map_file_copy_globals": bytes(copy_globals),
                 "application_paused": b"\x01" if paused else b"\0",

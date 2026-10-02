@@ -234,6 +234,7 @@ long async_copy_position(uint32_t source_file, uint32_t destination_file, void *
 	byte *done);
 long ASYNC_CALLBACK async_flush_file_work(void *parameters);
 long async_flush_file(uint32_t file, long category, long priority, byte *done);
+void async_flush_file_blocking(long category, uint32_t file);
 long ASYNC_CALLBACK async_write_work(void *parameters);
 long async_write_position(uint32_t file, const void *buffer, uint32_t size, uint32_t offset, uint32_t flags,
 	long category, long priority, uint32_t *bytes_written, byte *done);

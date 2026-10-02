@@ -391,8 +391,5 @@ extern struct cache_file_tag_instance *global_tag_instances;
 extern const char *cache_file_extension;
 extern struct cached_map_file_copy_globals cached_map_file_copy_globals;
 extern long global_language;
-extern long cached_map_files_language;
-extern long cached_map_files_build_number;
-extern uint8_t cached_map_files_state_changed;
 
 #endif

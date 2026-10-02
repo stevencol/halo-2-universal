@@ -13,13 +13,10 @@ address,name,source
 004e6420,physical_memory_globals,source/memory/physical_memory.c
 005020d8,xbox_game_state_globals,source/saved games/game_state_xbox.c
 00470050,game_state_file_name_format,source/saved games/game_state_xbox.c
-00510819,cached_map_files_state_changed,source/cache/cache_files.c
-00510a08,cached_map_files_build_number,source/cache/cache_files.c
 005476f8,cache_file_globals,source/cache/cache_files.c
 00557c90,cached_map_file_globals,source/cache/cache_files.c
 0046e48c,async_write_maximum_size,source/cseries/async.c
 0047ff38,global_language,source/cache/cache_files.c
-00510838,cached_map_files_language,source/cache/cache_files.c
 0055b4f0,cached_map_file_copy_globals,source/cache/cache_files.c
 004e3b60,game_state_globals,source/saved games/game_state.c
 00510c2c,game_state_allocation,source/saved games/game_state.c
@@ -70,3 +67,6 @@ address,name,source
 004e033c,global_bsp3d,source/scenario/scenario.c
 00510c49,unknown_00510c49,source/game/game.c
 004f55e7,unknown_004f55e7,source/game/game.c
+00510818,global_preferences_globals,source/main/global_preferences.c
+004687ec,global_preferences_path,source/main/global_preferences.c
+00470024,xbox_signature_handle,source/main/global_preferences.c

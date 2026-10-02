@@ -13,6 +13,7 @@ shell_dispose are those of Halo 1's shell.c; the other names are guesses.
 
 #include "cache/cache_files.h"
 #include "cseries/async.h"
+#include "main/global_preferences.h"
 #include "memory/physical_memory.h"
 #include "saved games/game_state.h"
 
@@ -61,7 +62,6 @@ void d3d_device_destroy(struct d3d_device *device);
 /* what shell_initialize sets up, in the order it calls them. Halo 1's does
 the errors, the tag files, the real math, the state of the game, the
 rasterizer, the input and the sound */
-void unknown_00121350(void);
 void unknown_00121fc0(void);
 void unknown_00123180(void);
 void unknown_00012560(void);
@@ -163,7 +163,7 @@ boolean shell_initialize(
 	_control87(FLOATING_POINT_CONTROL, FLOATING_POINT_CONTROL_MASK);
 
 	async_initialize();
-	unknown_00121350();
+	global_preferences_initialize();
 	unknown_00121fc0();
 	cache_files_initialize();
 	unknown_00123180();

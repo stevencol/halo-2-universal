@@ -983,3 +983,18 @@ long async_flush_file(
 
 	return async_task_add(priority, task.parameters, category, async_flush_file_work, done);
 }
+
+/* 0x001a0af0: has what was written to a file put on the disk, and waits for
+it. The name is a guess */
+void async_flush_file_blocking(
+	long category,
+	uint32_t file)
+{
+	volatile boolean done;
+
+	async_flush_file(file, category, 6, (byte *)&done);
+	while (!done)
+	{
+		SwitchToThread();
+	}
+}

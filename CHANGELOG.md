@@ -2,6 +2,65 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Las preferencias guardadas
+
+El archivo `z:\preferences.dat`, donde el juego recuerda cosas de una vez
+para otra: abrirlo, comprobar que lo firmó esta consola, escribirlo cuando
+algo cambia. Es el primero de los sistemas que prepara el arranque que se
+identifica. De 244 funciones se pasa a 258, el 2,29 % de las del juego (el
+1,052 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `global_preferences_initialize` | `0x00121350` | `main/global_preferences.c` |
+| `global_preferences_reset` | `0x00121220` | `main/global_preferences.c` |
+| `global_preferences_validate` | `0x00121280` | `main/global_preferences.c` |
+| `global_preferences_flush` | `0x00121120` | `main/global_preferences.c` |
+| `global_preferences_flush_blocking` | `0x00120d80` | `main/global_preferences.c` |
+| `global_preferences_set_name` | `0x00120df0` | `main/global_preferences.c` |
+| `global_preferences_set_other_name` | `0x00120e40` | `main/global_preferences.c` |
+| `global_preferences_set_unknown15C` | `0x00121040` | `main/global_preferences.c` |
+| `global_preferences_set_unknown160` | `0x00121060` | `main/global_preferences.c` |
+| `global_preferences_get_unknown160` | `0x001210a0` | `main/global_preferences.c` |
+| `global_preferences_set_unknown164` | `0x001210c0` | `main/global_preferences.c` |
+| `global_preferences_get_unknown164` | `0x00121100` | `main/global_preferences.c` |
+| `xbox_signature_end` | `0x00213380` | `main/global_preferences.c` |
+| `async_flush_file_blocking` | `0x001a0af0` | `cseries/async.c` |
+
+- Archivos nuevos: `main/global_preferences.{c,h}`;
+  `tests/test_global_preferences.py`.
+
+### Cambiado
+
+- Las tres variables sueltas que usaban los archivos de caché (el idioma y
+  el build de las copias de mapas, y la marca de «algo cambió») son campos
+  de `global_preferences_globals` (`0x00510818`).
+- `shell_initialize` y el fotograma llaman ya a estas funciones por su
+  nombre.
+- La biblioteca C de las pruebas gana `wcsncpy` con caracteres de 16 bits.
+
+### Lo que se sabe
+
+- El archivo son 0x1fc bytes: una firma de 20 bytes hecha por la consola y
+  0x1e8 de datos. Si la firma no coincide, la versión no es la 8 o no se
+  lee entero, se descarta y se empieza con preferencias vacías.
+- Guarda, entre otras cosas, cinco nombres de 31 caracteres, el idioma y el
+  build con los que se hicieron las copias de los mapas (por eso al cambiar
+  de idioma se vuelven a copiar), y varios ajustes de 0 a 3.
+- Se escribe en segundo plano, y solo si lo que hay difiere de lo último
+  escrito.
+- Un descuido del juego, reproducido tal cual: al validar unas
+  preferencias recién leídas, el final de cuatro de los nombres se pone en
+  las preferencias que el juego ya tenía, no en las leídas.
+
+### Sin comprobar
+
+- En `global_preferences_initialize`, marcar la tarea como terminada
+  después de validar: la lectura ya la había marcado.
+- Qué son los ajustes sin nombre (`unknown15C`, `unknown160`...).
+
 ## 2026-10-01 — Las opciones de una partida
 
 Las dos funciones que deciden si unas opciones de partida se pueden jugar y

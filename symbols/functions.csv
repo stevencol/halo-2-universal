@@ -273,7 +273,7 @@ address,name,source,arguments,returns,convention
 003f5240,d3d_create_device,,eax ecx stack,int
 003f9d00,unknown_003f9d00,,eax,void
 003fc530,d3d_device_destroy,,eax,void
-00121350,unknown_00121350,,,void
+00121350,global_preferences_initialize,source/main/global_preferences.c,,void
 00121fc0,unknown_00121fc0,,,void
 00123180,unknown_00123180,,,void
 00012560,unknown_00012560,,,void
@@ -483,7 +483,7 @@ address,name,source,arguments,returns,convention
 00124950,unknown_00124950,,,void
 00217c40,unknown_00217c40,,,void
 002164c0,unknown_002164c0,,eax stack,void
-00121120,unknown_00121120,,,void
+00121120,global_preferences_flush,source/main/global_preferences.c,,void
 001406b0,unknown_001406b0,,,void
 00163820,unknown_00163820,,,void
 001479c3,unknown_001479c3,,stack,void
@@ -525,3 +525,18 @@ address,name,source,arguments,returns,convention
 00138a10,game_finished_wait_over,source/game/game.c,,int
 0007ad80,unknown_0007ad80,,edi stack,void
 00137fe0,unknown_00137fe0,,,void
+00121220,global_preferences_reset,source/main/global_preferences.c,,void
+00121280,global_preferences_validate,source/main/global_preferences.c,eax,void
+00120d80,global_preferences_flush_blocking,source/main/global_preferences.c,,void
+00120df0,global_preferences_set_name,source/main/global_preferences.c,eax stack,void
+00120e40,global_preferences_set_other_name,source/main/global_preferences.c,eax,void
+00121040,global_preferences_set_unknown15C,source/main/global_preferences.c,eax,void
+00121060,global_preferences_set_unknown160,source/main/global_preferences.c,eax,void
+001210a0,global_preferences_get_unknown160,source/main/global_preferences.c,eax,void
+001210c0,global_preferences_set_unknown164,source/main/global_preferences.c,eax,void
+00121100,global_preferences_get_unknown164,source/main/global_preferences.c,eax,void
+00213380,xbox_signature_end,source/main/global_preferences.c,eax,bool
+001a0af0,async_flush_file_blocking,source/cseries/async.c,eax stack,void
+002d6765,XCalculateSignatureBegin,,stack,int
+002d6779,XCalculateSignatureUpdate,,stack stack stack,int
+002d67c7,XCalculateSignatureEnd,,stack stack,int

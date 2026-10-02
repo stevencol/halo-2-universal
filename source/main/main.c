@@ -14,6 +14,7 @@ Halo 1's main.c.
 #include "cache/cache_files.h"
 #include "cseries/async.h"
 #include "game/game.h"
+#include "main/global_preferences.h"
 #include "saved games/game_state.h"
 #include "scenario/scenario.h"
 #include "shell/shell.h"
@@ -53,7 +54,6 @@ void game_state_load_core(const char *name);
 void unknown_00124950(void);
 void unknown_00217c40(void);
 void unknown_002164c0(long unknown, void *unknown_pointer);
-void unknown_00121120(void);
 void unknown_001406b0(void);
 void unknown_00163820(void);
 void unknown_001479c3(float seconds);
@@ -375,9 +375,9 @@ void main_loop_body(
 		unknown_0055c150&= ~1UL;
 	}
 	/* the preferences changed: they are written */
-	if (cached_map_files_state_changed)
+	if (global_preferences_globals.dirty)
 	{
-		unknown_00121120();
+		global_preferences_flush();
 	}
 	unknown_001406b0();
 	async_globals.tasks_added= async_task_count();

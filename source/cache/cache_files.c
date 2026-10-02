@@ -9,6 +9,7 @@ gives the address it has there.
 
 #include "cseries/async.h"
 #include "cseries/cseries.h"
+#include "main/global_preferences.h"
 #include "memory/binary_search.h"
 #include "memory/physical_memory.h"
 #include "scenario/scenario.h"
@@ -115,18 +116,6 @@ struct cache_file_globals cache_file_globals;
 
 /* 0x00557c90 */
 struct cached_map_file_globals cached_map_file_globals;
-
-/* 0x00510a08: the number of the build that made the copies of the maps on
-the hard disk, 9809; zero makes the game copy them again. A field of a
-structure that is not understood yet, as the next one. The name is a guess */
-long cached_map_files_build_number;
-
-/* 0x00510819: set when something of that structure changes */
-uint8_t cached_map_files_state_changed;
-
-/* 0x00510838: the language that the copies of the maps on the hard disk are
-in. Another field of that structure */
-long cached_map_files_language;
 
 /* 0x0047ff38: the language of the game; NONE until it is asked for */
 long global_language= NONE;
@@ -624,17 +613,17 @@ void cache_files_initialize(
 	{
 		global_language= language_from_xbox_language(XGetLanguage());
 	}
-	if (cached_map_files_language!=global_language)
+	if (global_preferences_globals.current.data.language!=global_language)
 	{
 		cached_map_files_delete(0, MAXIMUM_CACHED_MAP_FILES);
-		cached_map_files_language= global_language;
-		cached_map_files_state_changed= 1;
+		global_preferences_globals.current.data.language= global_language;
+		global_preferences_globals.dirty= TRUE;
 	}
-	if (cached_map_files_build_number!=CACHED_MAP_FILES_BUILD_NUMBER)
+	if (global_preferences_globals.current.data.cache_build_number!=CACHED_MAP_FILES_BUILD_NUMBER)
 	{
 		cached_map_files_delete(0, MAXIMUM_CACHED_MAP_FILES);
-		cached_map_files_build_number= CACHED_MAP_FILES_BUILD_NUMBER;
-		cached_map_files_state_changed= 1;
+		global_preferences_globals.current.data.cache_build_number= CACHED_MAP_FILES_BUILD_NUMBER;
+		global_preferences_globals.dirty= TRUE;
 	}
 
 	cached_map_files_open();
@@ -1538,8 +1527,8 @@ uint8_t scenario_load(
 			else
 			{
 				/* the copy of the map on the hard disk is not good */
-				cached_map_files_build_number= 0;
-				cached_map_files_state_changed= 1;
+				global_preferences_globals.current.data.cache_build_number= 0;
+				global_preferences_globals.dirty= TRUE;
 			}
 		}
 	}

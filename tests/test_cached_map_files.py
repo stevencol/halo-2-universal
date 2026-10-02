@@ -191,9 +191,9 @@ def run(t) -> None:
                                 "cached_map_file_globals": random_.randbytes(GLOBALS_SIZE),
                                 "cached_map_file_copy_globals": random_.randbytes(COPY_GLOBALS_SIZE),
                                 "global_language": language,
-                                "cached_map_files_language": copies_language,
-                                "cached_map_files_build_number": build_number,
-                                "cached_map_files_state_changed": changed,
+                                "global_preferences_globals+0x20": copies_language,
+                                "global_preferences_globals+0x1F0": build_number,
+                                "global_preferences_globals+0x1": changed,
                             },
                             externals={
                                 "XGetLanguage": lambda harness, arguments, console_language=console_language: console_language,

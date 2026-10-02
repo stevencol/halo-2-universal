@@ -105,8 +105,8 @@ def run(t) -> None:
                 "global_scenario_index": 0x22222222,
                 "global_scenario": 0x33333333,
                 "global_game_globals": 0x44444444,
-                "cached_map_files_build_number": 9809,
-                "cached_map_files_state_changed": b"\0",
+                "global_preferences_globals+0x1F0": 9809,
+                "global_preferences_globals+0x1": b"\0",
             },
             externals={
                 "cached_map_files_find_map": find_map,

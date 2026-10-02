@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-01, al terminar el hito 28.
+**Última actualización:** 2026-10-01, al terminar el hito 29.
 
 ## Dónde estamos
 
-- **244 funciones descompiladas de 11.265: el 2,17 % del juego** (el
-  1,000 % de los bytes de código).
-- Las 244 están comprobadas contra el ejecutable original
+- **258 funciones descompiladas de 11.265: el 2,29 % del juego** (el
+  1,052 % de los bytes de código).
+- Las 258 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the checks of the options of a game* (ver
+- Último hito: *Decompile the preferences kept on the hard disk* (ver
   `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
@@ -87,6 +87,8 @@ Módulos (funciones hechas / archivo):
 - [ ] Estado del juego y puntos de control — `saved games\game_state.c`
       (17; falta guardar/cargar núcleo y partida guardada)
 - [x] Arranque del juego — `shell\shell.c` (7)
+- [x] Preferencias guardadas — `main\global_preferences.c` (13; quedan 2
+      que leen nombres)
 - [ ] Juego y tabla de sistemas — `game\game.c` (19): la tabla, lo que la
       recorre, las opciones (por defecto, validar, comparar), los ticks de
       un fotograma, partida perdida y terminada, y el tipo de simulación
@@ -108,9 +110,9 @@ Módulos (funciones hechas / archivo):
       las que hay 5. Cada módulo que se descompile rellena su fila. Es el
       mapa de carreteras del resto del proyecto.
 - [ ] **Los sistemas que prepara `shell_initialize`** y que no están:
-      `0x00121350` (parecen las preferencias guardadas, `0x00120d80` a
-      `0x00121280`), `0x00121fc0`, `0x00123180`, `0x00012560`
-      (rasterizador), `0x001248b0`, `0x001253d0`.
+      `0x00121fc0`, `0x00123180`, `0x00012560` (rasterizador),
+      `0x001248b0`, `0x001253d0`. (Las preferencias, `0x00121350`, ya
+      están: hito 29.)
 - [x] ~~Opciones de partida: validar y comparar~~ (hito 28).
 - [ ] **Resto de `game_state.c`:** núcleo y partida guardada (`0x001240b0` a
       `0x00124490`, `0x00124640`, `0x00124770` en adelante).

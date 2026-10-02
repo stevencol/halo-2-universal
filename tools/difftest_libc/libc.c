@@ -406,3 +406,20 @@ int strncmp(const char *a, const char *b, size_t size)
 
 	return !size ? 0 : (unsigned char)*a<(unsigned char)*b ? -1 : (unsigned char)*a>(unsigned char)*b;
 }
+
+/* with characters of 16 bits, as the game's */
+unsigned short *wcsncpy(unsigned short *destination, const unsigned short *source, size_t count)
+{
+	size_t index= 0;
+
+	for (; index<count && source[index]; index++)
+	{
+		destination[index]= source[index];
+	}
+	for (; index<count; index++)
+	{
+		destination[index]= 0;
+	}
+
+	return destination;
+}
