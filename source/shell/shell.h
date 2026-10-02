@@ -80,7 +80,9 @@ struct d3d_present_parameters
 code here uses */
 struct d3d_device
 {
-	byte unknown0[0x938];
+	byte unknown0[0x934];
+	/* where the registers of the console's graphics are */
+	void *registers;
 	long reference_count;
 	byte unknown93C[0x147C];
 	/* called by Direct3D; the game sets it in main_time_initialize */

@@ -14,6 +14,7 @@ there is memory for one.
 #include "game_state.h"
 
 #include "cseries/async.h"
+#include "cache/texture_cache.h"
 #include "memory/physical_memory.h"
 
 #include <string.h>
@@ -35,8 +36,8 @@ enum
 
 /* ---------- prototypes */
 
-void PHYSICAL_MEMORY_CALLBACK game_state_write_finish(void *buffer, long unknown);
-void PHYSICAL_MEMORY_CALLBACK game_state_write_reclaim(void *buffer, long unknown);
+void TEXTURE_CACHE_CALLBACK game_state_write_finish(void *buffer, long unknown);
+void TEXTURE_CACHE_CALLBACK game_state_write_reclaim(void *buffer, long unknown);
 
 /* ---------- globals */
 
@@ -141,14 +142,14 @@ static inline __attribute__((always_inline)) void game_state_write_end(
 {
 	xbox_game_state_globals.file_valid_for_read[xbox_game_state_globals.write_file_index]=
 		xbox_game_state_globals.bytes_written==(uint32_t)xbox_game_state_globals.buffer_size;
-	physical_memory_buffer_free(xbox_game_state_globals.write_buffer);
+	texture_cache_return_memory(xbox_game_state_globals.write_buffer);
 	xbox_game_state_globals.write_buffer= NULL;
 }
 
 /* 0x00215140: if the copy of the state is written, tells whether the file
 can be read and gives the memory of the copy back. The first of the two
 functions that the game gets with that memory; the name is a guess */
-void PHYSICAL_MEMORY_CALLBACK game_state_write_finish(
+void TEXTURE_CACHE_CALLBACK game_state_write_finish(
 	void *buffer,
 	long unknown)
 {
@@ -163,7 +164,7 @@ void PHYSICAL_MEMORY_CALLBACK game_state_write_finish(
 
 /* 0x00215180: the game wants the memory of the copy back: waits for the
 copy to be written and does the same. The name is a guess */
-void PHYSICAL_MEMORY_CALLBACK game_state_write_reclaim(
+void TEXTURE_CACHE_CALLBACK game_state_write_reclaim(
 	void *buffer,
 	long unknown)
 {
@@ -203,7 +204,7 @@ void game_state_write_to_file(
 	}
 
 	globals->file_valid_for_read[file_index]= FALSE;
-	globals->write_buffer= physical_memory_buffer_allocate(0, globals->buffer_size, 0, game_state_write_finish,
+	globals->write_buffer= texture_cache_steal_memory(0, globals->buffer_size, 0, game_state_write_finish,
 		game_state_write_reclaim);
 	globals->write_file_index= file_index;
 

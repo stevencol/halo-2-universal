@@ -132,7 +132,7 @@ def run(t) -> None:
 
     # ---------- the end of a write
 
-    free = {"physical_memory_buffer_free": lambda harness, arguments: 0}
+    free = {"texture_cache_return_memory": lambda harness, arguments: 0}
     for write_done in (0, 1, 0x80):
         for bytes_written in (STATE_SIZE, STATE_SIZE - 1, 0):
             for file_index in (0, 1):
@@ -230,7 +230,7 @@ def run(t) -> None:
                             },
                             externals={
                                 "game_state_write_reclaim": reclaim,
-                                "physical_memory_buffer_allocate": lambda harness, arguments, given=given: given,
+                                "texture_cache_steal_memory": lambda harness, arguments, given=given: given,
                                 "async_write_position": write_position,
                                 "SwitchToThread": switch_to_thread,
                                 "main_loading_idle": lambda harness, arguments: 0,

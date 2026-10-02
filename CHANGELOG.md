@@ -2,6 +2,99 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — La caché de texturas, primera parte
+
+`xbox_texture_cache.c`, que ya existía en Halo 1: la caché que guarda en
+memoria los píxeles de los bitmaps. En este hito está todo menos la carga de
+un bitmap: crearla, darle memoria, vaciarla, el trabajo de cada fotograma,
+lo que le pregunta `lruv_cache` y la memoria que presta a otros. De 284
+funciones se pasa a 301, el 2,67 % de las del juego (el 1,254 % de sus
+bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `texture_cache_new` | `0x0012c0d0` | `cache/xbox_texture_cache.c` |
+| `texture_cache_delete` | `0x0012c190` | `cache/xbox_texture_cache.c` |
+| `texture_cache_open` | `0x0012c1e0` | `cache/xbox_texture_cache.c` |
+| `texture_cache_close` | `0x0012c290` | `cache/xbox_texture_cache.c` |
+| `texture_cache_update_mip_bias` | `0x0012c2e0` | `cache/xbox_texture_cache.c` |
+| `texture_cache_stolen_memory_idle` | `0x0012c400` | `cache/xbox_texture_cache.c` |
+| `texture_cache_reset_frame_index` | `0x0012c530` | `cache/xbox_texture_cache.c` |
+| `texture_cache_tick` | `0x0012c5b0` | `cache/xbox_texture_cache.c` |
+| `texture_cache_idle` | `0x0012c600` | `cache/xbox_texture_cache.c` |
+| `texture_cache_bitmap_delete` | `0x0012c770` | `cache/xbox_texture_cache.c` |
+| `texture_cache_bitmap_predict` | `0x0012cc10` | `cache/xbox_texture_cache.c` |
+| `texture_cache_flush` | `0x0012d0a0` | `cache/xbox_texture_cache.c` |
+| `texture_cache_block_type` | `0x0012d160` | `cache/xbox_texture_cache.c` |
+| `texture_cache_block_locked` | `0x0012d1a0` | `cache/xbox_texture_cache.c` |
+| `texture_cache_block_deleted` | `0x0012d200` | `cache/xbox_texture_cache.c` |
+| `texture_cache_steal_memory_now` | `0x0012d2f0` | `cache/xbox_texture_cache.c` |
+| `texture_cache_return_memory` | `0x0012d520` | `cache/xbox_texture_cache.c` |
+
+- Archivos nuevos: `cache/texture_cache.h`, `cache/xbox_texture_cache.c`,
+  `tests/test_texture_cache.py`.
+- Funciones de Direct3D que se suplen en las pruebas: `D3DDevice_KickOff`
+  (`0x003fac30`), `D3DResource_IsBusy` (`0x003fb710`),
+  `D3DResource_BlockUntilNotBusy` (`0x003fad50`).
+
+### Cambiado
+
+- `physical_memory_buffer_allocate` y `physical_memory_buffer_free` eran de
+  la caché de texturas: ahora son `texture_cache_steal_memory`
+  (`0x0012d400`, aún sin descompilar) y `texture_cache_return_memory`, como
+  en Halo 1. La copia de mapas y la partida guardada las siguen usando igual.
+- `struct bitmap_data`: tienen nombre los campos que la caché usa del final
+  del bitmap (`hardware_format`, `base_address`, `frame_index`) y los que
+  ocupan el sitio del cuarto al sexto nivel de detalle (`cache_block_indices`
+  y `cache_addresses`).
+- `struct d3d_device`: el puntero a los registros de la consola (`+0x934`).
+
+### Lo que se sabe
+
+- La caché se queda con toda la memoria física que sobra al cargar un mapa,
+  en páginas de 4 KB, y tiene hasta 512 bloques. Un bitmap ocupa hasta tres:
+  uno por nivel de detalle.
+- El juego quita detalle a los bitmaps según lo llena que esté la caché. Cada 200 ms
+  mira cuántas páginas se usaron en los últimos 5 ticks: con el 95 % o más
+  (o si se dibujó un bitmap sin sus píxeles) sube el sesgo 0,05; con el 85 %,
+  0,02; con el 70 %, 60 % y 50 % o menos lo baja 0,01, 0,02 y 0,05. El sesgo
+  va de 0 a 2 niveles.
+- Un bloque no se puede echar si es memoria prestada, si está marcado como
+  necesario (salvo al vaciar la caché), si se está leyendo o si la consola
+  aún dibuja con él. Al echar uno de un bitmap, el juego espera a la lectura
+  y a la consola.
+- La memoria que la caché presta (a la copia de mapas y a la partida
+  guardada) empieza en una página, y justo antes lleva 36 bytes: el bloque,
+  una firma (la dirección con `0x02281972`), el tamaño, un dato de quien la
+  pide y dos funciones suyas, una para cada fotograma y otra para cuando la
+  caché quiere la memoria de vuelta. Al vaciar la caché se les pide a todos.
+- Tras mandar trabajo a la consola (`D3DDevice_KickOff`) el juego lee tres
+  registros de la tarjeta gráfica y no hace nada con ellos; está tal cual.
+- Los bitmaps tienen sitio para seis niveles de detalle en el mapa, pero el
+  juego de la consola solo lee tres y guarda cosas suyas en el sitio de los
+  otros tres.
+- `texture_cache_delete` no libera la lista de bitmaps previstos.
+
+### Sin comprobar
+
+- En lo que impide echar un bloque, la comprobación de que es memoria
+  prestada: un bloque prestado tiene además el resto a cero, y con eso ya
+  cuenta como «leyéndose».
+- Al prestar memoria, el borrado del bloque: `datum_new_at_index` ya lo deja
+  a cero.
+- `texture_cache_steal_memory` (`0x0012d400`) y la función que empieza a
+  leer los bitmaps previstos (`0x0012c450`) siguen sin descompilar; en las
+  pruebas de `texture_cache_idle` la segunda se suple.
+
+### Mutaciones
+
+100 líneas rotas a propósito: 95 detectadas a la primera. De las otras 5,
+tres dieron casos nuevos (un bitmap en la lista de previstos sin su marca,
+uno que está dos veces, memoria prestada con basura) y dos son las de «Sin
+comprobar».
+
 ## 2026-10-02 — La caché de animaciones
 
 El primer módulo que usa `lruv_cache.c` entero: la caché que trae del disco

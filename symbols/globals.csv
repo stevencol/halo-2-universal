@@ -77,3 +77,6 @@ address,name,source
 00510c21,animation_cache_opened,source/cache/xbox_animation_cache.c
 0055e71c,animation_cache_warning_time,source/cache/xbox_animation_cache.c
 0055e720,animation_cache_idle_count,source/cache/xbox_animation_cache.c
+004e6454,texture_cache_globals,source/cache/xbox_texture_cache.c
+00468841,texture_cache_mip_bias_enabled,source/cache/xbox_texture_cache.c
+0055e724,texture_cache_warning_time,source/cache/xbox_texture_cache.c

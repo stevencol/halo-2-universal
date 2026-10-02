@@ -19,7 +19,10 @@ blocks of the cache file apart from the tag.
 
 enum
 {
-	MAXIMUM_BITMAP_PIXELS_BLOCKS= 6
+	MAXIMUM_BITMAP_PIXELS_BLOCKS= 6,
+	/* the console's game reads three, and keeps things of its own where the
+	other three are */
+	NUMBER_OF_BITMAP_CACHE_LEVELS= 3
 };
 
 enum
@@ -69,9 +72,23 @@ struct bitmap_data
 	/* the pixels at up to six levels of detail, the largest first, each with
 	its mipmaps after it. The two high bits of an offset tell the file, as
 	in a geometry block's offset; NONE is no block */
-	uint32_t pixels_offsets[MAXIMUM_BITMAP_PIXELS_BLOCKS];
-	uint32_t pixels_sizes[MAXIMUM_BITMAP_PIXELS_BLOCKS];
-	uint8_t unknown4C[0x28];
+	uint32_t pixels_offsets[MAXIMUM_BITMAP_PIXELS_BLOCKS-NUMBER_OF_BITMAP_CACHE_LEVELS];
+	/* in the map, the offsets of the fourth to the sixth; in the game, the
+	blocks of the texture cache that have the pixels (NONE: not there) */
+	uint32_t cache_block_indices[NUMBER_OF_BITMAP_CACHE_LEVELS];
+	uint32_t pixels_sizes[MAXIMUM_BITMAP_PIXELS_BLOCKS-NUMBER_OF_BITMAP_CACHE_LEVELS];
+	/* in the map, the sizes of the fourth to the sixth; in the game, where
+	the pixels are in the texture cache */
+	uint32_t cache_addresses[NUMBER_OF_BITMAP_CACHE_LEVELS];
+	uint32_t unknown4C;
+	/* what follows is the game's, and is 0 in the map: the texture to draw
+	with (a pointer), and where its pixels are */
+	uint32_t hardware_format;
+	uint32_t base_address;
+	float unknown58;
+	uint8_t unknown5C[0x14];
+	/* of the texture cache: the last frame that it was drawn in */
+	int32_t frame_index;
 };
 
 struct bitmap_group

@@ -276,8 +276,8 @@ def run(t) -> None:
         for given in (COPY_BUFFER + 0x1000, 0):
             globals_ = {"cached_map_file_copy_globals": copy_globals(random_, buffer=buffer, buffer_size=buffer_size)}
             externals = {
-                "physical_memory_buffer_allocate": lambda harness, arguments, given=given: given,
-                "physical_memory_buffer_free": free,
+                "texture_cache_steal_memory": lambda harness, arguments, given=given: given,
+                "texture_cache_return_memory": free,
             }
             for size in (0x40000, 0x100000, 0):
                 t.check("cached_map_file_copy_buffer_acquire", size, globals=globals_, externals=externals)
@@ -353,8 +353,8 @@ def run(t) -> None:
                     "cached_map_file_choose_place": lambda harness, arguments, place=place: choose_place(
                         harness, arguments, place
                     ),
-                    "physical_memory_buffer_allocate": lambda harness, arguments, given=given: given,
-                    "physical_memory_buffer_free": free,
+                    "texture_cache_steal_memory": lambda harness, arguments, given=given: given,
+                    "texture_cache_return_memory": free,
                 },
             )
 
@@ -378,8 +378,8 @@ def run(t) -> None:
                     },
                     externals={
                         "async_copy_position": task(0x106),
-                        "physical_memory_buffer_allocate": lambda harness, arguments: COPY_BUFFER,
-                        "physical_memory_buffer_free": free,
+                        "texture_cache_steal_memory": lambda harness, arguments: COPY_BUFFER,
+                        "texture_cache_return_memory": free,
                     },
                 )
 

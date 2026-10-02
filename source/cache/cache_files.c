@@ -11,6 +11,7 @@ gives the address it has there.
 #include "cseries/cseries.h"
 #include "main/global_preferences.h"
 #include "memory/binary_search.h"
+#include "cache/texture_cache.h"
 #include "memory/physical_memory.h"
 #include "scenario/scenario.h"
 #include "scenario/scenario_definitions.h"
@@ -1013,7 +1014,7 @@ uint8_t cached_map_file_request(
 
 /* 0x00213fa0: what the game calls to have the memory of the buffer back:
 goes on with the copy until it gives the buffer up */
-void PHYSICAL_MEMORY_CALLBACK cached_map_file_copy_buffer_reclaim(
+void TEXTURE_CACHE_CALLBACK cached_map_file_copy_buffer_reclaim(
 	void *buffer,
 	long unknown)
 {
@@ -1039,11 +1040,11 @@ void cached_map_file_copy_buffer_acquire(
 	{
 		if (cached_map_file_copy_globals.buffer)
 		{
-			physical_memory_buffer_free(cached_map_file_copy_globals.buffer);
+			texture_cache_return_memory(cached_map_file_copy_globals.buffer);
 			cached_map_file_copy_globals.buffer= NULL;
 			cached_map_file_copy_globals.buffer_size= 0;
 		}
-		cached_map_file_copy_globals.buffer= physical_memory_buffer_allocate(0, size, 0, NULL,
+		cached_map_file_copy_globals.buffer= texture_cache_steal_memory(0, size, 0, NULL,
 			cached_map_file_copy_buffer_reclaim);
 		if (cached_map_file_copy_globals.buffer)
 		{
@@ -1058,7 +1059,7 @@ void cached_map_file_copy_buffer_release(
 {
 	if (cached_map_file_copy_globals.buffer)
 	{
-		physical_memory_buffer_free(cached_map_file_copy_globals.buffer);
+		texture_cache_return_memory(cached_map_file_copy_globals.buffer);
 		cached_map_file_copy_globals.buffer= NULL;
 		cached_map_file_copy_globals.buffer_size= 0;
 	}

@@ -206,8 +206,8 @@ address,name,source,arguments,returns,convention
 002148b0,cached_map_file_copy_get_progress,source/cache/cache_files.c,edx,bool
 00214940,cached_map_file_get_progress,source/cache/cache_files.c,esi,real:xmm0
 002141f0,cached_map_file_copy_update,source/cache/cache_files.c,,bool
-0012d400,physical_memory_buffer_allocate,,ecx stack stack stack stack,int
-0012d520,physical_memory_buffer_free,,esi,void
+0012d400,texture_cache_steal_memory,,ecx stack stack stack stack,int
+0012d520,texture_cache_return_memory,source/cache/xbox_texture_cache.c,esi,void
 003303f3,GetSystemTimeAsFileTime,,stack,void
 003314b0,GetTickCount,,,int
 00163c00,crc_build_table,source/memory/crc.c,edx,void
@@ -564,3 +564,23 @@ address,name,source,arguments,returns,convention
 001238f0,animation_cache_block_deleted,source/cache/xbox_animation_cache.c,stack,void
 00123970,animation_cache_reading_count,source/cache/xbox_animation_cache.c,,int
 001239d0,animation_cache_update_predicted,source/cache/xbox_animation_cache.c,,void
+0012c0d0,texture_cache_new,source/cache/xbox_texture_cache.c,,void
+0012c190,texture_cache_delete,source/cache/xbox_texture_cache.c,,void
+0012c1e0,texture_cache_open,source/cache/xbox_texture_cache.c,,void
+0012c290,texture_cache_close,source/cache/xbox_texture_cache.c,,void
+0012c2e0,texture_cache_update_mip_bias,source/cache/xbox_texture_cache.c,,void
+0012c400,texture_cache_stolen_memory_idle,source/cache/xbox_texture_cache.c,,void
+0012c530,texture_cache_reset_frame_index,source/cache/xbox_texture_cache.c,,void
+0012c5b0,texture_cache_tick,source/cache/xbox_texture_cache.c,,void
+0012c600,texture_cache_idle,source/cache/xbox_texture_cache.c,,void
+0012c770,texture_cache_bitmap_delete,source/cache/xbox_texture_cache.c,stack,void
+0012cc10,texture_cache_bitmap_predict,source/cache/xbox_texture_cache.c,eax,bool
+0012d0a0,texture_cache_flush,source/cache/xbox_texture_cache.c,,void
+0012d160,texture_cache_block_type,source/cache/xbox_texture_cache.c,stack,bool
+0012d1a0,texture_cache_block_locked,source/cache/xbox_texture_cache.c,stack,bool
+0012d200,texture_cache_block_deleted,source/cache/xbox_texture_cache.c,stack,void
+0012d2f0,texture_cache_steal_memory_now,source/cache/xbox_texture_cache.c,stack stack stack stack,int
+0012c450,unknown_0012c450,,,void
+003fac30,D3DDevice_KickOff,,edx,void
+003fb710,D3DResource_IsBusy,,ecx,int
+003fad50,D3DResource_BlockUntilNotBusy,,eax,void
