@@ -262,7 +262,8 @@ class Symbol:
     arguments: list[str]
     # int, bool, short, real, or void. The executable's function returns a
     # real in the x87 register, or in an SSE register if it is "real:xmm0",
-    # or as its 32 bits in eax if it is "real:eax"
+    # or as its 32 bits in eax if it is "real:eax". "string" is a pointer to
+    # a text, which is what is compared
     returns: str
     # "thiscall" for a function of source/ that takes its first argument in ecx
     convention: str = ""
@@ -683,6 +684,9 @@ class Harness:
             return eax - (1 << 32) if eax & 0x80000000 else eax
         if returns == "pointer":
             return self.normalize(eax)
+        if returns == "string":
+            # a text that is not at the same address in the game and in source/
+            return bytes(mu.mem_read(eax, 0x100)).split(bytes(1), 1)[0]
         if returns == "bool":
             return bool(eax & 0xFF)
         if returns == "short":

@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 48.
+**Última actualización:** 2026-10-02, al terminar el hito 49.
 
 ## Dónde estamos
 
-- **434 funciones descompiladas de 11.265: el 3,85 % del juego** (el
-  1,881 % de los bytes de código).
-- Las 434 están comprobadas contra el ejecutable original
+- **445 funciones descompiladas de 11.265: el 3,95 % del juego** (el
+  1,903 % de los bytes de código).
+- Las 445 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile sound_idle and the samples a sound asks for* (ver `git log`).
+- Último hito: *Decompile the types of the saved game files* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -76,6 +76,8 @@ Módulos (funciones hechas / archivo):
 - [x] Cargar y descargar un mapa — `main\main_game.c` (23, completo)
 - [x] Memoria de la interfaz — `interface\user_interface_memory.c` (4)
 - [x] Mandos — `input\input_xbox.c` (10, completo)
+- [ ] Archivos de los jugadores — `saved games\saved_game_files.c` (11 de
+      unas 35; va de `0x002160b0` a `0x00217590`)
 - [ ] Sonido — `sound\sound_manager.c` (22; faltan `0x001251e0`,
       `0x00125b40` y de `0x00125f70` en adelante), `sound\sound_classes.c` (1)
 - [x] Archivos — `tag_files\files.c`, `files_xbox.c` (19, completo)

@@ -797,3 +797,16 @@ address,name,source,arguments,returns,convention
 0021f6d0,unknown_0021f6d0,,ecx edx stack,void
 00218850,unknown_00218850,,stack stack stack,int
 001268e0,unknown_001268e0,,eax,void
+00216400,saved_game_files_get_unit_root,source/saved games/saved_game_files.c,ecx eax stack,pointer
+00216a50,saved_game_file_type_from_variant,source/saved games/saved_game_files.c,eax,int
+00216ab0,saved_game_file_type_from_listed_game,source/saved games/saved_game_files.c,eax,int
+00216b00,saved_game_file_type_to_listed_game,source/saved games/saved_game_files.c,eax,int
+00216b60,saved_game_file_type_get_name,source/saved games/saved_game_files.c,ecx,string
+00216bd0,saved_game_file_type_get_string_id,source/saved games/saved_game_files.c,ecx,int
+00216c40,saved_game_file_type_get_blocks,source/saved games/saved_game_files.c,eax,int
+00216c70,saved_game_file_size_to_blocks,source/saved games/saved_game_files.c,stack,int
+00216ce0,saved_game_files_hard_disk_has_blocks,source/saved games/saved_game_files.c,eax,bool
+00216d70,saved_game_file_get_type_path,source/saved games/saved_game_files.c,ecx eax stack,bool
+00217480,saved_game_file_type_get_size,source/saved games/saved_game_files.c,eax,int
+002d5f65,XGetDiskClusterSize,,stack,int
+002d5838,GetDiskFreeSpaceExA,,stack stack stack stack,int

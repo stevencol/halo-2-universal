@@ -2,6 +2,66 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Los tipos de archivo de los jugadores
+
+Se empieza `saved_game_files.c`: los archivos que los jugadores guardan en
+el disco duro y en las tarjetas de memoria (perfiles, variantes de juego y
+listas). De 434 funciones se pasa a 445, el 3,95 % de las del juego (el
+1,903 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `saved_game_files_get_unit_root` | `0x00216400` | `saved games/saved_game_files.c` |
+| `saved_game_file_type_from_variant` | `0x00216a50` | `saved games/saved_game_files.c` |
+| `saved_game_file_type_from_listed_game` | `0x00216ab0` | `saved games/saved_game_files.c` |
+| `saved_game_file_type_to_listed_game` | `0x00216b00` | `saved games/saved_game_files.c` |
+| `saved_game_file_type_get_name` | `0x00216b60` | `saved games/saved_game_files.c` |
+| `saved_game_file_type_get_string_id` | `0x00216bd0` | `saved games/saved_game_files.c` |
+| `saved_game_file_type_get_blocks` | `0x00216c40` | `saved games/saved_game_files.c` |
+| `saved_game_file_size_to_blocks` | `0x00216c70` | `saved games/saved_game_files.c` |
+| `saved_game_files_hard_disk_has_blocks` | `0x00216ce0` | `saved games/saved_game_files.c` |
+| `saved_game_file_get_type_path` | `0x00216d70` | `saved games/saved_game_files.c` |
+| `saved_game_file_type_get_size` | `0x00217480` | `saved games/saved_game_files.c` |
+
+- Archivos nuevos: `saved games/saved_game_files.h`,
+  `saved games/saved_game_files.c`, `tests/test_saved_game_files.py`.
+- En la herramienta de pruebas, un tipo de resultado nuevo, `string`: la
+  función devuelve un puntero a un texto y lo que se compara es el texto,
+  que no está en la misma dirección en el juego y en `source/`.
+- Funciones de la consola que se suplen: `XGetDiskClusterSize`
+  (`0x002d5f65`) y `GetDiskFreeSpaceExA` (`0x002d5838`).
+
+### Lo que se sabe
+
+- Hay once tipos de archivo, y su nombre es el del directorio donde se
+  guardan: `profile`, `slayer`, `koth`, `race`, `oddball`, `juggernaut`,
+  `headhunter`, `ctf`, `assault`, `territories` y `playlist`. **`race` y
+  `headhunter` están en la tabla aunque Halo 2 no salió con esos modos.**
+- Un perfil ocupa 0x1E0 bytes, una variante 0x130 y una lista 0x15CB8.
+- El espacio se cuenta en bloques de 16 KB, como lo enseña la consola: los
+  bytes del archivo más seis clústeres del disco, redondeado hacia arriba.
+- Tres numeraciones distintas para los juegos y funciones para pasar de
+  una a otra: la del tipo de archivo, la del motor de la variante (campo
+  `+0x44`: 1 ctf, 2 slayer, 3 oddball, 4 koth, 7 juggernaut, 8 territories,
+  9 assault) y el orden en que salen en la lista (slayer, oddball,
+  juggernaut, koth, ctf, assault, territories).
+- Esas tres funciones de conversión no comprueban nada: con un valor que
+  no sea de los siete juegos, el juego salta a una dirección cualquiera.
+
+### Sin comprobar
+
+- Las tres conversiones con valores que no son de los siete juegos (el
+  juego se cae).
+- En `saved_game_file_get_type_path`, el cero que se pone al final de la
+  ruta: `csstrcat256` lo pone también.
+
+### Mutaciones
+
+81 líneas rotas a propósito: 80 detectadas, y la otra es la de «Sin
+comprobar».
+
 ## 2026-10-02 — Atender el sonido y pedir sus muestras
 
 Cinco funciones más del sonido. De 429 funciones se pasa a 434, el 3,85 %
