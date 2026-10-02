@@ -685,3 +685,25 @@ address,name,source,arguments,returns,convention
 001483c3,unknown_001483c3,,stack,void
 0011c840,unknown_0011c840,,,void
 0012bf00,unknown_0012bf00,,,void
+001374c0,file_location_get_full_path,source/tag_files/files_xbox.c,esi edi,void
+00136860,file_delete,source/tag_files/files_xbox.c,ebx,bool
+001368f0,file_exists,source/tag_files/files_xbox.c,stack,bool
+00136970,file_open,source/tag_files/files_xbox.c,ebx stack stack,bool
+00136bb0,file_close,source/tag_files/files_xbox.c,esi,bool
+00136bf0,file_set_position,source/tag_files/files_xbox.c,esi eax stack,bool
+00136c40,file_set_eof,source/tag_files/files_xbox.c,esi eax,bool
+00136ca0,file_read,source/tag_files/files_xbox.c,esi edi ecx stack,bool
+00136d00,file_write,source/tag_files/files_xbox.c,esi edi ecx,bool
+00136d50,file_read_from_position,source/tag_files/files_xbox.c,ecx eax stack stack stack,int
+00136d90,file_write_to_position,source/tag_files/files_xbox.c,ecx eax edi stack,int
+00136df0,file_get_last_modification_date,source/tag_files/files_xbox.c,ebx stack,bool
+00136e90,file_get_size,source/tag_files/files_xbox.c,stack stack,bool
+00136fc0,find_files_end,source/tag_files/files_xbox.c,ecx,void
+00137320,file_path_add_name,source/tag_files/files.c,esi edi,void
+00137370,file_path_add_extension,source/tag_files/files.c,esi edi,void
+00136f00,find_files_start,source/tag_files/files.c,ecx edx eax stack,void
+002d1d3e,GetLastError,,,int
+00331aa1,RemoveDirectoryA,,stack,int
+002d69f8,SetFileAttributesA,,stack stack,int
+002d6a9e,GetFileAttributesA,,stack,int
+002d6ae9,GetFileAttributesExA,,stack stack stack,int

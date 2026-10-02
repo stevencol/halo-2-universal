@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-01, al terminar el hito 39.
+**Última actualización:** 2026-10-01, al terminar el hito 40.
 
 ## Dónde estamos
 
-- **365 funciones descompiladas de 11.265: el 3,24 % del juego** (el
-  1,568 % de los bytes de código).
-- Las 365 están comprobadas contra el ejecutable original
+- **382 funciones descompiladas de 11.265: el 3,39 % del juego** (el
+  1,633 % de los bytes de código).
+- Las 382 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the change of game* (ver `git log`).
+- Último hito: *Decompile the files* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -76,6 +76,8 @@ Módulos (funciones hechas / archivo):
 - [ ] Cargar y descargar un mapa — `main\main_game.c` (18; faltan
       `0x0018e960`, `0x0018f0a0` y `0x0018f1c0` en adelante)
 - [x] Memoria de la interfaz — `interface\user_interface_memory.c` (4)
+- [ ] Archivos — `tag_files\files.c`, `files_xbox.c` (17; faltan
+      `find_files_next`, `0x00137000`, y `file_path_split`, `0x00137400`)
 - [x] Cadenas anchas — `text\unicode.c` (7; quedan 3)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
 - [ ] Matemáticas reales — `math\real_math.c` (21 de unas 50)
@@ -122,8 +124,18 @@ Módulos (funciones hechas / archivo):
       `0x001248b0`, `0x001253d0`. (Las preferencias, `0x00121350`, ya
       están: hito 29.)
 - [x] ~~Opciones de partida: validar y comparar~~ (hito 28).
-- [ ] **Resto de `game_state.c`:** núcleo y partida guardada (`0x001240b0` a
-      `0x00124490`, `0x00124640`, `0x00124770` en adelante).
+- [x] ~~Archivos (`files.c`)~~ (hito 40).
+- [ ] **Resto de `game_state.c`:** `0x001240b0` (cargar la partida guardada),
+      `0x001241b0` (guardarla), `0x00124360`, `0x00124380`
+      (`game_state_load_core`), `0x00124490` (el archivo «core»:
+      `d:\core\<nombre>.bin`), `0x00124640` (leerlo), `0x00124770`,
+      `0x00124790`, `0x00124800`, `0x00124840` (leer y escribir la partida
+      guardada con `0x002174b0` y `0x00217520`). Ya tiene lo que necesitaba:
+      los archivos y `main_game_change_immediate`.
+- [ ] **Los mandos** (`0x001248b0` a `0x00124ee0`, en Halo 1
+      `input_xbox.c`): empieza justo después de `game_state.c`. Sus
+      globales están en `0x004e61b8`; el estado de los cuatro mandos, en
+      `0x004e61dc`, es lo que se pone a cero al empezar una partida.
 - [x] ~~`lruv_block_new`~~ (hito 31).
 - [x] ~~Caché de animaciones~~ (hito 32).
 - [x] ~~Caché de texturas, primera parte~~ (hito 33): crear, abrir,

@@ -2,6 +2,64 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Los archivos
+
+`files.c` y su parte de la consola, que en Halo 1 es `files_windows.c`:
+abrir, leer, escribir y borrar archivos, y componer rutas. De 365 funciones
+se pasa a 382, el 3,39 % de las del juego (el 1,633 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `file_delete` | `0x00136860` | `tag_files/files_xbox.c` |
+| `file_exists` | `0x001368f0` | `tag_files/files_xbox.c` |
+| `file_open` | `0x00136970` | `tag_files/files_xbox.c` |
+| `file_close` | `0x00136bb0` | `tag_files/files_xbox.c` |
+| `file_set_position` | `0x00136bf0` | `tag_files/files_xbox.c` |
+| `file_set_eof` | `0x00136c40` | `tag_files/files_xbox.c` |
+| `file_read` | `0x00136ca0` | `tag_files/files_xbox.c` |
+| `file_write` | `0x00136d00` | `tag_files/files_xbox.c` |
+| `file_read_from_position` | `0x00136d50` | `tag_files/files_xbox.c` |
+| `file_write_to_position` | `0x00136d90` | `tag_files/files_xbox.c` |
+| `file_get_last_modification_date` | `0x00136df0` | `tag_files/files_xbox.c` |
+| `file_get_size` | `0x00136e90` | `tag_files/files_xbox.c` |
+| `find_files_end` | `0x00136fc0` | `tag_files/files_xbox.c` |
+| `file_location_get_full_path` | `0x001374c0` | `tag_files/files_xbox.c` |
+| `find_files_start` | `0x00136f00` | `tag_files/files.c` |
+| `file_path_add_name` | `0x00137320` | `tag_files/files.c` |
+| `file_path_add_extension` | `0x00137370` | `tag_files/files.c` |
+
+- Archivos nuevos: `tag_files/files.h`, `files.c`, `files_xbox.c`,
+  `tests/test_files.py`.
+- Funciones de la consola que se suplen en las pruebas: `GetLastError`,
+  `RemoveDirectoryA`, `SetFileAttributesA`, `GetFileAttributesA`,
+  `GetFileAttributesExA`.
+
+### Lo que se sabe
+
+- La referencia a un archivo es como la de Halo 1 (la firma `filo`, unos
+  indicadores, la ruta de 256 caracteres) con dos campos más: el
+  identificador del archivo abierto y la posición. Mide 272 bytes.
+- Una ruta que no empieza por una unidad (`x:\`) es del disco del juego:
+  se le pone `d:\` delante.
+- El juego lleva la cuenta de la posición por su lado, y no le pide a la
+  consola que se mueva si ya está donde quiere.
+- Solo se abren archivos que existen (crear es cosa de otras funciones). Al
+  abrir se dice por qué no se pudo: no existe, no hay permiso, no existe la
+  ruta, la unidad no vale, está en uso, u otra cosa.
+- Tras cada fallo el juego lee el error de la consola y lo borra, sin hacer
+  nada con él: es lo que queda de los avisos de la versión de desarrollo.
+  En `file_set_eof` lo hace dos veces.
+- Una lectura que trae menos de lo pedido deja el error 0x26 (fin de
+  archivo).
+
+### Mutaciones
+
+73 líneas rotas a propósito: 70 detectadas a la primera, y las otras 3 con
+casos nuevos (rutas con minúsculas en los extremos del abecedario, una letra
+sin dos puntos, una ruta que llena la referencia).
+
 ## 2026-10-02 — El cambio de partida
 
 El resto del corazón de `main_game.c`: cómo se pide otra partida, cuándo se
