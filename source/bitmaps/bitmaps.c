@@ -10,6 +10,19 @@ that these functions are of it is a guess, and so are their names.
 
 #include "bitmaps.h"
 
+#include "cache/texture_cache.h"
+
+/* ---------- prototypes of functions of the console's libraries */
+
+/* 0x003fb640: one user less of a texture */
+unsigned long D3DResource_Release(uint32_t resource);
+
+/* 0x003312fa */
+int VirtualFree(void *address, unsigned long size, unsigned long type);
+
+/* 0x002d1d3e */
+uint32_t GetLastError(void);
+
 /* ---------- globals */
 
 /* 0x00453550: the bits that a pixel takes in each format; 0 for a format
@@ -44,6 +57,158 @@ static inline __attribute__((always_inline)) short bitmap_format_get_bits_per_pi
 	short format)
 {
 	return format==NONE ? 0 : bitmap_format_bits_per_pixel[format];
+}
+
+/* 0x00135880: a real of 16 bits as one of 32: its sign is its high bit, its
+exponent its 5 low bits, and the rest is what is after the point. No number
+is told apart: not zero either */
+real real16_to_real(
+	word value)
+{
+	union
+	{
+		unsigned long bits;
+		real value;
+	} result;
+	unsigned long bits= value;
+
+	result.bits= ((((bits>>REAL16_FRACTION_SHIFT)&REAL16_FRACTION_MASK) | ((bits>>REAL16_SIGN_SHIFT)<<18))<<13) |
+		(((bits&REAL16_EXPONENT_MASK)+REAL16_EXPONENT_BIAS)<<23);
+
+	return result.value;
+}
+
+/* 0x001358c0: the bits that a pixel takes in a format; 0 if there is none */
+long bitmap_format_get_bits(
+	short format)
+{
+	return bitmap_format_get_bits_per_pixel(format);
+}
+
+/* 0x001359d0: the end of a bitmap: it is taken out of the texture cache, the
+texture that it is drawn with is let go of, and if the bitmap was made by the
+game the memory of its pixels and its own are given back */
+void bitmap_delete(
+	struct bitmap_data *bitmap)
+{
+	if (!bitmap)
+	{
+		return;
+	}
+	texture_cache_bitmap_delete(bitmap);
+	if (bitmap->hardware_format)
+	{
+		D3DResource_Release(bitmap->hardware_format);
+		bitmap->hardware_format= 0;
+	}
+	if (bitmap->flags&FLAG(_bitmap_allocated_bit))
+	{
+		if (bitmap->base_address && !VirtualFree((void *)bitmap->base_address, 0, MEM_RELEASE))
+		{
+			GetLastError();
+		}
+		if (!VirtualFree(bitmap, 0, MEM_RELEASE))
+		{
+			GetLastError();
+		}
+	}
+}
+
+/* one of the sizes of a bitmap at the next mipmap: half, and no less than
+the least that there is */
+static inline __attribute__((always_inline)) short bitmap_dimension_next_mipmap(
+	short dimension,
+	short minimum)
+{
+	short half= (short)(dimension>>1);
+
+	return minimum<=half ? half : minimum;
+}
+
+static inline __attribute__((always_inline)) short bitmap_get_minimum_dimension(
+	const struct bitmap_data *bitmap)
+{
+	return (bitmap->flags&FLAG(_bitmap_compressed_bit)) ? BITMAP_COMPRESSED_BLOCK_SIZE : 1;
+}
+
+/* 0x00135a30: where a pixel of a bitmap is, at a mipmap: the mipmaps are one
+after another, and each has its rows one after another. A compressed bitmap
+has no mipmap smaller than a block */
+long bitmap_2d_get_pixel_address(
+	const struct bitmap_data *bitmap,
+	short mipmap_index,
+	short x,
+	short y)
+{
+	short minimum= bitmap_get_minimum_dimension(bitmap);
+	short bits_per_pixel= bitmap_format_get_bits_per_pixel(bitmap->format);
+	short width= bitmap->width;
+	short height= bitmap->height;
+	long pixel_count= 0;
+	short index;
+
+	for (index= 0; index<mipmap_index; index++)
+	{
+		pixel_count+= (long)width*(long)height;
+		width= bitmap_dimension_next_mipmap(width, minimum);
+		height= bitmap_dimension_next_mipmap(height, minimum);
+	}
+
+	return (long)(((long)width*y + pixel_count + x)*bits_per_pixel/BITS_PER_BYTE + (long)bitmap->base_address);
+}
+
+/* 0x00135af0: where a pixel of a bitmap of three dimensions is, at a mipmap.
+Its depth is its low byte, and is halved to no less than 1 */
+long bitmap_3d_get_pixel_address(
+	const struct bitmap_data *bitmap,
+	short x,
+	short y,
+	short z,
+	short mipmap_index)
+{
+	short minimum= bitmap_get_minimum_dimension(bitmap);
+	short bits_per_pixel= bitmap_format_get_bits_per_pixel(bitmap->format);
+	short width= bitmap->width;
+	short height= bitmap->height;
+	short depth= (char)bitmap->depth;
+	long pixel_count= 0;
+	short index;
+
+	for (index= 0; index<mipmap_index; index++)
+	{
+		pixel_count+= (long)width*(long)height*(long)depth;
+		width= bitmap_dimension_next_mipmap(width, minimum);
+		height= bitmap_dimension_next_mipmap(height, minimum);
+		depth= (short)(depth&~1)>=2 ? (short)(depth>>1) : 1;
+	}
+
+	return (long)((((long)height*z + y)*width + pixel_count + x)*bits_per_pixel/BITS_PER_BYTE + (long)bitmap->base_address);
+}
+
+/* 0x00135c00: where a pixel of a cube map is: of one of its faces, at a
+mipmap. The six faces of each mipmap are one after another, and those of a
+mipmap after those of the one before. A compressed cube map has no mipmap
+smaller than a block */
+long bitmap_cube_map_get_pixel_address(
+	const struct bitmap_data *bitmap,
+	short x,
+	short y,
+	short face,
+	short mipmap_index)
+{
+	short minimum_size= bitmap_get_minimum_dimension(bitmap);
+	short bits_per_pixel= bitmap_format_get_bits_per_pixel(bitmap->format);
+	short size= bitmap->width;
+	long pixel_count= 0;
+	short index;
+
+	for (index= 0; index<mipmap_index; index++)
+	{
+		pixel_count+= (long)size*(long)size*NUMBER_OF_CUBE_MAP_FACES;
+		size= bitmap_dimension_next_mipmap(size, minimum_size);
+	}
+
+	return (long)((x + ((long)face*size + y)*size + pixel_count)*bits_per_pixel/BITS_PER_BYTE + (long)bitmap->base_address);
 }
 
 /* 0x00136490: the bytes of the pixels of a bitmap, with all of its mipmaps */

@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Dónde está cada píxel de un bitmap: el 5 % del juego
+
+Seis funciones. De 557 funciones se pasa a 563: **el 5,00 % de las del
+juego** (el 2,495 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `real16_to_real` | `0x00135880` | `bitmaps/bitmaps.c` |
+| `bitmap_format_get_bits` | `0x001358c0` | `bitmaps/bitmaps.c` |
+| `bitmap_delete` | `0x001359d0` | `bitmaps/bitmaps.c` |
+| `bitmap_2d_get_pixel_address` | `0x00135a30` | `bitmaps/bitmaps.c` |
+| `bitmap_3d_get_pixel_address` | `0x00135af0` | `bitmaps/bitmaps.c` |
+| `bitmap_cube_map_get_pixel_address` | `0x00135c00` | `bitmaps/bitmaps.c` |
+
+### Lo que se sabe
+
+- Los píxeles de un bitmap están seguidos: un mipmap detrás de otro y, en
+  cada uno, las filas una detrás de otra. En uno de tres dimensiones van
+  además las capas seguidas, y en un mapa cúbico las seis caras de cada
+  mipmap. La dirección de un píxel es la de los píxeles más los bits que hay
+  antes de él, entre 8 redondeando hacia cero.
+- De un mipmap al siguiente cada medida es la mitad, sin bajar del mínimo: 1,
+  o 4 en un bitmap comprimido. El fondo de uno de tres dimensiones es su byte
+  bajo y no baja de 1.
+- Los números reales de 16 bits del juego no son los habituales: el signo es
+  el bit alto, el **exponente son los 5 bits bajos** y la fracción está en
+  medio. No se distingue ningún número, ni el cero.
+- Borrar un bitmap es sacarlo de la caché de texturas, soltar su textura y,
+  si lo hizo el juego (el bit 8 de sus banderas, que no tenía nombre),
+  devolver a la consola la memoria de sus píxeles y la suya.
+
+### Sin comprobar
+
+- En `real16_to_real`, tomar el número con signo o sin él: los bits de más
+  se pierden al desplazar.
+- Que la mitad sea «mayor o igual» o «mayor» que el mínimo, y el fondo de 2
+  o 3 capas: el resultado es el mismo de las dos formas (dos mutaciones).
+
+### Mutaciones
+
+68 líneas rotas a propósito: 62 detectadas a la primera (dos de ellas porque
+el número real que sale no cabe en uno de 32 bits y la prueba se detiene),
+tres más con casos nuevos (un píxel antes del primero, con 4 bits por píxel),
+y las tres de «Sin comprobar».
+
 ## 2026-10-02 — Recorrer un texto, y cuánto ocupan los píxeles de un bitmap
 
 Siete funciones. De 550 funciones se pasa a 557, el 4,94 % de las del juego

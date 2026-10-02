@@ -63,7 +63,10 @@ enum
 	_bitmap_linear_bit= 4,
 	/* the bitmaps of 32 bits that have it are given another format */
 	_bitmap_unknown5_bit= 5,
-	_bitmap_unknown7_bit= 7
+	_bitmap_unknown7_bit= 7,
+	/* made by the game: its memory and that of its pixels are the console's,
+	and are given back when the bitmap is deleted */
+	_bitmap_allocated_bit= 8
 };
 
 /* ---------- structures */

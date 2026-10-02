@@ -924,3 +924,10 @@ address,name,source,arguments,returns,convention
 001364e0,bitmap_mipmap_pixel_count,source/bitmaps/bitmaps.c,esi edx,int
 00136600,bitmap_dimensions_mipmap_size,source/bitmaps/bitmaps.c,eax ecx edx stack stack stack,int
 001366d0,bitmap_dimensions_size,source/bitmaps/bitmaps.c,ebx stack stack stack stack stack,int
+00135880,real16_to_real,source/bitmaps/bitmaps.c,eax,real:xmm0
+001358c0,bitmap_format_get_bits,source/bitmaps/bitmaps.c,ecx,int
+001359d0,bitmap_delete,source/bitmaps/bitmaps.c,esi,void
+00135c00,bitmap_cube_map_get_pixel_address,source/bitmaps/bitmaps.c,edi stack stack stack stack,int
+003fb640,D3DResource_Release,,stack,int
+00135a30,bitmap_2d_get_pixel_address,source/bitmaps/bitmaps.c,edi eax stack stack,int
+00135af0,bitmap_3d_get_pixel_address,source/bitmaps/bitmaps.c,ecx stack stack stack stack,int

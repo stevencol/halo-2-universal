@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 77.
+**Última actualización:** 2026-10-02, al terminar el hito 78.
 
 ## Dónde estamos
 
-- **557 funciones descompiladas de 11.265: el 4,94 % del juego** (el
-  2,470 % de los bytes de código).
-- Las 557 están comprobadas contra el ejecutable original
+- **563 funciones descompiladas de 11.265: el 5,00 % del juego** (el
+  2,495 % de los bytes de código).
+- Las 563 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile going through a text and the sizes of bitmaps* (ver `git log`).
+- Último hito: *Decompile where the pixels of a bitmap are* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -102,9 +102,9 @@ Módulos (funciones hechas / archivo):
 - [ ] Matemáticas reales — `math\real_math.c` (21 de unas 50)
 - [ ] Matrices — `math\matrix_math.c` (22; quedan 4)
 - [ ] Números aleatorios — `math\random_math.c` (2)
-- [ ] Colores y bitmaps — `bitmaps\` (11: 6 de colores y 5 de tamaños en
-      `bitmaps.c`; de este faltan de `0x00135880` a `0x00136140` y
-      `0x001362b0`)
+- [ ] Colores y bitmaps — `bitmaps\` (17: 6 de colores y 11 en
+      `bitmaps.c`; de este faltan `0x001358e0`, `0x00135ca0`, `0x00136140` y
+      `0x001362b0`, que leen el color de un píxel)
 - [ ] BSP 3D — `physics\bsp3d.c` (2)
 - [ ] Objetos — `objects\objects.c` (7 de cientos)
 - [x] Hilo de tareas y tareas de archivo — `cseries\async.c` (29; quedan

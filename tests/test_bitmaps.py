@@ -100,3 +100,84 @@ def run(t) -> None:
             signed(format_),
             signed(alignment),
         )
+
+    # ---------- reals of 16 bits
+
+    for value in (0, 1, 0x1F, 0x20, 0x8000, 0x8001, 0x7FFF, 0xFFFF, 0x7FE0, 0xF, 0x10, 0x801F):
+        t.check("real16_to_real", value)
+    for _ in range(300):
+        # with more than 16 bits: the rest is not looked at
+        t.check("real16_to_real", random_.getrandbits(16) | random_.choice((0, 0, 0x10000, 0xABCD0000)))
+
+    for format_ in formats:
+        t.check("bitmap_format_get_bits", signed(format_))
+        t.check("bitmap_format_get_bits", signed(format_) & 0xFFFF | 0x77770000)
+
+    # ---------- where a pixel of a cube map is
+
+    for _ in range(700):
+        data = a_bitmap()
+        t.check(
+            "bitmap_cube_map_get_pixel_address",
+            data,
+            signed(random_.choice(sizes)),
+            signed(random_.choice(sizes)),
+            signed(random_.choice((0, 0, 1, 2, 5, 6, -1, 0x7FFF))),
+            signed(random_.choice((0, 0, 1, 2, 3, 5, 9, 12, 16, 40, -1, -3))),
+        )
+
+    mipmaps = (0, 0, 1, 2, 3, 5, 9, 12, 16, 40, -1, -3)
+    for _ in range(700):
+        t.check(
+            "bitmap_2d_get_pixel_address",
+            a_bitmap(),
+            signed(random_.choice(mipmaps)),
+            signed(random_.choice(sizes)),
+            signed(random_.choice(sizes)),
+        )
+        t.check(
+            "bitmap_3d_get_pixel_address",
+            a_bitmap(),
+            signed(random_.choice(sizes)),
+            signed(random_.choice(sizes)),
+            signed(random_.choice((0, 0, 1, 2, 5, 63, -1, 0x7FFF))),
+            signed(random_.choice(mipmaps)),
+        )
+
+    # a pixel before the first, with 4 bits for each: the bits are less than
+    # zero and no multiple of 8, and the division rounds to zero
+    for x in (-1, -3, -5, -7, -9):
+        for mipmap in (0, 1):
+            data = bitmap(64, 64, 1, 0, 14, 0, 3)
+            t.check("bitmap_2d_get_pixel_address", data, mipmap, signed(x), 0)
+            t.check("bitmap_3d_get_pixel_address", data, signed(x), 0, 0, mipmap)
+            t.check("bitmap_cube_map_get_pixel_address", data, signed(x), 0, 0, mipmap)
+
+    # ---------- the end of a bitmap
+
+    for n in range(120):
+        flags = random_.choice((0x100, 0x100, 0x102, 0, 0xFEFF, 0xFFFF))
+        data = bytearray(random_.randbytes(BITMAP_SIZE))
+        struct.pack_into("<H", data, 0xE, flags)
+        struct.pack_into("<2I", data, 0x50, random_.choice((0, 0x80123400, 0x80123400)), random_.choice((0, 0x80456000, 0x80456000)))
+        failed = random_.choice((0, 0, 1, 2))
+
+        def free(harness, arguments, failed=failed):
+            address, size, type_ = arguments
+            from test_async import calls_so_far
+
+            # the bitmap is given back too: where it is is not the same in
+            # the game and in source/
+            first = calls_so_far(harness, "VirtualFree") == 0
+            return not (failed == 2 or failed == 1 and first), (harness.normalize(address), size, type_)
+
+        t.check(
+            "bitmap_delete",
+            0 if n % 10 == 9 else Buffer(bytes(data)),
+            externals={
+                "texture_cache_bitmap_delete": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "D3DResource_Release": lambda harness, arguments: 0,
+                "VirtualFree": free,
+                "GetLastError": lambda harness, arguments: 5,
+            },
+        )
