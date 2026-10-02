@@ -12,10 +12,15 @@ that these functions are of it is a guess, and so are their names.
 
 #include "cache/texture_cache.h"
 
+#include <string.h>
+
 /* ---------- prototypes of functions of the console's libraries */
 
 /* 0x003fb640: one user less of a texture */
 unsigned long D3DResource_Release(uint32_t resource);
+
+/* 0x003312cc */
+void *VirtualAlloc(void *address, unsigned long size, unsigned long type, unsigned long protection);
 
 /* 0x003312fa */
 int VirtualFree(void *address, unsigned long size, unsigned long type);
@@ -83,6 +88,62 @@ long bitmap_format_get_bits(
 	short format)
 {
 	return bitmap_format_get_bits_per_pixel(format);
+}
+
+/* 0x001358e0: a bitmap that the game makes, with memory of the console for
+it and, but for _bitmap_no_pixels_bit, for its pixels. NULL if there is no
+memory for it; with none for its pixels, the bitmap has no pixels */
+struct bitmap_data *bitmap_2d_new(
+	short width,
+	short height,
+	short mipmap_count,
+	short format,
+	word flags)
+{
+	struct bitmap_data *bitmap= VirtualAlloc(NULL, sizeof(struct bitmap_data), BITMAP_ALLOCATION_TYPE,
+		BITMAP_ALLOCATION_PROTECTION);
+
+	if (!bitmap)
+	{
+		GetLastError();
+
+		return NULL;
+	}
+	memset(bitmap, 0, sizeof(struct bitmap_data));
+	bitmap->mipmap_count= mipmap_count;
+	bitmap->type= _bitmap_type_2d;
+	bitmap->width= width;
+	bitmap->signature= BITMAP_SIGNATURE;
+	bitmap->height= height;
+	bitmap->depth= 1;
+	bitmap->format= format;
+	bitmap->flags= flags|FLAG(_bitmap_allocated_bit);
+	if (!(width&(width-1)) && !(height&(height-1)))
+	{
+		bitmap->flags|= FLAG(_bitmap_power_of_two_dimensions_bit);
+	}
+	if (format>=_bitmap_format_dxt1 && format<=_bitmap_format_dxt5)
+	{
+		bitmap->flags|= FLAG(_bitmap_compressed_bit);
+	}
+	if (format==_bitmap_format_p8)
+	{
+		bitmap->flags|= FLAG(_bitmap_palettized_bit);
+	}
+	bitmap->base_address= 0;
+	if (!(flags&FLAG(_bitmap_no_pixels_bit)))
+	{
+		void *pixels= VirtualAlloc(NULL, bitmap_pixels_size(bitmap), BITMAP_ALLOCATION_TYPE,
+			BITMAP_ALLOCATION_PROTECTION);
+
+		if (!pixels)
+		{
+			GetLastError();
+		}
+		bitmap->base_address= (uint32_t)pixels;
+	}
+
+	return bitmap;
 }
 
 /* 0x001359d0: the end of a bitmap: it is taken out of the texture cache, the

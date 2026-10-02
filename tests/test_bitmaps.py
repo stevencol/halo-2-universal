@@ -181,3 +181,32 @@ def run(t) -> None:
                 "GetLastError": lambda harness, arguments: 5,
             },
         )
+
+    # ---------- a new bitmap
+
+    from test_async import calls_so_far
+
+    for n in range(300):
+        made = Buffer(random_.randbytes(BITMAP_SIZE + 8))
+        pixels = Buffer(random_.randbytes(16))
+        # there is no memory for the bitmap, or for its pixels
+        fails = random_.choice((None, None, None, None, 0, 1))
+
+        def allocate(harness, arguments, made=made, pixels=pixels, fails=fails):
+            address, size, type_, protection = arguments
+            call = calls_so_far(harness, "VirtualAlloc")
+            return 0 if call == fails else (made, pixels)[min(call, 1)].address
+
+        t.check(
+            "bitmap_2d_new",
+            random_.choice((1, 2, 3, 4, 16, 100, 256, 0x100, 0x4000, 0, 0xFFFF, 0x8000)) | random_.choice((0, 0x10000, 0xABCD0000)),
+            random_.choice((1, 2, 5, 8, 16, 100, 256, 0x100, 0, 0xFFFE, 0x8000)) | random_.choice((0, 0x10000, 0xABCD0000)),
+            random_.choice((0, 0, 1, 3, 9, 0xFFFF)),
+            random_.choice((0, 1, 6, 9, 10, 11, 13, 14, 15, 16, 17, 18, 22, 0xFFFF, 0x1000E)),
+            random_.choice((0, 0x810, 0x800, 0x10, 0x100, 0x7FF, 0xF7FF, 0xFFFF, 0x10000, 0x10800, 1, 2, 4, 6)),
+            extra=[made, pixels],
+            externals={
+                "VirtualAlloc": allocate,
+                "GetLastError": lambda harness, arguments: 8,
+            },
+        )

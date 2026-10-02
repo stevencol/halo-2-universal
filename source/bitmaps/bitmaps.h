@@ -28,13 +28,17 @@ enum
 	REAL16_SIGN_SHIFT= 15,
 	REAL16_EXPONENT_BIAS= 0x70,
 
-	MEM_RELEASE= 0x8000
+	MEM_RELEASE= 0x8000,
+	/* MEM_COMMIT | MEM_TOP_DOWN, and PAGE_READWRITE */
+	BITMAP_ALLOCATION_TYPE= 0x101000,
+	BITMAP_ALLOCATION_PROTECTION= 4
 };
 
 /* ---------- prototypes/BITMAPS.C */
 
 real real16_to_real(word value);
 long bitmap_format_get_bits(short format);
+struct bitmap_data *bitmap_2d_new(short width, short height, short mipmap_count, short format, word flags);
 void bitmap_delete(struct bitmap_data *bitmap);
 long bitmap_2d_get_pixel_address(const struct bitmap_data *bitmap, short mipmap_index, short x, short y);
 long bitmap_3d_get_pixel_address(const struct bitmap_data *bitmap, short x, short y, short z, short mipmap_index);

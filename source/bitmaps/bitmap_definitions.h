@@ -49,13 +49,18 @@ enum
 	_bitmap_format_a8r8g8b8= 11,
 	_bitmap_format_dxt1= 14,
 	_bitmap_format_dxt3= 15,
-	_bitmap_format_dxt5= 16
+	_bitmap_format_dxt5= 16,
+	_bitmap_format_p8= 17
 };
 
 enum
 {
+	/* its width and its height are powers of two */
+	_bitmap_power_of_two_dimensions_bit= 0,
 	/* in blocks of 4 by 4 pixels: its sizes are taken up to whole blocks */
 	_bitmap_compressed_bit= 1,
+	/* its pixels are places in a palette */
+	_bitmap_palettized_bit= 2,
 	/* the texels are in the order of the console's swizzled textures; the
 	bitmaps that are not compressed have it */
 	_bitmap_swizzled_bit= 3,
@@ -66,7 +71,9 @@ enum
 	_bitmap_unknown7_bit= 7,
 	/* made by the game: its memory and that of its pixels are the console's,
 	and are given back when the bitmap is deleted */
-	_bitmap_allocated_bit= 8
+	_bitmap_allocated_bit= 8,
+	/* made by the game with no memory for its pixels */
+	_bitmap_no_pixels_bit= 11
 };
 
 /* ---------- structures */

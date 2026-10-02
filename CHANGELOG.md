@@ -2,6 +2,35 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Crear un bitmap
+
+Una función. De 628 funciones se pasa a 629, el 5,58 % de las del juego (el
+2,832 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `bitmap_2d_new` | `0x001358e0` | `bitmaps/bitmaps.c` |
+
+### Lo que se sabe
+
+- Los bitmaps que crea el propio juego (no los que vienen en el mapa) piden
+  su memoria a la consola: `0x74` bytes para el bitmap y, aparte, la de sus
+  píxeles. Es la pareja de `bitmap_delete`, que devuelve las dos.
+- El bitmap empieza por la firma `bitm`, tiene profundidad 1 y lleva la
+  marca de «hecho por el juego». Además se le ponen solas tres marcas: si su
+  ancho y su alto son potencias de dos, si su formato es comprimido (los tres
+  DXT) y si es de paleta (el formato 17).
+- Con la marca del bit 11 se crea **sin memoria para los píxeles**: es lo que
+  usa la caché de caracteres, cuyo bitmap solo existe como textura.
+- Si no hay memoria para el bitmap, no hay bitmap; si no la hay para los
+  píxeles, el bitmap se queda sin ellos.
+
+### Mutaciones
+
+33 líneas rotas a propósito: las 33 detectadas.
+
 ## 2026-10-02 — Las líneas de un texto: `draw_string.c`, completo
 
 Una función. De 627 funciones se pasa a 628, el 5,57 % de las del juego (el
