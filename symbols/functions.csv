@@ -969,3 +969,9 @@ address,name,source,arguments,returns,convention
 001411e0,font_cache_block_deleted,source/text/font_cache.c,stack,void
 00141290,font_cache_block_locked,source/text/font_cache.c,stack,bool
 00140b80,font_character_new,source/text/font_cache.c,stack stack,int
+00140dc0,font_character_read_location,source/text/font_cache.c,esi stack,void
+00140e40,font_character_header_validate,source/text/font_cache.c,eax,void
+00140f00,font_character_location_wait,source/text/font_cache.c,edi ebx,void
+00140f50,font_character_read_header,source/text/font_cache.c,esi edx,void
+00140fc0,font_character_header_wait,source/text/font_cache.c,edi stack,void
+00141020,font_character_update,source/text/font_cache.c,eax edx,bool

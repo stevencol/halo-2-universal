@@ -20,6 +20,16 @@ enum
 {
 	NUMBER_OF_FONT_GLYPH_SLOTS= 512,
 
+	/* in the file of a font: a table with where each character is, and
+	what the file says of each, 16 bytes */
+	FONT_FILE_LOCATIONS_OFFSET= 0x400,
+	FONT_FILE_HEADERS_OFFSET= 0x4040,
+	MAXIMUM_FONT_CHARACTER_WIDTH= 128,
+	MAXIMUM_FONT_CHARACTER_PIXELS_SIZE= 0x1000,
+	FONT_CACHE_TASK_CATEGORY= 7,
+	FONT_CACHE_READ_PRIORITY= 2,
+	FONT_CACHE_READ_PRIORITY_WAIT= 6,
+
 	MAXIMUM_FONT_CHARACTERS= 512,
 	MAXIMUM_PREDICTED_FONT_CHARACTERS= 256,
 	FONT_PREDICTED_CHARACTER_SIZE= 0xC,
@@ -37,10 +47,13 @@ enum
 drawn */
 enum
 {
-	_font_character_state_unknown0,
-	_font_character_state_unknown1,
-	_font_character_state_unknown2,
-	_font_character_state_unknown3,
+	/* nothing is known of it */
+	_font_character_state_new,
+	/* a task reads where it is in the file of its font */
+	_font_character_state_reading_location,
+	_font_character_state_location_read,
+	/* a task reads what the file says of it */
+	_font_character_state_reading_header,
 	_font_character_state_ready,
 	NUMBER_OF_FONT_CHARACTER_STATES
 };
@@ -54,19 +67,33 @@ struct font_character_key
 	long character;
 };
 
+/* what the file of a font says of a character */
+struct font_character_header
+{
+	byte unknown0[2];
+	/* how many bytes its pixels take in the file */
+	word pixels_size;
+	short width;
+	short height;
+	byte unknown8[8];
+};
+
 /* what the game knows of a character of a font */
 struct font_character
 {
 	short identifier;
 	word pad2;
 	struct font_character_key key;
-	boolean unknownC;
-	boolean unknownD;
+	/* the tasks that read these two are done */
+	boolean location_loaded;
+	boolean header_loaded;
 	byte padE[2];
 	long state;
-	long unknown14;
-	long unknown18;
-	byte unknown1C[0x10];
+	/* the task that reads */
+	long task;
+	/* where the character is in the file of its font */
+	long location;
+	struct font_character_header header;
 	/* of the cache: where its pixels are; NONE if they are not there */
 	long block_index;
 	/* the last frame that it was used in */
@@ -125,6 +152,12 @@ typedef char verify_font_cache_globals_size[
 unsigned long HASH_TABLE_CALLBACK font_character_key_hash(long key);
 boolean HASH_TABLE_CALLBACK font_character_key_compare(long key, long other);
 long font_character_find(long font_slot_index, long character);
+void font_character_read_location(struct font_character *character, boolean wait);
+void font_character_header_validate(struct font_character_header *header);
+void font_character_location_wait(struct font_character *character, boolean wait);
+void font_character_read_header(struct font_character *character, boolean wait);
+void font_character_header_wait(struct font_character *character, boolean wait);
+boolean font_character_update(long character_index, boolean wait);
 long font_character_new(long font_slot_index, long character);
 void font_character_delete(long character_index);
 boolean font_character_is_busy(long character_index);

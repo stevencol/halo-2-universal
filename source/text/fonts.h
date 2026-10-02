@@ -9,6 +9,8 @@ The fonts that the game has loaded. The names are guesses.
 
 #include "cseries/cseries.h"
 
+#include <stdint.h>
+
 /* ---------- constants */
 
 enum
@@ -48,7 +50,8 @@ struct font
 	struct font_kerning_pair kerning_pairs[MAXIMUM_FONT_KERNING_PAIRS];
 	/* a bit for each character that is the first of a pair */
 	unsigned long kerning_characters[NUMBER_OF_FONT_KERNING_CHARACTERS/32];
-	byte unknown1C4[4];
+	/* the file of the font, open */
+	uint32_t file;
 	boolean loaded;
 	boolean loading;
 	byte pad1CA[2];

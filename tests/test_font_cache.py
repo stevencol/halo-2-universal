@@ -416,3 +416,113 @@ def run(t) -> None:
                 "hash_table_add": add,
             },
         )
+
+    # ---------- getting a character ready
+
+    FONT_SIZE, FONT_SLOTS, FONT_FILE = 0x1D0, 10, 0x1C4
+    LOCATION_LOADED, HEADER_LOADED, TASK, LOCATION, HEADER = 0xC, 0xD, 0x14, 0x18, 0x1C
+    PREFERENCES_SIZE, PREFERENCES_DIRTY, PREFERENCES_FONTS = 0x408, 1, 0x24
+
+    def fonts() -> bytes:
+        data = bytearray(random_.randbytes(FONT_SLOTS * FONT_SIZE))
+        for slot in range(FONT_SLOTS):
+            struct.pack_into("<I", data, slot * FONT_SIZE + FONT_FILE, 0x700 + slot)
+        return bytes(data)
+
+    def a_character(state: int, location_loaded: int = 0, header_loaded: int = 0, header: tuple | None = None) -> bytearray:
+        data = bytearray(random_.randbytes(CHARACTER))
+        struct.pack_into("<2I", data, 4, random_.randrange(FONT_SLOTS), random_.choice((0, 0x41, 0x3042, 0xFFFF, random_.getrandbits(32))))
+        data[LOCATION_LOADED] = location_loaded
+        data[HEADER_LOADED] = header_loaded
+        struct.pack_into("<I", data, STATE, state)
+        if header:
+            struct.pack_into("<H2h", data, HEADER + 2, *header)
+        return data
+
+    def read(harness, arguments):
+        file, size, offset, category, priority, bytes_read, buffer, done = arguments
+        return 0x00AB0000 | size, (file, size, offset, category, priority, bytes_read, harness.normalize(buffer), harness.normalize(done))
+
+    sizes =(0, 1, 2, 0x7F, 0x80, 0x81, 0x1000, 0x1001, 0x7FFF, -1, -0x8000)
+
+    def a_header() -> tuple:
+        if random_.random() < 0.5:
+            # one that can be
+            return random_.choice((1, 16, 0x1000)), random_.choice((0, 5, 0x80)), random_.choice((0, 5, 0x80))
+        return random_.choice(sizes) & 0xFFFF, random_.choice(sizes), random_.choice(sizes)
+
+    def preferences() -> bytes:
+        data = bytearray(random_.randbytes(PREFERENCES_SIZE))
+        data[PREFERENCES_DIRTY] = random_.choice((0, 1))
+        struct.pack_into("<I", data, PREFERENCES_FONTS, random_.choice((NONE, 0, 3)))
+        return bytes(data)
+
+    def externals_of(buffer: Buffer, waits: int, flag: int, character_at: int = 0) -> dict:
+        """What the game waits for is read when its task is hurried, or after
+        so many times that the game stands by."""
+
+        def where(harness):
+            return buffer.address + character_at + flag
+
+        def switch(harness, arguments):
+            if calls_so_far(harness, "SwitchToThread") >= waits - 1:
+                harness.mu.mem_write(where(harness), b"\x01")
+            return 0
+
+        def hurry(harness, arguments):
+            if waits == 0:
+                harness.mu.mem_write(where(harness), b"\x01")
+            return 1
+
+        return {
+            "font_get": lambda harness, arguments, there=random_.random() < 0.8: there,
+            "async_read_position": read,
+            "async_task_set_priority": hurry,
+            "SwitchToThread": switch,
+            "global_preferences_flush_blocking": lambda harness, arguments: 0,
+        }
+
+    for n in range(120):
+        for name in ("font_character_read_location", "font_character_read_header"):
+            data = Buffer(bytes(a_character(random_.randrange(5))))
+            t.check(
+                name,
+                data,
+                random_.choice((0, 0, 1, 0x80, 0x100, 0xFF01)),
+                globals={"font_slots": fonts()},
+                externals=externals_of(data, 0, 0),
+            )
+    for n in range(200):
+        t.check(
+            "font_character_header_validate",
+            Buffer(struct.pack("<2sH2h8s", random_.randbytes(2), *a_header(), random_.randbytes(8)) + random_.randbytes(4)),
+            globals={"global_preferences_globals": preferences()},
+            externals={"global_preferences_flush_blocking": lambda harness, arguments: 0},
+        )
+    for n in range(200):
+        for name, flag in (("font_character_location_wait", LOCATION_LOADED), ("font_character_header_wait", HEADER_LOADED)):
+            loaded = random_.choice((0, 0, 0, 1, 0x80))
+            data = Buffer(bytes(a_character(random_.randrange(5), loaded, loaded, a_header())))
+            t.check(
+                name,
+                data,
+                random_.choice((0, 0, 1, 1, 0x80, 0x100, 0xFF01)),
+                globals={"font_slots": fonts(), "global_preferences_globals": preferences()},
+                externals=externals_of(data, random_.choice((0, 0, 1, 2)), flag),
+            )
+    for n in range(400):
+        index = random_.randrange(CHARACTERS)
+        state = random_.choice((0, 1, 2, 3, 4, 5, 9))
+        loaded = random_.choice((0, 0, 1))
+        blob = bytearray(random_.randbytes(DATA_SIZE + CHARACTERS * CHARACTER))
+        struct.pack_into("<I", blob, 0x44, DATA_SIZE)
+        place = DATA_SIZE + index * CHARACTER
+        blob[place : place + CHARACTER] = a_character(state, loaded, loaded, a_header())
+        data = Buffer(bytes(blob), pointers=(0x44,))
+        t.check(
+            "font_character_update",
+            index | random_.choice((0, 0, 0x10000, 0xE1740000)),
+            random_.choice((0, 0, 1, 1, 0x80, 0x100, 0xFF01)),
+            globals={"font_cache_globals+4": data, "font_slots": fonts(), "global_preferences_globals": preferences()},
+            externals=externals_of(data, random_.choice((0, 0, 1, 2)), LOCATION_LOADED if state == 1 else HEADER_LOADED, place),
+        )

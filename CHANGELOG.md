@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Leer un carácter del archivo de su fuente
+
+Seis funciones. De 603 funciones se pasa a 609, el 5,41 % de las del juego
+(el 2,666 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `font_character_read_location` | `0x00140dc0` | `text/font_cache.c` |
+| `font_character_header_validate` | `0x00140e40` | `text/font_cache.c` |
+| `font_character_location_wait` | `0x00140f00` | `text/font_cache.c` |
+| `font_character_read_header` | `0x00140f50` | `text/font_cache.c` |
+| `font_character_header_wait` | `0x00140fc0` | `text/font_cache.c` |
+| `font_character_update` | `0x00141020` | `text/font_cache.c` |
+
+### Lo que se sabe
+
+- Un carácter se prepara en cuatro pasos, uno cada vez que se le da una
+  vuelta (`font_character_update`), y cada lectura la hace una tarea del hilo
+  de las tareas:
+  1. se pide leer **dónde está** el carácter: 4 bytes de una tabla del
+     archivo de la fuente, en `0x400 + 4 × carácter`;
+  2. cuando eso llega, se pide leer **lo que el archivo dice de él**: 16
+     bytes en `(sitio + 0x4040) × 16`;
+  3. cuando llega, se comprueba y el carácter queda listo.
+- Los estados y campos del carácter ya tienen nombre: nuevo, leyendo su
+  sitio, sitio leído, leyendo su cabecera y listo.
+- Si quien pide el carácter quiere esperar, la lectura se pide con más
+  prioridad (6 en vez de 2), a la tarea se le sube la prioridad y el juego se
+  queda cediendo el turno hasta que termina.
+- La cabecera de un carácter dice su ancho y su alto (128 como mucho) y
+  cuántos bytes ocupan sus píxeles en el archivo (de 1 a 4.096). Si no
+  cumple, se recorta y además **el juego deja de fiarse de las fuentes del
+  disco duro**: apunta en las preferencias que no hay ninguna copiada y las
+  escribe en el acto.
+- El archivo abierto de una fuente está en su hueco (`font.file`, que era un
+  campo sin nombre).
+
+### Cambiado
+
+- Los estados `_font_character_state_unknown0…3` y los campos sin nombre de
+  `struct font_character` tienen ahora los nombres de arriba.
+
+### Mutaciones
+
+59 líneas rotas a propósito: las 59 detectadas.
+
 ## 2026-10-02 — Un carácter nuevo
 
 Una función. De 602 funciones se pasa a 603, el 5,35 % de las del juego (el

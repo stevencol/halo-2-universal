@@ -11,6 +11,8 @@ file and of the functions are guesses.
 #include "font_cache.h"
 
 #include "cseries/async.h"
+#include "main/global_preferences.h"
+#include "text/fonts.h"
 
 #include <string.h>
 
@@ -25,6 +27,9 @@ uint32_t GetLastError(void);
 /* 0x002d63fa, 0x002d62c4 */
 uint32_t WaitForSingleObject(uint32_t handle, uint32_t milliseconds);
 int ReleaseMutex(uint32_t mutex);
+
+/* 0x002d2084 */
+int SwitchToThread(void);
 
 #define MEM_COMMIT 0x1000
 #define MEM_TOP_DOWN 0x100000
@@ -127,7 +132,7 @@ boolean font_character_is_busy(
 {
 	const struct font_character *character= font_character_get(character_index);
 	boolean busy= (long)((unsigned long)font_cache_globals.frame_index-(unsigned long)character->frame_index)<=1 ||
-		character->state==_font_character_state_unknown1 || character->state==_font_character_state_unknown3;
+		character->state==_font_character_state_reading_location || character->state==_font_character_state_reading_header;
 
 	if (character->block_index!=NONE)
 	{
@@ -138,6 +143,159 @@ boolean font_character_is_busy(
 	}
 
 	return busy;
+}
+
+/* the file of the font of a place; NONE if the font is not there */
+static inline __attribute__((always_inline)) uint32_t font_cache_get_font_file(
+	long font_slot_index)
+{
+	uint32_t file= (uint32_t)NONE;
+
+	if (font_get(font_slot_index))
+	{
+		file= font_slots[font_slot_index].file;
+	}
+
+	return file;
+}
+
+/* the priority of a read of the file of a font: higher if the game is to
+wait for it */
+static inline __attribute__((always_inline)) long font_cache_read_priority(
+	boolean wait)
+{
+	return wait ? FONT_CACHE_READ_PRIORITY_WAIT : FONT_CACHE_READ_PRIORITY;
+}
+
+/* waits for a read of the file of a font, if it is to: its task is hurried,
+and the game stands by until it is done */
+static inline __attribute__((always_inline)) void font_cache_read_wait(
+	const struct font_character *character,
+	const boolean *loaded,
+	boolean wait)
+{
+	if (!*loaded && wait)
+	{
+		async_task_set_priority(character->task, FONT_LOAD_PRIORITY);
+		while (!*(volatile const boolean *)loaded)
+		{
+			SwitchToThread();
+		}
+	}
+}
+
+/* 0x00140dc0: the first step of getting a character ready: a task reads
+where the character is in the file of its font, from the table that the file
+has, which has 4 bytes for each character */
+void font_character_read_location(
+	struct font_character *character,
+	boolean wait)
+{
+	uint32_t offset= (uint32_t)character->key.character*sizeof(long)+FONT_FILE_LOCATIONS_OFFSET;
+	long priority= font_cache_read_priority(wait);
+	uint32_t file= font_cache_get_font_file(character->key.font_slot_index);
+
+	character->task= async_read_position(file, sizeof(character->location), offset, FONT_CACHE_TASK_CATEGORY,
+		priority, NULL, &character->location, &character->location_loaded);
+	character->state= _font_character_state_reading_location;
+}
+
+/* 0x00140e40: what the file says of a character, made to be what can be: a
+picture of 128 by 128 at the most, with pixels of 1 to 4096 bytes. If it was
+not, the file is not to be trusted: the preferences forget which fonts are on
+the hard disk, and are written at once */
+void font_character_header_validate(
+	struct font_character_header *header)
+{
+	if (header->width>=0 && header->width<=MAXIMUM_FONT_CHARACTER_WIDTH &&
+		header->height>=0 && header->height<=MAXIMUM_FONT_CHARACTER_WIDTH &&
+		header->pixels_size>0 && header->pixels_size<=MAXIMUM_FONT_CHARACTER_PIXELS_SIZE)
+	{
+		return;
+	}
+	header->width= header->width<0 ? 0 : header->width>MAXIMUM_FONT_CHARACTER_WIDTH ? MAXIMUM_FONT_CHARACTER_WIDTH :
+		header->width;
+	header->height= header->height<0 ? 0 : header->height>MAXIMUM_FONT_CHARACTER_WIDTH ? MAXIMUM_FONT_CHARACTER_WIDTH :
+		header->height;
+	header->pixels_size= header->pixels_size<1 ? 1 : header->pixels_size>MAXIMUM_FONT_CHARACTER_PIXELS_SIZE ?
+		MAXIMUM_FONT_CHARACTER_PIXELS_SIZE : header->pixels_size;
+	if (global_preferences_globals.current.data.unknown8!=NONE)
+	{
+		global_preferences_globals.current.data.unknown8= NONE;
+		global_preferences_globals.dirty= TRUE;
+		global_preferences_flush_blocking();
+	}
+}
+
+/* 0x00140f00: the second step: once it is known where the character is, the
+third one is started */
+void font_character_location_wait(
+	struct font_character *character,
+	boolean wait)
+{
+	font_cache_read_wait(character, &character->location_loaded, wait);
+	if (!character->location_loaded)
+	{
+		return;
+	}
+	character->state= _font_character_state_location_read;
+	font_character_read_header(character, wait);
+}
+
+/* 0x00140f50: the third step: a task reads what the file says of the
+character, 16 bytes */
+void font_character_read_header(
+	struct font_character *character,
+	boolean wait)
+{
+	uint32_t offset= (uint32_t)(character->location+FONT_FILE_HEADERS_OFFSET)<<4;
+	long priority= font_cache_read_priority(wait);
+	uint32_t file= font_cache_get_font_file(character->key.font_slot_index);
+
+	character->task= async_read_position(file, sizeof(character->header), offset, FONT_CACHE_TASK_CATEGORY,
+		priority, NULL, &character->header, &character->header_loaded);
+	character->state= _font_character_state_reading_header;
+}
+
+/* 0x00140fc0: the fourth step: once what the file says of the character is
+read, the character is ready */
+void font_character_header_wait(
+	struct font_character *character,
+	boolean wait)
+{
+	font_cache_read_wait(character, &character->header_loaded, wait);
+	if (!character->header_loaded)
+	{
+		return;
+	}
+	font_character_header_validate(&character->header);
+	character->state= _font_character_state_ready;
+}
+
+/* 0x00141020: one step more of getting a character ready. Whether it is */
+boolean font_character_update(
+	long character_index,
+	boolean wait)
+{
+	struct font_character *character= font_character_get(character_index);
+
+	switch (character->state)
+	{
+	case _font_character_state_new:
+		font_character_read_location(character, wait);
+		break;
+	case _font_character_state_reading_location:
+		font_character_location_wait(character, wait);
+		break;
+	case _font_character_state_location_read:
+		font_character_read_header(character, wait);
+		break;
+	case _font_character_state_reading_header:
+		font_character_header_wait(character, wait);
+		break;
+	}
+
+	return character->state==_font_character_state_ready;
 }
 
 /* 0x00140b80: what the game knows of a character of a font: what there is,
@@ -195,11 +353,11 @@ long font_character_new(
 	memset((byte *)new_character+sizeof(new_character->identifier), 0,
 		sizeof(*new_character)-sizeof(new_character->identifier));
 	new_character->key.character= character;
-	new_character->unknownC= FALSE;
-	new_character->unknownD= FALSE;
-	new_character->state= _font_character_state_unknown0;
-	new_character->unknown14= NONE;
-	new_character->unknown18= NONE;
+	new_character->location_loaded= FALSE;
+	new_character->header_loaded= FALSE;
+	new_character->state= _font_character_state_new;
+	new_character->task= NONE;
+	new_character->location= NONE;
 	new_character->block_index= NONE;
 	new_character->key.font_slot_index= font_slot_index;
 	new_character->frame_index= font_cache_globals.frame_index;
