@@ -211,15 +211,6 @@ boolean game_state_saved_game_read_header(long header_size, long size, long save
 void game_state_saved_game_read_data(long size, void *data, long saved_game);
 boolean game_state_saved_game_write(void *state, long header_size, long size, long saved_game);
 
-/* ---------- prototypes of functions not decompiled yet */
-
-/* 0x002174b0, 0x00217520: start to read and to write the file that a saved
-game of the hard disk keeps the state of the game in ("auxilary.bin"): what
-is at its start, and the rest. Whether it was started. The names are
-guesses */
-boolean saved_game_auxiliary_read(void *header, long header_size, void *data, long data_size,
-	struct saved_game_file_result *result, long saved_game);
-boolean saved_game_auxiliary_write(void *header, long header_size, void *data, long data_size,
-	struct saved_game_file_result *result, long saved_game);
+#include "saved_game_files.h"
 
 #endif

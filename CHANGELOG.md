@@ -2,6 +2,61 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Los índices de los archivos y el archivo del estado
+
+Siete funciones más de `saved_game_files.c`. De 445 funciones se pasa a
+452, el 4,01 % de las del juego (el 1,926 % de sus bytes). **Se pasa del
+4 %.**
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `saved_game_file_get_directory` | `0x002160b0` | `saved games/saved_game_files.c` |
+| `saved_game_file_index_after` | `0x002163d0` | `saved games/saved_game_files.c` |
+| `saved_game_file_index_after_delete` | `0x00217300` | `saved games/saved_game_files.c` |
+| `saved_game_files_take_operation` | `0x00217370` | `saved games/saved_game_files.c` |
+| `saved_game_auxiliary_read` | `0x002174b0` | `saved games/saved_game_files.c` |
+| `saved_game_auxiliary_write` | `0x00217520` | `saved games/saved_game_files.c` |
+| `saved_game_files_count_saved_games` | `0x00217590` | `saved games/saved_game_files.c` |
+
+- Funciones de la consola que se suplen: `GetCurrentThreadId`
+  (`0x002d2234`), `XFindFirstSaveGame` (`0x00331125`), `XFindNextSaveGame`
+  (`0x0033122f`) y `XFindClose` (`0x00331276`).
+
+### Cambiado
+
+- `saved_game_auxiliary_read` y `saved_game_auxiliary_write`, que
+  `game_state.c` llamaba sin estar descompiladas, ya lo están; sus
+  prototipos pasan de `game_state.h` a `saved_game_files.h`.
+
+### Lo que se sabe
+
+- Un archivo se nombra con un número de 32 bits: la unidad (bits 0-3), el
+  tipo (4-7), el número del archivo entre los de su tipo (8-20), un
+  indicador de que no está en ninguna unidad sino en la memoria del juego
+  (21) y una «sal» de 9 bits (22-30) que cambia cuando cambia la lista.
+- Al borrar un archivo, los que iban detrás entre los de su tipo bajan un
+  puesto y reciben la sal nueva.
+- En las listas, los archivos que vienen con el juego van detrás de los de
+  las unidades.
+- La partida guardada tiene su estado en `auxilary.bin` (sic), en el
+  directorio de la partida.
+- Antes de preguntar por un archivo el juego espera a que se hayan buscado
+  los de las unidades (`0x0055c14c`), atendiendo el sonido mientras tanto.
+- Las operaciones con archivos van de una en una: hay un único «turno»
+  (`0x0055c274`) con el archivo y el hilo que lo pidió.
+
+### Sin comprobar
+
+- El cero al final de la ruta en `saved_game_file_get_directory`: la ruta
+  que se copia ya lo trae.
+
+### Mutaciones
+
+67 líneas rotas a propósito: 66 detectadas, y la otra es la de «Sin
+comprobar».
+
 ## 2026-10-02 — Los tipos de archivo de los jugadores
 
 Se empieza `saved_game_files.c`: los archivos que los jugadores guardan en

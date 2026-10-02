@@ -6,7 +6,8 @@
 import random
 import struct
 
-from difftest import Buffer
+from difftest import Buffer, GlobalData
+from test_async import calls_so_far
 
 NONE = 0xFFFFFFFF
 GLOBALS_SIZE = 0x1B0
@@ -117,3 +118,132 @@ def run(t) -> None:
                 Buffer(directory + b"\0"),
                 type_,
             )
+
+    # ---------- the indices of the files
+
+    BUILT_IN = 1 << 21
+
+    def index(unit: int, type_: int, file: int, built_in: int = 0, salt: int = 0, top: int = 0) -> int:
+        return unit | type_ << 4 | file << 8 | built_in << 21 | salt << 22 | top << 31
+
+    indices = [0, 1, NONE, BUILT_IN, BUILT_IN - 1, BUILT_IN + 1, 0x7FFFFFFF, 0x80000000, 0x80000000 | BUILT_IN]
+    indices += [index(random_.randrange(16), random_.randrange(16), random_.randrange(0x2000), random_.getrandbits(1), random_.randrange(0x200), random_.getrandbits(1)) for _ in range(12)]
+    for file in indices:
+        for other in indices:
+            t.check("saved_game_file_index_after", file, other, random_.getrandbits(32))
+
+    for n in range(300):
+        type_ = random_.randrange(16)
+        file_index = random_.choice((0, 1, 2, 0x1FFF, random_.randrange(0x2000)))
+        deleted_index = random_.choice((0, file_index, max(file_index - 1, 0), min(file_index + 1, 0x1FFF), random_.randrange(0x2000)))
+        file = index(random_.randrange(16), type_, file_index, n % 7 == 6, random_.randrange(0x200), random_.getrandbits(1))
+        deleted = index(random_.randrange(16), type_ if n % 5 else random_.randrange(16), deleted_index, random_.getrandbits(1), random_.randrange(0x200), random_.getrandbits(1))
+        t.check(
+            "saved_game_file_index_after_delete",
+            file,
+            deleted,
+            globals={
+                "unknown_0051ea14": 0 if n % 11 == 10 else Buffer(bytes(0x4BEFC) + struct.pack("<I", random_.getrandbits(32))),
+            },
+        )
+
+    # ---------- waiting for the files
+
+    def wait_until(name: str, offset: int, waits: int):
+        """SwitchToThread: the flag that the game waits for is set after so many."""
+
+        def handler(harness, arguments):
+            if calls_so_far(harness, "SwitchToThread") >= waits - 1:
+                harness.mu.mem_write(harness.global_addresses[name] + offset, b"\x01")
+            return 0
+
+        return handler
+
+    def information(found: int, directory: bytes):
+        def handler(harness, arguments):
+            where, file = arguments
+            before = bytes(harness.mu.mem_read(where, 1)) + bytes(harness.mu.mem_read(where + 0x14, 2))
+            harness.mu.mem_write(where, (directory + bytes(0x40))[:0x40])
+            # what is told of the file is in the stack
+            return found, (before, file)
+
+        return handler
+
+    directories = (b"u:\\udata\\4d530064\\0123456789AB\\", b"", b"d" * 0x3F)
+    for n in range(60):
+        waits = random_.choice((0, 0, 1, 3))
+        file = index(random_.randrange(16), random_.randrange(16), random_.randrange(0x2000), n % 6 == 5, random_.randrange(0x200), random_.getrandbits(1))
+        t.check(
+            "saved_game_file_get_directory",
+            Buffer(random_.randbytes(0x100)),
+            file,
+            globals={"unknown_0055c14c": bytes([waits == 0])},
+            externals={
+                "SwitchToThread": wait_until("unknown_0055c14c", 0, waits),
+                "sound_idle": lambda harness, arguments: 0,
+                "unknown_00216800": information(n % 4 != 3, random_.choice(directories)),
+            },
+        )
+
+    for n in range(30):
+        waits = random_.choice((0, 0, 1, 3))
+        t.check(
+            "saved_game_files_take_operation",
+            random_.getrandbits(32),
+            Buffer(random_.randbytes(4), places=(0,)),
+            # the function gives a pointer to the global, which is not at the
+            # same address in the game and in source/
+            globals={"saved_game_files_operation": GlobalData(bytes([waits == 0]) + random_.randbytes(11))},
+            externals={
+                "GetCurrentThreadId": lambda harness, arguments, thread=random_.getrandbits(32): thread,
+                "SwitchToThread": wait_until("saved_game_files_operation", 0, waits),
+                "sound_idle": lambda harness, arguments: 0,
+            },
+        )
+
+    # ---------- the file of the state of the game
+
+    def start(result: int):
+        def handler(harness, arguments):
+            path, *rest = arguments
+            return result, (text(harness, path), *rest)
+
+        return handler
+
+    for name, callee in (("saved_game_auxiliary_read", "unknown_002ada70"), ("saved_game_auxiliary_write", "unknown_002adec0")):
+        for n in range(40):
+            file = index(random_.randrange(16), random_.randrange(16), random_.randrange(0x2000), n % 6 == 5, random_.randrange(0x200))
+            t.check(
+                name,
+                random_.getrandbits(32),
+                random_.getrandbits(32),
+                random_.getrandbits(32),
+                random_.getrandbits(32),
+                random_.getrandbits(32),
+                file,
+                globals={"unknown_0055c14c": b"\x01"},
+                externals={
+                    "unknown_00216800": information(n % 4 != 3, random_.choice(directories + (b"f" * 0x30,))),
+                    callee: start(random_.choice((0, 1, 1))),
+                    "SwitchToThread": lambda harness, arguments: 0,
+                    "sound_idle": lambda harness, arguments: 0,
+                },
+            )
+
+    # ---------- the saved games of a drive
+
+    for unit in (0, 1, 3):
+        for mask in (0, 1, 0xFFFF):
+            for found in (None, 0, 1, 5):
+                def first(harness, arguments, found=found):
+                    return (NONE if found is None else 0x7700), (text(harness, arguments[0]),)
+
+                def next_(harness, arguments, found=found):
+                    return (0x100 if calls_so_far(harness, "XFindNextSaveGame") < found else 0), (arguments[0],)
+
+                t.check(
+                    "saved_game_files_count_saved_games",
+                    unit,
+                    globals={"input_globals": input_globals(random_, mask)},
+                    externals={"XFindFirstSaveGame": first, "XFindNextSaveGame": next_, "XFindClose": lambda harness, arguments: 1},
+                )

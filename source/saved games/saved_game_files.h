@@ -74,6 +74,38 @@ enum
 	SAVED_GAME_FILE_PATH_LENGTH= 256
 };
 
+/* how a file is told: the bits of its index. The files with the built-in
+flag are not on a drive: they are in the memory of the game */
+enum
+{
+	SAVED_GAME_FILE_INDEX_UNIT_MASK= 0xF,
+	SAVED_GAME_FILE_INDEX_TYPE_SHIFT= 4,
+	SAVED_GAME_FILE_INDEX_TYPE_MASK= 0xF,
+	SAVED_GAME_FILE_INDEX_FILE_SHIFT= 8,
+	SAVED_GAME_FILE_INDEX_FILE_MASK= 0x1FFF,
+	_saved_game_file_index_built_in_bit= 21,
+	SAVED_GAME_FILE_INDEX_SALT_SHIFT= 22,
+	SAVED_GAME_FILE_INDEX_SALT_MASK= 0x1FF,
+
+	/* what is told of a file, by unknown_00216800: its directory first */
+	SAVED_GAME_FILE_INFORMATION_SIZE= 0x40,
+	SAVED_GAME_FILE_INFORMATION_NAME_OFFSET= 0x14
+};
+
+/* ---------- structures */
+
+struct saved_game_file_result;
+
+/* 0x0055c274: something that is done with the files, one thing at a time:
+whether it is over, of which file it is, and the thread that asked */
+struct saved_game_files_operation
+{
+	boolean done;
+	byte pad1[3];
+	long file;
+	unsigned long thread;
+};
+
 /* ---------- prototypes/SAVED_GAME_FILES.C */
 
 char *saved_game_files_get_unit_root(long unit_index, char *root, short size);
@@ -87,5 +119,18 @@ long saved_game_file_size_to_blocks(long size);
 boolean saved_game_files_hard_disk_has_blocks(long blocks);
 boolean saved_game_file_get_type_path(char *path, const char *directory, long type);
 long saved_game_file_type_get_size(long type);
+boolean saved_game_file_get_directory(char *path, long file);
+boolean saved_game_file_index_after(long file, long other, void *unused);
+long saved_game_file_index_after_delete(long file, long deleted);
+void saved_game_files_take_operation(long file, struct saved_game_files_operation **operation);
+long saved_game_files_count_saved_games(long unit_index);
+boolean saved_game_auxiliary_read(void *header, long header_size, void *data, long data_size,
+	struct saved_game_file_result *result, long saved_game);
+boolean saved_game_auxiliary_write(void *header, long header_size, void *data, long data_size,
+	struct saved_game_file_result *result, long saved_game);
+
+/* ---------- globals */
+
+extern struct saved_game_files_operation saved_game_files_operation;
 
 #endif

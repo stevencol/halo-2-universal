@@ -117,3 +117,4 @@ address,name,source
 0044a0c8,sound_configuration,source/sound/sound_manager.c
 0051ebe4,unknown_0051ebe4,source/sound/sound_manager.c
 0047f0e0,unknown_0047f0e0,source/sound/sound_manager.c
+0055c274,saved_game_files_operation,source/saved games/saved_game_files.c

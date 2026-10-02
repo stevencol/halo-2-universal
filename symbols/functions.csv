@@ -714,8 +714,8 @@ address,name,source,arguments,returns,convention
 00124800,game_state_saved_game_read_data,source/saved games/game_state.c,ecx edx edi,void
 00124840,game_state_saved_game_write,source/saved games/game_state.c,eax esi ecx stack,bool
 000b66c0,csprintf,source/cseries/cseries.c,esi stack stack,int
-002174b0,saved_game_auxiliary_read,,stack stack stack stack stack edi,bool
-00217520,saved_game_auxiliary_write,,stack stack stack stack stack edi,bool
+002174b0,saved_game_auxiliary_read,source/saved games/saved_game_files.c,stack stack stack stack stack edi,bool
+00217520,saved_game_auxiliary_write,source/saved games/saved_game_files.c,stack stack stack stack stack edi,bool
 001249a0,input_get_gamepad_state,source/input/input_xbox.c,ecx,pointer
 001249d0,input_get_gamepad_type,source/input/input_xbox.c,eax,int
 001249f0,input_get_unit_drive_letter,source/input/input_xbox.c,ecx edx,bool
@@ -810,3 +810,15 @@ address,name,source,arguments,returns,convention
 00217480,saved_game_file_type_get_size,source/saved games/saved_game_files.c,eax,int
 002d5f65,XGetDiskClusterSize,,stack,int
 002d5838,GetDiskFreeSpaceExA,,stack stack stack stack,int
+002160b0,saved_game_file_get_directory,source/saved games/saved_game_files.c,esi edi,bool
+002163d0,saved_game_file_index_after,source/saved games/saved_game_files.c,stack stack stack,bool
+00217300,saved_game_file_index_after_delete,source/saved games/saved_game_files.c,eax ecx,int
+00217370,saved_game_files_take_operation,source/saved games/saved_game_files.c,stack stack,void
+00217590,saved_game_files_count_saved_games,source/saved games/saved_game_files.c,ecx,int
+00216800,unknown_00216800,,eax edx,bool
+002ada70,unknown_002ada70,,eax esi stack stack stack stack stack,bool
+002adec0,unknown_002adec0,,eax esi stack stack stack stack stack,bool
+002d2234,GetCurrentThreadId,,,int
+00331125,XFindFirstSaveGame,,stack stack,int
+0033122f,XFindNextSaveGame,,stack stack,int
+00331276,XFindClose,,stack,int
