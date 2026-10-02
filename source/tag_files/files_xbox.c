@@ -54,6 +54,12 @@ uint32_t GetFileAttributesA(const char *path);
 /* 0x002d6ae9 */
 int GetFileAttributesExA(const char *path, long level, void *data);
 
+/* 0x00331b9b */
+uint32_t FindFirstFileA(const char *path, struct find_files_data *data);
+
+/* 0x00331ca8 */
+int FindNextFileA(uint32_t handle, struct find_files_data *data);
+
 /* ---------- constants */
 
 enum
@@ -69,6 +75,7 @@ enum
 	FILE_BEGIN= 0,
 	FILE_END= 2,
 
+	FILE_ATTRIBUTE_DIRECTORY= 0x10,
 	FILE_ATTRIBUTE_NORMAL= 0x80,
 	FILE_ATTRIBUTE_TEMPORARY= 0x100,
 	FILE_FLAG_DELETE_ON_CLOSE= 0x04000000,
@@ -472,4 +479,109 @@ void find_files_end(
 			state->handles[depth]= (uint32_t)NONE;
 		}
 	}
+}
+
+/* the reference of something that a search found: the directory where the
+search is */
+static inline __attribute__((always_inline)) void find_files_reference(
+	const struct find_files_state *state,
+	struct file_reference *file)
+{
+	memset(file, 0, sizeof(*file));
+	file->signature= FILE_REFERENCE_SIGNATURE;
+	file->location= state->location;
+	file_path_add_name(file->path, state->path);
+}
+
+/* 0x00137000: the next file of a search, with the date it was last written
+if it is asked for. FALSE when there are no more. The search goes down the
+directories it finds, if it is told to, and back up when one is done: the
+path of the state is that of the directory where it is */
+boolean find_files_next(
+	struct find_files_state *state,
+	struct file_reference *file,
+	struct file_last_modification_date *date)
+{
+	char full_path[MAXIMUM_FILENAME_LENGTH+1];
+	long depth= (word)state->depth;
+
+	memset(full_path, 0, sizeof(full_path));
+	while ((short)depth>=0)
+	{
+		uint32_t *handle= &state->handles[(short)depth];
+		boolean found;
+
+		if (*handle==(uint32_t)NONE)
+		{
+			file_location_get_full_path(full_path, state->path);
+			file_path_add_name(full_path, state->pattern);
+			*handle= FindFirstFileA(full_path, &state->data);
+			found= *handle!=(uint32_t)NONE;
+		}
+		else
+		{
+			found= FindNextFileA(*handle, &state->data)!=0;
+			if (!found)
+			{
+				CloseHandle(*handle);
+				*handle= (uint32_t)NONE;
+			}
+		}
+
+		if (!found)
+		{
+			/* this directory is done */
+			path_remove_last_element(state->path);
+			depth--;
+		}
+		else if (state->data.attributes&FILE_ATTRIBUTE_DIRECTORY)
+		{
+			if (memcmp(state->data.name, ".", 2)!=0 && memcmp(state->data.name, "..", 3)!=0)
+			{
+				boolean entered= FALSE;
+
+				if (state->flags&FLAG(_find_files_recursive_bit))
+				{
+					file_path_add_name(state->path, state->data.name);
+					depth++;
+					entered= TRUE;
+				}
+				if (state->flags&(FLAG(_find_files_directories_bit)|FLAG(_find_files_files_bit)))
+				{
+					find_files_reference(state, file);
+					if (!entered)
+					{
+						file_path_add_name(file->path, state->data.name);
+					}
+					if (date)
+					{
+						*date= state->data.last_modification_date;
+					}
+					state->depth= (short)depth;
+
+					return TRUE;
+				}
+			}
+		}
+		else if (state->flags&FLAG(_find_files_files_bit) || !(state->flags&FLAG(_find_files_directories_bit)))
+		{
+			find_files_reference(state, file);
+			if (file->flags&FLAG(_has_filename_bit))
+			{
+				path_remove_last_element(file->path);
+			}
+			file_path_add_name(file->path, state->data.name);
+			file->flags|= FLAG(_has_filename_bit);
+			if (date)
+			{
+				*date= state->data.last_modification_date;
+			}
+			state->depth= (short)depth;
+
+			return TRUE;
+		}
+	}
+	state->depth= (short)depth;
+
+	return FALSE;
 }

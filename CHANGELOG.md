@@ -2,6 +2,50 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Recorrer los archivos de un directorio
+
+`find_files_next`, lo único que faltaba de los archivos: con ella
+`files.c` y `files_xbox.c` quedan completos. De 408 funciones se pasa a
+409, el 3,63 % de las del juego (el 1,789 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `find_files_next` | `0x00137000` | `tag_files/files_xbox.c` |
+
+- `struct find_files_data` (el `WIN32_FIND_DATA` de la consola), que ahora
+  es parte de `struct find_files_state` (0x388 bytes en total).
+- Los indicadores de una búsqueda: recursiva (bit 0), decir los directorios
+  (bit 1) y decir los archivos aunque se digan los directorios (bit 2).
+- Funciones de la consola que se suplen en las pruebas: `FindFirstFileA`
+  (`0x00331b9b`) y `FindNextFileA` (`0x00331ca8`).
+
+### Lo que se sabe
+
+- La búsqueda lleva una pila de hasta 16 directorios, cada uno con su
+  búsqueda abierta en la consola. Al encontrar un directorio, si es
+  recursiva, lo añade a la ruta y baja; cuando un directorio se acaba,
+  cierra su búsqueda, quita el último elemento de la ruta y sube.
+- `.` y `..` se saltan siempre.
+- Sin indicadores solo se dicen los archivos. Con el bit 1 se dicen solo
+  los directorios, y con el bit 2 las dos cosas.
+- Con cada archivo se puede pedir la fecha en que se escribió por última
+  vez.
+
+### Sin comprobar
+
+- Que la ruta completa se ponga a cero antes de empezar: se escribe entera
+  antes de usarla.
+- Al hacer la referencia de un archivo, el juego mira si tiene el indicador
+  de nombre de archivo para quitarle el último elemento; pero la acaba de
+  poner a cero, así que nunca lo tiene.
+
+### Mutaciones
+
+60 líneas rotas a propósito: 58 detectadas, y las otras dos son las de
+«Sin comprobar».
+
 ## 2026-10-02 — El final de `main_game.c` y las partes de una ruta
 
 Lo que quedaba suelto de `main_game.c`, que queda completo, y

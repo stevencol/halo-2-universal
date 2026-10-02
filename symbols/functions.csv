@@ -748,3 +748,6 @@ address,name,source,arguments,returns,convention
 00063f50,unknown_00063f50,,stack stack stack,bool
 00321aae,time,,stack,int
 00321f75,rand,,,int
+00137000,find_files_next,source/tag_files/files_xbox.c,stack stack stack,bool
+00331b9b,FindFirstFileA,,stack stack,int
+00331ca8,FindNextFileA,,stack stack,int

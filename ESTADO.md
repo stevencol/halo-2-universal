@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 43.
+**Última actualización:** 2026-10-02, al terminar el hito 44.
 
 ## Dónde estamos
 
-- **408 funciones descompiladas de 11.265: el 3,62 % del juego** (el
-  1,762 % de los bytes de código).
-- Las 408 están comprobadas contra el ejecutable original
+- **409 funciones descompiladas de 11.265: el 3,63 % del juego** (el
+  1,789 % de los bytes de código).
+- Las 409 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the rest of main_game.c and file_path_split* (ver `git log`).
+- Último hito: *Decompile find_files_next* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -76,8 +76,7 @@ Módulos (funciones hechas / archivo):
 - [x] Cargar y descargar un mapa — `main\main_game.c` (23, completo)
 - [x] Memoria de la interfaz — `interface\user_interface_memory.c` (4)
 - [x] Mandos — `input\input_xbox.c` (10, completo)
-- [ ] Archivos — `tag_files\files.c`, `files_xbox.c` (18; falta
-      `find_files_next`, `0x00137000`)
+- [x] Archivos — `tag_files\files.c`, `files_xbox.c` (19, completo)
 - [x] Cadenas anchas — `text\unicode.c` (7; quedan 3)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
 - [ ] Matemáticas reales — `math\real_math.c` (21 de unas 50)
@@ -156,9 +155,7 @@ Módulos (funciones hechas / archivo):
 - [x] ~~El cambio de partida~~ (hito 39): pedirlo, esperarlo, hacerlo,
       cargar el mapa, y qué pasa si falla.
 - [x] ~~Lo que queda de `main_game.c`~~ (hito 43).
-- [ ] **`find_files_next`** (`0x00137000`): lo único que falta de los
-      archivos; usa `FindFirstFileA` (`0x00331b9b`) y `FindNextFileA`
-      (`0x00331ca8`).
+- [x] ~~`find_files_next`~~ (hito 44).
 - [x] ~~Fondo de memoria (`memory_pool.c`)~~ (hito 37).
 - [x] ~~El fondo de memoria de la interfaz~~ (hito 38).
 - [ ] **El fondo de la voz** («voice pool», `0x004c995c`): `0x00053290`

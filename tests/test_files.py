@@ -272,3 +272,66 @@ def run(t) -> None:
                 Buffer(random_.randbytes(4)),
                 has_filename,
             )
+
+    # ---------- going through the files of a directory
+
+    # what the console finds, in the order it is asked: a file, a directory
+    # or nothing more in the directory where the search is
+    STATE_SIZE, DATA, DATA_SIZE, HANDLES = 0x248, 0x248, 0x140, 0x208
+    DIRECTORY = 0x10
+
+    def find_data(kind: str) -> bytes:
+        data = bytearray(random_.randbytes(DATA_SIZE))
+        attributes = random_.getrandbits(32) & ~DIRECTORY
+        name = random_.choice((b"file.map", b"x", b"", b".x", b"..", b".", b"..x", b"long" * 60))[:0x103]
+        if kind in ("directory", "dot", "dots"):
+            attributes |= DIRECTORY
+            name = {"directory": random_.choice((b"sub", b"fonts", b".a", b"..b", b"", b"d" * 0x103)), "dot": b".", "dots": b".."}[kind]
+        struct.pack_into("<I", data, 0, attributes)
+        data[0x2C : 0x2C + len(name) + 1] = name + b"\0"
+        return bytes(data)
+
+    def search(found: list) -> dict:
+        def step(harness, data: int):
+            index = calls_so_far(harness, "FindFirstFileA") + calls_so_far(harness, "FindNextFileA")
+            kind = found[index] if index < len(found) else "end"
+            if kind != "end":
+                harness.mu.mem_write(data, datas[index])
+            return kind
+
+        datas = [find_data(kind) for kind in found]
+
+        def first(harness, arguments):
+            path, data = arguments
+            kind = step(harness, data)
+            handle = NONE if kind == "end" else 0x5000 + calls_so_far(harness, "FindFirstFileA")
+            return handle, (text(harness, path), data)
+
+        def next_(harness, arguments):
+            return step(harness, arguments[1]) != "end"
+
+        return {"FindFirstFileA": first, "FindNextFileA": next_, "CloseHandle": lambda harness, arguments: 1}
+
+    kinds = ("file", "file", "directory", "directory", "dot", "dots", "end", "end")
+    for n in range(400):
+        data = bytearray(random_.randbytes(STATE_SIZE + DATA_SIZE))
+        depth = random_.choice((0, 0, 0, 1, 2, 5, -1, -3, 14))
+        struct.pack_into("<Ihh", data, 0, random_.choice((0, 1, 2, 3, 4, 5, 6, 7, random_.getrandbits(32))), depth, random_.getrandbits(15))
+        path = random_.choice((b"", b"d:\\maps", b"d:\\maps\\", b"maps\\fonts\\deep", b"x", b"\\", b"p" * 0xF8, b"p" * 0xFF))
+        if depth > 0:
+            path += b"".join(b"\\d%d" % index for index in range(depth))
+        path = path[:0xFF]
+        data[8 : 8 + 0x100] = (path + bytes(0x100))[:0x100]
+        pattern = random_.choice((b"*.map", b"*", b"", b"q" * 0xFF))
+        data[0x108 : 0x108 + 0x100] = (pattern + bytes(0x100))[:0x100]
+        for index in range(16):
+            # some directories above have a search open, and this one may
+            struct.pack_into("<I", data, HANDLES + index * 4, random_.choice((NONE, NONE, 0x6000 + index)))
+        found = [random_.choice(kinds) for _ in range(random_.randint(0, 8))]
+        t.check(
+            "find_files_next",
+            Buffer(bytes(data)),
+            Buffer(random_.randbytes(REFERENCE_SIZE)),
+            random_.choice((0, Buffer(random_.randbytes(8)), Buffer(random_.randbytes(8)))),
+            externals=search(found),
+        )
