@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Los primeros pasos de un cambio de nombre
+
+Los dos pasos que la máquina de estados llamaba todavía por su dirección.
+De 520 funciones se pasa a 522, el 4,63 % de las del juego (el 2,222 % de
+sus bytes). El cambio de nombre de un archivo guardado queda descompilado
+de principio a fin.
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `saved_game_file_rename_create` | `0x002ad020` | `saved games/saved_game_file_tasks.c` |
+| `saved_game_file_rename_open_copy` | `0x002ad220` | `saved games/saved_game_file_tasks.c` |
+
+### Lo que se sabe
+
+- El primer paso pide a la consola una partida guardada **nueva** con el
+  nombre visible nuevo («tipo: nombre», en el idioma de la consola). Si ya
+  hay una con ese nombre, falla.
+- Dentro crea el archivo del tipo y le da ya su tamaño (0x1E0, 0x130 o
+  0x15CB8 bytes), antes de escribir nada: así se sabe que cabe.
+- De la ruta que devuelve la consola el juego se queda con 19 caracteres:
+  es lo que mide el directorio en lo que sabe de cada archivo. Basta
+  porque la consola da rutas cortas, del estilo de `u:\0123456789AB\`.
+- El paso de la copia abre `auxilary.bin` en la partida vieja para leer en
+  secuencia, lo crea en la nueva y le da el mismo tamaño. Que la vieja no
+  lo tenga no es un fallo: se salta la copia.
+- Si algo falla ahí se cierran los dos archivos, y esta vez bien (cada uno
+  comparado con -1 y marcado como cerrado), a diferencia del descuido del
+  hito 63.
+
+### Sin comprobar
+
+- Si el directorio se copia con 20 o con 19 caracteres: el último se pone
+  a cero después.
+
+### Mutaciones
+
+50 líneas rotas a propósito: 49 detectadas, y la otra es la de «Sin
+comprobar».
+
 ## 2026-10-02 — El trabajo de la tarea que escribe un archivo
 
 Una función: lo que hace el hilo de tareas para escribir un archivo de los

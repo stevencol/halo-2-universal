@@ -891,5 +891,5 @@ address,name,source,arguments,returns,convention
 00331055,XDeleteSaveGame,,stack stack,int
 002ad5f0,saved_game_file_rename_step,source/saved games/saved_game_file_tasks.c,eax stack,bool
 002ad760,saved_game_file_description_get_path,source/saved games/saved_game_file_tasks.c,eax ecx,void
-002ad020,unknown_002ad020,,stack,bool
-002ad220,unknown_002ad220,,edi stack,bool
+002ad020,saved_game_file_rename_create,source/saved games/saved_game_file_tasks.c,stack,bool
+002ad220,saved_game_file_rename_open_copy,source/saved games/saved_game_file_tasks.c,edi stack,bool

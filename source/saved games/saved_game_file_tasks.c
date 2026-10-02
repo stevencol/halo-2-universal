@@ -6,8 +6,8 @@ gives the address it has there.
 
 The files of the players are read and written by the thread of the tasks of
 async.c: here is what gives it the tasks. The names of the file and of the
-functions are guesses. Not here: 0x002ad020, 0x002ad220, 0x002ad7c0 and
-0x002adb10.
+functions are guesses. Not here: 0x002ad7c0 and 0x002adb10, the work of the
+tasks that read and write the file of the state of a saved game.
 */
 
 #include "saved_game_files.h"
@@ -44,6 +44,12 @@ enum
 	/* a file is copied in pieces of so many bytes */
 	SAVED_GAME_FILE_COPY_PIECE_SIZE= 0x20000,
 	FILE_BEGIN= 0,
+	GENERIC_READ= (int)0x80000000,
+	GENERIC_WRITE= 0x40000000,
+	CREATE_NEW= 1,
+	CREATE_ALWAYS= 2,
+	OPEN_EXISTING= 3,
+	FILE_FLAG_SEQUENTIAL_SCAN= 0x08000000,
 	INVALID_HANDLE_VALUE= -1
 };
 
@@ -114,6 +120,21 @@ int WriteFile(uint32_t file, const void *buffer, uint32_t size, uint32_t *bytes_
 /* 0x002d2488 */
 uint32_t SetFilePointer(uint32_t file, long distance, long *distance_high, uint32_t method);
 
+/* 0x002d2750 */
+uint32_t CreateFileA(const char *path, uint32_t access, uint32_t share_mode, void *security, uint32_t disposition,
+	uint32_t flags, uint32_t template_file);
+
+/* 0x002d2715 */
+uint32_t GetFileSize(uint32_t file, uint32_t *size_high);
+
+/* 0x002d2404 */
+int SetEndOfFile(uint32_t file);
+
+/* 0x00330df2: makes the directory of a saved game, or finds the one that
+there is, by the name that the console shows of it. 0 if it does */
+uint32_t XCreateSaveGame(const char *root, const wchar *name, uint32_t disposition, uint32_t flags, char *path,
+	uint32_t path_size);
+
 /* 0x0033039a */
 uint32_t XGetLanguage(void);
 
@@ -134,13 +155,6 @@ the others, 0 if all went well */
 uint32_t XCalculateSignatureBegin(uint32_t flags);
 uint32_t XCalculateSignatureUpdate(uint32_t signature, const void *data, uint32_t size);
 uint32_t XCalculateSignatureEnd(uint32_t signature, void *result);
-
-/* 0x002ad020: makes the saved game that a file goes to when it gets
-another name. 0x002ad220: opens the file of the state of the game in the old
-one and in the new one, to copy it: whether there is one to copy is left
-where it is told */
-boolean unknown_002ad020(struct saved_game_file_description *description);
-boolean unknown_002ad220(struct saved_game_file_description *description, boolean *copy);
 
 /* 0x002ad7c0, 0x002adb10: the work of the tasks that read and write the
 file of the state of a saved game */
@@ -580,7 +594,7 @@ boolean saved_game_file_rename_step(
 	switch (description->state)
 	{
 	case _saved_game_file_rename_create:
-		if (unknown_002ad020(description))
+		if (saved_game_file_rename_create(description))
 		{
 			description->state= _saved_game_file_rename_write_image;
 		}
@@ -603,7 +617,7 @@ boolean saved_game_file_rename_step(
 	{
 		boolean copy= FALSE;
 
-		if (!unknown_002ad220(description, &copy))
+		if (!saved_game_file_rename_open_copy(description, &copy))
 		{
 			*error= _saved_game_file_rename_error_step;
 		}
@@ -725,4 +739,121 @@ long ASYNC_CALLBACK saved_game_file_write_work(
 	}
 
 	return 1;
+}
+
+/* the path of the file of the state of the game of a saved game, by the
+directory of the saved game */
+static inline __attribute__((always_inline)) void saved_game_file_get_state_path(
+	char *path,
+	const char *directory)
+{
+	strncpy(path, directory, SAVED_GAME_FILE_PATH_LENGTH);
+	path[SAVED_GAME_FILE_PATH_LENGTH-1]= 0;
+	csstrcat256(path, "auxilary.bin");
+}
+
+/* 0x002ad020: the first step of giving a file another name: makes the saved
+game with the new name, and in it the file, empty but with all its size. The
+directory of the file is then that of the new saved game */
+boolean saved_game_file_rename_create(
+	struct saved_game_file_description *description)
+{
+	long type= description->file&SAVED_GAME_FILE_INDEX_TYPE_MASK;
+	char root[SAVED_GAME_FILE_ROOT_LENGTH];
+	char directory[sizeof(description->information.path)];
+	char path[SAVED_GAME_FILE_PATH_LENGTH];
+	char save_path[SAVED_GAME_FILE_PATH_LENGTH];
+	wchar display_name[SAVED_GAME_FILE_DISPLAY_NAME_LENGTH];
+	struct file_reference file;
+	long language;
+	long error;
+	boolean created;
+
+	if (global_language==NONE)
+	{
+		global_language= language_from_xbox_language((long)XGetLanguage());
+	}
+	language= global_language;
+	memset(save_path, 0, sizeof(save_path));
+	display_name[0]= 0;
+	saved_game_file_get_display_name(type, display_name, description->new_name, language);
+	saved_game_files_get_unit_root((description->file>>SAVED_GAME_FILE_INDEX_UNIT_SHIFT)&SAVED_GAME_FILE_INDEX_UNIT_MASK,
+		root, sizeof(root));
+	if (XCreateSaveGame(root, display_name, CREATE_NEW, 0, save_path, sizeof(save_path)))
+	{
+		return FALSE;
+	}
+
+	path[0]= 0;
+	strncpy(directory, save_path, sizeof(directory));
+	directory[sizeof(directory)-1]= 0;
+	strncpy(path, directory, SAVED_GAME_FILE_PATH_LENGTH);
+	path[SAVED_GAME_FILE_PATH_LENGTH-1]= 0;
+	csstrcat256(path, saved_game_file_type_get_name(type));
+	file_reference_set_path(&file, path, FALSE);
+	if (!file_create(&file) || !file_open(&file, FLAG(_permission_write_bit), &error))
+	{
+		return FALSE;
+	}
+	created= file_set_eof(&file, (unsigned long)saved_game_file_type_get_size(type));
+	if (created)
+	{
+		memcpy(description->information.path, directory, sizeof(directory));
+	}
+	file_close(&file);
+
+	return created;
+}
+
+/* 0x002ad220: the step of a rename that opens the file of the state of the
+game in the old saved game and makes it in the new one, with its size, to
+copy it. Whether there is one to copy is left where it is told: that the old
+one has none is not to fail */
+boolean saved_game_file_rename_open_copy(
+	struct saved_game_file_description *description,
+	boolean *copy)
+{
+	char source_path[SAVED_GAME_FILE_PATH_LENGTH];
+	char destination_path[SAVED_GAME_FILE_PATH_LENGTH];
+
+	saved_game_file_get_state_path(source_path, description->old_path);
+	description->source_file= CreateFileA(source_path, (uint32_t)GENERIC_READ, 0, NULL, OPEN_EXISTING,
+		FILE_FLAG_SEQUENTIAL_SCAN, 0);
+	if (description->source_file==(uint32_t)INVALID_HANDLE_VALUE)
+	{
+		*copy= FALSE;
+
+		return TRUE;
+	}
+
+	saved_game_file_get_state_path(destination_path, description->information.path);
+	description->destination_file= CreateFileA(destination_path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+		FILE_FLAG_SEQUENTIAL_SCAN, 0);
+	if (description->destination_file!=(uint32_t)INVALID_HANDLE_VALUE)
+	{
+		description->size= GetFileSize(description->source_file, NULL);
+		if (description->size!=(unsigned long)NONE)
+		{
+			SetFilePointer(description->destination_file, (long)description->size, NULL, FILE_BEGIN);
+			if (!GetLastError() && SetEndOfFile(description->destination_file))
+			{
+				*copy= TRUE;
+
+				return TRUE;
+			}
+		}
+	}
+
+	if (description->source_file!=(uint32_t)NONE)
+	{
+		CloseHandle(description->source_file);
+		description->source_file= (uint32_t)NONE;
+	}
+	if (description->destination_file!=(uint32_t)NONE)
+	{
+		CloseHandle(description->destination_file);
+		description->destination_file= (uint32_t)NONE;
+	}
+
+	return FALSE;
 }

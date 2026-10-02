@@ -8,6 +8,7 @@ import random
 import struct
 
 from difftest import Buffer, FunctionPointer, Mock, mock_address
+from test_async import calls_so_far
 
 NONE = 0xFFFFFFFF
 TASK_SIZE = 0x40
@@ -375,9 +376,9 @@ def run(t) -> None:
             return results["open"], (arguments[0],)
 
         return {
-            "unknown_002ad020": lambda harness, arguments: results["create"],
+            "saved_game_file_rename_create": lambda harness, arguments: results["create"],
             "saved_game_file_write_image": lambda harness, arguments: (results["image"], (arguments[0], text(harness, arguments[1]))),
-            "unknown_002ad220": open_copy,
+            "saved_game_file_rename_open_copy": open_copy,
             "saved_game_file_copy_read": lambda harness, arguments: results["read"],
             "saved_game_file_copy_write": lambda harness, arguments: results["write"],
             "saved_game_file_copy_close": lambda harness, arguments: 0,
@@ -446,4 +447,79 @@ def run(t) -> None:
             Buffer(data + bytes(result), pointers=(0xC,)),
             random_.getrandbits(32),
             externals={"saved_game_file_rename_step": step, "saved_game_file_write_signed": write_signed},
+        )
+
+    # ---------- the first step of a rename: the saved game with the new name
+
+    def reference_bytes(harness, address: int) -> bytes:
+        return bytes(harness.mu.mem_read(address, 0x108))
+
+    for n in range(160):
+        type_ = random_.choice((0, 1, 7, 10, 12))
+        unit = random_.choice((0, 0, 1, 3))
+        file = type_ | unit << 4 | random_.randrange(0x2000) << 8 | random_.getrandbits(9) << 22
+        description = bytearray(random_.randbytes(DESCRIPTION))
+        struct.pack_into("<I", description, 0, file)
+        description[0x44 : 0x44 + 0x22] = (wide(random_.choice(("another", "", "a name of 16 ch."))) + bytes(0x22))[:0x22]
+        # the path that the console gives: one that fits where the game keeps it, and longer ones
+        save_path = random_.choice((b"u:\\0123456789AB\\", b"u:\\0123456789ABCDEF\\", b"", b"s" * 0x13, b"s" * 0x14, b"s" * 0xFF))
+        created_result = random_.choice((0, 0, 0, 183))
+        results = {name: random_.choice((1, 1, 1, 1, 0)) for name in ("create", "open", "eof")}
+
+        def create_save(harness, arguments, save_path=save_path, created_result=created_result):
+            root, name, disposition, flags, path, path_size = arguments
+            before = bytes(harness.mu.mem_read(path, 0x100))
+            harness.mu.mem_write(path, (save_path + bytes(0x100))[:0x100])
+            return created_result, (text(harness, root), wide_text(harness, name), disposition, flags, before, path_size)
+
+        asked = n % 3 == 0
+        t.check(
+            "saved_game_file_rename_create",
+            Buffer(bytes(description)),
+            globals={
+                "input_globals": input_globals(random_.choice((0xFFFF, 1, 0, 2))),
+                "global_language": NONE if asked else random_.randrange(9),
+                "saved_game_files_string_list_index": random_.choice((NONE, 5)),
+            },
+            externals={
+                "XGetLanguage": lambda harness, arguments, value=random_.choice((0, 1, 2, 5, 8)): value,
+                "unicode_string_list_has_string": lambda harness, arguments: 1,
+                "XCreateSaveGame": create_save,
+                "file_create": lambda harness, arguments, results=results: (results["create"], (reference_bytes(harness, arguments[0]),)),
+                "file_open": lambda harness, arguments, results=results: (results["open"], (reference_bytes(harness, arguments[0]), arguments[1])),
+                "file_set_eof": lambda harness, arguments, results=results: (results["eof"], (reference_bytes(harness, arguments[0]), arguments[1])),
+                "file_close": lambda harness, arguments: (1, (reference_bytes(harness, arguments[0]),)),
+            },
+        )
+
+    # ---------- the step that opens the two files of the state of the game
+
+    for n in range(160):
+        description = bytearray(random_.randbytes(DESCRIPTION))
+        new_directory = random_.choice((b"u:\\0123456789AB\\", b"", b"n" * 0x13))
+        old_directory = random_.choice((b"u:\\BA9876543210\\", b"", b"o" * 0x13))
+        description[4:0x18] = (new_directory + bytes(0x14))[:0x14]
+        description[0x66:0x7A] = (old_directory + bytes(0x14))[:0x14]
+        source = random_.choice((0x4321, 0x4321, 0x4321, NONE))
+        destination = random_.choice((0x8765, 0x8765, 0x8765, NONE))
+        size = random_.choice((0, 0x1000, 0x3FE000, NONE, 0x80000000))
+        last_error = random_.choice((0, 0, 0, 5))
+        set_end = random_.choice((1, 1, 1, 0))
+
+        def create_file(harness, arguments, source=source, destination=destination):
+            handle = source if not calls_so_far(harness, "CreateFileA") else destination
+            return handle, (text(harness, arguments[0]), *arguments[1:])
+
+        t.check(
+            "saved_game_file_rename_open_copy",
+            Buffer(bytes(description)),
+            Buffer(random_.randbytes(1)),
+            externals={
+                "CreateFileA": create_file,
+                "GetFileSize": lambda harness, arguments, size=size: size,
+                "SetFilePointer": lambda harness, arguments: arguments[1],
+                "GetLastError": lambda harness, arguments, last_error=last_error: last_error,
+                "SetEndOfFile": lambda harness, arguments, set_end=set_end: set_end,
+                "CloseHandle": lambda harness, arguments: 1,
+            },
         )

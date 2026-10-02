@@ -281,6 +281,8 @@ boolean saved_game_state_read_task_new(const char *path, struct saved_game_file_
 	long header_size, void *data, long data_size, boolean unknown);
 boolean saved_game_state_write_task_new(const char *path, struct saved_game_file_result *result, void *header,
 	long header_size, void *data, long data_size, boolean unknown);
+boolean saved_game_file_rename_create(struct saved_game_file_description *description);
+boolean saved_game_file_rename_open_copy(struct saved_game_file_description *description, boolean *copy);
 boolean saved_game_file_rename_step(struct saved_game_file_description *description, long *error);
 void saved_game_file_description_get_path(const struct saved_game_file_description *description, char *path);
 boolean saved_game_file_copy_read(struct saved_game_file_description *description);
