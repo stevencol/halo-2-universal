@@ -2,6 +2,59 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Dónde puede acabar una línea de texto
+
+Seis funciones. De 544 funciones se pasa a 550, el 4,88 % de las del
+juego (el 2,440 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `binary_search_4byte` | `0x0013dd70` | `memory/binary_search.c` |
+| `usnprintf` | `0x0013fb50` | `text/unicode.c` |
+| `unicode_escape_character` | `0x0013fbd0` | `text/unicode.c` |
+| `character_can_break_line` | `0x0013fd20` | `text/unicode.c` |
+| `character_cannot_start_line` | `0x0013fde0` | `text/unicode.c` |
+| `character_cannot_end_line` | `0x00140260` | `text/unicode.c` |
+
+- Las variables `unicode_escape_note_time` (`0x0055e730`) y
+  `white_space_ranges` (`0x004536cc`).
+
+### Lo que se sabe
+
+- En los textos del juego una barra «|» seguida de una letra es una orden:
+  `|n` fin de línea, `|t` tabulador, `|l`, `|r` y `|c` alinear a la
+  izquierda, a la derecha o al centro lo que sigue (son los caracteres
+  `0xE405`, `0xE406` y `0xE407`), y `||` la barra misma. Una letra que no es
+  ninguna de esas se anota, como mucho una vez por minuto, y en esta versión
+  la nota no va a ningún sitio.
+- Una línea puede acabar detrás de un carácter si es un espacio (doce rangos
+  de Unicode) o si él o el siguiente son de escritura china, japonesa o
+  coreana, y además el carácter puede acabar línea y el siguiente puede
+  empezarla.
+- No pueden empezar línea 80 caracteres: lo que cierra (paréntesis, comillas,
+  puntos y comas) y las letras pequeñas del japonés. No pueden acabarla 26:
+  lo que abre. Están los 106 en el código del juego como un salto por casos;
+  aquí son una lista.
+- `usnprintf` es `usnzprintf` sin poner el final: si el texto no cabe, queda
+  sin terminar.
+- La búsqueda binaria de números de 4 bytes da a la función que compara los
+  números mismos, no punteros a ellos.
+
+### Sin comprobar
+
+- El último de los doce rangos de espacios (`0x3000`): es además un carácter
+  de escritura asiática, así que la línea puede acabar tras él con el rango
+  o sin él.
+- `usnprintf` con `%c` y `%s`, como en `usnzprintf`; y lo que devuelve, que
+  el juego no usa (aquí no devuelve nada).
+
+### Mutaciones
+
+162 líneas rotas a propósito, entre ellas cada uno de los 106 caracteres:
+161 detectadas, y la otra es la primera de «Sin comprobar».
+
 ## 2026-10-02 — Crear un perfil y buscarlo por su nombre: `player_profile.c`, completo
 
 Dos funciones. De 542 funciones se pasa a 544, el 4,83 % de las del juego (el

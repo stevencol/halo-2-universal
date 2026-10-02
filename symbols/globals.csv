@@ -130,3 +130,5 @@ address,name,source
 0055c14e,saved_game_files_memory_allocated,source/saved games/saved_game_files.c
 0055c15c,saved_game_files_next_salt,source/saved games/saved_game_files.c
 004508fc,saved_game_files_allocation_functions,source/saved games/saved_game_files.c
+0055e730,unicode_escape_note_time,source/text/unicode.c
+004536cc,white_space_ranges,source/text/unicode.c

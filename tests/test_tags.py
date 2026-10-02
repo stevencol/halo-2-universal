@@ -3,7 +3,7 @@
 import random
 import struct
 
-from difftest import Buffer, FunctionPointer, Pointer
+from difftest import Buffer, FunctionPointer, Mock, Pointer, mock_address
 
 TAG_HEADER_SIZE = 0x20
 NONE = 0xFFFFFFFF
@@ -185,3 +185,31 @@ def run(t) -> None:
 
     # no cache file loaded
     t.check("cache_file_tag_group_get", 0x62697064, globals={TAG_HEADER_GLOBAL: 0})
+
+    # ---------- a number among numbers of 4 bytes that are in order
+
+    def difference(call) -> int:
+        key, element, context = call.stack
+        signed = lambda value: value - (1 << 32) if value & 0x80000000 else value
+        return (signed(key) > signed(element)) - (signed(key) < signed(element))
+
+    def far(call) -> int:
+        # not 1 and -1: any number with the sign
+        return difference(call) * 0x7FFFFFFF & 0xFFFFFFFF
+
+    for count in (0, 1, 2, 3, 4, 7, 8, 9, 31, 100):
+        for n in range(12):
+            numbers = sorted(random_.sample(range(-(1 << 31), 1 << 31), count + 2))
+            # the numbers that are searched, and one after them that is not
+            data = Buffer(struct.pack(f"<{count + 2}i", *numbers))
+            keys = [*numbers[:count][:3], *numbers[max(count - 2, 0) :], random_.randrange(-(1 << 31), 1 << 31), numbers[0] - 1 if numbers[0] > -(1 << 31) else 0]
+            key = random_.choice(keys)
+            t.check(
+                "binary_search_4byte",
+                count,
+                key & 0xFFFFFFFF,
+                data,
+                mock_address(0),
+                random_.getrandbits(32),
+                mocks=[Mock(far if n % 2 else difference, stack_arguments=3)],
+            )

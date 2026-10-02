@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 75.
+**Última actualización:** 2026-10-02, al terminar el hito 76.
 
 ## Dónde estamos
 
-- **544 funciones descompiladas de 11.265: el 4,83 % del juego** (el
-  2,403 % de los bytes de código).
-- Las 544 están comprobadas contra el ejecutable original
+- **550 funciones descompiladas de 11.265: el 4,88 % del juego** (el
+  2,440 % de los bytes de código).
+- Las 550 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile making a profile and finding one by its name* (ver `git log`).
+- Último hito: *Decompile where a line of text can end* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -66,8 +66,7 @@ Módulos (funciones hechas / archivo):
 
 - [x] Tablas de datos — `memory\data.c` (20, módulo completo)
 - [x] CRC de 32 bits — `memory\crc.c` (2, completo)
-- [x] Búsqueda binaria — `memory\binary_search.c` (1; queda la de números
-      de 4 bytes, `0x0013dd70`)
+- [x] Búsqueda binaria — `memory\binary_search.c` (2)
 - [x] Ordenar números — `cseries\sort.c` (4)
 - [x] Caché de bloques de páginas — `memory\lruv_cache.c` (8, completo)
 - [x] Fondo de memoria — `memory\memory_pool.c` (11, completo)
@@ -95,7 +94,7 @@ Módulos (funciones hechas / archivo):
 - [x] Archivos — `tag_files\files.c`, `files_xbox.c` (22, completo: de
       `0x00136710` a `0x001374c0`. Lo que hay justo antes, de `0x00136140`
       a `0x001366d0`, es de los bitmaps)
-- [x] Cadenas anchas — `text\unicode.c` (8; quedan 2)
+- [x] Cadenas anchas — `text\unicode.c` (13)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
 - [ ] Matemáticas reales — `math\real_math.c` (21 de unas 50)
 - [ ] Matrices — `math\matrix_math.c` (22; quedan 4)

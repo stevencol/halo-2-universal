@@ -44,3 +44,34 @@ long binary_search(
 
 	return NONE;
 }
+
+/* 0x0013dd70: the same, of a sorted array of numbers of 4 bytes: the key
+and the numbers themselves are given to the function that compares */
+long binary_search_4byte(
+	long count,
+	long key,
+	const long *elements,
+	binary_search_4byte_compare_proc compare,
+	void *context)
+{
+	const long *first= elements;
+
+	while (count)
+	{
+		const long *middle= first+(count>>1);
+		long result= compare(key, *middle, context);
+
+		if (!result)
+		{
+			return (long)(middle-elements);
+		}
+		if (result>0)
+		{
+			first= middle+1;
+			count--;
+		}
+		count>>= 1;
+	}
+
+	return NONE;
+}

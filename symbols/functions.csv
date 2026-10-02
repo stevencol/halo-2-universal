@@ -912,3 +912,9 @@ address,name,source,arguments,returns,convention
 002170e0,saved_game_file_get_current_index,source/saved games/saved_game_files.c,stack,int
 001a03a0,player_profile_create,source/saved games/player_profile.c,stack stack,int
 001a0560,player_profile_find,source/saved games/player_profile.c,ebx stack stack,bool
+0013dd70,binary_search_4byte,source/memory/binary_search.c,eax stack stack stack stack,int
+0013fb50,usnprintf,source/text/unicode.c,edx stack stack stack,void
+0013fbd0,unicode_escape_character,source/text/unicode.c,edx edi,int
+0013fde0,character_cannot_start_line,source/text/unicode.c,stack,bool
+00140260,character_cannot_end_line,source/text/unicode.c,stack,bool
+0013fd20,character_can_break_line,source/text/unicode.c,stack stack,bool
