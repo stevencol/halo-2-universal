@@ -962,3 +962,5 @@ address,name,source,arguments,returns,convention
 0013e3e0,bit_vector_or,source/memory/bit_vector.c,ecx eax edx stack,void
 0013e420,bit_vector_count_bits,source/memory/bit_vector.c,stack stack,int
 0013e530,bit_vector_highest_bit_set,source/memory/bit_vector.c,edi eax,int
+00140cd0,font_character_delete,source/text/font_cache.c,stack,void
+00140d50,font_character_is_busy,source/text/font_cache.c,eax,bool

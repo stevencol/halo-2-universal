@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Olvidar un carácter
+
+Dos funciones. De 596 funciones se pasa a 598, el 5,31 % de las del juego
+(el 2,620 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `font_character_delete` | `0x00140cd0` | `text/font_cache.c` |
+| `font_character_is_busy` | `0x00140d50` | `text/font_cache.c` |
+
+- `struct font_character` (0x38 bytes): lo que el juego sabe de un carácter
+  de una fuente; `struct font_cache_block`; y la tabla `font_glyph_slots`
+  (`0x004b62b0`, 512 huecos).
+- `font_cache_globals` tiene un campo más: el número de fotograma
+  (`0x0054d588`).
+
+### Lo que se sabe
+
+- De cada carácter el juego guarda su clave (fuente y carácter), en qué paso
+  de la carga está (cinco estados; el último, listo), el bloque de la caché
+  con sus píxeles, el último fotograma en que se usó y su hueco entre los
+  dibujos que se están pintando.
+- Olvidar un carácter es: dejar libre su hueco entre los dibujos (y quitárselo
+  al carácter que lo tuviera apuntado), sacar sus píxeles de la caché, quitarlo
+  de la tabla hash y borrarlo de la lista.
+- Un carácter no se puede olvidar ahora si se usó en este fotograma o en el
+  anterior, si está a medio cargar (estados 1 y 3), o si tiene píxeles en la
+  caché que no pueden salir de ella.
+
+### Mutaciones
+
+25 líneas rotas a propósito: 24 detectadas a la primera y la otra con un caso
+nuevo (más de 256 caracteres: el índice es de 16 bits).
+
 ## 2026-10-02 — Vectores de bits
 
 Cinco funciones. De 591 funciones se pasa a 596, el 5,29 % de las del juego

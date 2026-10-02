@@ -172,3 +172,85 @@ def run(t) -> None:
             character,
             globals={"font_cache_globals": characters(list_count, known)},
         )
+
+    # ---------- the characters that the game knows
+
+    CHARACTER = 0x38
+    CHARACTERS = 6
+    STATE, BLOCK, FRAME, SLOT = 0x10, 0x2C, 0x30, 0x34
+    SLOTS = 512
+
+    def known_characters(values: dict) -> Buffer:
+        """The array of the characters and, after it, the characters."""
+        blob = bytearray(random_.randbytes(DATA_SIZE + CHARACTERS * CHARACTER))
+        struct.pack_into("<I", blob, 0x44, DATA_SIZE)
+        for index, (state, block, frame, slot) in values.items():
+            place = DATA_SIZE + index * CHARACTER
+            struct.pack_into("<I", blob, place + STATE, state)
+            struct.pack_into("<3I", blob, place + BLOCK, block, frame & 0xFFFFFFFF, slot)
+        return Buffer(bytes(blob), pointers=(0x44,))
+
+    for n in range(200):
+        index = random_.randrange(CHARACTERS)
+        other = random_.randrange(CHARACTERS)
+        slot = random_.choice((NONE, NONE, 0, 7, 511))
+        values = {
+            index: (random_.randrange(5), random_.choice((NONE, NONE, 0xE1740003, 5)), random_.getrandbits(32), slot),
+            other: (random_.randrange(5), NONE, 0, random_.choice((NONE, 3, slot))),
+        }
+        # its place among the pictures: its own, another character's, or no one's
+        slots = bytearray(random_.randbytes(SLOTS * 8))
+        if slot != NONE:
+            struct.pack_into("<I", slots, slot * 8, random_.choice((NONE, index, other, index | 0xE1740000, other | 0x10000)))
+        t.check(
+            "font_character_delete",
+            index | random_.choice((0, 0, 0x10000, 0xE1740000)),
+            globals={
+                "font_cache_globals": 0x80111100,
+                "font_cache_globals+4": known_characters(values),
+                "font_cache_globals+16": 0x80222200,
+                "font_glyph_slots": bytes(slots),
+            },
+            externals={
+                "lruv_block_delete": lambda harness, arguments: 0,
+                "hash_table_remove": lambda harness, arguments: 1,
+                "datum_delete": lambda harness, arguments: 0,
+            },
+        )
+
+    BLOCKS = 8
+    BLOCK_SIZE_ = 0xC
+    for n in range(300):
+        index = random_.randrange(CHARACTERS)
+        frame = random_.choice((0, 5, 1000, 0x7FFFFFFF, 0x80000000, 0xFFFFFFFF))
+        last = (frame - random_.choice((0, 1, 1, 2, 2, 3, 100, -1, -5))) & 0xFFFFFFFF
+        block = random_.choice((NONE, NONE, random_.randrange(BLOCKS), random_.randrange(BLOCKS) | 0xE1740000))
+        values = {index: (random_.choice((0, 1, 2, 3, 4, 4, 4, 5)), block, last, NONE)}
+        blocks = bytearray(random_.randbytes(DATA_SIZE + BLOCKS * BLOCK_SIZE_))
+        struct.pack_into("<I", blocks, 0x44, DATA_SIZE)
+        for at in range(BLOCKS):
+            blocks[DATA_SIZE + at * BLOCK_SIZE_ + 2] = random_.choice((0, 0, 1, 0x80))
+        t.check(
+            "font_character_is_busy",
+            index | random_.choice((0, 0, 0x10000, 0xE1740000)),
+            globals={
+                "font_cache_globals+4": known_characters(values),
+                "font_cache_globals+12": Buffer(bytes(blocks), pointers=(0x44,)),
+                "font_cache_globals+24": frame,
+            },
+        )
+
+    # more characters than a number of 8 bits tells apart
+    for index in (0x100, 0x1FF, 0x101):
+        MANY = 0x200
+        blob = bytearray(random_.randbytes(DATA_SIZE + MANY * CHARACTER))
+        struct.pack_into("<I", blob, 0x44, DATA_SIZE)
+        # those that would be taken for it have used in this frame; it, long ago
+        for at in (index, index & 0xFF):
+            struct.pack_into("<I", blob, DATA_SIZE + at * CHARACTER + STATE, 4)
+            struct.pack_into("<3I", blob, DATA_SIZE + at * CHARACTER + BLOCK, NONE, 1000 if at != index else 5, NONE)
+        t.check(
+            "font_character_is_busy",
+            index,
+            globals={"font_cache_globals+4": Buffer(bytes(blob), pointers=(0x44,)), "font_cache_globals+24": 1000},
+        )

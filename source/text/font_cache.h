@@ -14,6 +14,25 @@ each, and the cache of their pixels. The names are guesses.
 #include "memory/lruv_cache.h"
 #include "text/unicode.h"
 
+/* ---------- constants */
+
+enum
+{
+	NUMBER_OF_FONT_GLYPH_SLOTS= 512
+};
+
+/* how far the game is with a character: the last is that it is ready to be
+drawn */
+enum
+{
+	_font_character_state_unknown0,
+	_font_character_state_unknown1,
+	_font_character_state_unknown2,
+	_font_character_state_unknown3,
+	_font_character_state_ready,
+	NUMBER_OF_FONT_CHARACTER_STATES
+};
+
 /* ---------- structures */
 
 /* what a character is found by: the key of the table of the characters */
@@ -22,6 +41,47 @@ struct font_character_key
 	long font_slot_index;
 	long character;
 };
+
+/* what the game knows of a character of a font */
+struct font_character
+{
+	short identifier;
+	word pad2;
+	struct font_character_key key;
+	boolean unknownC;
+	boolean unknownD;
+	byte padE[2];
+	long state;
+	long unknown14;
+	long unknown18;
+	byte unknown1C[0x10];
+	/* of the cache: where its pixels are; NONE if they are not there */
+	long block_index;
+	/* the last frame that it was used in */
+	long frame_index;
+	/* its place among the pictures that are drawn; NONE if it has none */
+	long glyph_slot_index;
+};
+
+/* what the game keeps of a block of the cache of the pixels */
+struct font_cache_block
+{
+	short identifier;
+	boolean unknown2;
+	byte unknown3[9];
+};
+
+struct font_glyph_slot
+{
+	/* NONE if there is none */
+	long character_index;
+	byte unknown4[4];
+};
+
+typedef char verify_font_character_size[
+	sizeof(struct font_character) == 0x38 ? 1 : -1];
+typedef char verify_font_cache_block_size[
+	sizeof(struct font_cache_block) == 0xC ? 1 : -1];
 
 /* 0x0054d570: the characters that the game knows, and the cache of their
 pixels */
@@ -36,16 +96,20 @@ struct font_cache_globals
 	struct lruv_cache *cache;
 	/* where the pages of the cache are */
 	byte *base_address;
+	/* one more each frame */
+	long frame_index;
 };
 
 typedef char verify_font_cache_globals_size[
-	sizeof(struct font_cache_globals) == 0x18 ? 1 : -1];
+	sizeof(struct font_cache_globals) == 0x1C ? 1 : -1];
 
 /* ---------- prototypes/FONT_CACHE.C */
 
 unsigned long HASH_TABLE_CALLBACK font_character_key_hash(long key);
 boolean HASH_TABLE_CALLBACK font_character_key_compare(long key, long other);
 long font_character_find(long font_slot_index, long character);
+void font_character_delete(long character_index);
+boolean font_character_is_busy(long character_index);
 void font_characters_dispose(void);
 void font_cache_dispose(void);
 byte *font_cache_block_get_address(long block_index);
@@ -53,5 +117,6 @@ byte *font_cache_block_get_address(long block_index);
 /* ---------- globals */
 
 extern struct font_cache_globals font_cache_globals;
+extern struct font_glyph_slot font_glyph_slots[NUMBER_OF_FONT_GLYPH_SLOTS];
 
 #endif

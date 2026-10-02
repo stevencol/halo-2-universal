@@ -17,6 +17,11 @@ file and of the functions are guesses.
 /* 0x0054d570 */
 struct font_cache_globals font_cache_globals;
 
+/* 0x004b62b0: the places for the pictures of the characters that are drawn:
+the character of each. They are of what draws the texts, which is not
+decompiled */
+struct font_glyph_slot font_glyph_slots[NUMBER_OF_FONT_GLYPH_SLOTS];
+
 /* ---------- code */
 
 /* 0x00141090: the number of a character of a font, for the table that finds
@@ -61,6 +66,59 @@ long font_character_find(
 	memcpy(&index, entry+1, (unsigned long)table->size);
 
 	return index;
+}
+
+static inline __attribute__((always_inline)) struct font_character *font_character_get(
+	long character_index)
+{
+	return (struct font_character *)font_cache_globals.characters->data + (character_index&0xFFFF);
+}
+
+/* 0x00140cd0: the game forgets a character: its place among the pictures
+that are drawn is no one's, its pixels leave the cache, and it is taken out
+of the table and of the characters */
+void font_character_delete(
+	long character_index)
+{
+	struct font_character *character= font_character_get(character_index);
+
+	if (character->glyph_slot_index!=NONE)
+	{
+		struct font_glyph_slot *slot= &font_glyph_slots[character->glyph_slot_index];
+
+		if (slot->character_index!=NONE)
+		{
+			font_character_get(slot->character_index)->glyph_slot_index= NONE;
+		}
+		slot->character_index= NONE;
+	}
+	if (character->block_index!=NONE)
+	{
+		lruv_block_delete(font_cache_globals.cache, character->block_index);
+	}
+	hash_table_remove(font_cache_globals.character_table, (long)&character->key);
+	datum_delete(font_cache_globals.characters, character_index);
+}
+
+/* 0x00140d50: whether a character is not to be forgotten now: it was used
+in this frame or in the last one, or it is being loaded, or its pixels are in
+the cache and cannot leave it */
+boolean font_character_is_busy(
+	long character_index)
+{
+	const struct font_character *character= font_character_get(character_index);
+	boolean busy= (long)((unsigned long)font_cache_globals.frame_index-(unsigned long)character->frame_index)<=1 ||
+		character->state==_font_character_state_unknown1 || character->state==_font_character_state_unknown3;
+
+	if (character->block_index!=NONE)
+	{
+		const struct font_cache_block *block=
+			(const struct font_cache_block *)font_cache_globals.blocks->data + (character->block_index&0xFFFF);
+
+		return busy || !block->unknown2;
+	}
+
+	return busy;
 }
 
 /* 0x00140aa0: the end of what the game knows of the characters */
