@@ -47,6 +47,23 @@ void file_time_get_current(
 	*time= now;
 }
 
+/* 0x000b66c0: writes formatted text to a string of 1,024 characters; the
+string. The name is a guess */
+char *csprintf(
+	char *buffer,
+	const char *format,
+	...)
+{
+	va_list arguments;
+
+	va_start(arguments, format);
+	vsnprintf(buffer, 1023, format, arguments);
+	va_end(arguments);
+	buffer[1023]= 0;
+
+	return buffer;
+}
+
 /* 0x000b66f0: writes formatted text to a string of 256 characters; the
 string. The name is a guess */
 char *csprintf256(

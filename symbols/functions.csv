@@ -478,7 +478,7 @@ address,name,source,arguments,returns,convention
 0012bd40,main_switch_structure_bsp_private,source/main/main.c,,void
 0012bb20,main_save_map_private,source/main/main.c,,void
 0012bbd0,unknown_0012bbd0,,,void
-00124380,game_state_load_core,,stack,void
+00124380,game_state_load_core,source/saved games/game_state.c,stack,void
 0012bdf0,main_unknown4E_private,source/main/main.c,,void
 00124950,unknown_00124950,,,void
 00217c40,unknown_00217c40,,,void
@@ -707,3 +707,14 @@ address,name,source,arguments,returns,convention
 002d69f8,SetFileAttributesA,,stack stack,int
 002d6a9e,GetFileAttributesA,,stack,int
 002d6ae9,GetFileAttributesExA,,stack stack stack,int
+001240b0,game_state_load_saved_game,source/saved games/game_state.c,esi,void
+00124360,game_state_saved_game_read_header_async,source/saved games/game_state.c,ecx eax edi,bool
+00124490,game_state_core_file_reference,source/saved games/game_state.c,ecx stack,void
+00124640,game_state_core_read,source/saved games/game_state.c,ecx esi stack,bool
+00124770,game_state_saved_game_create,source/saved games/game_state.c,eax,bool
+00124790,game_state_saved_game_read_header,source/saved games/game_state.c,ecx eax edi stack,bool
+00124800,game_state_saved_game_read_data,source/saved games/game_state.c,ecx edx edi,void
+00124840,game_state_saved_game_write,source/saved games/game_state.c,eax esi ecx stack,bool
+000b66c0,csprintf,source/cseries/cseries.c,esi stack stack,int
+002174b0,saved_game_auxiliary_read,,stack stack stack stack stack edi,bool
+00217520,saved_game_auxiliary_write,,stack stack stack stack stack edi,bool

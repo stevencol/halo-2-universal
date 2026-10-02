@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-01, al terminar el hito 40.
+**Última actualización:** 2026-10-01, al terminar el hito 41.
 
 ## Dónde estamos
 
-- **382 funciones descompiladas de 11.265: el 3,39 % del juego** (el
-  1,633 % de los bytes de código).
-- Las 382 están comprobadas contra el ejecutable original
+- **392 funciones descompiladas de 11.265: el 3,48 % del juego** (el
+  1,672 % de los bytes de código).
+- Las 392 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the files* (ver `git log`).
+- Último hito: *Decompile the states of the game that are kept in files* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -125,13 +125,14 @@ Módulos (funciones hechas / archivo):
       están: hito 29.)
 - [x] ~~Opciones de partida: validar y comparar~~ (hito 28).
 - [x] ~~Archivos (`files.c`)~~ (hito 40).
-- [ ] **Resto de `game_state.c`:** `0x001240b0` (cargar la partida guardada),
-      `0x001241b0` (guardarla), `0x00124360`, `0x00124380`
-      (`game_state_load_core`), `0x00124490` (el archivo «core»:
-      `d:\core\<nombre>.bin`), `0x00124640` (leerlo), `0x00124770`,
-      `0x00124790`, `0x00124800`, `0x00124840` (leer y escribir la partida
-      guardada con `0x002174b0` y `0x00217520`). Ya tiene lo que necesitaba:
-      los archivos y `main_game_change_immediate`.
+- [x] ~~Resto de `game_state.c`~~ (hito 41): cargar un «core» y la
+      partida guardada. Solo queda `0x001241b0`, que guarda el estado en la
+      partida guardada (espera memoria de la caché de texturas con reloj,
+      como `texture_cache_steal_memory`).
+- [ ] **Los archivos de las partidas guardadas** (`0x002160b0` a
+      `0x00217520`): lo que hay detrás de `saved_game_auxiliary_read` y
+      `saved_game_auxiliary_write` (el archivo `auxilary.bin` de cada
+      partida).
 - [ ] **Los mandos** (`0x001248b0` a `0x00124ee0`, en Halo 1
       `input_xbox.c`): empieza justo después de `game_state.c`. Sus
       globales están en `0x004e61b8`; el estado de los cuatro mandos, en

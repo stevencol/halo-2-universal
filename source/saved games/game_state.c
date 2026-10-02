@@ -19,6 +19,27 @@ game (0x001240b0 to 0x00124490, 0x00124640, 0x00124770 on).
 #include "scenario/scenario.h"
 
 #include <string.h>
+#include "cseries/async.h"
+#include "main/main_game.h"
+#include "scenario/scenario.h"
+#include "tag_files/files.h"
+
+/* ---------- prototypes of functions not decompiled yet: the states in files */
+
+/* 0x000593e0: tells the network game that the game changes */
+void unknown_000593e0(void);
+
+/* 0x0018f1c0: goes to the main menu, most likely */
+void unknown_0018f1c0(long unknown);
+
+enum
+{
+	GAME_STATE_HEADER_SIZE= sizeof(struct game_state_header),
+	GAME_STATE_SIZE= GAME_STATE_CPU_SIZE+GAME_STATE_GPU_SIZE,
+	GAME_STATE_CORE_PATH_SIZE= 1024,
+	/* what the functions that are called around a load are told */
+	GAME_STATE_LOAD_FLAGS= 0xC
+};
 
 /* ---------- constants */
 
@@ -434,4 +455,229 @@ void GAME_STATE_PROC game_state_allocation_restore(
 	{
 		game_state_allocation->functions= &game_state_allocation_functions;
 	}
+}
+
+/* ---------- the states that are kept in files */
+
+/* a state that is loaded from a file is of a game on this console alone,
+whatever it was when it was saved; so is the one in memory. The game has
+this in the two functions that load one */
+static inline __attribute__((always_inline)) void game_state_header_make_local(
+	struct game_state_header *header)
+{
+	header->options.simulation= _game_simulation_local;
+	game_state_globals.header->options.simulation= _game_simulation_local;
+}
+
+/* the structure bsp of a header, as the game gives it to
+scenario_switch_structure_bsp: with the two bytes after it */
+static inline __attribute__((always_inline)) long game_state_header_structure_bsp_index(
+	const struct game_state_header *header)
+{
+	long structure_bsp_index;
+
+	memcpy(&structure_bsp_index, &header->structure_bsp_index, sizeof(structure_bsp_index));
+
+	return structure_bsp_index;
+}
+
+/* waits for the file of a saved game to be read or written */
+static inline __attribute__((always_inline)) void game_state_saved_game_wait(
+	const struct saved_game_file_result *result)
+{
+	while (!result->done)
+	{
+		SwitchToThread();
+		main_loading_idle();
+	}
+}
+
+/* 0x001240b0: loads the state that a saved game of the hard disk has, if it
+is of the game that is on: the map is not changed for it. The state becomes
+the one to go back to */
+void game_state_load_saved_game(
+	long saved_game)
+{
+	struct game_state_header header;
+
+	if (game_state_saved_game_read_header(GAME_STATE_HEADER_SIZE, GAME_STATE_SIZE, saved_game, &header) &&
+		game_state_header_valid(&header))
+	{
+		unknown_000593e0();
+		game_state_header_make_local(&header);
+		if (main_game_globals && main_game_globals->active &&
+			game_options_match(&main_game_globals->options, &header.options) &&
+			scenario_switch_structure_bsp(game_state_header_structure_bsp_index(&header), TRUE) &&
+			game_state_headers_match(&header, game_state_globals.header))
+		{
+			game_state_call_before_load_procs(GAME_STATE_LOAD_FLAGS);
+			game_state_saved_game_read_data(GAME_STATE_SIZE, game_state_globals.base_address, saved_game);
+			game_state_call_after_load_procs(GAME_STATE_LOAD_FLAGS);
+			game_state_save();
+			game_state_globals.unknown2538= TRUE;
+		}
+	}
+}
+
+/* 0x00124360: starts to read the header of the state of a saved game; the
+caller waits for it */
+boolean game_state_saved_game_read_header_async(
+	void *header,
+	struct saved_game_file_result *result,
+	long saved_game)
+{
+	return saved_game_auxiliary_read(header, GAME_STATE_HEADER_SIZE, NULL, GAME_STATE_SIZE-GAME_STATE_HEADER_SIZE,
+		result, saved_game);
+}
+
+/* 0x00124380: loads a state that was written to a file of the disc of the
+game: a "core", which is what a developer kept of a game to go back to. If
+it is of another game than the one that is on, that game is started first */
+void game_state_load_core(
+	const char *name)
+{
+	struct game_state_header header;
+	boolean changed= FALSE;
+
+	if (!game_state_core_read(name, GAME_STATE_HEADER_SIZE, &header) || !game_state_header_valid(&header))
+	{
+		return;
+	}
+	unknown_000593e0();
+	game_state_header_make_local(&header);
+	if (!main_game_globals || !main_game_globals->active ||
+		!game_options_match(&main_game_globals->options, &header.options))
+	{
+		changed= TRUE;
+		if (!main_game_change_immediate(&header.options))
+		{
+			unknown_0018f1c0(0);
+
+			return;
+		}
+	}
+	if (scenario_switch_structure_bsp(game_state_header_structure_bsp_index(&header), TRUE) &&
+		game_state_headers_match(&header, game_state_globals.header))
+	{
+		game_state_call_before_load_procs(GAME_STATE_LOAD_FLAGS);
+		game_state_core_read(name, GAME_STATE_SIZE, game_state_globals.base_address);
+		game_state_call_after_load_procs(GAME_STATE_LOAD_FLAGS);
+	}
+	else if (changed)
+	{
+		unknown_0018f1c0(0);
+	}
+}
+
+/* 0x00124490: the file of a core: in the directory of the cores of the disc
+of the game, unless the name is a whole path */
+void game_state_core_file_reference(
+	const char *name,
+	struct file_reference *file)
+{
+	char path[GAME_STATE_CORE_PATH_SIZE];
+	char first= name[0];
+
+	path[0]= 0;
+	if (((first>='a' && first<='z') || (first>='A' && first<='Z')) && name[1]==':' && name[2]=='\\')
+	{
+		csprintf(path, "%s.bin", name);
+	}
+	else
+	{
+		csprintf(path, "d:\\core\\%s.bin", name);
+	}
+
+	/* in Halo 1, file_reference_create and file_reference_set_name */
+	memset(file, 0, sizeof(*file));
+	file->signature= FILE_REFERENCE_SIGNATURE;
+	file->location= NONE;
+	if (TEST_FLAG(file->flags, _has_filename_bit))
+	{
+		path_remove_last_element(file->path);
+	}
+	file_path_add_name(file->path, path);
+	file->flags|= FLAG(_has_filename_bit);
+}
+
+/* 0x00124640: reads the start of the file of a core; whether all that was
+asked for was read */
+boolean game_state_core_read(
+	const char *name,
+	unsigned long size,
+	void *buffer)
+{
+	struct file_reference file;
+	boolean success= FALSE;
+	long error;
+
+	game_state_core_file_reference(name, &file);
+	if (file_open(&file, FLAG(_permission_read_bit), &error))
+	{
+		success= file_read(&file, size, buffer, FALSE);
+		file_close(&file);
+	}
+
+	return success;
+}
+
+/* 0x00124770: makes the file of the state of a saved game, with nothing in
+it yet */
+boolean game_state_saved_game_create(
+	long saved_game)
+{
+	return game_state_saved_game_write(NULL, GAME_STATE_HEADER_SIZE, GAME_STATE_SIZE, saved_game);
+}
+
+/* 0x00124790: reads the header of the state of a saved game, and waits for
+it; whether it was read */
+boolean game_state_saved_game_read_header(
+	long header_size,
+	long size,
+	long saved_game,
+	void *header)
+{
+	struct saved_game_file_result result;
+
+	if (!saved_game_auxiliary_read(header, header_size, NULL, size-header_size, &result, saved_game))
+	{
+		return FALSE;
+	}
+	game_state_saved_game_wait(&result);
+
+	return result.success;
+}
+
+/* 0x00124800: reads the rest of the state of a saved game, and waits for it */
+void game_state_saved_game_read_data(
+	long size,
+	void *data,
+	long saved_game)
+{
+	struct saved_game_file_result result;
+
+	if (saved_game_auxiliary_read(NULL, 0, data, size, &result, saved_game))
+	{
+		game_state_saved_game_wait(&result);
+	}
+}
+
+/* 0x00124840: writes a state to the file of a saved game, and waits for it;
+whether it was written */
+boolean game_state_saved_game_write(
+	void *state,
+	long header_size,
+	long size,
+	long saved_game)
+{
+	struct saved_game_file_result result;
+	void *data= state ? (byte *)state+header_size : NULL;
+
+	if (!saved_game_auxiliary_write(state, header_size, data, size-header_size, &result, saved_game))
+	{
+		return FALSE;
+	}
+	game_state_saved_game_wait(&result);
+
+	return result.success;
 }

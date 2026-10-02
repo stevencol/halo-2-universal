@@ -53,6 +53,7 @@ struct file_time
 
 /* ---------- prototypes/CSERIES.C */
 
+char *csprintf(char *buffer, const char *format, ...);
 char *csprintf256(char *buffer, const char *format, ...);
 char *csnzprintf(char *buffer, unsigned long size, const char *format, ...);
 char *csstrcat256(char *destination, const char *source);

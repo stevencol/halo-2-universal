@@ -54,7 +54,6 @@ void unknown_002237d4(void);
 void unknown_0018f1c0(long unknown);
 void unknown_0018e810(void);
 void unknown_0012bbd0(void);
-void game_state_load_core(const char *name);
 void unknown_00124950(void);
 void unknown_00217c40(void);
 void unknown_002164c0(long unknown, void *unknown_pointer);

@@ -2,6 +2,61 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Los estados guardados en archivos
+
+Casi todo lo que faltaba de `game_state.c`: cargar el estado del juego desde
+un archivo, sea un «core» del disco o una partida guardada del disco duro.
+De 382 funciones se pasa a 392, el 3,48 % de las del juego (el 1,672 % de
+sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_state_load_saved_game` | `0x001240b0` | `saved games/game_state.c` |
+| `game_state_saved_game_read_header_async` | `0x00124360` | `saved games/game_state.c` |
+| `game_state_load_core` | `0x00124380` | `saved games/game_state.c` |
+| `game_state_core_file_reference` | `0x00124490` | `saved games/game_state.c` |
+| `game_state_core_read` | `0x00124640` | `saved games/game_state.c` |
+| `game_state_saved_game_create` | `0x00124770` | `saved games/game_state.c` |
+| `game_state_saved_game_read_header` | `0x00124790` | `saved games/game_state.c` |
+| `game_state_saved_game_read_data` | `0x00124800` | `saved games/game_state.c` |
+| `game_state_saved_game_write` | `0x00124840` | `saved games/game_state.c` |
+| `csprintf` | `0x000b66c0` | `cseries/cseries.c` |
+
+- Archivo nuevo: `tests/test_game_state_files.py`.
+- Funciones que se suplen en las pruebas: `saved_game_auxiliary_read`
+  (`0x002174b0`) y `saved_game_auxiliary_write` (`0x00217520`).
+
+### Lo que se sabe
+
+- Un «core» es un volcado del estado del juego en un archivo del disco:
+  `d:\core\<nombre>.bin`, o la ruta entera si el nombre empieza por una
+  unidad. Es una herramienta de los desarrolladores que sigue en el juego.
+- Cargar un estado tiene siempre los mismos pasos: leer la cabecera, ver
+  que es válida, comprobar que es de la partida en curso (mismas opciones,
+  mismo mapa), poner el bsp que dice, y solo entonces leer el estado
+  entero. Con un «core», si la partida no coincide se empieza antes la suya;
+  con una partida guardada, no se hace nada.
+- Un estado cargado de un archivo pasa a ser de una partida local, fuera lo
+  que fuera al guardarlo.
+- La partida guardada tiene su estado en un archivo aparte, `auxilary.bin`
+  (así escrito), que se lee y se escribe en otro hilo: el juego espera
+  dando vueltas al bucle de carga.
+- El estado ocupa 0x3FE000 bytes (unos 4 MB) y su cabecera 0x1288.
+
+### Sin comprobar
+
+- `csprintf` escribe como mucho 1.023 caracteres y pone el cero en el
+  último sitio: si el tope fuera 1.024 daría lo mismo.
+- `0x001241b0`, que guarda el estado en la partida guardada, sigue sin
+  descompilar.
+
+### Mutaciones
+
+46 líneas rotas a propósito: 44 detectadas a la primera, una con un caso
+nuevo y otra que es la de «Sin comprobar».
+
 ## 2026-10-02 — Los archivos
 
 `files.c` y su parte de la consola, que en Halo 1 es `files_windows.c`:

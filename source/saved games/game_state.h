@@ -63,6 +63,19 @@ struct game_state_header
 	byte unknown124A[0x3E];
 };
 
+/* what the functions of the files of the saved games leave of a read or of
+a write, which another thread does */
+struct saved_game_file_result
+{
+	volatile boolean done;
+	byte unknown1;
+	boolean success;
+	byte unknown3[0x109];
+};
+
+typedef char verify_saved_game_file_result_size[
+	sizeof(struct saved_game_file_result) == 0x10C ? 1 : -1];
+
 /* 0x004e3b60. As in Halo 1, with the two files and their headers added */
 struct game_state_globals
 {
@@ -182,5 +195,31 @@ static inline void game_state_free_buffer(
 {
 	xbox_game_state_globals.buffer_allocated= FALSE;
 }
+
+/* ---------- prototypes/GAME_STATE.C: the states that are kept in files */
+
+struct file_reference;
+
+void game_state_load_saved_game(long saved_game);
+boolean game_state_saved_game_read_header_async(void *header, struct saved_game_file_result *result,
+	long saved_game);
+void game_state_load_core(const char *name);
+void game_state_core_file_reference(const char *name, struct file_reference *file);
+boolean game_state_core_read(const char *name, unsigned long size, void *buffer);
+boolean game_state_saved_game_create(long saved_game);
+boolean game_state_saved_game_read_header(long header_size, long size, long saved_game, void *header);
+void game_state_saved_game_read_data(long size, void *data, long saved_game);
+boolean game_state_saved_game_write(void *state, long header_size, long size, long saved_game);
+
+/* ---------- prototypes of functions not decompiled yet */
+
+/* 0x002174b0, 0x00217520: start to read and to write the file that a saved
+game of the hard disk keeps the state of the game in ("auxilary.bin"): what
+is at its start, and the rest. Whether it was started. The names are
+guesses */
+boolean saved_game_auxiliary_read(void *header, long header_size, void *data, long data_size,
+	struct saved_game_file_result *result, long saved_game);
+boolean saved_game_auxiliary_write(void *header, long header_size, void *data, long data_size,
+	struct saved_game_file_result *result, long saved_game);
 
 #endif
