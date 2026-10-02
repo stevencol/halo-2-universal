@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Leer y escribir un archivo de los jugadores
+
+Tres funciones más de `saved_game_files.c`. De 483 funciones se pasa a
+486, el 4,31 % de las del juego (el 2,045 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `saved_game_file_name_unique` | `0x00216120` | `saved games/saved_game_files.c` |
+| `saved_game_file_read` | `0x002161d0` | `saved games/saved_game_files.c` |
+| `saved_game_file_write` | `0x00216240` | `saved games/saved_game_files.c` |
+
+- `saved_game_files_last_error` (`0x0055c154`), y el campo `error` de
+  `struct saved_game_file_result`.
+- Función de la consola que se suple: `XCreateSaveGame` (`0x00330df2`).
+
+### Lo que se sabe
+
+- Para saber si un nombre está libre, el juego no recorre sus tablas: le
+  pide a la consola que **abra** la partida guardada que se llamaría así
+  (con el nombre visible, «tipo: nombre»), y el nombre está libre si la
+  consola no la encuentra. La ruta que la consola devolvería se tira.
+- Sin nombre, sin la memoria de los archivos preparada o sin disco duro, la
+  respuesta es que no está libre.
+- Leer y escribir un archivo lo hace otro hilo; estas dos funciones lo
+  piden y esperan, atendiendo el sonido. Si sale mal, el código de error de
+  la consola queda guardado para quien quiera enseñarlo.
+
+### Sin comprobar
+
+- En `saved_game_file_name_unique`, que el nombre visible empiece vacío:
+  la función que lo compone lo vacía también.
+
+### Mutaciones
+
+29 líneas rotas a propósito: 28 detectadas, y la otra es la de «Sin
+comprobar».
+
 ## 2026-10-02 — El nombre visible de un archivo guardado
 
 Dos funciones más de `saved_game_files.c`: la que compone el nombre que la

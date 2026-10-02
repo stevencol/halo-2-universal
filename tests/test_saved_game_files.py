@@ -453,3 +453,78 @@ def run(t) -> None:
                 Buffer(random_.randbytes(0x28)),
                 globals={"saved_game_files_language": 0},
             )
+
+    # ---------- whether a name is free
+
+    def wide_text(harness, address: int) -> bytes:
+        data = bytes(harness.mu.mem_read(address, 0x200))
+        for offset in range(0, len(data), 2):
+            if data[offset : offset + 2] == bytes(2):
+                return data[:offset]
+        return data
+
+    def create(result: int):
+        def handler(harness, arguments):
+            root, name, disposition, flags, path, path_size = arguments
+            # the path that the console would fill is in the stack: the game gives it all zeros
+            return result, (text(harness, root), wide_text(harness, name), disposition, flags, bytes(harness.mu.mem_read(path, 0x100)), path_size)
+
+        return handler
+
+    for name in (None, "", "mine", "a name that is longer than sixteen"):
+        for files, mask in ((0x80100000, 1), (0, 1), (0x80100000, 0), (0x80100000, 2), (0x80100000, 0xFFFF)):
+            for result in (0, 1, 183, 0x80000000):
+                for language in (0, 4, NONE):
+                    t.check(
+                        "saved_game_file_name_unique",
+                        0 if name is None else Buffer(wide(name)),
+                        random_.choice((0, 1, 7, 10)),
+                        globals={
+                            "unknown_0051ea14": files,
+                            "input_globals": input_globals(random_, mask),
+                            "saved_game_files_language": language,
+                            "saved_game_files_string_list_index": random_.choice((NONE, 5)),
+                        },
+                        externals={
+                            "XCreateSaveGame": create(result),
+                            "unicode_string_list_has_string": lambda harness, arguments: 1,
+                        },
+                    )
+
+    # ---------- reading and writing a file, and waiting for it
+
+    def started(start: int, success: int, waits: int, error: int, where: int):
+        """What starts the read or the write: what it leaves, at once or after
+        the game waits. `where` is which of its arguments is where it leaves it."""
+        pending = []
+
+        def handler(harness, arguments):
+            result = arguments[where]
+            pending.clear()
+            if start:
+                harness.mu.mem_write(result, struct.pack("<BBBBI", waits == 0, 0x55, success, 0x66, error))
+                if waits:
+                    pending.append(result)
+            return start, tuple(argument for index, argument in enumerate(arguments) if index != where)
+
+        def switch(harness, arguments):
+            if calls_so_far(harness, "SwitchToThread") >= waits - 1:
+                for result in pending:
+                    harness.mu.mem_write(result, b"\x01")
+            return 0
+
+        return handler, switch
+
+    for n in range(60):
+        start, success, waits = random_.choice((1, 1, 1, 0, 0x100)), random_.choice((1, 1, 0, 0x80)), random_.choice((0, 0, 1, 3))
+        for name, callee, where, arguments in (
+            ("saved_game_file_read", "unknown_002162b0", 3, (random_.getrandbits(32), random_.getrandbits(32), random_.getrandbits(32))),
+            ("saved_game_file_write", "unknown_002173d0", 4, (random_.getrandbits(32), random_.getrandbits(32), random_.getrandbits(32), random_.getrandbits(32))),
+        ):
+            handler, switch = started(start, success, waits, random_.getrandbits(32), where)
+            t.check(
+                name,
+                *arguments,
+                globals={"saved_game_files_last_error": random_.getrandbits(32)},
+                externals={callee: handler, "SwitchToThread": switch, "sound_idle": lambda harness, arguments: 0},
+            )

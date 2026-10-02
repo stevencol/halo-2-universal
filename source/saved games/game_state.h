@@ -70,7 +70,10 @@ struct saved_game_file_result
 	volatile boolean done;
 	byte unknown1;
 	boolean success;
-	byte unknown3[0x109];
+	byte unknown3;
+	/* of the console's library, if it did not go well */
+	long error;
+	byte unknown8[0x104];
 };
 
 typedef char verify_saved_game_file_result_size[

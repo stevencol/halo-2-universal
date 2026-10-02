@@ -851,3 +851,9 @@ address,name,source,arguments,returns,convention
 00140440,unknown_00140440,,stack stack stack,void
 00216da0,saved_game_file_get_display_name,source/saved games/saved_game_files.c,ecx edi stack stack,bool
 00216e50,saved_game_file_parse_display_name,source/saved games/saved_game_files.c,stack stack stack stack,void
+00216120,saved_game_file_name_unique,source/saved games/saved_game_files.c,esi stack,bool
+002161d0,saved_game_file_read,source/saved games/saved_game_files.c,edx ebx stack,bool
+00216240,saved_game_file_write,source/saved games/saved_game_files.c,edi ecx edx stack,bool
+002162b0,unknown_002162b0,,eax edx ebx stack,bool
+002173d0,unknown_002173d0,,eax edi stack stack stack,bool
+00330df2,XCreateSaveGame,,stack stack stack stack stack stack,int

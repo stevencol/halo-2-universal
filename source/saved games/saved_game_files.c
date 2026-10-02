@@ -12,6 +12,7 @@ file, which goes from 0x002160b0 to 0x00217590.
 #include "saved_game_files.h"
 
 #include "input/input.h"
+#include "saved games/game_state.h"
 #include "tag_files/files.h"
 #include "text/unicode_string_list.h"
 #include "cseries/async.h"
@@ -38,7 +39,18 @@ uint32_t XFindFirstSaveGame(const char *root, void *data);
 int XFindNextSaveGame(uint32_t handle, void *data);
 int XFindClose(uint32_t handle);
 
+/* 0x00330df2: makes the directory of a saved game, or finds the one that
+there is, by the name that the console shows of it. 0 if it does */
+uint32_t XCreateSaveGame(const char *root, const wchar *name, uint32_t disposition, uint32_t flags, char *path,
+	uint32_t path_size);
+
 /* ---------- prototypes of functions that are not decompiled */
+
+/* 0x002162b0, 0x002173d0: start to read and to write a file of the
+players. Whether it was started */
+boolean unknown_002162b0(unsigned long size, long file, void *buffer, struct saved_game_file_result *result);
+boolean unknown_002173d0(const void *buffer, long file, void *unknown, unsigned long size,
+	struct saved_game_file_result *result);
 
 /* 0x002ada70, 0x002adec0: start to read and to write a file in two parts.
 Whether it was started */
@@ -59,6 +71,7 @@ enum
 
 	/* what XFindFirstSaveGame fills */
 	XGAME_FIND_DATA_SIZE= 0x33C,
+	OPEN_EXISTING= 3,
 	INVALID_HANDLE_VALUE= -1
 };
 
@@ -73,6 +86,10 @@ extern void *unknown_0051ea14;
 
 /* 0x0055c274 */
 struct saved_game_files_operation saved_game_files_operation;
+
+/* 0x0055c154: what the console's library said when a file could not be
+read or written */
+long saved_game_files_last_error;
 
 /* 0x0055c158: the tag that has the texts that name the types of files; NONE
 if it is not known */
@@ -785,4 +802,86 @@ void saved_game_file_parse_display_name(
 			return;
 		}
 	}
+}
+
+/* waits for a file to be read or written, which another thread does */
+static inline __attribute__((always_inline)) void saved_game_file_wait(
+	const struct saved_game_file_result *result)
+{
+	while (!result->done)
+	{
+		SwitchToThread();
+		sound_idle();
+	}
+}
+
+/* 0x00216120: whether no file of a type on the hard disk has this name:
+the console is asked for the saved game that is shown with it, and it has
+none. FALSE too with no name, and with no hard disk. The name is Halo 1's */
+boolean saved_game_file_name_unique(
+	const wchar *name,
+	long type)
+{
+	char path[SAVED_GAME_FILE_PATH_LENGTH];
+	wchar display_name[SAVED_GAME_FILE_DISPLAY_NAME_LENGTH];
+	char root[SAVED_GAME_FILE_ROOT_LENGTH];
+	char letter;
+
+	if (!name || !name[0] || !unknown_0051ea14 || !input_get_unit_drive_letter(0, &letter))
+	{
+		return FALSE;
+	}
+	memset(path, 0, sizeof(path));
+	display_name[0]= 0;
+	if (!saved_game_file_get_display_name(type, display_name, name, saved_game_files_language))
+	{
+		return FALSE;
+	}
+
+	return XCreateSaveGame(saved_game_files_get_unit_root(0, root, sizeof(root)), display_name, OPEN_EXISTING, 0,
+		path, sizeof(path))!=0;
+}
+
+/* 0x002161d0: reads a file of the players, and waits for it. If it does
+not go well, why is kept */
+boolean saved_game_file_read(
+	long file,
+	void *buffer,
+	unsigned long size)
+{
+	struct saved_game_file_result result;
+
+	if (!unknown_002162b0(size, file, buffer, &result))
+	{
+		return FALSE;
+	}
+	saved_game_file_wait(&result);
+	if (!result.success)
+	{
+		saved_game_files_last_error= result.error;
+	}
+
+	return result.success;
+}
+
+/* 0x00216240: writes a file of the players, and waits for it */
+boolean saved_game_file_write(
+	long file,
+	unsigned long size,
+	void *unknown,
+	const void *buffer)
+{
+	struct saved_game_file_result result;
+
+	if (!unknown_002173d0(buffer, file, unknown, size, &result))
+	{
+		return FALSE;
+	}
+	saved_game_file_wait(&result);
+	if (!result.success)
+	{
+		saved_game_files_last_error= result.error;
+	}
+
+	return result.success;
 }
