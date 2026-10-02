@@ -19,8 +19,8 @@ INITIALIZE = (
     "game_state_initialize input_initialize sound_initialize"
 ).split()
 DISPOSE = (
-    "game_state_close_file sound_dispose input_dispose unknown_000141c0 animation_cache_delete unknown_00141190 "
-    "unknown_00140aa0"
+    "game_state_close_file sound_dispose input_dispose unknown_000141c0 animation_cache_delete font_cache_dispose "
+    "font_characters_dispose"
 ).split()
 
 

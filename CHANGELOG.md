@@ -2,6 +2,37 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — La caché de los caracteres: el final
+
+Cuatro funciones. De 576 funciones se pasa a 580, el 5,15 % de las del juego
+(el 2,557 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `character_is_private_use` | `0x00140420` | `text/font_cache.c` (nuevo) |
+| `font_characters_dispose` | `0x00140aa0` | `text/font_cache.c` |
+| `font_cache_dispose` | `0x00141190` | `text/font_cache.c` |
+| `font_cache_block_get_address` | `0x00141450` | `text/font_cache.c` |
+
+- `struct font_cache_globals` (`0x0054d570`) y `tests/test_font_cache.py`.
+
+### Lo que se sabe
+
+- El juego guarda aparte los caracteres que tiene listos para dibujar: una
+  tabla para encontrarlos, dos listas con lo que sabe de cada uno, y una
+  caché (del mismo tipo que la de texturas) con sus píxeles. Las dos
+  funciones sin nombre que `shell.c` llamaba al salir eran las que lo
+  sueltan todo.
+- Los píxeles de un bloque de la caché están en la base de la caché más su
+  primera página por el tamaño de página.
+- Los caracteres de `0xE000` a `0xF8FF` son los de uso privado de Unicode.
+
+### Mutaciones
+
+30 líneas rotas a propósito: las 30 detectadas.
+
 ## 2026-10-02 — Las fuentes cargadas
 
 Tres funciones. De 573 funciones se pasa a 576, el 5,11 % de las del juego

@@ -20,6 +20,7 @@ shell_dispose are those of Halo 1's shell.c; the other names are guesses.
 #include "main/global_preferences.h"
 #include "memory/physical_memory.h"
 #include "saved games/game_state.h"
+#include "text/font_cache.h"
 #include "text/fonts.h"
 
 #include <string.h>
@@ -72,8 +73,6 @@ void unknown_00012560(void);
 
 /* what shell_dispose takes down */
 void unknown_000141c0(void);
-void unknown_00141190(void);
-void unknown_00140aa0(void);
 
 /* 0x0012b690: the game, until it ends. The name is a guess */
 void main_loop(void);
@@ -182,8 +181,8 @@ void shell_dispose(
 	input_dispose();
 	unknown_000141c0();
 	animation_cache_delete();
-	unknown_00141190();
-	unknown_00140aa0();
+	font_cache_dispose();
+	font_characters_dispose();
 
 	/* the thread of the tasks is not ended: only its handles are closed */
 	memset(font_slots, 0, sizeof(font_slots));

@@ -281,8 +281,8 @@ address,name,source,arguments,returns,convention
 00124920,input_dispose,source/input/input_xbox.c,,void
 000141c0,unknown_000141c0,,,void
 00123310,animation_cache_delete,source/cache/xbox_animation_cache.c,,void
-00141190,unknown_00141190,,,void
-00140aa0,unknown_00140aa0,,,void
+00141190,font_cache_dispose,source/text/font_cache.c,,void
+00140aa0,font_characters_dispose,source/text/font_cache.c,,void
 00175f40,no_operation,source/cseries/cseries.c,,void
 00137c20,game_initialize,source/game/game.c,,void
 00137ca0,game_initialize_for_new_map,source/game/game.c,stack,void
@@ -945,3 +945,5 @@ address,name,source,arguments,returns,convention
 0013eb60,draw_string_set_color_exact,source/text/draw_string.c,eax,void
 00122540,font_get_line_height,source/text/fonts.c,eax,int
 00122570,font_get_kerning,source/text/fonts.c,edx edi ebx,short
+00140420,character_is_private_use,source/text/font_cache.c,ecx,bool
+00141450,font_cache_block_get_address,source/text/font_cache.c,eax,int

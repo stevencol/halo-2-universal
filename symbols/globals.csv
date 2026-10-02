@@ -134,3 +134,4 @@ address,name,source
 004536cc,white_space_ranges,source/text/unicode.c
 004e73a0,draw_string_globals,source/text/draw_string.c
 004e28f4,font_slot_indices,source/text/draw_string.c
+0054d570,font_cache_globals,source/text/font_cache.c
