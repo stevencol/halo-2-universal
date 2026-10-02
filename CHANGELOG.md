@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Buscar los archivos de una unidad
+
+Una función. De 538 funciones se pasa a 539, el 4,78 % de las del juego (el
+2,343 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `saved_game_files_find_unit_files` | `0x002164c0` | `saved games/saved_game_files.c` |
+
+- `struct saved_game_find_data`: lo que la consola cuenta de cada partida
+  guardada (`XGAME_FIND_DATA`, 0x344 bytes).
+
+### Lo que se sabe
+
+- El juego recorre las partidas guardadas de la unidad. De cada una prueba
+  los once tipos de archivo, por orden, hasta dar con el que existe en su
+  directorio (`profile`, `slayer`…): ese es su tipo. El nombre que le puso
+  el jugador y el idioma salen del nombre visible. Lo que sabe de ella va a
+  la tabla; con la tabla llena (4.096) se deja de buscar.
+- Una partida guardada sin archivo de ningún tipo no es de las del juego: se
+  compone un mensaje («unrecognized saved game file found by
+  XFindNextSaveGame()…») que en esta versión no se enseña en ningún sitio.
+- Era la función sin nombre que llaman el bucle principal y
+  `saved_game_files_update`.
+
+### Corregido
+
+- `saved_game_files_count_saved_games` reservaba 0x33C bytes para lo que
+  cuenta la consola de una partida guardada, y son 0x344. Las pruebas no lo
+  veían porque la consola es suplente; en una consola de verdad se habría
+  escrito fuera. Además, como en el juego, tiene en sí misma la función que
+  da la raíz de una unidad en vez de llamarla.
+
+### Sin comprobar
+
+- El nombre corto del archivo y el relleno de `saved_game_find_data`: el
+  juego no los mira.
+- El mensaje, pasado a caracteres de 8 bits: no sale de la función.
+
+### Mutaciones
+
+34 líneas rotas a propósito: 33 detectadas, y la otra es la primera de «Sin
+comprobar».
+
 ## 2026-10-02 — Crear un archivo
 
 Una función. De 537 funciones se pasa a 538, el 4,78 % de las del juego (el

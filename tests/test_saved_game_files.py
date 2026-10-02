@@ -6,6 +6,8 @@
 import random
 import struct
 
+from unicorn import x86_const
+
 from difftest import Buffer, GlobalData, GlobalRange, Memory, Mock, mock_address
 from test_async import calls_so_far
 
@@ -712,7 +714,7 @@ def run(t) -> None:
         t.check(
             "saved_game_files_update",
             globals={"unknown_0055c14d": bytes([can]), "unknown_0051ea14": files_, "unknown_0055c150": flags},
-            externals={"unknown_002164c0": lambda harness, arguments: 0},
+            externals={"saved_game_files_find_unit_files": lambda harness, arguments: 0},
         )
 
     for string_list_index in (NONE, 0, 0x12340005):
@@ -1055,5 +1057,93 @@ def run(t) -> None:
                 "XDeleteSaveGame": lambda harness, arguments: (0, (text(harness, arguments[0]), wide_text(harness, arguments[1]))),
                 "saved_game_file_type_get_blocks": lambda harness, arguments, value=random_.getrandbits(16): value,
                 "saved_game_files_hard_disk_has_blocks": lambda harness, arguments, value=random_.getrandbits(1): value,
+            },
+        )
+
+    # ---------- the files of a drive
+
+    FIND_DATA = 0x344
+    FIND_FILE_NAME, FIND_DIRECTORY, FIND_NAME = 0x2C, 0x140, 0x244
+    TYPE_COUNT = 11
+
+    def saved_game(directory: bytes, display: str) -> bytes:
+        """What the console tells of a saved game."""
+        data = bytearray(random_.randbytes(FIND_DATA))
+        file_name = random_.choice((b"0123456789AB", b"", b"f" * 0x40))
+        data[FIND_FILE_NAME : FIND_FILE_NAME + len(file_name) + 1] = file_name + b"\0"
+        data[FIND_DIRECTORY : FIND_DIRECTORY + len(directory) + 1] = directory + b"\0"
+        name = wide(display)
+        data[FIND_NAME : FIND_NAME + len(name)] = name
+        return bytes(data)
+
+    def find_first(handle: int, games: list):
+        def handler(harness, arguments):
+            root, where = arguments
+            if handle != NONE:
+                harness.mu.mem_write(where, games[0])
+            return handle, (text(harness, root),)
+
+        return handler
+
+    def find_next(games: list):
+        def handler(harness, arguments):
+            handle, where = arguments
+            number = calls_so_far(harness, "XFindNextSaveGame") + 1
+            if number < len(games):
+                harness.mu.mem_write(where, games[number])
+            return number < len(games), (handle,)
+
+        return handler
+
+    def there(types: list):
+        """file_exists: the type of file that each saved game has, or None.
+        The game asks for one type after another until it finds it."""
+        answers = []
+        for type_ in types:
+            answers += [0] * TYPE_COUNT if type_ is None else [0] * type_ + [1]
+
+        def handler(harness, arguments):
+            return answers[calls_so_far(harness, "file_exists")], (reference_path(harness, arguments[0]),)
+
+        return handler
+
+    def message(harness, arguments):
+        # the two texts that go in the message are after the format in the
+        # stack: the test's table has the first only
+        string, count, format_, name = arguments
+        esp = harness.mu.reg_read(x86_const.UC_X86_REG_ESP)
+        after = 12 if harness._external_side == "original" else 20
+        (file_name,) = struct.unpack("<I", harness.mu.mem_read(esp + after, 4))
+        harness.mu.mem_write(string, wide("unrecognized \u00e9"))
+        return 0, (count, wide_text(harness, format_), wide_text(harness, name), text(harness, file_name))
+
+    find_directories = (b"u:\\0123456789AB\\", b"", b"d" * 0x13, b"d" * 0x14, b"d" * 0x40, b"u:\\ABCDEF012345")
+    find_names = ("Slayer: mine", "mine", "", "Profile: a name of 16 ch.", "Lista de juego: a name that is longer than sixteen", "Assault : x")
+    for n in range(150):
+        unit = random_.choice((0, 0, 0, 1, 4, 8))
+        mask = random_.choice((0xFFFF, 0xFFFF, 0xFFFF, 1, 1, 0, 0x1FE))
+        game_count = random_.choice((1, 1, 2, 3, 6))
+        games = [saved_game(random_.choice(find_directories), random_.choice(find_names)) for _ in range(game_count)]
+        types = [random_.choice((None, 0, 1, 1, 5, 9, 10, 10)) for _ in range(game_count)]
+        # the table: with room, with room for one more, or full
+        count = random_.choice((0, 0, 3, 3, 4095, 4096))
+        room = 8
+        table = bytearray(4 + (count + room) * INFORMATION) if count < 4096 else bytearray(4 + 4098 * INFORMATION)
+        struct.pack_into("<i", table, 0, count)
+        table[4 + max(count - 2, 0) * INFORMATION :] = random_.randbytes(len(table) - 4 - max(count - 2, 0) * INFORMATION)
+        t.check(
+            "saved_game_files_find_unit_files",
+            unit,
+            Buffer(bytes(table)),
+            globals={
+                "input_globals": input_globals(random_, mask),
+                "saved_game_files_language": random_.choice((0, 4, 8, NONE)),
+            },
+            externals={
+                "XFindFirstSaveGame": find_first(NONE if n % 9 == 8 else 0x7700 + n, games),
+                "XFindNextSaveGame": find_next(games),
+                "XFindClose": lambda harness, arguments: 1,
+                "file_exists": there(types),
+                "usnzprintf": message,
             },
         )

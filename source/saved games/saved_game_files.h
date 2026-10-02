@@ -132,6 +132,7 @@ enum
 	SAVED_GAME_FILE_LANGUAGES= 9,
 	SAVED_GAME_IMAGE_SIZE= 0x1000,
 	MAXIMUM_CACHED_SAVED_GAME_FILES= 4,
+	SAVED_GAME_FILE_MESSAGE_LENGTH= 256,
 	/* the drives: the hard disk, and two memory units for each controller */
 	MEMORY_UNITS_PER_CONTROLLER= 2,
 	/* the files of the hard disk alone are asked for with this, or NONE */
@@ -143,6 +144,22 @@ enum
 
 struct saved_game_file_result;
 struct file_reference;
+
+/* what the console tells of a saved game of a drive (XGAME_FIND_DATA): of
+its directory, as of any file (WIN32_FIND_DATA), the path of the directory,
+and the name that the console shows */
+struct saved_game_find_data
+{
+	byte unknown0[0x2C];
+	char file_name[0x104];
+	char alternate_file_name[14];
+	byte pad13E[2];
+	char directory[0x104];
+	wchar name[SAVED_GAME_FILE_DISPLAY_NAME_LENGTH];
+};
+
+typedef char verify_saved_game_find_data_size[
+	sizeof(struct saved_game_find_data) == 0x344 ? 1 : -1];
 
 /* what the game knows of a file */
 struct saved_game_file_information
@@ -260,6 +277,7 @@ void saved_game_files_set_string_list(long string_list_index);
 void SAVED_GAME_FILES_CALLBACK saved_game_files_allocate_memory(long configuration);
 void saved_game_files_free_memory(void);
 void saved_game_files_new(struct allocation *allocation);
+void saved_game_files_find_unit_files(long unit_index, struct saved_game_file_table *table);
 void saved_game_files_enumerate(long controller_index, long type, word *count, long *files, boolean built_in);
 struct saved_game_file_information *ALLOCATION_CONVENTION saved_game_file_information_new(
 	struct saved_game_file_information *information);

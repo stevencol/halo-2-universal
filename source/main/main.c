@@ -56,7 +56,6 @@ void unknown_002237d4(void);
 void unknown_0018e810(void);
 void unknown_0012bbd0(void);
 void unknown_00217c40(void);
-void unknown_002164c0(long unknown, void *unknown_pointer);
 void unknown_001406b0(void);
 void unknown_00163820(void);
 void unknown_001479c3(float seconds);
@@ -360,7 +359,8 @@ void main_loop_body(
 	unknown_00217c40();
 	if (unknown_0055c14d && unknown_0051ea14 && (unknown_0055c150&1))
 	{
-		unknown_002164c0(0, (byte *)unknown_0051ea14+UNKNOWN_0051EA14_OFFSET);
+		saved_game_files_find_unit_files(0,
+			(struct saved_game_file_table *)((byte *)unknown_0051ea14+UNKNOWN_0051EA14_OFFSET));
 		unknown_0055c150&= ~1UL;
 	}
 	/* the preferences changed: they are written */

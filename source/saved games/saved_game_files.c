@@ -6,7 +6,7 @@ gives the address it has there.
 
 The files that the players keep: profiles, variants of the games and
 playlists. The names of the functions are guesses. The file goes from
-0x00215790 to 0x00217590; not here: 0x002164c0 and 0x002170e0.
+0x00215790 to 0x00217590; not here: 0x002170e0.
 */
 
 #include "saved_game_files.h"
@@ -35,10 +35,10 @@ int GetDiskFreeSpaceExA(const char *directory, uint64_t *free_bytes_available, u
 /* 0x002d2234 */
 uint32_t GetCurrentThreadId(void);
 
-/* 0x00331125, 0x0033122f, 0x00331276: go through the saved games of a drive.
-What they tell of each (XGAME_FIND_DATA) is not looked at */
-uint32_t XFindFirstSaveGame(const char *root, void *data);
-int XFindNextSaveGame(uint32_t handle, void *data);
+/* 0x00331125, 0x0033122f, 0x00331276: go through the saved games of a drive,
+and tell of each */
+uint32_t XFindFirstSaveGame(const char *root, struct saved_game_find_data *data);
+int XFindNextSaveGame(uint32_t handle, struct saved_game_find_data *data);
 int XFindClose(uint32_t handle);
 
 /* 0x00331055: deletes the saved game that the console shows with a name */
@@ -66,8 +66,6 @@ enum
 	SAVED_GAME_FILE_RESULT_DESCRIPTION_OFFSET= 8,
 	SAVED_GAME_FILE_LANGUAGE_NONE= 0xFF,
 
-	/* what XFindFirstSaveGame fills */
-	XGAME_FIND_DATA_SIZE= 0x33C,
 	CREATE_NEW= 1,
 	OPEN_EXISTING= 3,
 	INVALID_HANDLE_VALUE= -1
@@ -99,9 +97,6 @@ the memory is taken: one more each time, of 512 */
 long saved_game_files_next_salt;
 
 /* ---------- prototypes of functions that are not decompiled */
-
-/* 0x002164c0: looks for the files of the drives */
-void unknown_002164c0(long unknown, void *table);
 
 /* 0x000531b0: takes memory for what the allocation of the files asks */
 void *ALLOCATION_CONVENTION unknown_000531b0(struct allocation *allocation, unsigned long size);
@@ -169,6 +164,25 @@ static inline __attribute__((always_inline)) void saved_game_files_get_hard_disk
 	if (input_globals.unit_mask&1)
 	{
 		csnzprintf(root, SAVED_GAME_FILE_ROOT_LENGTH, "%c:\\", INPUT_HARD_DISK_DRIVE_LETTER);
+	}
+	else
+	{
+		root[0]= 0;
+	}
+}
+
+/* saved_game_files_get_unit_root, which the game has in itself in some
+functions */
+static inline __attribute__((always_inline)) void saved_game_files_get_unit_root_inline(
+	long unit_index,
+	char *root,
+	short size)
+{
+	char letter;
+
+	if (input_get_unit_drive_letter(unit_index, &letter))
+	{
+		csnzprintf(root, (unsigned long)(long)size, "%c:\\", letter);
 	}
 	else
 	{
@@ -547,18 +561,18 @@ long saved_game_files_count_saved_games(
 	long unit_index)
 {
 	char root[SAVED_GAME_FILE_ROOT_LENGTH]= { 0 };
-	byte data[XGAME_FIND_DATA_SIZE];
+	struct saved_game_find_data data;
 	long count= 0;
 	uint32_t handle;
 
-	saved_game_files_get_unit_root(unit_index, root, sizeof(root));
-	handle= XFindFirstSaveGame(root, data);
+	saved_game_files_get_unit_root_inline(unit_index, root, sizeof(root));
+	handle= XFindFirstSaveGame(root, &data);
 	if (handle!=(uint32_t)INVALID_HANDLE_VALUE)
 	{
 		do
 		{
 			count++;
-		} while (XFindNextSaveGame(handle, data));
+		} while (XFindNextSaveGame(handle, &data));
 		XFindClose(handle);
 	}
 
@@ -1107,7 +1121,8 @@ void saved_game_files_update(
 {
 	if (unknown_0055c14d && unknown_0051ea14 && (unknown_0055c150&FLAG(_saved_game_files_enumerate_bit)))
 	{
-		unknown_002164c0(0, (byte *)unknown_0051ea14+UNKNOWN_0051EA14_TABLES_OFFSET);
+		saved_game_files_find_unit_files(0,
+			(struct saved_game_file_table *)((byte *)unknown_0051ea14+UNKNOWN_0051EA14_TABLES_OFFSET));
 		unknown_0055c150&= ~(unsigned long)FLAG(_saved_game_files_enumerate_bit);
 	}
 }
@@ -1444,6 +1459,103 @@ long saved_game_file_create(
 		_saved_game_files_error_failed : _saved_game_files_error_no_room;
 
 	return file;
+}
+
+/* 0x002164c0: looks for the files of a drive: each saved game of it that
+has the file of one of the types is one, and what the game knows of it goes
+to the table: its directory, its type, and the name that the player gave it,
+from the name that the console shows. It stops when the table is full. A
+saved game with no file of a type is none of the game's: a message is made
+for it, and nothing is done with the message */
+void saved_game_files_find_unit_files(
+	long unit_index,
+	struct saved_game_file_table *table)
+{
+	char root[SAVED_GAME_FILE_ROOT_LENGTH];
+	struct saved_game_find_data data;
+	uint32_t handle;
+	char letter;
+
+	if (!input_get_unit_drive_letter(unit_index, &letter))
+	{
+		return;
+	}
+	memset(root, 0, sizeof(root));
+	saved_game_files_get_unit_root_inline(unit_index, root, sizeof(root));
+	handle= XFindFirstSaveGame(root, &data);
+	if (handle==(uint32_t)INVALID_HANDLE_VALUE)
+	{
+		return;
+	}
+	do
+	{
+		struct saved_game_file_information information;
+		long type;
+
+		memset(&information, 0, sizeof(information));
+		strncpy(information.path, data.directory, sizeof(information.path));
+		information.path[sizeof(information.path)-1]= 0;
+		for (type= 0; type<NUMBER_OF_SAVED_GAME_FILE_TYPES; type++)
+		{
+			char path[SAVED_GAME_FILE_PATH_LENGTH];
+			struct file_reference file;
+
+			path[0]= 0;
+			strncpy(path, information.path, SAVED_GAME_FILE_PATH_LENGTH);
+			path[SAVED_GAME_FILE_PATH_LENGTH-1]= 0;
+			csstrcat256(path, saved_game_file_type_get_name(type));
+			file_reference_set_path(&file, path, FALSE);
+			if (file_exists(&file))
+			{
+				break;
+			}
+		}
+		if (type<NUMBER_OF_SAVED_GAME_FILE_TYPES)
+		{
+			information.type= type;
+			saved_game_file_parse_display_name(data.name, type, &information.language, information.name);
+			if (table->count==MAXIMUM_SAVED_GAME_FILES_PER_TABLE)
+			{
+				break;
+			}
+			table->files[table->count++]= information;
+		}
+		else
+		{
+			wchar wide_message[SAVED_GAME_FILE_MESSAGE_LENGTH];
+			char message[SAVED_GAME_FILE_MESSAGE_LENGTH];
+			const wchar *source= wide_message;
+			char *destination= message;
+			long count= SAVED_GAME_FILE_MESSAGE_LENGTH;
+			wchar character;
+
+			usnzprintf(wide_message, SAVED_GAME_FILE_MESSAGE_LENGTH,
+				u"unrecognized saved game file found by XFindNextSaveGame(): display name= '%s' path= '%hs'",
+				data.name, data.file_name);
+			/* wchar_string_to_ascii_string, which the game has in itself
+			here */
+			do
+			{
+				character= *source;
+				if (count==1)
+				{
+					*destination= 0;
+				}
+				else if (character<0x80)
+				{
+					*destination= (char)character;
+				}
+				else
+				{
+					*destination= '?';
+				}
+				source++;
+				destination++;
+				count--;
+			} while (character && count>0);
+		}
+	} while (XFindNextSaveGame(handle, &data));
+	XFindClose(handle);
 }
 
 /* 0x00215e60: deletes a file: the saved game that the console shows with
