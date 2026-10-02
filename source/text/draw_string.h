@@ -176,6 +176,9 @@ struct draw_string_line DRAW_STRING_CALLBACK draw_string_measure_line(struct tex
 void DRAW_STRING_CALLBACK draw_string_draw_line(const real_rectangle2d *bounds, const real_rectangle2d *clip,
 	short start, draw_string_character_proc proc, real_point2d *position, unsigned long color,
 	unsigned long shadow_color, const long *characters, short end, real scale);
+void DRAW_STRING_CALLBACK draw_string_draw_characters(draw_string_character_proc proc,
+	const struct rectangle2d *rectangle, struct draw_string_point *end, const struct rectangle2d *clip, short leading,
+	real scale, const long *characters);
 void draw_string_set_tab_stops(short count, const short *tab_stops);
 void draw_string_set_color_exact(const real_argb_color *color);
 void draw_string_set_color(const real_argb_color *color);

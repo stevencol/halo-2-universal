@@ -285,7 +285,7 @@ def run(t) -> None:
             extra=[font],
             externals={
                 "font_get": get,
-                "unknown_0013f0e0": lambda harness, arguments, end=end, seen=seen: measure(harness, arguments, end, seen),
+                "draw_string_draw_characters": lambda harness, arguments, end=end, seen=seen: measure(harness, arguments, end, seen),
             },
         )
 
@@ -316,7 +316,7 @@ def run(t) -> None:
                 "font_slot_indices": fonts(),
             },
             extra=[font],
-            externals={"font_get": get, "unknown_0013f0e0": grow},
+            externals={"font_get": get, "draw_string_draw_characters": grow},
         )
 
     def game_text(count: int) -> bytes:
@@ -359,7 +359,7 @@ def run(t) -> None:
             externals={
                 "font_get": get,
                 "GetTickCount": lambda harness, arguments: 77,
-                "unknown_0013f0e0": lambda harness, arguments, end=end, seen=seen: measure(harness, arguments, end, seen),
+                "draw_string_draw_characters": lambda harness, arguments, end=end, seen=seen: measure(harness, arguments, end, seen),
             },
         )
 
@@ -542,5 +542,96 @@ def run(t) -> None:
                 "text_iterator_next": next_character,
                 "font_character_get_header": get_header,
                 "font_get_kerning": kerning_of,
+            },
+        )
+
+    # ---------- drawing the lines of a text
+
+    FONT_SIZE_, TAB_STOP_COUNT, INDENTS, JUSTIFICATION_ = 0x1D0, 0x3C, 0x5E, 0x10
+
+    def reals_at(harness, address: int, count: int) -> bytes:
+        return bytes(harness.mu.mem_read(address, 4 * count))
+
+    for n in range(1500):
+        font = bytearray(random_.randbytes(FONT_SIZE_))
+        struct.pack_into("<4h", font, 4, random_.choice((10, 12, 0, -2)), random_.choice((3, 4, 0)), random_.choice((0, 1, 2, -1)), random_.choice((0, 0, 1, 3, -2)))
+        font = Buffer(bytes(font))
+        filled = bytearray(random_.randbytes(ITERATOR_SIZE))
+        struct.pack_into("<h", filled, INDEX, random_.choice((0, 0, 0, 3, -2)))
+        struct.pack_into("<h", filled, JUSTIFICATION_, random_.choice((0, 0, 1, 1, 2, 2, 3, -1)))
+        there = n % 29 != 28
+
+        def new_(harness, arguments, filled=filled, font=font, there=there):
+            iterator, font_index, justification, characters, style, color, shadow, shadow_color = arguments
+            data = bytearray(filled)
+            struct.pack_into("<2I", data, 0, font_index, font.address)
+            harness.mu.mem_write(iterator, bytes(data))
+            return there, (font_index, justification & 0xFFFF, characters, style & 0xFFFF, *map(harness.normalize, (color, shadow, shadow_color)))
+
+        # what each line is found to be: what ends it, how wide it is, the
+        # index of the character after it and how it is set after it
+        steps = []
+        index = 0
+        for step in range(random_.choice((0, 1, 2, 3, 5, 8, 12))):
+            index += random_.choice((0, 1, 4, 9))
+            element = random_.choice((4, 4, 4, 1, 1, 2, 2, 2, 3, 5, 0x104)) if n % 4 else random_.choice((4, 1, 2))
+            width = random_.choice((0.0, 10.0, 33.5, 80.25, 400.0, -3.0))
+            steps.append((element, width, index | random_.choice((0, 0, 0x10000, 0x8000)), random_.choice((None, None, None, 0, 1, 2))))
+        steps.append((0, random_.choice((0.0, 25.0, 60.5)), index + 2, None))
+
+        def measure_(harness, arguments, steps=steps):
+            iterator, position, bounds, scale_ = arguments
+            done_ = calls_so_far(harness, "draw_string_measure_line")
+            element, width, at, justification = steps[done_] if done_ < len(steps) else (0, 0.0, 0x7000, None)
+            record = (bytes(harness.mu.mem_read(iterator, ITERATOR_SIZE)), reals_at(harness, position, 2), reals_at(harness, bounds, 4), scale_)
+            harness.mu.mem_write(iterator + ELEMENT, struct.pack("<I", element))
+            if justification is not None:
+                harness.mu.mem_write(iterator + JUSTIFICATION_, struct.pack("<h", justification))
+            return (real_bits(width), at), record
+
+        advances = [random_.choice((0.0, 7.0, 31.5, 250.0, -4.0, 40000.0, nan)) for _ in range(len(steps) + 1)]
+
+        def line_(harness, arguments, advances=advances):
+            bounds, clip, start_, proc, position, color, shadow_color, characters, end_, scale_ = arguments
+            record = (
+                reals_at(harness, bounds, 4),
+                reals_at(harness, clip, 4) if clip else None,
+                start_ & 0xFFFF,
+                proc,
+                reals_at(harness, position, 2),
+                color,
+                shadow_color,
+                characters,
+                end_ & 0xFFFF,
+                scale_,
+            )
+            # the place is left after the last character
+            (x_,) = struct.unpack("<f", harness.mu.mem_read(position, 4))
+            harness.mu.mem_write(position, struct.pack("<f", struct.unpack("<f", struct.pack("<f", x_ + advances[calls_so_far(harness, "draw_string_draw_line")]))[0]))
+            return 0, record
+
+        how_ = bytearray(random_.randbytes(GLOBALS_SIZE))
+        struct.pack_into("<I", how_, 0, random_.randrange(11))
+        tab_stops = random_.choice((0, 0, 1, 2, 3, 16, -1))
+        struct.pack_into("<17h", how_, TAB_STOP_COUNT, tab_stops, *(random_.choice((40, 100, 180, 260, 0, -20)) for _ in range(16)))
+        struct.pack_into("<2h", how_, INDENTS, random_.choice((0, 0, 8, -3)), random_.choice((0, 0, 20, -5)))
+        top, left = random_.choice((0, 30, -40)), random_.choice((0, 16, -10))
+        rectangle = struct.pack("<4h", top, left, top + random_.choice((480, 100, 30, 12, 0, -5)), left + random_.choice((640, 300, 50, 0)))
+        scale = random_.choice((1.0, 1.0, 1.0, 0.5, 2.0, 1.5, 0.0, -1.0)) if n % 40 != 39 else nan
+        t.check(
+            "draw_string_draw_characters",
+            mock_address(0),
+            Buffer(rectangle),
+            random_.choice((Buffer(random_.randbytes(8)), Buffer(random_.randbytes(8)), 0)),
+            random_.choice((Buffer(struct.pack("<4h", *(random_.randrange(-700, 700) for _ in range(4)))), 0)),
+            (random_.choice((0, 0, 2, 5, -3)) & 0xFFFF) | random_.choice((0, 0x10000, 0xFFFF0000)),
+            real_bits(scale),
+            Buffer(random_.randbytes(16)),
+            globals={"draw_string_globals": GlobalData(bytes(how_))},
+            extra=[font],
+            externals={
+                "text_iterator_new": new_,
+                "draw_string_measure_line": measure_,
+                "draw_string_draw_line": line_,
             },
         )

@@ -80,7 +80,9 @@ struct font
 	short ascending_height;
 	short descending_height;
 	short leading_height;
-	byte unknownA[0x16];
+	/* how far from the left of where it is drawn a line starts */
+	short leading_width;
+	byte unknownC[0x14];
 	/* in the order of their first characters, and of the second ones */
 	long kerning_pair_count;
 	struct font_kerning_pair kerning_pairs[MAXIMUM_FONT_KERNING_PAIRS];

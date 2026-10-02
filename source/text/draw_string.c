@@ -18,13 +18,6 @@ these functions are of it is a guess, and so are their names.
 
 /* ---------- prototypes of functions that are not decompiled */
 
-/* 0x0013f0e0: goes through the characters of a text as they are drawn in a
-rectangle, by a scale, and calls a function with each one that is not out
-of another rectangle, if there is one; where the text ends is left in a
-place. The lines can be farther from each other than the font says */
-void DRAW_STRING_CALLBACK unknown_0013f0e0(draw_string_character_proc proc, const struct rectangle2d *rectangle,
-	struct draw_string_point *end, const struct rectangle2d *clip, short leading, real scale, const long *characters);
-
 /* ---------- globals */
 
 /* 0x004e73a0: how texts are drawn */
@@ -185,7 +178,7 @@ void draw_string_get_characters_bounds(
 		draw_string_bounds.ascending_height= font->ascending_height;
 		draw_string_bounds.descending_height= font->descending_height;
 	}
-	unknown_0013f0e0(draw_string_bounds_character, rectangle, &end, NULL, 0, scale, characters);
+	draw_string_draw_characters(draw_string_bounds_character, rectangle, &end, NULL, 0, scale, characters);
 	cursor->x0= end.x;
 	cursor->x1= end.x+1;
 	cursor->y0= end.y-draw_string_bounds.ascending_height;
@@ -396,6 +389,133 @@ void DRAW_STRING_CALLBACK draw_string_draw_line(
 			}
 			position->x= (real)header->advance*scale + position->x + origin + kerning;
 		}
+	}
+}
+
+/* 0x0013f0e0: goes through the lines of a text that is drawn in a
+rectangle, by a scale, and calls a function with each character that is in
+it and in another rectangle, if there is one: see draw_string_draw_line.
+Where the text ends is left in a place, if one is given. The name is a guess.
+
+Each line is measured, set to the left, to the right or to the centre, and
+drawn if its line is over the bottom of the rectangle. A line starts at the
+left of the rectangle, as far in as the first line or the others are said to
+start; after a tab, at the tab stop, and it ends at the next one. A line
+that does not fit goes on in the one under it, from the same tab stop; what
+is after the end of a line starts under all of them. The lines can be
+farther from each other than the font says */
+void DRAW_STRING_CALLBACK draw_string_draw_characters(
+	draw_string_character_proc proc,
+	const struct rectangle2d *rectangle,
+	struct draw_string_point *end,
+	const struct rectangle2d *clip,
+	short leading,
+	real scale,
+	const long *characters)
+{
+	struct text_iterator iterator;
+	real_point2d position;
+	short tab= 0;
+	short line= 0;
+	short wraps= 0;
+	short most_wraps= 0;
+
+	position.x= (real)rectangle->x0;
+	position.y= (real)rectangle->y0;
+	if (text_iterator_new(&iterator, draw_string_globals.font_index, (short)draw_string_globals.justification,
+		characters, (short)draw_string_globals.style, &draw_string_globals.color, &draw_string_globals.shadow,
+		&draw_string_globals.shadow_color))
+	{
+		short start= iterator.index;
+		boolean done= FALSE;
+
+		while (!done)
+		{
+			const struct font *font= iterator.font;
+			short justification= iterator.justification;
+			real_rectangle2d bounds;
+			real_rectangle2d real_clip;
+			struct draw_string_line measured;
+
+			bounds.x1= (real)rectangle->x1;
+			bounds.y0= (real)rectangle->y0;
+			bounds.y1= (real)rectangle->y1;
+			if (draw_string_globals.tab_stop_count>0 && tab)
+			{
+				bounds.x0= (real)draw_string_globals.tab_stops[tab-1]*scale;
+			}
+			else
+			{
+				bounds.x0= (real)(line ? draw_string_globals.line_indent : draw_string_globals.first_line_indent)*scale +
+					(real)rectangle->x0;
+			}
+			if (draw_string_globals.tab_stop_count>0 && tab<draw_string_globals.tab_stop_count)
+			{
+				bounds.x1= (real)draw_string_globals.tab_stops[tab]*scale;
+			}
+
+			position.x= (real)font->leading_width*scale + bounds.x0;
+			position.y= (real)((font->descending_height+font->leading_height+leading+font->ascending_height)*
+				(wraps+line) + font->ascending_height)*scale + bounds.y0;
+			measured= draw_string_measure_line(&iterator, &position, &bounds, scale);
+			font= iterator.font;
+			if (justification==_text_justification_right)
+			{
+				position.x= bounds.x1 - bounds.x0 + bounds.x0 - measured.width - (real)font->leading_width;
+			}
+			else if (justification==_text_justification_center)
+			{
+				position.x= (bounds.x1 - bounds.x0 - measured.width)*0.5f + bounds.x0;
+			}
+			if (bounds.y1>position.y)
+			{
+				if (clip)
+				{
+					real_clip.x0= (real)clip->x0;
+					real_clip.x1= (real)clip->x1;
+					real_clip.y0= (real)clip->y0;
+					real_clip.y1= (real)clip->y1;
+				}
+				draw_string_draw_line(&bounds, clip ? &real_clip : NULL, start, proc, &position, iterator.color,
+					iterator.shadow_color, characters, (short)measured.index, scale);
+			}
+			start= (short)measured.index;
+			iterator.index= start;
+			switch (iterator.element)
+			{
+				case _text_element_end:
+					done= TRUE;
+					break;
+				case _text_element_line_end:
+					line= (short)(line+most_wraps+1);
+					wraps= 0;
+					tab= 0;
+					most_wraps= 0;
+					break;
+				case _text_element_tab:
+					if (tab<draw_string_globals.tab_stop_count)
+					{
+						tab++;
+						wraps= 0;
+					}
+					break;
+				case _text_element_justification:
+					wraps= 0;
+					break;
+				case _text_element_character:
+					wraps++;
+					if (wraps>most_wraps)
+					{
+						most_wraps= wraps;
+					}
+					break;
+			}
+		}
+	}
+	if (end)
+	{
+		end->x= (short)(long)position.x;
+		end->y= (short)(long)position.y;
 	}
 }
 

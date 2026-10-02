@@ -627,6 +627,10 @@ class Harness:
                     result if isinstance(result, tuple) else (result, tuple(map(self.normalize, arguments)))
                 )
                 self._calls.append((name, record))
+                if symbol.returns == "pair":
+                    # a structure of 8 bytes: the test gives its two halves
+                    value, high = value
+                    mu.reg_write(x86.UC_X86_REG_EDX, high & 0xFFFFFFFF)
                 mu.reg_write(x86.UC_X86_REG_EAX, (value or 0) & 0xFFFFFFFF)
                 mu.reg_write(x86.UC_X86_REG_ESP, esp + 4 + cleanup)
                 if address == RETURN_ADDRESS:

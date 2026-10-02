@@ -2,6 +2,50 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Las líneas de un texto: `draw_string.c`, completo
+
+Una función. De 627 funciones se pasa a 628, el 5,57 % de las del juego (el
+2,824 % de sus bytes). Con ella están las 19 funciones de `draw_string.c`.
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `draw_string_draw_characters` | `0x0013f0e0` | `text/draw_string.c` |
+
+Era la función a la que llamaba la que mide un texto; ya no hace falta
+suplantarla.
+
+### Lo que se sabe
+
+- Es la que **reparte un texto en líneas** dentro de un rectángulo. Para
+  cada línea: calcula dónde empieza, mide cuánto cabe
+  (`draw_string_measure_line`), la coloca a la izquierda, a la derecha o al
+  centro, y la dibuja (`draw_string_draw_line`) si su línea base queda por
+  encima del borde inferior.
+- Una línea empieza en el borde izquierdo del rectángulo más una **sangría**:
+  una para la primera línea y otra para las demás.
+- Con **tabuladores**, lo que va tras un tabulador empieza en su parada y
+  acaba en la siguiente; un tabulador de más no hace nada. Las paradas se
+  miden desde el borde izquierdo de la pantalla, no del rectángulo.
+- Si lo medido no cabe, sigue en la línea de debajo, desde la misma parada.
+  Tras un fin de línea se baja por debajo de la columna que más haya bajado.
+- La altura de una línea es lo que sube y lo que baja la fuente, más su
+  interlineado, más el interlineado extra que se pida.
+- A la derecha, el texto se pega al borde derecho menos el margen de la
+  fuente (sin escala); al centro, se reparte lo que sobra.
+- Al acabar deja, si se le pide, dónde ha terminado el texto.
+- De la fuente se conoce un campo más: el margen con que empieza una línea.
+
+### Herramientas
+
+- Una función suplantada que devuelve una estructura de 8 bytes (`pair`)
+  puede dar sus dos mitades.
+
+### Mutaciones
+
+74 líneas rotas a propósito: las 74 detectadas.
+
 ## 2026-10-02 — Dibujar una línea de texto
 
 Una función. De 626 funciones se pasa a 627, el 5,57 % de las del juego (el
