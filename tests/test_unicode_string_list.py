@@ -114,7 +114,7 @@ def run(t) -> None:
             Buffer(random_.randbytes(0x208)),
             first,
             extra=[w.buffer],
-            externals={"unknown_00140440": to_wide},
+            externals={"utf8_string_to_wchar_string": to_wide},
         )
 
     # a text that the function of the console gives with no end: 255 characters are kept
@@ -132,7 +132,7 @@ def run(t) -> None:
         Buffer(random_.randbytes(0x208)),
         0,
         extra=[w.buffer],
-        externals={"unknown_00140440": no_end},
+        externals={"utf8_string_to_wchar_string": no_end},
     )
 
     # ---------- the texts of a tag, in the language of the console
@@ -162,7 +162,7 @@ def run(t) -> None:
             string_id,
             Buffer(random_.randbytes(0x208)),
             globals=globals_,
-            externals={**externals, "unknown_00140440": to_wide},
+            externals={**externals, "utf8_string_to_wchar_string": to_wide},
         )
 
     # ---------- reading the texts of a language

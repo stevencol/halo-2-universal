@@ -35,11 +35,6 @@ uint32_t XGetLanguage(void);
 /* 0x003207ed: of characters of 16 bits */
 wchar *wcsncpy(wchar *destination, const wchar *source, size_t count);
 
-/* ---------- prototypes of functions that are not decompiled */
-
-/* 0x00140440: a text of UTF-8 as one of characters of 16 bits */
-void unknown_00140440(const char *utf8, wchar *string, long length);
-
 /* ---------- code */
 
 /* the texts of the language of the console, which is asked for the first
@@ -192,7 +187,7 @@ void language_texts_get(
 	{
 		wchar text[UNICODE_STRING_LENGTH];
 
-		unknown_00140440(language_texts_find(texts, first, count, string_id), text, UNICODE_STRING_LENGTH);
+		utf8_string_to_wchar_string(language_texts_find(texts, first, count, string_id), text, UNICODE_STRING_LENGTH);
 		wcsncpy(string, text, UNICODE_STRING_LENGTH-1);
 		string[UNICODE_STRING_LENGTH-1]= 0;
 	}

@@ -10,33 +10,25 @@ each, and the cache of their pixels. The names are guesses.
 
 #include "cseries/cseries.h"
 #include "memory/data.h"
+#include "memory/hash_table.h"
 #include "memory/lruv_cache.h"
 #include "text/unicode.h"
 
-/* ---------- constants */
-
-enum
-{
-	/* the characters that are of no writing: those of each program */
-	FIRST_PRIVATE_USE_CHARACTER= 0xE000,
-	LAST_PRIVATE_USE_CHARACTER= 0xF8FF
-};
-
 /* ---------- structures */
 
-/* what finds a character of a font among those that the game knows: only
-what the code here looks at */
-struct font_character_table
+/* what a character is found by: the key of the table of the characters */
+struct font_character_key
 {
-	byte unknown0[0x34];
-	struct allocation *allocation;
+	long font_slot_index;
+	long character;
 };
 
 /* 0x0054d570: the characters that the game knows, and the cache of their
 pixels */
 struct font_cache_globals
 {
-	struct font_character_table *character_table;
+	/* finds the index of a character by its key */
+	struct hash_table *character_table;
 	struct data_array *characters;
 	struct data_array *unknown8;
 	/* the blocks of the cache */
@@ -48,12 +40,12 @@ struct font_cache_globals
 
 typedef char verify_font_cache_globals_size[
 	sizeof(struct font_cache_globals) == 0x18 ? 1 : -1];
-typedef char verify_font_character_table_size[
-	sizeof(struct font_character_table) == 0x38 ? 1 : -1];
 
 /* ---------- prototypes/FONT_CACHE.C */
 
-boolean character_is_private_use(unsigned long character);
+unsigned long HASH_TABLE_CALLBACK font_character_key_hash(long key);
+boolean HASH_TABLE_CALLBACK font_character_key_compare(long key, long other);
+long font_character_find(long font_slot_index, long character);
 void font_characters_dispose(void);
 void font_cache_dispose(void);
 byte *font_cache_block_get_address(long block_index);

@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 84.
+**Última actualización:** 2026-10-02, al terminar el hito 85.
 
 ## Dónde estamos
 
-- **585 funciones descompiladas de 11.265: el 5,19 % del juego** (el
-  2,572 % de los bytes de código).
-- Las 585 están comprobadas contra el ejecutable original
+- **591 funciones descompiladas de 11.265: el 5,25 % del juego** (el
+  2,596 % de los bytes de código).
+- Las 591 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the hash table* (ver `git log`).
+- Último hito: *Decompile UTF-8 and finding a character* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -95,10 +95,10 @@ Módulos (funciones hechas / archivo):
 - [x] Archivos — `tag_files\files.c`, `files_xbox.c` (22, completo: de
       `0x00136710` a `0x001374c0`. Lo que hay justo antes, de `0x00136140`
       a `0x001366d0`, es de los bitmaps)
-- [x] Cadenas anchas — `text\unicode.c` (13)
+- [x] Cadenas anchas y UTF-8 — `text\unicode.c` (17)
 - [ ] Fuentes — `text\fonts.c` (3; faltan `0x001223a0` y `0x00122610`)
-- [ ] Caché de los caracteres de las fuentes — `text\font_cache.c` (4 de
-      unas 35; va de `0x00140420` a `0x00141480`)
+- [ ] Caché de los caracteres de las fuentes — `text\font_cache.c` (6 de
+      unas 30; va de `0x001406b0` a `0x00141480`)
 - [ ] Dibujar texto — `text\draw_string.c` (12; faltan las que miden y
       dibujan: `0x0013e9c0`, `0x0013ea60`, `0x0013ef40`, `0x0013f0e0` y
       `0x0013f700`)

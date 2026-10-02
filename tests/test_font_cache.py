@@ -3,7 +3,7 @@
 import random
 import struct
 
-from difftest import Buffer, Mock, Pointer, mock_address
+from difftest import Buffer, FunctionPointer, Mock, Pointer, mock_address
 
 DATA_SIZE = 0x4C
 DATA_ALLOCATION = 0x30
@@ -102,4 +102,73 @@ def run(t) -> None:
                 "font_cache_globals+16": Buffer(bytes(blob), pointers=(LRUV_BLOCKS, data_place + 0x44)),
                 "font_cache_globals+20": random_.choice((0, 0x80400000, random_.getrandbits(32))),
             },
+        )
+
+    # ---------- finding a character
+
+    def key(font: int, character: int) -> Buffer:
+        return Buffer(struct.pack("<2I", font, character) + random_.randbytes(4))
+
+    values = (0, 1, 2, 3, 9, 0x41, 0x3042, 0xFFFF, 0x10000, 0x7FFFFFFF, 0x80000000, 0xFFFFFFFF, 0x55555556, 0xAAAAAAAB)
+    for font in values:
+        for character in values:
+            t.check("font_character_key_hash", key(font, character))
+    for _ in range(200):
+        font, character = random_.choice(values), random_.choice(values)
+        other = random_.choice(((font, character), (font, character), (font ^ 1, character), (font, character ^ 0x100), (character, font), (random_.choice(values), random_.choice(values))))
+        t.check("font_character_key_compare", key(font, character), key(*other))
+
+    HEADER, ENTRY = 0x3C, 0x10
+    NONE = 0xFFFFFFFF
+
+    def hash_of(font: int, character: int) -> int:
+        return font * 3 + character & 0xFFFFFFFF
+
+    def characters(list_count: int, known: dict) -> tuple:
+        """The table that finds the characters, with some in it: the key of
+        each is after the entries, as it would be in what the game knows of
+        the character. The functions of the table are those of the game, and
+        of source/."""
+        entries = HEADER + 4 * list_count
+        keys = entries + ENTRY * (len(known) + 2)
+        blob = bytearray(random_.randbytes(keys + 8 * len(known) + 8))
+        blob[0x1F] = 0
+        struct.pack_into("<3I", blob, 0x20, list_count, len(known) + 2, 4)
+        struct.pack_into("<I", blob, 0x34, 0x80AA0000)
+        struct.pack_into("<I", blob, 0x38, 0)
+        pointers = []
+        lists = [0] * list_count
+        for n, ((font, character), index) in enumerate(known.items()):
+            place = entries + ENTRY * n
+            key_place = keys + 8 * n
+            struct.pack_into("<2I", blob, key_place, font, character)
+            list_ = hash_of(font, character) % list_count
+            struct.pack_into("<4I", blob, place, key_place, hash_of(font, character), lists[list_], index)
+            pointers.append(place)
+            if lists[list_]:
+                pointers.append(place + 8)
+            lists[list_] = place
+        for list_, place in enumerate(lists):
+            struct.pack_into("<I", blob, HEADER + 4 * list_, place)
+            if place:
+                pointers.append(HEADER + 4 * list_)
+        return Buffer(bytes(blob), pointers=tuple(pointers), functions={0x2C: "font_character_key_hash", 0x30: "font_character_key_compare"})
+
+    for n in range(200):
+        list_count = random_.choice((1, 3, 16, 0x400))
+        known = {}
+        for _ in range(random_.randrange(0, 9)):
+            known[(random_.randrange(4), random_.choice((0x41, 0x42, 0x44, 0x47, 0x3042, random_.getrandbits(16))))] = random_.getrandbits(32)
+        asked = [(random_.randrange(4), random_.choice((0x41, 0x44, 0x3042)))]
+        if known:
+            font, character = random_.choice(list(known))
+            # a character that is known; the same of another font; one with
+            # the same hash, which is three times the font and the character
+            asked += [(font, character), (font, character), (font ^ 1, character), (font + 1, (character - 3) & 0xFFFFFFFF)]
+        font, character = random_.choice(asked)
+        t.check(
+            "font_character_find",
+            font,
+            character,
+            globals={"font_cache_globals": characters(list_count, known)},
         )

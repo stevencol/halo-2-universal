@@ -2,6 +2,62 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — UTF-8, y encontrar un carácter de una fuente
+
+Seis funciones. De 585 funciones se pasa a 591, el 5,25 % de las del juego
+(el 2,596 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `utf8_string_to_wchar_string` | `0x00140440` | `text/unicode.c` |
+| `utf8_encode_character` | `0x001405a0` | `text/unicode.c` |
+| `wchar_string_to_utf8_string` | `0x00140650` | `text/unicode.c` |
+| `font_character_find` | `0x00140b20` | `text/font_cache.c` |
+| `font_character_key_hash` | `0x00141090` | `text/font_cache.c` |
+| `font_character_key_compare` | `0x001410b0` | `text/font_cache.c` |
+
+### Lo que se sabe
+
+- Los textos del juego están guardados en UTF-8 y se pasan a caracteres de
+  16 bits al usarlos. Un carácter mal escrito (un byte de continuación
+  suelto, un principio sin sus continuaciones) se salta, y se sigue desde el
+  byte siguiente. De un carácter de más de 16 bits se guardan los 16 bajos:
+  los emoji y demás salen como otro carácter. No se rechazan las formas
+  demasiado largas ni los sustitutos.
+- Al revés, un carácter se escribe en 1 a 4 bytes; si no cabe entero se corta
+  por donde quepa, así que el texto puede acabar con un carácter a medias.
+- La clave de un carácter en la tabla hash es el par (hueco de la fuente,
+  carácter), y su hash es tres veces el hueco más el carácter. Lo que la
+  tabla guarda con la clave es el índice de lo que el juego sabe del
+  carácter.
+
+### Cambiado
+
+- `character_is_private_use` pasa de `font_cache.c` a `unicode.c`: está entre
+  las funciones de caracteres, antes de las de UTF-8.
+- `utf8_string_to_wchar_string` era la función sin nombre que usaba
+  `unicode_string_list.c`.
+- La tabla de los caracteres de `font_cache_globals` es una `struct
+  hash_table`.
+
+### Sin comprobar
+
+- Las máscaras de los bits del primer byte de un carácter de 2, 3 o 4 bytes:
+  el bit de más que dejaría pasar una máscara más ancha es siempre 0 en un
+  principio válido (tres mutaciones). Lo mismo con el bit 6 de un byte de
+  continuación.
+- Seguir leyendo continuaciones después de una mala, y avanzar siempre un
+  solo byte: el texto que sale es el mismo, porque las continuaciones sueltas
+  se saltan.
+
+### Mutaciones
+
+66 líneas rotas a propósito: 58 detectadas a la primera, dos más con casos
+nuevos (sin sitio para escribir, nada se escribe tampoco antes del destino),
+y las seis de «Sin comprobar».
+
 ## 2026-10-02 — La tabla hash
 
 Cinco funciones. De 580 funciones se pasa a 585, el 5,19 % de las del juego

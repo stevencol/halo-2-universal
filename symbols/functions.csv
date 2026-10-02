@@ -848,7 +848,7 @@ address,name,source,arguments,returns,convention
 001a02d0,language_texts_find,source/text/unicode_string_list.c,edx eax ecx edi,string
 001a0310,language_texts_has,source/text/unicode_string_list.c,esi ecx ebx stack,bool
 001a0350,language_texts_get,source/text/unicode_string_list.c,edx edi ecx esi stack,void
-00140440,unknown_00140440,,stack stack stack,void
+00140440,utf8_string_to_wchar_string,source/text/unicode.c,stack stack stack,void
 00216da0,saved_game_file_get_display_name,source/saved games/saved_game_files.c,ecx edi stack stack,bool
 00216e50,saved_game_file_parse_display_name,source/saved games/saved_game_files.c,stack stack stack stack,void
 00216120,saved_game_file_name_unique,source/saved games/saved_game_files.c,esi stack,bool
@@ -945,10 +945,15 @@ address,name,source,arguments,returns,convention
 0013eb60,draw_string_set_color_exact,source/text/draw_string.c,eax,void
 00122540,font_get_line_height,source/text/fonts.c,eax,int
 00122570,font_get_kerning,source/text/fonts.c,edx edi ebx,short
-00140420,character_is_private_use,source/text/font_cache.c,ecx,bool
+00140420,character_is_private_use,source/text/unicode.c,ecx,bool
 00141450,font_cache_block_get_address,source/text/font_cache.c,eax,int
 0013e1a0,hash_table_new,source/memory/hash_table.c,edi ebx stack stack stack stack stack,pointer
 0013e210,hash_table_clear,source/memory/hash_table.c,edx,void
 0013e270,hash_table_add,source/memory/hash_table.c,ebx eax stack,bool
 0013e2d0,hash_table_find,source/memory/hash_table.c,edi stack,pointer
 0013e320,hash_table_remove,source/memory/hash_table.c,edi stack,bool
+001405a0,utf8_encode_character,source/text/unicode.c,eax edi stack,int
+00140650,wchar_string_to_utf8_string,source/text/unicode.c,eax stack stack,void
+00141090,font_character_key_hash,source/text/font_cache.c,stack,int
+001410b0,font_character_key_compare,source/text/font_cache.c,stack stack,bool
+00140b20,font_character_find,source/text/font_cache.c,eax ecx,int

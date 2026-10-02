@@ -3,7 +3,7 @@
 import random
 import struct
 
-from difftest import Buffer
+from difftest import Buffer, Pointer
 
 
 def wide(text: list[int], room: int, random_: random.Random) -> Buffer:
@@ -137,3 +137,57 @@ def run(t) -> None:
             random_.choice((*spaces, *starts, *ends, 0x41, 0x3042, 0xAC00, random_.getrandbits(16))),
             random_.choice((*spaces, *starts, *ends, 0x41, 0x3042, 0xAC00, random_.getrandbits(16))),
         )
+
+    # ---------- UTF-8
+
+    characters = (
+        0, 1, 0x41, 0x7F, 0x80, 0xE9, 0x7FF, 0x800, 0x3042, 0xD7FF, 0xD800, 0xFFFF, 0x10000, 0x1F600, 0x10FFFF, 0x1FFFFF, 0x200000,
+        0x7FFFFFFF, 0x80000000, 0xFFFFFFFF,
+    )
+    for character in characters:
+        for room in (-1, 0, 1, 2, 3, 4, 5, 8):
+            t.check("utf8_encode_character", Buffer(random_.randbytes(12)), character, room & 0xFFFFFFFF)
+    for _ in range(200):
+        t.check("utf8_encode_character", Buffer(random_.randbytes(12)), random_.choice((random_.getrandbits(7), random_.getrandbits(11), random_.getrandbits(16), random_.getrandbits(21), random_.getrandbits(32))), random_.randrange(0, 6))
+
+    def wide_characters(*values: int) -> Buffer:
+        return Buffer(struct.pack(f"<{len(values) + 1}H", *values, 0) + random_.randbytes(4))
+
+    wide_texts = [
+        (), (0x41,), (0x41, 0x42, 0x43), (0xE9,), (0x3042, 0x3044), (0x41, 0xE9, 0x3042, 0x7F, 0x80, 0x7FF, 0x800, 0xFFFF),
+        (0xD83D, 0xDE00), tuple(range(0x30, 0x50)),
+    ]
+    for text_ in wide_texts:
+        for size in (-1, 0, 1, 2, 3, 4, 5, 6, 7, 9, 12, 40, 100):
+            t.check("wchar_string_to_utf8_string", wide_characters(*text_), Buffer(random_.randbytes(0x70)), size & 0xFFFFFFFF)
+    for _ in range(150):
+        text_ = tuple(random_.choice((random_.randrange(1, 0x80), random_.randrange(0x80, 0x800), random_.randrange(0x800, 0x10000))) for _ in range(random_.randrange(0, 9)))
+        t.check("wchar_string_to_utf8_string", wide_characters(*text_), Buffer(random_.randbytes(0x30)), random_.randrange(0, 0x1C))
+
+    def narrow(data: bytes) -> Buffer:
+        # after its end there is more: a character that is cut reads it
+        return Buffer(data + bytes(1) + random_.randbytes(6))
+
+    utf8_texts = [
+        b"", b"A", b"plain", "caf\u00e9".encode(), "\u3042\u3044\u3046".encode(), "a\U0001F600b".encode(),
+        # bytes that go on with no start, starts with nothing after them, and
+        # starts that are cut by the end
+        b"\x80", b"a\x80b", b"\xbf\xbf", b"\xc3", b"\xc3A", b"\xe3\x81", b"\xe3\x81A", b"\xe3A\x81", b"\xf0\x9f\x98", b"\xf0\x9f\x98A",
+        b"\xf8\x88\x80\x80\x80", b"\xff", b"\xfe\xff", b"\xc0\x80", b"\xe0\x80\x80", b"\xc3\xa9\xc3", b"\xed\xa0\x80",
+        b"\xf7\xbf\xbf\xbf", b"\xf4\x90\x80\x80", "x".encode() * 40,
+    ]
+    for text_ in utf8_texts:
+        for count in (-1, 0, 1, 2, 3, 4, 5, 8, 20, 64):
+            t.check("utf8_string_to_wchar_string", narrow(text_), Buffer(random_.randbytes(0x90)), count & 0xFFFFFFFF)
+    for _ in range(300):
+        text_ = bytes(random_.choice((random_.randrange(1, 0x80), random_.randrange(0x80, 0x100), 0xC3, 0xA9, 0xE3, 0x81, 0x82, 0xF0, 0x9F)) for _ in range(random_.randrange(0, 12)))
+        t.check("utf8_string_to_wchar_string", narrow(text_), Buffer(random_.randbytes(0x30)), random_.randrange(0, 0x14))
+
+    # with no room, nothing is written: not before where the text goes either
+    for count in (0, -1, -5):
+        for text_ in (b"", b"A", b"\xff"):
+            room = Buffer(random_.randbytes(0x20))
+            t.check("utf8_string_to_wchar_string", narrow(text_), Pointer(room, 8), count & 0xFFFFFFFF, extra=[room])
+        for text_ in ((), (0x41,), (0x3042, 0x41)):
+            room = Buffer(random_.randbytes(0x20))
+            t.check("wchar_string_to_utf8_string", wide_characters(*text_), Pointer(room, 8), count & 0xFFFFFFFF, extra=[room])

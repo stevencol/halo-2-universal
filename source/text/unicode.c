@@ -376,3 +376,163 @@ boolean character_is_east_asian(
 		(character>=0xF900 && character<=0xFAFF) ||
 		(character>=0xFF00 && character<=0xFFDC);
 }
+
+/* 0x00140420: whether a character is of no writing: one of those that each
+program gives a meaning of its own. Only its 16 low bits are looked at */
+boolean character_is_private_use(
+	unsigned long character)
+{
+	return (wchar)character>=FIRST_PRIVATE_USE_CHARACTER && (wchar)character<=LAST_PRIVATE_USE_CHARACTER;
+}
+
+/* 0x00140440: a text of UTF-8 as one of characters of 16 bits, of so many at
+most with its end. A character that is not well written is left out, and the
+text goes on from its next byte; of one of more than 16 bits, the 16 low ones
+are kept */
+void utf8_string_to_wchar_string(
+	const char *source,
+	wchar *destination,
+	long count)
+{
+	long position= 0;
+	long length= 0;
+
+	while (source[position])
+	{
+		const byte *bytes= (const byte *)source+position;
+		unsigned long character= bytes[0];
+		boolean valid= TRUE;
+		long size= 0;
+
+		if (!(character&0x80))
+		{
+			size= 1;
+		}
+		else if ((character&0xE0)==0xC0)
+		{
+			character&= 0x1F;
+			size= 2;
+		}
+		else if ((character&0xF0)==0xE0)
+		{
+			character&= 0x0F;
+			size= 3;
+		}
+		else if ((character&0xF8)==0xF0)
+		{
+			character&= 0x07;
+			size= 4;
+		}
+		else
+		{
+			valid= FALSE;
+		}
+		if (valid)
+		{
+			long index;
+
+			for (index= 1; valid && index<size; index++)
+			{
+				character= (character<<6) | (bytes[index]&0x3F);
+				if ((bytes[index]&0xC0)!=0x80)
+				{
+					valid= FALSE;
+				}
+			}
+		}
+		position+= valid ? size : 1;
+		if (valid && length<count)
+		{
+			destination[length++]= (wchar)character;
+		}
+	}
+	if (length<count)
+	{
+		destination[length]= 0;
+	}
+	else if (length>0)
+	{
+		destination[length-1]= 0;
+	}
+}
+
+/* 0x001405a0: a character as bytes of UTF-8, of which only so many are
+written. How many it has; 0 if it is past 0x1FFFFF, and then its first byte
+is not written, but the others are: none */
+long utf8_encode_character(
+	char *destination,
+	unsigned long character,
+	long room)
+{
+	long size;
+	long index;
+
+	if (character<=0x7F)
+	{
+		size= 1;
+		if (room>0)
+		{
+			destination[0]= (char)character;
+		}
+	}
+	else if (character<=0x7FF)
+	{
+		size= 2;
+		if (room>0)
+		{
+			destination[0]= (char)((character|0x3000)>>6);
+		}
+	}
+	else if (character<=0xFFFF)
+	{
+		size= 3;
+		if (room>0)
+		{
+			destination[0]= (char)((character|0xE0000)>>12);
+		}
+	}
+	else if (character<=0x1FFFFF)
+	{
+		size= 4;
+		if (room>0)
+		{
+			destination[0]= (char)((character|0x3C00000)>>18);
+		}
+	}
+	else
+	{
+		size= 0;
+	}
+	for (index= 1; index<room && index<size; index++)
+	{
+		destination[index]= (char)(((character>>((size-index)*6-6))&0x3F)|0x80);
+	}
+
+	return size;
+}
+
+/* 0x00140650: a text of characters of 16 bits as one of UTF-8, of so many
+bytes at most with its end. A character that does not fit whole is cut */
+void wchar_string_to_utf8_string(
+	const wchar *source,
+	char *destination,
+	long size)
+{
+	long length= 0;
+
+	for (; *source; source++)
+	{
+		long room= size-length;
+		long written= utf8_encode_character(destination+length, *source, room);
+
+		length+= written<=room ? written : room;
+	}
+	if (length<size)
+	{
+		destination[length]= 0;
+	}
+	else if (length>0)
+	{
+		destination[length-1]= 0;
+	}
+}

@@ -10,6 +10,8 @@ file and of the functions are guesses.
 
 #include "font_cache.h"
 
+#include <string.h>
+
 /* ---------- globals */
 
 /* 0x0054d570 */
@@ -17,12 +19,48 @@ struct font_cache_globals font_cache_globals;
 
 /* ---------- code */
 
-/* 0x00140420: whether a character is of no writing: one of those that each
-program gives a meaning of its own. Only its 16 low bits are looked at */
-boolean character_is_private_use(
-	unsigned long character)
+/* 0x00141090: the number of a character of a font, for the table that finds
+it */
+unsigned long HASH_TABLE_CALLBACK font_character_key_hash(
+	long key)
 {
-	return (wchar)character>=FIRST_PRIVATE_USE_CHARACTER && (wchar)character<=LAST_PRIVATE_USE_CHARACTER;
+	const struct font_character_key *character= (const struct font_character_key *)key;
+
+	return (unsigned long)(character->font_slot_index*3 + character->character);
+}
+
+/* 0x001410b0: whether two are the same character of the same font */
+boolean HASH_TABLE_CALLBACK font_character_key_compare(
+	long key,
+	long other)
+{
+	const struct font_character_key *a= (const struct font_character_key *)key;
+	const struct font_character_key *b= (const struct font_character_key *)other;
+
+	return a->font_slot_index==b->font_slot_index && a->character==b->character;
+}
+
+/* 0x00140b20: the index of what the game knows of a character of a font;
+NONE if it knows nothing of it */
+long font_character_find(
+	long font_slot_index,
+	long character)
+{
+	struct hash_table *table= font_cache_globals.character_table;
+	struct font_character_key key;
+	const struct hash_table_entry *entry;
+	long index= NONE;
+
+	key.font_slot_index= font_slot_index;
+	key.character= character;
+	entry= hash_table_find(table, (long)&key);
+	if (!entry)
+	{
+		return NONE;
+	}
+	memcpy(&index, entry+1, (unsigned long)table->size);
+
+	return index;
 }
 
 /* 0x00140aa0: the end of what the game knows of the characters */
@@ -31,7 +69,7 @@ void font_characters_dispose(
 {
 	if (font_cache_globals.character_table)
 	{
-		struct font_character_table *table= font_cache_globals.character_table;
+		struct hash_table *table= font_cache_globals.character_table;
 
 		table->allocation->functions->deallocate(table->allocation, table);
 		font_cache_globals.character_table= NULL;
