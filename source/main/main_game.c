@@ -7,6 +7,7 @@ gives the address it has there.
 The names are guesses.
 */
 
+#include "text/unicode_string_list.h"
 #include "main_game.h"
 
 #include "cache/animation_cache.h"
@@ -51,9 +52,6 @@ void unknown_000693a0(void *unknown, void *also);
 
 /* 0x0006cd50: the state of a session of the network game */
 long unknown_0006cd50(long session_index);
-
-/* 0x001a01e0: reads the texts of a language of the globals tag */
-void unknown_001a01e0(void *language_texts);
 
 /* 0x002186f0: before the caches of a map are closed */
 void unknown_002186f0(void);
@@ -127,10 +125,8 @@ void unknown_00138640(long one, struct game_options *options);
 
 enum
 {
-	/* in the globals tag: where the texts of the first language are, and
-	how much each language has: an address, a size and whether they are
-	loaded */
-	GAME_GLOBALS_LANGUAGE_TEXTS_OFFSET= 0x188,
+	/* in the globals tag: how much each language has of texts (a struct
+	language_texts: where they are is in unicode_string_list.h) */
 	GAME_GLOBALS_LANGUAGE_TEXTS_SIZE= 0x1C,
 	GAME_GLOBALS_LANGUAGE_TEXTS_LOADED_OFFSET= 0x18,
 
@@ -302,7 +298,7 @@ void main_game_load_end(
 	if (!keep_caches)
 	{
 		animation_cache_open();
-		unknown_001a01e0(main_game_language_texts());
+		language_texts_load((struct language_texts *)main_game_language_texts());
 		geometry_cache_open();
 		texture_cache_globals.use_preloaded_pixels= FALSE;
 		texture_cache_globals.flushing= FALSE;

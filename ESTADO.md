@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 53.
+**Última actualización:** 2026-10-02, al terminar el hito 54.
 
 ## Dónde estamos
 
-- **475 funciones descompiladas de 11.265: el 4,22 % del juego** (el
-  1,996 % de los bytes de código).
-- Las 475 están comprobadas contra el ejecutable original
+- **481 funciones descompiladas de 11.265: el 4,27 % del juego** (el
+  2,017 % de los bytes de código).
+- Las 481 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the default names of the saved game files* (ver `git log`).
+- Último hito: *Decompile the texts of the game by language* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -76,6 +76,8 @@ Módulos (funciones hechas / archivo):
 - [x] Cargar y descargar un mapa — `main\main_game.c` (23, completo)
 - [x] Memoria de la interfaz — `interface\user_interface_memory.c` (4)
 - [x] Mandos — `input\input_xbox.c` (10, completo)
+- [ ] Textos por idioma — `text\unicode_string_list.c` (6, de
+      `0x001a0120` a `0x001a0350`; el archivo sigue hasta `0x001a08d0`)
 - [x] Nombres por defecto de los archivos —
       `saved games\saved_game_file_names.c` (14, de `0x00217620` a
       `0x00217b70`)

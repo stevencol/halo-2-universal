@@ -9,6 +9,7 @@ and the parts of the game that a frame calls. The names are guesses, after those
 Halo 1's main.c.
 */
 
+#include "text/unicode_string_list.h"
 #include "main.h"
 
 #include "cache/geometry_cache.h"
@@ -77,10 +78,9 @@ void unknown_00125b40(void);
 void unknown_000681e0(void);
 void unknown_00222d80(void);
 
-/* 0x0024cdaf, 0x001a0180 and 0x0024cbee: the messages that the game shows
-the players. The names are guesses */
+/* 0x0024cdaf and 0x0024cbee: the messages that the game shows the players.
+The names are guesses */
 void hud_messages_unknown_0024cdaf(void);
-void hud_get_text(unsigned long string_id, wchar *text);
 void hud_print_message(long local_player_index, const wchar *text);
 
 /* 0x0018efa0: what the loop does when a structure bsp cannot be loaded */
@@ -455,7 +455,7 @@ static inline __attribute__((always_inline)) void main_get_message(
 	text[0]= 0;
 	if (unknown_00510c94 && unknown_00510c94->unknown3FC!=NONE)
 	{
-		hud_get_text(string_id, text);
+		unicode_string_list_get_string(unknown_00510c94->unknown3FC, string_id, text);
 	}
 }
 

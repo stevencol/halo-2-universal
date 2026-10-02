@@ -504,7 +504,7 @@ address,name,source,arguments,returns,convention
 00222d80,unknown_00222d80,,,void
 00122bc0,cache_file_structure_bsp_unload,source/cache/cache_files.c,edi,void
 0024cdaf,hud_messages_unknown_0024cdaf,,,void
-001a0180,hud_get_text,,edi stack,void
+001a0180,unicode_string_list_get_string,source/text/unicode_string_list.c,eax edi stack,void
 0024cbee,hud_print_message,,eax stack,void
 0018efa0,unknown_0018efa0,,,void
 00190e37,unknown_00190e37,,,void
@@ -644,7 +644,7 @@ address,name,source,arguments,returns,convention
 0021ebc0,unknown_0021ebc0,,stack,void,stdcall
 000693a0,unknown_000693a0,,stack esi,void
 0006cd50,unknown_0006cd50,,eax,int
-001a01e0,unknown_001a01e0,,edi,void
+001a01e0,language_texts_load,source/text/unicode_string_list.c,edi,void
 002186f0,unknown_002186f0,,,void
 0011be50,unknown_0011be50,,,void
 000d5560,unknown_000d5560,,stack,void
@@ -844,3 +844,8 @@ address,name,source,arguments,returns,convention
 00217a20,saved_game_file_default_name_unknown,source/saved games/saved_game_file_names.c,eax,wstring
 00217a80,saved_game_file_get_default_name,source/saved games/saved_game_file_names.c,ecx edx esi,void
 00217b70,saved_game_file_name_length,source/saved games/saved_game_file_names.c,ecx,int
+001a0120,unicode_string_list_has_string,source/text/unicode_string_list.c,eax ebx,bool
+001a02d0,language_texts_find,source/text/unicode_string_list.c,edx eax ecx edi,string
+001a0310,language_texts_has,source/text/unicode_string_list.c,esi ecx ebx stack,bool
+001a0350,language_texts_get,source/text/unicode_string_list.c,edx edi ecx esi stack,void
+00140440,unknown_00140440,,stack stack stack,void

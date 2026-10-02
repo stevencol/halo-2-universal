@@ -159,8 +159,9 @@ def run(t) -> None:
     # ---------- what the loop does
 
     def get_text(harness, arguments):
-        string_id, text = arguments
-        record = (string_id, bytes(harness.mu.mem_read(text, 2)))
+        # the tag that has the text, which the game gives in a register
+        string_list_index, string_id, text = arguments
+        record = (string_list_index, string_id, bytes(harness.mu.mem_read(text, 2)))
         harness.mu.mem_write(text, "saved".encode("utf-16-le") + b"\0\0")
         return 0, record
 
@@ -169,7 +170,7 @@ def run(t) -> None:
 
     messages = {
         "hud_messages_unknown_0024cdaf": nothing,
-        "hud_get_text": get_text,
+        "unicode_string_list_get_string": get_text,
         "hud_print_message": print_message,
     }
 

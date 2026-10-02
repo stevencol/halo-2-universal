@@ -97,7 +97,7 @@ def run(t) -> None:
                     **language_externals(),
                     **stand_ins(
                         "animation_cache_open",
-                        "unknown_001a01e0",
+                        "language_texts_load",
                         "geometry_cache_open",
                         "texture_cache_load_preloaded_pixels",
                         "texture_cache_open",

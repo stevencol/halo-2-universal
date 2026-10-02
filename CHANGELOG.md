@@ -2,6 +2,60 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Los textos del juego por idioma
+
+Cómo encuentra el juego un texto en el idioma de la consola. De 475
+funciones se pasa a 481, el 4,27 % de las del juego (el 2,017 % de sus
+bytes: **se pasa del 2 % de los bytes**).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unicode_string_list_has_string` | `0x001a0120` | `text/unicode_string_list.c` |
+| `unicode_string_list_get_string` | `0x001a0180` | `text/unicode_string_list.c` |
+| `language_texts_load` | `0x001a01e0` | `text/unicode_string_list.c` |
+| `language_texts_find` | `0x001a02d0` | `text/unicode_string_list.c` |
+| `language_texts_has` | `0x001a0310` | `text/unicode_string_list.c` |
+| `language_texts_get` | `0x001a0350` | `text/unicode_string_list.c` |
+
+- Archivos nuevos: `text/unicode_string_list.h`,
+  `text/unicode_string_list.c`, `tests/test_unicode_string_list.py`.
+
+### Corregido
+
+- **`hud_get_text` recibía un argumento de menos.** La función del juego
+  toma tres cosas: el índice de la etiqueta que tiene el texto (en `eax`),
+  el identificador del texto y dónde escribirlo. `main.c` solo le pasaba
+  las dos últimas. Las pruebas no lo veían porque la función estaba
+  suplida y el registro no se comparaba. Ahora se llama
+  `unicode_string_list_get_string`, recibe el índice, y la prueba de
+  `main.c` comprueba que es el que debe ser.
+
+### Cambiado
+
+- `unknown_001a01e0`, que `main_game.c` llamaba al cargar un mapa, es
+  `language_texts_load`.
+
+### Lo que se sabe
+
+- Los textos de todas las etiquetas de un mapa están juntos, por idioma, en
+  el archivo del mapa. La etiqueta de globales dice dónde (una tabla de
+  0x1C bytes por idioma, desde `+0x188`), y se leen a memoria al cargar el
+  mapa, en sectores enteros de 512 bytes.
+- De cada texto se guarda su identificador y dónde empieza; los textos
+  están en UTF-8 y se pasan a 16 bits al pedirlos, con 255 caracteres como
+  mucho.
+- Una etiqueta con textos solo dice, para cada idioma, cuántos textos son
+  suyos y a partir de cuál: buscar un texto es recorrer ese tramo.
+- El idioma se pregunta a la consola la primera vez que hace falta.
+- Si el mismo identificador está dos veces en el tramo, vale el primero.
+
+### Mutaciones
+
+56 líneas rotas a propósito: 55 detectadas a la primera y la otra con un
+caso nuevo (un tramo que empieza antes del primer texto).
+
 ## 2026-10-02 — Los nombres por defecto de los archivos
 
 El nombre que recibe un archivo de cada tipo cuando el jugador no le pone
