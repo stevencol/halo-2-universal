@@ -81,6 +81,9 @@ COMPILE_FLAGS = [
     "-fno-math-errno",
     # a product and a sum stay two operations, each rounded
     "-ffp-contract=off",
+    # a structure of 8 bytes or less is returned in eax and edx, as the
+    # game's compiler does
+    "-freg-struct-return",
     "-O2",
     # a call to a function stays a call, so that a test can stand in for it
     "-fno-inline",
@@ -265,7 +268,7 @@ class Symbol:
     source: str
     # where the executable's function takes each argument: a register or "stack"
     arguments: list[str]
-    # int, bool, short, real, or void. The executable's function returns a
+    # int, bool, short, real, pair (a structure of 8 bytes, in eax and edx), or void. The executable's function returns a
     # real in the x87 register, or in an SSE register if it is "real:xmm0",
     # or as its 32 bits in eax if it is "real:eax". "string" is a pointer to
     # a text, which is what is compared; "wstring", to one of characters of
@@ -690,6 +693,9 @@ class Harness:
             return eax - (1 << 32) if eax & 0x80000000 else eax
         if returns == "pointer":
             return self.normalize(eax)
+        if returns == "pair":
+            # a structure of two things of 32 bits: their bits
+            return (eax, mu.reg_read(x86.UC_X86_REG_EDX) & 0xFFFFFFFF)
         if returns == "string":
             # a text that is not at the same address in the game and in source/
             return bytes(mu.mem_read(eax, 0x100)).split(bytes(1), 1)[0]

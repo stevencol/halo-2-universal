@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Cuánto texto cabe en una línea
+
+Una función. De 625 funciones se pasa a 626, el 5,56 % de las del juego (el
+2,765 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `draw_string_measure_line` | `0x0013ef40` | `text/draw_string.c` |
+
+### Lo que se sabe
+
+- La función va tomando caracteres mientras quepan antes del borde derecho,
+  y devuelve **dos cosas**: el ancho de lo que cabe y el índice del carácter
+  que va después. Las devuelve en dos registros (`eax` y `edx`), como hace el
+  compilador del juego con una estructura de 8 bytes.
+- Lo que ocupa un carácter es su avance, más dónde empiezan sus píxeles, más
+  el ajuste con el carácter anterior (*kerning*), todo por la escala.
+- **El primer carácter cabe siempre**, aunque no quepa: así una línea nunca
+  se queda vacía.
+- Si el texto se parte donde puede (el bit 0 de las opciones), al llegar a un
+  carácter que no cabe la línea vuelve al último sitio donde podía partirse.
+  Si no hay tal sitio, la línea acaba ahí mismo, con ese carácter dentro pero
+  sin contar su ancho.
+- Si el texto solo se parte donde él dice, los caracteres siguen pasando por
+  encima del borde y no se cuentan en el ancho.
+- De la cabecera de un carácter se conocen ahora tres campos más: el avance
+  y dónde están sus píxeles respecto al sitio en que se dibuja (a la derecha
+  y hacia arriba).
+
+### Herramientas
+
+- El arnés compara funciones que devuelven una estructura de 8 bytes (tipo
+  `pair` en `symbols/functions.csv`), y `source/` se compila devolviéndolas
+  en registros, como el juego.
+
+### Mutaciones
+
+51 líneas rotas a propósito: las 51 detectadas.
+
 ## 2026-10-02 — Medir un texto
 
 Cuatro funciones. De 621 funciones se pasa a 625, el 5,55 % de las del

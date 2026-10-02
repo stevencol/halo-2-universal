@@ -38,6 +38,12 @@ typedef struct real_point2d
 	real x, y;
 } real_point2d;
 
+/* its left, right, top and bottom */
+typedef struct real_rectangle2d
+{
+	real x0, x1, y0, y1;
+} real_rectangle2d;
+
 typedef struct real_rgb_color
 {
 	real red, green, blue;

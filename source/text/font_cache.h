@@ -79,12 +79,15 @@ struct font_character_key
 /* what the file of a font says of a character */
 struct font_character_header
 {
-	byte unknown0[2];
+	/* how far the character after it is */
+	short advance;
 	/* how many bytes its pixels take in the file */
 	word pixels_size;
 	short width;
 	short height;
-	byte unknown8[4];
+	/* where its pixels are from where it is drawn: to the right, and up */
+	short origin_x;
+	short origin_y;
 	/* where its pixels are in the file */
 	uint32_t pixels_offset;
 };

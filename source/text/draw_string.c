@@ -193,6 +193,77 @@ void draw_string_get_characters_bounds(
 	*bounds= draw_string_bounds.bounds;
 }
 
+/* 0x0013ef40: how much of a text fits in a line, from where it is gone
+through: the characters are taken while they end before the right of the
+bounds, from a place, and the first one always. With lines that end where
+they can (_draw_string_wrap_bit), the line ends at the last place where it
+can before the character that does not fit, if there is one; with no such
+place, and with lines that end only where the text says, the characters go
+on over the right, and they are not counted in the width. The line also ends
+at what is not a character */
+struct draw_string_line DRAW_STRING_CALLBACK draw_string_measure_line(
+	struct text_iterator *iterator,
+	const real_point2d *position,
+	const real_rectangle2d *bounds,
+	real scale)
+{
+	struct draw_string_line line;
+	long index= 0;
+	real width= 0.0f;
+	long break_index= 0;
+	real break_width= 0.0f;
+	long count= 0;
+	boolean done= FALSE;
+
+	do
+	{
+		text_iterator_next(iterator);
+		if (iterator->element!=_text_element_character)
+		{
+			done= TRUE;
+		}
+		else
+		{
+			const struct font_character_header *header= font_character_get_header(iterator->character,
+				iterator->font_index, FLAG(_font_character_request_wait_bit)|FLAG(_font_character_request_new_bit));
+
+			if (header)
+			{
+				real kerning= (real)font_get_kerning(iterator->font, iterator->previous_character,
+					iterator->character)*scale;
+				real origin= (real)header->origin_x*scale;
+				real advance= (real)header->advance*scale;
+
+				if (iterator->can_break)
+				{
+					break_index= index;
+					break_width= width;
+				}
+				if (bounds->x1>position->x + advance + origin + kerning + width || !count)
+				{
+					count++;
+					width= advance + origin + kerning + width;
+				}
+				else if (draw_string_globals.flags&FLAG(_draw_string_wrap_bit))
+				{
+					done= TRUE;
+					if (break_index>0)
+					{
+						index= break_index;
+						width= break_width;
+						break;
+					}
+				}
+			}
+		}
+		index= iterator->index;
+	} while (!done);
+	line.width= width;
+	line.index= index;
+
+	return line;
+}
+
 /* 0x0013eb20: where the tabs of the texts that are drawn are: 16 at most */
 void draw_string_set_tab_stops(
 	short count,

@@ -107,6 +107,14 @@ struct draw_string_bounds
 	short descending_height;
 };
 
+/* how much of a text fits in a line: how wide it is, and the index of the
+character after it. It is returned in two registers */
+struct draw_string_line
+{
+	real width;
+	long index;
+};
+
 /* what is done with each character of a text that is gone through: it is
 told where the text is gone through, the font, the character, its colour,
 where what is seen of it is and how wide and high it is, how much of it is
@@ -159,6 +167,8 @@ void draw_string_get_bounds(const wchar *string, const struct rectangle2d *recta
 	struct rectangle2d *cursor, real scale);
 void draw_string_get_characters_bounds(struct rectangle2d *cursor, struct rectangle2d *bounds,
 	const struct rectangle2d *rectangle, const long *characters, real scale);
+struct draw_string_line DRAW_STRING_CALLBACK draw_string_measure_line(struct text_iterator *iterator,
+	const real_point2d *position, const real_rectangle2d *bounds, real scale);
 void draw_string_set_tab_stops(short count, const short *tab_stops);
 void draw_string_set_color_exact(const real_argb_color *color);
 void draw_string_set_color(const real_argb_color *color);

@@ -4,6 +4,7 @@ import random
 import struct
 
 from difftest import Buffer, f32
+from test_async import calls_so_far
 
 ITERATOR_SIZE = 0x2C
 CHARACTERS, INDEX, CHARACTER, WRAP, ELEMENT, PREVIOUS_ELEMENT = 8, 0xC, 0x12, 0x1B, 0x1C, 0x20
@@ -359,5 +360,81 @@ def run(t) -> None:
                 "font_get": get,
                 "GetTickCount": lambda harness, arguments: 77,
                 "unknown_0013f0e0": lambda harness, arguments, end=end, seen=seen: measure(harness, arguments, end, seen),
+            },
+        )
+
+    # ---------- how much of a text fits in a line
+
+    KNOWN_DATA, KNOWN, KNOWN_COUNT, KNOWN_STATE, KNOWN_HEADER = 0x4C, 0x38, 6, 0x10, 0x1C
+    PREVIOUS_CHARACTER, CAN_BREAK = 0x16, 0x1A
+    nan = float("nan")
+
+    def known_characters(narrow: bool) -> Buffer:
+        """The characters that the game knows of: all ready but, at times, one."""
+        blob = bytearray(random_.randbytes(KNOWN_DATA + KNOWN_COUNT * KNOWN))
+        struct.pack_into("<I", blob, 0x44, KNOWN_DATA)
+        for index in range(KNOWN_COUNT):
+            place = KNOWN_DATA + index * KNOWN
+            struct.pack_into("<I", blob, place + KNOWN_STATE, 4 if random_.randrange(12) else random_.choice((0, 3, 5)))
+            # how far the next character is, and where its pixels are
+            struct.pack_into("<h", blob, place + KNOWN_HEADER, random_.choice((0, 3, 8, 8, 13, 21) if narrow else (8, 13, 300, -5, 0x7FFF)))
+            struct.pack_into("<2h", blob, place + KNOWN_HEADER + 8, random_.choice((0, 0, 1, -1, 2, -3)), random_.randrange(-5, 20))
+        return Buffer(bytes(blob), pointers=(0x44,))
+
+    for n in range(900):
+        # what going through the text finds: its characters and what is
+        # after them
+        count = random_.choice((0, 1, 2, 3, 5, 8, 12, 20))
+        steps = []
+        index = random_.choice((0, 0, 0, 1, 7))
+        for step in range(count):
+            index += random_.choice((1, 1, 1, 2))
+            character = random_.choice((0x41, 0x61, 0x20, 0x3042, 0xE100, 0x1F))
+            steps.append((4, character, random_.choice((0, 0x41, 0x20)), random_.randrange(10) < (2 if n % 3 else 6), index if n % 50 != 49 else 0))
+        steps.append((random_.choice((0, 0, 1, 2, 3)), random_.choice((0, 0xA, 9)), 0, random_.getrandbits(1), index + 1))
+        if n % 20 == 19:
+            # an index that is not kept whole
+            steps = [(element, character, previous, can_break, at | 0x8000) for element, character, previous, can_break, at in steps]
+
+        def next_(harness, arguments, steps=steps):
+            (iterator,) = arguments
+            element, character, previous, can_break, at = steps[min(calls_so_far(harness, "text_iterator_next"), len(steps) - 1)]
+            harness.mu.mem_write(iterator + INDEX, struct.pack("<H", at & 0xFFFF))
+            harness.mu.mem_write(iterator + CHARACTER, struct.pack("<2I", character, previous))
+            harness.mu.mem_write(iterator + CAN_BREAK, bytes((can_break,)))
+            harness.mu.mem_write(iterator + ELEMENT, struct.pack("<I", element))
+            return 0, ()
+
+        def request(harness, arguments):
+            font_index, character, flags = arguments
+            # some characters are not there
+            asked = 0xFFFFFFFF if character == 0x1F and font_index % 2 else (character + font_index) % KNOWN_COUNT | 0xE1740000
+            return asked, (font_index, character, flags)
+
+        def kerning(harness, arguments):
+            font, first, second = arguments
+            return (first * 7 + second) % 5 - 2
+
+        scale = random_.choice((1.0, 1.0, 1.0, 0.5, 2.0, 1.5, 0.0, -1.0, 0.3)) if n % 40 != 39 else nan
+        x = random_.choice((0.0, 0.0, 20.0, -30.5, 100.25, 640.0)) if n % 41 != 40 else nan
+        right = x + random_.choice((0.0, 5.0, 9.0, 20.0, 40.0, 60.0, 100.0, 200.0, -10.0, 1e9)) if n % 43 != 42 else nan
+        iterator = bytearray(random_.randbytes(ITERATOR_SIZE))
+        struct.pack_into("<I", iterator, 0, random_.randrange(11))
+        t.check(
+            "draw_string_measure_line",
+            Buffer(bytes(iterator)),
+            Buffer(struct.pack("<2f", x, random_.uniform(-50, 500))),
+            Buffer(struct.pack("<4f", random_.uniform(-50, 50), right, random_.uniform(-50, 50), random_.uniform(50, 500))),
+            real_bits(scale),
+            globals={
+                "draw_string_globals": struct.pack("<2I", random_.randrange(11), random_.choice((0, 1, 1, 1, 2, 0xFFFFFFFE, 0xFFFFFFFF)))
+                + random_.randbytes(GLOBALS_SIZE - 8),
+                "font_cache_globals+4": known_characters(n % 5 != 4),
+            },
+            externals={
+                "text_iterator_next": next_,
+                "font_character_request": request,
+                "font_character_pixels_request": lambda harness, arguments, there=random_.choice((1, 1, 1, 1, 1, 0x80, 0)): there,
+                "font_get_kerning": kerning,
             },
         )
