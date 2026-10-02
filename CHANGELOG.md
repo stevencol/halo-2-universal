@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — La memoria de la interfaz
+
+El primer usuario de `memory_pool.c`: el fondo del que sale la memoria de
+los menús («ui memory pool»), que es uno de los ocho que toman memoria al
+cargar un mapa. De 355 funciones se pasa a 359, el 3,19 % de las del juego
+(el 1,545 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `user_interface_memory_pool_new` | `0x001a474c` | `interface/user_interface_memory.c` |
+| `user_interface_memory_pool_delete` | `0x001a479a` | `interface/user_interface_memory.c` |
+| `user_interface_memory_allocate` | `0x001a47b1` | `interface/user_interface_memory.c` |
+| `user_interface_memory_free` | `0x001a4826` | `interface/user_interface_memory.c` |
+
+- Archivos nuevos: `interface/user_interface_memory.{c,h}`,
+  `tests/test_user_interface_memory.py`.
+
+### Cambiado
+
+- `main_game_state_has_map` (`0x0018eea0`) se llamaba mal: lo que recibe no
+  es la etapa de la carga sino el reparto de memoria, y dice si es uno de
+  los dos de campaña en sesión de red. Ahora es
+  `main_game_memory_configuration_is_session`.
+- La tabla de los que toman memoria ya tiene tres de sus ocho pares con
+  nombre: interfaz, animaciones y geometría.
+
+### Lo que se sabe
+
+- El fondo de la interfaz tiene 1 MB fuera de la campaña, 96 KB en la
+  campaña y 384 KB en una campaña en sesión de red.
+- Sus bloques no se mueven (no guarda los punteros de los dueños) y los
+  nuevos rellenan huecos.
+- Si no hay sitio para un bloque, la interfaz suelta lo que puede
+  (`0x00147ebe`) y lo intenta una vez más.
+- El otro fondo que se crea al cargar un mapa es el de la voz («voice
+  pool»).
+
+### Mutaciones
+
+15 líneas rotas a propósito, las 15 detectadas.
+
 ## 2026-10-02 — El fondo de memoria
 
 `memory_pool.c`, otro módulo que ya existía en Halo 1: un trozo de memoria

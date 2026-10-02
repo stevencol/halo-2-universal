@@ -101,7 +101,7 @@ void main_game_load_end(boolean keep_caches, const char *map_name);
 void main_game_load_fail(boolean loaded);
 void main_game_close_caches(void);
 void main_game_open_texture_cache(void);
-boolean main_game_state_has_map(long state);
+boolean main_game_memory_configuration_is_session(long configuration);
 long main_game_memory_configuration(const struct game_options *options);
 void main_game_configure_memory(const struct game_options *options);
 boolean main_game_start(const struct game_options *options);

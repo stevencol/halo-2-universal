@@ -13,6 +13,7 @@ The names are guesses. Not here: 0x0018efa0, 0x0018f0a0 and 0x0018f1c0 on.
 #include "cache/cache_files.h"
 #include "cache/geometry_cache.h"
 #include "cache/texture_cache.h"
+#include "interface/user_interface_memory.h"
 #include "memory/data.h"
 #include "memory/physical_memory.h"
 #include "scenario/scenario.h"
@@ -30,8 +31,6 @@ long XGetLanguage(void);
 takes it */
 void unknown_00081f80(void);
 void unknown_00081780(long configuration);
-void unknown_001a479a(void);
-void unknown_001a474c(long configuration);
 void unknown_00215810(void);
 void unknown_002157e0(long configuration);
 void unknown_000533e0(void);
@@ -97,7 +96,7 @@ that they take it */
 struct main_game_memory_user main_game_memory_users[NUMBER_OF_MAIN_GAME_MEMORY_USERS]=
 {
 	{unknown_00081f80, (void (MAIN_GAME_CALLBACK *)(long))unknown_00081780},
-	{unknown_001a479a, (void (MAIN_GAME_CALLBACK *)(long))unknown_001a474c},
+	{user_interface_memory_pool_delete, user_interface_memory_pool_new},
 	{unknown_00215810, (void (MAIN_GAME_CALLBACK *)(long))unknown_002157e0},
 	{unknown_000533e0, (void (MAIN_GAME_CALLBACK *)(long))unknown_00053310},
 	{unknown_000b3db0, (void (MAIN_GAME_CALLBACK *)(long))unknown_000b3d30},
@@ -275,11 +274,13 @@ void main_game_open_texture_cache(
 	main_game_load_globals.state= _main_game_load_texture_cache;
 }
 
-/* 0x0018eea0 */
-boolean main_game_state_has_map(
-	long state)
+/* 0x0018eea0: whether the memory is shared out as for a campaign in a
+session of the network game */
+boolean main_game_memory_configuration_is_session(
+	long configuration)
 {
-	return state>_main_game_load_started && state<=_main_game_load_closed;
+	return configuration>=_main_game_memory_campaign_session &&
+		configuration<=_main_game_memory_campaign_session_coop;
 }
 
 /* 0x0018eeb0: how the memory is shared out for a game: a campaign has its

@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-01, al terminar el hito 37.
+**Última actualización:** 2026-10-01, al terminar el hito 38.
 
 ## Dónde estamos
 
-- **355 funciones descompiladas de 11.265: el 3,15 % del juego** (el
-  1,538 % de los bytes de código).
-- Las 355 están comprobadas contra el ejecutable original
+- **359 funciones descompiladas de 11.265: el 3,19 % del juego** (el
+  1,545 % de los bytes de código).
+- Las 359 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the memory pool* (ver `git log`).
+- Último hito: *Decompile the memory pool of the interface* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -75,6 +75,7 @@ Módulos (funciones hechas / archivo):
       `0x0012e480`, el aviso de que falta geometría)
 - [ ] Cargar y descargar un mapa — `main\main_game.c` (12; falta el cambio
       de mapa entero)
+- [x] Memoria de la interfaz — `interface\user_interface_memory.c` (4)
 - [x] Cadenas anchas — `text\unicode.c` (7; quedan 3)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
 - [ ] Matemáticas reales — `math\real_math.c` (21 de unas 50)
@@ -143,11 +144,12 @@ Módulos (funciones hechas / archivo):
       `0x0018e960`) y empieza la partida; `0x0018e790` deja pedido el cambio
       (las opciones se guardan en `0x004ed3a8`).
 - [x] ~~Fondo de memoria (`memory_pool.c`)~~ (hito 37).
-- [ ] **Los que usan un fondo de memoria**, que además son pares de la
-      tabla de `0x00453c00`: el de la interfaz («ui memory pool»,
-      `0x0051e998`: `0x001a474c`, `0x001a479a`, `0x001a47b1`, `0x001a4826`)
-      y el de `0x00053290` a `0x000533e0`. También lo usan los objetos
-      (`0x000bc280`, `0x000bc380`, `0x000bf360`).
+- [x] ~~El fondo de memoria de la interfaz~~ (hito 38).
+- [ ] **El fondo de la voz** («voice pool», `0x004c995c`): `0x00053290`
+      (pedir), `0x000532e0` (soltar) y el par de la tabla, `0x00053310` y
+      `0x000533e0`, que además prepara la voz (`0x000556a0`, `0x00055720`,
+      `0x00055810`). También usan fondos los objetos (`0x000bc280`,
+      `0x000bc380`, `0x000bf360`).
 - [ ] **Los otros pares de la tabla de `0x00453c00`**: `0x00081780`,
       `0x002157e0`, `0x000b3d30`, `0x0021ebc0` y sus parejas.
 - [ ] **La tabla de `0x00453c00`**: ocho pares de funciones (soltar y

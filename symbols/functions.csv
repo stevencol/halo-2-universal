@@ -626,7 +626,7 @@ address,name,source,arguments,returns,convention
 0018ed00,main_game_load_fail,source/main/main_game.c,eax,void
 0018edb0,main_game_close_caches,source/main/main_game.c,,void
 0018ee60,main_game_open_texture_cache,source/main/main_game.c,,void
-0018eea0,main_game_state_has_map,source/main/main_game.c,eax,bool
+0018eea0,main_game_memory_configuration_is_session,source/main/main_game.c,eax,bool
 0018eeb0,main_game_memory_configuration,source/main/main_game.c,esi,int
 0018ef00,main_game_configure_memory,source/main/main_game.c,eax,void
 0018f000,main_game_start,source/main/main_game.c,eax,bool
@@ -634,8 +634,8 @@ address,name,source,arguments,returns,convention
 0018f170,main_game_launch_main_menu,source/main/main_game.c,eax stack,void
 00081f80,unknown_00081f80,,,void
 00081780,unknown_00081780,,stack,void,stdcall
-001a479a,unknown_001a479a,,,void
-001a474c,unknown_001a474c,,stack,void,stdcall
+001a479a,user_interface_memory_pool_delete,source/interface/user_interface_memory.c,,void
+001a474c,user_interface_memory_pool_new,source/interface/user_interface_memory.c,stack,void
 00215810,unknown_00215810,,,void
 002157e0,unknown_002157e0,,stack,void,stdcall
 000533e0,unknown_000533e0,,,void
@@ -668,3 +668,6 @@ address,name,source,arguments,returns,convention
 0018e560,memory_pool_block_new_at_end,source/memory/memory_pool.c,stack stack stack stack,int
 0018e600,memory_pool_block_new_at_start,source/memory/memory_pool.c,edi stack stack stack,int
 0018e690,memory_pool_block_new_in_gap,source/memory/memory_pool.c,stack eax stack stack,int
+001a47b1,user_interface_memory_allocate,source/interface/user_interface_memory.c,stack stack stack,int
+001a4826,user_interface_memory_free,source/interface/user_interface_memory.c,stack,void
+00147ebe,unknown_00147ebe,,,void

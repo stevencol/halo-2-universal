@@ -24,7 +24,7 @@ LANGUAGES = 9
 
 MEMORY_USERS = (
     ("unknown_00081f80", "unknown_00081780"),
-    ("unknown_001a479a", "unknown_001a474c"),
+    ("user_interface_memory_pool_delete", "user_interface_memory_pool_new"),
     ("unknown_00215810", "unknown_002157e0"),
     ("unknown_000533e0", "unknown_00053310"),
     ("unknown_000b3db0", "unknown_000b3d30"),
@@ -168,7 +168,7 @@ def run(t) -> None:
         )
 
     for state in (*range(-1, 8), 0x102, NONE - 1):
-        t.check("main_game_state_has_map", state & 0xFFFFFFFF)
+        t.check("main_game_memory_configuration_is_session", state & 0xFFFFFFFF)
 
     # ---------- how the memory is shared out
 
