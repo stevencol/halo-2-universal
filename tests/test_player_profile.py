@@ -136,3 +136,91 @@ def run(t) -> None:
     for position in (0, 1, 0x800, 0x7FFFFFFF, 0x80000000, NONE):
         for result in (position, NONE, 0):
             t.check("async_set_file_position", 0x4321, position, externals={"SetFilePointer": set_pointer(result)})
+
+    # ---------- making the file of a profile
+
+    def wide(text_: str) -> bytes:
+        return text_.encode("utf-16-le") + bytes(2)
+
+    def wide_text(harness, address: int) -> bytes:
+        data = bytes(harness.mu.mem_read(address, 0x200))
+        for offset in range(0, len(data), 2):
+            if data[offset : offset + 2] == bytes(2):
+                return data[:offset]
+        return data
+
+    def written(result: int):
+        def handler(harness, arguments):
+            # the profile is in the stack: all of it is compared, and where
+            # in it what is written starts
+            file, size, profile_, start = arguments
+            return result, (file, size, bytes(harness.mu.mem_read(profile_, PROFILE_SIZE)), start - profile_)
+
+        return handler
+
+    new_names = ("mine", "", "x", "a name of thirty-one characters", "a name that is longer than thirty-one characters")
+    for n in range(60):
+        file = NONE if n % 5 == 4 else random_.getrandbits(32)
+        t.check(
+            "player_profile_create",
+            random_.getrandbits(32),
+            Buffer(wide(random_.choice(new_names))),
+            globals={"global_random_seed_reference": Buffer(struct.pack("<2I", random_.getrandbits(32), random_.getrandbits(32)))},
+            externals={
+                "saved_game_file_create": lambda harness, arguments, file=file: (file, (arguments[0], wide_text(harness, arguments[1]))),
+                "saved_game_file_write": written(n % 3 != 2),
+                "saved_game_file_delete": lambda harness, arguments: 0,
+            },
+        )
+
+    # ---------- the profile with a name
+
+    def listed(files: list):
+        """saved_game_files_enumerate: the files of the profiles."""
+
+        def handler(harness, arguments):
+            controller, type_, count, where, built_in = arguments
+            (room,) = struct.unpack("<H", harness.mu.mem_read(count, 2))
+            harness.mu.mem_write(count, struct.pack("<H", len(files)))
+            harness.mu.mem_write(where, struct.pack(f"<{len(files)}I", *files))
+            return 0, (controller, type_, room, built_in & 0xFF)
+
+        return handler
+
+    def named(names: dict):
+        def handler(harness, arguments):
+            file, where = arguments
+            harness.mu.mem_write(where, wide(names[file]))
+            return where, (file,)
+
+        return handler
+
+    def read_profile(success: int, data: bytes):
+        def handler(harness, arguments):
+            file, where = arguments
+            if success:
+                harness.mu.mem_write(where, data)
+            return success, (file,)
+
+        return handler
+
+    profile_names = ("Alpha", "mine", "MiNe two", "", "z")
+    for n in range(160):
+        count = random_.choice((0, 1, 3, 5))
+        files = random_.sample(range(0x100, 0x200), count)
+        if count and n % 4 == 3:
+            # a file with no index: its profile is a new one
+            files[random_.randrange(count)] = NONE
+        names = {file: random_.choice(profile_names) for file in files}
+        asked = random_.choice(("mine", "MINE", "Mine", "alpha", "mine two", "min", "mine t", "", "", "z", "Z", "nobody"))
+        t.check(
+            "player_profile_find",
+            Buffer(random_.randbytes(PROFILE_SIZE + 8)) if n % 5 else 0,
+            Buffer(wide(asked)),
+            Buffer(random_.randbytes(8)) if n % 7 else 0,
+            externals={
+                "saved_game_files_enumerate": listed(files),
+                "saved_game_file_get_name": named(names),
+                "player_profile_read": read_profile(n % 6 != 5, profile()),
+            },
+        )

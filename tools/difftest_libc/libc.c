@@ -503,3 +503,31 @@ int _vsnwprintf(unsigned short *buffer, size_t size, const unsigned short *forma
 
 	return length;
 }
+
+/* of the letters of ASCII only: the game's is the console's, which knows of
+the others */
+int _wcsicmp(const unsigned short *a, const unsigned short *b)
+{
+	for (;;)
+	{
+		unsigned short x= *a++;
+		unsigned short y= *b++;
+
+		if (x>='A' && x<='Z')
+		{
+			x+= 'a'-'A';
+		}
+		if (y>='A' && y<='Z')
+		{
+			y+= 'a'-'A';
+		}
+		if (x!=y)
+		{
+			return (int)x-(int)y;
+		}
+		if (!x)
+		{
+			return 0;
+		}
+	}
+}

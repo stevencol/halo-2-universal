@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Crear un perfil y buscarlo por su nombre: `player_profile.c`, completo
+
+Dos funciones. De 542 funciones se pasa a 544, el 4,83 % de las del juego (el
+2,403 % de sus bytes). Con ellas están las 11 funciones de
+`player_profile.c`.
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `player_profile_create` | `0x001a03a0` | `saved games/player_profile.c` |
+| `player_profile_find` | `0x001a0560` | `saved games/player_profile.c` |
+
+- `_wcsicmp` en la biblioteca de C de las pruebas (solo distingue las letras
+  de ASCII).
+
+### Lo que se sabe
+
+- Un perfil nuevo se crea así: se crea su archivo en el disco duro con el
+  nombre; se hace un perfil de invitado; se le quita la marca de «por
+  defecto»; se le dan **al azar** cuatro colores (de los 16 primeros), el
+  dibujo del emblema (de 64) y su fondo (de 32), con la segunda semilla del
+  juego; se le pone el nombre (31 caracteres como mucho); y se escribe. Si
+  no se puede escribir, se borra el archivo.
+- El primer argumento de `player_profile_create` no se mira.
+- Buscar un perfil por su nombre es recorrer los perfiles del disco duro y
+  los de serie y comparar sin distinguir mayúsculas de minúsculas. Con el
+  nombre vacío el perfil es uno de invitado, y no hay archivo.
+- La lista de perfiles se pide con sitio para 4.096, en la pila: la función
+  reserva más de 16 KB.
+
+### Sin comprobar
+
+- Nombres con letras que no sean de ASCII: la comparación de la biblioteca
+  de las pruebas no es la de la consola.
+
+### Mutaciones
+
+45 líneas rotas a propósito: las 45 detectadas.
+
 ## 2026-10-02 — Escribir el estado de una partida guardada: `saved_game_file_tasks.c`, completo
 
 Una función. De 541 funciones se pasa a 542, el 4,81 % de las del juego (el

@@ -910,3 +910,5 @@ address,name,source,arguments,returns,convention
 00215900,saved_game_files_enumerate,source/saved games/saved_game_files.c,stack stack stack stack stack,void
 00215c00,saved_game_file_create,source/saved games/saved_game_files.c,stack stack,int
 002170e0,saved_game_file_get_current_index,source/saved games/saved_game_files.c,stack,int
+001a03a0,player_profile_create,source/saved games/player_profile.c,stack stack,int
+001a0560,player_profile_find,source/saved games/player_profile.c,ebx stack stack,bool

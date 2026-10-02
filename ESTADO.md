@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 74.
+**Última actualización:** 2026-10-02, al terminar el hito 75.
 
 ## Dónde estamos
 
-- **542 funciones descompiladas de 11.265: el 4,81 % del juego** (el
-  2,381 % de los bytes de código).
-- Las 542 están comprobadas contra el ejecutable original
+- **544 funciones descompiladas de 11.265: el 4,83 % del juego** (el
+  2,403 % de los bytes de código).
+- Las 544 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the work of writing the state of a saved game* (ver `git log`).
+- Último hito: *Decompile making a profile and finding one by its name* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -88,9 +88,8 @@ Módulos (funciones hechas / archivo):
 - [x] Tareas de los archivos de los jugadores —
       `saved games\saved_game_file_tasks.c` (20 de 20; el archivo va de
       `0x002accd0` a `0x002ae090`: completo)
-- [ ] Perfiles de los jugadores — `saved games\player_profile.c` (9;
-      faltan `0x001a03a0`, crear un perfil con aspecto al azar, y
-      `0x001a0560`, buscar un perfil por su nombre)
+- [x] Perfiles de los jugadores — `saved games\player_profile.c` (11:
+      completo)
 - [ ] Sonido — `sound\sound_manager.c` (22; faltan `0x001251e0`,
       `0x00125b40` y de `0x00125f70` en adelante), `sound\sound_classes.c` (1)
 - [x] Archivos — `tag_files\files.c`, `files_xbox.c` (22, completo: de

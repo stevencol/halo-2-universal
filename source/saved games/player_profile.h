@@ -22,6 +22,8 @@ enum
 	PLAYER_PROFILE_FILE_OFFSET= 8,
 
 	NUMBER_OF_PLAYER_COLORS= 18,
+	/* a new profile gets one of the first so many */
+	NUMBER_OF_NEW_PROFILE_COLORS= 16,
 	NUMBER_OF_PLAYER_APPEARANCE_COLORS= 4,
 	NUMBER_OF_PLAYER_APPEARANCE_UNKNOWN4= 4,
 	NUMBER_OF_EMBLEM_FOREGROUNDS= 64,
@@ -82,6 +84,8 @@ typedef char verify_player_profile_unknown151_offset[
 /* ---------- prototypes/PLAYER_PROFILE.C */
 
 boolean player_appearance_valid(const struct player_appearance *appearance);
+long player_profile_create(long unused, const wchar *name);
+boolean player_profile_find(struct player_profile *profile, const wchar *name, long *file);
 boolean player_profile_load(struct player_profile *profile, long file);
 boolean player_profile_write(long file, struct player_profile *profile);
 boolean player_profile_write_async(struct player_profile *profile, long file, struct saved_game_file_result *result);

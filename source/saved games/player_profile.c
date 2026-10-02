@@ -31,6 +31,10 @@ enum
 /* 0x003207ed: of characters of 16 bits */
 wchar *wcsncpy(wchar *destination, const wchar *source, unsigned int count);
 
+/* 0x00320e4c: compares two texts of characters of 16 bits, with no regard
+for the case of their letters */
+int _wcsicmp(const wchar *a, const wchar *b);
+
 /* ---------- prototypes of functions that are not decompiled */
 
 /* 0x0019c1f0: of one of four numbers that a profile keeps: 0 if it is not
@@ -62,6 +66,125 @@ boolean player_appearance_valid(
 		appearance->emblem_foreground<NUMBER_OF_EMBLEM_FOREGROUNDS &&
 		appearance->emblem_background<NUMBER_OF_EMBLEM_BACKGROUNDS &&
 		!(appearance->flags&~PLAYER_APPEARANCE_FLAGS_MASK);
+}
+
+/* a number from 0 that is less than another, at random, with the second
+seed of the game */
+static inline __attribute__((always_inline)) long player_profile_random(
+	long count)
+{
+	unsigned long *seed= &global_random_seed_reference[1];
+
+	*seed= *seed*1664525L + 1013904223L;
+
+	return (long)(*seed>>16)%count;
+}
+
+/* 0x001a03a0: makes the file of a profile with a name, on the hard disk: a
+new profile, with colours and an emblem at random. The index of the file;
+NONE if it is not made. The first argument is not looked at */
+long player_profile_create(
+	long unused,
+	const wchar *name)
+{
+	long file= saved_game_file_create(_saved_game_file_type_profile, name);
+
+	(void)unused;
+
+	if (file!=NONE)
+	{
+		struct player_profile profile;
+		long index;
+
+		player_profile_new(&profile, _player_profile_new_unknown0);
+		profile.flags= 0;
+		for (index= 0; index<NUMBER_OF_PLAYER_APPEARANCE_COLORS; index++)
+		{
+			profile.appearance.colors[index]= (char)player_profile_random(NUMBER_OF_NEW_PROFILE_COLORS);
+		}
+		profile.appearance.emblem_foreground= (byte)player_profile_random(NUMBER_OF_EMBLEM_FOREGROUNDS);
+		profile.appearance.emblem_background= (byte)player_profile_random(NUMBER_OF_EMBLEM_BACKGROUNDS);
+		wcsncpy(profile.name, name, PLAYER_PROFILE_NAME_LENGTH);
+		profile.name[PLAYER_PROFILE_NAME_LENGTH]= 0;
+		for (index= 0; index<NUMBER_OF_PLAYER_PROFILE_UNKNOWNEC; index++)
+		{
+			profile.unknownEC[index]= NONE;
+		}
+		if (!saved_game_file_write(file, PLAYER_PROFILE_SIZE, &profile, (byte *)&profile+PLAYER_PROFILE_FILE_OFFSET))
+		{
+			saved_game_file_delete(file);
+
+			return NONE;
+		}
+	}
+
+	return file;
+}
+
+/* player_profile_load, which the game has in itself in the function that
+follows */
+static inline __attribute__((always_inline)) boolean player_profile_load_inline(
+	struct player_profile *profile,
+	long file)
+{
+	if (file==NONE)
+	{
+		player_profile_new(profile, _player_profile_new_unknown0);
+
+		return TRUE;
+	}
+
+	return player_profile_read(file, profile);
+}
+
+/* 0x001a0560: looks for the profile with a name, with no regard for the case
+of its letters, among those of the hard disk and those that come with the
+game. Whether it is there: then its profile is read, if there is where to,
+and the index of its file is given, if there is where to. With no name, the
+profile is a new one, and there is no file */
+boolean player_profile_find(
+	struct player_profile *profile,
+	const wchar *name,
+	long *file)
+{
+	long files[MAXIMUM_SAVED_GAME_FILES_PER_TABLE];
+	wchar file_name[SAVED_GAME_FILE_DISPLAY_NAME_LENGTH];
+	word count= MAXIMUM_SAVED_GAME_FILES_PER_TABLE;
+	long index;
+
+	if (file)
+	{
+		*file= NONE;
+	}
+	if (!name[0])
+	{
+		if (!profile)
+		{
+			return FALSE;
+		}
+		player_profile_new(profile, _player_profile_new_unknown0);
+
+		return TRUE;
+	}
+	saved_game_files_enumerate(SAVED_GAME_FILES_NO_CONTROLLER, _saved_game_file_type_profile, &count, files, TRUE);
+	for (index= 0; index<count; index++)
+	{
+		if (!_wcsicmp(saved_game_file_get_name(files[index], file_name), name))
+		{
+			if (profile && !player_profile_load_inline(profile, files[index]))
+			{
+				return FALSE;
+			}
+			if (file)
+			{
+				*file= files[index];
+			}
+
+			return TRUE;
+		}
+	}
+
+	return FALSE;
 }
 
 /* 0x001a0540: the profile of a file; a new one, if there is no file */
