@@ -460,6 +460,56 @@ struct font_character_header *font_character_get_header(
 	return known->state==_font_character_state_ready ? &known->header : NULL;
 }
 
+/* the next thing of an array that is in use, from a place on; NONE if there
+is none */
+static inline __attribute__((always_inline)) long font_cache_data_next(
+	const struct data_array *data,
+	long absolute_index)
+{
+	if (absolute_index<0)
+	{
+		return NONE;
+	}
+	for (; absolute_index<data->first_unallocated; absolute_index++)
+	{
+		if (data->in_use_bit_vector[absolute_index>>5]&(1UL<<(absolute_index&31)))
+		{
+			return absolute_index;
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x001406b0: a frame goes by: the cache gets older, and each of the
+characters that were asked for and were not there is asked for again; one
+that is there now, with its pixels, is no longer waited for */
+void font_cache_frame(
+	void)
+{
+	struct data_array *predicted;
+	long absolute_index= NONE;
+
+	lruv_idle(font_cache_globals.cache);
+	font_cache_globals.frame_index++;
+	predicted= font_cache_globals.predicted_characters;
+	while ((absolute_index= font_cache_data_next(predicted, absolute_index+1))!=NONE)
+	{
+		const struct font_predicted_character *wanted=
+			(const struct font_predicted_character *)((const byte *)predicted->data+predicted->size*absolute_index);
+		long predicted_index= ((long)wanted->identifier<<16)|absolute_index;
+		long character_index= font_character_request(wanted->font_index, wanted->character,
+			FLAG(_font_character_request_new_bit));
+
+		if (character_index!=NONE &&
+			font_character_pixels_request(character_index, FLAG(_font_character_request_new_bit)) &&
+			font_character_get(character_index)->state==_font_character_state_ready)
+		{
+			datum_delete(font_cache_globals.predicted_characters, predicted_index);
+		}
+	}
+}
+
 /* an array for so many things, of the memory of the game: the array, the
 things and a bit for each. NULL if there is no memory for it */
 static inline __attribute__((always_inline)) struct data_array *font_cache_data_new(
@@ -495,13 +545,13 @@ void font_characters_new(
 {
 	font_cache_globals.characters= font_cache_data_new("character data", MAXIMUM_FONT_CHARACTERS,
 		sizeof(struct font_character));
-	font_cache_globals.unknown8= font_cache_data_new("predicted data", MAXIMUM_PREDICTED_FONT_CHARACTERS,
-		FONT_PREDICTED_CHARACTER_SIZE);
+	font_cache_globals.predicted_characters= font_cache_data_new("predicted data", MAXIMUM_PREDICTED_FONT_CHARACTERS,
+		sizeof(struct font_predicted_character));
 	font_cache_globals.character_table= hash_table_new(heap_allocation, MAXIMUM_FONT_CHARACTERS,
 		"font character hash table", sizeof(long), FONT_CHARACTER_TABLE_LIST_COUNT, font_character_key_hash,
 		font_character_key_compare);
 	font_cache_data_make_valid(font_cache_globals.characters);
-	font_cache_data_make_valid(font_cache_globals.unknown8);
+	font_cache_data_make_valid(font_cache_globals.predicted_characters);
 }
 
 /* 0x00140aa0: the end of what the game knows of the characters */
@@ -515,10 +565,10 @@ void font_characters_dispose(
 		table->allocation->functions->deallocate(table->allocation, table);
 		font_cache_globals.character_table= NULL;
 	}
-	if (font_cache_globals.unknown8)
+	if (font_cache_globals.predicted_characters)
 	{
-		data_dispose(font_cache_globals.unknown8);
-		font_cache_globals.unknown8= NULL;
+		data_dispose(font_cache_globals.predicted_characters);
+		font_cache_globals.predicted_characters= NULL;
 	}
 	if (font_cache_globals.characters)
 	{
@@ -603,6 +653,49 @@ void font_cache_dispose(
 		data_dispose(font_cache_globals.blocks);
 		font_cache_globals.blocks= NULL;
 	}
+}
+
+/* 0x001414d0: whether a character of a font and its pixels are there to be
+drawn. If they are not, they are asked for, with no wait, and the character
+is noted, if it was not, to be asked for again each frame until it is there */
+boolean font_character_precache(
+	long font_index,
+	long character)
+{
+	struct data_array *predicted;
+	long absolute_index= NONE;
+	long predicted_index;
+
+	if (font_character_get_header(character, font_index, FLAG(_font_character_request_new_bit)))
+	{
+		return TRUE;
+	}
+	predicted= font_cache_globals.predicted_characters;
+	while ((absolute_index= font_cache_data_next(predicted, absolute_index+1))!=NONE)
+	{
+		const struct font_predicted_character *wanted=
+			(const struct font_predicted_character *)((const byte *)predicted->data+predicted->size*absolute_index);
+
+		if (!wanted)
+		{
+			break;
+		}
+		if (wanted->font_index==font_index && wanted->character==character)
+		{
+			return FALSE;
+		}
+	}
+	predicted_index= datum_new(font_cache_globals.predicted_characters);
+	if (predicted_index!=NONE)
+	{
+		struct font_predicted_character *wanted=
+			(struct font_predicted_character *)font_cache_globals.predicted_characters->data + (predicted_index&0xFFFF);
+
+		wanted->font_index= font_index;
+		wanted->character= character;
+	}
+
+	return FALSE;
 }
 
 /* where the pixels of a block of the cache are */

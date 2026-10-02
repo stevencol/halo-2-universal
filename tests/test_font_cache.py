@@ -718,3 +718,95 @@ def run(t) -> None:
                 "font_character_pixels_request": lambda harness, arguments, there=random_.choice((0, 1, 1, 0x80)): there,
             },
         )
+
+    # ---------- the characters that are waited for
+
+    PREDICTED, PREDICTED_SIZE_ = 8, 0xC
+    DATA_ELEMENT_SIZE, DATA_FIRST_UNALLOCATED, DATA_BITS = 0x24, 0x38, 0x48
+    LRUV_FAILED = 0x44
+
+    def waited_for(entries: dict, first_unallocated: int | None = None) -> Buffer:
+        """The array of the characters that are waited for: each has an
+        identifier, a font and a character. After the array are its things,
+        and after them a bit for each that is in use."""
+        things = DATA_SIZE
+        bits = things + PREDICTED * PREDICTED_SIZE_
+        blob = bytearray(random_.randbytes(bits + 4))
+        struct.pack_into("<I", blob, DATA_ELEMENT_SIZE, PREDICTED_SIZE_)
+        struct.pack_into("<i", blob, DATA_FIRST_UNALLOCATED, max(entries, default=-1) + 1 if first_unallocated is None else first_unallocated)
+        struct.pack_into("<2I", blob, 0x44, things, bits)
+        in_use = 0
+        for index, (identifier, font, character) in entries.items():
+            struct.pack_into("<h2x2I", blob, things + index * PREDICTED_SIZE_, identifier, font, character)
+            in_use |= 1 << index
+        # bits of things past the last one are not looked at
+        struct.pack_into("<I", blob, bits, in_use | random_.getrandbits(32) << PREDICTED & 0xFFFFFFFF)
+        return Buffer(bytes(blob), pointers=(0x44, 0x48))
+
+    def some_waited(count: int) -> dict:
+        return {
+            index: (random_.choice((1, 0x7FFF, -0x8000, -2)), random_.randrange(11), random_.choice((0x41, 0x42, 0x3042)))
+            for index in random_.sample(range(PREDICTED), count)
+        }
+
+    for n in range(200):
+        entries = some_waited(random_.randrange(0, PREDICTED + 1))
+        order = sorted(entries)
+        # what there is of each when it is asked for again: nothing, the
+        # character with no pixels, the character not ready, or all of it
+        there = {index: random_.choice(("none", "no pixels", "not ready", "all", "all")) for index in order}
+        blob = bytearray(random_.randbytes(DATA_SIZE + CHARACTERS * CHARACTER))
+        struct.pack_into("<I", blob, 0x44, DATA_SIZE)
+        answers = []
+        for position, index in enumerate(order):
+            character_index = position % CHARACTERS
+            answers.append(NONE if there[index] == "none" else character_index | random_.choice((0, 0x10000)))
+        for character_index in range(CHARACTERS):
+            # a character is ready, but for those that are asked for and are not
+            states = [there[index] for position, index in enumerate(order) if position % CHARACTERS == character_index]
+            struct.pack_into("<I", blob, DATA_SIZE + character_index * CHARACTER + STATE, 3 if "not ready" in states else 4)
+        pixels = [there[index] != "no pixels" for index in order if there[index] != "none"]
+        cache = bytearray(a_cache().data)
+        struct.pack_into("<I", cache, LRUV_TICK, random_.choice((0, 5, 0x7FFFFFFE, 0x7FFFFFFF)))
+        data_place = LRUV_SIZE
+        t.check(
+            "font_cache_frame",
+            globals={
+                "font_cache_globals+4": Buffer(bytes(blob), pointers=(0x44,)),
+                "font_cache_globals+8": waited_for(entries, random_.choice((None, None, PREDICTED))),
+                "font_cache_globals+16": Buffer(bytes(cache), pointers=(LRUV_BLOCKS, data_place + 0x44)),
+                "font_cache_globals+24": random_.choice((0, 5, 0x7FFFFFFF, 0xFFFFFFFF)),
+            },
+            externals={
+                "lruv_wrap_ticks": lambda harness, arguments: 0,
+                "font_character_request": lambda harness, arguments, answers=answers: (answers[calls_so_far(harness, "font_character_request")], tuple(arguments)),
+                "font_character_pixels_request": lambda harness, arguments, pixels=pixels: (pixels[calls_so_far(harness, "font_character_pixels_request")], tuple(arguments)),
+                "datum_delete": lambda harness, arguments: (0, (arguments[1],)),
+            },
+        )
+
+    for n in range(200):
+        entries = some_waited(random_.randrange(0, PREDICTED + 1))
+        font, character = random_.randrange(11), random_.choice((0x41, 0x42, 0x3042))
+        if entries and n % 3 == 0:
+            # one of those that are waited for
+            _identifier, font, character = entries[random_.choice(list(entries))]
+        elif entries and n % 3 == 1:
+            # the same character of another font, or another of the same font
+            _identifier, font, character = entries[random_.choice(list(entries))]
+            if random_.getrandbits(1):
+                font ^= 0x10
+            else:
+                character ^= 0x100
+        free = [index for index in range(PREDICTED) if index not in entries]
+        fresh = random_.choice(free) | random_.choice((0, 0x10000, 0xE1740000)) if free and n % 7 != 6 else NONE
+        t.check(
+            "font_character_precache",
+            font,
+            character,
+            globals={"font_cache_globals+8": waited_for(entries, random_.choice((None, None, PREDICTED)))},
+            externals={
+                "font_character_get_header": lambda harness, arguments, there=random_.choice((0, 0, 0, 0x80123400)): there,
+                "datum_new": lambda harness, arguments, fresh=fresh: (fresh, ()),
+            },
+        )

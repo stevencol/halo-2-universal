@@ -42,7 +42,6 @@ enum
 
 	MAXIMUM_FONT_CHARACTERS= 512,
 	MAXIMUM_PREDICTED_FONT_CHARACTERS= 256,
-	FONT_PREDICTED_CHARACTER_SIZE= 0xC,
 	FONT_CHARACTER_TABLE_LIST_COUNT= 1024,
 
 	/* the cache of the pixels: its bytes, in pages of 16 */
@@ -128,6 +127,16 @@ struct font_cache_block
 	long task;
 };
 
+/* a character that was asked for and was not there: it is asked for again
+each frame */
+struct font_predicted_character
+{
+	short identifier;
+	word pad2;
+	long font_index;
+	long character;
+};
+
 struct font_glyph_slot
 {
 	/* NONE if there is none */
@@ -137,6 +146,8 @@ struct font_glyph_slot
 
 typedef char verify_font_character_size[
 	sizeof(struct font_character) == 0x38 ? 1 : -1];
+typedef char verify_font_predicted_character_size[
+	sizeof(struct font_predicted_character) == 0xC ? 1 : -1];
 typedef char verify_font_cache_block_size[
 	sizeof(struct font_cache_block) == 0xC ? 1 : -1];
 
@@ -147,7 +158,8 @@ struct font_cache_globals
 	/* finds the index of a character by its key */
 	struct hash_table *character_table;
 	struct data_array *characters;
-	struct data_array *unknown8;
+	/* the characters that were asked for and were not there */
+	struct data_array *predicted_characters;
 	/* the blocks of the cache */
 	struct data_array *blocks;
 	struct lruv_cache *cache;
@@ -181,6 +193,8 @@ long font_cache_read(long font_slot_index, boolean *done, void *buffer, long siz
 	long *bytes_read);
 void font_character_delete(long character_index);
 boolean font_character_is_busy(long character_index);
+void font_cache_frame(void);
+boolean font_character_precache(long font_index, long character);
 void font_characters_new(void);
 void font_characters_dispose(void);
 void font_cache_new(void);

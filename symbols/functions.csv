@@ -482,7 +482,7 @@ address,name,source,arguments,returns,convention
 00217c40,unknown_00217c40,,,void
 002164c0,saved_game_files_find_unit_files,source/saved games/saved_game_files.c,eax stack,void
 00121120,global_preferences_flush,source/main/global_preferences.c,,void
-001406b0,unknown_001406b0,,,void
+001406b0,font_cache_frame,source/text/font_cache.c,,void
 00163820,unknown_00163820,,,void
 001479c3,unknown_001479c3,,stack,void
 00155f80,unknown_00155f80,,,void
@@ -941,7 +941,7 @@ address,name,source,arguments,returns,convention
 0013eeb0,draw_string_precache_characters,source/text/draw_string.c,ecx edi,bool
 0013ef30,draw_string_precache,source/text/draw_string.c,ecx,bool
 0013ec70,draw_string_set_color,source/text/draw_string.c,eax,void
-001414d0,unknown_001414d0,,stack stack,bool
+001414d0,font_character_precache,source/text/font_cache.c,stack stack,bool
 0013eb60,draw_string_set_color_exact,source/text/draw_string.c,eax,void
 00122540,font_get_line_height,source/text/fonts.c,eax,int
 00122570,font_get_kerning,source/text/fonts.c,edx edi ebx,short

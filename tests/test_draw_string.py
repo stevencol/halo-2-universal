@@ -151,7 +151,7 @@ def run(t) -> None:
             globals={"draw_string_globals": how(), "font_slot_indices": fonts(), "unicode_escape_note_time": 0},
             externals={
                 "font_get": lambda harness, arguments, font=random_.choice((0, 0x80123400, 0x80123400, 0x80123400)): font,
-                "unknown_001414d0": ready,
+                "font_character_precache": ready,
                 "GetTickCount": lambda harness, arguments: 77,
             },
         )
@@ -174,7 +174,7 @@ def run(t) -> None:
                 globals={"draw_string_globals": how(font_index), "font_slot_indices": fonts(), "unicode_escape_note_time": 0},
                 externals={
                     "font_get": lambda harness, arguments: 0x80123400,
-                    "unknown_001414d0": ready,
+                    "font_character_precache": ready,
                     "GetTickCount": lambda harness, arguments: 77,
                 },
             )

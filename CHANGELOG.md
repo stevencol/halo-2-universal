@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Los caracteres que se esperan
+
+Dos funciones. De 615 funciones se pasa a 617, el 5,48 % de las del juego
+(el 2,709 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `font_cache_frame` | `0x001406b0` | `text/font_cache.c` |
+| `font_character_precache` | `0x001414d0` | `text/font_cache.c` |
+
+### Lo que se sabe
+
+- Antes de dibujar un texto el juego pregunta por cada carácter si está, con
+  sus píxeles. Si no está, lo pide **sin esperar** y lo apunta en una lista
+  de «esperados» (256 como mucho), una sola vez por carácter y fuente.
+- Cada fotograma la caché envejece un tic, el contador de fotogramas avanza,
+  y se vuelve a pedir cada carácter esperado; el que ya está, con sus
+  píxeles, se borra de la lista. Así un texto nuevo tarda unos fotogramas en
+  tener todas sus letras, sin parar el juego.
+- Eran las dos funciones sin nombre que llamaban el bucle principal y
+  `draw_string_precache_characters`. La lista era el campo sin nombre de
+  `font_cache_globals`.
+
+### Sin comprobar
+
+- Apuntar el carácter cuando la lista de esperados está llena: sin la
+  comprobación se escribiría fuera de la lista.
+
+### Mutaciones
+
+32 líneas rotas a propósito: 31 detectadas (cuatro porque la prueba se
+detiene: el juego roto pide más veces de las previstas), y la otra es la de
+«Sin comprobar».
+
 ## 2026-10-02 — Pedir un carácter y sus píxeles
 
 Seis funciones. De 609 funciones se pasa a 615, el 5,46 % de las del juego

@@ -10,16 +10,13 @@ these functions are of it is a guess, and so are their names.
 
 #include "draw_string.h"
 
+#include "text/font_cache.h"
 #include "text/fonts.h"
 #include "text/unicode.h"
 
 #include <string.h>
 
 /* ---------- prototypes of functions that are not decompiled */
-
-/* 0x001414d0: gets a character of a font ready to be drawn; whether it
-could */
-boolean unknown_001414d0(long font_index, long character);
 
 /* ---------- globals */
 
@@ -230,7 +227,7 @@ boolean draw_string_precache_characters(
 		do
 		{
 			text_iterator_next(&iterator);
-			if (iterator.element==_text_element_character && !unknown_001414d0(font_index, iterator.character))
+			if (iterator.element==_text_element_character && !font_character_precache(font_index, iterator.character))
 			{
 				result= FALSE;
 			}

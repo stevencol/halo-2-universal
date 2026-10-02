@@ -24,6 +24,7 @@ Halo 1's main.c.
 #include "saved games/game_state.h"
 #include "scenario/scenario.h"
 #include "shell/shell.h"
+#include "text/font_cache.h"
 #include "text/unicode.h"
 
 /* ---------- prototypes of functions of the console's libraries */
@@ -56,7 +57,6 @@ void unknown_002237d4(void);
 void unknown_0018e810(void);
 void unknown_0012bbd0(void);
 void unknown_00217c40(void);
-void unknown_001406b0(void);
 void unknown_00163820(void);
 void unknown_001479c3(float seconds);
 void unknown_00155f80(void);
@@ -368,7 +368,7 @@ void main_loop_body(
 	{
 		global_preferences_flush();
 	}
-	unknown_001406b0();
+	font_cache_frame();
 	async_globals.tasks_added= async_task_count();
 	/* a step of the copy of a map to the hard disk, if the last one is done */
 	if (cached_map_file_copy_globals.done)
