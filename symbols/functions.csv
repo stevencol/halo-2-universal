@@ -957,3 +957,8 @@ address,name,source,arguments,returns,convention
 00141090,font_character_key_hash,source/text/font_cache.c,stack,int
 001410b0,font_character_key_compare,source/text/font_cache.c,stack stack,bool
 00140b20,font_character_find,source/text/font_cache.c,eax ecx,int
+0013e3a0,highest_bit_set,source/memory/bit_vector.c,ecx,int
+0013e3c0,bits_to_count,source/memory/bit_vector.c,eax,int
+0013e3e0,bit_vector_or,source/memory/bit_vector.c,ecx eax edx stack,void
+0013e420,bit_vector_count_bits,source/memory/bit_vector.c,stack stack,int
+0013e530,bit_vector_highest_bit_set,source/memory/bit_vector.c,edi eax,int

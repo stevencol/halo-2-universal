@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Vectores de bits
+
+Cinco funciones. De 591 funciones se pasa a 596, el 5,29 % de las del juego
+(el 2,613 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `highest_bit_set` | `0x0013e3a0` | `memory/bit_vector.c` (nuevo) |
+| `bits_to_count` | `0x0013e3c0` | `memory/bit_vector.c` |
+| `bit_vector_or` | `0x0013e3e0` | `memory/bit_vector.c` |
+| `bit_vector_count_bits` | `0x0013e420` | `memory/bit_vector.c` |
+| `bit_vector_highest_bit_set` | `0x0013e530` | `memory/bit_vector.c` |
+
+- `tests/test_bit_vector.py`.
+
+### Lo que se sabe
+
+- Un vector de bits son números de 32 bits seguidos. Contar los bits
+  encendidos y buscar el más alto solo miran, del último número, los bits que
+  son del vector.
+- Con un vector de cero bits las dos funciones miran el número que hay
+  **antes** del vector: cuentan sus bits, o dan un índice negativo. Es del
+  juego y se reproduce.
+- `bits_to_count` da cuántos bits hacen falta para distinguir tantas cosas
+  (uno como poco); `highest_bit_set`, el bit más alto de un número (0 si no
+  tiene ninguno).
+
+### Sin comprobar
+
+- Dos de las máscaras con las que se cuentan los bits: los bits que quitaría
+  una máscara más estrecha son siempre 0 en ese paso (dos mutaciones).
+- En `bits_to_count`, que la cuenta sea «mayor que 1» o «mayor que 2»: con 2
+  sale 1 de las dos formas.
+
+### Mutaciones
+
+38 líneas rotas a propósito: 35 detectadas, y las tres de «Sin comprobar».
+
 ## 2026-10-02 — UTF-8, y encontrar un carácter de una fuente
 
 Seis funciones. De 585 funciones se pasa a 591, el 5,25 % de las del juego
