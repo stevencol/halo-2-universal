@@ -116,7 +116,25 @@ struct saved_game_file_information
 	char path[0x14];
 	wchar name[0x12];
 	long type;
-	byte unknown3C[4];
+	byte unknown3C;
+	/* the language that the name of its type is in, in the name that the
+	console shows of it; 0xFF if it is in none */
+	byte language;
+	byte unknown3E[2];
+};
+
+/* a file that comes with the game: it is in memory */
+struct built_in_saved_game_file
+{
+	long unknown0;
+	byte data[SAVED_GAME_FILE_PROFILE_SIZE];
+};
+
+/* the first of what the game knows of the files: those that come with it */
+struct built_in_saved_game_files
+{
+	long count;
+	struct built_in_saved_game_file files[1];
 };
 
 /* the files of a kind */
@@ -165,6 +183,10 @@ long saved_game_file_type_get_size(long type);
 boolean saved_game_file_get_directory(char *path, long file);
 boolean saved_game_file_name_unique(const wchar *name, long type);
 boolean saved_game_file_read(long file, void *buffer, unsigned long size);
+boolean saved_game_file_read_async(unsigned long size, long file, void *buffer,
+	struct saved_game_file_result *result);
+boolean saved_game_file_write_async(const void *buffer, long file, void *unknown, unsigned long size,
+	struct saved_game_file_result *result);
 boolean saved_game_file_write(long file, unsigned long size, void *unknown, const void *buffer);
 boolean saved_game_file_get_display_name(long type, wchar *display_name, const wchar *name, long language);
 void saved_game_file_parse_display_name(const wchar *display_name, long type, byte *language, wchar *name);

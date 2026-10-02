@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Arrancar la lectura y la escritura de un archivo
+
+Las dos funciones que el hito anterior llamaba sin estar descompiladas. De
+486 funciones se pasa a 488, el 4,33 % de las del juego (el 2,060 % de sus
+bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `saved_game_file_read_async` | `0x002162b0` | `saved games/saved_game_files.c` |
+| `saved_game_file_write_async` | `0x002173d0` | `saved games/saved_game_files.c` |
+
+- De `struct saved_game_file_result`: `progress` (`+0x108`). De
+  `struct saved_game_file_information`: `language` (`+0x3D`).
+- `struct built_in_saved_game_file`: un archivo de los que vienen con el
+  juego, 4 bytes y los 0x1E0 de un perfil.
+
+### Lo que se sabe
+
+- Los archivos que vienen con el juego (los perfiles de serie) no se leen
+  de ningún disco: están en memoria y la lectura es una copia, que termina
+  en el acto con el progreso a 1.
+- Los de una unidad los lee otro hilo, del archivo que se llama como su
+  tipo (`profile`, `slayer`…) dentro de su directorio.
+- Un archivo cuyo nombre visible no empieza por el de su tipo en ningún
+  idioma (idioma 0xFF) no se lee.
+- Lo que se escribe empieza por el nombre del archivo. Si ese nombre ya no
+  es el que el juego tenía apuntado, la escritura es además un cambio de
+  nombre, y para eso se coge el turno de operaciones.
+- El progreso de una operación va de 0 a 1, y vale -1 antes de empezar.
+
+### Mutaciones
+
+47 líneas rotas a propósito: las 47 detectadas.
+
 ## 2026-10-02 — Leer y escribir un archivo de los jugadores
 
 Tres funciones más de `saved_game_files.c`. De 483 funciones se pasa a

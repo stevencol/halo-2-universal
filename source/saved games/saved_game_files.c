@@ -46,11 +46,18 @@ uint32_t XCreateSaveGame(const char *root, const wchar *name, uint32_t dispositi
 
 /* ---------- prototypes of functions that are not decompiled */
 
-/* 0x002162b0, 0x002173d0: start to read and to write a file of the
-players. Whether it was started */
-boolean unknown_002162b0(unsigned long size, long file, void *buffer, struct saved_game_file_result *result);
-boolean unknown_002173d0(const void *buffer, long file, void *unknown, unsigned long size,
-	struct saved_game_file_result *result);
+/* 0x002acd60, 0x002acee0: give the read and the write of a file to the
+thread that does them. Whether it took them */
+boolean unknown_002acd60(void *buffer, unsigned long size, boolean unknown, struct saved_game_file_result *result,
+	const char *path);
+boolean unknown_002acee0(void *unknown, unsigned long size, boolean unknown2, struct saved_game_file_result *result);
+
+/* 0x002acf40, 0x002acf80: fill what is told of a file that is written: as
+it is, and with another name. NULL (0) if it cannot be */
+void *unknown_002acf40(void *description, long file, const struct saved_game_file_information *information);
+void *unknown_002acf80(long file, const wchar *name, void *description,
+	const struct saved_game_file_information *information, void *unknown,
+	struct saved_game_files_operation *operation);
 
 /* 0x002ada70, 0x002adec0: start to read and to write a file in two parts.
 Whether it was started */
@@ -68,6 +75,10 @@ enum
 	is */
 	UNKNOWN_0051EA14_TABLES_OFFSET= 0xBEF8,
 	UNKNOWN_0051EA14_SALT_OFFSET= 0x4BEFC,
+	UNKNOWN_0051EA14_UNKNOWN4BF00_OFFSET= 0x4BF00,
+
+	SAVED_GAME_FILE_RESULT_DESCRIPTION_OFFSET= 8,
+	SAVED_GAME_FILE_LANGUAGE_NONE= 0xFF,
 
 	/* what XFindFirstSaveGame fills */
 	XGAME_FIND_DATA_SIZE= 0x33C,
@@ -851,7 +862,7 @@ boolean saved_game_file_read(
 {
 	struct saved_game_file_result result;
 
-	if (!unknown_002162b0(size, file, buffer, &result))
+	if (!saved_game_file_read_async(size, file, buffer, &result))
 	{
 		return FALSE;
 	}
@@ -873,7 +884,7 @@ boolean saved_game_file_write(
 {
 	struct saved_game_file_result result;
 
-	if (!unknown_002173d0(buffer, file, unknown, size, &result))
+	if (!saved_game_file_write_async(buffer, file, unknown, size, &result))
 	{
 		return FALSE;
 	}
@@ -884,4 +895,93 @@ boolean saved_game_file_write(
 	}
 
 	return result.success;
+}
+
+/* 0x002162b0: starts to read a file of the players. One that comes with the
+game is in memory, and is read at once; one of a drive is read from the file
+of its type in its directory, by another thread. Whether it was started */
+boolean saved_game_file_read_async(
+	unsigned long size,
+	long file,
+	void *buffer,
+	struct saved_game_file_result *result)
+{
+	struct saved_game_file_information information;
+	char path[SAVED_GAME_FILE_PATH_LENGTH];
+
+	if (((file>>_saved_game_file_index_built_in_bit)&1) && unknown_0051ea14)
+	{
+		const struct built_in_saved_game_files *files= unknown_0051ea14;
+		long place= (file>>SAVED_GAME_FILE_INDEX_FILE_SHIFT)&SAVED_GAME_FILE_INDEX_FILE_MASK;
+
+		if (place>(long)((unsigned long)files->count-1) || size>SAVED_GAME_FILE_PROFILE_SIZE)
+		{
+			return FALSE;
+		}
+		memcpy(buffer, files->files[place].data, size);
+		result->done= TRUE;
+		result->success= TRUE;
+		result->error= 0;
+		result->progress= 1.0f;
+
+		return TRUE;
+	}
+
+	information.path[0]= 0;
+	information.name[0]= 0;
+	path[0]= 0;
+	if (!saved_game_file_get_information(&information, file) || information.language==SAVED_GAME_FILE_LANGUAGE_NONE)
+	{
+		return FALSE;
+	}
+	strncpy(path, information.path, SAVED_GAME_FILE_PATH_LENGTH);
+	path[SAVED_GAME_FILE_PATH_LENGTH-1]= 0;
+	csstrcat256(path, saved_game_file_type_get_name(information.type));
+
+	return unknown_002acd60(buffer, size, FALSE, result, path);
+}
+
+/* 0x002173d0: starts to write a file of the players, which another thread
+does. What is written starts with the name of the file: if it is not the
+name that the file has, the file is given the new one, and for that the turn
+is taken. Whether it was started */
+boolean saved_game_file_write_async(
+	const void *buffer,
+	long file,
+	void *unknown,
+	unsigned long size,
+	struct saved_game_file_result *result)
+{
+	struct saved_game_file_information information;
+	void *description= (byte *)result+SAVED_GAME_FILE_RESULT_DESCRIPTION_OFFSET;
+	void *filled;
+
+	information.path[0]= 0;
+	information.name[0]= 0;
+	if (!saved_game_file_get_information(&information, file))
+	{
+		return FALSE;
+	}
+	if (saved_game_file_name_differs(file, buffer))
+	{
+		struct saved_game_files_operation *operation;
+
+		if (!unknown_0051ea14)
+		{
+			return FALSE;
+		}
+		saved_game_files_take_operation(file, &operation);
+		filled= unknown_002acf80(file, buffer, description, &information,
+			(byte *)unknown_0051ea14+UNKNOWN_0051EA14_UNKNOWN4BF00_OFFSET, operation);
+	}
+	else
+	{
+		filled= unknown_002acf40(description, file, &information);
+	}
+	if (!filled)
+	{
+		return FALSE;
+	}
+
+	return unknown_002acee0(unknown, size, FALSE, result);
 }

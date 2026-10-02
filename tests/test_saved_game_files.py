@@ -518,8 +518,8 @@ def run(t) -> None:
     for n in range(60):
         start, success, waits = random_.choice((1, 1, 1, 0, 0x100)), random_.choice((1, 1, 0, 0x80)), random_.choice((0, 0, 1, 3))
         for name, callee, where, arguments in (
-            ("saved_game_file_read", "unknown_002162b0", 3, (random_.getrandbits(32), random_.getrandbits(32), random_.getrandbits(32))),
-            ("saved_game_file_write", "unknown_002173d0", 4, (random_.getrandbits(32), random_.getrandbits(32), random_.getrandbits(32), random_.getrandbits(32))),
+            ("saved_game_file_read", "saved_game_file_read_async", 3, (random_.getrandbits(32), random_.getrandbits(32), random_.getrandbits(32))),
+            ("saved_game_file_write", "saved_game_file_write_async", 4, (random_.getrandbits(32), random_.getrandbits(32), random_.getrandbits(32), random_.getrandbits(32))),
         ):
             handler, switch = started(start, success, waits, random_.getrandbits(32), where)
             t.check(
@@ -528,3 +528,107 @@ def run(t) -> None:
                 globals={"saved_game_files_last_error": random_.getrandbits(32)},
                 externals={callee: handler, "SwitchToThread": switch, "sound_idle": lambda harness, arguments: 0},
             )
+
+    # ---------- starting to read a file
+
+    BUILT_IN_SIZE = 0x1E4
+    RESULT_SIZE = 0x10C
+
+    def built_in(count: int, entries: int = 6) -> Buffer:
+        return Buffer(struct.pack("<i", count) + random_.randbytes(entries * BUILT_IN_SIZE + 8))
+
+    def give(found: int, type_: int, language: int, directory: bytes):
+        # the same for the game and for source/
+        data = bytearray(random_.randbytes(INFORMATION))
+        data[: len(directory) + 1] = directory + b"\0"
+        struct.pack_into("<I", data, 0x38, type_)
+        data[0x3D] = language
+
+        def handler(harness, arguments):
+            where, file = arguments
+            before = bytes(harness.mu.mem_read(where, 1)) + bytes(harness.mu.mem_read(where + 0x14, 2))
+            harness.mu.mem_write(where, bytes(data))
+            return found, (before, file)
+
+        return handler
+
+    def take_read(result: int):
+        def handler(harness, arguments):
+            buffer, size, unknown, where, path = arguments
+            return result, (buffer, size, unknown & 0xFF, where, text(harness, path))
+
+        return handler
+
+    for count in (0, 1, 3, 6, -1):
+        for place in (0, 1, 2, 5, 6, 0x1FFF):
+            for size in (0, 1, 0x13, 0x1E0, 0x1E1, NONE):
+                if place < 6 or size == 1:
+                    t.check(
+                        "saved_game_file_read_async",
+                        size,
+                        index(random_.randrange(16), random_.randrange(16), place, 1, random_.randrange(0x200), random_.getrandbits(1)),
+                        Buffer(random_.randbytes(0x1E8)),
+                        Buffer(random_.randbytes(RESULT_SIZE)),
+                        globals={"unknown_0051ea14": built_in(count)},
+                    )
+
+    short_directories = (b"u:\\udata\\4d\\AB\\", b"", b"d" * 0x13)
+    for n in range(120):
+        built = n % 5 == 4
+        file = index(random_.randrange(16), random_.randrange(16), random_.randrange(0x2000), built, random_.randrange(0x200))
+        t.check(
+            "saved_game_file_read_async",
+            random_.getrandbits(32),
+            file,
+            random_.getrandbits(32),
+            Buffer(random_.randbytes(RESULT_SIZE)),
+            # a file that comes with the game, with the files not set up, is
+            # read as one of a drive
+            globals={"unknown_0051ea14": 0 if built else random_.choice((0, 0x80100000))},
+            externals={
+                "saved_game_file_get_information": give(n % 6 != 5, random_.choice((0, 1, 5, 10, 11, NONE)), random_.choice((0, 3, 8, 0xFE, 0xFF, 0xFF)), random_.choice(short_directories)),
+                "unknown_002acd60": take_read(random_.choice((0, 1, 1))),
+            },
+        )
+
+    # ---------- starting to write a file
+
+    for n in range(160):
+        file = random_.getrandbits(32)
+        files_ = random_.choice((0x80100000, 0x80100000, 0x80200000, 0))
+        differs = random_.choice((0, 1, 1))
+        operation = random_.getrandbits(32) | 1
+
+        def take(harness, arguments, operation=operation):
+            harness.mu.mem_write(arguments[1], struct.pack("<I", operation))
+            return 0, (arguments[0],)
+
+        # what is told of the file is in the stack: the stand-ins tell what it has
+        information_ = give(n % 7 != 6, random_.randrange(11), random_.randrange(9), random_.choice(short_directories))
+        result_buffer = Buffer(random_.randbytes(RESULT_SIZE))
+        t.check(
+            "saved_game_file_write_async",
+            Buffer(wide(random_.choice(("mine", "", "another")))),
+            file,
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            result_buffer,
+            globals={"unknown_0051ea14": files_},
+            externals={
+                "saved_game_file_get_information": information_,
+                "saved_game_file_name_differs": lambda harness, arguments, differs=differs: differs,
+                "saved_game_files_take_operation": take,
+                "unknown_002acf80": lambda harness, arguments, result=random_.choice((0, 0x1234, 0x1234)): (
+                    result,
+                    (arguments[0], arguments[1], arguments[2], bytes(harness.mu.mem_read(arguments[3], INFORMATION)), arguments[4], arguments[5]),
+                ),
+                "unknown_002acf40": lambda harness, arguments, result=random_.choice((0, 0x1234, 0x1234)): (
+                    result,
+                    (arguments[0], arguments[1], bytes(harness.mu.mem_read(arguments[2], INFORMATION))),
+                ),
+                "unknown_002acee0": lambda harness, arguments, result=random_.choice((0, 1, 1)): (
+                    result,
+                    (arguments[0], arguments[1], arguments[2] & 0xFF, arguments[3]),
+                ),
+            },
+        )

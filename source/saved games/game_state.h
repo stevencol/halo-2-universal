@@ -73,7 +73,10 @@ struct saved_game_file_result
 	byte unknown3;
 	/* of the console's library, if it did not go well */
 	long error;
-	byte unknown8[0x104];
+	/* of a read, the path of the file; of a write, what is told of it */
+	byte unknown8[0x100];
+	/* how much is done, from 0 to 1; -1 before it starts */
+	float progress;
 };
 
 typedef char verify_saved_game_file_result_size[
