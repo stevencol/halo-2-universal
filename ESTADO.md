@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-01, al terminar el hito 27.
+**Última actualización:** 2026-10-01, al terminar el hito 28.
 
 ## Dónde estamos
 
-- **242 funciones descompiladas de 11.265: el 2,15 % del juego** (el
-  0,963 % de los bytes de código).
-- Las 242 están comprobadas contra el ejecutable original
+- **244 funciones descompiladas de 11.265: el 2,17 % del juego** (el
+  1,000 % de los bytes de código).
+- Las 244 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile eleven small functions of the game* (ver
+- Último hito: *Decompile the checks of the options of a game* (ver
   `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
@@ -87,9 +87,9 @@ Módulos (funciones hechas / archivo):
 - [ ] Estado del juego y puntos de control — `saved games\game_state.c`
       (17; falta guardar/cargar núcleo y partida guardada)
 - [x] Arranque del juego — `shell\shell.c` (7)
-- [ ] Juego y tabla de sistemas — `game\game.c` (17): la tabla, lo que la
-      recorre, las opciones por defecto, los ticks de un fotograma, partida
-      perdida y terminada, y el tipo de simulación
+- [ ] Juego y tabla de sistemas — `game\game.c` (19): la tabla, lo que la
+      recorre, las opciones (por defecto, validar, comparar), los ticks de
+      un fotograma, partida perdida y terminada, y el tipo de simulación
 - [ ] Bucle principal — `main\main.c` (12):
   - [x] el bucle, un fotograma y el reloj
   - [x] guardar, cambiar de bsp y avisar de que se guardó
@@ -111,8 +111,7 @@ Módulos (funciones hechas / archivo):
       `0x00121350` (parecen las preferencias guardadas, `0x00120d80` a
       `0x00121280`), `0x00121fc0`, `0x00123180`, `0x00012560`
       (rasterizador), `0x001248b0`, `0x001253d0`.
-- [ ] **Opciones de partida:** `0x00138180` (validar) y `0x001384a0`
-      (comparar). Desbloquean el resto de `game_state.c`.
+- [x] ~~Opciones de partida: validar y comparar~~ (hito 28).
 - [ ] **Resto de `game_state.c`:** núcleo y partida guardada (`0x001240b0` a
       `0x00124490`, `0x00124640`, `0x00124770` en adelante).
 - [ ] **Memoria prestada:** `0x0012d2f0`, `0x0012d400`, `0x0012d520`.

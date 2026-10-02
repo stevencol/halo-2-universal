@@ -358,9 +358,9 @@ void game_options_new(
 
 	memcpy(&game->options, options, sizeof(game->options));
 	game->options.unknown124= FALSE;
-	if (game->options.game_mode==_game_mode_multiplayer || game->options.unknown178)
+	if (game->options.game_mode==_game_mode_multiplayer || game->options.variant.unknown44)
 	{
-		unknown_0019d650(game->options.unknown134);
+		unknown_0019d650(game->options.variant.unknown0);
 		game= main_game_globals;
 	}
 	*global_random_seed_reference= game->options.random_seed;
@@ -513,11 +513,12 @@ boolean game_in_progress(
 	return main_game_globals && main_game_globals->active;
 }
 
-/* 0x00138820: whether the game is a campaign with unknown12C set */
-long game_is_campaign_unknown12C(
+/* 0x00138820: whether the game is a campaign of two players. The name is a
+guess */
+long game_is_coop(
 	void)
 {
-	return main_game_globals->options.game_mode==_game_mode_campaign && main_game_globals->options.unknown12C;
+	return main_game_globals->options.game_mode==_game_mode_campaign && main_game_globals->options.coop;
 }
 
 /* 0x00138840: whether the game is run among several consoles. The name is a
@@ -603,4 +604,183 @@ long game_finished_wait_over(
 	void)
 {
 	return main_game_globals->finished && main_game_globals->finished_ticks==0;
+}
+
+/* 0x00138180: whether the options are of a game that can be played: its
+values are in their ranges, no two consoles and no two players are the same,
+each player is at a console of the game, and the players are as many as the
+kind of game takes. The name is a guess */
+boolean game_options_verify(
+	const struct game_options *options)
+{
+	static const byte zeros[GAME_PLAYER_IDENTIFIER_SIZE]= {0};
+	unsigned long mask= options->machine_valid_mask;
+	long player_count= 0;
+	boolean valid;
+	long index;
+
+	if (options->game_mode<0 || options->game_mode>=NUMBER_OF_GAME_MODES ||
+		options->simulation<0 || options->simulation>=NUMBER_OF_GAME_SIMULATIONS ||
+		options->tick_rate<=0 || options->tick_rate>MAXIMUM_GAME_TICK_RATE ||
+		!options->map_name[0] ||
+		options->unknown120<0 || options->unknown120>=16)
+	{
+		return FALSE;
+	}
+
+	valid= (mask&0xFFFF0000)==0;
+	for (index= 0; index<MAXIMUM_GAME_MACHINES; index++)
+	{
+		if (mask&(1UL<<index))
+		{
+			long other_index;
+
+			for (other_index= index+1; other_index<MAXIMUM_GAME_MACHINES; other_index++)
+			{
+				if (mask&(1UL<<other_index))
+				{
+					valid= valid && memcmp(options->machine_identifiers[index],
+						options->machine_identifiers[other_index], GAME_MACHINE_IDENTIFIER_SIZE)!=0;
+				}
+			}
+		}
+	}
+
+	for (index= 0; index<MAXIMUM_GAME_PLAYERS; index++)
+	{
+		const struct game_player_options *player= &options->players[index];
+		boolean player_valid;
+		long other_index;
+
+		if (!player->valid)
+		{
+			continue;
+		}
+		player_count++;
+
+		player_valid= valid &&
+			player->controller_index>=0 && player->controller_index<MAXIMUM_CONTROLLERS &&
+			memcmp(player->identifier, zeros, GAME_PLAYER_IDENTIFIER_SIZE)!=0;
+		for (other_index= index+1; other_index<MAXIMUM_GAME_PLAYERS; other_index++)
+		{
+			const struct game_player_options *other= &options->players[other_index];
+
+			if (other->valid)
+			{
+				player_valid= player_valid &&
+					memcmp(player->identifier, other->identifier, GAME_PLAYER_IDENTIFIER_SIZE)!=0;
+			}
+		}
+
+		if (player->unknown1)
+		{
+			valid= player_valid && memcmp(player->machine_identifier, zeros, GAME_MACHINE_IDENTIFIER_SIZE)==0;
+		}
+		else
+		{
+			long machine_index= NONE;
+
+			for (other_index= 0; other_index<MAXIMUM_GAME_MACHINES; other_index++)
+			{
+				if ((mask&(1UL<<other_index)) &&
+					memcmp(player->machine_identifier, options->machine_identifiers[other_index],
+						GAME_MACHINE_IDENTIFIER_SIZE)==0)
+				{
+					machine_index= other_index;
+					break;
+				}
+			}
+			valid= player_valid && machine_index!=NONE;
+		}
+	}
+
+	switch (options->game_mode)
+	{
+	case _game_mode_campaign:
+		valid= valid && options->difficulty>=0 && options->difficulty<NUMBER_OF_GAME_DIFFICULTIES;
+		if (options->coop)
+		{
+			if (!valid || player_count!=2)
+			{
+				return FALSE;
+			}
+		}
+		else if (!valid || player_count!=1)
+		{
+			return FALSE;
+		}
+		break;
+	case _game_mode_multiplayer:
+		if (!valid || player_count<1 || player_count>MAXIMUM_GAME_PLAYERS)
+		{
+			return FALSE;
+		}
+		break;
+	case _game_mode_3:
+		if (!valid || player_count<1)
+		{
+			return FALSE;
+		}
+		break;
+	case _game_mode_4:
+	case _game_mode_5:
+		/* nothing is asked of how many players there are, or of this
+		console */
+		return valid;
+	default:
+		return FALSE;
+	}
+
+	return options->local_machine_exists!=0;
+}
+
+static inline __attribute__((always_inline)) unsigned long game_options_local_controllers(
+	const struct game_options *options)
+{
+	unsigned long controllers= 0;
+
+	if (options->local_machine_exists)
+	{
+		long index;
+
+		for (index= 0; index<MAXIMUM_GAME_PLAYERS; index++)
+		{
+			const struct game_player_options *player= &options->players[index];
+
+			if (player->valid && !player->unknown1 &&
+				memcmp(player->machine_identifier, options->local_machine_identifier,
+					GAME_MACHINE_IDENTIFIER_SIZE)==0)
+			{
+				controllers|= 1UL<<(player->controller_index&31);
+			}
+		}
+	}
+
+	return controllers;
+}
+
+/* 0x001384a0: whether two games are the same game: the same map, kind of
+game and tick rate, the same controllers of this console, and the same
+difficulty or rules. The name is a guess */
+boolean game_options_match(
+	const struct game_options *options1,
+	const struct game_options *options2)
+{
+	if (strcmp(options1->map_name, options2->map_name)!=0 ||
+		options1->game_mode!=options2->game_mode ||
+		options1->tick_rate!=options2->tick_rate ||
+		game_options_local_controllers(options1)!=game_options_local_controllers(options2))
+	{
+		return FALSE;
+	}
+
+	switch (options1->game_mode)
+	{
+	case _game_mode_campaign:
+		return options1->coop==options2->coop && options1->difficulty==options2->difficulty;
+	case _game_mode_multiplayer:
+		return memcmp(&options1->variant, &options2->variant, sizeof(options1->variant))==0;
+	}
+
+	return TRUE;
 }

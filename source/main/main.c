@@ -91,7 +91,6 @@ void unknown_00190e37(void);
 
 enum
 {
-	_game_mode_3= 3,
 	MAXIMUM_LOCAL_PLAYERS= 4,
 	HUD_MESSAGE_LENGTH= 256,
 

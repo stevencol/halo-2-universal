@@ -310,7 +310,7 @@ def run(t) -> None:
     for game_mode in (1, 2, 0):
         for unknown12C in (0, 1, 7):
             t.check(
-                "game_is_campaign_unknown12C",
+                "game_is_coop",
                 globals={"main_game_globals": GAME},
                 memory={GAME: game_memory(game_mode=game_mode, unknown12C=unknown12C)},
             )

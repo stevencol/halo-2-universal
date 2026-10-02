@@ -13,6 +13,40 @@ decompiled so far needs: the rest is not understood yet.
 /* ---------- structures */
 
 /* what a game is started with: the map, the difficulty, the players... */
+enum
+{
+	MAXIMUM_GAME_MACHINES= 16,
+	MAXIMUM_GAME_PLAYERS= 16,
+	GAME_MACHINE_IDENTIFIER_SIZE= 6,
+	GAME_PLAYER_IDENTIFIER_SIZE= 12,
+	GAME_MAP_NAME_LENGTH= 0x104
+};
+
+/* a player of a game that starts */
+struct game_player_options
+{
+	boolean valid;
+	/* set in a player that has no console: its console's identifier has to
+	be all zeros */
+	boolean unknown1;
+	/* from 0 to 3 */
+	short controller_index;
+	byte unknown4[4];
+	/* of the console that the player is at */
+	byte machine_identifier[GAME_MACHINE_IDENTIFIER_SIZE];
+	/* not all zeros, and of no other player */
+	byte identifier[GAME_PLAYER_IDENTIFIER_SIZE];
+	byte unknown1A[0xCA];
+};
+
+/* the rules of a multiplayer game. Only what the code here uses */
+struct game_variant
+{
+	byte unknown0[0x44];
+	long unknown44;
+	byte unknown48[0xE8];
+};
+
 struct game_options
 {
 	/* 1 for the campaign and 2 for multiplayer, at least */
@@ -28,19 +62,30 @@ struct game_options
 	unsigned long random_seed;
 	long unknown14;
 	long unknown18;
-	byte unknown1C[0x108];
+	/* the path of the scenario */
+	char map_name[GAME_MAP_NAME_LENGTH];
+	/* from 0 to 15 */
+	short unknown120;
+	byte pad122[2];
 	boolean unknown124;
 	byte unknown125[3];
 	boolean unknown128;
 	byte unknown129;
 	short difficulty;
-	/* a campaign with this set is not written to a saved game, at least */
-	boolean unknown12C;
+	/* a campaign of two players. It is not written to a saved game */
+	boolean coop;
 	byte unknown12D[7];
-	/* what unknown_0019d650 sets up, for a multiplayer game */
-	byte unknown134[0x44];
-	long unknown178;
-	byte unknown17C[0xF9C];
+	struct game_variant variant;
+	byte unknown264[4];
+	/* bit n: the console n of the table is in the game */
+	unsigned long machine_valid_mask;
+	byte machine_identifiers[MAXIMUM_GAME_MACHINES][GAME_MACHINE_IDENTIFIER_SIZE];
+	/* this console is in the game, and which it is */
+	boolean local_machine_exists;
+	byte local_machine_identifier[GAME_MACHINE_IDENTIFIER_SIZE];
+	byte pad2D3;
+	struct game_player_options players[MAXIMUM_GAME_PLAYERS];
+	byte unknown1114[4];
 };
 
 /* 0x004e6948 points to it. Not the tag of the same name in Halo 1, which is
@@ -91,8 +136,17 @@ enum
 
 enum
 {
-	_game_mode_campaign= 1,
-	_game_mode_multiplayer= 2,
+	_game_mode_none,
+	_game_mode_campaign,
+	_game_mode_multiplayer,
+	_game_mode_3,
+	_game_mode_4,
+	_game_mode_5,
+	NUMBER_OF_GAME_MODES,
+	NUMBER_OF_GAME_SIMULATIONS= 6,
+	NUMBER_OF_GAME_DIFFICULTIES= 4,
+	MAXIMUM_GAME_TICK_RATE= 300,
+	MAXIMUM_CONTROLLERS= 4,
 
 	_game_difficulty_normal= 1,
 	_game_difficulty_legendary= 3,
@@ -138,10 +192,14 @@ typedef char verify_main_game_globals_size[
 	sizeof(struct main_game_globals) == 0x1200 ? 1 : -1];
 typedef char verify_game_options_difficulty_offset[
 	offsetof(struct game_options, difficulty) == 0x12A ? 1 : -1];
-typedef char verify_game_options_unknown134_offset[
-	offsetof(struct game_options, unknown134) == 0x134 ? 1 : -1];
-typedef char verify_game_options_unknown178_offset[
-	offsetof(struct game_options, unknown178) == 0x178 ? 1 : -1];
+typedef char verify_game_options_variant_offset[
+	offsetof(struct game_options, variant) == 0x134 ? 1 : -1];
+typedef char verify_game_options_machine_valid_mask_offset[
+	offsetof(struct game_options, machine_valid_mask) == 0x268 ? 1 : -1];
+typedef char verify_game_options_players_offset[
+	offsetof(struct game_options, players) == 0x2D4 ? 1 : -1];
+typedef char verify_game_player_options_size[
+	sizeof(struct game_player_options) == 0xE4 ? 1 : -1];
 typedef char verify_game_system_size[
 	sizeof(struct game_system) == 9*sizeof(void *) ? 1 : -1];
 
@@ -166,9 +224,11 @@ void game_dispose_from_old_map(void);
 void game_initialize_for_new_structure_bsp(void);
 void game_dispose_from_old_structure_bsp(void);
 void game_options_new_default(struct game_options *options);
+boolean game_options_verify(const struct game_options *options);
+boolean game_options_match(const struct game_options *options1, const struct game_options *options2);
 void game_run_ticks(long tick_count, float *seconds);
 boolean game_in_progress(void);
-long game_is_campaign_unknown12C(void);
+long game_is_coop(void);
 boolean game_is_distributed(void);
 boolean game_is_authoritative(void);
 boolean game_is_predicted(void);
@@ -183,12 +243,6 @@ long game_finished_wait_over(void);
 in for these, and take the arguments off for them */
 #define GAME_STDCALL
 
-/* 0x001384a0: whether two games are the same game. The name is a guess */
-boolean GAME_STDCALL game_options_match(const struct game_options *options1, const struct game_options *options2);
-
-/* 0x00138180: whether the options are of a game that can be played. The name
-is a guess */
-boolean GAME_STDCALL game_options_verify(const struct game_options *options);
 
 /* ---------- globals */
 

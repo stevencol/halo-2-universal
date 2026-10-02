@@ -2,6 +2,50 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Las opciones de una partida
+
+Las dos funciones que deciden si unas opciones de partida se pueden jugar y
+si dos opciones son de la misma partida. Eran lo que faltaba para volver a
+un punto de control sin funciones simuladas. De 242 funciones se pasa a 244,
+el 2,17 % de las del juego (ya el 1,000 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_options_verify` | `0x00138180` | `game/game.c` |
+| `game_options_match` | `0x001384a0` | `game/game.c` |
+
+- `tests/test_game_options.py`: opciones buenas que se estropean al azar de
+  una o varias maneras (2.500 casos por función).
+
+### Cambiado
+
+- `struct game_options` tiene ya casi todos sus campos: el mapa, la
+  dificultad, si es cooperativo, las reglas del multijugador, la tabla de
+  16 consolas, esta consola y los 16 jugadores.
+- `game_is_campaign_unknown12C` pasa a llamarse `game_is_coop`: el campo
+  que no se entendía es «campaña de dos jugadores».
+
+### Lo que se sabe
+
+- Unas opciones valen si: el modo, la simulación, el ritmo de ticks (1 a
+  300) y la dificultad están en rango; hay nombre de mapa; no hay dos
+  consolas iguales ni dos jugadores iguales; cada jugador tiene mando de 0
+  a 3 e identificador distinto de cero, y está en una consola de la partida
+  (o en ninguna, con la marca correspondiente); y el número de jugadores
+  cuadra: 1 en campaña, 2 en cooperativo, de 1 a 16 en multijugador.
+- En los modos 4 y 5 no se mira cuántos jugadores hay ni si esta consola
+  está en la partida.
+- Dos opciones son de la misma partida si coinciden el mapa, el modo, el
+  ritmo de ticks y los mandos de esta consola, y además la dificultad y el
+  cooperativo (campaña) o las reglas enteras (multijugador).
+
+### Sin comprobar
+
+- Rechazar un modo de juego negativo al principio de la validación: quitar
+  esa comprobación no cambia nada, porque más abajo se rechaza igualmente.
+
 ## 2026-10-01 — Once funciones pequeñas del juego
 
 Funciones cortas de `game.c` que el resto del juego consulta a todas horas:

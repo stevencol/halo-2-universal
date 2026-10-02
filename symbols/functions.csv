@@ -229,8 +229,8 @@ address,name,source,arguments,returns,convention
 00124750,game_state_allocation_restore,source/saved games/game_state.c,stack,void
 00199520,game_state_call_before_load_procs,source/saved games/game_state.c,ebx,void
 00199540,game_state_call_after_load_procs,source/saved games/game_state.c,ebx,void
-001384a0,game_options_match,,stack stack,bool
-00138180,game_options_verify,,stack,bool
+001384a0,game_options_match,source/game/game.c,stack stack,bool
+00138180,game_options_verify,source/game/game.c,stack,bool
 0011c1b0,scenario_switch_structure_bsp,source/scenario/scenario.c,stack stack,bool
 001c3540,unknown_001c3540,,stack,void
 00068090,unknown_00068090,,stack,void
@@ -515,7 +515,7 @@ address,name,source,arguments,returns,convention
 00138110,game_options_new_default,source/game/game.c,esi,void
 00137f70,game_run_ticks,source/game/game.c,eax ebx,void
 00138800,game_in_progress,source/game/game.c,,bool
-00138820,game_is_campaign_unknown12C,source/game/game.c,,int
+00138820,game_is_coop,source/game/game.c,,int
 00138840,game_is_distributed,source/game/game.c,,bool
 00138860,game_is_authoritative,source/game/game.c,,bool
 00138880,game_is_predicted,source/game/game.c,,bool
