@@ -135,10 +135,6 @@ boolean GAME_STDCALL game_options_match(const struct game_options *options1, con
 is a guess */
 boolean GAME_STDCALL game_options_verify(const struct game_options *options);
 
-/* 0x0011c1b0: makes a structure bsp of the scenario the one that is loaded;
-whether it is. The name is a guess */
-boolean GAME_STDCALL scenario_switch_structure_bsp(long structure_bsp_index, long unknown);
-
 /* ---------- globals */
 
 extern struct main_game_globals *main_game_globals;

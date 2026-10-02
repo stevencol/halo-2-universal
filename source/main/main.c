@@ -15,7 +15,9 @@ Halo 1's main.c.
 #include "cseries/async.h"
 #include "game/game.h"
 #include "saved games/game_state.h"
+#include "scenario/scenario.h"
 #include "shell/shell.h"
+#include "text/unicode.h"
 
 /* ---------- prototypes of functions of the console's libraries */
 
@@ -46,11 +48,8 @@ known; the three with a name are what the game asked the loop for */
 void unknown_002237d4(void);
 void unknown_0018f1c0(long unknown);
 void unknown_0018e810(void);
-void main_switch_structure_bsp_private(void);
-void main_save_map_private(void);
 void unknown_0012bbd0(void);
 void game_state_load_core(const char *name);
-void unknown_0012bdf0(void);
 void unknown_00124950(void);
 void unknown_00217c40(void);
 void unknown_002164c0(long unknown, void *unknown_pointer);
@@ -77,11 +76,33 @@ void unknown_00125b40(void);
 void unknown_000681e0(void);
 void unknown_00222d80(void);
 
+/* 0x0024cdaf, 0x001a0180 and 0x0024cbee: the messages that the game shows
+the players. The names are guesses */
+void hud_messages_unknown_0024cdaf(void);
+void hud_get_text(unsigned long string_id, wchar *text);
+void hud_print_message(long local_player_index, const wchar *text);
+
+/* 0x0018efa0: what the loop does when a structure bsp cannot be loaded */
+void unknown_0018efa0(void);
+
+/* 0x00190e37: what main_unknown4E_private does before its message */
+void unknown_00190e37(void);
+
 /* ---------- constants */
 
 enum
 {
+	_game_mode_campaign= 1,
 	_game_mode_3= 3,
+	MAXIMUM_LOCAL_PLAYERS= 4,
+	HUD_MESSAGE_LENGTH= 256,
+
+	/* the string ids of the messages: hud_autosave_end, hud_loading_end and
+	hud_saving_end */
+	_string_id_hud_autosave_end= 0x100006A1,
+	_string_id_hud_loading_end= 0x0F0006A3,
+	_string_id_hud_saving_end= 0x0E0006A5,
+
 	MINIMUM_FRAME_VBLANKS= 2,
 	DEFAULT_REFRESH_RATE= 60,
 	UNKNOWN_0051EA14_OFFSET= 0xBEF8
@@ -90,6 +111,22 @@ enum
 #define MAXIMUM_FRAME_SECONDS 10.0f
 
 /* ---------- structures */
+
+/* 0x004e8c20 points to it: the players. Only what the code here uses */
+struct players_globals
+{
+	byte unknown0[0xC];
+	/* the players of this console; NONE where there is none */
+	long local_players[MAXIMUM_LOCAL_PLAYERS];
+};
+
+/* 0x00510c94 points to it: where the text of the messages comes from. What
+it is is not known */
+struct unknown_00510c94
+{
+	byte unknown0[0x3FC];
+	long unknown3FC;
+};
 
 /* 0x00510c50 points to it. What it is is not known */
 struct unknown_00510c50
@@ -131,6 +168,12 @@ long unknown_00510560;
 
 /* 0x00510c50 */
 struct unknown_00510c50 *unknown_00510c50;
+
+/* 0x004e8c20 */
+struct players_globals *players_globals;
+
+/* 0x00510c94 */
+struct unknown_00510c94 *unknown_00510c94;
 
 /* 0x004ed39d, 0x004e6470 and 0x004e64a0: what else main_action_pending
 looks at; and 0x0055c14c, what main_cancel_map_copy_and_wait waits for. What
@@ -324,7 +367,7 @@ void main_loop_body(
 	}
 	if (main_globals.unknown4E)
 	{
-		unknown_0012bdf0();
+		main_unknown4E_private();
 	}
 
 	unknown_00124950();
@@ -417,6 +460,108 @@ void main_revert_map_private(
 	main_globals.revert_flag0= FALSE;
 	main_globals.revert_flag1= FALSE;
 	main_globals.revert_map= FALSE;
+}
+
+static inline __attribute__((always_inline)) void main_get_message(
+	unsigned long string_id,
+	wchar *text)
+{
+	text[0]= 0;
+	if (unknown_00510c94 && unknown_00510c94->unknown3FC!=NONE)
+	{
+		hud_get_text(string_id, text);
+	}
+}
+
+static inline __attribute__((always_inline)) long main_first_local_player(
+	void)
+{
+	long index;
+
+	for (index= 0; index<MAXIMUM_LOCAL_PLAYERS; index++)
+	{
+		if (players_globals->local_players[index]!=NONE)
+		{
+			return index;
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x0012bb20: makes a checkpoint, and tells each player of this console, in
+the campaign */
+void main_save_map_private(
+	void)
+{
+	if (main_game_globals && main_game_globals->active)
+	{
+		game_state_save();
+	}
+
+	if (main_game_globals->options.game_mode==_game_mode_campaign)
+	{
+		long index;
+
+		hud_messages_unknown_0024cdaf();
+		for (index= 0; index<MAXIMUM_LOCAL_PLAYERS; index++)
+		{
+			if (players_globals->local_players[index]!=NONE)
+			{
+				wchar text[HUD_MESSAGE_LENGTH];
+
+				main_get_message(_string_id_hud_autosave_end, text);
+				hud_print_message(index, text);
+			}
+		}
+	}
+	main_globals.save_map= FALSE;
+}
+
+/* 0x0012bd40: makes another structure bsp of the scenario the one that is
+loaded, and tells the first player of this console, in the campaign */
+void main_switch_structure_bsp_private(
+	void)
+{
+	boolean switched= scenario_switch_structure_bsp((unsigned short)main_globals.switch_structure_bsp_index, TRUE);
+
+	if (main_game_globals->options.game_mode==_game_mode_campaign)
+	{
+		wchar text[HUD_MESSAGE_LENGTH];
+		long local_player_index;
+
+		hud_messages_unknown_0024cdaf();
+		local_player_index= main_first_local_player();
+		main_get_message(_string_id_hud_loading_end, text);
+		hud_print_message(local_player_index, text);
+	}
+	if (!switched)
+	{
+		unknown_0018efa0();
+	}
+	main_globals.switch_structure_bsp= FALSE;
+	main_globals.switch_structure_bsp_index= NONE;
+}
+
+/* 0x0012bdf0: does something that is not known and tells the first player of
+this console that the game was saved, in the campaign */
+void main_unknown4E_private(
+	void)
+{
+	unknown_00190e37();
+	main_globals.unknown4E= FALSE;
+
+	if (main_game_globals && main_game_globals->active &&
+		main_game_globals->options.game_mode==_game_mode_campaign)
+	{
+		wchar text[HUD_MESSAGE_LENGTH];
+		long local_player_index;
+
+		hud_messages_unknown_0024cdaf();
+		local_player_index= main_first_local_player();
+		main_get_message(_string_id_hud_saving_end, text);
+		hud_print_message(local_player_index, text);
+	}
 }
 
 /* 0x0012ba90: starts the map again, if a game goes on and its time is not

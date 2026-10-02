@@ -1,26 +1,159 @@
 /*
 SCENARIO.C
 
-Decompiled from halo2ship.exe (Xbox, build 02.09.27.09809).
+Decompiled from halo2ship.exe (Xbox, build 02.09.27.09809). Each function
+gives the address it has there.
+
+The scenario that is loaded and its structure bsp. The names are those of
+Halo 1's scenario.c.
 */
 
 #include "scenario.h"
 
+#include "cache/cache_files.h"
+#include "game/game.h"
+#include "main/main.h"
+#include "scenario/scenario_definitions.h"
+
+/* ---------- prototypes of functions not decompiled yet */
+
+/* 0x0016e2c0: does something with each element of a block of a structure
+bsp that was just loaded */
+void unknown_0016e2c0(long structure_bsp_tag_index);
+
 /* ---------- constants */
 
-#define NONE -1
+enum
+{
+	/* in a structure bsp, the address of its collision bsp */
+	STRUCTURE_BSP_COLLISION_BSP_OFFSET= 0x18
+};
 
 /* ---------- globals */
 
 /* 0x004686c0: the tag index of the scenario; NONE if there is none */
 long global_scenario_index= NONE;
 
-/* 0x004686c4: which structure bsp of the scenario is loaded. The name is
-that of Halo 1's variable */
-short global_structure_bsp_index;
+/* 0x004686c4: which structure bsp of the scenario is loaded; NONE if none
+is */
+short global_structure_bsp_index= NONE;
 
 /* 0x004e0350: the scenario tag */
 struct scenario *global_scenario;
 
 /* 0x004e034c: the globals tag of the cache file */
 struct game_globals *global_game_globals;
+
+/* 0x004e0348, 0x004e0344, 0x004e0340 and 0x004e033c: the structure bsp that
+is loaded, its lightmap, and its collision bsp twice. In Halo 1 the last is
+the bsp3d of the collision bsp; here it gets the same address, and its name
+is a guess */
+void *global_structure_bsp;
+void *global_structure_lightmap;
+void *global_collision_bsp;
+void *global_bsp3d;
+
+/* ---------- code */
+
+static inline __attribute__((always_inline)) void scenario_structure_bsp_globals_clear(
+	void)
+{
+	global_structure_bsp= NULL;
+	global_structure_lightmap= NULL;
+	global_collision_bsp= NULL;
+	global_bsp3d= NULL;
+}
+
+/* 0x0011c1b0: makes a structure bsp of the scenario the one that is loaded,
+or none of them with NONE; whether it is done. The parts of the game are told
+before, take down what they have of the old one, and set up for the new
+one */
+boolean scenario_switch_structure_bsp(
+	long structure_bsp_index,
+	long unload_old)
+{
+	const struct tag_block *structure_bsps=
+		(const struct tag_block *)((const byte *)global_scenario+SCENARIO_STRUCTURE_BSPS_OFFSET);
+	short game_structure_bsp_index= main_game_globals->structure_bsp_index;
+	short index= (short)structure_bsp_index;
+	boolean result= TRUE;
+	long system_index;
+
+	if (index!=NONE && (index<0 || index>=structure_bsps->count))
+	{
+		return FALSE;
+	}
+	if (global_structure_bsp_index==index && game_structure_bsp_index==index)
+	{
+		return TRUE;
+	}
+
+	for (system_index= 0; system_index<NUMBER_OF_GAME_SYSTEMS; system_index++)
+	{
+		if (game_systems[system_index].prepare_for_new_structure_bsp)
+		{
+			game_systems[system_index].prepare_for_new_structure_bsp(structure_bsp_index);
+		}
+	}
+
+	if (game_structure_bsp_index!=NONE && game_structure_bsp_index!=index)
+	{
+		game_dispose_from_old_structure_bsp();
+		game_structure_bsp_index= main_game_globals->structure_bsp_index;
+	}
+
+	if (global_structure_bsp_index!=NONE && global_structure_bsp_index!=index)
+	{
+		if ((byte)unload_old)
+		{
+			cache_file_structure_bsp_unload(
+				&((const struct scenario_structure_bsp_reference *)(uintptr_t)structure_bsps->address)
+					[global_structure_bsp_index]);
+		}
+		global_structure_bsp_index= NONE;
+		scenario_structure_bsp_globals_clear();
+	}
+
+	if (global_structure_bsp_index!=index)
+	{
+		const struct scenario_structure_bsp_reference *reference=
+			&((const struct scenario_structure_bsp_reference *)(uintptr_t)structure_bsps->address)[index];
+
+		scenario_structure_bsp_globals_clear();
+		global_structure_bsp_index= index;
+		if (cache_file_structure_bsp_load(reference))
+		{
+			unknown_0016e2c0((long)reference->structure_bsp.index);
+			if (reference->structure_lightmap.index!=(uint32_t)NONE)
+			{
+				global_structure_lightmap=
+					(void *)(uintptr_t)global_tag_instances[reference->structure_lightmap.index&0xFFFF].address;
+			}
+			else
+			{
+				global_structure_lightmap= NULL;
+			}
+			global_structure_bsp=
+				(void *)(uintptr_t)global_tag_instances[reference->structure_bsp.index&0xFFFF].address;
+			global_collision_bsp= *(void **)((byte *)global_structure_bsp+STRUCTURE_BSP_COLLISION_BSP_OFFSET);
+			global_bsp3d= global_collision_bsp;
+		}
+		else
+		{
+			/* the parts of the game are not set up for a structure bsp
+			that is not there */
+			global_structure_bsp_index= NONE;
+			main_time_skip();
+			return FALSE;
+		}
+	}
+
+	if (game_structure_bsp_index!=index)
+	{
+		game_initialize_for_new_structure_bsp();
+	}
+	/* the time that loading took is not a part of the next frame */
+	main_time_skip();
+
+	return result;
+}

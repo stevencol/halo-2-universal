@@ -2,6 +2,55 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — El cambio de bsp y las acciones del bucle
+
+Cómo el juego cambia la parte del nivel que tiene cargada (el bsp), y tres
+de las acciones que el bucle principal atiende entre fotogramas. De 226
+funciones se pasa a 231, el 2,05 % de las del juego (el 0,944 % de sus
+bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `scenario_switch_structure_bsp` | `0x0011c1b0` | `scenario/scenario.c` |
+| `cache_file_structure_bsp_unload` | `0x00122bc0` | `cache/cache_files.c` |
+| `main_save_map_private` | `0x0012bb20` | `main/main.c` |
+| `main_switch_structure_bsp_private` | `0x0012bd40` | `main/main.c` |
+| `main_unknown4E_private` | `0x0012bdf0` | `main/main.c` |
+
+- `tests/test_scenario_switch.py`.
+- `ESTADO.md` (lista de lo hecho y lo que falta) y
+  `tools/mutation_check.py`, del paso anterior, se mantienen al día desde
+  aquí.
+
+### Lo que se sabe
+
+- Cambiar de bsp, por orden: avisar a cada parte del juego; desmontar lo
+  que las partes tienen del bsp viejo; olvidar el bsp viejo; leer el nuevo
+  del disco; apuntar las variables globales (bsp, mapa de luces, bsp de
+  colisión); y preparar las partes para el nuevo. Si la lectura falla, el
+  juego se queda sin bsp y las partes no se preparan.
+- El tiempo que tarda la carga no cuenta en el fotograma siguiente.
+- Las tres acciones muestran un mensaje al jugador en la campaña. Sus
+  textos son `hud_autosave_end` (punto de control hecho),
+  `hud_loading_end` (carga terminada) y `hud_saving_end` (guardado
+  terminado); los nombres salen de la tabla de cadenas de los mapas.
+- Al guardar, el mensaje va a cada jugador de la consola; en las otras
+  dos, solo al primero.
+
+### Sin comprobar
+
+- En `scenario_switch_structure_bsp`, poner a cero el mapa de luces cuando
+  el bsp no tiene: el juego lo hace, pero ya estaba a cero.
+- `main_save_map_private` y `main_switch_structure_bsp_private` con el
+  juego sin preparar (`main_game_globals` nulo): el juego original lee de
+  la dirección cero, así que no se puede probar.
+
+### Pendiente
+
+- La acción `0x0012bbd0`, que abre pantallas de la interfaz.
+
 ## 2026-10-01 — Un fotograma del juego y su reloj
 
 Lo que el bucle principal hace en cada fotograma, y la función que calcula

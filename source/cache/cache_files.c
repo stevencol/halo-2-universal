@@ -47,6 +47,11 @@ long GetTickCount(void);
 /* 0x002d1d66 */
 void SetLastError(uint32_t error);
 
+/* ---------- prototypes of functions not decompiled yet */
+
+/* 0x0012e150: lets go of what the game keeps for a tag, as its textures */
+void unknown_0012e150(long tag_index);
+
 /* ---------- constants */
 
 #define GENERIC_READ 0x80000000
@@ -1609,6 +1614,21 @@ uint8_t cache_file_structure_bsp_load(
 	}
 
 	return 1;
+}
+
+/* 0x00122bc0: forgets the structure bsp of the scenario that is loaded: its
+tag and that of its lightmap have no address. The name is a guess */
+void cache_file_structure_bsp_unload(
+	const struct scenario_structure_bsp_reference *reference)
+{
+	unknown_0012e150((long)reference->structure_bsp.index);
+	global_tag_instances[(short)reference->structure_bsp.index].address= 0;
+	if (reference->structure_lightmap.index!=(uint32_t)NONE)
+	{
+		unknown_0012e150((long)reference->structure_lightmap.index);
+		global_tag_instances[(short)reference->structure_lightmap.index].address= 0;
+	}
+	cache_file_globals.structure_bsp_header= NULL;
 }
 
 /* 0x00122cf0: for binary_search; the tag groups are in the order of their

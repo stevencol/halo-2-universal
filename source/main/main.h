@@ -44,6 +44,7 @@ struct main_globals
 	/* the two flags that game_state_revert gets */
 	boolean revert_flag0;
 	boolean revert_flag1;
+	/* shows that the game was saved; what else it does is not known */
 	boolean unknown4E;
 	byte pad4F;
 	short switch_structure_bsp_index;
@@ -102,6 +103,9 @@ void main_loop_body(void);
 void main_time_initialize(void);
 float main_time_update(void);
 void main_revert_map_private(void);
+void main_save_map_private(void);
+void main_switch_structure_bsp_private(void);
+void main_unknown4E_private(void);
 void main_reset_map_private(void);
 void main_revert_map_if_possible_private(void);
 boolean main_action_pending(void);

@@ -378,6 +378,7 @@ uint8_t scenario_load(const char *scenario_name);
 void scenario_tags_unload(void);
 uint8_t cache_file_blocking_read(long unknown, uint32_t offset, void *buffer, long size);
 uint8_t cache_file_structure_bsp_load(const struct scenario_structure_bsp_reference *reference);
+void cache_file_structure_bsp_unload(const struct scenario_structure_bsp_reference *reference);
 struct cache_file_tag_group *cache_file_tag_group_get(uint32_t group_tag);
 void *tag_get(uint32_t group_tag, long tag_index);
 long tag_iterator_next(struct tag_iterator *iterator);

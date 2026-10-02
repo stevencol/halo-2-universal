@@ -231,7 +231,7 @@ address,name,source,arguments,returns,convention
 00199540,game_state_call_after_load_procs,source/saved games/game_state.c,ebx,void
 001384a0,game_options_match,,stack stack,bool
 00138180,game_options_verify,,stack,bool
-0011c1b0,scenario_switch_structure_bsp,,stack stack,bool
+0011c1b0,scenario_switch_structure_bsp,source/scenario/scenario.c,stack stack,bool
 001c3540,unknown_001c3540,,stack,void
 00068090,unknown_00068090,,stack,void
 0016eff0,unknown_0016eff0,,stack,void
@@ -475,11 +475,11 @@ address,name,source,arguments,returns,convention
 002237d4,unknown_002237d4,,,void
 0018f1c0,unknown_0018f1c0,,stack,void
 0018e810,unknown_0018e810,,,void
-0012bd40,main_switch_structure_bsp_private,,,void
-0012bb20,main_save_map_private,,,void
+0012bd40,main_switch_structure_bsp_private,source/main/main.c,,void
+0012bb20,main_save_map_private,source/main/main.c,,void
 0012bbd0,unknown_0012bbd0,,,void
 00124380,game_state_load_core,,stack,void
-0012bdf0,unknown_0012bdf0,,,void
+0012bdf0,main_unknown4E_private,source/main/main.c,,void
 00124950,unknown_00124950,,,void
 00217c40,unknown_00217c40,,,void
 002164c0,unknown_002164c0,,eax stack,void
@@ -505,3 +505,11 @@ address,name,source,arguments,returns,convention
 00125b40,unknown_00125b40,,,void
 000681e0,unknown_000681e0,,,void
 00222d80,unknown_00222d80,,,void
+00122bc0,cache_file_structure_bsp_unload,source/cache/cache_files.c,edi,void
+0024cdaf,hud_messages_unknown_0024cdaf,,,void
+001a0180,hud_get_text,,edi stack,void
+0024cbee,hud_print_message,,eax stack,void
+0018efa0,unknown_0018efa0,,,void
+00190e37,unknown_00190e37,,,void
+0016e2c0,unknown_0016e2c0,,eax,void
+0012e150,unknown_0012e150,,ebx,void

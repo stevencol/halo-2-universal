@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-01, al terminar el hito 25.
+**Última actualización:** 2026-10-01, al terminar el hito 26.
 
 ## Dónde estamos
 
-- **226 funciones descompiladas de 11.265: el 2,01 % del juego** (el
-  0,910 % de los bytes de código).
-- Las 226 están comprobadas contra el ejecutable original
+- **231 funciones descompiladas de 11.265: el 2,05 % del juego** (el
+  0,944 % de los bytes de código).
+- Las 231 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último commit: `3c29e6c` *Decompile a frame of the game and its time*.
+- Último hito: *Decompile the change of structure bsp* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -77,7 +77,7 @@ Módulos (funciones hechas / archivo):
 - [ ] Objetos — `objects\objects.c` (7 de cientos)
 - [x] Hilo de tareas y tareas de archivo — `cseries\async.c` (29; quedan
       algunas tareas de archivo)
-- [x] Archivos de caché — `cache\cache_files.c` (45):
+- [x] Archivos de caché — `cache\cache_files.c` (46):
   - [x] acceso a los tags y carga de un mapa
   - [x] arranque (`cache_files_initialize`) y apertura de las copias
   - [x] copia de mapas al disco duro (máquina de 20 pasos)
@@ -87,18 +87,19 @@ Módulos (funciones hechas / archivo):
       (17; falta guardar/cargar núcleo y partida guardada)
 - [x] Arranque del juego — `shell\shell.c` (7)
 - [ ] Juego y tabla de sistemas — `game\game.c` (6)
-- [ ] Bucle principal — `main\main.c` (9):
+- [ ] Bucle principal — `main\main.c` (12):
   - [x] el bucle, un fotograma y el reloj
-  - [ ] guardar, cambiar de bsp y otras dos acciones pendientes
+  - [x] guardar, cambiar de bsp y avisar de que se guardó
+  - [ ] la acción `0x0012bbd0` (pantallas de la interfaz)
+- [ ] Escenario — `scenario\scenario.c` (1): cambiar de bsp
 - [ ] Memoria física — `memory\physical_memory.c` (1)
 - [ ] Varios — `cseries\cseries.c` (10)
 
 ## Siguiente paso (por orden de recomendación)
 
-- [ ] **Acciones del bucle que faltan:** guardar (`0x0012bb20`), cambiar de
-      bsp (`0x0012bd40`), `0x0012bbd0` y `0x0012bdf0`.
-- [ ] **`scenario_switch_structure_bsp`** (`0x0011c1b0`): carga un bsp y usa
-      las funciones de bsp de la tabla de sistemas.
+- [x] ~~Acciones del bucle: guardar, cambiar de bsp y `0x0012bdf0`~~ (hito
+      26; queda `0x0012bbd0`).
+- [x] ~~`scenario_switch_structure_bsp`~~ (hito 26).
 - [ ] **Rellenar filas de la tabla de sistemas** (`game_systems`,
       `0x00440dd8`, en `game\game.c`): son 68 sistemas y 166 funciones, de
       las que hay 5. Cada módulo que se descompile rellena su fila. Es el
