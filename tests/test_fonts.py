@@ -137,3 +137,44 @@ def run(t) -> None:
         # no pairs at all
         t.check("font_get_kerning", font([], {9}, ghost=(9, 4, 0x1234)), 9, 4)
         t.check("font_get_kerning", font([], {9}, ghost=(8, 4, 0x1234)), 9, 4)
+
+    # ---------- the pixels of a character
+
+    def coded(length: int) -> bytes:
+        """Bytes of pixels as a font has them: runs, single pixels, pairs and
+        new colours, of all kinds."""
+        data = bytearray()
+        while len(data) < length:
+            kind = random_.randrange(6)
+            if kind == 0:
+                # a new colour, with its two bytes
+                data += bytes([0]) + random_.randbytes(2)
+            elif kind == 1:
+                data.append(random_.choice((1, 2, 5, 0x3F, 0x20)))
+            elif kind == 2:
+                data.append(0x40 | random_.choice((0, 1, 2, 5, 0x3F)))
+            elif kind == 3:
+                data.append(0x80 | random_.getrandbits(6))
+            elif kind == 4:
+                data.append(0xC0 | random_.getrandbits(6))
+            else:
+                data.append(random_.getrandbits(8))
+        return bytes(data)
+
+    # every byte, alone and after a colour
+    for code in range(256):
+        for before in (b"", b"\x00\x12\x34"):
+            data = before + bytes([code])
+            t.check("font_character_decode_pixels", Buffer(data + random_.randbytes(4)), len(data), Buffer(random_.randbytes(0x100)))
+    for n in range(300):
+        length = random_.choice((0, 1, 2, 3, 8, 20, 40))
+        data = coded(length)
+        # a size that cuts a colour, and sizes that are not of anything
+        size = random_.choice((len(data), len(data), len(data), max(len(data) - 1, 0), 0, -1 & 0xFFFFFFFF, 0x80000000))
+        t.check(
+            "font_character_decode_pixels",
+            Buffer(data + random_.randbytes(4)),
+            size,
+            # with nowhere to write them, they are counted
+            0 if n % 5 == 4 else Buffer(random_.randbytes(0x1500)),
+        )

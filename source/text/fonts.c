@@ -115,3 +115,99 @@ short font_get_kerning(
 
 	return font->kerning_pairs[index].offset;
 }
+
+/* a pixel of a character: 4 bits of how opaque it is, from 3, and a colour
+of 12 bits */
+static inline __attribute__((always_inline)) word font_pixel(
+	unsigned long alpha,
+	word color)
+{
+	return (word)((((alpha&1)|(alpha<<1))<<12)|color);
+}
+
+/* 0x00122610: the pixels of a character, from how they are in the file of a
+font. How many there are: they are written only if there is where to.
+
+Each byte is one of four things, by its two high bits: 0, so many pixels
+that are clear, and with none, a new colour, which is in the two bytes that
+follow and is a pixel as it is; 1, so many pixels that are opaque; 2, a pixel
+of an opacity and a few after it, clear or opaque; 3, two pixels, each of its
+opacity. The colour is white until another is set */
+long font_character_decode_pixels(
+	const byte *source,
+	long size,
+	word *pixels)
+{
+	word color= FONT_PIXEL_COLOR_MASK;
+	long count= 0;
+
+	while (size>0)
+	{
+		unsigned long code= *source;
+		unsigned long kind= code>>6;
+		long advance= 1;
+		long run= 0;
+		word pixel= 0;
+
+		if (kind<=_font_pixels_opaque_run)
+		{
+			run= (long)(code&0x3F);
+			if (!run && kind==_font_pixels_clear_run)
+			{
+				word value= (word)((source[1]<<8)|source[2]);
+
+				color= value&FONT_PIXEL_COLOR_MASK;
+				if (pixels)
+				{
+					*pixels++= value;
+				}
+				count++;
+				advance= 3;
+			}
+			else
+			{
+				pixel= font_pixel(kind==_font_pixels_clear_run ? 0 : FONT_PIXEL_MAXIMUM_ALPHA, color);
+			}
+		}
+		else if (kind==_font_pixels_one_and_run)
+		{
+			static const byte runs[8]= { 0, 4, 3, 2, 5, 4, 3, 2 };
+
+			if (pixels)
+			{
+				*pixels++= font_pixel((code>>3)&FONT_PIXEL_MAXIMUM_ALPHA, color);
+			}
+			count++;
+			run= runs[code&7];
+			/* the first three are opaque, and the others clear */
+			pixel= (code&7)>=1 && (code&7)<=3 ? (word)(color|0xF000) : color;
+		}
+		else
+		{
+			if (pixels)
+			{
+				*pixels++= font_pixel((code>>3)&FONT_PIXEL_MAXIMUM_ALPHA, color);
+				*pixels++= font_pixel(*source&FONT_PIXEL_MAXIMUM_ALPHA, color);
+			}
+			count+= 2;
+		}
+		if (run>0)
+		{
+			if (pixels)
+			{
+				long index;
+
+				for (index= 0; index<run; index++)
+				{
+					pixels[index]= pixel;
+				}
+				pixels+= run;
+			}
+			count+= run;
+		}
+		size-= advance;
+		source+= advance;
+	}
+
+	return count;
+}

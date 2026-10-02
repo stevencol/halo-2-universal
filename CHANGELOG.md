@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Los píxeles de un carácter: `font_cache.c`, completo
+
+Dos funciones. De 617 funciones se pasa a 619, el 5,49 % de las del juego
+(el 2,729 % de sus bytes). Con ellas están las 28 funciones de
+`font_cache.c`.
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `font_character_decode_pixels` | `0x00122610` | `text/fonts.c` |
+| `font_character_get_pixels` | `0x00140960` | `text/font_cache.c` |
+
+### Lo que se sabe
+
+- En el archivo de una fuente los píxeles de un carácter están **comprimidos
+  por tramos**. Cada píxel es un color de 12 bits y una opacidad; en el
+  archivo la opacidad tiene 3 bits y al descomprimir pasa a 4 (repitiendo el
+  bit bajo). Cada byte es una de cuatro cosas, según sus dos bits altos:
+  - `00`: tantos píxeles transparentes como digan los otros 6 bits; con
+    cero, un **color nuevo**, que viene en los dos bytes siguientes y cuenta
+    él mismo como un píxel;
+  - `01`: tantos píxeles opacos;
+  - `10`: un píxel con su opacidad y, detrás, de 0 a 5 opacos o
+    transparentes, según los tres bits bajos;
+  - `11`: dos píxeles, cada uno con su opacidad.
+  El color es blanco hasta que se pone otro.
+- La función cuenta los píxeles aunque no se le dé dónde escribirlos: sirve
+  para saber cuántos son.
+- Para dibujar un carácter se piden sus píxeles esperando por ellos, y se
+  descomprimen desde su bloque de la caché.
+
+### Mutaciones
+
+54 líneas rotas a propósito: las 54 detectadas.
+
 ## 2026-10-02 — Los caracteres que se esperan
 
 Dos funciones. De 615 funciones se pasa a 617, el 5,48 % de las del juego

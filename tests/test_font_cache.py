@@ -810,3 +810,30 @@ def run(t) -> None:
                 "datum_new": lambda harness, arguments, fresh=fresh: (fresh, ()),
             },
         )
+
+    # ---------- the pixels of a character, decoded
+
+    for n in range(120):
+        index = random_.randrange(CHARACTERS)
+        block = random_.randrange(BLOCKS) | random_.choice((0, 0x10000, 0xE1740000))
+        known = a_known(index, 4, block)
+        there = n % 4 != 3
+
+        def decode(harness, arguments):
+            source, size, pixels = arguments
+            return 0, (source, size, harness.normalize(pixels))
+
+        t.check(
+            "font_character_get_pixels",
+            index | random_.choice((0, 0, 0x10000, 0xE1740000)),
+            Buffer(random_.randbytes(0x20)),
+            globals={
+                "font_cache_globals+4": known,
+                "font_cache_globals+16": a_cache(),
+                "font_cache_globals+20": random_.choice((0, 0x80400000)),
+            },
+            externals={
+                "font_character_pixels_request": lambda harness, arguments, there=there: (there, tuple(arguments)),
+                "font_character_decode_pixels": decode,
+            },
+        )

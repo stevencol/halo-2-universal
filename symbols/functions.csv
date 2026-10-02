@@ -981,3 +981,5 @@ address,name,source,arguments,returns,convention
 001412c0,font_cache_block_wait,source/text/font_cache.c,eax stack,int
 00141350,font_character_pixels_new,source/text/font_cache.c,stack stack,bool
 00141480,font_cache_read,source/text/font_cache.c,eax ebx stack stack stack stack stack,int
+00122610,font_character_decode_pixels,source/text/fonts.c,ecx eax edx,int
+00140960,font_character_get_pixels,source/text/font_cache.c,eax stack,bool

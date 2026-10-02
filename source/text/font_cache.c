@@ -709,6 +709,26 @@ static inline __attribute__((always_inline)) byte *font_cache_block_address(
 		(blocks[block_index&0xFFFF].first_page_index<<(cache->page_size_bits&31));
 }
 
+/* 0x00140960: the pixels of a character, for which the game waits. Whether
+they are there */
+boolean font_character_get_pixels(
+	long character_index,
+	word *pixels)
+{
+	boolean loaded= font_character_pixels_request(character_index,
+		FLAG(_font_character_request_wait_bit)|FLAG(_font_character_request_new_bit));
+
+	if (loaded)
+	{
+		const struct font_character *character= font_character_get(character_index);
+
+		font_character_decode_pixels(font_cache_block_address(character->block_index), character->header.pixels_size,
+			pixels);
+	}
+
+	return loaded;
+}
+
 /* 0x001412c0: where the pixels of a block of the cache are, once they have
 been read: the game waits for them if it is to, hurrying the task that reads
 them. NULL if they are not there */

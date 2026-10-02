@@ -23,7 +23,22 @@ enum
 	FONT_DEFAULT_LINE_HEIGHT= 10,
 	/* the priority that the task that loads a font gets when the font is
 	asked for */
-	FONT_LOAD_PRIORITY= 6
+	FONT_LOAD_PRIORITY= 6,
+
+	/* a pixel of a character is a colour of 12 bits, and how opaque it is
+	in its 4 high bits; in the file, the opacity has 3 */
+	FONT_PIXEL_COLOR_MASK= 0xFFF,
+	FONT_PIXEL_MAXIMUM_ALPHA= 7
+};
+
+/* what a byte of the pixels of a character in the file is, by its two high
+bits */
+enum
+{
+	_font_pixels_clear_run,
+	_font_pixels_opaque_run,
+	_font_pixels_one_and_run,
+	_font_pixels_two
 };
 
 /* ---------- structures */
@@ -69,6 +84,7 @@ typedef char verify_font_kerning_characters_offset[
 struct font *font_get(long font_slot_index);
 long font_get_line_height(long font_index);
 short font_get_kerning(const struct font *font, unsigned long first, unsigned long second);
+long font_character_decode_pixels(const byte *source, long size, word *pixels);
 
 /* ---------- globals */
 

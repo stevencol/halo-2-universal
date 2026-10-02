@@ -187,6 +187,7 @@ long font_character_new(long font_slot_index, long character);
 long font_character_request(long font_index, long character, unsigned long flags);
 boolean font_character_pixels_request(long character_index, unsigned long flags);
 struct font_character_header *font_character_get_header(long character, long font_index, unsigned long flags);
+boolean font_character_get_pixels(long character_index, word *pixels);
 byte *font_cache_block_wait(long block_index, boolean wait);
 boolean font_character_pixels_new(long character_index, boolean wait);
 long font_cache_read(long font_slot_index, boolean *done, void *buffer, long size, uint32_t offset, long priority,
