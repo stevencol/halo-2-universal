@@ -598,3 +598,25 @@ address,name,source,arguments,returns,convention
 00223bb0,system_ticks_to_seconds,source/cseries/cseries.c,stack stack,real
 000359e0,bitmap_mipmap_count,,ecx eax stack stack stack stack,short
 001365a0,bitmap_row_size,,ecx esi,int
+0012d8b0,geometry_cache_new,source/cache/xbox_geometry_cache.c,,void
+0012d970,geometry_cache_delete,source/cache/xbox_geometry_cache.c,,void
+0012d9f0,geometry_cache_allocate_memory,source/cache/xbox_geometry_cache.c,stack,void
+0012dad0,geometry_cache_free_memory,source/cache/xbox_geometry_cache.c,,void
+0012daf0,geometry_cache_open,source/cache/xbox_geometry_cache.c,,void
+0012db40,geometry_cache_close,source/cache/xbox_geometry_cache.c,,void
+0012dba0,geometry_cache_reading_count,source/cache/xbox_geometry_cache.c,,int
+0012dc10,geometry_cache_update_predicted,source/cache/xbox_geometry_cache.c,,void
+0012dcb0,geometry_cache_block_predict,source/cache/xbox_geometry_cache.c,esi,bool
+0012dd80,geometry_cache_idle,source/cache/xbox_geometry_cache.c,,void
+0012ddd0,geometry_cache_block_delete,source/cache/xbox_geometry_cache.c,stack,void
+0012de70,geometry_cache_block_load,source/cache/xbox_geometry_cache.c,ecx eax,bool
+0012e0c0,geometry_cache_flush,source/cache/xbox_geometry_cache.c,,void
+0012e150,geometry_cache_delete_tag_blocks,source/cache/xbox_geometry_cache.c,ebx,void
+0012e210,geometry_cache_block_locked,source/cache/xbox_geometry_cache.c,stack,bool
+0012e290,geometry_cache_block_deleted,source/cache/xbox_geometry_cache.c,stack,void
+0012e3a0,geometry_cache_start_loading,source/cache/xbox_geometry_cache.c,eax stack stack stack,bool
+00223c70,geometry_block_attach_data,,stack edi,void
+00223d80,geometry_block_busy,,stack esi,bool
+00223e00,geometry_block_wait,,eax esi,void
+0012e480,unknown_0012e480,,,void
+002bcc80,unknown_002bcc80,,,void

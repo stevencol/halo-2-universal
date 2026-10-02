@@ -94,15 +94,16 @@ void animation_cache_new(
 	}
 }
 
-/* 0x00123230: takes the cache's memory, when a map is loaded: less if the
-screen is split. With 0x001232e0, in a table of those that take memory then
+/* 0x00123230: takes the cache's memory, when a map is loaded: less in all
+but two of the ways that the memory is shared out (the geometry cache has six
+of them). With 0x001232e0, in a table of those that take memory then
 (0x00453c00) */
 void ANIMATION_CACHE_CALLBACK animation_cache_allocate_memory(
-	long player_count)
+	long configuration)
 {
 	if (animation_cache_globals.cache)
 	{
-		if (player_count>1)
+		if (configuration>1)
 		{
 			animation_cache_globals.page_count= ANIMATION_CACHE_SIZE_SPLIT_SCREEN>>ANIMATION_CACHE_PAGE_SIZE_BITS;
 			animation_cache_globals.size= ANIMATION_CACHE_SIZE_SPLIT_SCREEN;

@@ -119,7 +119,7 @@ typedef char verify_animation_cache_globals_size[
 #define ANIMATION_CACHE_CALLBACK __attribute__((stdcall))
 
 void animation_cache_new(void);
-void ANIMATION_CACHE_CALLBACK animation_cache_allocate_memory(long player_count);
+void ANIMATION_CACHE_CALLBACK animation_cache_allocate_memory(long configuration);
 void animation_cache_free_memory(void);
 void animation_cache_delete(void);
 void animation_cache_open(void);

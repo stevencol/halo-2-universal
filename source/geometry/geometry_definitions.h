@@ -111,8 +111,15 @@ struct geometry_block_info
 	uint32_t resource_data_size;
 	struct tag_block resources; /* geometry_block_resource */
 	uint32_t owner_tag_index;
+	/* from this structure to the fields of the tag that say where the
+	geometry is, which the game sets when it is read */
 	int16_t owner_tag_section_offset;
-	uint8_t unknown1E[6];
+	/* what follows is the game's: the geometry is read and its tag knows
+	where it is; the flags of the geometry cache; its block of the cache
+	(NONE: not there) */
+	uint8_t loaded;
+	uint8_t flags;
+	uint32_t cache_block_index;
 };
 
 struct geometry_block_resource

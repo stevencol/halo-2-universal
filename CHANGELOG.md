@@ -2,6 +2,86 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — La caché de geometría
+
+La tercera caché que usa `lruv_cache.c`: la que trae del disco los vértices
+y los triángulos de los modelos y de los niveles. Halo 1 no la tiene; los
+nombres siguen los de su caché de texturas. De 315 funciones se pasa a 332,
+el 2,95 % de las del juego (el 1,454 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `geometry_cache_new` | `0x0012d8b0` | `cache/xbox_geometry_cache.c` |
+| `geometry_cache_delete` | `0x0012d970` | `cache/xbox_geometry_cache.c` |
+| `geometry_cache_allocate_memory` | `0x0012d9f0` | `cache/xbox_geometry_cache.c` |
+| `geometry_cache_free_memory` | `0x0012dad0` | `cache/xbox_geometry_cache.c` |
+| `geometry_cache_open` | `0x0012daf0` | `cache/xbox_geometry_cache.c` |
+| `geometry_cache_close` | `0x0012db40` | `cache/xbox_geometry_cache.c` |
+| `geometry_cache_reading_count` | `0x0012dba0` | `cache/xbox_geometry_cache.c` |
+| `geometry_cache_update_predicted` | `0x0012dc10` | `cache/xbox_geometry_cache.c` |
+| `geometry_cache_block_predict` | `0x0012dcb0` | `cache/xbox_geometry_cache.c` |
+| `geometry_cache_idle` | `0x0012dd80` | `cache/xbox_geometry_cache.c` |
+| `geometry_cache_block_delete` | `0x0012ddd0` | `cache/xbox_geometry_cache.c` |
+| `geometry_cache_block_load` | `0x0012de70` | `cache/xbox_geometry_cache.c` |
+| `geometry_cache_flush` | `0x0012e0c0` | `cache/xbox_geometry_cache.c` |
+| `geometry_cache_delete_tag_blocks` | `0x0012e150` | `cache/xbox_geometry_cache.c` |
+| `geometry_cache_block_locked` | `0x0012e210` | `cache/xbox_geometry_cache.c` |
+| `geometry_cache_block_deleted` | `0x0012e290` | `cache/xbox_geometry_cache.c` |
+| `geometry_cache_start_loading` | `0x0012e3a0` | `cache/xbox_geometry_cache.c` |
+
+- Archivos nuevos: `cache/geometry_cache.h`, `cache/xbox_geometry_cache.c`,
+  `tests/test_geometry_cache.py`.
+- Funciones que se suplen en las pruebas: `geometry_block_attach_data`
+  (`0x00223c70`), `geometry_block_busy` (`0x00223d80`),
+  `geometry_block_wait` (`0x00223e00`), `unknown_0012e480`.
+
+### Cambiado
+
+- `struct geometry_block_info`: los seis bytes del final son del juego:
+  `loaded`, `flags` y `cache_block_index`.
+- En la caché de animaciones, el argumento de
+  `animation_cache_allocate_memory` no es el número de jugadores sino el
+  reparto de memoria (`configuration`), el mismo que recibe la de geometría.
+
+### Lo que se sabe
+
+- La caché tiene 7 MB, o 6,5 MB en dos de los seis repartos de memoria (el 2
+  y el 4), en páginas de 4 KB, con hasta 512 bloques y 350 avisos. El juego
+  no comprueba que el reparto sea uno de los seis.
+- Cada bloque de geometría de un tag lleva al final si está leído, unos
+  indicadores y su bloque en la caché. Al leerse, una función apunta en el
+  tag dónde quedó la geometría; al echarlo, esos dos campos del tag se
+  ponen a cero.
+- Un bloque no se puede echar si se usó en este tick, si se está leyendo, o
+  si se usó hace menos de 5 ticks y la consola aún dibuja con él.
+- En esta versión el juego nunca espera por la geometría: hay un byte
+  (`0x00468c4c`) que lo impide, y está puesto. Lo que no está se pide y se
+  dibuja cuando llegue. La excepción es cuando el juego está leyendo todo
+  de una vez (al cargar un nivel): entonces sí espera, a toda la geometría o
+  solo a la de los niveles (los tags `sbsp` y `ltmp`).
+- Al subir la prioridad de una lectura ya empezada, la tarea pasa siempre a
+  prioridad 7, sea cual sea la nueva.
+- Cada fotograma se empiezan lecturas de la geometría avisada hasta tener 5
+  en marcha, si no hay más de 25 tareas pendientes.
+- `geometry_cache_delete_tag_blocks` saca de la caché toda la geometría de
+  un tag (lo usa quien descarga un tag).
+
+### Sin comprobar
+
+- Dos líneas que no cambian nada: poner `loaded` a falso tras echar el
+  bloque (ya lo hace la función que lo echa) y la comprobación de que la
+  geometría no estaba ya apuntada (no puede estarlo en ese punto).
+- `0x0012e480`, a la que se llama cada fotograma tras el trabajo de la
+  caché: se suple en las pruebas.
+
+### Mutaciones
+
+104 líneas rotas a propósito: 101 detectadas a la primera. De las otras 3,
+una dio un caso nuevo (un bloque al que aún no se le ha dado su geometría)
+y dos son las de «Sin comprobar».
+
 ## 2026-10-02 — La caché de texturas, segunda parte
 
 Lo que faltaba de `xbox_texture_cache.c`: cómo se piden y se leen los

@@ -83,3 +83,6 @@ address,name,source
 0046883c,texture_cache_low_detail,source/cache/xbox_texture_cache.c
 0046883d,texture_cache_full_detail,source/cache/xbox_texture_cache.c
 00485ae4,texture_cache_default_textures,source/cache/xbox_texture_cache.c
+004e648c,geometry_cache_globals,source/cache/xbox_geometry_cache.c
+00468c4c,geometry_cache_never_block,source/cache/xbox_geometry_cache.c
+0055e728,geometry_cache_warning_time,source/cache/xbox_geometry_cache.c
