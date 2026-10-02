@@ -2,6 +2,64 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — La memoria de los archivos guardados
+
+Siete funciones del principio de `saved_game_files.c`, que empieza antes
+de lo que se creía (`0x00215790`). De 522 funciones se pasa a 529, el
+4,70 % de las del juego (el 2,238 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `saved_game_files_update` | `0x00215790` | `saved games/saved_game_files.c` |
+| `saved_game_files_set_string_list` | `0x002157c0` | `saved games/saved_game_files.c` |
+| `saved_game_files_allocate_memory` | `0x002157e0` | `saved games/saved_game_files.c` |
+| `saved_game_files_free_memory` | `0x00215810` | `saved games/saved_game_files.c` |
+| `saved_game_files_new` | `0x00215880` | `saved games/saved_game_files.c` |
+| `saved_game_file_information_new` | `0x00215b40` | `saved games/saved_game_files.c` |
+| `saved_game_file_get_name` | `0x00215b50` | `saved games/saved_game_files.c` |
+
+### Cambiado
+
+- En la tabla de los que piden memoria al cargar un mapa
+  (`main_game_memory_users`), la pareja `unknown_00215810` /
+  `unknown_002157e0` es `saved_game_files_free_memory` /
+  `saved_game_files_allocate_memory`.
+
+### Corregido
+
+- **Solo hay una tabla de archivos**, no una por unidad como se dijo en el
+  hito 63. La memoria de los archivos mide 0x6BF00 bytes, y la cuenta sale
+  exacta con: los archivos de serie (0xBEF8), una tabla de 4.096 archivos
+  (0x40004), la sal de los índices (4) y el búfer de las copias (0x20000).
+  Eso explica también por qué la sal estaba «donde estaría la cuenta de la
+  segunda tabla» (hito 51): no hay segunda tabla. Los bits 4-7 del índice
+  de un archivo siguen siendo la unidad, pero para elegir tabla solo vale
+  la 0.
+
+### Lo que se sabe
+
+- La memoria de los archivos se pide al cargar un mapa en la configuración
+  de memoria 1, y se suelta con las demás. Antes de soltarla, el juego
+  guarda aparte lo que sabe de hasta cuatro archivos, para poder seguir
+  contestando por ellos sin la tabla.
+- La sal de los índices cambia cada vez que se pide la memoria (de 0 a
+  511): así un índice de archivo anterior ya no vale después.
+- El juego escribe la sal sin mirar si le dieron memoria: si no se la
+  dieran, escribiría en la dirección 0x4BEFC.
+- Al fijar la etiqueta de los textos, los archivos de serie se quedan en
+  uno solo: el perfil por defecto.
+- El nombre de un archivo de serie está dentro del propio archivo: a 8
+  bytes en un perfil y a 4 en una variante de juego.
+- `saved_game_files_update` es lo que el bucle principal tiene copiado
+  dentro de sí (ya estaba descompilado allí, sin saber que era una función
+  aparte).
+
+### Mutaciones
+
+57 líneas rotas a propósito: las 57 detectadas.
+
 ## 2026-10-02 — Los primeros pasos de un cambio de nombre
 
 Los dos pasos que la máquina de estados llamaba todavía por su dirección.

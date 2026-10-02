@@ -127,3 +127,6 @@ address,name,source
 00470054,saved_game_file_name_separator,source/saved games/saved_game_files.c
 0055c154,saved_game_files_last_error,source/saved games/saved_game_files.c
 00468710,player_color_default,source/saved games/player_profile.c
+0055c14e,saved_game_files_memory_allocated,source/saved games/saved_game_files.c
+0055c15c,saved_game_files_next_salt,source/saved games/saved_game_files.c
+004508fc,saved_game_files_allocation_functions,source/saved games/saved_game_files.c

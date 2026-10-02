@@ -634,8 +634,8 @@ address,name,source,arguments,returns,convention
 00081780,unknown_00081780,,stack,void,stdcall
 001a479a,user_interface_memory_pool_delete,source/interface/user_interface_memory.c,,void
 001a474c,user_interface_memory_pool_new,source/interface/user_interface_memory.c,stack,void
-00215810,unknown_00215810,,,void
-002157e0,unknown_002157e0,,stack,void,stdcall
+00215810,saved_game_files_free_memory,source/saved games/saved_game_files.c,,void
+002157e0,saved_game_files_allocate_memory,source/saved games/saved_game_files.c,stack,void
 000533e0,unknown_000533e0,,,void
 00053310,unknown_00053310,,stack,void,stdcall
 000b3db0,unknown_000b3db0,,,void
@@ -893,3 +893,10 @@ address,name,source,arguments,returns,convention
 002ad760,saved_game_file_description_get_path,source/saved games/saved_game_file_tasks.c,eax ecx,void
 002ad020,saved_game_file_rename_create,source/saved games/saved_game_file_tasks.c,stack,bool
 002ad220,saved_game_file_rename_open_copy,source/saved games/saved_game_file_tasks.c,edi stack,bool
+00215790,saved_game_files_update,source/saved games/saved_game_files.c,,void
+002157c0,saved_game_files_set_string_list,source/saved games/saved_game_files.c,eax,void
+00215880,saved_game_files_new,source/saved games/saved_game_files.c,ecx,void
+00215b40,saved_game_file_information_new,source/saved games/saved_game_files.c,ecx,pointer,thiscall
+00215b50,saved_game_file_get_name,source/saved games/saved_game_files.c,edx esi,pointer
+000531b0,unknown_000531b0,,ecx stack,int,stdcall
+00020670,unknown_00020670,,stack stack stack stack,void

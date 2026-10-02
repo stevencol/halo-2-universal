@@ -26,7 +26,7 @@ LANGUAGES = 9
 MEMORY_USERS = (
     ("unknown_00081f80", "unknown_00081780"),
     ("user_interface_memory_pool_delete", "user_interface_memory_pool_new"),
-    ("unknown_00215810", "unknown_002157e0"),
+    ("saved_game_files_free_memory", "saved_game_files_allocate_memory"),
     ("unknown_000533e0", "unknown_00053310"),
     ("unknown_000b3db0", "unknown_000b3d30"),
     ("unknown_0021ebe0", "unknown_0021ebc0"),

@@ -7,6 +7,7 @@ gives the address it has there.
 The names are guesses.
 */
 
+#include "saved games/saved_game_files.h"
 #include "text/unicode_string_list.h"
 #include "main_game.h"
 
@@ -38,8 +39,6 @@ long GetTickCount(void);
 takes it */
 void unknown_00081f80(void);
 void unknown_00081780(long configuration);
-void unknown_00215810(void);
-void unknown_002157e0(long configuration);
 void unknown_000533e0(void);
 void unknown_00053310(long configuration);
 void unknown_000b3db0(void);
@@ -154,7 +153,7 @@ struct main_game_memory_user main_game_memory_users[NUMBER_OF_MAIN_GAME_MEMORY_U
 {
 	{unknown_00081f80, (void (MAIN_GAME_CALLBACK *)(long))unknown_00081780},
 	{user_interface_memory_pool_delete, user_interface_memory_pool_new},
-	{unknown_00215810, (void (MAIN_GAME_CALLBACK *)(long))unknown_002157e0},
+	{saved_game_files_free_memory, saved_game_files_allocate_memory},
 	{unknown_000533e0, (void (MAIN_GAME_CALLBACK *)(long))unknown_00053310},
 	{unknown_000b3db0, (void (MAIN_GAME_CALLBACK *)(long))unknown_000b3d30},
 	{unknown_0021ebe0, (void (MAIN_GAME_CALLBACK *)(long))unknown_0021ebc0},

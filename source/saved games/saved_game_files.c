@@ -5,8 +5,9 @@ Decompiled from halo2ship.exe (Xbox, build 02.09.27.09809). Each function
 gives the address it has there.
 
 The files that the players keep: profiles, variants of the games and
-playlists. The names of the functions are guesses. Not here: most of the
-file, which goes from 0x002160b0 to 0x00217590.
+playlists. The names of the functions are guesses. The file goes from
+0x00215790 to 0x00217590; not here: 0x00215900, 0x00215c00, 0x00215e60,
+0x00215f40, 0x002164c0 and 0x002170e0.
 */
 
 #include "saved_game_files.h"
@@ -79,6 +80,47 @@ extern void *unknown_0051ea14;
 
 /* 0x0055c274 */
 struct saved_game_files_operation saved_game_files_operation;
+
+/* 0x0055c14d, 0x0055c150: the files can be looked for, and what there is to
+do with them: the first bit, to look for those of the drives (they are
+main.c's for now) */
+extern boolean unknown_0055c14d;
+extern unsigned long unknown_0055c150;
+
+/* 0x0055c14e: the memory of the files was asked for */
+boolean saved_game_files_memory_allocated;
+
+/* 0x0055c15c: the salt that the indices of the files get the next time that
+the memory is taken: one more each time, of 512 */
+long saved_game_files_next_salt;
+
+/* ---------- prototypes of functions that are not decompiled */
+
+/* 0x002164c0: looks for the files of the drives */
+void unknown_002164c0(long unknown, void *table);
+
+/* 0x000531b0: takes memory for what the allocation of the files asks */
+void *ALLOCATION_CONVENTION unknown_000531b0(struct allocation *allocation, unsigned long size);
+
+/* 0x00020670: calls a function with each of the elements of an array, as
+what makes them */
+void unknown_00020670(void *array, unsigned long size, long count,
+	void *(ALLOCATION_CONVENTION *constructor)(void *element));
+
+/* 0x004508fc: what the memory of the files is asked of. It gives nothing
+back */
+const struct allocation_functions saved_game_files_allocation_functions=
+{
+	unknown_000531b0,
+	(void (ALLOCATION_CONVENTION *)(struct allocation *, void *))no_operation1
+};
+
+/* what the memory is asked with: the functions, and a number for them */
+struct saved_game_files_allocation
+{
+	struct allocation allocation;
+	long unknown;
+};
 
 /* 0x0055c154: what the console's library said when a file could not be
 read or written */
@@ -1052,4 +1094,166 @@ void cached_saved_game_file_delete(
 			return;
 		}
 	}
+}
+
+/* 0x00215790: looks for the files of the drives, if it is to be done. The
+main loop has this in itself */
+void saved_game_files_update(
+	void)
+{
+	if (unknown_0055c14d && unknown_0051ea14 && (unknown_0055c150&FLAG(_saved_game_files_enumerate_bit)))
+	{
+		unknown_002164c0(0, (byte *)unknown_0051ea14+UNKNOWN_0051EA14_TABLES_OFFSET);
+		unknown_0055c150&= ~(unsigned long)FLAG(_saved_game_files_enumerate_bit);
+	}
+}
+
+/* 0x002157c0: tells which tag has the texts that name the types of files,
+if it is one, and has the files that come with the game be only the profile
+that the game gives a player who has none */
+void saved_game_files_set_string_list(
+	long string_list_index)
+{
+	if (string_list_index!=NONE)
+	{
+		saved_game_files_string_list_index= string_list_index;
+	}
+	if (unknown_0051ea14)
+	{
+		((struct built_in_saved_game_files *)unknown_0051ea14)->count= 0;
+		saved_game_files_add_default_profile();
+	}
+}
+
+/* 0x002157e0: takes the memory of the files, in the configuration of the
+memory of the game that has it. It is one of the users of the memory of
+main_game.c */
+void SAVED_GAME_FILES_CALLBACK saved_game_files_allocate_memory(
+	long configuration)
+{
+	if (configuration==_saved_game_files_memory_configuration)
+	{
+		struct saved_game_files_allocation allocation;
+
+		allocation.allocation.functions= &saved_game_files_allocation_functions;
+		allocation.unknown= SAVED_GAME_FILES_ALLOCATION_UNKNOWN;
+		saved_game_files_new(&allocation.allocation);
+	}
+	saved_game_files_memory_allocated= TRUE;
+}
+
+/* 0x00215810: lets go of the memory of the files. What it has of the few
+files that are kept apart is kept first */
+void saved_game_files_free_memory(
+	void)
+{
+	void *files= unknown_0051ea14;
+	struct saved_game_files_allocation allocation;
+
+	if (files)
+	{
+		long index;
+
+		for (index= 0; index<cached_saved_game_file_count; index++)
+		{
+			saved_game_file_get_information(&cached_saved_game_files[index].information,
+				cached_saved_game_files[index].file);
+		}
+		saved_game_files_cache_valid= TRUE;
+	}
+	allocation.allocation.functions= &saved_game_files_allocation_functions;
+	allocation.unknown= SAVED_GAME_FILES_ALLOCATION_UNKNOWN;
+	if (files)
+	{
+		saved_game_files_allocation_functions.deallocate(&allocation.allocation, files);
+		unknown_0051ea14= NULL;
+	}
+	saved_game_files_memory_allocated= FALSE;
+}
+
+/* 0x00215880: takes the memory of the files and sets it up: no file that
+comes with the game, none of a drive, and the salt of the indices. The game
+does not see whether there was memory before it writes the salt in it */
+void saved_game_files_new(
+	struct allocation *allocation)
+{
+	byte *files= allocation->functions->allocate(allocation, SAVED_GAME_FILES_MEMORY_SIZE);
+
+	if (files)
+	{
+		struct saved_game_file_table *table= (struct saved_game_file_table *)(files+UNKNOWN_0051EA14_TABLES_OFFSET);
+
+		((struct built_in_saved_game_files *)files)->count= 0;
+		table->count= 0;
+		unknown_00020670(table->files, sizeof(struct saved_game_file_information), MAXIMUM_SAVED_GAME_FILES_PER_TABLE,
+			(void *(ALLOCATION_CONVENTION *)(void *))saved_game_file_information_new);
+	}
+	else
+	{
+		files= NULL;
+	}
+	*(long *)(files+UNKNOWN_0051EA14_SALT_OFFSET)= saved_game_files_next_salt;
+	unknown_0051ea14= files;
+	saved_game_files_next_salt= (saved_game_files_next_salt+1)%(SAVED_GAME_FILE_INDEX_SALT_MASK+1);
+	unknown_0055c150= SAVED_GAME_FILES_INITIAL_FLAGS;
+}
+
+/* 0x00215b40: what the game knows of a file, before it knows anything */
+struct saved_game_file_information *ALLOCATION_CONVENTION saved_game_file_information_new(
+	struct saved_game_file_information *information)
+{
+	information->path[0]= 0;
+	information->name[0]= 0;
+
+	return information;
+}
+
+/* 0x00215b50: the name that the player gave a file: empty if the file is
+not known. Of one that comes with the game, the name is in the file */
+wchar *saved_game_file_get_name(
+	long file,
+	wchar *name)
+{
+	name[0]= 0;
+	if (unknown_0051ea14 && ((file>>_saved_game_file_index_built_in_bit)&1))
+	{
+		const struct built_in_saved_game_files *files= unknown_0051ea14;
+		long type= file&SAVED_GAME_FILE_INDEX_TYPE_MASK;
+		long place= (file>>SAVED_GAME_FILE_INDEX_FILE_SHIFT)&SAVED_GAME_FILE_INDEX_FILE_MASK;
+		const byte *data;
+
+		if (place>(long)((unsigned long)files->count-1))
+		{
+			return name;
+		}
+		data= files->files[place].data;
+		if (type==_saved_game_file_type_profile)
+		{
+			data+= offsetof(struct player_profile, name);
+		}
+		else if (type>=_saved_game_file_type_slayer && type<=_saved_game_file_type_territories)
+		{
+			data+= GAME_VARIANT_NAME_OFFSET;
+		}
+		else
+		{
+			return name;
+		}
+		wcsncpy(name, (const wchar *)data, SAVED_GAME_FILE_DISPLAY_NAME_LENGTH-1);
+		name[SAVED_GAME_FILE_DISPLAY_NAME_LENGTH-1]= 0;
+	}
+	else
+	{
+		struct saved_game_file_information information;
+
+		information.path[0]= 0;
+		information.name[0]= 0;
+		if (saved_game_file_get_information(&information, file))
+		{
+			wcsncpy(name, information.name, SAVED_GAME_FILE_DISPLAY_NAME_LENGTH-1);
+			name[SAVED_GAME_FILE_DISPLAY_NAME_LENGTH-1]= 0;
+		}
+	}
+
+	return name;
 }

@@ -6,7 +6,7 @@
 import random
 import struct
 
-from difftest import Buffer, GlobalData
+from difftest import Buffer, GlobalData, GlobalRange, Memory, Mock, mock_address
 from test_async import calls_so_far
 
 NONE = 0xFFFFFFFF
@@ -123,8 +123,9 @@ def run(t) -> None:
 
     BUILT_IN = 1 << 21
 
-    def index(unit: int, type_: int, file: int, built_in: int = 0, salt: int = 0, top: int = 0) -> int:
-        return unit | type_ << 4 | file << 8 | built_in << 21 | salt << 22 | top << 31
+    def index(type_: int, unit: int, file: int, built_in: int = 0, salt: int = 0, top: int = 0) -> int:
+        """The index of a file: its type, its drive, its place among those of the drive."""
+        return type_ | unit << 4 | file << 8 | built_in << 21 | salt << 22 | top << 31
 
     indices = [0, 1, NONE, BUILT_IN, BUILT_IN - 1, BUILT_IN + 1, 0x7FFFFFFF, 0x80000000, 0x80000000 | BUILT_IN]
     indices += [index(random_.randrange(16), random_.randrange(16), random_.randrange(0x2000), random_.getrandbits(1), random_.randrange(0x200), random_.getrandbits(1)) for _ in range(12)]
@@ -703,4 +704,110 @@ def run(t) -> None:
             "cached_saved_game_file_delete",
             file,
             globals=cache(1, random_.choice((4, 4, 3, 2, 1, 0, -1)), entries),
+        )
+
+    # ---------- the memory of the files
+
+    for can, files_, flags in ((1, 0x80100000, 1), (1, 0x80100000, 3), (0, 0x80100000, 1), (1, 0, 1), (1, 0x80100000, 2), (0x80, 0x80100000, 0xFFFFFFFF), (1, 0x80100000, 0)):
+        t.check(
+            "saved_game_files_update",
+            globals={"unknown_0055c14d": bytes([can]), "unknown_0051ea14": files_, "unknown_0055c150": flags},
+            externals={"unknown_002164c0": lambda harness, arguments: 0},
+        )
+
+    for string_list_index in (NONE, 0, 0x12340005):
+        for has_files in (1, 0):
+            t.check(
+                "saved_game_files_set_string_list",
+                string_list_index,
+                globals={
+                    "saved_game_files_string_list_index": random_.getrandbits(32),
+                    "unknown_0051ea14": Buffer(random_.randbytes(0x10)) if has_files else 0,
+                },
+                externals={"saved_game_files_add_default_profile": lambda harness, arguments: 0},
+            )
+
+    def new(harness, arguments):
+        # what the memory is asked with is in the stack: its functions, which
+        # are the game's or those of source/, and a number
+        functions, unknown = struct.unpack("<2I", harness.mu.mem_read(arguments[0], 8))
+        return 0, (harness.normalize(functions), unknown)
+
+    for configuration in (0, 1, 2, 5, NONE):
+        t.check(
+            "saved_game_files_allocate_memory",
+            configuration,
+            globals={
+                "saved_game_files_memory_allocated": bytes([random_.getrandbits(8)]),
+                "saved_game_files_allocation_functions": GlobalRange(8),
+            },
+            externals={"saved_game_files_new": new},
+        )
+
+    for n in range(30):
+        count = random_.choice((0, 1, 4, 4, 3, -1))
+        t.check(
+            "saved_game_files_free_memory",
+            globals={
+                "unknown_0051ea14": random_.choice((0x80100000, 0x80100000, 0)),
+                "cached_saved_game_file_count": count,
+                # the game tells of the few files that are kept by where they are kept
+                "cached_saved_game_files": GlobalData(random_.randbytes(4 * 0x44)),
+                "saved_game_files_cache_valid": bytes([random_.choice((0, 1))]),
+                "saved_game_files_memory_allocated": bytes([random_.getrandbits(8)]),
+            },
+            externals={"saved_game_file_get_information": lambda harness, arguments: 1},
+        )
+
+    MEMORY = 0x80100000
+    MEMORY_SIZE = 0x6BF00
+    for salt in (0, 1, 5, 0x1FE, 0x1FF, 0x200, 0x3FF, NONE, 0x80000000):
+        # what the memory is asked of: its functions are the test's
+        allocation = Buffer(struct.pack("<4I", 8, random_.getrandbits(32), mock_address(0), mock_address(1)), pointers=(0,))
+        t.check(
+            "saved_game_files_new",
+            allocation,
+            globals={
+                "saved_game_files_next_salt": salt,
+                "unknown_0055c150": random_.getrandbits(32),
+                "unknown_0051ea14": random_.getrandbits(32),
+            },
+            memory={MEMORY: Memory(random_.randbytes(MEMORY_SIZE))},
+            mocks=[Mock(lambda call: MEMORY, stack_arguments=1, registers=("ecx",))],
+            externals={"unknown_00020670": lambda harness, arguments: 0},
+        )
+
+    for _ in range(6):
+        t.check("saved_game_file_information_new", Buffer(random_.randbytes(INFORMATION)))
+
+    # ---------- the name of a file
+
+    def named_files(count: int, names: list) -> Buffer:
+        data = bytearray(struct.pack("<i", count) + random_.randbytes(len(names) * BUILT_IN_SIZE + 8))
+        for place, (profile_name, variant_name) in enumerate(names):
+            entry = 4 + place * BUILT_IN_SIZE + 4
+            data[entry + 8 : entry + 8 + len(wide(profile_name))] = wide(profile_name)
+            if variant_name is not None:
+                data[entry + 4 : entry + 4 + len(wide(variant_name))] = wide(variant_name)
+        return Buffer(bytes(data))
+
+    file_names = [("Default", None), ("", None), ("x" * 16, None), ("unused", "Team Slayer"), ("unused", "Rockets"), ("y" * 150, None), ("unused", "z" * 150)]
+    for place in range(len(file_names)):
+        for type_ in (0, 1, 5, 9, 10, 11, 15):
+            for count in (len(file_names), place, place + 1, 0, -1):
+                t.check(
+                    "saved_game_file_get_name",
+                    index(type_, random_.randrange(16), place, 1, random_.randrange(0x200), random_.getrandbits(1)),
+                    Buffer(random_.randbytes(0x108)),
+                    globals={"unknown_0051ea14": named_files(count, file_names)},
+                )
+    for n in range(40):
+        built = n % 4 == 3
+        t.check(
+            "saved_game_file_get_name",
+            index(random_.randrange(16), random_.randrange(16), random_.randrange(0x2000), built, random_.randrange(0x200)),
+            Buffer(random_.randbytes(0x108)),
+            # a file that comes with the game, with no memory for the files, is asked for as one of a drive
+            globals={"unknown_0051ea14": 0 if built else random_.choice((0, 0x80100000))},
+            externals={"saved_game_file_get_information": give(n % 5 != 4, 1, 0, random_.choice(short_directories))},
         )

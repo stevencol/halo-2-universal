@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 66.
+**Última actualización:** 2026-10-02, al terminar el hito 67.
 
 ## Dónde estamos
 
-- **522 funciones descompiladas de 11.265: el 4,63 % del juego** (el
-  2,222 % de los bytes de código).
-- Las 522 están comprobadas contra el ejecutable original
+- **529 funciones descompiladas de 11.265: el 4,70 % del juego** (el
+  2,238 % de los bytes de código).
+- Las 529 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the first steps of a rename* (ver `git log`).
+- Último hito: *Decompile the memory of the saved game files* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -81,9 +81,9 @@ Módulos (funciones hechas / archivo):
 - [x] Nombres por defecto de los archivos —
       `saved games\saved_game_file_names.c` (14, de `0x00217620` a
       `0x00217b70`)
-- [ ] Archivos de los jugadores — `saved games\saved_game_files.c` (35 de
-      37; va de `0x00216060` a `0x00217590`. Faltan las dos grandes:
-      `0x002164c0` (659 bytes) y `0x002170e0` (443 bytes))
+- [ ] Archivos de los jugadores — `saved games\saved_game_files.c` (42 de
+      48; va de `0x00215790` a `0x00217590`. Faltan `0x00215900`,
+      `0x00215c00`, `0x00215e60`, `0x00215f40`, `0x002164c0` y `0x002170e0`)
 - [ ] Tareas de los archivos de los jugadores —
       `saved games\saved_game_file_tasks.c` (18 de 20; el archivo va de
       `0x002accd0` a `0x002ae090`. Faltan `0x002ad7c0` y `0x002adb10`, el

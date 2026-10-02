@@ -14,6 +14,7 @@ names of the functions are guesses.
 
 #include "cseries/async.h"
 #include "game/game.h"
+#include "memory/data.h"
 #include "text/unicode.h"
 
 /* ---------- constants */
@@ -97,6 +98,20 @@ enum
 	SAVED_GAME_FILE_INFORMATION_NAME_OFFSET= 0x14,
 
 	MAXIMUM_SAVED_GAME_FILES_PER_TABLE= 4096,
+
+	/* the memory of the files: those that come with the game, one table of
+	those of a drive, the salt of the indices, and the buffer that a file is
+	copied with */
+	SAVED_GAME_FILES_MEMORY_SIZE= 0x6BF00,
+	/* the configuration of the memory of the game that has it */
+	_saved_game_files_memory_configuration= 1,
+	/* what the allocation of the memory is told with */
+	SAVED_GAME_FILES_ALLOCATION_UNKNOWN= 2,
+	/* what there is to do with the files when their memory is taken */
+	SAVED_GAME_FILES_INITIAL_FLAGS= 3,
+	_saved_game_files_enumerate_bit= 0,
+	/* a game variant has its name 4 bytes in, and a profile 8 */
+	GAME_VARIANT_NAME_OFFSET= 4,
 	MAXIMUM_BUILT_IN_SAVED_GAME_FILES= 101,
 
 	/* the name that the console shows of a file, with its end: that of its
@@ -224,6 +239,16 @@ struct saved_game_files_operation
 
 /* ---------- prototypes/SAVED_GAME_FILES.C */
 
+#define SAVED_GAME_FILES_CALLBACK __attribute__((stdcall))
+
+void saved_game_files_update(void);
+void saved_game_files_set_string_list(long string_list_index);
+void SAVED_GAME_FILES_CALLBACK saved_game_files_allocate_memory(long configuration);
+void saved_game_files_free_memory(void);
+void saved_game_files_new(struct allocation *allocation);
+struct saved_game_file_information *ALLOCATION_CONVENTION saved_game_file_information_new(
+	struct saved_game_file_information *information);
+wchar *saved_game_file_get_name(long file, wchar *name);
 char *saved_game_files_get_unit_root(long unit_index, char *root, short size);
 long saved_game_file_type_from_variant(const struct game_variant *variant);
 long saved_game_file_type_from_listed_game(long game);
@@ -316,6 +341,9 @@ long saved_game_file_name_length(const wchar *name);
 
 extern struct saved_game_files_operation saved_game_files_operation;
 extern boolean saved_game_files_cache_valid;
+extern boolean saved_game_files_memory_allocated;
+extern long saved_game_files_next_salt;
+extern const struct allocation_functions saved_game_files_allocation_functions;
 extern long saved_game_files_last_error;
 extern long saved_game_files_string_list_index;
 extern long saved_game_files_language;
