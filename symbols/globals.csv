@@ -139,3 +139,4 @@ address,name,source
 004687f0,font_directory,source/text/fonts.c
 004e7394,draw_string_bounds,source/text/draw_string.c
 004686cc,global_real_argb_white,source/math/real_math.c
+004b62a0,hardware_character_cache,source/rasterizer/rasterizer_text.c

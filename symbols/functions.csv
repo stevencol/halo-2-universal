@@ -993,3 +993,6 @@ address,name,source,arguments,returns,convention
 0013ef40,draw_string_measure_line,source/text/draw_string.c,eax stack stack stack,pair,stdcall
 0013f700,draw_string_draw_line,source/text/draw_string.c,eax ecx edx stack stack stack stack stack stack stack,void,stdcall
 001358e0,bitmap_2d_new,source/bitmaps/bitmaps.c,eax stack stack stack stack,pointer
+0001eff0,rasterizer_text_cache_initialize,source/rasterizer/rasterizer_text.c,,bool
+0001f2b0,rasterizer_text_cache_flush,source/rasterizer/rasterizer_text.c,,void
+0001d000,unknown_0001d000,,esi,bool

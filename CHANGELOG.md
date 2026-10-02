@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Hito 100: la caché de los caracteres que se pintan
+
+Dos funciones, en un archivo nuevo. De 629 funciones se pasa a 631, el
+5,60 % de las del juego (el 2,844 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `rasterizer_text_cache_initialize` | `0x0001eff0` | `rasterizer/rasterizer_text.c` |
+| `rasterizer_text_cache_flush` | `0x0001f2b0` | `rasterizer/rasterizer_text.c` |
+
+También el global `hardware_character_cache` (`0x004b62a0`).
+
+### Lo que se sabe
+
+- Los caracteres no se pintan desde la caché de píxeles de las fuentes, sino
+  desde **un solo bitmap de 256×256** (16 bits por píxel, 4 por canal) al
+  que se van copiando. Ese bitmap no tiene memoria propia para los píxeles:
+  solo existe como textura.
+- En él caben **512 caracteres** a la vez. Cada sitio guarda qué carácter
+  tiene y dónde están sus píxeles en el bitmap; son los «sitios de dibujo»
+  que ya usaba `font_cache.c`, y en el juego van a continuación de esta
+  estructura.
+- La estructura es la misma que la de Halo 1 (de ahí los nombres), con el
+  bitmap y la cantidad de sitios al doble.
+- Al empezar, todos los sitios quedan libres y el siguiente carácter irá al
+  píxel (1, 1). Si no se puede crear el bitmap, lo que había se queda como
+  estaba; si no se puede crear su textura, el bitmap no se devuelve.
+- Vaciar la caché deja libres todos los sitios y les quita el suyo a los
+  caracteres que lo tenían.
+
+### Mutaciones
+
+27 líneas rotas a propósito: las 27 detectadas.
+
 ## 2026-10-02 — Crear un bitmap
 
 Una función. De 628 funciones se pasa a 629, el 5,58 % de las del juego (el

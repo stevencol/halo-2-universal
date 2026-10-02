@@ -93,12 +93,6 @@ long font_character_find(
 	return index;
 }
 
-static inline __attribute__((always_inline)) struct font_character *font_character_get(
-	long character_index)
-{
-	return (struct font_character *)font_cache_globals.characters->data + (character_index&0xFFFF);
-}
-
 /* 0x00140cd0: the game forgets a character: its place among the pictures
 that are drawn is no one's, its pixels leave the cache, and it is taken out
 of the table and of the characters */

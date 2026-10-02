@@ -144,7 +144,9 @@ struct font_glyph_slot
 {
 	/* NONE if there is none */
 	long character_index;
-	byte unknown4[4];
+	/* where its pixels are in the bitmap of the pictures */
+	short x0;
+	short y0;
 };
 
 typedef char verify_font_character_size[
@@ -211,5 +213,14 @@ byte *font_cache_block_get_address(long block_index);
 
 extern struct font_cache_globals font_cache_globals;
 extern struct font_glyph_slot font_glyph_slots[NUMBER_OF_FONT_GLYPH_SLOTS];
+
+/* ---------- inline */
+
+/* what the game knows of a character, by its index */
+static inline __attribute__((always_inline)) struct font_character *font_character_get(
+	long character_index)
+{
+	return (struct font_character *)font_cache_globals.characters->data + (character_index&0xFFFF);
+}
 
 #endif
