@@ -40,6 +40,22 @@ enum
 /* does the work of a task, or a part of it, with the task's parameters */
 typedef long (ASYNC_CALLBACK *async_task_function)(void *parameters);
 
+/* a task whose parameters are a function and data for it */
+struct async_custom_task;
+typedef long (ASYNC_CALLBACK *async_custom_task_function)(struct async_custom_task *task, void *data, long size);
+
+enum
+{
+	ASYNC_CUSTOM_TASK_DATA_SIZE= 0x23
+};
+
+struct async_custom_task
+{
+	async_custom_task_function function;
+	byte data[ASYNC_CUSTOM_TASK_DATA_SIZE];
+	char size;
+};
+
 struct async_task
 {
 	/* the tasks with more are done first */
@@ -219,6 +235,9 @@ void async_thread_procedure(void);
 void async_thread_loop(void);
 
 uint32_t async_set_file_position(uint32_t file, long position);
+long ASYNC_CALLBACK async_custom_task_work(void *parameters);
+long async_task_add_custom(unsigned long size, async_custom_task_function function, const void *data, long priority,
+	byte *done);
 boolean async_read_goes_before(long next_priority, long task_priority, struct async_read_position_state *state,
 	async_task_function task_function, async_task_function next_function,
 	const struct async_read_parameters *next_parameters, const struct async_read_parameters *task_parameters);

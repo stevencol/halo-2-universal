@@ -857,10 +857,10 @@ address,name,source,arguments,returns,convention
 002162b0,saved_game_file_read_async,source/saved games/saved_game_files.c,eax edx ebx stack,bool
 002173d0,saved_game_file_write_async,source/saved games/saved_game_files.c,eax edi stack stack stack,bool
 00330df2,XCreateSaveGame,,stack stack stack stack stack stack,int
-002acd60,unknown_002acd60,,eax ecx edx esi stack,bool
-002acee0,unknown_002acee0,,eax ecx edx stack,bool
-002acf40,unknown_002acf40,,eax ecx edx,int
-002acf80,unknown_002acf80,,eax ecx stack stack stack stack,int
+002acd60,saved_game_file_read_task_new,source/saved games/saved_game_file_tasks.c,eax ecx edx esi stack,bool
+002acee0,saved_game_file_write_task_new,source/saved games/saved_game_file_tasks.c,eax ecx edx stack,bool
+002acf40,saved_game_file_description_new,source/saved games/saved_game_file_tasks.c,eax ecx edx,pointer
+002acf80,saved_game_file_description_new_renamed,source/saved games/saved_game_file_tasks.c,eax ecx stack stack stack stack,pointer
 00216440,saved_game_files_make_directory,source/saved games/saved_game_files.c,stack,bool
 00216760,saved_game_files_add_default_profile,source/saved games/saved_game_files.c,,void
 00217080,saved_game_files_add_built_in_variant,source/saved games/saved_game_files.c,stack,void
@@ -876,3 +876,8 @@ address,name,source,arguments,returns,convention
 001a0850,player_profile_read,source/saved games/player_profile.c,edx stack,bool
 001a08d0,async_set_file_position,source/cseries/async.c,edx ecx,int
 0019c1f0,unknown_0019c1f0,,stack,int
+001a17b0,async_custom_task_work,source/cseries/async.c,stack,int
+001a17d0,async_task_add_custom,source/cseries/async.c,eax edx stack stack ebx,int
+002accd0,saved_game_file_read_work,source/saved games/saved_game_file_tasks.c,stack stack stack,int
+002adf70,unknown_002adf70,,eax stack stack stack stack,void
+002acde0,unknown_002acde0,,stack stack stack,int,stdcall

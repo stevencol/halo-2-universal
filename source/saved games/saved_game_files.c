@@ -47,18 +47,6 @@ uint32_t XCreateSaveGame(const char *root, const wchar *name, uint32_t dispositi
 
 /* ---------- prototypes of functions that are not decompiled */
 
-/* 0x002acd60, 0x002acee0: give the read and the write of a file to the
-thread that does them. Whether it took them */
-boolean unknown_002acd60(void *buffer, unsigned long size, boolean unknown, struct saved_game_file_result *result,
-	const char *path);
-boolean unknown_002acee0(void *unknown, unsigned long size, boolean unknown2, struct saved_game_file_result *result);
-
-/* 0x002acf40, 0x002acf80: fill what is told of a file that is written: as
-it is, and with another name. NULL (0) if it cannot be */
-void *unknown_002acf40(void *description, long file, const struct saved_game_file_information *information);
-void *unknown_002acf80(long file, const wchar *name, void *description,
-	const struct saved_game_file_information *information, void *unknown,
-	struct saved_game_files_operation *operation);
 
 /* 0x002ada70, 0x002adec0: start to read and to write a file in two parts.
 Whether it was started */
@@ -939,7 +927,7 @@ boolean saved_game_file_read_async(
 	path[SAVED_GAME_FILE_PATH_LENGTH-1]= 0;
 	csstrcat256(path, saved_game_file_type_get_name(information.type));
 
-	return unknown_002acd60(buffer, size, FALSE, result, path);
+	return saved_game_file_read_task_new(buffer, size, FALSE, result, path);
 }
 
 /* 0x002173d0: starts to write a file of the players, which another thread
@@ -954,8 +942,9 @@ boolean saved_game_file_write_async(
 	struct saved_game_file_result *result)
 {
 	struct saved_game_file_information information;
-	void *description= (byte *)result+SAVED_GAME_FILE_RESULT_DESCRIPTION_OFFSET;
-	void *filled;
+	struct saved_game_file_description *description=
+		(struct saved_game_file_description *)((byte *)result+SAVED_GAME_FILE_RESULT_DESCRIPTION_OFFSET);
+	struct saved_game_file_description *filled;
 
 	information.path[0]= 0;
 	information.name[0]= 0;
@@ -972,19 +961,19 @@ boolean saved_game_file_write_async(
 			return FALSE;
 		}
 		saved_game_files_take_operation(file, &operation);
-		filled= unknown_002acf80(file, buffer, description, &information,
+		filled= saved_game_file_description_new_renamed(file, buffer, description, &information,
 			(byte *)unknown_0051ea14+UNKNOWN_0051EA14_UNKNOWN4BF00_OFFSET, operation);
 	}
 	else
 	{
-		filled= unknown_002acf40(description, file, &information);
+		filled= saved_game_file_description_new(description, file, &information);
 	}
 	if (!filled)
 	{
 		return FALSE;
 	}
 
-	return unknown_002acee0(unknown, size, FALSE, result);
+	return saved_game_file_write_task_new(unknown, size, FALSE, result);
 }
 
 /* 0x00216440: makes a directory, if it is not there. Whether it is there

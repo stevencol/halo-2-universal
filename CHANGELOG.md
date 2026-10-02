@@ -2,6 +2,56 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Las tareas de los archivos de los jugadores
+
+Cómo llegan al hilo de tareas las lecturas y escrituras de los archivos de
+los jugadores. De 502 funciones se pasa a 509, el 4,52 % de las del juego
+(el 2,123 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `async_custom_task_work` | `0x001a17b0` | `cseries/async.c` |
+| `async_task_add_custom` | `0x001a17d0` | `cseries/async.c` |
+| `saved_game_file_read_work` | `0x002accd0` | `saved games/saved_game_file_tasks.c` |
+| `saved_game_file_read_task_new` | `0x002acd60` | `saved games/saved_game_file_tasks.c` |
+| `saved_game_file_write_task_new` | `0x002acee0` | `saved games/saved_game_file_tasks.c` |
+| `saved_game_file_description_new` | `0x002acf40` | `saved games/saved_game_file_tasks.c` |
+| `saved_game_file_description_new_renamed` | `0x002acf80` | `saved games/saved_game_file_tasks.c` |
+
+- Archivos nuevos: `saved games/saved_game_file_tasks.c` y
+  `tests/test_saved_game_file_tasks.py`.
+- `struct async_custom_task` y `struct saved_game_file_description`.
+
+### Cambiado
+
+- Las cuatro funciones que `saved_game_files.c` llamaba por su dirección
+  (`unknown_002acd60`, `unknown_002acee0`, `unknown_002acf40`,
+  `unknown_002acf80`) tienen nombre y están descompiladas.
+
+### Lo que se sabe
+
+- Además de las tareas fijas de `async.c` (leer, escribir, copiar…), hay
+  una genérica: sus parámetros son una función y hasta 35 bytes de datos
+  para ella, que se copian. Así cualquier módulo puede mandar trabajo al
+  hilo de tareas sin que `async.c` lo conozca.
+- Si los datos no caben, esa función no hace nada y devuelve la dirección
+  de los datos en lugar de un identificador de tarea: quien la llama solo
+  comprueba que no sea -1, así que no se entera.
+- La lectura y la escritura de un archivo de los jugadores son tareas de
+  esas, de prioridad 2. Sus datos son un búfer, un tamaño, un indicador y
+  el resultado, que es también la bandera de «terminado» de la tarea.
+- El trabajo de una lectura empieza dando el archivo por no leído, con el
+  error 4, y lee del archivo cuya ruta va dentro del propio resultado.
+- De un archivo que se escribe se le dice al hilo qué archivo es y lo que
+  el juego sabe de él; si además cambia de nombre, el nombre nuevo, el
+  directorio que tenía y el turno de operaciones.
+
+### Mutaciones
+
+66 líneas rotas a propósito: las 66 detectadas.
+
 ## 2026-10-02 — Los perfiles de los jugadores
 
 Nueve funciones, casi todas de los perfiles. De 493 funciones se pasa a

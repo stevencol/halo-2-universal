@@ -10,6 +10,7 @@ names of the functions are guesses.
 #define __SAVED_GAME_FILES_H
 
 #include "cseries/cseries.h"
+#include "cseries/async.h"
 #include "game/game.h"
 #include "text/unicode.h"
 
@@ -131,6 +132,32 @@ struct built_in_saved_game_file
 	byte data[SAVED_GAME_FILE_PROFILE_SIZE];
 };
 
+/* what is told of a file that is written, to the thread that writes it. It
+is in the result of the write, after its first 8 bytes */
+struct saved_game_file_description
+{
+	long file;
+	struct saved_game_file_information information;
+	/* if the file gets another name */
+	wchar new_name[SAVED_GAME_FILE_NAME_LENGTH+1];
+	char old_path[0x14];
+	boolean renamed;
+	byte pad7B;
+	boolean unknown7C;
+	byte pad7D[3];
+	struct saved_game_files_operation *operation;
+	long unknown84;
+	long unknown88;
+	void *unknown8C;
+	long unknown90;
+	long unknown94;
+	long unknown98;
+	long unknown9C;
+};
+
+typedef char verify_saved_game_file_description_size[
+	sizeof(struct saved_game_file_description) == 0xA0 ? 1 : -1];
+
 /* the first of what the game knows of the files: those that come with it */
 struct built_in_saved_game_files
 {
@@ -210,6 +237,19 @@ boolean saved_game_auxiliary_read(void *header, long header_size, void *data, lo
 	struct saved_game_file_result *result, long saved_game);
 boolean saved_game_auxiliary_write(void *header, long header_size, void *data, long data_size,
 	struct saved_game_file_result *result, long saved_game);
+
+/* ---------- prototypes/SAVED_GAME_FILE_TASKS.C */
+
+long ASYNC_CALLBACK saved_game_file_read_work(struct async_custom_task *task, void *data, long size);
+boolean saved_game_file_read_task_new(void *buffer, unsigned long size, boolean unknown,
+	struct saved_game_file_result *result, const char *path);
+boolean saved_game_file_write_task_new(void *unknown, unsigned long size, boolean unknown2,
+	struct saved_game_file_result *result);
+struct saved_game_file_description *saved_game_file_description_new(struct saved_game_file_description *description,
+	long file, const struct saved_game_file_information *information);
+struct saved_game_file_description *saved_game_file_description_new_renamed(long file, const wchar *name,
+	struct saved_game_file_description *description, const struct saved_game_file_information *information,
+	void *unknown, struct saved_game_files_operation *operation);
 
 /* ---------- prototypes/SAVED_GAME_FILE_NAMES.C */
 

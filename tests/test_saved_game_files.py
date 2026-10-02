@@ -587,7 +587,7 @@ def run(t) -> None:
             globals={"unknown_0051ea14": 0 if built else random_.choice((0, 0x80100000))},
             externals={
                 "saved_game_file_get_information": give(n % 6 != 5, random_.choice((0, 1, 5, 10, 11, NONE)), random_.choice((0, 3, 8, 0xFE, 0xFF, 0xFF)), random_.choice(short_directories)),
-                "unknown_002acd60": take_read(random_.choice((0, 1, 1))),
+                "saved_game_file_read_task_new": take_read(random_.choice((0, 1, 1))),
             },
         )
 
@@ -618,15 +618,15 @@ def run(t) -> None:
                 "saved_game_file_get_information": information_,
                 "saved_game_file_name_differs": lambda harness, arguments, differs=differs: differs,
                 "saved_game_files_take_operation": take,
-                "unknown_002acf80": lambda harness, arguments, result=random_.choice((0, 0x1234, 0x1234)): (
+                "saved_game_file_description_new_renamed": lambda harness, arguments, result=random_.choice((0, 0x1234, 0x1234)): (
                     result,
                     (arguments[0], arguments[1], arguments[2], bytes(harness.mu.mem_read(arguments[3], INFORMATION)), arguments[4], arguments[5]),
                 ),
-                "unknown_002acf40": lambda harness, arguments, result=random_.choice((0, 0x1234, 0x1234)): (
+                "saved_game_file_description_new": lambda harness, arguments, result=random_.choice((0, 0x1234, 0x1234)): (
                     result,
                     (arguments[0], arguments[1], bytes(harness.mu.mem_read(arguments[2], INFORMATION))),
                 ),
-                "unknown_002acee0": lambda harness, arguments, result=random_.choice((0, 1, 1)): (
+                "saved_game_file_write_task_new": lambda harness, arguments, result=random_.choice((0, 1, 1)): (
                     result,
                     (arguments[0], arguments[1], arguments[2] & 0xFF, arguments[3]),
                 ),

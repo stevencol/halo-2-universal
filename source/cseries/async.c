@@ -1009,3 +1009,47 @@ uint32_t async_set_file_position(
 
 	return SetFilePointer(file, position, &position_high, FILE_BEGIN);
 }
+
+/* 0x001a17b0: does a task whose parameters are a function and data for it */
+long ASYNC_CALLBACK async_custom_task_work(
+	void *parameters)
+{
+	struct async_custom_task *task= parameters;
+
+	return task->function(task, task->data, task->size);
+}
+
+/* 0x001a17d0: makes a task of a function and so many bytes of data for it,
+which are copied; the task's id. With more data than a task has room for,
+nothing is done and what comes back is no id: it is where the data is. The
+name is a guess */
+long async_task_add_custom(
+	unsigned long size,
+	async_custom_task_function function,
+	const void *data,
+	long priority,
+	byte *done)
+{
+	struct async_custom_task custom;
+	struct async_task *task;
+
+	memset(&custom, 0, sizeof(custom));
+	if (size>ASYNC_CUSTOM_TASK_DATA_SIZE)
+	{
+		return (long)(uintptr_t)data;
+	}
+	custom.function= function;
+	memcpy(custom.data, data, size);
+	custom.size= (char)size;
+
+	async_globals.tasks_added++;
+	*done= FALSE;
+	task= async_task_allocate();
+	memcpy(task->parameters, &custom, sizeof(task->parameters));
+	task->done= done;
+	task->priority= priority;
+	task->function= async_custom_task_work;
+	task->category= 0;
+
+	return async_task_queue(task);
+}
