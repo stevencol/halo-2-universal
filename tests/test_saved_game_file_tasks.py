@@ -415,3 +415,35 @@ def run(t) -> None:
                 struct.pack_into("<I", data, 0x3C, type_)
                 data[0x7C] = debug
                 t.check("saved_game_file_description_get_path", Buffer(bytes(data)), Buffer(random_.randbytes(0x100)))
+
+    # ---------- the work of a write
+
+    for n in range(120):
+        done = random_.choice((1, 1, 0, 0x80))
+        error = random_.choice((0, 0, 0, 2, 4))
+
+        def step(harness, arguments, done=done, error=error):
+            # why it stopped is left in the stack
+            harness.mu.mem_write(arguments[1], struct.pack("<I", error))
+            return done, (arguments[0],)
+
+        def write_signed(harness, arguments):
+            file, buffer, size, unknown, result = arguments
+            # the reference of the file is in the stack
+            return 0, (bytes(harness.mu.mem_read(file, 0x108)), buffer, size, unknown & 0xFF, result)
+
+        result = bytearray(random_.randbytes(RESULT_SIZE))
+        # what is told of the file is after the first 8 bytes of the result
+        directory = random_.choice((b"u:\\udata\\4d\\AB\\", b"", b"d" * 0x13))
+        result[8 + 4 : 8 + 4 + 0x14] = (directory + bytes(0x14))[:0x14]
+        result[8 + 0x18 : 8 + 0x1A] = bytes(2)
+        struct.pack_into("<I", result, 8 + 0x3C, random_.choice((0, 1, 7, 10, 11)))
+        result[8 + 0x7C] = random_.choice((0, 0, 0, 1))
+        data = struct.pack("<2IB3sI", random_.getrandbits(32), random_.getrandbits(32), random_.getrandbits(8), random_.randbytes(3), 0x10)
+        t.check(
+            "saved_game_file_write_work",
+            random_.getrandbits(32),
+            Buffer(data + bytes(result), pointers=(0xC,)),
+            random_.getrandbits(32),
+            externals={"saved_game_file_rename_step": step, "saved_game_file_write_signed": write_signed},
+        )

@@ -6,8 +6,8 @@ gives the address it has there.
 
 The files of the players are read and written by the thread of the tasks of
 async.c: here is what gives it the tasks. The names of the file and of the
-functions are guesses. Not here: the work of a write (0x002acde0), and of
-what follows 0x002acf80 all but four functions.
+functions are guesses. Not here: 0x002ad020, 0x002ad220, 0x002ad7c0 and
+0x002adb10.
 */
 
 #include "saved_game_files.h"
@@ -142,9 +142,6 @@ where it is told */
 boolean unknown_002ad020(struct saved_game_file_description *description);
 boolean unknown_002ad220(struct saved_game_file_description *description, boolean *copy);
 
-/* 0x002acde0: the work of the task of a write */
-long ASYNC_CALLBACK unknown_002acde0(struct async_custom_task *task, void *data, long size);
-
 /* 0x002ad7c0, 0x002adb10: the work of the tasks that read and write the
 file of the state of a saved game */
 long ASYNC_CALLBACK unknown_002ad7c0(struct async_custom_task *task, void *data, long size);
@@ -220,7 +217,7 @@ boolean saved_game_file_write_task_new(
 	task.result= result;
 	result->progress= -1.0f;
 
-	return async_task_add_custom(sizeof(task), unknown_002acde0, &task, SAVED_GAME_FILE_TASK_PRIORITY,
+	return async_task_add_custom(sizeof(task), saved_game_file_write_work, &task, SAVED_GAME_FILE_TASK_PRIORITY,
 		(byte *)result)!=NONE;
 }
 
@@ -685,4 +682,47 @@ void saved_game_file_description_get_path(
 		path[SAVED_GAME_FILE_PATH_LENGTH-1]= 0;
 		csstrcat256(path, saved_game_file_type_get_name(type));
 	}
+}
+
+/* 0x002acde0: the work of the task of a write. First the file is given its
+new name, if it has one, a step each time the work is done: the work is not
+over until that is, and it is over at once if that fails. Then the file is
+written, with its signature */
+long ASYNC_CALLBACK saved_game_file_write_work(
+	struct async_custom_task *task,
+	void *data,
+	long size)
+{
+	struct saved_game_file_task *write= data;
+	struct saved_game_file_description *description=
+		(struct saved_game_file_description *)write->result->unknown8;
+	long error;
+
+	(void)task;
+	(void)size;
+
+	if (!saved_game_file_rename_step(description, &error))
+	{
+		if (error)
+		{
+			write->result->error= 0;
+
+			return 1;
+		}
+
+		return 0;
+	}
+	if (!error)
+	{
+		char path[SAVED_GAME_FILE_PATH_LENGTH];
+		struct file_reference file;
+
+		write->result->error= SAVED_GAME_FILE_ERROR_DEFAULT;
+		path[0]= 0;
+		saved_game_file_description_get_path(description, path);
+		file_reference_set_path(&file, path, FALSE);
+		saved_game_file_write_signed(&file, write->buffer, write->size, write->unknown8, write->result);
+	}
+
+	return 1;
 }

@@ -268,6 +268,7 @@ boolean saved_game_auxiliary_write(void *header, long header_size, void *data, l
 /* ---------- prototypes/SAVED_GAME_FILE_TASKS.C */
 
 long ASYNC_CALLBACK saved_game_file_read_work(struct async_custom_task *task, void *data, long size);
+long ASYNC_CALLBACK saved_game_file_write_work(struct async_custom_task *task, void *data, long size);
 boolean saved_game_file_read_task_new(void *buffer, unsigned long size, boolean unknown,
 	struct saved_game_file_result *result, const char *path);
 boolean saved_game_file_write_task_new(void *unknown, unsigned long size, boolean unknown2,

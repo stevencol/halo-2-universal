@@ -2,6 +2,33 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — El trabajo de la tarea que escribe un archivo
+
+Una función: lo que hace el hilo de tareas para escribir un archivo de los
+jugadores. De 519 funciones se pasa a 520, el 4,62 % de las del juego (el
+2,193 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `saved_game_file_write_work` | `0x002acde0` | `saved games/saved_game_file_tasks.c` |
+
+### Lo que se sabe
+
+- El trabajo de una tarea puede decir que no ha terminado (devuelve 0), y
+  entonces el hilo vuelve a llamarlo. Así se hace el cambio de nombre: un
+  paso por llamada, hasta que la máquina de estados dice que ha acabado.
+- Solo entonces se escribe el archivo, con su firma, en la ruta que da la
+  descripción.
+- Si el cambio de nombre falla, la tarea termina sin escribir nada y con el
+  error del resultado a 0: lo único que dice que salió mal es que no se
+  marca como bien hecha.
+
+### Mutaciones
+
+15 líneas rotas a propósito: las 15 detectadas.
+
 ## 2026-10-02 — Los pasos del cambio de nombre
 
 Dos funciones más de `saved_game_file_tasks.c`. De 517 funciones se pasa a
