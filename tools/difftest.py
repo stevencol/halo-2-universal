@@ -261,7 +261,8 @@ class Symbol:
     # where the executable's function takes each argument: a register or "stack"
     arguments: list[str]
     # int, bool, short, real, or void. The executable's function returns a
-    # real in the x87 register, or in an SSE register if it is "real:xmm0"
+    # real in the x87 register, or in an SSE register if it is "real:xmm0",
+    # or as its 32 bits in eax if it is "real:eax"
     returns: str
     # "thiscall" for a function of source/ that takes its first argument in ecx
     convention: str = ""
@@ -686,6 +687,8 @@ class Harness:
             return bool(eax & 0xFF)
         if returns == "short":
             return (eax & 0xFFFF) - (0x10000 if eax & 0x8000 else 0)
+        if returns == "real:eax":
+            return struct.unpack("<f", struct.pack("<I", eax))[0]
         if returns == "real:xmm0":
             # the low 32 bits of the register
             return struct.unpack("<f", (mu.reg_read(x86.UC_X86_REG_XMM0) & 0xFFFFFFFF).to_bytes(4, "little"))[0]

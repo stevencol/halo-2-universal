@@ -96,6 +96,19 @@ typedef char verify_main_time_globals_target_vblank_offset[
 typedef char verify_main_time_globals_frame_time_samples_offset[
 	offsetof(struct main_time_globals, frame_time_samples) == 0x78 ? 1 : -1];
 
+/* 0x004e8c20 points to it: the players. Only what the code uses */
+enum
+{
+	MAXIMUM_LOCAL_PLAYERS= 4
+};
+
+struct players_globals
+{
+	byte unknown0[0xC];
+	/* the players of this console; NONE where there is none */
+	long local_players[MAXIMUM_LOCAL_PLAYERS];
+};
+
 /* ---------- prototypes/MAIN.C */
 
 void main_loop(void);
@@ -115,6 +128,7 @@ void main_cancel_map_copy_and_wait(void);
 
 extern struct main_globals main_globals;
 extern struct main_time_globals main_time_globals;
+extern struct players_globals *players_globals;
 extern long long main_vblank_count;
 
 /* ---------- inline code */

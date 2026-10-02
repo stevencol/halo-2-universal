@@ -751,3 +751,14 @@ address,name,source,arguments,returns,convention
 00137000,find_files_next,source/tag_files/files_xbox.c,stack stack stack,bool
 00331b9b,FindFirstFileA,,stack stack,int
 00331ca8,FindNextFileA,,stack stack,int
+00124f90,sound_class_unknown_00124f90,source/sound/sound_manager.c,ecx,bool
+00124fc0,sound_get_minimum_distance,source/sound/sound_manager.c,ecx eax,real:xmm0
+00125010,sound_get_maximum_distance,source/sound/sound_manager.c,ecx eax,real:xmm0
+00125060,sound_unknown_00125060,source/sound/sound_manager.c,eax ecx,bool
+001250a0,sound_get_inner_cone_angle,source/sound/sound_manager.c,ecx eax,real:xmm0
+00125120,sound_get_outer_cone_angle,source/sound/sound_manager.c,ecx eax,real:xmm0
+001251a0,sound_get_outer_cone_gain,source/sound/sound_manager.c,ecx eax,real:eax
+00125260,sound_definition_random_gain,source/sound/sound_manager.c,eax,real:eax
+001252f0,sound_definition_random_pitch,source/sound/sound_manager.c,eax ecx,real
+00125360,sound_first_local_listener,source/sound/sound_manager.c,,pointer
+00221810,sound_class_get,source/sound/sound_classes.c,stack,pointer

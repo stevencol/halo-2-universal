@@ -104,3 +104,5 @@ address,name,source
 004087a8,xdevice_type_memory_unit,source/input/input_xbox.c
 0054e8e0,unknown_0054e8e0,source/input/input_xbox.c
 0054e7cc,unknown_0054e7cc,source/main/main_game.c
+0051ebd4,global_sound_cache_file_gestalt,source/sound/sound_manager.c
+004e6380,game_sound_globals,source/sound/sound_manager.c

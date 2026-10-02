@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 44.
+**Última actualización:** 2026-10-02, al terminar el hito 45.
 
 ## Dónde estamos
 
-- **409 funciones descompiladas de 11.265: el 3,63 % del juego** (el
-  1,789 % de los bytes de código).
-- Las 409 están comprobadas contra el ejecutable original
+- **420 funciones descompiladas de 11.265: el 3,73 % del juego** (el
+  1,821 % de los bytes de código).
+- Las 420 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile find_files_next* (ver `git log`).
+- Último hito: *Decompile how a sound is to be played* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -76,6 +76,8 @@ Módulos (funciones hechas / archivo):
 - [x] Cargar y descargar un mapa — `main\main_game.c` (23, completo)
 - [x] Memoria de la interfaz — `interface\user_interface_memory.c` (4)
 - [x] Mandos — `input\input_xbox.c` (10, completo)
+- [ ] Sonido — `sound\sound_manager.c` (10; faltan `0x001251e0` y de
+      `0x001253d0` en adelante), `sound\sound_classes.c` (1)
 - [x] Archivos — `tag_files\files.c`, `files_xbox.c` (19, completo)
 - [x] Cadenas anchas — `text\unicode.c` (7; quedan 3)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
@@ -137,7 +139,9 @@ Módulos (funciones hechas / archivo):
       arranque) y `0x00125600` (lo desmonta); usa memoria del estado del
       juego, una tabla «sound sources» y varias funciones de `0x00219b40`
       en adelante. Entre los mandos y él, `0x00124f90` a `0x00125360`, hay
-      funciones pequeñas de las definiciones de sonido.
+      funciones pequeñas de las definiciones de sonido (hechas en el
+      hito 45, menos `0x001251e0`, que llama a cinco funciones con reales
+      en registros).
 - [x] ~~`lruv_block_new`~~ (hito 31).
 - [x] ~~Caché de animaciones~~ (hito 32).
 - [x] ~~Caché de texturas, primera parte~~ (hito 33): crear, abrir,

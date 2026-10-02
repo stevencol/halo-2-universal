@@ -2,6 +2,74 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Cómo se reproduce un sonido
+
+Las primeras funciones del sonido: las que dicen a qué distancia se oye un
+sonido, con qué cono, qué volumen y qué tono. De 409 funciones se pasa a
+420, el 3,73 % de las del juego (el 1,821 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_class_unknown_00124f90` | `0x00124f90` | `sound/sound_manager.c` |
+| `sound_get_minimum_distance` | `0x00124fc0` | `sound/sound_manager.c` |
+| `sound_get_maximum_distance` | `0x00125010` | `sound/sound_manager.c` |
+| `sound_unknown_00125060` | `0x00125060` | `sound/sound_manager.c` |
+| `sound_get_inner_cone_angle` | `0x001250a0` | `sound/sound_manager.c` |
+| `sound_get_outer_cone_angle` | `0x00125120` | `sound/sound_manager.c` |
+| `sound_get_outer_cone_gain` | `0x001251a0` | `sound/sound_manager.c` |
+| `sound_definition_random_gain` | `0x00125260` | `sound/sound_manager.c` |
+| `sound_definition_random_pitch` | `0x001252f0` | `sound/sound_manager.c` |
+| `sound_first_local_listener` | `0x00125360` | `sound/sound_manager.c` |
+| `sound_class_get` | `0x00221810` | `sound/sound_classes.c` |
+
+- Archivos nuevos: `sound/sound_definitions.h`, `sound/sound_manager.c`,
+  `sound/sound_classes.c`, `tests/test_sound.py`.
+- En la herramienta de pruebas, un tipo de resultado nuevo, `real:eax`:
+  dos de estas funciones devuelven un real como sus 32 bits en `eax`.
+
+### Cambiado
+
+- `struct players_globals` y `MAXIMUM_LOCAL_PLAYERS` pasan de `main.c` a
+  `main.h`, porque el sonido también mira los jugadores de la consola.
+
+### Lo que se sabe
+
+- Los nombres de los archivos y de las funciones son suposiciones: Halo 1
+  no tiene estas funciones.
+- Cada dato de cómo suena un sonido se busca en hasta tres sitios, por este
+  orden: lo que diga quien lo reproduce (la «fuente», con un indicador por
+  dato), la clase del sonido (solo las distancias, si el sonido tiene el
+  indicador 10 u 11) y los parámetros de reproducción del sonido.
+- Los parámetros de reproducción no están en la etiqueta del sonido: están
+  todos juntos en una etiqueta común del mapa (`0x0051ebd4`), 0x38 bytes
+  cada uno, y el sonido solo guarda un índice.
+- Las clases de sonido están en otra etiqueta, a la que se llega por la
+  etiqueta de globales (bloque en `+0xC0`); cada clase mide 0x5C bytes.
+- Una fuente dice los ángulos del cono como una palabra de 16 bits: la
+  parte de media vuelta que son (0xFFFF es π).
+- El volumen de cada reproducción es la ganancia base más una parte al azar
+  de la variación, con la **segunda** semilla del juego (la que no afecta a
+  la partida); el tono, al azar entre dos límites enteros.
+- El oyente es el del primer jugador de la consola, si está puesto.
+
+### Sin comprobar
+
+- `sound_class_get` cuando la etiqueta de globales no dice nada del sonido:
+  el juego lee de la dirección 4 y se cae.
+- En el ángulo de una fuente, los casos de 0 y de 0xFFFF aparte, y el
+  término que se multiplica por cero: dan lo mismo que la fórmula general.
+- En la ganancia al azar, restar y sumar 0,0: solo cambia el signo de un
+  cero.
+
+### Mutaciones
+
+91 líneas rotas a propósito: 81 detectadas a la primera, cuatro más con
+casos nuevos (índices de etiqueta de más de 255, índice de reproducción
+negativo, ángulos donde dividir no da lo mismo que multiplicar por el
+inverso) y las otras seis son las de «Sin comprobar».
+
 ## 2026-10-02 — Recorrer los archivos de un directorio
 
 `find_files_next`, lo único que faltaba de los archivos: con ella

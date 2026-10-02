@@ -93,7 +93,6 @@ void unknown_00190e37(void);
 
 enum
 {
-	MAXIMUM_LOCAL_PLAYERS= 4,
 	HUD_MESSAGE_LENGTH= 256,
 
 	/* the string ids of the messages: hud_autosave_end, hud_loading_end and
@@ -110,14 +109,6 @@ enum
 #define MAXIMUM_FRAME_SECONDS 10.0f
 
 /* ---------- structures */
-
-/* 0x004e8c20 points to it: the players. Only what the code here uses */
-struct players_globals
-{
-	byte unknown0[0xC];
-	/* the players of this console; NONE where there is none */
-	long local_players[MAXIMUM_LOCAL_PLAYERS];
-};
 
 /* 0x00510c94 points to it: where the text of the messages comes from. What
 it is is not known */
