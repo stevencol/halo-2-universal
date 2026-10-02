@@ -111,6 +111,7 @@ enum
 /* ---------- structures */
 
 struct saved_game_file_result;
+struct file_reference;
 
 /* what the game knows of a file */
 struct saved_game_file_information
@@ -245,6 +246,10 @@ boolean saved_game_file_read_task_new(void *buffer, unsigned long size, boolean 
 	struct saved_game_file_result *result, const char *path);
 boolean saved_game_file_write_task_new(void *unknown, unsigned long size, boolean unknown2,
 	struct saved_game_file_result *result);
+void saved_game_file_read_signed(unsigned long size, struct file_reference *file, void *buffer,
+	boolean non_roamable, struct saved_game_file_result *result);
+void saved_game_file_write_signed(struct file_reference *file, const void *buffer, unsigned long size,
+	boolean non_roamable, struct saved_game_file_result *result);
 boolean saved_game_state_read_task_new(const char *path, struct saved_game_file_result *result, void *header,
 	long header_size, void *data, long data_size, boolean unknown);
 boolean saved_game_state_write_task_new(const char *path, struct saved_game_file_result *result, void *header,

@@ -112,7 +112,7 @@ def run(t) -> None:
             random_.getrandbits(32),
             Buffer(data + bytes(result), pointers=(0xC,)),
             random_.getrandbits(32),
-            externals={"unknown_002adf70": read_file},
+            externals={"saved_game_file_read_signed": read_file},
         )
 
     # ---------- what is told of a file that is written
@@ -156,3 +156,105 @@ def run(t) -> None:
                 extra=[place],
                 externals=task_externals(place, random_.choice((NONE, 0x1203, 0x1203, 0))),
             )
+
+    # ---------- a file and its signature
+
+    REFERENCE_SIZE = 0x110
+    HANDLE = 0x108
+    SIGNATURE = 20
+
+    def reference() -> Buffer:
+        data = bytearray(random_.randbytes(REFERENCE_SIZE))
+        struct.pack_into("<2I", data, HANDLE, 0x4321, random_.choice((0, 0x100)))
+        return Buffer(bytes(data))
+
+    def signature_externals(begin: int, end: int, signature: bytes) -> dict:
+        def finish(harness, arguments):
+            # the signature is left in the stack
+            harness.mu.mem_write(arguments[1], signature)
+            return end, (arguments[0],)
+
+        return {
+            "XCalculateSignatureBegin": lambda harness, arguments: begin,
+            "XCalculateSignatureUpdate": lambda harness, arguments: 0,
+            "XCalculateSignatureEnd": finish,
+            "CloseHandle": lambda harness, arguments, closed=random_.choice((1, 1, 0)): closed,
+            "GetLastError": lambda harness, arguments: 5,
+            "SetLastError": lambda harness, arguments: 0,
+        }
+
+    for n in range(150):
+        size = random_.choice((0, 1, 0x130, 0x1E0))
+        signature = random_.randbytes(SIGNATURE)
+        stored = signature if n % 3 else bytes(SIGNATURE - 1) + bytes([signature[-1] ^ 1]) if n % 6 else bytes([signature[0] ^ 0x80]) + signature[1:]
+        opened = n % 11 != 10
+        read_result = random_.choice((1, 1, 1, 0))
+        read_count = random_.choice((size, size, size, size + 1, max(size - 1, 0), None))
+        begin = random_.choice((0x55, 0x55, 0x55, NONE))
+        end = random_.choice((0, 0, 0, 5))
+        position_result = random_.choice((1, 1, 1, 0))
+
+        def open_(harness, arguments, opened=opened):
+            # the error is left in the stack
+            return opened, (arguments[0], arguments[1])
+
+        def read_file(harness, arguments, read_result=read_result, read_count=read_count):
+            file, buffer, count, bytes_read, overlapped = arguments
+            if read_count is not None:
+                harness.mu.mem_write(bytes_read, struct.pack("<I", read_count))
+            return read_result, (file, buffer, count, overlapped)
+
+        def read_from_position(harness, arguments, position_result=position_result, stored=stored):
+            file, position, count, silent, buffer = arguments
+            harness.mu.mem_write(buffer, stored)
+            return position_result, (file, position, count, silent & 0xFF)
+
+        file = reference()
+        externals = {
+            **signature_externals(begin, end, signature),
+            "file_open": open_,
+            "ReadFile": read_file,
+            "file_read_from_position": read_from_position,
+        }
+        if read_count is None:
+            # what is not set by the console is where the reference is, which
+            # is not the same number in the game and in source/ only if the
+            # buffer moves: it does not
+            pass
+        t.check(
+            "saved_game_file_read_signed",
+            size,
+            file,
+            random_.getrandbits(32),
+            random_.choice((0, 1, 0x80, 0x100)),
+            Buffer(random_.randbytes(RESULT_SIZE)),
+            externals=externals,
+        )
+
+    for n in range(120):
+        size = random_.choice((0, 1, 0x130, 0x1E0))
+        signature = random_.randbytes(SIGNATURE)
+        opened = n % 11 != 10
+        written = random_.choice((1, 1, 1, 0))
+        begin = random_.choice((0x55, 0x55, 0x55, NONE))
+        end = random_.choice((0, 0, 0, 5))
+        position_result = random_.choice((1, 1, 1, 0))
+
+        def write_to_position(harness, arguments, position_result=position_result):
+            file, position, count, buffer = arguments
+            return position_result, (file, position, count, bytes(harness.mu.mem_read(buffer, SIGNATURE)))
+
+        t.check(
+            "saved_game_file_write_signed",
+            reference(),
+            random_.getrandbits(32),
+            size,
+            random_.choice((0, 1, 0x80, 0x100)),
+            Buffer(random_.randbytes(RESULT_SIZE)),
+            externals={
+                **signature_externals(begin, end, signature),
+                "file_open": lambda harness, arguments, opened=opened: (opened, (arguments[0], arguments[1])),
+                "file_write": lambda harness, arguments, written=written: written,
+                "file_write_to_position": write_to_position,
+            },
+        )

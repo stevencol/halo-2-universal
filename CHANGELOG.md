@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Los archivos de los jugadores van firmados
+
+Las dos funciones que leen y escriben un archivo entero de los jugadores.
+De 511 funciones se pasa a 513, el 4,55 % de las del juego (el 2,151 % de
+sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `saved_game_file_read_signed` | `0x002adf70` | `saved games/saved_game_file_tasks.c` |
+| `saved_game_file_write_signed` | `0x002ae090` | `saved games/saved_game_file_tasks.c` |
+
+### Lo que se sabe
+
+- Detrás de los bytes de cada archivo (perfil, variante, lista) van 20
+  bytes de firma, que la consola calcula con la clave del juego
+  (`XCalculateSignature…`).
+- Al leer, el juego calcula la firma de lo leído y la compara con la del
+  archivo. **Solo si coinciden da la lectura por buena.** Un archivo
+  tocado a mano o corrupto se lee entero pero se da por malo.
+- El indicador que acompaña a la lectura y a la escritura dice si la firma
+  vale solo para esta consola o para cualquiera.
+- Un resultado lleva apuntado hasta dónde se llegó: 3 al leer y 2 al
+  escribir, que se cambian por 0 al acabar bien.
+- La lectura es la de `file_read` copiada dentro de la función, con una
+  diferencia: lo que la consola no escriba en «bytes leídos» si falla es la
+  dirección de la referencia del archivo, y eso es lo que se sumaría a la
+  posición.
+
+### Mutaciones
+
+45 líneas rotas a propósito: las 45 detectadas.
+
 ## 2026-10-02 — Las tareas del archivo del estado de una partida
 
 Las dos funciones que `saved_game_files.c` llamaba todavía por su

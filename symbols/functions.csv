@@ -879,7 +879,8 @@ address,name,source,arguments,returns,convention
 001a17b0,async_custom_task_work,source/cseries/async.c,stack,int
 001a17d0,async_task_add_custom,source/cseries/async.c,eax edx stack stack ebx,int
 002accd0,saved_game_file_read_work,source/saved games/saved_game_file_tasks.c,stack stack stack,int
-002adf70,unknown_002adf70,,eax stack stack stack stack,void
+002adf70,saved_game_file_read_signed,source/saved games/saved_game_file_tasks.c,eax stack stack stack stack,void
 002acde0,unknown_002acde0,,stack stack stack,int,stdcall
 002ad7c0,unknown_002ad7c0,,stack stack stack,int,stdcall
 002adb10,unknown_002adb10,,stack stack stack,int,stdcall
+002ae090,saved_game_file_write_signed,source/saved games/saved_game_file_tasks.c,eax stack stack stack stack,void
