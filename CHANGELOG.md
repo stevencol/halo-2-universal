@@ -2,6 +2,33 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Un carácter nuevo
+
+Una función. De 602 funciones se pasa a 603, el 5,35 % de las del juego (el
+2,644 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `font_character_new` | `0x00140b80` | `text/font_cache.c` |
+
+### Lo que se sabe
+
+- Cuando hace falta un carácter que el juego no conoce, se le busca sitio
+  entre los 512. Si no queda ninguno, se recorre la lista y se elige, de los
+  que no están en uso, **el que lleva más fotogramas sin usarse**; se olvida y
+  su sitio pasa al nuevo. Si todos están en uso, no hay carácter.
+- El carácter nuevo empieza en el estado 0 (no se sabe nada de él), sin
+  píxeles ni hueco entre los dibujos, con el fotograma actual como último
+  uso, y se apunta en la tabla hash con su índice.
+- Si el carácter ya se conocía, se devuelve el que había.
+
+### Mutaciones
+
+33 líneas rotas a propósito: las 33 detectadas (una porque la prueba se
+detiene: el índice roto no existe).
+
 ## 2026-10-02 — Crear la caché de los caracteres
 
 Cuatro funciones. De 598 funciones se pasa a 602, el 5,34 % de las del juego

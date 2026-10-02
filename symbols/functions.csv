@@ -968,3 +968,4 @@ address,name,source,arguments,returns,convention
 001410d0,font_cache_new,source/text/font_cache.c,,void
 001411e0,font_cache_block_deleted,source/text/font_cache.c,stack,void
 00141290,font_cache_block_locked,source/text/font_cache.c,stack,bool
+00140b80,font_character_new,source/text/font_cache.c,stack stack,int

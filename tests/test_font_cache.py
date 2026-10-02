@@ -362,3 +362,57 @@ def run(t) -> None:
                 "datum_delete": lambda harness, arguments: 0,
             },
         )
+
+    # ---------- a new character
+
+    for n in range(300):
+        font, character = random_.randrange(11), random_.choice((0x41, 0x3042, random_.getrandbits(32)))
+        frame = random_.choice((5, 1000, 0x7FFFFFFF, 0x80000000))
+        found = NONE if n % 5 else random_.getrandbits(32)
+        fresh = NONE if n % 3 == 0 else random_.randrange(CHARACTERS) | random_.choice((0, 0x10000, 0xE1740000))
+        # the characters that there are: whether each is busy, and when it was used
+        there = sorted(random_.sample(range(CHARACTERS), random_.randrange(0, CHARACTERS + 1)))
+        busy = {index: random_.random() < 0.4 for index in there}
+        values = {index: (4, NONE, (frame - random_.choice((0, 1, 2, 2, 7, 7, 100, -3))) & 0xFFFFFFFF, NONE) for index in there}
+        blob = bytearray(known_characters(values).data)
+        struct.pack_into("<I", blob, 0x24, CHARACTER)
+        for index in range(CHARACTERS):
+            struct.pack_into("<h", blob, DATA_SIZE + index * CHARACTER, random_.choice((1, 0x7FFF, -0x8000, -2)))
+        again = NONE if n % 11 == 10 else None
+
+        def next_one(harness, arguments, there=there):
+            data, start = arguments
+            later = [index for index in there if index >= start]
+            return (later[0] if later else NONE), (start,)
+
+        def is_busy(harness, arguments, busy=busy):
+            return busy[arguments[0] & 0xFFFF]
+
+        def new_at(harness, arguments, again=again):
+            data, index = arguments
+            return (index if again is None else again), (index,)
+
+        def add(harness, arguments):
+            table, key, data = arguments
+            # the index that goes with the key is in the stack
+            return 1, (table, harness.normalize(key), bytes(harness.mu.mem_read(data, 4)))
+
+        t.check(
+            "font_character_new",
+            font,
+            character,
+            globals={
+                "font_cache_globals": 0x80111100,
+                "font_cache_globals+4": Buffer(bytes(blob), pointers=(0x44,)),
+                "font_cache_globals+24": frame,
+            },
+            externals={
+                "font_character_find": lambda harness, arguments, found=found: found,
+                "datum_new": lambda harness, arguments, fresh=fresh: (fresh, ()),
+                "data_next_absolute_index": next_one,
+                "font_character_is_busy": is_busy,
+                "font_character_delete": lambda harness, arguments: 0,
+                "datum_new_at_index": new_at,
+                "hash_table_add": add,
+            },
+        )

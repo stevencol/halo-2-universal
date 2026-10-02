@@ -125,6 +125,7 @@ typedef char verify_font_cache_globals_size[
 unsigned long HASH_TABLE_CALLBACK font_character_key_hash(long key);
 boolean HASH_TABLE_CALLBACK font_character_key_compare(long key, long other);
 long font_character_find(long font_slot_index, long character);
+long font_character_new(long font_slot_index, long character);
 void font_character_delete(long character_index);
 boolean font_character_is_busy(long character_index);
 void font_characters_new(void);

@@ -140,6 +140,75 @@ boolean font_character_is_busy(
 	return busy;
 }
 
+/* 0x00140b80: what the game knows of a character of a font: what there is,
+or a new one, of which nothing is loaded yet. If there is no room for a new
+one, the one that has gone the longest with no use takes its place, of those
+that are not busy. NONE if there is none */
+long font_character_new(
+	long font_slot_index,
+	long character)
+{
+	struct font_character *new_character;
+	long index= font_character_find(font_slot_index, character);
+
+	if (index!=NONE)
+	{
+		return index;
+	}
+	index= datum_new(font_cache_globals.characters);
+	if (index==NONE)
+	{
+		struct data_array *data= font_cache_globals.characters;
+		long oldest_age= 0;
+		long absolute_index= NONE;
+
+		while ((absolute_index= data_next_absolute_index(data, absolute_index+1))!=NONE)
+		{
+			const struct font_character *candidate=
+				(const struct font_character *)((const byte *)data->data+data->size*absolute_index);
+			long candidate_index= ((long)candidate->identifier<<16)|absolute_index;
+
+			if (!font_character_is_busy(candidate_index))
+			{
+				long age= (long)((unsigned long)font_cache_globals.frame_index-(unsigned long)candidate->frame_index);
+
+				if (age>oldest_age)
+				{
+					oldest_age= age;
+					index= candidate_index;
+				}
+			}
+		}
+		if (index==NONE)
+		{
+			return NONE;
+		}
+		font_character_delete(index);
+		index= datum_new_at_index(font_cache_globals.characters, index);
+		if (index==NONE)
+		{
+			return NONE;
+		}
+	}
+
+	new_character= font_character_get(index);
+	memset((byte *)new_character+sizeof(new_character->identifier), 0,
+		sizeof(*new_character)-sizeof(new_character->identifier));
+	new_character->key.character= character;
+	new_character->unknownC= FALSE;
+	new_character->unknownD= FALSE;
+	new_character->state= _font_character_state_unknown0;
+	new_character->unknown14= NONE;
+	new_character->unknown18= NONE;
+	new_character->block_index= NONE;
+	new_character->key.font_slot_index= font_slot_index;
+	new_character->frame_index= font_cache_globals.frame_index;
+	new_character->glyph_slot_index= NONE;
+	hash_table_add(font_cache_globals.character_table, (long)&new_character->key, &index);
+
+	return index;
+}
+
 /* an array for so many things, of the memory of the game: the array, the
 things and a bit for each. NULL if there is no memory for it */
 static inline __attribute__((always_inline)) struct data_array *font_cache_data_new(
