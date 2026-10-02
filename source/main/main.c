@@ -11,6 +11,10 @@ Halo 1's main.c.
 
 #include "main.h"
 
+#include "cache/geometry_cache.h"
+#include "cache/texture_cache.h"
+#include "main/main_game.h"
+
 #include "cache/cache_files.h"
 #include "cseries/async.h"
 #include "game/game.h"
@@ -152,9 +156,8 @@ The name is a guess */
 short main_frame_vblanks;
 
 /* what a frame looks at, of other parts of the game. What they are is not
-known: 0x004ed294, 0x0055c14d, 0x0051ea14, 0x0055c150, 0x004d8ba0,
-0x00510548, 0x0051054c and 0x00510560 */
-long unknown_004ed294;
+known: 0x0055c14d, 0x0051ea14, 0x0055c150, 0x004d8ba0, 0x00510548,
+0x0051054c and 0x00510560 */
 boolean unknown_0055c14d;
 void *unknown_0051ea14;
 unsigned long unknown_0055c150;
@@ -172,12 +175,8 @@ struct players_globals *players_globals;
 /* 0x00510c94 */
 struct unknown_00510c94 *unknown_00510c94;
 
-/* 0x004ed39d, 0x004e6470 and 0x004e64a0: what else main_action_pending
-looks at; and 0x0055c14c, what main_cancel_map_copy_and_wait waits for. What
-they are is not known */
-boolean unknown_004ed39d;
-long unknown_004e6470;
-long unknown_004e64a0;
+/* 0x0055c14c: what main_cancel_map_copy_and_wait waits for. What it is is
+not known */
 boolean unknown_0055c14c;
 
 /* ---------- code */
@@ -327,7 +326,8 @@ void main_loop_body(
 		main_globals.unknown2= FALSE;
 		unknown_002237d4();
 	}
-	if (unknown_004ed294!=2 && unknown_004ed294!=5 && !unknown_004ed39d)
+	if (main_game_load_globals.state!=_main_game_load_map &&
+		main_game_load_globals.state!=_main_game_load_texture_cache && !main_game_load_globals.unknown10D)
 	{
 		unknown_0018f1c0(0);
 	}
@@ -607,7 +607,7 @@ void main_revert_map_if_possible_private(
 boolean main_action_pending(
 	void)
 {
-	boolean pending= unknown_004ed39d!=0;
+	boolean pending= main_game_load_globals.unknown10D!=0;
 
 	if (main_globals.switch_structure_bsp ||
 		main_globals.reset_map ||
@@ -616,8 +616,8 @@ boolean main_action_pending(
 		main_globals.save_map ||
 		main_globals.unknown49 ||
 		main_globals.unknown4E ||
-		unknown_004e6470>0 ||
-		unknown_004e64a0>0)
+		texture_cache_globals.blocking_count>0 ||
+		geometry_cache_globals.blocking_count>0)
 	{
 		pending= TRUE;
 	}

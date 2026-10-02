@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-01, al terminar el hito 35.
+**Última actualización:** 2026-10-01, al terminar el hito 36.
 
 ## Dónde estamos
 
-- **332 funciones descompiladas de 11.265: el 2,95 % del juego** (el
-  1,454 % de los bytes de código).
-- Las 332 están comprobadas contra el ejecutable original
+- **344 funciones descompiladas de 11.265: el 3,05 % del juego** (el
+  1,497 % de los bytes de código).
+- Las 344 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the geometry cache* (ver `git log`).
+- Último hito: *Decompile the loading and unloading of a map* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -72,6 +72,8 @@ Módulos (funciones hechas / archivo):
 - [x] Caché de texturas — `cache\xbox_texture_cache.c` (30, completo)
 - [ ] Caché de geometría — `cache\xbox_geometry_cache.c` (17; falta
       `0x0012e480`, el aviso de que falta geometría)
+- [ ] Cargar y descargar un mapa — `main\main_game.c` (12; falta el cambio
+      de mapa entero)
 - [x] Cadenas anchas — `text\unicode.c` (7; quedan 3)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
 - [ ] Matemáticas reales — `math\real_math.c` (21 de unas 50)
@@ -132,11 +134,16 @@ Módulos (funciones hechas / archivo):
       `0x00223c70`, `0x00223d80` y `0x00223e00` (lo que hace falta de la
       geometría leída: apuntarla en su tag, saber si la consola aún dibuja
       con ella y esperarla) y `0x0012e480`.
-- [ ] **Cargar y descargar un mapa** (`0x0018eb80` a `0x0018f260`, unas 15
-      funciones): el módulo que abre y cierra las tres cachés, pasa de una
-      etapa de memoria a otra y recorre la tabla de `0x00453c00`. Su estado
-      está en `0x004ed290` (el reparto de memoria, de 1 a 5, que calcula
-      `0x0018eeb0` según el modo de juego) y `0x004ed294` (la etapa).
+- [x] ~~Cargar y descargar un mapa, primera parte~~ (hito 36):
+      `main\main_game.c`, de `0x0018eb80` a `0x0018f170`.
+- [ ] **El cambio de mapa entero** (`0x0018e340` a `0x0018eaa0`, y
+      `0x0018efa0`, `0x0018f0a0`, `0x0018f1c0`): `0x0018e8b0` es la función
+      que descarga el mapa, reparte la memoria, carga el nuevo (`0x0018eaa0`,
+      `0x0018e960`) y empieza la partida; `0x0018e790` deja pedido el cambio
+      (las opciones se guardan en `0x004ed3a8`).
+- [ ] **Los otros seis pares de la tabla de `0x00453c00`**: quién más toma
+      memoria al cargar un mapa (`0x00081780`, `0x001a474c`, `0x002157e0`,
+      `0x00053310`, `0x000b3d30`, `0x0021ebc0` y sus parejas).
 - [ ] **La tabla de `0x00453c00`**: ocho pares de funciones (soltar y
       tomar memoria) de los que usan memoria al cargar un mapa; el par de
       la caché de animaciones ya está. La recorren `0x0018ec60` y

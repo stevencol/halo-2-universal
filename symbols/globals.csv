@@ -43,14 +43,10 @@ address,name,source
 00440dd8,game_systems,source/game/game.c
 004e7408,global_random_seed_reference,source/game/game.c
 00510c50,unknown_00510c50,source/main/main.c
-004ed39d,unknown_004ed39d,source/main/main.c
-004e6470,unknown_004e6470,source/main/main.c
-004e64a0,unknown_004e64a0,source/main/main.c
 0055c14c,unknown_0055c14c,source/main/main.c
 004e6388,main_time_globals,source/main/main.c
 00485ab0,main_vblank_count,source/main/main.c
 00485aca,main_frame_vblanks,source/main/main.c
-004ed294,unknown_004ed294,source/main/main.c
 0055c14d,unknown_0055c14d,source/main/main.c
 0051ea14,unknown_0051ea14,source/main/main.c
 0055c150,unknown_0055c150,source/main/main.c
@@ -86,3 +82,8 @@ address,name,source
 004e648c,geometry_cache_globals,source/cache/xbox_geometry_cache.c
 00468c4c,geometry_cache_never_block,source/cache/xbox_geometry_cache.c
 0055e728,geometry_cache_warning_time,source/cache/xbox_geometry_cache.c
+004ed290,main_game_load_globals,source/main/main_game.c
+00453c00,main_game_memory_users,source/main/main_game.c
+004cf770,unknown_004cf770,source/main/main_game.c
+00467214,unknown_00467214,source/main/main_game.c
+00502104,unknown_00502104,source/main/main_game.c

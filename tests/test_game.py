@@ -246,9 +246,9 @@ def run(t) -> None:
                 "main_action_pending",
                 globals={
                     "main_globals": main_globals(random_, **field),
-                    "unknown_004ed39d": unknown_byte,
-                    "unknown_004e6470": 0,
-                    "unknown_004e64a0": 0,
+                    "main_game_load_globals+0x10d": unknown_byte,
+                    "texture_cache_globals+0x1c": 0,
+                    "geometry_cache_globals+0x14": 0,
                 },
             )
     for first, second in ((1, 0), (0, 1), (NONE, 0), (0, NONE), (NONE, NONE), (0x7FFFFFFF, 0)):
@@ -256,9 +256,9 @@ def run(t) -> None:
             "main_action_pending",
             globals={
                 "main_globals": main_globals(random_),
-                "unknown_004ed39d": b"\0",
-                "unknown_004e6470": first,
-                "unknown_004e64a0": second,
+                "main_game_load_globals+0x10d": b"\0",
+                "texture_cache_globals+0x1c": first,
+                "geometry_cache_globals+0x14": second,
             },
         )
 

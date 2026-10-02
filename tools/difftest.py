@@ -594,7 +594,12 @@ class Harness:
                 else:
                     count = len(symbol.arguments)
                     arguments = list(struct.unpack(f"<{count}I", mu.mem_read(esp + 4, 4 * count)))
-                    cleanup = self._external_cleanup_ours.get(name, 0)
+                    # a function that is not decompiled and that source/ calls
+                    # through a pointer to a function that takes its arguments
+                    # off the stack ("stdcall" in symbols/functions.csv) does so
+                    cleanup = self._external_cleanup_ours.get(
+                        name, 4 * count if symbol.convention == "stdcall" else 0
+                    )
                 try:
                     result = self._external_handlers[name](self, arguments)
                 except StopCall:

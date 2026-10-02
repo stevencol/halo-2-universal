@@ -2,6 +2,76 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Cargar y descargar un mapa
+
+`main_game.c`: el módulo que une las tres cachés con el resto del juego.
+Lleva la cuenta de por dónde va la carga de un mapa, reparte la memoria
+entre los que la usan y empieza la partida. De 332 funciones se pasa a 344,
+el 3,05 % de las del juego (el 1,497 % de sus bytes). **Se pasa del 3 %.**
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `main_game_unload` | `0x0018eb80` | `main/main_game.c` |
+| `main_game_load_begin` | `0x0018ec20` | `main/main_game.c` |
+| `main_game_load_end` | `0x0018ec60` | `main/main_game.c` |
+| `main_game_load_fail` | `0x0018ed00` | `main/main_game.c` |
+| `main_game_close_caches` | `0x0018edb0` | `main/main_game.c` |
+| `main_game_open_texture_cache` | `0x0018ee60` | `main/main_game.c` |
+| `main_game_state_has_map` | `0x0018eea0` | `main/main_game.c` |
+| `main_game_memory_configuration` | `0x0018eeb0` | `main/main_game.c` |
+| `main_game_configure_memory` | `0x0018ef00` | `main/main_game.c` |
+| `main_game_start` | `0x0018f000` | `main/main_game.c` |
+| `main_game_unknown_0018f100` | `0x0018f100` | `main/main_game.c` |
+| `main_game_launch_main_menu` | `0x0018f170` | `main/main_game.c` |
+
+- Archivos nuevos: `main/main_game.{c,h}`, `tests/test_main_game.py`.
+- La tabla de `0x00453c00` (`main_game_memory_users`): los ocho que toman
+  memoria al cargar un mapa. Seis siguen sin descompilar.
+- Arnés: una función sin descompilar a la que el código llama por un
+  puntero «stdcall» se marca así en `symbols/functions.csv` y limpia la pila.
+
+### Cambiado
+
+- Tres globales de `main.c` que estaban sin identificar son campos de otras
+  cosas, y ahora se leen de ellas: `0x004ed294` es la etapa de la carga
+  (`main_game_load_globals.state`), `0x004e6470` y `0x004e64a0` son los
+  contadores de «leerlo todo de una vez» de las cachés de texturas y de
+  geometría, y `0x004ed39d` va con el estado de la carga.
+
+### Lo que se sabe
+
+- La carga de un mapa tiene etapas: nada, empezada, mapa cargado (con las
+  cachés abiertas), cachés cerradas, y «solo la caché de texturas» para lo
+  que se enseña cuando no hay mapa.
+- El reparto de memoria tiene cinco maneras: 1 para todo lo que no es
+  campaña, 2 y 3 para una campaña en una sesión de red (solo y con un
+  segundo jugador), 4 y 5 para una campaña normal. Si la partida que empieza
+  pide otro reparto que la anterior, los ocho de la tabla devuelven su
+  memoria y la vuelven a tomar.
+- Al terminar de cargar un mapa se abren, por este orden: la caché de
+  animaciones, los textos del idioma de la consola, la de geometría y la de
+  texturas (que antes lee los píxeles que vienen con el mapa).
+- Los textos de cada idioma están en el tag de globales, 28 bytes por
+  idioma a partir de `+0x188`.
+- El menú principal es un mapa más: `scenarios\ui\mainmenu\mainmenu`, con
+  el modo de juego 3.
+- `main_game_unload` no tiene nada previsto para las etapas 1 y 3: el juego
+  salta a la dirección 0. No se la llama entonces.
+
+### Sin comprobar
+
+- En `main_game_launch_main_menu`, el cero al final del nombre del mapa:
+  `strncpy` ya rellena con ceros.
+- Qué son `0x004cf770` (algo de la partida en red) y la tabla de datos de
+  `0x00502104`.
+
+### Mutaciones
+
+79 líneas rotas a propósito: 76 detectadas a la primera. De las otras 3, dos
+dieron casos nuevos y una es la de «Sin comprobar».
+
 ## 2026-10-02 — La caché de geometría
 
 La tercera caché que usa `lruv_cache.c`: la que trae del disco los vértices

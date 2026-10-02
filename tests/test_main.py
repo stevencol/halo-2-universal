@@ -151,8 +151,8 @@ def run(t) -> None:
             "main_loop_body",
             globals={
                 "main_globals": bytes(globals_bytes),
-                "unknown_004ed294": random_.choice((0, 2, 5, 7)),
-                "unknown_004ed39d": bytes([random_.randrange(2)]),
+                "main_game_load_globals+0x4": random_.choice((0, 2, 5, 7)),
+                "main_game_load_globals+0x10d": bytes([random_.randrange(2)]),
                 "main_game_globals": random_.choice((GAME, GAME, 0)),
                 "game_time_globals": TIME,
                 "unknown_0055c14d": bytes([random_.randrange(2)]),
