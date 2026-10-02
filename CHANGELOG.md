@@ -2,6 +2,103 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — La caché de animaciones
+
+El primer módulo que usa `lruv_cache.c` entero: la caché que trae del disco
+los datos de las animaciones cuando hacen falta. Halo 1 no la tiene (allí las
+animaciones van dentro de los tags); los nombres siguen los de su caché de
+sonidos. De 266 funciones se pasa a 284, el 2,52 % de las del juego (el
+1,187 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `animation_cache_new` | `0x00123180` | `cache/xbox_animation_cache.c` |
+| `animation_cache_allocate_memory` | `0x00123230` | `cache/xbox_animation_cache.c` |
+| `animation_cache_free_memory` | `0x001232e0` | `cache/xbox_animation_cache.c` |
+| `animation_cache_delete` | `0x00123310` | `cache/xbox_animation_cache.c` |
+| `animation_cache_open` | `0x001233a0` | `cache/xbox_animation_cache.c` |
+| `animation_cache_close` | `0x001233f0` | `cache/xbox_animation_cache.c` |
+| `animation_cache_idle` | `0x00123430` | `cache/xbox_animation_cache.c` |
+| `animation_cache_block_new` | `0x001234a0` | `cache/xbox_animation_cache.c` |
+| `animation_cache_block_request` | `0x00123550` | `cache/xbox_animation_cache.c` |
+| `animation_cache_block_read` | `0x001235b0` | `cache/xbox_animation_cache.c` |
+| `animation_cache_find_predicted` | `0x00123680` | `cache/xbox_animation_cache.c` |
+| `animation_cache_predict` | `0x001236f0` | `cache/xbox_animation_cache.c` |
+| `animation_cache_block_wait` | `0x001237a0` | `cache/xbox_animation_cache.c` |
+| `animation_cache_get_data` | `0x001237e0` | `cache/xbox_animation_cache.c` |
+| `animation_cache_block_locked` | `0x001238b0` | `cache/xbox_animation_cache.c` |
+| `animation_cache_block_deleted` | `0x001238f0` | `cache/xbox_animation_cache.c` |
+| `animation_cache_reading_count` | `0x00123970` | `cache/xbox_animation_cache.c` |
+| `animation_cache_update_predicted` | `0x001239d0` | `cache/xbox_animation_cache.c` |
+
+- Archivos nuevos: `cache/animation_cache.h`, `cache/xbox_animation_cache.c`,
+  `tests/test_animation_cache.py`.
+- En `memory/lruv_cache.h`, como código en línea (en Halo 1 son funciones;
+  aquí el juego las repite en cada sitio): `lruv_idle`, `lruv_block_get`,
+  `lruv_block_get_address`, `lruv_block_touch`.
+- Global `heap_allocation` (`0x00468758`): el asignador con el que se crean
+  las cachés.
+- Arnés: un `Buffer` puede llevar punteros a funciones (`functions`) y
+  sitios donde la llamada deja punteros a funciones o a globales (`places`),
+  que se comparan por aquello a lo que apuntan.
+
+### Cambiado
+
+- `cache_file_read_async` devuelve el número de la tarea de lectura (antes
+  estaba como `void`): la caché lo guarda para poder esperar la lectura.
+- `shell_initialize` y `shell_dispose` llaman a `animation_cache_new` y
+  `animation_cache_delete` (antes `unknown_00123180` y `unknown_00123310`).
+- `CACHE_FILE_SECTOR_SIZE` pasa a `cache_files.h`.
+
+### Lo que se sabe
+
+- La caché tiene 4 MB (3 MB con la pantalla partida), en páginas de 2 KB, y
+  hasta 512 bloques. La memoria se toma al cargar un mapa y se suelta al
+  salir: las dos funciones están en una tabla de ocho pares en `0x00453c00`,
+  la de todos los que toman memoria entonces.
+- En el tag, los datos de unas animaciones son 16 bytes: un campo sin
+  identificar, el tamaño, el desplazamiento en el mapa y el bloque de la
+  caché (o ninguno).
+- Hay tres urgencias, en una tabla en `0x00468810` (prioridad de la tarea,
+  edad con la que nace el bloque, antigüedad mínima de los bloques que se
+  pueden echar): ahora mismo (8, 0, 0), pronto (5, 10, 30) y cuando se pueda
+  (2, 20, 50).
+- Quien va a usar una animación avisa antes (`animation_cache_predict`); la
+  caché apunta hasta 128 avisos y cada fotograma empieza a leer algunos, sin
+  pasar de 8 lecturas a la vez ni si hay más de 25 tareas pendientes. Primero
+  van los avisos urgentes.
+- Si se pide una animación que no está (`animation_cache_get_data`), el
+  juego se queda esperando la lectura. Para hacerle sitio puede echar hasta
+  los bloques que se están leyendo, esperándolos, y lo intenta hasta tres
+  veces más, pasando un tick de la caché cada vez.
+- `animation_cache_get_data` no mira si consiguió bloque: una animación que
+  no quepa en la caché entera no se puede pedir.
+- Un bloque que se está leyendo no se echa. Al echar uno, la animación
+  vuelve a quedar sin bloque.
+
+### Corregido durante el hito
+
+- `animation_cache_open` vaciaba dos veces cada tabla: `data_make_valid` ya
+  lo hace. Lo encontró la comprobación por mutación.
+
+### Sin comprobar
+
+- Tres escrituras que dejan el valor que ya había: los dos `read_done=
+  FALSE` repetidos al pedir y al leer un bloque, y si el ajuste del tick en
+  `animation_cache_predict` es con `>` o con `>=`.
+- Para qué sirve el segundo argumento de `animation_cache_get_data`
+  (`0x7000180` cuando lo llama la propia caché): la función que lo recibe no
+  lo usa.
+
+### Mutaciones
+
+89 líneas rotas a propósito: 82 detectadas a la primera. De las otras 7,
+dos eran el error de `animation_cache_open`, dos dieron casos nuevos (un
+aviso de una animación que ya está en la caché, un bloque sin lectura
+empezada) y tres son las de «Sin comprobar».
+
 ## 2026-10-01 — Reservar un bloque en la caché
 
 La función que faltaba de `lruv_cache.c`, y la más grande del módulo (1.210

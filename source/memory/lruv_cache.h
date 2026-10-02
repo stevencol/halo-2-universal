@@ -120,4 +120,52 @@ long lruv_compute_pages_in_use(struct lruv_cache *cache, unsigned long age);
 
 extern struct allocation *lruv_blocks_allocation;
 
+/* ---------- inline code */
+
+/* these are functions in Halo 1; here the code is in each function that
+uses a cache */
+
+/* a tick goes by: once a frame */
+static inline __attribute__((always_inline)) void lruv_idle(
+	struct lruv_cache *cache)
+{
+	long index;
+
+	if (cache->tick==LRUV_CACHE_MAXIMUM_TICK)
+	{
+		lruv_wrap_ticks(cache);
+	}
+	else
+	{
+		cache->tick++;
+	}
+	for (index= 0; index<LRUV_CACHE_AGE_CLASS_COUNT; index++)
+	{
+		cache->failed_page_counts[index]= LRUV_CACHE_MAXIMUM_TICK;
+	}
+}
+
+static inline __attribute__((always_inline)) struct lruv_cache_block *lruv_block_get(
+	const struct lruv_cache *cache,
+	long block_index)
+{
+	return &((struct lruv_cache_block *)cache->blocks->data)[block_index&0xFFFF];
+}
+
+/* where the pages of a block are, in bytes from the first page of the cache */
+static inline __attribute__((always_inline)) unsigned long lruv_block_get_address(
+	const struct lruv_cache *cache,
+	long block_index)
+{
+	return (unsigned long)lruv_block_get(cache, block_index)->first_page_index<<cache->page_size_bits;
+}
+
+/* the block was used */
+static inline __attribute__((always_inline)) void lruv_block_touch(
+	const struct lruv_cache *cache,
+	long block_index)
+{
+	lruv_block_get(cache, block_index)->last_used_tick= cache->tick;
+}
+
 #endif

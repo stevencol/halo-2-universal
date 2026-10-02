@@ -15,11 +15,11 @@ REFERENCE_COUNT = 0x938
 SHELL_MEMORY = 0x00D00000
 
 INITIALIZE = (
-    "unknown_002d5d0a async_initialize global_preferences_initialize unknown_00121fc0 cache_files_initialize unknown_00123180 "
+    "unknown_002d5d0a async_initialize global_preferences_initialize unknown_00121fc0 cache_files_initialize animation_cache_new "
     "game_state_initialize unknown_001248b0 unknown_001253d0"
 ).split()
 DISPOSE = (
-    "game_state_close_file unknown_00125600 unknown_00124920 unknown_000141c0 unknown_00123310 unknown_00141190 "
+    "game_state_close_file unknown_00125600 unknown_00124920 unknown_000141c0 animation_cache_delete unknown_00141190 "
     "unknown_00140aa0"
 ).split()
 

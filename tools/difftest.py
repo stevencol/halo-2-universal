@@ -142,6 +142,12 @@ class Buffer:
     format: str | None = None
     # filled by the harness: the address in the emulator
     address: int = 0
+    # the offsets in the data of pointers to functions of symbols/functions.csv, by name
+    functions: dict[int, str] = field(default_factory=dict)
+    # the offsets where the call can leave a pointer to a function or to a
+    # global: what is there is compared as the place it points to, as are the
+    # pointers to functions
+    places: tuple[int, ...] = ()
 
     def values(self, data: bytes) -> tuple | bytes:
         return struct.unpack(self.format, data) if self.format else data
@@ -704,7 +710,7 @@ class Harness:
         name = self._function_names.get(value)
         return ("function", name) if name else value
 
-    def _place_buffers(self, arguments: tuple) -> tuple[list[int], list[Buffer]]:
+    def _place_buffers(self, arguments: tuple, original: bool) -> tuple[list[int], list[Buffer]]:
         """Writes the buffers of the arguments to the scratch memory; the arguments as integers."""
         at = SCRATCH_ADDRESS
         values, buffers = [], []
@@ -714,6 +720,10 @@ class Harness:
                 data = bytearray(argument.data)
                 for offset in argument.pointers:
                     struct.pack_into("<I", data, offset, struct.unpack_from("<I", data, offset)[0] + at)
+                for offset, function in argument.functions.items():
+                    struct.pack_into(
+                        "<I", data, offset, self.symbols[function].address if original else self.functions[function]
+                    )
                 self.mu.mem_write(at, bytes(data))
                 # some room after each, zeroed, for a function that reads past the end of a string
                 self.mu.mem_write(at + len(argument.data), b"\0" * 64)
@@ -744,7 +754,7 @@ class Harness:
             self._hook_external(name)
         self._running = symbol.name
         self._calls = []
-        values, buffers = self._place_buffers((*arguments, *globals_.values(), *(extra or ())))
+        values, buffers = self._place_buffers((*arguments, *globals_.values(), *(extra or ())), original)
         values = values[: len(arguments) + len(globals_)]
         # for the functions that stand in for others: where each global of
         # symbols/globals.csv is in the side that runs
@@ -841,11 +851,20 @@ class Harness:
                 pointers.append(self.normalize(struct.unpack_from("<I", data, offset)[0]))
                 struct.pack_into("<I", data, offset, 0)
             self._calls.append(("memory", address, bytes(data), tuple(pointers)))
-        return Result(
-            value,
-            [buffer.values(bytes(self.mu.mem_read(buffer.address, len(buffer.data)))) for buffer in buffers],
-            self._calls,
-        )
+        return Result(value, [self._buffer_values(number, buffer) for number, buffer in enumerate(buffers)], self._calls)
+
+    def _buffer_values(self, number: int, buffer: Buffer) -> tuple | bytes:
+        """What a call left in a buffer; its pointers to functions and to
+        globals go apart, with the calls, as what they point to."""
+        data = bytearray(self.mu.mem_read(buffer.address, len(buffer.data)))
+        offsets = sorted({*buffer.places, *buffer.functions})
+        if offsets:
+            pointers = []
+            for offset in offsets:
+                pointers.append(self.normalize(struct.unpack_from("<I", data, offset)[0]))
+                struct.pack_into("<I", data, offset, 0)
+            self._calls.append(("buffer", number, tuple(pointers)))
+        return buffer.values(bytes(data))
 
     def original(self, name: str, *arguments: object, **options: object) -> Result:
         """Calls the function of the game's executable.

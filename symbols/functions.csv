@@ -136,7 +136,7 @@ address,name,source,arguments,returns,convention
 002d6246,ReleaseSemaphore,,stack stack stack,int
 002d626c,CreateMutexA,,stack stack stack,int
 002d6b6b,DeleteFileA,,stack,int
-00213760,cache_file_read_async,source/cache/cache_files.c,ecx stack stack stack stack stack stack,void
+00213760,cache_file_read_async,source/cache/cache_files.c,ecx stack stack stack stack stack stack,int
 00213800,cache_file_read_header,source/cache/cache_files.c,eax ecx,bool
 00213890,cache_file_block_until_not_busy,source/cache/cache_files.c,,void
 00214a60,cached_map_files_find_map,source/cache/cache_files.c,eax,int
@@ -275,14 +275,14 @@ address,name,source,arguments,returns,convention
 003fc530,d3d_device_destroy,,eax,void
 00121350,global_preferences_initialize,source/main/global_preferences.c,,void
 00121fc0,unknown_00121fc0,,,void
-00123180,unknown_00123180,,,void
+00123180,animation_cache_new,source/cache/xbox_animation_cache.c,,void
 00012560,unknown_00012560,,,void
 001248b0,unknown_001248b0,,,void
 001253d0,unknown_001253d0,,,void
 00125600,unknown_00125600,,,void
 00124920,unknown_00124920,,,void
 000141c0,unknown_000141c0,,,void
-00123310,unknown_00123310,,,void
+00123310,animation_cache_delete,source/cache/xbox_animation_cache.c,,void
 00141190,unknown_00141190,,,void
 00140aa0,unknown_00140aa0,,,void
 00175f40,no_operation,source/cseries/cseries.c,,void
@@ -548,3 +548,19 @@ address,name,source,arguments,returns,convention
 0013d8b0,lruv_resize,source/memory/lruv_cache.c,eax stack,void
 0013d950,lruv_compute_pages_in_use,source/memory/lruv_cache.c,stack stack,int
 0013d370,lruv_block_new,source/memory/lruv_cache.c,stack stack stack,int
+00123230,animation_cache_allocate_memory,source/cache/xbox_animation_cache.c,stack,void
+001232e0,animation_cache_free_memory,source/cache/xbox_animation_cache.c,,void
+001233a0,animation_cache_open,source/cache/xbox_animation_cache.c,,void
+001233f0,animation_cache_close,source/cache/xbox_animation_cache.c,,void
+00123430,animation_cache_idle,source/cache/xbox_animation_cache.c,,void
+001234a0,animation_cache_block_new,source/cache/xbox_animation_cache.c,stack stack ebx,int
+00123550,animation_cache_block_request,source/cache/xbox_animation_cache.c,eax edi,int
+001235b0,animation_cache_block_read,source/cache/xbox_animation_cache.c,eax stack stack,void
+00123680,animation_cache_find_predicted,source/cache/xbox_animation_cache.c,ebx,int
+001236f0,animation_cache_predict,source/cache/xbox_animation_cache.c,eax ecx,void
+001237a0,animation_cache_block_wait,source/cache/xbox_animation_cache.c,edi,bool
+001237e0,animation_cache_get_data,source/cache/xbox_animation_cache.c,eax stack,int
+001238b0,animation_cache_block_locked,source/cache/xbox_animation_cache.c,stack,bool
+001238f0,animation_cache_block_deleted,source/cache/xbox_animation_cache.c,stack,void
+00123970,animation_cache_reading_count,source/cache/xbox_animation_cache.c,,int
+001239d0,animation_cache_update_predicted,source/cache/xbox_animation_cache.c,,void

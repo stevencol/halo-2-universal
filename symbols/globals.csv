@@ -71,3 +71,9 @@ address,name,source
 004687ec,global_preferences_path,source/main/global_preferences.c
 00470024,xbox_signature_handle,source/main/global_preferences.c
 0046875c,lruv_blocks_allocation,source/memory/lruv_cache.c
+00468758,heap_allocation,source/memory/data.c
+004e3b48,animation_cache_globals,source/cache/xbox_animation_cache.c
+00510c20,animation_cache_initialized,source/cache/xbox_animation_cache.c
+00510c21,animation_cache_opened,source/cache/xbox_animation_cache.c
+0055e71c,animation_cache_warning_time,source/cache/xbox_animation_cache.c
+0055e720,animation_cache_idle_count,source/cache/xbox_animation_cache.c

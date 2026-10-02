@@ -105,6 +105,10 @@ typedef char verify_data_array_data_offset[
 typedef char verify_data_iterator_size[
 	sizeof(struct data_iterator) == 0xC ? 1 : -1];
 
+/* ---------- globals */
+
+extern struct allocation *heap_allocation;
+
 /* ---------- prototypes/DATA.C */
 
 struct data_array *data_new(const char *name, long maximum_count, long size, long alignment_bits,

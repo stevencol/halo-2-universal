@@ -18,6 +18,13 @@ gives the address it has there.
 #define DATUM_INDEX_TO_ABSOLUTE_INDEX(index) ((long)((index)&0xFFFF))
 #define DATUM_INDEX_TO_IDENTIFIER(index) ((short)((index)>>16))
 
+/* ---------- globals */
+
+/* 0x00468758: what gives the memory of the things that are made when the
+game starts and last until it ends; its functions are at 0x0011ca20 and
+0x0011ca50. The name is a guess */
+struct allocation *heap_allocation;
+
 /* ---------- code */
 
 /* 0x0016b570: an array in memory of its own, for the array, its elements at

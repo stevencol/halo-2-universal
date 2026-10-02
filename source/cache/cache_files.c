@@ -64,9 +64,6 @@ void unknown_0012e150(long tag_index);
 
 enum
 {
-	/* a read is of whole sectors of the disc */
-	CACHE_FILE_SECTOR_SIZE= 0x200,
-
 	/* the two high bits of an offset tell the file */
 	CACHE_FILE_OFFSET_FILE_SHIFT= 30,
 	CACHE_FILE_OFFSET_MASK= 0x3FFFFFFF
@@ -1407,8 +1404,8 @@ uint8_t cached_map_file_copy_update(
 /* 0x00213760: starts to read a part of a cache file. When the read ends,
 the number of bytes read and a flag are set. The two high bits of the offset
 tell the file: the map that is loaded, or one of the three that the maps
-take resources from. The name is a guess */
-void cache_file_read_async(
+take resources from; the task's number. The name is a guess */
+long cache_file_read_async(
 	uint32_t offset,
 	long size,
 	void *buffer,
@@ -1432,7 +1429,8 @@ void cache_file_read_async(
 		break;
 	}
 
-	async_read_position(file, size, offset&CACHE_FILE_OFFSET_MASK, category, priority, bytes_read, buffer, done);
+	return async_read_position(file, size, offset&CACHE_FILE_OFFSET_MASK, category, priority, bytes_read, buffer,
+		done);
 }
 
 /* 0x00213890: waits for the reads that were started to end. The name is

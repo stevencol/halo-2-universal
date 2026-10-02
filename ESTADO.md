@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-01, al terminar el hito 31.
+**Última actualización:** 2026-10-01, al terminar el hito 32.
 
 ## Dónde estamos
 
-- **266 funciones descompiladas de 11.265: el 2,36 % del juego** (el
-  1,123 % de los bytes de código).
-- Las 266 están comprobadas contra el ejecutable original
+- **284 funciones descompiladas de 11.265: el 2,52 % del juego** (el
+  1,187 % de los bytes de código).
+- Las 284 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile lruv_block_new* (ver `git log`).
+- Último hito: *Decompile the cache of animations* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -68,6 +68,7 @@ Módulos (funciones hechas / archivo):
 - [x] CRC de 32 bits — `memory\crc.c` (2, completo)
 - [x] Búsqueda binaria — `memory\binary_search.c` (1)
 - [x] Caché de bloques de páginas — `memory\lruv_cache.c` (8, completo)
+- [x] Caché de animaciones — `cache\xbox_animation_cache.c` (18, completo)
 - [x] Cadenas anchas — `text\unicode.c` (7; quedan 3)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
 - [ ] Matemáticas reales — `math\real_math.c` (21 de unas 50)
@@ -110,17 +111,28 @@ Módulos (funciones hechas / archivo):
       las que hay 5. Cada módulo que se descompile rellena su fila. Es el
       mapa de carreteras del resto del proyecto.
 - [ ] **Los sistemas que prepara `shell_initialize`** y que no están:
-      `0x00121fc0`, `0x00123180`, `0x00012560` (rasterizador),
+      `0x00121fc0`, `0x00012560` (rasterizador),
       `0x001248b0`, `0x001253d0`. (Las preferencias, `0x00121350`, ya
       están: hito 29.)
 - [x] ~~Opciones de partida: validar y comparar~~ (hito 28).
 - [ ] **Resto de `game_state.c`:** núcleo y partida guardada (`0x001240b0` a
       `0x00124490`, `0x00124640`, `0x00124770` en adelante).
 - [x] ~~`lruv_block_new`~~ (hito 31).
-- [ ] **Caché de animaciones** (`0x00123180` a `0x001239d0`, 17 funciones):
-      usa `lruv_cache.c` entero. Después, la caché de texturas
-      (`0x0012c0d0`).
-- [ ] **Memoria prestada:** `0x0012d2f0`, `0x0012d400`, `0x0012d520`.
+- [x] ~~Caché de animaciones~~ (hito 32).
+- [ ] **Caché de texturas** (`0x0012c0d0` a `0x0012d970`, unas 30
+      funciones; en Halo 1 es `xbox_texture_cache.c`). En dos partes:
+      primero crear, abrir, cerrar, el trabajo de cada fotograma, las
+      funciones que le da a `lruv_cache` (`0x0012d160`, `0x0012d1a0`,
+      `0x0012d200`) y la memoria prestada (`0x0012d2f0`, `0x0012d400`,
+      `0x0012d520`: son de esta caché); después la carga de un bitmap
+      (`0x0012c640`, `0x0012c820`, `0x0012c990`, `0x0012ccf0`, `0x0012ce00`,
+      `0x0012d5a0`, `0x0012d6d0`). Sus globales están en `0x004e6454`
+      (0x38 bytes) y usa funciones de D3D (`0x003fac30`, `0x003fb710`,
+      `0x003fad50`).
+- [ ] **La tabla de `0x00453c00`**: ocho pares de funciones (soltar y
+      tomar memoria) de los que usan memoria al cargar un mapa; el par de
+      la caché de animaciones ya está. La recorren `0x0018ec60` y
+      `0x0018ed00`, que abren y cierran un mapa.
 - [ ] **Resto de las tareas de archivo:** `0x001a0a70`, `0x001a0da0`,
       `0x001a1480`, `0x001a17d0`.
 - [ ] **Matemáticas que quedan:** `real_math.c` (`0x0011cf50`, `0x0011d090`,

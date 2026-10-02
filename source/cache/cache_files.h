@@ -26,6 +26,8 @@ The fields called unknown are not understood yet.
 enum
 {
 	CACHE_FILE_VERSION= 8,
+	/* a read is of whole sectors of the disc */
+	CACHE_FILE_SECTOR_SIZE= 0x200,
 	CACHE_FILE_NAME_LENGTH= 32,
 	CACHE_FILE_STRING_ID_LENGTH= 128
 };
@@ -371,7 +373,7 @@ void cache_file_get_map_name(const char *path, char *name);
 void cache_file_get_map_path(const char *scenario_name, char *path);
 long cached_map_files_find_map(const char *scenario_name);
 uint8_t cache_file_read_header(struct cache_file_header *header, const char *scenario_name);
-void cache_file_read_async(uint32_t offset, long size, void *buffer, long *bytes_read, uint8_t *done,
+long cache_file_read_async(uint32_t offset, long size, void *buffer, long *bytes_read, uint8_t *done,
 	long category, long priority);
 void cache_file_block_until_not_busy(void);
 uint8_t scenario_load(const char *scenario_name);
