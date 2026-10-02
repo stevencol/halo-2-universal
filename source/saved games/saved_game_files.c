@@ -6,7 +6,7 @@ gives the address it has there.
 
 The files that the players keep: profiles, variants of the games and
 playlists. The names of the functions are guesses. The file goes from
-0x00215790 to 0x00217590; not here: 0x00215c00, 0x002164c0 and 0x002170e0.
+0x00215790 to 0x00217590; not here: 0x002164c0 and 0x002170e0.
 */
 
 #include "saved_game_files.h"
@@ -68,6 +68,7 @@ enum
 
 	/* what XFindFirstSaveGame fills */
 	XGAME_FIND_DATA_SIZE= 0x33C,
+	CREATE_NEW= 1,
 	OPEN_EXISTING= 3,
 	INVALID_HANDLE_VALUE= -1
 };
@@ -1355,6 +1356,96 @@ wchar *saved_game_file_get_name(
 	return name;
 }
 
+/* 0x00215c00: makes a file of a type on the hard disk, with the name that
+the player gives it: the saved game that the console shows with its name,
+the file of the type in it, empty, its picture, and what the game knows of
+it. The index of the file; NONE if it is not made, and then why is left in
+saved_game_files_last_error: there are as many files as there can be, the
+hard disk has no room, or something else. The game waits until the files of
+the drives have been looked for */
+long saved_game_file_create(
+	long type,
+	const wchar *name)
+{
+	wchar display_name[SAVED_GAME_FILE_DISPLAY_NAME_LENGTH];
+	char path[SAVED_GAME_FILE_PATH_LENGTH];
+	char root[SAVED_GAME_FILE_ROOT_LENGTH];
+	long file= NONE;
+	long saved_games;
+	long language;
+
+	while (!*(volatile boolean *)&unknown_0055c14c)
+	{
+		SwitchToThread();
+		sound_idle();
+	}
+	if (!unknown_0051ea14)
+	{
+		return NONE;
+	}
+	saved_games= saved_game_files_count_saved_games(0);
+	if ((unknown_0051ea14 &&
+		((const struct saved_game_file_table *)((const byte *)unknown_0051ea14+UNKNOWN_0051EA14_TABLES_OFFSET))->count>=
+		MAXIMUM_SAVED_GAME_FILES_PER_TABLE) || saved_games>=MAXIMUM_SAVED_GAME_FILES_PER_TABLE)
+	{
+		saved_game_files_last_error= _saved_game_files_error_too_many;
+		return NONE;
+	}
+	language= saved_game_files_language;
+	display_name[0]= 0;
+	if (!saved_game_file_get_display_name(type, display_name, name, language))
+	{
+		return NONE;
+	}
+	memset(path, 0, sizeof(path));
+	saved_game_files_get_unit_root(0, root, sizeof(root));
+	if (!XCreateSaveGame(root, display_name, CREATE_NEW, 0, path, sizeof(path)))
+	{
+		struct saved_game_file_information information;
+		char type_path[SAVED_GAME_FILE_PATH_LENGTH];
+		struct file_reference reference;
+		long index;
+
+		memset(&information, 0, sizeof(information));
+		type_path[0]= 0;
+		wcsncpy(information.name, name, SAVED_GAME_FILE_NAME_LENGTH);
+		information.name[SAVED_GAME_FILE_NAME_LENGTH]= 0;
+		information.type= type;
+		information.language= (byte)language;
+		strncpy(information.path, path, sizeof(information.path));
+		information.path[sizeof(information.path)-1]= 0;
+		saved_game_file_get_type_path(type_path, information.path, type);
+		if (file_reference_create_from_path(&reference, type_path, FALSE) && file_create(&reference) &&
+			saved_game_file_write_image(type, path) && saved_game_file_add_information(0, &information, &index))
+		{
+			unsigned long salt= *(const uint32_t *)((const byte *)unknown_0051ea14+UNKNOWN_0051EA14_SALT_OFFSET)&
+				SAVED_GAME_FILE_INDEX_SALT_MASK;
+
+			file= (long)((salt<<SAVED_GAME_FILE_INDEX_SALT_SHIFT) |
+				(((unsigned long)index&SAVED_GAME_FILE_INDEX_FILE_MASK)<<SAVED_GAME_FILE_INDEX_FILE_SHIFT) |
+				((unsigned long)type&SAVED_GAME_FILE_INDEX_TYPE_MASK));
+			if (file!=NONE)
+			{
+				saved_game_files_last_error= _saved_game_files_error_none;
+				return file;
+			}
+		}
+		else
+		{
+			/* what was made of the saved game is deleted */
+			wchar delete_name[SAVED_GAME_FILE_DISPLAY_NAME_LENGTH];
+
+			delete_name[0]= 0;
+			saved_game_file_get_display_name(type, delete_name, name, (char)information.language);
+			XDeleteSaveGame(root, delete_name);
+		}
+	}
+	saved_game_files_last_error= saved_game_files_hard_disk_has_blocks(saved_game_file_type_get_blocks(type)) ?
+		_saved_game_files_error_failed : _saved_game_files_error_no_room;
+
+	return file;
+}
+
 /* 0x00215e60: deletes a file: the saved game that the console shows with
 its name, if it is of a drive that is there, and what the game knows of it.
 The game waits until the files of the drives have been looked for */
@@ -1431,7 +1522,7 @@ boolean saved_game_file_get_unused_name(
 		} while (number<MAXIMUM_SAVED_GAME_FILE_NAME_NUMBER);
 		if (number==MAXIMUM_SAVED_GAME_FILE_NAME_NUMBER)
 		{
-			saved_game_files_last_error= _saved_game_files_error_no_name;
+			saved_game_files_last_error= _saved_game_files_error_too_many;
 			name[0]= 0;
 		}
 	}

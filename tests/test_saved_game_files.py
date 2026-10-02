@@ -963,3 +963,97 @@ def run(t) -> None:
             random_.getrandbits(1),
             globals={"unknown_0051ea14": 0, "input_globals": input_globals(random_, 0xFFFF)},
         )
+
+    # ---------- making a file
+
+    def shown(display: str):
+        """saved_game_file_get_display_name: the name that the console shows,
+        which is another each time that it is asked for.
+        It always says that it made it: the function of source/ does, and the
+        compiler knows, so what the game does when it does not cannot be
+        tried."""
+
+        def handler(harness, arguments):
+            type_, where, name, language = arguments
+            before = bytes(harness.mu.mem_read(where, 2))
+            number = calls_so_far(harness, "saved_game_file_get_display_name")
+            harness.mu.mem_write(where, wide(display + str(number)))
+            return 1, (type_, before, wide_text(harness, name), language)
+
+        return handler
+
+    def made(result: int, directory: bytes):
+        """XCreateSaveGame: what it says, and the directory of the saved game
+        that it leaves."""
+
+        def handler(harness, arguments):
+            root, name, disposition, flags, path, path_size = arguments
+            before = bytes(harness.mu.mem_read(path, 0x100))
+            harness.mu.mem_write(path, directory + b"\0")
+            return result, (text(harness, root), wide_text(harness, name), disposition, flags, before, path_size)
+
+        return handler
+
+    def referred(found: int):
+        def handler(harness, arguments):
+            file, path, directory = arguments
+            return file if found else 0, (text(harness, path), directory & 0xFF)
+
+        return handler
+
+    def added(result: int, place: int):
+        """saved_game_file_add_information: what the game knows of the new
+        file, and the place that it gets."""
+
+        def handler(harness, arguments):
+            table, information_, where = arguments
+            harness.mu.mem_write(where, struct.pack("<I", place))
+            return result, (table, bytes(harness.mu.mem_read(information_, INFORMATION)))
+
+        return handler
+
+    def files_with(count: int, salt: int) -> Buffer:
+        """The table of the hard disk with so many files, and the salt of the indices."""
+        data = bytearray(FILES_SIZE)
+        struct.pack_into("<i", data, TABLES, count)
+        struct.pack_into("<I", data, SALT, salt)
+        return Buffer(bytes(data))
+
+    create_directories = (b"u:\\0123456789AB\\", b"", b"d" * 0x13, b"d" * 0x14, b"d" * 0x40)
+    create_names = ("mine", "", "a name of 16 ch.", "a name that is longer than sixteen")
+    for n in range(200):
+        type_ = random_.choice((0, 1, 5, 9, 10, 12, 0x15, 0x8000000F))
+        # which of the steps fails: one of them, sometimes
+        steps = [1] * 5
+        if n % 3 == 2:
+            steps[random_.randrange(5)] = 0
+        console, reference, created, image_, added_ = steps
+        waits = random_.choice((0, 0, 0, 1, 2))
+        count = random_.choice((0, 0, 5, 5, 4095, 4096, 5000, -1))
+        saved_games = random_.choice((0, 0, 100, 100, 4095, 4096, 0x7FFFFFFF, NONE))
+        t.check(
+            "saved_game_file_create",
+            type_,
+            Buffer(wide(random_.choice(create_names)) + bytes(2)),
+            globals={
+                "unknown_0055c14c": bytes([waits == 0]),
+                "unknown_0051ea14": 0 if n % 23 == 22 else files_with(count, random_.getrandbits(32)),
+                "input_globals": input_globals(random_, random_.choice((0xFFFF, 1, 1, 0, 2))),
+                "saved_game_files_language": random_.choice((0, 4, 8, NONE, 0x1FF, 0x184, 0x7F)),
+                "saved_game_files_last_error": random_.getrandbits(32),
+            },
+            externals={
+                "SwitchToThread": wait_until("unknown_0055c14c", 0, waits),
+                "sound_idle": lambda harness, arguments: 0,
+                "saved_game_files_count_saved_games": lambda harness, arguments, value=saved_games: value,
+                "saved_game_file_get_display_name": shown(random_.choice(("Profile - mine", "", "x"))),
+                "XCreateSaveGame": made(0 if console else random_.choice((2, 183, 0x80000000)), random_.choice(create_directories)),
+                "file_reference_create_from_path": referred(reference),
+                "file_create": lambda harness, arguments, value=created: (value, 0),
+                "saved_game_file_write_image": lambda harness, arguments, value=image_: (value, (arguments[0], text(harness, arguments[1]))),
+                "saved_game_file_add_information": added(added_, random_.choice((0, 1, 0x1FFF, 0x2001, 0xFFFFFFFF))),
+                "XDeleteSaveGame": lambda harness, arguments: (0, (text(harness, arguments[0]), wide_text(harness, arguments[1]))),
+                "saved_game_file_type_get_blocks": lambda harness, arguments, value=random_.getrandbits(16): value,
+                "saved_game_files_hard_disk_has_blocks": lambda harness, arguments, value=random_.getrandbits(1): value,
+            },
+        )

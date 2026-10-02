@@ -4,7 +4,11 @@
 # executable it was decompiled from: runs both in an emulator with the cases
 # of tests/ and compares their results (tools/difftest.py)
 #
-# test_functions.py [name of a test file]
+# test_functions.py [name of a test file [function ...]]
+#
+# With functions after the name of the test file, only their cases are run:
+# the rest of the test file is gone through, so that the cases are the same,
+# but nothing of it is run.
 #
 # needs disc/default.xbe, clang and ld.lld in the PATH, and the Python package
 # unicorn
@@ -23,8 +27,10 @@ GHIDRA_FUNCTIONS = ROOT / "ghidra" / "functions.csv"
 class Tester:
     """What a test file gets: check() runs a case in both functions."""
 
-    def __init__(self, harness: Harness) -> None:
+    def __init__(self, harness: Harness, only: frozenset[str] = frozenset()) -> None:
         self.harness = harness
+        # the functions whose cases are run; all, if there are none
+        self.only = only
         # per function: the cases run and the first failures
         self.cases: dict[str, int] = {}
         self.failures: dict[str, list[str]] = {}
@@ -38,6 +44,8 @@ class Tester:
         is compared too. `mocks` are functions that the test stands in for
         (difftest.Mock): the calls to them are compared too. `extra` are
         buffers that are no argument, for the mocks to use; they are compared."""
+        if self.only and name not in self.only:
+            return
         self.cases[name] = self.cases.get(name, 0) + 1
         shown = ", ".join(
             f"<{len(argument.data)} bytes>"
@@ -81,7 +89,7 @@ def main() -> None:
         harness = Harness()
     except DifftestError as error:
         sys.exit(f"test_functions: {error}")
-    tester = Tester(harness)
+    tester = Tester(harness, frozenset(sys.argv[2:]))
 
     wanted = sys.argv[1] if len(sys.argv) > 1 else None
     # a test file can take what another one has

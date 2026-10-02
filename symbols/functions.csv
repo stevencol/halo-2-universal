@@ -908,3 +908,4 @@ address,name,source,arguments,returns,convention
 0013e0e0,short_sort_4byte,source/cseries/sort.c,stack eax stack stack,void
 0013e140,short_sort_2byte,source/cseries/sort.c,stack eax stack stack,void
 00215900,saved_game_files_enumerate,source/saved games/saved_game_files.c,stack stack stack stack stack,void
+00215c00,saved_game_file_create,source/saved games/saved_game_files.c,stack stack,int

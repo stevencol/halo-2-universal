@@ -101,7 +101,13 @@ enum
 	MAXIMUM_SAVED_GAME_FILES_PER_TABLE= 4096,
 	/* the names that the game gives are numbered: so many are tried */
 	MAXIMUM_SAVED_GAME_FILE_NAME_NUMBER= 4096,
-	_saved_game_files_error_no_name= 1,
+	/* why a file was not made: saved_game_files_last_error. There are as
+	many files, or names, as there can be; the hard disk has no room for the
+	file; or it has, and something else failed */
+	_saved_game_files_error_none= 0,
+	_saved_game_files_error_too_many= 1,
+	_saved_game_files_error_no_room= 2,
+	_saved_game_files_error_failed= 4,
 
 	/* the memory of the files: those that come with the game, one table of
 	those of a drive, the salt of the indices, and the buffer that a file is
@@ -258,6 +264,7 @@ void saved_game_files_enumerate(long controller_index, long type, word *count, l
 struct saved_game_file_information *ALLOCATION_CONVENTION saved_game_file_information_new(
 	struct saved_game_file_information *information);
 wchar *saved_game_file_get_name(long file, wchar *name);
+long saved_game_file_create(long type, const wchar *name);
 void saved_game_file_delete(long file);
 boolean saved_game_file_get_unused_name(long type, wchar *name);
 char *saved_game_files_get_unit_root(long unit_index, char *root, short size);

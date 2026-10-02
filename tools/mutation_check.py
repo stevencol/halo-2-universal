@@ -9,6 +9,7 @@
 # The file of mutations is Python, and defines:
 #
 #   TESTS = "game_state"          # the tests to run: a part of the name of the test files
+#   FUNCTIONS = ["game_state_new"]  # optional: the functions whose cases are run
 #   MUTATIONS = [
 #       ("source/saved games/game_state.c", "size= (size+3)&~3;", "size= (size+3)&~1;"),
 #       ...
@@ -36,6 +37,7 @@ def main() -> None:
     exec(Path(sys.argv[1]).read_text(encoding="utf-8"), settings)
     tests = settings.get("TESTS", "")
     mutations = settings["MUTATIONS"]
+    functions = settings.get("FUNCTIONS", []) if tests else []
 
     # all the texts have to be there before anything is changed
     for path, old, *_ in mutations:
@@ -50,7 +52,7 @@ def main() -> None:
         file.write_text(original.replace(old, new), encoding="utf-8", newline="\n")
         try:
             try:
-                command = [sys.executable, str(ROOT / "tools" / "test_functions.py"), *([tests] if tests else [])]
+                command = [sys.executable, str(ROOT / "tools" / "test_functions.py"), *([tests] if tests else []), *functions]
                 result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, timeout=TIMEOUT_SECONDS)
                 caught = [line.split()[1] for line in result.stdout.splitlines() if "FAILED" in line]
                 if "does not compile" in result.stdout + result.stderr:

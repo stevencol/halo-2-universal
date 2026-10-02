@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Crear un archivo
+
+Una función. De 537 funciones se pasa a 538, el 4,78 % de las del juego (el
+2,321 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `saved_game_file_create` | `0x00215c00` | `saved games/saved_game_files.c` |
+
+- `tools/test_functions.py` admite, detrás del nombre del archivo de pruebas,
+  los nombres de las funciones cuyos casos se corren; el resto del archivo se
+  recorre (para que los casos sean los mismos) pero no se emula.
+  `tools/mutation_check.py` los toma de `FUNCTIONS`. Una pasada de mutación
+  de `saved_game_files.c` baja de más de dos minutos a unos doce segundos.
+
+### Lo que se sabe
+
+- Crear un archivo en el disco duro es: esperar a que se hayan buscado los
+  archivos de las unidades; pedir a la consola una partida guardada nueva con
+  el nombre visible (el del tipo en el idioma de los archivos, y el que puso
+  el jugador); crear en su directorio el archivo vacío del tipo; escribir su
+  imagen; y apuntarlo en la tabla. Si falla cualquier paso después de crear
+  la partida guardada, se borra.
+- Por qué no se creó queda en `saved_game_files_last_error`: 1 si ya hay
+  4.096 archivos en la tabla o 4.096 partidas guardadas en el disco, 2 si
+  al disco no le caben los bloques de un archivo de ese tipo, 4 si le caben
+  y falló otra cosa; 0 si se creó. El 1 es el mismo de cuando no queda
+  nombre libre, así que `_saved_game_files_error_no_name` pasa a llamarse
+  `_saved_game_files_error_too_many`.
+- De la ruta que da la consola solo se guardan 19 caracteres.
+
+### Sin comprobar
+
+- La comprobación de que el índice recién hecho no sea −1: no puede serlo
+  (un índice del disco duro no tiene el bit de los de serie).
+- Lo que hace el juego si no se puede hacer el nombre visible: la función que
+  lo hace siempre dice que sí, el compilador lo sabe al compilar `source/`, y
+  la suplente de la prueba no puede decir otra cosa.
+
+### Mutaciones
+
+55 líneas rotas a propósito: 53 detectadas a la primera; una más tras hacer
+que la suplente del nombre visible dé un nombre distinto cada vez (el juego
+borra con el segundo nombre, no con el primero); la otra es la primera de
+«Sin comprobar».
+
 ## 2026-10-02 — La lista de los archivos de un tipo, y cómo se ordena
 
 Cinco funciones. De 532 funciones se pasa a 537, el 4,77 % de las del juego
