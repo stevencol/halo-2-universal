@@ -81,7 +81,7 @@ def run(t) -> None:
                 "draw_string_globals+4": bytes([random_.choice((0, 1, 2, 3, 0xFE, 0xFF))]),
                 "font_slot_indices": struct.pack("<11I", *slots),
             },
-            externals={"unknown_001224c0": lambda harness, arguments, font=font: font},
+            externals={"font_get": lambda harness, arguments, font=font: font},
         )
 
     # ---------- how the texts are drawn
@@ -116,7 +116,7 @@ def run(t) -> None:
             "draw_string_set_font",
             font_index,
             globals={"draw_string_globals": how(), "font_slot_indices": fonts()},
-            externals={"unknown_001224c0": lambda harness, arguments: 0x80123400},
+            externals={"font_get": lambda harness, arguments: 0x80123400},
         )
     for n in range(60):
         t.check(
@@ -129,7 +129,7 @@ def run(t) -> None:
             a_color(),
             globals={"draw_string_globals": how(), "font_slot_indices": fonts()},
             externals={
-                "unknown_001224c0": lambda harness, arguments: 0x80123400,
+                "font_get": lambda harness, arguments: 0x80123400,
                 "draw_string_set_color": lambda harness, arguments: (0, (bytes(harness.mu.mem_read(arguments[0], 16)),)),
             },
         )
@@ -150,7 +150,7 @@ def run(t) -> None:
             font_index,
             globals={"draw_string_globals": how(), "font_slot_indices": fonts(), "unicode_escape_note_time": 0},
             externals={
-                "unknown_001224c0": lambda harness, arguments, font=random_.choice((0, 0x80123400, 0x80123400, 0x80123400)): font,
+                "font_get": lambda harness, arguments, font=random_.choice((0, 0x80123400, 0x80123400, 0x80123400)): font,
                 "unknown_001414d0": ready,
                 "GetTickCount": lambda harness, arguments: 77,
             },
@@ -173,7 +173,7 @@ def run(t) -> None:
                 *((font_index,) if name == "draw_string_precache_string" else ()),
                 globals={"draw_string_globals": how(font_index), "font_slot_indices": fonts(), "unicode_escape_note_time": 0},
                 externals={
-                    "unknown_001224c0": lambda harness, arguments: 0x80123400,
+                    "font_get": lambda harness, arguments: 0x80123400,
                     "unknown_001414d0": ready,
                     "GetTickCount": lambda harness, arguments: 77,
                 },

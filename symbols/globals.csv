@@ -39,7 +39,7 @@ address,name,source
 00509350,shell_device_requested,source/shell/shell.c
 0047ffd8,unknown_0047ffd8,source/shell/shell.c
 00484ce8,unknown_00484ce8,source/shell/shell.c
-004e2920,unknown_004e2920,source/shell/shell.c
+004e2920,font_slots,source/text/fonts.c
 00440dd8,game_systems,source/game/game.c
 004e7408,global_random_seed_reference,source/game/game.c
 00510c50,unknown_00510c50,source/main/main.c

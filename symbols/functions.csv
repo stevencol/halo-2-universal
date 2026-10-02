@@ -932,7 +932,7 @@ address,name,source,arguments,returns,convention
 00135a30,bitmap_2d_get_pixel_address,source/bitmaps/bitmaps.c,edi eax stack stack,int
 00135af0,bitmap_3d_get_pixel_address,source/bitmaps/bitmaps.c,ecx stack stack stack stack,int
 0013f470,text_iterator_new,source/text/draw_string.c,esi ebx edx stack stack stack stack stack,bool
-001224c0,unknown_001224c0,,ecx,pointer
+001224c0,font_get,source/text/fonts.c,ecx,pointer
 0013eb20,draw_string_set_tab_stops,source/text/draw_string.c,eax edx,void
 0013ed50,draw_string_set_shadow_color,source/text/draw_string.c,eax,void
 0013ed90,draw_string_set_font,source/text/draw_string.c,esi,void
@@ -943,3 +943,5 @@ address,name,source,arguments,returns,convention
 0013ec70,draw_string_set_color,source/text/draw_string.c,eax,void
 001414d0,unknown_001414d0,,stack stack,bool
 0013eb60,draw_string_set_color_exact,source/text/draw_string.c,eax,void
+00122540,font_get_line_height,source/text/fonts.c,eax,int
+00122570,font_get_kerning,source/text/fonts.c,edx edi ebx,short

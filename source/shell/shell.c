@@ -20,6 +20,7 @@ shell_dispose are those of Halo 1's shell.c; the other names are guesses.
 #include "main/global_preferences.h"
 #include "memory/physical_memory.h"
 #include "saved games/game_state.h"
+#include "text/fonts.h"
 
 #include <string.h>
 
@@ -106,8 +107,7 @@ enum
 	SHELL_DEVICE_FORMAT= 6,
 	SHELL_DEVICE_DEPTH_FORMAT= 0x2A,
 
-	UNKNOWN_TABLE_SIZE= 0xD4,
-	UNKNOWN_004E2920_SIZE= 0x1220
+	UNKNOWN_TABLE_SIZE= 0xD4
 };
 
 /* ---------- globals */
@@ -139,10 +139,6 @@ long shell_device_requested;
 What they are is not known */
 byte unknown_0047ffd8[UNKNOWN_TABLE_SIZE];
 byte unknown_00484ce8[UNKNOWN_TABLE_SIZE];
-
-/* 0x004e2920: cleared when the game ends, with the tasks. What it is is not
-known */
-byte unknown_004e2920[UNKNOWN_004E2920_SIZE];
 
 /* ---------- code */
 
@@ -190,7 +186,7 @@ void shell_dispose(
 	unknown_00140aa0();
 
 	/* the thread of the tasks is not ended: only its handles are closed */
-	memset(unknown_004e2920, 0, sizeof(unknown_004e2920));
+	memset(font_slots, 0, sizeof(font_slots));
 	CloseHandle(async_globals.thread);
 	CloseHandle(async_globals.semaphore);
 	CloseHandle(async_globals.task_list_mutex);

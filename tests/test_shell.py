@@ -75,7 +75,7 @@ def run(t) -> None:
                 # game_state_dispose is in the game's function itself
                 "game_state_globals": bytes([memory != 0]) + random_.randbytes(0x253F),
                 "xbox_game_state_globals": random_.randbytes(0x28),
-                "unknown_004e2920": random_.randbytes(0x1220),
+                "font_slots": random_.randbytes(0x1220),
             },
             externals={
                 **{name: nothing for name in DISPOSE},

@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Las fuentes cargadas
+
+Tres funciones. De 573 funciones se pasa a 576, el 5,11 % de las del juego
+(el 2,548 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `font_get` | `0x001224c0` | `text/fonts.c` (nuevo) |
+| `font_get_line_height` | `0x00122540` | `text/fonts.c` |
+| `font_get_kerning` | `0x00122570` | `text/fonts.c` |
+
+- `struct font` (0x1D0 bytes) y la tabla `font_slots` (`0x004e2920`): los
+  diez huecos para fuentes. Era el bloque sin nombre que `shell.c` borraba al
+  salir.
+- `tests/test_fonts.py`.
+
+### Lo que se sabe
+
+- Hay diez huecos para fuentes. Una fuente se carga con una tarea del hilo
+  de las tareas; quien la pide mientras se carga le sube la prioridad a esa
+  tarea y espera a que termine.
+- La altura de una línea es la suma de tres medidas de la fuente (lo que sube,
+  lo que baja y el interlineado); sin fuente, 10.
+- El ajuste entre dos letras (*kerning*) solo existe para caracteres de 8
+  bits que no sean el 0: hasta 96 pares ordenados, y un bit por cada carácter
+  que empieza algún par, para no buscar en balde.
+- Al buscar un par el juego mira el primer hueco de la lista antes de
+  comprobar que haya alguno: con cero pares puede dar el ajuste de lo que
+  haya en ese hueco. Se reproduce tal cual.
+
+### Sin comprobar
+
+- El hueco número 10 (uno más de los que hay): el juego lee lo que haya
+  detrás de la tabla.
+- Los caracteres de más de 8 bits: sin la comprobación tampoco encuentran
+  par, porque los de los pares son de 8 bits (dos mutaciones).
+- Comprobar que quedan pares antes de mirar el primero: da lo mismo, por lo
+  dicho arriba.
+
+### Mutaciones
+
+35 líneas rotas a propósito: 25 detectadas a la primera, seis más con casos
+nuevos (pares con el carácter 0, un par cuyo bit no está, y algo que parece
+un par justo detrás de los pares), y las cuatro de «Sin comprobar».
+
 ## 2026-10-02 — El color del texto
 
 Dos funciones. De 571 funciones se pasa a 573, el 5,09 % de las del juego

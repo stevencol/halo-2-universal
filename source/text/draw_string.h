@@ -121,6 +121,10 @@ void draw_string_set_font_and_format(long font_index, const real_argb_color *sha
 boolean draw_string_precache_string(const wchar *string, long font_index);
 boolean draw_string_precache_characters(const long *characters, long font_index);
 boolean draw_string_precache(const wchar *string);
+
+/* ---------- globals */
+
+extern long font_slot_indices[NUMBER_OF_FONTS];
 boolean text_iterator_new(struct text_iterator *iterator, long font_index, short justification,
 	const long *characters, short unknown, const real_argb_color *color, const boolean *shadow,
 	const real_argb_color *shadow_color);

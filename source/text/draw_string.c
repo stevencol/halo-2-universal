@@ -10,15 +10,12 @@ these functions are of it is a guess, and so are their names.
 
 #include "draw_string.h"
 
+#include "text/fonts.h"
 #include "text/unicode.h"
 
 #include <string.h>
 
 /* ---------- prototypes of functions that are not decompiled */
-
-/* 0x001224c0: the font of one of the places for fonts, once it is loaded:
-it waits for it. NULL if there is none */
-void *unknown_001224c0(long font_slot_index);
 
 /* 0x001414d0: gets a character of a font ready to be drawn; whether it
 could */
@@ -148,7 +145,7 @@ void draw_string_set_shadow_color(
 static inline __attribute__((always_inline)) void draw_string_set_font_inline(
 	long font_index)
 {
-	unknown_001224c0(font_slot_indices[font_index]);
+	font_get(font_slot_indices[font_index]);
 	draw_string_globals.font_index= font_index;
 }
 
@@ -297,7 +294,7 @@ boolean text_iterator_new(
 	{
 		iterator->shadow_color= 0;
 	}
-	iterator->font= unknown_001224c0(font_slot_indices[font_index]);
+	iterator->font= font_get(font_slot_indices[font_index]);
 
 	return iterator->font!=NULL;
 }
