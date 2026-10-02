@@ -363,3 +363,55 @@ def run(t) -> None:
                 ),
             },
         )
+
+    # ---------- giving a file another name, a step at a time
+
+    STATE = 0x9C
+
+    def step_externals(results: dict, copy: int) -> dict:
+        def open_copy(harness, arguments):
+            # whether there is a file to copy is left in the stack
+            harness.mu.mem_write(arguments[1], bytes([copy]))
+            return results["open"], (arguments[0],)
+
+        return {
+            "unknown_002ad020": lambda harness, arguments: results["create"],
+            "saved_game_file_write_image": lambda harness, arguments: (results["image"], (arguments[0], text(harness, arguments[1]))),
+            "unknown_002ad220": open_copy,
+            "saved_game_file_copy_read": lambda harness, arguments: results["read"],
+            "saved_game_file_copy_write": lambda harness, arguments: results["write"],
+            "saved_game_file_copy_close": lambda harness, arguments: 0,
+            "saved_game_file_rename_finish": lambda harness, arguments: (0, (arguments[0], arguments[1] & 0xFF)),
+            "CloseHandle": lambda harness, arguments: 1,
+        }
+
+    names = ("create", "image", "open", "read", "write")
+    for state in list(range(-1, 9)) + [NONE, 0x100]:
+        for failing in (None, *names):
+            for copy in (0, 1, 0x80):
+                for size, written in ((0x1000, 0x800), (0x1000, 0x1000), (0x1000, 0x1001), (0x80000000, 1)):
+                    results = {name: int(name != failing) for name in names}
+                    data = bytearray(random_.randbytes(DESCRIPTION))
+                    struct.pack_into("<I", data, 0, random_.getrandbits(32))
+                    data[4:0x18] = (random_.choice((b"u:\\udata\\4d\\AB\\", b"")) + bytes(0x14))[:0x14]
+                    struct.pack_into("<6I", data, SOURCE, random_.choice((0x4321, NONE)), random_.choice((0x8765, 0)), 0x80200000, size, random_.getrandbits(32), written)
+                    struct.pack_into("<I", data, STATE, state & 0xFFFFFFFF)
+                    t.check(
+                        "saved_game_file_rename_step",
+                        Buffer(bytes(data)),
+                        Buffer(random_.randbytes(4)),
+                        externals=step_externals(results, copy),
+                    )
+
+    # ---------- the path of the file that is written
+
+    for debug in (0, 1, 0x80):
+        for type_ in (0, 1, 5, 10, 11, NONE):
+            for directory in (b"u:\\udata\\4d\\AB\\", b"", b"d" * 0x13):
+                data = bytearray(random_.randbytes(DESCRIPTION))
+                data[4 : 4 + 0x14] = (directory + bytes(0x14))[:0x14]
+                # the name of the file follows its directory: it is no part of the path
+                data[0x18:0x1A] = bytes(2)
+                struct.pack_into("<I", data, 0x3C, type_)
+                data[0x7C] = debug
+                t.check("saved_game_file_description_get_path", Buffer(bytes(data)), Buffer(random_.randbytes(0x100)))

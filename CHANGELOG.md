@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Los pasos del cambio de nombre
+
+Dos funciones más de `saved_game_file_tasks.c`. De 517 funciones se pasa a
+519, el 4,61 % de las del juego (el 2,185 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `saved_game_file_rename_step` | `0x002ad5f0` | `saved games/saved_game_file_tasks.c` |
+| `saved_game_file_description_get_path` | `0x002ad760` | `saved games/saved_game_file_tasks.c` |
+
+### Cambiado
+
+- En `struct saved_game_file_description`, `unknown9C` es `state` (por dónde
+  va el cambio de nombre) y `unknown7C` es `debug`.
+
+### Lo que se sabe
+
+- Cambiar de nombre un archivo no se hace de una vez: es una máquina de
+  siete estados, y cada vez que el hilo de tareas le da tiempo hace un paso.
+  En orden: crear la partida guardada con el nombre nuevo, escribir su
+  imagen, abrir el archivo del estado en la vieja y en la nueva, leer un
+  trozo, escribirlo (y volver a leer mientras quede), y borrar la vieja.
+- Si la partida vieja no tiene archivo de estado que copiar, se salta la
+  copia.
+- Si un paso falla se dice por qué (2 en los pasos sueltos, 4 en la copia),
+  se cierran los dos archivos y se borra la partida nueva. El estado se
+  queda donde estaba.
+- Un archivo que no cambia de nombre nace ya en el último estado.
+- Queda una rama de depuración: con un indicador puesto, el archivo se
+  escribiría en `t:\blam` en vez de en su directorio. Nada de lo
+  descompilado pone ese indicador.
+
+### Mutaciones
+
+41 líneas rotas a propósito: las 41 detectadas.
+
 ## 2026-10-02 — Cambiar de nombre un archivo guardado
 
 Cuatro funciones más de `saved_game_file_tasks.c`. De 513 funciones se

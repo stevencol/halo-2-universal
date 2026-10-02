@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 63.
+**Última actualización:** 2026-10-02, al terminar el hito 64.
 
 ## Dónde estamos
 
-- **517 funciones descompiladas de 11.265: el 4,59 % del juego** (el
-  2,171 % de los bytes de código).
-- Las 517 están comprobadas contra el ejecutable original
+- **519 funciones descompiladas de 11.265: el 4,61 % del juego** (el
+  2,185 % de los bytes de código).
+- Las 519 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the copy of a file that gets another name* (ver `git log`).
+- Último hito: *Decompile the steps of giving a file another name* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -85,7 +85,7 @@ Módulos (funciones hechas / archivo):
       37; va de `0x00216060` a `0x00217590`. Faltan las dos grandes:
       `0x002164c0` (659 bytes) y `0x002170e0` (443 bytes))
 - [ ] Tareas de los archivos de los jugadores —
-      `saved games\saved_game_file_tasks.c` (13; el archivo va de
+      `saved games\saved_game_file_tasks.c` (15; el archivo va de
       `0x002accd0` a `0x002ae090`: faltan el trabajo de una escritura,
       `0x002acde0`, y lo que hay de `0x002ad020` en adelante)
 - [ ] Perfiles de los jugadores — `saved games\player_profile.c` (9;

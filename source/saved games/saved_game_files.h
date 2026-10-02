@@ -135,6 +135,25 @@ struct built_in_saved_game_file
 	byte data[SAVED_GAME_FILE_PROFILE_SIZE];
 };
 
+/* how far giving a file another name is: each time the thread is given the
+work, a step is done */
+enum
+{
+	/* the saved game with the new name is made */
+	_saved_game_file_rename_create,
+	/* the file of the state of the game, if the old one has it, is opened
+	in both */
+	_saved_game_file_rename_open_copy,
+	_saved_game_file_rename_copy_read,
+	_saved_game_file_rename_copy_write,
+	/* the picture is written in the new one */
+	_saved_game_file_rename_write_image,
+	/* the old one is deleted */
+	_saved_game_file_rename_finish,
+	_saved_game_file_rename_done,
+	NUMBER_OF_SAVED_GAME_FILE_RENAME_STATES
+};
+
 /* what is told of a file that is written, to the thread that writes it. It
 is in the result of the write, after its first 8 bytes */
 struct saved_game_file_description
@@ -146,7 +165,8 @@ struct saved_game_file_description
 	char old_path[0x14];
 	boolean renamed;
 	byte pad7B;
-	boolean unknown7C;
+	/* the file is written to a place of the debug game */
+	boolean debug;
 	byte pad7D[3];
 	struct saved_game_files_operation *operation;
 	/* a file with another name is copied to a new one: the two, open; NONE
@@ -158,7 +178,8 @@ struct saved_game_file_description
 	unsigned long size;
 	unsigned long read_position;
 	unsigned long write_position;
-	long unknown9C;
+	/* how far giving the file another name is */
+	long state;
 };
 
 typedef char verify_saved_game_file_description_size[
@@ -259,6 +280,8 @@ boolean saved_game_state_read_task_new(const char *path, struct saved_game_file_
 	long header_size, void *data, long data_size, boolean unknown);
 boolean saved_game_state_write_task_new(const char *path, struct saved_game_file_result *result, void *header,
 	long header_size, void *data, long data_size, boolean unknown);
+boolean saved_game_file_rename_step(struct saved_game_file_description *description, long *error);
+void saved_game_file_description_get_path(const struct saved_game_file_description *description, char *path);
 boolean saved_game_file_copy_read(struct saved_game_file_description *description);
 boolean saved_game_file_copy_write(struct saved_game_file_description *description);
 void saved_game_file_rename_finish(struct saved_game_file_description *description, boolean renamed);

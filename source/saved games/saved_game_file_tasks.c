@@ -29,7 +29,9 @@ enum
 	/* ERROR_TOO_MANY_OPEN_FILES: what a read fails with until it is known
 	why */
 	SAVED_GAME_FILE_ERROR_DEFAULT= 4,
-	SAVED_GAME_FILE_DESCRIPTION_UNKNOWN9C= 6,
+	/* what a rename that does not go on says of where it stopped */
+	_saved_game_file_rename_error_step= 2,
+	_saved_game_file_rename_error_copy= 4,
 
 	/* what a result says of how far a read and a write got, if they fail */
 	_saved_game_file_error_reading= 3,
@@ -133,6 +135,13 @@ uint32_t XCalculateSignatureBegin(uint32_t flags);
 uint32_t XCalculateSignatureUpdate(uint32_t signature, const void *data, uint32_t size);
 uint32_t XCalculateSignatureEnd(uint32_t signature, void *result);
 
+/* 0x002ad020: makes the saved game that a file goes to when it gets
+another name. 0x002ad220: opens the file of the state of the game in the old
+one and in the new one, to copy it: whether there is one to copy is left
+where it is told */
+boolean unknown_002ad020(struct saved_game_file_description *description);
+boolean unknown_002ad220(struct saved_game_file_description *description, boolean *copy);
+
 /* 0x002acde0: the work of the task of a write */
 long ASYNC_CALLBACK unknown_002acde0(struct async_custom_task *task, void *data, long size);
 
@@ -227,10 +236,10 @@ struct saved_game_file_description *saved_game_file_description_new(
 	description->new_name[0]= 0;
 	description->old_path[0]= 0;
 	description->renamed= FALSE;
-	description->unknown7C= FALSE;
+	description->debug= FALSE;
 	description->operation= NULL;
 	description->copy_buffer= NULL;
-	description->unknown9C= SAVED_GAME_FILE_DESCRIPTION_UNKNOWN9C;
+	description->state= _saved_game_file_rename_done;
 	description->information= *information;
 
 	return description;
@@ -253,13 +262,13 @@ struct saved_game_file_description *saved_game_file_description_new_renamed(
 	description->new_name[SAVED_GAME_FILE_NAME_LENGTH]= 0;
 	memcpy(description->old_path, information->path, sizeof(description->old_path));
 	description->operation= operation;
-	description->unknown7C= FALSE;
+	description->debug= FALSE;
 	description->source_file= (uint32_t)NONE;
 	description->destination_file= (uint32_t)NONE;
 	description->size= (unsigned long)NONE;
 	description->read_position= 0;
 	description->write_position= 0;
-	description->unknown9C= 0;
+	description->state= _saved_game_file_rename_create;
 	description->renamed= TRUE;
 	description->copy_buffer= copy_buffer;
 	description->information= *information;
@@ -538,10 +547,10 @@ void saved_game_file_rename_finish(
 	description->operation->done= TRUE;
 }
 
-/* 0x002ad5b0: closes the two files of a copy. The second is taken as open
-if it is not 0, and what is then set as closed is the first again: the game
-has it so */
-void saved_game_file_copy_close(
+/* closes the two files of a copy. The second is taken as open if it is not
+0, and what is then set as closed is the first again: the game has it so, in
+the function that follows and where a rename stops */
+static inline __attribute__((always_inline)) void saved_game_file_copy_close_inline(
 	struct saved_game_file_description *description)
 {
 	if (description->source_file!=(uint32_t)NONE)
@@ -553,5 +562,127 @@ void saved_game_file_copy_close(
 	{
 		CloseHandle(description->destination_file);
 		description->source_file= (uint32_t)NONE;
+	}
+}
+
+/* 0x002ad5b0 */
+void saved_game_file_copy_close(
+	struct saved_game_file_description *description)
+{
+	saved_game_file_copy_close_inline(description);
+}
+
+/* 0x002ad5f0: one more step of giving a file another name. Whether it is
+all done. If a step fails, what was done is undone, and why is told: the
+state is left as it was */
+boolean saved_game_file_rename_step(
+	struct saved_game_file_description *description,
+	long *error)
+{
+	*error= 0;
+	switch (description->state)
+	{
+	case _saved_game_file_rename_create:
+		if (unknown_002ad020(description))
+		{
+			description->state= _saved_game_file_rename_write_image;
+		}
+		else
+		{
+			*error= _saved_game_file_rename_error_step;
+		}
+		break;
+	case _saved_game_file_rename_write_image:
+		if (saved_game_file_write_image(description->file&SAVED_GAME_FILE_INDEX_TYPE_MASK, description->information.path))
+		{
+			description->state= _saved_game_file_rename_open_copy;
+		}
+		else
+		{
+			*error= _saved_game_file_rename_error_step;
+		}
+		break;
+	case _saved_game_file_rename_open_copy:
+	{
+		boolean copy= FALSE;
+
+		if (!unknown_002ad220(description, &copy))
+		{
+			*error= _saved_game_file_rename_error_step;
+		}
+		else if (copy)
+		{
+			description->read_position= 0;
+			description->write_position= 0;
+			description->state= _saved_game_file_rename_copy_read;
+		}
+		else
+		{
+			description->state= _saved_game_file_rename_finish;
+		}
+		break;
+	}
+	case _saved_game_file_rename_copy_read:
+		if (saved_game_file_copy_read(description))
+		{
+			description->state= _saved_game_file_rename_copy_write;
+		}
+		else
+		{
+			*error= _saved_game_file_rename_error_copy;
+		}
+		break;
+	case _saved_game_file_rename_copy_write:
+		if (!saved_game_file_copy_write(description))
+		{
+			*error= _saved_game_file_rename_error_copy;
+		}
+		else if (description->size>description->write_position)
+		{
+			description->state= _saved_game_file_rename_copy_read;
+		}
+		else
+		{
+			saved_game_file_copy_close(description);
+			description->state= _saved_game_file_rename_finish;
+		}
+		break;
+	case _saved_game_file_rename_finish:
+		saved_game_file_rename_finish(description, TRUE);
+		description->state= _saved_game_file_rename_done;
+		break;
+	case _saved_game_file_rename_done:
+		return TRUE;
+	default:
+		return FALSE;
+	}
+
+	if (*error)
+	{
+		saved_game_file_copy_close_inline(description);
+		saved_game_file_rename_finish(description, FALSE);
+	}
+
+	return FALSE;
+}
+
+/* 0x002ad760: the path of the file that is written: that of its type, in
+its directory */
+void saved_game_file_description_get_path(
+	const struct saved_game_file_description *description,
+	char *path)
+{
+	if (description->debug)
+	{
+		strncpy(path, "t:\\blam", SAVED_GAME_FILE_PATH_LENGTH);
+		path[SAVED_GAME_FILE_PATH_LENGTH-1]= 0;
+	}
+	else
+	{
+		long type= description->information.type;
+
+		strncpy(path, description->information.path, SAVED_GAME_FILE_PATH_LENGTH);
+		path[SAVED_GAME_FILE_PATH_LENGTH-1]= 0;
+		csstrcat256(path, saved_game_file_type_get_name(type));
 	}
 }
