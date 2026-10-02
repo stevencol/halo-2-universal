@@ -423,3 +423,34 @@ unsigned short *wcsncpy(unsigned short *destination, const unsigned short *sourc
 
 	return destination;
 }
+
+/* what the compiler calls to divide numbers of 64 bits, which the processor
+does not do: the quotient, towards zero */
+static unsigned long long divide_unsigned(unsigned long long dividend, unsigned long long divisor)
+{
+	unsigned long long quotient= 0;
+	unsigned long long remainder= 0;
+	int bit;
+
+	for (bit= 63; bit>=0; bit--)
+	{
+		remainder= (remainder<<1)|((dividend>>bit)&1);
+		if (remainder>=divisor)
+		{
+			remainder-= divisor;
+			quotient|= 1ULL<<bit;
+		}
+	}
+
+	return quotient;
+}
+
+long long __divdi3(long long dividend, long long divisor)
+{
+	int negative= (dividend<0)!=(divisor<0);
+	unsigned long long quotient= divide_unsigned(
+		dividend<0 ? 0ULL-(unsigned long long)dividend : (unsigned long long)dividend,
+		divisor<0 ? 0ULL-(unsigned long long)divisor : (unsigned long long)divisor);
+
+	return (long long)(negative ? 0ULL-quotient : quotient);
+}

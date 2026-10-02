@@ -177,3 +177,16 @@ void path_remove_last_element(
 
 	return;
 }
+
+#define SYSTEM_TICKS_PER_SECOND 733333333LL
+
+/* 0x00223bb0: the seconds that a count of the processor's ticks (rdtsc) is:
+the console's processor does 733,333,333 a second. The name is a guess */
+float system_ticks_to_seconds(
+	long long ticks)
+{
+	long long seconds= ticks/SYSTEM_TICKS_PER_SECOND;
+	long long remainder= ticks-seconds*SYSTEM_TICKS_PER_SECOND;
+
+	return (float)((long double)remainder/(long double)SYSTEM_TICKS_PER_SECOND+(long double)seconds);
+}

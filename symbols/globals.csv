@@ -80,3 +80,6 @@ address,name,source
 004e6454,texture_cache_globals,source/cache/xbox_texture_cache.c
 00468841,texture_cache_mip_bias_enabled,source/cache/xbox_texture_cache.c
 0055e724,texture_cache_warning_time,source/cache/xbox_texture_cache.c
+0046883c,texture_cache_low_detail,source/cache/xbox_texture_cache.c
+0046883d,texture_cache_full_detail,source/cache/xbox_texture_cache.c
+00485ae4,texture_cache_default_textures,source/cache/xbox_texture_cache.c

@@ -9,7 +9,7 @@ import random
 import struct
 from dataclasses import dataclass, field
 
-from difftest import Buffer, Memory, Mock, Pointer, mock_address
+from difftest import Buffer, Memory, Mock, Pointer, f32, mock_address
 from test_async import calls_so_far
 from test_data import array
 from test_lruv_cache import (
@@ -59,8 +59,17 @@ PREDICTED_BITMAP = 0x4
 
 # a bitmap
 BITMAP_SIZE = 0x74
+BITMAP_WIDTH = 0x4
 BITMAP_FLAGS = 0xE
+BITMAP_MIPMAP_COUNT = 0x14
+BITMAP_OFFSETS = 0x1C
 BITMAP_BLOCK_INDICES = 0x28
+BITMAP_SIZES = 0x34
+BITMAP_MAXIMUM_MIP_BIAS = 0x58
+BITMAP_TEXTURE = 0x5C
+LINEAR = 0x10
+# the formats that Direct3D has one for
+FORMATS = (0, 1, 2, 3, 6, 8, 9, 10, 11, 14, 15, 16, 17, 18, 22, 23)
 BITMAP_HARDWARE_FORMAT = 0x50
 BITMAP_FRAME_INDEX = 0x70
 CACHED, PREDICTED = 0x200, 0x400
@@ -119,6 +128,7 @@ def world(
     stolen: float = 0.25,
     tick: int | None = None,
     valid: bool = True,
+    predict_cached: float = 0.0,
 ) -> World:
     lruv, indices = cache(
         random_,
@@ -179,7 +189,42 @@ def world(
     def bitmap(flags: int) -> int:
         at = len(data)
         piece = bytearray(random_.randbytes(BITMAP_SIZE))
-        struct.pack_into("<H", piece, BITMAP_FLAGS, (random_.getrandbits(16) & ~(CACHED | PREDICTED)) | flags)
+        if random_.random() < 0.8:
+            # the depth is its low byte, with a sign
+            sizes = [1 << random_.randint(0, 9) for _ in range(2)] + [random_.choice((1, 1, 1, 4, 0x104, 0x80))]
+        else:
+            sizes = [random_.randint(1, 640), random_.randint(1, 480), random_.choice((1, 3))]
+        struct.pack_into("<5h", piece, BITMAP_WIDTH, *sizes, random_.choice((0, 0, 1, 2)), random_.choice(FORMATS))
+        struct.pack_into(
+            "<H",
+            piece,
+            BITMAP_FLAGS,
+            (random_.getrandbits(16) & ~(CACHED | PREDICTED | LINEAR)) | flags | (LINEAR if random_.random() < 0.2 else 0),
+        )
+        struct.pack_into("<hBB", piece, BITMAP_MIPMAP_COUNT, random_.randint(0, 9), random_.choice((0, 0, 10, 100, 255)), random_.randint(0, 20))
+        # the levels of detail that the map has pixels for
+        for level in range(3):
+            there = random_.random() < (0.9 if level == 0 else 0.6)
+            struct.pack_into("<I", piece, BITMAP_OFFSETS + level * 4, random_.getrandbits(32) & ~1 if there else NONE)
+            struct.pack_into(
+                "<I",
+                piece,
+                BITMAP_SIZES + level * 4,
+                random_.choice((0, 0x200, 0x400, 0x401, PAGE_SIZE, 2 * PAGE_SIZE - 5, 5 * PAGE_SIZE)),
+            )
+        struct.pack_into("<f", piece, BITMAP_MAXIMUM_MIP_BIAS, random_.choice((0.0, 0.5, 1.0, 2.5, 100.0)))
+        # the pixels read with the map: a texture made already, the pixels of one to make, or none
+        kind = random_.choice(("made", "to make", "none", "none"))
+        struct.pack_into(
+            "<5I",
+            piece,
+            BITMAP_TEXTURE,
+            0x40001 if kind == "made" else 0,
+            random_.getrandbits(20),
+            random_.randint(1, 0x10000) if kind == "to make" else 0,
+            random_.choice(FORMATS) | (1 << random_.randint(0, 9)) << 16,
+            (1 << random_.randint(0, 9)) | random_.choice((1, 4)) << 16,
+        )
         struct.pack_into("<3I", piece, BITMAP_BLOCK_INDICES, NONE, NONE, NONE)
         struct.pack_into("<I", piece, BITMAP_HARDWARE_FORMAT, 0)
         struct.pack_into("<i", piece, BITMAP_FRAME_INDEX, random_.choice((0, 3, 4, 5, 6, 100)))
@@ -218,6 +263,9 @@ def world(
         struct.pack_into("<I", data, block + BLOCK_BITMAP, current)
         pointers.append(block + BLOCK_BITMAP)
         struct.pack_into("<I", data, current + BITMAP_BLOCK_INDICES + level * 4, index)
+        # a level that is in the cache has pixels in the map
+        struct.pack_into("<I", data, current + BITMAP_OFFSETS + level * 4, random_.getrandbits(32) & ~1)
+        struct.pack_into("<I", data, current + BITMAP_SIZES + level * 4, pages * PAGE_SIZE - random_.choice((0, 1, 0x7FF)))
         if level == 0:
             struct.pack_into("<I", data, current + BITMAP_HARDWARE_FORMAT, block + 0x14)
             pointers.append(current + BITMAP_HARDWARE_FORMAT)
@@ -245,11 +293,15 @@ def world(
             order[n + 1][0] - STOLEN_SIZE if n + 1 < len(order) else 0,
         )
 
+    cached_bitmaps = list(result.bitmaps)
     # the bitmaps that are about to be drawn, and some that nobody knows of
     at = None
     for slot in predicted_slots:
         # most are marked as being in the list, and are there once
-        if at is None or random_.random() < 0.85:
+        if cached_bitmaps and random_.random() < predict_cached:
+            # one whose pixels got into the cache since
+            at = random_.choice(cached_bitmaps)
+        elif at is None or random_.random() < 0.85:
             at = bitmap(CACHED | (PREDICTED if random_.random() < 0.85 else 0))
         datum = predicted + DATA_ARRAY_SIZE + slot * PREDICTED_SIZE
         struct.pack_into("<I", data, datum + PREDICTED_BITMAP, at)
@@ -291,6 +343,9 @@ def cache_globals(random_: random.Random, w: World, **fields: object) -> dict:
             "d3d_device": Buffer(bytes(0x934) + struct.pack("<I", REGISTERS) + bytes(0x10)),
             "texture_cache_warning_time": random_.choice((0, 5000, 0xFFFFFF00)),
             "texture_cache_mip_bias_enabled": bytes([fields.get("enabled", 1)]),
+            "texture_cache_low_detail": bytes([fields.get("low_detail", 0)]),
+            "texture_cache_full_detail": bytes([fields.get("full_detail", 0)]),
+            "texture_cache_default_textures": struct.pack("<3I", 0x0D000010, 0x0D000020, 0x0D000030),
         }
     )
     return result
@@ -329,7 +384,9 @@ def run(t) -> None:
         Mock(reclaim_proc, stack_arguments=2),
     ]
 
-    def externals(w: World, waits: int, busy: int, ticks: tuple[int, ...]) -> dict:
+    pending: list[int] = []
+
+    def externals(w: World, waits: int, busy: int, ticks: tuple[int, ...], instant: bool = True, stand_in: bool = True) -> dict:
         def wait_for_single_object(harness, arguments):
             # the task's thread ends the reads while the game waits
             if calls_so_far(harness, "WaitForSingleObject") >= waits - 1:
@@ -343,25 +400,67 @@ def run(t) -> None:
         def tick_count(harness, arguments):
             return ticks[min(calls_so_far(harness, "GetTickCount"), len(ticks) - 1)]
 
+        def read_async(harness, arguments):
+            # the flag can be in the stack, which is not at the same place in
+            # the game and in source/: it is not compared
+            if not calls_so_far(harness, "cache_file_read_async"):
+                pending.clear()
+            done = arguments[4]
+            if instant:
+                harness.mu.mem_write(done, b"\x01")
+            else:
+                pending.append(done)
+            inside = w.buffer.address <= done < w.buffer.address + len(w.buffer.data)
+            record = (*arguments[:4], done if inside else "elsewhere", *arguments[5:])
+            return 0x1000 + calls_so_far(harness, "cache_file_read_async"), record
+
+        def switch_to_thread(harness, arguments):
+            if not calls_so_far(harness, "cache_file_read_async"):
+                pending.clear()
+            for done in pending:
+                harness.mu.mem_write(done, b"\x01")
+            for slot in range(w.maximum_blocks):
+                harness.mu.mem_write(w.buffer.address + w.block(slot) + READ_DONE, b"\x01")
+            return 0
+
+        def mipmap_count(harness, arguments):
+            # the registers have more than the arguments
+            width, depth, height, format_, none, maximum = arguments
+            record = (width & 0xFFFF, depth & 0xFFFF, height & 0xFFFF, format_ & 0xFFFF, none & 0xFF, maximum & 0xFFFF)
+            maximum = (maximum & 0xFFFF) - (0x10000 if maximum & 0x8000 else 0)
+            return min(maximum, (width & 0xF) % 5) & 0xFFFF, record
+
+        def row_size(harness, arguments):
+            return 4 * struct.unpack("<h", harness.mu.mem_read(arguments[1] + BITMAP_WIDTH, 2))[0], (arguments[0] & 0xFF, arguments[1])
+
         return {
+            "cache_file_read_async": read_async,
+            "async_task_set_priority": lambda harness, arguments: 1,
+            "SwitchToThread": switch_to_thread,
+            "main_loading_idle": lambda harness, arguments: 0,
+            "bitmap_mipmap_count": mipmap_count,
+            "bitmap_row_size": row_size,
+            "tag_iterator_next": lambda harness, arguments: (NONE, ()),
             "WaitForSingleObject": wait_for_single_object,
             "ReleaseMutex": lambda harness, arguments: 1,
             "D3DResource_IsBusy": is_busy,
             "D3DResource_BlockUntilNotBusy": lambda harness, arguments: 0,
             "D3DDevice_KickOff": lambda harness, arguments: 0,
-            "XPhysicalProtect": lambda harness, arguments: 0,
+            "XPhysicalProtect": lambda harness, arguments: (0, tuple(arguments)),
             "GetTickCount": tick_count,
-            "unknown_0012c450": lambda harness, arguments: 0,
+            **({"texture_cache_update_predicted": lambda harness, arguments: 0} if stand_in else {}),
         }
 
-    def check(name, w, *arguments, ticks=(6000, 6010), more=None, **fields):
+    def check(name, w, *arguments, ticks=(6000, 6010), more=None, stand_in=True, extra=(), **fields):
         t.check(
             name,
             *arguments,
             globals={**cache_globals(random_, w, **fields), **(more or {})},
             mocks=mocks,
-            extra=[w.buffer],
-            externals=externals(w, random_.choice((1, 2)), random_.choice((0, 0, 1, 3)), ticks),
+            extra=[w.buffer, *extra],
+            externals=externals(
+                w, random_.choice((1, 2)), random_.choice((0, 0, 1, 3)), ticks, random_.random() < 0.5, stand_in
+            ),
             memory={BASE_ADDRESS: w.memory},
         )
 
@@ -520,3 +619,175 @@ def run(t) -> None:
         w = world(random_, stolen=random_.choice((0.3, 0.8)))
         if w.stolen:
             check("texture_cache_return_memory", w, random_.choice(w.stolen))
+
+    # ---------- the pixels of a bitmap
+
+    for usage in (*range(-1, 26), 0x101, 0x10001, NONE - 5):
+        t.check("texture_cache_usage_is_preloaded", usage & 0xFFFFFFFF)
+
+    biases = (0.0, 0.5, 0.99, 1.0, 1.5, 2.0, 2.5, -1.0, 100.0)
+
+    def some_fields() -> dict:
+        """The state of the cache that the functions that look for pixels look at."""
+        return {
+            "x14": bytes([random_.random() < 0.6]),
+            "x1c": random_.choice((0, 0, 0, 1, 2)),
+            "x20": random_.choice((0, 1, 2)),
+            "x30": random_.choice((0, 5, 9, 10, 11)),
+            "mip_bias": random_.choice((0.0, 0.0, 0.5, 1.0, 2.0)),
+            "enabled": random_.random() < 0.8,
+            "frame_index": random_.choice((4, 5, 6, 100)),
+            "low_detail": random_.random() < 0.1,
+            "full_detail": random_.random() < 0.1,
+        }
+
+    for _ in range(300):
+        w = world(random_)
+        offset = random_.choice(w.bitmaps)
+        check("texture_cache_bitmap_choose_level", w, w.pointer(offset), f32(random_.choice(biases)))
+        for level in range(3):
+            check(
+                "texture_cache_initialize_hardware_format",
+                w,
+                w.pointer(offset),
+                level,
+                Buffer(random_.randbytes(0x14)),
+            )
+        check("texture_cache_bitmap_initialize_preloaded_format", w, w.pointer(offset), **some_fields())
+        check("texture_cache_bitmap_get_preloaded_format", w, w.pointer(offset), **some_fields())
+
+    for _ in range(400):
+        w = world(random_, required=True, maximum_blocks=random_.choice((4, 8, 33)))
+        offset = random_.choice(w.bitmaps)
+        level = random_.randint(0, 2)
+        if struct.unpack_from("<I", w.buffer.data, offset + BITMAP_BLOCK_INDICES + level * 4)[0] == NONE:
+            check(
+                "texture_cache_start_loading_bitmap",
+                w,
+                random_.getrandbits(1),
+                w.pointer(offset),
+                level,
+                random_.getrandbits(1),
+                random_.choice((1, 2, 5, 7)),
+                **some_fields(),
+            )
+
+    for _ in range(800):
+        w = world(random_, required=True, maximum_blocks=random_.choice((4, 8, 33)), reading=random_.choice((0.2, 0.6)))
+        offset = random_.choice(w.bitmaps)
+        check(
+            "texture_cache_bitmap_get_level",
+            w,
+            random_.randint(0, 2),
+            random_.choice((0, 1, 1, 1)),
+            random_.choice((1, 2, 3, 5, 7)),
+            w.pointer(offset),
+            random_.choice((0, 0, 1)),
+            random_.getrandbits(1),
+            Buffer(b"\x00"),
+            Buffer(b"\x00"),
+            more={"async_globals+0x259c": random_.choice((0, 25, 26))},
+            **some_fields(),
+        )
+
+    for _ in range(300):
+        w = world(random_, required=True, maximum_blocks=random_.choice((4, 8, 33)), reading=random_.choice((0.2, 0.6)))
+        check("texture_cache_bitmap_load", w, w.pointer(random_.choice(w.bitmaps)), **some_fields())
+
+    for _ in range(800):
+        w = world(random_, required=True)
+        offset = random_.choice(w.bitmaps)
+        check(
+            "texture_cache_bitmap_get_loaded",
+            w,
+            random_.choice((0, 1, 2, 4, 6, 0x1F)),
+            w.pointer(offset),
+            f32(random_.choice(biases)),
+            **some_fields(),
+        )
+
+    for _ in range(1500):
+        w = world(random_, required=True, maximum_blocks=random_.choice((4, 8, 33)), reading=random_.choice((0.2, 0.6)))
+        offset = random_.choice(w.bitmaps)
+        check(
+            "texture_cache_bitmap_get_hardware_format",
+            w,
+            w.pointer(offset),
+            random_.choice((0, 1, 2, 3, 3, 3, 4, 6, 7, 0xA, 0x12, 0x1A, 0x1F)),
+            f32(random_.choice(biases)),
+            more={"async_globals+0x259c": random_.choice((0, 0, 25, 26))},
+            **some_fields(),
+        )
+
+    # ---------- once a frame, with the bitmaps that are about to be drawn
+
+    for _ in range(400):
+        w = world(
+            random_,
+            required=True,
+            maximum_blocks=random_.choice((4, 8, 33)),
+            maximum_predicted=random_.choice((4, 8, 16)),
+            valid=random_.random() < 0.9,
+            predict_cached=random_.choice((0.0, 0.5)),
+            reading=random_.choice((0.0, 0.2)),
+        )
+        check(
+            "texture_cache_update_predicted",
+            w,
+            stand_in=False,
+            more={"async_globals+0x259c": random_.choice((0, 0, 3, 25, 26, 100))},
+            **some_fields(),
+        )
+
+    for _ in range(100):
+        w = world(random_, required=True, maximum_blocks=random_.choice((4, 8, 33)))
+        check("texture_cache_idle", w, stand_in=False, **some_fields())
+
+    # ---------- the pixels that are read with the map
+
+    for _ in range(60):
+        w = world(random_)
+        stage = random_.randint(0, 4)
+        low = random_.choice((0x61000, 0x1000000))
+        size = random_.choice((0, 1, 0x1FF, 0x200, 0x201, PAGE_SIZE, PAGE_SIZE + 1, 0x12345))
+        high = low + random_.choice((0, PAGE_SIZE, 0x12000, 0x13000, 0x14000, 0x100000))
+        header = bytearray(random_.randbytes(0x810))
+        struct.pack_into("<2I", header, 0x160, random_.choice((0, 0x4000, 0x40004000)), size)
+        check(
+            "texture_cache_load_preloaded_pixels",
+            w,
+            more={
+                "physical_memory_globals": physical_memory(stage, low, high),
+                "cache_file_globals": bytes(header),
+            },
+        )
+
+    # ---------- the memory that the cache lends, waiting for it
+
+    # with no waiting, whatever the cache has; with it, a cache that will have
+    # room when its blocks get old: how long the game waits when there is
+    # none is a matter of the processor's clock, which is not the same twice
+    for _ in range(200):
+        wait = random_.choice((0, 0, 1, 2))
+        if wait:
+            w = world(random_, reading=0.0, stolen=0.0, maximum_blocks=random_.choice((33, 40)), predicted_count=0)
+            size = random_.choice((1, PAGE_SIZE, max(w.page_count - 3, 1) * PAGE_SIZE))
+            if (size + 0x2023 + PAGE_SIZE - 1) // PAGE_SIZE > w.page_count:
+                continue
+        else:
+            w = world(random_, required=True)
+            size = random_.choice((0, NONE, 1, PAGE_SIZE, 3 * PAGE_SIZE, w.page_count * PAGE_SIZE))
+        check(
+            "texture_cache_steal_memory",
+            w,
+            wait,
+            size,
+            random_.getrandbits(32),
+            random_.choice((0, mock_address(IDLE_PROC))),
+            mock_address(RECLAIM_PROC),
+            stand_in=False,
+            more={"texture_cache_globals+0x2c": 0xFFFFFFF0},
+        )
+
+    for ticks in (0, 1, 733333332, 733333333, 733333334, 1466666666, 0x7FFFFFFF, 0x100000000, 0x123456789AB, 366666666, 73333333):
+        t.check("system_ticks_to_seconds", ticks & 0xFFFFFFFF, ticks >> 32)

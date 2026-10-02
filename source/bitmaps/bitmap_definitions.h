@@ -28,7 +28,9 @@ enum
 enum
 {
 	/* the only type that the shaders of the structure bsps use */
-	_bitmap_type_2d
+	_bitmap_type_2d,
+	_bitmap_type_3d,
+	_bitmap_type_cube_map
 };
 
 enum
@@ -54,7 +56,12 @@ enum
 {
 	/* the texels are in the order of the console's swizzled textures; the
 	bitmaps that are not compressed have it */
-	_bitmap_swizzled_bit= 3
+	_bitmap_swizzled_bit= 3,
+	/* of sizes that are not powers of two: no mipmaps */
+	_bitmap_linear_bit= 4,
+	/* the bitmaps of 32 bits that have it are given another format */
+	_bitmap_unknown5_bit= 5,
+	_bitmap_unknown7_bit= 7
 };
 
 /* ---------- structures */
@@ -68,7 +75,13 @@ struct bitmap_data
 	int16_t type;
 	int16_t format;
 	uint16_t flags;
-	uint8_t unknown10[0xC];
+	uint8_t unknown10[4];
+	int16_t mipmap_count;
+	/* in hundredths of a level: detail that the bitmap gives up of its own */
+	uint8_t mip_bias;
+	/* what the bitmap is for; the values are not known */
+	uint8_t usage;
+	uint8_t unknown18[4];
 	/* the pixels at up to six levels of detail, the largest first, each with
 	its mipmaps after it. The two high bits of an offset tell the file, as
 	in a geometry block's offset; NONE is no block */
@@ -85,8 +98,12 @@ struct bitmap_data
 	with (a pointer), and where its pixels are */
 	uint32_t hardware_format;
 	uint32_t base_address;
-	float unknown58;
-	uint8_t unknown5C[0x14];
+	/* asked for with this much detail to lose or more, the bitmap is drawn
+	with what there is */
+	float maximum_mip_bias;
+	/* Direct3D's texture of the pixels that are read with the map; until it
+	is made, where they are and what they are like */
+	uint32_t texture[5];
 	/* of the texture cache: the last frame that it was drawn in */
 	int32_t frame_index;
 };

@@ -206,7 +206,7 @@ address,name,source,arguments,returns,convention
 002148b0,cached_map_file_copy_get_progress,source/cache/cache_files.c,edx,bool
 00214940,cached_map_file_get_progress,source/cache/cache_files.c,esi,real:xmm0
 002141f0,cached_map_file_copy_update,source/cache/cache_files.c,,bool
-0012d400,texture_cache_steal_memory,,ecx stack stack stack stack,int
+0012d400,texture_cache_steal_memory,source/cache/xbox_texture_cache.c,ecx stack stack stack stack,int
 0012d520,texture_cache_return_memory,source/cache/xbox_texture_cache.c,esi,void
 003303f3,GetSystemTimeAsFileTime,,stack,void
 003314b0,GetTickCount,,,int
@@ -580,7 +580,21 @@ address,name,source,arguments,returns,convention
 0012d1a0,texture_cache_block_locked,source/cache/xbox_texture_cache.c,stack,bool
 0012d200,texture_cache_block_deleted,source/cache/xbox_texture_cache.c,stack,void
 0012d2f0,texture_cache_steal_memory_now,source/cache/xbox_texture_cache.c,stack stack stack stack,int
-0012c450,unknown_0012c450,,,void
+0012c450,texture_cache_update_predicted,source/cache/xbox_texture_cache.c,,void
 003fac30,D3DDevice_KickOff,,edx,void
 003fb710,D3DResource_IsBusy,,ecx,int
 003fad50,D3DResource_BlockUntilNotBusy,,eax,void
+0012c640,texture_cache_load_preloaded_pixels,source/cache/xbox_texture_cache.c,,void
+0012c820,texture_cache_bitmap_initialize_preloaded_format,source/cache/xbox_texture_cache.c,esi,void
+0012c960,texture_cache_bitmap_get_preloaded_format,source/cache/xbox_texture_cache.c,eax,int
+0012c990,texture_cache_bitmap_get_level,source/cache/xbox_texture_cache.c,eax ecx ebx stack stack stack stack stack,int
+0012cb10,texture_cache_bitmap_choose_level,source/cache/xbox_texture_cache.c,edx xmm0,int
+0012cb80,texture_cache_bitmap_load,source/cache/xbox_texture_cache.c,stack,bool
+0012ccb0,texture_cache_usage_is_preloaded,source/cache/xbox_texture_cache.c,ecx,bool
+0012ccf0,texture_cache_bitmap_get_loaded,source/cache/xbox_texture_cache.c,edx esi xmm1,int
+0012ce00,texture_cache_bitmap_get_hardware_format,source/cache/xbox_texture_cache.c,stack stack xmm1,int
+0012d5a0,texture_cache_start_loading_bitmap,source/cache/xbox_texture_cache.c,eax ecx stack stack stack,bool
+0012d6d0,texture_cache_initialize_hardware_format,source/cache/xbox_texture_cache.c,eax stack stack,void
+00223bb0,system_ticks_to_seconds,source/cseries/cseries.c,stack stack,real
+000359e0,bitmap_mipmap_count,,ecx eax stack stack stack stack,short
+001365a0,bitmap_row_size,,ecx esi,int

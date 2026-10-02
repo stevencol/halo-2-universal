@@ -2,6 +2,99 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — La caché de texturas, segunda parte
+
+Lo que faltaba de `xbox_texture_cache.c`: cómo se piden y se leen los
+píxeles de un bitmap, y la espera de la memoria prestada. Con esto el módulo
+está completo. De 301 funciones se pasa a 315, el 2,80 % de las del juego
+(el 1,374 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `texture_cache_update_predicted` | `0x0012c450` | `cache/xbox_texture_cache.c` |
+| `texture_cache_load_preloaded_pixels` | `0x0012c640` | `cache/xbox_texture_cache.c` |
+| `texture_cache_bitmap_initialize_preloaded_format` | `0x0012c820` | `cache/xbox_texture_cache.c` |
+| `texture_cache_bitmap_get_preloaded_format` | `0x0012c960` | `cache/xbox_texture_cache.c` |
+| `texture_cache_bitmap_get_level` | `0x0012c990` | `cache/xbox_texture_cache.c` |
+| `texture_cache_bitmap_choose_level` | `0x0012cb10` | `cache/xbox_texture_cache.c` |
+| `texture_cache_bitmap_load` | `0x0012cb80` | `cache/xbox_texture_cache.c` |
+| `texture_cache_usage_is_preloaded` | `0x0012ccb0` | `cache/xbox_texture_cache.c` |
+| `texture_cache_bitmap_get_loaded` | `0x0012ccf0` | `cache/xbox_texture_cache.c` |
+| `texture_cache_bitmap_get_hardware_format` | `0x0012ce00` | `cache/xbox_texture_cache.c` |
+| `texture_cache_steal_memory` | `0x0012d400` | `cache/xbox_texture_cache.c` |
+| `texture_cache_start_loading_bitmap` | `0x0012d5a0` | `cache/xbox_texture_cache.c` |
+| `texture_cache_initialize_hardware_format` | `0x0012d6d0` | `cache/xbox_texture_cache.c` |
+| `system_ticks_to_seconds` | `0x00223bb0` | `cseries/cseries.c` |
+
+- Las tablas de formatos de Direct3D por formato de bitmap (`0x00450768` y
+  `0x004507c8`), reproducidas en el código.
+- Funciones que se suplen en las pruebas: `bitmap_mipmap_count`
+  (`0x000359e0`) y `bitmap_row_size` (`0x001365a0`).
+- El apoyo de las pruebas (`tools/difftest_libc`) sabe dividir números de
+  64 bits.
+
+### Cambiado
+
+- `struct bitmap_data`: nombres para `mipmap_count`, `mip_bias`, `usage`,
+  `maximum_mip_bias` y la textura que el bitmap lleva dentro.
+- En los globales de la caché: `has_preloaded_pixels`, `preloaded_pixels`,
+  `blocking_count`, `blocking_usage`, `use_preloaded_pixels`.
+
+### Lo que se sabe
+
+- Al pedir la textura de un bitmap se dan cinco indicadores: esperar a los
+  píxeles, leerlos si no están, «exacto» (el primer nivel y nada más), y dos
+  de prisa. La prioridad de la lectura es 7 si el juego espera, 5 o 1 según
+  la prisa, y 2 si no se dice nada.
+- El nivel de detalle se elige con el sesgo: lo que pide quien dibuja, más
+  lo que el bitmap cede de suyo (en centésimas de nivel), más el sesgo de la
+  caché. Con sesgo 1 o más vale el segundo nivel; con 2 o más, el tercero.
+  Un nivel que no sea el primero solo cuenta si ocupa más de 1 KB.
+- Si el nivel elegido no está, vale cualquiera que esté. Si el juego tenía
+  que esperar y no hay ninguno, se dibuja con una de tres texturas de
+  reserva, según el tipo de bitmap, y se apunta el fallo para subir el sesgo.
+- No se empiezan lecturas de poca prioridad si hay más de 25 tareas
+  pendientes o ya van 10 lecturas en el fotograma. De los bitmaps previstos
+  se atienden 5 por fotograma.
+- Para los píxeles de un bitmap no se echan bloques usados en los últimos 5
+  ticks; si el juego espera, en los últimos 2.
+- El mapa puede traer un bloque de píxeles aparte (cabecera `+0x158` y
+  `+0x15C`) que se lee entero al cargar; los bitmaps de ciertos usos (1 a
+  11, 17 y 18) se dibujan con esos píxeles. Su textura se monta la primera
+  vez que se pide, a partir de lo que el mapa dice de ella.
+- La textura de Direct3D se monta a mano: formato, dimensiones como
+  potencias de dos, número de mipmaps y dirección de los píxeles en 28 bits.
+  Los bitmaps de tamaño que no es potencia de dos llevan el tamaño aparte.
+- `texture_cache_steal_memory` deja pasar hasta 30 o 90 fotogramas de la
+  caché para que los bloques envejezcan, y luego espera a la consola hasta
+  0,1 o 1 segundo, midiendo con `rdtsc`. El procesador de la consola da
+  733.333.333 ticks por segundo.
+- El juego recorre los bitmaps de todos los grupos al cargar los píxeles
+  del mapa y no hace nada con ellos: lo que hacía no está en esta versión.
+
+### Sin comprobar
+
+- La espera con reloj de `texture_cache_steal_memory` cuando no hay sitio
+  ni dejando pasar fotogramas: depende del reloj del procesador, que en el
+  emulador no da lo mismo dos veces.
+- El valor exacto de los ticks por segundo: un tick más o menos no cambia
+  el resultado con la precisión de un real.
+- Tres escrituras que dejan lo que ya había (el bloque recién creado ya
+  está a cero) y dos condiciones que no pueden darse de otra manera (los
+  niveles van de más a menos detalle; con textura no se dibuja la de
+  reserva).
+- En `texture_cache_load_preloaded_pixels`, el recorrido de los bitmaps: en
+  las pruebas no hay ninguno.
+
+### Mutaciones
+
+111 líneas rotas a propósito: 101 detectadas a la primera. De las otras 10,
+cinco dieron casos nuevos (un bitmap previsto que ya está en la caché, la
+profundidad con signo, filas de un tamaño múltiplo de 64) y cinco son las de
+«Sin comprobar».
+
 ## 2026-10-02 — La caché de texturas, primera parte
 
 `xbox_texture_cache.c`, que ya existía en Halo 1: la caché que guarda en

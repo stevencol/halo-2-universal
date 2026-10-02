@@ -62,6 +62,7 @@ void no_operation(void);
 long language_from_xbox_language(long xbox_language);
 long csstrcasecmp(const char *s1, const char *s2);
 boolean bit_vector_test_flag(const unsigned long *vector, long bit);
+float system_ticks_to_seconds(long long ticks);
 void path_remove_last_element(char *path);
 
 /* ---------- macros */

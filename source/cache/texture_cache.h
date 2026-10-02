@@ -35,6 +35,34 @@ enum
 	/* the frame count starts here: a bitmap's is 0 when it was never drawn */
 	TEXTURE_CACHE_FIRST_FRAME_INDEX= 4,
 
+	/* a level of detail other than the first has to be of more than this */
+	TEXTURE_CACHE_MINIMUM_LEVEL_SIZE= 0x400,
+
+	/* of the reads from the map */
+	TEXTURE_CACHE_READ_CATEGORY= 3,
+	/* the priorities of the tasks that read: the game waits, the pixels are
+	wanted soon, they are wanted, they can wait */
+	TEXTURE_CACHE_BLOCKING_TASK_PRIORITY= 7,
+	TEXTURE_CACHE_SOON_TASK_PRIORITY= 5,
+	TEXTURE_CACHE_PREDICTED_TASK_PRIORITY= 2,
+	TEXTURE_CACHE_LATER_TASK_PRIORITY= 1,
+	/* the blocks used in the last so many ticks are not thrown out for the
+	pixels of a bitmap: fewer are kept when the game waits */
+	TEXTURE_CACHE_BLOCKING_AGE= 2,
+	TEXTURE_CACHE_PREDICTED_AGE= 5,
+
+	/* nothing more is read for what can wait when there are this many tasks,
+	or this many reads were started in the frame */
+	MAXIMUM_TEXTURE_CACHE_ASYNC_TASKS= 25,
+	MAXIMUM_TEXTURE_CACHE_READS_PER_FRAME= 10,
+	MAXIMUM_TEXTURE_CACHE_PREDICTED_PER_FRAME= 5,
+
+	/* a bitmap keeps the texture of its first level for this many frames */
+	TEXTURE_CACHE_HARDWARE_FORMAT_FRAMES= 2,
+
+	NUMBER_OF_BITMAP_FORMATS= 24,
+	NUMBER_OF_TEXTURE_CACHE_DEFAULT_TEXTURES= 3,
+
 	/* what a block of memory that the cache lends is marked with */
 	TEXTURE_CACHE_STOLEN_MEMORY_SIGNATURE= 0x02281972
 };
@@ -46,6 +74,41 @@ enum
 	_bitmap_cached_bit= 9,
 	/* in the list of those that are about to be drawn */
 	_bitmap_predicted_bit= 10
+};
+
+/* the flags that a texture is asked for with */
+enum
+{
+	/* wait for the pixels */
+	_texture_cache_block_bit,
+	/* read them if they are not there */
+	_texture_cache_load_bit,
+	/* the first level of detail and no other; nothing is read */
+	_texture_cache_exact_bit,
+	_texture_cache_soon_bit,
+	_texture_cache_later_bit
+};
+
+/* what the fields of Direct3D's texture are made of */
+enum
+{
+	D3D_TEXTURE_COMMON= 0x40001,
+	D3D_TEXTURE_FORMAT= 9,
+	D3D_TEXTURE_FORMAT_CUBE_MAP= 0xD,
+	D3D_TEXTURE_FORMAT_LINEAR= 0x10029,
+	D3D_TEXTURE_DATA_MASK= 0x0FFFFFFF,
+	D3D_TEXTURE_PITCH_ALIGNMENT= 64,
+	/* the formats of the bitmaps of 32 bits that have the flag */
+	D3D_FORMAT_UNKNOWN5= 0x33,
+	D3D_FORMAT_LINEAR_UNKNOWN5= 0x36
+};
+
+/* how long texture_cache_steal_memory tries */
+enum
+{
+	_texture_cache_steal_wait_none,
+	_texture_cache_steal_wait_short,
+	_texture_cache_steal_wait_long
 };
 
 /* the flags of a block */
@@ -130,16 +193,20 @@ struct texture_cache_globals
 	byte *base_address;
 	struct lruv_cache *cache;
 	/* the map has pixels that are read when it is loaded, at the address */
-	boolean unknown14;
-	unsigned long unknown18;
-	long unknown1C;
-	long unknown20;
+	boolean has_preloaded_pixels;
+	unsigned long preloaded_pixels;
+	/* while it is not 0, the game waits for the pixels of the bitmaps (if it
+	is 1), or reads them at once without waiting: of all, or of those of
+	the usage 3 */
+	long blocking_count;
+	long blocking_usage;
 	byte unknown24;
 	/* the cache is being emptied: no block has to stay */
 	boolean flushing;
 	/* a bitmap was drawn without its pixels since the bias was last changed */
 	boolean missed;
-	byte unknown27;
+	/* the bitmaps of some usages are drawn with the pixels read with the map */
+	boolean use_preloaded_pixels;
 	/* how many levels of detail the bitmaps lose, for the cache not to fill */
 	real mip_bias;
 	/* GetTickCount: when the bias is next looked at */
@@ -184,21 +251,46 @@ void *texture_cache_steal_memory_now(long size, long user_data, texture_cache_st
 	texture_cache_stolen_memory_proc reclaim_proc);
 void texture_cache_return_memory(void *address);
 
-/* ---------- prototypes of functions not decompiled yet */
-
-/* 0x0012d400: takes memory of the cache for something else, throwing out
-what it has to; its address, or NULL. How long it tries: not at all, a
-little or for long (0 to 2) */
 void *texture_cache_steal_memory(long wait, long size, long user_data, texture_cache_stolen_memory_proc idle_proc,
 	texture_cache_stolen_memory_proc reclaim_proc);
 
-/* 0x0012c450: starts to read the bitmaps that are about to be drawn */
-void unknown_0012c450(void);
+void texture_cache_load_preloaded_pixels(void);
+void texture_cache_bitmap_initialize_preloaded_format(struct bitmap_data *bitmap);
+struct d3d_texture *texture_cache_bitmap_get_preloaded_format(struct bitmap_data *bitmap);
+struct d3d_texture *texture_cache_bitmap_get_level(long level_index, boolean load, long priority,
+	struct bitmap_data *bitmap, boolean block, boolean unknown, boolean *waited, boolean *failed);
+long texture_cache_bitmap_choose_level(const struct bitmap_data *bitmap, real mip_bias);
+boolean texture_cache_bitmap_load(struct bitmap_data *bitmap);
+boolean texture_cache_usage_is_preloaded(long usage);
+struct d3d_texture *texture_cache_bitmap_get_loaded(unsigned long flags, struct bitmap_data *bitmap, real mip_bias);
+struct d3d_texture *texture_cache_bitmap_get_hardware_format(struct bitmap_data *bitmap, unsigned long flags,
+	real mip_bias);
+void texture_cache_update_predicted(void);
+boolean texture_cache_start_loading_bitmap(boolean block, struct bitmap_data *bitmap, long level_index,
+	boolean unknown, long priority);
+void texture_cache_initialize_hardware_format(const struct bitmap_data *bitmap, long level_index,
+	struct d3d_texture *texture);
+
+/* ---------- prototypes of functions not decompiled yet */
+
+/* 0x000359e0: how many mipmaps a texture of a size has after the first
+level, and no more than a maximum; 0 if a size is not a power of two, or if
+told that it has none. The name is a guess */
+short bitmap_mipmap_count(short width, short depth, short height, short format, boolean none, short maximum);
+
+/* 0x001365a0: the bytes of a row of the pixels of a bitmap, at a mipmap.
+The name is a guess */
+long bitmap_row_size(byte mipmap_index, const struct bitmap_data *bitmap);
 
 /* ---------- globals */
 
 extern struct texture_cache_globals texture_cache_globals;
 extern boolean texture_cache_mip_bias_enabled;
 extern unsigned long texture_cache_warning_time;
+extern boolean texture_cache_low_detail;
+extern boolean texture_cache_full_detail;
+extern struct d3d_texture *texture_cache_default_textures[NUMBER_OF_TEXTURE_CACHE_DEFAULT_TEXTURES];
+extern const long texture_cache_d3d_formats[NUMBER_OF_BITMAP_FORMATS];
+extern const long texture_cache_d3d_linear_formats[NUMBER_OF_BITMAP_FORMATS];
 
 #endif

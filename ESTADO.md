@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-01, al terminar el hito 33.
+**Última actualización:** 2026-10-01, al terminar el hito 34.
 
 ## Dónde estamos
 
-- **301 funciones descompiladas de 11.265: el 2,67 % del juego** (el
-  1,254 % de los bytes de código).
-- Las 301 están comprobadas contra el ejecutable original
+- **315 funciones descompiladas de 11.265: el 2,80 % del juego** (el
+  1,374 % de los bytes de código).
+- Las 315 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the first half of the texture cache* (ver `git log`).
+- Último hito: *Decompile the rest of the texture cache* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -69,8 +69,7 @@ Módulos (funciones hechas / archivo):
 - [x] Búsqueda binaria — `memory\binary_search.c` (1)
 - [x] Caché de bloques de páginas — `memory\lruv_cache.c` (8, completo)
 - [x] Caché de animaciones — `cache\xbox_animation_cache.c` (18, completo)
-- [ ] Caché de texturas — `cache\xbox_texture_cache.c` (17; falta la carga
-      de un bitmap)
+- [x] Caché de texturas — `cache\xbox_texture_cache.c` (30, completo)
 - [x] Cadenas anchas — `text\unicode.c` (7; quedan 3)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
 - [ ] Matemáticas reales — `math\real_math.c` (21 de unas 50)
@@ -124,17 +123,15 @@ Módulos (funciones hechas / archivo):
 - [x] ~~Caché de texturas, primera parte~~ (hito 33): crear, abrir,
       cerrar, cada fotograma, lo que le da a `lruv_cache` y la memoria
       prestada.
-- [ ] **Caché de texturas, segunda parte:** la carga de un bitmap. Están
-      leídas y con borrador: `0x0012c450`, `0x0012c640`, `0x0012c820`,
-      `0x0012c960`, `0x0012c990`, `0x0012cb10`, `0x0012cb80`, `0x0012ccb0`,
-      `0x0012ccf0`, `0x0012ce00` (en Halo 1,
-      `_texture_cache_bitmap_get_hardware_format`), `0x0012d5a0`,
-      `0x0012d6d0`, y `texture_cache_steal_memory` (`0x0012d400`, que mide
-      el tiempo con `rdtsc` y `0x00223bb0`). Hacen falta `0x000359e0`
-      (cuántos mipmaps) y `0x001365a0` (bytes por fila), y las tablas de
-      formatos de `0x00450768` y `0x004507c8`.
-- [ ] **Caché de geometría** (`0x0012d8b0` en adelante): el mismo esquema
-      que las otras dos cachés.
+- [x] ~~Caché de texturas, segunda parte~~ (hito 34): la carga de un
+      bitmap. Quedan como externas `0x000359e0` (cuántos mipmaps) y
+      `0x001365a0` (bytes por fila), de `bitmaps`.
+- [ ] **Caché de geometría** (`0x0012d8b0` a `0x0012e480`, unas 17
+      funciones): el mismo esquema que las otras dos cachés. Ya está leída:
+      globales en `0x004e648c` (bloques de 12 bytes, lista de previstos,
+      base `0x004e6494`, `lruv` en `0x004e649c`), funciones para `lruv` en
+      `0x0012e290`, `0x0012e210` y `0x002bcc80`; usa `0x00223c70` y
+      `0x00223d80` (crear y consultar el búfer de Direct3D).
 - [ ] **La tabla de `0x00453c00`**: ocho pares de funciones (soltar y
       tomar memoria) de los que usan memoria al cargar un mapa; el par de
       la caché de animaciones ya está. La recorren `0x0018ec60` y
