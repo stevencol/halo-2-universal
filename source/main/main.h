@@ -55,17 +55,52 @@ typedef char verify_main_globals_reset_map_offset[
 typedef char verify_main_globals_switch_structure_bsp_index_offset[
 	offsetof(struct main_globals, switch_structure_bsp_index) == 0x50 ? 1 : -1];
 
-/* 0x004e6400: how long the last frames took, to tell how the game runs */
+/* how long the last frames took, to tell how the game runs */
 struct main_frame_time_samples
 {
 	short next_index;
 	short samples[NUMBER_OF_MAIN_FRAME_TIME_SAMPLES];
 };
 
+/* 0x004e6388: the time of the main loop. It is counted in vertical blanks
+of the picture, which main_vblank_count counts */
+struct main_time_globals
+{
+	boolean unknown0;
+	boolean unknown1;
+	byte pad2[2];
+	/* the game's time, in ticks, at the last frame; 0 with no game */
+	long game_time;
+	/* the console's tick count at the last frame, in 64 bits */
+	unsigned long tick_count;
+	unsigned long tick_count_high;
+	/* when the last frame was */
+	long long last_vblank;
+	/* main_vblank_count at the last frame */
+	long long vblank_count;
+	byte unknown20[8];
+	/* a frame is not counted as sooner than this */
+	long long target_vblank;
+	/* how many vertical blanks a frame is given */
+	short frame_vblanks;
+	short unknown32;
+	byte unknown34[0x44];
+	struct main_frame_time_samples frame_time_samples;
+};
+
+typedef char verify_main_time_globals_size[
+	sizeof(struct main_time_globals) == 0x98 ? 1 : -1];
+typedef char verify_main_time_globals_target_vblank_offset[
+	offsetof(struct main_time_globals, target_vblank) == 0x28 ? 1 : -1];
+typedef char verify_main_time_globals_frame_time_samples_offset[
+	offsetof(struct main_time_globals, frame_time_samples) == 0x78 ? 1 : -1];
+
 /* ---------- prototypes/MAIN.C */
 
 void main_loop(void);
+void main_loop_body(void);
 void main_time_initialize(void);
+float main_time_update(void);
 void main_revert_map_private(void);
 void main_reset_map_private(void);
 void main_revert_map_if_possible_private(void);
@@ -75,5 +110,17 @@ void main_cancel_map_copy_and_wait(void);
 /* ---------- globals */
 
 extern struct main_globals main_globals;
+extern struct main_time_globals main_time_globals;
+extern long long main_vblank_count;
+
+/* ---------- inline code */
+
+/* the time that went by since the last frame is not counted: after what
+takes long, as writing a checkpoint. The game has no function for it */
+static inline void main_time_skip(
+	void)
+{
+	main_time_globals.last_vblank= main_vblank_count;
+}
 
 #endif

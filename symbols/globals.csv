@@ -28,8 +28,6 @@ address,name,source
 0046e330,game_state_after_save_procs,source/saved games/game_state.c
 0046e334,game_state_before_load_procs,source/saved games/game_state.c
 0046e348,game_state_after_load_procs,source/saved games/game_state.c
-00485ab0,unknown_00485ab0,source/saved games/game_state.c
-004e6398,unknown_004e6398,source/saved games/game_state.c
 004e6948,main_game_globals,source/game/game.c
 00510c54,game_time_globals,source/game/game.c
 00547f28,main_globals,source/main/main.c
@@ -47,10 +45,20 @@ address,name,source
 004e2920,unknown_004e2920,source/shell/shell.c
 00440dd8,game_systems,source/game/game.c
 004e7408,global_random_seed_reference,source/game/game.c
-004e6390,main_time_start,source/main/main.c
-004e6400,main_frame_time_samples,source/main/main.c
 00510c50,unknown_00510c50,source/main/main.c
 004ed39d,unknown_004ed39d,source/main/main.c
 004e6470,unknown_004e6470,source/main/main.c
 004e64a0,unknown_004e64a0,source/main/main.c
 0055c14c,unknown_0055c14c,source/main/main.c
+004e6388,main_time_globals,source/main/main.c
+00485ab0,main_vblank_count,source/main/main.c
+00485aca,main_frame_vblanks,source/main/main.c
+004ed294,unknown_004ed294,source/main/main.c
+0055c14d,unknown_0055c14d,source/main/main.c
+0051ea14,unknown_0051ea14,source/main/main.c
+0055c150,unknown_0055c150,source/main/main.c
+004d8ba0,unknown_004d8ba0,source/main/main.c
+00510548,unknown_00510548,source/main/main.c
+0051054c,unknown_0051054c,source/main/main.c
+00510560,unknown_00510560,source/main/main.c
+00509340,application_paused,source/shell/shell.c

@@ -117,6 +117,10 @@ enum
 /* 0x005107fc */
 struct shell_memory_globals shell_memory_globals;
 
+/* 0x00509340: the game does not go on. The name is that of Halo 1's
+variable */
+boolean application_paused;
+
 /* 0x00509344: a word that the game was started with: "xdemo " from the disc
 of demos. What reads it is not decompiled */
 char shell_launch_name[SHELL_LAUNCH_NAME_LENGTH];

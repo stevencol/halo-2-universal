@@ -298,7 +298,8 @@ address,name,source,arguments,returns,convention
 0012bad0,main_revert_map_if_possible_private,source/main/main.c,,void
 0012be90,main_action_pending,source/main/main.c,,bool
 0012bf40,main_cancel_map_copy_and_wait,source/main/main.c,,void
-0012b450,main_loop_body,,,void
+0012b450,main_loop_body,source/main/main.c,,void
+0012b0e0,main_time_update,source/main/main.c,,real:xmm0
 0018eb80,unknown_0018eb80,,,void
 0018e700,unknown_0018e700,,,void
 00163b60,unknown_00163b60,,,bool
@@ -470,3 +471,37 @@ address,name,source,arguments,returns,convention
 00225f80,unknown_00225f80,,,void
 00225fc0,unknown_00225fc0,,,void
 003361a4,unknown_003361a4,,,void
+0014a224,unknown_0014a224,,,bool
+002237d4,unknown_002237d4,,,void
+0018f1c0,unknown_0018f1c0,,stack,void
+0018e810,unknown_0018e810,,,void
+0012bd40,main_switch_structure_bsp_private,,,void
+0012bb20,main_save_map_private,,,void
+0012bbd0,unknown_0012bbd0,,,void
+00124380,game_state_load_core,,stack,void
+0012bdf0,unknown_0012bdf0,,,void
+00124950,unknown_00124950,,,void
+00217c40,unknown_00217c40,,,void
+002164c0,unknown_002164c0,,eax stack,void
+00121120,unknown_00121120,,,void
+001406b0,unknown_001406b0,,,void
+00163820,unknown_00163820,,,void
+001479c3,unknown_001479c3,,stack,void
+00155f80,unknown_00155f80,,,void
+00092f80,unknown_00092f80,,stack,void
+0008df50,unknown_0008df50,,,void
+000680f0,unknown_000680f0,,,void
+00059940,unknown_00059940,,,void
+00068250,unknown_00068250,,,bool
+00146660,unknown_00146660,,stack stack stack,void
+001870a0,unknown_001870a0,,stack stack,void
+00137f70,unknown_00137f70,,eax ebx,void
+0008dfc0,unknown_0008dfc0,,,void
+00137ed0,unknown_00137ed0,,stack,void
+001554b0,unknown_001554b0,,stack,void
+0016f280,unknown_0016f280,,stack,void
+00222a70,unknown_00222a70,,stack,void
+00223240,unknown_00223240,,,void
+00125b40,unknown_00125b40,,,void
+000681e0,unknown_000681e0,,,void
+00222d80,unknown_00222d80,,,void

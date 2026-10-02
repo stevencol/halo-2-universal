@@ -112,5 +112,6 @@ extern char shell_launch_name[SHELL_LAUNCH_NAME_LENGTH];
 extern struct xbox_video_settings xbox_video_settings;
 extern struct d3d_device *global_d3d_device;
 extern struct d3d_device *d3d_device;
+extern boolean application_paused;
 
 #endif

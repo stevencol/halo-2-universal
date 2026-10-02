@@ -131,12 +131,6 @@ game_state_proc game_state_after_load_procs[NUMBER_OF_GAME_STATE_AFTER_LOAD_PROC
 	unknown_00226030
 };
 
-/* 0x00485ab0 and 0x004e6398: eight bytes that game_state_save copies from
-one to the other. What they are is not known, and they are not of this
-file */
-unsigned long unknown_00485ab0[2];
-unsigned long unknown_004e6398[2];
-
 /* ---------- code */
 
 /* 0x00123b00: lets the game write all of the memory of its state. One of the
@@ -278,8 +272,8 @@ void game_state_save(
 
 	game_state_after_save_procs[0](0);
 
-	unknown_004e6398[0]= unknown_00485ab0[0];
-	unknown_004e6398[1]= unknown_00485ab0[1];
+	/* the time that writing took is not a part of the next frame */
+	main_time_skip();
 }
 
 /* 0x00123ed0: the game was lost. If that happens soon after a checkpoint,

@@ -189,9 +189,7 @@ def run(t) -> None:
     t.check(
         "main_time_initialize",
         globals={
-            "main_time_start": random_.randbytes(8),
-            "unknown_004e6398": random_.randbytes(8),
-            "main_frame_time_samples": random_.randbytes(32),
+            "main_time_globals": random_.randbytes(0x98),
             "d3d_device": DEVICE,
         },
         memory={DEVICE: Memory(random_.randbytes(DEVICE_SIZE), places=(0x1DB8,))},

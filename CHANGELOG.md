@@ -2,6 +2,62 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Un fotograma del juego y su reloj
+
+Lo que el bucle principal hace en cada fotograma, y la función que calcula
+cuántos segundos cuenta ese fotograma. De 224 funciones se pasa a 226, el
+2,01 % de las del juego (el 0,910 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `main_loop_body` | `0x0012b450` | `main/main.c` |
+| `main_time_update` | `0x0012b0e0` | `main/main.c` |
+
+- `tests/test_main.py`.
+
+### Cambiado
+
+- Las variables sueltas del tiempo del bucle son ahora una estructura,
+  `main_time_globals` (`0x004e6388`). Los ocho bytes que `game_state_save`
+  copiaba sin saber qué eran son el momento del último fotograma: después
+  de guardar se igualan al contador actual para que el tiempo que tardó el
+  guardado no cuente en el fotograma siguiente.
+- `0x00509340` es `application_paused`, como en Halo 1.
+
+### Lo que se sabe
+
+- Un fotograma hace, por orden: lo que el juego le pidió al bucle (volver
+  al punto de control, reiniciar, cambiar de bsp, guardar, cargar un
+  núcleo); varias partes que corren haya o no partida; guardar las
+  preferencias si cambiaron; un paso de la copia de mapas al disco duro; y,
+  si el juego no está en pausa, el reloj y las partes de la partida.
+- El tiempo se cuenta en refrescos verticales de la imagen, no en
+  milisegundos: los segundos de un fotograma son los refrescos pasados
+  divididos por la frecuencia (60 si no se conoce), entre 0 y 10.
+- Si al juego se le fija un número de refrescos por fotograma, cada
+  fotograma dura como mínimo dos.
+- El contador de milisegundos de la consola se guarda en 64 bits, sumando
+  uno a la parte alta cada vez que da la vuelta (cada 49 días).
+- El campo de las tareas que llamé `tasks_added` se iguala en cada
+  fotograma al número de tareas pendientes: es una cuenta aproximada de
+  las que quedan, no de las creadas.
+
+### Sin comprobar
+
+- Qué son las 33 funciones que el fotograma llama y que no están
+  descompiladas: solo se comprueba que se llaman en el mismo orden y con
+  los mismos argumentos que en el juego.
+- En `main_time_update`, la comparación del último fotograma con el momento
+  previsto: cambiar `>` por `>=` da el mismo resultado.
+
+### Pendiente
+
+- Lo que el juego le pide al bucle y aún no está: guardar
+  (`0x0012bb20`), cambiar de bsp (`0x0012bd40`), `0x0012bbd0` y
+  `0x0012bdf0`.
+
 ## 2026-10-01 — El bucle principal y la tabla de sistemas
 
 El bucle principal del juego y, con él, la tabla de las 68 partes del juego
