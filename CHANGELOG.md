@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Pedir un carácter y sus píxeles
+
+Seis funciones. De 609 funciones se pasa a 615, el 5,46 % de las del juego
+(el 2,694 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `font_character_request` | `0x001407d0` | `text/font_cache.c` |
+| `font_character_pixels_request` | `0x00140870` | `text/font_cache.c` |
+| `font_character_get_header` | `0x00140900` | `text/font_cache.c` |
+| `font_cache_block_wait` | `0x001412c0` | `text/font_cache.c` |
+| `font_character_pixels_new` | `0x00141350` | `text/font_cache.c` |
+| `font_cache_read` | `0x00141480` | `text/font_cache.c` |
+
+### Lo que se sabe
+
+- Quien dibuja pide un carácter con dos banderas: **esperar** (bit 0) y
+  **darlo a conocer si no se conoce** (bit 1). Sin esperar, cada petición da
+  un paso más de la carga y contesta si ya está listo; esperando, da vueltas
+  hasta que lo está. En los dos casos se apunta que se usó en este fotograma.
+- Los píxeles van aparte: cuando el carácter está listo se le busca sitio en
+  la caché (tantos bytes como dice su cabecera), se apunta el bloque y una
+  tarea los lee del archivo de la fuente, desde donde dice la cabecera (el
+  campo `pixels_offset`, que no tenía nombre). Si no hay sitio, no hay
+  píxeles.
+- Cada vez que se piden los píxeles de un carácter, su bloque queda marcado
+  como recién usado, para que la caché no lo suelte.
+- De las banderas con las que se piden los píxeles solo cuenta la primera.
+- `font_cache_read` es la lectura del archivo de una fuente que las funciones
+  del hito anterior llevaban dentro.
+
+### Mutaciones
+
+56 líneas rotas a propósito: las 56 detectadas.
+
 ## 2026-10-02 — Leer un carácter del archivo de su fuente
 
 Seis funciones. De 603 funciones se pasa a 609, el 5,41 % de las del juego

@@ -526,3 +526,195 @@ def run(t) -> None:
             globals={"font_cache_globals+4": data, "font_slots": fonts(), "global_preferences_globals": preferences()},
             externals=externals_of(data, random_.choice((0, 0, 1, 2)), LOCATION_LOADED if state == 1 else HEADER_LOADED, place),
         )
+
+    # ---------- asking for a character and for its pixels
+
+    LRUV_TICK = 0x38
+    LRUV_BLOCK, LRUV_BLOCK_FIRST_PAGE, LRUV_BLOCK_LAST_USED = 0x18, 8, 0x14
+    BLOCK_LOADED, BLOCK_CHARACTER, BLOCK_TASK = 2, 4, 8
+    PIXELS_SIZE, PIXELS_OFFSET = 0x1E, 0x28
+
+    def a_cache() -> Buffer:
+        """The cache, the array of its blocks and the blocks, in a buffer."""
+        data_place = LRUV_SIZE
+        blocks_place = LRUV_SIZE + DATA_SIZE
+        blob = bytearray(random_.randbytes(blocks_place + BLOCKS * LRUV_BLOCK))
+        struct.pack_into("<I", blob, LRUV_PAGE_SIZE_BITS, random_.choice((0, 4, 4, 12)))
+        struct.pack_into("<I", blob, LRUV_BLOCKS, data_place)
+        struct.pack_into("<I", blob, data_place + 0x44, blocks_place)
+        return Buffer(bytes(blob), pointers=(LRUV_BLOCKS, data_place + 0x44))
+
+    def some_blocks(values: dict) -> Buffer:
+        blob = bytearray(random_.randbytes(DATA_SIZE + BLOCKS * BLOCK_SIZE_))
+        struct.pack_into("<I", blob, 0x44, DATA_SIZE)
+        for index, loaded in values.items():
+            blob[DATA_SIZE + index * BLOCK_SIZE_ + BLOCK_LOADED] = loaded
+        return Buffer(bytes(blob), pointers=(0x44,))
+
+    def block_loaded(blocks: Buffer, index: int, waits: int, name: str = "SwitchToThread"):
+        """The pixels of a block are read after the game stands by so many times."""
+
+        def handler(harness, arguments):
+            if calls_so_far(harness, name) >= waits - 1:
+                harness.mu.mem_write(blocks.address + DATA_SIZE + index * BLOCK_SIZE_ + BLOCK_LOADED, b"\x01")
+            return 0
+
+        return handler
+
+    for n in range(40):
+        t.check(
+            "font_cache_read",
+            random_.randrange(FONT_SLOTS),
+            0x80500000 + random_.randrange(0x100),
+            0x80600000 + random_.randrange(0x100),
+            random_.getrandbits(16),
+            random_.getrandbits(32),
+            random_.choice((2, 6)),
+            random_.choice((0, 0x80700000)),
+            globals={"font_slots": fonts()},
+            externals={
+                "font_get": lambda harness, arguments, there=n % 4 != 3: there,
+                "async_read_position": lambda harness, arguments: 0x00CD0000 | arguments[1],
+            },
+        )
+
+    for n in range(200):
+        index = random_.randrange(BLOCKS)
+        loaded = random_.choice((0, 0, 0, 1, 0x80))
+        waits = random_.choice((0, 0, 1, 2))
+        blocks = some_blocks({index: loaded})
+
+        def hurry(harness, arguments, blocks=blocks, index=index, waits=waits):
+            if waits == 0:
+                harness.mu.mem_write(blocks.address + DATA_SIZE + index * BLOCK_SIZE_ + BLOCK_LOADED, b"\x01")
+            return 1
+
+        t.check(
+            "font_cache_block_wait",
+            NONE if n % 13 == 12 else index | random_.choice((0, 0, 0x10000, 0xE1740000)),
+            random_.choice((0, 0, 1, 1, 0x80, 0x100, 0xFF01)),
+            globals={
+                "font_cache_globals+12": blocks,
+                "font_cache_globals+16": a_cache(),
+                "font_cache_globals+20": random_.choice((0, 0x80400000)),
+            },
+            externals={"async_task_set_priority": hurry, "SwitchToThread": block_loaded(blocks, index, waits)},
+        )
+
+    def a_known(index: int, state: int, block: int) -> Buffer:
+        blob = bytearray(random_.randbytes(DATA_SIZE + CHARACTERS * CHARACTER))
+        struct.pack_into("<I", blob, 0x44, DATA_SIZE)
+        place = DATA_SIZE + index * CHARACTER
+        struct.pack_into("<I", blob, place + 4, random_.randrange(FONT_SLOTS))
+        struct.pack_into("<I", blob, place + STATE, state)
+        struct.pack_into("<I", blob, place + BLOCK, block)
+        return Buffer(bytes(blob), pointers=(0x44,))
+
+    for n in range(300):
+        index = random_.randrange(CHARACTERS)
+        state = random_.choice((4, 4, 4, 4, 0, 1, 3, 5))
+        block = random_.choice((NONE, NONE, NONE, 3))
+        new_block = random_.randrange(BLOCKS) | random_.choice((0, 0x10000, 0xE1740000))
+        fits = n % 7 != 6
+        made = n % 11 != 10
+        waits = random_.choice((0, 1, 2))
+        blocks = some_blocks({new_block & 0xFFFF: 0})
+
+        def read_pixels(harness, arguments, blocks=blocks, new_block=new_block, waits=waits):
+            slot, done, buffer, size, offset, priority, bytes_read = arguments
+            if waits == 0:
+                harness.mu.mem_write(done, b"\x01")
+            return 0x00EF0000 | size, (slot, harness.normalize(done), buffer, size, offset, priority, bytes_read)
+
+        t.check(
+            "font_character_pixels_new",
+            index | random_.choice((0, 0, 0x10000, 0xE1740000)),
+            random_.choice((0, 0, 1, 1, 0x80, 0x100, 0xFF01)),
+            globals={
+                "font_cache_globals+4": a_known(index, state, block),
+                "font_cache_globals+12": blocks,
+                "font_cache_globals+16": 0x80222200,
+            },
+            externals={
+                "lruv_block_new": lambda harness, arguments, value=new_block if fits else NONE: value,
+                "datum_new_at_index": lambda harness, arguments, made=made: (arguments[1] if made else NONE, (arguments[1],)),
+                "font_cache_block_get_address": lambda harness, arguments: 0x80401230,
+                "font_cache_read": read_pixels,
+                "SwitchToThread": block_loaded(blocks, new_block & 0xFFFF, waits),
+            },
+        )
+
+    for n in range(200):
+        index = random_.randrange(CHARACTERS)
+        block = random_.choice((NONE, NONE, 3, 3 | 0xE1740000))
+        new_block = random_.choice((NONE, 5, 5 | 0x10000))
+        known = a_known(index, random_.choice((4, 4, 1)), block)
+        there = random_.choice((0, 0x80401230, 0x80401230))
+
+        def new_pixels(harness, arguments, known=known, index=index, new_block=new_block):
+            character_index, wait = arguments
+            harness.mu.mem_write(known.address + DATA_SIZE + index * CHARACTER + BLOCK, struct.pack("<I", new_block))
+            return new_block != NONE, (character_index, wait & 0xFF)
+
+        t.check(
+            "font_character_pixels_request",
+            NONE if n % 17 == 16 else index | random_.choice((0, 0, 0x10000, 0xE1740000)),
+            random_.choice((0, 1, 2, 3, 0xFE, 0xFF, 0x100, 0x12345601)),
+            globals={
+                "font_cache_globals+4": known,
+                "font_cache_globals+16": a_cache(),
+            },
+            externals={
+                "font_character_pixels_new": new_pixels,
+                "font_cache_block_wait": lambda harness, arguments, there=there: (there, (arguments[0], arguments[1] & 0xFF)),
+            },
+        )
+
+    for n in range(300):
+        index = random_.randrange(CHARACTERS)
+        state = random_.choice((4, 4, 0, 1, 2, 3))
+        known = a_known(index, state, NONE)
+        found = random_.choice((index, index, index | 0xE1740000, NONE))
+        made = random_.choice((index, index | 0x10000, NONE))
+        steps = random_.choice((1, 1, 2, 4))
+        fonts_ = [random_.randrange(FONT_SLOTS) for _ in range(11)]
+
+        def update(harness, arguments, known=known, index=index, steps=steps):
+            character_index, wait = arguments
+            ready = calls_so_far(harness, "font_character_update") >= steps - 1
+            if ready:
+                harness.mu.mem_write(known.address + DATA_SIZE + index * CHARACTER + STATE, struct.pack("<I", 4))
+            return ready, (character_index, wait & 0xFF)
+
+        t.check(
+            "font_character_request",
+            random_.randrange(11),
+            random_.choice((0x41, 0x3042, random_.getrandbits(32))),
+            random_.choice((0, 1, 2, 3, 3, 0xFFFFFFFC, 0xFFFFFFFF, 0x12345602)),
+            globals={
+                "font_cache_globals+4": known,
+                "font_cache_globals+24": random_.getrandbits(32),
+                "font_slot_indices": struct.pack("<11I", *fonts_),
+            },
+            externals={
+                "font_character_find": lambda harness, arguments, found=found: found,
+                "font_character_new": lambda harness, arguments, made=made: made,
+                "font_character_update": update,
+            },
+        )
+
+    for n in range(200):
+        index = random_.randrange(CHARACTERS)
+        known = a_known(index, random_.choice((4, 4, 4, 3, 0)), NONE)
+        asked = random_.choice((index, index, index | 0xE1740000, NONE))
+        t.check(
+            "font_character_get_header",
+            random_.choice((0x41, 0x3042, random_.getrandbits(32))),
+            random_.randrange(11),
+            random_.choice((0, 1, 2, 3, 0x12345603)),
+            globals={"font_cache_globals+4": known},
+            externals={
+                "font_character_request": lambda harness, arguments, asked=asked: asked,
+                "font_character_pixels_request": lambda harness, arguments, there=random_.choice((0, 1, 1, 0x80)): there,
+            },
+        )

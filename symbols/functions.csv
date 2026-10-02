@@ -975,3 +975,9 @@ address,name,source,arguments,returns,convention
 00140f50,font_character_read_header,source/text/font_cache.c,esi edx,void
 00140fc0,font_character_header_wait,source/text/font_cache.c,edi stack,void
 00141020,font_character_update,source/text/font_cache.c,eax edx,bool
+001407d0,font_character_request,source/text/font_cache.c,eax stack stack,int
+00140870,font_character_pixels_request,source/text/font_cache.c,eax stack,bool
+00140900,font_character_get_header,source/text/font_cache.c,eax stack stack,pointer
+001412c0,font_cache_block_wait,source/text/font_cache.c,eax stack,int
+00141350,font_character_pixels_new,source/text/font_cache.c,stack stack,bool
+00141480,font_cache_read,source/text/font_cache.c,eax ebx stack stack stack stack stack,int

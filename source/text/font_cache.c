@@ -12,6 +12,7 @@ file and of the functions are guesses.
 
 #include "cseries/async.h"
 #include "main/global_preferences.h"
+#include "text/draw_string.h"
 #include "text/fonts.h"
 
 #include <string.h>
@@ -367,6 +368,98 @@ long font_character_new(
 	return index;
 }
 
+/* 0x001407d0: a character of a font that is ready: what the file of the
+font says of it has been read. With the first flag the game waits for it;
+with the second, a character that is not known is made known. Its index;
+NONE if it is not ready. It is told that the character was used in this
+frame */
+long font_character_request(
+	long font_index,
+	long character,
+	unsigned long flags)
+{
+	long font_slot_index= font_slot_indices[font_index];
+	long character_index= font_character_find(font_slot_index, character);
+	boolean wait= flags&FLAG(_font_character_request_wait_bit);
+	boolean ready;
+
+	if (character_index==NONE)
+	{
+		if (!((flags>>_font_character_request_new_bit)&1))
+		{
+			return NONE;
+		}
+		character_index= font_character_new(font_slot_index, character);
+		if (character_index==NONE)
+		{
+			return NONE;
+		}
+	}
+	ready= font_character_get(character_index)->state==_font_character_state_ready;
+	if (!ready)
+	{
+		do
+		{
+			ready= font_character_update(character_index, wait);
+		} while (wait && !ready);
+	}
+	font_character_get(character_index)->frame_index= font_cache_globals.frame_index;
+
+	return ready ? character_index : NONE;
+}
+
+/* 0x00140870: the pixels of a character are in the cache, or are on their
+way if the game is not to wait for them: with the first flag it does. Whether
+they are there. The block is told that it was used now */
+boolean font_character_pixels_request(
+	long character_index,
+	unsigned long flags)
+{
+	struct font_character *character;
+	struct lruv_cache *cache;
+	byte *pixels;
+
+	/* of the flags only the first is left, where the flags are */
+	flags= (flags&~0xFFUL) | (flags&FLAG(_font_character_request_wait_bit));
+	if (character_index==NONE)
+	{
+		return FALSE;
+	}
+	character= font_character_get(character_index);
+	if (character->block_index==NONE)
+	{
+		font_character_pixels_new(character_index, (boolean)flags);
+	}
+	if (character->block_index==NONE)
+	{
+		return FALSE;
+	}
+	pixels= font_cache_block_wait(character->block_index, (boolean)flags);
+	cache= font_cache_globals.cache;
+	((struct lruv_cache_block *)cache->blocks->data)[character->block_index&0xFFFF].last_used_tick= cache->tick;
+
+	return pixels!=NULL;
+}
+
+/* 0x00140900: what the file of a font says of a character, once it and its
+pixels are there; NULL if they are not */
+struct font_character_header *font_character_get_header(
+	long character,
+	long font_index,
+	unsigned long flags)
+{
+	long character_index= font_character_request(font_index, character, flags);
+	struct font_character *known;
+
+	if (character_index==NONE || !font_character_pixels_request(character_index, flags))
+	{
+		return NULL;
+	}
+	known= font_character_get(character_index);
+
+	return known->state==_font_character_state_ready ? &known->header : NULL;
+}
+
 /* an array for so many things, of the memory of the game: the array, the
 things and a bit for each. NULL if there is no memory for it */
 static inline __attribute__((always_inline)) struct data_array *font_cache_data_new(
@@ -510,6 +603,111 @@ void font_cache_dispose(
 		data_dispose(font_cache_globals.blocks);
 		font_cache_globals.blocks= NULL;
 	}
+}
+
+/* where the pixels of a block of the cache are */
+static inline __attribute__((always_inline)) byte *font_cache_block_address(
+	long block_index)
+{
+	const struct lruv_cache *cache= font_cache_globals.cache;
+	const struct lruv_cache_block *blocks= cache->blocks->data;
+
+	return font_cache_globals.base_address +
+		(blocks[block_index&0xFFFF].first_page_index<<(cache->page_size_bits&31));
+}
+
+/* 0x001412c0: where the pixels of a block of the cache are, once they have
+been read: the game waits for them if it is to, hurrying the task that reads
+them. NULL if they are not there */
+byte *font_cache_block_wait(
+	long block_index,
+	boolean wait)
+{
+	struct font_cache_block *block;
+
+	if (block_index==NONE)
+	{
+		return NULL;
+	}
+	block= (struct font_cache_block *)font_cache_globals.blocks->data + (block_index&0xFFFF);
+	if (!block->loaded && wait)
+	{
+		async_task_set_priority(block->task, FONT_CACHE_PIXELS_PRIORITY);
+		while (!*(volatile boolean *)&block->loaded)
+		{
+			SwitchToThread();
+		}
+	}
+	if (!block->loaded)
+	{
+		return NULL;
+	}
+
+	return font_cache_block_address(block_index);
+}
+
+/* 0x00141350: room in the cache for the pixels of a character that is ready,
+and a task that reads them from the file of its font: the game waits for it
+if it is to. Whether the character has a block: FALSE if it is not ready, or
+if there is no room */
+boolean font_character_pixels_new(
+	long character_index,
+	boolean wait)
+{
+	struct font_character *character= font_character_get(character_index);
+	struct font_cache_block *block;
+	long block_index;
+	long size;
+	byte *pixels;
+
+	if (character->block_index!=NONE)
+	{
+		return TRUE;
+	}
+	if (character->state!=_font_character_state_ready)
+	{
+		return FALSE;
+	}
+	size= character->header.pixels_size;
+	block_index= lruv_block_new(font_cache_globals.cache, size, 1);
+	if (block_index==NONE)
+	{
+		return FALSE;
+	}
+	block_index= datum_new_at_index(font_cache_globals.blocks, block_index);
+	if (block_index==NONE)
+	{
+		return FALSE;
+	}
+	block= (struct font_cache_block *)font_cache_globals.blocks->data + (block_index&0xFFFF);
+	pixels= font_cache_block_get_address(block_index);
+	character->block_index= block_index;
+	block->character_index= character_index;
+	block->task= font_cache_read(character->key.font_slot_index, &block->loaded, pixels, size,
+		character->header.pixels_offset, font_cache_read_priority(wait), NULL);
+	if (wait)
+	{
+		while (!*(volatile boolean *)&block->loaded)
+		{
+			SwitchToThread();
+		}
+	}
+
+	return TRUE;
+}
+
+/* 0x00141480: a task that reads from the file of the font of a place */
+long font_cache_read(
+	long font_slot_index,
+	boolean *done,
+	void *buffer,
+	long size,
+	uint32_t offset,
+	long priority,
+	long *bytes_read)
+{
+	return async_read_position(font_cache_get_font_file(font_slot_index), size, offset, FONT_CACHE_TASK_CATEGORY,
+		priority, bytes_read, buffer, done);
 }
 
 /* 0x00141450: where the pixels of a block of the cache are */

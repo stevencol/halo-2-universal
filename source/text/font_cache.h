@@ -9,6 +9,9 @@ each, and the cache of their pixels. The names are guesses.
 #define __FONT_CACHE_H
 
 #include "cseries/cseries.h"
+
+#include <stdint.h>
+
 #include "memory/data.h"
 #include "memory/hash_table.h"
 #include "memory/lruv_cache.h"
@@ -29,6 +32,13 @@ enum
 	FONT_CACHE_TASK_CATEGORY= 7,
 	FONT_CACHE_READ_PRIORITY= 2,
 	FONT_CACHE_READ_PRIORITY_WAIT= 6,
+	/* what the task that reads pixels gets when the game waits for it */
+	FONT_CACHE_PIXELS_PRIORITY= 7,
+
+	/* how a character is asked for: the game waits for it, and it is made
+	known if it is not */
+	_font_character_request_wait_bit= 0,
+	_font_character_request_new_bit= 1,
 
 	MAXIMUM_FONT_CHARACTERS= 512,
 	MAXIMUM_PREDICTED_FONT_CHARACTERS= 256,
@@ -75,7 +85,9 @@ struct font_character_header
 	word pixels_size;
 	short width;
 	short height;
-	byte unknown8[8];
+	byte unknown8[4];
+	/* where its pixels are in the file */
+	uint32_t pixels_offset;
 };
 
 /* what the game knows of a character of a font */
@@ -112,7 +124,8 @@ struct font_cache_block
 	byte pad3;
 	/* the character that the pixels are of */
 	long character_index;
-	byte unknown8[4];
+	/* the task that reads them */
+	long task;
 };
 
 struct font_glyph_slot
@@ -159,6 +172,13 @@ void font_character_read_header(struct font_character *character, boolean wait);
 void font_character_header_wait(struct font_character *character, boolean wait);
 boolean font_character_update(long character_index, boolean wait);
 long font_character_new(long font_slot_index, long character);
+long font_character_request(long font_index, long character, unsigned long flags);
+boolean font_character_pixels_request(long character_index, unsigned long flags);
+struct font_character_header *font_character_get_header(long character, long font_index, unsigned long flags);
+byte *font_cache_block_wait(long block_index, boolean wait);
+boolean font_character_pixels_new(long character_index, boolean wait);
+long font_cache_read(long font_slot_index, boolean *done, void *buffer, long size, uint32_t offset, long priority,
+	long *bytes_read);
 void font_character_delete(long character_index);
 boolean font_character_is_busy(long character_index);
 void font_characters_new(void);
