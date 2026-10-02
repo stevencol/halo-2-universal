@@ -2,6 +2,74 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Los mandos
+
+`input_xbox.c`, que ya existía en Halo 1: qué mandos hay enchufados, qué
+botones se pulsan y cuánto tiempo, los joysticks y la vibración. De 392
+funciones se pasa a 402, el 3,57 % de las del juego (el 1,730 % de sus
+bytes). **Se pasa de las 400 funciones.**
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `input_initialize` | `0x001248b0` | `input/input_xbox.c` |
+| `input_dispose` | `0x00124920` | `input/input_xbox.c` |
+| `input_update` | `0x00124950` | `input/input_xbox.c` |
+| `input_get_gamepad_state` | `0x001249a0` | `input/input_xbox.c` |
+| `input_get_gamepad_type` | `0x001249d0` | `input/input_xbox.c` |
+| `input_get_unit_drive_letter` | `0x001249f0` | `input/input_xbox.c` |
+| `input_set_gamepad_rumbler_state` | `0x00124a40` | `input/input_xbox.c` |
+| `input_update_devices` | `0x00124aa0` | `input/input_xbox.c` |
+| `input_update_gamepads` | `0x00124c00` | `input/input_xbox.c` |
+| `input_flush_rumble` | `0x00124ee0` | `input/input_xbox.c` |
+
+- Archivos nuevos: `input/input.h`, `input/input_xbox.c`,
+  `tests/test_input.py`.
+- Funciones de la consola que se suplen en las pruebas: `XInitDevices`,
+  `XGetDeviceChanges`, `XInputOpen`, `XInputClose`, `XInputGetCapabilities`,
+  `XInputGetState`, `XInputSetState`.
+
+### Cambiado
+
+- Tres funciones que el arranque y el bucle principal llamaban sin saber
+  qué eran (`unknown_001248b0`, `unknown_00124920`, `unknown_00124950`) son
+  `input_initialize`, `input_dispose` e `input_update`.
+- Los 0x120 bytes que se ponen a cero al empezar una partida
+  (`unknown_004e61dc`) son el estado de los cuatro mandos.
+
+### Lo que se sabe
+
+- De cada mando se guarda, por botón, el valor (los ocho botones de la
+  consola son analógicos, de 0 a 255), cuántos fotogramas y cuántos
+  milisegundos lleva pulsado, y los dos joysticks.
+- Un botón analógico no tiene un umbral fijo para contar como pulsado: el
+  umbral le sigue. Mientras está pulsado sube hasta 0x20 por debajo del
+  valor, y mientras no lo está baja hasta 0x40 por encima. Así un botón que
+  tiembla cerca del umbral no se pulsa y se suelta en cada fotograma.
+- Los joysticks tienen una zona muerta de 9.000 (de 32.768), y lo que queda
+  se estira a todo el rango. Hacia el lado negativo el rango es de 23.768 y
+  hacia el positivo de 23.767, porque el valor va de -32.768 a 32.767.
+- Un fotograma de mandos nunca cuenta más de 100 ms.
+- La vibración se manda solo si la consola ha acabado con la orden
+  anterior, y se apaga si no hay partida, si está en pausa o si los mandos
+  están «suprimidos». Tampoco vibra el mando de un jugador que no quiere
+  (dos indicadores de la tabla de `0x0054e8e0`, que parece el perfil).
+- El módulo también dice la letra de unidad del disco duro (`u`) y de las
+  tarjetas de memoria.
+- Cuando los mandos están suprimidos, el juego recibe un mando con nada
+  pulsado.
+
+### Sin comprobar
+
+- Al subir el umbral de un botón, si se compara con `>` o con `>=`: da el
+  mismo valor.
+
+### Mutaciones
+
+75 líneas rotas a propósito: 74 detectadas, y la otra es la de «Sin
+comprobar».
+
 ## 2026-10-02 — Los estados guardados en archivos
 
 Casi todo lo que faltaba de `game_state.c`: cargar el estado del juego desde

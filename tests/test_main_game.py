@@ -326,7 +326,7 @@ def run(t) -> None:
                 "main_game_globals": Buffer(bytes(data)),
                 "main_game_load_globals": load_globals(),
                 "global_structure_bsp_index": struct.pack("<h", bsp_index),
-                "unknown_004e61dc": random_.randbytes(0x120),
+                "input_globals+0x24": random_.randbytes(0x120),
             },
             externals={
                 **stand_ins(
@@ -388,7 +388,7 @@ def run(t) -> None:
         t.check(
             "main_game_change_immediate",
             Buffer(bytes(data)) if random_.random() < 0.9 else 0,
-            globals={"main_globals": random_.randbytes(0x54), "unknown_004e61dc": random_.randbytes(0x120)},
+            globals={"main_globals": random_.randbytes(0x54), "input_globals+0x24": random_.randbytes(0x120)},
             externals=stand_ins(
                 "main_game_unload",
                 "main_game_configure_memory",

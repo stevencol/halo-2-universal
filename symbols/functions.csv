@@ -277,10 +277,10 @@ address,name,source,arguments,returns,convention
 00121fc0,unknown_00121fc0,,,void
 00123180,animation_cache_new,source/cache/xbox_animation_cache.c,,void
 00012560,unknown_00012560,,,void
-001248b0,unknown_001248b0,,,void
+001248b0,input_initialize,source/input/input_xbox.c,,bool
 001253d0,unknown_001253d0,,,void
 00125600,unknown_00125600,,,void
-00124920,unknown_00124920,,,void
+00124920,input_dispose,source/input/input_xbox.c,,void
 000141c0,unknown_000141c0,,,void
 00123310,animation_cache_delete,source/cache/xbox_animation_cache.c,,void
 00141190,unknown_00141190,,,void
@@ -480,7 +480,7 @@ address,name,source,arguments,returns,convention
 0012bbd0,unknown_0012bbd0,,,void
 00124380,game_state_load_core,source/saved games/game_state.c,stack,void
 0012bdf0,main_unknown4E_private,source/main/main.c,,void
-00124950,unknown_00124950,,,void
+00124950,input_update,source/input/input_xbox.c,,void
 00217c40,unknown_00217c40,,,void
 002164c0,unknown_002164c0,,eax stack,void
 00121120,global_preferences_flush,source/main/global_preferences.c,,void
@@ -718,3 +718,18 @@ address,name,source,arguments,returns,convention
 000b66c0,csprintf,source/cseries/cseries.c,esi stack stack,int
 002174b0,saved_game_auxiliary_read,,stack stack stack stack stack edi,bool
 00217520,saved_game_auxiliary_write,,stack stack stack stack stack edi,bool
+001249a0,input_get_gamepad_state,source/input/input_xbox.c,ecx,pointer
+001249d0,input_get_gamepad_type,source/input/input_xbox.c,eax,int
+001249f0,input_get_unit_drive_letter,source/input/input_xbox.c,ecx edx,bool
+00124a40,input_set_gamepad_rumbler_state,source/input/input_xbox.c,ecx stack stack,void
+00124aa0,input_update_devices,source/input/input_xbox.c,,void
+00124c00,input_update_gamepads,source/input/input_xbox.c,stack,void
+00124ee0,input_flush_rumble,source/input/input_xbox.c,,void
+004098c0,XInitDevices,,stack stack,void
+004098c5,XGetDeviceChanges,,stack stack stack,int
+00409932,XInputOpen,,stack stack stack stack,int
+00409988,XInputClose,,stack,void
+00409994,XInputGetCapabilities,,stack stack,int
+00409b6c,XInputGetState,,stack stack,int
+00409bdf,XInputSetState,,stack stack,int
+002184a0,unknown_002184a0,,esi,void

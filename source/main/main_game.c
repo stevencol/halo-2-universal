@@ -13,6 +13,7 @@ The names are guesses. Not here: 0x0018e960, 0x0018f0a0 and 0x0018f1c0 on.
 #include "cache/cache_files.h"
 #include "cache/geometry_cache.h"
 #include "cache/texture_cache.h"
+#include "input/input.h"
 #include "interface/user_interface_memory.h"
 #include "main/main.h"
 #include "memory/data.h"
@@ -139,9 +140,6 @@ long unknown_00467214= NONE;
 
 /* 0x00502104: a data array that is emptied when a map is loaded */
 struct data_array *unknown_00502104;
-
-/* 0x004e61dc: zeroed when a game starts */
-byte unknown_004e61dc[UNKNOWN_004E61DC_SIZE];
 
 /* 0x004e9bbc, 0x004e9bc0: the tags of a map are being loaded, and since when */
 boolean main_game_loading_map;
@@ -486,7 +484,7 @@ void main_game_restart(
 		scenario_switch_structure_bsp(NONE, TRUE);
 	}
 	game_dispose_from_old_map();
-	memset(unknown_004e61dc, 0, sizeof(unknown_004e61dc));
+	memset(input_globals.gamepad_states, 0, sizeof(input_globals.gamepad_states));
 	if (main_game_start(&options))
 	{
 		main_game_load_globals.restarting= FALSE;
@@ -583,7 +581,7 @@ boolean main_game_change_immediate(
 		return TRUE;
 	}
 
-	memset(unknown_004e61dc, 0, sizeof(unknown_004e61dc));
+	memset(input_globals.gamepad_states, 0, sizeof(input_globals.gamepad_states));
 	if (main_game_load_map(options) && main_game_start(options))
 	{
 		if (options->game_mode==_game_mode_campaign)

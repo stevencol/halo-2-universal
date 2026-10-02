@@ -18,6 +18,9 @@ the game only when compiled for a 32-bit target.
 
 #define NONE -1
 
+#define UNSIGNED_CHAR_MAX 255
+#define UNSIGNED_SHORT_MAX 65535
+
 #ifndef TRUE
 #define TRUE 1
 #define FALSE 0

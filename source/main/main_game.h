@@ -17,8 +17,7 @@ started on it. Worked out from halo2ship.exe; the names are guesses.
 enum
 {
 	MAIN_GAME_MAP_NAME_LENGTH= 0x104,
-	NUMBER_OF_MAIN_GAME_MEMORY_USERS= 8,
-	UNKNOWN_004E61DC_SIZE= 0x120
+	NUMBER_OF_MAIN_GAME_MEMORY_USERS= 8
 };
 
 /* how far the loading of a map is */
@@ -131,7 +130,6 @@ extern struct main_game_load_globals main_game_load_globals;
 extern struct main_game_memory_user main_game_memory_users[NUMBER_OF_MAIN_GAME_MEMORY_USERS];
 extern struct unknown_004cf770 unknown_004cf770;
 extern long unknown_00467214;
-extern byte unknown_004e61dc[UNKNOWN_004E61DC_SIZE];
 extern boolean main_game_loading_map;
 extern unsigned long main_game_loading_map_time;
 extern boolean unknown_0051ea00;

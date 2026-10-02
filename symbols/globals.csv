@@ -89,7 +89,6 @@ address,name,source
 00502104,unknown_00502104,source/main/main_game.c
 0051e998,user_interface_memory_pool,source/interface/user_interface_memory.c
 0047d924,user_interface_allocation,source/interface/user_interface_memory.c
-004e61dc,unknown_004e61dc,source/main/main_game.c
 004e9bbc,main_game_loading_map,source/main/main_game.c
 004e9bc0,main_game_loading_map_time,source/main/main_game.c
 0051ea00,unknown_0051ea00,source/main/main_game.c
@@ -97,3 +96,10 @@ address,name,source
 00527330,unknown_00527330,source/main/main_game.c
 00527334,unknown_00527334,source/main/main_game.c
 0055e757,main_game_load_failing,source/main/main_game.c
+004e61b8,input_globals,source/input/input_xbox.c
+004e60a0,input_feedbacks,source/input/input_xbox.c
+004086f8,xdevice_type_gamepad,source/input/input_xbox.c
+004088b0,xdevice_type_voice_microphone,source/input/input_xbox.c
+004088bc,xdevice_type_voice_headphone,source/input/input_xbox.c
+004087a8,xdevice_type_memory_unit,source/input/input_xbox.c
+0054e8e0,unknown_0054e8e0,source/input/input_xbox.c

@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-01, al terminar el hito 41.
+**Última actualización:** 2026-10-01, al terminar el hito 42.
 
 ## Dónde estamos
 
-- **392 funciones descompiladas de 11.265: el 3,48 % del juego** (el
-  1,672 % de los bytes de código).
-- Las 392 están comprobadas contra el ejecutable original
+- **402 funciones descompiladas de 11.265: el 3,57 % del juego** (el
+  1,730 % de los bytes de código).
+- Las 402 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the states of the game that are kept in files* (ver `git log`).
+- Último hito: *Decompile the gamepads* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -76,6 +76,7 @@ Módulos (funciones hechas / archivo):
 - [ ] Cargar y descargar un mapa — `main\main_game.c` (18; faltan
       `0x0018e960`, `0x0018f0a0` y `0x0018f1c0` en adelante)
 - [x] Memoria de la interfaz — `interface\user_interface_memory.c` (4)
+- [x] Mandos — `input\input_xbox.c` (10, completo)
 - [ ] Archivos — `tag_files\files.c`, `files_xbox.c` (17; faltan
       `find_files_next`, `0x00137000`, y `file_path_split`, `0x00137400`)
 - [x] Cadenas anchas — `text\unicode.c` (7; quedan 3)
@@ -133,10 +134,12 @@ Módulos (funciones hechas / archivo):
       `0x00217520`): lo que hay detrás de `saved_game_auxiliary_read` y
       `saved_game_auxiliary_write` (el archivo `auxilary.bin` de cada
       partida).
-- [ ] **Los mandos** (`0x001248b0` a `0x00124ee0`, en Halo 1
-      `input_xbox.c`): empieza justo después de `game_state.c`. Sus
-      globales están en `0x004e61b8`; el estado de los cuatro mandos, en
-      `0x004e61dc`, es lo que se pone a cero al empezar una partida.
+- [x] ~~Los mandos~~ (hito 42).
+- [ ] **El sonido**: `0x001253d0` (lo prepara, es de los sistemas del
+      arranque) y `0x00125600` (lo desmonta); usa memoria del estado del
+      juego, una tabla «sound sources» y varias funciones de `0x00219b40`
+      en adelante. Entre los mandos y él, `0x00124f90` a `0x00125360`, hay
+      funciones pequeñas de las definiciones de sonido.
 - [x] ~~`lruv_block_new`~~ (hito 31).
 - [x] ~~Caché de animaciones~~ (hito 32).
 - [x] ~~Caché de texturas, primera parte~~ (hito 33): crear, abrir,
