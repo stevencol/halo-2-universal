@@ -547,3 +547,4 @@ address,name,source,arguments,returns,convention
 0013d830,lruv_block_delete,source/memory/lruv_cache.c,edi ebx,void
 0013d8b0,lruv_resize,source/memory/lruv_cache.c,eax stack,void
 0013d950,lruv_compute_pages_in_use,source/memory/lruv_cache.c,stack stack,int
+0013d370,lruv_block_new,source/memory/lruv_cache.c,stack stack stack,int

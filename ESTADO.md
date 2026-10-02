@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-01, al terminar el hito 30.
+**Última actualización:** 2026-10-01, al terminar el hito 31.
 
 ## Dónde estamos
 
-- **265 funciones descompiladas de 11.265: el 2,35 % del juego** (el
-  1,082 % de los bytes de código).
-- Las 265 están comprobadas contra el ejecutable original
+- **266 funciones descompiladas de 11.265: el 2,36 % del juego** (el
+  1,123 % de los bytes de código).
+- Las 266 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the cache of blocks of pages* (ver `git log`).
+- Último hito: *Decompile lruv_block_new* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -67,8 +67,7 @@ Módulos (funciones hechas / archivo):
 - [x] Tablas de datos — `memory\data.c` (20, módulo completo)
 - [x] CRC de 32 bits — `memory\crc.c` (2, completo)
 - [x] Búsqueda binaria — `memory\binary_search.c` (1)
-- [ ] Caché de bloques de páginas — `memory\lruv_cache.c` (7; falta
-      `lruv_block_new`, `0x0013d370`, que es grande)
+- [x] Caché de bloques de páginas — `memory\lruv_cache.c` (8, completo)
 - [x] Cadenas anchas — `text\unicode.c` (7; quedan 3)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
 - [ ] Matemáticas reales — `math\real_math.c` (21 de unas 50)
@@ -117,9 +116,9 @@ Módulos (funciones hechas / archivo):
 - [x] ~~Opciones de partida: validar y comparar~~ (hito 28).
 - [ ] **Resto de `game_state.c`:** núcleo y partida guardada (`0x001240b0` a
       `0x00124490`, `0x00124640`, `0x00124770` en adelante).
-- [ ] **`lruv_block_new`** (`0x0013d370`): reservar un bloque en la caché,
-      echando a los menos usados. Con ella se puede hacer el sistema
-      `0x00123180` (la caché de animaciones) y la caché de texturas
+- [x] ~~`lruv_block_new`~~ (hito 31).
+- [ ] **Caché de animaciones** (`0x00123180` a `0x001239d0`, 17 funciones):
+      usa `lruv_cache.c` entero. Después, la caché de texturas
       (`0x0012c0d0`).
 - [ ] **Memoria prestada:** `0x0012d2f0`, `0x0012d400`, `0x0012d520`.
 - [ ] **Resto de las tareas de archivo:** `0x001a0a70`, `0x001a0da0`,

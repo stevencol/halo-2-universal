@@ -2,6 +2,61 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Reservar un bloque en la caché
+
+La función que faltaba de `lruv_cache.c`, y la más grande del módulo (1.210
+bytes): la que busca sitio para un bloque nuevo y decide a cuáles echar. De
+265 funciones se pasa a 266, el 2,36 % de las del juego (el 1,123 % de sus
+bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `lruv_block_new` | `0x0013d370` | `memory/lruv_cache.c` |
+
+### Cambiado
+
+- Campos de la caché que ya tienen nombre: `hole_algorithm` (antes
+  `unknown2C`) y `failed_page_counts` (antes `unknown44`); y los del hueco,
+  `previous_block_index` y `first_page_index`.
+- `tests/test_lruv_cache.py`: el constructor de cachés acepta el tamaño de la
+  tabla, las edades de los bloques, los huecos entre ellos y ticks de 32 bits.
+
+### Lo que se sabe
+
+- La función recorre las páginas de la primera a la última, bloque a bloque
+  y hueco a hueco. En cada sitio donde empieza un bloque o un hueco puede
+  empezar un tramo; cada tramo crece hasta tener las páginas pedidas y
+  entonces se compara con el mejor hasta el momento. Un bloque que no se
+  puede echar (lo dice la función del dueño, o se usó hace menos ticks de
+  los que se piden) corta todos los tramos que pasan por él.
+- Lleva hasta 255 tramos abiertos a la vez, en un anillo de 256 en la pila.
+- Hay tres maneras de comparar dos tramos, según un campo de la caché: el
+  más viejo (y a igualdad, el de menos páginas); el más viejo con margen
+  (`lruv_hole_is_better`); y el de más edad por página.
+- Si no hay sitio, se apunta el número de páginas pedido en una tabla por
+  edad, y la próxima petición igual o mayor con esa edad falla sin buscar.
+  La tabla se borra cuando la caché cambia o pasa un tick.
+- Si la tabla de bloques está llena, además de los bloques del tramo se echa
+  al bloque que lleva más tiempo sin usarse.
+- La tabla de fallos tiene ocho entradas y la edad se limita a ocho, no a
+  siete: con edad 8 o más el juego lee y escribe el campo siguiente de la
+  caché, que es el puntero a los bloques. Se ha dejado igual.
+
+### Sin comprobar
+
+- Al enlazar el bloque nuevo detrás del último, si el anterior se toma de
+  `last_block_index` o del bloque previo: en una lista bien formada son el
+  mismo.
+
+### Mutaciones
+
+47 líneas rotas a propósito: 40 detectadas a la primera. Las otras 7 dieron
+casos nuevos de prueba (ticks con el bit alto, más de 256 tramos abiertos,
+bloques bloqueados con la tabla llena) y ahora se detectan todas salvo la de
+«Sin comprobar».
+
 ## 2026-10-01 — La caché de bloques de páginas
 
 `lruv_cache.c`, un módulo que ya existía en Halo 1: una caché que reparte

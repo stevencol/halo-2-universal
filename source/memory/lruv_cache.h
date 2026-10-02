@@ -19,7 +19,9 @@ fields; the names of those are guesses.
 enum
 {
 	LRUV_CACHE_NAME_LENGTH= 31,
-	LRUV_CACHE_UNKNOWN44_COUNT= 8,
+	LRUV_CACHE_AGE_CLASS_COUNT= 8,
+	/* how many runs of pages lruv_block_new looks at at a time */
+	LRUV_CACHE_HOLE_COUNT= 256,
 	/* the tick that the count goes back to when it reaches its end, and how
 	far back a block is still told from another */
 	LRUV_CACHE_WRAPPED_TICK= 0x101,
@@ -42,14 +44,17 @@ struct lruv_cache
 	lruv_locked_block_proc locked_block_proc;
 	void *unknown28;
 	/* how lruv_block_new chooses among the places for a block */
-	long unknown2C;
+	long hole_algorithm;
 	long page_count;
 	long page_size_bits;
 	long tick;
 	/* the blocks are in a list, in the order of their pages */
 	long first_block_index;
 	long last_block_index;
-	long unknown44[LRUV_CACHE_UNKNOWN44_COUNT];
+	/* per the age that a new block was asked with: the least pages that
+	there was no room for; a new block of as many is not looked for again.
+	LRUV_CACHE_MAXIMUM_TICK when the cache changes */
+	long failed_page_counts[LRUV_CACHE_AGE_CLASS_COUNT];
 	/* right after the cache */
 	struct data_array *blocks;
 	unsigned long signature;
@@ -71,10 +76,23 @@ struct lruv_cache_block
 several, and takes the best */
 struct lruv_hole
 {
-	long unknown0;
+	/* the block before the first page; NONE if there is none */
+	long previous_block_index;
+	/* of the blocks in it: the one used last */
 	unsigned long last_used_tick;
-	long unknown8;
+	long first_page_index;
 	long page_count;
+};
+
+/* the values of hole_algorithm */
+enum
+{
+	/* the run used the longest ago; of two the same, the one of less pages */
+	_lruv_hole_algorithm_oldest,
+	/* lruv_hole_is_better */
+	_lruv_hole_algorithm_oldest_with_margin,
+	/* the run with the most age for each of its pages */
+	_lruv_hole_algorithm_age_per_page
 };
 
 #if defined(__i386__)
@@ -93,6 +111,7 @@ void lruv_wrap_ticks(struct lruv_cache *cache);
 void lruv_flush(struct lruv_cache *cache);
 boolean lruv_hole_is_better(const struct lruv_cache *cache, const struct lruv_hole *hole,
 	const struct lruv_hole *other);
+long lruv_block_new(struct lruv_cache *cache, long size, long age);
 void lruv_block_delete(struct lruv_cache *cache, long block_index);
 void lruv_resize(struct lruv_cache *cache, long page_count);
 long lruv_compute_pages_in_use(struct lruv_cache *cache, unsigned long age);
