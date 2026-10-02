@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Crear la caché de los caracteres
+
+Cuatro funciones. De 598 funciones se pasa a 602, el 5,34 % de las del juego
+(el 2,633 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `font_characters_new` | `0x001409d0` | `text/font_cache.c` |
+| `font_cache_new` | `0x001410d0` | `text/font_cache.c` |
+| `font_cache_block_deleted` | `0x001411e0` | `text/font_cache.c` |
+| `font_cache_block_locked` | `0x00141290` | `text/font_cache.c` |
+
+### Lo que se sabe
+
+- El juego sabe de 512 caracteres a la vez, y de 256 «predichos» (los que
+  están a punto de dibujarse). La tabla hash que los encuentra tiene 1.024
+  listas y guarda 4 bytes con cada clave: el índice del carácter.
+- Los píxeles de los caracteres viven en una caché de **30.720 bytes** que se
+  pide a la consola, en páginas de 16 bytes, con 512 bloques como mucho. Es
+  una caché del mismo tipo que la de texturas (`lruv_cache`), con el mismo
+  modo de elegir hueco.
+- Un bloque no puede salir de la caché mientras sus píxeles se están leyendo
+  del disco. Cuando la caché suelta un bloque, el juego espera a que esa
+  lectura termine —contando las tareas pendientes en cada vuelta— y entonces
+  deja al carácter sin píxeles y borra el bloque.
+- Una lista del juego ocupa su cabecera (0x4C bytes), sus elementos y un bit
+  por elemento.
+
+### Mutaciones
+
+45 líneas rotas a propósito: las 45 detectadas.
+
 ## 2026-10-02 — Olvidar un carácter
 
 Dos funciones. De 596 funciones se pasa a 598, el 5,31 % de las del juego

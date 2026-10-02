@@ -4,6 +4,7 @@ import random
 import struct
 
 from difftest import Buffer, FunctionPointer, Mock, Pointer, mock_address
+from test_async import calls_so_far
 
 DATA_SIZE = 0x4C
 DATA_ALLOCATION = 0x30
@@ -253,4 +254,111 @@ def run(t) -> None:
             "font_character_is_busy",
             index,
             globals={"font_cache_globals+4": Buffer(bytes(blob), pointers=(0x44,)), "font_cache_globals+24": 1000},
+        )
+
+    # ---------- making the characters and the cache
+
+    CHARACTERS_SIZE, PREDICTED_SIZE, TABLE_MEMORY_SIZE = 0x708C, 0xC6C, 0x303C
+    BLOCKS_SIZE, CACHE_SIZE = 0x188C, 0x30FC
+
+    def gives(memory: dict):
+        """The function that gives memory: each size has its own."""
+
+        def handler(call):
+            buffer = memory.get(call.stack[0])
+            return buffer.address if buffer is not None else 0
+
+        return handler
+
+    for n in range(6):
+        characters = Buffer(random_.randbytes(CHARACTERS_SIZE + 8))
+        predicted = Buffer(random_.randbytes(PREDICTED_SIZE + 8))
+        # the two functions of the table are the game's, or those of source/
+        table = Buffer(random_.randbytes(TABLE_MEMORY_SIZE + 8), places=(0x2C, 0x30))
+        memory = {CHARACTERS_SIZE: characters, PREDICTED_SIZE: predicted}
+        if n != 5:
+            memory[TABLE_MEMORY_SIZE] = table
+        allocator = Buffer(struct.pack("<3I", 4, mock_address(0), mock_address(1)), pointers=(0,))
+        t.check(
+            "font_characters_new",
+            globals={"heap_allocation": allocator, "font_cache_globals": random_.randbytes(0x1C)},
+            mocks=[Mock(gives(memory), stack_arguments=1, registers=("ecx",)), Mock(lambda call: 0, stack_arguments=1, registers=("ecx",))],
+            extra=[characters, predicted, table],
+        )
+
+    for n in range(6):
+        blocks = Buffer(random_.randbytes(BLOCKS_SIZE + 8))
+        cache = Buffer(random_.randbytes(CACHE_SIZE + 8), places=(0x20, 0x24))
+        allocator = Buffer(struct.pack("<3I", 4, mock_address(0), mock_address(1)), pointers=(0,))
+        base = 0 if n == 5 else 0x80400000
+        t.check(
+            "font_cache_new",
+            globals={
+                "heap_allocation": allocator,
+                "font_cache_globals": random_.randbytes(0x1C),
+                "lruv_blocks_allocation": random_.choice((0, 0x60F00100)),
+            },
+            mocks=[
+                Mock(gives({BLOCKS_SIZE: blocks, CACHE_SIZE: cache}), stack_arguments=1, registers=("ecx",)),
+                Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
+            ],
+            extra=[blocks, cache],
+            externals={
+                "VirtualAlloc": lambda harness, arguments, base=base: base,
+                "GetLastError": lambda harness, arguments: 8,
+            },
+        )
+
+    # ---------- what the cache asks of its blocks
+
+    def cache_blocks(values: dict) -> Buffer:
+        blob = bytearray(random_.randbytes(DATA_SIZE + BLOCKS * BLOCK_SIZE_))
+        struct.pack_into("<I", blob, 0x44, DATA_SIZE)
+        for index, (loaded, character) in values.items():
+            blob[DATA_SIZE + index * BLOCK_SIZE_ + 2] = loaded
+            struct.pack_into("<I", blob, DATA_SIZE + index * BLOCK_SIZE_ + 4, character)
+        return Buffer(bytes(blob), pointers=(0x44,))
+
+    for n in range(60):
+        index = random_.randrange(BLOCKS)
+        t.check(
+            "font_cache_block_locked",
+            index | random_.choice((0, 0, 0x10000, 0xE1740000)),
+            globals={"font_cache_globals+12": cache_blocks({index: (random_.choice((0, 0, 1, 0x80)), 0)})},
+        )
+
+    TASK_SIZE, TASK_NEXT = 0x40, 0x3C
+    for n in range(80):
+        index = random_.randrange(BLOCKS)
+        character = random_.randrange(CHARACTERS)
+        waits = random_.choice((0, 0, 1, 2, 3))
+        blocks = cache_blocks({index: (waits == 0, character | random_.choice((0, 0x10000, 0xE1740000)))})
+        # the tasks that are not done: the game counts them while it waits
+        task_count = random_.choice((0, 1, 2, 5))
+        tasks = bytearray(random_.randbytes(max(task_count, 1) * TASK_SIZE))
+        for task in range(task_count):
+            struct.pack_into("<I", tasks, task * TASK_SIZE + TASK_NEXT, (task + 1) * TASK_SIZE if task + 1 < task_count else 0)
+        task_list = Buffer(bytes(tasks), pointers=tuple(task * TASK_SIZE + TASK_NEXT for task in range(task_count - 1)))
+
+        def wait(harness, arguments, waits=waits, blocks=blocks, index=index):
+            if calls_so_far(harness, "WaitForSingleObject") >= waits - 1:
+                harness.mu.mem_write(blocks.address + DATA_SIZE + index * BLOCK_SIZE_ + 2, b"\x01")
+            return 0
+
+        t.check(
+            "font_cache_block_deleted",
+            index | random_.choice((0, 0, 0x10000, 0xE1740000)),
+            globals={
+                "font_cache_globals+4": known_characters({character: (4, 0xE1740000 | index, 0, NONE)}),
+                "font_cache_globals+12": blocks,
+                "async_globals+8": 0x1234,
+                "async_globals+9624": Pointer(task_list, 0) if task_count else 0,
+                "async_globals+9628": random_.getrandbits(32),
+            },
+            extra=[task_list],
+            externals={
+                "WaitForSingleObject": wait,
+                "ReleaseMutex": lambda harness, arguments: 1,
+                "datum_delete": lambda harness, arguments: 0,
+            },
         )

@@ -964,3 +964,7 @@ address,name,source,arguments,returns,convention
 0013e530,bit_vector_highest_bit_set,source/memory/bit_vector.c,edi eax,int
 00140cd0,font_character_delete,source/text/font_cache.c,stack,void
 00140d50,font_character_is_busy,source/text/font_cache.c,eax,bool
+001409d0,font_characters_new,source/text/font_cache.c,,void
+001410d0,font_cache_new,source/text/font_cache.c,,void
+001411e0,font_cache_block_deleted,source/text/font_cache.c,stack,void
+00141290,font_cache_block_locked,source/text/font_cache.c,stack,bool

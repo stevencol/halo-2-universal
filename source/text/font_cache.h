@@ -18,7 +18,19 @@ each, and the cache of their pixels. The names are guesses.
 
 enum
 {
-	NUMBER_OF_FONT_GLYPH_SLOTS= 512
+	NUMBER_OF_FONT_GLYPH_SLOTS= 512,
+
+	MAXIMUM_FONT_CHARACTERS= 512,
+	MAXIMUM_PREDICTED_FONT_CHARACTERS= 256,
+	FONT_PREDICTED_CHARACTER_SIZE= 0xC,
+	FONT_CHARACTER_TABLE_LIST_COUNT= 1024,
+
+	/* the cache of the pixels: its bytes, in pages of 16 */
+	FONT_CACHE_SIZE= 0x7800,
+	FONT_CACHE_PAGE_SIZE_BITS= 4,
+	MAXIMUM_FONT_CACHE_BLOCKS= 512,
+	/* the cache, the array of its blocks and the blocks */
+	FONT_CACHE_LRUV_SIZE= 0x30FC
 };
 
 /* how far the game is with a character: the last is that it is ready to be
@@ -67,8 +79,13 @@ struct font_character
 struct font_cache_block
 {
 	short identifier;
-	boolean unknown2;
-	byte unknown3[9];
+	/* its pixels have been read: until then the block cannot leave the
+	cache */
+	boolean loaded;
+	byte pad3;
+	/* the character that the pixels are of */
+	long character_index;
+	byte unknown8[4];
 };
 
 struct font_glyph_slot
@@ -110,7 +127,11 @@ boolean HASH_TABLE_CALLBACK font_character_key_compare(long key, long other);
 long font_character_find(long font_slot_index, long character);
 void font_character_delete(long character_index);
 boolean font_character_is_busy(long character_index);
+void font_characters_new(void);
 void font_characters_dispose(void);
+void font_cache_new(void);
+void LRUV_CALLBACK font_cache_block_deleted(long block_index);
+boolean LRUV_CALLBACK font_cache_block_locked(long block_index);
 void font_cache_dispose(void);
 byte *font_cache_block_get_address(long block_index);
 
