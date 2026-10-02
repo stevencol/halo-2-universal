@@ -10,6 +10,7 @@ these functions are of it is a guess, and so are their names.
 
 #include "cseries/cseries.h"
 #include "math/real_math.h"
+#include "text/unicode.h"
 
 /* ---------- constants */
 
@@ -40,7 +41,10 @@ enum
 	LAST_PRIVATE_CHARACTER= 0xE3FF,
 
 	NUMBER_OF_FONTS= 11,
-	/* in draw_string_flags: lines are ended where they can */
+	MAXIMUM_NUMBER_OF_TAB_STOPS= 16,
+	/* with its end */
+	MAXIMUM_DRAW_STRING_CHARACTERS= 2048,
+	/* in the flags of how texts are drawn: lines are ended where they can */
 	_draw_string_wrap_bit= 0
 };
 
@@ -75,6 +79,28 @@ struct text_iterator
 };
 #pragma pack(pop)
 
+/* 0x004e73a0: how the texts are drawn */
+struct draw_string_globals
+{
+	long font_index;
+	unsigned long flags;
+	long style;
+	long justification;
+	real_argb_color color;
+	boolean shadow;
+	byte pad21[3];
+	real_argb_color shadow_color;
+	byte unknown34[8];
+	short tab_stop_count;
+	short tab_stops[MAXIMUM_NUMBER_OF_TAB_STOPS];
+	byte pad5E[2];
+};
+
+typedef char verify_draw_string_globals_size[
+	sizeof(struct draw_string_globals) == 0x60 ? 1 : -1];
+typedef char verify_draw_string_globals_tab_stop_count_offset[
+	offsetof(struct draw_string_globals, tab_stop_count) == 0x3C ? 1 : -1];
+
 typedef char verify_text_iterator_size[
 	sizeof(struct text_iterator) == 0x2C ? 1 : -1];
 typedef char verify_text_iterator_element_offset[
@@ -82,6 +108,14 @@ typedef char verify_text_iterator_element_offset[
 
 /* ---------- prototypes/DRAW_STRING.C */
 
+void draw_string_set_tab_stops(short count, const short *tab_stops);
+void draw_string_set_shadow_color(const real_argb_color *color);
+void draw_string_set_font(long font_index);
+void draw_string_set_font_and_format(long font_index, const real_argb_color *shadow_color, long style,
+	long justification, long flags, const real_argb_color *color);
+boolean draw_string_precache_string(const wchar *string, long font_index);
+boolean draw_string_precache_characters(const long *characters, long font_index);
+boolean draw_string_precache(const wchar *string);
 boolean text_iterator_new(struct text_iterator *iterator, long font_index, short justification,
 	const long *characters, short unknown, const real_argb_color *color, const boolean *shadow,
 	const real_argb_color *shadow_color);

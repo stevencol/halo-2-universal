@@ -132,5 +132,5 @@ address,name,source
 004508fc,saved_game_files_allocation_functions,source/saved games/saved_game_files.c
 0055e730,unicode_escape_note_time,source/text/unicode.c
 004536cc,white_space_ranges,source/text/unicode.c
-004e73a4,draw_string_flags,source/text/draw_string.c
+004e73a0,draw_string_globals,source/text/draw_string.c
 004e28f4,font_slot_indices,source/text/draw_string.c

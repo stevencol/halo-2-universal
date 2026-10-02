@@ -933,3 +933,12 @@ address,name,source,arguments,returns,convention
 00135af0,bitmap_3d_get_pixel_address,source/bitmaps/bitmaps.c,ecx stack stack stack stack,int
 0013f470,text_iterator_new,source/text/draw_string.c,esi ebx edx stack stack stack stack stack,bool
 001224c0,unknown_001224c0,,ecx,pointer
+0013eb20,draw_string_set_tab_stops,source/text/draw_string.c,eax edx,void
+0013ed50,draw_string_set_shadow_color,source/text/draw_string.c,eax,void
+0013ed90,draw_string_set_font,source/text/draw_string.c,esi,void
+0013edb0,draw_string_set_font_and_format,source/text/draw_string.c,esi edi stack stack stack stack,void
+0013ee20,draw_string_precache_string,source/text/draw_string.c,ecx stack,bool
+0013eeb0,draw_string_precache_characters,source/text/draw_string.c,ecx edi,bool
+0013ef30,draw_string_precache,source/text/draw_string.c,ecx,bool
+0013ec70,unknown_0013ec70,,eax,void
+001414d0,unknown_001414d0,,stack stack,bool

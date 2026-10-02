@@ -20,15 +20,167 @@ these functions are of it is a guess, and so are their names.
 it waits for it. NULL if there is none */
 void *unknown_001224c0(long font_slot_index);
 
+/* 0x0013ec70: sets the colour of the texts that are drawn */
+void unknown_0013ec70(const real_argb_color *color);
+
+/* 0x001414d0: gets a character of a font ready to be drawn; whether it
+could */
+boolean unknown_001414d0(long font_index, long character);
+
 /* ---------- globals */
 
-/* 0x004e73a4: how texts are drawn */
-byte draw_string_flags;
+/* 0x004e73a0: how texts are drawn */
+struct draw_string_globals draw_string_globals;
 
 /* 0x004e28f4: the place of each font */
 long font_slot_indices[NUMBER_OF_FONTS];
 
 /* ---------- code */
+
+/* 0x0013eb20: where the tabs of the texts that are drawn are: 16 at most */
+void draw_string_set_tab_stops(
+	short count,
+	const short *tab_stops)
+{
+	if (count>MAXIMUM_NUMBER_OF_TAB_STOPS)
+	{
+		count= MAXIMUM_NUMBER_OF_TAB_STOPS;
+	}
+	draw_string_globals.tab_stop_count= count;
+	if (count>0)
+	{
+		memcpy(draw_string_globals.tab_stops, tab_stops, (unsigned long)count*sizeof(short));
+	}
+}
+
+/* the colour of the shadow of the texts that are drawn; none, if none is
+given */
+static inline __attribute__((always_inline)) void draw_string_set_shadow_color_inline(
+	const real_argb_color *color)
+{
+	if (color)
+	{
+		draw_string_globals.shadow= TRUE;
+		draw_string_globals.shadow_color= *color;
+	}
+	else
+	{
+		draw_string_globals.shadow= FALSE;
+	}
+}
+
+/* 0x0013ed50 */
+void draw_string_set_shadow_color(
+	const real_argb_color *color)
+{
+	draw_string_set_shadow_color_inline(color);
+}
+
+/* the font of the texts that are drawn: the game waits until it is loaded */
+static inline __attribute__((always_inline)) void draw_string_set_font_inline(
+	long font_index)
+{
+	unknown_001224c0(font_slot_indices[font_index]);
+	draw_string_globals.font_index= font_index;
+}
+
+/* 0x0013ed90 */
+void draw_string_set_font(
+	long font_index)
+{
+	draw_string_set_font_inline(font_index);
+}
+
+/* 0x0013edb0: all of how the texts are drawn: the font, the colour, the
+colour of the shadow, and the format */
+void draw_string_set_font_and_format(
+	long font_index,
+	const real_argb_color *shadow_color,
+	long style,
+	long justification,
+	long flags,
+	const real_argb_color *color)
+{
+	draw_string_set_font_inline(font_index);
+	unknown_0013ec70(color);
+	draw_string_set_shadow_color_inline(shadow_color);
+	draw_string_globals.style= style;
+	draw_string_globals.justification= justification;
+	draw_string_globals.flags= flags;
+}
+
+/* 0x0013ee20: gets ready the characters of a text of the game, in which a
+bar and a letter are an order (unicode_escape_character): 2047 at most */
+boolean draw_string_precache_string(
+	const wchar *string,
+	long font_index)
+{
+	long characters[MAXIMUM_DRAW_STRING_CHARACTERS];
+	long *character= characters;
+	long count;
+
+	for (count= MAXIMUM_DRAW_STRING_CHARACTERS; count>0; count--)
+	{
+		long value;
+
+		if (count==1)
+		{
+			*character= 0;
+			break;
+		}
+		value= *string++;
+		if (value=='|')
+		{
+			boolean found= FALSE;
+
+			value= unicode_escape_character(*string, &found);
+			if (found)
+			{
+				string++;
+			}
+		}
+		*character++= value;
+		if (!value)
+		{
+			break;
+		}
+	}
+
+	return draw_string_precache_characters(characters, font_index);
+}
+
+/* 0x0013eeb0: gets ready each of the characters of a text that are drawn,
+with a font. Whether all of them could be */
+boolean draw_string_precache_characters(
+	const long *characters,
+	long font_index)
+{
+	struct text_iterator iterator;
+	boolean result= TRUE;
+
+	if (text_iterator_new(&iterator, font_index, (short)draw_string_globals.justification, characters,
+		(short)draw_string_globals.style, &draw_string_globals.color, &draw_string_globals.shadow,
+		&draw_string_globals.shadow_color))
+	{
+		do
+		{
+			text_iterator_next(&iterator);
+			if (iterator.element==_text_element_character && !unknown_001414d0(font_index, iterator.character))
+			{
+				result= FALSE;
+			}
+		} while (iterator.element!=_text_element_end);
+	}
+
+	return result;
+}
+
+/* 0x0013ef30: with the font of the texts that are drawn */
+boolean draw_string_precache(
+	const wchar *string)
+{
+	return draw_string_precache_string(string, draw_string_globals.font_index);
+}
 
 /* a colour as a number of 32 bits: each of its parts, from 0 to 1, times
 255, with what is after the point cut. A part that is not from 0 to 1 goes
@@ -66,7 +218,7 @@ boolean text_iterator_new(
 	iterator->font_index= font_index;
 	iterator->index= 0;
 	iterator->can_break= FALSE;
-	iterator->wrap= draw_string_flags&FLAG(_draw_string_wrap_bit);
+	iterator->wrap= (byte)draw_string_globals.flags&FLAG(_draw_string_wrap_bit);
 	iterator->color= draw_string_color_to_pixel32(color->alpha, &color->rgb);
 	if (*shadow)
 	{

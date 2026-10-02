@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Cómo se dibuja el texto
+
+Siete funciones. De 564 funciones se pasa a 571, el 5,07 % de las del juego
+(el 2,522 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `draw_string_set_tab_stops` | `0x0013eb20` | `text/draw_string.c` |
+| `draw_string_set_shadow_color` | `0x0013ed50` | `text/draw_string.c` |
+| `draw_string_set_font` | `0x0013ed90` | `text/draw_string.c` |
+| `draw_string_set_font_and_format` | `0x0013edb0` | `text/draw_string.c` |
+| `draw_string_precache_string` | `0x0013ee20` | `text/draw_string.c` |
+| `draw_string_precache_characters` | `0x0013eeb0` | `text/draw_string.c` |
+| `draw_string_precache` | `0x0013ef30` | `text/draw_string.c` |
+
+- `struct draw_string_globals` (`0x004e73a0`, 0x60 bytes): cómo se dibuja el
+  texto. Sustituye a la variable suelta `draw_string_flags`, que era su
+  segundo campo.
+
+### Lo que se sabe
+
+- El juego guarda en un solo sitio cómo dibuja el texto: la fuente, las
+  banderas, el estilo, la alineación, el color, si hay sombra y de qué
+  color, y hasta 16 tabuladores. Los nombres de las funciones que lo fijan
+  son los de Halo 1 (`draw_string_set_font`, `…_set_tab_stops`…).
+- Fijar la fuente espera a que esté cargada.
+- Antes de dibujar un texto el juego prepara sus caracteres: lo pasa a
+  caracteres de 32 bits traduciendo las órdenes de barra y letra (2.047
+  como mucho; lo que sobra se corta), lo recorre con el iterador y pide a la
+  fuente cada carácter que se dibuja. Dice si pudo con todos; aunque uno
+  falle, sigue con los demás.
+- Una barra seguida de una letra que no es una orden se queda como barra, y
+  la letra se dibuja.
+
+### Sin comprobar
+
+- Con qué estilo, alineación y colores se hace el iterador al preparar los
+  caracteres: no cambian qué caracteres salen, y el iterador está en la pila
+  de la función (cuatro mutaciones).
+
+### Mutaciones
+
+50 líneas rotas a propósito: 46 detectadas (una porque la prueba se detiene
+al leer un color que no hay), y las cuatro de «Sin comprobar».
+
 ## 2026-10-02 — Empezar a recorrer un texto
 
 Una función. De 563 funciones se pasa a 564, el 5,01 % de las del juego (el

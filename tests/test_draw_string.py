@@ -78,8 +78,103 @@ def run(t) -> None:
             Buffer(bytes([random_.choice((0, 1, 1, 0x80))]) + random_.randbytes(3)),
             a_color(),
             globals={
-                "draw_string_flags": bytes([random_.choice((0, 1, 2, 3, 0xFE, 0xFF))]),
+                "draw_string_globals+4": bytes([random_.choice((0, 1, 2, 3, 0xFE, 0xFF))]),
                 "font_slot_indices": struct.pack("<11I", *slots),
             },
             externals={"unknown_001224c0": lambda harness, arguments, font=font: font},
         )
+
+    # ---------- how the texts are drawn
+
+    GLOBALS_SIZE = 0x60
+
+    def how(font_index: int | None = None) -> bytes:
+        """How the texts are drawn: with colours that are colours."""
+        data = bytearray(random_.randbytes(GLOBALS_SIZE))
+        if font_index is not None:
+            struct.pack_into("<I", data, 0, font_index)
+        struct.pack_into("<4f", data, 0x10, *(random_.choice(parts[:11]) for _ in range(4)))
+        data[0x20] = random_.choice((0, 1, 1))
+        struct.pack_into("<4f", data, 0x24, *(random_.choice(parts[:11]) for _ in range(4)))
+        return bytes(data)
+
+    def fonts() -> bytes:
+        return struct.pack("<11I", *(random_.getrandbits(32) for _ in range(11)))
+
+    for count in (-0x8000, -1, 0, 1, 2, 5, 15, 16, 17, 100, 0x7FFF):
+        for _ in range(3):
+            t.check(
+                "draw_string_set_tab_stops",
+                count & 0xFFFFFFFF,
+                Buffer(random_.randbytes(0x30)),
+                globals={"draw_string_globals": how()},
+            )
+    for n in range(12):
+        t.check("draw_string_set_shadow_color", color(0.25, 0.5, 0.75, 1.0) if n % 3 else 0, globals={"draw_string_globals": how()})
+    for font_index in range(11):
+        t.check(
+            "draw_string_set_font",
+            font_index,
+            globals={"draw_string_globals": how(), "font_slot_indices": fonts()},
+            externals={"unknown_001224c0": lambda harness, arguments: 0x80123400},
+        )
+    for n in range(60):
+        t.check(
+            "draw_string_set_font_and_format",
+            random_.randrange(11),
+            a_color() if n % 3 else 0,
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            a_color(),
+            globals={"draw_string_globals": how(), "font_slot_indices": fonts()},
+            externals={
+                "unknown_001224c0": lambda harness, arguments: 0x80123400,
+                "unknown_0013ec70": lambda harness, arguments: (0, (bytes(harness.mu.mem_read(arguments[0], 16)),)),
+            },
+        )
+
+    # ---------- getting the characters of a text ready
+
+    def ready(harness, arguments):
+        font_index, character = arguments
+        # some characters cannot be got ready
+        return character % 5 != 3
+
+    for n in range(200):
+        characters = [random_.choice(drawn + special[2:]) for _ in range(random_.randrange(0, 14))] + [0, 0x41, 0]
+        font_index = random_.randrange(11)
+        t.check(
+            "draw_string_precache_characters",
+            Buffer(struct.pack(f"<{len(characters)}I", *characters)),
+            font_index,
+            globals={"draw_string_globals": how(), "font_slot_indices": fonts(), "unicode_escape_note_time": 0},
+            externals={
+                "unknown_001224c0": lambda harness, arguments, font=random_.choice((0, 0x80123400, 0x80123400, 0x80123400)): font,
+                "unknown_001414d0": ready,
+                "GetTickCount": lambda harness, arguments: 77,
+            },
+        )
+
+    def wide(text_: str) -> Buffer:
+        return Buffer(text_.encode("utf-16-le") + bytes(2))
+
+    texts = [
+        "", "a", "plain text", "one|ntwo", "||", "|", "a|", "|x unknown", "|l left |r right |c centre |t tab", "|n|n|n", "bar | space",
+        "\u3042\u3044 |n \u3046", "a\rb\nc\td", "|N upper", "x" * 0x7FE, "x" * 0x7FF, "x" * 0x800, "x" * 0x900,
+        "x" * 0x7FD + "|n", "x" * 0x7FE + "|n", "x" * 0x7FE + "||y", "|n" * 0x500,
+    ]
+    for text_ in texts:
+        for name in ("draw_string_precache_string", "draw_string_precache"):
+            font_index = random_.randrange(11)
+            t.check(
+                name,
+                wide(text_),
+                *((font_index,) if name == "draw_string_precache_string" else ()),
+                globals={"draw_string_globals": how(font_index), "font_slot_indices": fonts(), "unicode_escape_note_time": 0},
+                externals={
+                    "unknown_001224c0": lambda harness, arguments: 0x80123400,
+                    "unknown_001414d0": ready,
+                    "GetTickCount": lambda harness, arguments: 77,
+                },
+            )
