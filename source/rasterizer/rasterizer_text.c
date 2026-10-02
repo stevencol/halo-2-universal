@@ -22,9 +22,16 @@ Halo 1's; that these functions are of it is a guess, and so are their names.
 could */
 boolean unknown_0001d000(struct bitmap_data *bitmap);
 
+/* 0x00035b90: the console is made ready to paint characters from a
+bitmap. The names of these three are Halo 1's */
+void __attribute__((stdcall)) rasterizer_text_begin(const struct rasterizer_text_begin_parameters *parameters);
+
 /* 0x000363a0: paints a rectangle of the bitmap of the characters, with
 its four corners */
-void __attribute__((stdcall)) unknown_000363a0(struct rasterizer_text_vertex *vertices);
+void __attribute__((stdcall)) rasterizer_text_draw_character(struct rasterizer_text_vertex *vertices);
+
+/* 0x00036560: no more characters are painted */
+void rasterizer_text_end(void);
 
 /* 0x0001d5e0: where the pixels of the texture of a bitmap are, to write
 them, and how many bytes a row of them takes; before, the console is waited
@@ -42,6 +49,18 @@ for, and it is the first level of detail */
 
 /* 0x004b62a0 */
 struct hardware_character_cache hardware_character_cache;
+
+/* 0x004b9dd0 */
+struct rasterizer_text_bounds rasterizer_text_bounds;
+
+/* 0x0051080c, 0x00485602: while any of the two is not 0, no text is painted.
+What they are is not known, and their names are guesses */
+boolean rasterizer_text_disabled;
+short rasterizer_text_suspended;
+
+/* 0x004670c0: one more with each text that is painted; nothing is known to
+look at it. The name is Halo 1's */
+short magic_number= 12;
 
 /* ---------- code */
 
@@ -268,6 +287,104 @@ void __attribute__((stdcall)) cache_hardware_format_character(
 	hardware_character_cache.write_index= (short)((hardware_character_cache.write_index+1)&(NUMBER_OF_FONT_GLYPH_SLOTS-1));
 }
 
+/* 0x0001f070: paints a text in a rectangle of the screen, by a scale, and
+leaves where it ends in a place, if one is given: see
+draw_string_draw_characters. Nothing is painted if there is no bitmap of the
+characters, if the text is empty or while texts are not painted. The name is
+a guess.
+
+With no rectangle the text is set in the window of the texts, and what is
+out of the screen is not painted; a rectangle that cuts the text starts no
+farther left or up than the screen, and ends no farther than it */
+void __attribute__((stdcall)) rasterizer_draw_characters(
+	const struct rectangle2d *clip,
+	const struct rectangle2d *bounds,
+	struct draw_string_point *end,
+	short leading,
+	const long *characters,
+	real scale,
+	long unknown5,
+	long unknown6,
+	boolean unknown7)
+{
+	struct rasterizer_text_begin_parameters parameters;
+	struct rectangle2d text_bounds;
+	struct rectangle2d text_clip;
+	struct bitmap_data *bitmap;
+	const struct rectangle2d *viewport= &rasterizer_text_bounds.viewport_bounds;
+
+	if (rasterizer_text_disabled || rasterizer_text_suspended)
+	{
+		return;
+	}
+	magic_number++;
+	bitmap= hardware_character_cache.initialized ? hardware_character_cache.bitmap : NULL;
+	if (!bitmap || !*characters)
+	{
+		return;
+	}
+
+	if (!bounds)
+	{
+		text_bounds.y0= (short)(rasterizer_text_bounds.window_bounds.y0-viewport->y0);
+		text_bounds.x0= (short)(rasterizer_text_bounds.window_bounds.x0-viewport->x0);
+		text_bounds.y1= (short)(rasterizer_text_bounds.window_bounds.y1-viewport->y0);
+		text_bounds.x1= (short)(rasterizer_text_bounds.window_bounds.x1-viewport->x0);
+	}
+	else
+	{
+		text_bounds= *bounds;
+	}
+	if (!clip)
+	{
+		text_clip.y0= 0;
+		text_clip.x0= 0;
+		text_clip.y1= (short)(viewport->y1-viewport->y0);
+		text_clip.x1= (short)(viewport->x1-viewport->x0);
+	}
+	else
+	{
+		long bottom= viewport->y1-viewport->y0;
+		long right= viewport->x1-viewport->x0;
+
+		text_clip.y0= (short)(clip->y0<0 ? 0 : clip->y0);
+		text_clip.x0= (short)(clip->x0<0 ? 0 : clip->x0);
+		text_clip.y1= (short)(bottom>clip->y1 ? clip->y1 : bottom);
+		text_clip.x1= (short)(right>clip->x1 ? clip->x1 : right);
+	}
+
+	memset(&parameters, 0, sizeof(parameters));
+	if (bitmap->flags&FLAG(_bitmap_linear_bit))
+	{
+		parameters.texture_scale.x= 1.0f;
+		parameters.texture_scale.y= 1.0f;
+	}
+	else
+	{
+		parameters.texture_scale.x= 1.0f/(real)bitmap->width;
+		parameters.texture_scale.y= 1.0f/(real)bitmap->height;
+	}
+	parameters.bitmap= bitmap;
+	parameters.unknown2C= 1.0f;
+	parameters.unknown28= 1.0f;
+	parameters.unknown0= 0;
+	parameters.unknown96= 0;
+	parameters.unknown94= 0;
+	parameters.unknown97= unknown7;
+	if (unknown5)
+	{
+		parameters.unknown58= unknown5;
+	}
+	if (unknown6)
+	{
+		parameters.unknown5C= unknown6;
+	}
+	rasterizer_text_begin(&parameters);
+	draw_string_draw_characters(rasterizer_draw_character_with_dropshadow, &text_bounds, end, &text_clip, leading,
+		scale, characters);
+	rasterizer_text_end();
+}
+
 /* 0x0001f3a0: paints what is seen of a character, from its place in the
 bitmap of the characters: so many pixels wide and high, by a scale, at a
 place of the screen, from so many pixels into its picture. A function, if
@@ -316,7 +433,7 @@ void __attribute__((stdcall)) rasterizer_draw_character(
 	{
 		return;
 	}
-	unknown_000363a0(vertices);
+	rasterizer_text_draw_character(vertices);
 }
 
 /* 0x0001f490: what is done with each character of a text that is painted:

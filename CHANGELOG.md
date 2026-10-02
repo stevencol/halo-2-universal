@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Pintar un texto
+
+Una función. De 634 funciones se pasa a 635, el 5,64 % de las del juego
+(el 2,909 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `rasterizer_draw_characters` | `0x0001f070` | `rasterizer/rasterizer_text.c` |
+
+Tres funciones de la consola que aún no están descompiladas reciben el
+nombre que tienen en Halo 1, porque hacen lo mismo:
+`rasterizer_text_begin` (`0x00035b90`), `rasterizer_text_draw_character`
+(`0x000363a0`) y `rasterizer_text_end` (`0x00036560`).
+
+### Lo que se sabe
+
+- Es la que **pinta un texto de verdad**: prepara la consola, recorre el
+  texto con `draw_string_draw_characters` dándole la función que pinta cada
+  carácter con su sombra, y avisa a la consola de que ha terminado.
+- Sin rectángulo, el texto se coloca en la **ventana de los textos** (una
+  zona guardada junto a la de la pantalla, medida desde la esquina de esta).
+  Lo que se recorta nunca empieza antes de la pantalla ni acaba después.
+- No se pinta nada si la caché de caracteres no está lista, si el texto está
+  vacío o mientras dos indicadores globales lo impiden.
+- Las coordenadas del bitmap de caracteres se pasan en píxeles o divididas
+  por su tamaño, según la marca «lineal» del bitmap.
+- Como en Halo 1, hay un contador `magic_number` que empieza en 12 y sube con
+  cada texto pintado; no se ha visto a nadie leerlo.
+
+### Mutaciones
+
+47 líneas rotas a propósito: 46 detectadas.
+
+### Sin comprobar
+
+- Que `magic_number` empiece en 12: las pruebas siempre fijan su valor. El
+  12 se ha leído del ejecutable.
+
 ## 2026-10-02 — Un carácter entra en el bitmap de la caché
 
 Una función. De 633 funciones se pasa a 634, el 5,63 % de las del juego (el

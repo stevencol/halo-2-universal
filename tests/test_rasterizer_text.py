@@ -99,7 +99,7 @@ def run(t) -> None:
             random_.getrandbits(32),
             mocks=[Mock(given, stack_arguments=2, record=lambda call: (corners(call.stack[0]), call.stack[1]))],
             externals={
-                "unknown_000363a0": lambda harness, arguments: (0, (corners(arguments[0]),)),
+                "rasterizer_text_draw_character": lambda harness, arguments: (0, (corners(arguments[0]),)),
             },
         )
 
@@ -226,5 +226,54 @@ def run(t) -> None:
                 "unknown_0001d5e0": lock,
                 "texture_cache_bitmap_get_loaded": lambda harness, arguments, loaded=random_.choice((0, 0, 0x80123400)): loaded,
                 "texture_cache_bitmap_get_hardware_format": lambda harness, arguments: 0x80123400,
+            },
+        )
+
+    # ---------- painting a text
+
+    PARAMETERS_SIZE = 0x98
+
+    for n in range(500):
+        bitmap = bytearray(random_.randbytes(BITMAP_SIZE))
+        struct.pack_into("<2hI", bitmap, 4, random_.choice((256, 128, 100, 1, 3)), random_.choice((256, 64, 30, 1, 7)), random_.getrandbits(32))
+        bitmap = Buffer(bytes(bitmap))
+        viewport = [random_.choice((0, 0, 16, -8)), random_.choice((0, 0, 24, -6)), random_.choice((480, 448, 100)), random_.choice((640, 608, 150))]
+        window = [random_.choice((0, 24, 40)), random_.choice((0, 32, 50)), random_.choice((480, 440, 90)), random_.choice((640, 600, 140))]
+
+        def rectangle():
+            return Buffer(struct.pack("<4h", random_.choice((0, 10, -5, 300)), random_.choice((0, 20, -7, 400)), random_.choice((480, 100, 2000, -3)), random_.choice((640, 200, 3000, -4))))
+
+        def begin(harness, arguments):
+            return 0, (bytes(harness.mu.mem_read(arguments[0], PARAMETERS_SIZE)),)
+
+        def walk(harness, arguments):
+            proc, bounds, end, clip, leading, scale_, characters = arguments
+            if end:
+                harness.mu.mem_write(end, b"\x34\x12\x78\x56")
+            return 0, (harness.normalize(proc), bytes(harness.mu.mem_read(bounds, 8)), end, bytes(harness.mu.mem_read(clip, 8)), leading & 0xFFFF, scale_, characters)
+
+        t.check(
+            "rasterizer_draw_characters",
+            rectangle() if n % 3 else 0,
+            rectangle() if n % 4 else 0,
+            Buffer(random_.randbytes(8)) if n % 5 else 0,
+            random_.choice((0, 2, 0xFFFD, 0x10003)),
+            Buffer(struct.pack("<3I", 0x41 if n % 9 else 0, random_.getrandbits(32), 0)),
+            real_bits(random_.choice((1.0, 0.5, 2.0))),
+            random_.choice((0, 0, random_.getrandbits(32))),
+            random_.choice((0, 0, random_.getrandbits(32))),
+            random_.choice((0, 1, 0x100, 0xABCDEF02)),
+            globals={
+                "hardware_character_cache": bytes((random_.choice((1, 1, 1, 1, 0, 0x80)),)) + random_.randbytes(11),
+                "hardware_character_cache+12": bitmap,
+                "rasterizer_text_bounds": struct.pack("<8h", *viewport, *window),
+                "rasterizer_text_disabled": bytes((random_.choice((0, 0, 0, 0, 0, 1, 0x80)),)),
+                "rasterizer_text_suspended": struct.pack("<H", random_.choice((0, 0, 0, 0, 0, 1, 0x100))),
+                "magic_number": struct.pack("<H", random_.choice((12, 0x7FFF, 0xFFFF, 500))),
+            },
+            externals={
+                "rasterizer_text_begin": begin,
+                "draw_string_draw_characters": walk,
+                "rasterizer_text_end": lambda harness, arguments: 0,
             },
         )

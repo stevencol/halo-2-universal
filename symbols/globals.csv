@@ -140,3 +140,7 @@ address,name,source
 004e7394,draw_string_bounds,source/text/draw_string.c
 004686cc,global_real_argb_white,source/math/real_math.c
 004b62a0,hardware_character_cache,source/rasterizer/rasterizer_text.c
+004b9dd0,rasterizer_text_bounds,source/rasterizer/rasterizer_text.c
+0051080c,rasterizer_text_disabled,source/rasterizer/rasterizer_text.c
+00485602,rasterizer_text_suspended,source/rasterizer/rasterizer_text.c
+004670c0,magic_number,source/rasterizer/rasterizer_text.c
