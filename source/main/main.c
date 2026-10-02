@@ -327,7 +327,7 @@ void main_loop_body(
 		unknown_002237d4();
 	}
 	if (main_game_load_globals.state!=_main_game_load_map &&
-		main_game_load_globals.state!=_main_game_load_texture_cache && !main_game_load_globals.unknown10D)
+		main_game_load_globals.state!=_main_game_load_texture_cache && !main_game_load_globals.change_pending)
 	{
 		unknown_0018f1c0(0);
 	}
@@ -607,7 +607,7 @@ void main_revert_map_if_possible_private(
 boolean main_action_pending(
 	void)
 {
-	boolean pending= main_game_load_globals.unknown10D!=0;
+	boolean pending= main_game_load_globals.change_pending!=0;
 
 	if (main_globals.switch_structure_bsp ||
 		main_globals.reset_map ||

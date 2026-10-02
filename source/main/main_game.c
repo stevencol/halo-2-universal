@@ -4,7 +4,7 @@ MAIN_GAME.C
 Decompiled from halo2ship.exe (Xbox, build 02.09.27.09809). Each function
 gives the address it has there.
 
-The names are guesses. Not here: 0x0018efa0, 0x0018f0a0 and 0x0018f1c0 on.
+The names are guesses. Not here: 0x0018e960, 0x0018f0a0 and 0x0018f1c0 on.
 */
 
 #include "main_game.h"
@@ -14,6 +14,7 @@ The names are guesses. Not here: 0x0018efa0, 0x0018f0a0 and 0x0018f1c0 on.
 #include "cache/geometry_cache.h"
 #include "cache/texture_cache.h"
 #include "interface/user_interface_memory.h"
+#include "main/main.h"
 #include "memory/data.h"
 #include "memory/physical_memory.h"
 #include "scenario/scenario.h"
@@ -24,6 +25,9 @@ The names are guesses. Not here: 0x0018efa0, 0x0018f0a0 and 0x0018f1c0 on.
 
 /* 0x0033039a */
 long XGetLanguage(void);
+
+/* 0x003314b0 */
+long GetTickCount(void);
 
 /* ---------- prototypes of functions not decompiled yet */
 
@@ -63,8 +67,30 @@ void unknown_00158530(void);
 void unknown_00138f10(void);
 void unknown_00200d80(void);
 
-/* 0x00163890 */
-boolean unknown_00163890(long unknown, long two);
+/* 0x00163890: waits for a map to be copied to the hard disk, most likely */
+boolean unknown_00163890(const char *map_name, long two);
+
+/* 0x0014bac0: before the game on a map is started again */
+void unknown_0014bac0(void);
+
+/* 0x000593e0: tells the network game that the game changes */
+void unknown_000593e0(void);
+
+/* 0x00149318: whether the change of game has to wait */
+boolean unknown_00149318(void);
+
+/* 0x0018f0a0: after a game of the campaign is started */
+void unknown_0018f0a0(const struct game_options *options);
+
+/* 0x0012bf90, 0x001483c3: after the game of the main menu is started */
+boolean unknown_0012bf90(void);
+void unknown_001483c3(long unknown);
+
+/* 0x0011c840: after the tags of a map are loaded */
+void unknown_0011c840(void);
+
+/* 0x0012bf00: when not even the main menu can be started */
+void unknown_0012bf00(void);
 
 /* 0x00138640: asks for a game with these options */
 void unknown_00138640(long one, struct game_options *options);
@@ -113,6 +139,27 @@ long unknown_00467214= NONE;
 
 /* 0x00502104: a data array that is emptied when a map is loaded */
 struct data_array *unknown_00502104;
+
+/* 0x004e61dc: zeroed when a game starts */
+byte unknown_004e61dc[UNKNOWN_004E61DC_SIZE];
+
+/* 0x004e9bbc, 0x004e9bc0: the tags of a map are being loaded, and since when */
+boolean main_game_loading_map;
+unsigned long main_game_loading_map_time;
+
+/* 0x0051ea00: set when there is no map to load */
+boolean unknown_0051ea00;
+
+/* 0x0051ea10: while it is more than 0, a game that was asked for waits */
+long unknown_0051ea10;
+
+/* 0x00527330, 0x00527334: of the network game, and its state */
+boolean unknown_00527330;
+long unknown_00527334;
+
+/* 0x0055e757: the game is going to the main menu because a game could not
+be started */
+boolean main_game_load_failing;
 
 /* ---------- code */
 
@@ -163,7 +210,7 @@ void main_game_unload(
 			byte *unknown= unknown_004cf770.unknownC;
 
 			if (unknown[UNKNOWN_004CF770_ACTIVE_OFFSET] && !unknown_004cf770.unknownA &&
-				!main_game_load_globals.unknown10C)
+				!main_game_load_globals.restarting)
 			{
 				unknown_000693a0(unknown, unknown);
 				unknown[UNKNOWN_004CF770_ACTIVE_OFFSET]= FALSE;
@@ -368,17 +415,18 @@ boolean main_game_start(
 	return FALSE;
 }
 
-/* 0x0018f100: does something that needs the texture cache when no map is
-loaded (0x00163890): the cache is opened for it and closed after */
+/* 0x0018f100: has a map that is not on the hard disk copied (0x00163890,
+most likely, shows how it goes): the texture cache is opened for it and
+closed after; whether the map is there */
 boolean main_game_unknown_0018f100(
-	long unknown)
+	const char *map_name)
 {
 	boolean result;
 
 	physical_memory_stage_push();
 	texture_cache_open();
 	main_game_load_globals.state= _main_game_load_texture_cache;
-	result= unknown_00163890(unknown, 2);
+	result= unknown_00163890(map_name, 2);
 	texture_cache_close();
 	physical_memory_globals.stage--;
 	main_game_load_globals.state= _main_game_load_none;
@@ -397,4 +445,240 @@ void main_game_launch_main_menu(
 	options->map_name[GAME_MAP_NAME_LENGTH-1]= 0;
 	memcpy(options->unknown264, &unknown, sizeof(options->unknown264));
 	unknown_00138640(1, options);
+}
+
+/* ---------- changing the game */
+
+static inline __attribute__((always_inline)) void main_game_clear_main_actions(
+	void)
+{
+	main_globals.switch_structure_bsp= FALSE;
+	main_globals.reset_map= FALSE;
+	main_globals.revert_map= FALSE;
+	main_globals.revert_map_if_possible= FALSE;
+	main_globals.save_map= FALSE;
+	main_globals.unknown49= FALSE;
+}
+
+/* the network game is told that the game changes, in two of its states */
+static inline __attribute__((always_inline)) boolean main_game_unknown_00527330_wants_to_know(
+	void)
+{
+	return unknown_00527330 && (unknown_00527334==3 || unknown_00527334==8);
+}
+
+/* 0x0018e700: starts the game on the map again, with the options that it
+has; the map and its caches stay as they are */
+void main_game_restart(
+	void)
+{
+	struct game_options options;
+
+	main_game_load_globals.restarting= TRUE;
+	unknown_0014bac0();
+	options= main_game_globals->options;
+	if (options.unknown120==global_structure_bsp_index)
+	{
+		game_dispose_from_old_structure_bsp();
+	}
+	else
+	{
+		scenario_switch_structure_bsp(NONE, TRUE);
+	}
+	game_dispose_from_old_map();
+	memset(unknown_004e61dc, 0, sizeof(unknown_004e61dc));
+	if (main_game_start(&options))
+	{
+		main_game_load_globals.restarting= FALSE;
+	}
+	else
+	{
+		main_game_load_globals.restarting= FALSE;
+		main_game_load_failed();
+	}
+}
+
+/* 0x0018e790: asks for another game, which starts at the start of a frame;
+with no options, for the map to be let go of */
+void main_game_change(
+	const struct game_options *options)
+{
+	if (options)
+	{
+		main_game_load_globals.change_options= *options;
+	}
+	main_game_load_globals.change_to_nothing= options==NULL;
+	main_game_load_globals.change_pending= TRUE;
+	main_game_load_globals.change_time= (unsigned long)GetTickCount();
+	if (main_game_unknown_00527330_wants_to_know())
+	{
+		if (options)
+		{
+			if (options->unknown5)
+			{
+				return;
+			}
+			if (options->game_mode==_game_mode_3)
+			{
+				long unknown;
+
+				memcpy(&unknown, options->unknown264, sizeof(unknown));
+				if (unknown>=2 && unknown<=6)
+				{
+					return;
+				}
+			}
+		}
+		unknown_000593e0();
+	}
+}
+
+/* 0x0018e810: once a frame: starts the game that was asked for, unless
+something says to wait (0x0051ea10, 0x00149318) */
+void main_game_change_update(
+	void)
+{
+	boolean pending= main_game_load_globals.change_pending;
+
+	if (pending && !main_game_load_globals.change_to_nothing && unknown_0051ea10>0)
+	{
+		pending= FALSE;
+	}
+	if (!unknown_00149318() && pending)
+	{
+		if (main_game_load_globals.change_to_nothing)
+		{
+			if (main_game_load_globals.state!=_main_game_load_texture_cache)
+			{
+				main_game_unload();
+				main_game_clear_main_actions();
+				main_game_configure_memory(NULL);
+				main_game_open_texture_cache();
+			}
+		}
+		else
+		{
+			main_game_change_immediate(&main_game_load_globals.change_options);
+		}
+		main_game_load_globals.change_pending= FALSE;
+		main_game_load_globals.change_to_nothing= FALSE;
+		main_game_load_globals.unknown114= 0;
+	}
+}
+
+/* 0x0018e8b0: lets go of the game and of the map that there are, loads the
+map of the new game and starts it; whether it could. With no options, the
+map is let go of and the texture cache is left open. If the map cannot be
+loaded or the game started, the game goes to the main menu */
+boolean main_game_change_immediate(
+	const struct game_options *options)
+{
+	main_game_unload();
+	main_game_clear_main_actions();
+	main_game_configure_memory(options);
+	if (!options)
+	{
+		main_game_open_texture_cache();
+
+		return TRUE;
+	}
+
+	memset(unknown_004e61dc, 0, sizeof(unknown_004e61dc));
+	if (main_game_load_map(options) && main_game_start(options))
+	{
+		if (options->game_mode==_game_mode_campaign)
+		{
+			unknown_0018f0a0(options);
+		}
+		else if (options->game_mode==_game_mode_3)
+		{
+			if (!unknown_0012bf90())
+			{
+				long unknown;
+
+				memcpy(&unknown, options->unknown264, sizeof(unknown));
+				unknown_001483c3(unknown);
+			}
+		}
+
+		return TRUE;
+	}
+	main_game_load_failed();
+
+	return FALSE;
+}
+
+/* 0x0018eaa0: loads the map of a game; whether it could. A map that is not
+on the hard disk yet is copied first (0x0018f100 waits for it). If there is
+no map to load, the game is asked to let go of everything */
+boolean main_game_load_map(
+	const struct game_options *options)
+{
+	const char *map_name= options->map_name;
+	boolean loaded= FALSE;
+
+	switch (cached_map_file_status(map_name))
+	{
+	case _cached_map_file_status_none:
+	case _cached_map_file_status_pending:
+	case _cached_map_file_status_copying:
+		if (!main_game_unknown_0018f100(map_name))
+		{
+			goto failed;
+		}
+		/* falls through */
+	case _cached_map_file_status_cached:
+		main_game_loading_map= TRUE;
+		main_game_loading_map_time= (unsigned long)GetTickCount();
+		main_game_load_begin(FALSE);
+		if (scenario_load(map_name))
+		{
+			unknown_0011c840();
+			main_game_load_end(FALSE, map_name);
+			loaded= TRUE;
+		}
+		else
+		{
+			main_game_load_fail(FALSE);
+		}
+		main_game_loading_map= FALSE;
+		break;
+	case _cached_map_file_status_failed:
+	failed:
+		unknown_0051ea00= TRUE;
+		main_globals.unknown1= TRUE;
+		main_game_load_globals.change_to_nothing= TRUE;
+		main_game_load_globals.change_pending= TRUE;
+		main_game_load_globals.change_time= (unsigned long)GetTickCount();
+		if (main_game_unknown_00527330_wants_to_know())
+		{
+			unknown_000593e0();
+		}
+		break;
+	}
+
+	return loaded;
+}
+
+/* 0x0018efa0: a game could not be started: the game goes to the main menu.
+If it is the main menu that cannot be started, the texture cache is left
+open and nothing else */
+void main_game_load_failed(
+	void)
+{
+	main_game_unload();
+	if (!main_game_load_failing)
+	{
+		struct game_options options;
+
+		main_game_load_failing= TRUE;
+		main_game_launch_main_menu(&options, 0);
+		main_game_change_immediate(&options);
+		main_game_load_failing= FALSE;
+	}
+	else
+	{
+		main_game_open_texture_cache();
+		unknown_0012bf00();
+	}
 }

@@ -286,3 +286,167 @@ def run(t) -> None:
             random_.getrandbits(32),
             externals=stand_ins("game_options_new_default", "unknown_00138640"),
         )
+
+    # ---------- changing the game
+
+    CHANGE_GLOBALS_SIZE = 0x1230
+    CHANGE_PENDING, CHANGE_TO_NOTHING, CHANGE_OPTIONS = 0x10D, 0x10E, 0x118
+
+    def change_globals(pending: int, to_nothing: int, state: int | None = None) -> GlobalData:
+        data = bytearray(random_.randbytes(CHANGE_GLOBALS_SIZE))
+        struct.pack_into("<I", data, STATE, random_.choice((0, 2, 5)) if state is None else state)
+        data[CHANGE_PENDING] = pending
+        data[CHANGE_TO_NOTHING] = to_nothing
+        return GlobalData(bytes(data))
+
+    def network_game() -> dict:
+        return {
+            "unknown_00527330": bytes([random_.random() < 0.7]),
+            "unknown_00527334": random_.choice((3, 8, 3, 8, 5, 0)),
+        }
+
+    def options_start(harness, address: int) -> bytes:
+        """What a function is given as the options of a game, when they are in
+        the stack: the stack is not at the same place in the game and in source/."""
+        return bytes(harness.mu.mem_read(address, 0x130))
+
+    def flag(harness, name: str) -> int:
+        return harness.mu.mem_read(harness.global_addresses[name], 1)[0]
+
+    # the game on the map starts again
+    for _ in range(60):
+        game_buffer = game()
+        data = bytearray(game_buffer.data)
+        bsp_index = random_.randint(0, 3)
+        struct.pack_into("<h", data, 8 + 0x120, random_.choice((bsp_index, bsp_index, bsp_index + 1)))
+        started = random_.random() < 0.7
+        t.check(
+            "main_game_restart",
+            globals={
+                "main_game_globals": Buffer(bytes(data)),
+                "main_game_load_globals": load_globals(),
+                "global_structure_bsp_index": struct.pack("<h", bsp_index),
+                "unknown_004e61dc": random_.randbytes(0x120),
+            },
+            externals={
+                **stand_ins(
+                    "unknown_0014bac0",
+                    "game_dispose_from_old_structure_bsp",
+                    "game_dispose_from_old_map",
+                    scenario_switch_structure_bsp=1,
+                ),
+                "main_game_start": lambda harness, arguments, started=started: (
+                    started,
+                    # with the options, whether the game knows that it is starting again
+                    (
+                        options_start(harness, arguments[0]),
+                        harness.mu.mem_read(harness.global_addresses["main_game_load_globals"] + 0x10C, 1)[0],
+                    ),
+                ),
+                "main_game_load_failed": lambda harness, arguments: (
+                    0,
+                    (harness.mu.mem_read(harness.global_addresses["main_game_load_globals"] + 0x10C, 1)[0],),
+                ),
+            },
+        )
+
+    # another game is asked for
+    for _ in range(200):
+        game_options = Buffer(random_.randbytes(OPTIONS_SIZE))
+        data = bytearray(game_options.data)
+        struct.pack_into("<I", data, 0, random_.choice((1, 3, 3)))
+        data[5] = random_.random() < 0.2
+        struct.pack_into("<i", data, 0x264, random_.choice((0, 1, 2, 3, 6, 7, -1)))
+        t.check(
+            "main_game_change",
+            Buffer(bytes(data)) if random_.random() < 0.85 else 0,
+            globals={"main_game_load_globals": change_globals(0, 0), **network_game()},
+            externals={"GetTickCount": lambda harness, arguments: 0x4321, **stand_ins("unknown_000593e0")},
+        )
+
+    for _ in range(200):
+        t.check(
+            "main_game_change_update",
+            globals={
+                "main_game_load_globals": change_globals(random_.random() < 0.8, random_.random() < 0.4),
+                "unknown_0051ea10": random_.choice((0, 0, 1, NONE)),
+                "main_globals": random_.randbytes(0x54),
+            },
+            externals=stand_ins(
+                "main_game_unload",
+                "main_game_configure_memory",
+                "main_game_open_texture_cache",
+                "main_game_change_immediate",
+                unknown_00149318=random_.random() < 0.2,
+            ),
+        )
+
+    for _ in range(200):
+        game_options = some_options()
+        data = bytearray(game_options.data)
+        struct.pack_into("<I", data, 0x264, random_.getrandbits(32))
+        t.check(
+            "main_game_change_immediate",
+            Buffer(bytes(data)) if random_.random() < 0.9 else 0,
+            globals={"main_globals": random_.randbytes(0x54), "unknown_004e61dc": random_.randbytes(0x120)},
+            externals=stand_ins(
+                "main_game_unload",
+                "main_game_configure_memory",
+                "main_game_open_texture_cache",
+                "unknown_0018f0a0",
+                "unknown_001483c3",
+                "main_game_load_failed",
+                main_game_load_map=random_.random() < 0.8,
+                main_game_start=random_.random() < 0.8,
+                unknown_0012bf90=random_.random() < 0.5,
+            ),
+        )
+
+    # the map of a game: on the hard disk, to be copied, or not there at all
+    for status in range(5):
+        for _ in range(12):
+            t.check(
+                "main_game_load_map",
+                some_options(),
+                globals={
+                    "main_game_loading_map": bytes([random_.getrandbits(1)]),
+                    "main_game_loading_map_time": 7,
+                    "unknown_0051ea00": b"\0",
+                    "main_globals": random_.randbytes(0x54),
+                    "main_game_load_globals": change_globals(0, 0),
+                    **network_game(),
+                },
+                externals={
+                    "GetTickCount": lambda harness, arguments: 0x4321,
+                    # the flag is set while the tags are loaded
+                    "scenario_load": lambda harness, arguments, loaded=random_.random() < 0.7: (
+                        loaded,
+                        (arguments[0], flag(harness, "main_game_loading_map")),
+                    ),
+                    # a flag in a register: only its low byte is the argument
+                    "main_game_load_begin": lambda harness, arguments: (0, (arguments[0] & 0xFF,)),
+                    "main_game_load_end": lambda harness, arguments: (0, (arguments[0] & 0xFF, arguments[1])),
+                    "main_game_load_fail": lambda harness, arguments: (0, (arguments[0] & 0xFF,)),
+                    **stand_ins(
+                        "unknown_0011c840",
+                        "unknown_000593e0",
+                        cached_map_file_status=status,
+                        main_game_unknown_0018f100=random_.random() < 0.6,
+                    ),
+                },
+            )
+
+    for failing in (0, 1):
+        for _ in range(3):
+            t.check(
+                "main_game_load_failed",
+                globals={"main_game_load_failing": bytes([failing])},
+                externals={
+                    "main_game_launch_main_menu": lambda harness, arguments: (0, (arguments[1],)),
+                    "main_game_change_immediate": lambda harness, arguments: (
+                        random_.getrandbits(1) * 0,
+                        (flag(harness, "main_game_load_failing"),),
+                    ),
+                    **stand_ins("main_game_unload", "main_game_open_texture_cache", "unknown_0012bf00"),
+                },
+            )

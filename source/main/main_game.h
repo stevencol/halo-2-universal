@@ -17,7 +17,8 @@ started on it. Worked out from halo2ship.exe; the names are guesses.
 enum
 {
 	MAIN_GAME_MAP_NAME_LENGTH= 0x104,
-	NUMBER_OF_MAIN_GAME_MEMORY_USERS= 8
+	NUMBER_OF_MAIN_GAME_MEMORY_USERS= 8,
+	UNKNOWN_004E61DC_SIZE= 0x120
 };
 
 /* how far the loading of a map is */
@@ -68,10 +69,18 @@ struct main_game_load_globals
 	long memory_configuration;
 	long state;
 	char map_name[MAIN_GAME_MAP_NAME_LENGTH];
-	boolean unknown10C;
-	/* main_action_pending looks at it */
-	boolean unknown10D;
-	byte pad[2];
+	/* the game on the map is being started again: what unknown_004cf770 has
+	going is left alone */
+	boolean restarting;
+	/* another game was asked for: it is started at the start of a frame */
+	boolean change_pending;
+	/* and it is none: the map is let go of */
+	boolean change_to_nothing;
+	byte pad10F;
+	/* GetTickCount: when it was asked for */
+	unsigned long change_time;
+	long unknown114;
+	struct game_options change_options;
 };
 
 /* 0x004cf770: of the network game, most likely; what main_game_unload and
@@ -87,7 +96,9 @@ struct unknown_004cf770
 };
 
 typedef char verify_main_game_load_globals_size[
-	sizeof(struct main_game_load_globals) == 0x110 ? 1 : -1];
+	sizeof(struct main_game_load_globals) == 0x1230 ? 1 : -1];
+typedef char verify_main_game_load_globals_change_options_offset[
+	offsetof(struct main_game_load_globals, change_options) == 0x118 ? 1 : -1];
 #if defined(__i386__)
 typedef char verify_unknown_004cf770_size[
 	sizeof(struct unknown_004cf770) == 0x10 ? 1 : -1];
@@ -95,6 +106,12 @@ typedef char verify_unknown_004cf770_size[
 
 /* ---------- prototypes/MAIN_GAME.C */
 
+void main_game_restart(void);
+void main_game_change(const struct game_options *options);
+void main_game_change_update(void);
+boolean main_game_change_immediate(const struct game_options *options);
+boolean main_game_load_map(const struct game_options *options);
+void main_game_load_failed(void);
 void main_game_unload(void);
 void main_game_load_begin(boolean keep_memory);
 void main_game_load_end(boolean keep_caches, const char *map_name);
@@ -105,7 +122,7 @@ boolean main_game_memory_configuration_is_session(long configuration);
 long main_game_memory_configuration(const struct game_options *options);
 void main_game_configure_memory(const struct game_options *options);
 boolean main_game_start(const struct game_options *options);
-boolean main_game_unknown_0018f100(long unknown);
+boolean main_game_unknown_0018f100(const char *map_name);
 void main_game_launch_main_menu(struct game_options *options, long unknown);
 
 /* ---------- globals */
@@ -114,6 +131,14 @@ extern struct main_game_load_globals main_game_load_globals;
 extern struct main_game_memory_user main_game_memory_users[NUMBER_OF_MAIN_GAME_MEMORY_USERS];
 extern struct unknown_004cf770 unknown_004cf770;
 extern long unknown_00467214;
+extern byte unknown_004e61dc[UNKNOWN_004E61DC_SIZE];
+extern boolean main_game_loading_map;
+extern unsigned long main_game_loading_map_time;
+extern boolean unknown_0051ea00;
+extern long unknown_0051ea10;
+extern boolean unknown_00527330;
+extern long unknown_00527334;
+extern boolean main_game_load_failing;
 extern struct data_array *unknown_00502104;
 
 #endif

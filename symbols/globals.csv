@@ -89,3 +89,11 @@ address,name,source
 00502104,unknown_00502104,source/main/main_game.c
 0051e998,user_interface_memory_pool,source/interface/user_interface_memory.c
 0047d924,user_interface_allocation,source/interface/user_interface_memory.c
+004e61dc,unknown_004e61dc,source/main/main_game.c
+004e9bbc,main_game_loading_map,source/main/main_game.c
+004e9bc0,main_game_loading_map_time,source/main/main_game.c
+0051ea00,unknown_0051ea00,source/main/main_game.c
+0051ea10,unknown_0051ea10,source/main/main_game.c
+00527330,unknown_00527330,source/main/main_game.c
+00527334,unknown_00527334,source/main/main_game.c
+0055e757,main_game_load_failing,source/main/main_game.c

@@ -2,6 +2,63 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — El cambio de partida
+
+El resto del corazón de `main_game.c`: cómo se pide otra partida, cuándo se
+hace el cambio y qué pasos tiene. Con esto está entero el camino que va de
+«quiero jugar este mapa» a «la partida ha empezado», aunque muchas de las
+piezas que llama sigan sin descompilar. De 359 funciones se pasa a 365, el
+3,24 % de las del juego (el 1,568 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `main_game_restart` | `0x0018e700` | `main/main_game.c` |
+| `main_game_change` | `0x0018e790` | `main/main_game.c` |
+| `main_game_change_update` | `0x0018e810` | `main/main_game.c` |
+| `main_game_change_immediate` | `0x0018e8b0` | `main/main_game.c` |
+| `main_game_load_map` | `0x0018eaa0` | `main/main_game.c` |
+| `main_game_load_failed` | `0x0018efa0` | `main/main_game.c` |
+
+### Cambiado
+
+- `main_game_load_globals` es más grande de lo que se sabía (0x1230 bytes):
+  lleva también el cambio pedido (si hay uno, si es «a nada», cuándo se
+  pidió y las opciones de la partida nueva).
+- `unknown10C` y `unknown10D` ya tienen nombre: `restarting` y
+  `change_pending`.
+
+### Lo que se sabe
+
+- Una partida nueva no empieza cuando se pide: `main_game_change` guarda las
+  opciones y `main_game_change_update` la empieza al principio de un
+  fotograma, si nada dice que espere.
+- El cambio tiene estos pasos: soltar la partida y el mapa que haya, borrar
+  lo que el bucle principal tuviera pendiente (guardar, revertir, cambiar de
+  bsp), repartir la memoria, cargar el mapa y empezar la partida. Si se pide
+  «nada», se suelta todo y queda abierta solo la caché de texturas.
+- Cargar el mapa depende de si está en el disco duro: si está, se cargan sus
+  tags y se abren las cachés; si no, se espera a que se copie (con la caché
+  de texturas abierta, para enseñar algo mientras); si no se puede copiar,
+  se pide soltarlo todo.
+- Si la partida no puede empezar, el juego va al menú principal. Si lo que
+  no puede empezar es el menú principal, se queda con la caché de texturas
+  abierta y nada más.
+- Reempezar la partida en el mismo mapa no vuelve a cargarlo: solo se
+  desmontan y se montan otra vez los sistemas del juego.
+
+### Sin comprobar
+
+- Qué son `0x004e61dc` (0x120 bytes que se ponen a cero al empezar una
+  partida), `0x0051ea10` (mientras es mayor que 0, el cambio espera) y los
+  avisos a la partida en red (`0x00527330`, `0x000593e0`).
+
+### Mutaciones
+
+61 líneas rotas a propósito: 60 detectadas a la primera, y la otra con un
+caso nuevo.
+
 ## 2026-10-02 — La memoria de la interfaz
 
 El primer usuario de `memory_pool.c`: el fondo del que sale la memoria de

@@ -671,3 +671,17 @@ address,name,source,arguments,returns,convention
 001a47b1,user_interface_memory_allocate,source/interface/user_interface_memory.c,stack stack stack,int
 001a4826,user_interface_memory_free,source/interface/user_interface_memory.c,stack,void
 00147ebe,unknown_00147ebe,,,void
+0018e700,main_game_restart,source/main/main_game.c,,void
+0018e790,main_game_change,source/main/main_game.c,eax,void
+0018e810,main_game_change_update,source/main/main_game.c,,void
+0018e8b0,main_game_change_immediate,source/main/main_game.c,stack,bool
+0018eaa0,main_game_load_map,source/main/main_game.c,eax,bool
+0018efa0,main_game_load_failed,source/main/main_game.c,,void
+0014bac0,unknown_0014bac0,,,void
+000593e0,unknown_000593e0,,,void
+00149318,unknown_00149318,,,bool
+0018f0a0,unknown_0018f0a0,,stack,void
+0012bf90,unknown_0012bf90,,,bool
+001483c3,unknown_001483c3,,stack,void
+0011c840,unknown_0011c840,,,void
+0012bf00,unknown_0012bf00,,,void
