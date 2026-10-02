@@ -13,7 +13,8 @@ el proyecto abre los mapas del juego, lista su contenido y exporta los
 niveles y los modelos con su textura principal. Del código del ejecutable
 hay descompiladas 226 funciones de unas 11.265 (el 2,01 %), todas
 comprobadas contra el original. Consulta
-[CHANGELOG.md](CHANGELOG.md) para ver qué hay hecho.
+[ESTADO.md](ESTADO.md) para la lista de lo hecho y lo que falta, y
+[CHANGELOG.md](CHANGELOG.md) para el detalle de cada paso.
 
 ## En qué se basa
 
