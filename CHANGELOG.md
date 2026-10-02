@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Escribir el estado de una partida guardada: `saved_game_file_tasks.c`, completo
+
+Una función. De 541 funciones se pasa a 542, el 4,81 % de las del juego (el
+2,381 % de sus bytes: la función no está en la lista de Ghidra con la que se
+cuentan los bytes, y no suma). Con ella están las 20 funciones de
+`saved_game_file_tasks.c`.
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `saved_game_state_write_work` | `0x002adb10` | `saved games/saved_game_file_tasks.c` |
+
+### Lo que se sabe
+
+- El archivo del estado se escribe en cuatro pasos, uno cada vez que el hilo
+  de las tareas le da el turno: (0) se abre y se escriben **ceros** donde va
+  el principio; (1) se escribe el resto, detrás; (2) se escribe el
+  principio; (3) se escribe la firma de los dos. Así un archivo que no se
+  llegó a escribir entero no tiene un principio que valga.
+- Si no hay principio que escribir, la tarea solo hace sitio: si el archivo
+  ya es tan grande como hace falta, ha terminado bien; si no, escribe ceros
+  al principio y al final de donde va el resto, y una firma de ceros.
+- Los ceros salen del búfer de las tareas, a trozos de lo que quepa.
+- Si en el paso 0 falla empezar la firma, el paso no avanza y la tarea vuelve
+  a abrir el archivo la vez siguiente, sin cerrar el anterior. Es del juego.
+- El paso es uno de los cuatro: el juego salta por una tabla sin comprobarlo.
+
+### Sin comprobar
+
+- En el paso 0, avanzar por lo escrito o por el tamaño del búfer: solo
+  difieren en el último trozo, y ahí termina el bucle de las dos formas.
+- Un búfer de tareas de tamaño cero con principio que escribir: el juego no
+  termina nunca.
+
+### Mutaciones
+
+66 líneas rotas a propósito: 63 detectadas a la primera; dos más tras hacer
+más frecuentes los fallos de la consola en las pruebas (800 casos); la otra
+es la primera de «Sin comprobar».
+
 ## 2026-10-02 — Leer el estado de una partida guardada, paso a paso
 
 Una función. De 540 funciones se pasa a 541, el 4,80 % de las del juego (el

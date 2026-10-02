@@ -603,3 +603,82 @@ def run(t) -> None:
                 "CloseHandle": lambda harness, arguments: 1,
             },
         )
+
+    # ---------- the work of writing the state of a saved game
+
+    def state_write(step: int, header_size: int, data_size: int, no_header: int, file: int, made: int) -> Buffer:
+        """The data of the task, and after it in the same buffer its result,
+        the start of the file and the rest."""
+        blob = bytearray(random_.randbytes(STATE_SIZE))
+        struct.pack_into(
+            "<8I2B", blob, 0,
+            step, STATE_HEADER, header_size, STATE_DATA, data_size, file, made, STATE_RESULT,
+            random_.choice((0, 1, 0x80)), no_header,
+        )
+        path = b"u:\\0123456789AB\\state"
+        blob[STATE_RESULT + 8 : STATE_RESULT + 8 + len(path) + 1] = path + bytes(1)
+        return Buffer(bytes(blob), pointers=(4, 0xC, 0x1C))
+
+    for n in range(800):
+        step = n % 4
+        no_header = random_.choice((0, 0, 0, 1, 1, 0x80))
+        header_size = random_.choice((0, 0x10, 0x40, 0x40, 0x90))
+        data_size = random_.choice((0, 0x10, 0x100, 0x100)) if not no_header else random_.choice((0, 0x10, 0x100, 0x20, 0x90000000, 0xFFFFFFF0))
+        buffer_size = random_.choice((0x40, 0x40, 0x30, 0x10))
+        needed = (header_size + data_size + 0x14) & 0xFFFFFFFF
+        file_size = random_.choice((NONE, needed, needed, (needed - 1) & 0xFFFFFFFF, 0, 0, 0xFFFFFFFE))
+        signature = random_.randbytes(0x14)
+        # which of the things that the console does fails, if any, and at
+        # which of the times that it is asked for
+        fails = random_.choice((None, None, None, None, "create", "begin", "update", "seek", "write", "short", "unset", "end"))
+        # only the first step asks more than once
+        at = random_.choice((0, 0, 1, 2)) if step == 0 else 0
+        blob = state_write(step, header_size, data_size, no_header, random_.choice((0x4321, 0x4321, NONE)), random_.choice((0x55, 0x55, NONE)))
+
+        def write_file(harness, arguments, fails=fails, at=at):
+            file, buffer, count, bytes_written, overlapped = arguments
+            here = calls_so_far(harness, "WriteFile") == at
+            if not (here and fails == "unset"):
+                harness.mu.mem_write(bytes_written, struct.pack("<I", (count - 1) & 0xFFFFFFFF if here and fails == "short" else count))
+            return not (here and fails == "write"), (file, bytes(harness.mu.mem_read(buffer, min(count, 0x40))), count, overlapped)
+
+        def seek(harness, arguments, fails=fails, at=at):
+            here = calls_so_far(harness, "SetFilePointer") == at
+            return (arguments[1] + 1) & 0xFFFFFFFF if here and fails == "seek" else arguments[1]
+
+        def update(harness, arguments, fails=fails):
+            made, data, size = arguments
+            return 5 if fails == "update" else 0, (made, bytes(harness.mu.mem_read(data, min(size, 0x10))), size)
+
+        def finish(harness, arguments, fails=fails, signature=signature):
+            made, where = arguments
+            if where:
+                harness.mu.mem_write(where, signature)
+            return 5 if fails == "end" else 0, (made, where != 0)
+
+        other = Buffer(random_.randbytes(0x80))
+        own = random_.getrandbits(1)
+        t.check(
+            "saved_game_state_write_work",
+            random_.getrandbits(32),
+            blob,
+            random_.getrandbits(32),
+            globals={
+                "async_buffer": GlobalData(random_.randbytes(0x80)),
+                "async_buffer_globals": random_.getrandbits(32),
+                "async_buffer_globals+4": GlobalPointer("async_buffer") if own else Pointer(other, 0),
+                "async_buffer_globals+8": buffer_size,
+                "async_buffer_globals+12": random_.getrandbits(32),
+            },
+            extra=[other],
+            externals={
+                "CreateFileA": lambda harness, arguments, fails=fails: (NONE if fails == "create" else 0x7654, (text(harness, arguments[0]), *arguments[1:])),
+                "GetFileSize": lambda harness, arguments, value=file_size: value,
+                "WriteFile": write_file,
+                "SetFilePointer": seek,
+                "XCalculateSignatureBegin": lambda harness, arguments, fails=fails: NONE if fails == "begin" else 0x66,
+                "XCalculateSignatureUpdate": update,
+                "XCalculateSignatureEnd": finish,
+                "CloseHandle": lambda harness, arguments: 1,
+            },
+        )

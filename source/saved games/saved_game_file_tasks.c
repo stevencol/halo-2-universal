@@ -6,8 +6,7 @@ gives the address it has there.
 
 The files of the players are read and written by the thread of the tasks of
 async.c: here is what gives it the tasks. The names of the file and of the
-functions are guesses. Not here: 0x002adb10, the work of the task that
-writes the file of the state of a saved game.
+functions are guesses.
 */
 
 #include "saved_game_files.h"
@@ -99,17 +98,30 @@ enum
 /* that of the task that writes it */
 struct saved_game_state_write_task
 {
-	long unknown0;
+	/* how far the write is */
+	long step;
 	void *header;
 	long header_size;
 	void *data;
 	long data_size;
-	long unknown14;
-	long unknown18;
+	/* the file, open; NONE if it is not */
+	uint32_t file;
+	/* the signature of what has been written, which the console is making;
+	NONE if it is not */
+	uint32_t signature;
 	struct saved_game_file_result *result;
-	boolean unknown20;
-	/* the file has nothing at its start */
+	/* the signature is for this console alone */
+	boolean non_roamable;
+	/* there is nothing to write: the task only makes room in the file */
 	boolean no_header;
+};
+
+enum
+{
+	_saved_game_state_write_open,
+	_saved_game_state_write_data,
+	_saved_game_state_write_header,
+	_saved_game_state_write_signature
 };
 #pragma pack(pop)
 
@@ -170,9 +182,6 @@ uint32_t XCalculateSignatureBegin(uint32_t flags);
 uint32_t XCalculateSignatureUpdate(uint32_t signature, const void *data, uint32_t size);
 uint32_t XCalculateSignatureEnd(uint32_t signature, void *result);
 
-/* 0x002adb10: the work of the task that writes the file of the state of a
-saved game */
-long ASYNC_CALLBACK unknown_002adb10(struct async_custom_task *task, void *data, long size);
 
 /* ---------- code */
 
@@ -505,6 +514,219 @@ boolean saved_game_state_read_task_new(
 		(byte *)result)!=NONE;
 }
 
+/* closes what the task that writes the file of the state of a saved game
+has open, and ends it */
+static inline __attribute__((always_inline)) long saved_game_state_write_work_end(
+	struct saved_game_state_write_task *write)
+{
+	if (write->file!=(uint32_t)INVALID_HANDLE_VALUE)
+	{
+		CloseHandle(write->file);
+	}
+	if (write->signature!=(uint32_t)INVALID_HANDLE_VALUE)
+	{
+		XCalculateSignatureEnd(write->signature, NULL);
+	}
+
+	return 1;
+}
+
+/* the buffer that a task uses when it is given none: it is told that the
+task has it */
+static inline __attribute__((always_inline)) byte *saved_game_state_take_buffer(
+	struct async_custom_task *task,
+	unsigned long *size)
+{
+	byte *buffer= async_buffer_globals.address;
+
+	async_buffer_globals.other_buffer= buffer!=async_buffer;
+	*size= async_buffer_globals.size;
+	async_buffer_globals.unknown0= (long)task;
+
+	return buffer;
+}
+
+/* 0x002adb10: the work of the task that writes the file of the state of a
+saved game, a step each time that the thread gives it the turn: 0 while
+there is more to do.
+
+The file is opened, and zeros are written where its start goes; then the
+rest is written, after the start; then the start; and last the signature of
+both. So a file that was not written to the end does not have a start that
+is good.
+
+With nothing to write at the start, the task only makes room: if the file is
+not as large as it has to be, zeros are written at the start and at the end
+of where the rest goes, and a signature of zeros after it.
+
+The step is one of the four: the game jumps through a table with it */
+long ASYNC_CALLBACK saved_game_state_write_work(
+	struct async_custom_task *task,
+	void *data,
+	long size)
+{
+	struct saved_game_state_write_task *write= data;
+	uint32_t bytes_written;
+
+	(void)size;
+
+	write->result->error= SAVED_GAME_FILE_ERROR_DEFAULT;
+	switch (write->step)
+	{
+	case _saved_game_state_write_open:
+	{
+		unsigned long buffer_size;
+		unsigned long offset= 0;
+		boolean written= TRUE;
+		byte *buffer;
+
+		write->file= CreateFileA(saved_game_file_result_get_path(write->result), GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
+			0, 0);
+		if (write->file==(uint32_t)INVALID_HANDLE_VALUE)
+		{
+			return saved_game_state_write_work_end(write);
+		}
+		if (write->no_header)
+		{
+			uint32_t file_size= GetFileSize(write->file, NULL);
+
+			if (file_size!=(uint32_t)NONE)
+			{
+				if (file_size>=(uint32_t)(write->data_size+write->header_size+SAVED_GAME_FILE_SIGNATURE_SIZE))
+				{
+					/* the file has the room */
+					write->result->error= 0;
+					write->result->success= TRUE;
+
+					return saved_game_state_write_work_end(write);
+				}
+				write->step= _saved_game_state_write_data;
+			}
+		}
+		else
+		{
+			write->signature= XCalculateSignatureBegin(write->non_roamable!=0);
+			if (write->signature!=(uint32_t)INVALID_HANDLE_VALUE &&
+				!XCalculateSignatureUpdate(write->signature, write->header, (uint32_t)write->header_size))
+			{
+				write->step= _saved_game_state_write_data;
+			}
+		}
+
+		buffer= saved_game_state_take_buffer(task, &buffer_size);
+		memset(buffer, 0, (unsigned long)write->header_size<buffer_size ? (unsigned long)write->header_size : buffer_size);
+		if (write->header_size)
+		{
+			do
+			{
+				unsigned long count;
+
+				if (!written)
+				{
+					return saved_game_state_write_work_end(write);
+				}
+				count= (unsigned long)write->header_size-offset;
+				if (count>buffer_size)
+				{
+					count= buffer_size;
+				}
+				written= SetFilePointer(write->file, (long)offset, NULL, FILE_BEGIN)==offset &&
+					WriteFile(write->file, buffer, count, &bytes_written, NULL) && bytes_written==count;
+				offset+= buffer_size;
+			} while (offset<(unsigned long)write->header_size);
+			if (!written)
+			{
+				return saved_game_state_write_work_end(write);
+			}
+		}
+
+		return 0;
+	}
+
+	case _saved_game_state_write_data:
+		if (write->no_header)
+		{
+			unsigned long buffer_size;
+			byte *buffer= saved_game_state_take_buffer(task, &buffer_size);
+			long position= write->data_size-(long)buffer_size+write->header_size;
+			unsigned long count;
+
+			if (position<=0)
+			{
+				position= 0;
+			}
+			memset(buffer, 0, buffer_size);
+			count= (unsigned long)(write->data_size-position+write->header_size);
+			if (count>buffer_size)
+			{
+				count= buffer_size;
+			}
+			if (SetFilePointer(write->file, position, NULL, FILE_BEGIN)!=(uint32_t)position ||
+				!WriteFile(write->file, buffer, count, &bytes_written, NULL) || bytes_written!=count)
+			{
+				return saved_game_state_write_work_end(write);
+			}
+		}
+		else
+		{
+			if (SetFilePointer(write->file, write->header_size, NULL, FILE_BEGIN)!=(uint32_t)write->header_size ||
+				!WriteFile(write->file, write->data, (uint32_t)write->data_size, &bytes_written, NULL) ||
+				bytes_written!=(uint32_t)write->data_size ||
+				XCalculateSignatureUpdate(write->signature, write->data, bytes_written))
+			{
+				return saved_game_state_write_work_end(write);
+			}
+		}
+		write->step= _saved_game_state_write_header;
+
+		return 0;
+
+	case _saved_game_state_write_header:
+		if (!write->no_header)
+		{
+			if (SetFilePointer(write->file, 0, NULL, FILE_BEGIN)!=0 ||
+				!WriteFile(write->file, write->header, (uint32_t)write->header_size, &bytes_written, NULL) ||
+				bytes_written!=(uint32_t)write->header_size)
+			{
+				return saved_game_state_write_work_end(write);
+			}
+		}
+		write->step= _saved_game_state_write_signature;
+
+		return 0;
+
+	case _saved_game_state_write_signature:
+	{
+		uint32_t signature[SAVED_GAME_FILE_SIGNATURE_SIZE/sizeof(uint32_t)];
+		boolean signed_;
+		uint32_t position;
+
+		if (write->no_header)
+		{
+			memset(signature, 0, sizeof(signature));
+			signed_= TRUE;
+		}
+		else
+		{
+			signed_= XCalculateSignatureEnd(write->signature, signature)==0;
+			write->signature= (uint32_t)INVALID_HANDLE_VALUE;
+		}
+		position= (uint32_t)(write->data_size+write->header_size);
+		if (signed_ && SetFilePointer(write->file, (long)position, NULL, FILE_BEGIN)==position &&
+			WriteFile(write->file, signature, sizeof(signature), &bytes_written, NULL) &&
+			bytes_written==sizeof(signature))
+		{
+			write->result->error= 0;
+			write->result->success= TRUE;
+		}
+
+		return saved_game_state_write_work_end(write);
+	}
+	}
+
+	return saved_game_state_write_work_end(write);
+}
+
 /* 0x002adec0: gives the write of it */
 boolean saved_game_state_write_task_new(
 	const char *path,
@@ -518,18 +740,18 @@ boolean saved_game_state_write_task_new(
 	struct saved_game_state_write_task task;
 
 	saved_game_state_result_start(result, path, -1.0f);
-	task.unknown0= 0;
+	task.step= _saved_game_state_write_open;
 	task.header= header;
 	task.header_size= header_size;
 	task.data= data;
 	task.data_size= data_size;
-	task.unknown14= NONE;
-	task.unknown18= NONE;
+	task.file= (uint32_t)NONE;
+	task.signature= (uint32_t)NONE;
 	task.result= result;
-	task.unknown20= unknown;
+	task.non_roamable= unknown;
 	task.no_header= header==NULL;
 
-	return async_task_add_custom(sizeof(task), unknown_002adb10, &task, SAVED_GAME_FILE_TASK_PRIORITY,
+	return async_task_add_custom(sizeof(task), saved_game_state_write_work, &task, SAVED_GAME_FILE_TASK_PRIORITY,
 		(byte *)result)!=NONE;
 }
 
