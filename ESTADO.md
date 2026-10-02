@@ -83,11 +83,9 @@ Módulos (funciones hechas / archivo):
       `0x002170e0`, `0x002172a0` y `0x002173d0`)
 - [ ] Sonido — `sound\sound_manager.c` (22; faltan `0x001251e0`,
       `0x00125b40` y de `0x00125f70` en adelante), `sound\sound_classes.c` (1)
-- [ ] Archivos — `tag_files\files.c`, `files_xbox.c` (22). **No estaba
-      completo**, como se dijo en el hito 44: antes de `file_delete` hay
-      más funciones. Quedan por mirar `0x00136140`, `0x001362b0`,
-      `0x00136490` y `0x001364e0` (`0x00136600` y `0x001366d0` parecen de
-      los bitmaps)
+- [x] Archivos — `tag_files\files.c`, `files_xbox.c` (22, completo: de
+      `0x00136710` a `0x001374c0`. Lo que hay justo antes, de `0x00136140`
+      a `0x001366d0`, es de los bitmaps)
 - [x] Cadenas anchas — `text\unicode.c` (7; quedan 3)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
 - [ ] Matemáticas reales — `math\real_math.c` (21 de unas 50)
