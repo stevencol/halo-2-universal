@@ -19,7 +19,11 @@ Halo 1's; that these functions are of it is a guess, and so are their names.
 enum
 {
 	HARDWARE_CHARACTER_CACHE_BITMAP_WIDTH= 256,
-	HARDWARE_CHARACTER_CACHE_BITMAP_HEIGHT= 256
+	HARDWARE_CHARACTER_CACHE_BITMAP_HEIGHT= 256,
+	/* the pixels that a character can have */
+	MAXIMUM_HARDWARE_CHARACTER_PIXELS= 0x1000,
+	/* white that is not seen: what is around the picture of a character */
+	HARDWARE_CHARACTER_BORDER_PIXEL= 0x0FFF
 };
 
 /* ---------- structures */
@@ -68,6 +72,7 @@ typedef boolean (__attribute__((stdcall)) *rasterizer_text_vertices_proc)(struct
 
 /* ---------- prototypes/RASTERIZER_TEXT.C */
 
+void __attribute__((stdcall)) cache_hardware_format_character(long character_index);
 void __attribute__((stdcall)) rasterizer_draw_character(unsigned long color, rasterizer_text_vertices_proc proc,
 	long height, long width, const struct font_glyph_slot *slot, real x, real y, short skipped_width,
 	short skipped_height, real scale, long data);

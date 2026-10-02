@@ -150,7 +150,81 @@ def run(t) -> None:
             externals={
                 "font_character_find": lambda harness, arguments, found=found: (found[min(calls_so_far(harness, "font_character_find"), len(found) - 1)], tuple(arguments)),
                 "font_character_get_header": lambda harness, arguments: 0,
-                "unknown_0001f5c0": cache,
+                "cache_hardware_format_character": cache,
                 "rasterizer_draw_character": painted,
+            },
+        )
+
+    # ---------- the picture of a character goes into the bitmap of the characters
+
+    KNOWN_STATE, KNOWN_HEADER = 0x10, 0x1C
+    READ_INDEX, FRAME_INDEX, HARDWARE_FORMAT = 2, 0x70, 0x50
+
+    for n in range(500):
+        known = bytearray(random_.randbytes(KNOWN_DATA + KNOWN_COUNT * KNOWN))
+        struct.pack_into("<I", known, 0x44, KNOWN_DATA)
+        index = random_.randrange(KNOWN_COUNT)
+        width, height = random_.choice((1, 6, 9, 14, 30, 0)), random_.choice((1, 8, 12, 16, 33, 0))
+        place = KNOWN_DATA + index * KNOWN
+        struct.pack_into("<I", known, place + KNOWN_STATE, 4)
+        struct.pack_into("<2h", known, place + KNOWN_HEADER + 4, width, height)
+        # it has a place, at times: nothing is done
+        struct.pack_into("<I", known, place + KNOWN_SLOT, NONE if n % 12 else random_.randrange(SLOTS))
+
+        # the places that are taken go from the oldest to before the next
+        # one; of the others, what there was
+        read = random_.choice((0, 0, 5, 200, SLOTS - 1, SLOTS - 3, random_.randrange(SLOTS)))
+        taken = random_.choice((0, 1, 2, 5, 20, SLOTS - 1, SLOTS - 1, SLOTS - 2))
+        write = (read + taken) % SLOTS
+        slots = bytearray(random_.randbytes(SLOTS * SLOT_SIZE))
+        rows = sorted(random_.choice((1, 1, 14, 30, 60, 200, 240, 0, -5)) for _ in range(4))
+        for slot in range(SLOTS):
+            character = random_.choice((NONE, NONE, random_.randrange(KNOWN_COUNT) | random_.choice((0, 0x10000, 0xE1740000))))
+            struct.pack_into("<I2h", slots, slot * SLOT_SIZE, character, random_.randrange(1, 250), random_.choice(rows))
+        # where the next picture goes: near the right and the bottom of the
+        # bitmap at times, so that the rows and the bitmap start again
+        x0 = random_.choice((1, 1, 0, -2, 40, 200, 242, 247, 250, 255, 256, 257))
+        y0 = random_.choice((1, 1, 0, -2, 30, 200, 223, 240, 244, 248, 255, 256, 257))
+        maximum = random_.choice((0, 0, 9, 13, 17, 34))
+        cache = struct.pack("<2B5h", random_.getrandbits(8), random_.getrandbits(8), read, write, x0, y0, maximum)
+
+        pitch = random_.choice((0x200, 0x200, 0x208))
+        texture = Buffer(random_.randbytes(pitch * 304))
+        bitmap = bytearray(random_.randbytes(BITMAP_SIZE))
+        struct.pack_into("<2h", bitmap, 4, *random_.choice(((256, 256), (256, 256), (128, 300), (40, 20), (0, 0))))
+        frame = random_.choice((5, 100, 0x7FFFFFFE, -3))
+        struct.pack_into("<i", bitmap, FRAME_INDEX, random_.choice((frame, frame - 1, frame + 1, frame + 1)))
+        struct.pack_into("<I", bitmap, HARDWARE_FORMAT, random_.choice((0, 0x80123400, 0x80123400)))
+        bitmap = Buffer(bytes(bitmap))
+        picture = random_.randbytes(2 * width * height)
+        locked = n % 9 != 8
+
+        def pixels_(harness, arguments, picture=picture):
+            character_index, pixels = arguments
+            harness.mu.mem_write(pixels, picture)
+            return 1, (character_index,)
+
+        def lock(harness, arguments, texture=texture, pitch=pitch, locked=locked):
+            bitmap_, wait, pitch_ = arguments
+            if locked:
+                harness.mu.mem_write(pitch_, struct.pack("<I", pitch))
+            return (texture.address + 2 * pitch + 8 if locked else 0), (bitmap_, wait & 0xFF)
+
+        t.check(
+            "cache_hardware_format_character",
+            index | random_.choice((0, 0x10000, 0xE1740000)),
+            globals={
+                "hardware_character_cache": cache,
+                "hardware_character_cache+12": bitmap,
+                "font_glyph_slots": bytes(slots),
+                "font_cache_globals+4": Buffer(bytes(known), pointers=(0x44,)),
+                "texture_cache_globals+52": frame & 0xFFFFFFFF,
+            },
+            extra=[texture],
+            externals={
+                "font_character_get_pixels": pixels_,
+                "unknown_0001d5e0": lock,
+                "texture_cache_bitmap_get_loaded": lambda harness, arguments, loaded=random_.choice((0, 0, 0x80123400)): loaded,
+                "texture_cache_bitmap_get_hardware_format": lambda harness, arguments: 0x80123400,
             },
         )

@@ -11,6 +11,7 @@ Halo 1's; that these functions are of it is a guess, and so are their names.
 #include "rasterizer_text.h"
 
 #include "bitmaps/bitmaps.h"
+#include "cache/texture_cache.h"
 #include "text/font_cache.h"
 
 #include <string.h>
@@ -25,9 +26,17 @@ boolean unknown_0001d000(struct bitmap_data *bitmap);
 its four corners */
 void __attribute__((stdcall)) unknown_000363a0(struct rasterizer_text_vertex *vertices);
 
-/* 0x0001f5c0: puts the picture of a character in the bitmap of the
-characters, if it is not there */
-void __attribute__((stdcall)) unknown_0001f5c0(long character_index);
+/* 0x0001d5e0: where the pixels of the texture of a bitmap are, to write
+them, and how many bytes a row of them takes; before, the console is waited
+for if it is asked. NULL if the bitmap has no texture */
+byte *__attribute__((stdcall)) unknown_0001d5e0(struct bitmap_data *bitmap, long wait, long *pitch);
+
+/* ---------- constants */
+
+/* how the texture of the bitmap of the characters is asked for: it is waited
+for, and it is the first level of detail */
+#define HARDWARE_CHARACTER_CACHE_TEXTURE_FLAGS \
+	(FLAG(_texture_cache_block_bit)|FLAG(_texture_cache_load_bit)|FLAG(_texture_cache_exact_bit))
 
 /* ---------- globals */
 
@@ -98,6 +107,165 @@ void rasterizer_text_cache_flush(
 			slot->character_index= NONE;
 		}
 	}
+}
+
+/* a place of the bitmap of the characters is left free: the character that
+had it has none */
+static inline __attribute__((always_inline)) void flush_hardware_character(
+	long index)
+{
+	struct font_glyph_slot *slot= &font_glyph_slots[index];
+
+	if (slot->character_index!=NONE)
+	{
+		font_character_get(slot->character_index)->glyph_slot_index= NONE;
+	}
+	slot->character_index= NONE;
+}
+
+/* the oldest place of the bitmap of the characters is left free */
+static inline __attribute__((always_inline)) void flush_oldest_hardware_character(
+	void)
+{
+	long index= hardware_character_cache.read_index;
+
+	if (index!=NONE)
+	{
+		flush_hardware_character(index);
+	}
+	hardware_character_cache.read_index= (short)((hardware_character_cache.read_index+1)&(NUMBER_OF_FONT_GLYPH_SLOTS-1));
+}
+
+/* 0x0001f5c0: puts the picture of a character in the bitmap of the
+characters, if it has no place in it. The name is Halo 1's.
+
+The pictures are put in rows, from left to right, one pixel away from each
+other; a row is as high as the highest of its pictures, and when the bottom
+of the bitmap is reached the rows start again from the top. The places are
+given in turn, and the oldest ones are left free: those whose pictures the
+new one is put over, and one more if there is none left. Around the picture
+the pixels are made white that is not seen. If a place was left free the
+console is waited for, so that it is not drawing from the bitmap */
+void __attribute__((stdcall)) cache_hardware_format_character(
+	long character_index)
+{
+	word pixels[MAXIMUM_HARDWARE_CHARACTER_PIXELS];
+	struct font_character *character;
+	const struct font_character_header *header= NULL;
+	struct font_glyph_slot *slot;
+	boolean flushed= FALSE;
+	long pitch;
+	byte *base;
+
+	if (character_index!=NONE && font_character_get(character_index)->glyph_slot_index!=NONE)
+	{
+		return;
+	}
+	character= font_character_get(character_index);
+	if (character->state==_font_character_state_ready)
+	{
+		header= &character->header;
+	}
+
+	if (header->width+hardware_character_cache.x0>HARDWARE_CHARACTER_CACHE_BITMAP_WIDTH)
+	{
+		hardware_character_cache.y0= (short)(hardware_character_cache.y0+hardware_character_cache.maximum_character_height);
+		hardware_character_cache.x0= 1;
+		hardware_character_cache.maximum_character_height= 0;
+	}
+	if (header->height+hardware_character_cache.y0>HARDWARE_CHARACTER_CACHE_BITMAP_HEIGHT)
+	{
+		hardware_character_cache.y0= 1;
+		hardware_character_cache.x0= 1;
+		hardware_character_cache.maximum_character_height= 0;
+		while (hardware_character_cache.read_index!=hardware_character_cache.write_index &&
+			font_glyph_slots[hardware_character_cache.read_index].y0>0)
+		{
+			flushed= TRUE;
+			flush_oldest_hardware_character();
+		}
+	}
+	if (header->height+1>hardware_character_cache.maximum_character_height)
+	{
+		long top= hardware_character_cache.maximum_character_height+hardware_character_cache.y0;
+		long bottom= header->height+hardware_character_cache.y0;
+
+		while (hardware_character_cache.read_index!=hardware_character_cache.write_index)
+		{
+			long y= font_glyph_slots[hardware_character_cache.read_index].y0;
+
+			if (y<top || y>=bottom)
+			{
+				break;
+			}
+			flushed= TRUE;
+			flush_oldest_hardware_character();
+		}
+		hardware_character_cache.maximum_character_height= (short)(header->height+1);
+	}
+	if ((short)((hardware_character_cache.write_index+1)&(NUMBER_OF_FONT_GLYPH_SLOTS-1))==
+		hardware_character_cache.read_index)
+	{
+		flushed= TRUE;
+		flush_oldest_hardware_character();
+	}
+
+	if (character_index!=NONE)
+	{
+		character->glyph_slot_index= hardware_character_cache.write_index;
+	}
+	slot= &font_glyph_slots[hardware_character_cache.write_index];
+	slot->character_index= character_index;
+	slot->x0= hardware_character_cache.x0;
+	slot->y0= hardware_character_cache.y0;
+	font_character_get_pixels(character_index, pixels);
+	base= unknown_0001d5e0(hardware_character_cache.bitmap, flushed, &pitch);
+	if (base)
+	{
+		struct bitmap_data *bitmap= hardware_character_cache.bitmap;
+		long left= slot->x0-1;
+		long top= slot->y0-1;
+		long right= header->width+slot->x0+1;
+		long bottom= header->height+slot->y0+1;
+		short border_left= (short)(left>0 ? left : 0);
+		short border_top= (short)(top>0 ? top : 0);
+		short border_right= (short)(right<=bitmap->width-1 ? right : bitmap->width-1);
+		short border_bottom= (short)(bottom<=bitmap->height-1 ? bottom : bitmap->height-1);
+		long source= 0;
+		long row;
+
+		for (row= border_top; row<border_bottom; row++)
+		{
+			word *destination= (word *)(base + row*pitch) + border_left;
+			long column;
+
+			for (column= border_left; column<border_right; column++)
+			{
+				*destination++= HARDWARE_CHARACTER_BORDER_PIXEL;
+			}
+		}
+		for (row= 0; row<header->height; row++)
+		{
+			word *destination= (word *)(base + (slot->y0+row)*pitch) + slot->x0;
+			long column;
+
+			for (column= 0; column<header->width; column++)
+			{
+				destination[column]= pixels[source+column];
+			}
+			source+= header->width;
+		}
+		bitmap= hardware_character_cache.bitmap;
+		if (bitmap->frame_index<=texture_cache_globals.frame_index || !bitmap->hardware_format)
+		{
+			if (!texture_cache_bitmap_get_loaded(HARDWARE_CHARACTER_CACHE_TEXTURE_FLAGS, bitmap, 0.0f))
+			{
+				texture_cache_bitmap_get_hardware_format(bitmap, HARDWARE_CHARACTER_CACHE_TEXTURE_FLAGS, 0.0f);
+			}
+		}
+	}
+	hardware_character_cache.x0= (short)(hardware_character_cache.x0+header->width+1);
+	hardware_character_cache.write_index= (short)((hardware_character_cache.write_index+1)&(NUMBER_OF_FONT_GLYPH_SLOTS-1));
 }
 
 /* 0x0001f3a0: paints what is seen of a character, from its place in the
@@ -189,7 +357,7 @@ void DRAW_STRING_CALLBACK rasterizer_draw_character_with_dropshadow(
 			return;
 		}
 	}
-	unknown_0001f5c0(character_index);
+	cache_hardware_format_character(character_index);
 	glyph_slot_index= font_character_get(character_index)->glyph_slot_index;
 	if (glyph_slot_index==NONE)
 	{

@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Un carácter entra en el bitmap de la caché
+
+Una función. De 633 funciones se pasa a 634, el 5,63 % de las del juego (el
+2,890 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `cache_hardware_format_character` | `0x0001f5c0` | `rasterizer/rasterizer_text.c` |
+
+### Lo que se sabe
+
+- Copia el dibujo de un carácter al bitmap de 256×256 del que se pintan, si
+  no está ya. El nombre y los campos de la caché (dónde lee, dónde escribe,
+  la posición siguiente y la altura de la fila) son los de Halo 1.
+- Los dibujos se colocan **en filas**, de izquierda a derecha y separados un
+  píxel; cada fila es tan alta como su dibujo más alto. Al llegar abajo se
+  vuelve a empezar por arriba.
+- Los 512 sitios se usan **en orden, como un anillo**: se libera siempre el
+  más antiguo. Se liberan los dibujos que el nuevo va a pisar (todos los de
+  abajo al volver arriba; los de la franja que ocupa la fila al crecer) y,
+  si el anillo está lleno, uno más.
+- Si se ha liberado algún sitio, antes de escribir se **espera a la consola**,
+  por si aún está pintando desde ese trozo del bitmap.
+- Alrededor del dibujo se escribe un marco de un píxel de **blanco
+  transparente** (`0x0FFF`), para que el filtrado de la textura no mezcle
+  dibujos vecinos.
+- Después se pide la textura del bitmap a la caché de texturas, como en
+  otros sitios del juego.
+
+### Mutaciones
+
+70 líneas rotas a propósito: las 70 detectadas. Dos pidieron casos nuevos:
+la caché empezando en la columna o la fila 0, con la textura con margen
+delante para ver lo que se escribiría fuera.
+
 ## 2026-10-02 — Pintar un carácter y su sombra
 
 Dos funciones. De 631 funciones se pasa a 633, el 5,62 % de las del juego
