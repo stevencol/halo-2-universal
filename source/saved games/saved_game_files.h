@@ -10,6 +10,8 @@ names of the functions are guesses.
 #define __SAVED_GAME_FILES_H
 
 #include "cseries/cseries.h"
+#include <stdint.h>
+
 #include "cseries/async.h"
 #include "game/game.h"
 #include "text/unicode.h"
@@ -76,15 +78,15 @@ enum
 	SAVED_GAME_FILE_PATH_LENGTH= 256
 };
 
-/* how a file is told: the bits of its index. Those of a drive are in one of
-the tables of what the game knows of the files, at a place in it. The files
-with the built-in flag are not on a drive: they are in the memory of the
-game. What the low bits are is not known */
+/* how a file is told: the bits of its index: its type, the drive it is on
+(each drive has a table of what the game knows of its files), and its place
+in the table. The files with the built-in flag are not on a drive: they are
+in the memory of the game */
 enum
 {
+	SAVED_GAME_FILE_INDEX_TYPE_MASK= 0xF,
+	SAVED_GAME_FILE_INDEX_UNIT_SHIFT= 4,
 	SAVED_GAME_FILE_INDEX_UNIT_MASK= 0xF,
-	SAVED_GAME_FILE_INDEX_TABLE_SHIFT= 4,
-	SAVED_GAME_FILE_INDEX_TABLE_MASK= 0xF,
 	SAVED_GAME_FILE_INDEX_FILE_SHIFT= 8,
 	SAVED_GAME_FILE_INDEX_FILE_MASK= 0x1FFF,
 	_saved_game_file_index_built_in_bit= 21,
@@ -147,12 +149,15 @@ struct saved_game_file_description
 	boolean unknown7C;
 	byte pad7D[3];
 	struct saved_game_files_operation *operation;
-	long unknown84;
-	long unknown88;
-	void *unknown8C;
-	long unknown90;
-	long unknown94;
-	long unknown98;
+	/* a file with another name is copied to a new one: the two, open; NONE
+	if they are not */
+	uint32_t source_file;
+	uint32_t destination_file;
+	/* what is read from one and written to the other, a piece at a time */
+	void *copy_buffer;
+	unsigned long size;
+	unsigned long read_position;
+	unsigned long write_position;
 	long unknown9C;
 };
 
@@ -254,6 +259,10 @@ boolean saved_game_state_read_task_new(const char *path, struct saved_game_file_
 	long header_size, void *data, long data_size, boolean unknown);
 boolean saved_game_state_write_task_new(const char *path, struct saved_game_file_result *result, void *header,
 	long header_size, void *data, long data_size, boolean unknown);
+boolean saved_game_file_copy_read(struct saved_game_file_description *description);
+boolean saved_game_file_copy_write(struct saved_game_file_description *description);
+void saved_game_file_rename_finish(struct saved_game_file_description *description, boolean renamed);
+void saved_game_file_copy_close(struct saved_game_file_description *description);
 struct saved_game_file_description *saved_game_file_description_new(struct saved_game_file_description *description,
 	long file, const struct saved_game_file_information *information);
 struct saved_game_file_description *saved_game_file_description_new_renamed(long file, const wchar *name,

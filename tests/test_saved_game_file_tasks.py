@@ -258,3 +258,108 @@ def run(t) -> None:
                 "file_write_to_position": write_to_position,
             },
         )
+
+    # ---------- a file that is copied to give it another name
+
+    SOURCE, DESTINATION, COPY_BUFFER, SIZE, READ_POSITION, WRITE_POSITION = 0x84, 0x88, 0x8C, 0x90, 0x94, 0x98
+    PIECE = 0x20000
+
+    def copy_description(size: int, read_position: int, write_position: int, source: int = 0x4321, destination: int = 0x8765) -> Buffer:
+        data = bytearray(random_.randbytes(DESCRIPTION))
+        struct.pack_into("<6I", data, SOURCE, source, destination, 0x80200000, size & 0xFFFFFFFF, read_position, write_position)
+        return Buffer(bytes(data))
+
+    def transfer(result: int, count: int | None):
+        def handler(harness, arguments):
+            file, buffer, size, done, overlapped = arguments
+            if count is not None:
+                harness.mu.mem_write(done, struct.pack("<I", count))
+            # how many were done is left in the stack
+            return result, (file, buffer, size, overlapped)
+
+        return handler
+
+    for size, position in (
+        (0x130, 0),
+        (PIECE, 0),
+        (PIECE + 1, 0),
+        (PIECE + 1, 1),
+        (PIECE - 1, 0),
+        (5 * PIECE, 2 * PIECE),
+        (5 * PIECE, 4 * PIECE + 5),
+        (0x1E0, 0x1E0),
+        (0x100, 0x200),
+        (NONE, 0),
+    ):
+        left = (size - position) & 0xFFFFFFFF
+        piece = min(left, PIECE)
+        for seek in (position, position ^ 1, NONE):
+            for result, count in ((1, piece), (0, piece), (1, max(piece - 1, 0)), (1, piece + 1)):
+                externals = {
+                    "SetFilePointer": lambda harness, arguments, seek=seek: seek,
+                    "ReadFile": transfer(result, count),
+                    "WriteFile": transfer(result, count),
+                }
+                t.check("saved_game_file_copy_read", copy_description(size, position, random_.getrandbits(32)), externals=externals)
+                t.check("saved_game_file_copy_write", copy_description(size, random_.getrandbits(32), position), externals=externals)
+
+    for source in (0x4321, NONE, 0):
+        for destination in (0x8765, NONE, 0):
+            t.check(
+                "saved_game_file_copy_close",
+                copy_description(1, 2, 3, source, destination),
+                externals={"CloseHandle": lambda harness, arguments: 1},
+            )
+
+    # ---------- the end of giving a file another name
+
+    INPUT_GLOBALS_SIZE = 0x1B0
+
+    def input_globals(mask: int) -> bytes:
+        data = bytearray(random_.randbytes(INPUT_GLOBALS_SIZE))
+        struct.pack_into("<H", data, 8, mask)
+        data[10:18] = b"fghijklm"
+        return bytes(data)
+
+    def wide_text(harness, address: int) -> bytes:
+        data = bytes(harness.mu.mem_read(address, 0x200))
+        for offset in range(0, len(data), 2):
+            if data[offset : offset + 2] == bytes(2):
+                return data[:offset]
+        return data
+
+    for n in range(120):
+        renamed = random_.choice((1, 1, 0, 0x80))
+        type_ = random_.choice((0, 1, 7, 10, 12))
+        unit = random_.choice((0, 0, 1, 3))
+        file = type_ | unit << 4 | random_.randrange(0x2000) << 8 | random_.getrandbits(9) << 22
+        description = bytearray(random_.randbytes(DESCRIPTION))
+        struct.pack_into("<I", description, 0, file)
+        # the name that the file has: one of them fills all its room, with no end
+        old_name = random_.choice(("mine", "", "the old name", "a name of 17 char"))
+        description[0x18 : 0x18 + 0x24] = (wide(old_name) + bytes(0x24))[:0x24]
+        description[0x41] = random_.choice((0, 2, 4, 8, 0xFF, 0x80))
+        description[0x44 : 0x44 + 0x22] = (wide(random_.choice(("another", "", "a name of 16 ch.", "0123456789abcdefg"))) + bytes(0x22))[:0x22]
+        # the turn is in the same buffer, after what is told of the file
+        struct.pack_into("<I", description, 0x80, DESCRIPTION)
+        buffer = Buffer(bytes(description) + random_.randbytes(12), pointers=(0x80,))
+        asked = n % 3 == 0
+        t.check(
+            "saved_game_file_rename_finish",
+            buffer,
+            renamed,
+            globals={
+                "input_globals": input_globals(random_.choice((0xFFFF, 1, 0, 2))),
+                "global_language": NONE if asked else random_.randrange(9),
+                "saved_game_files_string_list_index": random_.choice((NONE, 5)),
+            },
+            externals={
+                "XGetLanguage": lambda harness, arguments, value=random_.choice((0, 1, 2, 5, 8)): value,
+                "unicode_string_list_has_string": lambda harness, arguments: 1,
+                "XDeleteSaveGame": lambda harness, arguments: (0, (text(harness, arguments[0]), wide_text(harness, arguments[1]))),
+                "saved_game_file_set_information": lambda harness, arguments: (
+                    0,
+                    (bytes(harness.mu.mem_read(arguments[0], INFORMATION)), arguments[1]),
+                ),
+            },
+        )

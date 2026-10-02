@@ -884,3 +884,8 @@ address,name,source,arguments,returns,convention
 002ad7c0,unknown_002ad7c0,,stack stack stack,int,stdcall
 002adb10,unknown_002adb10,,stack stack stack,int,stdcall
 002ae090,saved_game_file_write_signed,source/saved games/saved_game_file_tasks.c,eax stack stack stack stack,void
+002ad380,saved_game_file_copy_read,source/saved games/saved_game_file_tasks.c,esi,bool
+002ad400,saved_game_file_copy_write,source/saved games/saved_game_file_tasks.c,esi,bool
+002ad480,saved_game_file_rename_finish,source/saved games/saved_game_file_tasks.c,stack stack,void
+002ad5b0,saved_game_file_copy_close,source/saved games/saved_game_file_tasks.c,esi,void
+00331055,XDeleteSaveGame,,stack stack,int

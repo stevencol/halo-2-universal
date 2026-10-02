@@ -2,6 +2,60 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Cambiar de nombre un archivo guardado
+
+Cuatro funciones más de `saved_game_file_tasks.c`. De 513 funciones se
+pasa a 517, el 4,59 % de las del juego (el 2,171 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `saved_game_file_copy_read` | `0x002ad380` | `saved games/saved_game_file_tasks.c` |
+| `saved_game_file_copy_write` | `0x002ad400` | `saved games/saved_game_file_tasks.c` |
+| `saved_game_file_rename_finish` | `0x002ad480` | `saved games/saved_game_file_tasks.c` |
+| `saved_game_file_copy_close` | `0x002ad5b0` | `saved games/saved_game_file_tasks.c` |
+
+- Función de la consola que se suple: `XDeleteSaveGame` (`0x00331055`).
+
+### Corregido
+
+- **Los bits del índice de un archivo**, que en los hitos anteriores estaban
+  mal o sin aclarar: los bits 0-3 son el **tipo** del archivo y los bits
+  4-7 la **unidad** en la que está (0 el disco duro, las demás las
+  tarjetas). Las tablas de archivos son una por unidad. Las constantes se
+  llaman ahora `SAVED_GAME_FILE_INDEX_TYPE_MASK` y
+  `SAVED_GAME_FILE_INDEX_UNIT_*`.
+- En `struct saved_game_file_description`, los campos de `+0x84` a `+0x98`
+  tienen nombre: los dos archivos de la copia, el búfer, el tamaño y hasta
+  dónde se ha leído y escrito.
+
+### Lo que se sabe
+
+- La consola nombra el directorio de una partida guardada a partir de su
+  nombre visible, así que cambiar de nombre un archivo es **hacer otro y
+  copiarlo**: se copia en trozos de 128 KB, con un búfer que está en la
+  memoria de los archivos (`+0x4BF00`).
+- Al terminar bien, se borra la partida guardada con el nombre viejo y el
+  juego apunta el nuevo, en el idioma de la consola. Al terminar mal, lo
+  que se borra es la partida con el nombre nuevo. En los dos casos se
+  devuelve el turno de operaciones.
+- **Descuido del juego** al cerrar los dos archivos de la copia: el segundo
+  se da por abierto si no vale 0 (el primero, si no vale -1), y después de
+  cerrarlo se marca como cerrado el primero otra vez. No tiene
+  consecuencias porque la descripción no se vuelve a usar.
+
+### Sin comprobar
+
+- Que el nombre visible empiece vacío antes de componerlo: la función que
+  lo compone lo vacía también.
+
+### Mutaciones
+
+43 líneas rotas a propósito: 41 detectadas a la primera, una más con un
+caso nuevo (un nombre viejo que llena todo su sitio) y la otra es la de
+«Sin comprobar».
+
 ## 2026-10-02 — Los archivos de los jugadores van firmados
 
 Las dos funciones que leen y escriben un archivo entero de los jugadores.

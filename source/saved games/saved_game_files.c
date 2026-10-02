@@ -398,25 +398,25 @@ boolean saved_game_file_index_after(
 }
 
 /* 0x00217300: the index that a file has once another is deleted: one less
-if it was after it among those of its type, with a new salt */
+if it was after it among those of its drive, with a new salt */
 long saved_game_file_index_after_delete(
 	long file,
 	long deleted)
 {
 	const byte *files= unknown_0051ea14;
-	long type= (file>>SAVED_GAME_FILE_INDEX_TABLE_SHIFT)&SAVED_GAME_FILE_INDEX_TABLE_MASK;
+	long unit= (file>>SAVED_GAME_FILE_INDEX_UNIT_SHIFT)&SAVED_GAME_FILE_INDEX_UNIT_MASK;
 	long index= (file>>SAVED_GAME_FILE_INDEX_FILE_SHIFT)&SAVED_GAME_FILE_INDEX_FILE_MASK;
 
 	if (!((file>>_saved_game_file_index_built_in_bit)&1) && files &&
-		((deleted>>SAVED_GAME_FILE_INDEX_TABLE_SHIFT)&SAVED_GAME_FILE_INDEX_TABLE_MASK)==type &&
+		((deleted>>SAVED_GAME_FILE_INDEX_UNIT_SHIFT)&SAVED_GAME_FILE_INDEX_UNIT_MASK)==unit &&
 		index>((deleted>>SAVED_GAME_FILE_INDEX_FILE_SHIFT)&SAVED_GAME_FILE_INDEX_FILE_MASK))
 	{
 		unsigned long salt= *(const uint32_t *)(files+UNKNOWN_0051EA14_SALT_OFFSET)&SAVED_GAME_FILE_INDEX_SALT_MASK;
 
 		return (long)((salt<<SAVED_GAME_FILE_INDEX_SALT_SHIFT) |
-			((unsigned long)type<<SAVED_GAME_FILE_INDEX_TABLE_SHIFT) |
+			((unsigned long)unit<<SAVED_GAME_FILE_INDEX_UNIT_SHIFT) |
 			(((unsigned long)(index-1)&SAVED_GAME_FILE_INDEX_FILE_MASK)<<SAVED_GAME_FILE_INDEX_FILE_SHIFT) |
-			((unsigned long)file&SAVED_GAME_FILE_INDEX_UNIT_MASK));
+			((unsigned long)file&SAVED_GAME_FILE_INDEX_TYPE_MASK));
 	}
 
 	return file;
@@ -524,7 +524,7 @@ static inline __attribute__((always_inline)) struct saved_game_file_table *saved
 	long file)
 {
 	return (struct saved_game_file_table *)((byte *)unknown_0051ea14+UNKNOWN_0051EA14_TABLES_OFFSET)+
-		((file>>SAVED_GAME_FILE_INDEX_TABLE_SHIFT)&SAVED_GAME_FILE_INDEX_TABLE_MASK);
+		((file>>SAVED_GAME_FILE_INDEX_UNIT_SHIFT)&SAVED_GAME_FILE_INDEX_UNIT_MASK);
 }
 
 static inline __attribute__((always_inline)) long saved_game_file_get_table_place(

@@ -12,7 +12,9 @@ what follows 0x002acf80 all but four functions.
 
 #include "saved_game_files.h"
 
+#include "cache/cache_files.h"
 #include "cseries/async.h"
+#include "input/input.h"
 #include "saved games/game_state.h"
 #include "tag_files/files.h"
 
@@ -36,6 +38,10 @@ enum
 	/* after the bytes of a file is its signature, which the console makes
 	of them */
 	SAVED_GAME_FILE_SIGNATURE_SIZE= 20,
+
+	/* a file is copied in pieces of so many bytes */
+	SAVED_GAME_FILE_COPY_PIECE_SIZE= 0x20000,
+	FILE_BEGIN= 0,
 	INVALID_HANDLE_VALUE= -1
 };
 
@@ -99,8 +105,18 @@ wchar *wcsncpy(wchar *destination, const wchar *source, unsigned int count);
 
 /* ---------- prototypes of functions of the console's libraries */
 
-/* 0x002d2241 */
+/* 0x002d2241, 0x002d232e */
 int ReadFile(uint32_t file, void *buffer, uint32_t size, uint32_t *bytes_read, void *overlapped);
+int WriteFile(uint32_t file, const void *buffer, uint32_t size, uint32_t *bytes_written, void *overlapped);
+
+/* 0x002d2488 */
+uint32_t SetFilePointer(uint32_t file, long distance, long *distance_high, uint32_t method);
+
+/* 0x0033039a */
+uint32_t XGetLanguage(void);
+
+/* 0x00331055: deletes the saved game that the console shows with a name */
+uint32_t XDeleteSaveGame(const char *root, const wchar *name);
 
 /* 0x002d1f3a */
 int CloseHandle(uint32_t handle);
@@ -213,7 +229,7 @@ struct saved_game_file_description *saved_game_file_description_new(
 	description->renamed= FALSE;
 	description->unknown7C= FALSE;
 	description->operation= NULL;
-	description->unknown8C= NULL;
+	description->copy_buffer= NULL;
 	description->unknown9C= SAVED_GAME_FILE_DESCRIPTION_UNKNOWN9C;
 	description->information= *information;
 
@@ -227,7 +243,7 @@ struct saved_game_file_description *saved_game_file_description_new_renamed(
 	const wchar *name,
 	struct saved_game_file_description *description,
 	const struct saved_game_file_information *information,
-	void *unknown,
+	void *copy_buffer,
 	struct saved_game_files_operation *operation)
 {
 	description->file= file;
@@ -238,14 +254,14 @@ struct saved_game_file_description *saved_game_file_description_new_renamed(
 	memcpy(description->old_path, information->path, sizeof(description->old_path));
 	description->operation= operation;
 	description->unknown7C= FALSE;
-	description->unknown84= NONE;
-	description->unknown88= NONE;
-	description->unknown90= NONE;
-	description->unknown94= 0;
-	description->unknown98= 0;
+	description->source_file= (uint32_t)NONE;
+	description->destination_file= (uint32_t)NONE;
+	description->size= (unsigned long)NONE;
+	description->read_position= 0;
+	description->write_position= 0;
 	description->unknown9C= 0;
 	description->renamed= TRUE;
-	description->unknown8C= unknown;
+	description->copy_buffer= copy_buffer;
 	description->information= *information;
 
 	return description;
@@ -427,4 +443,115 @@ void saved_game_file_write_signed(
 		}
 	}
 	saved_game_file_close(file);
+}
+
+/* how much of a file that is copied is its next piece */
+static inline __attribute__((always_inline)) unsigned long saved_game_file_copy_piece_size(
+	const struct saved_game_file_description *description,
+	unsigned long position)
+{
+	unsigned long left= description->size-position;
+
+	return left<SAVED_GAME_FILE_COPY_PIECE_SIZE ? left : SAVED_GAME_FILE_COPY_PIECE_SIZE;
+}
+
+/* 0x002ad380: reads the next piece of a file that is copied */
+boolean saved_game_file_copy_read(
+	struct saved_game_file_description *description)
+{
+	unsigned long size= saved_game_file_copy_piece_size(description, description->read_position);
+	uint32_t bytes_read;
+
+	if (SetFilePointer(description->source_file, (long)description->read_position, NULL, FILE_BEGIN)!=
+			description->read_position ||
+		!ReadFile(description->source_file, description->copy_buffer, size, &bytes_read, NULL) ||
+		size!=bytes_read)
+	{
+		return FALSE;
+	}
+	description->read_position+= bytes_read;
+
+	return TRUE;
+}
+
+/* 0x002ad400: writes it */
+boolean saved_game_file_copy_write(
+	struct saved_game_file_description *description)
+{
+	unsigned long size= saved_game_file_copy_piece_size(description, description->write_position);
+	uint32_t bytes_written;
+
+	if (SetFilePointer(description->destination_file, (long)description->write_position, NULL, FILE_BEGIN)!=
+			description->write_position ||
+		!WriteFile(description->destination_file, description->copy_buffer, size, &bytes_written, NULL) ||
+		size!=bytes_written)
+	{
+		return FALSE;
+	}
+	description->write_position+= bytes_written;
+
+	return TRUE;
+}
+
+/* 0x002ad480: the end of giving a file another name. If it went well, the
+saved game that the console shows with the old name is deleted, and the game
+knows the file by the new one, in the language of the console; if not, what
+is deleted is the saved game with the new name. Either way the turn is given
+back */
+void saved_game_file_rename_finish(
+	struct saved_game_file_description *description,
+	boolean renamed)
+{
+	long type= description->file&SAVED_GAME_FILE_INDEX_TYPE_MASK;
+	char root[SAVED_GAME_FILE_ROOT_LENGTH];
+	wchar display_name[SAVED_GAME_FILE_DISPLAY_NAME_LENGTH];
+	long language;
+
+	saved_game_files_get_unit_root((description->file>>SAVED_GAME_FILE_INDEX_UNIT_SHIFT)&SAVED_GAME_FILE_INDEX_UNIT_MASK,
+		root, sizeof(root));
+	display_name[0]= 0;
+	if (renamed)
+	{
+		saved_game_file_get_display_name(type, display_name, description->information.name,
+			(char)description->information.language);
+		XDeleteSaveGame(root, display_name);
+		wcsncpy(description->information.name, description->new_name, SAVED_GAME_FILE_NAME_LENGTH);
+		description->information.name[SAVED_GAME_FILE_NAME_LENGTH]= 0;
+		if (global_language==NONE)
+		{
+			global_language= language_from_xbox_language((long)XGetLanguage());
+		}
+		language= global_language;
+		description->information.language= (byte)language;
+		saved_game_file_set_information(&description->information, description->file);
+	}
+	else
+	{
+		if (global_language==NONE)
+		{
+			global_language= language_from_xbox_language((long)XGetLanguage());
+		}
+		language= global_language;
+		saved_game_file_get_display_name(type, display_name, description->new_name, language);
+		XDeleteSaveGame(root, display_name);
+	}
+	description->operation->done= TRUE;
+}
+
+/* 0x002ad5b0: closes the two files of a copy. The second is taken as open
+if it is not 0, and what is then set as closed is the first again: the game
+has it so */
+void saved_game_file_copy_close(
+	struct saved_game_file_description *description)
+{
+	if (description->source_file!=(uint32_t)NONE)
+	{
+		CloseHandle(description->source_file);
+		description->source_file= (uint32_t)NONE;
+	}
+	if (description->destination_file)
+	{
+		CloseHandle(description->destination_file);
+		description->source_file= (uint32_t)NONE;
+	}
 }
