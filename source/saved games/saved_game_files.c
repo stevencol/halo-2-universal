@@ -48,13 +48,6 @@ uint32_t XCreateSaveGame(const char *root, const wchar *name, uint32_t dispositi
 /* ---------- prototypes of functions that are not decompiled */
 
 
-/* 0x002ada70, 0x002adec0: start to read and to write a file in two parts.
-Whether it was started */
-boolean unknown_002ada70(const char *path, struct saved_game_file_result *result, void *header, long header_size,
-	void *data, long data_size, long unknown);
-boolean unknown_002adec0(const char *path, struct saved_game_file_result *result, void *header, long header_size,
-	void *data, long data_size, long unknown);
-
 /* ---------- constants */
 
 enum
@@ -481,7 +474,7 @@ boolean saved_game_auxiliary_read(
 		return FALSE;
 	}
 
-	return unknown_002ada70(path, result, header, header_size, data, data_size, 0);
+	return saved_game_state_read_task_new(path, result, header, header_size, data, data_size, FALSE);
 }
 
 /* 0x00217520: starts to write it */
@@ -500,7 +493,7 @@ boolean saved_game_auxiliary_write(
 		return FALSE;
 	}
 
-	return unknown_002adec0(path, result, header, header_size, data, data_size, 0);
+	return saved_game_state_write_task_new(path, result, header, header_size, data, data_size, FALSE);
 }
 
 /* 0x00217590: how many saved games a drive has */

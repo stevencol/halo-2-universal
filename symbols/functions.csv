@@ -816,8 +816,8 @@ address,name,source,arguments,returns,convention
 00217370,saved_game_files_take_operation,source/saved games/saved_game_files.c,stack stack,void
 00217590,saved_game_files_count_saved_games,source/saved games/saved_game_files.c,ecx,int
 00216800,saved_game_file_get_information,source/saved games/saved_game_files.c,eax edx,bool
-002ada70,unknown_002ada70,,eax esi stack stack stack stack stack,bool
-002adec0,unknown_002adec0,,eax esi stack stack stack stack stack,bool
+002ada70,saved_game_state_read_task_new,source/saved games/saved_game_file_tasks.c,eax esi stack stack stack stack stack,bool
+002adec0,saved_game_state_write_task_new,source/saved games/saved_game_file_tasks.c,eax esi stack stack stack stack stack,bool
 002d2234,GetCurrentThreadId,,,int
 00331125,XFindFirstSaveGame,,stack stack,int
 0033122f,XFindNextSaveGame,,stack stack,int
@@ -881,3 +881,5 @@ address,name,source,arguments,returns,convention
 002accd0,saved_game_file_read_work,source/saved games/saved_game_file_tasks.c,stack stack stack,int
 002adf70,unknown_002adf70,,eax stack stack stack stack,void
 002acde0,unknown_002acde0,,stack stack stack,int,stdcall
+002ad7c0,unknown_002ad7c0,,stack stack stack,int,stdcall
+002adb10,unknown_002adb10,,stack stack stack,int,stdcall

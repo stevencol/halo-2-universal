@@ -6,8 +6,8 @@ gives the address it has there.
 
 The files of the players are read and written by the thread of the tasks of
 async.c: here is what gives it the tasks. The names of the file and of the
-functions are guesses. Not here: the work of a write (0x002acde0) and what
-follows 0x002acf80.
+functions are guesses. Not here: the work of a write (0x002acde0), and of
+what follows 0x002acf80 all but two functions.
 */
 
 #include "saved_game_files.h"
@@ -41,6 +41,45 @@ struct saved_game_file_task
 	struct saved_game_file_result *result;
 };
 
+/* the data of the task that reads the file of the state of a saved game:
+what is at its start, and the rest */
+#pragma pack(push, 1)
+struct saved_game_state_read_task
+{
+	void *header;
+	long header_size;
+	void *data;
+	long data_size;
+	long unknown10;
+	long unknown14;
+	long unknown18;
+	struct saved_game_file_result *result;
+	boolean unknown20;
+	boolean unknown21;
+};
+
+/* that of the task that writes it */
+struct saved_game_state_write_task
+{
+	long unknown0;
+	void *header;
+	long header_size;
+	void *data;
+	long data_size;
+	long unknown14;
+	long unknown18;
+	struct saved_game_file_result *result;
+	boolean unknown20;
+	/* the file has nothing at its start */
+	boolean no_header;
+};
+#pragma pack(pop)
+
+typedef char verify_saved_game_state_read_task_size[
+	sizeof(struct saved_game_state_read_task) == 0x22 ? 1 : -1];
+typedef char verify_saved_game_state_write_task_size[
+	sizeof(struct saved_game_state_write_task) == 0x22 ? 1 : -1];
+
 /* ---------- prototypes of functions of the C library */
 
 /* 0x003207ed: of characters of 16 bits */
@@ -54,6 +93,11 @@ void unknown_002adf70(unsigned long size, struct file_reference *file, void *buf
 
 /* 0x002acde0: the work of the task of a write */
 long ASYNC_CALLBACK unknown_002acde0(struct async_custom_task *task, void *data, long size);
+
+/* 0x002ad7c0, 0x002adb10: the work of the tasks that read and write the
+file of the state of a saved game */
+long ASYNC_CALLBACK unknown_002ad7c0(struct async_custom_task *task, void *data, long size);
+long ASYNC_CALLBACK unknown_002adb10(struct async_custom_task *task, void *data, long size);
 
 /* ---------- code */
 
@@ -179,4 +223,77 @@ struct saved_game_file_description *saved_game_file_description_new_renamed(
 	description->information= *information;
 
 	return description;
+}
+
+/* what a result has before the file of the state of a saved game is read or
+written */
+static inline __attribute__((always_inline)) void saved_game_state_result_start(
+	struct saved_game_file_result *result,
+	const char *path,
+	float progress)
+{
+	result->unknown1= FALSE;
+	result->success= FALSE;
+	result->progress= progress;
+	result->error= SAVED_GAME_FILE_ERROR_DEFAULT;
+	strncpy(saved_game_file_result_get_path(result), path, SAVED_GAME_FILE_PATH_LENGTH);
+	saved_game_file_result_get_path(result)[SAVED_GAME_FILE_PATH_LENGTH-1]= 0;
+}
+
+/* 0x002ada70: gives the read of the file of the state of a saved game to
+the thread that does it: what is at its start, and the rest. Whether it took
+it */
+boolean saved_game_state_read_task_new(
+	const char *path,
+	struct saved_game_file_result *result,
+	void *header,
+	long header_size,
+	void *data,
+	long data_size,
+	boolean unknown)
+{
+	struct saved_game_state_read_task task;
+
+	saved_game_state_result_start(result, path, 0.0f);
+	task.header= header;
+	task.header_size= header_size;
+	task.data= data;
+	task.data_size= data_size;
+	task.unknown10= NONE;
+	task.unknown14= 0;
+	task.unknown18= NONE;
+	task.result= result;
+	task.unknown20= unknown;
+	task.unknown21= FALSE;
+
+	return async_task_add_custom(sizeof(task), unknown_002ad7c0, &task, SAVED_GAME_FILE_TASK_PRIORITY,
+		(byte *)result)!=NONE;
+}
+
+/* 0x002adec0: gives the write of it */
+boolean saved_game_state_write_task_new(
+	const char *path,
+	struct saved_game_file_result *result,
+	void *header,
+	long header_size,
+	void *data,
+	long data_size,
+	boolean unknown)
+{
+	struct saved_game_state_write_task task;
+
+	saved_game_state_result_start(result, path, -1.0f);
+	task.unknown0= 0;
+	task.header= header;
+	task.header_size= header_size;
+	task.data= data;
+	task.data_size= data_size;
+	task.unknown14= NONE;
+	task.unknown18= NONE;
+	task.result= result;
+	task.unknown20= unknown;
+	task.no_header= header==NULL;
+
+	return async_task_add_custom(sizeof(task), unknown_002adb10, &task, SAVED_GAME_FILE_TASK_PRIORITY,
+		(byte *)result)!=NONE;
 }

@@ -136,3 +136,23 @@ def run(t) -> None:
             random_.getrandbits(32),
             random_.getrandbits(32),
         )
+
+    # ---------- the tasks that read and write the file of the state of a saved game
+
+    for name in ("saved_game_state_read_task_new", "saved_game_state_write_task_new"):
+        for n in range(40):
+            place = task_place()
+            path = random_.choice((b"u:\\udata\\4d530064\\0123456789AB\\auxilary.bin", b"", b"p" * 0xFF, b"q" * 0x140))
+            t.check(
+                name,
+                Buffer(path + bytes(1)),
+                Buffer(random_.randbytes(RESULT_SIZE)),
+                random_.choice((0, 0, random_.getrandbits(32) | 1)),
+                random_.getrandbits(32),
+                random_.getrandbits(32),
+                random_.getrandbits(32),
+                random_.getrandbits(32),
+                globals={f"async_globals+{TASKS_ADDED:#x}": random_.getrandbits(32)},
+                extra=[place],
+                externals=task_externals(place, random_.choice((NONE, 0x1203, 0x1203, 0))),
+            )

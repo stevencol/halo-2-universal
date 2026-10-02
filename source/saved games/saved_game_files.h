@@ -245,6 +245,10 @@ boolean saved_game_file_read_task_new(void *buffer, unsigned long size, boolean 
 	struct saved_game_file_result *result, const char *path);
 boolean saved_game_file_write_task_new(void *unknown, unsigned long size, boolean unknown2,
 	struct saved_game_file_result *result);
+boolean saved_game_state_read_task_new(const char *path, struct saved_game_file_result *result, void *header,
+	long header_size, void *data, long data_size, boolean unknown);
+boolean saved_game_state_write_task_new(const char *path, struct saved_game_file_result *result, void *header,
+	long header_size, void *data, long data_size, boolean unknown);
 struct saved_game_file_description *saved_game_file_description_new(struct saved_game_file_description *description,
 	long file, const struct saved_game_file_information *information);
 struct saved_game_file_description *saved_game_file_description_new_renamed(long file, const wchar *name,

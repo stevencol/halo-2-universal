@@ -210,7 +210,7 @@ def run(t) -> None:
 
         return handler
 
-    for name, callee in (("saved_game_auxiliary_read", "unknown_002ada70"), ("saved_game_auxiliary_write", "unknown_002adec0")):
+    for name, callee in (("saved_game_auxiliary_read", "saved_game_state_read_task_new"), ("saved_game_auxiliary_write", "saved_game_state_write_task_new")):
         for n in range(40):
             file = index(random_.randrange(16), random_.randrange(16), random_.randrange(0x2000), n % 6 == 5, random_.randrange(0x200))
             t.check(

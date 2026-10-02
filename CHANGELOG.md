@@ -2,6 +2,36 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Las tareas del archivo del estado de una partida
+
+Las dos funciones que `saved_game_files.c` llamaba todavía por su
+dirección. De 509 funciones se pasa a 511, el 4,54 % de las del juego (el
+2,134 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `saved_game_state_read_task_new` | `0x002ada70` | `saved games/saved_game_file_tasks.c` |
+| `saved_game_state_write_task_new` | `0x002adec0` | `saved games/saved_game_file_tasks.c` |
+
+### Lo que se sabe
+
+- El estado de una partida guardada (`auxilary.bin`) se lee y se escribe en
+  dos partes, la cabecera y el resto, cada una con su búfer y su tamaño.
+  Las dos van en los 34 bytes de datos de una tarea genérica de `async.c`,
+  de prioridad 2.
+- Al escribir, si no se da cabecera, la tarea lo lleva apuntado.
+- El progreso empieza en 0 para una lectura y en -1 para una escritura; el
+  error empieza en 4 en las dos.
+- Con esto está descompilado todo el camino desde que `game_state.c` pide
+  guardar o cargar hasta que la tarea queda en la lista. Lo que hace
+  después el hilo de tareas (`0x002ad7c0` y `0x002adb10`) no lo está.
+
+### Mutaciones
+
+32 líneas rotas a propósito: las 32 detectadas.
+
 ## 2026-10-02 — Las tareas de los archivos de los jugadores
 
 Cómo llegan al hilo de tareas las lecturas y escrituras de los archivos de
