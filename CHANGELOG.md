@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Los archivos que vienen con el juego
+
+Cinco funciones pequeñas: cuatro de `saved_game_files.c`, al que ya solo
+le faltan dos, y la primera de los perfiles. De 488 funciones se pasa a
+493, el 4,38 % de las del juego (el 2,078 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `saved_game_files_make_directory` | `0x00216440` | `saved games/saved_game_files.c` |
+| `saved_game_files_add_default_profile` | `0x00216760` | `saved games/saved_game_files.c` |
+| `saved_game_files_add_built_in_variant` | `0x00217080` | `saved games/saved_game_files.c` |
+| `cached_saved_game_file_delete` | `0x002172a0` | `saved games/saved_game_files.c` |
+| `player_profile_set_defaults` | `0x001a0750` | `saved games/player_profile.c` |
+
+- Archivos nuevos: `saved games/player_profile.h` y `player_profile.c`.
+- En la herramienta de pruebas, `clean` en un búfer: una función que dice
+  qué parte de lo que queda en él se compara.
+
+### Lo que se sabe
+
+- Los archivos «de serie» son hasta 101, cada uno con su tipo delante. El
+  juego los llena al arrancar con un perfil por defecto y con las variantes
+  de juego que trae.
+- El perfil por defecto se llama «Default» («Player» en japonés,
+  «Predeterminada» en español…), en el idioma de los archivos.
+- De un perfil se sabe el nombre (`+0x08`, 31 caracteres), un indicador que
+  se pone al crearlo (`+0x04`, bit 0) y seis bytes con valores por defecto
+  (10, 0, 0, 10 en `+0x118`; 3 en `+0x102`): qué son no se sabe todavía.
+- **Rareza del juego:** al añadir una variante de serie copia a la tabla
+  0x1E4 bytes de una variable local de la que solo ha rellenado 0x134. El
+  resto es lo que hubiera en la pila en ese momento. No afecta a nada,
+  porque de una variante solo se leen 0x130 bytes.
+- De la lista corta de cuatro archivos se quita uno poniendo el último en
+  su sitio.
+
+### Sin comprobar
+
+- Si el nombre de un perfil tiene 31 o 30 caracteres: los nombres por
+  defecto son cortos y la memoria ya está a cero.
+
+### Mutaciones
+
+36 líneas rotas a propósito: 35 detectadas, y la otra es la de «Sin
+comprobar».
+
 ## 2026-10-02 — Arrancar la lectura y la escritura de un archivo
 
 Las dos funciones que el hito anterior llamaba sin estar descompiladas. De

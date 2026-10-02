@@ -12,6 +12,7 @@ file, which goes from 0x002160b0 to 0x00217590.
 #include "saved_game_files.h"
 
 #include "input/input.h"
+#include "saved games/player_profile.h"
 #include "saved games/game_state.h"
 #include "tag_files/files.h"
 #include "text/unicode_string_list.h"
@@ -984,4 +985,89 @@ boolean saved_game_file_write_async(
 	}
 
 	return unknown_002acee0(unknown, size, FALSE, result);
+}
+
+/* 0x00216440: makes a directory, if it is not there. Whether it is there
+in the end */
+boolean saved_game_files_make_directory(
+	const char *path)
+{
+	struct file_reference directory;
+
+	file_reference_set_path(&directory, path, TRUE);
+	if (file_exists(&directory))
+	{
+		return TRUE;
+	}
+
+	return file_create(&directory);
+}
+
+/* 0x00216760: one more of the files that come with the game: a profile as
+the game gives it to a player who has none, with the name that the game has
+for it in the language of the files. Nothing is done if there is no room */
+void saved_game_files_add_default_profile(
+	void)
+{
+	struct built_in_saved_game_files *files= unknown_0051ea14;
+
+	if (files && files->count!=MAXIMUM_BUILT_IN_SAVED_GAME_FILES)
+	{
+		struct built_in_saved_game_file file;
+		struct player_profile *profile= (struct player_profile *)file.data;
+		wchar name[UNICODE_STRING_LENGTH];
+
+		file.type= _saved_game_file_type_profile;
+		name[0]= 0;
+		wcsncpy(name, saved_game_file_default_name_unknown(saved_game_files_language), UNICODE_STRING_LENGTH-1);
+		name[UNICODE_STRING_LENGTH-1]= 0;
+		player_profile_set_defaults(profile);
+		wcsncpy(profile->name, name, PLAYER_PROFILE_NAME_LENGTH);
+		profile->name[PLAYER_PROFILE_NAME_LENGTH]= 0;
+
+		files= unknown_0051ea14;
+		files->files[files->count++]= file;
+	}
+}
+
+/* 0x00217080: one more of the files that come with the game: a variant of a
+game. What follows the variant in the file is whatever was in the stack: the
+game does not set it */
+void saved_game_files_add_built_in_variant(
+	const struct game_variant *variant)
+{
+	struct built_in_saved_game_files *files= unknown_0051ea14;
+
+	if (files && files->count!=MAXIMUM_BUILT_IN_SAVED_GAME_FILES)
+	{
+		struct built_in_saved_game_file file;
+
+		memcpy(file.data, variant, sizeof(*variant));
+		file.type= saved_game_file_type_from_variant((const struct game_variant *)file.data);
+		files->files[files->count++]= file;
+	}
+}
+
+/* 0x002172a0: forgets what is kept of a file with the tables not set up:
+the last of those kept takes its place */
+void cached_saved_game_file_delete(
+	long file)
+{
+	long index;
+
+	for (index= 0; index<cached_saved_game_file_count; index++)
+	{
+		if (cached_saved_game_files[index].file!=NONE && cached_saved_game_files[index].file==file)
+		{
+			long last= cached_saved_game_file_count-1;
+
+			if (index!=last)
+			{
+				cached_saved_game_files[index]= cached_saved_game_files[last];
+			}
+			cached_saved_game_file_count--;
+
+			return;
+		}
+	}
 }

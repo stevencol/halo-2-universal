@@ -632,3 +632,75 @@ def run(t) -> None:
                 ),
             },
         )
+
+    # ---------- a directory that has to be there
+
+    for path in (b"u:\\udata\\4d530064", b"", b"d" * 0xFF, b"e" * 0x120, b"c:\\x\\"):
+        for exists, created in ((1, 1), (0, 1), (0, 0), (0x80, 0), (0, 0x100)):
+            t.check(
+                "saved_game_files_make_directory",
+                Buffer(path + b"\0"),
+                externals={
+                    "file_exists": lambda harness, arguments, exists=exists: (exists, (reference_path(harness, arguments[0]),)),
+                    "file_create": lambda harness, arguments, created=created: (created, (reference_path(harness, arguments[0]),)),
+                },
+            )
+
+    # ---------- the files that come with the game
+
+    PROFILE_SIZE = 0x1E0
+
+    for _ in range(12):
+        t.check("player_profile_set_defaults", Buffer(random_.randbytes(PROFILE_SIZE + 8)))
+
+    def built_in_files(count: int) -> Buffer:
+        room = min(max(count, 0), 3) + 2
+        return Buffer(struct.pack("<i", count) + random_.randbytes(room * BUILT_IN_SIZE))
+
+    for count in (0, 1, 3, 100, 101):
+        for language in (0, 1, 4, 7, 9, NONE):
+            # with 100 files the new one goes far: only a few of the files are
+            # in the test's memory, so 100 is tried with nothing to add to
+            files_ = 0 if count == 100 else built_in_files(count)
+            t.check(
+                "saved_game_files_add_default_profile",
+                globals={"unknown_0051ea14": files_, "saved_game_files_language": language},
+            )
+    for count in (0, 1, 3, 101):
+        for engine in (1, 2, 3, 4, 7, 8, 9):
+            data = bytearray(random_.randbytes(VARIANT_SIZE))
+            struct.pack_into("<I", data, 0x44, engine)
+            used = (4 + count * BUILT_IN_SIZE, 4 + count * BUILT_IN_SIZE + 4 + VARIANT_SIZE)
+
+            def clean(data, count=count):
+                # after the variant, the new file has what was in the stack
+                if count == 101:
+                    return data
+                start = 4 + count * BUILT_IN_SIZE + 4 + VARIANT_SIZE
+                end = 4 + (count + 1) * BUILT_IN_SIZE
+                return data[:start] + bytes(end - start) + data[end:]
+
+            files_ = built_in_files(count)
+            files_.clean = clean
+            t.check(
+                "saved_game_files_add_built_in_variant",
+                Buffer(bytes(data)),
+                globals={"unknown_0051ea14": files_},
+            )
+    t.check("saved_game_files_add_built_in_variant", Buffer(random_.randbytes(VARIANT_SIZE)), globals={"unknown_0051ea14": 0})
+
+    # ---------- forgetting a file that is kept
+
+    for n in range(80):
+        file = random_.getrandbits(32) if n % 9 else NONE
+        entries = [random_.getrandbits(32) for _ in range(4)]
+        if n % 4:
+            entries[random_.randrange(4)] = file
+        if n % 5 == 4:
+            entries[0] = file
+            entries[random_.randrange(1, 4)] = file
+        t.check(
+            "cached_saved_game_file_delete",
+            file,
+            globals=cache(1, random_.choice((4, 4, 3, 2, 1, 0, -1)), entries),
+        )

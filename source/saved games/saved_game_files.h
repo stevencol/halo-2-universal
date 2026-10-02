@@ -94,6 +94,7 @@ enum
 	SAVED_GAME_FILE_INFORMATION_NAME_OFFSET= 0x14,
 
 	MAXIMUM_SAVED_GAME_FILES_PER_TABLE= 4096,
+	MAXIMUM_BUILT_IN_SAVED_GAME_FILES= 101,
 
 	/* the name that the console shows of a file, with its end: that of its
 	type, a separator and the name that the player gave it */
@@ -126,7 +127,7 @@ struct saved_game_file_information
 /* a file that comes with the game: it is in memory */
 struct built_in_saved_game_file
 {
-	long unknown0;
+	long type;
 	byte data[SAVED_GAME_FILE_PROFILE_SIZE];
 };
 
@@ -181,6 +182,10 @@ boolean saved_game_files_hard_disk_has_blocks(long blocks);
 boolean saved_game_file_get_type_path(char *path, const char *directory, long type);
 long saved_game_file_type_get_size(long type);
 boolean saved_game_file_get_directory(char *path, long file);
+boolean saved_game_files_make_directory(const char *path);
+void saved_game_files_add_default_profile(void);
+void saved_game_files_add_built_in_variant(const struct game_variant *variant);
+void cached_saved_game_file_delete(long file);
 boolean saved_game_file_name_unique(const wchar *name, long type);
 boolean saved_game_file_read(long file, void *buffer, unsigned long size);
 boolean saved_game_file_read_async(unsigned long size, long file, void *buffer,

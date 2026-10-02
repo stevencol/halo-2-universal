@@ -861,3 +861,8 @@ address,name,source,arguments,returns,convention
 002acee0,unknown_002acee0,,eax ecx edx stack,bool
 002acf40,unknown_002acf40,,eax ecx edx,int
 002acf80,unknown_002acf80,,eax ecx stack stack stack stack,int
+00216440,saved_game_files_make_directory,source/saved games/saved_game_files.c,stack,bool
+00216760,saved_game_files_add_default_profile,source/saved games/saved_game_files.c,,void
+00217080,saved_game_files_add_built_in_variant,source/saved games/saved_game_files.c,stack,void
+002172a0,cached_saved_game_file_delete,source/saved games/saved_game_files.c,eax,void
+001a0750,player_profile_set_defaults,source/saved games/player_profile.c,edx,void

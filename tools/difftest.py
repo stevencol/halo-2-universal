@@ -148,8 +148,13 @@ class Buffer:
     # global: what is there is compared as the place it points to, as are the
     # pointers to functions
     places: tuple[int, ...] = ()
+    # takes what the call left in the buffer and returns what to compare of
+    # it: to leave out what the game copies from memory that it never set
+    clean: object = None
 
     def values(self, data: bytes) -> tuple | bytes:
+        if self.clean:
+            data = self.clean(data)
         return struct.unpack(self.format, data) if self.format else data
 
 
