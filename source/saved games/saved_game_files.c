@@ -6,7 +6,7 @@ gives the address it has there.
 
 The files that the players keep: profiles, variants of the games and
 playlists. The names of the functions are guesses. The file goes from
-0x00215790 to 0x00217590; not here: 0x002170e0.
+0x00215790 to 0x00217590.
 */
 
 #include "saved_game_files.h"
@@ -1556,6 +1556,94 @@ void saved_game_files_find_unit_files(
 		}
 	} while (XFindNextSaveGame(handle, &data));
 	XFindClose(handle);
+}
+
+/* 0x002170e0: the index that a file has now, from one that it had; NONE if
+it is not known any more.
+
+While the memory of the files is the one that the index was made with, the
+index is good as long as its salt is that of the memory. When the memory was
+given back and taken again, and the files that were kept are still to be
+looked for: a file of the hard disk is the one of its type that has the
+directory that was kept of it, and it is kept again with its new index. A
+file that was not kept is not expected here: the game looks at what was kept
+of it without seeing whether there is anything */
+long saved_game_file_get_current_index(
+	long file)
+{
+	const byte *files= unknown_0051ea14;
+	long type= file&SAVED_GAME_FILE_INDEX_TYPE_MASK;
+	long current= NONE;
+
+	if (!saved_game_files_cache_valid)
+	{
+		unsigned long salt= *(const uint32_t *)(files+UNKNOWN_0051EA14_SALT_OFFSET);
+
+		if (salt!=(unsigned long)((file>>SAVED_GAME_FILE_INDEX_SALT_SHIFT)&SAVED_GAME_FILE_INDEX_SALT_MASK))
+		{
+			return NONE;
+		}
+		if (!((file>>_saved_game_file_index_built_in_bit)&1))
+		{
+			return file;
+		}
+
+		return (long)(((salt&SAVED_GAME_FILE_INDEX_SALT_MASK)<<SAVED_GAME_FILE_INDEX_SALT_SHIFT) |
+			(1UL<<_saved_game_file_index_built_in_bit) |
+			(((unsigned long)(file>>SAVED_GAME_FILE_INDEX_FILE_SHIFT)&SAVED_GAME_FILE_INDEX_FILE_MASK)<<
+				SAVED_GAME_FILE_INDEX_FILE_SHIFT) |
+			(unsigned long)type);
+	}
+	else
+	{
+		const struct cached_saved_game_file *cached= cached_saved_game_file_get(file);
+		char letter;
+
+		if ((file>>_saved_game_file_index_built_in_bit)&1)
+		{
+			unsigned long salt= *(const uint32_t *)((const byte *)unknown_0051ea14+UNKNOWN_0051EA14_SALT_OFFSET)&
+				SAVED_GAME_FILE_INDEX_SALT_MASK;
+
+			current= (long)((salt<<SAVED_GAME_FILE_INDEX_SALT_SHIFT) |
+				(1UL<<_saved_game_file_index_built_in_bit) |
+				(((unsigned long)(file>>SAVED_GAME_FILE_INDEX_FILE_SHIFT)&SAVED_GAME_FILE_INDEX_FILE_MASK)<<
+					SAVED_GAME_FILE_INDEX_FILE_SHIFT) |
+				(unsigned long)type);
+		}
+		else if (files && input_get_unit_drive_letter(0, &letter))
+		{
+			const struct saved_game_file_table *table=
+				(const struct saved_game_file_table *)(files+UNKNOWN_0051EA14_TABLES_OFFSET);
+			struct saved_game_file_information information;
+			long index;
+
+			information.path[0]= 0;
+			information.name[0]= 0;
+			for (index= 0; index<table->count; index++)
+			{
+				information= table->files[index];
+				if (information.type==type &&
+					!strncmp(cached->information.path, information.path, sizeof(information.path)))
+				{
+					unsigned long salt= *(const uint32_t *)((const byte *)unknown_0051ea14+UNKNOWN_0051EA14_SALT_OFFSET)&
+						SAVED_GAME_FILE_INDEX_SALT_MASK;
+
+					current= (long)((salt<<SAVED_GAME_FILE_INDEX_SALT_SHIFT) |
+						(((unsigned long)index&SAVED_GAME_FILE_INDEX_FILE_MASK)<<SAVED_GAME_FILE_INDEX_FILE_SHIFT) |
+						(unsigned long)type);
+					break;
+				}
+			}
+		}
+		cached_saved_game_file_delete(file);
+		if (current!=NONE)
+		{
+			cached_saved_game_file_count++;
+			cached_saved_game_files[cached_saved_game_file_count-1].file= current;
+		}
+
+		return current;
+	}
 }
 
 /* 0x00215e60: deletes a file: the saved game that the console shows with

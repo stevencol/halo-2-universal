@@ -284,6 +284,7 @@ struct saved_game_file_information *ALLOCATION_CONVENTION saved_game_file_inform
 wchar *saved_game_file_get_name(long file, wchar *name);
 long saved_game_file_create(long type, const wchar *name);
 void saved_game_file_delete(long file);
+long saved_game_file_get_current_index(long file);
 boolean saved_game_file_get_unused_name(long type, wchar *name);
 char *saved_game_files_get_unit_root(long unit_index, char *root, short size);
 long saved_game_file_type_from_variant(const struct game_variant *variant);

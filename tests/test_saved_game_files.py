@@ -1147,3 +1147,86 @@ def run(t) -> None:
                 "usnzprintf": message,
             },
         )
+
+    # ---------- the index that a file has now
+
+    def an_information(path: bytes, type_: int) -> bytes:
+        data = bytearray(random_.randbytes(INFORMATION))
+        data[:0x14] = (path + bytes(0x14))[:0x14]
+        struct.pack_into("<I", data, 0x38, type_)
+        return bytes(data)
+
+    def kept(entries: list) -> bytes:
+        """The files that are kept while the memory of the files is not the
+        game's: the index of each, and what the game knew of it."""
+        data = bytearray(random_.randbytes(4 * CACHED))
+        for n, (file, information_) in enumerate(entries):
+            struct.pack_into("<I", data, n * CACHED, file)
+            data[n * CACHED + 4 : (n + 1) * CACHED] = information_
+        return bytes(data)
+
+    def table_of(entries: list, salt: int) -> Buffer:
+        data = bytearray(FILES_SIZE)
+        struct.pack_into("<i", data, TABLES, len(entries))
+        for n, information_ in enumerate(entries):
+            data[TABLES + 4 + n * INFORMATION : TABLES + 4 + (n + 1) * INFORMATION] = information_
+        struct.pack_into("<I", data, SALT, salt)
+        return Buffer(bytes(data))
+
+    current_paths = (b"u:\\0123456789AB\\", b"u:\\0123456789AC\\", b"", b"d" * 0x13, b"d" * 0x14, b"d" * 0x13 + b"e", b"u:\\0123")
+    for n in range(260):
+        type_ = random_.randrange(11)
+        built = random_.random() < 0.3
+        file_salt = random_.randrange(0x200)
+        file = index(type_, random_.choice((0, 0, 1)), random_.randrange(0x2000), int(built), file_salt, random_.getrandbits(1))
+        path = random_.choice(current_paths)
+        mask = random_.choice((0xFFFF, 0xFFFF, 1, 1, 0, 0xFFFE))
+        if n % 4 == 0:
+            # the memory is the one that the index was made with, or another
+            salt = random_.choice((file_salt, file_salt, file_salt ^ 1, file_salt | 0x200, random_.getrandbits(32)))
+            entries = [(index(random_.randrange(11), 0, random_.randrange(8)), an_information(random_.choice(current_paths), type_)) for _ in range(3)]
+            t.check(
+                "saved_game_file_get_current_index",
+                file,
+                globals={
+                    "saved_game_files_cache_valid": b"\x00",
+                    "cached_saved_game_file_count": random_.randrange(4),
+                    "cached_saved_game_files": kept(entries),
+                    "unknown_0051ea14": table_of([an_information(path, type_) for _ in range(3)], salt),
+                    "input_globals": input_globals(random_, mask),
+                },
+            )
+            continue
+
+        cached = built and random_.random() < 0.5 or not built and random_.random() < 0.8
+        entries = [(random_.choice((NONE, file ^ 0x100, file ^ 1, index(random_.randrange(11), 0, random_.randrange(8)))), an_information(random_.choice(current_paths), random_.randrange(11))) for _ in range(random_.randrange(3))]
+        if cached:
+            entries.insert(random_.randrange(len(entries) + 1), (file, an_information(path, random_.randrange(11))))
+        # the files of the hard disk: of the type or not, with the directory
+        # that was kept or with another
+        table = [
+            an_information(random_.choice((path, path, random_.choice(current_paths))), random_.choice((type_, type_, type_ ^ 1, type_ | 0x10)))
+            for _ in range(random_.choice((0, 1, 3, 6)))
+        ]
+        files_ = table_of(table, random_.getrandbits(32))
+        if not cached and not built:
+            # the game looks at what was kept of the file without seeing
+            # whether there is anything: it is not to get that far
+            safe = random_.randrange(3)
+            if safe == 0:
+                files_ = 0
+            elif safe == 1:
+                mask &= ~1
+            else:
+                files_ = table_of([an_information(path, type_ ^ 1) for _ in range(3)], random_.getrandbits(32))
+        t.check(
+            "saved_game_file_get_current_index",
+            file,
+            globals={
+                "saved_game_files_cache_valid": random_.choice((b"\x01", b"\x01", b"\x80")),
+                "cached_saved_game_file_count": len(entries),
+                "cached_saved_game_files": kept(entries),
+                "unknown_0051ea14": files_,
+                "input_globals": input_globals(random_, mask),
+            },
+        )

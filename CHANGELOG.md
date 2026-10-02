@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — El índice que un archivo tiene ahora: `saved_game_files.c`, completo
+
+Una función. De 539 funciones se pasa a 540, el 4,79 % de las del juego (el
+2,358 % de sus bytes). Con ella están las 48 funciones de
+`saved_game_files.c`.
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `saved_game_file_get_current_index` | `0x002170e0` | `saved games/saved_game_files.c` |
+
+### Lo que se sabe
+
+- El índice de un archivo deja de valer cuando la memoria de los archivos se
+  devuelve y se vuelve a pedir (al cambiar de mapa): la sal es otra. Esta
+  función da el índice de ahora a partir del de antes, o −1 si ya no se sabe
+  cuál es.
+- Con la memoria de siempre basta mirar la sal: si es la del índice, vale.
+  El juego compara la sal del índice con el número entero de la memoria, sin
+  quitarle los bits de más.
+- Con la memoria recién pedida se usa lo que se guardó de cada archivo (hasta
+  cuatro): un archivo del disco duro es el de su tipo cuyo directorio es el
+  guardado, y se vuelve a guardar con el índice nuevo. Uno de serie conserva
+  su sitio y solo cambia de sal.
+- Si de un archivo del disco duro no se guardó nada, el juego mira lo
+  guardado sin comprobar que haya algo (un puntero nulo). Solo se libra si no
+  hay ningún archivo de su tipo. Se reproduce tal cual.
+- Al volver a guardar, solo se apunta el índice: lo que se sabía del archivo
+  es lo que hubiera en ese hueco.
+
+### Sin comprobar
+
+- El caso del puntero nulo, y el de guardar un quinto archivo (escribe fuera
+  de la tabla de los guardados): en el juego es memoria ajena.
+
+### Mutaciones
+
+30 líneas rotas a propósito: las 30 detectadas.
+
 ## 2026-10-02 — Buscar los archivos de una unidad
 
 Una función. De 538 funciones se pasa a 539, el 4,78 % de las del juego (el
