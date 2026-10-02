@@ -82,6 +82,42 @@ struct text_iterator
 };
 #pragma pack(pop)
 
+/* a rectangle of pixels: its top, left, bottom and right */
+struct rectangle2d
+{
+	short y0;
+	short x0;
+	short y1;
+	short x1;
+};
+
+/* where a text ends */
+struct draw_string_point
+{
+	short x;
+	short y;
+};
+
+/* 0x004e7394: the bounds of the text that is measured, and how much the
+font that it is measured with goes up and down from the line */
+struct draw_string_bounds
+{
+	struct rectangle2d bounds;
+	short ascending_height;
+	short descending_height;
+};
+
+/* what is done with each character of a text that is gone through: it is
+told where the text is gone through, the font, the character, its colour,
+where what is seen of it is and how wide and high it is, how much of it is
+not seen at its left and at its top, and the scale. It takes its arguments
+off the stack itself */
+#define DRAW_STRING_CALLBACK __attribute__((stdcall))
+
+typedef void (DRAW_STRING_CALLBACK *draw_string_character_proc)(const struct text_iterator *iterator,
+	long font_index, long character, unsigned long color, long unknown5, real x, real y, real skipped_width,
+	real skipped_height, real width, real height, real scale, long unknown13, long unknown14);
+
 /* 0x004e73a0: how the texts are drawn */
 struct draw_string_globals
 {
@@ -96,11 +132,15 @@ struct draw_string_globals
 	byte unknown34[8];
 	short tab_stop_count;
 	short tab_stops[MAXIMUM_NUMBER_OF_TAB_STOPS];
-	byte pad5E[2];
+	/* how far from the left of where a text is drawn its first line begins,
+	and the others */
+	short first_line_indent;
+	short line_indent;
+	byte pad62[2];
 };
 
 typedef char verify_draw_string_globals_size[
-	sizeof(struct draw_string_globals) == 0x60 ? 1 : -1];
+	sizeof(struct draw_string_globals) == 0x64 ? 1 : -1];
 typedef char verify_draw_string_globals_tab_stop_count_offset[
 	offsetof(struct draw_string_globals, tab_stop_count) == 0x3C ? 1 : -1];
 
@@ -111,6 +151,14 @@ typedef char verify_text_iterator_element_offset[
 
 /* ---------- prototypes/DRAW_STRING.C */
 
+void draw_string_initialize(void);
+void DRAW_STRING_CALLBACK draw_string_bounds_character(const struct text_iterator *iterator, long font_index,
+	long character, unsigned long color, long unknown5, real x, real y, real skipped_width, real skipped_height,
+	real width, real height, real scale, long unknown13, long unknown14);
+void draw_string_get_bounds(const wchar *string, const struct rectangle2d *rectangle, struct rectangle2d *bounds,
+	struct rectangle2d *cursor, real scale);
+void draw_string_get_characters_bounds(struct rectangle2d *cursor, struct rectangle2d *bounds,
+	const struct rectangle2d *rectangle, const long *characters, real scale);
 void draw_string_set_tab_stops(short count, const short *tab_stops);
 void draw_string_set_color_exact(const real_argb_color *color);
 void draw_string_set_color(const real_argb_color *color);

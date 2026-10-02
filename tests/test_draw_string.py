@@ -86,7 +86,7 @@ def run(t) -> None:
 
     # ---------- how the texts are drawn
 
-    GLOBALS_SIZE = 0x60
+    GLOBALS_SIZE = 0x64
 
     def how(font_index: int | None = None) -> bytes:
         """How the texts are drawn: with colours that are colours."""
@@ -197,3 +197,167 @@ def run(t) -> None:
             values = [0.5, others, others, others]
             values[at] = nan
             t.check("draw_string_set_color", color(*values), globals={"draw_string_globals": how()})
+
+    # ---------- measuring a text
+
+    BOUNDS_SIZE, FONT_SIZE = 12, 0x1D0
+
+    def a_font():
+        # the font that there is, or none: the same in all the calls of a check
+        font = Buffer(random_.randbytes(FONT_SIZE))
+        there = random_.choice((True, True, False))
+        return font, lambda harness, arguments: font.address if there else 0
+
+    for n in range(40):
+        t.check(
+            "draw_string_initialize",
+            globals={"draw_string_globals": random_.randbytes(GLOBALS_SIZE)},
+        )
+
+    def real_bits(value: float) -> int:
+        return struct.unpack("<I", struct.pack("<f", value))[0]
+
+    reals = (0.0, 1.0, -1.0, 0.5, -0.5, 100.25, -100.75, 639.0, 479.5, 32766.5, -32768.5, 40000.0, float("nan"))
+    for n in range(300):
+        font, get = a_font()
+        bounds = [random_.choice((0x7FFF, -0x8000, 0, random_.randrange(-700, 700))) for _ in range(4)]
+        x = random_.choice((*reals, float(bounds[1]), bounds[1] + 0.5, bounds[1] - 0.5, random_.uniform(-800, 800)))
+        y = random_.choice((*reals, float(bounds[0]), bounds[0] + 0.5, bounds[0] - 0.5, random_.uniform(-800, 800)))
+        scale = random_.choice((1.0, 1.0, 0.5, 2.0, 0.0, -1.0, random_.uniform(0, 3), float("nan")))
+        # so that the right and the bottom of the character are at times
+        # where those of the bounds are
+        width = random_.choice((0.0, 1.0, 13.0, random_.uniform(0, 60), float(bounds[3]) - x - 1.0, float("nan")))
+        height = random_.choice((0.0, 1.0, 17.0, random_.uniform(0, 60), float(bounds[2]) - y - 1.0, float("nan")))
+        t.check(
+            "draw_string_bounds_character",
+            random_.getrandbits(32),
+            random_.randrange(11),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            real_bits(x),
+            real_bits(y),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            real_bits(width),
+            real_bits(height),
+            real_bits(scale),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            globals={
+                "draw_string_bounds": struct.pack("<4h", *bounds) + random_.randbytes(4),
+                "font_slot_indices": fonts(),
+            },
+            extra=[font],
+            externals={"font_get": get},
+        )
+
+    def measure(harness, arguments, end, characters_seen):
+        proc, unknown1, place, unknown3, unknown4, unknown5, characters = arguments
+        harness.mu.mem_write(place, end)
+        text = []
+        while len(text) < 0x900:
+            (value,) = struct.unpack("<i", harness.mu.mem_read(characters + 4 * len(text), 4))
+            text.append(value)
+            if not value:
+                break
+        characters_seen.append(tuple(text))
+        return 0, (harness.normalize(proc), unknown1, unknown3, unknown4, unknown5, tuple(text))
+
+    for n in range(150):
+        font, get = a_font()
+        end = struct.pack("<2h", *(random_.choice((0, 1, -1, 0x7FFF, -0x8000, random_.randrange(-700, 700))) for _ in range(2)))
+        text = [random_.randrange(1, 0x10000) for _ in range(random_.choice((0, 1, 5, 40)))] + [0]
+        seen = []
+        t.check(
+            "draw_string_get_characters_bounds",
+            Buffer(random_.randbytes(8)),
+            Buffer(random_.randbytes(8)),
+            random_.getrandbits(32),
+            Buffer(struct.pack(f"<{len(text)}i", *text)),
+            random_.getrandbits(32),
+            globals={
+                "draw_string_bounds": random_.randbytes(BOUNDS_SIZE),
+                "draw_string_globals": struct.pack("<i", random_.randrange(11)) + random_.randbytes(GLOBALS_SIZE - 4),
+                "font_slot_indices": fonts(),
+            },
+            extra=[font],
+            externals={
+                "font_get": get,
+                "unknown_0013f0e0": lambda harness, arguments, end=end, seen=seen: measure(harness, arguments, end, seen),
+            },
+        )
+
+    # the stand-in of the function that goes through the text changes the
+    # bounds, as the game's does with the function that it is given
+    for n in range(60):
+        font, get = a_font()
+        end = struct.pack("<2h", random_.randrange(-700, 700), random_.randrange(-700, 700))
+        grown = struct.pack("<6h", *(random_.randrange(-700, 700) for _ in range(6)))
+        text = [random_.randrange(1, 0x10000) for _ in range(3)] + [0]
+
+        def grow(harness, arguments, end=end, grown=grown):
+            # both heights, only at times: so that it is seen that they are
+            # read after the text is gone through
+            harness.mu.mem_write(harness.global_addresses["draw_string_bounds"], grown)
+            return measure(harness, arguments, end, [])
+
+        t.check(
+            "draw_string_get_characters_bounds",
+            Buffer(random_.randbytes(8)),
+            Buffer(random_.randbytes(8)),
+            random_.getrandbits(32),
+            Buffer(struct.pack(f"<{len(text)}i", *text)),
+            random_.getrandbits(32),
+            globals={
+                "draw_string_bounds": random_.randbytes(BOUNDS_SIZE),
+                "draw_string_globals": struct.pack("<i", random_.randrange(11)) + random_.randbytes(GLOBALS_SIZE - 4),
+                "font_slot_indices": fonts(),
+            },
+            extra=[font],
+            externals={"font_get": get, "unknown_0013f0e0": grow},
+        )
+
+    def game_text(count: int) -> bytes:
+        units = []
+        while len(units) < count:
+            kind = random_.randrange(8)
+            if kind == 0:
+                units.append(ord("|"))
+                units.append(random_.choice((ord("n"), ord("t"), ord("r"), ord("l"), ord("c"), ord("x"), ord("|"), ord("N"))))
+            else:
+                units.append(random_.choice((random_.randrange(1, 0x80), random_.randrange(0x80, 0x10000))))
+        return struct.pack(f"<{len(units) + 1}H", *units, 0)
+
+    for n in range(60):
+        count = random_.choice((0, 1, 2, 7, 30, 30, 200))
+        if n < 6:
+            # longer than what is taken of a text
+            count = (2046, 2047, 2048, 2049, 2500, 4000)[n]
+        end = struct.pack("<2h", random_.randrange(-700, 700), random_.randrange(-700, 700))
+        seen = []
+        font, get = a_font()
+        data = game_text(count)
+        if n % 10 == 9:
+            # a bar at the end
+            data = data[:-2] + struct.pack("<2H", ord("|"), 0)
+        t.check(
+            "draw_string_get_bounds",
+            Buffer(data + random_.randbytes(8)),
+            random_.getrandbits(32),
+            Buffer(random_.randbytes(8)),
+            Buffer(random_.randbytes(8)),
+            random_.getrandbits(32),
+            globals={
+                "draw_string_bounds": random_.randbytes(BOUNDS_SIZE),
+                "draw_string_globals": struct.pack("<i", random_.randrange(11)) + random_.randbytes(GLOBALS_SIZE - 4),
+                "font_slot_indices": fonts(),
+                "unicode_escape_note_time": 0,
+            },
+            extra=[font],
+            externals={
+                "font_get": get,
+                "GetTickCount": lambda harness, arguments: 77,
+                "unknown_0013f0e0": lambda harness, arguments, end=end, seen=seen: measure(harness, arguments, end, seen),
+            },
+        )

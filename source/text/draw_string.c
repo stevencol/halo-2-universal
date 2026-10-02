@@ -18,15 +18,180 @@ these functions are of it is a guess, and so are their names.
 
 /* ---------- prototypes of functions that are not decompiled */
 
+/* 0x0013f0e0: goes through the characters of a text as they are drawn in a
+rectangle, by a scale, and calls a function with each one that is not out
+of another rectangle, if there is one; where the text ends is left in a
+place. The lines can be farther from each other than the font says */
+void DRAW_STRING_CALLBACK unknown_0013f0e0(draw_string_character_proc proc, const struct rectangle2d *rectangle,
+	struct draw_string_point *end, const struct rectangle2d *clip, short leading, real scale, const long *characters);
+
 /* ---------- globals */
 
 /* 0x004e73a0: how texts are drawn */
 struct draw_string_globals draw_string_globals;
 
+/* 0x004e7394: the bounds of the text that is measured, and two heights of
+its font */
+struct draw_string_bounds draw_string_bounds;
+
 /* 0x004e28f4: the place of each font */
 long font_slot_indices[NUMBER_OF_FONTS];
 
 /* ---------- code */
+
+/* the characters of a text of the game, in which a bar and a letter are an
+order (unicode_escape_character): 2047 at most, and their end. The game has
+this in each function that takes a text */
+static inline __attribute__((always_inline)) void draw_string_parse(
+	const wchar *string,
+	long *characters)
+{
+	long count;
+
+	for (count= MAXIMUM_DRAW_STRING_CHARACTERS; count>0; count--)
+	{
+		long value;
+
+		if (count==1)
+		{
+			*characters= 0;
+			break;
+		}
+		value= *string++;
+		if (value=='|')
+		{
+			boolean found= FALSE;
+
+			value= unicode_escape_character(*string, &found);
+			if (found)
+			{
+				string++;
+			}
+		}
+		*characters++= value;
+		if (!value)
+		{
+			break;
+		}
+	}
+}
+
+/* 0x0013e8a0: texts are drawn with the first font, white, with no shadow and
+no tabs, to the left */
+void draw_string_initialize(
+	void)
+{
+	memset(&draw_string_globals, 0, sizeof(draw_string_globals));
+	draw_string_globals.font_index= 0;
+	draw_string_globals.tab_stop_count= 0;
+	draw_string_globals.flags= 0;
+	draw_string_globals.justification= 0;
+	draw_string_globals.first_line_indent= 0;
+	draw_string_globals.line_indent= 0;
+	draw_string_set_color(global_real_argb_white);
+}
+
+/* 0x0013e8e0: what is done with each character when a text is measured: the
+bounds of the text grow to hold it. What is seen of the character is so wide
+and so high, by a scale, from a place; of what else is told of it, only the
+font is looked at */
+void DRAW_STRING_CALLBACK draw_string_bounds_character(
+	const struct text_iterator *iterator,
+	long font_index,
+	long character,
+	unsigned long color,
+	long unknown5,
+	real x,
+	real y,
+	real skipped_width,
+	real skipped_height,
+	real width,
+	real height,
+	real scale,
+	long unknown13,
+	long unknown14)
+{
+	const struct font *font= font_get(font_slot_indices[font_index]);
+	real right= width*scale + x + 1.0f;
+	real bottom= height*scale + y + 1.0f;
+
+	(void)iterator;
+	(void)character;
+	(void)color;
+	(void)unknown5;
+	(void)skipped_width;
+	(void)skipped_height;
+	(void)unknown13;
+	(void)unknown14;
+
+	if ((real)draw_string_bounds.bounds.x0>x)
+	{
+		draw_string_bounds.bounds.x0= (short)(long)x;
+	}
+	if ((real)draw_string_bounds.bounds.y0>y)
+	{
+		draw_string_bounds.bounds.y0= (short)(long)y;
+	}
+	if (right>(real)draw_string_bounds.bounds.x1)
+	{
+		draw_string_bounds.bounds.x1= (short)(long)right;
+	}
+	if (bottom>(real)draw_string_bounds.bounds.y1)
+	{
+		draw_string_bounds.bounds.y1= (short)(long)bottom;
+	}
+	if (font)
+	{
+		draw_string_bounds.ascending_height= font->ascending_height;
+		draw_string_bounds.descending_height= font->descending_height;
+	}
+}
+
+/* 0x0013e9c0: how much room a text of the game takes, drawn in a rectangle
+by a scale: see draw_string_get_characters_bounds */
+void draw_string_get_bounds(
+	const wchar *string,
+	const struct rectangle2d *rectangle,
+	struct rectangle2d *bounds,
+	struct rectangle2d *cursor,
+	real scale)
+{
+	long characters[MAXIMUM_DRAW_STRING_CHARACTERS];
+
+	draw_string_parse(string, characters);
+	draw_string_get_characters_bounds(cursor, bounds, rectangle, characters, scale);
+}
+
+/* 0x0013ea60: how much room the characters of a text take, with how texts
+are drawn now: the text is gone through as if it were drawn, and each
+character makes the bounds grow. Also where the text ends: a place one pixel
+wide, as high as a line */
+void draw_string_get_characters_bounds(
+	struct rectangle2d *cursor,
+	struct rectangle2d *bounds,
+	const struct rectangle2d *rectangle,
+	const long *characters,
+	real scale)
+{
+	const struct font *font= font_get(font_slot_indices[draw_string_globals.font_index]);
+	struct draw_string_point end;
+
+	draw_string_bounds.bounds.y0= 0x7FFF;
+	draw_string_bounds.bounds.x0= 0x7FFF;
+	draw_string_bounds.bounds.y1= -0x8000;
+	draw_string_bounds.bounds.x1= -0x8000;
+	if (font)
+	{
+		draw_string_bounds.ascending_height= font->ascending_height;
+		draw_string_bounds.descending_height= font->descending_height;
+	}
+	unknown_0013f0e0(draw_string_bounds_character, rectangle, &end, NULL, 0, scale, characters);
+	cursor->x0= end.x;
+	cursor->x1= end.x+1;
+	cursor->y0= end.y-draw_string_bounds.ascending_height;
+	cursor->y1= draw_string_bounds.descending_height+end.y;
+	*bounds= draw_string_bounds.bounds;
+}
 
 /* 0x0013eb20: where the tabs of the texts that are drawn are: 16 at most */
 void draw_string_set_tab_stops(
@@ -178,35 +343,8 @@ boolean draw_string_precache_string(
 	long font_index)
 {
 	long characters[MAXIMUM_DRAW_STRING_CHARACTERS];
-	long *character= characters;
-	long count;
 
-	for (count= MAXIMUM_DRAW_STRING_CHARACTERS; count>0; count--)
-	{
-		long value;
-
-		if (count==1)
-		{
-			*character= 0;
-			break;
-		}
-		value= *string++;
-		if (value=='|')
-		{
-			boolean found= FALSE;
-
-			value= unicode_escape_character(*string, &found);
-			if (found)
-			{
-				string++;
-			}
-		}
-		*character++= value;
-		if (!value)
-		{
-			break;
-		}
-	}
+	draw_string_parse(string, characters);
 
 	return draw_string_precache_characters(characters, font_index);
 }

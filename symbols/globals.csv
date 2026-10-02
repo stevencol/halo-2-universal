@@ -137,3 +137,5 @@ address,name,source
 0054d570,font_cache_globals,source/text/font_cache.c
 004b62b0,font_glyph_slots,source/text/font_cache.c
 004687f0,font_directory,source/text/fonts.c
+004e7394,draw_string_bounds,source/text/draw_string.c
+004686cc,global_real_argb_white,source/math/real_math.c

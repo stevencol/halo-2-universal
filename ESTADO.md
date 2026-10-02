@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 94.
+**Última actualización:** 2026-10-02, al terminar el hito 95.
 
 ## Dónde estamos
 
-- **621 funciones descompiladas de 11.265: el 5,51 % del juego** (el
-  2,738 % de los bytes de código).
-- Las 621 están comprobadas contra el ejecutable original
+- **625 funciones descompiladas de 11.265: el 5,55 % del juego** (el
+  2,751 % de los bytes de código).
+- Las 625 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile loading a font* (ver `git log`).
+- Último hito: *Decompile measuring a text* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -100,8 +100,8 @@ Módulos (funciones hechas / archivo):
 - [x] Fuentes — `text\fonts.c` (6: completo)
 - [x] Caché de los caracteres de las fuentes — `text\font_cache.c` (28:
       completo; va de `0x001406b0` a `0x00141480`)
-- [ ] Dibujar texto — `text\draw_string.c` (12; faltan las que miden y
-      dibujan: `0x0013e9c0`, `0x0013ea60`, `0x0013ef40`, `0x0013f0e0` y
+- [ ] Dibujar texto — `text\draw_string.c` (16; faltan las que recorren
+      el texto: `0x0013ef40`, que mide una línea, `0x0013f0e0` y
       `0x0013f700`)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
 - [ ] Matemáticas reales — `math\real_math.c` (21 de unas 50)

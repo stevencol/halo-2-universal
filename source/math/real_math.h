@@ -120,6 +120,10 @@ typedef char verify_real_matrix3x3_size[
 typedef char verify_real_matrix4x3_size[
 	sizeof(real_matrix4x3) == 0x34 ? 1 : -1];
 
+/* ---------- globals */
+
+extern const real_argb_color *global_real_argb_white;
+
 /* ---------- prototypes/REAL_MATH.C */
 
 real normalize2d(real_vector2d *vector);

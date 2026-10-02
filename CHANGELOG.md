@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Medir un texto
+
+Cuatro funciones. De 621 funciones se pasa a 625, el 5,55 % de las del
+juego (el 2,751 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `draw_string_initialize` | `0x0013e8a0` | `text/draw_string.c` |
+| `draw_string_bounds_character` | `0x0013e8e0` | `text/draw_string.c` |
+| `draw_string_get_bounds` | `0x0013e9c0` | `text/draw_string.c` |
+| `draw_string_get_characters_bounds` | `0x0013ea60` | `text/draw_string.c` |
+
+También el global `global_real_argb_white` (`0x004686cc`, en
+`math/real_math.c`) y `draw_string_bounds` (`0x004e7394`).
+
+### Lo que se sabe
+
+- Al empezar, los textos se dibujan con la primera fuente, en blanco, sin
+  sombra, sin tabuladores y a la izquierda.
+- Lo que se sabe de cómo se dibujan los textos ocupa `0x64` bytes, no
+  `0x60`: al final hay dos sangrías, la de la primera línea y la de las
+  demás.
+- **Medir un texto es recorrerlo como si se dibujara**, pero dándole a la
+  función que lo recorre (`0x0013f0e0`, aún sin descompilar) otra cosa que
+  hacer con cada carácter: en vez de pintarlo, agrandar un rectángulo hasta
+  que quepa. El rectángulo empieza «al revés» (`0x7FFF` arriba y a la
+  izquierda, `-0x8000` abajo y a la derecha) y cada carácter lo estira.
+- De cada carácter se le dice a esa función, entre otras cosas: por dónde va
+  el recorrido, la fuente, el carácter, su color, dónde queda lo que se ve
+  de él, cuánto mide y la escala. Son 14 argumentos, y la función los quita
+  ella misma de la pila.
+- Además del rectángulo, medir da **dónde acaba el texto**: un sitio de un
+  píxel de ancho y tan alto como una línea de la fuente (lo que sube y lo
+  que baja desde la línea).
+- El texto del juego se convierte primero en caracteres de 32 bits (2047
+  como mucho), cambiando cada barra `|` y su letra por la orden que es. El
+  juego repite ese trozo en cada función que recibe un texto; aquí es una
+  sola función en línea.
+
+### Mutaciones
+
+63 líneas rotas a propósito: las 63 detectadas.
+
 ## 2026-10-02 — Cargar una fuente: `fonts.c`, completo
 
 Dos funciones. De 619 funciones se pasa a 621, el 5,51 % de las del juego

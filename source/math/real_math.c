@@ -9,6 +9,13 @@ gives the address it has there.
 
 #include <math.h>
 
+/* ---------- globals */
+
+static const real_argb_color real_argb_white= { 1.0f, { 1.0f, 1.0f, 1.0f } };
+
+/* 0x004686cc: white that hides all that is behind it. The name is Halo 1's */
+const real_argb_color *global_real_argb_white= &real_argb_white;
+
 /* ---------- code */
 
 /* 0x0002b400: as normalize3d */

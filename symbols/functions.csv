@@ -985,3 +985,8 @@ address,name,source,arguments,returns,convention
 00140960,font_character_get_pixels,source/text/font_cache.c,eax stack,bool
 001222d0,font_load_work,source/text/fonts.c,stack,int
 001223a0,font_load,source/text/fonts.c,eax ecx stack,void
+0013e8a0,draw_string_initialize,source/text/draw_string.c,,void
+0013e8e0,draw_string_bounds_character,source/text/draw_string.c,stack stack stack stack stack stack stack stack stack stack stack stack stack stack,void,stdcall
+0013e9c0,draw_string_get_bounds,source/text/draw_string.c,ecx stack stack stack stack,void
+0013ea60,draw_string_get_characters_bounds,source/text/draw_string.c,esi edi stack stack stack,void
+0013f0e0,unknown_0013f0e0,,stack stack stack stack stack stack stack,void,stdcall
