@@ -63,3 +63,15 @@ def run(t) -> None:
             t.check("character_is_east_asian", character)
     for character in (0, 0x41, 0x10000, -1, 0x7FFFFFFF):
         t.check("character_is_east_asian", character)
+
+    # ---------- formatted text
+
+    def wide_text(value: str) -> Buffer:
+        return Buffer(value.encode("utf-16-le") + bytes(2))
+
+    # no %c or %s: the C library of the tests takes the format as one of
+    # characters of 8 bits
+    for format_ in ("Halo%04d", "%d", "x%5dy", "", "%-6d|", "%x and %X", "no number"):
+        for count in (0x80, 9, 5, 2, 1):
+            for value in (0, 1, 42, 4096, 65, 0x7FFFFFFF, 0xFFFFFFFF):
+                t.check("usnzprintf", Buffer(random_.randbytes(0x108)), count, wide_text(format_), value)

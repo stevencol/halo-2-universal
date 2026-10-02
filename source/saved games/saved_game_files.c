@@ -6,8 +6,8 @@ gives the address it has there.
 
 The files that the players keep: profiles, variants of the games and
 playlists. The names of the functions are guesses. The file goes from
-0x00215790 to 0x00217590; not here: 0x00215900, 0x00215c00, 0x00215e60,
-0x00215f40, 0x002164c0 and 0x002170e0.
+0x00215790 to 0x00217590; not here: 0x00215900, 0x00215c00, 0x002164c0 and
+0x002170e0.
 */
 
 #include "saved_game_files.h"
@@ -40,6 +40,9 @@ What they tell of each (XGAME_FIND_DATA) is not looked at */
 uint32_t XFindFirstSaveGame(const char *root, void *data);
 int XFindNextSaveGame(uint32_t handle, void *data);
 int XFindClose(uint32_t handle);
+
+/* 0x00331055: deletes the saved game that the console shows with a name */
+uint32_t XDeleteSaveGame(const char *root, const wchar *name);
 
 /* 0x00330df2: makes the directory of a saved game, or finds the one that
 there is, by the name that the console shows of it. 0 if it does */
@@ -1256,4 +1259,88 @@ wchar *saved_game_file_get_name(
 	}
 
 	return name;
+}
+
+/* 0x00215e60: deletes a file: the saved game that the console shows with
+its name, if it is of a drive that is there, and what the game knows of it.
+The game waits until the files of the drives have been looked for */
+void saved_game_file_delete(
+	long file)
+{
+	struct saved_game_file_information information;
+	long unit_index;
+
+	if (file==NONE)
+	{
+		return;
+	}
+	while (!*(volatile boolean *)&unknown_0055c14c)
+	{
+		SwitchToThread();
+		sound_idle();
+	}
+	unit_index= (file>>SAVED_GAME_FILE_INDEX_UNIT_SHIFT)&SAVED_GAME_FILE_INDEX_UNIT_MASK;
+	information.path[0]= 0;
+	information.name[0]= 0;
+	if (!saved_game_file_get_information(&information, file))
+	{
+		return;
+	}
+	if (!((file>>_saved_game_file_index_built_in_bit)&1))
+	{
+		char root[SAVED_GAME_FILE_ROOT_LENGTH]= { 0 };
+		char letter;
+
+		if (input_get_unit_drive_letter(unit_index, &letter))
+		{
+			wchar display_name[SAVED_GAME_FILE_DISPLAY_NAME_LENGTH];
+
+			display_name[0]= 0;
+			saved_game_file_get_display_name(file&SAVED_GAME_FILE_INDEX_TYPE_MASK, display_name, information.name,
+				(char)information.language);
+			XDeleteSaveGame(saved_game_files_get_unit_root(unit_index, root, sizeof(root)), display_name);
+		}
+	}
+	saved_game_file_delete_information(file);
+}
+
+/* 0x00215f40: a name for a new file of a type that no saved game of the
+hard disk has: "Halo" and a number, the first from 1 that is free. Whether
+there is one: if none of the 4096 is free, or there is no hard disk, the
+name is left empty */
+boolean saved_game_file_get_unused_name(
+	long type,
+	wchar *name)
+{
+	name[0]= 0;
+	if (input_globals.unit_mask&1)
+	{
+		char root[SAVED_GAME_FILE_ROOT_LENGTH]= { 0 };
+		char path[SAVED_GAME_FILE_PATH_LENGTH];
+		long number= 0;
+
+		memset(path, 0, sizeof(path));
+		saved_game_files_get_hard_disk_root(root);
+		do
+		{
+			wchar display_name[SAVED_GAME_FILE_DISPLAY_NAME_LENGTH];
+			long next= number+1;
+
+			usnzprintf(name, SAVED_GAME_FILE_DISPLAY_NAME_LENGTH, u"Halo%04d", next);
+			display_name[0]= 0;
+			saved_game_file_get_display_name(type, display_name, name, saved_game_files_language);
+			if (XCreateSaveGame(root, display_name, OPEN_EXISTING, 0, path, sizeof(path)))
+			{
+				break;
+			}
+			number= next;
+		} while (number<MAXIMUM_SAVED_GAME_FILE_NAME_NUMBER);
+		if (number==MAXIMUM_SAVED_GAME_FILE_NAME_NUMBER)
+		{
+			saved_game_files_last_error= _saved_game_files_error_no_name;
+			name[0]= 0;
+		}
+	}
+
+	return name[0]!=0;
 }

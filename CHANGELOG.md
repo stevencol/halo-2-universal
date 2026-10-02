@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Borrar un archivo y buscarle nombre a uno nuevo
+
+Tres funciones. De 529 funciones se pasa a 532, el 4,72 % de las del juego
+(el 2,256 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `usnzprintf` | `0x0013fb70` | `text/unicode.c` |
+| `saved_game_file_delete` | `0x00215e60` | `saved games/saved_game_files.c` |
+| `saved_game_file_get_unused_name` | `0x00215f40` | `saved games/saved_game_files.c` |
+
+- `_vsnwprintf` en la biblioteca de C de las pruebas.
+
+### Lo que se sabe
+
+- Un archivo nuevo se llama por defecto **«Halo0001»**, «Halo0002»…: el
+  juego prueba números desde 1 y pregunta a la consola si ya hay una
+  partida guardada con ese nombre visible; el primero que no existe es el
+  nombre. Si los 4.096 están cogidos, no hay nombre y queda apuntado un
+  error.
+- Sin disco duro tampoco hay nombre.
+- Borrar un archivo es borrar su partida guardada en la consola (por el
+  nombre visible, en el idioma en que se guardó) y quitarlo de la tabla.
+  Un archivo de serie solo se quita de lo que el juego sabe: no hay nada
+  que borrar en ningún disco.
+
+### Sin comprobar
+
+- En `usnzprintf`, si a la función de la biblioteca se le da el tamaño
+  entero o uno menos: el último carácter se pone a cero después.
+- `usnzprintf` con `%c` y `%s`: la biblioteca de C de las pruebas toma el
+  formato como texto de 8 bits y solo sirve para números. En el juego la
+  función llama a la de la consola, que sí los admite.
+
+### Mutaciones
+
+32 líneas rotas a propósito: 31 detectadas, y la otra es la primera de
+«Sin comprobar».
+
 ## 2026-10-02 — La memoria de los archivos guardados
 
 Siete funciones del principio de `saved_game_files.c`, que empieza antes

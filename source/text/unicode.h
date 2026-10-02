@@ -28,6 +28,7 @@ struct character_range
 void ustrnzcat(wchar *destination, const wchar *source, long count);
 void ustrnzcpy(wchar *destination, const wchar *source, long count);
 void ustrnupr(wchar *string, long count);
+void usnzprintf(wchar *string, long count, const wchar *format, ...);
 void wchar_string_to_ascii_string(const wchar *source, char *destination, long count);
 void ascii_string_to_wchar_string(const char *source, wchar *destination, long count);
 boolean character_in_ranges(wchar character, long range_count, const struct character_range *ranges);

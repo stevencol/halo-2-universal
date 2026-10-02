@@ -811,3 +811,70 @@ def run(t) -> None:
             globals={"unknown_0051ea14": 0 if built else random_.choice((0, 0x80100000))},
             externals={"saved_game_file_get_information": give(n % 5 != 4, 1, 0, random_.choice(short_directories))},
         )
+
+    # ---------- deleting a file
+
+    for n in range(100):
+        type_ = random_.choice((0, 1, 7, 10, 12))
+        unit = random_.choice((0, 0, 1, 3))
+        built = n % 5 == 4
+        file = NONE if n % 17 == 16 else index(type_, unit, random_.randrange(0x2000), built, random_.randrange(0x200))
+        waits = random_.choice((0, 0, 1, 2))
+        data = bytearray(random_.randbytes(INFORMATION))
+        data[0] = 0
+        data[0x14:0x38] = (wide(random_.choice(("mine", "", "a name of 16 ch."))) + bytes(0x24))[:0x24]
+        data[0x3D] = random_.choice((0, 2, 4, 8, 0xFF, 0x80))
+
+        def known(harness, arguments, data=bytes(data), found=n % 6 != 5):
+            where, file_ = arguments
+            before = bytes(harness.mu.mem_read(where, 1)) + bytes(harness.mu.mem_read(where + 0x14, 2))
+            harness.mu.mem_write(where, data)
+            return found, (before, file_)
+
+        t.check(
+            "saved_game_file_delete",
+            file,
+            globals={
+                "unknown_0055c14c": bytes([waits == 0]),
+                "input_globals": input_globals(random_, random_.choice((0xFFFF, 1, 0, 2))),
+                "saved_game_files_string_list_index": random_.choice((NONE, 5)),
+            },
+            externals={
+                "SwitchToThread": wait_until("unknown_0055c14c", 0, waits),
+                "sound_idle": lambda harness, arguments: 0,
+                "saved_game_file_get_information": known,
+                "unicode_string_list_has_string": lambda harness, arguments: 1,
+                "XDeleteSaveGame": lambda harness, arguments: (0, (text(harness, arguments[0]), wide_text(harness, arguments[1]))),
+                "saved_game_file_delete_information": lambda harness, arguments: 0,
+            },
+        )
+
+    # ---------- a name that no file has
+
+    def taken(count: int):
+        """XCreateSaveGame: the first so many names are those of saved games that there are."""
+
+        def handler(harness, arguments):
+            root, name, disposition, flags, path, path_size = arguments
+            exists = calls_so_far(harness, "XCreateSaveGame") < count
+            return 0 if exists else 2, (text(harness, root), wide_text(harness, name), disposition, flags, path_size)
+
+        return handler
+
+    for count in (0, 1, 2, 9, 10, 99, 4095, 4096):
+        for mask in (1, 0xFFFF) if count >= 4095 else (1, 0, 2, 0xFFFF):
+            t.check(
+                "saved_game_file_get_unused_name",
+                random_.choice((0, 1, 7, 10)),
+                Buffer(random_.randbytes(0x108)),
+                globals={
+                    "input_globals": input_globals(random_, mask),
+                    "saved_game_files_language": random_.choice((0, 4, NONE)),
+                    "saved_game_files_string_list_index": random_.choice((NONE, 5)),
+                    "saved_game_files_last_error": random_.getrandbits(32),
+                },
+                externals={
+                    "XCreateSaveGame": taken(count),
+                    "unicode_string_list_has_string": lambda harness, arguments: 1,
+                },
+            )

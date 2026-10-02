@@ -469,3 +469,37 @@ int wcsncmp(const unsigned short *a, const unsigned short *b, size_t count)
 
 	return (int)*a-(int)*b;
 }
+
+/* as the game's: text that does not fit is cut with no zero after it, and
+the result is then -1. The format is taken as one of characters of 8 bits,
+so %s is a string of those: it serves for numbers and characters */
+int _vsnwprintf(unsigned short *buffer, size_t size, const unsigned short *format, va_list arguments)
+{
+	char narrow_format[256];
+	char narrow[512];
+	size_t index;
+	size_t count;
+	int length;
+
+	for (index= 0; index<sizeof(narrow_format)-1 && format[index]; index++)
+	{
+		narrow_format[index]= (char)format[index];
+	}
+	narrow_format[index]= 0;
+	if (size>sizeof(narrow))
+	{
+		size= sizeof(narrow);
+	}
+	length= vsnprintf(narrow, size, narrow_format, arguments);
+	count= length<0 ? size : (size_t)length;
+	for (index= 0; index<count; index++)
+	{
+		buffer[index]= (unsigned char)narrow[index];
+	}
+	if (length>=0 && (size_t)length<size)
+	{
+		buffer[length]= 0;
+	}
+
+	return length;
+}

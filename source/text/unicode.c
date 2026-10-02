@@ -10,7 +10,14 @@ after the functions of later games of the series that do the same.
 Every count is of characters, with the zero that ends the string.
 */
 
+#include <stdarg.h>
+#include <stddef.h>
 #include "unicode.h"
+
+/* ---------- prototypes of functions of the C library */
+
+/* 0x00321ef9: of characters of 16 bits */
+int _vsnwprintf(wchar *buffer, size_t size, const wchar *format, va_list arguments);
 
 /* ---------- code */
 
@@ -85,6 +92,22 @@ void ustrnupr(
 	}
 
 	return;
+}
+
+/* 0x0013fb70: writes formatted text to a string that has room for count
+characters. The name is a guess, after csnzprintf */
+void usnzprintf(
+	wchar *string,
+	long count,
+	const wchar *format,
+	...)
+{
+	va_list arguments;
+
+	va_start(arguments, format);
+	_vsnwprintf(string, (size_t)(count-1), format, arguments);
+	va_end(arguments);
+	string[count-1]= 0;
 }
 
 /* 0x0013fb90: a character that is not ASCII becomes a question mark */

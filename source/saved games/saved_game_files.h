@@ -98,6 +98,9 @@ enum
 	SAVED_GAME_FILE_INFORMATION_NAME_OFFSET= 0x14,
 
 	MAXIMUM_SAVED_GAME_FILES_PER_TABLE= 4096,
+	/* the names that the game gives are numbered: so many are tried */
+	MAXIMUM_SAVED_GAME_FILE_NAME_NUMBER= 4096,
+	_saved_game_files_error_no_name= 1,
 
 	/* the memory of the files: those that come with the game, one table of
 	those of a drive, the salt of the indices, and the buffer that a file is
@@ -249,6 +252,8 @@ void saved_game_files_new(struct allocation *allocation);
 struct saved_game_file_information *ALLOCATION_CONVENTION saved_game_file_information_new(
 	struct saved_game_file_information *information);
 wchar *saved_game_file_get_name(long file, wchar *name);
+void saved_game_file_delete(long file);
+boolean saved_game_file_get_unused_name(long type, wchar *name);
 char *saved_game_files_get_unit_root(long unit_index, char *root, short size);
 long saved_game_file_type_from_variant(const struct game_variant *variant);
 long saved_game_file_type_from_listed_game(long game);
