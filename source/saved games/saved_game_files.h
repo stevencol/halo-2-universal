@@ -11,6 +11,7 @@ names of the functions are guesses.
 
 #include "cseries/cseries.h"
 #include "game/game.h"
+#include "text/unicode.h"
 
 /* ---------- constants */
 
@@ -74,27 +75,61 @@ enum
 	SAVED_GAME_FILE_PATH_LENGTH= 256
 };
 
-/* how a file is told: the bits of its index. The files with the built-in
-flag are not on a drive: they are in the memory of the game */
+/* how a file is told: the bits of its index. Those of a drive are in one of
+the tables of what the game knows of the files, at a place in it. The files
+with the built-in flag are not on a drive: they are in the memory of the
+game. What the low bits are is not known */
 enum
 {
 	SAVED_GAME_FILE_INDEX_UNIT_MASK= 0xF,
-	SAVED_GAME_FILE_INDEX_TYPE_SHIFT= 4,
-	SAVED_GAME_FILE_INDEX_TYPE_MASK= 0xF,
+	SAVED_GAME_FILE_INDEX_TABLE_SHIFT= 4,
+	SAVED_GAME_FILE_INDEX_TABLE_MASK= 0xF,
 	SAVED_GAME_FILE_INDEX_FILE_SHIFT= 8,
 	SAVED_GAME_FILE_INDEX_FILE_MASK= 0x1FFF,
 	_saved_game_file_index_built_in_bit= 21,
 	SAVED_GAME_FILE_INDEX_SALT_SHIFT= 22,
 	SAVED_GAME_FILE_INDEX_SALT_MASK= 0x1FF,
 
-	/* what is told of a file, by unknown_00216800: its directory first */
 	SAVED_GAME_FILE_INFORMATION_SIZE= 0x40,
-	SAVED_GAME_FILE_INFORMATION_NAME_OFFSET= 0x14
+	SAVED_GAME_FILE_INFORMATION_NAME_OFFSET= 0x14,
+
+	MAXIMUM_SAVED_GAME_FILES_PER_TABLE= 4096,
+	MAXIMUM_CACHED_SAVED_GAME_FILES= 4,
+	SAVED_GAME_FILE_NAME_COMPARE_LENGTH= 128
 };
 
 /* ---------- structures */
 
 struct saved_game_file_result;
+
+/* what the game knows of a file */
+struct saved_game_file_information
+{
+	char path[0x14];
+	wchar name[0x12];
+	long type;
+	byte unknown3C[4];
+};
+
+/* the files of a kind */
+struct saved_game_file_table
+{
+	long count;
+	struct saved_game_file_information files[MAXIMUM_SAVED_GAME_FILES_PER_TABLE];
+};
+
+/* what is kept of a file when the tables are not set up */
+struct cached_saved_game_file
+{
+	/* NONE if there is none */
+	long file;
+	struct saved_game_file_information information;
+};
+
+typedef char verify_saved_game_file_information_size[
+	sizeof(struct saved_game_file_information) == 0x40 ? 1 : -1];
+typedef char verify_saved_game_file_table_size[
+	sizeof(struct saved_game_file_table) == 0x40004 ? 1 : -1];
 
 /* 0x0055c274: something that is done with the files, one thing at a time:
 whether it is over, of which file it is, and the thread that asked */
@@ -120,6 +155,12 @@ boolean saved_game_files_hard_disk_has_blocks(long blocks);
 boolean saved_game_file_get_type_path(char *path, const char *directory, long type);
 long saved_game_file_type_get_size(long type);
 boolean saved_game_file_get_directory(char *path, long file);
+boolean saved_game_file_name_differs(long file, const wchar *name);
+boolean saved_game_file_get_information(struct saved_game_file_information *information, long file);
+boolean saved_game_file_set_information(const struct saved_game_file_information *information, long file);
+boolean saved_game_file_add_information(long table_index, const struct saved_game_file_information *information,
+	long *index);
+void saved_game_file_delete_information(long file);
 boolean saved_game_file_index_after(long file, long other, void *unused);
 long saved_game_file_index_after_delete(long file, long deleted);
 void saved_game_files_take_operation(long file, struct saved_game_files_operation **operation);
@@ -132,5 +173,8 @@ boolean saved_game_auxiliary_write(void *header, long header_size, void *data, l
 /* ---------- globals */
 
 extern struct saved_game_files_operation saved_game_files_operation;
+extern boolean saved_game_files_cache_valid;
+extern long cached_saved_game_file_count;
+extern struct cached_saved_game_file cached_saved_game_files[MAXIMUM_CACHED_SAVED_GAME_FILES];
 
 #endif

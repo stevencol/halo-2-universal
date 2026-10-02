@@ -454,3 +454,18 @@ long long __divdi3(long long dividend, long long divisor)
 
 	return (long long)(negative ? 0ULL-quotient : quotient);
 }
+
+int wcsncmp(const unsigned short *a, const unsigned short *b, size_t count)
+{
+	if (!count)
+	{
+		return 0;
+	}
+	while (--count && *a && *a==*b)
+	{
+		a++;
+		b++;
+	}
+
+	return (int)*a-(int)*b;
+}

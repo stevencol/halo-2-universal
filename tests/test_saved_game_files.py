@@ -181,7 +181,7 @@ def run(t) -> None:
             externals={
                 "SwitchToThread": wait_until("unknown_0055c14c", 0, waits),
                 "sound_idle": lambda harness, arguments: 0,
-                "unknown_00216800": information(n % 4 != 3, random_.choice(directories)),
+                "saved_game_file_get_information": information(n % 4 != 3, random_.choice(directories)),
             },
         )
 
@@ -223,7 +223,7 @@ def run(t) -> None:
                 file,
                 globals={"unknown_0055c14c": b"\x01"},
                 externals={
-                    "unknown_00216800": information(n % 4 != 3, random_.choice(directories + (b"f" * 0x30,))),
+                    "saved_game_file_get_information": information(n % 4 != 3, random_.choice(directories + (b"f" * 0x30,))),
                     callee: start(random_.choice((0, 1, 1))),
                     "SwitchToThread": lambda harness, arguments: 0,
                     "sound_idle": lambda harness, arguments: 0,
@@ -247,3 +247,133 @@ def run(t) -> None:
                     globals={"input_globals": input_globals(random_, mask)},
                     externals={"XFindFirstSaveGame": first, "XFindNextSaveGame": next_, "XFindClose": lambda harness, arguments: 1},
                 )
+
+    # ---------- what the game knows of the files
+
+    TABLES, TABLE_SIZE, INFORMATION = 0xBEF8, 0x40004, 0x40
+    # two tables: the second starts where the salt of the indices is
+    FILES_SIZE = TABLES + 2 * TABLE_SIZE
+    CACHED = 0x44
+
+    def files(counts: tuple) -> Buffer:
+        """The tables, each with so many files; the rest of the memory is not
+        looked at, and is left at zero so that the test is not slow."""
+        data = bytearray(FILES_SIZE)
+        for table, count in enumerate(counts):
+            base = TABLES + table * TABLE_SIZE
+            struct.pack_into("<i", data, base, count)
+            used = min(max(count, 0), 12) + 2
+            data[base + 4 : base + 4 + used * INFORMATION] = random_.randbytes(used * INFORMATION)
+        return Buffer(bytes(data))
+
+    def cache(valid: int, count: int, entries: list) -> dict:
+        data = bytearray(random_.randbytes(4 * CACHED))
+        for n, file in enumerate(entries):
+            struct.pack_into("<I", data, n * CACHED, file)
+        return {
+            "saved_game_files_cache_valid": bytes([valid]),
+            "cached_saved_game_file_count": count,
+            "cached_saved_game_files": bytes(data),
+        }
+
+    def file_cases() -> list:
+        """Indices of files, and tables for them: in the tables, past their
+        ends, built in, and with no tables."""
+        cases = []
+        for count in (0, 1, 5, 12, -1, -3):
+            # 0x1001: all of the 13 bits of the place count
+            for place in (0, 1, 4, 5, 6, 11, 12, 0x1FFF, 0x1001):
+                if count >= 0 or place < 3:
+                    table = random_.randrange(2)
+                    counts = [random_.randrange(12), random_.randrange(12)]
+                    counts[table] = count
+                    cases.append((index(random_.randrange(16), table, place, 0, random_.randrange(0x200), random_.getrandbits(1)), tuple(counts)))
+        cases.append((index(3, 1, 2, 1, 5), (4, 4)))
+        cases.append((index(0, 0, 0, 1), (4, 4)))
+        return cases
+
+    for file, counts in file_cases():
+        t.check(
+            "saved_game_file_get_information",
+            Buffer(random_.randbytes(INFORMATION)),
+            file,
+            globals={"unknown_0051ea14": files(counts), **cache(1, 4, [file] * 4)},
+        )
+        t.check("saved_game_file_delete_information", file, globals={"unknown_0051ea14": files(counts)})
+        for done, same_file, same_thread in ((1, 1, 1), (1, 0, 0), (0, 1, 0), (0, 1, 1), (0, 0, 0), (0x80, 0, 1)):
+            thread = random_.getrandbits(32)
+            t.check(
+                "saved_game_file_set_information",
+                Buffer(random_.randbytes(INFORMATION)),
+                file,
+                globals={
+                    "unknown_0051ea14": files(counts),
+                    "saved_game_files_operation": struct.pack("<B3x2I", done, file if same_file else file ^ 0x100, thread if same_thread else thread ^ 1),
+                    **cache(1, 4, [file] * 4),
+                },
+                externals={"GetCurrentThreadId": lambda harness, arguments, thread=thread: thread},
+            )
+
+    # with no tables, what is kept of a few files
+    for n in range(80):
+        file = random_.getrandbits(32) if n % 9 else NONE
+        entries = [random_.getrandbits(32) for _ in range(4)]
+        if n % 3:
+            entries[random_.randrange(4)] = file
+        if n % 5 == 4:
+            entries[0] = file
+            entries[random_.randrange(1, 4)] = file
+        globals_ = {"unknown_0051ea14": 0, **cache(random_.choice((1, 1, 1, 0, 0x80)), random_.choice((4, 4, 4, 0, 1, 2, -1)), entries)}
+        t.check("saved_game_file_get_information", Buffer(random_.randbytes(INFORMATION)), file, globals=globals_)
+        t.check(
+            "saved_game_file_set_information",
+            Buffer(random_.randbytes(INFORMATION)),
+            file,
+            globals={**globals_, "saved_game_files_operation": struct.pack("<B3x2I", 1, 0, 0)},
+            externals={"GetCurrentThreadId": lambda harness, arguments: 7},
+        )
+        t.check("saved_game_file_delete_information", file, globals={"unknown_0051ea14": 0})
+
+    for table in (0, 1):
+        # a table of the first two with more files than it can have: the file
+        # goes past its end, into the next
+        for count in (0, 1, 5, 12, 0xFFF, 0x1000, -1) + ((0x1001,) if table == 0 else ()):
+            counts = [3, 3]
+            counts[table] = count
+            t.check(
+                "saved_game_file_add_information",
+                table,
+                Buffer(random_.randbytes(INFORMATION)),
+                Buffer(random_.randbytes(4)),
+                globals={"unknown_0051ea14": files(tuple(counts))},
+            )
+    t.check("saved_game_file_add_information", 0, Buffer(random_.randbytes(INFORMATION)), Buffer(random_.randbytes(4)), globals={"unknown_0051ea14": 0})
+
+    # ---------- the name of a file
+
+    def wide(text_: str) -> bytes:
+        return text_.encode("utf-16-le") + b"\0\0"
+
+    names = ("", "profile", "profile 2", "profil", "Profile", "p", "a much longer name than fits")
+    for known in (1, 0):
+        for kept in names[:6]:
+            for asked in names:
+                def get(harness, arguments, known=known, kept=kept):
+                    where, file = arguments
+                    data = bytearray(random_.randbytes(INFORMATION))
+                    data[0x14 : 0x14 + len(wide(kept))] = wide(kept)
+                    harness.mu.mem_write(where, bytes(data))
+                    return known, (file,)
+
+                t.check(
+                    "saved_game_file_name_differs",
+                    random_.getrandbits(32),
+                    Buffer(wide(asked)),
+                    externals={"saved_game_file_get_information": get},
+                )
+    t.check(
+        "saved_game_file_name_differs",
+        5,
+        0,
+        externals={"saved_game_file_get_information": lambda harness, arguments: (1, (arguments[1],))},
+    )

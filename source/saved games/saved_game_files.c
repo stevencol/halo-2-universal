@@ -38,9 +38,6 @@ int XFindClose(uint32_t handle);
 
 /* ---------- prototypes of functions that are not decompiled */
 
-/* 0x00216800: tells of a file: FALSE if there is none */
-boolean unknown_00216800(void *information, long file);
-
 /* 0x002ada70, 0x002adec0: start to read and to write a file in two parts.
 Whether it was started */
 boolean unknown_002ada70(const char *path, struct saved_game_file_result *result, void *header, long header_size,
@@ -52,7 +49,10 @@ boolean unknown_002adec0(const char *path, struct saved_game_file_result *result
 
 enum
 {
-	/* in unknown_0051ea14: a number that goes into the index of each file */
+	/* in unknown_0051ea14: the tables of the files, and a number that goes
+	into the index of each file: it is where the count of the second table
+	is */
+	UNKNOWN_0051EA14_TABLES_OFFSET= 0xBEF8,
 	UNKNOWN_0051EA14_SALT_OFFSET= 0x4BEFC,
 
 	/* what XFindFirstSaveGame fills */
@@ -71,6 +71,17 @@ extern void *unknown_0051ea14;
 
 /* 0x0055c274 */
 struct saved_game_files_operation saved_game_files_operation;
+
+/* 0x0055c14f, 0x0055c160, 0x0055c164: what is kept of a few files when the
+tables are not set up */
+boolean saved_game_files_cache_valid;
+long cached_saved_game_file_count;
+struct cached_saved_game_file cached_saved_game_files[MAXIMUM_CACHED_SAVED_GAME_FILES];
+
+/* ---------- prototypes of functions of the C library */
+
+/* 0x00321ce4: of characters of 16 bits */
+int wcsncmp(const wchar *a, const wchar *b, unsigned int count);
 
 /* ---------- code */
 
@@ -316,24 +327,24 @@ boolean saved_game_file_get_directory(
 	char *path,
 	long file)
 {
-	byte information[SAVED_GAME_FILE_INFORMATION_SIZE];
+	struct saved_game_file_information information;
 
 	if ((file>>_saved_game_file_index_built_in_bit)&1)
 	{
 		return FALSE;
 	}
-	information[0]= 0;
-	*(word *)(information+SAVED_GAME_FILE_INFORMATION_NAME_OFFSET)= 0;
+	information.path[0]= 0;
+	information.name[0]= 0;
 	while (!*(volatile boolean *)&unknown_0055c14c)
 	{
 		SwitchToThread();
 		sound_idle();
 	}
-	if (!unknown_00216800(information, file))
+	if (!saved_game_file_get_information(&information, file))
 	{
 		return FALSE;
 	}
-	strncpy(path, (const char *)information, SAVED_GAME_FILE_PATH_LENGTH);
+	strncpy(path, information.path, SAVED_GAME_FILE_PATH_LENGTH);
 	path[SAVED_GAME_FILE_PATH_LENGTH-1]= 0;
 
 	return TRUE;
@@ -363,17 +374,17 @@ long saved_game_file_index_after_delete(
 	long deleted)
 {
 	const byte *files= unknown_0051ea14;
-	long type= (file>>SAVED_GAME_FILE_INDEX_TYPE_SHIFT)&SAVED_GAME_FILE_INDEX_TYPE_MASK;
+	long type= (file>>SAVED_GAME_FILE_INDEX_TABLE_SHIFT)&SAVED_GAME_FILE_INDEX_TABLE_MASK;
 	long index= (file>>SAVED_GAME_FILE_INDEX_FILE_SHIFT)&SAVED_GAME_FILE_INDEX_FILE_MASK;
 
 	if (!((file>>_saved_game_file_index_built_in_bit)&1) && files &&
-		((deleted>>SAVED_GAME_FILE_INDEX_TYPE_SHIFT)&SAVED_GAME_FILE_INDEX_TYPE_MASK)==type &&
+		((deleted>>SAVED_GAME_FILE_INDEX_TABLE_SHIFT)&SAVED_GAME_FILE_INDEX_TABLE_MASK)==type &&
 		index>((deleted>>SAVED_GAME_FILE_INDEX_FILE_SHIFT)&SAVED_GAME_FILE_INDEX_FILE_MASK))
 	{
 		unsigned long salt= *(const uint32_t *)(files+UNKNOWN_0051EA14_SALT_OFFSET)&SAVED_GAME_FILE_INDEX_SALT_MASK;
 
 		return (long)((salt<<SAVED_GAME_FILE_INDEX_SALT_SHIFT) |
-			((unsigned long)type<<SAVED_GAME_FILE_INDEX_TYPE_SHIFT) |
+			((unsigned long)type<<SAVED_GAME_FILE_INDEX_TABLE_SHIFT) |
 			(((unsigned long)(index-1)&SAVED_GAME_FILE_INDEX_FILE_MASK)<<SAVED_GAME_FILE_INDEX_FILE_SHIFT) |
 			((unsigned long)file&SAVED_GAME_FILE_INDEX_UNIT_MASK));
 	}
@@ -476,4 +487,183 @@ long saved_game_files_count_saved_games(
 	}
 
 	return count;
+}
+
+/* the table that a file of a drive is in, and its place in it */
+static inline __attribute__((always_inline)) struct saved_game_file_table *saved_game_file_get_table(
+	long file)
+{
+	return (struct saved_game_file_table *)((byte *)unknown_0051ea14+UNKNOWN_0051EA14_TABLES_OFFSET)+
+		((file>>SAVED_GAME_FILE_INDEX_TABLE_SHIFT)&SAVED_GAME_FILE_INDEX_TABLE_MASK);
+}
+
+static inline __attribute__((always_inline)) long saved_game_file_get_table_place(
+	long file)
+{
+	return (file>>SAVED_GAME_FILE_INDEX_FILE_SHIFT)&SAVED_GAME_FILE_INDEX_FILE_MASK;
+}
+
+/* whether a table has a file at a place */
+static inline __attribute__((always_inline)) boolean saved_game_file_table_has(
+	const struct saved_game_file_table *table,
+	long place)
+{
+	return place<=(long)((unsigned long)table->count-1);
+}
+
+/* what is kept of a file when the tables are not set up; NULL if nothing is */
+static inline __attribute__((always_inline)) struct cached_saved_game_file *cached_saved_game_file_get(
+	long file)
+{
+	long index;
+
+	for (index= 0; index<cached_saved_game_file_count; index++)
+	{
+		if (cached_saved_game_files[index].file!=NONE && cached_saved_game_files[index].file==file)
+		{
+			return &cached_saved_game_files[index];
+		}
+	}
+
+	return NULL;
+}
+
+/* 0x00216060: whether a file has another name than this one. FALSE too if
+the file is not known or the name is empty */
+boolean saved_game_file_name_differs(
+	long file,
+	const wchar *name)
+{
+	struct saved_game_file_information information;
+
+	information.path[0]= 0;
+	information.name[0]= 0;
+
+	return saved_game_file_get_information(&information, file) && name && name[0] &&
+		wcsncmp(information.name, name, SAVED_GAME_FILE_NAME_COMPARE_LENGTH)!=0;
+}
+
+/* 0x00216800: what the game knows of a file of a drive: FALSE if it knows
+nothing */
+boolean saved_game_file_get_information(
+	struct saved_game_file_information *information,
+	long file)
+{
+	if (unknown_0051ea14)
+	{
+		const struct saved_game_file_table *table;
+		long place;
+
+		if ((file>>_saved_game_file_index_built_in_bit)&1)
+		{
+			return FALSE;
+		}
+		table= saved_game_file_get_table(file);
+		place= saved_game_file_get_table_place(file);
+		if (!saved_game_file_table_has(table, place))
+		{
+			return FALSE;
+		}
+		*information= table->files[place];
+
+		return TRUE;
+	}
+	if (saved_game_files_cache_valid)
+	{
+		const struct cached_saved_game_file *cached= cached_saved_game_file_get(file);
+
+		if (cached)
+		{
+			*information= cached->information;
+
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x002168b0: changes what the game knows of a file. Not while another
+thing is being done with the files, unless it is with this one and another
+thread asked. It tells FALSE when what changes is what is kept with the
+tables not set up */
+boolean saved_game_file_set_information(
+	const struct saved_game_file_information *information,
+	long file)
+{
+	unsigned long thread= GetCurrentThreadId();
+
+	if (!saved_game_files_operation.done &&
+		(saved_game_files_operation.file!=file || saved_game_files_operation.thread==thread))
+	{
+		return FALSE;
+	}
+	if (unknown_0051ea14)
+	{
+		struct saved_game_file_table *table= saved_game_file_get_table(file);
+		long place= saved_game_file_get_table_place(file);
+
+		if (!saved_game_file_table_has(table, place))
+		{
+			return FALSE;
+		}
+		table->files[place]= *information;
+
+		return TRUE;
+	}
+	if (saved_game_files_cache_valid)
+	{
+		struct cached_saved_game_file *cached= cached_saved_game_file_get(file);
+
+		if (cached)
+		{
+			cached->information= *information;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x00216990: a file more in a table: its place in it */
+boolean saved_game_file_add_information(
+	long table_index,
+	const struct saved_game_file_information *information,
+	long *index)
+{
+	struct saved_game_file_table *table;
+
+	if (!unknown_0051ea14)
+	{
+		return FALSE;
+	}
+	table= (struct saved_game_file_table *)((byte *)unknown_0051ea14+UNKNOWN_0051EA14_TABLES_OFFSET)+table_index;
+	if (table->count==MAXIMUM_SAVED_GAME_FILES_PER_TABLE)
+	{
+		return FALSE;
+	}
+	table->files[table->count++]= *information;
+	*index= table->count-1;
+
+	return TRUE;
+}
+
+/* 0x002169e0: a file less in its table: those after it go down a place */
+void saved_game_file_delete_information(
+	long file)
+{
+	if (unknown_0051ea14)
+	{
+		struct saved_game_file_table *table= saved_game_file_get_table(file);
+		long place= saved_game_file_get_table_place(file);
+
+		if (saved_game_file_table_has(table, place))
+		{
+			if (place<table->count-1)
+			{
+				memmove(&table->files[place], &table->files[place+1],
+					(unsigned long)(table->count-place-1)*sizeof(struct saved_game_file_information));
+			}
+			table->count--;
+		}
+	}
 }

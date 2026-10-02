@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 50.
+**Última actualización:** 2026-10-02, al terminar el hito 51.
 
 ## Dónde estamos
 
-- **452 funciones descompiladas de 11.265: el 4,01 % del juego** (el
-  1,926 % de los bytes de código).
-- Las 452 están comprobadas contra el ejecutable original
+- **457 funciones descompiladas de 11.265: el 4,06 % del juego** (el
+  1,947 % de los bytes de código).
+- Las 457 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the indices and the state file of the saved games* (ver `git log`).
+- Último hito: *Decompile what the game knows of the saved game files* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -76,10 +76,11 @@ Módulos (funciones hechas / archivo):
 - [x] Cargar y descargar un mapa — `main\main_game.c` (23, completo)
 - [x] Memoria de la interfaz — `interface\user_interface_memory.c` (4)
 - [x] Mandos — `input\input_xbox.c` (10, completo)
-- [ ] Archivos de los jugadores — `saved games\saved_game_files.c` (18 de
-      unas 36; va de `0x002160b0` a `0x00217590`. Faltan, entre otras,
-      `0x00216120`, `0x002161d0`, `0x00216240`, `0x002162b0`, `0x002164c0`,
-      `0x00216800` y `0x002173d0`)
+- [ ] Archivos de los jugadores — `saved games\saved_game_files.c` (23 de
+      unas 37; va de `0x00216060` a `0x00217590`. Faltan `0x00216120`,
+      `0x002161d0`, `0x00216240`, `0x002162b0`, `0x00216440`, `0x002164c0`,
+      `0x00216760`, `0x00216da0`, `0x00216e50`, `0x00216f80`, `0x00217080`,
+      `0x002170e0`, `0x002172a0` y `0x002173d0`)
 - [ ] Sonido — `sound\sound_manager.c` (22; faltan `0x001251e0`,
       `0x00125b40` y de `0x00125f70` en adelante), `sound\sound_classes.c` (1)
 - [x] Archivos — `tag_files\files.c`, `files_xbox.c` (19, completo)

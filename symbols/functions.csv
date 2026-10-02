@@ -815,10 +815,14 @@ address,name,source,arguments,returns,convention
 00217300,saved_game_file_index_after_delete,source/saved games/saved_game_files.c,eax ecx,int
 00217370,saved_game_files_take_operation,source/saved games/saved_game_files.c,stack stack,void
 00217590,saved_game_files_count_saved_games,source/saved games/saved_game_files.c,ecx,int
-00216800,unknown_00216800,,eax edx,bool
+00216800,saved_game_file_get_information,source/saved games/saved_game_files.c,eax edx,bool
 002ada70,unknown_002ada70,,eax esi stack stack stack stack stack,bool
 002adec0,unknown_002adec0,,eax esi stack stack stack stack stack,bool
 002d2234,GetCurrentThreadId,,,int
 00331125,XFindFirstSaveGame,,stack stack,int
 0033122f,XFindNextSaveGame,,stack stack,int
 00331276,XFindClose,,stack,int
+00216060,saved_game_file_name_differs,source/saved games/saved_game_files.c,edx esi,bool
+002168b0,saved_game_file_set_information,source/saved games/saved_game_files.c,eax stack,bool
+00216990,saved_game_file_add_information,source/saved games/saved_game_files.c,ecx stack stack,bool
+002169e0,saved_game_file_delete_information,source/saved games/saved_game_files.c,ecx,void

@@ -2,6 +2,67 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Lo que el juego sabe de cada archivo
+
+Cinco funciones más de `saved_game_files.c`: las que leen, cambian, añaden
+y quitan lo que el juego guarda de cada archivo de una unidad. De 452
+funciones se pasa a 457, el 4,06 % de las del juego (el 1,947 % de sus
+bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `saved_game_file_name_differs` | `0x00216060` | `saved games/saved_game_files.c` |
+| `saved_game_file_get_information` | `0x00216800` | `saved games/saved_game_files.c` |
+| `saved_game_file_set_information` | `0x002168b0` | `saved games/saved_game_files.c` |
+| `saved_game_file_add_information` | `0x00216990` | `saved games/saved_game_files.c` |
+| `saved_game_file_delete_information` | `0x002169e0` | `saved games/saved_game_files.c` |
+
+- `struct saved_game_file_information` (0x40 bytes: una ruta de 0x14, un
+  nombre de 18 caracteres de 16 bits, el tipo) y
+  `struct saved_game_file_table` (una cuenta y 4.096 de esas).
+- `wcsncmp` en la biblioteca de C de las pruebas.
+
+### Cambiado
+
+- **Corrección del hito anterior:** el campo de los bits 4-7 del índice de
+  un archivo no es su tipo, sino en cuál de las tablas está. Las
+  constantes `SAVED_GAME_FILE_INDEX_TYPE_*` pasan a llamarse
+  `SAVED_GAME_FILE_INDEX_TABLE_*`. Qué distingue una tabla de otra no se
+  sabe todavía.
+- `unknown_00216800` es `saved_game_file_get_information`.
+
+### Lo que se sabe
+
+- Las tablas empiezan en `+0xBEF8` de la memoria de los archivos
+  (`0x0051ea14`) y miden 0x40004 bytes cada una.
+- **La «sal» de los índices está justo donde estaría la cuenta de la
+  segunda tabla** (`+0x4BEFC`). O solo hay una tabla en la práctica, o las
+  dos cosas son la misma; no se puede decidir con lo descompilado.
+- Si esa memoria no está preparada, el juego guarda aparte lo de hasta
+  cuatro archivos (`0x0055c164`), y de ahí lee.
+- Cambiar lo de un archivo no se permite mientras hay otra operación en
+  curso, salvo que sea sobre ese mismo archivo y la haya pedido **otro**
+  hilo.
+- Cuando el cambio se hace en esos cuatro archivos guardados aparte, la
+  función contesta que no lo hizo aunque lo haya hecho.
+- Una tabla llena (4.096) no admite más; pero la comparación es de
+  igualdad, así que con una cuenta mayor el juego escribiría fuera.
+
+### Sin comprobar
+
+- Al borrar el último archivo de una tabla, si se entra o no a mover los
+  de detrás: no hay ninguno que mover.
+- `saved_game_file_set_information` y `saved_game_file_delete_information`
+  con un índice de archivo «integrado» (bit 21): el juego no lo mira.
+
+### Mutaciones
+
+52 líneas rotas a propósito: 49 detectadas a la primera, dos más con
+casos nuevos (un puesto mayor que 4.095; una tabla con más archivos de los
+que caben) y la otra es la primera de «Sin comprobar».
+
 ## 2026-10-02 — Los índices de los archivos y el archivo del estado
 
 Siete funciones más de `saved_game_files.c`. De 445 funciones se pasa a
