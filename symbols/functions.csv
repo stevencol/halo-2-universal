@@ -657,3 +657,14 @@ address,name,source,arguments,returns,convention
 00200d80,unknown_00200d80,,,void
 00163890,unknown_00163890,,stack stack,bool
 00138640,unknown_00138640,,stack stack,void
+0018e1f0,memory_pool_new,source/memory/memory_pool.c,eax ecx stack,int
+0018e230,memory_pool_delete,source/memory/memory_pool.c,edx,void
+0018e250,memory_pool_initialize,source/memory/memory_pool.c,esi ebx stack stack,void
+0018e2b0,memory_pool_block_allocate,source/memory/memory_pool.c,ecx stack stack stack eax,bool
+0018e340,memory_pool_block_reallocate,source/memory/memory_pool.c,stack ebx eax stack stack,bool
+0018e430,memory_pool_block_free,source/memory/memory_pool.c,edx eax,void
+0018e470,memory_pool_compact,source/memory/memory_pool.c,edi,void
+0018e4f0,memory_pool_block_link,source/memory/memory_pool.c,stack eax stack ebx stack stack ecx,int
+0018e560,memory_pool_block_new_at_end,source/memory/memory_pool.c,stack stack stack stack,int
+0018e600,memory_pool_block_new_at_start,source/memory/memory_pool.c,edi stack stack stack,int
+0018e690,memory_pool_block_new_in_gap,source/memory/memory_pool.c,stack eax stack stack,int

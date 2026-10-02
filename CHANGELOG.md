@@ -2,6 +2,61 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — El fondo de memoria
+
+`memory_pool.c`, otro módulo que ya existía en Halo 1: un trozo de memoria
+del que se van tomando bloques de cualquier tamaño, y que se puede volver a
+compactar porque cada bloque sabe qué puntero de su dueño hay que cambiar
+cuando se mueve. De 344 funciones se pasa a 355, el 3,15 % de las del juego
+(el 1,538 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `memory_pool_new` | `0x0018e1f0` | `memory/memory_pool.c` |
+| `memory_pool_delete` | `0x0018e230` | `memory/memory_pool.c` |
+| `memory_pool_initialize` | `0x0018e250` | `memory/memory_pool.c` |
+| `memory_pool_block_allocate` | `0x0018e2b0` | `memory/memory_pool.c` |
+| `memory_pool_block_reallocate` | `0x0018e340` | `memory/memory_pool.c` |
+| `memory_pool_block_free` | `0x0018e430` | `memory/memory_pool.c` |
+| `memory_pool_compact` | `0x0018e470` | `memory/memory_pool.c` |
+| `memory_pool_block_link` | `0x0018e4f0` | `memory/memory_pool.c` |
+| `memory_pool_block_new_at_end` | `0x0018e560` | `memory/memory_pool.c` |
+| `memory_pool_block_new_at_start` | `0x0018e600` | `memory/memory_pool.c` |
+| `memory_pool_block_new_in_gap` | `0x0018e690` | `memory/memory_pool.c` |
+
+- Archivos nuevos: `memory/memory_pool.{c,h}`, `tests/test_memory_pool.py`.
+
+### Lo que se sabe
+
+- Respecto a Halo 1, los bloques pierden las firmas de principio y fin
+  (16 bytes en vez de 24) y el fondo gana tres opciones: no guardar los
+  punteros de los dueños (y entonces no se puede compactar), rellenar los
+  huecos (un bloque nuevo va primero entre dos bloques, luego antes del
+  primero y solo al final después del último) y llevar la cuenta de quién
+  pide cada bloque (16 bytes más por bloque: la firma `head`, dos datos de
+  quien lo pide y la hora).
+- Todo va a múltiplos de 16 bytes.
+- A diferencia de Halo 1, pedir un bloque no compacta el fondo si no cabe:
+  devuelve que no, y quien lo pide decide.
+- Cambiar el tamaño de un bloque lo hace en el sitio si hay hueco detrás;
+  si no, toma otro bloque, copia y suelta el viejo.
+- Lo usan la interfaz («ui memory pool»), los objetos y algo más que toma
+  memoria al cargar un mapa.
+
+### Sin comprobar
+
+- En `memory_pool_compact`, si un bloque que ya está en su sitio se mueve
+  sobre sí mismo o no: queda igual.
+- Qué son los dos datos que se apuntan de quien pide un bloque.
+
+### Mutaciones
+
+68 líneas rotas a propósito: 66 detectadas a la primera. De las otras 2,
+una dio un caso nuevo (un fondo que no empieza en un múltiplo de 16) y la
+otra es la de «Sin comprobar».
+
 ## 2026-10-02 — Cargar y descargar un mapa
 
 `main_game.c`: el módulo que une las tres cachés con el resto del juego.

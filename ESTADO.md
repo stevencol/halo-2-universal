@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-01, al terminar el hito 36.
+**Última actualización:** 2026-10-01, al terminar el hito 37.
 
 ## Dónde estamos
 
-- **344 funciones descompiladas de 11.265: el 3,05 % del juego** (el
-  1,497 % de los bytes de código).
-- Las 344 están comprobadas contra el ejecutable original
+- **355 funciones descompiladas de 11.265: el 3,15 % del juego** (el
+  1,538 % de los bytes de código).
+- Las 355 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the loading and unloading of a map* (ver `git log`).
+- Último hito: *Decompile the memory pool* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -68,6 +68,7 @@ Módulos (funciones hechas / archivo):
 - [x] CRC de 32 bits — `memory\crc.c` (2, completo)
 - [x] Búsqueda binaria — `memory\binary_search.c` (1)
 - [x] Caché de bloques de páginas — `memory\lruv_cache.c` (8, completo)
+- [x] Fondo de memoria — `memory\memory_pool.c` (11, completo)
 - [x] Caché de animaciones — `cache\xbox_animation_cache.c` (18, completo)
 - [x] Caché de texturas — `cache\xbox_texture_cache.c` (30, completo)
 - [ ] Caché de geometría — `cache\xbox_geometry_cache.c` (17; falta
@@ -141,9 +142,14 @@ Módulos (funciones hechas / archivo):
       que descarga el mapa, reparte la memoria, carga el nuevo (`0x0018eaa0`,
       `0x0018e960`) y empieza la partida; `0x0018e790` deja pedido el cambio
       (las opciones se guardan en `0x004ed3a8`).
-- [ ] **Los otros seis pares de la tabla de `0x00453c00`**: quién más toma
-      memoria al cargar un mapa (`0x00081780`, `0x001a474c`, `0x002157e0`,
-      `0x00053310`, `0x000b3d30`, `0x0021ebc0` y sus parejas).
+- [x] ~~Fondo de memoria (`memory_pool.c`)~~ (hito 37).
+- [ ] **Los que usan un fondo de memoria**, que además son pares de la
+      tabla de `0x00453c00`: el de la interfaz («ui memory pool»,
+      `0x0051e998`: `0x001a474c`, `0x001a479a`, `0x001a47b1`, `0x001a4826`)
+      y el de `0x00053290` a `0x000533e0`. También lo usan los objetos
+      (`0x000bc280`, `0x000bc380`, `0x000bf360`).
+- [ ] **Los otros pares de la tabla de `0x00453c00`**: `0x00081780`,
+      `0x002157e0`, `0x000b3d30`, `0x0021ebc0` y sus parejas.
 - [ ] **La tabla de `0x00453c00`**: ocho pares de funciones (soltar y
       tomar memoria) de los que usan memoria al cargar un mapa; el par de
       la caché de animaciones ya está. La recorren `0x0018ec60` y
