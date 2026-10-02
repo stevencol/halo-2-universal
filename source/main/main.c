@@ -65,7 +65,6 @@ void unknown_00059940(void);
 boolean unknown_00068250(void);
 void unknown_00146660(float seconds, float *unknown_real, long *unknown_long);
 void unknown_001870a0(float seconds, float unknown_real);
-void unknown_00137f70(long unknown_long, float *unknown_real);
 void unknown_0008dfc0(void);
 void unknown_00137ed0(float unknown_real);
 void unknown_001554b0(float seconds);
@@ -92,7 +91,6 @@ void unknown_00190e37(void);
 
 enum
 {
-	_game_mode_campaign= 1,
 	_game_mode_3= 3,
 	MAXIMUM_LOCAL_PLAYERS= 4,
 	HUD_MESSAGE_LENGTH= 256,
@@ -420,7 +418,7 @@ void main_loop_body(
 	{
 		unknown_00146660(seconds, &unknown_real, &unknown_long);
 		unknown_001870a0(seconds, unknown_real);
-		unknown_00137f70(unknown_long, &unknown_real);
+		game_run_ticks(unknown_long, &unknown_real);
 		unknown_0008dfc0();
 		unknown_00137ed0(unknown_real);
 		unknown_001554b0(seconds);

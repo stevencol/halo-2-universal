@@ -12,7 +12,9 @@ these functions calls the parts by name.
 
 #include "game.h"
 
+#include "main/main.h"
 #include "saved games/game_state.h"
+#include "shell/shell.h"
 #include "scenario/scenario.h"
 
 #include <string.h>
@@ -26,6 +28,14 @@ unsigned int _control87(unsigned int value, unsigned int mask);
 
 /* 0x0019d650: sets up a part of the options of a multiplayer game */
 void unknown_0019d650(void *unknown);
+
+/* 0x0007ad80: fills a buffer with bytes made at random */
+void unknown_0007ad80(long size, void *buffer);
+
+/* 0x00137fe0: a tick of the game */
+void unknown_00137fe0(void);
+
+long lrintf(float value);
 
 /* what the parts of the game do: their names are not known. Those of the
 last three fields of a part take arguments, which are not given here */
@@ -206,10 +216,13 @@ enum
 {
 	/* _control87: single precision, round to nearest, no exceptions */
 	FLOATING_POINT_CONTROL= 0x9001F,
-	FLOATING_POINT_CONTROL_MASK= 0xFFFFF,
-
-	_game_mode_multiplayer= 2
+	FLOATING_POINT_CONTROL_MASK= 0xFFFFF
 };
+
+/* how long after the game is lost it goes back to the checkpoint, and how
+long after it is over it ends */
+#define GAME_LOST_SECONDS 5.0f
+#define GAME_FINISHED_SECONDS 7.0f
 
 /* ---------- globals */
 
@@ -222,6 +235,11 @@ struct game_time_globals *game_time_globals;
 /* 0x004e7408: where the seed of the game's random numbers is. The name is a
 guess */
 unsigned long *global_random_seed_reference;
+
+/* 0x00510c49 and 0x004f55e7: what game_options_new_default and
+game_unknown_001388a0 look at. What they are is not known */
+boolean unknown_00510c49;
+boolean unknown_004f55e7;
 
 /* 0x00440dd8: the parts of the game, in the order that they are set up; they
 are taken down in the opposite order */
@@ -347,7 +365,7 @@ void game_options_new(
 	}
 	*global_random_seed_reference= game->options.random_seed;
 	game->lost= FALSE;
-	game->unknown1128= FALSE;
+	game->finished= FALSE;
 	game->unknown11FA= 0;
 	game->unknown1130= 0;
 }
@@ -424,4 +442,165 @@ void game_dispose_from_old_structure_bsp(
 		}
 	}
 	main_game_globals->structure_bsp_index= NONE;
+}
+
+/* 0x00138110: the options of a game with nothing chosen: the campaign, on
+one console, in the normal difficulty. The name is a guess */
+void game_options_new_default(
+	struct game_options *options)
+{
+	long refresh_rate;
+
+	memset(options, 0, sizeof(*options));
+	options->game_mode= _game_mode_campaign;
+	options->unknown128= unknown_00510c49;
+	options->simulation= _game_simulation_local;
+	options->unknown5= 0;
+	refresh_rate= xbox_video_settings.refresh_rate;
+	if (refresh_rate<=0)
+	{
+		refresh_rate= GAME_DEFAULT_REFRESH_RATE;
+	}
+	options->difficulty= _game_difficulty_normal;
+	options->tick_rate= (short)(refresh_rate/2);
+	options->unknown14= NONE;
+	options->unknown18= NONE;
+	unknown_0007ad80(sizeof(options->game_instance), options->game_instance);
+	options->random_seed= GAME_DEFAULT_RANDOM_SEED;
+}
+
+/* 0x00137f70: runs so many ticks of the game. If the main loop gets
+something to do, the ticks that are left are not run, and their time is taken
+off the seconds. The name is a guess */
+void game_run_ticks(
+	long tick_count,
+	float *seconds)
+{
+	long tick;
+
+	for (tick= 0; tick<tick_count; tick++)
+	{
+		if (main_action_pending())
+		{
+			break;
+		}
+		unknown_00137fe0();
+	}
+
+	if (tick<tick_count)
+	{
+		if (tick==0)
+		{
+			*seconds= 0.0f;
+		}
+		else
+		{
+			float left= *seconds-(float)(tick_count-tick)*game_time_globals->seconds_per_tick;
+
+			if (!(left>0.0f))
+			{
+				left= 0.0f;
+			}
+			*seconds= left;
+		}
+	}
+}
+
+/* 0x00138800: whether a map is loaded and a game goes on. As in Halo 1 */
+boolean game_in_progress(
+	void)
+{
+	return main_game_globals && main_game_globals->active;
+}
+
+/* 0x00138820: whether the game is a campaign with unknown12C set */
+long game_is_campaign_unknown12C(
+	void)
+{
+	return main_game_globals->options.game_mode==_game_mode_campaign && main_game_globals->options.unknown12C;
+}
+
+/* 0x00138840: whether the game is run among several consoles. The name is a
+guess, as those of the next two */
+boolean game_is_distributed(
+	void)
+{
+	long simulation= main_game_globals->options.simulation;
+
+	return simulation>=_game_simulation_distributed_first && simulation<=_game_simulation_distributed_last;
+}
+
+/* 0x00138860 */
+boolean game_is_authoritative(
+	void)
+{
+	return main_game_globals->options.simulation!=_game_simulation_predicted;
+}
+
+/* 0x00138880 */
+boolean game_is_predicted(
+	void)
+{
+	return main_game_globals->options.simulation==_game_simulation_predicted;
+}
+
+/* 0x001388a0: false in a campaign if unknown_004f55e7 is set or the
+difficulty is legendary. What it is asked for is not known */
+long game_unknown_001388a0(
+	void)
+{
+	if (main_game_globals->options.game_mode==_game_mode_campaign)
+	{
+		if (unknown_004f55e7 || main_game_globals->options.difficulty==_game_difficulty_legendary)
+		{
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+/* 0x00138960: the game is lost, or is not any more. It goes back to the last
+checkpoint a while after it is lost. As in Halo 1 */
+void game_lost(
+	boolean lost)
+{
+	struct main_game_globals *game= main_game_globals;
+
+	if (lost)
+	{
+		if (!game->lost)
+		{
+			game->lost= TRUE;
+			game->lost_ticks= lrintf((float)game_time_globals->ticks_per_second*GAME_LOST_SECONDS);
+			game_state_note_death();
+		}
+	}
+	else if (game->lost)
+	{
+		game->lost= FALSE;
+	}
+}
+
+/* 0x001389c0: the game is over: it ends a while after. The name is a
+guess */
+void game_finish(
+	void)
+{
+	struct main_game_globals *game= main_game_globals;
+
+	if (!game->finished)
+	{
+		game->finished= TRUE;
+		game->finished_ticks= lrintf((float)game_time_globals->ticks_per_second*GAME_FINISHED_SECONDS);
+		game->unknown1129= FALSE;
+	}
+}
+
+/* 0x00138a10: whether the game is over and the while has gone by. The name is
+a guess */
+long game_finished_wait_over(
+	void)
+{
+	return main_game_globals->finished && main_game_globals->finished_ticks==0;
 }

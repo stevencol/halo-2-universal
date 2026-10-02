@@ -2,6 +2,55 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — Once funciones pequeñas del juego
+
+Funciones cortas de `game.c` que el resto del juego consulta a todas horas:
+si hay partida, cómo se simula, si se perdió o terminó, las opciones por
+defecto y los ticks de un fotograma. De 231 funciones se pasa a 242, el
+2,15 % de las del juego (el 0,963 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_options_new_default` | `0x00138110` | `game/game.c` |
+| `game_run_ticks` | `0x00137f70` | `game/game.c` |
+| `game_in_progress` | `0x00138800` | `game/game.c` |
+| `game_is_campaign_unknown12C` | `0x00138820` | `game/game.c` |
+| `game_is_distributed` | `0x00138840` | `game/game.c` |
+| `game_is_authoritative` | `0x00138860` | `game/game.c` |
+| `game_is_predicted` | `0x00138880` | `game/game.c` |
+| `game_unknown_001388a0` | `0x001388a0` | `game/game.c` |
+| `game_lost` | `0x00138960` | `game/game.c` |
+| `game_finish` | `0x001389c0` | `game/game.c` |
+| `game_finished_wait_over` | `0x00138a10` | `game/game.c` |
+
+### Corregido
+
+- El campo de las opciones que llamé `reverted` no es una marca: es el tipo
+  de simulación de la partida (`simulation`). Volver a un punto de control
+  lo pone a 1, que es «en una sola consola»; por eso parecía una marca.
+
+### Lo que se sabe
+
+- Las opciones por defecto de una partida: campaña, una consola, dificultad
+  normal, semilla 0x78a8 y un ritmo de ticks igual a la mitad de la
+  frecuencia de la imagen (30 por segundo a 60 Hz, 25 a 50 Hz).
+- Cinco segundos después de perder, el juego vuelve al punto de control;
+  siete segundos después de terminar, acaba.
+- Un fotograma ejecuta varios ticks seguidos. Si entre dos ticks el bucle
+  tiene algo que hacer (guardar, cambiar de bsp...), los que faltan no se
+  ejecutan y su tiempo se descuenta.
+- Tipo de simulación: de 2 a 5 la partida se reparte entre consolas; 4 es
+  la consola que predice (cliente). Los nombres `distributed`,
+  `authoritative` y `predicted` son suposiciones.
+
+### Sin comprobar
+
+- Dos cambios que no alteran ningún resultado: dividir la frecuencia entre
+  dos con división o con desplazamiento (las negativas se sustituyen antes
+  por 60), y leer la simulación con signo o sin él.
+
 ## 2026-10-01 — El cambio de bsp y las acciones del bucle
 
 Cómo el juego cambia la parte del nivel que tiene cargada (el bsp), y tres

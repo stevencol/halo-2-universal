@@ -495,7 +495,6 @@ address,name,source,arguments,returns,convention
 00068250,unknown_00068250,,,bool
 00146660,unknown_00146660,,stack stack stack,void
 001870a0,unknown_001870a0,,stack stack,void
-00137f70,unknown_00137f70,,eax ebx,void
 0008dfc0,unknown_0008dfc0,,,void
 00137ed0,unknown_00137ed0,,stack,void
 001554b0,unknown_001554b0,,stack,void
@@ -513,3 +512,16 @@ address,name,source,arguments,returns,convention
 00190e37,unknown_00190e37,,,void
 0016e2c0,unknown_0016e2c0,,eax,void
 0012e150,unknown_0012e150,,ebx,void
+00138110,game_options_new_default,source/game/game.c,esi,void
+00137f70,game_run_ticks,source/game/game.c,eax ebx,void
+00138800,game_in_progress,source/game/game.c,,bool
+00138820,game_is_campaign_unknown12C,source/game/game.c,,int
+00138840,game_is_distributed,source/game/game.c,,bool
+00138860,game_is_authoritative,source/game/game.c,,bool
+00138880,game_is_predicted,source/game/game.c,,bool
+001388a0,game_unknown_001388a0,source/game/game.c,,int
+00138960,game_lost,source/game/game.c,eax,void
+001389c0,game_finish,source/game/game.c,,void
+00138a10,game_finished_wait_over,source/game/game.c,,int
+0007ad80,unknown_0007ad80,,edi stack,void
+00137fe0,unknown_00137fe0,,,void

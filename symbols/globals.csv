@@ -68,3 +68,5 @@ address,name,source
 004e0344,global_structure_lightmap,source/scenario/scenario.c
 004e0340,global_collision_bsp,source/scenario/scenario.c
 004e033c,global_bsp3d,source/scenario/scenario.c
+00510c49,unknown_00510c49,source/game/game.c
+004f55e7,unknown_004f55e7,source/game/game.c

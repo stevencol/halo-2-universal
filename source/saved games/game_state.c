@@ -343,8 +343,8 @@ void game_state_revert(
 		memcpy(&saved_header, &game_state_globals.headers[game_state_globals.file_index], sizeof(saved_header));
 		if (game_state_header_valid(&saved_header))
 		{
-			saved_header.options.reverted= TRUE;
-			game_state_globals.header->options.reverted= TRUE;
+			saved_header.options.simulation= _game_simulation_local;
+			game_state_globals.header->options.simulation= _game_simulation_local;
 			if (main_game_globals &&
 				main_game_globals->active &&
 				game_options_match(&main_game_globals->options, &saved_header.options) &&

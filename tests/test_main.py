@@ -180,6 +180,6 @@ def run(t) -> None:
                 "unknown_00068250": lambda harness, arguments, result=random_.choice((1, 1, 0)): result,
                 "unknown_00092f80": unknown_00092f80,
                 "unknown_00146660": lambda harness, arguments, values=values: unknown_00146660(harness, arguments, values),
-                "unknown_00137f70": unknown_00137f70,
+                "game_run_ticks": unknown_00137f70,
             },
         )

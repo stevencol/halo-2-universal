@@ -281,3 +281,110 @@ def run(t) -> None:
                 },
                 externals={"SwitchToThread": switch_to_thread, "main_loading_idle": nothing},
             )
+
+    # ---------- what the game is, and how it ends
+
+    def game_memory(**fields: int) -> Memory:
+        data = bytearray(random_.randbytes(GAME_SIZE))
+        struct.pack_into("<I", data, 8, fields.get("game_mode", 1))
+        data[0xC] = fields.get("simulation", 1) & 0xFF
+        struct.pack_into("<H", data, 0x132, fields.get("difficulty", 1) & 0xFFFF)
+        data[0x134] = fields.get("unknown12C", 0)
+        data[0x1120] = fields.get("active", 1)
+        data[0x1121] = fields.get("lost", 0)
+        data[0x1128] = fields.get("finished", 0)
+        struct.pack_into("<I", data, 0x112C, fields.get("finished_ticks", 0))
+        return Memory(bytes(data))
+
+    def ticks(ticks_per_second: int) -> Memory:
+        return Memory(struct.pack("<BBhfI", 1, 0, ticks_per_second, 1 / 30, 100))
+
+    for game_globals in (GAME, 0):
+        for active in (0, 1, 0x80):
+            t.check(
+                "game_in_progress",
+                globals={"main_game_globals": game_globals},
+                memory={GAME: game_memory(active=active)},
+            )
+
+    for game_mode in (1, 2, 0):
+        for unknown12C in (0, 1, 7):
+            t.check(
+                "game_is_campaign_unknown12C",
+                globals={"main_game_globals": GAME},
+                memory={GAME: game_memory(game_mode=game_mode, unknown12C=unknown12C)},
+            )
+        for flag in (b"\0", b"\x01"):
+            for difficulty in (0, 1, 2, 3, 4, 0x8003, 0xFFFF):
+                t.check(
+                    "game_unknown_001388a0",
+                    globals={"main_game_globals": GAME, "unknown_004f55e7": flag},
+                    memory={GAME: game_memory(game_mode=game_mode, difficulty=difficulty)},
+                )
+
+    for simulation in (0, 1, 2, 3, 4, 5, 6, 7, 0x80, 0xFF):
+        for name in ("game_is_distributed", "game_is_authoritative", "game_is_predicted"):
+            t.check(name, globals={"main_game_globals": GAME}, memory={GAME: game_memory(simulation=simulation)})
+
+    for lost in (0, 1, 0x100, 0xFF01):
+        for already in (0, 1):
+            for ticks_per_second in (30, 60, 25, 1, -1, 31):
+                t.check(
+                    "game_lost",
+                    lost,
+                    globals={"main_game_globals": GAME, "game_time_globals": TIME},
+                    memory={GAME: game_memory(lost=already), TIME: ticks(ticks_per_second)},
+                    externals={"game_state_note_death": nothing},
+                )
+
+    for finished in (0, 1):
+        for ticks_per_second in (30, 60, 25, 1, -1, 31):
+            t.check(
+                "game_finish",
+                globals={"main_game_globals": GAME, "game_time_globals": TIME},
+                memory={GAME: game_memory(finished=finished), TIME: ticks(ticks_per_second)},
+            )
+        for finished_ticks in (0, 1, NONE):
+            t.check(
+                "game_finished_wait_over",
+                globals={"main_game_globals": GAME},
+                memory={GAME: game_memory(finished=finished, finished_ticks=finished_ticks)},
+            )
+
+    # ---------- the options of a game
+
+    def random_bytes(harness, arguments):
+        size, buffer = arguments
+        harness.mu.mem_write(buffer, bytes(range(0x41, 0x41 + size)))
+        return 0
+
+    for refresh_rate in (60, 50, 0, -1, 59, -7, 1):
+        for unknown in (b"\0", b"\x01"):
+            t.check(
+                "game_options_new_default",
+                Buffer(random_.randbytes(OPTIONS_SIZE)),
+                globals={
+                    "unknown_00510c49": unknown,
+                    "xbox_video_settings": struct.pack("<h6B", refresh_rate, 0, 0, 0, 0, 0, 0),
+                },
+                externals={"unknown_0007ad80": random_bytes},
+            )
+
+    # ---------- the ticks of a frame
+
+    for tick_count in (0, 1, 3, 8, -1):
+        for stop_at in (None, 0, 1, 2, 7):
+            for seconds in (0.1, 0.05, 1.0, 0.0, 0.2666):
+
+                def pending(harness, arguments, stop_at=stop_at):
+                    calls = sum(1 for call in harness._calls if call[0] == "main_action_pending")
+                    return 1 if stop_at is not None and calls >= stop_at else 0
+
+                t.check(
+                    "game_run_ticks",
+                    tick_count,
+                    Buffer(struct.pack("<f", seconds), format="<f"),
+                    globals={"game_time_globals": TIME},
+                    memory={TIME: ticks(30)},
+                    externals={"main_action_pending": pending, "unknown_00137fe0": nothing},
+                )

@@ -17,13 +17,26 @@ struct game_options
 {
 	/* 1 for the campaign and 2 for multiplayer, at least */
 	long game_mode;
-	/* set in the options of a state of the game that is gone back to */
-	boolean reverted;
-	byte unknown5[0xB];
+	/* how the game is run among consoles: _game_simulation_local on one
+	console. A state of the game that is gone back to gets that one */
+	char simulation;
+	byte unknown5;
+	/* half the refresh rate of the picture */
+	short tick_rate;
+	/* eight bytes made at random for each game */
+	byte game_instance[8];
 	unsigned long random_seed;
-	byte unknown14[0x110];
+	long unknown14;
+	long unknown18;
+	byte unknown1C[0x108];
 	boolean unknown124;
-	byte unknown125[0xF];
+	byte unknown125[3];
+	boolean unknown128;
+	byte unknown129;
+	short difficulty;
+	/* a campaign with this set is not written to a saved game, at least */
+	boolean unknown12C;
+	byte unknown12D[7];
 	/* what unknown_0019d650 sets up, for a multiplayer game */
 	byte unknown134[0x44];
 	long unknown178;
@@ -47,9 +60,13 @@ struct main_game_globals
 	/* the game is lost, and will go back to the last checkpoint */
 	boolean lost;
 	byte unknown1122[2];
-	long unknown1124;
-	boolean unknown1128;
-	byte unknown1129[7];
+	/* ticks until the game goes back to the checkpoint */
+	long lost_ticks;
+	/* the game is over, and will end in so many ticks */
+	boolean finished;
+	boolean unknown1129;
+	byte unknown112A[2];
+	long finished_ticks;
 	long unknown1130;
 	byte unknown1134[4];
 	/* three sets of bits, cleared for a new structure bsp */
@@ -59,6 +76,29 @@ struct main_game_globals
 	byte unknown11F8[2];
 	short unknown11FA;
 	byte unknown11FC[4];
+};
+
+/* the values of the simulation of a game. The names are guesses, by what
+game_is_distributed, game_is_authoritative and game_is_predicted tell */
+enum
+{
+	_game_simulation_none,
+	_game_simulation_local,
+	_game_simulation_distributed_first,
+	_game_simulation_predicted= 4,
+	_game_simulation_distributed_last= 5
+};
+
+enum
+{
+	_game_mode_campaign= 1,
+	_game_mode_multiplayer= 2,
+
+	_game_difficulty_normal= 1,
+	_game_difficulty_legendary= 3,
+
+	GAME_DEFAULT_RANDOM_SEED= 0x78A8,
+	GAME_DEFAULT_REFRESH_RATE= 60
 };
 
 /* a part of the game, as the objects or the sound: what it does when the
@@ -96,6 +136,10 @@ typedef char verify_main_game_globals_active_offset[
 	offsetof(struct main_game_globals, active) == 0x1120 ? 1 : -1];
 typedef char verify_main_game_globals_size[
 	sizeof(struct main_game_globals) == 0x1200 ? 1 : -1];
+typedef char verify_game_options_difficulty_offset[
+	offsetof(struct game_options, difficulty) == 0x12A ? 1 : -1];
+typedef char verify_game_options_unknown134_offset[
+	offsetof(struct game_options, unknown134) == 0x134 ? 1 : -1];
 typedef char verify_game_options_unknown178_offset[
 	offsetof(struct game_options, unknown178) == 0x178 ? 1 : -1];
 typedef char verify_game_system_size[
@@ -121,6 +165,17 @@ void game_options_new(const struct game_options *options);
 void game_dispose_from_old_map(void);
 void game_initialize_for_new_structure_bsp(void);
 void game_dispose_from_old_structure_bsp(void);
+void game_options_new_default(struct game_options *options);
+void game_run_ticks(long tick_count, float *seconds);
+boolean game_in_progress(void);
+long game_is_campaign_unknown12C(void);
+boolean game_is_distributed(void);
+boolean game_is_authoritative(void);
+boolean game_is_predicted(void);
+long game_unknown_001388a0(void);
+void game_lost(boolean lost);
+void game_finish(void);
+long game_finished_wait_over(void);
 
 /* ---------- prototypes of functions not decompiled yet */
 
