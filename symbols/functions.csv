@@ -903,3 +903,8 @@ address,name,source,arguments,returns,convention
 0013fb70,usnzprintf,source/text/unicode.c,edi esi stack stack,void
 00215e60,saved_game_file_delete,source/saved games/saved_game_files.c,stack,void
 00215f40,saved_game_file_get_unused_name,source/saved games/saved_game_files.c,stack stack,bool
+0013de30,qsort_4byte,source/cseries/sort.c,ecx eax stack stack stack,void
+0013df80,qsort_2byte,source/cseries/sort.c,ecx eax stack stack stack,void
+0013e0e0,short_sort_4byte,source/cseries/sort.c,stack eax stack stack,void
+0013e140,short_sort_2byte,source/cseries/sort.c,stack eax stack stack,void
+00215900,saved_game_files_enumerate,source/saved games/saved_game_files.c,stack stack stack stack stack,void

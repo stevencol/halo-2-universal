@@ -2,6 +2,69 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — La lista de los archivos de un tipo, y cómo se ordena
+
+Cinco funciones. De 532 funciones se pasa a 537, el 4,77 % de las del juego
+(el 2,301 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `qsort_4byte` | `0x0013de30` | `cseries/sort.c` (nuevo) |
+| `qsort_2byte` | `0x0013df80` | `cseries/sort.c` |
+| `short_sort_4byte` | `0x0013e0e0` | `cseries/sort.c` |
+| `short_sort_2byte` | `0x0013e140` | `cseries/sort.c` |
+| `saved_game_files_enumerate` | `0x00215900` | `saved games/saved_game_files.c` |
+
+- `tests/test_sort.py`.
+- En `tools/mutation_check.py`, una mutación puede llevar un cuarto dato: el
+  nombre con el que sale en el resultado. Hace falta cuando el texto que se
+  cambia es largo porque la línea está repetida en varias funciones.
+
+### Lo que se sabe
+
+- El juego ordena números de 4 y de 2 bytes con el mismo algoritmo que la
+  biblioteca de C de su compilador: se pone un número en su sitio, con los
+  que no van después de él antes y los demás después, y se sigue con la
+  parte pequeña, dejando la grande apuntada para luego (hasta 30). Con 8
+  números o menos se va llevando al final el mayor de los que quedan. Los
+  nombres `qsort_4byte` y `qsort_2byte` son los de Halo 1.
+- A la función que compara se le pregunta si un número va **después** de
+  otro, y recibe además un dato de quien ordena. El primer argumento de pila
+  de las dos funciones de ordenar no se mira.
+- La lista de archivos de un tipo junta los del disco duro, los de las dos
+  unidades de memoria de un mando si se da uno (las unidades 1 + 2 × mando y
+  la siguiente) y, si se piden, los que vienen con el juego. Con estos
+  últimos la lista se ordena: primero los de las unidades y después los de
+  serie, cada grupo por su índice.
+- Cada unidad tiene su tabla detrás de la anterior, pero la memoria de los
+  archivos solo tiene sitio para una: la cuenta de la tabla de la primera
+  unidad de memoria es el mismo número que la sal de los índices, y sus
+  archivos caen en el búfer de copia. Es del juego; se reproduce tal cual.
+- El mando es uno de los cuatro, ninguno (−1) o `0xFF`: el juego salta por
+  una tabla sin comprobar que sea uno de ellos.
+
+### Cambiado
+
+- `saved_game_file_index_after` saca ella sus argumentos de la pila, como
+  toda función que se le da a otra: es la que compara al ordenar la lista.
+
+### Sin comprobar
+
+- En las funciones de ordenar, lo que pasa con una parte de un solo número:
+  no hay nada que ordenar en ella, así que da igual apuntarla o no. Lo mismo
+  la comprobación de que haya al menos dos números.
+- En la lista, qué unidad sigue cuando no se da mando: solo se mira el disco
+  duro y la cuenta no llega a usarse.
+- Un mando que no sea uno de los seis valores: en el juego es un salto a
+  donde caiga.
+
+### Mutaciones
+
+105 líneas rotas a propósito (67 en las funciones de ordenar y 38 en la
+lista): las 105 detectadas.
+
 ## 2026-10-02 — Borrar un archivo y buscarle nombre a uno nuevo
 
 Tres funciones. De 529 funciones se pasa a 532, el 4,72 % de las del juego

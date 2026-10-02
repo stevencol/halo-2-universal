@@ -15,9 +15,11 @@
 #   ]
 #
 # Each mutation is a file, a text that is in it exactly once and what to put
-# in its place. The file is put back as it was after each one, also if the
-# run is stopped with Ctrl+C. A mutation that makes the code loop without end
-# counts as caught: the tests stop at a limit.
+# in its place; a fourth thing, if there is one, is what the mutation is
+# called in what is printed (the start of the text, if there is none). The
+# file is put back as it was after each one, also if the run is stopped with
+# Ctrl+C. A mutation that makes the code loop without end counts as caught:
+# the tests stop at a limit.
 
 import subprocess
 import sys
@@ -36,13 +38,13 @@ def main() -> None:
     mutations = settings["MUTATIONS"]
 
     # all the texts have to be there before anything is changed
-    for path, old, _ in mutations:
+    for path, old, *_ in mutations:
         count = (ROOT / path).read_text(encoding="utf-8").count(old)
         if count != 1:
             sys.exit(f"{path} has this text {count} times, not once:\n{old}")
 
     missed = 0
-    for path, old, new in mutations:
+    for path, old, new, *label in mutations:
         file = ROOT / path
         original = file.read_text(encoding="utf-8")
         file.write_text(original.replace(old, new), encoding="utf-8", newline="\n")
@@ -60,7 +62,7 @@ def main() -> None:
         finally:
             file.write_text(original, encoding="utf-8", newline="\n")
         missed += not caught
-        text = " ".join(old.split())[:64]
+        text = " ".join((label[0] if label else old).split())[:64]
         print(("caught  " if caught else "MISSED  ") + text, caught[:2], flush=True)
 
     print(f"missed: {missed} of {len(mutations)}")

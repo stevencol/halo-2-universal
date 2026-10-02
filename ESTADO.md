@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 68.
+**Última actualización:** 2026-10-02, al terminar el hito 69.
 
 ## Dónde estamos
 
-- **532 funciones descompiladas de 11.265: el 4,72 % del juego** (el
-  2,256 % de los bytes de código).
-- Las 532 están comprobadas contra el ejecutable original
+- **537 funciones descompiladas de 11.265: el 4,77 % del juego** (el
+  2,301 % de los bytes de código).
+- Las 537 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile deleting a file and finding a free name* (ver `git log`).
+- Último hito: *Decompile listing the files of a type, and the sorts* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -66,7 +66,9 @@ Módulos (funciones hechas / archivo):
 
 - [x] Tablas de datos — `memory\data.c` (20, módulo completo)
 - [x] CRC de 32 bits — `memory\crc.c` (2, completo)
-- [x] Búsqueda binaria — `memory\binary_search.c` (1)
+- [x] Búsqueda binaria — `memory\binary_search.c` (1; queda la de números
+      de 4 bytes, `0x0013dd70`)
+- [x] Ordenar números — `cseries\sort.c` (4)
 - [x] Caché de bloques de páginas — `memory\lruv_cache.c` (8, completo)
 - [x] Fondo de memoria — `memory\memory_pool.c` (11, completo)
 - [x] Caché de animaciones — `cache\xbox_animation_cache.c` (18, completo)
@@ -81,9 +83,9 @@ Módulos (funciones hechas / archivo):
 - [x] Nombres por defecto de los archivos —
       `saved games\saved_game_file_names.c` (14, de `0x00217620` a
       `0x00217b70`)
-- [ ] Archivos de los jugadores — `saved games\saved_game_files.c` (44 de
-      48; va de `0x00215790` a `0x00217590`. Faltan las cuatro grandes:
-      `0x00215900`, `0x00215c00`, `0x002164c0` y `0x002170e0`)
+- [ ] Archivos de los jugadores — `saved games\saved_game_files.c` (45 de
+      48; va de `0x00215790` a `0x00217590`. Faltan `0x00215c00`,
+      `0x002164c0` y `0x002170e0`)
 - [ ] Tareas de los archivos de los jugadores —
       `saved games\saved_game_file_tasks.c` (18 de 20; el archivo va de
       `0x002accd0` a `0x002ae090`. Faltan `0x002ad7c0` y `0x002adb10`, el

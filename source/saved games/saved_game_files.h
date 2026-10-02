@@ -13,6 +13,7 @@ names of the functions are guesses.
 #include <stdint.h>
 
 #include "cseries/async.h"
+#include "cseries/sort.h"
 #include "game/game.h"
 #include "memory/data.h"
 #include "text/unicode.h"
@@ -125,6 +126,10 @@ enum
 	SAVED_GAME_FILE_LANGUAGES= 9,
 	SAVED_GAME_IMAGE_SIZE= 0x1000,
 	MAXIMUM_CACHED_SAVED_GAME_FILES= 4,
+	/* the drives: the hard disk, and two memory units for each controller */
+	MEMORY_UNITS_PER_CONTROLLER= 2,
+	/* the files of the hard disk alone are asked for with this, or NONE */
+	SAVED_GAME_FILES_NO_CONTROLLER= 0xFF,
 	SAVED_GAME_FILE_NAME_COMPARE_LENGTH= 128
 };
 
@@ -249,6 +254,7 @@ void saved_game_files_set_string_list(long string_list_index);
 void SAVED_GAME_FILES_CALLBACK saved_game_files_allocate_memory(long configuration);
 void saved_game_files_free_memory(void);
 void saved_game_files_new(struct allocation *allocation);
+void saved_game_files_enumerate(long controller_index, long type, word *count, long *files, boolean built_in);
 struct saved_game_file_information *ALLOCATION_CONVENTION saved_game_file_information_new(
 	struct saved_game_file_information *information);
 wchar *saved_game_file_get_name(long file, wchar *name);
@@ -286,7 +292,7 @@ boolean saved_game_file_set_information(const struct saved_game_file_information
 boolean saved_game_file_add_information(long table_index, const struct saved_game_file_information *information,
 	long *index);
 void saved_game_file_delete_information(long file);
-boolean saved_game_file_index_after(long file, long other, void *unused);
+boolean SORT_CALLBACK saved_game_file_index_after(long file, long other, void *unused);
 long saved_game_file_index_after_delete(long file, long deleted);
 void saved_game_files_take_operation(long file, struct saved_game_files_operation **operation);
 long saved_game_files_count_saved_games(long unit_index);

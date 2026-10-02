@@ -6,8 +6,7 @@ gives the address it has there.
 
 The files that the players keep: profiles, variants of the games and
 playlists. The names of the functions are guesses. The file goes from
-0x00215790 to 0x00217590; not here: 0x00215900, 0x00215c00, 0x002164c0 and
-0x002170e0.
+0x00215790 to 0x00217590; not here: 0x00215c00, 0x002164c0 and 0x002170e0.
 */
 
 #include "saved_game_files.h"
@@ -18,6 +17,7 @@ playlists. The names of the functions are guesses. The file goes from
 #include "tag_files/files.h"
 #include "text/unicode_string_list.h"
 #include "cseries/async.h"
+#include "cseries/sort.h"
 #include "sound/sound_definitions.h"
 
 #include <stdint.h>
@@ -427,7 +427,7 @@ boolean saved_game_file_get_directory(
 
 /* 0x002163d0: whether a file goes after another in a list: those that are
 built in go after those of the drives, and the others by their indices */
-boolean saved_game_file_index_after(
+boolean SORT_CALLBACK saved_game_file_index_after(
 	long file,
 	long other,
 	void *unused)
@@ -1199,6 +1199,100 @@ void saved_game_files_new(
 	unknown_0051ea14= files;
 	saved_game_files_next_salt= (saved_game_files_next_salt+1)%(SAVED_GAME_FILE_INDEX_SALT_MASK+1);
 	unknown_0055c150= SAVED_GAME_FILES_INITIAL_FLAGS;
+}
+
+/* 0x00215900: the files of a type: those of the hard disk and, if a
+controller is given, those of its two memory units, and then those that come
+with the game, if they are asked for. The count comes with how many there is
+room for, and leaves with how many there are. With those that come with the
+game they are sorted: those first, and each kind by its index.
+
+Each drive has its table after that of the one before, though the memory has
+room for only one: those of the memory units are in what is after it. The
+controller is one of the four, NONE or 0xFF: no other is expected */
+void saved_game_files_enumerate(
+	long controller_index,
+	long type,
+	word *count,
+	long *files,
+	boolean built_in)
+{
+	long found= 0;
+
+	if (unknown_0051ea14)
+	{
+		long unit_count= (controller_index==NONE || controller_index==SAVED_GAME_FILES_NO_CONTROLLER) ? 1 :
+			1+MEMORY_UNITS_PER_CONTROLLER;
+		long unit_index= 0;
+		long unit;
+
+		for (unit= 0; unit<unit_count && found<*count; unit++)
+		{
+			char letter;
+
+			if (input_get_unit_drive_letter(unit_index, &letter))
+			{
+				const struct saved_game_file_table *table=
+					(const struct saved_game_file_table *)((const byte *)unknown_0051ea14+UNKNOWN_0051EA14_TABLES_OFFSET)+
+					unit_index;
+				long index;
+
+				for (index= 0; index<table->count; index++)
+				{
+					struct saved_game_file_information information= table->files[index];
+
+					if (information.type==type)
+					{
+						unsigned long salt= *(const uint32_t *)((const byte *)unknown_0051ea14+UNKNOWN_0051EA14_SALT_OFFSET)&
+							SAVED_GAME_FILE_INDEX_SALT_MASK;
+
+						files[found++]= (long)((salt<<SAVED_GAME_FILE_INDEX_SALT_SHIFT) |
+							(((unsigned long)index&SAVED_GAME_FILE_INDEX_FILE_MASK)<<SAVED_GAME_FILE_INDEX_FILE_SHIFT) |
+							(((unsigned long)unit_index&SAVED_GAME_FILE_INDEX_UNIT_MASK)<<SAVED_GAME_FILE_INDEX_UNIT_SHIFT) |
+							((unsigned long)type&SAVED_GAME_FILE_INDEX_TYPE_MASK));
+					}
+					if (found>=*count)
+					{
+						break;
+					}
+				}
+			}
+
+			/* the next drive: a memory unit of the controller, if there is
+			one */
+			if (controller_index==NONE || controller_index==SAVED_GAME_FILES_NO_CONTROLLER)
+			{
+				unit_index++;
+			}
+			else
+			{
+				unit_index= unit+1+controller_index*MEMORY_UNITS_PER_CONTROLLER;
+			}
+		}
+
+		if (built_in)
+		{
+			const struct built_in_saved_game_files *built_in_files= unknown_0051ea14;
+			long built_in_count= built_in_files->count;
+			long index;
+
+			for (index= 0; found<*count && index<built_in_count; index++)
+			{
+				if (built_in_files->files[index].type==type)
+				{
+					unsigned long salt= *(const uint32_t *)((const byte *)unknown_0051ea14+UNKNOWN_0051EA14_SALT_OFFSET)&
+						SAVED_GAME_FILE_INDEX_SALT_MASK;
+
+					files[found++]= (long)((salt<<SAVED_GAME_FILE_INDEX_SALT_SHIFT) |
+						(1UL<<_saved_game_file_index_built_in_bit) |
+						(((unsigned long)index&SAVED_GAME_FILE_INDEX_FILE_MASK)<<SAVED_GAME_FILE_INDEX_FILE_SHIFT) |
+						((unsigned long)type&SAVED_GAME_FILE_INDEX_TYPE_MASK));
+				}
+			}
+			qsort_4byte(files, (unsigned long)found, &built_in_count, saved_game_file_index_after, NULL);
+		}
+	}
+	*count= (word)found;
 }
 
 /* 0x00215b40: what the game knows of a file, before it knows anything */

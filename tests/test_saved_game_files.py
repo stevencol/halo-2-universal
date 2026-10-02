@@ -878,3 +878,88 @@ def run(t) -> None:
                     "unicode_string_list_has_string": lambda harness, arguments: 1,
                 },
             )
+
+    # ---------- the files of a type
+
+    UNITS = 9
+    SALT = 0x4BEFC
+
+    def known_files(type_: int, counts: dict, built_in_count: int) -> Buffer:
+        """What the game knows of the files: those that come with it, and a
+        table for each drive, one after another. The count of the table of
+        the first memory unit is where the salt is."""
+
+        def a_type() -> int:
+            return random_.choice((type_, type_, type_, type_ ^ 1, type_ ^ 0x10, type_ ^ 0x80000000, random_.randrange(11)))
+
+        data = bytearray(TABLES + UNITS * TABLE_SIZE)
+        struct.pack_into("<i", data, 0, built_in_count)
+        for n in range(min(max(built_in_count, 0), 101)):
+            data[4 + n * BUILT_IN_SIZE : 4 + (n + 1) * BUILT_IN_SIZE] = random_.randbytes(BUILT_IN_SIZE)
+            struct.pack_into("<I", data, 4 + n * BUILT_IN_SIZE, a_type())
+        for unit in range(UNITS):
+            base = TABLES + unit * TABLE_SIZE
+            count = counts.get(unit, 0)
+            struct.pack_into("<i", data, base, count)
+            for n in range(max(count, 0) + 1):
+                where = base + 4 + n * INFORMATION
+                data[where : where + INFORMATION] = random_.randbytes(INFORMATION)
+                struct.pack_into("<I", data, where + 0x38, a_type())
+        assert struct.unpack_from("<i", data, SALT)[0] == counts.get(1, 0)
+        return Buffer(bytes(data))
+
+    for n in range(170):
+        type_ = random_.choice((0, 1, 3, 7, 10, 0x13, 15))
+        controller = (NONE, 0xFF, 0, 1, 2, 3)[n % 6]
+        counts = {unit: random_.choice((0, 1, 2, 5, 12, -1)) for unit in range(UNITS) if random_.random() < 0.8}
+        # the count of the first memory unit is the salt: one that is
+        # negative has all of the bits of a salt, and no files
+        counts[1] = random_.choice((counts.get(1, 0), random_.randrange(0x200), -1 - random_.getrandbits(31)))
+        if counts[1] > 12:
+            # a salt with all of its bits is the count of a table of no drive
+            # that is there
+            mask_without = True
+        else:
+            mask_without = False
+        capacity = random_.choice((0, 1, 2, 3, 8, 40, 40, 40, 0xFFFF))
+        room = 60
+        t.check(
+            "saved_game_files_enumerate",
+            controller,
+            type_,
+            Buffer(struct.pack("<H", capacity) + random_.randbytes(6)),
+            Buffer(random_.randbytes(4 * (min(capacity, room) + 2))),
+            random_.choice((0, 1, 1, 1, 0x100, 0xFF01)),
+            globals={
+                "unknown_0051ea14": known_files(type_, counts, random_.choice((0, 0, 1, 3, 9, 14, -1))),
+                "input_globals": input_globals(
+                    random_,
+                    random_.choice((0xFFFF, 0xFFFF, 1, 0, 0x1FE, random_.getrandbits(9), random_.getrandbits(9))) & (~2 if mask_without else ~0) & 0xFFFF,
+                ),
+            },
+        )
+    # many files that come with the game, and no memory for the files
+    for capacity in (5, 101, 300):
+        for built_in_count in (100, 101):
+            t.check(
+                "saved_game_files_enumerate",
+                NONE,
+                4,
+                Buffer(struct.pack("<H", capacity) + random_.randbytes(6)),
+                Buffer(random_.randbytes(4 * 180)),
+                1,
+                globals={
+                    "unknown_0051ea14": known_files(4, {0: 12, 1: 0x155}, built_in_count),
+                    "input_globals": input_globals(random_, 1),
+                },
+            )
+    for controller in (NONE, 0xFF, 2):
+        t.check(
+            "saved_game_files_enumerate",
+            controller,
+            1,
+            Buffer(struct.pack("<H", 9) + random_.randbytes(6)),
+            Buffer(random_.randbytes(40)),
+            random_.getrandbits(1),
+            globals={"unknown_0051ea14": 0, "input_globals": input_globals(random_, 0xFFFF)},
+        )
