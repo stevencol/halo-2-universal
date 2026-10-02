@@ -172,6 +172,23 @@ boolean saved_game_auxiliary_read(void *header, long header_size, void *data, lo
 boolean saved_game_auxiliary_write(void *header, long header_size, void *data, long data_size,
 	struct saved_game_file_result *result, long saved_game);
 
+/* ---------- prototypes/SAVED_GAME_FILE_NAMES.C */
+
+const wchar *saved_game_file_default_name_profile(long language);
+const wchar *saved_game_file_default_name_slayer(long language);
+const wchar *saved_game_file_default_name_koth(long language);
+const wchar *saved_game_file_default_name_race(long language);
+const wchar *saved_game_file_default_name_oddball(long language);
+const wchar *saved_game_file_default_name_juggernaut(long language);
+const wchar *saved_game_file_default_name_headhunter(long language);
+const wchar *saved_game_file_default_name_ctf(long language);
+const wchar *saved_game_file_default_name_assault(long language);
+const wchar *saved_game_file_default_name_territories(long language);
+const wchar *saved_game_file_default_name_playlist(long language);
+const wchar *saved_game_file_default_name_unknown(long language);
+void saved_game_file_get_default_name(unsigned long string_id, long language, wchar *name);
+long saved_game_file_name_length(const wchar *name);
+
 /* ---------- globals */
 
 extern struct saved_game_files_operation saved_game_files_operation;

@@ -830,3 +830,17 @@ address,name,source,arguments,returns,convention
 00136770,find_files,source/tag_files/files_xbox.c,edx eax ebx stack,int
 001367d0,file_create,source/tag_files/files_xbox.c,ebx,bool
 00216f80,saved_game_file_write_image,source/saved games/saved_game_files.c,ecx stack,bool
+00217620,saved_game_file_default_name_profile,source/saved games/saved_game_file_names.c,eax,wstring
+00217680,saved_game_file_default_name_slayer,source/saved games/saved_game_file_names.c,eax,wstring
+002176e0,saved_game_file_default_name_koth,source/saved games/saved_game_file_names.c,eax,wstring
+00217740,saved_game_file_default_name_race,source/saved games/saved_game_file_names.c,eax,wstring
+002177a0,saved_game_file_default_name_oddball,source/saved games/saved_game_file_names.c,eax,wstring
+002177f0,saved_game_file_default_name_juggernaut,source/saved games/saved_game_file_names.c,eax,wstring
+00217840,saved_game_file_default_name_headhunter,source/saved games/saved_game_file_names.c,eax,wstring
+002178a0,saved_game_file_default_name_ctf,source/saved games/saved_game_file_names.c,eax,wstring
+00217900,saved_game_file_default_name_assault,source/saved games/saved_game_file_names.c,eax,wstring
+00217960,saved_game_file_default_name_territories,source/saved games/saved_game_file_names.c,eax,wstring
+002179c0,saved_game_file_default_name_playlist,source/saved games/saved_game_file_names.c,eax,wstring
+00217a20,saved_game_file_default_name_unknown,source/saved games/saved_game_file_names.c,eax,wstring
+00217a80,saved_game_file_get_default_name,source/saved games/saved_game_file_names.c,ecx edx esi,void
+00217b70,saved_game_file_name_length,source/saved games/saved_game_file_names.c,ecx,int

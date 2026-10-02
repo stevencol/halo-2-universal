@@ -2,6 +2,65 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Los nombres por defecto de los archivos
+
+El nombre que recibe un archivo de cada tipo cuando el jugador no le pone
+ninguno, en cada idioma. De 461 funciones se pasa a 475, el 4,22 % de las
+del juego (el 1,996 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección |
+| --- | --- |
+| `saved_game_file_default_name_profile` | `0x00217620` |
+| `saved_game_file_default_name_slayer` | `0x00217680` |
+| `saved_game_file_default_name_koth` | `0x002176e0` |
+| `saved_game_file_default_name_race` | `0x00217740` |
+| `saved_game_file_default_name_oddball` | `0x002177a0` |
+| `saved_game_file_default_name_juggernaut` | `0x002177f0` |
+| `saved_game_file_default_name_headhunter` | `0x00217840` |
+| `saved_game_file_default_name_ctf` | `0x002178a0` |
+| `saved_game_file_default_name_assault` | `0x00217900` |
+| `saved_game_file_default_name_territories` | `0x00217960` |
+| `saved_game_file_default_name_playlist` | `0x002179c0` |
+| `saved_game_file_default_name_unknown` | `0x00217a20` |
+| `saved_game_file_get_default_name` | `0x00217a80` |
+| `saved_game_file_name_length` | `0x00217b70` |
+
+Todas en el archivo nuevo `saved games/saved_game_file_names.c`, con
+`tests/test_saved_game_file_names.py`.
+
+- En la herramienta de pruebas, el tipo de resultado `wstring`: como
+  `string`, para textos de caracteres de 16 bits.
+
+### Lo que se sabe
+
+- Cada tipo de archivo tiene su función, que es un `switch` del idioma.
+  Las doce funciones se han escrito con un script que lee las tablas de
+  salto y los textos del ejecutable, no a mano.
+- El juego traduce los nombres al japonés, alemán, francés, español,
+  italiano, coreano y chino, pero **no todos a todos**: «Slayer» solo
+  cambia en alemán («Showdown»), francés, español, italiano y chino;
+  «Juggernaut» solo en alemán («Moloch»), francés y chino. El japonés y el
+  coreano solo traducen «Profile» y «Playlist».
+- El portugués, el noveno idioma de los textos del juego, está en todos los
+  `switch` y en todos recibe el nombre en inglés.
+- Los modos `race` y `headhunter`, que no salieron en el juego, tienen sus
+  nombres traducidos igual que los demás.
+- Hay un duodécimo texto («Default», «Player» en japonés) que no es de
+  ningún tipo de archivo: su identificador es `0x1B0006E8`.
+
+### Sin comprobar
+
+- Si el nombre se copia con 255 o con 256 caracteres: todos los nombres son
+  cortos y después se pone el cero final.
+
+### Mutaciones
+
+176 líneas rotas a propósito: 174 detectadas. De las otras dos, una es la
+de «Sin comprobar» y la otra señaló una constante que no se usaba
+(`_language_portuguese`): se ha quitado.
+
 ## 2026-10-02 — Crear archivos y la imagen de una variante
 
 Tres funciones de archivos que faltaban y la que escribe la imagen de una
