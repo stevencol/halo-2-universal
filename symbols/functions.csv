@@ -881,7 +881,7 @@ address,name,source,arguments,returns,convention
 002accd0,saved_game_file_read_work,source/saved games/saved_game_file_tasks.c,stack stack stack,int
 002adf70,saved_game_file_read_signed,source/saved games/saved_game_file_tasks.c,eax stack stack stack stack,void
 002acde0,saved_game_file_write_work,source/saved games/saved_game_file_tasks.c,stack stack stack,int
-002ad7c0,unknown_002ad7c0,,stack stack stack,int,stdcall
+002ad7c0,saved_game_state_read_work,source/saved games/saved_game_file_tasks.c,stack stack stack,int
 002adb10,unknown_002adb10,,stack stack stack,int,stdcall
 002ae090,saved_game_file_write_signed,source/saved games/saved_game_file_tasks.c,eax stack stack stack stack,void
 002ad380,saved_game_file_copy_read,source/saved games/saved_game_file_tasks.c,esi,bool

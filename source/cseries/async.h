@@ -198,13 +198,16 @@ struct async_globals
 	long tasks_added;
 };
 
-/* 0x005020c8: a buffer that the function at 0x002ad7c0 uses, which is not
-understood yet */
+/* 0x005020c8: the buffer that a task reads to when it is given none: the
+task that used it last, where it is and how large it is, and whether it is
+not the buffer of the tasks (async_buffer) */
 struct async_buffer_globals
 {
 	long unknown0;
 	byte *address;
 	unsigned long size;
+	boolean other_buffer;
+	byte padD[3];
 };
 
 #if defined(__i386__)

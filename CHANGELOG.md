@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Leer el estado de una partida guardada, paso a paso
+
+Una función. De 540 funciones se pasa a 541, el 4,80 % de las del juego (el
+2,381 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `saved_game_state_read_work` | `0x002ad7c0` | `saved games/saved_game_file_tasks.c` |
+
+### Lo que se sabe
+
+- El archivo del estado de una partida guardada tiene un principio, el
+  resto y, detrás, la firma de 20 bytes de los dos. El hilo de las tareas lo
+  lee en tres pasos, uno cada vez que le da el turno: abre el archivo y lee
+  el principio; lee el resto; y lee la firma y la compara con la que la
+  consola ha ido haciendo de lo leído. Solo si coinciden la lectura salió
+  bien.
+- Si no se le da dónde dejar el resto, lo lee a trozos al búfer de las
+  tareas (`async_buffer_globals`), tantos bytes como quepan cada vez: sirve
+  para comprobar la firma sin quedarse con los datos.
+- `async_buffer_globals` apunta además quién lo usó el último y si el búfer
+  no es el de siempre (su cuarto campo, que faltaba).
+- El progreso que ve el jugador es lo leído entre el total (principio,
+  resto y firma); al acabar, bien o mal, es 1.
+- Si quien pidió la lectura la cancela (el segundo byte del resultado), el
+  paso siguiente cierra todo y termina.
+- Los tamaños son números sin signo y el juego los pasa a reales como si
+  tuvieran signo, sumando 4.294.967.296 a los negativos. Con la precisión
+  simple con la que corre el juego esa suma se redondea, y el resultado no
+  es el mismo que convirtiendo el número de una vez: hay que hacerlo igual.
+
+### Sin comprobar
+
+- Que el trozo que se lee no pase de lo que queda, escrito de otra forma
+  (`>=` lo que queda más uno): es lo mismo salvo con un resto de 4 GB.
+
+### Mutaciones
+
+54 líneas rotas a propósito: 53 detectadas, y la otra es la de «Sin
+comprobar».
+
 ## 2026-10-02 — El índice que un archivo tiene ahora: `saved_game_files.c`, completo
 
 Una función. De 539 funciones se pasa a 540, el 4,79 % de las del juego (el

@@ -7,7 +7,7 @@
 import random
 import struct
 
-from difftest import Buffer, FunctionPointer, Mock, mock_address
+from difftest import Buffer, FunctionPointer, GlobalData, GlobalPointer, Mock, Pointer, mock_address
 from test_async import calls_so_far
 
 NONE = 0xFFFFFFFF
@@ -520,6 +520,86 @@ def run(t) -> None:
                 "SetFilePointer": lambda harness, arguments: arguments[1],
                 "GetLastError": lambda harness, arguments, last_error=last_error: last_error,
                 "SetEndOfFile": lambda harness, arguments, set_end=set_end: set_end,
+                "CloseHandle": lambda harness, arguments: 1,
+            },
+        )
+
+    # ---------- the work of reading the state of a saved game
+
+    STATE_RESULT, STATE_HEADER, STATE_DATA, STATE_SIZE = 0x24, 0x130, 0x180, 0x300
+    WRITTEN = 0x40
+
+    def state_read(step: int, header_size: int, data_size: int, data_there: bool, position: int, cancelled: int, file: int, made: int) -> Buffer:
+        """The data of the task, and after it in the same buffer its result,
+        the place of the start of the file and that of the rest."""
+        blob = bytearray(random_.randbytes(STATE_SIZE))
+        struct.pack_into(
+            "<8I2B", blob, 0,
+            STATE_HEADER, header_size, STATE_DATA if data_there else 0, data_size, file, position, made, STATE_RESULT,
+            random_.choice((0, 1, 0x80)), step,
+        )
+        blob[STATE_RESULT + 1] = cancelled
+        path = b"u:\\0123456789AB\\state"
+        blob[STATE_RESULT + 8 : STATE_RESULT + 8 + len(path) + 1] = path + bytes(1)
+        return Buffer(bytes(blob), pointers=(0, 0x1C, 8) if data_there else (0, 0x1C))
+
+    for n in range(420):
+        step = random_.choice((0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 3, 0xFF, 0x80))
+        header_size = random_.choice((0, 0x10, 0x40, 0x40, 0x80000000, 0xFFFFFFE0))
+        data_size = random_.choice((0, 0x10, 0x100, 0x100, 0x90000000))
+        if header_size + data_size + 0x14 == 1 << 32:
+            data_size = 0x100
+        data_there = random_.random() < 0.6
+        position = random_.choice((0, 0, 0x10, 0xF0, data_size, data_size + 1, max(data_size - 1, 0))) & 0xFFFFFFFF
+        if data_there and position > 0x100:
+            # what is read goes to the place of the rest: it is to be in it
+            position = 0x100
+        signature = random_.randbytes(0x14)
+        stored = signature if n % 3 else signature[:-1] + bytes([signature[-1] ^ 1]) if n % 6 else bytes([signature[0] ^ 0x80]) + signature[1:]
+        contents = random_.randbytes(WRITTEN)
+        # which of the things that the console does fails, if any
+        fails = random_.choice((None, None, None, "create", "read", "short", "unset", "begin", "update", "seek", "end"))
+        blob = state_read(step, header_size, data_size, data_there, position, random_.choice((0, 0, 0, 0, 1, 0x80)), random_.choice((0x4321, 0x4321, NONE)), random_.choice((0x55, 0x55, NONE)))
+
+        def read_file(harness, arguments, fails=fails, stored=stored, contents=contents, last=step not in (0, 1)):
+            file, buffer, count, bytes_read, overlapped = arguments
+            harness.mu.mem_write(buffer, stored if last else contents[:count])
+            if fails != "unset":
+                harness.mu.mem_write(bytes_read, struct.pack("<I", (count - 1) & 0xFFFFFFFF if fails == "short" else count))
+            return fails != "read", (file, count, overlapped)
+
+        def update(harness, arguments, fails=fails):
+            made, data, size = arguments
+            return 5 if fails == "update" else 0, (made, bytes(harness.mu.mem_read(data, min(size, 0x10))), size)
+
+        def finish(harness, arguments, fails=fails, signature=signature):
+            made, where = arguments
+            if where:
+                harness.mu.mem_write(where, signature)
+            return 5 if fails == "end" else 0, (made, where != 0)
+
+        other = Buffer(random_.randbytes(0x80))
+        own = random_.getrandbits(1)
+        t.check(
+            "saved_game_state_read_work",
+            random_.getrandbits(32),
+            blob,
+            random_.getrandbits(32),
+            globals={
+                "async_buffer": GlobalData(random_.randbytes(0x80)),
+                "async_buffer_globals": random_.getrandbits(32),
+                "async_buffer_globals+4": GlobalPointer("async_buffer") if own else Pointer(other, 0),
+                "async_buffer_globals+8": random_.choice((0x40, 0x40, 0x10, 0x30, 0)),
+                "async_buffer_globals+12": random_.getrandbits(32),
+            },
+            extra=[other],
+            externals={
+                "CreateFileA": lambda harness, arguments, fails=fails: (NONE if fails == "create" else 0x7654, (text(harness, arguments[0]), *arguments[1:])),
+                "ReadFile": read_file,
+                "SetFilePointer": lambda harness, arguments, fails=fails: (arguments[1] + 1) & 0xFFFFFFFF if fails == "seek" else arguments[1],
+                "XCalculateSignatureBegin": lambda harness, arguments, fails=fails: NONE if fails == "begin" else 0x66,
+                "XCalculateSignatureUpdate": update,
+                "XCalculateSignatureEnd": finish,
                 "CloseHandle": lambda harness, arguments: 1,
             },
         )

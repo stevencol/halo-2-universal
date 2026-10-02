@@ -6,8 +6,8 @@ gives the address it has there.
 
 The files of the players are read and written by the thread of the tasks of
 async.c: here is what gives it the tasks. The names of the file and of the
-functions are guesses. Not here: 0x002ad7c0 and 0x002adb10, the work of the
-tasks that read and write the file of the state of a saved game.
+functions are guesses. Not here: 0x002adb10, the work of the task that
+writes the file of the state of a saved game.
 */
 
 #include "saved_game_files.h"
@@ -49,6 +49,7 @@ enum
 	CREATE_NEW= 1,
 	CREATE_ALWAYS= 2,
 	OPEN_EXISTING= 3,
+	OPEN_ALWAYS= 4,
 	FILE_FLAG_SEQUENTIAL_SCAN= 0x08000000,
 	INVALID_HANDLE_VALUE= -1
 };
@@ -74,12 +75,25 @@ struct saved_game_state_read_task
 	long header_size;
 	void *data;
 	long data_size;
-	long unknown10;
-	long unknown14;
-	long unknown18;
+	/* the file, open; NONE if it is not */
+	uint32_t file;
+	/* how much of the rest has been read */
+	unsigned long position;
+	/* the signature of what has been read, which the console is making;
+	NONE if it is not */
+	uint32_t signature;
 	struct saved_game_file_result *result;
-	boolean unknown20;
-	boolean unknown21;
+	/* the signature is for this console alone */
+	boolean non_roamable;
+	/* how far the read is */
+	char step;
+};
+
+enum
+{
+	_saved_game_state_read_header,
+	_saved_game_state_read_data,
+	_saved_game_state_read_signature
 };
 
 /* that of the task that writes it */
@@ -156,9 +170,8 @@ uint32_t XCalculateSignatureBegin(uint32_t flags);
 uint32_t XCalculateSignatureUpdate(uint32_t signature, const void *data, uint32_t size);
 uint32_t XCalculateSignatureEnd(uint32_t signature, void *result);
 
-/* 0x002ad7c0, 0x002adb10: the work of the tasks that read and write the
-file of the state of a saved game */
-long ASYNC_CALLBACK unknown_002ad7c0(struct async_custom_task *task, void *data, long size);
+/* 0x002adb10: the work of the task that writes the file of the state of a
+saved game */
 long ASYNC_CALLBACK unknown_002adb10(struct async_custom_task *task, void *data, long size);
 
 /* ---------- code */
@@ -302,6 +315,166 @@ static inline __attribute__((always_inline)) void saved_game_state_result_start(
 	saved_game_file_result_get_path(result)[SAVED_GAME_FILE_PATH_LENGTH-1]= 0;
 }
 
+/* a number with no sign, as a real: the game takes it as one with a sign and
+adds 4294967296 to it if it is negative. With the precision that the game
+runs with, the sum is rounded: it is not the same as taking the number at
+once */
+static inline __attribute__((always_inline)) long double saved_game_state_unsigned_to_real(
+	unsigned long value)
+{
+	long double real= (long double)(long)value;
+
+	if ((long)value<0)
+	{
+		real+= 4294967296.0f;
+	}
+
+	return real;
+}
+
+/* closes what the task that reads the file of the state of a saved game has
+open, and ends it */
+static inline __attribute__((always_inline)) long saved_game_state_read_work_end(
+	struct saved_game_state_read_task *read)
+{
+	if (read->file!=(uint32_t)INVALID_HANDLE_VALUE)
+	{
+		CloseHandle(read->file);
+	}
+	if (read->signature!=(uint32_t)INVALID_HANDLE_VALUE)
+	{
+		XCalculateSignatureEnd(read->signature, NULL);
+	}
+
+	return 1;
+}
+
+/* 0x002ad7c0: the work of the task that reads the file of the state of a
+saved game, a step each time that the thread gives it the turn: 0 while
+there is more to do. First the file is opened and what is at its start is
+read; then the rest, a piece at a time if there is nowhere to read it to
+(then it goes to the buffer of the tasks, as much as fits); and last the
+signature that is after it, which has to be that of what was read. The
+result says how far the read is, and whether it went well */
+long ASYNC_CALLBACK saved_game_state_read_work(
+	struct async_custom_task *task,
+	void *data,
+	long size)
+{
+	struct saved_game_state_read_task *read= data;
+	float total= (float)saved_game_state_unsigned_to_real(
+		(unsigned long)(read->data_size+SAVED_GAME_FILE_SIGNATURE_SIZE+read->header_size));
+	uint32_t bytes_read;
+
+	(void)size;
+
+	read->result->error= SAVED_GAME_FILE_ERROR_DEFAULT;
+	if (read->result->unknown1)
+	{
+		return saved_game_state_read_work_end(read);
+	}
+	if (read->step==_saved_game_state_read_header)
+	{
+		read->file= CreateFileA(saved_game_file_result_get_path(read->result), (uint32_t)GENERIC_READ, 0, NULL,
+			OPEN_ALWAYS, 0, 0);
+		if (read->file==(uint32_t)INVALID_HANDLE_VALUE)
+		{
+			return saved_game_state_read_work_end(read);
+		}
+		if (!ReadFile(read->file, read->header, (uint32_t)read->header_size, &bytes_read, NULL) ||
+			bytes_read!=(uint32_t)read->header_size)
+		{
+			return saved_game_state_read_work_end(read);
+		}
+		read->signature= XCalculateSignatureBegin(read->non_roamable!=0);
+		if (read->signature==(uint32_t)INVALID_HANDLE_VALUE)
+		{
+			return saved_game_state_read_work_end(read);
+		}
+		if (read->header_size && XCalculateSignatureUpdate(read->signature, read->header, (uint32_t)read->header_size))
+		{
+			return saved_game_state_read_work_end(read);
+		}
+		read->result->progress=
+			(float)(saved_game_state_unsigned_to_real((unsigned long)read->header_size)/(long double)total);
+		read->step= _saved_game_state_read_data;
+
+		return 0;
+	}
+	else if (read->step==_saved_game_state_read_data)
+	{
+		unsigned long position= read->position;
+		unsigned long count;
+		byte *buffer;
+		uint32_t file_position;
+
+		if (position>=(unsigned long)read->data_size)
+		{
+			read->step= _saved_game_state_read_signature;
+
+			return 0;
+		}
+		if (read->data)
+		{
+			buffer= (byte *)read->data+position;
+			count= (unsigned long)read->data_size-position;
+		}
+		else
+		{
+			buffer= async_buffer_globals.address;
+			count= async_buffer_globals.size;
+			async_buffer_globals.unknown0= (long)task;
+			async_buffer_globals.other_buffer= buffer!=async_buffer;
+			position= read->position;
+			if (count>(unsigned long)read->data_size-position)
+			{
+				count= (unsigned long)read->data_size-position;
+			}
+		}
+		file_position= (uint32_t)read->header_size+position;
+		if (SetFilePointer(read->file, (long)file_position, NULL, FILE_BEGIN)!=file_position)
+		{
+			return saved_game_state_read_work_end(read);
+		}
+		if (!ReadFile(read->file, buffer, count, &bytes_read, NULL) || bytes_read!=count)
+		{
+			return saved_game_state_read_work_end(read);
+		}
+		if (XCalculateSignatureUpdate(read->signature, buffer, bytes_read))
+		{
+			return saved_game_state_read_work_end(read);
+		}
+		read->position+= bytes_read;
+		if (read->position>=(unsigned long)read->data_size)
+		{
+			read->step= _saved_game_state_read_signature;
+		}
+		read->result->progress=
+			(float)(saved_game_state_unsigned_to_real((unsigned long)read->header_size+read->position)/(long double)total);
+
+		return 0;
+	}
+	else
+	{
+		uint32_t stored[SAVED_GAME_FILE_SIGNATURE_SIZE/sizeof(uint32_t)];
+		uint32_t signature[SAVED_GAME_FILE_SIGNATURE_SIZE/sizeof(uint32_t)];
+		uint32_t file_position= (uint32_t)(read->data_size+read->header_size);
+
+		if (SetFilePointer(read->file, (long)file_position, NULL, FILE_BEGIN)==file_position &&
+			ReadFile(read->file, stored, sizeof(stored), &bytes_read, NULL) && bytes_read==sizeof(stored))
+		{
+			if (!XCalculateSignatureEnd(read->signature, signature))
+			{
+				read->result->success= memcmp(signature, stored, sizeof(stored))==0;
+			}
+			read->signature= (uint32_t)INVALID_HANDLE_VALUE;
+		}
+		read->result->progress= 1.0f;
+
+		return saved_game_state_read_work_end(read);
+	}
+}
+
 /* 0x002ada70: gives the read of the file of the state of a saved game to
 the thread that does it: what is at its start, and the rest. Whether it took
 it */
@@ -321,14 +494,14 @@ boolean saved_game_state_read_task_new(
 	task.header_size= header_size;
 	task.data= data;
 	task.data_size= data_size;
-	task.unknown10= NONE;
-	task.unknown14= 0;
-	task.unknown18= NONE;
+	task.file= (uint32_t)NONE;
+	task.position= 0;
+	task.signature= (uint32_t)NONE;
 	task.result= result;
-	task.unknown20= unknown;
-	task.unknown21= FALSE;
+	task.non_roamable= unknown;
+	task.step= _saved_game_state_read_header;
 
-	return async_task_add_custom(sizeof(task), unknown_002ad7c0, &task, SAVED_GAME_FILE_TASK_PRIORITY,
+	return async_task_add_custom(sizeof(task), saved_game_state_read_work, &task, SAVED_GAME_FILE_TASK_PRIORITY,
 		(byte *)result)!=NONE;
 }
 
