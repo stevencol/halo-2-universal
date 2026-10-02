@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — La tabla hash
+
+Cinco funciones. De 580 funciones se pasa a 585, el 5,19 % de las del juego
+(el 2,572 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `hash_table_new` | `0x0013e1a0` | `memory/hash_table.c` (nuevo) |
+| `hash_table_clear` | `0x0013e210` | `memory/hash_table.c` |
+| `hash_table_add` | `0x0013e270` | `memory/hash_table.c` |
+| `hash_table_find` | `0x0013e2d0` | `memory/hash_table.c` |
+| `hash_table_remove` | `0x0013e320` | `memory/hash_table.c` |
+
+- `tests/test_hash_table.py`.
+
+### Lo que se sabe
+
+- Es una tabla de tamaño fijo: una cabecera de 0x3C bytes, las listas (una
+  por cada resto del hash) y, detrás, todas las entradas que puede llegar a
+  tener, cada una con su clave, su hash, el enlace a la siguiente y los datos
+  que se guardan con la clave. Las entradas libres están en otra lista.
+- Añadir no mira si la clave ya estaba, y la nueva entrada queda la primera
+  de su lista. Si no quedan entradas libres, no se añade.
+- Buscar compara primero los hashes y luego las claves, con la función que
+  se dio al crear la tabla. Quitar solo compara las claves.
+- No es la tabla hash de Halo 1 (que crece): los nombres son propios.
+- La usa la caché de caracteres de las fuentes (1.024 listas, 4 bytes de
+  datos por clave) y otros tres sitios del juego.
+
+### Mutaciones
+
+50 líneas rotas a propósito: las 50 detectadas.
+
 ## 2026-10-02 — La caché de los caracteres: el final
 
 Cuatro funciones. De 576 funciones se pasa a 580, el 5,15 % de las del juego

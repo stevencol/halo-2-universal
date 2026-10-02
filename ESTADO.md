@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 83.
+**Última actualización:** 2026-10-02, al terminar el hito 84.
 
 ## Dónde estamos
 
-- **580 funciones descompiladas de 11.265: el 5,15 % del juego** (el
-  2,557 % de los bytes de código).
-- Las 580 están comprobadas contra el ejecutable original
+- **585 funciones descompiladas de 11.265: el 5,19 % del juego** (el
+  2,572 % de los bytes de código).
+- Las 585 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the end of the cache of the characters* (ver `git log`).
+- Último hito: *Decompile the hash table* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -68,6 +68,7 @@ Módulos (funciones hechas / archivo):
 - [x] CRC de 32 bits — `memory\crc.c` (2, completo)
 - [x] Búsqueda binaria — `memory\binary_search.c` (2)
 - [x] Ordenar números — `cseries\sort.c` (4)
+- [x] Tabla hash — `memory\hash_table.c` (5)
 - [x] Caché de bloques de páginas — `memory\lruv_cache.c` (8, completo)
 - [x] Fondo de memoria — `memory\memory_pool.c` (11, completo)
 - [x] Caché de animaciones — `cache\xbox_animation_cache.c` (18, completo)

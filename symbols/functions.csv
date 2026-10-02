@@ -947,3 +947,8 @@ address,name,source,arguments,returns,convention
 00122570,font_get_kerning,source/text/fonts.c,edx edi ebx,short
 00140420,character_is_private_use,source/text/font_cache.c,ecx,bool
 00141450,font_cache_block_get_address,source/text/font_cache.c,eax,int
+0013e1a0,hash_table_new,source/memory/hash_table.c,edi ebx stack stack stack stack stack,pointer
+0013e210,hash_table_clear,source/memory/hash_table.c,edx,void
+0013e270,hash_table_add,source/memory/hash_table.c,ebx eax stack,bool
+0013e2d0,hash_table_find,source/memory/hash_table.c,edi stack,pointer
+0013e320,hash_table_remove,source/memory/hash_table.c,edi stack,bool
