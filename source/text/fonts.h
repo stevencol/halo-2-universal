@@ -8,6 +8,7 @@ The fonts that the game has loaded. The names are guesses.
 #define __FONTS_H
 
 #include "cseries/cseries.h"
+#include "cseries/async.h"
 
 #include <stdint.h>
 
@@ -24,6 +25,15 @@ enum
 	/* the priority that the task that loads a font gets when the font is
 	asked for */
 	FONT_LOAD_PRIORITY= 6,
+	/* the priority of the task that loads a font that is not waited for,
+	and the category of the tasks of the fonts */
+	FONT_LOAD_PRIORITY_NO_WAIT= 2,
+	FONT_TASK_CATEGORY= 7,
+
+	FONT_NAME_LENGTH= 31,
+	FONT_PATH_LENGTH= 256,
+	/* in the file of a font: what goes to its place */
+	FONT_FILE_HEADER_OFFSET= 0x200,
 
 	/* a pixel of a character is a colour of 12 bits, and how opaque it is
 	in its 4 high bits; in the file, the opacity has 3 */
@@ -51,10 +61,21 @@ struct font_kerning_pair
 	short offset;
 };
 
+#define FONT_SIGNATURE 0xF0000001UL
+
+/* what the task that loads a font is told */
+struct font_load_parameters
+{
+	long font_slot_index;
+	long unknown4;
+	char name[FONT_NAME_LENGTH+1];
+};
+
 /* a place for a font: what the game keeps of one that it has loaded */
 struct font
 {
-	byte unknown0[4];
+	/* what the file of a font starts with */
+	unsigned long signature;
 	/* a line is as high as the three */
 	short ascending_height;
 	short descending_height;
@@ -81,6 +102,8 @@ typedef char verify_font_kerning_characters_offset[
 
 /* ---------- prototypes/FONTS.C */
 
+long ASYNC_CALLBACK font_load_work(void *parameters);
+void font_load(long font_slot_index, const char *name, boolean wait);
 struct font *font_get(long font_slot_index);
 long font_get_line_height(long font_index);
 short font_get_kerning(const struct font *font, unsigned long first, unsigned long second);
@@ -89,5 +112,6 @@ long font_character_decode_pixels(const byte *source, long size, word *pixels);
 /* ---------- globals */
 
 extern struct font font_slots[NUMBER_OF_FONT_SLOTS];
+extern const char *font_directory;
 
 #endif

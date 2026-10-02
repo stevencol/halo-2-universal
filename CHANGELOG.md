@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Cargar una fuente: `fonts.c`, completo
+
+Dos funciones. De 619 funciones se pasa a 621, el 5,51 % de las del juego
+(el 2,738 % de sus bytes). Con ellas están las 6 funciones de `fonts.c`.
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `font_load_work` | `0x001222d0` | `text/fonts.c` |
+| `font_load` | `0x001223a0` | `text/fonts.c` |
+
+### Lo que se sabe
+
+- Una fuente es un archivo de `z:\fonts\`, con el nombre que se le da (31
+  caracteres como mucho). Se abre para leer de él a saltos.
+- Su **cabecera** son `0x1C4` bytes que están a `0x200` del principio del
+  archivo, y se leen tal cual en el sitio de la fuente. Empieza por la firma
+  `0xF0000001`.
+- Cargarla es una **tarea en dos pasos**, como las demás de disco: en el
+  primero se abre el archivo (si no se puede, la fuente deja de estar
+  cargándose y la tarea acaba) y en el segundo se lee la cabecera.
+- Quien la pide puede esperar a que acabe. Si espera y lo leído no empieza
+  por la firma, el juego **olvida las fuentes** que tenía apuntadas en las
+  preferencias y las escribe en el disco en el momento: lo mismo que hace la
+  caché de caracteres cuando una cabecera no es válida.
+- La tarea tiene más prisa cuando se espera por ella que cuando no.
+
+### Mutaciones
+
+42 líneas rotas a propósito: las 42 detectadas.
+
 ## 2026-10-02 — Los píxeles de un carácter: `font_cache.c`, completo
 
 Dos funciones. De 617 funciones se pasa a 619, el 5,49 % de las del juego

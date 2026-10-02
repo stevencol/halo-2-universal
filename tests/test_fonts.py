@@ -178,3 +178,86 @@ def run(t) -> None:
             # with nowhere to write them, they are counted
             0 if n % 5 == 4 else Buffer(random_.randbytes(0x1500)),
         )
+
+    # ---------- loading a font
+
+    FONT_FILE, FONT_HEADER_SIZE = 0x1C4, 0x1C4
+    TASK_SIZE, TASK_PARAMETERS, TASK_CATEGORY, TASK_FUNCTION, TASK_DONE = 0x40, 8, 0x30, 0x34, 0x38
+    PREFERENCES_SIZE, PREFERENCES_FONTS = 0x408, 0x24
+    SIGNATURE = 0xF0000001
+
+    def text(harness, address: int) -> bytes:
+        return bytes(harness.mu.mem_read(address, 0x200)).split(b"\0", 1)[0]
+
+    def preferences() -> bytes:
+        data = bytearray(random_.randbytes(PREFERENCES_SIZE))
+        data[1] = random_.choice((0, 1))
+        struct.pack_into("<I", data, PREFERENCES_FONTS, random_.choice((NONE, 0, 3)))
+        return bytes(data)
+
+    names = (b"conduit", b"", b"a name of a font that is longer than thirty-one", b"x" * 31, b"x" * 32)
+    for n in range(120):
+        slot = random_.randrange(SLOTS)
+        data = slots()
+        # what the task leaves in the place of the font, if the game waits
+        signature = random_.choice((SIGNATURE, SIGNATURE, 0xF0000000, 0, random_.getrandbits(32)))
+        waits = random_.choice((0, 1, 3))
+        # the task: the two addresses that it gets are places of the game, or of source/
+        task = Buffer(random_.randbytes(TASK_SIZE), places=(TASK_FUNCTION, TASK_DONE))
+
+        def loaded(harness, arguments, slot=slot, signature=signature, waits=waits):
+            if calls_so_far(harness, "SwitchToThread") >= waits - 1:
+                place = harness.global_addresses["font_slots"] + slot * FONT_SIZE
+                harness.mu.mem_write(place, struct.pack("<I", signature))
+                harness.mu.mem_write(place + LOADED, b"\x01")
+            return 0
+
+        def queue(harness, arguments, slot=slot, signature=signature, waits=waits):
+            if waits == 0:
+                place = harness.global_addresses["font_slots"] + slot * FONT_SIZE
+                harness.mu.mem_write(place, struct.pack("<I", signature))
+                harness.mu.mem_write(place + LOADED, b"\x01")
+            return 0x00120000 | slot, ()
+
+        t.check(
+            "font_load",
+            slot,
+            Buffer(random_.choice(names) + bytes(1)),
+            random_.choice((0, 0, 1, 1, 0x80, 0x100, 0xFF01)),
+            globals={
+                "font_slots": GlobalData(bytes(data)),
+                "async_globals+9628": random_.getrandbits(32),
+                "global_preferences_globals": preferences(),
+            },
+            extra=[task],
+            externals={
+                "async_task_allocate": lambda harness, arguments, task=task: (task.address, ()),
+                "async_task_queue": queue,
+                "SwitchToThread": loaded,
+                "global_preferences_flush_blocking": lambda harness, arguments: 0,
+            },
+        )
+
+    for n in range(80):
+        slot = random_.randrange(SLOTS)
+        data = slots()
+        opened = n % 2
+        struct.pack_into("<I", data, slot * FONT_SIZE + FONT_FILE, 0x700 + slot if opened else NONE)
+        header = random_.randbytes(FONT_HEADER_SIZE)
+        handle = random_.choice((0x900, 0x900, NONE))
+
+        def read(harness, arguments, header=header):
+            file, buffer, size, bytes_read, overlapped = arguments
+            harness.mu.mem_write(buffer, header[:size])
+            return 1, (file, harness.normalize(buffer), size, overlapped)
+
+        t.check(
+            "font_load_work",
+            Buffer(struct.pack("<2I", slot, random_.getrandbits(32)) + (random_.choice(names) + bytes(32))[:31] + bytes(1) + random_.randbytes(4)),
+            globals={"font_slots": GlobalData(bytes(data))},
+            externals={
+                "CreateFileA": lambda harness, arguments, handle=handle: (handle, (text(harness, arguments[0]), *arguments[1:])),
+                "SetFilePointer": lambda harness, arguments: arguments[1],
+                "ReadFile": read,
+            },
+        )

@@ -114,4 +114,20 @@ extern struct global_preferences_globals global_preferences_globals;
 extern const char *global_preferences_path;
 extern uint32_t xbox_signature_handle;
 
+/* ---------- inline code */
+
+/* a file of a font was found to be bad: the preferences forget which fonts
+are on the hard disk, and are written at once. The game has this in each
+function that finds one */
+static inline __attribute__((always_inline)) void global_preferences_forget_fonts(
+	void)
+{
+	if (global_preferences_globals.current.data.unknown8!=NONE)
+	{
+		global_preferences_globals.current.data.unknown8= NONE;
+		global_preferences_globals.dirty= TRUE;
+		global_preferences_flush_blocking();
+	}
+}
+
 #endif

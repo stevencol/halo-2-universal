@@ -11,19 +11,121 @@ functions are guesses.
 #include "fonts.h"
 
 #include "cseries/async.h"
+#include "main/global_preferences.h"
 #include "text/draw_string.h"
+
+#include <stddef.h>
+#include <string.h>
 
 /* ---------- prototypes of functions of the console's libraries */
 
 /* 0x002d2084 */
 int SwitchToThread(void);
 
+/* 0x002d2750 */
+uint32_t CreateFileA(const char *path, uint32_t access, uint32_t share_mode, void *security, uint32_t disposition,
+	uint32_t flags, uint32_t template_file);
+
+/* 0x002d2488 */
+uint32_t SetFilePointer(uint32_t file, long distance, long *distance_high, uint32_t method);
+
+/* 0x002d2241 */
+int ReadFile(uint32_t file, void *buffer, uint32_t size, uint32_t *bytes_read, void *overlapped);
+
+#define GENERIC_READ 0x80000000
+#define OPEN_EXISTING 3
+#define FILE_FLAG_RANDOM_ACCESS 0x10000000
+#define FILE_BEGIN 0
+#define INVALID_HANDLE_VALUE (-1)
+
 /* ---------- globals */
 
 /* 0x004e2920 */
 struct font font_slots[NUMBER_OF_FONT_SLOTS];
 
+/* 0x004687f0: where the files of the fonts are */
+const char *font_directory= "z:\\fonts\\";
+
 /* ---------- code */
+
+/* 0x001222d0: the work of the task that loads a font, which the thread of
+the tasks does twice: the first time it opens the file of the font, and the
+second it reads the start of it to the place of the font. If the file cannot
+be opened, the font is not being loaded any more, and the task is done */
+long ASYNC_CALLBACK font_load_work(
+	void *parameters)
+{
+	const struct font_load_parameters *load= parameters;
+	struct font *font= &font_slots[load->font_slot_index];
+	boolean done= FALSE;
+
+	if (font->file==(uint32_t)INVALID_HANDLE_VALUE)
+	{
+		char path[FONT_PATH_LENGTH];
+
+		csnzprintf(path, sizeof(path), "%s%s", font_directory, load->name);
+		font->file= CreateFileA(path, (uint32_t)GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, 0);
+		if (font->file==(uint32_t)INVALID_HANDLE_VALUE)
+		{
+			font->loading= FALSE;
+			done= TRUE;
+		}
+	}
+	else
+	{
+		uint32_t bytes_read;
+
+		SetFilePointer(font->file, FONT_FILE_HEADER_OFFSET, NULL, FILE_BEGIN);
+		ReadFile(font->file, font, offsetof(struct font, file), &bytes_read, NULL);
+		done= TRUE;
+	}
+
+	return done!=FALSE;
+}
+
+/* 0x001223a0: starts to load a font to a place: a task opens its file and
+reads its start. If the game is to wait for it, it does, and then sees that
+what was read is a font: if it is not, the preferences forget which fonts are
+on the hard disk, and are written at once */
+void font_load(
+	long font_slot_index,
+	const char *name,
+	boolean wait)
+{
+	struct font_load_parameters parameters;
+	struct font *font= &font_slots[font_slot_index];
+	struct async_task *task;
+
+	memset(&parameters, 0, sizeof(parameters));
+	font->loading= TRUE;
+	strncpy(parameters.name, name, sizeof(parameters.name));
+	parameters.font_slot_index= font_slot_index;
+	font->file= (uint32_t)INVALID_HANDLE_VALUE;
+	parameters.name[sizeof(parameters.name)-1]= 0;
+
+	/* async_task_add, which the game has in itself here */
+	async_globals.tasks_added++;
+	font->loaded= FALSE;
+	task= async_task_allocate();
+	memcpy(task->parameters, &parameters, sizeof(task->parameters));
+	task->done= &font->loaded;
+	task->function= font_load_work;
+	task->category= FONT_TASK_CATEGORY;
+	task->priority= wait ? FONT_LOAD_PRIORITY : FONT_LOAD_PRIORITY_NO_WAIT;
+	font->load_task= async_task_queue(task);
+
+	if (wait)
+	{
+		while (!*(volatile boolean *)&font->loaded)
+		{
+			SwitchToThread();
+		}
+		if (font->signature!=FONT_SIGNATURE)
+		{
+			global_preferences_forget_fonts();
+		}
+	}
+}
 
 /* 0x001224c0: the font of a place, once it is loaded: if it is being
 loaded, the game hurries the task that loads it and waits for it. NULL if

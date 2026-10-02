@@ -220,12 +220,7 @@ void font_character_header_validate(
 		header->height;
 	header->pixels_size= header->pixels_size<1 ? 1 : header->pixels_size>MAXIMUM_FONT_CHARACTER_PIXELS_SIZE ?
 		MAXIMUM_FONT_CHARACTER_PIXELS_SIZE : header->pixels_size;
-	if (global_preferences_globals.current.data.unknown8!=NONE)
-	{
-		global_preferences_globals.current.data.unknown8= NONE;
-		global_preferences_globals.dirty= TRUE;
-		global_preferences_flush_blocking();
-	}
+	global_preferences_forget_fonts();
 }
 
 /* 0x00140f00: the second step: once it is known where the character is, the
