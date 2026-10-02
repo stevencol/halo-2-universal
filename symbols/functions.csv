@@ -595,7 +595,7 @@ address,name,source,arguments,returns,convention
 0012d6d0,texture_cache_initialize_hardware_format,source/cache/xbox_texture_cache.c,eax stack stack,void
 00223bb0,system_ticks_to_seconds,source/cseries/cseries.c,stack stack,real
 000359e0,bitmap_mipmap_count,,ecx eax stack stack stack stack,short
-001365a0,bitmap_row_size,,ecx esi,int
+001365a0,bitmap_row_size,source/bitmaps/bitmaps.c,ecx esi,int
 0012d8b0,geometry_cache_new,source/cache/xbox_geometry_cache.c,,void
 0012d970,geometry_cache_delete,source/cache/xbox_geometry_cache.c,,void
 0012d9f0,geometry_cache_allocate_memory,source/cache/xbox_geometry_cache.c,stack,void
@@ -918,3 +918,9 @@ address,name,source,arguments,returns,convention
 0013fde0,character_cannot_start_line,source/text/unicode.c,stack,bool
 00140260,character_cannot_end_line,source/text/unicode.c,stack,bool
 0013fd20,character_can_break_line,source/text/unicode.c,stack stack,bool
+0013f5a0,text_iterator_next,source/text/draw_string.c,esi,void
+0013f660,character_is_private_picture,source/text/draw_string.c,stack,bool
+00136490,bitmap_pixels_size,source/bitmaps/bitmaps.c,eax,int
+001364e0,bitmap_mipmap_pixel_count,source/bitmaps/bitmaps.c,esi edx,int
+00136600,bitmap_dimensions_mipmap_size,source/bitmaps/bitmaps.c,eax ecx edx stack stack stack,int
+001366d0,bitmap_dimensions_size,source/bitmaps/bitmaps.c,ebx stack stack stack stack stack,int

@@ -12,6 +12,7 @@ where it does not.
 
 #include "cseries/cseries.h"
 #include "bitmaps/bitmap_definitions.h"
+#include "bitmaps/bitmaps.h"
 #include "math/real_math.h"
 #include "memory/data.h"
 #include "memory/lruv_cache.h"
@@ -60,7 +61,6 @@ enum
 	/* a bitmap keeps the texture of its first level for this many frames */
 	TEXTURE_CACHE_HARDWARE_FORMAT_FRAMES= 2,
 
-	NUMBER_OF_BITMAP_FORMATS= 24,
 	NUMBER_OF_TEXTURE_CACHE_DEFAULT_TEXTURES= 3,
 
 	/* what a block of memory that the cache lends is marked with */
@@ -277,10 +277,6 @@ void texture_cache_initialize_hardware_format(const struct bitmap_data *bitmap, 
 level, and no more than a maximum; 0 if a size is not a power of two, or if
 told that it has none. The name is a guess */
 short bitmap_mipmap_count(short width, short depth, short height, short format, boolean none, short maximum);
-
-/* 0x001365a0: the bytes of a row of the pixels of a bitmap, at a mipmap.
-The name is a guess */
-long bitmap_row_size(byte mipmap_index, const struct bitmap_data *bitmap);
 
 /* ---------- globals */
 

@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 76.
+**Última actualización:** 2026-10-02, al terminar el hito 77.
 
 ## Dónde estamos
 
-- **550 funciones descompiladas de 11.265: el 4,88 % del juego** (el
-  2,440 % de los bytes de código).
-- Las 550 están comprobadas contra el ejecutable original
+- **557 funciones descompiladas de 11.265: el 4,94 % del juego** (el
+  2,470 % de los bytes de código).
+- Las 557 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile where a line of text can end* (ver `git log`).
+- Último hito: *Decompile going through a text and the sizes of bitmaps* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -95,11 +95,16 @@ Módulos (funciones hechas / archivo):
       `0x00136710` a `0x001374c0`. Lo que hay justo antes, de `0x00136140`
       a `0x001366d0`, es de los bitmaps)
 - [x] Cadenas anchas — `text\unicode.c` (13)
+- [ ] Recorrer un texto para dibujarlo — `text\draw_string.c` (2; faltan
+      `0x0013f470`, que prepara el recorrido, y las que miden y dibujan:
+      `0x0013f0e0` y `0x0013f700`)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
 - [ ] Matemáticas reales — `math\real_math.c` (21 de unas 50)
 - [ ] Matrices — `math\matrix_math.c` (22; quedan 4)
 - [ ] Números aleatorios — `math\random_math.c` (2)
-- [ ] Colores y bitmaps — `bitmaps\` (6)
+- [ ] Colores y bitmaps — `bitmaps\` (11: 6 de colores y 5 de tamaños en
+      `bitmaps.c`; de este faltan de `0x00135880` a `0x00136140` y
+      `0x001362b0`)
 - [ ] BSP 3D — `physics\bsp3d.c` (2)
 - [ ] Objetos — `objects\objects.c` (7 de cientos)
 - [x] Hilo de tareas y tareas de archivo — `cseries\async.c` (29; quedan

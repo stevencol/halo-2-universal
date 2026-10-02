@@ -54,6 +54,8 @@ enum
 
 enum
 {
+	/* in blocks of 4 by 4 pixels: its sizes are taken up to whole blocks */
+	_bitmap_compressed_bit= 1,
 	/* the texels are in the order of the console's swizzled textures; the
 	bitmaps that are not compressed have it */
 	_bitmap_swizzled_bit= 3,

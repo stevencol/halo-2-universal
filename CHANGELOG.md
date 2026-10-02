@@ -2,6 +2,64 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Recorrer un texto, y cuánto ocupan los píxeles de un bitmap
+
+Siete funciones. De 550 funciones se pasa a 557, el 4,94 % de las del juego
+(el 2,470 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `text_iterator_next` | `0x0013f5a0` | `text/draw_string.c` (nuevo) |
+| `character_is_private_picture` | `0x0013f660` | `text/draw_string.c` |
+| `bitmap_pixels_size` | `0x00136490` | `bitmaps/bitmaps.c` (nuevo) |
+| `bitmap_mipmap_pixel_count` | `0x001364e0` | `bitmaps/bitmaps.c` |
+| `bitmap_row_size` | `0x001365a0` | `bitmaps/bitmaps.c` |
+| `bitmap_dimensions_mipmap_size` | `0x00136600` | `bitmaps/bitmaps.c` |
+| `bitmap_dimensions_size` | `0x001366d0` | `bitmaps/bitmaps.c` |
+
+- `tests/test_draw_string.py`.
+- La tabla `bitmap_format_bits_per_pixel` (`0x00453550`): los bits por píxel
+  de los 24 formatos.
+
+### Lo que se sabe
+
+- Un texto se dibuja recorriéndolo con un iterador (44 bytes) sobre
+  caracteres de 32 bits. Cada paso da una de cinco cosas: un carácter que se
+  dibuja, un fin de línea (`\r`), un tabulador, un cambio de alineación
+  (`0xE405` a `0xE407`) o el final. El salto de línea (`\n`) se pasa sin
+  más. De cada carácter que se dibuja se apunta si la línea puede acabar
+  antes de él, cuando el texto se parte en líneas.
+- Los caracteres de `0xE000` a `0xE3FF` son dibujos propios del juego (los
+  botones del mando y demás), salvo `0xE000`–`0xE002`, `0xE004`, `0xE008` y
+  `0xE106`–`0xE131`.
+- Un mipmap mide la mitad que el anterior y nunca menos de 1. Un bitmap
+  comprimido (el bit 1 de sus banderas, que no tenía nombre) redondea ancho
+  y alto a múltiplos de 4. Un mapa cúbico tiene seis caras. Del fondo solo se
+  mira el byte bajo.
+- Los bytes salen de multiplicar píxeles por bits y dividir entre 8
+  redondeando hacia cero; los de una fila se pueden alinear a una potencia de
+  dos y son un número de 16 bits.
+- `bitmap_row_size` ya se usaba desde la caché de texturas como función sin
+  descompilar.
+
+### Sin comprobar
+
+- El límite inferior de los dibujos propios (`0xE000`): los tres primeros
+  están excluidos de todas formas, así que no cambia nada (tres mutaciones).
+- Que un tamaño reducido sea «mayor que 1» o «mayor que 0», y lo mismo con
+  el fondo: con 1 el resultado es 1 de las dos formas (dos mutaciones).
+- Dividir entre 8 o desplazar 3 bits los bytes de una fila: el producto
+  nunca es negativo (dos mutaciones). En el total de un bitmap sí puede
+  serlo, cuando la cuenta de píxeles pasa de 32 bits, y está probado.
+
+### Mutaciones
+
+121 líneas rotas a propósito: 113 detectadas a la primera, una más con
+casos nuevos (cuentas de píxeles que desbordan), y las siete de «Sin
+comprobar».
+
 ## 2026-10-02 — Dónde puede acabar una línea de texto
 
 Seis funciones. De 544 funciones se pasa a 550, el 4,88 % de las del
