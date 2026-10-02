@@ -377,3 +377,30 @@ def run(t) -> None:
         0,
         externals={"saved_game_file_get_information": lambda harness, arguments: (1, (arguments[1],))},
     )
+
+    # ---------- the picture of a variant
+
+    image = random_.randbytes(0x1000)
+
+    def reference_path(harness, address: int) -> tuple:
+        # of a reference that is in the stack: what it has but for the handle and the position
+        return bytes(harness.mu.mem_read(address, 0x108))
+
+    for type_ in list(range(-1, 13)) + [NONE, 0x80000000]:
+        for results in ((1, 1, 1, 1), (0, 1, 1, 1), (1, 0, 1, 1), (1, 1, 0, 1), (1, 1, 1, 0)):
+            directory = random_.choice((b"u:\\udata\\4d530064\\0123456789AB\\", b"", b"d" * 0xF8, b"d" * 0x110))
+            t.check(
+                "saved_game_file_write_image",
+                type_,
+                Buffer(directory + b"\0"),
+                globals={"saved_game_image": image},
+                externals={
+                    "file_create": lambda harness, arguments, result=results[0]: (result, (reference_path(harness, arguments[0]),)),
+                    "file_open": lambda harness, arguments, result=results[1]: (result, (reference_path(harness, arguments[0]), arguments[1])),
+                    "file_write": lambda harness, arguments, result=results[2]: (
+                        result,
+                        (reference_path(harness, arguments[0]), arguments[1], bytes(harness.mu.mem_read(arguments[2], 0x1000))),
+                    ),
+                    "file_close": lambda harness, arguments, result=results[3]: (result, (reference_path(harness, arguments[0]),)),
+                },
+            )

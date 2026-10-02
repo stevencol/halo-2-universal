@@ -13,6 +13,8 @@ files.h where it has them.
 
 #include "cseries/cseries.h"
 
+#include <string.h>
+
 /* ---------- constants */
 
 #define FILE_REFERENCE_SIGNATURE 'filo'
@@ -129,6 +131,37 @@ typedef char verify_find_files_state_size[
 typedef char verify_find_files_data_size[
 	sizeof(struct find_files_data) == 0x140 ? 1 : -1];
 
+/* ---------- inline code */
+
+void file_path_add_name(char *path, const char *name);
+void path_remove_last_element(char *path);
+
+/* the reference of a path: of a directory, or of a file. The game has this
+in the functions that make a reference, and has it as a function too
+(file_reference_create_from_path) */
+static inline __attribute__((always_inline)) void file_reference_set_path(
+	struct file_reference *file,
+	const char *path,
+	boolean directory)
+{
+	memset(file, 0, sizeof(*file));
+	file->signature= FILE_REFERENCE_SIGNATURE;
+	file->location= NONE;
+	if (directory)
+	{
+		file_path_add_name(file->path, path);
+	}
+	else
+	{
+		if (file->flags&FLAG(_has_filename_bit))
+		{
+			path_remove_last_element(file->path);
+		}
+		file_path_add_name(file->path, path);
+		file->flags|= FLAG(_has_filename_bit);
+	}
+}
+
 /* ---------- prototypes/FILES.C */
 
 void file_path_add_name(char *path, const char *name);
@@ -139,6 +172,12 @@ void find_files_start(struct find_files_state *state, unsigned long flags, const
 	const char *pattern);
 
 /* ---------- prototypes/FILES_XBOX.C */
+
+struct file_reference *file_reference_create_from_path(struct file_reference *file, const char *path,
+	boolean directory);
+long find_files(unsigned long flags, const struct file_reference *directory, long maximum_count,
+	struct file_reference *files);
+boolean file_create(struct file_reference *file);
 
 void file_location_get_full_path(char *full_path, const char *path);
 boolean file_delete(struct file_reference *file);

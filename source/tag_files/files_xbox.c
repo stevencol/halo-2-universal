@@ -54,6 +54,9 @@ uint32_t GetFileAttributesA(const char *path);
 /* 0x002d6ae9 */
 int GetFileAttributesExA(const char *path, long level, void *data);
 
+/* 0x00331a35 */
+int CreateDirectoryA(const char *path, void *security);
+
 /* 0x00331b9b */
 uint32_t FindFirstFileA(const char *path, struct find_files_data *data);
 
@@ -71,6 +74,7 @@ enum
 	GENERIC_READ= (int)0x80000000,
 	GENERIC_WRITE= 0x40000000,
 	FILE_SHARE_READ= 1,
+	CREATE_ALWAYS= 2,
 	OPEN_EXISTING= 3,
 	FILE_BEGIN= 0,
 	FILE_END= 2,
@@ -582,6 +586,75 @@ boolean find_files_next(
 		}
 	}
 	state->depth= (short)depth;
+
+	return FALSE;
+}
+
+/* 0x00136710: the reference of a path: of a directory, or of a file. The
+name is Halo 1's */
+struct file_reference *file_reference_create_from_path(
+	struct file_reference *file,
+	const char *path,
+	boolean directory)
+{
+	file_reference_set_path(file, path, directory);
+
+	return file;
+}
+
+/* 0x00136770: the files of a directory, up to so many: how many there are.
+The name is Halo 1's */
+long find_files(
+	unsigned long flags,
+	const struct file_reference *directory,
+	long maximum_count,
+	struct file_reference *files)
+{
+	struct find_files_state state;
+	long count= 0;
+
+	find_files_start(&state, flags, directory, "*.*");
+	if (maximum_count>0)
+	{
+		while (find_files_next(&state, &files[count], NULL))
+		{
+			count++;
+			if (count>=maximum_count)
+			{
+				break;
+			}
+		}
+	}
+	find_files_end(&state);
+
+	return count;
+}
+
+/* 0x001367d0: makes a file, empty, or a directory. A file that is there is
+emptied */
+boolean file_create(
+	struct file_reference *file)
+{
+	char full_path[MAXIMUM_FILENAME_LENGTH+1];
+
+	memset(full_path, 0, sizeof(full_path));
+	file_location_get_full_path(full_path, file->path);
+	if (TEST_FLAG(file->flags, _has_filename_bit))
+	{
+		uint32_t handle= CreateFileA(full_path, (uint32_t)GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+
+		if (handle!=(uint32_t)INVALID_HANDLE_VALUE)
+		{
+			CloseHandle(handle);
+
+			return TRUE;
+		}
+	}
+	else if (CreateDirectoryA(full_path, NULL))
+	{
+		return TRUE;
+	}
+	file_error();
 
 	return FALSE;
 }

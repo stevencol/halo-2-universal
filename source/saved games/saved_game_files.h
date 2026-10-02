@@ -94,6 +94,7 @@ enum
 	SAVED_GAME_FILE_INFORMATION_NAME_OFFSET= 0x14,
 
 	MAXIMUM_SAVED_GAME_FILES_PER_TABLE= 4096,
+	SAVED_GAME_IMAGE_SIZE= 0x1000,
 	MAXIMUM_CACHED_SAVED_GAME_FILES= 4,
 	SAVED_GAME_FILE_NAME_COMPARE_LENGTH= 128
 };
@@ -155,6 +156,7 @@ boolean saved_game_files_hard_disk_has_blocks(long blocks);
 boolean saved_game_file_get_type_path(char *path, const char *directory, long type);
 long saved_game_file_type_get_size(long type);
 boolean saved_game_file_get_directory(char *path, long file);
+boolean saved_game_file_write_image(long type, const char *directory);
 boolean saved_game_file_name_differs(long file, const wchar *name);
 boolean saved_game_file_get_information(struct saved_game_file_information *information, long file);
 boolean saved_game_file_set_information(const struct saved_game_file_information *information, long file);
@@ -174,6 +176,7 @@ boolean saved_game_auxiliary_write(void *header, long header_size, void *data, l
 
 extern struct saved_game_files_operation saved_game_files_operation;
 extern boolean saved_game_files_cache_valid;
+extern byte saved_game_image[SAVED_GAME_IMAGE_SIZE];
 extern long cached_saved_game_file_count;
 extern struct cached_saved_game_file cached_saved_game_files[MAXIMUM_CACHED_SAVED_GAME_FILES];
 

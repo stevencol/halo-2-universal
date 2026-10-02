@@ -826,3 +826,7 @@ address,name,source,arguments,returns,convention
 002168b0,saved_game_file_set_information,source/saved games/saved_game_files.c,eax stack,bool
 00216990,saved_game_file_add_information,source/saved games/saved_game_files.c,ecx stack stack,bool
 002169e0,saved_game_file_delete_information,source/saved games/saved_game_files.c,ecx,void
+00136710,file_reference_create_from_path,source/tag_files/files_xbox.c,stack ebx stack,pointer
+00136770,find_files,source/tag_files/files_xbox.c,edx eax ebx stack,int
+001367d0,file_create,source/tag_files/files_xbox.c,ebx,bool
+00216f80,saved_game_file_write_image,source/saved games/saved_game_files.c,ecx stack,bool

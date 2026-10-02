@@ -335,3 +335,54 @@ def run(t) -> None:
             random_.choice((0, Buffer(random_.randbytes(8)), Buffer(random_.randbytes(8)))),
             externals=search(found),
         )
+
+    # ---------- making a reference, a file and a directory
+
+    for path in PATHS + (b"p" * 0xFF, b"q" * 0x100):
+        for directory in (0, 1, 0x80):
+            t.check(
+                "file_reference_create_from_path",
+                Buffer(random_.randbytes(REFERENCE_SIZE)),
+                Buffer(path + b"\0"),
+                directory | random_.getrandbits(24) << 8,
+            )
+
+    for has_filename in (True, False):
+        for handle, made in ((0x4321, 1), (NONE, 0), (0, 0x100)):
+            for _ in range(4):
+                t.check(
+                    "file_create",
+                    reference(has_filename=has_filename),
+                    externals={
+                        "CreateFileA": lambda harness, arguments, handle=handle: (handle, (text(harness, arguments[0]), *arguments[1:])),
+                        "CloseHandle": lambda harness, arguments: 1,
+                        "CreateDirectoryA": lambda harness, arguments, made=made: (made, (text(harness, arguments[0]), arguments[1])),
+                        **errors(5),
+                    },
+                )
+
+    # the files of a directory: the search is stood in for
+    for maximum in (0, 1, 3, 4, 5, NONE, 0x80000000):
+        for found in (0, 1, 3, 4, 10):
+            count = 5
+
+            def next_(harness, arguments, found=found):
+                state, file, date = arguments
+                index = calls_so_far(harness, "find_files_next")
+                if index < found:
+                    harness.mu.mem_write(file, bytes([index + 1]) * REFERENCE_SIZE)
+                # the state is in the stack, which is not at the same place in the game and in source/
+                return index < found, (file, date)
+
+            def start(harness, arguments):
+                state, flags, directory, pattern = arguments
+                return 0, (flags, directory, text(harness, pattern))
+
+            t.check(
+                "find_files",
+                random_.getrandbits(32),
+                reference(),
+                maximum,
+                Buffer(random_.randbytes(count * REFERENCE_SIZE)),
+                externals={"find_files_start": start, "find_files_next": next_, "find_files_end": lambda harness, arguments: (0, ())},
+            )

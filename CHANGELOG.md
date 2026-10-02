@@ -2,6 +2,58 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Crear archivos y la imagen de una variante
+
+Tres funciones de archivos que faltaban y la que escribe la imagen de una
+variante de juego. De 457 funciones se pasa a 461, el 4,09 % de las del
+juego (el 1,966 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `file_reference_create_from_path` | `0x00136710` | `tag_files/files_xbox.c` |
+| `find_files` | `0x00136770` | `tag_files/files_xbox.c` |
+| `file_create` | `0x001367d0` | `tag_files/files_xbox.c` |
+| `saved_game_file_write_image` | `0x00216f80` | `saved games/saved_game_files.c` |
+
+- `file_reference_set_path`, en línea en `files.h`: el juego la tiene
+  copiada donde hace una referencia a partir de una ruta.
+
+### Corregido
+
+- **El módulo de archivos no estaba completo**, como se dijo en el hito 44.
+  Las tres primeras funciones de la tabla estaban antes de `file_delete` y
+  no se habían visto; aparecieron al seguir una llamada desde
+  `saved_game_files.c`. ESTADO.md lo recoge, con las que quedan por mirar.
+
+### Lo que se sabe
+
+- `file_create` hace un archivo vacío (y vacía el que hubiera) o un
+  directorio, según la referencia sea de archivo o no.
+- `find_files` es el envoltorio de las tres funciones de búsqueda: llena
+  una lista de referencias con lo que hay en un directorio (`*.*`), hasta
+  un máximo.
+- Junto a cada variante de juego guardada se escribe `SaveImage.xbx`, la
+  imagen que la consola enseña en su panel: 4.096 bytes que están dentro
+  del ejecutable (`0x00449038`). Los perfiles y las listas no llevan
+  imagen.
+- **Esa imagen no se copia al repositorio**: es un recurso del juego, no
+  código. En `source/` queda declarada y vacía; las pruebas le dan el
+  mismo contenido al juego y a `source/`.
+
+### Sin comprobar
+
+- En `file_create`, que la ruta completa se ponga a cero antes de
+  escribirla entera.
+- En `saved_game_file_write_image`, el cero al final de la ruta antes de
+  añadirle el nombre: `csstrcat256` lo pone también.
+
+### Mutaciones
+
+50 líneas rotas a propósito: 48 detectadas, y las otras dos son las de
+«Sin comprobar».
+
 ## 2026-10-02 — Lo que el juego sabe de cada archivo
 
 Cinco funciones más de `saved_game_files.c`: las que leen, cambian, añaden

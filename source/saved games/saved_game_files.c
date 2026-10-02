@@ -12,6 +12,7 @@ file, which goes from 0x002160b0 to 0x00217590.
 #include "saved_game_files.h"
 
 #include "input/input.h"
+#include "tag_files/files.h"
 #include "cseries/async.h"
 #include "sound/sound_definitions.h"
 
@@ -71,6 +72,12 @@ extern void *unknown_0051ea14;
 
 /* 0x0055c274 */
 struct saved_game_files_operation saved_game_files_operation;
+
+/* 0x00449038: the picture that the console shows next to a variant of a
+game: a file of textures of the console (XPR0), of 4096 bytes. It is the
+game's, and it is not copied here: what is built from this has an empty
+picture */
+byte saved_game_image[SAVED_GAME_IMAGE_SIZE];
 
 /* 0x0055c14f, 0x0055c160, 0x0055c164: what is kept of a few files when the
 tables are not set up */
@@ -666,4 +673,29 @@ void saved_game_file_delete_information(
 			table->count--;
 		}
 	}
+}
+
+/* 0x00216f80: writes the picture of a variant of a game in its directory
+("SaveImage.xbx"). The files of the other types have none: nothing is
+written, and that is not to fail */
+boolean saved_game_file_write_image(
+	long type,
+	const char *directory)
+{
+	char path[SAVED_GAME_FILE_PATH_LENGTH];
+	struct file_reference file;
+	long error;
+
+	if (type<_saved_game_file_type_slayer || type>_saved_game_file_type_territories)
+	{
+		return TRUE;
+	}
+	path[0]= 0;
+	strncpy(path, directory, SAVED_GAME_FILE_PATH_LENGTH);
+	path[SAVED_GAME_FILE_PATH_LENGTH-1]= 0;
+	csstrcat256(path, "SaveImage.xbx");
+	file_reference_set_path(&file, path, FALSE);
+
+	return file_create(&file) && file_open(&file, FLAG(_permission_write_bit), &error) &&
+		file_write(&file, SAVED_GAME_IMAGE_SIZE, saved_game_image) && file_close(&file);
 }
