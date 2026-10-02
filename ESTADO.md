@@ -8,7 +8,7 @@ detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 ## Dónde estamos
 
 - **265 funciones descompiladas de 11.265: el 2,35 % del juego** (el
-  1,083 % de los bytes de código).
+  1,082 % de los bytes de código).
 - Las 265 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
 - Último hito: *Decompile the cache of blocks of pages* (ver `git log`).

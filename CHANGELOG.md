@@ -8,7 +8,7 @@ Los cambios más recientes van arriba.
 páginas de memoria en bloques y, cuando no cabe uno nuevo, echa a los que
 llevan más tiempo sin usarse. El juego la usa para las animaciones y las
 texturas. De 258 funciones se pasa a 265, el 2,35 % de las del juego (el
-1,083 % de sus bytes).
+1,082 % de sus bytes).
 
 ### Añadido
 
