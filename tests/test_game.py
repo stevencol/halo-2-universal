@@ -279,7 +279,7 @@ def run(t) -> None:
                     "cached_map_file_copy_globals": bytes(copy_globals),
                     "unknown_0055c14c": b"\x01" if switches == 0 else b"\0",
                 },
-                externals={"SwitchToThread": switch_to_thread, "main_loading_idle": nothing},
+                externals={"SwitchToThread": switch_to_thread, "sound_idle": nothing},
             )
 
     # ---------- what the game is, and how it ends

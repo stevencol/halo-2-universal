@@ -249,7 +249,7 @@ long async_get_file_size(uint32_t file, long category, long priority, uint32_t *
 
 /* 0x00125d60: draws the screen that the game shows while it loads, if it is
 time to. The name is a guess */
-void main_loading_idle(void);
+void sound_idle(void);
 
 /* ---------- prototypes of functions of the console's libraries */
 

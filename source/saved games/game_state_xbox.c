@@ -224,7 +224,7 @@ void game_state_write_to_file(
 		while (!*(volatile boolean *)&globals->write_done)
 		{
 			SwitchToThread();
-			main_loading_idle();
+			sound_idle();
 		}
 		globals->file_valid_for_read[file_index]= globals->bytes_written==(uint32_t)globals->buffer_size;
 	}

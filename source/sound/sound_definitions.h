@@ -64,6 +64,31 @@ struct sound_definition
 	byte unknown3[3];
 	/* which of the playback parameters of the sounds are its own */
 	short playback_index;
+	/* its pitch ranges: the first, and how many */
+	short first_pitch_range_index;
+	byte pitch_range_count;
+};
+
+/* a range of pitches of a sound: each has its own recordings */
+struct sound_pitch_range
+{
+	byte unknown0[8];
+	short first_permutation_index;
+	short permutation_count;
+};
+
+/* a recording of a sound */
+struct sound_permutation
+{
+	byte unknown0[0xC];
+	short first_chunk_index;
+	short chunk_count;
+};
+
+/* a piece of the samples of a recording: where it is in the map */
+struct sound_chunk
+{
+	byte unknown0[0xC];
 };
 
 /* how a sound is played */
@@ -86,6 +111,11 @@ struct sound_playback_parameters
 struct sound_cache_file_gestalt
 {
 	struct tag_block playbacks; /* sound_playback_parameters */
+	struct tag_block unknown8[3];
+	struct tag_block pitch_ranges; /* sound_pitch_range */
+	struct tag_block permutations; /* sound_permutation */
+	struct tag_block unknown30[2];
+	struct tag_block chunks; /* sound_chunk */
 	/* the rest of the tag */
 };
 
@@ -160,6 +190,12 @@ struct sound_channel
 	long unknown20;
 };
 
+typedef char verify_sound_pitch_range_size[
+	sizeof(struct sound_pitch_range) == 0xC ? 1 : -1];
+typedef char verify_sound_permutation_size[
+	sizeof(struct sound_permutation) == 0x10 ? 1 : -1];
+typedef char verify_sound_cache_file_gestalt_chunks_offset[
+	offsetof(struct sound_cache_file_gestalt, chunks) == 0x40 ? 1 : -1];
 typedef char verify_sound_channel_size[
 	sizeof(struct sound_channel) == 0x24 ? 1 : -1];
 typedef char verify_sound_playback_parameters_size[
@@ -194,6 +230,11 @@ void sound_dispose_from_old_map(void);
 void sound_initialize_for_new_structure_bsp(void);
 boolean sound_available(void);
 void sound_enable(long enable);
+void sound_idle(void);
+void sound_load_environment(void);
+boolean sound_source_request_data(byte *source);
+void sound_unknown_00125ef0(const byte *unknown);
+void sound_predict(long sound_index);
 
 /* ---------- globals */
 

@@ -940,7 +940,7 @@ struct d3d_texture *texture_cache_bitmap_get_level(
 			while (!cache_block->read_done)
 			{
 				SwitchToThread();
-				main_loading_idle();
+				sound_idle();
 			}
 		}
 		else if (priority>cache_block->read_priority)

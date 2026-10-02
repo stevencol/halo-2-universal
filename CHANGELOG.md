@@ -2,6 +2,56 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Atender el sonido y pedir sus muestras
+
+Cinco funciones más del sonido. De 429 funciones se pasa a 434, el 3,85 %
+de las del juego (el 1,881 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_idle` | `0x00125d60` | `sound/sound_manager.c` |
+| `sound_load_environment` | `0x00125df0` | `sound/sound_manager.c` |
+| `sound_source_request_data` | `0x00125e60` | `sound/sound_manager.c` |
+| `sound_unknown_00125ef0` | `0x00125ef0` | `sound/sound_manager.c` |
+| `sound_predict` | `0x00125f10` | `sound/sound_manager.c` |
+
+- De la etiqueta común de sonidos de un mapa se conocen tres bloques más:
+  los rangos de tono (`+0x20`, 0xC bytes), las grabaciones (`+0x28`, 0x10
+  bytes) y los trozos de muestras (`+0x40`, 0xC bytes).
+
+### Cambiado
+
+- **`main_loading_idle` se llama ahora `sound_idle`**. El nombre anterior
+  era una suposición sacada de quién la llama (las esperas de la carga, de
+  las cachés y de las partidas guardadas); al descompilarla resulta que lo
+  que hace es atender el sonido. Cambia en ocho archivos de `source/` y en
+  siete de `tests/`.
+- `unknown_00125df0` es `sound_load_environment`.
+
+### Lo que se sabe
+
+- `sound_idle` solo hace algo dentro de una partida y si ha pasado más de
+  un tick (33 ms a 30 por segundo) desde que el sonido empezó o se
+  reanudó. No se vuelve a entrar mientras ya se está dentro.
+- Un sonido se compone así: sonido → rangos de tono → grabaciones
+  (permutaciones) → trozos de muestras. Cada nivel guarda el índice del
+  primero del siguiente, y un sonido que suena guarda cuánto se ha
+  desplazado en cada nivel (`+0x9C`, `+0x9D`, `+0x9E`).
+- Pedir muestras es pedir un trozo a la caché de sonido (`0x00218850`), que
+  contesta con bits: con el 0 o el 1 se avisa al sonido de que no las
+  tiene, y el 1 es lo que devuelve la función.
+- `sound_predict` pide el primer trozo de un sonido antes de que suene.
+- El «ambiente» del mapa sale de una etiqueta que nombra la etiqueta de
+  globales (`+0x14` de su bloque de sonido); puede no haberla.
+
+### Mutaciones
+
+71 líneas rotas a propósito: 69 detectadas a la primera y las otras dos
+con un caso nuevo (un tick de un segundo justo, para distinguir 1000 de
+1001 y de 990).
+
 ## 2026-10-02 — El sonido al cambiar de mapa
 
 El resto de la fila del sonido en la tabla de sistemas del juego: lo que

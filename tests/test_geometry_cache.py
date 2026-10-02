@@ -301,7 +301,7 @@ def run(t) -> None:
             "cache_file_read_async": read_async,
             "async_task_set_priority": lambda harness, arguments: 1,
             "SwitchToThread": switch_to_thread,
-            "main_loading_idle": lambda harness, arguments: 0,
+            "sound_idle": lambda harness, arguments: 0,
             "WaitForSingleObject": wait_for_single_object,
             "ReleaseMutex": lambda harness, arguments: 1,
             "geometry_block_attach_data": lambda harness, arguments: 0,

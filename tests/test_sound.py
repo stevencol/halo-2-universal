@@ -329,7 +329,7 @@ def run(t) -> None:
             },
             externals={
                 "GetTickCount": lambda harness, arguments, value=random_.getrandbits(32): value,
-                "unknown_00125df0": lambda harness, arguments: 0,
+                "sound_load_environment": lambda harness, arguments: 0,
                 "unknown_00191270": lambda harness, arguments: 0,
             },
         )
@@ -402,7 +402,7 @@ def run(t) -> None:
                 "GetTickCount": clock(clocks[n % len(clocks)]),
                 "data_next_absolute_index": next_absolute_index(in_use),
                 "unknown_0012a810": lambda harness, arguments: (arguments[0] ^ 0x5A5A5A5A, tuple(arguments)),
-                "main_loading_idle": lambda harness, arguments: 0,
+                "sound_idle": lambda harness, arguments: 0,
                 "unknown_001264c0": lambda harness, arguments: 0,
                 "data_delete_all": lambda harness, arguments: 0,
                 "unknown_00191270": lambda harness, arguments: 0,
@@ -475,3 +475,155 @@ def run(t) -> None:
                         "GetTickCount": lambda harness, arguments, value=random_.getrandbits(32): value,
                     },
                 )
+
+    # ---------- giving the sound some time
+
+    idle_names = ("unknown_0021ec00", "unknown_001269f0", "unknown_001290d0", "unknown_001293f0", "unknown_0021ee80", "unknown_00218810")
+
+    def flags_then(harness, arguments):
+        # the two flags that are set while the sound is given time
+        address = struct.unpack("<I", harness.mu.mem_read(harness.global_addresses["game_sound_globals"], 4))[0]
+        return 0, (bytes(harness.mu.mem_read(address + 0x7C, 2)),)
+
+    idle_cases = []
+    for seconds_per_tick, deltas in ((1 / 30, (0, 33, 34, 1000, -1, -1000, 0x7FFFFFFF)), (1 / 60, (16, 17)), (0.0, (0, 1)), (1.0, (999, 1000, 1001))):
+        for delta in deltas:
+            idle_cases.append((seconds_per_tick, delta, 1, 1, 0, (1, 1, 1)))
+    idle_cases += [
+        (1 / 30, 500, 0, 1, 0, (1, 1, 1)),
+        (1 / 30, 500, 1, 0, 0, (1, 1, 1)),
+        (1 / 30, 500, 1, 0x80, 0, (1, 1, 1)),
+        (1 / 30, 500, 1, 1, 1, (1, 1, 1)),
+        (1 / 30, 500, 1, 1, 0x80, (1, 1, 1)),
+        (1 / 30, 500, 1, 1, 0, (0, 1, 1)),
+        (1 / 30, 500, 1, 1, 0, (1, 0, 1)),
+        (1 / 30, 500, 1, 1, 0, (1, 1, 0)),
+    ]
+    for seconds_per_tick, delta, has_game, active, busy, available in idle_cases:
+        start = random_.choice((0, 1000, 0x7FFFFF00, 0xFFFFFF00, random_.getrandbits(32)))
+        state_data = bytearray(sound_state(*available).data)
+        state_data[0x7C] = random_.getrandbits(8)
+        state_data[0x7D] = busy
+        struct.pack_into("<I", state_data, 0x80, start)
+        game = bytearray(random_.randbytes(0x1200))
+        game[0x1120] = active
+        t.check(
+            "sound_idle",
+            globals={
+                "game_sound_globals": Buffer(bytes(state_data)),
+                "main_game_globals": Buffer(bytes(game)) if has_game else 0,
+                "game_time_globals": Buffer(struct.pack("<BBhfI", 1, 0, 30, seconds_per_tick, random_.getrandbits(32))),
+            },
+            externals={
+                "GetTickCount": lambda harness, arguments, value=(start + delta) & 0xFFFFFFFF: value,
+                **{name: flags_then for name in idle_names},
+            },
+        )
+
+    # ---------- the tags of the sounds of a map
+
+    PITCH_RANGES, PERMUTATIONS, CHUNKS = 8, 20, 40
+
+    def sound_tags(sound_index: int, pitch_range_count: int = 3, permutation_count: int | None = None):
+        """The tags, a sound and what the sounds share, in one buffer; where
+        the sound says its pitch ranges start, and the shared tag."""
+        data = bytearray(random_.randbytes(TAGS * 0x10))
+        pointers = []
+
+        def add(part: bytes) -> int:
+            offset = len(data)
+            data.extend(part)
+            return offset
+
+        def point(offset: int, to: int) -> None:
+            struct.pack_into("<I", data, offset, to)
+            pointers.append(offset)
+
+        first_pitch_range = random_.randrange(2, PITCH_RANGES - 2)
+        sound_ = bytearray(random_.randbytes(0x20))
+        struct.pack_into("<hB", sound_, 8, first_pitch_range, pitch_range_count)
+        point(sound_index * 0x10 + 8, add(bytes(sound_)))
+        gestalt = add(random_.randbytes(0x60))
+        ranges = bytearray()
+        for index in range(PITCH_RANGES):
+            count = random_.choice((0, 2)) if permutation_count is None else permutation_count
+            ranges += random_.randbytes(8) + struct.pack("<2h", random_.randrange(2, PERMUTATIONS - 2), count)
+        point(gestalt + 0x24, add(bytes(ranges)))
+        permutations = bytearray()
+        for index in range(PERMUTATIONS):
+            permutations += random_.randbytes(0xC) + struct.pack("<2h", random_.randrange(2, CHUNKS - 2), random_.randrange(1, 4))
+        point(gestalt + 0x2C, add(bytes(permutations)))
+        point(gestalt + 0x44, add(random_.randbytes(CHUNKS * 0xC)))
+        buffer = Buffer(bytes(data), pointers=tuple(pointers))
+        return buffer, gestalt
+
+    def request(result: int):
+        return lambda harness, arguments, result=result: (result, tuple(arguments))
+
+    for n in range(120):
+        sound_index = random_.randrange(TAGS)
+        tags, gestalt = sound_tags(sound_index)
+        source_data = bytearray(random_.randbytes(DATUM))
+        struct.pack_into("<I", source_data, 0xC, random_.getrandbits(16) << 16 | sound_index)
+        struct.pack_into("<bbh", source_data, 0x9C, random_.randint(-2, 1), random_.randint(-2, 1), random_.randint(-2, 1))
+        t.check(
+            "sound_source_request_data",
+            Buffer(bytes(source_data)),
+            globals={"global_tag_instances": tags, "global_sound_cache_file_gestalt": Pointer(tags, gestalt)},
+            externals={
+                "unknown_00218850": request(n % 4 | random_.choice((0, 0, 0xFFFFFFFC, 4))),
+                "unknown_001268e0": lambda harness, arguments: 0,
+            },
+        )
+
+    for n in range(80):
+        sound_index = random_.randrange(TAGS)
+        tags, gestalt = sound_tags(sound_index, random_.choice((0, 1, 3, 0x80)), None if n % 2 else 2)
+        t.check(
+            "sound_predict",
+            NONE if n % 10 == 9 else random_.getrandbits(16) << 16 | sound_index,
+            globals={"global_tag_instances": tags, "global_sound_cache_file_gestalt": Pointer(tags, gestalt)},
+            externals={"unknown_00218850": request(random_.getrandbits(32))},
+        )
+
+    for n in range(30):
+        count = 6
+        index = random_.randrange(count)
+        data = bytearray(random_.randbytes(0x4C + count * 0x10))
+        struct.pack_into("<I", data, 0x44, 0x4C)
+        data[0x4C + index * 0x10 + 4] = random_.choice((0, 1, 2, 0x80, 0xFF))
+        t.check(
+            "sound_unknown_00125ef0",
+            Buffer(random_.randbytes(8) + struct.pack("<I", random_.getrandbits(16) << 16 | index)),
+            globals={"unknown_00502104": Buffer(bytes(data), pointers=(0x44,))},
+        )
+
+    # ---------- the sound of the places of a map
+
+    for n in range(40):
+        environment_index = random_.randrange(TAGS)
+        data = bytearray(random_.randbytes(TAGS * 0x10))
+        pointers = []
+        struct.pack_into("<I", data, environment_index * 0x10 + 8, len(data))
+        pointers.append(environment_index * 0x10 + 8)
+        data += random_.randbytes(0x60)
+        element = len(data)
+        index = NONE if n % 4 == 3 else random_.getrandbits(16) << 16 | environment_index
+        data += random_.randbytes(0x14) + struct.pack("<I", index) + random_.randbytes(0x10)
+        game_globals = len(data)
+        data += random_.randbytes(0xC0) + struct.pack("<2I", random_.choice((1, 2)), element)
+        pointers.append(game_globals + 0xC4)
+        tags = Buffer(bytes(data), pointers=tuple(pointers))
+
+        def set_environment(harness, arguments):
+            return 0, tuple(bytes(harness.mu.mem_read(argument, 8)) for argument in arguments)
+
+        t.check(
+            "sound_load_environment",
+            globals={
+                "global_tag_instances": tags,
+                "global_game_globals": Pointer(tags, game_globals),
+                "game_sound_globals": sound_state(),
+            },
+            externals={"unknown_0021f6d0": set_environment},
+        )

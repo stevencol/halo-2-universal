@@ -6,8 +6,8 @@ gives the address it has there.
 
 How a sound is to be played: what the game says of it when it plays it (its
 source), and if it says nothing, what the tag of the sound says. The name of
-the file and those of the functions are guesses. Not here: 0x001251e0 and
-0x00125b40 on.
+the file and those of the functions are guesses. Not here: 0x001251e0,
+0x00125b40 and 0x00125f70 on.
 */
 
 #include "sound_definitions.h"
@@ -15,6 +15,7 @@ the file and those of the functions are guesses. Not here: 0x001251e0 and
 #include "cache/cache_files.h"
 #include "game/game.h"
 #include "main/main.h"
+#include "main/main_game.h"
 #include "cseries/async.h"
 #include "physics/bsp3d.h"
 #include "scenario/scenario.h"
@@ -73,6 +74,27 @@ enum
 	SOUND_SOURCE_DATUM_UNKNOWNB0_OFFSET= 0xB0,
 	SOUND_SOURCE_DATUM_FADE_TIME_OFFSET= 0xB4,
 	SOUND_SOURCE_DATUM_UNKNOWNB8_OFFSET= 0xB8,
+
+	/* more of a sound that plays */
+	SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET= 0xC,
+	SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET= 0x9C,
+	SOUND_SOURCE_DATUM_PERMUTATION_OFFSET= 0x9D,
+	SOUND_SOURCE_DATUM_CHUNK_OFFSET= 0x9E,
+
+	/* in what the globals tag says of the sound: the index of the tag of
+	the sound of the places with none of their own */
+	SOUND_GLOBALS_ENVIRONMENT_INDEX_OFFSET= 0x14,
+	GAME_SOUND_GLOBALS_ENVIRONMENT_OFFSET= 0x1EC,
+	GAME_SOUND_GLOBALS_IDLING_OFFSET= 0x7C,
+
+	/* what unknown_00218850 is asked, and what it answers */
+	_sound_cache_request_unknown2= 2,
+	_sound_cache_result_unknown0_bit= 0,
+	_sound_cache_result_unknown1_bit= 1,
+
+	/* of an element of unknown_00502104 */
+	UNKNOWN_00502104_DATUM_SIZE= 0x10,
+	UNKNOWN_00502104_DATUM_COUNT_OFFSET= 4,
 
 	/* in milliseconds: how long the sounds take to fade when a map is let go */
 	SOUND_FADE_OUT_TIME= 300,
@@ -149,9 +171,27 @@ void unknown_0021eae0(void);
 /* 0x003314b0 */
 unsigned long GetTickCount(void);
 
-/* 0x00125df0, 0x00191270: when a map is loaded */
-void unknown_00125df0(void);
+/* 0x00191270: when a map is loaded */
 void unknown_00191270(void);
+
+/* 0x0021ec00, 0x001269f0, 0x001290d0, 0x001293f0, 0x0021ee80, 0x00218810:
+what the sound does each time it is given some time */
+void unknown_0021ec00(void);
+void unknown_001269f0(void);
+void unknown_001290d0(void);
+void unknown_001293f0(void);
+void unknown_0021ee80(void);
+void unknown_00218810(void);
+
+/* 0x0021f6d0: sets the sound of the places of the map, from three parts of
+a tag */
+void unknown_0021f6d0(const void *unknown20, const void *unknown18, const void *unknown28);
+
+/* 0x00218850: asks for a piece of the samples of a sound. Bits come back */
+unsigned long unknown_00218850(long sound_index, const struct sound_chunk *chunk, long unknown);
+
+/* 0x001268e0: of a sound that plays, when its samples are not there */
+void unknown_001268e0(byte *source);
 
 /* 0x0012a810: of a sound that plays; what it gives may be a real */
 long unknown_0012a810(long source_index);
@@ -522,7 +562,7 @@ void sound_initialize_for_new_map(
 		((struct sound_listener *)(globals+GAME_SOUND_GLOBALS_LISTENERS_OFFSET))[index].valid= FALSE;
 	}
 
-	unknown_00125df0();
+	sound_load_environment();
 	unknown_00191270();
 	*(long *)(unknown_0051ebe4+UNKNOWN_0051EBE4_UNKNOWN2A98_OFFSET)= NONE;
 	*(long *)(unknown_0051ebe4+UNKNOWN_0051EBE4_UNKNOWN2A98_OFFSET+4)= NONE;
@@ -572,7 +612,7 @@ void sound_dispose_from_old_map(
 			end= (real)(long)start + (real)SOUND_FADE_OUT_TIME;
 			while ((double)end>(double)GetTickCount())
 			{
-				main_loading_idle();
+				sound_idle();
 			}
 		}
 	}
@@ -686,5 +726,129 @@ void sound_enable(
 			*(unsigned long *)(globals+GAME_SOUND_GLOBALS_START_TIME_OFFSET)= time;
 		}
 		globals[GAME_SOUND_GLOBALS_UNKNOWN7D_OFFSET]= FALSE;
+	}
+}
+
+/* 0x00125d60: gives the sound some time, while the game waits for something
+else: only in a game, and if more than a tick has gone by since the sound
+started. It is not done while it is being done */
+void sound_idle(
+	void)
+{
+	unsigned long start= *(unsigned long *)(game_sound_globals+GAME_SOUND_GLOBALS_START_TIME_OFFSET);
+	long elapsed= (long)(GetTickCount()-start);
+
+	if (main_game_globals && main_game_globals->active &&
+		(real)elapsed>game_time_globals->seconds_per_tick*1000.0f)
+	{
+		byte *globals= game_sound_globals;
+
+		globals[GAME_SOUND_GLOBALS_IDLING_OFFSET]= TRUE;
+		if (!globals[GAME_SOUND_GLOBALS_UNKNOWN7D_OFFSET])
+		{
+			globals[GAME_SOUND_GLOBALS_UNKNOWN7D_OFFSET]= TRUE;
+			if (sound_available())
+			{
+				unknown_0021ec00();
+				unknown_001269f0();
+				unknown_001290d0();
+				unknown_001293f0();
+				unknown_0021ee80();
+				globals= game_sound_globals;
+			}
+			unknown_00218810();
+			globals[GAME_SOUND_GLOBALS_UNKNOWN7D_OFFSET]= FALSE;
+		}
+		globals[GAME_SOUND_GLOBALS_IDLING_OFFSET]= FALSE;
+	}
+}
+
+/* 0x00125df0: when a map is loaded: the sound of the places with none of
+their own, if the globals tag tells of one */
+void sound_load_environment(
+	void)
+{
+	const struct tag_block *block= (const struct tag_block *)((const byte *)global_game_globals+GAME_GLOBALS_SOUND_OFFSET);
+	const byte *sound_globals= block->count ? (const byte *)(uintptr_t)block->address : NULL;
+	long environment_index= *(const int32_t *)(sound_globals+SOUND_GLOBALS_ENVIRONMENT_INDEX_OFFSET);
+
+	if (environment_index!=NONE)
+	{
+		const byte *environment= (const byte *)(uintptr_t)global_tag_instances[environment_index&0xFFFF].address;
+
+		unknown_0021f6d0(environment+0x20, environment+0x18, environment+0x28);
+		memcpy(game_sound_globals+GAME_SOUND_GLOBALS_ENVIRONMENT_OFFSET, environment+0x48, 3*sizeof(long));
+	}
+}
+
+/* the piece of the samples that a recording of a sound starts with */
+static inline __attribute__((always_inline)) const struct sound_chunk *sound_get_chunk(
+	long pitch_range_index,
+	long permutation_offset,
+	long chunk_offset)
+{
+	const struct sound_cache_file_gestalt *gestalt= global_sound_cache_file_gestalt;
+	const struct sound_pitch_range *pitch_range=
+		(const struct sound_pitch_range *)(uintptr_t)gestalt->pitch_ranges.address+pitch_range_index;
+	const struct sound_permutation *permutation=
+		(const struct sound_permutation *)(uintptr_t)gestalt->permutations.address+
+		(pitch_range->first_permutation_index+permutation_offset);
+
+	return (const struct sound_chunk *)(uintptr_t)gestalt->chunks.address+
+		(permutation->first_chunk_index+chunk_offset);
+}
+
+/* 0x00125e60: asks for the samples that a sound that plays is at. Whether
+the second bit of the answer is set */
+boolean sound_source_request_data(
+	byte *source)
+{
+	long sound_index= *(long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET);
+	const struct sound_definition *sound= sound_definition_get(sound_index);
+	unsigned long result= unknown_00218850(sound_index,
+		sound_get_chunk(sound->first_pitch_range_index+(char)source[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET],
+			(char)source[SOUND_SOURCE_DATUM_PERMUTATION_OFFSET],
+			*(short *)(source+SOUND_SOURCE_DATUM_CHUNK_OFFSET)),
+		_sound_cache_request_unknown2);
+
+	if (result&(FLAG(_sound_cache_result_unknown0_bit)|FLAG(_sound_cache_result_unknown1_bit)))
+	{
+		unknown_001268e0(source);
+	}
+
+	return (result>>_sound_cache_result_unknown1_bit)&1;
+}
+
+/* 0x00125ef0: one less of something that the sound of the console counts:
+which, is 8 bytes into what the function is given */
+void sound_unknown_00125ef0(
+	const byte *unknown)
+{
+	long index= *(const long *)(unknown+8);
+	byte *datum= (byte *)unknown_00502104->data+(index&0xFFFF)*UNKNOWN_00502104_DATUM_SIZE;
+
+	datum[UNKNOWN_00502104_DATUM_COUNT_OFFSET]--;
+}
+
+/* 0x00125f10: asks for the first samples of a sound, before it is played */
+void sound_predict(
+	long sound_index)
+{
+	if (sound_index!=NONE)
+	{
+		const struct sound_definition *sound= sound_definition_get(sound_index);
+
+		if (sound->pitch_range_count)
+		{
+			const struct sound_pitch_range *pitch_range=
+				(const struct sound_pitch_range *)(uintptr_t)global_sound_cache_file_gestalt->pitch_ranges.address+
+				sound->first_pitch_range_index;
+
+			if (pitch_range->permutation_count)
+			{
+				unknown_00218850(sound_index, sound_get_chunk(sound->first_pitch_range_index, 0, 0),
+					_sound_cache_request_unknown2);
+			}
+		}
 	}
 }

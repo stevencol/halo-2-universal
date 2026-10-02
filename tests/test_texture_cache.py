@@ -437,7 +437,7 @@ def run(t) -> None:
             "cache_file_read_async": read_async,
             "async_task_set_priority": lambda harness, arguments: 1,
             "SwitchToThread": switch_to_thread,
-            "main_loading_idle": lambda harness, arguments: 0,
+            "sound_idle": lambda harness, arguments: 0,
             "bitmap_mipmap_count": mipmap_count,
             "bitmap_row_size": row_size,
             "tag_iterator_next": lambda harness, arguments: (NONE, ()),

@@ -233,7 +233,7 @@ def run(t) -> None:
                                 "texture_cache_steal_memory": lambda harness, arguments, given=given: given,
                                 "async_write_position": write_position,
                                 "SwitchToThread": switch_to_thread,
-                                "main_loading_idle": lambda harness, arguments: 0,
+                                "sound_idle": lambda harness, arguments: 0,
                             },
                         )
 

@@ -491,7 +491,7 @@ boolean geometry_cache_block_load(
 				while (!cache_block->read_done)
 				{
 					SwitchToThread();
-					main_loading_idle();
+					sound_idle();
 				}
 			}
 		}

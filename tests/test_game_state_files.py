@@ -112,7 +112,7 @@ def run(t) -> None:
         return {
             name: auxiliary(random_.random() < 0.8, random_.choice((0, 1, 1, 0x80)), waits),
             "SwitchToThread": switch_to_thread(waits),
-            "main_loading_idle": lambda harness, arguments: 0,
+            "sound_idle": lambda harness, arguments: 0,
         }
 
     for _ in range(40):

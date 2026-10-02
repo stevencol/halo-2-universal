@@ -485,7 +485,7 @@ static inline __attribute__((always_inline)) void game_state_saved_game_wait(
 	while (!result->done)
 	{
 		SwitchToThread();
-		main_loading_idle();
+		sound_idle();
 	}
 }
 

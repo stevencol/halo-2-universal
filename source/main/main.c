@@ -623,6 +623,6 @@ void main_cancel_map_copy_and_wait(
 	while (!*(volatile boolean *)&unknown_0055c14c)
 	{
 		SwitchToThread();
-		main_loading_idle();
+		sound_idle();
 	}
 }

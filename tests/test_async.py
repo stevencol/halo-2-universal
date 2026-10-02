@@ -281,7 +281,7 @@ def run(t) -> None:
                     "async_wait",
                     done,
                     idle,
-                    externals={"SwitchToThread": switch_to_thread, "main_loading_idle": lambda harness, arguments: 0},
+                    externals={"SwitchToThread": switch_to_thread, "sound_idle": lambda harness, arguments: 0},
                 )
 
     # ---------- the thread

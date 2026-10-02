@@ -409,7 +409,7 @@ void async_wait(
 		SwitchToThread();
 		if (idle)
 		{
-			main_loading_idle();
+			sound_idle();
 		}
 	}
 }
