@@ -3,7 +3,7 @@
 import random
 import struct
 
-from difftest import Buffer
+from difftest import Buffer, f32
 
 ITERATOR_SIZE = 0x2C
 CHARACTERS, INDEX, CHARACTER, WRAP, ELEMENT, PREVIOUS_ELEMENT = 8, 0xC, 0x12, 0x1B, 0x1C, 0x20
@@ -50,4 +50,36 @@ def run(t) -> None:
         t.check(
             "text_iterator_next",
             Buffer(bytes(iterator) + struct.pack(f"<{len(characters)}I", *characters), pointers=(CHARACTERS,)),
+        )
+
+    # ---------- starting to go through a text
+
+    def color(*values: float) -> Buffer:
+        return Buffer(struct.pack("<4f", *values) + random_.randbytes(4))
+
+    parts = (0.0, 1.0, 0.5, 0.25, 1 / 255, 0.999, 0.9999999, 0.003, 0.0039, 0.00393, 254.5 / 255, 1.004, 2.0, -0.5, 100.0)
+
+    def a_color() -> Buffer:
+        if random_.random() < 0.7:
+            return color(*(random_.choice(parts[:11]) for _ in range(4)))
+        return color(*(random_.choice(parts) for _ in range(4)))
+
+    for n in range(400):
+        slots = [random_.getrandbits(32) for _ in range(11)]
+        font = random_.choice((0, 0x80123400, 0x80123400))
+        t.check(
+            "text_iterator_new",
+            Buffer(random_.randbytes(ITERATOR_SIZE + 4), places=(CHARACTERS,)),
+            random_.randrange(11),
+            random_.getrandbits(32),
+            Buffer(random_.randbytes(16)),
+            random_.getrandbits(32),
+            a_color(),
+            Buffer(bytes([random_.choice((0, 1, 1, 0x80))]) + random_.randbytes(3)),
+            a_color(),
+            globals={
+                "draw_string_flags": bytes([random_.choice((0, 1, 2, 3, 0xFE, 0xFF))]),
+                "font_slot_indices": struct.pack("<11I", *slots),
+            },
+            externals={"unknown_001224c0": lambda harness, arguments, font=font: font},
         )

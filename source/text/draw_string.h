@@ -9,6 +9,7 @@ these functions are of it is a guess, and so are their names.
 #define __DRAW_STRING_H
 
 #include "cseries/cseries.h"
+#include "math/real_math.h"
 
 /* ---------- constants */
 
@@ -36,7 +37,11 @@ enum
 {
 	/* the characters that the game draws with pictures of its own */
 	FIRST_PRIVATE_CHARACTER= 0xE000,
-	LAST_PRIVATE_CHARACTER= 0xE3FF
+	LAST_PRIVATE_CHARACTER= 0xE3FF,
+
+	NUMBER_OF_FONTS= 11,
+	/* in draw_string_flags: lines are ended where they can */
+	_draw_string_wrap_bit= 0
 };
 
 /* ---------- structures */
@@ -45,8 +50,9 @@ enum
 #pragma pack(push, 2)
 struct text_iterator
 {
-	long unknown0;
-	long unknown4;
+	long font_index;
+	/* NULL if it is not there */
+	void *font;
 	const long *characters;
 	/* of the next character */
 	short index;
@@ -63,8 +69,9 @@ struct text_iterator
 	/* what the last thing was, and the one before it */
 	long element;
 	long previous_element;
-	long unknown24;
-	long unknown28;
+	/* of the text and of its shadow: 0 if it has none */
+	unsigned long color;
+	unsigned long shadow_color;
 };
 #pragma pack(pop)
 
@@ -75,6 +82,9 @@ typedef char verify_text_iterator_element_offset[
 
 /* ---------- prototypes/DRAW_STRING.C */
 
+boolean text_iterator_new(struct text_iterator *iterator, long font_index, short justification,
+	const long *characters, short unknown, const real_argb_color *color, const boolean *shadow,
+	const real_argb_color *shadow_color);
 void text_iterator_next(struct text_iterator *iterator);
 boolean character_is_private_picture(long character);
 

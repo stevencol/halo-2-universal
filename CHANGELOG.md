@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Empezar a recorrer un texto
+
+Una función. De 563 funciones se pasa a 564, el 5,01 % de las del juego (el
+2,505 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `text_iterator_new` | `0x0013f470` | `text/draw_string.c` |
+
+- Las variables `draw_string_flags` (`0x004e73a4`) y `font_slot_indices`
+  (`0x004e28f4`).
+
+### Lo que se sabe
+
+- El iterador guarda la fuente (su número y la fuente misma, que se pide a
+  la función que espera a que esté cargada), la alineación, y los colores del
+  texto y de su sombra ya como números de 32 bits.
+- Cada parte de un color (de 0 a 1) se multiplica por 255 y se **corta** lo
+  que queda tras la coma, sin redondear; una parte fuera de rango pisa a las
+  demás, porque no se recorta.
+- La sombra nunca es más opaca que el texto: su opacidad es la menor de las
+  dos. Sin sombra, su color es 0.
+- Si las líneas se parten donde se puede lo dice el bit 0 de las banderas de
+  cómo se dibuja el texto.
+- La función `0x00322b0c`, que aparece ocho veces, es la de la biblioteca de
+  C que pasa un real a entero.
+
+### Sin comprobar
+
+- Quedarse con el byte bajo de la opacidad antes de juntarla con las otras
+  partes: lo que sobra se pierde al desplazar.
+
+### Mutaciones
+
+29 líneas rotas a propósito: 28 detectadas (una de ellas, que no compilaba,
+se repitió bien hecha), y la otra es la de «Sin comprobar».
+
 ## 2026-10-02 — Dónde está cada píxel de un bitmap: el 5 % del juego
 
 Seis funciones. De 557 funciones se pasa a 563: **el 5,00 % de las del

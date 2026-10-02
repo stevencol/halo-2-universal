@@ -931,3 +931,5 @@ address,name,source,arguments,returns,convention
 003fb640,D3DResource_Release,,stack,int
 00135a30,bitmap_2d_get_pixel_address,source/bitmaps/bitmaps.c,edi eax stack stack,int
 00135af0,bitmap_3d_get_pixel_address,source/bitmaps/bitmaps.c,ecx stack stack stack stack,int
+0013f470,text_iterator_new,source/text/draw_string.c,esi ebx edx stack stack stack stack stack,bool
+001224c0,unknown_001224c0,,ecx,pointer
