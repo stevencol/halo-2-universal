@@ -2,6 +2,59 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Los perfiles de los jugadores
+
+Nueve funciones, casi todas de los perfiles. De 493 funciones se pasa a
+502, el 4,46 % de las del juego (el 2,099 % de sus bytes). **Se pasa de
+las 500 funciones.**
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `player_appearance_valid` | `0x00153750` | `saved games/player_profile.c` |
+| `player_profile_load` | `0x001a0540` | `saved games/player_profile.c` |
+| `player_profile_write` | `0x001a0660` | `saved games/player_profile.c` |
+| `player_profile_write_async` | `0x001a0680` | `saved games/player_profile.c` |
+| `player_color_get` | `0x001a06a0` | `saved games/player_profile.c` |
+| `player_profile_get_unknownEC` | `0x001a06f0` | `saved games/player_profile.c` |
+| `player_profile_new` | `0x001a07b0` | `saved games/player_profile.c` |
+| `player_profile_read` | `0x001a0850` | `saved games/player_profile.c` |
+| `async_set_file_position` | `0x001a08d0` | `cseries/async.c` |
+
+- `struct player_appearance` (16 bytes) y más campos de
+  `struct player_profile`; `tests/test_player_profile.py`.
+
+### Lo que se sabe
+
+- Un perfil nuevo se llama «Guest». El de serie del hito anterior es el
+  mismo con otro nombre.
+- El aspecto de un jugador son cuatro colores (de 18, o -1 para ninguno),
+  un quinto valor de 0 a 3, un emblema con 64 primeros planos y 32 fondos,
+  y cuatro indicadores. Por defecto: colores 10, 0, 0 y 10.
+- Al leer un perfil el juego corrige lo que no puede ser: un aspecto
+  imposible se pone entero a cero, y el nombre se corta a 31 caracteres.
+  **Lo hace aunque la lectura falle**, sobre el perfil que le dieron.
+- Lo que se escribe de un perfil empieza en su nombre (`+0x08`), que es lo
+  que la función de escritura compara para saber si el archivo cambió de
+  nombre.
+- Los colores de los jugadores están en la etiqueta de globales
+  (`+0x160`); sin mapa cargado, o con un índice que no existe, el color es
+  blanco.
+- Un perfil guarda cuatro números (`+0xEC`); una función da el mayor de
+  los que valen y cuál de los cuatro es. Qué son no se sabe (los niveles
+  alcanzados en cada dificultad, quizá).
+
+### Sin comprobar
+
+- Si el indicador de un perfil nuevo se pone con `|=` o con `=`: la memoria
+  se acaba de poner a cero.
+
+### Mutaciones
+
+72 líneas rotas a propósito: 71 detectadas, y la otra es la de «Sin
+comprobar».
+
 ## 2026-10-02 — Los archivos que vienen con el juego
 
 Cinco funciones pequeñas: cuatro de `saved_game_files.c`, al que ya solo

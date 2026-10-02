@@ -998,3 +998,14 @@ void async_flush_file_blocking(
 		SwitchToThread();
 	}
 }
+
+/* 0x001a08d0: where a file is read or written next, from its start. The
+name is a guess */
+uint32_t async_set_file_position(
+	uint32_t file,
+	long position)
+{
+	long position_high= 0;
+
+	return SetFilePointer(file, position, &position_high, FILE_BEGIN);
+}

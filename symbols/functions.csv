@@ -865,4 +865,14 @@ address,name,source,arguments,returns,convention
 00216760,saved_game_files_add_default_profile,source/saved games/saved_game_files.c,,void
 00217080,saved_game_files_add_built_in_variant,source/saved games/saved_game_files.c,stack,void
 002172a0,cached_saved_game_file_delete,source/saved games/saved_game_files.c,eax,void
+00153750,player_appearance_valid,source/saved games/player_profile.c,edx,bool
+001a0540,player_profile_load,source/saved games/player_profile.c,eax edx,bool
+001a0660,player_profile_write,source/saved games/player_profile.c,eax edx,bool
+001a0680,player_profile_write_async,source/saved games/player_profile.c,eax edx ecx,bool
+001a06a0,player_color_get,source/saved games/player_profile.c,eax ecx,void
+001a06f0,player_profile_get_unknownEC,source/saved games/player_profile.c,ecx stack stack,void
 001a0750,player_profile_set_defaults,source/saved games/player_profile.c,edx,void
+001a07b0,player_profile_new,source/saved games/player_profile.c,esi stack,void
+001a0850,player_profile_read,source/saved games/player_profile.c,edx stack,bool
+001a08d0,async_set_file_position,source/cseries/async.c,edx ecx,int
+0019c1f0,unknown_0019c1f0,,stack,int

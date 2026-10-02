@@ -126,3 +126,4 @@ address,name,source
 0055c280,saved_game_files_language,source/saved games/saved_game_files.c
 00470054,saved_game_file_name_separator,source/saved games/saved_game_files.c
 0055c154,saved_game_files_last_error,source/saved games/saved_game_files.c
+00468710,player_color_default,source/saved games/player_profile.c

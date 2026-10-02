@@ -218,6 +218,7 @@ void async_wait(const volatile byte *done, boolean idle);
 void async_thread_procedure(void);
 void async_thread_loop(void);
 
+uint32_t async_set_file_position(uint32_t file, long position);
 boolean async_read_goes_before(long next_priority, long task_priority, struct async_read_position_state *state,
 	async_task_function task_function, async_task_function next_function,
 	const struct async_read_parameters *next_parameters, const struct async_read_parameters *task_parameters);
