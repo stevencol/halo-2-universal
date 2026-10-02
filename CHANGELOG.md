@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Dibujar una línea de texto
+
+Una función. De 626 funciones se pasa a 627, el 5,57 % de las del juego (el
+2,794 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `draw_string_draw_line` | `0x0013f700` | `text/draw_string.c` |
+
+### Lo que se sabe
+
+- Recorre los caracteres de una línea, desde uno hasta antes de otro, y con
+  cada uno llama a la función que se le da (la que lo pinta, o la que mide).
+- Cada carácter se **recorta** contra dos rectángulos, que pueden no darse;
+  sin ninguno, lo que se dibuja va de -32768 a 32767 en las dos direcciones.
+  A la función se le dice qué trozo del carácter se ve: dónde queda, cuánto
+  mide y cuánto se ha quitado por la izquierda y por arriba. Si no se ve
+  nada, no se la llama.
+- El carácter se coloca donde va la línea, más dónde empiezan sus píxeles y
+  el ajuste con el anterior; en vertical, lo que sus píxeles suben desde la
+  línea. Después la línea avanza lo que diga la fuente, se haya dibujado el
+  carácter o no.
+- No se dibujan los caracteres hasta el `0x1F`, ni los que la caché no
+  tiene.
+- Los **dibujos del juego** (los caracteres privados, como los botones del
+  mando) se pintan en blanco: del color solo se les deja la opacidad.
+
+### Herramientas
+
+- Una función de pega del arnés (`Mock`) puede decir qué se compara de cada
+  llamada (`record`), para cuando recibe direcciones de la pila.
+
+### Mutaciones
+
+82 líneas rotas a propósito: 80 detectadas. Cuatro pidieron casos nuevos
+(texto más allá de 640×480 sin rectángulos, y una fuente del recorrido
+distinta de la de los textos).
+
+### Sin comprobar
+
+- Dos mutaciones son equivalentes: tratar un «no es un número» de otra
+  forma en la comprobación de que queda sitio y en la de que el carácter se
+  ve. Los bordes nunca llegan a ser «no es un número» (un rectángulo así no
+  los cambia), y el ancho y el alto recortados tampoco.
+
 ## 2026-10-02 — Cuánto texto cabe en una línea
 
 Una función. De 625 funciones se pasa a 626, el 5,56 % de las del juego (el

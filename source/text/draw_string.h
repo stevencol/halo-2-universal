@@ -41,6 +41,8 @@ enum
 	LAST_PRIVATE_CHARACTER= 0xE3FF,
 
 	NUMBER_OF_FONTS= 11,
+	/* the characters up to this one are not drawn */
+	LAST_CONTROL_CHARACTER= 0x1F,
 	MAXIMUM_NUMBER_OF_TAB_STOPS= 16,
 	/* with its end */
 	MAXIMUM_DRAW_STRING_CHARACTERS= 2048,
@@ -123,7 +125,7 @@ off the stack itself */
 #define DRAW_STRING_CALLBACK __attribute__((stdcall))
 
 typedef void (DRAW_STRING_CALLBACK *draw_string_character_proc)(const struct text_iterator *iterator,
-	long font_index, long character, unsigned long color, long unknown5, real x, real y, real skipped_width,
+	long font_index, long character, unsigned long color, unsigned long shadow_color, real x, real y, real skipped_width,
 	real skipped_height, real width, real height, real scale, long unknown13, long unknown14);
 
 /* 0x004e73a0: how the texts are drawn */
@@ -137,7 +139,9 @@ struct draw_string_globals
 	boolean shadow;
 	byte pad21[3];
 	real_argb_color shadow_color;
-	byte unknown34[8];
+	/* told to what is done with each character */
+	long unknown34;
+	long unknown38;
 	short tab_stop_count;
 	short tab_stops[MAXIMUM_NUMBER_OF_TAB_STOPS];
 	/* how far from the left of where a text is drawn its first line begins,
@@ -161,7 +165,7 @@ typedef char verify_text_iterator_element_offset[
 
 void draw_string_initialize(void);
 void DRAW_STRING_CALLBACK draw_string_bounds_character(const struct text_iterator *iterator, long font_index,
-	long character, unsigned long color, long unknown5, real x, real y, real skipped_width, real skipped_height,
+	long character, unsigned long color, unsigned long shadow_color, real x, real y, real skipped_width, real skipped_height,
 	real width, real height, real scale, long unknown13, long unknown14);
 void draw_string_get_bounds(const wchar *string, const struct rectangle2d *rectangle, struct rectangle2d *bounds,
 	struct rectangle2d *cursor, real scale);
@@ -169,6 +173,9 @@ void draw_string_get_characters_bounds(struct rectangle2d *cursor, struct rectan
 	const struct rectangle2d *rectangle, const long *characters, real scale);
 struct draw_string_line DRAW_STRING_CALLBACK draw_string_measure_line(struct text_iterator *iterator,
 	const real_point2d *position, const real_rectangle2d *bounds, real scale);
+void DRAW_STRING_CALLBACK draw_string_draw_line(const real_rectangle2d *bounds, const real_rectangle2d *clip,
+	short start, draw_string_character_proc proc, real_point2d *position, unsigned long color,
+	unsigned long shadow_color, const long *characters, short end, real scale);
 void draw_string_set_tab_stops(short count, const short *tab_stops);
 void draw_string_set_color_exact(const real_argb_color *color);
 void draw_string_set_color(const real_argb_color *color);

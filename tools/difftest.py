@@ -255,6 +255,10 @@ class Mock:
     callee_cleans: bool = True
     # the registers that the function takes arguments in
     registers: tuple[str, ...] = ()
+    # takes the call and returns what to compare of it, when its arguments
+    # have addresses that are not the same in the game and in source/; if
+    # there is none, its arguments are compared
+    record: object = None
 
 
 def mock_address(n: int) -> int:
@@ -646,7 +650,9 @@ class Harness:
                     stack_arguments,
                 )
                 self._calls.append(
-                    (
+                    (call.mock, mock.record(call))
+                    if mock.record
+                    else (
                         call.mock,
                         tuple((name, self.normalize(value)) for name, value in call.registers.items()),
                         tuple(map(self.normalize, call.stack)),

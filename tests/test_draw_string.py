@@ -3,7 +3,7 @@
 import random
 import struct
 
-from difftest import Buffer, f32
+from difftest import Buffer, GlobalData, Mock, f32, mock_address
 from test_async import calls_so_far
 
 ITERATOR_SIZE = 0x2C
@@ -436,5 +436,111 @@ def run(t) -> None:
                 "font_character_request": request,
                 "font_character_pixels_request": lambda harness, arguments, there=random_.choice((1, 1, 1, 1, 1, 0x80, 0)): there,
                 "font_get_kerning": kerning,
+            },
+        )
+
+    # ---------- drawing a line of a text
+
+    def a_header() -> Buffer:
+        # how far the next character is, how many bytes its pixels take, how
+        # wide and high it is, and where its pixels are
+        return Buffer(
+            struct.pack(
+                "<H H 2h 2h I",
+                random_.choice((0, 3, 8, 8, 13, 21, 0xFFFB)),
+                random_.getrandbits(16),
+                random_.choice((1, 6, 9, 14, 30, 0, -3)),
+                random_.choice((1, 8, 12, 16, 40, 0, -3)),
+                random_.choice((0, 0, 1, -1, 2, -3)),
+                random_.choice((0, 5, 9, 12, -2)),
+                random_.getrandbits(32),
+            )
+        )
+
+    def a_rectangle(wide: bool):
+        if random_.randrange(4) == 0:
+            return 0
+        if wide:
+            values = [random_.choice((-1000.0, -40000.0, -5.5)), random_.choice((1000.0, 40000.0, 700.25)), random_.choice((-1000.0, -40000.0, -7.5)), random_.choice((1000.0, 40000.0, 500.75))]
+        else:
+            x0 = random_.choice((0.0, 10.0, 12.5, 30.0, -4.0))
+            y0 = random_.choice((0.0, 50.0, 55.5, 44.0, 60.0))
+            values = [x0, x0 + random_.choice((0.0, 3.0, 20.0, 45.5, 100.0, -1.0)), y0, y0 + random_.choice((0.0, 2.0, 9.5, 20.0, 100.0, -1.0))]
+        if random_.randrange(25) == 0:
+            values[random_.randrange(4)] = nan
+        return Buffer(struct.pack("<4f", *values))
+
+    def drawn_character(call):
+        # where the text is gone through is not at the same place in the game
+        # and in source/: what is there, and the rest of what is told
+        return bytes(t.harness.mu.mem_read(call.stack[0], ITERATOR_SIZE)), tuple(call.stack[1:])
+
+    for n in range(1200):
+        count = random_.choice((0, 1, 2, 3, 5, 8, 12))
+        steps = []
+        index = start = random_.choice((0, 0, 0, 1, 7, -3))
+        for step in range(count):
+            index += random_.choice((1, 1, 1, 2))
+            element = 4 if random_.randrange(8) else random_.choice((1, 2, 3))
+            character = random_.choice((0x41, 0x61, 0x20, 0x3042, 0xE100, 0xE3FF, 0x1F, 0x1E, 1, 0x80000041, 0xFFFFFFFF, 0x41, 0x61))
+            steps.append((element, character, random_.choice((0, 0x41, 0x20)), index))
+        steps.append((random_.choice((0, 0, 4, 1)), 0, 0, index + 1))
+        # the line ends before a character: at times, before the text does
+        end = random_.choice((index + 5, index + 1, index, index - 1, start, start + 2, start - 1, 0x7FFF))
+        headers = [a_header() for _ in range(4)]
+        filled = random_.randbytes(ITERATOR_SIZE)
+        there = n % 23 != 22
+
+        def new(harness, arguments, filled=filled, there=there):
+            iterator, font_index, justification, characters, style, color, shadow, shadow_color = arguments
+            data = bytearray(filled)
+            # another font than that of the texts
+            struct.pack_into("<I", data, 0, (font_index + 3) % 11)
+            harness.mu.mem_write(iterator, bytes(data))
+            return there, (font_index, justification & 0xFFFF, characters, style & 0xFFFF, *map(harness.normalize, (color, shadow, shadow_color)))
+
+        def next_character(harness, arguments, steps=steps):
+            (iterator,) = arguments
+            done_ = calls_so_far(harness, "text_iterator_next")
+            # after the text, its end: at an index that no line goes past
+            element, character, previous, at = steps[done_] if done_ < len(steps) else (0, 0, 0, 0x7FFF)
+            harness.mu.mem_write(iterator + INDEX, struct.pack("<H", at & 0xFFFF))
+            harness.mu.mem_write(iterator + CHARACTER, struct.pack("<2I", character, previous))
+            harness.mu.mem_write(iterator + ELEMENT, struct.pack("<I", element))
+            return 0, ()
+
+        def get_header(harness, arguments, headers=headers):
+            character, font_index, flags = arguments
+            # some characters are not there
+            return 0 if character == 0x61 and font_index % 3 == 0 else headers[character % len(headers)].address
+
+        def kerning_of(harness, arguments):
+            font, first, second = arguments
+            return (first * 7 + second) % 5 - 2
+
+        scale = random_.choice((1.0, 1.0, 1.0, 0.5, 2.0, 1.5, 0.0, -1.0)) if n % 40 != 39 else nan
+        x = random_.choice((0.0, 12.0, 20.0, -30.5, 100.25, 700.0, 32760.0, 33000.0)) if n % 41 != 40 else nan
+        y = random_.choice((60.0, 50.0, 64.5, 0.0, 300.0, 490.0, 32760.0, 33000.0)) if n % 43 != 42 else nan
+        wide = n % 3 == 0
+        t.check(
+            "draw_string_draw_line",
+            a_rectangle(wide),
+            a_rectangle(wide),
+            (start & 0xFFFF) | random_.choice((0, 0x10000, 0xFFFF0000)),
+            mock_address(0),
+            Buffer(struct.pack("<2f", x, y)),
+            random_.choice((0xFFFFFFFF, 0x80123456, 0, random_.getrandbits(32))),
+            random_.getrandbits(32),
+            Buffer(random_.randbytes(16)),
+            (end & 0xFFFF) | random_.choice((0, 0x10000, 0xFFFF0000)),
+            real_bits(scale),
+            globals={"draw_string_globals": GlobalData(struct.pack("<I", random_.randrange(11)) + random_.randbytes(GLOBALS_SIZE - 4))},
+            extra=headers,
+            mocks=[Mock(lambda call: 0x12345678, stack_arguments=14, record=drawn_character)],
+            externals={
+                "text_iterator_new": new,
+                "text_iterator_next": next_character,
+                "font_character_get_header": get_header,
+                "font_get_kerning": kerning_of,
             },
         )

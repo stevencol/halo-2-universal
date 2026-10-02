@@ -100,7 +100,7 @@ void DRAW_STRING_CALLBACK draw_string_bounds_character(
 	long font_index,
 	long character,
 	unsigned long color,
-	long unknown5,
+	unsigned long shadow_color,
 	real x,
 	real y,
 	real skipped_width,
@@ -118,7 +118,7 @@ void DRAW_STRING_CALLBACK draw_string_bounds_character(
 	(void)iterator;
 	(void)character;
 	(void)color;
-	(void)unknown5;
+	(void)shadow_color;
 	(void)skipped_width;
 	(void)skipped_height;
 	(void)unknown13;
@@ -262,6 +262,141 @@ struct draw_string_line DRAW_STRING_CALLBACK draw_string_measure_line(
 	line.index= index;
 
 	return line;
+}
+
+/* the least of the bounds of what is drawn and a rectangle */
+static inline __attribute__((always_inline)) void draw_string_clip(
+	const real_rectangle2d *rectangle,
+	real *left,
+	real *right,
+	real *top,
+	real *bottom)
+{
+	if (rectangle->x0>*left)
+	{
+		*left= rectangle->x0;
+	}
+	if (*right>rectangle->x1)
+	{
+		*right= rectangle->x1;
+	}
+	if (rectangle->y0>*top)
+	{
+		*top= rectangle->y0;
+	}
+	if (*bottom>rectangle->y1)
+	{
+		*bottom= rectangle->y1;
+	}
+}
+
+/* 0x0013f700: goes through the characters of a line of a text, from one to
+before another, and calls a function with each one that is drawn: with what
+of its pixels is in two rectangles, if there is any. Any of the two
+rectangles may not be given. The line is drawn from a place, which is left
+after the last character: each one is as far from the one before as the font
+says. The characters that are not known, and those up to 0x1F, are not
+drawn; the pictures of the game are drawn white, with the opacity of the
+colour */
+void DRAW_STRING_CALLBACK draw_string_draw_line(
+	const real_rectangle2d *bounds,
+	const real_rectangle2d *clip,
+	short start,
+	draw_string_character_proc proc,
+	real_point2d *position,
+	unsigned long color,
+	unsigned long shadow_color,
+	const long *characters,
+	short end,
+	real scale)
+{
+	struct text_iterator iterator;
+	real left= -32768.0f;
+	real right= 32767.0f;
+	real top= -32768.0f;
+	real bottom= 32767.0f;
+
+	if (bounds)
+	{
+		draw_string_clip(bounds, &left, &right, &top, &bottom);
+	}
+	if (clip)
+	{
+		draw_string_clip(clip, &left, &right, &top, &bottom);
+	}
+	if (!(right>left) || !(bottom>top))
+	{
+		return;
+	}
+	if (!text_iterator_new(&iterator, draw_string_globals.font_index, (short)draw_string_globals.justification,
+		characters, (short)draw_string_globals.style, &draw_string_globals.color, &draw_string_globals.shadow,
+		&draw_string_globals.shadow_color))
+	{
+		return;
+	}
+	iterator.index= start;
+	while (iterator.index<end)
+	{
+		const struct font_character_header *header;
+
+		text_iterator_next(&iterator);
+		if (!iterator.character)
+		{
+			break;
+		}
+		if (iterator.element!=_text_element_character ||
+			(iterator.character>=0 && iterator.character<=LAST_CONTROL_CHARACTER))
+		{
+			continue;
+		}
+		header= font_character_get_header(iterator.character, iterator.font_index,
+			FLAG(_font_character_request_wait_bit)|FLAG(_font_character_request_new_bit));
+		if (header)
+		{
+			real width= (real)header->width;
+			real height= (real)header->height;
+			real skipped_width= 0.0f;
+			real skipped_height= 0.0f;
+			real kerning= (real)font_get_kerning(iterator.font, iterator.previous_character, iterator.character)*scale;
+			real origin= (real)header->origin_x*scale;
+			real x= position->x + origin + kerning;
+			real y= position->y - (real)header->origin_y*scale;
+
+			if (x+width>right)
+			{
+				width= right-x;
+			}
+			if (left>x)
+			{
+				skipped_width= left-x;
+				width-= skipped_width;
+				x= left;
+			}
+			if (y+height>bottom)
+			{
+				height= bottom-y;
+			}
+			if (top>y)
+			{
+				skipped_height= top-y;
+				height-= skipped_height;
+				y= top;
+			}
+			if (width>0.0f && height>0.0f)
+			{
+				unsigned long character_color= color;
+
+				if (character_is_private_picture(iterator.character))
+				{
+					character_color|= 0xFFFFFF;
+				}
+				proc(&iterator, iterator.font_index, iterator.character, character_color, shadow_color, x, y,
+					skipped_width, skipped_height, width, height, scale, draw_string_globals.unknown34,
+					draw_string_globals.unknown38);
+			}
+			position->x= (real)header->advance*scale + position->x + origin + kerning;
+		}
+	}
 }
 
 /* 0x0013eb20: where the tabs of the texts that are drawn are: 16 at most */
