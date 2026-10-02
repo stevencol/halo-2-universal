@@ -540,3 +540,10 @@ address,name,source,arguments,returns,convention
 002d6765,XCalculateSignatureBegin,,stack,int
 002d6779,XCalculateSignatureUpdate,,stack stack stack,int
 002d67c7,XCalculateSignatureEnd,,stack stack,int
+0013d170,lruv_initialize,source/memory/lruv_cache.c,stack stack stack stack stack stack stack stack stack,void
+0013d230,lruv_wrap_ticks,source/memory/lruv_cache.c,eax,void
+0013d2b0,lruv_flush,source/memory/lruv_cache.c,eax,void
+0013d320,lruv_hole_is_better,source/memory/lruv_cache.c,ecx esi edi,bool
+0013d830,lruv_block_delete,source/memory/lruv_cache.c,edi ebx,void
+0013d8b0,lruv_resize,source/memory/lruv_cache.c,eax stack,void
+0013d950,lruv_compute_pages_in_use,source/memory/lruv_cache.c,stack stack,int

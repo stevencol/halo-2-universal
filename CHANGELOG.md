@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-01 — La caché de bloques de páginas
+
+`lruv_cache.c`, un módulo que ya existía en Halo 1: una caché que reparte
+páginas de memoria en bloques y, cuando no cabe uno nuevo, echa a los que
+llevan más tiempo sin usarse. El juego la usa para las animaciones y las
+texturas. De 258 funciones se pasa a 265, el 2,35 % de las del juego (el
+1,083 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `lruv_initialize` | `0x0013d170` | `memory/lruv_cache.c` |
+| `lruv_wrap_ticks` | `0x0013d230` | `memory/lruv_cache.c` |
+| `lruv_flush` | `0x0013d2b0` | `memory/lruv_cache.c` |
+| `lruv_hole_is_better` | `0x0013d320` | `memory/lruv_cache.c` |
+| `lruv_block_delete` | `0x0013d830` | `memory/lruv_cache.c` |
+| `lruv_resize` | `0x0013d8b0` | `memory/lruv_cache.c` |
+| `lruv_compute_pages_in_use` | `0x0013d950` | `memory/lruv_cache.c` |
+
+- Archivos nuevos: `memory/lruv_cache.{c,h}`; `tests/test_lruv_cache.py`.
+
+### Lo que se sabe
+
+- La caché de Halo 2 tiene los campos de la de Halo 1 y varios más: una
+  tercera función, un modo de elegir sitio, ocho contadores y un asignador.
+  Los bloques pierden el campo de datos del usuario (24 bytes en vez de 28).
+- El contador de ticks llega hasta 0x7fffffff; al llegar vuelve a 0x101 y
+  los bloques conservan su orden solo hasta 256 ticks atrás.
+- Al elegir entre dos huecos gana el que lleva más tiempo sin usarse; si
+  la diferencia es de menos de 150 ticks (y nunca se cuentan más de 300),
+  gana el de menos páginas.
+- El módulo de `0x00123180` es la caché de animaciones («xbox animation
+  cache»), y `0x0012c0d0` la de texturas.
+
+### Sin comprobar
+
+- En `lruv_wrap_ticks`, si un bloque de exactamente 256 ticks de antigüedad
+  entra por una rama o por la otra: las dos le dan el mismo valor.
+
+### Pendiente
+
+- `lruv_block_new` (`0x0013d370`), la función que reserva un bloque: es
+  grande y tiene tres maneras de puntuar los huecos.
+
 ## 2026-10-01 — Las preferencias guardadas
 
 El archivo `z:\preferences.dat`, donde el juego recuerda cosas de una vez

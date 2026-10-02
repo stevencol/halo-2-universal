@@ -70,3 +70,4 @@ address,name,source
 00510818,global_preferences_globals,source/main/global_preferences.c
 004687ec,global_preferences_path,source/main/global_preferences.c
 00470024,xbox_signature_handle,source/main/global_preferences.c
+0046875c,lruv_blocks_allocation,source/memory/lruv_cache.c
