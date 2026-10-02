@@ -2,6 +2,64 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — El sonido al cambiar de mapa
+
+El resto de la fila del sonido en la tabla de sistemas del juego: lo que
+hace al cargar un mapa, al soltarlo y al cambiar de BSP; y dos funciones
+más, si hay sonido y pararlo o reanudarlo. De 424 funciones se pasa a 429,
+el 3,81 % de las del juego (el 1,867 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_initialize_for_new_map` | `0x00125690` | `sound/sound_manager.c` |
+| `sound_dispose_from_old_map` | `0x001257b0` | `sound/sound_manager.c` |
+| `sound_initialize_for_new_structure_bsp` | `0x00125920` | `sound/sound_manager.c` |
+| `sound_available` | `0x00125a60` | `sound/sound_manager.c` |
+| `sound_enable` | `0x00125a90` | `sound/sound_manager.c` |
+
+### Cambiado
+
+- `unknown_00125690`, `unknown_001257b0` y `unknown_00125920` de la tabla
+  de sistemas tienen nombre: la fila del sonido está completa.
+- De un oyente (`struct sound_listener`) se sabe más: la hoja y el cluster
+  del BSP donde está, y su posición (`+0x30`).
+
+### Lo que se sabe
+
+- Al cargar un mapa, el sonido apunta a la etiqueta común de sonidos del
+  mapa (su índice está en el bloque de sonido de la etiqueta de globales,
+  en `+0x20`), apunta la hora y quita los oyentes.
+- Al soltar un mapa, los sonidos que suenan se marcan para apagarse en
+  300 ms y el juego **espera** esos 300 ms atendiendo el sonido. Si no
+  suena ninguno no espera.
+- En esa espera la hora de inicio se toma como número con signo y la hora
+  actual sin signo: si la consola llevara más de 24,8 días encendida, la
+  espera no ocurriría. El final se guarda como real de 32 bits, así que
+  pasadas 4,6 horas ya no es exacto al milisegundo.
+- Al cambiar de BSP se recalcula dónde están los sonidos que tienen
+  posición (los del tipo 1) y los oyentes.
+- «Hay sonido» es: está preparado, hay un mapa cargado y otro indicador
+  (`+0x79`) que se pone al arrancar.
+- `sound_enable(0)` para todos los canales; `sound_enable(1)` los reanuda y
+  apunta la hora. Cualquier otro número cuenta como «reanudar» para el
+  indicador pero no toca los canales.
+
+### Sin comprobar
+
+- `sound_initialize_for_new_map` cuando la etiqueta de globales no dice
+  nada del sonido: el juego lee de la dirección 0x20 y se cae.
+
+### Mutaciones
+
+113 líneas rotas a propósito: 110 detectadas a la primera, dos más con
+casos nuevos (un tipo de sonido con el bit 3 puesto; cargar un mapa sin
+otro cargado antes) y la otra es la de «Sin comprobar».
+
+Las pruebas encontraron un error antes de las mutaciones: había puesto la
+espera de 300 ms fuera de la condición de que suene algún sonido.
+
 ## 2026-10-02 — El arranque del sonido
 
 Las dos funciones que preparan y desmontan el sonido al arrancar y cerrar

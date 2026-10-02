@@ -342,9 +342,9 @@ address,name,source,arguments,returns,convention
 0011be20,unknown_0011be20,,,void
 0011be40,unknown_0011be40,,,void
 0011cc10,unknown_0011cc10,,,void
-00125690,unknown_00125690,,,void
-001257b0,unknown_001257b0,,,void
-00125920,unknown_00125920,,,void
+00125690,sound_initialize_for_new_map,source/sound/sound_manager.c,,void
+001257b0,sound_dispose_from_old_map,source/sound/sound_manager.c,,void
+00125920,sound_initialize_for_new_structure_bsp,source/sound/sound_manager.c,,void
 00131ff0,unknown_00131ff0,,,void
 001320b0,unknown_001320b0,,,void
 00134d90,unknown_00134d90,,,void
@@ -772,3 +772,16 @@ address,name,source,arguments,returns,convention
 0021dda0,unknown_0021dda0,,eax,bool
 0021e4b0,unknown_0021e4b0,,stack,bool
 0021eae0,unknown_0021eae0,,,void
+00125a60,sound_available,source/sound/sound_manager.c,,bool
+00125a90,sound_enable,source/sound/sound_manager.c,eax,void
+00125df0,unknown_00125df0,,,void
+00191270,unknown_00191270,,,void
+0012a810,unknown_0012a810,,eax,int
+0011bed0,unknown_0011bed0,,edx esi,void
+0021dde0,unknown_0021dde0,,,void
+0021a100,unknown_0021a100,,,void
+0012a060,unknown_0012a060,,ecx,void
+0012a0b0,unknown_0012a0b0,,eax,void
+00219d90,unknown_00219d90,,stack,void
+0021f5a0,unknown_0021f5a0,,,void
+0021f570,unknown_0021f570,,,void

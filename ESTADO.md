@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 46.
+**Última actualización:** 2026-10-02, al terminar el hito 47.
 
 ## Dónde estamos
 
-- **424 funciones descompiladas de 11.265: el 3,76 % del juego** (el
-  1,850 % de los bytes de código).
-- Las 424 están comprobadas contra el ejecutable original
+- **429 funciones descompiladas de 11.265: el 3,81 % del juego** (el
+  1,867 % de los bytes de código).
+- Las 429 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the start-up of the sound* (ver `git log`).
+- Último hito: *Decompile the sound when the map changes* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -76,8 +76,8 @@ Módulos (funciones hechas / archivo):
 - [x] Cargar y descargar un mapa — `main\main_game.c` (23, completo)
 - [x] Memoria de la interfaz — `interface\user_interface_memory.c` (4)
 - [x] Mandos — `input\input_xbox.c` (10, completo)
-- [ ] Sonido — `sound\sound_manager.c` (12; faltan `0x001251e0` y de
-      `0x00125690` en adelante), `sound\sound_classes.c` (1)
+- [ ] Sonido — `sound\sound_manager.c` (17; faltan `0x001251e0` y de
+      `0x00125b40` en adelante), `sound\sound_classes.c` (1)
 - [x] Archivos — `tag_files\files.c`, `files_xbox.c` (19, completo)
 - [x] Cadenas anchas — `text\unicode.c` (7; quedan 3)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
@@ -137,9 +137,12 @@ Módulos (funciones hechas / archivo):
 - [x] ~~Los mandos~~ (hito 42).
 - [x] ~~El arranque del sonido~~ (`sound_initialize` y `sound_dispose`,
       hito 46).
-- [ ] **El sonido al cambiar de mapa**: `0x00125690` (al cargar un mapa)
-      y `0x001257b0` (al soltarlo, con un fundido de 300 ms), y las demás
-      de la fila del sonido en la tabla de sistemas (`0x00125920`). Entre los mandos y él, `0x00124f90` a `0x00125360`, hay
+- [x] ~~El sonido al cambiar de mapa~~ (hito 47: la fila del sonido en
+      la tabla de sistemas está completa).
+- [ ] **Más del sonido**: `0x00125d60` (lo que hoy se llama
+      `main_loading_idle`: atiende el sonido mientras se espera),
+      `0x00125df0`, `0x00125e60`, `0x00125ef0`, `0x00125f70`; después las
+      grandes (`0x00125b40`, `0x00126000`). Entre los mandos y él, `0x00124f90` a `0x00125360`, hay
       funciones pequeñas de las definiciones de sonido (hechas en el
       hito 45, menos `0x001251e0`, que llama a cinco funciones con reales
       en registros).

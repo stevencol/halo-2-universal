@@ -6,7 +6,8 @@ gives the address it has there.
 
 How a sound is to be played: what the game says of it when it plays it (its
 source), and if it says nothing, what the tag of the sound says. The name of
-the file and those of the functions are guesses. Not here: 0x001251e0.
+the file and those of the functions are guesses. Not here: 0x001251e0 and
+0x00125b40 on.
 */
 
 #include "sound_definitions.h"
@@ -14,6 +15,10 @@ the file and those of the functions are guesses. Not here: 0x001251e0.
 #include "cache/cache_files.h"
 #include "game/game.h"
 #include "main/main.h"
+#include "cseries/async.h"
+#include "physics/bsp3d.h"
+#include "scenario/scenario.h"
+#include "structures/structure_bsp_definitions.h"
 #include "shell/shell.h"
 
 #include <string.h>
@@ -30,14 +35,52 @@ enum
 	GAME_SOUND_GLOBALS_UNKNOWN70_BITS= 64,
 	GAME_SOUND_GLOBALS_INITIALIZED_OFFSET= 0x78,
 	GAME_SOUND_GLOBALS_UNKNOWN79_OFFSET= 0x79,
+	/* a map is loaded */
+	GAME_SOUND_GLOBALS_MAP_LOADED_OFFSET= 0x7A,
+	GAME_SOUND_GLOBALS_DISABLED_OFFSET= 0x7B,
+	/* while the sound is enabled or disabled */
 	GAME_SOUND_GLOBALS_UNKNOWN7D_OFFSET= 0x7D,
+	/* GetTickCount when a map was loaded or the sound enabled */
+	GAME_SOUND_GLOBALS_START_TIME_OFFSET= 0x80,
+	GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET= 0x84,
+	GAME_SOUND_GLOBALS_UNKNOWN1AC_OFFSET= 0x1AC,
+	GAME_SOUND_GLOBALS_UNKNOWN1C8_OFFSET= 0x1C8,
+	GAME_SOUND_GLOBALS_UNKNOWN1E4_OFFSET= 0x1E4,
+	GAME_SOUND_GLOBALS_UNKNOWN1F8_OFFSET= 0x1F8,
+	GAME_SOUND_GLOBALS_UNKNOWN200_OFFSET= 0x200,
 	GAME_SOUND_GLOBALS_LISTENERS_OFFSET= 0x88,
 	GAME_SOUND_GLOBALS_UNKNOWN1B0_OFFSET= 0x1B0,
 	GAME_SOUND_GLOBALS_UNKNOWN1CC_OFFSET= 0x1CC,
 	GAME_SOUND_GLOBALS_CHANNEL_COUNT_OFFSET= 0x208,
 	GAME_SOUND_GLOBALS_MAXIMUM_VOICES_OFFSET= 0x20A,
 
-	SOUND_SOURCE_ANGLE_MAXIMUM= 0xFFFF
+	SOUND_SOURCE_ANGLE_MAXIMUM= 0xFFFF,
+
+	/* in the globals tag, the block of the sound: where the index of the
+	tag that the sounds of a map share is */
+	GAME_GLOBALS_SOUND_OFFSET= 0xC0,
+	SOUND_GLOBALS_GESTALT_INDEX_OFFSET= 0x20,
+
+	/* of a sound that plays (an element of sound_sources) */
+	SOUND_SOURCE_DATUM_FLAGS_OFFSET= 0x4,
+	SOUND_SOURCE_DATUM_FADING_FLAG= 0x80,
+	SOUND_SOURCE_DATUM_TYPE_OFFSET= 0x1B,
+	SOUND_SOURCE_DATUM_TYPE_MASK= 0xF,
+	_sound_source_datum_type_positioned= 1,
+	SOUND_SOURCE_DATUM_POSITION_OFFSET= 0x24,
+	SOUND_SOURCE_DATUM_LOCATION_OFFSET= 0x40,
+	SOUND_SOURCE_DATUM_UNKNOWNAE_OFFSET= 0xAE,
+	SOUND_SOURCE_DATUM_UNKNOWNB0_OFFSET= 0xB0,
+	SOUND_SOURCE_DATUM_FADE_TIME_OFFSET= 0xB4,
+	SOUND_SOURCE_DATUM_UNKNOWNB8_OFFSET= 0xB8,
+
+	/* in milliseconds: how long the sounds take to fade when a map is let go */
+	SOUND_FADE_OUT_TIME= 300,
+
+	/* in unknown_0051ebe4 */
+	UNKNOWN_0051EBE4_UNKNOWN2A98_OFFSET= 0x2A98,
+
+	_game_mode_main_menu= 3
 };
 
 #define SOUND_PI 3.14159265358979323846f
@@ -66,8 +109,14 @@ struct data_array *sound_voices;
 struct data_array *sound_effects;
 
 /* 0x0051ebd8, 0x0051ebdc: of the sound playback controllers */
-void *unknown_0051ebd8;
+struct data_array *unknown_0051ebd8;
 void *unknown_0051ebdc;
+
+/* 0x0051ebe4: of the sound of the console. Only two indices are known */
+byte *unknown_0051ebe4;
+
+/* 0x0047f0e0: 0x10000 in the main menu and 0x4000 in a game */
+long unknown_0047f0e0;
 
 /* 0x0044a0c8 */
 const struct sound_configuration sound_configuration=
@@ -96,6 +145,40 @@ boolean unknown_0021e4b0(const struct sound_configuration *configuration);
 
 /* 0x0021eae0: takes down what unknown_0021e4b0 set up, most likely */
 void unknown_0021eae0(void);
+
+/* 0x003314b0 */
+unsigned long GetTickCount(void);
+
+/* 0x00125df0, 0x00191270: when a map is loaded */
+void unknown_00125df0(void);
+void unknown_00191270(void);
+
+/* 0x0012a810: of a sound that plays; what it gives may be a real */
+long unknown_0012a810(long source_index);
+
+/* 0x001264c0: stops the sounds, most likely. It is one of the procedures of
+the state of the game, which take their argument off the stack: the tool
+that builds this for the tests sees to that */
+void unknown_001264c0(unsigned long flags);
+
+/* 0x0011bed0: where a point is in the structure bsp */
+void unknown_0011bed0(const real_point3d *point, void *location);
+
+/* 0x0021dde0, 0x0021a100: the sound voices and the looping sounds, after the
+structure bsp changes */
+void unknown_0021dde0(void);
+void unknown_0021a100(void);
+
+/* 0x0012a060, 0x0012a0b0: a channel, when the sound is disabled and when it
+is enabled */
+void unknown_0012a060(short channel_index);
+void unknown_0012a0b0(short channel_index);
+
+/* 0x00219d90, 0x0021f5a0, 0x0021f570: the sound playback controllers and the
+sound of the console, when the sound is enabled and disabled */
+void unknown_00219d90(boolean unknown);
+void unknown_0021f5a0(void);
+void unknown_0021f570(void);
 
 /* ---------- code */
 
@@ -390,5 +473,218 @@ void sound_dispose(
 			sound_sources= NULL;
 		}
 		sound_channels= NULL;
+	}
+}
+
+/* two things of the globals that are set apart: a real, an index and two
+more reals */
+static inline __attribute__((always_inline)) void game_sound_globals_reset_unknown(
+	long offset,
+	real unknownC)
+{
+	byte *unknown= game_sound_globals+offset;
+
+	*(real *)unknown= 0.0f;
+	*(long *)(unknown+4)= NONE;
+	*(real *)(unknown+8)= 0.0f;
+	*(real *)(unknown+0xC)= unknownC;
+}
+
+/* 0x00125690: when a map is loaded: what its sounds share is that of the
+map, and no listener is set */
+void sound_initialize_for_new_map(
+	void)
+{
+	const struct tag_block *block= (const struct tag_block *)((const byte *)global_game_globals+GAME_GLOBALS_SOUND_OFFSET);
+	const byte *sound_globals= block->count ? (const byte *)(uintptr_t)block->address : NULL;
+	unsigned long gestalt_index= *(const uint32_t *)(sound_globals+SOUND_GLOBALS_GESTALT_INDEX_OFFSET);
+	byte *globals;
+	long index;
+
+	global_sound_cache_file_gestalt=
+		(struct sound_cache_file_gestalt *)(uintptr_t)global_tag_instances[gestalt_index&0xFFFF].address;
+	*(real *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN1E4_OFFSET)= 1.0f;
+	game_sound_globals[GAME_SOUND_GLOBALS_MAP_LOADED_OFFSET]= TRUE;
+
+	{
+		unsigned long time= GetTickCount();
+
+		globals= game_sound_globals;
+		*(unsigned long *)(globals+GAME_SOUND_GLOBALS_START_TIME_OFFSET)= time;
+	}
+	*(unsigned long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET)= 0;
+	*(long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1F8_OFFSET)= NONE;
+	*(long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN200_OFFSET)= NONE;
+	game_sound_globals_reset_unknown(GAME_SOUND_GLOBALS_UNKNOWN1AC_OFFSET, 2.0f*SOUND_PI);
+	game_sound_globals_reset_unknown(GAME_SOUND_GLOBALS_UNKNOWN1C8_OFFSET, 0.0f);
+	for (index= 0; index<MAXIMUM_LOCAL_PLAYERS; index++)
+	{
+		((struct sound_listener *)(globals+GAME_SOUND_GLOBALS_LISTENERS_OFFSET))[index].valid= FALSE;
+	}
+
+	unknown_00125df0();
+	unknown_00191270();
+	*(long *)(unknown_0051ebe4+UNKNOWN_0051EBE4_UNKNOWN2A98_OFFSET)= NONE;
+	*(long *)(unknown_0051ebe4+UNKNOWN_0051EBE4_UNKNOWN2A98_OFFSET+4)= NONE;
+	unknown_0047f0e0= main_game_globals->options.game_mode==_game_mode_main_menu ? 0x10000 : 0x4000;
+}
+
+/* whether the sound can be used: it is set up, and a map is loaded */
+static inline __attribute__((always_inline)) boolean sound_available_inline(
+	void)
+{
+	const byte *globals= game_sound_globals;
+
+	return globals[GAME_SOUND_GLOBALS_INITIALIZED_OFFSET] && globals[GAME_SOUND_GLOBALS_UNKNOWN79_OFFSET] &&
+		globals[GAME_SOUND_GLOBALS_MAP_LOADED_OFFSET];
+}
+
+/* 0x001257b0: when a map is let go: the sounds that play fade out, and the
+game waits for them (300 ms); then all are stopped */
+void sound_dispose_from_old_map(
+	void)
+{
+	if (!game_sound_globals[GAME_SOUND_GLOBALS_DISABLED_OFFSET] && sound_available_inline())
+	{
+		unsigned long start= GetTickCount();
+		struct data_array *data= sound_sources;
+		long source_index= data_next_index(data, NONE);
+
+		/* with no sound to fade there is nothing to wait for */
+		if (source_index!=NONE)
+		{
+			real end;
+
+			do
+			{
+				byte *source= (byte *)data->data+(source_index&0xFFFF)*SOUND_SOURCE_DATUM_SIZE;
+
+				*(long *)(source+SOUND_SOURCE_DATUM_UNKNOWNB0_OFFSET)= unknown_0012a810(source_index);
+				*(short *)(source+SOUND_SOURCE_DATUM_UNKNOWNAE_OFFSET)= 0;
+				*(long *)(source+SOUND_SOURCE_DATUM_FADE_TIME_OFFSET)= SOUND_FADE_OUT_TIME;
+				*(long *)(source+SOUND_SOURCE_DATUM_UNKNOWNB8_OFFSET)= NONE;
+				source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]|= SOUND_SOURCE_DATUM_FADING_FLAG;
+				source_index= data_next_index(data, source_index);
+			} while (source_index!=NONE);
+
+			/* the time it started is taken as a number with a sign, and the
+			time it is as one with none */
+			end= (real)(long)start + (real)SOUND_FADE_OUT_TIME;
+			while ((double)end>(double)GetTickCount())
+			{
+				main_loading_idle();
+			}
+		}
+	}
+
+	unknown_001264c0(0);
+	game_sound_globals[GAME_SOUND_GLOBALS_MAP_LOADED_OFFSET]= FALSE;
+	if (looping_sounds)
+	{
+		data_delete_all(looping_sounds);
+	}
+	if (unknown_0051ebd8)
+	{
+		data_delete_all(unknown_0051ebd8);
+	}
+	global_sound_cache_file_gestalt= NULL;
+	unknown_00191270();
+	*(long *)(unknown_0051ebe4+UNKNOWN_0051EBE4_UNKNOWN2A98_OFFSET)= NONE;
+	*(long *)(unknown_0051ebe4+UNKNOWN_0051EBE4_UNKNOWN2A98_OFFSET+4)= NONE;
+}
+
+/* 0x00125920: when the structure bsp changes: where in it are the sounds
+that have a place, and the listeners */
+void sound_initialize_for_new_structure_bsp(
+	void)
+{
+	if (sound_available_inline())
+	{
+		struct data_array *data= sound_sources;
+		const struct structure_bsp *structure_bsp;
+		long source_index;
+		long index;
+
+		for (source_index= data_next_index(data, NONE);
+			source_index!=NONE;
+			source_index= data_next_index(data, source_index))
+		{
+			byte *source= (byte *)data->data+(source_index&0xFFFF)*SOUND_SOURCE_DATUM_SIZE;
+
+			if ((source[SOUND_SOURCE_DATUM_TYPE_OFFSET]&SOUND_SOURCE_DATUM_TYPE_MASK)==_sound_source_datum_type_positioned)
+			{
+				long location[2];
+
+				unknown_0011bed0((const real_point3d *)(source+SOUND_SOURCE_DATUM_POSITION_OFFSET), location);
+				memcpy(source+SOUND_SOURCE_DATUM_LOCATION_OFFSET, location, sizeof(location));
+			}
+		}
+
+		structure_bsp= global_structure_bsp;
+		for (index= 0; index<MAXIMUM_LOCAL_PLAYERS; index++)
+		{
+			struct sound_listener *listener=
+				(struct sound_listener *)(game_sound_globals+GAME_SOUND_GLOBALS_LISTENERS_OFFSET)+index;
+
+			if (listener->valid)
+			{
+				long leaf_index= bsp3d_test_point(global_bsp3d, 0, &listener->position);
+
+				listener->leaf_index= leaf_index;
+				listener->cluster_index= leaf_index!=NONE ?
+					*(const short *)((const byte *)(uintptr_t)structure_bsp->leaves.address+leaf_index*8) : NONE;
+			}
+		}
+		unknown_0021dde0();
+		unknown_0021a100();
+	}
+}
+
+/* 0x00125a60 */
+boolean sound_available(
+	void)
+{
+	return sound_available_inline();
+}
+
+/* 0x00125a90: stops the sound or lets it go on: 0 stops it and 1 lets it
+go on. Nothing is done if it is so already; any other number counts as one
+that lets it go on, but nothing is told */
+void sound_enable(
+	long enable)
+{
+	byte *globals= game_sound_globals;
+	boolean disabled= !enable;
+
+	if (disabled!=globals[GAME_SOUND_GLOBALS_DISABLED_OFFSET])
+	{
+		long index;
+
+		globals[GAME_SOUND_GLOBALS_UNKNOWN7D_OFFSET]= TRUE;
+		globals[GAME_SOUND_GLOBALS_DISABLED_OFFSET]= disabled;
+		if (enable==0)
+		{
+			for (index= 0; index<*(short *)(game_sound_globals+GAME_SOUND_GLOBALS_CHANNEL_COUNT_OFFSET); index++)
+			{
+				unknown_0012a060((short)index);
+			}
+			unknown_0021f570();
+			globals= game_sound_globals;
+		}
+		else if (enable==1)
+		{
+			unsigned long time;
+
+			for (index= 0; index<*(short *)(game_sound_globals+GAME_SOUND_GLOBALS_CHANNEL_COUNT_OFFSET); index++)
+			{
+				unknown_0012a0b0((short)index);
+			}
+			unknown_00219d90(TRUE);
+			unknown_0021f5a0();
+			time= GetTickCount();
+			globals= game_sound_globals;
+			*(unsigned long *)(globals+GAME_SOUND_GLOBALS_START_TIME_OFFSET)= time;
+		}
+		globals[GAME_SOUND_GLOBALS_UNKNOWN7D_OFFSET]= FALSE;
 	}
 }

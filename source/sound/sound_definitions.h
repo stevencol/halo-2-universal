@@ -124,9 +124,13 @@ struct sound_source
 /* what hears the sounds: one for each player of the console */
 struct sound_listener
 {
-	byte unknown0[6];
+	/* where it is in the structure bsp; NONE if it is out of it */
+	long leaf_index;
+	short cluster_index;
 	boolean valid;
-	byte unknown7[0x41];
+	byte unknown7[0x29];
+	real_point3d position;
+	byte unknown3C[0xC];
 };
 
 /* 0x0044a0c8: how much of each thing the sound has */
@@ -185,6 +189,11 @@ real sound_definition_random_pitch(const struct sound_definition *sound, unsigne
 struct sound_listener *sound_first_local_listener(void);
 void sound_initialize(void);
 void sound_dispose(void);
+void sound_initialize_for_new_map(void);
+void sound_dispose_from_old_map(void);
+void sound_initialize_for_new_structure_bsp(void);
+boolean sound_available(void);
+void sound_enable(long enable);
 
 /* ---------- globals */
 
@@ -196,7 +205,9 @@ extern struct data_array *sound_sources;
 extern struct data_array *looping_sounds;
 extern struct data_array *sound_voices;
 extern struct data_array *sound_effects;
-extern void *unknown_0051ebd8;
+extern struct data_array *unknown_0051ebd8;
+extern byte *unknown_0051ebe4;
+extern long unknown_0047f0e0;
 extern void *unknown_0051ebdc;
 extern const struct sound_configuration sound_configuration;
 

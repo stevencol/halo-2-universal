@@ -8,6 +8,7 @@ import random
 import struct
 
 from difftest import Buffer, Memory, Pointer
+from test_async import calls_so_far
 
 NONE = 0xFFFFFFFF
 PLAYBACK_SIZE = 0x38
@@ -290,3 +291,187 @@ def run(t) -> None:
             },
             externals={"unknown_002186b0": lambda harness, arguments: 0, "unknown_0021eae0": lambda harness, arguments: 0},
         )
+
+    # ---------- a map is loaded
+
+    GLOBALS_SIZE = 0x20C
+
+    def sound_state(initialized=1, unknown79=1, map_loaded=1, disabled=0, channels=0) -> Buffer:
+        data = bytearray(random_.randbytes(GLOBALS_SIZE))
+        data[0x78:0x7C] = bytes((initialized, unknown79, map_loaded, disabled))
+        struct.pack_into("<h", data, 0x208, channels)
+        return Buffer(bytes(data))
+
+    def console() -> Buffer:
+        return Buffer(random_.randbytes(0x2AA0))
+
+    for n in range(40):
+        # the tags, what the globals tag says of the sound, and the globals tag
+        gestalt_index = random_.randrange(TAGS)
+        data = bytearray(random_.randbytes(TAGS * 0x10))
+        element = len(data)
+        data += random_.randbytes(0x20) + struct.pack("<I", random_.getrandbits(16) << 16 | gestalt_index)
+        game_globals = len(data)
+        data += random_.randbytes(0xC0) + struct.pack("<2I", random_.choice((1, 2)), element)
+        tags = Buffer(bytes(data), pointers=(game_globals + 0xC4,))
+        game = bytearray(random_.randbytes(0x1200))
+        struct.pack_into("<I", game, 8, random_.choice((1, 2, 3, 3, 4, 0)))
+        t.check(
+            "sound_initialize_for_new_map",
+            globals={
+                "global_tag_instances": tags,
+                "global_game_globals": Pointer(tags, game_globals),
+                "global_sound_cache_file_gestalt": random_.getrandbits(32),
+                "game_sound_globals": sound_state(map_loaded=n % 2),
+                "unknown_0051ebe4": console(),
+                "main_game_globals": Buffer(bytes(game)),
+                "unknown_0047f0e0": random_.getrandbits(32),
+            },
+            externals={
+                "GetTickCount": lambda harness, arguments, value=random_.getrandbits(32): value,
+                "unknown_00125df0": lambda harness, arguments: 0,
+                "unknown_00191270": lambda harness, arguments: 0,
+            },
+        )
+
+    # ---------- the sounds that play
+
+    DATUM = 0xBC
+
+    def sources(count: int = 12) -> Buffer:
+        """The array of the sounds that play: what the functions read of it,
+        and its elements. Which are in use is told by the stand-in."""
+        data = bytearray(random_.randbytes(0x4C + count * DATUM))
+        struct.pack_into("<I", data, 0x24, DATUM)
+        struct.pack_into("<I", data, 0x44, 0x4C)
+        for index in range(count):
+            data[0x4C + index * DATUM + 0x1B] = random_.choice((0, 1, 1, 2, 0x11, 0xF1, 0x21, 0xF, 9, 0x19))
+            # no reals that are not numbers where the place of the sound is
+            data[0x4C + index * DATUM + 0x24 : 0x4C + index * DATUM + 0x30] = reals(random_, 3)
+        return Buffer(bytes(data), pointers=(0x44,))
+
+    def next_absolute_index(in_use: list):
+        def handler(harness, arguments):
+            data, absolute_index = arguments
+            absolute_index -= (1 << 32) if absolute_index & 0x80000000 else 0
+            following = [index for index in in_use if index >= absolute_index]
+            return (following[0] if following and absolute_index >= 0 else NONE), (data, absolute_index)
+
+        return handler
+
+    def used() -> list:
+        return sorted(random_.sample(range(12), random_.choice((0, 1, 3, 12))))
+
+    # the time that the game waits: what the clock says when the sounds
+    # start to fade, and each time it is looked at after
+    clocks = (
+        (1000, 1100, 1299, 1300),
+        (1000, 1301),
+        (1000, 1000, 1000, 1300),
+        (0, 299, 300),
+        (0, 300),
+        # a real cannot tell 16777217 from 16777216
+        (16777217, 16777515, 16777516),
+        (16777217, 16777515, 16777517),
+        (16777217, 16777516),
+        (0x7FFFFFF0, 0x7FFFFFFF, 0x80000000, 0x80000100, 0x80000200),
+        # the start is taken with a sign
+        (0x80000010, 0x80000020),
+        (0xFFFFFF00, 0xFFFFFF10, 20, 40, 50),
+        (0xFFFFFF00, 0xFFFFFFFF),
+    )
+
+    def clock(times: tuple):
+        return lambda harness, arguments: times[min(calls_so_far(harness, "GetTickCount"), len(times) - 1)]
+
+    states = [(1, 1, 1, 0)] * 14 + [(0, 1, 1, 0), (1, 0, 1, 0), (1, 1, 0, 0), (1, 1, 1, 1), (0x80, 2, 4, 0), (1, 1, 1, 0x80)]
+    for n in range(60):
+        in_use = used()
+        array = lambda: random_.choice((0, Buffer(random_.randbytes(0x4C))))
+        t.check(
+            "sound_dispose_from_old_map",
+            globals={
+                "game_sound_globals": sound_state(*states[n % len(states)]),
+                "sound_sources": sources(),
+                "looping_sounds": array(),
+                "unknown_0051ebd8": array(),
+                "global_sound_cache_file_gestalt": random_.getrandbits(32),
+                "unknown_0051ebe4": console(),
+            },
+            externals={
+                "GetTickCount": clock(clocks[n % len(clocks)]),
+                "data_next_absolute_index": next_absolute_index(in_use),
+                "unknown_0012a810": lambda harness, arguments: (arguments[0] ^ 0x5A5A5A5A, tuple(arguments)),
+                "main_loading_idle": lambda harness, arguments: 0,
+                "unknown_001264c0": lambda harness, arguments: 0,
+                "data_delete_all": lambda harness, arguments: 0,
+                "unknown_00191270": lambda harness, arguments: 0,
+            },
+        )
+
+    # ---------- the structure bsp changes
+
+    LEAVES = 9
+    for n in range(60):
+        in_use = used()
+        state_data = bytearray(sound_state(*states[n % len(states)]).data)
+        for index in range(4):
+            listener = LISTENERS + index * LISTENER_SIZE
+            state_data[listener + 6] = random_.choice((0, 1, 1, 0x80))
+            state_data[listener + 0x30 : listener + 0x3C] = reals(random_, 3)
+        structure_bsp = bytearray(random_.randbytes(0x140))
+        struct.pack_into("<2I", structure_bsp, 0x2C, LEAVES, len(structure_bsp))
+        structure_bsp += random_.randbytes(LEAVES * 8)
+        leaves = [random_.choice((NONE, random_.randrange(LEAVES), random_.randrange(LEAVES))) for _ in range(4)]
+
+        def location(harness, arguments):
+            point, where = arguments
+            index = calls_so_far(harness, "unknown_0011bed0")
+            harness.mu.mem_write(where, struct.pack("<2I", 0x1000 + index, 0x2000 + index))
+            return 0, (bytes(harness.mu.mem_read(point, 12)),)
+
+        def test_point(harness, arguments, leaves=leaves):
+            bsp, node, point = arguments
+            return leaves[calls_so_far(harness, "bsp3d_test_point") % 4], (bsp, node, bytes(harness.mu.mem_read(point, 12)))
+
+        t.check(
+            "sound_initialize_for_new_structure_bsp",
+            globals={
+                "game_sound_globals": Buffer(bytes(state_data)),
+                "sound_sources": sources(),
+                "global_structure_bsp": Buffer(bytes(structure_bsp), pointers=(0x30,)),
+                "global_bsp3d": random_.getrandbits(32),
+            },
+            externals={
+                "data_next_absolute_index": next_absolute_index(in_use),
+                "unknown_0011bed0": location,
+                "bsp3d_test_point": test_point,
+                "unknown_0021dde0": lambda harness, arguments: 0,
+                "unknown_0021a100": lambda harness, arguments: 0,
+            },
+        )
+
+    # ---------- whether there is sound, and stopping it
+
+    for initialized in (0, 1, 0x80):
+        for unknown79 in (0, 1, 2):
+            for map_loaded in (0, 1, 0x40):
+                t.check("sound_available", globals={"game_sound_globals": sound_state(initialized, unknown79, map_loaded, random_.getrandbits(8))})
+
+    channel = lambda harness, arguments: (0, (arguments[0] & 0xFFFF,))
+    for enable in (0, 1, 2, NONE, 0x100, 0x80000000):
+        for disabled in (0, 1, 0x80):
+            for channels in (0, 1, 5, -1):
+                t.check(
+                    "sound_enable",
+                    enable,
+                    globals={"game_sound_globals": sound_state(disabled=disabled, channels=channels)},
+                    externals={
+                        "unknown_0012a060": channel,
+                        "unknown_0012a0b0": channel,
+                        "unknown_00219d90": lambda harness, arguments: (0, (arguments[0] & 0xFF,)),
+                        "unknown_0021f5a0": lambda harness, arguments: 0,
+                        "unknown_0021f570": lambda harness, arguments: 0,
+                        "GetTickCount": lambda harness, arguments, value=random_.getrandbits(32): value,
+                    },
+                )
