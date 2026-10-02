@@ -10,6 +10,9 @@ Halo 1's; that these functions are of it is a guess, and so are their names.
 
 #include "cseries/cseries.h"
 #include "bitmaps/bitmap_definitions.h"
+#include "math/real_math.h"
+#include "text/draw_string.h"
+#include "text/font_cache.h"
 
 /* ---------- constants */
 
@@ -40,7 +43,38 @@ struct hardware_character_cache
 typedef char verify_hardware_character_cache_size[
 	sizeof(struct hardware_character_cache) == 0x10 ? 1 : -1];
 
+/* a corner of a character that is painted: where it is on the screen, where
+it is in the bitmap of the characters, in pixels, and its colour */
+struct rasterizer_text_vertex
+{
+	real_point2d position;
+	real_point2d texcoord;
+	unsigned long color;
+};
+
+typedef char verify_rasterizer_text_vertex_size[
+	sizeof(struct rasterizer_text_vertex) == 0x14 ? 1 : -1];
+
+enum
+{
+	NUMBER_OF_RASTERIZER_TEXT_VERTICES= 4
+};
+
+/* is given the four corners of a character before it is painted, and what
+it was to be told: it can change them, and whether the character is painted.
+It takes its arguments off the stack itself */
+typedef boolean (__attribute__((stdcall)) *rasterizer_text_vertices_proc)(struct rasterizer_text_vertex *vertices,
+	long data);
+
 /* ---------- prototypes/RASTERIZER_TEXT.C */
+
+void __attribute__((stdcall)) rasterizer_draw_character(unsigned long color, rasterizer_text_vertices_proc proc,
+	long height, long width, const struct font_glyph_slot *slot, real x, real y, short skipped_width,
+	short skipped_height, real scale, long data);
+void DRAW_STRING_CALLBACK rasterizer_draw_character_with_dropshadow(const struct text_iterator *iterator,
+	long font_index, long character, unsigned long color, unsigned long shadow_color, real x, real y,
+	real skipped_width, real skipped_height, real width, real height, real scale, long vertices_proc,
+	long vertices_proc_data);
 
 boolean rasterizer_text_cache_initialize(void);
 void rasterizer_text_cache_flush(void);

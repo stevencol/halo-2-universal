@@ -101,8 +101,8 @@ void DRAW_STRING_CALLBACK draw_string_bounds_character(
 	real width,
 	real height,
 	real scale,
-	long unknown13,
-	long unknown14)
+	long vertices_proc,
+	long vertices_proc_data)
 {
 	const struct font *font= font_get(font_slot_indices[font_index]);
 	real right= width*scale + x + 1.0f;
@@ -114,8 +114,8 @@ void DRAW_STRING_CALLBACK draw_string_bounds_character(
 	(void)shadow_color;
 	(void)skipped_width;
 	(void)skipped_height;
-	(void)unknown13;
-	(void)unknown14;
+	(void)vertices_proc;
+	(void)vertices_proc_data;
 
 	if ((real)draw_string_bounds.bounds.x0>x)
 	{
@@ -384,8 +384,8 @@ void DRAW_STRING_CALLBACK draw_string_draw_line(
 					character_color|= 0xFFFFFF;
 				}
 				proc(&iterator, iterator.font_index, iterator.character, character_color, shadow_color, x, y,
-					skipped_width, skipped_height, width, height, scale, draw_string_globals.unknown34,
-					draw_string_globals.unknown38);
+					skipped_width, skipped_height, width, height, scale, draw_string_globals.vertices_proc,
+					draw_string_globals.vertices_proc_data);
 			}
 			position->x= (real)header->advance*scale + position->x + origin + kerning;
 		}

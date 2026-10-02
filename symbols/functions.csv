@@ -996,3 +996,7 @@ address,name,source,arguments,returns,convention
 0001eff0,rasterizer_text_cache_initialize,source/rasterizer/rasterizer_text.c,,bool
 0001f2b0,rasterizer_text_cache_flush,source/rasterizer/rasterizer_text.c,,void
 0001d000,unknown_0001d000,,esi,bool
+0001f3a0,rasterizer_draw_character,source/rasterizer/rasterizer_text.c,eax ebx esi edi stack stack stack stack stack stack stack,void,stdcall
+0001f490,rasterizer_draw_character_with_dropshadow,source/rasterizer/rasterizer_text.c,stack stack stack stack stack stack stack stack stack stack stack stack stack stack,void,stdcall
+000363a0,unknown_000363a0,,stack,void,stdcall
+0001f5c0,unknown_0001f5c0,,stack,void,stdcall

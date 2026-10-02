@@ -126,7 +126,7 @@ off the stack itself */
 
 typedef void (DRAW_STRING_CALLBACK *draw_string_character_proc)(const struct text_iterator *iterator,
 	long font_index, long character, unsigned long color, unsigned long shadow_color, real x, real y, real skipped_width,
-	real skipped_height, real width, real height, real scale, long unknown13, long unknown14);
+	real skipped_height, real width, real height, real scale, long vertices_proc, long vertices_proc_data);
 
 /* 0x004e73a0: how the texts are drawn */
 struct draw_string_globals
@@ -139,9 +139,11 @@ struct draw_string_globals
 	boolean shadow;
 	byte pad21[3];
 	real_argb_color shadow_color;
-	/* told to what is done with each character */
-	long unknown34;
-	long unknown38;
+	/* told to what is done with each character: when the characters are
+	painted, a function that is given the corners of each one, and what it
+	is told */
+	long vertices_proc;
+	long vertices_proc_data;
 	short tab_stop_count;
 	short tab_stops[MAXIMUM_NUMBER_OF_TAB_STOPS];
 	/* how far from the left of where a text is drawn its first line begins,
@@ -166,7 +168,7 @@ typedef char verify_text_iterator_element_offset[
 void draw_string_initialize(void);
 void DRAW_STRING_CALLBACK draw_string_bounds_character(const struct text_iterator *iterator, long font_index,
 	long character, unsigned long color, unsigned long shadow_color, real x, real y, real skipped_width, real skipped_height,
-	real width, real height, real scale, long unknown13, long unknown14);
+	real width, real height, real scale, long vertices_proc, long vertices_proc_data);
 void draw_string_get_bounds(const wchar *string, const struct rectangle2d *rectangle, struct rectangle2d *bounds,
 	struct rectangle2d *cursor, real scale);
 void draw_string_get_characters_bounds(struct rectangle2d *cursor, struct rectangle2d *bounds,

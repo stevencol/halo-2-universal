@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Pintar un carácter y su sombra
+
+Dos funciones. De 631 funciones se pasa a 633, el 5,62 % de las del juego
+(el 2,852 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `rasterizer_draw_character` | `0x0001f3a0` | `rasterizer/rasterizer_text.c` |
+| `rasterizer_draw_character_with_dropshadow` | `0x0001f490` | `rasterizer/rasterizer_text.c` |
+
+### Lo que se sabe
+
+- `rasterizer_draw_character_with_dropshadow` es **la función que pinta de
+  verdad**: la que se le da al recorrido de un texto cuando no se está
+  midiendo. Busca el carácter (y si no lo conoce, lo pide y vuelve a
+  buscarlo), hace que su dibujo esté en el bitmap de la caché y lo pinta
+  desde ahí.
+- La **sombra** es el mismo dibujo pintado antes, con el color de la sombra,
+  desplazado hacia abajo y a la derecha tanto como la escala (un píxel a
+  escala 1). Solo hay sombra si su color tiene algo de opacidad.
+- Un carácter se pinta como un **rectángulo de cuatro esquinas**; cada una
+  lleva dónde va en pantalla, de qué píxel del bitmap de la caché sale y el
+  color. El tamaño en pantalla va por la escala; el del bitmap, no.
+- Antes de pintar, las cuatro esquinas se le pueden pasar a una función
+  (guardada en cómo se dibujan los textos, en `+0x34`, con un dato suyo en
+  `+0x38`): puede cambiarlas, y decir que el carácter no se pinte.
+- Los nombres de las dos funciones son los de Halo 1.
+
+### Mutaciones
+
+57 líneas rotas a propósito: las 57 detectadas.
+
 ## 2026-10-02 — Hito 100: la caché de los caracteres que se pintan
 
 Dos funciones, en un archivo nuevo. De 629 funciones se pasa a 631, el
