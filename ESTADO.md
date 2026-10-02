@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 54.
+**Última actualización:** 2026-10-02, al terminar el hito 55.
 
 ## Dónde estamos
 
-- **481 funciones descompiladas de 11.265: el 4,27 % del juego** (el
-  2,017 % de los bytes de código).
-- Las 481 están comprobadas contra el ejecutable original
+- **483 funciones descompiladas de 11.265: el 4,29 % del juego** (el
+  2,032 % de los bytes de código).
+- Las 483 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the texts of the game by language* (ver `git log`).
+- Último hito: *Decompile the display name of a saved game file* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -81,10 +81,10 @@ Módulos (funciones hechas / archivo):
 - [x] Nombres por defecto de los archivos —
       `saved games\saved_game_file_names.c` (14, de `0x00217620` a
       `0x00217b70`)
-- [ ] Archivos de los jugadores — `saved games\saved_game_files.c` (24 de
+- [ ] Archivos de los jugadores — `saved games\saved_game_files.c` (26 de
       unas 37; va de `0x00216060` a `0x00217590`. Faltan `0x00216120`,
       `0x002161d0`, `0x00216240`, `0x002162b0`, `0x00216440`, `0x002164c0`,
-      `0x00216760`, `0x00216da0`, `0x00216e50`, `0x00217080`,
+      `0x00216760`, `0x00217080`,
       `0x002170e0`, `0x002172a0` y `0x002173d0`)
 - [ ] Sonido — `sound\sound_manager.c` (22; faltan `0x001251e0`,
       `0x00125b40` y de `0x00125f70` en adelante), `sound\sound_classes.c` (1)

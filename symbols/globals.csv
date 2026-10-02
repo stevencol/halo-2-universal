@@ -122,3 +122,6 @@ address,name,source
 0055c160,cached_saved_game_file_count,source/saved games/saved_game_files.c
 0055c164,cached_saved_game_files,source/saved games/saved_game_files.c
 00449038,saved_game_image,source/saved games/saved_game_files.c
+0055c158,saved_game_files_string_list_index,source/saved games/saved_game_files.c
+0055c280,saved_game_files_language,source/saved games/saved_game_files.c
+00470054,saved_game_file_name_separator,source/saved games/saved_game_files.c

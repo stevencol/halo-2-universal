@@ -13,6 +13,7 @@ file, which goes from 0x002160b0 to 0x00217590.
 
 #include "input/input.h"
 #include "tag_files/files.h"
+#include "text/unicode_string_list.h"
 #include "cseries/async.h"
 #include "sound/sound_definitions.h"
 
@@ -73,6 +74,17 @@ extern void *unknown_0051ea14;
 /* 0x0055c274 */
 struct saved_game_files_operation saved_game_files_operation;
 
+/* 0x0055c158: the tag that has the texts that name the types of files; NONE
+if it is not known */
+long saved_game_files_string_list_index;
+
+/* 0x0055c280: the language that the files are named in */
+long saved_game_files_language;
+
+/* 0x00470054: what is between the name of the type of a file and the name
+that the player gave it */
+const wchar *saved_game_file_name_separator= u": ";
+
 /* 0x00449038: the picture that the console shows next to a variant of a
 game: a file of textures of the console (XPR0), of 4096 bytes. It is the
 game's, and it is not copied here: what is built from this has an empty
@@ -87,8 +99,9 @@ struct cached_saved_game_file cached_saved_game_files[MAXIMUM_CACHED_SAVED_GAME_
 
 /* ---------- prototypes of functions of the C library */
 
-/* 0x00321ce4: of characters of 16 bits */
+/* 0x00321ce4, 0x003207ed: of characters of 16 bits */
 int wcsncmp(const wchar *a, const wchar *b, unsigned int count);
+wchar *wcsncpy(wchar *destination, const wchar *source, unsigned int count);
 
 /* ---------- code */
 
@@ -698,4 +711,78 @@ boolean saved_game_file_write_image(
 
 	return file_create(&file) && file_open(&file, FLAG(_permission_write_bit), &error) &&
 		file_write(&file, SAVED_GAME_IMAGE_SIZE, saved_game_image) && file_close(&file);
+}
+
+/* 0x00216da0: the name that the console shows of a file: the name of its
+type in a language, a separator and the name that the player gave it. Only
+the last, if there is no language or the text of the type is not there */
+boolean saved_game_file_get_display_name(
+	long type,
+	wchar *display_name,
+	const wchar *name,
+	long language)
+{
+	wchar type_name[UNICODE_STRING_LENGTH];
+
+	display_name[0]= 0;
+	type_name[0]= 0;
+	if (language!=NONE && saved_game_files_string_list_index!=NONE)
+	{
+		long string_list_index= saved_game_files_string_list_index;
+		unsigned long string_id= saved_game_file_type_get_string_id(type);
+
+		if (unicode_string_list_has_string(string_list_index, string_id))
+		{
+			saved_game_file_get_default_name(string_id, language, type_name);
+			wcsncpy(display_name, type_name, SAVED_GAME_FILE_DISPLAY_NAME_LENGTH-1);
+			display_name[SAVED_GAME_FILE_DISPLAY_NAME_LENGTH-1]= 0;
+			ustrnzcat(display_name, saved_game_file_name_separator, SAVED_GAME_FILE_DISPLAY_NAME_LENGTH);
+			display_name[SAVED_GAME_FILE_DISPLAY_NAME_LENGTH-1]= 0;
+		}
+	}
+	ustrnzcat(display_name, name, SAVED_GAME_FILE_DISPLAY_NAME_LENGTH);
+	display_name[SAVED_GAME_FILE_DISPLAY_NAME_LENGTH-1]= 0;
+
+	return TRUE;
+}
+
+/* 0x00216e50: the name that the player gave a file, from the name that the
+console shows of it, and the language that the name of its type is in: 0xFF
+if it starts with the name of the type in no language, and then all of it
+is the name. The language of the files is tried first */
+void saved_game_file_parse_display_name(
+	const wchar *display_name,
+	long type,
+	byte *language,
+	wchar *name)
+{
+	unsigned long string_id;
+	long first_language;
+	long index;
+
+	*language= 0xFF;
+	wcsncpy(name, display_name, SAVED_GAME_FILE_NAME_LENGTH);
+	name[SAVED_GAME_FILE_NAME_LENGTH]= 0;
+	string_id= saved_game_file_type_get_string_id(type);
+	first_language= saved_game_files_language;
+	for (index= 0; index<SAVED_GAME_FILE_LANGUAGES; index++)
+	{
+		long try_language= (first_language+index)%SAVED_GAME_FILE_LANGUAGES;
+		wchar type_name[UNICODE_STRING_LENGTH];
+		long length;
+
+		type_name[0]= 0;
+		saved_game_file_get_default_name(string_id, try_language, type_name);
+		ustrnzcat(type_name, saved_game_file_name_separator, UNICODE_STRING_LENGTH);
+		type_name[UNICODE_STRING_LENGTH-1]= 0;
+		length= saved_game_file_name_length(type_name);
+		if (!wcsncmp(display_name, type_name, (unsigned int)length))
+		{
+			*language= (byte)try_language;
+			wcsncpy(name, display_name+length, SAVED_GAME_FILE_NAME_LENGTH);
+			name[SAVED_GAME_FILE_NAME_LENGTH]= 0;
+
+			return;
+		}
+	}
 }

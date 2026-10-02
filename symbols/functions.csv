@@ -849,3 +849,5 @@ address,name,source,arguments,returns,convention
 001a0310,language_texts_has,source/text/unicode_string_list.c,esi ecx ebx stack,bool
 001a0350,language_texts_get,source/text/unicode_string_list.c,edx edi ecx esi stack,void
 00140440,unknown_00140440,,stack stack stack,void
+00216da0,saved_game_file_get_display_name,source/saved games/saved_game_files.c,ecx edi stack stack,bool
+00216e50,saved_game_file_parse_display_name,source/saved games/saved_game_files.c,stack stack stack stack,void

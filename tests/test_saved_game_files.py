@@ -404,3 +404,52 @@ def run(t) -> None:
                     "file_close": lambda harness, arguments, result=results[3]: (result, (reference_path(harness, arguments[0]),)),
                 },
             )
+
+    # ---------- the name that the console shows of a file
+
+    TYPE_NAMES = {
+        0: ("Profile", "\u30d7\u30ec\u30a4\u30e4\u30fc", "Profil", "Profil", "Perfil", "Profilo", "\ud504\ub85c\ud544", "\u8a2d\u5b9a\u6a94", "Profile"),
+        1: ("Slayer", "Slayer", "Showdown", "Assassin", "Asesino", "Massacro", "Slayer", "\u6bba\u622e\u4e4b\u738b", "Slayer"),
+        7: ("Capture the Flag", "Capture the Flag", "Kampf um die Flagge", "Capture du drapeau", "Capturar la bandera", "Conquista la bandiera", "Capture the Flag", "\u6436\u65d7\u4e4b\u738b", "Capture the Flag"),
+        10: ("Playlist", "\u30d7\u30ec\u30a4\u30ea\u30b9\u30c8", "Spielliste", "Liste", "Lista de juego", "Elenco partite", "\uac8c\uc784 \ubaa9\ub85d", "\u904a\u6232\u6e05\u55ae", "Playlist"),
+    }
+    given = ("", "mine", "a name of 16 ch.", "a name that is longer than sixteen", "x" * 140, "Slayer: nested")
+
+    for type_ in (0, 1, 5, 7, 10, 11, NONE):
+        for language in (0, 1, 2, 4, 7, 8, 9, NONE):
+            for list_index in (0x12340005, NONE):
+                for has in (1, 0):
+                    t.check(
+                        "saved_game_file_get_display_name",
+                        type_,
+                        Buffer(random_.randbytes(0x108)),
+                        Buffer(wide(random_.choice(given))),
+                        language,
+                        globals={"saved_game_files_string_list_index": list_index},
+                        externals={"unicode_string_list_has_string": lambda harness, arguments, has=has: has},
+                    )
+
+    for type_, names in TYPE_NAMES.items():
+        for first_language in (0, 1, 3, 4, 8, 9, 20, NONE):
+            cases = [name + ": " + random_.choice(given[:4]) for name in names]
+            # no separator, another one, the name of another type, nothing
+            cases += [names[0] + ":", names[0] + " :x", names[0], names[2] + ":  two", "Oddball: x", "", ": x", names[4].lower() + ": x"]
+            for display_name in cases:
+                t.check(
+                    "saved_game_file_parse_display_name",
+                    Buffer(wide(display_name) + bytes(0x40)),
+                    type_,
+                    Buffer(random_.randbytes(4)),
+                    Buffer(random_.randbytes(0x28)),
+                    globals={"saved_game_files_language": first_language},
+                )
+    for type_ in (11, NONE, 5):
+        for display_name in ("", ": x", "Juggernaut: x", "x"):
+            t.check(
+                "saved_game_file_parse_display_name",
+                Buffer(wide(display_name) + bytes(0x40)),
+                type_,
+                Buffer(random_.randbytes(4)),
+                Buffer(random_.randbytes(0x28)),
+                globals={"saved_game_files_language": 0},
+            )

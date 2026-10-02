@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — El nombre visible de un archivo guardado
+
+Dos funciones más de `saved_game_files.c`: la que compone el nombre que la
+consola enseña de un archivo y la que lo descompone. De 481 funciones se
+pasa a 483, el 4,29 % de las del juego (el 2,032 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `saved_game_file_get_display_name` | `0x00216da0` | `saved games/saved_game_files.c` |
+| `saved_game_file_parse_display_name` | `0x00216e50` | `saved games/saved_game_files.c` |
+
+- Globales con nombre: `saved_game_files_string_list_index` (`0x0055c158`),
+  `saved_game_files_language` (`0x0055c280`) y
+  `saved_game_file_name_separator` (`0x00470054`, que apunta a `": "`).
+
+### Lo que se sabe
+
+- En el panel de la consola un archivo se llama «tipo: nombre», por ejemplo
+  «Slayer: mi variante», con el tipo en el idioma en que se guardó. Hasta
+  127 caracteres.
+- Si no hay idioma, o la etiqueta de textos no tiene el del tipo, el nombre
+  visible es solo el que puso el jugador.
+- Para recuperar el nombre del jugador a partir del visible, el juego
+  prueba los nueve idiomas, empezando por el suyo y dando la vuelta, hasta
+  que el nombre empieza por «tipo: » en alguno. Se queda con lo que sigue,
+  16 caracteres como mucho, y con qué idioma era.
+- Si no empieza así en ninguno, el idioma es 0xFF y el nombre son los 16
+  primeros caracteres del nombre visible.
+- Como varios idiomas comparten el nombre de un tipo («Slayer» es igual en
+  inglés, japonés, coreano y portugués), el idioma que sale es el primero
+  que coincide, no necesariamente aquel en que se guardó.
+
+### Sin comprobar
+
+Cuatro escrituras que el juego hace y que no cambian nada, porque el valor
+ya estaba puesto: el cero final tras añadir el separador, el cero inicial
+y el final del nombre del tipo al descomponer, y el cero tras copiar el
+nombre encontrado.
+
+### Mutaciones
+
+41 líneas rotas a propósito: 37 detectadas, y las otras cuatro son las de
+«Sin comprobar».
+
 ## 2026-10-02 — Los textos del juego por idioma
 
 Cómo encuentra el juego un texto en el idioma de la consola. De 475

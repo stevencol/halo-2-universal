@@ -94,6 +94,13 @@ enum
 	SAVED_GAME_FILE_INFORMATION_NAME_OFFSET= 0x14,
 
 	MAXIMUM_SAVED_GAME_FILES_PER_TABLE= 4096,
+
+	/* the name that the console shows of a file, with its end: that of its
+	type, a separator and the name that the player gave it */
+	SAVED_GAME_FILE_DISPLAY_NAME_LENGTH= 128,
+	/* the name that the player gave, with no end */
+	SAVED_GAME_FILE_NAME_LENGTH= 16,
+	SAVED_GAME_FILE_LANGUAGES= 9,
 	SAVED_GAME_IMAGE_SIZE= 0x1000,
 	MAXIMUM_CACHED_SAVED_GAME_FILES= 4,
 	SAVED_GAME_FILE_NAME_COMPARE_LENGTH= 128
@@ -156,6 +163,8 @@ boolean saved_game_files_hard_disk_has_blocks(long blocks);
 boolean saved_game_file_get_type_path(char *path, const char *directory, long type);
 long saved_game_file_type_get_size(long type);
 boolean saved_game_file_get_directory(char *path, long file);
+boolean saved_game_file_get_display_name(long type, wchar *display_name, const wchar *name, long language);
+void saved_game_file_parse_display_name(const wchar *display_name, long type, byte *language, wchar *name);
 boolean saved_game_file_write_image(long type, const char *directory);
 boolean saved_game_file_name_differs(long file, const wchar *name);
 boolean saved_game_file_get_information(struct saved_game_file_information *information, long file);
@@ -193,6 +202,9 @@ long saved_game_file_name_length(const wchar *name);
 
 extern struct saved_game_files_operation saved_game_files_operation;
 extern boolean saved_game_files_cache_valid;
+extern long saved_game_files_string_list_index;
+extern long saved_game_files_language;
+extern const wchar *saved_game_file_name_separator;
 extern byte saved_game_image[SAVED_GAME_IMAGE_SIZE];
 extern long cached_saved_game_file_count;
 extern struct cached_saved_game_file cached_saved_game_files[MAXIMUM_CACHED_SAVED_GAME_FILES];
