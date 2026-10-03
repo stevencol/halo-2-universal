@@ -193,6 +193,8 @@ void havok_component_set_rigid_body_transform(struct havok_component *component,
 	const struct havok_transform *transform);
 void havok_component_set_rigid_body_matrix(struct havok_component *component, long rigid_body_index,
 	const real_matrix4x3 *matrix);
+void havok_component_set_rigid_body_keyframe(struct havok_component *component, long rigid_body_index,
+	const real_matrix4x3 *matrix);
 void havok_component_get_rigid_body_rotation(const struct havok_component *component, long rigid_body_index,
 	real_matrix3x3 *rotation);
 real havok_component_get_rigid_body_mass(const struct havok_component *component, long rigid_body_index);

@@ -445,3 +445,48 @@ def run(t) -> None:
             (bodies,) = struct.unpack_from("<I", havok.data, component_offset + 0x70)
             (body,) = struct.unpack_from("<I", havok.data, bodies + rigid_body_index * RIGID_BODY_SIZE + 0x40)
             t.check("havok_rigid_body_set_transform", Pointer(havok, body), transform, **options)
+
+    # ---------- a keyframed rigid body that goes somewhere in a tick
+
+    def quaternion_set(harness, arguments):
+        """Stands in for Havok's quaternion of a rotation: the first 16
+        bytes of the rotation, turned."""
+        quaternion, rotation = arguments
+        matrix = bytes(harness.mu.mem_read(rotation, 0x30))
+        harness.mu.mem_write(quaternion, bytes(x ^ 0xA5 for x in matrix[:16]))
+        # both are on the stack, which is not the same in both functions
+        return 0, (matrix,)
+
+    def apply_hard_key_frame(harness, arguments):
+        position, orientation, inverse_time, body = arguments
+        return 0, (
+            bytes(harness.mu.mem_read(position, 16)),
+            bytes(harness.mu.mem_read(orientation, 16)),
+            inverse_time,
+            harness.normalize(body),
+        )
+
+    keyframe_externals = {
+        "hkTransform_setInverse": set_inverse,
+        "hkTransform_setMulEq": set_mul_eq_from_stack,
+        "hkQuaternion_set": quaternion_set,
+        "hkKeyFrameUtility_applyHardKeyFrame": apply_hard_key_frame,
+    }
+
+    for _ in range(30):
+        havok_count = random_.randint(1, 6)
+        havok = havok_components(havok_count, transforms=True)
+        for _ in range(10):
+            ticks = random_.choice((30, 60, 1, 0, -1, 0x7FFF, -0x8000))
+            time = Buffer(struct.pack("<BBhfI", 1, 0, ticks, 0.5, 1234))
+            component = Pointer(havok, COMPONENTS + random_.randrange(havok_count) * HAVOK_COMPONENT_SIZE)
+            matrix = Buffer(struct.pack("<13f", *(random_.uniform(-9, 9) for _ in range(13))))
+            t.check(
+                "havok_component_set_rigid_body_keyframe",
+                component,
+                random_.randrange(RIGID_BODIES),
+                matrix,
+                extra=[havok],
+                globals={"game_time_globals": time},
+                externals=keyframe_externals,
+            )

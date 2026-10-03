@@ -1084,3 +1084,6 @@ address,name,source,arguments,returns,convention
 002da3f0,hkTransform_setInverse,,ecx stack,void,stdcall
 001d1260,unknown_001d1260,,ecx,void
 001d1540,unknown_001d1540,,ecx,void
+001d0ee0,havok_component_set_rigid_body_keyframe,source/physics/havok_component.c,esi edi eax,void
+002da2d0,hkQuaternion_set,,ecx stack,void,stdcall
+002db880,hkKeyFrameUtility_applyHardKeyFrame,,stack stack stack stack,void

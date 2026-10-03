@@ -10,6 +10,8 @@ of its functions are guesses.
 
 #include "havok_component.h"
 
+#include "game/game.h"
+
 /* ---------- prototypes of functions that are not decompiled */
 
 /* 0x002da5d0: transform= transform*other. Havok's (hkTransform::setMulEq);
@@ -27,6 +29,15 @@ after a fixed rigid body of it is put somewhere, when it has
 _havok_component_unknown5_bit */
 void unknown_001d1260(struct havok_component *component);
 void unknown_001d1540(struct havok_component *component);
+
+/* 0x002da2d0: the quaternion of a rotation. Havok's (hkQuaternion::set) */
+void __attribute__((stdcall)) hkQuaternion_set(struct havok_vector4 *quaternion, const struct havok_matrix3 *rotation);
+
+/* 0x002db880: makes a keyframed body move and turn so that it is in a place
+and turned as a quaternion says after a time, given as its inverse. Havok's
+(hkKeyFrameUtility::applyHardKeyFrame) */
+void hkKeyFrameUtility_applyHardKeyFrame(const struct havok_vector4 *position, const struct havok_vector4 *orientation,
+	real inverse_time, struct havok_rigid_body *rigid_body);
 
 /* 0x0030bc40: whether a body of Havok is awake; Havok's (hkEntity::isActive),
 which gives where it leaves it */
@@ -59,6 +70,44 @@ static inline __attribute__((always_inline)) void havok_rigid_body_set_transform
 	if (!rigid_body->fixed || !rigid_body->world)
 	{
 		rigid_body->motion->vtable->set_transform(rigid_body->motion, transform);
+	}
+}
+
+/* a matrix as a transform of Havok; its scale is not looked at */
+static inline __attribute__((always_inline)) void havok_transform_from_matrix(
+	struct havok_transform *transform,
+	const real_matrix4x3 *matrix)
+{
+	transform->rotation[0][0]= matrix->forward.i;
+	transform->rotation[0][1]= matrix->forward.j;
+	transform->rotation[0][2]= matrix->forward.k;
+	transform->rotation[0][3]= 0.0f;
+	transform->rotation[1][0]= matrix->left.i;
+	transform->rotation[1][1]= matrix->left.j;
+	transform->rotation[1][2]= matrix->left.k;
+	transform->rotation[1][3]= 0.0f;
+	transform->rotation[2][0]= matrix->up.i;
+	transform->rotation[2][1]= matrix->up.j;
+	transform->rotation[2][2]= matrix->up.k;
+	transform->rotation[2][3]= 0.0f;
+	transform->translation[0]= matrix->position.x;
+	transform->translation[1]= matrix->position.y;
+	transform->translation[2]= matrix->position.z;
+	transform->translation[3]= 0.0f;
+}
+
+/* a transform of the world as one of the rigid bodies of a component, if
+theirs are from the component's */
+static inline __attribute__((always_inline)) void havok_component_transform_to_rigid_bodies(
+	const struct havok_component *component,
+	struct havok_transform *transform)
+{
+	if (TEST_FLAG(component->flags, _havok_component_transformed_bit))
+	{
+		struct havok_transform inverse;
+
+		hkTransform_setInverse(&inverse, &component->transform);
+		hkTransform_setMulEq(transform, &inverse);
 	}
 }
 
@@ -291,22 +340,7 @@ void havok_component_set_rigid_body_matrix(
 {
 	struct havok_transform transform;
 
-	transform.rotation[0][0]= matrix->forward.i;
-	transform.rotation[0][1]= matrix->forward.j;
-	transform.rotation[0][2]= matrix->forward.k;
-	transform.rotation[0][3]= 0.0f;
-	transform.rotation[1][0]= matrix->left.i;
-	transform.rotation[1][1]= matrix->left.j;
-	transform.rotation[1][2]= matrix->left.k;
-	transform.rotation[1][3]= 0.0f;
-	transform.rotation[2][0]= matrix->up.i;
-	transform.rotation[2][1]= matrix->up.j;
-	transform.rotation[2][2]= matrix->up.k;
-	transform.rotation[2][3]= 0.0f;
-	transform.translation[0]= matrix->position.x;
-	transform.translation[1]= matrix->position.y;
-	transform.translation[2]= matrix->position.z;
-	transform.translation[3]= 0.0f;
+	havok_transform_from_matrix(&transform, matrix);
 	havok_component_set_rigid_body_transform(component, rigid_body_index, &transform);
 }
 
@@ -320,13 +354,7 @@ void havok_component_set_rigid_body_transform(
 	struct havok_transform result= *transform;
 	struct havok_rigid_body *rigid_body;
 
-	if (TEST_FLAG(component->flags, _havok_component_transformed_bit))
-	{
-		struct havok_transform inverse;
-
-		hkTransform_setInverse(&inverse, &component->transform);
-		hkTransform_setMulEq(&result, &inverse);
-	}
+	havok_component_transform_to_rigid_bodies(component, &result);
 	rigid_body= component->rigid_bodies[rigid_body_index].rigid_body;
 	if (rigid_body->fixed && TEST_FLAG(component->flags, _havok_component_unknown5_bit))
 	{
@@ -348,4 +376,23 @@ void havok_rigid_body_set_transform(
 	const struct havok_transform *transform)
 {
 	havok_rigid_body_set_transform_inline(rigid_body, transform);
+}
+
+/* 0x001d0ee0: makes a keyframed rigid body of a havok component move and
+turn so that it is where a matrix says in a tick; its scale is not looked
+at */
+void havok_component_set_rigid_body_keyframe(
+	struct havok_component *component,
+	long rigid_body_index,
+	const real_matrix4x3 *matrix)
+{
+	real ticks_per_second= (real)game_time_globals->ticks_per_second;
+	struct havok_transform transform;
+	struct havok_vector4 orientation;
+
+	havok_transform_from_matrix(&transform, matrix);
+	havok_component_transform_to_rigid_bodies(component, &transform);
+	hkQuaternion_set(&orientation, (const struct havok_matrix3 *)transform.rotation);
+	hkKeyFrameUtility_applyHardKeyFrame((const struct havok_vector4 *)transform.translation, &orientation,
+		ticks_per_second, component->rigid_bodies[rigid_body_index].rigid_body);
 }

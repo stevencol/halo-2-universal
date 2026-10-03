@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Llevar un cuerpo «keyframed» a un sitio
+
+Una función de `physics/havok_component.c`. De 695 funciones se pasa a 696,
+el 6,18 % de las del juego (el 3,301 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_component_set_rigid_body_keyframe` | `0x001d0ee0` | `physics/havok_component.c` |
+
+Las pruebas ponen en lugar del cuaternión de una rotación de Havok
+(`0x002da2d0`) uno que da los primeros bytes de la rotación cambiados, y
+en lugar de `hkKeyFrameUtility::applyHardKeyFrame` (`0x002db880`) uno que
+apunta lo que recibe.
+
+### Lo que se sabe
+
+- Hace que un cuerpo rígido «keyframed» se mueva y gire para estar donde
+  dice una matriz al cabo de un tick: pasa la matriz a una transformación
+  de Havok (desde la del componente si hace falta), saca el cuaternión de
+  su rotación y llama a `applyHardKeyFrame` de Havok con la inversa del
+  tiempo, que son los ticks por segundo del juego.
+- Pasar una matriz a una transformación y llevarla a la de los cuerpos del
+  componente son ahora dos pasos que comparten las funciones que ponen un
+  cuerpo en un sitio.
+- El nombre es inventado.
+
+### Mutaciones
+
+12 líneas rotas a propósito: las 12 detectadas.
+
 ## 2026-10-03 — Poner un cuerpo rígido en un sitio
 
 Tres funciones de `physics/havok_component.c`. De 692 funciones se pasa a
