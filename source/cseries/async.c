@@ -500,6 +500,117 @@ long ASYNC_CALLBACK async_read_work(
 	return _async_task_not_done;
 }
 
+/* 0x001a0c90: the function of a task that copies all of a file to another:
+both are gone back to their starts, and then a part is read and written at a
+time until a part is less than all the buffer. The task is over when that is
+done or something goes wrong; whether the file was copied is told. The name
+is a guess */
+long ASYNC_CALLBACK async_copy_file_work(
+	void *parameters)
+{
+	struct async_copy_file_parameters *copy= parameters;
+	boolean failed;
+
+	switch (copy->state)
+	{
+		case _async_copy_file_state_rewind_source:
+			if (copy->source_file==INVALID_HANDLE_VALUE)
+			{
+				failed= TRUE;
+				break;
+			}
+			copy->state= _async_copy_file_state_rewind_destination;
+			copy->size= GetFileSize(copy->source_file, NULL);
+			failed= async_set_file_position(copy->source_file, 0)!=0;
+			break;
+
+		case _async_copy_file_state_rewind_destination:
+			copy->state= _async_copy_file_state_read;
+			if (copy->destination_file==INVALID_HANDLE_VALUE)
+			{
+				failed= TRUE;
+				break;
+			}
+			failed= async_set_file_position(copy->destination_file, 0)!=0;
+			break;
+
+		case _async_copy_file_state_read:
+			failed= !ReadFile(copy->source_file, copy->buffer, ASYNC_COPY_FILE_BUFFER_SIZE, &copy->bytes_read, NULL);
+			copy->state= _async_copy_file_state_write;
+			break;
+
+		case _async_copy_file_state_write:
+		{
+			uint32_t bytes_written= ASYNC_COPY_FILE_BUFFER_SIZE;
+
+			failed= !WriteFile(copy->destination_file, copy->buffer, copy->bytes_read, &bytes_written, NULL);
+			copy->bytes_copied+= bytes_written;
+			copy->state= _async_copy_file_state_read;
+			if (copy->bytes_read<ASYNC_COPY_FILE_BUFFER_SIZE)
+			{
+				copy->state= _async_copy_file_state_done;
+			}
+			break;
+		}
+
+		case _async_copy_file_state_done:
+			*copy->success= TRUE;
+
+			return _async_task_done;
+
+		default:
+			return _async_task_not_done;
+	}
+
+	if (failed)
+	{
+		*copy->success= FALSE;
+
+		return _async_task_done;
+	}
+
+	return _async_task_not_done;
+}
+
+/* 0x001a0da0: copies all of a file to another, and waits for it; whether it
+was copied. With a file that is not open, nothing is done. The name is a
+guess */
+boolean async_copy_file_blocking(
+	uint32_t source_file,
+	uint32_t destination_file,
+	long category)
+{
+	byte buffer[ASYNC_COPY_FILE_BUFFER_SIZE];
+	boolean success= FALSE;
+	byte done= FALSE;
+
+	if (source_file==INVALID_HANDLE_VALUE || destination_file==INVALID_HANDLE_VALUE)
+	{
+		return FALSE;
+	}
+	{
+		union
+		{
+			struct async_copy_file_parameters copy;
+			uint32_t parameters[ASYNC_TASK_PARAMETER_COUNT];
+		} task;
+
+		memset(&task, 0, sizeof(task));
+		task.copy.state= _async_copy_file_state_rewind_source;
+		task.copy.destination_file= destination_file;
+		task.copy.buffer= buffer;
+		task.copy.source_file= source_file;
+		task.copy.success= &success;
+		async_task_add(ASYNC_COPY_FILE_PRIORITY, task.parameters, category, async_copy_file_work, &done);
+	}
+	while (!*(volatile byte *)&done)
+	{
+		SwitchToThread();
+	}
+
+	return success;
+}
+
 /* 0x001a13a0: the function of a task that reads all of a file, in three
 steps: the file is opened, its size is found, and as much of it as fits is
 read. The task is over when a step goes wrong or the file is read; then the

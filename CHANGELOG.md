@@ -2,6 +2,35 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Copiar un archivo entero
+
+Dos funciones. De 657 funciones se pasa a 659, el 5,85 % de las del
+juego (el 3,001 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `async_copy_file_work` | `0x001a0c90` | `cseries/async.c` |
+| `async_copy_file_blocking` | `0x001a0da0` | `cseries/async.c` |
+
+### Lo que se sabe
+
+- Copiar un archivo entero en otro es una **tarea de cinco pasos** del hilo
+  de disco: volver al principio del origen (y apuntar su tamaño), volver al
+  principio del destino, y luego leer y escribir **64 KB** cada vez hasta
+  que una lectura trae menos; entonces se da por copiado.
+- Si un paso falla, la tarea acaba y dice que no se copió. Si la escritura
+  falla sin decir cuánto escribió, se cuentan 64 KB igualmente.
+- La versión que espera usa un búfer de 64 KB en su propia pila, añade la
+  tarea con prioridad 6 y espera a que termine; si alguno de los dos
+  archivos no está abierto, no hace nada y devuelve que no se copió.
+- Los nombres son suposiciones.
+
+### Mutaciones
+
+28 líneas rotas a propósito: las 28 detectadas.
+
 ## 2026-10-02 — Tres funciones pequeñas de los objetos
 
 Tres funciones. De 654 funciones se pasa a 657, el 5,83 % de las del

@@ -578,3 +578,76 @@ def run(t) -> None:
                 "CloseHandle": lambda harness, arguments: 1,
             },
         )
+
+    # ---------- copying all of a file
+
+    COPY_SIZE = 0x28
+    for n in range(600):
+        state = random_.choice((0, 1, 2, 3, 4, 5, 0xFFFFFFFF))
+        parameters = bytearray(random_.randbytes(COPY_SIZE + 8))
+        bytes_read = random_.choice((0, 5, 0xFFFF, 0x10000, 0x10001))
+        struct.pack_into(
+            "<IIIIIIII",
+            parameters,
+            0,
+            state,
+            random_.choice((0x1111, 0x1111, NONE)),
+            random_.choice((0x2222, 0x2222, NONE)),
+            random_.getrandbits(32),
+            bytes_read,
+            random_.choice((0, 0x30000, 0xFFFFFFF0)),
+            COPY_SIZE,
+            COPY_SIZE + 4,
+        )
+        position = random_.choice((0, 0, 0, NONE, 5))
+        result = random_.choice((1, 1, 0))
+        written = random_.choice((None, None, 0, 7))
+
+        def write_file(harness, arguments, result=result, written=written):
+            file, buffer, size, bytes_written, overlapped = arguments
+            if written is not None:
+                harness.mu.mem_write(bytes_written, struct.pack("<I", written))
+            return result, (file, harness.normalize(buffer), size, overlapped)
+
+        def read_file(harness, arguments, result=result):
+            file, buffer, size, bytes_read_, overlapped = arguments
+            harness.mu.mem_write(bytes_read_, struct.pack("<I", 0x123))
+            return result, (file, harness.normalize(buffer), size, overlapped)
+
+        t.check(
+            "async_copy_file_work",
+            Buffer(bytes(parameters), pointers=(0x18, 0x1C)),
+            externals={
+                "GetFileSize": lambda harness, arguments: 0x4567,
+                "async_set_file_position": lambda harness, arguments, position=position: position,
+                "ReadFile": read_file,
+                "WriteFile": write_file,
+            },
+        )
+
+    for n in range(60):
+        waits = random_.choice((0, 1, 3))
+
+        def add(harness, arguments, waits=waits, copied=random_.choice((0, 1))):
+            priority, parameters, category, function, done = arguments
+            task = bytes(harness.mu.mem_read(parameters, COPY_SIZE))
+            harness._copy_done = done
+            harness._copy_success = struct.unpack_from("<I", task, 0x1C)[0]
+            harness.mu.mem_write(harness._copy_success, bytes((copied,)))
+            if not waits:
+                harness.mu.mem_write(done, b"\x01")
+            # the buffer and the flags are on the stack: their places are not compared
+            return 7, (priority, task[:0x18] + task[0x20:], category, harness.normalize(function))
+
+        def wait(harness, arguments, waits=waits):
+            if calls_so_far(harness, "SwitchToThread") >= waits - 1:
+                harness.mu.mem_write(harness._copy_done, b"\x01")
+            return 0
+
+        t.check(
+            "async_copy_file_blocking",
+            random_.choice((0x1111, 0x1111, 0x1111, NONE)),
+            random_.choice((0x2222, 0x2222, 0x2222, NONE)),
+            random_.randrange(8),
+            externals={"async_task_add": add, "SwitchToThread": wait},
+        )

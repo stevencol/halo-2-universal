@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 111.
+**Última actualización:** 2026-10-02, al terminar el hito 112.
 
 ## Dónde estamos
 
-- **657 funciones descompiladas de 11.265: el 5,83 % del juego** (el
-  2,994 % de los bytes de código).
-- Las 657 están comprobadas contra el ejecutable original
+- **659 funciones descompiladas de 11.265: el 5,85 % del juego** (el
+  3,001 % de los bytes de código).
+- Las 659 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile three small functions of the objects* (ver `git log`).
+- Último hito: *Decompile copying all of a file* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -205,8 +205,8 @@ Módulos (funciones hechas / archivo):
       tomar memoria) de los que usan memoria al cargar un mapa; el par de
       la caché de animaciones ya está. La recorren `0x0018ec60` y
       `0x0018ed00`, que abren y cierran un mapa.
-- [ ] **Resto de las tareas de archivo:** `0x001a0a70`, `0x001a0da0`,
-      `0x001a17d0`.
+- [ ] **Resto de las tareas de archivo:** `0x001a0a70` (abre un archivo
+      esperando; necesita `0x001a1870`, que hace su ruta).
 - [ ] **Matemáticas que quedan:** `real_math.c` (`0x0011cf50`, `0x0011d090`,
       `0x0011e000` y las grandes) y una de matrices.
 

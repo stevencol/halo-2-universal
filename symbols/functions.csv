@@ -1030,3 +1030,5 @@ address,name,source,arguments,returns,convention
 000bae20,object_get_and_verify_type,source/objects/objects.c,eax stack,int
 000bae80,object_iterator_new,source/objects/objects.c,eax ecx stack,void
 000baf40,object_get_first_unflagged_ancestor,source/objects/objects.c,eax,int
+001a0c90,async_copy_file_work,source/cseries/async.c,stack,int
+001a0da0,async_copy_file_blocking,source/cseries/async.c,stack stack stack,bool

@@ -33,6 +33,21 @@ enum
 	_async_task_done_without_flag
 };
 
+/* what the task that copies a file does next */
+enum
+{
+	_async_copy_file_state_rewind_source,
+	_async_copy_file_state_rewind_destination,
+	_async_copy_file_state_read,
+	_async_copy_file_state_write,
+	_async_copy_file_state_done,
+	NUMBER_OF_ASYNC_COPY_FILE_STATES,
+
+	/* what the task reads and writes at a time */
+	ASYNC_COPY_FILE_BUFFER_SIZE= 0x10000,
+	ASYNC_COPY_FILE_PRIORITY= 6
+};
+
 /* ---------- structures */
 
 #define ASYNC_CALLBACK __attribute__((stdcall))
@@ -145,6 +160,26 @@ struct async_copy_parameters
 	uint32_t bytes_done;
 	/* what was read is in the buffer and has to be written */
 	long writing;
+};
+
+/* the parameters of a task that copies all of a file to another, from
+their starts: async_copy_file_work */
+struct async_copy_file_parameters
+{
+	/* what the task does next: _async_copy_file_state */
+	long state;
+	uint32_t source_file;
+	uint32_t destination_file;
+	/* of the source */
+	uint32_t size;
+	/* the last time that the source was read */
+	uint32_t bytes_read;
+	uint32_t bytes_copied;
+	/* of ASYNC_COPY_FILE_BUFFER_SIZE bytes */
+	void *buffer;
+	/* where to tell whether the file was copied */
+	boolean *success;
+	uint32_t unknown20[2];
 };
 
 struct async_flush_file_parameters
@@ -264,6 +299,8 @@ boolean async_read_goes_before(long next_priority, long task_priority, struct as
 	const struct async_read_parameters *next_parameters, const struct async_read_parameters *task_parameters);
 long ASYNC_CALLBACK async_read_work(void *parameters);
 long ASYNC_CALLBACK async_read_whole_file_work(void *parameters);
+long ASYNC_CALLBACK async_copy_file_work(void *parameters);
+boolean async_copy_file_blocking(uint32_t source_file, uint32_t destination_file, long category);
 void async_read_whole_file(boolean *done, boolean *read, uint32_t *size, const char *path, void *buffer,
 	uint32_t buffer_size, long category, long priority);
 long async_read_position(uint32_t file, long size, uint32_t offset, long category, long priority,
