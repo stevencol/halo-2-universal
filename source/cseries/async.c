@@ -72,6 +72,9 @@ int CloseHandle(uint32_t handle);
 #define FILE_BEGIN 0
 #define INVALID_SET_FILE_POINTER 0xFFFFFFFF
 #define THREAD_PRIORITY_ABOVE_NORMAL 1
+#define OPEN_EXISTING 3
+#define FILE_ATTRIBUTE_NORMAL 0x80
+#define INVALID_FILE_SIZE 0xFFFFFFFF
 
 enum
 {
@@ -495,6 +498,96 @@ long ASYNC_CALLBACK async_read_work(
 	}
 
 	return _async_task_not_done;
+}
+
+/* 0x001a13a0: the function of a task that reads all of a file, in three
+steps: the file is opened, its size is found, and as much of it as fits is
+read. The task is over when a step goes wrong or the file is read; then the
+file is closed and whether it was read is told. The name is a guess */
+long ASYNC_CALLBACK async_read_whole_file_work(
+	void *parameters)
+{
+	struct async_read_whole_file_parameters *read= parameters;
+	boolean finished= FALSE;
+	boolean success;
+
+	if (read->file==INVALID_HANDLE_VALUE)
+	{
+		read->file= CreateFileA(read->path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
+			FILE_ATTRIBUTE_NORMAL, 0);
+		success= read->file!=INVALID_HANDLE_VALUE;
+	}
+	else if (read->file_size==INVALID_FILE_SIZE)
+	{
+		read->file_size= GetFileSize(read->file, NULL);
+		success= read->file_size!=INVALID_FILE_SIZE;
+		if (success && read->size)
+		{
+			*read->size= read->file_size;
+		}
+	}
+	else
+	{
+		uint32_t size= read->file_size<=read->buffer_size ? read->file_size : read->buffer_size;
+		uint32_t bytes_read;
+
+		success= ReadFile(read->file, read->buffer, size, &bytes_read, NULL) && bytes_read==size;
+		finished= TRUE;
+	}
+
+	if (success && !finished)
+	{
+		return _async_task_not_done;
+	}
+	if (read->file!=INVALID_HANDLE_VALUE)
+	{
+		CloseHandle(read->file);
+	}
+	if (read->read)
+	{
+		*read->read= success;
+	}
+
+	return _async_task_done;
+}
+
+/* 0x001a1480: starts to read all of a file into a buffer, or as much of it
+as fits. When it is done the flag is set, and the size of the file and
+whether it was read are told where they are asked for. The name is a
+guess */
+void async_read_whole_file(
+	boolean *done,
+	boolean *read,
+	uint32_t *size,
+	const char *path,
+	void *buffer,
+	uint32_t buffer_size,
+	long category,
+	long priority)
+{
+	union
+	{
+		struct async_read_whole_file_parameters read;
+		uint32_t parameters[ASYNC_TASK_PARAMETER_COUNT];
+	} task;
+
+	if (read)
+	{
+		*read= FALSE;
+	}
+	if (size)
+	{
+		*size= 0;
+	}
+	memset(&task, 0, sizeof(task));
+	task.read.path= path;
+	task.read.buffer= buffer;
+	task.read.buffer_size= buffer_size;
+	task.read.size= size;
+	task.read.read= read;
+	task.read.file= INVALID_HANDLE_VALUE;
+	task.read.file_size= INVALID_FILE_SIZE;
+	async_task_add(priority, task.parameters, category, async_read_whole_file_work, (byte *)done);
 }
 
 /* 0x001a0f10: starts to read a part of a file; the task's id. When the read

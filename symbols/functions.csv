@@ -1006,4 +1006,5 @@ address,name,source,arguments,returns,convention
 00036560,rasterizer_text_end,,,void
 00121b00,unknown_00121b00,,,bool
 00121570,unknown_00121570,,stack stack,void,stdcall
-001a1480,unknown_001a1480,,ebx eax ecx stack stack stack stack stack,void,stdcall
+001a1480,async_read_whole_file,source/cseries/async.c,ebx eax ecx stack stack stack stack stack,void
+001a13a0,async_read_whole_file_work,source/cseries/async.c,stack,int

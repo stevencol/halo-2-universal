@@ -72,6 +72,24 @@ struct async_task
 	struct async_task *next;
 };
 
+/* the parameters of a task that reads all of a file, or as much of it as
+fits: async_read_whole_file_work */
+struct async_read_whole_file_parameters
+{
+	const char *path;
+	void *buffer;
+	uint32_t buffer_size;
+	/* where to tell how large the file is, and whether it was read; either
+	can be NULL */
+	uint32_t *size;
+	boolean *read;
+	/* the file, open; INVALID_HANDLE_VALUE until it is opened */
+	uint32_t file;
+	/* how large it is; NONE until it is known */
+	uint32_t file_size;
+	uint32_t unknown1C[3];
+};
+
 /* the parameters of a task that reads a file: async_read_work */
 struct async_read_parameters
 {
@@ -245,6 +263,9 @@ boolean async_read_goes_before(long next_priority, long task_priority, struct as
 	async_task_function task_function, async_task_function next_function,
 	const struct async_read_parameters *next_parameters, const struct async_read_parameters *task_parameters);
 long ASYNC_CALLBACK async_read_work(void *parameters);
+long ASYNC_CALLBACK async_read_whole_file_work(void *parameters);
+void async_read_whole_file(boolean *done, boolean *read, uint32_t *size, const char *path, void *buffer,
+	uint32_t buffer_size, long category, long priority);
 long async_read_position(uint32_t file, long size, uint32_t offset, long category, long priority,
 	long *bytes_read, void *buffer, uint8_t *done);
 

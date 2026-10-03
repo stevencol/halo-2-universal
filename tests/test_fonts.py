@@ -324,7 +324,7 @@ def run(t) -> None:
                 "GetTickCount": lambda harness, arguments: 0x12345,
                 "unknown_000593e0": lambda harness, arguments: 0,
                 "unknown_00121570": name_of_list,
-                "unknown_001a1480": remember(start),
+                "async_read_whole_file": remember(start),
                 "SwitchToThread": wait,
                 "font_load": lambda harness, arguments: (0, (arguments[0], text(harness, arguments[1]), arguments[2] & 0xFF)),
                 "font_characters_new": lambda harness, arguments: 0,

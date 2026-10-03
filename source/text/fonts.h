@@ -37,6 +37,9 @@ enum
 	FONT_LIST_SIZE= 0x800,
 	/* the index of a font that is not there */
 	FONT_INDEX_NONE= -2,
+	/* the task that reads the list of the fonts */
+	FONT_LIST_TASK_CATEGORY= 7,
+	FONT_LIST_TASK_PRIORITY= 6,
 	/* in the file of a font: what goes to its place */
 	FONT_FILE_HEADER_OFFSET= 0x200,
 

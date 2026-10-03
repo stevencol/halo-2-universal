@@ -522,3 +522,59 @@ def run(t) -> None:
             globals=globals_,
             externals=task_externals(),
         )
+
+    # ---------- reading all of a file
+
+    for n in range(200):
+        t.check(
+            "async_read_whole_file",
+            Buffer(b"\x55"),
+            random_.choice((0, Buffer(random_.randbytes(4)), Buffer(random_.randbytes(4)))),
+            random_.choice((0, Buffer(random_.randbytes(4)), Buffer(random_.randbytes(4)))),
+            0x80020000,
+            0x80030000,
+            random_.choice((0x7FF, 0, 0x10000)),
+            random_.randrange(12),
+            random_.randrange(12),
+            globals={"async_globals": async_globals(random_)},
+            externals={"async_task_allocate": allocate, "async_task_queue": queue},
+        )
+
+    WHOLE_SIZE, WHOLE_PATH, WHOLE_BUFFER = 0x28, 0x28, 0x60
+    for n in range(500):
+        file = random_.choice((NONE, NONE, 0x00340000))
+        file_size = random_.choice((NONE, NONE, 0, 5, 0x20, 0x7FF, 0x800, 0x1000))
+        buffer_size = random_.choice((0x20, 0x7FF, 0x10, 0))
+        parameters = bytearray(random_.randbytes(WHOLE_BUFFER + 0x20))
+        path = random_.choice((b"z:\\fonts\\fonts.txt", b"t:\\a.bin", b""))
+        parameters[WHOLE_PATH : WHOLE_PATH + len(path) + 1] = path + b"\0"
+        size_place = random_.choice((0, 0, WHOLE_BUFFER + 0x10))
+        read_place = random_.choice((0, WHOLE_BUFFER + 0x18, WHOLE_BUFFER + 0x18))
+        struct.pack_into("<5I", parameters, 0, WHOLE_PATH, WHOLE_BUFFER, buffer_size, size_place, read_place)
+        struct.pack_into("<2I", parameters, 0x14, file, file_size)
+        pointers = (0, 4) + ((0xC,) if size_place else ()) + ((0x10,) if read_place else ())
+        opened = random_.choice((0x00340000, 0x00340000, NONE))
+        found = random_.choice((0x7FF, 0x10, 0, NONE, 0x30))
+        result = random_.choice((1, 1, 1, 0))
+        short = random_.choice((0, 0, 0, 1))
+
+        def create(harness, arguments, opened=opened):
+            path_, *rest = arguments
+            return opened, (bytes(harness.mu.mem_read(path_, 0x40)).split(b"\0", 1)[0], *rest)
+
+        def read_file(harness, arguments, result=result, short=short):
+            file_, buffer, size, bytes_read, overlapped = arguments
+            harness.mu.mem_write(buffer, bytes(range(256)) * (size // 256) + bytes(range(size % 256)) if size <= 0x20 else b"\xAB" * 0x20)
+            harness.mu.mem_write(bytes_read, struct.pack("<I", max(size - short, 0)))
+            return result, (file_, size, overlapped)
+
+        t.check(
+            "async_read_whole_file_work",
+            Buffer(bytes(parameters), pointers=pointers),
+            externals={
+                "CreateFileA": create,
+                "GetFileSize": lambda harness, arguments, found=found: found,
+                "ReadFile": read_file,
+                "CloseHandle": lambda harness, arguments: 1,
+            },
+        )

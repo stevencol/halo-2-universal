@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Leer un archivo entero
+
+Dos funciones. De 636 funciones se pasa a 638, el 5,66 % de las del juego
+(el 2,941 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `async_read_whole_file_work` | `0x001a13a0` | `cseries/async.c` |
+| `async_read_whole_file` | `0x001a1480` | `cseries/async.c` |
+
+Es la lectura que usa `fonts_initialize`; ya no hace falta suplantarla.
+
+### Lo que se sabe
+
+- Es una tarea del hilo de disco que lee **un archivo entero**, o lo que
+  quepa de él, en tres pasos (una vuelta del hilo cada uno): abrirlo (para
+  leer, dejando que otros lo lean), saber cuánto ocupa y leerlo de una vez.
+- Termina cuando un paso falla o cuando ha leído; entonces cierra el archivo
+  y dice si se leyó todo lo pedido. Si se le pide, dice también el tamaño
+  del archivo (aunque no quepa entero).
+- Al empezar pone a «no leído» y a 0 lo que se le pide que diga, para que
+  quien espera no vea lo de antes.
+- En el juego, la parte que crea la tarea está copiada dentro de la función;
+  aquí se llama a `async_task_add`, que hace lo mismo.
+
+### Mutaciones
+
+36 líneas rotas a propósito: las 36 detectadas. Dos pidieron arreglar la
+prueba: lo que se pide que diga tenía que estar en búferes que se comparen.
+
 ## 2026-10-02 — Las fuentes que hay
 
 Una función. De 635 funciones se pasa a 636, el 5,65 % de las del juego

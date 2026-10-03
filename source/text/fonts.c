@@ -30,11 +30,6 @@ void unknown_000593e0(void);
 /* 0x00121570: the name of the file that lists the fonts */
 void __attribute__((stdcall)) unknown_00121570(char *name, long size);
 
-/* 0x001a1480: starts to read a file: when it is done, whether it was read and
-how many bytes are told */
-void __attribute__((stdcall)) unknown_001a1480(boolean *done, boolean *read, unsigned long *size, const char *path,
-	void *buffer, unsigned long buffer_size, long unknown7, long unknown8);
-
 /* ---------- prototypes of functions of the console's libraries */
 
 /* 0x003314b0 */
@@ -130,7 +125,7 @@ void fonts_initialize(
 	const char *names[NUMBER_OF_FONTS];
 	boolean done;
 	boolean read;
-	unsigned long size;
+	uint32_t size;
 	long index;
 
 	for (index= 0; index<NUMBER_OF_FONTS; index++)
@@ -163,7 +158,8 @@ void fonts_initialize(
 	strncpy(path, font_directory, sizeof(path));
 	path[sizeof(path)-1]= 0;
 	csstrcat256(path, list_name);
-	unknown_001a1480(&done, &read, &size, path, list, sizeof(list)-1, 7, 6);
+	async_read_whole_file(&done, &read, &size, path, list, sizeof(list)-1, FONT_LIST_TASK_CATEGORY,
+		FONT_LIST_TASK_PRIORITY);
 	while (!*(volatile boolean *)&done)
 	{
 		SwitchToThread();
