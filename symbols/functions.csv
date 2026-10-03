@@ -649,7 +649,7 @@ address,name,source,arguments,returns,convention
 0011be50,unknown_0011be50,,,void
 000d5560,unknown_000d5560,,stack,void
 000c09c0,unknown_000c09c0,,eax,void
-00137e40,unknown_00137e40,,,void
+00137e40,game_create_players,source/game/game.c,,void
 00158530,unknown_00158530,,,void
 00138f10,unknown_00138f10,,,void
 00200d80,unknown_00200d80,,,void
@@ -1034,3 +1034,10 @@ address,name,source,arguments,returns,convention
 001a0da0,async_copy_file_blocking,source/cseries/async.c,stack stack stack,bool
 000b9fc0,object_get_orientation,source/objects/objects.c,eax esi edi,void
 0012b980,main_print_saving_message,source/main/main.c,,void
+001388e0,game_won,source/game/game.c,,void
+0014c630,unknown_0014c630,,stack stack,void,stdcall
+0014c880,unknown_0014c880,,stack,void,stdcall
+0014bc00,unknown_0014bc00,,ebx,void
+00083510,unknown_00083510,,ebx,void
+001e73b0,unknown_001e73b0,,,void
+0019043f,unknown_0019043f,,esi stack stack,void,stdcall

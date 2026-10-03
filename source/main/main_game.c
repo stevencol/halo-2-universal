@@ -61,7 +61,6 @@ void unknown_0011be50(void);
 /* what a new game sets up after its systems */
 void unknown_000d5560(long unknown);
 void unknown_000c09c0(long game_mode);
-void unknown_00137e40(void);
 void unknown_00158530(void);
 void unknown_00138f10(void);
 void unknown_00200d80(void);
@@ -428,7 +427,7 @@ boolean main_game_start(
 	game_initialize_for_new_map(options);
 	unknown_000d5560(0);
 	unknown_000c09c0(main_game_globals->options.game_mode);
-	unknown_00137e40();
+	game_create_players();
 	if (scenario_switch_structure_bsp(options->unknown120, TRUE))
 	{
 		main_game_globals->active= TRUE;

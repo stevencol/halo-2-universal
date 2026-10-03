@@ -14,6 +14,7 @@ these functions calls the parts by name.
 #include "game.h"
 
 #include "main/main.h"
+#include "main/main_game.h"
 #include "saved games/game_state.h"
 #include "shell/shell.h"
 #include "scenario/scenario.h"
@@ -209,7 +210,22 @@ void unknown_00225f80(void);
 void unknown_00225fc0(void);
 void unknown_003361a4(void);
 
+/* 0x0014c630, 0x0014c880 and 0x0014bc00: the consoles of a game, this one,
+and a player that is made; 0x00083510 and 0x001e73b0 are after them */
+void __attribute__((stdcall)) unknown_0014c630(unsigned long machine_valid_mask, const void *machine_identifiers);
+void __attribute__((stdcall)) unknown_0014c880(const void *local_machine_identifier);
+void unknown_0014bc00(const struct game_player_options *player);
+void unknown_00083510(long unknown);
+void unknown_001e73b0(void);
+
+/* 0x0019043f: told, when the campaign is won, each of four things and the
+difficulty */
+void __attribute__((stdcall)) unknown_0019043f(long unknown, long index, long difficulty);
+
 /* ---------- constants */
+
+/* how many things game_won tells the difficulty to */
+#define GAME_WON_COUNT 4
 
 enum
 {
@@ -224,6 +240,11 @@ long after it is over it ends */
 #define GAME_FINISHED_SECONDS 7.0f
 
 /* ---------- globals */
+
+/* 0x004ed39c: no players are made for a game while it is set; and
+0x004cf780, which is given to 0x00083510. What they are is not known */
+boolean unknown_004ed39c;
+long unknown_004cf780;
 
 /* 0x004e6948: in the state of the game */
 struct main_game_globals *main_game_globals;
@@ -579,6 +600,68 @@ void game_lost(
 	else if (game->lost)
 	{
 		game->lost= FALSE;
+	}
+}
+
+/* 0x00137e40: the consoles of the game that starts are told to the network,
+and this one if it is in the game, and each player of the game is made.
+The name is a guess */
+void game_create_players(
+	void)
+{
+	struct game_options *options= &main_game_globals->options;
+	long index;
+
+	if (unknown_004ed39c)
+	{
+		return;
+	}
+	unknown_0014c630(options->machine_valid_mask, options->machine_identifiers);
+	unknown_0014c880(options->local_machine_exists ? options->local_machine_identifier : NULL);
+	for (index= 0; index<MAXIMUM_GAME_PLAYERS; index++)
+	{
+		if (options->players[index].valid)
+		{
+			unknown_0014bc00(&options->players[index]);
+		}
+	}
+	if (unknown_004cf770.unknown0 && !unknown_004cf770.unknownB)
+	{
+		unknown_00083510(unknown_004cf780);
+	}
+	unknown_001e73b0();
+}
+
+/* 0x001388e0: the game is won: in the campaign, each of the four is told the
+difficulty (if the game has a 0x18 of its options), the players are told
+that it is being saved, and the next map is loaded; in multiplayer, the game
+is over. As Halo 1's of this name */
+void game_won(
+	void)
+{
+	if (!main_game_globals || !main_game_globals->active)
+	{
+		return;
+	}
+	if (main_game_globals->options.game_mode==_game_mode_campaign)
+	{
+		if (main_game_globals->options.unknown18!=NONE)
+		{
+			long index= 0;
+
+			do
+			{
+				unknown_0019043f(main_game_globals->options.unknown18, index, main_game_globals->options.difficulty);
+				index= (index>=0 && index<GAME_WON_COUNT-1) ? index+1 : NONE;
+			}
+			while (index!=NONE);
+			main_print_saving_message();
+		}
+		main_game_next_map();
+	}
+	else if (main_game_globals->options.game_mode==_game_mode_multiplayer)
+	{
+		game_finish();
 	}
 }
 

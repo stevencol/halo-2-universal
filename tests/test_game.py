@@ -63,6 +63,7 @@ def nothing(harness, arguments):
 
 
 def run(t) -> None:
+    run_players_and_won(t)
     random_ = random.Random(24)
 
     def proc(call):
@@ -388,3 +389,65 @@ def run(t) -> None:
                     memory={TIME: ticks(30)},
                     externals={"main_action_pending": pending, "unknown_00137fe0": nothing},
                 )
+
+
+def run_players_and_won(t) -> None:
+    from difftest import Memory
+    from test_game_state import GAME
+
+    random_ = random.Random(115)
+
+    ACTIVE, MODE, UNKNOWN18, DIFFICULTY = 0x1120, 0x8, 0x20, 0x132
+    MASK, LOCAL_EXISTS, PLAYERS, PLAYER_SIZE = 0x270, 0x2D4, 0x2DC, 0xE4
+
+    def a_game(**fields) -> Memory:
+        data = bytearray(random_.randbytes(GAME_SIZE))
+        data[ACTIVE] = fields.get("active", 1)
+        struct.pack_into("<I", data, MODE, fields.get("mode", 1))
+        struct.pack_into("<i", data, UNKNOWN18, fields.get("unknown18", 5))
+        struct.pack_into("<h", data, DIFFICULTY, fields.get("difficulty", 2))
+        data[LOCAL_EXISTS] = fields.get("local", 1)
+        for player in range(16):
+            data[PLAYERS + player * PLAYER_SIZE] = random_.choice((0, 0, 1, 0x80))
+        return Memory(bytes(data))
+
+    record = lambda harness, arguments: 0
+
+    for n in range(60):
+        t.check(
+            "game_create_players",
+            globals={
+                "main_game_globals": GAME,
+                "unknown_004ed39c": bytes((random_.choice((0, 0, 0, 1)),)),
+                "unknown_004cf770": bytes((random_.choice((0, 1, 1)),)) + random_.randbytes(10) + bytes((random_.choice((0, 0, 1)),)) + random_.randbytes(4),
+                "unknown_004cf780": random_.getrandbits(32),
+            },
+            memory={GAME: a_game(local=random_.choice((0, 1, 0x80)))},
+            externals={
+                "unknown_0014c630": record,
+                "unknown_0014c880": record,
+                "unknown_0014bc00": record,
+                "unknown_00083510": record,
+                "unknown_001e73b0": record,
+            },
+        )
+
+    for n in range(80):
+        t.check(
+            "game_won",
+            globals={"main_game_globals": GAME if n % 9 else 0},
+            memory={
+                GAME: a_game(
+                    active=random_.choice((1, 1, 0)),
+                    mode=random_.choice((1, 1, 2, 2, 0, 3)),
+                    unknown18=random_.choice((5, 0, -1)),
+                    difficulty=random_.choice((0, 1, 2, 3, -1)),
+                )
+            },
+            externals={
+                "unknown_0019043f": record,
+                "main_print_saving_message": record,
+                "main_game_next_map": record,
+                "game_finish": record,
+            },
+        )

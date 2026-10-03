@@ -2,6 +2,35 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Crear los jugadores y ganar la partida
+
+Dos funciones. De 662 funciones se pasa a 664, el 5,89 % de las del
+juego (el 3,031 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_create_players` | `0x00137e40` | `game/game.c` |
+| `game_won` | `0x001388e0` | `game/game.c` |
+
+`main_game_start` ya llamaba a la primera con un nombre provisional.
+
+### Lo que se sabe
+
+- `game_create_players`: al empezar una partida, se le dicen a la red las
+  **consolas** que están en ella y si esta es una de ellas, y se crea cada
+  **jugador** válido de las opciones (hasta 16). Después vienen dos pasos
+  más que aún no conocemos. Un indicador global la salta por completo.
+- `game_won` (nombre de Halo 1): en la **campaña**, si las opciones tienen
+  un cierto valor (`+0x18`), se avisa a cuatro cosas con la **dificultad**,
+  se muestra «guardando» y se pasa al **mapa siguiente**; en
+  **multijugador**, la partida termina.
+
+### Mutaciones
+
+22 líneas rotas a propósito: las 22 detectadas.
+
 ## 2026-10-02 — Archivos dañados y el mensaje de «guardando»
 
 Dos funciones. De 660 funciones se pasa a 662, el 5,88 % de las del

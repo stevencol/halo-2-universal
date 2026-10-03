@@ -261,6 +261,9 @@ struct game_time_globals
 
 /* ---------- prototypes/GAME.C */
 
+void game_create_players(void);
+void game_won(void);
+
 void game_initialize(void);
 void game_dispose(void);
 void game_initialize_for_new_map(const struct game_options *options);

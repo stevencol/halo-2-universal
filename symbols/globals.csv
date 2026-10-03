@@ -155,3 +155,5 @@ address,name,source
 004c9964,sound_memory_use_other_pool,source/sound/sound_memory.c
 005476c4,real_math_pi,source/math/real_math.c
 005476c8,real_math_two_pi,source/math/real_math.c
+004ed39c,unknown_004ed39c,source/game/game.c
+004cf780,unknown_004cf780,source/game/game.c

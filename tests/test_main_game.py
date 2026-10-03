@@ -234,7 +234,7 @@ def run(t) -> None:
                 "game_initialize_for_new_map",
                 "unknown_000d5560",
                 "unknown_000c09c0",
-                "unknown_00137e40",
+                "game_create_players",
                 "unknown_00158530",
                 "unknown_00138f10",
                 "unknown_00200d80",
