@@ -1067,3 +1067,6 @@ address,name,source,arguments,returns,convention
 000ba1d0,object_get_velocities,source/objects/objects.c,eax ecx stack,void
 001d09d0,havok_component_get_rigid_body_linear_velocity,source/physics/havok_component.c,edx eax ecx,void
 001d0ad0,havok_component_get_rigid_body_angular_velocity,source/physics/havok_component.c,edx eax ecx,void
+001d0b20,havok_component_get_rigid_body_rotation,source/physics/havok_component.c,ecx eax esi,void
+001d0bb0,havok_component_get_rigid_body_mass,source/physics/havok_component.c,ecx eax,real:xmm0
+001d0c00,havok_component_rigid_body_is_keyframed,source/physics/havok_component.c,ecx eax,bool

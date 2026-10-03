@@ -735,6 +735,11 @@ class Harness:
             # and the exponent
             top = (mu.reg_read(x86.UC_X86_REG_FPSW) >> 11) & 7
             mantissa, exponent = mu.reg_read(x86.UC_X86_REG_FP0 + top)
+            if exponent & 0x7FFF == 0x7FFF:
+                # an infinity or a NaN, with the payload that a 32-bit real
+                # keeps of it
+                bits = (exponent & 0x8000) << 16 | 0x7F800000 | (mantissa >> 40) & 0x7FFFFF
+                return struct.unpack("<f", struct.pack("<I", bits))[0]
             value = mantissa / (1 << 63) * 2.0 ** ((exponent & 0x7FFF) - 16383) if mantissa else 0.0
             # as the 32-bit real that the game keeps
             return struct.unpack("<f", struct.pack("<f", -value if exponent & 0x8000 else value))[0]

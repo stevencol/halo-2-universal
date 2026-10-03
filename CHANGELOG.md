@@ -2,6 +2,50 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — La rotación, la masa y el tipo de un cuerpo rígido
+
+Tres funciones de `physics/havok_component.c`. De 684 funciones se pasa a
+687, el 6,10 % de las del juego (el 3,249 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_component_get_rigid_body_rotation` | `0x001d0b20` | `physics/havok_component.c` |
+| `havok_component_get_rigid_body_mass` | `0x001d0bb0` | `physics/havok_component.c` |
+| `havok_component_rigid_body_is_keyframed` | `0x001d0c00` | `physics/havok_component.c` |
+
+También la tabla de métodos de lo que mueve un cuerpo de Havok (solo los
+dos que se usan, en `0x18` y `0x24`), la inversa de su masa (`0x2C`) y la
+matriz de rotación de Havok (tres columnas de cuatro reales, alineada a
+16 bytes). Las pruebas ponen los dos métodos en la memoria de los mocks.
+
+### Arreglado
+
+- El arnés no sabía leer un infinito o un NaN devuelto en la pila del x87:
+  calculaba una potencia de 2 enorme y Python fallaba. Ahora los
+  reconoce, y del NaN guarda lo que guardaría un real de 32 bits.
+
+### Lo que se sabe
+
+- La rotación la pide al método `0x24` de lo que mueve el cuerpo y copia
+  los tres primeros reales de cada columna.
+- La masa es la inversa de lo que guarda Havok, pero nunca menor que 1; un
+  cuerpo con inversa 0 (que nada mueve) da 1, y un NaN sigue siendo NaN.
+- Un cuerpo es «keyframed» (lo mueve el juego, no la física) si el método
+  `0x18` dice el tipo 6, el `MOTION_KEYFRAMED` de Havok.
+- Los nombres son inventados.
+
+### Mutaciones
+
+17 líneas rotas a propósito: 15 detectadas.
+
+### Sin comprobar
+
+- Dos mutantes son equivalentes: escribir `mass<1.0f` en lugar de
+  `1.0f>mass` es la misma comparación, y con `>=` una masa justo de 1 da 1
+  por los dos caminos.
+
 ## 2026-10-03 — Las velocidades de un objeto
 
 Tres funciones, dos de ellas de un archivo nuevo,

@@ -1,9 +1,10 @@
 # source/objects/objects.c
 
+import math
 import random
 import struct
 
-from difftest import Buffer, Pointer
+from difftest import Buffer, Mock, Pointer, mock_address
 from test_data import DATA_ARRAY_SIZE, NONE, identifier, index
 
 HEADER_SIZE = 0xC
@@ -143,7 +144,12 @@ def run(t) -> None:
     RIGID_BODY_SIZE = 0x60
     RIGID_BODIES = 3
 
-    def havok_components(count: int, fixed: bool = False) -> Buffer:
+    INVERSE_MASSES = [
+        struct.pack("<f", value)
+        for value in (0.0, -0.0, 1.0, 0.5, 2.0, 0.25, 0.999, 1.001, 1e-30, 1e30, math.inf, -math.inf, -2.0, -0.5, 3.0)
+    ] + [bytes.fromhex("0000c07f"), bytes.fromhex("0100807f"), bytes.fromhex("01000000")]
+
+    def havok_components(count: int, fixed: bool = False, methods: bool = False) -> Buffer:
         """The data array of the havok components: only where its data is
         (0x44) is looked at. Each component has three rigid bodies, each of
         them one of Havok and what moves that."""
@@ -177,6 +183,15 @@ def run(t) -> None:
                     data[havok + n * 0x40 + 0x40] = random_.choice((0, 0, 1, 0xFF))
                     struct.pack_into("<3f", data, motions + n * 0x80 + 0x40, *(random_.uniform(-9, 9) for _ in range(3)))
                     struct.pack_into("<3f", data, motions + n * 0x80 + 0x50, *(random_.uniform(-9, 9) for _ in range(3)))
+                if methods:
+                    # the methods, at the end; the inverse of the mass; and
+                    # what the test's get_type gives
+                    struct.pack_into("<I", data, motions + n * 0x80, len(data))
+                    pointers.append(motions + n * 0x80)
+                    data[motions + n * 0x80 + 0x2C : motions + n * 0x80 + 0x30] = random_.choice(INVERSE_MASSES)
+                    struct.pack_into("<I", data, motions + n * 0x80 + 0x7C, random_.choice((6, 6, 0, 1, 5, 7, 0x106, 0xFFFFFFFF)))
+        if methods:
+            data += bytes(0x18) + struct.pack("<I", mock_address(0)) + bytes(8) + struct.pack("<I", mock_address(1))
         return Buffer(bytes(data), pointers=tuple(pointers))
 
     for _ in range(40):
@@ -220,3 +235,38 @@ def run(t) -> None:
                     Buffer(random_.randbytes(12)),
                     extra=[havok],
                 )
+
+    # ---------- the rotation, the mass and the kind of motion of a rigid body
+
+    def get_type(call) -> int:
+        (type_,) = struct.unpack("<I", t.harness.mu.mem_read(call.registers["ecx"] + 0x7C, 4))
+        return type_
+
+    def get_rotation(call) -> int:
+        # what moves the body has the matrix after its methods, as Havok's
+        # three columns of four reals
+        t.harness.mu.mem_write(call.stack[0], bytes(t.harness.mu.mem_read(call.registers["ecx"] + 4, 0x30)))
+        return 0
+
+    # the matrix is on the stack, which is not the same in both functions
+    methods = [
+        Mock(get_type, registers=("ecx",)),
+        Mock(get_rotation, stack_arguments=1, registers=("ecx",), record=lambda call: call.registers["ecx"]),
+    ]
+    for _ in range(30):
+        havok_count = random_.randint(1, 6)
+        havok = havok_components(havok_count, methods=True)
+        for _ in range(10):
+            component = Pointer(havok, COMPONENTS + random_.randrange(havok_count) * HAVOK_COMPONENT_SIZE)
+            rigid_body_index = random_.randrange(RIGID_BODIES)
+            t.check("havok_component_get_rigid_body_mass", component, rigid_body_index, extra=[havok])
+            t.check("havok_component_rigid_body_is_keyframed", component, rigid_body_index, extra=[havok], mocks=methods)
+            # compared as bytes, to tell 0 from -0
+            t.check(
+                "havok_component_get_rigid_body_rotation",
+                component,
+                rigid_body_index,
+                Buffer(random_.randbytes(0x24)),
+                extra=[havok],
+                mocks=methods,
+            )

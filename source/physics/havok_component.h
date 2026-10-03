@@ -12,12 +12,44 @@ names of the file and of everything in it are guesses.
 #include "math/real_math.h"
 #include "memory/data.h"
 
+/* ---------- constants */
+
+/* the methods of Havok's objects take the object in ecx */
+#define HAVOK_CONVENTION __attribute__((thiscall))
+
+/* what kind of motion moves a rigid body (Havok's hkMotion::MotionType) */
+enum
+{
+	_havok_motion_keyframed= 6
+};
+
 /* ---------- structures */
+
+/* a rotation as Havok has it: three columns, each of four reals */
+struct havok_matrix3
+{
+	real columns[3][4];
+} __attribute__((aligned(16)));
+
+struct havok_motion;
+
+/* the methods of what moves a rigid body: only those that are used */
+struct havok_motion_vtable
+{
+	byte unknown0[0x18];
+	long (HAVOK_CONVENTION *get_type)(struct havok_motion *motion);
+	byte unknown1C[8];
+	void (HAVOK_CONVENTION *get_rotation)(struct havok_motion *motion, struct havok_matrix3 *rotation);
+};
 
 /* what moves a rigid body of Havok */
 struct havok_motion
 {
-	byte unknown0[0x40];
+	const struct havok_motion_vtable *vtable;
+	byte unknown4[0x28];
+	/* 0 for a body that nothing moves */
+	real inverse_mass;
+	byte unknown30[0x10];
 	real_vector3d linear_velocity;
 	byte unknown4C[4];
 	real_vector3d angular_velocity;
@@ -55,6 +87,12 @@ struct havok_component
 	byte unknown78[0x28];
 };
 
+typedef char verify_havok_motion_vtable_get_rotation_offset[
+	offsetof(struct havok_motion_vtable, get_rotation) == 0x24 ? 1 : -1];
+typedef char verify_havok_motion_inverse_mass_offset[
+	offsetof(struct havok_motion, inverse_mass) == 0x2C ? 1 : -1];
+typedef char verify_havok_motion_linear_velocity_offset[
+	offsetof(struct havok_motion, linear_velocity) == 0x40 ? 1 : -1];
 typedef char verify_havok_motion_center_of_mass_offset[
 	offsetof(struct havok_motion, center_of_mass) == 0x70 ? 1 : -1];
 typedef char verify_havok_rigid_body_fixed_offset[
@@ -74,5 +112,9 @@ void havok_component_get_rigid_body_linear_velocity(const struct havok_component
 	real_vector3d *velocity);
 void havok_component_get_rigid_body_angular_velocity(const struct havok_component *component, long rigid_body_index,
 	real_vector3d *velocity);
+void havok_component_get_rigid_body_rotation(const struct havok_component *component, long rigid_body_index,
+	real_matrix3x3 *rotation);
+real havok_component_get_rigid_body_mass(const struct havok_component *component, long rigid_body_index);
+boolean havok_component_rigid_body_is_keyframed(const struct havok_component *component, long rigid_body_index);
 
 #endif
