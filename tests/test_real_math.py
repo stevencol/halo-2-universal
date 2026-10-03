@@ -35,6 +35,7 @@ VECTORS = (
 
 
 def run(t) -> None:
+    run_edges(t)
     run_slerp(t)
     run_basis(t)
     run_orientation_multiply(t)
@@ -391,3 +392,11 @@ def run_slerp(t) -> None:
             Buffer(struct.pack("<4f", 9.0, 9.0, 9.0, 9.0)),
             bits(random_.uniform(0, 1)),
         )
+
+
+def run_edges(t) -> None:
+    random_ = random.Random(124)
+
+    for n in range(60):
+        bounds = [random_.uniform(-50, 50) for _ in range(6)]
+        t.check("rectangle3d_build_edges", reals(*bounds), Buffer(random_.randbytes(24 * 12 + 8)))

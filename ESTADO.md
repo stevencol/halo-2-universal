@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 123.
+**Última actualización:** 2026-10-03, al terminar el hito 124.
 
 ## Dónde estamos
 
-- **673 funciones descompiladas de 11.265: el 5,97 % del juego** (el
-  3,134 % de los bytes de código).
-- Las 673 están comprobadas contra el ejecutable original
+- **674 funciones descompiladas de 11.265: el 5,98 % del juego** (el
+  3,153 % de los bytes de código).
+- Las 674 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the way from one quaternion to another* (ver `git log`).
+- Último hito: *Decompile the edges of a box* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -106,7 +106,7 @@ Módulos (funciones hechas / archivo):
 - [ ] Pintar los caracteres — `rasterizer\rasterizer_text.c` (6; faltan
       `0x0001ee50`, `0x0001ee60` y `0x0001ef70`, que hablan con la consola)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
-- [ ] Matemáticas reales — `math\real_math.c` (31 de unas 50)
+- [ ] Matemáticas reales — `math\real_math.c` (32 de unas 50)
 - [ ] Matrices — `math\matrix_math.c` (25; queda 1, `0x001417b0`)
 - [ ] Números aleatorios — `math\random_math.c` (2)
 - [ ] Colores y bitmaps — `bitmaps\` (17: 6 de colores y 11 en

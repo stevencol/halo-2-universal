@@ -1050,3 +1050,4 @@ address,name,source,arguments,returns,convention
 0011dbb0,orientation_multiply,source/math/real_math.c,edx stack stack,void
 0011d180,orthonormal_basis3d,source/math/real_math.c,eax ebx esi edi stack,void
 0011da10,quaternion_slerp,source/math/real_math.c,esi edi ebx stack,void
+0011fa40,rectangle3d_build_edges,source/math/real_math.c,stack stack,int

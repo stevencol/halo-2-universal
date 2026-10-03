@@ -173,6 +173,7 @@ void quaternion_from_vectors3d(real_quaternion *result, const real_vector3d *a, 
 void fast_quaternion_interpolate_and_normalize(const real_quaternion *a, const real_quaternion *b, real t,
 	real_quaternion *result);
 long rectangle3d_build_vertices(const real_rectangle3d *bounds, real_point3d *vertices);
+long __attribute__((stdcall)) rectangle3d_build_edges(const real_rectangle3d *bounds, real_point3d *points);
 void vectors3d_from_euler_angles3d(real_vector3d *forward, real_vector3d *up, const real_euler_angles3d *angles);
 void vectors3d_from_euler_angles2d(real_vector3d *forward, real_vector3d *up, const real_euler_angles2d *angles);
 void project_point3d(const real_point3d *point3d, short projection, unsigned char sign, real_point2d *point2d);

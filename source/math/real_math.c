@@ -38,6 +38,10 @@ static const real_vector3d down3d= { 0.0f, 0.0f, -1.0f };
 const real_vector3d *global_up3d= &up3d;
 const real_vector3d *global_down3d= &down3d;
 
+/* the corners and the edges of a box */
+#define RECTANGLE3D_VERTEX_COUNT 8
+#define RECTANGLE3D_EDGE_COUNT 12
+
 /* what undoes an orientation of scale 0 */
 #define ORIENTATION_INVERSE_OF_NO_SCALE 10000.0f
 
@@ -842,6 +846,31 @@ long rectangle3d_build_vertices(
 	}
 
 	return 8;
+}
+
+/* 0x0011fa40: the twelve edges of a box, as the two ends of each: those of
+the bottom, then those that go up, then those of the top. How many edges.
+The name is a guess */
+long __attribute__((stdcall)) rectangle3d_build_edges(
+	const real_rectangle3d *bounds,
+	real_point3d *points)
+{
+	long ends[RECTANGLE3D_EDGE_COUNT*2]=
+	{
+		0, 2, 2, 3, 3, 1, 1, 0,
+		0, 4, 1, 5, 2, 6, 3, 7,
+		4, 5, 5, 7, 7, 6, 6, 4
+	};
+	real_point3d vertices[RECTANGLE3D_VERTEX_COUNT];
+	long index;
+
+	rectangle3d_build_vertices(bounds, vertices);
+	for (index= 0; index<RECTANGLE3D_EDGE_COUNT*2; index++)
+	{
+		points[index]= vertices[ends[index]];
+	}
+
+	return RECTANGLE3D_EDGE_COUNT;
 }
 
 /* 0x0011df60: as in Halo 1 */

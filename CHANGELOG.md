@@ -2,6 +2,29 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Las aristas de una caja
+
+Una función. De 673 funciones se pasa a 674, el 5,98 % de las del juego
+(el 3,153 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `rectangle3d_build_edges` | `0x0011fa40` | `math/real_math.c` |
+
+### Lo que se sabe
+
+- Da las **12 aristas** de una caja como sus dos extremos (24 puntos): las
+  cuatro de abajo, las cuatro que suben y las cuatro de arriba. Saca las
+  esquinas con `rectangle3d_build_vertices` y devuelve 12.
+- Sirve, probablemente, para dibujar cajas de depuración con líneas. El
+  nombre es una suposición.
+
+### Mutaciones
+
+7 líneas rotas a propósito: las 7 detectadas.
+
 ## 2026-10-02 — El camino de un cuaternión a otro
 
 Una función. De 672 funciones se pasa a 673, el 5,97 % de las del juego
