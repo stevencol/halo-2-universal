@@ -718,6 +718,9 @@ class Harness:
             return data
         if returns == "bool":
             return bool(eax & 0xFF)
+        if returns == "byte":
+            # the low 8 bits: what is above them is not looked at
+            return eax & 0xFF
         if returns == "short":
             return (eax & 0xFFFF) - (0x10000 if eax & 0x8000 else 0)
         if returns == "real:eax":

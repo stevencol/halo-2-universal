@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Un real de un rango como un byte
+
+Una función. De 666 funciones se pasa a 667, el 5,92 % de las del juego
+(el 3,048 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `quantize_real_to_byte` | `0x0011f470` | `math/real_math.c` |
+
+### Lo que se sabe
+
+- Convierte un real de un rango en un byte: 0 para el mínimo, 255 para el
+  máximo. Primero calcula `(valor - mínimo) / rango × 255` truncando, y
+  luego **baja** mientras el real que representa ese byte quede por encima
+  del valor: el resultado es el mayor byte que no se pasa. El 255 representa
+  el máximo exacto.
+- Con un rango de nada (menos de 0,0001) devuelve 0. Como el byte se queda
+  con los 8 bits bajos del entero, un valor fuera del rango da un byte que
+  no tiene que ver con él.
+- El nombre es una suposición.
+
+### Herramientas
+
+- El arnés compara funciones que devuelven un byte (tipo `byte` en
+  `symbols/functions.csv`): solo los 8 bits bajos de `eax`.
+
+### Mutaciones
+
+13 líneas rotas a propósito: 11 detectadas. Una pidió valores iguales al
+máximo en rangos cuyo inicio y tamaño no suman exactamente el máximo.
+
+### Sin comprobar
+
+- Dos mutaciones son equivalentes: tratar distinto un rango o un valor que
+  no son un número no cambia nada, porque entonces el byte sale 0 y no se
+  entra en el bucle.
+
 ## 2026-10-02 — El ángulo entre dos vectores y un vector «arriba»
 
 Dos funciones. De 664 funciones se pasa a 666, el 5,91 % de las del

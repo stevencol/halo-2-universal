@@ -35,6 +35,7 @@ VECTORS = (
 
 
 def run(t) -> None:
+    run_quantize(t)
     run_angles(t)
     random_ = random.Random(3)
 
@@ -161,3 +162,27 @@ def run_angles(t) -> None:
     # two vectors that are the same but for k
     for a, b in (([0.0, 0.0, 1.0], [0.0, 0.0, -1.0]), ([0.6, 0.8, 0.0], [0.6, 0.8, 1e-3]), ([0.0, 1.0, 0.0], [0.0, 1.0, -0.0])):
         t.check("angle_between_vectors3d", reals(*a), reals(*b))
+
+
+def run_quantize(t) -> None:
+    random_ = random.Random(117)
+
+    def bits(value: float) -> int:
+        return struct.unpack("<I", struct.pack("<f", value))[0]
+
+    for n in range(1500):
+        minimum = random_.choice((0.0, 0.0, -1.0, 2.5, -100.0))
+        maximum = minimum + random_.choice((1.0, 1.0, 0.5, 100.0, 1e-5, 0.0, 1e-4, 1.0001e-4, -1.0))
+        choice = random_.randrange(6)
+        if choice == 0:
+            value = minimum + (maximum - minimum) * random_.randrange(256) / 255.0
+        elif choice == 1:
+            value = random_.choice((minimum, maximum, minimum - 1.0, maximum + 1.0, maximum * 3.0 + 7.0))
+        else:
+            value = random_.uniform(minimum - 0.1, maximum + 0.1)
+        t.check("quantize_real_to_byte", bits(minimum), bits(maximum), bits(value))
+    # the most of ranges whose start and size do not add up to it exactly
+    for n in range(400):
+        minimum = struct.unpack("<f", struct.pack("<f", random_.uniform(-50, 50)))[0]
+        maximum = struct.unpack("<f", struct.pack("<f", minimum + random_.uniform(0.001, 30)))[0]
+        t.check("quantize_real_to_byte", bits(minimum), bits(maximum), bits(maximum))

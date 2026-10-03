@@ -1043,3 +1043,4 @@ address,name,source,arguments,returns,convention
 0019043f,unknown_0019043f,,esi stack stack,void,stdcall
 0011cf50,angle_between_vectors3d,source/math/real_math.c,eax ecx,real:xmm0
 0011d090,generate_up_vector3d,source/math/real_math.c,ecx edx,int
+0011f470,quantize_real_to_byte,source/math/real_math.c,stack stack stack,byte

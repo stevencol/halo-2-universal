@@ -7,6 +7,7 @@ gives the address it has there.
 
 #include "real_math.h"
 
+#include <limits.h>
 #include <math.h>
 #include <stdint.h>
 #include <string.h>
@@ -40,6 +41,36 @@ static inline __attribute__((always_inline)) uint32_t real_bits(
 	memcpy(&bits, &value, sizeof(bits));
 
 	return bits;
+}
+
+/* 0x0011f470: a real from a range as a byte, from 0 for the least to 255 for
+the most: the greatest whose real is no more than the real. 0 for a range of
+nothing. The name is a guess */
+unsigned char __attribute__((stdcall)) quantize_real_to_byte(
+	real minimum,
+	real maximum,
+	real value)
+{
+	real range= maximum-minimum;
+	unsigned char quantized;
+
+	if (!(range>k_real_epsilon))
+	{
+		return 0;
+	}
+	quantized= (unsigned char)(long)((value-minimum)/range*255.0f);
+	while (quantized)
+	{
+		real decoded= quantized==UCHAR_MAX ? maximum : (real)quantized*(1.0f/255.0f)*range + minimum;
+
+		if (!(decoded>value))
+		{
+			break;
+		}
+		quantized--;
+	}
+
+	return quantized;
 }
 
 /* 0x0011cf50: the angle between two vectors of length 1, from 0 to pi: 0 for
