@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — El camino de un cuaternión a otro
+
+Una función. De 672 funciones se pasa a 673, el 5,97 % de las del juego
+(el 3,134 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `quaternion_slerp` | `0x0011da10` | `math/real_math.c` |
+
+### Lo que se sabe
+
+- Es la **interpolación esférica** entre dos cuaterniones: la parte `t` del
+  camino de uno a otro por la esfera. Si están a más de media vuelta, va
+  por el lado corto. Si son casi iguales (u opuestos) y el seno del ángulo
+  es menor que 0,0001, da el más cercano de los dos según `t` redondeado.
+- El juego hace el arcocoseno y los senos en la **x87** y los deja ahí entre
+  un paso y otro. Las funciones trascendentes de la x87 (`fpatan`, `fsin`)
+  no redondean a la precisión de la palabra de control, así que el ángulo y
+  el seno quedan con 64 bits de mantisa, y solo las multiplicaciones y la
+  división se redondean a precisión simple. Para dar los mismos bits, el
+  código usa `long double` en esos pasos.
+- El nombre es una suposición.
+
+### Herramientas
+
+- `acosl`, `sinl` y `fabsl` en `tools/difftest_libc`, con la x87.
+
+### Mutaciones
+
+22 líneas rotas a propósito: 19 detectadas. Una pidió cuaterniones
+perpendiculares (producto escalar exactamente 0).
+
+### Sin comprobar
+
+- Dos mutaciones son equivalentes: cambiar el orden de una suma de dos
+  términos (es conmutativa) y tratar `t` redondeado a 1 por la otra rama
+  (da lo mismo).
+- Redondear a real el seno de `t` por el ángulo antes de multiplicarlo no
+  ha cambiado ningún resultado en 7.200 casos: el doble redondeo casi nunca
+  se nota. El código sigue al juego igualmente.
+
 ## 2026-10-02 — Tres vectores perpendiculares a partir de una dirección
 
 Una función. De 671 funciones se pasa a 672, el 5,97 % de las del juego

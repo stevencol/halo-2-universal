@@ -409,6 +409,40 @@ float acosf(float value)
 	return value;
 }
 
+long double acosl(long double value)
+{
+	/* as acosf, with what the x87 has: its arc tangent is not rounded to the
+	precision of the control word */
+	__asm__(
+		"fld1\n\t"
+		"fadd %%st(1), %%st\n\t"
+		"fld1\n\t"
+		"fsub %%st(2), %%st\n\t"
+		"fmulp\n\t"
+		"fsqrt\n\t"
+		"fxch %%st(1)\n\t"
+		"fpatan"
+		: "+t"(value)
+		:
+		: "st(1)", "st(2)");
+
+	return value;
+}
+
+long double sinl(long double value)
+{
+	__asm__("fsin" : "+t"(value));
+
+	return value;
+}
+
+long double fabsl(long double value)
+{
+	__asm__("fabs" : "+t"(value));
+
+	return value;
+}
+
 long lrintf(float value)
 {
 	long result;

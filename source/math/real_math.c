@@ -232,6 +232,76 @@ void __attribute__((stdcall)) orientation_multiply(
 	result->translation.z= a->translation.z+result->translation.z;
 }
 
+/* 0x0011da10: the quaternion that is a part of the way from one to another,
+along the sphere: none of it at 0 and all of it at 1. Quaternions that are
+more than half a turn apart go the short way. For two that are about the
+same (or opposite), the nearest of the two to the part. The name is a guess.
+
+The game keeps the sines and the angle in the x87 between the steps: what it
+does with them is done here with long double */
+void __attribute__((stdcall)) quaternion_slerp(
+	const real_quaternion *to,
+	const real_quaternion *from,
+	real_quaternion *result,
+	real t)
+{
+	real one_minus_t= 1.0f-t;
+	real dot= to->v.k*from->v.k + to->v.j*from->v.j + from->v.i*to->v.i + to->w*from->w;
+	real clamped= dot;
+	long double angle;
+	real angle_real;
+	long double sine;
+	real to_scale;
+	real from_scale;
+
+	if (dot>1.0f)
+	{
+		clamped= 1.0f;
+	}
+	else if (-1.0f>dot)
+	{
+		clamped= -1.0f;
+	}
+	angle= acosl(clamped);
+	angle_real= (real)angle;
+	sine= sinl(angle);
+	if (!(k_real_epsilon>fabsl(sine)))
+	{
+		long double inverse_sine= 1.0L/sine;
+
+		to_scale= (real)(sinl((long double)angle_real*t)*inverse_sine);
+		from_scale= (real)(sinl((long double)angle_real*one_minus_t)*inverse_sine);
+		if (0.0f>clamped)
+		{
+			to_scale= 0.0f-to_scale;
+		}
+	}
+	else
+	{
+		real nearest= (real)lrintf(t);
+
+		if (0.0f>nearest)
+		{
+			to_scale= 0.0f;
+			from_scale= 1.0f-to_scale;
+		}
+		else if (nearest>1.0f)
+		{
+			to_scale= 1.0f;
+			from_scale= 1.0f-to_scale;
+		}
+		else
+		{
+			to_scale= (real)lrintf(t);
+			from_scale= 1.0f-to_scale;
+		}
+	}
+	result->v.i= from->v.i*from_scale + to->v.i*to_scale;
+	result->v.j= to->v.j*to_scale + from_scale*from->v.j;
+	result->v.k= to->v.k*to_scale + from_scale*from->v.k;
+	result->w= to->w*to_scale + from->w*from_scale;
+}
+
 /* 0x0011dd80: the orientation that undoes another: the other way round, from
 the other side, and the other size. An orientation of scale 0 is undone with
 a scale of 10000. The name is a guess */

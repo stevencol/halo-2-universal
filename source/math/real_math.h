@@ -142,6 +142,8 @@ real angle_between_vectors3d(const real_vector3d *a, const real_vector3d *b);
 void __attribute__((stdcall)) orthonormal_basis3d(const real_vector3d *direction, const real_vector3d *up_hint,
 	real_vector3d *forward, real_vector3d *left, real_vector3d *up);
 void orientation_inverse(real_orientation *result, const real_orientation *orientation);
+void __attribute__((stdcall)) quaternion_slerp(const real_quaternion *to, const real_quaternion *from,
+	real_quaternion *result, real t);
 void __attribute__((stdcall)) orientation_multiply(real_orientation *result, const real_orientation *a,
 	const real_orientation *b);
 unsigned char __attribute__((stdcall)) limit_angle_between_vectors3d(const real_vector3d *a, const real_vector3d *b,

@@ -35,6 +35,7 @@ VECTORS = (
 
 
 def run(t) -> None:
+    run_slerp(t)
     run_basis(t)
     run_orientation_multiply(t)
     run_orientation_inverse(t)
@@ -347,4 +348,46 @@ def run_basis(t) -> None:
             Buffer(struct.pack("<3f", 9.0, 9.0, 9.0)),
             Buffer(struct.pack("<3f", 9.0, 9.0, 9.0)),
             globals={"global_up3d": reals(*up), "global_down3d": reals(0.0, 0.0, -1.0), "global_forward3d": reals(1.0, 0.0, 0.0)},
+        )
+
+
+def run_slerp(t) -> None:
+    import math
+
+    random_ = random.Random(123)
+
+    def quaternion() -> list[float]:
+        q = [random_.uniform(-1, 1) for _ in range(4)]
+        length = math.sqrt(sum(x * x for x in q)) or 1.0
+        return [x / length for x in q]
+
+    def bits(value: float) -> int:
+        return struct.unpack("<I", struct.pack("<f", value))[0]
+
+    for n in range(1200):
+        a = quaternion()
+        choice = n % 6
+        if choice == 0:
+            b = list(a)
+        elif choice == 1:
+            b = [-x for x in a]
+        elif choice == 2:
+            # almost the same
+            b = [x + random_.uniform(-1e-4, 1e-4) for x in a]
+        else:
+            b = quaternion()
+        part = random_.choice((0.0, 1.0, 0.5, 0.25, 0.75, -0.5, 1.5, 2.6, -3.4, 0.4999, random_.uniform(0, 1)))
+        t.check("quaternion_slerp", reals(*a), reals(*b), Buffer(struct.pack("<4f", 9.0, 9.0, 9.0, 9.0)), bits(part))
+    # quaternions at right angles: a dot of exactly 0
+    for a, b in (([1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]), ([0.0, 0.0, 0.6, 0.8], [0.0, 0.0, 0.8, -0.6]), ([0.5, 0.5, 0.5, 0.5], [0.5, -0.5, 0.5, -0.5])):
+        for part in (0.25, 0.5, 0.75, 0.1):
+            t.check("quaternion_slerp", reals(*a), reals(*b), Buffer(struct.pack("<4f", 9.0, 9.0, 9.0, 9.0)), bits(part))
+    # many more: a sine that is rounded twice is wrong only now and then
+    for n in range(6000):
+        t.check(
+            "quaternion_slerp",
+            reals(*quaternion()),
+            reals(*quaternion()),
+            Buffer(struct.pack("<4f", 9.0, 9.0, 9.0, 9.0)),
+            bits(random_.uniform(0, 1)),
         )
