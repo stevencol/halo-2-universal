@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Las fuentes que hay
+
+Una función. De 635 funciones se pasa a 636, el 5,65 % de las del juego
+(el 2,935 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `fonts_initialize` | `0x00121fc0` | `text/fonts.c` |
+
+`shell.c` ya la llamaba con un nombre provisional; ahora llama a esta.
+
+### Lo que se sabe
+
+- Al arrancar, el juego lee **un archivo que dice qué fuentes hay**: está en
+  `z:\fonts\` y su nombre lo da otra función (aún sin descompilar). Es un
+  texto con nombres separados por espacios, tabuladores o saltos de línea;
+  se leen como mucho `0x7ff` bytes.
+- El primer nombre es la fuente 0, el segundo la 1, y así hasta 11. Cada
+  fuente nueva se carga **esperando** a que esté; un nombre repetido es la
+  misma fuente y no se carga dos veces. Las que el archivo no nombra quedan
+  como «no hay» (`-2`).
+- Antes, otra función comprueba que lo que dicen los archivos de las fuentes
+  está bien; si no, se avisa a varias partes del juego (y se apunta cuándo),
+  pero el archivo se lee igual.
+- El juego espera a que el archivo se lea y, si no llega a leerse nunca, se
+  queda esperando para siempre.
+- Solo se hace la primera vez; las siguientes solo se vuelven a preparar los
+  caracteres y su caché.
+
+### Mutaciones
+
+45 líneas rotas a propósito: 44 detectadas. Una pidió arreglar la prueba
+(la lectura suplantada no borraba el aviso de «terminado», y la espera no se
+veía).
+
+### Sin comprobar
+
+- Una mutación es equivalente: cortar el texto leído un byte más allá solo
+  cambia algo con `0x7ff` bytes, y entonces las dos versiones cortan en el
+  mismo sitio.
+
 ## 2026-10-02 — Pintar un texto
 
 Una función. De 634 funciones se pasa a 635, el 5,64 % de las del juego

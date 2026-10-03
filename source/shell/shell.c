@@ -68,7 +68,6 @@ void d3d_device_destroy(struct d3d_device *device);
 /* what shell_initialize sets up, in the order it calls them. Halo 1's does
 the errors, the tag files, the real math, the state of the game, the
 rasterizer, the input and the sound */
-void unknown_00121fc0(void);
 void unknown_00012560(void);
 
 /* what shell_dispose takes down */
@@ -157,7 +156,7 @@ boolean shell_initialize(
 
 	async_initialize();
 	global_preferences_initialize();
-	unknown_00121fc0();
+	fonts_initialize();
 	cache_files_initialize();
 	animation_cache_new();
 	game_state_initialize();

@@ -15,7 +15,7 @@ REFERENCE_COUNT = 0x938
 SHELL_MEMORY = 0x00D00000
 
 INITIALIZE = (
-    "unknown_002d5d0a async_initialize global_preferences_initialize unknown_00121fc0 cache_files_initialize animation_cache_new "
+    "unknown_002d5d0a async_initialize global_preferences_initialize fonts_initialize cache_files_initialize animation_cache_new "
     "game_state_initialize input_initialize sound_initialize"
 ).split()
 DISPOSE = (

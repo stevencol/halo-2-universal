@@ -274,7 +274,7 @@ address,name,source,arguments,returns,convention
 003f9d00,unknown_003f9d00,,eax,void
 003fc530,d3d_device_destroy,,eax,void
 00121350,global_preferences_initialize,source/main/global_preferences.c,,void
-00121fc0,unknown_00121fc0,,,void
+00121fc0,fonts_initialize,source/text/fonts.c,,void
 00123180,animation_cache_new,source/cache/xbox_animation_cache.c,,void
 00012560,unknown_00012560,,,void
 001248b0,input_initialize,source/input/input_xbox.c,,bool
@@ -1004,3 +1004,6 @@ address,name,source,arguments,returns,convention
 0001f070,rasterizer_draw_characters,source/rasterizer/rasterizer_text.c,eax ecx stack stack stack stack stack stack stack,void,stdcall
 00035b90,rasterizer_text_begin,,stack,void,stdcall
 00036560,rasterizer_text_end,,,void
+00121b00,unknown_00121b00,,,bool
+00121570,unknown_00121570,,stack stack,void,stdcall
+001a1480,unknown_001a1480,,ebx eax ecx stack stack stack stack stack,void,stdcall

@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 103.
+**Última actualización:** 2026-10-02, al terminar el hito 104.
 
 ## Dónde estamos
 
-- **635 funciones descompiladas de 11.265: el 5,64 % del juego** (el
-  2,909 % de los bytes de código).
-- Las 635 están comprobadas contra el ejecutable original
+- **636 funciones descompiladas de 11.265: el 5,65 % del juego** (el
+  2,935 % de los bytes de código).
+- Las 636 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile painting a text* (ver `git log`).
+- Último hito: *Decompile loading the fonts that there are* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -97,7 +97,7 @@ Módulos (funciones hechas / archivo):
       `0x00136710` a `0x001374c0`. Lo que hay justo antes, de `0x00136140`
       a `0x001366d0`, es de los bitmaps)
 - [x] Cadenas anchas y UTF-8 — `text\unicode.c` (17)
-- [x] Fuentes — `text\fonts.c` (6: completo)
+- [x] Fuentes — `text\fonts.c` (7: completo, con `fonts_initialize`)
 - [x] Caché de los caracteres de las fuentes — `text\font_cache.c` (28:
       completo; va de `0x001406b0` a `0x00141480`)
 - [x] Dibujar texto — `text\draw_string.c` (19: completo, de `0x0013e8a0`

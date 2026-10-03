@@ -12,12 +12,33 @@ functions are guesses.
 
 #include "cseries/async.h"
 #include "main/global_preferences.h"
+#include "text/font_cache.h"
+#include "main/main_game.h"
 #include "text/draw_string.h"
 
 #include <stddef.h>
 #include <string.h>
 
+/* ---------- prototypes of functions that are not decompiled */
+
+/* 0x00121b00: whether what the files of the fonts say is right */
+boolean unknown_00121b00(void);
+
+/* 0x000593e0 */
+void unknown_000593e0(void);
+
+/* 0x00121570: the name of the file that lists the fonts */
+void __attribute__((stdcall)) unknown_00121570(char *name, long size);
+
+/* 0x001a1480: starts to read a file: when it is done, whether it was read and
+how many bytes are told */
+void __attribute__((stdcall)) unknown_001a1480(boolean *done, boolean *read, unsigned long *size, const char *path,
+	void *buffer, unsigned long buffer_size, long unknown7, long unknown8);
+
 /* ---------- prototypes of functions of the console's libraries */
+
+/* 0x003314b0 */
+long GetTickCount(void);
 
 /* 0x002d2084 */
 int SwitchToThread(void);
@@ -46,7 +67,151 @@ struct font font_slots[NUMBER_OF_FONT_SLOTS];
 /* 0x004687f0: where the files of the fonts are */
 const char *font_directory= "z:\\fonts\\";
 
+/* 0x004e3b40 */
+boolean fonts_initialized;
+
+/* 0x00547f29, 0x004ed39e, 0x004ed39d, 0x004ed3a0: of other files, told that
+the fonts are not right; what they are is not known */
+boolean unknown_00547f29;
+boolean unknown_004ed39e;
+boolean unknown_004ed39d;
+long unknown_004ed3a0;
+
 /* ---------- code */
+
+/* the separators of the names of the fonts in the file that lists them */
+static const char font_list_separators[]= "\t\n\r ";
+
+/* the next name of a list of them: it is ended where it ends, and where the
+names go on from is left. NULL if there are no more */
+static inline __attribute__((always_inline)) char *font_list_next_name(
+	char *list,
+	char **rest)
+{
+	char *name= NULL;
+
+	if (list)
+	{
+		name= list+strspn(list, font_list_separators);
+		if (!*name)
+		{
+			name= NULL;
+		}
+	}
+	*rest= name;
+	if (name)
+	{
+		*rest= strpbrk(name, font_list_separators);
+		if (*rest)
+		{
+			**rest= 0;
+			(*rest)++;
+		}
+	}
+
+	return name;
+}
+
+/* 0x00121fc0: the first time, the fonts that a file says there are are
+loaded, waiting for each one, and in the order of the file: the first name
+is the font 0, and so on. A name that is in the list twice is the same font,
+and is loaded once. The fonts that the file does not name are not there.
+Then the characters of the fonts are made ready. The name is a guess.
+
+If what is in the file is not right (unknown_00121b00), several things of
+the game are told so, but the file is read all the same. The game waits for
+the file to be read, and stops for good if it is never read */
+void fonts_initialize(
+	void)
+{
+	char path[FONT_PATH_LENGTH];
+	char list_name[FONT_LIST_NAME_LENGTH];
+	char list[FONT_LIST_SIZE];
+	const char *names[NUMBER_OF_FONTS];
+	boolean done;
+	boolean read;
+	unsigned long size;
+	long index;
+
+	for (index= 0; index<NUMBER_OF_FONTS; index++)
+	{
+		font_slot_indices[index]= FONT_INDEX_NONE;
+	}
+	if (fonts_initialized)
+	{
+		font_characters_new();
+		font_cache_new();
+
+		return;
+	}
+
+	memset(font_slots, 0, sizeof(font_slots));
+	if (!unknown_00121b00())
+	{
+		unknown_0051ea00= TRUE;
+		unknown_00547f29= TRUE;
+		unknown_004ed39e= TRUE;
+		unknown_004ed39d= TRUE;
+		unknown_004ed3a0= GetTickCount();
+		if (unknown_00527330 && (unknown_00527334==3 || unknown_00527334==8))
+		{
+			unknown_000593e0();
+		}
+	}
+	path[0]= 0;
+	unknown_00121570(list_name, sizeof(list_name));
+	strncpy(path, font_directory, sizeof(path));
+	path[sizeof(path)-1]= 0;
+	csstrcat256(path, list_name);
+	unknown_001a1480(&done, &read, &size, path, list, sizeof(list)-1, 7, 6);
+	while (!*(volatile boolean *)&done)
+	{
+		SwitchToThread();
+	}
+	if (read)
+	{
+		long count= 0;
+		long font_slot_index= 0;
+		long offset;
+		char *rest;
+		char *name;
+
+		memset(names, 0, sizeof(names));
+		list[size<sizeof(list)-1 ? size : sizeof(list)-1]= 0;
+		for (offset= 0, name= font_list_next_name(list, &rest); name; name= font_list_next_name(rest, &rest))
+		{
+			long other;
+
+			if (offset>=NUMBER_OF_FONTS)
+			{
+				continue;
+			}
+			names[offset]= name;
+			for (other= 0; other<count && offset>0; other++)
+			{
+				if (!strcmp(name, names[other]))
+				{
+					break;
+				}
+			}
+			if (offset>0 && other<count)
+			{
+				font_slot_indices[offset]= font_slot_indices[other];
+			}
+			else
+			{
+				font_slot_indices[offset]= font_slot_index;
+				font_load(font_slot_index, name, TRUE);
+				font_slot_index++;
+			}
+			count++;
+			offset++;
+		}
+	}
+	fonts_initialized= TRUE;
+	font_characters_new();
+	font_cache_new();
+}
 
 /* 0x001222d0: the work of the task that loads a font, which the thread of
 the tasks does twice: the first time it opens the file of the font, and the

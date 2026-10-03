@@ -261,3 +261,73 @@ def run(t) -> None:
                 "ReadFile": read,
             },
         )
+
+    # ---------- the fonts that there are
+
+    font_names = (b"conduit", b"fixedsys", b"handel_gothic", b"conduit", b"x", b"a" * 40, b"", b"terminal")
+    separators = (b" ", b"\t", b"\r\n", b"\n", b"  \t ", b"\r")
+
+    for n in range(300):
+        words = [random_.choice(font_names[:-3] + font_names[-1:]) for _ in range(random_.choice((0, 1, 2, 4, 6, 11, 12, 15)))]
+        content = random_.choice((b"", b" ", b"\r\n")) + b"".join(word + random_.choice(separators) for word in words)
+        if n % 6 == 0:
+            content = content.rstrip()
+        if n % 25 == 24:
+            # longer than what is read of it
+            content = (b"conduit " * 300)[: random_.choice((0x7FE, 0x7FF, 0x800, 0x900))]
+        size = random_.choice((len(content), len(content), len(content), max(len(content) - 3, 0), 0x900))
+        waits = random_.choice((0, 0, 1, 3))
+        read = random_.choice((1, 1, 1, 1, 0, 0x100))
+
+        def start(harness, arguments, content=content, size=size, waits=waits, read=read):
+            done, read_, size_, path, buffer, buffer_size, unknown7, unknown8 = arguments
+            harness.mu.mem_write(buffer, content[:buffer_size] + bytes(1))
+            harness.mu.mem_write(read_, bytes((read & 0xFF,)))
+            harness.mu.mem_write(size_, struct.pack("<I", size))
+            # the flag is cleared when the read starts, and set when it ends
+            harness.mu.mem_write(done, bytes((0 if waits else 1,)))
+            return 0, (text(harness, path), buffer_size, unknown7, unknown8)
+
+        def wait(harness, arguments, waits=waits):
+            if calls_so_far(harness, "SwitchToThread") >= waits - 1:
+                # where the flag is: the first argument of the read
+                harness.mu.mem_write(harness._fonts_done, b"\x01")
+            return 0
+
+        def remember(handler):
+            def wrapped(harness, arguments):
+                harness._fonts_done = arguments[0]
+                return handler(harness, arguments)
+            return wrapped
+
+        def name_of_list(harness, arguments, name=random_.choice((b"fonts.txt", b"english.txt", b""))):
+            buffer, size_ = arguments
+            harness.mu.mem_write(buffer, name + bytes(1))
+            return 0, (size_,)
+
+        t.check(
+            "fonts_initialize",
+            globals={
+                "font_slot_indices": random_.randbytes(44),
+                "font_slots": random_.randbytes(SLOTS * FONT_SIZE),
+                "fonts_initialized": bytes((random_.choice((0, 0, 0, 0, 1, 0x80)),)),
+                "unknown_0051ea00": random_.randbytes(1),
+                "unknown_00547f29": random_.randbytes(1),
+                "unknown_004ed39e": random_.randbytes(1),
+                "unknown_004ed39d": random_.randbytes(1),
+                "unknown_004ed3a0": random_.randbytes(4),
+                "unknown_00527330": bytes((random_.choice((0, 1, 0x80)),)),
+                "unknown_00527334": struct.pack("<I", random_.choice((3, 8, 0, 4, 0x103))),
+            },
+            externals={
+                "unknown_00121b00": lambda harness, arguments, right=random_.choice((1, 1, 0, 0x100)): right,
+                "GetTickCount": lambda harness, arguments: 0x12345,
+                "unknown_000593e0": lambda harness, arguments: 0,
+                "unknown_00121570": name_of_list,
+                "unknown_001a1480": remember(start),
+                "SwitchToThread": wait,
+                "font_load": lambda harness, arguments: (0, (arguments[0], text(harness, arguments[1]), arguments[2] & 0xFF)),
+                "font_characters_new": lambda harness, arguments: 0,
+                "font_cache_new": lambda harness, arguments: 0,
+            },
+        )

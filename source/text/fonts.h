@@ -32,6 +32,11 @@ enum
 
 	FONT_NAME_LENGTH= 31,
 	FONT_PATH_LENGTH= 256,
+	/* of the file that says which fonts there are, and of what is read of it */
+	FONT_LIST_NAME_LENGTH= 256,
+	FONT_LIST_SIZE= 0x800,
+	/* the index of a font that is not there */
+	FONT_INDEX_NONE= -2,
 	/* in the file of a font: what goes to its place */
 	FONT_FILE_HEADER_OFFSET= 0x200,
 
@@ -105,6 +110,7 @@ typedef char verify_font_kerning_characters_offset[
 /* ---------- prototypes/FONTS.C */
 
 long ASYNC_CALLBACK font_load_work(void *parameters);
+void fonts_initialize(void);
 void font_load(long font_slot_index, const char *name, boolean wait);
 struct font *font_get(long font_slot_index);
 long font_get_line_height(long font_index);
@@ -114,6 +120,7 @@ long font_character_decode_pixels(const byte *source, long size, word *pixels);
 /* ---------- globals */
 
 extern struct font font_slots[NUMBER_OF_FONT_SLOTS];
+extern boolean fonts_initialized;
 extern const char *font_directory;
 
 #endif
