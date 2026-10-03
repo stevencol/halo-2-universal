@@ -2,6 +2,37 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Una orientación después de otra
+
+Una función. De 670 funciones se pasa a 671, el 5,96 % de las del juego
+(el 3,102 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `orientation_multiply` | `0x0011dbb0` | `math/real_math.c` |
+
+### Lo que se sabe
+
+- Compone dos orientaciones: primero `b` y luego `a`. Los giros se
+  multiplican (`quaternion_multiply`), la posición de `b` se gira con el
+  giro de `a`, se escala con la escala de `a` y se le suma la posición de
+  `a`, y las escalas se multiplican.
+- Con escala 1 no se multiplica nada (la escala del resultado es la de `b`).
+- El resultado puede ser una de las dos: entonces esa se copia antes a un
+  sitio aparte (si son las dos, se copian al mismo, que es lo mismo).
+- Es la pareja de `orientation_inverse`. El nombre es una suposición.
+
+### Mutaciones
+
+19 líneas rotas a propósito: 18 detectadas.
+
+### Sin comprobar
+
+- Una mutación es equivalente: no copiar `b` cuando el resultado es `b`.
+  Todo lo que se lee de `b` se lee antes de escribirlo en el resultado.
+
 ## 2026-10-02 — Hito 120: deshacer una orientación
 
 Una función. De 669 funciones se pasa a 670, el 5,95 % de las del juego

@@ -166,6 +166,64 @@ unsigned char __attribute__((stdcall)) limit_angle_between_vectors3d(
 	return 1;
 }
 
+/* 0x0011dbb0: the orientation that is one after another: b, and then a.
+The rotations are multiplied, the translation of b is turned and scaled by a
+and moved by a's, and the scales are multiplied. The result can be either of
+the two; then that one is copied first (if both are, both go to the same
+copy, which is the same). The name is a guess */
+void __attribute__((stdcall)) orientation_multiply(
+	real_orientation *result,
+	const real_orientation *a,
+	const real_orientation *b)
+{
+	real_orientation copy;
+	real dot;
+	real twice_w;
+	real w_squared;
+	real cross_i;
+	real cross_j;
+	real cross_k;
+
+	if (a==result)
+	{
+		copy= *a;
+		a= &copy;
+	}
+	if (b==result)
+	{
+		copy= *b;
+		b= &copy;
+	}
+	quaternion_multiply(&a->rotation, &b->rotation, &result->rotation);
+
+	/* b's translation turned by a's rotation */
+	dot= (a->rotation.v.j*b->translation.y + b->translation.x*a->rotation.v.i +
+		b->translation.z*a->rotation.v.k)*2.0f;
+	twice_w= a->rotation.w*2.0f;
+	w_squared= a->rotation.w*a->rotation.w*2.0f - 1.0f;
+	cross_j= b->translation.x*a->rotation.v.k - a->rotation.v.i*b->translation.z;
+	cross_k= a->rotation.v.i*b->translation.y - a->rotation.v.j*b->translation.x;
+	cross_i= a->rotation.v.j*b->translation.z - b->translation.y*a->rotation.v.k;
+	result->translation.x= cross_i*twice_w + b->translation.x*w_squared + a->rotation.v.i*dot;
+	result->translation.y= a->rotation.v.j*dot + cross_j*twice_w + w_squared*b->translation.y;
+	result->translation.z= b->translation.z*w_squared + cross_k*twice_w + dot*a->rotation.v.k;
+
+	if (a->scale!=1.0f)
+	{
+		result->translation.x= result->translation.x*a->scale;
+		result->translation.y= result->translation.y*a->scale;
+		result->translation.z= result->translation.z*a->scale;
+		result->scale= b->scale*a->scale;
+	}
+	else
+	{
+		result->scale= b->scale;
+	}
+	result->translation.x= a->translation.x+result->translation.x;
+	result->translation.y= a->translation.y+result->translation.y;
+	result->translation.z= a->translation.z+result->translation.z;
+}
+
 /* 0x0011dd80: the orientation that undoes another: the other way round, from
 the other side, and the other size. An orientation of scale 0 is undone with
 a scale of 10000. The name is a guess */

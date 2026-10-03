@@ -35,6 +35,7 @@ VECTORS = (
 
 
 def run(t) -> None:
+    run_orientation_multiply(t)
     run_orientation_inverse(t)
     run_limit_angle(t)
     run_segments(t)
@@ -270,3 +271,32 @@ def run_orientation_inverse(t) -> None:
             t.check("orientation_inverse", buffer, Pointer(buffer, 0))
         else:
             t.check("orientation_inverse", Buffer(struct.pack("<8f", *(9.0,) * 8)), Buffer(orientation))
+
+
+def run_orientation_multiply(t) -> None:
+    import math
+
+    random_ = random.Random(121)
+
+    def orientation() -> bytes:
+        q = [random_.uniform(-1, 1) for _ in range(4)]
+        length = math.sqrt(sum(x * x for x in q)) or 1.0
+        q = [x / length for x in q]
+        translation = [random_.uniform(-50, 50) for _ in range(3)]
+        scale = random_.choice((1.0, 1.0, 1.0, 2.0, 0.5, 0.0, -1.0, random_.uniform(0.1, 4)))
+        return struct.pack("<8f", *q, *translation, scale)
+
+    for n in range(800):
+        a, b = orientation(), orientation()
+        same = n % 6
+        if same == 1:
+            buffer = Buffer(a)
+            t.check("orientation_multiply", buffer, Pointer(buffer, 0), Buffer(b))
+        elif same == 2:
+            buffer = Buffer(b)
+            t.check("orientation_multiply", buffer, Buffer(a), Pointer(buffer, 0))
+        elif same == 3:
+            buffer = Buffer(a)
+            t.check("orientation_multiply", buffer, Pointer(buffer, 0), Pointer(buffer, 0))
+        else:
+            t.check("orientation_multiply", Buffer(struct.pack("<8f", *(9.0,) * 8)), Buffer(a), Buffer(b))
