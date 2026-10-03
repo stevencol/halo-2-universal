@@ -8,6 +8,8 @@ gives the address it has there.
 #include "real_math.h"
 
 #include <math.h>
+#include <stdint.h>
+#include <string.h>
 
 /* ---------- globals */
 
@@ -22,7 +24,81 @@ guesses */
 real real_math_pi;
 real real_math_two_pi;
 
+static const real_vector3d forward3d= { 1.0f, 0.0f, 0.0f };
+
+/* 0x004687a8: the vector forward, (1, 0, 0). The name is Halo 1's */
+const real_vector3d *global_forward3d= &forward3d;
+
 /* ---------- code */
+
+/* the bits of a real */
+static inline __attribute__((always_inline)) uint32_t real_bits(
+	real value)
+{
+	uint32_t bits;
+
+	memcpy(&bits, &value, sizeof(bits));
+
+	return bits;
+}
+
+/* 0x0011cf50: the angle between two vectors of length 1, from 0 to pi: 0 for
+two that are the same to the bit. The name is a guess */
+real angle_between_vectors3d(
+	const real_vector3d *a,
+	const real_vector3d *b)
+{
+	real dot;
+
+	if (real_bits(b->i)==real_bits(a->i) && real_bits(b->j)==real_bits(a->j) && real_bits(b->k)==real_bits(a->k))
+	{
+		return 0.0f;
+	}
+	dot= b->k*a->k + b->j*a->j + b->i*a->i;
+	if (-1.0f>dot)
+	{
+		dot= -1.0f;
+	}
+	else if (dot>1.0f)
+	{
+		dot= 1.0f;
+	}
+
+	return acosf(dot);
+}
+
+/* 0x0011d090: a vector that is up for something that faces a way: at right
+angles to the way, and to the side, which is level. For a way that is
+straight up or down, the side is forward. The name is a guess */
+real_vector3d *generate_up_vector3d(
+	const real_vector3d *forward,
+	real_vector3d *up)
+{
+	real_vector3d side;
+	real i= -forward->i;
+	real j= forward->j;
+	real magnitude= sqrtf(i*i + j*j);
+	real_vector3d result;
+
+	if (k_real_epsilon>fabsf(magnitude) || magnitude==0.0f)
+	{
+		side= *global_forward3d;
+	}
+	else
+	{
+		real scale= 1.0f/magnitude;
+
+		side.i= scale*j;
+		side.j= scale*i;
+		side.k= scale*0.0f;
+	}
+	result.k= side.i*forward->j - forward->i*side.j;
+	result.j= forward->i*side.k - forward->k*side.i;
+	result.i= forward->k*side.j - side.k*forward->j;
+	*up= result;
+
+	return up;
+}
 
 /* 0x0011d790: the axis of the rotation of a quaternion, of length 1, and
 its angle, from 0 to pi: a rotation of more than pi is the other way. A

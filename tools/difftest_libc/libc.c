@@ -389,6 +389,26 @@ float atan2f(float y, float x)
 	return x;
 }
 
+float acosf(float value)
+{
+	/* as the game's library: the arc tangent of sqrt((1+x)(1-x)) over x, on
+	the x87, with the precision that it has */
+	__asm__(
+		"fld1\n\t"
+		"fadd %%st(1), %%st\n\t"
+		"fld1\n\t"
+		"fsub %%st(2), %%st\n\t"
+		"fmulp\n\t"
+		"fsqrt\n\t"
+		"fxch %%st(1)\n\t"
+		"fpatan"
+		: "+t"(value)
+		:
+		: "st(1)", "st(2)");
+
+	return value;
+}
+
 long lrintf(float value)
 {
 	long result;

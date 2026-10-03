@@ -130,11 +130,14 @@ typedef char verify_real_matrix4x3_size[
 
 extern const real_argb_color *global_real_argb_white;
 extern real real_math_pi;
+extern const real_vector3d *global_forward3d;
 extern real real_math_two_pi;
 
 /* ---------- prototypes/REAL_MATH.C */
 
 void quaternion_to_axis_angle(const real_quaternion *quaternion, real_vector3d *axis, real *angle);
+real angle_between_vectors3d(const real_vector3d *a, const real_vector3d *b);
+real_vector3d *generate_up_vector3d(const real_vector3d *forward, real_vector3d *up);
 
 real normalize2d(real_vector2d *vector);
 real normalize3d(real_vector3d *vector);

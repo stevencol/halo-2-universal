@@ -35,6 +35,7 @@ VECTORS = (
 
 
 def run(t) -> None:
+    run_angles(t)
     random_ = random.Random(3)
 
     vectors = list(VECTORS)
@@ -127,3 +128,36 @@ def run(t) -> None:
         lower = random_.uniform(-100, 100)
         upper = lower + random_.choice((0.0, 1.0, random_.uniform(0, 500), -random_.uniform(0, 5)))
         t.check("real_seed_random_range", Buffer(struct.pack("<I", seed)), f32(lower), f32(upper))
+
+
+def run_angles(t) -> None:
+    import math
+
+    random_ = random.Random(116)
+
+    def unit() -> list[float]:
+        while True:
+            v = [random_.uniform(-1, 1) for _ in range(3)]
+            length = math.sqrt(sum(x * x for x in v))
+            if length > 0.1:
+                return [x / length for x in v]
+
+    special = ([0.0, 0.0, 1.0], [0.0, 0.0, -1.0], [1.0, 0.0, 0.0], [-0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [2.0, 0.0, 0.0], [1e-5, 1e-5, 1.0])
+    for n in range(400):
+        a = random_.choice(special) if n % 5 == 0 else unit()
+        choice = n % 4
+        b = list(a) if choice == 0 else [-x for x in a] if choice == 1 else random_.choice(special) if n % 7 == 0 else unit()
+        t.check("angle_between_vectors3d", reals(*a), reals(*b))
+        # zeros with a sign show the order of the operations
+        signed = ([0.0, 1.0, 0.0], [-0.0, 1.0, -0.0], [0.0, -1.0, 0.0], [-0.0, -1.0, 0.0])
+        forward = random_.choice(signed) if n % 4 == 1 else random_.choice(special) if n % 3 == 0 else unit()
+        t.check(
+            "generate_up_vector3d",
+            reals(*forward),
+            # the bytes: a zero has a sign
+            Buffer(struct.pack("<3f", 9.0, 9.0, 9.0)),
+            globals={"global_forward3d": reals(*random_.choice(([1.0, 0.0, 0.0], [0.25, -2.0, 3.5])))},
+        )
+    # two vectors that are the same but for k
+    for a, b in (([0.0, 0.0, 1.0], [0.0, 0.0, -1.0]), ([0.6, 0.8, 0.0], [0.6, 0.8, 1e-3]), ([0.0, 1.0, 0.0], [0.0, 1.0, -0.0])):
+        t.check("angle_between_vectors3d", reals(*a), reals(*b))

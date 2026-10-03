@@ -14,6 +14,7 @@ float fabsf(float value);
 float sinf(float value);
 float cosf(float value);
 float atan2f(float y, float x);
+float acosf(float value);
 /* to the nearest integer; to the even one, halfway between two */
 long lrintf(float value);
 

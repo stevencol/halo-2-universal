@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — El ángulo entre dos vectores y un vector «arriba»
+
+Dos funciones. De 664 funciones se pasa a 666, el 5,91 % de las del
+juego (el 3,044 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `angle_between_vectors3d` | `0x0011cf50` | `math/real_math.c` |
+| `generate_up_vector3d` | `0x0011d090` | `math/real_math.c` |
+
+También el global `global_forward3d` (`0x004687a8`): el puntero al vector
+(1, 0, 0). Junto a él están los de los otros cinco ejes y el vector cero,
+como en Halo 1.
+
+### Lo que se sabe
+
+- `angle_between_vectors3d`: el arcocoseno del producto escalar, recortado
+  entre -1 y 1. Dos vectores **iguales bit a bit** dan 0 sin calcular nada.
+- Usa el `acos` de la biblioteca del juego, que calcula en la x87
+  `atan2(sqrt((1+x)(1-x)), x)` con la precisión que tenga la FPU; la libc
+  de las pruebas tiene ahora un `acosf` que hace lo mismo.
+- `generate_up_vector3d`: un vector «arriba» para algo que mira en una
+  dirección: perpendicular a la dirección y al lado (que es horizontal). Si
+  la dirección es vertical, el lado es «adelante».
+- Los dos nombres son suposiciones.
+
+### Herramientas
+
+- `acosf` en `tools/difftest_libc`.
+
+### Mutaciones
+
+19 líneas rotas a propósito: 18 detectadas. Tres pidieron casos con ceros
+con signo y comparar la salida bit a bit; otra, dos vectores que solo
+difieren en k.
+
+### Sin comprobar
+
+- Con NaN: el `acos` del juego entra en su manejo de errores (que el arnés no
+  tiene preparado), y en `generate_up_vector3d` qué NaN sale depende del
+  orden de los operandos de las multiplicaciones, que en C no se controla.
+  Por eso una mutación (multiplicar o no la tercera componente por la
+  escala) no se puede ver: solo cambia algo con NaN.
+
 ## 2026-10-02 — Crear los jugadores y ganar la partida
 
 Dos funciones. De 662 funciones se pasa a 664, el 5,89 % de las del
