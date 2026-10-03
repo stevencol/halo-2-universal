@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Girar un vector hasta otro
+
+Una función, con la que `matrix_math.c` queda completo. De 676 funciones se
+pasa a 677, el 6,01 % de las del juego (el 3,214 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `matrix4x3_rotation_between_vectors` | `0x001417b0` | `math/matrix_math.c` |
+
+Y los globales `global_identity_quaternion` (`0x004687cc`) y
+`global_identity4x3` (`0x004687d0`), con los nombres de Halo 1. Las pruebas
+ponen en lugar de `valid_real_vector3d_axes3` (`0x00143120`, sin
+descompilar) una que mira de verdad los vectores, una que siempre dice que
+sí y otra que siempre dice que no.
+
+### Lo que se sabe
+
+- Hace la matriz que gira la dirección de un vector hasta la de otro por el
+  camino más corto: saca el cuaternión con el coseno y el seno de medio
+  ángulo y el producto vectorial, y gira con él los tres vectores de la
+  matriz identidad.
+- Si los vectores van en la misma dirección no gira; si van en direcciones
+  opuestas da media vuelta alrededor de un vector perpendicular al primero
+  (`perpendicular3d`), que no se hace de longitud 1.
+- Cada vector de la matriz suma sus términos en un orden distinto (el
+  compilador del juego los reordenó), y el código lo copia término a
+  término para que salga lo mismo bit a bit.
+- Si los vectores no salen de longitud 1 y en ángulo recto, la rotación se
+  rehace desde `up` y `forward` con productos vectoriales.
+- El nombre es inventado.
+
+### Mutaciones
+
+43 líneas rotas a propósito: las 43 detectadas. Dos primeras versiones no
+se detectaban porque no cambiaban nada (sumar dos términos al revés y
+multiplicar por 0,5 antes o después de restar dan lo mismo) y se cambiaron
+por otras que sí cambian el resultado; otra no compilaba y se rehízo.
+
 ## 2026-10-03 — Pedir otro BSP
 
 Una función. De 675 funciones se pasa a 676, el 6,00 % de las del juego

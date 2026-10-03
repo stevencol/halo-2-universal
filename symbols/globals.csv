@@ -160,3 +160,5 @@ address,name,source
 004687a8,global_forward3d,source/math/real_math.c
 004687b0,global_up3d,source/math/real_math.c
 004687bc,global_down3d,source/math/real_math.c
+004687cc,global_identity_quaternion,source/math/real_math.c
+004687d0,global_identity4x3,source/math/real_math.c

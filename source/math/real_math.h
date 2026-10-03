@@ -133,6 +133,8 @@ extern real real_math_pi;
 extern const real_vector3d *global_forward3d;
 extern const real_vector3d *global_up3d;
 extern const real_vector3d *global_down3d;
+extern const real_quaternion *global_identity_quaternion;
+extern const real_matrix4x3 *global_identity4x3;
 extern real real_math_two_pi;
 
 /* ---------- prototypes/REAL_MATH.C */
@@ -224,6 +226,10 @@ static inline real reciprocal_square_root_estimate(
 void matrix4x3_inverse(const real_matrix4x3 *matrix, real_matrix4x3 *result);
 void matrix4x3_translation(real_matrix4x3 *matrix, const real_point3d *point);
 void matrix4x3_rotation_from_vectors(real_matrix4x3 *matrix, const real_vector3d *forward, const real_vector3d *up);
+void matrix4x3_rotation_between_vectors(const real_vector3d *from, const real_vector3d *to, real_matrix4x3 *matrix);
+/* not decompiled: whether three vectors are of length 1 and at right angles
+to each other. The name is Halo 1's */
+unsigned char valid_real_vector3d_axes3(const real_vector3d *forward, const real_vector3d *left, const real_vector3d *up);
 void matrix4x3_rotation_from_angles(real_matrix4x3 *matrix, real yaw, real pitch, real roll);
 void matrix4x3_from_point_and_vectors(real_matrix4x3 *matrix, const real_point3d *point,
 	const real_vector3d *forward, const real_vector3d *up);

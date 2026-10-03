@@ -1054,3 +1054,5 @@ address,name,source,arguments,returns,convention
 0012b790,main_save_map,source/main/main.c,,void
 001896c0,unknown_001896c0,,stack xmm0,void
 0012b850,main_switch_structure_bsp,source/main/main.c,eax,void
+001417b0,matrix4x3_rotation_between_vectors,source/math/matrix_math.c,ecx edx stack,void
+00143120,valid_real_vector3d_axes3,,esi edi ebx,bool

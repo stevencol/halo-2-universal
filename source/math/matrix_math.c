@@ -111,6 +111,97 @@ void matrix4x3_rotation_from_vectors(
 	return;
 }
 
+/* 0x001417b0: the rotation that turns the direction of one vector to that
+of another the shortest way. Two vectors of opposite directions turn half a
+turn about a vector at a right angle to the first (not made of length 1).
+Each vector of the matrix is turned by the quaternion of the rotation, the
+sums in the game's order, which is not the same for the three; if they come
+out wrong the rotation is made again from up and forward. The name is a
+guess */
+void matrix4x3_rotation_between_vectors(
+	const real_vector3d *from,
+	const real_vector3d *to,
+	real_matrix4x3 *matrix)
+{
+	real dot= from->j*to->j + from->i*to->i + to->k*from->k;
+	real cosine;
+	real sine;
+	real scale;
+	real_quaternion quaternion;
+	real w2;
+	real m;
+	real d;
+	real_vector3d v;
+
+	if (dot<-1.0f)
+	{
+		dot= -1.0f;
+	}
+	else if (dot>1.0f)
+	{
+		dot= 1.0f;
+	}
+	/* of half the angle */
+	cosine= sqrtf((dot+1.0f)*0.5f);
+	sine= sqrtf((1.0f-dot)*0.5f);
+	scale= sine*cosine*2.0f;
+	if (scale!=0.0f)
+	{
+		/* the cross product is of length sine*cosine*2 */
+		real factor= sine/scale;
+
+		quaternion.v.i= (from->j*to->k - from->k*to->j)*factor;
+		quaternion.v.j= (to->i*from->k - to->k*from->i)*factor;
+		quaternion.v.k= (from->i*to->j - from->j*to->i)*factor;
+		quaternion.w= cosine;
+	}
+	else if (dot<0.0f)
+	{
+		perpendicular3d(from, &quaternion.v);
+		quaternion.w= 0.0f;
+	}
+	else
+	{
+		quaternion= *global_identity_quaternion;
+	}
+
+	/* a vector v turns to v*(2w^2 - 1) + q*2(q.v) + (q x v)*2w */
+	m= quaternion.w*quaternion.w*2.0f - 1.0f;
+	*matrix= *global_identity4x3;
+	w2= quaternion.w*2.0f;
+
+	v= matrix->forward;
+	d= (v.i*quaternion.v.i + v.k*quaternion.v.k + v.j*quaternion.v.j)*2.0f;
+	matrix->forward.i= (v.k*quaternion.v.j - v.j*quaternion.v.k)*w2 + v.i*m + d*quaternion.v.i;
+	matrix->forward.j= v.j*m + quaternion.v.j*d + (v.i*quaternion.v.k - v.k*quaternion.v.i)*w2;
+	matrix->forward.k= v.k*m + quaternion.v.k*d + (v.j*quaternion.v.i - v.i*quaternion.v.j)*w2;
+
+	v= matrix->up;
+	d= (v.i*quaternion.v.i + quaternion.v.k*v.k + quaternion.v.j*v.j)*2.0f;
+	matrix->up.i= (quaternion.v.j*v.k - quaternion.v.k*v.j)*w2 + v.i*m + d*quaternion.v.i;
+	matrix->up.j= (v.i*quaternion.v.k - quaternion.v.i*v.k)*w2 + quaternion.v.j*d + m*v.j;
+	matrix->up.k= (quaternion.v.i*v.j - v.i*quaternion.v.j)*w2 + quaternion.v.k*d + m*v.k;
+
+	v= matrix->left;
+	d= (v.k*quaternion.v.k + v.j*quaternion.v.j + v.i*quaternion.v.i)*2.0f;
+	matrix->left.i= (v.k*quaternion.v.j - v.j*quaternion.v.k)*w2 + v.i*m + d*quaternion.v.i;
+	matrix->left.j= v.j*m + quaternion.v.j*d + (v.i*quaternion.v.k - v.k*quaternion.v.i)*w2;
+	matrix->left.k= v.k*m + quaternion.v.k*d + (v.j*quaternion.v.i - v.i*quaternion.v.j)*w2;
+
+	if (!valid_real_vector3d_axes3(&matrix->forward, &matrix->left, &matrix->up))
+	{
+		/* left is up x forward and forward is left x up */
+		normalize3d(&matrix->up);
+		matrix->left.i= matrix->up.j*matrix->forward.k - matrix->up.k*matrix->forward.j;
+		matrix->left.j= matrix->forward.i*matrix->up.k - matrix->up.i*matrix->forward.k;
+		matrix->left.k= matrix->up.i*matrix->forward.j - matrix->forward.i*matrix->up.j;
+		normalize3d(&matrix->left);
+		matrix->forward.i= matrix->up.k*matrix->left.j - matrix->left.k*matrix->up.j;
+		matrix->forward.j= matrix->left.k*matrix->up.i - matrix->up.k*matrix->left.i;
+		matrix->forward.k= matrix->up.j*matrix->left.i - matrix->up.i*matrix->left.j;
+	}
+}
+
 /* 0x00141ce0 */
 void matrix4x3_rotation_from_angles(
 	real_matrix4x3 *matrix,

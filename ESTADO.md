@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-03, al terminar el hito 126.
+**Última actualización:** 2026-10-03, al terminar el hito 127.
 
 ## Dónde estamos
 
-- **676 funciones descompiladas de 11.265: el 6,00 % del juego** (el
-  3,169 % de los bytes de código).
-- Las 676 están comprobadas contra el ejecutable original
+- **677 funciones descompiladas de 11.265: el 6,01 % del juego** (el
+  3,214 % de los bytes de código).
+- Las 677 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile asking for another structure bsp* (ver `git log`).
+- Último hito: *Decompile the rotation from one vector to another* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -107,7 +107,7 @@ Módulos (funciones hechas / archivo):
       `0x0001ee50`, `0x0001ee60` y `0x0001ef70`, que hablan con la consola)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
 - [ ] Matemáticas reales — `math\real_math.c` (32 de unas 50)
-- [ ] Matrices — `math\matrix_math.c` (25; queda 1, `0x001417b0`)
+- [x] Matrices — `math\matrix_math.c` (26: completo)
 - [ ] Números aleatorios — `math\random_math.c` (2)
 - [ ] Colores y bitmaps — `bitmaps\` (17: 6 de colores y 11 en
       `bitmaps.c`; de este faltan `0x001358e0`, `0x00135ca0`, `0x00136140` y
@@ -207,8 +207,7 @@ Módulos (funciones hechas / archivo):
       `0x0018ed00`, que abren y cierran un mapa.
 - [ ] **Resto de las tareas de archivo:** `0x001a0a70` (abre un archivo
       esperando; necesita `0x001a1870`, que hace su ruta).
-- [ ] **Matemáticas que quedan:** las grandes de `real_math.c` y una de
-      matrices.
+- [ ] **Matemáticas que quedan:** las grandes de `real_math.c`.
 
 ## Lo que falta en grande
 

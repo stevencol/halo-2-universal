@@ -38,6 +38,21 @@ static const real_vector3d down3d= { 0.0f, 0.0f, -1.0f };
 const real_vector3d *global_up3d= &up3d;
 const real_vector3d *global_down3d= &down3d;
 
+static const real_quaternion identity_quaternion= { { 0.0f, 0.0f, 0.0f }, 1.0f };
+static const real_matrix4x3 identity4x3=
+{
+	1.0f,
+	{ 1.0f, 0.0f, 0.0f },
+	{ 0.0f, 1.0f, 0.0f },
+	{ 0.0f, 0.0f, 1.0f },
+	{ 0.0f, 0.0f, 0.0f }
+};
+
+/* 0x004687cc and 0x004687d0: the quaternion that does not turn and the
+matrix that changes nothing. The names are Halo 1's */
+const real_quaternion *global_identity_quaternion= &identity_quaternion;
+const real_matrix4x3 *global_identity4x3= &identity4x3;
+
 /* the corners and the edges of a box */
 #define RECTANGLE3D_VERTEX_COUNT 8
 #define RECTANGLE3D_EDGE_COUNT 12

@@ -164,3 +164,74 @@ def run(t) -> None:
             reals(*matrix4x3(random_, random_.choice((1.0, 1.0, 2.0)))),
             globals=angles(),
         )
+
+    # ---------- the rotation from one vector to another
+
+    def direction() -> list[float]:
+        choice = random_.randrange(6)
+        if choice == 0:
+            return [random_.uniform(-3, 3) for _ in range(3)]
+        if choice == 1:
+            # along an axis, so that two of them can be of exactly the same
+            # or the opposite direction
+            v = [0.0, 0.0, 0.0]
+            v[random_.randrange(3)] = random_.choice((1.0, -1.0, 2.0, -0.5))
+            return v
+        return list(unit(random_))
+
+    def axes3(mode: str):
+        def valid(harness, arguments) -> int:
+            if mode != "compute":
+                return 1 if mode == "valid" else 0
+            vectors = [struct.unpack("<3f", harness.mu.mem_read(address, 12)) for address in arguments]
+
+            def dot(a, b):
+                return sum(x * y for x, y in zip(a, b))
+
+            for n, a in enumerate(vectors):
+                if abs(dot(a, a) - 1.0) > 0.001:
+                    return 0
+                for b in vectors[n + 1 :]:
+                    if abs(dot(a, b)) > 0.001:
+                        return 0
+            return 1
+
+        return valid
+
+    def identities() -> dict:
+        if random_.random() < 0.7:
+            quaternion_ = [0.0, 0.0, 0.0, 1.0]
+            matrix = [1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+        else:
+            quaternion_ = [random_.uniform(-1, 1) for _ in range(4)]
+            matrix = [random_.uniform(-2, 2) for _ in range(13)]
+        return {"global_identity_quaternion": reals(*quaternion_), "global_identity4x3": reals(*matrix)}
+
+    def rotation_between_vectors(from_: list[float], to: list[float], mode: str) -> None:
+        # the matrix is compared as bytes, to tell 0 from -0
+        t.check(
+            "matrix4x3_rotation_between_vectors",
+            reals(*from_),
+            reals(*to),
+            Buffer(random_.randbytes(13 * 4)),
+            globals=identities(),
+            externals={"valid_real_vector3d_axes3": axes3(mode)},
+        )
+
+    for _ in range(400):
+        from_ = direction()
+        to = direction() if random_.random() < 0.7 else [x * random_.choice((1.0, -1.0, 3.0, -2.0)) for x in from_]
+        rotation_between_vectors(from_, to, random_.choice(("compute", "compute", "valid", "invalid")))
+    # the same and the opposite directions, at and past the ends of the
+    # cosine
+    for from_, to in (
+        ([1.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
+        ([1.0, 0.0, 0.0], [-1.0, 0.0, 0.0]),
+        ([0.0, 2.0, 0.0], [0.0, 3.0, 0.0]),
+        ([0.0, 2.0, 0.0], [0.0, -3.0, 0.0]),
+        ([0.0, 0.0, -1.0], [0.0, 0.0, 1.0]),
+        ([0.5, 0.0, 0.0], [-2.0, 0.0, 0.0]),
+        ([0.0, 0.0, 0.0], [0.0, 0.0, 0.0]),
+    ):
+        for mode in ("compute", "valid", "invalid"):
+            rotation_between_vectors(from_, to, mode)
