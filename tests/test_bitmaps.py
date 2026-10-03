@@ -3,7 +3,7 @@
 import random
 import struct
 
-from difftest import Buffer, f32
+from difftest import Buffer, Pointer, f32
 
 
 def reals(*values: float) -> Buffer:
@@ -209,4 +209,87 @@ def run(t) -> None:
                 "VirtualAlloc": allocate,
                 "GetLastError": lambda harness, arguments: 8,
             },
+        )
+
+    # ---------- a pixel
+
+    random_ = random.Random(140)
+    PIXELS_SIZE = 0x800
+
+    def pixel_externals():
+        def to_a8r8g8b8(harness, arguments):
+            format_, pixels, index = arguments
+            return ((format_ & 0xFFFF) * 0x01000193 ^ index) & 0xFFFFFFFF, (format_ & 0xFFFF, harness.normalize(pixels), index)
+
+        def swizzle(harness, arguments):
+            # the registers have only their low 16 bits looked at
+            width, y, x = (value & 0xFFFF for value in arguments[:3])
+            height, index = arguments[3:]
+            harness.mu.mem_write(index, struct.pack("<2I", x * 3 & 0xFFFF, (y * 5 + width) << 16 & 0xFFFFFFFF))
+            # the index is on the stack, which is not the same in both
+            return 0, (width, y, x, height)
+
+        def block_color(harness, block, x, y) -> int:
+            try:
+                (value,) = struct.unpack("<I", harness.mu.mem_read(block, 4))
+            except Exception:
+                # a block out of the memory
+                value = 0xDEAD
+            return (value ^ (x & 0xFFFF) << 8 ^ (y & 0xFFFF) << 16) & 0xFFFFFFFF
+
+        def write_color(harness, color, value, x, y) -> None:
+            # a pixel of the block is left as it was: the game gives what
+            # was there, the flags
+            if (x, y) != (1, 3):
+                harness.mu.mem_write(color, struct.pack("<I", value))
+
+        def dxt1(harness, arguments):
+            color, block, x, y = arguments
+            write_color(harness, color, block_color(harness, block, x, y), x, y)
+            return 0, ("dxt1", harness.normalize(block), x, y)
+
+        def dxt3(harness, arguments):
+            block, x, y, color = arguments
+            write_color(harness, color, block_color(harness, block, x, y) ^ 0x33, x, y)
+            return 0, ("dxt3", harness.normalize(block), x & 0xFFFFFFFF, y & 0xFFFFFFFF)
+
+        def dxt5(harness, arguments):
+            block, color, x, y = arguments
+            write_color(harness, color, block_color(harness, block, x, y) ^ 0x55, x, y)
+            return 0, ("dxt5", harness.normalize(block), x, y)
+
+        return {
+            "bitmap_format_to_a8r8g8b8": to_a8r8g8b8,
+            "unknown_000358d0": swizzle,
+            "unknown_00223ed0": dxt1,
+            "unknown_00224040": dxt3,
+            "unknown_00224080": dxt5,
+        }
+
+    externals = pixel_externals()
+    for _ in range(600):
+        pixels = Buffer(random_.randbytes(PIXELS_SIZE))
+        # the buffer that a compressed block has to be in, and where the
+        # pixels start in it
+        start = random_.choice((0, 0, 0x40, 0x100))
+        size = random_.choice((PIXELS_SIZE - start, 0x200, 0x40, 8))
+        # the pixels can start just at the end of the buffer
+        base = random_.choice((start, start, start + 0x10, 0x600, min(start + size, PIXELS_SIZE)))
+        compressed = random_.random() < 0.6
+        format_ = random_.choice((14, 15, 16, 14, 15, 16, 0, 2)) if compressed else random_.choice(range(24))
+        flags = random_.getrandbits(32) & ~0xA | (2 if compressed else 0) | random_.choice((0, 8))
+        t.check(
+            "bitmap_get_pixel",
+            random_.choice((0, 1, 3, 4, 7, 12, 31, 63, -1, -5)),
+            random_.choice((4, 8, 16, 32, 64, 3, 0)),
+            Pointer(pixels, start),
+            size,
+            Pointer(pixels, base),
+            random_.choice((0, 1, 2, 3, 4, 5, 15, 28, 60, -1, -6)),
+            random_.choice((4, 16, 64, 1)),
+            format_,
+            flags,
+            extra=[pixels],
+            globals={"bitmap_pixel_out_of_bounds": bytes([random_.choice((0, 0, 1, 7))])},
+            externals=externals,
         )

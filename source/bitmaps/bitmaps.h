@@ -45,6 +45,8 @@ long bitmap_3d_get_pixel_address(const struct bitmap_data *bitmap, short x, shor
 long bitmap_cube_map_get_pixel_address(const struct bitmap_data *bitmap, short x, short y, short face,
 	short mipmap_index);
 long bitmap_pixels_size(const struct bitmap_data *bitmap);
+unsigned long __attribute__((stdcall)) bitmap_get_pixel(short y, short width, const byte *buffer,
+	unsigned long buffer_size, const byte *pixels, short x, short height, short format, unsigned long flags);
 long bitmap_mipmap_pixel_count(const struct bitmap_data *bitmap, byte mipmap_index);
 long bitmap_row_size(byte mipmap_index, const struct bitmap_data *bitmap);
 long bitmap_dimensions_mipmap_size(short width, byte mipmap_index, short height, short depth, short format,
@@ -55,5 +57,6 @@ long bitmap_dimensions_size(short mipmap_count, short width, short height, short
 /* ---------- globals */
 
 extern const short bitmap_format_bits_per_pixel[NUMBER_OF_BITMAP_FORMATS];
+extern boolean bitmap_pixel_out_of_bounds;
 
 #endif

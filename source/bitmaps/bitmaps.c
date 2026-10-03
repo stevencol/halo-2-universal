@@ -37,6 +37,26 @@ const short bitmap_format_bits_per_pixel[NUMBER_OF_BITMAP_FORMATS]=
 	8, 8, 8, 16, 0, 0, 16, 0, 16, 16, 32, 32, 0, 0, 4, 8, 8, 8, 8, 128, 96, 48, 16, 16
 };
 
+/* 0x0055e72c: set when bitmap_get_pixel is asked for a block of a
+compressed bitmap out of its pixels */
+boolean bitmap_pixel_out_of_bounds;
+
+/* ---------- prototypes of functions that are not decompiled */
+
+/* 0x00135ca0: a pixel of a format as one of 32 bits, alpha, red, green and
+blue. The name is Halo 1's */
+unsigned long bitmap_format_to_a8r8g8b8(short format, const byte *pixels, long pixel_index);
+
+/* 0x000358d0: where a pixel is in a swizzled texture of a width and a
+height, in two parts that are or'ed */
+void __attribute__((stdcall)) unknown_000358d0(short width, short y, short x, long height, unsigned long *index);
+
+/* 0x00223ed0, 0x00224040 and 0x00224080: a pixel of a block of 4 by 4 of
+the formats dxt1, dxt3 and dxt5 */
+void __attribute__((stdcall)) unknown_00223ed0(unsigned long *color, const byte *block, long x, long y);
+void __attribute__((stdcall)) unknown_00224040(const byte *block, long x, long y, unsigned long *color);
+void __attribute__((stdcall)) unknown_00224080(const byte *block, unsigned long *color, long x, long y);
+
 /* ---------- code */
 
 /* one of the sizes of a bitmap at a mipmap: half at each one, and no less
@@ -286,6 +306,72 @@ long bitmap_pixels_size(
 	}
 
 	return bitmap_format_get_bits_per_pixel(bitmap->format)*pixel_count/BITS_PER_BYTE;
+}
+
+/* 0x00136140: a pixel of some pixels of a width, as one of 32 bits. A
+pixel of a compressed bitmap is from its block of 4 by 4, which has to be
+in a buffer; if it is not, the first block of the buffer is looked at and
+bitmap_pixel_out_of_bounds is set. 0 for a compressed format that is not
+dxt. The name is a guess */
+unsigned long __attribute__((stdcall)) bitmap_get_pixel(
+	short y,
+	short width,
+	const byte *buffer,
+	unsigned long buffer_size,
+	const byte *pixels,
+	short x,
+	short height,
+	short format,
+	unsigned long flags)
+{
+	if (TEST_FLAG(flags, _bitmap_compressed_bit))
+	{
+		short block_size= (short)(bitmap_format_get_bits_per_pixel(format)*BITMAP_COMPRESSED_BLOCK_SIZE*
+			BITMAP_COMPRESSED_BLOCK_SIZE/BITS_PER_BYTE);
+		long block_index= (long)(short)(y/BITMAP_COMPRESSED_BLOCK_SIZE)*width/BITMAP_COMPRESSED_BLOCK_SIZE +
+			(short)(x/BITMAP_COMPRESSED_BLOCK_SIZE);
+		const byte *block= pixels+block_index*block_size;
+		long block_x= x&(BITMAP_COMPRESSED_BLOCK_SIZE-1);
+		long block_y= y&(BITMAP_COMPRESSED_BLOCK_SIZE-1);
+		/* where the game leaves the pixel is where it was given the flags */
+		unsigned long color= flags;
+
+		if (block<buffer || block>=buffer+buffer_size)
+		{
+			if (!bitmap_pixel_out_of_bounds)
+			{
+				bitmap_pixel_out_of_bounds= TRUE;
+			}
+			block_y= 0;
+			block= buffer;
+			block_x= 0;
+		}
+		switch (format)
+		{
+		case _bitmap_format_dxt1:
+			unknown_00223ed0(&color, block, block_x, block_y);
+			break;
+		case _bitmap_format_dxt3:
+			unknown_00224040(block, block_x, block_y, &color);
+			break;
+		case _bitmap_format_dxt5:
+			unknown_00224080(block, &color, block_x, block_y);
+			break;
+		default:
+			return 0;
+		}
+
+		return color;
+	}
+	if (TEST_FLAG(flags, _bitmap_swizzled_bit))
+	{
+		unsigned long index[2];
+
+		unknown_000358d0(width, y, x, height, index);
+		return bitmap_format_to_a8r8g8b8(format, pixels, (long)(index[1]|index[0]));
+	}
+
+	return bitmap_format_to_a8r8g8b8(format, pixels, (long)y*width + x);
 }
 
 /* 0x001364e0: the pixels of a mipmap of a bitmap: of its six faces, if it

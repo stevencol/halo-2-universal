@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Leer un píxel de un bitmap
+
+Una función de `bitmaps/bitmaps.c`. De 703 funciones se pasa a 704, el
+6,25 % de las del juego (el 3,359 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `bitmap_get_pixel` | `0x00136140` | `bitmaps/bitmaps.c` |
+
+También el global `bitmap_pixel_out_of_bounds` (`0x0055e72c`). Las pruebas
+ponen en lugar del paso de un píxel a 32 bits (`0x00135ca0`, el
+`bitmap_format_to_a8r8g8b8` de Halo 1), del índice de un píxel en una
+textura con swizzle (`0x000358d0`) y de los tres decodificadores de bloques
+DXT (`0x00223ed0`, `0x00224040` y `0x00224080`) unos que dan valores que
+dependen de lo que reciben; cada uno toma sus argumentos en registros
+distintos.
+
+### Lo que se sabe
+
+- Lee el píxel `(x, y)` de unos píxeles de un ancho como uno de 32 bits.
+- En un bitmap comprimido busca el bloque de 4 por 4 que lo tiene (con
+  divisiones con signo, como el juego) y se lo pasa al decodificador de su
+  formato DXT con la posición dentro del bloque. El bloque tiene que estar
+  dentro de un búfer; si no, se usa el primero del búfer y se enciende
+  `bitmap_pixel_out_of_bounds`. Un formato comprimido que no es DXT da 0.
+- El decodificador deja el píxel donde el juego recibió las banderas: si
+  no escribe nada, la función devuelve las banderas.
+- En uno sin comprimir, el índice es `y*ancho + x`, o el de la textura con
+  swizzle si el bitmap lo tiene.
+- El nombre es inventado.
+
+### Mutaciones
+
+24 líneas rotas a propósito: las 24 detectadas. Al principio dos se
+escapaban y otras dos solo se «detectaban» porque la prueba fallaba; se
+arreglaron los simuladores (números con signo, un bloque fuera de la
+memoria y un decodificador que a veces no escribe) y se añadieron píxeles
+que empiezan justo al final del búfer.
+
 ## 2026-10-03 — Actualizar cada canal de sonido
 
 Una función de `sound/sound_manager.c`, que ya se llamaba como

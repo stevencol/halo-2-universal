@@ -1092,3 +1092,9 @@ address,name,source,arguments,returns,convention
 0011f5f0,real_rectangle2d_enclose_points,source/math/real_math.c,eax ebx esi,void
 0011f770,real_rectangle3d_enclose_points,source/math/real_math.c,eax edx ebx,void
 0012a450,unknown_0012a450,,eax,void
+00136140,bitmap_get_pixel,source/bitmaps/bitmaps.c,ecx edx stack stack stack stack stack stack stack,int,stdcall
+00135ca0,bitmap_format_to_a8r8g8b8,,edx ecx eax,int
+000358d0,unknown_000358d0,,eax ecx edx stack stack,void,stdcall
+00223ed0,unknown_00223ed0,,eax stack stack stack,void,stdcall
+00224040,unknown_00224040,,stack ebx esi edi,void,stdcall
+00224080,unknown_00224080,,ebx stack stack stack,void,stdcall
