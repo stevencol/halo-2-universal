@@ -1098,3 +1098,4 @@ address,name,source,arguments,returns,convention
 00223ed0,unknown_00223ed0,,eax stack stack stack,void,stdcall
 00224040,unknown_00224040,,stack ebx esi edi,void,stdcall
 00224080,unknown_00224080,,ebx stack stack stack,void,stdcall
+001362b0,bitmap_sample,source/bitmaps/bitmaps.c,eax xmm1 stack,int

@@ -12,6 +12,7 @@ that these functions are of it is a guess, and so are their names.
 
 #include "cache/texture_cache.h"
 
+#include <math.h>
 #include <string.h>
 
 /* ---------- prototypes of functions of the console's libraries */
@@ -372,6 +373,79 @@ unsigned long __attribute__((stdcall)) bitmap_get_pixel(
 	}
 
 	return bitmap_format_to_a8r8g8b8(format, pixels, (long)y*width + x);
+}
+
+/* one of the coordinates of a pixel at a point of a bitmap from 0 to 1, of
+a size: the nearest, and the bitmap is as if it was repeated */
+static inline __attribute__((always_inline)) long bitmap_sample_coordinate(
+	short size,
+	real coordinate)
+{
+	long pixel= lrintf((real)size*coordinate - 0.5f);
+
+	if ((size&(size-1))==0)
+	{
+		return pixel&(size-1);
+	}
+
+	return (pixel%size + size)%size;
+}
+
+/* 0x001362b0: the pixel of a bitmap at a point from 0 to 1, as one of 32
+bits, at a detail: 1 or more is the largest mipmap, and less goes to the
+smaller ones. NONE for a bitmap whose pixels are not there. The name is a
+guess */
+unsigned long bitmap_sample(
+	const struct bitmap_data *bitmap,
+	real detail,
+	const real_point2d *point)
+{
+	long mipmap_index;
+	short width;
+	short height;
+	long x;
+	long y;
+	long address;
+
+	if (!bitmap->base_address)
+	{
+		return NONE;
+	}
+	if (1.0f>detail && bitmap->mipmap_count>0)
+	{
+		mipmap_index= lrintf((1.0f-detail)*(real)bitmap->mipmap_count);
+	}
+	else
+	{
+		mipmap_index= 0;
+	}
+	width= bitmap_mipmap_dimension(bitmap->width, (byte)mipmap_index);
+	if (TEST_FLAG(bitmap->flags, _bitmap_compressed_bit))
+	{
+		width= bitmap_dimension_round_up_to_block(width);
+	}
+	height= bitmap_mipmap_dimension(bitmap->height, (byte)mipmap_index);
+	if (TEST_FLAG(bitmap->flags, _bitmap_compressed_bit))
+	{
+		height= bitmap_dimension_round_up_to_block(height);
+	}
+	x= bitmap_sample_coordinate(width, point->x);
+	y= bitmap_sample_coordinate(height, point->y);
+	switch (bitmap->type)
+	{
+	case _bitmap_type_2d:
+		address= bitmap_2d_get_pixel_address(bitmap, (short)mipmap_index, 0, 0);
+		break;
+	case _bitmap_type_3d:
+		address= bitmap_3d_get_pixel_address(bitmap, 0, 0, 0, (short)mipmap_index);
+		break;
+	default:
+		address= bitmap_cube_map_get_pixel_address(bitmap, 0, 0, 0, (short)mipmap_index);
+		break;
+	}
+
+	return bitmap_get_pixel((short)y, width, (const byte *)bitmap->base_address, bitmap->pixels_sizes[0],
+		(const byte *)address, (short)x, height, bitmap->format, bitmap->flags);
 }
 
 /* 0x001364e0: the pixels of a mipmap of a bitmap: of its six faces, if it

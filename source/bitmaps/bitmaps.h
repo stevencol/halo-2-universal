@@ -45,6 +45,7 @@ long bitmap_3d_get_pixel_address(const struct bitmap_data *bitmap, short x, shor
 long bitmap_cube_map_get_pixel_address(const struct bitmap_data *bitmap, short x, short y, short face,
 	short mipmap_index);
 long bitmap_pixels_size(const struct bitmap_data *bitmap);
+unsigned long bitmap_sample(const struct bitmap_data *bitmap, real detail, const real_point2d *point);
 unsigned long __attribute__((stdcall)) bitmap_get_pixel(short y, short width, const byte *buffer,
 	unsigned long buffer_size, const byte *pixels, short x, short height, short format, unsigned long flags);
 long bitmap_mipmap_pixel_count(const struct bitmap_data *bitmap, byte mipmap_index);

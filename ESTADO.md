@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-03, al terminar el hito 140.
+**Última actualización:** 2026-10-03, al terminar el hito 141.
 
 ## Dónde estamos
 
-- **704 funciones descompiladas de 11.265: el 6,25 % del juego** (el
-  3,359 % de los bytes de código).
-- Las 704 están comprobadas contra el ejecutable original
+- **705 funciones descompiladas de 11.265: el 6,26 % del juego** (el
+  3,374 % de los bytes de código).
+- Las 705 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile reading a pixel of a bitmap* (ver `git log`).
+- Último hito: *Decompile sampling a bitmap at a point* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -111,9 +111,9 @@ Módulos (funciones hechas / archivo):
 - [ ] Matemáticas reales — `math\real_math.c` (38 de unas 50)
 - [x] Matrices — `math\matrix_math.c` (26: completo)
 - [ ] Números aleatorios — `math\random_math.c` (2)
-- [ ] Colores y bitmaps — `bitmaps\` (19: 6 de colores y 13 en
-      `bitmaps.c`; de este faltan `0x00135ca0`, que pasa un píxel de un
-      formato a 32 bits, y `0x001362b0`)
+- [ ] Colores y bitmaps — `bitmaps\` (20: 6 de colores y 14 en
+      `bitmaps.c`; de este falta `0x00135ca0`, que pasa un píxel de un
+      formato a 32 bits)
 - [ ] BSP 3D — `physics\bsp3d.c` (2)
 - [ ] Objetos — `objects\objects.c` (13 de cientos)
 - [ ] Componentes de Havok — `physics\havok_component.c` (14: la

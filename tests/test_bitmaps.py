@@ -1,5 +1,6 @@
 # source/bitmaps/bitmap_utilities.c and source/bitmaps/bitmap_color_conversion.c
 
+import math
 import random
 import struct
 
@@ -291,5 +292,50 @@ def run(t) -> None:
             flags,
             extra=[pixels],
             globals={"bitmap_pixel_out_of_bounds": bytes([random_.choice((0, 0, 1, 7))])},
+            externals=externals,
+        )
+
+    # ---------- the pixel at a point
+
+    random_ = random.Random(141)
+    PIXELS_AT = 0x100
+
+    def sampled_bitmap() -> Buffer:
+        """A bitmap with its pixels after it, in the same buffer."""
+        data = bytearray(random_.randbytes(PIXELS_AT + 0x800))
+        width = random_.choice((1, 2, 4, 8, 16, 32, 3, 6, 12, 20))
+        height = random_.choice((1, 2, 4, 8, 16, 5, 10))
+        compressed = random_.random() < 0.5
+        format_ = random_.choice((14, 15, 16)) if compressed else random_.choice((0, 3, 10, 11))
+        flags = random_.getrandbits(16) & ~0xA | (2 if compressed else 0) | random_.choice((0, 8))
+        struct.pack_into(
+            "<5hH",
+            data,
+            4,
+            width,
+            height,
+            random_.choice((1, 2, 4)),
+            random_.choice((0, 0, 1, 2)),
+            format_,
+            flags,
+        )
+        struct.pack_into("<h", data, 0x14, random_.choice((0, 1, 2, 3, 5, -1)))
+        struct.pack_into("<I", data, 0x34, random_.choice((0x800, 0x80, 0x10)))
+        has_pixels = random_.random() < 0.9
+        struct.pack_into("<I", data, 0x54, PIXELS_AT if has_pixels else 0)
+        return Buffer(bytes(data), pointers=(0x54,) if has_pixels else ())
+
+    for _ in range(600):
+        point = (
+            random_.choice((0.0, 0.5, 0.25, 1.0, -0.25, 0.999, random_.uniform(-2, 2))),
+            random_.choice((0.0, 0.5, 0.75, 1.0, -1.5, random_.uniform(-2, 2))),
+        )
+        t.check(
+            "bitmap_sample",
+            sampled_bitmap(),
+            # -infinity times no mipmaps is a NaN
+            f32(random_.choice((0.0, 0.5, 1.0, 1.5, -0.5, 0.25, 0.75, -math.inf, random_.uniform(-1, 2)))),
+            Buffer(struct.pack("<2f", *point)),
+            globals={"bitmap_pixel_out_of_bounds": bytes([0])},
             externals=externals,
         )

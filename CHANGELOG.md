@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — El píxel de un bitmap en un punto
+
+Una función de `bitmaps/bitmaps.c`. De 704 funciones se pasa a 705, el
+6,26 % de las del juego (el 3,374 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `bitmap_sample` | `0x001362b0` | `bitmaps/bitmaps.c` |
+
+### Lo que se sabe
+
+- Da el píxel de un bitmap en un punto de 0 a 1 (el más cercano, y el
+  bitmap se repite), como uno de 32 bits, con un detalle: 1 o más es el
+  mipmap más grande, y menos baja a los pequeños (el índice es el redondeo
+  de `(1 - detalle) × mipmaps`). Un bitmap sin píxeles da `NONE`.
+- Los lados del mipmap son los de `bitmap_mipmap_dimension`, redondeados
+  a un bloque si el bitmap está comprimido. La coordenada se redondea con
+  medio píxel menos y se lleva dentro del lado con una máscara si es
+  potencia de dos, o con el resto si no.
+- Busca dónde empieza el mipmap con la función de su tipo (2D, 3D o cubo)
+  y lee el píxel con `bitmap_get_pixel`.
+- El nombre es inventado.
+
+### Mutaciones
+
+22 líneas rotas a propósito: 19 detectadas.
+
+### Sin comprobar
+
+- Tres mutantes son equivalentes: con un lado potencia de dos, el resto y
+  la máscara dan lo mismo; con un detalle justo de 1 el mipmap es el 0 por
+  los dos caminos; y contar también los bitmaps sin mipmaps solo cambia
+  algo con un detalle de menos infinito, que da un NaN y un índice
+  `0x80000000`, pero del índice solo se usan el byte bajo (al desplazar) y
+  los 16 bits bajos (para buscar el mipmap), y son 0. Las pruebas tienen
+  ese caso igualmente.
+
 ## 2026-10-03 — Leer un píxel de un bitmap
 
 Una función de `bitmaps/bitmaps.c`. De 703 funciones se pasa a 704, el
