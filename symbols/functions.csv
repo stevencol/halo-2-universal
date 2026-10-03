@@ -1073,3 +1073,8 @@ address,name,source,arguments,returns,convention
 001d0870,havok_component_get_rigid_body_position,source/physics/havok_component.c,ecx eax edi,void
 001d08e0,havok_component_get_rigid_body_matrix,source/physics/havok_component.c,ecx eax esi,void
 002da5d0,hkTransform_setMulEq,,ecx stack,void,stdcall
+001d0a20,havok_component_get_rigid_body_point_velocity,source/physics/havok_component.c,stack eax ecx esi,void
+001d0dd0,havok_component_set_rigid_body_linear_velocity,source/physics/havok_component.c,stack ecx eax,void
+001d0e50,havok_component_set_rigid_body_angular_velocity,source/physics/havok_component.c,stack eax ecx,void
+0030bc40,hkEntity_isActive,,ecx stack,int,stdcall
+0030bc60,hkEntity_activate,,ecx,void

@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Fijar las velocidades de un cuerpo rígido
+
+Tres funciones de `physics/havok_component.c`. De 689 funciones se pasa a
+692, el 6,14 % de las del juego (el 3,275 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_component_get_rigid_body_point_velocity` | `0x001d0a20` | `physics/havok_component.c` |
+| `havok_component_set_rigid_body_linear_velocity` | `0x001d0dd0` | `physics/havok_component.c` |
+| `havok_component_set_rigid_body_angular_velocity` | `0x001d0e50` | `physics/havok_component.c` |
+
+También el vector de Havok (`hkVector4`), tres métodos más de lo que mueve
+un cuerpo (`0x50`, `0x54` y `0x58`), la isla de simulación del cuerpo de
+Havok (`0x44`) y otra marca del componente (el bit 1). Las pruebas ponen
+en lugar de `hkEntity_isActive` (`0x0030bc40`) uno que mira la isla como
+la de Havok, y en lugar de `hkEntity_activate` (`0x0030bc60`) uno que solo
+apunta la llamada; los tres métodos nuevos son mocks que comparan lo que
+hay en el vector que reciben.
+
+### Lo que se sabe
+
+- La velocidad de un punto que se mueve con el cuerpo la da el método
+  `0x58` de lo que lo mueve, con el punto como vector de cuatro reales y
+  el cuarto a 0; un cuerpo fijo da 0.
+- Fijar la velocidad lineal o angular despierta antes el cuerpo, si
+  duerme y está en el mundo de Havok, y llama al método `0x50` o `0x54`. A
+  un cuerpo fijo no se le hace nada, y la angular tampoco se fija si el
+  componente tiene el bit 1, que parece decir que sus cuerpos no giran.
+- Los nombres son inventados.
+
+### Mutaciones
+
+21 líneas rotas a propósito: las 21 detectadas.
+
 ## 2026-10-03 — Dónde está un cuerpo rígido
 
 Dos funciones de `physics/havok_component.c`. De 687 funciones se pasa a

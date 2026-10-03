@@ -149,19 +149,28 @@ def run(t) -> None:
         for value in (0.0, -0.0, 1.0, 0.5, 2.0, 0.25, 0.999, 1.001, 1e-30, 1e30, math.inf, -math.inf, -2.0, -0.5, 3.0)
     ] + [bytes.fromhex("0000c07f"), bytes.fromhex("0100807f"), bytes.fromhex("01000000")]
 
-    def havok_components(count: int, fixed: bool = False, methods: bool = False, transforms: bool = False) -> Buffer:
+    def havok_components(
+        count: int, fixed: bool = False, methods: bool = False, transforms: bool = False, islands: bool = False
+    ) -> Buffer:
         """The data array of the havok components: only where its data is
         (0x44) is looked at. Each component has three rigid bodies, each of
         them one of Havok and what moves that."""
         components = 0x50
         bodies = components + count * HAVOK_COMPONENT_SIZE
         havok = bodies + count * RIGID_BODIES * RIGID_BODY_SIZE
-        motions = havok + count * RIGID_BODIES * 0x40
+        # Havok's rigid body has its simulation island after 0x40
+        body_size = 0x50 if islands else 0x40
+        motions = havok + count * RIGID_BODIES * body_size
         # what moves a rigid body has its transform after 0x80
         motion_size = 0xC0 if transforms else 0x80
         data = bytearray(random_.randbytes(motions + count * RIGID_BODIES * motion_size))
         pointers = [0x44]
         struct.pack_into("<I", data, 0x44, components)
+        if islands:
+            # two simulation islands in the header of the array, one awake
+            # (its 0x29) and one asleep
+            data[0x29] = random_.choice((1, 0xFF))
+            data[0x10 + 0x29] = 0
         for c in range(count):
             component = components + c * HAVOK_COMPONENT_SIZE
             rigid_body_count = random_.choice((0, 1, 2, 3, 3, -1, 0x100))
@@ -176,19 +185,29 @@ def run(t) -> None:
                 # whether the rigid bodies are from the component's transform
                 flags = random_.getrandbits(32) & ~0x40 | random_.choice((0, 0x40))
                 struct.pack_into("<I", data, component + 4, flags)
+            elif islands:
+                # whether the rigid bodies are not made to turn
+                flags = random_.getrandbits(32) & ~2 | random_.choice((0, 0, 2))
+                struct.pack_into("<I", data, component + 4, flags)
             pointers.append(component + 0x70)
             for r in range(RIGID_BODIES):
                 n = c * RIGID_BODIES + r
-                struct.pack_into("<I", data, bodies + n * RIGID_BODY_SIZE + 0x40, havok + n * 0x40)
-                struct.pack_into("<I", data, havok + n * 0x40 + 0x3C, motions + n * motion_size)
-                pointers += [bodies + n * RIGID_BODY_SIZE + 0x40, havok + n * 0x40 + 0x3C]
+                struct.pack_into("<I", data, bodies + n * RIGID_BODY_SIZE + 0x40, havok + n * body_size)
+                struct.pack_into("<I", data, havok + n * body_size + 0x3C, motions + n * motion_size)
+                pointers += [bodies + n * RIGID_BODY_SIZE + 0x40, havok + n * body_size + 0x3C]
                 struct.pack_into("<3f", data, motions + n * motion_size + 0x70, *(random_.uniform(-40, 40) for _ in range(3)))
                 if fixed:
                     # the byte after Havok's rigid body is whether it is
                     # fixed, and what moves it has its velocities
-                    data[havok + n * 0x40 + 0x40] = random_.choice((0, 0, 1, 0xFF))
+                    data[havok + n * body_size + 0x40] = random_.choice((0, 0, 1, 0xFF))
                     struct.pack_into("<3f", data, motions + n * motion_size + 0x40, *(random_.uniform(-9, 9) for _ in range(3)))
                     struct.pack_into("<3f", data, motions + n * motion_size + 0x50, *(random_.uniform(-9, 9) for _ in range(3)))
+                if islands:
+                    data[havok + n * body_size + 0x40] = random_.choice((0, 0, 0, 1, 0xFF))
+                    island = random_.choice((None, 0, 0x10))
+                    struct.pack_into("<I", data, havok + n * body_size + 0x44, 0 if island is None else island)
+                    if island is not None:
+                        pointers.append(havok + n * body_size + 0x44)
                 if methods:
                     # the methods, at the end; the inverse of the mass; and
                     # what the test's get_type gives
@@ -198,6 +217,7 @@ def run(t) -> None:
                     struct.pack_into("<I", data, motions + n * motion_size + 0x7C, random_.choice((6, 6, 0, 1, 5, 7, 0x106, 0xFFFFFFFF)))
         if methods:
             data += bytes(0x18) + struct.pack("<I", mock_address(0)) + bytes(8) + struct.pack("<I", mock_address(1))
+            data += bytes(0x28) + struct.pack("<3I", mock_address(2), mock_address(3), mock_address(4))
         return Buffer(bytes(data), pointers=tuple(pointers))
 
     for _ in range(40):
@@ -305,3 +325,56 @@ def run(t) -> None:
                     extra=[havok],
                     externals={"hkTransform_setMulEq": set_mul_eq},
                 )
+
+    # ---------- the velocities of a rigid body that are set, and that of a point
+
+    def is_active(harness, arguments):
+        """Stands in for Havok's: awake if its simulation island says so."""
+        rigid_body, active = arguments
+        (island,) = struct.unpack("<I", harness.mu.mem_read(rigid_body + 0x44, 4))
+        value = harness.mu.mem_read(island + 0x29, 1) if island else b"\0"
+        harness.mu.mem_write(active, bytes(value))
+        # where it is left is on the stack, which is not the same in both
+        return active, (harness.normalize(rigid_body),)
+
+    def vector4(address: int) -> bytes:
+        return bytes(t.harness.mu.mem_read(address, 16))
+
+    def get_point_velocity(call) -> int:
+        # the bits of the point with those of the motion
+        point, velocity = call.stack
+        motion = vector4(call.registers["ecx"] + 0x40)
+        t.harness.mu.mem_write(velocity, bytes(x ^ y for x, y in zip(vector4(point), motion)))
+        return 0
+
+    velocity_methods = [
+        Mock(get_type, registers=("ecx",)),
+        Mock(get_rotation, stack_arguments=1, registers=("ecx",), record=lambda call: call.registers["ecx"]),
+        # the vectors are on the stack: what is compared is what they have
+        Mock(lambda call: 0, stack_arguments=1, registers=("ecx",), record=lambda call: (call.registers["ecx"], vector4(call.stack[0]))),
+        Mock(lambda call: 0, stack_arguments=1, registers=("ecx",), record=lambda call: (call.registers["ecx"], vector4(call.stack[0]))),
+        Mock(get_point_velocity, stack_arguments=2, registers=("ecx",), record=lambda call: (call.registers["ecx"], vector4(call.stack[0]))),
+    ]
+    activation = {"hkEntity_isActive": is_active, "hkEntity_activate": lambda harness, arguments: 0}
+
+    def vector() -> Buffer:
+        return Buffer(struct.pack("<3f", *(random_.uniform(-9, 9) for _ in range(3))))
+
+    for _ in range(30):
+        havok_count = random_.randint(1, 6)
+        havok = havok_components(havok_count, methods=True, islands=True)
+        for _ in range(10):
+            component = Pointer(havok, COMPONENTS + random_.randrange(havok_count) * HAVOK_COMPONENT_SIZE)
+            rigid_body_index = random_.randrange(RIGID_BODIES)
+            for name in ("havok_component_set_rigid_body_linear_velocity", "havok_component_set_rigid_body_angular_velocity"):
+                t.check(name, component, rigid_body_index, vector(), extra=[havok], mocks=velocity_methods, externals=activation)
+            # compared as bytes, to tell 0 from -0
+            t.check(
+                "havok_component_get_rigid_body_point_velocity",
+                component,
+                rigid_body_index,
+                vector(),
+                Buffer(random_.randbytes(12)),
+                extra=[havok],
+                mocks=velocity_methods,
+            )

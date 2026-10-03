@@ -17,6 +17,27 @@ the name is a guess */
 void __attribute__((stdcall)) hkTransform_setMulEq(struct havok_transform *transform,
 	const struct havok_transform *other);
 
+/* 0x0030bc40: whether a body of Havok is awake; Havok's (hkEntity::isActive),
+which gives where it leaves it */
+boolean *__attribute__((stdcall)) hkEntity_isActive(const struct havok_rigid_body *rigid_body, boolean *active);
+
+/* 0x0030bc60: wakes a body of Havok (hkEntity::activate) */
+void hkEntity_activate(struct havok_rigid_body *rigid_body);
+
+/* ---------- private code */
+
+/* wakes a body that is in Havok's world and asleep */
+static inline __attribute__((always_inline)) void havok_rigid_body_wake(
+	struct havok_rigid_body *rigid_body)
+{
+	boolean active;
+
+	if (!*hkEntity_isActive(rigid_body, &active) && rigid_body->simulation_island)
+	{
+		hkEntity_activate(rigid_body);
+	}
+}
+
 /* ---------- globals */
 
 /* 0x0051e9b8: of struct havok_component, "havok components". The code that
@@ -95,6 +116,36 @@ void havok_component_get_rigid_body_linear_velocity(
 	}
 }
 
+/* 0x001d0a20: how fast a point of the world moves if it moves with a rigid
+body of a havok component; 0 if the body is fixed */
+void havok_component_get_rigid_body_point_velocity(
+	const struct havok_component *component,
+	long rigid_body_index,
+	const real_point3d *point,
+	real_vector3d *velocity)
+{
+	struct havok_rigid_body *rigid_body= component->rigid_bodies[rigid_body_index].rigid_body;
+
+	if (rigid_body->fixed)
+	{
+		*velocity= *global_zero_vector3d;
+	}
+	else
+	{
+		struct havok_vector4 position;
+		struct havok_vector4 result;
+
+		position.v[0]= point->x;
+		position.v[1]= point->y;
+		position.v[2]= point->z;
+		position.v[3]= 0.0f;
+		rigid_body->motion->vtable->get_point_velocity(rigid_body->motion, &position, &result);
+		velocity->i= result.v[0];
+		velocity->j= result.v[1];
+		velocity->k= result.v[2];
+	}
+}
+
 /* 0x001d0ad0: how fast a rigid body of a havok component turns; 0 if it is
 fixed */
 void havok_component_get_rigid_body_angular_velocity(
@@ -156,4 +207,53 @@ boolean havok_component_rigid_body_is_keyframed(
 	struct havok_motion *motion= component->rigid_bodies[rigid_body_index].rigid_body->motion;
 
 	return motion->vtable->get_type(motion)==_havok_motion_keyframed;
+}
+
+/* 0x001d0dd0: makes a rigid body of a havok component move, waking it; not
+if it is fixed */
+void havok_component_set_rigid_body_linear_velocity(
+	const struct havok_component *component,
+	long rigid_body_index,
+	const real_vector3d *velocity)
+{
+	struct havok_rigid_body *rigid_body= component->rigid_bodies[rigid_body_index].rigid_body;
+
+	if (!rigid_body->fixed)
+	{
+		struct havok_vector4 vector;
+
+		vector.v[0]= velocity->i;
+		vector.v[1]= velocity->j;
+		vector.v[2]= velocity->k;
+		vector.v[3]= 0.0f;
+		havok_rigid_body_wake(rigid_body);
+		rigid_body->motion->vtable->set_linear_velocity(rigid_body->motion, &vector);
+	}
+}
+
+/* 0x001d0e50: makes a rigid body of a havok component turn, waking it; not
+if it is fixed or the component's bodies are not made to turn */
+void havok_component_set_rigid_body_angular_velocity(
+	const struct havok_component *component,
+	long rigid_body_index,
+	const real_vector3d *velocity)
+{
+	struct havok_rigid_body *rigid_body;
+	struct havok_vector4 vector;
+
+	if (TEST_FLAG(component->flags, _havok_component_no_angular_velocity_bit))
+	{
+		return;
+	}
+	rigid_body= component->rigid_bodies[rigid_body_index].rigid_body;
+	if (rigid_body->fixed)
+	{
+		return;
+	}
+	vector.v[0]= velocity->i;
+	vector.v[1]= velocity->j;
+	vector.v[2]= velocity->k;
+	vector.v[3]= 0.0f;
+	havok_rigid_body_wake(rigid_body);
+	rigid_body->motion->vtable->set_angular_velocity(rigid_body->motion, &vector);
 }
