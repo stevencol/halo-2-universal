@@ -646,7 +646,7 @@ address,name,source,arguments,returns,convention
 0006cd50,unknown_0006cd50,,eax,int
 001a01e0,language_texts_load,source/text/unicode_string_list.c,edi,void
 002186f0,unknown_002186f0,,,void
-0011be50,unknown_0011be50,,,void
+0011be50,scenario_unload,source/scenario/scenario.c,,void
 000d5560,unknown_000d5560,,stack,void
 000c09c0,unknown_000c09c0,,eax,void
 00137e40,game_create_players,source/game/game.c,,void
@@ -777,7 +777,7 @@ address,name,source,arguments,returns,convention
 00125df0,sound_load_environment,source/sound/sound_manager.c,,void
 00191270,unknown_00191270,,,void
 0012a810,unknown_0012a810,,eax,int
-0011bed0,unknown_0011bed0,,edx esi,void
+0011bed0,scenario_location_from_point,source/scenario/scenario.c,esi edx,void
 0021dde0,unknown_0021dde0,,,void
 0021a100,unknown_0021a100,,,void
 0012a060,unknown_0012a060,,ecx,void

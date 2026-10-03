@@ -8,10 +8,23 @@ The scenario that is loaded. As in Halo 1.
 #define __SCENARIO_H
 
 #include "cseries/cseries.h"
+#include "math/real_math.h"
+
+/* ---------- structures */
+
+/* where a point is in the structure bsp that is loaded. As in Halo 1 */
+struct scenario_location
+{
+	long leaf_index;
+	short cluster_index;
+	short structure_bsp_index;
+};
 
 /* ---------- prototypes/SCENARIO.C */
 
 boolean scenario_switch_structure_bsp(long structure_bsp_index, long unload_old);
+void scenario_unload(void);
+void scenario_location_from_point(struct scenario_location *location, const real_point3d *point);
 
 /* ---------- globals */
 

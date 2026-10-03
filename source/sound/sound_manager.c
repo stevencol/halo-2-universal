@@ -201,8 +201,6 @@ the state of the game, which take their argument off the stack: the tool
 that builds this for the tests sees to that */
 void unknown_001264c0(unsigned long flags);
 
-/* 0x0011bed0: where a point is in the structure bsp */
-void unknown_0011bed0(const real_point3d *point, void *location);
 
 /* 0x0021dde0, 0x0021a100: the sound voices and the looping sounds, after the
 structure bsp changes */
@@ -653,10 +651,10 @@ void sound_initialize_for_new_structure_bsp(
 
 			if ((source[SOUND_SOURCE_DATUM_TYPE_OFFSET]&SOUND_SOURCE_DATUM_TYPE_MASK)==_sound_source_datum_type_positioned)
 			{
-				long location[2];
+				struct scenario_location location;
 
-				unknown_0011bed0((const real_point3d *)(source+SOUND_SOURCE_DATUM_POSITION_OFFSET), location);
-				memcpy(source+SOUND_SOURCE_DATUM_LOCATION_OFFSET, location, sizeof(location));
+				scenario_location_from_point(&location, (const real_point3d *)(source+SOUND_SOURCE_DATUM_POSITION_OFFSET));
+				memcpy(source+SOUND_SOURCE_DATUM_LOCATION_OFFSET, &location, sizeof(location));
 			}
 		}
 

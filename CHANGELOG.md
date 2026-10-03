@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Descargar el escenario y dónde está un punto
+
+Dos funciones de `scenario/scenario.c`, que ya se llamaban desde
+`main_game.c` y `sound_manager.c` como `unknown_0011be50` y
+`unknown_0011bed0`. De 700 funciones se pasa a 702, el 6,23 % de las del
+juego (el 3,345 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `scenario_unload` | `0x0011be50` | `scenario/scenario.c` |
+| `scenario_location_from_point` | `0x0011bed0` | `scenario/scenario.c` |
+
+También `struct scenario_location` (la hoja, el cluster y el BSP), como en
+Halo 1, y un archivo de pruebas nuevo, `tests/test_scenario.py`.
+
+### Lo que se sabe
+
+- `scenario_unload` descarga las etiquetas del escenario y deja sin nada
+  el escenario, su BSP y los globales del juego. Como en Halo 1.
+- `scenario_location_from_point` busca en el árbol del BSP cargado
+  (`bsp3d_test_point`, desde el nodo 0) la hoja donde está un punto, y su
+  cluster en las hojas del BSP (8 bytes cada una). Fuera de las hojas el
+  cluster es `NONE`; sin BSP cargado, todo es `NONE`. Como en Halo 1, con
+  los argumentos en el orden de Halo 1 (antes estaban al revés en
+  `sound_manager.c`).
+
+### Mutaciones
+
+16 líneas rotas a propósito: las 16 detectadas.
+
 ## 2026-10-03 — Meter puntos en un rectángulo
 
 Dos funciones de `math/real_math.c`, con las que se llega a 700. De 698

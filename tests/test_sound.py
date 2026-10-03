@@ -425,8 +425,8 @@ def run(t) -> None:
         leaves = [random_.choice((NONE, random_.randrange(LEAVES), random_.randrange(LEAVES))) for _ in range(4)]
 
         def location(harness, arguments):
-            point, where = arguments
-            index = calls_so_far(harness, "unknown_0011bed0")
+            where, point = arguments
+            index = calls_so_far(harness, "scenario_location_from_point")
             harness.mu.mem_write(where, struct.pack("<2I", 0x1000 + index, 0x2000 + index))
             return 0, (bytes(harness.mu.mem_read(point, 12)),)
 
@@ -444,7 +444,7 @@ def run(t) -> None:
             },
             externals={
                 "data_next_absolute_index": next_absolute_index(in_use),
-                "unknown_0011bed0": location,
+                "scenario_location_from_point": location,
                 "bsp3d_test_point": test_point,
                 "unknown_0021dde0": lambda harness, arguments: 0,
                 "unknown_0021a100": lambda harness, arguments: 0,

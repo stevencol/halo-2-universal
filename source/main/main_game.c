@@ -56,7 +56,6 @@ long unknown_0006cd50(long session_index);
 void unknown_002186f0(void);
 
 /* 0x0011be50: after the caches of a map are closed */
-void unknown_0011be50(void);
 
 /* what a new game sets up after its systems */
 void unknown_000d5560(long unknown);
@@ -261,7 +260,7 @@ void main_game_unload(
 	case _main_game_load_map:
 	case _main_game_load_unknown4:
 		main_game_close_caches();
-		unknown_0011be50();
+		scenario_unload();
 		physical_memory_globals.stage--;
 		main_game_load_globals.state= _main_game_load_none;
 		break;

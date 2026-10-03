@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-03, al terminar el hito 137.
+**Última actualización:** 2026-10-03, al terminar el hito 138.
 
 ## Dónde estamos
 
-- **700 funciones descompiladas de 11.265: el 6,21 % del juego** (el
-  3,340 % de los bytes de código).
-- Las 700 están comprobadas contra el ejecutable original
+- **702 funciones descompiladas de 11.265: el 6,23 % del juego** (el
+  3,345 % de los bytes de código).
+- Las 702 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile enclosing points in a rectangle* (ver `git log`).
+- Último hito: *Decompile unloading the scenario and where a point is* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -143,7 +143,8 @@ Módulos (funciones hechas / archivo):
   - [x] el bucle, un fotograma y el reloj
   - [x] guardar, cambiar de bsp y avisar de que se guardó
   - [ ] la acción `0x0012bbd0` (pantallas de la interfaz)
-- [ ] Escenario — `scenario\scenario.c` (1): cambiar de bsp
+- [ ] Escenario — `scenario\scenario.c` (3): cambiar de bsp, descargar
+      el escenario y en qué hoja y cluster está un punto
 - [ ] Memoria física — `memory\physical_memory.c` (1)
 - [ ] Varios — `cseries\cseries.c` (10)
 

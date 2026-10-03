@@ -13,6 +13,7 @@ Halo 1's scenario.c.
 #include "cache/cache_files.h"
 #include "game/game.h"
 #include "main/main.h"
+#include "physics/bsp3d.h"
 #include "scenario/scenario_definitions.h"
 
 /* ---------- prototypes of functions not decompiled yet */
@@ -26,7 +27,10 @@ void unknown_0016e2c0(long structure_bsp_tag_index);
 enum
 {
 	/* in a structure bsp, the address of its collision bsp */
-	STRUCTURE_BSP_COLLISION_BSP_OFFSET= 0x18
+	STRUCTURE_BSP_COLLISION_BSP_OFFSET= 0x18,
+	/* in a structure bsp, the address of its leaves: 8 bytes each, which
+	start with the index of the cluster */
+	STRUCTURE_BSP_LEAVES_OFFSET= 0x30
 };
 
 /* ---------- globals */
@@ -156,4 +160,48 @@ boolean scenario_switch_structure_bsp(
 	main_time_skip();
 
 	return result;
+}
+
+/* 0x0011be50: the scenario and its structure bsp are unloaded. As in Halo
+1 */
+void scenario_unload(
+	void)
+{
+	scenario_tags_unload();
+	global_scenario_index= NONE;
+	global_scenario= NULL;
+	global_structure_bsp_index= NONE;
+	global_game_globals= NULL;
+	scenario_structure_bsp_globals_clear();
+}
+
+/* 0x0011bed0: where a point is in the structure bsp that is loaded: its
+leaf and the leaf's cluster, which are NONE out of the bsp, and the index of
+the bsp, NONE if none is loaded. As in Halo 1 */
+void scenario_location_from_point(
+	struct scenario_location *location,
+	const real_point3d *point)
+{
+	short structure_bsp_index= global_structure_bsp_index;
+
+	if (structure_bsp_index==NONE)
+	{
+		location->cluster_index= NONE;
+		location->structure_bsp_index= NONE;
+		location->leaf_index= NONE;
+		return;
+	}
+	location->leaf_index= bsp3d_test_point((const struct bsp3d *)global_bsp3d, 0, point);
+	if (location->leaf_index!=NONE)
+	{
+		const byte *leaves= *(byte *const *)((const byte *)global_structure_bsp+STRUCTURE_BSP_LEAVES_OFFSET);
+
+		location->structure_bsp_index= structure_bsp_index;
+		location->cluster_index= *(const short *)(leaves+location->leaf_index*8);
+	}
+	else
+	{
+		location->structure_bsp_index= structure_bsp_index;
+		location->cluster_index= NONE;
+	}
 }

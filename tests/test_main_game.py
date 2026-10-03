@@ -257,7 +257,7 @@ def run(t) -> None:
                 "unknown_000693a0",
                 "game_dispose_from_old_map",
                 "main_game_close_caches",
-                "unknown_0011be50",
+                "scenario_unload",
                 "texture_cache_close",
                 scenario_switch_structure_bsp=1,
             ),
