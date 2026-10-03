@@ -59,6 +59,9 @@ struct file_time
 char *csprintf(char *buffer, const char *format, ...);
 char *csprintf256(char *buffer, const char *format, ...);
 char *csnzprintf(char *buffer, unsigned long size, const char *format, ...);
+unsigned long csstrnlen(const char *string, unsigned long maximum);
+char *csnzappendf(char *buffer, unsigned long size, const char *format, ...);
+void *__attribute__((stdcall)) system_allocate(unsigned long size);
 char *csstrcat256(char *destination, const char *source);
 void file_time_get_current(struct file_time *time);
 void __attribute__((stdcall)) no_operation1(unsigned long unused);

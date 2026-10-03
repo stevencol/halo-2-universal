@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 105.
+**Última actualización:** 2026-10-02, al terminar el hito 106.
 
 ## Dónde estamos
 
-- **638 funciones descompiladas de 11.265: el 5,66 % del juego** (el
-  2,941 % de los bytes de código).
-- Las 638 están comprobadas contra el ejecutable original
+- **641 funciones descompiladas de 11.265: el 5,69 % del juego** (el
+  2,945 % de los bytes de código).
+- Las 641 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile reading all of a file* (ver `git log`).
+- Último hito: *Decompile three small functions of cseries.c* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).

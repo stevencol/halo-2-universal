@@ -16,6 +16,18 @@ Where these functions go and their names are a guess.
 
 /* ---------- prototypes of functions of the console's libraries */
 
+/* 0x003312cc */
+void *VirtualAlloc(void *address, unsigned long size, unsigned long type, unsigned long protection);
+
+/* 0x002d1d3e */
+unsigned long GetLastError(void);
+
+/* MEM_COMMIT | MEM_TOP_DOWN, and PAGE_READWRITE */
+#define SYSTEM_ALLOCATION_TYPE 0x101000
+#define SYSTEM_ALLOCATION_PROTECTION 4
+
+/* ---------- prototypes of functions of the console's libraries */
+
 /* 0x003303f3 */
 void GetSystemTimeAsFileTime(struct file_time *time);
 
@@ -114,6 +126,58 @@ char *csnzprintf(
 	buffer[size-1]= 0;
 
 	return buffer;
+}
+
+/* 0x0011c9a0: how many characters a string has before its end, and no more
+than a number. The name is Halo 3's */
+unsigned long csstrnlen(
+	const char *string,
+	unsigned long maximum)
+{
+	unsigned long length= 0;
+
+	while (length<maximum && *string++)
+	{
+		length++;
+	}
+
+	return length;
+}
+
+/* 0x0011c9e0: as csnzprintf, after what the buffer has. The name is
+Halo 3's */
+char *csnzappendf(
+	char *buffer,
+	unsigned long size,
+	const char *format,
+	...)
+{
+	unsigned long length= strlen(buffer);
+	char *end= buffer+length;
+	va_list arguments;
+
+	size-= length;
+	va_start(arguments, format);
+	vsnprintf(end, size-1, format, arguments);
+	va_end(arguments);
+	end[size-1]= 0;
+
+	return buffer;
+}
+
+/* 0x0011ca20: memory of the console, from the top; NULL if there is none.
+The name is a guess */
+void *__attribute__((stdcall)) system_allocate(
+	unsigned long size)
+{
+	void *memory= VirtualAlloc(NULL, size, SYSTEM_ALLOCATION_TYPE, SYSTEM_ALLOCATION_PROTECTION);
+
+	if (!memory)
+	{
+		GetLastError();
+	}
+
+	return memory;
 }
 
 /* 0x0011ca80: the game's language for a language of the console

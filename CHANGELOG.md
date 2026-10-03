@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Tres funciones pequeñas de `cseries.c`
+
+Tres funciones. De 638 funciones se pasa a 641, el 5,69 % de las del
+juego (el 2,945 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `csstrnlen` | `0x0011c9a0` | `cseries/cseries.c` |
+| `csnzappendf` | `0x0011c9e0` | `cseries/cseries.c` |
+| `system_allocate` | `0x0011ca20` | `cseries/cseries.c` |
+
+Pruebas nuevas en `tests/test_cseries.py`.
+
+### Lo que se sabe
+
+- `csstrnlen`: cuántos caracteres tiene una cadena, sin pasar de un máximo.
+- `csnzappendf`: como `csnzprintf`, pero escribe **detrás** de lo que ya
+  hay en el búfer, sin pasarse de su tamaño y dejándolo siempre terminado.
+  Los dos nombres son los que tienen en Halo 3.
+- `system_allocate`: pide memoria a la consola, desde arriba, para leer y
+  escribir; si no hay, pregunta el error (sin hacer nada con él) y devuelve
+  nada. El nombre es una suposición.
+
+### Mutaciones
+
+13 líneas rotas a propósito: 12 detectadas.
+
+### Sin comprobar
+
+- Una mutación es equivalente: dejar que `vsnprintf` escriba un carácter
+  más. El `vsnprintf` del juego (el de Microsoft) no termina la cadena
+  cuando corta, así que ese carácter cae justo donde después se pone el
+  cero.
+
 ## 2026-10-02 — Leer un archivo entero
 
 Dos funciones. De 636 funciones se pasa a 638, el 5,66 % de las del juego
