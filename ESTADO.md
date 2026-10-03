@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 110.
+**Última actualización:** 2026-10-02, al terminar el hito 111.
 
 ## Dónde estamos
 
-- **654 funciones descompiladas de 11.265: el 5,81 % del juego** (el
-  2,988 % de los bytes de código).
-- Las 654 están comprobadas contra el ejecutable original
+- **657 funciones descompiladas de 11.265: el 5,83 % del juego** (el
+  2,994 % de los bytes de código).
+- Las 657 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile matrices, quaternions and orientations* (ver `git log`).
+- Último hito: *Decompile three small functions of the objects* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -113,7 +113,7 @@ Módulos (funciones hechas / archivo):
       `bitmaps.c`; de este faltan `0x001358e0`, `0x00135ca0`, `0x00136140` y
       `0x001362b0`, que leen el color de un píxel)
 - [ ] BSP 3D — `physics\bsp3d.c` (2)
-- [ ] Objetos — `objects\objects.c` (7 de cientos)
+- [ ] Objetos — `objects\objects.c` (10 de cientos)
 - [x] Hilo de tareas y tareas de archivo — `cseries\async.c` (29; quedan
       algunas tareas de archivo)
 - [x] Archivos de caché — `cache\cache_files.c` (46):

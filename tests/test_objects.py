@@ -102,6 +102,10 @@ def run(t) -> None:
             t.check("object_get_origin", object_index, Buffer(struct.pack("<3f", 9, 9, 9), format="<3f"), globals=globals_)
             for type_mask in (0xFFFFFFFF, 0, 1, 0x555, 0xAAA, random_.getrandbits(12)):
                 t.check("object_try_and_get_and_verify_type", object_index, type_mask, globals=globals_)
+                t.check("object_get_and_verify_type", object_index, type_mask, globals=globals_)
+            t.check("object_get_first_unflagged_ancestor", object_index, globals=globals_)
+            # the salt is not looked at: the absolute index alone, which can be 0
+            t.check("object_get_first_unflagged_ancestor", object_index & 0xFFFF, globals=globals_)
 
         # an iterator, from the start and from any header
         for absolute_index in (0, 1, maximum_count - 1, maximum_count, *random_.sample(range(maximum_count), 3)):
@@ -112,4 +116,12 @@ def run(t) -> None:
         # objects that are not there
         for object_index in (NONE, 0, index(maximum_count + 3, 5), indices[0] ^ 0x10000, indices[-1] ^ 0x7FFF0000):
             t.check("object_try_and_get_and_verify_type", object_index, 0xFFFFFFFF, globals=globals_)
+            t.check("object_get_and_verify_type", object_index, 0xFFFFFFFF, globals=globals_)
+        t.check("object_get_first_unflagged_ancestor", NONE, globals=globals_)
         t.check("object_get_ultimate_parent", NONE, globals=globals_)
+
+    # ---------- a new iterator
+
+    for type_mask in (0, 1, 0xFFFFFFFF, 0x0F3, 0x80000000):
+        for header_flags in (0, 1, 0x21, 0xFF, 0x100, 0xABCDEF21):
+            t.check("object_iterator_new", Buffer(random_.randbytes(0x14)), type_mask, header_flags)

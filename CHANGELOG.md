@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Tres funciones pequeñas de los objetos
+
+Tres funciones. De 654 funciones se pasa a 657, el 5,83 % de las del
+juego (el 2,994 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_get_and_verify_type` | `0x000bae20` | `objects/objects.c` |
+| `object_iterator_new` | `0x000bae80` | `objects/objects.c` |
+| `object_get_first_unflagged_ancestor` | `0x000baf40` | `objects/objects.c` |
+
+### Lo que se sabe
+
+- `object_get_and_verify_type` es **idéntica** a
+  `object_try_and_get_and_verify_type`: en Halo 1 la primera para el juego
+  si el objeto no está, y el juego se compiló sin esas comprobaciones, así
+  que quedaron dos copias iguales.
+- `object_iterator_new` prepara un recorrido de los objetos de unos tipos
+  (ninguno quiere decir todos) con unas marcas en su cabecera, desde el
+  primero. El recorrido mide 16 bytes, no 12: termina con la firma
+  `0x86868686`.
+- La tercera sube desde un objeto por aquello a lo que está unido hasta el
+  primero que no tiene el bit 26 de sus marcas (o hasta ninguno). Qué es
+  ese bit no se sabe aún. Para ello no mira la sal del índice.
+
+### Mutaciones
+
+15 líneas rotas a propósito: las 15 detectadas. Una pidió casos con
+índices sin sal, que pueden valer 0.
+
 ## 2026-10-02 — Matrices, cuaterniones y orientaciones
 
 Cuatro funciones. De 650 funciones se pasa a 654, el 5,81 % de las del

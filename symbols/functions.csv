@@ -1027,3 +1027,6 @@ address,name,source,arguments,returns,convention
 001421b0,matrix4x3_from_point_and_quaternion,source/math/matrix_math.c,edx esi ecx,void
 00142360,matrix4x3_to_orientation,source/math/matrix_math.c,esi eax,void
 001424f0,matrix4x3_rotation_between,source/math/matrix_math.c,eax ecx stack,int
+000bae20,object_get_and_verify_type,source/objects/objects.c,eax stack,int
+000bae80,object_iterator_new,source/objects/objects.c,eax ecx stack,void
+000baf40,object_get_first_unflagged_ancestor,source/objects/objects.c,eax,int

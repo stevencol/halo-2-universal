@@ -24,6 +24,17 @@ enum
 	_object_header_awake_bit
 };
 
+/* ---------- constants */
+
+/* what an iterator that object_iterator_new made has at its end */
+#define OBJECT_ITERATOR_SIGNATURE 0x86868686UL
+
+enum
+{
+	/* an object that object_get_first_unflagged_ancestor goes past */
+	_object_unknown26_bit= 26
+};
+
 /* ---------- structures */
 
 struct object_datum;
@@ -46,7 +57,10 @@ struct location
 
 struct object_datum
 {
-	byte unknown0[0x14];
+	byte unknown0[4];
+	/* what the bits are is not known */
+	unsigned long flags;
+	byte unknown8[0xC];
 	/* the object that this one is attached to, and the node of it; NONE for
 	an object attached to nothing */
 	long parent_object_index;
@@ -73,12 +87,14 @@ struct object_iterator
 	short absolute_index;
 	/* of the object that object_iterator_next returned */
 	long index;
+	/* OBJECT_ITERATOR_SIGNATURE */
+	unsigned long signature;
 };
 
 typedef char verify_object_header_datum_size[
 	sizeof(struct object_header_datum) == 0xC ? 1 : -1];
 typedef char verify_object_iterator_size[
-	sizeof(struct object_iterator) == 0xC ? 1 : -1];
+	sizeof(struct object_iterator) == 0x10 ? 1 : -1];
 typedef char verify_object_datum_location_offset[
 	offsetof(struct object_datum, location) == 0x28 ? 1 : -1];
 typedef char verify_object_datum_position_offset[
@@ -90,6 +106,9 @@ typedef char verify_object_datum_node_matrices_offset_offset[
 
 void object_wake(long object_index);
 void *object_try_and_get_and_verify_type(long object_index, unsigned long type_mask);
+void *object_get_and_verify_type(long object_index, unsigned long type_mask);
+void object_iterator_new(struct object_iterator *iterator, unsigned long type_mask, byte header_flags);
+long object_get_first_unflagged_ancestor(long object_index);
 void *object_iterator_next(struct object_iterator *iterator);
 long object_get_ultimate_parent(long object_index);
 void object_get_origin(long object_index, real_point3d *origin);

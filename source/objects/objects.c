@@ -88,6 +88,61 @@ void *object_try_and_get_and_verify_type(
 	return NULL;
 }
 
+/* 0x000bae20: the same as object_try_and_get_and_verify_type: in Halo 1 this
+one stops the game if the object is not there, and the game is built
+without it. The name is Halo 1's */
+void *object_get_and_verify_type(
+	long object_index,
+	unsigned long type_mask)
+{
+	struct object_header_datum *header= datum_try_and_get(object_header_data, object_index);
+
+	if (header && (type_mask & (1UL<<(header->type&31))))
+	{
+		return header->datum;
+	}
+
+	return NULL;
+}
+
+/* 0x000bae80: an iterator that goes through the objects of some types (all
+with 0) whose headers have some flags, from the first. As in Halo 1 */
+void object_iterator_new(
+	struct object_iterator *iterator,
+	unsigned long type_mask,
+	byte header_flags)
+{
+	iterator->signature= OBJECT_ITERATOR_SIGNATURE;
+	if (!type_mask)
+	{
+		type_mask= (unsigned long)NONE;
+	}
+	iterator->type_mask= type_mask;
+	iterator->header_flags= header_flags;
+	iterator->absolute_index= 0;
+	iterator->index= NONE;
+}
+
+/* 0x000baf40: the first object, going from an object to what it is attached
+to, that has not the bit 26 of its flags; NONE if there is none. The name is
+a guess */
+long object_get_first_unflagged_ancestor(
+	long object_index)
+{
+	while (object_index!=NONE)
+	{
+		struct object_datum *object= OBJECT_GET(object_index);
+
+		if (!(object->flags&FLAG(_object_unknown26_bit)))
+		{
+			break;
+		}
+		object_index= object->parent_object_index;
+	}
+
+	return object_index;
+}
+
 /* 0x000baf80: the object that an object is attached to, through every
 object between them; the object itself if it is attached to nothing */
 long object_get_ultimate_parent(
