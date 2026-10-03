@@ -651,3 +651,56 @@ def run(t) -> None:
             random_.randrange(8),
             externals={"async_task_add": add, "SwitchToThread": wait},
         )
+
+    # ---------- the path of a file reference, and opening a file waiting
+
+    random_ = random.Random(144)
+    PATHS = (
+        b"maps\\shared.map",
+        b"d:\\maps\\mainmenu.map",
+        b"z:\\saves\\profile\\file.dat",
+        b"t:\\",
+        b"name",
+        b"dir\\sub\\",
+        b"no_extension\\file",
+        b".hidden",
+        b"c:\\a.b.c",
+        b"",
+    )
+
+    def reference(path: bytes, flags: int) -> Buffer:
+        data = bytearray(random_.randbytes(0x110))
+        struct.pack_into("<IHh", data, 0, 0x66696C65, flags, random_.choice((0, 1, -1)))
+        data[8 : 8 + 256] = path.ljust(256, b"\0")
+        return Buffer(bytes(data))
+
+    for path in PATHS:
+        for flags in (0, 1, 0xFFFE, 0xFFFF):
+            t.check("file_reference_get_full_path", reference(path, flags), Buffer(random_.randbytes(256)))
+
+    for n in range(40):
+        waits = random_.choice((0, 1, 3))
+
+        def create(harness, arguments, waits=waits):
+            mode, path, access, flags, category, priority, file, done = arguments
+            harness._create_done = done
+            harness.mu.mem_write(done, b"\x01" if not waits else b"\0")
+            text = bytes(harness.mu.mem_read(path, 256)).split(b"\0")[0]
+            # the path and the flag are on the stack: their places are not compared
+            return 9, (mode, text, access, flags, category, priority, harness.normalize(file))
+
+        def wait(harness, arguments, waits=waits):
+            if calls_so_far(harness, "SwitchToThread") >= waits - 1:
+                harness.mu.mem_write(harness._create_done, b"\x01")
+            return 0
+
+        t.check(
+            "async_create_file_blocking",
+            reference(random_.choice(PATHS), random_.choice((0, 1))),
+            random_.choice((1, 2, 3)),
+            random_.choice((1, 2, 3, 4)),
+            random_.getrandbits(3),
+            random_.randrange(4),
+            Buffer(random_.randbytes(4)),
+            externals={"async_create_file": create, "SwitchToThread": wait},
+        )

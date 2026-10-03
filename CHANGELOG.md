@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Abrir un archivo esperando
+
+Dos funciones de `cseries/async.c`. De 707 funciones se pasa a 709, el
+6,29 % de las del juego (el 3,429 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `file_reference_get_full_path` | `0x001a1870` | `cseries/async.c` |
+| `async_create_file_blocking` | `0x001a0a70` | `cseries/async.c` |
+
+### Lo que se sabe
+
+- `file_reference_get_full_path` da la ruta que abre una referencia de
+  archivo: la ruta completa de su sitio (`file_location_get_full_path`),
+  partida y vuelta a juntar con su directorio, su nombre y su extensión.
+  El directorio de arriba que da `file_path_split` no se usa.
+- `async_create_file_blocking` abre un archivo como `async_create_file`,
+  con la ruta de la referencia y la prioridad 6, y espera cediendo el
+  procesador (`SwitchToThread`) hasta que la tarea dice que ha terminado.
+- Los nombres son inventados.
+
+### Mutaciones
+
+14 líneas rotas a propósito: 13 detectadas. Dos no compilaban al
+principio (no hay `strcpy`) y se cambiaron por `memcpy`.
+
+### Sin comprobar
+
+- Un mutante es equivalente: no limpiar el búfer de la ruta completa da lo
+  mismo, porque `file_location_get_full_path` lo llena hasta el final con
+  `strncpy`, que rellena con ceros.
+
 ## 2026-10-03 — Un tick del juego
 
 Una función de `game/game.c`, que ya se llamaba como `unknown_00137fe0`. De

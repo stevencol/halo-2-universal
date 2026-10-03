@@ -1130,3 +1130,5 @@ address,name,source,arguments,returns,convention
 00153950,unknown_00153950,,,void
 001917b2,unknown_001917b2,,,void
 0016f200,unknown_0016f200,,,void
+001a1870,file_reference_get_full_path,source/cseries/async.c,eax stack,int
+001a0a70,async_create_file_blocking,source/cseries/async.c,stack stack stack stack stack stack,void

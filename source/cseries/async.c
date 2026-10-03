@@ -11,6 +11,8 @@ on the disc.
 
 #include "async.h"
 
+#include "tag_files/files.h"
+
 #include <string.h>
 
 /* ---------- prototypes of functions of the console's libraries */
@@ -1256,4 +1258,51 @@ long async_task_add_custom(
 	task->category= 0;
 
 	return async_task_queue(task);
+}
+
+/* 0x001a1870: the path that a file reference opens: the full path of its
+location, put together again from its directory, its name and its
+extension. The name is a guess */
+char *file_reference_get_full_path(
+	const struct file_reference *reference,
+	char *path)
+{
+	char full_path[MAXIMUM_FILENAME_LENGTH+1];
+	char *directory;
+	char *parent_directory;
+	char *name;
+	char *extension;
+
+	memset(full_path, 0, sizeof(full_path));
+	file_location_get_full_path(full_path, reference->path);
+	file_path_split(full_path, &directory, &parent_directory, &name, &extension,
+		TEST_FLAG(reference->flags, _has_filename_bit));
+	path[0]= 0;
+	file_path_add_name(path, directory);
+	file_path_add_name(path, name);
+	file_path_add_extension(path, extension);
+
+	return path;
+}
+
+/* 0x001a0a70: opens a file as async_create_file does, and waits until it
+is open. The name is a guess */
+void async_create_file_blocking(
+	const struct file_reference *reference,
+	uint32_t access_flags,
+	long mode,
+	uint32_t file_flags,
+	long category,
+	uint32_t *file)
+{
+	char path[MAXIMUM_FILENAME_LENGTH+1];
+	byte done;
+
+	file_reference_get_full_path(reference, path);
+	/* of the priorities of the tasks, the one that the game gives this */
+	async_create_file(mode, path, access_flags, file_flags, category, 6, file, &done);
+	while (!done)
+	{
+		SwitchToThread();
+	}
 }

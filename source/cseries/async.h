@@ -286,6 +286,10 @@ long async_task_add(long priority, const uint32_t *parameters, long category, as
 long async_task_count(void);
 boolean async_category_busy(long category);
 boolean async_task_set_priority(long id, long priority);
+struct file_reference;
+char *file_reference_get_full_path(const struct file_reference *reference, char *path);
+void async_create_file_blocking(const struct file_reference *reference, uint32_t access_flags, long mode,
+	uint32_t file_flags, long category, uint32_t *file);
 void async_wait(const volatile byte *done, boolean idle);
 void async_thread_procedure(void);
 void async_thread_loop(void);

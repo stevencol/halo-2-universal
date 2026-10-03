@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-03, al terminar el hito 143.
+**Última actualización:** 2026-10-03, al terminar el hito 144.
 
 ## Dónde estamos
 
-- **707 funciones descompiladas de 11.265: el 6,28 % del juego** (el
-  3,421 % de los bytes de código).
-- Las 707 están comprobadas contra el ejecutable original
+- **709 funciones descompiladas de 11.265: el 6,29 % del juego** (el
+  3,429 % de los bytes de código).
+- Las 709 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile a tick of the game* (ver `git log`).
+- Último hito: *Decompile opening a file and waiting* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -120,8 +120,8 @@ Módulos (funciones hechas / archivo):
       «keyframed»), las velocidades
       (leerlas y fijarlas, y la de un punto), la rotación, la masa y
       el tipo de un cuerpo rígido)
-- [x] Hilo de tareas y tareas de archivo — `cseries\async.c` (29; quedan
-      algunas tareas de archivo)
+- [x] Hilo de tareas y tareas de archivo — `cseries\async.c` (39, con la
+      ruta de una referencia de archivo y abrir un archivo esperando)
 - [x] Archivos de caché — `cache\cache_files.c` (46):
   - [x] acceso a los tags y carga de un mapa
   - [x] arranque (`cache_files_initialize`) y apertura de las copias
@@ -213,8 +213,6 @@ Módulos (funciones hechas / archivo):
       tomar memoria) de los que usan memoria al cargar un mapa; el par de
       la caché de animaciones ya está. La recorren `0x0018ec60` y
       `0x0018ed00`, que abren y cierran un mapa.
-- [ ] **Resto de las tareas de archivo:** `0x001a0a70` (abre un archivo
-      esperando; necesita `0x001a1870`, que hace su ruta).
 - [ ] **Matemáticas que quedan:** las grandes de `real_math.c`.
 
 ## Lo que falta en grande
