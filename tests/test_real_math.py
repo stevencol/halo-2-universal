@@ -35,6 +35,7 @@ VECTORS = (
 
 
 def run(t) -> None:
+    run_basis(t)
     run_orientation_multiply(t)
     run_orientation_inverse(t)
     run_limit_angle(t)
@@ -300,3 +301,50 @@ def run_orientation_multiply(t) -> None:
             t.check("orientation_multiply", buffer, Pointer(buffer, 0), Pointer(buffer, 0))
         else:
             t.check("orientation_multiply", Buffer(struct.pack("<8f", *(9.0,) * 8)), Buffer(a), Buffer(b))
+
+
+def run_basis(t) -> None:
+    import math
+
+    random_ = random.Random(122)
+
+    def unit() -> list[float]:
+        while True:
+            v = [random_.uniform(-1, 1) for _ in range(3)]
+            length = math.sqrt(sum(x * x for x in v))
+            if length > 0.1:
+                return [x / length for x in v]
+
+    special = (
+        [0.0, 0.0, 1.0], [0.0, 0.0, -1.0], [0.0, 0.0, 0.99995], [0.00005, 0.0, -1.0], [0.0, 0.0, 0.0],
+        [3.0, 0.0, 0.0], [0.0, 0.0, 5.0], [1e-3, 1e-3, 1.0], [0.0, 1e-5, -1.0],
+    )
+    for n in range(800):
+        direction = random_.choice(special) if n % 3 == 0 else [x * random_.choice((1.0, 2.5)) for x in unit()]
+        choice = n % 4
+        hint = list(direction) if choice == 0 else random_.choice(special) if choice == 1 else unit()
+        t.check(
+            "orthonormal_basis3d",
+            reals(*direction),
+            reals(*hint),
+            Buffer(struct.pack("<3f", 9.0, 9.0, 9.0)),
+            Buffer(struct.pack("<3f", 9.0, 9.0, 9.0)),
+            Buffer(struct.pack("<3f", 9.0, 9.0, 9.0)),
+            globals={
+                "global_up3d": reals(*random_.choice(([0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.6, 0.8]))),
+                "global_down3d": reals(*random_.choice(([0.0, 0.0, -1.0], [0.0, 0.0, -1.0], [0.0, -0.6, -0.8]))),
+                "global_forward3d": reals(*random_.choice(([1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]))),
+            },
+        )
+    # a forward that is up but for exactly k_real_epsilon in one part
+    epsilon = struct.unpack("<f", struct.pack("<f", 1e-4))[0]
+    for up in ([epsilon, 0.0, 1.0], [0.0, epsilon, 1.0], [-epsilon, 0.0, 1.0], [epsilon * 0.5, 0.0, 1.0]):
+        t.check(
+            "orthonormal_basis3d",
+            reals(0.0, 0.0, 1.0),
+            reals(0.0, 0.0, 1.0),
+            Buffer(struct.pack("<3f", 9.0, 9.0, 9.0)),
+            Buffer(struct.pack("<3f", 9.0, 9.0, 9.0)),
+            Buffer(struct.pack("<3f", 9.0, 9.0, 9.0)),
+            globals={"global_up3d": reals(*up), "global_down3d": reals(0.0, 0.0, -1.0), "global_forward3d": reals(1.0, 0.0, 0.0)},
+        )

@@ -2,6 +2,36 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Tres vectores perpendiculares a partir de una dirección
+
+Una función. De 671 funciones se pasa a 672, el 5,97 % de las del juego
+(el 3,121 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `orthonormal_basis3d` | `0x0011d180` | `math/real_math.c` |
+
+También los globales `global_up3d` (`0x004687b0`) y `global_down3d`
+(`0x004687bc`), como en Halo 1.
+
+### Lo que se sabe
+
+- A partir de una dirección y de un vector que es más o menos «arriba», da
+  tres vectores de longitud 1 perpendiculares entre sí: **adelante** (la
+  dirección, o el eje adelante si no tiene longitud), **izquierda**
+  (perpendicular a adelante y a la pista de arriba) y **arriba**.
+- Si la pista está en la misma recta que la dirección, se usa el eje arriba;
+  y si la dirección es (casi) arriba o abajo, el eje adelante. «Casi» quiere
+  decir que cada componente se separa menos de 0,0001.
+- El nombre es una suposición.
+
+### Mutaciones
+
+20 líneas rotas a propósito: las 20 detectadas. Una pidió casos en los que
+una componente se separa exactamente 0,0001.
+
 ## 2026-10-02 — Una orientación después de otra
 
 Una función. De 670 funciones se pasa a 671, el 5,96 % de las del juego

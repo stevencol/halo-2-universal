@@ -30,6 +30,14 @@ static const real_vector3d forward3d= { 1.0f, 0.0f, 0.0f };
 /* 0x004687a8: the vector forward, (1, 0, 0). The name is Halo 1's */
 const real_vector3d *global_forward3d= &forward3d;
 
+static const real_vector3d up3d= { 0.0f, 0.0f, 1.0f };
+static const real_vector3d down3d= { 0.0f, 0.0f, -1.0f };
+
+/* 0x004687b0 and 0x004687bc: the vectors up and down. The names are Halo
+1's */
+const real_vector3d *global_up3d= &up3d;
+const real_vector3d *global_down3d= &down3d;
+
 /* what undoes an orientation of scale 0 */
 #define ORIENTATION_INVERSE_OF_NO_SCALE 10000.0f
 
@@ -275,6 +283,65 @@ void orientation_inverse(
 	result->translation.y= result->translation.y*-1.0f;
 	result->scale= inverse_scale;
 	result->translation.z= result->translation.z*-1.0f;
+}
+
+/* whether two vectors are the same, but for less than k_real_epsilon in each
+of their parts */
+static inline __attribute__((always_inline)) int vectors3d_close(
+	const real_vector3d *a,
+	const real_vector3d *b)
+{
+	return k_real_epsilon>fabsf(a->i-b->i) && k_real_epsilon>fabsf(a->j-b->j) && k_real_epsilon>fabsf(a->k-b->k);
+}
+
+/* 0x0011d180: three vectors of length 1 at right angles to each other: forward,
+which is a direction (forward if it has no length), left, which is at right
+angles to it and to a vector that is about up, and up. If that vector is
+on the line of the direction, up is used, or forward if the direction is up
+or down. The name is a guess */
+void __attribute__((stdcall)) orthonormal_basis3d(
+	const real_vector3d *direction,
+	const real_vector3d *up_hint,
+	real_vector3d *forward,
+	real_vector3d *left,
+	real_vector3d *up)
+{
+	real_vector3d i;
+
+	*forward= *direction;
+	if (normalize3d(forward)==0.0f)
+	{
+		*forward= *global_forward3d;
+	}
+
+	i.i= up_hint->j*forward->k - up_hint->k*forward->j;
+	i.j= forward->i*up_hint->k - up_hint->i*forward->k;
+	i.k= up_hint->i*forward->j - up_hint->j*forward->i;
+	*left= i;
+	if (normalize3d(left)==0.0f)
+	{
+		real_vector3d hint;
+
+		if (vectors3d_close(forward, global_up3d) || vectors3d_close(forward, global_down3d))
+		{
+			hint= *global_forward3d;
+		}
+		else
+		{
+			hint= *global_up3d;
+		}
+		i.k= hint.i*forward->j - forward->i*hint.j;
+		i.j= forward->i*hint.k - forward->k*hint.i;
+		i.i= forward->k*hint.j - hint.k*forward->j;
+		*left= i;
+		normalize3d(left);
+	}
+
+	i.k= left->j*forward->i - left->i*forward->j;
+	i.j= forward->k*left->i - forward->i*left->k;
+	i.i= forward->j*left->k - left->j*forward->k;
+	*up= i;
+	normalize3d(up);
 }
 
 /* 0x0011cf50: the angle between two vectors of length 1, from 0 to pi: 0 for

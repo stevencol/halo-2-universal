@@ -158,3 +158,5 @@ address,name,source
 004ed39c,unknown_004ed39c,source/game/game.c
 004cf780,unknown_004cf780,source/game/game.c
 004687a8,global_forward3d,source/math/real_math.c
+004687b0,global_up3d,source/math/real_math.c
+004687bc,global_down3d,source/math/real_math.c

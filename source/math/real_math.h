@@ -131,12 +131,16 @@ typedef char verify_real_matrix4x3_size[
 extern const real_argb_color *global_real_argb_white;
 extern real real_math_pi;
 extern const real_vector3d *global_forward3d;
+extern const real_vector3d *global_up3d;
+extern const real_vector3d *global_down3d;
 extern real real_math_two_pi;
 
 /* ---------- prototypes/REAL_MATH.C */
 
 void quaternion_to_axis_angle(const real_quaternion *quaternion, real_vector3d *axis, real *angle);
 real angle_between_vectors3d(const real_vector3d *a, const real_vector3d *b);
+void __attribute__((stdcall)) orthonormal_basis3d(const real_vector3d *direction, const real_vector3d *up_hint,
+	real_vector3d *forward, real_vector3d *left, real_vector3d *up);
 void orientation_inverse(real_orientation *result, const real_orientation *orientation);
 void __attribute__((stdcall)) orientation_multiply(real_orientation *result, const real_orientation *a,
 	const real_orientation *b);
