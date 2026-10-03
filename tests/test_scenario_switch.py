@@ -177,6 +177,10 @@ def run(t) -> None:
     def players(local: tuple[int, ...]) -> Memory:
         return Memory(random_.randbytes(0xC) + struct.pack("<4I", *local))
 
+    def sound_source(value: int) -> Memory:
+        # the sound to play, and the texts
+        return Memory(random_.randbytes(0x394) + struct.pack("<I", random_.choice((NONE, 7))) + random_.randbytes(0x64) + struct.pack("<I", value))
+
     def text_source(value: int) -> Memory:
         return Memory(random_.randbytes(0x3FC) + struct.pack("<I", value))
 
@@ -221,6 +225,14 @@ def run(t) -> None:
                             memory=memory,
                             externals={"unknown_00190e37": nothing, **messages},
                         )
+                        if source:
+                            # the game does not look at whether there is a source of the sound
+                            t.check(
+                                "main_save_map",
+                                globals={"main_globals": main_globals(random_), **common, "main_game_globals": GAME},
+                                memory={**memory, TEXT_SOURCE: sound_source(value)},
+                                externals={"unknown_001896c0": lambda harness, arguments: 0, **messages},
+                            )
                         for shown in (0, 1):
                             t.check(
                                 "main_print_saving_message",

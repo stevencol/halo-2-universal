@@ -88,6 +88,9 @@ void unknown_0018efa0(void);
 /* 0x00190e37: what main_unknown4E_private does before its message */
 void unknown_00190e37(void);
 
+/* 0x001896c0: plays a sound, as loud as it is told */
+void unknown_001896c0(long sound_index, real scale);
+
 /* 0x000593e0 */
 void unknown_000593e0(void);
 
@@ -99,6 +102,7 @@ enum
 
 	/* the string ids of the messages: hud_autosave_end, hud_loading_end and
 	hud_saving_end */
+	_string_id_hud_autosave= 0x120006A0,
 	_string_id_hud_autosave_end= 0x100006A1,
 	_string_id_hud_loading_end= 0x0F0006A3,
 	_string_id_hud_saving= 0x100006A4,
@@ -117,7 +121,10 @@ enum
 it is is not known */
 struct unknown_00510c94
 {
-	byte unknown0[0x3FC];
+	byte unknown0[0x394];
+	/* the sound that is played when the game is saved; NONE if none */
+	long save_sound_index;
+	byte unknown398[0x64];
 	long unknown3FC;
 };
 
@@ -576,6 +583,35 @@ void main_print_saving_message(
 		local_player_index= main_first_local_player();
 		main_get_message(_string_id_hud_saving, text);
 		hud_print_message(local_player_index, text);
+	}
+}
+
+/* 0x0012b790: the game is to be saved at the start of the next frame; in the
+campaign a sound is played and each player of this console is told. As
+Halo 1's of this name */
+void main_save_map(
+	void)
+{
+	main_globals.save_map= TRUE;
+	if (main_game_globals->options.game_mode==_game_mode_campaign)
+	{
+		long index;
+
+		hud_messages_unknown_0024cdaf();
+		if (unknown_00510c94->save_sound_index!=NONE)
+		{
+			unknown_001896c0(unknown_00510c94->save_sound_index, 1.0f);
+		}
+		for (index= 0; index<MAXIMUM_LOCAL_PLAYERS; index++)
+		{
+			if (players_globals->local_players[index]!=NONE)
+			{
+				wchar text[HUD_MESSAGE_LENGTH];
+
+				main_get_message(_string_id_hud_autosave, text);
+				hud_print_message(index, text);
+			}
+		}
 	}
 }
 

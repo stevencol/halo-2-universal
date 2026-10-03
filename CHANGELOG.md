@@ -2,6 +2,32 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Pedir que se guarde la partida
+
+Una función. De 674 funciones se pasa a 675, el 5,99 % de las del juego
+(el 3,160 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `main_save_map` | `0x0012b790` | `main/main.c` |
+
+### Lo que se sabe
+
+- Pide que la partida se guarde al empezar el fotograma siguiente (lo hace
+  `main_save_map_private`). En la campaña, además, **suena un sonido** (el
+  que dice la estructura de los textos, en `+0x394`, a volumen 1) y se
+  muestra a **cada jugador** de la consola el texto de «autoguardado»
+  (`0x120006A0`).
+- No mira si la estructura de los textos existe antes de leer el sonido: en
+  el juego siempre está.
+- El nombre es el de Halo 1.
+
+### Mutaciones
+
+10 líneas rotas a propósito: las 10 detectadas.
+
 ## 2026-10-03 — Las aristas de una caja
 
 Una función. De 673 funciones se pasa a 674, el 5,98 % de las del juego

@@ -120,6 +120,7 @@ void main_time_initialize(void);
 float main_time_update(void);
 void main_revert_map_private(void);
 void main_save_map_private(void);
+void main_save_map(void);
 void main_switch_structure_bsp_private(void);
 void main_unknown4E_private(void);
 void main_reset_map_private(void);

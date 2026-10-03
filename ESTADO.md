@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-03, al terminar el hito 124.
+**Última actualización:** 2026-10-03, al terminar el hito 125.
 
 ## Dónde estamos
 
-- **674 funciones descompiladas de 11.265: el 5,98 % del juego** (el
-  3,153 % de los bytes de código).
-- Las 674 están comprobadas contra el ejecutable original
+- **675 funciones descompiladas de 11.265: el 5,99 % del juego** (el
+  3,160 % de los bytes de código).
+- Las 675 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the edges of a box* (ver `git log`).
+- Último hito: *Decompile asking for the game to be saved* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -132,7 +132,7 @@ Módulos (funciones hechas / archivo):
 - [ ] Juego y tabla de sistemas — `game\game.c` (21): la tabla, lo que la
       recorre, las opciones (por defecto, validar, comparar), los ticks de
       un fotograma, partida perdida y terminada, y el tipo de simulación
-- [ ] Bucle principal — `main\main.c` (14):
+- [ ] Bucle principal — `main\main.c` (15):
   - [x] el bucle, un fotograma y el reloj
   - [x] guardar, cambiar de bsp y avisar de que se guardó
   - [ ] la acción `0x0012bbd0` (pantallas de la interfaz)
