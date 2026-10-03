@@ -916,6 +916,78 @@ void fast_quaternion_interpolate_and_normalize(
 	return;
 }
 
+/* 0x0011f5f0: makes a rectangle as large as it has to be for some points
+to be in it. The name is a guess */
+void real_rectangle2d_enclose_points(
+	real_rectangle2d *bounds,
+	long count,
+	const real_point2d *points)
+{
+	long index;
+
+	for (index= 0; index<count; index++)
+	{
+		const real_point2d *point= &points[index];
+
+		if (bounds->x0>point->x)
+		{
+			bounds->x0= point->x;
+		}
+		if (point->x>bounds->x1)
+		{
+			bounds->x1= point->x;
+		}
+		if (bounds->y0>point->y)
+		{
+			bounds->y0= point->y;
+		}
+		if (point->y>bounds->y1)
+		{
+			bounds->y1= point->y;
+		}
+	}
+}
+
+/* 0x0011f770: makes a box as large as it has to be for some points to be in
+it. The name is a guess */
+void real_rectangle3d_enclose_points(
+	real_rectangle3d *bounds,
+	long count,
+	const real_point3d *points)
+{
+	long index;
+
+	for (index= 0; index<count; index++)
+	{
+		const real_point3d *point= &points[index];
+
+		if (bounds->x0>point->x)
+		{
+			bounds->x0= point->x;
+		}
+		if (point->x>bounds->x1)
+		{
+			bounds->x1= point->x;
+		}
+		if (bounds->y0>point->y)
+		{
+			bounds->y0= point->y;
+		}
+		if (point->y>bounds->y1)
+		{
+			bounds->y1= point->y;
+		}
+		if (bounds->z0>point->z)
+		{
+			bounds->z0= point->z;
+		}
+		if (point->z>bounds->z1)
+		{
+			bounds->z1= point->z;
+		}
+	}
+}
+
 /* 0x0011f9a0: the eight corners of a box, and how many they are */
 long rectangle3d_build_vertices(
 	const real_rectangle3d *bounds,

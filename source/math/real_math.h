@@ -184,6 +184,8 @@ void quaternion_multiply(const real_quaternion *a, const real_quaternion *b, rea
 void quaternion_from_vectors3d(real_quaternion *result, const real_vector3d *a, const real_vector3d *b);
 void fast_quaternion_interpolate_and_normalize(const real_quaternion *a, const real_quaternion *b, real t,
 	real_quaternion *result);
+void real_rectangle2d_enclose_points(real_rectangle2d *bounds, long count, const real_point2d *points);
+void real_rectangle3d_enclose_points(real_rectangle3d *bounds, long count, const real_point3d *points);
 long rectangle3d_build_vertices(const real_rectangle3d *bounds, real_point3d *vertices);
 long __attribute__((stdcall)) rectangle3d_build_edges(const real_rectangle3d *bounds, real_point3d *points);
 void vectors3d_from_euler_angles3d(real_vector3d *forward, real_vector3d *up, const real_euler_angles3d *angles);

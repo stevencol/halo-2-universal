@@ -1089,3 +1089,5 @@ address,name,source,arguments,returns,convention
 002db880,hkKeyFrameUtility_applyHardKeyFrame,,stack stack stack stack,void
 0011f4f0,quantize_real_point3d,source/math/real_math.c,eax edx ecx stack,void
 0011f580,dequantize_real_point3d,source/math/real_math.c,stack ebx ecx eax,void
+0011f5f0,real_rectangle2d_enclose_points,source/math/real_math.c,eax ebx esi,void
+0011f770,real_rectangle3d_enclose_points,source/math/real_math.c,eax edx ebx,void

@@ -35,6 +35,7 @@ VECTORS = (
 
 
 def run(t) -> None:
+    run_enclose(t)
     run_point_quantize(t)
     run_edges(t)
     run_slerp(t)
@@ -444,3 +445,28 @@ def run_point_quantize(t) -> None:
             bits,
             Buffer(random_.randbytes(12)),
         )
+
+
+def run_enclose(t) -> None:
+    random_ = random.Random(137)
+    NAN = struct.unpack("<f", bytes.fromhex("0000c07f"))[0]
+
+    def coordinate() -> float:
+        return random_.choice((random_.uniform(-50, 50), random_.uniform(-50, 50), 0.0, -0.0, 5.0, NAN))
+
+    for dimensions, name in ((2, "real_rectangle2d_enclose_points"), (3, "real_rectangle3d_enclose_points")):
+        for _ in range(300):
+            bounds = []
+            for _ in range(dimensions):
+                low, high = coordinate(), coordinate()
+                # most are the right way up
+                bounds += sorted((low, high)) if random_.random() < 0.7 else [low, high]
+            count = random_.choice((0, 1, 2, 3, 4, 5, 7, 8, 9, 13))
+            points = [coordinate() for _ in range(count * dimensions)]
+            # compared as bytes, to tell 0 from -0
+            t.check(
+                name,
+                Buffer(struct.pack(f"<{2 * dimensions}f", *bounds)),
+                count,
+                Buffer(struct.pack(f"<{len(points)}f", *points) + random_.randbytes(8)),
+            )

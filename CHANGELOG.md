@@ -2,6 +2,32 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Meter puntos en un rectángulo
+
+Dos funciones de `math/real_math.c`, con las que se llega a 700. De 698
+funciones se pasa a 700, el 6,21 % de las del juego (el 3,340 % de
+sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `real_rectangle2d_enclose_points` | `0x0011f5f0` | `math/real_math.c` |
+| `real_rectangle3d_enclose_points` | `0x0011f770` | `math/real_math.c` |
+
+### Lo que se sabe
+
+- Agrandan un rectángulo o una caja lo justo para que quepan unos puntos,
+  uno tras otro: cada coordenada menor que el lado de abajo lo baja, y cada
+  una mayor que el de arriba lo sube. Un NaN no cambia nada.
+- El compilador del juego desenrolló los bucles de cuatro en cuatro; en C
+  es un bucle normal.
+- Los nombres son los de las herramientas de Blam, a ojo.
+
+### Mutaciones
+
+12 líneas rotas a propósito: las 12 detectadas.
+
 ## 2026-10-03 — Cuantizar un punto
 
 Dos funciones de `math/real_math.c`. De 696 funciones se pasa a 698, el
