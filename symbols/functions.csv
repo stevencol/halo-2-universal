@@ -1021,5 +1021,5 @@ address,name,source,arguments,returns,convention
 0012c090,xmem_static_allocate,source/shell/shell.c,stack stack,int
 002d09c0,XMemAllocDefault,,stack stack,int,stdcall
 002d0a60,XMemFreeDefault,,stack stack,void,stdcall
-00053290,unknown_00053290,,eax stack,int
-000532e0,unknown_000532e0,,stack stack,void,stdcall
+00053290,sound_memory_allocate,source/sound/sound_memory.c,eax stack,int
+000532e0,sound_memory_free,source/sound/sound_memory.c,stack stack,void

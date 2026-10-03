@@ -16,6 +16,7 @@ shell_dispose are those of Halo 1's shell.c; the other names are guesses.
 #include "cache/animation_cache.h"
 #include "cache/cache_files.h"
 #include "cache/texture_cache.h"
+#include "sound/sound_memory.h"
 #include "bitmaps/bitmap_definitions.h"
 #include "input/input.h"
 #include "cseries/async.h"
@@ -82,10 +83,6 @@ void main_loop(void);
 XMemFree do if the game does not do it */
 void *__attribute__((stdcall)) XMemAllocDefault(unsigned long size, unsigned long attributes);
 void __attribute__((stdcall)) XMemFreeDefault(void *address, unsigned long attributes);
-
-/* 0x00053290 and 0x000532e0: the memory of the sound */
-void *unknown_00053290(unsigned long size, unsigned long attributes);
-void __attribute__((stdcall)) unknown_000532e0(void *address, unsigned long attributes);
 
 /* ---------- constants */
 
@@ -191,7 +188,7 @@ void *__attribute__((stdcall)) XMemAlloc(
 	}
 	if (allocator>XMEM_SOUND_FIRST_ALLOCATOR_ID-1 && allocator<=XMEM_SOUND_LAST_ALLOCATOR_ID)
 	{
-		return unknown_00053290(size, attributes);
+		return sound_memory_allocate(size, attributes);
 	}
 
 	return XMemAllocDefault(size, attributes);
@@ -216,7 +213,7 @@ void __attribute__((stdcall)) XMemFree(
 	}
 	else if (allocator>XMEM_SOUND_FIRST_ALLOCATOR_ID-1 && allocator<=XMEM_SOUND_LAST_ALLOCATOR_ID)
 	{
-		unknown_000532e0(address, attributes);
+		sound_memory_free(address, attributes);
 
 		return;
 	}

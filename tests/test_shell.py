@@ -198,7 +198,7 @@ def run(t) -> None:
                         globals={"xmem_static_buffer+0": buffer, "xmem_static_buffer_used": random_x.randbytes(1)},
                         externals={
                             "XMemAllocDefault": lambda harness, arguments: 0x80123000,
-                            "unknown_00053290": lambda harness, arguments: 0x80456000,
+                            "sound_memory_allocate": lambda harness, arguments: 0x80456000,
                         },
                     )
                 buffer = Buffer(random_x.randbytes(0xD0))
@@ -211,7 +211,7 @@ def run(t) -> None:
                         extra=[buffer],
                         externals={
                             "XMemFreeDefault": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
-                            "unknown_000532e0": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                            "sound_memory_free": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
                         },
                     )
 

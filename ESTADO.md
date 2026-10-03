@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 108.
+**Última actualización:** 2026-10-02, al terminar el hito 109.
 
 ## Dónde estamos
 
-- **648 funciones descompiladas de 11.265: el 5,75 % del juego** (el
-  2,973 % de los bytes de código).
-- Las 648 están comprobadas contra el ejecutable original
+- **650 funciones descompiladas de 11.265: el 5,77 % del juego** (el
+  2,977 % de los bytes de código).
+- Las 650 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the memory that the console's libraries ask for* (ver `git log`).
+- Último hito: *Decompile the memory of the sound* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -126,6 +126,8 @@ Módulos (funciones hechas / archivo):
       (17; falta guardar/cargar núcleo y partida guardada)
 - [x] Arranque del juego — `shell\shell.c` (12, con la memoria que piden
       las bibliotecas de la consola)
+- [ ] Memoria del sonido — `sound\sound_memory.c` (2; faltan `0x00053310`,
+      que la prepara, y `0x000533e0`, que la deshace)
 - [x] Preferencias guardadas — `main\global_preferences.c` (15: completo)
 - [ ] Juego y tabla de sistemas — `game\game.c` (19): la tabla, lo que la
       recorre, las opciones (por defecto, validar, comparar), los ticks de

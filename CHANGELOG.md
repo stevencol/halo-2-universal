@@ -2,6 +2,34 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — La memoria del sonido
+
+Dos funciones, en un archivo nuevo. De 648 funciones se pasa a 650, el
+5,77 % de las del juego (el 2,977 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_memory_allocate` | `0x00053290` | `sound/sound_memory.c` |
+| `sound_memory_free` | `0x000532e0` | `sound/sound_memory.c` |
+
+`XMemAlloc` y `XMemFree` ya las llamaban; ahora llaman a estas.
+
+### Lo que se sabe
+
+- La memoria que piden las bibliotecas de sonido de la consola (los
+  asignadores `0x89` y `0x8A`) sale de **uno de dos *pools* de memoria** del
+  juego; un indicador global dice cuál se usa.
+- Una petición de tamaño 0 recibe `0x200` bytes. Lo demás que dice la
+  petición no se mira.
+- Devolver «nada» no hace nada.
+- Los nombres del archivo y de las funciones son suposiciones.
+
+### Mutaciones
+
+10 líneas rotas a propósito: las 10 detectadas.
+
 ## 2026-10-02 — La memoria que piden las bibliotecas de la consola
 
 Cinco funciones. De 643 funciones se pasa a 648, el 5,75 % de las del

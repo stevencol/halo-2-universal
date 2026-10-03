@@ -151,3 +151,6 @@ address,name,source
 004ed3a0,unknown_004ed3a0,source/text/fonts.c
 00510c3c,xmem_static_buffer,source/shell/shell.c
 00510c40,xmem_static_buffer_used,source/shell/shell.c
+004c995c,sound_memory_pool,source/sound/sound_memory.c
+004c9960,sound_memory_other_pool,source/sound/sound_memory.c
+004c9964,sound_memory_use_other_pool,source/sound/sound_memory.c
