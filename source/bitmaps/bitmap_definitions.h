@@ -44,13 +44,21 @@ enum
 	_bitmap_format_ay8= 2,
 	_bitmap_format_a8y8= 3,
 	_bitmap_format_r5g6b5= 6,
+	_bitmap_format_a1r5g5b5= 8,
 	_bitmap_format_a4r4g4b4= 9,
 	_bitmap_format_x8r8g8b8= 10,
 	_bitmap_format_a8r8g8b8= 11,
 	_bitmap_format_dxt1= 14,
 	_bitmap_format_dxt3= 15,
 	_bitmap_format_dxt5= 16,
-	_bitmap_format_p8= 17
+	_bitmap_format_p8= 17,
+	/* the names of these are Halo 2's. A pixel of the first is its byte */
+	_bitmap_format_unknown18= 18,
+	_bitmap_format_argbfp32= 19,
+	_bitmap_format_rgbfp32= 20,
+	_bitmap_format_rgbfp16= 21,
+	_bitmap_format_v8u8= 22,
+	_bitmap_format_g8b8= 23
 };
 
 enum

@@ -10,6 +10,8 @@ that these functions are of it is a guess, and so are their names.
 
 #include "bitmaps.h"
 
+#include "bitmaps/bitmap_utilities.h"
+
 #include "cache/texture_cache.h"
 
 #include <math.h>
@@ -42,11 +44,12 @@ const short bitmap_format_bits_per_pixel[NUMBER_OF_BITMAP_FORMATS]=
 compressed bitmap out of its pixels */
 boolean bitmap_pixel_out_of_bounds;
 
-/* ---------- prototypes of functions that are not decompiled */
+/* 0x00468848: the colors of the pixels of bitmaps of the format p8, which
+are of normals. They are the game's, and they are not copied here: what is
+built from this has them black. The name is Halo 1's */
+unsigned long global_vector_palette[256];
 
-/* 0x00135ca0: a pixel of a format as one of 32 bits, alpha, red, green and
-blue. The name is Halo 1's */
-unsigned long bitmap_format_to_a8r8g8b8(short format, const byte *pixels, long pixel_index);
+/* ---------- prototypes of functions that are not decompiled */
 
 /* 0x000358d0: where a pixel is in a swizzled texture of a width and a
 height, in two parts that are or'ed */
@@ -373,6 +376,125 @@ unsigned long __attribute__((stdcall)) bitmap_get_pixel(
 	}
 
 	return bitmap_format_to_a8r8g8b8(format, pixels, (long)y*width + x);
+}
+
+/* a component of a color of reals of a pixel, from 0 to 1. The game takes
+a hundred times the real */
+static inline __attribute__((always_inline)) real bitmap_pixel_real_component(
+	real value)
+{
+	value*= 100.0f;
+
+	return 0.0f>value ? 0.0f : (value>1.0f ? 1.0f : value);
+}
+
+/* 0x00135ca0: a pixel of some pixels of a format, as one of 32 bits: alpha,
+red, green and blue. A component of fewer bits is repeated to fill eight;
+those of reals are taken a hundred times, from 0 to 1. 0 for a format that
+is compressed or that there is not. The name is Halo 1's */
+unsigned long bitmap_format_to_a8r8g8b8(
+	short format,
+	const byte *pixels,
+	long pixel_index)
+{
+	const word *words= (const word *)pixels;
+
+	switch (format)
+	{
+	case _bitmap_format_a8:
+		return (unsigned long)pixels[pixel_index]<<24;
+	case _bitmap_format_y8:
+	{
+		unsigned long luminance= pixels[pixel_index];
+
+		return 0xFF000000 | luminance<<16 | luminance<<8 | luminance;
+	}
+	case _bitmap_format_ay8:
+	{
+		unsigned long value= pixels[pixel_index];
+
+		return value<<24 | value<<16 | value<<8 | value;
+	}
+	case _bitmap_format_a8y8:
+	{
+		unsigned long alpha= words[pixel_index]>>8;
+		unsigned long luminance= words[pixel_index]&0xFF;
+
+		return alpha<<24 | luminance<<16 | luminance<<8 | luminance;
+	}
+	case _bitmap_format_r5g6b5:
+	{
+		unsigned long red= words[pixel_index]>>11;
+		unsigned long green= (words[pixel_index]>>5)&0x3F;
+		unsigned long blue= words[pixel_index]&0x1F;
+
+		return 0xFF000000 | (red<<3 | red>>2)<<16 | (green<<2 | green>>4)<<8 | (blue<<3 | blue>>2);
+	}
+	case _bitmap_format_a1r5g5b5:
+	{
+		unsigned long alpha= (words[pixel_index]&0x8000) ? 0xFF : 0;
+		unsigned long red= (words[pixel_index]>>10)&0x1F;
+		unsigned long green= (words[pixel_index]>>5)&0x1F;
+		unsigned long blue= words[pixel_index]&0x1F;
+
+		return alpha<<24 | (red<<3 | red>>2)<<16 | (green<<3 | green>>2)<<8 | (blue<<3 | blue>>2);
+	}
+	case _bitmap_format_a4r4g4b4:
+	{
+		unsigned long alpha= words[pixel_index]>>12;
+		unsigned long red= (words[pixel_index]>>8)&0xF;
+		unsigned long green= (words[pixel_index]>>4)&0xF;
+		unsigned long blue= words[pixel_index]&0xF;
+
+		return (alpha*0x11)<<24 | (red*0x11)<<16 | (green*0x11)<<8 | blue*0x11;
+	}
+	case _bitmap_format_x8r8g8b8:
+	case _bitmap_format_a8r8g8b8:
+		return ((const unsigned long *)pixels)[pixel_index];
+	case _bitmap_format_p8:
+		return global_vector_palette[pixels[pixel_index]];
+	case _bitmap_format_unknown18:
+		return pixels[pixel_index];
+	case _bitmap_format_argbfp32:
+	{
+		const real *values= (const real *)(pixels+pixel_index*4*sizeof(real));
+		real_argb_color color;
+
+		color.alpha= bitmap_pixel_real_component(values[0]);
+		color.rgb.red= bitmap_pixel_real_component(values[1]);
+		color.rgb.green= bitmap_pixel_real_component(values[2]);
+		color.rgb.blue= bitmap_pixel_real_component(values[3]);
+		return real_argb_color_to_pixel32(&color);
+	}
+	case _bitmap_format_rgbfp32:
+	{
+		const real *values= (const real *)(pixels+pixel_index*3*sizeof(real));
+		real_rgb_color color;
+
+		color.red= bitmap_pixel_real_component(values[0]);
+		color.green= bitmap_pixel_real_component(values[1]);
+		color.blue= bitmap_pixel_real_component(values[2]);
+		return real_rgb_color_to_pixel32(&color);
+	}
+	case _bitmap_format_rgbfp16:
+	{
+		const word *values= (const word *)(pixels+pixel_index*3*sizeof(word));
+		real_argb_color color;
+
+		color.alpha= 1.0f;
+		color.rgb.red= bitmap_pixel_real_component(real16_to_real(values[0]));
+		color.rgb.green= bitmap_pixel_real_component(real16_to_real(values[1]));
+		color.rgb.blue= bitmap_pixel_real_component(real16_to_real(values[2]));
+		return real_argb_color_to_pixel32(&color);
+	}
+	case _bitmap_format_v8u8:
+		/* red is u and green is v */
+		return 0xFF000000 | (unsigned long)(words[pixel_index]&0xFF)<<16 | (words[pixel_index]&0xFF00);
+	case _bitmap_format_g8b8:
+		return 0xFF000000 | words[pixel_index];
+	default:
+		return 0;
+	}
 }
 
 /* one of the coordinates of a pixel at a point of a bitmap from 0 to 1, of

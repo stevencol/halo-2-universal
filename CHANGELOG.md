@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Un píxel de cada formato en 32 bits
+
+Una función, con la que `bitmaps/bitmaps.c` queda completo. De 705
+funciones se pasa a 706, el 6,27 % de las del juego (el 3,411 % de sus
+bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `bitmap_format_to_a8r8g8b8` | `0x00135ca0` | `bitmaps/bitmaps.c` |
+
+También los nombres de los formatos que faltaban (`a1r5g5b5`, y del 18 al
+23 los de Halo 2) y el global `global_vector_palette` (`0x00468848`, con el
+nombre de Halo 1). Sus 256 colores son del juego y no se copian aquí: lo
+que se compile de esto los tiene en negro, y las pruebas les dan valores.
+
+### Lo que se sabe
+
+- Pasa el píxel de un formato a uno de 32 bits (alfa, rojo, verde y azul).
+  Las componentes de menos bits se repiten hasta llenar ocho (r5g6b5,
+  a1r5g5b5, a4r4g4b4), las de luminancia van a las tres, y p8 se busca en
+  la paleta de vectores. El formato 18 da su byte tal cual, v8u8 pone u en
+  el rojo y v en el verde, y g8b8 deja el rojo a 0.
+- Los formatos de reales (de 32 y de 16 bits) multiplican cada componente
+  por 100 antes de llevarla de 0 a 1. Un NaN se queda como NaN, y si es el
+  azul se cuela en el bit alto del píxel.
+- Los formatos comprimidos y los que no hay dan 0.
+- En C las cuentas de bits están escritas de forma legible; se comprobó
+  aparte que dan lo mismo que las del juego con los 65.536 valores de 16
+  bits.
+
+### Mutaciones
+
+29 líneas rotas a propósito: las 29 detectadas. Una (un NaN que da 0) solo
+se veía con un NaN justo en el azul del píxel que se lee, y se pusieron
+más NaN en las pruebas.
+
 ## 2026-10-03 — El píxel de un bitmap en un punto
 
 Una función de `bitmaps/bitmaps.c`. De 704 funciones se pasa a 705, el

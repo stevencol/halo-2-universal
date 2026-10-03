@@ -168,3 +168,4 @@ address,name,source
 0051e9b8,havok_component_data,source/physics/havok_component.c
 004687a4,global_zero_vector3d,source/math/real_math.c
 0055e72c,bitmap_pixel_out_of_bounds,source/bitmaps/bitmaps.c
+00468848,global_vector_palette,source/bitmaps/bitmaps.c

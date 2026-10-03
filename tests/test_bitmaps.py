@@ -339,3 +339,36 @@ def run(t) -> None:
             globals={"bitmap_pixel_out_of_bounds": bytes([0])},
             externals=externals,
         )
+
+    # ---------- a pixel of each format as one of 32 bits
+
+    random_ = random.Random(142)
+    NEAR = [random_.uniform(-0.004, 0.014) for _ in range(64)]
+
+    def format_pixels(format_: int) -> Buffer:
+        if format_ in (19, 20):
+            # most reals of the pixels are about a hundredth of 0 to 1
+            values = [random_.choice(NEAR) if random_.random() < 0.8 else random_.uniform(-5, 5) for _ in range(0x100)]
+            data = bytearray(struct.pack("<256f", *values))
+            # and some NaNs, infinities and zeros
+            for _ in range(40):
+                at = random_.randrange(0x100) * 4
+                data[at : at + 4] = random_.choice((bytes.fromhex("0000c07f"), bytes.fromhex("0000807f"), bytes(4)))
+            return Buffer(bytes(data))
+        if format_ == 21:
+            # reals of 16 bits: about a hundredth, and any
+            values = [random_.choice((0x1C00, 0x2000, 0x2147, 0x211F, 0x9C00, 0x0000, 0x8000, 0x7C00, 0x7E00, 0x2400))
+                      if random_.random() < 0.6 else random_.getrandbits(16) for _ in range(0x200)]
+            return Buffer(struct.pack("<512H", *values))
+        return Buffer(random_.randbytes(0x400))
+
+    palette = Buffer(random_.randbytes(0x400))
+    for format_ in (*range(26), -1, 0x7FFF, -0x8000):
+        for _ in range(60):
+            t.check(
+                "bitmap_format_to_a8r8g8b8",
+                format_,
+                format_pixels(format_),
+                random_.randrange(0x40),
+                globals={"global_vector_palette": palette.data},
+            )
