@@ -35,6 +35,24 @@ void unknown_0019d650(void *unknown);
 /* 0x0007ad80: fills a buffer with bytes made at random */
 void unknown_0007ad80(long size, void *buffer);
 
+/* 0x0017bc40, 0x0017d690, 0x000d4db0, 0x0018c060, 0x002118c0, 0x00134e00,
+0x00039e50 and 0x00176f60: what is updated by the frame, with its seconds
+or not */
+void __attribute__((stdcall)) unknown_0017bc40(real seconds);
+void unknown_0017d690(void);
+void __attribute__((stdcall)) unknown_000d4db0(real seconds);
+void __attribute__((stdcall)) unknown_0018c060(real seconds);
+void unknown_002118c0(void);
+void __attribute__((stdcall)) unknown_00134e00(real seconds);
+void __attribute__((stdcall)) unknown_00039e50(real seconds);
+void __attribute__((stdcall)) unknown_00176f60(real seconds);
+
+/* 0x00014980, 0x000128c0 and 0x00014600: the display is set up again with
+some settings */
+void unknown_00014980(void);
+void unknown_000128c0(const struct display_settings *settings);
+void unknown_00014600(void);
+
 /* 0x000682e0, 0x000683a0, 0x0014d3a0, 0x00138db0 and 0x000684e0: what a
 tick does with what it has on the stack, before and after the systems are
 updated; the second says whether they are */
@@ -606,6 +624,41 @@ void game_tick(
 	{
 		game_time_globals->time++;
 	}
+}
+
+/* 0x00485b20: the seconds of the last frame of the game that took any */
+real unknown_00485b20;
+
+/* 0x004ba040: the seconds of all the frames of the game. The name is a
+guess */
+double game_seconds;
+
+/* 0x00137ed0: what the game does in a frame of some seconds, after its
+ticks: if the frame took any time the systems that go by the frame are
+updated, and the display is set up again if its settings are not those
+that the game starts with. The name is Halo 1's */
+void __attribute__((stdcall)) game_frame(
+	real seconds)
+{
+	if (seconds>0.0f)
+	{
+		unknown_0017bc40(seconds);
+		unknown_0017d690();
+		unknown_000d4db0(seconds);
+		unknown_0018c060(seconds);
+		unknown_002118c0();
+		unknown_00134e00(seconds);
+		if (memcmp(&display_settings, &display_settings_default, sizeof(display_settings)))
+		{
+			unknown_00014980();
+			unknown_000128c0(&display_settings_default);
+			unknown_00014600();
+		}
+		unknown_00485b20= seconds;
+		unknown_00039e50(seconds);
+	}
+	unknown_00176f60(seconds);
+	game_seconds+= seconds;
 }
 
 /* 0x00137f70: runs so many ticks of the game. If the main loop gets

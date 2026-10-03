@@ -29,7 +29,7 @@ PLAIN = (
     "unknown_0012bbd0 main_unknown4E_private input_update unknown_00217c40 saved_game_files_find_unit_files global_preferences_flush "
     "font_cache_frame cached_map_file_copy_update unknown_00163820 unknown_001479c3 unknown_00155f80 "
     "unknown_00092f80 unknown_0008df50 unknown_000680f0 unknown_00059940 unknown_001870a0 unknown_0008dfc0 "
-    "unknown_00137ed0 unknown_001554b0 unknown_0016f280 unknown_00222a70 unknown_00223240 unknown_00125b40 "
+    "game_frame unknown_001554b0 unknown_0016f280 unknown_00222a70 unknown_00223240 unknown_00125b40 "
     "unknown_000681e0 unknown_00222d80"
 ).split()
 
@@ -94,7 +94,7 @@ def run(t) -> None:
                     target_vblank=target_vblank,
                 ),
                 "main_vblank_count": struct.pack("<q", vblank_count),
-                "main_frame_vblanks": struct.pack("<h", random_.choice((0, 0, 1, 2, 3, 4, -3))),
+                "display_settings+2": struct.pack("<h", random_.choice((0, 0, 1, 2, 3, 4, -3))),
                 "xbox_video_settings": struct.pack("<h6B", random_.choice((60, 60, 50, 0, -1)), 0, 0, 0, 0, 0, 0),
                 "main_game_globals": game_globals,
                 "game_time_globals": TIME,
@@ -168,7 +168,7 @@ def run(t) -> None:
                 "unknown_00510560": random_.getrandbits(32),
                 "main_time_globals": time_globals(random_),
                 "main_vblank_count": struct.pack("<q", vblank_count),
-                "main_frame_vblanks": bytes(2),
+                "display_settings+2": bytes(2),
                 "xbox_video_settings": struct.pack("<h6B", 60, 0, 0, 0, 0, 0, 0),
             },
             memory={GAME: game(random_, random_.choice((1, 1, 0))), TIME: game_time(77)},

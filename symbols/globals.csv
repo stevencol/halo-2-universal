@@ -46,7 +46,7 @@ address,name,source
 0055c14c,unknown_0055c14c,source/main/main.c
 004e6388,main_time_globals,source/main/main.c
 00485ab0,main_vblank_count,source/main/main.c
-00485aca,main_frame_vblanks,source/main/main.c
+00485ac8,display_settings,source/main/main.c
 0055c14d,unknown_0055c14d,source/main/main.c
 0051ea14,unknown_0051ea14,source/main/main.c
 0055c150,unknown_0055c150,source/main/main.c
@@ -170,3 +170,6 @@ address,name,source
 0055e72c,bitmap_pixel_out_of_bounds,source/bitmaps/bitmaps.c
 00468848,global_vector_palette,source/bitmaps/bitmaps.c
 00510c6c,unknown_00510c6c,source/game/game.c
+0043ed80,display_settings_default,source/main/main.c
+00485b20,unknown_00485b20,source/game/game.c
+004ba040,game_seconds,source/game/game.c

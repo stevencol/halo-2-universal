@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Un fotograma del juego
+
+Una función de `game/game.c`, que ya se llamaba desde `main.c` como
+`unknown_00137ed0`. De 709 funciones se pasa a 710, el 6,30 % de las del
+juego (el 3,434 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_frame` | `0x00137ed0` | `game/game.c` |
+
+También la estructura `display_settings` (`0x00485ac8`, 12 bytes) y los
+valores con los que empieza el juego (`display_settings_default`,
+`0x0043ed80`), y los globales `unknown_00485b20` y `game_seconds`
+(`0x004ba040`, un `double`).
+
+### Cambiado
+
+- `main_frame_vblanks` (`0x00485aca`) no era un global aparte: es el
+  `short` en `+2` de `display_settings`, que `0x000128c0` llena entera.
+  Ahora es `display_settings.frame_vblanks`, y las pruebas lo dan como
+  `display_settings+2`.
+
+### Lo que se sabe
+
+- Es lo que el juego hace en un fotograma de unos segundos, después de sus
+  ticks. Si el fotograma duró algo (más de 0; un NaN no), actualiza ocho
+  sistemas que van por fotogramas, unos con los segundos y otros sin
+  ellos. Si los ajustes de la pantalla no son los del principio, la vuelve
+  a preparar con esos. Y guarda los segundos en `0x00485b20`.
+- Siempre llama a `0x00176f60` con los segundos y los suma, en coma
+  flotante del x87 y en un `double`, a `game_seconds`.
+- El nombre es el de Halo 1, que hace algo parecido.
+
+### Mutaciones
+
+15 líneas rotas a propósito: las 15 detectadas. Una (que un NaN cuente como
+fotograma) solo se veía con un NaN, y se añadió a las pruebas.
+
 ## 2026-10-03 — Abrir un archivo esperando
 
 Dos funciones de `cseries/async.c`. De 707 funciones se pasa a 709, el

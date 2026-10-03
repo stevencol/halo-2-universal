@@ -70,7 +70,6 @@ boolean unknown_00068250(void);
 void unknown_00146660(float seconds, float *unknown_real, long *unknown_long);
 void unknown_001870a0(float seconds, float unknown_real);
 void unknown_0008dfc0(void);
-void unknown_00137ed0(float unknown_real);
 void unknown_001554b0(float seconds);
 void unknown_0016f280(float seconds);
 void unknown_00222a70(float seconds);
@@ -159,9 +158,11 @@ it go up is not decompiled, and the name is a guess: a frame's seconds are
 what it went up, divided by the refresh rate */
 long long main_vblank_count;
 
-/* 0x00485aca: how many vertical blanks to give a frame; 0 for no limit.
-The name is a guess */
-short main_frame_vblanks;
+/* 0x00485ac8: how the frames are shown. The name is a guess */
+struct display_settings display_settings;
+
+/* 0x0043ed80: those that the game starts with: a vertical blank a frame */
+const struct display_settings display_settings_default= { 0, 0, 1, 3, 1 };
 
 /* what a frame looks at, of other parts of the game. What they are is not
 known: 0x0055c14d, 0x0051ea14, 0x0055c150, 0x004d8ba0, 0x00510548,
@@ -251,12 +252,12 @@ float main_time_update(
 		game_time= (long)game_time_globals->time;
 	}
 
-	if (main_frame_vblanks &&
+	if (display_settings.frame_vblanks &&
 		main_game_globals &&
 		main_game_globals->active &&
 		(!time->unknown0 || time->unknown1))
 	{
-		short frame_vblanks= main_frame_vblanks;
+		short frame_vblanks= display_settings.frame_vblanks;
 
 		time->unknown32= frame_vblanks;
 		if (main_game_globals->active)
@@ -428,7 +429,7 @@ void main_loop_body(
 		unknown_001870a0(seconds, unknown_real);
 		game_run_ticks(unknown_long, &unknown_real);
 		unknown_0008dfc0();
-		unknown_00137ed0(unknown_real);
+		game_frame(unknown_real);
 		unknown_001554b0(seconds);
 		unknown_0016f280(seconds);
 		unknown_00222a70(seconds);

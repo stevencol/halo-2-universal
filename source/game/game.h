@@ -261,6 +261,8 @@ struct game_time_globals
 
 /* ---------- prototypes/GAME.C */
 
+void __attribute__((stdcall)) game_frame(float seconds);
+
 void game_create_players(void);
 void game_won(void);
 

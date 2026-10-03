@@ -8,7 +8,7 @@
 import random
 import struct
 
-from difftest import PHYSICAL_ADDRESS, Buffer, Memory, Mock, mock_address
+from difftest import PHYSICAL_ADDRESS, Buffer, Memory, Mock, f32, mock_address
 from difftest import external_address as harness_external_address
 from test_game_state import BASE, GAME, TIME, game_state_globals, game_time
 
@@ -529,3 +529,43 @@ def run_players_and_won(t) -> None:
                 },
                 externals=tick_externals(update),
             )
+
+    # ---------- a frame
+
+    random_ = random.Random(145)
+    FRAME_NAMES = (
+        "unknown_0017bc40",
+        "unknown_0017d690",
+        "unknown_000d4db0",
+        "unknown_0018c060",
+        "unknown_002118c0",
+        "unknown_00134e00",
+        "unknown_00014980",
+        "unknown_00014600",
+        "unknown_00039e50",
+        "unknown_00176f60",
+    )
+
+    def settings_set(harness, arguments):
+        (settings,) = arguments
+        return 0, (bytes(harness.mu.mem_read(settings, 12)),)
+
+    frame_externals = {name: (lambda harness, arguments: 0) for name in FRAME_NAMES}
+    frame_externals["unknown_000128c0"] = settings_set
+    DEFAULT = struct.pack("<BBhii", 0, 0, 1, 3, 1)
+
+    for _ in range(60):
+        seconds = random_.choice((1 / 30, 0.5, 0.0, -0.0, -1.0, 1e-30, float("nan"), random_.uniform(0, 1)))
+        settings = random_.choice((DEFAULT, DEFAULT, struct.pack("<BBhii", 1, 0, 1, 3, 1), struct.pack("<BBhii", 0, 0, 2, 3, 1),
+                                   struct.pack("<BBhii", 0, 0, 1, 3, 2), random_.randbytes(12)))
+        t.check(
+            "game_frame",
+            f32(seconds),
+            globals={
+                "display_settings": settings,
+                "display_settings_default": DEFAULT,
+                "unknown_00485b20": random_.randbytes(4),
+                "game_seconds": struct.pack("<d", random_.choice((0.0, 1234.5678, 1e9 + 0.25, random_.uniform(0, 1e6)))),
+            },
+            externals=frame_externals,
+        )

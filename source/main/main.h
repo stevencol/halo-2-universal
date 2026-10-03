@@ -129,6 +129,18 @@ void main_revert_map_if_possible_private(void);
 boolean main_action_pending(void);
 void main_cancel_map_copy_and_wait(void);
 
+/* how the frames are shown: 0x000128c0 sets them. What the others are is
+not known */
+struct display_settings
+{
+	byte unknown0;
+	byte unknown1;
+	/* how many vertical blanks to give a frame; 0 for no limit */
+	short frame_vblanks;
+	long unknown4;
+	long unknown8;
+};
+
 /* ---------- globals */
 
 extern boolean unknown_004ed39d;
@@ -139,6 +151,8 @@ extern struct main_globals main_globals;
 extern struct main_time_globals main_time_globals;
 extern struct players_globals *players_globals;
 extern long long main_vblank_count;
+extern struct display_settings display_settings;
+extern const struct display_settings display_settings_default;
 
 /* ---------- inline code */
 

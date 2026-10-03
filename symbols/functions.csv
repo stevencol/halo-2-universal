@@ -494,7 +494,7 @@ address,name,source,arguments,returns,convention
 00146660,unknown_00146660,,stack stack stack,void
 001870a0,unknown_001870a0,,stack stack,void
 0008dfc0,unknown_0008dfc0,,,void
-00137ed0,unknown_00137ed0,,stack,void
+00137ed0,game_frame,source/game/game.c,stack,void,stdcall
 001554b0,unknown_001554b0,,stack,void
 0016f280,unknown_0016f280,,stack,void
 00222a70,unknown_00222a70,,stack,void
@@ -1132,3 +1132,14 @@ address,name,source,arguments,returns,convention
 0016f200,unknown_0016f200,,,void
 001a1870,file_reference_get_full_path,source/cseries/async.c,eax stack,int
 001a0a70,async_create_file_blocking,source/cseries/async.c,stack stack stack stack stack stack,void
+0017bc40,unknown_0017bc40,,stack,void,stdcall
+000d4db0,unknown_000d4db0,,stack,void,stdcall
+0018c060,unknown_0018c060,,stack,void,stdcall
+00134e00,unknown_00134e00,,stack,void,stdcall
+00039e50,unknown_00039e50,,stack,void,stdcall
+00176f60,unknown_00176f60,,stack,void,stdcall
+0017d690,unknown_0017d690,,,void
+002118c0,unknown_002118c0,,,void
+00014980,unknown_00014980,,,void
+00014600,unknown_00014600,,,void
+000128c0,unknown_000128c0,,eax,void
