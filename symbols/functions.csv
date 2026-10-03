@@ -1078,3 +1078,9 @@ address,name,source,arguments,returns,convention
 001d0e50,havok_component_set_rigid_body_angular_velocity,source/physics/havok_component.c,stack eax ecx,void
 0030bc40,hkEntity_isActive,,ecx stack,int,stdcall
 0030bc60,hkEntity_activate,,ecx,void
+001d8e80,havok_rigid_body_set_transform,source/physics/havok_component.c,esi stack,void
+001d0cf0,havok_component_set_rigid_body_transform,source/physics/havok_component.c,ebx ecx eax,void
+001d0c20,havok_component_set_rigid_body_matrix,source/physics/havok_component.c,stack ecx eax,void
+002da3f0,hkTransform_setInverse,,ecx stack,void,stdcall
+001d1260,unknown_001d1260,,ecx,void
+001d1540,unknown_001d1540,,ecx,void

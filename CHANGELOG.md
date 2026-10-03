@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Poner un cuerpo rígido en un sitio
+
+Tres funciones de `physics/havok_component.c`. De 692 funciones se pasa a
+695, el 6,17 % de las del juego (el 3,291 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_component_set_rigid_body_matrix` | `0x001d0c20` | `physics/havok_component.c` |
+| `havok_component_set_rigid_body_transform` | `0x001d0cf0` | `physics/havok_component.c` |
+| `havok_rigid_body_set_transform` | `0x001d8e80` | `physics/havok_component.c` |
+
+También el método `0x4C` de lo que mueve un cuerpo (ponerlo en un sitio),
+el mundo de Havok del cuerpo (en `0x08`, parece) y otra marca del
+componente (el bit 5). Las pruebas ponen en lugar de la inversa de Havok
+(`0x002da3f0`) una que da los bits de la otra transformación cambiados, y
+en lugar de `0x001d1260` una que intercambia los cuerpos de Havok de los
+dos primeros cuerpos rígidos, para ver que el juego vuelve a buscar el
+suyo después.
+
+### Lo que se sabe
+
+- `havok_rigid_body_set_transform` despierta el cuerpo de Havok y lo pone
+  en la transformación que se le da con el método `0x4C`, salvo si es fijo
+  y está en un mundo. Está lejos de las demás (`0x001d8e80`): puede ser de
+  otro archivo.
+- `havok_component_set_rigid_body_transform` hace eso con un cuerpo
+  rígido del componente; si los cuerpos van desde la transformación del
+  componente, antes multiplica por su inversa. Un cuerpo fijo de un
+  componente con el bit 5 se pone en su sitio entre dos funciones sin
+  descompilar (`0x001d1260` y `0x001d1540`), buscándolo otra vez después
+  de la primera.
+- `havok_component_set_rigid_body_matrix` pasa una matriz a una
+  transformación de Havok, sin mirar la escala, con los cuartos reales a
+  0.
+- Los nombres son inventados.
+
+### Mutaciones
+
+22 líneas rotas a propósito: las 22 detectadas.
+
 ## 2026-10-03 — Fijar las velocidades de un cuerpo rígido
 
 Tres funciones de `physics/havok_component.c`. De 689 funciones se pasa a

@@ -17,6 +17,17 @@ the name is a guess */
 void __attribute__((stdcall)) hkTransform_setMulEq(struct havok_transform *transform,
 	const struct havok_transform *other);
 
+/* 0x002da3f0: transform= the inverse of other. Havok's
+(hkTransform::setInverse); the name is a guess */
+void __attribute__((stdcall)) hkTransform_setInverse(struct havok_transform *transform,
+	const struct havok_transform *other);
+
+/* 0x001d1260 and 0x001d1540: what is done with a component before and
+after a fixed rigid body of it is put somewhere, when it has
+_havok_component_unknown5_bit */
+void unknown_001d1260(struct havok_component *component);
+void unknown_001d1540(struct havok_component *component);
+
 /* 0x0030bc40: whether a body of Havok is awake; Havok's (hkEntity::isActive),
 which gives where it leaves it */
 boolean *__attribute__((stdcall)) hkEntity_isActive(const struct havok_rigid_body *rigid_body, boolean *active);
@@ -35,6 +46,19 @@ static inline __attribute__((always_inline)) void havok_rigid_body_wake(
 	if (!*hkEntity_isActive(rigid_body, &active) && rigid_body->simulation_island)
 	{
 		hkEntity_activate(rigid_body);
+	}
+}
+
+/* puts a body of Havok somewhere, waking it; a fixed body in a world of
+Havok is not */
+static inline __attribute__((always_inline)) void havok_rigid_body_set_transform_inline(
+	struct havok_rigid_body *rigid_body,
+	const struct havok_transform *transform)
+{
+	havok_rigid_body_wake(rigid_body);
+	if (!rigid_body->fixed || !rigid_body->world)
+	{
+		rigid_body->motion->vtable->set_transform(rigid_body->motion, transform);
 	}
 }
 
@@ -256,4 +280,72 @@ void havok_component_set_rigid_body_angular_velocity(
 	vector.v[3]= 0.0f;
 	havok_rigid_body_wake(rigid_body);
 	rigid_body->motion->vtable->set_angular_velocity(rigid_body->motion, &vector);
+}
+
+/* 0x001d0c20: puts a rigid body of a havok component where a matrix says;
+its scale is not looked at */
+void havok_component_set_rigid_body_matrix(
+	struct havok_component *component,
+	long rigid_body_index,
+	const real_matrix4x3 *matrix)
+{
+	struct havok_transform transform;
+
+	transform.rotation[0][0]= matrix->forward.i;
+	transform.rotation[0][1]= matrix->forward.j;
+	transform.rotation[0][2]= matrix->forward.k;
+	transform.rotation[0][3]= 0.0f;
+	transform.rotation[1][0]= matrix->left.i;
+	transform.rotation[1][1]= matrix->left.j;
+	transform.rotation[1][2]= matrix->left.k;
+	transform.rotation[1][3]= 0.0f;
+	transform.rotation[2][0]= matrix->up.i;
+	transform.rotation[2][1]= matrix->up.j;
+	transform.rotation[2][2]= matrix->up.k;
+	transform.rotation[2][3]= 0.0f;
+	transform.translation[0]= matrix->position.x;
+	transform.translation[1]= matrix->position.y;
+	transform.translation[2]= matrix->position.z;
+	transform.translation[3]= 0.0f;
+	havok_component_set_rigid_body_transform(component, rigid_body_index, &transform);
+}
+
+/* 0x001d0cf0: puts a rigid body of a havok component somewhere: from the
+component's transform, if the bodies' are */
+void havok_component_set_rigid_body_transform(
+	struct havok_component *component,
+	long rigid_body_index,
+	const struct havok_transform *transform)
+{
+	struct havok_transform result= *transform;
+	struct havok_rigid_body *rigid_body;
+
+	if (TEST_FLAG(component->flags, _havok_component_transformed_bit))
+	{
+		struct havok_transform inverse;
+
+		hkTransform_setInverse(&inverse, &component->transform);
+		hkTransform_setMulEq(&result, &inverse);
+	}
+	rigid_body= component->rigid_bodies[rigid_body_index].rigid_body;
+	if (rigid_body->fixed && TEST_FLAG(component->flags, _havok_component_unknown5_bit))
+	{
+		unknown_001d1260(component);
+		havok_rigid_body_set_transform(component->rigid_bodies[rigid_body_index].rigid_body, &result);
+		unknown_001d1540(component);
+	}
+	else
+	{
+		havok_rigid_body_set_transform_inline(rigid_body, &result);
+	}
+}
+
+/* 0x001d8e80: puts a body of Havok somewhere, waking it; a fixed body in a
+world of Havok is not. It is far from the other functions: it can be of
+another file */
+void havok_rigid_body_set_transform(
+	struct havok_rigid_body *rigid_body,
+	const struct havok_transform *transform)
+{
+	havok_rigid_body_set_transform_inline(rigid_body, transform);
 }

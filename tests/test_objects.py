@@ -150,7 +150,12 @@ def run(t) -> None:
     ] + [bytes.fromhex("0000c07f"), bytes.fromhex("0100807f"), bytes.fromhex("01000000")]
 
     def havok_components(
-        count: int, fixed: bool = False, methods: bool = False, transforms: bool = False, islands: bool = False
+        count: int,
+        fixed: bool = False,
+        methods: bool = False,
+        transforms: bool = False,
+        islands: bool = False,
+        worlds: bool = False,
     ) -> Buffer:
         """The data array of the havok components: only where its data is
         (0x44) is looked at. Each component has three rigid bodies, each of
@@ -205,6 +210,8 @@ def run(t) -> None:
                 if islands:
                     data[havok + n * body_size + 0x40] = random_.choice((0, 0, 0, 1, 0xFF))
                     island = random_.choice((None, 0, 0x10))
+                    if worlds:
+                        struct.pack_into("<I", data, havok + n * body_size + 8, random_.choice((0, 0, 0x12345678)))
                     struct.pack_into("<I", data, havok + n * body_size + 0x44, 0 if island is None else island)
                     if island is not None:
                         pointers.append(havok + n * body_size + 0x44)
@@ -217,7 +224,7 @@ def run(t) -> None:
                     struct.pack_into("<I", data, motions + n * motion_size + 0x7C, random_.choice((6, 6, 0, 1, 5, 7, 0x106, 0xFFFFFFFF)))
         if methods:
             data += bytes(0x18) + struct.pack("<I", mock_address(0)) + bytes(8) + struct.pack("<I", mock_address(1))
-            data += bytes(0x28) + struct.pack("<3I", mock_address(2), mock_address(3), mock_address(4))
+            data += bytes(0x24) + struct.pack("<4I", mock_address(5), mock_address(2), mock_address(3), mock_address(4))
         return Buffer(bytes(data), pointers=tuple(pointers))
 
     for _ in range(40):
@@ -378,3 +385,63 @@ def run(t) -> None:
                 extra=[havok],
                 mocks=velocity_methods,
             )
+
+    # ---------- putting a rigid body somewhere
+
+    def transform_bytes(address: int) -> bytes:
+        return bytes(t.harness.mu.mem_read(address, 0x40))
+
+    def set_inverse(harness, arguments):
+        """Stands in for Havok's inverse: the bits of the other, turned."""
+        transform, other = arguments
+        harness.mu.mem_write(transform, bytes(x ^ 0x5A for x in transform_bytes(other)))
+        # the first is on the stack, which is not the same in both functions
+        return 0, (harness.normalize(other),)
+
+    def set_mul_eq_from_stack(harness, arguments):
+        """As set_mul_eq, for a second transform on the stack too."""
+        transform, other = arguments
+        a = transform_bytes(transform)
+        b = transform_bytes(other)
+        harness.mu.mem_write(transform, bytes(x ^ y for x, y in zip(a, b)))
+        return 0, (a, b)
+
+    def swap_rigid_bodies(harness, arguments):
+        """Stands in for 0x001d1260: it swaps Havok's bodies of the first
+        two rigid bodies, so that which one is put somewhere tells whether
+        it was looked for again."""
+        (component,) = arguments
+        (bodies,) = struct.unpack("<I", harness.mu.mem_read(component + 0x70, 4))
+        first = bytes(harness.mu.mem_read(bodies + 0x40, 4))
+        second = bytes(harness.mu.mem_read(bodies + RIGID_BODY_SIZE + 0x40, 4))
+        harness.mu.mem_write(bodies + 0x40, second)
+        harness.mu.mem_write(bodies + RIGID_BODY_SIZE + 0x40, first)
+        return 0, (harness.normalize(component),)
+
+    transform_methods = velocity_methods + [
+        Mock(lambda call: 0, stack_arguments=1, registers=("ecx",), record=lambda call: (call.registers["ecx"], transform_bytes(call.stack[0]))),
+    ]
+    transform_externals = {
+        **activation,
+        "hkTransform_setInverse": set_inverse,
+        "hkTransform_setMulEq": set_mul_eq_from_stack,
+        "unknown_001d1260": swap_rigid_bodies,
+        "unknown_001d1540": lambda harness, arguments: 0,
+    }
+
+    for _ in range(30):
+        havok_count = random_.randint(1, 6)
+        havok = havok_components(havok_count, fixed=True, methods=True, islands=True, worlds=True)
+        for _ in range(10):
+            component_offset = COMPONENTS + random_.randrange(havok_count) * HAVOK_COMPONENT_SIZE
+            component = Pointer(havok, component_offset)
+            rigid_body_index = random_.randrange(RIGID_BODIES)
+            transform = Buffer(struct.pack("<16f", *(random_.uniform(-9, 9) for _ in range(16))))
+            matrix = Buffer(struct.pack("<13f", *(random_.uniform(-9, 9) for _ in range(13))))
+            options = {"extra": [havok], "mocks": transform_methods, "externals": transform_externals}
+            t.check("havok_component_set_rigid_body_transform", component, rigid_body_index, transform, **options)
+            t.check("havok_component_set_rigid_body_matrix", component, rigid_body_index, matrix, **options)
+            # Havok's body of that rigid body
+            (bodies,) = struct.unpack_from("<I", havok.data, component_offset + 0x70)
+            (body,) = struct.unpack_from("<I", havok.data, bodies + rigid_body_index * RIGID_BODY_SIZE + 0x40)
+            t.check("havok_rigid_body_set_transform", Pointer(havok, body), transform, **options)

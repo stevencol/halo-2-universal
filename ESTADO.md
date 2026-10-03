@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-03, al terminar el hito 133.
+**Última actualización:** 2026-10-03, al terminar el hito 134.
 
 ## Dónde estamos
 
-- **692 funciones descompiladas de 11.265: el 6,14 % del juego** (el
-  3,275 % de los bytes de código).
-- Las 692 están comprobadas contra el ejecutable original
+- **695 funciones descompiladas de 11.265: el 6,17 % del juego** (el
+  3,291 % de los bytes de código).
+- Las 695 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile setting the velocities of a rigid body* (ver `git log`).
+- Último hito: *Decompile putting a rigid body somewhere* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -116,9 +116,10 @@ Módulos (funciones hechas / archivo):
       `0x001362b0`, que leen el color de un píxel)
 - [ ] BSP 3D — `physics\bsp3d.c` (2)
 - [ ] Objetos — `objects\objects.c` (13 de cientos)
-- [ ] Componentes de Havok — `physics\havok_component.c` (10: la
-      posición, la matriz, las velocidades (leerlas y fijarlas, y la de
-      un punto), la rotación, la masa y el tipo de un cuerpo rígido)
+- [ ] Componentes de Havok — `physics\havok_component.c` (13: la
+      posición y la matriz (leerlas y fijarlas), las velocidades
+      (leerlas y fijarlas, y la de un punto), la rotación, la masa y
+      el tipo de un cuerpo rígido)
 - [x] Hilo de tareas y tareas de archivo — `cseries\async.c` (29; quedan
       algunas tareas de archivo)
 - [x] Archivos de caché — `cache\cache_files.c` (46):

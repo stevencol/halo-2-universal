@@ -28,6 +28,9 @@ enum
 {
 	/* the rigid bodies are not made to turn */
 	_havok_component_no_angular_velocity_bit= 1,
+	/* a fixed rigid body is put somewhere between two functions that are
+	not decompiled, 0x001d1260 and 0x001d1540 */
+	_havok_component_unknown5_bit= 5,
 	/* the transforms of the rigid bodies are from the component's */
 	_havok_component_transformed_bit= 6
 };
@@ -64,7 +67,9 @@ struct havok_motion_vtable
 	long (HAVOK_CONVENTION *get_type)(struct havok_motion *motion);
 	byte unknown1C[8];
 	void (HAVOK_CONVENTION *get_rotation)(struct havok_motion *motion, struct havok_matrix3 *rotation);
-	byte unknown28[0x28];
+	byte unknown28[0x24];
+	/* puts the body somewhere */
+	void (HAVOK_CONVENTION *set_transform)(struct havok_motion *motion, const struct havok_transform *transform);
 	void (HAVOK_CONVENTION *set_linear_velocity)(struct havok_motion *motion, const struct havok_vector4 *velocity);
 	void (HAVOK_CONVENTION *set_angular_velocity)(struct havok_motion *motion, const struct havok_vector4 *velocity);
 	/* how fast a point of the world, that moves with the body, moves */
@@ -94,7 +99,11 @@ struct havok_motion
 /* Havok's own rigid body */
 struct havok_rigid_body
 {
-	byte unknown0[0x3C];
+	byte unknown0[8];
+	/* the world of Havok that it is in, it seems: a fixed body in one is
+	not put somewhere through what moves it */
+	void *world;
+	byte unknownC[0x30];
 	struct havok_motion *motion;
 	/* it does not move: its velocities are 0 */
 	boolean fixed;
@@ -148,6 +157,10 @@ typedef char verify_havok_motion_vtable_get_point_velocity_offset[
 	offsetof(struct havok_motion_vtable, get_point_velocity) == 0x58 ? 1 : -1];
 typedef char verify_havok_rigid_body_simulation_island_offset[
 	offsetof(struct havok_rigid_body, simulation_island) == 0x44 ? 1 : -1];
+typedef char verify_havok_motion_vtable_set_transform_offset[
+	offsetof(struct havok_motion_vtable, set_transform) == 0x4C ? 1 : -1];
+typedef char verify_havok_rigid_body_motion_offset[
+	offsetof(struct havok_rigid_body, motion) == 0x3C ? 1 : -1];
 typedef char verify_havok_rigid_body_fixed_offset[
 	offsetof(struct havok_rigid_body, fixed) == 0x40 ? 1 : -1];
 typedef char verify_havok_component_rigid_body_size[
@@ -175,6 +188,11 @@ void havok_component_set_rigid_body_linear_velocity(const struct havok_component
 	const real_vector3d *velocity);
 void havok_component_set_rigid_body_angular_velocity(const struct havok_component *component, long rigid_body_index,
 	const real_vector3d *velocity);
+void havok_rigid_body_set_transform(struct havok_rigid_body *rigid_body, const struct havok_transform *transform);
+void havok_component_set_rigid_body_transform(struct havok_component *component, long rigid_body_index,
+	const struct havok_transform *transform);
+void havok_component_set_rigid_body_matrix(struct havok_component *component, long rigid_body_index,
+	const real_matrix4x3 *matrix);
 void havok_component_get_rigid_body_rotation(const struct havok_component *component, long rigid_body_index,
 	real_matrix3x3 *rotation);
 real havok_component_get_rigid_body_mass(const struct havok_component *component, long rigid_body_index);
