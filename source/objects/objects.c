@@ -182,6 +182,59 @@ void object_get_origin(
 	return;
 }
 
+/* a vector turned by the rotation of a matrix, with no scale */
+static inline __attribute__((always_inline)) void object_rotate_vector(
+	const real_matrix4x3 *matrix,
+	const real_vector3d *vector,
+	real_vector3d *result)
+{
+	real i= vector->i;
+	real j= vector->j;
+	real k= vector->k;
+
+	result->i= matrix->up.i*k + matrix->left.i*j + matrix->forward.i*i;
+	result->j= matrix->up.j*k + matrix->left.j*j + matrix->forward.j*i;
+	result->k= matrix->up.k*k + matrix->left.k*j + matrix->forward.k*i;
+}
+
+/* 0x000b9fc0: where the object faces and what is up for it, in the world:
+those of an object attached to another are turned by the node of the other
+that it is attached to. Either can be not asked for. As Halo 1's */
+void object_get_orientation(
+	long object_index,
+	real_vector3d *forward,
+	real_vector3d *up)
+{
+	struct object_datum *object= OBJECT_GET(object_index);
+
+	if (object->parent_object_index==NONE)
+	{
+		if (forward)
+		{
+			*forward= object->forward;
+		}
+		if (up)
+		{
+			*up= object->up;
+		}
+	}
+	else
+	{
+		struct object_datum *parent= OBJECT_GET(object->parent_object_index);
+		const real_matrix4x3 *node_matrix=
+			&((const real_matrix4x3 *)((const byte *)parent+parent->node_matrices_offset))[object->parent_node_index];
+
+		if (forward)
+		{
+			object_rotate_vector(node_matrix, &object->forward, forward);
+		}
+		if (up)
+		{
+			object_rotate_vector(node_matrix, &object->up, up);
+		}
+	}
+}
+
 /* 0x000ba160: the matrix that takes a point of the object to the world */
 real_matrix4x3 *object_get_world_matrix(
 	long object_index,

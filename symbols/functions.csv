@@ -1032,3 +1032,4 @@ address,name,source,arguments,returns,convention
 000baf40,object_get_first_unflagged_ancestor,source/objects/objects.c,eax,int
 001a0c90,async_copy_file_work,source/cseries/async.c,stack,int
 001a0da0,async_copy_file_blocking,source/cseries/async.c,stack stack stack,bool
+000b9fc0,object_get_orientation,source/objects/objects.c,eax esi edi,void

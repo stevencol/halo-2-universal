@@ -2,6 +2,31 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Hacia dónde mira un objeto
+
+Una función. De 659 funciones se pasa a 660, el 5,86 % de las del juego
+(el 3,015 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_get_orientation` | `0x000b9fc0` | `objects/objects.c` |
+
+### Lo que se sabe
+
+- Devuelve hacia dónde mira un objeto y qué es «arriba» para él, en el
+  mundo. Se puede pedir solo uno de los dos.
+- Un objeto suelto los tiene tal cual. Uno unido a otro los guarda respecto
+  al **nodo** del otro al que está unido, y aquí se giran con la matriz de
+  ese nodo (solo el giro: ni escala ni posición). Es la pareja de
+  `object_get_origin`, que hace lo mismo con la posición.
+- El nombre es el de Halo 1.
+
+### Mutaciones
+
+13 líneas rotas a propósito: las 13 detectadas.
+
 ## 2026-10-02 — Copiar un archivo entero
 
 Dos funciones. De 657 funciones se pasa a 659, el 5,85 % de las del

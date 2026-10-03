@@ -112,6 +112,7 @@ long object_get_first_unflagged_ancestor(long object_index);
 void *object_iterator_next(struct object_iterator *iterator);
 long object_get_ultimate_parent(long object_index);
 void object_get_origin(long object_index, real_point3d *origin);
+void object_get_orientation(long object_index, real_vector3d *forward, real_vector3d *up);
 real_matrix4x3 *object_get_world_matrix(long object_index, real_matrix4x3 *matrix);
 void object_get_location(long object_index, struct location *location);
 

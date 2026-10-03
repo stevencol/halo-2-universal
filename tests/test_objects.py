@@ -74,7 +74,7 @@ def world(random_: random.Random, object_count: int, maximum_count: int) -> tupl
         datum = bytearray(random_.randbytes(OBJECT_SIZE))
         parent = random_.choice(indices[:-1]) if indices[:-1] and random_.random() < 0.6 else NONE
         struct.pack_into("<ib", datum, 0x14, parent, random_.randrange(0, NODE_COUNT))
-        struct.pack_into("<3f", datum, 0x64, *(random_.uniform(-40, 40) for _ in range(3)))
+        struct.pack_into("<9f", datum, 0x64, *(random_.uniform(-40, 40) for _ in range(9)))
         struct.pack_into("<h", datum, 0x116, NODE_MATRICES_OFFSET)
         for node in range(NODE_COUNT):
             matrix = [random_.choice((1.0, 1.0, 0.5, 2.5)), *(random_.uniform(-1, 1) for _ in range(9))]
@@ -100,6 +100,13 @@ def run(t) -> None:
             t.check("object_get_location", object_index, Buffer(bytes(8)), globals=globals_)
             t.check("object_get_ultimate_parent", object_index, globals=globals_)
             t.check("object_get_origin", object_index, Buffer(struct.pack("<3f", 9, 9, 9), format="<3f"), globals=globals_)
+            for asked in ((True, True), (True, False), (False, True)):
+                t.check(
+                    "object_get_orientation",
+                    object_index,
+                    *(Buffer(struct.pack("<3f", 9, 9, 9), format="<3f") if ask else 0 for ask in asked),
+                    globals=globals_,
+                )
             for type_mask in (0xFFFFFFFF, 0, 1, 0x555, 0xAAA, random_.getrandbits(12)):
                 t.check("object_try_and_get_and_verify_type", object_index, type_mask, globals=globals_)
                 t.check("object_get_and_verify_type", object_index, type_mask, globals=globals_)
