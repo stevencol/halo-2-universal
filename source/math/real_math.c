@@ -118,6 +118,51 @@ real point_to_segment_distance_squared3d(
 	}
 }
 
+/* 0x0011d3b0: with two vectors of length 1 and an angle, given by its sine
+and its cosine: if they are no farther apart than the angle, the first, and
+0; if not, the second turned by the angle around the line at right
+angles to both, and 1. For two that are on one line, the line is any at
+right angles to the second. The name is a guess */
+unsigned char __attribute__((stdcall)) limit_angle_between_vectors3d(
+	const real_vector3d *a,
+	const real_vector3d *b,
+	real_vector3d *result,
+	real sine,
+	real cosine)
+{
+	real_vector3d axis;
+	real dot= a->j*b->j + a->i*b->i + b->k*a->k;
+
+	if (dot>=cosine)
+	{
+		*result= *a;
+
+		return 0;
+	}
+
+	axis.i= a->k*b->j - a->j*b->k;
+	axis.j= a->i*b->k - b->i*a->k;
+	axis.k= a->j*b->i - a->i*b->j;
+	if (normalize3d(&axis)==0.0f)
+	{
+		perpendicular3d(b, &axis);
+		normalize3d(&axis);
+	}
+
+	*result= *b;
+	{
+		real projection= (result->k*axis.k + result->j*axis.j + result->i*axis.i)*(1.0f-cosine);
+		real cross_j= result->k*axis.i - result->i*axis.k;
+		real cross_k= result->i*axis.j - result->j*axis.i;
+
+		result->i= result->i*cosine + projection*axis.i - (result->j*axis.k - result->k*axis.j)*sine;
+		result->j= result->j*cosine + projection*axis.j - cross_j*sine;
+		result->k= result->k*cosine + projection*axis.k - cross_k*sine;
+	}
+
+	return 1;
+}
+
 /* 0x0011cf50: the angle between two vectors of length 1, from 0 to pi: 0 for
 two that are the same to the bit. The name is a guess */
 real angle_between_vectors3d(

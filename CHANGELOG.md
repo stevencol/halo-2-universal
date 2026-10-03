@@ -2,6 +2,37 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Limitar el ángulo entre dos vectores
+
+Una función. De 668 funciones se pasa a 669, el 5,94 % de las del juego
+(el 3,073 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `limit_angle_between_vectors3d` | `0x0011d3b0` | `math/real_math.c` |
+
+### Lo que se sabe
+
+- Recibe dos vectores de longitud 1 y un ángulo (su seno y su coseno). Si
+  los vectores no se separan más que el ángulo, devuelve el primero (y
+  0). Si no, gira el segundo ese ángulo alrededor de la recta perpendicular
+  a los dos, con la **fórmula de Rodrigues**, y devuelve 1.
+- Si los dos vectores están en la misma recta, la perpendicular es
+  cualquiera perpendicular al segundo (`perpendicular3d`).
+- Sirve para que algo gire hacia una dirección sin pasar de un ángulo por
+  paso. El nombre es una suposición.
+
+### Mutaciones
+
+21 líneas rotas a propósito: 20 detectadas.
+
+### Sin comprobar
+
+- Una mutación solo cambia algo cuando el producto escalar no es un número;
+  como en otras funciones, los NaN no se prueban.
+
 ## 2026-10-02 — La distancia de un punto a un segmento
 
 Una función. De 667 funciones se pasa a 668, el 5,93 % de las del juego

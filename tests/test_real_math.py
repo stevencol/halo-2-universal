@@ -35,6 +35,7 @@ VECTORS = (
 
 
 def run(t) -> None:
+    run_limit_angle(t)
     run_segments(t)
     run_quantize(t)
     run_angles(t)
@@ -205,3 +206,45 @@ def run_segments(t) -> None:
         if n % 17 == 16:
             point = list(start)
         t.check("point_to_segment_distance_squared3d", reals(*direction), reals(*start), reals(*point))
+
+
+def run_limit_angle(t) -> None:
+    import math
+
+    random_ = random.Random(119)
+
+    def unit() -> list[float]:
+        while True:
+            v = [random_.uniform(-1, 1) for _ in range(3)]
+            length = math.sqrt(sum(x * x for x in v))
+            if length > 0.1:
+                return [x / length for x in v]
+
+    def bits(value: float) -> int:
+        return struct.unpack("<I", struct.pack("<f", value))[0]
+
+    for n in range(800):
+        a = unit()
+        choice = n % 6
+        if choice == 0:
+            b = list(a)
+        elif choice == 1:
+            b = [-x for x in a]
+        elif choice == 2:
+            b = random_.choice(([0.0, 0.0, 1.0], [1.0, 0.0, 0.0], [0.0, -1.0, 0.0]))
+            a = random_.choice((b, [-x for x in b], unit()))
+        else:
+            b = unit()
+        angle = random_.choice((0.0, 0.1, 0.5, 1.0, 2.0, math.pi, random_.uniform(0, math.pi)))
+        cosine = math.cos(angle)
+        if n % 23 == 22:
+            # the angle between them, to the bit
+            cosine = sum(x * y for x, y in zip(a, b))
+        t.check(
+            "limit_angle_between_vectors3d",
+            reals(*a),
+            reals(*b),
+            Buffer(struct.pack("<3f", 9.0, 9.0, 9.0)),
+            bits(math.sin(angle)),
+            bits(cosine),
+        )
