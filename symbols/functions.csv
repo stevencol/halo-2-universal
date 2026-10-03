@@ -1011,3 +1011,6 @@ address,name,source,arguments,returns,convention
 0011c9a0,csstrnlen,source/cseries/cseries.c,eax ecx,int
 0011c9e0,csnzappendf,source/cseries/cseries.c,ebx eax stack stack,string
 0011ca20,system_allocate,source/cseries/cseries.c,stack,int
+00120e20,global_preferences_find_player_profile,source/main/global_preferences.c,eax ecx,bool
+00120e70,global_preferences_get_game_variant,source/main/global_preferences.c,stack,int
+00212c20,unknown_00212c20,,stack stack stack,bool

@@ -10,6 +10,12 @@ Not here yet: 0x00120e20 and 0x00120e70, which read two of the names.
 #include "global_preferences.h"
 
 #include "cseries/async.h"
+#include "cache/cache_files.h"
+#include "game/game.h"
+#include "saved games/player_profile.h"
+#include "scenario/scenario.h"
+#include "tag_files/tag_groups.h"
+#include "text/unicode_string_list.h"
 
 #include <string.h>
 
@@ -24,7 +30,19 @@ uint32_t XCalculateSignatureEnd(uint32_t signature, void *result);
 /* 0x003207ed: of the game's C library, with characters of 16 bits */
 wchar *wcsncpy(wchar *destination, const wchar *source, size_t count);
 
+/* ---------- prototypes of functions that are not decompiled */
+
+/* 0x00212c20: finds the game variant of a name, and its file; whether there
+is one */
+boolean unknown_00212c20(const wchar *name, struct game_variant *variant, long *file);
+
 /* ---------- constants */
+
+/* the default game variant: its name is the text of this id, in the list
+that is at this place of the first element of the tag of the game globals */
+#define DEFAULT_VARIANT_NAME_STRING_ID 0x0E000780
+#define DEFAULT_VARIANT_STRING_LIST_INDEX 7
+#define DEFAULT_VARIANT_NAME_SIZE 258
 
 #define GENERIC_READ 0x80000000
 #define GENERIC_WRITE 0x40000000
@@ -57,6 +75,78 @@ const char *global_preferences_path= "z:\\preferences.dat";
 uint32_t xbox_signature_handle= 0xFFFFFFFF;
 
 /* ---------- code */
+
+/* 0x00120e20: finds the profile of one of the names that the preferences
+keep; whether there is one, and its file. The name is a guess */
+boolean global_preferences_find_player_profile(
+	long index,
+	long *file)
+{
+	return player_profile_find(NULL, global_preferences_globals.current.data.names[index], file);
+}
+
+/* the text that is the name of the default game variant, or nothing */
+static inline __attribute__((always_inline)) void global_preferences_get_default_variant_name(
+	wchar *name)
+{
+	long tag_index;
+
+	name[0]= 0;
+	if (global_game_globals && (tag_index= global_game_globals->unknown16C)!=NONE)
+	{
+		const struct tag_block *block=
+			(const struct tag_block *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+		long string_list_index= ((const long *)(uintptr_t)block->address)[DEFAULT_VARIANT_STRING_LIST_INDEX];
+
+		if (string_list_index!=NONE)
+		{
+			unicode_string_list_get_string(string_list_index, DEFAULT_VARIANT_NAME_STRING_ID, name);
+		}
+	}
+}
+
+/* 0x00120e70: the game variant of the name that the preferences keep, and
+its file. If there is none, the default variant (its name is a text of the
+game's) and NONE. The name is a guess */
+long __attribute__((stdcall)) global_preferences_get_game_variant(
+	struct game_variant *variant)
+{
+	struct game_variant result;
+	wchar name[DEFAULT_VARIANT_NAME_SIZE];
+	long file= NONE;
+
+	if (unknown_00212c20(global_preferences_globals.current.data.name, variant, &file))
+	{
+		return file;
+	}
+
+	memset(&result, 0, sizeof(result));
+	global_preferences_get_default_variant_name(name);
+	wcsncpy(result.name, name, GAME_VARIANT_NAME_LENGTH);
+	result.unknown48= (result.unknown48&0xFFFF8F9A)|0xF9A;
+	result.unknown74= 16;
+	result.unknown78= 16;
+	result.unknownF0= (result.unknownF0&~5UL)|2;
+	result.unknown44= 2;
+	result.unknownA8= 2;
+	result.unknown80= 5;
+	result.unknown84= 5;
+	result.name[GAME_VARIANT_NAME_LENGTH]= 0;
+	result.unknown3= 0xFF;
+	result.unknown4C= 0;
+	result.unknown50= 25;
+	result.unknown54= 480;
+	result.unknown58= 0;
+	result.unknown7C= 0;
+	result.unknown88= 0;
+	result.unknownA4= 0;
+	result.unknownAC= 10;
+	result.unknownB0= 0;
+	memset(result.unknownCC, 0, sizeof(result.unknownCC));
+	*variant= result;
+
+	return NONE;
+}
 
 static inline __attribute__((always_inline)) void global_preferences_wait(
 	void)

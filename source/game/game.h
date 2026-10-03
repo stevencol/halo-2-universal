@@ -9,6 +9,7 @@ decompiled so far needs: the rest is not understood yet.
 #define __GAME_H
 
 #include "cseries/cseries.h"
+#include "text/unicode.h"
 
 /* ---------- structures */
 
@@ -39,13 +40,57 @@ struct game_player_options
 	byte unknown1A[0xCA];
 };
 
-/* the rules of a multiplayer game. Only what the code here uses */
+enum
+{
+	GAME_VARIANT_NAME_LENGTH= 31
+};
+
+/* the rules of a multiplayer game. Only what the code here uses; the
+values that the default variant has are told */
 struct game_variant
 {
-	byte unknown0[0x44];
+	byte unknown0[3];
+	/* 0xFF */
+	byte unknown3;
+	wchar name[GAME_VARIANT_NAME_LENGTH+1];
+	/* 2 */
 	long unknown44;
-	byte unknown48[0xE8];
+	/* 0xF9A */
+	unsigned long unknown48;
+	long unknown4C;
+	/* 25 */
+	long unknown50;
+	/* 480 */
+	long unknown54;
+	long unknown58;
+	byte unknown5C[0x18];
+	/* 16 and 16 */
+	long unknown74;
+	long unknown78;
+	long unknown7C;
+	/* 5 and 5 */
+	long unknown80;
+	long unknown84;
+	long unknown88;
+	byte unknown8C[0x18];
+	long unknownA4;
+	/* 2 */
+	long unknownA8;
+	/* 10 */
+	long unknownAC;
+	long unknownB0;
+	byte unknownB4[0x18];
+	byte unknownCC[12];
+	byte unknownD8[0x18];
+	/* 2 */
+	unsigned long unknownF0;
+	byte unknownF4[0x3C];
 };
+
+typedef char verify_game_variant_size[
+	sizeof(struct game_variant) == 0x130 ? 1 : -1];
+typedef char verify_game_variant_unknownF0_offset[
+	offsetof(struct game_variant, unknownF0) == 0xF0 ? 1 : -1];
 
 struct game_options
 {

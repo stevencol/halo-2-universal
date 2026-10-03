@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 106.
+**Última actualización:** 2026-10-02, al terminar el hito 107.
 
 ## Dónde estamos
 
-- **641 funciones descompiladas de 11.265: el 5,69 % del juego** (el
-  2,945 % de los bytes de código).
-- Las 641 están comprobadas contra el ejecutable original
+- **643 funciones descompiladas de 11.265: el 5,71 % del juego** (el
+  2,961 % de los bytes de código).
+- Las 643 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile three small functions of cseries.c* (ver `git log`).
+- Último hito: *Decompile the profiles and the game variant of the preferences* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -125,8 +125,7 @@ Módulos (funciones hechas / archivo):
 - [ ] Estado del juego y puntos de control — `saved games\game_state.c`
       (17; falta guardar/cargar núcleo y partida guardada)
 - [x] Arranque del juego — `shell\shell.c` (7)
-- [x] Preferencias guardadas — `main\global_preferences.c` (13; quedan 2
-      que leen nombres)
+- [x] Preferencias guardadas — `main\global_preferences.c` (15: completo)
 - [ ] Juego y tabla de sistemas — `game\game.c` (19): la tabla, lo que la
       recorre, las opciones (por defecto, validar, comparar), los ticks de
       un fotograma, partida perdida y terminada, y el tipo de simulación

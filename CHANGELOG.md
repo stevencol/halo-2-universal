@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Los perfiles y la variante de las preferencias
+
+Dos funciones. De 641 funciones se pasa a 643, el 5,71 % de las del
+juego (el 2,961 % de sus bytes). Con ellas no falta ninguna función entre
+las de `global_preferences.c`.
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `global_preferences_find_player_profile` | `0x00120e20` | `main/global_preferences.c` |
+| `global_preferences_get_game_variant` | `0x00120e70` | `main/global_preferences.c` |
+
+### Lo que se sabe
+
+- Las preferencias guardan **cuatro nombres de perfiles** de jugador y el
+  nombre de **una variante de juego**. La primera función busca el perfil de
+  uno de esos nombres; la segunda, la variante.
+- Si la variante no está, se crea **la variante por defecto**: su nombre es
+  un texto del juego (el `0x0E000780` de una lista de textos que nombran los
+  globales del juego) y tiene unos valores fijos (2, 25, 480, 16, 5, 10...),
+  que de momento no sabemos qué son. Entonces no hay archivo (`NONE`).
+- La variante de juego mide `0x130` bytes y lleva su nombre (31 caracteres)
+  a 4 bytes del principio; ya tiene sus campos, aunque casi todos sin nombre.
+
+### Mutaciones
+
+30 líneas rotas a propósito: 28 detectadas. Dos pidieron casos nuevos:
+etiquetas de índice mayor que 255 y una búsqueda que dice un archivo aunque
+no encuentre la variante.
+
+### Sin comprobar
+
+- Dos mutaciones son equivalentes: copiar un carácter más del nombre (el
+  cero que se pone después lo tapa) y no poner ese cero (la variante ya
+  está a cero).
+
 ## 2026-10-02 — Tres funciones pequeñas de `cseries.c`
 
 Tres funciones. De 638 funciones se pasa a 641, el 5,69 % de las del

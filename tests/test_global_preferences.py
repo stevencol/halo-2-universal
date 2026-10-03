@@ -316,3 +316,67 @@ def run(t) -> None:
                 "SwitchToThread": nothing,
             },
         )
+
+    # ---------- the profiles and the game variant of the preferences
+
+    for index in range(4):
+        for found in (0, 1, 0x100):
+            t.check(
+                "global_preferences_find_player_profile",
+                index,
+                Buffer(random_.randbytes(4)),
+                globals={"global_preferences_globals": preferences_globals(random_)},
+                externals={
+                    "player_profile_find": lambda harness, arguments, found=found: (
+                        found,
+                        (arguments[0], harness.normalize(arguments[1]), arguments[2]),
+                    ),
+                },
+            )
+
+    VARIANT_SIZE, TAG_INSTANCE_SIZE = 0x130, 0x10
+    for n in range(200):
+        found = n % 4 == 3
+        file = random_.choice((0, 3, 0x7FFFFFFF))
+
+        def find(harness, arguments, found=found, file=file):
+            name, variant, file_ = arguments
+            if found:
+                harness.mu.mem_write(variant, bytes(range(256)) + bytes(VARIANT_SIZE - 256))
+            if found or file == 3:
+                # the file is told at times though there is no variant
+                harness.mu.mem_write(file_, struct.pack("<I", file))
+            return found, (harness.normalize(name), variant)
+
+        # the instances of the tags, then the tag that the game globals name
+        # (it starts with a block) and the first element of its block
+        tag_index = random_.choice((0, 1, 2, 0x101))
+        count = tag_index + 1 if tag_index > 2 else 3
+        string_list = random_.choice((0x00ABCDEF, NONE))
+        BLOCK, ELEMENT = TAG_INSTANCE_SIZE * count, TAG_INSTANCE_SIZE * count + 8
+        tags = bytearray(random_.randbytes(ELEMENT + 0x28))
+        struct.pack_into("<I", tags, tag_index * TAG_INSTANCE_SIZE + 8, BLOCK)
+        struct.pack_into("<iI", tags, BLOCK, 1, ELEMENT)
+        struct.pack_into("<I", tags, ELEMENT + 0x1C, string_list)
+        game_globals = bytearray(random_.randbytes(0x170))
+        struct.pack_into("<I", game_globals, 0x16C, random_.choice((tag_index | 0xE0010000, tag_index, NONE)))
+        text = random_.choice(("Slayer", "", "a name of a variant that is longer than thirty-one", "x" * 31))
+
+        def get_string(harness, arguments, text=text):
+            string_list_index, string_id, string = arguments
+            harness.mu.mem_write(string, text.encode("utf-16-le") + bytes(2))
+            return 0, (string_list_index, string_id)
+
+        t.check(
+            "global_preferences_get_game_variant",
+            Buffer(random_.randbytes(VARIANT_SIZE)),
+            globals={
+                "global_preferences_globals": preferences_globals(random_),
+                "global_game_globals": Buffer(bytes(game_globals)) if n % 7 else 0,
+                "global_tag_instances": Buffer(bytes(tags), pointers=(tag_index * TAG_INSTANCE_SIZE + 8, BLOCK + 4)),
+            },
+            externals={
+                "unknown_00212c20": find,
+                "unicode_string_list_get_string": get_string,
+            },
+        )

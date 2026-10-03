@@ -94,6 +94,11 @@ typedef char verify_global_preferences_globals_done_offset[
 
 /* ---------- prototypes/GLOBAL_PREFERENCES.C */
 
+struct game_variant;
+
+boolean global_preferences_find_player_profile(long index, long *file);
+long __attribute__((stdcall)) global_preferences_get_game_variant(struct game_variant *variant);
+
 void global_preferences_initialize(void);
 void global_preferences_reset(void);
 void global_preferences_validate(struct global_preferences_file *file);
