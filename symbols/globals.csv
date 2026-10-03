@@ -169,3 +169,4 @@ address,name,source
 004687a4,global_zero_vector3d,source/math/real_math.c
 0055e72c,bitmap_pixel_out_of_bounds,source/bitmaps/bitmaps.c
 00468848,global_vector_palette,source/bitmaps/bitmaps.c
+00510c6c,unknown_00510c6c,source/game/game.c

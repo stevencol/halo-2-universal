@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Un tick del juego
+
+Una función de `game/game.c`, que ya se llamaba como `unknown_00137fe0`. De
+706 funciones se pasa a 707, el 6,28 % de las del juego (el 3,421 %
+de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_tick` | `0x00137fe0` | `game/game.c` |
+
+También el global `unknown_00510c6c` (un puntero a algo que lleva los
+segundos de los ticks y una cuenta atrás) y 31 funciones sin descompilar a
+las que llama, que las pruebas simulan apuntando el orden de las llamadas.
+
+### Arreglado
+
+- El arnés calcula lo que una función del juego saca de la pila al volver
+  mirando su primer `ret`. `0x002268e0` no tiene uno propio: acaba en una
+  llamada de cola (`jmp 0x00227280`) a mitad de su código, y el arnés
+  seguía el último salto, que vuelve hacia atrás, y daba con el `ret 4` de
+  otra función. Ahora un salto incondicional fuera de una función de
+  tamaño conocido lleva a la función que vuelve por ella.
+
+### Lo que se sabe
+
+- Pone la unidad de coma flotante como el resto del juego y prepara en la
+  pila una estructura de 0x4048 bytes (por eso llama a la sonda de la
+  pila del compilador). Dos funciones sin descompilar la llenan; si la
+  segunda dice que hay que actualizar, se actualizan 29 sistemas en un
+  orden fijo (uno de ellos es `animation_cache_idle`), la cuenta atrás de
+  `0x00510c6c` baja uno sin pasar de 0 (restando sin signo, como el juego)
+  y sus segundos suben un tick. Después otra función cierra la estructura
+  y, si hubo actualización, el tiempo del juego avanza un tick.
+- `0x000683a0` y `0x0014d3a0` reciben la estructura en la pila y la sacan
+  ellas mismas al volver (stdcall).
+- El nombre es el de Halo 1.
+
+### Mutaciones
+
+17 líneas rotas a propósito: 16 detectadas.
+
+### Sin comprobar
+
+- Un mutante es equivalente: con la cuenta justo en 0, dejarla en 0 con
+  `<0` o con `<=0` da lo mismo.
+
 ## 2026-10-03 — Un píxel de cada formato en 32 bits
 
 Una función, con la que `bitmaps/bitmaps.c` queda completo. De 705

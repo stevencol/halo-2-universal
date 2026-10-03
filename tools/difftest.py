@@ -487,6 +487,15 @@ class Harness:
                 return 4 * self.symbols[name].arguments.count("stack")
             if instruction.mnemonic == "ret":
                 return int(instruction.op_str, 0) if instruction.op_str else 0
+            if (
+                address in self._game_function_sizes
+                and instruction.mnemonic == "jmp"
+                and instruction.op_str.startswith("0x")
+                and not address <= int(instruction.op_str, 16) < address + size
+                and depth < 8
+            ):
+                # a jump out of the function, to another that returns for it
+                return self._game_cleanup(name, int(instruction.op_str, 16), depth + 1)
             if instruction.mnemonic != "int3":
                 last = instruction
         if last is not None and last.mnemonic == "jmp" and last.op_str.startswith("0x") and depth < 8:

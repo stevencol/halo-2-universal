@@ -522,7 +522,7 @@ address,name,source,arguments,returns,convention
 001389c0,game_finish,source/game/game.c,,void
 00138a10,game_finished_wait_over,source/game/game.c,,int
 0007ad80,unknown_0007ad80,,edi stack,void
-00137fe0,unknown_00137fe0,,,void
+00137fe0,game_tick,source/game/game.c,,void
 00121220,global_preferences_reset,source/main/global_preferences.c,,void
 00121280,global_preferences_validate,source/main/global_preferences.c,eax,void
 00120d80,global_preferences_flush_blocking,source/main/global_preferences.c,,void
@@ -1099,3 +1099,34 @@ address,name,source,arguments,returns,convention
 00224040,unknown_00224040,,stack ebx esi edi,void,stdcall
 00224080,unknown_00224080,,ebx stack stack stack,void,stdcall
 001362b0,bitmap_sample,source/bitmaps/bitmaps.c,eax xmm1 stack,int
+000682e0,unknown_000682e0,,eax,void
+000683a0,unknown_000683a0,,stack,void,stdcall
+0014d3a0,unknown_0014d3a0,,stack,void,stdcall
+00138db0,unknown_00138db0,,ebx,void
+000684e0,unknown_000684e0,,esi,void
+001c83c0,unknown_001c83c0,,,void
+001fb510,unknown_001fb510,,,void
+0020b660,unknown_0020b660,,,void
+0015c150,unknown_0015c150,,,void
+00195ed0,unknown_00195ed0,,,void
+00209310,unknown_00209310,,,void
+00138c10,unknown_00138c10,,,void
+000b6f10,unknown_000b6f10,,,void
+001c3d30,unknown_001c3d30,,,void
+000b7060,unknown_000b7060,,,void
+000b7150,unknown_000b7150,,,void
+002268e0,unknown_002268e0,,,void
+00176e40,unknown_00176e40,,,void
+000c1400,unknown_000c1400,,,void
+0015ca10,unknown_0015ca10,,,void
+0014d8b0,unknown_0014d8b0,,,void
+001df500,unknown_001df500,,,void
+00138e40,unknown_00138e40,,,void
+00138eb0,unknown_00138eb0,,,void
+00226050,unknown_00226050,,,void
+0013c680,unknown_0013c680,,,void
+00225730,unknown_00225730,,,void
+00165dc1,unknown_00165dc1,,,void
+00153950,unknown_00153950,,,void
+001917b2,unknown_001917b2,,,void
+0016f200,unknown_0016f200,,,void

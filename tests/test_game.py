@@ -387,7 +387,7 @@ def run(t) -> None:
                     Buffer(struct.pack("<f", seconds), format="<f"),
                     globals={"game_time_globals": TIME},
                     memory={TIME: ticks(30)},
-                    externals={"main_action_pending": pending, "unknown_00137fe0": nothing},
+                    externals={"main_action_pending": pending, "game_tick": nothing},
                 )
 
 
@@ -451,3 +451,81 @@ def run_players_and_won(t) -> None:
                 "game_finish": record,
             },
         )
+
+    # ---------- a tick
+
+    random_ = random.Random(143)
+    UPDATE_NAMES = [
+        "unknown_001c83c0",
+        "unknown_001fb510",
+        "unknown_0020b660",
+        "unknown_0015c150",
+        "unknown_00195ed0",
+        "unknown_00209310",
+        "unknown_00138c10",
+        "unknown_000b6f10",
+        "unknown_001c3d30",
+        "unknown_000b7060",
+        "unknown_000b7150",
+        "unknown_002268e0",
+        "unknown_00176e40",
+        "unknown_000c1400",
+        "unknown_0015ca10",
+        "unknown_0014d8b0",
+        "unknown_001df500",
+        "unknown_00138e40",
+        "unknown_00138eb0",
+        "unknown_00226050",
+        "unknown_0013c680",
+        "animation_cache_idle",
+        "unknown_00225730",
+        "unknown_00165dc1",
+        "unknown_00153950",
+        "unknown_001917b2",
+        "unknown_0016f200",
+    ]
+
+    def tick_externals(update: int) -> dict:
+        def start(harness, arguments):
+            # what is on the stack is not the same in both: what is
+            # compared is what it has
+            (state,) = arguments
+            harness.mu.mem_write(state, bytes([0x5A, 0, 0, 0]))
+            return 0, ()
+
+        def decide(harness, arguments):
+            (state,) = arguments
+            harness.mu.mem_write(state + 4, bytes([update]))
+            return 0, (bytes(harness.mu.mem_read(state, 4)),)
+
+        def with_state(harness, arguments):
+            (state,) = arguments
+            return 0, (bytes(harness.mu.mem_read(state, 5)),)
+
+        externals = {name: (lambda harness, arguments: 0) for name in UPDATE_NAMES}
+        externals.update(
+            {
+                "_control87": lambda harness, arguments: 0,
+                "unknown_000682e0": start,
+                "unknown_000683a0": decide,
+                "unknown_0014d3a0": with_state,
+                "unknown_00138db0": with_state,
+                "unknown_000684e0": with_state,
+            }
+        )
+        return externals
+
+    for update in (0, 1, 0x80, 0, 1):
+        for countdown in (0, 1, 2, -1, 0x7FFFFFFF, -0x80000000):
+            seconds_per_tick = random_.choice((1 / 30, 1 / 60, 0.1, 0.0))
+            t.check(
+                "game_tick",
+                globals={
+                    "game_time_globals": Buffer(struct.pack("<BBhfI", 1, 0, 30, seconds_per_tick, random_.getrandbits(32))),
+                    "unknown_00510c6c": Buffer(
+                        random_.randbytes(4) + struct.pack("<f", random_.uniform(0, 100)) + random_.randbytes(12)
+                        + struct.pack("<I", countdown & 0xFFFFFFFF)
+                    ),
+                },
+                externals=tick_externals(update),
+            )

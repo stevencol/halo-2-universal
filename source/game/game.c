@@ -13,6 +13,7 @@ these functions calls the parts by name.
 #include "sound/sound_definitions.h"
 #include "game.h"
 
+#include "cache/animation_cache.h"
 #include "main/main.h"
 #include "main/main_game.h"
 #include "saved games/game_state.h"
@@ -34,10 +35,47 @@ void unknown_0019d650(void *unknown);
 /* 0x0007ad80: fills a buffer with bytes made at random */
 void unknown_0007ad80(long size, void *buffer);
 
-/* 0x00137fe0: a tick of the game */
-void unknown_00137fe0(void);
+/* 0x000682e0, 0x000683a0, 0x0014d3a0, 0x00138db0 and 0x000684e0: what a
+tick does with what it has on the stack, before and after the systems are
+updated; the second says whether they are */
+struct game_tick_state;
+void unknown_000682e0(struct game_tick_state *state);
+void __attribute__((stdcall)) unknown_000683a0(struct game_tick_state *state);
+void __attribute__((stdcall)) unknown_0014d3a0(struct game_tick_state *state);
+void unknown_00138db0(struct game_tick_state *state);
+void unknown_000684e0(struct game_tick_state *state);
+
+/* what is updated in a tick, in this order; animation_cache_idle is between
+the twenty-first and the twenty-second */
+void unknown_001c83c0(void);
+void unknown_001fb510(void);
+void unknown_0020b660(void);
+void unknown_0015c150(void);
+void unknown_00195ed0(void);
+void unknown_00209310(void);
+void unknown_00138c10(void);
+void unknown_000b6f10(void);
+void unknown_001c3d30(void);
+void unknown_000b7060(void);
+void unknown_000b7150(void);
+void unknown_002268e0(void);
+void unknown_00176e40(void);
+void unknown_000c1400(void);
+void unknown_0015ca10(void);
+void unknown_0014d8b0(void);
+void unknown_001df500(void);
+void unknown_00138e40(void);
+void unknown_00138eb0(void);
+void unknown_00226050(void);
+void unknown_0013c680(void);
+void unknown_00225730(void);
+void unknown_00165dc1(void);
+void unknown_00153950(void);
+void unknown_001917b2(void);
+void unknown_0016f200(void);
 
 long lrintf(float value);
+
 
 /* what the parts of the game do: their names are not known. Those of the
 last three fields of a part take arguments, which are not given here */
@@ -221,6 +259,28 @@ void unknown_001e73b0(void);
 /* 0x0019043f: told, when the campaign is won, each of four things and the
 difficulty */
 void __attribute__((stdcall)) unknown_0019043f(long unknown, long index, long difficulty);
+
+/* ---------- structures */
+
+/* what a tick has on the stack: 0x4048 bytes */
+struct game_tick_state
+{
+	byte unknown0[4];
+	/* the systems are updated */
+	boolean update;
+	byte unknown5[0x4043];
+};
+
+/* 0x00510c6c points to it */
+struct unknown_00510c6c
+{
+	byte unknown0[4];
+	/* the time of the ticks that it has seen */
+	real seconds;
+	byte unknown8[0xC];
+	/* less one each tick, down to 0 */
+	long countdown;
+};
 
 /* ---------- constants */
 
@@ -489,6 +549,65 @@ void game_options_new_default(
 	options->random_seed= GAME_DEFAULT_RANDOM_SEED;
 }
 
+/* 0x00510c6c */
+struct unknown_00510c6c *unknown_00510c6c;
+
+/* 0x00137fe0: a tick of the game: the systems are updated, if the first
+functions say so, and the time goes on a tick. The name is Halo 1's */
+void game_tick(
+	void)
+{
+	struct game_tick_state state;
+
+	_control87(FLOATING_POINT_CONTROL, FLOATING_POINT_CONTROL_MASK);
+	unknown_000682e0(&state);
+	unknown_000683a0(&state);
+	if (state.update)
+	{
+		unknown_0014d3a0(&state);
+		unknown_00138db0(&state);
+		unknown_001c83c0();
+		unknown_001fb510();
+		unknown_0020b660();
+		unknown_0015c150();
+		unknown_00195ed0();
+		unknown_00209310();
+		unknown_00138c10();
+		unknown_000b6f10();
+		unknown_001c3d30();
+		unknown_000b7060();
+		unknown_000b7150();
+		unknown_002268e0();
+		unknown_00176e40();
+		unknown_000c1400();
+		unknown_0015ca10();
+		unknown_0014d8b0();
+		unknown_001df500();
+		unknown_00138e40();
+		unknown_00138eb0();
+		unknown_00226050();
+		unknown_0013c680();
+		animation_cache_idle();
+		unknown_00225730();
+		unknown_00165dc1();
+		unknown_00153950();
+		unknown_001917b2();
+		unknown_0016f200();
+		{
+			/* the game takes one away as an unsigned number */
+			long countdown= (long)((unsigned long)unknown_00510c6c->countdown-1);
+
+			unknown_00510c6c->countdown= countdown<0 ? 0 : countdown;
+		}
+		unknown_00510c6c->seconds= game_time_globals->seconds_per_tick + unknown_00510c6c->seconds;
+	}
+	unknown_000684e0(&state);
+	if (state.update)
+	{
+		game_time_globals->time++;
+	}
+}
+
 /* 0x00137f70: runs so many ticks of the game. If the main loop gets
 something to do, the ticks that are left are not run, and their time is taken
 off the seconds. The name is a guess */
@@ -504,7 +623,7 @@ void game_run_ticks(
 		{
 			break;
 		}
-		unknown_00137fe0();
+		game_tick();
 	}
 
 	if (tick<tick_count)

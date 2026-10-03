@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-03, al terminar el hito 142.
+**Última actualización:** 2026-10-03, al terminar el hito 143.
 
 ## Dónde estamos
 
-- **706 funciones descompiladas de 11.265: el 6,27 % del juego** (el
-  3,411 % de los bytes de código).
-- Las 706 están comprobadas contra el ejecutable original
+- **707 funciones descompiladas de 11.265: el 6,28 % del juego** (el
+  3,421 % de los bytes de código).
+- Las 707 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile a pixel of each format as 32 bits* (ver `git log`).
+- Último hito: *Decompile a tick of the game* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -135,9 +135,10 @@ Módulos (funciones hechas / archivo):
 - [ ] Memoria del sonido — `sound\sound_memory.c` (2; faltan `0x00053310`,
       que la prepara, y `0x000533e0`, que la deshace)
 - [x] Preferencias guardadas — `main\global_preferences.c` (15: completo)
-- [ ] Juego y tabla de sistemas — `game\game.c` (21): la tabla, lo que la
+- [ ] Juego y tabla de sistemas — `game\game.c` (22): la tabla, lo que la
       recorre, las opciones (por defecto, validar, comparar), los ticks de
-      un fotograma, partida perdida y terminada, y el tipo de simulación
+      un fotograma y un tick, partida perdida y terminada, y el tipo de
+      simulación
 - [ ] Bucle principal — `main\main.c` (16):
   - [x] el bucle, un fotograma y el reloj
   - [x] guardar, cambiar de bsp y avisar de que se guardó
