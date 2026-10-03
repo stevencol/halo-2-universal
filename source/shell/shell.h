@@ -83,7 +83,13 @@ struct d3d_present_parameters
 code here uses */
 struct d3d_device
 {
-	byte unknown0[0x934];
+	/* where the next command for the console's graphics is written, and
+	where the room for them ends */
+	uint32_t *push;
+	uint32_t *push_limit;
+	/* what Direct3D has to do yet (_d3d_state_flag_...) */
+	uint32_t state_flags;
+	byte unknownC[0x928];
 	/* where the registers of the console's graphics are */
 	void *registers;
 	long reference_count;

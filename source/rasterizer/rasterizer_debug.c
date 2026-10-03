@@ -1,0 +1,154 @@
+/*
+RASTERIZER_DEBUG.C
+
+Decompiled from halo2ship.exe (Xbox, build 02.09.27.09809). Each function
+gives the address it has there.
+
+The lines and triangles that are drawn to see how the game works. They are
+sent straight to the console's graphics: the game writes the commands in
+Direct3D's push buffer itself, as Direct3D's Begin and End do. The name of
+the file is Halo 1's (rasterizer/xbox/rasterizer_xbox_debug.c); that these
+functions are of it is a guess, and so are their names.
+*/
+
+#include "rasterizer_debug.h"
+
+#include "shell/shell.h"
+
+/* ---------- prototypes of functions of the console's libraries */
+
+/* 0x003faae0: makes room in the push buffer and returns where to write;
+the game asks for the size of the push buffer, and at least half of it */
+uint32_t *__attribute__((stdcall)) D3D_MakeRequestedSpace(uint32_t size, uint32_t minimum);
+
+/* 0x003f5730: how wide the lines are drawn */
+void __attribute__((stdcall)) D3DDevice_SetRenderState_LineWidth(real width);
+
+/* 0x003fa680 */
+uint32_t __attribute__((stdcall)) D3D_SetFence(uint32_t flags);
+
+/* 0x00400fa0: sends the console the states that Direct3D has been told
+and has not sent yet. The name is a guess */
+void D3D_LazySetState(void);
+
+/* ---------- constants */
+
+enum
+{
+	/* a command of the console's graphics (NV2A) with one value: the
+	method 0x17FC, which begins (with the kind of primitive) or ends (with
+	0) what is drawn */
+	NV2A_SET_BEGIN_END= 0x000417FC,
+
+	NV2A_PRIMITIVE_END= 0,
+	NV2A_PRIMITIVE_LINES= 2,
+	NV2A_PRIMITIVE_LINE_STRIP= 4,
+	NV2A_PRIMITIVE_TRIANGLES= 5,
+	NV2A_PRIMITIVE_QUADS= 8,
+
+	/* of d3d_device->state_flags: between a begin and an end, and what
+	makes the end set a fence */
+	_d3d_state_flag_begun= 0x800,
+	_d3d_state_flag_fence= 0x1000
+};
+
+/* ---------- globals */
+
+/* 0x004b6294: between a rasterizer_debug_immediate_begin and its end */
+boolean rasterizer_debug_immediate_active;
+
+/* 0x004b6298: what is being drawn, or none */
+long rasterizer_debug_primitive_type;
+
+/* 0x00408648: the size of Direct3D's push buffer. It is Direct3D's; the
+name is a guess */
+uint32_t d3d_push_buffer_size;
+
+/* ---------- private code */
+
+static inline __attribute__((always_inline)) void push_begin_end(
+	struct d3d_device *device,
+	uint32_t primitive)
+{
+	uint32_t *push= device->push;
+
+	if (push>=device->push_limit)
+	{
+		push= D3D_MakeRequestedSpace(d3d_push_buffer_size, d3d_push_buffer_size>>1);
+	}
+	push[0]= NV2A_SET_BEGIN_END;
+	push[1]= primitive;
+	device->push= push+2;
+}
+
+/* ---------- public code */
+
+/* 0x0001ee50: what is being drawn is ended. The functions that begin are
+0x0001e930 and 0x0001eb00 */
+void rasterizer_debug_immediate_end(
+	void)
+{
+	rasterizer_debug_primitive_end();
+	rasterizer_debug_immediate_active= FALSE;
+}
+
+/* 0x0001ee60: begins drawing primitives of a kind, after ending those of
+another; the lines are 1 wide. The type is 1 to 4: the game has nothing for
+another */
+void rasterizer_debug_primitive_begin(
+	long type)
+{
+	struct d3d_device *device;
+	uint32_t primitive;
+
+	if (rasterizer_debug_primitive_type==type)
+	{
+		return;
+	}
+	rasterizer_debug_primitive_end();
+	D3DDevice_SetRenderState_LineWidth(1.0f);
+	switch (type)
+	{
+	case _rasterizer_debug_primitive_lines:
+		primitive= NV2A_PRIMITIVE_LINES;
+		break;
+	case _rasterizer_debug_primitive_line_strip:
+		primitive= NV2A_PRIMITIVE_LINE_STRIP;
+		break;
+	case _rasterizer_debug_primitive_triangles:
+		primitive= NV2A_PRIMITIVE_TRIANGLES;
+		break;
+	case _rasterizer_debug_primitive_quads:
+	default:
+		primitive= NV2A_PRIMITIVE_QUADS;
+		break;
+	}
+	device= d3d_device;
+	D3D_LazySetState();
+	push_begin_end(device, primitive);
+	device->state_flags|= _d3d_state_flag_begun;
+	rasterizer_debug_primitive_type= type;
+}
+
+/* 0x0001ef70: ends what rasterizer_debug_primitive_begin began, if it
+began anything, as Direct3D's End does; the lines are 1 wide again */
+void rasterizer_debug_primitive_end(
+	void)
+{
+	if (rasterizer_debug_primitive_type!=_rasterizer_debug_primitive_none)
+	{
+		real line_width= 1.0f;
+		struct d3d_device *device= d3d_device;
+		uint32_t flags;
+
+		push_begin_end(device, NV2A_PRIMITIVE_END);
+		flags= device->state_flags;
+		device->state_flags= flags&~(_d3d_state_flag_begun|_d3d_state_flag_fence);
+		if (flags&_d3d_state_flag_fence)
+		{
+			D3D_SetFence(1);
+		}
+		D3DDevice_SetRenderState_LineWidth(line_width);
+		rasterizer_debug_primitive_type= _rasterizer_debug_primitive_none;
+	}
+}

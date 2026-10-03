@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-03, al terminar el hito 127.
+**Última actualización:** 2026-10-03, al terminar el hito 128.
 
 ## Dónde estamos
 
-- **677 funciones descompiladas de 11.265: el 6,01 % del juego** (el
-  3,214 % de los bytes de código).
-- Las 677 están comprobadas contra el ejecutable original
+- **680 funciones descompiladas de 11.265: el 6,04 % del juego** (el
+  3,219 % de los bytes de código).
+- Las 680 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the rotation from one vector to another* (ver `git log`).
+- Último hito: *Decompile beginning and ending debug primitives* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -103,8 +103,10 @@ Módulos (funciones hechas / archivo):
 - [x] Dibujar texto — `text\draw_string.c` (19: completo, de `0x0013e8a0`
       a `0x0013f700`. Quien pinta de verdad los caracteres está en otro
       archivo, hacia `0x0001f070`)
-- [ ] Pintar los caracteres — `rasterizer\rasterizer_text.c` (6; faltan
-      `0x0001ee50`, `0x0001ee60` y `0x0001ef70`, que hablan con la consola)
+- [x] Pintar los caracteres — `rasterizer\rasterizer_text.c` (6: completo)
+- [ ] Dibujo de depuración — `rasterizer\rasterizer_debug.c` (3: empezar y
+      terminar líneas o triángulos; faltan `0x0001e930` y `0x0001eb00`, que
+      preparan la consola para dibujar)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
 - [ ] Matemáticas reales — `math\real_math.c` (32 de unas 50)
 - [x] Matrices — `math\matrix_math.c` (26: completo)

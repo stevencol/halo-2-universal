@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Empezar y terminar el dibujo de depuración
+
+Tres funciones de un archivo nuevo, `rasterizer/rasterizer_debug.c`. De 677
+funciones se pasa a 680, el 6,04 % de las del juego (el 3,219 % de sus
+bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `rasterizer_debug_immediate_end` | `0x0001ee50` | `rasterizer/rasterizer_debug.c` |
+| `rasterizer_debug_primitive_begin` | `0x0001ee60` | `rasterizer/rasterizer_debug.c` |
+| `rasterizer_debug_primitive_end` | `0x0001ef70` | `rasterizer/rasterizer_debug.c` |
+
+También los globales `rasterizer_debug_immediate_active` (`0x004b6294`),
+`rasterizer_debug_primitive_type` (`0x004b6298`) y `d3d_push_buffer_size`
+(`0x00408648`, de Direct3D), y los tres primeros campos del dispositivo de
+Direct3D. Las pruebas ponen en lugar de las funciones de Direct3D
+`D3D_MakeRequestedSpace`, `D3DDevice_SetRenderState_LineWidth`,
+`D3D_SetFence` y `D3D_LazySetState` unas que solo apuntan las llamadas; la
+última también escribe en el búfer de órdenes, para ver que el juego lo lee
+después.
+
+### Lo que se sabe
+
+- Son las líneas y triángulos que se dibujan para ver cómo funciona el
+  juego. El juego no llama a `Begin` y `End` de Direct3D: escribe él mismo
+  la orden de la gráfica de la consola (NV2A, método `0x17FC`) en el búfer
+  de órdenes de Direct3D, y pide sitio cuando no queda.
+- Los tipos 1 a 4 son líneas, tira de líneas, triángulos y cuadriláteros.
+  Empezar un tipo que no es el que se dibuja termina antes el anterior y
+  pone las líneas de 1 de ancho; pedir el mismo no hace nada.
+- Al terminar se quitan dos marcas del dispositivo, y si estaba la de
+  `0x1000` se pone una «valla» (`D3D_SetFence(1)`), como hace `End`.
+- `0x0001ee50` termina lo que se dibuja y apaga la marca que encienden
+  `0x0001e930` y `0x0001eb00`, que están por descompilar.
+- Los nombres son inventados, a partir de los de Halo 1
+  (`rasterizer_xbox_debug.c`).
+
+### Mutaciones
+
+32 líneas rotas a propósito: las 32 detectadas.
+
 ## 2026-10-03 — Girar un vector hasta otro
 
 Una función, con la que `matrix_math.c` queda completo. De 676 funciones se

@@ -1056,3 +1056,10 @@ address,name,source,arguments,returns,convention
 0012b850,main_switch_structure_bsp,source/main/main.c,eax,void
 001417b0,matrix4x3_rotation_between_vectors,source/math/matrix_math.c,ecx edx stack,void
 00143120,valid_real_vector3d_axes3,,esi edi ebx,bool
+0001ee50,rasterizer_debug_immediate_end,source/rasterizer/rasterizer_debug.c,,void
+0001ee60,rasterizer_debug_primitive_begin,source/rasterizer/rasterizer_debug.c,edi,void
+0001ef70,rasterizer_debug_primitive_end,source/rasterizer/rasterizer_debug.c,,void
+003faae0,D3D_MakeRequestedSpace,,eax stack,int,stdcall
+003f5730,D3DDevice_SetRenderState_LineWidth,,stack,void,stdcall
+003fa680,D3D_SetFence,,stack,int,stdcall
+00400fa0,D3D_LazySetState,,,void

@@ -162,3 +162,6 @@ address,name,source
 004687bc,global_down3d,source/math/real_math.c
 004687cc,global_identity_quaternion,source/math/real_math.c
 004687d0,global_identity4x3,source/math/real_math.c
+004b6294,rasterizer_debug_immediate_active,source/rasterizer/rasterizer_debug.c
+004b6298,rasterizer_debug_primitive_type,source/rasterizer/rasterizer_debug.c
+00408648,d3d_push_buffer_size,source/rasterizer/rasterizer_debug.c
