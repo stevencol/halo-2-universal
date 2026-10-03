@@ -73,6 +73,51 @@ unsigned char __attribute__((stdcall)) quantize_real_to_byte(
 	return quantized;
 }
 
+/* 0x0011e000: how far a point is from a segment, squared: the segment goes
+from a place along a vector. A segment whose length squared is no more than
+k_real_epsilon is its start. The name is a guess */
+real point_to_segment_distance_squared3d(
+	const real_vector3d *direction,
+	const real_point3d *start,
+	const real_point3d *point)
+{
+	real j= direction->j;
+	real k= direction->k;
+	real length_squared= j*j + k*k + direction->i*direction->i;
+
+	if (length_squared>k_real_epsilon)
+	{
+		real x= point->x-start->x;
+		real y= point->y-start->y;
+		real z= point->z-start->z;
+		real t= (direction->i*x + z*k + y*j)/length_squared;
+		real minus_t;
+
+		if (0.0f>t)
+		{
+			t= 0.0f;
+		}
+		else if (t>1.0f)
+		{
+			t= 1.0f;
+		}
+		minus_t= 0.0f-t;
+		x= direction->i*minus_t + x;
+		y= minus_t*direction->j + y;
+		z= minus_t*direction->k + z;
+
+		return z*z + y*y + x*x;
+	}
+	else
+	{
+		real x= start->x-point->x;
+		real y= start->y-point->y;
+		real z= start->z-point->z;
+
+		return z*z + y*y + x*x;
+	}
+}
+
 /* 0x0011cf50: the angle between two vectors of length 1, from 0 to pi: 0 for
 two that are the same to the bit. The name is a guess */
 real angle_between_vectors3d(

@@ -35,6 +35,7 @@ VECTORS = (
 
 
 def run(t) -> None:
+    run_segments(t)
     run_quantize(t)
     run_angles(t)
     random_ = random.Random(3)
@@ -186,3 +187,21 @@ def run_quantize(t) -> None:
         minimum = struct.unpack("<f", struct.pack("<f", random_.uniform(-50, 50)))[0]
         maximum = struct.unpack("<f", struct.pack("<f", minimum + random_.uniform(0.001, 30)))[0]
         t.check("quantize_real_to_byte", bits(minimum), bits(maximum), bits(maximum))
+
+
+def run_segments(t) -> None:
+    random_ = random.Random(118)
+
+    for n in range(800):
+        start = [random_.uniform(-20, 20) for _ in range(3)]
+        choice = n % 5
+        if choice == 0:
+            direction = random_.choice(([0.0, 0.0, 0.0], [1e-3, 0.0, 0.0], [0.0, 0.0, 0.01], [0.006, 0.006, 0.006]))
+        else:
+            direction = [random_.uniform(-10, 10) for _ in range(3)]
+        # before the start, along the segment and past its end
+        along = random_.choice((-0.5, 0.0, 0.25, 0.5, 1.0, 1.5, random_.uniform(-2, 3)))
+        point = [s_ + d * along + random_.uniform(-3, 3) for s_, d in zip(start, direction)]
+        if n % 17 == 16:
+            point = list(start)
+        t.check("point_to_segment_distance_squared3d", reals(*direction), reals(*start), reals(*point))

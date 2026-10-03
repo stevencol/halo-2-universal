@@ -2,6 +2,36 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — La distancia de un punto a un segmento
+
+Una función. De 667 funciones se pasa a 668, el 5,93 % de las del juego
+(el 3,057 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `point_to_segment_distance_squared3d` | `0x0011e000` | `math/real_math.c` |
+
+### Lo que se sabe
+
+- Devuelve la distancia **al cuadrado** de un punto a un segmento, dado
+  como un punto de inicio y un vector. Proyecta el punto sobre la recta,
+  recorta la proyección entre el inicio y el final del segmento y mide desde
+  ahí.
+- Un segmento cuya longitud al cuadrado no pasa de 0,0001 se trata como su
+  punto de inicio.
+- El nombre es una suposición.
+
+### Mutaciones
+
+15 líneas rotas a propósito: 14 detectadas.
+
+### Sin comprobar
+
+- Una mutación es equivalente: cambiar `0 - t` por `-t` solo cambia el signo
+  de un cero, que desaparece al elevar al cuadrado.
+
 ## 2026-10-02 — Un real de un rango como un byte
 
 Una función. De 666 funciones se pasa a 667, el 5,92 % de las del juego
