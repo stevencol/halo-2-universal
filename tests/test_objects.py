@@ -149,7 +149,7 @@ def run(t) -> None:
         for value in (0.0, -0.0, 1.0, 0.5, 2.0, 0.25, 0.999, 1.001, 1e-30, 1e30, math.inf, -math.inf, -2.0, -0.5, 3.0)
     ] + [bytes.fromhex("0000c07f"), bytes.fromhex("0100807f"), bytes.fromhex("01000000")]
 
-    def havok_components(count: int, fixed: bool = False, methods: bool = False) -> Buffer:
+    def havok_components(count: int, fixed: bool = False, methods: bool = False, transforms: bool = False) -> Buffer:
         """The data array of the havok components: only where its data is
         (0x44) is looked at. Each component has three rigid bodies, each of
         them one of Havok and what moves that."""
@@ -157,7 +157,9 @@ def run(t) -> None:
         bodies = components + count * HAVOK_COMPONENT_SIZE
         havok = bodies + count * RIGID_BODIES * RIGID_BODY_SIZE
         motions = havok + count * RIGID_BODIES * 0x40
-        data = bytearray(random_.randbytes(motions + count * RIGID_BODIES * 0x80))
+        # what moves a rigid body has its transform after 0x80
+        motion_size = 0xC0 if transforms else 0x80
+        data = bytearray(random_.randbytes(motions + count * RIGID_BODIES * motion_size))
         pointers = [0x44]
         struct.pack_into("<I", data, 0x44, components)
         for c in range(count):
@@ -170,26 +172,30 @@ def run(t) -> None:
             else:
                 data[component + 0x18] = random_.choice((0, 1, 2, 2, 3, 0x7F, 0x80, 0xFF))
             struct.pack_into("<Ii", data, component + 0x70, bodies + c * RIGID_BODIES * RIGID_BODY_SIZE, rigid_body_count)
+            if transforms:
+                # whether the rigid bodies are from the component's transform
+                flags = random_.getrandbits(32) & ~0x40 | random_.choice((0, 0x40))
+                struct.pack_into("<I", data, component + 4, flags)
             pointers.append(component + 0x70)
             for r in range(RIGID_BODIES):
                 n = c * RIGID_BODIES + r
                 struct.pack_into("<I", data, bodies + n * RIGID_BODY_SIZE + 0x40, havok + n * 0x40)
-                struct.pack_into("<I", data, havok + n * 0x40 + 0x3C, motions + n * 0x80)
+                struct.pack_into("<I", data, havok + n * 0x40 + 0x3C, motions + n * motion_size)
                 pointers += [bodies + n * RIGID_BODY_SIZE + 0x40, havok + n * 0x40 + 0x3C]
-                struct.pack_into("<3f", data, motions + n * 0x80 + 0x70, *(random_.uniform(-40, 40) for _ in range(3)))
+                struct.pack_into("<3f", data, motions + n * motion_size + 0x70, *(random_.uniform(-40, 40) for _ in range(3)))
                 if fixed:
                     # the byte after Havok's rigid body is whether it is
                     # fixed, and what moves it has its velocities
                     data[havok + n * 0x40 + 0x40] = random_.choice((0, 0, 1, 0xFF))
-                    struct.pack_into("<3f", data, motions + n * 0x80 + 0x40, *(random_.uniform(-9, 9) for _ in range(3)))
-                    struct.pack_into("<3f", data, motions + n * 0x80 + 0x50, *(random_.uniform(-9, 9) for _ in range(3)))
+                    struct.pack_into("<3f", data, motions + n * motion_size + 0x40, *(random_.uniform(-9, 9) for _ in range(3)))
+                    struct.pack_into("<3f", data, motions + n * motion_size + 0x50, *(random_.uniform(-9, 9) for _ in range(3)))
                 if methods:
                     # the methods, at the end; the inverse of the mass; and
                     # what the test's get_type gives
-                    struct.pack_into("<I", data, motions + n * 0x80, len(data))
-                    pointers.append(motions + n * 0x80)
-                    data[motions + n * 0x80 + 0x2C : motions + n * 0x80 + 0x30] = random_.choice(INVERSE_MASSES)
-                    struct.pack_into("<I", data, motions + n * 0x80 + 0x7C, random_.choice((6, 6, 0, 1, 5, 7, 0x106, 0xFFFFFFFF)))
+                    struct.pack_into("<I", data, motions + n * motion_size, len(data))
+                    pointers.append(motions + n * motion_size)
+                    data[motions + n * motion_size + 0x2C : motions + n * motion_size + 0x30] = random_.choice(INVERSE_MASSES)
+                    struct.pack_into("<I", data, motions + n * motion_size + 0x7C, random_.choice((6, 6, 0, 1, 5, 7, 0x106, 0xFFFFFFFF)))
         if methods:
             data += bytes(0x18) + struct.pack("<I", mock_address(0)) + bytes(8) + struct.pack("<I", mock_address(1))
         return Buffer(bytes(data), pointers=tuple(pointers))
@@ -270,3 +276,32 @@ def run(t) -> None:
                 extra=[havok],
                 mocks=methods,
             )
+
+    # ---------- where a rigid body is
+
+    def set_mul_eq(harness, arguments):
+        """Stands in for Havok's product of two transforms: what the test
+        leaves is the bits of the first with those of the second."""
+        transform, other = arguments
+        a = bytes(harness.mu.mem_read(transform, 0x40))
+        b = bytes(harness.mu.mem_read(other, 0x40))
+        harness.mu.mem_write(transform, bytes(x ^ y for x, y in zip(a, b)))
+        # the first is on the stack, which is not the same in both functions
+        return 0, (harness.normalize(other),)
+
+    for _ in range(30):
+        havok_count = random_.randint(1, 6)
+        havok = havok_components(havok_count, transforms=True)
+        for _ in range(10):
+            component = Pointer(havok, COMPONENTS + random_.randrange(havok_count) * HAVOK_COMPONENT_SIZE)
+            rigid_body_index = random_.randrange(RIGID_BODIES)
+            # compared as bytes, to tell 0 from -0
+            for name, size in (("havok_component_get_rigid_body_matrix", 0x34), ("havok_component_get_rigid_body_position", 12)):
+                t.check(
+                    name,
+                    component,
+                    rigid_body_index,
+                    Buffer(random_.randbytes(size)),
+                    extra=[havok],
+                    externals={"hkTransform_setMulEq": set_mul_eq},
+                )

@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Dónde está un cuerpo rígido
+
+Dos funciones de `physics/havok_component.c`. De 687 funciones se pasa a
+689, el 6,12 % de las del juego (el 3,260 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_component_get_rigid_body_position` | `0x001d0870` | `physics/havok_component.c` |
+| `havok_component_get_rigid_body_matrix` | `0x001d08e0` | `physics/havok_component.c` |
+
+También la transformación de Havok (`hkTransform`: tres columnas de
+rotación y una traslación, de cuatro reales cada una), la que tiene lo que
+mueve un cuerpo (en `0x80`) y la del componente (en `0x30`), con una marca
+del componente (el bit 6 de `0x04`). Las pruebas ponen en lugar del
+producto de transformaciones de Havok (`0x002da5d0`) uno que mezcla los
+bits de las dos.
+
+### Lo que se sabe
+
+- La matriz de un cuerpo rígido es su transformación de Havok, con escala
+  1; si el componente tiene la marca, antes se multiplica por la del
+  componente.
+- La posición, con la marca, sale de esa matriz; sin ella, es la
+  traslación de la transformación del cuerpo.
+- Los nombres son inventados.
+
+### Mutaciones
+
+16 líneas rotas a propósito: 15 detectadas.
+
+### Sin comprobar
+
+- Un mutante es equivalente: sacar la posición siempre de la matriz da lo
+  mismo cuando el componente no tiene la marca, porque entonces la matriz
+  no se multiplica por nada.
+
 ## 2026-10-03 — La rotación, la masa y el tipo de un cuerpo rígido
 
 Tres funciones de `physics/havok_component.c`. De 684 funciones se pasa a

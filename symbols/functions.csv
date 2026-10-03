@@ -1070,3 +1070,6 @@ address,name,source,arguments,returns,convention
 001d0b20,havok_component_get_rigid_body_rotation,source/physics/havok_component.c,ecx eax esi,void
 001d0bb0,havok_component_get_rigid_body_mass,source/physics/havok_component.c,ecx eax,real:xmm0
 001d0c00,havok_component_rigid_body_is_keyframed,source/physics/havok_component.c,ecx eax,bool
+001d0870,havok_component_get_rigid_body_position,source/physics/havok_component.c,ecx eax edi,void
+001d08e0,havok_component_get_rigid_body_matrix,source/physics/havok_component.c,ecx eax esi,void
+002da5d0,hkTransform_setMulEq,,ecx stack,void,stdcall
