@@ -165,4 +165,5 @@ address,name,source
 004b6294,rasterizer_debug_immediate_active,source/rasterizer/rasterizer_debug.c
 004b6298,rasterizer_debug_primitive_type,source/rasterizer/rasterizer_debug.c
 00408648,d3d_push_buffer_size,source/rasterizer/rasterizer_debug.c
-0051e9b8,havok_component_data,source/objects/objects.c
+0051e9b8,havok_component_data,source/physics/havok_component.c
+004687a4,global_zero_vector3d,source/math/real_math.c

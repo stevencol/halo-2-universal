@@ -13,15 +13,15 @@ gives the address it has there.
 #define OBJECT_HEADER_GET(object_index) \
 	(&((struct object_header_datum *)object_header_data->data)[(object_index)&0xFFFF])
 #define OBJECT_GET(object_index) (OBJECT_HEADER_GET(object_index)->datum)
+/* the havok component of an index that is not NONE; its salt is not looked
+at */
+#define HAVOK_COMPONENT_GET(havok_component_index) \
+	(&((struct havok_component *)havok_component_data->data)[(havok_component_index)&0xFFFF])
 
 /* ---------- globals */
 
 /* 0x004e0300 */
 struct data_array *object_header_data;
-
-/* 0x0051e9b8: of struct havok_component, "havok components". The code that
-makes it is not decompiled */
-struct data_array *havok_component_data;
 
 /* ---------- code */
 
@@ -186,6 +186,29 @@ void object_get_origin(
 	return;
 }
 
+/* the main rigid body of the havok component of an object, and the
+component; NONE if it has none */
+static inline __attribute__((always_inline)) short object_get_main_rigid_body(
+	const struct object_datum *object,
+	struct havok_component **component)
+{
+	short rigid_body_index= NONE;
+
+	if (object->havok_component_index!=NONE)
+	{
+		struct havok_component *havok_component= HAVOK_COMPONENT_GET(object->havok_component_index);
+
+		if (havok_component->rigid_body_index>=0 &&
+			havok_component->rigid_body_index<havok_component->rigid_body_count)
+		{
+			rigid_body_index= havok_component->rigid_body_index;
+		}
+		*component= havok_component;
+	}
+
+	return rigid_body_index;
+}
+
 /* 0x000b9ef0: where the center of mass of an object is: that of a rigid
 body of the havok component of the object that it is attached to at the
 top (or of itself), or the object's origin if there is none. The name is a
@@ -194,29 +217,69 @@ real_point3d *object_get_center_of_mass(
 	long object_index,
 	real_point3d *center)
 {
-	long havok_component_index= OBJECT_GET(object_get_ultimate_parent(object_index))->havok_component_index;
+	struct havok_component *component;
+	short rigid_body_index=
+		object_get_main_rigid_body(OBJECT_GET(object_get_ultimate_parent(object_index)), &component);
 
-	if (havok_component_index!=NONE)
+	if (rigid_body_index!=NONE)
 	{
-		struct havok_component *component=
-			&((struct havok_component *)havok_component_data->data)[havok_component_index&0xFFFF];
-		short rigid_body_index= NONE;
-
-		if (component->rigid_body_index>=0 && component->rigid_body_index<component->rigid_body_count)
-		{
-			rigid_body_index= component->rigid_body_index;
-		}
-		if (rigid_body_index!=NONE)
-		{
-			byte *motion= *(byte **)(component->rigid_bodies[rigid_body_index].rigid_body+0x3C);
-
-			*center= *(real_point3d *)(motion+0x70);
-			return center;
-		}
+		*center= component->rigid_bodies[rigid_body_index].rigid_body->motion->center_of_mass;
+		return center;
 	}
 	object_get_origin(object_index, center);
 
 	return center;
+}
+
+/* 0x000ba1d0: how fast the object that an object is attached to at the top
+(or the object itself) moves and turns; either can be NULL. They are
+Havok's, of the main rigid body of its havok component, if it has one;
+0 if the object is fixed. The name is Halo 1's */
+void object_get_velocities(
+	long object_index,
+	real_vector3d *translational_velocity,
+	real_vector3d *angular_velocity)
+{
+	struct object_datum *object= OBJECT_GET(object_get_ultimate_parent(object_index));
+	struct havok_component *component;
+	short rigid_body_index= object_get_main_rigid_body(object, &component);
+
+	if (rigid_body_index!=NONE)
+	{
+		boolean fixed= TEST_FLAG(object->physics_flags, _object_physics_fixed_bit);
+
+		if (translational_velocity)
+		{
+			if (fixed)
+			{
+				*translational_velocity= *global_zero_vector3d;
+			}
+			else
+			{
+				havok_component_get_rigid_body_linear_velocity(component, rigid_body_index, translational_velocity);
+			}
+		}
+		if (angular_velocity)
+		{
+			if (fixed)
+			{
+				*angular_velocity= *global_zero_vector3d;
+			}
+			else
+			{
+				havok_component_get_rigid_body_angular_velocity(component, rigid_body_index, angular_velocity);
+			}
+		}
+		return;
+	}
+	if (translational_velocity)
+	{
+		*translational_velocity= object->translational_velocity;
+	}
+	if (angular_velocity)
+	{
+		*angular_velocity= object->angular_velocity;
+	}
 }
 
 /* a vector turned by the rotation of a matrix, with no scale */

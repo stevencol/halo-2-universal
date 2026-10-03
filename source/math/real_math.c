@@ -25,6 +25,11 @@ guesses */
 real real_math_pi;
 real real_math_two_pi;
 
+static const real_vector3d zero_vector3d= { 0.0f, 0.0f, 0.0f };
+
+/* 0x004687a4: the vector (0, 0, 0). The name is Halo 1's */
+const real_vector3d *global_zero_vector3d= &zero_vector3d;
+
 static const real_vector3d forward3d= { 1.0f, 0.0f, 0.0f };
 
 /* 0x004687a8: the vector forward, (1, 0, 0). The name is Halo 1's */

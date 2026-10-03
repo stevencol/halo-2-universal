@@ -1064,3 +1064,6 @@ address,name,source,arguments,returns,convention
 003fa680,D3D_SetFence,,stack,int,stdcall
 00400fa0,D3D_LazySetState,,,void
 000b9ef0,object_get_center_of_mass,source/objects/objects.c,eax ecx,int
+000ba1d0,object_get_velocities,source/objects/objects.c,eax ecx stack,void
+001d09d0,havok_component_get_rigid_body_linear_velocity,source/physics/havok_component.c,edx eax ecx,void
+001d0ad0,havok_component_get_rigid_body_angular_velocity,source/physics/havok_component.c,edx eax ecx,void

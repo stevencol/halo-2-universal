@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Las velocidades de un objeto
+
+Tres funciones, dos de ellas de un archivo nuevo,
+`physics/havok_component.c`. De 681 funciones se pasa a 684, el 6,07 %
+de las del juego (el 3,241 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_get_velocities` | `0x000ba1d0` | `objects/objects.c` |
+| `havok_component_get_rigid_body_linear_velocity` | `0x001d09d0` | `physics/havok_component.c` |
+| `havok_component_get_rigid_body_angular_velocity` | `0x001d0ad0` | `physics/havok_component.c` |
+
+También el global `global_zero_vector3d` (`0x004687a4`, el nombre de Halo
+1), las velocidades de los objetos (`0x88` y `0x94`) y una marca suya en
+`0xC1`. Lo que se sabe de Havok (el componente, sus cuerpos rígidos, el
+cuerpo rígido de Havok y lo que lo mueve) pasa de `objects.h` a
+`physics/havok_component.h`, con estructuras en lugar de desplazamientos.
+
+### Lo que se sabe
+
+- `object_get_velocities` da lo rápido que se mueve y gira el objeto del
+  que cuelga todo; cualquiera de las dos puede pedirse con `NULL`. Si
+  tiene un componente de Havok con su cuerpo rígido principal, son las de
+  Havok, o 0 si el objeto tiene la marca de fijo; si no, las del propio
+  objeto. El nombre es el de Halo 1.
+- Las dos de Havok leen las velocidades de lo que mueve el cuerpo rígido,
+  o dan 0 si el cuerpo es fijo (un byte en `0x40`).
+- `object_get_center_of_mass` usa ahora el mismo paso para encontrar el
+  cuerpo rígido principal.
+
+### Mutaciones
+
+26 líneas rotas a propósito: las 26 detectadas (una, cambiar el orden de
+las velocidades del objeto, la para al compilar la comprobación de su
+desplazamiento).
+
 ## 2026-10-03 — El centro de masa de un objeto
 
 Una función. De 680 funciones se pasa a 681, el 6,05 % de las del juego

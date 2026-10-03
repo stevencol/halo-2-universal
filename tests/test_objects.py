@@ -3,7 +3,7 @@
 import random
 import struct
 
-from difftest import Buffer
+from difftest import Buffer, Pointer
 from test_data import DATA_ARRAY_SIZE, NONE, identifier, index
 
 HEADER_SIZE = 0xC
@@ -143,7 +143,7 @@ def run(t) -> None:
     RIGID_BODY_SIZE = 0x60
     RIGID_BODIES = 3
 
-    def havok_components(count: int) -> Buffer:
+    def havok_components(count: int, fixed: bool = False) -> Buffer:
         """The data array of the havok components: only where its data is
         (0x44) is looked at. Each component has three rigid bodies, each of
         them one of Havok and what moves that."""
@@ -171,6 +171,12 @@ def run(t) -> None:
                 struct.pack_into("<I", data, havok + n * 0x40 + 0x3C, motions + n * 0x80)
                 pointers += [bodies + n * RIGID_BODY_SIZE + 0x40, havok + n * 0x40 + 0x3C]
                 struct.pack_into("<3f", data, motions + n * 0x80 + 0x70, *(random_.uniform(-40, 40) for _ in range(3)))
+                if fixed:
+                    # the byte after Havok's rigid body is whether it is
+                    # fixed, and what moves it has its velocities
+                    data[havok + n * 0x40 + 0x40] = random_.choice((0, 0, 1, 0xFF))
+                    struct.pack_into("<3f", data, motions + n * 0x80 + 0x40, *(random_.uniform(-9, 9) for _ in range(3)))
+                    struct.pack_into("<3f", data, motions + n * 0x80 + 0x50, *(random_.uniform(-9, 9) for _ in range(3)))
         return Buffer(bytes(data), pointers=tuple(pointers))
 
     for _ in range(40):
@@ -183,3 +189,34 @@ def run(t) -> None:
         for object_index in random_.sample(indices, min(len(indices), 10)):
             # compared as bytes, to tell 0 from -0
             t.check("object_get_center_of_mass", object_index, Buffer(random_.randbytes(12)), globals=globals_)
+
+    # ---------- the velocities
+
+    COMPONENTS = 0x50
+
+    for _ in range(40):
+        maximum_count = random_.choice((4, 20, 64))
+        object_count = random_.randint(1, maximum_count)
+        havok_count = random_.choice((1, 2, 3, 4, 5, 6, 300))
+        data, indices = world(random_, object_count, maximum_count, havok_count)
+        havok = havok_components(havok_count, fixed=True)
+        globals_ = {"object_header_data": data, "havok_component_data": havok}
+        for object_index in random_.sample(indices, min(len(indices), 10)):
+            for asked in ((True, True), (True, False), (False, True), (False, False)):
+                # compared as bytes, to tell 0 from -0
+                t.check(
+                    "object_get_velocities",
+                    object_index,
+                    *(Buffer(random_.randbytes(12)) if ask else 0 for ask in asked),
+                    globals=globals_,
+                )
+        for _ in range(10):
+            component = random_.randrange(havok_count)
+            for name in ("havok_component_get_rigid_body_linear_velocity", "havok_component_get_rigid_body_angular_velocity"):
+                t.check(
+                    name,
+                    Pointer(havok, COMPONENTS + component * HAVOK_COMPONENT_SIZE),
+                    random_.randrange(RIGID_BODIES),
+                    Buffer(random_.randbytes(12)),
+                    extra=[havok],
+                )

@@ -130,6 +130,7 @@ typedef char verify_real_matrix4x3_size[
 
 extern const real_argb_color *global_real_argb_white;
 extern real real_math_pi;
+extern const real_vector3d *global_zero_vector3d;
 extern const real_vector3d *global_forward3d;
 extern const real_vector3d *global_up3d;
 extern const real_vector3d *global_down3d;
