@@ -13,7 +13,7 @@ MATRIX_SIZE = 0x34
 NODE_COUNT = 4
 
 
-def world(random_: random.Random, object_count: int, maximum_count: int) -> tuple[Buffer, list[int]]:
+def world(random_: random.Random, object_count: int, maximum_count: int, havok_count: int = 0) -> tuple[Buffer, list[int]]:
     """The data array of the object headers, with its objects after it in the buffer, and the index of each object.
 
     An object can be attached to an object before it; each object has the
@@ -76,6 +76,10 @@ def world(random_: random.Random, object_count: int, maximum_count: int) -> tupl
         struct.pack_into("<ib", datum, 0x14, parent, random_.randrange(0, NODE_COUNT))
         struct.pack_into("<9f", datum, 0x64, *(random_.uniform(-40, 40) for _ in range(9)))
         struct.pack_into("<h", datum, 0x116, NODE_MATRICES_OFFSET)
+        if havok_count:
+            # the salt of the index is not looked at
+            component = NONE if random_.random() < 0.25 else random_.getrandbits(16) << 16 | random_.randrange(havok_count)
+            struct.pack_into("<I", datum, 0xB4, component & 0xFFFFFFFF)
         for node in range(NODE_COUNT):
             matrix = [random_.choice((1.0, 1.0, 0.5, 2.5)), *(random_.uniform(-1, 1) for _ in range(9))]
             matrix += [random_.uniform(-40, 40) for _ in range(3)]
@@ -132,3 +136,50 @@ def run(t) -> None:
     for type_mask in (0, 1, 0xFFFFFFFF, 0x0F3, 0x80000000):
         for header_flags in (0, 1, 0x21, 0xFF, 0x100, 0xABCDEF21):
             t.check("object_iterator_new", Buffer(random_.randbytes(0x14)), type_mask, header_flags)
+
+    # ---------- the center of mass
+
+    HAVOK_COMPONENT_SIZE = 0xA0
+    RIGID_BODY_SIZE = 0x60
+    RIGID_BODIES = 3
+
+    def havok_components(count: int) -> Buffer:
+        """The data array of the havok components: only where its data is
+        (0x44) is looked at. Each component has three rigid bodies, each of
+        them one of Havok and what moves that."""
+        components = 0x50
+        bodies = components + count * HAVOK_COMPONENT_SIZE
+        havok = bodies + count * RIGID_BODIES * RIGID_BODY_SIZE
+        motions = havok + count * RIGID_BODIES * 0x40
+        data = bytearray(random_.randbytes(motions + count * RIGID_BODIES * 0x80))
+        pointers = [0x44]
+        struct.pack_into("<I", data, 0x44, components)
+        for c in range(count):
+            component = components + c * HAVOK_COMPONENT_SIZE
+            rigid_body_count = random_.choice((0, 1, 2, 3, 3, -1, 0x100))
+            if rigid_body_count == 0x100:
+                # past 0x7F a signed index is negative: it is none of the
+                # many rigid bodies
+                data[component + 0x18] = random_.choice((0, 1, 2, 0x80, 0xFF))
+            else:
+                data[component + 0x18] = random_.choice((0, 1, 2, 2, 3, 0x7F, 0x80, 0xFF))
+            struct.pack_into("<Ii", data, component + 0x70, bodies + c * RIGID_BODIES * RIGID_BODY_SIZE, rigid_body_count)
+            pointers.append(component + 0x70)
+            for r in range(RIGID_BODIES):
+                n = c * RIGID_BODIES + r
+                struct.pack_into("<I", data, bodies + n * RIGID_BODY_SIZE + 0x40, havok + n * 0x40)
+                struct.pack_into("<I", data, havok + n * 0x40 + 0x3C, motions + n * 0x80)
+                pointers += [bodies + n * RIGID_BODY_SIZE + 0x40, havok + n * 0x40 + 0x3C]
+                struct.pack_into("<3f", data, motions + n * 0x80 + 0x70, *(random_.uniform(-40, 40) for _ in range(3)))
+        return Buffer(bytes(data), pointers=tuple(pointers))
+
+    for _ in range(40):
+        maximum_count = random_.choice((4, 20, 64))
+        object_count = random_.randint(1, maximum_count)
+        # past 0xFF the index of a component has more than 8 bits
+        havok_count = random_.choice((1, 2, 3, 4, 5, 6, 300))
+        data, indices = world(random_, object_count, maximum_count, havok_count)
+        globals_ = {"object_header_data": data, "havok_component_data": havok_components(havok_count)}
+        for object_index in random_.sample(indices, min(len(indices), 10)):
+            # compared as bytes, to tell 0 from -0
+            t.check("object_get_center_of_mass", object_index, Buffer(random_.randbytes(12)), globals=globals_)

@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — El centro de masa de un objeto
+
+Una función. De 680 funciones se pasa a 681, el 6,05 % de las del juego
+(el 3,226 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_get_center_of_mass` | `0x000b9ef0` | `objects/objects.c` |
+
+También el global `havok_component_data` (`0x0051e9b8`, la tabla de datos
+«havok components»), el campo `havok_component_index` de los objetos (en
+`0xB4`) y lo poco que se usa de un componente de Havok y de sus cuerpos
+rígidos. Las pruebas de objetos pueden hacer ahora un mundo con
+componentes de Havok; sin ellos sale igual que antes.
+
+### Lo que se sabe
+
+- Sube hasta el objeto del que cuelga todo (`object_get_ultimate_parent`)
+  y mira su componente de Havok. Si tiene uno y su cuerpo rígido
+  principal existe (un índice con signo de 8 bits, entre 0 y el número de
+  cuerpos), devuelve el centro de masa que Havok tiene de ese cuerpo.
+- Si no, devuelve el origen del objeto pedido, no el del de arriba
+  (`object_get_origin`).
+- No mira la sal del índice del componente.
+- El nombre es inventado.
+
+### Mutaciones
+
+15 líneas rotas a propósito: las 15 detectadas (dos, mover campos de las
+estructuras, las paran las comprobaciones de tamaño al compilar). Dos se
+escapaban al principio: con pocos componentes y pocos cuerpos, un índice
+de 8 bits y uno de 16, o uno con signo y otro sin él, daban lo mismo. Las
+pruebas tienen ahora 300 componentes a veces y 256 cuerpos.
+
 ## 2026-10-03 — Empezar y terminar el dibujo de depuración
 
 Tres funciones de un archivo nuevo, `rasterizer/rasterizer_debug.c`. De 677

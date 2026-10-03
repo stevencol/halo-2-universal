@@ -1063,3 +1063,4 @@ address,name,source,arguments,returns,convention
 003f5730,D3DDevice_SetRenderState_LineWidth,,stack,void,stdcall
 003fa680,D3D_SetFence,,stack,int,stdcall
 00400fa0,D3D_LazySetState,,,void
+000b9ef0,object_get_center_of_mass,source/objects/objects.c,eax ecx,int

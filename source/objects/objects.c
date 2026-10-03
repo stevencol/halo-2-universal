@@ -19,6 +19,10 @@ gives the address it has there.
 /* 0x004e0300 */
 struct data_array *object_header_data;
 
+/* 0x0051e9b8: of struct havok_component, "havok components". The code that
+makes it is not decompiled */
+struct data_array *havok_component_data;
+
 /* ---------- code */
 
 /* 0x000b7360: marks the object and every object it is attached to, up to
@@ -180,6 +184,39 @@ void object_get_origin(
 	}
 
 	return;
+}
+
+/* 0x000b9ef0: where the center of mass of an object is: that of a rigid
+body of the havok component of the object that it is attached to at the
+top (or of itself), or the object's origin if there is none. The name is a
+guess */
+real_point3d *object_get_center_of_mass(
+	long object_index,
+	real_point3d *center)
+{
+	long havok_component_index= OBJECT_GET(object_get_ultimate_parent(object_index))->havok_component_index;
+
+	if (havok_component_index!=NONE)
+	{
+		struct havok_component *component=
+			&((struct havok_component *)havok_component_data->data)[havok_component_index&0xFFFF];
+		short rigid_body_index= NONE;
+
+		if (component->rigid_body_index>=0 && component->rigid_body_index<component->rigid_body_count)
+		{
+			rigid_body_index= component->rigid_body_index;
+		}
+		if (rigid_body_index!=NONE)
+		{
+			byte *motion= *(byte **)(component->rigid_bodies[rigid_body_index].rigid_body+0x3C);
+
+			*center= *(real_point3d *)(motion+0x70);
+			return center;
+		}
+	}
+	object_get_origin(object_index, center);
+
+	return center;
 }
 
 /* a vector turned by the rotation of a matrix, with no scale */

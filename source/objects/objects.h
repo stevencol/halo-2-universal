@@ -72,9 +72,34 @@ struct object_datum
 	real_point3d position;
 	real_vector3d forward;
 	real_vector3d up;
-	byte unknown88[0x8E];
+	byte unknown88[0x2C];
+	/* of havok_component_data, or NONE */
+	long havok_component_index;
+	byte unknownB8[0x5E];
 	/* the offset in the object of the matrix of each of its nodes */
 	short node_matrices_offset;
+};
+
+/* a rigid body of a havok component */
+struct havok_component_rigid_body
+{
+	byte unknown0[0x40];
+	/* Havok's own rigid body: at 0x3C it has what moves it, which has the
+	center of mass in the world at 0x70 */
+	byte *rigid_body;
+	byte unknown44[0x1C];
+};
+
+/* what an object has of Havok, the physics library */
+struct havok_component
+{
+	byte unknown0[0x18];
+	/* the rigid body whose center of mass is that of the object */
+	char rigid_body_index;
+	byte unknown19[0x57];
+	struct havok_component_rigid_body *rigid_bodies;
+	long rigid_body_count;
+	byte unknown78[0x28];
 };
 
 /* goes through the objects of some types whose header has some flags */
@@ -99,6 +124,12 @@ typedef char verify_object_datum_location_offset[
 	offsetof(struct object_datum, location) == 0x28 ? 1 : -1];
 typedef char verify_object_datum_position_offset[
 	offsetof(struct object_datum, position) == 0x64 ? 1 : -1];
+typedef char verify_object_datum_havok_component_index_offset[
+	offsetof(struct object_datum, havok_component_index) == 0xB4 ? 1 : -1];
+typedef char verify_havok_component_rigid_body_size[
+	sizeof(struct havok_component_rigid_body) == 0x60 ? 1 : -1];
+typedef char verify_havok_component_size[
+	sizeof(struct havok_component) == 0xA0 ? 1 : -1];
 typedef char verify_object_datum_node_matrices_offset_offset[
 	offsetof(struct object_datum, node_matrices_offset) == 0x116 ? 1 : -1];
 
@@ -112,6 +143,7 @@ long object_get_first_unflagged_ancestor(long object_index);
 void *object_iterator_next(struct object_iterator *iterator);
 long object_get_ultimate_parent(long object_index);
 void object_get_origin(long object_index, real_point3d *origin);
+real_point3d *object_get_center_of_mass(long object_index, real_point3d *center);
 void object_get_orientation(long object_index, real_vector3d *forward, real_vector3d *up);
 real_matrix4x3 *object_get_world_matrix(long object_index, real_matrix4x3 *matrix);
 void object_get_location(long object_index, struct location *location);
