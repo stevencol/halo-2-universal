@@ -1046,3 +1046,4 @@ address,name,source,arguments,returns,convention
 0011f470,quantize_real_to_byte,source/math/real_math.c,stack stack stack,byte
 0011e000,point_to_segment_distance_squared3d,source/math/real_math.c,eax ecx edx,real:xmm0
 0011d3b0,limit_angle_between_vectors3d,source/math/real_math.c,eax edi esi stack stack,bool
+0011dd80,orientation_inverse,source/math/real_math.c,ecx edx,void

@@ -2,6 +2,39 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Hito 120: deshacer una orientación
+
+Una función. De 669 funciones se pasa a 670, el 5,95 % de las del juego
+(el 3,087 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `orientation_inverse` | `0x0011dd80` | `math/real_math.c` |
+
+### Lo que se sabe
+
+- Una **orientación** es un giro (cuaternión), una posición y una escala.
+  Esta función da la que la deshace: el giro al revés (cambiando el signo de
+  `w`), la posición girada con ese giro, dividida por la escala y cambiada
+  de signo, y la escala inversa.
+- Una orientación de escala 0 se deshace con escala **10000**, en vez de
+  dividir por cero.
+- El giro de la posición usa la fórmula `2(u·t)u + (2w² - 1)t + 2w(u×t)`,
+  en un orden de sumas concreto que hay que respetar para dar los mismos
+  bits.
+- Funciona aunque el resultado y la orientación estén en el mismo sitio.
+- El nombre es una suposición.
+
+### Mutaciones
+
+18 líneas rotas a propósito: 17 detectadas.
+
+### Sin comprobar
+
+- Una mutación es equivalente: no tratar aparte la escala 1 (1/1 es 1).
+
 ## 2026-10-02 — Limitar el ángulo entre dos vectores
 
 Una función. De 668 funciones se pasa a 669, el 5,94 % de las del juego

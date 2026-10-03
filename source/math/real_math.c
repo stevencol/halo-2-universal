@@ -30,6 +30,9 @@ static const real_vector3d forward3d= { 1.0f, 0.0f, 0.0f };
 /* 0x004687a8: the vector forward, (1, 0, 0). The name is Halo 1's */
 const real_vector3d *global_forward3d= &forward3d;
 
+/* what undoes an orientation of scale 0 */
+#define ORIENTATION_INVERSE_OF_NO_SCALE 10000.0f
+
 /* ---------- code */
 
 /* the bits of a real */
@@ -161,6 +164,59 @@ unsigned char __attribute__((stdcall)) limit_angle_between_vectors3d(
 	}
 
 	return 1;
+}
+
+/* 0x0011dd80: the orientation that undoes another: the other way round, from
+the other side, and the other size. An orientation of scale 0 is undone with
+a scale of 10000. The name is a guess */
+void orientation_inverse(
+	real_orientation *result,
+	const real_orientation *orientation)
+{
+	real w;
+	real dot;
+	real w_squared;
+	real twice_w;
+	real cross_i;
+	real cross_j;
+	real cross_k;
+	real inverse_scale;
+
+	result->rotation= orientation->rotation;
+	result->rotation.w*= -1.0f;
+	w= result->rotation.w;
+
+	/* the translation turned by the rotation */
+	dot= (orientation->translation.x*result->rotation.v.i + orientation->translation.y*result->rotation.v.j +
+		result->rotation.v.k*orientation->translation.z)*2.0f;
+	w_squared= w*w*2.0f - 1.0f;
+	twice_w= w*2.0f;
+	cross_j= result->rotation.v.k*orientation->translation.x - result->rotation.v.i*orientation->translation.z;
+	cross_k= orientation->translation.y*result->rotation.v.i - orientation->translation.x*result->rotation.v.j;
+	cross_i= result->rotation.v.j*orientation->translation.z - orientation->translation.y*result->rotation.v.k;
+	result->translation.x= cross_i*twice_w + orientation->translation.x*w_squared + result->rotation.v.i*dot;
+	result->translation.y= orientation->translation.y*w_squared + result->rotation.v.j*dot + cross_j*twice_w;
+	result->translation.z= result->rotation.v.k*dot + cross_k*twice_w + w_squared*orientation->translation.z;
+
+	if (orientation->scale==0.0f)
+	{
+		inverse_scale= ORIENTATION_INVERSE_OF_NO_SCALE;
+	}
+	else if (orientation->scale==1.0f)
+	{
+		inverse_scale= 1.0f;
+	}
+	else
+	{
+		inverse_scale= 1.0f/orientation->scale;
+	}
+	result->translation.x= inverse_scale*result->translation.x;
+	result->translation.y= result->translation.y*inverse_scale;
+	result->translation.z= result->translation.z*inverse_scale;
+	result->translation.x= result->translation.x*-1.0f;
+	result->translation.y= result->translation.y*-1.0f;
+	result->scale= inverse_scale;
+	result->translation.z= result->translation.z*-1.0f;
 }
 
 /* 0x0011cf50: the angle between two vectors of length 1, from 0 to pi: 0 for

@@ -3,7 +3,7 @@
 import random
 import struct
 
-from difftest import Buffer, f32
+from difftest import Buffer, Pointer, f32
 
 
 def reals(*values: float) -> Buffer:
@@ -35,6 +35,7 @@ VECTORS = (
 
 
 def run(t) -> None:
+    run_orientation_inverse(t)
     run_limit_angle(t)
     run_segments(t)
     run_quantize(t)
@@ -248,3 +249,24 @@ def run_limit_angle(t) -> None:
             bits(math.sin(angle)),
             bits(cosine),
         )
+
+
+def run_orientation_inverse(t) -> None:
+    import math
+
+    random_ = random.Random(120)
+
+    for n in range(800):
+        q = [random_.uniform(-1, 1) for _ in range(4)]
+        length = math.sqrt(sum(x * x for x in q)) or 1.0
+        if n % 5:
+            q = [x / length for x in q]
+        translation = [random_.uniform(-50, 50) for _ in range(3)]
+        scale = random_.choice((1.0, 1.0, 0.0, 2.0, 0.5, -1.0, 3.25, random_.uniform(0.1, 4)))
+        orientation = struct.pack("<8f", *q, *translation, scale)
+        if n % 7 == 6:
+            # the same place for both
+            buffer = Buffer(orientation)
+            t.check("orientation_inverse", buffer, Pointer(buffer, 0))
+        else:
+            t.check("orientation_inverse", Buffer(struct.pack("<8f", *(9.0,) * 8)), Buffer(orientation))

@@ -137,6 +137,7 @@ extern real real_math_two_pi;
 
 void quaternion_to_axis_angle(const real_quaternion *quaternion, real_vector3d *axis, real *angle);
 real angle_between_vectors3d(const real_vector3d *a, const real_vector3d *b);
+void orientation_inverse(real_orientation *result, const real_orientation *orientation);
 unsigned char __attribute__((stdcall)) limit_angle_between_vectors3d(const real_vector3d *a, const real_vector3d *b,
 	real_vector3d *result, real sine, real cosine);
 real point_to_segment_distance_squared3d(const real_vector3d *direction, const real_point3d *start,
