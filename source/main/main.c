@@ -23,7 +23,9 @@ Halo 1's main.c.
 #include "main/global_preferences.h"
 #include "saved games/game_state.h"
 #include "scenario/scenario.h"
+#include "scenario/scenario_definitions.h"
 #include "shell/shell.h"
+#include "tag_files/tag_groups.h"
 #include "text/font_cache.h"
 #include "text/unicode.h"
 
@@ -104,6 +106,7 @@ enum
 	hud_saving_end */
 	_string_id_hud_autosave= 0x120006A0,
 	_string_id_hud_autosave_end= 0x100006A1,
+	_string_id_hud_loading= 0x110006A2,
 	_string_id_hud_loading_end= 0x0F0006A3,
 	_string_id_hud_saving= 0x100006A4,
 	_string_id_hud_saving_end= 0x0E0006A5,
@@ -613,6 +616,55 @@ void main_save_map(
 			}
 		}
 	}
+}
+
+/* 0x0012b850: another structure bsp of the scenario is to be loaded at the
+start of the next frame, and in the campaign the first player of this
+console is told. Asking for the one that is loaded undoes what was asked
+for before, and the player is told that it is loaded; asking for it when
+nothing was asked for does nothing. An index that is not of the scenario
+does nothing. As Halo 1's of this name */
+void main_switch_structure_bsp(
+	short structure_bsp_index)
+{
+	const struct tag_block *structure_bsps;
+	unsigned long string_id;
+	wchar text[HUD_MESSAGE_LENGTH];
+	long local_player_index;
+
+	if (structure_bsp_index<0)
+	{
+		return;
+	}
+	structure_bsps= (const struct tag_block *)((const byte *)global_scenario+SCENARIO_STRUCTURE_BSPS_OFFSET);
+	if (structure_bsp_index>=structure_bsps->count)
+	{
+		return;
+	}
+	if (structure_bsp_index==global_structure_bsp_index)
+	{
+		if (!main_globals.switch_structure_bsp)
+		{
+			return;
+		}
+		main_globals.switch_structure_bsp_index= structure_bsp_index;
+		main_globals.switch_structure_bsp= FALSE;
+		string_id= _string_id_hud_loading_end;
+	}
+	else
+	{
+		main_globals.switch_structure_bsp_index= structure_bsp_index;
+		main_globals.switch_structure_bsp= TRUE;
+		string_id= _string_id_hud_loading;
+	}
+	if (main_game_globals->options.game_mode!=_game_mode_campaign)
+	{
+		return;
+	}
+	hud_messages_unknown_0024cdaf();
+	local_player_index= main_first_local_player();
+	main_get_message(string_id, text);
+	hud_print_message(local_player_index, text);
 }
 
 /* 0x0012bdf0: does something that is not known and tells the first player of

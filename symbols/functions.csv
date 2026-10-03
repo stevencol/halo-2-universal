@@ -1053,3 +1053,4 @@ address,name,source,arguments,returns,convention
 0011fa40,rectangle3d_build_edges,source/math/real_math.c,stack stack,int
 0012b790,main_save_map,source/main/main.c,,void
 001896c0,unknown_001896c0,,stack xmm0,void
+0012b850,main_switch_structure_bsp,source/main/main.c,eax,void

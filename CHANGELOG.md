@@ -2,6 +2,33 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Pedir otro BSP
+
+Una función. De 675 funciones se pasa a 676, el 6,00 % de las del juego
+(el 3,169 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `main_switch_structure_bsp` | `0x0012b850` | `main/main.c` |
+
+### Lo que se sabe
+
+- Pide que se cargue otro BSP del escenario al empezar el fotograma
+  siguiente (lo hace `main_switch_structure_bsp_private`), y en la campaña
+  avisa al primer jugador de la consola con el texto «cargando»
+  (`0x110006A2`).
+- Pedir el BSP que **ya está cargado** deshace lo pedido antes y avisa de
+  que la carga ha terminado (`0x0F0006A3`); si no se había pedido nada, no
+  hace nada.
+- Un índice negativo o que no es del escenario no hace nada.
+- El nombre es el de Halo 1.
+
+### Mutaciones
+
+13 líneas rotas a propósito: las 13 detectadas.
+
 ## 2026-10-03 — Pedir que se guarde la partida
 
 Una función. De 674 funciones se pasa a 675, el 5,99 % de las del juego

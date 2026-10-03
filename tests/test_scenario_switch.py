@@ -233,6 +233,20 @@ def run(t) -> None:
                                 memory={**memory, TEXT_SOURCE: sound_source(value)},
                                 externals={"unknown_001896c0": lambda harness, arguments: 0, **messages},
                             )
+                        for index, loaded, asked in ((1, 1, 1), (1, 1, 0), (1, 2, 0), (2, 2, 1), (0, NONE, 0), (-1, 1, 0), (3, 1, 0), (5, 1, 1), (0x10001, 1, 0)):
+                            t.check(
+                                "main_switch_structure_bsp",
+                                index & 0xFFFFFFFF,
+                                globals={
+                                    "main_globals": main_globals(random_, x4B=asked),
+                                    **common,
+                                    "main_game_globals": GAME,
+                                    "global_scenario": SCENARIO,
+                                    "global_structure_bsp_index": struct.pack("<h", loaded if loaded != NONE else -1),
+                                },
+                                memory={**memory, SCENARIO: scenario()},
+                                externals=messages,
+                            )
                         for shown in (0, 1):
                             t.check(
                                 "main_print_saving_message",
