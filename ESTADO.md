@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-02, al terminar el hito 109.
+**Última actualización:** 2026-10-02, al terminar el hito 110.
 
 ## Dónde estamos
 
-- **650 funciones descompiladas de 11.265: el 5,77 % del juego** (el
-  2,977 % de los bytes de código).
-- Las 650 están comprobadas contra el ejecutable original
+- **654 funciones descompiladas de 11.265: el 5,81 % del juego** (el
+  2,988 % de los bytes de código).
+- Las 654 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the memory of the sound* (ver `git log`).
+- Último hito: *Decompile matrices, quaternions and orientations* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -106,8 +106,8 @@ Módulos (funciones hechas / archivo):
 - [ ] Pintar los caracteres — `rasterizer\rasterizer_text.c` (6; faltan
       `0x0001ee50`, `0x0001ee60` y `0x0001ef70`, que hablan con la consola)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
-- [ ] Matemáticas reales — `math\real_math.c` (21 de unas 50)
-- [ ] Matrices — `math\matrix_math.c` (22; quedan 4)
+- [ ] Matemáticas reales — `math\real_math.c` (22 de unas 50)
+- [ ] Matrices — `math\matrix_math.c` (25; queda 1, `0x001417b0`)
 - [ ] Números aleatorios — `math\random_math.c` (2)
 - [ ] Colores y bitmaps — `bitmaps\` (17: 6 de colores y 11 en
       `bitmaps.c`; de este faltan `0x001358e0`, `0x00135ca0`, `0x00136140` y
@@ -206,9 +206,9 @@ Módulos (funciones hechas / archivo):
       la caché de animaciones ya está. La recorren `0x0018ec60` y
       `0x0018ed00`, que abren y cierran un mapa.
 - [ ] **Resto de las tareas de archivo:** `0x001a0a70`, `0x001a0da0`,
-      `0x001a1480`, `0x001a17d0`.
+      `0x001a17d0`.
 - [ ] **Matemáticas que quedan:** `real_math.c` (`0x0011cf50`, `0x0011d090`,
-      `0x0011d790`, `0x0011e000` y las grandes) y las 4 de matrices.
+      `0x0011e000` y las grandes) y una de matrices.
 
 ## Lo que falta en grande
 

@@ -129,8 +129,12 @@ typedef char verify_real_matrix4x3_size[
 /* ---------- globals */
 
 extern const real_argb_color *global_real_argb_white;
+extern real real_math_pi;
+extern real real_math_two_pi;
 
 /* ---------- prototypes/REAL_MATH.C */
+
+void quaternion_to_axis_angle(const real_quaternion *quaternion, real_vector3d *axis, real *angle);
 
 real normalize2d(real_vector2d *vector);
 real normalize3d(real_vector3d *vector);
@@ -229,5 +233,9 @@ void matrix3x3_from_angles(real_matrix3x3 *matrix, real yaw, real pitch, real ro
 void matrix3x3_transform_vector(const real_matrix3x3 *matrix, const real_vector3d *vector, real_vector3d *result);
 void matrix3x3_rotation_from_quaternion(real_matrix3x3 *matrix, const real_quaternion *quaternion);
 void matrix3x3_rotation_to_quaternion(const real_matrix3x3 *matrix, real_quaternion *quaternion);
+void matrix4x3_from_point_and_quaternion(real_matrix4x3 *matrix, const real_point3d *point,
+	const real_quaternion *quaternion);
+void matrix4x3_to_orientation(const real_matrix4x3 *matrix, real_orientation *orientation);
+real_vector3d *matrix4x3_rotation_between(real_vector3d *vector, const real_matrix4x3 *from, const real_matrix4x3 *to);
 
 #endif

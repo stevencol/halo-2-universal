@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Matrices, cuaterniones y orientaciones
+
+Cuatro funciones. De 650 funciones se pasa a 654, el 5,81 % de las del
+juego (el 2,988 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `quaternion_to_axis_angle` | `0x0011d790` | `math/real_math.c` |
+| `matrix4x3_from_point_and_quaternion` | `0x001421b0` | `math/matrix_math.c` |
+| `matrix4x3_to_orientation` | `0x00142360` | `math/matrix_math.c` |
+| `matrix4x3_rotation_between` | `0x001424f0` | `math/matrix_math.c` |
+
+También los globales `real_math_pi` (`0x005476c4`) y `real_math_two_pi`
+(`0x005476c8`).
+
+### Lo que se sabe
+
+- `quaternion_to_axis_angle`: el eje de un giro (de longitud 1) y su ángulo,
+  de 0 a pi; un giro de más de pi se da como el giro al revés. Un cuaternión
+  sin giro da un eje de longitud 0.
+- El juego guarda **pi y dos pi** en dos variables que no vienen en el
+  ejecutable: se ponen al arrancar.
+- `matrix4x3_from_point_and_quaternion` (nombre de Halo 1): una matriz de
+  escala 1 que gira como un cuaternión y está en un punto.
+- `matrix4x3_to_orientation`: lo contrario, de matriz a giro, posición y
+  escala (la «orientación» de 32 bytes que ya conocíamos).
+- `matrix4x3_rotation_between`: el giro que lleva de una matriz a otra,
+  como un vector: su eje por su ángulo. Se calcula con la inversa de la
+  primera.
+
+### Mutaciones
+
+19 líneas rotas a propósito: las 19 detectadas. Una pidió cuaterniones de
+media vuelta, cuyo ángulo es pi exacto.
+
 ## 2026-10-02 — La memoria del sonido
 
 Dos funciones, en un archivo nuevo. De 648 funciones se pasa a 650, el

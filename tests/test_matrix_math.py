@@ -127,3 +127,40 @@ def run(t) -> None:
     for diagonal in ((1, 1, 1), (1, -1, -1), (-1, 1, -1), (-1, -1, 1), (-1, -1, -1), (0, 0, 0)):
         matrix3 = [diagonal[0], 0, 0, 0, diagonal[1], 0, 0, 0, diagonal[2]]
         t.check("matrix3x3_rotation_to_quaternion", reals(*matrix3), garbage(random_, 4))
+
+    # ---------- matrices, quaternions and orientations
+
+    PI = struct.unpack("<f", struct.pack("<f", math.pi))[0]
+
+    def angles() -> dict:
+        return {
+            "real_math_pi": struct.pack("<f", random_.choice((math.pi, math.pi, 1.0, 3.5))),
+            "real_math_two_pi": struct.pack("<f", random_.choice((2 * math.pi, 2 * math.pi, 7.0))),
+        }
+
+    def quaternion() -> list[float]:
+        choice = random_.randrange(7)
+        if choice == 6:
+            # half a turn: exactly pi
+            return random_.choice(([1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, -1.0, 0.0]))
+        if choice == 0:
+            return [0.0, 0.0, 0.0, random_.choice((1.0, -1.0))]
+        if choice == 1:
+            return [random_.uniform(-2, 2) for _ in range(4)]
+        q = [random_.uniform(-1, 1) for _ in range(4)]
+        length = math.sqrt(sum(x * x for x in q)) or 1.0
+        return [x / length for x in q]
+
+    for _ in range(300):
+        t.check("matrix4x3_from_point_and_quaternion", garbage(random_, 13), reals(*(random_.uniform(-50, 50) for _ in range(3))), reals(*quaternion()))
+        t.check("matrix4x3_to_orientation", reals(*matrix4x3(random_)), garbage(random_, 8))
+    for _ in range(300):
+        t.check("quaternion_to_axis_angle", reals(*quaternion()), garbage(random_, 3), garbage(random_, 1), globals=angles())
+    for _ in range(300):
+        t.check(
+            "matrix4x3_rotation_between",
+            garbage(random_, 3),
+            reals(*matrix4x3(random_, 1.0)),
+            reals(*matrix4x3(random_, random_.choice((1.0, 1.0, 2.0)))),
+            globals=angles(),
+        )

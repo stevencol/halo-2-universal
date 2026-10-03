@@ -154,3 +154,5 @@ address,name,source
 004c995c,sound_memory_pool,source/sound/sound_memory.c
 004c9960,sound_memory_other_pool,source/sound/sound_memory.c
 004c9964,sound_memory_use_other_pool,source/sound/sound_memory.c
+005476c4,real_math_pi,source/math/real_math.c
+005476c8,real_math_two_pi,source/math/real_math.c

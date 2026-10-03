@@ -212,6 +212,55 @@ void matrix4x3_from_orientation(
 	return;
 }
 
+/* 0x001421b0: a matrix of scale 1 that turns as a quaternion and is at a
+place. The name is Halo 1's */
+void matrix4x3_from_point_and_quaternion(
+	real_matrix4x3 *matrix,
+	const real_point3d *point,
+	const real_quaternion *quaternion)
+{
+	matrix3x3_rotation_from_quaternion((real_matrix3x3 *)&matrix->forward, quaternion);
+	matrix->position.x= 0.0f;
+	matrix->position.y= 0.0f;
+	matrix->position.z= 0.0f;
+	matrix->scale= 1.0f;
+	matrix->position= *point;
+}
+
+/* 0x00142360: how a matrix turns, where it is and how large it is. The name
+is a guess */
+void matrix4x3_to_orientation(
+	const real_matrix4x3 *matrix,
+	real_orientation *orientation)
+{
+	matrix3x3_rotation_to_quaternion((const real_matrix3x3 *)&matrix->forward, &orientation->rotation);
+	orientation->translation= matrix->position;
+	orientation->scale= matrix->scale;
+}
+
+/* 0x001424f0: the rotation that goes from one matrix to another, as a
+vector: its axis by its angle. The name is a guess */
+real_vector3d *matrix4x3_rotation_between(
+	real_vector3d *vector,
+	const real_matrix4x3 *from,
+	const real_matrix4x3 *to)
+{
+	real_matrix4x3 inverse;
+	real_matrix4x3 rotation;
+	real_quaternion quaternion;
+	real angle;
+
+	matrix4x3_inverse(from, &inverse);
+	matrix4x3_multiply(to, &inverse, &rotation);
+	matrix3x3_rotation_to_quaternion((const real_matrix3x3 *)&rotation.forward, &quaternion);
+	quaternion_to_axis_angle(&quaternion, vector, &angle);
+	vector->i*= angle;
+	vector->j*= angle;
+	vector->k*= angle;
+
+	return vector;
+}
+
 /* 0x00142390: a matrix whose up is the plane's normal and whose position is
 the point of the plane nearest to the origin. As in Halo 1 */
 void matrix4x3_from_plane(

@@ -1023,3 +1023,7 @@ address,name,source,arguments,returns,convention
 002d0a60,XMemFreeDefault,,stack stack,void,stdcall
 00053290,sound_memory_allocate,source/sound/sound_memory.c,eax stack,int
 000532e0,sound_memory_free,source/sound/sound_memory.c,stack stack,void
+0011d790,quaternion_to_axis_angle,source/math/real_math.c,eax esi edi,void
+001421b0,matrix4x3_from_point_and_quaternion,source/math/matrix_math.c,edx esi ecx,void
+00142360,matrix4x3_to_orientation,source/math/matrix_math.c,esi eax,void
+001424f0,matrix4x3_rotation_between,source/math/matrix_math.c,eax ecx stack,int

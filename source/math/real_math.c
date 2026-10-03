@@ -16,7 +16,37 @@ static const real_argb_color real_argb_white= { 1.0f, { 1.0f, 1.0f, 1.0f } };
 /* 0x004686cc: white that hides all that is behind it. The name is Halo 1's */
 const real_argb_color *global_real_argb_white= &real_argb_white;
 
+/* 0x005476c4 and 0x005476c8: pi and twice it, as the game has them; they
+are not in the executable, and are set when the game starts. The names are
+guesses */
+real real_math_pi;
+real real_math_two_pi;
+
 /* ---------- code */
+
+/* 0x0011d790: the axis of the rotation of a quaternion, of length 1, and
+its angle, from 0 to pi: a rotation of more than pi is the other way. A
+quaternion of no rotation has an axis of length 0. The name is a guess */
+void quaternion_to_axis_angle(
+	const real_quaternion *quaternion,
+	real_vector3d *axis,
+	real *angle)
+{
+	real w;
+	real magnitude;
+
+	*axis= quaternion->v;
+	w= quaternion->w;
+	magnitude= normalize3d(axis);
+	*angle= 2.0f*atan2f(magnitude, w);
+	if (*angle>real_math_pi)
+	{
+		axis->i= 0.0f-axis->i;
+		axis->k= 0.0f-axis->k;
+		axis->j= 0.0f-axis->j;
+		*angle= real_math_two_pi-*angle;
+	}
+}
 
 /* 0x0002b400: as normalize3d */
 real normalize2d(
