@@ -88,6 +88,9 @@ void unknown_0018efa0(void);
 /* 0x00190e37: what main_unknown4E_private does before its message */
 void unknown_00190e37(void);
 
+/* 0x000593e0 */
+void unknown_000593e0(void);
+
 /* ---------- constants */
 
 enum
@@ -98,6 +101,7 @@ enum
 	hud_saving_end */
 	_string_id_hud_autosave_end= 0x100006A1,
 	_string_id_hud_loading_end= 0x0F0006A3,
+	_string_id_hud_saving= 0x100006A4,
 	_string_id_hud_saving_end= 0x0E0006A5,
 
 	MINIMUM_FRAME_VBLANKS= 2,
@@ -130,6 +134,12 @@ struct unknown_00510c50
 
 /* 0x00547f28 */
 struct main_globals main_globals;
+
+/* 0x004ed39d, 0x004ed39e and 0x004ed3a0: of another part, told that files of
+the game are damaged, and when; what they are is not known */
+boolean unknown_004ed39d;
+boolean unknown_004ed39e;
+long unknown_004ed3a0;
 
 /* 0x004e6388 */
 struct main_time_globals main_time_globals;
@@ -527,6 +537,46 @@ void main_switch_structure_bsp_private(
 	}
 	main_globals.switch_structure_bsp= FALSE;
 	main_globals.switch_structure_bsp_index= NONE;
+}
+
+/* 0x0012bf00: what is done when files of the game are found to be damaged:
+several things of the game are told so, and when, and something more is
+done in two states of another part. Which files is not known; the fonts use
+it. The name is a guess */
+void main_files_damaged(
+	void)
+{
+	main_globals.unknown1= TRUE;
+	unknown_004ed39e= TRUE;
+	unknown_004ed39d= TRUE;
+	unknown_004ed3a0= GetTickCount();
+	if (unknown_00527330 && (unknown_00527334==3 || unknown_00527334==8))
+	{
+		unknown_000593e0();
+	}
+}
+
+/* 0x0012b980: tells the first player of this console that the game is
+being saved, in the campaign, once until it is saved. The name is a guess */
+void main_print_saving_message(
+	void)
+{
+	if (main_globals.unknown4E)
+	{
+		return;
+	}
+	main_globals.unknown4E= TRUE;
+	if (main_game_globals && main_game_globals->active &&
+		main_game_globals->options.game_mode==_game_mode_campaign)
+	{
+		wchar text[HUD_MESSAGE_LENGTH];
+		long local_player_index;
+
+		hud_messages_unknown_0024cdaf();
+		local_player_index= main_first_local_player();
+		main_get_message(_string_id_hud_saving, text);
+		hud_print_message(local_player_index, text);
+	}
 }
 
 /* 0x0012bdf0: does something that is not known and tells the first player of

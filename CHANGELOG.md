@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — Archivos dañados y el mensaje de «guardando»
+
+Dos funciones. De 660 funciones se pasa a 662, el 5,88 % de las del
+juego (el 3,022 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `main_files_damaged` | `0x0012bf00` | `main/main.c` |
+| `main_print_saving_message` | `0x0012b980` | `main/main.c` |
+
+`main_game.c` ya llamaba a la primera con un nombre provisional, y
+`fonts_initialize` la tenía copiada dentro: ahora las dos la llaman.
+
+### Lo que se sabe
+
+- `main_files_damaged` es lo que hace el juego cuando encuentra **archivos
+  dañados**: cuando ni siquiera puede abrir el menú principal, y cuando las
+  fuentes no están bien. Avisa a varias partes del juego (y apunta cuándo) y,
+  en dos estados de otra parte, hace algo más. Uno de los avisos es un campo
+  de `main_globals` que antes teníamos como una variable aparte.
+- `main_print_saving_message` muestra al primer jugador de la consola el
+  texto «guardando» (`0x100006A4`) en la campaña, **una sola vez** hasta que
+  se termina de guardar: el indicador `unknown4E` de `main_globals`, que
+  `main_unknown4E_private` vuelve a apagar al mostrar «guardado».
+- Los dos nombres son suposiciones.
+
+### Mutaciones
+
+14 líneas rotas a propósito: las 14 detectadas.
+
 ## 2026-10-02 — Hacia dónde mira un objeto
 
 Una función. De 659 funciones se pasa a 660, el 5,86 % de las del juego

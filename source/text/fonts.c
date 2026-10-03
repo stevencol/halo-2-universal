@@ -14,6 +14,7 @@ functions are guesses.
 #include "main/global_preferences.h"
 #include "text/font_cache.h"
 #include "main/main_game.h"
+#include "main/main.h"
 #include "text/draw_string.h"
 
 #include <stddef.h>
@@ -24,16 +25,10 @@ functions are guesses.
 /* 0x00121b00: whether what the files of the fonts say is right */
 boolean unknown_00121b00(void);
 
-/* 0x000593e0 */
-void unknown_000593e0(void);
-
 /* 0x00121570: the name of the file that lists the fonts */
 void __attribute__((stdcall)) unknown_00121570(char *name, long size);
 
 /* ---------- prototypes of functions of the console's libraries */
-
-/* 0x003314b0 */
-long GetTickCount(void);
 
 /* 0x002d2084 */
 int SwitchToThread(void);
@@ -64,13 +59,6 @@ const char *font_directory= "z:\\fonts\\";
 
 /* 0x004e3b40 */
 boolean fonts_initialized;
-
-/* 0x00547f29, 0x004ed39e, 0x004ed39d, 0x004ed3a0: of other files, told that
-the fonts are not right; what they are is not known */
-boolean unknown_00547f29;
-boolean unknown_004ed39e;
-boolean unknown_004ed39d;
-long unknown_004ed3a0;
 
 /* ---------- code */
 
@@ -144,14 +132,8 @@ void fonts_initialize(
 	if (!unknown_00121b00())
 	{
 		unknown_0051ea00= TRUE;
-		unknown_00547f29= TRUE;
-		unknown_004ed39e= TRUE;
-		unknown_004ed39d= TRUE;
-		unknown_004ed3a0= GetTickCount();
-		if (unknown_00527330 && (unknown_00527334==3 || unknown_00527334==8))
-		{
-			unknown_000593e0();
-		}
+		/* which the game has in itself here */
+		main_files_damaged();
 	}
 	path[0]= 0;
 	unknown_00121570(list_name, sizeof(list_name));

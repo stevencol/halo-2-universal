@@ -221,3 +221,10 @@ def run(t) -> None:
                             memory=memory,
                             externals={"unknown_00190e37": nothing, **messages},
                         )
+                        for shown in (0, 1):
+                            t.check(
+                                "main_print_saving_message",
+                                globals={"main_globals": main_globals(random_, x4E=shown), **common, "main_game_globals": game_globals},
+                                memory=memory,
+                                externals=messages,
+                            )

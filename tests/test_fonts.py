@@ -312,7 +312,7 @@ def run(t) -> None:
                 "font_slots": random_.randbytes(SLOTS * FONT_SIZE),
                 "fonts_initialized": bytes((random_.choice((0, 0, 0, 0, 1, 0x80)),)),
                 "unknown_0051ea00": random_.randbytes(1),
-                "unknown_00547f29": random_.randbytes(1),
+                "main_globals+1": random_.randbytes(1),
                 "unknown_004ed39e": random_.randbytes(1),
                 "unknown_004ed39d": random_.randbytes(1),
                 "unknown_004ed3a0": random_.randbytes(4),
@@ -329,5 +329,24 @@ def run(t) -> None:
                 "font_load": lambda harness, arguments: (0, (arguments[0], text(harness, arguments[1]), arguments[2] & 0xFF)),
                 "font_characters_new": lambda harness, arguments: 0,
                 "font_cache_new": lambda harness, arguments: 0,
+            },
+        )
+
+    # ---------- files of the game that are damaged (source/main/main.c)
+
+    for n in range(40):
+        t.check(
+            "main_files_damaged",
+            globals={
+                "main_globals": random_.randbytes(0x54),
+                "unknown_004ed39e": random_.randbytes(1),
+                "unknown_004ed39d": random_.randbytes(1),
+                "unknown_004ed3a0": random_.randbytes(4),
+                "unknown_00527330": bytes((random_.choice((0, 1, 0x80)),)),
+                "unknown_00527334": struct.pack("<I", random_.choice((3, 8, 0, 4, 0x103))),
+            },
+            externals={
+                "GetTickCount": lambda harness, arguments: 0x12345,
+                "unknown_000593e0": lambda harness, arguments: 0,
             },
         )

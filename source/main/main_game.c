@@ -114,8 +114,6 @@ void unknown_001483c3(long unknown);
 /* 0x0011c840: after the tags of a map are loaded */
 void unknown_0011c840(void);
 
-/* 0x0012bf00: when not even the main menu can be started */
-void unknown_0012bf00(void);
 
 /* 0x00138640: asks for a game with these options */
 void unknown_00138640(long one, struct game_options *options);
@@ -718,7 +716,7 @@ void main_game_load_failed(
 	else
 	{
 		main_game_open_texture_cache();
-		unknown_0012bf00();
+		main_files_damaged();
 	}
 }
 

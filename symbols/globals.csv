@@ -145,10 +145,9 @@ address,name,source
 00485602,rasterizer_text_suspended,source/rasterizer/rasterizer_text.c
 004670c0,magic_number,source/rasterizer/rasterizer_text.c
 004e3b40,fonts_initialized,source/text/fonts.c
-00547f29,unknown_00547f29,source/text/fonts.c
-004ed39e,unknown_004ed39e,source/text/fonts.c
-004ed39d,unknown_004ed39d,source/text/fonts.c
-004ed3a0,unknown_004ed3a0,source/text/fonts.c
+004ed39e,unknown_004ed39e,source/main/main.c
+004ed39d,unknown_004ed39d,source/main/main.c
+004ed3a0,unknown_004ed3a0,source/main/main.c
 00510c3c,xmem_static_buffer,source/shell/shell.c
 00510c40,xmem_static_buffer_used,source/shell/shell.c
 004c995c,sound_memory_pool,source/sound/sound_memory.c

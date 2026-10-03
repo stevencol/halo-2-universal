@@ -111,6 +111,9 @@ struct players_globals
 
 /* ---------- prototypes/MAIN.C */
 
+void main_files_damaged(void);
+void main_print_saving_message(void);
+
 void main_loop(void);
 void main_loop_body(void);
 void main_time_initialize(void);
@@ -125,6 +128,10 @@ boolean main_action_pending(void);
 void main_cancel_map_copy_and_wait(void);
 
 /* ---------- globals */
+
+extern boolean unknown_004ed39d;
+extern boolean unknown_004ed39e;
+extern long unknown_004ed3a0;
 
 extern struct main_globals main_globals;
 extern struct main_time_globals main_time_globals;

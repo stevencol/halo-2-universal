@@ -682,7 +682,7 @@ address,name,source,arguments,returns,convention
 0012bf90,unknown_0012bf90,,,bool
 001483c3,unknown_001483c3,,stack,void
 0011c840,unknown_0011c840,,,void
-0012bf00,unknown_0012bf00,,,void
+0012bf00,main_files_damaged,source/main/main.c,,void
 001374c0,file_location_get_full_path,source/tag_files/files_xbox.c,esi edi,void
 00136860,file_delete,source/tag_files/files_xbox.c,ebx,bool
 001368f0,file_exists,source/tag_files/files_xbox.c,stack,bool
@@ -1033,3 +1033,4 @@ address,name,source,arguments,returns,convention
 001a0c90,async_copy_file_work,source/cseries/async.c,stack,int
 001a0da0,async_copy_file_blocking,source/cseries/async.c,stack stack stack,bool
 000b9fc0,object_get_orientation,source/objects/objects.c,eax esi edi,void
+0012b980,main_print_saving_message,source/main/main.c,,void

@@ -448,7 +448,7 @@ def run(t) -> None:
                         random_.getrandbits(1) * 0,
                         (flag(harness, "main_game_load_failing"),),
                     ),
-                    **stand_ins("main_game_unload", "main_game_open_texture_cache", "unknown_0012bf00"),
+                    **stand_ins("main_game_unload", "main_game_open_texture_cache", "main_files_damaged"),
                 },
             )
 
