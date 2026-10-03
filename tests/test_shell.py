@@ -6,7 +6,7 @@
 import random
 import struct
 
-from difftest import PHYSICAL_ADDRESS, Memory, StopCall
+from difftest import PHYSICAL_ADDRESS, Buffer, Memory, Pointer, StopCall
 
 NONE = 0xFFFFFFFF
 DEVICE = PHYSICAL_ADDRESS + 0x50000
@@ -178,3 +178,58 @@ def run(t) -> None:
                         "d3d_device_destroy": nothing,
                     },
                 )
+
+    # ---------- the memory that the console's libraries ask for
+
+    import random as random_module
+
+    random_x = random_module.Random(108)
+    allocators = (0x82, 0x81, 0x83, 0x88, 0x89, 0x8A, 0x8B, 0x00, 0xFF, 0x182)
+    for allocator in allocators:
+        for kind in (1, 0, 2, 0x2001, 0x1001, 0x1FFF):
+            for zero in (0, 0x40000000):
+                attributes = ((allocator << 16) & 0x7FFFFFFF) | kind | zero | (0x80000000 if random_x.getrandbits(1) else 0)
+                for name in ("XMemAlloc", "xmem_static_allocate"):
+                    buffer = Buffer(random_x.randbytes(0xD0))
+                    t.check(
+                        name,
+                        random_x.choice((0, 0x10, 0x1000)),
+                        attributes,
+                        globals={"xmem_static_buffer+0": buffer, "xmem_static_buffer_used": random_x.randbytes(1)},
+                        externals={
+                            "XMemAllocDefault": lambda harness, arguments: 0x80123000,
+                            "unknown_00053290": lambda harness, arguments: 0x80456000,
+                        },
+                    )
+                buffer = Buffer(random_x.randbytes(0xD0))
+                for address in (0x80999000, 0x80123000, 0):
+                    t.check(
+                        "XMemFree",
+                        address,
+                        attributes,
+                        globals={"xmem_static_buffer": 0x80999000, "xmem_static_buffer_used": random_x.choice((b"\x01", b"\x00", b"\x80"))},
+                        extra=[buffer],
+                        externals={
+                            "XMemFreeDefault": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                            "unknown_000532e0": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                        },
+                    )
+
+    # ---------- the texture of a bitmap
+
+    for n in range(200):
+        bitmap = bytearray(random_x.randbytes(0x74))
+        frame = random_x.choice((5, 100, -3, 0x7FFFFFF0))
+        struct.pack_into("<i", bitmap, 0x70, random_x.choice((frame, frame - 1, frame + 1, frame + 1)))
+        struct.pack_into("<I", bitmap, 0x50, random_x.choice((0, 0x80123400, 0x80123400)))
+        for name in ("shell_bitmap_get_texture_blocking", "shell_bitmap_get_texture"):
+            t.check(
+                name,
+                Buffer(bytes(bitmap)),
+                struct.unpack("<I", struct.pack("<f", random_x.choice((0.0, 1.5, -0.5))))[0],
+                globals={"texture_cache_globals+52": frame & 0xFFFFFFFF},
+                externals={
+                    "texture_cache_bitmap_get_loaded": lambda harness, arguments, loaded=random_x.choice((0, 0, 0x80555000)): loaded,
+                    "texture_cache_bitmap_get_hardware_format": lambda harness, arguments, made=random_x.choice((0, 0x80777000)): made,
+                },
+            )

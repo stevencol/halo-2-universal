@@ -11,6 +11,7 @@ executable.
 
 #include "memory/data.h"
 #include "cseries/cseries.h"
+#include "math/real_math.h"
 
 #include <stdint.h>
 
@@ -101,6 +102,14 @@ typedef char verify_d3d_device_size[
 
 /* ---------- prototypes/SHELL.C */
 
+struct bitmap_data;
+
+void *__attribute__((stdcall)) XMemAlloc(unsigned long size, unsigned long attributes);
+void __attribute__((stdcall)) XMemFree(void *address, unsigned long attributes);
+void *__attribute__((stdcall)) xmem_static_allocate(unsigned long size, unsigned long attributes);
+struct d3d_texture *shell_bitmap_get_texture_blocking(struct bitmap_data *bitmap, real mip_bias);
+struct d3d_texture *shell_bitmap_get_texture(struct bitmap_data *bitmap, real mip_bias);
+
 boolean shell_initialize(void);
 void shell_dispose(void);
 void shell_main(void);
@@ -114,6 +123,8 @@ struct data_array *shell_memory_data_new(const char *name, long maximum_count, l
 /* ---------- globals */
 
 extern struct shell_memory_globals shell_memory_globals;
+extern void *xmem_static_buffer;
+extern boolean xmem_static_buffer_used;
 extern char shell_launch_name[SHELL_LAUNCH_NAME_LENGTH];
 extern struct xbox_video_settings xbox_video_settings;
 extern struct d3d_device *global_d3d_device;

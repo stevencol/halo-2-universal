@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-02 — La memoria que piden las bibliotecas de la consola
+
+Cinco funciones. De 643 funciones se pasa a 648, el 5,75 % de las del
+juego (el 2,973 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `XMemAlloc` | `0x00012280` | `shell/shell.c` |
+| `XMemFree` | `0x000122c0` | `shell/shell.c` |
+| `shell_bitmap_get_texture_blocking` | `0x00012310` | `shell/shell.c` |
+| `shell_bitmap_get_texture` | `0x00012360` | `shell/shell.c` |
+| `xmem_static_allocate` | `0x0012c090` | `shell/shell.c` |
+
+### Lo que se sabe
+
+- Las bibliotecas de la consola (Direct3D, el sonido...) piden memoria con
+  `XMemAlloc` y la devuelven con `XMemFree`, diciendo **quién la pide** en
+  los bits 16 a 23 de sus atributos. El juego sustituye estas dos funciones
+  para repartirla él:
+  - quien tiene el número `0x82` recibe, para las peticiones de tipo 1, **un
+    búfer de `0xCC` bytes que el juego tiene guardado** (a cero si se pide);
+    las demás van a la consola;
+  - `0x89` y `0x8A` reciben memoria del **sonido**;
+  - el resto, la de la consola, como si el juego no hiciera nada.
+- El búfer guardado no se mira para ver si está libre: se da aunque ya esté
+  dado. Al devolverlo solo se marca como libre.
+- Las otras dos funciones son la manera habitual de pedir la textura de un
+  bitmap (si ya la tuvo este fotograma, la misma; si no, se busca y, si no
+  está, se lee), esperando por ella o sin esperar.
+
+### Mutaciones
+
+33 líneas rotas a propósito: las 33 detectadas. Cuatro pidieron casos
+nuevos: atributos con bits altos y un búfer guardado en una dirección que
+coincida con la que se devuelve.
+
 ## 2026-10-02 — Los perfiles y la variante de las preferencias
 
 Dos funciones. De 641 funciones se pasa a 643, el 5,71 % de las del

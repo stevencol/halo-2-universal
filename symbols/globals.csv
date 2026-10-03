@@ -149,3 +149,5 @@ address,name,source
 004ed39e,unknown_004ed39e,source/text/fonts.c
 004ed39d,unknown_004ed39d,source/text/fonts.c
 004ed3a0,unknown_004ed3a0,source/text/fonts.c
+00510c3c,xmem_static_buffer,source/shell/shell.c
+00510c40,xmem_static_buffer_used,source/shell/shell.c

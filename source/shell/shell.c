@@ -15,6 +15,8 @@ shell_dispose are those of Halo 1's shell.c; the other names are guesses.
 
 #include "cache/animation_cache.h"
 #include "cache/cache_files.h"
+#include "cache/texture_cache.h"
+#include "bitmaps/bitmap_definitions.h"
 #include "input/input.h"
 #include "cseries/async.h"
 #include "main/global_preferences.h"
@@ -76,7 +78,27 @@ void unknown_000141c0(void);
 /* 0x0012b690: the game, until it ends. The name is a guess */
 void main_loop(void);
 
+/* 0x002d09c0 and 0x002d0a60: of the console's libraries: what XMemAlloc and
+XMemFree do if the game does not do it */
+void *__attribute__((stdcall)) XMemAllocDefault(unsigned long size, unsigned long attributes);
+void __attribute__((stdcall)) XMemFreeDefault(void *address, unsigned long attributes);
+
+/* 0x00053290 and 0x000532e0: the memory of the sound */
+void *unknown_00053290(unsigned long size, unsigned long attributes);
+void __attribute__((stdcall)) unknown_000532e0(void *address, unsigned long attributes);
+
 /* ---------- constants */
+
+/* the attributes of the console's allocations: who asks, and what */
+#define XMEM_ALLOCATOR_ID_SHIFT 16
+#define XMEM_ALLOCATOR_ID_MASK 0xFF
+#define XMEM_STATIC_ALLOCATOR_ID 0x82
+#define XMEM_SOUND_FIRST_ALLOCATOR_ID 0x89
+#define XMEM_SOUND_LAST_ALLOCATOR_ID 0x8A
+#define XMEM_ALLOCATION_KIND_MASK 0x1FFF
+#define XMEM_STATIC_ALLOCATION_KIND 1
+#define XMEM_ZERO_INITIALIZE 0x40000000
+#define XMEM_STATIC_BUFFER_SIZE 0xCC
 
 #define MEM_COMMIT 0x1000
 #define MEM_RELEASE 0x8000
@@ -110,6 +132,11 @@ enum
 
 /* ---------- globals */
 
+/* 0x00510c3c: the buffer that the game keeps for the allocator 0x82, and
+whether it was given */
+void *xmem_static_buffer;
+boolean xmem_static_buffer_used;
+
 /* 0x005107fc */
 struct shell_memory_globals shell_memory_globals;
 
@@ -139,6 +166,126 @@ byte unknown_0047ffd8[UNKNOWN_TABLE_SIZE];
 byte unknown_00484ce8[UNKNOWN_TABLE_SIZE];
 
 /* ---------- code */
+
+/* the allocator that asks for memory: of the attributes of the console's
+allocations */
+static inline __attribute__((always_inline)) unsigned long xmem_allocator_id(
+	unsigned long attributes)
+{
+	return (attributes>>XMEM_ALLOCATOR_ID_SHIFT)&XMEM_ALLOCATOR_ID_MASK;
+}
+
+/* 0x00012280: the game's own allocation of the memory that the console's
+libraries ask for: one allocator (0x82) gets a buffer that the game keeps
+for it, two (0x89 and 0x8A) the memory of the sound, and the others the
+console's */
+void *__attribute__((stdcall)) XMemAlloc(
+	unsigned long size,
+	unsigned long attributes)
+{
+	unsigned long allocator= xmem_allocator_id(attributes);
+
+	if (allocator==XMEM_STATIC_ALLOCATOR_ID)
+	{
+		return xmem_static_allocate(size, attributes);
+	}
+	if (allocator>XMEM_SOUND_FIRST_ALLOCATOR_ID-1 && allocator<=XMEM_SOUND_LAST_ALLOCATOR_ID)
+	{
+		return unknown_00053290(size, attributes);
+	}
+
+	return XMemAllocDefault(size, attributes);
+}
+
+/* 0x000122c0: gives back what XMemAlloc gave: the buffer that the game keeps
+is free again */
+void __attribute__((stdcall)) XMemFree(
+	void *address,
+	unsigned long attributes)
+{
+	unsigned long allocator= xmem_allocator_id(attributes);
+
+	if (allocator==XMEM_STATIC_ALLOCATOR_ID)
+	{
+		if (xmem_static_buffer==address)
+		{
+			xmem_static_buffer_used= FALSE;
+
+			return;
+		}
+	}
+	else if (allocator>XMEM_SOUND_FIRST_ALLOCATOR_ID-1 && allocator<=XMEM_SOUND_LAST_ALLOCATOR_ID)
+	{
+		unknown_000532e0(address, attributes);
+
+		return;
+	}
+	XMemFreeDefault(address, attributes);
+}
+
+/* 0x00012310 and 0x00012360: the texture that a bitmap is drawn with, read
+if it is not there, and waiting for it in the first one; a bitmap that has
+had its texture this frame keeps it. NULL if it cannot be had now. The
+names are guesses */
+static inline __attribute__((always_inline)) struct d3d_texture *shell_bitmap_texture(
+	struct bitmap_data *bitmap,
+	unsigned long flags,
+	real mip_bias)
+{
+	struct d3d_texture *texture= NULL;
+
+	if (bitmap->frame_index>texture_cache_globals.frame_index)
+	{
+		texture= (struct d3d_texture *)(uintptr_t)bitmap->hardware_format;
+	}
+	if (!texture)
+	{
+		texture= texture_cache_bitmap_get_loaded(flags, bitmap, mip_bias);
+		if (!texture)
+		{
+			texture= texture_cache_bitmap_get_hardware_format(bitmap, flags, mip_bias);
+		}
+	}
+
+	return texture;
+}
+
+struct d3d_texture *shell_bitmap_get_texture_blocking(
+	struct bitmap_data *bitmap,
+	real mip_bias)
+{
+	return shell_bitmap_texture(bitmap, FLAG(_texture_cache_block_bit)|FLAG(_texture_cache_load_bit), mip_bias);
+}
+
+struct d3d_texture *shell_bitmap_get_texture(
+	struct bitmap_data *bitmap,
+	real mip_bias)
+{
+	return shell_bitmap_texture(bitmap, FLAG(_texture_cache_load_bit), mip_bias);
+}
+
+/* 0x0012c090: the buffer that the game keeps for the allocator 0x82, for
+the allocations of the kind 1: cleared if they ask for it. The others are
+the console's. The buffer is not looked at to see if it is free. The name is
+a guess */
+void *__attribute__((stdcall)) xmem_static_allocate(
+	unsigned long size,
+	unsigned long attributes)
+{
+	void *buffer= xmem_static_buffer;
+
+	if ((attributes&XMEM_ALLOCATION_KIND_MASK)!=XMEM_STATIC_ALLOCATION_KIND)
+	{
+		return XMemAllocDefault(size, attributes);
+	}
+	xmem_static_buffer_used= TRUE;
+	if (attributes&XMEM_ZERO_INITIALIZE)
+	{
+		memset(buffer, 0, XMEM_STATIC_BUFFER_SIZE);
+	}
+
+	return buffer;
+}
 
 /* 0x00012000: sets up the game; whether it can run */
 boolean shell_initialize(
