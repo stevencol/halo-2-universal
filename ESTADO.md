@@ -3,15 +3,15 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-03, al terminar el hito 135.
+**Última actualización:** 2026-10-03, al terminar el hito 136.
 
 ## Dónde estamos
 
-- **696 funciones descompiladas de 11.265: el 6,18 % del juego** (el
-  3,301 % de los bytes de código).
-- Las 696 están comprobadas contra el ejecutable original
+- **698 funciones descompiladas de 11.265: el 6,20 % del juego** (el
+  3,309 % de los bytes de código).
+- Las 698 están comprobadas contra el ejecutable original
   (`python tools\test_functions.py`).
-- Último hito: *Decompile moving a keyframed rigid body* (ver `git log`).
+- Último hito: *Decompile quantizing a point* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 280 funciones apuntadas pero sin descompilar (las que el código
   llama); 237 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -108,7 +108,7 @@ Módulos (funciones hechas / archivo):
       terminar líneas o triángulos; faltan `0x0001e930` y `0x0001eb00`, que
       preparan la consola para dibujar)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
-- [ ] Matemáticas reales — `math\real_math.c` (32 de unas 50)
+- [ ] Matemáticas reales — `math\real_math.c` (36 de unas 50)
 - [x] Matrices — `math\matrix_math.c` (26: completo)
 - [ ] Números aleatorios — `math\random_math.c` (2)
 - [ ] Colores y bitmaps — `bitmaps\` (17: 6 de colores y 11 en

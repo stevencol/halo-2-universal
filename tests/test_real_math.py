@@ -35,6 +35,7 @@ VECTORS = (
 
 
 def run(t) -> None:
+    run_point_quantize(t)
     run_edges(t)
     run_slerp(t)
     run_basis(t)
@@ -400,3 +401,46 @@ def run_edges(t) -> None:
     for n in range(60):
         bounds = [random_.uniform(-50, 50) for _ in range(6)]
         t.check("rectangle3d_build_edges", reals(*bounds), Buffer(random_.randbytes(24 * 12 + 8)))
+
+
+def run_point_quantize(t) -> None:
+    random_ = random.Random(136)
+
+    def bounds() -> list[float]:
+        values = []
+        for _ in range(3):
+            lower = random_.uniform(-50, 50)
+            choice = random_.randrange(5)
+            if choice == 0:
+                # a box of nothing on this axis
+                upper = lower
+            elif choice == 1:
+                # upside down
+                upper = lower - random_.uniform(0.1, 9)
+            else:
+                upper = lower + random_.uniform(0.1, 90)
+            values += [lower, upper]
+        return values
+
+    for _ in range(400):
+        box = bounds()
+        bits = random_.choice((1, 2, 4, 8, 10, 11, 16, 20, 24, 31))
+        point = []
+        for axis in range(3):
+            lower, upper = box[2 * axis], box[2 * axis + 1]
+            choice = random_.randrange(6)
+            # in, at the ends, and out
+            point.append(
+                (lower, upper, lower - 3.0, upper + 3.0)[choice] if choice < 4 else random_.uniform(min(lower, upper), max(lower, upper))
+            )
+        t.check("quantize_real_point3d", reals(*point), reals(*box), bits, Buffer(random_.randbytes(12)))
+        maximum = (1 << bits) - 1
+        quantized = [random_.choice((0, 1, maximum - 1, maximum, maximum + 1, -1, random_.randint(0, maximum))) for _ in range(3)]
+        # compared as bytes, to tell 0 from -0
+        t.check(
+            "dequantize_real_point3d",
+            Buffer(struct.pack("<3I", *(q & 0xFFFFFFFF for q in quantized))),
+            reals(*box),
+            bits,
+            Buffer(random_.randbytes(12)),
+        )

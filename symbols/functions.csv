@@ -1087,3 +1087,5 @@ address,name,source,arguments,returns,convention
 001d0ee0,havok_component_set_rigid_body_keyframe,source/physics/havok_component.c,esi edi eax,void
 002da2d0,hkQuaternion_set,,ecx stack,void,stdcall
 002db880,hkKeyFrameUtility_applyHardKeyFrame,,stack stack stack stack,void
+0011f4f0,quantize_real_point3d,source/math/real_math.c,eax edx ecx stack,void
+0011f580,dequantize_real_point3d,source/math/real_math.c,stack ebx ecx eax,void

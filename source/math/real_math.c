@@ -108,6 +108,71 @@ unsigned char __attribute__((stdcall)) quantize_real_to_byte(
 	return quantized;
 }
 
+/* 0x0011f4f0: a point in a box as three integers of some bits, each from 0
+for the least of its bounds to all the bits for the most, the nearest; a
+point out of the box is as the nearest point in it. The name is a guess */
+void quantize_real_point3d(
+	const real_point3d *point,
+	const real_bounds *bounds,
+	long bits,
+	long *quantized)
+{
+	real maximum= (real)((1<<bits)-1);
+	const real *values= &point->x;
+	long axis;
+
+	for (axis= 0; axis<3; axis++)
+	{
+		real value;
+
+		if (bounds[axis].lower>values[axis])
+		{
+			value= bounds[axis].lower;
+		}
+		else if (values[axis]>bounds[axis].upper)
+		{
+			value= bounds[axis].upper;
+		}
+		else
+		{
+			value= values[axis];
+		}
+		quantized[axis]= lrintf((value-bounds[axis].lower)/((bounds[axis].upper-bounds[axis].lower)/maximum));
+	}
+}
+
+/* 0x0011f580: the point of three integers of some bits in a box: the least
+of the bounds for 0, the most for all the bits or more, and between them
+the mean that they weigh. The name is a guess */
+void dequantize_real_point3d(
+	const long *quantized,
+	const real_bounds *bounds,
+	long bits,
+	real_point3d *point)
+{
+	long maximum= (1<<bits)-1;
+	real *values= &point->x;
+	long axis;
+
+	for (axis= 0; axis<3; axis++)
+	{
+		long value= quantized[axis];
+
+		if (value==0)
+		{
+			values[axis]= bounds[axis].lower;
+		}
+		else if (value>=maximum)
+		{
+			values[axis]= bounds[axis].upper;
+		}
+		else
+		{
+			values[axis]= ((real)(maximum-value)*bounds[axis].lower + (real)value*bounds[axis].upper)/(real)maximum;
+		}
+	}
+}
+
 /* 0x0011e000: how far a point is from a segment, squared: the segment goes
 from a place along a vector. A segment whose length squared is no more than
 k_real_epsilon is its start. The name is a guess */

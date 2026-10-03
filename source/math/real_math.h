@@ -76,6 +76,13 @@ typedef struct real_rectangle3d
 	real x0, x1, y0, y1, z0, z1;
 } real_rectangle3d;
 
+/* from the least to the most */
+typedef struct real_bounds
+{
+	real lower;
+	real upper;
+} real_bounds;
+
 typedef struct real_quaternion
 {
 	real_vector3d v;
@@ -154,6 +161,8 @@ unsigned char __attribute__((stdcall)) limit_angle_between_vectors3d(const real_
 real point_to_segment_distance_squared3d(const real_vector3d *direction, const real_point3d *start,
 	const real_point3d *point);
 unsigned char __attribute__((stdcall)) quantize_real_to_byte(real minimum, real maximum, real value);
+void quantize_real_point3d(const real_point3d *point, const real_bounds *bounds, long bits, long *quantized);
+void dequantize_real_point3d(const long *quantized, const real_bounds *bounds, long bits, real_point3d *point);
 real_vector3d *generate_up_vector3d(const real_vector3d *forward, real_vector3d *up);
 
 real normalize2d(real_vector2d *vector);

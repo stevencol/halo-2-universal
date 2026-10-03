@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Cuantizar un punto
+
+Dos funciones de `math/real_math.c`. De 696 funciones se pasa a 698, el
+6,20 % de las del juego (el 3,309 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `quantize_real_point3d` | `0x0011f4f0` | `math/real_math.c` |
+| `dequantize_real_point3d` | `0x0011f580` | `math/real_math.c` |
+
+También el tipo `real_bounds` (el menor y el mayor de un intervalo).
+
+### Lo que se sabe
+
+- `quantize_real_point3d` guarda un punto de una caja como tres enteros de
+  unos bits: 0 para el menor de cada eje y todos los bits a 1 para el
+  mayor, redondeando al más cercano. Un punto fuera de la caja vale lo que
+  el punto de la caja más cercano. Con una caja vacía en un eje sale
+  `0x80000000` (0 entre 0).
+- `dequantize_real_point3d` hace lo contrario: 0 es el menor, todos los
+  bits o más son el mayor, y entre medias la media ponderada de los dos.
+- Los nombres son inventados.
+
+### Mutaciones
+
+15 líneas rotas a propósito: 13 detectadas.
+
+### Sin comprobar
+
+- Dos mutantes son equivalentes: si el valor es justo el mayor de la caja,
+  da el mayor tanto si se lleva a él como si no; y sumar los dos términos
+  de la media al revés da lo mismo.
+
 ## 2026-10-03 — Llevar un cuerpo «keyframed» a un sitio
 
 Una función de `physics/havok_component.c`. De 695 funciones se pasa a 696,
