@@ -478,7 +478,7 @@ def run(t) -> None:
 
     # ---------- giving the sound some time
 
-    idle_names = ("unknown_0021ec00", "unknown_001269f0", "unknown_001290d0", "unknown_001293f0", "unknown_0021ee80", "unknown_00218810")
+    idle_names = ("unknown_0021ec00", "unknown_001269f0", "sound_channels_update", "unknown_001293f0", "unknown_0021ee80", "unknown_00218810")
 
     def flags_then(harness, arguments):
         # the two flags that are set while the sound is given time
@@ -626,4 +626,30 @@ def run(t) -> None:
                 "game_sound_globals": sound_state(),
             },
             externals={"unknown_0021f6d0": set_environment},
+        )
+
+    # ---------- updating each channel
+
+    random_ = random.Random(139)
+
+    def channels_globals(count: int) -> Buffer:
+        data = bytearray(random_.randbytes(GLOBALS_SIZE))
+        struct.pack_into("<h", data, 0x208, count)
+        return Buffer(bytes(data))
+
+    def update_channel(harness, arguments):
+        """Stands in for 0x0012a450; the channel 2 takes one away from the
+        count, to see that it is looked at again."""
+        (channel_index,) = arguments
+        if channel_index & 0xFFFF == 2:
+            (globals_address,) = struct.unpack("<I", harness.mu.mem_read(harness.global_addresses["game_sound_globals"], 4))
+            (count,) = struct.unpack("<h", harness.mu.mem_read(globals_address + 0x208, 2))
+            harness.mu.mem_write(globals_address + 0x208, struct.pack("<H", (count - 1) & 0xFFFF))
+        return 0, (channel_index & 0xFFFF,)
+
+    for count in (0, 1, 2, 3, 4, 7, 24, -1, -0x8000):
+        t.check(
+            "sound_channels_update",
+            globals={"game_sound_globals": channels_globals(count)},
+            externals={"unknown_0012a450": update_channel},
         )

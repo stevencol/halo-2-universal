@@ -790,7 +790,7 @@ address,name,source,arguments,returns,convention
 00125f10,sound_predict,source/sound/sound_manager.c,edx,void
 0021ec00,unknown_0021ec00,,,void
 001269f0,unknown_001269f0,,,void
-001290d0,unknown_001290d0,,,void
+001290d0,sound_channels_update,source/sound/sound_manager.c,,void
 001293f0,unknown_001293f0,,,void
 0021ee80,unknown_0021ee80,,,void
 00218810,unknown_00218810,,,void
@@ -1091,3 +1091,4 @@ address,name,source,arguments,returns,convention
 0011f580,dequantize_real_point3d,source/math/real_math.c,stack ebx ecx eax,void
 0011f5f0,real_rectangle2d_enclose_points,source/math/real_math.c,eax ebx esi,void
 0011f770,real_rectangle3d_enclose_points,source/math/real_math.c,eax edx ebx,void
+0012a450,unknown_0012a450,,eax,void

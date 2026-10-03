@@ -2,6 +2,32 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Actualizar cada canal de sonido
+
+Una función de `sound/sound_manager.c`, que ya se llamaba como
+`unknown_001290d0`. De 702 funciones se pasa a 703, el 6,24 % de las
+del juego (el 3,346 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_channels_update` | `0x001290d0` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- Es una de las cosas que hace el sonido cada vez que se le da tiempo:
+  llama a `0x0012a450` (sin descompilar) con cada canal, del 0 al número
+  de canales que tienen los globales del sonido, y vuelve a mirar ese
+  número después de cada uno. Un número negativo no hace nada.
+- El nombre es inventado.
+
+### Mutaciones
+
+6 líneas rotas a propósito: las 6 detectadas. Una (el número de canales
+sin signo) solo se detectaba porque la prueba fallaba al restar del número
+menor; ahora el simulador da la vuelta en 16 bits y la prueba la ve.
+
 ## 2026-10-03 — Descargar el escenario y dónde está un punto
 
 Dos funciones de `scenario/scenario.c`, que ya se llamaban desde

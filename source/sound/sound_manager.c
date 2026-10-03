@@ -174,11 +174,17 @@ unsigned long GetTickCount(void);
 /* 0x00191270: when a map is loaded */
 void unknown_00191270(void);
 
-/* 0x0021ec00, 0x001269f0, 0x001290d0, 0x001293f0, 0x0021ee80, 0x00218810:
-what the sound does each time it is given some time */
+/* 0x0021ec00, 0x001269f0, 0x001293f0, 0x0021ee80, 0x00218810: what the
+sound does each time it is given some time, with sound_channels_update */
+/* 0x0012a450: what is done with a sound channel each time the sound is
+given some time */
+void unknown_0012a450(short channel_index);
+
+/* 0x001290d0 */
+void sound_channels_update(void);
+
 void unknown_0021ec00(void);
 void unknown_001269f0(void);
-void unknown_001290d0(void);
 void unknown_001293f0(void);
 void unknown_0021ee80(void);
 void unknown_00218810(void);
@@ -749,7 +755,7 @@ void sound_idle(
 			{
 				unknown_0021ec00();
 				unknown_001269f0();
-				unknown_001290d0();
+				sound_channels_update();
 				unknown_001293f0();
 				unknown_0021ee80();
 				globals= game_sound_globals;
@@ -848,5 +854,20 @@ void sound_predict(
 					_sound_cache_request_unknown2);
 			}
 		}
+	}
+}
+
+/* 0x001290d0: each sound channel is updated, by 0x0012a450; how many there
+are is looked at again after each. The name is a guess */
+void sound_channels_update(
+	void)
+{
+	short channel_index;
+
+	for (channel_index= 0;
+		channel_index<*(short *)(game_sound_globals+GAME_SOUND_GLOBALS_CHANNEL_COUNT_OFFSET);
+		channel_index++)
+	{
+		unknown_0012a450(channel_index);
 	}
 }
