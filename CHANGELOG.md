@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Dos funciones pequeñas más del sonido
+
+Dos funciones de `sound/sound_manager.c`. De 725 funciones se pasa a 727,
+el 6,45 % de las del juego (el 3,524 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_definition_unknown_00126bd0` | `0x00126bd0` | `sound/sound_manager.c` |
+| `sound_set_unknown1f8` | `0x001272c0` | `sound/sound_manager.c` |
+
+También el global `unknown_0047f0e4` y los dos reales de los globales del
+sonido en `0x1FC` y `0x204`.
+
+### Lo que se sabe
+
+- `sound_definition_unknown_00126bd0` dice si un sonido es de cierto tipo
+  (lo dicen sus bytes quinto y sexto; para el tipo 2, además, hace falta
+  `unknown_0047f0e4`) y si el primero de sus rangos de tono tiene
+  permutaciones. Qué significa no se sabe.
+- `sound_set_unknown1f8` cambia el índice de `0x1F8` de los globales del
+  sonido por otro. El que había se guarda en `0x200` y los dos reales se
+  ponen a 0; si se vuelve justo al que se guardó, se intercambian y se
+  recupera su real. La llama una de las funciones que van por fotograma
+  (`0x0018c060`).
+- Los nombres dicen lo que hacen, no para qué sirven.
+
+### Mutaciones
+
+13 líneas rotas a propósito: las 13 detectadas.
+
 ## 2026-10-03 — Casillas del sonido, una marca de voz y una fracción
 
 Cuatro funciones pequeñas de `sound/sound_manager.c`. De 721 funciones se

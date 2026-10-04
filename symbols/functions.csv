@@ -1173,3 +1173,5 @@ address,name,source,arguments,returns,convention
 0012af10,sound_slot_new,source/sound/sound_manager.c,,short
 0012af90,sound_slot_delete,source/sound/sound_manager.c,eax,void
 0012aff0,sound_interpolation_fraction,source/sound/sound_manager.c,stack stack stack ecx,real:xmm0,stdcall
+00126bd0,sound_definition_unknown_00126bd0,source/sound/sound_manager.c,eax,bool
+001272c0,sound_set_unknown1f8,source/sound/sound_manager.c,ecx,void

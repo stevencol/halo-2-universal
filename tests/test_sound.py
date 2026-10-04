@@ -1008,3 +1008,43 @@ def run(t) -> None:
         maximum = minimum + random_.choice((1.0, -1.0)) * random_.uniform(0.001, 20)
         value = random_.uniform(min(minimum, maximum), max(minimum, maximum))
         t.check("sound_interpolation_fraction", as_bits(minimum), as_bits(maximum), as_bits(value), random_.randrange(2))
+
+    # ---------- something of a sound, and the index at 0x1F8
+
+    random_ = random.Random(153)
+    for _ in range(200):
+        data = bytearray(random_.randbytes(GLOBALS_SIZE))
+        current = random_.choice((-1, 0, 1, 2))
+        struct.pack_into("<iii", data, 0x1F8, current, random_.getrandbits(32) - (1 << 31), random_.choice((-1, 0, 1, 2)))
+        t.check(
+            "sound_set_unknown1f8",
+            random_.choice((-1, 0, 1, 2, current)),
+            globals={"game_sound_globals": Buffer(bytes(data))},
+        )
+
+    for _ in range(300):
+        # the tags of the sounds, and the pitch ranges after the gestalt
+        definitions = bytearray(random_.randbytes(TAGS * 0x10))
+        pointers = []
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        for n in range(TAGS):
+            struct.pack_into("<I", tags, n * 0x10 + 8, TAGS * 0x10 + n * 0x10)
+            pointers.append(n * 0x10 + 8)
+            at = n * 0x10
+            definitions[at + 4] = random_.choice((0, 1, 2, 2, 3))
+            definitions[at + 5] = random_.choice((0, 1, 1, 2))
+            struct.pack_into("<h", definitions, at + 8, random_.randrange(8))
+            definitions[at + 0xA] = random_.choice((0, 1, 3))
+        gestalt = bytearray(random_.randbytes(0x48)) + bytearray(random_.randbytes(8 * 12))
+        struct.pack_into("<iI", gestalt, 0x20, 8, 0x48)
+        for n in range(8):
+            struct.pack_into("<h", gestalt, 0x48 + n * 12 + 0xA, random_.choice((0, 0, 1, 5)))
+        t.check(
+            "sound_definition_unknown_00126bd0",
+            random_.getrandbits(16) << 16 | random_.randrange(TAGS),
+            globals={
+                "global_tag_instances": Buffer(bytes(tags + definitions), pointers=tuple(pointers)),
+                "global_sound_cache_file_gestalt": Buffer(bytes(gestalt), pointers=(0x24,)),
+                "unknown_0047f0e4": struct.pack("<i", random_.choice((0, 1))),
+            },
+        )

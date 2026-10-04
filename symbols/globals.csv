@@ -175,3 +175,4 @@ address,name,source
 004ba040,game_seconds,source/game/game.c
 004e61cc,unknown_004e61cc,source/game/game.c
 0050210c,sound_lruv_cache,source/sound/sound_manager.c
+0047f0e4,unknown_0047f0e4,source/sound/sound_manager.c

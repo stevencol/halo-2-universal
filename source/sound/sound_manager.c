@@ -51,6 +51,9 @@ enum
 	GAME_SOUND_GLOBALS_UNKNOWN1E4_OFFSET= 0x1E4,
 	GAME_SOUND_GLOBALS_UNKNOWN1F8_OFFSET= 0x1F8,
 	GAME_SOUND_GLOBALS_UNKNOWN200_OFFSET= 0x200,
+	/* the reals that go with those two */
+	GAME_SOUND_GLOBALS_UNKNOWN1FC_OFFSET= 0x1FC,
+	GAME_SOUND_GLOBALS_UNKNOWN204_OFFSET= 0x204,
 	GAME_SOUND_GLOBALS_LISTENERS_OFFSET= 0x88,
 	GAME_SOUND_GLOBALS_UNKNOWN1B0_OFFSET= 0x1B0,
 	GAME_SOUND_GLOBALS_UNKNOWN1CC_OFFSET= 0x1CC,
@@ -162,6 +165,10 @@ byte *unknown_0051ebe4;
 /* 0x0047f0e0: 0x10000 in the main menu and 0x4000 in a game */
 long unknown_0047f0e0;
 
+/* 0x0047f0e4: what makes sounds of the kind 2 be told so by
+sound_definition_unknown_00126bd0 */
+long unknown_0047f0e4;
+
 /* 0x0044a0c8 */
 const struct sound_configuration sound_configuration=
 {
@@ -218,6 +225,10 @@ void unknown_00129380(byte *second, byte *first);
 
 /* 0x00125b40 */
 void sound_update(void);
+
+/* 0x00126bd0 and 0x001272c0 */
+boolean sound_definition_unknown_00126bd0(long sound_index);
+void sound_set_unknown1f8(long index);
 
 /* 0x0012a420, 0x0012af10, 0x0012af90 and 0x0012aff0 */
 void sound_channel_set_voice_flag3(short channel_index);
@@ -1372,4 +1383,55 @@ real __attribute__((stdcall)) sound_interpolation_fraction(
 	}
 
 	return fraction>1.0f ? 1.0f : fraction;
+}
+
+/* 0x00126bd0: whether a sound is of some kind (its fifth and sixth bytes
+say, and unknown_0047f0e4 for the kind 2) and the first of its pitch
+ranges has permutations. What it means is not known */
+boolean sound_definition_unknown_00126bd0(
+	long sound_index)
+{
+	const struct sound_definition *sound= sound_definition_get(sound_index);
+	const struct sound_pitch_range *pitch_ranges;
+
+	if (!(sound->unknown3[2]==1 && sound->unknown3[1]!=2))
+	{
+		if (sound->unknown3[1]!=2 || !unknown_0047f0e4)
+		{
+			return FALSE;
+		}
+	}
+	if (!sound->pitch_range_count)
+	{
+		return FALSE;
+	}
+	pitch_ranges= (const struct sound_pitch_range *)(uintptr_t)global_sound_cache_file_gestalt->pitch_ranges.address;
+
+	return pitch_ranges[sound->first_pitch_range_index].permutation_count!=0;
+}
+
+/* 0x001272c0: the index at 0x1F8 of the globals of the sound becomes
+another; the one that it was is kept at 0x200, and going back to it gives
+back its real at 0x204. The name is a guess */
+void sound_set_unknown1f8(
+	long index)
+{
+	byte *globals= game_sound_globals;
+	long current= *(long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1F8_OFFSET);
+
+	if (index==current)
+	{
+		return;
+	}
+	if (index!=NONE && index==*(long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN200_OFFSET))
+	{
+		*(long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1F8_OFFSET)= index;
+		*(long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1FC_OFFSET)= *(long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN204_OFFSET);
+		*(real *)(globals+GAME_SOUND_GLOBALS_UNKNOWN204_OFFSET)= 0.0f;
+		return;
+	}
+	*(long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN200_OFFSET)= current;
+	*(long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1F8_OFFSET)= index;
+	*(real *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1FC_OFFSET)= 0.0f;
+	*(real *)(globals+GAME_SOUND_GLOBALS_UNKNOWN204_OFFSET)= 0.0f;
 }
