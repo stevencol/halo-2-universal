@@ -2,6 +2,56 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Los jugadores locales de una partida
+
+Dos funciones de `game/game.c`; la primera ya se llamaba desde
+`main_game.c` como `unknown_00138640`. De 710 funciones se pasa a 712, el
+6,32 % de las del juego (el 3,449 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_options_controller_compare` | `0x00138600` | `game/game.c` |
+| `game_options_setup_local_players` | `0x00138640` | `game/game.c` |
+
+También el global `unknown_004e61cc` (algo de cada uno de los cuatro
+mandos), el nombre y otros campos de las opciones de un jugador, y `qsort`
+en la biblioteca de C de las pruebas (`tools/difftest_libc`).
+
+### Cambiado
+
+- Smart App Control empezó a bloquear el clang de llvm-mingw (y también el
+  LLVM oficial, que no está firmado). Las pruebas se compilan ahora con el
+  clang 19 y el ld.lld del componente Clang de Visual Studio Build Tools,
+  firmados por Microsoft; toda la batería pasa igual con él.
+
+### Lo que se sabe
+
+- `game_options_setup_local_players` prepara una partida de esta consola
+  sola con unos jugadores locales: la consola 0, con identificador de
+  ceros, es la de la partida. Cada jugador recibe un mando: el primero de
+  los cuatro de `0x004e61cc` que está puesto y libre, o si no el primero
+  libre; los mandos se ordenan con `qsort` (por su número, y `NONE` al
+  final). Luego cada jugador queda válido, en esta consola, con su
+  índice, un identificador `{índice, FF, FF, FF, 0...}`, el nombre vacío
+  y, en multijugador, su índice en `0x98` (1 en la campaña).
+- `game_options_controller_compare` es el comparador: por el `short` bajo,
+  con `NONE` detrás de todo.
+- Los nombres son inventados.
+
+### Mutaciones
+
+26 líneas rotas a propósito: 23 detectadas.
+
+### Sin comprobar
+
+- Tres mutantes son equivalentes: ordenar solo los mandos de los jugadores
+  (los demás son `NONE`, que ya van al final); no copiar el identificador
+  de la consola en cada jugador (es de ceros, como lo deja el `memset`); y
+  borrar solo la mitad de `0x5C` (el `memset` de los jugadores ya lo dejó
+  a cero).
+
 ## 2026-10-03 — Un fotograma del juego
 
 Una función de `game/game.c`, que ya se llamaba desde `main.c` como

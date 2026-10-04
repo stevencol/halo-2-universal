@@ -173,3 +173,4 @@ address,name,source
 0043ed80,display_settings_default,source/main/main.c
 00485b20,unknown_00485b20,source/game/game.c
 004ba040,game_seconds,source/game/game.c
+004e61cc,unknown_004e61cc,source/game/game.c

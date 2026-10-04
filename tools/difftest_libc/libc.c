@@ -7,6 +7,7 @@ run. The image has no other library.
 
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <wctype.h>
 
@@ -582,6 +583,33 @@ int _wcsicmp(const unsigned short *a, const unsigned short *b)
 		if (!x)
 		{
 			return 0;
+		}
+	}
+}
+
+/* by insertion: the game's sorts otherwise, which gives the same order when
+elements that are neither less nor more are the same */
+void qsort(void *elements, size_t count, size_t size, int (*compare)(const void *, const void *))
+{
+	unsigned char *bytes= (unsigned char *)elements;
+	size_t index;
+
+	for (index= 1; index<count; index++)
+	{
+		size_t place= index;
+
+		while (place>0 && compare(bytes+(place-1)*size, bytes+place*size)>0)
+		{
+			size_t byte_index;
+
+			for (byte_index= 0; byte_index<size; byte_index++)
+			{
+				unsigned char swapped= bytes[(place-1)*size+byte_index];
+
+				bytes[(place-1)*size+byte_index]= bytes[place*size+byte_index];
+				bytes[place*size+byte_index]= swapped;
+			}
+			place--;
 		}
 	}
 }

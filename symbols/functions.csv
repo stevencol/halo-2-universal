@@ -654,7 +654,7 @@ address,name,source,arguments,returns,convention
 00138f10,unknown_00138f10,,,void
 00200d80,unknown_00200d80,,,void
 00163890,unknown_00163890,,stack stack,bool
-00138640,unknown_00138640,,stack stack,void
+00138640,game_options_setup_local_players,source/game/game.c,stack stack,void
 0018e1f0,memory_pool_new,source/memory/memory_pool.c,eax ecx stack,int
 0018e230,memory_pool_delete,source/memory/memory_pool.c,edx,void
 0018e250,memory_pool_initialize,source/memory/memory_pool.c,esi ebx stack stack,void
@@ -1143,3 +1143,4 @@ address,name,source,arguments,returns,convention
 00014980,unknown_00014980,,,void
 00014600,unknown_00014600,,,void
 000128c0,unknown_000128c0,,eax,void
+00138600,game_options_controller_compare,source/game/game.c,stack stack,int

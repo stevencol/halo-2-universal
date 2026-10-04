@@ -20,12 +20,16 @@ these functions calls the parts by name.
 #include "shell/shell.h"
 #include "scenario/scenario.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 /* ---------- prototypes of functions of the console's libraries */
 
 /* 0x003212d6 */
 unsigned int _control87(unsigned int value, unsigned int mask);
+
+/* 0x003207ed: of the game's C library, with characters of 16 bits */
+wchar *wcsncpy(wchar *destination, const wchar *source, size_t count);
 
 /* ---------- prototypes of functions not decompiled yet */
 
@@ -623,6 +627,119 @@ void game_tick(
 	if (state.update)
 	{
 		game_time_globals->time++;
+	}
+}
+
+/* 0x004e61cc: something of each of the four controllers: those that have
+it are given to the local players of a game first */
+long unknown_004e61cc[MAXIMUM_CONTROLLERS];
+
+/* the controller after one, or NONE after the last */
+static inline __attribute__((always_inline)) long game_next_controller(
+	long controller_index)
+{
+	return (controller_index>=0 && controller_index<MAXIMUM_CONTROLLERS-1) ? controller_index+1 : NONE;
+}
+
+/* 0x00138600: the order of the controllers of the local players: by their
+index, with NONE last. The name is a guess */
+int game_options_controller_compare(
+	const void *a,
+	const void *b)
+{
+	short first= *(const short *)a;
+	short second= *(const short *)b;
+
+	if (first==NONE)
+	{
+		return second==NONE ? 0 : 1;
+	}
+	if (second==NONE)
+	{
+		return -1;
+	}
+	if (first>second)
+	{
+		return 1;
+	}
+
+	return first>=second ? 0 : -1;
+}
+
+/* 0x00138640: a game of this console alone with some local players: each
+gets a controller (one of unknown_004e61cc that is set if there is one,
+else the first that no other has) and the rest of its options as a game
+starts them. The name is a guess */
+void game_options_setup_local_players(
+	long count,
+	struct game_options *options)
+{
+	boolean taken[MAXIMUM_CONTROLLERS];
+	long controllers[MAXIMUM_CONTROLLERS];
+	long controller_index;
+	long player_index;
+
+	options->machine_valid_mask= 1;
+	memset(options->machine_identifiers[0], 0, GAME_MACHINE_IDENTIFIER_SIZE);
+	memcpy(options->local_machine_identifier, options->machine_identifiers[0], GAME_MACHINE_IDENTIFIER_SIZE);
+	options->local_machine_exists= TRUE;
+
+	for (controller_index= 0; controller_index!=NONE; controller_index= game_next_controller(controller_index))
+	{
+		taken[controller_index]= FALSE;
+		controllers[controller_index]= NONE;
+	}
+	for (player_index= 0; player_index<count; player_index++)
+	{
+		long controller= NONE;
+
+		for (controller_index= 0; controller_index!=NONE; controller_index= game_next_controller(controller_index))
+		{
+			if (unknown_004e61cc[(short)controller_index] && !taken[controller_index])
+			{
+				controller= controller_index;
+				break;
+			}
+		}
+		if (controller==NONE)
+		{
+			controller= 0;
+		}
+		if (taken[controller])
+		{
+			for (controller_index= 0; controller_index!=NONE; controller_index= game_next_controller(controller_index))
+			{
+				if (!taken[controller_index])
+				{
+					controller= controller_index;
+					break;
+				}
+			}
+		}
+		controllers[player_index]= controller;
+		taken[controller]= TRUE;
+	}
+	qsort(controllers, MAXIMUM_CONTROLLERS, sizeof(controllers[0]), game_options_controller_compare);
+
+	memset(options->players, 0, sizeof(options->players));
+	for (player_index= 0; player_index<count; player_index++)
+	{
+		struct game_player_options *player= &options->players[player_index];
+
+		player->valid= TRUE;
+		player->unknown1= FALSE;
+		memcpy(player->machine_identifier, options->local_machine_identifier, GAME_MACHINE_IDENTIFIER_SIZE);
+		player->unknown4= controllers[player_index];
+		player->controller_index= (short)player_index;
+		memset(player->identifier, 0, sizeof(player->identifier));
+		player->identifier[0]= (byte)player_index;
+		player->identifier[1]= 0xFF;
+		player->identifier[2]= 0xFF;
+		player->identifier[3]= 0xFF;
+		wcsncpy(player->name, L"", GAME_PLAYER_NAME_LENGTH);
+		player->unknown5A= 0;
+		memset(player->unknown5C, 0, sizeof(player->unknown5C));
+		player->unknown98= options->game_mode==_game_mode_multiplayer ? (byte)player_index : 1;
 	}
 }
 

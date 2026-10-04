@@ -20,6 +20,7 @@ enum
 	MAXIMUM_GAME_PLAYERS= 16,
 	GAME_MACHINE_IDENTIFIER_SIZE= 6,
 	GAME_PLAYER_IDENTIFIER_SIZE= 12,
+	GAME_PLAYER_NAME_LENGTH= 31,
 	GAME_MAP_NAME_LENGTH= 0x104
 };
 
@@ -32,12 +33,22 @@ struct game_player_options
 	boolean unknown1;
 	/* from 0 to 3 */
 	short controller_index;
-	byte unknown4[4];
+	/* game_options_setup_local_players gives the local players these from
+	0 to 3, the ones of the four entries of unknown_004e61cc that are set
+	first, and NONE to those it has none for */
+	long unknown4;
 	/* of the console that the player is at */
 	byte machine_identifier[GAME_MACHINE_IDENTIFIER_SIZE];
 	/* not all zeros, and of no other player */
 	byte identifier[GAME_PLAYER_IDENTIFIER_SIZE];
-	byte unknown1A[0xCA];
+	byte unknown1A[2];
+	wchar name[GAME_PLAYER_NAME_LENGTH];
+	short unknown5A;
+	byte unknown5C[0x10];
+	byte unknown6C[0x2C];
+	/* in multiplayer, the index of the local player; 1 in the campaign */
+	byte unknown98;
+	byte unknown99[0x4B];
 };
 
 enum
@@ -229,6 +240,10 @@ enum
 	NUMBER_OF_GAME_SYSTEMS= 68
 };
 
+typedef char verify_game_player_options_size[
+	sizeof(struct game_player_options) == 0xE4 ? 1 : -1];
+typedef char verify_game_player_options_unknown98_offset[
+	offsetof(struct game_player_options, unknown98) == 0x98 ? 1 : -1];
 typedef char verify_game_options_size[
 	sizeof(struct game_options) == 0x1118 ? 1 : -1];
 typedef char verify_main_game_globals_active_offset[
@@ -262,6 +277,8 @@ struct game_time_globals
 /* ---------- prototypes/GAME.C */
 
 void __attribute__((stdcall)) game_frame(float seconds);
+void game_options_setup_local_players(long count, struct game_options *options);
+int game_options_controller_compare(const void *a, const void *b);
 
 void game_create_players(void);
 void game_won(void);

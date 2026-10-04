@@ -569,3 +569,24 @@ def run_players_and_won(t) -> None:
             },
             externals=frame_externals,
         )
+
+    # ---------- the local players of a game
+
+    random_ = random.Random(146)
+    for a, b in ((0, 0), (0, 1), (1, 0), (-1, 0), (0, -1), (-1, -1), (3, 2), (2, 3), (0x10002, 2), (5, 0x7FFF), (-2, 1), (1, -2)):
+        t.check(
+            "game_options_controller_compare",
+            Buffer(struct.pack("<i", a)),
+            Buffer(struct.pack("<i", b)),
+        )
+    for _ in range(80):
+        count = random_.randint(0, 4)
+        controllers = [random_.choice((0, 0, 1, 7)) for _ in range(4)]
+        options = bytearray(random_.randbytes(OPTIONS_SIZE))
+        struct.pack_into("<i", options, 0, random_.choice((1, 2, 3)))
+        t.check(
+            "game_options_setup_local_players",
+            count,
+            Buffer(bytes(options)),
+            globals={"unknown_004e61cc": struct.pack("<4i", *controllers)},
+        )

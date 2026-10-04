@@ -11,7 +11,7 @@ con Halo: Combat Evolved.
 **Estado: muy temprano.** El juego no arranca ni está cerca de hacerlo. Hoy
 el proyecto abre los mapas del juego, lista su contenido y exporta los
 niveles y los modelos con su textura principal. Del código del ejecutable
-hay descompiladas 710 funciones de unas 11.265 (el 6,30 %), todas
+hay descompiladas 712 funciones de unas 11.265 (el 6,32 %), todas
 comprobadas contra el original. Consulta
 [ESTADO.md](ESTADO.md) para la lista de lo hecho y lo que falta, y
 [CHANGELOG.md](CHANGELOG.md) para el detalle de cada paso.
@@ -53,7 +53,7 @@ copia de Halo 2 para Xbox, con `default.xbe` y la carpeta `maps/`.
 | --- | --- |
 | [Ghidra](https://github.com/NationalSecurityAgency/ghidra) 12.0.3 con [ghidra-xbe](https://github.com/XboxDev/ghidra-xbe) | Análisis del ejecutable |
 | JDK 21 | Lo necesita Ghidra |
-| clang ([llvm-mingw](https://github.com/mstorsjo/llvm-mingw)) y [ninja](https://ninja-build.org/) | Compilar |
+| clang y ld.lld ([llvm-mingw](https://github.com/mstorsjo/llvm-mingw), o el componente Clang de Visual Studio Build Tools, firmado por Microsoft, si Smart App Control bloquea el otro) y [ninja](https://ninja-build.org/) | Compilar |
 | Python 3 | Scripts de `tools/` |
 | [Unicorn](https://www.unicorn-engine.org/) y [Capstone](https://www.capstone-engine.org/) (`pip install unicorn capstone`) | Emulador de procesador para probar las funciones, y desensamblador |
 

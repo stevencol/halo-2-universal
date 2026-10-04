@@ -285,7 +285,7 @@ def run(t) -> None:
             "main_game_launch_main_menu",
             Buffer(random_.randbytes(OPTIONS_SIZE)),
             random_.getrandbits(32),
-            externals=stand_ins("game_options_new_default", "unknown_00138640"),
+            externals=stand_ins("game_options_new_default", "game_options_setup_local_players"),
         )
 
     # ---------- changing the game
@@ -503,7 +503,7 @@ def run(t) -> None:
             globals={"main_game_globals": Buffer(bytes(data)) if random_.random() < 0.85 else 0},
             externals={
                 "game_options_new_default": new_default,
-                "unknown_00138640": lambda harness, arguments: (0, (arguments[0], bytes(harness.mu.mem_read(arguments[1], OPTIONS_SIZE)))),
+                "game_options_setup_local_players": lambda harness, arguments: (0, (arguments[0], bytes(harness.mu.mem_read(arguments[1], OPTIONS_SIZE)))),
                 "main_game_change": options_given(),
                 **stand_ins("unknown_001483c3"),
             },

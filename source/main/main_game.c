@@ -113,8 +113,6 @@ void unknown_001483c3(long unknown);
 void unknown_0011c840(void);
 
 
-/* 0x00138640: asks for a game with these options */
-void unknown_00138640(long one, struct game_options *options);
 
 /* ---------- constants */
 
@@ -479,7 +477,7 @@ void main_game_launch_main_menu(
 	strncpy(options->map_name, "scenarios\\ui\\mainmenu\\mainmenu", GAME_MAP_NAME_LENGTH);
 	options->map_name[GAME_MAP_NAME_LENGTH-1]= 0;
 	memcpy(options->unknown264, &unknown, sizeof(options->unknown264));
-	unknown_00138640(1, options);
+	game_options_setup_local_players(1, options);
 }
 
 /* ---------- changing the game */
