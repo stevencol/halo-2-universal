@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Lo que hace un canal de sonido cada vez
+
+Tres funciones de `sound/sound_manager.c`; la primera ya se llamaba como
+`unknown_0012a450`. De 715 funciones se pasa a 718, el 6,37 % de las
+del juego (el 3,481 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_channel_update` | `0x0012a450` | `sound/sound_manager.c` |
+| `sound_permutation_next_chunk` | `0x00219290` | `sound/sound_manager.c` |
+| `sound_voice_playback_rate` | `0x0021f650` | `sound/sound_manager.c` |
+
+También `exp2l` en la biblioteca de C de las pruebas, que hace en el x87
+lo mismo que el juego (`frndint`, `f2xm1` y `fscale`).
+
+### Lo que se sabe
+
+- `sound_channel_update` es lo que se hace con un canal que suena cada vez
+  que el sonido recibe tiempo. Mira lo que hace su voz (un número con
+  signo de tres bits): si ya no necesita el primer trozo, lo suelta, pasa
+  el segundo a primero y pide sus datos; si no, suelta el que tiene.
+  Después, si la voz suena, el tiempo del sonido avanza lo que dura el
+  tiempo dado por la velocidad de la voz.
+- `sound_voice_playback_rate` es la velocidad de una voz: 2 elevado a su
+  tono más una cantidad que depende del tipo del sonido, dividido entre
+  4096. Se calcula como el juego, en el x87.
+- `sound_permutation_next_chunk` da el trozo siguiente de una permutación,
+  o `NONE` después del último o sin permutación.
+- Una constante de `sound_manager.c` que estaba repetida desde el hito
+  anterior se quitó.
+- Los nombres son inventados.
+
+### Mutaciones
+
+24 líneas rotas a propósito: 22 detectadas.
+
+### Sin comprobar
+
+- Dos mutantes son equivalentes: poner el estado a 1 en lugar de 0 cuando
+  el trozo siguiente no tiene datos da lo mismo, porque luego solo se mira
+  si es menor que 2; y usar `log2(e)` con la precisión de un `double` en
+  lugar de la del x87 da el mismo producto redondeado a la precisión
+  simple del juego, salvo en casos rarísimos que las pruebas no tocan.
+
 ## 2026-10-03 — Reanudar un canal de sonido
 
 Una función de `sound/sound_manager.c`, que ya se llamaba como

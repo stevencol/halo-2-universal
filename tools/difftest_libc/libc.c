@@ -613,3 +613,24 @@ void qsort(void *elements, size_t count, size_t size, int (*compare)(const void 
 		}
 	}
 }
+
+long double exp2l(long double value)
+{
+	/* as the game's code: the integer part by fscale and the rest by f2xm1,
+	on the x87 */
+	__asm__(
+		"fld %%st(0)\n\t"
+		"frndint\n\t"
+		"fxch %%st(1)\n\t"
+		"fsub %%st(1), %%st\n\t"
+		"f2xm1\n\t"
+		"fld1\n\t"
+		"faddp\n\t"
+		"fscale\n\t"
+		"fstp %%st(1)"
+		: "+t"(value)
+		:
+		: "st(1)");
+
+	return value;
+}

@@ -22,6 +22,7 @@ the file and those of the functions are guesses. Not here: 0x001251e0,
 #include "structures/structure_bsp_definitions.h"
 #include "shell/shell.h"
 
+#include <math.h>
 #include <string.h>
 
 /* ---------- constants */
@@ -104,8 +105,12 @@ enum
 	/* in unknown_0051ebe4, a voice of the console's sound for each channel */
 	UNKNOWN_0051EBE4_VOICE_SIZE= 0x34,
 	UNKNOWN_0051EBE4_VOICE_OFFSET= 0xC,
-	/* of a sound source, the sound */
-	SOUND_SOURCE_DATUM_SOUND_OFFSET= 0xC,
+	/* in a voice: what it does, in its low three bits (a signed number),
+	and its pitch */
+	VOICE_STATE_OFFSET= 1,
+	VOICE_PITCH_OFFSET= 8,
+	/* in the globals of the sound: the seconds that it was given */
+	GAME_SOUND_GLOBALS_SECONDS_OFFSET= 0x1E0,
 
 	_game_mode_main_menu= 3
 };
@@ -181,9 +186,10 @@ void unknown_00191270(void);
 
 /* 0x0021ec00, 0x001269f0, 0x001293f0, 0x0021ee80, 0x00218810: what the
 sound does each time it is given some time, with sound_channels_update */
-/* 0x0012a450: what is done with a sound channel each time the sound is
-given some time */
-void unknown_0012a450(short channel_index);
+/* 0x0012a450, 0x00219290 and 0x0021f650 */
+void sound_channel_update(short channel_index);
+long sound_permutation_next_chunk(const struct sound_permutation *permutation, short chunk);
+real __attribute__((stdcall)) sound_voice_playback_rate(short voice_index, long kind);
 
 /* 0x001290d0 */
 void sound_channels_update(void);
@@ -889,7 +895,7 @@ void sound_channels_update(
 		channel_index<*(short *)(game_sound_globals+GAME_SOUND_GLOBALS_CHANNEL_COUNT_OFFSET);
 		channel_index++)
 	{
-		unknown_0012a450(channel_index);
+		sound_channel_update(channel_index);
 	}
 }
 
@@ -908,7 +914,7 @@ boolean sound_channel_pausable(
 		return TRUE;
 	}
 	source= (const byte *)sound_sources->data+(source_index&0xFFFF)*SOUND_SOURCE_DATUM_SIZE;
-	sound_class= sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_OFFSET))->sound_class;
+	sound_class= sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET))->sound_class;
 	if (sound_class<0 || sound_class>=NUMBER_OF_SOUND_CLASSES)
 	{
 		return TRUE;
@@ -960,7 +966,7 @@ void sound_channel_resume(
 	{
 		const byte *source=
 			(const byte *)sound_sources->data+(channel->unknown0&0xFFFF)*SOUND_SOURCE_DATUM_SIZE;
-		const struct sound_definition *sound= sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_OFFSET));
+		const struct sound_definition *sound= sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET));
 		const struct sound_permutation *permutation= (const struct sound_permutation *)(uintptr_t)channel->unknown1C;
 		long offset= unknown_00218b00((char)sound->unknown3[1], (char)sound->unknown3[2], (char)sound->unknown3[0],
 			channel->unknown10);
@@ -975,4 +981,122 @@ void sound_channel_resume(
 		}
 	}
 	channel->unknown9= FALSE;
+}
+
+/* the voice of the console's sound of a channel */
+static inline __attribute__((always_inline)) byte *sound_channel_voice(
+	const struct sound_channel *channel)
+{
+	return unknown_0051ebe4+channel->unknownC*UNKNOWN_0051EBE4_VOICE_SIZE+UNKNOWN_0051EBE4_VOICE_OFFSET;
+}
+
+/* what a voice does: a signed number of three bits */
+static inline __attribute__((always_inline)) short sound_voice_state(
+	const byte *voice)
+{
+	return (short)((signed char)(voice[VOICE_STATE_OFFSET]<<5)>>5);
+}
+
+static inline __attribute__((always_inline)) const struct sound_chunk *sound_permutation_chunk(
+	const struct sound_permutation *permutation,
+	short chunk)
+{
+	return (const struct sound_chunk *)(uintptr_t)global_sound_cache_file_gestalt->chunks.address+
+		permutation->first_chunk_index+chunk;
+}
+
+/* 0x00219290: the chunk of a permutation after one; NONE after the last, or
+with no permutation. The name is a guess */
+long sound_permutation_next_chunk(
+	const struct sound_permutation *permutation,
+	short chunk)
+{
+	if (permutation && chunk<permutation->chunk_count-1)
+	{
+		return chunk+1;
+	}
+
+	return NONE;
+}
+
+/* 0x0021f650: how fast a voice of the console's sound plays, from its pitch
+and a kind of sound: 2 to the power of their sum over 4096. The name is a
+guess */
+real __attribute__((stdcall)) sound_voice_playback_rate(
+	short voice_index,
+	long kind)
+{
+	const byte *voice= unknown_0051ebe4+voice_index*UNKNOWN_0051EBE4_VOICE_SIZE+UNKNOWN_0051EBE4_VOICE_OFFSET;
+	long pitch= *(const long *)(voice+VOICE_PITCH_OFFSET);
+	long double exponent;
+
+	switch (kind)
+	{
+	case 0:
+		pitch+= 0x11F5;
+		break;
+	case 1:
+		pitch+= 0x1F5;
+		break;
+	default:
+		pitch+= 0x95C;
+		break;
+	}
+	exponent= (long double)pitch*(long double)(1.0f/4096.0f)*(long double)0.6931471824645996f;
+
+	return (real)exp2l(exponent*1.4426950408889634073599246810018921L);
+}
+
+/* 0x0012a450: what is done with a channel that plays each time the sound
+is given some time: when its voice is done with a chunk, the next one goes
+first and the one that was is let go; and the time of the sound goes on as
+fast as the voice plays. The name is a guess */
+void sound_channel_update(
+	short channel_index)
+{
+	struct sound_channel *channel= &sound_channels[channel_index];
+	const struct sound_permutation *permutation;
+	short state;
+
+	if (channel->unknownC==NONE || channel->unknown9 || !channel->unknown1C)
+	{
+		return;
+	}
+	permutation= (const struct sound_permutation *)(uintptr_t)channel->unknown1C;
+	state= sound_voice_state(sound_channel_voice(channel));
+	if (channel->unknown20 && state<3)
+	{
+		sound_unknown_00125ef0((const byte *)sound_permutation_chunk(permutation, channel->unknown18));
+		if ((short)sound_permutation_next_chunk(permutation, channel->unknown18)==NONE)
+		{
+			channel->unknown10= 0.0f;
+		}
+		channel->unknown1C= channel->unknown20;
+		channel->unknown18= channel->unknown1A;
+		channel->unknown20= 0;
+		channel->unknown1A= NONE;
+		if (!((unknown_00218850(NONE,
+			sound_permutation_chunk((const struct sound_permutation *)(uintptr_t)channel->unknown1C, channel->unknown18), 0)>>
+			_sound_cache_result_unknown1_bit)&1))
+		{
+			state= 0;
+		}
+	}
+	if (channel->unknown1C && state<2)
+	{
+		sound_unknown_00125ef0((const byte *)sound_permutation_chunk(
+			(const struct sound_permutation *)(uintptr_t)channel->unknown1C, channel->unknown18));
+		channel->unknown1C= 0;
+		channel->unknown18= NONE;
+	}
+	if ((signed char)(sound_channel_voice(channel)[VOICE_STATE_OFFSET]<<5)>0)
+	{
+		const byte *source=
+			(const byte *)sound_sources->data+(channel->unknown0&0xFFFF)*SOUND_SOURCE_DATUM_SIZE;
+		const struct sound_definition *sound=
+			sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET));
+
+		channel->unknown10= sound_voice_playback_rate(channel->unknownC, (char)sound->unknown3[0])*
+			*(const real *)(game_sound_globals+GAME_SOUND_GLOBALS_SECONDS_OFFSET) + channel->unknown10;
+	}
 }

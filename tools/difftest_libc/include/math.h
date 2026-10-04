@@ -18,6 +18,7 @@ float acosf(float value);
 long double acosl(long double value);
 long double sinl(long double value);
 long double fabsl(long double value);
+long double exp2l(long double value);
 /* to the nearest integer; to the even one, halfway between two */
 long lrintf(float value);
 

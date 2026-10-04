@@ -1091,7 +1091,7 @@ address,name,source,arguments,returns,convention
 0011f580,dequantize_real_point3d,source/math/real_math.c,stack ebx ecx eax,void
 0011f5f0,real_rectangle2d_enclose_points,source/math/real_math.c,eax ebx esi,void
 0011f770,real_rectangle3d_enclose_points,source/math/real_math.c,eax edx ebx,void
-0012a450,unknown_0012a450,,eax,void
+0012a450,sound_channel_update,source/sound/sound_manager.c,eax,void
 00136140,bitmap_get_pixel,source/bitmaps/bitmaps.c,ecx edx stack stack stack stack stack stack stack,int,stdcall
 00135ca0,bitmap_format_to_a8r8g8b8,source/bitmaps/bitmaps.c,edx ecx eax,int
 000358d0,unknown_000358d0,,eax ecx edx stack stack,void,stdcall
@@ -1150,3 +1150,5 @@ address,name,source,arguments,returns,convention
 00218ac0,unknown_00218ac0,,ecx edx,int
 0021f5d0,unknown_0021f5d0,,eax edi,void
 002ae500,unknown_002ae500,,esi edi,void
+00219290,sound_permutation_next_chunk,source/sound/sound_manager.c,ecx eax,int
+0021f650,sound_voice_playback_rate,source/sound/sound_manager.c,eax stack,real:xmm0,stdcall

@@ -651,7 +651,7 @@ def run(t) -> None:
         t.check(
             "sound_channels_update",
             globals={"game_sound_globals": channels_globals(count)},
-            externals={"unknown_0012a450": update_channel},
+            externals={"sound_channel_update": update_channel},
         )
 
     # ---------- pausing a channel
@@ -788,3 +788,54 @@ def run(t) -> None:
         }
         for channel_index in range(CHANNELS):
             t.check("sound_channel_resume", channel_index, **options)
+
+    # ---------- a channel that plays, each time
+
+    random_ = random.Random(149)
+
+    def voices() -> Buffer:
+        data = bytearray(random_.randbytes(4 * 0x34 + 0x10))
+        for n in range(4):
+            voice = n * 0x34 + 0xC
+            data[voice + 1] = random_.getrandbits(8)
+            struct.pack_into("<i", data, voice + 8, random_.choice((0, -0x11F5, 0x1000, -0x2000, random_.randint(-0x8000, 0x8000))))
+        return Buffer(bytes(data))
+
+    for voice_index in range(4):
+        for kind in (0, 1, 2, -1, 0x80, 0x7F):
+            for _ in range(5):
+                t.check("sound_voice_playback_rate", voice_index, kind, globals={"unknown_0051ebe4": voices()})
+    for chunk in (-1, 0, 1, 2, 5, 6, 7, 0x7FFF):
+        for count in (0, 1, 6, 7, -1):
+            permutation = Buffer(random_.randbytes(0xC) + struct.pack("<hh", random_.randrange(20), count))
+            t.check("sound_permutation_next_chunk", permutation, chunk)
+        t.check("sound_permutation_next_chunk", 0, chunk)
+
+    def update_externals():
+        def release(harness, arguments):
+            return 0, (harness.normalize(arguments[0]),)
+
+        def request(harness, arguments):
+            sound_index, chunk, unknown = arguments
+            (value,) = struct.unpack("<I", harness.mu.mem_read(chunk, 4))
+            return value & 3, (sound_index, harness.normalize(chunk), unknown)
+
+        return {"sound_unknown_00125ef0": release, "unknown_00218850": request}
+
+    for _ in range(40):
+        channels, sources, tags, gestalt = resume_world()
+        data = bytearray(random_.randbytes(GLOBALS_SIZE))
+        struct.pack_into("<f", data, 0x1E0, random_.choice((1 / 30, 0.5, 0.0)))
+        options = {
+            "globals": {
+                "sound_channels": channels,
+                "sound_sources": sources,
+                "global_tag_instances": tags,
+                "global_sound_cache_file_gestalt": gestalt,
+                "unknown_0051ebe4": voices(),
+                "game_sound_globals": Buffer(bytes(data)),
+            },
+            "externals": update_externals(),
+        }
+        for channel_index in range(CHANNELS):
+            t.check("sound_channel_update", channel_index, **options)
