@@ -6,8 +6,8 @@ gives the address it has there.
 
 How a sound is to be played: what the game says of it when it plays it (its
 source), and if it says nothing, what the tag of the sound says. The name of
-the file and those of the functions are guesses. Not here: 0x001251e0,
-0x00125b40 and 0x00125f70 on.
+the file and those of the functions are guesses. Not here: 0x00125b40 and
+0x00125f70 on.
 */
 
 #include "sound_definitions.h"
@@ -186,6 +186,19 @@ void unknown_00191270(void);
 
 /* 0x0021ec00, 0x001269f0, 0x001293f0, 0x0021ee80, 0x00218810: what the
 sound does each time it is given some time, with sound_channels_update */
+/* 0x00218de0 and 0x00218d70: the most and the least loudness of a sound,
+in decibels; 0x002197f0: a gain in decibels; 0x00127010: the decibels of a
+class of sounds */
+real unknown_00218de0(const struct sound_definition *sound);
+real unknown_00218d70(const struct sound_definition *sound);
+real unknown_002197f0(real gain);
+real unknown_00127010(short sound_class);
+
+/* 0x001251e0 and 0x002195f0 */
+real __attribute__((stdcall)) sound_definition_decibels(const struct sound_definition *sound, real decibels,
+	real interpolation);
+long double __attribute__((stdcall)) sound_decibels_to_gain(real decibels);
+
 /* 0x0012a450, 0x00219290 and 0x0021f650 */
 void sound_channel_update(short channel_index);
 long sound_permutation_next_chunk(const struct sound_permutation *permutation, short chunk);
@@ -1099,4 +1112,49 @@ void sound_channel_update(
 		channel->unknown10= sound_voice_playback_rate(channel->unknownC, (char)sound->unknown3[0])*
 			*(const real *)(game_sound_globals+GAME_SOUND_GLOBALS_SECONDS_OFFSET) + channel->unknown10;
 	}
+}
+
+/* 0x002195f0: a loudness in decibels as a gain: 10 to the power of a
+twentieth of them, from -64 to 0, on the x87 and not rounded. The name is a
+guess */
+long double __attribute__((stdcall)) sound_decibels_to_gain(
+	real decibels)
+{
+	real clamped;
+
+	if (-64.0f>decibels)
+	{
+		clamped= -64.0f;
+	}
+	else if (decibels>0.0f)
+	{
+		clamped= 0.0f;
+	}
+	else
+	{
+		clamped= decibels;
+	}
+	/* the game works it out as it runs, with the precision of the x87: the
+	compiler is not to do it before for the ends, with more */
+	__asm__("" : "+x"(clamped));
+
+	return exp2l((long double)clamped*(long double)0.05f*(long double)2.3025851249694824f*
+		1.4426950408889634073599246810018921L);
+}
+
+/* 0x001251e0: how loud a sound is played, in decibels: between its least
+and its most loudness, as gains, by an interpolation, with those of its
+class and some more. The name is a guess */
+real __attribute__((stdcall)) sound_definition_decibels(
+	const struct sound_definition *sound,
+	real decibels,
+	real interpolation)
+{
+	real most= unknown_00218de0(sound);
+	real least_gain= (real)sound_decibels_to_gain(unknown_00218d70(sound));
+	long double most_gain= sound_decibels_to_gain(most);
+	real gain= (real)((most_gain-(long double)least_gain)*(long double)interpolation+(long double)least_gain);
+	real gain_decibels= unknown_002197f0(gain);
+
+	return gain_decibels + (unknown_00127010(sound->sound_class) + decibels);
 }

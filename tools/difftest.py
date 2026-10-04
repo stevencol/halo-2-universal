@@ -126,6 +126,34 @@ DEFAULT_EXTERNALS = {
 }
 
 
+def x87_push(mu: Uc, bits: int) -> None:
+    """Puts a real of 32 bits on top of the x87's stack, as a function that
+    returns it there leaves it."""
+    sign = bits >> 31
+    exponent = (bits >> 23) & 0xFF
+    fraction = bits & 0x7FFFFF
+    if exponent == 0xFF:
+        exponent80 = 0x7FFF
+        mantissa = 1 << 63 | fraction << 40
+    elif exponent == 0 and fraction == 0:
+        exponent80 = 0
+        mantissa = 0
+    elif exponent == 0:
+        # a denormal of 32 bits is a normal number of 80
+        shift = fraction.bit_length()
+        mantissa = fraction << (64 - shift)
+        exponent80 = 16383 - 126 - (23 - shift + 1)
+    else:
+        exponent80 = exponent - 127 + 16383
+        mantissa = 1 << 63 | fraction << 40
+    status = mu.reg_read(x86.UC_X86_REG_FPSW)
+    top = (((status >> 11) & 7) - 1) & 7
+    mu.reg_write(x86.UC_X86_REG_FP0 + top, (mantissa, exponent80 | sign << 15))
+    mu.reg_write(x86.UC_X86_REG_FPSW, status & ~(7 << 11) | top << 11)
+    tags = mu.reg_read(x86.UC_X86_REG_FPTAG)
+    mu.reg_write(x86.UC_X86_REG_FPTAG, tags & ~(3 << (2 * top)))
+
+
 def f32(value: float) -> int:
     """A real as the 32 bits that an argument of type real is."""
     return struct.unpack("<I", struct.pack("<f", value))[0]
@@ -641,6 +669,16 @@ class Harness:
                     value, high = value
                     mu.reg_write(x86.UC_X86_REG_EDX, high & 0xFFFFFFFF)
                 mu.reg_write(x86.UC_X86_REG_EAX, (value or 0) & 0xFFFFFFFF)
+                if symbol.returns.startswith("real"):
+                    # the test gives the 32 bits of the real: the game's
+                    # function returns it where symbols/functions.csv says,
+                    # and one of source/ on the x87's stack, as C does
+                    bits = (value or 0) & 0xFFFFFFFF
+                    if self._external_side == "original" and symbol.returns == "real:xmm0":
+                        xmm0 = mu.reg_read(x86.UC_X86_REG_XMM0)
+                        mu.reg_write(x86.UC_X86_REG_XMM0, xmm0 & ~0xFFFFFFFF | bits)
+                    elif self._external_side != "original" or symbol.returns == "real":
+                        x87_push(mu, bits)
                 mu.reg_write(x86.UC_X86_REG_ESP, esp + 4 + cleanup)
                 if address == RETURN_ADDRESS:
                     mu.reg_write(x86.UC_X86_REG_EIP, RETURN_ADDRESS)

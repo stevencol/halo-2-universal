@@ -839,3 +839,57 @@ def run(t) -> None:
         }
         for channel_index in range(CHANNELS):
             t.check("sound_channel_update", channel_index, **options)
+
+    # ---------- how loud a sound is, in decibels
+
+    random_ = random.Random(150)
+
+    def real_bits(value: float) -> int:
+        return struct.unpack("<I", struct.pack("<f", value))[0]
+
+    def bits_real(value: int) -> float:
+        return struct.unpack("<f", struct.pack("<I", value & 0xFFFFFFFF))[0]
+
+    for decibels in (-100.0, -64.0, -63.99, -40.0, -20.0, -6.0, -0.5, 0.0, -0.0, 0.5, 30.0, float("nan"), float("-inf")):
+        t.check("sound_decibels_to_gain", real_bits(decibels))
+    for _ in range(100):
+        t.check("sound_decibels_to_gain", real_bits(random_.uniform(-70, 5)))
+
+    def decibels_externals():
+        def most(harness, arguments):
+            (sound,) = arguments
+            value = harness.mu.mem_read(sound + 0xB, 1)[0]
+            return real_bits(-value / 3.0 + 4.0), (harness.normalize(sound),)
+
+        def least(harness, arguments):
+            (sound,) = arguments
+            value = harness.mu.mem_read(sound + 0xB, 1)[0]
+            return real_bits(-value / 2.0 - 10.0), (harness.normalize(sound),)
+
+        def to_decibels(harness, arguments):
+            (gain,) = arguments
+            return real_bits(bits_real(gain) * 7.0 - 3.0), (gain & 0xFFFFFFFF,)
+
+        def class_decibels(harness, arguments):
+            (sound_class,) = arguments
+            sound_class = (sound_class & 0xFFFF) - (0x10000 if sound_class & 0x8000 else 0)
+            return real_bits(sound_class * 0.25), (sound_class,)
+
+        return {
+            "unknown_00218de0": most,
+            "unknown_00218d70": least,
+            "unknown_002197f0": to_decibels,
+            "unknown_00127010": class_decibels,
+        }
+
+    externals = decibels_externals()
+    for _ in range(200):
+        definition = bytearray(random_.randbytes(0x10))
+        definition[2] = random_.choice((0, 1, 5, 0x35, 0x80, 0xFF))
+        t.check(
+            "sound_definition_decibels",
+            Buffer(bytes(definition)),
+            real_bits(random_.choice((0.0, -3.0, 6.5, random_.uniform(-20, 20)))),
+            real_bits(random_.choice((0.0, 1.0, 0.5, random_.uniform(0, 1), -0.5, 1.5))),
+            externals=externals,
+        )

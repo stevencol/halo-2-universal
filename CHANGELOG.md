@@ -2,6 +2,50 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Lo fuerte que suena un sonido, en decibelios
+
+Dos funciones de `sound/sound_manager.c`. De 718 funciones se pasa a 720,
+el 6,39 % de las del juego (el 3,489 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_definition_decibels` | `0x001251e0` | `sound/sound_manager.c` |
+| `sound_decibels_to_gain` | `0x002195f0` | `sound/sound_manager.c` |
+
+### Arreglado
+
+- El arnés no sabía simular una función externa que devuelve un real: lo
+  dejaba solo en `eax`. Ahora el simulador da sus 32 bits, y el arnés los
+  pone donde la función del juego los devuelve según `symbols/functions.csv`
+  (`eax`, `xmm0` o la pila del x87) y, en las de `source/`, en la pila del
+  x87, que es donde los deja C. Con esto se pueden probar funciones que
+  llaman a otras que devuelven reales, que antes no se podían.
+
+### Lo que se sabe
+
+- `sound_decibels_to_gain` pasa decibelios (de −64 a 0) a una ganancia:
+  10 elevado a una vigésima parte de ellos, en el x87 y sin redondear. En C
+  hay que impedir que el compilador calcule de antemano, con más
+  precisión, los casos de −64 y de 0.
+- `sound_definition_decibels` da lo fuerte que suena un sonido en
+  decibelios: interpola por un valor entre la ganancia de su volumen menor
+  y la de su volumen mayor, la vuelve a pasar a decibelios y le suma los de
+  su clase y otros que recibe.
+- Los nombres son inventados.
+
+### Mutaciones
+
+15 líneas rotas a propósito: 13 detectadas.
+
+### Sin comprobar
+
+- Dos mutantes son equivalentes: tratar 0 y −0 decibelios igual (los dos
+  dan una ganancia de 1), y no redondear la ganancia menor a 32 bits (la
+  que sale del x87 ya cabe en ellos: es la suma redondeada a la precisión
+  simple, multiplicada por una potencia de 2).
+
 ## 2026-10-03 — Lo que hace un canal de sonido cada vez
 
 Tres funciones de `sound/sound_manager.c`; la primera ya se llamaba como

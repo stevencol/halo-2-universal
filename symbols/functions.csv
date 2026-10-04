@@ -1152,3 +1152,9 @@ address,name,source,arguments,returns,convention
 002ae500,unknown_002ae500,,esi edi,void
 00219290,sound_permutation_next_chunk,source/sound/sound_manager.c,ecx eax,int
 0021f650,sound_voice_playback_rate,source/sound/sound_manager.c,eax stack,real:xmm0,stdcall
+001251e0,sound_definition_decibels,source/sound/sound_manager.c,esi stack stack,real:eax,stdcall
+002195f0,sound_decibels_to_gain,source/sound/sound_manager.c,stack,real,stdcall
+00218de0,unknown_00218de0,,edx,real:eax
+00218d70,unknown_00218d70,,edx,real:eax
+002197f0,unknown_002197f0,,xmm0,real:eax
+00127010,unknown_00127010,,ecx,real:eax
