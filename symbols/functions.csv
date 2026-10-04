@@ -780,7 +780,7 @@ address,name,source,arguments,returns,convention
 0011bed0,scenario_location_from_point,source/scenario/scenario.c,esi edx,void
 0021dde0,unknown_0021dde0,,,void
 0021a100,unknown_0021a100,,,void
-0012a060,unknown_0012a060,,ecx,void
+0012a060,sound_channel_pause,source/sound/sound_manager.c,ecx,void
 0012a0b0,unknown_0012a0b0,,eax,void
 00219d90,unknown_00219d90,,stack,void
 0021f5a0,unknown_0021f5a0,,,void
@@ -1144,3 +1144,5 @@ address,name,source,arguments,returns,convention
 00014600,unknown_00014600,,,void
 000128c0,unknown_000128c0,,eax,void
 00138600,game_options_controller_compare,source/game/game.c,stack stack,int
+00129fe0,sound_channel_pausable,source/sound/sound_manager.c,ecx,bool
+002ae750,unknown_002ae750,,eax,void

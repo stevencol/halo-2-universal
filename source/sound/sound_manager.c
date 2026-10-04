@@ -101,6 +101,11 @@ enum
 
 	/* in unknown_0051ebe4 */
 	UNKNOWN_0051EBE4_UNKNOWN2A98_OFFSET= 0x2A98,
+	/* in unknown_0051ebe4, a voice of the console's sound for each channel */
+	UNKNOWN_0051EBE4_VOICE_SIZE= 0x34,
+	UNKNOWN_0051EBE4_VOICE_OFFSET= 0xC,
+	/* of a sound source, the sound */
+	SOUND_SOURCE_DATUM_SOUND_OFFSET= 0xC,
 
 	_game_mode_main_menu= 3
 };
@@ -215,7 +220,12 @@ void unknown_0021a100(void);
 
 /* 0x0012a060, 0x0012a0b0: a channel, when the sound is disabled and when it
 is enabled */
-void unknown_0012a060(short channel_index);
+/* 0x002ae750: stops a voice of the console's sound for a while */
+void unknown_002ae750(void *voice);
+
+/* 0x00129fe0 and 0x0012a060 */
+boolean sound_channel_pausable(short channel_index);
+void sound_channel_pause(short channel_index);
 void unknown_0012a0b0(short channel_index);
 
 /* 0x00219d90, 0x0021f5a0, 0x0021f570: the sound playback controllers and the
@@ -710,7 +720,7 @@ void sound_enable(
 		{
 			for (index= 0; index<*(short *)(game_sound_globals+GAME_SOUND_GLOBALS_CHANNEL_COUNT_OFFSET); index++)
 			{
-				unknown_0012a060((short)index);
+				sound_channel_pause((short)index);
 			}
 			unknown_0021f570();
 			globals= game_sound_globals;
@@ -869,5 +879,43 @@ void sound_channels_update(
 		channel_index++)
 	{
 		unknown_0012a450(channel_index);
+	}
+}
+
+/* 0x00129fe0: whether the sound of a channel stops when the game is paused:
+not if its class says so. A channel with no sound, or with a sound of a
+class that there is not, can be. The name is a guess */
+boolean sound_channel_pausable(
+	short channel_index)
+{
+	long source_index= sound_channels[channel_index].unknown0;
+	const byte *source;
+	char sound_class;
+
+	if (source_index==NONE)
+	{
+		return TRUE;
+	}
+	source= (const byte *)sound_sources->data+(source_index&0xFFFF)*SOUND_SOURCE_DATUM_SIZE;
+	sound_class= sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_OFFSET))->sound_class;
+	if (sound_class<0 || sound_class>=NUMBER_OF_SOUND_CLASSES)
+	{
+		return TRUE;
+	}
+
+	return !TEST_FLAG(sound_class_get(sound_class)->internal_flags, _sound_class_internal_not_pausable_bit);
+}
+
+/* 0x0012a060: the sound of a channel stops for a while, if it plays, is not
+stopped and can be. The name is a guess */
+void sound_channel_pause(
+	short channel_index)
+{
+	struct sound_channel *channel= &sound_channels[channel_index];
+
+	if (channel->unknownC!=NONE && !channel->unknown9 && sound_channel_pausable(channel_index))
+	{
+		unknown_002ae750(unknown_0051ebe4+channel->unknownC*UNKNOWN_0051EBE4_VOICE_SIZE+UNKNOWN_0051EBE4_VOICE_OFFSET);
+		channel->unknown9= TRUE;
 	}
 }

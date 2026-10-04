@@ -51,7 +51,11 @@ enum
 	_sound_class_unknown1_bit= 1,
 	_sound_class_unknown3_bit= 3,
 	/* of the second flags */
-	_sound_class_internal_unknown11_bit= 11
+	_sound_class_internal_unknown11_bit= 11,
+	/* of the second flags: its sounds go on when the game is paused */
+	_sound_class_internal_not_pausable_bit= 0,
+
+	NUMBER_OF_SOUND_CLASSES= 54
 };
 
 /* ---------- structures */

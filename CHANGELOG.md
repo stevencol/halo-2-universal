@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Pausar un canal de sonido
+
+Dos funciones de `sound/sound_manager.c`; la segunda ya se llamaba como
+`unknown_0012a060`. De 712 funciones se pasa a 714, el 6,34 % de las
+del juego (el 3,455 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_channel_pausable` | `0x00129fe0` | `sound/sound_manager.c` |
+| `sound_channel_pause` | `0x0012a060` | `sound/sound_manager.c` |
+
+También el número de clases de sonido (54) y la bandera de una clase cuyos
+sonidos siguen cuando el juego se pausa (el bit 0 de sus segundas
+banderas).
+
+### Lo que se sabe
+
+- `sound_channel_pausable` dice si el sonido de un canal se para cuando el
+  juego se pausa: sí si el canal no tiene sonido o si la clase del sonido
+  no existe (menor que 0 o de 54 en adelante); si no, lo que diga la
+  bandera de su clase.
+- `sound_channel_pause` para una voz del sonido de la consola
+  (`0x002ae750`, en `0x0051ebe4`, 0x34 bytes por voz) si el canal tiene
+  voz, no estaba parado y se puede parar, y lo marca como parado.
+- Los nombres son inventados.
+
+### Mutaciones
+
+14 líneas rotas a propósito: las 14 detectadas. Una (el índice de la
+fuente de 8 bits) solo se veía con más de 256 fuentes, y las pruebas
+tienen ahora 260.
+
 ## 2026-10-03 — Los jugadores locales de una partida
 
 Dos funciones de `game/game.c`; la primera ya se llamaba desde

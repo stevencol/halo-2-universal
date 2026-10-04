@@ -467,7 +467,7 @@ def run(t) -> None:
                     enable,
                     globals={"game_sound_globals": sound_state(disabled=disabled, channels=channels)},
                     externals={
-                        "unknown_0012a060": channel,
+                        "sound_channel_pause": channel,
                         "unknown_0012a0b0": channel,
                         "unknown_00219d90": lambda harness, arguments: (0, (arguments[0] & 0xFF,)),
                         "unknown_0021f5a0": lambda harness, arguments: 0,
@@ -653,3 +653,61 @@ def run(t) -> None:
             globals={"game_sound_globals": channels_globals(count)},
             externals={"unknown_0012a450": update_channel},
         )
+
+    # ---------- pausing a channel
+
+    random_ = random.Random(147)
+    CHANNELS = 8
+    # past 0xFF the index of a source has more than 8 bits
+    SOURCES = 260
+
+    def pause_world():
+        """The channels, the sound sources, the tags of their sounds and the
+        sound classes that sound_class_get gives."""
+        channels = bytearray(random_.randbytes(CHANNELS * 0x24))
+        for n in range(CHANNELS):
+            source = random_.choice((-1, 0, 1, 2, 3, 4, 5, 0x100, 0x101, 0x103)) & 0xFFFFFFFF
+            struct.pack_into("<I", channels, n * 0x24, source | (random_.getrandbits(16) << 16 if source != 0xFFFFFFFF else 0))
+            channels[n * 0x24 + 9] = random_.choice((0, 0, 1, 0xFF))
+            struct.pack_into("<h", channels, n * 0x24 + 0xC, random_.choice((-1, 0, 1, 2, 3)))
+        sources = bytearray(0x50) + bytearray(random_.randbytes(SOURCES * 0xBC))
+        struct.pack_into("<I", sources, 0x44, 0x50)
+        tags = bytearray(random_.randbytes(SOURCES * 0x10)) + bytearray(SOURCES * 0x10)
+        pointers = []
+        for n in range(SOURCES):
+            struct.pack_into("<I", sources, 0x50 + n * 0xBC + 0xC, random_.getrandbits(16) << 16 | n)
+            definition = SOURCES * 0x10 + n * 0x10
+            struct.pack_into("<I", tags, n * 0x10 + 8, definition)
+            pointers.append(n * 0x10 + 8)
+            tags[definition + 2] = random_.choice((0, 1, 5, 0x35, 0x36, 0x7F, 0x80, 0xFF))
+        classes = Buffer(bytes(random_.randbytes(0x36 * 0x5C)))
+        return (
+            Buffer(bytes(channels)),
+            Buffer(bytes(sources), pointers=(0x44,)),
+            Buffer(bytes(tags), pointers=tuple(pointers)),
+            classes,
+        )
+
+    for _ in range(40):
+        channels, sources, tags, classes = pause_world()
+
+        def class_get(harness, arguments, classes=classes):
+            index = arguments[0] & 0xFFFF
+            return classes.address + index * 0x5C, (index,)
+
+        def voice(harness, arguments):
+            return 0, (harness.normalize(arguments[0]),)
+
+        options = {
+            "globals": {
+                "sound_channels": channels,
+                "sound_sources": sources,
+                "global_tag_instances": tags,
+                "unknown_0051ebe4": Buffer(random_.randbytes(4 * 0x34 + 0x10)),
+            },
+            "extra": [classes],
+            "externals": {"sound_class_get": class_get, "unknown_002ae750": voice},
+        }
+        for channel_index in range(CHANNELS):
+            t.check("sound_channel_pausable", channel_index, **options)
+            t.check("sound_channel_pause", channel_index, **options)
