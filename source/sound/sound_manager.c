@@ -115,6 +115,13 @@ enum
 	/* in the globals of the sound: set for a frame by something not decompiled,
 	and how many frames it was */
 	GAME_SOUND_GLOBALS_UNKNOWN7E_OFFSET= 0x7E,
+	/* in the globals of the sound: the slots that there are, of 64 bits, and
+	how many to look at */
+	GAME_SOUND_GLOBALS_SLOTS_VALID_OFFSET= 0x58,
+	GAME_SOUND_GLOBALS_SLOT_COUNT_OFFSET= 0x20A,
+	/* of a voice of the console's sound */
+	VOICE_FLAGS_OFFSET= 3,
+	_voice_unknown3_bit= 3,
 	GAME_SOUND_GLOBALS_UNKNOWN7F_OFFSET= 0x7F,
 
 	_game_mode_main_menu= 3
@@ -211,6 +218,12 @@ void unknown_00129380(byte *second, byte *first);
 
 /* 0x00125b40 */
 void sound_update(void);
+
+/* 0x0012a420, 0x0012af10, 0x0012af90 and 0x0012aff0 */
+void sound_channel_set_voice_flag3(short channel_index);
+short sound_slot_new(void);
+void sound_slot_delete(short slot_index);
+real __attribute__((stdcall)) sound_interpolation_fraction(real minimum, real maximum, real value, boolean above);
 
 /* 0x00218de0 and 0x00218d70: the most and the least loudness of a sound,
 in decibels; 0x002197f0: a gain in decibels; 0x00127010: the decibels of a
@@ -1288,4 +1301,75 @@ void sound_update(
 		game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7D_OFFSET]= FALSE;
 	}
 	lruv_idle(sound_lruv_cache);
+}
+
+/* 0x0012a420: sets a flag of the voice of a channel (the fourth bit of its
+fourth byte), which giving it a chunk clears. The name is a guess */
+void sound_channel_set_voice_flag3(
+	short channel_index)
+{
+	byte *voice= sound_channel_voice(&sound_channels[channel_index]);
+
+	voice[VOICE_FLAGS_OFFSET]|= FLAG(_voice_unknown3_bit);
+}
+
+/* 0x0012af10: takes the first slot of the globals of the sound that there
+is and is not taken; NONE if there is none. The name is a guess */
+short sound_slot_new(
+	void)
+{
+	byte *globals= game_sound_globals;
+	short count= *(short *)(globals+GAME_SOUND_GLOBALS_SLOT_COUNT_OFFSET);
+	short slot_index;
+
+	for (slot_index= 0; slot_index<count; slot_index++)
+	{
+		const unsigned long *valid= (const unsigned long *)(globals+GAME_SOUND_GLOBALS_SLOTS_VALID_OFFSET);
+		unsigned long *taken= (unsigned long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN70_OFFSET);
+
+		if ((valid[slot_index>>5]&(1UL<<(slot_index&31))) && !(taken[slot_index>>5]&(1UL<<(slot_index&31))))
+		{
+			taken[slot_index>>5]|= 1UL<<(slot_index&31);
+			return slot_index;
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x0012af90: lets a slot of the globals of the sound go, if it is not
+NONE. The name is a guess */
+void sound_slot_delete(
+	short slot_index)
+{
+	if (slot_index!=NONE)
+	{
+		unsigned long *taken= (unsigned long *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN70_OFFSET);
+
+		taken[slot_index>>5]&= ~(1UL<<(slot_index&31));
+	}
+}
+
+/* 0x0012aff0: where a value is from a minimum to a maximum, from 0 to 1;
+with the two closer than 0.0001, 0 or 1 by whether the minimum is over the
+value as it is asked. The name is a guess */
+real __attribute__((stdcall)) sound_interpolation_fraction(
+	real minimum,
+	real maximum,
+	real value,
+	boolean above)
+{
+	real fraction;
+
+	if (fabsf(minimum-maximum)<0.0001f)
+	{
+		return (minimum>value)==above ? 0.0f : 1.0f;
+	}
+	fraction= (value-minimum)/(maximum-minimum);
+	if (0.0f>fraction)
+	{
+		return 0.0f;
+	}
+
+	return fraction>1.0f ? 1.0f : fraction;
 }

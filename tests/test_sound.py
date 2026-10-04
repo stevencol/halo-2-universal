@@ -973,3 +973,38 @@ def run(t) -> None:
             },
             externals=frame_externals(random_.choice((-1, 0, 1, 2, 3)), random_.random() < 0.2),
         )
+
+    # ---------- slots, a flag of a voice, and a fraction
+
+    random_ = random.Random(152)
+    for _ in range(150):
+        data = bytearray(random_.randbytes(GLOBALS_SIZE))
+        struct.pack_into("<h", data, 0x20A, random_.choice((0, 1, 5, 33, 64, -1)))
+        if random_.random() < 0.3:
+            data[0x58:0x60] = bytes(8)
+        t.check("sound_slot_new", globals={"game_sound_globals": Buffer(bytes(data))})
+        for slot in (random_.randrange(64), -1, 0, 31, 32, 63):
+            t.check("sound_slot_delete", slot, globals={"game_sound_globals": Buffer(bytes(data))})
+
+    for _ in range(20):
+        channels, sources, tags, classes = pause_world()
+        for channel_index in range(CHANNELS):
+            t.check(
+                "sound_channel_set_voice_flag3",
+                channel_index,
+                globals={"sound_channels": channels, "unknown_0051ebe4": Buffer(random_.randbytes(4 * 0x34 + 0x10))},
+            )
+
+    def as_bits(value: float) -> int:
+        return struct.unpack("<I", struct.pack("<f", value))[0]
+
+    for minimum, maximum in ((0.0, 1.0), (1.0, 0.0), (2.0, 2.0), (2.0, 2.00005), (-1.0, 3.0), (5.0, float("nan")), (0.0, 0.0001)):
+        for value in (minimum, maximum, -2.0, 0.5, 4.0, 2.0, float("nan")):
+            for above in (0, 1):
+                t.check("sound_interpolation_fraction", as_bits(minimum), as_bits(maximum), as_bits(value), above)
+    # and values that a division and a product by the inverse round apart
+    for _ in range(300):
+        minimum = random_.uniform(-10, 10)
+        maximum = minimum + random_.choice((1.0, -1.0)) * random_.uniform(0.001, 20)
+        value = random_.uniform(min(minimum, maximum), max(minimum, maximum))
+        t.check("sound_interpolation_fraction", as_bits(minimum), as_bits(maximum), as_bits(value), random_.randrange(2))

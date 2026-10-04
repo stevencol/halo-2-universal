@@ -1169,3 +1169,7 @@ address,name,source,arguments,returns,convention
 0014dde0,unknown_0014dde0,,,int
 00221a70,unknown_00221a70,,stack stack,void,stdcall
 00129380,unknown_00129380,,edi ebx,void
+0012a420,sound_channel_set_voice_flag3,source/sound/sound_manager.c,eax,void
+0012af10,sound_slot_new,source/sound/sound_manager.c,,short
+0012af90,sound_slot_delete,source/sound/sound_manager.c,eax,void
+0012aff0,sound_interpolation_fraction,source/sound/sound_manager.c,stack stack stack ecx,real:xmm0,stdcall

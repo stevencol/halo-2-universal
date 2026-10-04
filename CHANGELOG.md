@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Casillas del sonido, una marca de voz y una fracción
+
+Cuatro funciones pequeñas de `sound/sound_manager.c`. De 721 funciones se
+pasa a 725, el 6,44 % de las del juego (el 3,518 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_channel_set_voice_flag3` | `0x0012a420` | `sound/sound_manager.c` |
+| `sound_slot_new` | `0x0012af10` | `sound/sound_manager.c` |
+| `sound_slot_delete` | `0x0012af90` | `sound/sound_manager.c` |
+| `sound_interpolation_fraction` | `0x0012aff0` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- `sound_slot_new` toma la primera casilla de los globales del sonido que
+  existe (un vector de 64 bits en `0x58`, mirando tantas como dice `0x20A`)
+  y que no está tomada (el de `0x70`), la marca y devuelve su número, o
+  `NONE`; `sound_slot_delete` la suelta.
+- `sound_channel_set_voice_flag3` pone el cuarto bit del cuarto byte de la
+  voz de un canal, que dar un trozo a la voz quita.
+- `sound_interpolation_fraction` dice dónde está un valor entre un mínimo y
+  un máximo, de 0 a 1. Si los dos están a menos de 0,0001 da 0 o 1 según
+  si el mínimo pasa del valor y una marca que recibe en `cl`.
+- Los nombres son inventados.
+
+### Mutaciones
+
+14 líneas rotas a propósito: las 14 detectadas. Una (dividir con el
+inverso) solo se veía con valores que no son redondos, y se añadieron 300.
+
 ## 2026-10-03 — Lo que hace el sonido cada fotograma
 
 Una función de `sound/sound_manager.c`, que `main.c` ya llamaba como
