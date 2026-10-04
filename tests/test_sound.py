@@ -468,7 +468,7 @@ def run(t) -> None:
                     globals={"game_sound_globals": sound_state(disabled=disabled, channels=channels)},
                     externals={
                         "sound_channel_pause": channel,
-                        "unknown_0012a0b0": channel,
+                        "sound_channel_resume": channel,
                         "unknown_00219d90": lambda harness, arguments: (0, (arguments[0] & 0xFF,)),
                         "unknown_0021f5a0": lambda harness, arguments: 0,
                         "unknown_0021f570": lambda harness, arguments: 0,
@@ -711,3 +711,80 @@ def run(t) -> None:
         for channel_index in range(CHANNELS):
             t.check("sound_channel_pausable", channel_index, **options)
             t.check("sound_channel_pause", channel_index, **options)
+
+    # ---------- a channel goes on
+
+    random_ = random.Random(148)
+    CHUNKS = 40
+
+    def resume_world():
+        channels, sources, tags, classes = pause_world()
+        data = bytearray(channels.data)
+        # the permutations, after the channels in the same buffer
+        permutations = len(data)
+        data += random_.randbytes(4 * 0x10)
+        for n in range(4):
+            struct.pack_into("<h", data, permutations + n * 0x10 + 0xC, random_.randrange(0, 20))
+        pointers = []
+        for n in range(CHANNELS):
+            data[n * 0x24 + 9] = random_.choice((0, 1, 1, 0x80))
+            struct.pack_into("<f", data, n * 0x24 + 0x10, random_.uniform(0, 5))
+            struct.pack_into("<hh", data, n * 0x24 + 0x18, random_.randrange(0, 10), random_.randrange(0, 10))
+            for field in (0x1C, 0x20):
+                if random_.random() < 0.7:
+                    struct.pack_into("<I", data, n * 0x24 + field, permutations + random_.randrange(4) * 0x10)
+                    pointers.append(n * 0x24 + field)
+                else:
+                    struct.pack_into("<I", data, n * 0x24 + field, 0)
+        gestalt = bytearray(random_.randbytes(0x48)) + bytearray(random_.randbytes(CHUNKS * 12))
+        struct.pack_into("<iI", gestalt, 0x40, CHUNKS, 0x48)
+        # the kinds of the sounds, which can be negative
+        definitions = bytearray(tags.data)
+        for n in range(SOURCES):
+            at = SOURCES * 0x10 + n * 0x10
+            definitions[at + 3 : at + 6] = bytes(random_.choice((0, 1, 2, 3, 0x7F, 0x80, 0xFF)) for _ in range(3))
+        return (
+            Buffer(bytes(data), pointers=tuple(pointers)),
+            sources,
+            Buffer(bytes(definitions), pointers=tags.pointers),
+            Buffer(bytes(gestalt), pointers=(0x44,)),
+        )
+
+    def resume_externals():
+        def played(harness, arguments):
+            unknown4, unknown5, unknown3, seconds = arguments
+            return (unknown4 * 7 + unknown5 * 3 + unknown3 + seconds) & 0xFFFFFF, (unknown4, unknown5, unknown3, seconds)
+
+        def chunk_bytes(harness, arguments):
+            permutation, count = arguments
+            return (count * 0x100 + 3) & 0xFFFFFFFF, (harness.normalize(permutation), count & 0xFFFF)
+
+        def restart(harness, arguments):
+            voice, offset = arguments
+            return 0, (voice & 0xFFFF, offset)
+
+        def chunk(harness, arguments):
+            voice, chunk_ = arguments
+            return 0, (harness.normalize(voice), harness.normalize(chunk_))
+
+        return {
+            "unknown_00218b00": played,
+            "unknown_00218ac0": chunk_bytes,
+            "unknown_0021f5d0": restart,
+            "unknown_002ae500": chunk,
+        }
+
+    for _ in range(40):
+        channels, sources, tags, gestalt = resume_world()
+        options = {
+            "globals": {
+                "sound_channels": channels,
+                "sound_sources": sources,
+                "global_tag_instances": tags,
+                "global_sound_cache_file_gestalt": gestalt,
+                "unknown_0051ebe4": Buffer(random_.randbytes(4 * 0x34 + 0x10)),
+            },
+            "externals": resume_externals(),
+        }
+        for channel_index in range(CHANNELS):
+            t.check("sound_channel_resume", channel_index, **options)

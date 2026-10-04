@@ -189,7 +189,13 @@ struct sound_channel
 	byte unknownB;
 	short unknownC;
 	short unknownE;
-	byte unknown10[0xC];
+	/* how far the sound has played, in seconds it seems */
+	real unknown10;
+	byte unknown14[4];
+	/* the chunk of each permutation that plays */
+	short unknown18;
+	short unknown1A;
+	/* the permutations that play: a pointer, or 0 */
 	long unknown1C;
 	long unknown20;
 };

@@ -226,7 +226,18 @@ void unknown_002ae750(void *voice);
 /* 0x00129fe0 and 0x0012a060 */
 boolean sound_channel_pausable(short channel_index);
 void sound_channel_pause(short channel_index);
-void unknown_0012a0b0(short channel_index);
+/* 0x00218b00: how many bytes of a sound of some kind are played in a
+time; 0x00218ac0: the bytes of the first chunks of a permutation */
+long __attribute__((stdcall)) unknown_00218b00(long unknown4, long unknown5, long unknown3, real seconds);
+long unknown_00218ac0(const struct sound_permutation *permutation, long chunk_count);
+
+/* 0x0021f5d0: a voice of the console's sound starts again from some bytes
+into its sound; 0x002ae500: a voice is given a chunk */
+void unknown_0021f5d0(short voice_index, long offset);
+void unknown_002ae500(void *voice, const struct sound_chunk *chunk);
+
+/* 0x0012a0b0 */
+void sound_channel_resume(short channel_index);
 
 /* 0x00219d90, 0x0021f5a0, 0x0021f570: the sound playback controllers and the
 sound of the console, when the sound is enabled and disabled */
@@ -731,7 +742,7 @@ void sound_enable(
 
 			for (index= 0; index<*(short *)(game_sound_globals+GAME_SOUND_GLOBALS_CHANNEL_COUNT_OFFSET); index++)
 			{
-				unknown_0012a0b0((short)index);
+				sound_channel_resume((short)index);
 			}
 			unknown_00219d90(TRUE);
 			unknown_0021f5a0();
@@ -918,4 +929,50 @@ void sound_channel_pause(
 		unknown_002ae750(unknown_0051ebe4+channel->unknownC*UNKNOWN_0051EBE4_VOICE_SIZE+UNKNOWN_0051EBE4_VOICE_OFFSET);
 		channel->unknown9= TRUE;
 	}
+}
+
+/* the voice of a channel is given the chunk of a permutation that plays */
+static inline __attribute__((always_inline)) void sound_channel_voice_set_chunk(
+	const struct sound_channel *channel,
+	const struct sound_permutation *permutation,
+	short chunk)
+{
+	const struct sound_chunk *chunks=
+		(const struct sound_chunk *)(uintptr_t)global_sound_cache_file_gestalt->chunks.address;
+
+	unknown_002ae500(unknown_0051ebe4+channel->unknownC*UNKNOWN_0051EBE4_VOICE_SIZE+UNKNOWN_0051EBE4_VOICE_OFFSET,
+		&chunks[permutation->first_chunk_index+chunk]);
+}
+
+/* 0x0012a0b0: the sound of a channel that sound_channel_pause stopped goes
+on: its voice starts again where the sound was, in the chunks that play.
+The name is a guess */
+void sound_channel_resume(
+	short channel_index)
+{
+	struct sound_channel *channel= &sound_channels[channel_index];
+
+	if (channel->unknownC==NONE || !channel->unknown9)
+	{
+		return;
+	}
+	if (channel->unknown1C)
+	{
+		const byte *source=
+			(const byte *)sound_sources->data+(channel->unknown0&0xFFFF)*SOUND_SOURCE_DATUM_SIZE;
+		const struct sound_definition *sound= sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_OFFSET));
+		const struct sound_permutation *permutation= (const struct sound_permutation *)(uintptr_t)channel->unknown1C;
+		long offset= unknown_00218b00((char)sound->unknown3[1], (char)sound->unknown3[2], (char)sound->unknown3[0],
+			channel->unknown10);
+
+		offset-= unknown_00218ac0(permutation, channel->unknown18);
+		unknown_0021f5d0(channel->unknownC, offset);
+		sound_channel_voice_set_chunk(channel, permutation, channel->unknown18);
+		if (channel->unknown20)
+		{
+			sound_channel_voice_set_chunk(channel, (const struct sound_permutation *)(uintptr_t)channel->unknown20,
+				channel->unknown1A);
+		}
+	}
+	channel->unknown9= FALSE;
 }

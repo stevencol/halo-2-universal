@@ -2,6 +2,39 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Reanudar un canal de sonido
+
+Una función de `sound/sound_manager.c`, que ya se llamaba como
+`unknown_0012a0b0`. De 714 funciones se pasa a 715, el 6,35 % de las
+del juego (el 3,464 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_channel_resume` | `0x0012a0b0` | `sound/sound_manager.c` |
+
+También algunos campos más de un canal: un real en `0x10` (lo que el sonido
+lleva, en segundos al parecer), el trozo de cada permutación que suena
+(`0x18` y `0x1A`) y las dos permutaciones (`0x1C` y `0x20`).
+
+### Lo que se sabe
+
+- Hace seguir el sonido de un canal que `sound_channel_pause` paró. Si el
+  canal tiene una permutación que suena, calcula cuántos bytes lleva el
+  sonido (`0x00218b00`, con tres bytes de su tipo y el real del canal),
+  quita los de los trozos anteriores al que suena (`0x00218ac0`), hace
+  empezar la voz desde ahí (`0x0021f5d0`, que toma el número en `edi`) y
+  le da el trozo de cada permutación (`0x002ae500`, con la voz en `esi` y
+  el trozo en `edi`). Después marca el canal como no parado.
+- El nombre es inventado.
+
+### Mutaciones
+
+16 líneas rotas a propósito: las 16 detectadas. Dos (cambiar el orden o el
+signo de los bytes del tipo del sonido) solo se veían si esos bytes no son
+cero, y las pruebas les dan ahora valores.
+
 ## 2026-10-03 — Pausar un canal de sonido
 
 Dos funciones de `sound/sound_manager.c`; la segunda ya se llamaba como
