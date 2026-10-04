@@ -74,7 +74,8 @@ void unknown_001554b0(float seconds);
 void unknown_0016f280(float seconds);
 void unknown_00222a70(float seconds);
 void unknown_00223240(void);
-void unknown_00125b40(void);
+/* 0x00125b40 */
+void sound_update(void);
 void unknown_000681e0(void);
 void unknown_00222d80(void);
 
@@ -434,7 +435,7 @@ void main_loop_body(
 		unknown_0016f280(seconds);
 		unknown_00222a70(seconds);
 		unknown_00223240();
-		unknown_00125b40();
+		sound_update();
 	}
 	else
 	{
@@ -442,7 +443,7 @@ void main_loop_body(
 		unknown_0008dfc0();
 		unknown_00222d80();
 		unknown_00223240();
-		unknown_00125b40();
+		sound_update();
 	}
 }
 

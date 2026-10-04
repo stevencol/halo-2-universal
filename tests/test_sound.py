@@ -893,3 +893,83 @@ def run(t) -> None:
             real_bits(random_.choice((0.0, 1.0, 0.5, random_.uniform(0, 1), -0.5, 1.5))),
             externals=externals,
         )
+
+    # ---------- what the sound does each frame
+
+    random_ = random.Random(151)
+    UPDATE_NAMES = (
+        "unknown_0021ec00",
+        "unknown_00219d90",
+        "unknown_0021f5a0",
+        "unknown_001269f0",
+        "unknown_00127400",
+        "unknown_00219cc0",
+        "unknown_0021b0e0",
+        "sound_channels_update",
+        "unknown_00128020",
+        "unknown_001282d0",
+        "unknown_001293f0",
+        "unknown_0021ee80",
+    )
+
+    def frame_externals(first_player: int, unload: bool) -> dict:
+        def stack_bytes(harness, address, size=8):
+            return bytes(harness.mu.mem_read(address, size))
+
+        def sound_globals(harness) -> int:
+            return struct.unpack("<I", harness.mu.mem_read(harness.global_addresses["game_sound_globals"], 4))[0]
+
+        def first_update(harness, arguments):
+            # what the frame is marked as; the map can be let go meanwhile
+            globals_ = sound_globals(harness)
+            marked = harness.mu.mem_read(globals_ + 0x7D, 1)[0]
+            if unload:
+                harness.mu.mem_write(globals_ + 0x7A, b"\0")
+            return 0, (marked,)
+
+        def tables(harness, arguments):
+            first, second, listeners = arguments
+            # what it is given, and then something of its own in the tables
+            record = (stack_bytes(harness, first, 0x100), stack_bytes(harness, second, 0x200), stack_bytes(harness, listeners, 4))
+            harness.mu.mem_write(first, bytes(range(0x100)))
+            harness.mu.mem_write(second, bytes(x ^ 0xA5 for x in range(0x100)) * 2)
+            return 0, record
+
+        externals = {name: (lambda harness, arguments: 0) for name in UPDATE_NAMES}
+        externals.update(
+            {
+                "sound_channel_resume": lambda harness, arguments: (0, (arguments[0] & 0xFFFF,)),
+                "GetTickCount": lambda harness, arguments: 0x12345,
+                "unknown_0021f360": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "unknown_00221900": lambda harness, arguments: (0, (arguments[0] & 0xFFFFFFFF,)),
+                "unknown_0021ec00": first_update,
+                "unknown_00129100": tables,
+                "unknown_0014dde0": lambda harness, arguments: first_player,
+                "unknown_00221a70": lambda harness, arguments: (0, (arguments[0], stack_bytes(harness, arguments[1], 4))),
+                "unknown_00129380": lambda harness, arguments: (0, (stack_bytes(harness, arguments[0], 16), stack_bytes(harness, arguments[1], 16))),
+                "lruv_wrap_ticks": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+            }
+        )
+        return externals
+
+    for _ in range(120):
+        data = bytearray(random_.randbytes(GLOBALS_SIZE))
+        data[0x78:0x7C] = bytes(random_.choice((1, 1, 1, 0)) for _ in range(3)) + bytes((random_.choice((0, 1)),))
+        data[0x7E] = random_.choice((0, 1))
+        struct.pack_into("<h", data, 0x208, random_.choice((0, 1, 3)))
+        struct.pack_into("<f", data, 0x1E0, random_.uniform(0, 0.1))
+        players = bytearray(random_.randbytes(0xC)) + struct.pack(
+            "<4i", *(random_.choice((-1, -1, 0, 1, 7)) for _ in range(4))
+        )
+        cache = bytearray(random_.randbytes(0x70))
+        struct.pack_into("<i", cache, 0x38, random_.choice((0x7FFFFFFF, 0x7FFFFFFE, 5)))
+        t.check(
+            "sound_update",
+            globals={
+                "game_sound_globals": Buffer(bytes(data)),
+                "game_time_globals": Buffer(bytes((random_.choice((0, 1)), random_.choice((0, 1)))) + random_.randbytes(10)),
+                "players_globals": Buffer(bytes(players)),
+                "sound_lruv_cache": Buffer(bytes(cache)),
+            },
+            externals=frame_externals(random_.choice((-1, 0, 1, 2, 3)), random_.random() < 0.2),
+        )

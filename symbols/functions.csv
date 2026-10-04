@@ -499,7 +499,7 @@ address,name,source,arguments,returns,convention
 0016f280,unknown_0016f280,,stack,void
 00222a70,unknown_00222a70,,stack,void
 00223240,unknown_00223240,,,void
-00125b40,unknown_00125b40,,,void
+00125b40,sound_update,source/sound/sound_manager.c,,void
 000681e0,unknown_000681e0,,,void
 00222d80,unknown_00222d80,,,void
 00122bc0,cache_file_structure_bsp_unload,source/cache/cache_files.c,edi,void
@@ -1158,3 +1158,14 @@ address,name,source,arguments,returns,convention
 00218d70,unknown_00218d70,,edx,real:eax
 002197f0,unknown_002197f0,,xmm0,real:eax
 00127010,unknown_00127010,,ecx,real:eax
+0021f360,unknown_0021f360,,stack,void,stdcall
+00221900,unknown_00221900,,xmm1,void
+00127400,unknown_00127400,,stack,void,stdcall
+00219cc0,unknown_00219cc0,,,void
+0021b0e0,unknown_0021b0e0,,stack,void,stdcall
+00128020,unknown_00128020,,,void
+001282d0,unknown_001282d0,,,void
+00129100,unknown_00129100,,stack stack edi,void,stdcall
+0014dde0,unknown_0014dde0,,,int
+00221a70,unknown_00221a70,,stack stack,void,stdcall
+00129380,unknown_00129380,,edi ebx,void

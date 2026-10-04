@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-03 — Lo que hace el sonido cada fotograma
+
+Una función de `sound/sound_manager.c`, que `main.c` ya llamaba como
+`unknown_00125b40`. De 720 funciones se pasa a 721, el 6,40 % de las
+del juego (el 3,506 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_update` | `0x00125b40` | `sound/sound_manager.c` |
+
+También el global `sound_lruv_cache` (`0x0050210c`, la caché de las
+muestras del sonido) y once funciones sin descompilar a las que llama, que
+las pruebas simulan apuntando el orden y lo que reciben.
+
+### Lo que se sabe
+
+- Con el sonido iniciado y un mapa cargado, marca el fotograma y pone en
+  marcha sus partes. Si el sonido estaba apagado y el juego no está en
+  pausa, lo enciende: reanuda cada canal y apunta la hora.
+- Después actualiza sus partes en un orden fijo, entre ellas los canales
+  (`sound_channels_update`). Con dos tablas y una estructura en la pila
+  (0x1744 bytes en total) prepara los oyentes, uno por cada jugador local,
+  y cuenta los fotogramas en que se marcó `0x7E`.
+- Siempre pasa un tick de su caché (`lruv_idle`).
+- El nombre es inventado.
+
+### Mutaciones
+
+25 líneas rotas a propósito: 24 detectadas. Al principio cuatro se
+escapaban por los simuladores: no miraban la marca del fotograma, no
+podían descargar el mapa a mitad y no escribían nada en las tablas. Se
+arreglaron.
+
+### Sin comprobar
+
+- Un mutante es equivalente: el paso al jugador siguiente nunca recibe
+  `NONE`, porque el bucle solo sigue con un jugador.
+
 ## 2026-10-03 — Lo fuerte que suena un sonido, en decibelios
 
 Dos funciones de `sound/sound_manager.c`. De 718 funciones se pasa a 720,

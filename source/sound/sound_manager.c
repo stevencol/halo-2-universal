@@ -17,6 +17,7 @@ the file and those of the functions are guesses. Not here: 0x00125b40 and
 #include "main/main.h"
 #include "main/main_game.h"
 #include "cseries/async.h"
+#include "memory/lruv_cache.h"
 #include "physics/bsp3d.h"
 #include "scenario/scenario.h"
 #include "structures/structure_bsp_definitions.h"
@@ -111,6 +112,10 @@ enum
 	VOICE_PITCH_OFFSET= 8,
 	/* in the globals of the sound: the seconds that it was given */
 	GAME_SOUND_GLOBALS_SECONDS_OFFSET= 0x1E0,
+	/* in the globals of the sound: set for a frame by something not decompiled,
+	and how many frames it was */
+	GAME_SOUND_GLOBALS_UNKNOWN7E_OFFSET= 0x7E,
+	GAME_SOUND_GLOBALS_UNKNOWN7F_OFFSET= 0x7F,
 
 	_game_mode_main_menu= 3
 };
@@ -186,6 +191,27 @@ void unknown_00191270(void);
 
 /* 0x0021ec00, 0x001269f0, 0x001293f0, 0x0021ee80, 0x00218810: what the
 sound does each time it is given some time, with sound_channels_update */
+/* what sound_update does each frame, in this order, of what is not
+decompiled: 0x0021f360 with the globals of the sound, 0x00221900 with the
+seconds of the frame, 0x00127400, 0x00219cc0, 0x0021b0e0, 0x00128020,
+0x001282d0; 0x00129100, 0x00221a70 for each local player and 0x00129380 with
+what the frame has on the stack; 0x0014dde0 gives the first local player */
+struct sound_update_listeners;
+void __attribute__((stdcall)) unknown_0021f360(byte *globals);
+void unknown_00221900(real seconds);
+void __attribute__((stdcall)) unknown_00127400(boolean unknown);
+void unknown_00219cc0(void);
+void __attribute__((stdcall)) unknown_0021b0e0(long unknown);
+void unknown_00128020(void);
+void unknown_001282d0(void);
+void __attribute__((stdcall)) unknown_00129100(byte *first, byte *second, struct sound_update_listeners *listeners);
+long unknown_0014dde0(void);
+void __attribute__((stdcall)) unknown_00221a70(long player_index, struct sound_update_listeners *listeners);
+void unknown_00129380(byte *second, byte *first);
+
+/* 0x00125b40 */
+void sound_update(void);
+
 /* 0x00218de0 and 0x00218d70: the most and the least loudness of a sound,
 in decibels; 0x002197f0: a gain in decibels; 0x00127010: the decibels of a
 class of sounds */
@@ -1157,4 +1183,109 @@ real __attribute__((stdcall)) sound_definition_decibels(
 	real gain_decibels= unknown_002197f0(gain);
 
 	return gain_decibels + (unknown_00127010(sound->sound_class) + decibels);
+}
+
+/* what sound_update has on the stack for the listeners: how many, and more
+that is not known */
+struct sound_update_listeners
+{
+	long count;
+	byte unknown4[0x1434];
+};
+
+/* 0x0050210c: the cache of the sound's samples */
+struct lruv_cache *sound_lruv_cache;
+
+/* the local player after one, or NONE after the last */
+static inline __attribute__((always_inline)) long sound_next_local_player(
+	long player_index)
+{
+	long index= player_index==NONE ? 0 : player_index+1;
+
+	for (; index<MAXIMUM_LOCAL_PLAYERS; index++)
+	{
+		if (players_globals->local_players[index]!=NONE)
+		{
+			return index;
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x00125b40: what the sound does each frame: it goes on if it was off and
+the game is not paused, its parts are updated, with the listeners of each
+local player, and a tick of its cache goes by. The name is a guess */
+void sound_update(
+	void)
+{
+	byte *globals= game_sound_globals;
+
+	if (globals[GAME_SOUND_GLOBALS_INITIALIZED_OFFSET] && globals[GAME_SOUND_GLOBALS_UNKNOWN79_OFFSET] &&
+		globals[GAME_SOUND_GLOBALS_MAP_LOADED_OFFSET])
+	{
+		globals[GAME_SOUND_GLOBALS_UNKNOWN7D_OFFSET]= TRUE;
+		unknown_0021ec00();
+		globals= game_sound_globals;
+		if (globals[GAME_SOUND_GLOBALS_MAP_LOADED_OFFSET])
+		{
+			byte first[0x100];
+			byte second[0x200];
+			struct sound_update_listeners listeners;
+			long player_index;
+
+			if (globals[GAME_SOUND_GLOBALS_DISABLED_OFFSET] &&
+				(!game_time_globals->initialized || !game_time_globals->paused))
+			{
+				long index;
+				unsigned long time;
+
+				globals[GAME_SOUND_GLOBALS_UNKNOWN7D_OFFSET]= TRUE;
+				globals[GAME_SOUND_GLOBALS_DISABLED_OFFSET]= FALSE;
+				for (index= 0; index<*(short *)(game_sound_globals+GAME_SOUND_GLOBALS_CHANNEL_COUNT_OFFSET); index++)
+				{
+					sound_channel_resume((short)index);
+				}
+				unknown_00219d90(TRUE);
+				unknown_0021f5a0();
+				time= GetTickCount();
+				globals= game_sound_globals;
+				*(unsigned long *)(globals+GAME_SOUND_GLOBALS_START_TIME_OFFSET)= time;
+				globals[GAME_SOUND_GLOBALS_UNKNOWN7D_OFFSET]= FALSE;
+			}
+			unknown_0021f360(globals);
+			if (!globals[GAME_SOUND_GLOBALS_DISABLED_OFFSET])
+			{
+				unknown_001269f0();
+				globals= game_sound_globals;
+			}
+			unknown_00221900(*(real *)(globals+GAME_SOUND_GLOBALS_SECONDS_OFFSET));
+			unknown_00127400(TRUE);
+			unknown_00219cc0();
+			unknown_0021b0e0(game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7E_OFFSET]);
+			sound_channels_update();
+			unknown_00128020();
+			unknown_001282d0();
+			memset(first, 0, sizeof(first));
+			memset(second, 0, sizeof(second));
+			listeners.count= 0;
+			unknown_00129100(first, second, &listeners);
+			for (player_index= unknown_0014dde0(); player_index!=NONE;
+				player_index= sound_next_local_player(player_index))
+			{
+				unknown_00221a70(player_index, &listeners);
+			}
+			unknown_00129380(second, first);
+			unknown_001293f0();
+			if (game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7E_OFFSET])
+			{
+				game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7F_OFFSET]++;
+			}
+		}
+		unknown_0021ee80();
+		unknown_00219d90(FALSE);
+		game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7E_OFFSET]= FALSE;
+		game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7D_OFFSET]= FALSE;
+	}
+	lruv_idle(sound_lruv_cache);
 }
