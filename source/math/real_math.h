@@ -168,6 +168,7 @@ real_vector3d *generate_up_vector3d(const real_vector3d *forward, real_vector3d 
 real normalize2d(real_vector2d *vector);
 real normalize3d(real_vector3d *vector);
 real normalize3d_with_default(real_vector3d *vector, const real_vector3d *default_vector);
+real_vector3d *vector3d_decompress(unsigned long compressed, real_vector3d *vector);
 real fast_vector_sphere_intersection(const real_point3d *point, const real_vector3d *vector,
 	const real_point3d *center, real radius);
 real magnitude3d(const real_vector3d *vector);

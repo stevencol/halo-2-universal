@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Un vector guardado en 32 bits
+
+Una función en `math/real_math.c`. De 860 funciones se pasa a
+861, el 7,64 % de las del juego (el 4,435 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `vector3d_decompress` | `0x00188ea0` | `math/real_math.c` |
+
+No estaba apuntada. La llama `0x00129aa0`, la del sonido que falta por
+hacer, para saber hacia dónde apunta un sonido. Recibe el número en `ecx` y
+dónde dejar el vector en `esi`, y devuelve ese mismo sitio.
+
+### Lo que se sabe
+
+- `vector3d_decompress` saca un vector de un número de 32 bits: 11 bits
+  para `i`, 11 para `j` y 10 para `k`. Cada parte va de -1 (el 0) a 1 (lo
+  más que cabe en sus bits), y al final el vector se deja de longitud 1.
+- Lo que el juego dice de un sonido guarda así, en `0x18` (el `0x30` del
+  sonido que suena), hacia dónde apunta su cono.
+- El nombre es inventado, y el archivo también: la función está lejos del
+  resto de `real_math.c` (en `0x00188ea0`), pero no se sabe de qué archivo
+  es.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y de
+  `normalize3d`. La última batería completa es la del hito 200 (857
+  funciones, todas bien).
+
+### Mutaciones
+
+Siete líneas rotas a mano: las pruebas notan seis. La que no notan es
+cambiar el «mayor o igual» del tope por «mayor»: con el valor más alto la
+cuenta da 1 de todas formas.
+
 ## 2026-10-05 — El sonido de un canal y su voz de la consola
 
 Una función en `sound/sound_manager.c`, de 1057 bytes. De 859 funciones se pasa a

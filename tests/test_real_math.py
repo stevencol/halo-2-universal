@@ -46,6 +46,7 @@ def run(t) -> None:
     run_segments(t)
     run_quantize(t)
     run_angles(t)
+    run_decompress(t)
     random_ = random.Random(3)
 
     vectors = list(VECTORS)
@@ -470,3 +471,13 @@ def run_enclose(t) -> None:
                 count,
                 Buffer(struct.pack(f"<{len(points)}f", *points) + random_.randbytes(8)),
             )
+
+
+def run_decompress(t) -> None:
+    random_ = random.Random(204)
+
+    values = [0, 0xFFFFFFFF, 0x7FF, 0x7FF << 11, 0x3FF << 22, 0x7FE, 0x7FE << 11, 0x3FE << 22, 1, 1 << 11, 1 << 22]
+    values += [0x3FF | 0x3FF << 11 | 0x1FF << 22, 0x400 | 0x400 << 11 | 0x200 << 22]
+    values += [random_.getrandbits(32) for _ in range(600)]
+    for value in values:
+        t.check("vector3d_decompress", value, Buffer(random_.randbytes(12)))

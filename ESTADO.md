@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-04, al terminar el hito 203.
+**Última actualización:** 2026-10-04, al terminar el hito 204.
 
 ## Dónde estamos
 
-- **860 funciones descompiladas de 11.265: el 7,63 % del juego** (el
-  4,428 % de los bytes de código).
-- Las 860 están comprobadas contra el ejecutable original: las 857 del
+- **861 funciones descompiladas de 11.265: el 7,64 % del juego** (el
+  4,435 % de los bytes de código).
+- Las 861 están comprobadas contra el ejecutable original: las 857 del
   hito 200 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the sound of a channel going to its voice of the console's sound* (ver `git log`).
+- Último hito: *Decompile a vector that is kept in 32 bits* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 447 funciones apuntadas pero sin descompilar (las que el código
   llama); 360 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -109,7 +109,7 @@ Módulos (funciones hechas / archivo):
       terminar líneas o triángulos; faltan `0x0001e930` y `0x0001eb00`, que
       preparan la consola para dibujar)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
-- [ ] Matemáticas reales — `math\real_math.c` (38 de unas 50)
+- [ ] Matemáticas reales — `math\real_math.c` (39 de unas 50, con una que está lejos de las demás)
 - [x] Matrices — `math\matrix_math.c` (26: completo)
 - [ ] Números aleatorios — `math\random_math.c` (2)
 - [x] Colores y bitmaps — `bitmaps\` (21: 6 de colores y 15 en

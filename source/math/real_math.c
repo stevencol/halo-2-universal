@@ -1166,3 +1166,36 @@ real normalize3d(
 
 	return magnitude;
 }
+
+/* one of the three numbers of a vector that is kept in 32 bits: from -1, for
+0, to 1, for the most that its bits hold */
+static inline __attribute__((always_inline)) real vector3d_decompress_component(
+	long value,
+	long maximum)
+{
+	if (!value)
+	{
+		return -1.0f;
+	}
+	if (value>=maximum)
+	{
+		return 1.0f;
+	}
+
+	return ((real)value-(real)(maximum-value))*(1.0f/(real)maximum);
+}
+
+/* 0x00188ea0: a vector that is kept in 32 bits: 11 for i, 11 for j and 10
+for k. It is made of length 1. The name is made up, and so is the file: the
+function is far from the rest of these */
+real_vector3d *vector3d_decompress(
+	unsigned long compressed,
+	real_vector3d *vector)
+{
+	vector->i= vector3d_decompress_component(compressed&0x7FF, 0x7FF);
+	vector->j= vector3d_decompress_component((compressed>>11)&0x7FF, 0x7FF);
+	vector->k= vector3d_decompress_component(compressed>>22, 0x3FF);
+	normalize3d(vector);
+
+	return vector;
+}
