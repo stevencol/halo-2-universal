@@ -1538,3 +1538,124 @@ def run(t) -> None:
                 globals={"unknown_0051ebe4": Buffer(random_.randbytes(0x2AA0))},
                 externals={"unknown_0037b73f": lambda harness, arguments: (0, tuple(arguments))},
             )
+
+    # ---------- more small functions of other files of the sound
+
+    random_ = random.Random(158)
+
+    for _ in range(200):
+        # the cache of the sounds, with its array of blocks after it
+        cache = bytearray(random_.randbytes(0x70)) + bytearray(random_.randbytes(0x4C + COUNTED * 0x18))
+        struct.pack_into("<i", cache, 0x34, random_.choice((0, 1, 9, 12)))
+        struct.pack_into("<I", cache, 0x64, 0x70)
+        struct.pack_into("<I", cache, 0x70 + 0x44, 0x70 + 0x4C)
+        for index in range(COUNTED):
+            struct.pack_into("<i", cache, 0x70 + 0x4C + index * 0x18 + 8, random_.randrange(0, 0x2000))
+        uses = bytearray(counted().data)
+        for index in range(COUNTED):
+            uses[0x4C + index * 0x10 + 5] = random_.choice((0, 1, 0xFE, 0xFF, 0x80))
+        chunk = random_.randbytes(8) + struct.pack("<I", random_.getrandbits(16) << 16 | random_.randrange(COUNTED))
+        t.check(
+            "sound_cache_chunk_get_address",
+            Buffer(chunk),
+            globals={
+                "unknown_00502104": Buffer(bytes(uses), pointers=(0x44,)),
+                "sound_lruv_cache": Buffer(bytes(cache), pointers=(0x64, 0x70 + 0x44)),
+                "sound_cache_base": random_.choice((0, 0x80000000, random_.getrandbits(32))),
+            },
+        )
+
+    for _ in range(30):
+        sources, tags = playing_sounds()
+        gestalt, _permutations = recordings()
+        for n in random_.sample(range(SOURCES), 20):
+            t.check(
+                "sound_permutation_unknown6",
+                random_.getrandbits(16) << 16 | n,
+                random_.randrange(3),
+                random_.randrange(6),
+                globals={
+                    "global_tag_instances": tags,
+                    "global_sound_cache_file_gestalt": Buffer(gestalt, pointers=(0x24, 0x2C, 0x44)),
+                },
+            )
+
+    for bit in range(16):
+        for sound_flags in (1 << bit, 0xFFFF ^ 1 << bit):
+            for _ in range(6):
+                sound_index = random_.randrange(TAGS)
+                t.check(
+                    "sound_definition_get_maximum_distance",
+                    random_.getrandbits(16) << 16 | sound_index,
+                    globals=world(random_, sound_index, sound_data(random_, sound_flags)),
+                )
+
+    for _ in range(150):
+        definition = sound_data(random_)
+        globals_ = world(random_, 0, sound_data(random_))
+        for name in ("sound_pitch_range_set_unknown4", "sound_pitch_range_set_unknown5"):
+            t.check(name, Buffer(random_.randbytes(0xC)), Buffer(definition), random_.getrandbits(8), globals=globals_)
+        for name in ("sound_pitch_range_get_unknown4", "sound_pitch_range_get_unknown5"):
+            pitch_range = bytearray(random_.randbytes(0xC))
+            pitch_range[4:6] = bytes(random_.choice((0, 1, 0x7F, 0x80, 0xFF)) for _ in range(2))
+            t.check(name, Buffer(bytes(pitch_range)), Buffer(definition), globals=globals_)
+
+    for _ in range(60):
+        looping = bytearray(random_.randbytes(0x4C + 6 * 0xD4))
+        struct.pack_into("<I", looping, 0x44, 0x4C)
+        controllers = bytearray(random_.randbytes(0x4C + CONTROLLERS * 0x1C))
+        struct.pack_into("<I", controllers, 0x44, 0x4C)
+        for index in range(CONTROLLERS):
+            controllers[0x4C + index * 0x1C + 2] = random_.choice((0, 1, 2, 0x80, 0x81, 0x82, 0xFF))
+        for index in range(6):
+            struct.pack_into(
+                "<I",
+                looping,
+                0x4C + index * 0xD4 + 0x54,
+                random_.choice((NONE, random_.getrandbits(16) << 16 | random_.randrange(CONTROLLERS))),
+            )
+        for index in range(6):
+            t.check(
+                "looping_sound_delete",
+                random_.getrandbits(16) << 16 | index,
+                globals={
+                    "looping_sounds": Buffer(bytes(looping), pointers=(0x44,)),
+                    "unknown_0051ebd8": Buffer(bytes(controllers), pointers=(0x44,)),
+                },
+                externals={"datum_delete": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1]))},
+            )
+
+    for _ in range(120):
+        start = random_.choice((0x1234, NONE, 0))
+        voices_ = bytearray(random_.randbytes(0x4C + VOICES * 0x6C))
+        struct.pack_into("<I", voices_, 0x44, 0x4C)
+        for index in range(VOICES):
+            struct.pack_into("<I", voices_, 0x4C + index * 0x6C + 0x44, random_.choice((NONE, start, start, 7)))
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        struct.pack_into("<I", state, 0x80, start)
+        for index in range(VOICES):
+            t.check(
+                "sound_voice_unknown_0021dff0",
+                random_.getrandbits(16) << 16 | index,
+                Buffer(random_.randbytes(0x48)),
+                Buffer(random_.randbytes(4)),
+                globals={"sound_voices": Buffer(bytes(voices_), pointers=(0x44,)), "game_sound_globals": Buffer(bytes(state))},
+            )
+
+    for _ in range(150):
+        table = bytearray(random_.randbytes(0x100 * 0x5C))
+        for n in range(0x100):
+            struct.pack_into("<f", table, n * 0x5C + 0x10, random_.choice((0.0, 1.0, 1.0, 2.5, -0.0, float("nan"))))
+            struct.pack_into(
+                "<f", table, n * 0x5C + 0x50, random_.choice((0.0, 0.00005, 0.0001, 0.00011, 0.00009999, 1.0, 1.00005, float("nan")))
+            )
+        table_ = Buffer(bytes(table))
+        for _pair in range(8):
+            first = random_.randrange(12)
+            t.check(
+                "sound_classes_match",
+                first,
+                random_.choice((first, random_.randrange(12), random_.randrange(12))),
+                extra=[table_],
+                externals={"sound_class_get": class_of(table_)},
+            )

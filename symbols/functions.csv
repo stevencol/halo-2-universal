@@ -1197,3 +1197,13 @@ address,name,source,arguments,returns,convention
 00219f60,sound_playback_controller_add_count,source/sound/sound_manager.c,ecx stack,void,stdcall
 0021dcf0,sound_effect_delete,source/sound/sound_manager.c,ebx,void
 0037b73f,unknown_0037b73f,,stack stack,void,stdcall
+00218950,sound_cache_chunk_get_address,source/sound/sound_manager.c,edx,int
+00218c60,sound_permutation_unknown6,source/sound/sound_manager.c,eax stack stack,real:xmm0,stdcall
+00218d30,sound_definition_get_maximum_distance,source/sound/sound_manager.c,eax,real:xmm0
+002192b0,sound_pitch_range_set_unknown4,source/sound/sound_manager.c,stack stack stack,void,stdcall
+00219310,sound_pitch_range_set_unknown5,source/sound/sound_manager.c,stack stack stack,void,stdcall
+00219370,sound_pitch_range_get_unknown4,source/sound/sound_manager.c,stack stack,int,stdcall
+002193d0,sound_pitch_range_get_unknown5,source/sound/sound_manager.c,stack stack,int,stdcall
+0021b070,looping_sound_delete,source/sound/sound_manager.c,edi,void
+0021dff0,sound_voice_unknown_0021dff0,source/sound/sound_manager.c,ecx stack stack,bool,stdcall
+0021e1d0,sound_classes_match,source/sound/sound_manager.c,eax esi,int

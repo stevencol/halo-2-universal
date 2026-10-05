@@ -2,6 +2,62 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Diez funciones pequeñas más del sonido
+
+Diez funciones pequeñas, en `sound/sound_manager.c` aunque lo más probable
+es que sean de otros archivos del sonido. De 752 funciones se pasa a
+762, el 6,76 % de las del juego (el 3,632 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_cache_chunk_get_address` | `0x00218950` | `sound/sound_manager.c` |
+| `sound_permutation_unknown6` | `0x00218c60` | `sound/sound_manager.c` |
+| `sound_definition_get_maximum_distance` | `0x00218d30` | `sound/sound_manager.c` |
+| `sound_pitch_range_set_unknown4` | `0x002192b0` | `sound/sound_manager.c` |
+| `sound_pitch_range_set_unknown5` | `0x00219310` | `sound/sound_manager.c` |
+| `sound_pitch_range_get_unknown4` | `0x00219370` | `sound/sound_manager.c` |
+| `sound_pitch_range_get_unknown5` | `0x002193d0` | `sound/sound_manager.c` |
+| `looping_sound_delete` | `0x0021b070` | `sound/sound_manager.c` |
+| `sound_voice_unknown_0021dff0` | `0x0021dff0` | `sound/sound_manager.c` |
+| `sound_classes_match` | `0x0021e1d0` | `sound/sound_manager.c` |
+
+También el global `sound_cache_base` (`0x00502108`).
+
+### Lo que se sabe
+
+- `sound_cache_chunk_get_address` dice dónde están en la caché de los
+  sonidos las muestras de un trozo de una grabación (la primera página de
+  su bloque, por el tamaño de página, más `sound_cache_base`), y cuenta que
+  se pidieron, hasta 255 veces.
+- `sound_permutation_unknown6` da como real la palabra en `6` de una
+  grabación de un rango de tono de un sonido.
+- `sound_definition_get_maximum_distance`: hasta dónde se oye un sonido: lo
+  que diga su clase, si el sonido lo pide (bit 11 de sus marcas), o cómo se
+  reproduce el sonido.
+- `sound_pitch_range_set_unknown4`/`5` y `sound_pitch_range_get_unknown4`/`5`
+  ponen y leen los bytes `4` y `5` de un rango de tono, salvo que la clase
+  del sonido no deje guardarlos (bit 5 de sus segundas marcas): entonces no
+  se ponen, y al leer sale `NONE`.
+- `looping_sound_delete` suelta un sonido en bucle y le quita un sonido a
+  su controlador de reproducción.
+- `sound_voice_unknown_0021dff0` le da a una voz de sonido `0x24` bytes de
+  algo, una vez por cada arranque del reloj del sonido, y dice si los tomó
+  y si era la primera vez.
+- `sound_classes_match` dice si dos clases de sonido son la misma, o tienen
+  el mismo real en `0x10` y reales en `0x50` a menos de 0,0001.
+- Los nombres son inventados.
+
+### Sin comprobar
+
+- La batería completa no se pasó en este hito, solo las pruebas de estas
+  funciones.
+
+### Mutaciones
+
+Pendientes; corren aparte, en segundo plano.
+
 ## 2026-10-04 — Doce funciones pequeñas de otros archivos del sonido
 
 Doce funciones pequeñas, en `sound/sound_manager.c` aunque lo más probable

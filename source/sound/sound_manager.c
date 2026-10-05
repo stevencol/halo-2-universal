@@ -194,6 +194,24 @@ enum
 	SOUND_EFFECT_DATUM_CONTROLLER_INDEX_OFFSET= 0x8,
 	/* in unknown_0051ebe4: two streams of the console's sound */
 	UNKNOWN_0051EBE4_STREAMS_OFFSET= 0x2A90,
+	/* a piece of the samples of a recording: which element of
+	unknown_00502104 it is, and of an element, how many times it was asked
+	for */
+	SOUND_CHUNK_CACHE_INDEX_OFFSET= 0x8,
+	UNKNOWN_00502104_DATUM_USES_OFFSET= 0x5,
+	SOUND_PERMUTATION_UNKNOWN6_OFFSET= 0x6,
+	/* a flag of the tag of a sound: how far it is heard is of its class */
+	_sound_definition_class_distance_bit= 11,
+	_sound_class_internal_unknown5_bit= 5,
+	SOUND_CLASS_UNKNOWN10_OFFSET= 0x10,
+	SOUND_CLASS_UNKNOWN50_OFFSET= 0x50,
+	LOOPING_SOUND_DATUM_CONTROLLER_INDEX_OFFSET= 0x54,
+	/* of a sound voice: the time of the sound when it was given the 0x24
+	bytes after it */
+	SOUND_VOICE_DATUM_START_TIME_OFFSET= 0x44,
+	SOUND_VOICE_DATUM_UNKNOWN48_OFFSET= 0x48,
+	SOUND_VOICE_DATUM_UNKNOWN48_SIZE= 0x24,
+	SOUND_VOICE_DATUM_UNKNOWN_SOURCE_OFFSET= 0x24,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -246,6 +264,9 @@ byte *unknown_0051ebe4;
 
 /* 0x004ed288: of something else; two numbers of it start again with the sound */
 byte *unknown_004ed288;
+
+/* 0x00502108: where the memory of the cache of the sounds starts */
+long sound_cache_base;
 
 /* 0x0047f0e0: 0x10000 in the main menu and 0x4000 in a game */
 long unknown_0047f0e0;
@@ -423,6 +444,23 @@ const void *sound_definition_get_custom_playback(const struct sound_definition *
 void *sound_playback_controller_get(long controller_index);
 void __attribute__((stdcall)) sound_playback_controller_add_count(byte *controller, char amount);
 void sound_effect_delete(long effect_index);
+
+/* 0x00218950, 0x00218c60, 0x00218d30, 0x002192b0, 0x00219310, 0x00219370,
+0x002193d0, 0x0021b070, 0x0021dff0 and 0x0021e1d0 */
+long sound_cache_chunk_get_address(const struct sound_chunk *chunk);
+real __attribute__((stdcall)) sound_permutation_unknown6(long sound_index, long pitch_range, long permutation);
+real sound_definition_get_maximum_distance(long sound_index);
+void __attribute__((stdcall)) sound_pitch_range_set_unknown4(struct sound_pitch_range *pitch_range,
+	const struct sound_definition *sound, char value);
+void __attribute__((stdcall)) sound_pitch_range_set_unknown5(struct sound_pitch_range *pitch_range,
+	const struct sound_definition *sound, char value);
+long __attribute__((stdcall)) sound_pitch_range_get_unknown4(const struct sound_pitch_range *pitch_range,
+	const struct sound_definition *sound);
+long __attribute__((stdcall)) sound_pitch_range_get_unknown5(const struct sound_pitch_range *pitch_range,
+	const struct sound_definition *sound);
+void looping_sound_delete(long looping_sound_index);
+boolean __attribute__((stdcall)) sound_voice_unknown_0021dff0(long voice_index, const byte *unknown, boolean *first);
+long sound_classes_match(long class_index, long other_class_index);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -2163,4 +2201,185 @@ void sound_console_streams_resume(
 	{
 		unknown_0037b73f(*(void **)(unknown_0051ebe4+offset), FALSE);
 	}
+}
+
+/* ---------- more of other files of the sound, most likely. The names are
+guesses */
+
+/* 0x00218950: where the samples of a piece of a recording are in the cache
+of the sounds; it is counted too that they were asked for, up to 255 times */
+long sound_cache_chunk_get_address(
+	const struct sound_chunk *chunk)
+{
+	long index= *(const long *)((const byte *)chunk+SOUND_CHUNK_CACHE_INDEX_OFFSET);
+	byte *datum= (byte *)unknown_00502104->data+(index&0xFFFF)*UNKNOWN_00502104_DATUM_SIZE;
+	const struct lruv_cache *cache;
+	const struct lruv_cache_block *blocks;
+
+	if (datum[UNKNOWN_00502104_DATUM_USES_OFFSET]<0xFF)
+	{
+		datum[UNKNOWN_00502104_DATUM_USES_OFFSET]++;
+	}
+	index= *(const long *)((const byte *)chunk+SOUND_CHUNK_CACHE_INDEX_OFFSET);
+	cache= sound_lruv_cache;
+	blocks= (const struct lruv_cache_block *)cache->blocks->data;
+
+	return (long)((unsigned long)blocks[index&0xFFFF].first_page_index<<(cache->page_size_bits&31))+sound_cache_base;
+}
+
+/* 0x00218c60: the word at 6 of a recording of a sound, as a real: the
+recording is one of a pitch range of the sound */
+real __attribute__((stdcall)) sound_permutation_unknown6(
+	long sound_index,
+	long pitch_range,
+	long permutation)
+{
+	const struct sound_cache_file_gestalt *gestalt= global_sound_cache_file_gestalt;
+	const struct sound_pitch_range *pitch_ranges= (const struct sound_pitch_range *)(uintptr_t)gestalt->pitch_ranges.address;
+	const byte *permutations= (const byte *)(uintptr_t)gestalt->permutations.address;
+	long index= pitch_ranges[sound_definition_get(sound_index)->first_pitch_range_index+pitch_range].first_permutation_index+
+		permutation;
+
+	return (real)(long)*(const word *)(permutations+index*(long)sizeof(struct sound_permutation)+SOUND_PERMUTATION_UNKNOWN6_OFFSET);
+}
+
+/* 0x00218d30: how far a sound is heard: what its class says, if the sound
+says to ask it, or else how the sound is played */
+real sound_definition_get_maximum_distance(
+	long sound_index)
+{
+	const struct sound_definition *sound= sound_definition_get(sound_index);
+
+	if (sound->flags&FLAG(_sound_definition_class_distance_bit))
+	{
+		return sound_class_get(sound->sound_class)->maximum_distance;
+	}
+
+	return sound_definition_get_playback(sound)->maximum_distance;
+}
+
+/* whether the class of a sound says that its pitch ranges keep nothing of
+what was played */
+static inline __attribute__((always_inline)) boolean sound_definition_class_keeps_nothing(
+	const struct sound_definition *sound)
+{
+	return (sound_class_get(sound->sound_class)->internal_flags>>_sound_class_internal_unknown5_bit)&1;
+}
+
+/* 0x002192b0 and 0x00219310: the bytes at 4 and at 5 of a pitch range of a
+sound are set, if the class of the sound lets them be */
+void __attribute__((stdcall)) sound_pitch_range_set_unknown4(
+	struct sound_pitch_range *pitch_range,
+	const struct sound_definition *sound,
+	char value)
+{
+	if (!sound_definition_class_keeps_nothing(sound))
+	{
+		pitch_range->unknown0[4]= value;
+	}
+}
+
+void __attribute__((stdcall)) sound_pitch_range_set_unknown5(
+	struct sound_pitch_range *pitch_range,
+	const struct sound_definition *sound,
+	char value)
+{
+	if (!sound_definition_class_keeps_nothing(sound))
+	{
+		pitch_range->unknown0[5]= value;
+	}
+}
+
+/* 0x00219370 and 0x002193d0: the bytes at 4 and at 5 of a pitch range of a
+sound; NONE if the class of the sound does not let them be kept */
+long __attribute__((stdcall)) sound_pitch_range_get_unknown4(
+	const struct sound_pitch_range *pitch_range,
+	const struct sound_definition *sound)
+{
+	if (!sound_definition_class_keeps_nothing(sound))
+	{
+		return (char)pitch_range->unknown0[4];
+	}
+
+	return NONE;
+}
+
+long __attribute__((stdcall)) sound_pitch_range_get_unknown5(
+	const struct sound_pitch_range *pitch_range,
+	const struct sound_definition *sound)
+{
+	if (!sound_definition_class_keeps_nothing(sound))
+	{
+		return (char)pitch_range->unknown0[5];
+	}
+
+	return NONE;
+}
+
+/* 0x0021b070: a looping sound is let go, and its sound playback controller
+has one sound less */
+void looping_sound_delete(
+	long looping_sound_index)
+{
+	struct data_array *data= looping_sounds;
+	const byte *looping_sound= (const byte *)data->data+(looping_sound_index&0xFFFF)*LOOPING_SOUND_DATUM_SIZE;
+
+	sound_playback_controller_release(*(const long *)(looping_sound+LOOPING_SOUND_DATUM_CONTROLLER_INDEX_OFFSET));
+	datum_delete(data, looping_sound_index);
+}
+
+/* 0x0021dff0: a sound voice is given 0x24 bytes of something, once each
+time that the time of the sound starts: whether it took them. It says too
+whether the voice had never been given any */
+boolean __attribute__((stdcall)) sound_voice_unknown_0021dff0(
+	long voice_index,
+	const byte *unknown,
+	boolean *first)
+{
+	byte *voice= (byte *)sound_voices->data+(voice_index&0xFFFF)*SOUND_VOICE_DATUM_SIZE;
+	long start_time= *(const long *)(game_sound_globals+GAME_SOUND_GLOBALS_START_TIME_OFFSET);
+
+	*first= *(const long *)(voice+SOUND_VOICE_DATUM_START_TIME_OFFSET)==NONE;
+	if (*(const long *)(voice+SOUND_VOICE_DATUM_START_TIME_OFFSET)==start_time)
+	{
+		return FALSE;
+	}
+	memcpy(voice+SOUND_VOICE_DATUM_UNKNOWN48_OFFSET, unknown+SOUND_VOICE_DATUM_UNKNOWN_SOURCE_OFFSET,
+		SOUND_VOICE_DATUM_UNKNOWN48_SIZE);
+	*(long *)(voice+SOUND_VOICE_DATUM_START_TIME_OFFSET)= start_time;
+
+	return TRUE;
+}
+
+/* 0x0021e1d0: whether two classes of sounds are the same, or have the same
+real at 0x10 and reals at 0x50 that are closer than 0.0001 */
+long sound_classes_match(
+	long class_index,
+	long other_class_index)
+{
+	const struct sound_class *sound_class;
+	const struct sound_class *other;
+	long double difference;
+
+	if (class_index==other_class_index)
+	{
+		return TRUE;
+	}
+	sound_class= sound_class_get((short)class_index);
+	other= sound_class_get((short)other_class_index);
+	if (*(const real *)((const byte *)sound_class+SOUND_CLASS_UNKNOWN10_OFFSET)!=
+		*(const real *)((const byte *)other+SOUND_CLASS_UNKNOWN10_OFFSET))
+	{
+		return FALSE;
+	}
+	sound_class= sound_class_get((short)class_index);
+	other= sound_class_get((short)other_class_index);
+	difference= (long double)*(const real *)((const byte *)sound_class+SOUND_CLASS_UNKNOWN50_OFFSET)-
+		(long double)*(const real *)((const byte *)other+SOUND_CLASS_UNKNOWN50_OFFSET);
+	if (difference<0.0L)
+	{
+		difference= -difference;
+	}
+
+	return 0.0001f>difference;
 }
