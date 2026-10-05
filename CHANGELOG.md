@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — La caché del sonido se cierra
+
+Una función en `sound/sound_manager.c`. De 886 funciones se pasa a
+887, el 7,87 % de las del juego (el 4,608 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_cache_close` | `0x002186f0` | `sound/sound_manager.c` |
+
+Estaba apuntada sin descompilar (`unknown_002186f0`); la llaman
+`main_game_load_fail` y `main_game_close_caches`, al soltar un mapa, antes
+de cerrar las cachés de texturas y de geometría.
+
+### Lo que se sabe
+
+- `sound_cache_close` vacía la caché de muestras del sonido: recorre todos
+  sus trozos y los echa de la caché (`lruv_block_delete`).
+- Al trozo que no se puede echar (retenido, en uso o aún leyéndose) lo
+  espera, contando mientras las tareas que quedan por hacer, pero no más de
+  cinco segundos en total desde que empezó.
+- Al final deja la tabla de trozos como no válida.
+- El nombre es una suposición, por `texture_cache_close`, que hace lo mismo
+  con las texturas.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y de las dos que
+  la llaman. La última batería completa es la del hito 219 (881 funciones,
+  todas bien).
+
+### Mutaciones
+
+Ocho líneas rotas a mano: las pruebas notan las ocho.
+
 ## 2026-10-05 — La caché del sonido se crea
 
 Tres funciones en `sound/sound_manager.c`. De 883 funciones se pasa a

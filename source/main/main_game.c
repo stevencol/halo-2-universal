@@ -53,7 +53,7 @@ void unknown_000693a0(void *unknown, void *also);
 long unknown_0006cd50(long session_index);
 
 /* 0x002186f0: before the caches of a map are closed */
-void unknown_002186f0(void);
+void sound_cache_close(void);
 
 /* 0x0011be50: after the caches of a map are closed */
 
@@ -312,7 +312,7 @@ void main_game_load_fail(
 {
 	if (loaded)
 	{
-		unknown_002186f0();
+		sound_cache_close();
 		texture_cache_close();
 		geometry_cache_close();
 		main_game_language_texts_unload();
@@ -335,7 +335,7 @@ void main_game_load_fail(
 void main_game_close_caches(
 	void)
 {
-	unknown_002186f0();
+	sound_cache_close();
 	texture_cache_close();
 	geometry_cache_close();
 	main_game_language_texts_unload();

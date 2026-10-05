@@ -563,6 +563,8 @@ enum
 	SOUND_CACHE_PAGE_SIZE_BITS= 14,
 	SOUND_CACHE_BLOCKS_SIZE= 0x208C,
 	SOUND_CACHE_LRUV_SIZE= 0x30FC,
+	/* in milliseconds */
+	SOUND_CACHE_CLOSE_WAIT= 5000,
 	VOICE_UNKNOWN2_OFFSET= 0x2,
 	VOICE_DECIBELS_OFFSET= 0xC,
 	VOICE_UNKNOWN30_OFFSET= 0x30,
@@ -968,6 +970,7 @@ const struct sound_configuration sound_configuration=
 
 /* 0x002185d0, 0x002186b0: set up and take down the sound of the console */
 void sound_cache_initialize(void);
+void sound_cache_close(void);
 
 /* 0x002189a0 and 0x002189e0 */
 boolean __attribute__((stdcall)) sound_cache_block_locked(long block_index);
@@ -8790,4 +8793,51 @@ void sound_cache_initialize(
 	cache->hole_algorithm= _lruv_hole_algorithm_age_per_page;
 	sound_lruv_cache= cache;
 	sound_cache_base= (long)(uintptr_t)physical_memory_allocate_high(SOUND_CACHE_PAGE_COUNT<<SOUND_CACHE_PAGE_SIZE_BITS);
+}
+
+/* 0x002186f0: the cache of the sound is closed, when a map is let go: each
+piece of samples is thrown out of it. One that cannot be (it is held, or in
+use, or its samples are not read yet) is waited for, while the tasks that
+are not done are counted: for no more than five seconds in all. The array
+of the pieces is left as not valid. The name is a guess, after
+texture_cache_close */
+void sound_cache_close(
+	void)
+{
+	unsigned long start= GetTickCount();
+	struct data_iterator iterator;
+	const byte *datum;
+
+	iterator.data= unknown_00502104;
+	iterator.absolute_index= NONE;
+	while ((datum= data_iterator_next(&iterator))!=NULL)
+	{
+		long index= iterator.index;
+		const struct sound_chunk *chunk;
+		long block_index;
+
+		for (; ; )
+		{
+			const volatile byte *waited=
+				(const byte *)unknown_00502104->data+(index&0xFFFF)*UNKNOWN_00502104_DATUM_SIZE;
+
+			if (!waited[UNKNOWN_00502104_DATUM_COUNT_OFFSET] && !waited[UNKNOWN_00502104_DATUM_USES_OFFSET] &&
+				waited[UNKNOWN_00502104_DATUM_DONE_OFFSET])
+			{
+				break;
+			}
+			async_globals.tasks_added= async_task_count();
+			if (GetTickCount()-start>=SOUND_CACHE_CLOSE_WAIT)
+			{
+				break;
+			}
+		}
+		chunk= *(const struct sound_chunk *const *)(datum+UNKNOWN_00502104_DATUM_CHUNK_OFFSET);
+		block_index= *(const long *)(chunk->unknown0+SOUND_CHUNK_CACHE_INDEX_OFFSET);
+		if (block_index!=NONE)
+		{
+			lruv_block_delete(sound_lruv_cache, block_index);
+		}
+	}
+	unknown_00502104->valid= FALSE;
 }

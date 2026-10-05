@@ -645,7 +645,7 @@ address,name,source,arguments,returns,convention
 000693a0,unknown_000693a0,,stack esi,void
 0006cd50,unknown_0006cd50,,eax,int
 001a01e0,language_texts_load,source/text/unicode_string_list.c,edi,void
-002186f0,unknown_002186f0,,,void
+002186f0,sound_cache_close,source/sound/sound_manager.c,,void
 0011be50,scenario_unload,source/scenario/scenario.c,,void
 000d5560,unknown_000d5560,,stack,void
 000c09c0,unknown_000c09c0,,eax,void

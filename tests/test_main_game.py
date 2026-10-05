@@ -131,7 +131,7 @@ def run(t) -> None:
                 externals={
                     **language_externals(),
                     **stand_ins(
-                        "unknown_002186f0",
+                        "sound_cache_close",
                         "texture_cache_close",
                         "geometry_cache_close",
                         "animation_cache_close",
@@ -157,7 +157,7 @@ def run(t) -> None:
             },
             externals={
                 **language_externals(),
-                **stand_ins("unknown_002186f0", "texture_cache_close", "geometry_cache_close", "lruv_flush"),
+                **stand_ins("sound_cache_close", "texture_cache_close", "geometry_cache_close", "lruv_flush"),
             },
         )
 

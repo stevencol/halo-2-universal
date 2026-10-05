@@ -5339,3 +5339,58 @@ def run(t) -> None:
             globals={"unknown_00502104": Buffer(bytes(elements_), pointers=tuple(pointers))},
             externals={"datum_delete": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1]))},
         )
+
+    # ---------- the cache of the sound is closed
+
+    random_ = random.Random(223)
+
+    for _ in range(300):
+        count = random_.choice((PIECES, PIECES, PIECES - 4, 1, 0))
+        elements_ = bytearray(random_.randbytes(0x4C + PIECES * 0x10))
+        elements_[0x29] = random_.choice((1, 1, 0xFF))
+        struct.pack_into("<I", elements_, 0x24, 0x10)
+        struct.pack_into("<i", elements_, 0x38, count)
+        struct.pack_into("<I", elements_, 0x44, 0x4C)
+        pointers = [0x44, 0x48]
+        struct.pack_into("<I", elements_, 0x48, len(elements_))
+        elements_ += struct.pack("<I", random_.getrandbits(32) | random_.getrandbits(32))
+        chunks_ = len(elements_)
+        elements_ += random_.randbytes(PIECES * 0xC)
+        for piece in range(PIECES):
+            at = 0x4C + piece * 0x10
+            elements_[at + 2] = random_.choice((0, 1, 1, 1, 0x80))
+            elements_[at + 4] = random_.choice((0, 0, 0, 0, 1, 0xFF))
+            elements_[at + 5] = random_.choice((0, 0, 0, 0, 1))
+            struct.pack_into("<I", elements_, at + 0xC, chunks_ + piece * 0xC)
+            pointers.append(at + 0xC)
+            struct.pack_into("<I", elements_, chunks_ + piece * 0xC + 8, random_.choice((NONE, random_.getrandbits(32), random_.getrandbits(32))))
+        elements = Buffer(bytes(elements_), pointers=tuple(pointers))
+        tasks = bytearray(random_.randbytes(0x25A0))
+        struct.pack_into("<I", tasks, 0x2598, 0)
+        turns = random_.choice((1, 2, 3, 1000))
+        times = [1000]
+        for _time in range(40):
+            times.append(times[-1] + random_.choice((0, 10, 500, 2000, 4999, 5000)))
+
+        def waited_(harness, arguments, elements=elements, turns=turns):
+            if calls_so_far(harness, "WaitForSingleObject") + 1 >= turns:
+                # the thread of the tasks is done with all of them, and nothing holds them
+                for piece_ in range(PIECES):
+                    harness.mu.mem_write(elements.address + 0x4C + piece_ * 0x10 + 2, b"\x01")
+                    harness.mu.mem_write(elements.address + 0x4C + piece_ * 0x10 + 4, b"\x00\x00")
+            return 0, tuple(arguments)
+
+        t.check(
+            "sound_cache_close",
+            globals={
+                "unknown_00502104": elements,
+                "sound_lruv_cache": random_.getrandbits(32),
+                "async_globals": bytes(tasks),
+            },
+            externals={
+                "GetTickCount": clock(tuple(times)),
+                "WaitForSingleObject": waited_,
+                "ReleaseMutex": lambda harness, arguments: (0, tuple(arguments)),
+                "lruv_block_delete": lambda harness, arguments: (0, tuple(arguments)),
+            },
+        )
