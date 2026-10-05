@@ -456,6 +456,7 @@ enum
 	SOUND_CLASS_UNKNOWN58_OFFSET= 0x58,
 	UNKNOWN_0051EBE4_SLOTS_OFFSET= 0x1A18,
 	UNKNOWN_0051EBE4_SLOT_FLAGS_OFFSET= 0x4,
+	_sound_console_slot_unknown0_bit= 0,
 	_sound_console_slot_unknown1_bit= 1,
 	MAXIMUM_SOUND_QUERIES= 72,
 	_sound_source_datum_unknown2_bit= 2,
@@ -519,7 +520,7 @@ struct sound_same_channels
 typedef char verify_sound_same_channels_size[
 	sizeof(struct sound_same_channels) == 0x4A ? 1 : -1];
 
-/* what unknown_00220e00 takes for a slot of the console's sound */
+/* what sound_console_slot_set_parameters takes for a slot of the console's sound */
 struct sound_slot_parameters
 {
 	unsigned long flags;
@@ -533,6 +534,25 @@ struct sound_slot_parameters
 
 typedef char verify_sound_slot_parameters_size[
 	sizeof(struct sound_slot_parameters) == 0x24 ? 1 : -1];
+
+/* a slot of the console's sound: a place that a sound is heard from */
+struct sound_console_slot
+{
+	byte unknown0[4];
+	byte flags;
+	byte unknown5[3];
+	/* what it was last given */
+	real_point3d position;
+	byte unknown14[0x18];
+	real unknown2C;
+	real unknown30;
+	/* of the console */
+	void *stream;
+	byte unknown38[4];
+};
+
+typedef char verify_sound_console_slot_size[
+	sizeof(struct sound_console_slot) == 0x3C ? 1 : -1];
 
 /* a sound of which it is to be worked out how it is heard where it is */
 struct sound_query
@@ -863,8 +883,12 @@ void sound_request_unknown_002226b0(byte *request, long sound_index);
 long sound_unknown_001914f0(long name);
 void __attribute__((stdcall)) sound_channel_update_slot(short channel_index, const real *unknown);
 
-/* 0x00220e00: of a slot of the console's sound */
-void unknown_00220e00(const struct sound_slot_parameters *parameters, long slot);
+/* 0x00220e00; 0x0037c668: the console is told where a sound is; 0x002211e0:
+of a slot of the console's sound */
+void __attribute__((stdcall)) sound_console_slot_set_parameters(const struct sound_slot_parameters *parameters,
+	long slot_index);
+void unknown_0037c668(void *stream, real x, real y, real z, long apply);
+void unknown_002211e0(long slot_index, real unknown);
 void unknown_0021e3b0(void *unknown);
 
 /* 0x00125f70, 0x001268e0, 0x00129380, 0x0021f6d0 and 0x00221900 */
@@ -6179,7 +6203,7 @@ that say how it is heard where it is (or none), each time. A sound of the
 type 0 with the flag 12 loses of its real at 0x1C what the third real says,
 by its class; with no reals, all of it, if it is not of the structure bsp
 that is loaded. A sound of the types 1 and 2 that plays with a sound voice,
-in a channel with a slot, gives the slot what unknown_00220e00 takes: where
+in a channel with a slot, gives the slot what sound_console_slot_set_parameters takes: where
 the sound is as its listener sees it, two of the reals, by its class, and
 three numbers of its class, the first with the decibels of what the second
 real leaves. Once each time for each sound voice */
@@ -6275,7 +6299,7 @@ void __attribute__((stdcall)) sound_channel_update_slot(
 		parameters.unknown1C= 0.0f;
 	}
 	parameters.flags= (((const byte *)listener)[SOUND_LISTENER_UNKNOWN7_OFFSET]!=0)|2;
-	unknown_00220e00(&parameters, channel->unknownE);
+	sound_console_slot_set_parameters(&parameters, channel->unknownE);
 }
 
 /* 0x00129100: each frame: the channels that play get a voice, and a list is
@@ -6491,4 +6515,87 @@ real __attribute__((stdcall)) sound_source_spatial_gain(
 	}
 
 	return gain;
+}
+
+/* 0x00220e00: a slot of the console's sound takes where its sound is and
+two reals more. The console is told where it is the first time (a slot
+with no flag 1, or when the first byte of the sound of the console is not
+set) and when it has moved 0.05 or more along an axis. Each of the two
+reals, at 0x10 and 0x14 of what it takes, goes to the slot as it is the
+first time, when the flag 0 changes, or when its step (at 0x1C and 0x20) is
+not over 0; if not, the slot goes towards it by no more than the step. With
+nothing new, no more is done; if not, unknown_002211e0 is given the slot.
+The name is made up */
+void __attribute__((stdcall)) sound_console_slot_set_parameters(
+	const struct sound_slot_parameters *parameters,
+	long slot_index)
+{
+	byte *console= unknown_0051ebe4;
+	struct sound_console_slot *slot= (struct sound_console_slot *)(console+UNKNOWN_0051EBE4_SLOTS_OFFSET)+slot_index;
+	boolean first= !(slot->flags&FLAG(_sound_console_slot_unknown1_bit)) || !console[0];
+	byte flag= (byte)parameters->flags&FLAG(_sound_console_slot_unknown0_bit);
+	real unknown10= parameters->unknown10;
+	real unknown14= parameters->unknown14;
+
+	if (first ||
+		!((long double)0.05f>fabsl((long double)parameters->position.x-(long double)slot->position.x)) ||
+		!((long double)0.05f>fabsl((long double)parameters->position.y-(long double)slot->position.y)) ||
+		!((long double)0.05f>fabsl((long double)parameters->position.z-(long double)slot->position.z)))
+	{
+		/* the console has the height second */
+		unknown_0037c668(slot->stream, parameters->position.x, parameters->position.z, parameters->position.y, 1);
+		slot->position= parameters->position;
+	}
+	if (!first &&
+		(long double)0.001f>fabsl((long double)unknown10-(long double)slot->unknown2C) &&
+		(long double)0.001f>fabsl((long double)unknown14-(long double)slot->unknown30) &&
+		(slot->flags&FLAG(_sound_console_slot_unknown0_bit))==flag)
+	{
+		slot->flags|= FLAG(_sound_console_slot_unknown1_bit);
+		return;
+	}
+
+	if (first || (slot->flags&FLAG(_sound_console_slot_unknown0_bit))!=flag || 0.0f>=parameters->unknown20)
+	{
+		slot->unknown30= unknown14;
+	}
+	else
+	{
+		real difference= unknown14-slot->unknown30;
+		real limit= parameters->unknown20;
+		real step= 0.0f-limit;
+
+		if (!(step>difference))
+		{
+			step= limit;
+			if (!(difference>limit))
+			{
+				step= difference;
+			}
+		}
+		slot->unknown30= slot->unknown30+step;
+	}
+	if (first || (slot->flags&FLAG(_sound_console_slot_unknown0_bit))!=flag || 0.0f>=parameters->unknown1C)
+	{
+		slot->unknown2C= unknown10;
+	}
+	else
+	{
+		real limit= parameters->unknown1C;
+		real difference= unknown10-slot->unknown2C;
+		real step= 0.0f-limit;
+
+		if (!(step>difference))
+		{
+			step= limit;
+			if (!(difference>limit))
+			{
+				step= difference;
+			}
+		}
+		slot->unknown2C= step+slot->unknown2C;
+	}
+	slot->flags^= (slot->flags^flag)&FLAG(_sound_console_slot_unknown0_bit);
+	unknown_002211e0(slot_index, parameters->unknown18);
+	slot->flags|= FLAG(_sound_console_slot_unknown1_bit);
 }

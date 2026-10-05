@@ -3831,7 +3831,7 @@ def run(t) -> None:
                 "sound_source_get_position": where_,
                 "matrix4x3_inverse_transform_point": seen_from,
                 "sound_gain_to_decibels": lambda harness, arguments: (real_bits(-2.25), tuple(arguments)),
-                "unknown_00220e00": slot_,
+                "sound_console_slot_set_parameters": slot_,
             },
         )
 
@@ -3986,4 +3986,44 @@ def run(t) -> None:
             random_.getrandbits(16) << 16 | sound_index,
             Buffer(some_way()),
             globals=world(random_, sound_index, sound_data(random_, sound_flags)),
+        )
+
+    # ---------- a slot of the console's sound takes where its sound is
+
+    random_ = random.Random(195)
+    SLOTS = 0x1A18
+    SLOT_SIZE = 0x3C
+
+    def near(value: float, least: float) -> float:
+        return value + random_.choice((0.0, 0.0, least * 0.5, -least * 0.5, least, -least, least * 2, random_.uniform(-3, 3)))
+
+    for n in range(1500):
+        console = bytearray(random_.randbytes(0x2AC0))
+        console[0] = random_.choice((0, 1, 1, 1, 0x80))
+        slot_index = random_.randrange(32)
+        slot = SLOTS + slot_index * SLOT_SIZE
+        console[slot + 4] = random_.choice((0, 1, 2, 2, 3, 3, 0xFE, 0xFF, random_.getrandbits(8)))
+        taken = bytearray(random_.randbytes(0x24))
+        taken[0] = random_.choice((0, 1, 2, 0xFF, 0xFE))
+        taken[4:0x10] = reals(random_, 3)
+        struct.pack_into("<2f", taken, 0x10, random_.uniform(-2, 2), random_.uniform(-2, 2))
+        struct.pack_into("<2f", taken, 0x1C, random_.choice((0.0, -1.0, 0.25, 0.25, 5.0)), random_.choice((0.0, -1.0, 0.25, 0.25, 5.0)))
+        x, y, z, unknown10, unknown14 = struct.unpack_from("<5f", taken, 4)
+        if n % 4:
+            struct.pack_into("<3f", console, slot + 8, near(x, 0.05), near(y, 0.05), near(z, 0.05))
+        if n % 3:
+            struct.pack_into("<2f", console, slot + 0x2C, near(unknown10, 0.001), near(unknown14, 0.001))
+        if n % 5 == 0:
+            # nothing new
+            struct.pack_into("<3f", console, slot + 8, x, y, z)
+            struct.pack_into("<2f", console, slot + 0x2C, unknown10, unknown14)
+        t.check(
+            "sound_console_slot_set_parameters",
+            Buffer(bytes(taken)),
+            slot_index,
+            globals={"unknown_0051ebe4": Buffer(bytes(console))},
+            externals={
+                "unknown_0037c668": lambda harness, arguments: (0, tuple(arguments)),
+                "unknown_002211e0": lambda harness, arguments: (0, tuple(arguments)),
+            },
         )

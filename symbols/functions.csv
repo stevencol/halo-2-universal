@@ -1294,5 +1294,7 @@ address,name,source,arguments,returns,convention
 001295e0,sound_channel_get_voice,source/sound/sound_manager.c,stack,bool,stdcall
 0037b75b,unknown_0037b75b,,stack stack,void
 0021de90,sound_voice_get_for_source,source/sound/sound_manager.c,ebx,int
-00220e00,unknown_00220e00,,edi stack,void
+00220e00,sound_console_slot_set_parameters,source/sound/sound_manager.c,edi stack,void,stdcall
 0012ad30,sound_source_spatial_gain,source/sound/sound_manager.c,eax ecx stack stack,real:xmm0,stdcall
+0037c668,unknown_0037c668,,stack stack stack stack stack,void
+002211e0,unknown_002211e0,,eax stack,void

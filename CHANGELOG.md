@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Una casilla del sonido de la consola recibe dónde está su sonido
+
+Una función en `sound/sound_manager.c`. De 851 funciones se pasa a
+852, el 7,56 % de las del juego (el 4,281 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_console_slot_set_parameters` | `0x00220e00` | `sound/sound_manager.c` |
+
+Estaba apuntada sin descompilar (`unknown_00220e00`); la llama
+`sound_channel_update_slot`. Nuevas sin descompilar: `0x0037c668` (de la
+consola: le dice dónde está un sonido) y `0x002211e0`. También la
+estructura `sound_console_slot` (`0x3C` bytes).
+
+### Lo que se sabe
+
+- `sound_console_slot_set_parameters` le da a una casilla del sonido de la
+  consola dónde está su sonido y dos reales más.
+- A la consola se le dice el sitio la primera vez (casilla sin la marca 1, o
+  cuando el primer byte del sonido de la consola es 0) y cuando se ha movido
+  0,05 o más en algún eje. La consola recibe la altura en segundo lugar: el
+  juego le pasa `x`, `z`, `y`.
+- Cada uno de los dos reales (en `0x10` y `0x14` de lo que recibe) pasa a la
+  casilla tal cual la primera vez, cuando cambia la marca 0 o cuando su paso
+  (en `0x1C` y `0x20`) no es mayor que 0; si no, la casilla se acerca a él
+  como mucho ese paso cada vez.
+- Si no hay nada nuevo (los dos reales a menos de una milésima y la misma
+  marca) no hace más; si lo hay, llama a `0x002211e0` con la casilla y el
+  real de `0x18`.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y de
+  `sound_channel_update_slot`. La batería completa corre aparte con las 849
+  funciones del hito 192.
+
+### Mutaciones
+
+Siete líneas rotas a mano (los dos límites de 0,05 y 0,001, los dos pasos
+que no son mayores que 0, la suma del paso, el orden de los ejes y la
+condición de la primera vez): las pruebas notan las siete. Pendientes las
+listas completas de los hitos 156 a 195.
+
 ## 2026-10-05 — Cuánto se oye un sonido desde donde está su oyente
 
 Una función en `sound/sound_manager.c`. De 850 funciones se pasa a
