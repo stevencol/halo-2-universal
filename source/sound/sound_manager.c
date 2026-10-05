@@ -655,6 +655,13 @@ enum
 	_sound_console_slot_unknown0_bit= 0,
 	_sound_console_slot_unknown1_bit= 1,
 	MAXIMUM_SOUND_QUERIES= 72,
+	/* of the structure bsp: how many clusters it has, and the count and the
+	address of its openings for the sound, which starts with how many there
+	are and has what each says at 0x30 */
+	MAXIMUM_STRUCTURE_BSP_CLUSTERS= 512,
+	STRUCTURE_BSP_CLUSTER_COUNT_OFFSET= 0x9C,
+	STRUCTURE_BSP_SOUND_OPENINGS_OFFSET= 0x224,
+	STRUCTURE_BSP_SOUND_OPENINGS_SAID_OFFSET= 0x30,
 	_sound_source_datum_unknown2_bit= 2,
 	_sound_class_internal_unknown6_bit= 6,
 	_sound_definition_unknown5_bit= 5,
@@ -1142,7 +1149,8 @@ void sound_sources_update(void);
 void sound_sources_get_channels(void);
 void __attribute__((stdcall)) sound_channels_build_queries(byte *first, byte *second, struct sound_update_listeners *listeners);
 long unknown_0014dde0(void);
-void __attribute__((stdcall)) unknown_00221a70(long player_index, struct sound_update_listeners *listeners);
+void __attribute__((stdcall)) sound_listener_compute_queries(long listener_index,
+	struct sound_update_listeners *listeners);
 
 /* 0x00125b40 */
 void sound_update(void);
@@ -1483,6 +1491,19 @@ void __attribute__((stdcall)) sound_console_set_listener(const byte *listener);
 void unknown_0037d598(void *sound, real x, real y, real z, long apply);
 void unknown_0037d54e(void *sound, real front_x, real front_y, real front_z, real top_x, real top_y, real top_z,
 	long apply);
+
+/* 0x00249d10, 0x00249c90 and 0x0018cac0: the openings of a cluster, the
+clusters of the two sides of an opening and what an opening says, as a real;
+0x00020670 calls 0x0031bc70, which does nothing, with each of the two sides;
+0x00221e30 works out a query */
+struct sound_query;
+void unknown_00249d10(const byte *structure_bsp, unsigned long *openings, long cluster_index);
+void unknown_00249c90(unsigned long *first, const byte *structure_bsp, long opening_index, unsigned long *second);
+real unknown_0018cac0(long said);
+void __attribute__((stdcall)) unknown_00020670(void *array, unsigned long size, long count,
+	void *(__attribute__((thiscall)) *constructor)(void *element));
+void *__attribute__((thiscall)) unknown_0031bc70(void *element);
+void unknown_00221e30(struct sound_query *query, const real *heard, const struct sound_listener *listener);
 
 /* 0x0021d110 */
 long __attribute__((stdcall)) sound_effect_source_new(byte *request, long sound_index);
@@ -2663,7 +2684,7 @@ void sound_update(
 			for (player_index= unknown_0014dde0(); player_index!=NONE;
 				player_index= sound_next_local_player(player_index))
 			{
-				unknown_00221a70(player_index, &listeners);
+				sound_listener_compute_queries(player_index, &listeners);
 			}
 			sound_channels_unknown_00129380((const long *)second, (const long *)first);
 			sound_channels_update_sources();
@@ -10170,6 +10191,102 @@ void __attribute__((stdcall)) sound_console_set_listener(
 		{
 			*kept_amount= 0.0f;
 			console[UNKNOWN_0051EBE4_UNKNOWN2A08_OFFSET+2+index]= TRUE;
+		}
+	}
+}
+
+/* whether a bit of a row of them is set */
+static inline __attribute__((always_inline)) boolean sound_bit_vector_test(
+	const unsigned long *bits,
+	long index)
+{
+	return (bits[index>>5]&(1UL<<(index&31)))!=0;
+}
+
+/* 0x00221a70: what a listener hears of each cluster through the structure
+bsp's openings for the sound, and with it what is worked out of each query
+of that listener (unknown_00221e30). Of the openings that the listener's
+cluster has (unknown_00249d10 says which), those that say something
+(unknown_0018cac0 turns what they say into a real) have the clusters of each
+of their two sides (unknown_00249c90): if the listener's cluster is on one,
+the clusters on the other are heard with that real, or with the most of
+those of the openings they are behind. The listener's own cluster is never
+written. The name is made up */
+void __attribute__((stdcall)) sound_listener_compute_queries(
+	long listener_index,
+	struct sound_update_listeners *listeners)
+{
+	const struct sound_listener *listener=
+		(const struct sound_listener *)(game_sound_globals+GAME_SOUND_GLOBALS_LISTENERS_OFFSET)+listener_index;
+
+	if (listener && listener->cluster_index!=NONE)
+	{
+		const byte *structure_bsp= global_structure_bsp;
+		real heard[MAXIMUM_STRUCTURE_BSP_CLUSTERS];
+		struct sound_query *query;
+		long index;
+
+		memset(heard, 0, sizeof(heard));
+		if (*(const long *)(structure_bsp+STRUCTURE_BSP_SOUND_OPENINGS_OFFSET)>0)
+		{
+			const long *openings= *(const long *const *)(structure_bsp+STRUCTURE_BSP_SOUND_OPENINGS_OFFSET+4);
+			unsigned long mine[4]= { 0, 0, 0, 0 };
+
+			unknown_00249d10(structure_bsp, mine, listener->cluster_index);
+			for (index= 0; index<openings[0]; index++)
+			{
+				unsigned long sides[2][MAXIMUM_STRUCTURE_BSP_CLUSTERS/32];
+				const signed char *said;
+				real amount;
+				long cluster_index;
+				long cluster_count;
+				long other;
+				long side;
+
+				if (!sound_bit_vector_test(mine, index))
+				{
+					continue;
+				}
+				said= *(const signed char *const *)(*(const byte *const *)(structure_bsp+STRUCTURE_BSP_SOUND_OPENINGS_OFFSET+4)+
+					STRUCTURE_BSP_SOUND_OPENINGS_SAID_OFFSET);
+				if (said[index]==NONE)
+				{
+					continue;
+				}
+				amount= unknown_0018cac0(said[index]);
+				unknown_00020670(sides, sizeof(sides[0]), 2, unknown_0031bc70);
+				unknown_00249c90(sides[0], structure_bsp, index, sides[1]);
+				cluster_index= listener->cluster_index;
+				if (sound_bit_vector_test(sides[0], cluster_index))
+				{
+					side= 1;
+				}
+				else if (sound_bit_vector_test(sides[1], cluster_index))
+				{
+					side= 0;
+				}
+				else
+				{
+					continue;
+				}
+				cluster_count= *(const long *)(structure_bsp+STRUCTURE_BSP_CLUSTER_COUNT_OFFSET);
+				for (other= 0; other<cluster_count; other++)
+				{
+					if (other!=cluster_index && sound_bit_vector_test(sides[side], other))
+					{
+						heard[other]= heard[other]>amount ? heard[other] : amount;
+					}
+				}
+			}
+		}
+
+		query= (struct sound_query *)((byte *)listeners+sizeof(long));
+		for (index= listeners->count; index>0; index--, query++)
+		{
+			if (query->listener_index==listener_index)
+			{
+				unknown_00221e30(query, heard, listener);
+			}
 		}
 	}
 }

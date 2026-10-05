@@ -953,7 +953,7 @@ def run(t) -> None:
                 "sound_console_update": first_update,
                 "sound_channels_build_queries": tables,
                 "unknown_0014dde0": lambda harness, arguments: first_player,
-                "unknown_00221a70": lambda harness, arguments: (0, (arguments[0], stack_bytes(harness, arguments[1], 4))),
+                "sound_listener_compute_queries": lambda harness, arguments: (0, (arguments[0], stack_bytes(harness, arguments[1], 4))),
                 "sound_channels_unknown_00129380": lambda harness, arguments: (0, (stack_bytes(harness, arguments[0], 16), stack_bytes(harness, arguments[1], 16))),
                 "lruv_wrap_ticks": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
             }
@@ -6162,5 +6162,84 @@ def run(t) -> None:
             externals={
                 "unknown_0037d598": lambda harness, arguments: (0, tuple(arguments)),
                 "unknown_0037d54e": lambda harness, arguments: (0, tuple(arguments)),
+            },
+        )
+
+    # ---------- what a listener hears of each cluster, and its queries
+
+    random_ = random.Random(241)
+
+    for n in range(700):
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        listener_index = random_.randrange(4)
+        clusters = random_.choice((0, 1, 3, 4, 5, 7, 8, 9, 31, 32, 33, 64, 100, 511, 512))
+        own = random_.randrange(clusters) if clusters and n % 9 else random_.choice((-1, -1, 0))
+        struct.pack_into("<h", state, LISTENERS + listener_index * LISTENER_SIZE + 4, own)
+        openings = random_.choice((0, 1, 2, 5, 33, 100, 128))
+        said = bytes(random_.choice((0xFF, 0, 1, 2, 3, 0x7F, 0x80, 0xFE)) for _ in range(openings))
+        table = bytearray(random_.randbytes(0x34))
+        struct.pack_into("<i", table, 0, openings)
+        struct.pack_into("<I", table, 0x30, 0x22C + 0x34)
+        table += said + bytes(4)
+        structure = bytearray(random_.randbytes(0x22C))
+        struct.pack_into("<i", structure, 0x9C, clusters)
+        struct.pack_into("<i", structure, 0x224, random_.choice((1, 1, 1, 1, 3, 0, -1)))
+        struct.pack_into("<I", structure, 0x228, 0x22C)
+        seed = random_.getrandbits(32)
+        dense = random_.random() < 0.5
+
+        def mine_(harness, arguments, seed=seed):
+            bits = random.Random(seed * 3 + (arguments[2] & 0xFFFF)).randbytes(16)
+            harness.mu.mem_write(arguments[1], bits)
+            return 0, (harness.normalize(arguments[0]), arguments[2])
+
+        def sides_(harness, arguments, seed=seed, own=own, dense=dense, clusters=clusters):
+            source_ = random.Random(seed * 5 + arguments[2])
+            rows = []
+            for row in range(2):
+                bits = bytearray(source_.randbytes(0x40))
+                if not dense:
+                    other = bytes(source_.randbytes(0x40))
+                    bits = bytearray(a & b for a, b in zip(bits, other))
+                rows.append(bits)
+            kind = source_.randrange(4)
+            if 0 <= own < 512 and kind < 3:
+                for row in range(2):
+                    rows[row][own >> 3] &= ~(1 << (own & 7)) & 0xFF
+                if kind < 2:
+                    rows[kind][own >> 3] |= 1 << (own & 7)
+            harness.mu.mem_write(arguments[0], bytes(rows[0]))
+            harness.mu.mem_write(arguments[3], bytes(rows[1]))
+            return 0, (harness.normalize(arguments[1]), arguments[2])
+
+        def amount_(harness, arguments, seed=seed):
+            value = random.Random(seed * 7 + arguments[0]).choice((0.0, 1.0, 0.25, 0.5, 0.75, 0.1, -1.0, 2.0))
+            return real_bits(value), (arguments[0],)
+
+        def query_(harness, arguments):
+            return 0, (
+                harness.normalize(arguments[0]),
+                bytes(harness.mu.mem_read(arguments[1], 0x800)),
+                harness.normalize(arguments[2]),
+            )
+
+        count = random_.choice((0, 1, 2, 5, 72))
+        queries = bytearray(struct.pack("<i", count) + random_.randbytes(72 * 0x48))
+        for index in range(72):
+            struct.pack_into("<i", queries, 4 + index * 0x48, random_.choice((listener_index, listener_index, 0, 1, 2, 3, -1)))
+        t.check(
+            "sound_listener_compute_queries",
+            listener_index,
+            Buffer(bytes(queries)),
+            globals={
+                "game_sound_globals": Buffer(bytes(state)),
+                "global_structure_bsp": Buffer(bytes(structure) + bytes(table), pointers=(0x228, 0x22C + 0x30)),
+            },
+            externals={
+                "unknown_00249d10": mine_,
+                "unknown_00249c90": sides_,
+                "unknown_0018cac0": amount_,
+                "unknown_00020670": lambda harness, arguments: (0, (arguments[1], arguments[2])),
+                "unknown_00221e30": query_,
             },
         )

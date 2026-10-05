@@ -2,6 +2,60 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Lo que un oyente oye de cada cluster
+
+Una función en `sound/sound_manager.c`, de 804 bytes. De 907 funciones se pasa a
+908, el 8,06 % de las del juego (el 4,876 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_listener_compute_queries` | `0x00221a70` | `sound/sound_manager.c` |
+
+Era `unknown_00221a70`. La llama `sound_update`, una vez por jugador local.
+Recibe en la pila el oyente y las consultas que preparó
+`sound_channels_build_queries`. Nuevas sin descompilar: `0x00249d10`,
+`0x00249c90`, `0x0018cac0` y `0x00221e30`.
+
+### Lo que se sabe
+
+- El nivel (el structure bsp) tiene, en `0x224`, unas aberturas para el
+  sonido: cada una dice algo (un byte, en la tabla de `0x30`; `NONE` es
+  nada) y tiene a cada lado un grupo de clusters.
+- `sound_listener_compute_queries` mira las aberturas del cluster del oyente
+  (`0x00249d10` dice cuáles) y, de cada una que dice algo, los clusters de
+  sus dos lados (`0x00249c90`). Si el cluster del oyente está en un lado,
+  los del otro se oyen con el número que `0x0018cac0` saca de lo que dice
+  la abertura; si un cluster queda detrás de varias, con el mayor.
+- El cluster del propio oyente no se toca nunca: se queda en 0. Hay sitio
+  para 512 clusters.
+- Con esa tabla se resuelve cada consulta de ese oyente (`0x00221e30`, que
+  recibe la consulta en `edi`).
+- Un oyente sin cluster (`NONE`) no hace nada.
+- El nombre es inventado.
+
+### Arreglo
+
+- `unknown_00020670` (la que llama a una función con cada elemento de un
+  array) quita sus cuatro argumentos de la pila al volver, y estaba
+  apuntada como si no. Se ha corregido en `symbols/functions.csv` y en
+  `saved games/saved_game_files.c`, que también la llama; sus pruebas
+  siguen pasando.
+
+### Sin comprobar
+
+- Clusters del oyente negativos que no sean `NONE`, y niveles con más de
+  512 clusters: el juego lee y escribe fuera de sus tablas.
+- En este hito solo se pasaron las pruebas de esta función, las de
+  `sound_update` y las de `saved_game_files`. La última batería completa es
+  la del hito 233 (900 funciones, todas bien); la del hito 240 está en
+  marcha.
+
+### Mutaciones
+
+Diecinueve cambios a mano: las pruebas notan los diecinueve.
+
 ## 2026-10-05 — La consola sabe quién oye y cómo suenan sus sitios
 
 Una función en `sound/sound_manager.c`, de 725 bytes. De 906 funciones se pasa a

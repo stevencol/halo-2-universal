@@ -103,7 +103,7 @@ void *ALLOCATION_CONVENTION unknown_000531b0(struct allocation *allocation, unsi
 
 /* 0x00020670: calls a function with each of the elements of an array, as
 what makes them */
-void unknown_00020670(void *array, unsigned long size, long count,
+void __attribute__((stdcall)) unknown_00020670(void *array, unsigned long size, long count,
 	void *(ALLOCATION_CONVENTION *constructor)(void *element));
 
 /* 0x004508fc: what the memory of the files is asked of. It gives nothing

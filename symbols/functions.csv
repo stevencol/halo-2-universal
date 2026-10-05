@@ -899,7 +899,7 @@ address,name,source,arguments,returns,convention
 00215b40,saved_game_file_information_new,source/saved games/saved_game_files.c,ecx,pointer,thiscall
 00215b50,saved_game_file_get_name,source/saved games/saved_game_files.c,edx esi,pointer
 000531b0,unknown_000531b0,,ecx stack,int,stdcall
-00020670,unknown_00020670,,stack stack stack stack,void
+00020670,unknown_00020670,,stack stack stack stack,void,stdcall
 0013fb70,usnzprintf,source/text/unicode.c,edi esi stack stack,void
 00215e60,saved_game_file_delete,source/saved games/saved_game_files.c,stack,void
 00215f40,saved_game_file_get_unused_name,source/saved games/saved_game_files.c,stack stack,bool
@@ -1167,7 +1167,7 @@ address,name,source,arguments,returns,convention
 001282d0,sound_sources_get_channels,source/sound/sound_manager.c,,void
 00129100,sound_channels_build_queries,source/sound/sound_manager.c,stack stack edi,void,stdcall
 0014dde0,unknown_0014dde0,,,int
-00221a70,unknown_00221a70,,stack stack,void,stdcall
+00221a70,sound_listener_compute_queries,source/sound/sound_manager.c,stack stack,void,stdcall
 00129380,sound_channels_unknown_00129380,source/sound/sound_manager.c,edi ebx,void
 0012a420,sound_channel_set_voice_flag3,source/sound/sound_manager.c,eax,void
 0012af10,sound_slot_new,source/sound/sound_manager.c,,short
@@ -1371,3 +1371,8 @@ address,name,source,arguments,returns,convention
 00220790,sound_console_set_listener,source/sound/sound_manager.c,stack,void,stdcall
 0037d598,unknown_0037d598,,stack stack stack stack stack,void
 0037d54e,unknown_0037d54e,,stack stack stack stack stack stack stack stack,void
+00249d10,unknown_00249d10,,eax ecx stack,void
+00249c90,unknown_00249c90,,eax edx stack stack,void
+0018cac0,unknown_0018cac0,,ecx,real:xmm0
+0031bc70,unknown_0031bc70,,ecx,pointer
+00221e30,unknown_00221e30,,edi stack stack,void
