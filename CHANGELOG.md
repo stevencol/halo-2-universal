@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Los bits de las grabaciones que sonaron de una pista
+
+Dos funciones en `sound/sound_manager.c`. De 826 funciones se pasa a
+828, el 7,35 % de las del juego (el 3,950 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `looping_sound_track_get_played_bits` | `0x0021cb90` | `sound/sound_manager.c` |
+| `looping_sound_track_set_played_bits` | `0x0021cbe0` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- Cada pista de un sonido en bucle puede llevar por su cuenta los bits de
+  las grabaciones que ya sonaron (en `0x8C` del sonido en bucle, cada `0x14`
+  bytes), si tiene alguna de dos marcas y el sonido en bucle tiene
+  controlador de reproducción. Si no, se usan los del rango de tono del
+  sonido, como en cualquier otro sonido.
+- `looping_sound_track_get_played_bits` los lee (y puede borrarlos al
+  leerlos) y `looping_sound_track_set_played_bits` los escribe; esta última,
+  cuando van en el rango de tono, apunta también cuál fue la última
+  grabación.
+- Los nombres son inventados.
+
+### Sin comprobar
+
+- La batería completa corre aparte con las 824 funciones del hito 173; en
+  este hito solo se pasaron las pruebas de estas dos.
+
+### Mutaciones
+
+Pendientes las de los hitos 156 a 175.
+
 ## 2026-10-04 — Leer las muestras de un trozo y un byte de lo que un sonido tiene de más
 
 Dos funciones en `sound/sound_manager.c`. De 824 funciones se pasa a

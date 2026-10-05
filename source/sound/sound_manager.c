@@ -336,6 +336,10 @@ enum
 	SOUND_EXTRA_INFO_SIZE= 0x2C,
 	SOUND_EXTRA_INFO_ENTRY_SIZE= 0x10,
 	SOUND_PERMUTATION_UNKNOWN5_OFFSET= 0x5,
+	/* in a looping sound: the bits of the recordings that were played of
+	each of its tracks */
+	LOOPING_SOUND_DATUM_TRACK_PLAYED_OFFSET= 0x8C,
+	LOOPING_SOUND_TRACK_OWN_BITS_FLAGS= 0x30,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -733,6 +737,12 @@ long __attribute__((stdcall)) looping_sound_get_or_new_source(long sound_index, 
 void __attribute__((stdcall)) sound_cache_chunk_load(struct sound_chunk *chunk, long unknown);
 real __attribute__((stdcall)) sound_unknown_00218e50(long sound_index, short permutation, short pitch_range_offset,
 	short index);
+
+/* 0x0021cb90 and 0x0021cbe0 */
+unsigned long __attribute__((stdcall)) looping_sound_track_get_played_bits(long track,
+	const struct sound_definition *sound, byte *looping_sound, const byte *flags, short pitch_range_offset, boolean clear);
+void __attribute__((stdcall)) looping_sound_track_set_played_bits(long track, unsigned long bits, byte *looping_sound,
+	const struct sound_definition *sound, const byte *flags, short pitch_range_offset, char last_permutation);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -4491,4 +4501,70 @@ real __attribute__((stdcall)) sound_unknown_00218e50(
 	}
 
 	return (real)(long)(*(const byte *const *)(extra+4))[(short)clamped_index+*(const long *)entry]*(1.0f/255.0f);
+}
+
+/* whether a track of a looping sound keeps for itself the bits of the
+recordings that were played: with either of two flags, and a sound playback
+controller */
+static inline __attribute__((always_inline)) boolean looping_sound_track_keeps_played_bits(
+	const byte *flags,
+	const byte *looping_sound)
+{
+	return (*flags&LOOPING_SOUND_TRACK_OWN_BITS_FLAGS) &&
+		*(const long *)(looping_sound+LOOPING_SOUND_DATUM_CONTROLLER_INDEX_OFFSET)!=NONE;
+}
+
+/* 0x0021cb90: the bits of the recordings that were played of a track of a
+looping sound: those that the track keeps, which can be cleared as they are
+read, or those of a pitch range of a sound */
+unsigned long __attribute__((stdcall)) looping_sound_track_get_played_bits(
+	long track,
+	const struct sound_definition *sound,
+	byte *looping_sound,
+	const byte *flags,
+	short pitch_range_offset,
+	boolean clear)
+{
+	if (looping_sound_track_keeps_played_bits(flags, looping_sound))
+	{
+		unsigned long *played= (unsigned long *)(looping_sound+LOOPING_SOUND_DATUM_TRACK_PLAYED_OFFSET+
+			track*LOOPING_SOUND_TRACK_SIZE);
+		unsigned long bits= *played;
+
+		if (clear)
+		{
+			*played= 0;
+		}
+
+		return bits;
+	}
+
+	return sound_pitch_range_get_played_bits(
+		(const struct sound_pitch_range *)(uintptr_t)global_sound_cache_file_gestalt->pitch_ranges.address+
+		(sound->first_pitch_range_index+pitch_range_offset), sound);
+}
+
+/* 0x0021cbe0: the bits of the recordings that were played of a track of a
+looping sound are set: those that the track keeps, or those of a pitch range
+of a sound, which is told too which was played last */
+void __attribute__((stdcall)) looping_sound_track_set_played_bits(
+	long track,
+	unsigned long bits,
+	byte *looping_sound,
+	const struct sound_definition *sound,
+	const byte *flags,
+	short pitch_range_offset,
+	char last_permutation)
+{
+	struct sound_pitch_range *pitch_range;
+
+	if (looping_sound_track_keeps_played_bits(flags, looping_sound))
+	{
+		*(unsigned long *)(looping_sound+LOOPING_SOUND_DATUM_TRACK_PLAYED_OFFSET+track*LOOPING_SOUND_TRACK_SIZE)= bits;
+		return;
+	}
+	pitch_range= (struct sound_pitch_range *)(uintptr_t)global_sound_cache_file_gestalt->pitch_ranges.address+
+		(sound->first_pitch_range_index+pitch_range_offset);
+	sound_pitch_range_set_played_bits(pitch_range, sound, bits);
+	sound_pitch_range_set_unknown4(pitch_range, sound, last_permutation);
 }

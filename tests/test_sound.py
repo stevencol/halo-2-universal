@@ -2848,3 +2848,45 @@ def run(t) -> None:
                     "global_tag_instances": Buffer(bytes(tags) + bytes(definition), pointers=(sound_index * 0x10 + 8,)),
                 },
             )
+
+    # ---------- the bits of the recordings that were played of a track of a looping sound
+
+    random_ = random.Random(175)
+
+    for _ in range(300):
+        definition = bytearray(sound_data(random_))
+        struct.pack_into("<h", definition, 8, random_.randrange(2))
+        globals_ = world(random_, 0, sound_data(random_))
+        gestalt, _permutations = recordings()
+        shared = bytearray(gestalt)
+        struct.pack_into("<I", shared, 0x3C, len(shared))
+        shared += random_.randbytes(0x20)
+        for n in range(4):
+            at = 0x48 + n * 0xC
+            struct.pack_into("<H", shared, at + 6, random_.randrange(0, 0x80))
+            struct.pack_into("<h", shared, at + 0xA, random_.choice((0, 1, 2, 5, 9, 17)))
+        globals_["global_sound_cache_file_gestalt"] = Buffer(bytes(shared), pointers=(0x24, 0x2C, 0x3C, 0x44))
+        looping_sound = bytearray(random_.randbytes(0xD4))
+        struct.pack_into("<I", looping_sound, 0x54, random_.choice((NONE, 0, random_.getrandbits(32))))
+        flags_ = bytes((random_.choice((0, 0x10, 0x20, 0x30, 0xCF, 0xFF)),)) + random_.randbytes(3)
+        t.check(
+            "looping_sound_track_get_played_bits",
+            random_.randrange(3),
+            Buffer(bytes(definition)),
+            Buffer(bytes(looping_sound)),
+            Buffer(flags_),
+            random_.randrange(3),
+            random_.choice((0, 1, 0x80)),
+            globals=globals_,
+        )
+        t.check(
+            "looping_sound_track_set_played_bits",
+            random_.randrange(3),
+            random_.getrandbits(32),
+            Buffer(bytes(looping_sound)),
+            Buffer(bytes(definition)),
+            Buffer(flags_),
+            random_.randrange(3),
+            random_.getrandbits(8),
+            globals=globals_,
+        )
