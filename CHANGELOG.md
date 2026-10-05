@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Los decibelios de un sonido y buscar un controlador de reproducción
+
+Siete funciones pequeñas en `sound/sound_manager.c`. De 762 funciones se
+pasa a 769, el 6,83 % de las del juego (el 3,659 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unknown_00218420_set_defaults` | `0x00218420` | `sound/sound_manager.c` |
+| `sound_definition_get_minimum_decibels` | `0x00218d70` | `sound/sound_manager.c` |
+| `sound_definition_get_maximum_decibels` | `0x00218de0` | `sound/sound_manager.c` |
+| `sound_permutation_get_unknown6` | `0x00219430` | `sound/sound_manager.c` |
+| `sound_playback_controller_try_and_get` | `0x00219910` | `sound/sound_manager.c` |
+| `sound_playback_controller_find` | `0x00219960` | `sound/sound_manager.c` |
+| `sound_playback_controller_acquire` | `0x00219a30` | `sound/sound_manager.c` |
+
+Las dos de los decibelios estaban apuntadas sin descompilar
+(`unknown_00218d70` y `unknown_00218de0`).
+
+### Lo que se sabe
+
+- `sound_definition_get_minimum_decibels` y
+  `sound_definition_get_maximum_decibels`: lo menos y lo más que se oye un
+  sonido, en decibelios: lo que dice su escala (byte `0xB` del sonido;
+  bloque en `8` de lo que comparten los sonidos, de `0x14` bytes) más lo
+  que dice su clase (reales en `0x20` y `0x24`).
+- `sound_permutation_get_unknown6` da la palabra en `6` de una grabación
+  solo si la clase del sonido no deja guardar lo que se reprodujo.
+- `sound_playback_controller_try_and_get` da un controlador de reproducción,
+  o `NULL` si el índice no es de ninguno.
+- `sound_playback_controller_find` busca el controlador de algo (el que lo
+  tiene en `4`); `sound_playback_controller_acquire` además le suma un
+  sonido a su cuenta de 7 bits.
+- `unknown_00218420_set_defaults` rellena algo de `0x1C` bytes con dos
+  reales (120 y 60) y veinte bytes fijos. No se sabe de qué es.
+- Los nombres son inventados.
+
+### Sin comprobar
+
+- La batería completa no se pasó en este hito, solo las pruebas de estas
+  funciones y de `sound_definition_decibels`, que llama a dos de ellas.
+
+### Mutaciones
+
+Pendientes; corren aparte, en segundo plano.
+
 ## 2026-10-04 — Diez funciones pequeñas más del sonido
 
 Diez funciones pequeñas, en `sound/sound_manager.c` aunque lo más probable

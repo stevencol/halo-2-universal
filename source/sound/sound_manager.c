@@ -212,6 +212,13 @@ enum
 	SOUND_VOICE_DATUM_UNKNOWN48_OFFSET= 0x48,
 	SOUND_VOICE_DATUM_UNKNOWN48_SIZE= 0x24,
 	SOUND_VOICE_DATUM_UNKNOWN_SOURCE_OFFSET= 0x24,
+	UNKNOWN_00218420_BYTES_OFFSET= 0x8,
+	UNKNOWN_00218420_BYTES_SIZE= 0x14,
+	/* in a class of sounds, and in the scale of a sound (one of those that
+	the sounds of a map share): the least and the most decibels */
+	SOUND_CLASS_DECIBELS_OFFSET= 0x20,
+	SOUND_DEFINITION_SCALE_INDEX_OFFSET= 0xB,
+	SOUND_SCALE_SIZE= 0x14,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -345,8 +352,8 @@ real __attribute__((stdcall)) sound_interpolation_fraction(real minimum, real ma
 /* 0x00218de0 and 0x00218d70: the most and the least loudness of a sound,
 in decibels; 0x002197f0: a gain in decibels; 0x00127010: the decibels of a
 class of sounds */
-real unknown_00218de0(const struct sound_definition *sound);
-real unknown_00218d70(const struct sound_definition *sound);
+real sound_definition_get_maximum_decibels(const struct sound_definition *sound);
+real sound_definition_get_minimum_decibels(const struct sound_definition *sound);
 real unknown_002197f0(real gain);
 real unknown_00127010(short sound_class);
 
@@ -461,6 +468,14 @@ long __attribute__((stdcall)) sound_pitch_range_get_unknown5(const struct sound_
 void looping_sound_delete(long looping_sound_index);
 boolean __attribute__((stdcall)) sound_voice_unknown_0021dff0(long voice_index, const byte *unknown, boolean *first);
 long sound_classes_match(long class_index, long other_class_index);
+
+/* 0x00218420, 0x00219430, 0x00219910, 0x00219960 and 0x00219a30 */
+void unknown_00218420_set_defaults(byte *unknown);
+long __attribute__((stdcall)) sound_permutation_get_unknown6(const struct sound_permutation *permutation,
+	const struct sound_definition *sound);
+void *sound_playback_controller_try_and_get(long controller_index);
+long sound_playback_controller_find(long owner);
+long sound_playback_controller_acquire(long owner);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -1360,8 +1375,8 @@ real __attribute__((stdcall)) sound_definition_decibels(
 	real decibels,
 	real interpolation)
 {
-	real most= unknown_00218de0(sound);
-	real least_gain= (real)sound_decibels_to_gain(unknown_00218d70(sound));
+	real most= sound_definition_get_maximum_decibels(sound);
+	real least_gain= (real)sound_decibels_to_gain(sound_definition_get_minimum_decibels(sound));
 	long double most_gain= sound_decibels_to_gain(most);
 	real gain= (real)((most_gain-(long double)least_gain)*(long double)interpolation+(long double)least_gain);
 	real gain_decibels= unknown_002197f0(gain);
@@ -2382,4 +2397,132 @@ long sound_classes_match(
 	}
 
 	return 0.0001f>difference;
+}
+
+/* 0x00218420: what something of 0x1C bytes is when it is new: two reals,
+120 and 60, and twenty bytes. What it is of is not known */
+void unknown_00218420_set_defaults(
+	byte *unknown)
+{
+	static const byte defaults[UNKNOWN_00218420_BYTES_SIZE]=
+	{
+		0, 4, 2, 3, 1, 5, 6, 7, 12, 13, 14, 15, 10, 11, 0, 1, 0, 0, 0, 0
+	};
+
+	((real *)unknown)[0]= 120.0f;
+	((real *)unknown)[1]= 60.0f;
+	memcpy(unknown+UNKNOWN_00218420_BYTES_OFFSET, defaults, sizeof(defaults));
+}
+
+/* the reals of a class of sounds and of the scale of a sound that say how
+loud the sound is, in decibels: the least, and then the most */
+static inline __attribute__((always_inline)) const real *sound_definition_class_decibels(
+	const struct sound_definition *sound)
+{
+	return (const real *)((const byte *)sound_class_get(sound->sound_class)+SOUND_CLASS_DECIBELS_OFFSET);
+}
+
+static inline __attribute__((always_inline)) const real *sound_definition_scale_decibels(
+	const struct sound_definition *sound)
+{
+	return (const real *)((const byte *)(uintptr_t)global_sound_cache_file_gestalt->unknown8[0].address+
+		((const char *)sound)[SOUND_DEFINITION_SCALE_INDEX_OFFSET]*SOUND_SCALE_SIZE);
+}
+
+/* 0x00218d70 and 0x00218de0: the least and the most that a sound is heard,
+in decibels: what its scale says and what its class says, added */
+real sound_definition_get_minimum_decibels(
+	const struct sound_definition *sound)
+{
+	real class_decibels= sound_definition_class_decibels(sound)[0];
+
+	return sound_definition_scale_decibels(sound)[0]+class_decibels;
+}
+
+real sound_definition_get_maximum_decibels(
+	const struct sound_definition *sound)
+{
+	real class_decibels= sound_definition_class_decibels(sound)[1];
+
+	return sound_definition_scale_decibels(sound)[1]+class_decibels;
+}
+
+/* 0x00219430: the word at 6 of a recording of a sound, if the class of the
+sound does not let its pitch ranges keep what was played; NONE if it does,
+or if the word is NONE */
+long __attribute__((stdcall)) sound_permutation_get_unknown6(
+	const struct sound_permutation *permutation,
+	const struct sound_definition *sound)
+{
+	if (sound_definition_class_keeps_nothing(sound))
+	{
+		word unknown6= *(const word *)((const byte *)permutation+SOUND_PERMUTATION_UNKNOWN6_OFFSET);
+
+		return unknown6==0xFFFF ? NONE : unknown6;
+	}
+
+	return NONE;
+}
+
+/* 0x00219910: a sound playback controller: the one of unknown_0051ebdc for
+NONE, and NULL if the index is of none */
+void *sound_playback_controller_try_and_get(
+	long controller_index)
+{
+	if (controller_index==NONE)
+	{
+		return unknown_0051ebdc;
+	}
+
+	return datum_try_and_get(unknown_0051ebd8, controller_index);
+}
+
+/* 0x00219960: the sound playback controller of something: the one that has
+it at 4. NONE if there is none, or with no sound */
+long sound_playback_controller_find(
+	long owner)
+{
+	long controller_index;
+
+	if (!sound_available_inline() || owner==NONE)
+	{
+		return NONE;
+	}
+	for (controller_index= data_next_index(unknown_0051ebd8, NONE);
+		controller_index!=NONE;
+		controller_index= data_next_index(unknown_0051ebd8, controller_index))
+	{
+		const byte *controller= sound_playback_controller_get(controller_index);
+
+		if (*(const long *)(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWN4_OFFSET)==owner)
+		{
+			return controller_index;
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x00219a30: the sound playback controller of something has one sound
+more. Gives the controller; NONE if there is none */
+long sound_playback_controller_acquire(
+	long owner)
+{
+	long controller_index;
+
+	if (!sound_available_inline() || owner==NONE)
+	{
+		return NONE;
+	}
+	controller_index= sound_playback_controller_find(owner);
+	if (controller_index!=NONE)
+	{
+		byte *controller= (byte *)unknown_0051ebd8->data+(controller_index&0xFFFF)*UNKNOWN_0051EBD8_DATUM_SIZE;
+		byte sounds= controller[UNKNOWN_0051EBD8_DATUM_SOUNDS_OFFSET];
+
+		controller[UNKNOWN_0051EBD8_DATUM_SOUNDS_OFFSET]=
+			(sounds&~UNKNOWN_0051EBD8_DATUM_COUNT_MASK)|((sounds+1)&UNKNOWN_0051EBD8_DATUM_COUNT_MASK);
+	}
+
+	return controller_index;
 }

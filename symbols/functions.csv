@@ -1154,8 +1154,8 @@ address,name,source,arguments,returns,convention
 0021f650,sound_voice_playback_rate,source/sound/sound_manager.c,eax stack,real:xmm0,stdcall
 001251e0,sound_definition_decibels,source/sound/sound_manager.c,esi stack stack,real:eax,stdcall
 002195f0,sound_decibels_to_gain,source/sound/sound_manager.c,stack,real,stdcall
-00218de0,unknown_00218de0,,edx,real:eax
-00218d70,unknown_00218d70,,edx,real:eax
+00218de0,sound_definition_get_maximum_decibels,source/sound/sound_manager.c,edx,real:eax
+00218d70,sound_definition_get_minimum_decibels,source/sound/sound_manager.c,edx,real:eax
 002197f0,unknown_002197f0,,xmm0,real:eax
 00127010,unknown_00127010,,ecx,real:eax
 0021f360,unknown_0021f360,,stack,void,stdcall
@@ -1207,3 +1207,8 @@ address,name,source,arguments,returns,convention
 0021b070,looping_sound_delete,source/sound/sound_manager.c,edi,void
 0021dff0,sound_voice_unknown_0021dff0,source/sound/sound_manager.c,ecx stack stack,bool,stdcall
 0021e1d0,sound_classes_match,source/sound/sound_manager.c,eax esi,int
+00218420,unknown_00218420_set_defaults,source/sound/sound_manager.c,eax,void
+00219430,sound_permutation_get_unknown6,source/sound/sound_manager.c,stack stack,int,stdcall
+00219910,sound_playback_controller_try_and_get,source/sound/sound_manager.c,eax,pointer
+00219960,sound_playback_controller_find,source/sound/sound_manager.c,ebx,int
+00219a30,sound_playback_controller_acquire,source/sound/sound_manager.c,eax,int
