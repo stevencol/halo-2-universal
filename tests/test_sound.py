@@ -2472,3 +2472,56 @@ def run(t) -> None:
                 "unknown_0037b657": lambda harness, arguments: (0, tuple(arguments)),
             },
         )
+
+    # ---------- a ring fades out, what a looping sound says, and looking for a looping sound
+
+    random_ = random.Random(170)
+
+    for _ in range(100):
+        looping, playing_, indices = ring_world()
+        data = bytearray(playing_.data)
+        for n in range(PLAYING):
+            at = 0x4C + n * DATUM
+            data[at + 2] = random_.choice((2, 2, 2, 0, 1, 3))
+            data[at + 4] = random_.choice((0, 0x80, 0x7F, 0xFF))
+        for first in (NONE, *random_.sample(indices, 4)):
+            t.check(
+                "sound_source_ring_fade_out",
+                first,
+                random_.choice((0, 1, 2, 0xFFFF)),
+                as_bits(random_.choice((0.0, 0.5, 1.0, 2.5))),
+                globals={"sound_sources": Buffer(bytes(data), pointers=playing_.pointers)},
+                externals={"sound_source_fade_decibels": lambda harness, arguments: (fade_bits(arguments[0]), tuple(arguments))},
+            )
+
+    def said_patch(data: bytearray, at: int) -> None:
+        number = random_.choice((1, 2, 0x10001, random_.getrandbits(32)))
+        struct.pack_into("<2I", data, at + 4, number, random_.choice((number, number | 0x6000, number | 0x6000, 5)))
+        data[at + 0xF] = random_.getrandbits(8)
+        struct.pack_into("<I", data, at + 0x54, random_.choice((NONE, random_.getrandbits(16) << 16 | random_.randrange(CONTROLLERS))))
+
+    for _ in range(100):
+        in_use = some_in_use(12)
+        looping_ = patched(data_array(random_, 12, 0xD4, in_use), 0xD4, 12, said_patch)
+        globals_ = {
+            "looping_sounds": looping_,
+            "unknown_0051ebd8": all_controllers(),
+            "unknown_0051ebdc": Buffer(random_.randbytes(0x1C)),
+        }
+        candidates = [NONE, 12, random_.randrange(12)] + [(in_use[n] & 0xFFFF) << 16 | n for n in in_use]
+        for looping_sound_index in random_.sample(candidates, min(len(candidates), 6)):
+            t.check(
+                "looping_sound_get_source",
+                looping_sound_index,
+                random_.getrandbits(32),
+                random_.getrandbits(32),
+                Buffer(random_.randbytes(0x48)),
+                globals=globals_,
+            )
+        for _pair in range(4):
+            t.check(
+                "looping_sound_find",
+                random_.choice((1, 2, 0x10001)),
+                random_.choice((1, 2, 0x10001, 0x6001, 0x6002, 0x16001, 5)),
+                globals={"looping_sounds": looping_},
+            )

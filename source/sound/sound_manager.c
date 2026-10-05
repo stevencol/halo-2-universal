@@ -297,6 +297,11 @@ enum
 	SOUND_CONSOLE_STATE_SIZE= 0x60,
 	SOUND_CONSOLE_STATE_KIND_SIZE= 0x10,
 	SOUND_CONSOLE_STATE_COUNTS_OFFSET= 0x40,
+	_sound_source_datum_kind_unknown2= 2,
+	/* more of a looping sound */
+	LOOPING_SOUND_DATUM_UNKNOWN4_OFFSET= 0x4,
+	LOOPING_SOUND_DATUM_UNKNOWN8_OFFSET= 0x8,
+	LOOPING_SOUND_DATUM_SOURCE_SIZE= 0x44,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -647,6 +652,12 @@ void sound_effects_update(void);
 
 /* 0x00219d90 */
 void __attribute__((stdcall)) sound_playback_controllers_unknown_00219d90(boolean enable);
+
+/* 0x0021be20, 0x0021bf00 and 0x0021cf80 */
+void __attribute__((stdcall)) sound_source_ring_fade_out(long first_source_index, short kind, real seconds);
+boolean __attribute__((stdcall)) looping_sound_get_source(long looping_sound_index, long unused, long unused2,
+	struct sound_source *source);
+long __attribute__((stdcall)) looping_sound_find(long unknown4, long unknown8);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -3924,4 +3935,108 @@ void __attribute__((stdcall)) sound_console_unknown_0021f430(
 	{
 		unknown_0037b657(*(void **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET));
 	}
+}
+
+/* 0x0021be20: the sounds that play of a ring that are of the kind 2 fade
+out, in some seconds and in a way, as the first of sound_sources_cross_fade
+does. The ring is that of a sound: nothing for NONE */
+void __attribute__((stdcall)) sound_source_ring_fade_out(
+	long first_source_index,
+	short kind,
+	real seconds)
+{
+	long source_index= first_source_index;
+	long count;
+
+	if (first_source_index==NONE)
+	{
+		return;
+	}
+	for (count= 0; ; count++)
+	{
+		if (count>0 && source_index!=NONE)
+		{
+			source_index= *(const long *)(sound_source_get(source_index)+SOUND_SOURCE_DATUM_NEXT_OFFSET);
+			if (source_index==first_source_index)
+			{
+				source_index= NONE;
+			}
+		}
+		if (source_index==NONE)
+		{
+			return;
+		}
+		if (sound_source_get(source_index)[SOUND_SOURCE_DATUM_KIND_OFFSET]==_sound_source_datum_kind_unknown2)
+		{
+			sound_sources_cross_fade(source_index, NONE, kind, seconds);
+		}
+	}
+}
+
+/* 0x0021bf00: what the game says of a looping sound, as of a sound: copied
+out, if the looping sound has no sound playback controller or the flag at 3
+of the one that it has is set. If the two numbers at 4 and 8 of the looping
+sound are the same but for two bits, the type of the copy is 0. FALSE if
+there is no such looping sound, or the flag is not set. Its second and
+third arguments are not used */
+boolean __attribute__((stdcall)) looping_sound_get_source(
+	long looping_sound_index,
+	long unused,
+	long unused2,
+	struct sound_source *source)
+{
+	const byte *looping_sound;
+	long controller_index;
+
+	(void)unused;
+	(void)unused2;
+	if (looping_sound_index==NONE)
+	{
+		return FALSE;
+	}
+	looping_sound= datum_try_and_get(looping_sounds, looping_sound_index);
+	if (!looping_sound)
+	{
+		return FALSE;
+	}
+	controller_index= *(const long *)(looping_sound+LOOPING_SOUND_DATUM_CONTROLLER_INDEX_OFFSET);
+	if (controller_index!=NONE &&
+		!(((const byte *)sound_playback_controller_get(controller_index))[UNKNOWN_0051EBD8_DATUM_COUNT_OFFSET]&
+		UNKNOWN_0051EBD8_DATUM_UNKNOWN_FLAG))
+	{
+		return FALSE;
+	}
+	memcpy(source, looping_sound+LOOPING_SOUND_DATUM_SOURCE_OFFSET, LOOPING_SOUND_DATUM_SOURCE_SIZE);
+	if (*(const long *)(looping_sound+LOOPING_SOUND_DATUM_UNKNOWN8_OFFSET)==
+		(*(const long *)(looping_sound+LOOPING_SOUND_DATUM_UNKNOWN4_OFFSET)|0x6000))
+	{
+		((byte *)source)[SOUND_SOURCE_TYPE_OFFSET]&= ~SOUND_SOURCE_DATUM_TYPE_MASK;
+	}
+
+	return TRUE;
+}
+
+/* 0x0021cf80: the looping sound that has two numbers at 4 and at 8; NONE if
+there is none */
+long __attribute__((stdcall)) looping_sound_find(
+	long unknown4,
+	long unknown8)
+{
+	struct data_array *data= looping_sounds;
+	long looping_sound_index;
+
+	for (looping_sound_index= data_next_index(data, NONE);
+		looping_sound_index!=NONE;
+		looping_sound_index= data_next_index(data, looping_sound_index))
+	{
+		const byte *looping_sound= (const byte *)data->data+(looping_sound_index&0xFFFF)*LOOPING_SOUND_DATUM_SIZE;
+
+		if (*(const long *)(looping_sound+LOOPING_SOUND_DATUM_UNKNOWN4_OFFSET)==unknown4 &&
+			*(const long *)(looping_sound+LOOPING_SOUND_DATUM_UNKNOWN8_OFFSET)==unknown8)
+		{
+			break;
+		}
+	}
+
+	return looping_sound_index;
 }

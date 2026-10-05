@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Apagar un anillo, lo que dice un sonido en bucle y buscar uno
+
+Tres funciones en `sound/sound_manager.c`. De 812 funciones se pasa a
+815, el 7,23 % de las del juego (el 3,891 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_source_ring_fade_out` | `0x0021be20` | `sound/sound_manager.c` |
+| `looping_sound_get_source` | `0x0021bf00` | `sound/sound_manager.c` |
+| `looping_sound_find` | `0x0021cf80` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- `sound_source_ring_fade_out` apaga en unos segundos los sonidos de un
+  anillo (los de una pista de un sonido en bucle) que son del tipo 2, igual
+  que la primera mitad de `sound_sources_cross_fade`.
+- `looping_sound_get_source` copia lo que el juego dice de un sonido en
+  bucle (los `0x44` bytes de `0xC`), si no tiene controlador de
+  reproducción o la marca de su controlador está puesta. Si sus dos números
+  de `4` y `8` son el mismo salvo dos bits, pone a 0 el tipo de la copia.
+  No usa su segundo ni su tercer argumento.
+- `looping_sound_find` busca el sonido en bucle que tiene dos números en
+  `4` y en `8`.
+- Los nombres son inventados.
+
+### Sin comprobar
+
+- La batería completa no se pasó en este hito, solo las pruebas de estas
+  funciones.
+
+### Mutaciones
+
+Pendientes; corren aparte, en segundo plano.
+
 ## 2026-10-04 — El anillo de una pista, los efectos cada vez y el estado de la consola
 
 Cinco funciones en `sound/sound_manager.c`. De 807 funciones se pasa a

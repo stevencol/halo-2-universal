@@ -1253,3 +1253,6 @@ address,name,source,arguments,returns,convention
 0021d390,sound_effects_update,source/sound/sound_manager.c,,void
 0037b822,unknown_0037b822,,stack stack,void
 0037b657,unknown_0037b657,,stack,void
+0021be20,sound_source_ring_fade_out,source/sound/sound_manager.c,ebx stack stack,void,stdcall
+0021bf00,looping_sound_get_source,source/sound/sound_manager.c,stack stack stack stack,bool,stdcall
+0021cf80,looping_sound_find,source/sound/sound_manager.c,stack stack,int,stdcall
