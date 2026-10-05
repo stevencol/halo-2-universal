@@ -3222,3 +3222,81 @@ def run(t) -> None:
             globals=globals_,
             mocks=[Mock(lambda call, answer=answer: answer, stack_arguments=4)],
         )
+
+    # ---------- the channel that a sound that is to play gets
+
+    random_ = random.Random(183)
+
+    for _ in range(700):
+        data = bytearray(random_.randbytes(0x4C + PLAYING * DATUM))
+        struct.pack_into("<I", data, 0x44, 0x4C)
+        indices = []
+        for index in range(PLAYING):
+            at = 0x4C + index * DATUM
+            struct.pack_into("<I", data, at + 0xC, random_.getrandbits(16) << 16 | random_.randrange(TAGS))
+            struct.pack_into("<I", data, at + 0x10, random_.choice((NONE, 1, 1, 1, 2)))
+            struct.pack_into("<H", data, at + 0xAC, random_.choice((0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 3)))
+            indices.append(random_.getrandbits(16) << 16 | index)
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        tag_pointers = []
+        for n in range(TAGS):
+            struct.pack_into("<I", tags, n * 0x10 + 8, TAGS * 0x10 + n * 0x10)
+            tag_pointers.append(n * 0x10 + 8)
+        definitions = bytearray(random_.randbytes(TAGS * 0x10))
+        for n in range(TAGS):
+            definitions[n * 0x10 + 4] = random_.choice((0, 1, 1, 2))
+        table = bytearray(random_.randbytes(0x100 * 0x5C))
+        exclusive = random_.random() < 0.5
+        for n in range(0x100):
+            table[n * 0x5C + 8] = random_.choice((2, 2, 0xFF, 0, 0xFD)) if exclusive else random_.choice((0, 0, 0xFD, 2))
+        table_ = Buffer(bytes(table))
+        channels = bytearray(random_.randbytes(CHANNELS * 0x24))
+        for n in range(CHANNELS):
+            struct.pack_into("<I", channels, n * 0x24, random_.choice((NONE, *indices)))
+            channels[n * 0x24 + 8] = random_.choice((0, 1, 1, 2, 5))
+        counts = random_.choice(((0, 1, 0, 1), (1, 1, 0, 1), (2, 3, 1, 1), (2, 2, 0, 1), (5, 2, 3, 4), (0, 0, 0, 0)))
+        started = random_.choice((0, 0, 0, 1))
+        found = random_.choice((0xFFFF, 0, 3, 7))
+        chosen_ = random_.choice((0xFFFF, 1, 6))
+
+        def same_(harness, arguments, counts=counts, started=started):
+            out, source_index = arguments
+            content = bytearray(bytes(range(0x4A)))
+            struct.pack_into("<h", content, 0, counts[0])
+            struct.pack_into("<h", content, 0x22, counts[1])
+            content[0x24] = started
+            struct.pack_into("<h", content, 0x26, counts[2])
+            struct.pack_into("<h", content, 0x48, counts[3])
+            harness.mu.mem_write(out, bytes(content))
+            return 0, (source_index,)
+
+        def choose_(harness, arguments, chosen_=chosen_):
+            source_index, count, channel_indices = arguments
+            return chosen_, (source_index, count & 0xFFFF, bytes(harness.mu.mem_read(channel_indices, 32)))
+
+        def find_(harness, arguments, found=found):
+            source_index, why = arguments
+            record = source_index, bytes(harness.mu.mem_read(why, 4))
+            harness.mu.mem_write(why, struct.pack("<I", 9 if found != 0xFFFF else 0))
+            return found, record
+
+        t.check(
+            "sound_source_get_channel",
+            random_.choice(indices),
+            Buffer(random_.randbytes(4)),
+            globals={
+                "sound_sources": Buffer(bytes(data), pointers=(0x44,)),
+                "sound_channels": Buffer(bytes(channels)),
+                "game_sound_globals": sound_state(channels=random_.choice((0, 1, 5, CHANNELS, CHANNELS, -1))),
+                "global_tag_instances": Buffer(bytes(tags) + bytes(definitions), pointers=tuple(tag_pointers)),
+            },
+            extra=[table_],
+            externals={
+                "sound_class_get": class_of(table_),
+                "sound_source_find_same": same_,
+                "sound_source_choose_channel": choose_,
+                "sound_source_find_channel": find_,
+                "sound_source_delete": lambda harness, arguments: (0, tuple(arguments)),
+                "sound_channel_delete": lambda harness, arguments: (0, (arguments[0] & 0xFFFF,)),
+            },
+        )

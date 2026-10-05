@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — El canal que recibe un sonido
+
+Una función en `sound/sound_manager.c`. De 837 funciones se pasa a
+838, el 7,44 % de las del juego (el 4,063 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_source_get_channel` | `0x00128700` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- `sound_source_get_channel` decide qué canal recibe un sonido que va a
+  sonar, o por qué no recibe ninguno. Une las funciones de los cuatro hitos
+  anteriores y no llama a nada sin descompilar.
+- Si el sonido ya tiene canal, es ese.
+- Un sonido de una clase de las que la misma cosa solo toca uno a la vez
+  (bit 1 de las marcas de la clase) ocupa el sitio del que esa cosa estaba
+  tocando: en el mismo canal si es de su tipo (motivo 13); si no, se suelta
+  el otro sonido con su canal y se busca uno.
+- Cualquier otro sonido no recibe canal si uno igual empezó en este mismo
+  instante (motivo 5); si ya hay tantos iguales como deja su clase, o
+  tantos de su sonido, le quita el canal a uno de ellos (motivos 5 y 6); y
+  si no, se busca un canal con `sound_source_find_channel`.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- La batería completa corre aparte con las 824 funciones del hito 173; en
+  este hito solo se pasó la prueba de esta función.
+
+### Mutaciones
+
+Pendientes las de los hitos 156 a 183.
+
 ## 2026-10-04 — Los canales que ya tocan el mismo sonido
 
 Una función en `sound/sound_manager.c`. De 836 funciones se pasa a

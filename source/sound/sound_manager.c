@@ -361,6 +361,10 @@ enum
 	SOUND_CLASS_PRIORITY_OFFSET= 0xC,
 	/* why a sound is let go: another took its channel */
 	_sound_source_deleted_channel_taken= 9,
+	/* more of why a sound is let go, or gets no channel */
+	_sound_source_deleted_too_many_instances= 5,
+	_sound_source_deleted_too_many_sounds= 6,
+	_sound_source_deleted_replaced= 13,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -809,6 +813,9 @@ short __attribute__((stdcall)) sound_source_find_channel(long source_index, long
 
 /* 0x00128500 */
 void __attribute__((stdcall)) sound_source_find_same(struct sound_same_channels *same, long source_index);
+
+/* 0x00128700 */
+short __attribute__((stdcall)) sound_source_get_channel(long source_index, long *reason);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -5171,4 +5178,102 @@ void __attribute__((stdcall)) sound_source_find_same(
 			same->started_now= TRUE;
 		}
 	}
+}
+
+/* whether the class of the sound of a sound that plays is one of those of
+which the same thing plays only one sound at a time */
+static inline __attribute__((always_inline)) boolean sound_definition_class_is_exclusive(
+	const struct sound_definition *sound)
+{
+	return (sound_class_get(sound->sound_class)->flags>>_sound_class_unknown1_bit)&1;
+}
+
+/* 0x00128700: the channel that a sound that is to play gets; NONE if it
+gets none, and why. The one that it has, if it has one. A sound of a class
+of which the same thing plays only one at a time takes the place of the one
+that the thing plays: in the same channel, if it is of its type (reason 13);
+if not, the other sound and its channel are let go, and a channel is looked
+for. Any other sound gets none if one like it started this very time (5);
+with as many like it as its class lets there be, or as many of its sound, it
+takes the channel of one of them (5 and 6); and if not, a channel is looked
+for. The name is a guess */
+short __attribute__((stdcall)) sound_source_get_channel(
+	long source_index,
+	long *reason)
+{
+	byte *source= sound_source_get(source_index);
+	const struct sound_definition *sound;
+	struct sound_same_channels same;
+
+	*reason= 0;
+	if (*(const short *)(source+SOUND_SOURCE_DATUM_CHANNEL_INDEX_OFFSET)!=NONE)
+	{
+		return *(const short *)(source+SOUND_SOURCE_DATUM_CHANNEL_INDEX_OFFSET);
+	}
+	sound= sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET));
+	if (sound_definition_class_is_exclusive(sound) && *(const long *)(source+SOUND_SOURCE_DATUM_CALLBACK_DATA_OFFSET)!=NONE)
+	{
+		short count= *(const short *)(game_sound_globals+GAME_SOUND_GLOBALS_CHANNEL_COUNT_OFFSET);
+		long replaced_source_index= NONE;
+		short replaced_channel_index= NONE;
+		short channel_index;
+
+		for (channel_index= 0; channel_index<count; channel_index++)
+		{
+			const struct sound_channel *channel= &sound_channels[channel_index];
+			long playing_index= channel->unknown0;
+
+			if (playing_index!=NONE)
+			{
+				const byte *playing= sound_source_get(playing_index);
+
+				if (*(const long *)(playing+SOUND_SOURCE_DATUM_CALLBACK_DATA_OFFSET)==
+					*(const long *)(source+SOUND_SOURCE_DATUM_CALLBACK_DATA_OFFSET) &&
+					sound_definition_class_is_exclusive(
+						sound_definition_get(*(const long *)(playing+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET))))
+				{
+					if (sound->unknown3[1]==(byte)channel->type)
+					{
+						source[SOUND_SOURCE_DATUM_TYPE_OFFSET]= (source[SOUND_SOURCE_DATUM_TYPE_OFFSET]&~SOUND_SOURCE_DATUM_TYPE_MASK)|
+							(playing[SOUND_SOURCE_DATUM_TYPE_OFFSET]&SOUND_SOURCE_DATUM_TYPE_MASK);
+						*reason= _sound_source_deleted_replaced;
+						goto replace;
+					}
+					replaced_channel_index= channel_index;
+					replaced_source_index= playing_index;
+				}
+			}
+		}
+		channel_index= sound_source_find_channel(source_index, reason);
+		if (channel_index==NONE)
+		{
+			return NONE;
+		}
+replace:
+		if (replaced_source_index!=NONE)
+		{
+			sound_source_delete(replaced_source_index, _sound_source_deleted_replaced);
+			sound_channel_delete(replaced_channel_index);
+		}
+
+		return channel_index;
+	}
+	sound_source_find_same(&same, source_index);
+	if (same.started_now)
+	{
+		*reason= _sound_source_deleted_too_many_instances;
+		return NONE;
+	}
+	if (same.instance_count>=same.instance_limit)
+	{
+		*reason= _sound_source_deleted_too_many_instances;
+		return sound_source_choose_channel(source_index, same.instance_count, same.instance_channels);
+	}
+	if (same.sound_count>=same.sound_limit)
+	{
+		*reason= _sound_source_deleted_too_many_sounds;
+		return sound_source_choose_channel(source_index, same.sound_count, same.sound_channels);
+	}
+
+	return sound_source_find_channel(source_index, reason);
 }
