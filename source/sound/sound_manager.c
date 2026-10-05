@@ -465,6 +465,14 @@ enum
 	SOUND_VOICE_ENVIRONMENT_UNKNOWNC_OFFSET= 0xC,
 	SOUND_ENVIRONMENT_TAG_NAMES_OFFSET= 0xC,
 	SOUND_EFFECT_COLLECTION_ELEMENT_BLOCK_OFFSET= 0x20,
+	/* of the list that sound_unknown_002225a0 makes, and of what it makes
+	it from */
+	SOUND_EFFECT_ELEMENT_SIZE= 0x18,
+	SOUND_EFFECT_OVERRIDE_SIZE= 0x1C,
+	SOUND_EFFECT_OVERRIDES_MASK_OFFSET= 0x10,
+	SOUND_EFFECT_ENTRY_SIZE= 0xC,
+	SOUND_EFFECT_ENTRY_BYTES_OFFSET= 0xA,
+	SOUND_EFFECT_NAME_FOUR_TIMES= 0x11000138,
 	_sound_source_datum_unknown4_bit= 4,
 	SOUND_CLASS_UNKNOWNE_OFFSET= 0xE,
 	/* more of a sound that plays, of a listener, of a class of sounds and of
@@ -941,6 +949,12 @@ long __attribute__((stdcall)) sound_source_create(long sound_index, long listene
 /* 0x002226b0, 0x00222930 and 0x001914f0 */
 void sound_request_unknown_002226b0(byte *request, long sound_index);
 void sound_unknown_00222930(long sound_index, long unknown, byte *result);
+
+/* 0x002225a0; 0x002222c0: writes an entry of a list for the console's sound */
+void __attribute__((stdcall)) sound_unknown_002225a0(const byte *overrides, const long *block, long unknown,
+	long *list, long *size);
+void unknown_002222c0(long *entry, const long *element, const byte *override, long unknown, long number);
+
 long sound_unknown_001914f0(long name);
 void __attribute__((stdcall)) sound_channel_update_slot(short channel_index, const real *unknown);
 
@@ -6986,4 +7000,49 @@ void sound_unknown_00222930(
 		*(const byte **)(result+SOUND_VOICE_ENVIRONMENT_UNKNOWN8_OFFSET)= block+4;
 	}
 	*(long *)(result+SOUND_VOICE_ENVIRONMENT_UNKNOWNC_OFFSET)= *(const long *)(result+SOUND_VOICE_ENVIRONMENT_UNKNOWN8_OFFSET);
+}
+
+/* 0x002225a0: a list for the console's sound, from the elements of a block
+of a tag: how many they are, and then what unknown_002222c0 writes for each,
+one after another, in pieces of four bytes: the word at 0xA of what it
+writes says how many bytes more than 0xC it took. An element of the name
+0x11000138 is written four times, with the numbers 0 to 3; any other, once,
+with NONE. `overrides` has, at 4, something of 0x1C bytes for each element
+whose bit is set in its mask at 0x10: unknown_002222c0 is given it. `size`
+takes how many bytes the list is. What the list is of is not known */
+void __attribute__((stdcall)) sound_unknown_002225a0(
+	const byte *overrides,
+	const long *block,
+	long unknown,
+	long *list,
+	long *size)
+{
+	long position= 0;
+	long override_offset= 0;
+	long index;
+
+	list[0]= block[0];
+	*size= sizeof(long);
+	for (index= 0; index<block[0]; index++)
+	{
+		const long *element= (const long *)((const byte *)(uintptr_t)block[1]+index*SOUND_EFFECT_ELEMENT_SIZE);
+		const byte *override= NULL;
+		boolean four_times;
+		long number;
+
+		if (*(const unsigned long *)(overrides+SOUND_EFFECT_OVERRIDES_MASK_OFFSET)&(1UL<<(index&31)))
+		{
+			override= *(const byte *const *)(overrides+4)+override_offset;
+			override_offset+= SOUND_EFFECT_OVERRIDE_SIZE;
+		}
+		four_times= element[0]==SOUND_EFFECT_NAME_FOUR_TIMES;
+		for (number= four_times ? 0 : NONE; number<(four_times ? 4 : 0); number++)
+		{
+			const word *bytes= (const word *)((const byte *)list+position*4+sizeof(long)+SOUND_EFFECT_ENTRY_BYTES_OFFSET);
+
+			unknown_002222c0((long *)((byte *)list+position*4+sizeof(long)), element, override, unknown, number);
+			*size+= *bytes+SOUND_EFFECT_ENTRY_SIZE;
+			position+= (*bytes+SOUND_EFFECT_ENTRY_SIZE+3)>>2;
+		}
+	}
 }

@@ -1301,3 +1301,5 @@ address,name,source,arguments,returns,convention
 0037c6e5,unknown_0037c6e5,,stack stack stack,void
 0037b68b,unknown_0037b68b,,stack stack,void
 00222930,sound_unknown_00222930,source/sound/sound_manager.c,ecx edx esi,void
+002225a0,sound_unknown_002225a0,source/sound/sound_manager.c,stack stack stack stack stack,void,stdcall
+002222c0,unknown_002222c0,,eax stack stack stack stack,void

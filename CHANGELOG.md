@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Una lista para el sonido de la consola, de un bloque de un tag
+
+Una función en `sound/sound_manager.c`. De 856 funciones se pasa a
+857, el 7,61 % de las del juego (el 4,360 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_unknown_002225a0` | `0x002225a0` | `sound/sound_manager.c` |
+
+No estaba apuntada. La llama `0x00222770`, que es parte de lo que rellena
+`0x0012a1b0` para una voz de la consola. Nueva sin descompilar:
+`0x002222c0`, que escribe cada entrada de la lista.
+
+### Lo que se sabe
+
+- `sound_unknown_002225a0` hace una lista a partir de los elementos (de
+  `0x18` bytes) de un bloque de un tag: primero cuántos son, y luego lo que
+  `0x002222c0` escribe para cada uno, uno detrás de otro, en trozos de
+  cuatro bytes. La palabra de `0xA` de cada entrada dice cuántos bytes ocupa
+  además de los `0xC` fijos.
+- Un elemento con el nombre `0x11000138` se escribe cuatro veces, con los
+  números 0 a 3; cualquier otro, una vez, con `NONE`.
+- El primer argumento trae, en `4`, algo de `0x1C` bytes para cada elemento
+  cuyo bit está puesto en la máscara de `0x10`; se le pasa a `0x002222c0`.
+- El último argumento recibe cuántos bytes ocupa la lista.
+- De qué es la lista no se sabe todavía (por las funciones que la usan,
+  parecen los efectos de sonido de un entorno); el nombre lleva la
+  dirección.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función. La batería
+  completa se lanza aparte con las 857 funciones de este hito.
+
+### Mutaciones
+
+Diez líneas rotas a mano (los dos valores iniciales, el bit de la máscara,
+los tamaños, los límites de las cuatro veces, el nombre y las dos cuentas
+de bytes): las pruebas notan las diez. Pendientes las listas completas de
+los hitos 156 a 200.
+
 ## 2026-10-05 — Cuatro datos de un sonido, de los tags, para una voz de la consola
 
 Una función en `sound/sound_manager.c`. De 855 funciones se pasa a

@@ -4278,3 +4278,33 @@ def run(t) -> None:
                 "unknown_0018d090": lambda harness, arguments, first=first: (first.address if first else 0, tuple(arguments)),
             },
         )
+
+    # ---------- a list for the console's sound, from the elements of a block of a tag
+
+    random_ = random.Random(200)
+
+    for _ in range(600):
+        count = random_.choice((0, 1, 2, 3, 4, 4, -1))
+        block = bytearray(struct.pack("<iI", count, 8)) + random_.randbytes(4 * 0x18)
+        for element in range(4):
+            struct.pack_into("<I", block, 8 + element * 0x18, random_.choice((0x11000138, 0x11000138, 0x11000139, 0, 0x1300012D)))
+        overrides = bytearray(random_.randbytes(0x14 + 4 * 0x1C))
+        struct.pack_into("<I", overrides, 4, 0x14)
+        struct.pack_into("<I", overrides, 0x10, random_.choice((0, 0xF, 5, 0xFFFFFFF0, random_.getrandbits(32))))
+        taken = [random_.choice((0, 0, 1, 3, 4, 5, 0x10, 0x25, 0x30)) for _ in range(16)]
+
+        def entry_(harness, arguments, taken=taken):
+            entry, element, override, unknown, number = arguments
+            calls = calls_so_far(harness, "unknown_002222c0")
+            harness.mu.mem_write(entry, random.Random(calls).randbytes(0xA) + struct.pack("<H", taken[calls % 16]))
+            return 0, (harness.normalize(entry), harness.normalize(element), harness.normalize(override), unknown, number)
+
+        t.check(
+            "sound_unknown_002225a0",
+            Buffer(bytes(overrides), pointers=(4,)),
+            Buffer(bytes(block), pointers=(4,)),
+            random_.getrandbits(32),
+            Buffer(random_.randbytes(0x500)),
+            Buffer(random_.randbytes(4)),
+            externals={"unknown_002222c0": entry_},
+        )
