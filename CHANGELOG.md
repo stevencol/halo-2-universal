@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Cuatro datos de un sonido, de los tags, para una voz de la consola
+
+Una función en `sound/sound_manager.c`. De 855 funciones se pasa a
+856, el 7,60 % de las del juego (el 4,351 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_unknown_00222930` | `0x00222930` | `sound/sound_manager.c` |
+
+No estaba apuntada. La llaman cuatro funciones, entre ellas `0x0012a1b0`,
+que rellena lo que una voz de la consola necesita de un sonido. Recibe el
+sonido en `ecx`, un número en `edx` y dónde dejar el resultado en `esi`.
+
+### Lo que se sabe
+
+- `sound_unknown_00222930` rellena cuatro datos (16 bytes) a partir de lo
+  que `unknown_0018d090` da para el sonido: el primer elemento dice un tag,
+  el mismo que mira `sound_request_unknown_002226b0`.
+- En `2` deja el número que `sound_unknown_001914f0` tiene para el nombre
+  del primer elemento de un bloque de ese tag (en `0xC` del tag).
+- En `4` y `8`, un número y dónde hay cuatro bytes más: los del propio
+  elemento del tag o, si el elemento de `unknown_0018d090` trae un bloque
+  suyo con algo, los de ese bloque. En `0xC` repite lo de `8`.
+- Sin tag: `NONE` en `2` y en `0xC`, y 0 en `8`.
+- Qué son esos datos no se sabe todavía; el nombre lleva la dirección.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función. La última
+  batería completa es la del hito 192 (849 funciones, todas bien).
+
+### Mutaciones
+
+Once líneas rotas a mano (las cuentas de los bloques, el tag que no hay,
+los cuatro desplazamientos y el nombre): las pruebas notan las once.
+Pendientes las listas completas de los hitos 156 a 199.
+
 ## 2026-10-05 — Cada sonido que suena: si sigue, y quién lo oye
 
 Una función en `sound/sound_manager.c`, de 684 bytes. De 854 funciones se pasa a

@@ -4240,3 +4240,41 @@ def run(t) -> None:
                 "sound_class_get": class_of(table_),
             },
         )
+
+    # ---------- four things of a sound from the tags, for a voice of the console's sound
+
+    random_ = random.Random(199)
+
+    for _ in range(900):
+        tag_index = random_.randrange(TAGS)
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        struct.pack_into("<I", tags, tag_index * 0x10 + 8, len(tags))
+        tag = bytearray(random_.randbytes(0x14))
+        tag += struct.pack("<I", random_.choice((*NAMES, 0, 0x1300012C))) + random_.randbytes(0xC)
+        struct.pack_into("<iI", tag, 0xC, random_.choice((1, 1, 1, 2, 0, -1)), len(tags) + 0x14)
+        tags_ = Buffer(bytes(tags) + bytes(tag), pointers=(tag_index * 0x10 + 8, len(tags) + 0x10))
+
+        data = bytearray(random_.randbytes(0x7C))
+        pointers = [0x30, 0x58, 0x68]
+        struct.pack_into("<iI", data, 0x2C, random_.choice((1, 1, 1, 2, 0, -1, -0x80000000)), 0x34)
+        if random_.random() < 0.1:
+            # no elements where they should be
+            struct.pack_into("<I", data, 0x30, 0)
+            pointers.remove(0x30)
+        struct.pack_into(
+            "<I", data, 0x38, random_.choice((NONE, random_.getrandbits(16) << 16 | tag_index, random_.getrandbits(16) << 16 | tag_index))
+        )
+        struct.pack_into("<iI", data, 0x54, random_.choice((1, 1, 0, -1, 3)), 0x5C)
+        struct.pack_into("<iI", data, 0x64, random_.choice((1, 1, 0, -1, 3)), 0x6C)
+        first = random_.choice((None, Buffer(bytes(data), pointers=tuple(pointers)), Buffer(bytes(data), pointers=tuple(pointers))))
+        t.check(
+            "sound_unknown_00222930",
+            random_.getrandbits(32),
+            random_.choice((NONE, 0, random_.getrandbits(32))),
+            Buffer(random_.randbytes(0x10)),
+            globals={"global_tag_instances": tags_},
+            extra=[first] if first else [],
+            externals={
+                "unknown_0018d090": lambda harness, arguments, first=first: (first.address if first else 0, tuple(arguments)),
+            },
+        )

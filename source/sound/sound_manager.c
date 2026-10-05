@@ -456,6 +456,15 @@ enum
 	_sound_source_datum_unknown9_bit= 9,
 	_sound_source_unknown0_bit= 0,
 	SOUND_UNHEARD_FADE_OUT_TIME= 2000,
+	/* what sound_unknown_00222930 fills, and where it takes it from: a
+	block of names of a tag, and a block of an element of what
+	unknown_0018d090 gives */
+	SOUND_VOICE_ENVIRONMENT_NUMBER_OFFSET= 0x2,
+	SOUND_VOICE_ENVIRONMENT_UNKNOWN4_OFFSET= 0x4,
+	SOUND_VOICE_ENVIRONMENT_UNKNOWN8_OFFSET= 0x8,
+	SOUND_VOICE_ENVIRONMENT_UNKNOWNC_OFFSET= 0xC,
+	SOUND_ENVIRONMENT_TAG_NAMES_OFFSET= 0xC,
+	SOUND_EFFECT_COLLECTION_ELEMENT_BLOCK_OFFSET= 0x20,
 	_sound_source_datum_unknown4_bit= 4,
 	SOUND_CLASS_UNKNOWNE_OFFSET= 0xE,
 	/* more of a sound that plays, of a listener, of a class of sounds and of
@@ -929,8 +938,9 @@ long __attribute__((stdcall)) sound_promotion_update(long sound_index, long *rul
 long __attribute__((stdcall)) sound_source_create(long sound_index, long listener_index, byte *request,
 	long rule_index);
 
-/* 0x002226b0 and 0x001914f0 */
+/* 0x002226b0, 0x00222930 and 0x001914f0 */
 void sound_request_unknown_002226b0(byte *request, long sound_index);
+void sound_unknown_00222930(long sound_index, long unknown, byte *result);
 long sound_unknown_001914f0(long name);
 void __attribute__((stdcall)) sound_channel_update_slot(short channel_index, const real *unknown);
 
@@ -6911,4 +6921,69 @@ void sound_sources_update(
 			}
 		}
 	}
+}
+
+/* 0x00222930: four things of a sound from the tags, for a voice of the
+console's sound: at 2, the number that sound_unknown_001914f0 has for the
+name of the first element of a block of a tag; at 4 and 8, a number and
+where four bytes more are: of the element itself, or of what the first
+element of what unknown_0018d090 gives for the sound has in a block of its
+own, if it has it; at 0xC, the same as at 8. The tag is the one that
+sound_request_unknown_002226b0 looks at. With no tag, NONE at 2 and 0xC, and
+0 at 8. What they are is not known */
+void sound_unknown_00222930(
+	long sound_index,
+	long unknown,
+	byte *result)
+{
+	const byte *collection;
+	const byte *element;
+	const byte *tag;
+	const byte *block;
+	long tag_index;
+
+	*(short *)(result+SOUND_VOICE_ENVIRONMENT_NUMBER_OFFSET)= NONE;
+	*(const byte **)(result+SOUND_VOICE_ENVIRONMENT_UNKNOWN8_OFFSET)= NULL;
+	*(long *)(result+SOUND_VOICE_ENVIRONMENT_UNKNOWNC_OFFSET)= NONE;
+	collection= unknown_0018d090(sound_index, unknown);
+	/* a count of the least number there is passes, as in the game */
+	if (!collection || (long)(*(const unsigned long *)(collection+SOUND_EFFECT_COLLECTION_COUNT_OFFSET)-1)<0)
+	{
+		return;
+	}
+	element= *(const byte *const *)(collection+SOUND_EFFECT_COLLECTION_COUNT_OFFSET+4);
+	if (!element)
+	{
+		return;
+	}
+	tag_index= *(const long *)(element+4);
+	if (tag_index==NONE)
+	{
+		return;
+	}
+	tag= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+	if (*(const long *)(tag+SOUND_ENVIRONMENT_TAG_NAMES_OFFSET)<=0)
+	{
+		return;
+	}
+	block= *(const byte *const *)(tag+SOUND_ENVIRONMENT_TAG_NAMES_OFFSET+4);
+	*(short *)(result+SOUND_VOICE_ENVIRONMENT_NUMBER_OFFSET)= (short)sound_unknown_001914f0(*(const long *)block);
+	if (*(const long *)(element+SOUND_EFFECT_COLLECTION_ELEMENT_BLOCK_OFFSET)>0)
+	{
+		const byte *other= *(const byte *const *)(element+SOUND_EFFECT_COLLECTION_ELEMENT_BLOCK_OFFSET+4);
+
+		if (*(const long *)(other+8)>0)
+		{
+			const byte *entry= *(const byte *const *)(other+0xC);
+
+			*(long *)(result+SOUND_VOICE_ENVIRONMENT_UNKNOWN4_OFFSET)= *(const long *)(entry+0xC);
+			*(const byte **)(result+SOUND_VOICE_ENVIRONMENT_UNKNOWN8_OFFSET)= entry+4;
+		}
+	}
+	if (!*(const byte **)(result+SOUND_VOICE_ENVIRONMENT_UNKNOWN8_OFFSET))
+	{
+		*(long *)(result+SOUND_VOICE_ENVIRONMENT_UNKNOWN4_OFFSET)= *(const long *)(block+0xC);
+		*(const byte **)(result+SOUND_VOICE_ENVIRONMENT_UNKNOWN8_OFFSET)= block+4;
+	}
+	*(long *)(result+SOUND_VOICE_ENVIRONMENT_UNKNOWNC_OFFSET)= *(const long *)(result+SOUND_VOICE_ENVIRONMENT_UNKNOWN8_OFFSET);
 }

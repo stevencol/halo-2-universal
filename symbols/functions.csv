@@ -1300,3 +1300,4 @@ address,name,source,arguments,returns,convention
 002211e0,sound_console_slot_update_room,source/sound/sound_manager.c,eax stack,void,stdcall
 0037c6e5,unknown_0037c6e5,,stack stack stack,void
 0037b68b,unknown_0037b68b,,stack stack,void
+00222930,sound_unknown_00222930,source/sound/sound_manager.c,ecx edx esi,void
