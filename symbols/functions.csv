@@ -1271,7 +1271,7 @@ address,name,source,arguments,returns,convention
 0018cbc0,unknown_0018cbc0,,eax ecx,void
 00219070,sound_choose_permutation,source/sound/sound_manager.c,edi stack,short,stdcall
 0021b910,looping_sound_get_or_new_source,source/sound/sound_manager.c,eax esi edi stack stack stack,int,stdcall
-00219110,unknown_00219110,,eax ecx esi stack stack stack stack,int
+00219110,sound_pitch_range_choose_permutation,source/sound/sound_manager.c,eax ecx esi stack stack stack stack,int,stdcall
 0021b940,unknown_0021b940,,stack stack stack stack stack stack,int
 00218a10,sound_cache_chunk_load,source/sound/sound_manager.c,ebx stack,void,stdcall
 00218e50,sound_unknown_00218e50,source/sound/sound_manager.c,eax ecx edx stack,real:xmm0,stdcall

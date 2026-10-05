@@ -346,6 +346,8 @@ enum
 	SOUND_VOICE_DATUM_CALLBACK_DATA_OFFSET= 0xC,
 	SOUND_VOICE_DATUM_CALLBACKS_OFFSET= 0x10,
 	SOUND_VOICE_DATUM_UNKNOWN14_OFFSET= 0x14,
+	/* in a recording: how often it is passed over when one is chosen */
+	SOUND_PERMUTATION_SKIP_FRACTION_OFFSET= 0x2,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -731,10 +733,11 @@ long __attribute__((stdcall)) sound_effect_new(long unknown, real unknownC, shor
 void sound_effect_get_source(long effect_index, struct sound_source *source);
 boolean __attribute__((stdcall)) sound_effect_definition_get(long tag_index, long unknown, const byte **definition);
 
-/* 0x00219110: chooses a recording of a pitch range; 0x0021b940: makes the
-sound that plays of a track of a looping sound */
-long unknown_00219110(const struct sound_definition *sound, short pitch_range_offset, unsigned long *played,
-	long last_permutation, unsigned long *seed, long unknown, long unknown2);
+/* 0x00219110; 0x0021b940: makes the sound that plays of a track of a
+looping sound */
+long __attribute__((stdcall)) sound_pitch_range_choose_permutation(const struct sound_definition *sound,
+	short pitch_range_offset, unsigned long *played, long last_permutation, unsigned long *seed, boolean *all_played,
+	boolean unknown);
 long unknown_0021b940(long looping_sound_index, long sound_index, long pitch_range, long track, long unknown,
 	long unknown2);
 
@@ -4365,7 +4368,7 @@ void sound_cache_dispose(
 
 /* 0x00219070: which recording of a pitch range of a sound is played now.
 The one that was set aside to be next (the byte at 5 of the pitch range), if
-there is one; if not, what unknown_00219110 chooses, with the bits of those
+there is one; if not, what sound_pitch_range_choose_permutation chooses, with the bits of those
 that were played, the one that was played last and the seed of the game's
 random numbers. It is kept as the last one */
 short __attribute__((stdcall)) sound_choose_permutation(
@@ -4386,8 +4389,8 @@ short __attribute__((stdcall)) sound_choose_permutation(
 	{
 		unsigned long played= sound_pitch_range_get_played_bits(pitch_range, sound);
 
-		permutation= unknown_00219110(sound, pitch_range_offset, &played, sound_pitch_range_get_unknown4(pitch_range, sound),
-			&global_random_seed_reference[1], 0, 0);
+		permutation= sound_pitch_range_choose_permutation(sound, pitch_range_offset, &played, sound_pitch_range_get_unknown4(pitch_range, sound),
+			&global_random_seed_reference[1], NULL, FALSE);
 		sound_pitch_range_set_played_bits(pitch_range, sound, played);
 	}
 	sound_pitch_range_set_unknown4(pitch_range, sound, (char)permutation);
@@ -4736,4 +4739,81 @@ short sound_choose_pitch_range(
 	}
 
 	return (short)closest;
+}
+
+/* 0x00219110: a recording of a pitch range of a sound, at random, that was
+not played since all were: the bits of those that were played are kept, and
+when all have been, they start again from the one that was played last.
+Each recording says how often it is passed over (the word at 2 of it, of
+65535; or the rest to 1, for those from a half on, if it is asked so); one
+that is passed over stays as played, and another is looked for, up to twice
+as many times as there are recordings. It can be told whether all have been
+played now */
+long __attribute__((stdcall)) sound_pitch_range_choose_permutation(
+	const struct sound_definition *sound,
+	short pitch_range_offset,
+	unsigned long *played,
+	long last_permutation,
+	unsigned long *seed,
+	boolean *all_played,
+	boolean unknown)
+{
+	const struct sound_cache_file_gestalt *gestalt= global_sound_cache_file_gestalt;
+	const struct sound_pitch_range *pitch_range=
+		(const struct sound_pitch_range *)(uintptr_t)gestalt->pitch_ranges.address+
+		(sound->first_pitch_range_index+pitch_range_offset);
+	long count= pitch_range->permutation_count;
+	long tries= 0;
+	unsigned long permutation;
+
+	if (all_played)
+	{
+		*all_played= FALSE;
+	}
+	for (;;)
+	{
+		unsigned long bit;
+		real skip;
+
+		*seed= *seed*1664525UL+1013904223UL;
+		permutation= ((*seed>>16)*(unsigned long)count)>>16;
+		if (!(~*played&((1UL<<(pitch_range->permutation_count&31))-1)))
+		{
+			*played= 0;
+			if (pitch_range->permutation_count>1 && (short)last_permutation!=NONE)
+			{
+				*played= 1UL<<(last_permutation&31);
+			}
+			last_permutation= NONE;
+		}
+		bit= 1UL<<((short)permutation&31);
+		if (*played&bit)
+		{
+			continue;
+		}
+		*played|= bit;
+		if (all_played && !(~*played&((1UL<<(count&31))-1)))
+		{
+			*all_played= TRUE;
+		}
+		skip= (real)(long)*(const word *)((const byte *)(uintptr_t)gestalt->permutations.address+
+			(pitch_range->first_permutation_index+(short)permutation)*(long)sizeof(struct sound_permutation)+
+			SOUND_PERMUTATION_SKIP_FRACTION_OFFSET)*(1.0f/65535.0f);
+		if (unknown && !(skip<0.5f))
+		{
+			skip= 1.0f-skip;
+		}
+		*seed= *seed*1664525UL+1013904223UL;
+		if ((long double)(*seed>>16)*(long double)(1.0f/65535.0f)>=(long double)skip)
+		{
+			break;
+		}
+		tries++;
+		if (tries==count+count)
+		{
+			break;
+		}
+	}
+
+	return (long)permutation;
 }

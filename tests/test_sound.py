@@ -2741,7 +2741,7 @@ def run(t) -> None:
             Buffer(bytes(definition)),
             random_.randrange(3),
             globals=globals_,
-            externals={"unknown_00219110": choose},
+            externals={"sound_pitch_range_choose_permutation": choose},
         )
 
     for _ in range(40):
@@ -2983,3 +2983,29 @@ def run(t) -> None:
                 as_bits(random_.choice((0.0, -1200.0, 100.0, 650.0, 2000.0, -3000.0, float("nan"), random_.uniform(-1500, 1500)))),
                 globals={"global_sound_cache_file_gestalt": shared},
             )
+
+    # ---------- a recording of a pitch range, at random
+
+    random_ = random.Random(178)
+
+    for _ in range(600):
+        gestalt, _permutations = recordings()
+        shared = bytearray(gestalt)
+        count = random_.choice((1, 1, 2, 3, 5, 6))
+        for n in range(4):
+            struct.pack_into("<hh", shared, 0x48 + n * 0xC + 8, random_.randrange(0, 6), count)
+        for n in range(12):
+            struct.pack_into("<H", shared, 0x48 + 4 * 0xC + n * 0x10 + 2, random_.choice((0, 0, 0x4000, 0x8000, 0xC000, 0xF000)))
+        definition = bytearray(random_.randbytes(0x10))
+        struct.pack_into("<h", definition, 8, random_.randrange(2))
+        t.check(
+            "sound_pitch_range_choose_permutation",
+            Buffer(bytes(definition)),
+            random_.randrange(3),
+            Buffer(struct.pack("<I", random_.choice((0, (1 << count) - 1, random_.getrandbits(count), random_.getrandbits(count))))),
+            random_.choice((NONE, 0xFFFF, 0, count - 1, random_.randrange(count))),
+            Buffer(struct.pack("<I", random_.getrandbits(32))),
+            random_.choice((0, Buffer(random_.randbytes(4)))),
+            random_.choice((0, 0, 1)),
+            globals={"global_sound_cache_file_gestalt": Buffer(bytes(shared), pointers=(0x24, 0x2C, 0x44))},
+        )

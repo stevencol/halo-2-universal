@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Elegir al azar una grabación de un rango de tono
+
+Una función en `sound/sound_manager.c`. De 830 funciones se pasa a
+831, el 7,38 % de las del juego (el 3,981 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_pitch_range_choose_permutation` | `0x00219110` | `sound/sound_manager.c` |
+
+Estaba apuntada sin descompilar (`unknown_00219110`).
+
+### Lo que se sabe
+
+- `sound_pitch_range_choose_permutation` elige al azar una grabación de un
+  rango de tono que no haya sonado desde que sonaron todas. Lleva un bit por
+  grabación; cuando ya sonaron todas, empieza de nuevo dejando marcada solo
+  la última, para no repetirla enseguida.
+- Cada grabación dice con qué frecuencia se la salta (la palabra en `2`, de
+  65.535): si le toca saltarse, se queda marcada como sonada y se busca
+  otra, hasta el doble de veces que grabaciones hay.
+- Puede avisar de que con esta ya han sonado todas.
+- Con ella queda completa la elección de la grabación:
+  `sound_choose_permutation` ya no llama a nada sin descompilar.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- La batería completa corre aparte con las 824 funciones del hito 173; en
+  este hito solo se pasaron la prueba de esta función y la de
+  `sound_choose_permutation`.
+
+### Mutaciones
+
+Pendientes las de los hitos 156 a 178.
+
 ## 2026-10-04 — El rango de tono de un sonido para un tono
 
 Una función en `sound/sound_manager.c`. De 829 funciones se pasa a
