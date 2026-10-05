@@ -191,3 +191,4 @@ address,name,source
 0047f0f0,unknown_0047f0f0,source/sound/sound_manager.c
 0044a1c0,sound_effect_callbacks,source/sound/sound_manager.c
 0044a130,looping_sound_callbacks,source/sound/sound_manager.c
+00386ad8,unknown_00386ad8,source/sound/sound_manager.c

@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Lo que el sonido de la consola hace cada fotograma
+
+Una función en `sound/sound_manager.c`. De 898 funciones se pasa a
+899, el 7,98 % de las del juego (el 4,724 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_console_update` | `0x0021ec00` | `sound/sound_manager.c` |
+
+Estaba apuntada sin descompilar (`unknown_0021ec00`); la llaman
+`sound_update` y `sound_idle`. Nuevas sin descompilar: `0x001915f0` y
+`0x0037b844` (de la consola). También el global `unknown_00386ad8`.
+
+### Lo que se sabe
+
+- `sound_console_update` es lo que el sonido de la consola hace cada
+  fotograma. Primero compara un número que guarda (`0x2AD4`) con
+  `unknown_00386ad8`: si no coinciden llama a `0x001915f0` (por las cadenas
+  que usa, la que carga el programa del procesador de sonido), pone dos
+  bytes y se queda con el número nuevo.
+- Después deja que la consola haga su trabajo (`0x0037b844`).
+- Por último mira cada voz que suena: si su flujo dice que ya no suena (el
+  bit 16 de lo que hace), la para, igual que `sound_console_voice_stop`
+  pero sin tocar su volumen.
+- El nombre es una suposición.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función, de
+  `sound_update` y de `sound_idle`. La última batería completa es la del
+  hito 227 (893 funciones, todas bien).
+
+### Mutaciones
+
+Nueve líneas rotas a mano: las pruebas notan las nueve.
+
 ## 2026-10-05 — La consola hace sonar silencio sin parar
 
 Una función en `sound/sound_manager.c`. De 897 funciones se pasa a

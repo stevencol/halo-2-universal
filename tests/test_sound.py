@@ -486,7 +486,7 @@ def run(t) -> None:
 
     # ---------- giving the sound some time
 
-    idle_names = ("unknown_0021ec00", "sound_update_time", "sound_channels_update", "sound_channels_update_sources", "unknown_0021ee80", "sound_cache_idle")
+    idle_names = ("sound_console_update", "sound_update_time", "sound_channels_update", "sound_channels_update_sources", "unknown_0021ee80", "sound_cache_idle")
 
     def flags_then(harness, arguments):
         # the two flags that are set while the sound is given time
@@ -906,7 +906,7 @@ def run(t) -> None:
 
     random_ = random.Random(151)
     UPDATE_NAMES = (
-        "unknown_0021ec00",
+        "sound_console_update",
         "sound_playback_controllers_unknown_00219d90",
         "sound_console_streams_resume",
         "sound_update_time",
@@ -950,7 +950,7 @@ def run(t) -> None:
                 "GetTickCount": lambda harness, arguments: 0x12345,
                 "sound_console_get_state": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                 "sound_classes_update": lambda harness, arguments: (0, (arguments[0] & 0xFFFFFFFF,)),
-                "unknown_0021ec00": first_update,
+                "sound_console_update": first_update,
                 "sound_channels_build_queries": tables,
                 "unknown_0014dde0": lambda harness, arguments: first_player,
                 "unknown_00221a70": lambda harness, arguments: (0, (arguments[0], stack_bytes(harness, arguments[1], 4))),
@@ -5743,4 +5743,53 @@ def run(t) -> None:
                 "unknown_0037b66f": lambda harness, arguments: (0, tuple(arguments)),
                 "unknown_0037b6df": lambda harness, arguments: (0, tuple(arguments)),
             },
+        )
+
+    # ---------- what the console's sound does each frame
+
+    random_ = random.Random(232)
+
+    for _ in range(300):
+        console = bytearray(console_voices(random_.choice((8, 8, 3, 1, 0, -1))))
+        pointers = []
+        stream = len(console)
+        console += struct.pack("<I", stream + 4) + random_.randbytes(0xC) + struct.pack("<I", mock_address(0))
+        console += random_.randbytes(8) + struct.pack("<I", mock_address(1))
+        pointers.append(stream)
+        other = len(console)
+        console += struct.pack("<I", other + 4) + random_.randbytes(0x1C) + struct.pack("<I", mock_address(2))
+        pointers.append(other)
+        for voice in range(8):
+            at = 0xC + voice * 0x34
+            console[at + 1] = random_.choice((1, 1, 9, 0xF9, 0, 2, 3, 0xFA, random_.getrandbits(8)))
+            console[at + 3] = random_.getrandbits(8)
+            struct.pack_into("<I", console, at + 0x24, stream)
+            struct.pack_into("<I", console, at + 0x30, other)
+            pointers += [at + 0x24, at + 0x30]
+        number = random_.getrandbits(32)
+        struct.pack_into("<I", console, 0x2AD4, random_.choice((number, number, number ^ 1)))
+        doing = [random_.choice((0x10000, 0x10000, 0, 0xFFFEFFFF, 0xFFFFFFFF)) for _ in range(8)]
+
+        def does(call, doing=doing):
+            # by how many times the stream was asked in this call
+            asked_ = sum(1 for made_call in t.harness._calls if made_call[0] == 0)
+            t.harness.mu.mem_write(call.stack[1], struct.pack("<I", doing[asked_ % 8]))
+            return 0
+
+        t.check(
+            "sound_console_update",
+            globals={
+                "unknown_0051ebe4": Buffer(bytes(console), pointers=tuple(pointers)),
+                "unknown_00386ad8": struct.pack("<I", number),
+            },
+            externals={
+                "unknown_001915f0": lambda harness, arguments: 0,
+                "unknown_0037b844": lambda harness, arguments: 0,
+                "unknown_002ae8e0": console_call(0),
+            },
+            mocks=[
+                Mock(does, stack_arguments=2, record=lambda call: (call.stack[0],)),
+                Mock(lambda call: 0, stack_arguments=1),
+                Mock(lambda call: 0, stack_arguments=0, registers=("ecx",)),
+            ],
         )

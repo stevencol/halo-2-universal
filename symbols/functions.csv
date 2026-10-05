@@ -788,7 +788,7 @@ address,name,source,arguments,returns,convention
 00125e60,sound_source_request_data,source/sound/sound_manager.c,stack,bool
 00125ef0,sound_unknown_00125ef0,source/sound/sound_manager.c,eax,void
 00125f10,sound_predict,source/sound/sound_manager.c,edx,void
-0021ec00,unknown_0021ec00,,,void
+0021ec00,sound_console_update,source/sound/sound_manager.c,,void
 001269f0,sound_update_time,source/sound/sound_manager.c,,void
 001290d0,sound_channels_update,source/sound/sound_manager.c,,void
 001293f0,sound_channels_update_sources,source/sound/sound_manager.c,,void
@@ -1356,3 +1356,5 @@ address,name,source,arguments,returns,convention
 0037b6a7,unknown_0037b6a7,,stack stack,void
 0037b66f,unknown_0037b66f,,stack stack,void
 0037b6df,unknown_0037b6df,,stack stack stack stack,void
+001915f0,unknown_001915f0,,,void
+0037b844,unknown_0037b844,,,void

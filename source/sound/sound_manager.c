@@ -583,6 +583,8 @@ enum
 	SOUND_EFFECT_COLLECTION_FLAGS_OFFSET= 0x8,
 	SOUND_CONSOLE_SLOT_BUFFER_FLAGS= 0x2010,
 	SOUND_SILENCE_SIZE= 1000,
+	UNKNOWN_0051EBE4_UNKNOWN2A08_OFFSET= 0x2A08,
+	UNKNOWN_0051EBE4_UNKNOWN2AD4_OFFSET= 0x2AD4,
 	SOUND_CONSOLE_FORMAT_BASE_SIZE= 0x12,
 	VOICE_UNKNOWN2_OFFSET= 0x2,
 	VOICE_DECIBELS_OFFSET= 0xC,
@@ -989,6 +991,10 @@ the filter of the slots of the console's sound */
 map. What they are is not known */
 byte unknown_00470060[0x24];
 
+/* 0x00386ad8: a number that the console's sound follows. What it is of is not
+known */
+long unknown_00386ad8;
+
 /* 0x0047f0d0 and 0x0047f0f0: two things of the game with functions of their
 own, for the samples that are not compressed and for those that are. What
 they do is not known */
@@ -1099,7 +1105,11 @@ real __attribute__((stdcall)) sound_voice_playback_rate(short voice_index, long 
 /* 0x001290d0 */
 void sound_channels_update(void);
 
-void unknown_0021ec00(void);
+void sound_console_update(void);
+
+/* 0x001915f0; 0x0037b844: the console does the work of its sound */
+void unknown_001915f0(void);
+void unknown_0037b844(void);
 void sound_update_time(void);
 void sound_channels_update_sources(void);
 void unknown_0021ee80(void);
@@ -2083,7 +2093,7 @@ void sound_idle(
 			globals[GAME_SOUND_GLOBALS_UNKNOWN7D_OFFSET]= TRUE;
 			if (sound_available())
 			{
-				unknown_0021ec00();
+				sound_console_update();
 				sound_update_time();
 				sound_channels_update();
 				sound_channels_update_sources();
@@ -2489,7 +2499,7 @@ void sound_update(
 		globals[GAME_SOUND_GLOBALS_MAP_LOADED_OFFSET])
 	{
 		globals[GAME_SOUND_GLOBALS_UNKNOWN7D_OFFSET]= TRUE;
-		unknown_0021ec00();
+		sound_console_update();
 		globals= game_sound_globals;
 		if (globals[GAME_SOUND_GLOBALS_MAP_LOADED_OFFSET])
 		{
@@ -9457,4 +9467,53 @@ void __attribute__((stdcall)) sound_console_create_silence(
 	unknown_0037b66f(buffer, -10000);
 	unknown_0037b6df(buffer, 0, 0, 1);
 	*silence= buffer;
+}
+
+/* 0x0021ec00: what the console's sound does each frame. If the number that
+it keeps at 0x2AD4 is not unknown_00386ad8, unknown_001915f0 is called, the
+two bytes at 0x2A08 are set and the number is kept. The console does its
+work (unknown_0037b844). And each voice that plays whose stream says that it
+does not (the bit 16 of what it does) is stopped: its stream is told so, its
+other thing too, it does nothing and unknown_002ae8e0 is given it. The name
+is a guess */
+void sound_console_update(
+	void)
+{
+	byte *console= unknown_0051ebe4;
+	long voice_index;
+
+	if (*(const long *)(console+UNKNOWN_0051EBE4_UNKNOWN2AD4_OFFSET)!=unknown_00386ad8)
+	{
+		unknown_001915f0();
+		console= unknown_0051ebe4;
+		*(word *)(console+UNKNOWN_0051EBE4_UNKNOWN2A08_OFFSET)= 0x101;
+		*(long *)(console+UNKNOWN_0051EBE4_UNKNOWN2AD4_OFFSET)= unknown_00386ad8;
+	}
+	unknown_0037b844();
+	for (voice_index= 0;
+		voice_index<*(const short *)(unknown_0051ebe4+UNKNOWN_0051EBE4_VOICE_COUNT_OFFSET);
+		voice_index++)
+	{
+		byte *voice= unknown_0051ebe4+voice_index*UNKNOWN_0051EBE4_VOICE_SIZE+UNKNOWN_0051EBE4_VOICE_OFFSET;
+
+		if ((voice[VOICE_STATE_OFFSET]&VOICE_STATE_MASK)==_voice_state_playing)
+		{
+			void *stream= *(void **)(voice+VOICE_UNKNOWN24_OFFSET);
+			unsigned long status;
+
+			(*(const struct sound_console_stream_functions *const *)stream)->unknownC(stream, (long *)&status);
+			if (!((status>>16)&1))
+			{
+				void *object;
+
+				stream= *(void **)(voice+VOICE_UNKNOWN24_OFFSET);
+				(*(const struct sound_console_stream_functions *const *)stream)->unknown18(stream);
+				object= *(void **)(voice+VOICE_UNKNOWN30_OFFSET);
+				(*(const struct sound_console_voice_object_functions *const *)object)->unknown1C(object);
+				voice[VOICE_STATE_OFFSET]&= ~VOICE_STATE_MASK;
+				unknown_002ae8e0(voice);
+				voice[VOICE_FLAGS_OFFSET]&= ~FLAG(_voice_unknown2_bit);
+			}
+		}
+	}
 }
