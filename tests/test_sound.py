@@ -6723,3 +6723,43 @@ def run(t) -> None:
             Buffer(bytes(told)),
             globals={"looping_sounds": looping, "sound_sources": Buffer(bytes(sources), pointers=(0x44,))},
         )
+
+    # ---------- a looping sound is asked how a sound of one of its tracks is heard
+
+    random_ = random.Random(250)
+
+    for n in range(700):
+        looping, indices = looping_world()
+        data = bytearray(looping.data)
+        for number in range(6):
+            at = 0x4C + number * 0xD4
+            tag_ = random_.getrandbits(32)
+            struct.pack_into("<2I", data, at + 4, tag_, random_.choice((tag_ | 0x6000, tag_ | 0x6000, tag_, tag_ | 0x4000, tag_ | 0x2000, NONE)))
+            data[at + 0x10 : at + 0x18] = reals(random_, 2)
+            data[at + 0xC4 : at + 0xD4] = reals(random_, 4)
+        sound_index = random_.getrandbits(16) << 16 | random_.randrange(TAGS)
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        struct.pack_into("<I", tags, (sound_index & 0xFFFF) * 0x10 + 8, len(tags))
+
+        def decibels_(harness, arguments):
+            return real_bits(bits_real(arguments[0]) * 0.5 - 3.0), (arguments[0],)
+
+        def as_sound(harness, arguments):
+            return real_bits(bits_real(arguments[1]) + bits_real(arguments[2]) * 0.25), (
+                harness.normalize(arguments[0]),
+                arguments[1],
+                arguments[2],
+            )
+
+        t.check(
+            "looping_sound_track_source_heard",
+            random_.choice((NONE, *indices, *indices, *indices, indices[0] ^ 0x10000, 6, 0x10007)),
+            sound_index,
+            Buffer(random_.randbytes(0x30)),
+            Buffer(random_.randbytes(0x40)),
+            globals={
+                "looping_sounds": Buffer(bytes(data), pointers=looping.pointers),
+                "global_tag_instances": Buffer(bytes(tags) + random_.randbytes(0x20), pointers=((sound_index & 0xFFFF) * 0x10 + 8,)),
+            },
+            externals={"sound_gain_to_decibels": decibels_, "sound_definition_decibels": as_sound},
+        )

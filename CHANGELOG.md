@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Cómo se oye un sonido de una pista de un sonido en bucle
+
+Una función en `sound/sound_manager.c`, de 223 bytes. De 916 funciones se pasa a
+917, el 8,14 % de las del juego (el 4,977 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `looping_sound_track_source_heard` | `0x0021acc0` | `sound/sound_manager.c` |
+
+No estaba apuntada: es otra de las funciones de la tabla de `0x0044a110`
+(la de las pistas de los sonidos en bucle), y no está en la lista de
+Ghidra.
+
+### Lo que se sabe
+
+- Solo contesta un sonido en bucle que sigue ahí y cuyo número de `0x8` es
+  su tag con las marcas `0x6000`.
+- Contesta con cuatro reales, en `0x28` de lo que se pregunta: los
+  decibelios de cada una de las cuatro ganancias que el sonido en bucle
+  guarda al final (`0xC4`), tal como los tiene el sonido
+  (`sound_definition_decibels`, con el real de `0x4` de lo que el sonido
+  en bucle dice de sus sonidos), más el real de `0x8` de eso mismo. Y pone
+  la marca 4 de lo que se pregunta.
+- Devuelve falso si no contesta.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función. La última
+  batería completa es la del hito 244 (911 funciones, todas bien).
+
+### Mutaciones
+
+Once cambios a mano: las pruebas notan los once.
+
 ## 2026-10-05 — Una pista de un sonido en bucle cuenta sus canales
 
 Una función en `sound/sound_manager.c`, de 142 bytes. De 915 funciones se pasa a

@@ -287,6 +287,14 @@ enum
 	/* in a looping sound: the first sound that plays of each of its
 	tracks; in a sound that plays, the next and the one before of its ring */
 	LOOPING_SOUND_TRACK_SIZE= 0x14,
+	/* four gains at the end of a looping sound, the flags its number at 8 has
+	with its tag when it answers how its sounds are heard, and where the four
+	decibels go in what is asked, with their flag */
+	LOOPING_SOUND_DATUM_GAINS_OFFSET= 0xC4,
+	NUMBER_OF_LOOPING_SOUND_GAINS= 4,
+	LOOPING_SOUND_UNKNOWN8_OWN_FLAGS= 0x6000,
+	SOUND_HEARD_DECIBELS_OFFSET= 0x28,
+	_sound_heard_decibels_bit= 4,
 	/* how many sounds of a track have a channel, and where the bytes for who
 	is told of a sound of a track say which track */
 	LOOPING_SOUND_TRACK_CHANNELS_OFFSET= 0xE,
@@ -1584,6 +1592,10 @@ real unknown_0014b240(const byte *structure_bsp, const byte *portal, const real_
 /* 0x0021ac30 */
 void __attribute__((stdcall)) looping_sound_track_source_got_channel(long data, long sound_index,
 	long source_index, void *unknown5C);
+
+/* 0x0021acc0 */
+boolean __attribute__((stdcall)) looping_sound_track_source_heard(long data, long sound_index,
+	void *unknown5C, byte *parameters);
 
 /* 0x0021d060 */
 void looping_sound_check_distances(long definition_index, const struct sound_source *source);
@@ -11074,4 +11086,41 @@ void __attribute__((stdcall)) looping_sound_track_source_got_channel(
 		looping_sound[LOOPING_SOUND_DATUM_TRACK_SOURCE_OFFSET+LOOPING_SOUND_TRACK_CHANNELS_OFFSET+
 			(char)((const byte *)unknown5C)[LOOPING_SOUND_TOLD_TRACK_OFFSET]*LOOPING_SOUND_TRACK_SIZE]++;
 	}
+}
+
+/* 0x0021acc0: a looping sound is asked how a sound of one of its tracks is
+heard. Only one whose number at 8 is its tag with the flags 0x6000 answers:
+four reals at 0x28 of what is asked, each the decibels of one of the four
+gains at the end of the looping sound, as the sound has them
+(sound_definition_decibels, with the real at 4 of what the looping sound
+says of its sounds), plus the real at 8 of that; and the flag 4 of what is
+asked. FALSE if it does not answer. The name is made up */
+boolean __attribute__((stdcall)) looping_sound_track_source_heard(
+	long data,
+	long sound_index,
+	void *unknown5C,
+	byte *parameters)
+{
+	const byte *looping_sound= datum_try_and_get(looping_sounds, data);
+	const struct sound_definition *sound;
+	long index;
+
+	if (!looping_sound || *(const long *)(looping_sound+LOOPING_SOUND_DATUM_UNKNOWN8_OFFSET)!=
+		(*(const long *)(looping_sound+LOOPING_SOUND_DATUM_UNKNOWN4_OFFSET)|LOOPING_SOUND_UNKNOWN8_OWN_FLAGS))
+	{
+		return FALSE;
+	}
+	sound= (const struct sound_definition *)(uintptr_t)global_tag_instances[sound_index&0xFFFF].address;
+	for (index= 0; index<NUMBER_OF_LOOPING_SOUND_GAINS; index++)
+	{
+		real decibels= sound_definition_decibels(sound,
+			sound_gain_to_decibels(*(const real *)(looping_sound+LOOPING_SOUND_DATUM_GAINS_OFFSET+index*4)),
+			*(const real *)(looping_sound+LOOPING_SOUND_DATUM_SOURCE_OFFSET+4));
+
+		*(real *)(parameters+SOUND_HEARD_DECIBELS_OFFSET+index*4)=
+			decibels+*(const real *)(looping_sound+LOOPING_SOUND_DATUM_SOURCE_OFFSET+8);
+	}
+	*(unsigned long *)parameters|= FLAG(_sound_heard_decibels_bit);
+
+	return TRUE;
 }
