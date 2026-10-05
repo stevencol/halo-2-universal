@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — El stream de una voz toma los efectos de su sonido
+
+Una función en `sound/sound_manager.c`, de 1.344 bytes. De 920 funciones se pasa a
+921, el 8,18 % de las del juego (el 5,084 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_console_voice_apply_effects` | `0x002201f0` | `sound/sound_manager.c` |
+
+Era `unknown_002201f0`. La llaman `sound_console_voice_start` y
+`0x0021fa80`. Recibe la voz en `eax`, los efectos en `ebx` y un byte en la
+pila. Nuevas sin descompilar, de la consola: `0x0037b813` (el filtro de un
+stream) y `0x0037b809`.
+
+### Lo que se sabe
+
+- Los efectos de una voz empiezan con una semilla y una fracción, y tienen
+  hasta tres cosas: un filtro (en `0x10`) y otras dos (en `0x14` y `0x18`),
+  más la lista de `sound_console_apply_effect_list` (en `0x1C`, con su
+  tamaño en `0x41C`).
+- Cada número sale de cuatro reales con `sound_unknown_00219880`, la
+  semilla y la fracción.
+- El filtro es de tres tipos, con dos frecuencias y dos volúmenes. A la
+  consola se le dice un 2, un 1 o un 3 según el tipo; el tercero solo vale
+  para una voz que tiene a 0 tres bits de su byte de `0x1`.
+- Con el byte de la pila a 0 solo se dice el filtro, y ni eso si la
+  fracción es la que la voz ya tenía (con una diezmilésima de margen). Con
+  el byte puesto se dicen también las otras dos cosas: la primera con tres
+  números (hasta `0xFFFF`, hasta `0x3FF` y de -128 a 127) y la segunda con
+  cuatro (los dos últimos de -128 a 127 y de -128 a 128); y lo que los
+  efectos no traen se dice como «nada».
+- La voz se queda con la fracción, y al final la lista va a la consola.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función. La última
+  batería completa es la del hito 244 (911 funciones, todas bien).
+
+### Mutaciones
+
+Treinta y cuatro cambios a mano: las pruebas notan treinta y dos. Los dos
+que no notan no cambian nada (sumar un cero, y quitar una condición que
+solo deja pasar a donde no se hace nada).
+
 ## 2026-10-05 — La consola aplica lo que cambió de su sonido
 
 Una función en `sound/sound_manager.c`, de 1.005 bytes. De 919 funciones se pasa a

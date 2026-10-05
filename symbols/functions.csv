@@ -1260,7 +1260,7 @@ address,name,source,arguments,returns,convention
 00221da0,sound_source_unknown_00221da0,source/sound/sound_manager.c,ecx edx stack,bool,stdcall
 002ae7a0,unknown_002ae7a0,,stack stack stack,void
 0037c705,unknown_0037c705,,stack stack,void
-002201f0,unknown_002201f0,,eax ebx stack,void
+002201f0,sound_console_voice_apply_effects,source/sound/sound_manager.c,eax ebx stack,void,stdcall
 0021fa80,unknown_0021fa80,,edi stack stack stack,void
 00249d60,unknown_00249d60,,eax ecx edx,real:xmm0
 0021d2c0,sound_effect_new,source/sound/sound_manager.c,ecx xmm0 stack,int,stdcall
@@ -1393,3 +1393,5 @@ address,name,source,arguments,returns,convention
 000a5750,unknown_000a5750,,stack stack,bool,stdcall
 0037d141,unknown_0037d141,,stack,void
 00191550,unknown_00191550,,,void
+0037b813,unknown_0037b813,,stack stack,void
+0037b809,unknown_0037b809,,stack stack,void

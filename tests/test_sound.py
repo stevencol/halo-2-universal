@@ -2576,7 +2576,7 @@ def run(t) -> None:
                 "unknown_0037b822": console_call(),
                 "unknown_002ae7a0": console_call(0),
                 "unknown_0037c705": console_call(),
-                "unknown_002201f0": console_call(1),
+                "sound_console_voice_apply_effects": console_call(1),
                 "unknown_0021fa80": console_call(0),
             },
         )
@@ -7022,5 +7022,63 @@ def run(t) -> None:
                 "unknown_0037d141": lambda harness, arguments: (0, tuple(arguments)),
                 "unknown_002ae820": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                 "unknown_00191550": lambda harness, arguments: (0, ()),
+            },
+        )
+
+    # ---------- the stream of a voice of the console's sound takes the effects of its sound
+
+    random_ = random.Random(254)
+
+    for n in range(1200):
+        console = bytearray(random_.randbytes(0x2AC0))
+        voice_index = random_.randrange(8)
+        at = 0xC + voice_index * 0x34
+        fraction = random_.choice((0.0, 0.5, 1.0, 0.25, random_.random()))
+        console[at + 1] = random_.choice((0, 0, 0xC7, 0x08, 0x20, 0x38, random_.getrandbits(8)))
+        struct.pack_into(
+            "<f", console, at + 4, fraction + random_.choice((0.0, 0.0, 0.00005, -0.00005, 0.0002, -0.0002, 0.3))
+        )
+        effects = bytearray(random_.randbytes(0x420))
+        struct.pack_into("<If", effects, 0, random_.getrandbits(32), fraction)
+        pointers = []
+        for number, size in enumerate((0x48, 0x30, 0x40)):
+            where = 0x10 + number * 4
+            if random_.random() < 0.75:
+                struct.pack_into("<I", effects, where, len(effects))
+                pointers.append(where)
+                thing = bytearray(random_.randbytes(size))
+                struct.pack_into("<2i", thing, 0, random_.choice((0, 1, 2, 2, 3, -1)), random_.choice((0, 1, 5, 7, 8, -1, 100)))
+                effects += thing
+            else:
+                struct.pack_into("<I", effects, where, 0)
+        answers = [
+            random_.choice((0.0, 1.0, 0.5, 2.0, 10.0, 43.69, 100.0, -1.0, -10.0, 1e10, -1e10, 0.0234, 7.99, 8.01, -8.01, random_.uniform(-12, 12)))
+            for _ in range(12)
+        ]
+
+        def number_(harness, arguments, answers=answers):
+            answer = answers[calls_so_far(harness, "sound_unknown_00219880") % 12]
+            seed_ = struct.unpack("<I", harness.mu.mem_read(arguments[1], 4))[0]
+            harness.mu.mem_write(arguments[1], struct.pack("<I", (seed_ * 5 + 1) & 0xFFFFFFFF))
+            return real_bits(answer), (harness.normalize(arguments[0]), seed_, arguments[2])
+
+        def told_(harness, arguments):
+            return 0, (arguments[0], bytes(harness.mu.mem_read(arguments[1], 24)))
+
+        effects_ = Buffer(bytes(effects), pointers=tuple(pointers))
+        t.check(
+            "sound_console_voice_apply_effects",
+            voice_index,
+            effects_ if n % 23 else 0,
+            random_.choice((0, 0, 1, 1, 1, 0x100, 0x80)),
+            globals={"unknown_0051ebe4": Buffer(bytes(console))},
+            externals={
+                "sound_unknown_00219880": number_,
+                "sound_frequency_to_filter_coefficient": lambda harness, arguments: ((arguments[0] >> 3) ^ 0x1111, tuple(arguments)),
+                "sound_unknown_0021e2d0": lambda harness, arguments: ((arguments[0] >> 5) ^ 0x2222, tuple(arguments)),
+                "sound_unknown_0021e330": lambda harness, arguments: ((arguments[0] >> 7) ^ 0x3333, tuple(arguments)),
+                "unknown_0037b813": told_,
+                "unknown_0037b809": told_,
+                "sound_console_apply_effect_list": lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]))),
             },
         )

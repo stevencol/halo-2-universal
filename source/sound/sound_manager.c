@@ -639,6 +639,11 @@ enum
 	SOUND_CONSOLE_PLACE_AMOUNT_OFFSET= 0x14,
 	NUMBER_OF_SOUND_CONSOLE_PLACES= 2,
 	NUMBER_OF_SOUND_CONSOLE_PLACE_STREAMS= 4,
+	/* of the effects of a voice, and of a voice */
+	SOUND_VOICE_EFFECTS_FRACTION_OFFSET= 0x4,
+	SOUND_VOICE_EFFECTS_FILTER_OFFSET= 0x10,
+	VOICE_FRACTION_OFFSET= 0x4,
+	VOICE_STREAM_OFFSET= 0x24,
 	UNKNOWN_0051EBE4_PLACE_STREAMS_OFFSET= 0x2A70,
 	SOUND_ENVIRONMENT_SIZE= 0x48,
 	UNKNOWN_0051EBE4_LISTENER_POSITION_OFFSET= 0x2918,
@@ -1674,7 +1679,12 @@ long __attribute__((stdcall)) looping_sound_find(long unknown4, long unknown8);
 sound; 0x00249d60: something of two clusters of a structure bsp */
 void unknown_002ae7a0(void *voice, real unknown, real unknown2);
 void unknown_0037c705(void *unknown, void *stream);
-void unknown_002201f0(long voice_index, const byte *effects, long unknown);
+void __attribute__((stdcall)) sound_console_voice_apply_effects(long voice_index, const byte *effects, boolean all);
+/* 0x0037b813 and 0x0037b809: the console is told of the filter of a stream,
+and of two other things of it */
+struct sound_console_effect_description;
+void unknown_0037b813(void *stream, const struct sound_console_effect_description *description);
+void unknown_0037b809(void *stream, const struct sound_console_effect_description *description);
 void unknown_0021fa80(const byte *parameters, long voice_index, const byte *effects, long unknown);
 real unknown_00249d60(long cluster_index, long other_cluster_index, const void *structure_bsp);
 
@@ -5252,7 +5262,7 @@ void sound_voices_initialize_for_new_structure_bsp(
 /* 0x0021f8a0: a voice of the console's sound starts with what
 sound_channel_build_voice_parameters fills: its sound playback controller,
 and its slot, whose stream it is given. `effects` is what is at 0x48 of it:
-the game has it in ebx, and unknown_002201f0 takes it there. What the
+the game has it in ebx, and sound_console_voice_apply_effects takes it there. What the
 functions of the console that it calls do is not known */
 void __attribute__((stdcall)) sound_console_voice_start(
 	const byte *parameters,
@@ -5281,7 +5291,7 @@ void __attribute__((stdcall)) sound_console_voice_start(
 		unknown_0037c705(*(void **)(voice+VOICE_UNKNOWN24_OFFSET), NULL);
 		voice[VOICE_SLOT_OFFSET]= 0xFF;
 	}
-	unknown_002201f0(voice_index, effects, 1);
+	sound_console_voice_apply_effects(voice_index, effects, 1);
 	voice[VOICE_FLAGS_OFFSET]&= ~FLAG(_voice_unknown0_bit);
 	unknown_0021fa80(parameters, voice_index, NULL, 0);
 	voice[VOICE_FLAGS_OFFSET]|= FLAG(_voice_unknown0_bit);
@@ -11420,4 +11430,184 @@ void sound_console_commit(
 		unknown_002ae820(unknown_0051ebe4+UNKNOWN_0051EBE4_VOICE_OFFSET+index*UNKNOWN_0051EBE4_VOICE_SIZE);
 	}
 	unknown_00191550();
+}
+
+/* what the console is told of the filter of a stream, and of each of two
+other things of it: which kind, and five numbers */
+struct sound_console_effect_description
+{
+	long kind;
+	long values[5];
+};
+
+/* a whole number, no less than one and no more than another */
+static inline __attribute__((always_inline)) long sound_pin_long(
+	long value,
+	long minimum,
+	long maximum)
+{
+	if (value<minimum)
+	{
+		return minimum;
+	}
+
+	return value>maximum ? maximum : value;
+}
+
+/* 0x002201f0: the stream of a voice of the console's sound takes the effects
+of its sound: a filter (unknown_0037b813), two other things (unknown_0037b809,
+the first with a 1 and the second with a 0) and the list that
+sound_console_apply_effect_list gives the console. The numbers of each come
+from four reals each (sound_unknown_00219880), with the seed and the fraction
+that the effects start with.
+
+The filter is of one of three kinds, with two frequencies and two loudnesses;
+the third kind is only for a voice whose three bits at 3 of its byte at 1 are
+0. With `all` not set, only the filter is told, and not even that if the
+fraction is the one that the voice had (to a ten thousandth). With it set,
+the other two are told too: the first has three numbers (up to 0xFFFF, up to
+0x3FF and from -128 to 127) and the second four; and what the effects do not
+have is told as nothing. The voice keeps the fraction. The voice is taken in
+eax and the effects in ebx. The name is made up */
+void __attribute__((stdcall)) sound_console_voice_apply_effects(
+	long voice_index,
+	const byte *effects,
+	boolean all)
+{
+	struct sound_console_effect_description description;
+	boolean filter_told= FALSE;
+	boolean first_told= FALSE;
+	boolean second_told= FALSE;
+	const byte *filter;
+	unsigned long seed;
+	real fraction;
+	byte *voice;
+	long field;
+
+	if (!effects)
+	{
+		return;
+	}
+	voice= unknown_0051ebe4+UNKNOWN_0051EBE4_VOICE_OFFSET+voice_index*UNKNOWN_0051EBE4_VOICE_SIZE;
+	fraction= *(const real *)(effects+SOUND_VOICE_EFFECTS_FRACTION_OFFSET);
+	seed= *(const unsigned long *)effects;
+	filter= *(const byte *const *)(effects+SOUND_VOICE_EFFECTS_FILTER_OFFSET);
+	field= (signed char)(voice[1]<<2)>>5;
+	if (!filter || all ||
+		!((long double)0.0001f>fabsl((long double)fraction-(long double)*(const real *)(voice+VOICE_FRACTION_OFFSET))))
+	{
+		if (filter)
+		{
+			boolean known= FALSE;
+			real first_frequency;
+			real first_decibels;
+			real second_frequency;
+			real second_decibels;
+
+			memset(&description, 0, sizeof(description));
+			first_frequency= sound_unknown_00219880((const real *)(filter+8), &seed, fraction);
+			first_decibels= sound_unknown_00219880((const real *)(filter+0x18), &seed, fraction);
+			second_frequency= sound_unknown_00219880((const real *)(filter+0x28), &seed, fraction);
+			second_decibels= sound_unknown_00219880((const real *)(filter+0x38), &seed, fraction);
+			switch (*(const long *)filter)
+			{
+			case 0:
+				description.kind= 2;
+				description.values[0]= sound_pin_long(*(const long *)(filter+4), 0, 7);
+				description.values[1]= sound_frequency_to_filter_coefficient(first_frequency);
+				description.values[2]= sound_unknown_0021e330(first_decibels);
+				description.values[3]= sound_frequency_to_filter_coefficient(second_frequency);
+				description.values[4]= sound_unknown_0021e330(second_decibels);
+				known= TRUE;
+				break;
+			case 1:
+				description.kind= 1;
+				description.values[1]= sound_frequency_to_filter_coefficient(first_frequency);
+				description.values[2]= (long)sound_unknown_0021e2d0(first_decibels);
+				description.values[3]= sound_frequency_to_filter_coefficient(second_frequency);
+				description.values[4]= (long)sound_unknown_0021e2d0(second_decibels);
+				known= TRUE;
+				break;
+			case 2:
+				if (!field)
+				{
+					description.kind= 3;
+					description.values[0]= sound_pin_long(*(const long *)(filter+4), 0, 7);
+					description.values[1]= sound_frequency_to_filter_coefficient(first_frequency);
+					description.values[2]= (long)sound_unknown_0021e2d0(first_decibels);
+					description.values[3]= sound_frequency_to_filter_coefficient(second_frequency);
+					description.values[4]= sound_unknown_0021e330(second_decibels);
+					known= TRUE;
+				}
+				break;
+			}
+			if (known)
+			{
+				unknown_0037b813(*(void **)(voice+VOICE_STREAM_OFFSET), &description);
+				filter_told= TRUE;
+			}
+		}
+		if (all)
+		{
+			const byte *first= *(const byte *const *)(effects+SOUND_VOICE_EFFECTS_FILTER_OFFSET+4);
+			const byte *second;
+
+			if (first)
+			{
+				real rate;
+				real depth;
+				real amount;
+
+				memset(&description, 0, sizeof(description));
+				description.kind= 1;
+				rate= sound_unknown_00219880((const real *)first, &seed, fraction);
+				depth= sound_unknown_00219880((const real *)(first+0x10), &seed, fraction);
+				amount= sound_unknown_00219880((const real *)(first+0x20), &seed, fraction);
+				description.values[0]= sound_pin_long((long)(rate*1500.0f), 0, 0xFFFF);
+				description.values[1]= sound_pin_long((long)(depth*43.6906662f), 0, 0x3FF);
+				description.values[2]= sound_pin_long((long)(amount*128.0f), -128, 127);
+				unknown_0037b809(*(void **)(voice+VOICE_STREAM_OFFSET), &description);
+				first_told= TRUE;
+			}
+			second= *(const byte *const *)(effects+SOUND_VOICE_EFFECTS_FILTER_OFFSET+8);
+			if (second)
+			{
+				real rate;
+				real depth;
+				real amount;
+				real other;
+
+				memset(&description, 0, sizeof(description));
+				rate= sound_unknown_00219880((const real *)second, &seed, fraction);
+				depth= sound_unknown_00219880((const real *)(second+0x10), &seed, fraction);
+				amount= sound_unknown_00219880((const real *)(second+0x20), &seed, fraction);
+				other= sound_unknown_00219880((const real *)(second+0x30), &seed, fraction);
+				description.values[0]= sound_pin_long((long)(rate*1500.0f), 0, 0xFFFF);
+				description.values[1]= sound_pin_long((long)(depth*43.6906662f), 0, 0x3FF);
+				description.values[3]= sound_pin_long((long)(amount*16.0f), -128, 127);
+				description.values[4]= sound_pin_long((long)(other*16.0f), -128, 128);
+				unknown_0037b809(*(void **)(voice+VOICE_STREAM_OFFSET), &description);
+				second_told= TRUE;
+			}
+			if (!filter_told)
+			{
+				memset(&description, 0, sizeof(description));
+				unknown_0037b813(*(void **)(voice+VOICE_STREAM_OFFSET), &description);
+			}
+			if (!first_told)
+			{
+				memset(&description, 0, sizeof(description));
+				description.kind= 1;
+				unknown_0037b809(*(void **)(voice+VOICE_STREAM_OFFSET), &description);
+			}
+			if (!second_told)
+			{
+				memset(&description, 0, sizeof(description));
+				unknown_0037b809(*(void **)(voice+VOICE_STREAM_OFFSET), &description);
+			}
+		}
+	}
+	*(real *)(voice+VOICE_FRACTION_OFFSET)= fraction;
+	sound_console_apply_effect_list(*(const long *)(effects+SOUND_VOICE_EFFECTS_LIST_SIZE_OFFSET),
+		effects+SOUND_VOICE_EFFECTS_LIST_OFFSET);
 }
