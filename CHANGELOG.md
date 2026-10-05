@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Los mandos de sonidos se preparan
+
+Una función en `sound/sound_manager.c`. De 881 funciones se pasa a
+882, el 7,83 % de las del juego (el 4,583 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_playback_controllers_initialize` | `0x00219b40` | `sound/sound_manager.c` |
+
+Estaba apuntada sin descompilar (`unknown_00219b40`); la llama
+`sound_initialize` al arrancar el sonido.
+
+### Lo que se sabe
+
+- `sound_playback_controllers_initialize` prepara los mandos de sonidos: la
+  tabla, con sitio para 64, y uno suelto que no está en la tabla
+  (`unknown_0051ebdc`). Los dos salen de la memoria que el juego reserva al
+  arrancar.
+- El mando suelto queda como nuevo y sin dueño, con un número hecho con la
+  hora, un número al azar y el reloj de la consola (es la semilla de sus
+  números al azar), y con la marca que sigue al byte de `0x7F` de los
+  globales del sonido.
+- Devuelve si hay memoria para las dos cosas.
+- El nombre es una suposición.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y de
+  `sound_initialize`. La batería completa corre aparte con las 881
+  funciones del hito 219.
+
+### Mutaciones
+
+Diez líneas rotas a mano: las pruebas notan nueve. La que no notan es
+devolver siempre que sí al final: en las pruebas siempre hay memoria para
+el mando suelto.
+
 ## 2026-10-05 — Lo que se le avisa a un efecto de sonido de sus sonidos
 
 Cinco funciones en `sound/sound_manager.c`. De 876 funciones se pasa a

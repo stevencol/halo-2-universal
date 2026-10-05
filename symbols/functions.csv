@@ -766,7 +766,7 @@ address,name,source,arguments,returns,convention
 00125600,sound_dispose,source/sound/sound_manager.c,,void
 002185d0,unknown_002185d0,,,void
 002186b0,sound_cache_dispose,source/sound/sound_manager.c,,void
-00219b40,unknown_00219b40,,,bool
+00219b40,sound_playback_controllers_initialize,source/sound/sound_manager.c,,bool
 0021a0c0,looping_sounds_initialize,source/sound/sound_manager.c,,bool
 0021d490,sound_effects_initialize,source/sound/sound_manager.c,,bool
 0021dda0,sound_voices_initialize,source/sound/sound_manager.c,eax,bool

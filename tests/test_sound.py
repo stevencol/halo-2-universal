@@ -226,7 +226,7 @@ def run(t) -> None:
             )
 
     def answers(*values: int) -> dict:
-        names = ("unknown_00219b40", "looping_sounds_initialize", "sound_effects_initialize", "sound_voices_initialize", "unknown_0021e4b0")
+        names = ("sound_playback_controllers_initialize", "looping_sounds_initialize", "sound_effects_initialize", "sound_voices_initialize", "unknown_0021e4b0")
 
         def configuration(harness, arguments):
             return bytes(harness.mu.mem_read(arguments[0], 14))
@@ -5203,3 +5203,32 @@ def run(t) -> None:
             globals={"sound_sources": buffer},
             externals={"sound_effect_source_deleted": lambda harness, arguments: (0, tuple(arguments))},
         )
+
+    # ---------- the sound playback controllers are set up
+
+    random_ = random.Random(220)
+
+    for give in (True, True, True, False):
+        for allocated in (0, 0x1290, 0x1291, 0x1292, 0x1293, 0x345):
+            memory = Buffer(random_.randbytes(0x4C)) if give else None
+            state = bytearray(random_.randbytes(GLOBALS_SIZE))
+            state[0x7F] = random_.choice((0, 1, 2, 0xFF, 0xFE))
+            when, some, ticks = random_.getrandbits(31), random_.getrandbits(15), random_.getrandbits(32)
+            t.check(
+                "sound_playback_controllers_initialize",
+                globals={
+                    "shell_memory_globals": shell_memory(allocated),
+                    "game_sound_globals": Buffer(bytes(state)),
+                    "unknown_0051ebd8": random_.getrandbits(32),
+                    "unknown_0051ebdc": random_.getrandbits(32),
+                },
+                extra=[memory] if memory else [],
+                memory={STATE: Memory(random_.randbytes(STATE_SIZE))},
+                externals={
+                    "shell_memory_data_new": new_array(memory),
+                    "data_delete_all": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                    "time": lambda harness, arguments, when=when: (when, tuple(arguments)),
+                    "rand": lambda harness, arguments, some=some: some,
+                    "GetTickCount": lambda harness, arguments, ticks=ticks: ticks,
+                },
+            )

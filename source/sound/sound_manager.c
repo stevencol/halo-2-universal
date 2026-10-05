@@ -551,6 +551,7 @@ enum
 	_voice_unknown2_bit= 2,
 	_voice_state_playing= 1,
 	UNKNOWN_0051EBE4_SLOT_COUNT_SHORT_OFFSET= 0x6,
+	MAXIMUM_SOUND_PLAYBACK_CONTROLLERS= 64,
 	VOICE_UNKNOWN2_OFFSET= 0x2,
 	VOICE_DECIBELS_OFFSET= 0xC,
 	VOICE_UNKNOWN30_OFFSET= 0x30,
@@ -961,7 +962,7 @@ void sound_cache_dispose(void);
 /* 0x00219b40, 0x0021a0c0, 0x0021d490, 0x0021dda0, 0x0021e4b0: set up the
 sound playback controllers, the looping sounds, the sound effects, the sound
 voices and something more. FALSE if they cannot */
-boolean unknown_00219b40(void);
+boolean sound_playback_controllers_initialize(void);
 boolean looping_sounds_initialize(void);
 boolean sound_effects_initialize(void);
 boolean sound_voices_initialize(const struct sound_configuration *configuration);
@@ -978,6 +979,10 @@ void unknown_002ae170(void *unknown);
 
 /* 0x003314b0 */
 unsigned long GetTickCount(void);
+
+/* of the C library of the console */
+long time(long *timer);
+int rand(void);
 
 /* 0x00191270: when a map is loaded */
 void unknown_00191270(void);
@@ -1655,7 +1660,7 @@ void sound_initialize(
 		{
 			data_make_valid(sources);
 			memset(sound_channels, 0, MAXIMUM_SOUND_CHANNELS*sizeof(struct sound_channel));
-			if (unknown_00219b40() && looping_sounds_initialize() && sound_effects_initialize() &&
+			if (sound_playback_controllers_initialize() && looping_sounds_initialize() && sound_effects_initialize() &&
 				sound_voices_initialize(&sound_configuration) && unknown_0021e4b0(&sound_configuration))
 			{
 				short channel_index= 0;
@@ -8616,4 +8621,45 @@ void __attribute__((stdcall)) sound_effect_source_stopped(
 	*(long *)(source+SOUND_SOURCE_DATUM_CALLBACKS_OFFSET)= *(const long *)(source+SOUND_SOURCE_DATUM_EFFECT_CALLBACKS_OFFSET);
 	*(long *)(source+SOUND_SOURCE_DATUM_EFFECT_INDEX_OFFSET)= 0;
 	*(long *)(source+SOUND_SOURCE_DATUM_EFFECT_CALLBACKS_OFFSET)= 0;
+}
+
+/* 0x00219b40: the sound playback controllers are set up: the array of them,
+for 64, and one more that is not in the array (unknown_0051ebdc), both of the
+memory that the game has from its start. The one that is apart is made new
+for no one, with a number made of the time, a random number and the clock of
+the console, and with the flag that follows the byte at 0x7F of the globals
+of the sound. FALSE if there is no memory. The name is a guess */
+boolean sound_playback_controllers_initialize(
+	void)
+{
+	struct data_array *data=
+		shell_memory_data_new("sound playback controllers", MAXIMUM_SOUND_PLAYBACK_CONTROLLERS, UNKNOWN_0051EBD8_DATUM_SIZE);
+	byte *controller;
+
+	unknown_0051ebd8= data;
+	controller= shell_memory_allocate(UNKNOWN_0051EBD8_DATUM_SIZE);
+	unknown_0051ebdc= controller;
+	if (!data)
+	{
+		return FALSE;
+	}
+	if (controller)
+	{
+		byte unknown;
+		unsigned long seed;
+
+		data_make_valid(data);
+		unknown= game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7F_OFFSET];
+		seed= (unsigned long)time(NULL);
+		seed^= (unsigned long)rand()^GetTickCount();
+		controller= unknown_0051ebdc;
+		controller[UNKNOWN_0051EBD8_DATUM_SOUNDS_OFFSET]=
+			(controller[UNKNOWN_0051EBD8_DATUM_SOUNDS_OFFSET]&UNKNOWN_0051EBD8_DATUM_COUNT_MASK)|(byte)(~unknown<<7);
+		*(unsigned long *)(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWN8_OFFSET)= seed;
+		*(long *)(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWN4_OFFSET)= NONE;
+		controller[UNKNOWN_0051EBD8_DATUM_COUNT_OFFSET]= UNKNOWN_0051EBD8_DATUM_UNKNOWN_FLAG;
+		memset(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWNC_OFFSET, 0, UNKNOWN_0051EBD8_DATUM_UNKNOWNC_SIZE);
+	}
+
+	return unknown_0051ebd8 && unknown_0051ebdc;
 }
