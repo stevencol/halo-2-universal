@@ -544,6 +544,7 @@ enum
 	/* more of a voice of the console's sound */
 	_voice_unknown2_bit= 2,
 	_voice_state_playing= 1,
+	UNKNOWN_0051EBE4_SLOT_COUNT_SHORT_OFFSET= 0x6,
 	VOICE_UNKNOWN2_OFFSET= 0x2,
 	VOICE_DECIBELS_OFFSET= 0xC,
 	VOICE_UNKNOWN30_OFFSET= 0x30,
@@ -659,7 +660,7 @@ struct sound_console_slot
 	real unknown30;
 	/* of the console */
 	void *stream;
-	byte unknown38[4];
+	void *unknown38;
 };
 
 typedef char verify_sound_console_slot_size[
@@ -737,7 +738,9 @@ struct sound_console_environment_handler
 first take it on the stack; those of the second, in ecx */
 struct sound_console_stream_functions
 {
-	void *unknown0[3];
+	void *unknown0;
+	void (__attribute__((stdcall)) *unknown4)(void *stream);
+	void *unknown8;
 	void (__attribute__((stdcall)) *unknownC)(void *stream, long *status);
 	void *unknown10[2];
 	void (__attribute__((stdcall)) *unknown18)(void *stream);
@@ -959,7 +962,13 @@ boolean sound_voices_initialize(const struct sound_configuration *configuration)
 boolean unknown_0021e4b0(const struct sound_configuration *configuration);
 
 /* 0x0021eae0: takes down what unknown_0021e4b0 set up, most likely */
-void unknown_0021eae0(void);
+void sound_console_dispose(void);
+
+/* 0x00379f45 and 0x00379f2a: of the console: something of its sound is let
+go; 0x002ae170 */
+void unknown_00379f45(void *unknown);
+void unknown_00379f2a(void *unknown);
+void unknown_002ae170(void *unknown);
 
 /* 0x003314b0 */
 unsigned long GetTickCount(void);
@@ -1661,7 +1670,7 @@ void sound_dispose(
 	if (!--sound_initialize_count)
 	{
 		sound_cache_dispose();
-		unknown_0021eae0();
+		sound_console_dispose();
 		sound_effects= NULL;
 		if (sound_voices)
 		{
@@ -8322,4 +8331,62 @@ void sound_console_voices_stop(
 			voice[VOICE_UNKNOWN2_OFFSET]&= ~7;
 		}
 	}
+}
+
+/* 0x0021eae0: the console's sound is let go, when the sound of the game is:
+its voices are stopped and their streams let go, and there are no voices;
+the two things of the console that each slot has are let go, and the one
+that the console's sound has at 0x2AB0; unknown_002ae170 is given
+unknown_0047f0d0; and the first byte of the console's sound is 0, and
+the memory of the libraries of the console (xmem_static_buffer) is no more.
+The name is a guess */
+void sound_console_dispose(
+	void)
+{
+	byte *console;
+	void *object;
+	long index;
+
+	sound_console_voices_stop();
+	console= unknown_0051ebe4;
+	for (index= 0; index<*(const short *)(console+UNKNOWN_0051EBE4_VOICE_COUNT_OFFSET); index++)
+	{
+		void **stream= (void **)(console+UNKNOWN_0051EBE4_VOICE_OFFSET+index*UNKNOWN_0051EBE4_VOICE_SIZE+VOICE_UNKNOWN24_OFFSET);
+
+		if (*stream)
+		{
+			(*(const struct sound_console_stream_functions *const *)*stream)->unknown4(*stream);
+			console= unknown_0051ebe4;
+			*stream= NULL;
+		}
+	}
+	*(short *)(console+UNKNOWN_0051EBE4_VOICE_COUNT_OFFSET)= 0;
+	for (index= 0; index<*(const short *)(console+UNKNOWN_0051EBE4_SLOT_COUNT_SHORT_OFFSET); index++)
+	{
+		struct sound_console_slot *slot= (struct sound_console_slot *)(console+UNKNOWN_0051EBE4_SLOTS_OFFSET)+index;
+
+		if (slot->stream)
+		{
+			unknown_00379f45(slot->stream);
+			console= unknown_0051ebe4;
+			slot->stream= NULL;
+		}
+		if (slot->unknown38)
+		{
+			unknown_00379f45(slot->unknown38);
+			console= unknown_0051ebe4;
+			slot->unknown38= NULL;
+		}
+	}
+	object= *(void **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET);
+	if (object)
+	{
+		unknown_00379f2a(object);
+		console= unknown_0051ebe4;
+		*(void **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET)= NULL;
+	}
+	unknown_002ae170(unknown_0047f0d0);
+	console= unknown_0051ebe4;
+	xmem_static_buffer= NULL;
+	console[0]= 0;
 }

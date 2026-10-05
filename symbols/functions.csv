@@ -771,7 +771,7 @@ address,name,source,arguments,returns,convention
 0021d490,sound_effects_initialize,source/sound/sound_manager.c,,bool
 0021dda0,sound_voices_initialize,source/sound/sound_manager.c,eax,bool
 0021e4b0,unknown_0021e4b0,,stack,bool
-0021eae0,unknown_0021eae0,,,void
+0021eae0,sound_console_dispose,source/sound/sound_manager.c,,void
 00125a60,sound_available,source/sound/sound_manager.c,,bool
 00125a90,sound_enable,source/sound/sound_manager.c,eax,void
 00125df0,sound_load_environment,source/sound/sound_manager.c,,void
@@ -1317,3 +1317,6 @@ address,name,source,arguments,returns,convention
 0021f4e0,sound_console_voice_create_stream,source/sound/sound_manager.c,ebx stack,void,stdcall
 002ae660,unknown_002ae660,,eax ecx edi stack,bool
 00219f80,sound_pitch_range_fade_decibels,source/sound/sound_manager.c,ecx edx stack,real:eax,stdcall
+00379f45,unknown_00379f45,,stack,void
+00379f2a,unknown_00379f2a,,stack,void
+002ae170,unknown_002ae170,,edi,void

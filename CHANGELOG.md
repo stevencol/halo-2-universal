@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — El sonido de la consola se suelta
+
+Una función en `sound/sound_manager.c`. De 872 funciones se pasa a
+873, el 7,75 % de las del juego (el 4,564 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_console_dispose` | `0x0021eae0` | `sound/sound_manager.c` |
+
+Estaba apuntada sin descompilar (`unknown_0021eae0`); la llama
+`sound_dispose`. Nuevas sin descompilar: `0x00379f45` y `0x00379f2a`, de la
+consola (sueltan algo de su sonido), y `0x002ae170`.
+
+### Lo que se sabe
+
+- `sound_console_dispose` deshace el sonido de la consola cuando se deshace
+  el del juego: para todas las voces (`sound_console_voices_stop`), suelta
+  el flujo de cada una (la función de `4` de su tabla) y deja la cuenta de
+  voces a 0.
+- De cada casilla suelta las dos cosas de la consola que tiene (en `0x34` y
+  `0x38`), y del sonido de la consola, la de `0x2AB0`.
+- Al final llama a `0x002ae170` con `unknown_0047f0d0` (lo que acompaña a
+  las muestras sin comprimir), pone a 0 el primer byte del sonido de la
+  consola y deja sin memoria a las bibliotecas de la consola
+  (`xmem_static_buffer`, que ya estaba en `shell.c`).
+- El nombre es una suposición.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función, de
+  `sound_dispose` y de las que usan las estructuras que cambian. La última
+  batería completa es la del hito 210 (867 funciones, todas bien).
+
+### Mutaciones
+
+Once líneas rotas a mano: las pruebas notan las once.
+
 ## 2026-10-05 — Todas las voces de la consola se paran
 
 Una función en `sound/sound_manager.c`. De 871 funciones se pasa a

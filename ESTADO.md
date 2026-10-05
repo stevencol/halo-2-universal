@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-04, al terminar el hito 215.
+**Última actualización:** 2026-10-04, al terminar el hito 216.
 
 ## Dónde estamos
 
-- **872 funciones descompiladas de 11.265: el 7,74 % del juego** (el
-  4,556 % de los bytes de código).
-- Las 872 están comprobadas contra el ejecutable original: las 867 del
+- **873 funciones descompiladas de 11.265: el 7,75 % del juego** (el
+  4,564 % de los bytes de código).
+- Las 873 están comprobadas contra el ejecutable original: las 867 del
   hito 210 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile all the voices of the console's sound being stopped* (ver `git log`).
+- Último hito: *Decompile the console's sound being let go* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 446 funciones apuntadas pero sin descompilar (las que el código
-  llama); 359 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 448 funciones apuntadas pero sin descompilar (las que el código
+  llama); 361 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -92,7 +92,7 @@ Módulos (funciones hechas / archivo):
       `0x002accd0` a `0x002ae090`: completo)
 - [x] Perfiles de los jugadores — `saved games\player_profile.c` (11:
       completo)
-- [ ] Sonido — `sound\sound_manager.c` (182; faltan muchas de
+- [ ] Sonido — `sound\sound_manager.c` (183; faltan muchas de
       `0x00125f70` a `0x0012b070`), `sound\sound_classes.c` (1)
 - [x] Archivos — `tag_files\files.c`, `files_xbox.c` (22, completo: de
       `0x00136710` a `0x001374c0`. Lo que hay justo antes, de `0x00136140`
@@ -183,7 +183,7 @@ Módulos (funciones hechas / archivo):
       (solo queda `0x00127400`); y de los
       otros archivos del sonido, `0x0021d630` (los efectos), `0x0021b940`
       (los sonidos en bucle) y las que hablan con la consola por tablas de
-      funciones (`0x0021ec00`, `0x0021eae0`).
+      funciones (`0x0021ec00`).
 - [x] ~~`lruv_block_new`~~ (hito 31).
 - [x] ~~Caché de animaciones~~ (hito 32).
 - [x] ~~Caché de texturas, primera parte~~ (hito 33): crear, abrir,

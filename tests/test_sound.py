@@ -296,7 +296,7 @@ def run(t) -> None:
                 "sound_sources": random_.choice((0, array(1), array(1))),
                 "sound_channels": pointer(),
             },
-            externals={"sound_cache_dispose": lambda harness, arguments: 0, "unknown_0021eae0": lambda harness, arguments: 0},
+            externals={"sound_cache_dispose": lambda harness, arguments: 0, "sound_console_dispose": lambda harness, arguments: 0},
         )
 
     # ---------- a map is loaded
@@ -5030,4 +5030,42 @@ def run(t) -> None:
                 Mock(lambda call: 0, stack_arguments=1),
                 Mock(lambda call: 0, stack_arguments=0, registers=("ecx",)),
             ],
+        )
+
+    # ---------- the console's sound is let go
+
+    random_ = random.Random(216)
+
+    for _ in range(200):
+        console = bytearray(console_voices(random_.choice((8, 8, 3, 1, 0, -1))))
+        struct.pack_into("<h", console, 6, random_.choice((0, 1, 5, 16, -1)))
+        pointers = []
+        stream = len(console)
+        console += struct.pack("<2I", stream + 4, random_.getrandbits(32)) + struct.pack("<I", mock_address(0)) + random_.randbytes(8)
+        pointers.append(stream)
+        for voice in range(8):
+            at = 0xC + voice * 0x34
+            if random_.random() < 0.7:
+                struct.pack_into("<I", console, at + 0x24, stream)
+                pointers.append(at + 0x24)
+            else:
+                struct.pack_into("<I", console, at + 0x24, 0)
+        for slot in range(16):
+            at = 0x1A18 + slot * 0x3C
+            struct.pack_into("<2I", console, at + 0x34, random_.choice((0, random_.getrandbits(32) | 1)), random_.choice((0, random_.getrandbits(32) | 1)))
+        struct.pack_into("<I", console, 0x2AB0, random_.choice((0, random_.getrandbits(32) | 1, random_.getrandbits(32) | 1)))
+        t.check(
+            "sound_console_dispose",
+            globals={
+                "unknown_0051ebe4": Buffer(bytes(console), pointers=tuple(pointers)),
+                "xmem_static_buffer": struct.pack("<I", random_.getrandbits(32)),
+                "unknown_0047f0d0": GlobalRange(0x20),
+            },
+            externals={
+                "sound_console_voices_stop": lambda harness, arguments: 0,
+                "unknown_00379f45": lambda harness, arguments: (0, tuple(arguments)),
+                "unknown_00379f2a": lambda harness, arguments: (0, tuple(arguments)),
+                "unknown_002ae170": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+            },
+            mocks=[Mock(lambda call: 0, stack_arguments=1)],
         )
