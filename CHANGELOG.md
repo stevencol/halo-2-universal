@@ -2,6 +2,65 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Cada vez, con el sonido de una pista que tiene voz
+
+Una función en `sound/sound_manager.c`, de 1.929 bytes. De 922 funciones se pasa a
+923, el 8,19 % de las del juego (el 5,212 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `looping_sound_channel_update_voice` | `0x0021c400` | `sound/sound_manager.c` |
+
+Era `unknown_0021c400`. La llama la función que cada fotograma atiende a
+los canales, para los sonidos de las pistas de los sonidos en bucle (los
+tipos 1 a 4). Recibe en la pila el canal, cuánto se oye y lo que calculó
+`sound_channel_compute_parameters`. Es la hermana de
+`sound_channel_update_voice` (hito 205), que hace lo mismo para los demás
+sonidos.
+
+### Lo que se sabe
+
+- Como su hermana, da a la voz lo que rellena
+  `sound_channel_build_voice_parameters`, con el tono (torcido por el real
+  de la pista, menos el de las grabaciones tal como se hicieron, y con el
+  efecto Doppler si el sonido tiene voz de sonido) y el volumen, más la
+  ganancia de la grabación. Un sonido sin la marca 9 arranca; los demás
+  siguen (`sound_console_voice_set_parameters`).
+- Lo propio de las pistas es cómo se elige el trozo siguiente cuando no hay
+  ninguno esperando: el siguiente de la grabación; o, al acabarse esta,
+  otra grabación (con los bits de las ya usadas: los de la pista para su
+  primer sonido, los del propio sonido para los demás), salvo que el tag
+  del sonido en bucle tenga la marca 1, que acaba el sonido (pasa al tipo
+  4).
+- El primer sonido de una pista a la que le toca cambiar de estado
+  (`looping_sound_unknown_0021a050`) cambia al acabar su grabación, o antes
+  si la pista lo permite (`looping_sound_unknown_0021a080`) y el trozo
+  tiene su bit más alto: `looping_sound_source_next_state` (hito 239). Si
+  eso suelta el sonido, no se hace nada más.
+- Un trozo que espera se pone en cola cuando sus muestras están listas,
+  salvo que la voz esté en el estado 3. Si con él se acaba la grabación de
+  un sonido de entrada (tipo 1) o de salida (tipo 3) que no va a cambiar de
+  estado, el sonido pasa al tipo siguiente.
+- El primer sonido de una pista se queda al final con la semilla y las
+  grabaciones usadas de la pista.
+- El juego solo mira el byte bajo de lo que devuelve
+  `looping_sound_unknown_0021a050`.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- Las pruebas dan a `looping_sound_unknown_0021a050` solo los valores que
+  esa función puede dar (0 y 1): con otros, el compilador de `source/` no
+  hace la conversión a byte que el juego sí hace.
+- En este hito solo se pasaron las pruebas de esta función. La última
+  batería completa es la del hito 254 (921 funciones, todas bien).
+
+### Mutaciones
+
+Cuarenta y dos cambios a mano: las pruebas notan los cuarenta y dos.
+
 ## 2026-10-05 — Una voz de la consola toma cómo se oye su sonido
 
 Una función en `sound/sound_manager.c`, de 1.893 bytes. De 921 funciones se pasa a

@@ -1289,7 +1289,7 @@ address,name,source,arguments,returns,convention
 002226b0,sound_request_unknown_002226b0,source/sound/sound_manager.c,ebx edi,void
 001914f0,sound_unknown_001914f0,source/sound/sound_manager.c,ecx,int
 00129aa0,sound_channel_compute_parameters,source/sound/sound_manager.c,eax stack stack,void,stdcall
-0021c400,unknown_0021c400,,stack stack stack,void
+0021c400,looping_sound_channel_update_voice,source/sound/sound_manager.c,stack stack stack,void,stdcall
 00128ca0,sound_channel_update_voice,source/sound/sound_manager.c,stack stack stack,void,stdcall
 001295e0,sound_channel_get_voice,source/sound/sound_manager.c,stack,bool,stdcall
 0037b75b,unknown_0037b75b,,stack stack,void

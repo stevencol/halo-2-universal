@@ -302,6 +302,7 @@ enum
 	LOOPING_SOUND_TOLD_COUNTED_OFFSET= 0x6,
 	LOOPING_SOUND_TRACK_PITCH_OFFSET= 0x10,
 	LOOPING_SOUND_DEFINITION_TRACK_GAIN_OFFSET= 0x8,
+	LOOPING_SOUND_DEFINITION_TRACK_UNKNOWN3C_OFFSET= 0x3C,
 	SOUND_SOURCE_DATUM_TRACK_SEED_OFFSET= 0x64,
 	SOUND_SOURCE_DATUM_TRACK_PLAYED_OFFSET= 0x68,
 	LOOPING_SOUND_DATUM_TRACK_SOURCE_OFFSET= 0x88,
@@ -1782,7 +1783,8 @@ short __attribute__((stdcall)) sound_source_get_channel(long source_index, long 
 /* 0x00129aa0: works out how the sound of a channel is heard; 0x0021c400
 and 0x00128ca0: give it to the voice of the channel */
 void __attribute__((stdcall)) sound_channel_compute_parameters(short channel_index, real *decibels, byte *parameters);
-void unknown_0021c400(long channel_index, real decibels, const byte *parameters);
+void __attribute__((stdcall)) looping_sound_channel_update_voice(short channel_index, real decibels,
+	const byte *parameters);
 void __attribute__((stdcall)) sound_channel_update_voice(short channel_index, real decibels, const byte *parameters);
 
 /* 0x0021f720: of the console's sound, with what sound_unknown_00222930 fills */
@@ -6831,7 +6833,7 @@ plays and is not stopped for a while. A sound that has faded out and is
 heard at -64 decibels or less is let go (reason 4); one that has faded in
 stops fading. For a channel with a voice, sound_channel_compute_parameters works out how the
 sound is heard, to which the decibels of the real that follows the pause of
-the game are added, and that is given to unknown_0021c400 (for the sounds of
+the game are added, and that is given to looping_sound_channel_update_voice (for the sounds of
 the kinds 1 to 4) or to sound_channel_update_voice; and who is told of it is
 told where it plays, if the sound is not marked. Before all, what the game
 keeps of the console's sound is filled */
@@ -6887,7 +6889,7 @@ void sound_channels_update_sources(
 		decibels= master_decibels+decibels;
 		if (sound_source_kind_test(sound_source_get(channel->unknown0)))
 		{
-			unknown_0021c400(channel_index, decibels, parameters);
+			looping_sound_channel_update_voice(channel_index, decibels, parameters);
 		}
 		else
 		{
@@ -11900,4 +11902,280 @@ void __attribute__((stdcall)) sound_console_voice_set_parameters(
 		}
 	}
 	sound_console_voice_apply_effects(voice_index, effects, FALSE);
+}
+
+/* whether a track of a looping sound is to go on to another state: only the
+low byte of what looping_sound_unknown_0021a050 gives is looked at */
+static inline __attribute__((always_inline)) boolean looping_sound_track_goes_on(
+	const byte *track_state,
+	const byte *track_definition)
+{
+	return (byte)looping_sound_unknown_0021a050(track_state, track_definition)!=0;
+}
+
+/* the recording that a sound that plays is at */
+static inline __attribute__((always_inline)) const struct sound_permutation *sound_source_permutation(
+	const byte *source)
+{
+	const struct sound_cache_file_gestalt *gestalt= global_sound_cache_file_gestalt;
+	const struct sound_definition *sound= sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET));
+	const struct sound_pitch_range *pitch_range= (const struct sound_pitch_range *)(uintptr_t)gestalt->pitch_ranges.address+
+		(sound->first_pitch_range_index+(char)source[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET]);
+
+	return (const struct sound_permutation *)(uintptr_t)gestalt->permutations.address+
+		(pitch_range->first_permutation_index+(char)source[SOUND_SOURCE_DATUM_PERMUTATION_OFFSET]);
+}
+
+/* 0x0021c400: what is done each time with the sound of a channel that has
+a voice of the console's sound, for a sound of a track of a looping sound
+(the kinds 1 to 4). As sound_channel_update_voice: the voice is given what
+sound_channel_build_voice_parameters fills, with the pitch of the sound
+(bent by the real of the track, less that of the recordings as they were
+made, and with the Doppler effect for a sound with a sound voice) and how
+loud it is, plus the gain of the recording. A sound with no flag 9 starts.
+
+Any other goes on. Of the kinds 1 to 3, when no piece waits (flag 3), the
+next piece is chosen: the next of its recording, or at its end another
+recording (with the bits of those played, of the track for its first sound
+and of the sound for the rest), unless the looping sound's tag has the flag
+1, which ends the sound (kind 4). The first sound of a track that the track
+says is to go on to another state (looping_sound_unknown_0021a050) does so
+at the end of its recording, or before it if the track lets it
+(looping_sound_unknown_0021a080) and the piece has its top bit:
+looping_sound_source_next_state, and if that lets the sound go there is
+nothing more to do. A sound with nothing more to play is marked as at its
+end (flag 6), and its voice too. A piece that waits is queued when its
+samples are there, unless the voice is at 3. The first sound of a track
+keeps the seed and the played recordings of the track. The name is made
+up */
+void __attribute__((stdcall)) looping_sound_channel_update_voice(
+	short channel_index,
+	real decibels,
+	const byte *parameters)
+{
+	struct sound_channel *channel= sound_channels+channel_index;
+	long source_index= channel->unknown0;
+	byte *source= sound_source_get(source_index);
+	const struct sound_definition *sound= sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET));
+	const struct sound_pitch_range *pitch_range=
+		(const struct sound_pitch_range *)(uintptr_t)global_sound_cache_file_gestalt->pitch_ranges.address+
+		(sound->first_pitch_range_index+(char)source[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET]);
+	byte *looping_sound= (byte *)looping_sounds->data+
+		(*(const long *)(source+SOUND_SOURCE_DATUM_CALLBACK_DATA_OFFSET)&0xFFFF)*LOOPING_SOUND_DATUM_SIZE;
+	byte *track_state= looping_sound+LOOPING_SOUND_DATUM_TRACK_SOURCE_OFFSET+
+		(char)source[SOUND_SOURCE_DATUM_TRACK_OFFSET]*LOOPING_SOUND_TRACK_SIZE;
+	const byte *definition= (const byte *)(uintptr_t)
+		global_tag_instances[*(const long *)(looping_sound+LOOPING_SOUND_DATUM_UNKNOWN4_OFFSET)&0xFFFF].address;
+	const byte *track_definition= *(const byte *const *)(definition+LOOPING_SOUND_DEFINITION_TRACKS_OFFSET+4)+
+		(char)source[SOUND_SOURCE_DATUM_TRACK_OFFSET]*LOOPING_SOUND_DEFINITION_TRACK_SIZE;
+	byte *controller= sound_playback_controller_get(*(const long *)(looping_sound+LOOPING_SOUND_DATUM_CONTROLLER_INDEX_OFFSET));
+	const short *bends= (const short *)((const byte *)sound_definition_scale_decibels(sound)+SOUND_SCALE_PITCH_BENDS_OFFSET);
+	real scale= *(const real *)(source+SOUND_SOURCE_DATUM_SCALE_OFFSET);
+	boolean first= *(const long *)track_state==source_index;
+	real pitch= ((real)bends[1]-(real)bends[0])**(const real *)(track_state+LOOPING_SOUND_TRACK_PITCH_OFFSET)+
+		*(const real *)(source+SOUND_SOURCE_DATUM_PITCH_OFFSET)+(real)bends[0];
+	byte voice_parameters[SOUND_VOICE_PARAMETERS_SIZE];
+	const struct sound_permutation *permutation;
+	short voice_state;
+	word flags;
+
+	memset(voice_parameters, 0, sizeof(voice_parameters));
+	*(real *)(voice_parameters+SOUND_VOICE_PARAMETERS_DECIBELS_OFFSET)= sound_definition_decibels(sound,
+		*(const real *)(source+SOUND_SOURCE_DATUM_DECIBELS_OFFSET)+(*(const real *)(source+SOUND_SOURCE_DATUM_GAIN_OFFSET)+decibels),
+		scale);
+	*(short *)(voice_parameters+SOUND_VOICE_PARAMETERS_UNKNOWN34_OFFSET)=
+		*(const short *)(track_definition+LOOPING_SOUND_DEFINITION_TRACK_UNKNOWN3C_OFFSET);
+	if (*(const short *)(track_definition+LOOPING_SOUND_DEFINITION_TRACK_UNKNOWN3C_OFFSET))
+	{
+		*(unsigned long *)(voice_parameters+SOUND_VOICE_PARAMETERS_FLAGS_OFFSET)|= 1;
+	}
+	*(long *)(voice_parameters+SOUND_VOICE_START_CONTROLLER_INDEX_OFFSET)= definition[0]&FLAG(5) ?
+		*(const long *)(looping_sound+LOOPING_SOUND_DATUM_CONTROLLER_INDEX_OFFSET) : NONE;
+	*(real *)(voice_parameters+SOUND_VOICE_PARAMETERS_PITCH_OFFSET)= pitch-(real)sound_pitch_range_natural_pitch(pitch_range);
+	if (source[SOUND_SOURCE_DATUM_UNKNOWN6_OFFSET]&FLAG(_sound_source_datum_voice_bit))
+	{
+		const struct sound_class *sound_class= sound_class_get(sound->sound_class);
+		long controller_index= *(const long *)(looping_sound+LOOPING_SOUND_DATUM_CONTROLLER_INDEX_OFFSET);
+		real doppler;
+
+		if (controller_index!=NONE)
+		{
+			const byte *own= (const byte *)unknown_0051ebd8->data+(controller_index&0xFFFF)*UNKNOWN_0051EBD8_DATUM_SIZE;
+
+			doppler= *(const long *)(own+UNKNOWN_0051EBD8_DATUM_UNKNOWN4_OFFSET)!=NONE ?
+				*(const real *)(own+UNKNOWN_0051EBD8_DATUM_UNKNOWNC_OFFSET+(char)source[SOUND_SOURCE_DATUM_LISTENER_OFFSET]*4) :
+				0.0f;
+		}
+		else
+		{
+			doppler= (real)sound_listener_doppler_pitch((char)source[SOUND_SOURCE_DATUM_LISTENER_OFFSET],
+				(const real_point3d *)(source+SOUND_SOURCE_DATUM_POSITION_OFFSET));
+		}
+		*(real *)(voice_parameters+SOUND_VOICE_PARAMETERS_PITCH_OFFSET)=
+			*(const real *)((const byte *)sound_class+SOUND_CLASS_UNKNOWN48_OFFSET)*
+			*(const real *)(parameters+SOUND_CHANNEL_PARAMETERS_UNKNOWN14_OFFSET)*doppler +
+			*(real *)(voice_parameters+SOUND_VOICE_PARAMETERS_PITCH_OFFSET);
+	}
+	sound_channel_build_voice_parameters(channel_index, parameters, voice_parameters, source);
+
+	flags= *(const word *)(source+SOUND_SOURCE_DATUM_FLAGS_OFFSET);
+	if (!((flags>>_sound_source_datum_unknown9_bit)&1))
+	{
+		permutation= (const struct sound_permutation *)(uintptr_t)global_sound_cache_file_gestalt->permutations.address+
+			(pitch_range->first_permutation_index+(char)source[SOUND_SOURCE_DATUM_PERMUTATION_OFFSET]);
+		*(real *)(voice_parameters+SOUND_VOICE_PARAMETERS_DECIBELS_OFFSET)=
+			(real)(char)permutation->unknown0[SOUND_PERMUTATION_GAIN_OFFSET]+
+			*(real *)(voice_parameters+SOUND_VOICE_PARAMETERS_DECIBELS_OFFSET);
+		sound_console_voice_start(voice_parameters, voice_parameters+SOUND_VOICE_PARAMETERS_EFFECTS_OFFSET, channel->unknownC);
+		sound_console_stream_set_function(voice_parameters+SOUND_VOICE_PARAMETERS_ENVIRONMENT_OFFSET);
+		sound_channel_queue_chunk(channel_index, permutation, *(const short *)(source+SOUND_SOURCE_DATUM_CHUNK_OFFSET));
+		if (definition[0]&FLAG(5))
+		{
+			byte count= 0xFF;
+
+			if (*(const long *)(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWN4_OFFSET)!=NONE)
+			{
+				count= controller[UNKNOWN_0051EBD8_DATUM_COUNT_OFFSET]&UNKNOWN_0051EBD8_DATUM_COUNT_MASK;
+				controller[UNKNOWN_0051EBD8_DATUM_COUNT_OFFSET]=
+					(byte)(controller[UNKNOWN_0051EBD8_DATUM_COUNT_OFFSET]-1)&UNKNOWN_0051EBD8_DATUM_COUNT_MASK;
+			}
+			source[SOUND_SOURCE_DATUM_UNKNOWN5C_OFFSET+LOOPING_SOUND_TOLD_COUNTED_OFFSET]= count;
+		}
+		source[SOUND_SOURCE_DATUM_FLAGS_OFFSET+1]|= FLAG(_sound_source_datum_unknown9_bit-8);
+	}
+	else
+	{
+		byte kind= source[SOUND_SOURCE_DATUM_KIND_OFFSET];
+
+		if (kind!=2 && kind!=3 && kind!=1)
+		{
+			source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]|= FLAG(_sound_source_datum_unknown6_bit);
+			sound_channel_set_voice_flag3(channel_index);
+		}
+		else
+		{
+			voice_state= sound_voice_state(sound_channel_voice(sound_channels+
+				*(const short *)(source+SOUND_SOURCE_DATUM_CHANNEL_INDEX_OFFSET)));
+			if (!((flags>>_sound_source_datum_unknown3_bit)&1) &&
+				!(voice_state==3 && !looping_sound_track_goes_on(track_state, track_definition)))
+			{
+				unsigned long *seed= &global_random_seed_reference[1];
+				const struct sound_permutation *playing;
+				boolean chosen= FALSE;
+				boolean ended= FALSE;
+				boolean at_end;
+				long next_chunk;
+				long recording;
+
+				if (definition[0]&LOOPING_SOUND_TRACK_OWN_BITS_FLAGS)
+				{
+					seed= first ? (unsigned long *)(track_state+8) : (unsigned long *)(source+SOUND_SOURCE_DATUM_TRACK_SEED_OFFSET);
+				}
+				recording= (short)(char)source[SOUND_SOURCE_DATUM_PERMUTATION_OFFSET];
+				playing= sound_source_permutation(source);
+				next_chunk= playing && *(const short *)(source+SOUND_SOURCE_DATUM_CHUNK_OFFSET)<playing->chunk_count-1 ?
+					*(const short *)(source+SOUND_SOURCE_DATUM_CHUNK_OFFSET)+1 : NONE;
+				at_end= (short)next_chunk==NONE;
+				if (!(source[SOUND_SOURCE_DATUM_TRACK_OFFSET+1]&1) && first &&
+					looping_sound_track_goes_on(track_state, track_definition))
+				{
+					if (at_end || (looping_sound_unknown_0021a080(track_state) &&
+						(*(const unsigned long *)((const byte *)(uintptr_t)global_sound_cache_file_gestalt->chunks.address+
+						(playing->first_chunk_index+*(const short *)(source+SOUND_SOURCE_DATUM_CHUNK_OFFSET))*
+						(long)sizeof(struct sound_chunk)+4)>>31)))
+					{
+						if (looping_sound_source_next_state(looping_sound, track_state, channel->unknown0, seed))
+						{
+							return;
+						}
+						pitch_range= (const struct sound_pitch_range *)(uintptr_t)global_sound_cache_file_gestalt->pitch_ranges.address+
+							(sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET))->first_pitch_range_index+
+							(char)source[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET]);
+						source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]|= FLAG(_sound_source_datum_unknown3_bit);
+						chosen= TRUE;
+					}
+				}
+				else if (at_end)
+				{
+					if (definition[0]&FLAG(1))
+					{
+						source[SOUND_SOURCE_DATUM_KIND_OFFSET]= 4;
+						if (first)
+						{
+							looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET]|= 8;
+						}
+						ended= TRUE;
+					}
+					else
+					{
+						unsigned long played= first ?
+							looping_sound_track_get_played_bits((char)source[SOUND_SOURCE_DATUM_TRACK_OFFSET], sound, looping_sound,
+								definition, (short)(char)source[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET], FALSE) :
+							*(const unsigned long *)(source+SOUND_SOURCE_DATUM_TRACK_PLAYED_OFFSET);
+
+						recording= sound_pitch_range_choose_permutation(sound, (short)(char)source[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET],
+							&played, (short)(char)source[SOUND_SOURCE_DATUM_PERMUTATION_OFFSET], seed, NULL, FALSE);
+						if (first)
+						{
+							looping_sound_track_set_played_bits((char)source[SOUND_SOURCE_DATUM_TRACK_OFFSET], played, looping_sound,
+								sound, definition, (short)(char)source[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET], (char)recording);
+						}
+						else
+						{
+							*(unsigned long *)(source+SOUND_SOURCE_DATUM_TRACK_PLAYED_OFFSET)= played;
+						}
+						next_chunk= 0;
+					}
+				}
+				if (!chosen)
+				{
+					if (!ended && (short)recording!=NONE)
+					{
+						sound_source_set_sound(channel->unknown0, *(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET),
+							(char)source[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET], (char)recording, (short)next_chunk);
+						source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]|= FLAG(_sound_source_datum_unknown3_bit);
+					}
+					else
+					{
+						source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]|= FLAG(_sound_source_datum_unknown6_bit);
+						sound_channel_set_voice_flag3(channel_index);
+					}
+				}
+			}
+			if ((source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]>>_sound_source_datum_unknown3_bit)&1)
+			{
+				permutation= (const struct sound_permutation *)(uintptr_t)global_sound_cache_file_gestalt->permutations.address+
+					(pitch_range->first_permutation_index+(char)source[SOUND_SOURCE_DATUM_PERMUTATION_OFFSET]);
+				if (sound_source_request_data(sound_source_get(channel->unknown0)) && voice_state!=3)
+				{
+					sound_channel_queue_chunk(channel_index, permutation, *(const short *)(source+SOUND_SOURCE_DATUM_CHUNK_OFFSET));
+					source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]&= ~FLAG(_sound_source_datum_unknown3_bit);
+					if (first && !looping_sound_track_goes_on(track_state, track_definition) &&
+						(short)sound_permutation_next_chunk(permutation, *(const short *)(source+SOUND_SOURCE_DATUM_CHUNK_OFFSET))==NONE)
+					{
+						if (source[SOUND_SOURCE_DATUM_KIND_OFFSET]==1)
+						{
+							source[SOUND_SOURCE_DATUM_KIND_OFFSET]= 2;
+						}
+						else if (source[SOUND_SOURCE_DATUM_KIND_OFFSET]==3)
+						{
+							source[SOUND_SOURCE_DATUM_KIND_OFFSET]= 4;
+						}
+					}
+				}
+			}
+		}
+		permutation= (const struct sound_permutation *)(uintptr_t)global_sound_cache_file_gestalt->permutations.address+
+			(pitch_range->first_permutation_index+(char)source[SOUND_SOURCE_DATUM_PERMUTATION_OFFSET]);
+		*(real *)(voice_parameters+SOUND_VOICE_PARAMETERS_DECIBELS_OFFSET)=
+			(real)(char)permutation->unknown0[SOUND_PERMUTATION_GAIN_OFFSET]+
+			*(real *)(voice_parameters+SOUND_VOICE_PARAMETERS_DECIBELS_OFFSET);
+		sound_console_voice_set_parameters(voice_parameters, sound_channels[channel_index].unknownC,
+			voice_parameters+SOUND_VOICE_PARAMETERS_EFFECTS_OFFSET, FALSE);
+	}
+	if (first)
+	{
+		*(long *)(source+SOUND_SOURCE_DATUM_TRACK_SEED_OFFSET)= *(const long *)(track_state+8);
+		*(long *)(source+SOUND_SOURCE_DATUM_TRACK_PLAYED_OFFSET)= *(const long *)(track_state+4);
+	}
 }

@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-04, al terminar el hito 255.
+**Última actualización:** 2026-10-04, al terminar el hito 256.
 
 ## Dónde estamos
 
-- **922 funciones descompiladas de 11.265: el 8,18 % del juego** (el
-  5,148 % de los bytes de código).
-- Las 922 están comprobadas contra el ejecutable original: las 921 del
+- **923 funciones descompiladas de 11.265: el 8,19 % del juego** (el
+  5,212 % de los bytes de código).
+- Las 923 están comprobadas contra el ejecutable original: las 921 del
   hito 254 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile a voice of the console's sound taking how its sound is heard* (ver `git log`).
+- Último hito: *Decompile what is done each time with the sound of a track that has a voice* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 479 funciones apuntadas pero sin descompilar (las que el código
-  llama); 392 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 478 funciones apuntadas pero sin descompilar (las que el código
+  llama); 391 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -92,7 +92,7 @@ Módulos (funciones hechas / archivo):
       `0x002accd0` a `0x002ae090`: completo)
 - [x] Perfiles de los jugadores — `saved games\player_profile.c` (11:
       completo)
-- [ ] Sonido — `sound\sound_manager.c` (231; faltan muchas de
+- [ ] Sonido — `sound\sound_manager.c` (232; faltan muchas de
       `0x00125f70` a `0x0012b070`), `sound\sound_classes.c` (1)
 - [x] Archivos — `tag_files\files.c`, `files_xbox.c` (22, completo: de
       `0x00136710` a `0x001374c0`. Lo que hay justo antes, de `0x00136140`
@@ -182,9 +182,9 @@ Módulos (funciones hechas / archivo):
       185): lo que queda son las funciones grandes de cada fotograma
       (solo queda `0x00127400`); y de los
       otros archivos del sonido, los sonidos en bucle
-      (`0x0021a250`, `0x0021b0e0` y `0x0021c400`), y las
-      grande que prepara la consola (`0x0021e4b0`). Al terminar el hito 255 quedan 7 funciones
-      del sonido, unos 10.500 bytes.
+      (`0x0021a250` y `0x0021b0e0`), y las
+      grande que prepara la consola (`0x0021e4b0`). Al terminar el hito 256 quedan 6 funciones
+      del sonido, unos 8.600 bytes.
 - [x] ~~`lruv_block_new`~~ (hito 31).
 - [x] ~~Caché de animaciones~~ (hito 32).
 - [x] ~~Caché de texturas, primera parte~~ (hito 33): crear, abrir,
