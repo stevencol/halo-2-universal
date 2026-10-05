@@ -1297,4 +1297,6 @@ address,name,source,arguments,returns,convention
 00220e00,sound_console_slot_set_parameters,source/sound/sound_manager.c,edi stack,void,stdcall
 0012ad30,sound_source_spatial_gain,source/sound/sound_manager.c,eax ecx stack stack,real:xmm0,stdcall
 0037c668,unknown_0037c668,,stack stack stack stack stack,void
-002211e0,unknown_002211e0,,eax stack,void
+002211e0,sound_console_slot_update_room,source/sound/sound_manager.c,eax stack,void,stdcall
+0037c6e5,unknown_0037c6e5,,stack stack stack,void
+0037b68b,unknown_0037b68b,,stack stack,void

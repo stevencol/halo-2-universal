@@ -4024,6 +4024,43 @@ def run(t) -> None:
             globals={"unknown_0051ebe4": Buffer(bytes(console))},
             externals={
                 "unknown_0037c668": lambda harness, arguments: (0, tuple(arguments)),
-                "unknown_002211e0": lambda harness, arguments: (0, tuple(arguments)),
+                "sound_console_slot_update_room": lambda harness, arguments: (0, tuple(arguments)),
             },
+        )
+
+    # ---------- the console is told how the sound of a slot is heard in a room
+
+    random_ = random.Random(196)
+
+    def some_gain() -> float:
+        return random_.choice(
+            (0.0, 1.0, 1.0, 0.5, 0.001, 0.0006, 0.00063, 0.00064, 2.0, -1.0, 1e-30, 1e30, float("inf"), random_.uniform(0, 1), random_.uniform(0, 1))
+        )
+
+    def room_(harness, arguments):
+        stream, room, apply = arguments
+        return 0, (stream, bytes(harness.mu.mem_read(room, 0x24)), apply)
+
+    def filter_(harness, arguments):
+        stream, filter__ = arguments
+        return 0, (stream, bytes(harness.mu.mem_read(filter__, 0x18)))
+
+    for n in range(1500):
+        console = bytearray(random_.randbytes(0x2AC8))
+        struct.pack_into("<3f", console, 0x2ABC, some_gain(), some_gain(), some_gain())
+        slot_index = random_.randrange(32)
+        slot = SLOTS + slot_index * SLOT_SIZE
+        struct.pack_into("<2f", console, slot + 0x2C, 1.0 - some_gain(), 1.0 - some_gain())
+        if n % 7 == 0:
+            struct.pack_into("<2f", console, slot + 0x2C, random_.choice((1.0, 0.0, 2.0)), random_.choice((1.0, 0.0, 2.0)))
+        t.check(
+            "sound_console_slot_update_room",
+            slot_index,
+            as_bits(random_.choice((0.0, -64.0, -32.0, -70.0, 3.0, -0.01, -63.99, random_.uniform(-64, 0), float("nan")))),
+            globals={
+                "unknown_0051ebe4": Buffer(bytes(console)),
+                "unknown_00470084": struct.pack("<i", random_.choice((8000, 8000, 0, 29, 30, 100, 1000, 7999, 8001, 24000, -5))),
+                "unknown_00470088": struct.pack("<f", random_.choice((0.0, 0.0, 3.0, 22.5, 30.0, -6.0, random_.uniform(0, 25)))),
+            },
+            externals={"unknown_0037c6e5": room_, "unknown_0037b68b": filter_},
         )

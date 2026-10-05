@@ -2,6 +2,55 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Cómo se oye en una sala el sonido de una casilla, y su filtro
+
+Una función en `sound/sound_manager.c`, de 676 bytes. De 852 funciones se pasa a
+853, el 7,57 % de las del juego (el 4,304 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_console_slot_update_room` | `0x002211e0` | `sound/sound_manager.c` |
+
+Estaba apuntada sin descompilar desde el hito anterior
+(`unknown_002211e0`); la llama `sound_console_slot_set_parameters`. Nuevas
+sin descompilar, las dos de la consola: `0x0037c6e5` (cómo se oye un sonido
+en una sala) y `0x0037b68b` (su filtro). También las estructuras
+`sound_console_i3dl2_source` (`0x24` bytes) y `sound_console_filter`
+(`0x18`), y los globales `unknown_00470084` (una frecuencia, 8000) y
+`unknown_00470088` (unos decibelios, 0).
+
+### Lo que se sabe
+
+- `sound_console_slot_update_room` le dice a la consola cómo se oye en una
+  sala el sonido de una casilla, y con qué filtro.
+- En `0x2ABC` del sonido de la consola hay tres ganancias. Se pasan a
+  centésimas de decibelio (2000 por el logaritmo en base 10), de -6400 a 0:
+  las dos primeras son para el sonido directo y la tercera para la sala.
+- A la sala se le quitan además hasta 64 decibelios según lo lejos de 0 que
+  estén los decibelios que recibe la función, sin bajar de -100.
+- Los dos reales de la casilla que rellena
+  `sound_console_slot_set_parameters` son cuánto tapa el sonido lo que hay
+  en medio (`0x30`) y una pared (`0x2C`): a la consola va lo que queda hasta
+  1, también en centésimas de decibelio.
+- El filtro es siempre del mismo modo, con dos números: el de la frecuencia
+  de `unknown_00470084` y el de los decibelios de `unknown_00470088`.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y de
+  `sound_console_slot_set_parameters`. La batería completa corre aparte con
+  las 849 funciones del hito 192.
+
+### Mutaciones
+
+Diez líneas rotas a mano: las pruebas notan nueve. La que no notan es el
+tope de 0 para la sala: no se puede pasar de 0, porque a un número que ya
+no es mayor que 0 solo se le resta. Pendientes las listas completas de los
+hitos 156 a 196.
+
 ## 2026-10-05 — Una casilla del sonido de la consola recibe dónde está su sonido
 
 Una función en `sound/sound_manager.c`. De 851 funciones se pasa a

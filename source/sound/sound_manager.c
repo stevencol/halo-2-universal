@@ -267,6 +267,9 @@ enum
 	UNKNOWN_0051EBE4_ENVIRONMENT_OFFSET= 0x2A0C,
 	UNKNOWN_0051EBE4_ENVIRONMENT_UNKNOWN_SIZE= 0x30,
 	UNKNOWN_0051EBE4_UNKNOWN2AB4_OFFSET= 0x2AB4,
+	/* three gains of the sound of the console */
+	UNKNOWN_0051EBE4_GAINS_OFFSET= 0x2ABC,
+	SOUND_MINIMUM_MILLIBELS= -6400,
 	/* how many reals each class of sounds has in sound_class_gains */
 	SOUND_CLASS_GAIN_REALS= 4,
 	/* in what the game says of a sound whose place is a column: how high
@@ -554,6 +557,34 @@ struct sound_console_slot
 typedef char verify_sound_console_slot_size[
 	sizeof(struct sound_console_slot) == 0x3C ? 1 : -1];
 
+/* what the console takes of how a sound is heard in a room: hundredths of
+a decibel, and three reals */
+struct sound_console_i3dl2_source
+{
+	long direct;
+	long direct_high_frequencies;
+	long room;
+	long room_high_frequencies;
+	real room_rolloff;
+	long obstruction_high_frequencies;
+	real obstruction_low_frequency_ratio;
+	long occlusion_high_frequencies;
+	real occlusion_low_frequency_ratio;
+};
+
+/* what the console takes of the filter of a sound */
+struct sound_console_filter
+{
+	long mode;
+	long unknown4;
+	long coefficients[4];
+};
+
+typedef char verify_sound_console_i3dl2_source_size[
+	sizeof(struct sound_console_i3dl2_source) == 0x24 ? 1 : -1];
+typedef char verify_sound_console_filter_size[
+	sizeof(struct sound_console_filter) == 0x18 ? 1 : -1];
+
 /* a sound of which it is to be worked out how it is heard where it is */
 struct sound_query
 {
@@ -630,6 +661,11 @@ long unknown_0047f0e0;
 /* 0x0047f0e4: what makes sounds of the kind 2 be told so by
 sound_definition_unknown_00126bd0 */
 long unknown_0047f0e4;
+
+/* 0x00470084 and 0x00470088: a frequency, 8000, and some decibels, 0, for
+the filter of the slots of the console's sound */
+long unknown_00470084= 8000;
+real unknown_00470088= 0.0f;
 
 /* 0x0044a0c8 */
 const struct sound_configuration sound_configuration=
@@ -888,7 +924,14 @@ of a slot of the console's sound */
 void __attribute__((stdcall)) sound_console_slot_set_parameters(const struct sound_slot_parameters *parameters,
 	long slot_index);
 void unknown_0037c668(void *stream, real x, real y, real z, long apply);
-void unknown_002211e0(long slot_index, real unknown);
+void __attribute__((stdcall)) sound_console_slot_update_room(long slot_index, real decibels);
+
+/* 0x0037c6e5 and 0x0037b68b: the console is told how a sound is heard in a
+room, and its filter */
+struct sound_console_i3dl2_source;
+struct sound_console_filter;
+void unknown_0037c6e5(void *stream, const struct sound_console_i3dl2_source *source, long apply);
+void unknown_0037b68b(void *stream, const struct sound_console_filter *filter);
 void unknown_0021e3b0(void *unknown);
 
 /* 0x00125f70, 0x001268e0, 0x00129380, 0x0021f6d0 and 0x00221900 */
@@ -6524,7 +6567,7 @@ set) and when it has moved 0.05 or more along an axis. Each of the two
 reals, at 0x10 and 0x14 of what it takes, goes to the slot as it is the
 first time, when the flag 0 changes, or when its step (at 0x1C and 0x20) is
 not over 0; if not, the slot goes towards it by no more than the step. With
-nothing new, no more is done; if not, unknown_002211e0 is given the slot.
+nothing new, no more is done; if not, sound_console_slot_update_room is told.
 The name is made up */
 void __attribute__((stdcall)) sound_console_slot_set_parameters(
 	const struct sound_slot_parameters *parameters,
@@ -6596,6 +6639,76 @@ void __attribute__((stdcall)) sound_console_slot_set_parameters(
 		slot->unknown2C= step+slot->unknown2C;
 	}
 	slot->flags^= (slot->flags^flag)&FLAG(_sound_console_slot_unknown0_bit);
-	unknown_002211e0(slot_index, parameters->unknown18);
+	sound_console_slot_update_room(slot_index, parameters->unknown18);
 	slot->flags|= FLAG(_sound_console_slot_unknown1_bit);
+}
+
+/* a gain in hundredths of a decibel, from -6400 to 0 */
+static inline __attribute__((always_inline)) long sound_gain_to_millibels(
+	real gain)
+{
+	long millibels;
+
+	if (gain==0.0f)
+	{
+		return SOUND_MINIMUM_MILLIBELS;
+	}
+	millibels= (long)(long long)(log10l((long double)gain)*(long double)2000.0f);
+	if (millibels<SOUND_MINIMUM_MILLIBELS)
+	{
+		return SOUND_MINIMUM_MILLIBELS;
+	}
+
+	return millibels>0 ? 0 : millibels;
+}
+
+/* 0x002211e0: the console is told how the sound of a slot is heard in a
+room, and its filter. Of the three gains of the sound of the console, the
+first two are for the sound as it comes; the third, for the room, less up
+to 64 decibels for how far `decibels` is from 0, to no less than -100
+decibels. What is left of the two reals of the slot, from 1, is how much
+gets through what is in the way and through a wall. The filter is of
+unknown_00470084 (a frequency) and unknown_00470088 (some decibels). The
+name is made up */
+void __attribute__((stdcall)) sound_console_slot_update_room(
+	long slot_index,
+	real decibels)
+{
+	const byte *console= unknown_0051ebe4;
+	const real *gains= (const real *)(console+UNKNOWN_0051EBE4_GAINS_OFFSET);
+	struct sound_console_slot *slot= (struct sound_console_slot *)(console+UNKNOWN_0051EBE4_SLOTS_OFFSET)+slot_index;
+	struct sound_console_i3dl2_source room;
+	struct sound_console_filter filter;
+	real fraction;
+	long millibels;
+
+	memset(&room, 0, sizeof(room));
+	room.direct= sound_gain_to_millibels(gains[0]);
+	room.direct_high_frequencies= sound_gain_to_millibels(gains[1]);
+	room.room_rolloff= 0.0f;
+	room.obstruction_low_frequency_ratio= 0.0f;
+	room.occlusion_low_frequency_ratio= 0.25f;
+	fraction= sound_interpolation_fraction(SOUND_MINIMUM_DECIBELS, 0.0f, decibels, TRUE);
+	millibels= sound_gain_to_millibels(gains[2])-(long)(6400.0f-fraction*6400.0f);
+	if (millibels<-10000)
+	{
+		millibels= -10000;
+	}
+	else if (millibels>0)
+	{
+		millibels= 0;
+	}
+	room.room= millibels;
+	room.room_high_frequencies= millibels;
+	room.obstruction_high_frequencies= sound_gain_to_millibels(1.0f-slot->unknown30);
+	room.occlusion_high_frequencies= sound_gain_to_millibels(1.0f-slot->unknown2C);
+	unknown_0037c6e5(slot->stream, &room, 1);
+
+	filter.mode= 1;
+	filter.unknown4= 0;
+	filter.coefficients[0]= sound_frequency_to_filter_coefficient((real)unknown_00470084);
+	filter.coefficients[1]= (long)sound_unknown_0021e2d0(unknown_00470088);
+	filter.coefficients[2]= 0;
+	filter.coefficients[3]= 0;
+	unknown_0037b68b(slot->stream, &filter);
 }
