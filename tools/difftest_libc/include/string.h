@@ -23,5 +23,6 @@ char *strncpy(char *destination, const char *source, size_t size);
 char *strpbrk(const char *string, const char *characters);
 char *strrchr(const char *string, int character);
 size_t strspn(const char *string, const char *characters);
+char *strstr(const char *string, const char *substring);
 
 #endif

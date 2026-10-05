@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Subir y bajar las clases de sonidos por su nombre
+
+Una función en `sound/sound_manager.c`. De 866 funciones se pasa a
+867, el 7,70 % de las del juego (el 4,530 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_classes_set_decibels` | `0x00221980` | `sound/sound_manager.c` |
+
+No estaba apuntada. La llaman cuatro funciones de fuera del sonido. También
+la tabla `sound_class_names` (`0x00470090`): los nombres de las 54 clases de
+sonidos.
+
+### Lo que se sabe
+
+- `sound_classes_set_decibels` recibe un texto, unos decibelios y unos
+  segundos. Todas las clases de sonidos cuyo nombre contiene el texto pasan
+  a ese volumen (entre -64 y 0 decibelios) en esos segundos; con 0 segundos,
+  de golpe. Quien las lleva hasta ahí es `sound_classes_update`.
+- Es lo que usan los guiones de los niveles para subir y bajar grupos de
+  sonidos: con «weapon» cambian todas las clases de armas, con «dialog» las
+  de diálogos, y así.
+- De las 54 clases, 34 tienen nombre (`projectile_impact`, `weapon_fire`,
+  `unit_dialog`, `music`, `ambient_nature`, `cortana_mission`, `ui`...); las
+  que no lo tienen no se tocan nunca.
+- El nombre de la función es una suposición.
+
+### Herramientas
+
+- La biblioteca de C de las pruebas (`tools/difftest_libc`) tiene ahora
+  `strstr`.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y de
+  `sound_classes_update`. La última batería completa es la del hito 200
+  (857 funciones, todas bien).
+
+### Mutaciones
+
+Seis cambios a mano (un nombre mal escrito, un nombre de más, las clases
+sin nombre, los segundos menores que 0 y el volumen que se pone de golpe):
+las pruebas notan los seis. La prueba pasa cada nombre entero, así que un
+nombre distinto del que tiene el juego se nota.
+
 ## 2026-10-05 — Una voz del sonido de la consola se para
 
 Una función en `sound/sound_manager.c`. De 865 funciones se pasa a

@@ -795,6 +795,66 @@ long sound_cache_base;
 /* 0x00502118: four reals for each class of sounds */
 real *sound_class_gains;
 
+/* 0x00470090: the names of the classes of sounds; those with no name are not
+used */
+const char *sound_class_names[NUMBER_OF_SOUND_CLASSES]=
+{
+	"projectile_impact",
+	"projectile_detonation",
+	"projectile_flyby",
+	"",
+	"weapon_fire",
+	"weapon_ready",
+	"weapon_reload",
+	"weapon_empty",
+	"weapon_charge",
+	"weapon_overheat",
+	"weapon_idle",
+	"weapon_melee",
+	"weapon_animation",
+	"object_impacts",
+	"particle_impacts",
+	"",
+	"",
+	"",
+	"unit_footsteps",
+	"unit_dialog",
+	"unit_animation",
+	"",
+	"vehicle_collision",
+	"vehicle_engine",
+	"vehicle_animation",
+	"",
+	"device_door",
+	"",
+	"device_machinery",
+	"device_stationary",
+	"",
+	"",
+	"music",
+	"ambient_nature",
+	"ambient_machinery",
+	"",
+	"huge_ass",
+	"object_looping",
+	"cinematic_music",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"cortana_mission",
+	"cortana_cinematic",
+	"mission_dialog",
+	"cinematic_dialog",
+	"scripted_cinematic_foley",
+	"game_event",
+	"ui",
+	"test",
+	"multilingual_test"
+};
+
 /* 0x0055e780: while it is set, no sound shares a sound voice */
 boolean unknown_0055e780;
 
@@ -1118,6 +1178,9 @@ void sound_source_hold_chunk(byte *source);
 void sound_channels_unknown_00129380(const long *voice_values, const long *slot_values);
 void __attribute__((stdcall)) sound_console_set_environment(const long *second, const long *first, const void *unknown);
 void sound_classes_update(real seconds);
+
+/* 0x00221980 */
+void __attribute__((stdcall)) sound_classes_set_decibels(const char *name, real decibels, real seconds);
 
 /* 0x00126df0, 0x00127e20, 0x00129f20 and 0x0012ac20 */
 void __attribute__((stdcall)) sound_sources_cross_fade(long out_source_index, long in_source_index, short kind,
@@ -7976,4 +8039,34 @@ void sound_console_voice_stop(
 		unknown_0037b822(*(void **)(voice+VOICE_UNKNOWN24_OFFSET), 1);
 	}
 	unknown_002ae7a0(voice, 0.1f, 0.1f);
+}
+
+/* 0x00221980: the classes of sounds whose name has some text in it are to be
+as loud as some decibels, from -64 to 0, in some seconds: at once, in none.
+sound_classes_update takes them there. It is what a script of a map does to
+turn classes of sounds up and down. The name is a guess */
+void __attribute__((stdcall)) sound_classes_set_decibels(
+	const char *name,
+	real decibels,
+	real seconds)
+{
+	long index;
+
+	for (index= 0; index<NUMBER_OF_SOUND_CLASSES; index++)
+	{
+		const char *class_name= sound_class_names[index];
+
+		if (class_name[0] && strstr(class_name, name))
+		{
+			real *gain= sound_class_gains+index*SOUND_CLASS_GAIN_REALS;
+			real pinned= sound_pin_decibels(decibels);
+
+			gain[0]= pinned;
+			gain[2]= 0.0f>seconds ? 0.0f : seconds;
+			if (seconds==0.0f)
+			{
+				gain[1]= pinned;
+			}
+		}
+	}
 }

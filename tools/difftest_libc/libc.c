@@ -87,6 +87,26 @@ void *memset(void *memory, int value, size_t size)
 	return memory;
 }
 
+char *strstr(const char *string, const char *substring)
+{
+	for (; ; string++)
+	{
+		size_t index;
+
+		for (index= 0; substring[index] && string[index]==substring[index]; index++)
+		{
+		}
+		if (!substring[index])
+		{
+			return (char *)string;
+		}
+		if (!*string)
+		{
+			return NULL;
+		}
+	}
+}
+
 char *strchr(const char *string, int character)
 {
 	for (; ; string++)

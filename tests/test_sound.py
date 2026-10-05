@@ -4851,3 +4851,25 @@ def run(t) -> None:
                 Mock(lambda call: 0, stack_arguments=0, registers=("ecx",)),
             ],
         )
+
+    # ---------- the classes of sounds whose name has some text are to be as loud as some decibels
+
+    random_ = random.Random(210)
+
+    texts = ("weapon", "projectile", "", "unit_dialog", "music", "x", "ambient_", "test", "multilingual_test", "e", "zzz", "_", "ui", "cinematic", "dialog", "weapon_fire!", "huge_ass", "ass")
+    # each name of a class, whole: a name that is not as the game has it is found out
+    texts += ("projectile_impact", "projectile_detonation", "projectile_flyby", "weapon_fire", "weapon_ready", "weapon_reload")
+    texts += ("weapon_empty", "weapon_charge", "weapon_overheat", "weapon_idle", "weapon_melee", "weapon_animation")
+    texts += ("object_impacts", "particle_impacts", "unit_footsteps", "unit_animation", "vehicle_collision", "vehicle_engine")
+    texts += ("vehicle_animation", "device_door", "device_machinery", "device_stationary", "ambient_nature", "ambient_machinery")
+    texts += ("object_looping", "cinematic_music", "cortana_mission", "cortana_cinematic", "mission_dialog", "cinematic_dialog")
+    texts += ("scripted_cinematic_foley", "game_event")
+    for text in texts:
+        for _ in range(12):
+            t.check(
+                "sound_classes_set_decibels",
+                Buffer(text.encode() + b"\0" + random_.randbytes(3)),
+                as_bits(random_.choice((0.0, -0.0, -6.0, -64.0, -64.5, -100.0, 3.0, 0.001, float("nan"), random_.uniform(-64, 0)))),
+                as_bits(random_.choice((0.0, 0.0, -0.0, 1.5, 0.001, -1.0, float("nan"), 30.0))),
+                globals={"sound_class_gains": Buffer(reals(random_, 54 * 4))},
+            )

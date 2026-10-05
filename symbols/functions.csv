@@ -1310,3 +1310,4 @@ address,name,source,arguments,returns,convention
 00126660,sound_unknown_states_set,source/sound/sound_manager.c,eax,void
 002ae8e0,unknown_002ae8e0,,ecx,void
 002ae6f0,unknown_002ae6f0,,esi,void
+00221980,sound_classes_set_decibels,source/sound/sound_manager.c,stack stack stack,void,stdcall
