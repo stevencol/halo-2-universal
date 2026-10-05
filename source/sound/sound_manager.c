@@ -359,6 +359,8 @@ enum
 	SOUND_SOURCE_DATUM_LISTENER_OFFSET= 0xA1,
 	SOUND_CLASS_UNKNOWN4_OFFSET= 0x4,
 	SOUND_CLASS_PRIORITY_OFFSET= 0xC,
+	/* why a sound is let go: another took its channel */
+	_sound_source_deleted_channel_taken= 9,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -783,6 +785,9 @@ real __attribute__((stdcall)) sound_unknown_0012a6d0(short kind, real time, real
 short __attribute__((stdcall)) sound_source_choose_channel(long source_index, short channel_count,
 	const short *channel_indices);
 long __attribute__((stdcall)) sound_source_goes_before(long other_source_index, long source_index, real distance);
+
+/* 0x00128920 */
+short __attribute__((stdcall)) sound_source_find_channel(long source_index, long *reason);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -5024,4 +5029,58 @@ long __attribute__((stdcall)) sound_source_goes_before(
 
 	return sound_source_unknown_00127e20((const struct sound_source *)(other+SOUND_SOURCE_DATUM_UNKNOWN18_OFFSET),
 		(char)other[SOUND_SOURCE_DATUM_LISTENER_OFFSET])>distance;
+}
+
+/* how far a sound that plays is from its listener, as
+sound_source_unknown_00127e20 measures it */
+static inline __attribute__((always_inline)) real sound_source_listener_distance(
+	const byte *source)
+{
+	return sound_source_unknown_00127e20((const struct sound_source *)(source+SOUND_SOURCE_DATUM_UNKNOWN18_OFFSET),
+		(char)source[SOUND_SOURCE_DATUM_LISTENER_OFFSET]);
+}
+
+/* 0x00128920: a channel for a sound that is to play, of those of the type
+of its sound: the first that plays nothing; if all play, the one whose sound
+the new one goes before, and of those, the one whose sound all the rest go
+before. NONE if there is none. It says too why a channel that plays was
+taken: 9; 0 if none was */
+short __attribute__((stdcall)) sound_source_find_channel(
+	long source_index,
+	long *reason)
+{
+	const byte *source= sound_source_get(source_index);
+	const struct sound_definition *sound= sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET));
+	real distance= sound_source_listener_distance(source);
+	real taken_distance= 0.0f;
+	long taken_source_index= NONE;
+	short taken= NONE;
+	short channel_index;
+
+	*reason= 0;
+	for (channel_index= 0;
+		channel_index<*(const short *)(game_sound_globals+GAME_SOUND_GLOBALS_CHANNEL_COUNT_OFFSET);
+		channel_index++)
+	{
+		const struct sound_channel *channel= &sound_channels[channel_index];
+
+		if (sound->unknown3[1]!=(byte)channel->type)
+		{
+			continue;
+		}
+		if (channel->unknown0==NONE)
+		{
+			return channel_index;
+		}
+		if ((byte)sound_source_goes_before(channel->unknown0, source_index, distance) &&
+			(taken==NONE || (byte)sound_source_goes_before(channel->unknown0, taken_source_index, taken_distance)))
+		{
+			*reason= _sound_source_deleted_channel_taken;
+			taken_source_index= channel->unknown0;
+			taken= channel_index;
+			taken_distance= sound_source_listener_distance(sound_source_get(channel->unknown0));
+		}
+	}
+
+	return taken;
 }

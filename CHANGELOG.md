@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Buscar un canal para un sonido
+
+Una función en `sound/sound_manager.c`. De 835 funciones se pasa a
+836, el 7,42 % de las del juego (el 4,031 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_source_find_channel` | `0x00128920` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- `sound_source_find_channel` busca un canal para un sonido que va a sonar,
+  entre los del tipo de su sonido (el byte `4` del tag del sonido contra el
+  tipo del canal): el primero que esté libre; si todos suenan, el de un
+  sonido ante el que el nuevo tenga preferencia
+  (`sound_source_goes_before`), y de esos, el del sonido con menos
+  preferencia de todos. Da `NONE` si no hay ninguno.
+- Dice también por qué se quitó un canal que sonaba: el motivo 9, que es
+  el que recibe después a quien se avisa del sonido que pierde el canal.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- La batería completa corre aparte con las 824 funciones del hito 173; en
+  este hito solo se pasó la prueba de esta función.
+
+### Mutaciones
+
+Pendientes las de los hitos 156 a 181.
+
 ## 2026-10-04 — Qué canal toma un sonido y qué sonido va antes
 
 Dos funciones en `sound/sound_manager.c`. De 833 funciones se pasa a

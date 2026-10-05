@@ -3135,3 +3135,44 @@ def run(t) -> None:
             globals=globals_,
             externals={"sound_source_unknown_00127e20": far},
         )
+
+    # ---------- a channel for a sound that is to play
+
+    random_ = random.Random(181)
+
+    for _ in range(400):
+        playing_, indices = classed_sources(1000)
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        tag_pointers = []
+        for n in range(TAGS):
+            struct.pack_into("<I", tags, n * 0x10 + 8, TAGS * 0x10 + n * 0x10)
+            tag_pointers.append(n * 0x10 + 8)
+        definitions = bytearray(random_.randbytes(TAGS * 0x10))
+        for n in range(TAGS):
+            definitions[n * 0x10 + 4] = random_.choice((0, 1, 1, 2))
+        channels = bytearray(random_.randbytes(CHANNELS * 0x24))
+        full = random_.random() < 0.6
+        for n in range(CHANNELS):
+            struct.pack_into("<I", channels, n * 0x24, random_.choice(indices) if full or random_.random() < 0.7 else NONE)
+            channels[n * 0x24 + 8] = random_.choice((0, 1, 1, 2))
+        before = random_.getrandbits(32)
+
+        def goes_before(harness, arguments, before=before):
+            other, mine, distance = arguments
+            return (before >> ((other ^ mine) & 31)) & 1, (other, mine, distance)
+
+        def measure_(harness, arguments):
+            return real_bits((arguments[1] & 3) * 2.5 + 1.0), (harness.normalize(arguments[0]), arguments[1])
+
+        t.check(
+            "sound_source_find_channel",
+            random_.choice(indices),
+            Buffer(random_.randbytes(4)),
+            globals={
+                "sound_sources": playing_,
+                "sound_channels": Buffer(bytes(channels)),
+                "game_sound_globals": sound_state(channels=random_.choice((0, 1, 5, CHANNELS, CHANNELS, -1))),
+                "global_tag_instances": Buffer(bytes(tags) + bytes(definitions), pointers=tuple(tag_pointers)),
+            },
+            externals={"sound_source_goes_before": goes_before, "sound_source_unknown_00127e20": measure_},
+        )
