@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — El efecto Doppler de un sonido para un oyente
+
+Una función en `sound/sound_manager.c`. De 849 funciones se pasa a
+850, el 7,55 % de las del juego (el 4,250 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_listener_doppler_pitch` | `0x0012a9d0` | `sound/sound_manager.c` |
+
+Estaba apuntada sin descompilar (`unknown_0012a9d0`). En `sound_listener`
+ya se sabe qué son los bytes de `8` a `0x48`: una matriz (dónde está el
+oyente y cómo está girado) y la velocidad a la que se mueve.
+
+### Lo que se sabe
+
+- `sound_listener_doppler_pitch` da el efecto Doppler de un sonido para un
+  oyente, en cents (1200 por octava): más agudo cuanto más rápido se acercan
+  el sonido y el oyente, más grave cuanto más rápido se alejan.
+- La velocidad del sonido es 111,54855 unidades del mundo por segundo: 340
+  metros. El resultado va de tres octavas abajo (-3600) a dos arriba (2400).
+- Detrás del sitio del sonido, a `0x10`, va su velocidad. La del oyente está
+  en sus propios ejes: se gira con su matriz antes de usarla.
+- Un mando de sonidos se queda con este número para cada jugador de la
+  consola (`sound_playback_controller_unknown_00219ed0`).
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y de las que
+  usan a los oyentes. La batería completa corre aparte con las 849 funciones
+  del hito 192.
+
+### Mutaciones
+
+Pendientes las de los hitos 156 a 193.
+
 ## 2026-10-04 — La lista de sonidos de los que hay que calcular cómo se oyen
 
 Una función en `sound/sound_manager.c`. De 848 funciones se pasa a

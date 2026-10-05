@@ -162,9 +162,11 @@ struct sound_listener
 	long leaf_index;
 	short cluster_index;
 	boolean valid;
-	byte unknown7[0x29];
-	real_point3d position;
-	byte unknown3C[0xC];
+	byte unknown7;
+	/* where it is and how it is turned, and how fast it moves, as seen
+	from itself */
+	real_matrix4x3 matrix;
+	real_vector3d velocity;
 };
 
 /* 0x0044a0c8: how much of each thing the sound has */

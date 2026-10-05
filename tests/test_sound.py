@@ -1855,7 +1855,7 @@ def run(t) -> None:
             random_.choice((0, 1)),
             Buffer(bytes(controller)),
             Buffer(bytes(said)),
-            externals={"unknown_0014dde0": first_player, "unknown_0014de10": next_player, "unknown_0012a9d0": listener_real},
+            externals={"unknown_0014dde0": first_player, "unknown_0014de10": next_player, "sound_listener_doppler_pitch": listener_real},
         )
 
     EFFECTS = 16
@@ -3886,4 +3886,63 @@ def run(t) -> None:
                     (arguments[0] & 0xFFFF,),
                 ),
             },
+        )
+
+    # ---------- the Doppler effect of a sound for a listener
+
+    random_ = random.Random(193)
+
+    def some_speed() -> float:
+        return random_.choice((0.0, 0.0, 1.0, random_.uniform(-5, 5), random_.uniform(-150, 150), random_.uniform(-600, 600)))
+
+    for n in range(900):
+        state = bytearray(random_.randbytes(LISTENERS + 4 * LISTENER_SIZE))
+        for index in range(4):
+            listener = LISTENERS + index * LISTENER_SIZE
+            struct.pack_into("<f", state, listener + 8, random_.choice((1.0, 1.0, 0.5, 2.0, 0.0, random_.uniform(0, 3))))
+            if random_.random() < 0.5:
+                # turned and no more
+                forward = [random_.gauss(0, 1) for _ in range(3)]
+                length = sum(x * x for x in forward) ** 0.5 or 1.0
+                forward = [x / length for x in forward]
+                left = [forward[1], -forward[0], 0.0]
+                up = [
+                    forward[1] * left[2] - forward[2] * left[1],
+                    forward[2] * left[0] - forward[0] * left[2],
+                    forward[0] * left[1] - forward[1] * left[0],
+                ]
+                struct.pack_into("<9f", state, listener + 0xC, *forward, *left, *up)
+            else:
+                state[listener + 0xC : listener + 0x30] = reals(random_, 9)
+            state[listener + 0x30 : listener + 0x3C] = reals(random_, 3)
+            struct.pack_into("<3f", state, listener + 0x3C, some_speed(), some_speed(), some_speed())
+        listener_index = random_.randrange(4)
+        said = bytearray(random_.randbytes(0x1C))
+        said[0:0xC] = reals(random_, 3)
+        struct.pack_into("<3f", said, 0x10, some_speed(), some_speed(), some_speed())
+        at = LISTENERS + listener_index * LISTENER_SIZE + 0x30
+        kind = n % 6
+        if kind == 0:
+            # where the listener is
+            said[0:0xC] = state[at : at + 0xC]
+        elif kind == 1:
+            # next to it
+            x, y, z = struct.unpack_from("<3f", state, at)
+            struct.pack_into(
+                "<3f",
+                said,
+                0,
+                x + random_.choice((0.0, 0.00005, 0.0001, 0.00011, 0.001)),
+                y,
+                z + random_.choice((0.0, 0.00005, -0.0001)),
+            )
+        elif kind == 2:
+            # nothing moves
+            said[0x10:0x1C] = bytes(12)
+            state[at + 0xC : at + 0x18] = bytes(12)
+        t.check(
+            "sound_listener_doppler_pitch",
+            listener_index,
+            Buffer(bytes(said)),
+            globals={"game_sound_globals": Buffer(bytes(state))},
         )

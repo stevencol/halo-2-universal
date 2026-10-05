@@ -446,6 +446,9 @@ enum
 	SOUND_SOURCE_DATUM_SCALE_OFFSET= 0x1C,
 	SOUND_LISTENER_UNKNOWN7_OFFSET= 0x7,
 	SOUND_LISTENER_MATRIX_OFFSET= 0x8,
+	/* from the place of a sound, in what the game says of it: how fast it
+	moves */
+	SOUND_POSITION_VELOCITY_OFFSET= 0x10,
 	SOUND_CLASS_UNKNOWN54_OFFSET= 0x54,
 	SOUND_CLASS_UNKNOWN58_OFFSET= 0x58,
 	UNKNOWN_0051EBE4_SLOTS_OFFSET= 0x1A18,
@@ -465,6 +468,12 @@ enum
 
 /* the most that a real can be */
 #define SOUND_REAL_MAXIMUM 3.4028234663852886e+38f
+
+/* how fast sound goes, in world units each second: 340 metres */
+#define SOUND_SPEED 111.54855f
+
+/* the cents of an interval: 1200 for each time that the pitch doubles */
+#define SOUND_CENTS_PER_NATURAL_LOGARITHM 1731.2340f
 
 /* the least that a sound is heard, in decibels */
 #define SOUND_MINIMUM_DECIBELS -64.0f
@@ -793,10 +802,10 @@ long unknown_001462b0(void);
 void __attribute__((stdcall)) sound_playback_controller_unknown_00219ed0(boolean unknown, byte *controller,
 	const struct sound_source *source);
 
-/* 0x0014de10: the local player after one; 0x0012a9d0: something of a
-listener and a place; 0x0021d630: of a sound effect */
+/* 0x0014de10: the local player after one; 0x0012a9d0: the Doppler effect
+of a place for a listener; 0x0021d630: of a sound effect */
 long unknown_0014de10(long player_index);
-real unknown_0012a9d0(long listener_index, const real_point3d *position);
+long double sound_listener_doppler_pitch(long listener_index, const real_point3d *position);
 void unknown_0021d630(long effect_index, long unknown);
 
 /* 0x0021d360, 0x0021d5a0 and 0x0021da90 */
@@ -1435,7 +1444,7 @@ void sound_initialize_for_new_structure_bsp(
 
 			if (listener->valid)
 			{
-				long leaf_index= bsp3d_test_point(global_bsp3d, 0, &listener->position);
+				long leaf_index= bsp3d_test_point(global_bsp3d, 0, &listener->matrix.position);
 
 				listener->leaf_index= leaf_index;
 				listener->cluster_index= leaf_index!=NONE ?
@@ -2381,7 +2390,7 @@ real_point3d *sound_source_get_position(
 
 		result[0]= place[0];
 		result[1]= place[1];
-		result[2]= *(const long *)&listeners[listener_index].position.z;
+		result[2]= *(const long *)&listeners[listener_index].matrix.position.z;
 		break;
 	}
 	}
@@ -3192,7 +3201,7 @@ void __attribute__((stdcall)) sound_playback_controller_unknown_00219c30(
 
 /* 0x00219ed0: a sound playback controller with something takes a flag, if
 it is not the one that it has: for a sound with a place, it is given too a
-real of each local player (what unknown_0012a9d0 says of the player and the
+real of each local player (what sound_listener_doppler_pitch says of it and the
 place); for any other, its four reals are 0 */
 void __attribute__((stdcall)) sound_playback_controller_unknown_00219ed0(
 	boolean unknown,
@@ -3211,7 +3220,7 @@ void __attribute__((stdcall)) sound_playback_controller_unknown_00219ed0(
 		for (player_index= unknown_0014dde0(); player_index!=NONE; player_index= unknown_0014de10(player_index))
 		{
 			*(real *)(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWNC_OFFSET+player_index*4)=
-				unknown_0012a9d0(player_index, (const real_point3d *)((const byte *)source+SOUND_SOURCE_POSITION_OFFSET));
+				(real)sound_listener_doppler_pitch(player_index, (const real_point3d *)((const byte *)source+SOUND_SOURCE_POSITION_OFFSET));
 		}
 	}
 	else
@@ -3922,15 +3931,15 @@ real sound_source_unknown_00127e20(
 	{
 		const struct sound_listener *listener=
 			(const struct sound_listener *)(game_sound_globals+GAME_SOUND_GLOBALS_LISTENERS_OFFSET)+listener_index;
-		real height= listener->position.z-place[2];
+		real height= listener->matrix.position.z-place[2];
 		real limited;
 		real y;
 		real x;
 
 		if (!(char)bytes[SOUND_SOURCE_POSITION_KIND_OFFSET])
 		{
-			y= listener->position.y-place[1];
-			x= listener->position.x-place[0];
+			y= listener->matrix.position.y-place[1];
+			x= listener->matrix.position.x-place[0];
 
 			return height*height+y*y+x*x;
 		}
@@ -3944,8 +3953,8 @@ real sound_source_unknown_00127e20(
 		{
 			return SOUND_REAL_MAXIMUM;
 		}
-		y= place[1]-listener->position.y;
-		x= place[0]-listener->position.x;
+		y= place[1]-listener->matrix.position.y;
+		x= place[0]-listener->matrix.position.x;
 
 		return x*x+y*y;
 	}
@@ -6356,4 +6365,69 @@ void __attribute__((stdcall)) sound_channels_build_queries(
 			voice_results[channel->unknownC]= query->results;
 		}
 	}
+}
+
+/* 0x0012a9d0: the Doppler effect of a sound for a listener, in cents: how
+much higher it is heard for how fast the sound and the listener come near,
+and how much lower for how fast they go apart. From three octaves down to two
+up. The place of the sound is followed by how fast it moves; how fast the
+listener moves is turned by its matrix. The name is made up */
+long double sound_listener_doppler_pitch(
+	long listener_index,
+	const real_point3d *position)
+{
+	const struct sound_listener *listener=
+		(const struct sound_listener *)(game_sound_globals+GAME_SOUND_GLOBALS_LISTENERS_OFFSET)+listener_index;
+	const real_vector3d *velocity= (const real_vector3d *)((const byte *)position+SOUND_POSITION_VELOCITY_OFFSET);
+	real i= position->x-listener->matrix.position.x;
+	real j= position->y-listener->matrix.position.y;
+	real k= position->z-listener->matrix.position.z;
+	long double exact_length= sqrtl((long double)k*(long double)k+(long double)j*(long double)j+(long double)i*(long double)i);
+	real length= (real)exact_length;
+	real listener_i= listener->velocity.i;
+	real listener_j= listener->velocity.j;
+	real listener_k= listener->velocity.k;
+	real x;
+	real y;
+	real z;
+	real away;
+	real speed;
+	real ratio;
+	real limited;
+
+	if (!((long double)0.0001f>fabsl(exact_length)))
+	{
+		real scale= 1.0f/length;
+
+		i= scale*i;
+		j*= scale;
+		k*= scale;
+	}
+	if (listener->matrix.scale!=1.0f)
+	{
+		listener_i= listener->matrix.scale*listener_i;
+		listener_j= listener->matrix.scale*listener_j;
+		listener_k= listener->matrix.scale*listener_k;
+	}
+	x= listener->matrix.up.i*listener_k + listener->matrix.left.i*listener_j + listener->matrix.forward.i*listener_i;
+	y= listener->matrix.up.j*listener_k + listener->matrix.left.j*listener_j + listener->matrix.forward.j*listener_i;
+	z= listener->matrix.up.k*listener_k + listener->matrix.left.k*listener_j + listener->matrix.forward.k*listener_i;
+	away= 0.0f-(z*k + y*j + x*i);
+	speed= velocity->k*k + velocity->j*j + velocity->i*i + SOUND_SPEED;
+	if (!(speed>0.001f))
+	{
+		speed= 0.001f;
+	}
+	ratio= (real)(((long double)SOUND_SPEED-(long double)away)/(long double)speed);
+	if (0.125>(double)ratio)
+	{
+		return logl((long double)0.125)*(long double)SOUND_CENTS_PER_NATURAL_LOGARITHM;
+	}
+	limited= 4.0f;
+	if (!(ratio>4.0f))
+	{
+		limited= ratio;
+	}
+
+	return logl((long double)limited)*(long double)SOUND_CENTS_PER_NATURAL_LOGARITHM;
 }

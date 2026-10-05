@@ -1223,7 +1223,7 @@ address,name,source,arguments,returns,convention
 0021d5a0,sound_effect_unknown_0021d5a0,source/sound/sound_manager.c,ecx,bool
 0021da90,sound_effect_source_deleted,source/sound/sound_manager.c,stack stack stack,void,stdcall
 0014de10,unknown_0014de10,,ecx,int
-0012a9d0,unknown_0012a9d0,,eax edx,real
+0012a9d0,sound_listener_doppler_pitch,source/sound/sound_manager.c,eax edx,real
 0021d630,unknown_0021d630,,stack stack,void
 0021e230,sound_mixbins_add,source/sound/sound_manager.c,esi ecx stack,void,stdcall
 0021e270,sound_frequency_to_filter_coefficient,source/sound/sound_manager.c,stack,int,stdcall
