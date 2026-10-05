@@ -1231,3 +1231,5 @@ address,name,source,arguments,returns,convention
 0021e330,sound_unknown_0021e330,source/sound/sound_manager.c,stack,int,stdcall
 00219650,sound_decibels_interpolate,source/sound/sound_manager.c,edx stack stack stack,real:eax,stdcall
 002197b0,sound_decibels_fade_in,source/sound/sound_manager.c,stack stack stack,real:eax,stdcall
+00218b80,sound_permutation_get_maximum_milliseconds,source/sound/sound_manager.c,esi stack stack,real,stdcall
+00218ca0,sound_get_maximum_milliseconds,source/sound/sound_manager.c,eax stack stack stack,real,stdcall

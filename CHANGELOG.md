@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Cuánto dura una grabación
+
+Dos funciones en `sound/sound_manager.c`. De 787 funciones se pasa a
+789, el 7,00 % de las del juego (el 3,755 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_permutation_get_maximum_milliseconds` | `0x00218b80` | `sound/sound_manager.c` |
+| `sound_get_maximum_milliseconds` | `0x00218ca0` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- `sound_permutation_get_maximum_milliseconds` dice cuánto dura como mucho
+  una grabación de un sonido, en milésimas de segundo, a partir del número
+  que la grabación tiene en `8`: lo divide por las muestras por segundo y
+  lo ajusta por el tono con el que se grabó (parámetros del rango de tono,
+  bloque en `0x18` de lo que comparten los sonidos, de `0xA` bytes) y por
+  lo más grave que pueden ponerla la forma de reproducir el sonido y su
+  escala. Un tono va en centésimas de semitono: 1200 son el doble de
+  rápido.
+- `sound_get_maximum_milliseconds` hace lo mismo para una grabación de un
+  rango de tono de un sonido, reproducida a un tono dado.
+- Usan las tablas del hito 160, que quedan confirmadas: las muestras por
+  segundo y los dos reales de cómo se guardan las muestras.
+- Los nombres son inventados.
+
+### Sin comprobar
+
+- La batería completa no se pasó en este hito, solo las pruebas de estas
+  dos funciones.
+
+### Mutaciones
+
+Pendientes; corren aparte, en segundo plano.
+
 ## 2026-10-04 — Decibelios entre dos y los de un sonido que se apaga
 
 Tres funciones en `sound/sound_manager.c`. De 784 funciones se pasa a

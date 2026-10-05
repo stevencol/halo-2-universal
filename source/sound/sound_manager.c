@@ -250,6 +250,13 @@ enum
 	_sound_interpolation_gain= 1,
 	_sound_interpolation_gain_square_root= 2,
 	_sound_interpolation_gain_smooth= 3,
+	/* in a pitch range: which of the parameters that the sounds of a map
+	share are its own; in a scale, two bends of the pitch; in a recording,
+	something that says how long it is */
+	SOUND_PITCH_RANGE_PARAMETERS_INDEX_OFFSET= 0x2,
+	SOUND_PITCH_RANGE_PARAMETERS_SIZE= 0xA,
+	SOUND_SCALE_PITCH_BENDS_OFFSET= 0x8,
+	SOUND_PERMUTATION_UNKNOWN8_OFFSET= 0x8,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -545,6 +552,12 @@ void __attribute__((stdcall)) sound_mixbins_add(long *mixbins, long mixbin, real
 long __attribute__((stdcall)) sound_frequency_to_filter_coefficient(real frequency);
 unsigned long __attribute__((stdcall)) sound_unknown_0021e2d0(real decibels);
 long __attribute__((stdcall)) sound_unknown_0021e330(real decibels);
+
+/* 0x00218b80 and 0x00218ca0 */
+long double __attribute__((stdcall)) sound_permutation_get_maximum_milliseconds(const struct sound_definition *sound,
+	const struct sound_pitch_range *pitch_range, long unknown8);
+long double __attribute__((stdcall)) sound_get_maximum_milliseconds(long sound_index, long pitch_range_offset,
+	long permutation_offset, real pitch);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -3148,4 +3161,71 @@ real sound_source_fade_decibels(
 	}
 
 	return decibels;
+}
+
+/* the pitch of the recordings of a pitch range as they were made, in
+hundredths of a semitone: of the parameters of the pitch ranges that the
+sounds of a map share */
+static inline __attribute__((always_inline)) short sound_pitch_range_natural_pitch(
+	const struct sound_pitch_range *pitch_range)
+{
+	const byte *parameters= (const byte *)(uintptr_t)global_sound_cache_file_gestalt->unknown8[2].address;
+
+	return *(const short *)(parameters+*(const short *)(pitch_range->unknown0+SOUND_PITCH_RANGE_PARAMETERS_INDEX_OFFSET)*
+		SOUND_PITCH_RANGE_PARAMETERS_SIZE);
+}
+
+/* how many times faster a sound is played some hundredths of a semitone up:
+1200 of them are twice as fast */
+static inline __attribute__((always_inline)) long double sound_pitch_to_rate(
+	long double pitch)
+{
+	return exp2l(pitch*(long double)0.0005776226753368974f*1.4426950408889634073599246810018921L);
+}
+
+/* 0x00218b80: how long a recording of a sound lasts at the most, in
+thousandths of a second, from the number at 8 of the recording: played as
+low as how the sound is played and its scale let it be */
+long double __attribute__((stdcall)) sound_permutation_get_maximum_milliseconds(
+	const struct sound_definition *sound,
+	const struct sound_pitch_range *pitch_range,
+	long unknown8)
+{
+	const struct sound_playback_parameters *playback= sound_definition_get_playback(sound);
+	const short *scale_bends= (const short *)((const byte *)sound_definition_scale_decibels(sound)+SOUND_SCALE_PITCH_BENDS_OFFSET);
+	long double length= sound_pitch_to_rate(sound_pitch_range_natural_pitch(pitch_range));
+	short playback_bend= playback->pitch_lower_bound<=playback->pitch_upper_bound ? playback->pitch_lower_bound :
+		playback->pitch_upper_bound;
+	short scale_bend= scale_bends[0]>scale_bends[1] ? scale_bends[1] : scale_bends[0];
+	long bend= scale_bend+playback_bend;
+	long double rate;
+
+	length*= (long double)sound_unknown5_reals[(char)sound->unknown3[2]];
+	length*= (long double)sound_unknown4_reals[(char)sound->unknown3[1]];
+	length*= (long double)unknown8;
+	length*= (long double)1000.0f;
+	rate= sound_pitch_to_rate(bend);
+
+	return length/(rate*(long double)sound_sample_rates[(char)sound->unknown3[0]]);
+}
+
+/* 0x00218ca0: how long a recording of a pitch range of a sound lasts at the
+most, played at a pitch */
+long double __attribute__((stdcall)) sound_get_maximum_milliseconds(
+	long sound_index,
+	long pitch_range_offset,
+	long permutation_offset,
+	real pitch)
+{
+	const struct sound_cache_file_gestalt *gestalt= global_sound_cache_file_gestalt;
+	const struct sound_definition *sound= sound_definition_get(sound_index);
+	const struct sound_pitch_range *pitch_range=
+		(const struct sound_pitch_range *)(uintptr_t)gestalt->pitch_ranges.address+
+		(sound->first_pitch_range_index+pitch_range_offset);
+	const byte *permutation= (const byte *)(uintptr_t)gestalt->permutations.address+
+		(pitch_range->first_permutation_index+permutation_offset)*(long)sizeof(struct sound_permutation);
+	long double milliseconds= sound_permutation_get_maximum_milliseconds(sound, pitch_range,
+		*(const long *)(permutation+SOUND_PERMUTATION_UNKNOWN8_OFFSET));
+
+	return sound_pitch_to_rate((long double)pitch-(long double)sound_pitch_range_natural_pitch(pitch_range))*milliseconds;
 }

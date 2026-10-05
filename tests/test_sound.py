@@ -1991,3 +1991,75 @@ def run(t) -> None:
                 source_index,
                 globals={"sound_sources": Buffer(bytes(data), pointers=buffer.pointers), "game_sound_globals": Buffer(bytes(state))},
             )
+
+    # ---------- how long a recording lasts
+
+    random_ = random.Random(164)
+
+    def lengths_world() -> tuple:
+        """What the sounds of a map share for the length of a recording: how
+        6 sounds are played, 4 scales, 5 parameters of pitch ranges, 6 pitch
+        ranges and 12 recordings. Gives where the pitch ranges are."""
+        data = bytearray(random_.randbytes(0x48))
+        pointers = []
+
+        def block(offset: int, content: bytes) -> int:
+            struct.pack_into("<I", data, offset, len(data))
+            pointers.append(offset)
+            at = len(data)
+            data.extend(content)
+            return at
+
+        playbacks_ = bytearray(random_.randbytes(6 * 0x38))
+        for n in range(6):
+            struct.pack_into("<2h", playbacks_, n * 0x38 + 0x18, random_.randint(-1200, 1200), random_.randint(-1200, 1200))
+        block(4, bytes(playbacks_))
+        scales_ = bytearray(random_.randbytes(4 * 0x14))
+        for n in range(4):
+            struct.pack_into("<2h", scales_, n * 0x14 + 8, random_.randint(-600, 600), random_.randint(-600, 600))
+        block(0xC, bytes(scales_))
+        parameters = bytearray(random_.randbytes(5 * 0xA))
+        for n in range(5):
+            struct.pack_into("<h", parameters, n * 0xA, random_.choice((0, 0, 100, -100, random_.randint(-2400, 2400))))
+        block(0x1C, bytes(parameters))
+        pitch_ranges = bytearray(random_.randbytes(6 * 0xC))
+        for n in range(6):
+            struct.pack_into("<h", pitch_ranges, n * 0xC + 2, random_.randrange(5))
+            struct.pack_into("<h", pitch_ranges, n * 0xC + 8, random_.randrange(6))
+        ranges_at = block(0x24, bytes(pitch_ranges))
+        permutations_ = bytearray(random_.randbytes(12 * 0x10))
+        for n in range(12):
+            struct.pack_into("<i", permutations_, n * 0x10 + 8, random_.choice((0, 1, 22050, 44100, 1000000, random_.randrange(1 << 24))))
+        block(0x2C, bytes(permutations_))
+        return Buffer(bytes(data), pointers=tuple(pointers)), ranges_at
+
+    def length_sound() -> bytes:
+        definition = bytearray(random_.randbytes(0x10))
+        definition[3:6] = bytes((random_.randrange(3), random_.randrange(3), random_.randrange(5)))
+        struct.pack_into("<2h", definition, 6, random_.randrange(6), random_.randrange(3))
+        definition[0xB] = random_.randrange(4)
+        return bytes(definition)
+
+    for _ in range(300):
+        shared, ranges_at = lengths_world()
+        t.check(
+            "sound_permutation_get_maximum_milliseconds",
+            Buffer(length_sound()),
+            Buffer(shared.data[ranges_at + random_.randrange(6) * 0xC :][:0xC]),
+            random_.choice((0, 1, 22050, 1000000, random_.randrange(1 << 24))),
+            globals={"global_sound_cache_file_gestalt": shared},
+        )
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        sound_index = random_.randrange(TAGS)
+        struct.pack_into("<I", tags, sound_index * 0x10 + 8, len(tags))
+        t.check(
+            "sound_get_maximum_milliseconds",
+            random_.getrandbits(16) << 16 | sound_index,
+            random_.randrange(3),
+            random_.randrange(6),
+            as_bits(random_.choice((0.0, 100.0, -1200.0, 1200.0, random_.uniform(-2400, 2400)))),
+            globals={
+                "global_sound_cache_file_gestalt": shared,
+                "global_tag_instances": Buffer(bytes(tags) + length_sound(), pointers=(sound_index * 0x10 + 8,)),
+            },
+        )
