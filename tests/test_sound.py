@@ -4945,3 +4945,47 @@ def run(t) -> None:
             },
             externals={"unknown_002ae660": made_},
         )
+
+    # ---------- how loud a pitch range is played at a pitch that is out of its own
+
+    random_ = random.Random(214)
+
+    for _ in range(1500):
+        shared = bytearray(random_.randbytes(0x50))
+        struct.pack_into("<I", shared, 0x1C, len(shared))
+        bounds = sorted(random_.randint(-1200, 1200) for _ in range(4))
+        if random_.random() < 0.2:
+            random_.shuffle(bounds)
+        low_start, low, high, high_end = bounds
+        # nothing between where it comes up from and where it is all there
+        if random_.random() < 0.2:
+            low_start = low
+        if random_.random() < 0.2:
+            high_end = high
+        for index in range(4):
+            shared += struct.pack("<5h", random_.randint(-100, 100), low_start, high_end, low, high) if index == 2 else random_.randbytes(0xA)
+        pitch_range = bytearray(random_.randbytes(0xC))
+        struct.pack_into("<h", pitch_range, 2, 2)
+        pitch = random_.choice(
+            (
+                float(low),
+                float(high),
+                float(low_start),
+                float(high_end),
+                low - 0.00005,
+                low - 0.0002,
+                high + 0.00005,
+                high + 0.0002,
+                (low_start + low) / 2.0,
+                (high + high_end) / 2.0,
+                random_.uniform(-1500, 1500),
+                random_.uniform(-1500, 1500),
+            )
+        )
+        t.check(
+            "sound_pitch_range_fade_decibels",
+            Buffer(bytes((random_.getrandbits(8), random_.choice((0x20, 0x20, 0x20, 0xFF, 0, 0xDF))))),
+            Buffer(bytes(pitch_range)),
+            as_bits(pitch),
+            globals={"global_sound_cache_file_gestalt": Buffer(bytes(shared), pointers=(0x1C,))},
+        )

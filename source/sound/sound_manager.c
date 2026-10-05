@@ -538,6 +538,7 @@ enum
 	SOUND_CONSOLE_FORMAT_UNCOMPRESSED= 1,
 	SOUND_CONSOLE_FORMAT_COMPRESSED= 0x69,
 	SOUND_SAMPLES_PER_SECOND= 44100,
+	_sound_unknown13_bit= 13,
 	SOUND_COMPRESSED_SAMPLES_PER_BLOCK= 64,
 	SOUND_COMPRESSED_BLOCK_SIZE= 36,
 	/* more of a voice of the console's sound */
@@ -1034,6 +1035,10 @@ unsigned long unknown_00218850(long sound_index, const struct sound_chunk *chunk
 real sound_source_fade_decibels(long source_index);
 real __attribute__((stdcall)) sound_decibels_interpolate(long kind, real from, real to, real fraction);
 real __attribute__((stdcall)) sound_decibels_fade_in(long kind, real decibels, real fraction);
+
+/* 0x00219f80 */
+real __attribute__((stdcall)) sound_pitch_range_fade_decibels(const byte *flags,
+	const struct sound_pitch_range *pitch_range, real pitch);
 
 
 
@@ -8225,4 +8230,41 @@ void __attribute__((stdcall)) sound_console_voice_create_stream(
 	description.callback= sound_console_voice_stream_callback;
 	description.context= voice_index;
 	unknown_002ae660(voice, object, &description, kind);
+}
+
+/* 0x00219f80: how loud a pitch range is played at a pitch that is out of
+those that it is played at, in decibels, for something with the flag 13: it
+comes up from silence from the second number of its parameters to the
+fourth, and goes back to it from the fifth to the third. 0 for a pitch from
+the fourth to the fifth, and with no flag. The name is made up */
+real __attribute__((stdcall)) sound_pitch_range_fade_decibels(
+	const byte *flags,
+	const struct sound_pitch_range *pitch_range,
+	real pitch)
+{
+	const short *parameters;
+	real bound;
+	real fraction;
+
+	if (!(flags[1]&FLAG(_sound_unknown13_bit-8)))
+	{
+		return 0.0f;
+	}
+	parameters= sound_pitch_range_parameters(pitch_range);
+	bound= (real)parameters[3];
+	if (!((long double)0.0001f>fabsl((long double)pitch-(long double)bound)) && bound>pitch)
+	{
+		fraction= sound_interpolation_fraction((real)parameters[1], bound, pitch, TRUE);
+	}
+	else
+	{
+		bound= (real)parameters[4];
+		if ((long double)0.0001f>fabsl((long double)pitch-(long double)bound) || !(pitch>bound))
+		{
+			return 0.0f;
+		}
+		fraction= sound_interpolation_fraction((real)parameters[2], bound, pitch, FALSE);
+	}
+
+	return sound_decibels_fade_in(2, 0.0f, fraction);
 }

@@ -1316,3 +1316,4 @@ address,name,source,arguments,returns,convention
 002ae820,unknown_002ae820,,eax,void
 0021f4e0,sound_console_voice_create_stream,source/sound/sound_manager.c,ebx stack,void,stdcall
 002ae660,unknown_002ae660,,eax ecx edi stack,bool
+00219f80,sound_pitch_range_fade_decibels,source/sound/sound_manager.c,ecx edx stack,real:eax,stdcall

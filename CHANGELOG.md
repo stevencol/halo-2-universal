@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — El volumen de un rango de tono fuera de sus tonos
+
+Una función en `sound/sound_manager.c`. De 870 funciones se pasa a
+871, el 7,73 % de las del juego (el 4,550 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_pitch_range_fade_decibels` | `0x00219f80` | `sound/sound_manager.c` |
+
+No estaba apuntada. La llama `0x0021b0e0`, la de los sonidos en bucle que
+falta por hacer. Recibe unas marcas en `ecx`, el rango de tono en `edx` y el
+tono en la pila.
+
+### Lo que se sabe
+
+- `sound_pitch_range_fade_decibels` da cuánto baja el volumen de un rango de
+  tono cuando el tono al que suena queda fuera de los suyos, en decibelios.
+- Los parámetros de un rango de tono son cinco números: el segundo y el
+  cuarto marcan por abajo dónde empieza a oírse y dónde se oye entero; el
+  quinto y el tercero, por arriba, dónde deja de oírse entero y dónde se
+  apaga del todo. Entre el cuarto y el quinto el resultado es 0.
+- Así un motor puede pasar de un rango de tono al siguiente sin saltos: uno
+  se apaga mientras el otro sube. Solo se hace con la marca 13.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función. La batería
+  completa corre aparte con las 867 funciones del hito 210.
+
+### Mutaciones
+
+Diez líneas rotas a mano: las pruebas notan nueve, una de ellas solo
+después de añadir casos con dos límites iguales. La que no notan es
+cambiar un «mayor» por «mayor o igual»: el caso de igualdad ya lo descarta
+la comprobación anterior.
+
 ## 2026-10-05 — Una voz de la consola recibe su flujo
 
 Una función en `sound/sound_manager.c`. De 869 funciones se pasa a
