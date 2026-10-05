@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Un sonido en bucle se crea
+
+Una función en `sound/sound_manager.c`, de 432 bytes. De 902 funciones se pasa a
+903, el 8,02 % de las del juego (el 4,765 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `looping_sound_new` | `0x0021aeb0` | `sound/sound_manager.c` |
+
+No estaba apuntada. La llama `0x0021a250`. Recibe el tag en `eax` y tres
+números en la pila; devuelve el sonido en bucle, o `NONE`.
+
+### Lo que se sabe
+
+- `looping_sound_new` crea un sonido en bucle a partir de su tag, con un
+  mando de sonidos para quien lo pide. No lo crea si el sonido no puede
+  sonar ahora o no queda sitio.
+- A cada sonido suelto del tag le apunta cuándo sonará por primera vez: un
+  tiempo al azar entre los dos que dice, contado desde ahora, o ahora mismo
+  si tiene la marca 2.
+- Con las marcas 4 o 5 del tag, cada pista se queda con un número al azar
+  del mando de sonidos.
+- El nombre es una suposición.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función (700 casos). La
+  batería completa del hito 233 (900 funciones) quedó corriendo aparte: hay
+  que mirar su resultado.
+
+### Mutaciones
+
+Pendientes las de este hito: no se rompió ninguna línea a mano.
+
 ## 2026-10-05 — Cómo suena un sitio, para la consola
 
 Una función en `sound/sound_manager.c`, de 410 bytes. De 901 funciones se pasa a

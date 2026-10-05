@@ -5881,3 +5881,52 @@ def run(t) -> None:
                 ),
             },
         )
+
+    # ---------- a looping sound is made
+
+    random_ = random.Random(236)
+
+    for _ in range(700):
+        looping, indices = looping_world()
+        definition_index = random_.randrange(TAGS)
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        struct.pack_into("<I", tags, definition_index * 0x10 + 8, len(tags))
+        definition = bytearray(random_.randbytes(0x30))
+        definition[0] = random_.choice((0, 0x10, 0x20, 0x30, 0xCF, 0xFF))
+        struct.pack_into("<i", definition, 0x1C, random_.choice((0, 1, 2, 3, 3)))
+        details_count = random_.choice((0, 1, 3, 6, 12))
+        struct.pack_into("<iI", definition, 0x24, details_count, len(tags) + 0x30)
+        details = bytearray(random_.randbytes(12 * 0x34))
+        for detail in range(12):
+            low = random_.choice((0.0, 1.0, 2.5, 30.0))
+            struct.pack_into("<2f", details, detail * 0x34 + 0xC, low, low + random_.choice((0.0, 1.0, 10.0)))
+            details[detail * 0x34 + 0x18] = random_.choice((0, 0, 4, 0xFB, 0xFF))
+        controllers = bytearray(random_.randbytes(0x4C + CONTROLLERS * 0x1C))
+        struct.pack_into("<I", controllers, 0x44, 0x4C)
+        for controller in range(CONTROLLERS):
+            struct.pack_into("<I", controllers, 0x4C + controller * 0x1C + 4, random_.choice((NONE, NONE, 0, random_.getrandbits(32))))
+        apart = bytearray(random_.randbytes(0x1C))
+        struct.pack_into("<I", apart, 4, random_.choice((NONE, NONE, 5)))
+        state = bytearray(sound_state(*random_.choice(((1, 1, 1), (1, 1, 1), (1, 1, 1), (0, 1, 1), (1, 0, 1), (1, 1, 0)))).data)
+        struct.pack_into("<i", state, 0x84, random_.choice((0, 1000, 123456, 0x7F000000)))
+        made_index = random_.choice((NONE, *indices, *indices))
+        given = random_.choice((NONE, NONE, random_.getrandbits(16) << 16 | random_.randrange(CONTROLLERS)))
+        t.check(
+            "looping_sound_new",
+            random_.getrandbits(16) << 16 | definition_index,
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            globals={
+                "looping_sounds": looping,
+                "game_sound_globals": Buffer(bytes(state)),
+                "global_tag_instances": Buffer(bytes(tags) + bytes(definition) + bytes(details), pointers=(definition_index * 0x10 + 8, len(tags) + 0x28)),
+                "unknown_0051ebd8": Buffer(bytes(controllers), pointers=(0x44,)),
+                "unknown_0051ebdc": Buffer(bytes(apart)),
+                "global_random_seed_reference": Buffer(struct.pack("<4I", *(random_.getrandbits(32) for _ in range(4)))),
+            },
+            externals={
+                "datum_new": lambda harness, arguments, made_index=made_index: (made_index, (harness.normalize(arguments[0]),)),
+                "sound_playback_controller_new": lambda harness, arguments, given=given: (given, tuple(arguments)),
+            },
+        )

@@ -595,6 +595,18 @@ enum
 	SOUND_CONSOLE_EFFECT_STATE_OFFSET= 0x10,
 	SOUND_CONSOLE_EFFECT_STATE_SIZE_OFFSET= 0x14,
 	UNKNOWN_00510C90_EFFECTS_OFFSET= 0x22,
+	/* more of a looping sound, of its tag and of a sound of it that plays now
+	and then */
+	LOOPING_SOUND_DATUM_UNKNOWN2_OFFSET= 0x2,
+	LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET= 0x50,
+	LOOPING_SOUND_DATUM_DETAIL_TIMES_OFFSET= 0x58,
+	LOOPING_SOUND_DATUM_TRACK_SEED_OFFSET= 0x90,
+	LOOPING_SOUND_DEFINITION_TRACKS_OFFSET= 0x1C,
+	LOOPING_SOUND_DEFINITION_DETAILS_OFFSET= 0x24,
+	LOOPING_SOUND_DETAIL_SIZE= 0x34,
+	LOOPING_SOUND_DETAIL_PERIOD_BOUNDS_OFFSET= 0xC,
+	LOOPING_SOUND_DETAIL_FLAGS_OFFSET= 0x18,
+	_looping_sound_detail_unknown2_bit= 2,
 	UNKNOWN_0051EBE4_UNKNOWN2A08_OFFSET= 0x2A08,
 	UNKNOWN_0051EBE4_UNKNOWN2AD4_OFFSET= 0x2AD4,
 	SOUND_CONSOLE_FORMAT_BASE_SIZE= 0x12,
@@ -1429,6 +1441,9 @@ void unknown_0037b60d(void *sound, unsigned long effect_index, unsigned long off
 
 /* 0x0021ece0 */
 void __attribute__((stdcall)) sound_console_set_reverb(const real *environment, long effect_index);
+
+/* 0x0021aeb0 */
+long __attribute__((stdcall)) looping_sound_new(long definition_index, short unknown2, long unknown8, long owner);
 
 /* 0x0021d110 */
 long __attribute__((stdcall)) sound_effect_source_new(byte *request, long sound_index);
@@ -9695,4 +9710,72 @@ void __attribute__((stdcall)) sound_console_set_reverb(
 	reverb.density= environment[12]*100.0f;
 	reverb.high_frequency_reference= environment[13];
 	unknown_0037ba6f(effect_index, (const byte *)&reverb, 0);
+}
+
+/* 0x0021aeb0: a looping sound is made, of a tag, for something: NONE if the
+sound cannot play now or there is no room. It has a sound playback controller
+of what it is for. Each of its sounds that play now and then is to play first
+at a time at random between the two that it says, from now, or now with its
+flag 2; and with one of the flags 4 and 5 of the tag, each track takes a
+number at random of the controller, to tell which recordings it has
+played. The name is a guess */
+long __attribute__((stdcall)) looping_sound_new(
+	long definition_index,
+	short unknown2,
+	long unknown8,
+	long owner)
+{
+	long looping_sound_index;
+	byte *looping_sound;
+	const byte *definition;
+	long index;
+
+	if (!sound_available_inline())
+	{
+		return NONE;
+	}
+	looping_sound_index= datum_new(looping_sounds);
+	if (looping_sound_index==NONE)
+	{
+		return NONE;
+	}
+	looping_sound= (byte *)looping_sounds->data+(looping_sound_index&0xFFFF)*LOOPING_SOUND_DATUM_SIZE;
+	*(short *)(looping_sound+LOOPING_SOUND_DATUM_UNKNOWN2_OFFSET)= unknown2;
+	*(long *)(looping_sound+LOOPING_SOUND_DATUM_UNKNOWN4_OFFSET)= definition_index;
+	*(long *)(looping_sound+LOOPING_SOUND_DATUM_UNKNOWN8_OFFSET)= unknown8;
+	*(long *)(looping_sound+LOOPING_SOUND_DATUM_CONTROLLER_INDEX_OFFSET)= sound_playback_controller_new(owner);
+	looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET+1]= 0;
+	looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET]= 0;
+	definition= (const byte *)(uintptr_t)global_tag_instances[definition_index&0xFFFF].address;
+	for (index= 0; index<*(const long *)(definition+LOOPING_SOUND_DEFINITION_DETAILS_OFFSET); index++)
+	{
+		const byte *detail= *(const byte *const *)(definition+LOOPING_SOUND_DEFINITION_DETAILS_OFFSET+4)+
+			index*LOOPING_SOUND_DETAIL_SIZE;
+		real seconds= 0.0f;
+
+		if (!(detail[LOOPING_SOUND_DETAIL_FLAGS_OFFSET]&FLAG(_looping_sound_detail_unknown2_bit)))
+		{
+			seconds= (real)sound_random_between((const real *)(detail+LOOPING_SOUND_DETAIL_PERIOD_BOUNDS_OFFSET));
+		}
+		*(long *)(looping_sound+LOOPING_SOUND_DATUM_DETAIL_TIMES_OFFSET+index*4)=
+			(long)(seconds*1000.0f+(real)*(const long *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET));
+	}
+	if (definition[0]&LOOPING_SOUND_TRACK_OWN_BITS_FLAGS)
+	{
+		byte *controller=
+			sound_playback_controller_get(*(const long *)(looping_sound+LOOPING_SOUND_DATUM_CONTROLLER_INDEX_OFFSET));
+
+		for (index= 0; index<*(const long *)(definition+LOOPING_SOUND_DEFINITION_TRACKS_OFFSET); index++)
+		{
+			unsigned long *seed= (unsigned long *)(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWN8_OFFSET);
+
+			if (*(const long *)(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWN4_OFFSET)==NONE)
+			{
+				*seed= *seed*1664525UL+1013904223UL;
+			}
+			*(unsigned long *)(looping_sound+LOOPING_SOUND_DATUM_TRACK_SEED_OFFSET+index*LOOPING_SOUND_TRACK_SIZE)= *seed;
+		}
+	}
+
+	return looping_sound_index;
 }
