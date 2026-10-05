@@ -5434,3 +5434,114 @@ def run(t) -> None:
             Buffer(random_.randbytes(12)),
             globals={"global_random_seed_reference": Buffer(struct.pack("<4I", *(random_.getrandbits(32) for _ in range(4))))},
         )
+
+    # ---------- the sounds of a looping sound that play now and then
+
+    random_ = random.Random(227)
+
+    harness = t.harness
+    tables = []
+    for original in (True, False):
+        names = {0: None}
+        for n, name in enumerate(harness.externals):
+            names[harness.symbols[name].address if original else harness_external_address(n)] = name
+        for name, symbol in harness.symbols.items():
+            if symbol.source:
+                names[symbol.address if original else harness.functions[name]] = name
+        address = harness.globals["looping_sound_callbacks"] if original else harness.variables["looping_sound_callbacks"]
+        tables.append([names.get(value, hex(value)) for value in struct.unpack("<8I", harness.mu.mem_read(address, 0x20))])
+    if not t.only or "looping_sound_detail_request" in t.only:
+        t.cases["looping_sound_detail_request"] = t.cases.get("looping_sound_detail_request", 0) + 1
+        if tables[0] != tables[1]:
+            t._fail("looping_sound_detail_request", f"looping_sound_callbacks: the game has {tables[0]}, source/ has {tables[1]}")
+
+    for _ in range(400):
+        first = [random_.uniform(-5, 5) for _ in range(3)]
+        second = [value + random_.choice((0.0, 0.0, 0.00005, -0.00005, 0.0001, 0.0002, -0.0002, 1.0)) for value in first]
+        t.check(
+            "looping_sound_source_matches",
+            Buffer(struct.pack("<3f", *first) + random_.randbytes(4)),
+            Buffer(struct.pack("<3f", *second) + random_.randbytes(4)),
+        )
+
+    def looping_world() -> tuple:
+        """The looping sounds: 6 of them, some with no place, with their indices."""
+        data = bytearray(random_.randbytes(0x4C + 6 * 0xD4))
+        struct.pack_into("<I", data, 0x24, 0xD4)
+        struct.pack_into("<i", data, 0x38, random_.choice((6, 6, 6, 3)))
+        struct.pack_into("<I", data, 0x44, 0x4C)
+        indices = []
+        for n in range(6):
+            at = 0x4C + n * 0xD4
+            identifier_ = random_.choice((0, 1, 0x7FFF, 0x8001, 0xFFFF, random_.getrandbits(16)))
+            struct.pack_into("<H", data, at, identifier_)
+            data[at + 0xF] = random_.choice((0, 0x10, 1, 1, 0x11, 2, 0xF1))
+            data[at + 0x18 : at + 0x24] = reals(random_, 3)
+            indices.append(identifier_ << 16 | n)
+        return Buffer(bytes(data), pointers=(0x44,)), indices
+
+    for _ in range(900):
+        looping, indices = looping_world()
+        index = random_.choice((NONE, *indices, *indices, indices[0] ^ 0x10000, 6, 0x10007))
+        said = bytearray(random_.randbytes(0x48))
+        said[3] = random_.choice((0, 1, 1, 0x11, 2, 0xF1, 0xF0))
+        said[0xC:0x18] = reals(random_, 3)
+        t.check(
+            "looping_sound_source_unknown0",
+            index,
+            random_.getrandbits(32),
+            Buffer(reals(random_, 3)),
+            Buffer(bytes(said)),
+            globals={"looping_sounds": looping},
+        )
+
+    for _ in range(900):
+        looping, indices = looping_world()
+        sound_index = random_.randrange(TAGS)
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        struct.pack_into("<I", tags, sound_index * 0x10 + 8, len(tags))
+        definition = bytearray(random_.randbytes(0x10))
+        definition[4] = random_.choice((0, 0, 1, 0xFF))
+        detail = bytearray(random_.randbytes(0x34))
+        struct.pack_into("<I", detail, 8, random_.getrandbits(16) << 16 | sound_index)
+        detail[0x1C:0x2C] = struct.pack("<4f", -1.0, 2.0, -0.5, 0.5)
+        struct.pack_into("<2f", detail, 0x2C, random_.choice((0.0, 1.0, 3.0)), random_.choice((0.0, 4.0, 8.0)))
+        players = bytearray(random_.randbytes(0xC))
+        struct.pack_into("<h", players, 8, random_.choice((0, 1, 2, 2, 4, 4, -1)))
+        local = [NONE if random_.random() < 0.4 else random_.getrandbits(32) for _ in range(4)]
+        players += struct.pack("<4I", *local)
+        first_player = next((n for n in range(4) if local[n] != NONE), NONE)
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        for n in range(-1, 4):
+            at = LISTENERS + n * LISTENER_SIZE + 0x30
+            state[at : at + 12] = reals(random_, 3)
+
+        def located(harness, arguments):
+            location, point = arguments
+            harness.mu.mem_write(location, bytes(range(0x70, 0x78)))
+            return 0, (harness.normalize(location), bytes(harness.mu.mem_read(point, 12)))
+
+        def told__(harness, arguments):
+            data_, index_, offset, said_ = arguments
+            # the sound is not compared: the function does not use it, and the compiler of source/ does not pass it
+            return 1, (data_, bytes(harness.mu.mem_read(offset, 12)), harness.normalize(said_))
+
+        t.check(
+            "looping_sound_detail_request",
+            Buffer(bytes(detail)),
+            random_.choice(indices),
+            Buffer(random_.randbytes(0xA0), places=(0x58,)),
+            globals={
+                "looping_sounds": looping,
+                "global_tag_instances": Buffer(bytes(tags) + bytes(definition), pointers=(sound_index * 0x10 + 8,)),
+                "players_globals": Buffer(bytes(players)),
+                "game_sound_globals": Buffer(bytes(state)),
+                "global_random_seed_reference": Buffer(struct.pack("<4I", *(random_.getrandbits(32) for _ in range(4)))),
+                "looping_sound_callbacks": GlobalRange(0x20),
+            },
+            externals={
+                "unknown_0014dde0": lambda harness, arguments, first_player=first_player: first_player,
+                "scenario_location_from_point": located,
+                "looping_sound_source_unknown0": told__,
+            },
+        )

@@ -567,9 +567,17 @@ enum
 	SOUND_CACHE_CLOSE_WAIT= 5000,
 	_sound_class_internal_unknown10_bit= 10,
 	/* of a sound of a looping sound that plays now and then */
+	LOOPING_SOUND_DETAIL_SOUND_INDEX_OFFSET= 0x8,
 	LOOPING_SOUND_DETAIL_YAW_BOUNDS_OFFSET= 0x1C,
 	LOOPING_SOUND_DETAIL_PITCH_BOUNDS_OFFSET= 0x24,
 	LOOPING_SOUND_DETAIL_DISTANCE_BOUNDS_OFFSET= 0x2C,
+	/* in what the game says of a sound: which way it points (a vector in 32
+	bits) and how fast it moves; a byte of the tag of
+	a sound; and how many players the console has */
+	SOUND_SOURCE_FORWARD_OFFSET= 0x18,
+	SOUND_SOURCE_VELOCITY_OFFSET= 0x1C,
+	SOUND_DEFINITION_UNKNOWN4_OFFSET= 0x4,
+	PLAYERS_GLOBALS_LOCAL_PLAYER_COUNT_OFFSET= 0x8,
 	VOICE_UNKNOWN2_OFFSET= 0x2,
 	VOICE_DECIBELS_OFFSET= 0xC,
 	VOICE_UNKNOWN30_OFFSET= 0x30,
@@ -1300,6 +1308,13 @@ void sound_channels_unknown_00129380(const long *voice_values, const long *slot_
 void __attribute__((stdcall)) sound_console_set_environment(const long *second, const long *first, const void *unknown);
 void sound_classes_update(real seconds);
 
+/* 0x0021bfb0, 0x0021c140 and 0x0021cc60 */
+boolean __attribute__((stdcall)) looping_sound_source_unknown0(long data, long sound_index, void *unknown5C,
+	void *unknown18);
+boolean __attribute__((stdcall)) looping_sound_source_matches(const void *unknown5C, const void *unknown14);
+boolean __attribute__((stdcall)) looping_sound_detail_request(const byte *detail, long looping_sound_index,
+	byte *request);
+
 /* 0x0021ce60 */
 void looping_sound_detail_random_position(const byte *detail, real_vector3d *position);
 
@@ -1458,6 +1473,21 @@ const struct sound_source_callbacks sound_effect_callbacks=
 	sound_effect_source_deleted,
 	sound_effect_source_stopped,
 	NULL,
+	NULL
+};
+
+/* 0x0044a130: who is told of the sounds of a looping sound that play now and
+then: the looping sound itself, which says where they are and which are the
+same */
+const struct sound_source_callbacks looping_sound_callbacks=
+{
+	looping_sound_source_unknown0,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	looping_sound_source_matches,
 	NULL
 };
 
@@ -8931,4 +8961,162 @@ void looping_sound_detail_random_position(
 	position->i= (real)(cosl(yaw)*cosl(pitch)*distance);
 	position->j= (real)(sinl(yaw)*cosl(pitch)*distance);
 	position->k= (real)(sinl(pitch)*distance);
+}
+
+/* 0x0021bfb0: the first thing that a looping sound is told of a sound of its
+own that plays now and then: what the game says of the sound follows what it
+says of the looping sound. With a place, its direction, how fast it moves,
+where it is in the structure bsp, and its distances and its cone, with their
+flags; with none, it points forward and does not move. The place is the three
+reals of the bytes for who is told, from the place of the looping sound if
+the sound has a place. FALSE if there is no such looping sound */
+boolean __attribute__((stdcall)) looping_sound_source_unknown0(
+	long data,
+	long sound_index,
+	void *unknown5C,
+	void *unknown18)
+{
+	const byte *looping_sound= datum_try_and_get(looping_sounds, data);
+	const struct sound_source *from;
+	struct sound_source *said= (struct sound_source *)unknown18;
+	byte *bytes= (byte *)unknown18;
+
+	if (!looping_sound)
+	{
+		return FALSE;
+	}
+	from= (const struct sound_source *)(looping_sound+LOOPING_SOUND_DATUM_SOURCE_OFFSET);
+	if (((const byte *)from)[SOUND_SOURCE_TYPE_OFFSET]&SOUND_SOURCE_DATUM_TYPE_MASK)
+	{
+		long bit;
+
+		memcpy(bytes+SOUND_SOURCE_VELOCITY_OFFSET, (const byte *)from+SOUND_SOURCE_VELOCITY_OFFSET, sizeof(real_vector3d));
+		*(long *)(bytes+SOUND_SOURCE_FORWARD_OFFSET)= *(const long *)((const byte *)from+SOUND_SOURCE_FORWARD_OFFSET);
+		memcpy(bytes+SOUND_SOURCE_LOCATION_OFFSET, (const byte *)from+SOUND_SOURCE_LOCATION_OFFSET, sizeof(struct scenario_location));
+		for (bit= _sound_source_minimum_distance_bit; bit<=_sound_source_outer_cone_gain_bit; bit++)
+		{
+			if ((((const byte *)from)[0]>>bit)&1)
+			{
+				bytes[0]|= FLAG(bit);
+			}
+			else
+			{
+				bytes[0]&= ~FLAG(bit);
+			}
+		}
+		said->minimum_distance= from->minimum_distance;
+		said->maximum_distance= from->maximum_distance;
+		said->inner_cone_angle= from->inner_cone_angle;
+		said->outer_cone_angle= from->outer_cone_angle;
+		said->outer_cone_gain= from->outer_cone_gain;
+	}
+	else
+	{
+		*(unsigned long *)(bytes+SOUND_SOURCE_FORWARD_OFFSET)= vector3d_compress(global_forward3d);
+		*(real_vector3d *)(bytes+SOUND_SOURCE_VELOCITY_OFFSET)= *global_zero_vector3d;
+	}
+	memcpy(bytes+SOUND_SOURCE_POSITION_OFFSET, unknown5C, sizeof(real_point3d));
+	if ((bytes[SOUND_SOURCE_TYPE_OFFSET]&SOUND_SOURCE_DATUM_TYPE_MASK)==_sound_source_datum_type_positioned)
+	{
+		real *position= (real *)(bytes+SOUND_SOURCE_POSITION_OFFSET);
+		const real *origin= (const real *)((const byte *)from+SOUND_SOURCE_POSITION_OFFSET);
+
+		position[0]= origin[0]+position[0];
+		position[1]= origin[1]+position[1];
+		position[2]= origin[2]+position[2];
+	}
+
+	return TRUE;
+}
+
+/* 0x0021c140: whether two sounds of a looping sound that play now and then
+are the same: their three reals of the bytes for who is told are, to less
+than a ten thousandth */
+boolean __attribute__((stdcall)) looping_sound_source_matches(
+	const void *unknown5C,
+	const void *unknown14)
+{
+	const real *a= (const real *)unknown5C;
+	const real *b= (const real *)unknown14;
+
+	return (long double)0.0001f>fabsl((long double)a[0]-(long double)b[0]) &&
+		(long double)0.0001f>fabsl((long double)a[1]-(long double)b[1]) &&
+		(long double)0.0001f>fabsl((long double)a[2]-(long double)b[2]);
+}
+
+/* 0x0021cc60: what the game gives to start a sound is made for a sound of a
+looping sound that plays now and then. What it says of the sound is what it
+says of the looping sound. For a looping sound with a place, the sound is at
+a place at random from it (looping_sound_detail_random_position), and the
+looping sound is told of it (looping_sound_callbacks), with that place. For
+any other, the sound is at a place at random from the listener of one of the
+players of the console, taken at random; FALSE if there are none. The name
+is made up */
+boolean __attribute__((stdcall)) looping_sound_detail_request(
+	const byte *detail,
+	long looping_sound_index,
+	byte *request)
+{
+	const byte *looping_sound= (const byte *)looping_sounds->data+(looping_sound_index&0xFFFF)*LOOPING_SOUND_DATUM_SIZE;
+	long sound_index= *(const long *)(detail+LOOPING_SOUND_DETAIL_SOUND_INDEX_OFFSET);
+	const byte *sound= (const byte *)sound_definition_get(sound_index);
+	byte *said= request+SOUND_REQUEST_SOURCE_OFFSET;
+	real_vector3d offset;
+	boolean result= FALSE;
+	byte type;
+
+	memcpy(said, looping_sound+LOOPING_SOUND_DATUM_SOURCE_OFFSET, LOOPING_SOUND_DATUM_SOURCE_SIZE);
+	said[SOUND_SOURCE_POSITION_KIND_OFFSET]= _sound_source_position_world;
+	*(long *)(request+SOUND_REQUEST_UNKNOWN8_OFFSET)= 0x10;
+	*(long *)(request+SOUND_REQUEST_UNKNOWN4_OFFSET)= sound[SOUND_DEFINITION_UNKNOWN4_OFFSET] ? 0 : 2;
+	type= looping_sound[LOOPING_SOUND_DATUM_SOURCE_OFFSET+SOUND_SOURCE_TYPE_OFFSET]&SOUND_SOURCE_DATUM_TYPE_MASK;
+	if (type==_sound_source_datum_type_positioned)
+	{
+		said[SOUND_SOURCE_TYPE_OFFSET]= (said[SOUND_SOURCE_TYPE_OFFSET]&0xF1)|type;
+		looping_sound_detail_random_position(detail, &offset);
+		looping_sound_source_unknown0(looping_sound_index, sound_index, &offset, said);
+		*(real_vector3d *)(request+SOUND_REQUEST_CALLBACK_BYTES_OFFSET)= offset;
+		*(unsigned long *)request= 0x2F;
+		*(long *)(request+SOUND_REQUEST_CALLBACK_DATA_OFFSET)= looping_sound_index;
+		*(const struct sound_source_callbacks **)(request+SOUND_REQUEST_CALLBACKS_OFFSET)= &looping_sound_callbacks;
+		*(short *)(request+SOUND_REQUEST_CALLBACK_SIZE_OFFSET)= sizeof(real_vector3d);
+		result= TRUE;
+	}
+	else
+	{
+		short count= *(const short *)(players_globals->unknown0+PLAYERS_GLOBALS_LOCAL_PLAYER_COUNT_OFFSET);
+
+		if (count>0)
+		{
+			unsigned long *seed= &global_random_seed_reference[1];
+			const struct sound_listener *listener;
+			long player_index;
+			long pick;
+
+			*seed= *seed*1664525UL+1013904223UL;
+			pick= (short)(((*seed>>16)*(unsigned long)(long)count)>>16);
+			player_index= unknown_0014dde0();
+			for (; pick>0; pick--)
+			{
+				player_index= sound_next_local_player(player_index);
+			}
+			said[SOUND_SOURCE_TYPE_OFFSET]= (said[SOUND_SOURCE_TYPE_OFFSET]&0xF1)|_sound_source_datum_type_positioned;
+			listener= (const struct sound_listener *)(game_sound_globals+GAME_SOUND_GLOBALS_LISTENERS_OFFSET)+player_index;
+			looping_sound_detail_random_position(detail, &offset);
+			((real *)(said+SOUND_SOURCE_POSITION_OFFSET))[0]= listener->matrix.position.x+offset.i;
+			((real *)(said+SOUND_SOURCE_POSITION_OFFSET))[1]= listener->matrix.position.y+offset.j;
+			((real *)(said+SOUND_SOURCE_POSITION_OFFSET))[2]= listener->matrix.position.z+offset.k;
+			/* where the listener is, not the sound */
+			scenario_location_from_point((struct scenario_location *)(said+SOUND_SOURCE_LOCATION_OFFSET),
+				&listener->matrix.position);
+			*(unsigned long *)(said+SOUND_SOURCE_FORWARD_OFFSET)= vector3d_compress(global_forward3d);
+			*(real_vector3d *)(said+SOUND_SOURCE_VELOCITY_OFFSET)= *global_zero_vector3d;
+			*(unsigned long *)request= 7;
+			result= TRUE;
+		}
+	}
+	said[SOUND_SOURCE_TYPE_OFFSET]= (said[SOUND_SOURCE_TYPE_OFFSET]&0xF)|(byte)(said[SOUND_SOURCE_TYPE_OFFSET]<<4);
+	said[0]|= 0x80;
+
+	return result;
 }

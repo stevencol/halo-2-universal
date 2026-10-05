@@ -2,6 +2,55 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Los sonidos sueltos de un sonido en bucle
+
+Tres funciones en `sound/sound_manager.c`. De 890 funciones se pasa a
+893, el 7,93 % de las del juego (el 4,664 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `looping_sound_detail_request` | `0x0021cc60` | `sound/sound_manager.c` |
+| `looping_sound_source_unknown0` | `0x0021bfb0` | `sound/sound_manager.c` |
+| `looping_sound_source_matches` | `0x0021c140` | `sound/sound_manager.c` |
+
+Ninguna estaba apuntada. Las dos últimas son las de la tabla
+`looping_sound_callbacks` (`0x0044a130`), que también es nueva; la última no
+figura en la lista de Ghidra.
+
+### Lo que se sabe
+
+- `looping_sound_detail_request` prepara lo que el juego da para arrancar
+  un sonido suelto de un sonido en bucle (los que suenan de vez en cuando).
+  Lo que dice del sonido es lo que dice del sonido en bucle.
+- Si el sonido en bucle tiene sitio, el suelto suena en un sitio al azar a
+  partir del suyo (`looping_sound_detail_random_position`), y el sonido en
+  bucle recibe sus avisos (`looping_sound_callbacks`).
+- Si no lo tiene, suena en un sitio al azar alrededor del oyente de uno de
+  los jugadores de la consola, elegido al azar; sin jugadores no hay
+  sonido. El sitio en el nivel que se apunta es el del oyente, no el del
+  sonido: así lo hace el juego.
+- `looping_sound_source_unknown0` es el primer aviso: lo que el juego dice
+  del sonido suelto sigue a lo que dice del sonido en bucle (dirección,
+  velocidad, sitio en el nivel, distancias y cono), y su sitio se cuenta
+  desde el del sonido en bucle.
+- `looping_sound_source_matches` dice si dos sonidos sueltos son el mismo:
+  si sus tres reales coinciden con menos de una diezmilésima.
+
+### Sin comprobar
+
+- `looping_sound_detail_request` le pasa a `looping_sound_source_unknown0`
+  el sonido, que esa función no usa: el compilador de `source/` no lo pasa,
+  y la prueba no lo compara.
+- En este hito solo se pasaron las pruebas de estas funciones. La última
+  batería completa es la del hito 219 (881 funciones, todas bien).
+
+### Mutaciones
+
+Diecinueve líneas rotas a mano: las pruebas notan las diecinueve. La prueba
+compara además la tabla con la del juego.
+
 ## 2026-10-05 — Guardar un vector en 32 bits
 
 Una función en `math/real_math.c`. De 889 funciones se pasa a
