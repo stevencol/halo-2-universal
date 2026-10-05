@@ -2,6 +2,67 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Una voz de la consola toma cómo se oye su sonido
+
+Una función en `sound/sound_manager.c`, de 1.893 bytes. De 921 funciones se pasa a
+922, el 8,18 % de las del juego (el 5,148 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_console_voice_set_parameters` | `0x0021fa80` | `sound/sound_manager.c` |
+
+Era `unknown_0021fa80`. La llaman tres sitios, entre ellos
+`sound_channel_update_voice`. Recibe en `edi` lo que se pide para la voz
+y, en la pila, la voz, sus efectos y un byte. Nuevas sin descompilar, de la
+consola: `0x0037b83f`, `0x0037b7e3`, `0x0037b7ff`, `0x0037b804` y
+`0x0037b71b`. Quien lleva el sonido de los sitios resulta tener siete
+funciones, no tres: las cuatro nuevas rellenan las salidas por las que se
+oye una voz.
+
+### Lo que se sabe
+
+- A la consola solo se le dice lo que ha cambiado: el volumen y lo demás,
+  si cambian en una décima o más; el tono, en 1,5 unidades o más. Todo se
+  dice si la voz es nueva (no tiene la marca 0 de su byte de `0x3`, o el
+  sonido de la consola tiene un 0 al principio).
+- El volumen (de -64 a 0 decibelios, en centésimas) va al stream de la voz.
+  Si la voz tiene una casilla del sonido de la consola (un número que no
+  queda por debajo del short de `0x8`), el volumen va a la salida de la
+  casilla (una vez, o dos si los tres bits de la voz valen 1) y el stream
+  suena al máximo.
+- Dónde se oye lo decide quien lleva el sonido de los sitios, que rellena
+  las salidas. Con casilla, son las de lo que hace sonar la casilla en
+  `0x38`, que arranca o se para según haya o no salidas, y el volumen de lo
+  de `0x34`. Sin casilla, las del stream de la voz.
+- Con la marca 5 de lo que se pide, los cuatro volúmenes de `0x38` se
+  juntan en uno (la raíz de la suma de los cuadrados de sus ganancias).
+- El tono va en las unidades de la consola (4.096 por octava), desde una
+  base por cada uno de tres tipos de muestras (-4597, -501 y -2396), entre
+  -32767 y 8191. No se dice si el byte de la pila está puesto.
+- Al final llama a `sound_console_voice_apply_effects` (hito 254) con un 0.
+- El nombre es inventado.
+
+### Batería completa
+
+La del hito 254 terminó: 921 funciones, las 921 bien.
+
+### Sin comprobar
+
+- El juego tiene un camino al que no se puede llegar: con casilla y sin
+  volumen de casilla le diría a la consola -10000, pero una voz con casilla
+  siempre lo trae. Está escrito como en el juego y las pruebas no lo pisan.
+- En este hito solo se pasaron las pruebas de esta función y las de
+  `sound_channel_update_voice`.
+
+### Mutaciones
+
+Cincuenta cambios a mano: las pruebas notan cuarenta y nueve, tres de
+ellos solo después de añadir casos (diferencias de justo una décima y de
+poco más, y una casilla negativa que no es `NONE`). El que no notan es el
+del camino al que no se llega.
+
 ## 2026-10-05 — El stream de una voz toma los efectos de su sonido
 
 Una función en `sound/sound_manager.c`, de 1.344 bytes. De 920 funciones se pasa a

@@ -2577,7 +2577,7 @@ def run(t) -> None:
                 "unknown_002ae7a0": console_call(0),
                 "unknown_0037c705": console_call(),
                 "sound_console_voice_apply_effects": console_call(1),
-                "unknown_0021fa80": console_call(0),
+                "sound_console_voice_set_parameters": console_call(0),
             },
         )
 
@@ -4578,7 +4578,7 @@ def run(t) -> None:
                     0,
                     (arguments[0] & 0xFFFF, harness.normalize(arguments[1]), arguments[2] & 0xFFFF),
                 ),
-                "unknown_0021fa80": goes_on__,
+                "sound_console_voice_set_parameters": goes_on__,
                 "sound_source_request_data": lambda harness, arguments, asked_=asked_: (
                     asked_[calls_so_far(harness, "sound_source_request_data") % 4],
                     (harness.normalize(arguments[0]),),
@@ -7080,5 +7080,158 @@ def run(t) -> None:
                 "unknown_0037b813": told_,
                 "unknown_0037b809": told_,
                 "sound_console_apply_effect_list": lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]))),
+            },
+        )
+
+    # ---------- a voice of the console's sound takes how its sound is to be heard
+
+    random_ = random.Random(255)
+
+    def mixbins_(harness, address) -> tuple:
+        """What some outputs say: how many they are, and each."""
+        count_ = struct.unpack("<i", harness.mu.mem_read(address + 0x40, 4))[0]
+        return count_, bytes(harness.mu.mem_read(address, 8 * max(0, min(count_, 8))))
+
+    def places_(harness, address) -> tuple:
+        flags_ = struct.unpack("<I", harness.mu.mem_read(address, 4))[0]
+        parts = [flags_]
+        if flags_ & 1:
+            parts.append(bytes(harness.mu.mem_read(address + 4, 16)))
+        if flags_ & 2:
+            parts.append(bytes(harness.mu.mem_read(address + 0x14, 4)))
+        if flags_ & 0x20:
+            parts.append(bytes(harness.mu.mem_read(address + 4, 8)))
+        return tuple(parts)
+
+    for n in range(1500):
+        console = bytearray(random_.randbytes(0x2AC0))
+        console[0] = random_.choice((1, 1, 1, 1, 0, 0x80))
+        slot_count = random_.choice((0, 0, 3, 3, 64))
+        struct.pack_into("<h", console, 8, slot_count)
+        voice_index = random_.randrange(8)
+        at = 0xC + voice_index * 0x34
+        parameters = bytearray(random_.randbytes(0x48))
+        struct.pack_into(
+            "<if",
+            parameters,
+            4,
+            random_.choice((0, 1, 2, 3, -1)),
+            random_.choice((0.0, 1200.0, -1200.0, 100.0, 5000.0, -9000.0, random_.uniform(-2400, 2400))),
+        )
+        struct.pack_into("<f", parameters, 0xC, random_.choice((0.0, -6.0, -64.0, -80.0, 3.0, -20.05, random_.uniform(-64, 0))))
+        struct.pack_into("<4f", parameters, 0x14, *(random_.choice((0.0, 0.0, 0.05, 0.2, 0.1, -0.1, 0.12, 1.0, -0.5, random_.uniform(-1, 1))) for _ in range(4)))
+        struct.pack_into("<h", parameters, 0x24, random_.choice((-1, -1, 0, 1, 2, 3, 5, -2)))
+        struct.pack_into("<f", parameters, 0x28, random_.choice((0.0, -6.0, -64.0, random_.uniform(-64, 0))))
+        struct.pack_into("<I", parameters, 0x30, random_.choice((0, 1, 0x20, 0x21, 2, 0x5A, 0x7F, random_.getrandbits(7), random_.getrandbits(32))))
+        struct.pack_into("<4f", parameters, 0x38, *(random_.choice((0.0, -6.0, -64.0, -100.0, 5.0, random_.uniform(-64, 0))) for _ in range(4)))
+        kind = random_.randrange(3)
+        console[at + 1] = random_.choice((0, 0, 0x08, 0x08, 0x10, 0x38, random_.getrandbits(8)))
+        console[at + 3] = random_.choice((1, 1, 1, 0x21, 0x21, 0, 0x20, 0xFF, 0xDF))
+
+        def near(offset: int, value: float) -> None:
+            struct.pack_into("<f", console, at + offset, value + (random_.choice((0.0, 0.05, -0.05, 0.2, -0.2, 3.0, 0.12, -0.12)) if kind else 0.0))
+
+        near(0xC, max(-64.0, struct.unpack_from("<f", parameters, 0xC)[0]))
+        near(0x10, struct.unpack_from("<f", parameters, 0x18)[0])
+        near(0x18, struct.unpack_from("<f", parameters, 0x14)[0])
+        near(0x14, struct.unpack_from("<f", parameters, 0x28)[0])
+        struct.pack_into("<i", console, at + 8, random_.choice((0, -4597, -501, -2396, 8191, -32767, random_.randrange(-9000, 9000))))
+        if random_.random() < 0.3:
+            base = (-4597, -501, -2396, -2396)[min(3, struct.unpack_from("<i", parameters, 4)[0] & 3)]
+            wanted = int(max(-32767.0, min(8191.0, struct.unpack_from("<f", parameters, 8)[0] * 3.4133334 + base)))
+            struct.pack_into("<i", console, at + 8, wanted + random_.choice((0, 1, -1, 2, -2)))
+        old = len(console)
+        console += struct.pack("<8I", old + 4, *(mock_address(number) for number in range(7)))
+        struct.pack_into("<I", console, 0x2AB4, old)
+        harness = t.harness
+
+        def filled(call, harness=harness):
+            # the handler fills one more output
+            address = call.stack[3]
+            count_ = struct.unpack("<i", harness.mu.mem_read(address + 0x40, 4))[0]
+            if 0 <= count_ < 8:
+                harness.mu.mem_write(address + count_ * 8, struct.pack("<2i", call.mock, -100 * count_))
+                harness.mu.mem_write(address + 0x40, struct.pack("<i", count_ + 1))
+            return 0
+
+        def add_(harness, arguments):
+            address = arguments[0]
+            before = mixbins_(harness, address)
+            if 0 <= before[0] < 8:
+                harness.mu.mem_write(address + before[0] * 8, struct.pack("<2I", arguments[1], arguments[2]))
+                harness.mu.mem_write(address + 0x40, struct.pack("<i", before[0] + 1))
+            return 0, (before, arguments[1], arguments[2])
+
+        def given(harness, arguments, seed=random_.getrandbits(32)):
+            harness.mu.mem_write(arguments[1], random.Random(seed + arguments[0]).randbytes(0x5C))
+            return 0, (arguments[0],)
+
+        def set_(harness, arguments):
+            return 0, (bytes(harness.mu.mem_read(arguments[0], 0x5C)), mixbins_(harness, arguments[1]), arguments[2])
+
+        def fraction_(harness, arguments):
+            value = bits_real(arguments[2])
+            return real_bits(max(0.0, min(1.0, (value + 64.0) / 64.0))), (arguments[0], arguments[1], arguments[2], arguments[3] & 0xFF)
+
+        def status_(harness, arguments, status=random_.choice((0, 1, 1, 2, 3))):
+            harness.mu.mem_write(arguments[1], struct.pack("<I", status))
+            return 0, (arguments[0],)
+
+        def outputs_(harness, arguments):
+            count_ = struct.unpack("<i", harness.mu.mem_read(arguments[1], 4))[0]
+            pairs = struct.unpack("<I", harness.mu.mem_read(arguments[1] + 4, 4))[0]
+            return 0, (arguments[0], count_, bytes(harness.mu.mem_read(pairs, 8 * max(0, min(count_, 8)))))
+
+        def all_(harness, arguments):
+            return 0, tuple(arguments)
+
+        with_places = lambda call, harness=harness: (call.mock, places_(harness, call.stack[0]), call.stack[1], call.stack[2], mixbins_(harness, call.stack[3]))
+        t.check(
+            "sound_console_voice_set_parameters",
+            Buffer(bytes(parameters)),
+            voice_index,
+            random_.getrandbits(32),
+            random_.choice((0, 0, 0, 1, 0x100, 0x80)),
+            globals={"unknown_0051ebe4": Buffer(bytes(console), pointers=(old, 0x2AB4))},
+            mocks=[
+                Mock(lambda call: 0, stack_arguments=3, registers=("ecx",)),
+                Mock(lambda call: 0, stack_arguments=0, registers=("ecx",)),
+                Mock(lambda call: 0, stack_arguments=2, registers=("ecx",)),
+                Mock(filled, stack_arguments=4, registers=("ecx",), record=with_places),
+                Mock(
+                    filled,
+                    stack_arguments=4,
+                    registers=("ecx",),
+                    record=lambda call, harness=harness: (call.mock, call.stack[0], call.stack[1], call.stack[2], mixbins_(harness, call.stack[3])),
+                ),
+                Mock(
+                    filled,
+                    stack_arguments=4,
+                    registers=("ecx",),
+                    record=lambda call, harness=harness: (
+                        call.mock,
+                        bytes(harness.mu.mem_read(call.stack[0], 0x48)),
+                        call.stack[1],
+                        call.stack[2],
+                        mixbins_(harness, call.stack[3]),
+                    ),
+                ),
+                Mock(filled, stack_arguments=4, registers=("ecx",), record=with_places),
+            ],
+            externals={
+                "unknown_0037b83f": given,
+                "unknown_0037b7e3": given,
+                "sound_mixbins_add": add_,
+                "sound_console_stream_set_mixbins": set_,
+                "sound_console_slot_stream_set_mixbins": set_,
+                "sound_interpolation_fraction": fraction_,
+                "unknown_0037b7ff": all_,
+                "unknown_0037b66f": all_,
+                "unknown_0037b75b": status_,
+                "unknown_0037b6df": all_,
+                "unknown_0037b71b": all_,
+                "unknown_0037b804": all_,
+                "unknown_0037c70a": outputs_,
+                "sound_console_voice_apply_effects": all_,
             },
         )

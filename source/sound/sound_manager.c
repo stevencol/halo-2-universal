@@ -643,6 +643,13 @@ enum
 	SOUND_VOICE_EFFECTS_FRACTION_OFFSET= 0x4,
 	SOUND_VOICE_EFFECTS_FILTER_OFFSET= 0x10,
 	VOICE_FRACTION_OFFSET= 0x4,
+	VOICE_FLAGS3_OFFSET= 0x3,
+	VOICE_DECIBELS_OFFSET= 0xC,
+	VOICE_UNKNOWN10_OFFSET= 0x10,
+	VOICE_UNKNOWN14_OFFSET= 0x14,
+	VOICE_UNKNOWN18_OFFSET= 0x18,
+	/* what the console gives of where a stream is heard */
+	SOUND_CONSOLE_STREAM_MIXBINS_SIZE= 0x5C,
 	VOICE_STREAM_OFFSET= 0x24,
 	UNKNOWN_0051EBE4_PLACE_STREAMS_OFFSET= 0x2A70,
 	SOUND_ENVIRONMENT_SIZE= 0x48,
@@ -684,7 +691,6 @@ enum
 	UNKNOWN_0051EBE4_UNKNOWN2AD4_OFFSET= 0x2AD4,
 	SOUND_CONSOLE_FORMAT_BASE_SIZE= 0x12,
 	VOICE_UNKNOWN2_OFFSET= 0x2,
-	VOICE_DECIBELS_OFFSET= 0xC,
 	VOICE_UNKNOWN30_OFFSET= 0x30,
 	NUMBER_OF_SOUND_UNKNOWN_STATES= 2,
 	_sound_source_datum_unknown3_bit= 3,
@@ -864,7 +870,7 @@ struct sound_unknown_state
 typedef char verify_sound_unknown_state_size[
 	sizeof(struct sound_unknown_state) == 0x1C ? 1 : -1];
 
-/* what the game keeps at 0x2AB4 of the console's sound: something with three
+/* what the game keeps at 0x2AB4 of the console's sound: something with seven
 functions, which take it in ecx and take their arguments off the stack. The
 first is given the sound of the places of the map */
 struct sound_console_environment_handler;
@@ -876,6 +882,15 @@ struct sound_console_environment_handler_functions
 	void (__attribute__((thiscall)) *dispose)(struct sound_console_environment_handler *handler);
 	void (__attribute__((thiscall)) *unknown8)(struct sound_console_environment_handler *handler, const void *unknown,
 		long unknown2);
+	/* these four fill the outputs where a voice is heard */
+	void (__attribute__((thiscall)) *unknownC)(struct sound_console_environment_handler *handler, const void *places,
+		long unknown, long unknown2, long *mixbins);
+	void (__attribute__((thiscall)) *unknown10)(struct sound_console_environment_handler *handler, long unknown,
+		long unknown2, real unknown3, long *mixbins);
+	void (__attribute__((thiscall)) *unknown14)(struct sound_console_environment_handler *handler, const byte *parameters,
+		long unknown, long unknown2, long *mixbins);
+	void (__attribute__((thiscall)) *unknown18)(struct sound_console_environment_handler *handler, const void *places,
+		long unknown, long unknown2, long *mixbins);
 };
 
 struct sound_console_environment_handler
@@ -1685,7 +1700,16 @@ and of two other things of it */
 struct sound_console_effect_description;
 void unknown_0037b813(void *stream, const struct sound_console_effect_description *description);
 void unknown_0037b809(void *stream, const struct sound_console_effect_description *description);
-void unknown_0021fa80(const byte *parameters, long voice_index, const byte *effects, long unknown);
+void __attribute__((stdcall)) sound_console_voice_set_parameters(const byte *parameters, long voice_index,
+	const byte *effects, boolean keep_pitch);
+/* 0x0037b83f and 0x0037b7e3: the console gives where a stream is heard;
+0x0037b7ff and 0x0037b804: it is told how loud a stream is, and how high;
+0x0037b71b: something stops */
+void unknown_0037b83f(void *stream, long *mixbins);
+void unknown_0037b7e3(void *stream, long *mixbins);
+void unknown_0037b7ff(void *stream, long millibels);
+void unknown_0037b804(void *stream, long pitch);
+void unknown_0037b71b(void *buffer, long unknown, long unknown2, long unknown3);
 real unknown_00249d60(long cluster_index, long other_cluster_index, const void *structure_bsp);
 
 /* 0x0021f8a0 and 0x00221da0 */
@@ -5293,7 +5317,7 @@ void __attribute__((stdcall)) sound_console_voice_start(
 	}
 	sound_console_voice_apply_effects(voice_index, effects, 1);
 	voice[VOICE_FLAGS_OFFSET]&= ~FLAG(_voice_unknown0_bit);
-	unknown_0021fa80(parameters, voice_index, NULL, 0);
+	sound_console_voice_set_parameters(parameters, voice_index, NULL, 0);
 	voice[VOICE_FLAGS_OFFSET]|= FLAG(_voice_unknown0_bit);
 }
 
@@ -8025,7 +8049,7 @@ sound_listener_doppler_pitch says) and how loud it is: what
 sound_definition_decibels says plus the gain of the recording. A sound with
 no flag 9 starts: its voice starts, its first piece of samples is queued and
 its sound playback controller has one less to start; any other goes on
-(unknown_0021fa80), if its channel has a recording. Then the next piece is
+(sound_console_voice_set_parameters), if its channel has a recording. Then the next piece is
 seen to: one that waits (flag 3) is queued when the channel has no second
 recording and its samples are asked for; if none waits, the sound goes on
 to the next piece of its recording and asks for it, or with no more pieces
@@ -8119,7 +8143,7 @@ void __attribute__((stdcall)) sound_channel_update_voice(
 
 		*(real *)(voice_parameters+SOUND_VOICE_PARAMETERS_DECIBELS_OFFSET)=
 			sound_pin_decibels((real)(char)playing->unknown0[SOUND_PERMUTATION_GAIN_OFFSET]+loudness);
-		unknown_0021fa80(voice_parameters, channel->unknownC, voice_parameters+SOUND_VOICE_PARAMETERS_EFFECTS_OFFSET, 1);
+		sound_console_voice_set_parameters(voice_parameters, channel->unknownC, voice_parameters+SOUND_VOICE_PARAMETERS_EFFECTS_OFFSET, 1);
 	}
 
 	if ((source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]>>_sound_source_datum_unknown6_bit)&1)
@@ -11610,4 +11634,270 @@ void __attribute__((stdcall)) sound_console_voice_apply_effects(
 	*(real *)(voice+VOICE_FRACTION_OFFSET)= fraction;
 	sound_console_apply_effect_list(*(const long *)(effects+SOUND_VOICE_EFFECTS_LIST_SIZE_OFFSET),
 		effects+SOUND_VOICE_EFFECTS_LIST_OFFSET);
+}
+
+/* what the handler of the sound of the places is given of where a voice is
+heard: which of its reals are set (bit 0: the four at 4; bit 1: the one at
+0x14; bit 5: the first two, with the loudness of all the outputs together),
+and four more flags of the voice */
+struct sound_console_voice_places
+{
+	unsigned long flags;
+	real unknown4;
+	real unknown8;
+	real unknownC;
+	real unknown10;
+	real unknown14;
+};
+
+/* a loudness in decibels, from -64 to 0, as the hundredths of a decibel
+that the console takes */
+static inline __attribute__((always_inline)) long sound_decibels_to_millibels(
+	real decibels)
+{
+	return (long)(sound_interpolation_fraction(SOUND_MINIMUM_DECIBELS, 0.0f, decibels, TRUE)*6400.0f-6400.0f);
+}
+
+/* whether two reals are within a tenth of each other, on the x87 */
+static inline __attribute__((always_inline)) boolean sound_reals_near(
+	real a,
+	real b)
+{
+	return (long double)0.1f>fabsl((long double)a-(long double)b);
+}
+
+/* 0x0021fa80: a voice of the console's sound takes how its sound is to be
+heard: how loud, where, and how high; and then its effects
+(sound_console_voice_apply_effects). Each thing is told to the console only
+if the voice is new (it has no flag 0 at 3, or the console's sound has
+nothing at its start) or if it has changed by a tenth or more (the pitch,
+by 1.5).
+
+The loudness goes to the stream of the voice. A voice with a slot of the
+console's sound (one whose number is not under the short at 8) has the
+loudness in the output of the slot (once, or twice for a voice whose three
+bits are 1) and the stream at its loudest.
+
+Where it is heard is for the handler of the sound of the places, which
+fills the outputs: for a voice with a slot, those of what plays the sound of
+the slot at 0x38, which starts or stops with them, and the loudness of the
+one at 0x34; for the rest, those of the stream. With the flag 5 of what is
+asked, the four loudnesses at 0x38 go together as one.
+
+The pitch is that of what is asked, in the units of the console (4096 for
+each octave), from a base for each of three kinds of samples; it is not
+told when `keep_pitch` is set. What is asked is taken in edi. The name is
+made up */
+void __attribute__((stdcall)) sound_console_voice_set_parameters(
+	const byte *parameters,
+	long voice_index,
+	const byte *effects,
+	boolean keep_pitch)
+{
+	byte *console= unknown_0051ebe4;
+	byte *voice= console+UNKNOWN_0051EBE4_VOICE_OFFSET+voice_index*UNKNOWN_0051EBE4_VOICE_SIZE;
+	boolean first= !(voice[VOICE_FLAGS3_OFFSET]&1) || !console[0];
+	real decibels= *(const real *)(parameters+SOUND_VOICE_PARAMETERS_DECIBELS_OFFSET)>SOUND_MINIMUM_DECIBELS ?
+		*(const real *)(parameters+SOUND_VOICE_PARAMETERS_DECIBELS_OFFSET) : SOUND_MINIMUM_DECIBELS;
+	long field= (signed char)(voice[1]<<2)>>5;
+	boolean spread= parameters[SOUND_VOICE_PARAMETERS_FLAGS_OFFSET]&1;
+	boolean places_changed= TRUE;
+	long slot_index;
+
+	if (first || !sound_reals_near(decibels, *(const real *)(voice+VOICE_DECIBELS_OFFSET)))
+	{
+		console= unknown_0051ebe4;
+		slot_index= *(const short *)(parameters+SOUND_VOICE_PARAMETERS_SLOT_OFFSET);
+		if (slot_index>=*(const short *)(console+UNKNOWN_0051EBE4_SLOT_COUNT_OFFSET))
+		{
+			long old[SOUND_CONSOLE_STREAM_MIXBINS_SIZE/4];
+			long new[SOUND_MIXBINS_COUNT_INDEX+2];
+			const byte *slot;
+
+			unknown_0037b83f(*(void **)(voice+VOICE_STREAM_OFFSET), old);
+			slot= unknown_0051ebe4+UNKNOWN_0051EBE4_SLOTS_OFFSET+
+				*(const short *)(parameters+SOUND_VOICE_PARAMETERS_SLOT_OFFSET)*UNKNOWN_0051EBE4_SLOT_SIZE;
+			new[SOUND_MIXBINS_COUNT_INDEX]= 0;
+			new[SOUND_MIXBINS_COUNT_INDEX+1]= (long)(uintptr_t)new;
+			if (field==1)
+			{
+				sound_mixbins_add(new, *(const long *)slot, decibels);
+			}
+			if (field==0 || field==1)
+			{
+				sound_mixbins_add(new, *(const long *)slot, decibels);
+			}
+			sound_console_stream_set_mixbins(old, new, *(void **)(voice+VOICE_STREAM_OFFSET));
+			unknown_0037b7ff(*(void **)(voice+VOICE_STREAM_OFFSET), sound_decibels_to_millibels(0.0f));
+		}
+		else
+		{
+			unknown_0037b7ff(*(void **)(voice+VOICE_STREAM_OFFSET), sound_decibels_to_millibels(decibels));
+		}
+		*(real *)(voice+VOICE_DECIBELS_OFFSET)= decibels;
+	}
+
+	slot_index= *(const short *)(parameters+SOUND_VOICE_PARAMETERS_SLOT_OFFSET);
+	if (!first && spread==((voice[VOICE_FLAGS3_OFFSET]>>5)&1))
+	{
+		boolean same= spread ||
+			(sound_reals_near(*(const real *)(parameters+SOUND_VOICE_PARAMETERS_UNKNOWN18_OFFSET),
+				*(const real *)(voice+VOICE_UNKNOWN10_OFFSET)) &&
+			sound_reals_near(*(const real *)(parameters+SOUND_VOICE_PARAMETERS_UNKNOWN14_OFFSET),
+				*(const real *)(voice+VOICE_UNKNOWN18_OFFSET)) &&
+			sound_reals_near(*(const real *)(parameters+SOUND_VOICE_PARAMETERS_UNKNOWN1C_OFFSET), 0.0f) &&
+			sound_reals_near(*(const real *)(parameters+SOUND_VOICE_PARAMETERS_UNKNOWN20_OFFSET), 0.0f));
+
+		if (same && (slot_index==NONE || sound_reals_near(*(const real *)(parameters+SOUND_VOICE_PARAMETERS_UNKNOWN28_OFFSET),
+			*(const real *)(voice+VOICE_UNKNOWN14_OFFSET))))
+		{
+			places_changed= FALSE;
+		}
+	}
+
+	if (places_changed)
+	{
+		unsigned long flags= *(const unsigned long *)(parameters+SOUND_VOICE_PARAMETERS_FLAGS_OFFSET);
+		long mixbins[SOUND_MIXBINS_COUNT_INDEX+2];
+		struct sound_console_voice_places places;
+
+		places.flags= ((flags>>1)&1 ? 4 : 0)|((flags>>3)&1 ? 8 : 0)|((flags>>4)&1 ? 0x10 : 0)|((flags>>6)&1 ? 0x40 : 0);
+		voice[VOICE_FLAGS3_OFFSET]= spread ? voice[VOICE_FLAGS3_OFFSET]|0x20 : voice[VOICE_FLAGS3_OFFSET]&~0x20;
+		if ((*(const unsigned long *)(parameters+SOUND_VOICE_PARAMETERS_FLAGS_OFFSET)>>5)&1)
+		{
+			long double sum= 0.0L;
+			real values[4];
+			long index;
+
+			memcpy(values, parameters+SOUND_VOICE_PARAMETERS_UNKNOWN38_OFFSET, sizeof(values));
+			for (index= 0; index<4; index++)
+			{
+				long double gain= sound_decibels_to_gain(values[index]);
+
+				sum+= gain*gain;
+			}
+			places.unknown4= sound_gain_to_decibels((real)sqrtl(sum));
+			*(long *)&places.unknown8= *(const long *)(parameters+SOUND_VOICE_PARAMETERS_UNKNOWN14_OFFSET);
+			places.flags|= 0x20;
+		}
+		else
+		{
+			if (!(parameters[SOUND_VOICE_PARAMETERS_FLAGS_OFFSET]&1))
+			{
+				*(long *)&places.unknown8= *(const long *)(parameters+SOUND_VOICE_PARAMETERS_UNKNOWN14_OFFSET);
+				*(long *)&places.unknown4= *(const long *)(parameters+SOUND_VOICE_PARAMETERS_UNKNOWN18_OFFSET);
+				*(long *)&places.unknownC= *(const long *)(parameters+SOUND_VOICE_PARAMETERS_UNKNOWN1C_OFFSET);
+				*(long *)&places.unknown10= *(const long *)(parameters+SOUND_VOICE_PARAMETERS_UNKNOWN20_OFFSET);
+				*(long *)(voice+VOICE_UNKNOWN10_OFFSET)= *(const long *)(parameters+SOUND_VOICE_PARAMETERS_UNKNOWN18_OFFSET);
+				places.flags|= 1;
+				*(long *)(voice+VOICE_UNKNOWN18_OFFSET)= *(const long *)(parameters+SOUND_VOICE_PARAMETERS_UNKNOWN14_OFFSET);
+			}
+			if (slot_index!=NONE)
+			{
+				*(long *)&places.unknown14= *(const long *)(parameters+SOUND_VOICE_PARAMETERS_UNKNOWN28_OFFSET);
+				places.flags|= 2;
+				*(long *)(voice+VOICE_UNKNOWN14_OFFSET)= *(const long *)(parameters+SOUND_VOICE_PARAMETERS_UNKNOWN28_OFFSET);
+			}
+		}
+
+		console= unknown_0051ebe4;
+		if (slot_index>=*(const short *)(console+UNKNOWN_0051EBE4_SLOT_COUNT_OFFSET) && !(places.flags&0x20))
+		{
+			struct sound_console_slot *slot= (struct sound_console_slot *)(console+UNKNOWN_0051EBE4_SLOTS_OFFSET+
+				slot_index*UNKNOWN_0051EBE4_SLOT_SIZE);
+			long first_old[SOUND_CONSOLE_STREAM_MIXBINS_SIZE/4];
+			long second_old[SOUND_CONSOLE_STREAM_MIXBINS_SIZE/4];
+			long status;
+
+			unknown_0037b7e3(slot->stream, first_old);
+			unknown_0037b7e3(slot->unknown38, second_old);
+			if (places.flags&2)
+			{
+				unknown_0037b66f(slot->stream, sound_decibels_to_millibels(places.unknown14));
+			}
+			else
+			{
+				unknown_0037b66f(slot->stream, -10000);
+			}
+			if (places.flags&1)
+			{
+				struct sound_console_environment_handler *handler;
+
+				console= unknown_0051ebe4;
+				handler= *(struct sound_console_environment_handler **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB4_OFFSET);
+				mixbins[SOUND_MIXBINS_COUNT_INDEX]= 0;
+				mixbins[SOUND_MIXBINS_COUNT_INDEX+1]= (long)(uintptr_t)mixbins;
+				handler->functions->unknownC(handler, &places, 0, console[UNKNOWN_0051EBE4_UNKNOWN1_OFFSET], mixbins);
+				sound_console_slot_stream_set_mixbins(second_old, mixbins, slot->unknown38);
+				unknown_0037b75b(slot->unknown38, &status);
+				if (!(status&1))
+				{
+					unknown_0037b6df(slot->unknown38, 0, 0, 0);
+				}
+			}
+			else
+			{
+				unknown_0037b75b(slot->unknown38, &status);
+				if (status&1)
+				{
+					unknown_0037b71b(slot->unknown38, 0, 0, 0);
+				}
+			}
+		}
+		else
+		{
+			struct sound_console_environment_handler *handler;
+
+			mixbins[SOUND_MIXBINS_COUNT_INDEX]= 0;
+			mixbins[SOUND_MIXBINS_COUNT_INDEX+1]= (long)(uintptr_t)mixbins;
+			if (places.flags&1)
+			{
+				handler= *(struct sound_console_environment_handler **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB4_OFFSET);
+				handler->functions->unknownC(handler, &places, console[UNKNOWN_0051EBE4_UNKNOWN1_OFFSET], field, mixbins);
+				console= unknown_0051ebe4;
+			}
+			if (places.flags&2)
+			{
+				handler= *(struct sound_console_environment_handler **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB4_OFFSET);
+				handler->functions->unknown10(handler, 0x1F, field, places.unknown14, mixbins);
+				console= unknown_0051ebe4;
+			}
+			if (places.flags&0x20)
+			{
+				handler= *(struct sound_console_environment_handler **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB4_OFFSET);
+				handler->functions->unknown18(handler, &places, console[UNKNOWN_0051EBE4_UNKNOWN1_OFFSET], field, mixbins);
+				console= unknown_0051ebe4;
+			}
+			handler= *(struct sound_console_environment_handler **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB4_OFFSET);
+			handler->functions->unknown14(handler, parameters, console[UNKNOWN_0051EBE4_UNKNOWN1_OFFSET], field, mixbins);
+			unknown_0037c70a(*(void **)(voice+VOICE_STREAM_OFFSET),
+				(const struct sound_console_mixbins *)&mixbins[SOUND_MIXBINS_COUNT_INDEX]);
+		}
+	}
+
+	if (!keep_pitch)
+	{
+		long kind= *(const long *)(parameters+SOUND_VOICE_PARAMETERS_UNKNOWN4_OFFSET);
+		real pitch= *(const real *)(parameters+SOUND_VOICE_PARAMETERS_PITCH_OFFSET)*3.41333342f+
+			(real)(kind==0 ? -4597 : kind==1 ? -501 : -2396);
+		long difference;
+		long value;
+
+		if (-32767.0f>pitch)
+		{
+			pitch= -32767.0f;
+		}
+		else if (pitch>8191.0f)
+		{
+			pitch= 8191.0f;
+		}
+		value= (long)pitch;
+		difference= value-*(const long *)(voice+VOICE_PITCH_OFFSET);
+		if (first || !((real)(difference<0 ? -difference : difference)<1.5f))
+		{
+			unknown_0037b804(*(void **)(voice+VOICE_STREAM_OFFSET), value);
+			*(long *)(voice+VOICE_PITCH_OFFSET)= value;
+		}
+	}
+	sound_console_voice_apply_effects(voice_index, effects, FALSE);
 }
