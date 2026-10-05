@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — El sonido de cada canal, cada vez
+
+Una función en `sound/sound_manager.c`. De 844 funciones se pasa a
+845, el 7,50 % de las del juego (el 4,159 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_channels_update_sources` | `0x001293f0` | `sound/sound_manager.c` |
+
+Estaba apuntada sin descompilar (`unknown_001293f0`); la llaman `sound_idle`
+y `sound_update`. Nuevas sin descompilar: `0x00129aa0`, `0x0021c400` y
+`0x00128ca0`. También la tercera función de la tabla de a quién se avisa de
+un sonido (`playing`).
+
+### Lo que se sabe
+
+- `sound_channels_update_sources` es lo que se hace cada vez con el sonido
+  de cada canal que suena y no está en pausa.
+- Un sonido que ya se apagó (terminó su fundido y se oye a -64 decibelios o
+  menos) se suelta con el motivo 4; uno que terminó de encenderse deja de
+  fundirse.
+- Para un canal con voz, `0x00129aa0` calcula cómo se oye el sonido; a eso
+  se le suman los decibelios del real que sigue a la pausa del juego, y el
+  resultado se le da a `0x0021c400` (sonidos de los tipos 1 a 4) o a
+  `0x00128ca0`.
+- Después se avisa a quien el sonido diga de por dónde va sonando (su
+  tercera función), si el sonido no está marcado.
+- Antes de todo rellena lo que el juego guarda del sonido de la consola
+  (`sound_console_get_state`).
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y de las que la
+  llaman. La batería completa corre aparte con las 843 funciones del hito
+  186.
+
+### Mutaciones
+
+Pendientes las de los hitos 156 a 188.
+
 ## 2026-10-04 — El reloj del sonido y el fundido al pausar
 
 Una función en `sound/sound_manager.c`. De 843 funciones se pasa a

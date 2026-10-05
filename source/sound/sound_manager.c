@@ -432,6 +432,11 @@ enum
 	MAIN_GAME_GLOBALS_MODE_OFFSET= 0x8,
 	MAIN_GAME_GLOBALS_ACTIVE_OFFSET= 0x1120,
 	MAIN_GAME_GLOBALS_PAUSED_OFFSET= 0x1121,
+	/* of a sound that plays: its decibels, of what the game says of it; and
+	how many bytes what unknown_00129aa0 works out of a channel is */
+	SOUND_SOURCE_DATUM_DECIBELS_OFFSET= 0x20,
+	SOUND_CHANNEL_PARAMETERS_SIZE= 0x38,
+	_sound_source_deleted_faded_out= 4,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -453,7 +458,10 @@ functions are known */
 struct sound_source_callbacks
 {
 	boolean (__attribute__((stdcall)) *unknown0)(long data, long sound_index, void *unknown5C, void *unknown18);
-	void *unknown4[3];
+	void *unknown4;
+	void (__attribute__((stdcall)) *playing)(long data, void *unknown5C, long sound_index, long pitch_range,
+		long permutation, real position);
+	void *unknownC;
 	void (__attribute__((stdcall)) *deleted)(long data, long source_index, long reason);
 	void (__attribute__((stdcall)) *stopped)(long data, long source_index);
 	boolean (__attribute__((stdcall)) *matches)(const void *unknown5C, const void *unknown14);
@@ -620,7 +628,7 @@ void sound_channels_update(void);
 
 void unknown_0021ec00(void);
 void sound_update_time(void);
-void unknown_001293f0(void);
+void sound_channels_update_sources(void);
 void unknown_0021ee80(void);
 void sound_cache_idle(void);
 
@@ -895,6 +903,12 @@ void __attribute__((stdcall)) sound_source_find_same(struct sound_same_channels 
 
 /* 0x00128700 */
 short __attribute__((stdcall)) sound_source_get_channel(long source_index, long *reason);
+
+/* 0x00129aa0: works out how the sound of a channel is heard; 0x0021c400
+and 0x00128ca0: give it to the voice of the channel */
+void unknown_00129aa0(long channel_index, real *decibels, byte *parameters);
+void unknown_0021c400(long channel_index, real decibels, const byte *parameters);
+void unknown_00128ca0(long channel_index, real decibels, const byte *parameters);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -1440,7 +1454,7 @@ void sound_idle(
 				unknown_0021ec00();
 				sound_update_time();
 				sound_channels_update();
-				unknown_001293f0();
+				sound_channels_update_sources();
 				unknown_0021ee80();
 				globals= game_sound_globals;
 			}
@@ -1894,7 +1908,7 @@ void sound_update(
 				unknown_00221a70(player_index, &listeners);
 			}
 			sound_channels_unknown_00129380((const long *)second, (const long *)first);
-			unknown_001293f0();
+			sound_channels_update_sources();
 			if (game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7E_OFFSET])
 			{
 				game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7F_OFFSET]++;
@@ -5834,5 +5848,86 @@ void sound_update_time(
 			sound_step_towards(1.0f-*(const real *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1E4_OFFSET),
 				*(const real *)(globals+GAME_SOUND_GLOBALS_SECONDS_OFFSET)/duration);
 		*(long *)(globals+GAME_SOUND_GLOBALS_PAUSE_WAIT_OFFSET)= NONE;
+	}
+}
+
+/* 0x001293f0: what is done each time with the sound of each channel that
+plays and is not stopped for a while. A sound that has faded out and is
+heard at -64 decibels or less is let go (reason 4); one that has faded in
+stops fading. For a channel with a voice, unknown_00129aa0 works out how the
+sound is heard, to which the decibels of the real that follows the pause of
+the game are added, and that is given to unknown_0021c400 (for the sounds of
+the kinds 1 to 4) or to unknown_00128ca0; and who is told of the sound is
+told where it plays, if the sound is not marked. Before all, what the game
+keeps of the console's sound is filled */
+void sound_channels_update_sources(
+	void)
+{
+	byte *globals= game_sound_globals;
+	real master_decibels= sound_gain_to_decibels(*(const real *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1E4_OFFSET));
+	short channel_index;
+
+	sound_console_get_state(globals);
+	for (channel_index= 0;
+		channel_index<*(const short *)(game_sound_globals+GAME_SOUND_GLOBALS_CHANNEL_COUNT_OFFSET);
+		channel_index++)
+	{
+		struct sound_channel *channel= &sound_channels[channel_index];
+		const struct sound_source_callbacks *callbacks;
+		byte parameters[SOUND_CHANNEL_PARAMETERS_SIZE];
+		byte *source;
+		byte *playing;
+		real decibels;
+
+		if (channel->unknown0==NONE || channel->unknown9)
+		{
+			continue;
+		}
+		source= sound_source_get(channel->unknown0);
+		decibels= sound_source_fade_decibels(channel->unknown0);
+		if (!(SOUND_MINIMUM_DECIBELS<*(const real *)(source+SOUND_SOURCE_DATUM_DECIBELS_OFFSET)+decibels))
+		{
+			playing= sound_source_get(channel->unknown0);
+			if (((playing[SOUND_SOURCE_DATUM_FLAGS_OFFSET]>>7)&1) &&
+				*(const long *)(playing+SOUND_SOURCE_DATUM_FADE_TIME_OFFSET)>*(const long *)(playing+SOUND_SOURCE_DATUM_UNKNOWNB8_OFFSET))
+			{
+				sound_source_delete(channel->unknown0, _sound_source_deleted_faded_out);
+				channel->unknown0= NONE;
+				continue;
+			}
+		}
+		playing= sound_source_get(channel->unknown0);
+		if (((playing[SOUND_SOURCE_DATUM_FLAGS_OFFSET]>>7)&1) &&
+			*(const long *)(playing+SOUND_SOURCE_DATUM_UNKNOWNB8_OFFSET)>*(const long *)(playing+SOUND_SOURCE_DATUM_FADE_TIME_OFFSET) &&
+			*(const long *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET)>=
+			*(const long *)(playing+SOUND_SOURCE_DATUM_UNKNOWNB8_OFFSET))
+		{
+			playing[SOUND_SOURCE_DATUM_FLAGS_OFFSET]&= ~SOUND_SOURCE_DATUM_FADING_FLAG;
+		}
+		if (channel->unknownC==NONE)
+		{
+			continue;
+		}
+		unknown_00129aa0(channel_index, &decibels, parameters);
+		decibels= master_decibels+decibels;
+		if (sound_source_kind_test(sound_source_get(channel->unknown0)))
+		{
+			unknown_0021c400(channel_index, decibels, parameters);
+		}
+		else
+		{
+			unknown_00128ca0(channel_index, decibels, parameters);
+		}
+		if ((source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]>>_sound_source_datum_unknown5_bit)&1)
+		{
+			continue;
+		}
+		callbacks= *(const struct sound_source_callbacks *const *)(source+SOUND_SOURCE_DATUM_CALLBACKS_OFFSET);
+		if (callbacks && callbacks->playing)
+		{
+			callbacks->playing(*(const long *)(source+SOUND_SOURCE_DATUM_CALLBACK_DATA_OFFSET),
+				source+SOUND_SOURCE_DATUM_UNKNOWN5C_OFFSET, *(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET),
+				(char)source[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET], channel->unknown1C, channel->unknown10);
+		}
 	}
 }
