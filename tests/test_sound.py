@@ -6502,3 +6502,46 @@ def run(t) -> None:
                 "unknown_0037b66f": lambda harness, arguments: (0, tuple(arguments)),
             },
         )
+
+    # ---------- what is left of a look at a looping sound's tag
+
+    random_ = random.Random(246)
+
+    for n in range(500):
+        tag_index = random_.randrange(TAGS)
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        struct.pack_into("<I", tags, tag_index * 0x10 + 8, len(tags))
+        tag = bytearray(random_.randbytes(0x2C))
+        tracks = random_.choice((0, 1, 1, 2, 3, -1))
+        details = random_.choice((0, 1, 2, 4, -1))
+        struct.pack_into("<iIiI", tag, 0x1C, tracks, len(tags) + 0x2C, details, len(tags) + 0x2C + 3 * 0x58)
+        for index in range(3):
+            track = bytearray(random_.randbytes(0x58))
+            struct.pack_into("<I", track, 0x20, random_.choice((NONE, NONE, random_.getrandbits(32))))
+            tag += track
+        for index in range(4):
+            detail = bytearray(random_.randbytes(0x34))
+            struct.pack_into("<I", detail, 8, random_.choice((NONE, NONE, random_.getrandbits(32))))
+            tag += detail
+        said = bytearray(random_.randbytes(0x44))
+        said[3] = random_.choice((1, 1, 1, 0x11, 0xF1, 0, 2, 0x10))
+        nearer = random_.choice((0.0, 0.0, -0.0, 1.0, 5.0, float("nan")))
+        t.check(
+            "looping_sound_check_distances",
+            tag_index | (random_.getrandbits(16) << 16),
+            Buffer(bytes(said)),
+            globals={
+                "global_tag_instances": Buffer(bytes(tags) + bytes(tag), pointers=(tag_index * 0x10 + 8, len(tags) + 0x20, len(tags) + 0x28)),
+                "unknown_004e636d": bytes([random_.choice((1, 1, 1, 0, 0x80))]),
+            },
+            externals={
+                "sound_get_minimum_distance": lambda harness, arguments, nearer=nearer: (
+                    real_bits(nearer),
+                    (bytes(harness.mu.mem_read(arguments[0], 0x44)), arguments[1]),
+                ),
+                "sound_get_maximum_distance": lambda harness, arguments: (
+                    real_bits(9.0),
+                    (bytes(harness.mu.mem_read(arguments[0], 0x44)), arguments[1]),
+                ),
+            },
+        )

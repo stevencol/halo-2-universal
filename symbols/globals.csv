@@ -196,3 +196,4 @@ address,name,source
 0047005c,unknown_0047005c,source/sound/sound_manager.c
 0044a2a0,sound_environment_default,source/sound/sound_manager.c
 004ed280,unknown_004ed280,source/sound/sound_manager.c
+004e636d,unknown_004e636d,source/sound/sound_manager.c

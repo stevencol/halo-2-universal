@@ -1384,3 +1384,4 @@ address,name,source,arguments,returns,convention
 0013b390,unknown_0013b390,,edi stack stack,real:xmm0
 0037b7b3,unknown_0037b7b3,,stack stack stack stack stack stack stack stack,void
 0037b797,unknown_0037b797,,stack stack,void
+0021d060,looping_sound_check_distances,source/sound/sound_manager.c,eax ebx,void

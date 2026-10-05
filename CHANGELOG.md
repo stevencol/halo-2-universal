@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Un resto de comprobación de los sonidos en bucle
+
+Una función en `sound/sound_manager.c`, de 162 bytes. De 912 funciones se pasa a
+913, el 8,10 % de las del juego (el 4,949 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `looping_sound_check_distances` | `0x0021d060` | `sound/sound_manager.c` |
+
+No estaba apuntada. La llama `0x0021a250`, la que arranca un sonido en
+bucle. Recibe el tag en `eax` y la fuente del sonido en `ebx`; no devuelve
+nada. Nueva variable: `unknown_004e636d`.
+
+### Lo que se sabe
+
+- Solo hace algo con `unknown_004e636d` puesta y una fuente del tipo 1.
+- Pide las dos distancias (`sound_get_minimum_distance` y
+  `sound_get_maximum_distance`) del sonido de la primera pista que tenga
+  uno. Tiene una rareza: mira siempre la primera pista, tantas veces como
+  pistas hay.
+- Si no hay ninguna, o la distancia más corta es 0, recorre los detalles
+  hasta el primero que tenga sonido.
+- No hace nada con lo que encuentra: lo único que se nota desde fuera son
+  las dos llamadas. Será una comprobación que avisaba de algo en las
+  versiones de desarrollo y de la que en esta solo queda el recorrido.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- El recorrido de los detalles no deja nada que comparar: se ha escrito
+  como lo hace el juego, pero las pruebas no pueden notarlo.
+- En este hito solo se pasaron las pruebas de esta función. La batería
+  completa del hito 244 sigue en marcha; la última terminada es la del
+  hito 240 (907 funciones, todas bien).
+
+### Mutaciones
+
+Diez cambios a mano: las pruebas notan los diez.
+
 ## 2026-10-05 — Un stream de la consola toma la forma de una función
 
 Una función en `sound/sound_manager.c`, de 381 bytes. De 911 funciones se pasa a

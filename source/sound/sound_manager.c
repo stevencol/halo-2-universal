@@ -639,6 +639,7 @@ enum
 	LOOPING_SOUND_DEFINITION_DETAILS_OFFSET= 0x24,
 	LOOPING_SOUND_DETAIL_SIZE= 0x34,
 	LOOPING_SOUND_DEFINITION_TRACK_SIZE= 0x58,
+	LOOPING_SOUND_DEFINITION_TRACK_SOUND_INDEX_OFFSET= 0x20,
 	/* in a sound that plays of a looping sound: which track it is of */
 	SOUND_SOURCE_DATUM_TRACK_OFFSET= 0x60,
 	LOOPING_SOUND_DETAIL_PERIOD_BOUNDS_OFFSET= 0xC,
@@ -998,6 +999,9 @@ void *unknown_0051ebdc;
 
 /* 0x0051ebe4: of the sound of the console. Only two indices are known */
 byte *unknown_0051ebe4;
+
+/* 0x004e636d: whether looping_sound_check_distances looks at anything */
+boolean unknown_004e636d;
 
 /* 0x004ed280: of something else; it has 32 bytes for each structure bsp */
 byte *unknown_004ed280;
@@ -1552,6 +1556,9 @@ void __attribute__((stdcall)) sound_query_portal_results(long listener_cluster_i
 	long cluster_index);
 long unknown_0018cfd0(long cluster_index, const real_point3d *position, real *distance);
 real unknown_0014b240(const byte *structure_bsp, const byte *portal, const real_point3d *position);
+
+/* 0x0021d060 */
+void looping_sound_check_distances(long definition_index, const struct sound_source *source);
 
 /* 0x0021d110 */
 long __attribute__((stdcall)) sound_effect_source_new(byte *request, long sound_index);
@@ -10746,4 +10753,63 @@ void __attribute__((stdcall)) sound_console_stream_set_function(
 	}
 	unknown_0037b797(stream, 0);
 	unknown_0037b66f(stream, 0);
+}
+
+/* 0x0021d060: what is left of something that looked at a looping sound's
+tag when it starts, for a source of the type 1 and with unknown_004e636d
+set: it asks the two distances of the sound of the first track that has one
+(it looks at the first track each time, as many times as there are tracks)
+and, if there is none or the nearer distance is 0, goes through the details
+up to the first that has a sound. Nothing is done with any of it: what it
+said, most likely, is not in this build of the game. The tag is taken in
+eax and the source in ebx. The name is made up */
+void looping_sound_check_distances(
+	long definition_index,
+	const struct sound_source *source)
+{
+	const byte *definition;
+	long track_count;
+	long index;
+
+	if (!unknown_004e636d || (((const byte *)source)[3]&0xF)!=1)
+	{
+		return;
+	}
+	definition= (const byte *)(uintptr_t)global_tag_instances[definition_index&0xFFFF].address;
+	track_count= *(const long *)(definition+LOOPING_SOUND_DEFINITION_TRACKS_OFFSET);
+	if (track_count>0)
+	{
+		const byte *track= *(const byte *const *)(definition+LOOPING_SOUND_DEFINITION_TRACKS_OFFSET+4);
+		short track_index= 0;
+		boolean found= TRUE;
+
+		while (*(const long *)(track+LOOPING_SOUND_DEFINITION_TRACK_SOUND_INDEX_OFFSET)==NONE)
+		{
+			track_index++;
+			if (track_index>=track_count)
+			{
+				found= FALSE;
+				break;
+			}
+		}
+		if (found)
+		{
+			real minimum_distance=
+				sound_get_minimum_distance(source, *(const long *)(track+LOOPING_SOUND_DEFINITION_TRACK_SOUND_INDEX_OFFSET));
+
+			sound_get_maximum_distance(source, *(const long *)(track+LOOPING_SOUND_DEFINITION_TRACK_SOUND_INDEX_OFFSET));
+			if (minimum_distance!=0.0f)
+			{
+				return;
+			}
+		}
+	}
+	for (index= 0; index<*(const long *)(definition+LOOPING_SOUND_DEFINITION_DETAILS_OFFSET); index++)
+	{
+		if (*(const long *)(*(const byte *const *)(definition+LOOPING_SOUND_DEFINITION_DETAILS_OFFSET+4)+
+			index*LOOPING_SOUND_DETAIL_SIZE+LOOPING_SOUND_DETAIL_SOUND_INDEX_OFFSET)!=NONE)
+		{
+			break;
+		}
+	}
 }
