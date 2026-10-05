@@ -4308,3 +4308,59 @@ def run(t) -> None:
             Buffer(random_.randbytes(4)),
             externals={"unknown_002222c0": entry_},
         )
+
+    # ---------- what a voice of the console's sound takes of a sound from the tags
+
+    random_ = random.Random(201)
+
+    for _ in range(1200):
+        tag_index = random_.randrange(TAGS)
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        struct.pack_into("<I", tags, tag_index * 0x10 + 8, len(tags))
+        tag = bytearray(random_.randbytes(0x40))
+        struct.pack_into("<I", tag, 0x18, len(tags) + 0x20)
+        tags_ = Buffer(bytes(tags) + bytes(tag), pointers=(tag_index * 0x10 + 8, len(tags) + 0x18))
+
+        def collection__() -> tuple:
+            """What one of the two functions gives, and whether the list can be made from it."""
+            data = bytearray(random_.randbytes(0x34 + 0x28))
+            for offset in (0x14, 0x1C, 0x24):
+                struct.pack_into(
+                    "<iI", data, offset, random_.choice((1, 1, 2, 0, -1, -0x80000000)), random_.choice((0, random_.getrandbits(32) | 1))
+                )
+            count = random_.choice((1, 1, 1, 2, 0, -1))
+            has_elements = random_.random() < 0.9
+            named = random_.random() < 0.85
+            struct.pack_into("<iI", data, 0x2C, count, 0x34 if has_elements else 0)
+            struct.pack_into("<I", data, 0x38, random_.getrandbits(16) << 16 | tag_index if named else NONE)
+            struct.pack_into("<i", data, 0x54, random_.choice((1, 1, 1, 3, 0, -1)))
+            return Buffer(bytes(data), pointers=(0x30,) if has_elements else ()), count > 0 and has_elements and named
+
+        first, first_usable = random_.choice((None, collection__(), collection__(), collection__()))  or (None, False)
+        second, _second_usable = random_.choice((None, collection__(), collection__())) or (None, False)
+        if random_.random() < 0.1 and first:
+            second = first
+        if not first_usable and second is not first:
+            # the game makes the list from the first: with nothing to make it from, the second has none either
+            if second:
+                second = Buffer(second.data[:0x38] + struct.pack("<I", NONE) + second.data[0x3C:], pointers=second.pointers)
+
+        def list_(harness, arguments):
+            overrides, block, unknown2, list__, size = arguments
+            harness.mu.mem_write(size, struct.pack("<I", 0x123))
+            return 0, (overrides, harness.normalize(block), unknown2, harness.normalize(list__), harness.normalize(size))
+
+        t.check(
+            "sound_unknown_00222770",
+            random_.getrandbits(32),
+            random_.choice((NONE, 0, random_.getrandbits(32))),
+            random_.getrandbits(32),
+            Buffer(random_.randbytes(0x420)),
+            globals={"global_tag_instances": tags_},
+            extra=[buffer for buffer in (first, second) if buffer and (buffer is first or second is not first)],
+            externals={
+                "unknown_0018d090": lambda harness, arguments, first=first: (first.address if first else 0, tuple(arguments)),
+                "unknown_0018d170": lambda harness, arguments, second=second: (second.address if second else 0, tuple(arguments)),
+                "sound_unknown_002225a0": list_,
+            },
+        )

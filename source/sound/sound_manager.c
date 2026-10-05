@@ -473,6 +473,18 @@ enum
 	SOUND_EFFECT_ENTRY_SIZE= 0xC,
 	SOUND_EFFECT_ENTRY_BYTES_OFFSET= 0xA,
 	SOUND_EFFECT_NAME_FOUR_TIMES= 0x11000138,
+	/* three blocks more of what unknown_0018d090 gives, and what
+	sound_unknown_00222770 fills */
+	SOUND_EFFECT_COLLECTION_UNKNOWN14_OFFSET= 0x14,
+	SOUND_EFFECT_COLLECTION_UNKNOWN1C_OFFSET= 0x1C,
+	SOUND_EFFECT_COLLECTION_UNKNOWN24_OFFSET= 0x24,
+	SOUND_VOICE_EFFECTS_UNKNOWN8_OFFSET= 0x8,
+	SOUND_VOICE_EFFECTS_UNKNOWNC_OFFSET= 0xC,
+	SOUND_VOICE_EFFECTS_UNKNOWN10_OFFSET= 0x10,
+	SOUND_VOICE_EFFECTS_UNKNOWN14_OFFSET= 0x14,
+	SOUND_VOICE_EFFECTS_UNKNOWN18_OFFSET= 0x18,
+	SOUND_VOICE_EFFECTS_LIST_OFFSET= 0x1C,
+	SOUND_VOICE_EFFECTS_LIST_SIZE_OFFSET= 0x41C,
 	_sound_source_datum_unknown4_bit= 4,
 	SOUND_CLASS_UNKNOWNE_OFFSET= 0xE,
 	/* more of a sound that plays, of a listener, of a class of sounds and of
@@ -954,6 +966,10 @@ void sound_unknown_00222930(long sound_index, long unknown, byte *result);
 void __attribute__((stdcall)) sound_unknown_002225a0(const byte *overrides, const long *block, long unknown,
 	long *list, long *size);
 void unknown_002222c0(long *entry, const long *element, const byte *override, long unknown, long number);
+
+/* 0x00222770 */
+void __attribute__((stdcall)) sound_unknown_00222770(long sound_index, long unknown, long unknown2,
+	byte *result);
 
 long sound_unknown_001914f0(long name);
 void __attribute__((stdcall)) sound_channel_update_slot(short channel_index, const real *unknown);
@@ -7044,5 +7060,97 @@ void __attribute__((stdcall)) sound_unknown_002225a0(
 			*size+= *bytes+SOUND_EFFECT_ENTRY_SIZE;
 			position+= (*bytes+SOUND_EFFECT_ENTRY_SIZE+3)>>2;
 		}
+	}
+}
+
+/* the first element of a block of a tag; NULL if it has none. A count of
+the least number there is passes, as in the game */
+static inline __attribute__((always_inline)) const byte *sound_block_first_element(
+	const byte *block)
+{
+	return (long)(*(const unsigned long *)block-1)>=0 ? *(const byte *const *)(block+4) : NULL;
+}
+
+/* whether what unknown_0018d090 or unknown_0018d170 gives has a list for
+the console's sound: its first element says a tag and has a block of its
+own with something */
+static inline __attribute__((always_inline)) boolean sound_effect_collection_has_list(
+	const byte *element)
+{
+	return element && *(const long *)(element+4)!=NONE &&
+		*(const long *)(element+SOUND_EFFECT_COLLECTION_ELEMENT_BLOCK_OFFSET)>0;
+}
+
+/* 0x00222770: what a voice of the console's sound takes of a sound from
+the tags: three things at 0x10, 0x14 and 0x18, the first elements of three
+blocks of what unknown_0018d170 gives for the sound, or of what
+unknown_0018d090 gives, where it has them; and at 0x1C, the list that
+sound_unknown_002225a0 makes, with its size at 0x41C: 0 if neither has a
+list. The list is always made from what unknown_0018d090 gives, as in the
+game. What they are is not known */
+void __attribute__((stdcall)) sound_unknown_00222770(
+	long sound_index,
+	long unknown,
+	long unknown2,
+	byte *result)
+{
+	const byte *first= unknown_0018d090(sound_index, unknown);
+	const byte *second= unknown_0018d170(sound_index);
+	const byte *chosen= NULL;
+
+	if (second)
+	{
+		const byte *unknown10= sound_block_first_element(second+SOUND_EFFECT_COLLECTION_UNKNOWN14_OFFSET);
+		const byte *unknown14= sound_block_first_element(second+SOUND_EFFECT_COLLECTION_UNKNOWN1C_OFFSET);
+		const byte *unknown18= sound_block_first_element(second+SOUND_EFFECT_COLLECTION_UNKNOWN24_OFFSET);
+		const byte *element= sound_block_first_element(second+SOUND_EFFECT_COLLECTION_COUNT_OFFSET);
+
+		*(long *)(result+SOUND_VOICE_EFFECTS_UNKNOWN8_OFFSET)= 0;
+		*(long *)(result+SOUND_VOICE_EFFECTS_UNKNOWNC_OFFSET)= 0;
+		*(const byte **)(result+SOUND_VOICE_EFFECTS_UNKNOWN10_OFFSET)= unknown10;
+		*(const byte **)(result+SOUND_VOICE_EFFECTS_UNKNOWN14_OFFSET)= unknown14;
+		*(const byte **)(result+SOUND_VOICE_EFFECTS_UNKNOWN18_OFFSET)= unknown18;
+		if (sound_effect_collection_has_list(element))
+		{
+			chosen= second;
+		}
+	}
+	if (first && first!=second)
+	{
+		const byte *unknown10= sound_block_first_element(first+SOUND_EFFECT_COLLECTION_UNKNOWN14_OFFSET);
+		const byte *unknown14= sound_block_first_element(first+SOUND_EFFECT_COLLECTION_UNKNOWN1C_OFFSET);
+		const byte *unknown18= sound_block_first_element(first+SOUND_EFFECT_COLLECTION_UNKNOWN24_OFFSET);
+		const byte *element= sound_block_first_element(first+SOUND_EFFECT_COLLECTION_COUNT_OFFSET);
+
+		if (unknown10)
+		{
+			*(const byte **)(result+SOUND_VOICE_EFFECTS_UNKNOWN10_OFFSET)= unknown10;
+		}
+		if (unknown14)
+		{
+			*(const byte **)(result+SOUND_VOICE_EFFECTS_UNKNOWN14_OFFSET)= unknown14;
+		}
+		if (unknown18)
+		{
+			*(const byte **)(result+SOUND_VOICE_EFFECTS_UNKNOWN18_OFFSET)= unknown18;
+		}
+		if (sound_effect_collection_has_list(element))
+		{
+			chosen= first;
+		}
+	}
+	if (chosen)
+	{
+		const byte *element= *(const long *)(first+SOUND_EFFECT_COLLECTION_COUNT_OFFSET)>0 ?
+			*(const byte *const *)(first+SOUND_EFFECT_COLLECTION_COUNT_OFFSET+4) : NULL;
+		const byte *tag= (const byte *)(uintptr_t)global_tag_instances[*(const long *)(element+4)&0xFFFF].address;
+
+		sound_unknown_002225a0(*(const byte *const *)(element+SOUND_EFFECT_COLLECTION_ELEMENT_BLOCK_OFFSET+4),
+			*(const long *const *)(tag+SOUND_ENVIRONMENT_TAG_BLOCK_OFFSET+4), unknown2,
+			(long *)(result+SOUND_VOICE_EFFECTS_LIST_OFFSET), (long *)(result+SOUND_VOICE_EFFECTS_LIST_SIZE_OFFSET));
+	}
+	else
+	{
+		*(long *)(result+SOUND_VOICE_EFFECTS_LIST_SIZE_OFFSET)= 0;
 	}
 }

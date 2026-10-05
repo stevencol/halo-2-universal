@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Lo que una voz de la consola toma de un sonido, de los tags
+
+Una función en `sound/sound_manager.c`. De 857 funciones se pasa a
+858, el 7,62 % de las del juego (el 4,371 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_unknown_00222770` | `0x00222770` | `sound/sound_manager.c` |
+
+No estaba apuntada. La llama `0x0012a1b0`. Recibe el sonido en `eax`, un
+número en `edx`, y en la pila otro número y dónde dejar el resultado (de
+`0x420` bytes).
+
+### Lo que se sabe
+
+- `sound_unknown_00222770` pregunta a `unknown_0018d090` y a
+  `unknown_0018d170` por el sonido. Cada una puede dar algo con cuatro
+  bloques, en `0x14`, `0x1C`, `0x24` y `0x2C`.
+- En `0x10`, `0x14` y `0x18` del resultado deja el primer elemento de los
+  tres primeros bloques: los de `unknown_0018d170`, o los de
+  `unknown_0018d090` donde esta los tenga.
+- En `0x1C` deja la lista que hace `sound_unknown_002225a0`, y en `0x41C`
+  su tamaño. Hay lista si el primer elemento del cuarto bloque de alguna de
+  las dos dice un tag y trae un bloque propio con algo; si no, el tamaño
+  es 0.
+- La lista se hace siempre con lo que da `unknown_0018d090`, aunque quien
+  la tenga sea la otra: así lo hace el juego, y aquí se hace igual.
+- Qué son esos datos no se sabe todavía; el nombre lleva la dirección.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función. La batería
+  completa corre aparte con las 857 funciones del hito 200.
+
+### Mutaciones
+
+Doce líneas rotas a mano: las pruebas notan once. La que no notan es
+quitar la comparación de que las dos funciones no den lo mismo: repetir el
+trabajo con lo mismo deja el mismo resultado. Pendientes las listas
+completas de los hitos 156 a 201.
+
 ## 2026-10-05 — Una lista para el sonido de la consola, de un bloque de un tag
 
 Una función en `sound/sound_manager.c`. De 856 funciones se pasa a
