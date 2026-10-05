@@ -3009,3 +3009,42 @@ def run(t) -> None:
             random_.choice((0, 0, 1)),
             globals={"global_sound_cache_file_gestalt": Buffer(bytes(shared), pointers=(0x24, 0x2C, 0x44))},
         )
+
+    # ---------- the listener that hears a sound, and something that comes up from silence
+
+    random_ = random.Random(179)
+
+    for _ in range(600):
+        said = bytearray(random_.randbytes(0x48))
+        struct.pack_into("<H", said, 0, random_.choice((0, 0, 0x100, 0x800, 0x900, 0xF6FF, random_.getrandbits(16))))
+        said[3] = random_.choice((1, 1, 1, 0x11, 0xF1, 0, 2))
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        for index in range(4):
+            state[LISTENERS + index * LISTENER_SIZE + 6] = random_.choice((0, 1, 1, 0x80))
+        players = bytearray(random_.randbytes(0xC)) + struct.pack("<4i", *(random_.choice((-1, -1, 0, 7)) for _ in range(4)))
+        squares = [random_.choice((0.0, 1.0, 4.0, 4.0, 25.0, 100.0, 1e6)) for _ in range(4)]
+        refused = random_.choice((0, 0, 0, 1))
+
+        def square(harness, arguments, squares=squares):
+            return real_bits(squares[arguments[1] & 3]), (harness.normalize(arguments[0]), arguments[1])
+
+        def refuse_(harness, arguments, refused=refused):
+            return refused, (arguments[0], harness.normalize(arguments[1]), arguments[2])
+
+        t.check(
+            "sound_source_get_listener",
+            Buffer(bytes(said)),
+            as_bits(random_.choice((1.0, 2.0, 5.0, 10.0, 0.5, 3.0))),
+            random_.choice((0, Buffer(random_.randbytes(4)), Buffer(random_.randbytes(4)))),
+            globals={"game_sound_globals": Buffer(bytes(state)), "players_globals": Buffer(bytes(players))},
+            externals={"sound_source_unknown_00127e20": square, "sound_source_unknown_00221da0": refuse_},
+        )
+
+    for kind in (0, 1, 2, 0xFFFF):
+        for _ in range(200):
+            t.check(
+                "sound_unknown_0012a6d0",
+                kind,
+                as_bits(random_.choice((0.0, 0.5, 1.0, -0.5, 2.0, random_.uniform(-2, 2), random_.uniform(0, 1)))),
+                as_bits(random_.choice((1.0, -1.0, 0.5, 2.0, -0.3, 0.0, random_.uniform(0.1, 3)))),
+            )

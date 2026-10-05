@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Quién oye un sonido
+
+Dos funciones en `sound/sound_manager.c`. De 831 funciones se pasa a
+833, el 7,39 % de las del juego (el 4,001 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_source_get_listener` | `0x00127d00` | `sound/sound_manager.c` |
+| `sound_unknown_0012a6d0` | `0x0012a6d0` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- `sound_source_get_listener` dice qué oyente oye un sonido y a qué
+  distancia. Un sonido sin sitio lo oye el primer jugador local, a
+  distancia 0. Uno con sitio lo oye el oyente más cercano
+  (`sound_source_unknown_00127e20`), salvo que
+  `sound_source_unknown_00221da0` diga que no; después, si el sonido no
+  tiene ninguna de dos marcas (bits 8 y 11), más allá de una distancia que
+  se le da no lo oye nadie; y si tiene alguna y no quedó nadie, lo oye el
+  primer jugador local.
+- `sound_unknown_0012a6d0` da los decibelios de algo que sube desde el
+  silencio según el tiempo que lleva y lo que tarda (de 0 a 1, o al revés
+  si la duración es negativa), con las maneras 1 y 2 de
+  `sound_decibels_interpolate`.
+- Los nombres son inventados.
+
+### Sin comprobar
+
+- La batería completa corre aparte con las 824 funciones del hito 173; en
+  este hito solo se pasaron las pruebas de estas dos.
+
+### Mutaciones
+
+Pendientes las de los hitos 156 a 179.
+
 ## 2026-10-04 — Elegir al azar una grabación de un rango de tono
 
 Una función en `sound/sound_manager.c`. De 830 funciones se pasa a

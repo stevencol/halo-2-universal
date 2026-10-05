@@ -348,6 +348,10 @@ enum
 	SOUND_VOICE_DATUM_UNKNOWN14_OFFSET= 0x14,
 	/* in a recording: how often it is passed over when one is chosen */
 	SOUND_PERMUTATION_SKIP_FRACTION_OFFSET= 0x2,
+	/* two flags of what the game says of a sound: with either, the sound
+	is heard however far it is */
+	_sound_source_unknown8_bit= 8,
+	_sound_source_unknown11_bit= 11,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -762,6 +766,11 @@ long sound_voice_matches_source(const byte *voice, const byte *source);
 
 /* 0x00218f50 */
 short sound_choose_pitch_range(short pitch_range_offset, const struct sound_definition *sound, real pitch);
+
+/* 0x00127d00 and 0x0012a6d0 */
+long __attribute__((stdcall)) sound_source_get_listener(const struct sound_source *source, real maximum_distance,
+	real *distance);
+real __attribute__((stdcall)) sound_unknown_0012a6d0(short kind, real time, real duration);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -4816,4 +4825,101 @@ long __attribute__((stdcall)) sound_pitch_range_choose_permutation(
 	}
 
 	return (long)permutation;
+}
+
+/* 0x00127d00: the listener that hears a sound, of what the game says of
+it, and how far it is. For a sound with no place: the first local player,
+at no distance. For one with a place: the closest listener, by
+sound_source_unknown_00127e20, unless sound_source_unknown_00221da0 says no
+of it; then, if neither of two flags of the sound is set, there is none
+beyond a distance that the function is given; and if either is set and
+there is none, the first local player. NONE if no one hears it */
+long __attribute__((stdcall)) sound_source_get_listener(
+	const struct sound_source *source,
+	real maximum_distance,
+	real *distance)
+{
+	const byte *bytes= (const byte *)source;
+	long listener_index= NONE;
+	real result;
+
+	if ((bytes[SOUND_SOURCE_TYPE_OFFSET]&SOUND_SOURCE_DATUM_TYPE_MASK)!=_sound_source_datum_type_positioned)
+	{
+		listener_index= sound_next_local_player(NONE);
+		result= 0.0f;
+	}
+	else
+	{
+		const struct sound_listener *listeners=
+			(const struct sound_listener *)(game_sound_globals+GAME_SOUND_GLOBALS_LISTENERS_OFFSET);
+		real closest= SOUND_REAL_MAXIMUM;
+		long index;
+
+		for (index= 0; index<MAXIMUM_LOCAL_PLAYERS; index++)
+		{
+			if (listeners[index].valid)
+			{
+				real square= sound_source_unknown_00127e20(source, index);
+
+				if (closest>square)
+				{
+					listener_index= index;
+					closest= square;
+				}
+			}
+		}
+		result= (real)sqrtl(closest);
+		if (sound_source_unknown_00221da0(listener_index, source, (real)(sqrtl(closest)/(long double)maximum_distance)))
+		{
+			listener_index= NONE;
+		}
+		if (!(source->flags&(FLAG(_sound_source_unknown8_bit)|FLAG(_sound_source_unknown11_bit))))
+		{
+			if (closest>maximum_distance*maximum_distance)
+			{
+				listener_index= NONE;
+				result= SOUND_REAL_MAXIMUM;
+			}
+		}
+		else if (listener_index==NONE)
+		{
+			listener_index= sound_next_local_player(NONE);
+		}
+	}
+	if (distance)
+	{
+		*distance= result;
+	}
+
+	return listener_index;
+}
+
+/* 0x0012a6d0: how loud something that comes up from silence is, in
+decibels, at a time of how long it takes: the part of it that has gone by,
+from 0 to 1 (and from 1 to 0 if it takes less than nothing), along the gains
+or with a square root, by its kind. For any other kind, how long it takes */
+real __attribute__((stdcall)) sound_unknown_0012a6d0(
+	short kind,
+	real time,
+	real duration)
+{
+	real fraction= (real)fabsl((long double)time/(long double)duration);
+
+	if (fraction>1.0f)
+	{
+		fraction= 1.0f;
+	}
+	if (0.0f>duration)
+	{
+		fraction= 1.0f-fraction;
+	}
+	switch (kind)
+	{
+	case 0:
+		return sound_decibels_interpolate(_sound_interpolation_gain, SOUND_MINIMUM_DECIBELS, 0.0f, fraction);
+	case 1:
+		return sound_decibels_interpolate(_sound_interpolation_gain_square_root, SOUND_MINIMUM_DECIBELS, 0.0f, fraction);
+	}
+
+	return duration;
 }
