@@ -1240,7 +1240,7 @@ address,name,source,arguments,returns,convention
 00125f70,sound_source_new,source/sound/sound_manager.c,ebx edi stack,int,stdcall
 00126c30,sound_start_test,source/sound/sound_manager.c,eax stack stack stack,bool,stdcall
 00126ec0,sound_promotion_update,source/sound/sound_manager.c,ecx stack,int,stdcall
-00126000,unknown_00126000,,stack stack stack stack,int
+00126000,sound_source_create,source/sound/sound_manager.c,stack stack stack stack,int,stdcall
 00129790,unknown_00129790,,eax stack,void
 0021e3b0,unknown_0021e3b0,,esi,void
 00126df0,sound_sources_cross_fade,source/sound/sound_manager.c,eax edi ebx stack,void,stdcall
@@ -1286,3 +1286,4 @@ address,name,source,arguments,returns,convention
 00128920,sound_source_find_channel,source/sound/sound_manager.c,stack stack,short,stdcall
 00128500,sound_source_find_same,source/sound/sound_manager.c,esi stack,void,stdcall
 00128700,sound_source_get_channel,source/sound/sound_manager.c,stack stack,short,stdcall
+002226b0,unknown_002226b0,,ebx,void

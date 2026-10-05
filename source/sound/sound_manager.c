@@ -385,6 +385,43 @@ enum
 	SOUND_PROMOTION_RULE_SECONDS_OFFSET= 0x4,
 	SOUND_PROMOTION_RULE_THRESHOLD_OFFSET= 0x8,
 	SOUND_PROMOTION_RULE_STEP_OFFSET= 0xC,
+	/* what the game gives to start a sound: its flags say which of the rest
+	there is */
+	_sound_request_unknown1_bit= 1,
+	_sound_request_callback_data_bit= 3,
+	_sound_request_controller_bit= 4,
+	_sound_request_callbacks_bit= 5,
+	_sound_request_unknown6_bit= 6,
+	_sound_request_gain_bit= 7,
+	_sound_request_unknown8_bit= 8,
+	_sound_request_unknown9_bit= 9,
+	_sound_request_permutation_bit= 10,
+	SOUND_REQUEST_UNKNOWN4_OFFSET= 0x4,
+	SOUND_REQUEST_UNKNOWN8_OFFSET= 0x8,
+	SOUND_REQUEST_CALLBACK_DATA_OFFSET= 0x50,
+	SOUND_REQUEST_CONTROLLER_OWNER_OFFSET= 0x54,
+	SOUND_REQUEST_CALLBACKS_OFFSET= 0x58,
+	SOUND_REQUEST_CALLBACK_BYTES_OFFSET= 0x5C,
+	SOUND_REQUEST_CALLBACK_BYTES_SIZE= 0x30,
+	SOUND_REQUEST_CALLBACK_SIZE_OFFSET= 0x8C,
+	SOUND_REQUEST_UNKNOWN8E_OFFSET= 0x8E,
+	SOUND_REQUEST_UNKNOWN90_OFFSET= 0x90,
+	SOUND_REQUEST_GAIN_OFFSET= 0x94,
+	SOUND_REQUEST_UNKNOWN98_OFFSET= 0x98,
+	SOUND_REQUEST_PITCH_RANGE_OFFSET= 0x9C,
+	SOUND_REQUEST_PERMUTATION_OFFSET= 0x9E,
+	/* more of a sound that plays: its pitch and its gain, at random, and
+	the seed that they left */
+	SOUND_SOURCE_DATUM_UNKNOWN6_OFFSET= 0x6,
+	SOUND_SOURCE_DATUM_UNKNOWN8_OFFSET= 0x8,
+	SOUND_SOURCE_DATUM_PITCH_OFFSET= 0x90,
+	SOUND_SOURCE_DATUM_GAIN_OFFSET= 0x94,
+	SOUND_SOURCE_DATUM_SEED_OFFSET= 0x98,
+	SOUND_SOURCE_DATUM_UNKNOWNA2_OFFSET= 0xA2,
+	SOUND_SOURCE_DATUM_UNKNOWNA4_OFFSET= 0xA4,
+	SOUND_SOURCE_DELAY_MINIMUM= 100,
+	_sound_definition_unknown3_bit= 3,
+	_sound_class_internal_unknown2_bit= 2,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -471,6 +508,9 @@ real *sound_class_gains;
 
 /* 0x0055e780: while it is set, no sound shares a sound voice */
 boolean unknown_0055e780;
+
+/* 0x00547f14: how much later a sound starts for each unit that it is far */
+real unknown_00547f14;
 
 /* 0x0047f0e0: 0x10000 in the main menu and 0x4000 in a game */
 long unknown_0047f0e0;
@@ -723,7 +763,11 @@ the console's sound */
 boolean __attribute__((stdcall)) sound_start_test(const byte *request, long sound_index, long *listener_index,
 	long *reason);
 long __attribute__((stdcall)) sound_promotion_update(long sound_index, long *rule_index);
-long unknown_00126000(long sound_index, long listener_index, const byte *request, long rule_index);
+long __attribute__((stdcall)) sound_source_create(long sound_index, long listener_index, const byte *request,
+	long rule_index);
+
+/* 0x002226b0: of what the game gives to start a sound */
+void unknown_002226b0(const byte *request);
 void unknown_00129790(long channel_index, long value);
 void unknown_0021e3b0(void *unknown);
 
@@ -3592,7 +3636,7 @@ long __attribute__((stdcall)) sound_unknown_0021cc30(
 /* 0x00125f70: a sound starts to play, with what the game gives to start
 it: sound_start_test says whether it is to, and which listener hears it;
 sound_promotion_update, whether its promotion keeps it from playing; and
-unknown_00126000 makes it. Gives the sound that plays; NONE if it does not,
+sound_source_create makes it. Gives the sound that plays; NONE if it does not,
 and then why, if it is asked: what sound_start_test says, 2 if its promotion
 keeps it, and 3 if it could not be made. The name is a guess */
 long __attribute__((stdcall)) sound_source_new(
@@ -3618,7 +3662,7 @@ long __attribute__((stdcall)) sound_source_new(
 			}
 			else
 			{
-				source_index= unknown_00126000(sound_index, first, request, second);
+				source_index= sound_source_create(sound_index, first, request, second);
 				if (failure && source_index==NONE)
 				{
 					*failure= _sound_source_new_failure_unknown3;
@@ -5450,4 +5494,150 @@ long __attribute__((stdcall)) sound_promotion_update(
 	*(long *)(promotion+SOUND_PROMOTION_LAST_TIME_OFFSET)= *(const long *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET);
 
 	return suppressed;
+}
+
+/* 0x00126000: makes the sound that plays, of a sound, for a listener, with
+what the game gives to start it and the rule of its promotion. NONE if it
+would be heard at -64 decibels or less, or there is no room. It is given a
+gain and a pitch at random; what the game says of it; its sound playback
+controller, who is told of it and what with, if the game gives them; and
+the pitch range and the recording that it plays: those that the game gives,
+or the pitch range of the rule of its promotion, or the one for its pitch,
+and a recording that is chosen. A sound that is far (more than 100, by its
+distance and unknown_00547f14) and has neither of two flags starts that much
+later. Its samples are asked for */
+long __attribute__((stdcall)) sound_source_create(
+	long sound_index,
+	long listener_index,
+	const byte *request,
+	long rule_index)
+{
+	const struct sound_definition *sound= sound_definition_get(sound_index);
+	const struct sound_source *said= (const struct sound_source *)(request+SOUND_REQUEST_SOURCE_OFFSET);
+	real gain= sound_definition_random_gain(sound);
+	real decibels;
+	long source_index;
+	byte *source;
+	long delay;
+	unsigned long *seed;
+	unsigned long flags;
+
+	gain= ((signed char)request[0]<0 ? *(const real *)(request+SOUND_REQUEST_GAIN_OFFSET) : 0.0f)+gain;
+	decibels= sound_definition_decibels(sound, *(const real *)((const byte *)said+SOUND_SOURCE_DECIBELS_OFFSET),
+		*(const real *)((const byte *)said+SOUND_SOURCE_SCALE_OFFSET));
+	if (!(decibels+gain>SOUND_MINIMUM_DECIBELS))
+	{
+		return NONE;
+	}
+	unknown_002226b0(request);
+	source_index= datum_new(sound_sources);
+	if (source_index==NONE)
+	{
+		return NONE;
+	}
+	source= sound_source_get(source_index);
+	delay= (long)(long long)(sqrtl((long double)sound_source_unknown_00127e20(said, listener_index))*
+		(long double)unknown_00547f14);
+	source[SOUND_SOURCE_DATUM_KIND_OFFSET]= 0;
+	*(short *)(source+SOUND_SOURCE_DATUM_CHANNEL_INDEX_OFFSET)= NONE;
+	source[SOUND_SOURCE_DATUM_LISTENER_OFFSET]= (byte)listener_index;
+	*(word *)(source+SOUND_SOURCE_DATUM_UNKNOWN6_OFFSET)= *(const word *)(request+SOUND_REQUEST_UNKNOWN4_OFFSET);
+	seed= &global_random_seed_reference[1];
+	*(real *)(source+SOUND_SOURCE_DATUM_PITCH_OFFSET)= sound_definition_random_pitch(sound, seed);
+	*(real *)(source+SOUND_SOURCE_DATUM_GAIN_OFFSET)= gain;
+	*(unsigned long *)(source+SOUND_SOURCE_DATUM_SEED_OFFSET)= *seed;
+	*(word *)(source+SOUND_SOURCE_DATUM_FLAGS_OFFSET)=
+		request[0]&FLAG(_sound_request_unknown1_bit) ? *(const word *)(request+SOUND_REQUEST_UNKNOWN8_OFFSET) : 0;
+	*(long *)(source+SOUND_SOURCE_DATUM_CALLBACK_DATA_OFFSET)=
+		request[0]&FLAG(_sound_request_callback_data_bit) ? *(const long *)(request+SOUND_REQUEST_CALLBACK_DATA_OFFSET) : NONE;
+	memcpy(source+SOUND_SOURCE_DATUM_UNKNOWN18_OFFSET, said, LOOPING_SOUND_DATUM_SOURCE_SIZE);
+	if (sound->flags&FLAG(_sound_definition_unknown3_bit))
+	{
+		source[SOUND_SOURCE_DATUM_UNKNOWN18_OFFSET]|= 1;
+	}
+	if ((sound_class_get(sound->sound_class)->internal_flags>>_sound_class_internal_unknown2_bit)&1)
+	{
+		source[SOUND_SOURCE_DATUM_UNKNOWN18_OFFSET]|= 0x80;
+	}
+	*(short *)(source+SOUND_SOURCE_DATUM_UNKNOWNA2_OFFSET)=
+		request[0]&FLAG(_sound_request_unknown6_bit) ? (short)(char)*(const short *)(request+SOUND_REQUEST_UNKNOWN8E_OFFSET) : NONE;
+	flags= *(const unsigned long *)request;
+	source[SOUND_SOURCE_DATUM_UNKNOWNA4_OFFSET]=
+		flags&FLAG(_sound_request_unknown9_bit) ? request[SOUND_REQUEST_UNKNOWN90_OFFSET] : 0xFF;
+	flags= *(const unsigned long *)request;
+	*(long *)(source+SOUND_SOURCE_DATUM_UNKNOWN8_OFFSET)=
+		flags&FLAG(_sound_request_unknown8_bit) ? *(const long *)(request+SOUND_REQUEST_UNKNOWN98_OFFSET) : NONE;
+	if (request[0]&FLAG(_sound_request_controller_bit))
+	{
+		long controller_index= sound_playback_controller_acquire(*(const long *)(request+SOUND_REQUEST_CONTROLLER_OWNER_OFFSET));
+
+		*(long *)(source+SOUND_SOURCE_DATUM_CONTROLLER_INDEX_OFFSET)= controller_index;
+		if (controller_index!=NONE)
+		{
+			sound_playback_controller_add_count(sound_playback_controller_get(controller_index), 1);
+		}
+	}
+	else
+	{
+		*(long *)(source+SOUND_SOURCE_DATUM_CONTROLLER_INDEX_OFFSET)= NONE;
+	}
+	source[SOUND_SOURCE_DATUM_UNKNOWN3_OFFSET]= 0xFF;
+	if (request[0]&FLAG(_sound_request_callbacks_bit))
+	{
+		word size= *(const word *)(request+SOUND_REQUEST_CALLBACK_SIZE_OFFSET);
+
+		*(const void **)(source+SOUND_SOURCE_DATUM_CALLBACKS_OFFSET)= *(const void *const *)(request+SOUND_REQUEST_CALLBACKS_OFFSET);
+		memcpy(source+SOUND_SOURCE_DATUM_UNKNOWN5C_OFFSET, request+SOUND_REQUEST_CALLBACK_BYTES_OFFSET,
+			size>SOUND_REQUEST_CALLBACK_BYTES_SIZE ? SOUND_REQUEST_CALLBACK_BYTES_SIZE : size);
+	}
+	else
+	{
+		*(const void **)(source+SOUND_SOURCE_DATUM_CALLBACKS_OFFSET)= NULL;
+	}
+	flags= *(const unsigned long *)request;
+	if (flags&FLAG(_sound_request_permutation_bit))
+	{
+		sound_source_set_sound(source_index, sound_index, (char)*(const word *)(request+SOUND_REQUEST_PITCH_RANGE_OFFSET),
+			(char)*(const word *)(request+SOUND_REQUEST_PERMUTATION_OFFSET), 0);
+	}
+	else
+	{
+		long pitch_range;
+		short permutation;
+
+		if (rule_index!=NONE)
+		{
+			pitch_range= sound_definition_promotion_rule(rule_index, sound);
+		}
+		else
+		{
+			const short *bends= (const short *)((const byte *)sound_definition_scale_decibels(sound)+SOUND_SCALE_PITCH_BENDS_OFFSET);
+			real lower= (real)bends[0];
+			real pitch= ((real)bends[1]-lower)*(*(const real *)((const byte *)said+SOUND_SOURCE_SCALE_OFFSET));
+
+			pitch+= *(const real *)(source+SOUND_SOURCE_DATUM_PITCH_OFFSET);
+			pitch+= lower;
+			pitch_range= sound_choose_pitch_range(NONE, sound, pitch);
+		}
+		permutation= sound_choose_permutation(sound, (short)pitch_range);
+		sound_source_set_sound(source_index, sound_index, (char)pitch_range, (char)permutation, 0);
+	}
+	source[SOUND_SOURCE_DATUM_UNKNOWNA0_OFFSET]= (byte)rule_index;
+	*(long *)(source+SOUND_SOURCE_DATUM_UNKNOWNB8_OFFSET)= 0;
+	*(long *)(source+SOUND_SOURCE_DATUM_FADE_TIME_OFFSET)= 0;
+	if (delay>SOUND_SOURCE_DELAY_MINIMUM &&
+		!(*(const word *)(source+SOUND_SOURCE_DATUM_UNKNOWN18_OFFSET)&(FLAG(_sound_source_unknown8_bit)|FLAG(_sound_source_unknown11_bit))))
+	{
+		*(long *)(source+SOUND_SOURCE_DATUM_UNKNOWN8C_OFFSET)=
+			*(const long *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET)+delay;
+		source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]|= FLAG(_sound_source_datum_unknown0_bit);
+	}
+	else
+	{
+		*(long *)(source+SOUND_SOURCE_DATUM_UNKNOWN8C_OFFSET)=
+			*(const long *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET);
+	}
+	sound_source_request_data(source);
+
+	return source_index;
 }

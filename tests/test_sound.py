@@ -2136,7 +2136,7 @@ def run(t) -> None:
             externals={
                 "sound_start_test": look,
                 "sound_promotion_update": refuse,
-                "unknown_00126000": lambda harness, arguments, made=made: (
+                "sound_source_create": lambda harness, arguments, made=made: (
                     made,
                     (arguments[0], arguments[1], harness.normalize(arguments[2]), arguments[3]),
                 ),
@@ -3419,5 +3419,89 @@ def run(t) -> None:
                 "global_tag_instances": Buffer(bytes(tags) + bytes(definition), pointers=(sound_index * 0x10 + 8,)),
                 "global_sound_cache_file_gestalt": Buffer(bytes(data), pointers=tuple(pointers)),
                 "game_sound_globals": Buffer(bytes(state)),
+            },
+        )
+
+    # ---------- the sound that plays is made
+
+    random_ = random.Random(185)
+
+    for _ in range(900):
+        sound_index = random_.randrange(TAGS)
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        struct.pack_into("<I", tags, sound_index * 0x10 + 8, len(tags))
+        definition = bytearray(random_.randbytes(0x10))
+        definition[0] = random_.choice((0, 8, 0xF7, 0xFF))
+        definition[0xB] = random_.randrange(4)
+        shared = bytearray(random_.randbytes(0x10))
+        struct.pack_into("<I", shared, 0xC, len(shared))
+        for _n in range(4):
+            shared += random_.randbytes(8) + struct.pack("<2h", random_.randint(-600, 0), random_.randint(0, 600)) + random_.randbytes(8)
+        buffer, indices = playing()
+        request = bytearray(random_.randbytes(0xA0))
+        struct.pack_into("<I", request, 0, random_.getrandbits(11) | random_.getrandbits(21) << 11)
+        struct.pack_into("<H", request, 0xC, random_.choice((0, 0, 0x100, 0x800, random_.getrandbits(16))))
+        struct.pack_into("<2f", request, 0x10, random_.choice((0.0, 0.5, 1.0)), random_.choice((0.0, -3.0)))
+        struct.pack_into("<H", request, 0x8C, random_.choice((0, 0x10, 0x2F, 0x30, 0x31, 0xFFFF)))
+        struct.pack_into("<f", request, 0x94, random_.choice((0.0, -6.0, -80.0)))
+        table = bytearray(random_.randbytes(0x100 * 0x5C))
+        table_ = Buffer(bytes(table))
+        controller_ = Buffer(random_.randbytes(0x1C))
+        loud = random_.choice((0.0, 0.0, -6.0, -60.0, -64.0))
+        random_gain = random_.choice((0.0, 0.0, -1.5, -5.0))
+        made = random_.choice((NONE, *indices, *indices))
+        far_ = random_.choice((0.0, 4.0, 400.0, 1e6, 1e12))
+        acquired = random_.choice((NONE, 0x30002, 5))
+        chosen_range = random_.choice((0, 1, 3, 0xFFFF))
+        chosen_recording = random_.choice((0, 2, 0xFFFF))
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        struct.pack_into("<i", state, 0x84, random_.choice((0, 5000, 0x7FFFFF00)))
+
+        def pointer_record(*pointers: int):
+            def handler(harness, arguments, value=0):
+                return value, tuple(harness.normalize(a) if n in pointers else a for n, a in enumerate(arguments))
+
+            return handler
+
+        def returning(value: int, *pointers: int, mask=None):
+            def handler(harness, arguments):
+                record = tuple(harness.normalize(a) if n in pointers else a for n, a in enumerate(arguments))
+                if mask:
+                    record = tuple(a & mask.get(n, 0xFFFFFFFF) for n, a in enumerate(record))
+                return value, record
+
+            return handler
+
+        t.check(
+            "sound_source_create",
+            random_.getrandbits(16) << 16 | sound_index,
+            random_.choice((0, 1, 2, 3)),
+            Buffer(bytes(request)),
+            random_.choice((NONE, NONE, 0, 1, 2)),
+            globals={
+                "global_tag_instances": Buffer(bytes(tags) + bytes(definition), pointers=(sound_index * 0x10 + 8,)),
+                "global_sound_cache_file_gestalt": Buffer(bytes(shared), pointers=(0xC,)),
+                "sound_sources": Buffer(buffer.data, pointers=buffer.pointers),
+                "game_sound_globals": Buffer(bytes(state)),
+                "global_random_seed_reference": Buffer(random_.randbytes(0x10)),
+                "unknown_00547f14": struct.pack("<f", random_.choice((0.0, 1.0, 3.0, 20.0))),
+            },
+            extra=[table_, controller_],
+            externals={
+                "sound_definition_random_gain": returning(real_bits(random_gain), 0),
+                "sound_definition_decibels": returning(real_bits(loud), 0),
+                "unknown_002226b0": returning(0, 0),
+                "datum_new": returning(made, 0),
+                "sound_source_unknown_00127e20": returning(real_bits(far_), 0),
+                "sound_definition_random_pitch": returning(real_bits(random_.choice((0.0, 100.0, -50.0))), 0, 1),
+                "sound_class_get": class_of(table_),
+                "sound_playback_controller_acquire": returning(acquired),
+                "sound_playback_controller_get": returning(controller_.address),
+                "sound_playback_controller_add_count": returning(0, 0, mask={1: 0xFF}),
+                "sound_definition_promotion_rule": returning(chosen_range, 1),
+                "sound_choose_pitch_range": returning(chosen_range, 1, mask={0: 0xFFFF}),
+                "sound_choose_permutation": returning(chosen_recording, 0, mask={1: 0xFFFF}),
+                "sound_source_set_sound": returning(0, mask={2: 0xFF, 3: 0xFF, 4: 0xFFFF}),
+                "sound_source_request_data": returning(0, 0),
             },
         )

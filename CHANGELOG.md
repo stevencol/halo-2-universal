@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Crear el sonido que empieza a sonar
+
+Una función en `sound/sound_manager.c`, de 864 bytes. De 840 funciones se
+pasa a 841, el 7,47 % de las del juego (el 4,118 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_source_create` | `0x00126000` | `sound/sound_manager.c` |
+
+Estaba apuntada sin descompilar (`unknown_00126000`). Nueva sin
+descompilar: `0x002226b0`. También el global `unknown_00547f14`.
+
+### Lo que se sabe
+
+- `sound_source_create` crea el sonido que suena, para un oyente, con lo
+  que el juego da para arrancarlo y la regla de su promoción. No lo crea si
+  se oiría a -64 decibelios o menos, o si no hay sitio en la tabla.
+- Le pone una ganancia y un tono al azar; lo que el juego dice de él; su
+  controlador de reproducción, a quién avisar y con qué, si el juego los
+  da; y el rango de tono y la grabación que toca: los que da el juego, o el
+  rango de la regla de su promoción, o el que corresponde a su tono, y una
+  grabación elegida con `sound_choose_permutation`.
+- Un sonido que está lejos empieza más tarde: el retraso sale de su
+  distancia al oyente por `unknown_00547f14`, y solo cuenta si pasa de 100
+  y el sonido no tiene ninguna de dos marcas.
+- Lo que el juego da para arrancar un sonido lleva unas marcas que dicen
+  qué campos trae: de la ganancia (bit 7), del controlador (4), de a quién
+  avisar (5 y 3) y del rango de tono y la grabación (10), entre otros.
+- Con ella, `sound_source_new` (arrancar un sonido) ya no llama a nada sin
+  descompilar. Todo el camino desde que el juego pide un sonido hasta que
+  queda creado y con sus muestras pedidas está descompilado y comprobado.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función (900 casos) y de
+  `sound_source_new`. La batería completa pasó con las 824 funciones del
+  hito 173.
+
+### Mutaciones
+
+Pendientes las de los hitos 156 a 185.
+
 ## 2026-10-04 — Si un sonido debe empezar, y su promoción
 
 Dos funciones en `sound/sound_manager.c`. De 838 funciones se pasa a
