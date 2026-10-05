@@ -3490,7 +3490,7 @@ def run(t) -> None:
             externals={
                 "sound_definition_random_gain": returning(real_bits(random_gain), 0),
                 "sound_definition_decibels": returning(real_bits(loud), 0),
-                "unknown_002226b0": returning(0, 0),
+                "sound_request_unknown_002226b0": returning(0, 0, mask={1: 0xFFFF}),
                 "datum_new": returning(made, 0),
                 "sound_source_unknown_00127e20": returning(real_bits(far_), 0),
                 "sound_definition_random_pitch": returning(real_bits(random_.choice((0.0, 100.0, -50.0))), 0, 1),
@@ -3503,5 +3503,47 @@ def run(t) -> None:
                 "sound_choose_permutation": returning(chosen_recording, 0, mask={1: 0xFFFF}),
                 "sound_source_set_sound": returning(0, mask={2: 0xFF, 3: 0xFF, 4: 0xFFFF}),
                 "sound_source_request_data": returning(0, 0),
+            },
+        )
+
+    # ---------- two things more for what the game gives to start a sound
+
+    random_ = random.Random(186)
+
+    NAMES = (0x1300012D, 0x14000135, 0x1600013C, 0x1600013D, 0x1600013E, 0x1600013F)
+    for name in (*NAMES, 0, NONE, 0x1300012C, 0x1300012E, 0x16000140, 0x1600013B, 0x12D, 0x7FFFFFFF, 0x80000000):
+        t.check("sound_unknown_001914f0", name)
+
+    for _ in range(500):
+        tag_index = random_.randrange(TAGS)
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        struct.pack_into("<I", tags, tag_index * 0x10 + 8, len(tags))
+        tag = bytearray(random_.randbytes(0x1C)) + random_.randbytes(8) + struct.pack(
+            "<I", random_.choice((*NAMES, NAMES[0], NAMES[0], 0, 0x1300012C))
+        )
+        struct.pack_into("<iI", tag, 0x14, random_.choice((1, 1, 1, 0, -1)), len(tags) + 0x1C)
+        tags_ = Buffer(bytes(tags) + bytes(tag), pointers=(tag_index * 0x10 + 8, len(tags) + 0x18))
+
+        def collection_(count: int) -> Buffer:
+            data = bytearray(random_.randbytes(0x34)) + random_.randbytes(4)
+            data += struct.pack("<I", random_.choice((NONE, random_.getrandbits(16) << 16 | tag_index, random_.getrandbits(16) << 16 | tag_index)))
+            struct.pack_into("<iI", data, 0x2C, count, 0x34)
+            return Buffer(bytes(data), pointers=(0x30,))
+
+        first = random_.choice((None, collection_(random_.choice((0, 1, 2, -1)))))
+        second = random_.choice((None, collection_(random_.choice((0, 1, 1)))))
+        request = bytearray(random_.randbytes(0xA0))
+        struct.pack_into("<I", request, 0, random_.getrandbits(32))
+        other = bytearray(random_.randbytes(0x10))
+        struct.pack_into("<h", other, 6, random_.choice((-1, 0, 5, 0x1234)))
+        t.check(
+            "sound_request_unknown_002226b0",
+            Buffer(bytes(request)),
+            random_.getrandbits(32),
+            globals={"global_tag_instances": tags_, "unknown_00510c90": Buffer(bytes(other))},
+            extra=[buffer for buffer in (first, second) if buffer],
+            externals={
+                "unknown_0018d090": lambda harness, arguments, first=first: (first.address if first else 0, tuple(arguments)),
+                "unknown_0018d170": lambda harness, arguments, second=second: (second.address if second else 0, tuple(arguments)),
             },
         )

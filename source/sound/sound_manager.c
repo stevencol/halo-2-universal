@@ -422,6 +422,8 @@ enum
 	SOUND_SOURCE_DELAY_MINIMUM= 100,
 	_sound_definition_unknown3_bit= 3,
 	_sound_class_internal_unknown2_bit= 2,
+	/* in a tag that sound_request_unknown_002226b0 reads: a block */
+	SOUND_ENVIRONMENT_TAG_BLOCK_OFFSET= 0x14,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -511,6 +513,9 @@ boolean unknown_0055e780;
 
 /* 0x00547f14: how much later a sound starts for each unit that it is far */
 real unknown_00547f14;
+
+/* 0x00510c90: of something else; a number of 16 bits is at 6 of it */
+byte *unknown_00510c90;
 
 /* 0x0047f0e0: 0x10000 in the main menu and 0x4000 in a game */
 long unknown_0047f0e0;
@@ -763,16 +768,17 @@ the console's sound */
 boolean __attribute__((stdcall)) sound_start_test(const byte *request, long sound_index, long *listener_index,
 	long *reason);
 long __attribute__((stdcall)) sound_promotion_update(long sound_index, long *rule_index);
-long __attribute__((stdcall)) sound_source_create(long sound_index, long listener_index, const byte *request,
+long __attribute__((stdcall)) sound_source_create(long sound_index, long listener_index, byte *request,
 	long rule_index);
 
-/* 0x002226b0: of what the game gives to start a sound */
-void unknown_002226b0(const byte *request);
+/* 0x002226b0 and 0x001914f0 */
+void sound_request_unknown_002226b0(byte *request, long sound_index);
+long sound_unknown_001914f0(long name);
 void unknown_00129790(long channel_index, long value);
 void unknown_0021e3b0(void *unknown);
 
 /* 0x00125f70, 0x001268e0, 0x00129380, 0x0021f6d0 and 0x00221900 */
-long __attribute__((stdcall)) sound_source_new(long sound_index, long *failure, const byte *request);
+long __attribute__((stdcall)) sound_source_new(long sound_index, long *failure, byte *request);
 void sound_source_hold_chunk(byte *source);
 void sound_channels_unknown_00129380(const long *voice_values, const long *slot_values);
 void __attribute__((stdcall)) sound_console_set_environment(const long *second, const long *first, const void *unknown);
@@ -3642,7 +3648,7 @@ keeps it, and 3 if it could not be made. The name is a guess */
 long __attribute__((stdcall)) sound_source_new(
 	long sound_index,
 	long *failure,
-	const byte *request)
+	byte *request)
 {
 	long source_index= NONE;
 
@@ -5509,7 +5515,7 @@ later. Its samples are asked for */
 long __attribute__((stdcall)) sound_source_create(
 	long sound_index,
 	long listener_index,
-	const byte *request,
+	byte *request,
 	long rule_index)
 {
 	const struct sound_definition *sound= sound_definition_get(sound_index);
@@ -5529,7 +5535,7 @@ long __attribute__((stdcall)) sound_source_create(
 	{
 		return NONE;
 	}
-	unknown_002226b0(request);
+	sound_request_unknown_002226b0(request, sound_index);
 	source_index= datum_new(sound_sources);
 	if (source_index==NONE)
 	{
@@ -5640,4 +5646,92 @@ long __attribute__((stdcall)) sound_source_create(
 	sound_source_request_data(source);
 
 	return source_index;
+}
+
+/* 0x001914f0: a number for each of six names (the numbers of six texts of
+the game, as the tags give them); NONE for any other. It is of another
+file, most likely; what the names are is not known */
+long sound_unknown_001914f0(
+	long name)
+{
+	switch (name)
+	{
+	case 0x1300012D:
+		return 13;
+	case 0x14000135:
+		return 14;
+	case 0x1600013C:
+		return 27;
+	case 0x1600013D:
+		return 28;
+	case 0x1600013E:
+		return 29;
+	case 0x1600013F:
+		return 30;
+	}
+
+	return NONE;
+}
+
+/* 0x002226b0: what the game gives to start a sound takes two things more
+from the tags, for the sound: what unknown_0018d090 or unknown_0018d170 has
+for it says a tag, and the first element of a block of that tag has a name.
+For one of the names, a number of unknown_00510c90 is taken, if it has one;
+and for the names that sound_unknown_001914f0 knows, its number */
+void sound_request_unknown_002226b0(
+	byte *request,
+	long sound_index)
+{
+	const byte *first= unknown_0018d090(sound_index,
+		*(const unsigned long *)request&FLAG(_sound_request_unknown8_bit) ? *(const long *)(request+SOUND_REQUEST_UNKNOWN98_OFFSET) :
+		NONE);
+	const byte *second= unknown_0018d170(sound_index);
+	const byte *chosen= NULL;
+	const byte *elements;
+	const byte *tag;
+	const byte *block;
+	long tag_index;
+	long number;
+
+	if (second && *(const long *)(second+SOUND_EFFECT_COLLECTION_COUNT_OFFSET)>0)
+	{
+		chosen= second;
+	}
+	if (first && *(const long *)(first+SOUND_EFFECT_COLLECTION_COUNT_OFFSET)>0)
+	{
+		chosen= first;
+	}
+	if (!chosen)
+	{
+		return;
+	}
+	elements= *(const long *)(chosen+SOUND_EFFECT_COLLECTION_COUNT_OFFSET)>0 ?
+		*(const byte *const *)(chosen+SOUND_EFFECT_COLLECTION_COUNT_OFFSET+4) : NULL;
+	tag_index= *(const long *)(elements+4);
+	if (tag_index==NONE)
+	{
+		return;
+	}
+	tag= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+	if (*(const long *)(tag+SOUND_ENVIRONMENT_TAG_BLOCK_OFFSET)<=0)
+	{
+		return;
+	}
+	block= *(const byte *const *)(tag+SOUND_ENVIRONMENT_TAG_BLOCK_OFFSET+4);
+	if (*(const long *)(block+8)==0x1300012D)
+	{
+		short unknown= *(const short *)(unknown_00510c90+6);
+
+		if (unknown!=NONE)
+		{
+			*(short *)(request+SOUND_REQUEST_UNKNOWN8E_OFFSET)= unknown;
+			*(unsigned long *)request|= FLAG(_sound_request_unknown6_bit);
+		}
+	}
+	number= sound_unknown_001914f0(*(const long *)(block+8));
+	if ((short)number!=NONE)
+	{
+		request[SOUND_REQUEST_UNKNOWN90_OFFSET]= (byte)number;
+		*(unsigned long *)request|= FLAG(_sound_request_unknown9_bit);
+	}
 }

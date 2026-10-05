@@ -181,3 +181,4 @@ address,name,source
 00502118,sound_class_gains,source/sound/sound_manager.c
 0055e780,unknown_0055e780,source/sound/sound_manager.c
 00547f14,unknown_00547f14,source/sound/sound_manager.c
+00510c90,unknown_00510c90,source/sound/sound_manager.c

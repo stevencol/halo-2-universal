@@ -1286,4 +1286,5 @@ address,name,source,arguments,returns,convention
 00128920,sound_source_find_channel,source/sound/sound_manager.c,stack stack,short,stdcall
 00128500,sound_source_find_same,source/sound/sound_manager.c,esi stack,void,stdcall
 00128700,sound_source_get_channel,source/sound/sound_manager.c,stack stack,short,stdcall
-002226b0,unknown_002226b0,,ebx,void
+002226b0,sound_request_unknown_002226b0,source/sound/sound_manager.c,ebx edi,void
+001914f0,sound_unknown_001914f0,source/sound/sound_manager.c,ecx,int

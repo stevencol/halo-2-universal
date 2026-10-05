@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Dos datos más para arrancar un sonido
+
+Dos funciones en `sound/sound_manager.c`. De 841 funciones se pasa a
+843, el 7,48 % de las del juego (el 4,127 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_unknown_001914f0` | `0x001914f0` | `sound/sound_manager.c` |
+| `sound_request_unknown_002226b0` | `0x002226b0` | `sound/sound_manager.c` |
+
+La segunda estaba apuntada sin descompilar (`unknown_002226b0`) y mal: recibe
+además el sonido en `edi`, y cambia lo que el juego da para arrancar el
+sonido. `sound_source_create` ya le pasa el sonido. También el global
+`unknown_00510c90`.
+
+### Lo que se sabe
+
+- `sound_request_unknown_002226b0` completa lo que el juego da para arrancar
+  un sonido con dos datos de los tags: lo que `0x0018d090` o `0x0018d170`
+  tienen para el sonido dice un tag, y el primer elemento de un bloque de
+  ese tag tiene un nombre. Para uno de los nombres toma un número de
+  `unknown_00510c90`; para los que conoce `sound_unknown_001914f0`, su
+  número.
+- `sound_unknown_001914f0` da un número para cada uno de seis nombres (los
+  números de seis textos del juego) y `NONE` para los demás. Lo más
+  probable es que sea de otro archivo.
+- No se sabe qué son los nombres ni los números.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de estas dos funciones, de
+  `sound_source_create` y de `sound_source_new`. La batería completa pasó
+  con las 824 funciones del hito 173.
+
+### Mutaciones
+
+Pendientes las de los hitos 156 a 186.
+
 ## 2026-10-04 — Crear el sonido que empieza a sonar
 
 Una función en `sound/sound_manager.c`, de 864 bytes. De 840 funciones se
