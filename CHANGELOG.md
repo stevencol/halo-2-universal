@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — El volumen de una clase de sonidos
+
+Una función en `sound/sound_manager.c`, de 678 bytes. De 862 funciones se pasa a
+863, el 7,66 % de las del juego (el 4,497 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_class_get_decibels` | `0x00127010` | `sound/sound_manager.c` |
+
+Estaba apuntada sin descompilar (`unknown_00127010`); la llama
+`sound_definition_decibels`.
+
+### Lo que se sabe
+
+- `sound_class_get_decibels` da el volumen de una clase de sonidos, en
+  decibelios: el suyo de ahora (el que `sound_classes_update` va llevando a
+  su sitio) más lo que añade el estado del sonido del juego, salvo que el
+  cuarto número de la clase tenga la marca 0.
+- Los globales del sonido guardan el estado en que está el juego (`0x1F8`),
+  con los segundos que lleva en él (`0x1FC`), y el estado anterior
+  (`0x200`), con los suyos (`0x204`). Es lo que cambia
+  `sound_set_unknown1f8`.
+- Cada clase tiene, para cada estado, cuatro reales en `0x28`: unos
+  decibelios, los segundos en los que entran, los que esperan antes de
+  irse y los segundos en los que se van.
+- Los decibelios del estado de ahora entran desde 0, y los del anterior se
+  van hacia 0. Si se vuelve al estado anterior antes de que se haya ido,
+  entran desde donde estaban.
+- Parece el mecanismo que baja unas clases de sonido mientras suena otra
+  cosa (un diálogo, por ejemplo), pero eso no está comprobado.
+- El nombre es una suposición.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y de
+  `sound_definition_decibels`. La última batería completa es la del hito
+  200 (857 funciones, todas bien).
+
+### Mutaciones
+
+Dieciocho líneas rotas a mano (los límites de una milésima, los topes de
+las fracciones, las esperas y los signos): las pruebas notan las dieciocho.
+
 ## 2026-10-05 — Cómo se oye el sonido de un canal
 
 Una función en `sound/sound_manager.c`, de 1152 bytes. De 861 funciones se pasa a

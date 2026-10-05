@@ -524,6 +524,10 @@ enum
 	SOUND_SOURCE_DATUM_FORWARD_OFFSET= 0x30,
 	SOUND_SOURCE_DATUM_VELOCITY_OFFSET= 0x34,
 	SOUND_CLASS_UNKNOWN14_OFFSET= 0x14,
+	/* in a class of sounds: four reals for each state of the sound of the
+	game */
+	SOUND_CLASS_STATES_OFFSET= 0x28,
+	SOUND_CLASS_STATE_SIZE= 0x10,
 	_sound_source_datum_unknown3_bit= 3,
 	_sound_source_datum_unknown4_bit= 4,
 	SOUND_CLASS_UNKNOWNE_OFFSET= 0xE,
@@ -822,7 +826,7 @@ class of sounds */
 real sound_definition_get_maximum_decibels(const struct sound_definition *sound);
 real sound_definition_get_minimum_decibels(const struct sound_definition *sound);
 real sound_gain_to_decibels(real gain);
-real unknown_00127010(short sound_class);
+real sound_class_get_decibels(short sound_class);
 
 /* 0x001251e0 and 0x002195f0 */
 real __attribute__((stdcall)) sound_definition_decibels(const struct sound_definition *sound, real decibels,
@@ -2066,7 +2070,7 @@ real __attribute__((stdcall)) sound_definition_decibels(
 	real gain= (real)((most_gain-(long double)least_gain)*(long double)interpolation+(long double)least_gain);
 	real gain_decibels= sound_gain_to_decibels(gain);
 
-	return gain_decibels + (unknown_00127010(sound->sound_class) + decibels);
+	return gain_decibels + (sound_class_get_decibels(sound->sound_class) + decibels);
 }
 
 /* what sound_update has on the stack for the listeners: how many, and more
@@ -7636,4 +7640,111 @@ void __attribute__((stdcall)) sound_channel_compute_parameters(
 			}
 		}
 	}
+}
+
+/* a fraction that is not over 1 */
+static inline __attribute__((always_inline)) real sound_fraction_up_to_one(
+	real fraction)
+{
+	return 1.0f>fraction ? fraction : 1.0f;
+}
+
+/* 0x00127010: how loud a class of sounds is, in decibels: where its own
+loudness is now (sound_classes_update takes it there), and, if the fourth of
+its numbers has no flag 0, what the state of the sound of the game adds. The
+globals of the sound have the state that the game is in, at 0x1F8, with the
+seconds that it has been in it, and the one that it was in before, at 0x200,
+with its seconds. A class has for each state four reals at 0x28: some
+decibels, the seconds in which they come, those that they wait before they
+go, and those in which they go. The decibels of the state come in from 0,
+and those of the state before go out to 0; going back to the state before,
+they come in from where they were. The name is a guess */
+real sound_class_get_decibels(
+	short sound_class)
+{
+	const real *gains= sound_class_gains+sound_class*SOUND_CLASS_GAIN_REALS;
+	real decibels= gains[1];
+	const byte *class_states;
+	const byte *globals;
+	const real *state;
+	long current;
+	long previous;
+
+	if (*(const byte *)&gains[3]&1)
+	{
+		return decibels;
+	}
+	class_states= (const byte *)sound_class_get(sound_class)+SOUND_CLASS_STATES_OFFSET;
+	globals= game_sound_globals;
+	previous= *(const long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN200_OFFSET);
+	current= *(const long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1F8_OFFSET);
+	if (previous!=NONE && current==previous)
+	{
+		real seconds= *(const real *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1FC_OFFSET)-
+			*(const real *)(globals+GAME_SOUND_GLOBALS_UNKNOWN204_OFFSET);
+
+		state= (const real *)(class_states+current*SOUND_CLASS_STATE_SIZE);
+		if (!(seconds>state[2]))
+		{
+			return state[0]+decibels;
+		}
+		if (!(state[1]>=0.001f))
+		{
+			return decibels;
+		}
+		if (state[3]>=0.001f && state[3]+state[2]>seconds)
+		{
+			real inverse= 1.0f/state[1];
+			real total= (*(const real *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1FC_OFFSET)-seconds) +
+				(seconds-state[2])*inverse*state[3];
+			real fraction= total/state[1];
+
+			if (!(1.0f>total*inverse))
+			{
+				fraction= 1.0f;
+			}
+
+			return decibels + ((state[0]-0.0f)*fraction + 0.0f);
+		}
+
+		return ((state[0]-0.0f)*
+			sound_fraction_up_to_one((*(const real *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1FC_OFFSET)-seconds)/state[1]) + 0.0f) +
+			decibels;
+	}
+	if (previous!=NONE)
+	{
+		state= (const real *)(class_states+previous*SOUND_CLASS_STATE_SIZE);
+		if (state[3]>=0.001f)
+		{
+			real left= *(const real *)(globals+GAME_SOUND_GLOBALS_UNKNOWN204_OFFSET)-state[2]/state[3];
+			real fraction;
+
+			if (0.0f>left)
+			{
+				fraction= 0.0f;
+			}
+			else
+			{
+				fraction= 1.0f;
+				if (!(left>1.0f))
+				{
+					fraction= left;
+				}
+			}
+			decibels= ((0.0f-state[0])*fraction + state[0]) + decibels;
+		}
+	}
+	current= *(const long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1F8_OFFSET);
+	if (current==NONE)
+	{
+		return decibels;
+	}
+	state= (const real *)(class_states+current*SOUND_CLASS_STATE_SIZE);
+	if (!(state[1]>=0.001f))
+	{
+		return decibels;
+	}
+
+	return ((state[0]-0.0f)*sound_fraction_up_to_one(*(const real *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1FC_OFFSET)/state[1]) +
+		0.0f) + decibels;
 }

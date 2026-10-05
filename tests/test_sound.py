@@ -886,7 +886,7 @@ def run(t) -> None:
             "sound_definition_get_maximum_decibels": most,
             "sound_definition_get_minimum_decibels": least,
             "sound_gain_to_decibels": to_decibels,
-            "unknown_00127010": class_decibels,
+            "sound_class_get_decibels": class_decibels,
         }
 
     externals = decibels_externals()
@@ -4707,4 +4707,42 @@ def run(t) -> None:
                     record=lambda call: (call.stack[0], call.stack[1], bytes(t.harness.mu.mem_read(call.stack[3], 0x38))),
                 )
             ],
+        )
+
+    # ---------- how loud a class of sounds is
+
+    random_ = random.Random(206)
+
+    def some_seconds() -> float:
+        return random_.choice((0.0, 0.0, 0.0005, 0.001, 0.25, 0.5, 1.0, 1.0, 2.0, 3.5, random_.uniform(0, 4)))
+
+    for _ in range(2500):
+        gains_ = bytearray(reals(random_, 8 * 4))
+        for class_index in range(8):
+            gains_[class_index * 0x10 + 0xC] = random_.choice((0, 0, 0, 1, 2, 0xFE, 0xFF))
+        table__ = bytearray(random_.randbytes(0x100 * 0x5C))
+        for class_index in range(0x100):
+            for state_index in range(3):
+                struct.pack_into(
+                    "<4f",
+                    table__,
+                    class_index * 0x5C + 0x28 + state_index * 0x10,
+                    random_.choice((0.0, -6.0, -20.0, 3.0)),
+                    some_seconds(),
+                    some_seconds(),
+                    some_seconds(),
+                )
+        table_ = Buffer(bytes(table__))
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        current = random_.choice((NONE, 0, 1, 2))
+        struct.pack_into("<I", state, 0x1F8, current)
+        struct.pack_into("<I", state, 0x200, random_.choice((NONE, 0, 1, 2, current, current)))
+        struct.pack_into("<f", state, 0x1FC, some_seconds())
+        struct.pack_into("<f", state, 0x204, some_seconds())
+        t.check(
+            "sound_class_get_decibels",
+            random_.getrandbits(16) << 16 | random_.randrange(8),
+            globals={"sound_class_gains": Buffer(bytes(gains_)), "game_sound_globals": Buffer(bytes(state))},
+            extra=[table_],
+            externals={"sound_class_get": class_of(table_)},
         )
