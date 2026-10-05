@@ -1277,3 +1277,4 @@ address,name,source,arguments,returns,convention
 00218e50,sound_unknown_00218e50,source/sound/sound_manager.c,eax ecx edx stack,real:xmm0,stdcall
 0021cb90,looping_sound_track_get_played_bits,source/sound/sound_manager.c,eax ecx edx stack stack stack,int,stdcall
 0021cbe0,looping_sound_track_set_played_bits,source/sound/sound_manager.c,eax ecx edx edi stack stack stack,void,stdcall
+0021e0b0,sound_voice_matches_source,source/sound/sound_manager.c,eax ecx,int

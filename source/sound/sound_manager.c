@@ -340,6 +340,12 @@ enum
 	each of its tracks */
 	LOOPING_SOUND_DATUM_TRACK_PLAYED_OFFSET= 0x8C,
 	LOOPING_SOUND_TRACK_OWN_BITS_FLAGS= 0x30,
+	/* more of a sound voice */
+	SOUND_VOICE_DATUM_CLASS_OFFSET= 0x4,
+	SOUND_VOICE_DATUM_UNKNOWN8_OFFSET= 0x8,
+	SOUND_VOICE_DATUM_CALLBACK_DATA_OFFSET= 0xC,
+	SOUND_VOICE_DATUM_CALLBACKS_OFFSET= 0x10,
+	SOUND_VOICE_DATUM_UNKNOWN14_OFFSET= 0x14,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -364,6 +370,7 @@ struct sound_source_callbacks
 	void *unknown4[3];
 	void (__attribute__((stdcall)) *deleted)(long data, long source_index, long reason);
 	void (__attribute__((stdcall)) *stopped)(long data, long source_index);
+	boolean (__attribute__((stdcall)) *matches)(const void *unknown5C, const void *unknown14);
 };
 
 /* ---------- globals */
@@ -404,6 +411,9 @@ long sound_cache_base;
 
 /* 0x00502118: four reals for each class of sounds */
 real *sound_class_gains;
+
+/* 0x0055e780: while it is set, no sound shares a sound voice */
+boolean unknown_0055e780;
 
 /* 0x0047f0e0: 0x10000 in the main menu and 0x4000 in a game */
 long unknown_0047f0e0;
@@ -743,6 +753,9 @@ unsigned long __attribute__((stdcall)) looping_sound_track_get_played_bits(long 
 	const struct sound_definition *sound, byte *looping_sound, const byte *flags, short pitch_range_offset, boolean clear);
 void __attribute__((stdcall)) looping_sound_track_set_played_bits(long track, unsigned long bits, byte *looping_sound,
 	const struct sound_definition *sound, const byte *flags, short pitch_range_offset, char last_permutation);
+
+/* 0x0021e0b0 */
+long sound_voice_matches_source(const byte *voice, const byte *source);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -4567,4 +4580,70 @@ void __attribute__((stdcall)) looping_sound_track_set_played_bits(
 		(sound->first_pitch_range_index+pitch_range_offset);
 	sound_pitch_range_set_played_bits(pitch_range, sound, bits);
 	sound_pitch_range_set_unknown4(pitch_range, sound, last_permutation);
+}
+
+/* whether two reals are closer than 0.0001, with the precision of the x87 */
+static inline __attribute__((always_inline)) boolean sound_reals_match(
+	real a,
+	real b)
+{
+	long double difference= (long double)a-(long double)b;
+
+	if (difference<0.0L)
+	{
+		difference= -difference;
+	}
+
+	return 0.0001f>difference;
+}
+
+/* 0x0021e0b0: whether a sound that plays can share a sound voice: the same
+who is told of it, the same flag, classes that match, and then, with someone
+to tell, the same thing to tell with and what its seventh function says of
+the two; with no one, the same place in the structure bsp and the same six
+reals. Never while unknown_0055e780 is set */
+long sound_voice_matches_source(
+	const byte *voice,
+	const byte *source)
+{
+	const struct sound_source_callbacks *callbacks= *(const struct sound_source_callbacks *const *)(voice+SOUND_VOICE_DATUM_CALLBACKS_OFFSET);
+
+	if (callbacks!=*(const struct sound_source_callbacks *const *)(source+SOUND_SOURCE_DATUM_CALLBACKS_OFFSET) ||
+		voice[SOUND_VOICE_DATUM_UNKNOWN8_OFFSET]!=(source[SOUND_SOURCE_DATUM_UNKNOWN18_OFFSET]&1) ||
+		!(byte)sound_classes_match((char)voice[SOUND_VOICE_DATUM_CLASS_OFFSET],
+			sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET))->sound_class))
+	{
+		return FALSE;
+	}
+	if (callbacks)
+	{
+		if (*(const long *)(voice+SOUND_VOICE_DATUM_CALLBACK_DATA_OFFSET)!=
+			*(const long *)(source+SOUND_SOURCE_DATUM_CALLBACK_DATA_OFFSET) ||
+			!callbacks->matches ||
+			!callbacks->matches(source+SOUND_SOURCE_DATUM_UNKNOWN5C_OFFSET, voice+SOUND_VOICE_DATUM_UNKNOWN14_OFFSET))
+		{
+			return FALSE;
+		}
+	}
+	else
+	{
+		static const byte offsets[]= { 0x0, 0x4, 0x8, 0x10, 0x14, 0x18 };
+		long index;
+
+		if (*(const short *)(source+SOUND_SOURCE_DATUM_LOCATION_OFFSET+4)!=*(const short *)(voice+SOUND_VOICE_DATUM_LOCATION_OFFSET+4) ||
+			*(const long *)(source+SOUND_SOURCE_DATUM_LOCATION_OFFSET)!=*(const long *)(voice+SOUND_VOICE_DATUM_LOCATION_OFFSET))
+		{
+			return FALSE;
+		}
+		for (index= 0; index<(long)sizeof(offsets); index++)
+		{
+			if (!sound_reals_match(*(const real *)(source+SOUND_SOURCE_DATUM_POSITION_OFFSET+offsets[index]),
+				*(const real *)(voice+SOUND_VOICE_DATUM_UNKNOWN48_OFFSET+offsets[index])))
+			{
+				return FALSE;
+			}
+		}
+	}
+
+	return !unknown_0055e780;
 }

@@ -179,3 +179,4 @@ address,name,source
 004ed288,unknown_004ed288,source/sound/sound_manager.c
 00502108,sound_cache_base,source/sound/sound_manager.c
 00502118,sound_class_gains,source/sound/sound_manager.c
+0055e780,unknown_0055e780,source/sound/sound_manager.c

@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Si un sonido puede compartir una voz de sonido
+
+Una función en `sound/sound_manager.c`. De 828 funciones se pasa a
+829, el 7,36 % de las del juego (el 3,959 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_voice_matches_source` | `0x0021e0b0` | `sound/sound_manager.c` |
+
+También el global `unknown_0055e780` y la séptima función de la tabla de a
+quién se avisa de un sonido (`matches`).
+
+### Lo que se sabe
+
+- `sound_voice_matches_source` dice si un sonido que suena puede compartir
+  una voz de sonido: tiene que avisar al mismo, tener la misma marca y una
+  clase que coincida (`sound_classes_match`). Después, si hay a quién
+  avisar, tiene que ser con lo mismo y lo decide su séptima función; si no
+  lo hay, tienen que estar en el mismo sitio del nivel y coincidir seis
+  reales a menos de 0,0001. Nunca mientras `unknown_0055e780` esté puesto.
+- La prueba descubrió una diferencia que no es del juego: si a
+  `sound_classes_match` sustituida se le hace devolver 256, el juego mira
+  solo el byte bajo y el código de aquí todo el número, porque el
+  compilador sabe que la de verdad solo da 0 o 1. La prueba usa 0 y 1.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- La batería completa corre aparte con las 824 funciones del hito 173; en
+  este hito solo se pasó la prueba de esta función.
+
+### Mutaciones
+
+Pendientes las de los hitos 156 a 176.
+
 ## 2026-10-04 — Los bits de las grabaciones que sonaron de una pista
 
 Dos funciones en `sound/sound_manager.c`. De 826 funciones se pasa a

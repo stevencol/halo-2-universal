@@ -2890,3 +2890,63 @@ def run(t) -> None:
             random_.getrandbits(8),
             globals=globals_,
         )
+
+    # ---------- whether a sound can share a sound voice
+
+    random_ = random.Random(176)
+
+    VOICE = 0
+    SOUND = 0x6C
+    TABLE = 0x6C + 0xBC
+    for _ in range(1500):
+        data = bytearray(random_.randbytes(TABLE + 0x1C))
+        pointers = []
+        told_ = random_.choice((0, 0, 1, 1, 2))
+        struct.pack_into("<I", data, TABLE + 0x18, random_.choice((mock_address(0), mock_address(0), mock_address(0), 0)))
+        if told_:
+            struct.pack_into("<I", data, VOICE + 0x10, TABLE)
+            pointers.append(VOICE + 0x10)
+        else:
+            struct.pack_into("<I", data, VOICE + 0x10, 0)
+        if told_ == 1:
+            struct.pack_into("<I", data, SOUND + 0x14, TABLE)
+            pointers.append(SOUND + 0x14)
+        else:
+            struct.pack_into("<I", data, SOUND + 0x14, 0)
+        struct.pack_into("<I", data, SOUND + 0xC, random_.getrandbits(16) << 16 | random_.randrange(TAGS))
+        data[SOUND + 0x24 : SOUND + 0x40] = reals(random_, 7)
+        # the voice is as the sound, but for something now and then
+        data[VOICE + 8] = data[SOUND + 0x18] & 1
+        data[VOICE + 0xC : VOICE + 0x10] = data[SOUND + 0x10 : SOUND + 0x14]
+        data[VOICE + 0x48 : VOICE + 0x64] = data[SOUND + 0x24 : SOUND + 0x40]
+        data[VOICE + 0x64 : VOICE + 0x6A] = data[SOUND + 0x40 : SOUND + 0x46]
+        change = random_.choice((None, None, None, 8, 0xC, 0x64, 0x68, "real", "real", "near"))
+        if isinstance(change, int):
+            data[VOICE + change] ^= 1
+        elif change:
+            offset = VOICE + 0x48 + random_.choice((0, 4, 8, 0x10, 0x14, 0x18))
+            value = struct.unpack_from("<f", data, offset)[0]
+            value += random_.choice((0.00005, -0.00005, 0.00009)) if change == "near" else random_.choice((0.0002, -0.0002, 1.0))
+            struct.pack_into("<f", data, offset, value)
+        buffer = Buffer(bytes(data), pointers=tuple(pointers))
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        tag_pointers = []
+        for n in range(TAGS):
+            struct.pack_into("<I", tags, n * 0x10 + 8, TAGS * 0x10 + n * 0x10)
+            tag_pointers.append(n * 0x10 + 8)
+        tags += random_.randbytes(TAGS * 0x10)
+        # sound_classes_match gives 0 or 1, and nothing more
+        same = random_.choice((1, 1, 1, 0))
+        answer = random_.choice((1, 1, 1, 0, 0x100))
+        t.check(
+            "sound_voice_matches_source",
+            Pointer(buffer, VOICE),
+            Pointer(buffer, SOUND),
+            globals={
+                "global_tag_instances": Buffer(bytes(tags), pointers=tuple(tag_pointers)),
+                "unknown_0055e780": bytes((random_.choice((0, 0, 0, 0, 1, 0x80)),)),
+            },
+            extra=[buffer],
+            externals={"sound_classes_match": lambda harness, arguments, same=same: (same, tuple(value & 0xFFFF for value in arguments))},
+            mocks=[Mock(lambda call, answer=answer: answer, stack_arguments=2)],
+        )
