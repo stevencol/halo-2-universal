@@ -219,6 +219,14 @@ enum
 	SOUND_CLASS_DECIBELS_OFFSET= 0x20,
 	SOUND_DEFINITION_SCALE_INDEX_OFFSET= 0xB,
 	SOUND_SCALE_SIZE= 0x14,
+	/* in a pitch range: which of the bits that the sounds of a map share
+	are of its recordings */
+	SOUND_PITCH_RANGE_PLAYED_BITS_OFFSET= 0x6,
+	/* more of an element of unknown_0051ebd8 */
+	UNKNOWN_0051EBD8_DATUM_UNKNOWN8_OFFSET= 0x8,
+	UNKNOWN_0051EBD8_DATUM_UNKNOWN_FLAG= 0x80,
+	UNKNOWN_0051EBD8_DATUM_UNKNOWNC_OFFSET= 0xC,
+	UNKNOWN_0051EBD8_DATUM_UNKNOWNC_SIZE= 0x10,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -406,7 +414,7 @@ boolean sound_channel_pausable(short channel_index);
 void sound_channel_pause(short channel_index);
 /* 0x00218b00: how many bytes of a sound of some kind are played in a
 time; 0x00218ac0: the bytes of the first chunks of a permutation */
-long __attribute__((stdcall)) unknown_00218b00(long unknown4, long unknown5, long unknown3, real seconds);
+long __attribute__((stdcall)) sound_seconds_to_bytes(long unknown4, long unknown5, long unknown3, real seconds);
 long sound_permutation_chunks_size(const struct sound_permutation *permutation, long chunk_count);
 
 /* 0x0021f5d0: a voice of the console's sound starts again from some bytes
@@ -476,6 +484,21 @@ long __attribute__((stdcall)) sound_permutation_get_unknown6(const struct sound_
 void *sound_playback_controller_try_and_get(long controller_index);
 long sound_playback_controller_find(long owner);
 long sound_playback_controller_acquire(long owner);
+
+/* 0x001462b0: a number from the clocks of the console; 0x00219ed0: of a
+sound playback controller */
+long unknown_001462b0(void);
+void unknown_00219ed0(boolean unknown, byte *controller, void *unknown2);
+
+/* 0x002194c0, 0x00219560, 0x00219e90, 0x00219a90 and 0x00219c30 */
+unsigned long __attribute__((stdcall)) sound_pitch_range_get_played_bits(const struct sound_pitch_range *pitch_range,
+	const struct sound_definition *sound);
+void __attribute__((stdcall)) sound_pitch_range_set_played_bits(const struct sound_pitch_range *pitch_range,
+	const struct sound_definition *sound, unsigned long bits);
+void __attribute__((stdcall)) sound_playback_controller_initialize(byte *controller, long owner, long unknown8,
+	boolean unknown);
+long sound_playback_controller_new(long owner);
+void __attribute__((stdcall)) sound_playback_controller_unknown_00219c30(long owner, void *unknown);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -1206,7 +1229,7 @@ void sound_channel_resume(
 			(const byte *)sound_sources->data+(channel->unknown0&0xFFFF)*SOUND_SOURCE_DATUM_SIZE;
 		const struct sound_definition *sound= sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET));
 		const struct sound_permutation *permutation= (const struct sound_permutation *)(uintptr_t)channel->unknown1C;
-		long offset= unknown_00218b00((char)sound->unknown3[1], (char)sound->unknown3[2], (char)sound->unknown3[0],
+		long offset= sound_seconds_to_bytes((char)sound->unknown3[1], (char)sound->unknown3[2], (char)sound->unknown3[0],
 			channel->unknown10);
 
 		offset-= sound_permutation_chunks_size(permutation, channel->unknown18);
@@ -2525,4 +2548,166 @@ long sound_playback_controller_acquire(
 	}
 
 	return controller_index;
+}
+
+/* 0x0044a054 to 0x0044a0a0: what the three numbers of the tag of a sound
+that say how its samples are kept mean: the samples in a second (the byte at
+3 of the tag), two numbers of each of the three ways at 4, and two of each of
+the five ways at 5 */
+static const long sound_sample_rates[]= { 22050, 44100, 32000 };
+static const real sound_unknown4_reals[]= { 1.0f, 0.5f, 1.0f };
+static const real sound_unknown5_reals[]= { 0.5f, 16.0f/9.0f, 0.5f, 0.5f, 1.0f };
+static const long sound_unknown5_block_sizes[]= { 2, 36, 2, 2, 1 };
+static const long sound_unknown4_channels[]= { 1, 2, 1 };
+
+/* 0x00218b00: how many bytes of the samples of a sound are played in some
+seconds: a whole number of blocks */
+long __attribute__((stdcall)) sound_seconds_to_bytes(
+	long unknown4,
+	long unknown5,
+	long unknown3,
+	real seconds)
+{
+	real blocks= 1.0f/sound_unknown5_reals[unknown5];
+
+	blocks/= sound_unknown4_reals[unknown4];
+	blocks*= (real)sound_sample_rates[unknown3];
+	blocks*= seconds;
+	blocks/= (real)sound_unknown5_block_sizes[unknown5];
+	blocks/= (real)sound_unknown4_channels[unknown4];
+
+	return sound_unknown4_channels[unknown4]*sound_unknown5_block_sizes[unknown5]*(long)blocks;
+}
+
+/* how many bytes the bits of the recordings of a pitch range are: none if
+the class of the sound keeps nothing of what was played, or with one
+recording or less */
+static inline __attribute__((always_inline)) unsigned long sound_pitch_range_played_bits_size(
+	const struct sound_pitch_range *pitch_range,
+	const struct sound_definition *sound)
+{
+	if (sound_definition_class_keeps_nothing(sound) || pitch_range->permutation_count<=1)
+	{
+		return 0;
+	}
+
+	return (unsigned long)(pitch_range->permutation_count+7)>>3;
+}
+
+static inline __attribute__((always_inline)) byte *sound_pitch_range_played_bits(
+	const struct sound_pitch_range *pitch_range)
+{
+	return (byte *)(uintptr_t)global_sound_cache_file_gestalt->unknown30[1].address+
+		(*(const word *)(pitch_range->unknown0+SOUND_PITCH_RANGE_PLAYED_BITS_OFFSET)>>3);
+}
+
+/* 0x002194c0 and 0x00219560: the bits of the recordings of a pitch range of
+a sound that were played, of those that the sounds of a map share: one for
+each recording. 0 if they are not kept */
+unsigned long __attribute__((stdcall)) sound_pitch_range_get_played_bits(
+	const struct sound_pitch_range *pitch_range,
+	const struct sound_definition *sound)
+{
+	unsigned long bits= 0;
+	unsigned long size= sound_pitch_range_played_bits_size(pitch_range, sound);
+
+	if (size)
+	{
+		memcpy(&bits, sound_pitch_range_played_bits(pitch_range), size);
+	}
+
+	return bits;
+}
+
+void __attribute__((stdcall)) sound_pitch_range_set_played_bits(
+	const struct sound_pitch_range *pitch_range,
+	const struct sound_definition *sound,
+	unsigned long bits)
+{
+	unsigned long size= sound_pitch_range_played_bits_size(pitch_range, sound);
+
+	if (size)
+	{
+		memcpy(sound_pitch_range_played_bits(pitch_range), &bits, size);
+	}
+}
+
+/* 0x00219e90: a sound playback controller is made new for something */
+void __attribute__((stdcall)) sound_playback_controller_initialize(
+	byte *controller,
+	long owner,
+	long unknown8,
+	boolean unknown)
+{
+	*(long *)(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWN4_OFFSET)= owner;
+	*(long *)(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWN8_OFFSET)= unknown8;
+	controller[UNKNOWN_0051EBD8_DATUM_SOUNDS_OFFSET]=
+		(controller[UNKNOWN_0051EBD8_DATUM_SOUNDS_OFFSET]&UNKNOWN_0051EBD8_DATUM_COUNT_MASK)|
+		(unknown ? 0 : UNKNOWN_0051EBD8_DATUM_UNKNOWN_FLAG);
+	controller[UNKNOWN_0051EBD8_DATUM_COUNT_OFFSET]= UNKNOWN_0051EBD8_DATUM_UNKNOWN_FLAG;
+	memset(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWNC_OFFSET, 0, UNKNOWN_0051EBD8_DATUM_UNKNOWNC_SIZE);
+}
+
+/* 0x00219a90: the sound playback controller of something has one sound
+more; if there was none, one is made. Gives the controller; NONE if it
+cannot */
+long sound_playback_controller_new(
+	long owner)
+{
+	const byte *globals= game_sound_globals;
+	long controller_index;
+	byte *controller;
+	byte sounds;
+
+	if (!sound_available_inline() || owner==NONE)
+	{
+		return NONE;
+	}
+	controller_index= sound_playback_controller_find(owner);
+	if (controller_index==NONE)
+	{
+		controller_index= datum_new(unknown_0051ebd8);
+		if (controller_index==NONE)
+		{
+			return NONE;
+		}
+	}
+	controller= sound_playback_controller_get(controller_index);
+	sounds= controller[UNKNOWN_0051EBD8_DATUM_SOUNDS_OFFSET];
+	sounds= (sounds&~UNKNOWN_0051EBD8_DATUM_COUNT_MASK)|((sounds+1)&UNKNOWN_0051EBD8_DATUM_COUNT_MASK);
+	controller[UNKNOWN_0051EBD8_DATUM_SOUNDS_OFFSET]= sounds;
+	if ((sounds&UNKNOWN_0051EBD8_DATUM_COUNT_MASK)==1)
+	{
+		boolean unknown= globals[GAME_SOUND_GLOBALS_UNKNOWN7F_OFFSET]&1;
+
+		sound_playback_controller_initialize(controller, owner, unknown_001462b0(), unknown);
+	}
+
+	return controller_index;
+}
+
+/* 0x00219c30: the sound playback controller of something, if it has one,
+is given to unknown_00219ed0 with what the function is given */
+void __attribute__((stdcall)) sound_playback_controller_unknown_00219c30(
+	long owner,
+	void *unknown)
+{
+	const byte *globals= game_sound_globals;
+	long controller_index;
+	byte *controller;
+
+	if (!sound_available_inline() || owner==NONE)
+	{
+		return;
+	}
+	controller_index= sound_playback_controller_find(owner);
+	if (controller_index==NONE)
+	{
+		return;
+	}
+	controller= sound_playback_controller_try_and_get(controller_index);
+	if (controller)
+	{
+		unknown_00219ed0(globals[GAME_SOUND_GLOBALS_UNKNOWN7F_OFFSET]&1, controller, unknown);
+	}
 }

@@ -1146,7 +1146,7 @@ address,name,source,arguments,returns,convention
 00138600,game_options_controller_compare,source/game/game.c,stack stack,int
 00129fe0,sound_channel_pausable,source/sound/sound_manager.c,ecx,bool
 002ae750,unknown_002ae750,,eax,void
-00218b00,unknown_00218b00,,eax ecx stack stack,int,stdcall
+00218b00,sound_seconds_to_bytes,source/sound/sound_manager.c,eax ecx stack stack,int,stdcall
 00218ac0,sound_permutation_chunks_size,source/sound/sound_manager.c,ecx edx,int
 0021f5d0,unknown_0021f5d0,,eax edi,void
 002ae500,unknown_002ae500,,esi edi,void
@@ -1212,3 +1212,10 @@ address,name,source,arguments,returns,convention
 00219910,sound_playback_controller_try_and_get,source/sound/sound_manager.c,eax,pointer
 00219960,sound_playback_controller_find,source/sound/sound_manager.c,ebx,int
 00219a30,sound_playback_controller_acquire,source/sound/sound_manager.c,eax,int
+002194c0,sound_pitch_range_get_played_bits,source/sound/sound_manager.c,edx stack,int,stdcall
+00219560,sound_pitch_range_set_played_bits,source/sound/sound_manager.c,edx stack stack,void,stdcall
+00219e90,sound_playback_controller_initialize,source/sound/sound_manager.c,eax ecx edx stack,void,stdcall
+00219a90,sound_playback_controller_new,source/sound/sound_manager.c,eax,int
+00219c30,sound_playback_controller_unknown_00219c30,source/sound/sound_manager.c,eax stack,void,stdcall
+001462b0,unknown_001462b0,,,int
+00219ed0,unknown_00219ed0,,eax edi stack,void

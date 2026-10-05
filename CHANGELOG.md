@@ -2,6 +2,56 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Bytes por segundo, los bits de un rango de tono y un controlador nuevo
+
+Seis funciones en `sound/sound_manager.c`. De 769 funciones se pasa a
+775, el 6,88 % de las del juego (el 3,683 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_seconds_to_bytes` | `0x00218b00` | `sound/sound_manager.c` |
+| `sound_pitch_range_get_played_bits` | `0x002194c0` | `sound/sound_manager.c` |
+| `sound_pitch_range_set_played_bits` | `0x00219560` | `sound/sound_manager.c` |
+| `sound_playback_controller_new` | `0x00219a90` | `sound/sound_manager.c` |
+| `sound_playback_controller_unknown_00219c30` | `0x00219c30` | `sound/sound_manager.c` |
+| `sound_playback_controller_initialize` | `0x00219e90` | `sound/sound_manager.c` |
+
+`sound_seconds_to_bytes` estaba apuntada sin descompilar
+(`unknown_00218b00`). Nuevas sin descompilar: `0x001462b0` y `0x00219ed0`.
+También las cinco tablas de `0x0044a054` a `0x0044a0a0`.
+
+### Lo que se sabe
+
+- `sound_seconds_to_bytes` dice cuántos bytes de muestras de un sonido se
+  reproducen en unos segundos, en bloques enteros. Usa cinco tablas según
+  los tres números del tag que dicen cómo se guardan las muestras: las
+  muestras por segundo (22.050, 44.100 o 32.000) y dos números por cada
+  forma de los bytes `4` (tres formas) y `5` (cinco formas) del tag. Una de
+  las formas del byte `5` tiene bloques de 36 bytes.
+- `sound_pitch_range_get_played_bits` y `sound_pitch_range_set_played_bits`
+  leen y escriben los bits de las grabaciones de un rango de tono (uno por
+  grabación, en el bloque de `0x38` de lo que comparten los sonidos; la
+  palabra en `6` del rango dice dónde empiezan). Con una grabación o menos,
+  o si la clase no deja guardarlos, no hay bits.
+- `sound_playback_controller_new` le suma un sonido al controlador de algo,
+  y si no lo había lo crea (`datum_new`) y lo prepara con
+  `sound_playback_controller_initialize`, que le pone a quién sirve, un
+  número de los relojes de la consola (`0x001462b0`) y lo demás a cero.
+- `sound_playback_controller_unknown_00219c30` le pasa el controlador de
+  algo, si lo tiene, a `0x00219ed0`.
+- Los nombres son inventados.
+
+### Sin comprobar
+
+- La batería completa no se pasó en este hito, solo las pruebas de estas
+  funciones y de `sound_channel_resume`, que llama a la primera.
+
+### Mutaciones
+
+Pendientes; corren aparte, en segundo plano.
+
 ## 2026-10-04 — Los decibelios de un sonido y buscar un controlador de reproducción
 
 Siete funciones pequeñas en `sound/sound_manager.c`. De 762 funciones se

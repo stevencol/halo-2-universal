@@ -768,7 +768,7 @@ def run(t) -> None:
             return 0, (harness.normalize(voice), harness.normalize(chunk_))
 
         return {
-            "unknown_00218b00": played,
+            "sound_seconds_to_bytes": played,
             "sound_permutation_chunks_size": chunk_bytes,
             "unknown_0021f5d0": restart,
             "unknown_002ae500": chunk,
@@ -1728,4 +1728,95 @@ def run(t) -> None:
             owner,
             globals={"game_sound_globals": sound_state(*states[n % len(states)]), "unknown_0051ebd8": controllers_(OWNERS)},
             externals={"sound_playback_controller_find": lambda harness, arguments, found=found: (found, tuple(arguments))},
+        )
+
+    # ---------- bytes in some seconds, the bits of a pitch range, and a new sound playback controller
+
+    random_ = random.Random(160)
+
+    for unknown4 in range(3):
+        for unknown5 in range(5):
+            for unknown3 in range(3):
+                for seconds in (0.0, 1.0, 0.5, 2.0, 1.0 / 3.0, 59.99, -1.0, *(random_.uniform(0, 30) for _ in range(12))):
+                    t.check("sound_seconds_to_bytes", unknown4, unknown5, unknown3, as_bits(seconds))
+
+    for _ in range(300):
+        definition = sound_data(random_)
+        globals_ = world(random_, 0, sound_data(random_))
+        bits = random_.randbytes(0x40) + bytes(0x10)
+        shared = bytearray(random_.randbytes(0x40))
+        struct.pack_into("<I", shared, 0x3C, len(shared))
+        globals_["global_sound_cache_file_gestalt"] = Buffer(bytes(shared) + bits, pointers=(0x3C,))
+        pitch_range = bytearray(random_.randbytes(0xC))
+        struct.pack_into("<H", pitch_range, 6, random_.randrange(0, 0x40 * 8))
+        struct.pack_into("<h", pitch_range, 0xA, random_.choice((0, 1, 2, 3, 8, 9, 16, 17, 24, 25, 32, -1, -9)))
+        t.check("sound_pitch_range_get_played_bits", Buffer(bytes(pitch_range)), Buffer(definition), globals=globals_)
+        t.check(
+            "sound_pitch_range_set_played_bits",
+            Buffer(bytes(pitch_range)),
+            Buffer(definition),
+            random_.getrandbits(32),
+            globals=globals_,
+        )
+
+    for _ in range(200):
+        controller = bytearray(random_.randbytes(0x1C))
+        controller[2] = random_.choice((0, 1, 0x7F, 0x80, 0xFF, 0x55))
+        t.check(
+            "sound_playback_controller_initialize",
+            Buffer(bytes(controller)),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            random_.choice((0, 1, 0x80, 0x100)),
+        )
+
+    for n in range(240):
+        owner = random_.choice(OWNERS)
+        found = random_.choice((NONE, NONE, random_.getrandbits(16) << 16 | random_.randrange(CONTROLLERS)))
+        made = random_.choice((NONE, random_.getrandbits(16) << 16 | random_.randrange(CONTROLLERS)))
+        state = bytearray(sound_state(*states[n % len(states)]).data)
+        state[0x7F] = random_.choice((0, 1, 2, 3, 0xFF))
+        buffer = controllers_(OWNERS)
+        data = bytearray(buffer.data)
+        for index in range(CONTROLLERS):
+            data[0x4C + index * 0x1C + 2] = random_.choice((0, 0, 0x80, 1, 0x7F, 0xFF, 0x81))
+        t.check(
+            "sound_playback_controller_new",
+            owner,
+            globals={
+                "game_sound_globals": Buffer(bytes(state)),
+                "unknown_0051ebd8": Buffer(bytes(data), pointers=buffer.pointers),
+                "unknown_0051ebdc": Buffer(random_.randbytes(0x1C)),
+            },
+            externals={
+                "sound_playback_controller_find": lambda harness, arguments, found=found: (found, tuple(arguments)),
+                "datum_new": lambda harness, arguments, made=made: (made, (harness.normalize(arguments[0]),)),
+                "unknown_001462b0": lambda harness, arguments: 0x13579BDF,
+                "sound_playback_controller_initialize": lambda harness, arguments: (
+                    0,
+                    (harness.normalize(arguments[0]), arguments[1], arguments[2], arguments[3] & 0xFF),
+                ),
+            },
+        )
+        buffer = controllers_(OWNERS)
+        found = random_.choice((NONE, *(random_.getrandbits(16) << 16 | index for index in range(CONTROLLERS))))
+        if found != NONE and random_.random() < 0.6:
+            # the index that was found is of a controller
+            found = struct.unpack_from("<H", buffer.data, 0x4C + (found & 0xFFFF) * 0x1C)[0] << 16 | found & 0xFFFF
+        t.check(
+            "sound_playback_controller_unknown_00219c30",
+            owner,
+            random_.getrandbits(32),
+            globals={
+                "game_sound_globals": Buffer(bytes(state)),
+                "unknown_0051ebd8": buffer,
+                "unknown_0051ebdc": Buffer(random_.randbytes(0x1C)),
+            },
+            externals={
+                "sound_playback_controller_find": lambda harness, arguments, found=found: (found, tuple(arguments)),
+                "unknown_00219ed0": lambda harness, arguments: (
+                    0,
+                    (arguments[0] & 0xFF, harness.normalize(arguments[1]), arguments[2]),
+                ),
+            },
         )
