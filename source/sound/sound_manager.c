@@ -528,6 +528,8 @@ enum
 	game */
 	SOUND_CLASS_STATES_OFFSET= 0x28,
 	SOUND_CLASS_STATE_SIZE= 0x10,
+	GAME_SOUND_GLOBALS_UNKNOWN_STATES_OFFSET= 0x1A8,
+	NUMBER_OF_SOUND_UNKNOWN_STATES= 2,
 	_sound_source_datum_unknown3_bit= 3,
 	_sound_source_datum_unknown4_bit= 4,
 	SOUND_CLASS_UNKNOWNE_OFFSET= 0xE,
@@ -672,6 +674,26 @@ typedef char verify_sound_console_i3dl2_source_size[
 	sizeof(struct sound_console_i3dl2_source) == 0x24 ? 1 : -1];
 typedef char verify_sound_console_filter_size[
 	sizeof(struct sound_console_filter) == 0x18 ? 1 : -1];
+
+/* one of the two things of the same kind that the globals of the sound keep
+at 0x1A8, each of which comes in and goes out: what it is of (NONE for
+none), how much of it there is, from 0 to 1, in how many seconds it comes
+and goes, and four reals that follow what it is given: the first two as
+angles do. What they are of is not known: the game gives them from
+0x0018bb80 */
+struct sound_unknown_state
+{
+	real duration;
+	real amount;
+	long index;
+	real unknownC;
+	real unknown10;
+	real unknown14;
+	real unknown18;
+};
+
+typedef char verify_sound_unknown_state_size[
+	sizeof(struct sound_unknown_state) == 0x1C ? 1 : -1];
 
 /* a sound of which it is to be worked out how it is heard where it is */
 struct sound_query
@@ -1034,6 +1056,10 @@ struct sound_console_filter;
 void unknown_0037c6e5(void *stream, const struct sound_console_i3dl2_source *source, long apply);
 void unknown_0037b68b(void *stream, const struct sound_console_filter *filter);
 void unknown_0021e3b0(void *unknown);
+
+/* 0x00126660 */
+struct sound_unknown_state;
+void sound_unknown_states_set(const struct sound_unknown_state *wanted);
 
 /* 0x00125f70, 0x001268e0, 0x00129380, 0x0021f6d0 and 0x00221900 */
 long __attribute__((stdcall)) sound_source_new(long sound_index, long *failure, byte *request);
@@ -7747,4 +7773,94 @@ real sound_class_get_decibels(
 
 	return ((state[0]-0.0f)*sound_fraction_up_to_one(*(const real *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1FC_OFFSET)/state[1]) +
 		0.0f) + decibels;
+}
+
+/* seconds in which something comes or goes: no less than a thousandth */
+static inline __attribute__((always_inline)) real sound_state_duration(
+	real duration)
+{
+	return duration>0.001f ? duration : 0.001f;
+}
+
+/* 0x00126660: the two states that the globals of the sound keep at 0x1A8
+are given what they are to be: two, each of something or of nothing (NONE).
+Each one that is of something takes the state that is of the same thing, or
+if there is none the last one that is free: one that is not taken this time
+and of which there is no more than a thousandth. The state goes towards
+what it is given by what the seconds of this time are of its seconds: its
+four reals (the first two, as angles: by pi times as much; or all at once,
+if there was none of it) and how much of it there is, towards 1. Of a state
+that is not taken there is less, towards 0. The name is made up */
+void sound_unknown_states_set(
+	const struct sound_unknown_state *wanted)
+{
+	unsigned long taken= 0;
+	long index;
+	long slot;
+
+	for (index= 0; index<NUMBER_OF_SOUND_UNKNOWN_STATES; index++, wanted++)
+	{
+		struct sound_unknown_state *states=
+			(struct sound_unknown_state *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN_STATES_OFFSET);
+		struct sound_unknown_state *state;
+		long found= NONE;
+		real step;
+
+		if (wanted->index==NONE)
+		{
+			continue;
+		}
+		for (slot= 0; slot<NUMBER_OF_SOUND_UNKNOWN_STATES; slot++)
+		{
+			if (taken&(1UL<<slot))
+			{
+				continue;
+			}
+			if (states[slot].index==wanted->index)
+			{
+				found= slot;
+				break;
+			}
+			if (0.001f>=states[slot].amount)
+			{
+				found= slot;
+			}
+		}
+		if (found==NONE)
+		{
+			continue;
+		}
+		step= *(const real *)(game_sound_globals+GAME_SOUND_GLOBALS_SECONDS_OFFSET)/sound_state_duration(wanted->duration);
+		state= (struct sound_unknown_state *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN_STATES_OFFSET)+found;
+		if (0.001f>=state->amount)
+		{
+			state->unknownC= wanted->unknownC;
+			state->unknown10= wanted->unknown10;
+		}
+		else
+		{
+			real turn= step*SOUND_PI;
+
+			state->unknownC= sound_step_towards(wanted->unknownC-state->unknownC, turn)+state->unknownC;
+			state->unknown10= state->unknown10+sound_step_towards(wanted->unknown10-state->unknown10, turn);
+		}
+		state->unknown18= state->unknown18+sound_step_towards(wanted->unknown18-state->unknown18, step);
+		state->unknown14= sound_step_towards(wanted->unknown14-state->unknown14, step)+state->unknown14;
+		state->amount= state->amount+sound_step_towards(1.0f-state->amount, step);
+		state->duration= wanted->duration;
+		state->index= wanted->index;
+		taken|= 1UL<<found;
+	}
+	for (slot= 0; slot<NUMBER_OF_SOUND_UNKNOWN_STATES; slot++)
+	{
+		if (!(taken&(1UL<<slot)))
+		{
+			struct sound_unknown_state *state=
+				(struct sound_unknown_state *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN_STATES_OFFSET)+slot;
+			real step= *(const real *)(game_sound_globals+GAME_SOUND_GLOBALS_SECONDS_OFFSET)/
+				sound_state_duration(state->duration);
+
+			state->amount= state->amount+sound_step_towards(0.0f-state->amount, step);
+		}
+	}
 }

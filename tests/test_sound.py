@@ -4746,3 +4746,30 @@ def run(t) -> None:
             extra=[table_],
             externals={"sound_class_get": class_of(table_)},
         )
+
+    # ---------- the two states that the globals of the sound keep at 0x1A8
+
+    random_ = random.Random(207)
+
+    def some_state(index: int) -> bytes:
+        return struct.pack(
+            "<2fI4f",
+            random_.choice((0.0, 0.0005, 0.001, 0.5, 1.0, 2.0, -1.0)),
+            random_.choice((0.0, 0.0, 0.0005, 0.001, 0.0011, 0.5, 1.0, 1.0, 0.99, 1.5)),
+            index,
+            random_.uniform(-4, 4),
+            random_.uniform(-4, 4),
+            random_.uniform(-2, 2),
+            random_.uniform(-2, 2),
+        )
+
+    for _ in range(2500):
+        things = (NONE, NONE, 0x10001, 0x20002, 0x30003, 0)
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        state[0x1A8:0x1E0] = some_state(random_.choice(things)) + some_state(random_.choice(things))
+        struct.pack_into("<f", state, 0x1E0, random_.choice((0.0, 1.0 / 30.0, 1.0 / 30.0, 0.5, 2.0, 0.0001)))
+        wanted = bytearray(some_state(random_.choice(things)) + some_state(random_.choice(things)))
+        if random_.random() < 0.2:
+            # both of the same thing
+            wanted[0x1C + 8 : 0x1C + 0xC] = wanted[8:0xC]
+        t.check("sound_unknown_states_set", Buffer(bytes(wanted)), globals={"game_sound_globals": Buffer(bytes(state))})

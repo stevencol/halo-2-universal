@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Los dos estados que el sonido guarda en 0x1A8
+
+Una función en `sound/sound_manager.c`, de 625 bytes. De 863 funciones se pasa a
+864, el 7,67 % de las del juego (el 4,518 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_unknown_states_set` | `0x00126660` | `sound/sound_manager.c` |
+
+No estaba apuntada. Solo la llama `0x0018bb80`, que no es del sonido. Recibe
+en `eax` dos cosas de `0x1C` bytes. También la estructura
+`sound_unknown_state`.
+
+### Lo que se sabe
+
+- Los globales del sonido guardan en `0x1A8` dos estados iguales: de qué es
+  cada uno (`NONE` si de nada), cuánto hay de él (de 0 a 1), en cuántos
+  segundos entra y sale, y cuatro reales.
+- `sound_unknown_states_set` les dice lo que tienen que ser. Cada cosa que
+  recibe se queda con el estado que ya es de lo mismo o, si no hay, con el
+  último que esté libre (uno que no se ha usado esta vez y del que no queda
+  más de una milésima).
+- El estado se acerca a lo que recibe según lo que los segundos de esta vez
+  son de sus segundos: los cuatro reales (los dos primeros como ángulos, pi
+  veces más rápido; o de golpe, si no quedaba nada de él) y cuánto hay de
+  él, hacia 1.
+- De un estado que nadie pide queda cada vez menos, hacia 0.
+- De qué son esos estados no se sabe todavía (por cómo entran y salen,
+  pueden ser los dos entornos de sonido entre los que se pasa); el nombre
+  es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función. La última
+  batería completa es la del hito 200 (857 funciones, todas bien).
+
+### Mutaciones
+
+Quince líneas rotas a mano: las pruebas notan las quince.
+
 ## 2026-10-05 — El volumen de una clase de sonidos
 
 Una función en `sound/sound_manager.c`, de 678 bytes. De 862 funciones se pasa a

@@ -1307,3 +1307,4 @@ address,name,source,arguments,returns,convention
 0012a1b0,sound_channel_build_voice_parameters,source/sound/sound_manager.c,eax ebx edi stack,void,stdcall
 0021f720,unknown_0021f720,,stack,void
 00188ea0,vector3d_decompress,source/math/real_math.c,ecx esi,pointer
+00126660,sound_unknown_states_set,source/sound/sound_manager.c,eax,void
