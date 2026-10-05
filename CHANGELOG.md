@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Todas las voces de la consola se paran
+
+Una función en `sound/sound_manager.c`. De 871 funciones se pasa a
+872, el 7,74 % de las del juego (el 4,556 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_console_voices_stop` | `0x0021f290` | `sound/sound_manager.c` |
+
+Estaba apuntada sin descompilar (`unknown_0021f290`); la llama
+`sound_dispose_from_old_map` al soltar un mapa.
+
+### Lo que se sabe
+
+- `sound_console_voices_stop` para todas las voces del sonido de la consola:
+  a cada una le hace lo mismo que `sound_console_voice_stop` (parar su
+  flujo, avisar a su otra cosa, dejarla sin hacer nada y a -64 decibelios),
+  y lo repite si después de eso la voz sigue sonando.
+- Además deja a 0 los dos números de tres bits que la voz tiene en `2`.
+- El nombre es una suposición.
+
+### Comprobado
+
+- **La batería completa del hito 210 terminó: 867 funciones de 867, todas
+  bien.**
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función, de
+  `sound_stop_all`, de `sound_dispose_from_old_map` y de
+  `sound_console_voice_stop`.
+
+### Mutaciones
+
+Siete líneas rotas a mano: las pruebas notan las siete.
+
 ## 2026-10-05 — El volumen de un rango de tono fuera de sus tonos
 
 Una función en `sound/sound_manager.c`. De 870 funciones se pasa a

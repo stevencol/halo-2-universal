@@ -543,6 +543,8 @@ enum
 	SOUND_COMPRESSED_BLOCK_SIZE= 36,
 	/* more of a voice of the console's sound */
 	_voice_unknown2_bit= 2,
+	_voice_state_playing= 1,
+	VOICE_UNKNOWN2_OFFSET= 0x2,
 	VOICE_DECIBELS_OFFSET= 0xC,
 	VOICE_UNKNOWN30_OFFSET= 0x30,
 	NUMBER_OF_SOUND_UNKNOWN_STATES= 2,
@@ -1101,7 +1103,7 @@ boolean __attribute__((stdcall)) sound_source_unknown_00127f10(long source_index
 
 /* 0x0021f290: of the sound of the console, and 0x0021a1e0: of the looping
 sounds, when the sounds are stopped */
-void unknown_0021f290(void);
+void sound_console_voices_stop(void);
 void looping_sounds_delete_all(void);
 
 /* 0x0037b73f: of the console: a stream of sound stops for a while, or
@@ -2906,7 +2908,7 @@ void __attribute__((stdcall)) sound_reset(
 		}
 		else
 		{
-			unknown_0021f290();
+			sound_console_voices_stop();
 		}
 	}
 	*(unsigned long *)(game_sound_globals+GAME_SOUND_GLOBALS_START_TIME_OFFSET)= GetTickCount();
@@ -8267,4 +8269,57 @@ real __attribute__((stdcall)) sound_pitch_range_fade_decibels(
 	}
 
 	return sound_decibels_fade_in(2, 0.0f, fraction);
+}
+
+/* the stream of a voice of the console's sound is asked what it does and
+told to stop, the other thing of the voice is told, the voice does nothing
+and unknown_002ae8e0 is given it */
+static inline __attribute__((always_inline)) void sound_console_voice_halt(
+	byte *voice)
+{
+	void *stream= *(void **)(voice+VOICE_UNKNOWN24_OFFSET);
+	void *object;
+	long status;
+
+	(*(const struct sound_console_stream_functions *const *)stream)->unknownC(stream, &status);
+	stream= *(void **)(voice+VOICE_UNKNOWN24_OFFSET);
+	(*(const struct sound_console_stream_functions *const *)stream)->unknown18(stream);
+	object= *(void **)(voice+VOICE_UNKNOWN30_OFFSET);
+	(*(const struct sound_console_voice_object_functions *const *)object)->unknown1C(object);
+	voice[VOICE_STATE_OFFSET]&= ~VOICE_STATE_MASK;
+	unknown_002ae8e0(voice);
+	voice[VOICE_FLAGS_OFFSET]&= ~FLAG(_voice_unknown2_bit);
+}
+
+/* 0x0021f290: all the voices of the console's sound are stopped: each as
+sound_console_voice_stop does it, at -64 decibels, and once more if it
+plays after that; and the two numbers of three bits at 2 of it are 0. The
+name is a guess */
+void sound_console_voices_stop(
+	void)
+{
+	long voice_index;
+
+	for (voice_index= 0;
+		voice_index<*(const short *)(unknown_0051ebe4+UNKNOWN_0051EBE4_VOICE_COUNT_OFFSET);
+		voice_index++)
+	{
+		byte *voice= unknown_0051ebe4+voice_index*UNKNOWN_0051EBE4_VOICE_SIZE+UNKNOWN_0051EBE4_VOICE_OFFSET;
+
+		voice[VOICE_FLAGS_OFFSET]|= FLAG(_voice_unknown2_bit);
+		sound_console_voice_halt(voice);
+		*(real *)(voice+VOICE_DECIBELS_OFFSET)= SOUND_MINIMUM_DECIBELS;
+		if ((voice[VOICE_STATE_OFFSET]&VOICE_STATE_MASK)==_voice_state_playing)
+		{
+			sound_console_voice_halt(voice);
+		}
+		if (voice[VOICE_UNKNOWN2_OFFSET]&0x38)
+		{
+			voice[VOICE_UNKNOWN2_OFFSET]&= ~0x38;
+		}
+		if (voice[VOICE_UNKNOWN2_OFFSET]&7)
+		{
+			voice[VOICE_UNKNOWN2_OFFSET]&= ~7;
+		}
+	}
 }

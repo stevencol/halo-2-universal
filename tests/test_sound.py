@@ -1415,7 +1415,7 @@ def run(t) -> None:
                 "sound_source_delete": lambda harness, arguments: (0, tuple(arguments)),
                 "sound_class_get": class_of(table),
                 "sound_idle": lambda harness, arguments: 0,
-                "unknown_0021f290": lambda harness, arguments: 0,
+                "sound_console_voices_stop": lambda harness, arguments: 0,
                 "GetTickCount": lambda harness, arguments: 0x89ABCDEF,
                 "looping_sounds_delete_all": lambda harness, arguments: 0,
             },
@@ -4988,4 +4988,46 @@ def run(t) -> None:
             Buffer(bytes(pitch_range)),
             as_bits(pitch),
             globals={"global_sound_cache_file_gestalt": Buffer(bytes(shared), pointers=(0x1C,))},
+        )
+
+    # ---------- all the voices of the console's sound are stopped
+
+    random_ = random.Random(215)
+
+    for _ in range(200):
+        console = bytearray(console_voices(random_.choice((8, 8, 3, 1, 0, -1))))
+        pointers = []
+        stream = len(console)
+        console += struct.pack("<I", stream + 4) + random_.randbytes(0xC) + struct.pack("<I", mock_address(0))
+        console += random_.randbytes(8) + struct.pack("<I", mock_address(1))
+        pointers.append(stream)
+        other = len(console)
+        console += struct.pack("<I", other + 4) + random_.randbytes(0x1C) + struct.pack("<I", mock_address(2))
+        pointers.append(other)
+        for voice in range(8):
+            at = 0xC + voice * 0x34
+            console[at + 1] = random_.getrandbits(8)
+            console[at + 2] = random_.choice((0, 7, 0x38, 0xC0, 0xFF, random_.getrandbits(8)))
+            console[at + 3] = random_.getrandbits(8)
+            struct.pack_into("<I", console, at + 0x24, stream)
+            struct.pack_into("<I", console, at + 0x30, other)
+            pointers += [at + 0x24, at + 0x30]
+        states = [random_.choice((0, 0, 1, 1, 2, 9)) for _ in range(16)]
+
+        def halted(harness, arguments, states=states):
+            # what the voice does after: it can play again
+            calls = calls_so_far(harness, "unknown_002ae8e0")
+            flags = harness.mu.mem_read(arguments[0] + 1, 4)
+            harness.mu.mem_write(arguments[0] + 1, bytes((flags[0] | states[calls % 16],)))
+            return 0, (harness.normalize(arguments[0]), bytes(flags))
+
+        t.check(
+            "sound_console_voices_stop",
+            globals={"unknown_0051ebe4": Buffer(bytes(console), pointers=tuple(pointers))},
+            externals={"unknown_002ae8e0": halted},
+            mocks=[
+                Mock(lambda call: 0, stack_arguments=2, record=lambda call: (call.stack[0],)),
+                Mock(lambda call: 0, stack_arguments=1),
+                Mock(lambda call: 0, stack_arguments=0, registers=("ecx",)),
+            ],
         )

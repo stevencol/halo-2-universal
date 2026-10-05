@@ -1189,7 +1189,7 @@ address,name,source,arguments,returns,convention
 002ae4b0,unknown_002ae4b0,,esi,void
 0021e050,sound_voice_release,source/sound/sound_manager.c,eax,void
 00127f10,sound_source_unknown_00127f10,source/sound/sound_manager.c,eax edi stack,bool,stdcall
-0021f290,unknown_0021f290,,,void
+0021f290,sound_console_voices_stop,source/sound/sound_manager.c,,void
 0021a1e0,looping_sounds_delete_all,source/sound/sound_manager.c,,void
 00218f10,sound_definition_promotion_rule,source/sound/sound_manager.c,ecx edx,short
 002194a0,sound_definition_get_custom_playback,source/sound/sound_manager.c,eax,pointer
