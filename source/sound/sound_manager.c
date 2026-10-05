@@ -1344,6 +1344,14 @@ void unknown_0037c6c1(void *stream, real unknown, long apply);
 void unknown_0037c69d(void *stream, real unknown, long apply);
 void unknown_0037c600(void *stream, long unknown, long apply);
 
+/* 0x002215d0 and 0x002216f0; 0x0037c70a, 0x0037b81d and 0x0037b6c3: of the
+console */
+void __attribute__((stdcall)) sound_console_stream_set_mixbins(const long *old, const long *new, void *stream);
+void __attribute__((stdcall)) sound_console_slot_stream_set_mixbins(const long *old, const long *new, void *stream);
+void unknown_0037c70a(void *stream, const struct sound_console_mixbins *mixbins);
+void unknown_0037b81d(void *stream, const struct sound_console_mixbins *volumes);
+void unknown_0037b6c3(void *stream, const struct sound_console_mixbins *volumes);
+
 /* 0x0021d110 */
 long __attribute__((stdcall)) sound_effect_source_new(byte *request, long sound_index);
 
@@ -9282,4 +9290,110 @@ boolean sound_console_slot_create_stream(
 	slot->unknown38= NULL;
 
 	return TRUE;
+}
+
+/* what has changed between where a sound was to be heard and where it is to
+be heard now. `old` is how many pairs there were and the pairs, each of
+where and how loud; `new` is as sound_mixbins_add makes it: the pairs, and
+then how many. With the same places in the same order, 1 if a loudness is
+not the same, and 0 if all are: `pairs` takes each place once, with how
+loud, and `count` how many. If not, 2: all is to be set again; and so with
+a place that is twice and changes. The game looks at the loudness of a
+place that is twice by where the pair is, not by the place: it is done the
+same, and what it finds there may never have been set */
+static inline __attribute__((always_inline)) long sound_mixbins_compare(
+	const long *old,
+	const long *new,
+	long *pairs,
+	long *count)
+{
+	volatile long loudness[32];
+	unsigned long seen= 0;
+	unsigned long changed= 0;
+	boolean any= FALSE;
+	long index;
+
+	*count= 0;
+	if (!old || old[0]!=new[SOUND_MIXBINS_COUNT_INDEX])
+	{
+		return 2;
+	}
+	for (index= 0; index<old[0]; index++)
+	{
+		long mixbin= new[index*2];
+		long volume= new[index*2+1];
+		unsigned long bit;
+
+		if (old[1+index*2]!=mixbin)
+		{
+			return 2;
+		}
+		bit= 1UL<<(mixbin&31);
+		if (old[1+index*2+1]!=volume)
+		{
+			if (seen&bit && (volume!=loudness[index] || changed&bit))
+			{
+				return 2;
+			}
+			changed|= bit;
+			any= TRUE;
+		}
+		if (!(seen&bit))
+		{
+			pairs[*count*2+1]= volume;
+			seen|= bit;
+			pairs[*count*2]= mixbin;
+			++*count;
+			loudness[mixbin]= volume;
+		}
+	}
+
+	return any;
+}
+
+/* 0x002215d0 and 0x002216f0: a stream of a voice of the console's sound, and
+what plays the sound of a slot, are told where the sound is to be heard: all
+again (unknown_0037c70a, unknown_0037c5e4), or only how loud in each place
+(unknown_0037b81d, unknown_0037b6c3), or nothing if nothing has changed. The
+names are made up */
+void __attribute__((stdcall)) sound_console_stream_set_mixbins(
+	const long *old,
+	const long *new,
+	void *stream)
+{
+	struct sound_console_mixbins volumes;
+	long pairs[SOUND_MIXBINS_COUNT_INDEX];
+
+	volumes.count= 0;
+	volumes.pairs= pairs;
+	switch (sound_mixbins_compare(old, new, pairs, &volumes.count))
+	{
+	case 2:
+		unknown_0037c70a(stream, (const struct sound_console_mixbins *)&new[SOUND_MIXBINS_COUNT_INDEX]);
+		break;
+	case 1:
+		unknown_0037b81d(stream, &volumes);
+		break;
+	}
+}
+
+void __attribute__((stdcall)) sound_console_slot_stream_set_mixbins(
+	const long *old,
+	const long *new,
+	void *stream)
+{
+	struct sound_console_mixbins volumes;
+	long pairs[SOUND_MIXBINS_COUNT_INDEX];
+
+	volumes.count= 0;
+	volumes.pairs= pairs;
+	switch (sound_mixbins_compare(old, new, pairs, &volumes.count))
+	{
+	case 2:
+		unknown_0037c5e4(stream, (const struct sound_console_mixbins *)&new[SOUND_MIXBINS_COUNT_INDEX]);
+		break;
+	case 1:
+		unknown_0037b6c3(stream, &volumes);
+		break;
+	}
 }

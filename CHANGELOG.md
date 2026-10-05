@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Por dónde se oye un sonido en la consola, y qué ha cambiado
+
+Dos funciones en `sound/sound_manager.c`. De 895 funciones se pasa a
+897, el 7,96 % de las del juego (el 4,707 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_console_stream_set_mixbins` | `0x002215d0` | `sound/sound_manager.c` |
+| `sound_console_slot_stream_set_mixbins` | `0x002216f0` | `sound/sound_manager.c` |
+
+Ninguna estaba apuntada. Las dos las llama `0x0021fa80`. Son gemelas: una
+es para el flujo de una voz y la otra para lo que hace sonar una casilla.
+Reciben en `eax` por dónde se oía el sonido, y en la pila por dónde se oye
+ahora y a quién decírselo. Nuevas sin descompilar, de la consola:
+`0x0037c70a`, `0x0037b81d` y `0x0037b6c3`.
+
+### Lo que se sabe
+
+- Un sonido se oye por varias salidas de la consola, cada una con su
+  volumen: es la lista de parejas que rellena `sound_mixbins_add`.
+- Estas funciones comparan la lista de antes con la de ahora. Si las
+  salidas son las mismas y en el mismo orden, solo le dicen a la consola
+  los volúmenes (y nada si tampoco han cambiado). Si no, se lo dicen todo
+  de nuevo.
+- Una salida que está dos veces y cambia obliga a decirlo todo de nuevo. Al
+  comprobarlo, el juego mira el volumen por el puesto de la pareja y no por
+  el número de la salida, y puede leer algo que nunca se escribió: aquí se
+  hace igual, y las pruebas lo comprueban.
+- Los nombres son inventados.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de estas funciones. La batería
+  completa corre aparte con las 893 funciones del hito 227.
+
+### Mutaciones
+
+Diez líneas rotas a mano: las pruebas notan las diez, dos de ellas solo
+después de añadir casos con una salida repetida en el puesto de su propio
+número.
+
 ## 2026-10-05 — Una casilla de la consola recibe lo que hace sonar su sonido
 
 Una función en `sound/sound_manager.c`. De 894 funciones se pasa a

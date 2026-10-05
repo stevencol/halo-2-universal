@@ -1345,3 +1345,8 @@ address,name,source,arguments,returns,convention
 0037c6c1,unknown_0037c6c1,,stack stack stack,void
 0037c69d,unknown_0037c69d,,stack stack stack,void
 0037c600,unknown_0037c600,,stack stack stack,void
+002215d0,sound_console_stream_set_mixbins,source/sound/sound_manager.c,eax stack stack,void,stdcall
+002216f0,sound_console_slot_stream_set_mixbins,source/sound/sound_manager.c,eax stack stack,void,stdcall
+0037c70a,unknown_0037c70a,,stack stack,void
+0037b81d,unknown_0037b81d,,stack stack,void
+0037b6c3,unknown_0037b6c3,,stack stack,void

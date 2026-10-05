@@ -5640,3 +5640,65 @@ def run(t) -> None:
                 "unknown_0037c600": lambda harness, arguments: (0, tuple(arguments)),
             },
         )
+
+    # ---------- where the sound of a stream is to be heard, and what has changed
+
+    random_ = random.Random(230)
+
+    def all_again(harness, arguments):
+        count, pairs = struct.unpack("<2I", harness.mu.mem_read(arguments[1], 8))
+        return 0, (arguments[0], count, harness.normalize(pairs), harness.normalize(arguments[1]))
+
+    def loudness_(harness, arguments):
+        count, pairs = struct.unpack("<2I", harness.mu.mem_read(arguments[1], 8))
+        return 0, (arguments[0], count, bytes(harness.mu.mem_read(pairs, count * 8)))
+
+    for n in range(1500):
+        count = random_.choice((0, 1, 2, 3, 5, 8))
+        if n % 5:
+            places = random_.sample(range(11), count)
+        else:
+            # a place can be twice
+            places = [random_.randrange(8) for _ in range(count)]
+        pairs = [(place, random_.choice((0, -600, -6400, -1234))) for place in places]
+        new = bytearray(random_.randbytes(0x48))
+        for index, (place, volume) in enumerate(pairs):
+            struct.pack_into("<2i", new, index * 8, place, volume)
+        struct.pack_into("<i", new, 0x40, count)
+        if n % 7 == 0:
+            # a place twice, the second time where its own number is: with the same loudness both times
+            volume = random_.choice((0, -600))
+            pairs = [(1, volume), (1, volume)] + pairs[:3]
+            count = len(pairs)
+            for index, (place, volume_) in enumerate(pairs):
+                struct.pack_into("<2i", new, index * 8, place, volume_)
+            struct.pack_into("<i", new, 0x40, count)
+        before = list(pairs)
+        kind = random_.randrange(6)
+        if n % 7 == 0:
+            kind = 0
+            before[0] = (1, before[0][1] - random_.choice((0, 100)))
+            before[1] = (1, before[1][1] - random_.choice((0, 100, 100)))
+        if kind == 1 and before:
+            index = random_.randrange(len(before))
+            before[index] = (before[index][0], before[index][1] - 100)
+        elif kind == 2:
+            before = [(place, random_.choice((volume, volume, -700))) for place, volume in before]
+        elif kind == 3 and before:
+            index = random_.randrange(len(before))
+            before[index] = (before[index][0] ^ 1, before[index][1])
+        old_count = len(before) if kind != 4 else len(before) + random_.choice((1, -1))
+        old = struct.pack("<i", old_count) + b"".join(struct.pack("<2i", place, volume) for place, volume in before) + random_.randbytes(16)
+        for name in ("sound_console_stream_set_mixbins", "sound_console_slot_stream_set_mixbins"):
+            t.check(
+                name,
+                0 if kind == 5 else Buffer(old),
+                Buffer(bytes(new)),
+                random_.getrandbits(32),
+                externals={
+                    "unknown_0037c70a": all_again,
+                    "unknown_0037c5e4": all_again,
+                    "unknown_0037b81d": loudness_,
+                    "unknown_0037b6c3": loudness_,
+                },
+            )
