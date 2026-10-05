@@ -767,9 +767,9 @@ address,name,source,arguments,returns,convention
 002185d0,unknown_002185d0,,,void
 002186b0,unknown_002186b0,,,void
 00219b40,unknown_00219b40,,,bool
-0021a0c0,unknown_0021a0c0,,,bool
-0021d490,unknown_0021d490,,,bool
-0021dda0,unknown_0021dda0,,eax,bool
+0021a0c0,looping_sounds_initialize,source/sound/sound_manager.c,,bool
+0021d490,sound_effects_initialize,source/sound/sound_manager.c,,bool
+0021dda0,sound_voices_initialize,source/sound/sound_manager.c,eax,bool
 0021e4b0,unknown_0021e4b0,,stack,bool
 0021eae0,unknown_0021eae0,,,void
 00125a60,sound_available,source/sound/sound_manager.c,,bool
@@ -783,8 +783,8 @@ address,name,source,arguments,returns,convention
 0012a060,sound_channel_pause,source/sound/sound_manager.c,ecx,void
 0012a0b0,sound_channel_resume,source/sound/sound_manager.c,eax,void
 00219d90,unknown_00219d90,,stack,void
-0021f5a0,unknown_0021f5a0,,,void
-0021f570,unknown_0021f570,,,void
+0021f5a0,sound_console_streams_resume,source/sound/sound_manager.c,,void
+0021f570,sound_console_streams_pause,source/sound/sound_manager.c,,void
 00125e60,sound_source_request_data,source/sound/sound_manager.c,stack,bool
 00125ef0,sound_unknown_00125ef0,source/sound/sound_manager.c,eax,void
 00125f10,sound_predict,source/sound/sound_manager.c,edx,void
@@ -793,7 +793,7 @@ address,name,source,arguments,returns,convention
 001290d0,sound_channels_update,source/sound/sound_manager.c,,void
 001293f0,unknown_001293f0,,,void
 0021ee80,unknown_0021ee80,,,void
-00218810,unknown_00218810,,,void
+00218810,sound_cache_idle,source/sound/sound_manager.c,,void
 0021f6d0,unknown_0021f6d0,,ecx edx stack,void
 00218850,unknown_00218850,,stack stack stack,int
 001268e0,unknown_001268e0,,eax,void
@@ -1147,7 +1147,7 @@ address,name,source,arguments,returns,convention
 00129fe0,sound_channel_pausable,source/sound/sound_manager.c,ecx,bool
 002ae750,unknown_002ae750,,eax,void
 00218b00,unknown_00218b00,,eax ecx stack stack,int,stdcall
-00218ac0,unknown_00218ac0,,ecx edx,int
+00218ac0,sound_permutation_chunks_size,source/sound/sound_manager.c,ecx edx,int
 0021f5d0,unknown_0021f5d0,,eax edi,void
 002ae500,unknown_002ae500,,esi edi,void
 00219290,sound_permutation_next_chunk,source/sound/sound_manager.c,ecx eax,int
@@ -1191,3 +1191,9 @@ address,name,source,arguments,returns,convention
 00127f10,sound_source_unknown_00127f10,source/sound/sound_manager.c,eax edi stack,bool,stdcall
 0021f290,unknown_0021f290,,,void
 0021a1e0,unknown_0021a1e0,,,void
+00218f10,sound_definition_promotion_rule,source/sound/sound_manager.c,ecx edx,short
+002194a0,sound_definition_get_custom_playback,source/sound/sound_manager.c,eax,pointer
+002198f0,sound_playback_controller_get,source/sound/sound_manager.c,ecx,pointer
+00219f60,sound_playback_controller_add_count,source/sound/sound_manager.c,ecx stack,void,stdcall
+0021dcf0,sound_effect_delete,source/sound/sound_manager.c,ebx,void
+0037b73f,unknown_0037b73f,,stack stack,void,stdcall

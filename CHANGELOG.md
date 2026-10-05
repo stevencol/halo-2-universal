@@ -2,6 +2,65 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Doce funciones pequeñas de otros archivos del sonido
+
+Doce funciones pequeñas, en `sound/sound_manager.c` aunque lo más probable
+es que sean de otros archivos del sonido. De 740 funciones se pasa a
+752, el 6,68 % de las del juego (el 3,604 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_cache_idle` | `0x00218810` | `sound/sound_manager.c` |
+| `sound_permutation_chunks_size` | `0x00218ac0` | `sound/sound_manager.c` |
+| `sound_definition_promotion_rule` | `0x00218f10` | `sound/sound_manager.c` |
+| `sound_definition_get_custom_playback` | `0x002194a0` | `sound/sound_manager.c` |
+| `sound_playback_controller_get` | `0x002198f0` | `sound/sound_manager.c` |
+| `sound_playback_controller_add_count` | `0x00219f60` | `sound/sound_manager.c` |
+| `looping_sounds_initialize` | `0x0021a0c0` | `sound/sound_manager.c` |
+| `sound_effects_initialize` | `0x0021d490` | `sound/sound_manager.c` |
+| `sound_effect_delete` | `0x0021dcf0` | `sound/sound_manager.c` |
+| `sound_voices_initialize` | `0x0021dda0` | `sound/sound_manager.c` |
+| `sound_console_streams_pause` | `0x0021f570` | `sound/sound_manager.c` |
+| `sound_console_streams_resume` | `0x0021f5a0` | `sound/sound_manager.c` |
+
+Siete estaban apuntadas sin descompilar con el nombre `unknown_...`
+(`0x00218810`, `0x00218ac0`, `0x0021a0c0`, `0x0021d490`, `0x0021dda0`,
+`0x0021f570` y `0x0021f5a0`). Nueva sin descompilar: `0x0037b73f`, de la
+consola.
+
+### Lo que se sabe
+
+- `sound_cache_idle`: pasa un tick de la caché de los sonidos.
+- `sound_permutation_chunks_size`: cuántos bytes suman los primeros trozos
+  de muestras de una grabación (30 bits de la palabra en `4` de cada uno).
+- `sound_definition_promotion_rule` y `sound_definition_get_custom_playback`
+  leen, de lo que comparten los sonidos de un mapa, la promoción de un
+  sonido (su byte `0xC`; bloque en `0x48`, de `0x1C` bytes, con reglas de
+  `0x10`) y su reproducción propia (byte `0xD`; bloque en `0x30`, de `0x34`).
+- `sound_playback_controller_get` da un controlador de reproducción, o el
+  de `unknown_0051ebdc` para `NONE`; `sound_playback_controller_add_count`
+  le suma algo a su cuenta de 7 bits.
+- `looping_sounds_initialize`, `sound_effects_initialize` y
+  `sound_voices_initialize` hacen las tablas de los sonidos en bucle (128 de
+  `0xD4` bytes), los efectos (16 de `0x14`; el juego la llama «sounds
+  effects») y las voces (tantas como diga la configuración, de `0x6C`).
+- `sound_effect_delete` suelta un efecto de sonido y le quita un sonido a
+  su controlador.
+- `sound_console_streams_pause` y `sound_console_streams_resume` paran y
+  reanudan los dos flujos de sonido de la consola (`0x0037b73f`).
+- Los nombres son inventados.
+
+### Sin comprobar
+
+- La batería completa no se pasó en este hito, solo las pruebas de estas
+  funciones y de las que las llaman.
+
+### Mutaciones
+
+Pendientes; corren aparte, en segundo plano, con las de los hitos 155 y 156.
+
 ## 2026-10-04 — Parar los sonidos al leer el estado del juego
 
 Tres funciones de `sound/sound_manager.c`. De 737 funciones se pasa a 740,

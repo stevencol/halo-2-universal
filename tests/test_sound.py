@@ -218,7 +218,7 @@ def run(t) -> None:
             )
 
     def answers(*values: int) -> dict:
-        names = ("unknown_00219b40", "unknown_0021a0c0", "unknown_0021d490", "unknown_0021dda0", "unknown_0021e4b0")
+        names = ("unknown_00219b40", "looping_sounds_initialize", "sound_effects_initialize", "sound_voices_initialize", "unknown_0021e4b0")
 
         def configuration(harness, arguments):
             return bytes(harness.mu.mem_read(arguments[0], 14))
@@ -232,7 +232,7 @@ def run(t) -> None:
         for name, value in zip(names, values):
             if name == "unknown_0021e4b0":
                 result[name] = last
-            elif name == "unknown_0021dda0":
+            elif name == "sound_voices_initialize":
                 result[name] = lambda harness, arguments, value=value: (value, (configuration(harness, arguments),))
             else:
                 result[name] = lambda harness, arguments, value=value: value
@@ -470,15 +470,15 @@ def run(t) -> None:
                         "sound_channel_pause": channel,
                         "sound_channel_resume": channel,
                         "unknown_00219d90": lambda harness, arguments: (0, (arguments[0] & 0xFF,)),
-                        "unknown_0021f5a0": lambda harness, arguments: 0,
-                        "unknown_0021f570": lambda harness, arguments: 0,
+                        "sound_console_streams_resume": lambda harness, arguments: 0,
+                        "sound_console_streams_pause": lambda harness, arguments: 0,
                         "GetTickCount": lambda harness, arguments, value=random_.getrandbits(32): value,
                     },
                 )
 
     # ---------- giving the sound some time
 
-    idle_names = ("unknown_0021ec00", "unknown_001269f0", "sound_channels_update", "unknown_001293f0", "unknown_0021ee80", "unknown_00218810")
+    idle_names = ("unknown_0021ec00", "unknown_001269f0", "sound_channels_update", "unknown_001293f0", "unknown_0021ee80", "sound_cache_idle")
 
     def flags_then(harness, arguments):
         # the two flags that are set while the sound is given time
@@ -769,7 +769,7 @@ def run(t) -> None:
 
         return {
             "unknown_00218b00": played,
-            "unknown_00218ac0": chunk_bytes,
+            "sound_permutation_chunks_size": chunk_bytes,
             "unknown_0021f5d0": restart,
             "unknown_002ae500": chunk,
         }
@@ -900,7 +900,7 @@ def run(t) -> None:
     UPDATE_NAMES = (
         "unknown_0021ec00",
         "unknown_00219d90",
-        "unknown_0021f5a0",
+        "sound_console_streams_resume",
         "unknown_001269f0",
         "unknown_00127400",
         "unknown_00219cc0",
@@ -1413,3 +1413,128 @@ def run(t) -> None:
                 "unknown_0021a1e0": lambda harness, arguments: 0,
             },
         )
+
+    # ---------- small functions of other files of the sound
+
+    random_ = random.Random(157)
+
+    for _ in range(40):
+        cache = bytearray(random_.randbytes(0x70))
+        struct.pack_into("<i", cache, 0x38, random_.choice((0x7FFFFFFF, 0x7FFFFFFE, 5, 0, -1)))
+        t.check(
+            "sound_cache_idle",
+            globals={"sound_lruv_cache": Buffer(bytes(cache))},
+            externals={"lruv_wrap_ticks": lambda harness, arguments: (0, (harness.normalize(arguments[0]),))},
+        )
+
+    for _ in range(200):
+        gestalt, _permutations = recordings()
+        permutation = bytearray(random_.randbytes(0x10))
+        struct.pack_into("<h", permutation, 0xC, random_.randrange(0, PIECES - 12))
+        t.check(
+            "sound_permutation_chunks_size",
+            Buffer(bytes(permutation)),
+            random_.choice((0, 1, 2, 5, 12, -1, -0x80000000)),
+            globals={"global_sound_cache_file_gestalt": Buffer(gestalt, pointers=(0x24, 0x2C, 0x44))},
+        )
+
+    for _ in range(60):
+        # what the sounds share: 4 promotions after it, and 8 rules of each
+        data = bytearray(random_.randbytes(0x60))
+        pointers = [0x34, 0x4C]
+        struct.pack_into("<I", data, 0x34, len(data))
+        data += random_.randbytes(6 * 0x34)
+        promotions = len(data)
+        struct.pack_into("<I", data, 0x4C, promotions)
+        data += random_.randbytes(4 * 0x1C)
+        for n in range(4):
+            struct.pack_into("<I", data, promotions + n * 0x1C + 4, len(data))
+            pointers.append(promotions + n * 0x1C + 4)
+            for _rule in range(8):
+                data += struct.pack("<h", random_.choice((-1, -1, 0, 3, 0x7FFF, -2))) + random_.randbytes(0xE)
+        shared = Buffer(bytes(data), pointers=tuple(pointers))
+        for _sound in range(12):
+            definition = bytearray(random_.randbytes(0x14))
+            definition[0xC] = random_.choice((0xFF, 0, 1, 2, 3))
+            definition[0xD] = random_.choice((0xFF, 0, 1, 2, 5))
+            t.check(
+                "sound_definition_promotion_rule",
+                random_.randrange(8),
+                Buffer(bytes(definition)),
+                globals={"global_sound_cache_file_gestalt": shared},
+            )
+            t.check(
+                "sound_definition_get_custom_playback",
+                Buffer(bytes(definition)),
+                globals={"global_sound_cache_file_gestalt": shared},
+            )
+
+    for _ in range(40):
+        controllers = bytearray(random_.randbytes(0x4C + CONTROLLERS * 0x1C))
+        struct.pack_into("<I", controllers, 0x44, 0x4C)
+        for controller_index in [NONE] + [random_.getrandbits(16) << 16 | index for index in range(CONTROLLERS)]:
+            t.check(
+                "sound_playback_controller_get",
+                controller_index,
+                globals={
+                    "unknown_0051ebd8": Buffer(bytes(controllers), pointers=(0x44,)),
+                    "unknown_0051ebdc": Buffer(random_.randbytes(0x1C)),
+                },
+            )
+    for _ in range(300):
+        controller = bytearray(random_.randbytes(0x1C))
+        struct.pack_into("<I", controller, 4, random_.choice((NONE, 0, random_.getrandbits(32))))
+        controller[3] = random_.choice((0, 1, 0x7F, 0x80, 0xFF, random_.getrandbits(8)))
+        t.check("sound_playback_controller_add_count", Buffer(bytes(controller)), random_.choice((1, 0xFF, 0, 2, 0x7F, 0x80)))
+
+    def new_array(memory):
+        def handler(harness, arguments):
+            name, maximum_count, size = arguments
+            text = bytes(harness.mu.mem_read(name, 16)).split(b"\0")[0]
+            return (memory.address if memory else 0), (text, maximum_count, size)
+
+        return handler
+
+    def made(harness, arguments):
+        return 0, (harness.normalize(arguments[0]),)
+
+    for name, variable in (
+        ("looping_sounds_initialize", "looping_sounds"),
+        ("sound_effects_initialize", "sound_effects"),
+        ("sound_voices_initialize", "sound_voices"),
+    ):
+        for give in (True, True, False):
+            for _ in range(6):
+                memory = Buffer(random_.randbytes(0x4C)) if give else None
+                configuration = random_.randbytes(0xC) + struct.pack("<h", random_.choice((51, 0, 1, -1, 0x7FFF)))
+                t.check(
+                    name,
+                    *((Buffer(configuration),) if name == "sound_voices_initialize" else ()),
+                    globals={variable: random_.getrandbits(32)},
+                    extra=[memory] if memory else [],
+                    externals={"shell_memory_data_new": new_array(memory), "data_delete_all": made},
+                )
+
+    for _ in range(60):
+        effects = bytearray(random_.randbytes(0x4C + 16 * 0x14))
+        struct.pack_into("<I", effects, 0x44, 0x4C)
+        for index in range(16):
+            struct.pack_into("<I", effects, 0x4C + index * 0x14 + 8, random_.choice((NONE, 0, random_.getrandbits(32))))
+        for index in range(16):
+            t.check(
+                "sound_effect_delete",
+                random_.getrandbits(16) << 16 | index,
+                globals={"sound_effects": Buffer(bytes(effects), pointers=(0x44,))},
+                externals={
+                    "sound_playback_controller_release": lambda harness, arguments: (0, tuple(arguments)),
+                    "datum_delete": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                },
+            )
+
+    for _ in range(20):
+        for name in ("sound_console_streams_pause", "sound_console_streams_resume"):
+            t.check(
+                name,
+                globals={"unknown_0051ebe4": Buffer(random_.randbytes(0x2AA0))},
+                externals={"unknown_0037b73f": lambda harness, arguments: (0, tuple(arguments))},
+            )

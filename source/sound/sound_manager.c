@@ -175,6 +175,25 @@ enum
 	_sound_reset_keep_bit= 5,
 	_sound_reset_unknown6_bit= 6,
 	UNKNOWN_004ED288_UNKNOWN20_OFFSET= 0x20,
+	/* a piece of the samples of a recording: how many bytes it is */
+	SOUND_CHUNK_SIZE_OFFSET= 0x4,
+	SOUND_CHUNK_SIZE_MASK= 0x3FFFFFFF,
+	/* in the tag of a sound: which promotion and which playback of its own
+	it has, of those that the sounds of a map share */
+	SOUND_DEFINITION_PROMOTION_INDEX_OFFSET= 0xC,
+	SOUND_DEFINITION_CUSTOM_PLAYBACK_INDEX_OFFSET= 0xD,
+	SOUND_GESTALT_PROMOTIONS_OFFSET= 0x48,
+	SOUND_PROMOTION_SIZE= 0x1C,
+	SOUND_PROMOTION_RULE_SIZE= 0x10,
+	SOUND_CUSTOM_PLAYBACK_SIZE= 0x34,
+	/* the arrays of other files of the sound */
+	MAXIMUM_LOOPING_SOUNDS= 128,
+	LOOPING_SOUND_DATUM_SIZE= 0xD4,
+	MAXIMUM_SOUND_EFFECTS= 16,
+	SOUND_EFFECT_DATUM_SIZE= 0x14,
+	SOUND_EFFECT_DATUM_CONTROLLER_INDEX_OFFSET= 0x8,
+	/* in unknown_0051ebe4: two streams of the console's sound */
+	UNKNOWN_0051EBE4_STREAMS_OFFSET= 0x2A90,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -255,9 +274,9 @@ void unknown_002186b0(void);
 sound playback controllers, the looping sounds, the sound effects, the sound
 voices and something more. FALSE if they cannot */
 boolean unknown_00219b40(void);
-boolean unknown_0021a0c0(void);
-boolean unknown_0021d490(void);
-boolean unknown_0021dda0(const struct sound_configuration *configuration);
+boolean looping_sounds_initialize(void);
+boolean sound_effects_initialize(void);
+boolean sound_voices_initialize(const struct sound_configuration *configuration);
 boolean unknown_0021e4b0(const struct sound_configuration *configuration);
 
 /* 0x0021eae0: takes down what unknown_0021e4b0 set up, most likely */
@@ -327,7 +346,7 @@ void unknown_0021ec00(void);
 void unknown_001269f0(void);
 void unknown_001293f0(void);
 void unknown_0021ee80(void);
-void unknown_00218810(void);
+void sound_cache_idle(void);
 
 /* 0x0021f6d0: sets the sound of the places of the map, from three parts of
 a tag */
@@ -360,7 +379,7 @@ void sound_channel_pause(short channel_index);
 /* 0x00218b00: how many bytes of a sound of some kind are played in a
 time; 0x00218ac0: the bytes of the first chunks of a permutation */
 long __attribute__((stdcall)) unknown_00218b00(long unknown4, long unknown5, long unknown3, real seconds);
-long unknown_00218ac0(const struct sound_permutation *permutation, long chunk_count);
+long sound_permutation_chunks_size(const struct sound_permutation *permutation, long chunk_count);
 
 /* 0x0021f5d0: a voice of the console's sound starts again from some bytes
 into its sound; 0x002ae500: a voice is given a chunk */
@@ -373,8 +392,8 @@ void sound_channel_resume(short channel_index);
 /* 0x00219d90, 0x0021f5a0, 0x0021f570: the sound playback controllers and the
 sound of the console, when the sound is enabled and disabled */
 void unknown_00219d90(boolean unknown);
-void unknown_0021f5a0(void);
-void unknown_0021f570(void);
+void sound_console_streams_resume(void);
+void sound_console_streams_pause(void);
 
 /* 0x0012a5d0, 0x00126960 and 0x00219c80; 0x0021d4d0: of the sound effects */
 void sound_channel_delete(short channel_index);
@@ -393,6 +412,17 @@ boolean __attribute__((stdcall)) sound_source_unknown_00127f10(long source_index
 sounds, when the sounds are stopped */
 void unknown_0021f290(void);
 void unknown_0021a1e0(void);
+
+/* 0x0037b73f: of the console: a stream of sound stops for a while, or
+goes on */
+void __attribute__((stdcall)) unknown_0037b73f(void *stream, long pause);
+
+/* 0x00218f10, 0x002194a0, 0x002198f0, 0x00219f60 and 0x0021dcf0 */
+short sound_definition_promotion_rule(long rule_index, const struct sound_definition *sound);
+const void *sound_definition_get_custom_playback(const struct sound_definition *sound);
+void *sound_playback_controller_get(long controller_index);
+void __attribute__((stdcall)) sound_playback_controller_add_count(byte *controller, char amount);
+void sound_effect_delete(long effect_index);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -633,8 +663,8 @@ void sound_initialize(
 		{
 			data_make_valid(sources);
 			memset(sound_channels, 0, MAXIMUM_SOUND_CHANNELS*sizeof(struct sound_channel));
-			if (unknown_00219b40() && unknown_0021a0c0() && unknown_0021d490() &&
-				unknown_0021dda0(&sound_configuration) && unknown_0021e4b0(&sound_configuration))
+			if (unknown_00219b40() && looping_sounds_initialize() && sound_effects_initialize() &&
+				sound_voices_initialize(&sound_configuration) && unknown_0021e4b0(&sound_configuration))
 			{
 				short channel_index= 0;
 				short type;
@@ -894,7 +924,7 @@ void sound_enable(
 			{
 				sound_channel_pause((short)index);
 			}
-			unknown_0021f570();
+			sound_console_streams_pause();
 			globals= game_sound_globals;
 		}
 		else if (enable==1)
@@ -906,7 +936,7 @@ void sound_enable(
 				sound_channel_resume((short)index);
 			}
 			unknown_00219d90(TRUE);
-			unknown_0021f5a0();
+			sound_console_streams_resume();
 			time= GetTickCount();
 			globals= game_sound_globals;
 			*(unsigned long *)(globals+GAME_SOUND_GLOBALS_START_TIME_OFFSET)= time;
@@ -942,7 +972,7 @@ void sound_idle(
 				unknown_0021ee80();
 				globals= game_sound_globals;
 			}
-			unknown_00218810();
+			sound_cache_idle();
 			globals[GAME_SOUND_GLOBALS_UNKNOWN7D_OFFSET]= FALSE;
 		}
 		globals[GAME_SOUND_GLOBALS_IDLING_OFFSET]= FALSE;
@@ -1126,7 +1156,7 @@ void sound_channel_resume(
 		long offset= unknown_00218b00((char)sound->unknown3[1], (char)sound->unknown3[2], (char)sound->unknown3[0],
 			channel->unknown10);
 
-		offset-= unknown_00218ac0(permutation, channel->unknown18);
+		offset-= sound_permutation_chunks_size(permutation, channel->unknown18);
 		unknown_0021f5d0(channel->unknownC, offset);
 		sound_channel_voice_set_chunk(channel, permutation, channel->unknown18);
 		if (channel->unknown20)
@@ -1363,7 +1393,7 @@ void sound_update(
 					sound_channel_resume((short)index);
 				}
 				unknown_00219d90(TRUE);
-				unknown_0021f5a0();
+				sound_console_streams_resume();
 				time= GetTickCount();
 				globals= game_sound_globals;
 				*(unsigned long *)(globals+GAME_SOUND_GLOBALS_START_TIME_OFFSET)= time;
@@ -1940,5 +1970,197 @@ void __attribute__((stdcall)) sound_reset(
 	if (!keep)
 	{
 		unknown_0021a1e0();
+	}
+}
+
+/* ---------- of other files of the sound, most likely: the sound cache
+(0x00218810, 0x00218ac0, 0x00218f10), the sound definitions (0x002194a0), the
+sound playback controllers (0x002198f0, 0x00219f60), the looping sounds
+(0x0021a0c0), the sound effects (0x0021d490, 0x0021dcf0), the sound voices
+(0x0021dda0) and the sound of the console (0x0021f570, 0x0021f5a0). The
+names are guesses */
+
+/* 0x00218810: a tick of the cache of the sounds goes by */
+void sound_cache_idle(
+	void)
+{
+	lruv_idle(sound_lruv_cache);
+}
+
+/* 0x00218ac0: how many bytes the first pieces of the samples of a recording
+are */
+long sound_permutation_chunks_size(
+	const struct sound_permutation *permutation,
+	long chunk_count)
+{
+	long size= 0;
+	long index;
+
+	for (index= 0; index<chunk_count; index++)
+	{
+		size+= *(const long *)((const byte *)sound_permutation_chunk(permutation, 0)+index*(long)sizeof(struct sound_chunk)+
+			SOUND_CHUNK_SIZE_OFFSET)&SOUND_CHUNK_SIZE_MASK;
+	}
+
+	return size;
+}
+
+/* 0x00218f10: what one of the rules of the promotion of a sound says, in
+its first word; 0 if the sound has no promotion or the rule says NONE */
+short sound_definition_promotion_rule(
+	long rule_index,
+	const struct sound_definition *sound)
+{
+	char promotion_index= ((const char *)sound)[SOUND_DEFINITION_PROMOTION_INDEX_OFFSET];
+	uintptr_t promotion;
+
+	if (promotion_index==NONE)
+	{
+		return 0;
+	}
+	promotion= (uintptr_t)*(const long *)((const byte *)global_sound_cache_file_gestalt+SOUND_GESTALT_PROMOTIONS_OFFSET+4)+
+		(uintptr_t)(promotion_index*SOUND_PROMOTION_SIZE);
+	if (promotion)
+	{
+		const byte *rules= (const byte *)(uintptr_t)*(const long *)(promotion+4);
+		short rule= *(const short *)(rules+rule_index*SOUND_PROMOTION_RULE_SIZE);
+
+		if (rule!=NONE)
+		{
+			return rule;
+		}
+	}
+
+	return 0;
+}
+
+/* 0x002194a0: how a sound is played that is its own, and not of its class;
+NULL if it has none */
+const void *sound_definition_get_custom_playback(
+	const struct sound_definition *sound)
+{
+	char custom_playback_index= ((const char *)sound)[SOUND_DEFINITION_CUSTOM_PLAYBACK_INDEX_OFFSET];
+
+	if (custom_playback_index==NONE)
+	{
+		return NULL;
+	}
+
+	return (const byte *)(uintptr_t)global_sound_cache_file_gestalt->unknown30[0].address+
+		custom_playback_index*SOUND_CUSTOM_PLAYBACK_SIZE;
+}
+
+/* 0x002198f0: a sound playback controller; the one of unknown_0051ebdc for
+NONE */
+void *sound_playback_controller_get(
+	long controller_index)
+{
+	if (controller_index==NONE)
+	{
+		return unknown_0051ebdc;
+	}
+
+	return (byte *)unknown_0051ebd8->data+(controller_index&0xFFFF)*UNKNOWN_0051EBD8_DATUM_SIZE;
+}
+
+/* 0x00219f60: the count of 7 bits at 3 of a sound playback controller
+changes by some, if what the controller has at 4 is not NONE */
+void __attribute__((stdcall)) sound_playback_controller_add_count(
+	byte *controller,
+	char amount)
+{
+	if (*(const long *)(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWN4_OFFSET)!=NONE)
+	{
+		byte count= controller[UNKNOWN_0051EBD8_DATUM_COUNT_OFFSET];
+
+		controller[UNKNOWN_0051EBD8_DATUM_COUNT_OFFSET]=
+			(count&~UNKNOWN_0051EBD8_DATUM_COUNT_MASK)|((count+amount)&UNKNOWN_0051EBD8_DATUM_COUNT_MASK);
+	}
+}
+
+/* 0x0021a0c0: makes the array of the looping sounds. FALSE if it cannot */
+boolean looping_sounds_initialize(
+	void)
+{
+	struct data_array *data= shell_memory_data_new("looping sounds", MAXIMUM_LOOPING_SOUNDS, LOOPING_SOUND_DATUM_SIZE);
+
+	looping_sounds= data;
+	if (data)
+	{
+		data_make_valid(data);
+	}
+
+	return looping_sounds!=NULL;
+}
+
+/* 0x0021d490: makes the array of the sound effects. FALSE if it cannot */
+boolean sound_effects_initialize(
+	void)
+{
+	struct data_array *data= shell_memory_data_new("sounds effects", MAXIMUM_SOUND_EFFECTS, SOUND_EFFECT_DATUM_SIZE);
+
+	sound_effects= data;
+	if (data)
+	{
+		data_make_valid(data);
+	}
+
+	return sound_effects!=NULL;
+}
+
+/* 0x0021dcf0: a sound effect is let go, and its sound playback controller
+has one sound less */
+void sound_effect_delete(
+	long effect_index)
+{
+	struct data_array *data= sound_effects;
+	byte *effect= (byte *)data->data+(effect_index&0xFFFF)*SOUND_EFFECT_DATUM_SIZE;
+
+	if (*(const long *)(effect+SOUND_EFFECT_DATUM_CONTROLLER_INDEX_OFFSET)!=NONE)
+	{
+		sound_playback_controller_release(*(const long *)(effect+SOUND_EFFECT_DATUM_CONTROLLER_INDEX_OFFSET));
+		*(long *)(effect+SOUND_EFFECT_DATUM_CONTROLLER_INDEX_OFFSET)= NONE;
+	}
+	datum_delete(data, effect_index);
+}
+
+/* 0x0021dda0: makes the array of the sound voices, of as many as the
+sound has. FALSE if it cannot */
+boolean sound_voices_initialize(
+	const struct sound_configuration *configuration)
+{
+	struct data_array *data= shell_memory_data_new("sound voices", configuration->maximum_voices, SOUND_VOICE_DATUM_SIZE);
+
+	sound_voices= data;
+	if (!data)
+	{
+		return FALSE;
+	}
+	data_make_valid(data);
+
+	return TRUE;
+}
+
+/* 0x0021f570 and 0x0021f5a0: the two streams of the console's sound stop
+for a while, and go on */
+void sound_console_streams_pause(
+	void)
+{
+	long offset;
+
+	for (offset= UNKNOWN_0051EBE4_STREAMS_OFFSET; offset<UNKNOWN_0051EBE4_UNKNOWN2A98_OFFSET; offset+= 4)
+	{
+		unknown_0037b73f(*(void **)(unknown_0051ebe4+offset), TRUE);
+	}
+}
+
+void sound_console_streams_resume(
+	void)
+{
+	long offset;
+
+	for (offset= UNKNOWN_0051EBE4_STREAMS_OFFSET; offset<UNKNOWN_0051EBE4_UNKNOWN2A98_OFFSET; offset+= 4)
+	{
+		unknown_0037b73f(*(void **)(unknown_0051ebe4+offset), FALSE);
 	}
 }
