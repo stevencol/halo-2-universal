@@ -287,6 +287,10 @@ enum
 	/* in a looping sound: the first sound that plays of each of its
 	tracks; in a sound that plays, the next and the one before of its ring */
 	LOOPING_SOUND_TRACK_SIZE= 0x14,
+	/* how many sounds of a track have a channel, and where the bytes for who
+	is told of a sound of a track say which track */
+	LOOPING_SOUND_TRACK_CHANNELS_OFFSET= 0xE,
+	LOOPING_SOUND_TOLD_TRACK_OFFSET= 0x4,
 	LOOPING_SOUND_DATUM_TRACK_SOURCE_OFFSET= 0x88,
 	SOUND_SOURCE_DATUM_NEXT_OFFSET= 0x6C,
 	SOUND_SOURCE_DATUM_PREVIOUS_OFFSET= 0x70,
@@ -1576,6 +1580,10 @@ void __attribute__((stdcall)) sound_query_portal_results(long listener_cluster_i
 	long cluster_index);
 long unknown_0018cfd0(long cluster_index, const real_point3d *position, real *distance);
 real unknown_0014b240(const byte *structure_bsp, const byte *portal, const real_point3d *position);
+
+/* 0x0021ac30 */
+void __attribute__((stdcall)) looping_sound_track_source_got_channel(long data, long sound_index,
+	long source_index, void *unknown5C);
 
 /* 0x0021d060 */
 void looping_sound_check_distances(long definition_index, const struct sound_source *source);
@@ -11039,5 +11047,31 @@ void sound_effect_start_sounds(
 				sound_source_create(tag_index, listener_index, bytes, rule_index);
 			}
 		}
+	}
+}
+
+/* 0x0021ac30: a looping sound is told that a sound of one of its tracks
+has a channel: the track (the byte at 4 of the bytes for who is told) counts
+one more, in its byte at 0xE. Not for a sound that is fading out, nor if the
+looping sound is no longer there. The name is made up */
+void __attribute__((stdcall)) looping_sound_track_source_got_channel(
+	long data,
+	long sound_index,
+	long source_index,
+	void *unknown5C)
+{
+	const byte *source= sound_source_get(source_index);
+	byte *looping_sound;
+
+	if (((source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]>>7)&1) &&
+		*(const long *)(source+SOUND_SOURCE_DATUM_FADE_TIME_OFFSET)>*(const long *)(source+SOUND_SOURCE_DATUM_UNKNOWNB8_OFFSET))
+	{
+		return;
+	}
+	looping_sound= datum_try_and_get(looping_sounds, data);
+	if (looping_sound)
+	{
+		looping_sound[LOOPING_SOUND_DATUM_TRACK_SOURCE_OFFSET+LOOPING_SOUND_TRACK_CHANNELS_OFFSET+
+			(char)((const byte *)unknown5C)[LOOPING_SOUND_TOLD_TRACK_OFFSET]*LOOPING_SOUND_TRACK_SIZE]++;
 	}
 }

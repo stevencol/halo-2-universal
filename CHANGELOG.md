@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Una pista de un sonido en bucle cuenta sus canales
+
+Una función en `sound/sound_manager.c`, de 142 bytes. De 915 funciones se pasa a
+916, el 8,13 % de las del juego (el 4,977 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `looping_sound_track_source_got_channel` | `0x0021ac30` | `sound/sound_manager.c` |
+
+No estaba apuntada: solo se llega a ella por la tabla de `0x0044a110`, la
+de a quién se avisa de los sonidos de las pistas de un sonido en bucle, así
+que no está en la lista de Ghidra. Esa tabla hace falta para `0x0021b940`,
+y tiene otras tres funciones que irán en los hitos siguientes.
+
+### Lo que se sabe
+
+- Se llama cuando un sonido de una pista consigue canal. La pista (el byte
+  de `0x4` de los bytes de a quién se avisa) cuenta uno más en su byte de
+  `0xE`.
+- No cuenta si el sonido se está apagando (la marca 7 y el tiempo de
+  apagado por delante del de `0xB8`), ni si el sonido en bucle ya no está.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función. La última
+  batería completa es la del hito 244 (911 funciones, todas bien).
+
+### Mutaciones
+
+Ocho cambios a mano: las pruebas notan los ocho.
+
 ## 2026-10-05 — Un efecto de sonido arranca sus sonidos
 
 Una función en `sound/sound_manager.c`, de 820 bytes. De 914 funciones se pasa a

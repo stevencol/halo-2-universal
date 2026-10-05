@@ -6699,3 +6699,27 @@ def run(t) -> None:
                 "unknown_0021a250": looping_,
             },
         )
+
+    # ---------- a looping sound is told that a sound of one of its tracks has a channel
+
+    random_ = random.Random(249)
+
+    for n in range(700):
+        looping, indices = looping_world()
+        sources = bytearray(random_.randbytes(0x4C + PLAYING * DATUM))
+        struct.pack_into("<I", sources, 0x44, 0x4C)
+        number = random_.randrange(PLAYING)
+        at = 0x4C + number * DATUM
+        sources[at + 4] = random_.choice((0, 0x80, 0x80, 0x7F, 0xFF))
+        fade = random_.randrange(-5, 1000)
+        struct.pack_into("<2i", sources, at + 0xB4, fade, random_.choice((fade, fade - 1, fade + 1, -1, 5000)))
+        told = bytearray(random_.randbytes(0x30))
+        told[4] = random_.randrange(3)
+        t.check(
+            "looping_sound_track_source_got_channel",
+            random_.choice((NONE, *indices, *indices, indices[0] ^ 0x10000, 6, 0x10007)),
+            random_.getrandbits(32),
+            random_.getrandbits(16) << 16 | number,
+            Buffer(bytes(told)),
+            globals={"looping_sounds": looping, "sound_sources": Buffer(bytes(sources), pointers=(0x44,))},
+        )
