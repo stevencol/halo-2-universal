@@ -4886,3 +4886,28 @@ def run(t) -> None:
             Buffer(random_.randbytes(4), places=(0,)),
             globals={"unknown_0047f0d0": GlobalRange(0x20), "unknown_0047f0f0": GlobalRange(0x20)},
         )
+
+    # ---------- what the console calls for the stream of a voice
+
+    random_ = random.Random(212)
+
+    for _ in range(500):
+        count = random_.choice((8, 8, 4, 1, 0, -1))
+        console = bytearray(console_voices(count))
+        other = len(console)
+        console += struct.pack("<I", other + 4) + random_.randbytes(0x18) + struct.pack("<I", mock_address(0)) + random_.randbytes(4)
+        pointers = [other]
+        for voice in range(8):
+            at = 0xC + voice * 0x34
+            console[at + 3] = random_.choice((0, 0, 4, 8, 0xC, 0xF3, 0xFF, random_.getrandbits(8)))
+            struct.pack_into("<I", console, at + 0x30, other)
+            pointers.append(at + 0x30)
+        t.check(
+            "sound_console_voice_stream_callback",
+            random_.choice((0, 1, 3, 7, 7, 8, NONE, 0x80000000, random_.randrange(8), random_.randrange(8))),
+            random_.choice((0, 1, random_.getrandbits(32), random_.getrandbits(32) | 1)),
+            random_.choice((0, 0, 1, random_.getrandbits(32))),
+            globals={"unknown_0051ebe4": Buffer(bytes(console), pointers=tuple(pointers))},
+            externals={"unknown_002ae820": console_call(0)},
+            mocks=[Mock(lambda call: 0, stack_arguments=3, registers=("ecx",))],
+        )

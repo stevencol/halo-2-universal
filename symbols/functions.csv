@@ -1312,3 +1312,5 @@ address,name,source,arguments,returns,convention
 002ae6f0,unknown_002ae6f0,,esi,void
 00221980,sound_classes_set_decibels,source/sound/sound_manager.c,stack stack stack,void,stdcall
 0021e410,sound_console_get_format,source/sound/sound_manager.c,eax esi edi,void
+00220730,sound_console_voice_stream_callback,source/sound/sound_manager.c,stack stack stack,void,stdcall
+002ae820,unknown_002ae820,,eax,void

@@ -731,7 +731,7 @@ struct sound_console_environment_handler
 
 /* the two things of the console that a voice of the console's sound has, at
 0x24 and 0x30: of their functions, those that the game calls. Those of the
-first take it on the stack; that of the second, in ecx */
+first take it on the stack; those of the second, in ecx */
 struct sound_console_stream_functions
 {
 	void *unknown0[3];
@@ -742,7 +742,8 @@ struct sound_console_stream_functions
 
 struct sound_console_voice_object_functions
 {
-	void *unknown0[7];
+	void *unknown0[6];
+	void (__attribute__((thiscall)) *unknown18)(void *object, byte *voice, long unknown, long unknown2);
 	void (__attribute__((thiscall)) *unknown1C)(void *object);
 };
 
@@ -1047,6 +1048,10 @@ void sound_console_voice_stop(long voice_index, long unknown);
 /* 0x002ae8e0 and 0x002ae6f0: of a voice of the console's sound */
 void unknown_002ae8e0(byte *voice);
 void unknown_002ae6f0(byte *voice);
+
+/* 0x00220730; 0x002ae820: of a voice of the console's sound */
+void __attribute__((stdcall)) sound_console_voice_stream_callback(long voice_index, long unknown, long unknown2);
+void unknown_002ae820(byte *voice);
 void unknown_002ae500(void *voice, const struct sound_chunk *chunk);
 
 /* 0x0012a0b0 */
@@ -8142,4 +8147,39 @@ void sound_console_get_format(
 	format->block_size= (word)(channels*SOUND_COMPRESSED_BLOCK_SIZE);
 	format->bytes_per_second= format->block_size*(SOUND_SAMPLES_PER_SECOND/SOUND_COMPRESSED_SAMPLES_PER_BLOCK);
 	*unknown= unknown_0047f0f0;
+}
+
+/* 0x00220730: what the console calls for the stream of a voice of the
+console's sound: unknown_0021f4e0 gives it this function, with the number of
+the voice. With something to tell, of a voice that there is, the thing that
+the voice has at 0x30 is told of it; and if the last number is 0 and the
+voice has neither of the flags 2 and 3, unknown_002ae820 is given the voice.
+The name is made up */
+void __attribute__((stdcall)) sound_console_voice_stream_callback(
+	long voice_index,
+	long unknown,
+	long unknown2)
+{
+	byte *console;
+	byte *voice;
+	void *object;
+	long last;
+
+	if (!unknown)
+	{
+		return;
+	}
+	console= unknown_0051ebe4;
+	last= *(const short *)(console+UNKNOWN_0051EBE4_VOICE_COUNT_OFFSET)-1;
+	if (voice_index<0 || voice_index>last)
+	{
+		return;
+	}
+	voice= console+voice_index*UNKNOWN_0051EBE4_VOICE_SIZE+UNKNOWN_0051EBE4_VOICE_OFFSET;
+	object= *(void **)(voice+VOICE_UNKNOWN30_OFFSET);
+	(*(const struct sound_console_voice_object_functions *const *)object)->unknown18(object, voice, unknown, unknown2);
+	if (!unknown2 && !(voice[VOICE_FLAGS_OFFSET]&(FLAG(_voice_unknown2_bit)|FLAG(_voice_unknown3_bit))))
+	{
+		unknown_002ae820(voice);
+	}
 }

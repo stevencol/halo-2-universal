@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Lo que la consola llama para el flujo de una voz
+
+Una función en `sound/sound_manager.c`. De 868 funciones se pasa a
+869, el 7,71 % de las del juego (el 4,538 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_console_voice_stream_callback` | `0x00220730` | `sound/sound_manager.c` |
+
+No estaba apuntada. No la llama nadie del juego: `0x0021f4e0` se la da a la
+consola, junto con el número de la voz, al preparar el flujo de la voz.
+Nueva sin descompilar: `0x002ae820`.
+
+### Lo que se sabe
+
+- `sound_console_voice_stream_callback` es el aviso que da la consola sobre
+  el flujo de una voz. Recibe el número de la voz y dos números.
+- Si hay algo que avisar y la voz existe, se lo pasa a la cosa que la voz
+  tiene en `0x30` (la función de `0x18` de su tabla).
+- Si el último número es 0 y la voz no tiene las marcas 2 ni 3, llama a
+  `0x002ae820` con la voz (seguramente para darle más muestras).
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y de
+  `sound_console_voice_stop`. La batería completa corre aparte con las 867
+  funciones del hito 210.
+
+### Mutaciones
+
+Siete líneas rotas a mano: las pruebas notan las siete.
+
 ## 2026-10-05 — Cómo son las muestras de un sonido para la consola
 
 Una función en `sound/sound_manager.c`. De 867 funciones se pasa a
