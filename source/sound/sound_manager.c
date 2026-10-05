@@ -583,6 +583,7 @@ enum
 	SOUND_EFFECT_COLLECTION_FLAGS_OFFSET= 0x8,
 	SOUND_CONSOLE_SLOT_BUFFER_FLAGS= 0x2010,
 	SOUND_SILENCE_SIZE= 1000,
+	SOUND_UNKNOWN_00222250_MAXIMUM= 4,
 	UNKNOWN_0051EBE4_UNKNOWN2A08_OFFSET= 0x2A08,
 	UNKNOWN_0051EBE4_UNKNOWN2AD4_OFFSET= 0x2AD4,
 	SOUND_CONSOLE_FORMAT_BASE_SIZE= 0x12,
@@ -1377,6 +1378,10 @@ void unknown_0037cc4a(void *buffer, void *samples, unsigned long size);
 void unknown_0037b6a7(void *buffer, long unknown);
 void unknown_0037b66f(void *buffer, long unknown);
 void unknown_0037b6df(void *buffer, long unknown, long unknown2, long unknown3);
+
+/* 0x00222250; 0x00192b90: something of a direction */
+real sound_unknown_00222250(const real_vector3d *vector, long index);
+real unknown_00192b90(long index, const real_vector3d *direction, long unknown);
 
 /* 0x0021d110 */
 long __attribute__((stdcall)) sound_effect_source_new(byte *request, long sound_index);
@@ -9516,4 +9521,30 @@ void sound_console_update(
 			}
 		}
 	}
+}
+
+/* 0x00222250: what unknown_00192b90 says of a direction and one of five
+things, from 0 to 1: the direction is made of length 1 first. 1 for a number
+that is of none of the five. It is for the entries of the list that
+unknown_002222c0 writes; what it is of is not known */
+real sound_unknown_00222250(
+	const real_vector3d *vector,
+	long index)
+{
+	real_vector3d direction;
+	real result;
+
+	if (index<0 || index>SOUND_UNKNOWN_00222250_MAXIMUM)
+	{
+		return 1.0f;
+	}
+	direction= *vector;
+	normalize3d(&direction);
+	result= unknown_00192b90(index, &direction, 1);
+	if (0.0f>result)
+	{
+		return 0.0f;
+	}
+
+	return result>1.0f ? 1.0f : result;
 }

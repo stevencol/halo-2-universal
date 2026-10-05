@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Función número 900
+
+Una función en `sound/sound_manager.c`. De 899 funciones se pasa a
+900, el 7,99 % de las del juego (el 4,728 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_unknown_00222250` | `0x00222250` | `sound/sound_manager.c` |
+
+No estaba apuntada. La llama `0x002222c0`, la que escribe las entradas de
+la lista de `sound_unknown_002225a0`. Recibe una dirección en `ecx` y un
+número en `esi`, y devuelve un real en `xmm0`. Nueva sin descompilar:
+`0x00192b90`.
+
+### Lo que se sabe
+
+- `sound_unknown_00222250` deja la dirección con longitud 1 y pregunta a
+  `0x00192b90` por ella y por una de cinco cosas (el número, de 0 a 4); lo
+  que responde se recorta entre 0 y 1.
+- Con un número que no es de ninguna de las cinco devuelve 1.
+- De qué son esas cinco cosas no se sabe todavía (por dónde se usa, pueden
+  ser las cinco salidas de un sonido envolvente); el nombre lleva la
+  dirección.
+
+### Dónde queda el sonido
+
+- Con esta son **900 funciones descompiladas**. En esta tanda (hitos 193 a
+  233) se han hecho 51, casi todas del sonido: el efecto Doppler, cómo se
+  oye un canal, la voz de la consola de cada canal, la caché de muestras
+  entera, los efectos de sonido, los sonidos sueltos de los sonidos en
+  bucle y buena parte de lo que habla con la consola.
+- Del sonido quedan 25 funciones, unos 23.000 bytes: las más grandes
+  (`0x00127400`, los oyentes; `0x0021a250`, `0x0021b0e0` y `0x0021c400`,
+  los sonidos en bucle; `0x0021e4b0`, `0x0021fa80` y `0x002201f0`, la
+  consola) y otras que dependen de funciones de fuera del sonido.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función. La batería
+  completa se lanza aparte con las 900 funciones de este hito.
+
+### Mutaciones
+
+Siete líneas rotas a mano: las pruebas notan las siete.
+
 ## 2026-10-05 — Lo que el sonido de la consola hace cada fotograma
 
 Una función en `sound/sound_manager.c`. De 898 funciones se pasa a

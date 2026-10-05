@@ -5793,3 +5793,21 @@ def run(t) -> None:
                 Mock(lambda call: 0, stack_arguments=0, registers=("ecx",)),
             ],
         )
+
+    # ---------- what unknown_00192b90 says of a direction and one of five things
+
+    random_ = random.Random(233)
+
+    for _ in range(600):
+        answer = random_.choice((0.0, 0.5, 1.0, 1.5, -0.25, -0.0, 0.999, float("nan"), random_.uniform(-1, 2)))
+        t.check(
+            "sound_unknown_00222250",
+            Buffer(reals(random_, 3)),
+            random_.choice((0, 1, 2, 3, 4, 4, 5, NONE, 0x80000000, 0x7FFFFFFF)),
+            externals={
+                "unknown_00192b90": lambda harness, arguments, answer=answer: (
+                    real_bits(answer),
+                    (arguments[0], bytes(harness.mu.mem_read(arguments[1], 12)), arguments[2]),
+                ),
+            },
+        )

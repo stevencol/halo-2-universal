@@ -1358,3 +1358,5 @@ address,name,source,arguments,returns,convention
 0037b6df,unknown_0037b6df,,stack stack stack stack,void
 001915f0,unknown_001915f0,,,void
 0037b844,unknown_0037b844,,,void
+00222250,sound_unknown_00222250,source/sound/sound_manager.c,ecx esi,real:xmm0
+00192b90,unknown_00192b90,,eax ecx stack,real:xmm0
