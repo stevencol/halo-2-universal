@@ -1337,3 +1337,11 @@ address,name,source,arguments,returns,convention
 0021c140,looping_sound_source_matches,source/sound/sound_manager.c,stack stack,bool,stdcall
 0021cc60,looping_sound_detail_request,source/sound/sound_manager.c,stack stack stack,bool,stdcall
 0021d110,sound_effect_source_new,source/sound/sound_manager.c,eax stack,int,stdcall
+00220a70,sound_console_slot_create_stream,source/sound/sound_manager.c,eax,bool
+0037d4be,unknown_0037d4be,,stack stack stack stack,int
+0037c5e4,unknown_0037c5e4,,stack stack,void
+0037c620,unknown_0037c620,,stack stack stack,void
+0037c644,unknown_0037c644,,stack stack stack,void
+0037c6c1,unknown_0037c6c1,,stack stack stack,void
+0037c69d,unknown_0037c69d,,stack stack stack,void
+0037c600,unknown_0037c600,,stack stack stack,void

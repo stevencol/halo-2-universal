@@ -581,6 +581,7 @@ enum
 	/* of what the tags have of a sound effect, and of what unknown_0018d090
 	gives */
 	SOUND_EFFECT_COLLECTION_FLAGS_OFFSET= 0x8,
+	SOUND_CONSOLE_SLOT_BUFFER_FLAGS= 0x2010,
 	VOICE_UNKNOWN2_OFFSET= 0x2,
 	VOICE_DECIBELS_OFFSET= 0xC,
 	VOICE_UNKNOWN30_OFFSET= 0x30,
@@ -819,6 +820,24 @@ struct sound_console_stream_description
 
 typedef char verify_sound_console_stream_description_size[
 	sizeof(struct sound_console_stream_description) == 0x18 ? 1 : -1];
+
+/* what the console takes to make what plays the sound of a slot, and where
+that is to be heard: a number of pairs, each of where and how loud */
+struct sound_console_buffer_description
+{
+	unsigned long size;
+	unsigned long flags;
+	unsigned long unknown8[4];
+};
+
+struct sound_console_mixbins
+{
+	long count;
+	const long *pairs;
+};
+
+typedef char verify_sound_console_buffer_description_size[
+	sizeof(struct sound_console_buffer_description) == 0x18 ? 1 : -1];
 
 /* a sound of which it is to be worked out how it is heard where it is */
 struct sound_query
@@ -1310,6 +1329,20 @@ void sound_source_hold_chunk(byte *source);
 void sound_channels_unknown_00129380(const long *voice_values, const long *slot_values);
 void __attribute__((stdcall)) sound_console_set_environment(const long *second, const long *first, const void *unknown);
 void sound_classes_update(real seconds);
+
+/* 0x00220a70; 0x0037d4be, 0x0037c5e4, 0x0037c620, 0x0037c644, 0x0037c6c1,
+0x0037c69d and 0x0037c600: of the console */
+struct sound_console_buffer_description;
+struct sound_console_mixbins;
+boolean sound_console_slot_create_stream(long slot_index);
+long unknown_0037d4be(void *sound, const struct sound_console_buffer_description *description, void **stream,
+	void *unknown);
+void unknown_0037c5e4(void *stream, const struct sound_console_mixbins *mixbins);
+void unknown_0037c620(void *stream, real unknown, long apply);
+void unknown_0037c644(void *stream, real unknown, long apply);
+void unknown_0037c6c1(void *stream, real unknown, long apply);
+void unknown_0037c69d(void *stream, real unknown, long apply);
+void unknown_0037c600(void *stream, long unknown, long apply);
 
 /* 0x0021d110 */
 long __attribute__((stdcall)) sound_effect_source_new(byte *request, long sound_index);
@@ -9201,4 +9234,52 @@ long __attribute__((stdcall)) sound_effect_source_new(
 	}
 
 	return sound_source_new_inline(request, sound_index);
+}
+
+/* 0x00220a70: a slot of the console's sound is given what plays its sound:
+the console makes it (unknown_0037d4be), and it is to be heard in five
+places (6, 8, 7, 9 and 10), as far as can be and with nothing that changes
+it by how far it is or how fast it moves; the slot has 0x1F at its start.
+FALSE if the console does not make it. Either way the slot has nothing at
+0x38. What the functions of the console are is a guess: they are not in
+this executable by name. The name is made up */
+boolean sound_console_slot_create_stream(
+	long slot_index)
+{
+	byte *console= unknown_0051ebe4;
+	struct sound_console_slot *slot= (struct sound_console_slot *)(console+UNKNOWN_0051EBE4_SLOTS_OFFSET)+slot_index;
+	struct sound_console_buffer_description description;
+	struct sound_console_mixbins mixbins;
+	long pairs[10];
+
+	memset(&description, 0, sizeof(description));
+	description.size= sizeof(description);
+	description.flags= SOUND_CONSOLE_SLOT_BUFFER_FLAGS;
+	if (unknown_0037d4be(*(void **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET), &description, &slot->stream, NULL)<0)
+	{
+		slot->unknown38= NULL;
+		return FALSE;
+	}
+	pairs[0]= 6;
+	pairs[1]= 0;
+	pairs[2]= 8;
+	pairs[3]= 0;
+	pairs[4]= 7;
+	pairs[5]= 0;
+	pairs[6]= 9;
+	pairs[7]= 0;
+	pairs[8]= 10;
+	pairs[9]= 0;
+	mixbins.count= 5;
+	mixbins.pairs= pairs;
+	unknown_0037c5e4(slot->stream, &mixbins);
+	*(long *)slot->unknown0= 0x1F;
+	unknown_0037c620(slot->stream, SOUND_REAL_MAXIMUM, 1);
+	unknown_0037c644(slot->stream, SOUND_REAL_MAXIMUM, 1);
+	unknown_0037c6c1(slot->stream, 0.0f, 1);
+	unknown_0037c69d(slot->stream, 0.0f, 1);
+	unknown_0037c600(slot->stream, 0, 1);
+	slot->unknown38= NULL;
+
+	return TRUE;
 }

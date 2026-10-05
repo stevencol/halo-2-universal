@@ -5605,3 +5605,38 @@ def run(t) -> None:
                 "sound_effect_delete": lambda harness, arguments: (0, tuple(arguments)),
             },
         )
+
+    # ---------- a slot of the console's sound is given what plays its sound
+
+    random_ = random.Random(229)
+
+    for _ in range(200):
+        console = Buffer(random_.randbytes(0x2AC0))
+        answer = random_.choice((0, 0, 1, 0x80004005, 0x8007000E, 0x7FFFFFFF))
+        stream = random_.getrandbits(32)
+
+        def makes(harness, arguments, answer=answer, stream=stream):
+            sound_, description, where, unknown = arguments
+            record = sound_, bytes(harness.mu.mem_read(description, 0x18)), harness.normalize(where), unknown
+            if not answer & 0x80000000:
+                harness.mu.mem_write(where, struct.pack("<I", stream))
+            return answer, record
+
+        def heard_in(harness, arguments):
+            count, pairs = struct.unpack("<2I", harness.mu.mem_read(arguments[1], 8))
+            return 0, (arguments[0], count, bytes(harness.mu.mem_read(pairs, 0x28)))
+
+        t.check(
+            "sound_console_slot_create_stream",
+            random_.randrange(16),
+            globals={"unknown_0051ebe4": console},
+            externals={
+                "unknown_0037d4be": makes,
+                "unknown_0037c5e4": heard_in,
+                "unknown_0037c620": lambda harness, arguments: (0, tuple(arguments)),
+                "unknown_0037c644": lambda harness, arguments: (0, tuple(arguments)),
+                "unknown_0037c6c1": lambda harness, arguments: (0, tuple(arguments)),
+                "unknown_0037c69d": lambda harness, arguments: (0, tuple(arguments)),
+                "unknown_0037c600": lambda harness, arguments: (0, tuple(arguments)),
+            },
+        )

@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Una casilla de la consola recibe lo que hace sonar su sonido
+
+Una función en `sound/sound_manager.c`. De 894 funciones se pasa a
+895, el 7,94 % de las del juego (el 4,688 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_console_slot_create_stream` | `0x00220a70` | `sound/sound_manager.c` |
+
+No estaba apuntada. Recibe el número de la casilla en `eax` y devuelve si
+pudo. Nuevas sin descompilar, todas de la consola: `0x0037d4be` (la que
+crea), `0x0037c5e4`, `0x0037c620`, `0x0037c644`, `0x0037c6c1`,
+`0x0037c69d` y `0x0037c600`.
+
+### Lo que se sabe
+
+- `sound_console_slot_create_stream` crea lo que hace sonar el sonido de una
+  casilla (las casillas son los sitios desde los que se oye un sonido con
+  posición). Lo pide a la consola con una descripción de `0x18` bytes y las
+  marcas `0x2010`.
+- Después lo configura: que se oiga por cinco salidas (las 6, 8, 7, 9 y
+  10), con las dos distancias al máximo que cabe en un real y a 0 las otras
+  tres cosas que la consola ajusta por distancia y velocidad: el juego hace
+  esas cuentas por su lado (`sound_source_spatial_gain`,
+  `sound_listener_doppler_pitch`).
+- La casilla empieza con `0x1F` en su primer número y sin nada en `0x38`.
+- Qué es cada función de la consola es una suposición: no están en este
+  ejecutable por nombre. El nombre de esta es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función. La batería
+  completa corre aparte con las 893 funciones del hito 227.
+
+### Mutaciones
+
+Diez líneas rotas a mano: las pruebas notan las diez.
+
 ## 2026-10-05 — Un sonido arranca con su efecto de sonido
 
 Una función en `sound/sound_manager.c`, de 427 bytes. De 893 funciones se pasa a
