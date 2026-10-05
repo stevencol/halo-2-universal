@@ -794,9 +794,9 @@ address,name,source,arguments,returns,convention
 001293f0,unknown_001293f0,,,void
 0021ee80,unknown_0021ee80,,,void
 00218810,sound_cache_idle,source/sound/sound_manager.c,,void
-0021f6d0,unknown_0021f6d0,,ecx edx stack,void
+0021f6d0,sound_console_set_environment,source/sound/sound_manager.c,ecx edx stack,void,stdcall
 00218850,unknown_00218850,,stack stack stack,int
-001268e0,unknown_001268e0,,eax,void
+001268e0,sound_source_hold_chunk,source/sound/sound_manager.c,eax,void
 00216400,saved_game_files_get_unit_root,source/saved games/saved_game_files.c,ecx eax stack,pointer
 00216a50,saved_game_file_type_from_variant,source/saved games/saved_game_files.c,eax,int
 00216ab0,saved_game_file_type_from_listed_game,source/saved games/saved_game_files.c,eax,int
@@ -1159,7 +1159,7 @@ address,name,source,arguments,returns,convention
 002197f0,sound_gain_to_decibels,source/sound/sound_manager.c,xmm0,real:eax
 00127010,unknown_00127010,,ecx,real:eax
 0021f360,unknown_0021f360,,stack,void,stdcall
-00221900,unknown_00221900,,xmm1,void
+00221900,sound_classes_update,source/sound/sound_manager.c,xmm1,void
 00127400,unknown_00127400,,stack,void,stdcall
 00219cc0,unknown_00219cc0,,,void
 0021b0e0,unknown_0021b0e0,,stack,void,stdcall
@@ -1168,7 +1168,7 @@ address,name,source,arguments,returns,convention
 00129100,unknown_00129100,,stack stack edi,void,stdcall
 0014dde0,unknown_0014dde0,,,int
 00221a70,unknown_00221a70,,stack stack,void,stdcall
-00129380,unknown_00129380,,edi ebx,void
+00129380,sound_channels_unknown_00129380,source/sound/sound_manager.c,edi ebx,void
 0012a420,sound_channel_set_voice_flag3,source/sound/sound_manager.c,eax,void
 0012af10,sound_slot_new,source/sound/sound_manager.c,,short
 0012af90,sound_slot_delete,source/sound/sound_manager.c,eax,void
@@ -1237,3 +1237,9 @@ address,name,source,arguments,returns,convention
 0021a050,looping_sound_unknown_0021a050,source/sound/sound_manager.c,ecx stack,int,stdcall
 0021a080,looping_sound_unknown_0021a080,source/sound/sound_manager.c,eax,bool
 0021cc30,sound_unknown_0021cc30,source/sound/sound_manager.c,ecx eax stack,int,stdcall
+00125f70,sound_source_new,source/sound/sound_manager.c,ebx edi stack,int,stdcall
+00126c30,unknown_00126c30,,eax stack stack stack,bool
+00126ec0,unknown_00126ec0,,ecx stack,int
+00126000,unknown_00126000,,stack stack stack stack,int
+00129790,unknown_00129790,,eax stack,void
+0021e3b0,unknown_0021e3b0,,esi,void

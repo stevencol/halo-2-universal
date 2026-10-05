@@ -259,6 +259,16 @@ enum
 	SOUND_PERMUTATION_UNKNOWN8_OFFSET= 0x8,
 	LOOPING_SOUND_UNKNOWNC_OFFSET= 0xC,
 	LOOPING_SOUND_UNKNOWND_OFFSET= 0xD,
+	/* why a sound could not start */
+	_sound_source_new_failure_unknown2= 2,
+	_sound_source_new_failure_unknown3= 3,
+	_sound_cache_request_unknown4= 4,
+	/* in unknown_0051ebe4: the sound of the places of the map */
+	UNKNOWN_0051EBE4_ENVIRONMENT_OFFSET= 0x2A0C,
+	UNKNOWN_0051EBE4_ENVIRONMENT_UNKNOWN_SIZE= 0x30,
+	UNKNOWN_0051EBE4_UNKNOWN2AB4_OFFSET= 0x2AB4,
+	/* how many reals each class of sounds has in sound_class_gains */
+	SOUND_CLASS_GAIN_REALS= 4,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -318,6 +328,9 @@ byte *unknown_004ed288;
 /* 0x00502108: where the memory of the cache of the sounds starts */
 long sound_cache_base;
 
+/* 0x00502118: four reals for each class of sounds */
+real *sound_class_gains;
+
 /* 0x0047f0e0: 0x10000 in the main menu and 0x4000 in a game */
 long unknown_0047f0e0;
 
@@ -368,7 +381,6 @@ seconds of the frame, 0x00127400, 0x00219cc0, 0x0021b0e0, 0x00128020,
 what the frame has on the stack; 0x0014dde0 gives the first local player */
 struct sound_update_listeners;
 void __attribute__((stdcall)) unknown_0021f360(byte *globals);
-void unknown_00221900(real seconds);
 void __attribute__((stdcall)) unknown_00127400(boolean unknown);
 void unknown_00219cc0(void);
 void __attribute__((stdcall)) unknown_0021b0e0(long unknown);
@@ -377,7 +389,6 @@ void unknown_001282d0(void);
 void __attribute__((stdcall)) unknown_00129100(byte *first, byte *second, struct sound_update_listeners *listeners);
 long unknown_0014dde0(void);
 void __attribute__((stdcall)) unknown_00221a70(long player_index, struct sound_update_listeners *listeners);
-void unknown_00129380(byte *second, byte *first);
 
 /* 0x00125b40 */
 void sound_update(void);
@@ -421,13 +432,11 @@ void sound_cache_idle(void);
 
 /* 0x0021f6d0: sets the sound of the places of the map, from three parts of
 a tag */
-void unknown_0021f6d0(const void *unknown20, const void *unknown18, const void *unknown28);
 
 /* 0x00218850: asks for a piece of the samples of a sound. Bits come back */
 unsigned long unknown_00218850(long sound_index, const struct sound_chunk *chunk, long unknown);
 
 /* 0x001268e0: of a sound that plays, when its samples are not there */
-void unknown_001268e0(byte *source);
 
 /* 0x0012a810, 0x00219650 and 0x002197b0 */
 real sound_source_fade_decibels(long source_index);
@@ -567,6 +576,22 @@ long __attribute__((stdcall)) looping_sound_unknown_0021a050(const byte *unknown
 boolean looping_sound_unknown_0021a080(const byte *unknown);
 long __attribute__((stdcall)) sound_unknown_0021cc30(const byte *flags, const struct sound_definition *sound,
 	long pitch_range_offset);
+
+/* 0x00126c30 and 0x00126ec0: look at what the game says of a sound that
+is to play; 0x00126000: makes it; 0x00129790: of a channel; 0x0021e3b0: of
+the console's sound */
+boolean unknown_00126c30(long unknown2, void *unknown, long *first, long *failure);
+long unknown_00126ec0(void *unknown, long *second);
+long unknown_00126000(void *unknown, long first, long unknown2, long second);
+void unknown_00129790(long channel_index, long value);
+void unknown_0021e3b0(void *unknown);
+
+/* 0x00125f70, 0x001268e0, 0x00129380, 0x0021f6d0 and 0x00221900 */
+long __attribute__((stdcall)) sound_source_new(void *unknown, long *failure, long unknown2);
+void sound_source_hold_chunk(byte *source);
+void sound_channels_unknown_00129380(const long *voice_values, const long *slot_values);
+void __attribute__((stdcall)) sound_console_set_environment(const long *second, const long *first, const void *unknown);
+void sound_classes_update(real seconds);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -1136,7 +1161,7 @@ void sound_load_environment(
 	{
 		const byte *environment= (const byte *)(uintptr_t)global_tag_instances[environment_index&0xFFFF].address;
 
-		unknown_0021f6d0(environment+0x20, environment+0x18, environment+0x28);
+		sound_console_set_environment((const long *)(environment+0x20), (const long *)(environment+0x18), environment+0x28);
 		memcpy(game_sound_globals+GAME_SOUND_GLOBALS_ENVIRONMENT_OFFSET, environment+0x48, 3*sizeof(long));
 	}
 }
@@ -1173,7 +1198,7 @@ boolean sound_source_request_data(
 
 	if (result&(FLAG(_sound_cache_result_unknown0_bit)|FLAG(_sound_cache_result_unknown1_bit)))
 	{
-		unknown_001268e0(source);
+		sound_source_hold_chunk(source);
 	}
 
 	return (result>>_sound_cache_result_unknown1_bit)&1;
@@ -1549,7 +1574,7 @@ void sound_update(
 				unknown_001269f0();
 				globals= game_sound_globals;
 			}
-			unknown_00221900(*(real *)(globals+GAME_SOUND_GLOBALS_SECONDS_OFFSET));
+			sound_classes_update(*(real *)(globals+GAME_SOUND_GLOBALS_SECONDS_OFFSET));
 			unknown_00127400(TRUE);
 			unknown_00219cc0();
 			unknown_0021b0e0(game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7E_OFFSET]);
@@ -1565,7 +1590,7 @@ void sound_update(
 			{
 				unknown_00221a70(player_index, &listeners);
 			}
-			unknown_00129380(second, first);
+			sound_channels_unknown_00129380((const long *)second, (const long *)first);
 			unknown_001293f0();
 			if (game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7E_OFFSET])
 			{
@@ -3317,4 +3342,137 @@ long __attribute__((stdcall)) sound_unknown_0021cc30(
 	return (short)sound_pitch_range_get_unknown4(
 		(const struct sound_pitch_range *)(uintptr_t)global_sound_cache_file_gestalt->pitch_ranges.address+
 		(sound->first_pitch_range_index+pitch_range_offset), sound);
+}
+
+/* 0x00125f70: a sound starts to play: what the game says of it is looked at
+by unknown_00126c30 and unknown_00126ec0, and unknown_00126000 makes it.
+Gives the sound that plays; NONE if it cannot, and then why, if it is asked:
+2 if the second says no, and 3 if it could not be made. The name is a guess */
+long __attribute__((stdcall)) sound_source_new(
+	void *unknown,
+	long *failure,
+	long unknown2)
+{
+	long source_index= NONE;
+
+	if (sound_available_inline())
+	{
+		long first;
+		long second= unknown2;
+
+		if (unknown_00126c30(unknown2, unknown, &first, failure))
+		{
+			if (unknown_00126ec0(unknown, &second))
+			{
+				if (failure)
+				{
+					*failure= _sound_source_new_failure_unknown2;
+				}
+			}
+			else
+			{
+				source_index= unknown_00126000(unknown, first, unknown2, second);
+				if (failure && source_index==NONE)
+				{
+					*failure= _sound_source_new_failure_unknown3;
+				}
+			}
+		}
+	}
+
+	return source_index;
+}
+
+/* 0x001268e0: a sound that plays counts in the piece of the samples that it
+is at, if it did not, and the piece is asked for */
+void sound_source_hold_chunk(
+	byte *source)
+{
+	if (!((source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]>>_sound_source_datum_holds_chunk_bit)&1))
+	{
+		const struct sound_definition *sound;
+
+		source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]|= FLAG(_sound_source_datum_holds_chunk_bit);
+		sound= sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET));
+		unknown_00218850(NONE,
+			sound_get_chunk(sound->first_pitch_range_index+(char)source[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET],
+				(char)source[SOUND_SOURCE_DATUM_PERMUTATION_OFFSET],
+				*(short *)(source+SOUND_SOURCE_DATUM_CHUNK_OFFSET)),
+			_sound_cache_request_unknown4);
+	}
+}
+
+/* 0x00129380: each channel that plays and is not stopped for a while is
+given, by unknown_00129790, a number of one of two tables: that of its slot,
+or with no slot, that of its voice of the console's sound */
+void sound_channels_unknown_00129380(
+	const long *voice_values,
+	const long *slot_values)
+{
+	long channel_index;
+
+	for (channel_index= 0;
+		channel_index<*(const short *)(game_sound_globals+GAME_SOUND_GLOBALS_CHANNEL_COUNT_OFFSET);
+		channel_index++)
+	{
+		const struct sound_channel *channel= &sound_channels[(short)channel_index];
+
+		if (channel->unknown0!=NONE && !channel->unknown9)
+		{
+			if (channel->unknownE!=NONE)
+			{
+				unknown_00129790(channel_index, slot_values[channel->unknownE]);
+			}
+			else if (channel->unknownC!=NONE)
+			{
+				unknown_00129790(channel_index, voice_values[channel->unknownC]);
+			}
+		}
+	}
+}
+
+/* 0x0021f6d0: the sound of the places of the map is set: two pairs of
+numbers and 0x30 bytes, kept in what the game has of the console's sound,
+and then unknown_0021e3b0 with what is at 0x2AB4 of it */
+void __attribute__((stdcall)) sound_console_set_environment(
+	const long *second,
+	const long *first,
+	const void *unknown)
+{
+	byte *console= unknown_0051ebe4;
+	long *numbers= (long *)(console+UNKNOWN_0051EBE4_ENVIRONMENT_OFFSET);
+
+	numbers[0]= first[0];
+	numbers[1]= first[1];
+	numbers[2]= second[0];
+	numbers[3]= second[1];
+	memcpy(&numbers[4], unknown, UNKNOWN_0051EBE4_ENVIRONMENT_UNKNOWN_SIZE);
+	unknown_0021e3b0(*(void **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB4_OFFSET));
+}
+
+/* 0x00221900: some seconds go by for the classes of sounds: each has three
+reals of its own, where it goes, where it is and the seconds that it has
+left to get there */
+void sound_classes_update(
+	real seconds)
+{
+	if (seconds>0.0f)
+	{
+		real *gain= sound_class_gains;
+		long index;
+
+		for (index= 0; index<NUMBER_OF_SOUND_CLASSES; index++, gain+= SOUND_CLASS_GAIN_REALS)
+		{
+			if (gain[2]>seconds)
+			{
+				gain[1]= (gain[0]-gain[1])*(seconds/gain[2])+gain[1];
+				gain[2]= gain[2]-seconds;
+			}
+			else
+			{
+				*(long *)&gain[1]= *(const long *)&gain[0];
+				gain[2]= 0.0f;
+			}
+		}
+	}
 }

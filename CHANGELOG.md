@@ -2,6 +2,56 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Empezar un sonido y el volumen de las clases
+
+Cinco funciones en `sound/sound_manager.c`. De 793 funciones se pasa a
+798, el 7,08 % de las del juego (el 3,782 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_source_new` | `0x00125f70` | `sound/sound_manager.c` |
+| `sound_source_hold_chunk` | `0x001268e0` | `sound/sound_manager.c` |
+| `sound_channels_unknown_00129380` | `0x00129380` | `sound/sound_manager.c` |
+| `sound_console_set_environment` | `0x0021f6d0` | `sound/sound_manager.c` |
+| `sound_classes_update` | `0x00221900` | `sound/sound_manager.c` |
+
+Cuatro estaban apuntadas sin descompilar (`unknown_001268e0`,
+`unknown_00129380`, `unknown_0021f6d0` y `unknown_00221900`). Nuevas sin
+descompilar: `0x00126c30`, `0x00126ec0`, `0x00126000`, `0x00129790` y
+`0x0021e3b0`. También el global `sound_class_gains` (`0x00502118`).
+
+### Lo que se sabe
+
+- `sound_source_new` es la entrada para que un sonido empiece a sonar:
+  `0x00126c30` y `0x00126ec0` miran lo que el juego dice de él y
+  `0x00126000` lo crea. Devuelve el sonido, o `NONE` con el motivo (2 si la
+  segunda lo rechaza, 3 si no se pudo crear). Recibe dos de sus argumentos
+  en `ebx` y `edi`.
+- `sound_source_hold_chunk` hace que un sonido cuente en el trozo de
+  muestras en el que está, si no contaba, y pide el trozo. Es la pareja de
+  `sound_source_release_chunk`.
+- `sound_channels_unknown_00129380` da a cada canal que suena y no está en
+  pausa un número de una de dos tablas (la de su casilla o la de su voz de
+  la consola), con `0x00129790`.
+- `sound_console_set_environment` guarda el sonido de los sitios del mapa
+  (dos pares de números y `0x30` bytes) en lo que el juego tiene del sonido
+  de la consola, y llama a `0x0021e3b0`.
+- `sound_classes_update` hace pasar unos segundos para las 54 clases de
+  sonido: cada una tiene adónde va, dónde está y los segundos que le
+  quedan para llegar.
+- Los nombres son inventados.
+
+### Sin comprobar
+
+- La batería completa no se pasó en este hito, solo las pruebas de estas
+  funciones y de las tres que las llaman.
+
+### Mutaciones
+
+Pendientes; corren aparte, en segundo plano.
+
 ## 2026-10-04 — Un número al azar, dos de los sonidos en bucle y un byte de un rango de tono
 
 Cuatro funciones en `sound/sound_manager.c`. De 789 funciones se pasa a

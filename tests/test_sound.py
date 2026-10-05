@@ -577,7 +577,7 @@ def run(t) -> None:
             globals={"global_tag_instances": tags, "global_sound_cache_file_gestalt": Pointer(tags, gestalt)},
             externals={
                 "unknown_00218850": request(n % 4 | random_.choice((0, 0, 0xFFFFFFFC, 4))),
-                "unknown_001268e0": lambda harness, arguments: 0,
+                "sound_source_hold_chunk": lambda harness, arguments: 0,
             },
         )
 
@@ -630,7 +630,7 @@ def run(t) -> None:
                 "global_game_globals": Pointer(tags, game_globals),
                 "game_sound_globals": sound_state(),
             },
-            externals={"unknown_0021f6d0": set_environment},
+            externals={"sound_console_set_environment": set_environment},
         )
 
     # ---------- updating each channel
@@ -946,12 +946,12 @@ def run(t) -> None:
                 "sound_channel_resume": lambda harness, arguments: (0, (arguments[0] & 0xFFFF,)),
                 "GetTickCount": lambda harness, arguments: 0x12345,
                 "unknown_0021f360": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
-                "unknown_00221900": lambda harness, arguments: (0, (arguments[0] & 0xFFFFFFFF,)),
+                "sound_classes_update": lambda harness, arguments: (0, (arguments[0] & 0xFFFFFFFF,)),
                 "unknown_0021ec00": first_update,
                 "unknown_00129100": tables,
                 "unknown_0014dde0": lambda harness, arguments: first_player,
                 "unknown_00221a70": lambda harness, arguments: (0, (arguments[0], stack_bytes(harness, arguments[1], 4))),
-                "unknown_00129380": lambda harness, arguments: (0, (stack_bytes(harness, arguments[0], 16), stack_bytes(harness, arguments[1], 16))),
+                "sound_channels_unknown_00129380": lambda harness, arguments: (0, (stack_bytes(harness, arguments[0], 16), stack_bytes(harness, arguments[1], 16))),
                 "lruv_wrap_ticks": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
             }
         )
@@ -2104,3 +2104,96 @@ def run(t) -> None:
             random_.randrange(3),
             globals=globals_,
         )
+
+    # ---------- a sound starts, and four more
+
+    random_ = random.Random(166)
+
+    for n in range(200):
+        looked = random_.choice((1, 1, 1, 0, 0x100))
+        refused = random_.choice((0, 0, 1, 0x80000000))
+        made = random_.choice((NONE, random_.getrandbits(32), 0x12340005))
+
+        def look(harness, arguments, looked=looked):
+            unknown2, unknown, first, failure = arguments
+            harness.mu.mem_write(first, struct.pack("<I", 0xA1B2C3D4))
+            return looked, (unknown2, harness.normalize(unknown), harness.normalize(failure))
+
+        def refuse(harness, arguments, refused=refused):
+            unknown, second = arguments
+            record = harness.normalize(unknown), bytes(harness.mu.mem_read(second, 4))
+            harness.mu.mem_write(second, struct.pack("<I", 0x0F1E2D3C))
+            return refused, record
+
+        said = Buffer(random_.randbytes(0x90))
+        t.check(
+            "sound_source_new",
+            said,
+            random_.choice((0, Buffer(random_.randbytes(4)), Buffer(random_.randbytes(4)))),
+            random_.getrandbits(32),
+            globals={"game_sound_globals": sound_state(*states[n % len(states)])},
+            externals={
+                "unknown_00126c30": look,
+                "unknown_00126ec0": refuse,
+                "unknown_00126000": lambda harness, arguments, made=made: (
+                    made,
+                    (harness.normalize(arguments[0]), *arguments[1:]),
+                ),
+            },
+        )
+
+    for _ in range(40):
+        sources, tags = playing_sounds()
+        gestalt, _permutations = recordings()
+        shared = Buffer(gestalt, pointers=(0x24, 0x2C, 0x44))
+
+        def request(harness, arguments):
+            sound_index, chunk, kind = arguments
+            return 0, (sound_index, harness.normalize(chunk), kind)
+
+        for n in random_.sample(range(SOURCES), 30):
+            t.check(
+                "sound_source_hold_chunk",
+                Buffer(sources.data[0x50 + n * 0xBC : 0x50 + (n + 1) * 0xBC]),
+                globals={"global_tag_instances": tags, "global_sound_cache_file_gestalt": shared},
+                externals={"unknown_00218850": request},
+            )
+
+    for _ in range(150):
+        count = random_.choice((0, 1, 5, CHANNELS, -1))
+        data = bytearray(random_.randbytes(CHANNELS * 0x24))
+        for n in range(CHANNELS):
+            struct.pack_into("<I", data, n * 0x24, random_.choice((NONE, 0, random_.getrandbits(32))))
+            data[n * 0x24 + 9] = random_.choice((0, 0, 0, 1, 0x80))
+            struct.pack_into("<hh", data, n * 0x24 + 0xC, random_.choice((-1, 0, 5, 127)), random_.choice((-1, -1, 0, 9, 63)))
+        t.check(
+            "sound_channels_unknown_00129380",
+            Buffer(random_.randbytes(0x200)),
+            Buffer(random_.randbytes(0x100)),
+            globals={"game_sound_globals": sound_state(channels=count), "sound_channels": Buffer(bytes(data))},
+            externals={"unknown_00129790": lambda harness, arguments: (0, tuple(arguments))},
+        )
+
+    for _ in range(40):
+        t.check(
+            "sound_console_set_environment",
+            Buffer(random_.randbytes(8)),
+            Buffer(random_.randbytes(8)),
+            Buffer(random_.randbytes(0x30)),
+            globals={"unknown_0051ebe4": Buffer(random_.randbytes(0x2AC0))},
+            externals={"unknown_0021e3b0": lambda harness, arguments: (0, tuple(arguments))},
+        )
+
+    for _ in range(120):
+        gains_ = bytearray(random_.randbytes(0x36 * 0x10))
+        for n in range(0x36):
+            struct.pack_into(
+                "<3f",
+                gains_,
+                n * 0x10,
+                random_.uniform(-64, 0),
+                random_.uniform(-64, 0),
+                random_.choice((0.0, 0.5, 1.0, 1.0 / 30.0, random_.uniform(0, 3))),
+            )
+        seconds = random_.choice((0.0, -1.0, 1.0 / 30.0, 0.5, 1.0, float("nan"), random_.uniform(0, 2)))
+        t.check("sound_classes_update", as_bits(seconds), globals={"sound_class_gains": Buffer(bytes(gains_))})
