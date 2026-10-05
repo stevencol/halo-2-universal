@@ -92,10 +92,14 @@ enum
 	GAME_SOUND_GLOBALS_ENVIRONMENT_OFFSET= 0x1EC,
 	GAME_SOUND_GLOBALS_IDLING_OFFSET= 0x7C,
 
-	/* what unknown_00218850 is asked, and what it answers */
+	/* what sound_cache_chunk_request is asked, and what it answers */
 	_sound_cache_request_unknown2= 2,
 	_sound_cache_result_unknown0_bit= 0,
 	_sound_cache_result_unknown1_bit= 1,
+	_sound_cache_result_held_bit= 2,
+	_sound_cache_request_wait_bit= 0,
+	_sound_cache_request_load_bit= 1,
+	_sound_cache_request_hold_bit= 2,
 
 	/* of an element of unknown_00502104 */
 	UNKNOWN_00502104_DATUM_SIZE= 0x10,
@@ -1049,7 +1053,8 @@ void sound_cache_idle(void);
 a tag */
 
 /* 0x00218850: asks for a piece of the samples of a sound. Bits come back */
-unsigned long unknown_00218850(long sound_index, const struct sound_chunk *chunk, long unknown);
+unsigned long __attribute__((stdcall)) sound_cache_chunk_request(long sound_index, const struct sound_chunk *chunk,
+	long flags);
 
 /* 0x001268e0: of a sound that plays, when its samples are not there */
 
@@ -2018,7 +2023,7 @@ boolean sound_source_request_data(
 {
 	long sound_index= *(long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET);
 	const struct sound_definition *sound= sound_definition_get(sound_index);
-	unsigned long result= unknown_00218850(sound_index,
+	unsigned long result= sound_cache_chunk_request(sound_index,
 		sound_get_chunk(sound->first_pitch_range_index+(char)source[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET],
 			(char)source[SOUND_SOURCE_DATUM_PERMUTATION_OFFSET],
 			*(short *)(source+SOUND_SOURCE_DATUM_CHUNK_OFFSET)),
@@ -2059,7 +2064,7 @@ void sound_predict(
 
 			if (pitch_range->permutation_count)
 			{
-				unknown_00218850(sound_index, sound_get_chunk(sound->first_pitch_range_index, 0, 0),
+				sound_cache_chunk_request(sound_index, sound_get_chunk(sound->first_pitch_range_index, 0, 0),
 					_sound_cache_request_unknown2);
 			}
 		}
@@ -2257,7 +2262,7 @@ void sound_channel_update(
 		channel->unknown18= channel->unknown1A;
 		channel->unknown20= 0;
 		channel->unknown1A= NONE;
-		if (!((unknown_00218850(NONE,
+		if (!((sound_cache_chunk_request(NONE,
 			sound_permutation_chunk((const struct sound_permutation *)(uintptr_t)channel->unknown1C, channel->unknown18), 0)>>
 			_sound_cache_result_unknown1_bit)&1))
 		{
@@ -4227,7 +4232,7 @@ void sound_source_hold_chunk(
 
 		source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]|= FLAG(_sound_source_datum_holds_chunk_bit);
 		sound= sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET));
-		unknown_00218850(NONE,
+		sound_cache_chunk_request(NONE,
 			sound_get_chunk(sound->first_pitch_range_index+(char)source[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET],
 				(char)source[SOUND_SOURCE_DATUM_PERMUTATION_OFFSET],
 				*(short *)(source+SOUND_SOURCE_DATUM_CHUNK_OFFSET)),
@@ -4422,7 +4427,7 @@ void __attribute__((stdcall)) sound_channel_queue_chunk(
 		channel->unknown1A= NONE;
 	}
 	unknown_002ae500(sound_channel_voice(channel), queued);
-	unknown_00218850(NONE, queued, _sound_cache_request_unknown4);
+	sound_cache_chunk_request(NONE, queued, _sound_cache_request_unknown4);
 	if (channel->unknown1C)
 	{
 		channel->unknown1A= chunk;
@@ -8662,4 +8667,62 @@ boolean sound_playback_controllers_initialize(
 	}
 
 	return unknown_0051ebd8 && unknown_0051ebdc;
+}
+
+/* 0x00218850: a piece of the samples of a sound is asked for. With the flag
+1 of what is asked, a piece that is not in the cache of the sound is put in
+it and its samples start to be read (sound_cache_chunk_load); with the flag
+0, the game waits until they are read; with the flag 2, the piece is held:
+its count goes up. A piece that is in the cache is touched, so that it is
+not the first to be thrown out. What comes back says, with the bit 1, that
+the samples are there; with the bit 0, that they are being read; and with
+the bit 2, that the piece was held. The name is a guess */
+unsigned long __attribute__((stdcall)) sound_cache_chunk_request(
+	long sound_index,
+	const struct sound_chunk *chunk,
+	long flags)
+{
+	const long *cache_index= (const long *)(chunk->unknown0+SOUND_CHUNK_CACHE_INDEX_OFFSET);
+	boolean wait= flags&FLAG(_sound_cache_request_wait_bit);
+	boolean hold= (flags>>_sound_cache_request_hold_bit)&1;
+	unsigned long result= 0;
+
+	if (*cache_index==NONE && sound_index!=NONE && (flags>>_sound_cache_request_load_bit)&1)
+	{
+		sound_cache_chunk_load((struct sound_chunk *)chunk, sound_index);
+	}
+	if (*cache_index!=NONE)
+	{
+		volatile byte *datum;
+
+		lruv_block_touch(sound_lruv_cache, *cache_index);
+		datum= (byte *)unknown_00502104->data+(*cache_index&0xFFFF)*UNKNOWN_00502104_DATUM_SIZE;
+		if (wait)
+		{
+			/* another thread reads them */
+			while (!datum[UNKNOWN_00502104_DATUM_DONE_OFFSET])
+			{
+				SwitchToThread();
+			}
+		}
+		if (datum[UNKNOWN_00502104_DATUM_DONE_OFFSET])
+		{
+			if (!datum[UNKNOWN_00502104_DATUM_UNKNOWN3_OFFSET])
+			{
+				datum[UNKNOWN_00502104_DATUM_UNKNOWN3_OFFSET]= TRUE;
+			}
+			result= FLAG(_sound_cache_result_unknown1_bit);
+		}
+		if (hold)
+		{
+			datum[UNKNOWN_00502104_DATUM_COUNT_OFFSET]++;
+			result|= FLAG(_sound_cache_result_held_bit);
+		}
+	}
+	if (!(result&FLAG(_sound_cache_result_unknown1_bit)) && *cache_index!=NONE)
+	{
+		return result|FLAG(_sound_cache_result_unknown0_bit);
+	}
+
+	return result&~(unsigned long)FLAG(_sound_cache_result_unknown0_bit);
 }

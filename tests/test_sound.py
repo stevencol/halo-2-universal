@@ -579,7 +579,7 @@ def run(t) -> None:
             Buffer(bytes(source_data)),
             globals={"global_tag_instances": tags, "global_sound_cache_file_gestalt": Pointer(tags, gestalt)},
             externals={
-                "unknown_00218850": request(n % 4 | random_.choice((0, 0, 0xFFFFFFFC, 4))),
+                "sound_cache_chunk_request": request(n % 4 | random_.choice((0, 0, 0xFFFFFFFC, 4))),
                 "sound_source_hold_chunk": lambda harness, arguments: 0,
             },
         )
@@ -591,7 +591,7 @@ def run(t) -> None:
             "sound_predict",
             NONE if n % 10 == 9 else random_.getrandbits(16) << 16 | sound_index,
             globals={"global_tag_instances": tags, "global_sound_cache_file_gestalt": Pointer(tags, gestalt)},
-            externals={"unknown_00218850": request(random_.getrandbits(32))},
+            externals={"sound_cache_chunk_request": request(random_.getrandbits(32))},
         )
 
     for n in range(30):
@@ -828,7 +828,7 @@ def run(t) -> None:
             (value,) = struct.unpack("<I", harness.mu.mem_read(chunk, 4))
             return value & 3, (sound_index, harness.normalize(chunk), unknown)
 
-        return {"sound_unknown_00125ef0": release, "unknown_00218850": request}
+        return {"sound_unknown_00125ef0": release, "sound_cache_chunk_request": request}
 
     for _ in range(40):
         channels, sources, tags, gestalt = resume_world()
@@ -2158,7 +2158,7 @@ def run(t) -> None:
                 "sound_source_hold_chunk",
                 Buffer(sources.data[0x50 + n * 0xBC : 0x50 + (n + 1) * 0xBC]),
                 globals={"global_tag_instances": tags, "global_sound_cache_file_gestalt": shared},
-                externals={"unknown_00218850": request},
+                externals={"sound_cache_chunk_request": request},
             )
 
     for _ in range(150):
@@ -2278,7 +2278,7 @@ def run(t) -> None:
                         0,
                         (harness.normalize(arguments[0]), harness.normalize(arguments[1])),
                     ),
-                    "unknown_00218850": piece_request,
+                    "sound_cache_chunk_request": piece_request,
                 },
             )
 
@@ -5232,3 +5232,50 @@ def run(t) -> None:
                     "GetTickCount": lambda harness, arguments, ticks=ticks: ticks,
                 },
             )
+
+    # ---------- a piece of the samples of a sound is asked for
+
+    random_ = random.Random(221)
+    PIECES = 12
+
+    for _ in range(900):
+        elements_ = bytearray(random_.randbytes(0x4C + PIECES * 0x10))
+        struct.pack_into("<I", elements_, 0x44, 0x4C)
+        for piece in range(PIECES):
+            elements_[0x4C + piece * 0x10 + 2] = random_.choice((0, 0, 1, 1, 0x80))
+            elements_[0x4C + piece * 0x10 + 3] = random_.choice((0, 0, 1, 5))
+            elements_[0x4C + piece * 0x10 + 4] = random_.choice((0, 1, 0xFF, 7))
+        elements = Buffer(bytes(elements_), pointers=(0x44,))
+        cache = bytearray(random_.randbytes(0x70))
+        struct.pack_into("<I", cache, 0x64, len(cache))
+        cache += random_.randbytes(0x4C)
+        struct.pack_into("<I", cache, 0x70 + 0x44, len(cache))
+        cache += random_.randbytes(PIECES * 0x18)
+        piece = random_.randrange(PIECES)
+        index = random_.choice((NONE, NONE, random_.getrandbits(16) << 16 | piece, random_.getrandbits(16) << 16 | piece))
+        loaded = random_.choice((NONE, random_.getrandbits(16) << 16 | random_.randrange(PIECES), random_.getrandbits(16) << 16 | random_.randrange(PIECES)))
+        turns = random_.choice((1, 2, 5))
+
+        def load_(harness, arguments, loaded=loaded):
+            chunk, sound_index = arguments
+            harness.mu.mem_write(chunk + 8, struct.pack("<I", loaded))
+            return 0, (harness.normalize(chunk), sound_index)
+
+        def wait_(harness, arguments, elements=elements, turns=turns):
+            if calls_so_far(harness, "SwitchToThread") + 1 >= turns:
+                # the other thread is done with all of them
+                for piece_ in range(PIECES):
+                    harness.mu.mem_write(elements.address + 0x4C + piece_ * 0x10 + 2, b"\x01")
+            return 0
+
+        t.check(
+            "sound_cache_chunk_request",
+            random_.choice((NONE, random_.getrandbits(32), random_.getrandbits(32))),
+            Buffer(random_.randbytes(8) + struct.pack("<I", index)),
+            random_.choice((0, 1, 2, 3, 4, 5, 6, 7, 0xFFFFFFF8, random_.getrandbits(32))),
+            globals={
+                "unknown_00502104": elements,
+                "sound_lruv_cache": Buffer(bytes(cache), pointers=(0x64, 0x70 + 0x44)),
+            },
+            externals={"sound_cache_chunk_load": load_, "SwitchToThread": wait_},
+        )

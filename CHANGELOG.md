@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Pedir un trozo de las muestras de un sonido
+
+Una función en `sound/sound_manager.c`. De 882 funciones se pasa a
+883, el 7,84 % de las del juego (el 4,592 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_cache_chunk_request` | `0x00218850` | `sound/sound_manager.c` |
+
+Estaba apuntada sin descompilar (`unknown_00218850`). La llaman seis
+funciones del sonido, todas ya descompiladas: es la puerta de la caché de
+muestras.
+
+### Lo que se sabe
+
+- `sound_cache_chunk_request` pide un trozo de las muestras de un sonido.
+  Lo que se le pide son tres marcas: la 1, que el trozo se meta en la caché
+  si no está y se empiecen a leer sus muestras (`sound_cache_chunk_load`);
+  la 0, esperar hasta que estén leídas (cediendo el turno al hilo que las
+  lee); la 2, retener el trozo: sube su cuenta.
+- Un trozo que está en la caché se marca como usado ahora, para que no sea
+  el primero en salir de ella.
+- Lo que devuelve son tres bits: el 1, que las muestras están; el 0, que se
+  están leyendo; el 2, que el trozo quedó retenido.
+- Con esta función, pedir, retener y soltar muestras queda completo de
+  principio a fin. El nombre es una suposición.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y de cinco de
+  las que la llaman. La batería completa corre aparte con las 881
+  funciones del hito 219.
+
+### Mutaciones
+
+Once líneas rotas a mano: las pruebas notan diez. La que no notan es
+quitar el último «y» que borra el bit 0 del resultado: en ese punto nunca
+está puesto.
+
 ## 2026-10-05 — Los mandos de sonidos se preparan
 
 Una función en `sound/sound_manager.c`. De 881 funciones se pasa a

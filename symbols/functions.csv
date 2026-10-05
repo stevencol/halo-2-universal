@@ -795,7 +795,7 @@ address,name,source,arguments,returns,convention
 0021ee80,unknown_0021ee80,,,void
 00218810,sound_cache_idle,source/sound/sound_manager.c,,void
 0021f6d0,sound_console_set_environment,source/sound/sound_manager.c,ecx edx stack,void,stdcall
-00218850,unknown_00218850,,stack stack stack,int
+00218850,sound_cache_chunk_request,source/sound/sound_manager.c,stack stack stack,int,stdcall
 001268e0,sound_source_hold_chunk,source/sound/sound_manager.c,eax,void
 00216400,saved_game_files_get_unit_root,source/saved games/saved_game_files.c,ecx eax stack,pointer
 00216a50,saved_game_file_type_from_variant,source/saved games/saved_game_files.c,eax,int
