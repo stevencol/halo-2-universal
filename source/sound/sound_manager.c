@@ -1039,6 +1039,9 @@ the filter of the slots of the console's sound */
 map. What they are is not known */
 byte unknown_00470060[0x24];
 
+/* 0x0047005c: set when the console's sound takes its gains */
+boolean unknown_0047005c= TRUE;
+
 /* 0x00468834: a gain that is added to how loud a place sounds: 1 */
 real unknown_00468834= 1.0f;
 
@@ -1444,6 +1447,9 @@ void __attribute__((stdcall)) sound_console_set_reverb(const real *environment, 
 
 /* 0x0021aeb0 */
 long __attribute__((stdcall)) looping_sound_new(long definition_index, short unknown2, long unknown8, long owner);
+
+/* 0x00220fd0 */
+void sound_console_set_gains(const real *gains);
 
 /* 0x0021d110 */
 long __attribute__((stdcall)) sound_effect_source_new(byte *request, long sound_index);
@@ -9778,4 +9784,57 @@ long __attribute__((stdcall)) looping_sound_new(
 	}
 
 	return looping_sound_index;
+}
+
+/* a real from 0 to 1 */
+static inline __attribute__((always_inline)) real sound_pin_gain(
+	real gain)
+{
+	if (0.0f>gain)
+	{
+		return 0.0f;
+	}
+
+	return gain>1.0f ? 1.0f : gain;
+}
+
+/* 0x00220fd0: the console's sound takes its gains: four reals, from 0 to 1,
+a frequency and some decibels, which it keeps from 0x2ABC on. With them
+unknown_00470060 is filled, which is how a sound is heard in a room when
+nothing is in the way (the first two gains for the sound as it comes, the
+third for the room, in hundredths of a decibel), and the frequency and the
+decibels of the filter (unknown_00470084 and unknown_00470088). Each slot
+loses its flag 1, so that it is told all again, and unknown_0047005c is set.
+The name is made up */
+void sound_console_set_gains(
+	const real *gains)
+{
+	byte *console= unknown_0051ebe4;
+	real *kept= (real *)(console+UNKNOWN_0051EBE4_GAINS_OFFSET);
+	struct sound_console_i3dl2_source *room= (struct sound_console_i3dl2_source *)unknown_00470060;
+	long millibels;
+	long index;
+
+	kept[0]= sound_pin_gain(gains[0]);
+	kept[1]= sound_pin_gain(gains[1]);
+	kept[2]= sound_pin_gain(gains[2]);
+	kept[3]= sound_pin_gain(gains[3]);
+	*(long *)&kept[4]= *(const long *)&gains[4];
+	*(long *)&kept[5]= *(const long *)&gains[5];
+	room->direct= sound_gain_to_millibels(kept[0]);
+	room->direct_high_frequencies= sound_gain_to_millibels(kept[1]);
+	room->room_rolloff= 0.0f;
+	room->obstruction_low_frequency_ratio= 0.0f;
+	room->occlusion_low_frequency_ratio= 0.25f;
+	millibels= sound_gain_to_millibels(kept[2]);
+	room->room= millibels;
+	room->room_high_frequencies= millibels;
+	unknown_00470084= *(const long *)&kept[4];
+	unknown_00470088= kept[5];
+	for (index= 0; index<*(const short *)(console+UNKNOWN_0051EBE4_SLOT_COUNT_SHORT_OFFSET); index++)
+	{
+		((struct sound_console_slot *)(console+UNKNOWN_0051EBE4_SLOTS_OFFSET))[index].flags&=
+			~FLAG(_sound_console_slot_unknown1_bit);
+	}
+	unknown_0047005c= TRUE;
 }

@@ -1365,3 +1365,4 @@ address,name,source,arguments,returns,convention
 0037b60d,unknown_0037b60d,,stack stack stack stack stack stack,void
 0021ece0,sound_console_set_reverb,source/sound/sound_manager.c,esi stack,void,stdcall
 0021aeb0,looping_sound_new,source/sound/sound_manager.c,eax stack stack stack,int,stdcall
+00220fd0,sound_console_set_gains,source/sound/sound_manager.c,eax,void

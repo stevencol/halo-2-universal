@@ -5930,3 +5930,25 @@ def run(t) -> None:
                 "sound_playback_controller_new": lambda harness, arguments, given=given: (given, tuple(arguments)),
             },
         )
+
+    # ---------- the console's sound takes its gains
+
+    random_ = random.Random(237)
+
+    def a_gain() -> float:
+        return random_.choice((0.0, -0.0, 1.0, 0.5, 0.25, 0.001, 0.0006, 0.00063, 0.00064, 2.0, -1.0, 1e-30, float("nan"), random_.uniform(0, 1), random_.uniform(0, 1)))
+
+    for _ in range(900):
+        console = bytearray(random_.randbytes(0x2AD8))
+        struct.pack_into("<h", console, 6, random_.choice((0, 1, 5, 16, 32, -1)))
+        t.check(
+            "sound_console_set_gains",
+            Buffer(struct.pack("<4f", a_gain(), a_gain(), a_gain(), a_gain()) + random_.randbytes(8)),
+            globals={
+                "unknown_0051ebe4": Buffer(bytes(console)),
+                "unknown_00470060": random_.randbytes(0x24),
+                "unknown_00470084": random_.randbytes(4),
+                "unknown_00470088": random_.randbytes(4),
+                "unknown_0047005c": bytes((random_.choice((0, 1, 0xFF)),)),
+            },
+        )

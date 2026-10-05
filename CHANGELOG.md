@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — El sonido de la consola recibe sus ganancias
+
+Una función en `sound/sound_manager.c`, de 526 bytes. De 903 funciones se pasa a
+904, el 8,02 % de las del juego (el 4,783 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_console_set_gains` | `0x00220fd0` | `sound/sound_manager.c` |
+
+No estaba apuntada. La llaman dos funciones de fuera del sonido. Recibe en
+`eax` cuatro ganancias, una frecuencia y unos decibelios. También el global
+`unknown_0047005c`.
+
+### Lo que se sabe
+
+- `sound_console_set_gains` guarda en el sonido de la consola (desde
+  `0x2ABC`) cuatro ganancias, recortadas entre 0 y 1, una frecuencia y unos
+  decibelios. Son los números que usa `sound_console_slot_update_room`
+  (hito 196).
+- Con ellos rellena `unknown_00470060`, que ahora se sabe qué es: cómo se
+  oye un sonido en una sala cuando nada lo tapa (las dos primeras ganancias
+  para el sonido directo y la tercera para la sala, en centésimas de
+  decibelio), y deja la frecuencia y los decibelios del filtro en
+  `unknown_00470084` y `unknown_00470088`.
+- Cada casilla pierde la marca 1, para que la próxima vez se le diga todo
+  de nuevo, y `unknown_0047005c` queda puesto.
+- El nombre es inventado.
+
+### Comprobado
+
+- **La batería completa del hito 233 terminó: 900 funciones de 900, todas
+  bien.**
+- A `looping_sound_new` (hito 236) se le rompieron doce líneas a mano: las
+  pruebas notan las doce.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función.
+
+### Mutaciones
+
+Diez líneas rotas a mano: las pruebas notan las diez.
+
 ## 2026-10-05 — Un sonido en bucle se crea
 
 Una función en `sound/sound_manager.c`, de 432 bytes. De 902 funciones se pasa a

@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-04, al terminar el hito 236.
+**Última actualización:** 2026-10-04, al terminar el hito 237.
 
 ## Dónde estamos
 
-- **903 funciones descompiladas de 11.265: el 8,02 % del juego** (el
-  4,765 % de los bytes de código).
-- Las 903 están comprobadas contra el ejecutable original: las 893 del
-  hito 227 con la batería completa, y las de después con sus propias pruebas
+- **904 funciones descompiladas de 11.265: el 8,02 % del juego** (el
+  4,783 % de los bytes de código).
+- Las 904 están comprobadas contra el ejecutable original: las 900 del
+  hito 233 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile a looping sound being made* (ver `git log`).
+- Último hito: *Decompile the console's sound taking its gains* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 463 funciones apuntadas pero sin descompilar (las que el código
   llama); 376 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -92,7 +92,7 @@ Módulos (funciones hechas / archivo):
       `0x002accd0` a `0x002ae090`: completo)
 - [x] Perfiles de los jugadores — `saved games\player_profile.c` (11:
       completo)
-- [ ] Sonido — `sound\sound_manager.c` (212; faltan muchas de
+- [ ] Sonido — `sound\sound_manager.c` (213; faltan muchas de
       `0x00125f70` a `0x0012b070`), `sound\sound_classes.c` (1)
 - [x] Archivos — `tag_files\files.c`, `files_xbox.c` (22, completo: de
       `0x00136710` a `0x001374c0`. Lo que hay justo antes, de `0x00136140`
@@ -184,7 +184,7 @@ Módulos (funciones hechas / archivo):
       otros archivos del sonido, `0x0021d630` (los efectos), `0x0021b940`
       (los sonidos en bucle, con `0x0021a250`, `0x0021b0e0` y `0x0021c400`), y las
       grandes que hablan con la consola (`0x0021e4b0`, `0x0021fa80`,
-      `0x002201f0`, `0x0021ee80`). Al terminar el hito 236 quedan 22 funciones
+      `0x002201f0`, `0x0021ee80`). Al terminar el hito 237 quedan 21 funciones
       del sonido, unos 23.000 bytes.
 - [x] ~~`lruv_block_new`~~ (hito 31).
 - [x] ~~Caché de animaciones~~ (hito 32).
