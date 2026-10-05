@@ -1304,3 +1304,4 @@ address,name,source,arguments,returns,convention
 002225a0,sound_unknown_002225a0,source/sound/sound_manager.c,stack stack stack stack stack,void,stdcall
 002222c0,unknown_002222c0,,eax stack stack stack stack,void
 00222770,sound_unknown_00222770,source/sound/sound_manager.c,eax edx stack stack,void,stdcall
+0012a1b0,sound_channel_build_voice_parameters,source/sound/sound_manager.c,eax ebx edi stack,void,stdcall

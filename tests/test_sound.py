@@ -4364,3 +4364,76 @@ def run(t) -> None:
                 "sound_unknown_002225a0": list_,
             },
         )
+
+    # ---------- what a voice of the console's sound takes of the sound of a channel
+
+    random_ = random.Random(202)
+
+    for _ in range(900):
+        sound_index = random_.randrange(TAGS)
+        classes_index = random_.choice([index for index in range(TAGS) if index != sound_index])
+        data = bytearray(random_.randbytes(TAGS * 0x10))
+        pointers = []
+
+        def add(part: bytes) -> int:
+            offset = len(data)
+            data.extend(part)
+            return offset
+
+        def point(offset: int, to: int) -> None:
+            struct.pack_into("<I", data, offset, to)
+            pointers.append(offset)
+
+        definition = bytearray(random_.randbytes(0x20))
+        definition[2] = random_.randrange(CLASSES)
+        point(sound_index * 0x10 + 8, add(bytes(definition)))
+        classes = add(struct.pack("<2I", CLASSES, 0))
+        point(classes_index * 0x10 + 8, classes)
+        table = bytearray(random_.randbytes(CLASSES * CLASS_SIZE))
+        for class_index in range(CLASSES):
+            table[class_index * CLASS_SIZE + 0x4C] = random_.choice((0, 1, 1, 2, 0xFF))
+            struct.pack_into("<H", table, class_index * CLASS_SIZE + 0xA, random_.choice((0, 2, 8, 0x200, 0x20A, 0xFDF5, random_.getrandbits(16))))
+        point(classes + 4, add(bytes(table)))
+        reference = add(struct.pack("<2I", random_.getrandbits(32), random_.getrandbits(16) << 16 | classes_index))
+        game_globals = add(random_.randbytes(0xC0) + struct.pack("<2I", random_.choice((1, 1, 3)), 0))
+        point(game_globals + 0xC4, reference)
+        buffer = Buffer(bytes(data), pointers=tuple(pointers))
+
+        time = random_.choice((0, 100000, 0x7FFF0000))
+        playing_ = bytearray(random_.randbytes(DATUM))
+        playing_[6] = random_.choice((0, 8, 0xF7, 0xFF, random_.getrandbits(8)))
+        struct.pack_into("<I", playing_, 0xC, random_.getrandbits(16) << 16 | sound_index)
+        playing_[0x19] = random_.choice((0, 1, 1, 0xFE, 0xFF))
+        struct.pack_into("<f", playing_, 0x1C, random_.choice((0.0, 1.0, 0.5, random_.uniform(0, 2))))
+        struct.pack_into("<i", playing_, 0x8C, time)
+        playing_[0xA4] = random_.choice((0xFF, 0xFF, 0, 3, 0x80))
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        struct.pack_into("<i", state, 0x84, time + random_.choice((0, 999, 1000, 1001, 5500, 60000, -1, -999, -1000, -2500)))
+        heard = bytearray(random_.randbytes(0x38))
+        heard[0] = random_.choice((0, 0x10, 0x10, 0xEF, 0xFF))
+        struct.pack_into("<f", heard, 0x18, random_.choice((0.0, 0.25, 1.0, 0.75, 2.0, random_.uniform(0, 1))))
+
+        def effects__(harness, arguments):
+            index, unknown, played, result = arguments
+            harness.mu.mem_write(result, bytes(range(0x30, 0x40)))
+            return 0, (index, unknown, bytes(harness.mu.mem_read(played, 0x1C)), harness.normalize(result))
+
+        def environment__(harness, arguments):
+            index, unknown, result = arguments
+            harness.mu.mem_write(result, bytes(range(0x50, 0x60)))
+            return 0, (index, unknown, harness.normalize(result))
+
+        t.check(
+            "sound_channel_build_voice_parameters",
+            random_.getrandbits(16) << 16 | random_.randrange(CHANNELS),
+            Buffer(bytes(heard)),
+            Buffer(random_.randbytes(0x478)),
+            Buffer(bytes(playing_)),
+            globals={
+                "global_tag_instances": buffer,
+                "global_game_globals": Pointer(buffer, game_globals),
+                "sound_channels": Buffer(random_.randbytes(CHANNELS * 0x24)),
+                "game_sound_globals": Buffer(bytes(state)),
+            },
+            externals={"sound_unknown_00222770": effects__, "sound_unknown_00222930": environment__},
+        )

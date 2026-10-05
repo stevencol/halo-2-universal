@@ -485,6 +485,20 @@ enum
 	SOUND_VOICE_EFFECTS_UNKNOWN18_OFFSET= 0x18,
 	SOUND_VOICE_EFFECTS_LIST_OFFSET= 0x1C,
 	SOUND_VOICE_EFFECTS_LIST_SIZE_OFFSET= 0x41C,
+	/* what a voice of the console's sound takes of the sound of a channel */
+	SOUND_VOICE_PARAMETERS_UNKNOWN4_OFFSET= 0x4,
+	SOUND_VOICE_PARAMETERS_CLASS_OFFSET= 0x10,
+	SOUND_VOICE_PARAMETERS_UNKNOWN12_OFFSET= 0x12,
+	SOUND_VOICE_PARAMETERS_UNKNOWN14_OFFSET= 0x14,
+	SOUND_VOICE_PARAMETERS_UNKNOWN18_OFFSET= 0x18,
+	SOUND_VOICE_PARAMETERS_UNKNOWN1C_OFFSET= 0x1C,
+	SOUND_VOICE_PARAMETERS_UNKNOWN20_OFFSET= 0x20,
+	SOUND_VOICE_PARAMETERS_SLOT_OFFSET= 0x24,
+	SOUND_VOICE_PARAMETERS_UNKNOWN28_OFFSET= 0x28,
+	SOUND_VOICE_PARAMETERS_FLAGS_OFFSET= 0x30,
+	SOUND_VOICE_PARAMETERS_UNKNOWN38_OFFSET= 0x38,
+	SOUND_VOICE_PARAMETERS_EFFECTS_OFFSET= 0x48,
+	SOUND_VOICE_PARAMETERS_ENVIRONMENT_OFFSET= 0x468,
 	_sound_source_datum_unknown4_bit= 4,
 	SOUND_CLASS_UNKNOWNE_OFFSET= 0xE,
 	/* more of a sound that plays, of a listener, of a class of sounds and of
@@ -967,9 +981,11 @@ void __attribute__((stdcall)) sound_unknown_002225a0(const byte *overrides, cons
 	long *list, long *size);
 void unknown_002222c0(long *entry, const long *element, const byte *override, long unknown, long number);
 
-/* 0x00222770 */
+/* 0x00222770 and 0x0012a1b0 */
 void __attribute__((stdcall)) sound_unknown_00222770(long sound_index, long unknown, long unknown2,
 	byte *result);
+void __attribute__((stdcall)) sound_channel_build_voice_parameters(short channel_index, const byte *parameters,
+	byte *result, const byte *source);
 
 long sound_unknown_001914f0(long name);
 void __attribute__((stdcall)) sound_channel_update_slot(short channel_index, const real *unknown);
@@ -7152,5 +7168,110 @@ void __attribute__((stdcall)) sound_unknown_00222770(
 	else
 	{
 		*(long *)(result+SOUND_VOICE_EFFECTS_LIST_SIZE_OFFSET)= 0;
+	}
+}
+
+/* a class of sounds, as sound_class_get gives it: the game has it written
+out where it does not call it */
+static inline __attribute__((always_inline)) const struct sound_class *sound_class_get_inline(
+	short class_index)
+{
+	const struct tag_block *block= (const struct tag_block *)((const byte *)global_game_globals+GAME_GLOBALS_SOUND_OFFSET);
+	const byte *reference= block->count ? (const byte *)(uintptr_t)block->address : NULL;
+	const struct sound_classes *classes=
+		(const struct sound_classes *)(uintptr_t)global_tag_instances[*(const long *)(reference+4)&0xFFFF].address;
+
+	return (const struct sound_class *)(uintptr_t)classes->classes.address+class_index;
+}
+
+/* a flag of a number is set or not */
+static inline __attribute__((always_inline)) unsigned long sound_set_flag(
+	unsigned long flags,
+	long bit,
+	boolean set)
+{
+	return set ? flags|FLAG(bit) : flags&~FLAG(bit);
+}
+
+/* 0x0012a1b0: what a voice of the console's sound takes of the sound of a
+channel is filled: from the tag of the sound and its class (two numbers, a
+real of the class at 0x14 and the flags at 0x30), from the sound that plays
+(a number at 0x12, its seed at 0x48 and its scale at 0x4C: times the square
+root of what is left to 1 of the real at 0x18 of `parameters`, if the sound
+has the flag 8), from the channel (its slot, at 0x24) and from `parameters`,
+which is what unknown_00129aa0 works out of how the sound is heard. At 0x48
+goes too what sound_unknown_00222770 fills, which is given the seconds that
+the sound has played, and at 0x468 what sound_unknown_00222930 fills. The
+name is made up */
+void __attribute__((stdcall)) sound_channel_build_voice_parameters(
+	short channel_index,
+	const byte *parameters,
+	byte *result,
+	const byte *source)
+{
+	const struct sound_channel *channel= sound_channels+channel_index;
+	long sound_index= *(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET);
+	const struct sound_definition *sound= sound_definition_get(sound_index);
+	const struct sound_class *sound_class= sound_class_get_inline(sound->sound_class);
+	boolean unknown3= (source[SOUND_SOURCE_DATUM_UNKNOWN6_OFFSET]>>3)&1;
+	unsigned long flags;
+	struct
+	{
+		real unknown0;
+		real seconds;
+		real scale;
+		real unknownC;
+		long unknown10[3];
+	} played;
+
+	*(long *)(result+SOUND_VOICE_PARAMETERS_UNKNOWN4_OFFSET)= (char)sound->unknown3[0];
+	*(short *)(result+SOUND_VOICE_PARAMETERS_CLASS_OFFSET)= sound->sound_class;
+	*(short *)(result+SOUND_VOICE_PARAMETERS_UNKNOWN12_OFFSET)= (char)source[SOUND_SOURCE_DATUM_UNKNOWNA4_OFFSET];
+	*(short *)(result+SOUND_VOICE_PARAMETERS_SLOT_OFFSET)= channel->unknownE;
+	*(long *)(result+SOUND_VOICE_PARAMETERS_UNKNOWN14_OFFSET)=
+		*(const long *)((const byte *)sound_class_get_inline(sound->sound_class)+SOUND_CLASS_UNKNOWN10_OFFSET);
+	*(long *)(result+SOUND_VOICE_PARAMETERS_UNKNOWN18_OFFSET)= *(const long *)(parameters+0x8);
+	*(long *)(result+SOUND_VOICE_PARAMETERS_UNKNOWN28_OFFSET)= *(const long *)(parameters+0x4);
+	*(long *)(result+SOUND_VOICE_PARAMETERS_UNKNOWN1C_OFFSET)= *(const long *)(parameters+0xC);
+	*(long *)(result+SOUND_VOICE_PARAMETERS_UNKNOWN20_OFFSET)= *(const long *)(parameters+0x10);
+
+	flags= *(unsigned long *)(result+SOUND_VOICE_PARAMETERS_FLAGS_OFFSET);
+	flags= sound_set_flag(flags, 1, (sound_class->internal_flags>>3)&1);
+	flags= sound_set_flag(flags, 3, (sound_class->internal_flags>>1)&1);
+	flags= sound_set_flag(flags, 4, ((const byte *)sound_class)[SOUND_CLASS_UNKNOWN4C_OFFSET]==1);
+	flags= sound_set_flag(flags, 2, ((sound_class->internal_flags>>1)&1) || unknown3);
+	flags= sound_set_flag(flags, 6, (sound_class->internal_flags>>9)&1);
+	*(unsigned long *)(result+SOUND_VOICE_PARAMETERS_FLAGS_OFFSET)= flags;
+	if (parameters[0]&FLAG(4))
+	{
+		*(unsigned long *)(result+SOUND_VOICE_PARAMETERS_FLAGS_OFFSET)|= FLAG(5);
+		memcpy(result+SOUND_VOICE_PARAMETERS_UNKNOWN38_OFFSET, parameters+0x28, 0x10);
+	}
+	if (*(short *)(result+SOUND_VOICE_PARAMETERS_UNKNOWN12_OFFSET)!=NONE)
+	{
+		*(unsigned long *)(result+SOUND_VOICE_PARAMETERS_FLAGS_OFFSET)|= FLAG(0);
+	}
+
+	played.unknown0= 0.0f;
+	played.seconds= (real)((*(const long *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET)-
+		*(const long *)(source+SOUND_SOURCE_DATUM_UNKNOWN8C_OFFSET))/1000);
+	played.scale= *(const real *)(source+SOUND_SOURCE_DATUM_SCALE_OFFSET);
+	played.unknownC= *(const real *)(parameters+0x18);
+	memcpy(played.unknown10, parameters+0x1C, sizeof(played.unknown10));
+	sound_unknown_00222770(sound_index, *(const long *)(source+SOUND_SOURCE_DATUM_UNKNOWN8_OFFSET), (long)(uintptr_t)&played,
+		result+SOUND_VOICE_PARAMETERS_EFFECTS_OFFSET);
+	sound_unknown_00222930(sound_index, *(const long *)(source+SOUND_SOURCE_DATUM_UNKNOWN8_OFFSET),
+		result+SOUND_VOICE_PARAMETERS_ENVIRONMENT_OFFSET);
+
+	*(long *)(result+SOUND_VOICE_PARAMETERS_EFFECTS_OFFSET)= *(const long *)(source+SOUND_SOURCE_DATUM_SEED_OFFSET);
+	if (source[SOUND_SOURCE_DATUM_UNKNOWN18_OFFSET+1]&1)
+	{
+		*(real *)(result+SOUND_VOICE_PARAMETERS_EFFECTS_OFFSET+4)=
+			(real)(sqrtl((long double)1.0f-(long double)*(const real *)(parameters+0x18))*
+			(long double)*(const real *)(source+SOUND_SOURCE_DATUM_SCALE_OFFSET));
+	}
+	else
+	{
+		*(real *)(result+SOUND_VOICE_PARAMETERS_EFFECTS_OFFSET+4)= *(const real *)(source+SOUND_SOURCE_DATUM_SCALE_OFFSET);
 	}
 }

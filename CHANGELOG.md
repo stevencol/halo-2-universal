@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Lo que una voz de la consola toma del sonido de un canal
+
+Una función en `sound/sound_manager.c`, de 620 bytes. De 858 funciones se pasa a
+859, el 7,63 % de las del juego (el 4,392 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_channel_build_voice_parameters` | `0x0012a1b0` | `sound/sound_manager.c` |
+
+No estaba apuntada. La llaman `0x00128ca0` y `0x0021c400`, las dos que
+`sound_channels_update_sources` usa para pasar a la consola cómo se oye cada
+canal. Recibe el canal en `ax`, lo que calculó `unknown_00129aa0` en `ebx`,
+dónde dejar el resultado en `edi` y el sonido que suena en la pila.
+
+### Lo que se sabe
+
+- `sound_channel_build_voice_parameters` rellena lo que una voz de la
+  consola necesita del sonido de un canal (unos `0x478` bytes).
+- Del tag del sonido y de su clase salen dos números, un real de la clase y
+  las marcas de `0x30`: cuatro son marcas de la clase, una dice si el byte
+  de `0x4C` de la clase es 1, otra si el sonido trae cuatro números más
+  (que van a `0x38`) y otra si el número de `0x12` no es `NONE`.
+- La clase se busca aquí sin llamar a `sound_class_get`: el juego tiene esa
+  función escrita en línea.
+- Del sonido que suena salen su semilla (`0x48`) y su escala (`0x4C`), que
+  con la marca 8 del sonido se multiplica por la raíz de lo que le falta a
+  un real de `unknown_00129aa0` para llegar a 1.
+- En `0x48` va además lo que rellena `sound_unknown_00222770`, a la que se
+  le pasan los segundos que lleva sonando el sonido, y en `0x468` lo que
+  rellena `sound_unknown_00222930`.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función. La batería
+  completa corre aparte con las 857 funciones del hito 200.
+
+### Mutaciones
+
+Diecisiete líneas rotas a mano (las marcas, los signos de los números, la
+división de los segundos, la raíz y lo que se copia): las pruebas notan las
+diecisiete. Pendientes las listas completas de los hitos 156 a 202.
+
 ## 2026-10-05 — Lo que una voz de la consola toma de un sonido, de los tags
 
 Una función en `sound/sound_manager.c`. De 857 funciones se pasa a
