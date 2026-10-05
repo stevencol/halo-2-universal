@@ -582,6 +582,8 @@ enum
 	gives */
 	SOUND_EFFECT_COLLECTION_FLAGS_OFFSET= 0x8,
 	SOUND_CONSOLE_SLOT_BUFFER_FLAGS= 0x2010,
+	SOUND_CONSOLE_SLOT_MIX_BUFFER_FLAGS= 0x100000,
+	MAXIMUM_SOUND_CONSOLE_SLOTS= 64,
 	SOUND_SILENCE_SIZE= 1000,
 	SOUND_UNKNOWN_00222250_MAXIMUM= 4,
 	/* more of an entry of the list that sound_unknown_002225a0 makes, and of
@@ -1450,6 +1452,9 @@ long __attribute__((stdcall)) looping_sound_new(long definition_index, short unk
 
 /* 0x00220fd0 */
 void sound_console_set_gains(const real *gains);
+
+/* 0x00220b90 */
+short __attribute__((stdcall)) sound_console_slot_new(unsigned long flags, long unknown);
 
 /* 0x0021d110 */
 long __attribute__((stdcall)) sound_effect_source_new(byte *request, long sound_index);
@@ -9837,4 +9842,90 @@ void sound_console_set_gains(
 			~FLAG(_sound_console_slot_unknown1_bit);
 	}
 	unknown_0047005c= TRUE;
+}
+
+/* 0x00220b90: the console's sound has one slot more, up to 64: NONE if there
+are that many. The console makes for it two things. The one at 0x38 is to be
+heard in the places 0 to 5, and plays at once; if the console does not make
+it, the slot goes on with none. The one at 0x34 is only for the flag 0 of
+`flags`: it is to be heard in the places 6, 8, 7, 9 and 10, as far as can
+be, and with the flag 1 it is of another kind and plays at once; if the
+console does not make it, there is no slot, and NONE. `unknown` is given to
+the console for both, and the slot keeps it at its start. Gives the slot.
+The name is a guess */
+short __attribute__((stdcall)) sound_console_slot_new(
+	unsigned long flags,
+	long unknown)
+{
+	byte *console= unknown_0051ebe4;
+	short slot_index= *(const short *)(console+UNKNOWN_0051EBE4_SLOT_COUNT_SHORT_OFFSET);
+	boolean positioned= flags&1;
+	boolean unknown1= (flags>>1)&1;
+	struct sound_console_slot *slot;
+	struct sound_console_buffer_description description;
+	struct sound_console_mixbins mixbins;
+	long pairs[12];
+	long index;
+
+	if (slot_index>=MAXIMUM_SOUND_CONSOLE_SLOTS)
+	{
+		return NONE;
+	}
+	*(short *)(console+UNKNOWN_0051EBE4_SLOT_COUNT_SHORT_OFFSET)= slot_index+1;
+	slot= (struct sound_console_slot *)(console+UNKNOWN_0051EBE4_SLOTS_OFFSET)+slot_index;
+
+	memset(&description, 0, sizeof(description));
+	description.size= sizeof(description);
+	description.flags= SOUND_CONSOLE_SLOT_MIX_BUFFER_FLAGS;
+	description.unknown14= (unsigned long)unknown;
+	if (unknown_0037d4be(*(void **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET), &description, &slot->unknown38, NULL)>=0)
+	{
+		unknown_0037b66f(slot->unknown38, 0);
+		for (index= 0; index<6; index++)
+		{
+			pairs[index*2]= index;
+			pairs[index*2+1]= 0;
+		}
+		mixbins.count= 6;
+		mixbins.pairs= pairs;
+		unknown_0037c5e4(slot->unknown38, &mixbins);
+		unknown_0037b6df(slot->unknown38, 0, 0, 0);
+	}
+	if (!positioned)
+	{
+		slot->stream= NULL;
+		return slot_index;
+	}
+
+	memset(&description, 0, sizeof(description));
+	description.size= sizeof(description);
+	description.flags= (unknown1 ? 0x100000 : 0x80000)|0x10;
+	description.unknown14= (unsigned long)unknown;
+	if (unknown_0037d4be(*(void **)(unknown_0051ebe4+UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET), &description, &slot->stream, NULL)<0)
+	{
+		--*(short *)(unknown_0051ebe4+UNKNOWN_0051EBE4_SLOT_COUNT_SHORT_OFFSET);
+		return NONE;
+	}
+	pairs[0]= 6;
+	pairs[1]= 0;
+	pairs[2]= 8;
+	pairs[3]= 0;
+	pairs[4]= 7;
+	pairs[5]= 0;
+	pairs[6]= 9;
+	pairs[7]= 0;
+	pairs[8]= 10;
+	pairs[9]= 0;
+	mixbins.count= 5;
+	mixbins.pairs= pairs;
+	unknown_0037c5e4(slot->stream, &mixbins);
+	*(long *)slot->unknown0= unknown;
+	unknown_0037c620(slot->stream, SOUND_REAL_MAXIMUM, 1);
+	unknown_0037c644(slot->stream, SOUND_REAL_MAXIMUM, 1);
+	if (unknown1)
+	{
+		unknown_0037b6df(slot->stream, 0, 0, 0);
+	}
+
+	return slot_index;
 }

@@ -1366,3 +1366,4 @@ address,name,source,arguments,returns,convention
 0021ece0,sound_console_set_reverb,source/sound/sound_manager.c,esi stack,void,stdcall
 0021aeb0,looping_sound_new,source/sound/sound_manager.c,eax stack stack stack,int,stdcall
 00220fd0,sound_console_set_gains,source/sound/sound_manager.c,eax,void
+00220b90,sound_console_slot_new,source/sound/sound_manager.c,ecx stack,short,stdcall

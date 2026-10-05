@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — El sonido de la consola tiene una casilla más
+
+Una función en `sound/sound_manager.c`, de 618 bytes. De 904 funciones se pasa a
+905, el 8,03 % de las del juego (el 4,804 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_console_slot_new` | `0x00220b90` | `sound/sound_manager.c` |
+
+No estaba apuntada. La llama `0x0021e4b0`, la que prepara el sonido de la
+consola. Recibe unas marcas en `ecx` y un número en la pila; devuelve la
+casilla, o `NONE`.
+
+### Lo que se sabe
+
+- `sound_console_slot_new` añade una casilla al sonido de la consola, hasta
+  64.
+- La consola crea para ella dos cosas. La de `0x38` suena por las salidas 0
+  a 5 y arranca enseguida; si la consola no la crea, la casilla sigue sin
+  ella.
+- La de `0x34` solo se crea con la marca 0: suena por las salidas 6, 8, 7,
+  9 y 10, con las dos distancias al máximo, y con la marca 1 es de otro
+  tipo y arranca enseguida. Si la consola no la crea, no hay casilla: la
+  cuenta vuelve atrás y devuelve `NONE`.
+- El número de la pila va a la consola en las dos, y la casilla se lo queda
+  al principio.
+- El nombre es una suposición.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función. La última
+  batería completa es la del hito 233 (900 funciones, todas bien).
+
+### Mutaciones
+
+Trece líneas rotas a mano: las pruebas notan las trece.
+
 ## 2026-10-05 — El sonido de la consola recibe sus ganancias
 
 Una función en `sound/sound_manager.c`, de 526 bytes. De 903 funciones se pasa a

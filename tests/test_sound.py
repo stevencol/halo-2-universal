@@ -5952,3 +5952,40 @@ def run(t) -> None:
                 "unknown_0047005c": bytes((random_.choice((0, 1, 0xFF)),)),
             },
         )
+
+    # ---------- the console's sound has one slot more
+
+    random_ = random.Random(238)
+
+    for _ in range(600):
+        console = bytearray(random_.randbytes(0x2AC0))
+        struct.pack_into("<h", console, 6, random_.choice((0, 0, 5, 20, 0x3F, 0x40, 0x41, 0x7FFF, -1)))
+        answers_ = [random_.choice((0, 0, 0, 1, 0x80004005)), random_.choice((0, 0, 0, 1, 0x8007000E))]
+        streams = [random_.getrandbits(32), random_.getrandbits(32)]
+
+        def makes__(harness, arguments, answers_=answers_, streams=streams):
+            sound_, description, where, unknown = arguments
+            n = calls_so_far(harness, "unknown_0037d4be")
+            record = sound_, bytes(harness.mu.mem_read(description, 0x18)), harness.normalize(where), unknown
+            if not answers_[n % 2] & 0x80000000:
+                harness.mu.mem_write(where, struct.pack("<I", streams[n % 2]))
+            return answers_[n % 2], record
+
+        def heard_in_(harness, arguments):
+            count, pairs = struct.unpack("<2I", harness.mu.mem_read(arguments[1], 8))
+            return 0, (arguments[0], count, bytes(harness.mu.mem_read(pairs, count * 8)))
+
+        t.check(
+            "sound_console_slot_new",
+            random_.choice((0, 1, 2, 3, 3, 1, 0xFFFFFFFC, 0xFFFFFFFD, random_.getrandbits(32))),
+            random_.getrandbits(32),
+            globals={"unknown_0051ebe4": Buffer(bytes(console))},
+            externals={
+                "unknown_0037d4be": makes__,
+                "unknown_0037c5e4": heard_in_,
+                "unknown_0037b66f": lambda harness, arguments: (0, tuple(arguments)),
+                "unknown_0037b6df": lambda harness, arguments: (0, tuple(arguments)),
+                "unknown_0037c620": lambda harness, arguments: (0, tuple(arguments)),
+                "unknown_0037c644": lambda harness, arguments: (0, tuple(arguments)),
+            },
+        )
