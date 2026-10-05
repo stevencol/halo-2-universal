@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Otra lista para la consola, y un real en 24 bits
+
+Dos funciones en `sound/sound_manager.c`. De 873 funciones se pasa a
+875, el 7,77 % de las del juego (el 4,571 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_unknown_002228d0` | `0x002228d0` | `sound/sound_manager.c` |
+| `sound_real_to_fixed24` | `0x002221d0` | `sound/sound_manager.c` |
+
+Ninguna de las dos estaba apuntada. La primera recibe un número en `edx`,
+dónde dejar el resultado en `esi` y otro número en la pila; la segunda, un
+real en la pila.
+
+### Lo que se sabe
+
+- `sound_unknown_002228d0` hace la misma lista que
+  `sound_unknown_002225a0`, pero para lo que `unknown_0018d090` da sin
+  sonido (con `NONE`) y un número: si su primer elemento dice un tag y trae
+  un bloque propio con algo, la lista va al principio del resultado y su
+  tamaño en `0x400`. Si no, no hace nada. De qué es la lista sigue sin
+  saberse.
+- `sound_real_to_fixed24` pasa un real entre -1 y 1 a un número de 24 bits
+  con signo, como los que usa el procesador de sonido de la consola: 1 es
+  `0x7FFFFF` y -1 es `0x800000`. Lo que se sale de -1 a 1 se recorta. La
+  llama `0x002222c0`, la que escribe las entradas de la lista.
+- El nombre de la segunda es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de estas funciones. La última
+  batería completa es la del hito 210 (867 funciones, todas bien).
+
+### Mutaciones
+
+Once líneas rotas a mano: las pruebas notan las once (entre ellas, tratar
+el 0 negativo y lo que no es un número de otra manera).
+
 ## 2026-10-05 — El sonido de la consola se suelta
 
 Una función en `sound/sound_manager.c`. De 872 funciones se pasa a

@@ -1320,3 +1320,5 @@ address,name,source,arguments,returns,convention
 00379f45,unknown_00379f45,,stack,void
 00379f2a,unknown_00379f2a,,stack,void
 002ae170,unknown_002ae170,,edi,void
+002228d0,sound_unknown_002228d0,source/sound/sound_manager.c,edx esi stack,void,stdcall
+002221d0,sound_real_to_fixed24,source/sound/sound_manager.c,stack,int,stdcall

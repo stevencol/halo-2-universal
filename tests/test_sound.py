@@ -5069,3 +5069,44 @@ def run(t) -> None:
             },
             mocks=[Mock(lambda call: 0, stack_arguments=1)],
         )
+
+    # ---------- the list for what unknown_0018d090 gives for no sound, and a real as 24 bits
+
+    random_ = random.Random(217)
+
+    for _ in range(600):
+        tag_index = random_.randrange(TAGS)
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        struct.pack_into("<I", tags, tag_index * 0x10 + 8, len(tags))
+        tag = bytearray(random_.randbytes(0x40))
+        struct.pack_into("<I", tag, 0x18, len(tags) + 0x20)
+        tags_ = Buffer(bytes(tags) + bytes(tag), pointers=(tag_index * 0x10 + 8, len(tags) + 0x18))
+        data = bytearray(random_.randbytes(0x34 + 0x28))
+        has_elements = random_.random() < 0.9
+        struct.pack_into("<iI", data, 0x2C, random_.choice((1, 1, 1, 2, 0, -1, -0x80000000)), 0x34 if has_elements else 0)
+        struct.pack_into("<I", data, 0x38, random_.choice((NONE, random_.getrandbits(16) << 16 | tag_index, random_.getrandbits(16) << 16 | tag_index)))
+        struct.pack_into("<i", data, 0x54, random_.choice((1, 1, 1, 3, 0, -1)))
+        first = random_.choice((None, Buffer(bytes(data), pointers=(0x30,) if has_elements else ()), Buffer(bytes(data), pointers=(0x30,) if has_elements else ())))
+
+        def list__(harness, arguments):
+            overrides, block, unknown2, list___, size = arguments
+            harness.mu.mem_write(size, struct.pack("<I", 0x77))
+            return 0, (overrides, harness.normalize(block), unknown2, harness.normalize(list___), harness.normalize(size))
+
+        t.check(
+            "sound_unknown_002228d0",
+            random_.choice((NONE, 0, random_.getrandbits(32))),
+            Buffer(random_.randbytes(0x404)),
+            random_.getrandbits(32),
+            globals={"global_tag_instances": tags_},
+            extra=[first] if first else [],
+            externals={
+                "unknown_0018d090": lambda harness, arguments, first=first: (first.address if first else 0, tuple(arguments)),
+                "sound_unknown_002225a0": list__,
+            },
+        )
+
+    values = [0.0, -0.0, 1.0, -1.0, 0.5, -0.5, 1.5, -1.5, 100.0, -100.0, 1e-9, -1e-9, 0.99999994, -0.99999994, float("nan"), float("inf"), float("-inf")]
+    values += [random_.uniform(-1.2, 1.2) for _ in range(400)]
+    for value in values:
+        t.check("sound_real_to_fixed24", as_bits(value))

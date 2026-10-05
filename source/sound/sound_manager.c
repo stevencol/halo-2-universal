@@ -485,6 +485,7 @@ enum
 	SOUND_VOICE_EFFECTS_UNKNOWN18_OFFSET= 0x18,
 	SOUND_VOICE_EFFECTS_LIST_OFFSET= 0x1C,
 	SOUND_VOICE_EFFECTS_LIST_SIZE_OFFSET= 0x41C,
+	SOUND_EFFECT_LIST_SIZE= 0x400,
 	/* what a voice of the console's sound takes of the sound of a channel */
 	SOUND_VOICE_PARAMETERS_UNKNOWN4_OFFSET= 0x4,
 	SOUND_VOICE_PARAMETERS_CLASS_OFFSET= 0x10,
@@ -1214,6 +1215,10 @@ void sound_unknown_00222930(long sound_index, long unknown, byte *result);
 void __attribute__((stdcall)) sound_unknown_002225a0(const byte *overrides, const long *block, long unknown,
 	long *list, long *size);
 void unknown_002222c0(long *entry, const long *element, const byte *override, long unknown, long number);
+
+/* 0x002228d0 and 0x002221d0 */
+void __attribute__((stdcall)) sound_unknown_002228d0(long unknown, byte *result, long unknown2);
+long __attribute__((stdcall)) sound_real_to_fixed24(real value);
 
 /* 0x00222770 and 0x0012a1b0 */
 void __attribute__((stdcall)) sound_unknown_00222770(long sound_index, long unknown, long unknown2,
@@ -8389,4 +8394,55 @@ void sound_console_dispose(
 	console= unknown_0051ebe4;
 	xmem_static_buffer= NULL;
 	console[0]= 0;
+}
+
+/* 0x002228d0: the list that sound_unknown_002225a0 makes, for what
+unknown_0018d090 gives for no sound and a number, if its first element says
+a tag and has a block of its own with something: the list goes at the start
+of `result`, and its size at 0x400 of it. Nothing is done if not. What the
+list is of is not known */
+void __attribute__((stdcall)) sound_unknown_002228d0(
+	long unknown,
+	byte *result,
+	long unknown2)
+{
+	const byte *collection= unknown_0018d090(NONE, unknown);
+	const byte *element;
+	const byte *tag;
+
+	if (!collection)
+	{
+		return;
+	}
+	element= sound_block_first_element(collection+SOUND_EFFECT_COLLECTION_COUNT_OFFSET);
+	if (!sound_effect_collection_has_list(element))
+	{
+		return;
+	}
+	tag= (const byte *)(uintptr_t)global_tag_instances[*(const long *)(element+4)&0xFFFF].address;
+	sound_unknown_002225a0(*(const byte *const *)(element+SOUND_EFFECT_COLLECTION_ELEMENT_BLOCK_OFFSET+4),
+		*(const long *const *)(tag+SOUND_ENVIRONMENT_TAG_BLOCK_OFFSET+4), unknown2, (long *)result,
+		(long *)(result+SOUND_EFFECT_LIST_SIZE));
+}
+
+/* 0x002221d0: a real from -1 to 1 as a number of 24 bits with a sign: 1 is
+0x7FFFFF and -1 is 0x800000. A real that is not a number gives 0x1000000.
+The name is made up */
+long __attribute__((stdcall)) sound_real_to_fixed24(
+	real value)
+{
+	if (-1.0f>value)
+	{
+		value= -1.0f;
+	}
+	else if (value>1.0f)
+	{
+		return (long)(long long)((long double)1.0f*(long double)8388607.0f);
+	}
+	else if (value>=0.0f)
+	{
+		return (long)(long long)((long double)value*(long double)8388607.0f);
+	}
+
+	return 0x1000000-(long)(long long)((long double)value*(long double)-8388608.0f);
 }
