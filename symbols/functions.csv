@@ -1185,7 +1185,7 @@ address,name,source,arguments,returns,convention
 0021d4d0,sound_effects_delete_all,source/sound/sound_manager.c,,void
 001286b0,sound_source_set_sound,source/sound/sound_manager.c,eax stack stack stack stack,void,stdcall
 00127fc0,sound_source_unknown_00127fc0,source/sound/sound_manager.c,esi,bool
-0012abe0,sound_source_get_position,source/sound/sound_manager.c,ecx esi eax,void
+0012abe0,sound_source_get_position,source/sound/sound_manager.c,ecx esi eax,pointer
 002ae4b0,unknown_002ae4b0,,esi,void
 0021e050,sound_voice_release,source/sound/sound_manager.c,eax,void
 00127f10,sound_source_unknown_00127f10,source/sound/sound_manager.c,eax edi stack,bool,stdcall
@@ -1241,7 +1241,7 @@ address,name,source,arguments,returns,convention
 00126c30,sound_start_test,source/sound/sound_manager.c,eax stack stack stack,bool,stdcall
 00126ec0,sound_promotion_update,source/sound/sound_manager.c,ecx stack,int,stdcall
 00126000,sound_source_create,source/sound/sound_manager.c,stack stack stack stack,int,stdcall
-00129790,unknown_00129790,,eax stack,void
+00129790,sound_channel_update_slot,source/sound/sound_manager.c,eax stack,void,stdcall
 0021e3b0,unknown_0021e3b0,,esi,void
 00126df0,sound_sources_cross_fade,source/sound/sound_manager.c,eax edi ebx stack,void,stdcall
 00127e20,sound_source_unknown_00127e20,source/sound/sound_manager.c,ecx edx,real:xmm0
@@ -1294,3 +1294,4 @@ address,name,source,arguments,returns,convention
 001295e0,sound_channel_get_voice,source/sound/sound_manager.c,stack,bool,stdcall
 0037b75b,unknown_0037b75b,,stack stack,void
 0021de90,sound_voice_get_for_source,source/sound/sound_manager.c,ebx,int
+00220e00,unknown_00220e00,,edi stack,void

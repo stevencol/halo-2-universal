@@ -440,6 +440,17 @@ enum
 	/* a flag of a sound that plays, at 6 of it: it plays with a sound voice */
 	_sound_source_datum_voice_bit= 1,
 	_sound_source_deleted_no_voice= 7,
+	/* more of a sound that plays, of a listener, of a class of sounds and of
+	the slots of the console's sound */
+	_sound_source_unknown12_bit= 12,
+	SOUND_SOURCE_DATUM_SCALE_OFFSET= 0x1C,
+	SOUND_LISTENER_UNKNOWN7_OFFSET= 0x7,
+	SOUND_LISTENER_MATRIX_OFFSET= 0x8,
+	SOUND_CLASS_UNKNOWN54_OFFSET= 0x54,
+	SOUND_CLASS_UNKNOWN58_OFFSET= 0x58,
+	UNKNOWN_0051EBE4_SLOTS_OFFSET= 0x1A18,
+	UNKNOWN_0051EBE4_SLOT_FLAGS_OFFSET= 0x4,
+	_sound_console_slot_unknown1_bit= 1,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -487,6 +498,21 @@ struct sound_same_channels
 
 typedef char verify_sound_same_channels_size[
 	sizeof(struct sound_same_channels) == 0x4A ? 1 : -1];
+
+/* what unknown_00220e00 takes for a slot of the console's sound */
+struct sound_slot_parameters
+{
+	unsigned long flags;
+	real_point3d position;
+	real unknown10;
+	real unknown14;
+	real unknown18;
+	real unknown1C;
+	real unknown20;
+};
+
+typedef char verify_sound_slot_parameters_size[
+	sizeof(struct sound_slot_parameters) == 0x24 ? 1 : -1];
 
 /* ---------- globals */
 
@@ -793,7 +819,10 @@ long __attribute__((stdcall)) sound_source_create(long sound_index, long listene
 /* 0x002226b0 and 0x001914f0 */
 void sound_request_unknown_002226b0(byte *request, long sound_index);
 long sound_unknown_001914f0(long name);
-void unknown_00129790(long channel_index, long value);
+void __attribute__((stdcall)) sound_channel_update_slot(short channel_index, const real *unknown);
+
+/* 0x00220e00: of a slot of the console's sound */
+void unknown_00220e00(const struct sound_slot_parameters *parameters, long slot);
 void unknown_0021e3b0(void *unknown);
 
 /* 0x00125f70, 0x001268e0, 0x00129380, 0x0021f6d0 and 0x00221900 */
@@ -924,7 +953,7 @@ boolean __attribute__((stdcall)) sound_channel_get_voice(short channel_index);
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
 	char permutation, short chunk);
 boolean sound_source_unknown_00127fc0(long source_index);
-void sound_source_get_position(const struct sound_source *source, long listener_index, real_point3d *position);
+real_point3d *sound_source_get_position(const struct sound_source *source, long listener_index, real_point3d *position);
 
 /* 0x00126360, 0x00126400, 0x00127320 and 0x00127390 */
 void sound_source_stop(long source_index);
@@ -2302,8 +2331,9 @@ boolean sound_source_unknown_00127fc0(
 
 /* 0x0012abe0: where a sound is, of what the game says of it: its place, or
 its place at the height of a listener. Nothing for any other kind. The name
-is a guess */
-void sound_source_get_position(
+is a guess. The game leaves in eax the place that it was given there, and
+sound_channel_update_slot goes on to use it: it is given back */
+real_point3d *sound_source_get_position(
 	const struct sound_source *source,
 	long listener_index,
 	real_point3d *position)
@@ -2329,6 +2359,8 @@ void sound_source_get_position(
 		break;
 	}
 	}
+
+	return position;
 }
 
 /* 0x0021e050: a sound voice has one less that uses it; with none, its slot
@@ -3732,7 +3764,7 @@ void sound_source_hold_chunk(
 }
 
 /* 0x00129380: each channel that plays and is not stopped for a while is
-given, by unknown_00129790, a number of one of two tables: that of its slot,
+given, by sound_channel_update_slot, a number of one of two tables: that of its slot,
 or with no slot, that of its voice of the console's sound */
 void sound_channels_unknown_00129380(
 	const long *voice_values,
@@ -3750,11 +3782,11 @@ void sound_channels_unknown_00129380(
 		{
 			if (channel->unknownE!=NONE)
 			{
-				unknown_00129790(channel_index, slot_values[channel->unknownE]);
+				sound_channel_update_slot((short)channel_index, (const real *)(uintptr_t)slot_values[channel->unknownE]);
 			}
 			else if (channel->unknownC!=NONE)
 			{
-				unknown_00129790(channel_index, voice_values[channel->unknownC]);
+				sound_channel_update_slot((short)channel_index, (const real *)(uintptr_t)voice_values[channel->unknownC]);
 			}
 		}
 	}
@@ -6082,4 +6114,120 @@ long sound_voice_get_for_source(
 	(*(short *)(voice+SOUND_VOICE_DATUM_USERS_OFFSET))++;
 
 	return voice_index;
+}
+
+/* a real, from 0 to 1 */
+static inline __attribute__((always_inline)) real sound_pin_fraction(
+	real value)
+{
+	if (0.0f>value)
+	{
+		return 0.0f;
+	}
+
+	return value>1.0f ? 1.0f : value;
+}
+
+/* 0x00129790: what is done with the sound of a channel and three reals
+that say how it is heard where it is (or none), each time. A sound of the
+type 0 with the flag 12 loses of its real at 0x1C what the third real says,
+by its class; with no reals, all of it, if it is not of the structure bsp
+that is loaded. A sound of the types 1 and 2 that plays with a sound voice,
+in a channel with a slot, gives the slot what unknown_00220e00 takes: where
+the sound is as its listener sees it, two of the reals, by its class, and
+three numbers of its class, the first with the decibels of what the second
+real leaves. Once each time for each sound voice */
+void __attribute__((stdcall)) sound_channel_update_slot(
+	short channel_index,
+	const real *unknown)
+{
+	struct sound_channel *channel= &sound_channels[channel_index];
+	byte *source= sound_source_get(channel->unknown0);
+	const struct sound_definition *sound;
+	const struct sound_listener *listener;
+	struct sound_slot_parameters parameters;
+	real_point3d position;
+	boolean first;
+	long type;
+
+	channel->unknownB= channel->unknownA;
+	channel->unknownA= 0;
+	type= (signed char)(source[SOUND_SOURCE_DATUM_TYPE_OFFSET]<<4)>>4;
+	if (type==0)
+	{
+		if (!((*(const word *)(source+SOUND_SOURCE_DATUM_UNKNOWN18_OFFSET)>>_sound_source_unknown12_bit)&1))
+		{
+			return;
+		}
+		if (unknown)
+		{
+			sound= sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET));
+			*(real *)(source+SOUND_SOURCE_DATUM_SCALE_OFFSET)=
+				(1.0f-sound_pin_fraction(unknown[2]**(const real *)((const byte *)sound_class_get(sound->sound_class)+
+				SOUND_CLASS_UNKNOWN50_OFFSET)))**(const real *)(source+SOUND_SOURCE_DATUM_SCALE_OFFSET);
+		}
+		else if (*(const short *)(source+SOUND_SOURCE_DATUM_LOCATION_OFFSET+6)!=global_structure_bsp_index)
+		{
+			*(real *)(source+SOUND_SOURCE_DATUM_SCALE_OFFSET)= 0.0f;
+		}
+		return;
+	}
+	if (type<0 || type>2 || !(source[SOUND_SOURCE_DATUM_UNKNOWN6_OFFSET]&FLAG(_sound_source_datum_voice_bit)))
+	{
+		return;
+	}
+	first= TRUE;
+	if (channel->unknownE==NONE)
+	{
+		return;
+	}
+	if (channel->unknown4!=NONE && !sound_voice_unknown_0021dff0(channel->unknown4, source, &first))
+	{
+		return;
+	}
+	listener= (const struct sound_listener *)(game_sound_globals+GAME_SOUND_GLOBALS_LISTENERS_OFFSET)+
+		(char)source[SOUND_SOURCE_DATUM_LISTENER_OFFSET];
+	if ((source[SOUND_SOURCE_DATUM_TYPE_OFFSET]&SOUND_SOURCE_DATUM_TYPE_MASK)==_sound_source_datum_type_positioned)
+	{
+		sound_source_get_position((const struct sound_source *)(source+SOUND_SOURCE_DATUM_UNKNOWN18_OFFSET),
+			(char)source[SOUND_SOURCE_DATUM_LISTENER_OFFSET], &position);
+		matrix4x3_inverse_transform_point((const real_matrix4x3 *)((const byte *)listener+SOUND_LISTENER_MATRIX_OFFSET),
+			&position, &position);
+	}
+	else
+	{
+		memcpy(&position, source+SOUND_SOURCE_DATUM_POSITION_OFFSET, sizeof(position));
+	}
+	if (first)
+	{
+		byte *slot= unknown_0051ebe4+UNKNOWN_0051EBE4_SLOTS_OFFSET+channel->unknownE*UNKNOWN_0051EBE4_SLOT_SIZE;
+
+		slot[UNKNOWN_0051EBE4_SLOT_FLAGS_OFFSET]&= ~FLAG(_sound_console_slot_unknown1_bit);
+	}
+	sound= sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET));
+	memcpy(&parameters.position, &position, sizeof(position));
+	if (unknown)
+	{
+		real scale= *(const real *)((const byte *)sound_class_get(sound->sound_class)+SOUND_CLASS_UNKNOWN50_OFFSET);
+		real left= 1.0f-unknown[1]*scale;
+
+		parameters.unknown14= sound_pin_fraction(unknown[0]*scale);
+		parameters.unknown10= sound_pin_fraction(unknown[2]*scale);
+		left= sound_gain_to_decibels(left);
+		parameters.unknown18= left+*(const real *)((const byte *)sound_class_get(sound->sound_class)+SOUND_CLASS_UNKNOWN10_OFFSET);
+		parameters.unknown20= *(const real *)((const byte *)sound_class_get(sound->sound_class)+SOUND_CLASS_UNKNOWN54_OFFSET)*
+			*(const real *)(game_sound_globals+GAME_SOUND_GLOBALS_SECONDS_OFFSET);
+		parameters.unknown1C= *(const real *)((const byte *)sound_class_get(sound->sound_class)+SOUND_CLASS_UNKNOWN58_OFFSET)*
+			*(const real *)(game_sound_globals+GAME_SOUND_GLOBALS_SECONDS_OFFSET);
+	}
+	else
+	{
+		parameters.unknown14= 0.0f;
+		parameters.unknown10= 0.0f;
+		memcpy(&parameters.unknown18, (const byte *)sound_class_get(sound->sound_class)+SOUND_CLASS_UNKNOWN10_OFFSET, sizeof(real));
+		parameters.unknown20= 0.0f;
+		parameters.unknown1C= 0.0f;
+	}
+	parameters.flags= (((const byte *)listener)[SOUND_LISTENER_UNKNOWN7_OFFSET]!=0)|2;
+	unknown_00220e00(&parameters, channel->unknownE);
 }

@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — El sonido de un canal y cómo se oye donde está
+
+Una función en `sound/sound_manager.c`, de 784 bytes. De 847 funciones se
+pasa a 848, el 7,53 % de las del juego (el 4,211 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_channel_update_slot` | `0x00129790` | `sound/sound_manager.c` |
+
+Estaba apuntada sin descompilar (`unknown_00129790`): su segundo argumento
+es un puntero a tres reales, o nulo. Nueva sin descompilar: `0x00220e00`.
+También la estructura `sound_slot_parameters` (`0x24` bytes).
+
+### Lo que se sabe
+
+- `sound_channel_update_slot` es lo que se hace cada vez con el sonido de un
+  canal y tres reales que dicen cómo se oye donde está (o ninguno).
+- Un sonido del tipo 0 con la marca 12 pierde de su real de `0x1C` lo que
+  diga el tercer real, según su clase; sin reales, lo pierde todo si no es
+  del bsp cargado.
+- Un sonido de los tipos 1 y 2 que suena con una voz de sonido, en un canal
+  con casilla, le da a la casilla lo que toma `0x00220e00`: dónde está el
+  sonido visto desde su oyente (`matrix4x3_inverse_transform_point` con la
+  matriz del oyente, que está en `8`), dos de los reales según su clase, y
+  tres números de su clase. Una vez por voz de sonido cada vez.
+- La prueba descubrió que `sound_source_get_position` deja en `eax` el sitio
+  que recibió ahí y que el juego lo sigue usando después: ahora lo devuelve.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función, de
+  `sound_source_get_position` y de `sound_channels_unknown_00129380`. La
+  batería completa corre aparte con las 843 funciones del hito 186.
+
+### Mutaciones
+
+Pendientes las de los hitos 156 a 191.
+
 ## 2026-10-04 — La voz de sonido de un sonido que suena
 
 Una función en `sound/sound_manager.c`. De 846 funciones se pasa a

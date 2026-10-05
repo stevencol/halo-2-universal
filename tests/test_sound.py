@@ -2172,7 +2172,7 @@ def run(t) -> None:
             Buffer(random_.randbytes(0x200)),
             Buffer(random_.randbytes(0x100)),
             globals={"game_sound_globals": sound_state(channels=count), "sound_channels": Buffer(bytes(data))},
-            externals={"unknown_00129790": lambda harness, arguments: (0, tuple(arguments))},
+            externals={"sound_channel_update_slot": lambda harness, arguments: (0, tuple(arguments))},
         )
 
     for _ in range(40):
@@ -3746,5 +3746,91 @@ def run(t) -> None:
                 "sound_slot_new": lambda harness, arguments, slot=slot: slot,
                 "datum_new": lambda harness, arguments, made=made: (made, (harness.normalize(arguments[0]),)),
                 "sound_slot_delete": lambda harness, arguments: (0, (arguments[0] & 0xFFFF,)),
+            },
+        )
+
+    # ---------- the sound of a channel and how it is heard where it is
+
+    random_ = random.Random(191)
+
+    for _ in range(900):
+        buffer, indices = playing()
+        data = bytearray(buffer.data)
+        for index in range(PLAYING):
+            at = 0x4C + index * DATUM
+            data[at + 6] = random_.choice((2, 2, 2, 0, 0xFD))
+            struct.pack_into("<I", data, at + 0xC, random_.getrandbits(16) << 16 | random_.randrange(TAGS))
+            struct.pack_into("<H", data, at + 0x18, random_.choice((0x1000, 0x1000, 0, 0xEFFF, 0xFFFF)))
+            data[at + 0x1B] = random_.choice((0, 0, 1, 1, 2, 2, 3, 0xF, 0x21, 0x10, 0x18))
+            data[at + 0x1C : at + 0x20] = reals(random_, 1)
+            data[at + 0x24 : at + 0x30] = reals(random_, 3)
+            struct.pack_into("<h", data, at + 0x46, random_.choice((0, 1, 1)))
+            data[at + 0xA1] = random_.randrange(4)
+        channels = bytearray(random_.randbytes(CHANNELS * 0x24))
+        for n in range(CHANNELS):
+            struct.pack_into("<I", channels, n * 0x24, random_.choice(indices))
+            struct.pack_into("<I", channels, n * 0x24 + 4, random_.choice((NONE, NONE, 0x10002, 5)))
+            struct.pack_into("<h", channels, n * 0x24 + 0xE, random_.choice((-1, 0, 3, 9)))
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        tag_pointers = []
+        for n in range(TAGS):
+            struct.pack_into("<I", tags, n * 0x10 + 8, TAGS * 0x10 + n * 0x10)
+            tag_pointers.append(n * 0x10 + 8)
+        table = bytearray(random_.randbytes(0x100 * 0x5C))
+        for n in range(0x100):
+            struct.pack_into("<f", table, n * 0x5C + 0x10, random_.choice((0.0, -3.0, 2.0)))
+            struct.pack_into(
+                "<3f", table, n * 0x5C + 0x50, random_.choice((0.0, 0.5, 1.0, 2.0)), random_.uniform(0, 4), random_.uniform(0, 4)
+            )
+        table_ = Buffer(bytes(table))
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        struct.pack_into("<f", state, 0x1E0, random_.choice((0.0, 1.0 / 30.0, 0.5)))
+        for index in range(4):
+            state[LISTENERS + index * LISTENER_SIZE + 7] = random_.choice((0, 1, 0x80))
+        taken = random_.choice((1, 1, 0))
+        seen = random_.choice((0, 1))
+
+        def given__(harness, arguments, taken=taken, seen=seen):
+            voice_index, said_, first_ = arguments
+            record = voice_index, harness.normalize(said_), bytes(harness.mu.mem_read(first_, 1))
+            harness.mu.mem_write(first_, bytes((seen,)))
+            return taken, record
+
+        def where_(harness, arguments):
+            said_, listener_index, position = arguments
+            harness.mu.mem_write(position, struct.pack("<3f", 1.5, -2.5, 4.0))
+            # the game's function leaves in eax the place that it was given there, and the game goes on to use it
+            return position, (harness.normalize(said_), listener_index & 0xFF)
+
+        def seen_from(harness, arguments):
+            matrix, point, result = arguments
+            record = harness.normalize(matrix), bytes(harness.mu.mem_read(point, 12)), harness.normalize(point) == harness.normalize(result)
+            harness.mu.mem_write(result, struct.pack("<3f", 0.25, 8.0, -1.0))
+            return result, record
+
+        def slot_(harness, arguments):
+            parameters, slot = arguments
+            return 0, (bytes(harness.mu.mem_read(parameters, 0x24)), slot & 0xFFFF)
+
+        t.check(
+            "sound_channel_update_slot",
+            random_.randrange(CHANNELS),
+            random_.choice((0, Buffer(reals(random_, 3)), Buffer(struct.pack("<3f", random_.uniform(-1, 2), random_.uniform(-1, 2), random_.uniform(-1, 2))))),
+            globals={
+                "sound_sources": Buffer(bytes(data), pointers=buffer.pointers),
+                "sound_channels": Buffer(bytes(channels)),
+                "game_sound_globals": Buffer(bytes(state)),
+                "global_tag_instances": Buffer(bytes(tags) + random_.randbytes(TAGS * 0x10), pointers=tuple(tag_pointers)),
+                "global_structure_bsp_index": struct.pack("<h", 1),
+                "unknown_0051ebe4": Buffer(random_.randbytes(0x2AC0)),
+            },
+            extra=[table_],
+            externals={
+                "sound_class_get": class_of(table_),
+                "sound_voice_unknown_0021dff0": given__,
+                "sound_source_get_position": where_,
+                "matrix4x3_inverse_transform_point": seen_from,
+                "sound_gain_to_decibels": lambda harness, arguments: (real_bits(-2.25), tuple(arguments)),
+                "unknown_00220e00": slot_,
             },
         )
