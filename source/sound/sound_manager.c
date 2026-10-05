@@ -320,6 +320,22 @@ enum
 	SOUND_EFFECT_DEFINITION_UNKNOWN8_OFFSET= 0x8,
 	SOUND_EFFECT_DATUM_UNKNOWN6_OFFSET= 0x6,
 	SOUND_EFFECT_DATUM_DEFINITION_OFFSET= 0x10,
+	/* more of an element of unknown_00502104: whether its samples are read,
+	and of which piece of a recording they are */
+	UNKNOWN_00502104_DATUM_DONE_OFFSET= 0x2,
+	UNKNOWN_00502104_DATUM_UNKNOWN3_OFFSET= 0x3,
+	UNKNOWN_00502104_DATUM_UNKNOWN8_OFFSET= 0x8,
+	UNKNOWN_00502104_DATUM_CHUNK_OFFSET= 0xC,
+	/* the samples are read from the map in pieces of this many bytes */
+	SOUND_CACHE_READ_UNIT= 0x200,
+	_sound_cache_read_category= 5,
+	_sound_cache_read_priority= 4,
+	/* what the sounds of a map have more of some sounds */
+	SOUND_DEFINITION_EXTRA_INFO_INDEX_OFFSET= 0xE,
+	SOUND_GESTALT_EXTRA_INFOS_OFFSET= 0x50,
+	SOUND_EXTRA_INFO_SIZE= 0x2C,
+	SOUND_EXTRA_INFO_ENTRY_SIZE= 0x10,
+	SOUND_PERMUTATION_UNKNOWN5_OFFSET= 0x5,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -712,6 +728,11 @@ long unknown_0021b940(long looping_sound_index, long sound_index, long pitch_ran
 short __attribute__((stdcall)) sound_choose_permutation(const struct sound_definition *sound, short pitch_range_offset);
 long __attribute__((stdcall)) looping_sound_get_or_new_source(long sound_index, short track, long pitch_range,
 	long looping_sound_index, long unknown, long unknown2);
+
+/* 0x00218a10 and 0x00218e50 */
+void __attribute__((stdcall)) sound_cache_chunk_load(struct sound_chunk *chunk, long unknown);
+real __attribute__((stdcall)) sound_unknown_00218e50(long sound_index, short permutation, short pitch_range_offset,
+	short index);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -4366,4 +4387,108 @@ long __attribute__((stdcall)) looping_sound_get_or_new_source(
 	}
 
 	return source_index;
+}
+
+/* 0x00218a10: the samples of a piece of a recording start to be read from
+the map into the cache of the sounds: a block of the cache is made for
+them, and the element of unknown_00502104 that goes with the block says of
+which piece it is and whether the read is done. Nothing if there is no room.
+The second argument is kept at 8 of the element */
+void __attribute__((stdcall)) sound_cache_chunk_load(
+	struct sound_chunk *chunk,
+	long unknown)
+{
+	byte *bytes= (byte *)chunk;
+	long block_index= lruv_block_new(sound_lruv_cache, *(const long *)(bytes+SOUND_CHUNK_SIZE_OFFSET)&SOUND_CHUNK_SIZE_MASK, 0);
+	const struct lruv_cache *cache;
+	long address;
+	byte *datum;
+	long size;
+
+	if (block_index==NONE)
+	{
+		return;
+	}
+	cache= sound_lruv_cache;
+	address= (long)((unsigned long)((const struct lruv_cache_block *)cache->blocks->data)[block_index&0xFFFF].first_page_index<<
+		(cache->page_size_bits&31))+sound_cache_base;
+	datum_new_at_index(unknown_00502104, block_index);
+	datum= (byte *)unknown_00502104->data+(block_index&0xFFFF)*UNKNOWN_00502104_DATUM_SIZE;
+	*(long *)(bytes+SOUND_CHUNK_CACHE_INDEX_OFFSET)= block_index;
+	*(long *)(datum+UNKNOWN_00502104_DATUM_UNKNOWN8_OFFSET)= unknown;
+	*(struct sound_chunk **)(datum+UNKNOWN_00502104_DATUM_CHUNK_OFFSET)= chunk;
+	datum[UNKNOWN_00502104_DATUM_COUNT_OFFSET]= 0;
+	datum[UNKNOWN_00502104_DATUM_USES_OFFSET]= 0;
+	datum[UNKNOWN_00502104_DATUM_UNKNOWN3_OFFSET]= 0;
+	size= *(const long *)(bytes+SOUND_CHUNK_SIZE_OFFSET)&SOUND_CHUNK_SIZE_MASK;
+	if (size&(SOUND_CACHE_READ_UNIT-1))
+	{
+		size= (size|(SOUND_CACHE_READ_UNIT-1))+1;
+	}
+	cache_file_read_async(*(const uint32_t *)bytes, size, (void *)(uintptr_t)address, NULL,
+		datum+UNKNOWN_00502104_DATUM_DONE_OFFSET, _sound_cache_read_category, _sound_cache_read_priority);
+}
+
+/* 0x00218e50: a byte, as a real from 0 to 1, of what the sounds of a map
+have more of a sound (its number at 0xE says which): that of a recording of
+a pitch range, at a place in the bytes of the recording. 0 if the recording
+is not of the pitch range, or has no bytes. What the bytes are is not known */
+real __attribute__((stdcall)) sound_unknown_00218e50(
+	long sound_index,
+	short permutation,
+	short pitch_range_offset,
+	short index)
+{
+	const struct sound_cache_file_gestalt *gestalt= global_sound_cache_file_gestalt;
+	const byte *sound= (const byte *)sound_definition_get(sound_index);
+	const struct sound_pitch_range *pitch_range=
+		(const struct sound_pitch_range *)(uintptr_t)gestalt->pitch_ranges.address+
+		(*(const short *)(sound+8)+pitch_range_offset);
+	long clamped;
+	const byte *extra;
+	const byte *entry;
+	long count;
+	long clamped_index;
+
+	if (permutation<0)
+	{
+		clamped= 0;
+	}
+	else
+	{
+		clamped= pitch_range->permutation_count-1;
+		if (permutation<=clamped)
+		{
+			clamped= permutation;
+		}
+	}
+	if (clamped!=permutation)
+	{
+		return 0.0f;
+	}
+	extra= *(const byte *const *)(*(const byte *const *)((const byte *)gestalt+SOUND_GESTALT_EXTRA_INFOS_OFFSET+4)+
+		*(const short *)(sound+SOUND_DEFINITION_EXTRA_INFO_INDEX_OFFSET)*SOUND_EXTRA_INFO_SIZE+4);
+	entry= *(const byte *const *)(extra+0xC)+
+		(char)((const byte *)(uintptr_t)gestalt->permutations.address)[
+			(pitch_range->first_permutation_index+permutation)*(long)sizeof(struct sound_permutation)+SOUND_PERMUTATION_UNKNOWN5_OFFSET]*
+		SOUND_EXTRA_INFO_ENTRY_SIZE;
+	count= *(const long *)(entry+4);
+	if (count<=0)
+	{
+		return 0.0f;
+	}
+	if (index<0)
+	{
+		clamped_index= 0;
+	}
+	else
+	{
+		clamped_index= count-1;
+		if (!(index>clamped_index))
+		{
+			clamped_index= index;
+		}
+	}
+
+	return (real)(long)(*(const byte *const *)(extra+4))[(short)clamped_index+*(const long *)entry]*(1.0f/255.0f);
 }

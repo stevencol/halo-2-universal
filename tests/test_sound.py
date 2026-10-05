@@ -2764,3 +2764,87 @@ def run(t) -> None:
                     )
                 },
             )
+
+    # ---------- the samples of a piece start to be read, and a byte of what a sound has more
+
+    random_ = random.Random(174)
+
+    for _ in range(200):
+        cache = bytearray(random_.randbytes(0x70)) + bytearray(random_.randbytes(0x4C + COUNTED * 0x18))
+        struct.pack_into("<i", cache, 0x34, random_.choice((0, 1, 9, 12)))
+        struct.pack_into("<I", cache, 0x64, 0x70)
+        struct.pack_into("<I", cache, 0x70 + 0x44, 0x70 + 0x4C)
+        for index in range(COUNTED):
+            struct.pack_into("<i", cache, 0x70 + 0x4C + index * 0x18 + 8, random_.randrange(0, 0x2000))
+        piece = bytearray(random_.randbytes(0xC))
+        struct.pack_into("<I", piece, 4, random_.getrandbits(2) << 30 | random_.choice((0, 1, 0x1FF, 0x200, 0x201, 0x12345, 0x3FFFFE00)))
+        block = random_.choice((NONE, *(random_.getrandbits(16) << 16 | index for index in range(COUNTED))))
+        t.check(
+            "sound_cache_chunk_load",
+            Buffer(bytes(piece)),
+            random_.getrandbits(32),
+            globals={
+                "unknown_00502104": counted(),
+                "sound_lruv_cache": Buffer(bytes(cache), pointers=(0x64, 0x70 + 0x44)),
+                "sound_cache_base": random_.choice((0, 0x80000000, random_.getrandbits(32))),
+            },
+            externals={
+                "lruv_block_new": lambda harness, arguments, block=block: (
+                    block,
+                    (harness.normalize(arguments[0]), arguments[1], arguments[2]),
+                ),
+                "datum_new_at_index": lambda harness, arguments: (arguments[1], (harness.normalize(arguments[0]), arguments[1])),
+                "cache_file_read_async": lambda harness, arguments: (
+                    0,
+                    (arguments[0], arguments[1], arguments[2], arguments[3], harness.normalize(arguments[4]), *arguments[5:]),
+                ),
+            },
+        )
+
+    for _ in range(60):
+        # what the sounds share: 4 pitch ranges, 12 recordings, and 3 of what some sounds have more
+        data = bytearray(random_.randbytes(0x58))
+        pointers = []
+
+        def put(offset: int, content: bytes) -> int:
+            struct.pack_into("<I", data, offset, len(data))
+            pointers.append(offset)
+            at = len(data)
+            data.extend(content)
+            return at
+
+        ranges = bytearray(random_.randbytes(4 * 0xC))
+        for n in range(4):
+            struct.pack_into("<hh", ranges, n * 0xC + 8, random_.randrange(0, 6), random_.choice((0, 1, 3, 6)))
+        put(0x24, bytes(ranges))
+        recordings_ = bytearray(random_.randbytes(12 * 0x10))
+        for n in range(12):
+            recordings_[n * 0x10 + 5] = random_.randrange(4)
+        put(0x2C, bytes(recordings_))
+        extras = put(0x54, random_.randbytes(3 * 0x2C))
+        for n in range(3):
+            more = put(extras + n * 0x2C + 4, random_.randbytes(0x10))
+            put(more + 4, random_.randbytes(0x100))
+            entries = bytearray()
+            for _entry in range(4):
+                entries += struct.pack("<2i", random_.randrange(0, 0x80), random_.choice((0, 1, 5, 0x40, -1))) + random_.randbytes(8)
+            put(more + 0xC, bytes(entries))
+        shared = Buffer(bytes(data), pointers=tuple(pointers))
+        for _case in range(12):
+            sound_index = random_.randrange(TAGS)
+            tags = bytearray(random_.randbytes(TAGS * 0x10))
+            struct.pack_into("<I", tags, sound_index * 0x10 + 8, len(tags))
+            definition = bytearray(random_.randbytes(0x10))
+            struct.pack_into("<h", definition, 8, random_.randrange(2))
+            struct.pack_into("<h", definition, 0xE, random_.randrange(3))
+            t.check(
+                "sound_unknown_00218e50",
+                random_.getrandbits(16) << 16 | sound_index,
+                random_.choice((0, 1, 2, 5, 6, 0xFFFF)),
+                random_.randrange(3),
+                random_.choice((0, 1, 4, 0x3F, 0x40, 0x7FFF, 0xFFFF)),
+                globals={
+                    "global_sound_cache_file_gestalt": shared,
+                    "global_tag_instances": Buffer(bytes(tags) + bytes(definition), pointers=(sound_index * 0x10 + 8,)),
+                },
+            )

@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Leer las muestras de un trozo y un byte de lo que un sonido tiene de más
+
+Dos funciones en `sound/sound_manager.c`. De 824 funciones se pasa a
+826, el 7,33 % de las del juego (el 3,944 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_cache_chunk_load` | `0x00218a10` | `sound/sound_manager.c` |
+| `sound_unknown_00218e50` | `0x00218e50` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- `sound_cache_chunk_load` empieza a leer del mapa las muestras de un trozo
+  de una grabación y las mete en la caché de los sonidos: crea un bloque de
+  la caché (`lruv_block_new`), apunta en la tabla `unknown_00502104` de qué
+  trozo es y lanza la lectura con `cache_file_read_async`, en múltiplos de
+  512 bytes. El byte `2` del elemento de la tabla dice cuándo terminó la
+  lectura. Si no hay sitio en la caché no hace nada.
+- `sound_unknown_00218e50` da un byte, como real de 0 a 1, de lo que los
+  sonidos de un mapa tienen de más de algunos sonidos (bloque en `0x50`, de
+  `0x2C` bytes; el número en `0xE` del sonido dice cuál): el de una
+  grabación de un rango de tono, en un sitio de sus bytes. No se sabe qué
+  son esos bytes.
+- Los nombres son inventados.
+
+### Sin comprobar
+
+- La batería completa corre aparte con las 824 funciones del hito 173; en
+  este hito solo se pasaron las pruebas de estas dos.
+
+### Mutaciones
+
+Pendientes las de los hitos 156 a 174.
+
 ## 2026-10-04 — Soltar la caché de sonidos, elegir una grabación y el sonido de una pista
 
 Tres funciones en `sound/sound_manager.c`. De 821 funciones se pasa a
