@@ -437,6 +437,9 @@ enum
 	SOUND_SOURCE_DATUM_DECIBELS_OFFSET= 0x20,
 	SOUND_CHANNEL_PARAMETERS_SIZE= 0x38,
 	_sound_source_deleted_faded_out= 4,
+	/* a flag of a sound that plays, at 6 of it: it plays with a sound voice */
+	_sound_source_datum_voice_bit= 1,
+	_sound_source_deleted_no_voice= 7,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -909,6 +912,14 @@ and 0x00128ca0: give it to the voice of the channel */
 void unknown_00129aa0(long channel_index, real *decibels, byte *parameters);
 void unknown_0021c400(long channel_index, real decibels, const byte *parameters);
 void unknown_00128ca0(long channel_index, real decibels, const byte *parameters);
+
+/* 0x0037b75b: of the console: what a stream of sound does; 0x0021de90: a
+sound voice */
+void unknown_0037b75b(void *stream, long *status);
+long unknown_0021de90(void);
+
+/* 0x001295e0 */
+boolean __attribute__((stdcall)) sound_channel_get_voice(short channel_index);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -5930,4 +5941,88 @@ void sound_channels_update_sources(
 				(char)source[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET], channel->unknown1C, channel->unknown10);
 		}
 	}
+}
+
+/* 0x001295e0: a channel gets a voice of the console's sound to play its
+sound with: the first of those of its type that is free and not taken. With
+it goes a slot: the one that the sound says (the byte at 0xA2 of it), if its
+stream is not busy; or, for a sound with the flag 2 at 6, that of a sound
+voice that unknown_0021de90 gives. A channel that has a voice keeps it,
+unless its sound has that flag and the channel has no slot. If it gets none,
+the sound and the channel are let go (reason 7), and FALSE comes back */
+boolean __attribute__((stdcall)) sound_channel_get_voice(
+	short channel_index)
+{
+	struct sound_channel *channel= &sound_channels[channel_index];
+	const byte *source= sound_source_get(channel->unknown0);
+	byte *globals;
+	long voice;
+	long last;
+
+	if (channel->unknownC!=NONE &&
+		(!(source[SOUND_SOURCE_DATUM_UNKNOWN6_OFFSET]&FLAG(_sound_source_datum_voice_bit)) || channel->unknownE!=NONE))
+	{
+		return TRUE;
+	}
+	globals= game_sound_globals;
+	voice= *(const long *)(globals+SOUND_CONSOLE_STATE_COUNTS_OFFSET+(char)channel->type*4);
+	last= *(const long *)(globals+SOUND_CONSOLE_STATE_COUNTS_OFFSET+(3+(char)channel->type)*4);
+	for (; voice<=last; voice++)
+	{
+		unsigned long bit= 1UL<<(voice&31);
+
+		if ((((const unsigned long *)globals)[voice>>5]&bit) &&
+			!(((const unsigned long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN60_OFFSET))[voice>>5]&bit))
+		{
+			break;
+		}
+	}
+	if (voice<=last && (short)voice!=NONE)
+	{
+		long sound_voice_index= NONE;
+		short slot= NONE;
+		boolean found= FALSE;
+
+		if (source[SOUND_SOURCE_DATUM_UNKNOWNA2_OFFSET]!=0xFF)
+		{
+			long status;
+
+			unknown_0037b75b(*(void **)(unknown_0051ebe4+UNKNOWN_0051EBE4_SLOT_STREAM_OFFSET+
+				(char)source[SOUND_SOURCE_DATUM_UNKNOWNA2_OFFSET]*UNKNOWN_0051EBE4_SLOT_SIZE), &status);
+			if (!(status&1))
+			{
+				slot= (char)source[SOUND_SOURCE_DATUM_UNKNOWNA2_OFFSET];
+				found= slot!=NONE;
+			}
+		}
+		else if (source[SOUND_SOURCE_DATUM_UNKNOWN6_OFFSET]&FLAG(_sound_source_datum_voice_bit))
+		{
+			sound_voice_index= unknown_0021de90();
+			if (sound_voice_index!=NONE)
+			{
+				slot= *(const short *)((const byte *)sound_voices->data+(sound_voice_index&0xFFFF)*SOUND_VOICE_DATUM_SIZE+
+					SOUND_VOICE_DATUM_SLOT_OFFSET);
+				found= slot!=NONE;
+			}
+		}
+		else
+		{
+			found= TRUE;
+		}
+		if (found)
+		{
+			globals= game_sound_globals;
+			channel->unknownE= slot;
+			channel->unknownC= (short)voice;
+			channel->unknown4= sound_voice_index;
+			((unsigned long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN60_OFFSET))[(short)voice>>5]|= 1UL<<((short)voice&31);
+			((unsigned long *)globals)[channel->unknownC>>5]&= ~(1UL<<(channel->unknownC&31));
+
+			return TRUE;
+		}
+	}
+	sound_source_delete(channel->unknown0, _sound_source_deleted_no_voice);
+	sound_channel_delete(channel_index);
+
+	return FALSE;
 }

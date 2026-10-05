@@ -3659,3 +3659,56 @@ def run(t) -> None:
             },
             mocks=[Mock(lambda call: 0, stack_arguments=6)],
         )
+
+    # ---------- a channel gets a voice of the console's sound
+
+    random_ = random.Random(189)
+
+    for _ in range(700):
+        buffer, indices = playing()
+        data = bytearray(buffer.data)
+        for index in range(PLAYING):
+            at = 0x4C + index * DATUM
+            data[at + 6] = random_.choice((0, 0, 2, 2, 0xFD, 0xFF))
+            data[at + 0xA2] = random_.choice((0xFF, 0xFF, 0, 3, 0x7F))
+        channels = bytearray(random_.randbytes(CHANNELS * 0x24))
+        for n in range(CHANNELS):
+            struct.pack_into("<I", channels, n * 0x24, random_.choice(indices))
+            channels[n * 0x24 + 8] = random_.randrange(3)
+            struct.pack_into("<hh", channels, n * 0x24 + 0xC, random_.choice((-1, -1, -1, 4)), random_.choice((-1, -1, 6)))
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        for kind in range(3):
+            first = random_.choice((0, 5, 30, 40))
+            struct.pack_into("<i", state, 0x40 + kind * 4, first)
+            struct.pack_into("<i", state, 0x4C + kind * 4, first + random_.choice((-1, 0, 3, 20)))
+        state[0:0x10] = random_.choice((bytes(0x10), random_.randbytes(0x10), bytes((0xFF,)) * 0x10))
+        state[0x60:0x70] = random_.choice((bytes(0x10), random_.randbytes(0x10), bytes((0xFF,)) * 0x10))
+        voices_ = bytearray(random_.randbytes(0x4C + VOICES * 0x6C))
+        struct.pack_into("<I", voices_, 0x44, 0x4C)
+        for index in range(VOICES):
+            struct.pack_into("<h", voices_, 0x4C + index * 0x6C + 2, random_.choice((-1, 0, 5, 31)))
+        busy = random_.choice((0, 0, 1, 0xFE, 0xFF))
+        given = random_.choice((NONE, *(random_.getrandbits(16) << 16 | index for index in range(VOICES))))
+
+        def stream_(harness, arguments, busy=busy):
+            stream, status = arguments
+            harness.mu.mem_write(status, struct.pack("<I", busy))
+            return 0, (stream,)
+
+        t.check(
+            "sound_channel_get_voice",
+            random_.randrange(CHANNELS),
+            globals={
+                "sound_sources": Buffer(bytes(data), pointers=buffer.pointers),
+                "sound_channels": Buffer(bytes(channels)),
+                "game_sound_globals": Buffer(bytes(state)),
+                "sound_voices": Buffer(bytes(voices_), pointers=(0x44,)),
+                "unknown_0051ebe4": Buffer(random_.randbytes(0x2AC0)),
+            },
+            externals={
+                "unknown_0037b75b": stream_,
+                "unknown_0021de90": lambda harness, arguments, given=given: given,
+                "sound_source_delete": lambda harness, arguments: (0, tuple(arguments)),
+                "sound_channel_delete": lambda harness, arguments: (0, (arguments[0] & 0xFFFF,)),
+            },
+        )

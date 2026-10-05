@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Un canal consigue una voz de la consola
+
+Una función en `sound/sound_manager.c`. De 845 funciones se pasa a
+846, el 7,51 % de las del juego (el 4,173 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_channel_get_voice` | `0x001295e0` | `sound/sound_manager.c` |
+
+Nuevas sin descompilar: `0x0037b75b`, de la consola, y `0x0021de90`.
+
+### Lo que se sabe
+
+- `sound_channel_get_voice` le consigue a un canal una voz del sonido de la
+  consola para tocar su sonido: la primera de las de su tipo que esté libre
+  y sin tomar, mirando los vectores de bits que rellena
+  `sound_console_get_state`.
+- Con la voz va una casilla: la que diga el sonido (su byte `0xA2`), si su
+  flujo no está ocupado (`0x0037b75b`); o, para un sonido con la marca 2 en
+  `6`, la de una voz de sonido que da `0x0021de90`.
+- Un canal que ya tiene voz se la queda, salvo que su sonido tenga esa
+  marca y el canal no tenga casilla.
+- Si no consigue voz, suelta el sonido y el canal con el motivo 7 y
+  devuelve falso.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasó la prueba de esta función. La batería completa
+  corre aparte con las 843 funciones del hito 186.
+
+### Mutaciones
+
+Pendientes las de los hitos 156 a 189.
+
 ## 2026-10-04 — El sonido de cada canal, cada vez
 
 Una función en `sound/sound_manager.c`. De 844 funciones se pasa a
