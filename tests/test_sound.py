@@ -913,7 +913,7 @@ def run(t) -> None:
         "sound_playback_controllers_update",
         "unknown_0021b0e0",
         "sound_channels_update",
-        "unknown_00128020",
+        "sound_sources_update",
         "sound_sources_get_channels",
         "sound_channels_update_sources",
         "unknown_0021ee80",
@@ -4155,4 +4155,88 @@ def run(t) -> None:
                 ),
             },
             mocks=[Mock(lambda call: 0, stack_arguments=4, record=lambda call: tuple(call.stack[:3]))],
+        )
+
+    # ---------- each frame, of each sound that plays: whether it goes on, and who hears it
+
+    random_ = random.Random(198)
+
+    for n in range(700):
+        count = random_.choice((PLAYING, PLAYING, PLAYING - 3, 1, 0))
+        times = (1000, 2000)
+        data = bytearray(random_.randbytes(0x4C + PLAYING * DATUM))
+        bits = len(data)
+        data += struct.pack("<I", random_.getrandbits(32) | random_.getrandbits(32))
+        struct.pack_into("<I", data, 0x24, DATUM)
+        struct.pack_into("<i", data, 0x38, count)
+        struct.pack_into("<2I", data, 0x44, 0x4C, bits)
+        for index in range(PLAYING):
+            at = 0x4C + index * DATUM
+            struct.pack_into("<H", data, at, random_.choice((0, 1, 0x7FFF, 0x8001, 0xFFFF, random_.getrandbits(16))))
+            struct.pack_into(
+                "<H", data, at + 4, random_.choice((0, 0, 4, 4, 0x240, 0x240, 0x244, 0x200, 0x40, 0xFDBF, 0xFFFF, random_.getrandbits(16)))
+            )
+            struct.pack_into("<I", data, at + 0xC, random_.getrandbits(16) << 16 | random_.randrange(TAGS))
+            struct.pack_into("<H", data, at + 0x18, random_.choice((0, 0, 8, 8, 0xFFF7, random_.getrandbits(16))))
+            struct.pack_into("<f", data, at + 0x50, random_.choice((0.0, 5.0, 40.0)))
+            struct.pack_into("<i", data, at + 0x8C, random_.choice(times))
+            data[at + 0xA0] = random_.choice((0xFF, 0, 0, 1, 2))
+            struct.pack_into("<h", data, at + 0xAC, random_.choice((-1, -1, *range(CHANNELS))))
+        # one before the first: the game looks at the channel of a sound with none
+        channels = bytearray(random_.randbytes((CHANNELS + 1) * 0x24))
+        for channel_index in range(CHANNELS + 1):
+            channels[channel_index * 0x24 + 9] = random_.choice((0, 0, 0, 0, 1))
+            struct.pack_into("<h", channels, channel_index * 0x24 + 0xC, random_.randrange(32))
+        console = bytearray(random_.randbytes(32 * 0x34 + 0x10))
+        for voice in range(32):
+            console[voice * 0x34 + 0xD] = random_.choice((0, 0, 8, 0xF8, 1, 7, 0xFF))
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        tag_pointers = []
+        definitions = bytearray(random_.randbytes(TAGS * 0x10))
+        for tag in range(TAGS):
+            struct.pack_into("<I", tags, tag * 0x10 + 8, TAGS * 0x10 + tag * 0x10)
+            tag_pointers.append(tag * 0x10 + 8)
+            struct.pack_into("<h", definitions, tag * 0x10 + 6, random_.randrange(0, PLAYBACKS))
+            definitions[tag * 0x10 + 0xC] = random_.choice((0xFF, 0xFF, 0, 1, 2, 3))
+        shared = bytearray(random_.randbytes(0x50))
+        struct.pack_into("<I", shared, 4, len(shared))
+        shared += reals(random_, PLAYBACKS * PLAYBACK_SIZE // 4)
+        struct.pack_into("<I", shared, 0x4C, len(shared))
+        for _promotion in range(4):
+            shared += random_.randbytes(0x10) + struct.pack(
+                "<3i", random_.choice((-1, 0, 1, 2, 3)), random_.choice(times), random_.choice((0, 1000, 1001, 2000, 2001, 5000))
+            )
+        table_ = Buffer(random_.randbytes(0x100 * 0x5C))
+        goes_on = [random_.choice((1, 1, 1, 0)) for _ in range(PLAYING)]
+        heard_by = [random_.choice((NONE, NONE, 0, 1, 3)) for _ in range(PLAYING)]
+
+        def goes_on_(harness, arguments, goes_on=goes_on):
+            return goes_on[arguments[0] & 0xFFFF], tuple(arguments)
+
+        def heard_by_(harness, arguments, heard_by=heard_by):
+            calls = calls_so_far(harness, "sound_source_get_listener")
+            return heard_by[calls % PLAYING], (harness.normalize(arguments[0]), arguments[1], arguments[2])
+
+        buffer = Buffer(bytes(channels))
+        t.check(
+            "sound_sources_update",
+            globals={
+                "sound_sources": Buffer(bytes(data), pointers=(0x44, 0x48)),
+                "sound_channels": Pointer(buffer, 0x24),
+                "unknown_0051ebe4": Buffer(bytes(console)),
+                "global_tag_instances": Buffer(bytes(tags) + bytes(definitions), pointers=tuple(tag_pointers)),
+                "global_sound_cache_file_gestalt": Buffer(bytes(shared), pointers=(4, 0x4C)),
+            },
+            extra=[table_, buffer],
+            externals={
+                "sound_source_unknown_00127fc0": goes_on_,
+                "sound_source_get_listener": heard_by_,
+                "sound_source_fade_decibels": lambda harness, arguments: (fade_bits(arguments[0]), tuple(arguments)),
+                "sound_sources_cross_fade": lambda harness, arguments: (
+                    0,
+                    (arguments[0], arguments[1], arguments[2] & 0xFFFF, arguments[3]),
+                ),
+                "sound_source_delete": lambda harness, arguments: (0, tuple(arguments)),
+                "sound_class_get": class_of(table_),
+            },
         )

@@ -2,6 +2,55 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Cada sonido que suena: si sigue, y quién lo oye
+
+Una función en `sound/sound_manager.c`, de 684 bytes. De 854 funciones se pasa a
+855, el 7,59 % de las del juego (el 4,346 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_sources_update` | `0x00128020` | `sound/sound_manager.c` |
+
+Estaba apuntada sin descompilar (`unknown_00128020`); la llama
+`sound_update` cada fotograma, justo antes de
+`sound_sources_get_channels`.
+
+### Lo que se sabe
+
+- `sound_sources_update` recorre los sonidos que suenan cuyo canal no está
+  en pausa, y decide si cada uno sigue.
+- Se suelta el sonido con las marcas 6 y 9 cuando la voz de su canal ya no
+  hace nada (motivo 2); el que su promoción no deja sonar: es de una regla
+  por debajo de la que tiene la promoción, y de la última vez que se miró
+  la promoción (motivo 15); y el que `sound_source_unknown_00127fc0` dice
+  que no sigue (motivo 3).
+- A los demás se les busca el oyente que los oye (`sound_source_get_listener`),
+  hasta la distancia a la que se oye el sonido. Sin oyente, el sonido empieza
+  a apagarse, en dos segundos, y su marca 2 lo recuerda; cuando vuelve a
+  tener oyente, vuelve en medio segundo (`sound_sources_cross_fade`) y pierde
+  la marca.
+- Un sonido cuyo tag tiene la marca 3 recibe la marca 0 en lo que el juego
+  dice de él.
+- El juego mira el canal de un sonido sin canal (el de antes del primero)
+  cuando el sonido tiene las marcas 6 y 9: aquí se hace igual.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y de
+  `sound_update`. La última batería completa es la del hito 192 (849
+  funciones, todas bien).
+
+### Mutaciones
+
+Quince líneas rotas a mano (la pausa del canal, las dos marcas, el estado
+de la voz, los motivos, las tres comparaciones de la promoción, la marca del
+tag, el tiempo de apagado, el orden de los sonidos al volver y las marcas
+que se ponen y se quitan): las pruebas notan las quince. Pendientes las
+listas completas de los hitos 156 a 198.
+
 ## 2026-10-05 — Los sonidos a los que les llega la hora consiguen canal
 
 Una función en `sound/sound_manager.c`, de 558 bytes. De 853 funciones se pasa a

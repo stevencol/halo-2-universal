@@ -446,6 +446,16 @@ enum
 	/* why a sound that plays is let go: its samples cannot be asked for.
 	A flag of it, and a number of its class */
 	_sound_source_deleted_no_data= 14,
+	/* more of why: its promotion keeps it from playing, and what
+	sound_source_unknown_00127fc0 says; two flags more of a sound that
+	plays, one of what the game says of it, and in how long a sound that
+	no one hears fades out */
+	_sound_source_deleted_promotion= 15,
+	_sound_source_deleted_unknown3= 3,
+	_sound_source_datum_unknown6_bit= 6,
+	_sound_source_datum_unknown9_bit= 9,
+	_sound_source_unknown0_bit= 0,
+	SOUND_UNHEARD_FADE_OUT_TIME= 2000,
 	_sound_source_datum_unknown4_bit= 4,
 	SOUND_CLASS_UNKNOWNE_OFFSET= 0xE,
 	/* more of a sound that plays, of a listener, of a class of sounds and of
@@ -718,7 +728,7 @@ void __attribute__((stdcall)) sound_console_get_state(byte *state);
 void __attribute__((stdcall)) unknown_00127400(boolean unknown);
 void sound_playback_controllers_update(void);
 void __attribute__((stdcall)) unknown_0021b0e0(long unknown);
-void unknown_00128020(void);
+void sound_sources_update(void);
 void sound_sources_get_channels(void);
 void __attribute__((stdcall)) sound_channels_build_queries(byte *first, byte *second, struct sound_update_listeners *listeners);
 long unknown_0014dde0(void);
@@ -2053,7 +2063,7 @@ void sound_update(
 			sound_playback_controllers_update();
 			unknown_0021b0e0(game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7E_OFFSET]);
 			sound_channels_update();
-			unknown_00128020();
+			sound_sources_update();
 			sound_sources_get_channels();
 			memset(first, 0, sizeof(first));
 			memset(second, 0, sizeof(second));
@@ -6808,6 +6818,96 @@ void sound_sources_get_channels(
 					sound_pitch_range_set_unknown5(pitch_range, sound, (char)source[SOUND_SOURCE_DATUM_PERMUTATION_OFFSET]);
 				}
 				sound_source_delete(source_index, _sound_source_deleted_no_data);
+			}
+		}
+	}
+}
+
+/* 0x00128020: each frame, of each sound that plays whose channel is not
+paused. It is let go when the voice of its channel does nothing and it has
+the flags 6 and 9 (reason 2); when its promotion keeps it from playing: it
+is of a rule under the one that the promotion is at, and of the last time
+that the promotion was looked at (reason 15); and when
+sound_source_unknown_00127fc0 says FALSE (reason 3). If not, the listener
+that hears it is looked for, as far as the sound is heard: with none, the
+sound starts to fade out, in two seconds, and its flag 2 says so; with one,
+a sound with that flag fades back in half a second. The name is made up */
+void sound_sources_update(
+	void)
+{
+	long source_index;
+
+	for (source_index= data_next_index(sound_sources, NONE);
+		source_index!=NONE;
+		source_index= data_next_index(sound_sources, source_index))
+	{
+		byte *source= sound_source_get(source_index);
+		const struct sound_definition *sound= sound_definition_get(*(long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET));
+		char promotion_index= ((const char *)sound)[SOUND_DEFINITION_PROMOTION_INDEX_OFFSET];
+		const byte *promotion= NULL;
+		short channel_index;
+		struct sound_source *said;
+		long listener_index;
+		word flags;
+
+		if (promotion_index!=NONE)
+		{
+			promotion= (const byte *)((uintptr_t)*(const long *)((const byte *)global_sound_cache_file_gestalt+
+				SOUND_GESTALT_PROMOTIONS_OFFSET+4)+(uintptr_t)(promotion_index*SOUND_PROMOTION_SIZE));
+		}
+		channel_index= *(short *)(source+SOUND_SOURCE_DATUM_CHANNEL_INDEX_OFFSET);
+		if (channel_index!=NONE && sound_channels[channel_index].unknown9)
+		{
+			continue;
+		}
+		flags= *(word *)(source+SOUND_SOURCE_DATUM_FLAGS_OFFSET);
+		if ((flags>>_sound_source_datum_unknown9_bit)&1 && (flags>>_sound_source_datum_unknown6_bit)&1 &&
+			!sound_voice_state(sound_channel_voice(sound_channels+channel_index)))
+		{
+			sound_source_delete(source_index, _sound_source_deleted_unknown2);
+			continue;
+		}
+		if (promotion && (char)source[SOUND_SOURCE_DATUM_UNKNOWNA0_OFFSET]!=NONE &&
+			(char)source[SOUND_SOURCE_DATUM_UNKNOWNA0_OFFSET]<*(const long *)(promotion+SOUND_PROMOTION_RULE_INDEX_OFFSET) &&
+			*(long *)(source+SOUND_SOURCE_DATUM_UNKNOWN8C_OFFSET)==*(const long *)(promotion+SOUND_PROMOTION_LAST_TIME_OFFSET) &&
+			*(long *)(source+SOUND_SOURCE_DATUM_UNKNOWN8C_OFFSET)<*(const long *)(promotion+SOUND_PROMOTION_SUPPRESSED_UNTIL_OFFSET))
+		{
+			sound_source_delete(source_index, _sound_source_deleted_promotion);
+			continue;
+		}
+		if (!sound_source_unknown_00127fc0(source_index))
+		{
+			sound_source_delete(source_index, _sound_source_deleted_unknown3);
+			continue;
+		}
+		said= (struct sound_source *)(source+SOUND_SOURCE_DATUM_UNKNOWN18_OFFSET);
+		if (sound->flags&FLAG(_sound_definition_unknown3_bit))
+		{
+			source[SOUND_SOURCE_DATUM_UNKNOWN18_OFFSET]|= FLAG(_sound_source_unknown0_bit);
+		}
+		listener_index= sound_source_get_listener(said,
+			sound_get_maximum_distance(said, *(long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET)), NULL);
+		if (listener_index==NONE)
+		{
+			if (!((source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]>>_sound_source_datum_unknown2_bit)&1))
+			{
+				byte *fading= sound_source_get(source_index);
+
+				*(real *)(fading+SOUND_SOURCE_DATUM_UNKNOWNB0_OFFSET)= sound_source_fade_decibels(source_index);
+				*(short *)(fading+SOUND_SOURCE_DATUM_UNKNOWNAE_OFFSET)= 0;
+				*(long *)(fading+SOUND_SOURCE_DATUM_FADE_TIME_OFFSET)= SOUND_UNHEARD_FADE_OUT_TIME;
+				*(long *)(fading+SOUND_SOURCE_DATUM_UNKNOWNB8_OFFSET)= NONE;
+				fading[SOUND_SOURCE_DATUM_FLAGS_OFFSET]|= SOUND_SOURCE_DATUM_FADING_FLAG;
+				source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]|= FLAG(_sound_source_datum_unknown2_bit);
+			}
+		}
+		else
+		{
+			source[SOUND_SOURCE_DATUM_LISTENER_OFFSET]= (byte)listener_index;
+			if ((source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]>>_sound_source_datum_unknown2_bit)&1)
+			{
+				sound_sources_cross_fade(source_index, NONE, 0, 0.5f);
+				source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]&= ~FLAG(_sound_source_datum_unknown2_bit);
 			}
 		}
 	}
