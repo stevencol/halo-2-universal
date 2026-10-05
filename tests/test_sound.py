@@ -3654,7 +3654,7 @@ def run(t) -> None:
                 "sound_console_get_state": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                 "sound_source_fade_decibels": fade_,
                 "sound_source_delete": lambda harness, arguments: (0, tuple(arguments)),
-                "unknown_00129aa0": heard_,
+                "sound_channel_compute_parameters": heard_,
                 "unknown_0021c400": given_,
                 "sound_channel_update_voice": given_,
             },
@@ -4587,4 +4587,124 @@ def run(t) -> None:
                     (arguments[0], arguments[1], arguments[2] & 0xFF, arguments[3] & 0xFF, arguments[4] & 0xFFFF),
                 ),
             },
+        )
+
+    # ---------- how the sound of a channel is heard, for its voice of the console's sound
+
+    random_ = random.Random(205)
+
+    for n in range(1500):
+        time = random_.choice((5000, 100000, 0x7FFF0000, 700))
+        data = bytearray(random_.randbytes(0x4C + PLAYING * DATUM))
+        struct.pack_into("<I", data, 0x24, DATUM)
+        struct.pack_into("<I", data, 0x44, 0x4C)
+        table = len(data)
+        data += random_.randbytes(0xC) + struct.pack("<I", mock_address(0) if random_.random() < 0.85 else 0)
+        pointers = [0x44]
+        indices = []
+        for index in range(PLAYING):
+            at = 0x4C + index * DATUM
+            identifier_ = random_.getrandbits(16)
+            struct.pack_into("<H", data, at, identifier_)
+            data[at + 4] = random_.choice((0, 0, 0, 0x20, 0xDF, random_.getrandbits(8)))
+            data[at + 6] = random_.choice((0, 2, 2, 0xFD, 0xFF))
+            struct.pack_into("<I", data, at + 0xC, random_.getrandbits(16) << 16 | random_.randrange(TAGS))
+            if random_.random() < 0.6:
+                struct.pack_into("<I", data, at + 0x14, table)
+                pointers.append(at + 0x14)
+            else:
+                struct.pack_into("<I", data, at + 0x14, 0)
+            struct.pack_into("<H", data, at + 0x18, random_.choice((0, 0, 0x800, 0x100, 0x900, 0xF7FF, random_.getrandbits(16))))
+            data[at + 0x1B] = random_.choice((0, 0, 1, 1, 1, 2, 2, 0x11, 0x12, 0x10, 3, 0xF, 0x9))
+            data[at + 0x24 : at + 0x30] = reals(random_, 3)
+            struct.pack_into("<I", data, at + 0x30, random_.choice((0, 0xFFFFFFFF, random_.getrandbits(32), random_.getrandbits(32))))
+            data[at + 0x34 : at + 0x40] = reals(random_, 3)
+            data[at + 0xA1] = random_.randrange(4)
+            indices.append(identifier_ << 16 | index)
+        channels = bytearray(random_.randbytes(CHANNELS * 0x24))
+        for channel_index in range(CHANNELS):
+            at = channel_index * 0x24
+            struct.pack_into("<I", channels, at, random_.choice(indices))
+            channels[at + 0xA] = random_.choice((0, 1, 2, 3, 0xFF))
+            channels[at + 0xB] = random_.choice((0, 0, 1, 1, 2, 2, 3))
+            struct.pack_into(
+                "<i", channels, at + 0x14, random_.choice((0, 0, time, time - 1, time - 400, time - 1000, time - 1001, time - 5000, time + 300, -5, 1, -time - 500))
+            )
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        struct.pack_into("<i", state, 0x84, time)
+        for index in range(4):
+            listener = LISTENERS + index * LISTENER_SIZE
+            struct.pack_into("<f", state, listener + 8, random_.choice((1.0, 1.0, 0.5, 2.0)))
+            state[listener + 0xC : listener + 0x3C] = reals(random_, 12)
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        tag_pointers = []
+        for tag in range(TAGS):
+            struct.pack_into("<I", tags, tag * 0x10 + 8, TAGS * 0x10 + tag * 0x10)
+            tag_pointers.append(tag * 0x10 + 8)
+        table__ = bytearray(random_.randbytes(0x100 * 0x5C))
+        for class_index in range(0x100):
+            struct.pack_into("<f", table__, class_index * 0x5C + 0x14, random_.choice((0.0, -3.0, 2.5)))
+        table_ = Buffer(bytes(table__))
+        has_cone = random_.choice((1, 1, 0))
+        heard_gain = random_.choice((0.0, 0.5, 1.0, 0.25))
+        changes = random_.choice((1, 1, 0))
+
+        def place_(harness, arguments):
+            said_, listener_index, position = arguments
+            harness.mu.mem_write(position, struct.pack("<3f", 1.5 + listener_index, -2.0, 0.25))
+            return position, (harness.normalize(said_), listener_index)
+
+        def spatial(harness, arguments, heard_gain=heard_gain):
+            offset, said_, sound_index, forward = arguments
+            record = bytes(harness.mu.mem_read(offset, 12)), harness.normalize(said_), sound_index, bytes(harness.mu.mem_read(forward, 12))
+            return real_bits(heard_gain), record
+
+        def fade__(harness, arguments):
+            kind, milliseconds, duration = arguments
+            value = bits_real(milliseconds) / 1000.0
+            return real_bits(-64.0 * (1.0 - value) if bits_real(duration) > 0 else -64.0 * value), (kind & 0xFFFF, milliseconds, duration)
+
+        def changed_(call, changes=changes):
+            if changes:
+                t.harness.mu.mem_write(call.stack[3] + 4, bytes(range(0x60, 0x70)))
+            return changes
+
+        t.check(
+            "sound_channel_compute_parameters",
+            random_.getrandbits(16) << 16 | random_.randrange(CHANNELS),
+            Buffer(struct.pack("<f", random_.choice((0.0, -3.0, -10.5)))),
+            Buffer(random_.randbytes(0x38)),
+            globals={
+                "sound_sources": Buffer(bytes(data), pointers=tuple(pointers)),
+                "sound_channels": Buffer(bytes(channels)),
+                "game_sound_globals": Buffer(bytes(state)),
+                "global_tag_instances": Buffer(bytes(tags) + random_.randbytes(TAGS * 0x10), pointers=tuple(tag_pointers)),
+                "unknown_00468788": Buffer(reals(random_, 3)),
+            },
+            extra=[table_],
+            externals={
+                "sound_source_get_position": place_,
+                "sound_unknown_00125060": lambda harness, arguments, has_cone=has_cone: (
+                    has_cone,
+                    (harness.normalize(arguments[0]), arguments[1]),
+                ),
+                "sound_source_spatial_gain": spatial,
+                "sound_gain_to_decibels": lambda harness, arguments: (
+                    real_bits(-6.0 if arguments[0] == real_bits(0.5) else (-64.0 if arguments[0] == 0 else (-12.0 if arguments[0] == real_bits(0.25) else 0.0))),
+                    tuple(arguments),
+                ),
+                "sound_unknown_0012a6d0": fade__,
+                "sound_decibels_to_gain": lambda harness, arguments: (
+                    real_bits(10.0 ** (max(bits_real(arguments[0]), -64.0) / 20.0)),
+                    tuple(arguments),
+                ),
+                "sound_class_get": class_of(table_),
+            },
+            mocks=[
+                Mock(
+                    changed_,
+                    stack_arguments=4,
+                    record=lambda call: (call.stack[0], call.stack[1], bytes(t.harness.mu.mem_read(call.stack[3], 0x38))),
+                )
+            ],
         )

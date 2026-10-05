@@ -2,6 +2,60 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Cómo se oye el sonido de un canal
+
+Una función en `sound/sound_manager.c`, de 1152 bytes. De 861 funciones se pasa a
+862, el 7,65 % de las del juego (el 4,474 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_channel_compute_parameters` | `0x00129aa0` | `sound/sound_manager.c` |
+
+Estaba apuntada sin descompilar (`unknown_00129aa0`); la llama
+`sound_channels_update_sources` para cada canal con voz, y lo que calcula
+es lo que reciben `sound_channel_update_voice` y `0x0021c400`. En
+`sound_source_callbacks` ya se sabe qué es la función de `0xC`: quien
+recibe los avisos de un sonido puede cambiar cómo se oye.
+
+### Lo que se sabe
+
+- `sound_channel_compute_parameters` calcula cómo se oye el sonido de un
+  canal. El canal tiene dos marcas de cómo va su sonido a la consola: tal
+  cual (la 0) o por una casilla con sitio (la 1).
+- Un sonido sin sitio (tipo 0) va tal cual: todo, o nada si tiene la marca
+  8.
+- Un sonido con sitio (tipos 1 y 2) recibe lo que dice
+  `sound_source_spatial_gain` de dónde está y hacia dónde apunta, vistos
+  desde su oyente: la posición se pasa a los ejes del oyente, y la dirección
+  del cono sale de 32 bits (`vector3d_decompress`) y se gira igual. Con voz
+  de sonido va por su casilla con esa ganancia; si no, la pierde de sus
+  decibelios y va tal cual.
+- Cuando las marcas del canal cambian, pasa de una forma a la otra en un
+  segundo (`sound_unknown_0012a6d0`), desde el tiempo de `0x14` del canal.
+  Al calcular cuánto queda, el juego resta el tiempo donde parece que
+  debería sumarlo; aquí se hace igual, y las pruebas lo comprueban.
+- El resultado (`0x38` bytes) lleva las marcas, tres volúmenes (dos en
+  decibelios, en `4` y `8`, y uno como ganancia, en `0x14`), la ganancia de
+  `sound_source_spatial_gain` (`0x18`) y dónde está el sonido (`0x1C`).
+- La velocidad del sonido también se pasa a los ejes del oyente, pero no se
+  usa después.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y de
+  `sound_channels_update_sources`. La última batería completa es la del
+  hito 200 (857 funciones, todas bien).
+
+### Mutaciones
+
+Treinta líneas rotas a mano: las pruebas notan veintinueve, dos de ellas
+solo después de añadir casos (un tiempo menor que un segundo y un comienzo
+muy negativo). La que no notan es tratar las marcas del canal como un byte
+con signo: nunca pasan de 3.
+
 ## 2026-10-05 — Un vector guardado en 32 bits
 
 Una función en `math/real_math.c`. De 860 funciones se pasa a
