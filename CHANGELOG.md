@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Una voz de la consola recibe su flujo
+
+Una función en `sound/sound_manager.c`. De 869 funciones se pasa a
+870, el 7,72 % de las del juego (el 4,543 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_console_voice_create_stream` | `0x0021f4e0` | `sound/sound_manager.c` |
+
+No estaba apuntada. La llama `0x0021e4b0`, la que prepara el sonido de la
+consola. Recibe el tipo de muestras en `ebx` y el número de la voz en la
+pila. Nueva sin descompilar: `0x002ae660`, que es la que crea el flujo.
+También la estructura `sound_console_stream_description`.
+
+### Lo que se sabe
+
+- `sound_console_voice_create_stream` le da a una voz su flujo de sonido,
+  para muestras de un tipo: pide el formato a `sound_console_get_format` y
+  rellena lo que la consola necesita para crear el flujo (el formato, hasta
+  dos trozos de muestras a la vez, y `sound_console_voice_stream_callback`
+  como aviso, con el número de la voz).
+- Con esto queda completa la cadena del formato de una voz: tipo de
+  muestras, formato, flujo y aviso.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función. La batería
+  completa corre aparte con las 867 funciones del hito 210.
+
+### Mutaciones
+
+Seis líneas rotas a mano: las pruebas notan las seis.
+
 ## 2026-10-05 — Lo que la consola llama para el flujo de una voz
 
 Una función en `sound/sound_manager.c`. De 868 funciones se pasa a

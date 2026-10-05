@@ -4911,3 +4911,37 @@ def run(t) -> None:
             externals={"unknown_002ae820": console_call(0)},
             mocks=[Mock(lambda call: 0, stack_arguments=3, registers=("ecx",))],
         )
+
+    # ---------- a voice of the console's sound is given its stream
+
+    random_ = random.Random(213)
+
+    def made_(harness, arguments):
+        voice, thing, description, kind = arguments
+        flags, packets, format_, callback, context, unknown14 = struct.unpack("<6I", harness.mu.mem_read(description, 0x18))
+        record = (
+            harness.normalize(voice),
+            harness.normalize(thing),
+            flags,
+            packets,
+            # 0x12 bytes of the format are set for the samples that are not compressed
+            bytes(harness.mu.mem_read(format_, 0x14 if kind != 2 else 0x12)),
+            harness.normalize(callback),
+            context,
+            unknown14,
+            kind,
+        )
+        return 1, record
+
+    for kind in (0, 1, 2, 3, NONE, 0x102) * 8:
+        t.check(
+            "sound_console_voice_create_stream",
+            kind,
+            random_.randrange(8),
+            globals={
+                "unknown_0051ebe4": Buffer(bytes(console_voices(8))),
+                "unknown_0047f0d0": GlobalRange(0x20),
+                "unknown_0047f0f0": GlobalRange(0x20),
+            },
+            externals={"unknown_002ae660": made_},
+        )

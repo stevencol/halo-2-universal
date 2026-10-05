@@ -764,6 +764,20 @@ struct sound_console_format
 typedef char verify_sound_console_format_size[
 	sizeof(struct sound_console_format) == 0x14 ? 1 : -1];
 
+/* what the console takes to make a stream of sound */
+struct sound_console_stream_description
+{
+	unsigned long flags;
+	unsigned long maximum_packets;
+	const struct sound_console_format *format;
+	void (__attribute__((stdcall)) *callback)(long context, long unknown, long unknown2);
+	long context;
+	const void *unknown14;
+};
+
+typedef char verify_sound_console_stream_description_size[
+	sizeof(struct sound_console_stream_description) == 0x18 ? 1 : -1];
+
 /* a sound of which it is to be worked out how it is heard where it is */
 struct sound_query
 {
@@ -1052,6 +1066,11 @@ void unknown_002ae6f0(byte *voice);
 /* 0x00220730; 0x002ae820: of a voice of the console's sound */
 void __attribute__((stdcall)) sound_console_voice_stream_callback(long voice_index, long unknown, long unknown2);
 void unknown_002ae820(byte *voice);
+
+/* 0x0021f4e0; 0x002ae660: makes the stream of a voice of the console's sound */
+struct sound_console_stream_description;
+void __attribute__((stdcall)) sound_console_voice_create_stream(long kind, long voice_index);
+boolean unknown_002ae660(byte *voice, void *object, struct sound_console_stream_description *description, long kind);
 void unknown_002ae500(void *voice, const struct sound_chunk *chunk);
 
 /* 0x0012a0b0 */
@@ -8182,4 +8201,28 @@ void __attribute__((stdcall)) sound_console_voice_stream_callback(
 	{
 		unknown_002ae820(voice);
 	}
+}
+
+/* 0x0021f4e0: a voice of the console's sound is given its stream, for the
+samples of a kind: unknown_002ae660 makes it, with how the samples are
+(sound_console_get_format), up to two pieces of them at a time, and
+sound_console_voice_stream_callback for the console to call with the number
+of the voice. The name is made up */
+void __attribute__((stdcall)) sound_console_voice_create_stream(
+	long kind,
+	long voice_index)
+{
+	byte *voice= unknown_0051ebe4+voice_index*UNKNOWN_0051EBE4_VOICE_SIZE+UNKNOWN_0051EBE4_VOICE_OFFSET;
+	struct sound_console_stream_description description;
+	struct sound_console_format format;
+	void *object= NULL;
+
+	memset(&description, 0, sizeof(description));
+	sound_console_get_format(kind, &format, &object);
+	description.format= &format;
+	description.flags= 0;
+	description.maximum_packets= 2;
+	description.callback= sound_console_voice_stream_callback;
+	description.context= voice_index;
+	unknown_002ae660(voice, object, &description, kind);
 }
