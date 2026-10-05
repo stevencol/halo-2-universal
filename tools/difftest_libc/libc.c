@@ -695,3 +695,20 @@ long double sqrtl(long double value)
 
 	return value;
 }
+
+/* what is left of a number after taking another from it as many times as
+it goes, with the sign of the first: exact */
+long double fmodl(long double value, long double divisor)
+{
+	__asm__(
+		"1:\n\t"
+		"fprem\n\t"
+		"fnstsw %%ax\n\t"
+		"testb $4, %%ah\n\t"
+		"jnz 1b"
+		: "+t"(value)
+		: "u"(divisor)
+		: "ax");
+
+	return value;
+}

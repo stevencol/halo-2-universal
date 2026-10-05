@@ -478,6 +478,22 @@ enum
 	SOUND_EFFECT_ENTRY_SIZE= 0xC,
 	SOUND_EFFECT_ENTRY_BYTES_OFFSET= 0xA,
 	SOUND_EFFECT_NAME_FOUR_TIMES= 0x11000138,
+	SOUND_EFFECT_NAME_KIND10= 0x0D00012E,
+	SOUND_EFFECT_NAME_KIND4= 0x1300012D,
+	/* of what an element has in its place: the functions (of 0x10 bytes: two
+	shorts that say which reals of the sound it is of, its data and a real),
+	the reals, a byte for each number that it has (bit 0: a function; the
+	rest: which) and the bits of the numbers that it has */
+	SOUND_EFFECT_OVERRIDE_FUNCTIONS_OFFSET= 0x4,
+	SOUND_EFFECT_OVERRIDE_REALS_OFFSET= 0xC,
+	SOUND_EFFECT_OVERRIDE_WHICH_OFFSET= 0x14,
+	SOUND_EFFECT_OVERRIDE_MASK_OFFSET= 0x18,
+	SOUND_EFFECT_FUNCTION_SIZE= 0x10,
+	SOUND_EFFECT_FUNCTION_DATA_OFFSET= 0x4,
+	SOUND_EFFECT_FUNCTION_SCALE_OFFSET= 0xC,
+	_sound_effect_input_scaled= 1,
+	_sound_effect_input_directional= 3,
+	SOUND_EFFECT_INPUTS_VECTOR_INDEX= 4,
 	/* three blocks more of what unknown_0018d090 gives, and what
 	sound_unknown_00222770 fills */
 	SOUND_EFFECT_COLLECTION_UNKNOWN14_OFFSET= 0x14,
@@ -1389,7 +1405,12 @@ void sound_unknown_00222930(long sound_index, long unknown, byte *result);
 /* 0x002225a0; 0x002222c0: writes an entry of a list for the console's sound */
 void __attribute__((stdcall)) sound_unknown_002225a0(const byte *overrides, const long *block, long unknown,
 	long *list, long *size);
-void unknown_002222c0(long *entry, const long *element, const byte *override, long unknown, long number);
+void sound_effect_entry_build(long *entry, const long *element, const byte *override, const real *inputs,
+	long number);
+/* 0x00191660: which effects of the console an element is for; 0x0013b390:
+what a function of a tag is of two reals */
+long unknown_00191660(long name, long number);
+real unknown_0013b390(const byte *function, real input, real range);
 
 /* 0x0021dc60; 0x0021d9f0, 0x0021da30, 0x0021da50, 0x0021da70 and 0x0021db30:
 what a sound effect is told of its sounds */
@@ -7620,12 +7641,12 @@ void sound_unknown_00222930(
 }
 
 /* 0x002225a0: a list for the console's sound, from the elements of a block
-of a tag: how many they are, and then what unknown_002222c0 writes for each,
+of a tag: how many they are, and then what sound_effect_entry_build writes for each,
 one after another, in pieces of four bytes: the word at 0xA of what it
 writes says how many bytes more than 0xC it took. An element of the name
 0x11000138 is written four times, with the numbers 0 to 3; any other, once,
 with NONE. `overrides` has, at 4, something of 0x1C bytes for each element
-whose bit is set in its mask at 0x10: unknown_002222c0 is given it. `size`
+whose bit is set in its mask at 0x10: sound_effect_entry_build is given it. `size`
 takes how many bytes the list is. What the list is of is not known */
 void __attribute__((stdcall)) sound_unknown_002225a0(
 	const byte *overrides,
@@ -7657,7 +7678,8 @@ void __attribute__((stdcall)) sound_unknown_002225a0(
 		{
 			const word *bytes= (const word *)((const byte *)list+position*4+sizeof(long)+SOUND_EFFECT_ENTRY_BYTES_OFFSET);
 
-			unknown_002222c0((long *)((byte *)list+position*4+sizeof(long)), element, override, unknown, number);
+			sound_effect_entry_build((long *)((byte *)list+position*4+sizeof(long)), element, override,
+				(const real *)(uintptr_t)unknown, number);
 			*size+= *bytes+SOUND_EFFECT_ENTRY_SIZE;
 			position+= (*bytes+SOUND_EFFECT_ENTRY_SIZE+3)>>2;
 		}
@@ -9683,7 +9705,7 @@ void sound_console_update(
 /* 0x00222250: what unknown_00192b90 says of a direction and one of five
 things, from 0 to 1: the direction is made of length 1 first. 1 for a number
 that is of none of the five. It is for the entries of the list that
-unknown_002222c0 writes; what it is of is not known */
+sound_effect_entry_build writes; what it is of is not known */
 real sound_unknown_00222250(
 	const real_vector3d *vector,
 	long index)
@@ -10473,4 +10495,176 @@ void __attribute__((stdcall)) sound_query_compute(
 		}
 	}
 	query->results[0]+= amount;
+}
+
+/* one of the numbers of an element of the effects of a tag: of which type
+it is (0, an integer; 1, a real), what it is when nothing else says, and
+what it has to be between */
+struct sound_effect_parameter
+{
+	long type;
+	real initial;
+	real minimum;
+	real maximum;
+};
+
+typedef char verify_sound_effect_parameter_size[
+	sizeof(struct sound_effect_parameter) == 0x10 ? 1 : -1];
+
+/* one of the two reals a function of a sound effect is given, from those
+of the sound: the one of the number 1 is divided by the function's real and
+only what is after its point is kept, and the one of the number 3 is
+multiplied by what sound_unknown_00222250 says of the three reals at 0x10 and
+the number of the entry, when there is one */
+static inline __attribute__((always_inline)) real sound_effect_function_input(
+	const real *inputs,
+	short input,
+	real value,
+	real scale,
+	long number)
+{
+	if (input==_sound_effect_input_scaled)
+	{
+		value= (real)fmodl((long double)value/(long double)scale, 1.0L);
+	}
+	if (number!=NONE && input==_sound_effect_input_directional)
+	{
+		value= sound_unknown_00222250((const real_vector3d *)(inputs+SOUND_EFFECT_INPUTS_VECTOR_INDEX), number)*value;
+	}
+
+	return value;
+}
+
+/* 0x002222c0: an entry of the list for the console's sound, from an element
+of the effects of a tag. It starts with three numbers: which effects of the
+console it is for (unknown_00191660 says, of the element's name and the
+number), and the two that the element has at 8. Then one number for each of
+the element's parameters, after a first one that says which kind of thing
+it is when the element has the flag 0: 10, 4 or NONE, by its name. With that
+flag the reals are written as they are; without it, as
+sound_real_to_fixed24 has them. A number is what its parameter says, or
+what the override has for it when it has its bit: either a real, or a
+function of two of the reals of the sound (unknown_0013b390), which is put
+between the two reals of the function unless it has one of four flags. In
+the end it is put between the two of the parameter. The entry is taken in
+eax. The name is made up */
+void sound_effect_entry_build(
+	long *entry,
+	const long *element,
+	const byte *override,
+	const real *inputs,
+	long number)
+{
+	long *out= &entry[SOUND_EFFECT_ENTRY_SIZE/4];
+	long override_index= 0;
+	long index;
+
+	memcpy(entry, &element[1], SOUND_EFFECT_ENTRY_SIZE);
+	entry[0]= unknown_00191660(element[0], number);
+	if (*(const byte *)&element[2]&FLAG(_sound_effect_entry_whole_bit))
+	{
+		long kind= NONE;
+
+		if (element[0]==SOUND_EFFECT_NAME_KIND10)
+		{
+			kind= 10;
+		}
+		else if (element[0]==SOUND_EFFECT_NAME_KIND4)
+		{
+			kind= 4;
+		}
+		*out= kind;
+	}
+
+	for (index= 0; index<element[4]; index++, out++)
+	{
+		const struct sound_effect_parameter *parameter=
+			(const struct sound_effect_parameter *)(uintptr_t)element[5]+index;
+		real value= parameter->initial;
+
+		if (override && (*(const unsigned long *)(override+SOUND_EFFECT_OVERRIDE_MASK_OFFSET)&(1UL<<(index&31))))
+		{
+			signed char which= (*(const signed char *const *)(override+SOUND_EFFECT_OVERRIDE_WHICH_OFFSET))[override_index];
+
+			if (which&1)
+			{
+				const byte *function= *(const byte *const *)(override+SOUND_EFFECT_OVERRIDE_FUNCTIONS_OFFSET)+
+					(which>>1)*SOUND_EFFECT_FUNCTION_SIZE;
+				short first_input= *(const short *)function;
+				boolean ranged= (*(const byte *const *)(function+SOUND_EFFECT_FUNCTION_DATA_OFFSET+4))[1]&1;
+				real first= inputs[first_input];
+				real second= ranged ? inputs[*(const short *)(function+2)] : 0.0f;
+				real scale= *(const real *)(function+SOUND_EFFECT_FUNCTION_SCALE_OFFSET);
+
+				first= sound_effect_function_input(inputs, first_input, first, scale, number);
+				if (ranged)
+				{
+					second= sound_effect_function_input(inputs, *(const short *)(function+2), second, scale, number);
+				}
+				if (*(const byte *const *)(function+SOUND_EFFECT_FUNCTION_DATA_OFFSET+4) &&
+					*(const long *)(function+SOUND_EFFECT_FUNCTION_DATA_OFFSET)>0)
+				{
+					const byte *data;
+
+					value= unknown_0013b390(function+SOUND_EFFECT_FUNCTION_DATA_OFFSET, first, second);
+					data= *(const byte *const *)(function+SOUND_EFFECT_FUNCTION_DATA_OFFSET+4);
+					if (!(data[1]&0xF0))
+					{
+						real low= *(const real *)(data+4);
+						real high= *(const real *)(data+8);
+
+						if (0.0f>value)
+						{
+							value= 0.0f;
+						}
+						else if (value>1.0f)
+						{
+							value= 1.0f;
+						}
+						value= (high-low)*value+low;
+					}
+				}
+				else
+				{
+					value= 0.0f;
+				}
+			}
+			else
+			{
+				value= (*(const real *const *)(override+SOUND_EFFECT_OVERRIDE_REALS_OFFSET))[which>>1];
+			}
+			override_index++;
+		}
+		if (parameter->minimum>value)
+		{
+			value= parameter->minimum;
+		}
+		else if (value>parameter->maximum)
+		{
+			value= parameter->maximum;
+		}
+
+		if (*(const byte *)&element[2]&FLAG(_sound_effect_entry_whole_bit))
+		{
+			if (parameter->type==0)
+			{
+				out[1]= lrintf(value);
+			}
+			else if (parameter->type==1)
+			{
+				*(real *)&out[1]= value;
+			}
+		}
+		else
+		{
+			if (parameter->type==0)
+			{
+				out[0]= lrintf(value);
+			}
+			else if (parameter->type==1)
+			{
+				out[0]= sound_real_to_fixed24(value);
+			}
+		}
+	}
 }

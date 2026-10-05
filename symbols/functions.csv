@@ -1302,7 +1302,7 @@ address,name,source,arguments,returns,convention
 0037b68b,unknown_0037b68b,,stack stack,void
 00222930,sound_unknown_00222930,source/sound/sound_manager.c,ecx edx esi,void
 002225a0,sound_unknown_002225a0,source/sound/sound_manager.c,stack stack stack stack stack,void,stdcall
-002222c0,unknown_002222c0,,eax stack stack stack stack,void
+002222c0,sound_effect_entry_build,source/sound/sound_manager.c,eax stack stack stack stack,void
 00222770,sound_unknown_00222770,source/sound/sound_manager.c,eax edx stack stack,void,stdcall
 0012a1b0,sound_channel_build_voice_parameters,source/sound/sound_manager.c,eax ebx edi stack,void,stdcall
 0021f720,unknown_0021f720,,stack,void
@@ -1380,3 +1380,5 @@ address,name,source,arguments,returns,convention
 0018cfd0,unknown_0018cfd0,,ecx esi stack,int
 0014b240,unknown_0014b240,,eax ecx edx,real:xmm0
 001de630,unknown_001de630,,eax ecx edx xmm0 stack stack stack stack,bool
+00191660,unknown_00191660,,ecx edx,int
+0013b390,unknown_0013b390,,edi stack stack,real:xmm0

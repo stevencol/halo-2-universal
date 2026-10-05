@@ -4297,7 +4297,7 @@ def run(t) -> None:
 
         def entry_(harness, arguments, taken=taken):
             entry, element, override, unknown, number = arguments
-            calls = calls_so_far(harness, "unknown_002222c0")
+            calls = calls_so_far(harness, "sound_effect_entry_build")
             harness.mu.mem_write(entry, random.Random(calls).randbytes(0xA) + struct.pack("<H", taken[calls % 16]))
             return 0, (harness.normalize(entry), harness.normalize(element), harness.normalize(override), unknown, number)
 
@@ -4308,7 +4308,7 @@ def run(t) -> None:
             random_.getrandbits(32),
             Buffer(random_.randbytes(0x500)),
             Buffer(random_.randbytes(4)),
-            externals={"unknown_002222c0": entry_},
+            externals={"sound_effect_entry_build": entry_},
         )
 
     # ---------- what a voice of the console's sound takes of a sound from the tags
@@ -6357,5 +6357,92 @@ def run(t) -> None:
                 "unknown_001de630": line,
                 "unknown_00249d60": around_,
                 "sound_query_portal_results": portal_,
+            },
+        )
+
+    # ---------- an entry of the list for the console's sound, from an element of a tag
+
+    random_ = random.Random(244)
+
+    for n in range(1200):
+        count = random_.choice((0, 1, 2, 3, 5, 8, 33))
+        data = bytearray()
+        element = bytearray(random_.randbytes(0x18))
+        struct.pack_into("<I", element, 0, random_.choice((0x0D00012E, 0x1300012D, 0x11000138, 0x17000137, random_.getrandbits(32))))
+        element[8] = random_.getrandbits(8)
+        struct.pack_into("<i", element, 0x10, count)
+        parameters = bytearray()
+        for index in range(count):
+            low, high = sorted((random_.uniform(-50, 50), random_.uniform(-50, 50)))
+            if random_.random() < 0.1:
+                low, high = high, low
+            parameters += struct.pack(
+                "<i3f", random_.choice((0, 0, 1, 1, 1, 2, -1)), random_.choice((random_.uniform(-60, 60), 0.5, 2.5, -1.5)), low, high
+            )
+        # the override: 0x1C bytes, and after it its functions, its reals and its bytes
+        override = bytearray(random_.randbytes(0x1C))
+        functions = 6
+        pointers = []
+        struct.pack_into("<I", override, 4, 0x1C)
+        pointers.append(4)
+        table = bytearray()
+        datas = bytearray()
+        datas_at = 0x1C + functions * 0x10
+        for index in range(functions):
+            entry_ = bytearray(0x10)
+            struct.pack_into(
+                "<2hiIf",
+                entry_,
+                0,
+                random_.choice((0, 1, 1, 2, 3, 3, 5)),
+                random_.choice((0, 1, 1, 2, 3, 3, 5)),
+                random_.choice((1, 1, 1, 20, 0, -1)),
+                datas_at + len(datas),
+                random_.choice((1.0, 2.0, 0.5, 3.0, 10.0)),
+            )
+            pointers.append(0x1C + index * 0x10 + 8)
+            table += entry_
+            piece = bytearray(random_.randbytes(0xC))
+            piece[1] = random_.choice((0, 1, 1, 0x0E, 0x0F, 0x10, 0x80, 0x11))
+            piece[4:0xC] = struct.pack("<2f", random_.uniform(-80, 80), random_.uniform(-80, 80))
+            datas += piece
+        override += table + datas
+        struct.pack_into("<I", override, 0xC, len(override))
+        pointers.append(0xC)
+        override += reals(random_, 8)
+        struct.pack_into("<I", override, 0x14, len(override))
+        pointers.append(0x14)
+        override += bytes(
+            random_.choice((random_.randrange(functions) * 2 + 1, random_.randrange(8) * 2)) for _ in range(count + 1)
+        )
+        struct.pack_into("<I", override, 0x18, random_.choice((0, 0xFFFFFFFF, random_.getrandbits(32), random_.getrandbits(32))))
+        inputs = bytearray(struct.pack("<8f", *(random_.choice((0.0, 0.25, 0.5, 1.0, 2.0, -1.0, 7.5, random_.uniform(-3, 3))) for _ in range(8))))
+        number = random_.choice((NONE, NONE, 0, 1, 2, 3))
+
+        def which_(harness, arguments):
+            return (arguments[0] * 7 + arguments[1]) & 0xFF, (arguments[0], arguments[1])
+
+        def function_(harness, arguments, seed=random_.getrandbits(32)):
+            value = random.Random(seed + calls_so_far(harness, "unknown_0013b390")).choice(
+                (0.0, 0.25, 0.5, 1.0, 1.5, -0.5, 0.75, 0.1, float("nan"))
+            )
+            return real_bits(value), (bytes(harness.mu.mem_read(arguments[0], 8))[:4], arguments[1], arguments[2])
+
+        def directional_(harness, arguments, seed=random_.getrandbits(32)):
+            value = random.Random(seed + arguments[1]).choice((0.0, 0.5, 1.0, 0.3))
+            return real_bits(value), (bytes(harness.mu.mem_read(arguments[0], 12)), arguments[1])
+
+        with_override = random_.random() < 0.8
+        t.check(
+            "sound_effect_entry_build",
+            Buffer(random_.randbytes(0x10 + (count + 1) * 4 + 8)),
+            Buffer(bytes(element[:0x14]) + struct.pack("<I", 0x18) + bytes(parameters) + bytes(4), pointers=(0x14,)),
+            Buffer(bytes(override), pointers=tuple(pointers)) if with_override else 0,
+            Buffer(bytes(inputs)),
+            number,
+            externals={
+                "unknown_00191660": which_,
+                "unknown_0013b390": function_,
+                "sound_unknown_00222250": directional_,
             },
         )

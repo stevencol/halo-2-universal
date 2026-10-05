@@ -2,6 +2,65 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Los números de un efecto de sonido para la consola
+
+Una función en `sound/sound_manager.c`, de 722 bytes. De 910 funciones se pasa a
+911, el 8,09 % de las del juego (el 4,931 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_effect_entry_build` | `0x002222c0` | `sound/sound_manager.c` |
+
+Era `unknown_002222c0`. La llama `sound_unknown_002225a0` con cada elemento
+de los efectos de un tag. Recibe la entrada que escribe en `eax` y, en la
+pila, el elemento, lo que hay en su lugar (o nada), los números del sonido
+y un número de 0 a 3 (o `NONE`). Nuevas sin descompilar: `0x00191660` y
+`0x0013b390`.
+
+### Lo que se sabe
+
+- Una entrada empieza con tres números: para qué efectos de la consola es
+  (lo dice `0x00191660` con el nombre del elemento y el número) y los dos
+  que el elemento trae en `0x8`.
+- Después va un número por cada parámetro del elemento. Si el elemento
+  tiene la marca 0, antes va uno más que dice de qué tipo es: 10 para el
+  nombre `0x0D00012E`, 4 para `0x1300012D` y `NONE` para los demás; y los
+  reales se escriben tal cual. Sin la marca, los reales se escriben como
+  los da `sound_real_to_fixed24`. Los enteros se redondean al más cercano.
+- Cada parámetro (16 bytes) dice su tipo (0 entero, 1 real), su valor de
+  partida y entre qué dos valores tiene que quedar.
+- Lo que hay en lugar del elemento puede cambiar un parámetro (un bit por
+  cada uno) por un real fijo o por una función de un tag
+  (`0x0013b390`) de dos números del sonido. El resultado de la función se
+  lleva entre los dos reales que trae, salvo que tenga alguna de cuatro
+  marcas.
+- De los números del sonido, el 1 se divide por un real de la función y se
+  queda solo con lo que hay tras la coma (un ciclo que se repite); el 3 se
+  multiplica por lo que dice `sound_unknown_00222250` de la dirección que
+  hay en `0x10` y el número de la entrada.
+- El nombre es inventado.
+
+### Un error que cazaron las pruebas
+
+- Tomé `0x00373b6a` por la potencia de la biblioteca de C (elevar a 1).
+  Las pruebas daban distinto, y la tabla que usa dice `fmod`: es el resto
+  de dividir por 1. A la biblioteca de las pruebas se le ha añadido
+  `fmodl`.
+
+### Sin comprobar
+
+- Funciones sin datos (puntero a 0): el juego lee un byte de ellos antes de
+  mirar si los hay, y las pruebas no tienen memoria en esa dirección.
+- En este hito solo se pasaron las pruebas de esta función y las de
+  `sound_unknown_002225a0`. La última batería completa es la del hito 240
+  (907 funciones, todas bien).
+
+### Mutaciones
+
+Treinta y cuatro cambios a mano: las pruebas notan los treinta y cuatro.
+
 ## 2026-10-05 — Cuánto tapa el nivel un sonido
 
 Una función en `sound/sound_manager.c`, de 793 bytes. De 909 funciones se pasa a

@@ -23,6 +23,7 @@ long double exp2l(long double value);
 long double logl(long double value);
 long double sqrtl(long double value);
 long double log10l(long double value);
+long double fmodl(long double value, long double divisor);
 /* to the nearest integer; to the even one, halfway between two */
 long lrintf(float value);
 
