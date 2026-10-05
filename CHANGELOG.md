@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — La consola hace sonar silencio sin parar
+
+Una función en `sound/sound_manager.c`. De 897 funciones se pasa a
+898, el 7,97 % de las del juego (el 4,717 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_console_create_silence` | `0x00221490` | `sound/sound_manager.c` |
+
+No estaba apuntada. Recibe en la pila dónde dejar lo que crea. Nuevas sin
+descompilar, de la consola: `0x0037d7de` (la que crea), `0x0037cc4a`,
+`0x0037b6a7`, `0x0037b66f` y `0x0037b6df`.
+
+### Lo que se sabe
+
+- `sound_console_create_silence` hace que la consola cree algo que suena
+  sin parar: mil bytes de silencio (muestras de 8 bits, un canal, mil por
+  segundo), por la salida 14 y a -100 decibelios, en bucle.
+- Los mil bytes salen de la memoria que el juego reserva al arrancar.
+- Para qué sirve no se sabe (puede ser lo que mantiene en marcha una parte
+  del procesador de sonido de la consola). El nombre es inventado.
+- La descripción que la consola recibe para crear un sonido ya tiene sus
+  campos con nombre: tamaño, marcas, bytes, formato y salidas.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y de las que usan
+  las estructuras que cambian. La última batería completa es la del hito
+  227 (893 funciones, todas bien).
+
+### Mutaciones
+
+Nueve líneas rotas a mano: las pruebas notan las nueve.
+
 ## 2026-10-05 — Por dónde se oye un sonido en la consola, y qué ha cambiado
 
 Dos funciones en `sound/sound_manager.c`. De 895 funciones se pasa a

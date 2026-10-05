@@ -1350,3 +1350,9 @@ address,name,source,arguments,returns,convention
 0037c70a,unknown_0037c70a,,stack stack,void
 0037b81d,unknown_0037b81d,,stack stack,void
 0037b6c3,unknown_0037b6c3,,stack stack,void
+00221490,sound_console_create_silence,source/sound/sound_manager.c,stack,void,stdcall
+0037d7de,unknown_0037d7de,,stack stack,int
+0037cc4a,unknown_0037cc4a,,stack stack stack,void
+0037b6a7,unknown_0037b6a7,,stack stack,void
+0037b66f,unknown_0037b66f,,stack stack,void
+0037b6df,unknown_0037b6df,,stack stack stack stack,void

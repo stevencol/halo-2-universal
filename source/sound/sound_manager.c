@@ -582,6 +582,8 @@ enum
 	gives */
 	SOUND_EFFECT_COLLECTION_FLAGS_OFFSET= 0x8,
 	SOUND_CONSOLE_SLOT_BUFFER_FLAGS= 0x2010,
+	SOUND_SILENCE_SIZE= 1000,
+	SOUND_CONSOLE_FORMAT_BASE_SIZE= 0x12,
 	VOICE_UNKNOWN2_OFFSET= 0x2,
 	VOICE_DECIBELS_OFFSET= 0xC,
 	VOICE_UNKNOWN30_OFFSET= 0x30,
@@ -807,6 +809,29 @@ struct sound_console_format
 typedef char verify_sound_console_format_size[
 	sizeof(struct sound_console_format) == 0x14 ? 1 : -1];
 
+/* where a sound of the console is to be heard: a number of pairs, each of
+where and how loud */
+struct sound_console_mixbins
+{
+	long count;
+	const long *pairs;
+};
+
+/* what the console takes to make what plays the sound of a slot, or any
+sound that is not a stream */
+struct sound_console_buffer_description
+{
+	unsigned long size;
+	unsigned long flags;
+	unsigned long buffer_size;
+	const struct sound_console_format *format;
+	const struct sound_console_mixbins *mixbins;
+	unsigned long unknown14;
+};
+
+typedef char verify_sound_console_buffer_description_size[
+	sizeof(struct sound_console_buffer_description) == 0x18 ? 1 : -1];
+
 /* what the console takes to make a stream of sound */
 struct sound_console_stream_description
 {
@@ -820,24 +845,6 @@ struct sound_console_stream_description
 
 typedef char verify_sound_console_stream_description_size[
 	sizeof(struct sound_console_stream_description) == 0x18 ? 1 : -1];
-
-/* what the console takes to make what plays the sound of a slot, and where
-that is to be heard: a number of pairs, each of where and how loud */
-struct sound_console_buffer_description
-{
-	unsigned long size;
-	unsigned long flags;
-	unsigned long unknown8[4];
-};
-
-struct sound_console_mixbins
-{
-	long count;
-	const long *pairs;
-};
-
-typedef char verify_sound_console_buffer_description_size[
-	sizeof(struct sound_console_buffer_description) == 0x18 ? 1 : -1];
 
 /* a sound of which it is to be worked out how it is heard where it is */
 struct sound_query
@@ -1351,6 +1358,15 @@ void __attribute__((stdcall)) sound_console_slot_stream_set_mixbins(const long *
 void unknown_0037c70a(void *stream, const struct sound_console_mixbins *mixbins);
 void unknown_0037b81d(void *stream, const struct sound_console_mixbins *volumes);
 void unknown_0037b6c3(void *stream, const struct sound_console_mixbins *volumes);
+
+/* 0x00221490; 0x0037d7de, 0x0037cc4a, 0x0037b6a7, 0x0037b66f and 0x0037b6df:
+of the console */
+void __attribute__((stdcall)) sound_console_create_silence(void **silence);
+long unknown_0037d7de(const struct sound_console_buffer_description *description, void **buffer);
+void unknown_0037cc4a(void *buffer, void *samples, unsigned long size);
+void unknown_0037b6a7(void *buffer, long unknown);
+void unknown_0037b66f(void *buffer, long unknown);
+void unknown_0037b6df(void *buffer, long unknown, long unknown2, long unknown3);
 
 /* 0x0021d110 */
 long __attribute__((stdcall)) sound_effect_source_new(byte *request, long sound_index);
@@ -9396,4 +9412,49 @@ void __attribute__((stdcall)) sound_console_slot_stream_set_mixbins(
 		unknown_0037b6c3(stream, &volumes);
 		break;
 	}
+}
+
+/* 0x00221490: the console makes something that plays a thousand bytes of
+silence over and over: samples of 8 bits with one channel, a thousand each
+second, to be heard in the place 14, at -100 decibels. The bytes are of the
+memory that the game has from its start. Where it is told gets it. What it
+is for is not known; the names of the functions of the console are not in
+this executable. The name is made up */
+void __attribute__((stdcall)) sound_console_create_silence(
+	void **silence)
+{
+	struct sound_console_buffer_description description;
+	struct sound_console_format format;
+	struct sound_console_mixbins mixbins;
+	long pair[2];
+	void *buffer= NULL;
+	void *samples;
+
+	memset(&description, 0, sizeof(description));
+	memset(&format, 0, SOUND_CONSOLE_FORMAT_BASE_SIZE);
+	format.format= SOUND_CONSOLE_FORMAT_UNCOMPRESSED;
+	format.channels= 1;
+	format.samples_per_second= SOUND_SILENCE_SIZE;
+	format.bytes_per_second= SOUND_SILENCE_SIZE;
+	format.block_size= 1;
+	format.bits_per_sample= 8;
+	format.extra_size= 0;
+	pair[0]= 14;
+	pair[1]= 0;
+	mixbins.count= 1;
+	mixbins.pairs= pair;
+	description.size= sizeof(description);
+	description.buffer_size= 0;
+	description.format= &format;
+	description.mixbins= &mixbins;
+	description.unknown14= 0;
+	unknown_0037d7de(&description, &buffer);
+
+	samples= shell_memory_allocate(SOUND_SILENCE_SIZE);
+	memset(samples, 0, SOUND_SILENCE_SIZE);
+	unknown_0037cc4a(buffer, samples, SOUND_SILENCE_SIZE);
+	unknown_0037b6a7(buffer, 0);
+	unknown_0037b66f(buffer, -10000);
+	unknown_0037b6df(buffer, 0, 0, 1);
+	*silence= buffer;
 }

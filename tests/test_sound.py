@@ -5702,3 +5702,45 @@ def run(t) -> None:
                     "unknown_0037b6c3": loudness_,
                 },
             )
+
+    # ---------- the console makes something that plays silence over and over
+
+    random_ = random.Random(231)
+
+    for allocated in (0, 0x1290, 0x1291, 0x1292, 0x1293, 0x345) * 4:
+        made_buffer = random_.getrandbits(32)
+
+        def makes_(harness, arguments, made_buffer=made_buffer):
+            description, where = arguments
+            size, flags, bytes_, format_, mixbins, unknown14 = struct.unpack("<6I", harness.mu.mem_read(description, 0x18))
+            count, pairs = struct.unpack("<2I", harness.mu.mem_read(mixbins, 8))
+            record = (
+                size,
+                flags,
+                bytes_,
+                bytes(harness.mu.mem_read(format_, 0x12)),
+                count,
+                bytes(harness.mu.mem_read(pairs, 8)),
+                unknown14,
+                bytes(harness.mu.mem_read(where, 4)),
+            )
+            harness.mu.mem_write(where, struct.pack("<I", made_buffer))
+            return 0, record
+
+        def samples_(harness, arguments):
+            buffer_, samples, size = arguments
+            return 0, (buffer_, samples, size, bytes(harness.mu.mem_read(samples, size)))
+
+        t.check(
+            "sound_console_create_silence",
+            Buffer(random_.randbytes(4)),
+            globals={"shell_memory_globals": shell_memory(allocated)},
+            memory={STATE: Memory(random_.randbytes(STATE_SIZE))},
+            externals={
+                "unknown_0037d7de": makes_,
+                "unknown_0037cc4a": samples_,
+                "unknown_0037b6a7": lambda harness, arguments: (0, tuple(arguments)),
+                "unknown_0037b66f": lambda harness, arguments: (0, tuple(arguments)),
+                "unknown_0037b6df": lambda harness, arguments: (0, tuple(arguments)),
+            },
+        )
