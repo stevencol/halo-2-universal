@@ -2,6 +2,64 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Un efecto de sonido arranca sus sonidos
+
+Una función en `sound/sound_manager.c`, de 820 bytes. De 914 funciones se pasa a
+915, el 8,12 % de las del juego (el 4,977 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_effect_start_sounds` | `0x0021d630` | `sound/sound_manager.c` |
+
+Era `unknown_0021d630`. La llaman seis sitios, con un 0 cuando el efecto
+empieza, un 1 mientras dura y un 2 cuando acaba. Nueva sin descompilar:
+`0x0021a250`, la que arranca un sonido en bucle. Nuevas tablas:
+`sound_effect_looping_sound_states` (`0x0044a200`) y
+`sound_effect_looping_sound_unknown_states` (`0x0044a20c`); nueva variable:
+`unknown_004ed28c`.
+
+### Lo que se sabe
+
+- La definición de un efecto de sonido tiene una lista de sonidos, de 16
+  bytes cada uno: el grupo del tag (`snd!` o `lsnd`), el tag, un real y unas
+  marcas.
+- Un sonido normal solo arranca al empezar (si no tiene la marca 0) o al
+  acabar (si tiene la marca 1). Arranca como cualquier otro del juego
+  (`sound_start_test`, `sound_promotion_update`, `sound_source_create`),
+  con lo que `sound_effect_get_source` dice del efecto y el real como
+  ganancia. Al empezar lleva además el mando de sonidos del dueño del
+  efecto, y se le avisa por `sound_effect_sound_callbacks` (hito 247) con
+  el efecto apuntado.
+- Un sonido en bucle se pasa a `0x0021a250` en los tres momentos, con el
+  real sumado al de `0x8` de lo que el juego dice del sonido, el estado
+  que toca (0, 1 o 2) y dos marcas: la 0, si el sonido de la lista tiene
+  la marca 3, o la 4 cuando el efecto tiene las suyas 1 y 4; y la 1, al
+  acabar.
+- En un efecto del tipo 2, un sonido en bucle con la marca 5 toma el
+  estado y la primera marca de otra cosa del juego (`unknown_004ed28c`),
+  que no se sabe qué es.
+- El short de `0x6` del efecto va sin su bit 0 si el tag del sonido en
+  bucle tiene la marca 3, y sin su bit 1 si tiene la 6.
+- Nada arranca si el sonido no está en marcha (los tres bytes de `0x78`
+  del sonido del juego).
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y las de dos
+  que la llaman. La última batería completa es la del hito 244 (911
+  funciones, todas bien).
+
+### Mutaciones
+
+Treinta y ocho cambios a mano: las pruebas notan treinta y seis. Los dos
+que no notan no cambian nada: mirar la otra cosa del juego también en los
+efectos del tipo 1 (no se usa) y comparar con 1 lo que devuelve
+`sound_promotion_update`, que el compilador sabe que solo da 0 o 1. La
+prueba compara además las dos tablas con las del juego.
+
 ## 2026-10-05 — Lo primero que se dice a un sonido que arranca un efecto
 
 Una función en `sound/sound_manager.c`, de 121 bytes. De 913 funciones se pasa a

@@ -18,6 +18,9 @@ guesses.
 
 /* ---------- constants */
 
+#define SOUND_TAG 'snd!'
+#define LOOPING_SOUND_TAG 'lsnd'
+
 /* the flags of a sound */
 enum
 {

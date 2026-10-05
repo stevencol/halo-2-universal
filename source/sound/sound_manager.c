@@ -479,6 +479,17 @@ enum
 	SOUND_EFFECT_ENTRY_BYTES_OFFSET= 0xA,
 	SOUND_EFFECT_NAME_FOUR_TIMES= 0x11000138,
 	SOUND_EFFECT_NAME_KIND10= 0x0D00012E,
+	/* of a sound of the definition of a sound effect */
+	SOUND_EFFECT_SOUND_SIZE= 0x10,
+	SOUND_EFFECT_SOUND_GAIN_OFFSET= 0x8,
+	SOUND_EFFECT_SOUND_FLAGS_OFFSET= 0xC,
+	_sound_effect_sound_unknown0_bit= 0,
+	_sound_effect_sound_unknown1_bit= 1,
+	_sound_effect_sound_unknown3_bit= 3,
+	_sound_effect_sound_unknown4_bit= 4,
+	_sound_effect_sound_unknown5_bit= 5,
+	UNKNOWN_004ED28C_DATUM_SIZE= 0x18,
+	SOUND_REQUEST_SIZE= 0xA0,
 	NUMBER_OF_SOUND_CONSOLE_FUNCTION_STREAMS= 2,
 	SOUND_CONSOLE_FUNCTION_STREAM_SIZE= 1000,
 	SOUND_EFFECT_NAME_KIND4= 0x1300012D,
@@ -1003,6 +1014,10 @@ byte *unknown_0051ebe4;
 /* 0x004e636d: whether looping_sound_check_distances looks at anything */
 boolean unknown_004e636d;
 
+/* 0x004ed28c: an array of something else, which the sound effects of the
+kind 2 are of */
+struct data_array *unknown_004ed28c;
+
 /* 0x004ed280: of something else; it has 32 bytes for each structure bsp */
 byte *unknown_004ed280;
 
@@ -1359,7 +1374,10 @@ void __attribute__((stdcall)) sound_playback_controller_unknown_00219ed0(boolean
 of a place for a listener; 0x0021d630: of a sound effect */
 long unknown_0014de10(long player_index);
 long double sound_listener_doppler_pitch(long listener_index, const real_point3d *position);
-void unknown_0021d630(long effect_index, long unknown);
+void sound_effect_start_sounds(long effect_index, long phase);
+/* 0x0021a250: a looping sound starts, or goes on, or ends */
+void unknown_0021a250(long definition_index, unsigned long unknown, long owner, long controller_owner,
+	const struct sound_source *source, long state, unsigned long flags, long unknown2);
 
 /* 0x0021d360, 0x0021d5a0 and 0x0021da90 */
 void sound_effect_unknown_0021d360(long effect_index);
@@ -1751,6 +1769,12 @@ const struct sound_source_callbacks sound_effect_sound_callbacks=
 	NULL,
 	NULL
 };
+
+/* 0x0044a200 and 0x0044a20c: what a looping sound of a sound effect is
+started with, by what the effect is at (0 to 2), and by a byte of the
+element of unknown_004ed28c of an effect of the kind 2 */
+const long sound_effect_looping_sound_states[3]= { 0, 1, 2 };
+const long sound_effect_looping_sound_unknown_states[4]= { 0, 1, 2, 2 };
 
 /* 0x0044a130: who is told of the sounds of a looping sound that play now and
 then: the looping sound itself, which says where they are and which are the
@@ -4019,14 +4043,14 @@ static inline __attribute__((always_inline)) byte *sound_effect_get(
 }
 
 /* 0x0021d360: a sound effect is marked (the bits 3 and 4 of its flags),
-unknown_0021d630 is given it with a 2, and then its bit 0 is set */
+sound_effect_start_sounds is given it with a 2, and then its bit 0 is set */
 void sound_effect_unknown_0021d360(
 	long effect_index)
 {
 	byte *effect= sound_effect_get(effect_index);
 
 	effect[SOUND_EFFECT_DATUM_FLAGS_OFFSET]|= SOUND_EFFECT_DATUM_UNKNOWN_FLAGS;
-	unknown_0021d630(effect_index, 2);
+	sound_effect_start_sounds(effect_index, 2);
 	effect[SOUND_EFFECT_DATUM_FLAGS_OFFSET]|= FLAG(_sound_effect_datum_unknown0_bit);
 }
 
@@ -4107,7 +4131,7 @@ void __attribute__((stdcall)) sound_effect_source_deleted(
 	effect_index= *(const long *)(source+SOUND_SOURCE_DATUM_EFFECT_INDEX_OFFSET);
 	effect= sound_effect_get(effect_index);
 	effect[SOUND_EFFECT_DATUM_FLAGS_OFFSET]|= SOUND_EFFECT_DATUM_UNKNOWN_FLAGS;
-	unknown_0021d630(effect_index, 2);
+	sound_effect_start_sounds(effect_index, 2);
 	effect[SOUND_EFFECT_DATUM_FLAGS_OFFSET]|= FLAG(_sound_effect_datum_unknown0_bit);
 }
 
@@ -4967,7 +4991,7 @@ void looping_sound_add_source(
 
 /* 0x0021d390: what is done with each sound effect each time: those with the
 bit 0 of their flags are let go, and of the rest, those that
-sound_effect_unknown_0021d5a0 says are given to unknown_0021d630 with a 1 */
+sound_effect_unknown_0021d5a0 says are given to sound_effect_start_sounds with a 1 */
 void sound_effects_update(
 	void)
 {
@@ -4982,7 +5006,7 @@ void sound_effects_update(
 		}
 		else if (sound_effect_unknown_0021d5a0(effect_index))
 		{
-			unknown_0021d630(effect_index, 1);
+			sound_effect_start_sounds(effect_index, 1);
 		}
 	}
 }
@@ -5312,7 +5336,7 @@ long __attribute__((stdcall)) sound_effect_new(
 	effect[SOUND_EFFECT_DATUM_KIND_OFFSET]= 0;
 	*(real *)(effect+SOUND_EFFECT_DATUM_SOURCE_INDEX_OFFSET)= unknownC;
 	*(short *)(effect+SOUND_EFFECT_DATUM_UNKNOWN6_OFFSET)= unknown6;
-	unknown_0021d630(effect_index, 0);
+	sound_effect_start_sounds(effect_index, 0);
 
 	return effect_index;
 }
@@ -9434,7 +9458,7 @@ static inline __attribute__((always_inline)) long sound_source_new_inline(
 one for it (sound_effect_definition_get) with something at 8 and there is
 room for one more: the effect is made, what the game gives to start the sound
 becomes that of a sound of the effect (sound_effect_prepare_request), and
-the effect keeps the sound and is given to unknown_0021d630; if the sound
+the effect keeps the sound and is given to sound_effect_start_sounds; if the sound
 does not start, the effect is let go. With the flag 0 of what
 unknown_0018d090 gives for the sound, what the game says of the sound has the
 flag 8. With no effect the sound starts as any other. Gives the sound that
@@ -9471,7 +9495,7 @@ long __attribute__((stdcall)) sound_effect_source_new(
 			effect[SOUND_EFFECT_DATUM_KIND_OFFSET]= 1;
 			*(long *)(effect+SOUND_EFFECT_DATUM_SOURCE_INDEX_OFFSET)= source_index;
 			*(short *)(effect+SOUND_EFFECT_DATUM_UNKNOWN6_OFFSET)= *(const short *)(request+SOUND_REQUEST_UNKNOWN4_OFFSET);
-			unknown_0021d630(effect_index, 0);
+			sound_effect_start_sounds(effect_index, 0);
 		}
 		else
 		{
@@ -10873,4 +10897,147 @@ boolean __attribute__((stdcall)) sound_effect_sound_unknown0(
 	}
 
 	return TRUE;
+}
+
+/* 0x0021d630: the sounds of a sound effect are started, for what the effect
+is at: 0, when it starts; 1, in between; 2, when it ends. Each of the
+elements of the effect's definition (0x10 bytes: a group, a tag, a real and
+flags) is a sound or a looping sound.
+
+A sound only starts at 0, without its flag 0, or at 2, with its flag 1. It
+is started as the game starts any, from what sound_effect_get_source says of
+the effect, with the real as its gain; at 0 it also has the sound playback
+controller of the effect's owner and is told of things through
+sound_effect_sound_callbacks, with the effect at the end of the bytes for
+it.
+
+A looping sound is given to unknown_0021a250 at all three, with the real
+added to the one at 8 of what the game says of the sound, with the state of
+sound_effect_looping_sound_states and two flags: 1 if the element has the
+flag 3, or the flag 4 when the effect has the flags 1 and 4; 2 at the end.
+For an effect of the kind 2 and an element with the flag 5, the state and
+the first flag are those of the element of unknown_004ed28c of the effect.
+The short at 6 of the effect goes without its bit 0 if the looping sound's
+tag has the flag 3, and without its bit 1 if it has the flag 6. The name is
+made up */
+void sound_effect_start_sounds(
+	long effect_index,
+	long phase)
+{
+	const byte *effect= (const byte *)sound_effects->data+(effect_index&0xFFFF)*SOUND_EFFECT_DATUM_SIZE;
+	long owner= *(const long *)((const byte *)sound_playback_controller_get(
+		*(const long *)(effect+SOUND_EFFECT_DATUM_CONTROLLER_INDEX_OFFSET))+UNKNOWN_0051EBD8_DATUM_UNKNOWN4_OFFSET);
+	long source[LOOPING_SOUND_DATUM_SOURCE_SIZE/4];
+	const byte *definition;
+	long unknown_state;
+	boolean unknown_flag;
+	long index;
+
+	*(word *)source= 0;
+	sound_effect_get_source(effect_index, (struct sound_source *)source);
+	if (effect[SOUND_EFFECT_DATUM_KIND_OFFSET]==2)
+	{
+		const byte *unknown= (const byte *)unknown_004ed28c->data+
+			(*(const long *)(effect+SOUND_EFFECT_DATUM_SOURCE_INDEX_OFFSET)&0xFFFF)*UNKNOWN_004ED28C_DATUM_SIZE;
+
+		unknown_flag= (unknown[4]>>4)&1;
+		unknown_state= (signed char)unknown[2];
+	}
+	definition= *(const byte *const *)(effect+SOUND_EFFECT_DATUM_DEFINITION_OFFSET);
+	for (index= 0; index<*(const long *)(definition+SOUND_EFFECT_DEFINITION_UNKNOWN8_OFFSET); index++)
+	{
+		const byte *element= *(const byte *const *)(definition+SOUND_EFFECT_DEFINITION_UNKNOWN8_OFFSET+4)+
+			index*SOUND_EFFECT_SOUND_SIZE;
+		long tag_index= *(const long *)(element+4);
+		byte flags= element[SOUND_EFFECT_SOUND_FLAGS_OFFSET];
+
+		if (tag_index==NONE)
+		{
+			continue;
+		}
+		if (*(const unsigned long *)element==LOOPING_SOUND_TAG)
+		{
+			const byte *looping_sound= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+			long copy[LOOPING_SOUND_DATUM_SOURCE_SIZE/4];
+			unsigned long unknown6;
+			unsigned long start_flags;
+			boolean flag;
+			long state;
+
+			if ((flags&FLAG(_sound_effect_sound_unknown5_bit)) && effect[SOUND_EFFECT_DATUM_KIND_OFFSET]==2)
+			{
+				state= sound_effect_looping_sound_unknown_states[unknown_state];
+				flag= unknown_flag;
+			}
+			else
+			{
+				state= sound_effect_looping_sound_states[phase];
+				flag= (flags&FLAG(_sound_effect_sound_unknown3_bit)) ||
+					(((effect[SOUND_EFFECT_DATUM_FLAGS_OFFSET]>>_sound_effect_datum_unknown4_bit)&1) &&
+					((effect[SOUND_EFFECT_DATUM_FLAGS_OFFSET]>>_sound_effect_datum_unknown1_bit)&1) &&
+					(flags&FLAG(_sound_effect_sound_unknown4_bit)));
+			}
+			unknown6= *(const word *)(effect+SOUND_EFFECT_DATUM_UNKNOWN6_OFFSET);
+			if (*(const unsigned long *)looping_sound&FLAG(3))
+			{
+				unknown6&= ~1UL;
+			}
+			if (*(const unsigned long *)looping_sound&FLAG(6))
+			{
+				unknown6&= ~2UL;
+			}
+			start_flags= flag!=0;
+			if (phase==2)
+			{
+				start_flags|= 2;
+			}
+			memcpy(copy, source, sizeof(copy));
+			*(real *)&copy[2]= *(const real *)(element+SOUND_EFFECT_SOUND_GAIN_OFFSET)+*(const real *)&copy[2];
+			unknown_0021a250(tag_index, unknown6,
+				effect[SOUND_EFFECT_DATUM_KIND_OFFSET] ? *(const long *)(effect+SOUND_EFFECT_DATUM_SOURCE_INDEX_OFFSET) :
+				effect_index|SOUND_EFFECT_CONTROLLER_OWNER_FLAG,
+				owner, (const struct sound_source *)copy, state, start_flags, 0);
+		}
+		else if (*(const unsigned long *)element==SOUND_TAG)
+		{
+			long request[SOUND_REQUEST_SIZE/4];
+			byte *bytes= (byte *)request;
+			const byte *globals;
+			long listener_index;
+			long rule_index;
+
+			if (phase==0)
+			{
+				if (flags&FLAG(_sound_effect_sound_unknown0_bit))
+				{
+					continue;
+				}
+			}
+			else if (phase!=2 || !(flags&FLAG(_sound_effect_sound_unknown1_bit)))
+			{
+				continue;
+			}
+			*(unsigned long *)(bytes+SOUND_REQUEST_UNKNOWN4_OFFSET)= *(const word *)(effect+SOUND_EFFECT_DATUM_UNKNOWN6_OFFSET);
+			memcpy(bytes+SOUND_REQUEST_SOURCE_OFFSET, source, sizeof(source));
+			*(unsigned long *)bytes= FLAG(0)|FLAG(2)|FLAG(_sound_request_controller_bit);
+			if (phase!=2)
+			{
+				*(long *)(bytes+SOUND_REQUEST_CONTROLLER_OWNER_OFFSET)= owner;
+				memset(bytes+SOUND_REQUEST_CALLBACK_BYTES_OFFSET, 0, SOUND_REQUEST_CALLBACK_BYTES_SIZE);
+				*(unsigned long *)bytes= FLAG(0)|FLAG(2)|FLAG(_sound_request_controller_bit)|FLAG(_sound_request_callbacks_bit);
+				*(const struct sound_source_callbacks **)(bytes+SOUND_REQUEST_CALLBACKS_OFFSET)= &sound_effect_sound_callbacks;
+				*(word *)(bytes+SOUND_REQUEST_CALLBACK_SIZE_OFFSET)= SOUND_REQUEST_CALLBACK_BYTES_SIZE;
+				*(long *)(bytes+SOUND_REQUEST_EFFECT_INDEX_OFFSET)= effect_index;
+			}
+			*(long *)(bytes+SOUND_REQUEST_GAIN_OFFSET)= *(const long *)(element+SOUND_EFFECT_SOUND_GAIN_OFFSET);
+			*(unsigned long *)bytes|= FLAG(_sound_request_gain_bit);
+			globals= game_sound_globals;
+			if (globals[GAME_SOUND_GLOBALS_INITIALIZED_OFFSET] && globals[GAME_SOUND_GLOBALS_UNKNOWN79_OFFSET] &&
+				globals[GAME_SOUND_GLOBALS_MAP_LOADED_OFFSET] && sound_start_test(bytes, tag_index, &listener_index, NULL) &&
+				!sound_promotion_update(tag_index, &rule_index))
+			{
+				sound_source_create(tag_index, listener_index, bytes, rule_index);
+			}
+		}
+	}
 }

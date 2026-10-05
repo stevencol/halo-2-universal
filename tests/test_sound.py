@@ -1885,7 +1885,7 @@ def run(t) -> None:
                 "sound_effect_unknown_0021d360",
                 effect_index,
                 globals={"sound_effects": effects_()},
-                externals={"unknown_0021d630": effect_update},
+                externals={"sound_effect_start_sounds": effect_update},
             )
             mark = random_.choice((0, 0x20, 0xFF, 0xDF))
 
@@ -1922,7 +1922,7 @@ def run(t) -> None:
                 random_.getrandbits(16) << 16 | index,
                 random_.choice((10, 2, 2, 0, 1, 3)),
                 globals={"sound_effects": effects_(), "sound_sources": Buffer(bytes(data), pointers=tuple(pointers))},
-                externals={"unknown_0021d630": effect_update},
+                externals={"sound_effect_start_sounds": effect_update},
                 mocks=told(),
             )
 
@@ -2441,7 +2441,7 @@ def run(t) -> None:
                     (0, 1, 0x100, 0)[arguments[0] & 3],
                     tuple(arguments),
                 ),
-                "unknown_0021d630": lambda harness, arguments: (0, tuple(arguments)),
+                "sound_effect_start_sounds": lambda harness, arguments: (0, tuple(arguments)),
             },
         )
 
@@ -2652,7 +2652,7 @@ def run(t) -> None:
             externals={
                 "sound_effect_definition_get": get,
                 "datum_new": lambda harness, arguments, made=made: (made, (harness.normalize(arguments[0]),)),
-                "unknown_0021d630": effect_update,
+                "sound_effect_start_sounds": effect_update,
             },
         )
 
@@ -5601,7 +5601,7 @@ def run(t) -> None:
                     created,
                     (arguments[0], arguments[1], harness.normalize(arguments[2]), arguments[3]),
                 ),
-                "unknown_0021d630": lambda harness, arguments: (0, tuple(arguments)),
+                "sound_effect_start_sounds": lambda harness, arguments: (0, tuple(arguments)),
                 "sound_effect_delete": lambda harness, arguments: (0, tuple(arguments)),
             },
         )
@@ -6588,4 +6588,114 @@ def run(t) -> None:
             Buffer(random_.randbytes(0x48)),
             globals={"sound_effects": Buffer(bytes(effects), pointers=(0x44,))},
             externals={"sound_effect_get_source": lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1])))},
+        )
+
+    # ---------- the sounds of a sound effect are started
+
+    random_ = random.Random(248)
+
+    harness = t.harness
+    if not t.only or "sound_effect_start_sounds" in t.only:
+        t.cases["sound_effect_start_sounds"] = t.cases.get("sound_effect_start_sounds", 0) + 1
+        for name, size, expected in (
+            ("sound_effect_looping_sound_states", 12, (0, 1, 2)),
+            ("sound_effect_looping_sound_unknown_states", 16, (0, 1, 2, 2)),
+        ):
+            both = [bytes(harness.mu.mem_read(place[name], size)) for place in (harness.globals, harness.variables)]
+            if both[0] != both[1] or both[0] != struct.pack(f"<{size // 4}i", *expected):
+                t._fail("sound_effect_start_sounds", f"{name} is not the game's")
+
+    for n in range(900):
+        effects = bytearray(random_.randbytes(0x4C + EFFECTS * 0x14))
+        struct.pack_into("<I", effects, 0x44, 0x4C)
+        index = random_.randrange(EFFECTS)
+        at = 0x4C + index * 0x14
+        effect_index = random_.getrandbits(16) << 16 | index
+        kind = random_.choice((0, 1, 2, 2))
+        effects[at + 3] = kind
+        effects[at + 4] = random_.choice((0, 0x12, 0x12, 0x10, 2, 0xFF, random_.getrandbits(8)))
+        struct.pack_into("<I", effects, at + 8, random_.choice((NONE, random_.getrandbits(16) << 16 | random_.randrange(CONTROLLERS))))
+        things = 4
+        struct.pack_into("<I", effects, at + 0xC, random_.getrandbits(16) << 16 | random_.randrange(things))
+        # the definition, after the effects: 0x10 bytes, and its sounds
+        sounds = random_.choice((0, 1, 2, 3, 6))
+        definition_at = len(effects)
+        struct.pack_into("<I", effects, at + 0x10, definition_at)
+        pointers = [0x44, at + 0x10, definition_at + 0xC]
+        effects += random_.randbytes(8) + struct.pack("<iI", sounds, definition_at + 0x10)
+        for number in range(6):
+            effects += struct.pack(
+                "<IIfI",
+                random_.choice((0x6C736E64, 0x6C736E64, 0x736E6421, 0x736E6421, 0x736E6422, 0)),
+                random_.choice((NONE, random_.getrandbits(16) << 16 | random_.randrange(TAGS), random_.randrange(TAGS), random_.randrange(TAGS))),
+                random_.uniform(-6, 6),
+                random_.getrandbits(32) if number % 2 else random_.choice((0, 1, 2, 3, 8, 0x10, 0x20, 0x30, 0x38)),
+            )
+        controllers = bytearray(random_.randbytes(0x4C + CONTROLLERS * 0x1C))
+        struct.pack_into("<I", controllers, 0x44, 0x4C)
+        unknown = bytearray(random_.randbytes(0x4C + things * 0x18))
+        struct.pack_into("<I", unknown, 0x44, 0x4C)
+        for thing in range(things):
+            unknown[0x4C + thing * 0x18 + 2] = random_.randrange(4)
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        tag_pointers = []
+        for tag in range(TAGS):
+            struct.pack_into("<I", tags, tag * 0x10 + 8, TAGS * 0x10 + (tag % 8) * 4)
+            tag_pointers.append(tag * 0x10 + 8)
+        tags += b"".join(struct.pack("<I", random_.choice((0, 8, 0x40, 0x48, random_.getrandbits(32)))) for _ in range(8))
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        state[0x78:0x7B] = bytes(random_.choice((1, 1, 1, 1, 1, 1, 0, 0x80)) for _ in range(3))
+        phase = random_.choice((0, 0, 1, 2, 2))
+        said = random_.randbytes(0x42)
+
+        def said_(harness, arguments, said=said):
+            harness.mu.mem_write(arguments[1] + 2, said)
+            return 0, (arguments[0],)
+
+        def request_(harness, address):
+            flags = struct.unpack("<I", harness.mu.mem_read(address, 4))[0]
+            parts = [flags, bytes(harness.mu.mem_read(address + 4, 4)), bytes(harness.mu.mem_read(address + 0xC, 0x44))]
+            if flags & 0x20:
+                parts += [
+                    bytes(harness.mu.mem_read(address + 0x54, 4)),
+                    harness.normalize(struct.unpack("<I", harness.mu.mem_read(address + 0x58, 4))[0]),
+                    bytes(harness.mu.mem_read(address + 0x5C, 0x32)),
+                ]
+            parts.append(bytes(harness.mu.mem_read(address + 0x94, 4)))
+            return tuple(parts)
+
+        def test_(harness, arguments, answer=random_.choice((1, 1, 1, 0)), listener=random_.getrandbits(32)):
+            harness.mu.mem_write(arguments[2], struct.pack("<I", listener))
+            return answer, (request_(harness, arguments[0]), arguments[1], arguments[3])
+
+        def promotion_(harness, arguments, answer=random_.choice((0, 0, 0, 1, 0x100)), rule=random_.getrandbits(32)):
+            harness.mu.mem_write(arguments[1], struct.pack("<I", rule))
+            return answer, (arguments[0],)
+
+        def create_(harness, arguments):
+            return 0, (arguments[0], arguments[1], request_(harness, arguments[2]), arguments[3])
+
+        def looping_(harness, arguments):
+            return 0, (*arguments[:4], bytes(harness.mu.mem_read(arguments[4], 0x44)), *arguments[5:])
+
+        t.check(
+            "sound_effect_start_sounds",
+            effect_index,
+            phase,
+            globals={
+                "sound_effects": Buffer(bytes(effects), pointers=tuple(pointers)),
+                "unknown_0051ebd8": Buffer(bytes(controllers), pointers=(0x44,)),
+                "unknown_0051ebdc": Buffer(random_.randbytes(0x1C)),
+                "unknown_004ed28c": Buffer(bytes(unknown), pointers=(0x44,)),
+                "global_tag_instances": Buffer(bytes(tags), pointers=tuple(tag_pointers)),
+                "game_sound_globals": Buffer(bytes(state)),
+                "sound_effect_sound_callbacks": GlobalRange(0x20),
+            },
+            externals={
+                "sound_effect_get_source": said_,
+                "sound_start_test": test_,
+                "sound_promotion_update": promotion_,
+                "sound_source_create": create_,
+                "unknown_0021a250": looping_,
+            },
         )

@@ -1224,7 +1224,7 @@ address,name,source,arguments,returns,convention
 0021da90,sound_effect_source_deleted,source/sound/sound_manager.c,stack stack stack,void,stdcall
 0014de10,unknown_0014de10,,ecx,int
 0012a9d0,sound_listener_doppler_pitch,source/sound/sound_manager.c,eax edx,real
-0021d630,unknown_0021d630,,stack stack,void
+0021d630,sound_effect_start_sounds,source/sound/sound_manager.c,stack stack,void
 0021e230,sound_mixbins_add,source/sound/sound_manager.c,esi ecx stack,void,stdcall
 0021e270,sound_frequency_to_filter_coefficient,source/sound/sound_manager.c,stack,int,stdcall
 0021e2d0,sound_unknown_0021e2d0,source/sound/sound_manager.c,stack,int,stdcall
@@ -1386,3 +1386,4 @@ address,name,source,arguments,returns,convention
 0037b797,unknown_0037b797,,stack stack,void
 0021d060,looping_sound_check_distances,source/sound/sound_manager.c,eax ebx,void
 0021d970,sound_effect_sound_unknown0,source/sound/sound_manager.c,stack stack stack stack,bool,stdcall
+0021a250,unknown_0021a250,,stack stack stack stack stack stack stack stack,void
