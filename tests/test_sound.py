@@ -453,7 +453,7 @@ def run(t) -> None:
                 "data_next_absolute_index": next_absolute_index(in_use),
                 "scenario_location_from_point": location,
                 "bsp3d_test_point": test_point,
-                "unknown_0021dde0": lambda harness, arguments: 0,
+                "sound_voices_initialize_for_new_structure_bsp": lambda harness, arguments: 0,
                 "looping_sounds_initialize_for_new_structure_bsp": lambda harness, arguments: 0,
             },
         )
@@ -2525,3 +2525,80 @@ def run(t) -> None:
                 random_.choice((1, 2, 0x10001, 0x6001, 0x6002, 0x16001, 5)),
                 globals={"looping_sounds": looping_},
             )
+
+    # ---------- the sound voices when the structure bsp changes, a voice of the console starts, and two clusters
+
+    random_ = random.Random(171)
+
+    for _ in range(80):
+        # the game has the code of scenario_location_from_point in the function
+        structure_bsp = bytearray(random_.randbytes(0x140))
+        struct.pack_into("<2I", structure_bsp, 0x2C, LEAVES, len(structure_bsp))
+        structure_bsp += random_.randbytes(LEAVES * 8)
+
+        def leaf_of(harness, arguments):
+            bsp, node, point = arguments
+            leaf = (NONE, 0, 3, LEAVES - 1)[calls_so_far(harness, "bsp3d_test_point") % 4]
+            return leaf, (bsp, node, bytes(harness.mu.mem_read(point, 12)))
+
+        t.check(
+            "sound_voices_initialize_for_new_structure_bsp",
+            globals={
+                "sound_voices": data_array(random_, 8, 0x6C, some_in_use(8)),
+                "global_structure_bsp_index": struct.pack("<h", random_.choice((0, 1, 5, -1))),
+                "global_structure_bsp": Buffer(bytes(structure_bsp), pointers=(0x30,)),
+                "global_bsp3d": random_.getrandbits(32),
+            },
+            externals={"bsp3d_test_point": leaf_of},
+        )
+
+    def console_call(*pointers: int):
+        """A stand-in of a function of the console: of its arguments, those
+        at some places are addresses."""
+
+        def handler(harness, arguments):
+            return 0, tuple(harness.normalize(value) if n in pointers else value for n, value in enumerate(arguments))
+
+        return handler
+
+    for _ in range(200):
+        console_ = console_voices(8)
+        something = bytearray(random_.randbytes(0x30))
+        struct.pack_into("<h", something, 0x24, random_.choice((-1, -1, 0, 3, 0x105)))
+        struct.pack_into("<I", something, 0x2C, random_.choice((NONE, 0, random_.getrandbits(32))))
+        t.check(
+            "sound_console_voice_start",
+            Buffer(bytes(something)),
+            random_.randrange(8),
+            globals={"unknown_0051ebe4": Buffer(bytes(console_))},
+            externals={
+                "unknown_0037b822": console_call(),
+                "unknown_002ae7a0": console_call(0),
+                "unknown_0037c705": console_call(),
+                "unknown_002201f0": console_call(),
+                "unknown_0021fa80": console_call(),
+            },
+        )
+
+    for _ in range(600):
+        said = bytearray(random_.randbytes(0x48))
+        said[0] = random_.choice((0, 0, 0, 1, 0xFE, 0xFF))
+        said[3] = random_.choice((1, 1, 1, 0x11, 0xF1, 0, 2))
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        for index in range(4):
+            listener = LISTENERS + index * LISTENER_SIZE
+            struct.pack_into("<ih", state, listener, random_.choice((5, 6, 7)), random_.choice((-1, 1, 2, 3)))
+        struct.pack_into("<ih", said, 0x28, random_.choice((5, 6, 7, 8)), random_.choice((-1, 1, 2, 3, 3)))
+        measure = random_.choice((0.0, 1.0, 100.0, 255.9, 256.0, 300.0, float("nan")))
+
+        def between(harness, arguments, measure=measure):
+            return real_bits(measure), (arguments[0], arguments[1], harness.normalize(arguments[2]))
+
+        t.check(
+            "sound_source_unknown_00221da0",
+            random_.choice((NONE, 0, 1, 2, 3, 0, 1, 2, 3)),
+            Buffer(bytes(said)),
+            as_bits(random_.choice((1.0, 1.0, 0.5, 2.0, 0.0))),
+            globals={"game_sound_globals": Buffer(bytes(state)), "global_structure_bsp": Buffer(random_.randbytes(0x40))},
+            externals={"unknown_00249d60": between},
+        )

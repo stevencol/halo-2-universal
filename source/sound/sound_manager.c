@@ -302,6 +302,19 @@ enum
 	LOOPING_SOUND_DATUM_UNKNOWN4_OFFSET= 0x4,
 	LOOPING_SOUND_DATUM_UNKNOWN8_OFFSET= 0x8,
 	LOOPING_SOUND_DATUM_SOURCE_SIZE= 0x44,
+	/* of a sound voice: where its point is in the structure bsp */
+	SOUND_VOICE_DATUM_LOCATION_OFFSET= 0x64,
+	/* more of a voice of the console's sound, and of the slots */
+	_voice_unknown0_bit= 0,
+	_voice_unknown4_bit= 4,
+	VOICE_UNKNOWN2C_OFFSET= 0x2C,
+	UNKNOWN_0051EBE4_SLOT_SIZE= 0x3C,
+	UNKNOWN_0051EBE4_SLOT_STREAM_OFFSET= 0x1A4C,
+	/* in what sound_console_voice_start is given */
+	SOUND_VOICE_START_SLOT_OFFSET= 0x24,
+	SOUND_VOICE_START_CONTROLLER_INDEX_OFFSET= 0x2C,
+	/* in what the game says of a sound: where it is in the structure bsp */
+	SOUND_SOURCE_LOCATION_OFFSET= 0x28,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -483,7 +496,7 @@ real __attribute__((stdcall)) sound_decibels_fade_in(long kind, real decibels, r
 
 /* 0x0021dde0, 0x0021a100: the sound voices and the looping sounds, after the
 structure bsp changes */
-void unknown_0021dde0(void);
+void sound_voices_initialize_for_new_structure_bsp(void);
 void looping_sounds_initialize_for_new_structure_bsp(void);
 
 /* 0x0012a060, 0x0012a0b0: a channel, when the sound is disabled and when it
@@ -658,6 +671,19 @@ void __attribute__((stdcall)) sound_source_ring_fade_out(long first_source_index
 boolean __attribute__((stdcall)) looping_sound_get_source(long looping_sound_index, long unused, long unused2,
 	struct sound_source *source);
 long __attribute__((stdcall)) looping_sound_find(long unknown4, long unknown8);
+
+/* 0x002ae7a0, 0x0037c705, 0x002201f0 and 0x0021fa80: of the console's
+sound; 0x00249d60: something of two clusters of a structure bsp */
+void unknown_002ae7a0(void *voice, real unknown, real unknown2);
+void unknown_0037c705(void *unknown, void *stream);
+void unknown_002201f0(long voice_index, long unknown);
+void unknown_0021fa80(long voice_index, long unknown, long unknown2);
+real unknown_00249d60(long cluster_index, long other_cluster_index, const void *structure_bsp);
+
+/* 0x0021f8a0 and 0x00221da0 */
+void __attribute__((stdcall)) sound_console_voice_start(const byte *unknown, long voice_index);
+boolean __attribute__((stdcall)) sound_source_unknown_00221da0(long listener_index, const struct sound_source *source,
+	real unknown);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -1126,7 +1152,7 @@ void sound_initialize_for_new_structure_bsp(
 					*(const short *)((const byte *)(uintptr_t)structure_bsp->leaves.address+leaf_index*8) : NONE;
 			}
 		}
-		unknown_0021dde0();
+		sound_voices_initialize_for_new_structure_bsp();
 		looping_sounds_initialize_for_new_structure_bsp();
 	}
 }
@@ -4039,4 +4065,92 @@ long __attribute__((stdcall)) looping_sound_find(
 	}
 
 	return looping_sound_index;
+}
+
+/* 0x0021dde0: when the structure bsp changes: where in it the point of each
+sound voice is */
+void sound_voices_initialize_for_new_structure_bsp(
+	void)
+{
+	struct data_array *data= sound_voices;
+	long voice_index;
+
+	for (voice_index= data_next_index(data, NONE); voice_index!=NONE; voice_index= data_next_index(data, voice_index))
+	{
+		byte *voice= (byte *)data->data+(voice_index&0xFFFF)*SOUND_VOICE_DATUM_SIZE;
+
+		scenario_location_from_point((struct scenario_location *)(voice+SOUND_VOICE_DATUM_LOCATION_OFFSET),
+			(const real_point3d *)(voice+SOUND_VOICE_DATUM_UNKNOWN48_OFFSET));
+	}
+}
+
+/* 0x0021f8a0: a voice of the console's sound starts with what something
+says: its sound playback controller, and its slot, whose stream it is given.
+What the functions of the console that it calls do is not known */
+void __attribute__((stdcall)) sound_console_voice_start(
+	const byte *unknown,
+	long voice_index)
+{
+	byte *voice= unknown_0051ebe4+UNKNOWN_0051EBE4_VOICE_OFFSET+voice_index*UNKNOWN_0051EBE4_VOICE_SIZE;
+	long controller_index;
+	short slot;
+
+	voice[VOICE_FLAGS_OFFSET]|= FLAG(_voice_unknown4_bit);
+	controller_index= *(const long *)(unknown+SOUND_VOICE_START_CONTROLLER_INDEX_OFFSET);
+	*(long *)(voice+VOICE_CONTROLLER_INDEX_OFFSET)= controller_index;
+	*(long *)(voice+VOICE_UNKNOWN2C_OFFSET)= 0;
+	unknown_0037b822(*(void **)(voice+VOICE_UNKNOWN24_OFFSET), controller_index!=NONE);
+	unknown_002ae7a0(voice, 0.0f, 0.1f);
+	slot= *(const short *)(unknown+SOUND_VOICE_START_SLOT_OFFSET);
+	if (slot!=NONE)
+	{
+		unknown_0037c705(*(void **)(voice+VOICE_UNKNOWN24_OFFSET),
+			*(void **)(unknown_0051ebe4+UNKNOWN_0051EBE4_SLOT_STREAM_OFFSET+slot*UNKNOWN_0051EBE4_SLOT_SIZE));
+		voice[VOICE_SLOT_OFFSET]= unknown[SOUND_VOICE_START_SLOT_OFFSET];
+	}
+	else
+	{
+		unknown_0037c705(*(void **)(voice+VOICE_UNKNOWN24_OFFSET), NULL);
+		voice[VOICE_SLOT_OFFSET]= 0xFF;
+	}
+	unknown_002201f0(voice_index, 1);
+	voice[VOICE_FLAGS_OFFSET]&= ~FLAG(_voice_unknown0_bit);
+	unknown_0021fa80(voice_index, 0, 0);
+	voice[VOICE_FLAGS_OFFSET]|= FLAG(_voice_unknown0_bit);
+}
+
+/* 0x00221da0: TRUE with no listener. For a sound with a place whose first
+flag is not set: TRUE if its cluster or that of the listener is NONE; FALSE
+if they are in the same leaf or cluster; and if not, whether what
+unknown_00249d60 says of the two clusters, times a real, is 256 or more.
+FALSE for the rest. What it means is not known */
+boolean __attribute__((stdcall)) sound_source_unknown_00221da0(
+	long listener_index,
+	const struct sound_source *source,
+	real unknown)
+{
+	const byte *bytes= (const byte *)source;
+	const struct sound_listener *listener;
+	short cluster_index;
+
+	if (listener_index==NONE)
+	{
+		return TRUE;
+	}
+	if ((bytes[0]&1) || (bytes[SOUND_SOURCE_TYPE_OFFSET]&SOUND_SOURCE_DATUM_TYPE_MASK)!=_sound_source_datum_type_positioned)
+	{
+		return FALSE;
+	}
+	listener= (const struct sound_listener *)(game_sound_globals+GAME_SOUND_GLOBALS_LISTENERS_OFFSET)+listener_index;
+	cluster_index= *(const short *)(bytes+SOUND_SOURCE_LOCATION_OFFSET+4);
+	if (cluster_index==NONE || listener->cluster_index==NONE)
+	{
+		return TRUE;
+	}
+	if (listener->leaf_index==*(const long *)(bytes+SOUND_SOURCE_LOCATION_OFFSET) || listener->cluster_index==cluster_index)
+	{
+		return FALSE;
+	}
+
+	return !(256.0f>unknown_00249d60(listener->cluster_index, cluster_index, global_structure_bsp)*unknown);
 }

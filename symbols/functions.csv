@@ -778,7 +778,7 @@ address,name,source,arguments,returns,convention
 00191270,unknown_00191270,,,void
 0012a810,sound_source_fade_decibels,source/sound/sound_manager.c,eax,real:eax
 0011bed0,scenario_location_from_point,source/scenario/scenario.c,esi edx,void
-0021dde0,unknown_0021dde0,,,void
+0021dde0,sound_voices_initialize_for_new_structure_bsp,source/sound/sound_manager.c,,void
 0021a100,looping_sounds_initialize_for_new_structure_bsp,source/sound/sound_manager.c,,void
 0012a060,sound_channel_pause,source/sound/sound_manager.c,ecx,void
 0012a0b0,sound_channel_resume,source/sound/sound_manager.c,eax,void
@@ -1256,3 +1256,10 @@ address,name,source,arguments,returns,convention
 0021be20,sound_source_ring_fade_out,source/sound/sound_manager.c,ebx stack stack,void,stdcall
 0021bf00,looping_sound_get_source,source/sound/sound_manager.c,stack stack stack stack,bool,stdcall
 0021cf80,looping_sound_find,source/sound/sound_manager.c,stack stack,int,stdcall
+0021f8a0,sound_console_voice_start,source/sound/sound_manager.c,eax stack,void,stdcall
+00221da0,sound_source_unknown_00221da0,source/sound/sound_manager.c,ecx edx stack,bool,stdcall
+002ae7a0,unknown_002ae7a0,,stack stack stack,void
+0037c705,unknown_0037c705,,stack stack,void
+002201f0,unknown_002201f0,,eax stack,void
+0021fa80,unknown_0021fa80,,stack stack stack,void
+00249d60,unknown_00249d60,,eax ecx edx,real:xmm0

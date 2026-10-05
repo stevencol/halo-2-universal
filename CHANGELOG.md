@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Las voces al cambiar de bsp, arrancar una voz de la consola y dos clusters
+
+Tres funciones en `sound/sound_manager.c`. De 815 funciones se pasa a
+818, el 7,26 % de las del juego (el 3,907 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_voices_initialize_for_new_structure_bsp` | `0x0021dde0` | `sound/sound_manager.c` |
+| `sound_console_voice_start` | `0x0021f8a0` | `sound/sound_manager.c` |
+| `sound_source_unknown_00221da0` | `0x00221da0` | `sound/sound_manager.c` |
+
+La primera estaba apuntada sin descompilar (`unknown_0021dde0`). Nuevas sin
+descompilar: `0x002ae7a0`, `0x0037c705`, `0x002201f0`, `0x0021fa80` y
+`0x00249d60`.
+
+### Lo que se sabe
+
+- `sound_voices_initialize_for_new_structure_bsp` vuelve a calcular en qué
+  sitio del nivel está el punto de cada voz de sonido cuando cambia el bsp.
+  En el juego lleva dentro el código de `scenario_location_from_point`;
+  aquí la llama.
+- `sound_console_voice_start` arranca una voz del sonido de la consola con
+  lo que dice algo que recibe: su controlador de reproducción y su casilla,
+  cuyo flujo se le da. Llama a cinco funciones de la consola que no se sabe
+  qué hacen.
+- `sound_source_unknown_00221da0` responde algo de un sonido y un oyente:
+  verdadero sin oyente; para un sonido con sitio, según si están en la
+  misma hoja o cluster del nivel y, si no, según lo que diga `0x00249d60`
+  de los dos clusters por un real (256 o más).
+- Los nombres son inventados.
+
+### Sin comprobar
+
+- La batería completa no se pasó en este hito, solo las pruebas de estas
+  funciones y de la que llama a la primera.
+
+### Mutaciones
+
+Pendientes; corren aparte, en segundo plano.
+
 ## 2026-10-04 — Apagar un anillo, lo que dice un sonido en bucle y buscar uno
 
 Tres funciones en `sound/sound_manager.c`. De 812 funciones se pasa a
