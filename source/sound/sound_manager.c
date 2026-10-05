@@ -860,6 +860,30 @@ struct sound_console_stream_description
 typedef char verify_sound_console_stream_description_size[
 	sizeof(struct sound_console_stream_description) == 0x18 ? 1 : -1];
 
+/* how a place sounds, as the game has it (the reals of it: four loudnesses
+in decibels, at 8, 0xC, 0x1C and 0x24, and eight more), and as the effect of
+the console that makes it takes it: how many numbers, and the numbers, the
+loudnesses in hundredths of a decibel */
+struct sound_console_reverb
+{
+	long count;
+	long room;
+	long room_high_frequencies;
+	real room_rolloff;
+	real decay_time;
+	real decay_high_frequency_ratio;
+	long reflections;
+	real reflections_delay;
+	long reverb;
+	real reverb_delay;
+	real diffusion;
+	real density;
+	real high_frequency_reference;
+};
+
+typedef char verify_sound_console_reverb_size[
+	sizeof(struct sound_console_reverb) == 0x34 ? 1 : -1];
+
 /* a sound of which it is to be worked out how it is heard where it is */
 struct sound_query
 {
@@ -1002,6 +1026,9 @@ the filter of the slots of the console's sound */
 /* 0x00470060: 0x24 bytes for the handler of the sound of the places of the
 map. What they are is not known */
 byte unknown_00470060[0x24];
+
+/* 0x00468834: a gain that is added to how loud a place sounds: 1 */
+real unknown_00468834= 1.0f;
 
 /* 0x00386ad8: a number that the console's sound follows. What it is of is not
 known */
@@ -1399,6 +1426,9 @@ void __attribute__((stdcall)) sound_console_apply_effect_list(long size, const b
 void unknown_0037ba6f(unsigned long effect_index, const byte *data, long unknown);
 void unknown_0037b60d(void *sound, unsigned long effect_index, unsigned long offset, const byte *data,
 	unsigned long size, long unknown);
+
+/* 0x0021ece0 */
+void __attribute__((stdcall)) sound_console_set_reverb(const real *environment, long effect_index);
 
 /* 0x0021d110 */
 long __attribute__((stdcall)) sound_effect_source_new(byte *request, long sound_index);
@@ -9627,4 +9657,42 @@ void __attribute__((stdcall)) sound_console_apply_effect_list(
 		}
 		position+= (*(const word *)(entry+SOUND_EFFECT_ENTRY_BYTES_OFFSET)+SOUND_EFFECT_ENTRY_SIZE+3)>>2;
 	}
+}
+
+/* some decibels and those of unknown_00468834, as the part that they are of
+the way from -64 to some more */
+static inline __attribute__((always_inline)) real sound_reverb_fraction(
+	real decibels,
+	real master,
+	real maximum)
+{
+	return sound_interpolation_fraction(SOUND_MINIMUM_DECIBELS, maximum,
+		(real)((long double)decibels+(long double)master), TRUE);
+}
+
+/* 0x0021ece0: an effect of the processor of the console's sound is given how
+a place sounds: its four loudnesses, with that of unknown_00468834 added, in
+hundredths of a decibel (from -6400 to 0, 1000 and 2000), and the rest as
+they are, two of them as parts of a hundred. The name is a guess */
+void __attribute__((stdcall)) sound_console_set_reverb(
+	const real *environment,
+	long effect_index)
+{
+	struct sound_console_reverb reverb;
+	real master= sound_gain_to_decibels(unknown_00468834);
+
+	reverb.count= 12;
+	reverb.room= (long)(sound_reverb_fraction(environment[2], master, 0.0f)*6400.0f-6400.0f);
+	reverb.room_high_frequencies= (long)(sound_reverb_fraction(environment[3], master, 0.0f)*6400.0f-6400.0f);
+	reverb.room_rolloff= environment[4];
+	reverb.decay_time= environment[5];
+	reverb.decay_high_frequency_ratio= environment[6];
+	reverb.reflections= (long)(sound_reverb_fraction(environment[7], master, 10.0f)*7400.0f-6400.0f);
+	reverb.reflections_delay= environment[8];
+	reverb.reverb= (long)(sound_reverb_fraction(environment[9], master, 20.0f)*8400.0f-6400.0f);
+	reverb.reverb_delay= environment[10];
+	reverb.diffusion= environment[11]*100.0f;
+	reverb.density= environment[12]*100.0f;
+	reverb.high_frequency_reference= environment[13];
+	unknown_0037ba6f(effect_index, (const byte *)&reverb, 0);
 }

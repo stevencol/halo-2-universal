@@ -1363,3 +1363,4 @@ address,name,source,arguments,returns,convention
 0021f960,sound_console_apply_effect_list,source/sound/sound_manager.c,eax stack,void,stdcall
 0037ba6f,unknown_0037ba6f,,stack stack stack,void
 0037b60d,unknown_0037b60d,,stack stack stack stack stack stack,void
+0021ece0,sound_console_set_reverb,source/sound/sound_manager.c,esi stack,void,stdcall

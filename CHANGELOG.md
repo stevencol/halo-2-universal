@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Cómo suena un sitio, para la consola
+
+Una función en `sound/sound_manager.c`, de 410 bytes. De 901 funciones se pasa a
+902, el 8,01 % de las del juego (el 4,751 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_console_set_reverb` | `0x0021ece0` | `sound/sound_manager.c` |
+
+No estaba apuntada. Recibe en `esi` cómo suena un sitio del nivel (los
+reales de su tag) y en la pila a qué efecto del procesador de sonido de la
+consola dárselo. También la estructura `sound_console_reverb` y el global
+`unknown_00468834` (una ganancia, 1).
+
+### Lo que se sabe
+
+- `sound_console_set_reverb` traduce cómo suena un sitio (una cueva, un
+  pasillo, el exterior) a lo que entiende el efecto de reverberación de la
+  consola: doce números.
+- Cuatro son volúmenes: la sala, sus agudos, los primeros ecos y la cola.
+  A cada uno se le suma el de `unknown_00468834` y se pasa a centésimas de
+  decibelio: los dos primeros de -6400 a 0, los ecos hasta 1000 y la cola
+  hasta 2000.
+- Los otros ocho pasan tal cual (tiempos, retrasos, frecuencia de
+  referencia), salvo la difusión y la densidad, que van en tantos por
+  ciento.
+- El nombre es una suposición.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función. La batería
+  completa corre aparte con las 900 funciones del hito 233.
+
+### Mutaciones
+
+Diez líneas rotas a mano: las pruebas notan las diez.
+
 ## 2026-10-05 — La lista de efectos llega a la consola
 
 Una función en `sound/sound_manager.c`. De 900 funciones se pasa a

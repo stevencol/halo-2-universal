@@ -5856,3 +5856,28 @@ def run(t) -> None:
                 "unknown_0037b60d": lambda harness, arguments: (0, tuple(arguments)),
             },
         )
+
+    # ---------- an effect of the console is given how a place sounds
+
+    random_ = random.Random(235)
+
+    def some_loudness() -> float:
+        return random_.choice((0.0, -64.0, -32.0, -6.0, -70.0, 5.0, 10.0, 15.0, 20.0, 25.0, -0.01, random_.uniform(-64, 20)))
+
+    for _ in range(900):
+        place = bytearray(reals(random_, 14))
+        for offset in (8, 0xC, 0x1C, 0x24):
+            struct.pack_into("<f", place, offset, some_loudness())
+        struct.pack_into("<2f", place, 0x2C, random_.choice((0.0, 1.0, 0.5, 0.333)), random_.choice((0.0, 1.0, 0.75, 0.123)))
+        t.check(
+            "sound_console_set_reverb",
+            Buffer(bytes(place)),
+            random_.getrandbits(32),
+            globals={"unknown_00468834": struct.pack("<f", random_.choice((1.0, 1.0, 0.5, 0.0, 2.0)))},
+            externals={
+                "unknown_0037ba6f": lambda harness, arguments: (
+                    0,
+                    (arguments[0], bytes(harness.mu.mem_read(arguments[1], 0x34)), arguments[2]),
+                ),
+            },
+        )
