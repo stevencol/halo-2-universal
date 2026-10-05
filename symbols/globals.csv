@@ -187,3 +187,5 @@ address,name,source
 00470088,unknown_00470088,source/sound/sound_manager.c
 00470060,unknown_00470060,source/sound/sound_manager.c
 00470090,sound_class_names,source/sound/sound_manager.c
+0047f0d0,unknown_0047f0d0,source/sound/sound_manager.c
+0047f0f0,unknown_0047f0f0,source/sound/sound_manager.c

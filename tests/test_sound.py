@@ -4873,3 +4873,16 @@ def run(t) -> None:
                 as_bits(random_.choice((0.0, 0.0, -0.0, 1.5, 0.001, -1.0, float("nan"), 30.0))),
                 globals={"sound_class_gains": Buffer(reals(random_, 54 * 4))},
             )
+
+    # ---------- how the samples of a sound of a kind are, for the console
+
+    random_ = random.Random(211)
+
+    for kind in (0, 1, 2, 3, NONE, 0x102, 0x80000000, 5) * 4:
+        t.check(
+            "sound_console_get_format",
+            kind,
+            Buffer(random_.randbytes(0x14)),
+            Buffer(random_.randbytes(4), places=(0,)),
+            globals={"unknown_0047f0d0": GlobalRange(0x20), "unknown_0047f0f0": GlobalRange(0x20)},
+        )

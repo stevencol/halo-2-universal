@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Cómo son las muestras de un sonido para la consola
+
+Una función en `sound/sound_manager.c`. De 867 funciones se pasa a
+868, el 7,71 % de las del juego (el 4,535 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_console_get_format` | `0x0021e410` | `sound/sound_manager.c` |
+
+No estaba apuntada. La llama `0x0021f4e0`, que le da a una voz de la consola
+su formato. Recibe el tipo de muestras en `eax`, dónde dejar el formato en
+`esi` y dónde dejar un puntero en `edi`. También la estructura
+`sound_console_format` y los globales `unknown_0047f0d0` y
+`unknown_0047f0f0`.
+
+### Lo que se sabe
+
+- `sound_console_get_format` dice cómo son las muestras de un sonido según
+  su tipo, tal como lo quiere la consola, siempre a 44.100 muestras por
+  segundo.
+- El tipo 2 son muestras sin comprimir: 16 bits y dos canales.
+- Los demás son muestras comprimidas (el formato `0x69` de la consola): 4
+  bits por muestra, 64 muestras en cada bloque de 36 bytes por canal. El
+  tipo 1 tiene dos canales y el 0 uno.
+- Con el formato da también un objeto del juego, distinto para las
+  comprimidas y las que no: cada uno tiene su tabla de funciones (lo que
+  descomprime, seguramente).
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función. La batería
+  completa corre aparte con las 867 funciones del hito 210.
+
+### Mutaciones
+
+Nueve líneas rotas a mano: las pruebas notan las nueve.
+
 ## 2026-10-05 — Subir y bajar las clases de sonidos por su nombre
 
 Una función en `sound/sound_manager.c`. De 866 funciones se pasa a

@@ -531,6 +531,15 @@ enum
 	GAME_SOUND_GLOBALS_UNKNOWN_STATES_OFFSET= 0x1A8,
 	UNKNOWN_0051EBE4_ENVIRONMENT_SIZE= 0x40,
 	UNKNOWN_0051EBE4_UNKNOWN1_OFFSET= 0x1,
+	/* the kinds of samples of a sound, and how the console calls them */
+	_sound_samples_compressed_mono= 0,
+	_sound_samples_compressed_stereo= 1,
+	_sound_samples_uncompressed= 2,
+	SOUND_CONSOLE_FORMAT_UNCOMPRESSED= 1,
+	SOUND_CONSOLE_FORMAT_COMPRESSED= 0x69,
+	SOUND_SAMPLES_PER_SECOND= 44100,
+	SOUND_COMPRESSED_SAMPLES_PER_BLOCK= 64,
+	SOUND_COMPRESSED_BLOCK_SIZE= 36,
 	/* more of a voice of the console's sound */
 	_voice_unknown2_bit= 2,
 	VOICE_DECIBELS_OFFSET= 0xC,
@@ -737,6 +746,23 @@ struct sound_console_voice_object_functions
 	void (__attribute__((thiscall)) *unknown1C)(void *object);
 };
 
+/* how the samples of a sound are, as the console takes it: the last two
+numbers are only of the compressed ones */
+struct sound_console_format
+{
+	word format;
+	word channels;
+	unsigned long samples_per_second;
+	unsigned long bytes_per_second;
+	word block_size;
+	word bits_per_sample;
+	word extra_size;
+	word samples_per_block;
+};
+
+typedef char verify_sound_console_format_size[
+	sizeof(struct sound_console_format) == 0x14 ? 1 : -1];
+
 /* a sound of which it is to be worked out how it is heard where it is */
 struct sound_query
 {
@@ -879,6 +905,12 @@ the filter of the slots of the console's sound */
 /* 0x00470060: 0x24 bytes for the handler of the sound of the places of the
 map. What they are is not known */
 byte unknown_00470060[0x24];
+
+/* 0x0047f0d0 and 0x0047f0f0: two things of the game with functions of their
+own, for the samples that are not compressed and for those that are. What
+they do is not known */
+byte unknown_0047f0d0[0x20];
+byte unknown_0047f0f0[0x20];
 
 long unknown_00470084= 8000;
 real unknown_00470088= 0.0f;
@@ -1178,6 +1210,10 @@ void sound_source_hold_chunk(byte *source);
 void sound_channels_unknown_00129380(const long *voice_values, const long *slot_values);
 void __attribute__((stdcall)) sound_console_set_environment(const long *second, const long *first, const void *unknown);
 void sound_classes_update(real seconds);
+
+/* 0x0021e410 */
+struct sound_console_format;
+void sound_console_get_format(long kind, struct sound_console_format *format, void **unknown);
 
 /* 0x00221980 */
 void __attribute__((stdcall)) sound_classes_set_decibels(const char *name, real decibels, real seconds);
@@ -8069,4 +8105,41 @@ void __attribute__((stdcall)) sound_classes_set_decibels(
 			}
 		}
 	}
+}
+
+/* 0x0021e410: how the samples of a sound of a kind are, for the console, and
+what of the game goes with them: for the kind 2, samples of 16 bits with
+two channels, and unknown_0047f0d0; for the rest, compressed samples (four
+bits each, 64 in each block of 36 bytes for each channel), with one channel
+or with two for the kind 1, and unknown_0047f0f0. All at 44100 samples each
+second. The name is made up */
+void sound_console_get_format(
+	long kind,
+	struct sound_console_format *format,
+	void **unknown)
+{
+	long channels;
+
+	if (kind==_sound_samples_uncompressed)
+	{
+		format->format= SOUND_CONSOLE_FORMAT_UNCOMPRESSED;
+		format->channels= 2;
+		format->samples_per_second= SOUND_SAMPLES_PER_SECOND;
+		format->bytes_per_second= SOUND_SAMPLES_PER_SECOND*4;
+		format->block_size= 4;
+		format->bits_per_sample= 16;
+		format->extra_size= 0;
+		*unknown= unknown_0047f0d0;
+		return;
+	}
+	format->format= SOUND_CONSOLE_FORMAT_COMPRESSED;
+	format->bits_per_sample= 4;
+	channels= (long)(long long)(long double)(kind==_sound_samples_compressed_stereo ? 2.0f : 1.0f);
+	format->channels= (word)channels;
+	format->samples_per_second= SOUND_SAMPLES_PER_SECOND;
+	format->extra_size= 2;
+	format->samples_per_block= SOUND_COMPRESSED_SAMPLES_PER_BLOCK;
+	format->block_size= (word)(channels*SOUND_COMPRESSED_BLOCK_SIZE);
+	format->bytes_per_second= format->block_size*(SOUND_SAMPLES_PER_SECOND/SOUND_COMPRESSED_SAMPLES_PER_BLOCK);
+	*unknown= unknown_0047f0f0;
 }
