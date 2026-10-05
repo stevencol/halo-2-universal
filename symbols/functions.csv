@@ -1156,7 +1156,7 @@ address,name,source,arguments,returns,convention
 002195f0,sound_decibels_to_gain,source/sound/sound_manager.c,stack,real,stdcall
 00218de0,sound_definition_get_maximum_decibels,source/sound/sound_manager.c,edx,real:eax
 00218d70,sound_definition_get_minimum_decibels,source/sound/sound_manager.c,edx,real:eax
-002197f0,unknown_002197f0,,xmm0,real:eax
+002197f0,sound_gain_to_decibels,source/sound/sound_manager.c,xmm0,real:eax
 00127010,unknown_00127010,,ecx,real:eax
 0021f360,unknown_0021f360,,stack,void,stdcall
 00221900,unknown_00221900,,xmm1,void
@@ -1225,3 +1225,7 @@ address,name,source,arguments,returns,convention
 0014de10,unknown_0014de10,,ecx,int
 0012a9d0,unknown_0012a9d0,,eax edx,real
 0021d630,unknown_0021d630,,stack stack,void
+0021e230,sound_mixbins_add,source/sound/sound_manager.c,esi ecx stack,void,stdcall
+0021e270,sound_frequency_to_filter_coefficient,source/sound/sound_manager.c,stack,int,stdcall
+0021e2d0,sound_unknown_0021e2d0,source/sound/sound_manager.c,stack,int,stdcall
+0021e330,sound_unknown_0021e330,source/sound/sound_manager.c,stack,int,stdcall

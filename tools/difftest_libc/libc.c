@@ -634,3 +634,30 @@ long double exp2l(long double value)
 
 	return value;
 }
+
+long double logl(long double value)
+{
+	/* as the game's code: the logarithm in base 2 by fyl2x, times that of 2 */
+	__asm__(
+		"fldln2\n\t"
+		"fxch %%st(1)\n\t"
+		"fyl2x"
+		: "+t"(value)
+		:
+		: "st(1)");
+
+	return value;
+}
+
+long double log10l(long double value)
+{
+	__asm__(
+		"fldlg2\n\t"
+		"fxch %%st(1)\n\t"
+		"fyl2x"
+		: "+t"(value)
+		:
+		: "st(1)");
+
+	return value;
+}

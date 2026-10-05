@@ -243,6 +243,8 @@ enum
 	SOUND_SOURCE_DATUM_EFFECT_INDEX_OFFSET= 0x84,
 	SOUND_SOURCE_DATUM_EFFECT_CALLBACKS_OFFSET= 0x88,
 	_sound_source_deleted_unknown2= 2,
+	/* after the eight pairs of sound_mixbins_add, counting by longs */
+	SOUND_MIXBINS_COUNT_INDEX= 0x10,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -250,6 +252,9 @@ enum
 };
 
 #define SOUND_PI 3.14159265358979323846f
+
+/* the least that a sound is heard, in decibels */
+#define SOUND_MINIMUM_DECIBELS -64.0f
 
 /* ---------- structures */
 
@@ -378,7 +383,7 @@ in decibels; 0x002197f0: a gain in decibels; 0x00127010: the decibels of a
 class of sounds */
 real sound_definition_get_maximum_decibels(const struct sound_definition *sound);
 real sound_definition_get_minimum_decibels(const struct sound_definition *sound);
-real unknown_002197f0(real gain);
+real sound_gain_to_decibels(real gain);
 real unknown_00127010(short sound_class);
 
 /* 0x001251e0 and 0x002195f0 */
@@ -527,6 +532,12 @@ void __attribute__((stdcall)) sound_playback_controller_initialize(byte *control
 	boolean unknown);
 long sound_playback_controller_new(long owner);
 void __attribute__((stdcall)) sound_playback_controller_unknown_00219c30(long owner, void *unknown);
+
+/* 0x0021e230, 0x0021e270, 0x0021e2d0 and 0x0021e330 */
+void __attribute__((stdcall)) sound_mixbins_add(long *mixbins, long mixbin, real decibels);
+long __attribute__((stdcall)) sound_frequency_to_filter_coefficient(real frequency);
+unsigned long __attribute__((stdcall)) sound_unknown_0021e2d0(real decibels);
+long __attribute__((stdcall)) sound_unknown_0021e330(real decibels);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -1430,7 +1441,7 @@ real __attribute__((stdcall)) sound_definition_decibels(
 	real least_gain= (real)sound_decibels_to_gain(sound_definition_get_minimum_decibels(sound));
 	long double most_gain= sound_decibels_to_gain(most);
 	real gain= (real)((most_gain-(long double)least_gain)*(long double)interpolation+(long double)least_gain);
-	real gain_decibels= unknown_002197f0(gain);
+	real gain_decibels= sound_gain_to_decibels(gain);
 
 	return gain_decibels + (unknown_00127010(sound->sound_class) + decibels);
 }
@@ -2869,4 +2880,132 @@ void __attribute__((stdcall)) sound_effect_source_deleted(
 	effect[SOUND_EFFECT_DATUM_FLAGS_OFFSET]|= SOUND_EFFECT_DATUM_UNKNOWN_FLAGS;
 	unknown_0021d630(effect_index, 2);
 	effect[SOUND_EFFECT_DATUM_FLAGS_OFFSET]|= FLAG(_sound_effect_datum_unknown0_bit);
+}
+
+/* 0x002197f0: a gain, from 0 to 1, in decibels: from -64 to 0 */
+real sound_gain_to_decibels(
+	real gain)
+{
+	real clamped;
+	real decibels;
+
+	if (0.0f>gain)
+	{
+		clamped= 0.0f;
+	}
+	else
+	{
+		clamped= 1.0f;
+		if (!(gain>1.0f))
+		{
+			clamped= gain;
+		}
+	}
+	decibels= SOUND_MINIMUM_DECIBELS;
+	if (gain>0.0f)
+	{
+		long double exact= log10l(clamped)*(long double)20.0f;
+
+		/* the least is looked for with all the precision of the x87 */
+		if (!((long double)SOUND_MINIMUM_DECIBELS>exact))
+		{
+			decibels= (real)exact;
+			if (decibels>0.0f)
+			{
+				decibels= 0.0f;
+			}
+		}
+	}
+	if (SOUND_MINIMUM_DECIBELS>decibels)
+	{
+		return SOUND_MINIMUM_DECIBELS;
+	}
+	if (decibels>0.0f)
+	{
+		return 0.0f;
+	}
+
+	return decibels;
+}
+
+/* 0x0021e230: one more pair for the console's sound, of those that say how
+loud each of its outputs is: an output, and some decibels from -64 to 0 as
+hundredths of a decibel from -6400 to 0. The pairs are 8 bytes each, and how
+many there are is after eight of them */
+void __attribute__((stdcall)) sound_mixbins_add(
+	long *mixbins,
+	long mixbin,
+	real decibels)
+{
+	real fraction;
+
+	mixbins[mixbins[SOUND_MIXBINS_COUNT_INDEX]*2]= mixbin;
+	fraction= sound_interpolation_fraction(SOUND_MINIMUM_DECIBELS, 0.0f, decibels, TRUE);
+	mixbins[mixbins[SOUND_MIXBINS_COUNT_INDEX]*2+1]= (long)(fraction*6400.0f-6400.0f);
+	mixbins[SOUND_MIXBINS_COUNT_INDEX]++;
+}
+
+/* 0x0021e270: a number of 16 bits for the console's sound from a frequency:
+0x8000 under 30, 0 over 8000, and between them the logarithm of twice the
+sine of the part of half a turn that the frequency is of 48000, times
+5909.28 */
+long __attribute__((stdcall)) sound_frequency_to_filter_coefficient(
+	real frequency)
+{
+	long double sine;
+	real coefficient;
+
+	if (30.0f>frequency)
+	{
+		return 0x8000;
+	}
+	if (frequency>8000.0f)
+	{
+		return 0;
+	}
+	sine= sinl((long double)frequency*(long double)2.0833333110203966e-05f*(long double)3.1415927410125732f);
+	coefficient= (real)(logl(sine+sine)*(long double)5909.27880859375f);
+
+	return (long)coefficient&0xFFFF;
+}
+
+/* 0x0021e2d0: a number of 16 bits for the console's sound from some
+decibels that take away, up to 22.5: the gain that they are, times 32768 */
+unsigned long __attribute__((stdcall)) sound_unknown_0021e2d0(
+	real decibels)
+{
+	unsigned long result;
+
+	if (decibels>22.5f)
+	{
+		decibels= 22.5f;
+	}
+	result= (unsigned long)(long long)(exp2l((long double)decibels*(long double)-0.115129254758358f*
+		1.4426950408889634073599246810018921L)*(long double)32768.0f);
+
+	return result>0xFFFF ? 0xFFFF : result;
+}
+
+/* 0x0021e330: a number for the console's sound from some decibels: the
+gain that they are less one, times 8192; up to 0x7FFF, and for those under 0,
+0xC000 less it, up to 0xDFFF */
+long __attribute__((stdcall)) sound_unknown_0021e330(
+	real decibels)
+{
+	long double gain= exp2l((long double)decibels*(long double)0.115129254758358f*1.4426950408889634073599246810018921L);
+	real scaled= (real)((gain-(long double)1.0f)*(long double)8192.0f);
+	long value= (long)scaled;
+	long negative;
+
+	if (value>=0)
+	{
+		return value>0x7FFF ? 0x7FFF : value;
+	}
+	negative= (long)(0xC000UL-(unsigned long)value);
+	if (negative<0xC000)
+	{
+		return 0xC000;
+	}
+
+	return negative>0xDFFF ? 0xDFFF : negative;
 }

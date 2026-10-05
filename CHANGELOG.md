@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Números para el sonido de la consola
+
+Cinco funciones de cálculo en `sound/sound_manager.c`. De 779 funciones se
+pasa a 784, el 6,96 % de las del juego (el 3,715 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_gain_to_decibels` | `0x002197f0` | `sound/sound_manager.c` |
+| `sound_mixbins_add` | `0x0021e230` | `sound/sound_manager.c` |
+| `sound_frequency_to_filter_coefficient` | `0x0021e270` | `sound/sound_manager.c` |
+| `sound_unknown_0021e2d0` | `0x0021e2d0` | `sound/sound_manager.c` |
+| `sound_unknown_0021e330` | `0x0021e330` | `sound/sound_manager.c` |
+
+`sound_gain_to_decibels` estaba apuntada sin descompilar
+(`unknown_002197f0`). Para probarlas, la biblioteca de las pruebas
+(`tools/difftest_libc`) tiene ahora `logl` y `log10l`, hechas con las mismas
+instrucciones del procesador que usa el juego.
+
+### Lo que se sabe
+
+- `sound_gain_to_decibels` pasa una ganancia de 0 a 1 a decibelios, de -64
+  a 0 (20 por el logaritmo en base 10).
+- `sound_mixbins_add` añade un par a una lista de la consola que dice
+  cuánto suena cada salida: la salida y unos decibelios de -64 a 0 pasados
+  a centésimas de decibelio (de -6400 a 0). La lista tiene sitio para ocho
+  pares y después la cuenta.
+- `sound_frequency_to_filter_coefficient` saca de una frecuencia un número
+  de 16 bits para un filtro de la consola: `0x8000` por debajo de 30, 0 por
+  encima de 8000, y entre medias el logaritmo de dos veces el seno de la
+  parte de media vuelta que es la frecuencia de 48.000, por 5909,28.
+- `sound_unknown_0021e2d0` pasa unos decibelios que restan (hasta 22,5) a
+  la ganancia que son por 32.768, hasta `0xFFFF`.
+- `sound_unknown_0021e330` pasa unos decibelios a la ganancia que son menos
+  uno, por 8192; hasta `0x7FFF`, y para los negativos `0xC000` menos el
+  número, hasta `0xDFFF`.
+- Los nombres son inventados.
+
+### Sin comprobar
+
+- La batería completa no se pasó en este hito, solo las pruebas de estas
+  funciones y de `sound_definition_decibels`.
+
+### Mutaciones
+
+Pendientes; corren aparte, en segundo plano.
+
 ## 2026-10-04 — Una marca de un controlador y tres funciones de los efectos de sonido
 
 Cuatro funciones en `sound/sound_manager.c`. De 775 funciones se pasa a

@@ -878,7 +878,7 @@ def run(t) -> None:
         return {
             "sound_definition_get_maximum_decibels": most,
             "sound_definition_get_minimum_decibels": least,
-            "unknown_002197f0": to_decibels,
+            "sound_gain_to_decibels": to_decibels,
             "unknown_00127010": class_decibels,
         }
 
@@ -1917,3 +1917,33 @@ def run(t) -> None:
                 externals={"unknown_0021d630": effect_update},
                 mocks=told(),
             )
+
+    # ---------- numbers for the console's sound
+
+    random_ = random.Random(162)
+
+    gains = [0.0, 1.0, 0.5, -1.0, 2.0, float("nan"), 1e-4, 6.3e-4, 6.31e-4, 6.3095e-4, 6.3096e-4, 1e-30, 0.999999, 1.0000001]
+    gains += [random_.uniform(0, 1.2) for _ in range(200)] + [10 ** random_.uniform(-4, 0) for _ in range(200)]
+    for gain in gains:
+        t.check("sound_gain_to_decibels", as_bits(gain))
+
+    for _ in range(300):
+        count = random_.randrange(8)
+        mixbins = bytearray(random_.randbytes(0x44))
+        struct.pack_into("<i", mixbins, 0x40, count)
+        decibels = random_.choice((0.0, -64.0, -32.0, 1.0, -65.0, float("nan"), random_.uniform(-70, 5), random_.uniform(-64, 0)))
+        t.check("sound_mixbins_add", Buffer(bytes(mixbins)), random_.getrandbits(32), as_bits(decibels))
+
+    frequencies = [29.999, 30.0, 30.001, 8000.0, 8000.001, 0.0, -5.0, float("nan"), 1000.0, 4000.0, 7999.5]
+    frequencies += [random_.uniform(30, 8000) for _ in range(300)]
+    for frequency in frequencies:
+        t.check("sound_frequency_to_filter_coefficient", as_bits(frequency))
+
+    values = [0.0, 22.5, 22.4999, 23.0, 100.0, -1.0, -6.0, -6.0206, -6.03, 6.0, 1.0, -20.0, -90.0, -150.0]
+    values += [random_.uniform(-12, 30) for _ in range(300)]
+    for value in values:
+        t.check("sound_unknown_0021e2d0", as_bits(value))
+    values = [0.0, 1.0, -1.0, 12.0, 13.9, 14.0, 20.0, 100.0, -6.0, -20.0, -100.0, 6.0, 0.001, -0.001, 250.0]
+    values += [random_.uniform(-40, 20) for _ in range(300)]
+    for value in values:
+        t.check("sound_unknown_0021e330", as_bits(value))
