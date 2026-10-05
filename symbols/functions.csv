@@ -1164,7 +1164,7 @@ address,name,source,arguments,returns,convention
 00219cc0,sound_playback_controllers_update,source/sound/sound_manager.c,,void
 0021b0e0,unknown_0021b0e0,,stack,void,stdcall
 00128020,unknown_00128020,,,void
-001282d0,unknown_001282d0,,,void
+001282d0,sound_sources_get_channels,source/sound/sound_manager.c,,void
 00129100,sound_channels_build_queries,source/sound/sound_manager.c,stack stack edi,void,stdcall
 0014dde0,unknown_0014dde0,,,int
 00221a70,unknown_00221a70,,stack stack,void,stdcall

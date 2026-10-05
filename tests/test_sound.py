@@ -914,7 +914,7 @@ def run(t) -> None:
         "unknown_0021b0e0",
         "sound_channels_update",
         "unknown_00128020",
-        "unknown_001282d0",
+        "sound_sources_get_channels",
         "sound_channels_update_sources",
         "unknown_0021ee80",
     )
@@ -4063,4 +4063,96 @@ def run(t) -> None:
                 "unknown_00470088": struct.pack("<f", random_.choice((0.0, 0.0, 3.0, 22.5, 30.0, -6.0, random_.uniform(0, 25)))),
             },
             externals={"unknown_0037c6e5": room_, "unknown_0037b68b": filter_},
+        )
+
+    # ---------- the sounds whose time has come get a channel
+
+    random_ = random.Random(197)
+
+    for n in range(700):
+        count = random_.choice((PLAYING, PLAYING, PLAYING - 3, 1, 0))
+        now = random_.choice((0, 1000, 0x7FFFFF00, -5))
+        data = bytearray(random_.randbytes(0x4C + PLAYING * DATUM))
+        bits = len(data)
+        data += struct.pack("<I", random_.getrandbits(32) | random_.getrandbits(32))
+        table = len(data)
+        data += random_.randbytes(4) + struct.pack("<I", mock_address(0) if random_.random() < 0.85 else 0)
+        pointers = [0x44, 0x48]
+        struct.pack_into("<I", data, 0x24, DATUM)
+        struct.pack_into("<i", data, 0x38, count)
+        struct.pack_into("<2I", data, 0x44, 0x4C, bits)
+        indices = []
+        for index in range(PLAYING):
+            at = 0x4C + index * DATUM
+            identifier_ = random_.choice((0, 1, 0x7FFF, 0x8001, 0xFFFF, random_.getrandbits(16)))
+            struct.pack_into("<H", data, at, identifier_)
+            data[at + 4] = random_.choice((0, 0, 0, 0x10, 0x20, 0x30, 0xCF, 0xFF, random_.getrandbits(8)))
+            struct.pack_into("<I", data, at + 0xC, random_.getrandbits(16) << 16 | random_.randrange(TAGS))
+            if random_.random() < 0.75:
+                struct.pack_into("<I", data, at + 0x14, table)
+                pointers.append(at + 0x14)
+            else:
+                struct.pack_into("<I", data, at + 0x14, 0)
+            # whether its samples can be asked for: for the stand-in
+            data[at + 0x30] = random_.choice((1, 1, 0))
+            struct.pack_into("<i", data, at + 0x8C, now + random_.choice((0, 0, -1, -1000, 1, 50)))
+            data[at + 0x9C] = random_.choice((0, 1, 2, 0xFF))
+            struct.pack_into("<H", data, at + 0xAC, random_.choice((0xFFFF, 0xFFFF, 0, 3, 0x8000)))
+            indices.append(identifier_ << 16 | index)
+        channels = bytearray(random_.randbytes(CHANNELS * 0x24))
+        for channel_index in range(CHANNELS):
+            struct.pack_into("<I", channels, channel_index * 0x24, random_.choice((NONE, NONE, *indices)))
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        tag_pointers = []
+        definitions = bytearray(random_.randbytes(TAGS * 0x10))
+        for tag in range(TAGS):
+            struct.pack_into("<I", tags, tag * 0x10 + 8, TAGS * 0x10 + tag * 0x10)
+            tag_pointers.append(tag * 0x10 + 8)
+            struct.pack_into("<h", definitions, tag * 0x10 + 8, random_.randrange(0, 6))
+        table__ = bytearray(random_.randbytes(0x100 * 0x5C))
+        for class_index in range(0x100):
+            struct.pack_into("<h", table__, class_index * 0x5C + 0xE, random_.choice((0, 0, 0, 1, -1, 0x100)))
+        table_ = Buffer(bytes(table__))
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        struct.pack_into("<i", state, 0x84, now)
+        gestalt_ = bytearray(random_.randbytes(0x50 + 0x10 * 0xC))
+        struct.pack_into("<I", gestalt_, 0x24, 0x50)
+        given_channels = [random_.choice((-1, -1, *range(CHANNELS), *range(CHANNELS))) for _ in range(PLAYING)]
+        set_aside = [random_.choice((NONE, NONE, 0xFFFF, 0, 2)) for _ in range(PLAYING)]
+
+        def asked(harness, arguments):
+            return harness.mu.mem_read(arguments[0] + 0x30, 1)[0], (harness.normalize(arguments[0]),)
+
+        def channel_(harness, arguments, given_channels=given_channels):
+            source_index, reason = arguments
+            harness.mu.mem_write(reason, struct.pack("<I", (source_index & 0xFFFF) + 20))
+            return given_channels[source_index & 0xFFFF] & 0xFFFFFFFF, (source_index,)
+
+        def aside(harness, arguments, set_aside=set_aside):
+            calls = calls_so_far(harness, "sound_pitch_range_get_unknown5")
+            return set_aside[calls % PLAYING], (harness.normalize(arguments[0]), harness.normalize(arguments[1]))
+
+        t.check(
+            "sound_sources_get_channels",
+            globals={
+                "sound_sources": Buffer(bytes(data), pointers=tuple(pointers)),
+                "sound_channels": Buffer(bytes(channels)),
+                "game_sound_globals": Buffer(bytes(state)),
+                "global_tag_instances": Buffer(bytes(tags) + bytes(definitions), pointers=tuple(tag_pointers)),
+                "global_sound_cache_file_gestalt": Buffer(bytes(gestalt_), pointers=(0x24,)),
+            },
+            extra=[table_],
+            externals={
+                "sound_source_request_data": asked,
+                "sound_source_get_channel": channel_,
+                "sound_source_delete": lambda harness, arguments: (0, tuple(arguments)),
+                "sound_channel_delete": lambda harness, arguments: (0, (arguments[0] & 0xFFFF,)),
+                "sound_class_get": class_of(table_),
+                "sound_pitch_range_get_unknown5": aside,
+                "sound_pitch_range_set_unknown5": lambda harness, arguments: (
+                    0,
+                    (harness.normalize(arguments[0]), harness.normalize(arguments[1]), arguments[2] & 0xFFFF),
+                ),
+            },
+            mocks=[Mock(lambda call: 0, stack_arguments=4, record=lambda call: tuple(call.stack[:3]))],
         )

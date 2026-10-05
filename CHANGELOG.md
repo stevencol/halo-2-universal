@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Los sonidos a los que les llega la hora consiguen canal
+
+Una función en `sound/sound_manager.c`, de 558 bytes. De 853 funciones se pasa a
+854, el 7,58 % de las del juego (el 4,323 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_sources_get_channels` | `0x001282d0` | `sound/sound_manager.c` |
+
+Estaba apuntada sin descompilar (`unknown_001282d0`); la llama
+`sound_update` cada fotograma. En `sound_source_callbacks` ya se sabe qué es
+la función de `4`: el aviso de que el sonido tiene canal.
+
+### Lo que se sabe
+
+- `sound_sources_get_channels` recorre los sonidos que suenan y, a los que
+  les ha llegado la hora (el número de `0x8C` no pasa del de `0x84` de los
+  globales del sonido), les busca canal.
+- Si sus muestras se pueden pedir (`sound_source_request_data`), el sonido
+  se queda con el canal que diga `sound_source_get_channel`. Sin canal, se
+  suelta (motivo 7). Si el canal era de otro sonido, ese se suelta con el
+  motivo que dio la función, y el canal también. A quien hay que avisar del
+  sonido se le avisa de que ya tiene canal, salvo que tenga la marca 5.
+- Si sus muestras no se pueden pedir y no tiene canal, se suelta (motivo 14)
+  cuando el número de `0xE` de su clase es 0 y no tiene la marca 4. Antes,
+  su grabación se aparta para ser la siguiente de su rango de tono, si no
+  hay ya una apartada y la clase no tiene la marca 5.
+- El nombre es inventado.
+
+### Comprobado
+
+- **La batería completa del hito 192 terminó: 849 funciones de 849, todas
+  bien.** Es la primera completa desde el hito 173.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función, de
+  `sound_update`, de `sound_source_stop` y de `sound_source_delete`.
+
+### Mutaciones
+
+Doce líneas rotas a mano (la comparación de la hora, los dos motivos, las
+dos marcas, el número de la clase, la grabación apartada, el signo del
+rango de tono, y lo que se apunta en el canal y en el sonido): las pruebas
+notan las doce. Pendientes las listas completas de los hitos 156 a 197.
+
 ## 2026-10-05 — Cómo se oye en una sala el sonido de una casilla, y su filtro
 
 Una función en `sound/sound_manager.c`, de 676 bytes. De 852 funciones se pasa a

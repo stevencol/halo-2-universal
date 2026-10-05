@@ -443,6 +443,11 @@ enum
 	/* a flag of a sound that plays, at 6 of it: it plays with a sound voice */
 	_sound_source_datum_voice_bit= 1,
 	_sound_source_deleted_no_voice= 7,
+	/* why a sound that plays is let go: its samples cannot be asked for.
+	A flag of it, and a number of its class */
+	_sound_source_deleted_no_data= 14,
+	_sound_source_datum_unknown4_bit= 4,
+	SOUND_CLASS_UNKNOWNE_OFFSET= 0xE,
 	/* more of a sound that plays, of a listener, of a class of sounds and of
 	the slots of the console's sound */
 	_sound_source_unknown12_bit= 12,
@@ -496,7 +501,7 @@ functions are known */
 struct sound_source_callbacks
 {
 	boolean (__attribute__((stdcall)) *unknown0)(long data, long sound_index, void *unknown5C, void *unknown18);
-	void *unknown4;
+	void (__attribute__((stdcall)) *got_channel)(long data, long sound_index, long source_index, void *unknown5C);
 	void (__attribute__((stdcall)) *playing)(long data, void *unknown5C, long sound_index, long pitch_range,
 		long permutation, real position);
 	void *unknownC;
@@ -714,7 +719,7 @@ void __attribute__((stdcall)) unknown_00127400(boolean unknown);
 void sound_playback_controllers_update(void);
 void __attribute__((stdcall)) unknown_0021b0e0(long unknown);
 void unknown_00128020(void);
-void unknown_001282d0(void);
+void sound_sources_get_channels(void);
 void __attribute__((stdcall)) sound_channels_build_queries(byte *first, byte *second, struct sound_update_listeners *listeners);
 long unknown_0014dde0(void);
 void __attribute__((stdcall)) unknown_00221a70(long player_index, struct sound_update_listeners *listeners);
@@ -2049,7 +2054,7 @@ void sound_update(
 			unknown_0021b0e0(game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7E_OFFSET]);
 			sound_channels_update();
 			unknown_00128020();
-			unknown_001282d0();
+			sound_sources_get_channels();
 			memset(first, 0, sizeof(first));
 			memset(second, 0, sizeof(second));
 			listeners.count= 0;
@@ -6711,4 +6716,99 @@ void __attribute__((stdcall)) sound_console_slot_update_room(
 	filter.coefficients[2]= 0;
 	filter.coefficients[3]= 0;
 	unknown_0037b68b(slot->stream, &filter);
+}
+
+/* 0x001282d0: each frame, the sounds that play whose time has come get a
+channel. One whose samples are asked for (sound_source_request_data) gets
+what sound_source_get_channel says: with none, it is let go (reason 7); in a
+channel that was of another sound, that one is let go, with the reason that
+was given, and the channel too; and who is told of the sound is told that it
+has a channel, if its flag 5 is not set. One whose samples cannot be asked
+for, with no channel, is let go (reason 14) if what is at 0xE of its class
+is 0 and its flag 4 is not set: and its recording is set aside to be the
+next of its pitch range, if none is and the class has no flag 5. The name
+is made up */
+void sound_sources_get_channels(
+	void)
+{
+	long source_index;
+
+	for (source_index= data_next_index(sound_sources, NONE);
+		source_index!=NONE;
+		source_index= data_next_index(sound_sources, source_index))
+	{
+		byte *source= sound_source_get(source_index);
+
+		if (*(long *)(source+SOUND_SOURCE_DATUM_UNKNOWN8C_OFFSET)>*(long *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET))
+		{
+			continue;
+		}
+		if (sound_source_request_data(source))
+		{
+			long reason;
+			short channel_index= sound_source_get_channel(source_index, &reason);
+
+			if (channel_index==NONE)
+			{
+				sound_source_delete(source_index, _sound_source_deleted_no_voice);
+			}
+			else
+			{
+				struct sound_channel *channel= sound_channels+channel_index;
+				long other_source_index= channel->unknown0;
+
+				if (other_source_index!=source_index)
+				{
+					if (other_source_index!=NONE)
+					{
+						sound_source_delete(other_source_index, reason);
+						sound_channel_delete(channel_index);
+					}
+					channel->unknown0= source_index;
+					*(long *)(source+SOUND_SOURCE_DATUM_UNKNOWN8C_OFFSET)=
+						*(long *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET);
+					*(short *)(source+SOUND_SOURCE_DATUM_CHANNEL_INDEX_OFFSET)= channel_index;
+				}
+				if (!((source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]>>_sound_source_datum_unknown5_bit)&1))
+				{
+					const struct sound_source_callbacks *callbacks=
+						*(const struct sound_source_callbacks **)(source+SOUND_SOURCE_DATUM_CALLBACKS_OFFSET);
+
+					if (callbacks && callbacks->got_channel)
+					{
+						callbacks->got_channel(*(long *)(source+SOUND_SOURCE_DATUM_CALLBACK_DATA_OFFSET),
+							*(long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET), source_index,
+							source+SOUND_SOURCE_DATUM_UNKNOWN5C_OFFSET);
+					}
+				}
+			}
+		}
+		else if (*(short *)(source+SOUND_SOURCE_DATUM_CHANNEL_INDEX_OFFSET)==NONE)
+		{
+			const struct sound_definition *sound= sound_definition_get(*(long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET));
+			short unknown;
+
+			if ((source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]>>_sound_source_datum_unknown4_bit)&1)
+			{
+				unknown= 1;
+			}
+			else
+			{
+				unknown= *(const short *)((const byte *)sound_class_get(sound->sound_class)+SOUND_CLASS_UNKNOWNE_OFFSET);
+			}
+			if (unknown==0)
+			{
+				struct sound_pitch_range *pitch_range=
+					(struct sound_pitch_range *)(uintptr_t)global_sound_cache_file_gestalt->pitch_ranges.address+
+					((char)source[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET]+sound->first_pitch_range_index);
+
+				if (!((sound_class_get(sound->sound_class)->internal_flags>>_sound_class_internal_unknown5_bit)&1) &&
+					(short)sound_pitch_range_get_unknown5(pitch_range, sound)==NONE)
+				{
+					sound_pitch_range_set_unknown5(pitch_range, sound, (char)source[SOUND_SOURCE_DATUM_PERMUTATION_OFFSET]);
+				}
+				sound_source_delete(source_index, _sound_source_deleted_no_data);
+			}
+		}
+	}
 }
