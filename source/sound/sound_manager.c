@@ -257,6 +257,8 @@ enum
 	SOUND_PITCH_RANGE_PARAMETERS_SIZE= 0xA,
 	SOUND_SCALE_PITCH_BENDS_OFFSET= 0x8,
 	SOUND_PERMUTATION_UNKNOWN8_OFFSET= 0x8,
+	LOOPING_SOUND_UNKNOWNC_OFFSET= 0xC,
+	LOOPING_SOUND_UNKNOWND_OFFSET= 0xD,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -558,6 +560,13 @@ long double __attribute__((stdcall)) sound_permutation_get_maximum_milliseconds(
 	const struct sound_pitch_range *pitch_range, long unknown8);
 long double __attribute__((stdcall)) sound_get_maximum_milliseconds(long sound_index, long pitch_range_offset,
 	long permutation_offset, real pitch);
+
+/* 0x00219880, 0x0021a050, 0x0021a080 and 0x0021cc30 */
+long double __attribute__((stdcall)) sound_unknown_00219880(const real *unknown, unsigned long *seed, real fraction);
+long __attribute__((stdcall)) looping_sound_unknown_0021a050(const byte *unknown, const byte *definition);
+boolean looping_sound_unknown_0021a080(const byte *unknown);
+long __attribute__((stdcall)) sound_unknown_0021cc30(const byte *flags, const struct sound_definition *sound,
+	long pitch_range_offset);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -3228,4 +3237,84 @@ long double __attribute__((stdcall)) sound_get_maximum_milliseconds(
 		*(const long *)(permutation+SOUND_PERMUTATION_UNKNOWN8_OFFSET));
 
 	return sound_pitch_to_rate((long double)pitch-(long double)sound_pitch_range_natural_pitch(pitch_range))*milliseconds;
+}
+
+/* 0x00219880: a number from four reals and a fraction: between the first
+two by the fraction, plus the third, plus one at random from less the
+fourth to the fourth. What the reals are of is not known */
+long double __attribute__((stdcall)) sound_unknown_00219880(
+	const real *unknown,
+	unsigned long *seed,
+	real fraction)
+{
+	real base= (unknown[1]-unknown[0])*fraction+unknown[0];
+	long double range= unknown[3];
+	long double random;
+
+	*seed= *seed*1664525UL+1013904223UL;
+	random= (long double)(*seed>>16)*(long double)(1.0f/65535.0f);
+
+	return (range-(-range))*random+(-range)+(long double)unknown[2]+(long double)base;
+}
+
+/* 0x0044a150, 0x0044a16c and 0x0044a188: of the seven states of a looping
+sound, most likely: two numbers of each, and where something of each is in
+what the second function is given */
+static const long looping_sound_unknown_0044a150[]= { 1, 1, 2, 5, 5, 1, 6 };
+static const long looping_sound_unknown_0044a16c[]= { 3, 3, 2, 4, 4, 3, 6 };
+static const long looping_sound_unknown_0044a188[]= { 0x14, 0x1C, 0x24, 0x40, 0x2C, 0x48, 0x34 };
+
+/* 0x0021a050: with the bytes at 0xC and 0xD of something not the same:
+whether what the second one says there is, in what the function is given, is
+not NONE */
+long __attribute__((stdcall)) looping_sound_unknown_0021a050(
+	const byte *unknown,
+	const byte *definition)
+{
+	char next= (char)unknown[LOOPING_SOUND_UNKNOWND_OFFSET];
+
+	if (unknown[LOOPING_SOUND_UNKNOWNC_OFFSET]==unknown[LOOPING_SOUND_UNKNOWND_OFFSET])
+	{
+		return FALSE;
+	}
+
+	return *(const long *)(definition+looping_sound_unknown_0044a188[next]+4)!=NONE;
+}
+
+/* 0x0021a080: FALSE if the byte at 0xC of something is 0, 3 or 5 and the
+one at 0xD is one of the two numbers of the first; TRUE if not */
+boolean looping_sound_unknown_0021a080(
+	const byte *unknown)
+{
+	char current= (char)unknown[LOOPING_SOUND_UNKNOWNC_OFFSET];
+	boolean result= FALSE;
+
+	if ((1UL<<(current&31))&0x29)
+	{
+		char next= (char)unknown[LOOPING_SOUND_UNKNOWND_OFFSET];
+
+		if (looping_sound_unknown_0044a16c[current]==next || looping_sound_unknown_0044a150[current]==next)
+		{
+			result= TRUE;
+		}
+	}
+
+	return !result;
+}
+
+/* 0x0021cc30: the byte at 4 of a pitch range of a sound, as
+sound_pitch_range_get_unknown4 gives it; NONE if either of two flags is set */
+long __attribute__((stdcall)) sound_unknown_0021cc30(
+	const byte *flags,
+	const struct sound_definition *sound,
+	long pitch_range_offset)
+{
+	if (*flags&0x30)
+	{
+		return NONE;
+	}
+
+	return (short)sound_pitch_range_get_unknown4(
+		(const struct sound_pitch_range *)(uintptr_t)global_sound_cache_file_gestalt->pitch_ranges.address+
+		(sound->first_pitch_range_index+pitch_range_offset), sound);
 }

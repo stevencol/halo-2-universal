@@ -1233,3 +1233,7 @@ address,name,source,arguments,returns,convention
 002197b0,sound_decibels_fade_in,source/sound/sound_manager.c,stack stack stack,real:eax,stdcall
 00218b80,sound_permutation_get_maximum_milliseconds,source/sound/sound_manager.c,esi stack stack,real,stdcall
 00218ca0,sound_get_maximum_milliseconds,source/sound/sound_manager.c,eax stack stack stack,real,stdcall
+00219880,sound_unknown_00219880,source/sound/sound_manager.c,eax edx stack,real,stdcall
+0021a050,looping_sound_unknown_0021a050,source/sound/sound_manager.c,ecx stack,int,stdcall
+0021a080,looping_sound_unknown_0021a080,source/sound/sound_manager.c,eax,bool
+0021cc30,sound_unknown_0021cc30,source/sound/sound_manager.c,ecx eax stack,int,stdcall

@@ -2063,3 +2063,44 @@ def run(t) -> None:
                 "global_tag_instances": Buffer(bytes(tags) + length_sound(), pointers=(sound_index * 0x10 + 8,)),
             },
         )
+
+    # ---------- a number at random, two of the looping sounds, and a byte of a pitch range
+
+    random_ = random.Random(165)
+
+    for _ in range(300):
+        t.check(
+            "sound_unknown_00219880",
+            Buffer(reals(random_, 4)),
+            Buffer(struct.pack("<I", random_.choice((0, 1, 0xFFFFFFFF, random_.getrandbits(32))))),
+            as_bits(random_.choice((0.0, 1.0, 0.5, random_.uniform(0, 1), random_.uniform(-1, 2)))),
+        )
+
+    for current in range(7):
+        for following in range(7):
+            something = bytearray(random_.randbytes(0x10))
+            something[0xC:0xE] = bytes((current, following))
+            t.check("looping_sound_unknown_0021a080", Buffer(bytes(something)))
+            for _ in range(6):
+                definition = bytearray(random_.randbytes(0x50))
+                for offset in (0x14, 0x1C, 0x24, 0x2C, 0x34, 0x40, 0x48):
+                    struct.pack_into("<I", definition, offset + 4, random_.choice((NONE, NONE, 0, random_.getrandbits(32))))
+                t.check("looping_sound_unknown_0021a050", Buffer(bytes(something)), Buffer(bytes(definition)))
+
+    for _ in range(200):
+        gestalt, _permutations = recordings()
+        definition = bytearray(sound_data(random_))
+        struct.pack_into("<h", definition, 8, random_.randrange(2))
+        globals_ = world(random_, 0, sound_data(random_))
+        shared = bytearray(gestalt)
+        # the bytes that the pitch ranges keep
+        for n in range(4):
+            shared[0x48 + n * 0xC + 4] = random_.choice((0, 1, 0x7F, 0x80, 0xFF))
+        globals_["global_sound_cache_file_gestalt"] = Buffer(bytes(shared), pointers=(0x24, 0x2C, 0x44))
+        t.check(
+            "sound_unknown_0021cc30",
+            Buffer(bytes((random_.choice((0, 0, 0, 0x10, 0x20, 0x30, 0xCF, 0xFF)),)) + random_.randbytes(3)),
+            Buffer(bytes(definition)),
+            random_.randrange(3),
+            globals=globals_,
+        )

@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Un número al azar, dos de los sonidos en bucle y un byte de un rango de tono
+
+Cuatro funciones en `sound/sound_manager.c`. De 789 funciones se pasa a
+793, el 7,04 % de las del juego (el 3,763 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_unknown_00219880` | `0x00219880` | `sound/sound_manager.c` |
+| `looping_sound_unknown_0021a050` | `0x0021a050` | `sound/sound_manager.c` |
+| `looping_sound_unknown_0021a080` | `0x0021a080` | `sound/sound_manager.c` |
+| `sound_unknown_0021cc30` | `0x0021cc30` | `sound/sound_manager.c` |
+
+También las tres tablas de `0x0044a150`, `0x0044a16c` y `0x0044a188` (siete
+números cada una), y `tools/milestone_docs.py`: el script que escribe estas
+notas, el `README.md` y el `ESTADO.md` de cada hito.
+
+### Lo que se sabe
+
+- `sound_unknown_00219880` saca un número de cuatro reales y una fracción:
+  entre los dos primeros según la fracción, más el tercero, más uno al
+  azar entre menos el cuarto y el cuarto.
+- `looping_sound_unknown_0021a050` y `looping_sound_unknown_0021a080` miran
+  los bytes `0xC` y `0xD` de algo (lo más probable, el estado de un sonido
+  en bucle y el siguiente, de siete posibles) con las tres tablas.
+- `sound_unknown_0021cc30` da el byte `4` de un rango de tono de un sonido,
+  como `sound_pitch_range_get_unknown4`, o `NONE` si hay alguna de dos
+  marcas.
+- Los nombres dicen la dirección porque no se sabe para qué sirven.
+
+### Sin comprobar
+
+- La batería completa no se pasó en este hito, solo las pruebas de estas
+  funciones.
+
+### Mutaciones
+
+Pendientes; corren aparte, en segundo plano.
+
 ## 2026-10-04 — Cuánto dura una grabación
 
 Dos funciones en `sound/sound_manager.c`. De 787 funciones se pasa a
