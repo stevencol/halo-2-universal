@@ -776,7 +776,7 @@ address,name,source,arguments,returns,convention
 00125a90,sound_enable,source/sound/sound_manager.c,eax,void
 00125df0,sound_load_environment,source/sound/sound_manager.c,,void
 00191270,unknown_00191270,,,void
-0012a810,unknown_0012a810,,eax,int
+0012a810,sound_source_fade_decibels,source/sound/sound_manager.c,eax,real:eax
 0011bed0,scenario_location_from_point,source/scenario/scenario.c,esi edx,void
 0021dde0,unknown_0021dde0,,,void
 0021a100,unknown_0021a100,,,void
@@ -1229,3 +1229,5 @@ address,name,source,arguments,returns,convention
 0021e270,sound_frequency_to_filter_coefficient,source/sound/sound_manager.c,stack,int,stdcall
 0021e2d0,sound_unknown_0021e2d0,source/sound/sound_manager.c,stack,int,stdcall
 0021e330,sound_unknown_0021e330,source/sound/sound_manager.c,stack,int,stdcall
+00219650,sound_decibels_interpolate,source/sound/sound_manager.c,edx stack stack stack,real:eax,stdcall
+002197b0,sound_decibels_fade_in,source/sound/sound_manager.c,stack stack stack,real:eax,stdcall

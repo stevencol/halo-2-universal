@@ -2,6 +2,50 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Decibelios entre dos y los de un sonido que se apaga
+
+Tres funciones en `sound/sound_manager.c`. De 784 funciones se pasa a
+787, el 6,99 % de las del juego (el 3,743 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_source_fade_decibels` | `0x0012a810` | `sound/sound_manager.c` |
+| `sound_decibels_interpolate` | `0x00219650` | `sound/sound_manager.c` |
+| `sound_decibels_fade_in` | `0x002197b0` | `sound/sound_manager.c` |
+
+`sound_source_fade_decibels` estaba apuntada sin descompilar
+(`unknown_0012a810`); devuelve un real, no un entero, y las dos funciones
+que guardan su resultado ya lo guardan como real. La biblioteca de las
+pruebas tiene ahora `sqrtl`.
+
+### Lo que se sabe
+
+- `sound_decibels_interpolate` da unos decibelios entre otros dos, según
+  una fracción y de una de cuatro maneras: por los decibelios (0), por las
+  ganancias (1), por las ganancias con raíz cuadrada, que al principio va
+  rápido hacia la más alta (2), y por las ganancias, suave en los dos
+  extremos (3). Con cualquier otra manera da los segundos.
+- `sound_decibels_fade_in` da unos decibelios subiendo desde el silencio
+  (-64), con la fracción recortada de 0 a 1.
+- `sound_source_fade_decibels` dice cuánto se oye un sonido que se está
+  apagando o encendiendo, de -64 a 0 decibelios; 0 si no lo hace. Sus dos
+  tiempos (`0xB4` y `0xB8`) se cuentan desde ahora la primera vez. Si el
+  segundo no es posterior, sube desde el silencio hasta sus decibelios de
+  `0xB0`; si lo es, va de ellos a 0. La palabra de `0xAE` elige entre las
+  maneras 1 y 2 de `sound_decibels_interpolate`.
+- Los nombres son inventados.
+
+### Sin comprobar
+
+- La batería completa no se pasó en este hito, solo las pruebas de estas
+  funciones y de las dos que llaman a la primera.
+
+### Mutaciones
+
+Pendientes; corren aparte, en segundo plano.
+
 ## 2026-10-04 — Números para el sonido de la consola
 
 Cinco funciones de cálculo en `sound/sound_manager.c`. De 779 funciones se

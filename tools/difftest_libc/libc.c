@@ -661,3 +661,10 @@ long double log10l(long double value)
 
 	return value;
 }
+
+long double sqrtl(long double value)
+{
+	__asm__("fsqrt" : "+t"(value));
+
+	return value;
+}

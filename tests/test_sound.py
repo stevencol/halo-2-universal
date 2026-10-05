@@ -25,6 +25,11 @@ CLASSES = 5
 ROUNDED_ANGLES = [113, 226, 452, 685, 904, 1370, 1808, 2083, 2521, 2740, 3453, 3616, 4166, 4329, 4879, 5042]
 
 
+def fade_bits(source_index: int) -> int:
+    """What the stand-in of sound_source_fade_decibels gives: the bits of some decibels."""
+    return struct.unpack("<I", struct.pack("<f", -((source_index ^ source_index >> 16) % 257) / 4.0))[0]
+
+
 def reals(random_: random.Random, count: int) -> bytes:
     return struct.pack(f"<{count}f", *(random_.choice((0.0, 1.0, random_.uniform(-50, 50), random_.uniform(0, 3))) for _ in range(count)))
 
@@ -401,7 +406,7 @@ def run(t) -> None:
             externals={
                 "GetTickCount": clock(clocks[n % len(clocks)]),
                 "data_next_absolute_index": next_absolute_index(in_use),
-                "unknown_0012a810": lambda harness, arguments: (arguments[0] ^ 0x5A5A5A5A, tuple(arguments)),
+                "sound_source_fade_decibels": lambda harness, arguments: (fade_bits(arguments[0]), tuple(arguments)),
                 "sound_idle": lambda harness, arguments: 0,
                 "sound_reset": lambda harness, arguments: 0,
                 "data_delete_all": lambda harness, arguments: 0,
@@ -1101,7 +1106,7 @@ def run(t) -> None:
                 "sound_source_stop",
                 source_index,
                 globals={"sound_sources": Buffer(buffer.data, pointers=buffer.pointers)},
-                externals={"unknown_0012a810": lambda harness, arguments: (arguments[0] ^ 0x5A5A5A5A, tuple(arguments))},
+                externals={"sound_source_fade_decibels": lambda harness, arguments: (fade_bits(arguments[0]), tuple(arguments))},
                 mocks=told(),
             )
 
@@ -1947,3 +1952,42 @@ def run(t) -> None:
     values += [random_.uniform(-40, 20) for _ in range(300)]
     for value in values:
         t.check("sound_unknown_0021e330", as_bits(value))
+
+    # ---------- decibels between two others, and those of a sound that fades
+
+    random_ = random.Random(163)
+
+    def some_decibels() -> float:
+        return random_.choice((0.0, -64.0, -6.0, -70.0, 3.0, random_.uniform(-70, 5), random_.uniform(-64, 0)))
+
+    def some_fraction() -> float:
+        return random_.choice((0.0, 1.0, 0.5, 0.25, -0.5, 1.5, random_.uniform(0, 1), random_.uniform(-0.2, 1.2)))
+
+    for kind in (0, 1, 2, 3, 4, NONE, 0x80000001):
+        for _ in range(150):
+            t.check("sound_decibels_interpolate", kind, as_bits(some_decibels()), as_bits(some_decibels()), as_bits(some_fraction()))
+            t.check("sound_decibels_fade_in", kind, as_bits(some_decibels()), as_bits(some_fraction()))
+    for kind in (1, 2):
+        t.check("sound_decibels_fade_in", kind, as_bits(-3.0), as_bits(float("nan")))
+
+    for _ in range(80):
+        buffer, indices = playing()
+        now = random_.choice((0, 100, 1000, 0x7FFF0000))
+        data = bytearray(buffer.data)
+        for index in range(PLAYING):
+            at = 0x4C + index * DATUM
+            data[at + 4] = random_.choice((0x80, 0x80, 0x80, 0xFF, 0x7F, 0))
+            struct.pack_into("<h", data, at + 0xAE, random_.choice((0, 0, 1, 1, 2, -1)))
+            struct.pack_into("<f", data, at + 0xB0, some_decibels())
+            for field in (0xB4, 0xB8):
+                struct.pack_into(
+                    "<i", data, at + field, random_.choice((-1, 0, 300, now, now + 150, now - 150, now + 300, now - 300, now + 1))
+                )
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        struct.pack_into("<i", state, 0x84, now)
+        for source_index in indices:
+            t.check(
+                "sound_source_fade_decibels",
+                source_index,
+                globals={"sound_sources": Buffer(bytes(data), pointers=buffer.pointers), "game_sound_globals": Buffer(bytes(state))},
+            )

@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-04, al terminar el hito 162.
+**Última actualización:** 2026-10-04, al terminar el hito 163.
 
 ## Dónde estamos
 
-- **784 funciones descompiladas de 11.265: el 6,96 % del juego** (el
-  3,715 % de los bytes de código).
-- Las 784 están comprobadas contra el ejecutable original: las 731 del
+- **787 funciones descompiladas de 11.265: el 6,99 % del juego** (el
+  3,743 % de los bytes de código).
+- Las 787 están comprobadas contra el ejecutable original: las 731 del
   hito 154 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile numbers for the console's sound* (ver `git log`).
+- Último hito: *Decompile decibels between two others and those of a fading sound* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 446 funciones apuntadas pero sin descompilar (las que el código
-  llama); 359 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 445 funciones apuntadas pero sin descompilar (las que el código
+  llama); 358 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -92,7 +92,7 @@ Módulos (funciones hechas / archivo):
       `0x002accd0` a `0x002ae090`: completo)
 - [x] Perfiles de los jugadores — `saved games\player_profile.c` (11:
       completo)
-- [ ] Sonido — `sound\sound_manager.c` (95; faltan muchas de
+- [ ] Sonido — `sound\sound_manager.c` (98; faltan muchas de
       `0x00125f70` a `0x0012b070`), `sound\sound_classes.c` (1)
 - [x] Archivos — `tag_files\files.c`, `files_xbox.c` (22, completo: de
       `0x00136710` a `0x001374c0`. Lo que hay justo antes, de `0x00136140`
@@ -179,7 +179,7 @@ Módulos (funciones hechas / archivo):
       la tabla de sistemas está completa).
 - [x] ~~`sound_idle` y las muestras que pide un sonido~~ (hito 48).
 - [ ] **Más del sonido**: `0x00125f70` (empezar un sonido, con
-      `0x00126c30`, `0x00126ec0` y `0x00126000`), `0x0012a810` (cuánto se oye un sonido que se apaga), `0x002ae4b0`
+      `0x00126c30`, `0x00126ec0` y `0x00126000`), `0x002ae4b0`
       (parar una voz de la consola), `0x0021f290` y `0x0021a1e0` (lo que
       llama `sound_reset`), `0x0021d4d0` (los efectos de sonido). Entre los mandos y él, `0x00124f90` a `0x00125360`, hay
       funciones pequeñas de las definiciones de sonido (hechas en el

@@ -245,6 +245,11 @@ enum
 	_sound_source_deleted_unknown2= 2,
 	/* after the eight pairs of sound_mixbins_add, counting by longs */
 	SOUND_MIXBINS_COUNT_INDEX= 0x10,
+	/* the ways of sound_decibels_interpolate */
+	_sound_interpolation_decibels= 0,
+	_sound_interpolation_gain= 1,
+	_sound_interpolation_gain_square_root= 2,
+	_sound_interpolation_gain_smooth= 3,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -415,8 +420,10 @@ unsigned long unknown_00218850(long sound_index, const struct sound_chunk *chunk
 /* 0x001268e0: of a sound that plays, when its samples are not there */
 void unknown_001268e0(byte *source);
 
-/* 0x0012a810: of a sound that plays; what it gives may be a real */
-long unknown_0012a810(long source_index);
+/* 0x0012a810, 0x00219650 and 0x002197b0 */
+real sound_source_fade_decibels(long source_index);
+real __attribute__((stdcall)) sound_decibels_interpolate(long kind, real from, real to, real fraction);
+real __attribute__((stdcall)) sound_decibels_fade_in(long kind, real decibels, real fraction);
 
 
 
@@ -930,7 +937,7 @@ void sound_dispose_from_old_map(
 			{
 				byte *source= (byte *)data->data+(source_index&0xFFFF)*SOUND_SOURCE_DATUM_SIZE;
 
-				*(long *)(source+SOUND_SOURCE_DATUM_UNKNOWNB0_OFFSET)= unknown_0012a810(source_index);
+				*(real *)(source+SOUND_SOURCE_DATUM_UNKNOWNB0_OFFSET)= sound_source_fade_decibels(source_index);
 				*(short *)(source+SOUND_SOURCE_DATUM_UNKNOWNAE_OFFSET)= 0;
 				*(long *)(source+SOUND_SOURCE_DATUM_FADE_TIME_OFFSET)= SOUND_FADE_OUT_TIME;
 				*(long *)(source+SOUND_SOURCE_DATUM_UNKNOWNB8_OFFSET)= NONE;
@@ -1706,7 +1713,7 @@ void sound_source_stop(
 				callbacks->stopped(*(long *)(source+SOUND_SOURCE_DATUM_CALLBACK_DATA_OFFSET), source_index);
 			}
 			source= sound_source_get(source_index);
-			*(long *)(source+SOUND_SOURCE_DATUM_UNKNOWNB0_OFFSET)= unknown_0012a810(source_index);
+			*(real *)(source+SOUND_SOURCE_DATUM_UNKNOWNB0_OFFSET)= sound_source_fade_decibels(source_index);
 			*(short *)(source+SOUND_SOURCE_DATUM_UNKNOWNAE_OFFSET)= 0;
 			*(long *)(source+SOUND_SOURCE_DATUM_FADE_TIME_OFFSET)= SOUND_FADE_OUT_TIME;
 			*(long *)(source+SOUND_SOURCE_DATUM_UNKNOWNB8_OFFSET)= NONE;
@@ -3008,4 +3015,137 @@ long __attribute__((stdcall)) sound_unknown_0021e330(
 	}
 
 	return negative>0xDFFF ? 0xDFFF : negative;
+}
+
+/* 0x00219650: some decibels between two others, by a fraction and in one
+of four ways: along the decibels, along the gains, along the gains with a
+square root (which goes fast at first towards the louder one), and along
+the gains slow at both ends. In any other way, the second ones */
+real __attribute__((stdcall)) sound_decibels_interpolate(
+	long kind,
+	real from,
+	real to,
+	real fraction)
+{
+	real from_gain;
+	real to_gain;
+	real amount;
+
+	switch (kind)
+	{
+	case _sound_interpolation_decibels:
+		return (to-from)*fraction+from;
+	case _sound_interpolation_gain:
+		from_gain= (real)sound_decibels_to_gain(from);
+		return sound_gain_to_decibels((real)((sound_decibels_to_gain(to)-(long double)from_gain)*(long double)fraction+
+			(long double)from_gain));
+	case _sound_interpolation_gain_square_root:
+		from_gain= (real)sound_decibels_to_gain(from);
+		to_gain= (real)sound_decibels_to_gain(to);
+		if (to_gain>from_gain)
+		{
+			amount= (real)sqrtl(fraction);
+		}
+		else
+		{
+			amount= (real)((long double)1.0f-sqrtl((long double)1.0f-(long double)fraction));
+		}
+		return sound_gain_to_decibels((to_gain-from_gain)*amount+from_gain);
+	case _sound_interpolation_gain_smooth:
+	{
+		real square;
+
+		from_gain= (real)sound_decibels_to_gain(from);
+		to_gain= (real)sound_decibels_to_gain(to);
+		square= fraction*fraction;
+		amount= square*3.0f-square*fraction*2.0f;
+		if (0.0f>amount)
+		{
+			amount= 0.0f;
+		}
+		else if (amount>1.0f)
+		{
+			amount= 1.0f;
+		}
+		return sound_gain_to_decibels((to_gain-from_gain)*amount+from_gain);
+	}
+	}
+
+	return to;
+}
+
+/* 0x002197b0: some decibels as they come up from silence, by a fraction
+from 0 to 1 */
+real __attribute__((stdcall)) sound_decibels_fade_in(
+	long kind,
+	real decibels,
+	real fraction)
+{
+	if (0.0f>fraction)
+	{
+		fraction= 0.0f;
+	}
+	else if (fraction>1.0f)
+	{
+		fraction= 1.0f;
+	}
+
+	return sound_decibels_interpolate(kind, SOUND_MINIMUM_DECIBELS, decibels, fraction);
+}
+
+/* 0x0012a810: how loud a sound that fades is, in decibels, from -64 to 0;
+0 for one that does not fade. Its two times, at 0xB4 and 0xB8, are from now
+the first time, when either is NONE; the sound goes from one to the other:
+towards its decibels at 0xB0 from silence if the second is not later, and
+from them to 0 if it is. The name is a guess */
+real sound_source_fade_decibels(
+	long source_index)
+{
+	byte *source= sound_source_get(source_index);
+	const byte *globals;
+	long first;
+	long second;
+	long latest;
+	real fraction;
+	real from;
+	real to;
+	real decibels= 0.0f;
+
+	if (!((source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]>>7)&1))
+	{
+		return 0.0f;
+	}
+	globals= game_sound_globals;
+	if (*(const long *)(source+SOUND_SOURCE_DATUM_FADE_TIME_OFFSET)==NONE ||
+		*(const long *)(source+SOUND_SOURCE_DATUM_UNKNOWNB8_OFFSET)==NONE)
+	{
+		*(long *)(source+SOUND_SOURCE_DATUM_FADE_TIME_OFFSET)+= *(const long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET)+1;
+		*(long *)(source+SOUND_SOURCE_DATUM_UNKNOWNB8_OFFSET)+= *(const long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET)+1;
+	}
+	first= *(const long *)(source+SOUND_SOURCE_DATUM_FADE_TIME_OFFSET);
+	second= *(const long *)(source+SOUND_SOURCE_DATUM_UNKNOWNB8_OFFSET);
+	latest= first<=second ? second : first;
+	fraction= sound_interpolation_fraction((real)(first-latest), (real)(second-latest),
+		(real)(*(const long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET)-latest), first<second);
+	from= first<second ? *(const real *)(source+SOUND_SOURCE_DATUM_UNKNOWNB0_OFFSET) : SOUND_MINIMUM_DECIBELS;
+	to= first>=second ? *(const real *)(source+SOUND_SOURCE_DATUM_UNKNOWNB0_OFFSET) : 0.0f;
+	switch (*(const short *)(source+SOUND_SOURCE_DATUM_UNKNOWNAE_OFFSET))
+	{
+	case 0:
+		decibels= sound_decibels_interpolate(_sound_interpolation_gain, from, to, fraction);
+		break;
+	case 1:
+		decibels= sound_decibels_interpolate(_sound_interpolation_gain_square_root, from, to, fraction);
+		break;
+	}
+	if (SOUND_MINIMUM_DECIBELS>decibels)
+	{
+		return SOUND_MINIMUM_DECIBELS;
+	}
+	if (decibels>0.0f)
+	{
+		return 0.0f;
+	}
+
+	return decibels;
 }
