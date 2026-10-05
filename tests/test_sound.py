@@ -7,7 +7,7 @@
 import random
 import struct
 
-from difftest import Buffer, Memory, Pointer
+from difftest import Buffer, Memory, Mock, Pointer, mock_address
 from test_async import calls_so_far
 
 NONE = 0xFFFFFFFF
@@ -1048,3 +1048,112 @@ def run(t) -> None:
                 "unknown_0047f0e4": struct.pack("<i", random_.choice((0, 1))),
             },
         )
+
+    # ---------- a sound stops, all are let go, and one is let go
+
+    random_ = random.Random(154)
+    PLAYING = 12
+    CONTROLLERS = 6
+
+    def playing(callbacks: tuple = (1, 1)) -> tuple:
+        """The array of the sounds that play, with what tells whether an
+        index is of one of them, and who is told of each: none, or a table
+        after the array whose two functions are the test's. Gives too the
+        index of each sound."""
+        data = bytearray(random_.randbytes(0x4C + PLAYING * DATUM))
+        pointers = [0x44]
+        struct.pack_into("<I", data, 0x24, DATUM)
+        struct.pack_into("<i", data, 0x38, random_.choice((PLAYING, PLAYING, PLAYING - 3, 1, 0)))
+        struct.pack_into("<I", data, 0x44, 0x4C)
+        table = len(data)
+        data += random_.randbytes(0x10) + struct.pack(
+            "<2I", mock_address(0) if callbacks[0] else 0, mock_address(1) if callbacks[1] else 0
+        )
+        indices = []
+        for index in range(PLAYING):
+            at = 0x4C + index * DATUM
+            identifier = random_.choice((0, 1, 0x7FFF, 0x8001, 0xFFFF, random_.getrandbits(16)))
+            struct.pack_into("<H", data, at, identifier)
+            data[at + 2] = random_.choice((0, 0, 0, 1, 0x80))
+            data[at + 3] = random_.choice((0xFF, 0xFF, 0, 1, 0x7F))
+            if random_.random() < 0.7:
+                struct.pack_into("<I", data, at + 0x14, table)
+                pointers.append(at + 0x14)
+            else:
+                struct.pack_into("<I", data, at + 0x14, 0)
+            struct.pack_into(
+                "<I", data, at + 0xA8, random_.choice((NONE, random_.getrandbits(16) << 16 | random_.randrange(CONTROLLERS)))
+            )
+            struct.pack_into("<H", data, at + 0xAC, random_.choice((0xFFFF, 0, 3, 0x8000, 0xFFFE)))
+            indices.append(identifier << 16 | index)
+        return Buffer(bytes(data), pointers=tuple(pointers)), indices
+
+    def told() -> list:
+        return [Mock(lambda call: 0, stack_arguments=3), Mock(lambda call: 0, stack_arguments=2)]
+
+    for n in range(60):
+        buffer, indices = playing((random_.random() < 0.8, random_.random() < 0.8))
+        others = [NONE, 0, PLAYING, 0x10000 | PLAYING, 0xFFFF0000 | random_.randrange(PLAYING)]
+        # the index of another sound, with the identifier of this one
+        others += [index ^ 0x10000 for index in random_.sample(indices, 3)]
+        for source_index in indices + others:
+            t.check(
+                "sound_source_stop",
+                source_index,
+                globals={"sound_sources": Buffer(buffer.data, pointers=buffer.pointers)},
+                externals={"unknown_0012a810": lambda harness, arguments: (arguments[0] ^ 0x5A5A5A5A, tuple(arguments))},
+                mocks=told(),
+            )
+
+    for n in range(80):
+        buffer, indices = playing()
+        in_use = used()
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        state[0x78] = random_.choice((1, 1, 1, 1, 0, 0x80))
+        t.check(
+            "sound_stop_all",
+            globals={"game_sound_globals": Buffer(bytes(state)), "sound_sources": buffer},
+            externals={
+                "unknown_0021d4d0": lambda harness, arguments: 0,
+                "data_next_absolute_index": next_absolute_index(in_use),
+                "sound_source_delete": lambda harness, arguments: (0, tuple(arguments)),
+            },
+        )
+
+    for n in range(60):
+        buffer, indices = playing((random_.random() < 0.8, random_.random() < 0.8))
+        for source_index in indices:
+            t.check(
+                "sound_source_delete",
+                source_index,
+                random_.choice((10, 0, random_.getrandbits(32))),
+                globals={"sound_sources": Buffer(buffer.data, pointers=buffer.pointers)},
+                externals={
+                    "unknown_0012a5d0": lambda harness, arguments: (0, (arguments[0] & 0xFFFF,)),
+                    "unknown_00126960": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                    "sound_source_free": lambda harness, arguments: (0, tuple(arguments)),
+                },
+                mocks=told(),
+            )
+
+    for n in range(60):
+        buffer, indices = playing()
+        controllers = bytearray(random_.randbytes(0x4C + CONTROLLERS * 0x1C))
+        struct.pack_into("<I", controllers, 0x44, 0x4C)
+        for index in range(CONTROLLERS):
+            at = 0x4C + index * 0x1C
+            controllers[at + 3] = random_.choice((0, 1, 0x80, 0x81, 0xFF, random_.getrandbits(8)))
+            struct.pack_into("<I", controllers, at + 4, random_.choice((NONE, NONE, 0, random_.getrandbits(32))))
+        for source_index in indices:
+            t.check(
+                "sound_source_free",
+                source_index,
+                globals={
+                    "sound_sources": Buffer(buffer.data, pointers=buffer.pointers),
+                    "unknown_0051ebd8": Buffer(bytes(controllers), pointers=(0x44,)),
+                },
+                externals={
+                    "unknown_00219c80": lambda harness, arguments: (0, tuple(arguments)),
+                    "datum_delete": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                },
+            )

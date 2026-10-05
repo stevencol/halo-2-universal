@@ -127,10 +127,38 @@ enum
 	_voice_unknown3_bit= 3,
 	GAME_SOUND_GLOBALS_UNKNOWN7F_OFFSET= 0x7F,
 
+	/* more of a sound that plays: set while it is being let go, who is told
+	of what happens to it and what it is told with, its playback controller
+	and its channel */
+	SOUND_SOURCE_DATUM_UNKNOWN2_OFFSET= 0x2,
+	SOUND_SOURCE_DATUM_UNKNOWN3_OFFSET= 0x3,
+	SOUND_SOURCE_DATUM_CALLBACK_DATA_OFFSET= 0x10,
+	SOUND_SOURCE_DATUM_CALLBACKS_OFFSET= 0x14,
+	SOUND_SOURCE_DATUM_CONTROLLER_INDEX_OFFSET= 0xA8,
+	SOUND_SOURCE_DATUM_CHANNEL_INDEX_OFFSET= 0xAC,
+	/* of an element of unknown_0051ebd8 */
+	UNKNOWN_0051EBD8_DATUM_SIZE= 0x1C,
+	UNKNOWN_0051EBD8_DATUM_COUNT_OFFSET= 0x3,
+	UNKNOWN_0051EBD8_DATUM_COUNT_MASK= 0x7F,
+	UNKNOWN_0051EBD8_DATUM_UNKNOWN4_OFFSET= 0x4,
+	/* what the one who is told of a sound is told when all are stopped */
+	_sound_source_deleted_unknown10= 10,
+
 	_game_mode_main_menu= 3
 };
 
 #define SOUND_PI 3.14159265358979323846f
+
+/* ---------- structures */
+
+/* who is told of what happens to a sound that plays. Only two of its
+functions are known */
+struct sound_source_callbacks
+{
+	void *unknown0[4];
+	void (__attribute__((stdcall)) *deleted)(long data, long source_index, long reason);
+	void (__attribute__((stdcall)) *stopped)(long data, long source_index);
+};
 
 /* ---------- globals */
 
@@ -313,6 +341,20 @@ sound of the console, when the sound is enabled and disabled */
 void unknown_00219d90(boolean unknown);
 void unknown_0021f5a0(void);
 void unknown_0021f570(void);
+
+/* 0x0012a5d0: a channel lets go of the sound that it plays; 0x00126960: of a
+sound that plays, when it is let go; 0x00219c80: a sound playback controller
+has one sound less; 0x0021d4d0: of the sound effects */
+void unknown_0012a5d0(short channel_index);
+void unknown_00126960(byte *source);
+void unknown_00219c80(long controller_index);
+void unknown_0021d4d0(void);
+
+/* 0x00126360, 0x00126400, 0x00127320 and 0x00127390 */
+void sound_source_stop(long source_index);
+void sound_stop_all(void);
+void __attribute__((stdcall)) sound_source_delete(long source_index, long reason);
+void sound_source_free(long source_index);
 
 /* ---------- code */
 
@@ -1434,4 +1476,108 @@ void sound_set_unknown1f8(
 	*(long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1F8_OFFSET)= index;
 	*(real *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1FC_OFFSET)= 0.0f;
 	*(real *)(globals+GAME_SOUND_GLOBALS_UNKNOWN204_OFFSET)= 0.0f;
+}
+
+static inline __attribute__((always_inline)) byte *sound_source_get(
+	long source_index)
+{
+	return (byte *)sound_sources->data+(source_index&0xFFFF)*SOUND_SOURCE_DATUM_SIZE;
+}
+
+/* 0x00126360: a sound that plays starts to fade out, as all do when a map
+is let go, and who is told of it is told. Nothing for an index that is of no
+sound, or of one that is being let go. The name is a guess */
+void sound_source_stop(
+	long source_index)
+{
+	if (source_index!=NONE && datum_try_and_get(sound_sources, source_index))
+	{
+		byte *source= sound_source_get(source_index);
+
+		if (!source[SOUND_SOURCE_DATUM_UNKNOWN2_OFFSET])
+		{
+			const struct sound_source_callbacks *callbacks=
+				*(const struct sound_source_callbacks **)(source+SOUND_SOURCE_DATUM_CALLBACKS_OFFSET);
+
+			if (callbacks && callbacks->stopped)
+			{
+				callbacks->stopped(*(long *)(source+SOUND_SOURCE_DATUM_CALLBACK_DATA_OFFSET), source_index);
+			}
+			source= sound_source_get(source_index);
+			*(long *)(source+SOUND_SOURCE_DATUM_UNKNOWNB0_OFFSET)= unknown_0012a810(source_index);
+			*(short *)(source+SOUND_SOURCE_DATUM_UNKNOWNAE_OFFSET)= 0;
+			*(long *)(source+SOUND_SOURCE_DATUM_FADE_TIME_OFFSET)= SOUND_FADE_OUT_TIME;
+			*(long *)(source+SOUND_SOURCE_DATUM_UNKNOWNB8_OFFSET)= NONE;
+			source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]|= SOUND_SOURCE_DATUM_FADING_FLAG;
+		}
+	}
+}
+
+/* 0x00126400: all the sounds that play are let go at once, with no fading.
+The name is a guess */
+void sound_stop_all(
+	void)
+{
+	if (game_sound_globals[GAME_SOUND_GLOBALS_INITIALIZED_OFFSET])
+	{
+		long source_index;
+
+		unknown_0021d4d0();
+		for (source_index= data_next_index(sound_sources, NONE);
+			source_index!=NONE;
+			source_index= data_next_index(sound_sources, source_index))
+		{
+			if (!sound_source_get(source_index)[SOUND_SOURCE_DATUM_UNKNOWN2_OFFSET])
+			{
+				sound_source_delete(source_index, _sound_source_deleted_unknown10);
+			}
+		}
+	}
+}
+
+/* 0x00127320: a sound that plays is let go: its channel, what it has, and
+its place in the array; who is told of it is told why. The name is a guess */
+void __attribute__((stdcall)) sound_source_delete(
+	long source_index,
+	long reason)
+{
+	byte *source= sound_source_get(source_index);
+	const struct sound_source_callbacks *callbacks;
+
+	if (*(short *)(source+SOUND_SOURCE_DATUM_CHANNEL_INDEX_OFFSET)!=NONE)
+	{
+		unknown_0012a5d0(*(short *)(source+SOUND_SOURCE_DATUM_CHANNEL_INDEX_OFFSET));
+		*(short *)(source+SOUND_SOURCE_DATUM_CHANNEL_INDEX_OFFSET)= NONE;
+	}
+	unknown_00126960(source);
+	callbacks= *(const struct sound_source_callbacks **)(source+SOUND_SOURCE_DATUM_CALLBACKS_OFFSET);
+	if (callbacks && callbacks->deleted)
+	{
+		callbacks->deleted(*(long *)(source+SOUND_SOURCE_DATUM_CALLBACK_DATA_OFFSET), source_index, reason);
+	}
+	sound_source_free(source_index);
+}
+
+/* 0x00127390: the place of a sound in the array of those that play is let
+go, and its sound playback controller has one sound less. The name is a
+guess */
+void sound_source_free(
+	long source_index)
+{
+	struct data_array *data= sound_sources;
+	const byte *source= (const byte *)data->data+(source_index&0xFFFF)*SOUND_SOURCE_DATUM_SIZE;
+	long controller_index= *(const long *)(source+SOUND_SOURCE_DATUM_CONTROLLER_INDEX_OFFSET);
+
+	if (controller_index!=NONE)
+	{
+		byte *controller= (byte *)unknown_0051ebd8->data+(controller_index&0xFFFF)*UNKNOWN_0051EBD8_DATUM_SIZE;
+
+		if (source[SOUND_SOURCE_DATUM_UNKNOWN3_OFFSET]==0xFF && *(long *)(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWN4_OFFSET)!=NONE)
+		{
+			controller[UNKNOWN_0051EBD8_DATUM_COUNT_OFFSET]=
+				(controller[UNKNOWN_0051EBD8_DATUM_COUNT_OFFSET]-1)&UNKNOWN_0051EBD8_DATUM_COUNT_MASK;
+		}
+		unknown_00219c80(*(const long *)(source+SOUND_SOURCE_DATUM_CONTROLLER_INDEX_OFFSET));
+	}
+	datum_delete(data, source_index);
 }

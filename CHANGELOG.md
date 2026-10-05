@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Parar un sonido y soltarlo
+
+Cuatro funciones de `sound/sound_manager.c`. De 727 funciones se pasa a 731,
+el 6,49 % de las del juego (el 3,541 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_source_stop` | `0x00126360` | `sound/sound_manager.c` |
+| `sound_stop_all` | `0x00126400` | `sound/sound_manager.c` |
+| `sound_source_delete` | `0x00127320` | `sound/sound_manager.c` |
+| `sound_source_free` | `0x00127390` | `sound/sound_manager.c` |
+
+También la estructura `sound_source_callbacks` (a quién se avisa de lo que
+le pasa a un sonido; solo se conocen dos de sus funciones) y cuatro
+funciones apuntadas sin descompilar: `0x0012a5d0`, `0x00126960`,
+`0x00219c80` y `0x0021d4d0`.
+
+### Lo que se sabe
+
+- `sound_source_stop` hace que un sonido que suena empiece a apagarse, igual
+  que se apagan todos al soltar un mapa (300 ms), y avisa a quien el sonido
+  diga (la función de `0x14` de su tabla). No hace nada si el índice no es
+  de un sonido o si el sonido ya se está soltando (su byte `2`).
+- `sound_stop_all` suelta de golpe todos los sonidos que suenan, sin
+  apagarlos, si el sonido está preparado. Antes llama a `0x0021d4d0`, de los
+  efectos de sonido.
+- `sound_source_delete` suelta un sonido: su canal (`0x0012a5d0`), lo que
+  tiene (`0x00126960`) y su sitio en la tabla, y avisa del motivo a quien
+  el sonido diga (la función de `0x10`). `sound_stop_all` da el motivo 10.
+- `sound_source_free` suelta el sitio del sonido en la tabla y le quita un
+  sonido a su controlador de reproducción (`0x00219c80`); si el byte `3`
+  del sonido es `0xFF`, también baja una cuenta de 7 bits del controlador.
+- Los nombres son inventados: dicen lo que hacen las funciones.
+
+### Mutaciones
+
+24 líneas rotas a propósito: 23 detectadas. La otra es equivalente: quitar
+la comprobación de `NONE` de `sound_source_stop` no cambia nada, porque
+`datum_try_and_get` ya la hace.
+
 ## 2026-10-03 — Dos funciones pequeñas más del sonido
 
 Dos funciones de `sound/sound_manager.c`. De 725 funciones se pasa a 727,
