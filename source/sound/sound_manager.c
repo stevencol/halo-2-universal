@@ -661,6 +661,9 @@ enum
 	MAXIMUM_STRUCTURE_BSP_CLUSTERS= 512,
 	STRUCTURE_BSP_CLUSTER_COUNT_OFFSET= 0x9C,
 	STRUCTURE_BSP_PORTALS_OFFSET= 0x60,
+	STRUCTURE_BSP_CLUSTER_SIZE= 0xB0,
+	STRUCTURE_BSP_CLUSTER_UNKNOWN7A_OFFSET= 0x7A,
+	UNKNOWN_004ED280_SIZE= 32,
 	STRUCTURE_BSP_PORTAL_SIZE= 0x24,
 	STRUCTURE_BSP_SOUND_OPENINGS_OFFSET= 0x224,
 	STRUCTURE_BSP_SOUND_OPENINGS_SAID_OFFSET= 0x30,
@@ -928,7 +931,12 @@ typedef char verify_sound_console_reverb_size[
 struct sound_query
 {
 	long listener_index;
-	byte unknown4[0x20];
+	/* where the line from the listener to the sound hits the level, where the
+	one back does, and how far along each that is */
+	real_point3d near_point;
+	real_point3d far_point;
+	real near_fraction;
+	real far_fraction;
 	real_point3d position;
 	/* what is worked out */
 	real results[3];
@@ -972,6 +980,9 @@ void *unknown_0051ebdc;
 
 /* 0x0051ebe4: of the sound of the console. Only two indices are known */
 byte *unknown_0051ebe4;
+
+/* 0x004ed280: of something else; it has 32 bytes for each structure bsp */
+byte *unknown_004ed280;
 
 /* 0x004ed288: of something else; two numbers of it start again with the sound */
 byte *unknown_004ed288;
@@ -1505,7 +1516,11 @@ real unknown_0018cac0(long said);
 void __attribute__((stdcall)) unknown_00020670(void *array, unsigned long size, long count,
 	void *(__attribute__((thiscall)) *constructor)(void *element));
 void *__attribute__((thiscall)) unknown_0031bc70(void *element);
-void unknown_00221e30(struct sound_query *query, const real *heard, const struct sound_listener *listener);
+void __attribute__((stdcall)) sound_query_compute(struct sound_query *query, const real *heard,
+	const struct sound_listener *listener);
+/* 0x001de630: whether a line hits the level, and where */
+boolean unknown_001de630(void *result, long unknown, void *collision_bsp, real maximum, long flags,
+	const byte *unknown2, const real_point3d *origin, const real_vector3d *vector);
 
 /* 0x00222150; 0x0018cfd0: the portal of a cluster that is nearest a place,
 and how far it is; 0x0014b240: how far a place is from a portal */
@@ -10215,7 +10230,7 @@ static inline __attribute__((always_inline)) boolean sound_bit_vector_test(
 
 /* 0x00221a70: what a listener hears of each cluster through the structure
 bsp's openings for the sound, and with it what is worked out of each query
-of that listener (unknown_00221e30). Of the openings that the listener's
+of that listener (sound_query_compute). Of the openings that the listener's
 cluster has (unknown_00249d10 says which), those that say something
 (unknown_0018cac0 turns what they say into a real) have the clusters of each
 of their two sides (unknown_00249c90): if the listener's cluster is on one,
@@ -10295,7 +10310,7 @@ void __attribute__((stdcall)) sound_listener_compute_queries(
 		{
 			if (query->listener_index==listener_index)
 			{
-				unknown_00221e30(query, heard, listener);
+				sound_query_compute(query, heard, listener);
 			}
 		}
 	}
@@ -10335,4 +10350,127 @@ void __attribute__((stdcall)) sound_query_portal_results(
 		results[0]= 1.0f;
 		results[1]= 0.0f;
 	}
+}
+
+/* what unknown_001de630 says of a line through the level: how far along it
+something is, from 0 to 1, and more that is not known */
+struct sound_line_result
+{
+	real fraction;
+	byte unknown4[0x418];
+};
+
+/* 0x00221e30: what is worked out of a query, for a listener that is not in
+the query's leaf. The first real has added to it how much of the line
+between the two is behind the level: a line is tested from the listener to
+the sound and, if it hits, another from the sound to the listener, and what
+is between the two hits is that much (and the two hits are kept in the
+query, with the flag at 0x45). If only the first hits, it is what is after
+it. A query with the flag at 0x47 has no lines: with the flag at 0x44
+nothing is added, and without it and in another cluster, how much of the way
+from the listener to the sound's cluster (unknown_00249d60) and on to the
+sound is the first part. For a sound in another cluster the other two reals
+are those of sound_query_portal_results, with 0 for the first when the two
+clusters have the same short at 0x7A; with the flag at 0x44 they are 0 and
+what the listener hears of the sound's cluster. The query is taken in edi.
+The name is made up */
+void __attribute__((stdcall)) sound_query_compute(
+	struct sound_query *query,
+	const real *heard,
+	const struct sound_listener *listener)
+{
+	real amount;
+	real results[2];
+
+	if (listener->leaf_index==query->leaf_index)
+	{
+		return;
+	}
+	amount= 0.0f;
+	if (!query->unknown47)
+	{
+		struct sound_line_result first;
+		struct sound_line_result second;
+		const byte *unknown= unknown_004ed280+global_structure_bsp_index*UNKNOWN_004ED280_SIZE+1;
+		real_vector3d there;
+		real_vector3d back;
+
+		there.i= query->position.x-listener->matrix.position.x;
+		there.j= query->position.y-listener->matrix.position.y;
+		there.k= query->position.z-listener->matrix.position.z;
+		if (unknown_001de630(&first, 1, global_collision_bsp, 1.0f, 0x100, unknown, &listener->matrix.position, &there))
+		{
+			back.i= 0.0f-there.i;
+			back.j= 0.0f-there.j;
+			back.k= 0.0f-there.k;
+			if (unknown_001de630(&second, 1, global_collision_bsp, 1.0f, 0x100, unknown, &query->position, &back))
+			{
+				real far_fraction= second.fraction;
+				real near_fraction= first.fraction;
+				boolean between;
+
+				amount= 1.0f-far_fraction-near_fraction;
+				if (0.0f>amount)
+				{
+					amount= 0.0f;
+					between= FALSE;
+				}
+				else if (amount>1.0f)
+				{
+					amount= 1.0f;
+					between= TRUE;
+				}
+				else
+				{
+					between= amount>0.0f;
+				}
+				if (between)
+				{
+					query->unknown45= TRUE;
+					query->near_point.x= there.i*near_fraction+listener->matrix.position.x;
+					query->near_point.y= there.j*near_fraction+listener->matrix.position.y;
+					query->near_point.z= there.k*near_fraction+listener->matrix.position.z;
+					query->near_fraction= near_fraction;
+					query->far_point.x= back.i*far_fraction+query->position.x;
+					query->far_point.y= back.j*far_fraction+query->position.y;
+					query->far_point.z= back.k*far_fraction+query->position.z;
+					query->far_fraction= far_fraction;
+				}
+			}
+			else
+			{
+				amount= 1.0f-first.fraction;
+			}
+		}
+	}
+	else if (!query->unknown44 && listener->cluster_index!=query->cluster_index)
+	{
+		real around= unknown_00249d60(listener->cluster_index, query->cluster_index, global_structure_bsp);
+		real straight= distance3d(&query->position, &listener->matrix.position);
+		real all= straight+around;
+
+		amount= 1.0f-straight/(all>0.001f ? all : 0.001f);
+	}
+
+	if (listener->cluster_index!=NONE && query->cluster_index!=NONE && listener->cluster_index!=query->cluster_index)
+	{
+		if (query->unknown44)
+		{
+			query->results[1]= 0.0f;
+			*(long *)&query->results[2]= *(const long *)&heard[query->cluster_index];
+		}
+		else
+		{
+			const byte *clusters;
+
+			sound_query_portal_results(listener->cluster_index, &listener->matrix.position, results, heard, &query->position,
+				query->cluster_index);
+			clusters= *(const byte *const *)((const byte *)global_structure_bsp+STRUCTURE_BSP_CLUSTER_COUNT_OFFSET+4);
+			query->results[1]= *(const short *)(clusters+listener->cluster_index*STRUCTURE_BSP_CLUSTER_SIZE+
+				STRUCTURE_BSP_CLUSTER_UNKNOWN7A_OFFSET)==*(const short *)(clusters+query->cluster_index*
+				STRUCTURE_BSP_CLUSTER_SIZE+STRUCTURE_BSP_CLUSTER_UNKNOWN7A_OFFSET) ? 0.0f : results[0];
+			query->results[2]= results[1];
+		}
+	}
+	query->results[0]+= amount;
 }

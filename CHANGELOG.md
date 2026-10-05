@@ -2,6 +2,62 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Cuánto tapa el nivel un sonido
+
+Una función en `sound/sound_manager.c`, de 793 bytes. De 909 funciones se pasa a
+910, el 8,08 % de las del juego (el 4,907 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_query_compute` | `0x00221e30` | `sound/sound_manager.c` |
+
+Era `unknown_00221e30`, apuntada en el hito 241. La llama
+`sound_listener_compute_queries` con cada consulta del oyente. Recibe la
+consulta en `edi` y, en la pila, la tabla de lo que el oyente oye de cada
+cluster y el oyente. Nueva sin descompilar: `0x001de630` (si una línea
+choca con el nivel, y dónde). Nueva variable: `unknown_004ed280`.
+
+### Lo que se sabe
+
+- Si el oyente está en la misma hoja del nivel que el sonido, no hace nada.
+- Si no, traza una línea del oyente al sonido. Si choca con el nivel, traza
+  otra de vuelta, del sonido al oyente. Lo que queda entre los dos choques
+  (de 0 a 1 del camino) es cuánto tapa el nivel el sonido, y se suma al
+  primer número de la consulta. Los dos choques se guardan en la consulta
+  (los 32 bytes de `0x4`, que no se sabía qué eran) y se pone la marca de
+  `0x45`. Si la de vuelta no choca, cuenta todo lo que hay después del
+  primer choque.
+- Las consultas con la marca de `0x47` no trazan líneas. Sin la marca de
+  `0x44` y con el sonido en otro cluster, se suma cuánto del camino «oyente
+  → cluster del sonido → sonido» es el rodeo (`0x00249d60` da lo que hay
+  entre los dos clusters).
+- Los otros dos números solo se tocan si el sonido está en otro cluster:
+  son los de `sound_query_portal_results` (hito 242), con 0 en el primero
+  si los dos clusters tienen el mismo número en `0x7A`; con la marca de
+  `0x44` son 0 y lo que el oyente oye del cluster del sonido.
+- El nombre es inventado.
+
+### Arreglo del hito 242
+
+- La mutación que las pruebas no notaban (hacer la cuenta con reales de 32
+  bits) no se nota porque el juego tiene el procesador puesto a 32 bits de
+  precisión, y las pruebas también; no porque saliera el mismo código,
+  como decía. Se ha corregido esa entrada y se han añadido casos donde las
+  dos cuentas darían distinto con otra precisión.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y las de las dos
+  que tienen que ver con ella. La última batería completa es la del hito
+  240 (907 funciones, todas bien).
+
+### Mutaciones
+
+Veintiocho cambios a mano: las pruebas notan veintisiete. El que no notan
+es tratar un 0 justo como negativo: solo cambia un `-0` por un `0`.
+
 ## 2026-10-05 — Lo que una consulta saca del portal más cercano al oyente
 
 Una función en `sound/sound_manager.c`, de 121 bytes. De 908 funciones se pasa a
@@ -43,8 +99,9 @@ bien.
 ### Mutaciones
 
 Doce cambios a mano: las pruebas notan once. El que no notan es hacer la
-cuenta con reales de 32 bits en vez de con los del procesador: con este
-compilador sale el mismo código.
+cuenta con reales de 32 bits en vez de con los del procesador: da lo
+mismo, porque el juego tiene el procesador puesto a 32 bits de precisión
+(y las pruebas también).
 
 ## 2026-10-05 — Lo que un oyente oye de cada cluster
 

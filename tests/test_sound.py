@@ -6240,7 +6240,7 @@ def run(t) -> None:
                 "unknown_00249c90": sides_,
                 "unknown_0018cac0": amount_,
                 "unknown_00020670": lambda harness, arguments: (0, (arguments[1], arguments[2])),
-                "unknown_00221e30": query_,
+                "sound_query_compute": query_,
             },
         )
 
@@ -6255,6 +6255,9 @@ def run(t) -> None:
         struct.pack_into("<I", structure, 0x60, 0x64)
         portal = random_.choice((NONE, NONE, 0, 1, 5, 7))
         away = random_.choice((0.0, 1.0, 0.5, 3.0, 100.0, 1e-7, 0.3333, 1e30, -0.5, random_.uniform(0, 50), float("inf")))
+        if n % 4 == 0:
+            # where rounding each step to 32 bits gives another real
+            away = bits_real(random_.choice((0x3DD7A8ED, 0x3F8988BC, 0x4114B99A, 0x41423126, 0x41DB84FE, 0x421BB043)))
         cluster = random_.randrange(16)
         listener_cluster = random_.choice((0, 1, 7, NONE))
 
@@ -6275,4 +6278,84 @@ def run(t) -> None:
             cluster,
             globals={"global_structure_bsp": Buffer(bytes(structure), pointers=(0x60,))},
             externals={"unknown_0018cfd0": nearest, "unknown_0014b240": far},
+        )
+
+    # ---------- what is worked out of a query
+
+    random_ = random.Random(243)
+
+    for n in range(1200):
+        clusters = 6
+        leaf = random_.getrandbits(32)
+        listener = bytearray(random_.randbytes(0x48))
+        listener[8:0x48] = reals(random_, 16)
+        struct.pack_into("<Ih", listener, 0, leaf, random_.choice((0, 1, 2, 3, 4, 5, 2, -1)))
+        query = bytearray(random_.randbytes(0x48))
+        query[4:0x3C] = reals(random_, 14)
+        struct.pack_into(
+            "<iI4B",
+            query,
+            0x3C,
+            random_.choice((0, 1, 2, 3, 4, 5, 2, -1)),
+            leaf if n % 11 == 0 else leaf ^ 1,
+            random_.choice((0, 0, 1)),
+            random_.choice((0, 1)),
+            random_.choice((0, 1)),
+            random_.choice((0, 0, 1)),
+        )
+        structure = bytearray(random_.randbytes(0xA4))
+        struct.pack_into("<I", structure, 0xA0, 0xA4)
+        for cluster in range(clusters):
+            entry = bytearray(random_.randbytes(0xB0))
+            struct.pack_into("<h", entry, 0x7A, random_.choice((1, 2)))
+            structure += entry
+        answers = [
+            (random_.choice((1, 1, 1, 0, 0x100)), random_.choice((0.0, 0.25, 0.5, 0.75, 1.0, 0.1, -0.25, 0.3, random_.random())))
+            for _ in range(2)
+        ]
+        if n % 7 == 0:
+            answers[1] = (1, 1.0 - answers[0][1])
+
+        def line(harness, arguments, answers=answers):
+            hit, fraction = answers[calls_so_far(harness, "unknown_001de630") % 2]
+            harness.mu.mem_write(arguments[0], struct.pack("<f", fraction))
+            return hit, (
+                arguments[1],
+                arguments[2],
+                arguments[3],
+                arguments[4],
+                arguments[5],
+                bytes(harness.mu.mem_read(arguments[6], 12)),
+                bytes(harness.mu.mem_read(arguments[7], 12)),
+            )
+
+        def around_(harness, arguments, value=random_.choice((0.0, 1.0, 5.0, 100.0, -1000.0, 0.0005, random_.uniform(0, 20)))):
+            return real_bits(value), (arguments[0], arguments[1], harness.normalize(arguments[2]))
+
+        def portal_(harness, arguments, pair=reals(random_, 2)):
+            harness.mu.mem_write(arguments[2], pair)
+            return 0, (
+                arguments[0],
+                bytes(harness.mu.mem_read(arguments[1], 12)),
+                bytes(harness.mu.mem_read(arguments[3], 64)),
+                bytes(harness.mu.mem_read(arguments[4], 12)),
+                arguments[5],
+            )
+
+        t.check(
+            "sound_query_compute",
+            Buffer(bytes(query)),
+            Buffer(reals(random_, 16)),
+            Buffer(bytes(listener)),
+            globals={
+                "global_structure_bsp": Buffer(bytes(structure), pointers=(0xA0,)),
+                "global_collision_bsp": random_.getrandbits(32),
+                "global_structure_bsp_index": struct.pack("<h", random_.choice((0, 1, 5, -1))),
+                "unknown_004ed280": random_.getrandbits(30),
+            },
+            externals={
+                "unknown_001de630": line,
+                "unknown_00249d60": around_,
+                "sound_query_portal_results": portal_,
+            },
         )

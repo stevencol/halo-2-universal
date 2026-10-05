@@ -195,3 +195,4 @@ address,name,source
 00468834,unknown_00468834,source/sound/sound_manager.c
 0047005c,unknown_0047005c,source/sound/sound_manager.c
 0044a2a0,sound_environment_default,source/sound/sound_manager.c
+004ed280,unknown_004ed280,source/sound/sound_manager.c

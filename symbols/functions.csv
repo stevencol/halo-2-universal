@@ -1375,7 +1375,8 @@ address,name,source,arguments,returns,convention
 00249c90,unknown_00249c90,,eax edx stack stack,void
 0018cac0,unknown_0018cac0,,ecx,real:xmm0
 0031bc70,unknown_0031bc70,,ecx,pointer
-00221e30,unknown_00221e30,,edi stack stack,void
+00221e30,sound_query_compute,source/sound/sound_manager.c,edi stack stack,void,stdcall
 00222150,sound_query_portal_results,source/sound/sound_manager.c,ecx esi ebx stack stack stack,void,stdcall
 0018cfd0,unknown_0018cfd0,,ecx esi stack,int
 0014b240,unknown_0014b240,,eax ecx edx,real:xmm0
+001de630,unknown_001de630,,eax ecx edx xmm0 stack stack stack stack,bool
