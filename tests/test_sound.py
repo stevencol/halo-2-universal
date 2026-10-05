@@ -6545,3 +6545,47 @@ def run(t) -> None:
                 ),
             },
         )
+
+    # ---------- the first thing a sound that a sound effect started by itself is told
+
+    random_ = random.Random(247)
+
+    harness = t.harness
+    tables = []
+    for original in (True, False):
+        names = {0: None}
+        for name, symbol in harness.symbols.items():
+            if symbol.source:
+                names[symbol.address if original else harness.functions[name]] = name
+        address = harness.globals["sound_effect_sound_callbacks"] if original else harness.variables["sound_effect_sound_callbacks"]
+        tables.append([names.get(value, hex(value)) for value in struct.unpack("<8I", harness.mu.mem_read(address, 0x20))])
+    if not t.only or "sound_effect_sound_unknown0" in t.only:
+        t.cases["sound_effect_sound_unknown0"] = t.cases.get("sound_effect_sound_unknown0", 0) + 1
+        if tables[0] != tables[1] or tables[0][0] != "sound_effect_sound_unknown0":
+            t._fail("sound_effect_sound_unknown0", f"sound_effect_sound_callbacks: the game has {tables[0]}, source/ has {tables[1]}")
+
+    for n in range(600):
+        effects = bytearray(random_.randbytes(0x4C + EFFECTS * 0x14))
+        first_unallocated = random_.choice((EFFECTS, EFFECTS, 8, 1, 0))
+        struct.pack_into("<i", effects, 0x24, 0x14)
+        struct.pack_into("<i", effects, 0x38, first_unallocated)
+        struct.pack_into("<I", effects, 0x44, 0x4C)
+        index = random_.randrange(EFFECTS)
+        salt = random_.choice((1, 2, 0x7FFF, 0x8000, 0xFFFF, 0, 0))
+        struct.pack_into("<H", effects, 0x4C + index * 0x14, salt)
+        effects[0x4C + index * 0x14 + 4] = random_.choice((0, 0, 0x10, 0x10, 1, 0x11, 0xEE, 0xFE, random_.getrandbits(8)))
+        told = bytearray(random_.randbytes(0x30))
+        kind = random_.randrange(8)
+        effect_index = (salt << 16 | index) if kind else NONE
+        if kind == 1:
+            effect_index ^= 0x10000
+        struct.pack_into("<I", told, 0x28, effect_index)
+        t.check(
+            "sound_effect_sound_unknown0",
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            Buffer(bytes(told)),
+            Buffer(random_.randbytes(0x48)),
+            globals={"sound_effects": Buffer(bytes(effects), pointers=(0x44,))},
+            externals={"sound_effect_get_source": lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1])))},
+        )

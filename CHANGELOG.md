@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Lo primero que se dice a un sonido que arranca un efecto
+
+Una función en `sound/sound_manager.c`, de 121 bytes. De 913 funciones se pasa a
+914, el 8,11 % de las del juego (el 4,949 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_effect_sound_unknown0` | `0x0021d970` | `sound/sound_manager.c` |
+
+No estaba apuntada: solo se llega a ella por una tabla, así que no está en
+la lista de Ghidra (cuenta en las funciones, no en el total). Es la única
+función de la tabla `sound_effect_sound_callbacks` (`0x0044a1e0`), que
+también es nueva: la usa `0x0021d630` para los sonidos que un efecto de
+sonido arranca por su cuenta.
+
+### Lo que se sabe
+
+- Recibe lo mismo que la primera función de `sound_effect_callbacks` (hito
+  219): los bytes de a quién se avisa, con el efecto al final, y dónde
+  dejar lo que el juego dice del sonido.
+- Dice que no si el efecto ya no está (no hay índice, el índice no está en
+  uso o el identificador no es el suyo) o si tiene la marca 0.
+- Si está, dice que sí; y si no tiene la marca 4, lo que el juego dice del
+  sonido pasa a ser lo del efecto (`sound_effect_get_source`).
+- La diferencia con la del hito 219 es que aquella no mira si el efecto
+  sigue ahí.
+- El nombre es inventado.
+
+### Batería completa
+
+La del hito 244 terminó: 911 funciones, las 911 bien.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función.
+
+### Mutaciones
+
+Once cambios a mano: las pruebas notan ocho. De los otros tres, dos no
+cambian nada (quitar la comprobación de que hay índice: un índice `NONE`
+nunca está en uso; y comparar el identificador sin signo) y el tercero es
+devolver 2 en vez de 1, que las pruebas dan por bueno porque comparan lo
+que devuelve como verdadero o falso. La prueba compara además la tabla con
+la del juego.
+
 ## 2026-10-05 — Un resto de comprobación de los sonidos en bucle
 
 Una función en `sound/sound_manager.c`, de 162 bytes. De 912 funciones se pasa a

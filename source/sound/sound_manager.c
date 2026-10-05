@@ -1422,6 +1422,8 @@ real unknown_0013b390(const byte *function, real input, real range);
 what a sound effect is told of its sounds */
 void sound_effect_prepare_request(long effect_index, byte *request);
 boolean __attribute__((stdcall)) sound_effect_source_unknown0(long data, long sound_index, void *unknown5C, void *unknown18);
+/* 0x0021d970 */
+boolean __attribute__((stdcall)) sound_effect_sound_unknown0(long data, long sound_index, void *unknown5C, void *unknown18);
 void __attribute__((stdcall)) sound_effect_source_got_channel(long data, long sound_index, long source_index, void *unknown5C);
 void __attribute__((stdcall)) sound_effect_source_playing(long data, void *unknown5C, long sound_index, long pitch_range,
 	long permutation, real position);
@@ -1732,6 +1734,20 @@ const struct sound_source_callbacks sound_effect_callbacks=
 	sound_effect_source_heard,
 	sound_effect_source_deleted,
 	sound_effect_source_stopped,
+	NULL,
+	NULL
+};
+
+/* 0x0044a1e0: who is told of the sounds that a sound effect starts by
+itself: only the first thing, which the effect answers */
+const struct sound_source_callbacks sound_effect_sound_callbacks=
+{
+	sound_effect_sound_unknown0,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 	NULL,
 	NULL
 };
@@ -10812,4 +10828,49 @@ void looping_sound_check_distances(
 			break;
 		}
 	}
+}
+
+/* 0x0021d970: the first thing that a sound that a sound effect started by
+itself is told: whether its effect is still there (the one of the index at
+the end of the bytes for who is told, and with that identifier) and has no
+flag 0; and then, if the effect has no flag 4, what the game says of the
+sound is that of the effect (sound_effect_get_source). The name is made
+up */
+boolean __attribute__((stdcall)) sound_effect_sound_unknown0(
+	long data,
+	long sound_index,
+	void *unknown5C,
+	void *unknown18)
+{
+	long effect_index= *(const long *)((const byte *)unknown5C+
+		(SOUND_REQUEST_EFFECT_INDEX_OFFSET-SOUND_REQUEST_CALLBACK_BYTES_OFFSET));
+	const struct data_array *effects;
+	const byte *effect;
+	short identifier;
+
+	if (effect_index==NONE)
+	{
+		return FALSE;
+	}
+	effects= sound_effects;
+	if ((effect_index&0xFFFF)>=effects->first_unallocated)
+	{
+		return FALSE;
+	}
+	effect= (const byte *)effects->data+(effect_index&0xFFFF)*effects->size;
+	identifier= *(const short *)effect;
+	if (!identifier || identifier!=effect_index>>16)
+	{
+		return FALSE;
+	}
+	if (effect[SOUND_EFFECT_DATUM_FLAGS_OFFSET]&FLAG(_sound_effect_datum_unknown0_bit))
+	{
+		return FALSE;
+	}
+	if (!((effect[SOUND_EFFECT_DATUM_FLAGS_OFFSET]>>_sound_effect_datum_unknown4_bit)&1))
+	{
+		sound_effect_get_source(effect_index, (struct sound_source *)unknown18);
+	}
+
+	return TRUE;
 }
