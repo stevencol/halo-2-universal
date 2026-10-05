@@ -184,7 +184,7 @@ Módulos (funciones hechas / archivo):
       otros archivos del sonido, los sonidos en bucle
       (`0x0021a250`, `0x0021b0e0` y `0x0021c400`), y las
       grandes que hablan con la consola (`0x0021e4b0`, `0x0021fa80`). Al terminar el hito 254 quedan 8 funciones
-      del sonido, unos 23.000 bytes.
+      del sonido, unos 12.400 bytes.
 - [x] ~~`lruv_block_new`~~ (hito 31).
 - [x] ~~Caché de animaciones~~ (hito 32).
 - [x] ~~Caché de texturas, primera parte~~ (hito 33): crear, abrir,
