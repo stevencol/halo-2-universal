@@ -403,7 +403,7 @@ def run(t) -> None:
                 "data_next_absolute_index": next_absolute_index(in_use),
                 "unknown_0012a810": lambda harness, arguments: (arguments[0] ^ 0x5A5A5A5A, tuple(arguments)),
                 "sound_idle": lambda harness, arguments: 0,
-                "unknown_001264c0": lambda harness, arguments: 0,
+                "sound_reset": lambda harness, arguments: 0,
                 "data_delete_all": lambda harness, arguments: 0,
                 "unknown_00191270": lambda harness, arguments: 0,
             },
@@ -1269,7 +1269,7 @@ def run(t) -> None:
                 },
                 externals={
                     "unknown_002ae4b0": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
-                    "unknown_0021e050": lambda harness, arguments: (0, tuple(arguments)),
+                    "sound_voice_release": lambda harness, arguments: (0, tuple(arguments)),
                 },
             )
 
@@ -1304,9 +1304,9 @@ def run(t) -> None:
                 source_index,
                 globals={"sound_sources": Buffer(bytes(data), pointers=buffer.pointers), "game_sound_globals": Buffer(bytes(state))},
                 externals={
-                    "unknown_00127f10": lambda harness, arguments: (
+                    "sound_source_unknown_00127f10": lambda harness, arguments: (
                         arguments[0] & 1,
-                        (arguments[0], harness.normalize(arguments[1])),
+                        (arguments[0], harness.normalize(arguments[1]), harness.normalize(arguments[2])),
                     )
                 },
             )
@@ -1320,4 +1320,96 @@ def run(t) -> None:
             random_.randrange(4),
             Buffer(random_.randbytes(12)),
             globals={"game_sound_globals": Buffer(random_.randbytes(GLOBALS_SIZE))},
+        )
+
+    # ---------- a sound voice is let go, who is told is asked, and the sounds are stopped
+
+    random_ = random.Random(156)
+    VOICES = 6
+
+    for _ in range(150):
+        voices_ = bytearray(random_.randbytes(0x4C + VOICES * 0x6C))
+        struct.pack_into("<I", voices_, 0x44, 0x4C)
+        for index in range(VOICES):
+            at = 0x4C + index * 0x6C
+            struct.pack_into("<h", voices_, at + 2, random_.choice((-1, 0, 5, 31, 32, 63)))
+            struct.pack_into("<h", voices_, at + 0xA, random_.choice((1, 1, 2, 0, -1, 0x100)))
+        state = random_.randbytes(GLOBALS_SIZE)
+        for voice_index in [NONE] + [random_.getrandbits(16) << 16 | index for index in range(VOICES)]:
+            t.check(
+                "sound_voice_release",
+                voice_index,
+                globals={"sound_voices": Buffer(bytes(voices_), pointers=(0x44,)), "game_sound_globals": Buffer(state)},
+                externals={"datum_delete": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1]))},
+            )
+
+    def classed(classes: tuple, kinds: tuple) -> tuple:
+        """The sounds that play and the tags of their sounds, with the
+        classes of the sounds and the kinds of those that play taken from
+        some, and the classes of sounds that sound_class_get gives."""
+        sources, tags = playing_sounds()
+        sources_ = bytearray(sources.data)
+        tags_ = bytearray(tags.data)
+        for n in range(SOURCES):
+            sources_[0x50 + n * 0xBC + 2] = random_.choice(kinds)
+            tags_[SOURCES * 0x10 + n * 0x10 + 2] = random_.choice(classes)
+        table = bytearray(random_.randbytes(0x100 * 0x5C))
+        for n in range(0x100):
+            table[n * 0x5C + 0x4C] = random_.choice((0, 1, 1, 2))
+        return (
+            Buffer(bytes(sources_), pointers=sources.pointers),
+            Buffer(bytes(tags_), pointers=tags.pointers),
+            Buffer(bytes(table)),
+        )
+
+    def class_of(table: Buffer):
+        def handler(harness, arguments):
+            index = arguments[0] & 0xFFFF
+            # a class is a signed number: those under 0 are given as the last ones
+            return table.address + (index & 0xFF) * 0x5C, (index,)
+
+        return handler
+
+    for _ in range(12):
+        sources, tags, table = classed((0, 1, 5, 0x20, 0x26, 0x35), (0, 0, 1, 2, 3, 4, 5, 6, 0x21, 0x3F, 0xFF))
+        for n in random_.sample(range(SOURCES), 60):
+            answer = random_.choice((0, 0, 1, 0x100, 0xFF))
+            for told_ in (True, True, False):
+                t.check(
+                    "sound_source_unknown_00127f10",
+                    random_.getrandbits(16) << 16 | n,
+                    Buffer(struct.pack("<I", mock_address(0)) + random_.randbytes(0x14)) if told_ else 0,
+                    Buffer(random_.randbytes(4)),
+                    globals={"sound_sources": Buffer(sources.data, pointers=sources.pointers), "global_tag_instances": tags},
+                    extra=[table],
+                    externals={"sound_class_get": class_of(table)},
+                    mocks=[Mock(lambda call, answer=answer: answer, stack_arguments=4)],
+                )
+
+    for n in range(160):
+        sources, tags, table = classed((0, 5, 0x20, 0x20, 0x26, 0x26, 0x35), (0, 1, 2, 3, 4, 5, 0x21, 0xFF))
+        in_use = sorted(random_.sample(range(SOURCES), random_.choice((0, 1, 8, 30))))
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        state[0x78] = random_.choice((1, 1, 1, 1, 0, 0x80))
+        state[0x7B] = random_.choice((0, 1, 0x80))
+        t.check(
+            "sound_reset",
+            random_.choice((0, 0x20, 0x40, 0x60, 0x20, 0x60, random_.getrandbits(32))),
+            globals={
+                "game_sound_globals": Buffer(bytes(state)),
+                "sound_sources": sources,
+                "global_tag_instances": tags,
+                "unknown_004ed288": Buffer(random_.randbytes(0x30)),
+            },
+            extra=[table],
+            externals={
+                "unknown_0021d4d0": lambda harness, arguments: 0,
+                "data_next_absolute_index": next_absolute_index(in_use),
+                "sound_source_delete": lambda harness, arguments: (0, tuple(arguments)),
+                "sound_class_get": class_of(table),
+                "sound_idle": lambda harness, arguments: 0,
+                "unknown_0021f290": lambda harness, arguments: 0,
+                "GetTickCount": lambda harness, arguments: 0x89ABCDEF,
+                "unknown_0021a1e0": lambda harness, arguments: 0,
+            },
         )

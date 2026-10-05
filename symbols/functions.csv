@@ -240,7 +240,7 @@ address,name,source,arguments,returns,convention
 001889d0,unknown_001889d0,,stack,void
 00155f10,unknown_00155f10,,stack,void
 00067fb0,unknown_00067fb0,,stack,void
-001264c0,unknown_001264c0,,stack,void
+001264c0,sound_reset,source/sound/sound_manager.c,stack,void,stdcall
 00188ac0,unknown_00188ac0,,stack,void
 0016f090,unknown_0016f090,,stack,void
 0014b660,unknown_0014b660,,stack,void
@@ -1187,5 +1187,7 @@ address,name,source,arguments,returns,convention
 00127fc0,sound_source_unknown_00127fc0,source/sound/sound_manager.c,esi,bool
 0012abe0,sound_source_get_position,source/sound/sound_manager.c,ecx esi eax,void
 002ae4b0,unknown_002ae4b0,,esi,void
-0021e050,unknown_0021e050,,eax,void
-00127f10,unknown_00127f10,,eax stack,bool
+0021e050,sound_voice_release,source/sound/sound_manager.c,eax,void
+00127f10,sound_source_unknown_00127f10,source/sound/sound_manager.c,eax edi stack,bool,stdcall
+0021f290,unknown_0021f290,,,void
+0021a1e0,unknown_0021a1e0,,,void

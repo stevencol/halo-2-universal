@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Parar los sonidos al leer el estado del juego
+
+Tres funciones de `sound/sound_manager.c`. De 737 funciones se pasa a 740,
+el 6,57 % de las del juego (el 3,586 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_reset` | `0x001264c0` | `sound/sound_manager.c` |
+| `sound_source_unknown_00127f10` | `0x00127f10` | `sound/sound_manager.c` |
+| `sound_voice_release` | `0x0021e050` | `sound/sound_manager.c` |
+
+También el global `unknown_004ed288` y dos funciones apuntadas sin
+descompilar: `0x0021f290` y `0x0021a1e0`.
+
+### Lo que se sabe
+
+- `sound_reset` (antes `unknown_001264c0`) suelta los sonidos que suenan y
+  pone a cero el reloj del sonido. Es uno de los procedimientos del estado
+  del juego (después de leerlo), y `sound_dispose_from_old_map` la llama con
+  0. Con el bit 5 de sus marcas algunos sonidos siguen: los de la clase 32
+  siempre, los de la clase 38 si además está el bit 6, y los de los tipos 1
+  a 4 cuya clase lo diga (su byte `0x4C` a 1); a esos se les pone el tiempo
+  de `0x8C` a `NONE`. Sin el bit 5, además, vuelve a activar el sonido si
+  estaba desactivado.
+- `sound_source_unknown_00127f10` pregunta algo de un sonido a quien el
+  sonido dice (la primera función de su tabla, con dos partes del sonido).
+  Si responde que no, marca el sonido (bit 5 de sus marcas). Recibe la tabla
+  en `edi`: en el hito anterior se había apuntado sin ese argumento, y
+  `sound_source_unknown_00127fc0` ya se lo pasa.
+- `sound_voice_release`: una voz de sonido tiene uno menos que la usa; sin
+  ninguno, suelta su casilla de los globales del sonido y su sitio.
+- Los nombres son inventados.
+
+### Sin comprobar
+
+- La batería completa no se pasó en este hito, solo las pruebas de estas
+  funciones y de las que las llaman.
+
+### Mutaciones
+
+- Hito anterior (155): pendiente; corre aparte, en segundo plano.
+- Este hito: se comprueba aparte, después de la del 155.
+
 ## 2026-10-04 — Lo que sueltan un sonido y un canal
 
 Seis funciones de `sound/sound_manager.c`. De 731 funciones se pasa a 737,

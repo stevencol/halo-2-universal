@@ -245,6 +245,7 @@ void sound_load_environment(void);
 boolean sound_source_request_data(byte *source);
 void sound_unknown_00125ef0(const byte *unknown);
 void sound_predict(long sound_index);
+void __attribute__((stdcall)) sound_reset(unsigned long flags);
 
 /* ---------- globals */
 
@@ -259,6 +260,7 @@ extern struct data_array *sound_effects;
 extern struct data_array *unknown_0051ebd8;
 extern byte *unknown_0051ebe4;
 extern long unknown_0047f0e0;
+extern byte *unknown_004ed288;
 extern void *unknown_0051ebdc;
 extern const struct sound_configuration sound_configuration;
 

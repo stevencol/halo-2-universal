@@ -17,6 +17,7 @@ game (0x001240b0 to 0x00124490, 0x00124640, 0x00124770 on).
 #include "memory/crc.h"
 #include "memory/physical_memory.h"
 #include "scenario/scenario.h"
+#include "sound/sound_definitions.h"
 
 #include <string.h>
 #include "cseries/async.h"
@@ -69,7 +70,6 @@ void GAME_STATE_PROC unknown_001c3590(unsigned long flags);
 void GAME_STATE_PROC unknown_001889d0(unsigned long flags);
 void GAME_STATE_PROC unknown_00155f10(unsigned long flags);
 void GAME_STATE_PROC unknown_00067fb0(unsigned long flags);
-void GAME_STATE_PROC unknown_001264c0(unsigned long flags);
 void GAME_STATE_PROC unknown_00188ac0(unsigned long flags);
 void GAME_STATE_PROC unknown_0016f090(unsigned long flags);
 void GAME_STATE_PROC unknown_0014b660(unsigned long flags);
@@ -129,7 +129,7 @@ game_state_proc game_state_after_load_procs[NUMBER_OF_GAME_STATE_AFTER_LOAD_PROC
 {
 	game_state_allocation_restore,
 	(game_state_proc)no_operation1,
-	unknown_001264c0,
+	sound_reset,
 	unknown_00188ac0,
 	unknown_0016f090,
 	unknown_0014b660,

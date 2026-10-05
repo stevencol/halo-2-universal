@@ -155,6 +155,26 @@ enum
 	SOUND_SOURCE_POSITION_OFFSET= 0xC,
 	_sound_source_position_world= 0,
 	_sound_source_position_listener_height= 1,
+	/* of a sound that plays: its kind, and two parts of it that who is told
+	of it is given */
+	SOUND_SOURCE_DATUM_KIND_OFFSET= 0x2,
+	SOUND_SOURCE_DATUM_KINDS_UNKNOWN= 0x1E,
+	SOUND_SOURCE_DATUM_UNKNOWN18_OFFSET= 0x18,
+	SOUND_SOURCE_DATUM_UNKNOWN5C_OFFSET= 0x5C,
+	/* of a sound voice: its slot of the globals of the sound, and how many
+	use it */
+	SOUND_VOICE_DATUM_SIZE= 0x6C,
+	SOUND_VOICE_DATUM_SLOT_OFFSET= 0x2,
+	SOUND_VOICE_DATUM_USERS_OFFSET= 0xA,
+	/* two classes of sounds, and what a class says of its sounds when the
+	sounds are stopped */
+	_sound_class_unknown32= 0x20,
+	_sound_class_unknown38= 0x26,
+	SOUND_CLASS_UNKNOWN4C_OFFSET= 0x4C,
+	/* the flags of sound_reset */
+	_sound_reset_keep_bit= 5,
+	_sound_reset_unknown6_bit= 6,
+	UNKNOWN_004ED288_UNKNOWN20_OFFSET= 0x20,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -169,7 +189,8 @@ enum
 functions are known */
 struct sound_source_callbacks
 {
-	void *unknown0[4];
+	boolean (__attribute__((stdcall)) *unknown0)(long data, long sound_index, void *unknown5C, void *unknown18);
+	void *unknown4[3];
 	void (__attribute__((stdcall)) *deleted)(long data, long source_index, long reason);
 	void (__attribute__((stdcall)) *stopped)(long data, long source_index);
 };
@@ -203,6 +224,9 @@ void *unknown_0051ebdc;
 
 /* 0x0051ebe4: of the sound of the console. Only two indices are known */
 byte *unknown_0051ebe4;
+
+/* 0x004ed288: of something else; two numbers of it start again with the sound */
+byte *unknown_004ed288;
 
 /* 0x0047f0e0: 0x10000 in the main menu and 0x4000 in a game */
 long unknown_0047f0e0;
@@ -318,10 +342,6 @@ void unknown_001268e0(byte *source);
 /* 0x0012a810: of a sound that plays; what it gives may be a real */
 long unknown_0012a810(long source_index);
 
-/* 0x001264c0: stops the sounds, most likely. It is one of the procedures of
-the state of the game, which take their argument off the stack: the tool
-that builds this for the tests sees to that */
-void unknown_001264c0(unsigned long flags);
 
 
 /* 0x0021dde0, 0x0021a100: the sound voices and the looping sounds, after the
@@ -362,11 +382,17 @@ void sound_source_release_chunk(byte *source);
 void sound_playback_controller_release(long controller_index);
 void unknown_0021d4d0(void);
 
-/* 0x002ae4b0: a voice of the console's sound stops; 0x0021e050: of a sound
-voice; 0x00127f10: of a sound that plays and its flags */
+/* 0x002ae4b0: a voice of the console's sound stops; 0x0021e050 and
+0x00127f10 */
 void unknown_002ae4b0(void *voice);
-void unknown_0021e050(long voice_index);
-boolean unknown_00127f10(long source_index, byte *flags);
+void sound_voice_release(long voice_index);
+boolean __attribute__((stdcall)) sound_source_unknown_00127f10(long source_index,
+	const struct sound_source_callbacks *callbacks, byte *flags);
+
+/* 0x0021f290: of the sound of the console, and 0x0021a1e0: of the looping
+sounds, when the sounds are stopped */
+void unknown_0021f290(void);
+void unknown_0021a1e0(void);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -777,7 +803,7 @@ void sound_dispose_from_old_map(
 		}
 	}
 
-	unknown_001264c0(0);
+	sound_reset(0);
 	game_sound_globals[GAME_SOUND_GLOBALS_MAP_LOADED_OFFSET]= FALSE;
 	if (looping_sounds)
 	{
@@ -1508,6 +1534,13 @@ static inline __attribute__((always_inline)) byte *sound_source_get(
 	return (byte *)sound_sources->data+(source_index&0xFFFF)*SOUND_SOURCE_DATUM_SIZE;
 }
 
+/* whether a sound that plays is of one of the kinds 1 to 4 */
+static inline __attribute__((always_inline)) boolean sound_source_kind_test(
+	const byte *source)
+{
+	return ((1UL<<(source[SOUND_SOURCE_DATUM_KIND_OFFSET]&31))&SOUND_SOURCE_DATUM_KINDS_UNKNOWN)!=0;
+}
+
 /* 0x00126360: a sound that plays starts to fade out, as all do when a map
 is let go, and who is told of it is told. Nothing for an index that is of no
 sound, or of one that is being let go. The name is a guess */
@@ -1683,7 +1716,7 @@ void sound_channel_delete(
 	}
 	if (channel->unknown4!=NONE)
 	{
-		unknown_0021e050(channel->unknown4);
+		sound_voice_release(channel->unknown4);
 	}
 	channel->unknownA= 0;
 	channel->unknownB= 0;
@@ -1713,7 +1746,7 @@ void sound_playback_controller_release(
 }
 
 /* 0x00127fc0: of a sound that plays with someone to tell, when the time at
-0x8C of it is not come or the sound is disabled: what unknown_00127f10 says.
+0x8C of it is not come or the sound is disabled: what sound_source_unknown_00127f10 says.
 TRUE for the rest. What it means is not known */
 boolean sound_source_unknown_00127fc0(
 	long source_index)
@@ -1726,14 +1759,14 @@ boolean sound_source_unknown_00127fc0(
 		const struct sound_source_callbacks *callbacks=
 			*(const struct sound_source_callbacks **)(source+SOUND_SOURCE_DATUM_CALLBACKS_OFFSET);
 
-		if (callbacks && callbacks->unknown0[0])
+		if (callbacks && callbacks->unknown0)
 		{
 			const byte *globals= game_sound_globals;
 
 			if (*(const long *)(source+SOUND_SOURCE_DATUM_UNKNOWN8C_OFFSET)<*(const long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET) ||
 				globals[GAME_SOUND_GLOBALS_DISABLED_OFFSET])
 			{
-				return unknown_00127f10(source_index, source+SOUND_SOURCE_DATUM_FLAGS_OFFSET);
+				return sound_source_unknown_00127f10(source_index, callbacks, source+SOUND_SOURCE_DATUM_FLAGS_OFFSET);
 			}
 		}
 	}
@@ -1769,5 +1802,143 @@ void sound_source_get_position(
 		result[2]= *(const long *)&listeners[listener_index].position.z;
 		break;
 	}
+	}
+}
+
+/* 0x0021e050: a sound voice has one less that uses it; with none, its slot
+of the globals of the sound and its place in the array are let go. The name
+is a guess */
+void sound_voice_release(
+	long voice_index)
+{
+	if (voice_index!=NONE)
+	{
+		byte *voice= (byte *)sound_voices->data+(voice_index&0xFFFF)*SOUND_VOICE_DATUM_SIZE;
+
+		if (!--*(short *)(voice+SOUND_VOICE_DATUM_USERS_OFFSET))
+		{
+			sound_slot_delete(*(short *)(voice+SOUND_VOICE_DATUM_SLOT_OFFSET));
+			datum_delete(sound_voices, voice_index);
+		}
+	}
+}
+
+/* 0x00127f10: who is told of a sound that plays is asked something of it,
+with two parts of the sound. If the answer is no, the sound is marked (the
+bit 5 of the flags that the function is given), and what comes back is
+whether the sound is of the kind 0 or of a kind over 4 and its class is not
+one of those that sound_class_unknown_00124f90 tells of. TRUE with no one to
+ask. What it means is not known */
+boolean __attribute__((stdcall)) sound_source_unknown_00127f10(
+	long source_index,
+	const struct sound_source_callbacks *callbacks,
+	byte *flags)
+{
+	byte *source= sound_source_get(source_index);
+	long sound_index= *(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET);
+	const struct sound_definition *sound= sound_definition_get(sound_index);
+
+	if (!callbacks)
+	{
+		return TRUE;
+	}
+	if (callbacks->unknown0(*(long *)(source+SOUND_SOURCE_DATUM_CALLBACK_DATA_OFFSET), sound_index,
+		source+SOUND_SOURCE_DATUM_UNKNOWN5C_OFFSET, source+SOUND_SOURCE_DATUM_UNKNOWN18_OFFSET))
+	{
+		return TRUE;
+	}
+	if (!sound_source_kind_test(sound_source_get(source_index)) &&
+		!sound_class_unknown_00124f90(sound_class_get(sound->sound_class)))
+	{
+		*flags|= FLAG(_sound_source_datum_unknown5_bit);
+		return TRUE;
+	}
+	*flags|= FLAG(_sound_source_datum_unknown5_bit);
+
+	return FALSE;
+}
+
+/* whether a sound that plays goes on when the sounds are stopped and the
+state of the game is kept */
+static inline __attribute__((always_inline)) boolean sound_reset_keeps_source(
+	const byte *source,
+	boolean unknown6)
+{
+	short sound_class= sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET))->sound_class;
+
+	if (sound_class==_sound_class_unknown32)
+	{
+		return TRUE;
+	}
+	if (sound_class==_sound_class_unknown38)
+	{
+		return unknown6;
+	}
+	if (!sound_source_kind_test(source))
+	{
+		return FALSE;
+	}
+
+	return ((const byte *)sound_class_get(sound_class))[SOUND_CLASS_UNKNOWN4C_OFFSET]==1;
+}
+
+/* 0x001264c0: the sounds that play are let go, and the time of the sound
+starts again. It is one of the procedures of the state of the game, after it
+is read; its flags say then (the bit 5) that some sounds go on: those of two
+classes, and those of some kinds whose class says so. The name is a guess */
+void __attribute__((stdcall)) sound_reset(
+	unsigned long flags)
+{
+	boolean unknown6= (flags>>_sound_reset_unknown6_bit)&1;
+	boolean keep= (flags>>_sound_reset_keep_bit)&1;
+	byte *globals= game_sound_globals;
+	byte *unknown;
+
+	if (!keep && globals[GAME_SOUND_GLOBALS_DISABLED_OFFSET])
+	{
+		globals[GAME_SOUND_GLOBALS_UNKNOWN7D_OFFSET]= TRUE;
+		globals[GAME_SOUND_GLOBALS_DISABLED_OFFSET]= FALSE;
+		globals[GAME_SOUND_GLOBALS_UNKNOWN7D_OFFSET]= FALSE;
+	}
+	if (globals[GAME_SOUND_GLOBALS_INITIALIZED_OFFSET])
+	{
+		long source_index;
+
+		unknown_0021d4d0();
+		for (source_index= data_next_index(sound_sources, NONE);
+			source_index!=NONE;
+			source_index= data_next_index(sound_sources, source_index))
+		{
+			byte *source= sound_source_get(source_index);
+
+			if (keep && sound_reset_keeps_source(source, unknown6))
+			{
+				*(long *)(source+SOUND_SOURCE_DATUM_UNKNOWN8C_OFFSET)= NONE;
+			}
+			else
+			{
+				sound_source_delete(source_index, _sound_source_deleted_unknown10);
+			}
+		}
+		if (keep)
+		{
+			sound_idle();
+		}
+		else
+		{
+			unknown_0021f290();
+		}
+	}
+	*(unsigned long *)(game_sound_globals+GAME_SOUND_GLOBALS_START_TIME_OFFSET)= GetTickCount();
+	globals= game_sound_globals;
+	*(long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1F8_OFFSET)= NONE;
+	*(long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN200_OFFSET)= NONE;
+	*(long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET)= 0;
+	unknown= unknown_004ed288;
+	*(long *)(unknown+UNKNOWN_004ED288_UNKNOWN20_OFFSET)= 0;
+	*(long *)(unknown+UNKNOWN_004ED288_UNKNOWN20_OFFSET+4)= 0;
+	if (!keep)
+	{
+		unknown_0021a1e0();
 	}
 }
