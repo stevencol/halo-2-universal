@@ -486,6 +486,11 @@ enum
 	SOUND_VOICE_EFFECTS_LIST_OFFSET= 0x1C,
 	SOUND_VOICE_EFFECTS_LIST_SIZE_OFFSET= 0x41C,
 	SOUND_EFFECT_LIST_SIZE= 0x400,
+	/* in what the game gives to start a sound of a sound effect, at the end
+	of the bytes for who is told: the effect, and who was to be told */
+	SOUND_REQUEST_EFFECT_INDEX_OFFSET= 0x84,
+	SOUND_REQUEST_EFFECT_CALLBACKS_OFFSET= 0x88,
+	SOUND_EFFECT_CONTROLLER_OWNER_FLAG= 0x4000,
 	/* what a voice of the console's sound takes of the sound of a channel */
 	SOUND_VOICE_PARAMETERS_UNKNOWN4_OFFSET= 0x4,
 	SOUND_VOICE_PARAMETERS_CLASS_OFFSET= 0x10,
@@ -1216,6 +1221,16 @@ void __attribute__((stdcall)) sound_unknown_002225a0(const byte *overrides, cons
 	long *list, long *size);
 void unknown_002222c0(long *entry, const long *element, const byte *override, long unknown, long number);
 
+/* 0x0021dc60; 0x0021d9f0, 0x0021da30, 0x0021da50, 0x0021da70 and 0x0021db30:
+what a sound effect is told of its sounds */
+void sound_effect_prepare_request(long effect_index, byte *request);
+boolean __attribute__((stdcall)) unknown_0021d9f0(long data, long sound_index, void *unknown5C, void *unknown18);
+void __attribute__((stdcall)) unknown_0021da30(long data, long sound_index, long source_index, void *unknown5C);
+void __attribute__((stdcall)) unknown_0021da50(long data, void *unknown5C, long sound_index, long pitch_range,
+	long permutation, real position);
+boolean __attribute__((stdcall)) unknown_0021da70(long data, long sound_index, void *unknown5C, byte *parameters);
+void __attribute__((stdcall)) unknown_0021db30(long data, long source_index);
+
 /* 0x002228d0 and 0x002221d0 */
 void __attribute__((stdcall)) sound_unknown_002228d0(long unknown, byte *result, long unknown2);
 long __attribute__((stdcall)) sound_real_to_fixed24(real value);
@@ -1398,6 +1413,20 @@ void sound_source_stop(long source_index);
 void sound_stop_all(void);
 void __attribute__((stdcall)) sound_source_delete(long source_index, long reason);
 void sound_source_free(long source_index);
+
+/* 0x0044a1c0: who is told of the sounds of a sound effect: the effect
+itself. Only the fifth of its functions is decompiled */
+const struct sound_source_callbacks sound_effect_callbacks=
+{
+	unknown_0021d9f0,
+	unknown_0021da30,
+	unknown_0021da50,
+	unknown_0021da70,
+	sound_effect_source_deleted,
+	unknown_0021db30,
+	NULL,
+	NULL
+};
 
 /* ---------- code */
 
@@ -8445,4 +8474,50 @@ long __attribute__((stdcall)) sound_real_to_fixed24(
 	}
 
 	return 0x1000000-(long)(long long)((long double)value*(long double)-8388608.0f);
+}
+
+/* 0x0021dc60: what the game gives to start a sound becomes that of a sound
+of a sound effect: the effect is told of the sound (sound_effect_callbacks),
+with its own index and who was to be told before it, at the end of the bytes
+for who is told; with no one before, the effect has the flag 3. And the
+sound has a sound playback controller: the one that it was to have, or a
+new one of the effect, which the effect keeps. The name is made up */
+void sound_effect_prepare_request(
+	long effect_index,
+	byte *request)
+{
+	byte *effect= (byte *)sound_effects->data+(effect_index&0xFFFF)*SOUND_EFFECT_DATUM_SIZE;
+	unsigned long flags;
+
+	*(short *)(request+SOUND_REQUEST_CALLBACK_SIZE_OFFSET)= SOUND_REQUEST_CALLBACK_BYTES_SIZE;
+	if (request[0]&FLAG(_sound_request_callbacks_bit))
+	{
+		*(long *)(request+SOUND_REQUEST_EFFECT_CALLBACKS_OFFSET)= *(const long *)(request+SOUND_REQUEST_CALLBACKS_OFFSET);
+	}
+	else
+	{
+		effect[SOUND_EFFECT_DATUM_FLAGS_OFFSET]|= FLAG(_sound_effect_datum_unknown3_bit);
+		*(long *)(request+SOUND_REQUEST_EFFECT_CALLBACKS_OFFSET)= 0;
+	}
+	*(long *)(request+SOUND_REQUEST_EFFECT_INDEX_OFFSET)= effect_index;
+	flags= *(unsigned long *)request|FLAG(_sound_request_callbacks_bit);
+	*(const struct sound_source_callbacks **)(request+SOUND_REQUEST_CALLBACKS_OFFSET)= &sound_effect_callbacks;
+	*(unsigned long *)request= flags;
+	if (flags&FLAG(_sound_request_controller_bit))
+	{
+		*(long *)(effect+SOUND_EFFECT_DATUM_CONTROLLER_INDEX_OFFSET)=
+			sound_playback_controller_acquire(*(const long *)(request+SOUND_REQUEST_CONTROLLER_OWNER_OFFSET));
+	}
+	else
+	{
+		long owner= effect_index|SOUND_EFFECT_CONTROLLER_OWNER_FLAG;
+		long controller_index= sound_playback_controller_new(owner);
+
+		*(long *)(effect+SOUND_EFFECT_DATUM_CONTROLLER_INDEX_OFFSET)= controller_index;
+		if (controller_index!=NONE)
+		{
+			*(long *)(request+SOUND_REQUEST_CONTROLLER_OWNER_OFFSET)= owner;
+			*(unsigned long *)request|= FLAG(_sound_request_controller_bit);
+		}
+	}
 }

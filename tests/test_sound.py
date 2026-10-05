@@ -8,6 +8,7 @@ import random
 import struct
 
 from difftest import Buffer, GlobalRange, Memory, Mock, Pointer, mock_address
+from difftest import external_address as harness_external_address
 from test_async import calls_so_far
 from test_data import array as data_array
 from test_data import identifier
@@ -5110,3 +5111,41 @@ def run(t) -> None:
     values += [random_.uniform(-1.2, 1.2) for _ in range(400)]
     for value in values:
         t.check("sound_real_to_fixed24", as_bits(value))
+
+    # ---------- what the game gives to start a sound becomes that of a sound of a sound effect
+
+    random_ = random.Random(218)
+
+    # the table of who is told: the same functions, in the same places, as the game's
+    harness = t.harness
+    tables = []
+    for original in (True, False):
+        names = {0: None}
+        for n, name in enumerate(harness.externals):
+            names[harness.symbols[name].address if original else harness_external_address(n)] = name
+        for name, symbol in harness.symbols.items():
+            if symbol.source:
+                names[symbol.address if original else harness.functions[name]] = name
+        address = harness.globals["sound_effect_callbacks"] if original else harness.variables["sound_effect_callbacks"]
+        tables.append([names.get(value, hex(value)) for value in struct.unpack("<8I", harness.mu.mem_read(address, 0x20))])
+    if not t.only or "sound_effect_prepare_request" in t.only:
+        t.cases["sound_effect_prepare_request"] = t.cases.get("sound_effect_prepare_request", 0) + 1
+        if tables[0] != tables[1]:
+            t._fail("sound_effect_prepare_request", f"sound_effect_callbacks: the game has {tables[0]}, source/ has {tables[1]}")
+
+    for _ in range(600):
+        effects = bytearray(random_.randbytes(0x4C + EFFECTS * 0x14))
+        struct.pack_into("<I", effects, 0x44, 0x4C)
+        request = bytearray(random_.randbytes(0xA0))
+        struct.pack_into("<I", request, 0, random_.choice((0, 0x10, 0x20, 0x30, 0xFFFFFFCF, random_.getrandbits(32))))
+        got = random_.choice((NONE, NONE, 0x10003, 5))
+        t.check(
+            "sound_effect_prepare_request",
+            random_.getrandbits(16) << 16 | random_.randrange(EFFECTS),
+            Buffer(bytes(request), places=(0x58, 0x88)),
+            globals={"sound_effects": Buffer(bytes(effects), pointers=(0x44,)), "sound_effect_callbacks": GlobalRange(0x20)},
+            externals={
+                "sound_playback_controller_acquire": lambda harness, arguments, got=got: (got, tuple(arguments)),
+                "sound_playback_controller_new": lambda harness, arguments, got=got: (got, tuple(arguments)),
+            },
+        )

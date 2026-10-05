@@ -2,6 +2,50 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Un sonido pasa a ser de un efecto de sonido
+
+Una función en `sound/sound_manager.c`. De 875 funciones se pasa a
+876, el 7,78 % de las del juego (el 4,575 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_effect_prepare_request` | `0x0021dc60` | `sound/sound_manager.c` |
+
+No estaba apuntada. La llama `0x0021d110`. Recibe el efecto en `ecx` y lo
+que el juego da para arrancar un sonido en `esi`. También la tabla
+`sound_effect_callbacks` (`0x0044a1c0`), con cinco funciones nuevas sin
+descompilar: `0x0021d9f0`, `0x0021da30`, `0x0021da50`, `0x0021da70` y
+`0x0021db30`.
+
+### Lo que se sabe
+
+- `sound_effect_prepare_request` hace que un sonido que va a arrancar sea de
+  un efecto de sonido: quien recibe los avisos del sonido pasa a ser el
+  efecto (`sound_effect_callbacks`), y al final de los bytes de los avisos
+  quedan el índice del efecto y quién los iba a recibir antes. Si no había
+  nadie, el efecto se queda con la marca 3.
+- El sonido recibe además un mando de sonidos: el que ya iba a tener o uno
+  nuevo del efecto (con `0x4000` en el índice), que el efecto se guarda.
+- De las seis funciones de la tabla solo estaba descompilada la quinta
+  (`sound_effect_source_deleted`). Las otras cinco no figuran en la lista
+  de funciones de Ghidra: nadie las llama por su dirección, solo están en
+  esta tabla. Hay, por tanto, más funciones en el juego que las 11.265 de
+  la lista.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función. La última
+  batería completa es la del hito 210 (867 funciones, todas bien).
+
+### Mutaciones
+
+Diez cambios a mano, dos de ellos en la tabla: las pruebas notan nueve y
+el compilador el otro (una función de otro tipo en la tabla). La prueba
+compara la tabla con la del juego, función por función.
+
 ## 2026-10-05 — Otra lista para la consola, y un real en 24 bits
 
 Dos funciones en `sound/sound_manager.c`. De 873 funciones se pasa a

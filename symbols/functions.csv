@@ -1322,3 +1322,9 @@ address,name,source,arguments,returns,convention
 002ae170,unknown_002ae170,,edi,void
 002228d0,sound_unknown_002228d0,source/sound/sound_manager.c,edx esi stack,void,stdcall
 002221d0,sound_real_to_fixed24,source/sound/sound_manager.c,stack,int,stdcall
+0021dc60,sound_effect_prepare_request,source/sound/sound_manager.c,ecx esi,void
+0021d9f0,unknown_0021d9f0,,stack stack stack stack,bool,stdcall
+0021da30,unknown_0021da30,,stack stack stack stack,void,stdcall
+0021da50,unknown_0021da50,,stack stack stack stack stack stack,void,stdcall
+0021da70,unknown_0021da70,,stack stack stack stack,bool,stdcall
+0021db30,unknown_0021db30,,stack stack,void,stdcall
