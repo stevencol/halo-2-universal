@@ -584,6 +584,20 @@ enum
 	SOUND_CONSOLE_SLOT_BUFFER_FLAGS= 0x2010,
 	SOUND_CONSOLE_SLOT_MIX_BUFFER_FLAGS= 0x100000,
 	MAXIMUM_SOUND_CONSOLE_SLOTS= 64,
+	/* what sound_console_set_listener takes, and where the console's sound
+	keeps it */
+	SOUND_CONSOLE_LISTENER_FACING_OFFSET= 0xC,
+	SOUND_CONSOLE_LISTENER_PLACE_COUNT_OFFSET= 0x30,
+	SOUND_CONSOLE_PLACE_SIZE= 0x18,
+	SOUND_CONSOLE_PLACE_NUMBERS_SIZE= 0x10,
+	SOUND_CONSOLE_PLACE_AMOUNT_OFFSET= 0x14,
+	NUMBER_OF_SOUND_CONSOLE_PLACES= 2,
+	SOUND_ENVIRONMENT_SIZE= 0x48,
+	UNKNOWN_0051EBE4_LISTENER_POSITION_OFFSET= 0x2918,
+	UNKNOWN_0051EBE4_LISTENER_FACING_OFFSET= 0x2924,
+	UNKNOWN_0051EBE4_PLACE_ENVIRONMENTS_OFFSET= 0x2950,
+	UNKNOWN_0051EBE4_PLACE_AMOUNTS_OFFSET= 0x29E0,
+	UNKNOWN_0051EBE4_PLACE_NUMBERS_OFFSET= 0x29E8,
 	SOUND_SILENCE_SIZE= 1000,
 	SOUND_UNKNOWN_00222250_MAXIMUM= 4,
 	/* more of an entry of the list that sound_unknown_002225a0 makes, and of
@@ -1463,6 +1477,13 @@ short __attribute__((stdcall)) sound_console_slot_new(unsigned long flags, long 
 boolean __attribute__((stdcall)) looping_sound_source_next_state(byte *looping_sound, byte *state,
 	long source_index, unsigned long *seed);
 
+/* 0x00220790; 0x0037d598 and 0x0037d54e: the console is told where who hears
+is, and which way it faces */
+void __attribute__((stdcall)) sound_console_set_listener(const byte *listener);
+void unknown_0037d598(void *sound, real x, real y, real z, long apply);
+void unknown_0037d54e(void *sound, real front_x, real front_y, real front_z, real top_x, real top_y, real top_z,
+	long apply);
+
 /* 0x0021d110 */
 long __attribute__((stdcall)) sound_effect_source_new(byte *request, long sound_index);
 
@@ -1647,6 +1668,16 @@ const struct sound_source_callbacks looping_sound_callbacks=
 	NULL,
 	looping_sound_source_matches,
 	NULL
+};
+
+/* 0x0044a2a0: how a place with no sound of its own sounds: silence. As the
+tags have it: 8 bytes, and the twelve reals that sound_console_set_reverb
+takes; the rest is not known */
+const unsigned long sound_environment_default[SOUND_ENVIRONMENT_SIZE/4]=
+{
+	0, 0x8000,
+	0xC2C80000, 0xC2C80000, 0, 0x3F800000, 0x3F800000, 0xC2C80000, 0, 0xC2C80000, 0, 0x3F800000, 0x3F800000, 0x459C4000,
+	0, 0, 0, 0
 };
 
 /* ---------- code */
@@ -10048,4 +10079,97 @@ boolean __attribute__((stdcall)) looping_sound_source_next_state(
 	state[LOOPING_SOUND_UNKNOWNC_OFFSET]= state[LOOPING_SOUND_UNKNOWND_OFFSET];
 
 	return result;
+}
+
+/* whether two reals are not the same, to some */
+static inline __attribute__((always_inline)) boolean sound_real_differs(
+	real a,
+	real b,
+	real epsilon)
+{
+	return !((long double)epsilon>fabsl((long double)a-(long double)b));
+}
+
+/* 0x00220790: the console's sound is told of who hears: where it is (only
+the first time: the byte at the start of the console's sound is 0 then),
+which way it faces, when that has changed by 0.05 or more, and how up to
+two places sound, with four numbers and how much of each there is. What is
+told is kept, and for each of the two places a byte says that how it sounds
+has changed (at 0x2A08) and another that the rest has (at 0x2A0A). A place
+that is not given sounds as sound_environment_default, with nothing of it.
+The console has the height second. The name is made up */
+void __attribute__((stdcall)) sound_console_set_listener(
+	const byte *listener)
+{
+	byte *console= unknown_0051ebe4;
+	const real *facing= (const real *)(listener+SOUND_CONSOLE_LISTENER_FACING_OFFSET);
+	const real *kept_facing;
+	long count;
+	long index;
+
+	if (!console[0])
+	{
+		const real *position= (const real *)listener;
+
+		unknown_0037d598(*(void **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET), position[0], position[2], position[1], 1);
+		console= unknown_0051ebe4;
+		memcpy(console+UNKNOWN_0051EBE4_LISTENER_POSITION_OFFSET, listener, sizeof(real_point3d));
+	}
+	kept_facing= (const real *)(console+UNKNOWN_0051EBE4_LISTENER_FACING_OFFSET);
+	if (sound_real_differs(facing[0], kept_facing[0], 0.05f) || sound_real_differs(facing[1], kept_facing[1], 0.05f) ||
+		sound_real_differs(facing[2], kept_facing[2], 0.05f) || sound_real_differs(facing[3], kept_facing[3], 0.05f) ||
+		sound_real_differs(facing[4], kept_facing[4], 0.05f) || sound_real_differs(facing[5], kept_facing[5], 0.05f) ||
+		!console[0])
+	{
+		unknown_0037d54e(*(void **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET), facing[0], facing[2], facing[1], facing[3],
+			facing[5], facing[4], 1);
+		console= unknown_0051ebe4;
+		memcpy(console+UNKNOWN_0051EBE4_LISTENER_FACING_OFFSET, facing, 2*sizeof(real_vector3d));
+	}
+
+	count= *(const long *)(listener+SOUND_CONSOLE_LISTENER_PLACE_COUNT_OFFSET);
+	if (count>=NUMBER_OF_SOUND_CONSOLE_PLACES)
+	{
+		count= NUMBER_OF_SOUND_CONSOLE_PLACES;
+	}
+	for (index= 0; index<count; index++)
+	{
+		const byte *place= *(const byte *const *)(listener+SOUND_CONSOLE_LISTENER_PLACE_COUNT_OFFSET+4)+
+			index*SOUND_CONSOLE_PLACE_SIZE;
+		byte *kept= console+UNKNOWN_0051EBE4_PLACE_ENVIRONMENTS_OFFSET+index*SOUND_ENVIRONMENT_SIZE;
+		byte *kept_numbers= console+UNKNOWN_0051EBE4_PLACE_NUMBERS_OFFSET+index*SOUND_CONSOLE_PLACE_NUMBERS_SIZE;
+		real *kept_amount= (real *)(console+UNKNOWN_0051EBE4_PLACE_AMOUNTS_OFFSET)+index;
+
+		if (memcmp(*(const byte *const *)place, kept, SOUND_ENVIRONMENT_SIZE) || !console[0])
+		{
+			memcpy(kept, *(const byte *const *)place, SOUND_ENVIRONMENT_SIZE);
+			console[UNKNOWN_0051EBE4_UNKNOWN2A08_OFFSET+index]= TRUE;
+		}
+		if (memcmp(kept_numbers, place+4, SOUND_CONSOLE_PLACE_NUMBERS_SIZE) || !console[0])
+		{
+			memcpy(kept_numbers, place+4, SOUND_CONSOLE_PLACE_NUMBERS_SIZE);
+			console[UNKNOWN_0051EBE4_UNKNOWN2A08_OFFSET+2+index]= TRUE;
+		}
+		if (sound_real_differs(*kept_amount, *(const real *)(place+SOUND_CONSOLE_PLACE_AMOUNT_OFFSET), 0.0001f) || !console[0])
+		{
+			*(long *)kept_amount= *(const long *)(place+SOUND_CONSOLE_PLACE_AMOUNT_OFFSET);
+			console[UNKNOWN_0051EBE4_UNKNOWN2A08_OFFSET+2+index]= TRUE;
+		}
+	}
+	for (index= count; index<NUMBER_OF_SOUND_CONSOLE_PLACES; index++)
+	{
+		byte *kept= console+UNKNOWN_0051EBE4_PLACE_ENVIRONMENTS_OFFSET+index*SOUND_ENVIRONMENT_SIZE;
+		real *kept_amount= (real *)(console+UNKNOWN_0051EBE4_PLACE_AMOUNTS_OFFSET)+index;
+
+		if (memcmp(sound_environment_default, kept, SOUND_ENVIRONMENT_SIZE) || !console[0])
+		{
+			memcpy(kept, sound_environment_default, SOUND_ENVIRONMENT_SIZE);
+			console[UNKNOWN_0051EBE4_UNKNOWN2A08_OFFSET+index]= TRUE;
+		}
+		if (sound_real_differs(*kept_amount, 0.0f, 0.0001f) || !console[0])
+		{
+			*kept_amount= 0.0f;
+			console[UNKNOWN_0051EBE4_UNKNOWN2A08_OFFSET+2+index]= TRUE;
+		}
+	}
 }

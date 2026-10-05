@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — La consola sabe quién oye y cómo suenan sus sitios
+
+Una función en `sound/sound_manager.c`, de 725 bytes. De 906 funciones se pasa a
+907, el 8,05 % de las del juego (el 4,849 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_console_set_listener` | `0x00220790` | `sound/sound_manager.c` |
+
+No estaba apuntada. La llaman `0x00127400` (la de los oyentes) y
+`0x0021e4b0` (la que prepara la consola). Recibe en la pila lo que hay que
+decirle a la consola. Nuevas sin descompilar, de la consola: `0x0037d598` y
+`0x0037d54e`. También la tabla `sound_environment_default` (`0x0044a2a0`).
+
+### Lo que se sabe
+
+- `sound_console_set_listener` le dice a la consola dónde está quien oye
+  (solo la primera vez: después el oyente no se mueve, son los sonidos los
+  que se pasan a sus ejes), hacia dónde mira (cuando ha cambiado 0,05 o más
+  en algún número) y cómo suenan hasta dos sitios, con cuánto hay de cada
+  uno.
+- Lo que se dice se guarda en el sonido de la consola, y para cada uno de
+  los dos sitios un byte avisa de que ha cambiado cómo suena y otro de que
+  ha cambiado lo demás. Son los avisos que mira `sound_console_update`.
+- Un sitio que no se da suena como `sound_environment_default`: silencio
+  (-100 decibelios en todo), y con nada de él.
+- Con esto se ve que los dos «estados» de `sound_unknown_states_set` (hito
+  207) son seguramente esos dos sitios entre los que se pasa, aunque sigue
+  sin comprobarse.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función. La última
+  batería completa es la del hito 233 (900 funciones, todas bien).
+
+### Mutaciones
+
+Catorce cambios a mano: las pruebas notan trece, uno de ellos solo después
+de añadir un caso. El que no notan era un cambio mío que no cambiaba nada
+(el tope de dos sitios escrito de otra forma). La prueba compara además la
+tabla del silencio con la del juego.
+
 ## 2026-10-05 — El sonido de una pista pasa al estado siguiente
 
 Una función en `sound/sound_manager.c`, de 616 bytes. De 905 funciones se pasa a

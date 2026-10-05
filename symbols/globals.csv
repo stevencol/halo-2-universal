@@ -194,3 +194,4 @@ address,name,source
 00386ad8,unknown_00386ad8,source/sound/sound_manager.c
 00468834,unknown_00468834,source/sound/sound_manager.c
 0047005c,unknown_0047005c,source/sound/sound_manager.c
+0044a2a0,sound_environment_default,source/sound/sound_manager.c

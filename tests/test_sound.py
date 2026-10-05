@@ -6101,3 +6101,66 @@ def run(t) -> None:
                 "sound_source_delete": lambda harness, arguments: (0, tuple(arguments)),
             },
         )
+
+    # ---------- the console's sound is told of who hears
+
+    random_ = random.Random(240)
+    SILENCE = struct.pack("<2I", 0, 0x8000) + struct.pack("<12f", -100, -100, 0, 1, 1, -100, 0, -100, 0, 1, 1, 5000) + bytes(16)
+
+    # the place with no sound of its own: as the game has it
+    harness = t.harness
+    if not t.only or "sound_console_set_listener" in t.only:
+        both = [
+            bytes(harness.mu.mem_read(harness.globals["sound_environment_default"], 0x48)),
+            bytes(harness.mu.mem_read(harness.variables["sound_environment_default"], 0x48)),
+        ]
+        t.cases["sound_console_set_listener"] = t.cases.get("sound_console_set_listener", 0) + 1
+        if both[0] != both[1] or both[0] != SILENCE:
+            t._fail("sound_console_set_listener", "sound_environment_default is not the game's")
+
+    for n in range(900):
+        heard = bytearray(random_.randbytes(0x38))
+        heard[0:0x24] = reals(random_, 9)
+        count = random_.choice((0, 1, 2, 2, 3, -1))
+        places = len(heard)
+        struct.pack_into("<iI", heard, 0x30, count, places)
+        pointers = [0x34]
+        heard += random_.randbytes(3 * 0x18)
+        for place in range(3):
+            at = len(heard)
+            heard += random_.choice((SILENCE, random_.randbytes(0x48), random_.randbytes(0x48)))
+            struct.pack_into("<I", heard, places + place * 0x18, at)
+            pointers.append(places + place * 0x18)
+            struct.pack_into("<f", heard, places + place * 0x18 + 0x14, random_.choice((0.0, 1.0, 0.5, 0.00005, 0.0002)))
+        console = bytearray(random_.randbytes(0x2AC0))
+        console[0] = random_.choice((1, 1, 1, 0, 0x80))
+        for index in range(6):
+            value = struct.unpack_from("<f", heard, 0xC + index * 4)[0]
+            if n % 3:
+                value += random_.choice((0.0, 0.0, 0.0, 0.02, -0.02, 0.05, 0.06))
+            else:
+                value = random_.uniform(-1, 1)
+            struct.pack_into("<f", console, 0x2924 + index * 4, value)
+        for place in range(2):
+            source_ = struct.unpack_from("<I", heard, places + place * 0x18)[0]
+            kind = random_.randrange(4)
+            if kind == 0:
+                console[0x2950 + place * 0x48 : 0x2950 + (place + 1) * 0x48] = heard[source_ : source_ + 0x48]
+            elif kind == 1:
+                console[0x2950 + place * 0x48 : 0x2950 + (place + 1) * 0x48] = SILENCE
+            if random_.random() < 0.5:
+                console[0x29E8 + place * 0x10 : 0x29E8 + (place + 1) * 0x10] = heard[places + place * 0x18 + 4 : places + place * 0x18 + 0x14]
+                if random_.random() < 0.4:
+                    # all but the last of the four numbers
+                    console[0x29E8 + place * 0x10 + 0xF] ^= 1
+            amount = struct.unpack_from("<f", heard, places + place * 0x18 + 0x14)[0]
+            struct.pack_into("<f", console, 0x29E0 + place * 4, random_.choice((amount, amount, 0.0, amount + 0.00005, amount + 0.0002, 0.7)))
+        t.check(
+            "sound_console_set_listener",
+            Buffer(bytes(heard), pointers=tuple(pointers)),
+            globals={"unknown_0051ebe4": Buffer(bytes(console))},
+            externals={
+                "unknown_0037d598": lambda harness, arguments: (0, tuple(arguments)),
+                "unknown_0037d54e": lambda harness, arguments: (0, tuple(arguments)),
+            },
+        )
