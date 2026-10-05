@@ -3946,3 +3946,44 @@ def run(t) -> None:
             Buffer(bytes(said)),
             globals={"game_sound_globals": Buffer(bytes(state))},
         )
+
+    # ---------- how much of a sound is heard from where its listener is
+
+    random_ = random.Random(194)
+
+    def some_way() -> bytes:
+        kind = random_.randrange(8)
+        if kind == 0:
+            return bytes(12)
+        if kind == 1:
+            # too near for the cone to count, or just not
+            if random_.random() < 0.5:
+                # the square of its length is the real before the least
+                return struct.pack("<3I", 0, 0x3A831247, 0x364BA58F)
+            return struct.pack("<3f", random_.choice((0.0009, 0.001, 0.0011, -0.001)), 0.0, random_.choice((0.0, 0.0001)))
+        if kind == 2:
+            return struct.pack("<3f", *(random_.choice((0.0, 1.0, -1.0)) for _ in range(3)))
+        return struct.pack("<3f", *(random_.uniform(-20, 20) for _ in range(3)))
+
+    for n in range(1200):
+        sound_index = random_.randrange(TAGS)
+        flags = random_.getrandbits(16)
+        if n % 3 == 0:
+            flags &= ~0x30
+        if n % 4 == 0:
+            # the distances and the cone, of the sound itself
+            flags |= 0x7C
+        said = bytearray(source(random_, flags, random_.choice((None, None, 0x2000, 0x4000, 0x8000))).data)
+        struct.pack_into("<2f", said, 0x34, random_.choice((0.0, 0.5, 1.0, 3.0)), random_.choice((0.0, 5.0, 30.0, 100.0)))
+        struct.pack_into("<f", said, 0x40, random_.choice((0.0, -3.0, -6.0, -30.0, -64.0, -100.0, 2.0)))
+        sound_flags = random_.getrandbits(16)
+        if n % 2 == 0:
+            sound_flags &= ~0x1000
+        t.check(
+            "sound_source_spatial_gain",
+            Buffer(some_way()),
+            Buffer(bytes(said)),
+            random_.getrandbits(16) << 16 | sound_index,
+            Buffer(some_way()),
+            globals=world(random_, sound_index, sound_data(random_, sound_flags)),
+        )

@@ -443,6 +443,9 @@ enum
 	/* more of a sound that plays, of a listener, of a class of sounds and of
 	the slots of the console's sound */
 	_sound_source_unknown12_bit= 12,
+	/* a flag of what the game says of a sound: what is not heard of it
+	from where its listener is, is what counts */
+	_sound_source_inverted_gain_bit= 9,
 	SOUND_SOURCE_DATUM_SCALE_OFFSET= 0x1C,
 	SOUND_LISTENER_UNKNOWN7_OFFSET= 0x7,
 	SOUND_LISTENER_MATRIX_OFFSET= 0x8,
@@ -474,6 +477,10 @@ enum
 
 /* the cents of an interval: 1200 for each time that the pitch doubles */
 #define SOUND_CENTS_PER_NATURAL_LOGARITHM 1731.2340f
+
+/* the square of the least that a sound is away from its listener for its
+cone to count */
+#define SOUND_MINIMUM_OFFSET_SQUARED (0.001f*0.001f)
 
 /* the least that a sound is heard, in decibels */
 #define SOUND_MINIMUM_DECIBELS -64.0f
@@ -875,6 +882,10 @@ void __attribute__((stdcall)) sound_channel_queue_chunk(short channel_index, con
 	short chunk);
 real __attribute__((stdcall)) sound_source_distance_gain(long sound_index, const struct sound_source *source,
 	real distance);
+
+/* 0x0012ad30 */
+real __attribute__((stdcall)) sound_source_spatial_gain(const real_vector3d *offset,
+	const struct sound_source *source, long sound_index, const real_vector3d *forward);
 
 /* 0x0021f430 */
 void __attribute__((stdcall)) sound_console_unknown_0021f430(long controller_index);
@@ -6430,4 +6441,54 @@ long double sound_listener_doppler_pitch(
 	}
 
 	return logl((long double)limited)*(long double)SOUND_CENTS_PER_NATURAL_LOGARITHM;
+}
+
+/* 0x0012ad30: how much of a sound is heard from where its listener is, from
+0 to 1: what sound_source_distance_gain says of how far it is, times what
+its cone says. `offset` is the way from the listener to the sound, and
+`forward` where the sound points. In its inner cone all is heard; out of
+the outer one, what the gain of the outer cone says; between the two, by
+the angle. A sound with no cone of its own whose tag has the flag 12 has no
+cone. With the flag 9, what is not heard is given. The name is made up */
+real __attribute__((stdcall)) sound_source_spatial_gain(
+	const real_vector3d *offset,
+	const struct sound_source *source,
+	long sound_index,
+	const real_vector3d *forward)
+{
+	real distance_gain= sound_source_distance_gain(sound_index, source,
+		(real)sqrtl((long double)(offset->i*offset->i + offset->j*offset->j + offset->k*offset->k)));
+	word flags= source->flags;
+	real cone_gain= 1.0f;
+	real gain;
+
+	if (((flags>>_sound_source_inner_cone_angle_bit)&1 || (flags>>_sound_source_outer_cone_angle_bit)&1 ||
+			!(sound_definition_get(sound_index)->flags&FLAG(_sound_unknown12_bit))) &&
+		!((long double)0.0001f>fabsl((long double)distance_gain)) &&
+		offset->j*offset->j + offset->k*offset->k + offset->i*offset->i>=SOUND_MINIMUM_OFFSET_SQUARED)
+	{
+		real_vector3d toward;
+
+		toward.i= 0.0f-offset->i;
+		toward.j= 0.0f-offset->j;
+		toward.k= 0.0f-offset->k;
+		if (normalize3d(&toward)>0.0f)
+		{
+			real outer_cone_gain= sound_get_outer_cone_gain(source, sound_index);
+			real angle= angle_between_vectors3d(&toward, forward);
+			real outer_cone_angle= sound_get_outer_cone_angle(source, sound_index);
+			real inner_cone_angle= sound_get_inner_cone_angle(source, sound_index);
+			real fraction= sound_interpolation_fraction(inner_cone_angle, outer_cone_angle, angle, TRUE);
+
+			cone_gain= (real)((sound_decibels_to_gain(outer_cone_gain)-(long double)1.0f)*(long double)fraction+
+				(long double)1.0f);
+		}
+	}
+	gain= cone_gain*distance_gain;
+	if ((flags>>_sound_source_inverted_gain_bit)&1)
+	{
+		gain= 1.0f-gain;
+	}
+
+	return gain;
 }

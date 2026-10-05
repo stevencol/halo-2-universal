@@ -1295,3 +1295,4 @@ address,name,source,arguments,returns,convention
 0037b75b,unknown_0037b75b,,stack stack,void
 0021de90,sound_voice_get_for_source,source/sound/sound_manager.c,ebx,int
 00220e00,unknown_00220e00,,edi stack,void
+0012ad30,sound_source_spatial_gain,source/sound/sound_manager.c,eax ecx stack stack,real:xmm0,stdcall

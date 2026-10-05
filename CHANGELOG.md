@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Cuánto se oye un sonido desde donde está su oyente
+
+Una función en `sound/sound_manager.c`. De 850 funciones se pasa a
+851, el 7,55 % de las del juego (el 4,266 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_source_spatial_gain` | `0x0012ad30` | `sound/sound_manager.c` |
+
+No estaba apuntada: solo la llama `0x00129aa0`, que aún no está hecha.
+Recibe en `eax` el camino del oyente al sonido, en `ecx` lo que el juego
+dice del sonido, y en la pila el sonido y hacia dónde apunta.
+
+### Lo que se sabe
+
+- `sound_source_spatial_gain` da cuánto se oye un sonido desde donde está su
+  oyente, de 0 a 1: lo que dice `sound_source_distance_gain` de lo lejos que
+  está, por lo que dice su cono.
+- El cono: dentro del ángulo interior se oye todo; fuera del exterior, lo
+  que diga la ganancia del cono exterior (en decibelios); entre los dos,
+  según el ángulo (`sound_interpolation_fraction`). El ángulo es el que hay
+  entre hacia dónde apunta el sonido y el camino del sonido al oyente.
+- El cono no cuenta si el sonido no trae cono propio y su tag tiene la marca
+  12 (la misma condición que `sound_unknown_00125060`), si ya casi no se oye
+  por la distancia (menos de 0,0001) o si el oyente está a menos de una
+  milésima del sonido.
+- Con la marca 9 de lo que el juego dice del sonido, el resultado es lo que
+  *no* se oye (1 menos lo anterior).
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y de
+  `sound_source_distance_gain`. La batería completa corre aparte con las 849
+  funciones del hito 192.
+
+### Mutaciones
+
+Seis líneas rotas a mano entre este hito y el anterior (el sentido de
+`sound_interpolation_fraction`, la longitud mínima, el signo de la marca 9,
+la constante de la milésima al cuadrado, un signo del producto del Doppler y
+su límite de arriba): las pruebas notan las seis. La constante solo se notó
+al añadir un caso cuyo cuadrado de la longitud es el real anterior al
+límite. Pendientes las listas completas de los hitos 156 a 194.
+
 ## 2026-10-05 — El efecto Doppler de un sonido para un oyente
 
 Una función en `sound/sound_manager.c`. De 849 funciones se pasa a
