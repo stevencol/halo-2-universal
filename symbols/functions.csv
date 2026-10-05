@@ -1148,7 +1148,7 @@ address,name,source,arguments,returns,convention
 002ae750,unknown_002ae750,,eax,void
 00218b00,sound_seconds_to_bytes,source/sound/sound_manager.c,eax ecx stack stack,int,stdcall
 00218ac0,sound_permutation_chunks_size,source/sound/sound_manager.c,ecx edx,int
-0021f5d0,unknown_0021f5d0,,eax edi,void
+0021f5d0,sound_console_voice_stop,source/sound/sound_manager.c,eax edi,void
 002ae500,unknown_002ae500,,esi edi,void
 00219290,sound_permutation_next_chunk,source/sound/sound_manager.c,ecx eax,int
 0021f650,sound_voice_playback_rate,source/sound/sound_manager.c,eax stack,real:xmm0,stdcall
@@ -1308,3 +1308,5 @@ address,name,source,arguments,returns,convention
 0021f720,unknown_0021f720,,stack,void
 00188ea0,vector3d_decompress,source/math/real_math.c,ecx esi,pointer
 00126660,sound_unknown_states_set,source/sound/sound_manager.c,eax,void
+002ae8e0,unknown_002ae8e0,,ecx,void
+002ae6f0,unknown_002ae6f0,,esi,void

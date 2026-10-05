@@ -777,7 +777,7 @@ def run(t) -> None:
         return {
             "sound_seconds_to_bytes": played,
             "sound_permutation_chunks_size": chunk_bytes,
-            "unknown_0021f5d0": restart,
+            "sound_console_voice_stop": restart,
             "unknown_002ae500": chunk,
         }
 
@@ -4804,4 +4804,50 @@ def run(t) -> None:
             Buffer(struct.pack("<4I", 4, mock_address(0), mock_address(1), mock_address(2)) + random_.randbytes(8), pointers=(0,)),
             globals={"unknown_0051ebe4": Buffer(bytes(console), pointers=tuple(pointers)), "unknown_00470060": GlobalRange(0x24)},
             mocks=handler_mocks(),
+        )
+
+    # ---------- a voice of the console's sound is stopped
+
+    random_ = random.Random(209)
+
+    for _ in range(300):
+        console = bytearray(console_voices(8))
+        pointers = []
+        stream = len(console)
+        console += struct.pack("<I", stream + 4) + random_.randbytes(0xC) + struct.pack("<I", mock_address(0))
+        console += random_.randbytes(8) + struct.pack("<I", mock_address(1))
+        pointers.append(stream)
+        other = len(console)
+        console += struct.pack("<I", other + 4) + random_.randbytes(0x1C) + struct.pack("<I", mock_address(2))
+        pointers.append(other)
+        for voice in range(8):
+            at = 0xC + voice * 0x34
+            console[at + 1] = random_.getrandbits(8)
+            console[at + 3] = random_.getrandbits(8)
+            struct.pack_into("<I", console, at + 0x24, stream)
+            struct.pack_into("<I", console, at + 0x30, other)
+            pointers += [at + 0x24, at + 0x30]
+        console_ = Buffer(bytes(console), pointers=tuple(pointers))
+        voice_index = random_.randrange(8)
+
+        def asked__(call, console_=console_, voice_index=voice_index):
+            # the flags of the voice while it is stopped
+            return call.stack[0], t.harness.mu.mem_read(console_.address + 0xC + voice_index * 0x34 + 3, 1)[0]
+
+        t.check(
+            "sound_console_voice_stop",
+            voice_index,
+            random_.choice((0, 0, 1, 500, 0x7FFFFFFF, NONE, 0x80000000)),
+            globals={"unknown_0051ebe4": console_},
+            externals={
+                "unknown_002ae8e0": console_call(0),
+                "unknown_002ae6f0": console_call(0),
+                "unknown_0037b822": console_call(0),
+                "unknown_002ae7a0": console_call(0),
+            },
+            mocks=[
+                Mock(lambda call: 0, stack_arguments=2, record=asked__),
+                Mock(lambda call: 0, stack_arguments=1),
+                Mock(lambda call: 0, stack_arguments=0, registers=("ecx",)),
+            ],
         )

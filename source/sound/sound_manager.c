@@ -531,6 +531,10 @@ enum
 	GAME_SOUND_GLOBALS_UNKNOWN_STATES_OFFSET= 0x1A8,
 	UNKNOWN_0051EBE4_ENVIRONMENT_SIZE= 0x40,
 	UNKNOWN_0051EBE4_UNKNOWN1_OFFSET= 0x1,
+	/* more of a voice of the console's sound */
+	_voice_unknown2_bit= 2,
+	VOICE_DECIBELS_OFFSET= 0xC,
+	VOICE_UNKNOWN30_OFFSET= 0x30,
 	NUMBER_OF_SOUND_UNKNOWN_STATES= 2,
 	_sound_source_datum_unknown3_bit= 3,
 	_sound_source_datum_unknown4_bit= 4,
@@ -714,6 +718,23 @@ struct sound_console_environment_handler_functions
 struct sound_console_environment_handler
 {
 	const struct sound_console_environment_handler_functions *functions;
+};
+
+/* the two things of the console that a voice of the console's sound has, at
+0x24 and 0x30: of their functions, those that the game calls. Those of the
+first take it on the stack; that of the second, in ecx */
+struct sound_console_stream_functions
+{
+	void *unknown0[3];
+	void (__attribute__((stdcall)) *unknownC)(void *stream, long *status);
+	void *unknown10[2];
+	void (__attribute__((stdcall)) *unknown18)(void *stream);
+};
+
+struct sound_console_voice_object_functions
+{
+	void *unknown0[7];
+	void (__attribute__((thiscall)) *unknown1C)(void *object);
 };
 
 /* a sound of which it is to be worked out how it is heard where it is */
@@ -929,7 +950,11 @@ long sound_permutation_chunks_size(const struct sound_permutation *permutation, 
 
 /* 0x0021f5d0: a voice of the console's sound starts again from some bytes
 into its sound; 0x002ae500: a voice is given a chunk */
-void unknown_0021f5d0(short voice_index, long offset);
+void sound_console_voice_stop(long voice_index, long unknown);
+
+/* 0x002ae8e0 and 0x002ae6f0: of a voice of the console's sound */
+void unknown_002ae8e0(byte *voice);
+void unknown_002ae6f0(byte *voice);
 void unknown_002ae500(void *voice, const struct sound_chunk *chunk);
 
 /* 0x0012a0b0 */
@@ -1951,7 +1976,7 @@ void sound_channel_resume(
 			channel->unknown10);
 
 		offset-= sound_permutation_chunks_size(permutation, channel->unknown18);
-		unknown_0021f5d0(channel->unknownC, offset);
+		sound_console_voice_stop(channel->unknownC, offset);
 		sound_channel_voice_set_chunk(channel, permutation, channel->unknown18);
 		if (channel->unknown20)
 		{
@@ -7915,4 +7940,40 @@ void sound_console_set_environment_handler(
 	console= unknown_0051ebe4;
 	handler= *(struct sound_console_environment_handler **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB4_OFFSET);
 	handler->functions->unknown8(handler, unknown_00470060, console[UNKNOWN_0051EBE4_UNKNOWN1_OFFSET]);
+}
+
+/* 0x0021f5d0: a voice of the console's sound is stopped and left as new: its
+stream is asked what it does and is told to stop, its other thing is told
+something, it does nothing (its state is 0) and is at -64 decibels;
+unknown_002ae8e0 and unknown_002ae6f0 are given it. Its number at 0x2C is
+the one given, or 0 if that is less. A voice with a sound playback
+controller is told so again (unknown_0037b822). While it is done the voice
+has the flag 2. The name is a guess */
+void sound_console_voice_stop(
+	long voice_index,
+	long unknown)
+{
+	byte *voice= unknown_0051ebe4+voice_index*UNKNOWN_0051EBE4_VOICE_SIZE+UNKNOWN_0051EBE4_VOICE_OFFSET;
+	void *stream;
+	void *object;
+	long status;
+
+	voice[VOICE_FLAGS_OFFSET]|= FLAG(_voice_unknown2_bit);
+	stream= *(void **)(voice+VOICE_UNKNOWN24_OFFSET);
+	(*(const struct sound_console_stream_functions *const *)stream)->unknownC(stream, &status);
+	stream= *(void **)(voice+VOICE_UNKNOWN24_OFFSET);
+	(*(const struct sound_console_stream_functions *const *)stream)->unknown18(stream);
+	object= *(void **)(voice+VOICE_UNKNOWN30_OFFSET);
+	(*(const struct sound_console_voice_object_functions *const *)object)->unknown1C(object);
+	voice[VOICE_STATE_OFFSET]&= ~VOICE_STATE_MASK;
+	unknown_002ae8e0(voice);
+	voice[VOICE_FLAGS_OFFSET]&= ~FLAG(_voice_unknown2_bit);
+	*(real *)(voice+VOICE_DECIBELS_OFFSET)= SOUND_MINIMUM_DECIBELS;
+	unknown_002ae6f0(voice);
+	*(long *)(voice+VOICE_UNKNOWN2C_OFFSET)= unknown>0 ? unknown : 0;
+	if (*(const long *)(voice+VOICE_CONTROLLER_INDEX_OFFSET)!=NONE)
+	{
+		unknown_0037b822(*(void **)(voice+VOICE_UNKNOWN24_OFFSET), 1);
+	}
+	unknown_002ae7a0(voice, 0.1f, 0.1f);
 }

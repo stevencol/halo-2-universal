@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Una voz del sonido de la consola se para
+
+Una función en `sound/sound_manager.c`. De 865 funciones se pasa a
+866, el 7,69 % de las del juego (el 4,525 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_console_voice_stop` | `0x0021f5d0` | `sound/sound_manager.c` |
+
+Estaba apuntada sin descompilar (`unknown_0021f5d0`); la llama
+`sound_channel_resume`. Nuevas sin descompilar: `0x002ae8e0` y
+`0x002ae6f0`, de una voz de la consola.
+
+### Lo que se sabe
+
+- `sound_console_voice_stop` para una voz del sonido de la consola y la deja
+  como nueva: a su flujo le pregunta qué hace y le dice que pare (dos
+  funciones de su tabla, en `0xC` y `0x18`), avisa a la otra cosa que tiene
+  la voz (en `0x30`, función de `0x1C`), deja su estado en 0 y su volumen
+  en -64 decibelios.
+- El número de `0x2C` de la voz pasa a ser el que recibe la función, o 0 si
+  es menor.
+- Si la voz tiene mando de sonidos, se lo vuelve a decir a la consola
+  (`0x0037b822`).
+- Mientras lo hace, la voz lleva la marca 2.
+- El primer argumento es un número entero, no una palabra: el juego usa los
+  32 bits.
+- El nombre es una suposición.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y de
+  `sound_channel_resume`. La última batería completa es la del hito 200
+  (857 funciones, todas bien).
+
+### Mutaciones
+
+Nueve líneas rotas a mano: las pruebas notan las nueve, dos de ellas solo
+después de mirar la marca de la voz mientras se para y de probar con todos
+los estados.
+
 ## 2026-10-05 — El sonido de la consola cambia de quién lleva el sonido de los sitios
 
 Una función en `sound/sound_manager.c`. De 864 funciones se pasa a
