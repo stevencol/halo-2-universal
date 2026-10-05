@@ -227,6 +227,22 @@ enum
 	UNKNOWN_0051EBD8_DATUM_UNKNOWN_FLAG= 0x80,
 	UNKNOWN_0051EBD8_DATUM_UNKNOWNC_OFFSET= 0xC,
 	UNKNOWN_0051EBD8_DATUM_UNKNOWNC_SIZE= 0x10,
+	/* in what the game says of a sound: its type, as in a sound that plays */
+	SOUND_SOURCE_TYPE_OFFSET= 0x3,
+	/* of a sound effect: its kind, its flags and its sound */
+	SOUND_EFFECT_DATUM_KIND_OFFSET= 0x3,
+	SOUND_EFFECT_DATUM_FLAGS_OFFSET= 0x4,
+	_sound_effect_datum_unknown0_bit= 0,
+	_sound_effect_datum_unknown1_bit= 1,
+	_sound_effect_datum_unknown3_bit= 3,
+	_sound_effect_datum_unknown4_bit= 4,
+	SOUND_EFFECT_DATUM_UNKNOWN_FLAGS= 0x18,
+	SOUND_EFFECT_DATUM_SOURCE_INDEX_OFFSET= 0xC,
+	/* of a sound that plays, of a sound effect: the effect, and who the
+	sound had to tell before the effect took its place */
+	SOUND_SOURCE_DATUM_EFFECT_INDEX_OFFSET= 0x84,
+	SOUND_SOURCE_DATUM_EFFECT_CALLBACKS_OFFSET= 0x88,
+	_sound_source_deleted_unknown2= 2,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -488,7 +504,19 @@ long sound_playback_controller_acquire(long owner);
 /* 0x001462b0: a number from the clocks of the console; 0x00219ed0: of a
 sound playback controller */
 long unknown_001462b0(void);
-void unknown_00219ed0(boolean unknown, byte *controller, void *unknown2);
+void __attribute__((stdcall)) sound_playback_controller_unknown_00219ed0(boolean unknown, byte *controller,
+	const struct sound_source *source);
+
+/* 0x0014de10: the local player after one; 0x0012a9d0: something of a
+listener and a place; 0x0021d630: of a sound effect */
+long unknown_0014de10(long player_index);
+real unknown_0012a9d0(long listener_index, const real_point3d *position);
+void unknown_0021d630(long effect_index, long unknown);
+
+/* 0x0021d360, 0x0021d5a0 and 0x0021da90 */
+void sound_effect_unknown_0021d360(long effect_index);
+boolean sound_effect_unknown_0021d5a0(long effect_index);
+void __attribute__((stdcall)) sound_effect_source_deleted(long data, long source_index, long reason);
 
 /* 0x002194c0, 0x00219560, 0x00219e90, 0x00219a90 and 0x00219c30 */
 unsigned long __attribute__((stdcall)) sound_pitch_range_get_played_bits(const struct sound_pitch_range *pitch_range,
@@ -2687,7 +2715,7 @@ long sound_playback_controller_new(
 }
 
 /* 0x00219c30: the sound playback controller of something, if it has one,
-is given to unknown_00219ed0 with what the function is given */
+is given to sound_playback_controller_unknown_00219ed0 with what the function is given */
 void __attribute__((stdcall)) sound_playback_controller_unknown_00219c30(
 	long owner,
 	void *unknown)
@@ -2708,6 +2736,137 @@ void __attribute__((stdcall)) sound_playback_controller_unknown_00219c30(
 	controller= sound_playback_controller_try_and_get(controller_index);
 	if (controller)
 	{
-		unknown_00219ed0(globals[GAME_SOUND_GLOBALS_UNKNOWN7F_OFFSET]&1, controller, unknown);
+		sound_playback_controller_unknown_00219ed0(globals[GAME_SOUND_GLOBALS_UNKNOWN7F_OFFSET]&1, controller, unknown);
 	}
+}
+
+/* 0x00219ed0: a sound playback controller with something takes a flag, if
+it is not the one that it has: for a sound with a place, it is given too a
+real of each local player (what unknown_0012a9d0 says of the player and the
+place); for any other, its four reals are 0 */
+void __attribute__((stdcall)) sound_playback_controller_unknown_00219ed0(
+	boolean unknown,
+	byte *controller,
+	const struct sound_source *source)
+{
+	if (*(const long *)(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWN4_OFFSET)==NONE ||
+		(byte)(controller[UNKNOWN_0051EBD8_DATUM_SOUNDS_OFFSET]>>7)==unknown)
+	{
+		return;
+	}
+	if ((((const byte *)source)[SOUND_SOURCE_TYPE_OFFSET]&SOUND_SOURCE_DATUM_TYPE_MASK)==_sound_source_datum_type_positioned)
+	{
+		long player_index;
+
+		for (player_index= unknown_0014dde0(); player_index!=NONE; player_index= unknown_0014de10(player_index))
+		{
+			*(real *)(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWNC_OFFSET+player_index*4)=
+				unknown_0012a9d0(player_index, (const real_point3d *)((const byte *)source+SOUND_SOURCE_POSITION_OFFSET));
+		}
+	}
+	else
+	{
+		memset(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWNC_OFFSET, 0, UNKNOWN_0051EBD8_DATUM_UNKNOWNC_SIZE);
+	}
+	controller[UNKNOWN_0051EBD8_DATUM_SOUNDS_OFFSET]=
+		(controller[UNKNOWN_0051EBD8_DATUM_SOUNDS_OFFSET]&UNKNOWN_0051EBD8_DATUM_COUNT_MASK)|(byte)(unknown<<7);
+}
+
+static inline __attribute__((always_inline)) byte *sound_effect_get(
+	long effect_index)
+{
+	return (byte *)sound_effects->data+(effect_index&0xFFFF)*SOUND_EFFECT_DATUM_SIZE;
+}
+
+/* 0x0021d360: a sound effect is marked (the bits 3 and 4 of its flags),
+unknown_0021d630 is given it with a 2, and then its bit 0 is set */
+void sound_effect_unknown_0021d360(
+	long effect_index)
+{
+	byte *effect= sound_effect_get(effect_index);
+
+	effect[SOUND_EFFECT_DATUM_FLAGS_OFFSET]|= SOUND_EFFECT_DATUM_UNKNOWN_FLAGS;
+	unknown_0021d630(effect_index, 2);
+	effect[SOUND_EFFECT_DATUM_FLAGS_OFFSET]|= FLAG(_sound_effect_datum_unknown0_bit);
+}
+
+/* 0x0021d5a0: something of a sound effect, by its kind (the byte at 3). Of
+the kind 0: whether the bit 4 of its flags is not set. Of the kind 1: TRUE
+with any of the bits 3 and 4; if not, what sound_source_unknown_00127f10 says
+of its sound, and the effect is marked if the sound is. FALSE for the rest */
+boolean sound_effect_unknown_0021d5a0(
+	long effect_index)
+{
+	byte *effect= sound_effect_get(effect_index);
+
+	switch ((char)effect[SOUND_EFFECT_DATUM_KIND_OFFSET])
+	{
+	case 0:
+		return !((effect[SOUND_EFFECT_DATUM_FLAGS_OFFSET]>>_sound_effect_datum_unknown4_bit)&1);
+	case 1:
+	{
+		long source_index;
+		const byte *source;
+		word flags;
+		boolean result;
+
+		if (effect[SOUND_EFFECT_DATUM_FLAGS_OFFSET]&SOUND_EFFECT_DATUM_UNKNOWN_FLAGS)
+		{
+			return TRUE;
+		}
+		source_index= *(const long *)(effect+SOUND_EFFECT_DATUM_SOURCE_INDEX_OFFSET);
+		source= sound_source_get(source_index);
+		flags= 0;
+		result= sound_source_unknown_00127f10(source_index,
+			*(const struct sound_source_callbacks **)(source+SOUND_SOURCE_DATUM_EFFECT_CALLBACKS_OFFSET), (byte *)&flags);
+		if ((flags>>_sound_source_datum_unknown5_bit)&1)
+		{
+			effect[SOUND_EFFECT_DATUM_FLAGS_OFFSET]|= FLAG(_sound_effect_datum_unknown3_bit);
+		}
+
+		return result;
+	}
+	}
+
+	return FALSE;
+}
+
+/* 0x0021da90: what a sound of a sound effect has told when it is let go,
+if it is not that all are stopped: who the sound had to tell before the
+effect is told, the bit 1 of the flags of the effect says whether the reason
+was not 2, and then as sound_effect_unknown_0021d360 */
+void __attribute__((stdcall)) sound_effect_source_deleted(
+	long data,
+	long source_index,
+	long reason)
+{
+	const byte *source;
+	const struct sound_source_callbacks *callbacks;
+	byte *effect;
+	long effect_index;
+
+	if (reason==_sound_source_deleted_unknown10)
+	{
+		return;
+	}
+	source= sound_source_get(source_index);
+	effect= sound_effect_get(*(const long *)(source+SOUND_SOURCE_DATUM_EFFECT_INDEX_OFFSET));
+	callbacks= *(const struct sound_source_callbacks **)(source+SOUND_SOURCE_DATUM_EFFECT_CALLBACKS_OFFSET);
+	if (callbacks && callbacks->deleted)
+	{
+		callbacks->deleted(data, source_index, reason);
+	}
+	if (reason==_sound_source_deleted_unknown2)
+	{
+		effect[SOUND_EFFECT_DATUM_FLAGS_OFFSET]&= ~FLAG(_sound_effect_datum_unknown1_bit);
+	}
+	else
+	{
+		effect[SOUND_EFFECT_DATUM_FLAGS_OFFSET]|= FLAG(_sound_effect_datum_unknown1_bit);
+	}
+	effect_index= *(const long *)(source+SOUND_SOURCE_DATUM_EFFECT_INDEX_OFFSET);
+	effect= sound_effect_get(effect_index);
+	effect[SOUND_EFFECT_DATUM_FLAGS_OFFSET]|= SOUND_EFFECT_DATUM_UNKNOWN_FLAGS;
+	unknown_0021d630(effect_index, 2);
+	effect[SOUND_EFFECT_DATUM_FLAGS_OFFSET]|= FLAG(_sound_effect_datum_unknown0_bit);
 }

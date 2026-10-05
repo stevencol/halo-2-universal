@@ -1218,4 +1218,10 @@ address,name,source,arguments,returns,convention
 00219a90,sound_playback_controller_new,source/sound/sound_manager.c,eax,int
 00219c30,sound_playback_controller_unknown_00219c30,source/sound/sound_manager.c,eax stack,void,stdcall
 001462b0,unknown_001462b0,,,int
-00219ed0,unknown_00219ed0,,eax edi stack,void
+00219ed0,sound_playback_controller_unknown_00219ed0,source/sound/sound_manager.c,eax edi stack,void,stdcall
+0021d360,sound_effect_unknown_0021d360,source/sound/sound_manager.c,ecx,void
+0021d5a0,sound_effect_unknown_0021d5a0,source/sound/sound_manager.c,ecx,bool
+0021da90,sound_effect_source_deleted,source/sound/sound_manager.c,stack stack stack,void,stdcall
+0014de10,unknown_0014de10,,ecx,int
+0012a9d0,unknown_0012a9d0,,eax edx,real
+0021d630,unknown_0021d630,,stack stack,void

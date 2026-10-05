@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Una marca de un controlador y tres funciones de los efectos de sonido
+
+Cuatro funciones en `sound/sound_manager.c`. De 775 funciones se pasa a
+779, el 6,92 % de las del juego (el 3,698 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_playback_controller_unknown_00219ed0` | `0x00219ed0` | `sound/sound_manager.c` |
+| `sound_effect_unknown_0021d360` | `0x0021d360` | `sound/sound_manager.c` |
+| `sound_effect_unknown_0021d5a0` | `0x0021d5a0` | `sound/sound_manager.c` |
+| `sound_effect_source_deleted` | `0x0021da90` | `sound/sound_manager.c` |
+
+La primera estaba apuntada sin descompilar (`unknown_00219ed0`). Nuevas sin
+descompilar: `0x0014de10`, `0x0012a9d0` y `0x0021d630`.
+
+### Lo que se sabe
+
+- `sound_playback_controller_unknown_00219ed0` le cambia una marca (el bit
+  alto del byte `2`) a un controlador de reproducción, si no la tenía ya.
+  Para un sonido con sitio guarda además un real por cada jugador local
+  (lo que diga `0x0012a9d0` del jugador y del sitio); para los demás pone
+  sus cuatro reales a 0.
+- `sound_effect_unknown_0021d360` marca un efecto de sonido (bits 3 y 4), se
+  lo pasa a `0x0021d630` con un 2 y le pone el bit 0.
+- `sound_effect_unknown_0021d5a0` responde algo de un efecto según su tipo
+  (byte `3`): para el tipo 1 pregunta por su sonido a
+  `sound_source_unknown_00127f10`.
+- `sound_effect_source_deleted` es lo que se le dice a un efecto cuando se
+  suelta su sonido: avisa primero a quien el sonido tenía que avisar antes
+  de que el efecto ocupara su sitio (lo guarda en `0x88` del sonido, y el
+  efecto en `0x84`) y luego hace lo mismo que `sound_effect_unknown_0021d360`.
+  Con el motivo 10 (se paran todos) no hace nada.
+- Los nombres son inventados.
+
+### Sin comprobar
+
+- La batería completa no se pasó en este hito, solo las pruebas de estas
+  funciones y de las que las llaman.
+
+### Mutaciones
+
+Pendientes; corren aparte, en segundo plano.
+
 ## 2026-10-04 — Bytes por segundo, los bits de un rango de tono y un controlador nuevo
 
 Seis funciones en `sound/sound_manager.c`. De 769 funciones se pasa a

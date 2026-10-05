@@ -1814,9 +1814,106 @@ def run(t) -> None:
             },
             externals={
                 "sound_playback_controller_find": lambda harness, arguments, found=found: (found, tuple(arguments)),
-                "unknown_00219ed0": lambda harness, arguments: (
+                "sound_playback_controller_unknown_00219ed0": lambda harness, arguments: (
                     0,
                     (arguments[0] & 0xFF, harness.normalize(arguments[1]), arguments[2]),
                 ),
             },
         )
+
+    # ---------- a sound playback controller takes a flag, and three of the sound effects
+
+    random_ = random.Random(161)
+
+    for _ in range(300):
+        controller = bytearray(random_.randbytes(0x1C))
+        struct.pack_into("<I", controller, 4, random_.choice((NONE, 0, random_.getrandbits(32))))
+        controller[2] = random_.choice((0, 1, 0x7F, 0x80, 0xFF, 0x55))
+        said = bytearray(random_.randbytes(0x48))
+        said[3] = random_.choice((1, 1, 0x11, 0xF1, 0, 2, 0x10))
+        players = random_.choice(((), (0,), (1, 3), (0, 1, 2, 3)))
+
+        def first_player(harness, arguments, players=players):
+            return players[0] if players else NONE
+
+        def next_player(harness, arguments, players=players):
+            following = [player for player in players if player > arguments[0]]
+            return (following[0] if following else NONE), tuple(arguments)
+
+        def listener_real(harness, arguments):
+            return real_bits(arguments[0] * 1.5 + 0.25), (arguments[0], bytes(harness.mu.mem_read(arguments[1], 12)))
+
+        t.check(
+            "sound_playback_controller_unknown_00219ed0",
+            random_.choice((0, 1)),
+            Buffer(bytes(controller)),
+            Buffer(bytes(said)),
+            externals={"unknown_0014dde0": first_player, "unknown_0014de10": next_player, "unknown_0012a9d0": listener_real},
+        )
+
+    EFFECTS = 16
+
+    def effects_() -> Buffer:
+        data = bytearray(random_.randbytes(0x4C + EFFECTS * 0x14))
+        struct.pack_into("<I", data, 0x44, 0x4C)
+        for index in range(EFFECTS):
+            at = 0x4C + index * 0x14
+            data[at + 3] = random_.choice((0, 1, 1, 1, 2, 3, 0xFF))
+            data[at + 4] = random_.choice((0, 0, 8, 0x10, 0x18, 0xE7, 0xFF, 2))
+            struct.pack_into("<I", data, at + 0xC, random_.getrandbits(16) << 16 | random_.randrange(PLAYING))
+        return Buffer(bytes(data), pointers=(0x44,))
+
+    def effect_update(harness, arguments):
+        # what the effect is when the function is called
+        effects_address = struct.unpack("<I", harness.mu.mem_read(harness.global_addresses["sound_effects"], 4))[0]
+        elements = struct.unpack("<I", harness.mu.mem_read(effects_address + 0x44, 4))[0]
+        return 0, (tuple(arguments), bytes(harness.mu.mem_read(elements + (arguments[0] & 0xFFFF) * 0x14, 0x14)))
+
+    for _ in range(40):
+        buffer, indices = playing()
+        for index in range(EFFECTS):
+            effect_index = random_.getrandbits(16) << 16 | index
+            t.check(
+                "sound_effect_unknown_0021d360",
+                effect_index,
+                globals={"sound_effects": effects_()},
+                externals={"unknown_0021d630": effect_update},
+            )
+            mark = random_.choice((0, 0x20, 0xFF, 0xDF))
+
+            def asked(harness, arguments, mark=mark):
+                source_index, callbacks, flags = arguments
+                record = source_index, harness.normalize(callbacks), bytes(harness.mu.mem_read(flags, 2))
+                harness.mu.mem_write(flags, bytes((mark,)))
+                return source_index & 1 | (source_index >> 3 & 1) << 8, record
+
+            t.check(
+                "sound_effect_unknown_0021d5a0",
+                effect_index,
+                globals={"sound_effects": effects_(), "sound_sources": Buffer(buffer.data, pointers=buffer.pointers)},
+                externals={"sound_source_unknown_00127f10": asked},
+            )
+
+    for _ in range(60):
+        buffer, indices = playing((random_.random() < 0.8, 1))
+        data = bytearray(buffer.data)
+        table = 0x4C + PLAYING * DATUM
+        pointers = [0x44]
+        for index in range(PLAYING):
+            at = 0x4C + index * DATUM
+            struct.pack_into("<I", data, at + 0x84, random_.getrandbits(16) << 16 | random_.randrange(EFFECTS))
+            if random_.random() < 0.7:
+                struct.pack_into("<I", data, at + 0x88, table)
+                pointers.append(at + 0x88)
+            else:
+                struct.pack_into("<I", data, at + 0x88, 0)
+        for index in range(PLAYING):
+            t.check(
+                "sound_effect_source_deleted",
+                random_.getrandbits(32),
+                random_.getrandbits(16) << 16 | index,
+                random_.choice((10, 2, 2, 0, 1, 3)),
+                globals={"sound_effects": effects_(), "sound_sources": Buffer(bytes(data), pointers=tuple(pointers))},
+                externals={"unknown_0021d630": effect_update},
+                mocks=told(),
+            )
