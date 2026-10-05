@@ -315,6 +315,11 @@ enum
 	SOUND_VOICE_START_CONTROLLER_INDEX_OFFSET= 0x2C,
 	/* in what the game says of a sound: where it is in the structure bsp */
 	SOUND_SOURCE_LOCATION_OFFSET= 0x28,
+	/* what a tag says of a sound effect, and more of a sound effect */
+	SOUND_EFFECT_COLLECTION_COUNT_OFFSET= 0x2C,
+	SOUND_EFFECT_DEFINITION_UNKNOWN8_OFFSET= 0x8,
+	SOUND_EFFECT_DATUM_UNKNOWN6_OFFSET= 0x6,
+	SOUND_EFFECT_DATUM_DEFINITION_OFFSET= 0x10,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -684,6 +689,17 @@ real unknown_00249d60(long cluster_index, long other_cluster_index, const void *
 void __attribute__((stdcall)) sound_console_voice_start(const byte *unknown, long voice_index);
 boolean __attribute__((stdcall)) sound_source_unknown_00221da0(long listener_index, const struct sound_source *source,
 	real unknown);
+
+/* 0x0018d090 and 0x0018d170: what a tag has of the sound effects;
+0x0018cbc0: what the game says of the sound of something */
+const byte *unknown_0018d090(long tag_index, long unknown);
+const byte *unknown_0018d170(long tag_index);
+void unknown_0018cbc0(long unknown, struct sound_source *source);
+
+/* 0x0021d2c0, 0x0021db80 and 0x0021dd30 */
+long __attribute__((stdcall)) sound_effect_new(long unknown, real unknownC, short unknown6);
+void sound_effect_get_source(long effect_index, struct sound_source *source);
+boolean __attribute__((stdcall)) sound_effect_definition_get(long tag_index, long unknown, const byte **definition);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -4153,4 +4169,123 @@ boolean __attribute__((stdcall)) sound_source_unknown_00221da0(
 	}
 
 	return !(256.0f>unknown_00249d60(listener->cluster_index, cluster_index, global_structure_bsp)*unknown);
+}
+
+/* 0x0021dd30: what a tag says of a sound effect: the elements of a block of
+what unknown_0018d090 gives for the tag and a number; whether the first has
+anything at 8. FALSE if there is no such block. What unknown_0018d170 gives
+is only looked at when the number is NONE, and it changes nothing */
+boolean __attribute__((stdcall)) sound_effect_definition_get(
+	long tag_index,
+	long unknown,
+	const byte **definition)
+{
+	const byte *first= unknown_0018d090(tag_index, unknown);
+	const byte *second= unknown_0018d170(tag_index);
+	const byte *elements;
+
+	if (!(first && *(const long *)(first+SOUND_EFFECT_COLLECTION_COUNT_OFFSET)))
+	{
+		if (unknown!=NONE || !second || !*(const long *)(second+SOUND_EFFECT_COLLECTION_COUNT_OFFSET))
+		{
+			return FALSE;
+		}
+	}
+	if (*(const long *)(first+SOUND_EFFECT_COLLECTION_COUNT_OFFSET)<=0)
+	{
+		return FALSE;
+	}
+	elements= *(const byte *const *)(first+SOUND_EFFECT_COLLECTION_COUNT_OFFSET+4);
+	if (!elements)
+	{
+		return FALSE;
+	}
+	*definition= elements;
+
+	return *(const long *)(elements+SOUND_EFFECT_DEFINITION_UNKNOWN8_OFFSET)>0;
+}
+
+/* 0x0021d2c0: a new sound effect, of what a number says of it, with a real
+and a number of 16 bits. NONE if there is nothing for it, or no room */
+long __attribute__((stdcall)) sound_effect_new(
+	long unknown,
+	real unknownC,
+	short unknown6)
+{
+	const byte *definition= NULL;
+	long effect_index= NONE;
+	byte *effect;
+
+	if (!sound_effect_definition_get(NONE, unknown, &definition))
+	{
+		return NONE;
+	}
+	if (*(const long *)(definition+SOUND_EFFECT_DEFINITION_UNKNOWN8_OFFSET))
+	{
+		effect_index= datum_new(sound_effects);
+		if (effect_index==NONE)
+		{
+			return NONE;
+		}
+		effect= sound_effect_get(effect_index);
+		*(const byte **)(effect+SOUND_EFFECT_DATUM_DEFINITION_OFFSET)= definition;
+		*(long *)(effect+SOUND_EFFECT_DATUM_CONTROLLER_INDEX_OFFSET)= NONE;
+	}
+	if (effect_index==NONE)
+	{
+		return NONE;
+	}
+	effect= sound_effect_get(effect_index);
+	effect[SOUND_EFFECT_DATUM_KIND_OFFSET]= 0;
+	*(real *)(effect+SOUND_EFFECT_DATUM_SOURCE_INDEX_OFFSET)= unknownC;
+	*(short *)(effect+SOUND_EFFECT_DATUM_UNKNOWN6_OFFSET)= unknown6;
+	unknown_0021d630(effect_index, 0);
+
+	return effect_index;
+}
+
+/* 0x0021db80: what the game says of the sound of a sound effect, by the
+kind of the effect. Of the kind 0, which has no sound: no type, and the
+number of the effect. Of the kind 1: what its sound that plays says, with
+the distances that it is heard at, if its flag 8 asks for them. Of the kind
+2: what unknown_0018cbc0 gives */
+void sound_effect_get_source(
+	long effect_index,
+	struct sound_source *source)
+{
+	const byte *effect= sound_effect_get(effect_index);
+	byte *bytes= (byte *)source;
+
+	switch ((char)effect[SOUND_EFFECT_DATUM_KIND_OFFSET])
+	{
+	case 0:
+		bytes[SOUND_SOURCE_TYPE_OFFSET]= 0;
+		*(long *)(bytes+4)= *(const long *)(effect+SOUND_EFFECT_DATUM_SOURCE_INDEX_OFFSET);
+		*(long *)(bytes+8)= 0;
+		break;
+	case 1:
+	{
+		const byte *playing= sound_source_get(*(const long *)(effect+SOUND_EFFECT_DATUM_SOURCE_INDEX_OFFSET));
+		const struct sound_source *said= (const struct sound_source *)(playing+SOUND_SOURCE_DATUM_UNKNOWN18_OFFSET);
+
+		if (source!=said)
+		{
+			memcpy(source, said, LOOPING_SOUND_DATUM_SOURCE_SIZE);
+			if (bytes[1]&1)
+			{
+				real distance= sound_get_minimum_distance(said, *(const long *)(playing+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET));
+
+				bytes[0]|= 4;
+				source->minimum_distance= distance;
+				distance= sound_get_maximum_distance(said, *(const long *)(playing+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET));
+				*(word *)bytes|= 0x208;
+				source->maximum_distance= distance;
+			}
+		}
+		break;
+	}
+	case 2:
+		unknown_0018cbc0(*(const long *)(effect+SOUND_EFFECT_DATUM_SOURCE_INDEX_OFFSET), source);
+		break;
+	}
 }

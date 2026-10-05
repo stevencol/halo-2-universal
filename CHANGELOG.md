@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Un efecto de sonido nuevo y lo que dice de su sonido
+
+Tres funciones en `sound/sound_manager.c`. De 818 funciones se pasa a
+821, el 7,29 % de las del juego (el 3,923 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_effect_new` | `0x0021d2c0` | `sound/sound_manager.c` |
+| `sound_effect_get_source` | `0x0021db80` | `sound/sound_manager.c` |
+| `sound_effect_definition_get` | `0x0021dd30` | `sound/sound_manager.c` |
+
+Nuevas sin descompilar: `0x0018d090`, `0x0018d170` y `0x0018cbc0`.
+
+### Lo que se sabe
+
+- `sound_effect_definition_get` busca lo que un tag dice de un efecto de
+  sonido: los elementos de un bloque (en `0x2C`) de lo que da `0x0018d090`,
+  y dice si el primero tiene algo en `8`. Lo que da `0x0018d170` solo se
+  mira cuando el número es `NONE`, y no cambia el resultado: en ese caso, si
+  la primera no dio nada, el juego lee de un puntero nulo.
+- `sound_effect_new` crea un efecto de sonido con un real y un número de 16
+  bits, y se lo pasa a `0x0021d630` con un 0. Recibe el real en `xmm0`.
+- `sound_effect_get_source` da lo que el juego dice del sonido de un efecto
+  según su tipo: para el tipo 1 copia lo que dice su sonido, con las
+  distancias a las que se oye si su marca 8 las pide; para el tipo 2 lo
+  pide a `0x0018cbc0`.
+- Los nombres son inventados.
+
+### Sin comprobar
+
+- La batería completa no se pasó en este hito, solo las pruebas de estas
+  funciones.
+
+### Mutaciones
+
+Pendientes; corren aparte, en segundo plano.
+
 ## 2026-10-04 — Las voces al cambiar de bsp, arrancar una voz de la consola y dos clusters
 
 Tres funciones en `sound/sound_manager.c`. De 815 funciones se pasa a

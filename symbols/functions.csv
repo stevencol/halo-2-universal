@@ -1263,3 +1263,9 @@ address,name,source,arguments,returns,convention
 002201f0,unknown_002201f0,,eax stack,void
 0021fa80,unknown_0021fa80,,stack stack stack,void
 00249d60,unknown_00249d60,,eax ecx edx,real:xmm0
+0021d2c0,sound_effect_new,source/sound/sound_manager.c,ecx xmm0 stack,int,stdcall
+0021db80,sound_effect_get_source,source/sound/sound_manager.c,eax ebx,void
+0021dd30,sound_effect_definition_get,source/sound/sound_manager.c,edi stack stack,bool,stdcall
+0018d090,unknown_0018d090,,ecx edx,pointer
+0018d170,unknown_0018d170,,ecx,pointer
+0018cbc0,unknown_0018cbc0,,eax ecx,void
