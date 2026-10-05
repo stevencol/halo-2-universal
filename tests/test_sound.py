@@ -7,7 +7,7 @@
 import random
 import struct
 
-from difftest import Buffer, Memory, Mock, Pointer, mock_address
+from difftest import Buffer, GlobalRange, Memory, Mock, Pointer, mock_address
 from test_async import calls_so_far
 from test_data import array as data_array
 from test_data import identifier
@@ -2182,7 +2182,7 @@ def run(t) -> None:
             Buffer(random_.randbytes(8)),
             Buffer(random_.randbytes(0x30)),
             globals={"unknown_0051ebe4": Buffer(random_.randbytes(0x2AC0))},
-            externals={"unknown_0021e3b0": lambda harness, arguments: (0, tuple(arguments))},
+            externals={"sound_console_set_environment_handler": lambda harness, arguments: (0, tuple(arguments))},
         )
 
     for _ in range(120):
@@ -4773,3 +4773,35 @@ def run(t) -> None:
             # both of the same thing
             wanted[0x1C + 8 : 0x1C + 0xC] = wanted[8:0xC]
         t.check("sound_unknown_states_set", Buffer(bytes(wanted)), globals={"game_sound_globals": Buffer(bytes(state))})
+
+    # ---------- the console's sound takes another handler of the sound of the places of the map
+
+    random_ = random.Random(208)
+
+    def handler_mocks() -> list:
+        mocks = []
+        for _ in range(2):
+            mocks += [
+                Mock(lambda call: 0, stack_arguments=3, registers=("ecx",)),
+                Mock(lambda call: 0, stack_arguments=0, registers=("ecx",)),
+                Mock(lambda call: 0, stack_arguments=2, registers=("ecx",)),
+            ]
+        return mocks
+
+    for _ in range(200):
+        console = bytearray(random_.randbytes(0x2AC0))
+        old = len(console)
+        # the handler that it has, with its functions after it
+        console += struct.pack("<4I", old + 4, mock_address(3), mock_address(4), mock_address(5))
+        pointers = [old]
+        if random_.random() < 0.7:
+            struct.pack_into("<I", console, 0x2AB4, old)
+            pointers.append(0x2AB4)
+        else:
+            struct.pack_into("<I", console, 0x2AB4, 0)
+        t.check(
+            "sound_console_set_environment_handler",
+            Buffer(struct.pack("<4I", 4, mock_address(0), mock_address(1), mock_address(2)) + random_.randbytes(8), pointers=(0,)),
+            globals={"unknown_0051ebe4": Buffer(bytes(console), pointers=tuple(pointers)), "unknown_00470060": GlobalRange(0x24)},
+            mocks=handler_mocks(),
+        )

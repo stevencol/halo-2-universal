@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — El sonido de la consola cambia de quién lleva el sonido de los sitios
+
+Una función en `sound/sound_manager.c`. De 864 funciones se pasa a
+865, el 7,68 % de las del juego (el 4,521 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_console_set_environment_handler` | `0x0021e3b0` | `sound/sound_manager.c` |
+
+Estaba apuntada sin descompilar (`unknown_0021e3b0`); la llama
+`sound_console_set_environment`. También las estructuras
+`sound_console_environment_handler` y la de sus tres funciones, y el global
+`unknown_00470060` (`0x24` bytes).
+
+### Lo que se sabe
+
+- En `0x2AB4` del sonido de la consola hay un objeto con tres funciones, que
+  lo reciben en `ecx` y quitan sus argumentos de la pila.
+- `sound_console_set_environment_handler` lo cambia por otro: al que había,
+  si había, le avisa de que se suelta (la segunda función); al nuevo le da
+  lo que guarda `sound_console_set_environment` (la primera) y después
+  `unknown_00470060` (la tercera), las dos veces con el byte de `1` del
+  sonido de la consola.
+- Qué hacen esas funciones no se sabe: no están en este ejecutable por
+  nombre. El nombre de la función es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y de
+  `sound_console_set_environment`. La última batería completa es la del
+  hito 200 (857 funciones, todas bien).
+
+### Mutaciones
+
+Seis líneas rotas a mano: las pruebas notan las seis.
+
 ## 2026-10-05 — Los dos estados que el sonido guarda en 0x1A8
 
 Una función en `sound/sound_manager.c`, de 625 bytes. De 863 funciones se pasa a

@@ -529,6 +529,8 @@ enum
 	SOUND_CLASS_STATES_OFFSET= 0x28,
 	SOUND_CLASS_STATE_SIZE= 0x10,
 	GAME_SOUND_GLOBALS_UNKNOWN_STATES_OFFSET= 0x1A8,
+	UNKNOWN_0051EBE4_ENVIRONMENT_SIZE= 0x40,
+	UNKNOWN_0051EBE4_UNKNOWN1_OFFSET= 0x1,
 	NUMBER_OF_SOUND_UNKNOWN_STATES= 2,
 	_sound_source_datum_unknown3_bit= 3,
 	_sound_source_datum_unknown4_bit= 4,
@@ -695,6 +697,25 @@ struct sound_unknown_state
 typedef char verify_sound_unknown_state_size[
 	sizeof(struct sound_unknown_state) == 0x1C ? 1 : -1];
 
+/* what the game keeps at 0x2AB4 of the console's sound: something with three
+functions, which take it in ecx and take their arguments off the stack. The
+first is given the sound of the places of the map */
+struct sound_console_environment_handler;
+
+struct sound_console_environment_handler_functions
+{
+	void (__attribute__((thiscall)) *set)(struct sound_console_environment_handler *handler, const void *environment,
+		const void *unknown, long unknown2);
+	void (__attribute__((thiscall)) *dispose)(struct sound_console_environment_handler *handler);
+	void (__attribute__((thiscall)) *unknown8)(struct sound_console_environment_handler *handler, const void *unknown,
+		long unknown2);
+};
+
+struct sound_console_environment_handler
+{
+	const struct sound_console_environment_handler_functions *functions;
+};
+
 /* a sound of which it is to be worked out how it is heard where it is */
 struct sound_query
 {
@@ -774,6 +795,10 @@ long unknown_0047f0e4;
 
 /* 0x00470084 and 0x00470088: a frequency, 8000, and some decibels, 0, for
 the filter of the slots of the console's sound */
+/* 0x00470060: 0x24 bytes for the handler of the sound of the places of the
+map. What they are is not known */
+byte unknown_00470060[0x24];
+
 long unknown_00470084= 8000;
 real unknown_00470088= 0.0f;
 
@@ -1055,7 +1080,8 @@ struct sound_console_i3dl2_source;
 struct sound_console_filter;
 void unknown_0037c6e5(void *stream, const struct sound_console_i3dl2_source *source, long apply);
 void unknown_0037b68b(void *stream, const struct sound_console_filter *filter);
-void unknown_0021e3b0(void *unknown);
+struct sound_console_environment_handler;
+void sound_console_set_environment_handler(struct sound_console_environment_handler *handler);
 
 /* 0x00126660 */
 struct sound_unknown_state;
@@ -4037,7 +4063,7 @@ void sound_channels_unknown_00129380(
 
 /* 0x0021f6d0: the sound of the places of the map is set: two pairs of
 numbers and 0x30 bytes, kept in what the game has of the console's sound,
-and then unknown_0021e3b0 with what is at 0x2AB4 of it */
+and then sound_console_set_environment_handler with what is at 0x2AB4 of it */
 void __attribute__((stdcall)) sound_console_set_environment(
 	const long *second,
 	const long *first,
@@ -4051,7 +4077,8 @@ void __attribute__((stdcall)) sound_console_set_environment(
 	numbers[2]= second[0];
 	numbers[3]= second[1];
 	memcpy(&numbers[4], unknown, UNKNOWN_0051EBE4_ENVIRONMENT_UNKNOWN_SIZE);
-	unknown_0021e3b0(*(void **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB4_OFFSET));
+	sound_console_set_environment_handler(
+		*(struct sound_console_environment_handler **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB4_OFFSET));
 }
 
 /* 0x00221900: some seconds go by for the classes of sounds: each has three
@@ -7863,4 +7890,29 @@ void sound_unknown_states_set(
 			state->amount= state->amount+sound_step_towards(0.0f-state->amount, step);
 		}
 	}
+}
+
+/* 0x0021e3b0: the console's sound takes another handler of the sound of the
+places of the map: the one that it had, if it had one, is told that it is let
+go; the new one is given what sound_console_set_environment keeps, with the
+byte at 1 of the console's sound, and then unknown_00470060 with that byte.
+The name is made up */
+void sound_console_set_environment_handler(
+	struct sound_console_environment_handler *handler)
+{
+	byte *console= unknown_0051ebe4;
+	struct sound_console_environment_handler *old=
+		*(struct sound_console_environment_handler **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB4_OFFSET);
+
+	if (old)
+	{
+		old->functions->dispose(old);
+		console= unknown_0051ebe4;
+	}
+	*(struct sound_console_environment_handler **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB4_OFFSET)= handler;
+	handler->functions->set(handler, console+UNKNOWN_0051EBE4_ENVIRONMENT_OFFSET,
+		console+UNKNOWN_0051EBE4_ENVIRONMENT_OFFSET+UNKNOWN_0051EBE4_ENVIRONMENT_SIZE, console[UNKNOWN_0051EBE4_UNKNOWN1_OFFSET]);
+	console= unknown_0051ebe4;
+	handler= *(struct sound_console_environment_handler **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB4_OFFSET);
+	handler->functions->unknown8(handler, unknown_00470060, console[UNKNOWN_0051EBE4_UNKNOWN1_OFFSET]);
 }
