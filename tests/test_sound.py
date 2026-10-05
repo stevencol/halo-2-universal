@@ -485,7 +485,7 @@ def run(t) -> None:
 
     # ---------- giving the sound some time
 
-    idle_names = ("unknown_0021ec00", "unknown_001269f0", "sound_channels_update", "unknown_001293f0", "unknown_0021ee80", "sound_cache_idle")
+    idle_names = ("unknown_0021ec00", "sound_update_time", "sound_channels_update", "unknown_001293f0", "unknown_0021ee80", "sound_cache_idle")
 
     def flags_then(harness, arguments):
         # the two flags that are set while the sound is given time
@@ -908,7 +908,7 @@ def run(t) -> None:
         "unknown_0021ec00",
         "sound_playback_controllers_unknown_00219d90",
         "sound_console_streams_resume",
-        "unknown_001269f0",
+        "sound_update_time",
         "unknown_00127400",
         "sound_playback_controllers_update",
         "unknown_0021b0e0",
@@ -3545,5 +3545,44 @@ def run(t) -> None:
             externals={
                 "unknown_0018d090": lambda harness, arguments, first=first: (first.address if first else 0, tuple(arguments)),
                 "unknown_0018d170": lambda harness, arguments, second=second: (second.address if second else 0, tuple(arguments)),
+            },
+        )
+
+    # ---------- the time of the sound goes on
+
+    random_ = random.Random(187)
+
+    for _ in range(900):
+        before = random_.choice((1000, 0, 0xFFFFFF00, 0x7FFFFFF0))
+        now = (before + random_.choice((0, 1, 16, 33, 34, 500, 1000, 5000, -5))) & 0xFFFFFFFF
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        struct.pack_into("<Ii", state, 0x80, before, random_.choice((0, 100, 5000, 0x7FFFFF00)))
+        struct.pack_into("<f", state, 0x1E0, random_.uniform(0, 1))
+        struct.pack_into("<f", state, 0x1E4, random_.choice((0.0, 1.0, 0.5, 0.25, 0.999, 0.001, -0.5, 1.5)))
+        struct.pack_into("<i", state, 0x1E8, random_.choice((-1, -1, 0, 10, 400, 100000)))
+        struct.pack_into(
+            "<3f",
+            state,
+            0x1EC,
+            random_.choice((0.0, 0.25, 1.0)),
+            random_.choice((0.0, 0.0005, 0.5, 2.0)),
+            random_.choice((0.0, 0.0005, 0.5, 2.0)),
+        )
+        struct.pack_into("<f", state, 0x1FC, random_.uniform(0, 100))
+        struct.pack_into("<f", state, 0x204, random_.uniform(0, 100))
+        game = bytearray(random_.randbytes(0x1200))
+        struct.pack_into("<i", game, 8, random_.choice((1, 1, 1, 0, 2, 3)))
+        game[0x1120] = random_.choice((1, 1, 1, 0, 0x80))
+        game[0x1121] = random_.choice((0, 1, 1, 0x80))
+        pending = random_.choice((0, 0, 0, 1))
+        t.check(
+            "sound_update_time",
+            globals={
+                "game_sound_globals": Buffer(bytes(state)),
+                "main_game_globals": random_.choice((Buffer(bytes(game)), Buffer(bytes(game)), Buffer(bytes(game)), 0)),
+            },
+            externals={
+                "GetTickCount": lambda harness, arguments, now=now: now,
+                "main_action_pending": lambda harness, arguments, pending=pending: pending,
             },
         )

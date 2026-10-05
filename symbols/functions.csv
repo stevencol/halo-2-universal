@@ -789,7 +789,7 @@ address,name,source,arguments,returns,convention
 00125ef0,sound_unknown_00125ef0,source/sound/sound_manager.c,eax,void
 00125f10,sound_predict,source/sound/sound_manager.c,edx,void
 0021ec00,unknown_0021ec00,,,void
-001269f0,unknown_001269f0,,,void
+001269f0,sound_update_time,source/sound/sound_manager.c,,void
 001290d0,sound_channels_update,source/sound/sound_manager.c,,void
 001293f0,unknown_001293f0,,,void
 0021ee80,unknown_0021ee80,,,void

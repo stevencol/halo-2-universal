@@ -424,6 +424,14 @@ enum
 	_sound_class_internal_unknown2_bit= 2,
 	/* in a tag that sound_request_unknown_002226b0 reads: a block */
 	SOUND_ENVIRONMENT_TAG_BLOCK_OFFSET= 0x14,
+	/* in the globals of the sound: the thousandths of a second that are
+	left before the sound goes down when the game is paused */
+	GAME_SOUND_GLOBALS_PAUSE_WAIT_OFFSET= 0x1E8,
+	/* in the globals of the game: the kind of game, whether one is going on
+	and whether it is paused */
+	MAIN_GAME_GLOBALS_MODE_OFFSET= 0x8,
+	MAIN_GAME_GLOBALS_ACTIVE_OFFSET= 0x1120,
+	MAIN_GAME_GLOBALS_PAUSED_OFFSET= 0x1121,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -611,7 +619,7 @@ real __attribute__((stdcall)) sound_voice_playback_rate(short voice_index, long 
 void sound_channels_update(void);
 
 void unknown_0021ec00(void);
-void unknown_001269f0(void);
+void sound_update_time(void);
 void unknown_001293f0(void);
 void unknown_0021ee80(void);
 void sound_cache_idle(void);
@@ -1430,7 +1438,7 @@ void sound_idle(
 			if (sound_available())
 			{
 				unknown_0021ec00();
-				unknown_001269f0();
+				sound_update_time();
 				sound_channels_update();
 				unknown_001293f0();
 				unknown_0021ee80();
@@ -1866,7 +1874,7 @@ void sound_update(
 			sound_console_get_state(globals);
 			if (!globals[GAME_SOUND_GLOBALS_DISABLED_OFFSET])
 			{
-				unknown_001269f0();
+				sound_update_time();
 				globals= game_sound_globals;
 			}
 			sound_classes_update(*(real *)(globals+GAME_SOUND_GLOBALS_SECONDS_OFFSET));
@@ -3598,7 +3606,7 @@ long __attribute__((stdcall)) looping_sound_unknown_0021a050(
 		return FALSE;
 	}
 
-	return *(const long *)(definition+looping_sound_unknown_0044a188[next]+4)!=NONE;
+	return *(const long *)(definition+looping_sound_unknown_0044a188[(long)next]+4)!=NONE;
 }
 
 /* 0x0021a080: FALSE if the byte at 0xC of something is 0, 3 or 5 and the
@@ -3613,7 +3621,7 @@ boolean looping_sound_unknown_0021a080(
 	{
 		char next= (char)unknown[LOOPING_SOUND_UNKNOWND_OFFSET];
 
-		if (looping_sound_unknown_0044a16c[current]==next || looping_sound_unknown_0044a150[current]==next)
+		if (looping_sound_unknown_0044a16c[(long)current]==next || looping_sound_unknown_0044a150[(long)current]==next)
 		{
 			result= TRUE;
 		}
@@ -5733,5 +5741,98 @@ void sound_request_unknown_002226b0(
 	{
 		request[SOUND_REQUEST_UNKNOWN90_OFFSET]= (byte)number;
 		*(unsigned long *)request|= FLAG(_sound_request_unknown9_bit);
+	}
+}
+
+/* how much a real that goes towards another moves in a step: the step, but
+no more than what is left, and back by as much if it is less than nothing */
+static inline __attribute__((always_inline)) real sound_step_towards(
+	real left,
+	real step)
+{
+	real back= 0.0f-step;
+
+	if (back>left)
+	{
+		return back;
+	}
+
+	return left>step ? step : left;
+}
+
+/* 0x001269f0: the time of the sound goes on, by the clock of the console:
+its thousandths of a second, the seconds of this time, and the two reals
+that count seconds for sound_set_unknown1f8. And the real at 0x1E4 follows
+the game, in a campaign that is going on: it goes down to 0 while the game
+is paused, after a wait and as fast as two numbers of the sound of the
+places of the map say, and back up to 1 when it goes on, as fast as a
+third says, unless something is to be done by the main loop. It is 1 for
+any other game */
+void sound_update_time(
+	void)
+{
+	unsigned long now= GetTickCount();
+	byte *globals= game_sound_globals;
+	long elapsed= (long)(now-*(const unsigned long *)(globals+GAME_SOUND_GLOBALS_START_TIME_OFFSET));
+	real seconds= (real)elapsed*0.001f;
+	const byte *game= (const byte *)main_game_globals;
+
+	*(unsigned long *)(globals+GAME_SOUND_GLOBALS_START_TIME_OFFSET)= now;
+	*(long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET)+= elapsed;
+	*(real *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1FC_OFFSET)+= seconds;
+	*(real *)(globals+GAME_SOUND_GLOBALS_SECONDS_OFFSET)= seconds;
+	*(real *)(globals+GAME_SOUND_GLOBALS_UNKNOWN204_OFFSET)+= seconds;
+	if (!game || !game[MAIN_GAME_GLOBALS_ACTIVE_OFFSET] || *(const long *)(game+MAIN_GAME_GLOBALS_MODE_OFFSET)!=_game_mode_campaign)
+	{
+		*(real *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1E4_OFFSET)= 1.0f;
+		return;
+	}
+	if (game[MAIN_GAME_GLOBALS_PAUSED_OFFSET])
+	{
+		long wait;
+		real duration;
+
+		if (*(const long *)(globals+GAME_SOUND_GLOBALS_PAUSE_WAIT_OFFSET)==NONE)
+		{
+			*(long *)(globals+GAME_SOUND_GLOBALS_PAUSE_WAIT_OFFSET)=
+				(long)(*(const real *)(globals+GAME_SOUND_GLOBALS_ENVIRONMENT_OFFSET)*1000.0f);
+		}
+		wait= *(const long *)(globals+GAME_SOUND_GLOBALS_PAUSE_WAIT_OFFSET);
+		if (wait>0)
+		{
+			wait-= elapsed;
+			*(long *)(globals+GAME_SOUND_GLOBALS_PAUSE_WAIT_OFFSET)= wait<=0 ? 0 : wait;
+		}
+		if (*(const long *)(globals+GAME_SOUND_GLOBALS_PAUSE_WAIT_OFFSET))
+		{
+			return;
+		}
+		duration= 0.001f;
+		if (!(duration>*(const real *)(globals+GAME_SOUND_GLOBALS_ENVIRONMENT_OFFSET+4)))
+		{
+			duration= *(const real *)(globals+GAME_SOUND_GLOBALS_ENVIRONMENT_OFFSET+4);
+		}
+		*(real *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1E4_OFFSET)=
+			sound_step_towards(0.0f-*(const real *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1E4_OFFSET), seconds/duration)+
+			*(const real *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1E4_OFFSET);
+	}
+	else
+	{
+		real duration;
+
+		if (main_action_pending())
+		{
+			return;
+		}
+		duration= 0.001f;
+		if (!(duration>*(const real *)(globals+GAME_SOUND_GLOBALS_ENVIRONMENT_OFFSET+8)))
+		{
+			duration= *(const real *)(globals+GAME_SOUND_GLOBALS_ENVIRONMENT_OFFSET+8);
+		}
+		*(real *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1E4_OFFSET)=
+			*(const real *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1E4_OFFSET)+
+			sound_step_towards(1.0f-*(const real *)(globals+GAME_SOUND_GLOBALS_UNKNOWN1E4_OFFSET),
+				*(const real *)(globals+GAME_SOUND_GLOBALS_SECONDS_OFFSET)/duration);
+		*(long *)(globals+GAME_SOUND_GLOBALS_PAUSE_WAIT_OFFSET)= NONE;
 	}
 }

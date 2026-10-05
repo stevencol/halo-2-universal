@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — El reloj del sonido y el fundido al pausar
+
+Una función en `sound/sound_manager.c`. De 843 funciones se pasa a
+844, el 7,49 % de las del juego (el 4,143 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_update_time` | `0x001269f0` | `sound/sound_manager.c` |
+
+Estaba apuntada sin descompilar (`unknown_001269f0`); la llama `sound_idle`.
+
+### Lo que se sabe
+
+- `sound_update_time` hace avanzar el tiempo del sonido con el reloj de la
+  consola: sus milésimas (`0x84`), los segundos de esta vez (`0x1E0`) y los
+  dos reales que cuentan segundos para `sound_set_unknown1f8`.
+- Además mueve el real de `0x1E4`, que sigue a la pausa del juego en una
+  campaña en curso: baja a 0 mientras el juego está en pausa, tras una
+  espera y a la velocidad que dicen dos números del sonido de los sitios
+  del mapa, y vuelve a 1 al reanudar, a la velocidad que dice un tercero,
+  salvo que el bucle principal tenga algo pendiente. En cualquier otra
+  partida vale 1.
+- En los globales del juego, `0x1120` dice si hay partida en curso y
+  `0x1121` si está en pausa.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y de
+  `sound_idle`. La batería completa corre aparte con las 843 funciones del
+  hito 186.
+
+### Mutaciones
+
+Pendientes las de los hitos 156 a 187.
+
 ## 2026-10-04 — Dos datos más para arrancar un sonido
 
 Dos funciones en `sound/sound_manager.c`. De 841 funciones se pasa a
