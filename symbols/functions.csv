@@ -1293,4 +1293,4 @@ address,name,source,arguments,returns,convention
 00128ca0,unknown_00128ca0,,stack stack stack,void
 001295e0,sound_channel_get_voice,source/sound/sound_manager.c,stack,bool,stdcall
 0037b75b,unknown_0037b75b,,stack stack,void
-0021de90,unknown_0021de90,,,int
+0021de90,sound_voice_get_for_source,source/sound/sound_manager.c,ebx,int

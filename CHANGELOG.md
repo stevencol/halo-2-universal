@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — La voz de sonido de un sonido que suena
+
+Una función en `sound/sound_manager.c`. De 846 funciones se pasa a
+847, el 7,52 % de las del juego (el 4,185 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_voice_get_for_source` | `0x0021de90` | `sound/sound_manager.c` |
+
+Estaba apuntada sin descompilar (`unknown_0021de90`) y sin su argumento:
+recibe el sonido en `ebx`. `sound_channel_get_voice` ya se lo pasa.
+
+### Lo que se sabe
+
+- `sound_voice_get_for_source` da la voz de sonido por la que se oye un
+  sonido que suena, y le apunta uno más que la usa: una que el sonido pueda
+  compartir (`sound_voice_matches_source`), o una nueva, con una casilla de
+  los globales del sonido y lo que dice el sonido: su clase, su marca, a
+  quién avisar y con qué, y su sitio.
+- Da `NONE` si no hay sitio para otra voz o no queda casilla.
+- Varios sonidos iguales que suenan en el mismo sitio comparten así una
+  sola voz de sonido.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y de
+  `sound_channel_get_voice`. La batería completa corre aparte con las 843
+  funciones del hito 186.
+
+### Mutaciones
+
+Pendientes las de los hitos 156 a 190.
+
 ## 2026-10-04 — Un canal consigue una voz de la consola
 
 Una función en `sound/sound_manager.c`. De 845 funciones se pasa a

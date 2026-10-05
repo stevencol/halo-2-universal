@@ -913,10 +913,9 @@ void unknown_00129aa0(long channel_index, real *decibels, byte *parameters);
 void unknown_0021c400(long channel_index, real decibels, const byte *parameters);
 void unknown_00128ca0(long channel_index, real decibels, const byte *parameters);
 
-/* 0x0037b75b: of the console: what a stream of sound does; 0x0021de90: a
-sound voice */
+/* 0x0037b75b: of the console: what a stream of sound does; 0x0021de90 */
 void unknown_0037b75b(void *stream, long *status);
-long unknown_0021de90(void);
+long sound_voice_get_for_source(const byte *source);
 
 /* 0x001295e0 */
 boolean __attribute__((stdcall)) sound_channel_get_voice(short channel_index);
@@ -5946,8 +5945,8 @@ void sound_channels_update_sources(
 /* 0x001295e0: a channel gets a voice of the console's sound to play its
 sound with: the first of those of its type that is free and not taken. With
 it goes a slot: the one that the sound says (the byte at 0xA2 of it), if its
-stream is not busy; or, for a sound with the flag 2 at 6, that of a sound
-voice that unknown_0021de90 gives. A channel that has a voice keeps it,
+stream is not busy; or, for a sound with the flag 2 at 6, that of the
+sound voice that sound_voice_get_for_source gives. A channel that has a voice keeps it,
 unless its sound has that flag and the channel has no slot. If it gets none,
 the sound and the channel are let go (reason 7), and FALSE comes back */
 boolean __attribute__((stdcall)) sound_channel_get_voice(
@@ -5997,7 +5996,7 @@ boolean __attribute__((stdcall)) sound_channel_get_voice(
 		}
 		else if (source[SOUND_SOURCE_DATUM_UNKNOWN6_OFFSET]&FLAG(_sound_source_datum_voice_bit))
 		{
-			sound_voice_index= unknown_0021de90();
+			sound_voice_index= sound_voice_get_for_source(source);
 			if (sound_voice_index!=NONE)
 			{
 				slot= *(const short *)((const byte *)sound_voices->data+(sound_voice_index&0xFFFF)*SOUND_VOICE_DATUM_SIZE+
@@ -6025,4 +6024,62 @@ boolean __attribute__((stdcall)) sound_channel_get_voice(
 	sound_channel_delete(channel_index);
 
 	return FALSE;
+}
+
+/* 0x0021de90: the sound voice that a sound that plays is heard through, and
+it has one more that uses it: one that the sound can share
+(sound_voice_matches_source), or a new one, with a slot of the globals of
+the sound and what the sound says: its class, its flag, who is told of it
+and what with, and its place. NONE if there is no room for one, or no slot */
+long sound_voice_get_for_source(
+	const byte *source)
+{
+	struct data_array *data= sound_voices;
+	long voice_index;
+	byte *voice;
+	short slot;
+
+	for (voice_index= data_next_index(data, NONE); voice_index!=NONE; voice_index= data_next_index(data, voice_index))
+	{
+		if ((byte)sound_voice_matches_source((const byte *)data->data+(voice_index&0xFFFF)*data->size, source))
+		{
+			break;
+		}
+	}
+	if (voice_index==NONE)
+	{
+		data= sound_voices;
+		if (data->actual_count>=data->maximum_count)
+		{
+			return NONE;
+		}
+		slot= sound_slot_new();
+		if (slot==NONE)
+		{
+			return NONE;
+		}
+		voice_index= datum_new(sound_voices);
+		if (voice_index==NONE)
+		{
+			sound_slot_delete(slot);
+			return NONE;
+		}
+		voice= (byte *)sound_voices->data+(voice_index&0xFFFF)*SOUND_VOICE_DATUM_SIZE;
+		*(short *)(voice+SOUND_VOICE_DATUM_USERS_OFFSET)= 0;
+		*(long *)(voice+SOUND_VOICE_DATUM_START_TIME_OFFSET)= NONE;
+		*(long *)(voice+SOUND_VOICE_DATUM_CLASS_OFFSET)=
+			sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET))->sound_class;
+		voice[SOUND_VOICE_DATUM_UNKNOWN8_OFFSET]= source[SOUND_SOURCE_DATUM_UNKNOWN18_OFFSET]&1;
+		memcpy(voice+SOUND_VOICE_DATUM_UNKNOWN48_OFFSET, source+SOUND_SOURCE_DATUM_POSITION_OFFSET,
+			SOUND_VOICE_DATUM_UNKNOWN48_SIZE);
+		memcpy(voice+SOUND_VOICE_DATUM_UNKNOWN14_OFFSET, source+SOUND_SOURCE_DATUM_UNKNOWN5C_OFFSET,
+			SOUND_REQUEST_CALLBACK_BYTES_SIZE);
+		*(long *)(voice+SOUND_VOICE_DATUM_CALLBACK_DATA_OFFSET)= *(const long *)(source+SOUND_SOURCE_DATUM_CALLBACK_DATA_OFFSET);
+		*(short *)(voice+SOUND_VOICE_DATUM_SLOT_OFFSET)= slot;
+		*(long *)(voice+SOUND_VOICE_DATUM_CALLBACKS_OFFSET)= *(const long *)(source+SOUND_SOURCE_DATUM_CALLBACKS_OFFSET);
+	}
+	voice= (byte *)sound_voices->data+(voice_index&0xFFFF)*SOUND_VOICE_DATUM_SIZE;
+	(*(short *)(voice+SOUND_VOICE_DATUM_USERS_OFFSET))++;
+
+	return voice_index;
 }

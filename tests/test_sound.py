@@ -3707,8 +3707,44 @@ def run(t) -> None:
             },
             externals={
                 "unknown_0037b75b": stream_,
-                "unknown_0021de90": lambda harness, arguments, given=given: given,
+                "sound_voice_get_for_source": lambda harness, arguments, given=given: (given, (harness.normalize(arguments[0]),)),
                 "sound_source_delete": lambda harness, arguments: (0, tuple(arguments)),
                 "sound_channel_delete": lambda harness, arguments: (0, (arguments[0] & 0xFFFF,)),
+            },
+        )
+
+    # ---------- the sound voice of a sound that plays
+
+    random_ = random.Random(190)
+
+    for _ in range(600):
+        in_use = some_in_use(VOICES)
+        voices_ = data_array(random_, VOICES, 0x6C, in_use)
+        playing_ = bytearray(random_.randbytes(DATUM))
+        sound_index = random_.randrange(TAGS)
+        struct.pack_into("<I", playing_, 0xC, random_.getrandbits(16) << 16 | sound_index)
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        struct.pack_into("<I", tags, sound_index * 0x10 + 8, len(tags))
+        shared_ = random_.getrandbits(VOICES) if random_.random() < 0.5 else 0
+        slot = random_.choice((0xFFFF, 0, 5, 63))
+        made = random_.choice((NONE, *(random_.getrandbits(16) << 16 | index for index in range(VOICES))))
+
+        def matches_(harness, arguments, shared_=shared_):
+            voice, source_ = arguments
+            index = calls_so_far(harness, "sound_voice_matches_source")
+            return (shared_ >> index) & 1, (harness.normalize(voice), harness.normalize(source_))
+
+        t.check(
+            "sound_voice_get_for_source",
+            Buffer(bytes(playing_)),
+            globals={
+                "sound_voices": voices_,
+                "global_tag_instances": Buffer(bytes(tags) + random_.randbytes(0x10), pointers=(sound_index * 0x10 + 8,)),
+            },
+            externals={
+                "sound_voice_matches_source": matches_,
+                "sound_slot_new": lambda harness, arguments, slot=slot: slot,
+                "datum_new": lambda harness, arguments, made=made: (made, (harness.normalize(arguments[0]),)),
+                "sound_slot_delete": lambda harness, arguments: (0, (arguments[0] & 0xFFFF,)),
             },
         )
