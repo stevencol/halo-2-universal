@@ -141,6 +141,20 @@ enum
 	UNKNOWN_0051EBD8_DATUM_COUNT_OFFSET= 0x3,
 	UNKNOWN_0051EBD8_DATUM_COUNT_MASK= 0x7F,
 	UNKNOWN_0051EBD8_DATUM_UNKNOWN4_OFFSET= 0x4,
+	/* of a sound that plays: it counts in the piece of the samples that it
+	is at, it is not to be told of again, and something more */
+	_sound_source_datum_unknown0_bit= 0,
+	_sound_source_datum_holds_chunk_bit= 1,
+	_sound_source_datum_unknown5_bit= 5,
+	SOUND_SOURCE_DATUM_UNKNOWN8C_OFFSET= 0x8C,
+	/* of an element of unknown_0051ebd8: how many sounds it has, in 7 bits */
+	UNKNOWN_0051EBD8_DATUM_SOUNDS_OFFSET= 0x2,
+	/* in what the game says of a sound: where its place comes from, and
+	its place */
+	SOUND_SOURCE_POSITION_KIND_OFFSET= 0x2,
+	SOUND_SOURCE_POSITION_OFFSET= 0xC,
+	_sound_source_position_world= 0,
+	_sound_source_position_listener_height= 1,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -342,13 +356,23 @@ void unknown_00219d90(boolean unknown);
 void unknown_0021f5a0(void);
 void unknown_0021f570(void);
 
-/* 0x0012a5d0: a channel lets go of the sound that it plays; 0x00126960: of a
-sound that plays, when it is let go; 0x00219c80: a sound playback controller
-has one sound less; 0x0021d4d0: of the sound effects */
-void unknown_0012a5d0(short channel_index);
-void unknown_00126960(byte *source);
-void unknown_00219c80(long controller_index);
+/* 0x0012a5d0, 0x00126960 and 0x00219c80; 0x0021d4d0: of the sound effects */
+void sound_channel_delete(short channel_index);
+void sound_source_release_chunk(byte *source);
+void sound_playback_controller_release(long controller_index);
 void unknown_0021d4d0(void);
+
+/* 0x002ae4b0: a voice of the console's sound stops; 0x0021e050: of a sound
+voice; 0x00127f10: of a sound that plays and its flags */
+void unknown_002ae4b0(void *voice);
+void unknown_0021e050(long voice_index);
+boolean unknown_00127f10(long source_index, byte *flags);
+
+/* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
+void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
+	char permutation, short chunk);
+boolean sound_source_unknown_00127fc0(long source_index);
+void sound_source_get_position(const struct sound_source *source, long listener_index, real_point3d *position);
 
 /* 0x00126360, 0x00126400, 0x00127320 and 0x00127390 */
 void sound_source_stop(long source_index);
@@ -1546,10 +1570,10 @@ void __attribute__((stdcall)) sound_source_delete(
 
 	if (*(short *)(source+SOUND_SOURCE_DATUM_CHANNEL_INDEX_OFFSET)!=NONE)
 	{
-		unknown_0012a5d0(*(short *)(source+SOUND_SOURCE_DATUM_CHANNEL_INDEX_OFFSET));
+		sound_channel_delete(*(short *)(source+SOUND_SOURCE_DATUM_CHANNEL_INDEX_OFFSET));
 		*(short *)(source+SOUND_SOURCE_DATUM_CHANNEL_INDEX_OFFSET)= NONE;
 	}
-	unknown_00126960(source);
+	sound_source_release_chunk(source);
 	callbacks= *(const struct sound_source_callbacks **)(source+SOUND_SOURCE_DATUM_CALLBACKS_OFFSET);
 	if (callbacks && callbacks->deleted)
 	{
@@ -1577,7 +1601,173 @@ void sound_source_free(
 			controller[UNKNOWN_0051EBD8_DATUM_COUNT_OFFSET]=
 				(controller[UNKNOWN_0051EBD8_DATUM_COUNT_OFFSET]-1)&UNKNOWN_0051EBD8_DATUM_COUNT_MASK;
 		}
-		unknown_00219c80(*(const long *)(source+SOUND_SOURCE_DATUM_CONTROLLER_INDEX_OFFSET));
+		sound_playback_controller_release(*(const long *)(source+SOUND_SOURCE_DATUM_CONTROLLER_INDEX_OFFSET));
 	}
 	datum_delete(data, source_index);
+}
+
+/* a piece of the samples of a recording has one less that counts in it */
+static inline __attribute__((always_inline)) void sound_chunk_release(
+	const struct sound_chunk *chunk)
+{
+	long index= *(const long *)((const byte *)chunk+8);
+	byte *datum= (byte *)unknown_00502104->data+(index&0xFFFF)*UNKNOWN_00502104_DATUM_SIZE;
+
+	datum[UNKNOWN_00502104_DATUM_COUNT_OFFSET]--;
+}
+
+/* 0x00126960: a sound that plays does not count any more in the piece of
+the samples that it is at, if it did. The name is a guess */
+void sound_source_release_chunk(
+	byte *source)
+{
+	if ((source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]>>_sound_source_datum_holds_chunk_bit)&1)
+	{
+		const struct sound_definition *sound=
+			sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET));
+
+		sound_chunk_release(sound_get_chunk(sound->first_pitch_range_index+(char)source[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET],
+			(char)source[SOUND_SOURCE_DATUM_PERMUTATION_OFFSET],
+			*(short *)(source+SOUND_SOURCE_DATUM_CHUNK_OFFSET)));
+		source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]&= ~FLAG(_sound_source_datum_holds_chunk_bit);
+	}
+}
+
+/* 0x001286b0: what a sound that plays is of changes: the sound, and the
+pitch range, the recording and the piece of the samples that it is at. The
+name is a guess */
+void __attribute__((stdcall)) sound_source_set_sound(
+	long source_index,
+	long sound_index,
+	char pitch_range,
+	char permutation,
+	short chunk)
+{
+	byte *source= sound_source_get(source_index);
+
+	sound_source_release_chunk(source);
+	*(long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET)= sound_index;
+	source[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET]= pitch_range;
+	source[SOUND_SOURCE_DATUM_PERMUTATION_OFFSET]= permutation;
+	*(short *)(source+SOUND_SOURCE_DATUM_CHUNK_OFFSET)= chunk;
+}
+
+/* 0x0012a5d0: a channel lets go of the sound that it plays: the pieces of
+the samples of its recordings, its voice of the console's sound and its
+sound voice. The name is a guess */
+void sound_channel_delete(
+	short channel_index)
+{
+	struct sound_channel *channel= &sound_channels[channel_index];
+
+	channel->unknown0= NONE;
+	if (channel->unknown20)
+	{
+		sound_chunk_release(sound_permutation_chunk((const struct sound_permutation *)(uintptr_t)channel->unknown20,
+			channel->unknown1A));
+		channel->unknown20= 0;
+	}
+	if (channel->unknown1C)
+	{
+		sound_chunk_release(sound_permutation_chunk((const struct sound_permutation *)(uintptr_t)channel->unknown1C,
+			channel->unknown18));
+		channel->unknown1C= 0;
+	}
+	if (channel->unknownC!=NONE)
+	{
+		unsigned long *taken;
+
+		unknown_002ae4b0(sound_channel_voice(channel));
+		taken= (unsigned long *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN60_OFFSET);
+		taken[channel->unknownC>>5]&= ~(1UL<<(channel->unknownC&31));
+	}
+	if (channel->unknown4!=NONE)
+	{
+		unknown_0021e050(channel->unknown4);
+	}
+	channel->unknownA= 0;
+	channel->unknownB= 0;
+	channel->unknown9= 0;
+	channel->unknownC= NONE;
+	channel->unknownE= NONE;
+	channel->unknown4= NONE;
+}
+
+/* 0x00219c80: a sound playback controller has one sound less, and is let
+go with none. The name is a guess */
+void sound_playback_controller_release(
+	long controller_index)
+{
+	if (controller_index!=NONE)
+	{
+		byte *controller= (byte *)unknown_0051ebd8->data+(controller_index&0xFFFF)*UNKNOWN_0051EBD8_DATUM_SIZE;
+		byte sounds= controller[UNKNOWN_0051EBD8_DATUM_SOUNDS_OFFSET];
+
+		sounds= (sounds&~UNKNOWN_0051EBD8_DATUM_COUNT_MASK)|((sounds-1)&UNKNOWN_0051EBD8_DATUM_COUNT_MASK);
+		controller[UNKNOWN_0051EBD8_DATUM_SOUNDS_OFFSET]= sounds;
+		if (!(sounds&UNKNOWN_0051EBD8_DATUM_COUNT_MASK))
+		{
+			datum_delete(unknown_0051ebd8, controller_index);
+		}
+	}
+}
+
+/* 0x00127fc0: of a sound that plays with someone to tell, when the time at
+0x8C of it is not come or the sound is disabled: what unknown_00127f10 says.
+TRUE for the rest. What it means is not known */
+boolean sound_source_unknown_00127fc0(
+	long source_index)
+{
+	byte *source= sound_source_get(source_index);
+	byte flags= source[SOUND_SOURCE_DATUM_FLAGS_OFFSET];
+
+	if (!(flags&FLAG(_sound_source_datum_unknown0_bit)) && !((flags>>_sound_source_datum_unknown5_bit)&1))
+	{
+		const struct sound_source_callbacks *callbacks=
+			*(const struct sound_source_callbacks **)(source+SOUND_SOURCE_DATUM_CALLBACKS_OFFSET);
+
+		if (callbacks && callbacks->unknown0[0])
+		{
+			const byte *globals= game_sound_globals;
+
+			if (*(const long *)(source+SOUND_SOURCE_DATUM_UNKNOWN8C_OFFSET)<*(const long *)(globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET) ||
+				globals[GAME_SOUND_GLOBALS_DISABLED_OFFSET])
+			{
+				return unknown_00127f10(source_index, source+SOUND_SOURCE_DATUM_FLAGS_OFFSET);
+			}
+		}
+	}
+
+	return TRUE;
+}
+
+/* 0x0012abe0: where a sound is, of what the game says of it: its place, or
+its place at the height of a listener. Nothing for any other kind. The name
+is a guess */
+void sound_source_get_position(
+	const struct sound_source *source,
+	long listener_index,
+	real_point3d *position)
+{
+	const long *place= (const long *)((const byte *)source+SOUND_SOURCE_POSITION_OFFSET);
+	long *result= (long *)position;
+
+	switch (((const char *)source)[SOUND_SOURCE_POSITION_KIND_OFFSET])
+	{
+	case _sound_source_position_world:
+		result[0]= place[0];
+		result[1]= place[1];
+		result[2]= place[2];
+		break;
+	case _sound_source_position_listener_height:
+	{
+		const struct sound_listener *listeners=
+			(const struct sound_listener *)(game_sound_globals+GAME_SOUND_GLOBALS_LISTENERS_OFFSET);
+
+		result[0]= place[0];
+		result[1]= place[1];
+		result[2]= *(const long *)&listeners[listener_index].position.z;
+		break;
+	}
+	}
 }

@@ -3,15 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-04, al terminar el hito 154.
+**Última actualización:** 2026-10-04, al terminar el hito 155.
 
 ## Dónde estamos
 
-- **731 funciones descompiladas de 11.265: el 6,49 % del juego** (el
-  3,541 % de los bytes de código).
-- Las 731 están comprobadas contra el ejecutable original
+- **737 funciones descompiladas de 11.265: el 6,54 % del juego** (el
+  3,564 % de los bytes de código).
+- Las 737 están comprobadas contra el ejecutable original: las 731 del
+  hito 154 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile stopping and letting go of a sound* (ver `git log`).
+- Último hito: *Decompile what a sound and a channel let go of* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 453 funciones apuntadas pero sin descompilar (las que el código
   llama); 366 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -91,7 +92,7 @@ Módulos (funciones hechas / archivo):
       `0x002accd0` a `0x002ae090`: completo)
 - [x] Perfiles de los jugadores — `saved games\player_profile.c` (11:
       completo)
-- [ ] Sonido — `sound\sound_manager.c` (42; faltan muchas de
+- [ ] Sonido — `sound\sound_manager.c` (48; faltan muchas de
       `0x00125f70` a `0x0012b070`), `sound\sound_classes.c` (1)
 - [x] Archivos — `tag_files\files.c`, `files_xbox.c` (22, completo: de
       `0x00136710` a `0x001374c0`. Lo que hay justo antes, de `0x00136140`
@@ -178,9 +179,9 @@ Módulos (funciones hechas / archivo):
       la tabla de sistemas está completa).
 - [x] ~~`sound_idle` y las muestras que pide un sonido~~ (hito 48).
 - [ ] **Más del sonido**: `0x00125f70` (empezar un sonido, con
-      `0x00126c30`, `0x00126ec0` y `0x00126000`), y lo que llaman las que
-      sueltan un sonido (hito 154): `0x0012a5d0` (el canal lo suelta),
-      `0x00126960`, `0x00219c80` y `0x001264c0` (parar los sonidos). Entre los mandos y él, `0x00124f90` a `0x00125360`, hay
+      `0x00126c30`, `0x00126ec0` y `0x00126000`), `0x0012a810` (cuánto se oye un sonido que se apaga), `0x00127f10`,
+      `0x001264c0` (parar los sonidos), `0x002ae4b0` y `0x0021e050` (las
+      voces que suelta un canal). Entre los mandos y él, `0x00124f90` a `0x00125360`, hay
       funciones pequeñas de las definiciones de sonido (hechas en el
       hito 45, menos `0x001251e0`, que llama a cinco funciones con reales
       en registros).

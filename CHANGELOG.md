@@ -2,6 +2,60 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Lo que sueltan un sonido y un canal
+
+Seis funciones de `sound/sound_manager.c`. De 731 funciones se pasa a 737,
+el 6,54 % de las del juego (el 3,564 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_source_release_chunk` | `0x00126960` | `sound/sound_manager.c` |
+| `sound_source_set_sound` | `0x001286b0` | `sound/sound_manager.c` |
+| `sound_channel_delete` | `0x0012a5d0` | `sound/sound_manager.c` |
+| `sound_playback_controller_release` | `0x00219c80` | `sound/sound_manager.c` |
+| `sound_source_unknown_00127fc0` | `0x00127fc0` | `sound/sound_manager.c` |
+| `sound_source_get_position` | `0x0012abe0` | `sound/sound_manager.c` |
+
+Las tres primeras de la lista de direcciones (`0x00126960`, `0x0012a5d0` y
+`0x00219c80`) estaban apuntadas sin descompilar desde el hito anterior.
+Nuevas sin descompilar: `0x002ae4b0`, `0x0021e050` y `0x00127f10`.
+
+### Lo que se sabe
+
+- `sound_source_release_chunk`: un sonido que suena deja de contar en el
+  trozo de muestras en el que está (rango de tono, grabación y trozo), si
+  contaba (segundo bit de sus marcas).
+- `sound_source_set_sound` cambia de qué sonido es una fuente: suelta el
+  trozo anterior y pone el sonido, el rango de tono, la grabación y el
+  trozo nuevos.
+- `sound_channel_delete`: un canal suelta lo que toca: los trozos de sus dos
+  grabaciones, su voz de la consola (`0x002ae4b0`, y su bit en el vector de
+  `0x60` de los globales) y su voz de sonido (`0x0021e050`), y queda vacío.
+- `sound_playback_controller_release` le quita un sonido a un controlador
+  de reproducción (una cuenta de 7 bits) y lo borra cuando no le queda
+  ninguno.
+- `sound_source_unknown_00127fc0` devuelve lo que diga `0x00127f10` para un
+  sonido que tiene a quién avisar, cuando no ha llegado su tiempo (`0x8C`) o
+  el sonido está desactivado; para el resto, verdadero. No se sabe qué
+  significa.
+- `sound_source_get_position` da el sitio de un sonido según lo que el
+  juego dice de él: su sitio, o su sitio a la altura de un oyente.
+- Los nombres son inventados.
+
+### Sin comprobar
+
+- La batería completa no se pasó en este hito: se pasó con las 731
+  funciones del anterior (todas bien) y aquí solo las pruebas de las seis
+  nuevas y de las dos que las llaman.
+- `ninja` (los tamaños de las estructuras) falla en este equipo con el
+  clang de Visual Studio: no encuentra `stdlib.h`. Viene de antes.
+
+### Mutaciones
+
+42 líneas rotas a propósito. La comprobación corre aparte, en segundo plano, y su resultado se anota en el hito siguiente.
+
 ## 2026-10-04 — Parar un sonido y soltarlo
 
 Cuatro funciones de `sound/sound_manager.c`. De 727 funciones se pasa a 731,

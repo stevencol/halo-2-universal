@@ -1179,7 +1179,13 @@ address,name,source,arguments,returns,convention
 00126400,sound_stop_all,source/sound/sound_manager.c,,void
 00127320,sound_source_delete,source/sound/sound_manager.c,eax stack,void,stdcall
 00127390,sound_source_free,source/sound/sound_manager.c,edi,void
-0012a5d0,unknown_0012a5d0,,eax,void
-00126960,unknown_00126960,,ecx,void
-00219c80,unknown_00219c80,,esi,void
+0012a5d0,sound_channel_delete,source/sound/sound_manager.c,eax,void
+00126960,sound_source_release_chunk,source/sound/sound_manager.c,ecx,void
+00219c80,sound_playback_controller_release,source/sound/sound_manager.c,esi,void
 0021d4d0,unknown_0021d4d0,,,void
+001286b0,sound_source_set_sound,source/sound/sound_manager.c,eax stack stack stack stack,void,stdcall
+00127fc0,sound_source_unknown_00127fc0,source/sound/sound_manager.c,esi,bool
+0012abe0,sound_source_get_position,source/sound/sound_manager.c,ecx esi eax,void
+002ae4b0,unknown_002ae4b0,,esi,void
+0021e050,unknown_0021e050,,eax,void
+00127f10,unknown_00127f10,,eax stack,bool

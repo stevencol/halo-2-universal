@@ -1129,8 +1129,8 @@ def run(t) -> None:
                 random_.choice((10, 0, random_.getrandbits(32))),
                 globals={"sound_sources": Buffer(buffer.data, pointers=buffer.pointers)},
                 externals={
-                    "unknown_0012a5d0": lambda harness, arguments: (0, (arguments[0] & 0xFFFF,)),
-                    "unknown_00126960": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                    "sound_channel_delete": lambda harness, arguments: (0, (arguments[0] & 0xFFFF,)),
+                    "sound_source_release_chunk": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                     "sound_source_free": lambda harness, arguments: (0, tuple(arguments)),
                 },
                 mocks=told(),
@@ -1153,7 +1153,171 @@ def run(t) -> None:
                     "unknown_0051ebd8": Buffer(bytes(controllers), pointers=(0x44,)),
                 },
                 externals={
-                    "unknown_00219c80": lambda harness, arguments: (0, tuple(arguments)),
+                    "sound_playback_controller_release": lambda harness, arguments: (0, tuple(arguments)),
                     "datum_delete": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
                 },
             )
+
+    # ---------- a sound and a channel let go of what they have
+
+    random_ = random.Random(155)
+    COUNTED = 8
+    PIECES = 30
+
+    def counted() -> Buffer:
+        """The array that counts who is at each piece of the samples."""
+        data = bytearray(random_.randbytes(0x4C + COUNTED * 0x10))
+        struct.pack_into("<I", data, 0x44, 0x4C)
+        for index in range(COUNTED):
+            data[0x4C + index * 0x10 + 4] = random_.choice((0, 1, 2, 0x80, 0xFF))
+        return Buffer(bytes(data), pointers=(0x44,))
+
+    def recordings() -> tuple:
+        """What the sounds of a map share, with 4 pitch ranges, 12 recordings
+        and their pieces after it in the buffer. Gives where the recordings
+        are in it."""
+        data = bytearray(random_.randbytes(0x48))
+        pitch_ranges = len(data)
+        data += random_.randbytes(4 * 0xC)
+        permutations = len(data)
+        data += random_.randbytes(12 * 0x10)
+        chunks = len(data)
+        data += random_.randbytes(PIECES * 0xC)
+        for n in range(4):
+            struct.pack_into("<h", data, pitch_ranges + n * 0xC + 8, random_.randrange(0, 6))
+        for n in range(12):
+            struct.pack_into("<h", data, permutations + n * 0x10 + 0xC, random_.randrange(0, 12))
+        for n in range(PIECES):
+            struct.pack_into("<I", data, chunks + n * 0xC + 8, random_.getrandbits(16) << 16 | random_.randrange(COUNTED))
+        struct.pack_into("<I", data, 0x24, pitch_ranges)
+        struct.pack_into("<I", data, 0x2C, permutations)
+        struct.pack_into("<I", data, 0x44, chunks)
+        return bytes(data), permutations
+
+    def playing_sounds() -> tuple:
+        """The sounds that play, with the tags of their sounds."""
+        sources = bytearray(0x50) + bytearray(random_.randbytes(SOURCES * 0xBC))
+        struct.pack_into("<I", sources, 0x44, 0x50)
+        tags = bytearray(random_.randbytes(SOURCES * 0x10)) + bytearray(random_.randbytes(SOURCES * 0x10))
+        pointers = []
+        for n in range(SOURCES):
+            at = 0x50 + n * 0xBC
+            sources[at + 4] = random_.choice((0, 2, 2, 3, 0xFF, 0xFD, random_.getrandbits(8)))
+            struct.pack_into("<I", sources, at + 0xC, random_.getrandbits(16) << 16 | n)
+            sources[at + 0x9C] = random_.choice((0, 1, 2))
+            sources[at + 0x9D] = random_.choice((0, 1, 3, 5))
+            struct.pack_into("<h", sources, at + 0x9E, random_.randrange(0, 6))
+            definition = SOURCES * 0x10 + n * 0x10
+            struct.pack_into("<I", tags, n * 0x10 + 8, definition)
+            pointers.append(n * 0x10 + 8)
+            struct.pack_into("<h", tags, definition + 8, random_.choice((0, 1)))
+        return Buffer(bytes(sources), pointers=(0x44,)), Buffer(bytes(tags), pointers=tuple(pointers))
+
+    for _ in range(60):
+        sources, tags = playing_sounds()
+        gestalt, _permutations = recordings()
+        world_ = {
+            "global_tag_instances": tags,
+            "global_sound_cache_file_gestalt": Buffer(gestalt, pointers=(0x24, 0x2C, 0x44)),
+            "unknown_00502104": counted(),
+        }
+        for n in range(SOURCES):
+            t.check(
+                "sound_source_release_chunk",
+                Buffer(sources.data[0x50 + n * 0xBC : 0x50 + (n + 1) * 0xBC]),
+                globals=world_,
+            )
+            t.check(
+                "sound_source_set_sound",
+                random_.getrandbits(16) << 16 | n,
+                random_.getrandbits(32),
+                random_.getrandbits(8),
+                random_.getrandbits(8),
+                random_.getrandbits(16),
+                globals={**world_, "sound_sources": Buffer(sources.data, pointers=sources.pointers)},
+            )
+
+    for _ in range(120):
+        gestalt, permutations = recordings()
+        # the channels, after what the sounds share, in the same buffer
+        data = bytearray(gestalt)
+        channels = len(data)
+        data += random_.randbytes(CHANNELS * 0x24)
+        pointers = [0x24, 0x2C, 0x44]
+        for n in range(CHANNELS):
+            at = channels + n * 0x24
+            struct.pack_into("<I", data, at + 4, random_.choice((NONE, NONE, 0, random_.getrandbits(32))))
+            struct.pack_into("<h", data, at + 0xC, random_.choice((-1, 0, 1, 2, 3, 31, 32, 63, 127)))
+            struct.pack_into("<hh", data, at + 0x18, random_.randrange(0, 10), random_.randrange(0, 10))
+            for field in (0x1C, 0x20):
+                if random_.random() < 0.6:
+                    struct.pack_into("<I", data, at + field, permutations + random_.randrange(12) * 0x10)
+                    pointers.append(at + field)
+                else:
+                    struct.pack_into("<I", data, at + field, 0)
+        buffer = Buffer(bytes(data), pointers=tuple(pointers))
+        for channel_index in range(CHANNELS):
+            t.check(
+                "sound_channel_delete",
+                channel_index,
+                globals={
+                    "global_sound_cache_file_gestalt": buffer,
+                    "sound_channels": Pointer(buffer, channels),
+                    "unknown_00502104": counted(),
+                    "game_sound_globals": Buffer(random_.randbytes(GLOBALS_SIZE)),
+                    "unknown_0051ebe4": Buffer(random_.randbytes(128 * 0x34 + 0x10)),
+                },
+                externals={
+                    "unknown_002ae4b0": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                    "unknown_0021e050": lambda harness, arguments: (0, tuple(arguments)),
+                },
+            )
+
+    for _ in range(150):
+        controllers = bytearray(random_.randbytes(0x4C + CONTROLLERS * 0x1C))
+        struct.pack_into("<I", controllers, 0x44, 0x4C)
+        for index in range(CONTROLLERS):
+            controllers[0x4C + index * 0x1C + 2] = random_.choice((0, 1, 2, 0x80, 0x81, 0x82, 0xFF, 0x7F))
+        for controller_index in [NONE] + [random_.getrandbits(16) << 16 | index for index in range(CONTROLLERS)]:
+            t.check(
+                "sound_playback_controller_release",
+                controller_index,
+                globals={"unknown_0051ebd8": Buffer(bytes(controllers), pointers=(0x44,))},
+                externals={"datum_delete": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1]))},
+            )
+
+    for _ in range(80):
+        buffer, indices = playing()
+        data = bytearray(buffer.data)
+        # the first function of the table of who is told: there is one, or none
+        struct.pack_into("<I", data, 0x4C + PLAYING * DATUM, random_.choice((0, 1, random_.getrandbits(32))))
+        for index in range(PLAYING):
+            at = 0x4C + index * DATUM
+            data[at + 4] = random_.choice((0, 0, 0, 1, 0x20, 0xDE, 0x21, random_.getrandbits(8)))
+            struct.pack_into("<i", data, at + 0x8C, random_.choice((-5, 0, 99, 100, 101, 0x7FFFFFFF, -0x80000000)))
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        state[0x7B] = random_.choice((0, 0, 1, 0x80))
+        struct.pack_into("<i", state, 0x84, random_.choice((100, 100, 0, -1)))
+        for source_index in indices:
+            t.check(
+                "sound_source_unknown_00127fc0",
+                source_index,
+                globals={"sound_sources": Buffer(bytes(data), pointers=buffer.pointers), "game_sound_globals": Buffer(bytes(state))},
+                externals={
+                    "unknown_00127f10": lambda harness, arguments: (
+                        arguments[0] & 1,
+                        (arguments[0], harness.normalize(arguments[1])),
+                    )
+                },
+            )
+
+    for _ in range(300):
+        said = bytearray(random_.randbytes(0x48))
+        said[2] = random_.choice((0, 0, 1, 1, 2, 0xFF, 0x80))
+        t.check(
+            "sound_source_get_position",
+            Buffer(bytes(said)),
+            random_.randrange(4),
+            Buffer(random_.randbytes(12)),
+            globals={"game_sound_globals": Buffer(random_.randbytes(GLOBALS_SIZE))},
+        )
