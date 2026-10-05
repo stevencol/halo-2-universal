@@ -1305,7 +1305,7 @@ address,name,source,arguments,returns,convention
 002222c0,sound_effect_entry_build,source/sound/sound_manager.c,eax stack stack stack stack,void
 00222770,sound_unknown_00222770,source/sound/sound_manager.c,eax edx stack stack,void,stdcall
 0012a1b0,sound_channel_build_voice_parameters,source/sound/sound_manager.c,eax ebx edi stack,void,stdcall
-0021f720,unknown_0021f720,,stack,void
+0021f720,sound_console_stream_set_function,source/sound/sound_manager.c,stack,void,stdcall
 00188ea0,vector3d_decompress,source/math/real_math.c,ecx esi,pointer
 00126660,sound_unknown_states_set,source/sound/sound_manager.c,eax,void
 002ae8e0,unknown_002ae8e0,,ecx,void
@@ -1382,3 +1382,5 @@ address,name,source,arguments,returns,convention
 001de630,unknown_001de630,,eax ecx edx xmm0 stack stack stack stack,bool
 00191660,unknown_00191660,,ecx edx,int
 0013b390,unknown_0013b390,,edi stack stack,real:xmm0
+0037b7b3,unknown_0037b7b3,,stack stack stack stack stack stack stack stack,void
+0037b797,unknown_0037b797,,stack stack,void

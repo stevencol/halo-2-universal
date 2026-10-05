@@ -2,6 +2,64 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Un stream de la consola toma la forma de una función
+
+Una función en `sound/sound_manager.c`, de 381 bytes. De 911 funciones se pasa a
+912, el 8,10 % de las del juego (el 4,944 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_console_stream_set_function` | `0x0021f720` | `sound/sound_manager.c` |
+
+Era `unknown_0021f720`. La llaman cinco sitios, entre ellos
+`sound_channel_update_voice`. Recibe en la pila lo que una voz tiene de su
+entorno. Nuevas sin descompilar, de la consola: `0x0037b7b3` y
+`0x0037b797`.
+
+### Lo que se sabe
+
+- El sonido de la consola tiene dos streams aparte (en `0x2A90`), y de cada
+  uno recuerda un número (en `0x2A98`). Lo que una voz tiene de su entorno
+  dice cuál de los dos (el short del principio) y trae una función de un
+  tag y un número.
+- Si el número no es el de la última vez,
+  `sound_console_stream_set_function` para el stream, pide a la consola
+  dónde escribir mil bytes y escribe en cada uno, de 0 a 255, lo que vale
+  la función (`0x0013b390`) de 0 a 1 en pasos de una milésima, llevado
+  entre los dos reales que trae la función salvo que tenga alguna de cuatro
+  marcas (lo mismo que en el hito 244). Sin función, ceros. Después lo
+  suelta y se queda con el número.
+- Siempre, al final, le dice dos cosas al stream con un 0 (`0x0037b797` y
+  `0x0037b66f`; la segunda es la que en otros sitios recibe -10000, así que
+  será el volumen).
+- No hace nada si el short de `0x2` no está entre 0 y 31, o si el del
+  principio no es 0 o 1.
+- El juego tiene un tope de 255 para el byte que no puede pasar nunca: un
+  byte ya no pasa de 255. Se escribe el byte bajo del entero.
+- El nombre es inventado.
+
+### Aclaración del hito 241
+
+- Allí puse como «arreglo» que `unknown_00020670` quita sus argumentos de
+  la pila. Es verdad que la del juego lo hace, pero no era un error: la
+  tabla solo tiene que decir lo mismo que el prototipo de C, y las dos
+  cosas decían que no. Hay unas cuarenta funciones sin descompilar
+  apuntadas así, y está bien mientras no se descompilen. El cambio se deja
+  porque no molesta.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y las de
+  `sound_channel_update_voice`. La batería completa del hito 244 está en
+  marcha; la última terminada es la del hito 240 (907 funciones, todas
+  bien).
+
+### Mutaciones
+
+Veinticuatro cambios a mano: las pruebas notan los veinticuatro.
+
 ## 2026-10-05 — Los números de un efecto de sonido para la consola
 
 Una función en `sound/sound_manager.c`, de 722 bytes. De 910 funciones se pasa a

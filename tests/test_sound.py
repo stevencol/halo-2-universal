@@ -4573,7 +4573,7 @@ def run(t) -> None:
                     (arguments[0], harness.normalize(arguments[1])),
                 ),
                 "sound_console_voice_start": started,
-                "unknown_0021f720": lambda harness, arguments: (0, (bytes(harness.mu.mem_read(arguments[0], 0x10)),)),
+                "sound_console_stream_set_function": lambda harness, arguments: (0, (bytes(harness.mu.mem_read(arguments[0], 0x10)),)),
                 "sound_channel_queue_chunk": lambda harness, arguments: (
                     0,
                     (arguments[0] & 0xFFFF, harness.normalize(arguments[1]), arguments[2] & 0xFFFF),
@@ -6444,5 +6444,61 @@ def run(t) -> None:
                 "unknown_00191660": which_,
                 "unknown_0013b390": function_,
                 "sound_unknown_00222250": directional_,
+            },
+        )
+
+    # ---------- a stream of the console's sound is given the shape of a function
+
+    random_ = random.Random(245)
+
+    for n in range(160):
+        console = bytearray(random_.randbytes(0x2AC0))
+        stream_index = random_.choice((0, 0, 1, 1, 1, 2, -1, 0x100))
+        last = random_.getrandbits(32)
+        if 0 <= stream_index < 2:
+            struct.pack_into("<I", console, 0x2A98 + stream_index * 4, last)
+        environment = bytearray(random_.randbytes(0x10))
+        struct.pack_into(
+            "<2hIII",
+            environment,
+            0,
+            stream_index,
+            random_.choice((0, 1, 5, 31, 31, 0, 32, -1, 0x100)),
+            random_.getrandbits(32),
+            0x10,
+            last if n % 4 == 0 else last ^ 0x10,
+        )
+        data = bytearray(random_.randbytes(0xC))
+        data[1] = random_.choice((0, 1, 0x0F, 0x10, 0x80, 0x40, 0x20))
+        data[4:0xC] = struct.pack("<2f", *random_.choice(((0.0, 1.0), (0.25, 0.75), (1.0, 0.0), (-1.0, 2.0), (0.0, 1.004))))
+        environment += struct.pack("<iI", random_.choice((1, 1, 1, 30, 0, -1)), 0x18) + data
+        size = random_.choice((1000, 1000, 10, 0, 1, 257))
+
+        def lock_(harness, arguments, size=size):
+            harness.mu.mem_write(arguments[3], struct.pack("<I", STATE))
+            harness.mu.mem_write(arguments[4], struct.pack("<I", size))
+            return 0, (arguments[0], arguments[1], arguments[2], arguments[5], arguments[6], arguments[7])
+
+        def function_(harness, arguments, seed=random_.getrandbits(32), kind=random_.randrange(3)):
+            source_ = random.Random(seed + arguments[1])
+            if kind == 0:
+                value = bits_real(arguments[1]) * 1.0
+            elif kind == 1:
+                value = source_.choice((0.0, 1.0, 0.5, 0.25, 1.5, -0.5, 0.002, 0.998, 0.5019608, 0.4980392, 3.0, -3.0))
+            else:
+                value = source_.uniform(-0.2, 1.2)
+            return real_bits(value), (bytes(harness.mu.mem_read(arguments[0], 4)), arguments[1], arguments[2])
+
+        t.check(
+            "sound_console_stream_set_function",
+            Buffer(bytes(environment), pointers=(8, 0x14)),
+            globals={"unknown_0051ebe4": Buffer(bytes(console))},
+            memory={STATE: Memory(random_.randbytes(1024))},
+            externals={
+                "unknown_0037b73f": lambda harness, arguments: (0, tuple(arguments)),
+                "unknown_0037b7b3": lock_,
+                "unknown_0013b390": function_,
+                "unknown_0037b797": lambda harness, arguments: (0, tuple(arguments)),
+                "unknown_0037b66f": lambda harness, arguments: (0, tuple(arguments)),
             },
         )

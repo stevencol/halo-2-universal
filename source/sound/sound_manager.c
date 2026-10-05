@@ -479,6 +479,8 @@ enum
 	SOUND_EFFECT_ENTRY_BYTES_OFFSET= 0xA,
 	SOUND_EFFECT_NAME_FOUR_TIMES= 0x11000138,
 	SOUND_EFFECT_NAME_KIND10= 0x0D00012E,
+	NUMBER_OF_SOUND_CONSOLE_FUNCTION_STREAMS= 2,
+	SOUND_CONSOLE_FUNCTION_STREAM_SIZE= 1000,
 	SOUND_EFFECT_NAME_KIND4= 0x1300012D,
 	/* of what an element has in its place: the functions (of 0x10 bytes: two
 	shorts that say which reals of the sound it is of, its data and a real),
@@ -1687,7 +1689,12 @@ void unknown_0021c400(long channel_index, real decibels, const byte *parameters)
 void __attribute__((stdcall)) sound_channel_update_voice(short channel_index, real decibels, const byte *parameters);
 
 /* 0x0021f720: of the console's sound, with what sound_unknown_00222930 fills */
-void unknown_0021f720(const byte *environment);
+void __attribute__((stdcall)) sound_console_stream_set_function(const byte *environment);
+/* 0x0037b7b3: the console gives where to write some bytes of a stream, and
+how many; 0x0037b797: the console is told something of a stream */
+void unknown_0037b7b3(void *stream, unsigned long offset, unsigned long size, byte **bytes, unsigned long *bytes_size,
+	byte **more_bytes, unsigned long *more_bytes_size, unsigned long flags);
+void unknown_0037b797(void *stream, long unknown);
 
 /* 0x0037b75b: of the console: what a stream of sound does; 0x0021de90 */
 void unknown_0037b75b(void *stream, long *status);
@@ -7976,7 +7983,7 @@ void __attribute__((stdcall)) sound_channel_update_voice(
 		*(real *)(voice_parameters+SOUND_VOICE_PARAMETERS_DECIBELS_OFFSET)=
 			sound_pin_decibels((real)(char)permutation->unknown0[SOUND_PERMUTATION_GAIN_OFFSET]+loudness);
 		sound_console_voice_start(voice_parameters, voice_parameters+SOUND_VOICE_PARAMETERS_EFFECTS_OFFSET, channel->unknownC);
-		unknown_0021f720(voice_parameters+SOUND_VOICE_PARAMETERS_ENVIRONMENT_OFFSET);
+		sound_console_stream_set_function(voice_parameters+SOUND_VOICE_PARAMETERS_ENVIRONMENT_OFFSET);
 		sound_channel_queue_chunk(channel_index, permutation, *(const short *)(source+SOUND_SOURCE_DATUM_CHUNK_OFFSET));
 		controller_index= *(const long *)(source+SOUND_SOURCE_DATUM_CONTROLLER_INDEX_OFFSET);
 		if (controller_index!=NONE)
@@ -10667,4 +10674,76 @@ void sound_effect_entry_build(
 			}
 		}
 	}
+}
+
+/* 0x0021f720: one of the two streams of the console's sound (the short at
+the start of what a voice has of its environment says which) is given the
+shape of a function of a tag: a thousand bytes, from 0 to 255, of what the
+function is from 0 to 1 (unknown_0013b390), put between the two reals of the
+function unless it has one of four flags; 0 with no function. It is only
+written when the number at 0xC is not the one of the last time, with the
+stream paused. Then the stream is told two things with a 0. Nothing is done
+when the short at 2 is not from 0 to 31. The name is made up */
+void __attribute__((stdcall)) sound_console_stream_set_function(
+	const byte *environment)
+{
+	short number= *(const short *)(environment+SOUND_VOICE_ENVIRONMENT_NUMBER_OFFSET);
+	short stream_index= *(const short *)environment;
+	byte *console;
+	void *stream;
+
+	if (number<0 || number>31 || stream_index<0 || stream_index>=NUMBER_OF_SOUND_CONSOLE_FUNCTION_STREAMS)
+	{
+		return;
+	}
+	console= unknown_0051ebe4;
+	stream= *(void **)(console+UNKNOWN_0051EBE4_STREAMS_OFFSET+stream_index*4);
+	if (*(const long *)(environment+SOUND_VOICE_ENVIRONMENT_UNKNOWNC_OFFSET)!=
+		*(const long *)(console+UNKNOWN_0051EBE4_UNKNOWN2A98_OFFSET+stream_index*4))
+	{
+		unsigned long size;
+		byte *bytes;
+		unsigned long index;
+
+		unknown_0037b73f(stream, TRUE);
+		unknown_0037b7b3(stream, 0, SOUND_CONSOLE_FUNCTION_STREAM_SIZE, &bytes, &size, NULL, NULL, 0);
+		for (index= 0; index<size; index++)
+		{
+			const byte *function= *(const byte *const *)(environment+SOUND_VOICE_ENVIRONMENT_UNKNOWN8_OFFSET);
+			real value;
+
+			if (*(const byte *const *)(function+4) && *(const long *)function>0)
+			{
+				const byte *data;
+
+				value= unknown_0013b390(function, (real)(long)index*0.001f, 0.0f);
+				data= *(const byte *const *)(function+4);
+				if (!(data[1]&0xF0))
+				{
+					real low= *(const real *)(data+4);
+					real high= *(const real *)(data+8);
+
+					if (0.0f>value)
+					{
+						value= 0.0f;
+					}
+					else if (value>1.0f)
+					{
+						value= 1.0f;
+					}
+					value= (high-low)*value+low;
+				}
+			}
+			else
+			{
+				value= 0.0f;
+			}
+			bytes[index]= (byte)lrintf(value*255.0f);
+		}
+		unknown_0037b73f(stream, FALSE);
+		*(long *)(unknown_0051ebe4+UNKNOWN_0051EBE4_UNKNOWN2A98_OFFSET+stream_index*4)=
+			*(const long *)(environment+SOUND_VOICE_ENVIRONMENT_UNKNOWNC_OFFSET);
+	}
+	unknown_0037b797(stream, 0);
+	unknown_0037b66f(stream, 0);
 }
