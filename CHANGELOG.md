@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Un sonido arranca con su efecto de sonido
+
+Una función en `sound/sound_manager.c`, de 427 bytes. De 893 funciones se pasa a
+894, el 7,94 % de las del juego (el 4,678 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_effect_source_new` | `0x0021d110` | `sound/sound_manager.c` |
+
+No estaba apuntada. Recibe en `eax` lo que el juego da para arrancar un
+sonido y en la pila el sonido; devuelve el sonido que suena, o `NONE`.
+
+### Lo que se sabe
+
+- `sound_effect_source_new` arranca un sonido. Si los tags tienen un efecto
+  de sonido para él (`sound_effect_definition_get`) y queda sitio para otro
+  efecto, crea el efecto, convierte el sonido en sonido del efecto
+  (`sound_effect_prepare_request`) y lo arranca; el efecto se queda con el
+  sonido y pasa a `0x0021d630`. Si el sonido no llega a arrancar, el efecto
+  se suelta.
+- Si no hay efecto, el sonido arranca como cualquier otro.
+- Arrancar es lo mismo que hace `sound_source_new` (comprobar que se puede,
+  mirar su promoción y crearlo), que aquí el juego tiene escrito en línea
+  dos veces.
+- Si lo que da `unknown_0018d090` para el sonido tiene la marca 0, lo que
+  el juego dice del sonido recibe la marca 8.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función. La batería
+  completa corre aparte con las 893 funciones del hito 227.
+
+### Mutaciones
+
+Doce líneas rotas a mano: las pruebas notan once. La que no notan es el
+valor con el que empieza el número de la regla de la promoción: quien lo
+rellena lo escribe siempre.
+
 ## 2026-10-05 — Los sonidos sueltos de un sonido en bucle
 
 Tres funciones en `sound/sound_manager.c`. De 890 funciones se pasa a

@@ -578,6 +578,9 @@ enum
 	SOUND_SOURCE_VELOCITY_OFFSET= 0x1C,
 	SOUND_DEFINITION_UNKNOWN4_OFFSET= 0x4,
 	PLAYERS_GLOBALS_LOCAL_PLAYER_COUNT_OFFSET= 0x8,
+	/* of what the tags have of a sound effect, and of what unknown_0018d090
+	gives */
+	SOUND_EFFECT_COLLECTION_FLAGS_OFFSET= 0x8,
 	VOICE_UNKNOWN2_OFFSET= 0x2,
 	VOICE_DECIBELS_OFFSET= 0xC,
 	VOICE_UNKNOWN30_OFFSET= 0x30,
@@ -1307,6 +1310,9 @@ void sound_source_hold_chunk(byte *source);
 void sound_channels_unknown_00129380(const long *voice_values, const long *slot_values);
 void __attribute__((stdcall)) sound_console_set_environment(const long *second, const long *first, const void *unknown);
 void sound_classes_update(real seconds);
+
+/* 0x0021d110 */
+long __attribute__((stdcall)) sound_effect_source_new(byte *request, long sound_index);
 
 /* 0x0021bfb0, 0x0021c140 and 0x0021cc60 */
 boolean __attribute__((stdcall)) looping_sound_source_unknown0(long data, long sound_index, void *unknown5C,
@@ -9119,4 +9125,80 @@ boolean __attribute__((stdcall)) looping_sound_detail_request(
 	said[0]|= 0x80;
 
 	return result;
+}
+
+/* a sound starts to play, as sound_source_new has it, with no one to say
+why if it does not: the game has it written out here */
+static inline __attribute__((always_inline)) long sound_source_new_inline(
+	byte *request,
+	long sound_index)
+{
+	long source_index= NONE;
+
+	if (sound_available_inline())
+	{
+		long first;
+		long second= sound_index;
+
+		if (sound_start_test(request, sound_index, &first, NULL) && !sound_promotion_update(sound_index, &second))
+		{
+			source_index= sound_source_create(sound_index, first, request, second);
+		}
+	}
+
+	return source_index;
+}
+
+/* 0x0021d110: a sound starts to play, with a sound effect if the tags have
+one for it (sound_effect_definition_get) with something at 8 and there is
+room for one more: the effect is made, what the game gives to start the sound
+becomes that of a sound of the effect (sound_effect_prepare_request), and
+the effect keeps the sound and is given to unknown_0021d630; if the sound
+does not start, the effect is let go. With the flag 0 of what
+unknown_0018d090 gives for the sound, what the game says of the sound has the
+flag 8. With no effect the sound starts as any other. Gives the sound that
+plays, or NONE. The name is made up */
+long __attribute__((stdcall)) sound_effect_source_new(
+	byte *request,
+	long sound_index)
+{
+	long unknown= *(const unsigned long *)request&FLAG(_sound_request_unknown8_bit) ?
+		*(const long *)(request+SOUND_REQUEST_UNKNOWN98_OFFSET) : NONE;
+	const byte *definition= NULL;
+	long effect_index;
+
+	if (sound_effect_definition_get(sound_index, unknown, &definition) &&
+		*(const long *)(definition+SOUND_EFFECT_DEFINITION_UNKNOWN8_OFFSET) &&
+		(effect_index= datum_new(sound_effects))!=NONE)
+	{
+		byte *effect= (byte *)sound_effects->data+(effect_index&0xFFFF)*SOUND_EFFECT_DATUM_SIZE;
+		const byte *collection;
+		long source_index;
+
+		*(const byte **)(effect+SOUND_EFFECT_DATUM_DEFINITION_OFFSET)= definition;
+		*(long *)(effect+SOUND_EFFECT_DATUM_CONTROLLER_INDEX_OFFSET)= NONE;
+		collection= unknown_0018d090(sound_index, unknown);
+		if (collection && collection[SOUND_EFFECT_COLLECTION_FLAGS_OFFSET]&1)
+		{
+			request[SOUND_REQUEST_SOURCE_OFFSET+1]|= FLAG(_sound_source_unknown8_bit-8);
+		}
+		sound_effect_prepare_request(effect_index, request);
+		source_index= sound_source_new_inline(request, sound_index);
+		if (source_index!=NONE)
+		{
+			effect= (byte *)sound_effects->data+(effect_index&0xFFFF)*SOUND_EFFECT_DATUM_SIZE;
+			effect[SOUND_EFFECT_DATUM_KIND_OFFSET]= 1;
+			*(long *)(effect+SOUND_EFFECT_DATUM_SOURCE_INDEX_OFFSET)= source_index;
+			*(short *)(effect+SOUND_EFFECT_DATUM_UNKNOWN6_OFFSET)= *(const short *)(request+SOUND_REQUEST_UNKNOWN4_OFFSET);
+			unknown_0021d630(effect_index, 0);
+		}
+		else
+		{
+			sound_effect_delete(effect_index);
+		}
+
+		return source_index;
+	}
+
+	return sound_source_new_inline(request, sound_index);
 }

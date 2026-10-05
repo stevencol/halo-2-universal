@@ -1336,3 +1336,4 @@ address,name,source,arguments,returns,convention
 0021bfb0,looping_sound_source_unknown0,source/sound/sound_manager.c,stack stack stack stack,bool,stdcall
 0021c140,looping_sound_source_matches,source/sound/sound_manager.c,stack stack,bool,stdcall
 0021cc60,looping_sound_detail_request,source/sound/sound_manager.c,stack stack stack,bool,stdcall
+0021d110,sound_effect_source_new,source/sound/sound_manager.c,eax stack,int,stdcall

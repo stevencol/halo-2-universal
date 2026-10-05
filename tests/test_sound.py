@@ -5545,3 +5545,63 @@ def run(t) -> None:
                 "looping_sound_source_unknown0": told__,
             },
         )
+
+    # ---------- a sound starts to play, with a sound effect if it has one
+
+    random_ = random.Random(228)
+
+    for _ in range(900):
+        effects = bytearray(random_.randbytes(0x4C + EFFECTS * 0x14))
+        struct.pack_into("<I", effects, 0x44, 0x4C)
+        request = bytearray(random_.randbytes(0xA0))
+        struct.pack_into("<I", request, 0, random_.choice((0, 0x100, 0x100, 0xFFFFFEFF, random_.getrandbits(32))))
+        definition = Buffer(random_.randbytes(8) + struct.pack("<I", random_.choice((0, 1, 1, random_.getrandbits(32)))) + random_.randbytes(4))
+        has_definition = random_.choice((1, 1, 1, 0))
+        collection = random_.choice((None, Buffer(random_.randbytes(8) + bytes((random_.choice((0, 1, 1, 0xFE)),)) + random_.randbytes(7))))
+        made_index = random_.choice((NONE, random_.getrandbits(16) << 16 | random_.randrange(EFFECTS), random_.getrandbits(16) << 16 | random_.randrange(EFFECTS)))
+        starts = random_.choice((1, 1, 1, 0))
+        promoted = random_.choice((0, 0, 0, 1))
+        created = random_.choice((NONE, random_.getrandbits(32), random_.getrandbits(32)))
+        states = ((1, 1, 1), (1, 1, 1), (1, 1, 1), (0, 1, 1), (1, 0, 1), (1, 1, 0))
+
+        def has_(harness, arguments, definition=definition, has_definition=has_definition):
+            tag_index, unknown, where = arguments
+            if has_definition or random.Random(tag_index).random() < 0.3:
+                harness.mu.mem_write(where, struct.pack("<I", definition.address))
+            return has_definition, (tag_index, unknown)
+
+        def test_(harness, arguments, starts=starts):
+            harness.mu.mem_write(arguments[2], struct.pack("<I", 2))
+            return starts, (harness.normalize(arguments[0]), arguments[1], arguments[3])
+
+        def promotion_(harness, arguments, promoted=promoted):
+            harness.mu.mem_write(arguments[1], struct.pack("<I", 5))
+            return promoted, (arguments[0],)
+
+        t.check(
+            "sound_effect_source_new",
+            Buffer(bytes(request)),
+            random_.getrandbits(32),
+            globals={
+                "sound_effects": Buffer(bytes(effects), pointers=(0x44,)),
+                "game_sound_globals": sound_state(*states[random_.randrange(len(states))]),
+            },
+            extra=[definition] + ([collection] if collection else []),
+            externals={
+                "sound_effect_definition_get": has_,
+                "datum_new": lambda harness, arguments, made_index=made_index: (made_index, (harness.normalize(arguments[0]),)),
+                "unknown_0018d090": lambda harness, arguments, collection=collection: (
+                    collection.address if collection else 0,
+                    tuple(arguments),
+                ),
+                "sound_effect_prepare_request": lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]))),
+                "sound_start_test": test_,
+                "sound_promotion_update": promotion_,
+                "sound_source_create": lambda harness, arguments, created=created: (
+                    created,
+                    (arguments[0], arguments[1], harness.normalize(arguments[2]), arguments[3]),
+                ),
+                "unknown_0021d630": lambda harness, arguments: (0, tuple(arguments)),
+                "sound_effect_delete": lambda harness, arguments: (0, tuple(arguments)),
+            },
+        )
