@@ -1224,12 +1224,12 @@ void unknown_002222c0(long *entry, const long *element, const byte *override, lo
 /* 0x0021dc60; 0x0021d9f0, 0x0021da30, 0x0021da50, 0x0021da70 and 0x0021db30:
 what a sound effect is told of its sounds */
 void sound_effect_prepare_request(long effect_index, byte *request);
-boolean __attribute__((stdcall)) unknown_0021d9f0(long data, long sound_index, void *unknown5C, void *unknown18);
-void __attribute__((stdcall)) unknown_0021da30(long data, long sound_index, long source_index, void *unknown5C);
-void __attribute__((stdcall)) unknown_0021da50(long data, void *unknown5C, long sound_index, long pitch_range,
+boolean __attribute__((stdcall)) sound_effect_source_unknown0(long data, long sound_index, void *unknown5C, void *unknown18);
+void __attribute__((stdcall)) sound_effect_source_got_channel(long data, long sound_index, long source_index, void *unknown5C);
+void __attribute__((stdcall)) sound_effect_source_playing(long data, void *unknown5C, long sound_index, long pitch_range,
 	long permutation, real position);
-boolean __attribute__((stdcall)) unknown_0021da70(long data, long sound_index, void *unknown5C, byte *parameters);
-void __attribute__((stdcall)) unknown_0021db30(long data, long source_index);
+boolean __attribute__((stdcall)) sound_effect_source_heard(long data, long sound_index, void *unknown5C, byte *parameters);
+void __attribute__((stdcall)) sound_effect_source_stopped(long data, long source_index);
 
 /* 0x002228d0 and 0x002221d0 */
 void __attribute__((stdcall)) sound_unknown_002228d0(long unknown, byte *result, long unknown2);
@@ -1415,15 +1415,15 @@ void __attribute__((stdcall)) sound_source_delete(long source_index, long reason
 void sound_source_free(long source_index);
 
 /* 0x0044a1c0: who is told of the sounds of a sound effect: the effect
-itself. Only the fifth of its functions is decompiled */
+itself */
 const struct sound_source_callbacks sound_effect_callbacks=
 {
-	unknown_0021d9f0,
-	unknown_0021da30,
-	unknown_0021da50,
-	unknown_0021da70,
+	sound_effect_source_unknown0,
+	sound_effect_source_got_channel,
+	sound_effect_source_playing,
+	sound_effect_source_heard,
 	sound_effect_source_deleted,
-	unknown_0021db30,
+	sound_effect_source_stopped,
 	NULL,
 	NULL
 };
@@ -8520,4 +8520,100 @@ void sound_effect_prepare_request(
 			*(unsigned long *)request|= FLAG(_sound_request_controller_bit);
 		}
 	}
+}
+
+/* who was to be told of a sound of a sound effect before the effect: at the
+end of the bytes for who is told */
+static inline __attribute__((always_inline)) const struct sound_source_callbacks *sound_effect_source_callbacks(
+	const void *unknown5C)
+{
+	return *(const struct sound_source_callbacks *const *)((const byte *)unknown5C+
+		(SOUND_REQUEST_EFFECT_CALLBACKS_OFFSET-SOUND_REQUEST_CALLBACK_BYTES_OFFSET));
+}
+
+/* 0x0021d9f0: the first thing that a sound effect is told of a sound of
+its own: whether the effect has no flag 4; and if it has none, what the game
+says of the sound is that of the effect (sound_effect_get_source) */
+boolean __attribute__((stdcall)) sound_effect_source_unknown0(
+	long data,
+	long sound_index,
+	void *unknown5C,
+	void *unknown18)
+{
+	long effect_index= *(const long *)((const byte *)unknown5C+
+		(SOUND_REQUEST_EFFECT_INDEX_OFFSET-SOUND_REQUEST_CALLBACK_BYTES_OFFSET));
+	const byte *effect= (const byte *)sound_effects->data+(effect_index&0xFFFF)*SOUND_EFFECT_DATUM_SIZE;
+	boolean result= !((effect[SOUND_EFFECT_DATUM_FLAGS_OFFSET]>>_sound_effect_datum_unknown4_bit)&1);
+
+	if (result)
+	{
+		sound_effect_get_source(effect_index, (struct sound_source *)unknown18);
+	}
+
+	return result;
+}
+
+/* 0x0021da30, 0x0021da50 and 0x0021da70: a sound effect that is told that a
+sound of its own has a channel, where it plays, and how it is heard, tells
+who was to be told before it, if there was one */
+void __attribute__((stdcall)) sound_effect_source_got_channel(
+	long data,
+	long sound_index,
+	long source_index,
+	void *unknown5C)
+{
+	const struct sound_source_callbacks *callbacks= sound_effect_source_callbacks(unknown5C);
+
+	if (callbacks && callbacks->got_channel)
+	{
+		callbacks->got_channel(data, sound_index, source_index, unknown5C);
+	}
+}
+
+void __attribute__((stdcall)) sound_effect_source_playing(
+	long data,
+	void *unknown5C,
+	long sound_index,
+	long pitch_range,
+	long permutation,
+	real position)
+{
+	const struct sound_source_callbacks *callbacks= sound_effect_source_callbacks(unknown5C);
+
+	if (callbacks && callbacks->playing)
+	{
+		callbacks->playing(data, unknown5C, sound_index, pitch_range, permutation, position);
+	}
+}
+
+boolean __attribute__((stdcall)) sound_effect_source_heard(
+	long data,
+	long sound_index,
+	void *unknown5C,
+	byte *parameters)
+{
+	const struct sound_source_callbacks *callbacks= sound_effect_source_callbacks(unknown5C);
+
+	if (callbacks && callbacks->heard)
+	{
+		return callbacks->heard(data, sound_index, unknown5C, parameters);
+	}
+
+	return FALSE;
+}
+
+/* 0x0021db30: a sound effect that is told that a sound of its own stops does
+as when it is let go, with the reason 1; and the sound is no more of the
+effect: who was to be told before is told from now on */
+void __attribute__((stdcall)) sound_effect_source_stopped(
+	long data,
+	long source_index)
+{
+	byte *source;
+
+	sound_effect_source_deleted(data, source_index, 1);
+	source= sound_source_get(source_index);
+	*(long *)(source+SOUND_SOURCE_DATUM_CALLBACKS_OFFSET)= *(const long *)(source+SOUND_SOURCE_DATUM_EFFECT_CALLBACKS_OFFSET);
+	*(long *)(source+SOUND_SOURCE_DATUM_EFFECT_INDEX_OFFSET)= 0;
+	*(long *)(source+SOUND_SOURCE_DATUM_EFFECT_CALLBACKS_OFFSET)= 0;
 }

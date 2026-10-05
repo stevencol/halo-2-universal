@@ -2,6 +2,56 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Lo que se le avisa a un efecto de sonido de sus sonidos
+
+Cinco funciones en `sound/sound_manager.c`. De 876 funciones se pasa a
+881, el 7,82 % de las del juego (el 4,575 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_effect_source_unknown0` | `0x0021d9f0` | `sound/sound_manager.c` |
+| `sound_effect_source_got_channel` | `0x0021da30` | `sound/sound_manager.c` |
+| `sound_effect_source_playing` | `0x0021da50` | `sound/sound_manager.c` |
+| `sound_effect_source_heard` | `0x0021da70` | `sound/sound_manager.c` |
+| `sound_effect_source_stopped` | `0x0021db30` | `sound/sound_manager.c` |
+
+Son las cinco funciones de `sound_effect_callbacks` que faltaban: con ellas
+la tabla está completa.
+
+### Lo que se sabe
+
+- `sound_effect_source_unknown0` dice si el efecto no tiene la marca 4; si
+  no la tiene, lo que el juego dice del sonido pasa a ser lo del efecto
+  (`sound_effect_get_source`).
+- `sound_effect_source_got_channel`, `sound_effect_source_playing` y
+  `sound_effect_source_heard` reciben los avisos de que el sonido tiene
+  canal, por dónde va sonando y cómo se oye, y se los pasan tal cual a
+  quien los iba a recibir antes que el efecto, si lo había.
+- `sound_effect_source_stopped` hace lo mismo que cuando el sonido se
+  suelta (`sound_effect_source_deleted`, con el motivo 1) y desengancha el
+  sonido del efecto: a partir de ahí los avisos van a quien los recibía
+  antes.
+
+### Aviso sobre las cuentas
+
+- Estas cinco funciones no están en la lista de funciones de Ghidra (solo
+  se llega a ellas por la tabla), así que cuentan en las funciones
+  descompiladas pero no en las 11.265 del total ni en los bytes. El
+  porcentaje queda unas centésimas por encima de lo real hasta que se
+  rehaga la lista.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de estas funciones y de
+  `sound_effect_prepare_request`. La última batería completa es la del hito
+  210 (867 funciones, todas bien).
+
+### Mutaciones
+
+Nueve líneas rotas a mano: las pruebas notan las nueve.
+
 ## 2026-10-05 — Un sonido pasa a ser de un efecto de sonido
 
 Una función en `sound/sound_manager.c`. De 875 funciones se pasa a

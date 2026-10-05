@@ -1323,8 +1323,8 @@ address,name,source,arguments,returns,convention
 002228d0,sound_unknown_002228d0,source/sound/sound_manager.c,edx esi stack,void,stdcall
 002221d0,sound_real_to_fixed24,source/sound/sound_manager.c,stack,int,stdcall
 0021dc60,sound_effect_prepare_request,source/sound/sound_manager.c,ecx esi,void
-0021d9f0,unknown_0021d9f0,,stack stack stack stack,bool,stdcall
-0021da30,unknown_0021da30,,stack stack stack stack,void,stdcall
-0021da50,unknown_0021da50,,stack stack stack stack stack stack,void,stdcall
-0021da70,unknown_0021da70,,stack stack stack stack,bool,stdcall
-0021db30,unknown_0021db30,,stack stack,void,stdcall
+0021d9f0,sound_effect_source_unknown0,source/sound/sound_manager.c,stack stack stack stack,bool,stdcall
+0021da30,sound_effect_source_got_channel,source/sound/sound_manager.c,stack stack stack stack,void,stdcall
+0021da50,sound_effect_source_playing,source/sound/sound_manager.c,stack stack stack stack stack stack,void,stdcall
+0021da70,sound_effect_source_heard,source/sound/sound_manager.c,stack stack stack stack,bool,stdcall
+0021db30,sound_effect_source_stopped,source/sound/sound_manager.c,stack stack,void,stdcall

@@ -5149,3 +5149,57 @@ def run(t) -> None:
                 "sound_playback_controller_new": lambda harness, arguments, got=got: (got, tuple(arguments)),
             },
         )
+
+    # ---------- what a sound effect is told of its sounds
+
+    random_ = random.Random(219)
+
+    def told_bytes(table: bool, functions: tuple) -> Buffer:
+        """The bytes for who is told of a sound of a sound effect, with who was to be told before after them."""
+        data = bytearray(random_.randbytes(0x30))
+        struct.pack_into("<I", data, 0x28, random_.getrandbits(16) << 16 | random_.randrange(EFFECTS))
+        struct.pack_into("<I", data, 0x2C, 0x30 if table else 0)
+        data += struct.pack("<8I", *(mock_address(n) if function else 0 for n, function in enumerate(functions)))
+        return Buffer(bytes(data), pointers=(0x2C,) if table else ())
+
+    for _ in range(300):
+        effects = bytearray(random_.randbytes(0x4C + EFFECTS * 0x14))
+        struct.pack_into("<I", effects, 0x44, 0x4C)
+        t.check(
+            "sound_effect_source_unknown0",
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            told_bytes(False, (False,) * 8),
+            Buffer(random_.randbytes(0x48)),
+            globals={"sound_effects": Buffer(bytes(effects), pointers=(0x44,))},
+            externals={"sound_effect_get_source": lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1])))},
+        )
+    for _ in range(200):
+        table = random_.random() < 0.8
+        functions = tuple(random_.random() < 0.8 for _ in range(8))
+        for name, arguments in (
+            ("sound_effect_source_got_channel", lambda told_: (random_.getrandbits(32), random_.getrandbits(32), random_.getrandbits(32), told_)),
+            (
+                "sound_effect_source_playing",
+                lambda told_: (random_.getrandbits(32), told_, random_.getrandbits(32), random_.getrandbits(32), random_.getrandbits(32), as_bits(1.5)),
+            ),
+            ("sound_effect_source_heard", lambda told_: (random_.getrandbits(32), random_.getrandbits(32), told_, Buffer(random_.randbytes(0x38)))),
+        ):
+            random_before = random.Random(random_.getrandbits(32))
+            answer = random_before.choice((0, 1, 1))
+            mocks = [
+                Mock(lambda call: 0, stack_arguments=4),
+                Mock(lambda call: 0, stack_arguments=4),
+                Mock(lambda call: 0, stack_arguments=6),
+                Mock(lambda call, answer=answer: answer, stack_arguments=4),
+            ]
+            t.check(name, *arguments(told_bytes(table, functions)), mocks=mocks)
+    for _ in range(200):
+        buffer, indices = playing()
+        t.check(
+            "sound_effect_source_stopped",
+            random_.getrandbits(32),
+            random_.choice(indices),
+            globals={"sound_sources": buffer},
+            externals={"sound_effect_source_deleted": lambda harness, arguments: (0, tuple(arguments))},
+        )
