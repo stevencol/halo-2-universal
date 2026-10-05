@@ -757,6 +757,9 @@ void __attribute__((stdcall)) looping_sound_track_set_played_bits(long track, un
 /* 0x0021e0b0 */
 long sound_voice_matches_source(const byte *voice, const byte *source);
 
+/* 0x00218f50 */
+short sound_choose_pitch_range(short pitch_range_offset, const struct sound_definition *sound, real pitch);
+
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
 	char permutation, short chunk);
@@ -4646,4 +4649,91 @@ long sound_voice_matches_source(
 	}
 
 	return !unknown_0055e780;
+}
+
+/* the parameters of a pitch range, of those that the sounds of a map share:
+five numbers of 16 bits, pitches in hundredths of a semitone */
+static inline __attribute__((always_inline)) const short *sound_pitch_range_parameters(
+	const struct sound_pitch_range *pitch_range)
+{
+	return (const short *)((const byte *)(uintptr_t)global_sound_cache_file_gestalt->unknown8[2].address+
+		*(const short *)(pitch_range->unknown0+SOUND_PITCH_RANGE_PARAMETERS_INDEX_OFFSET)*SOUND_PITCH_RANGE_PARAMETERS_SIZE);
+}
+
+/* whether a pitch is one of those that a pitch range is played at: from its
+fourth number to its fifth */
+static inline __attribute__((always_inline)) boolean sound_pitch_range_has_pitch(
+	const short *parameters,
+	real pitch)
+{
+	real clamped= (real)parameters[3];
+
+	if (!(clamped>pitch))
+	{
+		clamped= (real)parameters[4];
+		if (!(pitch>clamped))
+		{
+			clamped= pitch;
+		}
+	}
+
+	return clamped==pitch;
+}
+
+/* 0x00218f50: the pitch range of a sound for a pitch. The one that is
+asked for, if it has the pitch and recordings; if not, the first with
+recordings that has the pitch; and if none has it, the one whose second and
+third numbers are closest to the pitch. NONE if no pitch range has
+recordings */
+short sound_choose_pitch_range(
+	short pitch_range_offset,
+	const struct sound_definition *sound,
+	real pitch)
+{
+	const struct sound_pitch_range *pitch_ranges=
+		(const struct sound_pitch_range *)(uintptr_t)global_sound_cache_file_gestalt->pitch_ranges.address;
+	long count= (char)sound->pitch_range_count;
+	long closest= NONE;
+	real closest_distance= SOUND_REAL_MAXIMUM;
+	short index;
+
+	if (pitch_range_offset!=NONE && pitch_range_offset<count)
+	{
+		const struct sound_pitch_range *pitch_range= &pitch_ranges[sound->first_pitch_range_index+pitch_range_offset];
+
+		if (sound_pitch_range_has_pitch(sound_pitch_range_parameters(pitch_range), pitch) && pitch_range->permutation_count>0)
+		{
+			return pitch_range_offset;
+		}
+	}
+	for (index= 0; index<count; index++)
+	{
+		const struct sound_pitch_range *pitch_range= &pitch_ranges[sound->first_pitch_range_index+index];
+
+		if (pitch_range->permutation_count>0)
+		{
+			const short *parameters= sound_pitch_range_parameters(pitch_range);
+			real distance;
+
+			if (sound_pitch_range_has_pitch(parameters, pitch))
+			{
+				return index;
+			}
+			if (pitch>(real)parameters[2])
+			{
+				distance= pitch-(real)parameters[2];
+			}
+			else
+			{
+				distance= (real)parameters[1]-pitch;
+			}
+			if (closest_distance>distance)
+			{
+				closest= index;
+				closest_distance= distance;
+			}
+		}
+	}
+
+	return (short)closest;
 }

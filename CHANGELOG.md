@@ -2,6 +2,39 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — El rango de tono de un sonido para un tono
+
+Una función en `sound/sound_manager.c`. De 829 funciones se pasa a
+830, el 7,37 % de las del juego (el 3,968 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_choose_pitch_range` | `0x00218f50` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- `sound_choose_pitch_range` elige el rango de tono de un sonido para un
+  tono: el que se pide, si admite ese tono y tiene grabaciones; si no, el
+  primero con grabaciones que lo admita; y si ninguno lo admite, el que
+  quede más cerca. Da `NONE` si ningún rango tiene grabaciones.
+- Los parámetros de un rango de tono son cinco números de 16 bits (tonos en
+  centésimas de semitono): el primero es el tono con el que se grabó, el
+  cuarto y el quinto dicen entre qué tonos se reproduce, y el segundo y el
+  tercero se usan para medir lo lejos que queda un tono.
+- Recibe el tono en `xmm1`.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- La batería completa corre aparte con las 824 funciones del hito 173; en
+  este hito solo se pasó la prueba de esta función.
+
+### Mutaciones
+
+Pendientes las de los hitos 156 a 177.
+
 ## 2026-10-04 — Si un sonido puede compartir una voz de sonido
 
 Una función en `sound/sound_manager.c`. De 828 funciones se pasa a

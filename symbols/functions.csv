@@ -1278,3 +1278,4 @@ address,name,source,arguments,returns,convention
 0021cb90,looping_sound_track_get_played_bits,source/sound/sound_manager.c,eax ecx edx stack stack stack,int,stdcall
 0021cbe0,looping_sound_track_set_played_bits,source/sound/sound_manager.c,eax ecx edx edi stack stack stack,void,stdcall
 0021e0b0,sound_voice_matches_source,source/sound/sound_manager.c,eax ecx,int
+00218f50,sound_choose_pitch_range,source/sound/sound_manager.c,eax ecx xmm1,short

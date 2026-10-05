@@ -2950,3 +2950,36 @@ def run(t) -> None:
             externals={"sound_classes_match": lambda harness, arguments, same=same: (same, tuple(value & 0xFFFF for value in arguments))},
             mocks=[Mock(lambda call, answer=answer: answer, stack_arguments=2)],
         )
+
+    # ---------- the pitch range of a sound for a pitch
+
+    random_ = random.Random(177)
+
+    for _ in range(150):
+        # what the sounds share: 6 parameters of pitch ranges and 8 pitch ranges
+        data = bytearray(random_.randbytes(0x48))
+        parameters = bytearray()
+        for _n in range(6):
+            low = random_.choice((-1200, -600, 0, 100))
+            high = low + random_.choice((0, 100, 600, 1200))
+            parameters += struct.pack("<5h", random_.randint(-50, 50), low - 50, high + 50, low, high)
+        struct.pack_into("<I", data, 0x1C, len(data))
+        data += parameters
+        struct.pack_into("<I", data, 0x24, len(data))
+        for _n in range(8):
+            pitch_range = bytearray(random_.randbytes(0xC))
+            struct.pack_into("<h", pitch_range, 2, random_.randrange(6))
+            struct.pack_into("<h", pitch_range, 0xA, random_.choice((0, 1, 1, 4, -1)))
+            data += pitch_range
+        shared = Buffer(bytes(data), pointers=(0x1C, 0x24))
+        for _case in range(10):
+            definition = bytearray(random_.randbytes(0x10))
+            struct.pack_into("<h", definition, 8, random_.randrange(4))
+            definition[0xA] = random_.choice((0, 1, 2, 4, 4, 0xFF))
+            t.check(
+                "sound_choose_pitch_range",
+                random_.choice((0xFFFF, 0, 1, 2, 3, 4, 7)),
+                Buffer(bytes(definition)),
+                as_bits(random_.choice((0.0, -1200.0, 100.0, 650.0, 2000.0, -3000.0, float("nan"), random_.uniform(-1500, 1500)))),
+                globals={"global_sound_cache_file_gestalt": shared},
+            )
