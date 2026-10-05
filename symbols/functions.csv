@@ -1281,3 +1281,5 @@ address,name,source,arguments,returns,convention
 00218f50,sound_choose_pitch_range,source/sound/sound_manager.c,eax ecx xmm1,short
 00127d00,sound_source_get_listener,source/sound/sound_manager.c,stack stack stack,int,stdcall
 0012a6d0,sound_unknown_0012a6d0,source/sound/sound_manager.c,eax stack stack,real:eax,stdcall
+00128a60,sound_source_choose_channel,source/sound/sound_manager.c,eax ecx stack,short,stdcall
+00128b90,sound_source_goes_before,source/sound/sound_manager.c,eax ecx stack,int,stdcall

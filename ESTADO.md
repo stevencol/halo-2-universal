@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-04, al terminar el hito 179.
+**Última actualización:** 2026-10-04, al terminar el hito 180.
 
 ## Dónde estamos
 
-- **833 funciones descompiladas de 11.265: el 7,39 % del juego** (el
-  4,001 % de los bytes de código).
-- Las 833 están comprobadas contra el ejecutable original: las 731 del
+- **835 funciones descompiladas de 11.265: el 7,41 % del juego** (el
+  4,020 % de los bytes de código).
+- Las 835 están comprobadas contra el ejecutable original: las 731 del
   hito 154 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the listener that hears a sound* (ver `git log`).
+- Último hito: *Decompile which channel a sound takes and which sound goes before* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 449 funciones apuntadas pero sin descompilar (las que el código
   llama); 362 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -92,7 +92,7 @@ Módulos (funciones hechas / archivo):
       `0x002accd0` a `0x002ae090`: completo)
 - [x] Perfiles de los jugadores — `saved games\player_profile.c` (11:
       completo)
-- [ ] Sonido — `sound\sound_manager.c` (144; faltan muchas de
+- [ ] Sonido — `sound\sound_manager.c` (146; faltan muchas de
       `0x00125f70` a `0x0012b070`), `sound\sound_classes.c` (1)
 - [x] Archivos — `tag_files\files.c`, `files_xbox.c` (22, completo: de
       `0x00136710` a `0x001374c0`. Lo que hay justo antes, de `0x00136140`

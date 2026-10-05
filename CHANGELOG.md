@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Qué canal toma un sonido y qué sonido va antes
+
+Dos funciones en `sound/sound_manager.c`. De 833 funciones se pasa a
+835, el 7,41 % de las del juego (el 4,020 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_source_choose_channel` | `0x00128a60` | `sound/sound_manager.c` |
+| `sound_source_goes_before` | `0x00128b90` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- `sound_source_choose_channel` elige, entre varios canales, el que un
+  sonido nuevo le quita al sonido que lo ocupa: el del sonido que lleva más
+  tiempo sonando, entre los que llevan al menos lo que dice la clase del
+  sonido nuevo (el número en `4` de la clase); o uno cuyo sonido tenga
+  menos que el nuevo en `0xA0`. Da `NONE` si no puede quitar ninguno.
+- `sound_source_goes_before` dice si un sonido va antes que otro: si su
+  clase tiene más prioridad (la palabra en `0xC` de la clase); a igual
+  prioridad y siendo del mismo sonido, si tiene más en `0xA0`; y si no, si
+  el otro está más lejos de su oyente que una distancia dada.
+- En un sonido que suena, `0xA1` es su oyente y `0x8C` el momento en que
+  empezó a sonar.
+- Los nombres son inventados.
+
+### Sin comprobar
+
+- La batería completa corre aparte con las 824 funciones del hito 173; en
+  este hito solo se pasaron las pruebas de estas dos.
+
+### Mutaciones
+
+Pendientes las de los hitos 156 a 180.
+
 ## 2026-10-04 — Quién oye un sonido
 
 Dos funciones en `sound/sound_manager.c`. De 831 funciones se pasa a

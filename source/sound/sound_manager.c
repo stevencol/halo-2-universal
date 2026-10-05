@@ -352,6 +352,13 @@ enum
 	is heard however far it is */
 	_sound_source_unknown8_bit= 8,
 	_sound_source_unknown11_bit= 11,
+	/* of a sound that plays: something that says which goes before, and
+	its listener; of a class of sounds: how long a sound of it plays before
+	its channel can be taken, and which class goes before */
+	SOUND_SOURCE_DATUM_UNKNOWNA0_OFFSET= 0xA0,
+	SOUND_SOURCE_DATUM_LISTENER_OFFSET= 0xA1,
+	SOUND_CLASS_UNKNOWN4_OFFSET= 0x4,
+	SOUND_CLASS_PRIORITY_OFFSET= 0xC,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -771,6 +778,11 @@ short sound_choose_pitch_range(short pitch_range_offset, const struct sound_defi
 long __attribute__((stdcall)) sound_source_get_listener(const struct sound_source *source, real maximum_distance,
 	real *distance);
 real __attribute__((stdcall)) sound_unknown_0012a6d0(short kind, real time, real duration);
+
+/* 0x00128a60 and 0x00128b90 */
+short __attribute__((stdcall)) sound_source_choose_channel(long source_index, short channel_count,
+	const short *channel_indices);
+long __attribute__((stdcall)) sound_source_goes_before(long other_source_index, long source_index, real distance);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -4922,4 +4934,94 @@ real __attribute__((stdcall)) sound_unknown_0012a6d0(
 	}
 
 	return duration;
+}
+
+/* the class of the sound of a sound that plays */
+static inline __attribute__((always_inline)) const byte *sound_source_get_class(
+	const byte *source)
+{
+	return (const byte *)sound_class_get(
+		sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET))->sound_class);
+}
+
+/* 0x00128a60: of some channels, the one that a sound that is to play takes
+from the sound that it plays: the one whose sound has played the longest, of
+those that have played as long as the class of the new sound says at least;
+or one whose sound has less of what is at 0xA0 than the new one. The last
+one that can be taken is the one; NONE if none can */
+short __attribute__((stdcall)) sound_source_choose_channel(
+	long source_index,
+	short channel_count,
+	const short *channel_indices)
+{
+	const byte *source= sound_source_get(source_index);
+	const struct sound_definition *sound= sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET));
+	long longest= 0;
+	short chosen= NONE;
+	long time;
+	long index;
+
+	if (channel_count<=0)
+	{
+		return NONE;
+	}
+	time= *(const long *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET);
+	for (index= 0; index<(word)channel_count; index++)
+	{
+		short channel_index= channel_indices[index];
+		const byte *playing= sound_source_get(sound_channels[channel_index].unknown0);
+		long played= time-*(const long *)(playing+SOUND_SOURCE_DATUM_UNKNOWN8C_OFFSET);
+
+		if ((played>=*(const long *)((const byte *)sound_class_get(sound->sound_class)+SOUND_CLASS_UNKNOWN4_OFFSET) &&
+			played>longest) ||
+			(char)source[SOUND_SOURCE_DATUM_UNKNOWNA0_OFFSET]>(char)playing[SOUND_SOURCE_DATUM_UNKNOWNA0_OFFSET])
+		{
+			chosen= channel_index;
+			longest= played;
+		}
+	}
+
+	return chosen;
+}
+
+/* 0x00128b90: whether a sound that plays goes before another: if its class
+has more at 0xC; with as much, and both of the same sound, if it has more at
+0xA0; and with as much of that, or of different sounds, if the other is
+farther from its listener than a distance, as sound_source_unknown_00127e20
+measures it */
+long __attribute__((stdcall)) sound_source_goes_before(
+	long other_source_index,
+	long source_index,
+	real distance)
+{
+	const byte *other= sound_source_get(other_source_index);
+	const byte *source= sound_source_get(source_index);
+	long priority= *(const short *)(sound_source_get_class(source)+SOUND_CLASS_PRIORITY_OFFSET);
+	long other_priority= *(const short *)(sound_source_get_class(other)+SOUND_CLASS_PRIORITY_OFFSET);
+
+	if (priority>other_priority)
+	{
+		return TRUE;
+	}
+	if (priority!=other_priority)
+	{
+		return FALSE;
+	}
+	if (*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET)==*(const long *)(other+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET))
+	{
+		char unknown= (char)source[SOUND_SOURCE_DATUM_UNKNOWNA0_OFFSET];
+		char other_unknown= (char)other[SOUND_SOURCE_DATUM_UNKNOWNA0_OFFSET];
+
+		if (unknown>other_unknown)
+		{
+			return TRUE;
+		}
+		if (unknown!=other_unknown)
+		{
+			return FALSE;
+		}
+	}
+
+	return sound_source_unknown_00127e20((const struct sound_source *)(other+SOUND_SOURCE_DATUM_UNKNOWN18_OFFSET),
+		(char)other[SOUND_SOURCE_DATUM_LISTENER_OFFSET])>distance;
 }

@@ -3048,3 +3048,90 @@ def run(t) -> None:
                 as_bits(random_.choice((0.0, 0.5, 1.0, -0.5, 2.0, random_.uniform(-2, 2), random_.uniform(0, 1)))),
                 as_bits(random_.choice((1.0, -1.0, 0.5, 2.0, -0.3, 0.0, random_.uniform(0.1, 3)))),
             )
+
+    # ---------- which channel a sound takes, and which sound goes before
+
+    random_ = random.Random(180)
+
+    def class_world() -> dict:
+        """The tags, with a sound at each but the last, which is the tag of
+        the classes of sounds, and the globals tag that tells of it."""
+        classes_index = TAGS - 1
+        data = bytearray(random_.randbytes(TAGS * 0x10))
+        pointers = []
+
+        def add(part: bytes) -> int:
+            offset = len(data)
+            data.extend(part)
+            return offset
+
+        def point(offset: int, to: int) -> None:
+            struct.pack_into("<I", data, offset, to)
+            pointers.append(offset)
+
+        definitions = bytearray(random_.randbytes(TAGS * 0x10))
+        for n in range(TAGS):
+            definitions[n * 0x10 + 2] = random_.randrange(CLASSES)
+        definitions_at = add(bytes(definitions))
+        for n in range(TAGS - 1):
+            point(n * 0x10 + 8, definitions_at + n * 0x10)
+        table = bytearray(random_.randbytes(CLASSES * CLASS_SIZE))
+        for n in range(CLASSES):
+            struct.pack_into("<i", table, n * CLASS_SIZE + 4, random_.choice((0, 10, 100, 1000)))
+            struct.pack_into("<h", table, n * CLASS_SIZE + 0xC, random_.choice((0, 1, 1, 2, -1)))
+        classes = add(struct.pack("<2I", CLASSES, 0))
+        point(classes_index * 0x10 + 8, classes)
+        point(classes + 4, add(bytes(table)))
+        reference = add(struct.pack("<2I", random_.getrandbits(32), random_.getrandbits(16) << 16 | classes_index))
+        game_globals = add(random_.randbytes(0xC0) + struct.pack("<2I", 1, 0))
+        point(game_globals + 0xC4, reference)
+        buffer = Buffer(bytes(data), pointers=tuple(pointers))
+        return {"global_tag_instances": buffer, "global_game_globals": Pointer(buffer, game_globals)}
+
+    def classed_sources(now: int) -> tuple:
+        buffer, indices = playing()
+        data = bytearray(buffer.data)
+        for index in range(PLAYING):
+            at = 0x4C + index * DATUM
+            struct.pack_into("<I", data, at + 0xC, random_.getrandbits(16) << 16 | random_.choice((3, 3, 4, random_.randrange(TAGS - 1))))
+            struct.pack_into("<i", data, at + 0x8C, now - random_.choice((0, 5, 50, 500, 5000, -20)))
+            data[at + 0xA0] = random_.choice((0, 1, 1, 2, 0xFF))
+            data[at + 0xA1] = random_.randrange(4)
+        return Buffer(bytes(data), pointers=buffer.pointers), indices
+
+    for _ in range(150):
+        now = random_.choice((10000, 0x40000000))
+        playing_, indices = classed_sources(now)
+        channels = bytearray(random_.randbytes(CHANNELS * 0x24))
+        for n in range(CHANNELS):
+            struct.pack_into("<I", channels, n * 0x24, random_.choice(indices))
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        struct.pack_into("<i", state, 0x84, now)
+        count = random_.choice((0, 1, 3, CHANNELS, 0xFFFF))
+        order = struct.pack(f"<{CHANNELS}h", *random_.sample(range(CHANNELS), CHANNELS))
+        globals_ = class_world()
+        globals_.update(
+            {"sound_sources": playing_, "sound_channels": Buffer(bytes(channels)), "game_sound_globals": Buffer(bytes(state))}
+        )
+        if count == 0xFFFF:
+            # a count under 0 is of no channel
+            order = random_.randbytes(4)
+        t.check("sound_source_choose_channel", random_.choice(indices), count, Buffer(order), globals=globals_)
+
+    for _ in range(600):
+        playing_, indices = classed_sources(1000)
+        measure = random_.choice((0.0, 1.0, 4.0, 25.0, 100.0))
+
+        def far(harness, arguments, measure=measure):
+            return real_bits(measure), (harness.normalize(arguments[0]), arguments[1])
+
+        globals_ = class_world()
+        globals_["sound_sources"] = playing_
+        t.check(
+            "sound_source_goes_before",
+            random_.choice(indices),
+            random_.choice(indices),
+            as_bits(random_.choice((0.0, 1.0, 4.0, 25.0, 50.0))),
+            globals=globals_,
+            externals={"sound_source_unknown_00127e20": far},
+        )
