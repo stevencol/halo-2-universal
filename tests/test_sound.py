@@ -486,7 +486,7 @@ def run(t) -> None:
 
     # ---------- giving the sound some time
 
-    idle_names = ("sound_console_update", "sound_update_time", "sound_channels_update", "sound_channels_update_sources", "unknown_0021ee80", "sound_cache_idle")
+    idle_names = ("sound_console_update", "sound_update_time", "sound_channels_update", "sound_channels_update_sources", "sound_console_commit", "sound_cache_idle")
 
     def flags_then(harness, arguments):
         # the two flags that are set while the sound is given time
@@ -917,7 +917,7 @@ def run(t) -> None:
         "sound_sources_update",
         "sound_sources_get_channels",
         "sound_channels_update_sources",
-        "unknown_0021ee80",
+        "sound_console_commit",
     )
 
     def frame_externals(first_player: int, unload: bool) -> dict:
@@ -6959,5 +6959,68 @@ def run(t) -> None:
                 ),
                 "sound_source_request_data": lambda harness, arguments: (1, (normal(harness, arguments[0]),)),
                 "looping_sound_add_source": lambda harness, arguments: (0, (arguments[0], arguments[1] & 0xFFFF, arguments[2])),
+            },
+        )
+
+    # ---------- the console's sound tells the console what has changed
+
+    random_ = random.Random(253)
+
+    harness = t.harness
+    if not t.only or "sound_console_commit" in t.only:
+        t.cases["sound_console_commit"] = t.cases.get("sound_console_commit", 0) + 1
+        both = [bytes(harness.mu.mem_read(place_["sound_console_place_effects"], 8)) for place_ in (harness.globals, harness.variables)]
+        if both[0] != both[1] or both[0] != struct.pack("<2i", 9, 8):
+            t._fail("sound_console_commit", "sound_console_place_effects is not the game's")
+
+    PI = 3.14159265
+    for n in range(1500):
+        console = bytearray(random_.randbytes(0x2AC0))
+        struct.pack_into("<h", console, 4, random_.choice((0, 1, 2, 5, 5, -1)))
+        for place_ in range(2):
+            console[0x2A08 + place_] = random_.choice((0, 0, 1, 0x80))
+            console[0x2A0A + place_] = random_.choice((0, 1, 1, 1, 0x80))
+            kind = random_.randrange(6)
+            if kind == 0:
+                start, end = sorted((random_.uniform(-7, 7), random_.uniform(-7, 7)))
+            elif kind == 1:
+                start = random_.choice((-PI / 4, PI / 4, 3 * PI / 4, -3 * PI / 4, 0.0, PI, -PI, 2 * PI, -2 * PI))
+                end = start + random_.choice((0.0, PI / 2, PI, 2 * PI, 0.1))
+            elif kind == 2:
+                end, start = sorted((random_.uniform(-7, 7), random_.uniform(-7, 7)))
+            else:
+                start = random_.uniform(-PI, PI)
+                end = start + random_.uniform(0, PI)
+            struct.pack_into(
+                "<4f",
+                console,
+                0x29E8 + place_ * 0x10,
+                start,
+                end,
+                random_.choice((0.0, 1.0, 0.5, 0.25, 2.0, -1.0)),
+                random_.choice((0.0, 1.0, 0.5, 0.1, -0.5, 3.0)),
+            )
+            struct.pack_into("<f", console, 0x29E0 + place_ * 4, random_.choice((0.0, 1.0, 1.0, 0.5, 0.7, 0.01, 2.0, -1.0, 1e-9)))
+        old = len(console)
+        console += struct.pack("<4I", old + 4, mock_address(0), mock_address(1), mock_address(2))
+        struct.pack_into("<I", console, 0x2AB4, old)
+        t.check(
+            "sound_console_commit",
+            globals={
+                "unknown_0051ebe4": Buffer(bytes(console), pointers=(old, 0x2AB4)),
+                "unknown_0047005c": bytes([random_.choice((0, 1, 1, 0x80))]),
+                "unknown_00470060": GlobalRange(0x24),
+            },
+            mocks=[
+                Mock(lambda call: 0, stack_arguments=3, registers=("ecx",)),
+                Mock(lambda call: 0, stack_arguments=0, registers=("ecx",)),
+                Mock(lambda call: 0, stack_arguments=2, registers=("ecx",)),
+            ],
+            externals={
+                "sound_console_set_reverb": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                "unknown_0037b66f": lambda harness, arguments: (0, tuple(arguments)),
+                "unknown_0037d141": lambda harness, arguments: (0, tuple(arguments)),
+                "unknown_002ae820": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "unknown_00191550": lambda harness, arguments: (0, ()),
             },
         )

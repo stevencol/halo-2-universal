@@ -792,7 +792,7 @@ address,name,source,arguments,returns,convention
 001269f0,sound_update_time,source/sound/sound_manager.c,,void
 001290d0,sound_channels_update,source/sound/sound_manager.c,,void
 001293f0,sound_channels_update_sources,source/sound/sound_manager.c,,void
-0021ee80,unknown_0021ee80,,,void
+0021ee80,sound_console_commit,source/sound/sound_manager.c,,void
 00218810,sound_cache_idle,source/sound/sound_manager.c,,void
 0021f6d0,sound_console_set_environment,source/sound/sound_manager.c,ecx edx stack,void,stdcall
 00218850,sound_cache_chunk_request,source/sound/sound_manager.c,stack stack stack,int,stdcall
@@ -1391,3 +1391,5 @@ address,name,source,arguments,returns,convention
 0021acc0,looping_sound_track_source_heard,source/sound/sound_manager.c,stack stack stack stack,bool,stdcall
 0021adb0,looping_sound_track_source_deleted,source/sound/sound_manager.c,stack stack stack,void,stdcall
 000a5750,unknown_000a5750,,stack stack,bool,stdcall
+0037d141,unknown_0037d141,,stack,void
+00191550,unknown_00191550,,,void

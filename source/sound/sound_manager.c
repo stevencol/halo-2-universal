@@ -638,6 +638,8 @@ enum
 	SOUND_CONSOLE_PLACE_NUMBERS_SIZE= 0x10,
 	SOUND_CONSOLE_PLACE_AMOUNT_OFFSET= 0x14,
 	NUMBER_OF_SOUND_CONSOLE_PLACES= 2,
+	NUMBER_OF_SOUND_CONSOLE_PLACE_STREAMS= 4,
+	UNKNOWN_0051EBE4_PLACE_STREAMS_OFFSET= 0x2A70,
 	SOUND_ENVIRONMENT_SIZE= 0x48,
 	UNKNOWN_0051EBE4_LISTENER_POSITION_OFFSET= 0x2918,
 	UNKNOWN_0051EBE4_LISTENER_FACING_OFFSET= 0x2924,
@@ -1260,7 +1262,10 @@ void unknown_001915f0(void);
 void unknown_0037b844(void);
 void sound_update_time(void);
 void sound_channels_update_sources(void);
-void unknown_0021ee80(void);
+void sound_console_commit(void);
+/* 0x0037d141: the console does all that it was told of its sound; 0x00191550 */
+void unknown_0037d141(void *sound);
+void unknown_00191550(void);
 void sound_cache_idle(void);
 
 /* 0x0021f6d0: sets the sound of the places of the map, from three parts of
@@ -1822,6 +1827,10 @@ const struct sound_source_callbacks looping_sound_track_callbacks=
 	NULL
 };
 
+/* 0x0044a250: the effect of the processor of the console's sound that each
+of the two places that are heard has */
+const long sound_console_place_effects[NUMBER_OF_SOUND_CONSOLE_PLACES]= { 9, 8 };
+
 /* 0x0044a130: who is told of the sounds of a looping sound that play now and
 then: the looping sound itself, which says where they are and which are the
 same */
@@ -2380,7 +2389,7 @@ void sound_idle(
 				sound_update_time();
 				sound_channels_update();
 				sound_channels_update_sources();
-				unknown_0021ee80();
+				sound_console_commit();
 				globals= game_sound_globals;
 			}
 			sound_cache_idle();
@@ -2839,7 +2848,7 @@ void sound_update(
 				game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7F_OFFSET]++;
 			}
 		}
-		unknown_0021ee80();
+		sound_console_commit();
 		sound_playback_controllers_unknown_00219d90(FALSE);
 		game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7E_OFFSET]= FALSE;
 		game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7D_OFFSET]= FALSE;
@@ -11325,4 +11334,90 @@ long __attribute__((stdcall)) looping_sound_source_new(
 	looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET+1]++;
 
 	return source_index;
+}
+
+/* how much of an arc, from one angle to another, is in another */
+static inline __attribute__((always_inline)) real sound_arc_overlap(
+	const real *arc,
+	const real *other)
+{
+	real end= arc[1]>other[1] ? other[1] : arc[1];
+	real start= arc[0]>other[0] ? arc[0] : other[0];
+	real overlap= end-start;
+
+	return overlap>0.0f ? overlap : 0.0f;
+}
+
+/* 0x0021ee80: the console's sound tells the console what has changed, and
+to do all that it was told. First, if unknown_0047005c is set, the handler
+of the sound of the places is given unknown_00470060. Then, for each of the
+two places that are heard: if how it sounds has changed, its effect is given
+it (sound_console_set_reverb, sound_console_place_effects); and if the rest
+has, each of its four streams (at 0x2A70) takes its loudness: the half of
+the circle that the stream is for (in three arcs, for the angles that go
+round) has some of the arc between the first two numbers of the place, and
+that part of a half circle goes towards the fourth number by what the third
+is short of 1, times how much there is of the place; in hundredths of a
+decibel. After that the console is told to do it all (unknown_0037d141),
+each voice is given to unknown_002ae820, and unknown_00191550 is called. The
+name is made up */
+void sound_console_commit(
+	void)
+{
+	static const real arcs[NUMBER_OF_SOUND_CONSOLE_PLACE_STREAMS][6]=
+	{
+		{ -0.785398185f, 2.35619450f, 5.49778748f, 6.28318548f, -6.28318548f, -3.92699099f },
+		{ -2.35619450f, 0.785398185f, 3.92699099f, 6.28318548f, -6.28318548f, -5.49778748f },
+		{ 0.785398185f, 3.92699099f, -5.49778748f, -2.35619450f, 0.0f, 0.0f },
+		{ 2.35619450f, 5.49778748f, -3.92699099f, -0.785398185f, 0.0f, 0.0f }
+	};
+	byte *console;
+	long place;
+	long index;
+
+	if (unknown_0047005c)
+	{
+		struct sound_console_environment_handler *handler;
+
+		console= unknown_0051ebe4;
+		handler= *(struct sound_console_environment_handler **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB4_OFFSET);
+		handler->functions->unknown8(handler, unknown_00470060, console[UNKNOWN_0051EBE4_UNKNOWN1_OFFSET]);
+		unknown_0047005c= FALSE;
+	}
+
+	console= unknown_0051ebe4;
+	for (place= 0; place<NUMBER_OF_SOUND_CONSOLE_PLACES; place++)
+	{
+		if (console[UNKNOWN_0051EBE4_UNKNOWN2A08_OFFSET+place])
+		{
+			sound_console_set_reverb((const real *)(console+UNKNOWN_0051EBE4_PLACE_ENVIRONMENTS_OFFSET+place*SOUND_ENVIRONMENT_SIZE),
+				sound_console_place_effects[place]);
+			console= unknown_0051ebe4;
+			console[UNKNOWN_0051EBE4_UNKNOWN2A08_OFFSET+place]= FALSE;
+		}
+		if (console[UNKNOWN_0051EBE4_UNKNOWN2A08_OFFSET+2+place])
+		{
+			real amount= *(const real *)(console+UNKNOWN_0051EBE4_PLACE_AMOUNTS_OFFSET+place*4);
+			const real *numbers= (const real *)(console+UNKNOWN_0051EBE4_PLACE_NUMBERS_OFFSET+place*SOUND_CONSOLE_PLACE_NUMBERS_SIZE);
+
+			for (index= 0; index<NUMBER_OF_SOUND_CONSOLE_PLACE_STREAMS; index++)
+			{
+				real first= sound_arc_overlap(numbers, &arcs[index][0]);
+				real second= sound_arc_overlap(numbers, &arcs[index][2]);
+				real third= sound_arc_overlap(numbers, &arcs[index][4]);
+				real gain= (((third+second+first)*0.318309873f-numbers[3])*numbers[2]+numbers[3])*amount;
+
+				unknown_0037b66f(*(void **)(console+UNKNOWN_0051EBE4_PLACE_STREAMS_OFFSET+
+					(place*NUMBER_OF_SOUND_CONSOLE_PLACE_STREAMS+index)*4), sound_gain_to_millibels(sound_pin_gain(gain)));
+				console= unknown_0051ebe4;
+			}
+			console[UNKNOWN_0051EBE4_UNKNOWN2A08_OFFSET+2+place]= FALSE;
+		}
+	}
+	unknown_0037d141(*(void **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET));
+	for (index= 0; index<*(const short *)(unknown_0051ebe4+UNKNOWN_0051EBE4_VOICE_COUNT_OFFSET); index++)
+	{
+		unknown_002ae820(unknown_0051ebe4+UNKNOWN_0051EBE4_VOICE_OFFSET+index*UNKNOWN_0051EBE4_VOICE_SIZE);
+	}
+	unknown_00191550();
 }

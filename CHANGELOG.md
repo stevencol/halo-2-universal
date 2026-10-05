@@ -2,6 +2,61 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — La consola aplica lo que cambió de su sonido
+
+Una función en `sound/sound_manager.c`, de 1.005 bytes. De 919 funciones se pasa a
+920, el 8,17 % de las del juego (el 5,039 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_console_commit` | `0x0021ee80` | `sound/sound_manager.c` |
+
+Era `unknown_0021ee80`. La llaman dos sitios, una vez por fotograma. No
+recibe ni devuelve nada. Nuevas sin descompilar: `0x0037d141` (la consola
+hace de una vez todo lo que se le ha dicho) y `0x00191550`. Nueva tabla:
+`sound_console_place_effects` (`0x0044a250`).
+
+### Lo que se sabe
+
+- Es la otra mitad de `sound_console_set_listener` (hito 240): aquella
+  guardaba cómo suenan los dos sitios que se oyen y dejaba dos avisos por
+  sitio; esta mira los avisos y se lo dice a la consola.
+- Si ha cambiado cómo suena un sitio, le da su efecto del procesador de
+  sonido (el 9 al primero y el 8 al segundo) con `sound_console_set_reverb`.
+- Si ha cambiado lo demás, pone el volumen de sus cuatro streams (en
+  `0x2A70`), uno por cada medio círculo alrededor del oyente: delante a la
+  izquierda, delante a la derecha y los dos de detrás. Los dos primeros
+  números del sitio son un arco (de un ángulo a otro); lo que de ese arco
+  cae en el medio círculo de un stream, partido por π, se acerca al cuarto
+  número según lo que al tercero le falte para 1, y se multiplica por
+  cuánto hay del sitio. El resultado va en centésimas de decibelio, de
+  -6400 a 0.
+- Antes de todo, si `unknown_0047005c` está puesta, le pasa
+  `unknown_00470060` a quien lleva el sonido de los sitios, como hace
+  `sound_console_set_environment_handler`.
+- Al final le dice a la consola que lo haga todo (`0x0037d141`), pasa cada
+  voz a `0x002ae820` y llama a `0x00191550`.
+- El juego tiene alrededor de la llamada de cada voz dos saltos por tabla
+  que van todos al mismo sitio: no hacen nada (restos de algo que se quitó).
+- El nombre es inventado.
+
+### Sin comprobar
+
+- Las tablas de ángulos están en la pila del juego y no se pueden comparar
+  directamente: se comparan los volúmenes que salen de 1.500 casos.
+- En este hito solo se pasaron las pruebas de esta función. La última
+  batería completa es la del hito 244 (911 funciones, todas bien).
+
+### Mutaciones
+
+Veintisiete cambios a mano: las pruebas notan veintiséis. El que no notan
+es mover uno de los ángulos una millonésima: el volumen sale en centésimas
+de decibelio y no llega a cambiar. Los ángulos están copiados a mano de
+los del juego (múltiplos de π/4), y las pruebas solo los comprueban hasta
+ahí. La prueba compara además la tabla de los efectos con la del juego.
+
 ## 2026-10-05 — Se crea el sonido de una pista de un sonido en bucle
 
 Una función en `sound/sound_manager.c`, de 832 bytes. De 918 funciones se pasa a
