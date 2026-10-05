@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Fundir dos sonidos, la distancia a un oyente y cuánto se oye a una distancia
+
+Cuatro funciones en `sound/sound_manager.c`. De 798 funciones se pasa a
+802, el 7,12 % de las del juego (el 3,812 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_sources_cross_fade` | `0x00126df0` | `sound/sound_manager.c` |
+| `sound_source_unknown_00127e20` | `0x00127e20` | `sound/sound_manager.c` |
+| `sound_channel_queue_chunk` | `0x00129f20` | `sound/sound_manager.c` |
+| `sound_source_distance_gain` | `0x0012ac20` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- `sound_sources_cross_fade` hace que un sonido se apague y otro se
+  encienda en unos segundos (cualquiera de los dos puede faltar): les pone
+  los decibelios de partida, la manera y los tiempos que luego lee
+  `sound_source_fade_decibels`.
+- `sound_source_unknown_00127e20` da la distancia de un sonido a un oyente
+  según su tipo: 0 para el tipo 0; para el tipo 1 (con sitio), el cuadrado
+  de la distancia, o si su sitio es una columna (byte `2`), el de la
+  distancia en el suelo, y el mayor real posible si el oyente no está a la
+  altura de la columna (su alto está en `0x30`). Para los demás tipos, la
+  longitud de sus tres reales.
+- `sound_channel_queue_chunk` le da a un canal un trozo de muestras de una
+  grabación para que lo reproduzca: se lo pasa a su voz de la consola y lo
+  pide. Es el primero del canal si no tenía ninguno, o el siguiente.
+- `sound_source_distance_gain` dice cuánto se oye un sonido a una
+  distancia, de 0 a 1: todo hasta la distancia a la que suena más fuerte, y
+  de ahí en adelante menos, hasta la distancia a la que deja de oírse.
+- Los nombres son inventados.
+
+### Sin comprobar
+
+- La batería completa no se pasó en este hito, solo las pruebas de estas
+  funciones.
+
+### Mutaciones
+
+Pendientes; corren aparte, en segundo plano.
+
 ## 2026-10-04 — Empezar un sonido y el volumen de las clases
 
 Cinco funciones en `sound/sound_manager.c`. De 793 funciones se pasa a

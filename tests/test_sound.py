@@ -2197,3 +2197,100 @@ def run(t) -> None:
             )
         seconds = random_.choice((0.0, -1.0, 1.0 / 30.0, 0.5, 1.0, float("nan"), random_.uniform(0, 2)))
         t.check("sound_classes_update", as_bits(seconds), globals={"sound_class_gains": Buffer(bytes(gains_))})
+
+    # ---------- two sounds fade, a distance, a piece for a channel, and how much is heard at a distance
+
+    random_ = random.Random(167)
+
+    for _ in range(60):
+        buffer, indices = playing()
+        for _pair in range(8):
+            t.check(
+                "sound_sources_cross_fade",
+                random_.choice((NONE, *indices)),
+                random_.choice((NONE, *indices)),
+                random_.choice((0, 1, 2, 0xFFFF)),
+                as_bits(random_.choice((0.0, 0.5, 1.0, 0.3, 2.5, 0.0005))),
+                globals={"sound_sources": Buffer(buffer.data, pointers=buffer.pointers)},
+                externals={"sound_source_fade_decibels": lambda harness, arguments: (fade_bits(arguments[0]), tuple(arguments))},
+            )
+
+    for _ in range(600):
+        said = bytearray(random_.randbytes(0x48))
+        said[2] = random_.choice((0, 0, 1, 2, 0xFF))
+        said[3] = random_.choice((0, 1, 1, 1, 0x11, 0xF1, 2, 0xF, 0xF0, 0x21))
+        said[0xC:0x18] = reals(random_, 3)
+        struct.pack_into("<f", said, 0x30, random_.choice((0.0, 1.0, 3.0, 50.0, -1.0)))
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        for index in range(4):
+            position = LISTENERS + index * LISTENER_SIZE + 0x30
+            state[position : position + 12] = reals(random_, 3)
+            if random_.random() < 0.3:
+                # at the height of the sound, or a little over
+                height = struct.unpack_from("<f", said, 0x14)[0] + random_.choice((0.0, 0.5, 2.0))
+                struct.pack_into("<f", state, position + 8, height)
+        t.check(
+            "sound_source_unknown_00127e20",
+            Buffer(bytes(said)),
+            random_.randrange(4),
+            globals={"game_sound_globals": Buffer(bytes(state))},
+        )
+
+    def piece_request(harness, arguments):
+        sound_index, chunk, kind = arguments
+        return 0, (sound_index, harness.normalize(chunk), kind)
+
+    for _ in range(120):
+        gestalt, permutations = recordings()
+        data = bytearray(gestalt)
+        channels = len(data)
+        data += random_.randbytes(CHANNELS * 0x24)
+        pointers = [0x24, 0x2C, 0x44]
+        for n in range(CHANNELS):
+            at = channels + n * 0x24
+            struct.pack_into("<h", data, at + 0xC, random_.choice((0, 1, 2, 3, 31)))
+            struct.pack_into("<hh", data, at + 0x18, random_.randrange(0, 10), random_.randrange(0, 10))
+            for field in (0x1C, 0x20):
+                if random_.random() < 0.6:
+                    struct.pack_into("<I", data, at + field, permutations + random_.randrange(12) * 0x10)
+                    pointers.append(at + field)
+                else:
+                    struct.pack_into("<I", data, at + field, 0)
+        buffer = Buffer(bytes(data), pointers=tuple(pointers))
+        for channel_index in range(CHANNELS):
+            recording = bytearray(random_.randbytes(0x10))
+            struct.pack_into("<h", recording, 0xC, random_.randrange(0, 12))
+            t.check(
+                "sound_channel_queue_chunk",
+                channel_index,
+                Buffer(bytes(recording)),
+                random_.randrange(0, 10),
+                globals={
+                    "global_sound_cache_file_gestalt": buffer,
+                    "sound_channels": Pointer(buffer, channels),
+                    "unknown_00502104": counted(),
+                    "unknown_0051ebe4": Buffer(random_.randbytes(32 * 0x34 + 0x10)),
+                },
+                externals={
+                    "unknown_002ae500": lambda harness, arguments: (
+                        0,
+                        (harness.normalize(arguments[0]), harness.normalize(arguments[1])),
+                    ),
+                    "unknown_00218850": piece_request,
+                },
+            )
+
+    for bit in range(16):
+        for flags, sound_flags in ((1 << bit, 0), (0, 1 << bit), (0xFFFF ^ 1 << bit, 0xFFFF), (0, 0xFFFF ^ 1 << bit)):
+            for _ in range(5):
+                sound_index = random_.randrange(TAGS)
+                said = bytearray(source(random_, flags).data)
+                if random_.random() < 0.3:
+                    struct.pack_into("<f", said, 0x34, random_.choice((0.0, 0.0005, 0.001, 0.002, -1.0)))
+                t.check(
+                    "sound_source_distance_gain",
+                    random_.getrandbits(16) << 16 | sound_index,
+                    Buffer(bytes(said)),
+                    as_bits(random_.choice((0.0, 0.5, 1.0, 2.0, 10.0, 60.0, random_.uniform(0, 60)))),
+                    globals=world(random_, sound_index, sound_data(random_, sound_flags)),
+                )

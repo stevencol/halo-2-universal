@@ -269,6 +269,9 @@ enum
 	UNKNOWN_0051EBE4_UNKNOWN2AB4_OFFSET= 0x2AB4,
 	/* how many reals each class of sounds has in sound_class_gains */
 	SOUND_CLASS_GAIN_REALS= 4,
+	/* in what the game says of a sound whose place is a column: how high
+	the column is */
+	SOUND_SOURCE_HEIGHT_OFFSET= 0x30,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -276,6 +279,9 @@ enum
 };
 
 #define SOUND_PI 3.14159265358979323846f
+
+/* the most that a real can be */
+#define SOUND_REAL_MAXIMUM 3.4028234663852886e+38f
 
 /* the least that a sound is heard, in decibels */
 #define SOUND_MINIMUM_DECIBELS -64.0f
@@ -592,6 +598,15 @@ void sound_source_hold_chunk(byte *source);
 void sound_channels_unknown_00129380(const long *voice_values, const long *slot_values);
 void __attribute__((stdcall)) sound_console_set_environment(const long *second, const long *first, const void *unknown);
 void sound_classes_update(real seconds);
+
+/* 0x00126df0, 0x00127e20, 0x00129f20 and 0x0012ac20 */
+void __attribute__((stdcall)) sound_sources_cross_fade(long out_source_index, long in_source_index, short kind,
+	real seconds);
+real sound_source_unknown_00127e20(const struct sound_source *source, long listener_index);
+void __attribute__((stdcall)) sound_channel_queue_chunk(short channel_index, const struct sound_permutation *permutation,
+	short chunk);
+real __attribute__((stdcall)) sound_source_distance_gain(long sound_index, const struct sound_source *source,
+	real distance);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -3475,4 +3490,150 @@ void sound_classes_update(
 			}
 		}
 	}
+}
+
+/* 0x00126df0: a sound that plays fades out and another fades in, in some
+seconds and in a way: either can be NONE. The name is a guess */
+void __attribute__((stdcall)) sound_sources_cross_fade(
+	long out_source_index,
+	long in_source_index,
+	short kind,
+	real seconds)
+{
+	if (out_source_index!=NONE)
+	{
+		byte *source= sound_source_get(out_source_index);
+
+		if ((source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]>>7)&1)
+		{
+			*(real *)(source+SOUND_SOURCE_DATUM_UNKNOWNB0_OFFSET)= sound_source_fade_decibels(out_source_index);
+		}
+		else
+		{
+			*(real *)(source+SOUND_SOURCE_DATUM_UNKNOWNB0_OFFSET)= SOUND_MINIMUM_DECIBELS;
+		}
+		*(short *)(source+SOUND_SOURCE_DATUM_UNKNOWNAE_OFFSET)= kind;
+		*(long *)(source+SOUND_SOURCE_DATUM_FADE_TIME_OFFSET)= NONE;
+		*(long *)(source+SOUND_SOURCE_DATUM_UNKNOWNB8_OFFSET)= (long)(seconds*1000.0f);
+		source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]|= SOUND_SOURCE_DATUM_FADING_FLAG;
+	}
+	if (in_source_index!=NONE)
+	{
+		byte *source= sound_source_get(in_source_index);
+
+		*(real *)(source+SOUND_SOURCE_DATUM_UNKNOWNB0_OFFSET)= sound_source_fade_decibels(in_source_index);
+		*(short *)(source+SOUND_SOURCE_DATUM_UNKNOWNAE_OFFSET)= kind;
+		*(long *)(source+SOUND_SOURCE_DATUM_FADE_TIME_OFFSET)= (long)(seconds*1000.0f);
+		*(long *)(source+SOUND_SOURCE_DATUM_UNKNOWNB8_OFFSET)= NONE;
+		source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]|= SOUND_SOURCE_DATUM_FADING_FLAG;
+	}
+}
+
+/* 0x00127e20: how far a sound is from a listener, of what the game says of
+it, by its type: 0 for the type 0. For the type 1, which has a place, the
+square of the distance; or, if its place is a column (the byte at 2), that
+of the distance on the ground, and the most that a real can be for a
+listener that is not at the height of the column. For the rest, the length
+of its three reals */
+real sound_source_unknown_00127e20(
+	const struct sound_source *source,
+	long listener_index)
+{
+	const byte *bytes= (const byte *)source;
+	const real *place= (const real *)(bytes+SOUND_SOURCE_POSITION_OFFSET);
+
+	switch ((signed char)(bytes[SOUND_SOURCE_TYPE_OFFSET]<<4)>>4)
+	{
+	case 0:
+		return 0.0f;
+	case _sound_source_datum_type_positioned:
+	{
+		const struct sound_listener *listener=
+			(const struct sound_listener *)(game_sound_globals+GAME_SOUND_GLOBALS_LISTENERS_OFFSET)+listener_index;
+		real height= listener->position.z-place[2];
+		real limited;
+		real y;
+		real x;
+
+		if (!(char)bytes[SOUND_SOURCE_POSITION_KIND_OFFSET])
+		{
+			y= listener->position.y-place[1];
+			x= listener->position.x-place[0];
+
+			return height*height+y*y+x*x;
+		}
+		limited= 0.0f;
+		if (!(0.0f>height))
+		{
+			limited= height>*(const real *)(bytes+SOUND_SOURCE_HEIGHT_OFFSET) ? *(const real *)(bytes+SOUND_SOURCE_HEIGHT_OFFSET) :
+				height;
+		}
+		if (limited!=height)
+		{
+			return SOUND_REAL_MAXIMUM;
+		}
+		y= place[1]-listener->position.y;
+		x= place[0]-listener->position.x;
+
+		return x*x+y*y;
+	}
+	}
+
+	return (real)sqrtl((long double)place[0]*(long double)place[0]+(long double)place[1]*(long double)place[1]+
+		(long double)place[2]*(long double)place[2]);
+}
+
+/* 0x00129f20: a channel takes a piece of the samples of a recording to play
+it: its voice of the console's sound is given it, and it is asked for. It is
+the first of the channel, if it had none, or the one that comes after; of
+the one that came after, if there was one, the channel lets go. The name is
+a guess */
+void __attribute__((stdcall)) sound_channel_queue_chunk(
+	short channel_index,
+	const struct sound_permutation *permutation,
+	short chunk)
+{
+	struct sound_channel *channel= &sound_channels[channel_index];
+	const struct sound_chunk *queued= sound_permutation_chunk(permutation, chunk);
+
+	if (channel->unknown20)
+	{
+		sound_chunk_release(sound_permutation_chunk((const struct sound_permutation *)(uintptr_t)channel->unknown20,
+			channel->unknown1A));
+		channel->unknown1A= NONE;
+	}
+	unknown_002ae500(sound_channel_voice(channel), queued);
+	unknown_00218850(NONE, queued, _sound_cache_request_unknown4);
+	if (channel->unknown1C)
+	{
+		channel->unknown1A= chunk;
+		channel->unknown20= (long)(uintptr_t)permutation;
+	}
+	else
+	{
+		channel->unknown18= chunk;
+		channel->unknown1C= (long)(uintptr_t)permutation;
+		channel->unknown10= 0.0f;
+	}
+}
+
+/* 0x0012ac20: how much of a sound is heard at a distance, from 0 to 1: all
+of it up to the distance that it is heard at its loudest, and from there
+less, by the distance and by how far the distance is on the way to that
+from which it is not heard. The name is a guess */
+real __attribute__((stdcall)) sound_source_distance_gain(
+	long sound_index,
+	const struct sound_source *source,
+	real distance)
+{
+	real minimum_distance= sound_get_minimum_distance(source, sound_index);
+	real fraction;
+
+	if (!(minimum_distance>0.001f))
+	{
+		minimum_distance= 0.001f;
+	}
+	fraction= sound_interpolation_fraction(sound_get_maximum_distance(source, sound_index), minimum_distance, distance, FALSE);
+
+	return minimum_distance/(minimum_distance>distance ? minimum_distance : distance)*fraction;
 }

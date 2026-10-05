@@ -1243,3 +1243,7 @@ address,name,source,arguments,returns,convention
 00126000,unknown_00126000,,stack stack stack stack,int
 00129790,unknown_00129790,,eax stack,void
 0021e3b0,unknown_0021e3b0,,esi,void
+00126df0,sound_sources_cross_fade,source/sound/sound_manager.c,eax edi ebx stack,void,stdcall
+00127e20,sound_source_unknown_00127e20,source/sound/sound_manager.c,ecx edx,real:xmm0
+00129f20,sound_channel_queue_chunk,source/sound/sound_manager.c,eax stack stack,void,stdcall
+0012ac20,sound_source_distance_gain,source/sound/sound_manager.c,eax edi stack,real:xmm0,stdcall
