@@ -276,6 +276,27 @@ enum
 	where it is in the structure bsp */
 	LOOPING_SOUND_DATUM_SOURCE_OFFSET= 0xC,
 	LOOPING_SOUND_DATUM_LOCATION_OFFSET= 0x34,
+	/* in a looping sound: the first sound that plays of each of its
+	tracks; in a sound that plays, the next and the one before of its ring */
+	LOOPING_SOUND_TRACK_SIZE= 0x14,
+	LOOPING_SOUND_DATUM_TRACK_SOURCE_OFFSET= 0x88,
+	SOUND_SOURCE_DATUM_NEXT_OFFSET= 0x6C,
+	SOUND_SOURCE_DATUM_PREVIOUS_OFFSET= 0x70,
+	/* in unknown_0051ebe4: how many voices and slots there are, and six
+	numbers; in a voice: its slot, its state in three bits, and more */
+	UNKNOWN_0051EBE4_VOICE_COUNT_OFFSET= 0x4,
+	UNKNOWN_0051EBE4_SLOT_COUNT_OFFSET= 0x8,
+	UNKNOWN_0051EBE4_COUNTS_OFFSET= 0x1A0C,
+	UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET= 0x2AB0,
+	VOICE_SLOT_OFFSET= 0,
+	VOICE_STATE_MASK= 7,
+	VOICE_UNKNOWN24_OFFSET= 0x24,
+	VOICE_CONTROLLER_INDEX_OFFSET= 0x28,
+	/* what sound_console_get_state fills: a vector of bits for the voices
+	of each kind, and six numbers */
+	SOUND_CONSOLE_STATE_SIZE= 0x60,
+	SOUND_CONSOLE_STATE_KIND_SIZE= 0x10,
+	SOUND_CONSOLE_STATE_COUNTS_OFFSET= 0x40,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -390,7 +411,7 @@ seconds of the frame, 0x00127400, 0x00219cc0, 0x0021b0e0, 0x00128020,
 0x001282d0; 0x00129100, 0x00221a70 for each local player and 0x00129380 with
 what the frame has on the stack; 0x0014dde0 gives the first local player */
 struct sound_update_listeners;
-void __attribute__((stdcall)) unknown_0021f360(byte *globals);
+void __attribute__((stdcall)) sound_console_get_state(byte *state);
 void __attribute__((stdcall)) unknown_00127400(boolean unknown);
 void sound_playback_controllers_update(void);
 void __attribute__((stdcall)) unknown_0021b0e0(long unknown);
@@ -611,8 +632,18 @@ void __attribute__((stdcall)) sound_channel_queue_chunk(short channel_index, con
 real __attribute__((stdcall)) sound_source_distance_gain(long sound_index, const struct sound_source *source,
 	real distance);
 
-/* 0x0021f430: of the console's sound and a sound playback controller */
-void unknown_0021f430(long controller_index);
+/* 0x0021f430 */
+void __attribute__((stdcall)) sound_console_unknown_0021f430(long controller_index);
+
+/* 0x0037b822 and 0x0037b657: of the console */
+void unknown_0037b822(void *unknown, long unknown2);
+void unknown_0037b657(void *unknown);
+
+/* 0x0021b870, 0x0021bc80 and 0x0021d390 */
+long __attribute__((stdcall)) looping_sound_find_source(long looping_sound_index, short track, long sound_index,
+	long pitch_range);
+void looping_sound_add_source(long looping_sound_index, short track, long source_index);
+void sound_effects_update(void);
 
 /* 0x00219d90 */
 void __attribute__((stdcall)) sound_playback_controllers_unknown_00219d90(boolean enable);
@@ -1592,7 +1623,7 @@ void sound_update(
 				*(unsigned long *)(globals+GAME_SOUND_GLOBALS_START_TIME_OFFSET)= time;
 				globals[GAME_SOUND_GLOBALS_UNKNOWN7D_OFFSET]= FALSE;
 			}
-			unknown_0021f360(globals);
+			sound_console_get_state(globals);
 			if (!globals[GAME_SOUND_GLOBALS_DISABLED_OFFSET])
 			{
 				unknown_001269f0();
@@ -3668,7 +3699,7 @@ void sound_playback_controllers_update(
 /* 0x00219d90: when the sound is disabled, and when it is enabled: each
 sound playback controller with something and a count of 0 at 3 whose flag
 there is as the function is told (set, to enable; not set, to disable) is
-given to unknown_0021f430, and to disable its flag is set */
+given to sound_console_unknown_0021f430, and to disable its flag is set */
 void __attribute__((stdcall)) sound_playback_controllers_unknown_00219d90(
 	boolean enable)
 {
@@ -3685,7 +3716,7 @@ void __attribute__((stdcall)) sound_playback_controllers_unknown_00219d90(
 			*(const long *)(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWN4_OFFSET)!=NONE &&
 			!(count&UNKNOWN_0051EBD8_DATUM_COUNT_MASK))
 		{
-			unknown_0021f430(controller_index);
+			sound_console_unknown_0021f430(controller_index);
 			if (!enable)
 			{
 				controller[UNKNOWN_0051EBD8_DATUM_COUNT_OFFSET]|= UNKNOWN_0051EBD8_DATUM_UNKNOWN_FLAG;
@@ -3746,5 +3777,151 @@ void sound_effects_delete_all(
 	for (effect_index= data_next_index(data, NONE); effect_index!=NONE; effect_index= data_next_index(data, effect_index))
 	{
 		sound_effect_delete(effect_index);
+	}
+}
+
+/* 0x0021b870: the sound that plays, of those of a track of a looping sound,
+that is of a sound, and of a pitch range of it if one is given. The sounds
+of a track are in a ring: each says which is next. NONE if there is none */
+long __attribute__((stdcall)) looping_sound_find_source(
+	long looping_sound_index,
+	short track,
+	long sound_index,
+	long pitch_range)
+{
+	const byte *looping_sound= (const byte *)looping_sounds->data+(looping_sound_index&0xFFFF)*LOOPING_SOUND_DATUM_SIZE;
+	long first= *(const long *)(looping_sound+track*LOOPING_SOUND_TRACK_SIZE+LOOPING_SOUND_DATUM_TRACK_SOURCE_OFFSET);
+	long source_index= first;
+	long count;
+
+	for (count= 0; ; count++)
+	{
+		const byte *source;
+
+		if (count>0 && source_index!=NONE)
+		{
+			source_index= *(const long *)(sound_source_get(source_index)+SOUND_SOURCE_DATUM_NEXT_OFFSET);
+			if (source_index==first)
+			{
+				source_index= NONE;
+			}
+		}
+		if (source_index==NONE)
+		{
+			return NONE;
+		}
+		source= sound_source_get(source_index);
+		if (*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET)==sound_index &&
+			(pitch_range==NONE || (char)source[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET]==pitch_range))
+		{
+			return source_index;
+		}
+	}
+}
+
+/* 0x0021bc80: a sound that plays goes into the ring of a track of a looping
+sound, after its first one; nothing if the track has none */
+void looping_sound_add_source(
+	long looping_sound_index,
+	short track,
+	long source_index)
+{
+	const byte *looping_sound= (const byte *)looping_sounds->data+(looping_sound_index&0xFFFF)*LOOPING_SOUND_DATUM_SIZE;
+	const long *first= (const long *)(looping_sound+track*LOOPING_SOUND_TRACK_SIZE+LOOPING_SOUND_DATUM_TRACK_SOURCE_OFFSET);
+	byte *source= sound_source_get(source_index);
+
+	if (*first!=NONE)
+	{
+		byte *first_source= sound_source_get(*first);
+
+		*(long *)(source+SOUND_SOURCE_DATUM_NEXT_OFFSET)= *(const long *)(first_source+SOUND_SOURCE_DATUM_NEXT_OFFSET);
+		*(long *)(source+SOUND_SOURCE_DATUM_PREVIOUS_OFFSET)= *first;
+		*(long *)(first_source+SOUND_SOURCE_DATUM_NEXT_OFFSET)= source_index;
+		*(long *)(sound_source_get(*(const long *)(source+SOUND_SOURCE_DATUM_NEXT_OFFSET))+SOUND_SOURCE_DATUM_PREVIOUS_OFFSET)=
+			source_index;
+	}
+}
+
+/* 0x0021d390: what is done with each sound effect each time: those with the
+bit 0 of their flags are let go, and of the rest, those that
+sound_effect_unknown_0021d5a0 says are given to unknown_0021d630 with a 1 */
+void sound_effects_update(
+	void)
+{
+	struct data_array *data= sound_effects;
+	long effect_index;
+
+	for (effect_index= data_next_index(data, NONE); effect_index!=NONE; effect_index= data_next_index(data, effect_index))
+	{
+		if (sound_effect_get(effect_index)[SOUND_EFFECT_DATUM_FLAGS_OFFSET]&FLAG(_sound_effect_datum_unknown0_bit))
+		{
+			sound_effect_delete(effect_index);
+		}
+		else if (sound_effect_unknown_0021d5a0(effect_index))
+		{
+			unknown_0021d630(effect_index, 1);
+		}
+	}
+}
+
+/* 0x0021f360: what the game keeps of the sound is filled from what it has
+of the console's sound: which voices are of each kind, which slots have no
+voice that plays, and six numbers */
+void __attribute__((stdcall)) sound_console_get_state(
+	byte *state)
+{
+	const byte *console= unknown_0051ebe4;
+	long index;
+
+	memset(state, 0, SOUND_CONSOLE_STATE_SIZE);
+	memset(state+GAME_SOUND_GLOBALS_SLOTS_VALID_OFFSET, 0xFF,
+		(unsigned long)((*(const short *)(console+UNKNOWN_0051EBE4_SLOT_COUNT_OFFSET)+31)>>5)*4);
+	for (index= 0; index<*(const short *)(console+UNKNOWN_0051EBE4_VOICE_COUNT_OFFSET); index++)
+	{
+		const byte *voice= console+UNKNOWN_0051EBE4_VOICE_OFFSET+index*UNKNOWN_0051EBE4_VOICE_SIZE;
+		long kind= (signed char)(voice[VOICE_STATE_OFFSET]<<5)>>5;
+
+		((unsigned long *)(state+kind*SOUND_CONSOLE_STATE_KIND_SIZE))[index>>5]|= 1UL<<(index&31);
+		if (voice[VOICE_SLOT_OFFSET]!=0xFF && (voice[VOICE_STATE_OFFSET]&VOICE_STATE_MASK))
+		{
+			long slot= (char)voice[VOICE_SLOT_OFFSET];
+
+			((unsigned long *)(state+GAME_SOUND_GLOBALS_SLOTS_VALID_OFFSET))[slot>>5]&= ~(1UL<<(slot&31));
+		}
+	}
+	for (index= 0; index<3; index++)
+	{
+		*(long *)(state+SOUND_CONSOLE_STATE_COUNTS_OFFSET+index*4)=
+			*(const short *)(console+UNKNOWN_0051EBE4_COUNTS_OFFSET+index*2);
+		*(long *)(state+SOUND_CONSOLE_STATE_COUNTS_OFFSET+(3+index)*4)=
+			*(const short *)(console+UNKNOWN_0051EBE4_COUNTS_OFFSET+(3+index)*2);
+	}
+}
+
+/* 0x0021f430: each voice of the console's sound that plays and is of a
+sound playback controller is given to unknown_0037b822 with a 2; if there
+was any, unknown_0037b657 is given what is at 0x2AB0 */
+void __attribute__((stdcall)) sound_console_unknown_0021f430(
+	long controller_index)
+{
+	byte *console= unknown_0051ebe4;
+	boolean found= FALSE;
+	long index;
+
+	for (index= 0; index<*(const short *)(console+UNKNOWN_0051EBE4_VOICE_COUNT_OFFSET); index++)
+	{
+		const byte *voice= console+UNKNOWN_0051EBE4_VOICE_OFFSET+index*UNKNOWN_0051EBE4_VOICE_SIZE;
+
+		if (*(const long *)(voice+VOICE_CONTROLLER_INDEX_OFFSET)==controller_index &&
+			(voice[VOICE_STATE_OFFSET]&VOICE_STATE_MASK))
+		{
+			unknown_0037b822(*(void *const *)(voice+VOICE_UNKNOWN24_OFFSET), 2);
+			console= unknown_0051ebe4;
+			found= TRUE;
+		}
+	}
+	if (found)
+	{
+		unknown_0037b657(*(void **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET));
 	}
 }

@@ -947,7 +947,7 @@ def run(t) -> None:
             {
                 "sound_channel_resume": lambda harness, arguments: (0, (arguments[0] & 0xFFFF,)),
                 "GetTickCount": lambda harness, arguments: 0x12345,
-                "unknown_0021f360": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "sound_console_get_state": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                 "sound_classes_update": lambda harness, arguments: (0, (arguments[0] & 0xFFFFFFFF,)),
                 "unknown_0021ec00": first_update,
                 "unknown_00129100": tables,
@@ -2330,7 +2330,7 @@ def run(t) -> None:
                 "sound_playback_controllers_unknown_00219d90",
                 enable,
                 globals={"unknown_0051ebd8": all_controllers(), "unknown_0051ebdc": Buffer(random_.randbytes(0x1C))},
-                externals={"unknown_0021f430": lambda harness, arguments: (0, tuple(arguments))},
+                externals={"sound_console_unknown_0021f430": lambda harness, arguments: (0, tuple(arguments))},
             )
 
     def looping_patch(data: bytearray, at: int) -> None:
@@ -2370,4 +2370,105 @@ def run(t) -> None:
                 "unknown_0051ebd8": all_controllers(),
             },
             externals={"datum_delete": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1]))},
+        )
+
+    # ---------- the ring of a track of a looping sound, the sound effects each time, and two of the console's sound
+
+    random_ = random.Random(169)
+
+    def ring_world() -> tuple:
+        """The looping sounds (6, with the first sound of each of 3 tracks)
+        and the sounds that play, in rings by what each says is next."""
+        looping = bytearray(random_.randbytes(0x4C + 6 * 0xD4))
+        struct.pack_into("<I", looping, 0x44, 0x4C)
+        playing_ = bytearray(random_.randbytes(0x4C + PLAYING * DATUM))
+        struct.pack_into("<I", playing_, 0x44, 0x4C)
+        indices = [random_.getrandbits(16) << 16 | n for n in range(PLAYING)]
+        order = random_.sample(range(PLAYING), PLAYING)
+        rings = [order[0:5], order[5:6], order[6:9], order[9:12]]
+        for ring in rings:
+            for position, n in enumerate(ring):
+                at = 0x4C + n * DATUM
+                following = indices[ring[(position + 1) % len(ring)]]
+                if random_.random() < 0.05:
+                    following = NONE
+                struct.pack_into("<I", playing_, at + 0x6C, following)
+                struct.pack_into("<I", playing_, at + 0xC, random_.choice((1, 2, 0xE0010003)))
+                playing_[at + 0x9C] = random_.choice((0, 1, 0xFF))
+        for n in range(6):
+            for track in range(3):
+                first = random_.choice((NONE, indices[random_.choice(random_.choice(rings))]))
+                struct.pack_into("<I", looping, 0x4C + n * 0xD4 + 0x88 + track * 0x14, first)
+        return Buffer(bytes(looping), pointers=(0x44,)), Buffer(bytes(playing_), pointers=(0x44,)), indices
+
+    for _ in range(80):
+        looping, playing_, indices = ring_world()
+        for _case in range(8):
+            globals_ = {
+                "looping_sounds": Buffer(looping.data, pointers=looping.pointers),
+                "sound_sources": Buffer(playing_.data, pointers=playing_.pointers),
+            }
+            t.check(
+                "looping_sound_find_source",
+                random_.getrandbits(16) << 16 | random_.randrange(6),
+                random_.randrange(3),
+                random_.choice((1, 2, 0xE0010003, 7)),
+                random_.choice((NONE, NONE, 0, 1)),
+                globals=globals_,
+            )
+            t.check(
+                "looping_sound_add_source",
+                random_.getrandbits(16) << 16 | random_.randrange(6),
+                random_.randrange(3),
+                random_.choice(indices),
+                globals=globals_,
+            )
+
+    def update_patch(data: bytearray, at: int) -> None:
+        data[at + 4] = random_.choice((0, 0, 1, 1, 0xFE, 0xFF))
+        struct.pack_into("<I", data, at + 8, random_.choice((NONE, random_.getrandbits(16) << 16 | random_.randrange(CONTROLLERS))))
+
+    for _ in range(100):
+        t.check(
+            "sound_effects_update",
+            globals={
+                "sound_effects": patched(data_array(random_, EFFECTS, 0x14, some_in_use(EFFECTS)), 0x14, EFFECTS, update_patch),
+                "unknown_0051ebd8": all_controllers(),
+            },
+            externals={
+                "datum_delete": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                "sound_effect_unknown_0021d5a0": lambda harness, arguments: (
+                    (0, 1, 0x100, 0)[arguments[0] & 3],
+                    tuple(arguments),
+                ),
+                "unknown_0021d630": lambda harness, arguments: (0, tuple(arguments)),
+            },
+        )
+
+    def console_voices(count: int) -> bytearray:
+        data = bytearray(random_.randbytes(0x2AC0))
+        struct.pack_into("<h", data, 4, count)
+        for n in range(8):
+            at = 0xC + n * 0x34
+            data[at] = random_.choice((0xFF, 0, 5, 31, 32, 63))
+            data[at + 1] = random_.getrandbits(5) << 3 | random_.choice((0, 0, 1, 2, 3))
+            struct.pack_into("<I", data, at + 0x28, random_.choice((NONE, 1, 2, 0x30001)))
+        return data
+
+    for _ in range(150):
+        console_ = console_voices(random_.choice((0, 1, 4, 8, -1)))
+        struct.pack_into("<h", console_, 8, random_.choice((0, 1, 32, 33, 64)))
+        t.check(
+            "sound_console_get_state",
+            Buffer(random_.randbytes(GLOBALS_SIZE)),
+            globals={"unknown_0051ebe4": Buffer(bytes(console_))},
+        )
+        t.check(
+            "sound_console_unknown_0021f430",
+            random_.choice((NONE, 1, 2, 0x30001, 5)),
+            globals={"unknown_0051ebe4": Buffer(bytes(console_))},
+            externals={
+                "unknown_0037b822": lambda harness, arguments: (0, tuple(arguments)),
+                "unknown_0037b657": lambda harness, arguments: (0, tuple(arguments)),
+            },
         )

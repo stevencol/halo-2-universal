@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — El anillo de una pista, los efectos cada vez y el estado de la consola
+
+Cinco funciones en `sound/sound_manager.c`. De 807 funciones se pasa a
+812, el 7,21 % de las del juego (el 3,872 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `looping_sound_find_source` | `0x0021b870` | `sound/sound_manager.c` |
+| `looping_sound_add_source` | `0x0021bc80` | `sound/sound_manager.c` |
+| `sound_effects_update` | `0x0021d390` | `sound/sound_manager.c` |
+| `sound_console_get_state` | `0x0021f360` | `sound/sound_manager.c` |
+| `sound_console_unknown_0021f430` | `0x0021f430` | `sound/sound_manager.c` |
+
+Las dos últimas estaban apuntadas sin descompilar (`unknown_0021f360` y
+`unknown_0021f430`). Nuevas sin descompilar, de la consola: `0x0037b822` y
+`0x0037b657`.
+
+### Lo que se sabe
+
+- Los sonidos que suenan de cada pista de un sonido en bucle forman un
+  anillo: cada uno dice cuál es el siguiente (`0x6C`) y cuál el anterior
+  (`0x70`), y el sonido en bucle guarda el primero de cada pista (`0x88`,
+  cada `0x14` bytes). `looping_sound_find_source` busca en el anillo el que
+  es de un sonido (y de un rango de tono, si se da), y
+  `looping_sound_add_source` mete uno detrás del primero.
+- `sound_effects_update` es lo que se hace con los efectos de sonido cada
+  vez: los que tienen el bit 0 se sueltan, y de los demás, los que diga
+  `sound_effect_unknown_0021d5a0` se pasan a `0x0021d630` con un 1.
+- `sound_console_get_state` rellena lo que el juego guarda del sonido con
+  lo que tiene del sonido de la consola: qué voces son de cada tipo (un
+  vector de bits por tipo), qué casillas no tienen una voz sonando y seis
+  números.
+- `sound_console_unknown_0021f430` pasa a `0x0037b822` cada voz que suena y
+  es de un controlador de reproducción; si hubo alguna, llama a
+  `0x0037b657`.
+- Los nombres son inventados.
+
+### Sin comprobar
+
+- La batería completa no se pasó en este hito, solo las pruebas de estas
+  funciones y de las dos que las llaman.
+
+### Mutaciones
+
+Pendientes; corren aparte, en segundo plano.
+
 ## 2026-10-04 — Recorrer las tablas del sonido
 
 Cinco funciones en `sound/sound_manager.c` que recorren una tabla entera.

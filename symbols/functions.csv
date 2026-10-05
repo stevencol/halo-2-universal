@@ -1158,7 +1158,7 @@ address,name,source,arguments,returns,convention
 00218d70,sound_definition_get_minimum_decibels,source/sound/sound_manager.c,edx,real:eax
 002197f0,sound_gain_to_decibels,source/sound/sound_manager.c,xmm0,real:eax
 00127010,unknown_00127010,,ecx,real:eax
-0021f360,unknown_0021f360,,stack,void,stdcall
+0021f360,sound_console_get_state,source/sound/sound_manager.c,stack,void,stdcall
 00221900,sound_classes_update,source/sound/sound_manager.c,xmm1,void
 00127400,unknown_00127400,,stack,void,stdcall
 00219cc0,sound_playback_controllers_update,source/sound/sound_manager.c,,void
@@ -1247,4 +1247,9 @@ address,name,source,arguments,returns,convention
 00127e20,sound_source_unknown_00127e20,source/sound/sound_manager.c,ecx edx,real:xmm0
 00129f20,sound_channel_queue_chunk,source/sound/sound_manager.c,eax stack stack,void,stdcall
 0012ac20,sound_source_distance_gain,source/sound/sound_manager.c,eax edi stack,real:xmm0,stdcall
-0021f430,unknown_0021f430,,stack,void
+0021f430,sound_console_unknown_0021f430,source/sound/sound_manager.c,stack,void,stdcall
+0021b870,looping_sound_find_source,source/sound/sound_manager.c,eax ecx ebx stack,int,stdcall
+0021bc80,looping_sound_add_source,source/sound/sound_manager.c,eax ecx esi,void
+0021d390,sound_effects_update,source/sound/sound_manager.c,,void
+0037b822,unknown_0037b822,,stack stack,void
+0037b657,unknown_0037b657,,stack,void
