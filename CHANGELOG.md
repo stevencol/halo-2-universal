@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Si un sonido debe empezar, y su promoción
+
+Dos funciones en `sound/sound_manager.c`. De 838 funciones se pasa a
+840, el 7,46 % de las del juego (el 4,089 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_start_test` | `0x00126c30` | `sound/sound_manager.c` |
+| `sound_promotion_update` | `0x00126ec0` | `sound/sound_manager.c` |
+
+Las dos estaban apuntadas sin descompilar (`unknown_00126c30` y
+`unknown_00126ec0`). Con ellas se corrigen los argumentos de
+`sound_source_new`: recibe el sonido en `ebx` y, en la pila, lo que el juego
+da para arrancarlo (que lleva en `0xC` lo que dice del sonido).
+
+### Lo que se sabe
+
+- `sound_start_test` decide si un sonido debe empezar a sonar, y si no, por
+  qué. No, si no hay sonido o el sonido es de un tipo que no se reproduce
+  (motivo 5). No, al azar, tantas veces como digan su escala y su forma de
+  reproducirse que se salta (motivo 1). Y no si no lo oye ningún oyente, o
+  se oiría a -64 decibelios o menos y ninguna de dos marcas dice que suene
+  igualmente (motivo 4). Dice también qué oyente lo oye.
+- `sound_promotion_update` lleva la promoción de un sonido cuando va a
+  empezar: en qué regla está y si el sonido no debe sonar por un rato. Cada
+  regla tiene un tiempo propio que baja con el tiempo y sube cada vez que
+  el sonido empieza; cuando llega a lo que dice la regla, se pasa a la
+  siguiente. Una regla alcanzada impide que el sonido vuelva a sonar, en
+  esa regla o en una menor, durante los segundos que diga.
+- De lo que llama `sound_source_new` solo queda `0x00126000`, la que crea
+  el sonido.
+- Los nombres son inventados.
+
+### Comprobado
+
+- La batería completa que corría aparte terminó: las 824 funciones del hito
+  173 pasan contra el ejecutable original. En este hito se pasaron las
+  pruebas de estas dos funciones y la de `sound_source_new`.
+
+### Mutaciones
+
+Pendientes las de los hitos 156 a 184.
+
 ## 2026-10-04 — El canal que recibe un sonido
 
 Una función en `sound/sound_manager.c`. De 837 funciones se pasa a

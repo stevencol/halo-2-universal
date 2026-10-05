@@ -1238,8 +1238,8 @@ address,name,source,arguments,returns,convention
 0021a080,looping_sound_unknown_0021a080,source/sound/sound_manager.c,eax,bool
 0021cc30,sound_unknown_0021cc30,source/sound/sound_manager.c,ecx eax stack,int,stdcall
 00125f70,sound_source_new,source/sound/sound_manager.c,ebx edi stack,int,stdcall
-00126c30,unknown_00126c30,,eax stack stack stack,bool
-00126ec0,unknown_00126ec0,,ecx stack,int
+00126c30,sound_start_test,source/sound/sound_manager.c,eax stack stack stack,bool,stdcall
+00126ec0,sound_promotion_update,source/sound/sound_manager.c,ecx stack,int,stdcall
 00126000,unknown_00126000,,stack stack stack stack,int
 00129790,unknown_00129790,,eax stack,void
 0021e3b0,unknown_0021e3b0,,esi,void

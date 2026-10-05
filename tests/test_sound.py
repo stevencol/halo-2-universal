@@ -2117,29 +2117,28 @@ def run(t) -> None:
         made = random_.choice((NONE, random_.getrandbits(32), 0x12340005))
 
         def look(harness, arguments, looked=looked):
-            unknown2, unknown, first, failure = arguments
+            request_, sound_index_, first, failure = arguments
             harness.mu.mem_write(first, struct.pack("<I", 0xA1B2C3D4))
-            return looked, (unknown2, harness.normalize(unknown), harness.normalize(failure))
+            return looked, (harness.normalize(request_), sound_index_, harness.normalize(failure))
 
         def refuse(harness, arguments, refused=refused):
-            unknown, second = arguments
-            record = harness.normalize(unknown), bytes(harness.mu.mem_read(second, 4))
+            sound_index_, second = arguments
             harness.mu.mem_write(second, struct.pack("<I", 0x0F1E2D3C))
-            return refused, record
+            return refused, (sound_index_,)
 
         said = Buffer(random_.randbytes(0x90))
         t.check(
             "sound_source_new",
-            said,
-            random_.choice((0, Buffer(random_.randbytes(4)), Buffer(random_.randbytes(4)))),
             random_.getrandbits(32),
+            random_.choice((0, Buffer(random_.randbytes(4)), Buffer(random_.randbytes(4)))),
+            said,
             globals={"game_sound_globals": sound_state(*states[n % len(states)])},
             externals={
-                "unknown_00126c30": look,
-                "unknown_00126ec0": refuse,
+                "sound_start_test": look,
+                "sound_promotion_update": refuse,
                 "unknown_00126000": lambda harness, arguments, made=made: (
                     made,
-                    (harness.normalize(arguments[0]), *arguments[1:]),
+                    (arguments[0], arguments[1], harness.normalize(arguments[2]), arguments[3]),
                 ),
             },
         )
@@ -3298,5 +3297,127 @@ def run(t) -> None:
                 "sound_source_find_channel": find_,
                 "sound_source_delete": lambda harness, arguments: (0, tuple(arguments)),
                 "sound_channel_delete": lambda harness, arguments: (0, (arguments[0] & 0xFFFF,)),
+            },
+        )
+
+    # ---------- whether a sound is to start, and its promotion
+
+    random_ = random.Random(184)
+
+    for _ in range(900):
+        sound_index = random_.randrange(TAGS)
+        definition = bytearray(sound_data(random_))
+        definition[4] = random_.choice((0, 0, 1, 2, 2))
+        definition[5] = random_.choice((1, 1, 1, 0, 2))
+        struct.pack_into("<h", definition, 6, random_.randrange(0, PLAYBACKS))
+        definition[0xB] = random_.randrange(4)
+        globals_ = world(random_, sound_index, bytes(definition))
+        # what the sounds share: how they are played, and four scales
+        shared = bytearray(random_.randbytes(0x10))
+        struct.pack_into("<I", shared, 4, len(shared))
+        played = bytearray()
+        for _n in range(PLAYBACKS):
+            playback = bytearray(reals(random_, PLAYBACK_SIZE // 4))
+            struct.pack_into("<f", playback, 8, random_.choice((0.0, 0.0, 0.0, 0.5, 1.0, 2.0)))
+            struct.pack_into("<f", playback, 0x10, random_.choice((0.0, -6.0, 3.0, -70.0)))
+            played += playback
+        shared += played
+        struct.pack_into("<I", shared, 0xC, len(shared))
+        for _n in range(4):
+            shared += reals(random_, 3) + struct.pack("<2f", random_.choice((0.0, 0.0, 0.3, 1.0)), random_.choice((0.0, 0.0, 0.6, 1.0)))
+        globals_["global_sound_cache_file_gestalt"] = Buffer(bytes(shared), pointers=(4, 0xC))
+        globals_["game_sound_globals"] = sound_state(*states[random_.randrange(len(states))])
+        globals_["global_random_seed_reference"] = Buffer(random_.randbytes(0x10))
+        globals_["unknown_0047f0e4"] = struct.pack("<i", random_.choice((0, 1)))
+        request = bytearray(random_.randbytes(0xC + 0x48))
+        struct.pack_into("<H", request, 0xC, random_.choice((0, 0, 0x100, 0x800, random_.getrandbits(16))))
+        struct.pack_into("<2f", request, 0x10, random_.choice((0.0, 0.5, 1.0)), random_.choice((0.0, -3.0, -64.0)))
+        heard = random_.choice((NONE, 0, 0, 1, 3))
+        kind_ok = random_.choice((1, 1, 1, 0))
+        gain = random_.choice((0.0, 0.0005, 0.25, 1.0, 1.0))
+        loud = random_.choice((0.0, -6.0, -30.0, -64.0, -80.0))
+
+        def listener_(harness, arguments, heard=heard):
+            said_, maximum, distance = arguments
+            record = harness.normalize(said_), maximum, bytes(harness.mu.mem_read(distance, 4))
+            harness.mu.mem_write(distance, struct.pack("<f", 7.5))
+            return heard, record
+
+        t.check(
+            "sound_start_test",
+            Buffer(bytes(request)),
+            random_.getrandbits(16) << 16 | sound_index,
+            Buffer(random_.randbytes(4)),
+            random_.choice((0, Buffer(random_.randbytes(4)), Buffer(random_.randbytes(4)))),
+            globals=globals_,
+            externals={
+                "sound_definition_unknown_00126bd0": lambda harness, arguments, kind_ok=kind_ok: (kind_ok, tuple(arguments)),
+                "sound_get_maximum_distance": lambda harness, arguments: (
+                    real_bits(40.0),
+                    (harness.normalize(arguments[0]), arguments[1]),
+                ),
+                "sound_source_get_listener": listener_,
+                "sound_source_distance_gain": lambda harness, arguments, gain=gain: (
+                    real_bits(gain),
+                    (arguments[0], harness.normalize(arguments[1]), arguments[2]),
+                ),
+                "sound_definition_decibels": lambda harness, arguments, loud=loud: (
+                    real_bits(loud),
+                    (harness.normalize(arguments[0]), arguments[1], arguments[2]),
+                ),
+            },
+        )
+
+    for _ in range(500):
+        sound_index = random_.randrange(TAGS)
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        struct.pack_into("<I", tags, sound_index * 0x10 + 8, len(tags))
+        definition = bytearray(random_.randbytes(0x10))
+        definition[0xC] = random_.choice((0xFF, 0, 1, 2, 3, 0, 1, 2, 3))
+        now = random_.choice((0, 1000, 100000))
+        # what the sounds share: 4 promotions, with 3 rules and 3 times each
+        data = bytearray(random_.randbytes(0x50))
+        pointers = [0x4C]
+        promotions = len(data)
+        struct.pack_into("<I", data, 0x4C, promotions)
+        data += bytes(4 * 0x1C)
+        for n in range(4):
+            at = promotions + n * 0x1C
+            count = random_.choice((0, 1, 3, 3))
+            rules = len(data)
+            for _rule in range(3):
+                data += struct.pack(
+                    "<hhfii",
+                    random_.randrange(4),
+                    random_.choice((0, 1, 1, 4)),
+                    random_.choice((0.0, 0.5, 2.0)),
+                    random_.choice((0, 100, 1000)),
+                    random_.choice((0, 50, 500)),
+                )
+            timers = len(data)
+            data += struct.pack("<3i", *(random_.choice((0, 10, 400, 5000)) for _ in range(3)))
+            struct.pack_into(
+                "<iIiIiii",
+                data,
+                at,
+                count,
+                rules,
+                random_.choice((0, 3, 3)),
+                timers,
+                random_.choice((-1, 0, 1, 2)),
+                now - random_.choice((0, 5, 300, 100000)),
+                now + random_.choice((-500, 0, 1, 500)),
+            )
+            pointers += [at + 4, at + 0xC]
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        struct.pack_into("<i", state, 0x84, now)
+        t.check(
+            "sound_promotion_update",
+            random_.getrandbits(16) << 16 | sound_index,
+            Buffer(random_.randbytes(4)),
+            globals={
+                "global_tag_instances": Buffer(bytes(tags) + bytes(definition), pointers=(sound_index * 0x10 + 8,)),
+                "global_sound_cache_file_gestalt": Buffer(bytes(data), pointers=tuple(pointers)),
+                "game_sound_globals": Buffer(bytes(state)),
             },
         )

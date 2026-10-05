@@ -365,6 +365,26 @@ enum
 	_sound_source_deleted_too_many_instances= 5,
 	_sound_source_deleted_too_many_sounds= 6,
 	_sound_source_deleted_replaced= 13,
+	/* in what the game gives to start a sound: what it says of the sound,
+	and in that, a scale from 0 to 1 and some decibels */
+	SOUND_REQUEST_SOURCE_OFFSET= 0xC,
+	SOUND_SOURCE_SCALE_OFFSET= 0x4,
+	SOUND_SOURCE_DECIBELS_OFFSET= 0x8,
+	/* why a sound does not start */
+	_sound_start_refused_skipped= 1,
+	_sound_start_refused_not_heard= 4,
+	_sound_start_refused_unknown5= 5,
+	/* a promotion, of those that the sounds of a map share: its rules, a
+	time of each, the rule that it is at, when it was last looked at, and up
+	to when the sound does not play; and of a rule */
+	SOUND_PROMOTION_TIMER_COUNT_OFFSET= 0x8,
+	SOUND_PROMOTION_RULE_INDEX_OFFSET= 0x10,
+	SOUND_PROMOTION_LAST_TIME_OFFSET= 0x14,
+	SOUND_PROMOTION_SUPPRESSED_UNTIL_OFFSET= 0x18,
+	SOUND_PROMOTION_RULE_COUNT_OFFSET= 0x2,
+	SOUND_PROMOTION_RULE_SECONDS_OFFSET= 0x4,
+	SOUND_PROMOTION_RULE_THRESHOLD_OFFSET= 0x8,
+	SOUND_PROMOTION_RULE_STEP_OFFSET= 0xC,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -700,14 +720,15 @@ long __attribute__((stdcall)) sound_unknown_0021cc30(const byte *flags, const st
 /* 0x00126c30 and 0x00126ec0: look at what the game says of a sound that
 is to play; 0x00126000: makes it; 0x00129790: of a channel; 0x0021e3b0: of
 the console's sound */
-boolean unknown_00126c30(long unknown2, void *unknown, long *first, long *failure);
-long unknown_00126ec0(void *unknown, long *second);
-long unknown_00126000(void *unknown, long first, long unknown2, long second);
+boolean __attribute__((stdcall)) sound_start_test(const byte *request, long sound_index, long *listener_index,
+	long *reason);
+long __attribute__((stdcall)) sound_promotion_update(long sound_index, long *rule_index);
+long unknown_00126000(long sound_index, long listener_index, const byte *request, long rule_index);
 void unknown_00129790(long channel_index, long value);
 void unknown_0021e3b0(void *unknown);
 
 /* 0x00125f70, 0x001268e0, 0x00129380, 0x0021f6d0 and 0x00221900 */
-long __attribute__((stdcall)) sound_source_new(void *unknown, long *failure, long unknown2);
+long __attribute__((stdcall)) sound_source_new(long sound_index, long *failure, const byte *request);
 void sound_source_hold_chunk(byte *source);
 void sound_channels_unknown_00129380(const long *voice_values, const long *slot_values);
 void __attribute__((stdcall)) sound_console_set_environment(const long *second, const long *first, const void *unknown);
@@ -3568,25 +3589,27 @@ long __attribute__((stdcall)) sound_unknown_0021cc30(
 		(sound->first_pitch_range_index+pitch_range_offset), sound);
 }
 
-/* 0x00125f70: a sound starts to play: what the game says of it is looked at
-by unknown_00126c30 and unknown_00126ec0, and unknown_00126000 makes it.
-Gives the sound that plays; NONE if it cannot, and then why, if it is asked:
-2 if the second says no, and 3 if it could not be made. The name is a guess */
+/* 0x00125f70: a sound starts to play, with what the game gives to start
+it: sound_start_test says whether it is to, and which listener hears it;
+sound_promotion_update, whether its promotion keeps it from playing; and
+unknown_00126000 makes it. Gives the sound that plays; NONE if it does not,
+and then why, if it is asked: what sound_start_test says, 2 if its promotion
+keeps it, and 3 if it could not be made. The name is a guess */
 long __attribute__((stdcall)) sound_source_new(
-	void *unknown,
+	long sound_index,
 	long *failure,
-	long unknown2)
+	const byte *request)
 {
 	long source_index= NONE;
 
 	if (sound_available_inline())
 	{
 		long first;
-		long second= unknown2;
+		long second= (long)(uintptr_t)request;
 
-		if (unknown_00126c30(unknown2, unknown, &first, failure))
+		if (sound_start_test(request, sound_index, &first, failure))
 		{
-			if (unknown_00126ec0(unknown, &second))
+			if (sound_promotion_update(sound_index, &second))
 			{
 				if (failure)
 				{
@@ -3595,7 +3618,7 @@ long __attribute__((stdcall)) sound_source_new(
 			}
 			else
 			{
-				source_index= unknown_00126000(unknown, first, unknown2, second);
+				source_index= unknown_00126000(sound_index, first, request, second);
 				if (failure && source_index==NONE)
 				{
 					*failure= _sound_source_new_failure_unknown3;
@@ -5276,4 +5299,155 @@ replace:
 	}
 
 	return sound_source_find_channel(source_index, reason);
+}
+
+/* 0x00126c30: whether a sound is to start to play, with what the game says
+of it (which is 0xC into what the function is given), and if not, why. Not
+with no sound, or for a sound of a kind that is not played (5). Not, at
+random, as often as its scale and how it is played say that it is skipped
+(1). And not if no listener hears it, or it would be heard at -64 decibels
+or less and neither of two flags says that it plays all the same (4). It
+says too which listener hears it */
+boolean __attribute__((stdcall)) sound_start_test(
+	const byte *request,
+	long sound_index,
+	long *listener_index,
+	long *reason)
+{
+	const struct sound_source *source= (const struct sound_source *)(request+SOUND_REQUEST_SOURCE_OFFSET);
+	boolean result= FALSE;
+	long why= _sound_start_refused_unknown5;
+
+	if (sound_available_inline())
+	{
+		const struct sound_definition *sound= sound_definition_get(sound_index);
+
+		if ((sound->unknown3[2]==1 && sound->unknown3[1]!=2) || (sound->unknown3[1]==2 && unknown_0047f0e4))
+		{
+			unsigned long *seed= &global_random_seed_reference[1];
+			const real *scale= sound_definition_scale_decibels(sound);
+			long double random;
+			long double skip;
+
+			*seed= *seed*1664525UL+1013904223UL;
+			random= (long double)(*seed>>16)*(long double)(1.0f/65535.0f);
+			why= _sound_start_refused_skipped;
+			skip= ((long double)scale[3]+((long double)scale[4]-(long double)scale[3])*
+				(long double)*(const real *)((const byte *)source+SOUND_SOURCE_SCALE_OFFSET))*
+				(long double)*(const real *)sound_definition_get_playback(sound)->unknown8;
+			if (random>skip)
+			{
+				why= _sound_start_refused_not_heard;
+				if (sound_definition_unknown_00126bd0(sound_index))
+				{
+					real distance= sound_get_maximum_distance(source, sound_index);
+					long listener= sound_source_get_listener(source, distance, &distance);
+
+					*listener_index= listener;
+					if (listener!=NONE)
+					{
+						real gain= sound_source_distance_gain(sound_index, source, distance);
+						real decibels= sound_definition_decibels(sound,
+							*(const real *)((const byte *)source+SOUND_SOURCE_DECIBELS_OFFSET),
+							*(const real *)((const byte *)source+SOUND_SOURCE_SCALE_OFFSET));
+						real gain_decibels= sound_gain_to_decibels(gain);
+						real total= sound_definition_get_playback(sound)->gain_base+(decibels+gain_decibels);
+
+						if ((source->flags&(FLAG(_sound_source_unknown8_bit)|FLAG(_sound_source_unknown11_bit))) ||
+							total>SOUND_MINIMUM_DECIBELS)
+						{
+							why= 0;
+							result= TRUE;
+						}
+					}
+				}
+			}
+		}
+	}
+	if (reason)
+	{
+		*reason= why;
+	}
+
+	return result;
+}
+
+/* 0x00126ec0: the promotion of a sound, when the sound is to start: which
+of its rules it is at now, and whether the sound is not to play for a while.
+Each rule has a time of its own, which goes down as time goes by and up by
+what the rule says each time the sound starts; a rule that has a count and
+whose time is up to what it says goes on to the next one. A rule that is
+reached keeps the sound from playing again, at that rule or a lower one, for
+the seconds that it says. NONE, and FALSE, for a sound with no promotion */
+long __attribute__((stdcall)) sound_promotion_update(
+	long sound_index,
+	long *rule_index)
+{
+	char promotion_index= ((const char *)sound_definition_get(sound_index))[SOUND_DEFINITION_PROMOTION_INDEX_OFFSET];
+	uintptr_t address= 0;
+	byte *promotion;
+	const byte *rules;
+	long *timers;
+	long time;
+	long elapsed;
+	long suppressed;
+	long rule;
+	long index;
+
+	if (promotion_index!=NONE)
+	{
+		address= (uintptr_t)*(const long *)((const byte *)global_sound_cache_file_gestalt+SOUND_GESTALT_PROMOTIONS_OFFSET+4)+
+			(uintptr_t)(promotion_index*SOUND_PROMOTION_SIZE);
+	}
+	if (!address)
+	{
+		*rule_index= NONE;
+		return FALSE;
+	}
+	promotion= (byte *)address;
+	time= *(const long *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET);
+	if (*(const long *)(promotion+SOUND_PROMOTION_SUPPRESSED_UNTIL_OFFSET)<=time)
+	{
+		*(long *)(promotion+SOUND_PROMOTION_RULE_INDEX_OFFSET)= NONE;
+		*(long *)(promotion+SOUND_PROMOTION_SUPPRESSED_UNTIL_OFFSET)= 0;
+	}
+	elapsed= *(const long *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET)-
+		*(const long *)(promotion+SOUND_PROMOTION_LAST_TIME_OFFSET);
+	for (index= 0; index<*(const long *)(promotion+SOUND_PROMOTION_TIMER_COUNT_OFFSET); index++)
+	{
+		long left;
+
+		timers= *(long *const *)(promotion+SOUND_PROMOTION_TIMER_COUNT_OFFSET+4);
+		left= timers[index]-elapsed;
+		timers[index]= left<0 ? 0 : left;
+	}
+	for (rule= 0; rule<*(const long *)promotion; rule++)
+	{
+		long *timer= *(long *const *)(promotion+SOUND_PROMOTION_TIMER_COUNT_OFFSET+4)+rule;
+		const byte *entry= *(const byte *const *)(promotion+4)+rule*SOUND_PROMOTION_RULE_SIZE;
+
+		*timer+= *(const long *)(entry+SOUND_PROMOTION_RULE_STEP_OFFSET);
+		if (*(const short *)(entry+SOUND_PROMOTION_RULE_COUNT_OFFSET)<=0 ||
+			*timer<*(const long *)(entry+SOUND_PROMOTION_RULE_THRESHOLD_OFFSET) ||
+			rule>=*(const long *)promotion-1)
+		{
+			break;
+		}
+		*timer= 0;
+	}
+	*rule_index= rule;
+	suppressed= rule<=*(const long *)(promotion+SOUND_PROMOTION_RULE_INDEX_OFFSET) &&
+		*(const long *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET)<
+		*(const long *)(promotion+SOUND_PROMOTION_SUPPRESSED_UNTIL_OFFSET);
+	if (rule>=*(const long *)(promotion+SOUND_PROMOTION_RULE_INDEX_OFFSET) && !suppressed)
+	{
+		rules= *(const byte *const *)(promotion+4);
+		*(long *)(promotion+SOUND_PROMOTION_RULE_INDEX_OFFSET)= rule;
+		*(long *)(promotion+SOUND_PROMOTION_SUPPRESSED_UNTIL_OFFSET)=
+			(long)(*(const real *)(rules+rule*SOUND_PROMOTION_RULE_SIZE+SOUND_PROMOTION_RULE_SECONDS_OFFSET)*1000.0f+
+			(real)*(const long *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET));
+	}
+	*(long *)(promotion+SOUND_PROMOTION_LAST_TIME_OFFSET)= *(const long *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET);
+
+	return suppressed;
 }
