@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Guardar un vector en 32 bits
+
+Una función en `math/real_math.c`. De 889 funciones se pasa a
+890, el 7,90 % de las del juego (el 4,634 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `vector3d_compress` | `0x00188dd0` | `math/real_math.c` |
+
+No estaba apuntada. La llaman 19 funciones del juego; recibe el vector en
+`eax`.
+
+### Lo que se sabe
+
+- `vector3d_compress` es la pareja de `vector3d_decompress` (hito 204):
+  guarda un vector en 32 bits, 11 para `i`, 11 para `j` y 10 para `k`, cada
+  parte redondeada al número más cercano que cabe en sus bits.
+- Lo que se sale de -1 a 1 se toma como el extremo que pasa.
+- El juego la usa para guardar direcciones en poco sitio: la del cono de un
+  sonido, por ejemplo.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y de
+  `vector3d_decompress`. La última batería completa es la del hito 219
+  (881 funciones, todas bien).
+
+### Mutaciones
+
+Siete líneas rotas a mano: las pruebas notan las siete.
+
 ## 2026-10-05 — Un sitio al azar para un sonido suelto de un sonido en bucle
 
 Una función en `sound/sound_manager.c`. De 888 funciones se pasa a

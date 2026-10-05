@@ -1199,3 +1199,32 @@ real_vector3d *vector3d_decompress(
 
 	return vector;
 }
+
+/* a real from -1 to 1 */
+static inline __attribute__((always_inline)) real vector3d_compress_pin(
+	real value)
+{
+	if (-1.0f>value)
+	{
+		return -1.0f;
+	}
+
+	return value>1.0f ? 1.0f : value;
+}
+
+/* 0x00188dd0: a vector in 32 bits, as vector3d_decompress takes it: 11 bits
+for i, 11 for j and 10 for k, each to the nearest of what its bits hold.
+What is out of -1 to 1 is taken as the end that it is past. The name is
+made up */
+unsigned long vector3d_compress(
+	const real_vector3d *vector)
+{
+	real k= vector3d_compress_pin(vector->k);
+	real j= vector3d_compress_pin(vector->j);
+	real i= vector3d_compress_pin(vector->i);
+	long compressed_k= lrintf((k-(-1.0f))*511.5f);
+	long compressed_j= lrintf((j-(-1.0f))*1023.5f);
+	long compressed_i= lrintf((i-(-1.0f))*1023.5f);
+
+	return (unsigned long)(((compressed_k<<11)|compressed_j)<<11)|(unsigned long)compressed_i;
+}

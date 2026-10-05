@@ -47,6 +47,7 @@ def run(t) -> None:
     run_quantize(t)
     run_angles(t)
     run_decompress(t)
+    run_compress(t)
     random_ = random.Random(3)
 
     vectors = list(VECTORS)
@@ -481,3 +482,15 @@ def run_decompress(t) -> None:
     values += [random_.getrandbits(32) for _ in range(600)]
     for value in values:
         t.check("vector3d_decompress", value, Buffer(random_.randbytes(12)))
+
+
+def run_compress(t) -> None:
+    random_ = random.Random(226)
+    NAN = struct.unpack("<f", bytes.fromhex("0000c07f"))[0]
+
+    vectors = [(0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1), (-1, -1, -1), (1, 1, 1), (2, -3, 5), (NAN, 0.5, -0.5), (0.5, NAN, NAN)]
+    # halfway between two of the numbers that the bits hold
+    vectors += [(n / 1023.5 - 1.0, (n + 0.5) / 1023.5 - 1.0, (n % 1024 + 0.5) / 511.5 - 1.0) for n in (0, 1, 2, 511, 1023, 1024, 2045, 2046)]
+    vectors += [tuple(random_.uniform(-1.1, 1.1) for _ in range(3)) for _ in range(900)]
+    for vector in vectors:
+        t.check("vector3d_compress", reals(*vector))
