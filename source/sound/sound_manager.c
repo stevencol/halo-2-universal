@@ -499,6 +499,17 @@ enum
 	SOUND_VOICE_PARAMETERS_UNKNOWN38_OFFSET= 0x38,
 	SOUND_VOICE_PARAMETERS_EFFECTS_OFFSET= 0x48,
 	SOUND_VOICE_PARAMETERS_ENVIRONMENT_OFFSET= 0x468,
+	SOUND_VOICE_PARAMETERS_SIZE= 0x478,
+	SOUND_VOICE_PARAMETERS_PITCH_OFFSET= 0x8,
+	SOUND_VOICE_PARAMETERS_DECIBELS_OFFSET= 0xC,
+	SOUND_VOICE_PARAMETERS_UNKNOWN34_OFFSET= 0x34,
+	/* in a recording: its gain, in decibels; in a class of sounds and in
+	what unknown_00129aa0 works out: how much of the Doppler effect a
+	sound has; a flag of a sound that plays */
+	SOUND_PERMUTATION_GAIN_OFFSET= 0x4,
+	SOUND_CLASS_UNKNOWN48_OFFSET= 0x48,
+	SOUND_CHANNEL_PARAMETERS_UNKNOWN14_OFFSET= 0x14,
+	_sound_source_datum_unknown3_bit= 3,
 	_sound_source_datum_unknown4_bit= 4,
 	SOUND_CLASS_UNKNOWNE_OFFSET= 0xE,
 	/* more of a sound that plays, of a listener, of a class of sounds and of
@@ -1051,12 +1062,12 @@ long __attribute__((stdcall)) looping_sound_find(long unknown4, long unknown8);
 sound; 0x00249d60: something of two clusters of a structure bsp */
 void unknown_002ae7a0(void *voice, real unknown, real unknown2);
 void unknown_0037c705(void *unknown, void *stream);
-void unknown_002201f0(long voice_index, long unknown);
-void unknown_0021fa80(long voice_index, long unknown, long unknown2);
+void unknown_002201f0(long voice_index, const byte *effects, long unknown);
+void unknown_0021fa80(const byte *parameters, long voice_index, const byte *effects, long unknown);
 real unknown_00249d60(long cluster_index, long other_cluster_index, const void *structure_bsp);
 
 /* 0x0021f8a0 and 0x00221da0 */
-void __attribute__((stdcall)) sound_console_voice_start(const byte *unknown, long voice_index);
+void __attribute__((stdcall)) sound_console_voice_start(const byte *parameters, const byte *effects, long voice_index);
 boolean __attribute__((stdcall)) sound_source_unknown_00221da0(long listener_index, const struct sound_source *source,
 	real unknown);
 
@@ -1124,7 +1135,10 @@ short __attribute__((stdcall)) sound_source_get_channel(long source_index, long 
 and 0x00128ca0: give it to the voice of the channel */
 void unknown_00129aa0(long channel_index, real *decibels, byte *parameters);
 void unknown_0021c400(long channel_index, real decibels, const byte *parameters);
-void unknown_00128ca0(long channel_index, real decibels, const byte *parameters);
+void __attribute__((stdcall)) sound_channel_update_voice(short channel_index, real decibels, const byte *parameters);
+
+/* 0x0021f720: of the console's sound, with what sound_unknown_00222930 fills */
+void unknown_0021f720(const byte *environment);
 
 /* 0x0037b75b: of the console: what a stream of sound does; 0x0021de90 */
 void unknown_0037b75b(void *stream, long *status);
@@ -4537,11 +4551,14 @@ void sound_voices_initialize_for_new_structure_bsp(
 	}
 }
 
-/* 0x0021f8a0: a voice of the console's sound starts with what something
-says: its sound playback controller, and its slot, whose stream it is given.
-What the functions of the console that it calls do is not known */
+/* 0x0021f8a0: a voice of the console's sound starts with what
+sound_channel_build_voice_parameters fills: its sound playback controller,
+and its slot, whose stream it is given. `effects` is what is at 0x48 of it:
+the game has it in ebx, and unknown_002201f0 takes it there. What the
+functions of the console that it calls do is not known */
 void __attribute__((stdcall)) sound_console_voice_start(
-	const byte *unknown,
+	const byte *parameters,
+	const byte *effects,
 	long voice_index)
 {
 	byte *voice= unknown_0051ebe4+UNKNOWN_0051EBE4_VOICE_OFFSET+voice_index*UNKNOWN_0051EBE4_VOICE_SIZE;
@@ -4549,26 +4566,26 @@ void __attribute__((stdcall)) sound_console_voice_start(
 	short slot;
 
 	voice[VOICE_FLAGS_OFFSET]|= FLAG(_voice_unknown4_bit);
-	controller_index= *(const long *)(unknown+SOUND_VOICE_START_CONTROLLER_INDEX_OFFSET);
+	controller_index= *(const long *)(parameters+SOUND_VOICE_START_CONTROLLER_INDEX_OFFSET);
 	*(long *)(voice+VOICE_CONTROLLER_INDEX_OFFSET)= controller_index;
 	*(long *)(voice+VOICE_UNKNOWN2C_OFFSET)= 0;
 	unknown_0037b822(*(void **)(voice+VOICE_UNKNOWN24_OFFSET), controller_index!=NONE);
 	unknown_002ae7a0(voice, 0.0f, 0.1f);
-	slot= *(const short *)(unknown+SOUND_VOICE_START_SLOT_OFFSET);
+	slot= *(const short *)(parameters+SOUND_VOICE_START_SLOT_OFFSET);
 	if (slot!=NONE)
 	{
 		unknown_0037c705(*(void **)(voice+VOICE_UNKNOWN24_OFFSET),
 			*(void **)(unknown_0051ebe4+UNKNOWN_0051EBE4_SLOT_STREAM_OFFSET+slot*UNKNOWN_0051EBE4_SLOT_SIZE));
-		voice[VOICE_SLOT_OFFSET]= unknown[SOUND_VOICE_START_SLOT_OFFSET];
+		voice[VOICE_SLOT_OFFSET]= parameters[SOUND_VOICE_START_SLOT_OFFSET];
 	}
 	else
 	{
 		unknown_0037c705(*(void **)(voice+VOICE_UNKNOWN24_OFFSET), NULL);
 		voice[VOICE_SLOT_OFFSET]= 0xFF;
 	}
-	unknown_002201f0(voice_index, 1);
+	unknown_002201f0(voice_index, effects, 1);
 	voice[VOICE_FLAGS_OFFSET]&= ~FLAG(_voice_unknown0_bit);
-	unknown_0021fa80(voice_index, 0, 0);
+	unknown_0021fa80(parameters, voice_index, NULL, 0);
 	voice[VOICE_FLAGS_OFFSET]|= FLAG(_voice_unknown0_bit);
 }
 
@@ -6083,7 +6100,7 @@ heard at -64 decibels or less is let go (reason 4); one that has faded in
 stops fading. For a channel with a voice, unknown_00129aa0 works out how the
 sound is heard, to which the decibels of the real that follows the pause of
 the game are added, and that is given to unknown_0021c400 (for the sounds of
-the kinds 1 to 4) or to unknown_00128ca0; and who is told of the sound is
+the kinds 1 to 4) or to sound_channel_update_voice; and who is told of it is
 told where it plays, if the sound is not marked. Before all, what the game
 keeps of the console's sound is filled */
 void sound_channels_update_sources(
@@ -6142,7 +6159,7 @@ void sound_channels_update_sources(
 		}
 		else
 		{
-			unknown_00128ca0(channel_index, decibels, parameters);
+			sound_channel_update_voice(channel_index, decibels, parameters);
 		}
 		if ((source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]>>_sound_source_datum_unknown5_bit)&1)
 		{
@@ -7274,4 +7291,152 @@ void __attribute__((stdcall)) sound_channel_build_voice_parameters(
 	{
 		*(real *)(result+SOUND_VOICE_PARAMETERS_EFFECTS_OFFSET+4)= *(const real *)(source+SOUND_SOURCE_DATUM_SCALE_OFFSET);
 	}
+}
+
+/* some decibels, from -64 to 0 */
+static inline __attribute__((always_inline)) real sound_pin_decibels(
+	real decibels)
+{
+	if (SOUND_MINIMUM_DECIBELS>decibels)
+	{
+		return SOUND_MINIMUM_DECIBELS;
+	}
+
+	return decibels>0.0f ? 0.0f : decibels;
+}
+
+/* 0x00128ca0: what is done each time with the sound of a channel that has
+a voice of the console's sound, for a sound of none of the kinds 1 to 4.
+`decibels` is how it is heard, and `parameters` what unknown_00129aa0 worked
+out. The voice is given what sound_channel_build_voice_parameters fills,
+with the pitch of the sound (that of its scale and its own, less that of the
+recordings as they were made, and for a sound with a sound voice the Doppler
+effect: that of its sound playback controller, or what
+sound_listener_doppler_pitch says) and how loud it is: what
+sound_definition_decibels says plus the gain of the recording. A sound with
+no flag 9 starts: its voice starts, its first piece of samples is queued and
+its sound playback controller has one less to start; any other goes on
+(unknown_0021fa80), if its channel has a recording. Then the next piece is
+seen to: one that waits (flag 3) is queued when the channel has no second
+recording and its samples are asked for; if none waits, the sound goes on
+to the next piece of its recording and asks for it, or with no more pieces
+it is marked as at its end (flag 6), and its voice too. The name is made
+up */
+void __attribute__((stdcall)) sound_channel_update_voice(
+	short channel_index,
+	real decibels,
+	const byte *parameters)
+{
+	struct sound_channel *channel= sound_channels+channel_index;
+	byte *source= sound_source_get(channel->unknown0);
+	const struct sound_definition *sound= sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET));
+	byte voice_parameters[SOUND_VOICE_PARAMETERS_SIZE];
+	real scale= *(const real *)(source+SOUND_SOURCE_DATUM_SCALE_OFFSET);
+	const short *bends= (const short *)((const byte *)sound_definition_scale_decibels(sound)+SOUND_SCALE_PITCH_BENDS_OFFSET);
+	const struct sound_pitch_range *pitch_range;
+	const struct sound_permutation *permutation;
+	real pitch;
+	real loudness;
+	short chunk;
+
+	memset(voice_parameters, 0, sizeof(voice_parameters));
+	pitch= ((real)bends[1]-(real)bends[0])*scale + *(const real *)(source+SOUND_SOURCE_DATUM_PITCH_OFFSET) + (real)bends[0];
+	loudness= sound_definition_decibels(sound,
+		*(const real *)(source+SOUND_SOURCE_DATUM_DECIBELS_OFFSET)+(*(const real *)(source+SOUND_SOURCE_DATUM_GAIN_OFFSET)+decibels),
+		scale);
+	sound_channel_build_voice_parameters(channel_index, parameters, voice_parameters, source);
+
+	pitch_range= (const struct sound_pitch_range *)(uintptr_t)global_sound_cache_file_gestalt->pitch_ranges.address+
+		((char)source[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET]+sound->first_pitch_range_index);
+	permutation= (const struct sound_permutation *)(uintptr_t)global_sound_cache_file_gestalt->permutations.address+
+		(pitch_range->first_permutation_index+(char)source[SOUND_SOURCE_DATUM_PERMUTATION_OFFSET]);
+	*(short *)(voice_parameters+SOUND_VOICE_PARAMETERS_UNKNOWN34_OFFSET)= 0;
+	*(long *)(voice_parameters+SOUND_VOICE_START_CONTROLLER_INDEX_OFFSET)=
+		*(const long *)(source+SOUND_SOURCE_DATUM_CONTROLLER_INDEX_OFFSET);
+	*(real *)(voice_parameters+SOUND_VOICE_PARAMETERS_PITCH_OFFSET)= pitch-(real)sound_pitch_range_natural_pitch(pitch_range);
+	if (source[SOUND_SOURCE_DATUM_UNKNOWN6_OFFSET]&FLAG(_sound_source_datum_voice_bit))
+	{
+		const struct sound_class *sound_class= sound_class_get(sound->sound_class);
+		long controller_index= *(const long *)(source+SOUND_SOURCE_DATUM_CONTROLLER_INDEX_OFFSET);
+		real doppler;
+
+		if (controller_index!=NONE)
+		{
+			const byte *controller= (const byte *)unknown_0051ebd8->data+(controller_index&0xFFFF)*UNKNOWN_0051EBD8_DATUM_SIZE;
+
+			doppler= *(const long *)(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWN4_OFFSET)!=NONE ?
+				*(const real *)(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWNC_OFFSET+(char)source[SOUND_SOURCE_DATUM_LISTENER_OFFSET]*4) :
+				0.0f;
+		}
+		else
+		{
+			doppler= (real)sound_listener_doppler_pitch((char)source[SOUND_SOURCE_DATUM_LISTENER_OFFSET],
+				(const real_point3d *)(source+SOUND_SOURCE_DATUM_POSITION_OFFSET));
+		}
+		*(real *)(voice_parameters+SOUND_VOICE_PARAMETERS_PITCH_OFFSET)=
+			*(const real *)((const byte *)sound_class+SOUND_CLASS_UNKNOWN48_OFFSET)*
+			*(const real *)(parameters+SOUND_CHANNEL_PARAMETERS_UNKNOWN14_OFFSET)*doppler +
+			*(real *)(voice_parameters+SOUND_VOICE_PARAMETERS_PITCH_OFFSET);
+	}
+
+	if (!((*(const word *)(source+SOUND_SOURCE_DATUM_FLAGS_OFFSET)>>_sound_source_datum_unknown9_bit)&1))
+	{
+		long controller_index;
+
+		*(real *)(voice_parameters+SOUND_VOICE_PARAMETERS_DECIBELS_OFFSET)=
+			sound_pin_decibels((real)(char)permutation->unknown0[SOUND_PERMUTATION_GAIN_OFFSET]+loudness);
+		sound_console_voice_start(voice_parameters, voice_parameters+SOUND_VOICE_PARAMETERS_EFFECTS_OFFSET, channel->unknownC);
+		unknown_0021f720(voice_parameters+SOUND_VOICE_PARAMETERS_ENVIRONMENT_OFFSET);
+		sound_channel_queue_chunk(channel_index, permutation, *(const short *)(source+SOUND_SOURCE_DATUM_CHUNK_OFFSET));
+		controller_index= *(const long *)(source+SOUND_SOURCE_DATUM_CONTROLLER_INDEX_OFFSET);
+		if (controller_index!=NONE)
+		{
+			byte *controller= (byte *)unknown_0051ebd8->data+(controller_index&0xFFFF)*UNKNOWN_0051EBD8_DATUM_SIZE;
+			byte count= 0xFF;
+
+			if (*(const long *)(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWN4_OFFSET)!=NONE)
+			{
+				count= controller[UNKNOWN_0051EBD8_DATUM_COUNT_OFFSET]&UNKNOWN_0051EBD8_DATUM_COUNT_MASK;
+				controller[UNKNOWN_0051EBD8_DATUM_COUNT_OFFSET]=
+					(byte)(controller[UNKNOWN_0051EBD8_DATUM_COUNT_OFFSET]-1)&UNKNOWN_0051EBD8_DATUM_COUNT_MASK;
+			}
+			source[SOUND_SOURCE_DATUM_UNKNOWN3_OFFSET]= count;
+		}
+		source[SOUND_SOURCE_DATUM_FLAGS_OFFSET+1]|= FLAG(_sound_source_datum_unknown9_bit-8);
+	}
+	else if (channel->unknown1C)
+	{
+		const struct sound_permutation *playing= (const struct sound_permutation *)(uintptr_t)channel->unknown1C;
+
+		*(real *)(voice_parameters+SOUND_VOICE_PARAMETERS_DECIBELS_OFFSET)=
+			sound_pin_decibels((real)(char)playing->unknown0[SOUND_PERMUTATION_GAIN_OFFSET]+loudness);
+		unknown_0021fa80(voice_parameters, channel->unknownC, voice_parameters+SOUND_VOICE_PARAMETERS_EFFECTS_OFFSET, 1);
+	}
+
+	if ((source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]>>_sound_source_datum_unknown6_bit)&1)
+	{
+		return;
+	}
+	if ((source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]>>_sound_source_datum_unknown3_bit)&1 && !channel->unknown20 &&
+		sound_source_request_data(source))
+	{
+		sound_channel_queue_chunk(channel_index, permutation, *(const short *)(source+SOUND_SOURCE_DATUM_CHUNK_OFFSET));
+		source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]&= ~FLAG(_sound_source_datum_unknown3_bit);
+	}
+	if ((source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]>>_sound_source_datum_unknown3_bit)&1)
+	{
+		return;
+	}
+	chunk= *(const short *)(source+SOUND_SOURCE_DATUM_CHUNK_OFFSET);
+	if (permutation && chunk<permutation->chunk_count-1 && (short)(chunk+1)!=NONE)
+	{
+		sound_source_set_sound(channel->unknown0, *(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET),
+			(char)source[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET], (char)source[SOUND_SOURCE_DATUM_PERMUTATION_OFFSET],
+			(short)(chunk+1));
+		sound_source_request_data(source);
+		source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]|= FLAG(_sound_source_datum_unknown3_bit);
+		return;
+	}
+	source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]|= FLAG(_sound_source_datum_unknown6_bit);
+	sound_channel_voice(sound_channels+channel_index)[VOICE_FLAGS_OFFSET]|= FLAG(_voice_unknown3_bit);
 }

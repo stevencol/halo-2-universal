@@ -1256,12 +1256,12 @@ address,name,source,arguments,returns,convention
 0021be20,sound_source_ring_fade_out,source/sound/sound_manager.c,ebx stack stack,void,stdcall
 0021bf00,looping_sound_get_source,source/sound/sound_manager.c,stack stack stack stack,bool,stdcall
 0021cf80,looping_sound_find,source/sound/sound_manager.c,stack stack,int,stdcall
-0021f8a0,sound_console_voice_start,source/sound/sound_manager.c,eax stack,void,stdcall
+0021f8a0,sound_console_voice_start,source/sound/sound_manager.c,eax ebx stack,void,stdcall
 00221da0,sound_source_unknown_00221da0,source/sound/sound_manager.c,ecx edx stack,bool,stdcall
 002ae7a0,unknown_002ae7a0,,stack stack stack,void
 0037c705,unknown_0037c705,,stack stack,void
-002201f0,unknown_002201f0,,eax stack,void
-0021fa80,unknown_0021fa80,,stack stack stack,void
+002201f0,unknown_002201f0,,eax ebx stack,void
+0021fa80,unknown_0021fa80,,edi stack stack stack,void
 00249d60,unknown_00249d60,,eax ecx edx,real:xmm0
 0021d2c0,sound_effect_new,source/sound/sound_manager.c,ecx xmm0 stack,int,stdcall
 0021db80,sound_effect_get_source,source/sound/sound_manager.c,eax ebx,void
@@ -1290,7 +1290,7 @@ address,name,source,arguments,returns,convention
 001914f0,sound_unknown_001914f0,source/sound/sound_manager.c,ecx,int
 00129aa0,unknown_00129aa0,,eax stack stack,void
 0021c400,unknown_0021c400,,stack stack stack,void
-00128ca0,unknown_00128ca0,,stack stack stack,void
+00128ca0,sound_channel_update_voice,source/sound/sound_manager.c,stack stack stack,void,stdcall
 001295e0,sound_channel_get_voice,source/sound/sound_manager.c,stack,bool,stdcall
 0037b75b,unknown_0037b75b,,stack stack,void
 0021de90,sound_voice_get_for_source,source/sound/sound_manager.c,ebx,int
@@ -1305,3 +1305,4 @@ address,name,source,arguments,returns,convention
 002222c0,unknown_002222c0,,eax stack stack stack stack,void
 00222770,sound_unknown_00222770,source/sound/sound_manager.c,eax edx stack stack,void,stdcall
 0012a1b0,sound_channel_build_voice_parameters,source/sound/sound_manager.c,eax ebx edi stack,void,stdcall
+0021f720,unknown_0021f720,,stack,void

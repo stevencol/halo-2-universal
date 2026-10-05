@@ -2,6 +2,69 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — El sonido de un canal y su voz de la consola
+
+Una función en `sound/sound_manager.c`, de 1057 bytes. De 859 funciones se pasa a
+860, el 7,63 % de las del juego (el 4,428 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_channel_update_voice` | `0x00128ca0` | `sound/sound_manager.c` |
+
+Estaba apuntada sin descompilar (`unknown_00128ca0`); la llama
+`sound_channels_update_sources` para cada canal con voz cuyo sonido no es de
+los tipos 1 a 4. Nueva sin descompilar: `0x0021f720`, del sonido de la
+consola.
+
+### Cambiado
+
+- Tres funciones reciben argumentos en registros que no estaban apuntados:
+  `sound_console_voice_start` recibe además en `ebx` lo que hay en `0x48`
+  de lo que rellena `sound_channel_build_voice_parameters`, y se lo pasa a
+  `0x002201f0`, que lo toma ahí; y `0x0021fa80` recibe en `edi` eso mismo
+  entero. Las pruebas de antes no lo notaban porque solo comparaban los
+  argumentos que estaban apuntados.
+
+### Lo que se sabe
+
+- `sound_channel_update_voice` es lo que se hace cada vez con el sonido de
+  un canal que tiene voz de la consola.
+- Calcula el tono (el de la escala del sonido y el suyo propio, menos el de
+  las grabaciones tal como se hicieron; y, para un sonido con voz de sonido,
+  el efecto Doppler: el que guarda su mando de sonidos o el que dice
+  `sound_listener_doppler_pitch`) y el volumen (lo que dice
+  `sound_definition_decibels` más la ganancia de la grabación, entre -64 y
+  0 decibelios).
+- Un sonido sin la marca 9 arranca: arranca su voz
+  (`sound_console_voice_start`), se pone en cola su primer trozo de muestras
+  y su mando de sonidos tiene uno menos por arrancar. Los demás siguen
+  (`0x0021fa80`), si su canal tiene grabación.
+- Después se ocupa del trozo siguiente: el que espera (marca 3) se pone en
+  cola cuando el canal no tiene segunda grabación y sus muestras se pueden
+  pedir; si ninguno espera, el sonido pasa al trozo siguiente de su
+  grabación y lo pide, o, si no quedan trozos, se marca como terminado
+  (marca 6), y su voz también.
+- El nombre es inventado.
+
+### Comprobado
+
+- **La batería completa del hito 200 terminó: 857 funciones de 857, todas
+  bien.**
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función, de
+  `sound_channels_update_sources` y de `sound_console_voice_start`.
+
+### Mutaciones
+
+Veintisiete líneas rotas a mano (los límites del volumen, las partes del
+tono, el Doppler, las marcas, la cuenta del mando de sonidos, las ganancias
+de las grabaciones y todo lo del trozo siguiente): las pruebas notan las
+veintisiete. Pendientes las listas completas de los hitos 156 a 203.
+
 ## 2026-10-05 — Lo que una voz de la consola toma del sonido de un canal
 
 Una función en `sound/sound_manager.c`, de 620 bytes. De 858 funciones se pasa a
