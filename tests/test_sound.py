@@ -5394,3 +5394,25 @@ def run(t) -> None:
                 "lruv_block_delete": lambda harness, arguments: (0, tuple(arguments)),
             },
         )
+
+    # ---------- the sounds of a ring start to fade out, in some seconds
+
+    random_ = random.Random(224)
+
+    for _ in range(150):
+        looping, playing_, indices = ring_world()
+        sound_index = random_.randrange(TAGS)
+        data = bytearray(playing_.data)
+        for n in range(PLAYING):
+            at = 0x4C + n * DATUM
+            data[at + 4] = random_.choice((0, 0x80, 0x7F, 0xFF))
+            struct.pack_into("<I", data, at + 0xC, random_.getrandbits(16) << 16 | sound_index)
+        globals_ = world(random_, sound_index, sound_data(random_))
+        for first in (NONE, *random_.sample(indices, 4)):
+            t.check(
+                "sound_source_ring_fade_out_in_seconds",
+                as_bits(random_.choice((0.0, 0.5, 1.0, 2.5, 0.0005, 0.0015, -1.0, 30.0))),
+                first,
+                globals={**globals_, "sound_sources": Buffer(bytes(data), pointers=playing_.pointers)},
+                externals={"sound_source_fade_decibels": lambda harness, arguments: (fade_bits(arguments[0]), tuple(arguments))},
+            )

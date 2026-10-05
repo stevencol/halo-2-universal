@@ -1330,3 +1330,4 @@ address,name,source,arguments,returns,convention
 0021db30,sound_effect_source_stopped,source/sound/sound_manager.c,stack stack,void,stdcall
 002189a0,sound_cache_block_locked,source/sound/sound_manager.c,stack,bool,stdcall
 002189e0,sound_cache_block_deleted,source/sound/sound_manager.c,stack,void,stdcall
+0021bd00,sound_source_ring_fade_out_in_seconds,source/sound/sound_manager.c,stack stack,void,stdcall

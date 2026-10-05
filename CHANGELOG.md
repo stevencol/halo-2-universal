@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Los sonidos de un anillo se apagan en unos segundos
+
+Una función en `sound/sound_manager.c`. De 887 funciones se pasa a
+888, el 7,88 % de las del juego (el 4,618 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_source_ring_fade_out_in_seconds` | `0x0021bd00` | `sound/sound_manager.c` |
+
+No estaba apuntada. La llama una función de los sonidos en bucle que falta
+por hacer. Recibe los segundos y el primer sonido del anillo, en la pila.
+
+### Lo que se sabe
+
+- Los sonidos de una pista de un sonido en bucle están enlazados en anillo.
+  `sound_source_ring_fade_out_in_seconds` los recorre todos y hace que
+  empiecen a apagarse en los segundos que recibe, cada uno desde el volumen
+  al que se oye ahora.
+- La manera de apagarse la dice la clase del sonido: con la marca 10 de la
+  clase, la manera 0; sin ella, la 1.
+- Es hermana de `sound_source_ring_fade_out`, que hace lo mismo pero con la
+  manera dada y solo para los sonidos de un tipo.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función. La última
+  batería completa es la del hito 219 (881 funciones, todas bien).
+
+### Mutaciones
+
+Ocho líneas rotas a mano: las pruebas notan las ocho.
+
 ## 2026-10-05 — La caché del sonido se cierra
 
 Una función en `sound/sound_manager.c`. De 886 funciones se pasa a

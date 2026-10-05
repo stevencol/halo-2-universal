@@ -565,6 +565,7 @@ enum
 	SOUND_CACHE_LRUV_SIZE= 0x30FC,
 	/* in milliseconds */
 	SOUND_CACHE_CLOSE_WAIT= 5000,
+	_sound_class_internal_unknown10_bit= 10,
 	VOICE_UNKNOWN2_OFFSET= 0x2,
 	VOICE_DECIBELS_OFFSET= 0xC,
 	VOICE_UNKNOWN30_OFFSET= 0x30,
@@ -1333,6 +1334,7 @@ void __attribute__((stdcall)) sound_playback_controllers_unknown_00219d90(boolea
 
 /* 0x0021be20, 0x0021bf00 and 0x0021cf80 */
 void __attribute__((stdcall)) sound_source_ring_fade_out(long first_source_index, short kind, real seconds);
+void __attribute__((stdcall)) sound_source_ring_fade_out_in_seconds(real seconds, long first_source_index);
 boolean __attribute__((stdcall)) looping_sound_get_source(long looping_sound_index, long unused, long unused2,
 	struct sound_source *source);
 long __attribute__((stdcall)) looping_sound_find(long unknown4, long unknown8);
@@ -8840,4 +8842,49 @@ void sound_cache_close(
 		}
 	}
 	unknown_00502104->valid= FALSE;
+}
+
+/* 0x0021bd00: the sounds of a ring start to fade out, in some seconds: each
+from how loud it is heard now, and in the way that its class says (with the
+flag 10 of the class, the kind 0; if not, the kind 1). Nothing for no ring.
+The name is made up */
+void __attribute__((stdcall)) sound_source_ring_fade_out_in_seconds(
+	real seconds,
+	long first_source_index)
+{
+	long source_index= first_source_index;
+	long count;
+
+	if (first_source_index==NONE)
+	{
+		return;
+	}
+	for (count= 0; ; count++)
+	{
+		byte *source;
+		const struct sound_class *sound_class;
+		short kind;
+
+		if (count>0 && source_index!=NONE)
+		{
+			source_index= *(const long *)(sound_source_get(source_index)+SOUND_SOURCE_DATUM_NEXT_OFFSET);
+			if (source_index==first_source_index)
+			{
+				source_index= NONE;
+			}
+		}
+		if (source_index==NONE)
+		{
+			return;
+		}
+		source= sound_source_get(source_index);
+		sound_class= sound_class_get_inline(
+			sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET))->sound_class);
+		kind= !((sound_class->internal_flags>>_sound_class_internal_unknown10_bit)&1);
+		*(real *)(source+SOUND_SOURCE_DATUM_UNKNOWNB0_OFFSET)= sound_source_fade_decibels(source_index);
+		*(short *)(source+SOUND_SOURCE_DATUM_UNKNOWNAE_OFFSET)= kind;
+		*(long *)(source+SOUND_SOURCE_DATUM_FADE_TIME_OFFSET)= (long)(seconds*1000.0f);
+		*(long *)(source+SOUND_SOURCE_DATUM_UNKNOWNB8_OFFSET)= NONE;
+		source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]|= SOUND_SOURCE_DATUM_FADING_FLAG;
+	}
 }
