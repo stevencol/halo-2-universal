@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — La lista de sonidos de los que hay que calcular cómo se oyen
+
+Una función en `sound/sound_manager.c`. De 848 funciones se pasa a
+849, el 7,54 % de las del juego (el 4,233 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_channels_build_queries` | `0x00129100` | `sound/sound_manager.c` |
+
+Estaba apuntada sin descompilar (`unknown_00129100`); la llama
+`sound_update` cada fotograma. También la estructura `sound_query` (`0x48`
+bytes) y el global `unknown_00468788`.
+
+### Lo que se sabe
+
+- `sound_channels_build_queries` les consigue voz a los canales que suenan
+  (`sound_channel_get_voice`) y hace la lista de los sonidos de los que hay
+  que calcular cómo se oyen donde están: como mucho 72.
+- Entra uno por cada casilla de un sonido con sitio que no tenga ninguna de
+  tres marcas, y uno por cada sonido del tipo 0 con la marca 12 que sea del
+  bsp cargado; a estos se les pregunta en el punto de `unknown_00468788`.
+- Cada entrada dice el oyente, el sitio, dónde está en el nivel y cuatro
+  marcas, y tiene sitio para tres reales. Dónde quedan esos reales se
+  apunta en dos tablas, por casilla y por voz, que luego lee
+  `sound_channels_unknown_00129380` para pasárselos a
+  `sound_channel_update_slot`.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y de
+  `sound_update`. La batería completa del hito 186 (843 funciones) se
+  lanzó aparte y se interrumpió al apagar el equipo: hay que volver a
+  lanzarla. La última completa es la del hito 173 (824 funciones, todas
+  bien).
+
+### Mutaciones
+
+Pendientes las de los hitos 156 a 192.
+
 ## 2026-10-04 — El sonido de un canal y cómo se oye donde está
 
 Una función en `sound/sound_manager.c`, de 784 bytes. De 847 funciones se

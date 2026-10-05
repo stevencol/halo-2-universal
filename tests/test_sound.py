@@ -950,7 +950,7 @@ def run(t) -> None:
                 "sound_console_get_state": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                 "sound_classes_update": lambda harness, arguments: (0, (arguments[0] & 0xFFFFFFFF,)),
                 "unknown_0021ec00": first_update,
-                "unknown_00129100": tables,
+                "sound_channels_build_queries": tables,
                 "unknown_0014dde0": lambda harness, arguments: first_player,
                 "unknown_00221a70": lambda harness, arguments: (0, (arguments[0], stack_bytes(harness, arguments[1], 4))),
                 "sound_channels_unknown_00129380": lambda harness, arguments: (0, (stack_bytes(harness, arguments[0], 16), stack_bytes(harness, arguments[1], 16))),
@@ -3832,5 +3832,58 @@ def run(t) -> None:
                 "matrix4x3_inverse_transform_point": seen_from,
                 "sound_gain_to_decibels": lambda harness, arguments: (real_bits(-2.25), tuple(arguments)),
                 "unknown_00220e00": slot_,
+            },
+        )
+
+    # ---------- the sounds of which it is to be worked out how they are heard
+
+    random_ = random.Random(192)
+
+    for _ in range(600):
+        buffer, indices = playing()
+        data = bytearray(buffer.data)
+        for index in range(PLAYING):
+            at = 0x4C + index * DATUM
+            data[at + 4] = random_.choice((0, 0, 0, 4, 0xFB, 0xFF))
+            struct.pack_into("<I", data, at + 0xC, random_.getrandbits(16) << 16 | random_.randrange(TAGS))
+            struct.pack_into("<H", data, at + 0x18, random_.choice((0, 0, 0x1000, 0x1000, 0x80, 1, 0x1081, 0xEF7E)))
+            data[at + 0x1B] = random_.choice((0, 0, 1, 1, 1, 2, 0x11, 0x10, 0xF))
+            struct.pack_into("<h", data, at + 0x46, random_.choice((1, 1, 0)))
+            data[at + 0xA1] = random_.randrange(4)
+        channels = bytearray(random_.randbytes(CHANNELS * 0x24))
+        for n in range(CHANNELS):
+            struct.pack_into("<I", channels, n * 0x24, random_.choice((NONE, *indices, *indices)))
+            channels[n * 0x24 + 9] = random_.choice((0, 0, 0, 1))
+            struct.pack_into("<hh", channels, n * 0x24 + 0xC, random_.choice((-1, 0, 3, 127)), random_.choice((-1, 0, 0, 5, 63)))
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        tag_pointers = []
+        for n in range(TAGS):
+            struct.pack_into("<I", tags, n * 0x10 + 8, TAGS * 0x10 + n * 0x10)
+            tag_pointers.append(n * 0x10 + 8)
+        table_ = Buffer(random_.randbytes(0x100 * 0x5C))
+        listeners_ = bytearray(random_.randbytes(4 + 72 * 0x48))
+        struct.pack_into("<i", listeners_, 0, random_.choice((0, 0, 0, 5, 70, 71, 72)))
+        voiced = random_.getrandbits(CHANNELS) | random_.getrandbits(CHANNELS)
+
+        t.check(
+            "sound_channels_build_queries",
+            Buffer(random_.randbytes(0x100)),
+            Buffer(random_.randbytes(0x200)),
+            Buffer(bytes(listeners_)),
+            globals={
+                "sound_sources": Buffer(bytes(data), pointers=buffer.pointers),
+                "sound_channels": Buffer(bytes(channels)),
+                "game_sound_globals": sound_state(channels=random_.choice((0, 1, 5, CHANNELS, CHANNELS, -1))),
+                "global_tag_instances": Buffer(bytes(tags) + random_.randbytes(TAGS * 0x10), pointers=tuple(tag_pointers)),
+                "global_structure_bsp_index": struct.pack("<h", 1),
+                "unknown_00468788": Buffer(random_.randbytes(12)),
+            },
+            extra=[table_],
+            externals={
+                "sound_class_get": class_of(table_),
+                "sound_channel_get_voice": lambda harness, arguments, voiced=voiced: (
+                    (voiced >> (arguments[0] & 7)) & 1,
+                    (arguments[0] & 0xFFFF,),
+                ),
             },
         )

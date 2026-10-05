@@ -1165,7 +1165,7 @@ address,name,source,arguments,returns,convention
 0021b0e0,unknown_0021b0e0,,stack,void,stdcall
 00128020,unknown_00128020,,,void
 001282d0,unknown_001282d0,,,void
-00129100,unknown_00129100,,stack stack edi,void,stdcall
+00129100,sound_channels_build_queries,source/sound/sound_manager.c,stack stack edi,void,stdcall
 0014dde0,unknown_0014dde0,,,int
 00221a70,unknown_00221a70,,stack stack,void,stdcall
 00129380,sound_channels_unknown_00129380,source/sound/sound_manager.c,edi ebx,void

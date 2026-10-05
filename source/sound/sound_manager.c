@@ -451,6 +451,10 @@ enum
 	UNKNOWN_0051EBE4_SLOTS_OFFSET= 0x1A18,
 	UNKNOWN_0051EBE4_SLOT_FLAGS_OFFSET= 0x4,
 	_sound_console_slot_unknown1_bit= 1,
+	MAXIMUM_SOUND_QUERIES= 72,
+	_sound_source_datum_unknown2_bit= 2,
+	_sound_class_internal_unknown6_bit= 6,
+	_sound_definition_unknown5_bit= 5,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -514,6 +518,25 @@ struct sound_slot_parameters
 typedef char verify_sound_slot_parameters_size[
 	sizeof(struct sound_slot_parameters) == 0x24 ? 1 : -1];
 
+/* a sound of which it is to be worked out how it is heard where it is */
+struct sound_query
+{
+	long listener_index;
+	byte unknown4[0x20];
+	real_point3d position;
+	/* what is worked out */
+	real results[3];
+	long cluster_index;
+	long leaf_index;
+	boolean unknown44;
+	boolean unknown45;
+	boolean unknown46;
+	boolean unknown47;
+};
+
+typedef char verify_sound_query_size[
+	sizeof(struct sound_query) == 0x48 ? 1 : -1];
+
 /* ---------- globals */
 
 /* 0x0051ebd4 */
@@ -561,6 +584,9 @@ real unknown_00547f14;
 
 /* 0x00510c90: of something else; a number of 16 bits is at 6 of it */
 byte *unknown_00510c90;
+
+/* 0x00468788: where a point is that the sounds with no place are asked at */
+const real_point3d *unknown_00468788;
 
 /* 0x0047f0e0: 0x10000 in the main menu and 0x4000 in a game */
 long unknown_0047f0e0;
@@ -617,7 +643,7 @@ void sound_playback_controllers_update(void);
 void __attribute__((stdcall)) unknown_0021b0e0(long unknown);
 void unknown_00128020(void);
 void unknown_001282d0(void);
-void __attribute__((stdcall)) unknown_00129100(byte *first, byte *second, struct sound_update_listeners *listeners);
+void __attribute__((stdcall)) sound_channels_build_queries(byte *first, byte *second, struct sound_update_listeners *listeners);
 long unknown_0014dde0(void);
 void __attribute__((stdcall)) unknown_00221a70(long player_index, struct sound_update_listeners *listeners);
 
@@ -1940,7 +1966,7 @@ void sound_update(
 			memset(first, 0, sizeof(first));
 			memset(second, 0, sizeof(second));
 			listeners.count= 0;
-			unknown_00129100(first, second, &listeners);
+			sound_channels_build_queries(first, second, &listeners);
 			for (player_index= unknown_0014dde0(); player_index!=NONE;
 				player_index= sound_next_local_player(player_index))
 			{
@@ -6230,4 +6256,104 @@ void __attribute__((stdcall)) sound_channel_update_slot(
 	}
 	parameters.flags= (((const byte *)listener)[SOUND_LISTENER_UNKNOWN7_OFFSET]!=0)|2;
 	unknown_00220e00(&parameters, channel->unknownE);
+}
+
+/* 0x00129100: each frame: the channels that play get a voice, and a list is
+made of the sounds of which it is to be worked out how they are heard where
+they are: at most 72. One for each slot of a sound with a place that has
+none of three flags, and one for each sound of the type 0 with the flag 12
+that is of the structure bsp that is loaded, which is asked at the place of
+unknown_00468788. Each one says the listener, the place, where it is in the
+structure bsp and four flags, and has room for three reals: where those of
+each are is put in two tables, by slot and by voice, which
+sound_channels_unknown_00129380 reads after they are worked out */
+void __attribute__((stdcall)) sound_channels_build_queries(
+	byte *first,
+	byte *second,
+	struct sound_update_listeners *listeners)
+{
+	unsigned long taken[3]= { 0, 0, 0 };
+	real **slot_results= (real **)first;
+	real **voice_results= (real **)second;
+	long channel_index;
+
+	for (channel_index= 0;
+		channel_index<*(const short *)(game_sound_globals+GAME_SOUND_GLOBALS_CHANNEL_COUNT_OFFSET);
+		channel_index++)
+	{
+		const struct sound_channel *channel;
+		const byte *source;
+		struct sound_query *query;
+		boolean positioned;
+		boolean ambient;
+		long type;
+
+		if (listeners->count==MAXIMUM_SOUND_QUERIES)
+		{
+			break;
+		}
+		channel= &sound_channels[(short)channel_index];
+		if (channel->unknown0==NONE || channel->unknown9 || !sound_channel_get_voice((short)channel_index))
+		{
+			continue;
+		}
+		source= sound_source_get(channel->unknown0);
+		type= (signed char)(source[SOUND_SOURCE_DATUM_TYPE_OFFSET]<<4)>>4;
+		positioned= type==_sound_source_datum_type_positioned &&
+			!((source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]>>_sound_source_datum_unknown2_bit)&1) &&
+			!((source[SOUND_SOURCE_DATUM_UNKNOWN18_OFFSET]>>7)&1) && !(source[SOUND_SOURCE_DATUM_UNKNOWN18_OFFSET]&1);
+		ambient= type==0 && !((source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]>>_sound_source_datum_unknown2_bit)&1) &&
+			((*(const word *)(source+SOUND_SOURCE_DATUM_UNKNOWN18_OFFSET)>>_sound_source_unknown12_bit)&1) &&
+			*(const short *)(source+SOUND_SOURCE_DATUM_LOCATION_OFFSET+6)==global_structure_bsp_index;
+		if (positioned)
+		{
+			const struct sound_definition *sound;
+			short slot= channel->unknownE;
+
+			if (slot==NONE || (taken[slot>>5]&(1UL<<(slot&31))))
+			{
+				continue;
+			}
+			taken[slot>>5]|= 1UL<<(slot&31);
+			listeners->count++;
+			sound= sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET));
+			query= (struct sound_query *)((byte *)listeners+listeners->count*(long)sizeof(struct sound_query)-
+				((long)sizeof(struct sound_query)-(long)sizeof(long)));
+			query->listener_index= (char)source[SOUND_SOURCE_DATUM_LISTENER_OFFSET];
+			memcpy(&query->position, source+SOUND_SOURCE_DATUM_POSITION_OFFSET, sizeof(query->position));
+			query->cluster_index= *(const short *)(source+SOUND_SOURCE_DATUM_LOCATION_OFFSET+4);
+			query->leaf_index= *(const long *)(source+SOUND_SOURCE_DATUM_LOCATION_OFFSET);
+			query->unknown44= FALSE;
+			query->unknown46= (source[SOUND_SOURCE_DATUM_UNKNOWN18_OFFSET]>>7)&1;
+			query->unknown45= FALSE;
+			query->unknown47= ((sound_class_get(sound->sound_class)->internal_flags>>_sound_class_internal_unknown6_bit)&1) ||
+				(sound->flags&FLAG(_sound_definition_unknown5_bit));
+			query->results[0]= 0.0f;
+			query->results[2]= 0.0f;
+			query->results[1]= 0.0f;
+			slot_results[channel->unknownE]= query->results;
+		}
+		else if (ambient)
+		{
+			if (channel->unknownC==NONE)
+			{
+				continue;
+			}
+			listeners->count++;
+			query= (struct sound_query *)((byte *)listeners+listeners->count*(long)sizeof(struct sound_query)-
+				((long)sizeof(struct sound_query)-(long)sizeof(long)));
+			query->listener_index= (char)source[SOUND_SOURCE_DATUM_LISTENER_OFFSET];
+			memcpy(&query->position, unknown_00468788, sizeof(query->position));
+			query->cluster_index= *(const short *)(source+SOUND_SOURCE_DATUM_LOCATION_OFFSET+4);
+			query->leaf_index= NONE;
+			query->unknown44= TRUE;
+			query->unknown46= TRUE;
+			query->unknown45= FALSE;
+			query->unknown47= TRUE;
+			query->results[0]= 0.0f;
+			query->results[2]= 0.0f;
+			query->results[1]= 0.0f;
+			voice_results[channel->unknownC]= query->results;
+		}
+	}
 }
