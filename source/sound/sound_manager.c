@@ -606,6 +606,9 @@ enum
 	LOOPING_SOUND_DEFINITION_TRACKS_OFFSET= 0x1C,
 	LOOPING_SOUND_DEFINITION_DETAILS_OFFSET= 0x24,
 	LOOPING_SOUND_DETAIL_SIZE= 0x34,
+	LOOPING_SOUND_DEFINITION_TRACK_SIZE= 0x58,
+	/* in a sound that plays of a looping sound: which track it is of */
+	SOUND_SOURCE_DATUM_TRACK_OFFSET= 0x60,
 	LOOPING_SOUND_DETAIL_PERIOD_BOUNDS_OFFSET= 0xC,
 	LOOPING_SOUND_DETAIL_FLAGS_OFFSET= 0x18,
 	_looping_sound_detail_unknown2_bit= 2,
@@ -1455,6 +1458,10 @@ void sound_console_set_gains(const real *gains);
 
 /* 0x00220b90 */
 short __attribute__((stdcall)) sound_console_slot_new(unsigned long flags, long unknown);
+
+/* 0x0021c190 */
+boolean __attribute__((stdcall)) looping_sound_source_next_state(byte *looping_sound, byte *state,
+	long source_index, unsigned long *seed);
 
 /* 0x0021d110 */
 long __attribute__((stdcall)) sound_effect_source_new(byte *request, long sound_index);
@@ -9928,4 +9935,117 @@ short __attribute__((stdcall)) sound_console_slot_new(
 	}
 
 	return slot_index;
+}
+
+/* 0x0021c190: the sound that plays of a track of a looping sound goes on to
+the sound of the next state of the looping sound (the byte at 0xD of
+`state`; the one at 0xC then follows it). Its pitch range is chosen by its
+pitch, and its recording as for any sound: with the bits of those that were
+played, which are of the track if the tag of the looping sound has one of
+the flags 4 and 5 and the looping sound has a sound playback controller, and
+of the pitch range if not. If the sound has a channel, and there are as many
+like it as its class lets there be, or as many of its sound, one of them is
+let go (reasons 5 and 6): TRUE if it is this very one. The name is made up */
+boolean __attribute__((stdcall)) looping_sound_source_next_state(
+	byte *looping_sound,
+	byte *state,
+	long source_index,
+	unsigned long *seed)
+{
+	const byte *definition= (const byte *)(uintptr_t)
+		global_tag_instances[*(const long *)(looping_sound+LOOPING_SOUND_DATUM_UNKNOWN4_OFFSET)&0xFFFF].address;
+	byte *source= sound_source_get(source_index);
+	const byte *track= *(const byte *const *)(definition+LOOPING_SOUND_DEFINITION_TRACKS_OFFSET+4)+
+		(char)source[SOUND_SOURCE_DATUM_TRACK_OFFSET]*LOOPING_SOUND_DEFINITION_TRACK_SIZE;
+	long sound_index= *(const long *)(track+looping_sound_unknown_0044a188[(long)(char)state[LOOPING_SOUND_UNKNOWND_OFFSET]]+4);
+	const struct sound_definition *sound= sound_definition_get(sound_index);
+	struct sound_pitch_range *pitch_ranges;
+	struct sound_same_channels same;
+	unsigned long *own_bits;
+	unsigned long played;
+	boolean result= FALSE;
+	short pitch_range;
+	long permutation;
+	long last;
+
+	source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]|= FLAG(_sound_source_datum_unknown3_bit);
+	pitch_range= sound_choose_pitch_range((char)source[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET], sound,
+		*(const real *)(source+SOUND_SOURCE_DATUM_PITCH_OFFSET));
+	pitch_ranges= (struct sound_pitch_range *)(uintptr_t)global_sound_cache_file_gestalt->pitch_ranges.address;
+	own_bits= (unsigned long *)(looping_sound+LOOPING_SOUND_DATUM_TRACK_PLAYED_OFFSET+
+		(char)source[SOUND_SOURCE_DATUM_TRACK_OFFSET]*LOOPING_SOUND_TRACK_SIZE);
+	if (definition[0]&LOOPING_SOUND_TRACK_OWN_BITS_FLAGS &&
+		*(const long *)(looping_sound+LOOPING_SOUND_DATUM_CONTROLLER_INDEX_OFFSET)!=NONE)
+	{
+		played= *own_bits;
+		*own_bits= 0;
+	}
+	else
+	{
+		played= sound_pitch_range_get_played_bits(pitch_ranges+(sound->first_pitch_range_index+pitch_range), sound);
+	}
+	if (!(definition[0]&LOOPING_SOUND_TRACK_OWN_BITS_FLAGS))
+	{
+		last= (short)sound_pitch_range_get_unknown4(
+			pitch_ranges+(sound->first_pitch_range_index+(char)source[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET]), sound);
+	}
+	else
+	{
+		last= NONE;
+	}
+	permutation= sound_pitch_range_choose_permutation(sound, pitch_range, &played, last, seed, NULL, FALSE);
+	if (definition[0]&LOOPING_SOUND_TRACK_OWN_BITS_FLAGS &&
+		*(const long *)(looping_sound+LOOPING_SOUND_DATUM_CONTROLLER_INDEX_OFFSET)!=NONE)
+	{
+		*(unsigned long *)(looping_sound+LOOPING_SOUND_DATUM_TRACK_PLAYED_OFFSET+
+			(char)source[SOUND_SOURCE_DATUM_TRACK_OFFSET]*LOOPING_SOUND_TRACK_SIZE)= played;
+	}
+	else
+	{
+		struct sound_pitch_range *chosen= pitch_ranges+(sound->first_pitch_range_index+pitch_range);
+
+		sound_pitch_range_set_played_bits(chosen, sound, played);
+		sound_pitch_range_set_unknown4(chosen, sound, (char)permutation);
+	}
+
+	source= sound_source_get(source_index);
+	sound_source_release_chunk(source);
+	*(long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET)= sound_index;
+	source[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET]= (byte)pitch_range;
+	source[SOUND_SOURCE_DATUM_PERMUTATION_OFFSET]= (byte)permutation;
+	*(short *)(source+SOUND_SOURCE_DATUM_CHUNK_OFFSET)= 0;
+	if (*(const short *)(source+SOUND_SOURCE_DATUM_CHANNEL_INDEX_OFFSET)!=NONE)
+	{
+		const short *channels= NULL;
+		short count= 0;
+		long reason= 0;
+
+		sound_source_find_same(&same, source_index);
+		if (same.instance_count>=same.instance_limit)
+		{
+			reason= _sound_source_deleted_too_many_instances;
+			channels= same.instance_channels;
+			count= same.instance_count;
+		}
+		else if (same.sound_count>=same.sound_limit)
+		{
+			reason= _sound_source_deleted_too_many_sounds;
+			channels= same.sound_channels;
+			count= same.sound_count;
+		}
+		if (count>0)
+		{
+			short channel_index= sound_source_choose_channel(source_index, count, channels);
+			long other_source_index= channel_index==NONE ? source_index : sound_channels[channel_index].unknown0;
+
+			if (other_source_index!=NONE)
+			{
+				sound_source_delete(other_source_index, reason);
+				result= other_source_index==source_index;
+			}
+		}
+	}
+	state[LOOPING_SOUND_UNKNOWNC_OFFSET]= state[LOOPING_SOUND_UNKNOWND_OFFSET];
+
+	return result;
 }

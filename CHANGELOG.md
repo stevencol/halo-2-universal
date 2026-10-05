@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — El sonido de una pista pasa al estado siguiente
+
+Una función en `sound/sound_manager.c`, de 616 bytes. De 905 funciones se pasa a
+906, el 8,04 % de las del juego (el 4,825 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `looping_sound_source_next_state` | `0x0021c190` | `sound/sound_manager.c` |
+
+No estaba apuntada. La llama `0x0021c400`. Recibe en la pila el sonido en
+bucle, su estado, el sonido que suena y una semilla; devuelve si ese sonido
+se ha soltado.
+
+### Lo que se sabe
+
+- Un sonido en bucle pasa por estados (entrada, bucle, salida y variantes),
+  y cada pista tiene un sonido para cada uno.
+  `looping_sound_source_next_state` hace que el sonido que suena de una
+  pista pase a ser el del estado siguiente (el byte de `0xD` del estado; el
+  de `0xC` lo sigue al terminar).
+- Elige el rango de tono por su tono y la grabación como en cualquier
+  sonido, con los bits de las ya usadas: los de la pista, si el tag tiene
+  las marcas 4 o 5 y el sonido en bucle tiene mando de sonidos, o los del
+  rango de tono si no.
+- Si el sonido tiene canal y ya hay tantos iguales como deja su clase, o
+  tantos de su sonido, se suelta uno de ellos (motivos 5 y 6): devuelve
+  verdadero si el que se suelta es este mismo.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- La prueba da a `sound_pitch_range_get_unknown4` solo valores que esa
+  función puede dar: con otros, el compilador de `source/` no hace la
+  conversión que el juego sí hace.
+- En este hito solo se pasaron las pruebas de esta función. La última
+  batería completa es la del hito 233 (900 funciones, todas bien).
+
+### Mutaciones
+
+Catorce líneas rotas a mano: las pruebas notan trece. La que no notan es
+quitar la puesta a 0 de los bits de la pista: se vuelven a escribir justo
+después.
+
 ## 2026-10-05 — El sonido de la consola tiene una casilla más
 
 Una función en `sound/sound_manager.c`, de 618 bytes. De 904 funciones se pasa a

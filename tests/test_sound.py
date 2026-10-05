@@ -5989,3 +5989,115 @@ def run(t) -> None:
                 "unknown_0037c644": lambda harness, arguments: (0, tuple(arguments)),
             },
         )
+
+    # ---------- the sound of a track of a looping sound goes on to the next state
+
+    random_ = random.Random(239)
+
+    for _ in range(900):
+        buffer, indices = playing()
+        data = bytearray(buffer.data)
+        for index in range(PLAYING):
+            at = 0x4C + index * DATUM
+            data[at + 4] = random_.choice((0, 8, 0xF7, 0xFF))
+            data[at + 0x60] = random_.randrange(3)
+            struct.pack_into("<f", data, at + 0x90, random_.choice((0.0, 100.0, -300.0)))
+            data[at + 0x9C] = random_.choice((0, 1, 2))
+            struct.pack_into("<h", data, at + 0xAC, random_.choice((-1, 0, 3, 5)))
+        definition_index = random_.randrange(TAGS)
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        tag_pointers = []
+        definitions = bytearray(random_.randbytes(TAGS * 0x10))
+        for tag in range(TAGS):
+            struct.pack_into("<I", tags, tag * 0x10 + 8, TAGS * 0x10 + tag * 0x10)
+            tag_pointers.append(tag * 0x10 + 8)
+            struct.pack_into("<h", definitions, tag * 0x10 + 8, random_.randrange(0, 6))
+        looping_definition = TAGS * 0x20
+        struct.pack_into("<I", tags, definition_index * 0x10 + 8, looping_definition)
+        definition = bytearray(random_.randbytes(0x28))
+        definition[0] = random_.choice((0, 0, 0x10, 0x20, 0x30, 0xCF, 0xFF))
+        struct.pack_into("<I", definition, 0x20, looping_definition + 0x28)
+        tracks = bytearray(random_.randbytes(3 * 0x58))
+        for track in range(3):
+            for offset in (0x14, 0x1C, 0x24, 0x40, 0x2C, 0x48, 0x34):
+                sound_index = random_.choice([tag for tag in range(TAGS) if tag != definition_index])
+                struct.pack_into("<I", tracks, track * 0x58 + offset + 4, random_.getrandbits(16) << 16 | sound_index)
+        tags_ = Buffer(bytes(tags) + bytes(definitions) + bytes(definition) + bytes(tracks), pointers=tuple(tag_pointers) + (looping_definition + 0x20,))
+        looping_ = bytearray(random_.randbytes(0xD4))
+        struct.pack_into("<I", looping_, 4, random_.getrandbits(16) << 16 | definition_index)
+        struct.pack_into("<I", looping_, 0x54, random_.choice((NONE, NONE, 0x10002, 5)))
+        state_ = bytearray(random_.randbytes(0x10))
+        state_[0xD] = random_.randrange(7)
+        shared = bytearray(random_.randbytes(0x50 + 0x10 * 0xC))
+        struct.pack_into("<I", shared, 0x24, 0x50)
+        channels = bytearray(random_.randbytes(CHANNELS * 0x24))
+        for channel_index in range(CHANNELS):
+            struct.pack_into("<I", channels, channel_index * 0x24, random_.choice((NONE, *indices, *indices)))
+        source_index = random_.choice(indices)
+        for channel_index in random_.sample(range(CHANNELS), 2):
+            struct.pack_into("<I", channels, channel_index * 0x24, source_index)
+        like = bytearray(random_.randbytes(0x4A))
+        struct.pack_into("<h", like, 0, random_.choice((0, 1, 3, -1)))
+        struct.pack_into("<h", like, 0x22, random_.choice((0, 1, 2, 4)))
+        struct.pack_into("<h", like, 0x26, random_.choice((0, 1, 2, -1)))
+        struct.pack_into("<h", like, 0x48, random_.choice((0, 1, 2, 4)))
+        range_ = random_.choice((0, 1, 2))
+        bits_ = random_.getrandbits(32)
+        # as the function gives it: a number of 8 bits with its sign
+        last_ = random_.choice((NONE, NONE, 0, 2, 5))
+        chosen_ = random_.choice((0, 1, 5, 0x105))
+        channel_ = random_.choice((NONE, NONE, *range(CHANNELS)))
+
+        def choose_(harness, arguments, chosen_=chosen_):
+            sound_, range__, played_, last__, seed_, all_, unknown_ = arguments
+            record = harness.normalize(sound_), range__ & 0xFFFF, bytes(harness.mu.mem_read(played_, 4)), last__, seed_, all_, unknown_ & 0xFF
+            harness.mu.mem_write(played_, struct.pack("<I", 0xA5A50000 | chosen_))
+            return chosen_, record
+
+        def same_(harness, arguments, like=like):
+            harness.mu.mem_write(arguments[0], bytes(like))
+            return 0, (arguments[1],)
+
+        t.check(
+            "looping_sound_source_next_state",
+            Buffer(bytes(looping_)),
+            Buffer(bytes(state_)),
+            source_index,
+            Buffer(random_.randbytes(4)),
+            globals={
+                "sound_sources": Buffer(bytes(data), pointers=buffer.pointers),
+                "sound_channels": Buffer(bytes(channels)),
+                "global_tag_instances": tags_,
+                "global_sound_cache_file_gestalt": Buffer(bytes(shared), pointers=(0x24,)),
+            },
+            externals={
+                "sound_choose_pitch_range": lambda harness, arguments, range_=range_: (
+                    range_,
+                    (arguments[0] & 0xFFFF, harness.normalize(arguments[1]), arguments[2]),
+                ),
+                "sound_pitch_range_get_played_bits": lambda harness, arguments, bits_=bits_: (
+                    bits_,
+                    (harness.normalize(arguments[0]), harness.normalize(arguments[1])),
+                ),
+                "sound_pitch_range_get_unknown4": lambda harness, arguments, last_=last_: (
+                    last_,
+                    (harness.normalize(arguments[0]), harness.normalize(arguments[1])),
+                ),
+                "sound_pitch_range_choose_permutation": choose_,
+                "sound_pitch_range_set_played_bits": lambda harness, arguments: (
+                    0,
+                    (harness.normalize(arguments[0]), harness.normalize(arguments[1]), arguments[2]),
+                ),
+                "sound_pitch_range_set_unknown4": lambda harness, arguments: (
+                    0,
+                    (harness.normalize(arguments[0]), harness.normalize(arguments[1]), arguments[2] & 0xFF),
+                ),
+                "sound_source_release_chunk": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "sound_source_find_same": same_,
+                "sound_source_choose_channel": lambda harness, arguments, channel_=channel_: (
+                    channel_,
+                    (arguments[0], arguments[1] & 0xFFFF, bytes(harness.mu.mem_read(arguments[2], 4))),
+                ),
+                "sound_source_delete": lambda harness, arguments: (0, tuple(arguments)),
+            },
+        )
