@@ -1162,7 +1162,7 @@ address,name,source,arguments,returns,convention
 00221900,sound_classes_update,source/sound/sound_manager.c,xmm1,void
 00127400,unknown_00127400,,stack,void,stdcall
 00219cc0,sound_playback_controllers_update,source/sound/sound_manager.c,,void
-0021b0e0,unknown_0021b0e0,,stack,void,stdcall
+0021b0e0,looping_sounds_update,source/sound/sound_manager.c,stack,void,stdcall
 00128020,sound_sources_update,source/sound/sound_manager.c,,void
 001282d0,sound_sources_get_channels,source/sound/sound_manager.c,,void
 00129100,sound_channels_build_queries,source/sound/sound_manager.c,stack stack edi,void,stdcall

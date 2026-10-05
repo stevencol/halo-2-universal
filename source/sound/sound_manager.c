@@ -303,6 +303,8 @@ enum
 	LOOPING_SOUND_TRACK_PITCH_OFFSET= 0x10,
 	LOOPING_SOUND_DEFINITION_TRACK_GAIN_OFFSET= 0x8,
 	LOOPING_SOUND_DEFINITION_TRACK_UNKNOWN3C_OFFSET= 0x3C,
+	MAXIMUM_SOUND_PITCH_RANGES= 9,
+	_sound_source_deleted_out_of_pitch_range= 8,
 	SOUND_SOURCE_DATUM_TRACK_SEED_OFFSET= 0x64,
 	SOUND_SOURCE_DATUM_TRACK_PLAYED_OFFSET= 0x68,
 	LOOPING_SOUND_DATUM_TRACK_SOURCE_OFFSET= 0x88,
@@ -1234,7 +1236,7 @@ struct sound_update_listeners;
 void __attribute__((stdcall)) sound_console_get_state(byte *state);
 void __attribute__((stdcall)) unknown_00127400(boolean unknown);
 void sound_playback_controllers_update(void);
-void __attribute__((stdcall)) unknown_0021b0e0(long unknown);
+void __attribute__((stdcall)) looping_sounds_update(boolean update_sources);
 void sound_sources_update(void);
 void sound_sources_get_channels(void);
 void __attribute__((stdcall)) sound_channels_build_queries(byte *first, byte *second, struct sound_update_listeners *listeners);
@@ -2864,7 +2866,7 @@ void sound_update(
 			sound_classes_update(*(real *)(globals+GAME_SOUND_GLOBALS_SECONDS_OFFSET));
 			unknown_00127400(TRUE);
 			sound_playback_controllers_update();
-			unknown_0021b0e0(game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7E_OFFSET]);
+			looping_sounds_update(game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7E_OFFSET]);
 			sound_channels_update();
 			sound_sources_update();
 			sound_sources_get_channels();
@@ -12177,5 +12179,279 @@ void __attribute__((stdcall)) looping_sound_channel_update_voice(
 	{
 		*(long *)(source+SOUND_SOURCE_DATUM_TRACK_SEED_OFFSET)= *(const long *)(track_state+8);
 		*(long *)(source+SOUND_SOURCE_DATUM_TRACK_PLAYED_OFFSET)= *(const long *)(track_state+4);
+	}
+}
+
+/* 0x0021b0e0: what is done each time with each looping sound. With
+`update_sources` set, one that was not kept this time (its byte at 0x53 is
+not that of the game's sound) is let go, unless it has the flag 1 and
+sounds that play.
+
+For each track of the rest, the count of its sounds with a channel starts
+again and, unless the looping sound is at 2, its real goes towards that of
+the looping sound: as fast as the playback of the sound of its first sound
+says (in each second), or at once if that says nothing. Then, with
+`update_sources`, the pitch range for the pitch that results is seen to
+(sound_choose_pitch_range, with the seed of the sound playback controller,
+which takes a new number if the controller has nothing at 4). A sound with
+the flag 13 plays all its pitch ranges at once: each one that has the pitch
+has a sound of the kind 2 in the ring of the track (made if there is none),
+as loud as the track says plus what sound_pitch_range_fade_decibels says,
+and those that do not have it are let go (reason 8). Any other sound goes
+to the sound of the new pitch range, found or made, in three quarters of a
+second (sound_sources_cross_fade), and that one is the first of the track
+from then on.
+
+Last, unless the looping sound is at 2 or has the flag 2, each detail of
+its tag whose time has come plays (looping_sound_detail_request,
+sound_source_new) and takes its next time: in some seconds at random
+between its two, in thousandths. A detail with the flag 0 does not play
+when the looping sound has the flag 0, and one with the flag 1 only then.
+The name is made up */
+void __attribute__((stdcall)) looping_sounds_update(
+	boolean update_sources)
+{
+	long looping_sound_index;
+
+	for (looping_sound_index= data_next_index(looping_sounds, NONE); looping_sound_index!=NONE;
+		looping_sound_index= data_next_index(looping_sounds, looping_sound_index))
+	{
+		byte *looping_sound= (byte *)looping_sounds->data+(looping_sound_index&0xFFFF)*LOOPING_SOUND_DATUM_SIZE;
+		const byte *definition;
+		long track;
+		long index;
+
+		if (update_sources && looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET+3]!=game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7F_OFFSET] &&
+			(!(looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET]&2) || !looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET+1]))
+		{
+			looping_sound_delete(looping_sound_index);
+			continue;
+		}
+		definition= (const byte *)(uintptr_t)
+			global_tag_instances[*(const long *)(looping_sound+LOOPING_SOUND_DATUM_UNKNOWN4_OFFSET)&0xFFFF].address;
+		for (track= 0; track<*(const long *)(definition+LOOPING_SOUND_DEFINITION_TRACKS_OFFSET); track++)
+		{
+			byte *track_state= looping_sound+LOOPING_SOUND_DATUM_TRACK_SOURCE_OFFSET+track*LOOPING_SOUND_TRACK_SIZE;
+			const byte *track_definition= *(const byte *const *)(definition+LOOPING_SOUND_DEFINITION_TRACKS_OFFSET+4)+
+				track*LOOPING_SOUND_DEFINITION_TRACK_SIZE;
+			real *track_scale= (real *)(track_state+LOOPING_SOUND_TRACK_PITCH_OFFSET);
+			const struct sound_definition *sound;
+			unsigned long seed;
+			long sound_index;
+			byte *controller;
+			byte *source;
+			short current;
+			short chosen;
+			real pitch;
+
+			track_state[LOOPING_SOUND_TRACK_CHANNELS_OFFSET]= 0;
+			if (looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET+2]==2)
+			{
+				continue;
+			}
+			if (*(const long *)track_state!=NONE)
+			{
+				real rate= *(const real *)(sound_definition_get_playback(sound_definition_get(
+					*(const long *)(sound_source_get(*(const long *)track_state)+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET)))->unknown8+4);
+
+				if ((long double)0.0001f>fabsl((long double)rate))
+				{
+					*(long *)track_scale= *(const long *)(looping_sound+LOOPING_SOUND_DATUM_SOURCE_OFFSET+4);
+				}
+				else
+				{
+					real step= *(const real *)(game_sound_globals+GAME_SOUND_GLOBALS_SECONDS_OFFSET)*rate;
+					real difference= *(const real *)(looping_sound+LOOPING_SOUND_DATUM_SOURCE_OFFSET+4)-*track_scale;
+					real negative= 0.0f-step;
+
+					if (negative>difference)
+					{
+						*track_scale= negative+*track_scale;
+					}
+					else
+					{
+						*track_scale= (difference>step ? step : difference)+*track_scale;
+					}
+				}
+			}
+			if (!update_sources || *(const long *)track_state==NONE)
+			{
+				continue;
+			}
+
+			source= sound_source_get(*(const long *)track_state);
+			sound_index= *(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET);
+			sound= sound_definition_get(sound_index);
+			{
+				const short *bends= (const short *)((const byte *)sound_definition_scale_decibels(sound)+SOUND_SCALE_PITCH_BENDS_OFFSET);
+				real low= (real)bends[0];
+
+				controller= sound_playback_controller_get(*(const long *)(looping_sound+LOOPING_SOUND_DATUM_CONTROLLER_INDEX_OFFSET));
+				pitch= ((real)bends[1]-low)**track_scale+*(const real *)(source+SOUND_SOURCE_DATUM_PITCH_OFFSET)+low;
+			}
+			if (*(const long *)(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWN4_OFFSET)==NONE)
+			{
+				unsigned long *controller_seed= (unsigned long *)(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWN8_OFFSET);
+
+				*controller_seed= *controller_seed*1664525UL+1013904223UL;
+			}
+			current= (short)(char)source[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET];
+			seed= *(const unsigned long *)(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWN8_OFFSET);
+			chosen= sound_choose_pitch_range(current, sound, pitch);
+			if (((const byte *)sound)[1]&0x20)
+			{
+				long first_source_index= *(const long *)track_state;
+				long by_range[MAXIMUM_SOUND_PITCH_RANGES];
+				real decibels[MAXIMUM_SOUND_PITCH_RANGES];
+				unsigned long in_range= 0;
+				long ring_index= first_source_index;
+				long count;
+				long range;
+
+				for (range= 0; range<MAXIMUM_SOUND_PITCH_RANGES; range++)
+				{
+					by_range[range]= NONE;
+				}
+				for (range= 0; range<MAXIMUM_SOUND_PITCH_RANGES; range++)
+				{
+					decibels[range]= SOUND_MINIMUM_DECIBELS;
+				}
+				for (count= 0; ; count++)
+				{
+					const byte *other;
+
+					if (count>0 && ring_index!=NONE)
+					{
+						ring_index= *(const long *)(sound_source_get(ring_index)+SOUND_SOURCE_DATUM_NEXT_OFFSET);
+						if (ring_index==first_source_index)
+						{
+							ring_index= NONE;
+						}
+					}
+					if (ring_index==NONE)
+					{
+						break;
+					}
+					other= sound_source_get(ring_index);
+					if (*(const long *)(other+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET)==sound_index &&
+						other[SOUND_SOURCE_DATUM_KIND_OFFSET]==2)
+					{
+						by_range[(char)other[SOUND_SOURCE_DATUM_PITCH_RANGE_OFFSET]]= ring_index;
+					}
+				}
+				for (range= 0; range<(char)sound->pitch_range_count; range++)
+				{
+					const struct sound_pitch_range *pitch_range=
+						(const struct sound_pitch_range *)(uintptr_t)global_sound_cache_file_gestalt->pitch_ranges.address+
+						(sound->first_pitch_range_index+range);
+					const short *bounds= (const short *)((const byte *)(uintptr_t)global_sound_cache_file_gestalt->unknown8[2].address+
+						*(const short *)(pitch_range->unknown0+SOUND_PITCH_RANGE_PARAMETERS_INDEX_OFFSET)*SOUND_PITCH_RANGE_PARAMETERS_SIZE+2);
+					real pinned;
+
+					decibels[range]= sound_pitch_range_fade_decibels((const byte *)sound, pitch_range, pitch);
+					if ((real)bounds[0]>pitch)
+					{
+						pinned= (real)bounds[0];
+					}
+					else
+					{
+						pinned= pitch>(real)bounds[1] ? (real)bounds[1] : pitch;
+					}
+					if (pinned==pitch)
+					{
+						in_range|= 1UL<<(range&31);
+					}
+				}
+				for (range= 0; range<(char)sound->pitch_range_count; range++)
+				{
+					boolean has= (in_range&(1UL<<(range&31)))!=0;
+
+					if (!has && by_range[range]!=NONE)
+					{
+						sound_source_delete(by_range[range], _sound_source_deleted_out_of_pitch_range);
+						by_range[range]= NONE;
+					}
+					if (has && by_range[range]==NONE)
+					{
+						long new_source_index= looping_sound_source_new(looping_sound_index, sound_index, range, track, 2,
+							(long)(uintptr_t)&seed);
+
+						if (new_source_index!=NONE)
+						{
+							if (chosen==range)
+							{
+								*(long *)track_state= new_source_index;
+							}
+							*(real *)(sound_source_get(new_source_index)+SOUND_SOURCE_DATUM_GAIN_OFFSET)= SOUND_MINIMUM_DECIBELS;
+							by_range[range]= new_source_index;
+						}
+					}
+					if (by_range[range]!=NONE)
+					{
+						byte *other= sound_source_get(by_range[range]);
+
+						*(real *)(other+SOUND_SOURCE_DATUM_GAIN_OFFSET)=
+							*(const real *)(track_definition+LOOPING_SOUND_DEFINITION_TRACK_GAIN_OFFSET)+decibels[range];
+						other[SOUND_SOURCE_DATUM_UNKNOWN5C_OFFSET+7]= 0xFF;
+					}
+				}
+			}
+			else if (chosen!=current)
+			{
+				long new_source_index= looping_sound_find_source(*(const long *)(source+SOUND_SOURCE_DATUM_CALLBACK_DATA_OFFSET),
+					(short)track, sound_index, chosen);
+
+				if (new_source_index==NONE)
+				{
+					new_source_index= looping_sound_source_new(*(const long *)(source+SOUND_SOURCE_DATUM_CALLBACK_DATA_OFFSET),
+						sound_index, chosen, track, 2, (long)(uintptr_t)&seed);
+				}
+				if (new_source_index!=NONE)
+				{
+					*(long *)(sound_source_get(new_source_index)+SOUND_SOURCE_DATUM_PITCH_OFFSET)=
+						*(const long *)(source+SOUND_SOURCE_DATUM_PITCH_OFFSET);
+					sound_sources_cross_fade(new_source_index, *(const long *)track_state, 1, 0.75f);
+					*(long *)track_state= new_source_index;
+				}
+			}
+		}
+
+		if (looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET+2]==2 || (looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET]&4))
+		{
+			continue;
+		}
+		for (index= 0; index<*(const long *)(definition+LOOPING_SOUND_DEFINITION_DETAILS_OFFSET); index++)
+		{
+			const byte *detail= *(const byte *const *)(definition+LOOPING_SOUND_DEFINITION_DETAILS_OFFSET+4)+
+				index*LOOPING_SOUND_DETAIL_SIZE;
+			long *time= (long *)(looping_sound+LOOPING_SOUND_DATUM_DETAIL_TIMES_OFFSET)+index;
+			long request[SOUND_REQUEST_SIZE/4];
+			unsigned long flags;
+			long failure;
+
+			if (*(const long *)(detail+LOOPING_SOUND_DETAIL_SOUND_INDEX_OFFSET)==NONE ||
+				*time>=*(const long *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET))
+			{
+				continue;
+			}
+			flags= *(const unsigned long *)(detail+LOOPING_SOUND_DETAIL_FLAGS_OFFSET);
+			if (((flags&1) && (looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET]&1)) ||
+				((flags&2) && !(looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET]&1)))
+			{
+				continue;
+			}
+			*(word *)((byte *)request+SOUND_REQUEST_SOURCE_OFFSET)= 0;
+			if (!looping_sound_detail_request(detail, looping_sound_index, (byte *)request))
+			{
+				continue;
+			}
+			if (sound_source_new(*(const long *)(detail+LOOPING_SOUND_DETAIL_SOUND_INDEX_OFFSET), &failure, (byte *)request)==NONE &&
+				failure!=1)
+			{
+				continue;
+			}
+			*time= (long)(long long)(sound_random_between((const real *)(detail+LOOPING_SOUND_DETAIL_PERIOD_BOUNDS_OFFSET))*
+				(long double)1000.0f+(long double)*(const long *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET));
+		}
 	}
 }

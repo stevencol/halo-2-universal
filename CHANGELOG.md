@@ -2,6 +2,61 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Cada fotograma, con cada sonido en bucle
+
+Una función en `sound/sound_manager.c`, de 1.917 bytes. De 923 funciones se pasa a
+924, el 8,20 % de las del juego (el 5,277 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `looping_sounds_update` | `0x0021b0e0` | `sound/sound_manager.c` |
+
+Era `unknown_0021b0e0`. La llama `sound_update` una vez por fotograma, con
+un byte del sonido del juego. No devuelve nada.
+
+### Lo que se sabe
+
+- Con el byte puesto, un sonido en bucle que no se ha mantenido este
+  fotograma (su byte de `0x53` no es el del sonido del juego) se suelta,
+  salvo que tenga la marca 1 y sonidos sonando.
+- Para cada pista de los demás, la cuenta de sus sonidos con canal vuelve a
+  0 y, si el sonido en bucle no está en el estado 2, el real de la pista
+  se acerca al del sonido en bucle: tan deprisa como diga la reproducción
+  del sonido de su primer sonido (por segundo), o de golpe si no dice nada.
+- Después, con el byte puesto, se mira qué rango de tono toca para el tono
+  que resulta. Un sonido con la marca 13 hace sonar a la vez todos sus
+  rangos de tono: cada rango que tiene ese tono tiene un sonido del tipo 2
+  en el anillo de la pista (se crea si falta), tan fuerte como dice la
+  pista más lo que dice `sound_pitch_range_fade_decibels`; los de los
+  rangos que no lo tienen se sueltan (motivo 8). Los demás sonidos pasan al
+  sonido del rango nuevo, encontrado o creado, en tres cuartos de segundo
+  (`sound_sources_cross_fade`), y ese pasa a ser el primero de la pista.
+- La semilla es la del mando de sonidos del sonido en bucle, que saca un
+  número nuevo si el mando no tiene nada en `0x4`.
+- Al final, si el sonido en bucle no está en el estado 2 ni tiene la marca
+  2, suena cada detalle de su tag al que le ha llegado la hora
+  (`looping_sound_detail_request`, `sound_source_new`), y se le pone la
+  hora siguiente: dentro de unos segundos al azar entre sus dos límites,
+  en milésimas. Un detalle con la marca 0 no suena si el sonido en bucle
+  tiene la marca 0, y uno con la marca 1 solo suena entonces.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y las de
+  `sound_update`. La última batería completa es la del hito 254 (921
+  funciones, todas bien).
+
+### Mutaciones
+
+Cuarenta y tres cambios a mano: las pruebas notan cuarenta y dos, dos de
+ellos solo después de añadir casos (una velocidad entre una diezmilésima y
+una milésima, y una hora que es justo la de ahora). El que no notan es un
+cambio mío flojo: cortar el recorrido del anillo a los seis pasos, que con
+los anillos de las pruebas da lo mismo.
+
 ## 2026-10-05 — Cada vez, con el sonido de una pista que tiene voz
 
 Una función en `sound/sound_manager.c`, de 1.929 bytes. De 922 funciones se pasa a
