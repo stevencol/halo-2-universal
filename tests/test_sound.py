@@ -296,7 +296,7 @@ def run(t) -> None:
                 "sound_sources": random_.choice((0, array(1), array(1))),
                 "sound_channels": pointer(),
             },
-            externals={"unknown_002186b0": lambda harness, arguments: 0, "unknown_0021eae0": lambda harness, arguments: 0},
+            externals={"sound_cache_dispose": lambda harness, arguments: 0, "unknown_0021eae0": lambda harness, arguments: 0},
         )
 
     # ---------- a map is loaded
@@ -2675,4 +2675,92 @@ def run(t) -> None:
                 Buffer(random_.randbytes(0x48)),
                 globals=globals_,
                 externals={"unknown_0018cbc0": lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1])))},
+            )
+
+    # ---------- the cache of the sounds is let go, a recording is chosen, and the sound of a track
+
+    random_ = random.Random(173)
+
+    for _ in range(40):
+        counted_ = bytearray(counted().data)
+        allocated = random_.random() < 0.7
+        struct.pack_into("<I", counted_, 0x30, len(counted_) if allocated else 0)
+        pointers = [0x44] + ([0x30, len(counted_)] if allocated else [])
+        counted_ += struct.pack("<3I", len(counted_) + 4, mock_address(0), mock_address(1))
+        cache = bytearray(random_.randbytes(0x70))
+        struct.pack_into("<I", cache, 0x6C, 0x70)
+        cache += struct.pack("<3I", 0x74, mock_address(0), mock_address(1))
+        t.check(
+            "sound_cache_dispose",
+            globals={
+                "unknown_00502104": Buffer(bytes(counted_), pointers=tuple(pointers)),
+                "sound_lruv_cache": Buffer(bytes(cache), pointers=(0x6C, 0x70)),
+                "sound_cache_base": random_.getrandbits(32),
+            },
+            mocks=[
+                Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
+                Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
+            ],
+        )
+
+    for _ in range(300):
+        definition = bytearray(sound_data(random_))
+        struct.pack_into("<h", definition, 8, random_.randrange(2))
+        globals_ = world(random_, 0, sound_data(random_))
+        gestalt, _permutations = recordings()
+        shared = bytearray(gestalt)
+        struct.pack_into("<I", shared, 0x3C, len(shared))
+        shared += random_.randbytes(0x20)
+        for n in range(4):
+            at = 0x48 + n * 0xC
+            shared[at + 4] = random_.choice((0, 1, 5, 0xFF))
+            shared[at + 5] = random_.choice((0xFF, 0xFF, 0, 2, 7))
+            struct.pack_into("<H", shared, at + 6, random_.randrange(0, 0x80))
+            struct.pack_into("<h", shared, at + 0xA, random_.choice((0, 1, 2, 5, 9, 17)))
+        globals_["global_sound_cache_file_gestalt"] = Buffer(bytes(shared), pointers=(0x24, 0x2C, 0x3C, 0x44))
+        globals_["global_random_seed_reference"] = Buffer(random_.randbytes(0x10))
+        chosen = random_.choice((0, 1, 4, 0x7F, 0xFFFF0003))
+        mark = random_.getrandbits(32)
+
+        def choose(harness, arguments, chosen=chosen, mark=mark):
+            sound_, offset, played, last, seed, unknown, unknown2 = arguments
+            record = (
+                harness.normalize(sound_),
+                offset & 0xFFFF,
+                bytes(harness.mu.mem_read(played, 4)),
+                last,
+                harness.normalize(seed),
+                unknown,
+                unknown2,
+            )
+            harness.mu.mem_write(played, struct.pack("<I", mark))
+            return chosen, record
+
+        t.check(
+            "sound_choose_permutation",
+            Buffer(bytes(definition)),
+            random_.randrange(3),
+            globals=globals_,
+            externals={"unknown_00219110": choose},
+        )
+
+    for _ in range(40):
+        looping, playing_, indices = ring_world()
+        for _case in range(8):
+            made = random_.choice((NONE, random_.getrandbits(32)))
+            t.check(
+                "looping_sound_get_or_new_source",
+                random_.choice((1, 2, 0xE0010003, 7)),
+                random_.randrange(3),
+                random_.choice((NONE, NONE, 0, 1)),
+                random_.getrandbits(16) << 16 | random_.randrange(6),
+                random_.getrandbits(32),
+                random_.getrandbits(32),
+                globals={"looping_sounds": looping, "sound_sources": playing_},
+                externals={
+                    "unknown_0021b940": lambda harness, arguments, made=made: (
+                        made,
+                        (*arguments[:3], arguments[3] & 0xFFFF, *arguments[4:]),
+                    )
+                },
             )

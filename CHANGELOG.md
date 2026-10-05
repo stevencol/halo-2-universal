@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Soltar la caché de sonidos, elegir una grabación y el sonido de una pista
+
+Tres funciones en `sound/sound_manager.c`. De 821 funciones se pasa a
+824, el 7,31 % de las del juego (el 3,932 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_cache_dispose` | `0x002186b0` | `sound/sound_manager.c` |
+| `sound_choose_permutation` | `0x00219070` | `sound/sound_manager.c` |
+| `looping_sound_get_or_new_source` | `0x0021b910` | `sound/sound_manager.c` |
+
+`sound_cache_dispose` estaba apuntada sin descompilar (`unknown_002186b0`).
+Nuevas sin descompilar: `0x00219110` y `0x0021b940`.
+
+### Lo que se sabe
+
+- `sound_cache_dispose` suelta la caché de los sonidos: la tabla que cuenta
+  quién está en cada trozo de muestras y la caché misma, que libera quien
+  la creó.
+- `sound_choose_permutation` decide qué grabación de un rango de tono de un
+  sonido suena ahora: la que se había apartado para ser la siguiente (byte
+  `5` del rango), si la hay; si no, la que elija `0x00219110` con los bits
+  de las que ya sonaron, la última que sonó y la semilla de los números al
+  azar del juego. La guarda como la última (byte `4`).
+- `looping_sound_get_or_new_source` da el sonido de una pista de un sonido
+  en bucle que es de un sonido y un rango de tono; si no lo hay, lo crea
+  `0x0021b940`.
+- Los nombres son inventados.
+
+### Sin comprobar
+
+- La batería completa no se pasó en este hito, solo las pruebas de estas
+  funciones y de `sound_dispose`. Se lanza ahora aparte, con las 824
+  funciones.
+
+### Mutaciones
+
+- Hito 155: terminó la comprobación que corría aparte. Sin detectar: 0 de 40 líneas rotas a propósito.
+- Hitos 156 a 173: pendientes.
+
 ## 2026-10-04 — Un efecto de sonido nuevo y lo que dice de su sonido
 
 Tres funciones en `sound/sound_manager.c`. De 818 funciones se pasa a
@@ -829,7 +871,7 @@ Nuevas sin descompilar: `0x002ae4b0`, `0x0021e050` y `0x00127f10`.
 
 ### Mutaciones
 
-42 líneas rotas a propósito. La comprobación corre aparte, en segundo plano, y su resultado se anota en el hito siguiente.
+40 líneas rotas a propósito. La comprobación corre aparte, en segundo plano, y su resultado se anota en el hito siguiente.
 
 ## 2026-10-04 — Parar un sonido y soltarlo
 

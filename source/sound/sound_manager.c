@@ -406,7 +406,7 @@ const struct sound_configuration sound_configuration=
 
 /* 0x002185d0, 0x002186b0: set up and take down the sound of the console */
 void unknown_002185d0(void);
-void unknown_002186b0(void);
+void sound_cache_dispose(void);
 
 /* 0x00219b40, 0x0021a0c0, 0x0021d490, 0x0021dda0, 0x0021e4b0: set up the
 sound playback controllers, the looping sounds, the sound effects, the sound
@@ -701,6 +701,18 @@ long __attribute__((stdcall)) sound_effect_new(long unknown, real unknownC, shor
 void sound_effect_get_source(long effect_index, struct sound_source *source);
 boolean __attribute__((stdcall)) sound_effect_definition_get(long tag_index, long unknown, const byte **definition);
 
+/* 0x00219110: chooses a recording of a pitch range; 0x0021b940: makes the
+sound that plays of a track of a looping sound */
+long unknown_00219110(const struct sound_definition *sound, short pitch_range_offset, unsigned long *played,
+	long last_permutation, unsigned long *seed, long unknown, long unknown2);
+long unknown_0021b940(long looping_sound_index, long sound_index, long pitch_range, long track, long unknown,
+	long unknown2);
+
+/* 0x00219070 and 0x0021b910 */
+short __attribute__((stdcall)) sound_choose_permutation(const struct sound_definition *sound, short pitch_range_offset);
+long __attribute__((stdcall)) looping_sound_get_or_new_source(long sound_index, short track, long pitch_range,
+	long looping_sound_index, long unknown, long unknown2);
+
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
 	char permutation, short chunk);
@@ -988,7 +1000,7 @@ void sound_dispose(
 {
 	if (!--sound_initialize_count)
 	{
-		unknown_002186b0();
+		sound_cache_dispose();
 		unknown_0021eae0();
 		sound_effects= NULL;
 		if (sound_voices)
@@ -4288,4 +4300,70 @@ void sound_effect_get_source(
 		unknown_0018cbc0(*(const long *)(effect+SOUND_EFFECT_DATUM_SOURCE_INDEX_OFFSET), source);
 		break;
 	}
+}
+
+/* 0x002186b0: the cache of the sounds is let go: the array that counts who
+is at each piece of the samples, and the cache itself, which what made it
+frees */
+void sound_cache_dispose(
+	void)
+{
+	struct lruv_cache *cache;
+
+	data_dispose(unknown_00502104);
+	cache= sound_lruv_cache;
+	cache->allocation->functions->deallocate(cache->allocation, cache);
+	sound_cache_base= 0;
+}
+
+/* 0x00219070: which recording of a pitch range of a sound is played now.
+The one that was set aside to be next (the byte at 5 of the pitch range), if
+there is one; if not, what unknown_00219110 chooses, with the bits of those
+that were played, the one that was played last and the seed of the game's
+random numbers. It is kept as the last one */
+short __attribute__((stdcall)) sound_choose_permutation(
+	const struct sound_definition *sound,
+	short pitch_range_offset)
+{
+	struct sound_pitch_range *pitch_range=
+		(struct sound_pitch_range *)(uintptr_t)global_sound_cache_file_gestalt->pitch_ranges.address+
+		(sound->first_pitch_range_index+pitch_range_offset);
+	long permutation;
+
+	if ((short)sound_pitch_range_get_unknown5(pitch_range, sound)!=NONE)
+	{
+		permutation= sound_pitch_range_get_unknown5(pitch_range, sound);
+		sound_pitch_range_set_unknown5(pitch_range, sound, NONE);
+	}
+	else
+	{
+		unsigned long played= sound_pitch_range_get_played_bits(pitch_range, sound);
+
+		permutation= unknown_00219110(sound, pitch_range_offset, &played, sound_pitch_range_get_unknown4(pitch_range, sound),
+			&global_random_seed_reference[1], 0, 0);
+		sound_pitch_range_set_played_bits(pitch_range, sound, played);
+	}
+	sound_pitch_range_set_unknown4(pitch_range, sound, (char)permutation);
+
+	return (short)permutation;
+}
+
+/* 0x0021b910: the sound that plays of a track of a looping sound that is of
+a sound and a pitch range; if there is none, unknown_0021b940 makes it */
+long __attribute__((stdcall)) looping_sound_get_or_new_source(
+	long sound_index,
+	short track,
+	long pitch_range,
+	long looping_sound_index,
+	long unknown,
+	long unknown2)
+{
+	long source_index= looping_sound_find_source(looping_sound_index, track, sound_index, pitch_range);
+
+	if (source_index==NONE)
+	{
+		source_index= unknown_0021b940(looping_sound_index, sound_index, pitch_range, track, unknown, unknown2);
+	}
+
+	return source_index;
 }

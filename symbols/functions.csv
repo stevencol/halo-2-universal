@@ -765,7 +765,7 @@ address,name,source,arguments,returns,convention
 001253d0,sound_initialize,source/sound/sound_manager.c,,void
 00125600,sound_dispose,source/sound/sound_manager.c,,void
 002185d0,unknown_002185d0,,,void
-002186b0,unknown_002186b0,,,void
+002186b0,sound_cache_dispose,source/sound/sound_manager.c,,void
 00219b40,unknown_00219b40,,,bool
 0021a0c0,looping_sounds_initialize,source/sound/sound_manager.c,,bool
 0021d490,sound_effects_initialize,source/sound/sound_manager.c,,bool
@@ -1269,3 +1269,7 @@ address,name,source,arguments,returns,convention
 0018d090,unknown_0018d090,,ecx edx,pointer
 0018d170,unknown_0018d170,,ecx,pointer
 0018cbc0,unknown_0018cbc0,,eax ecx,void
+00219070,sound_choose_permutation,source/sound/sound_manager.c,edi stack,short,stdcall
+0021b910,looping_sound_get_or_new_source,source/sound/sound_manager.c,eax esi edi stack stack stack,int,stdcall
+00219110,unknown_00219110,,eax ecx esi stack stack stack stack,int
+0021b940,unknown_0021b940,,stack stack stack stack stack stack,int
