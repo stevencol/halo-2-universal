@@ -3176,3 +3176,49 @@ def run(t) -> None:
             },
             externals={"sound_source_goes_before": goes_before, "sound_source_unknown_00127e20": measure_},
         )
+
+    # ---------- the channels that play the sound of a sound that is to play
+
+    random_ = random.Random(182)
+
+    for _ in range(400):
+        globals_ = class_world()
+        definitions = globals_["global_tag_instances"].data[TAGS * 0x10 :]
+        data = bytearray(random_.randbytes(0x4C + PLAYING * DATUM))
+        pointers = [0x44]
+        struct.pack_into("<I", data, 0x44, 0x4C)
+        tables = len(data)
+        for _table in range(2):
+            data += random_.randbytes(0x1C) + struct.pack("<I", random_.choice((mock_address(0), mock_address(0), 0)))
+        now = 5000
+        indices = []
+        for index in range(PLAYING):
+            at = 0x4C + index * DATUM
+            struct.pack_into("<I", data, at + 0xC, random_.choice((0xE0010003, 0xE0010003, 0xE0020004)))
+            struct.pack_into("<I", data, at + 0x10, random_.choice((NONE, 1, 1, 1, 2)))
+            struct.pack_into("<I", data, at + 0x14, tables + random_.choice((0, 0, 0, 0x20)))
+            pointers.append(at + 0x14)
+            struct.pack_into("<i", data, at + 0x8C, random_.choice((now, now - 1, now - 100)))
+            indices.append(random_.getrandbits(16) << 16 | index)
+        channels = bytearray(random_.randbytes(CHANNELS * 0x24))
+        for n in range(CHANNELS):
+            struct.pack_into("<I", channels, n * 0x24, random_.choice((NONE, *indices)))
+            # the type of one of the two sounds, most times
+            channels[n * 0x24 + 8] = random_.choice((definitions[3 * 0x10 + 4], definitions[4 * 0x10 + 4], random_.getrandbits(8)))
+        state = bytearray(sound_state(channels=random_.choice((0, 1, 5, CHANNELS, CHANNELS, -1))).data)
+        struct.pack_into("<i", state, 0x84, now)
+        globals_.update(
+            {
+                "sound_sources": Buffer(bytes(data), pointers=tuple(pointers)),
+                "sound_channels": Buffer(bytes(channels)),
+                "game_sound_globals": Buffer(bytes(state)),
+            }
+        )
+        answer = random_.choice((1, 1, 0, 0x100))
+        t.check(
+            "sound_source_find_same",
+            Buffer(random_.randbytes(0x4A)),
+            random_.choice(indices),
+            globals=globals_,
+            mocks=[Mock(lambda call, answer=answer: answer, stack_arguments=4)],
+        )

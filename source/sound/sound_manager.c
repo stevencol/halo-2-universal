@@ -386,7 +386,25 @@ struct sound_source_callbacks
 	void (__attribute__((stdcall)) *deleted)(long data, long source_index, long reason);
 	void (__attribute__((stdcall)) *stopped)(long data, long source_index);
 	boolean (__attribute__((stdcall)) *matches)(const void *unknown5C, const void *unknown14);
+	boolean (__attribute__((stdcall)) *same)(long data, const void *unknown5C, long other_data, const void *other_unknown5C);
 };
+
+/* what sound_source_find_same fills: the channels that play a sound, and
+those that play it for the same thing, with how many of each there can be */
+struct sound_same_channels
+{
+	short sound_count;
+	short sound_channels[16];
+	short sound_limit;
+	boolean started_now;
+	byte pad;
+	short instance_count;
+	short instance_channels[16];
+	short instance_limit;
+};
+
+typedef char verify_sound_same_channels_size[
+	sizeof(struct sound_same_channels) == 0x4A ? 1 : -1];
 
 /* ---------- globals */
 
@@ -788,6 +806,9 @@ long __attribute__((stdcall)) sound_source_goes_before(long other_source_index, 
 
 /* 0x00128920 */
 short __attribute__((stdcall)) sound_source_find_channel(long source_index, long *reason);
+
+/* 0x00128500 */
+void __attribute__((stdcall)) sound_source_find_same(struct sound_same_channels *same, long source_index);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -5083,4 +5104,71 @@ short __attribute__((stdcall)) sound_source_find_channel(
 	}
 
 	return taken;
+}
+
+/* 0x00128500: the channels that play the sound of a sound that is to play,
+and of those, the ones that play it for the same thing: with the same who is
+told, and the same to tell with or what its eighth function says of the two.
+With each list goes how many of them the class of the sound lets there be.
+It is said too whether one of the second list started to play this very
+time */
+void __attribute__((stdcall)) sound_source_find_same(
+	struct sound_same_channels *same,
+	long source_index)
+{
+	const byte *source= sound_source_get(source_index);
+	const struct sound_definition *sound= sound_definition_get(*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET));
+	short channel_index;
+
+	same->started_now= FALSE;
+	same->sound_count= 0;
+	same->instance_count= 0;
+	same->sound_limit= ((const short *)sound_class_get(sound->sound_class))[0];
+	same->instance_limit= ((const short *)sound_class_get(sound->sound_class))[1];
+	for (channel_index= 0;
+		channel_index<*(const short *)(game_sound_globals+GAME_SOUND_GLOBALS_CHANNEL_COUNT_OFFSET);
+		channel_index++)
+	{
+		const struct sound_channel *channel= &sound_channels[channel_index];
+		const struct sound_source_callbacks *callbacks;
+		const byte *playing;
+		long data;
+		long playing_data;
+
+		if (channel->unknown0==NONE || channel->unknown0==source_index)
+		{
+			continue;
+		}
+		playing= sound_source_get(channel->unknown0);
+		if (sound->unknown3[1]!=(byte)channel->type ||
+			*(const long *)(source+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET)!=*(const long *)(playing+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET))
+		{
+			continue;
+		}
+		same->sound_channels[same->sound_count]= channel_index;
+		same->sound_count++;
+		data= *(const long *)(source+SOUND_SOURCE_DATUM_CALLBACK_DATA_OFFSET);
+		playing_data= *(const long *)(playing+SOUND_SOURCE_DATUM_CALLBACK_DATA_OFFSET);
+		callbacks= *(const struct sound_source_callbacks *const *)(source+SOUND_SOURCE_DATUM_CALLBACKS_OFFSET);
+		if (data==NONE || playing_data==NONE ||
+			callbacks!=*(const struct sound_source_callbacks *const *)(playing+SOUND_SOURCE_DATUM_CALLBACKS_OFFSET))
+		{
+			continue;
+		}
+		if (data!=playing_data)
+		{
+			if (!callbacks->same || !callbacks->same(data, source+SOUND_SOURCE_DATUM_UNKNOWN5C_OFFSET, playing_data,
+				playing+SOUND_SOURCE_DATUM_UNKNOWN5C_OFFSET))
+			{
+				continue;
+			}
+		}
+		same->instance_channels[same->instance_count]= channel_index;
+		same->instance_count++;
+		if (*(const long *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET)==
+			*(const long *)(playing+SOUND_SOURCE_DATUM_UNKNOWN8C_OFFSET))
+		{
+			same->started_now= TRUE;
+		}
+	}
 }

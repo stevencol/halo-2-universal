@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Los canales que ya tocan el mismo sonido
+
+Una función en `sound/sound_manager.c`. De 836 funciones se pasa a
+837, el 7,43 % de las del juego (el 4,045 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_source_find_same` | `0x00128500` | `sound/sound_manager.c` |
+
+También la estructura `sound_same_channels` (`0x4A` bytes) y la octava
+función de la tabla de a quién se avisa de un sonido (`same`).
+
+### Lo que se sabe
+
+- `sound_source_find_same` hace dos listas para un sonido que va a sonar:
+  los canales que ya tocan su mismo sonido, y de esos, los que lo tocan
+  para lo mismo (avisan al mismo, y con lo mismo o con algo que su octava
+  función dice que es igual). Con cada lista va el máximo que admite la
+  clase del sonido (sus dos primeras palabras). Dice también si alguno de
+  la segunda lista empezó a sonar en este mismo instante.
+- Sirve para no pasarse de tantas copias del mismo sonido a la vez.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- La batería completa corre aparte con las 824 funciones del hito 173; en
+  este hito solo se pasó la prueba de esta función.
+
+### Mutaciones
+
+Pendientes las de los hitos 156 a 182.
+
 ## 2026-10-04 — Buscar un canal para un sonido
 
 Una función en `sound/sound_manager.c`. De 835 funciones se pasa a

@@ -1284,3 +1284,4 @@ address,name,source,arguments,returns,convention
 00128a60,sound_source_choose_channel,source/sound/sound_manager.c,eax ecx stack,short,stdcall
 00128b90,sound_source_goes_before,source/sound/sound_manager.c,eax ecx stack,int,stdcall
 00128920,sound_source_find_channel,source/sound/sound_manager.c,stack stack,short,stdcall
+00128500,sound_source_find_same,source/sound/sound_manager.c,esi stack,void,stdcall
