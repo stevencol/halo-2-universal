@@ -201,3 +201,4 @@ address,name,source
 004ed28c,unknown_004ed28c,source/sound/sound_manager.c
 0044a200,sound_effect_looping_sound_states,source/sound/sound_manager.c
 0044a20c,sound_effect_looping_sound_unknown_states,source/sound/sound_manager.c
+0044a110,looping_sound_track_callbacks,source/sound/sound_manager.c

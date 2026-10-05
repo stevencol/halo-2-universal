@@ -2,6 +2,58 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Se crea el sonido de una pista de un sonido en bucle
+
+Una función en `sound/sound_manager.c`, de 832 bytes. De 918 funciones se pasa a
+919, el 8,16 % de las del juego (el 5,005 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `looping_sound_source_new` | `0x0021b940` | `sound/sound_manager.c` |
+
+Era `unknown_0021b940`. La llaman tres sitios, entre ellos
+`looping_sound_get_or_new_source`. Recibe en la pila el sonido en bucle, el
+sonido, el rango de tono (o `NONE`), la pista, qué es el sonido de la pista
+y dónde está la semilla; devuelve el sonido que suena, o `NONE`. Nueva
+tabla: `looping_sound_track_callbacks` (`0x0044a110`), con las tres
+funciones de los hitos 249 a 251, `looping_sound_get_source` y
+`0x000a5750`, que solo dice que sí.
+
+### Lo que se sabe
+
+- No crea nada si el sonido no puede sonar ahora
+  (`sound_definition_unknown_00126bd0`), si ningún oyente está lo bastante
+  cerca, o si no queda sitio.
+- El sonido nuevo dice de sí mismo lo que dice el sonido en bucle, suena
+  tan fuerte como dice la pista y tiene de tono el límite bajo del tono del
+  sonido. Aquí el juego tiene una rareza: saca un número de la semilla para
+  elegir el tono entre dos límites, pero usa el mismo límite las dos veces,
+  así que el número no cambia nada (la semilla sí avanza).
+- Se le avisa por `looping_sound_track_callbacks`, con la pista y lo que
+  la pista tiene de semilla y de grabaciones ya usadas; y empieza solo en
+  su anillo.
+- Si el tag del sonido en bucle tiene la marca 5, cuenta en el mando de
+  sonidos del sonido en bucle.
+- Sin rango de tono, se elige por el tono, torcido por el real de `0x10`
+  de la pista entre los dos límites de la escala del sonido.
+- La grabación se elige como en `looping_sound_source_next_state` (hito
+  239), y después el sonido entra en el anillo de su pista y el sonido en
+  bucle cuenta uno más.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y las de
+  `looping_sound_get_or_new_source`. La última batería completa es la del
+  hito 244 (911 funciones, todas bien).
+
+### Mutaciones
+
+Treinta y nueve cambios a mano: las pruebas notan los treinta y nueve. La
+prueba compara además la tabla con la del juego.
+
 ## 2026-10-05 — Un sonido de una pista de un sonido en bucle se suelta
 
 Una función en `sound/sound_manager.c`, de 252 bytes. De 917 funciones se pasa a

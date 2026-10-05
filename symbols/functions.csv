@@ -1272,7 +1272,7 @@ address,name,source,arguments,returns,convention
 00219070,sound_choose_permutation,source/sound/sound_manager.c,edi stack,short,stdcall
 0021b910,looping_sound_get_or_new_source,source/sound/sound_manager.c,eax esi edi stack stack stack,int,stdcall
 00219110,sound_pitch_range_choose_permutation,source/sound/sound_manager.c,eax ecx esi stack stack stack stack,int,stdcall
-0021b940,unknown_0021b940,,stack stack stack stack stack stack,int
+0021b940,looping_sound_source_new,source/sound/sound_manager.c,stack stack stack stack stack stack,int,stdcall
 00218a10,sound_cache_chunk_load,source/sound/sound_manager.c,ebx stack,void,stdcall
 00218e50,sound_unknown_00218e50,source/sound/sound_manager.c,eax ecx edx stack,real:xmm0,stdcall
 0021cb90,looping_sound_track_get_played_bits,source/sound/sound_manager.c,eax ecx edx stack stack stack,int,stdcall
@@ -1390,3 +1390,4 @@ address,name,source,arguments,returns,convention
 0021ac30,looping_sound_track_source_got_channel,source/sound/sound_manager.c,stack stack stack stack,void,stdcall
 0021acc0,looping_sound_track_source_heard,source/sound/sound_manager.c,stack stack stack stack,bool,stdcall
 0021adb0,looping_sound_track_source_deleted,source/sound/sound_manager.c,stack stack stack,void,stdcall
+000a5750,unknown_000a5750,,stack stack,bool,stdcall

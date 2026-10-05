@@ -2759,7 +2759,7 @@ def run(t) -> None:
                 random_.getrandbits(32),
                 globals={"looping_sounds": looping, "sound_sources": playing_},
                 externals={
-                    "unknown_0021b940": lambda harness, arguments, made=made: (
+                    "looping_sound_source_new": lambda harness, arguments, made=made: (
                         made,
                         (*arguments[:3], arguments[3] & 0xFFFF, *arguments[4:]),
                     )
@@ -6816,4 +6816,148 @@ def run(t) -> None:
             },
             memory={STATE: Memory(bytes(controller))},
             externals={"sound_playback_controller_try_and_get": controller_},
+        )
+
+    # ---------- the sound that plays of a track of a looping sound is made
+
+    random_ = random.Random(252)
+
+    harness = t.harness
+    tables = []
+    for original in (True, False):
+        names = {0: None}
+        for number, name in enumerate(harness.externals):
+            names[harness.symbols[name].address if original else harness_external_address(number)] = name
+        for name, symbol in harness.symbols.items():
+            if symbol.source:
+                names[symbol.address if original else harness.functions[name]] = name
+        address = harness.globals["looping_sound_track_callbacks"] if original else harness.variables["looping_sound_track_callbacks"]
+        tables.append([names.get(value, hex(value)) for value in struct.unpack("<8I", harness.mu.mem_read(address, 0x20))])
+    if not t.only or "looping_sound_source_new" in t.only:
+        t.cases["looping_sound_source_new"] = t.cases.get("looping_sound_source_new", 0) + 1
+        expected = [
+            "looping_sound_get_source",
+            "looping_sound_track_source_got_channel",
+            None,
+            "looping_sound_track_source_heard",
+            "looping_sound_track_source_deleted",
+            None,
+            "unknown_000a5750",
+            None,
+        ]
+        if tables[0] != tables[1] or tables[0] != expected:
+            t._fail("looping_sound_source_new", f"looping_sound_track_callbacks: the game has {tables[0]}, source/ has {tables[1]}")
+
+    for n in range(900):
+        looping, indices = looping_world()
+        data = bytearray(looping.data)
+        looping_index = random_.choice(indices)
+        at = 0x4C + (looping_index & 0xFFFF) * 0xD4
+        definition_index = random_.randrange(TAGS)
+        sound_index = random_.choice([number for number in range(TAGS) if number != definition_index])
+        struct.pack_into("<I", data, at + 4, random_.getrandbits(16) << 16 | definition_index)
+        for number in range(3):
+            struct.pack_into("<f", data, at + 0x88 + number * 0x14 + 0x10, random_.choice((0.0, 1.0, 0.5, 0.25)))
+        # the tags, and after them the looping sound's, the sound's, and what the sounds share
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        pointers = []
+        definition_at = len(tags)
+        struct.pack_into("<I", tags, definition_index * 0x10 + 8, definition_at)
+        pointers.append(definition_index * 0x10 + 8)
+        definition = bytearray(random_.randbytes(0x24))
+        definition[0] = random_.choice((0, 0x20, 0x20, 0x10, 0x30, 0xFF, 0xDF))
+        struct.pack_into("<I", definition, 0x20, definition_at + 0x24)
+        pointers.append(definition_at + 0x20)
+        tags += definition + random_.randbytes(3 * 0x58)
+        sound_at = len(tags)
+        struct.pack_into("<I", tags, sound_index * 0x10 + 8, sound_at)
+        pointers.append(sound_index * 0x10 + 8)
+        sound_ = bytearray(random_.randbytes(0x10))
+        sound_[1] = random_.choice((0, 0x20, 0x20, 0xDF, 0xFF))
+        struct.pack_into("<h", sound_, 6, random_.randrange(3))
+        sound_[0xB] = random_.randrange(3)
+        tags += sound_
+        gestalt = len(tags)
+        tags += random_.randbytes(0x20)
+        struct.pack_into("<I", tags, gestalt + 4, gestalt + 0x20)
+        struct.pack_into("<I", tags, gestalt + 0xC, gestalt + 0x20 + 3 * 0x38)
+        pointers += [gestalt + 4, gestalt + 0xC]
+        for number in range(3):
+            playback = bytearray(random_.randbytes(0x38))
+            struct.pack_into("<2h", playback, 0x18, random_.choice((0, -1200, 1200, 100, -32768, 32767)), random_.randrange(-1200, 1200))
+            tags += playback
+        for number in range(3):
+            scale = bytearray(random_.randbytes(0x14))
+            struct.pack_into("<2h", scale, 8, random_.choice((0, -1200, -100, 50)), random_.choice((0, 1200, 100, 50)))
+            tags += scale
+        sources = bytearray(random_.randbytes(0x4C + PLAYING * DATUM))
+        struct.pack_into("<I", sources, 0x44, 0x4C)
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        made_index = random_.choice((NONE, *(random_.getrandbits(16) << 16 | number for number in range(PLAYING))))
+        listener = random_.choice((NONE, 0, 1, 2, 3, 0x100, 1))
+        can = random_.choice((1, 1, 1, 1, 0))
+        chosen = random_.choice((0, 1, 2, 0x10001, 0xFFFF0002))
+        recording = random_.choice((0, 1, 5, 0x100, 0x7F))
+        new_played = random_.getrandbits(32)
+
+        def normal(harness, value):
+            return harness.normalize(value)
+
+        def permutation_(harness, arguments, recording=recording, new_played=new_played):
+            before = struct.unpack("<I", harness.mu.mem_read(arguments[2], 4))[0]
+            harness.mu.mem_write(arguments[2], struct.pack("<I", new_played))
+            seed_ = struct.unpack("<I", harness.mu.mem_read(arguments[4], 4))[0]
+            return recording, (normal(harness, arguments[0]), arguments[1] & 0xFFFF, before, arguments[3], seed_, arguments[5], arguments[6] & 0xFF)
+
+        t.check(
+            "looping_sound_source_new",
+            looping_index,
+            random_.getrandbits(16) << 16 | sound_index,
+            random_.choice((NONE, NONE, 0, 1, 2)),
+            random_.getrandbits(16) << 16 | random_.randrange(3),
+            random_.choice((0, 1, 2, 2, 0x10002, 0x102)),
+            Buffer(struct.pack("<I", random_.getrandbits(32))),
+            globals={
+                "looping_sounds": Buffer(bytes(data), pointers=looping.pointers),
+                "global_tag_instances": (tags_ := Buffer(bytes(tags), pointers=tuple(pointers))),
+                "global_sound_cache_file_gestalt": Pointer(tags_, gestalt),
+                "sound_sources": Buffer(bytes(sources), pointers=(0x44,), places=tuple(0x4C + number * DATUM + 0x14 for number in range(PLAYING))),
+                "game_sound_globals": Buffer(bytes(state)),
+                "looping_sound_track_callbacks": GlobalRange(0x20),
+            },
+            memory={STATE: Memory(random_.randbytes(0x1C))},
+            externals={
+                "sound_definition_unknown_00126bd0": lambda harness, arguments, can=can: (can, tuple(arguments)),
+                "sound_get_maximum_distance": lambda harness, arguments: (real_bits(12.5), (normal(harness, arguments[0]), arguments[1])),
+                "sound_source_get_listener": lambda harness, arguments, listener=listener: (
+                    listener,
+                    (normal(harness, arguments[0]), arguments[1], arguments[2]),
+                ),
+                "datum_new": lambda harness, arguments, made_index=made_index: (made_index, (normal(harness, arguments[0]),)),
+                "sound_playback_controller_get": lambda harness, arguments: (STATE, tuple(arguments)),
+                "sound_playback_controller_add_count": lambda harness, arguments: (0, (arguments[0], arguments[1] & 0xFF)),
+                "sound_choose_pitch_range": lambda harness, arguments, chosen=chosen: (
+                    chosen,
+                    (arguments[0] & 0xFFFF, normal(harness, arguments[1]), arguments[2]),
+                ),
+                "looping_sound_track_get_played_bits": lambda harness, arguments: (
+                    0x1234ABCD,
+                    (arguments[0], normal(harness, arguments[1]), normal(harness, arguments[2]), normal(harness, arguments[3]), arguments[4] & 0xFFFF, arguments[5] & 0xFF),
+                ),
+                "sound_unknown_0021cc30": lambda harness, arguments: (
+                    0x77,
+                    (normal(harness, arguments[0]), normal(harness, arguments[1]), arguments[2]),
+                ),
+                "sound_pitch_range_choose_permutation": permutation_,
+                "looping_sound_track_set_played_bits": lambda harness, arguments: (
+                    0,
+                    (arguments[0], arguments[1], normal(harness, arguments[2]), normal(harness, arguments[3]), normal(harness, arguments[4]), arguments[5] & 0xFFFF, arguments[6] & 0xFF),
+                ),
+                "sound_source_set_sound": lambda harness, arguments: (
+                    0,
+                    (arguments[0], arguments[1], arguments[2] & 0xFF, arguments[3] & 0xFF, arguments[4] & 0xFFFF),
+                ),
+                "sound_source_request_data": lambda harness, arguments: (1, (normal(harness, arguments[0]),)),
+                "looping_sound_add_source": lambda harness, arguments: (0, (arguments[0], arguments[1] & 0xFFFF, arguments[2])),
+            },
         )
