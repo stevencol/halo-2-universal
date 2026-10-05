@@ -584,6 +584,17 @@ enum
 	SOUND_CONSOLE_SLOT_BUFFER_FLAGS= 0x2010,
 	SOUND_SILENCE_SIZE= 1000,
 	SOUND_UNKNOWN_00222250_MAXIMUM= 4,
+	/* more of an entry of the list that sound_unknown_002225a0 makes, and of
+	what the game knows of an effect of the processor of the console's sound:
+	the first thing of unknown_00510c90 says where they are */
+	SOUND_EFFECT_ENTRY_FLAGS_OFFSET= 0x4,
+	_sound_effect_entry_whole_bit= 0,
+	_sound_effect_entry_skip_bit= 1,
+	SOUND_EFFECT_ENTRY_OFFSET_OFFSET= 0x8,
+	SOUND_CONSOLE_EFFECT_SIZE= 0x20,
+	SOUND_CONSOLE_EFFECT_STATE_OFFSET= 0x10,
+	SOUND_CONSOLE_EFFECT_STATE_SIZE_OFFSET= 0x14,
+	UNKNOWN_00510C90_EFFECTS_OFFSET= 0x22,
 	UNKNOWN_0051EBE4_UNKNOWN2A08_OFFSET= 0x2A08,
 	UNKNOWN_0051EBE4_UNKNOWN2AD4_OFFSET= 0x2AD4,
 	SOUND_CONSOLE_FORMAT_BASE_SIZE= 0x12,
@@ -1382,6 +1393,12 @@ void unknown_0037b6df(void *buffer, long unknown, long unknown2, long unknown3);
 /* 0x00222250; 0x00192b90: something of a direction */
 real sound_unknown_00222250(const real_vector3d *vector, long index);
 real unknown_00192b90(long index, const real_vector3d *direction, long unknown);
+
+/* 0x0021f960; 0x0037ba6f and 0x0037b60d: of the console */
+void __attribute__((stdcall)) sound_console_apply_effect_list(long size, const byte *list);
+void unknown_0037ba6f(unsigned long effect_index, const byte *data, long unknown);
+void unknown_0037b60d(void *sound, unsigned long effect_index, unsigned long offset, const byte *data,
+	unsigned long size, long unknown);
 
 /* 0x0021d110 */
 long __attribute__((stdcall)) sound_effect_source_new(byte *request, long sound_index);
@@ -9547,4 +9564,67 @@ real sound_unknown_00222250(
 	}
 
 	return result>1.0f ? 1.0f : result;
+}
+
+/* 0x0021f960: the console is given a list of those that
+sound_unknown_002225a0 makes: they are what the effects of the processor of
+the console's sound are to have. Each entry says, with a bit for each, which
+effects it is for (up to 32), and has some bytes for them: either all that
+the effect has (flag 0: unknown_0037ba6f), or a part of it, from where the
+entry says, which is given only if it is not what the game knows that the
+effect has (unknown_0037b60d). An entry with the flag 1 is passed over. The
+effects that were given something are remembered in the word at 0x22 of
+unknown_00510c90. `size` is how many bytes the list is. The name is made
+up */
+void __attribute__((stdcall)) sound_console_apply_effect_list(
+	long size,
+	const byte *list)
+{
+	long entries_size;
+	long position;
+
+	if (!list || !size)
+	{
+		return;
+	}
+	entries_size= (long)((unsigned long)(size-(long)sizeof(long))>>2);
+	for (position= 0; position<entries_size; )
+	{
+		const byte *entry= list+sizeof(long)+position*4;
+		word bytes= *(const word *)(entry+SOUND_EFFECT_ENTRY_BYTES_OFFSET);
+
+		if (!(entry[SOUND_EFFECT_ENTRY_FLAGS_OFFSET]&FLAG(_sound_effect_entry_skip_bit)))
+		{
+			unsigned long effects= *(const unsigned long *)entry;
+			unsigned long effect_index;
+
+			for (effect_index= 0; effect_index<32 && effects>=1UL<<effect_index; effect_index++)
+			{
+				if (!(effects&(1UL<<effect_index)))
+				{
+					continue;
+				}
+				if (entry[SOUND_EFFECT_ENTRY_FLAGS_OFFSET]&FLAG(_sound_effect_entry_whole_bit))
+				{
+					unknown_0037ba6f(effect_index, entry+SOUND_EFFECT_ENTRY_SIZE, 0);
+				}
+				else
+				{
+					const byte *effect= *(const byte *const *)unknown_00510c90+effect_index*SOUND_CONSOLE_EFFECT_SIZE;
+					unsigned long offset= *(const word *)(entry+SOUND_EFFECT_ENTRY_OFFSET_OFFSET);
+
+					bytes= *(const word *)(entry+SOUND_EFFECT_ENTRY_BYTES_OFFSET);
+					if (offset+bytes<=*(const unsigned long *)(effect+SOUND_CONSOLE_EFFECT_STATE_SIZE_OFFSET)<<2 &&
+						memcmp(entry+SOUND_EFFECT_ENTRY_SIZE,
+							*(const byte *const *)(effect+SOUND_CONSOLE_EFFECT_STATE_OFFSET)+offset, bytes))
+					{
+						unknown_0037b60d(*(void **)(unknown_0051ebe4+UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET), effect_index,
+							*(const word *)(entry+SOUND_EFFECT_ENTRY_OFFSET_OFFSET), entry+SOUND_EFFECT_ENTRY_SIZE, bytes, 0);
+					}
+				}
+			}
+			*(word *)(unknown_00510c90+UNKNOWN_00510C90_EFFECTS_OFFSET)|= *(const word *)entry;
+		}
+		position+= (*(const word *)(entry+SOUND_EFFECT_ENTRY_BYTES_OFFSET)+SOUND_EFFECT_ENTRY_SIZE+3)>>2;
+	}
 }

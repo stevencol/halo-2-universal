@@ -5811,3 +5811,48 @@ def run(t) -> None:
                 ),
             },
         )
+
+    # ---------- the console is given a list of what its effects are to have
+
+    random_ = random.Random(234)
+
+    for _ in range(700):
+        known = bytearray(random_.randbytes(0x30))
+        effects_ = len(known)
+        struct.pack_into("<I", known, 0, effects_)
+        pointers = [0]
+        known += random_.randbytes(32 * 0x20)
+        states = len(known)
+        known += random_.randbytes(32 * 0x40)
+        for effect in range(32):
+            struct.pack_into("<2I", known, effects_ + effect * 0x20 + 0x10, states + effect * 0x40, random_.choice((0x10, 0x10, 4, 0, 1)))
+            pointers.append(effects_ + effect * 0x20 + 0x10)
+        entries = bytearray(struct.pack("<I", random_.getrandbits(32)))
+        for _entry in range(random_.choice((0, 1, 2, 4, 6))):
+            mask = random_.choice((0, 1, 2, 0x10, 0x8001, 0x80000000, 0x105, random_.getrandbits(32), 1 << random_.randrange(32)))
+            flags = random_.choice((0, 0, 0, 1, 2, 3, 0xFC))
+            bytes_ = random_.choice((0, 1, 4, 5, 8, 0x10, 0x23))
+            offset = random_.choice((0, 0, 4, 8, 0x30, 0x3C))
+            data_ = bytearray(random_.randbytes(bytes_))
+            first_effect = next((bit for bit in range(32) if mask >> bit & 1), 0)
+            if random_.random() < 0.4 and offset + bytes_ <= 0x40:
+                # what the game knows that the first of its effects has there
+                at = states + first_effect * 0x40 + offset
+                data_ = bytearray(known[at : at + bytes_])
+                if random_.random() < 0.3 and bytes_:
+                    data_[-1] ^= 1
+            entries += struct.pack("<IB3xHH", mask, flags, offset, bytes_) + data_ + random_.randbytes(-bytes_ % 4)
+        size = random_.choice((len(entries), len(entries), len(entries), 0, 4, len(entries) + 3))
+        t.check(
+            "sound_console_apply_effect_list",
+            size,
+            random_.choice((0, Buffer(bytes(entries) + random_.randbytes(0x40)), Buffer(bytes(entries) + random_.randbytes(0x40)), Buffer(bytes(entries) + random_.randbytes(0x40)))),
+            globals={
+                "unknown_00510c90": Buffer(bytes(known), pointers=tuple(pointers)),
+                "unknown_0051ebe4": Buffer(random_.randbytes(0x2AC0)),
+            },
+            externals={
+                "unknown_0037ba6f": lambda harness, arguments: (0, tuple(arguments)),
+                "unknown_0037b60d": lambda harness, arguments: (0, tuple(arguments)),
+            },
+        )

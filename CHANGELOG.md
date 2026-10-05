@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — La lista de efectos llega a la consola
+
+Una función en `sound/sound_manager.c`. De 900 funciones se pasa a
+901, el 8,00 % de las del juego (el 4,737 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_console_apply_effect_list` | `0x0021f960` | `sound/sound_manager.c` |
+
+No estaba apuntada. Recibe en `eax` cuántos bytes ocupa la lista y en la
+pila la lista. Nuevas sin descompilar, de la consola: `0x0037ba6f` y
+`0x0037b60d`.
+
+### Lo que se sabe
+
+- Con esta función se aclara qué es la lista que hacen
+  `sound_unknown_002225a0` y `sound_unknown_002228d0` (hitos 200 y 217):
+  son los valores que deben tener los efectos del procesador de sonido de
+  la consola (la reverberación y demás).
+- `sound_console_apply_effect_list` recorre la lista. Cada entrada dice,
+  con un bit por efecto, a cuáles se aplica (hasta 32), y trae unos bytes:
+  o todo lo que el efecto tiene (marca 0), o solo una parte, desde el punto
+  que dice la entrada.
+- Una parte solo se manda a la consola si no coincide con lo que el juego
+  sabe que el efecto ya tiene: así no se repiten órdenes cada fotograma.
+- Las entradas con la marca 1 se saltan. Los efectos tocados se apuntan en
+  una palabra de `unknown_00510c90`.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función. La batería
+  completa corre aparte con las 900 funciones del hito 233.
+
+### Mutaciones
+
+Diez líneas rotas a mano: las pruebas notan las diez.
+
 ## 2026-10-05 — Función número 900
 
 Una función en `sound/sound_manager.c`. De 899 funciones se pasa a
