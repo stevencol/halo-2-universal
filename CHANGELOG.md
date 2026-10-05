@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-04 — Recorrer las tablas del sonido
+
+Cinco funciones en `sound/sound_manager.c` que recorren una tabla entera.
+De 802 funciones se pasa a 807, el 7,16 % de las del juego (el
+3,844 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_playback_controllers_update` | `0x00219cc0` | `sound/sound_manager.c` |
+| `sound_playback_controllers_unknown_00219d90` | `0x00219d90` | `sound/sound_manager.c` |
+| `looping_sounds_initialize_for_new_structure_bsp` | `0x0021a100` | `sound/sound_manager.c` |
+| `looping_sounds_delete_all` | `0x0021a1e0` | `sound/sound_manager.c` |
+| `sound_effects_delete_all` | `0x0021d4d0` | `sound/sound_manager.c` |
+
+Las cinco estaban apuntadas sin descompilar con nombres `unknown_...`.
+Nueva sin descompilar: `0x0021f430`.
+
+### Lo que se sabe
+
+- `sound_playback_controllers_update` hace avanzar el número al azar de
+  cada controlador de reproducción (lo llama `sound_update` cada fotograma).
+- `sound_playback_controllers_unknown_00219d90` es lo que se hace con los
+  controladores al activar y al desactivar el sonido: a los que tienen algo
+  y la cuenta de `3` a cero, y cuya marca está como toca, se los pasa a
+  `0x0021f430`; al desactivar les pone la marca.
+- `looping_sounds_initialize_for_new_structure_bsp` vuelve a calcular en qué
+  sitio del nivel está cada sonido en bucle que tiene sitio, cuando cambia
+  el bsp.
+- `looping_sounds_delete_all` y `sound_effects_delete_all` sueltan todos los
+  sonidos en bucle y todos los efectos de sonido.
+- En el juego estos recorridos van escritos dentro de cada función; aquí
+  usan `data_next_index`, y las pruebas les dan tablas de verdad, con su
+  vector de bits, en vez de sustituir el recorrido.
+- Los nombres son inventados.
+
+### Sin comprobar
+
+- La batería completa no se pasó en este hito, solo las pruebas de estas
+  funciones y de las cinco que las llaman.
+
+### Mutaciones
+
+Pendientes; corren aparte, en segundo plano.
+
 ## 2026-10-04 — Fundir dos sonidos, la distancia a un oyente y cuánto se oye a una distancia
 
 Cuatro funciones en `sound/sound_manager.c`. De 798 funciones se pasa a

@@ -9,6 +9,8 @@ import struct
 
 from difftest import Buffer, Memory, Mock, Pointer, mock_address
 from test_async import calls_so_far
+from test_data import array as data_array
+from test_data import identifier
 
 NONE = 0xFFFFFFFF
 PLAYBACK_SIZE = 0x38
@@ -452,7 +454,7 @@ def run(t) -> None:
                 "scenario_location_from_point": location,
                 "bsp3d_test_point": test_point,
                 "unknown_0021dde0": lambda harness, arguments: 0,
-                "unknown_0021a100": lambda harness, arguments: 0,
+                "looping_sounds_initialize_for_new_structure_bsp": lambda harness, arguments: 0,
             },
         )
 
@@ -474,7 +476,7 @@ def run(t) -> None:
                     externals={
                         "sound_channel_pause": channel,
                         "sound_channel_resume": channel,
-                        "unknown_00219d90": lambda harness, arguments: (0, (arguments[0] & 0xFF,)),
+                        "sound_playback_controllers_unknown_00219d90": lambda harness, arguments: (0, (arguments[0] & 0xFF,)),
                         "sound_console_streams_resume": lambda harness, arguments: 0,
                         "sound_console_streams_pause": lambda harness, arguments: 0,
                         "GetTickCount": lambda harness, arguments, value=random_.getrandbits(32): value,
@@ -904,11 +906,11 @@ def run(t) -> None:
     random_ = random.Random(151)
     UPDATE_NAMES = (
         "unknown_0021ec00",
-        "unknown_00219d90",
+        "sound_playback_controllers_unknown_00219d90",
         "sound_console_streams_resume",
         "unknown_001269f0",
         "unknown_00127400",
-        "unknown_00219cc0",
+        "sound_playback_controllers_update",
         "unknown_0021b0e0",
         "sound_channels_update",
         "unknown_00128020",
@@ -1119,7 +1121,7 @@ def run(t) -> None:
             "sound_stop_all",
             globals={"game_sound_globals": Buffer(bytes(state)), "sound_sources": buffer},
             externals={
-                "unknown_0021d4d0": lambda harness, arguments: 0,
+                "sound_effects_delete_all": lambda harness, arguments: 0,
                 "data_next_absolute_index": next_absolute_index(in_use),
                 "sound_source_delete": lambda harness, arguments: (0, tuple(arguments)),
             },
@@ -1408,14 +1410,14 @@ def run(t) -> None:
             },
             extra=[table],
             externals={
-                "unknown_0021d4d0": lambda harness, arguments: 0,
+                "sound_effects_delete_all": lambda harness, arguments: 0,
                 "data_next_absolute_index": next_absolute_index(in_use),
                 "sound_source_delete": lambda harness, arguments: (0, tuple(arguments)),
                 "sound_class_get": class_of(table),
                 "sound_idle": lambda harness, arguments: 0,
                 "unknown_0021f290": lambda harness, arguments: 0,
                 "GetTickCount": lambda harness, arguments: 0x89ABCDEF,
-                "unknown_0021a1e0": lambda harness, arguments: 0,
+                "looping_sounds_delete_all": lambda harness, arguments: 0,
             },
         )
 
@@ -2294,3 +2296,78 @@ def run(t) -> None:
                     as_bits(random_.choice((0.0, 0.5, 1.0, 2.0, 10.0, 60.0, random_.uniform(0, 60)))),
                     globals=world(random_, sound_index, sound_data(random_, sound_flags)),
                 )
+
+    # ---------- what is done with all the looping sounds, the sound effects and the sound playback controllers
+
+    random_ = random.Random(168)
+
+    def some_in_use(maximum_count: int) -> dict:
+        count = random_.choice((0, 1, maximum_count // 2, maximum_count))
+        return {n: identifier(random_) for n in random_.sample(range(maximum_count), count)}
+
+    def patched(buffer: Buffer, size: int, count: int, patch) -> Buffer:
+        """A data array with something of each of its elements changed."""
+        data = bytearray(buffer.data)
+        for n in range(count):
+            patch(data, 0x4C + n * size)
+        return Buffer(bytes(data), pointers=buffer.pointers)
+
+    def controller_patch(data: bytearray, at: int) -> None:
+        data[at + 2] = random_.choice((0, 1, 2, 0x80, 0x81, 0xFF))
+        data[at + 3] = random_.choice((0, 0x80, 1, 0x81, 0x7F, 0xFF))
+        struct.pack_into("<I", data, at + 4, random_.choice((NONE, 0, random_.getrandbits(32))))
+
+    def all_controllers() -> Buffer:
+        return patched(data_array(random_, CONTROLLERS, 0x1C, some_in_use(CONTROLLERS)), 0x1C, CONTROLLERS, controller_patch)
+
+    for _ in range(80):
+        t.check(
+            "sound_playback_controllers_update",
+            globals={"unknown_0051ebd8": all_controllers(), "unknown_0051ebdc": Buffer(random_.randbytes(0x1C))},
+        )
+        for enable in (0, 1, 0x80):
+            t.check(
+                "sound_playback_controllers_unknown_00219d90",
+                enable,
+                globals={"unknown_0051ebd8": all_controllers(), "unknown_0051ebdc": Buffer(random_.randbytes(0x1C))},
+                externals={"unknown_0021f430": lambda harness, arguments: (0, tuple(arguments))},
+            )
+
+    def looping_patch(data: bytearray, at: int) -> None:
+        data[at + 0xF] = random_.choice((0, 1, 1, 0x11, 0xF1, 2))
+        data[at + 0x18 : at + 0x24] = reals(random_, 3)
+        struct.pack_into("<I", data, at + 0x54, random_.choice((NONE, random_.getrandbits(16) << 16 | random_.randrange(CONTROLLERS))))
+
+    def all_looping() -> Buffer:
+        return patched(data_array(random_, 12, 0xD4, some_in_use(12)), 0xD4, 12, looping_patch)
+
+    def placed(harness, arguments):
+        where, point = arguments
+        index = calls_so_far(harness, "scenario_location_from_point")
+        harness.mu.mem_write(where, struct.pack("<2I", 0x1000 + index, 0x2000 + index))
+        return 0, (harness.normalize(where), bytes(harness.mu.mem_read(point, 12)))
+
+    for _ in range(80):
+        t.check(
+            "looping_sounds_initialize_for_new_structure_bsp",
+            globals={"looping_sounds": all_looping()},
+            externals={"scenario_location_from_point": placed},
+        )
+        t.check(
+            "looping_sounds_delete_all",
+            globals={"looping_sounds": random_.choice((0, all_looping(), all_looping()))},
+            externals={"looping_sound_delete": lambda harness, arguments: (0, tuple(arguments))},
+        )
+
+    def effect_patch(data: bytearray, at: int) -> None:
+        struct.pack_into("<I", data, at + 8, random_.choice((NONE, random_.getrandbits(16) << 16 | random_.randrange(CONTROLLERS))))
+
+    for _ in range(80):
+        t.check(
+            "sound_effects_delete_all",
+            globals={
+                "sound_effects": patched(data_array(random_, EFFECTS, 0x14, some_in_use(EFFECTS)), 0x14, EFFECTS, effect_patch),
+                "unknown_0051ebd8": all_controllers(),
+            },
+            externals={"datum_delete": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1]))},
+        )

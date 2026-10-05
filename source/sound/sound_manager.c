@@ -272,6 +272,10 @@ enum
 	/* in what the game says of a sound whose place is a column: how high
 	the column is */
 	SOUND_SOURCE_HEIGHT_OFFSET= 0x30,
+	/* in a looping sound: what the game says of it, as of a sound, and
+	where it is in the structure bsp */
+	LOOPING_SOUND_DATUM_SOURCE_OFFSET= 0xC,
+	LOOPING_SOUND_DATUM_LOCATION_OFFSET= 0x34,
 	/* what the one who is told of a sound is told when all are stopped */
 	_sound_source_deleted_unknown10= 10,
 
@@ -388,7 +392,7 @@ what the frame has on the stack; 0x0014dde0 gives the first local player */
 struct sound_update_listeners;
 void __attribute__((stdcall)) unknown_0021f360(byte *globals);
 void __attribute__((stdcall)) unknown_00127400(boolean unknown);
-void unknown_00219cc0(void);
+void sound_playback_controllers_update(void);
 void __attribute__((stdcall)) unknown_0021b0e0(long unknown);
 void unknown_00128020(void);
 void unknown_001282d0(void);
@@ -454,7 +458,7 @@ real __attribute__((stdcall)) sound_decibels_fade_in(long kind, real decibels, r
 /* 0x0021dde0, 0x0021a100: the sound voices and the looping sounds, after the
 structure bsp changes */
 void unknown_0021dde0(void);
-void unknown_0021a100(void);
+void looping_sounds_initialize_for_new_structure_bsp(void);
 
 /* 0x0012a060, 0x0012a0b0: a channel, when the sound is disabled and when it
 is enabled */
@@ -479,7 +483,6 @@ void sound_channel_resume(short channel_index);
 
 /* 0x00219d90, 0x0021f5a0, 0x0021f570: the sound playback controllers and the
 sound of the console, when the sound is enabled and disabled */
-void unknown_00219d90(boolean unknown);
 void sound_console_streams_resume(void);
 void sound_console_streams_pause(void);
 
@@ -487,7 +490,7 @@ void sound_console_streams_pause(void);
 void sound_channel_delete(short channel_index);
 void sound_source_release_chunk(byte *source);
 void sound_playback_controller_release(long controller_index);
-void unknown_0021d4d0(void);
+void sound_effects_delete_all(void);
 
 /* 0x002ae4b0: a voice of the console's sound stops; 0x0021e050 and
 0x00127f10 */
@@ -499,7 +502,7 @@ boolean __attribute__((stdcall)) sound_source_unknown_00127f10(long source_index
 /* 0x0021f290: of the sound of the console, and 0x0021a1e0: of the looping
 sounds, when the sounds are stopped */
 void unknown_0021f290(void);
-void unknown_0021a1e0(void);
+void looping_sounds_delete_all(void);
 
 /* 0x0037b73f: of the console: a stream of sound stops for a while, or
 goes on */
@@ -607,6 +610,12 @@ void __attribute__((stdcall)) sound_channel_queue_chunk(short channel_index, con
 	short chunk);
 real __attribute__((stdcall)) sound_source_distance_gain(long sound_index, const struct sound_source *source,
 	real distance);
+
+/* 0x0021f430: of the console's sound and a sound playback controller */
+void unknown_0021f430(long controller_index);
+
+/* 0x00219d90 */
+void __attribute__((stdcall)) sound_playback_controllers_unknown_00219d90(boolean enable);
 
 /* 0x001286b0, 0x00127fc0 and 0x0012abe0 */
 void __attribute__((stdcall)) sound_source_set_sound(long source_index, long sound_index, char pitch_range,
@@ -1076,7 +1085,7 @@ void sound_initialize_for_new_structure_bsp(
 			}
 		}
 		unknown_0021dde0();
-		unknown_0021a100();
+		looping_sounds_initialize_for_new_structure_bsp();
 	}
 }
 
@@ -1119,7 +1128,7 @@ void sound_enable(
 			{
 				sound_channel_resume((short)index);
 			}
-			unknown_00219d90(TRUE);
+			sound_playback_controllers_unknown_00219d90(TRUE);
 			sound_console_streams_resume();
 			time= GetTickCount();
 			globals= game_sound_globals;
@@ -1576,7 +1585,7 @@ void sound_update(
 				{
 					sound_channel_resume((short)index);
 				}
-				unknown_00219d90(TRUE);
+				sound_playback_controllers_unknown_00219d90(TRUE);
 				sound_console_streams_resume();
 				time= GetTickCount();
 				globals= game_sound_globals;
@@ -1591,7 +1600,7 @@ void sound_update(
 			}
 			sound_classes_update(*(real *)(globals+GAME_SOUND_GLOBALS_SECONDS_OFFSET));
 			unknown_00127400(TRUE);
-			unknown_00219cc0();
+			sound_playback_controllers_update();
 			unknown_0021b0e0(game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7E_OFFSET]);
 			sound_channels_update();
 			unknown_00128020();
@@ -1613,7 +1622,7 @@ void sound_update(
 			}
 		}
 		unknown_0021ee80();
-		unknown_00219d90(FALSE);
+		sound_playback_controllers_unknown_00219d90(FALSE);
 		game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7E_OFFSET]= FALSE;
 		game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7D_OFFSET]= FALSE;
 	}
@@ -1793,7 +1802,7 @@ void sound_stop_all(
 	{
 		long source_index;
 
-		unknown_0021d4d0();
+		sound_effects_delete_all();
 		for (source_index= data_next_index(sound_sources, NONE);
 			source_index!=NONE;
 			source_index= data_next_index(sound_sources, source_index))
@@ -2118,7 +2127,7 @@ void __attribute__((stdcall)) sound_reset(
 	{
 		long source_index;
 
-		unknown_0021d4d0();
+		sound_effects_delete_all();
 		for (source_index= data_next_index(sound_sources, NONE);
 			source_index!=NONE;
 			source_index= data_next_index(sound_sources, source_index))
@@ -2153,7 +2162,7 @@ void __attribute__((stdcall)) sound_reset(
 	*(long *)(unknown+UNKNOWN_004ED288_UNKNOWN20_OFFSET+4)= 0;
 	if (!keep)
 	{
-		unknown_0021a1e0();
+		looping_sounds_delete_all();
 	}
 }
 
@@ -3636,4 +3645,106 @@ real __attribute__((stdcall)) sound_source_distance_gain(
 	fraction= sound_interpolation_fraction(sound_get_maximum_distance(source, sound_index), minimum_distance, distance, FALSE);
 
 	return minimum_distance/(minimum_distance>distance ? minimum_distance : distance)*fraction;
+}
+
+/* 0x00219cc0: each sound playback controller goes on to its next random
+number */
+void sound_playback_controllers_update(
+	void)
+{
+	long controller_index;
+
+	for (controller_index= data_next_index(unknown_0051ebd8, NONE);
+		controller_index!=NONE;
+		controller_index= data_next_index(unknown_0051ebd8, controller_index))
+	{
+		unsigned long *seed= (unsigned long *)((byte *)sound_playback_controller_get(controller_index)+
+			UNKNOWN_0051EBD8_DATUM_UNKNOWN8_OFFSET);
+
+		*seed= *seed*1664525UL+1013904223UL;
+	}
+}
+
+/* 0x00219d90: when the sound is disabled, and when it is enabled: each
+sound playback controller with something and a count of 0 at 3 whose flag
+there is as the function is told (set, to enable; not set, to disable) is
+given to unknown_0021f430, and to disable its flag is set */
+void __attribute__((stdcall)) sound_playback_controllers_unknown_00219d90(
+	boolean enable)
+{
+	long controller_index;
+
+	for (controller_index= data_next_index(unknown_0051ebd8, NONE);
+		controller_index!=NONE;
+		controller_index= data_next_index(unknown_0051ebd8, controller_index))
+	{
+		byte *controller= sound_playback_controller_get(controller_index);
+		byte count= controller[UNKNOWN_0051EBD8_DATUM_COUNT_OFFSET];
+
+		if (((count&UNKNOWN_0051EBD8_DATUM_UNKNOWN_FLAG)!=0)==(enable!=0) &&
+			*(const long *)(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWN4_OFFSET)!=NONE &&
+			!(count&UNKNOWN_0051EBD8_DATUM_COUNT_MASK))
+		{
+			unknown_0021f430(controller_index);
+			if (!enable)
+			{
+				controller[UNKNOWN_0051EBD8_DATUM_COUNT_OFFSET]|= UNKNOWN_0051EBD8_DATUM_UNKNOWN_FLAG;
+			}
+		}
+	}
+}
+
+/* 0x0021a100: when the structure bsp changes: where in it the looping
+sounds with a place are */
+void looping_sounds_initialize_for_new_structure_bsp(
+	void)
+{
+	struct data_array *data= looping_sounds;
+	long looping_sound_index;
+
+	for (looping_sound_index= data_next_index(data, NONE);
+		looping_sound_index!=NONE;
+		looping_sound_index= data_next_index(data, looping_sound_index))
+	{
+		byte *looping_sound= (byte *)data->data+(looping_sound_index&0xFFFF)*LOOPING_SOUND_DATUM_SIZE;
+
+		if ((looping_sound[LOOPING_SOUND_DATUM_SOURCE_OFFSET+SOUND_SOURCE_TYPE_OFFSET]&SOUND_SOURCE_DATUM_TYPE_MASK)==
+			_sound_source_datum_type_positioned)
+		{
+			scenario_location_from_point((struct scenario_location *)(looping_sound+LOOPING_SOUND_DATUM_LOCATION_OFFSET),
+				(const real_point3d *)(looping_sound+LOOPING_SOUND_DATUM_SOURCE_OFFSET+SOUND_SOURCE_POSITION_OFFSET));
+		}
+	}
+}
+
+/* 0x0021a1e0: all the looping sounds are let go */
+void looping_sounds_delete_all(
+	void)
+{
+	struct data_array *data= looping_sounds;
+
+	if (data)
+	{
+		long looping_sound_index;
+
+		for (looping_sound_index= data_next_index(data, NONE);
+			looping_sound_index!=NONE;
+			looping_sound_index= data_next_index(data, looping_sound_index))
+		{
+			looping_sound_delete(looping_sound_index);
+		}
+	}
+}
+
+/* 0x0021d4d0: all the sound effects are let go */
+void sound_effects_delete_all(
+	void)
+{
+	struct data_array *data= sound_effects;
+	long effect_index;
+
+	for (effect_index= data_next_index(data, NONE); effect_index!=NONE; effect_index= data_next_index(data, effect_index))
+	{
+		sound_effect_delete(effect_index);
+	}
 }
