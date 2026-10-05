@@ -299,6 +299,7 @@ enum
 	is told of a sound of a track say which track */
 	LOOPING_SOUND_TRACK_CHANNELS_OFFSET= 0xE,
 	LOOPING_SOUND_TOLD_TRACK_OFFSET= 0x4,
+	LOOPING_SOUND_TOLD_COUNTED_OFFSET= 0x6,
 	LOOPING_SOUND_DATUM_TRACK_SOURCE_OFFSET= 0x88,
 	SOUND_SOURCE_DATUM_NEXT_OFFSET= 0x6C,
 	SOUND_SOURCE_DATUM_PREVIOUS_OFFSET= 0x70,
@@ -1596,6 +1597,10 @@ void __attribute__((stdcall)) looping_sound_track_source_got_channel(long data, 
 /* 0x0021acc0 */
 boolean __attribute__((stdcall)) looping_sound_track_source_heard(long data, long sound_index,
 	void *unknown5C, byte *parameters);
+
+/* 0x0021adb0 */
+void __attribute__((stdcall)) looping_sound_track_source_deleted(long data, long source_index,
+	long reason);
 
 /* 0x0021d060 */
 void looping_sound_check_distances(long definition_index, const struct sound_source *source);
@@ -11123,4 +11128,56 @@ boolean __attribute__((stdcall)) looping_sound_track_source_heard(
 	*(unsigned long *)parameters|= FLAG(_sound_heard_decibels_bit);
 
 	return TRUE;
+}
+
+/* 0x0021adb0: a looping sound is told that a sound of one of its tracks is
+let go. The sound leaves the ring of the sounds of its track: the one
+before it and the one after it go one to the other. If the looping sound is
+still there, it counts one sound less (its byte at 0x51), and if the sound
+was the first of its track, the first is now the one after it, or none if it
+was alone. And if the sound has a sound playback controller that is still
+there and has something at 4, and the byte at 6 of the bytes for who is told
+is 0xFF, the count of the controller goes down by one, without its flag. The
+name is made up */
+void __attribute__((stdcall)) looping_sound_track_source_deleted(
+	long data,
+	long source_index,
+	long reason)
+{
+	byte *looping_sound= datum_try_and_get(looping_sounds, data);
+	byte *source= sound_source_get(source_index);
+	long track= (char)source[SOUND_SOURCE_DATUM_TRACK_OFFSET];
+	long next= *(const long *)(source+SOUND_SOURCE_DATUM_NEXT_OFFSET);
+	long following= NONE;
+	long controller_index;
+
+	if (next!=source_index)
+	{
+		*(long *)(sound_source_get(*(const long *)(source+SOUND_SOURCE_DATUM_PREVIOUS_OFFSET))+SOUND_SOURCE_DATUM_NEXT_OFFSET)= next;
+		*(long *)(sound_source_get(next)+SOUND_SOURCE_DATUM_PREVIOUS_OFFSET)=
+			*(const long *)(source+SOUND_SOURCE_DATUM_PREVIOUS_OFFSET);
+		following= *(const long *)(source+SOUND_SOURCE_DATUM_NEXT_OFFSET);
+	}
+	if (looping_sound)
+	{
+		long *first= (long *)(looping_sound+LOOPING_SOUND_DATUM_TRACK_SOURCE_OFFSET+track*LOOPING_SOUND_TRACK_SIZE);
+
+		looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET+1]--;
+		if (*first==source_index)
+		{
+			*first= following;
+		}
+	}
+	controller_index= *(const long *)(source+SOUND_SOURCE_DATUM_UNKNOWN5C_OFFSET);
+	if (controller_index!=NONE)
+	{
+		byte *controller= sound_playback_controller_try_and_get(controller_index);
+
+		if (controller && source[SOUND_SOURCE_DATUM_UNKNOWN5C_OFFSET+LOOPING_SOUND_TOLD_COUNTED_OFFSET]==0xFF &&
+			*(const long *)(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWN4_OFFSET)!=NONE)
+		{
+			controller[UNKNOWN_0051EBD8_DATUM_COUNT_OFFSET]=
+				(controller[UNKNOWN_0051EBD8_DATUM_COUNT_OFFSET]-1)&UNKNOWN_0051EBD8_DATUM_COUNT_MASK;
+		}
+	}
 }

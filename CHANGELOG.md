@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Un sonido de una pista de un sonido en bucle se suelta
+
+Una función en `sound/sound_manager.c`, de 252 bytes. De 917 funciones se pasa a
+918, el 8,15 % de las del juego (el 4,977 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `looping_sound_track_source_deleted` | `0x0021adb0` | `sound/sound_manager.c` |
+
+No estaba apuntada: es la tercera de las funciones de la tabla de
+`0x0044a110` (la de las pistas de los sonidos en bucle), y no está en la
+lista de Ghidra.
+
+### Lo que se sabe
+
+- Los sonidos de una pista están en un anillo: cada uno dice cuál va
+  después y cuál antes. Al soltarse uno, sale del anillo: el de antes y el
+  de después se apuntan el uno al otro.
+- Si el sonido en bucle sigue ahí, cuenta un sonido menos (su byte de
+  `0x51`); y si el que se suelta era el primero de su pista, el primero
+  pasa a ser el de después, o ninguno si estaba solo.
+- Si el sonido tiene mando de sonidos, el mando sigue ahí y tiene algo en
+  `0x4`, y el byte de `0x6` de los bytes de a quién se avisa es `0xFF`, la
+  cuenta del mando baja en uno. A diferencia de
+  `sound_playback_controller_add_count`, aquí se pierde la marca que
+  comparte byte con la cuenta.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función. La última
+  batería completa es la del hito 244 (911 funciones, todas bien).
+
+### Mutaciones
+
+Catorce cambios a mano: las pruebas notan los catorce, uno de ellos solo
+después de añadir un caso (un «siguiente» que cae en la misma casilla que
+el propio sonido pero es otro).
+
 ## 2026-10-05 — Cómo se oye un sonido de una pista de un sonido en bucle
 
 Una función en `sound/sound_manager.c`, de 223 bytes. De 916 funciones se pasa a

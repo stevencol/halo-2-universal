@@ -1389,3 +1389,4 @@ address,name,source,arguments,returns,convention
 0021a250,unknown_0021a250,,stack stack stack stack stack stack stack stack,void
 0021ac30,looping_sound_track_source_got_channel,source/sound/sound_manager.c,stack stack stack stack,void,stdcall
 0021acc0,looping_sound_track_source_heard,source/sound/sound_manager.c,stack stack stack stack,bool,stdcall
+0021adb0,looping_sound_track_source_deleted,source/sound/sound_manager.c,stack stack stack,void,stdcall

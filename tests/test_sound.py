@@ -6763,3 +6763,57 @@ def run(t) -> None:
             },
             externals={"sound_gain_to_decibels": decibels_, "sound_definition_decibels": as_sound},
         )
+
+    # ---------- a looping sound is told that a sound of one of its tracks is let go
+
+    random_ = random.Random(251)
+
+    for n in range(900):
+        looping, indices = looping_world()
+        data = bytearray(looping.data)
+        sources = bytearray(random_.randbytes(0x4C + PLAYING * DATUM))
+        struct.pack_into("<I", sources, 0x44, 0x4C)
+        salts = [random_.getrandbits(16) << 16 | number for number in range(PLAYING)]
+        number = random_.randrange(PLAYING)
+        at = 0x4C + number * DATUM
+        own = salts[number]
+        others = random_.sample([salt for salt in salts if salt != own], 2)
+        kind = random_.randrange(6)
+        if kind == 0:
+            following, before = own, own
+        elif kind == 5:
+            # the same place in the array, of another sound
+            following, before = own ^ 0x10000, others[0]
+        elif kind == 1:
+            following, before = others[0], others[0]
+        elif kind == 2:
+            following, before = own, others[1]
+        else:
+            following, before = others
+        struct.pack_into("<2I", sources, at + 0x6C, following, before)
+        track = random_.randrange(3)
+        sources[at + 0x60] = track
+        sources[at + 0x62] = random_.choice((0xFF, 0xFF, 0xFF, 0, 0x7F))
+        controller = bytearray(random_.randbytes(0x1C))
+        struct.pack_into("<I", controller, 4, random_.choice((NONE, random_.getrandbits(32), random_.getrandbits(32))))
+        controller[3] = random_.choice((0, 1, 0x80, 0x81, 0x7F, 0xFF, 5))
+        struct.pack_into("<I", sources, at + 0x5C, random_.choice((NONE, 0x30002, 0x30002, random_.getrandbits(32))))
+        for index in range(6):
+            first = 0x4C + index * 0xD4 + 0x88 + track * 0x14
+            struct.pack_into("<I", data, first, random_.choice((own, own, own ^ 0x10000, others[0], NONE)))
+
+        def controller_(harness, arguments, there=random_.random() < 0.85):
+            return (STATE if there else 0), (arguments[0],)
+
+        t.check(
+            "looping_sound_track_source_deleted",
+            random_.choice((NONE, *indices, *indices, *indices, indices[0] ^ 0x10000, 6, 0x10007)),
+            own,
+            random_.getrandbits(32),
+            globals={
+                "looping_sounds": Buffer(bytes(data), pointers=looping.pointers),
+                "sound_sources": Buffer(bytes(sources), pointers=(0x44,)),
+            },
+            memory={STATE: Memory(bytes(controller))},
+            externals={"sound_playback_controller_try_and_get": controller_},
+        )
