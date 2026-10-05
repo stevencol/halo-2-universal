@@ -2,6 +2,50 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Lo que una consulta saca del portal más cercano al oyente
+
+Una función en `sound/sound_manager.c`, de 121 bytes. De 908 funciones se pasa a
+909, el 8,07 % de las del juego (el 4,880 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_query_portal_results` | `0x00222150` | `sound/sound_manager.c` |
+
+No estaba apuntada. La llama `0x00221e30`, la que resuelve cada consulta.
+Recibe el cluster del oyente en `ecx`, dónde está el oyente en `esi`, dónde
+dejar dos números en `ebx` y, en la pila, la tabla de lo que el oyente oye
+de cada cluster (la del hito 241), dónde está el sonido y su cluster.
+Nuevas sin descompilar: `0x0018cfd0` y `0x0014b240`.
+
+### Lo que se sabe
+
+- Es para un sonido que está en otro cluster que el oyente.
+  `sound_query_portal_results` busca el portal del cluster del oyente que
+  queda más cerca del oyente (`0x0018cfd0`; los portales están en `0x60`
+  del structure bsp, de `0x24` bytes cada uno).
+- El primer número es `1 - 1/(d + 1)`, con `d` lo lejos que está el sonido
+  de ese portal (`0x0014b240`): 0 en el portal y cerca de 1 muy lejos. El
+  segundo es lo que el oyente oye del cluster del sonido.
+- Sin portal, los números son 1 y 0.
+- El nombre es inventado.
+
+### Batería completa
+
+La del hito 240 terminó mientras se hacía este: 907 funciones, las 907
+bien.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función.
+
+### Mutaciones
+
+Doce cambios a mano: las pruebas notan once. El que no notan es hacer la
+cuenta con reales de 32 bits en vez de con los del procesador: con este
+compilador sale el mismo código.
+
 ## 2026-10-05 — Lo que un oyente oye de cada cluster
 
 Una función en `sound/sound_manager.c`, de 804 bytes. De 907 funciones se pasa a

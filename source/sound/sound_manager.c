@@ -660,6 +660,8 @@ enum
 	are and has what each says at 0x30 */
 	MAXIMUM_STRUCTURE_BSP_CLUSTERS= 512,
 	STRUCTURE_BSP_CLUSTER_COUNT_OFFSET= 0x9C,
+	STRUCTURE_BSP_PORTALS_OFFSET= 0x60,
+	STRUCTURE_BSP_PORTAL_SIZE= 0x24,
 	STRUCTURE_BSP_SOUND_OPENINGS_OFFSET= 0x224,
 	STRUCTURE_BSP_SOUND_OPENINGS_SAID_OFFSET= 0x30,
 	_sound_source_datum_unknown2_bit= 2,
@@ -1504,6 +1506,14 @@ void __attribute__((stdcall)) unknown_00020670(void *array, unsigned long size, 
 	void *(__attribute__((thiscall)) *constructor)(void *element));
 void *__attribute__((thiscall)) unknown_0031bc70(void *element);
 void unknown_00221e30(struct sound_query *query, const real *heard, const struct sound_listener *listener);
+
+/* 0x00222150; 0x0018cfd0: the portal of a cluster that is nearest a place,
+and how far it is; 0x0014b240: how far a place is from a portal */
+void __attribute__((stdcall)) sound_query_portal_results(long listener_cluster_index,
+	const real_point3d *listener_position, real *results, const real *heard, const real_point3d *position,
+	long cluster_index);
+long unknown_0018cfd0(long cluster_index, const real_point3d *position, real *distance);
+real unknown_0014b240(const byte *structure_bsp, const byte *portal, const real_point3d *position);
 
 /* 0x0021d110 */
 long __attribute__((stdcall)) sound_effect_source_new(byte *request, long sound_index);
@@ -10288,5 +10298,41 @@ void __attribute__((stdcall)) sound_listener_compute_queries(
 				unknown_00221e30(query, heard, listener);
 			}
 		}
+	}
+}
+
+/* 0x00222150: two reals for a sound that is in another cluster than the
+listener, from the portal of the listener's cluster that is nearest the
+listener (unknown_0018cfd0): the first is nearer 1 the further the sound is
+from that portal (unknown_0014b240), 0 at it; the second is what the
+listener hears of the sound's cluster. With no portal, 1 and 0. The cluster
+of the listener is taken in ecx, where the listener is in esi and where the
+reals go in ebx. The name is made up */
+void __attribute__((stdcall)) sound_query_portal_results(
+	long listener_cluster_index,
+	const real_point3d *listener_position,
+	real *results,
+	const real *heard,
+	const real_point3d *position,
+	long cluster_index)
+{
+	const byte *structure_bsp= global_structure_bsp;
+	real distance;
+	long portal_index= unknown_0018cfd0(listener_cluster_index, listener_position, &distance);
+
+	if (portal_index!=NONE)
+	{
+		const byte *portal= *(const byte *const *)(structure_bsp+STRUCTURE_BSP_PORTALS_OFFSET)+
+			portal_index*STRUCTURE_BSP_PORTAL_SIZE;
+		real amount= heard[cluster_index];
+		real away= unknown_0014b240(structure_bsp, portal, position);
+
+		results[1]= amount;
+		results[0]= (real)(1.0L-1.0L/((long double)away+1.0L));
+	}
+	else
+	{
+		results[0]= 1.0f;
+		results[1]= 0.0f;
 	}
 }

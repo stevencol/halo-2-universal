@@ -6243,3 +6243,36 @@ def run(t) -> None:
                 "unknown_00221e30": query_,
             },
         )
+
+    # ---------- two reals for a sound in another cluster, from the nearest portal
+
+    random_ = random.Random(242)
+
+    for n in range(600):
+        portals = 8
+        heard = reals(random_, 16)
+        structure = bytearray(random_.randbytes(0x64) + random_.randbytes(portals * 0x24))
+        struct.pack_into("<I", structure, 0x60, 0x64)
+        portal = random_.choice((NONE, NONE, 0, 1, 5, 7))
+        away = random_.choice((0.0, 1.0, 0.5, 3.0, 100.0, 1e-7, 0.3333, 1e30, -0.5, random_.uniform(0, 50), float("inf")))
+        cluster = random_.randrange(16)
+        listener_cluster = random_.choice((0, 1, 7, NONE))
+
+        def nearest(harness, arguments, portal=portal):
+            harness.mu.mem_write(arguments[2], struct.pack("<f", 12.5))
+            return portal, (arguments[0], harness.normalize(arguments[1]))
+
+        def far(harness, arguments, away=away):
+            return real_bits(away), tuple(harness.normalize(argument) for argument in arguments)
+
+        t.check(
+            "sound_query_portal_results",
+            listener_cluster,
+            Buffer(reals(random_, 3)),
+            Buffer(random_.randbytes(8)),
+            Buffer(heard),
+            Buffer(reals(random_, 3)),
+            cluster,
+            globals={"global_structure_bsp": Buffer(bytes(structure), pointers=(0x60,))},
+            externals={"unknown_0018cfd0": nearest, "unknown_0014b240": far},
+        )
