@@ -274,7 +274,7 @@ def run(t) -> None:
                     "sound_sources": random_.getrandbits(32),
                 },
                 memory={STATE: Memory(random_.randbytes(STATE_SIZE))},
-                externals={**answers(*values), "unknown_002185d0": console_sound},
+                externals={**answers(*values), "sound_cache_initialize": console_sound},
             )
 
     def array(valid: int) -> Buffer:
@@ -5278,4 +5278,64 @@ def run(t) -> None:
                 "sound_lruv_cache": Buffer(bytes(cache), pointers=(0x64, 0x70 + 0x44)),
             },
             externals={"sound_cache_chunk_load": load_, "SwitchToThread": wait_},
+        )
+
+    # ---------- the cache of the sound is made, and what it asks of its pieces
+
+    random_ = random.Random(222)
+
+    for give_array in (True, True, False):
+        for case in range(8):
+            blocks_memory = Buffer(random_.randbytes(0x208C))
+            cache_memory = Buffer(random_.randbytes(0x30FC), places=(0x20, 0x24, 0x28))
+            allocator = Buffer(struct.pack("<3I", 4, mock_address(0), mock_address(1)), pointers=(0,))
+
+            def allocate_(call, give_array=give_array, memory={0x208C: blocks_memory, 0x30FC: cache_memory}):
+                if call.stack[0] != 0x30FC and not give_array:
+                    return 0
+                return memory[call.stack[0]].address
+
+            stage = random_.randrange(5)
+            lows = [random_.getrandbits(26) & ~0xFFF for _ in range(5)]
+            highs = [random_.getrandbits(26) & ~0xFFF for _ in range(5)]
+            lows[stage] = random_.choice((0x1000000, 0x1000000, 0x61000, 0))
+            highs[stage] = lows[stage] + random_.choice((0x300000, 0x300000, 0x2FF000, 0x800000, 0x301000, 0))
+            t.check(
+                "sound_cache_initialize",
+                globals={
+                    "heap_allocation": allocator,
+                    "lruv_blocks_allocation": random_.choice((0, 0x60F00100)),
+                    "physical_memory_globals": struct.pack("<3I5I5I", stage, 0x61000, 0x3145000, *lows, *highs),
+                    "unknown_00502104": random_.getrandbits(32),
+                    "sound_lruv_cache": random_.getrandbits(32),
+                    "sound_cache_base": struct.pack("<I", random_.getrandbits(32)),
+                },
+                mocks=[
+                    Mock(allocate_, stack_arguments=1, registers=("ecx",)),
+                    Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
+                ],
+                extra=[blocks_memory, cache_memory],
+                externals={"XPhysicalProtect": lambda harness, arguments: (0, tuple(arguments))},
+            )
+
+    for _ in range(400):
+        elements_ = bytearray(random_.randbytes(0x4C + PIECES * 0x10))
+        struct.pack_into("<I", elements_, 0x44, 0x4C)
+        pointers = [0x44]
+        chunks_ = len(elements_)
+        elements_ += random_.randbytes(PIECES * 0xC)
+        for piece in range(PIECES):
+            at = 0x4C + piece * 0x10
+            elements_[at + 2] = random_.choice((0, 1, 1, 0x80))
+            elements_[at + 4] = random_.choice((0, 0, 0, 1, 0xFF))
+            elements_[at + 5] = random_.choice((0, 0, 0, 1, 0xFF))
+            struct.pack_into("<I", elements_, at + 0xC, chunks_ + random_.randrange(PIECES) * 0xC)
+            pointers.append(at + 0xC)
+        index = random_.getrandbits(16) << 16 | random_.randrange(PIECES)
+        t.check("sound_cache_block_locked", index, globals={"unknown_00502104": Buffer(bytes(elements_), pointers=tuple(pointers))})
+        t.check(
+            "sound_cache_block_deleted",
+            index,
+            globals={"unknown_00502104": Buffer(bytes(elements_), pointers=tuple(pointers))},
+            externals={"datum_delete": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1]))},
         )

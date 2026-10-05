@@ -764,7 +764,7 @@ address,name,source,arguments,returns,convention
 0011cc20,shell_memory_data_new,source/shell/shell.c,stack eax stack,pointer
 001253d0,sound_initialize,source/sound/sound_manager.c,,void
 00125600,sound_dispose,source/sound/sound_manager.c,,void
-002185d0,unknown_002185d0,,,void
+002185d0,sound_cache_initialize,source/sound/sound_manager.c,,void
 002186b0,sound_cache_dispose,source/sound/sound_manager.c,,void
 00219b40,sound_playback_controllers_initialize,source/sound/sound_manager.c,,bool
 0021a0c0,looping_sounds_initialize,source/sound/sound_manager.c,,bool
@@ -1328,3 +1328,5 @@ address,name,source,arguments,returns,convention
 0021da50,sound_effect_source_playing,source/sound/sound_manager.c,stack stack stack stack stack stack,void,stdcall
 0021da70,sound_effect_source_heard,source/sound/sound_manager.c,stack stack stack stack,bool,stdcall
 0021db30,sound_effect_source_stopped,source/sound/sound_manager.c,stack stack,void,stdcall
+002189a0,sound_cache_block_locked,source/sound/sound_manager.c,stack,bool,stdcall
+002189e0,sound_cache_block_deleted,source/sound/sound_manager.c,stack,void,stdcall

@@ -18,6 +18,7 @@ the file and those of the functions are guesses. Not here: 0x00125b40 and
 #include "main/main_game.h"
 #include "cseries/async.h"
 #include "memory/lruv_cache.h"
+#include "memory/physical_memory.h"
 #include "physics/bsp3d.h"
 #include "scenario/scenario.h"
 #include "structures/structure_bsp_definitions.h"
@@ -556,6 +557,12 @@ enum
 	_voice_state_playing= 1,
 	UNKNOWN_0051EBE4_SLOT_COUNT_SHORT_OFFSET= 0x6,
 	MAXIMUM_SOUND_PLAYBACK_CONTROLLERS= 64,
+	/* the cache of the sound */
+	MAXIMUM_CACHED_SOUND_CHUNKS= 512,
+	SOUND_CACHE_PAGE_COUNT= 192,
+	SOUND_CACHE_PAGE_SIZE_BITS= 14,
+	SOUND_CACHE_BLOCKS_SIZE= 0x208C,
+	SOUND_CACHE_LRUV_SIZE= 0x30FC,
 	VOICE_UNKNOWN2_OFFSET= 0x2,
 	VOICE_DECIBELS_OFFSET= 0xC,
 	VOICE_UNKNOWN30_OFFSET= 0x30,
@@ -960,7 +967,11 @@ const struct sound_configuration sound_configuration=
 /* ---------- prototypes of functions that are not decompiled */
 
 /* 0x002185d0, 0x002186b0: set up and take down the sound of the console */
-void unknown_002185d0(void);
+void sound_cache_initialize(void);
+
+/* 0x002189a0 and 0x002189e0 */
+boolean __attribute__((stdcall)) sound_cache_block_locked(long block_index);
+void __attribute__((stdcall)) sound_cache_block_deleted(long block_index);
 void sound_cache_dispose(void);
 
 /* 0x00219b40, 0x0021a0c0, 0x0021d490, 0x0021dda0, 0x0021e4b0: set up the
@@ -1643,7 +1654,7 @@ void sound_initialize(
 		game_sound_globals= globals;
 		globals[GAME_SOUND_GLOBALS_UNKNOWN79_OFFSET]= TRUE;
 		globals[GAME_SOUND_GLOBALS_UNKNOWN7D_OFFSET]= FALSE;
-		unknown_002185d0();
+		sound_cache_initialize();
 
 		{
 			long *unknown1b0= (long *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN1B0_OFFSET);
@@ -8725,4 +8736,58 @@ unsigned long __attribute__((stdcall)) sound_cache_chunk_request(
 	}
 
 	return result&~(unsigned long)FLAG(_sound_cache_result_unknown0_bit);
+}
+
+/* 0x002189a0: whether a piece of samples of the cache of the sound cannot
+be thrown out: one that is held, or in use, or whose samples are not read
+yet. For the cache */
+boolean __attribute__((stdcall)) sound_cache_block_locked(
+	long block_index)
+{
+	const byte *datum= (const byte *)unknown_00502104->data+(block_index&0xFFFF)*UNKNOWN_00502104_DATUM_SIZE;
+
+	return datum[UNKNOWN_00502104_DATUM_COUNT_OFFSET] || datum[UNKNOWN_00502104_DATUM_USES_OFFSET] ||
+		!datum[UNKNOWN_00502104_DATUM_DONE_OFFSET];
+}
+
+/* 0x002189e0: a piece of samples is thrown out of the cache of the sound:
+the piece of the recording that it was of is of none, and its element is
+let go. For the cache */
+void __attribute__((stdcall)) sound_cache_block_deleted(
+	long block_index)
+{
+	const byte *datum= (const byte *)unknown_00502104->data+(block_index&0xFFFF)*UNKNOWN_00502104_DATUM_SIZE;
+	struct sound_chunk *chunk= *(struct sound_chunk *const *)(datum+UNKNOWN_00502104_DATUM_CHUNK_OFFSET);
+
+	*(long *)(chunk->unknown0+SOUND_CHUNK_CACHE_INDEX_OFFSET)= NONE;
+	datum_delete(unknown_00502104, block_index);
+}
+
+/* 0x002185d0: the cache of the sound is made, when the sound is set up: the
+array of its pieces of samples, for 512, and the cache that says where
+each is, of 192 pages of 16384 bytes: three megabytes, which are taken from
+the high end of the memory of the console. The name is a guess */
+void sound_cache_initialize(
+	void)
+{
+	struct allocation *allocation;
+	struct data_array *data;
+	struct lruv_cache *cache;
+
+	allocation= heap_allocation;
+	data= allocation->functions->allocate(allocation, SOUND_CACHE_BLOCKS_SIZE);
+	if (data)
+	{
+		data_initialize(data, "xbox sound", MAXIMUM_CACHED_SOUND_CHUNKS, UNKNOWN_00502104_DATUM_SIZE, 0, allocation);
+		data->flags|= FLAG(_data_array_allocated_bit);
+	}
+	unknown_00502104= data;
+
+	allocation= heap_allocation;
+	cache= allocation->functions->allocate(allocation, SOUND_CACHE_LRUV_SIZE);
+	lruv_initialize(cache, "xbox sound cache", SOUND_CACHE_PAGE_COUNT, SOUND_CACHE_PAGE_SIZE_BITS,
+		MAXIMUM_CACHED_SOUND_CHUNKS, sound_cache_block_deleted, sound_cache_block_locked, NULL, allocation);
+	cache->hole_algorithm= _lruv_hole_algorithm_age_per_page;
+	sound_lruv_cache= cache;
+	sound_cache_base= (long)(uintptr_t)physical_memory_allocate_high(SOUND_CACHE_PAGE_COUNT<<SOUND_CACHE_PAGE_SIZE_BITS);
 }

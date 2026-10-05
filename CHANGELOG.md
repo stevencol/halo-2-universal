@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — La caché del sonido se crea
+
+Tres funciones en `sound/sound_manager.c`. De 883 funciones se pasa a
+886, el 7,87 % de las del juego (el 4,599 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_cache_initialize` | `0x002185d0` | `sound/sound_manager.c` |
+| `sound_cache_block_locked` | `0x002189a0` | `sound/sound_manager.c` |
+| `sound_cache_block_deleted` | `0x002189e0` | `sound/sound_manager.c` |
+
+La primera estaba apuntada sin descompilar (`unknown_002185d0`); la llama
+`sound_initialize`. Las otras dos no estaban apuntadas ni figuran en la
+lista de Ghidra: solo se llega a ellas porque la primera se las da a la
+caché.
+
+### Lo que se sabe
+
+- `sound_cache_initialize` crea la caché de muestras del sonido: la tabla
+  de sus trozos (512) y la caché que dice dónde está cada uno, de 192
+  páginas de 16.384 bytes. Son tres megas, que se toman del final de la
+  memoria de la consola.
+- `sound_cache_block_locked` le dice a la caché si un trozo no se puede
+  echar: el que está retenido, el que está en uso o el que aún no se ha
+  terminado de leer.
+- `sound_cache_block_deleted` es lo que se hace cuando la caché echa un
+  trozo: el trozo de la grabación deja de tener sitio en la caché y su
+  entrada en la tabla se suelta.
+- Con esto la caché del sonido está completa: crear, pedir, retener,
+  soltar, echar y deshacer.
+
+### Comprobado
+
+- **La batería completa del hito 219 terminó: 881 funciones de 881, todas
+  bien.**
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de estas funciones y de
+  `sound_initialize`. Las dos últimas cuentan en las funciones pero no en
+  los bytes, como las del hito 219.
+
+### Mutaciones
+
+Once líneas rotas a mano: las pruebas notan las once.
+
 ## 2026-10-05 — Pedir un trozo de las muestras de un sonido
 
 Una función en `sound/sound_manager.c`. De 882 funciones se pasa a
