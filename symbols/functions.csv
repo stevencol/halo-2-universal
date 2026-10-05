@@ -1331,3 +1331,4 @@ address,name,source,arguments,returns,convention
 002189a0,sound_cache_block_locked,source/sound/sound_manager.c,stack,bool,stdcall
 002189e0,sound_cache_block_deleted,source/sound/sound_manager.c,stack,void,stdcall
 0021bd00,sound_source_ring_fade_out_in_seconds,source/sound/sound_manager.c,stack stack,void,stdcall
+0021ce60,looping_sound_detail_random_position,source/sound/sound_manager.c,ecx esi,void

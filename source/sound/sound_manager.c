@@ -566,6 +566,10 @@ enum
 	/* in milliseconds */
 	SOUND_CACHE_CLOSE_WAIT= 5000,
 	_sound_class_internal_unknown10_bit= 10,
+	/* of a sound of a looping sound that plays now and then */
+	LOOPING_SOUND_DETAIL_YAW_BOUNDS_OFFSET= 0x1C,
+	LOOPING_SOUND_DETAIL_PITCH_BOUNDS_OFFSET= 0x24,
+	LOOPING_SOUND_DETAIL_DISTANCE_BOUNDS_OFFSET= 0x2C,
 	VOICE_UNKNOWN2_OFFSET= 0x2,
 	VOICE_DECIBELS_OFFSET= 0xC,
 	VOICE_UNKNOWN30_OFFSET= 0x30,
@@ -1295,6 +1299,9 @@ void sound_source_hold_chunk(byte *source);
 void sound_channels_unknown_00129380(const long *voice_values, const long *slot_values);
 void __attribute__((stdcall)) sound_console_set_environment(const long *second, const long *first, const void *unknown);
 void sound_classes_update(real seconds);
+
+/* 0x0021ce60 */
+void looping_sound_detail_random_position(const byte *detail, real_vector3d *position);
 
 /* 0x0021e410 */
 struct sound_console_format;
@@ -8887,4 +8894,41 @@ void __attribute__((stdcall)) sound_source_ring_fade_out_in_seconds(
 		*(long *)(source+SOUND_SOURCE_DATUM_UNKNOWNB8_OFFSET)= NONE;
 		source[SOUND_SOURCE_DATUM_FLAGS_OFFSET]|= SOUND_SOURCE_DATUM_FADING_FLAG;
 	}
+}
+
+/* a real at random between two, with the second seed of the game */
+static inline __attribute__((always_inline)) long double sound_random_between(
+	const real *bounds)
+{
+	unsigned long *seed= &global_random_seed_reference[1];
+	long double random;
+
+	*seed= *seed*1664525UL+1013904223UL;
+	random= (long double)(long)(*seed>>16)*(long double)(1.0f/65535.0f);
+
+	return ((long double)bounds[1]-(long double)bounds[0])*random+(long double)bounds[0];
+}
+
+/* 0x0021ce60: a place at random for a sound of a looping sound that plays
+now and then: at a distance, a pitch and a yaw between those that it says
+(two reals each, at 0x2C, 0x24 and 0x1C). With no distance, the zero vector,
+and the other two are not drawn. The name is made up */
+void looping_sound_detail_random_position(
+	const byte *detail,
+	real_vector3d *position)
+{
+	long double distance= sound_random_between((const real *)(detail+LOOPING_SOUND_DETAIL_DISTANCE_BOUNDS_OFFSET));
+	long double pitch;
+	long double yaw;
+
+	if (distance==0.0L)
+	{
+		*position= *global_zero_vector3d;
+		return;
+	}
+	pitch= sound_random_between((const real *)(detail+LOOPING_SOUND_DETAIL_PITCH_BOUNDS_OFFSET));
+	yaw= sound_random_between((const real *)(detail+LOOPING_SOUND_DETAIL_YAW_BOUNDS_OFFSET));
+	position->i= (real)(cosl(yaw)*cosl(pitch)*distance);
+	position->j= (real)(sinl(yaw)*cosl(pitch)*distance);
+	position->k= (real)(sinl(pitch)*distance);
 }

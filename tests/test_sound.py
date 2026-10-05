@@ -5416,3 +5416,21 @@ def run(t) -> None:
                 globals={**globals_, "sound_sources": Buffer(bytes(data), pointers=playing_.pointers)},
                 externals={"sound_source_fade_decibels": lambda harness, arguments: (fade_bits(arguments[0]), tuple(arguments))},
             )
+
+    # ---------- a place at random for a sound of a looping sound that plays now and then
+
+    random_ = random.Random(225)
+
+    for _ in range(1500):
+        detail = bytearray(random_.randbytes(0x34))
+        for offset in (0x1C, 0x24):
+            low = random_.choice((0.0, -3.14159, -1.0, 0.5, random_.uniform(-3.2, 3.2)))
+            struct.pack_into("<2f", detail, offset, low, random_.choice((low, low + 1.0, 3.14159, random_.uniform(-3.2, 3.2))))
+        low = random_.choice((0.0, 0.0, 1.0, 5.0, random_.uniform(0, 10)))
+        struct.pack_into("<2f", detail, 0x2C, low, random_.choice((low, low, low + 2.0, 0.0, random_.uniform(0, 10))))
+        t.check(
+            "looping_sound_detail_random_position",
+            Buffer(bytes(detail)),
+            Buffer(random_.randbytes(12)),
+            globals={"global_random_seed_reference": Buffer(struct.pack("<4I", *(random_.getrandbits(32) for _ in range(4))))},
+        )

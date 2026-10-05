@@ -17,6 +17,7 @@ float atan2f(float y, float x);
 float acosf(float value);
 long double acosl(long double value);
 long double sinl(long double value);
+long double cosl(long double value);
 long double fabsl(long double value);
 long double exp2l(long double value);
 long double logl(long double value);

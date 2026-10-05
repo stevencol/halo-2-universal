@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Un sitio al azar para un sonido suelto de un sonido en bucle
+
+Una función en `sound/sound_manager.c`. De 888 funciones se pasa a
+889, el 7,89 % de las del juego (el 4,627 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `looping_sound_detail_random_position` | `0x0021ce60` | `sound/sound_manager.c` |
+
+No estaba apuntada. La llama `0x0021cc60`, de los sonidos en bucle. Recibe
+en `ecx` la parte del sonido en bucle que describe un sonido suelto, y en
+`esi` dónde dejar el sitio.
+
+### Lo que se sabe
+
+- Un sonido en bucle puede tener sonidos sueltos que suenan de vez en cuando
+  alrededor (un pájaro, un goteo). `looping_sound_detail_random_position`
+  elige dónde suena uno: a una distancia, una elevación y un giro al azar
+  entre los dos valores que dice para cada cosa (en `0x2C`, `0x24` y
+  `0x1C`).
+- Usa la segunda semilla del juego, una vez para cada número. Si la
+  distancia sale 0, el sitio es el origen y los otros dos números no se
+  sacan.
+- El nombre es inventado.
+
+### Herramientas
+
+- La biblioteca de C de las pruebas tiene ahora `cosl`.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función. La última
+  batería completa es la del hito 219 (881 funciones, todas bien).
+
+### Mutaciones
+
+Ocho líneas rotas a mano: las pruebas notan las ocho.
+
 ## 2026-10-05 — Los sonidos de un anillo se apagan en unos segundos
 
 Una función en `sound/sound_manager.c`. De 887 funciones se pasa a

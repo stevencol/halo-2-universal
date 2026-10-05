@@ -457,6 +457,13 @@ long double sinl(long double value)
 	return value;
 }
 
+long double cosl(long double value)
+{
+	__asm__("fcos" : "+t"(value));
+
+	return value;
+}
+
 long double fabsl(long double value)
 {
 	__asm__("fabs" : "+t"(value));
