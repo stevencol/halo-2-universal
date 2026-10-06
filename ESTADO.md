@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-04, al terminar el hito 261.
+**Última actualización:** 2026-10-04, al terminar el hito 262.
 
 ## Dónde estamos
 
-- **931 funciones descompiladas de 11.265: el 8,26 % del juego** (el
-  5,501 % de los bytes de código).
-- Las 931 están comprobadas contra el ejecutable original: las 928 del
-  hito 258 con la batería completa, y las de después con sus propias pruebas
+- **932 funciones descompiladas de 11.265: el 8,27 % del juego** (el
+  5,568 % de los bytes de código).
+- Las 932 están comprobadas contra el ejecutable original: las 931 del
+  hito 261 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile a looping sound starting, going on or ending* (ver `git log`).
+- Último hito: *Decompile what each controller says, each time* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 487 funciones apuntadas pero sin descompilar (las que el código
-  llama); 400 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 486 funciones apuntadas pero sin descompilar (las que el código
+  llama); 399 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -179,9 +179,8 @@ Módulos (funciones hechas / archivo):
       la tabla de sistemas está completa).
 - [x] ~~`sound_idle` y las muestras que pide un sonido~~ (hito 48).
 - [x] ~~Más del sonido~~ (hito 261): todas las funciones del sonido que
-      estaban en la lista están descompiladas. Lo siguiente a mano es el
-      módulo vecino, `input/input_abstraction.c` (queda su función grande,
-      `0x00217c40`, de 1.993 bytes).
+      estaban en la lista están descompiladas. El módulo vecino,
+      `input/input_abstraction.c`, quedó completo en el hito 262.
 - [x] ~~`lruv_block_new`~~ (hito 31).
 - [x] ~~Caché de animaciones~~ (hito 32).
 - [x] ~~Caché de texturas, primera parte~~ (hito 33): crear, abrir,

@@ -18,6 +18,7 @@ Halo 1's main.c.
 
 #include "cache/cache_files.h"
 #include "input/input.h"
+#include "input/input_abstraction.h"
 #include "cseries/async.h"
 #include "game/game.h"
 #include "main/global_preferences.h"
@@ -58,7 +59,6 @@ known; the three with a name are what the game asked the loop for */
 void unknown_002237d4(void);
 void unknown_0018e810(void);
 void unknown_0012bbd0(void);
-void unknown_00217c40(void);
 void unknown_00163820(void);
 void unknown_001479c3(float seconds);
 void unknown_00155f80(void);
@@ -381,7 +381,7 @@ void main_loop_body(
 	}
 
 	input_update();
-	unknown_00217c40();
+	input_abstraction_update();
 	if (unknown_0055c14d && unknown_0051ea14 && (unknown_0055c150&1))
 	{
 		saved_game_files_find_unit_files(0,

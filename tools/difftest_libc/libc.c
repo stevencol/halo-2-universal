@@ -712,3 +712,11 @@ long double fmodl(long double value, long double divisor)
 
 	return value;
 }
+
+long double atan2l(long double y, long double x)
+{
+	/* fpatan takes x from the top of the x87 stack and y from under it */
+	__asm__("fpatan" : "+t"(x) : "u"(y) : "st(1)");
+
+	return x;
+}

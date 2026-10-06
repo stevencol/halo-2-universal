@@ -18,7 +18,8 @@ is worked out; the name of the file is a guess, from later games.
 
 enum
 {
-	INPUT_ABSTRACTION_PREFERENCES_BYTES_SIZE= 0x14
+	INPUT_ABSTRACTION_PREFERENCES_BYTES_SIZE= 0x14,
+	INPUT_ABSTRACTION_BUTTON_COUNT= 16
 };
 
 /* ---------- structures */
@@ -32,11 +33,29 @@ struct input_abstraction_preferences
 	byte unknown8[INPUT_ABSTRACTION_PREFERENCES_BYTES_SIZE];
 };
 
+/* what a controller says: its buttons, in the order of its preferences (for
+how many frames and how many milliseconds each has been down), its two
+triggers, five reals of its two sticks, and three bytes */
+struct input_abstraction_state
+{
+	byte frames_down[INPUT_ABSTRACTION_BUTTON_COUNT];
+	word msec_down[INPUT_ABSTRACTION_BUTTON_COUNT];
+	real triggers[2];
+	real sticks[5];
+	byte unknown4C;
+	byte unknown4D;
+	boolean unknown4E;
+	byte pad4F;
+};
+
+typedef char verify_input_abstraction_state_size[
+	sizeof(struct input_abstraction_state) == 0x50 ? 1 : -1];
+
 /* 0x0051ea18 */
 struct input_abstraction_globals
 {
 	struct input_abstraction_preferences preferences[MAXIMUM_GAMEPADS];
-	byte unknown70[0x140];
+	struct input_abstraction_state states[MAXIMUM_GAMEPADS];
 	/* GetTickCount: when this started */
 	unsigned long time;
 	/* whether each gamepad was plugged in when this started */
@@ -56,6 +75,7 @@ typedef char verify_input_abstraction_globals_time_offset[
 
 void input_abstraction_initialize(void);
 void input_abstraction_dispose(void);
+void input_abstraction_update(void);
 void input_abstraction_preferences_set_defaults(byte *preferences);
 void input_abstraction_handle_gamepad_changes(unsigned long gamepad_changes);
 boolean input_abstraction_controller_unknown_00218510(long controller_index);

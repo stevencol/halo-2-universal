@@ -2,6 +2,59 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Lo que dice cada mando, cada fotograma
+
+Una función en `input/input_abstraction.c`, de 1.993 bytes. De 931 funciones se pasa a
+932, el 8,27 % de las del juego (el 5,568 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `input_abstraction_update` | `0x00217c40` | `input/input_abstraction.c` |
+
+Era `unknown_00217c40`. La llama `main_loop_body` justo después de
+`input_update`. No recibe ni devuelve nada. Con ella, las seis funciones
+del módulo `input_abstraction` están descompiladas.
+
+### Lo que se sabe
+
+- Por cada mando enchufado rellena `0x50` bytes de
+  `input_abstraction_globals` (hasta ahora un hueco sin nombre): los
+  dieciséis botones en el orden que digan las preferencias del mando
+  (cuántos fotogramas y cuántos milisegundos lleva pulsado cada uno), los
+  dos gatillos de 0 a 1, cinco reales de las dos palancas y tres bytes.
+- Las palancas se «estiran»: el juego divide por el mayor de |seno| y
+  |coseno| de su ángulo, para que lleguen a 1 en todas las direcciones y no
+  solo a lo largo de los ejes.
+- El número de `0x18` de las preferencias dice qué palanca mueve y cuál
+  mira (cuatro combinaciones). En las combinaciones 2 y 3 las palancas solo
+  van en cuatro direcciones: cerca de una diagonal (a menos de 35 grados la
+  izquierda y de 10 la derecha) el eje menor se va encogiendo hasta la
+  diagonal; fuera, solo queda el eje mayor.
+- Mirar arriba y abajo va al revés con el byte de `0x1A`, o con el de
+  `0x1B` cuando `input_abstraction_controller_unknown_00218510` (hito 258)
+  dice que sí: será la opción de invertir solo al volar.
+- Los ángulos se calculan con las instrucciones del procesador (arco
+  tangente, seno y coseno), y las pruebas comparan los reales bit a bit. A
+  la biblioteca de las pruebas se le ha añadido `atan2l`.
+
+### Batería completa
+
+La del hito 261 terminó: 931 funciones, las 931 bien. Es la primera con
+todo el sonido descompilado.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo y las de `main`.
+
+### Mutaciones
+
+Cuarenta y tres cambios a mano: las pruebas notan cuarenta y uno. Los dos
+que no notan son de casos justos: una palanca a exactamente el ángulo
+límite de la diagonal, y una con los dos ejes iguales fuera de ese ángulo,
+que solo pasa con la palanca en el centro (y entonces da lo mismo).
+
 ## 2026-10-05 — Un sonido en bucle empieza, sigue o acaba: el sonido, completo
 
 Una función en `sound/sound_manager.c`, de 2.497 bytes: la última del sonido. De 930 funciones se pasa a

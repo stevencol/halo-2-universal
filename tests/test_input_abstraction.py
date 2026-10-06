@@ -107,3 +107,46 @@ def run(t) -> None:
                 "global_tag_instances": Buffer(bytes(tags), pointers=tuple(tag_pointers)),
             },
         )
+
+    # ---------- what each controller says, from its gamepad
+
+    random_ = random.Random(262)
+    STICKS = (0, 0, 1, -1, 5, -5, 32767, -32768, -32767, 16384, -16384, 23170, -23170, 1000, 30000)
+    for n in range(2500):
+        gamepads = bytearray(random_.randbytes(INPUT_GLOBALS_SIZE))
+        gamepads[1] = random_.choice((0, 0, 0, 1))
+        for index in range(4):
+            struct.pack_into("<I", gamepads, 0x14 + index * 4, random_.choice((0, 1, 1, 1, random_.getrandbits(32))))
+        for at in (*(0x24 + index * 0x48 for index in range(4)), 0x154):
+            kind = random_.randrange(4)
+            for stick in range(2):
+                if kind == 0:
+                    x, y = random_.choice(STICKS), random_.choice(STICKS)
+                elif kind == 1:
+                    # near a diagonal
+                    x = random_.choice((-1, 1)) * random_.randrange(1000, 32767)
+                    y = random_.choice((-1, 1)) * max(-32768, min(32767, abs(x) + random_.randrange(-9000, 9000)))
+                else:
+                    x, y = random_.randrange(-32768, 32768), random_.randrange(-32768, 32768)
+                struct.pack_into("<2h", gamepads, at + 0x40 + stick * 4, x, y)
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        for index in range(4):
+            at = index * 0x1C
+            order = [random_.randrange(16) for _ in range(16)]
+            if random_.random() < 0.6:
+                order = random_.sample(range(16), 16)
+            state[at + 8 : at + 0x18] = bytes(order)
+            struct.pack_into("<h", state, at + 0x18, random_.choice((0, 1, 2, 3, 2, 3, 4, -1, 0x102)))
+            state[at + 0x1A] = random_.choice((0, 0, 1, 0x80))
+            state[at + 0x1B] = random_.choice((0, 1, 1))
+            state[0x1B4 + index] = random_.choice((0, 1, 0x80))
+        t.check(
+            "input_abstraction_update",
+            globals={"input_abstraction_globals": bytes(state), "input_globals": bytes(gamepads)},
+            externals={
+                "input_abstraction_controller_unknown_00218510": lambda harness, arguments, answers=tuple(random_.choice((0, 1)) for _ in range(4)): (
+                    answers[arguments[0] & 3],
+                    tuple(arguments),
+                ),
+            },
+        )

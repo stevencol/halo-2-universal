@@ -479,7 +479,7 @@ address,name,source,arguments,returns,convention
 00124380,game_state_load_core,source/saved games/game_state.c,stack,void
 0012bdf0,main_unknown4E_private,source/main/main.c,,void
 00124950,input_update,source/input/input_xbox.c,,void
-00217c40,unknown_00217c40,,,void
+00217c40,input_abstraction_update,source/input/input_abstraction.c,,void
 002164c0,saved_game_files_find_unit_files,source/saved games/saved_game_files.c,eax stack,void
 00121120,global_preferences_flush,source/main/global_preferences.c,,void
 001406b0,font_cache_frame,source/text/font_cache.c,,void
