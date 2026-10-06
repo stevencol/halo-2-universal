@@ -182,6 +182,9 @@ struct unknown_00510c50 *unknown_00510c50;
 /* 0x004e8c20 */
 struct players_globals *players_globals;
 
+/* 0x004e8c24: the players. The name is a guess */
+struct data_array *player_data;
+
 /* 0x00510c94 */
 struct unknown_00510c94 *unknown_00510c94;
 

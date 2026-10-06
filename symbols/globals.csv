@@ -203,3 +203,8 @@ address,name,source
 0044a20c,sound_effect_looping_sound_unknown_states,source/sound/sound_manager.c
 0044a110,looping_sound_track_callbacks,source/sound/sound_manager.c
 0044a250,sound_console_place_effects,source/sound/sound_manager.c
+0051ea18,input_abstraction_globals,source/input/input_abstraction.c
+0055e77c,unknown_0055e77c,source/input/input_abstraction.c
+004e9188,unknown_004e9188,source/input/input_abstraction.c
+004e9190,unknown_004e9190,source/input/input_abstraction.c
+004e8c24,player_data,source/main/main.c

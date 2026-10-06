@@ -107,6 +107,8 @@ struct players_globals
 	byte unknown0[0xC];
 	/* the players of this console; NONE where there is none */
 	long local_players[MAXIMUM_LOCAL_PLAYERS];
+	/* the player of each controller; NONE where there is none */
+	long unknown1C[MAXIMUM_LOCAL_PLAYERS];
 };
 
 /* ---------- prototypes/MAIN.C */
@@ -150,6 +152,7 @@ extern long unknown_004ed3a0;
 extern struct main_globals main_globals;
 extern struct main_time_globals main_time_globals;
 extern struct players_globals *players_globals;
+extern struct data_array *player_data;
 extern long long main_vblank_count;
 extern struct display_settings display_settings;
 extern const struct display_settings display_settings_default;

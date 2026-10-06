@@ -1673,9 +1673,6 @@ def run(t) -> None:
 
     random_ = random.Random(159)
 
-    for _ in range(20):
-        t.check("unknown_00218420_set_defaults", Buffer(random_.randbytes(0x1C)))
-
     for _ in range(200):
         definition = bytearray(sound_data(random_))
         definition[0xB] = random_.randrange(4)

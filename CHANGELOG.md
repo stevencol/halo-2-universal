@@ -2,6 +2,63 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Un archivo nuevo: lo que el juego hace con los mandos
+
+Cuatro funciones nuevas y una que cambia de sitio, en el archivo nuevo `input/input_abstraction.c`.
+De 924 funciones se pasa a 928, el 8,24 % de las del juego (el 5,287 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `input_abstraction_initialize` | `0x00217bc0` | `input/input_abstraction.c` |
+| `input_abstraction_dispose` | `0x00217c20` | `input/input_abstraction.c` |
+| `input_abstraction_handle_gamepad_changes` | `0x002184a0` | `input/input_abstraction.c` |
+| `input_abstraction_controller_unknown_00218510` | `0x00218510` | `input/input_abstraction.c` |
+
+Dos de las funciones que quedaban en la lista «del sonido» (`0x002184a0` y
+`0x00218510`) no eran del sonido: estaban en su rango de direcciones, pero
+son de un módulo vecino, el que convierte los mandos en lo que hace cada
+jugador. Su función grande (`0x00217c40`, 1.993 bytes) sigue sin
+descompilar. El nombre del archivo es una suposición, tomada de juegos
+posteriores.
+
+### Lo que se sabe
+
+- `input_abstraction_initialize` y `input_abstraction_dispose` son las dos
+  funciones de uno de los sistemas del juego (estaban en la tabla de
+  `game.c` como `unknown_00217bc0` y `unknown_00217c20`). La primera deja
+  todo a cero, pone cada mando como lo deja
+  `input_abstraction_preferences_set_defaults`, apunta qué mandos están
+  enchufados y la hora.
+- `input_abstraction_preferences_set_defaults` (`0x00218420`) ya estaba
+  descompilada dentro de `sound_manager.c` como
+  `unknown_00218420_set_defaults`, sin saber de qué era. Se ha movido aquí.
+- `input_abstraction_handle_gamepad_changes` es a la que
+  `input_update_devices` avisa de los mandos que se enchufan y
+  desenchufan. Si cambia alguno pasados dos segundos del arranque (o de
+  enchufar el primero), para algo que está en marcha (`0x001565a0`, que
+  puede volver al menú principal), salvo que eso tenga una de dos marcas.
+  Y se queda con la hora del primer mando que se enchufa.
+- `input_abstraction_controller_unknown_00218510` dice si la unidad del
+  jugador de un mando va en un asiento con la marca 2, de algo cuyo tag
+  tiene un 3 o un 5 en `0x1F0`. La llama `0x00217c40`.
+- Nuevas variables: `input_abstraction_globals` (`0x0051ea18`),
+  `player_data` (`0x004e8c24`, el array de los jugadores; el nombre es una
+  suposición), `unknown_0055e77c`, `unknown_004e9188` y
+  `unknown_004e9190`. `players_globals` tiene, tras los jugadores de la
+  consola, el jugador de cada mando.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo nuevo y las de los
+  archivos tocados (`input`, `game`, `main`). La última batería completa
+  es la del hito 254 (921 funciones, todas bien).
+
+### Mutaciones
+
+Veinticinco cambios a mano: las pruebas notan los veinticinco.
+
 ## 2026-10-05 — Cada fotograma, con cada sonido en bucle
 
 Una función en `sound/sound_manager.c`, de 1.917 bytes. De 923 funciones se pasa a

@@ -8,6 +8,7 @@ The names are those of Halo 1's input_xbox.c where it has them.
 */
 
 #include "input.h"
+#include "input_abstraction.h"
 
 #include "game/game.h"
 
@@ -64,12 +65,6 @@ long XInputGetState(uint32_t device, struct xinput_state *state);
 /* 0x00409bdf */
 uint32_t XInputSetState(uint32_t device, struct input_feedback *feedback);
 
-/* ---------- prototypes of functions not decompiled yet */
-
-/* 0x002184a0: told of the gamepads that were plugged in and unplugged; of
-the saved games, most likely */
-void unknown_002184a0(unsigned long gamepad_changes);
-
 /* ---------- constants */
 
 enum
@@ -78,7 +73,8 @@ enum
 	/* ERROR_IO_PENDING: the console is still at what it was last told */
 	INPUT_FEEDBACK_STATUS_PENDING= 0x3E5,
 
-	/* how unknown_002184a0 is told of the gamepads that were plugged in */
+	/* how input_abstraction_handle_gamepad_changes is told of the gamepads that
+	were plugged in */
 	INPUT_GAMEPAD_INSERTION_SHIFT= 12
 };
 
@@ -301,7 +297,7 @@ void input_update_devices(
 	{
 		input_globals.memory_unit_change_time= (unsigned long)GetTickCount();
 	}
-	unknown_002184a0(gamepad_changes);
+	input_abstraction_handle_gamepad_changes(gamepad_changes);
 }
 
 /* what a thumbstick says, with what is near its middle taken as its middle.

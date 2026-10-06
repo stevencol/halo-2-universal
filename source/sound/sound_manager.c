@@ -217,8 +217,6 @@ enum
 	SOUND_VOICE_DATUM_UNKNOWN48_OFFSET= 0x48,
 	SOUND_VOICE_DATUM_UNKNOWN48_SIZE= 0x24,
 	SOUND_VOICE_DATUM_UNKNOWN_SOURCE_OFFSET= 0x24,
-	UNKNOWN_00218420_BYTES_OFFSET= 0x8,
-	UNKNOWN_00218420_BYTES_SIZE= 0x14,
 	/* in a class of sounds, and in the scale of a sound (one of those that
 	the sounds of a map share): the least and the most decibels */
 	SOUND_CLASS_DECIBELS_OFFSET= 0x20,
@@ -1401,8 +1399,7 @@ void looping_sound_delete(long looping_sound_index);
 boolean __attribute__((stdcall)) sound_voice_unknown_0021dff0(long voice_index, const byte *unknown, boolean *first);
 long sound_classes_match(long class_index, long other_class_index);
 
-/* 0x00218420, 0x00219430, 0x00219910, 0x00219960 and 0x00219a30 */
-void unknown_00218420_set_defaults(byte *unknown);
+/* 0x00219430, 0x00219910, 0x00219960 and 0x00219a30 */
 long __attribute__((stdcall)) sound_permutation_get_unknown6(const struct sound_permutation *permutation,
 	const struct sound_definition *sound);
 void *sound_playback_controller_try_and_get(long controller_index);
@@ -3805,21 +3802,6 @@ long sound_classes_match(
 	}
 
 	return 0.0001f>difference;
-}
-
-/* 0x00218420: what something of 0x1C bytes is when it is new: two reals,
-120 and 60, and twenty bytes. What it is of is not known */
-void unknown_00218420_set_defaults(
-	byte *unknown)
-{
-	static const byte defaults[UNKNOWN_00218420_BYTES_SIZE]=
-	{
-		0, 4, 2, 3, 1, 5, 6, 7, 12, 13, 14, 15, 10, 11, 0, 1, 0, 0, 0, 0
-	};
-
-	((real *)unknown)[0]= 120.0f;
-	((real *)unknown)[1]= 60.0f;
-	memcpy(unknown+UNKNOWN_00218420_BYTES_OFFSET, defaults, sizeof(defaults));
 }
 
 /* the reals of a class of sounds and of the scale of a sound that say how

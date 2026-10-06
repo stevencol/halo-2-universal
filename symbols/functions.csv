@@ -454,8 +454,8 @@ address,name,source,arguments,returns,convention
 00215690,unknown_00215690,,,void
 00215720,unknown_00215720,,,void
 00215730,unknown_00215730,,,void
-00217bc0,unknown_00217bc0,,,void
-00217c20,unknown_00217c20,,,void
+00217bc0,input_abstraction_initialize,source/input/input_abstraction.c,,void
+00217c20,input_abstraction_dispose,source/input/input_abstraction.c,,void
 00221850,unknown_00221850,,,void
 002218a0,unknown_002218a0,,,void
 002218e0,unknown_002218e0,,,void
@@ -730,7 +730,7 @@ address,name,source,arguments,returns,convention
 00409994,XInputGetCapabilities,,stack stack,int
 00409b6c,XInputGetState,,stack stack,int
 00409bdf,XInputSetState,,stack stack,int
-002184a0,unknown_002184a0,,esi,void
+002184a0,input_abstraction_handle_gamepad_changes,source/input/input_abstraction.c,esi,void
 00137400,file_path_split,source/tag_files/files.c,ebx stack stack esi edi stack,void
 0019040d,unknown_0019040d,,eax,void
 0018fada,unknown_0018fada,,,int
@@ -1207,7 +1207,7 @@ address,name,source,arguments,returns,convention
 0021b070,looping_sound_delete,source/sound/sound_manager.c,edi,void
 0021dff0,sound_voice_unknown_0021dff0,source/sound/sound_manager.c,ecx stack stack,bool,stdcall
 0021e1d0,sound_classes_match,source/sound/sound_manager.c,eax esi,int
-00218420,unknown_00218420_set_defaults,source/sound/sound_manager.c,eax,void
+00218420,input_abstraction_preferences_set_defaults,source/input/input_abstraction.c,eax,void
 00219430,sound_permutation_get_unknown6,source/sound/sound_manager.c,stack stack,int,stdcall
 00219910,sound_playback_controller_try_and_get,source/sound/sound_manager.c,eax,pointer
 00219960,sound_playback_controller_find,source/sound/sound_manager.c,ebx,int
@@ -1400,3 +1400,5 @@ address,name,source,arguments,returns,convention
 0037b7ff,unknown_0037b7ff,,stack stack,void
 0037b804,unknown_0037b804,,stack stack,void
 0037b71b,unknown_0037b71b,,stack stack stack stack,void
+00218510,input_abstraction_controller_unknown_00218510,source/input/input_abstraction.c,eax,bool
+001565a0,unknown_001565a0,,,void

@@ -13,6 +13,8 @@ these functions calls the parts by name.
 #include "sound/sound_definitions.h"
 #include "game.h"
 
+#include "input/input_abstraction.h"
+
 #include "cache/animation_cache.h"
 #include "main/main.h"
 #include "main/main_game.h"
@@ -254,8 +256,6 @@ void unknown_00211030(void);
 void unknown_00215690(void);
 void unknown_00215720(void);
 void unknown_00215730(void);
-void unknown_00217bc0(void);
-void unknown_00217c20(void);
 void unknown_00221850(void);
 void unknown_002218a0(void);
 void unknown_002218e0(void);
@@ -357,7 +357,7 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{no_operation, no_operation},
 	{no_operation, no_operation},
 	{unknown_00215690, unknown_00215730, no_operation, unknown_00215720},
-	{unknown_00217bc0, unknown_00217c20},
+	{input_abstraction_initialize, input_abstraction_dispose},
 	{unknown_00155ea0, unknown_00155ed0},
 	{no_operation, no_operation},
 	{unknown_0019bcd0, unknown_0019bd50, unknown_0019c190, unknown_0019c1d0},

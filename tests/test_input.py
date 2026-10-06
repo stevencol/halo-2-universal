@@ -159,7 +159,7 @@ def run(t) -> None:
                 ),
                 "XInputGetCapabilities": capabilities,
                 "GetTickCount": lambda harness, arguments: 0x7777,
-                "unknown_002184a0": lambda harness, arguments: 0,
+                "input_abstraction_handle_gamepad_changes": lambda harness, arguments: 0,
             },
         )
 
