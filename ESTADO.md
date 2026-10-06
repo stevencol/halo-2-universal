@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-04, al terminar el hito 260.
+**Última actualización:** 2026-10-04, al terminar el hito 261.
 
 ## Dónde estamos
 
-- **930 funciones descompiladas de 11.265: el 8,26 % del juego** (el
-  5,417 % de los bytes de código).
-- Las 930 están comprobadas contra el ejecutable original: las 928 del
+- **931 funciones descompiladas de 11.265: el 8,26 % del juego** (el
+  5,501 % de los bytes de código).
+- Las 931 están comprobadas contra el ejecutable original: las 928 del
   hito 258 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile where each listener is, each time* (ver `git log`).
+- Último hito: *Decompile a looping sound starting, going on or ending* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 486 funciones apuntadas pero sin descompilar (las que el código
-  llama); 399 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 487 funciones apuntadas pero sin descompilar (las que el código
+  llama); 400 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -92,7 +92,7 @@ Módulos (funciones hechas / archivo):
       `0x002accd0` a `0x002ae090`: completo)
 - [x] Perfiles de los jugadores — `saved games\player_profile.c` (11:
       completo)
-- [ ] Sonido — `sound\sound_manager.c` (234; faltan muchas de
+- [ ] Sonido — `sound\sound_manager.c` (235; faltan muchas de
       `0x00125f70` a `0x0012b070`), `sound\sound_classes.c` (1)
 - [x] Archivos — `tag_files\files.c`, `files_xbox.c` (22, completo: de
       `0x00136710` a `0x001374c0`. Lo que hay justo antes, de `0x00136140`
@@ -178,10 +178,10 @@ Módulos (funciones hechas / archivo):
 - [x] ~~El sonido al cambiar de mapa~~ (hito 47: la fila del sonido en
       la tabla de sistemas está completa).
 - [x] ~~`sound_idle` y las muestras que pide un sonido~~ (hito 48).
-- [ ] **Más del sonido** (arrancar un sonido está completo desde el hito
-      185): solo queda la que arranca un sonido en bucle
-      (`0x0021a250`). Al terminar el hito 260 queda 1 función
-      del sonido, de 2.497 bytes.
+- [x] ~~Más del sonido~~ (hito 261): todas las funciones del sonido que
+      estaban en la lista están descompiladas. Lo siguiente a mano es el
+      módulo vecino, `input/input_abstraction.c` (queda su función grande,
+      `0x00217c40`, de 1.993 bytes).
 - [x] ~~`lruv_block_new`~~ (hito 31).
 - [x] ~~Caché de animaciones~~ (hito 32).
 - [x] ~~Caché de texturas, primera parte~~ (hito 33): crear, abrir,

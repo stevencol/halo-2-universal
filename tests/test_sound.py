@@ -6694,7 +6694,7 @@ def run(t) -> None:
                 "sound_start_test": test_,
                 "sound_promotion_update": promotion_,
                 "sound_source_create": create_,
-                "unknown_0021a250": looping_,
+                "looping_sound_start": looping_,
             },
         )
 
@@ -7797,5 +7797,165 @@ def run(t) -> None:
                 "object_get_velocities": velocities_,
                 "scenario_location_from_point": location_,
                 "sound_console_set_listener": console_,
+            },
+        )
+
+    # ---------- a looping sound starts, goes on or ends
+
+    random_ = random.Random(261)
+
+    for n in range(3000):
+        looping_count = 4
+        data = bytearray(random_.randbytes(0x4C + looping_count * 0xD4))
+        struct.pack_into("<I", data, 0x44, 0x4C)
+        sources = bytearray(random_.randbytes(0x4C + PLAYING * DATUM))
+        struct.pack_into("<I", sources, 0x44, 0x4C)
+        salts = [random_.getrandbits(16) << 16 | number for number in range(PLAYING)]
+        tags = bytearray(random_.randbytes(TAGS * 0x10))
+        chosen_tags = random_.sample(range(TAGS), 4)
+        definition_index, sound_tags = chosen_tags[0], chosen_tags[1:]
+        pointers = []
+        sounds = []
+        for number in range(3):
+            struct.pack_into("<I", tags, sound_tags[number] * 0x10 + 8, len(tags))
+            pointers.append(sound_tags[number] * 0x10 + 8)
+            sound_ = bytearray(random_.randbytes(0x10))
+            struct.pack_into("<h", sound_, 6, random_.randrange(3))
+            sound_[0xB] = random_.randrange(3)
+            tags += sound_
+            sounds.append(random_.getrandbits(15) << 16 | sound_tags[number])
+        definition_at = len(tags)
+        struct.pack_into("<I", tags, definition_index * 0x10 + 8, definition_at)
+        pointers.append(definition_index * 0x10 + 8)
+        definition = bytearray(random_.randbytes(0x24))
+        definition[0] = random_.choice((0, 0x80, 0x80, 2, 0x82, 0x30, 0xB0, random_.getrandbits(8)))
+        struct.pack_into("<2f", definition, 0xC, random_.choice((0.0, 0.0005, 1.0, 3.0)), random_.choice((5.0, 20.0)))
+        struct.pack_into("<iI", definition, 0x1C, random_.choice((0, 1, 2, 3)), definition_at + 0x24)
+        pointers.append(definition_at + 0x20)
+        tags += definition
+        for number in range(3):
+            piece = bytearray(random_.randbytes(0x58))
+            struct.pack_into("<I", piece, 4, random_.choice((0, 1, 2, 4, 5, 0x10, 0x14, 6, 7, 0x17, random_.getrandbits(5))))
+            struct.pack_into("<2f", piece, 0xC, random_.choice((0.0, 0.5, 2.0)), random_.choice((0.0, 0.25, 1.5)))
+            for offset in (0x18, 0x20, 0x28, 0x30, 0x38, 0x44, 0x4C):
+                struct.pack_into("<I", piece, offset, random_.choice((NONE, NONE, *sounds)))
+            if random_.random() < 0.25:
+                for offset in (0x30, 0x38, 0x44, 0x4C):
+                    struct.pack_into("<I", piece, offset, NONE)
+            struct.pack_into("<2f", piece, 0x50, random_.choice((0.0, 0.75)), random_.choice((0.0, 1.25)))
+            tags += piece
+        gestalt = len(tags)
+        tags += random_.randbytes(0x48)
+        blocks = {}
+        for offset, count, size in ((4, 3, 0x38), (0xC, 3, 0x14)):
+            struct.pack_into("<I", tags, gestalt + offset, len(tags))
+            pointers.append(gestalt + offset)
+            blocks[offset] = len(tags)
+            tags += random_.randbytes(count * size)
+        for index in range(3):
+            struct.pack_into("<h", tags, blocks[4] + index * 0x38 + 0x18, random_.choice((0, -100, 300)))
+            struct.pack_into("<2h", tags, blocks[0xC] + index * 0x14 + 8, random_.choice((0, -1200, -100)), random_.choice((0, 1200, 100)))
+        existing = random_.choice((NONE, NONE, *(random_.getrandbits(15) << 16 | number for number in range(looping_count))))
+        made = random_.choice((NONE, *(random_.getrandbits(15) << 16 | number % looping_count for number in range(3 * looping_count))))
+        for number in range(looping_count):
+            at = 0x4C + number * 0xD4
+            struct.pack_into("<I", data, at + 4, random_.getrandbits(15) << 16 | definition_index)
+            data[at + 0xC] = random_.choice((0, 4, 8, 0xC, random_.getrandbits(8)))
+            data[at + 0xF] = random_.choice((0, 1, 1, 2, 0x11))
+            data[at + 0x10 : at + 0x48] = reals(random_, 14)
+            struct.pack_into("<2f", data, at + 0x40, random_.choice((0.0005, 1.0, 2.0)), random_.choice((4.0, 15.0)))
+            data[at + 0x50] = random_.choice((0, 0, 0, 8, 1, 7, random_.getrandbits(8)))
+            data[at + 0x51] = random_.choice((0, 0, 1, 2))
+            data[at + 0x52] = random_.choice((0, 1, 1, 2))
+            data[at + 0x53] = random_.choice((0, 1))
+            data[at + 0xC4 : at + 0xD4] = reals(random_, 4)
+            for track in range(3):
+                state_at = at + 0x88 + track * 0x14
+                struct.pack_into("<I", data, state_at, random_.choice((NONE, *salts[:6])))
+                data[state_at + 0xC] = random_.randrange(7)
+                data[state_at + 0xD] = random_.choice((data[state_at + 0xC], data[state_at + 0xC], random_.randrange(7)))
+                struct.pack_into("<f", data, state_at + 0x10, random_.choice((0.0, 1.0, 0.5)))
+        for number in range(PLAYING):
+            at = 0x4C + number * DATUM
+            struct.pack_into("<I", sources, at + 0xC, random_.choice(sounds))
+            struct.pack_into("<h", sources, at + 0xAC, random_.choice((-1, 0, 3)))
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        state[0x78:0x7B] = bytes(random_.choice((1, 1, 1, 1, 1, 1, 1, 1, 0, 0x80)) for _ in range(3))
+        state[0x7F] = random_.choice((0, 1))
+        state[0x88 : 0x88 + 4 * 0x48] = reals(random_, 4 * 0x12)
+        said = bytearray(random_.randbytes(0x44))
+        said[0] = random_.choice((0, 0, 2, 4, 8, 0xC, random_.getrandbits(8)))
+        said[3] = random_.choice((0, 1, 1, 2, 0x10, 0x11))
+        said[4:0x44] = reals(random_, 16)
+        harness = t.harness
+
+        def answers(name, values):
+            def handler(harness, arguments, name=name, values=values):
+                return values[calls_so_far(harness, name) % len(values)], tuple(arguments)
+
+            return handler
+
+        def listener_(harness, arguments, values=tuple(random_.choice((NONE, 0, 1, 2, 3, 1)) for _ in range(2)), far=random_.choice((0.0, 0.5, 2.5, 9.0))):
+            if arguments[2]:
+                harness.mu.mem_write(arguments[2], struct.pack("<f", far))
+            return values[calls_so_far(harness, "sound_source_get_listener") % 2], (harness.normalize(arguments[0]), arguments[1], 1 if arguments[2] else 0)
+
+        def position_(harness, arguments, place=reals(random_, 3)):
+            harness.mu.mem_write(arguments[2], place)
+            return arguments[2], (harness.normalize(arguments[0]), arguments[1])
+
+        def parts_(harness, arguments, parts=struct.pack("<4f", *(random_.choice((0.0, 0.5, 1.0, 0.25, 0.9)) for _ in range(4)))):
+            before = bytes(harness.mu.mem_read(arguments[0], 12))
+            harness.mu.mem_write(arguments[1], parts)
+            return 0, (before, arguments[2])
+
+        def new_(harness, arguments, salts=salts, seed=random_.getrandbits(32)):
+            call_ = calls_so_far(harness, "looping_sound_source_new")
+            return random.Random(seed + call_).choice((NONE, *salts[6:], *salts[6:])), (*arguments[:5], harness.normalize(arguments[5]))
+
+        t.check(
+            "looping_sound_start",
+            random_.choice((NONE, *(random_.getrandbits(15) << 16 | definition_index for _ in range(12)))),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            Buffer(bytes(said)),
+            random_.choice((0, 0, 1, 1, 2, 2, 3)),
+            random_.choice((0, 1, 2, 4, 0x10, 0x11, 7, random_.getrandbits(5))),
+            as_bits(random_.choice((0.0, 0.0, 0.0, 0.5, -0.0))),
+            globals={
+                "looping_sounds": Buffer(bytes(data), pointers=(0x44,)),
+                "sound_sources": Buffer(bytes(sources), pointers=(0x44,)),
+                "global_tag_instances": (tags_ := Buffer(bytes(tags), pointers=tuple(pointers))),
+                "global_sound_cache_file_gestalt": Pointer(tags_, gestalt),
+                "game_sound_globals": Buffer(bytes(state)),
+                "global_random_seed_reference": Buffer(random_.randbytes(16)),
+            },
+            externals={
+                "looping_sound_find": lambda harness, arguments, existing=existing: (existing, tuple(arguments)),
+                "looping_sound_new": lambda harness, arguments, made=made: (made, (arguments[0], arguments[1] & 0xFFFF, arguments[2], arguments[3])),
+                "looping_sound_check_distances": lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]))),
+                "sound_source_get_listener": listener_,
+                "unknown_00192d70": lambda harness, arguments, gain=random_.choice((0.0, 1.0, 0.5, 0.8)): (real_bits(gain), tuple(arguments)),
+                "sound_source_get_position": position_,
+                "unknown_00192ce0": parts_,
+                "looping_sound_delete": lambda harness, arguments: (0, tuple(arguments)),
+                "looping_sound_find_source": lambda harness, arguments, values=(NONE, salts[9], NONE, salts[10]), shift=random_.randrange(4): (
+                    values[(calls_so_far(harness, "looping_sound_find_source") + shift) % 4],
+                    (arguments[0], arguments[1] & 0xFFFF, arguments[2], arguments[3]),
+                ),
+                "looping_sound_source_new": new_,
+                "sound_source_fade_decibels": lambda harness, arguments: (real_bits(-7.5), tuple(arguments)),
+                "sound_source_ring_fade_out": lambda harness, arguments: (0, (arguments[0], arguments[1] & 0xFFFF, arguments[2])),
+                "looping_sound_get_or_new_source": lambda harness, arguments, value=random_.choice((NONE, salts[11], salts[11])): (
+                    value,
+                    (arguments[0], arguments[1] & 0xFFFF, arguments[2], arguments[3], arguments[4], harness.normalize(arguments[5])),
+                ),
+                "sound_sources_cross_fade": lambda harness, arguments: (0, (arguments[0], arguments[1], arguments[2] & 0xFFFF, arguments[3])),
+                "sound_choose_pitch_range": lambda harness, arguments, value=random_.choice((0, 1, 2, 0xFFFF)): (
+                    value,
+                    (arguments[0] & 0xFFFF, harness.normalize(arguments[1]), arguments[2]),
+                ),
+                "sound_source_ring_fade_out_in_seconds": lambda harness, arguments: (0, tuple(arguments)),
             },
         )

@@ -302,6 +302,12 @@ enum
 	LOOPING_SOUND_TRACK_PITCH_OFFSET= 0x10,
 	LOOPING_SOUND_DEFINITION_TRACK_GAIN_OFFSET= 0x8,
 	LOOPING_SOUND_DEFINITION_TRACK_UNKNOWN3C_OFFSET= 0x3C,
+	LOOPING_SOUND_DEFINITION_MAXIMUM_DISTANCE_OFFSET= 0x10,
+	LOOPING_SOUND_DEFINITION_TRACK_FLAGS_OFFSET= 0x4,
+	LOOPING_SOUND_DEFINITION_TRACK_FADE_IN_OFFSET= 0xC,
+	LOOPING_SOUND_DEFINITION_TRACK_FADE_OUT_OFFSET= 0x10,
+	LOOPING_SOUND_DEFINITION_TRACK_ALTERNATE_CROSS_FADE_OFFSET= 0x50,
+	LOOPING_SOUND_DEFINITION_TRACK_ALTERNATE_FADE_OUT_OFFSET= 0x54,
 	MAXIMUM_SOUND_PITCH_RANGES= 9,
 	_sound_source_deleted_out_of_pitch_range= 8,
 	SOUND_SOURCE_DATUM_TRACK_SEED_OFFSET= 0x64,
@@ -1467,8 +1473,12 @@ long unknown_0014de10(long player_index);
 long double sound_listener_doppler_pitch(long listener_index, const real_point3d *position);
 void sound_effect_start_sounds(long effect_index, long phase);
 /* 0x0021a250: a looping sound starts, or goes on, or ends */
-void unknown_0021a250(long definition_index, unsigned long unknown, long owner, long controller_owner,
-	const struct sound_source *source, long state, unsigned long flags, long unknown2);
+boolean __attribute__((stdcall)) looping_sound_start(long definition_index, long unknown2, long owner,
+	long controller_owner, const struct sound_source *source, long state, unsigned long flags, real seconds);
+/* 0x00192d70: how loud something is for how far it is; 0x00192ce0: four
+parts of a direction */
+real __attribute__((stdcall)) unknown_00192d70(real minimum_distance, real maximum_distance, real distance);
+void unknown_00192ce0(const real_vector3d *direction, real *parts, long unknown);
 
 /* 0x0021d360, 0x0021d5a0 and 0x0021da90 */
 void sound_effect_unknown_0021d360(long effect_index);
@@ -11036,7 +11046,7 @@ controller of the effect's owner and is told of things through
 sound_effect_sound_callbacks, with the effect at the end of the bytes for
 it.
 
-A looping sound is given to unknown_0021a250 at all three, with the real
+A looping sound is given to looping_sound_start at all three, with the real
 added to the one at 8 of what the game says of the sound, with the state of
 sound_effect_looping_sound_states and two flags: 1 if the element has the
 flag 3, or the flag 4 when the effect has the flags 1 and 4; 2 at the end.
@@ -11118,7 +11128,7 @@ void sound_effect_start_sounds(
 			}
 			memcpy(copy, source, sizeof(copy));
 			*(real *)&copy[2]= *(const real *)(element+SOUND_EFFECT_SOUND_GAIN_OFFSET)+*(const real *)&copy[2];
-			unknown_0021a250(tag_index, unknown6,
+			looping_sound_start(tag_index, unknown6,
 				effect[SOUND_EFFECT_DATUM_KIND_OFFSET] ? *(const long *)(effect+SOUND_EFFECT_DATUM_SOURCE_INDEX_OFFSET) :
 				effect_index|SOUND_EFFECT_CONTROLLER_OWNER_FLAG,
 				owner, (const struct sound_source *)copy, state, start_flags, 0);
@@ -12858,4 +12868,452 @@ void __attribute__((stdcall)) sound_listeners_update(
 		*(const byte **)(heard+SOUND_CONSOLE_LISTENER_PLACE_COUNT_OFFSET+4)= places;
 		sound_console_set_listener(heard);
 	}
+}
+
+/* whether a state of a track of a looping sound is one of its other set:
+3, 4 and 6 */
+static inline __attribute__((always_inline)) boolean looping_sound_state_is_alternate(
+	long state)
+{
+	return ((1UL<<(state&31))&0x58)!=0;
+}
+
+/* the sound of a state of a track, in the tag: NONE if it has none */
+static inline __attribute__((always_inline)) long looping_sound_track_state_sound(
+	const byte *track_definition,
+	long state)
+{
+	return *(const long *)(track_definition+looping_sound_unknown_0044a188[state]+4);
+}
+
+/* 0x0021a250: a looping sound starts (0), goes on (1) or ends (2). The one
+of the tag and the owner is looked for (looping_sound_find), and made if it
+is to start or go on and is not there; one of a source with a type whose tag
+has the flag 7 is its own: its owner is its tag with the flags 0x6000, and
+each time it is asked for, how it is heard by its listener is added to its
+four gains (unknown_00192d70 and unknown_00192ce0 say how much, for how far
+it is and for where). It is kept for this time (its byte at 0x53), and takes
+what the game says of it unless that has the flag 1.
+
+One that ends, or has the flag 3, with no sounds that play, is let go.
+Else each track is seen to. Its state is one of seven: in, loop and out,
+their three others (3, 4 and 6) for when the flag 0 of `flags` is set and
+the track has sounds for them, and 5. When it starts, the sound of its
+start plays: in place of what the track plays, or with it fading in if the
+track has the flag 0. When it starts or goes on, the state that the track
+is to go to is looked for along looping_sound_unknown_0044a150 or
+looping_sound_unknown_0044a16c: the sound of the first state that has one
+plays, crossing from the one before in half a second, or as long as the
+track says; those of the states that the track's flags leave out only
+start. When it ends, the sounds of the track fade out in `seconds`; with
+none given, in what the track says, and the sound of its end plays, or the
+first sound of the track is marked to go to it (kind 3).
+
+Last, one with no sounds that play and no listener near enough is let go;
+and it keeps three flags of `flags` and what it was asked. TRUE if nothing
+was to be done; if the sound is not ready, whether it was to end. The name
+is made up */
+boolean __attribute__((stdcall)) looping_sound_start(
+	long definition_index,
+	long unknown2,
+	long owner,
+	long controller_owner,
+	const struct sound_source *source,
+	long state,
+	unsigned long flags,
+	real seconds)
+{
+	boolean alternate_wanted= flags&1;
+	boolean result= state==2;
+	const byte *definition;
+	long looping_sound_index;
+	byte *looping_sound;
+	boolean created;
+	boolean own;
+	long track;
+	long key;
+
+	if (definition_index==NONE)
+	{
+		return TRUE;
+	}
+	if (!game_sound_globals[GAME_SOUND_GLOBALS_INITIALIZED_OFFSET] || !game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN79_OFFSET] ||
+		!game_sound_globals[GAME_SOUND_GLOBALS_MAP_LOADED_OFFSET])
+	{
+		return result;
+	}
+	definition= (const byte *)(uintptr_t)global_tag_instances[definition_index&0xFFFF].address;
+	if ((((const byte *)source)[SOUND_SOURCE_TYPE_OFFSET]&0xF) && (signed char)definition[0]<0)
+	{
+		own= TRUE;
+		key= definition_index|LOOPING_SOUND_UNKNOWN8_OWN_FLAGS;
+	}
+	else
+	{
+		own= FALSE;
+		key= owner;
+	}
+	looping_sound_index= looping_sound_find(definition_index, key);
+	created= FALSE;
+	result= TRUE;
+	if (looping_sound_index!=NONE)
+	{
+		if ((flags&0x10) && state==0)
+		{
+			state= 1;
+		}
+	}
+	else
+	{
+		if (!((1UL<<(state&31))&3))
+		{
+			return result;
+		}
+		looping_sound_index= looping_sound_new(definition_index, (short)unknown2, key, controller_owner);
+		created= TRUE;
+		if (looping_sound_index==NONE)
+		{
+			return FALSE;
+		}
+	}
+
+	looping_sound= (byte *)looping_sounds->data+(looping_sound_index&0xFFFF)*LOOPING_SOUND_DATUM_SIZE;
+	*(short *)(looping_sound+LOOPING_SOUND_DATUM_UNKNOWN2_OFFSET)= (short)unknown2;
+	if (!((((const byte *)source)[0]>>1)&1))
+	{
+		memcpy(looping_sound+LOOPING_SOUND_DATUM_SOURCE_OFFSET, source, LOOPING_SOUND_DATUM_SOURCE_SIZE);
+	}
+	looping_sound_check_distances(definition_index, (const struct sound_source *)(looping_sound+LOOPING_SOUND_DATUM_SOURCE_OFFSET));
+	if (own)
+	{
+		const struct sound_source *said= (const struct sound_source *)(looping_sound+LOOPING_SOUND_DATUM_SOURCE_OFFSET);
+		real maximum_distance;
+		long listener_index;
+		real distance;
+
+		if (looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET+3]!=game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7F_OFFSET])
+		{
+			memset(looping_sound+LOOPING_SOUND_DATUM_GAINS_OFFSET, 0, NUMBER_OF_LOOPING_SOUND_GAINS*sizeof(real));
+		}
+		maximum_distance= said->flags&FLAG(_sound_source_maximum_distance_bit) ? said->maximum_distance :
+			*(const real *)(definition+LOOPING_SOUND_DEFINITION_MAXIMUM_DISTANCE_OFFSET);
+		listener_index= sound_source_get_listener(said, maximum_distance, &distance);
+		if (listener_index!=NONE)
+		{
+			real minimum_distance= said->flags&FLAG(_sound_source_minimum_distance_bit) ? said->minimum_distance :
+				*(const real *)(definition+LOOPING_SOUND_DEFINITION_MAXIMUM_DISTANCE_OFFSET-4);
+			real *gains= (real *)(looping_sound+LOOPING_SOUND_DATUM_GAINS_OFFSET);
+			real_point3d position;
+			real parts[NUMBER_OF_LOOPING_SOUND_GAINS];
+			real sum= 0.0f;
+			real scale= 1.0f;
+			real gain;
+			long index;
+
+			if (!(minimum_distance>0.001f))
+			{
+				minimum_distance= 0.001f;
+			}
+			gain= unknown_00192d70(minimum_distance, maximum_distance, distance);
+			sound_source_get_position(said, listener_index, &position);
+			if ((looping_sound[LOOPING_SOUND_DATUM_SOURCE_OFFSET+SOUND_SOURCE_TYPE_OFFSET]&0xF)==1)
+			{
+				matrix4x3_inverse_transform_point(
+					&((const struct sound_listener *)(game_sound_globals+GAME_SOUND_GLOBALS_LISTENERS_OFFSET))[listener_index].matrix,
+					&position, &position);
+			}
+			if (distance>minimum_distance)
+			{
+				normalize3d((real_vector3d *)&position);
+			}
+			unknown_00192ce0((const real_vector3d *)&position, parts, 1);
+			for (index= 0; index<NUMBER_OF_LOOPING_SOUND_GAINS; index++)
+			{
+				real part= parts[index]*gain;
+
+				sum= part*part+sum;
+			}
+			if (sum>1.0f)
+			{
+				scale= 1.0f/sum;
+			}
+			for (index= 0; index<NUMBER_OF_LOOPING_SOUND_GAINS; index++)
+			{
+				gains[index]= parts[index]*scale*gain+gains[index];
+			}
+		}
+		looping_sound[LOOPING_SOUND_DATUM_UNKNOWN2_OFFSET]&= ~2;
+	}
+
+	looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET+3]= game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7F_OFFSET];
+	if ((state==2 || (looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET]&8)) && !looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET+1])
+	{
+		looping_sound_delete(looping_sound_index);
+		return result;
+	}
+	result= FALSE;
+	for (track= 0; track<*(const long *)(definition+LOOPING_SOUND_DEFINITION_TRACKS_OFFSET); track++)
+	{
+		const byte *track_definition= *(const byte *const *)(definition+LOOPING_SOUND_DEFINITION_TRACKS_OFFSET+4)+
+			track*LOOPING_SOUND_DEFINITION_TRACK_SIZE;
+		byte *track_state= looping_sound+LOOPING_SOUND_DATUM_TRACK_SOURCE_OFFSET+track*LOOPING_SOUND_TRACK_SIZE;
+		unsigned long *seed= &global_random_seed_reference[1];
+		unsigned long track_flags= *(const unsigned long *)(track_definition+LOOPING_SOUND_DEFINITION_TRACK_FLAGS_OFFSET);
+		boolean alternate= alternate_wanted;
+		long wanted= NONE;
+
+		if (definition[0]&LOOPING_SOUND_TRACK_OWN_BITS_FLAGS)
+		{
+			seed= (unsigned long *)(track_state+8);
+		}
+		if (looping_sound_track_state_sound(track_definition, 3)==NONE && looping_sound_track_state_sound(track_definition, 4)==NONE &&
+			looping_sound_track_state_sound(track_definition, 6)==NONE && looping_sound_track_state_sound(track_definition, 5)==NONE &&
+			!(track_definition[LOOPING_SOUND_DEFINITION_TRACK_FLAGS_OFFSET]&0x14))
+		{
+			alternate= FALSE;
+		}
+		if (created)
+		{
+			*(long *)(track_state+LOOPING_SOUND_TRACK_PITCH_OFFSET)= *(const long *)(looping_sound+LOOPING_SOUND_DATUM_SOURCE_OFFSET+4);
+			track_state[LOOPING_SOUND_TRACK_CHANNELS_OFFSET]= 0;
+		}
+		if (created || *(const long *)track_state==NONE)
+		{
+			*(long *)track_state= NONE;
+			track_state[LOOPING_SOUND_UNKNOWNC_OFFSET]= alternate ? 3 : 0;
+			track_state[LOOPING_SOUND_UNKNOWND_OFFSET]= alternate ? 3 : 0;
+		}
+
+		if (state==0)
+		{
+			long start_sound_index= looping_sound_track_state_sound(track_definition, 0);
+
+			if (start_sound_index!=NONE)
+			{
+				long out_source_index= looping_sound_find_source(looping_sound_index, (short)track,
+					looping_sound_track_state_sound(track_definition, 2), NONE);
+
+				if (!(track_definition[LOOPING_SOUND_DEFINITION_TRACK_FLAGS_OFFSET]&1))
+				{
+					*(long *)track_state= looping_sound_source_new(looping_sound_index, start_sound_index, NONE, track, 1,
+						(long)(uintptr_t)seed);
+				}
+				else
+				{
+					looping_sound_source_new(looping_sound_index, start_sound_index, NONE, track, 0, (long)(uintptr_t)seed);
+					if (out_source_index!=NONE)
+					{
+						real fade_seconds= *(const real *)(track_definition+LOOPING_SOUND_DEFINITION_TRACK_FADE_IN_OFFSET);
+						byte *other= sound_source_get(out_source_index);
+
+						*(real *)(other+SOUND_SOURCE_DATUM_UNKNOWNB0_OFFSET)= sound_source_fade_decibels(out_source_index);
+						*(short *)(other+SOUND_SOURCE_DATUM_UNKNOWNAE_OFFSET)= 1;
+						*(long *)(other+SOUND_SOURCE_DATUM_FADE_TIME_OFFSET)= (long)(fade_seconds*1000.0f);
+						*(long *)(other+SOUND_SOURCE_DATUM_UNKNOWNB8_OFFSET)= NONE;
+						other[SOUND_SOURCE_DATUM_FLAGS_OFFSET]|= 0x80;
+					}
+					sound_source_ring_fade_out(*(const long *)track_state, 1,
+						*(const real *)(track_definition+LOOPING_SOUND_DEFINITION_TRACK_FADE_IN_OFFSET));
+				}
+				track_state[LOOPING_SOUND_UNKNOWNC_OFFSET]= 0;
+				track_state[LOOPING_SOUND_UNKNOWND_OFFSET]= 0;
+			}
+		}
+
+		if (state==2 || (looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET]&8))
+		{
+			boolean alternate_now;
+			boolean start_end;
+			long end_sound_index;
+			long first;
+
+			if (looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET+2]==2)
+			{
+				continue;
+			}
+			if (seconds!=0.0f)
+			{
+				if (*(const long *)track_state!=NONE)
+				{
+					sound_source_ring_fade_out_in_seconds(seconds, *(const long *)track_state);
+				}
+				continue;
+			}
+			alternate_now= looping_sound_state_is_alternate((char)track_state[LOOPING_SOUND_UNKNOWNC_OFFSET]);
+			if (alternate_now && ((track_flags&0x10) || looping_sound_track_state_sound(track_definition, 6)!=NONE))
+			{
+				end_sound_index= looping_sound_track_state_sound(track_definition, 6);
+				start_end= (track_flags>>4)&1;
+				alternate= TRUE;
+			}
+			else
+			{
+				end_sound_index= looping_sound_track_state_sound(track_definition, 2);
+				start_end= (track_flags>>1)&1;
+				alternate= FALSE;
+			}
+			first= *(const long *)track_state;
+			if (first!=NONE)
+			{
+				if (!start_end && end_sound_index==NONE && (definition[0]&2))
+				{
+					continue;
+				}
+				if (start_end || end_sound_index==NONE)
+				{
+					sound_source_ring_fade_out_in_seconds(alternate_now && (track_flags&0x10) ?
+						*(const real *)(track_definition+LOOPING_SOUND_DEFINITION_TRACK_ALTERNATE_FADE_OUT_OFFSET) :
+						*(const real *)(track_definition+LOOPING_SOUND_DEFINITION_TRACK_FADE_OUT_OFFSET), first);
+				}
+			}
+			if (end_sound_index==NONE)
+			{
+				continue;
+			}
+			if (start_end)
+			{
+				looping_sound_source_new(looping_sound_index, end_sound_index, NONE, track, 0, (long)(uintptr_t)seed);
+				continue;
+			}
+			first= *(const long *)track_state;
+			if (first!=NONE)
+			{
+				byte *other= sound_source_get(first);
+
+				if (*(const short *)(other+SOUND_SOURCE_DATUM_CHANNEL_INDEX_OFFSET)!=NONE)
+				{
+					track_state[LOOPING_SOUND_UNKNOWND_OFFSET]= alternate ? 6 : 2;
+					other[SOUND_SOURCE_DATUM_KIND_OFFSET]= 3;
+				}
+			}
+			continue;
+		}
+
+		{
+			long current= (char)track_state[LOOPING_SOUND_UNKNOWNC_OFFSET];
+			long next= (char)track_state[LOOPING_SOUND_UNKNOWND_OFFSET];
+			unsigned long only_start= (track_flags&1)|((track_flags>>1)&1 ? 0x44 : 0)|((track_flags>>2)&1 ? 0x28 : 0);
+			boolean immediate;
+			long new_source_index;
+			long first;
+
+			if (!(current!=next && looping_sound_track_state_sound(track_definition, next)!=NONE &&
+				alternate==looping_sound_state_is_alternate(current)))
+			{
+				long pending= NONE;
+				long from= current;
+				long to= alternate ? looping_sound_unknown_0044a16c[from] : looping_sound_unknown_0044a150[from];
+
+				while (to!=from)
+				{
+					long candidate= looping_sound_unknown_0044a188[to]!=NONE ? looping_sound_track_state_sound(track_definition, to) : NONE;
+
+					if (candidate!=NONE)
+					{
+						if (!(only_start&(1UL<<(to&31))))
+						{
+							wanted= candidate;
+							break;
+						}
+						pending= candidate;
+					}
+					from= to;
+					to= alternate ? looping_sound_unknown_0044a16c[to] : looping_sound_unknown_0044a150[to];
+				}
+				track_state[LOOPING_SOUND_UNKNOWND_OFFSET]= (byte)to;
+				if (pending!=NONE)
+				{
+					looping_sound_source_new(looping_sound_index, pending, NONE, track, 0, (long)(uintptr_t)seed);
+				}
+			}
+			if (wanted==NONE && alternate==looping_sound_state_is_alternate((char)track_state[LOOPING_SOUND_UNKNOWNC_OFFSET]))
+			{
+				continue;
+			}
+
+			immediate= state==0 && (track_definition[LOOPING_SOUND_DEFINITION_TRACK_FLAGS_OFFSET]&1);
+			first= *(const long *)track_state;
+			if (first!=NONE && !immediate)
+			{
+				if (*(const long *)(sound_source_get(first)+SOUND_SOURCE_DATUM_SOUND_INDEX_OFFSET)==wanted ||
+					alternate==looping_sound_state_is_alternate((char)track_state[LOOPING_SOUND_UNKNOWNC_OFFSET]) ||
+					!(track_definition[LOOPING_SOUND_DEFINITION_TRACK_FLAGS_OFFSET]&4))
+				{
+					continue;
+				}
+				new_source_index= NONE;
+				if (wanted!=NONE)
+				{
+					new_source_index= looping_sound_get_or_new_source(wanted, (short)track, NONE, looping_sound_index, 2,
+						(long)(uintptr_t)seed);
+					if (new_source_index==NONE)
+					{
+						continue;
+					}
+				}
+				sound_sources_cross_fade(new_source_index, *(const long *)track_state, 1,
+					*(const real *)(track_definition+LOOPING_SOUND_DEFINITION_TRACK_ALTERNATE_CROSS_FADE_OFFSET));
+				*(long *)track_state= new_source_index;
+				track_state[LOOPING_SOUND_UNKNOWNC_OFFSET]= alternate ? 4 : 1;
+				track_state[LOOPING_SOUND_UNKNOWND_OFFSET]= alternate ? 4 : 1;
+				continue;
+			}
+			if (wanted==NONE)
+			{
+				continue;
+			}
+			{
+				const struct sound_definition *sound= sound_definition_get(wanted);
+				const short *bends= (const short *)((const byte *)sound_definition_scale_decibels(sound)+SOUND_SCALE_PITCH_BENDS_OFFSET);
+				real low= (real)bends[0];
+				long pitch_range= sound_choose_pitch_range(NONE, sound,
+					((real)bends[1]-low)**(const real *)(track_state+LOOPING_SOUND_TRACK_PITCH_OFFSET)+
+					(real)sound_definition_get_playback(sound)->pitch_lower_bound+low);
+
+				new_source_index= looping_sound_find_source(looping_sound_index, (short)track, wanted, pitch_range);
+				if (new_source_index==NONE)
+				{
+					new_source_index= looping_sound_source_new(looping_sound_index, wanted, pitch_range, track, 2, (long)(uintptr_t)seed);
+					if (new_source_index==NONE)
+					{
+						continue;
+					}
+				}
+			}
+			if (state!=0)
+			{
+				sound_sources_cross_fade(new_source_index, NONE, 1, 0.5f);
+			}
+			else if (track_definition[LOOPING_SOUND_DEFINITION_TRACK_FLAGS_OFFSET]&1)
+			{
+				sound_sources_cross_fade(new_source_index, NONE, 1,
+					*(const real *)(track_definition+LOOPING_SOUND_DEFINITION_TRACK_FADE_IN_OFFSET));
+			}
+			*(long *)track_state= new_source_index;
+			track_state[LOOPING_SOUND_UNKNOWNC_OFFSET]= track_state[LOOPING_SOUND_UNKNOWND_OFFSET];
+		}
+	}
+
+	if (!looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET+1])
+	{
+		const struct sound_source *said= (const struct sound_source *)(looping_sound+LOOPING_SOUND_DATUM_SOURCE_OFFSET);
+
+		if (sound_source_get_listener(said, said->flags&FLAG(_sound_source_maximum_distance_bit) ? said->maximum_distance :
+			*(const real *)((const byte *)(uintptr_t)global_tag_instances[
+			*(const long *)(looping_sound+LOOPING_SOUND_DATUM_UNKNOWN4_OFFSET)&0xFFFF].address+
+			LOOPING_SOUND_DEFINITION_MAXIMUM_DISTANCE_OFFSET), NULL)==NONE)
+		{
+			looping_sound_delete(looping_sound_index);
+			return result;
+		}
+	}
+	looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET]= alternate_wanted ?
+		looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET]|1 : looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET]&~1;
+	looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET]= (flags>>1)&1 ?
+		looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET]|2 : looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET]&~2;
+	looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET]= (flags>>2)&1 ?
+		looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET]|4 : looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET]&~4;
+	looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET+2]= (byte)state;
+
+	return result;
 }

@@ -2,6 +2,74 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Un sonido en bucle empieza, sigue o acaba: el sonido, completo
+
+Una función en `sound/sound_manager.c`, de 2.497 bytes: la última del sonido. De 930 funciones se pasa a
+931, el 8,26 % de las del juego (el 5,501 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `looping_sound_start` | `0x0021a250` | `sound/sound_manager.c` |
+
+Era `unknown_0021a250`, la más grande de las que quedaban. La llaman
+`sound_effect_start_sounds` y una función de fuera del sonido
+(`0x0018a7b0`). Recibe en la pila el tag, un número, el dueño, el dueño del
+mando de sonidos, lo que el juego dice del sonido, qué se pide (0 empezar,
+1 seguir, 2 acabar), unas marcas y unos segundos; devuelve un byte. Nuevas
+sin descompilar: `0x00192d70` y `0x00192ce0`.
+
+**Con esta función, todo el sonido del juego que estaba en la lista está
+descompilado**: `sound/sound_manager.c` reúne las funciones de los rangos
+`0x00124fc0`–`0x0012b0d0` y `0x00218510`–`0x00222a00`.
+
+### Lo que se sabe
+
+- Busca el sonido en bucle del tag y del dueño (`looping_sound_find`) y lo
+  crea si hace falta para empezar o seguir. Uno de un sonido con sitio cuyo
+  tag tiene la marca 7 es «propio»: su dueño es su tag con las marcas
+  `0x6000`, y cada vez que se pide se suma a sus cuatro ganancias cómo lo
+  oye su oyente (`0x00192d70` y `0x00192ce0` dicen cuánto, por lo lejos que
+  está y por dónde).
+- Si se pide acabar (o tiene la marca 3) y no tiene sonidos sonando, se
+  suelta.
+- Cada pista tiene uno de siete estados: entrada, bucle y salida; sus tres
+  alternativos (3, 4 y 6), para cuando se pide con la marca 0 y la pista
+  tiene sonidos para ellos; y el 5. Las tablas `looping_sound_unknown_0044a150`
+  y `looping_sound_unknown_0044a16c` dicen a qué estado se pasa desde cada
+  uno, por un camino o por el alternativo.
+- Al empezar suena el sonido de entrada: en lugar de lo que la pista
+  tuviera, o con ello fundiéndose si la pista tiene la marca 0.
+- Al empezar o seguir se busca el estado al que toca ir: suena el sonido
+  del primer estado del camino que tenga uno, cruzándose con el anterior en
+  medio segundo o en lo que diga la pista; los de los estados que las
+  marcas de la pista dejan fuera solo se arrancan.
+- Al acabar, los sonidos de la pista se apagan en los segundos que se
+  piden; si no se piden, en lo que diga la pista, y suena el sonido de
+  salida, o el primer sonido de la pista queda marcado para pasar a él
+  (tipo 3).
+- Al final, uno sin sonidos sonando y sin oyente lo bastante cerca se
+  suelta; y se queda con tres de las marcas y con lo que se pidió.
+- Lo que devuelve: verdadero si no había nada que hacer. Una rareza: si el
+  sonido no está en marcha devuelve si se pedía acabar, porque el juego
+  guarda eso en el mismo sitio de la pila donde luego guarda el resultado.
+  Lo cazaron las pruebas: al principio creí que devolvía basura.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y las de
+  `sound_effect_start_sounds`. La última batería completa es la del hito
+  258 (928 funciones, todas bien); la siguiente se lanza con este hito.
+
+### Mutaciones
+
+Setenta y dos cambios a mano: las pruebas notan setenta. Los dos que no
+notan no cambian nada: son dos bits de las marcas de la pista (los de los
+estados 0 y 6) que el juego prepara pero a los que el camino entre estados
+nunca llega.
+
 ## 2026-10-05 — Dónde está cada oyente
 
 Una función en `sound/sound_manager.c`, de 2.290 bytes. De 929 funciones se pasa a
