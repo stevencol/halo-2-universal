@@ -2,6 +2,66 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Se prepara el sonido de la consola
+
+Una función en `sound/sound_manager.c`, de 1.584 bytes. De 928 funciones se pasa a
+929, el 8,25 % de las del juego (el 5,340 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_console_initialize` | `0x0021e4b0` | `sound/sound_manager.c` |
+
+Era `unknown_0021e4b0`. La llama `sound_initialize`, con cuántas voces de
+cada tipo y cuántas casillas quiere el juego. Devuelve si todo fue bien.
+Once funciones nuevas sin descompilar, casi todas de la consola
+(`0x0037d797`, `0x0037b5ae`, `0x0037d506`, `0x0037d5cd`, `0x0037b5ca`,
+`0x0037b637`, `0x0037d52a`, `0x00379f5b`, `0x00191300`, `0x0012c040` y
+`0x00191420`). Nueva variable: `unknown_0047f088`.
+
+### Lo que se sabe
+
+- La memoria del sonido de la consola (`0x2AD8` bytes) sale de la que el
+  juego toma al arrancar (`shell_memory_allocate`).
+- La consola crea su sonido y se le preguntan y dicen varias cosas. El byte
+  de `0x1` dice si los altavoces son de un tipo (un 2 con la marca 16). Si
+  algo de esto falla, o el procesador de sonido no recibe su programa
+  (`0x00191300`), se desmonta todo y devuelve falso.
+- Quien oye empieza mirando al frente (`sound_console_set_listener`).
+- Las voces reciben sus streams, tantas de cada uno de tres tipos como diga
+  el juego; dónde empieza y acaba cada tipo se guarda en `0x1A0C` y
+  `0x1A12`. Después, las casillas. En cuanto uno falla no se crean más.
+- Para el sonido de los sitios se crean tres parejas de cosas (en `0x2A58`
+  y `0x2A64`, de las salidas 23 a 25), quien lleva ese sonido pasa a ser
+  `unknown_0047f088`, y cada uno de los dos sitios tiene cuatro streams (en
+  `0x2A70`, de las salidas 15 a 22 hacia las salidas 6 a 9).
+- Los dos streams de `0x2A90` empiezan en silencio, y las ganancias en 1.
+- Si todo fue bien, el primer byte del sonido de la consola pasa a 1.
+- El nombre es una suposición.
+
+### Arreglos
+
+- `sound_console_voice_create_stream` (hito 215) devuelve si la consola
+  creó el stream; estaba como si no devolviera nada, y esta función lo
+  mira.
+- `unknown_0047f0d0` estaba apuntada con `0x20` bytes, y así pisaba a
+  `unknown_0047f0e0` y `unknown_0047f0e4`, que son dos de sus números. Se
+  ha dejado en `0x10` bytes.
+
+### Batería completa
+
+La del hito 258 terminó: 928 funciones, las 928 bien.
+
+### Sin comprobar
+
+- En este hito solo se pasaron las pruebas de esta función y las de las que
+  tienen que ver con ella.
+
+### Mutaciones
+
+Cuarenta y dos cambios a mano: las pruebas notan los cuarenta y dos.
+
 ## 2026-10-05 — Un archivo nuevo: lo que el juego hace con los mandos
 
 Cuatro funciones nuevas y una que cambia de sitio, en el archivo nuevo `input/input_abstraction.c`.

@@ -640,6 +640,9 @@ enum
 	SOUND_CONSOLE_PLACE_AMOUNT_OFFSET= 0x14,
 	NUMBER_OF_SOUND_CONSOLE_PLACES= 2,
 	NUMBER_OF_SOUND_CONSOLE_PLACE_STREAMS= 4,
+	UNKNOWN_0051EBE4_SIZE= 0x2AD8,
+	UNKNOWN_0051EBE4_UNKNOWN2AA0_OFFSET= 0x2AA0,
+	SOUND_CONSOLE_LISTENER_SIZE= 0x38,
 	/* of the effects of a voice, and of a voice */
 	SOUND_VOICE_EFFECTS_FRACTION_OFFSET= 0x4,
 	SOUND_VOICE_EFFECTS_FILTER_OFFSET= 0x10,
@@ -1058,6 +1061,10 @@ boolean unknown_004e636d;
 kind 2 are of */
 struct data_array *unknown_004ed28c;
 
+/* 0x0047f088: the handler of the sound of the places that the console's
+sound starts with */
+struct sound_console_environment_handler unknown_0047f088;
+
 /* 0x004ed280: of something else; it has 32 bytes for each structure bsp */
 byte *unknown_004ed280;
 
@@ -1167,8 +1174,9 @@ long unknown_00386ad8;
 
 /* 0x0047f0d0 and 0x0047f0f0: two things of the game with functions of their
 own, for the samples that are not compressed and for those that are. What
-they do is not known */
-byte unknown_0047f0d0[0x20];
+they do is not known. The first is 0x20 bytes too: its numbers at 0x10 and
+0x14 are unknown_0047f0e0 and unknown_0047f0e4 */
+byte unknown_0047f0d0[0x10];
 byte unknown_0047f0f0[0x20];
 
 long unknown_00470084= 8000;
@@ -1202,9 +1210,24 @@ boolean sound_playback_controllers_initialize(void);
 boolean looping_sounds_initialize(void);
 boolean sound_effects_initialize(void);
 boolean sound_voices_initialize(const struct sound_configuration *configuration);
-boolean unknown_0021e4b0(const struct sound_configuration *configuration);
+boolean __attribute__((stdcall)) sound_console_initialize(const struct sound_configuration *configuration);
+/* 0x0037d797: the console makes its sound; 0x0037b5ae, 0x0037d506, 0x0037d5cd,
+0x0037b5ca, 0x0037b637 and 0x0037d52a: it is asked and told things of it;
+0x00379f5b; 0x00191300: the processor of the sound is given its program;
+0x0012c040 and 0x00191420 */
+long unknown_0037d797(void *unknown, void **sound, void *unknown2);
+long unknown_0037b5ae(void *sound, void *unknown);
+long unknown_0037d506(void *sound, real unknown, long apply);
+long unknown_0037d5cd(void *sound, real unknown, long apply);
+long unknown_0037b5ca(void *sound, unsigned long *speakers);
+void unknown_0037b637(void *sound, long output, long unknown);
+void unknown_0037d52a(void *sound, real unknown, long apply);
+void unknown_00379f5b(void);
+boolean unknown_00191300(void *sound);
+void unknown_0012c040(void);
+void unknown_00191420(void *sound);
 
-/* 0x0021eae0: takes down what unknown_0021e4b0 set up, most likely */
+/* 0x0021eae0: takes down what sound_console_initialize set up, most likely */
 void sound_console_dispose(void);
 
 /* 0x00379f45 and 0x00379f2a: of the console: something of its sound is let
@@ -1341,7 +1364,7 @@ void unknown_002ae820(byte *voice);
 
 /* 0x0021f4e0; 0x002ae660: makes the stream of a voice of the console's sound */
 struct sound_console_stream_description;
-void __attribute__((stdcall)) sound_console_voice_create_stream(long kind, long voice_index);
+boolean __attribute__((stdcall)) sound_console_voice_create_stream(long kind, long voice_index);
 boolean unknown_002ae660(byte *voice, void *object, struct sound_console_stream_description *description, long kind);
 void unknown_002ae500(void *voice, const struct sound_chunk *chunk);
 
@@ -2119,7 +2142,7 @@ void sound_initialize(
 			data_make_valid(sources);
 			memset(sound_channels, 0, MAXIMUM_SOUND_CHANNELS*sizeof(struct sound_channel));
 			if (sound_playback_controllers_initialize() && looping_sounds_initialize() && sound_effects_initialize() &&
-				sound_voices_initialize(&sound_configuration) && unknown_0021e4b0(&sound_configuration))
+				sound_voices_initialize(&sound_configuration) && sound_console_initialize(&sound_configuration))
 			{
 				short channel_index= 0;
 				short type;
@@ -8706,8 +8729,8 @@ void __attribute__((stdcall)) sound_console_voice_stream_callback(
 samples of a kind: unknown_002ae660 makes it, with how the samples are
 (sound_console_get_format), up to two pieces of them at a time, and
 sound_console_voice_stream_callback for the console to call with the number
-of the voice. The name is made up */
-void __attribute__((stdcall)) sound_console_voice_create_stream(
+of the voice. Whether it was made. The name is made up */
+boolean __attribute__((stdcall)) sound_console_voice_create_stream(
 	long kind,
 	long voice_index)
 {
@@ -8723,7 +8746,8 @@ void __attribute__((stdcall)) sound_console_voice_create_stream(
 	description.maximum_packets= 2;
 	description.callback= sound_console_voice_stream_callback;
 	description.context= voice_index;
-	unknown_002ae660(voice, object, &description, kind);
+
+	return unknown_002ae660(voice, object, &description, kind);
 }
 
 /* 0x00219f80: how loud a pitch range is played at a pitch that is out of
@@ -12436,4 +12460,182 @@ void __attribute__((stdcall)) looping_sounds_update(
 				(long double)1000.0f+(long double)*(const long *)(game_sound_globals+GAME_SOUND_GLOBALS_UNKNOWN84_OFFSET));
 		}
 	}
+}
+
+/* 0x0021e4b0: the sound of the console is set up. Its memory (0x2AD8 bytes)
+is taken of that which the game takes when it starts. The console makes its
+sound (unknown_0037d797) and is asked and told some things of it; the byte
+at 1 says whether its speakers are of one kind (2, with the flag 16). The
+processor of the sound is given its program (unknown_00191300), and who
+hears faces forward. Then the voices get their streams, as many of each of
+three kinds as `configuration` says (where each kind starts and ends is
+kept at 0x1A0C and 0x1A12), and the slots theirs; three pairs of things are
+made for the sound of the places (at 0x2A58 and 0x2A64, of the outputs 23
+to 25), the handler of the sound of the places is unknown_0047f088, each of
+the two places has four streams (at 0x2A70, from the outputs 15 to 22 to
+the outputs 6 to 9), the two streams of 0x2A90 are silent, and the gains
+are 1. TRUE if all went well, and then the first byte of the console's
+sound is 1; if not, all is taken down (sound_console_dispose). The name is
+a guess */
+boolean __attribute__((stdcall)) sound_console_initialize(
+	const struct sound_configuration *configuration)
+{
+	static const long place_inputs[NUMBER_OF_SOUND_CONSOLE_PLACES*NUMBER_OF_SOUND_CONSOLE_PLACE_STREAMS]=
+	{
+		15, 16, 17, 18, 19, 20, 21, 22
+	};
+	static const long place_outputs[NUMBER_OF_SOUND_CONSOLE_PLACE_STREAMS]= { 6, 7, 8, 9 };
+	const short *voice_counts= (const short *)configuration;
+	byte *console= shell_memory_allocate(UNKNOWN_0051EBE4_SIZE);
+	struct sound_console_buffer_description description;
+	unsigned long speakers;
+	byte listener[SOUND_CONSOLE_LISTENER_SIZE];
+	boolean ok;
+	long index;
+	long kind;
+
+	memset(console, 0, UNKNOWN_0051EBE4_SIZE);
+	unknown_0051ebe4= console;
+	console[0]= 0;
+	if (unknown_0037d797(NULL, (void **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET), NULL)<0 ||
+		unknown_0037b5ae(*(void **)(unknown_0051ebe4+UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET),
+			unknown_0051ebe4+UNKNOWN_0051EBE4_UNKNOWN2AA0_OFFSET)<0 ||
+		unknown_0037d506(*(void **)(unknown_0051ebe4+UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET), 3.04800010f, 0)<0 ||
+		unknown_0037d5cd(*(void **)(unknown_0051ebe4+UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET), 0.0f, 0)<0 ||
+		unknown_0037b5ca(*(void **)(unknown_0051ebe4+UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET), &speakers)<0)
+	{
+		sound_console_dispose();
+		return FALSE;
+	}
+	unknown_0051ebe4[UNKNOWN_0051EBE4_UNKNOWN1_OFFSET]= (speakers&0xFFFF)==2 && (speakers&0x10000);
+	for (index= 0; index<=31; index++)
+	{
+		unknown_0037b637(*(void **)(unknown_0051ebe4+UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET), index, 0);
+	}
+	unknown_0037d52a(*(void **)(unknown_0051ebe4+UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET), 0.0f, 1);
+	unknown_00379f5b();
+	if (!unknown_00191300(*(void **)(unknown_0051ebe4+UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET)))
+	{
+		sound_console_dispose();
+		return FALSE;
+	}
+	memset(listener, 0, sizeof(listener));
+	memcpy(listener+SOUND_CONSOLE_LISTENER_FACING_OFFSET, global_forward3d, sizeof(real_vector3d));
+	memcpy(listener+SOUND_CONSOLE_LISTENER_FACING_OFFSET+sizeof(real_vector3d), global_up3d, sizeof(real_vector3d));
+	sound_console_set_listener(listener);
+	ok= TRUE;
+	unknown_0012c040();
+
+	console= unknown_0051ebe4;
+	*(long *)(unknown_0047f0d0+4)= 0;
+	unknown_0047f0e4= 0;
+	unknown_0047f0e0= 0x10000;
+	for (kind= 0; kind<NUMBER_OF_SOUND_CHANNEL_TYPES; kind++)
+	{
+		long first= *(const short *)(console+UNKNOWN_0051EBE4_VOICE_COUNT_OFFSET);
+
+		*(short *)(console+UNKNOWN_0051EBE4_COUNTS_OFFSET+kind*2)= (short)first;
+		*(short *)(console+UNKNOWN_0051EBE4_VOICE_COUNT_OFFSET)+= voice_counts[kind];
+		for (index= 0; ok && index<voice_counts[kind]; index++)
+		{
+			ok= sound_console_voice_create_stream(kind, first+index)!=0;
+			console= unknown_0051ebe4;
+		}
+		*(short *)(console+UNKNOWN_0051EBE4_COUNTS_OFFSET+(NUMBER_OF_SOUND_CHANNEL_TYPES+kind)*2)=
+			*(const short *)(console+UNKNOWN_0051EBE4_VOICE_COUNT_OFFSET)-1;
+	}
+	*(short *)(console+UNKNOWN_0051EBE4_SLOT_COUNT_SHORT_OFFSET)= configuration->maximum_voices;
+	*(short *)(console+UNKNOWN_0051EBE4_SLOT_COUNT_OFFSET)= configuration->maximum_voices;
+	for (index= 0; ok && index<configuration->maximum_voices; index++)
+	{
+		ok= sound_console_slot_create_stream(index)!=0;
+		console= unknown_0051ebe4;
+	}
+	unknown_00191420(*(void **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET));
+
+	/* how the sound of no place is: half as loud in four places, and -3 */
+	console= unknown_0051ebe4;
+	*(unsigned long *)(console+UNKNOWN_0051EBE4_ENVIRONMENT_OFFSET)= 0;
+	*(unsigned long *)(console+UNKNOWN_0051EBE4_ENVIRONMENT_OFFSET+4)= 0xC0C0A8C1;
+	*(unsigned long *)(console+UNKNOWN_0051EBE4_ENVIRONMENT_OFFSET+8)= 0;
+	*(unsigned long *)(console+UNKNOWN_0051EBE4_ENVIRONMENT_OFFSET+0xC)= 0xC0C0A8C1;
+	*(unsigned long *)(console+UNKNOWN_0051EBE4_ENVIRONMENT_OFFSET+0x10)= 0xC0C0A8C1;
+	*(real *)(console+UNKNOWN_0051EBE4_ENVIRONMENT_OFFSET+0x14)= -3.0f;
+	*(unsigned long *)(console+UNKNOWN_0051EBE4_ENVIRONMENT_OFFSET+0x18)= 0xC0C0A8C1;
+	*(unsigned long *)(console+UNKNOWN_0051EBE4_ENVIRONMENT_OFFSET+0x2C)= 0xC0C0A8C1;
+	*(long *)(console+UNKNOWN_0051EBE4_ENVIRONMENT_OFFSET+UNKNOWN_0051EBE4_ENVIRONMENT_SIZE)= 23;
+	*(long *)(console+UNKNOWN_0051EBE4_ENVIRONMENT_OFFSET+UNKNOWN_0051EBE4_ENVIRONMENT_SIZE+4)= 24;
+	*(long *)(console+UNKNOWN_0051EBE4_ENVIRONMENT_OFFSET+UNKNOWN_0051EBE4_ENVIRONMENT_SIZE+8)= 25;
+	for (index= 0; index<3; index++)
+	{
+		unsigned long output= *(const unsigned long *)(console+UNKNOWN_0051EBE4_ENVIRONMENT_OFFSET+
+			UNKNOWN_0051EBE4_ENVIRONMENT_SIZE+index*4);
+		void **first= (void **)(console+UNKNOWN_0051EBE4_ENVIRONMENT_OFFSET+UNKNOWN_0051EBE4_ENVIRONMENT_SIZE+0xC+index*4);
+		void **second= (void **)(console+UNKNOWN_0051EBE4_ENVIRONMENT_OFFSET+UNKNOWN_0051EBE4_ENVIRONMENT_SIZE+0x18+index*4);
+
+		memset(&description, 0, sizeof(description));
+		description.size= sizeof(description);
+		description.flags= 0x100000;
+		description.unknown14= output;
+		if (unknown_0037d4be(*(void **)(console+UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET), &description, first, NULL)>=0)
+		{
+			unknown_0037b6df(*first, 0, 0, 0);
+		}
+		memset(&description, 0, sizeof(description));
+		description.size= sizeof(description);
+		description.flags= 0x100010;
+		description.unknown14= output;
+		if (unknown_0037d4be(*(void **)(unknown_0051ebe4+UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET), &description, second, NULL)>=0)
+		{
+			unknown_0037c620(*second, SOUND_REAL_MAXIMUM, 1);
+			unknown_0037c644(*second, SOUND_REAL_MAXIMUM, 1);
+			unknown_0037b6df(*second, 0, 0, 0);
+		}
+		console= unknown_0051ebe4;
+	}
+	sound_console_set_environment_handler(&unknown_0047f088);
+
+	for (index= 0; index<NUMBER_OF_SOUND_CONSOLE_PLACES*NUMBER_OF_SOUND_CONSOLE_PLACE_STREAMS; index++)
+	{
+		void **stream= (void **)(unknown_0051ebe4+UNKNOWN_0051EBE4_PLACE_STREAMS_OFFSET+index*4);
+
+		memset(&description, 0, sizeof(description));
+		description.size= sizeof(description);
+		description.flags= 0x100000;
+		description.unknown14= place_inputs[index];
+		if (unknown_0037d4be(*(void **)(unknown_0051ebe4+UNKNOWN_0051EBE4_UNKNOWN2AB0_OFFSET), &description, stream, NULL)>=0)
+		{
+			long pair[2];
+			struct sound_console_mixbins mixbins;
+
+			unknown_0037b66f(*stream, 0);
+			pair[0]= place_outputs[index%NUMBER_OF_SOUND_CONSOLE_PLACE_STREAMS];
+			pair[1]= 0;
+			mixbins.pairs= pair;
+			mixbins.count= 1;
+			unknown_0037c5e4(*stream, &mixbins);
+			unknown_0037b6df(*stream, 0, 0, 0);
+		}
+	}
+	console= unknown_0051ebe4;
+	for (index= 0; index<NUMBER_OF_SOUND_CONSOLE_FUNCTION_STREAMS; index++)
+	{
+		sound_console_create_silence((void **)(console+UNKNOWN_0051EBE4_STREAMS_OFFSET+index*4));
+		console= unknown_0051ebe4;
+		*(long *)(console+UNKNOWN_0051EBE4_UNKNOWN2A98_OFFSET+index*4)= NONE;
+	}
+	*(real *)(console+UNKNOWN_0051EBE4_GAINS_OFFSET)= 1.0f;
+	*(real *)(console+UNKNOWN_0051EBE4_GAINS_OFFSET+4)= 1.0f;
+	*(real *)(console+UNKNOWN_0051EBE4_GAINS_OFFSET+8)= 1.0f;
+	*(real *)(console+UNKNOWN_0051EBE4_GAINS_OFFSET+0xC)= 1.0f;
+	*(long *)(console+UNKNOWN_0051EBE4_GAINS_OFFSET+0x10)= 8000;
+	*(real *)(console+UNKNOWN_0051EBE4_GAINS_OFFSET+0x14)= 0.0f;
+	if (!ok)
+	{
+		sound_console_dispose();
+		return FALSE;
+	}
+	console[0]= 1;
+
+	return ok;
 }

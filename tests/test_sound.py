@@ -8,8 +8,8 @@ import random
 import struct
 import zlib
 
-from difftest import Buffer, GlobalRange, Memory, Mock, Pointer, mock_address
-from difftest import external_address as harness_external_address
+from difftest import GlobalData, Buffer, GlobalRange, Memory, Mock, Pointer, mock_address
+from difftest import GlobalData, external_address as harness_external_address
 from test_async import calls_so_far
 from test_data import array as data_array
 from test_data import identifier
@@ -227,7 +227,7 @@ def run(t) -> None:
             )
 
     def answers(*values: int) -> dict:
-        names = ("sound_playback_controllers_initialize", "looping_sounds_initialize", "sound_effects_initialize", "sound_voices_initialize", "unknown_0021e4b0")
+        names = ("sound_playback_controllers_initialize", "looping_sounds_initialize", "sound_effects_initialize", "sound_voices_initialize", "sound_console_initialize")
 
         def configuration(harness, arguments):
             return bytes(harness.mu.mem_read(arguments[0], 14))
@@ -239,7 +239,7 @@ def run(t) -> None:
 
         result = {}
         for name, value in zip(names, values):
-            if name == "unknown_0021e4b0":
+            if name == "sound_console_initialize":
                 result[name] = last
             elif name == "sound_voices_initialize":
                 result[name] = lambda harness, arguments, value=value: (value, (configuration(harness, arguments),))
@@ -4883,7 +4883,7 @@ def run(t) -> None:
             kind,
             Buffer(random_.randbytes(0x14)),
             Buffer(random_.randbytes(4), places=(0,)),
-            globals={"unknown_0047f0d0": GlobalRange(0x20), "unknown_0047f0f0": GlobalRange(0x20)},
+            globals={"unknown_0047f0d0": GlobalRange(0x10), "unknown_0047f0f0": GlobalRange(0x20)},
         )
 
     # ---------- what the console calls for the stream of a voice
@@ -4939,7 +4939,7 @@ def run(t) -> None:
             random_.randrange(8),
             globals={
                 "unknown_0051ebe4": Buffer(bytes(console_voices(8))),
-                "unknown_0047f0d0": GlobalRange(0x20),
+                "unknown_0047f0d0": GlobalRange(0x10),
                 "unknown_0047f0f0": GlobalRange(0x20),
             },
             externals={"unknown_002ae660": made_},
@@ -5058,7 +5058,7 @@ def run(t) -> None:
             globals={
                 "unknown_0051ebe4": Buffer(bytes(console), pointers=tuple(pointers)),
                 "xmem_static_buffer": struct.pack("<I", random_.getrandbits(32)),
-                "unknown_0047f0d0": GlobalRange(0x20),
+                "unknown_0047f0d0": GlobalRange(0x10),
             },
             externals={
                 "sound_console_voices_stop": lambda harness, arguments: 0,
@@ -7570,5 +7570,104 @@ def run(t) -> None:
                 ),
                 "looping_sound_detail_request": request_,
                 "sound_source_new": new_,
+            },
+        )
+
+    # ---------- the sound of the console is set up
+
+    random_ = random.Random(259)
+
+    for n in range(400):
+        allocated = random_.choice((0, 0x1290, 0x1291, 0x1292, 0x1293))
+        blob = bytearray(random_.randbytes(0x9000))
+        blob[0x8000:0x800C] = struct.pack("<3I", mock_address(0), mock_address(1), mock_address(2))
+        counts = struct.pack("<7h", random_.choice((0, 1, 2)), random_.choice((0, 1, 3)), random_.choice((0, 2)), 1, 2, 3, random_.choice((0, 1, 4)))
+        fails = random_.choice((None, None, None, None, "unknown_0037d797", "unknown_0037b5ae", "unknown_0037d506", "unknown_0037d5cd", "unknown_0037b5ca", "unknown_00191300"))
+        speakers = random_.choice((2, 0x10002, 0x10002, 0x10001, 0x30002, 0x10102))
+        bad = random_.choice((None, None, None, 0, 1, 3, 5))
+        harness = t.harness
+
+        def result_(name, value=0):
+            def handler(harness, arguments, name=name, value=value, fails=fails):
+                return (0x80004005 if fails == name else value), tuple(arguments)
+
+            return handler
+
+        def made_(harness, arguments, fails=fails):
+            harness.mu.mem_write(arguments[1], struct.pack("<I", 0x70001000))
+            return (0x80004005 if fails == "unknown_0037d797" else 0), (arguments[0], arguments[1], arguments[2])
+
+        def speakers_(harness, arguments, fails=fails, speakers=speakers):
+            harness.mu.mem_write(arguments[1], struct.pack("<I", speakers))
+            return (0x80004005 if fails == "unknown_0037b5ca" else 0), (arguments[0],)
+
+        def stream_(harness, arguments, seed=random_.getrandbits(16)):
+            call_ = calls_so_far(harness, "unknown_0037d4be")
+            harness.mu.mem_write(arguments[2], struct.pack("<I", 0x71000000 + call_ * 0x10))
+            return (0x80004005 if (call_ * 7 + seed) % 5 == 0 else 0), (
+                arguments[0],
+                bytes(harness.mu.mem_read(arguments[1], 24)),
+                arguments[2],
+                arguments[3],
+            )
+
+        def voice_(harness, arguments, bad=bad):
+            return (0 if calls_so_far(harness, "sound_console_voice_create_stream") == bad else 1), tuple(arguments)
+
+        def slot_(harness, arguments, bad=bad):
+            return (0 if bad is not None and calls_so_far(harness, "sound_console_slot_create_stream") + 4 == bad else 1), tuple(arguments)
+
+        def outputs_(harness, arguments):
+            count_, pairs = struct.unpack("<iI", harness.mu.mem_read(arguments[1], 8))
+            return 0, (arguments[0], count_, bytes(harness.mu.mem_read(pairs, 8)))
+
+        def silence_(harness, arguments):
+            harness.mu.mem_write(arguments[0], struct.pack("<I", 0x72000000 + calls_so_far(harness, "sound_console_create_silence")))
+            return 0, tuple(arguments)
+
+        t.check(
+            "sound_console_initialize",
+            Buffer(counts),
+            globals={
+                "shell_memory_globals": shell_memory(allocated),
+                "unknown_0051ebe4": random_.getrandbits(32),
+                "unknown_0047f088": GlobalData(struct.pack("<I", STATE + 0x8000)),
+                "unknown_0047f0d0": random_.randbytes(0x10),
+                "unknown_0047f0e0": struct.pack("<I", random_.getrandbits(32)),
+                "unknown_0047f0e4": struct.pack("<I", random_.getrandbits(32)),
+                "unknown_00470060": GlobalRange(0x24),
+                "global_forward3d": Buffer(reals(random_, 3)),
+                "global_up3d": Buffer(reals(random_, 3)),
+            },
+            memory={STATE: Memory(bytes(blob), places=(((allocated + 3) & ~3) + 0x2AB4,))},
+            mocks=[
+                # who is told is not at the same address in the game and in source/
+                Mock(lambda call: 0, stack_arguments=3, registers=("ecx",), record=lambda call: (call.mock, tuple(call.stack))),
+                Mock(lambda call: 0, stack_arguments=0, registers=("ecx",), record=lambda call: (call.mock,)),
+                Mock(lambda call: 0, stack_arguments=2, registers=("ecx",), record=lambda call: (call.mock, call.stack[1])),
+            ],
+            externals={
+                "unknown_0037d797": made_,
+                "unknown_0037b5ae": result_("unknown_0037b5ae"),
+                "unknown_0037d506": result_("unknown_0037d506"),
+                "unknown_0037d5cd": result_("unknown_0037d5cd"),
+                "unknown_0037b5ca": speakers_,
+                "unknown_0037b637": result_("unknown_0037b637"),
+                "unknown_0037d52a": result_("unknown_0037d52a"),
+                "unknown_00379f5b": lambda harness, arguments: (0, ()),
+                "unknown_00191300": lambda harness, arguments, fails=fails: ((0 if fails == "unknown_00191300" else 1), tuple(arguments)),
+                "sound_console_set_listener": lambda harness, arguments: (0, (bytes(harness.mu.mem_read(arguments[0], 0x38)),)),
+                "unknown_0012c040": lambda harness, arguments: (0, ()),
+                "sound_console_voice_create_stream": voice_,
+                "sound_console_slot_create_stream": slot_,
+                "unknown_00191420": result_("unknown_00191420"),
+                "unknown_0037d4be": stream_,
+                "unknown_0037b6df": result_("unknown_0037b6df"),
+                "unknown_0037c620": result_("unknown_0037c620"),
+                "unknown_0037c644": result_("unknown_0037c644"),
+                "unknown_0037b66f": result_("unknown_0037b66f"),
+                "unknown_0037c5e4": outputs_,
+                "sound_console_create_silence": silence_,
+                "sound_console_dispose": lambda harness, arguments: (0, ()),
             },
         )

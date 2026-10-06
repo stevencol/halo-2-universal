@@ -770,7 +770,7 @@ address,name,source,arguments,returns,convention
 0021a0c0,looping_sounds_initialize,source/sound/sound_manager.c,,bool
 0021d490,sound_effects_initialize,source/sound/sound_manager.c,,bool
 0021dda0,sound_voices_initialize,source/sound/sound_manager.c,eax,bool
-0021e4b0,unknown_0021e4b0,,stack,bool
+0021e4b0,sound_console_initialize,source/sound/sound_manager.c,stack,bool,stdcall
 0021eae0,sound_console_dispose,source/sound/sound_manager.c,,void
 00125a60,sound_available,source/sound/sound_manager.c,,bool
 00125a90,sound_enable,source/sound/sound_manager.c,eax,void
@@ -1314,7 +1314,7 @@ address,name,source,arguments,returns,convention
 0021e410,sound_console_get_format,source/sound/sound_manager.c,eax esi edi,void
 00220730,sound_console_voice_stream_callback,source/sound/sound_manager.c,stack stack stack,void,stdcall
 002ae820,unknown_002ae820,,eax,void
-0021f4e0,sound_console_voice_create_stream,source/sound/sound_manager.c,ebx stack,void,stdcall
+0021f4e0,sound_console_voice_create_stream,source/sound/sound_manager.c,ebx stack,bool,stdcall
 002ae660,unknown_002ae660,,eax ecx edi stack,bool
 00219f80,sound_pitch_range_fade_decibels,source/sound/sound_manager.c,ecx edx stack,real:eax,stdcall
 00379f45,unknown_00379f45,,stack,void
@@ -1402,3 +1402,14 @@ address,name,source,arguments,returns,convention
 0037b71b,unknown_0037b71b,,stack stack stack stack,void
 00218510,input_abstraction_controller_unknown_00218510,source/input/input_abstraction.c,eax,bool
 001565a0,unknown_001565a0,,,void
+0037d797,unknown_0037d797,,stack stack stack,int
+0037b5ae,unknown_0037b5ae,,stack stack,int
+0037d506,unknown_0037d506,,stack stack stack,int
+0037d5cd,unknown_0037d5cd,,stack stack stack,int
+0037b5ca,unknown_0037b5ca,,stack stack,int
+0037b637,unknown_0037b637,,stack stack stack,void
+0037d52a,unknown_0037d52a,,stack stack stack,void
+00379f5b,unknown_00379f5b,,,void
+00191300,unknown_00191300,,stack,bool
+0012c040,unknown_0012c040,,,void
+00191420,unknown_00191420,,edi,void
