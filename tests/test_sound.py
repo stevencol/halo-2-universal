@@ -911,7 +911,7 @@ def run(t) -> None:
         "sound_playback_controllers_unknown_00219d90",
         "sound_console_streams_resume",
         "sound_update_time",
-        "unknown_00127400",
+        "sound_listeners_update",
         "sound_playback_controllers_update",
         "looping_sounds_update",
         "sound_channels_update",
@@ -7669,5 +7669,133 @@ def run(t) -> None:
                 "unknown_0037c5e4": outputs_,
                 "sound_console_create_silence": silence_,
                 "sound_console_dispose": lambda harness, arguments: (0, ()),
+            },
+        )
+
+    # ---------- where each listener is
+
+    random_ = random.Random(260)
+
+    def direction(source_) -> bytes:
+        """A vector of length 1."""
+        while True:
+            vector = [source_.uniform(-1, 1) for _ in range(3)]
+            length = sum(value * value for value in vector) ** 0.5
+            if length > 0.2:
+                return struct.pack("<3f", *(value / length for value in vector))
+
+    for n in range(700):
+        objects, tag_count, clusters = 8, 16, 6
+        game = bytearray(random_.randbytes(0x1124))
+        game[0x1120] = random_.choice((1, 1, 1, 1, 1, 0, 0x80))
+        players = bytearray(random_.randbytes(0x2C))
+        for index in range(4):
+            struct.pack_into("<I", players, 0xC + index * 4, random_.choice((NONE, 0x50000 | random_.randrange(4), 0x50000 | random_.randrange(4), 0x50000 | random_.randrange(4))))
+        player_data_ = bytearray(random_.randbytes(0x4C + 4 * 0x21C))
+        struct.pack_into("<I", player_data_, 0x44, 0x4C)
+        for index in range(4):
+            struct.pack_into("<I", player_data_, 0x4C + index * 0x21C + 0x2C, random_.choice((NONE, 0x70000 | random_.randrange(objects), 0x70000 | random_.randrange(objects), 0x70000 | random_.randrange(objects))))
+        headers = bytearray(random_.randbytes(0x4C + objects * 0xC))
+        struct.pack_into("<I", headers, 0x44, 0x4C)
+        pointers = [0x44]
+        for index in range(objects):
+            struct.pack_into("<I", headers, 0x4C + index * 0xC + 8, len(headers))
+            pointers.append(0x4C + index * 0xC + 8)
+            thing = bytearray(random_.randbytes(0x200))
+            struct.pack_into("<I", thing, 0, 0x30000 | random_.randrange(tag_count))
+            struct.pack_into("<I", thing, 0x14, random_.choice((NONE, 0x70000 | random_.randrange(objects), 0x70000 | random_.randrange(objects), 0x70000 | random_.randrange(objects))))
+            thing[0x180:0x18C] = direction(random_)
+            struct.pack_into("<h", thing, 0x1FC, random_.choice((-1, 0, 1, 2, 3, 3)))
+            headers += thing
+        tags = bytearray(random_.randbytes(tag_count * 0x10))
+        tag_pointers = []
+        for index in range(tag_count):
+            struct.pack_into("<I", tags, index * 0x10 + 8, len(tags))
+            tag_pointers.append(index * 0x10 + 8)
+            definition = bytearray(random_.randbytes(0x1D0))
+            struct.pack_into("<I", definition, 0x1CC, len(tags) + 0x1D0)
+            tag_pointers.append(len(tags) + 0x1CC)
+            tags += definition
+            for seat in range(4):
+                piece = bytearray(random_.randbytes(0xB0))
+                struct.pack_into("<f", piece, 0x40, random_.choice((0.0, 1.0, 0.5, 0.25, 0.9)))
+                tags += piece
+        observers = bytearray(random_.randbytes(4 * 0x358))
+        for index in range(4):
+            at = index * 0x358
+            observers[at : at + 0xC] = reals(random_, 3)
+            struct.pack_into("<ih", observers, at + 0xC, random_.getrandbits(31), random_.choice((-1, 0, 1, 2, 3, 4, 5)))
+            observers[at + 0x14 : at + 0x20] = reals(random_, 3)
+            observers[at + 0x20 : at + 0x2C] = direction(random_)
+            observers[at + 0x2C : at + 0x38] = direction(random_)
+        structure = bytearray(random_.randbytes(0xA4))
+        struct.pack_into("<I", structure, 0x68, 0xA4)
+        struct.pack_into("<I", structure, 0xA0, 0xA4 + 128 * 0x18)
+        for index in range(128):
+            entry = bytearray(random_.randbytes(0x18))
+            struct.pack_into("<h", entry, 2, random_.choice((-1, 0, 5, 7)))
+            entry[4:0x14] = reals(random_, 4)
+            structure += entry
+        for index in range(clusters):
+            cluster = bytearray(random_.randbytes(0xB0))
+            cluster[0x70] = random_.choice((0xFF, 0xFF, random_.randrange(8), random_.randrange(8), 0x80 | random_.randrange(8), 0x80 | random_.randrange(8)))
+            structure += cluster
+        state = bytearray(random_.randbytes(GLOBALS_SIZE))
+        for index in range(2):
+            struct.pack_into("<I", state, 0x1B0 + index * 0x1C, random_.choice((NONE, 0x90000 | random_.randrange(tag_count))))
+        modes = [random_.choice((0, 0, 1, 1, 1, 2, 5)) for _ in range(8)]
+        harness = t.harness
+
+        def mode_(harness, arguments, modes=modes):
+            return modes[calls_so_far(harness, "unknown_00155760") % 8], (arguments[0],)
+
+        def head_(harness, arguments, seed=random_.getrandbits(32)):
+            harness.mu.mem_write(arguments[1], reals(random.Random(seed + arguments[0]), 3))
+            return 0, (arguments[0],)
+
+        def velocities_(harness, arguments, seed=random_.getrandbits(32)):
+            harness.mu.mem_write(arguments[1], reals(random.Random(seed + arguments[0]), 3))
+            return 0, (arguments[0], arguments[2])
+
+        def location_(harness, arguments, seed=random_.getrandbits(32)):
+            source_ = random.Random(seed + calls_so_far(harness, "scenario_location_from_point"))
+            harness.mu.mem_write(arguments[0], struct.pack("<ihh", source_.getrandbits(31), source_.choice((-1, 0, 1, 2, 3, 4, 5)), 7))
+            return 0, (bytes(harness.mu.mem_read(arguments[1], 12)),)
+
+        def console_(harness, arguments):
+            heard = bytes(harness.mu.mem_read(arguments[0], 0x38))
+            count_, places_at = struct.unpack_from("<iI", heard, 0x30)
+            places = []
+            for index_ in range(2):
+                place = bytes(harness.mu.mem_read(places_at + index_ * 0x18, 0x18))
+                places.append((harness.normalize(struct.unpack_from("<I", place, 0)[0]), place[4:]))
+            return 0, (heard[:0x30], count_, tuple(places))
+
+        t.check(
+            "sound_listeners_update",
+            random_.choice((1, 1, 0, 0x100)),
+            globals={
+                "main_game_globals": Buffer(bytes(game)) if n % 13 else 0,
+                "players_globals": Buffer(bytes(players)),
+                "player_data": Buffer(bytes(player_data_), pointers=(0x44,)),
+                "object_header_data": Buffer(bytes(headers), pointers=tuple(pointers)),
+                "global_tag_instances": Buffer(bytes(tags), pointers=tuple(tag_pointers)),
+                "unknown_004e9c8c": bytes(observers),
+                "global_structure_bsp_index": struct.pack("<h", random_.choice((0, 1, 5))),
+                "global_structure_bsp": Buffer(bytes(structure), pointers=(0x68, 0xA0)),
+                "game_sound_globals": Buffer(bytes(state)),
+                "global_identity_quaternion": Buffer(struct.pack("<4f", 0.0, 0.0, 0.0, 1.0)),
+                "global_forward3d": Buffer(struct.pack("<3f", 1.0, 0.0, 0.0)),
+                "global_up3d": Buffer(struct.pack("<3f", 0.0, 0.0, 1.0)),
+                "global_zero_vector3d": Buffer(reals(random_, 3)),
+                "unknown_00468788": Buffer(reals(random_, 3)),
+                "sound_environment_default": GlobalRange(0x48),
+            },
+            externals={
+                "unknown_00155760": mode_,
+                "unknown_000caf60": head_,
+                "object_get_velocities": velocities_,
+                "scenario_location_from_point": location_,
+                "sound_console_set_listener": console_,
             },
         )

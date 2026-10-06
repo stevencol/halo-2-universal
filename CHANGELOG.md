@@ -2,6 +2,67 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-05 — Dónde está cada oyente
+
+Una función en `sound/sound_manager.c`, de 2.290 bytes. De 929 funciones se pasa a
+930, el 8,26 % de las del juego (el 5,417 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_listeners_update` | `0x00127400` | `sound/sound_manager.c` |
+
+Era `unknown_00127400`, la última de las funciones grandes que
+`sound_update` llama cada fotograma. Recibe un byte en la pila. Nuevas sin
+descompilar: `0x00155760` y `0x000caf60`. Nueva variable:
+`unknown_004e9c8c`.
+
+### Lo que se sabe
+
+- Solo hace algo con una partida en marcha. Hay cuatro oyentes, uno por
+  jugador de la consola; el del jugador que no está se queda sin sitio
+  (`NONE`).
+- Los demás están donde dice `unknown_004e9c8c` para su jugador (`0x358`
+  bytes cada uno: un punto, dónde cae en el nivel, una velocidad, hacia
+  dónde mira y hacia dónde es arriba; será la cámara).
+- Si la unidad del jugador va en un asiento y `0x00155760` da 1 para el
+  oyente, el oyente se acerca a la unidad (`0x000caf60` dice dónde está) y
+  gira hacia donde mira la unidad, en la parte que diga el asiento en
+  `0x40`; entonces se mueve como la unidad y está en el nivel donde caiga
+  su punto.
+- El oyente se queda con sus ejes (adelante, izquierda y arriba), su punto
+  y lo deprisa que se mueve visto a lo largo de sus ejes.
+- Su byte de `0x7` dice que su cluster tiene algo del nivel (el byte de
+  `0x70` del cluster, en el bloque de `0x68` del structure bsp): sin más si
+  ese byte no tiene el bit alto, y solo por detrás de su plano si lo
+  tiene.
+- Con el byte de la pila puesto, después se le dice a la consola quién oye
+  (`sound_console_set_listener`): en el origen y mirando al frente, porque
+  los sonidos se colocan donde los ven los oyentes; y con los dos estados
+  del sonido de los sitios (hito 207) como sus dos sitios, lo que confirma
+  lo que allí se suponía.
+- El giro por un cuaternión está escrito en línea, operación por
+  operación, como lo tiene el juego: las pruebas comparan los reales bit a
+  bit.
+- El nombre es inventado.
+
+### Sin comprobar
+
+- Con el índice del nivel a `NONE` el juego leería de la dirección 0; las
+  pruebas siempre tienen nivel.
+- El juego divide la velocidad por la escala del oyente si no es 1, pero
+  acaba de ponerla a 1: no se ha escrito.
+- En este hito solo se pasaron las pruebas de esta función y las de
+  `sound_update`. La última batería completa es la del hito 258 (928
+  funciones, todas bien).
+
+### Mutaciones
+
+Cuarenta y cuatro cambios a mano: las pruebas notan los cuarenta y cuatro,
+uno de ellos solo después de dar a las pruebas la tabla completa del
+nivel.
+
 ## 2026-10-05 — Se prepara el sonido de la consola
 
 Una función en `sound/sound_manager.c`, de 1.584 bytes. De 928 funciones se pasa a

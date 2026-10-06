@@ -1160,7 +1160,7 @@ address,name,source,arguments,returns,convention
 00127010,sound_class_get_decibels,source/sound/sound_manager.c,ecx,real:eax
 0021f360,sound_console_get_state,source/sound/sound_manager.c,stack,void,stdcall
 00221900,sound_classes_update,source/sound/sound_manager.c,xmm1,void
-00127400,unknown_00127400,,stack,void,stdcall
+00127400,sound_listeners_update,source/sound/sound_manager.c,stack,void,stdcall
 00219cc0,sound_playback_controllers_update,source/sound/sound_manager.c,,void
 0021b0e0,looping_sounds_update,source/sound/sound_manager.c,stack,void,stdcall
 00128020,sound_sources_update,source/sound/sound_manager.c,,void
@@ -1413,3 +1413,5 @@ address,name,source,arguments,returns,convention
 00191300,unknown_00191300,,stack,bool
 0012c040,unknown_0012c040,,,void
 00191420,unknown_00191420,,edi,void
+00155760,unknown_00155760,,eax,int
+000caf60,unknown_000caf60,,eax esi,void

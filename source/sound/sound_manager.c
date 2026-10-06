@@ -19,6 +19,7 @@ the file and those of the functions are guesses. Not here: 0x00125b40 and
 #include "cseries/async.h"
 #include "memory/lruv_cache.h"
 #include "memory/physical_memory.h"
+#include "objects/objects.h"
 #include "physics/bsp3d.h"
 #include "scenario/scenario.h"
 #include "structures/structure_bsp_definitions.h"
@@ -725,6 +726,23 @@ enum
 	MAXIMUM_STRUCTURE_BSP_CLUSTERS= 512,
 	STRUCTURE_BSP_CLUSTER_COUNT_OFFSET= 0x9C,
 	STRUCTURE_BSP_PORTALS_OFFSET= 0x60,
+	STRUCTURE_BSP_UNKNOWN68_OFFSET= 0x68,
+	STRUCTURE_BSP_UNKNOWN68_SIZE= 0x18,
+	STRUCTURE_BSP_CLUSTER_UNKNOWN70_OFFSET= 0x70,
+	/* of what unknown_004e9c8c has for each local player, of a player, of an
+	object and of the tag of a unit */
+	SOUND_OBSERVER_SIZE= 0x358,
+	SOUND_OBSERVER_LOCATION_OFFSET= 0xC,
+	SOUND_OBSERVER_VELOCITY_OFFSET= 0x14,
+	SOUND_OBSERVER_FORWARD_OFFSET= 0x20,
+	SOUND_PLAYER_DATUM_SIZE= 0x21C,
+	SOUND_PLAYER_DATUM_UNIT_INDEX_OFFSET= 0x2C,
+	SOUND_OBJECT_PARENT_INDEX_OFFSET= 0x14,
+	SOUND_UNIT_FORWARD_OFFSET= 0x180,
+	SOUND_UNIT_SEAT_INDEX_OFFSET= 0x1FC,
+	SOUND_UNIT_DEFINITION_SEATS_OFFSET= 0x1CC,
+	SOUND_UNIT_SEAT_SIZE= 0xB0,
+	SOUND_UNIT_SEAT_LISTENER_FRACTION_OFFSET= 0x40,
 	STRUCTURE_BSP_CLUSTER_SIZE= 0xB0,
 	STRUCTURE_BSP_CLUSTER_UNKNOWN7A_OFFSET= 0x7A,
 	UNKNOWN_004ED280_SIZE= 32,
@@ -1065,6 +1083,10 @@ struct data_array *unknown_004ed28c;
 sound starts with */
 struct sound_console_environment_handler unknown_0047f088;
 
+/* 0x004e9c8c: where each local player sees the game from, most likely: 0x358
+bytes for each. Only what the listeners take of it is known */
+byte unknown_004e9c8c[MAXIMUM_LOCAL_PLAYERS*0x358];
+
 /* 0x004ed280: of something else; it has 32 bytes for each structure bsp */
 byte *unknown_004ed280;
 
@@ -1255,7 +1277,11 @@ seconds of the frame, 0x00127400, 0x00219cc0, 0x0021b0e0, 0x00128020,
 what the frame has on the stack; 0x0014dde0 gives the first local player */
 struct sound_update_listeners;
 void __attribute__((stdcall)) sound_console_get_state(byte *state);
-void __attribute__((stdcall)) unknown_00127400(boolean unknown);
+void __attribute__((stdcall)) sound_listeners_update(boolean tell_console);
+/* 0x00155760: something of a listener, 0 or 1 for those that are heard from;
+0x000caf60: where the head of a unit is, most likely */
+long unknown_00155760(long listener_index);
+void unknown_000caf60(long unit_index, real_point3d *point);
 void sound_playback_controllers_update(void);
 void __attribute__((stdcall)) looping_sounds_update(boolean update_sources);
 void sound_sources_update(void);
@@ -2884,7 +2910,7 @@ void sound_update(
 				globals= game_sound_globals;
 			}
 			sound_classes_update(*(real *)(globals+GAME_SOUND_GLOBALS_SECONDS_OFFSET));
-			unknown_00127400(TRUE);
+			sound_listeners_update(TRUE);
 			sound_playback_controllers_update();
 			looping_sounds_update(game_sound_globals[GAME_SOUND_GLOBALS_UNKNOWN7E_OFFSET]);
 			sound_channels_update();
@@ -12638,4 +12664,198 @@ boolean __attribute__((stdcall)) sound_console_initialize(
 	console[0]= 1;
 
 	return ok;
+}
+
+/* a vector turned by a quaternion, as the game works it out */
+static inline __attribute__((always_inline)) void sound_rotate_vector(
+	const real_quaternion *rotation,
+	const real_vector3d *vector,
+	real_vector3d *result)
+{
+	real scalar= rotation->w*rotation->w*2.0f-1.0f;
+	real along= (vector->j*rotation->v.j+vector->k*rotation->v.k+rotation->v.i*vector->i)*2.0f;
+	real twice= rotation->w*2.0f;
+
+	result->i= (vector->k*rotation->v.j-vector->j*rotation->v.k)*twice+rotation->v.i*along+scalar*vector->i;
+	result->j= (rotation->v.k*vector->i-vector->k*rotation->v.i)*twice+rotation->v.j*along+vector->j*scalar;
+	result->k= (vector->j*rotation->v.i-rotation->v.j*vector->i)*twice+rotation->v.k*along+vector->k*scalar;
+}
+
+/* 0x00127400: where each of the four listeners is, each time, while a game
+is on. One whose player there is not has no place (NONE). The rest are where
+unknown_004e9c8c says for their player (0x358 bytes each: a place, where it
+is in the structure bsp, a velocity, and which way it faces and which way is
+up). But if the unit of the player is in a seat, and unknown_00155760 gives
+1 for the listener, the listener goes part of the way to the unit
+(unknown_000caf60 says where it is), and turns part of the way to where the
+unit faces: the part that the seat says at 0x40; then it moves as the unit
+does, and is in the structure bsp where its place is.
+
+The listener keeps its axes (forward, left and up, with no scale), its
+place, and how fast it moves as seen along its axes. Its byte at 7 says
+that its cluster has something of the structure bsp's (the byte at 0x70 of
+the cluster, in the block at 0x68), with nothing more if the top bit of
+that byte is not set, and on the back of its plane if it is.
+
+With `tell_console` set, the console is then told of who hears
+(sound_console_set_listener): at the origin and facing forward, since the
+sounds are put where the listeners see them, with the two states of the
+sound of the places as its two places. The name is made up */
+void __attribute__((stdcall)) sound_listeners_update(
+	boolean tell_console)
+{
+	byte *globals;
+	long index;
+
+	if (!main_game_globals || !((const byte *)main_game_globals)[MAIN_GAME_GLOBALS_ACTIVE_OFFSET])
+	{
+		return;
+	}
+	globals= game_sound_globals;
+	for (index= 0; index<MAXIMUM_LOCAL_PLAYERS; index++)
+	{
+		struct sound_listener *listener= (struct sound_listener *)(globals+GAME_SOUND_GLOBALS_LISTENERS_OFFSET)+index;
+		const byte *observer= unknown_004e9c8c+index*SOUND_OBSERVER_SIZE;
+		long player_index= players_globals->local_players[index];
+		struct scenario_location location;
+		real_vector3d velocity;
+		real_point3d position;
+		real_vector3d forward;
+		real_vector3d up;
+		const byte *camera;
+		boolean seated= FALSE;
+		boolean unknown7= FALSE;
+		long unit_index;
+		long mode;
+
+		if (player_index==NONE)
+		{
+			listener->leaf_index= NONE;
+			listener->cluster_index= NONE;
+			continue;
+		}
+		unit_index= *(const long *)((const byte *)player_data->data+(player_index&0xFFFF)*SOUND_PLAYER_DATUM_SIZE+
+			SOUND_PLAYER_DATUM_UNIT_INDEX_OFFSET);
+		mode= unknown_00155760(index);
+		if (unit_index!=NONE && ((1UL<<(unknown_00155760(index)&31))&3))
+		{
+			const struct object_header_datum *headers= (const struct object_header_datum *)object_header_data->data;
+			const byte *unit= (const byte *)headers[unit_index&0xFFFF].datum;
+			long parent_index= *(const long *)(unit+SOUND_OBJECT_PARENT_INDEX_OFFSET);
+
+			camera= global_structure_bsp_index!=NONE ? observer : NULL;
+			if (parent_index!=NONE && *(const short *)(unit+SOUND_UNIT_SEAT_INDEX_OFFSET)!=NONE && (short)mode)
+			{
+				const byte *definition= (const byte *)(uintptr_t)
+					global_tag_instances[*(const long *)headers[parent_index&0xFFFF].datum&0xFFFF].address;
+				const byte *seat= *(const byte *const *)(definition+SOUND_UNIT_DEFINITION_SEATS_OFFSET)+
+					*(const short *)(unit+SOUND_UNIT_SEAT_INDEX_OFFSET)*SOUND_UNIT_SEAT_SIZE;
+				const real *place= (const real *)camera;
+				real_quaternion rotation;
+				real_point3d head;
+
+				unknown_000caf60(unit_index, &head);
+				position.x= (head.x-place[0])**(const real *)(seat+SOUND_UNIT_SEAT_LISTENER_FRACTION_OFFSET)+place[0];
+				position.y= (head.y-place[1])**(const real *)(seat+SOUND_UNIT_SEAT_LISTENER_FRACTION_OFFSET)+place[1];
+				position.z= (head.z-place[2])**(const real *)(seat+SOUND_UNIT_SEAT_LISTENER_FRACTION_OFFSET)+place[2];
+				quaternion_from_vectors3d(&rotation, (const real_vector3d *)(camera+SOUND_OBSERVER_FORWARD_OFFSET),
+					(const real_vector3d *)(unit+SOUND_UNIT_FORWARD_OFFSET));
+				fast_quaternion_interpolate_and_normalize(global_identity_quaternion, &rotation,
+					*(const real *)(seat+SOUND_UNIT_SEAT_LISTENER_FRACTION_OFFSET), &rotation);
+				sound_rotate_vector(&rotation, (const real_vector3d *)(camera+SOUND_OBSERVER_FORWARD_OFFSET), &forward);
+				sound_rotate_vector(&rotation, (const real_vector3d *)(camera+SOUND_OBSERVER_FORWARD_OFFSET+sizeof(real_vector3d)), &up);
+				object_get_velocities(unit_index, &velocity, NULL);
+				scenario_location_from_point(&location, &position);
+				if (location.cluster_index==NONE)
+				{
+					location.leaf_index= *(const long *)(camera+SOUND_OBSERVER_LOCATION_OFFSET);
+					location.cluster_index= *(const short *)(camera+SOUND_OBSERVER_LOCATION_OFFSET+4);
+				}
+				seated= TRUE;
+			}
+		}
+		else
+		{
+			camera= global_structure_bsp_index!=NONE ? observer : NULL;
+		}
+		if (!seated)
+		{
+			memcpy(&forward, camera+SOUND_OBSERVER_FORWARD_OFFSET, sizeof(forward));
+			memcpy(&up, camera+SOUND_OBSERVER_FORWARD_OFFSET+sizeof(real_vector3d), sizeof(up));
+			memcpy(&position, camera, sizeof(position));
+			memcpy(&velocity, camera+SOUND_OBSERVER_VELOCITY_OFFSET, sizeof(velocity));
+			location.leaf_index= *(const long *)(camera+SOUND_OBSERVER_LOCATION_OFFSET);
+			location.cluster_index= *(const short *)(camera+SOUND_OBSERVER_LOCATION_OFFSET+4);
+		}
+
+		listener->valid= TRUE;
+		if (location.cluster_index!=NONE)
+		{
+			const byte *structure_bsp= global_structure_bsp;
+			byte which= (*(const byte *const *)(structure_bsp+STRUCTURE_BSP_CLUSTER_COUNT_OFFSET+4)+
+				location.cluster_index*STRUCTURE_BSP_CLUSTER_SIZE)[STRUCTURE_BSP_CLUSTER_UNKNOWN70_OFFSET];
+
+			if (which!=0xFF)
+			{
+				const byte *entry= *(const byte *const *)(structure_bsp+STRUCTURE_BSP_UNKNOWN68_OFFSET)+
+					(which&0x7F)*STRUCTURE_BSP_UNKNOWN68_SIZE;
+
+				if (*(const short *)(entry+2)!=NONE)
+				{
+					if (which&0x80)
+					{
+						const real *plane= (const real *)(entry+4);
+
+						unknown7= 0.0f>plane[2]*position.z+plane[1]*position.y+plane[0]*position.x-plane[3];
+					}
+					else
+					{
+						unknown7= TRUE;
+					}
+				}
+			}
+		}
+		listener->unknown7= unknown7;
+		memcpy(&listener->matrix.forward, &forward, sizeof(forward));
+		listener->matrix.scale= 1.0f;
+		listener->matrix.left.i= up.j*forward.k-up.k*forward.j;
+		listener->matrix.left.j= up.k*forward.i-forward.k*up.i;
+		listener->matrix.left.k= forward.j*up.i-up.j*forward.i;
+		memcpy(&listener->matrix.up, &up, sizeof(up));
+		memcpy(&listener->matrix.position, &position, sizeof(position));
+		listener->velocity.i= listener->matrix.forward.j*velocity.j+listener->matrix.forward.k*velocity.k+
+			velocity.i*listener->matrix.forward.i;
+		listener->velocity.j= listener->matrix.left.i*velocity.i+listener->matrix.left.j*velocity.j+
+			listener->matrix.left.k*velocity.k;
+		listener->velocity.k= listener->matrix.up.j*velocity.j+listener->matrix.up.k*velocity.k+
+			listener->matrix.up.i*velocity.i;
+		listener->leaf_index= location.leaf_index;
+		listener->cluster_index= location.cluster_index;
+	}
+
+	if (tell_console)
+	{
+		const struct sound_unknown_state *states;
+		byte heard[SOUND_CONSOLE_LISTENER_SIZE];
+		byte places[NUMBER_OF_SOUND_CONSOLE_PLACES*SOUND_CONSOLE_PLACE_SIZE];
+
+		globals= game_sound_globals;
+		states= (const struct sound_unknown_state *)(globals+GAME_SOUND_GLOBALS_UNKNOWN_STATES_OFFSET);
+		for (index= 0; index<NUMBER_OF_SOUND_CONSOLE_PLACES; index++)
+		{
+			byte *place= places+index*SOUND_CONSOLE_PLACE_SIZE;
+
+			*(const void **)place= states[index].index==NONE ? (const void *)sound_environment_default :
+				(const void *)(uintptr_t)global_tag_instances[states[index].index&0xFFFF].address;
+			memcpy(place+4, &states[index].unknownC, SOUND_CONSOLE_PLACE_NUMBERS_SIZE);
+			*(long *)(place+SOUND_CONSOLE_PLACE_AMOUNT_OFFSET)= *(const long *)&states[index].amount;
+		}
+		memcpy(heard, unknown_00468788, sizeof(real_point3d));
+		memcpy(heard+SOUND_CONSOLE_LISTENER_FACING_OFFSET, global_forward3d, sizeof(real_vector3d));
+		memcpy(heard+SOUND_CONSOLE_LISTENER_FACING_OFFSET+sizeof(real_vector3d), global_up3d, sizeof(real_vector3d));
+		memcpy(heard+SOUND_CONSOLE_LISTENER_FACING_OFFSET+2*sizeof(real_vector3d), global_zero_vector3d, sizeof(real_vector3d));
+		*(long *)(heard+SOUND_CONSOLE_LISTENER_PLACE_COUNT_OFFSET)= NUMBER_OF_SOUND_CONSOLE_PLACES;
+		*(const byte **)(heard+SOUND_CONSOLE_LISTENER_PLACE_COUNT_OFFSET+4)= places;
+		sound_console_set_listener(heard);
+	}
 }

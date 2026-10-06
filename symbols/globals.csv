@@ -209,3 +209,4 @@ address,name,source
 004e9190,unknown_004e9190,source/input/input_abstraction.c
 004e8c24,player_data,source/main/main.c
 0047f088,unknown_0047f088,source/sound/sound_manager.c
+004e9c8c,unknown_004e9c8c,source/sound/sound_manager.c
