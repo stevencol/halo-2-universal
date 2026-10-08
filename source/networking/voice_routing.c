@@ -21,9 +21,9 @@ voice.c, from 0x00055960 on.
 
 /* ---------- prototypes of functions not decompiled yet */
 
-/* 0x00057080, 0x00057360, 0x000577d0: what is done each frame with who hears
-whom, in one state of the network game, after voice_channels_update_ended */
-void __attribute__((stdcall)) unknown_00057080(byte *channels);
+/* 0x00057360, 0x000577d0: what is done each frame with who hears whom, in one
+state of the network game, after voice_channels_update_ended and
+voice_channels_update_near */
 void __attribute__((stdcall)) unknown_00057360(byte *channels);
 void __attribute__((stdcall)) unknown_000577d0(byte *channels);
 
@@ -53,6 +53,11 @@ void __attribute__((stdcall)) unknown_00056df0(byte *channels, long player_index
 
 
 /* ---------- globals */
+
+/* 0x00510c94, of main.c: something of the game that is played; NULL if there
+is none. At 0x290 it has how far a voice is heard */
+struct unknown_00510c94;
+extern struct unknown_00510c94 *unknown_00510c94;
 
 /* 0x004cf738: how long the time that who hears whom has for a player counts
 as a moment ago, in seconds */
@@ -157,7 +162,7 @@ void voice_channels_update(
 		if (unknown_004c9888==_game_voice_network1)
 		{
 			voice_channels_update_ended(channels);
-			unknown_00057080(channels);
+			voice_channels_update_near(channels);
 			unknown_00057360(channels);
 			unknown_000577d0(channels);
 		}
@@ -955,9 +960,18 @@ boolean voice_channels_time_is_recent(
 
 	if (time)
 	{
-		real seconds= (real)(unsigned long)(game_time_globals->time-time)*game_time_globals->seconds_per_tick;
+		/* the game does this with the old instructions for reals of the
+		processor: the ticks are taken whole, with their sign, and 2 to the 32
+		is added to them if they are less than 0 */
+		long ticks= (long)(game_time_globals->time-time);
+		long double seconds= ticks;
 
-		if (unknown_004cf738>seconds)
+		if (ticks<0)
+		{
+			seconds+= 4294967296.0f;
+		}
+		seconds*= game_time_globals->seconds_per_tick;
+		if ((long double)unknown_004cf738>seconds)
 		{
 			return TRUE;
 		}
@@ -1515,4 +1529,113 @@ real voice_players_get_distance(
 	}
 
 	return distance;
+}
+
+/* the object that a player is heard from: the one that it has or, with
+none, the one at 0x30; NONE with neither. The game has this where it looks
+for where a player is */
+static inline __attribute__((always_inline)) long voice_player_get_object(
+	const byte *datum)
+{
+	long object_index= *(const long *)(datum+VOICE_PLAYER_DATUM_UNKNOWN2C_OFFSET);
+
+	if (object_index==NONE)
+	{
+		object_index= *(const long *)(datum+VOICE_PLAYER_DATUM_OBJECT_OFFSET);
+	}
+
+	return object_index;
+}
+
+/* 0x00057080: each frame, in a game that goes on: for each player of this
+console, a bit for each player of another console that is near it: no
+farther than what the game that is played says, or 8 if it says nothing,
+and one and a half more. It is the first number that who hears whom has for
+each player. The game asks twice whether the voice has each player, and has
+game_voice_get_players in the function itself */
+void VOICE_ROUTING_CALLBACK voice_channels_update_near(
+	byte *channels)
+{
+	unsigned long session_players= 0;
+	unsigned long local_players;
+	long local_player_index;
+
+	if (voice_routing_active())
+	{
+		const byte *membership= game_voice_get_membership();
+
+		if (membership)
+		{
+			session_players= *(const unsigned long *)(membership+GAME_VOICE_MEMBERSHIP_PLAYERS_OFFSET);
+		}
+	}
+	local_players= game_voice_get_local_players();
+	memset(channels+VOICE_CHANNELS_UNKNOWN4_OFFSET, 0, MAXIMUM_VOICE_ROUTING_PLAYERS*sizeof(long));
+	for (local_player_index= 0; local_player_index<MAXIMUM_VOICE_ROUTING_PLAYERS; local_player_index++)
+	{
+		unsigned long *near= (unsigned long *)(channels+VOICE_CHANNELS_UNKNOWN4_OFFSET+
+			local_player_index*sizeof(long));
+		const byte *datum;
+		long object_index;
+		real_point3d position;
+		long player_index;
+
+		if (!(local_players&(1u<<local_player_index)) || !game_voice_unknown_00054df0(local_player_index) ||
+			!game_voice_unknown_00054df0(local_player_index))
+		{
+			continue;
+		}
+		datum= game_voice_get_player_datum(local_player_index);
+		if (!datum)
+		{
+			continue;
+		}
+		object_index= voice_player_get_object(datum);
+		if (object_index==NONE)
+		{
+			continue;
+		}
+		unknown_000caf90(object_index, &position);
+		for (player_index= 0; player_index<MAXIMUM_VOICE_ROUTING_PLAYERS; player_index++)
+		{
+			unsigned long bit= 1u<<player_index;
+			real_point3d other_position;
+			real dx, dy, dz, sum, distance;
+			long double limit;
+
+			if (!(session_players&bit) || (local_players&bit) || !game_voice_unknown_00054df0(player_index) ||
+				!game_voice_unknown_00054df0(player_index))
+			{
+				continue;
+			}
+			datum= game_voice_get_player_datum(player_index);
+			if (!datum)
+			{
+				continue;
+			}
+			object_index= voice_player_get_object(datum);
+			if (object_index==NONE)
+			{
+				continue;
+			}
+			unknown_000caf90(object_index, &other_position);
+			dz= other_position.z-position.z;
+			dx= other_position.x-position.x;
+			dy= other_position.y-position.y;
+			sum= dz*dz+dx*dx;
+			sum+= dy*dy;
+			distance= VOICE_NEAR_DEFAULT_DISTANCE;
+			if (unknown_00510c94)
+			{
+				distance= *(const real *)((const byte *)unknown_00510c94+UNKNOWN_00510C94_VOICE_DISTANCE_OFFSET);
+			}
+			/* the game does the last of it with the old instructions for reals
+			of the processor */
+			limit= (long double)distance+VOICE_NEAR_EXTRA_DISTANCE;
+			if (limit>=__builtin_sqrtl((long double)sum))
+			{
+				*near|= bit;
+			}
+		}
+	}
 }

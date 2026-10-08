@@ -106,7 +106,7 @@ def run(t) -> None:
                         name: gives(0)
                         for name in (
                             "voice_channels_update_ended",
-                            "unknown_00057080",
+                            "voice_channels_update_near",
                             "unknown_00057360",
                             "unknown_000577d0",
                             "voice_channels_update_by_team",
@@ -552,8 +552,9 @@ def run(t) -> None:
 
     for player in (0, 7, 15):
         for seconds_per_tick in (1 / 30, 1 / 60):
-            for limit in (2.0, 0.5, 0.0, -1.0, float("nan"), float("inf")):
-                for ticks_ago in (None, 0, 1, 14, 15, 16, 29, 30, 31, 59, 60, 61, 119, 120, 121, 100000, -1, -100):
+            for limit in (2.0, 0.5, 0.0, -1.0, float("nan"), float("inf"), 559240.56, 279620.28, 35791394.0, 17895698.0):
+                for ticks_ago in (None, 0, 1, 14, 15, 16, 29, 30, 31, 59, 60, 61, 119, 120, 121, 100000, -1, -100,
+                                  0x1000001, 0x1000003, 0x7FFFFFFF, 0x80000001, 0x3FFFFFFD):
                     now = random_.choice((1000000, 0x7FFFFFF0, 0x80000010))
                     data = bytearray(random_.randbytes(0x194 + 16 * 4))
                     struct.pack_into("<I", data, 0x194 + player * 4, 0 if ticks_ago is None else (now - ticks_ago) & 0xFFFFFFFF)
@@ -921,3 +922,53 @@ def run(t) -> None:
             },
             extra=[local_datum, other_datum],
         )
+
+    # ---------- who is near whom
+
+    for enabled, initialized in active():
+        for n in range(40):
+            local = random_.choice((1, 3, 0x8001, random_.getrandbits(16)))
+            membership = bytearray(random_.randbytes(MEMBERSHIP_PLAYERS + 4))
+            struct.pack_into("<I", membership, MEMBERSHIP_PLAYERS, random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16))))
+            membership = Buffer(bytes(membership))
+            has = random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16)))
+            # of each player: its two objects, and whether the game has it
+            datums = [
+                a_datum(random_.choice((0xE0000000 + player, NONE)), random_.choice((0xE0000100 + player, 0xE0000100 + player, NONE)))
+                for player in range(16)
+            ]
+            there = [random_.choice((True, True, True, False)) for _ in range(16)]
+            says = random_.choice((None, 8.0, 20.0, 0.0, float("nan")))
+            limit = (8.0 if says is None or says != says else says) + 1.5
+            # where each object is: some at the very limit of a player of this console
+            origin = [random_.uniform(-50, 50) for _ in range(3)]
+            points = {}
+            for player in range(16):
+                for base in (0xE0000000, 0xE0000100):
+                    far = random_.choice((0.0, 0.5, 0.999, 1.0, 1.001, 2.0, 30.0)) * limit
+                    points[base + player] = struct.pack("<3f", origin[0] + far, origin[1], origin[2])
+            other = Buffer(struct.pack("<f", 0.0 if says is None else says).rjust(0x294, b"\x55"))
+
+            def datum_of(harness, arguments, datums=datums, there=there):
+                player = arguments[0] & 15
+                return datums[player].address if there[player] else 0
+
+            def where(harness, arguments, points=points):
+                harness.mu.mem_write(arguments[1], points[arguments[0]])
+                return 0, (arguments[0],)
+
+            t.check(
+                "voice_channels_update_near",
+                Buffer(random_.randbytes(0x48)),
+                globals={**state(enabled, initialized), "unknown_00510c94": other if says is not None else 0},
+                externals={
+                    "game_voice_get_membership": lambda harness, arguments, membership=membership, n=n: (
+                        membership.address if n % 10 else 0
+                    ),
+                    "game_voice_get_local_players": gives(local),
+                    "game_voice_unknown_00054df0": lambda harness, arguments, has=has: has >> (arguments[0] & 15) & 1,
+                    "game_voice_get_player_datum": datum_of,
+                    "unknown_000caf90": where,
+                },
+                extra=[membership, *datums],
+            )

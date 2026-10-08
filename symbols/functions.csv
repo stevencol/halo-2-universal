@@ -785,7 +785,7 @@ address,name,source,arguments,returns,convention
 000574e0,voice_play_sound_by_number,source/networking/voice_routing.c,ecx ebx stack,void,stdcall
 00057530,voice_play_sound,source/networking/voice_routing.c,ebx stack,void,stdcall
 00189760,unknown_00189760,,esi,void
-00057080,unknown_00057080,,stack,void,stdcall
+00057080,voice_channels_update_near,source/networking/voice_routing.c,stack,void,stdcall
 00057360,unknown_00057360,,stack,void,stdcall
 000577d0,unknown_000577d0,,stack,void,stdcall
 00057960,voice_channels_update_by_team,source/networking/voice_routing.c,stack,void,stdcall

@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — La voz por cercanía: quién está cerca de quién
+
+Una función en `networking/voice_routing.c`, de 489 bytes. De 1100 funciones se pasa a
+1101, el 9,77 % de las del juego (el 6,211 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_channels_update_near` | `0x00057080` | `networking/voice_routing.c` |
+
+Era `unknown_00057080`, la segunda de las cuatro cosas que
+`voice_channels_update` hace cada fotograma con una partida en marcha.
+
+### Lo que se sabe
+
+- Es la voz por cercanía de Halo 2. Cada fotograma, para cada jugador de
+  esta consola, se mira a qué distancia está cada jugador de otra consola,
+  y se le da un bit si está cerca: a no más de lo que diga la partida (un
+  real en `0x290` de lo que apunta `0x00510c94`) o de **8 unidades** si no
+  dice nada, más **una y media** de margen.
+- Ese es el «primer número» de «quién oye a quién» que usaba la tercera
+  manera de oír (hito 303): la tercera es la de cercanía.
+- La posición de cada jugador sale de su objeto, con la reserva del hito
+  304: quien acaba de morir sigue oyendo y sonando desde donde cayó.
+
+### Corregido
+
+- `voice_channels_time_is_recent` (hito 296) queda exacta también con más
+  de 16 millones de ticks: está escrita con el mismo tipo de real que el
+  juego (hito 304), y la prueba incluye ahora esos casos (1.380 en total).
+  El «sin comprobar» de aquel hito ya no hace falta.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- La batería completa del hito 296 corre aparte; las mutaciones de los
+  hitos 280 a 305 están pendientes.
+
 ## 2026-10-08 — A qué distancia están dos jugadores: 1.100 funciones
 
 Una función en `networking/voice_routing.c`, de 219 bytes. De 1099 funciones se pasa a
