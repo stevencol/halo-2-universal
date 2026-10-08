@@ -1793,3 +1793,5 @@ address,name,source,arguments,returns,convention
 0005b650,network_session_leader_set_roster,source/networking/network_session.c,eax ebx,bool
 0005b790,network_session_leader_set_unknown4d08,source/networking/network_session.c,esi edx stack stack,bool,stdcall
 0005b9d0,network_session_leader_set_unknown4db0,source/networking/network_session.c,eax edx,bool
+0005bf10,network_session_unknown_0005bf10,source/networking/network_session.c,ecx edx ebx stack stack,bool,stdcall
+0005c010,network_session_leader_set_unknown5ddc,source/networking/network_session.c,edx stack,bool,stdcall

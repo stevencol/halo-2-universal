@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — La petición de la clase 0x23 y la última del molde
+
+Dos funciones en `networking/network_session.c`, 633 bytes entre las dos. De 1245
+funciones se pasa a 1247, el 11,07 % de las del juego (el 6,908 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_unknown_0005bf10` | `0x0005bf10` | `networking/network_session.c` |
+| `network_session_leader_set_unknown5ddc` | `0x0005c010` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_unknown_0005bf10` es **la que manda** lo que
+  `network_session_host_unknown_0005dea0` recibe (hito 337): un mensaje de
+  la clase `0x23` y 32 bytes, con los ocho bytes de la sesión, un byte, dos
+  números y, si el segundo número es 1, doce bytes más (lo que mide lo que
+  identifica a un jugador). Si esta consola lleva la sesión no manda nada:
+  hace directamente lo mismo que haría al recibirlo (`0x0005df30`, para sí
+  misma). Las dos puntas del mensaje cuadran campo a campo.
+- `network_session_leader_set_unknown5ddc` es la última del molde de los
+  hitos 338 a 340: pone el bloque de 68 bytes de `0x5DDC` o dice que no lo
+  hay, y no lo admite si lleva por identificador el de esta misma sesión.
+  Con ella se conocen catorce sitios del mensaje de petición.
+
+### Mutaciones
+
+Las de los hitos 309 a 313 (`voice_routing`) terminaron: **40 de 40
+cazadas**. Con las 19 de 19 de `transport_security` (hito 316), quedan
+corriendo las 73 de la sesión (hitos 314 a 320).
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (155
+  funciones).
+- Las mutaciones de los hitos 280 a 308 y 321 a 341 están pendientes.
+
 ## 2026-10-08 — Tres peticiones grandes de quien dirige la sesión
 
 Tres funciones en `networking/network_session.c`, 976 bytes entre todas. De 1242

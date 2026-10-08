@@ -3069,3 +3069,96 @@ boolean network_session_leader_set_unknown4db0(
 
 	return TRUE;
 }
+
+/* 0x0005bf10: unknown_0005df30 is done for this console, with a byte, two
+numbers and a thing: by this console if it runs the session, and if not it
+is asked of the one that does, with something of the kind 0x23 that
+network_session_host_unknown_0005dea0 takes there. FALSE if the session does
+not say who is in it */
+boolean NETWORK_SESSION_CALLBACK network_session_unknown_0005bf10(
+	byte *session,
+	boolean unknown8,
+	long unknownC,
+	long unknown10,
+	const byte *unknown14)
+{
+	if (!network_session_established(session))
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		unknown_0005df30(session, unknown8, unknownC, unknown10, *(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET),
+			unknown14);
+	}
+	else
+	{
+		byte message[NETWORK_SESSION_MESSAGE_UNKNOWN23_SIZE];
+		const struct network_session_peer_state *state=
+			(const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+
+			*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET);
+
+		memset(message, 0, sizeof(message));
+		memcpy(message, session+NETWORK_SESSION_IDENTIFIER_OFFSET, NETWORK_SESSION_IDENTIFIER_SIZE);
+		message[NETWORK_SESSION_MESSAGE_UNKNOWN8_OFFSET]= unknown8;
+		*(long *)(message+NETWORK_SESSION_MESSAGE_UNKNOWNC_OFFSET)= unknownC;
+		*(long *)(message+NETWORK_SESSION_MESSAGE_UNKNOWN10_OFFSET)= unknown10;
+		if (unknown10==1)
+		{
+			memcpy(message+NETWORK_SESSION_MESSAGE_UNKNOWN14_OFFSET, unknown14, NETWORK_SESSION_MESSAGE_UNKNOWN14_SIZE);
+		}
+		if (state->unknown1)
+		{
+			unknown_00075e80(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+				*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_unknown23,
+				sizeof(message), message);
+		}
+	}
+
+	return TRUE;
+}
+
+/* 0x0005c010: the console that leads a session sets the thing of 0x5DDC, or
+says that there is none, or asks the one that runs it to; whether it could:
+it has to lead the session, and the thing cannot have what this session is
+known by */
+boolean NETWORK_SESSION_CALLBACK network_session_leader_set_unknown5ddc(
+	byte *session,
+	const byte *unknown5ddc)
+{
+	if (!network_session_established(session) || !network_session_unknown_0005c190(unknown5ddc, session) ||
+		!network_session_local_peer_is_host(session))
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		if (unknown5ddc)
+		{
+			session[NETWORK_SESSION_UNKNOWN5DD8_OFFSET]= TRUE;
+			memcpy(session+NETWORK_SESSION_UNKNOWN5DDC_OFFSET, unknown5ddc, NETWORK_SESSION_UNKNOWN5DDC_SIZE);
+		}
+		else
+		{
+			session[NETWORK_SESSION_UNKNOWN5DD8_OFFSET]= FALSE;
+			memset(session+NETWORK_SESSION_UNKNOWN5DDC_OFFSET, 0, NETWORK_SESSION_UNKNOWN5DDC_SIZE);
+		}
+		network_session_parameters_changed(session);
+	}
+	else
+	{
+		byte request[NETWORK_SESSION_PARAMETERS_REQUEST_SIZE];
+
+		network_session_parameters_request_new(session, request);
+		request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN5DDC_OFFSET]= TRUE;
+		if (unknown5ddc)
+		{
+			request[NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN5DDC_VALID_OFFSET]= TRUE;
+			memcpy(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN5DDC_OFFSET, unknown5ddc,
+				NETWORK_SESSION_UNKNOWN5DDC_SIZE);
+		}
+		network_session_parameters_request_send(session, request);
+	}
+
+	return TRUE;
+}

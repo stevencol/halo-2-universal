@@ -207,6 +207,16 @@ enum
 	NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN4D10_OFFSET= 0x350,
 	NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN4DB0_OFFSET= 0x3D8,
 	NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN4DB0_OFFSET= 0x3DC,
+	NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN5DDC_OFFSET= 0x554,
+	NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN5DDC_VALID_OFFSET= 0x555,
+	NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN5DDC_OFFSET= 0x558,
+	/* another thing that is sent to the console that runs a session, of
+	this kind and this size: what the session is known by, a byte, two
+	numbers and, if the second number is 1, twelve bytes: see
+	NETWORK_SESSION_MESSAGE_UNKNOWN8_OFFSET */
+	_network_session_message_unknown23= 0x23,
+	NETWORK_SESSION_MESSAGE_UNKNOWN23_SIZE= 0x20,
+	NETWORK_SESSION_MESSAGE_UNKNOWN14_SIZE= 0xC,
 	/* the thing of 0x4D10 is a text of up to 127 characters; and after the
 	number of 0x4DAC, the session knows a thing of 0x130 bytes, which counts
 	only if the number at its 0x44 is not zero */
@@ -521,6 +531,9 @@ boolean network_session_leader_set_roster(const struct network_session_roster *r
 boolean NETWORK_SESSION_CALLBACK network_session_leader_set_unknown4d08(byte *session, const char *unknown4d10,
 	long unknown4d08, long unknown4d0c);
 boolean network_session_leader_set_unknown4db0(const byte *unknown4db0, byte *session);
+boolean NETWORK_SESSION_CALLBACK network_session_unknown_0005bf10(byte *session, boolean unknown8, long unknownC,
+	long unknown10, const byte *unknown14);
+boolean NETWORK_SESSION_CALLBACK network_session_leader_set_unknown5ddc(byte *session, const byte *unknown5ddc);
 boolean network_session_leader_set_unknown49a1(byte *session, const byte *unknown49a1);
 boolean network_session_leader_set_unknown5dd0(byte *session, short unknown5dd0);
 boolean network_session_leader_set_language(byte *session, long language);

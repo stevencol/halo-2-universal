@@ -1722,3 +1722,27 @@ def run(t) -> None:
             led(),
             externals={"unknown_00075e80": sends_all},
         )
+
+    # ---------- two more things that are asked of the console that runs a session
+
+    for n in range(200):
+        t.check(
+            "network_session_unknown_0005bf10",
+            led(),
+            random_.choice((0, 1, 0x80, 0x100, 0x17F)),
+            random_.getrandbits(32),
+            random_.choice((0, 1, 1, 2, NONE)),
+            Buffer(random_.randbytes(12)),
+            externals={"unknown_00075e80": sends_all, "unknown_0005df30": does},
+        )
+    for n in range(200):
+        session_ = led()
+        thing = bytearray(random_.randbytes(0x44))
+        if n % 4 == 0:
+            thing[4:12] = session_.data[0x1C:0x24]
+        t.check(
+            "network_session_leader_set_unknown5ddc",
+            session_,
+            Buffer(bytes(thing)) if n % 5 else 0,
+            externals={"unknown_00075e80": sends_all},
+        )
