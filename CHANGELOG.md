@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Los grupos y los jugadores de la lista de la sesión
+
+Seis funciones en `networking/network_session.c`, 466 bytes entre todas. De 1206
+funciones se pasa a 1212, el 10,76 % de las del juego (el 6,718 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_roster_find_player` | `0x00063190` | `networking/network_session.c` |
+| `network_session_roster_group_maximum_unknown248` | `0x000631f0` | `networking/network_session.c` |
+| `network_session_roster_find_group_by_unknown84` | `0x00063280` | `networking/network_session.c` |
+| `network_session_roster_find_group_by_unknown4` | `0x000632e0` | `networking/network_session.c` |
+| `network_session_roster_valid` | `0x00063340` | `networking/network_session.c` |
+| `network_session_roster_has_any_player` | `0x00063510` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- El bloque de 776 bytes que la sesión guarda en `0x4A00` (hito 332) tiene
+  ya estructura: hasta **dieciséis grupos**, cada uno conocido por ocho
+  bytes y por doce, y hasta **dieciséis jugadores**, cada uno con sus doce
+  bytes, dos números (el primero de -1 a 127, el segundo de -1 a
+  `0x3FFFFFFF`) y el grupo al que pertenece. Lo llamo «lista»
+  (`network_session_roster`), que es una conjetura: por los límites, el
+  primer número parece un nivel y el segundo una puntuación.
+- `network_session_roster_valid` era `unknown_00063340`, la que comprueba
+  la lista antes de que la sesión la acepte: cuentas dentro de sus
+  límites, cada jugador en un grupo que existe y sus dos números dentro de
+  lo que pueden ser.
+- Las otras buscan en ella: un jugador por sus doce bytes, un grupo por sus
+  ocho o por sus doce, el mayor primer número de los jugadores de un grupo,
+  y si alguno de varios jugadores está en la lista.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (120
+  funciones).
+- Las mutaciones de los hitos 280 a 308 y 321 a 334 están pendientes; las
+  de los hitos 309 a 320 seguían corriendo.
+
 ## 2026-10-08 — Mandar algo a las consolas, y quién puede entrar
 
 Seis funciones en `networking/network_session.c`, 526 bytes entre todas. De 1200

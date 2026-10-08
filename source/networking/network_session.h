@@ -350,6 +350,36 @@ struct network_session_random
 	unsigned long high;
 };
 
+/* the thing of 0x308 bytes that a session has at 0x4A00: up to sixteen
+groups, each known by eight bytes and by twelve; and up to sixteen players,
+each known by twelve bytes, with two numbers and the group that it is of.
+The name is a guess */
+struct network_session_roster
+{
+	long group_count;
+	byte group_unknown4[MAXIMUM_NETWORK_SESSION_PLAYERS][8];
+	byte group_unknown84[MAXIMUM_NETWORK_SESSION_PLAYERS][NETWORK_SESSION_PLAYER_IDENTIFIER_SIZE];
+	byte unknown144[0x40];
+	long player_count;
+	byte player_identifiers[MAXIMUM_NETWORK_SESSION_PLAYERS][NETWORK_SESSION_PLAYER_IDENTIFIER_SIZE];
+	/* NONE, or 0 to 127 */
+	long player_unknown248[MAXIMUM_NETWORK_SESSION_PLAYERS];
+	/* NONE, or 0 to 0x3FFFFFFF */
+	long player_unknown288[MAXIMUM_NETWORK_SESSION_PLAYERS];
+	long player_groups[MAXIMUM_NETWORK_SESSION_PLAYERS];
+};
+
+typedef char verify_network_session_roster_size[
+	sizeof(struct network_session_roster) == NETWORK_SESSION_UNKNOWN4A00_SIZE ? 1 : -1];
+typedef char verify_network_session_roster_player_count_offset[
+	offsetof(struct network_session_roster, player_count) == 0x184 ? 1 : -1];
+
+enum
+{
+	MAXIMUM_NETWORK_SESSION_ROSTER_UNKNOWN248= 0x7F,
+	MAXIMUM_NETWORK_SESSION_ROSTER_UNKNOWN288= 0x3FFFFFFF
+};
+
 /* a number that network_session_start leaves in a session */
 #define NETWORK_SESSION_UNKNOWN4DA8_VALUE 0xDEADBEEFu
 
@@ -397,6 +427,16 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_set_player_unknownA8(long 
 	const byte *unknownA8);
 boolean NETWORK_SESSION_CALLBACK network_session_host_unknown_0005aeb0(byte *session, long unknown);
 void network_session_reset_unknown761c(byte *session);
+long NETWORK_SESSION_CALLBACK network_session_roster_find_player(const struct network_session_roster *roster,
+	const byte *identifier);
+long network_session_roster_group_maximum_unknown248(const struct network_session_roster *roster, long group_index);
+long NETWORK_SESSION_CALLBACK network_session_roster_find_group_by_unknown84(
+	const struct network_session_roster *roster, const byte *unknown84);
+long NETWORK_SESSION_CALLBACK network_session_roster_find_group_by_unknown4(
+	const struct network_session_roster *roster, const byte *unknown4);
+boolean network_session_roster_valid(const struct network_session_roster *roster);
+boolean NETWORK_SESSION_CALLBACK network_session_roster_has_any_player(const byte *identifiers,
+	const struct network_session_roster *roster, long count);
 void NETWORK_SESSION_CALLBACK network_session_send_to_peer(long peer_index, long mode, byte *session, long type,
 	long size, const void *data);
 void NETWORK_SESSION_CALLBACK network_session_send_to_peers(long mode, byte *session, long type, long size,

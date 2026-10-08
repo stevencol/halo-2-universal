@@ -840,7 +840,12 @@ address,name,source,arguments,returns,convention
 0005c660,network_session_host_set_unknown4999,source/networking/network_session.c,esi edx,bool
 0005c940,network_session_matches_state2_address,source/networking/network_session.c,eax ecx,bool
 0005c990,network_session_unknown_0005c990,source/networking/network_session.c,ecx eax,void
-00063340,unknown_00063340,,ecx,bool
+00063340,network_session_roster_valid,source/networking/network_session.c,ecx,bool
+00063190,network_session_roster_find_player,source/networking/network_session.c,stack stack,int,stdcall
+000631f0,network_session_roster_group_maximum_unknown248,source/networking/network_session.c,ecx edi,int
+00063280,network_session_roster_find_group_by_unknown84,source/networking/network_session.c,stack stack,int,stdcall
+000632e0,network_session_roster_find_group_by_unknown4,source/networking/network_session.c,stack stack,int,stdcall
+00063510,network_session_roster_has_any_player,source/networking/network_session.c,eax stack stack,bool,stdcall
 00056b70,voice_channels_update,source/networking/voice_routing.c,esi,void
 00056bd0,voice_channels_get_player,source/networking/voice_routing.c,eax ecx,int
 00056dd0,voice_channels_get_unknown84,source/networking/voice_routing.c,ecx stack,int

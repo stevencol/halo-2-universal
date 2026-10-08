@@ -45,10 +45,6 @@ void __attribute__((stdcall)) unknown_00075e80(boolean unknown, long channel_ind
 /* 0x0011ca80, of cseries.c */
 long language_from_xbox_language(long xbox_language);
 
-/* 0x00063340: whether a thing of 0x308 bytes that a session is given is
-right */
-boolean unknown_00063340(const byte *unknown4a00);
-
 /* 0x0005a520: something that is done with a session: see
 network_life_cycle.c */
 void unknown_0005a520(byte *session);
@@ -1756,7 +1752,7 @@ boolean network_session_host_set_unknown49cc(
 
 /* 0x0005c350: the console that runs a session sets the thing of 0x4A00, or
 says that there is none; whether it could: it has to be the one that runs
-it, and unknown_00063340 has to say that the thing is right */
+it, and network_session_roster_valid has to say that the thing is right */
 boolean NETWORK_SESSION_CALLBACK network_session_host_set_unknown4a00(
 	const byte *unknown4a00,
 	byte *session)
@@ -1767,7 +1763,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_set_unknown4a00(
 	}
 	if (unknown4a00)
 	{
-		if (!unknown_00063340(unknown4a00))
+		if (!network_session_roster_valid((const struct network_session_roster *)unknown4a00))
 		{
 			return FALSE;
 		}
@@ -2111,4 +2107,130 @@ long network_session_host_check_join(
 	}
 
 	return _network_session_join_ok;
+}
+
+/* 0x00063190: which player of a roster is known by twelve bytes: the first
+that is; NONE if none */
+long NETWORK_SESSION_CALLBACK network_session_roster_find_player(
+	const struct network_session_roster *roster,
+	const byte *identifier)
+{
+	long found= NONE;
+	long index;
+
+	for (index= 0; index<roster->player_count; index++)
+	{
+		if (found==NONE && memcmp(roster->player_identifiers[index], identifier, sizeof(roster->player_identifiers[index]))==0)
+		{
+			found= index;
+		}
+	}
+
+	return found;
+}
+
+/* 0x000631f0: the most that the players of a group of a roster have in the
+first of their two numbers; NONE if the group has no player */
+long network_session_roster_group_maximum_unknown248(
+	const struct network_session_roster *roster,
+	long group_index)
+{
+	long maximum= NONE;
+	long index;
+
+	for (index= 0; index<roster->player_count; index++)
+	{
+		if (roster->player_groups[index]==group_index && maximum<=roster->player_unknown248[index])
+		{
+			maximum= roster->player_unknown248[index];
+		}
+	}
+
+	return maximum;
+}
+
+/* 0x00063280: which group of a roster is known by twelve bytes: the first
+that is; NONE if none */
+long NETWORK_SESSION_CALLBACK network_session_roster_find_group_by_unknown84(
+	const struct network_session_roster *roster,
+	const byte *unknown84)
+{
+	long found= NONE;
+	long index;
+
+	for (index= 0; index<roster->group_count; index++)
+	{
+		if (found==NONE && memcmp(roster->group_unknown84[index], unknown84, sizeof(roster->group_unknown84[index]))==0)
+		{
+			found= index;
+		}
+	}
+
+	return found;
+}
+
+/* 0x000632e0: which group of a roster is known by eight bytes: the first
+that is; NONE if none */
+long NETWORK_SESSION_CALLBACK network_session_roster_find_group_by_unknown4(
+	const struct network_session_roster *roster,
+	const byte *unknown4)
+{
+	long found= NONE;
+	long index;
+
+	for (index= 0; index<roster->group_count; index++)
+	{
+		if (found==NONE && memcmp(roster->group_unknown4[index], unknown4, sizeof(roster->group_unknown4[index]))==0)
+		{
+			found= index;
+		}
+	}
+
+	return found;
+}
+
+/* 0x00063340: whether a roster is right: no more than sixteen groups and
+sixteen players, and each player in a group that there is and with its two
+numbers NONE or in what they can be. The game stops at the first player that
+is not right */
+boolean network_session_roster_valid(
+	const struct network_session_roster *roster)
+{
+	boolean valid= roster->group_count>=0 && roster->group_count<=MAXIMUM_NETWORK_SESSION_PLAYERS &&
+		roster->player_count>=0 && roster->player_count<=MAXIMUM_NETWORK_SESSION_PLAYERS;
+	long index;
+
+	for (index= 0; index<roster->player_count && valid; index++)
+	{
+		long group_index= roster->player_groups[index];
+		long unknown248= roster->player_unknown248[index];
+		long unknown288= roster->player_unknown288[index];
+
+		valid= group_index>=0 && group_index<roster->group_count &&
+			(unknown248==NONE || (unknown248>=0 && unknown248<=MAXIMUM_NETWORK_SESSION_ROSTER_UNKNOWN248)) &&
+			(unknown288==NONE || (unknown288>=0 && unknown288<=MAXIMUM_NETWORK_SESSION_ROSTER_UNKNOWN288));
+	}
+
+	return valid;
+}
+
+/* 0x00063510: whether any of a number of players, each known by twelve
+bytes, is in a roster */
+boolean NETWORK_SESSION_CALLBACK network_session_roster_has_any_player(
+	const byte *identifiers,
+	const struct network_session_roster *roster,
+	long count)
+{
+	boolean found= FALSE;
+	long index;
+
+	for (index= 0; index<count && !found; index++)
+	{
+		if (network_session_roster_find_player(roster, identifiers+index*NETWORK_SESSION_PLAYER_IDENTIFIER_SIZE)!=NONE)
+		{
+			found= TRUE;
+		}
+	}
+
+	return found;
 }

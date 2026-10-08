@@ -1228,7 +1228,7 @@ def run(t) -> None:
             "network_session_host_set_unknown4a00",
             maybe(0x308),
             Buffer(bytes(hosted())),
-            externals={"unknown_00063340": lambda harness, arguments, right=random_.choice((1, 1, 1, 0x80, 0, 0x100)): right},
+            externals={"network_session_roster_valid": lambda harness, arguments, right=random_.choice((1, 1, 1, 0x80, 0, 0x100)): right},
         )
     for n in range(160):
         data = hosted()
@@ -1367,3 +1367,78 @@ def run(t) -> None:
             at = PEERS + random_.randrange(4) * PEER
             join[0x188 : 0x188 + 0x24] = data[at : at + 0x24]
         t.check("network_session_host_check_join", Buffer(bytes(data)), Buffer(bytes(join)))
+
+    # ---------- the groups and the players of the thing of 0x4A00
+
+    def roster(right: bool = True) -> bytearray:
+        data = bytearray(random_.randbytes(0x308))
+        groups = random_.choice((0, 1, 2, 4, 16))
+        players = random_.choice((0, 1, 2, 5, 16))
+        struct.pack_into("<i", data, 0, groups)
+        struct.pack_into("<i", data, 0x184, players)
+        for player in range(16):
+            struct.pack_into("<i", data, 0x248 + player * 4, random_.choice((-1, 0, 5, 50, 0x7F)))
+            struct.pack_into("<i", data, 0x288 + player * 4, random_.choice((-1, 0, 1000, 0x3FFFFFFF)))
+            struct.pack_into("<i", data, 0x2C8 + player * 4, random_.randrange(max(groups, 1)))
+        if not right:
+            way = random_.randrange(8)
+            player = random_.randrange(16)
+            if way == 0:
+                struct.pack_into("<i", data, 0, random_.choice((-1, 17, 0x7FFFFFFF)))
+            elif way == 1:
+                struct.pack_into("<i", data, 0x184, random_.choice((-1, 17, -0x80000000)))
+            elif way == 2:
+                struct.pack_into("<i", data, 0x248 + player * 4, random_.choice((-2, 0x80, 1000)))
+            elif way == 3:
+                struct.pack_into("<i", data, 0x288 + player * 4, random_.choice((-2, 0x40000000)))
+            elif way == 4:
+                struct.pack_into("<i", data, 0x2C8 + player * 4, random_.choice((-1, groups, 16)))
+            else:
+                # the last player is not right
+                last = max(players - 1, 0)
+                struct.pack_into("<i", data, 0x2C8 + last * 4, groups)
+        return data
+
+    for n in range(400):
+        t.check("network_session_roster_valid", Buffer(bytes(roster(right=n % 2 == 0))))
+
+    def one_of(data: bytearray, at: int, size: int) -> bytes:
+        # one of sixteen things of a roster, most of the time; two of them can be the same
+        index = random_.randrange(16)
+        thing = bytes(data[at + index * size : at + (index + 1) * size])
+        if random_.randrange(4) == 0:
+            other = random_.randrange(16)
+            data[at + other * size : at + (other + 1) * size] = thing
+        if random_.randrange(5) == 0:
+            thing = thing[:-1] + bytes((thing[-1] ^ 8,))
+        return thing
+
+    for n in range(240):
+        data = roster()
+        identifier = one_of(data, 0x188, 12)
+        t.check("network_session_roster_find_player", Buffer(bytes(data)), Buffer(identifier))
+    for n in range(240):
+        data = roster()
+        thing = one_of(data, 0x84, 12)
+        t.check("network_session_roster_find_group_by_unknown84", Buffer(bytes(data)), Buffer(thing))
+    for n in range(240):
+        data = roster()
+        thing = one_of(data, 4, 8)
+        t.check("network_session_roster_find_group_by_unknown4", Buffer(bytes(data)), Buffer(thing))
+    for n in range(240):
+        t.check(
+            "network_session_roster_group_maximum_unknown248",
+            Buffer(bytes(roster())),
+            random_.choice((0, 0, 1, 2, 3, 15, NONE)),
+        )
+    for n in range(240):
+        data = roster()
+        identifiers = b"".join(
+            one_of(data, 0x188, 12) if random_.randrange(4) == 0 else random_.randbytes(12) for _ in range(4)
+        )
+        t.check(
+            "network_session_roster_has_any_player",
+            Buffer(identifiers),
+            Buffer(bytes(data)),
+            random_.choice((0, 1, 2, 4, 4, NONE)),
+        )
