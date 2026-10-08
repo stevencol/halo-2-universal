@@ -19,14 +19,19 @@ voice.c, from 0x00055960 on.
 
 /* ---------- prototypes of functions not decompiled yet */
 
-/* 0x00056f60, 0x00057080, 0x00057360, 0x000577d0: what is done each frame
-with who hears whom, in one state of the network game; 0x00057960: in the
-others */
-void __attribute__((stdcall)) unknown_00056f60(byte *channels);
+/* 0x00057080, 0x00057360, 0x000577d0: what is done each frame with who hears
+whom, in one state of the network game, after voice_channels_update_ended;
+0x00057960: in the others */
 void __attribute__((stdcall)) unknown_00057080(byte *channels);
 void __attribute__((stdcall)) unknown_00057360(byte *channels);
 void __attribute__((stdcall)) unknown_000577d0(byte *channels);
 void __attribute__((stdcall)) unknown_00057960(byte *channels);
+
+/* 0x00057270: something of two players: whether the second can have heard
+the first, most likely. 0x000574e0: a sound of the voice is played, by its
+number */
+boolean unknown_00057270(long player_index, long other_player_index);
+void __attribute__((stdcall)) unknown_000574e0(long sound, byte *channels);
 
 /* 0x00056df0: something that who hears whom is told of a player whose
 voice comes from another console, with the flag of what it said */
@@ -137,7 +142,7 @@ void voice_channels_update(
 	{
 		if (unknown_004c9888==_game_voice_network1)
 		{
-			unknown_00056f60(channels);
+			voice_channels_update_ended(channels);
 			unknown_00057080(channels);
 			unknown_00057360(channels);
 			unknown_000577d0(channels);
@@ -1001,4 +1006,60 @@ unsigned long VOICE_ROUTING_CALLBACK voice_channels_get_player_by_team(
 	}
 
 	return result;
+}
+
+/* 0x00056f60: each frame, in the first state of the network game: of each
+player of another console that the voice has and that
+voice_player_unknown_000589e0 says no of, if its time is less than three
+tenths of a second ago: a sound is played for each player of this console
+that unknown_00057270 says so of, when neither wants not to hear the other;
+and the player has no time any more. The game has game_voice_get_players in
+the function itself */
+void VOICE_ROUTING_CALLBACK voice_channels_update_ended(
+	byte *channels)
+{
+	unsigned long session_players= 0;
+	unsigned long local_players;
+	long player_index;
+
+	if (voice_routing_active())
+	{
+		const byte *membership= game_voice_get_membership();
+
+		if (membership)
+		{
+			session_players= *(const unsigned long *)(membership+GAME_VOICE_MEMBERSHIP_PLAYERS_OFFSET);
+		}
+	}
+	local_players= game_voice_get_local_players();
+	for (player_index= 0; player_index<MAXIMUM_VOICE_ROUTING_PLAYERS; player_index++)
+	{
+		unsigned long bit= 1u<<player_index;
+		long *started= (long *)(channels+VOICE_CHANNELS_STARTED_OFFSET+player_index*sizeof(long));
+
+		if ((session_players&bit) && !(local_players&bit) && game_voice_unknown_00054df0(player_index) &&
+			!voice_player_unknown_000589e0(player_index))
+		{
+			long ticks= (long)(game_time_globals->time-(unsigned long)*started);
+
+			if (VOICE_CHANNELS_ENDED_SECONDS>(real)ticks*game_time_globals->seconds_per_tick)
+			{
+				long other_index;
+
+				for (other_index= 0; other_index<MAXIMUM_VOICE_ROUTING_PLAYERS; other_index++)
+				{
+					unsigned long other_bit= 1u<<other_index;
+
+					if ((session_players&other_bit) && (local_players&other_bit) &&
+						game_voice_unknown_00054df0(other_index) && unknown_00057270(player_index, other_index) &&
+						!game_voice_player_has_muted(other_index, player_index) &&
+						!game_voice_player_has_muted(player_index, other_index))
+					{
+						unknown_000574e0(_voice_sound_unknown2, channels);
+					}
+				}
+				*started= 0;
+			}
+		}
+	}
 }

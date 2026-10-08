@@ -2,6 +2,39 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Quién oye a quién, dentro de la partida: el primer paso de cada fotograma
+
+Una función en `networking/voice_routing.c`, de 276 bytes. De 1091 funciones se pasa a
+1092, el 9,69 % de las del juego (el 6,136 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_channels_update_ended` | `0x00056f60` | `networking/voice_routing.c` |
+
+Era `unknown_00056f60`, la primera de las cuatro cosas que
+`voice_channels_update` (hito 279) hace cada fotograma con una partida en
+marcha.
+
+### Lo que se sabe
+
+- «Quién oye a quién» guarda otro momento por jugador, en `0x148`. Cada
+  fotograma mira a cada jugador de otra consola: si ese momento fue hace
+  menos de tres décimas de segundo (y `voice_player_unknown_000589e0` dice
+  que no), suena un sonido de la voz (el 2, por `0x000574e0`) para cada
+  jugador de esta consola que cumpla una condición (`0x00057270`, sin
+  descompilar) y con el que no haya silencio en ninguno de los dos
+  sentidos; y el momento se borra.
+- Lo que aún no se sabe es qué momento es ese ni qué condición es aquella:
+  el nombre de la función es una suposición.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- La batería completa del hito 296 corre aparte; las mutaciones de los
+  hitos 280 a 298 están pendientes.
+
 ## 2026-10-08 — Quién oye a quién fuera de la partida: todos, o los del equipo
 
 Una función en `networking/voice_routing.c`, de 368 bytes. De 1090 funciones se pasa a

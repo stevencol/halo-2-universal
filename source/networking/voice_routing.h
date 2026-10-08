@@ -86,6 +86,11 @@ enum
 	VOICE_CHANNELS_UNKNOWN84_OFFSET= 0x84,
 	/* and a time of the game for each player, in ticks; 0 for none */
 	VOICE_CHANNELS_TIMES_OFFSET= 0x194,
+	/* another time for each player: when what it said started to come */
+	VOICE_CHANNELS_STARTED_OFFSET= 0x148,
+	/* the sound of the voice that is played when a player stops being
+	heard */
+	_voice_sound_unknown2= 2,
 
 	/* in a player of the game: a number that is NONE or not, and an object;
 	and in the object, a time of the game, in ticks */
@@ -97,6 +102,10 @@ enum
 /* how long after that time voice_player_unknown_000589e0 still says so, in
 seconds */
 #define VOICE_PLAYER_UNKNOWN_000589E0_SECONDS 1.0f
+
+/* how soon after it started a player's voice has to end for the sound to be
+played, in seconds */
+#define VOICE_CHANNELS_ENDED_SECONDS 0.3f
 
 /* a function that takes its arguments off the stack */
 #define VOICE_ROUTING_CALLBACK __attribute__((stdcall))
@@ -123,6 +132,7 @@ unsigned long voice_targets_to_peers(unsigned long targets);
 boolean voice_player_unknown_000589e0(long player);
 boolean voice_channels_time_is_recent(const byte *channels, long player_index);
 unsigned long VOICE_ROUTING_CALLBACK voice_channels_get_player_by_team(const byte *channels, long player_index);
+void VOICE_ROUTING_CALLBACK voice_channels_update_ended(byte *channels);
 void VOICE_ROUTING_CALLBACK voice_route_peers(const byte *unknown, unsigned long peers, word *words);
 void VOICE_ROUTING_CALLBACK voice_route_assign(long *budget, unsigned long *peers, unsigned long allowed,
 	unsigned long *direct, boolean through_chosen, long chosen_peer, boolean *more);

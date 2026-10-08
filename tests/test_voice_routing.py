@@ -105,7 +105,7 @@ def run(t) -> None:
                     externals={
                         name: gives(0)
                         for name in (
-                            "unknown_00056f60",
+                            "voice_channels_update_ended",
                             "unknown_00057080",
                             "unknown_00057360",
                             "unknown_000577d0",
@@ -597,3 +597,44 @@ def run(t) -> None:
                         },
                         extra=[membership],
                     )
+
+    # ---------- a voice that ends
+
+    for enabled, initialized in active():
+        for n in range(30):
+            now = random_.choice((1000000, 0x7FFFFFF0, 0x80000010))
+            seconds_per_tick = random_.choice((1 / 30, 1 / 60))
+            data = bytearray(random_.randbytes(0x1D8))
+            for player in range(16):
+                # some started a moment ago, some a while ago, and the limit itself
+                ago = random_.choice((0, 1, 5, 8, 9, 10, 17, 18, 19, 60, -3, 100000))
+                struct.pack_into("<I", data, 0x148 + player * 4, (now - ago) & 0xFFFFFFFF)
+            membership = bytearray(random_.randbytes(MEMBERSHIP_PLAYERS + 4))
+            struct.pack_into("<I", membership, MEMBERSHIP_PLAYERS, random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16))))
+            membership = Buffer(bytes(membership))
+            time = bytearray(random_.randbytes(0xC))
+            struct.pack_into("<fI", time, 4, seconds_per_tick, now)
+            local = random_.choice((1, 3, 0x8001, random_.getrandbits(16), 0))
+            has = random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16)))
+            still = random_.choice((0, 0, random_.getrandbits(16)))
+            can = [random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16))) for _ in range(16)]
+            muted = [random_.choice((0, 0, 0, random_.getrandbits(16))) for _ in range(16)]
+            t.check(
+                "voice_channels_update_ended",
+                Buffer(bytes(data)),
+                globals={**state(enabled, initialized), "game_time_globals": Buffer(bytes(time))},
+                externals={
+                    "game_voice_get_membership": lambda harness, arguments, membership=membership, n=n: (
+                        membership.address if n % 10 else 0
+                    ),
+                    "game_voice_get_local_players": gives(local),
+                    "game_voice_unknown_00054df0": lambda harness, arguments, has=has: has >> (arguments[0] & 15) & 1,
+                    "voice_player_unknown_000589e0": lambda harness, arguments, still=still: still >> (arguments[0] & 15) & 1,
+                    "unknown_00057270": lambda harness, arguments, can=can: can[arguments[0] & 15] >> (arguments[1] & 15) & 1,
+                    "game_voice_player_has_muted": lambda harness, arguments, muted=muted: (
+                        muted[arguments[0] & 15] >> (arguments[1] & 15) & 1
+                    ),
+                    "unknown_000574e0": lambda harness, arguments: 0,
+                },
+                extra=[membership],
+            )

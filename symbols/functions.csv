@@ -779,7 +779,9 @@ address,name,source,arguments,returns,convention
 00056bd0,voice_channels_get_player,source/networking/voice_routing.c,eax ecx,int
 00056dd0,voice_channels_get_unknown84,source/networking/voice_routing.c,ecx stack,int
 00055b40,voice_queue_add,source/networking/voice_routing.c,ebx stack stack stack stack,void,stdcall
-00056f60,unknown_00056f60,,stack,void,stdcall
+00056f60,voice_channels_update_ended,source/networking/voice_routing.c,stack,void,stdcall
+00057270,unknown_00057270,,eax ecx,bool
+000574e0,unknown_000574e0,,ecx stack,void,stdcall
 00057080,unknown_00057080,,stack,void,stdcall
 00057360,unknown_00057360,,stack,void,stdcall
 000577d0,unknown_000577d0,,stack,void,stdcall
