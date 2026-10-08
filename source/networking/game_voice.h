@@ -76,6 +76,22 @@ enum
 	GAME_VOICE_SESSION_MEMBERSHIP_OFFSET= 0x4C,
 	/* in that: a bit for each player that there is */
 	GAME_VOICE_MEMBERSHIP_PLAYERS_OFFSET= 0x10D0,
+	/* and then the players: of each, the console that it is of and the
+	number that the voice knows it by */
+	GAME_VOICE_MEMBERSHIP_PLAYER_ARRAY_OFFSET= 0x10D4,
+	GAME_VOICE_MEMBERSHIP_PLAYER_SIZE= 0x13C,
+	GAME_VOICE_MEMBERSHIP_PLAYER_PEER_OFFSET= 0xC,
+	GAME_VOICE_MEMBERSHIP_PLAYER_IDENTIFIER_OFFSET= 0x14,
+	/* the consoles: a number of each */
+	GAME_VOICE_MEMBERSHIP_PEER_SIZE= 0x10C,
+	GAME_VOICE_MEMBERSHIP_PEER_UNKNOWNA8_OFFSET= 0xA8,
+	/* in the session: this console, and another number */
+	GAME_VOICE_SESSION_LOCAL_PEER_OFFSET= 0x72D8,
+	GAME_VOICE_SESSION_UNKNOWN40_OFFSET= 0x40,
+	/* in what unknown_000596d0 gives, and what it is when the session comes
+	from the second place */
+	UNKNOWN_000596D0_UNKNOWN14_OFFSET= 0x14,
+	_unknown_000596d0_unknown14_2= 2,
 
 	/* in what unknown_000649c0 gives, and what it is when
 	game_voice_unknown_00053d90 says so */
@@ -152,6 +168,21 @@ boolean game_voice_message_is_sound_file(const long *message, long size);
 byte *game_voice_get_membership(void);
 void game_voice_library_begin(void);
 void game_voice_library_end(void);
+void game_voice_update_session_source(void);
+void game_voice_unknown_00054810(long unknown0, long unknown4);
+boolean game_voice_unknown_00054850(long unknown);
+long game_voice_unknown_00054990(long unknown);
+boolean game_voice_unknown_000549d0(void);
+long game_voice_get_local_peer(void);
+long game_voice_session_unknown40(void);
+long game_voice_local_peer_unknownA8(void);
+unsigned long game_voice_get_players(void);
+byte *game_voice_get_player_array(void);
+long game_voice_find_local_player(long identifier);
+long game_voice_player_identifier(long player_index);
+boolean game_voice_unknown_00054c70(void);
+long game_voice_unknown_00054cc0(void);
+unsigned long game_voice_unknown_00054d00(void);
 
 /* ---------- globals */
 
@@ -163,6 +194,9 @@ extern long game_voice_kind;
 extern boolean game_voice_enabled;
 extern long unknown_004c9888;
 extern long game_voice_session_source;
+extern long unknown_004c9878;
+extern long unknown_004c9880;
+extern long unknown_004c9884;
 extern word game_voice_player_flag_words[MAXIMUM_GAME_VOICE_PLAYERS];
 extern byte unknown_00525a00[];
 extern word unknown_004c9968[MAXIMUM_GAME_VOICE_PLAYERS];

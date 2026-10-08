@@ -30,6 +30,18 @@ boolean unknown_000596a0(byte **session);
 /* 0x00056380: something that 0x00525a00 does with three numbers */
 long unknown_00056380(long unknown4, byte *unknown, long unknown0, long unknown8);
 
+/* 0x000564c0, 0x00056160, 0x00056220: more that 0x00525a00 does */
+void unknown_000564c0(long unknown4, byte *unknown, long unknown0);
+boolean unknown_00056160(long unknown0, byte *unknown);
+long unknown_00056220(byte *unknown, long unknown0);
+
+/* 0x000596d0: something of the network game that says where the session
+comes from; whether there is one */
+boolean unknown_000596d0(byte **unknown);
+
+/* 0x00054d20: of this file: a bit for each player of this console */
+unsigned long unknown_00054d20(void);
+
 /* 0x000649c0: something of the network game; NULL if there is none */
 byte *unknown_000649c0(void);
 
@@ -62,6 +74,15 @@ long unknown_004c9888;
 
 /* 0x004c988c: which of two things gives the session of the network game */
 long game_voice_session_source;
+
+/* 0x004c9878: a console of the session; NONE if none. With no voice it
+counts as 0 */
+long unknown_004c9878;
+
+/* 0x004c9880, 0x004c9884: what game_voice_unknown_00054cc0 gives when
+unknown_004c9888 is 1, and when it is 2 or 3 */
+long unknown_004c9880;
+long unknown_004c9884;
 
 /* 0x004c9988: what the game knows of the voice of each player */
 word game_voice_player_flag_words[MAXIMUM_GAME_VOICE_PLAYERS];
@@ -104,6 +125,31 @@ static inline __attribute__((always_inline)) boolean game_voice_active(
 	void)
 {
 	return game_voice_enabled && voice_globals.initialized;
+}
+
+boolean game_voice_get_session(byte **session);
+
+/* the session that the voice goes with, if it says who is in it; NULL if
+not. The game has this in each function that looks at the session */
+static inline __attribute__((always_inline)) byte *game_voice_get_valid_session(
+	void)
+{
+	byte *session= NULL;
+
+	if (game_voice_get_session(&session) && *(const long *)(session+GAME_VOICE_SESSION_UNKNOWN741C_OFFSET) &&
+		*(const long *)(session+GAME_VOICE_SESSION_MEMBERSHIP_OFFSET)!=NONE)
+	{
+		return session;
+	}
+
+	return NULL;
+}
+
+/* unknown_004c9878, as the functions of the file read it */
+static inline __attribute__((always_inline)) long game_voice_get_unknown_004c9878(
+	void)
+{
+	return game_voice_active() ? unknown_004c9878 : 0;
 }
 
 /* the pool that the memory comes from now */
@@ -604,4 +650,275 @@ void game_voice_library_end(
 	__builtin_ia32_ldmxcsr(__builtin_ia32_stmxcsr()&~(unsigned int)GAME_VOICE_MXCSR_EXCEPTION_FLAGS);
 	_clearfp();
 	_control87(GAME_VOICE_FLOATING_POINT_CONTROL, GAME_VOICE_FLOATING_POINT_MASK);
+}
+
+/* 0x000547e0: says which of the two places the session comes from: none, if
+unknown_000596d0 gives nothing */
+void game_voice_update_session_source(
+	void)
+{
+	byte *unknown;
+
+	game_voice_session_source= 0;
+	if (unknown_000596d0(&unknown))
+	{
+		game_voice_session_source=
+			(*(const long *)(unknown+UNKNOWN_000596D0_UNKNOWN14_OFFSET)==_unknown_000596d0_unknown14_2)+
+			_game_voice_session_source1;
+	}
+}
+
+/* 0x00054810 */
+void game_voice_unknown_00054810(
+	long unknown0,
+	long unknown4)
+{
+	if (game_voice_active() && unknown_004c9888!=0)
+	{
+		unknown_000564c0(unknown4, unknown_00525a00, unknown0);
+	}
+}
+
+/* 0x00054850 */
+boolean game_voice_unknown_00054850(
+	long unknown)
+{
+	boolean result= FALSE;
+
+	if (game_voice_active() && unknown_004c9888!=0)
+	{
+		result= unknown_00056160(unknown, unknown_00525a00);
+	}
+
+	return result;
+}
+
+/* 0x00054990 */
+long game_voice_unknown_00054990(
+	long unknown)
+{
+	long result= 0;
+
+	if (game_voice_active() && unknown_004c9888!=0)
+	{
+		result= unknown_00056220(unknown_00525a00, unknown);
+	}
+
+	return result;
+}
+
+/* 0x000549d0: whether this console is that of unknown_004c9878 */
+boolean game_voice_unknown_000549d0(
+	void)
+{
+	if (game_voice_active())
+	{
+		long peer= game_voice_get_local_peer();
+
+		if (peer!=NONE && peer==game_voice_get_unknown_004c9878())
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x00054a20: which of the consoles of the session this one is; NONE with
+no session */
+long game_voice_get_local_peer(
+	void)
+{
+	if (game_voice_active())
+	{
+		const byte *session= game_voice_get_valid_session();
+
+		if (session)
+		{
+			return *(const long *)(session+GAME_VOICE_SESSION_LOCAL_PEER_OFFSET);
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x00054a70: another number of the session; NONE with no session */
+long game_voice_session_unknown40(
+	void)
+{
+	if (game_voice_active())
+	{
+		const byte *session= game_voice_get_valid_session();
+
+		if (session)
+		{
+			return *(const long *)(session+GAME_VOICE_SESSION_UNKNOWN40_OFFSET);
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x00054ac0: a number that the session has of this console; 0 with no
+session */
+long game_voice_local_peer_unknownA8(
+	void)
+{
+	if (game_voice_active())
+	{
+		const byte *membership= game_voice_get_membership();
+		long peer= game_voice_get_local_peer();
+
+		if (membership && peer!=NONE)
+		{
+			return *(const long *)(membership+peer*GAME_VOICE_MEMBERSHIP_PEER_SIZE+
+				GAME_VOICE_MEMBERSHIP_PEER_UNKNOWNA8_OFFSET);
+		}
+	}
+
+	return 0;
+}
+
+/* 0x00054b10: a bit for each player that the session has */
+unsigned long game_voice_get_players(
+	void)
+{
+	if (game_voice_active())
+	{
+		const byte *membership= game_voice_get_membership();
+
+		if (membership)
+		{
+			return *(const unsigned long *)(membership+GAME_VOICE_MEMBERSHIP_PLAYERS_OFFSET);
+		}
+	}
+
+	return 0;
+}
+
+/* 0x00054b40: the players of the session; NULL with no session */
+byte *game_voice_get_player_array(
+	void)
+{
+	if (game_voice_active())
+	{
+		byte *membership= game_voice_get_membership();
+
+		if (membership)
+		{
+			return membership+GAME_VOICE_MEMBERSHIP_PLAYER_ARRAY_OFFSET;
+		}
+	}
+
+	return NULL;
+}
+
+/* 0x00054b70: the player of this console that the voice knows by a number;
+NONE if there is none. The game has game_voice_get_player_array and
+game_voice_get_players in the function itself */
+long game_voice_find_local_player(
+	long identifier)
+{
+	if (game_voice_active())
+	{
+		const byte *membership= game_voice_get_membership();
+		const byte *players= membership ? membership+GAME_VOICE_MEMBERSHIP_PLAYER_ARRAY_OFFSET : NULL;
+		long peer= game_voice_get_local_peer();
+		unsigned long mask= 0;
+
+		if (game_voice_active())
+		{
+			const byte *membership_again= game_voice_get_membership();
+
+			if (membership_again)
+			{
+				mask= *(const unsigned long *)(membership_again+GAME_VOICE_MEMBERSHIP_PLAYERS_OFFSET);
+			}
+		}
+		if (peer!=NONE && players && mask)
+		{
+			long player_index;
+
+			for (player_index= 0; player_index<MAXIMUM_GAME_VOICE_PLAYERS; player_index++)
+			{
+				const byte *player= players+player_index*GAME_VOICE_MEMBERSHIP_PLAYER_SIZE;
+
+				if ((mask&(1u<<player_index)) &&
+					*(const long *)(player+GAME_VOICE_MEMBERSHIP_PLAYER_PEER_OFFSET)==peer &&
+					*(const long *)(player+GAME_VOICE_MEMBERSHIP_PLAYER_IDENTIFIER_OFFSET)==identifier)
+				{
+					return player_index;
+				}
+			}
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x00054c20: the number that the voice knows a player of this console by;
+NONE if it is not one */
+long game_voice_player_identifier(
+	long player_index)
+{
+	if (game_voice_active())
+	{
+		if ((1u<<player_index)&unknown_00054d20())
+		{
+			const byte *players= game_voice_get_player_array();
+
+			if (players)
+			{
+				return *(const long *)(players+player_index*GAME_VOICE_MEMBERSHIP_PLAYER_SIZE+
+					GAME_VOICE_MEMBERSHIP_PLAYER_IDENTIFIER_OFFSET);
+			}
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x00054c70: whether there is a console in unknown_004c9878 and it is not
+this one */
+boolean game_voice_unknown_00054c70(
+	void)
+{
+	if (game_voice_active())
+	{
+		if (!game_voice_unknown_000549d0())
+		{
+			return game_voice_get_unknown_004c9878()!=NONE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x00054cc0 */
+long game_voice_unknown_00054cc0(
+	void)
+{
+	if (game_voice_enabled)
+	{
+		if (voice_globals.initialized)
+		{
+			if (unknown_004c9888==1)
+			{
+				return unknown_004c9880;
+			}
+			if (unknown_004c9888>1 && unknown_004c9888<=3)
+			{
+				return unknown_004c9884;
+			}
+		}
+	}
+
+	return 0;
+}
+
+/* 0x00054d00: unknown_004c9966; 0 with no voice */
+unsigned long game_voice_unknown_00054d00(
+	void)
+{
+	return game_voice_active() ? unknown_004c9966 : 0;
 }

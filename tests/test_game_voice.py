@@ -544,3 +544,188 @@ def run(t) -> None:
         "game_voice_library_end",
         externals={"_control87": lambda harness, arguments: 0, "_clearfp": lambda harness, arguments: 0},
     )
+
+    # ---------- the consoles and the players of the session
+
+    PLAYERS = 0x10D4
+    PLAYER_SIZE = 0x13C
+    MEMBERSHIP_SIZE = PLAYERS + 16 * PLAYER_SIZE
+
+    def session_at(found: int, session: Buffer):
+        def handler(harness, arguments):
+            # the place for the session is in the stack
+            if found:
+                harness.mu.mem_write(arguments[0], struct.pack("<I", session.address))
+            return found, ()
+
+        return handler
+
+    def a_session(unknown741c: int, first: int) -> Buffer:
+        data = bytearray(random_.randbytes(SESSION_SIZE))
+        struct.pack_into("<I", data, 0x741C, unknown741c)
+        struct.pack_into("<I", data, MEMBERSHIP, first)
+        return Buffer(bytes(data))
+
+    def gives(value: object):
+        return lambda harness, arguments: value
+
+    def gives_buffer(buffer: Buffer, there: bool = True, offset: int = 0):
+        return lambda harness, arguments: buffer.address + offset if there else 0
+
+    for source in (2, 1, 0, 0x102):
+        for found in (1, 0):
+            thing = bytearray(random_.randbytes(0x18))
+            struct.pack_into("<I", thing, 0x14, source)
+            thing = Buffer(bytes(thing))
+
+            def session_source(harness, arguments, thing=thing, found=found):
+                if found:
+                    harness.mu.mem_write(arguments[0], struct.pack("<I", thing.address))
+                return found, ()
+
+            t.check(
+                "game_voice_update_session_source",
+                globals={"game_voice_session_source": random_.getrandbits(32) | 4},
+                externals={"unknown_000596d0": session_source},
+                extra=[thing],
+            )
+
+    def with_525a00(result: int, position: int):
+        def handler(harness, arguments):
+            return result, tuple(
+                harness.normalize(argument) if n == position else argument for n, argument in enumerate(arguments)
+            )
+
+        return handler
+
+    for enabled, initialized in active():
+        for unknown in (1, 0, 3):
+            both = {**state(enabled, initialized), "unknown_004c9888": unknown, "unknown_00525a00": GlobalRange(4)}
+            t.check(
+                "game_voice_unknown_00054810",
+                random_.getrandbits(32),
+                random_.getrandbits(32),
+                globals=both,
+                externals={"unknown_000564c0": with_525a00(0, 1)},
+            )
+            for result in (1, 0, 0x100, 0xFFFFFF01):
+                t.check(
+                    "game_voice_unknown_00054850",
+                    random_.getrandbits(32),
+                    globals=both,
+                    externals={"unknown_00056160": with_525a00(result, 1)},
+                )
+            t.check(
+                "game_voice_unknown_00054990",
+                random_.getrandbits(32),
+                globals=both,
+                externals={"unknown_00056220": with_525a00(random_.getrandbits(32), 0)},
+            )
+
+            for value in (0x12345678, 0):
+                t.check(
+                    "game_voice_unknown_00054cc0",
+                    globals={
+                        **state(enabled, initialized),
+                        "unknown_004c9888": random_.choice((0, 1, 2, 3, 4, 0xFFFFFFFF, 0x80000001)) if unknown else unknown,
+                        "unknown_004c9880": value ^ 0x1111,
+                        "unknown_004c9884": value ^ 0x2222,
+                    },
+                )
+        for n in range(8):
+            t.check(
+                "game_voice_unknown_00054cc0",
+                globals={
+                    **state(enabled, initialized),
+                    "unknown_004c9888": (0, 1, 2, 3, 4, 0xFFFFFFFF, 0x80000001, 0x7FFFFFFF)[n],
+                    "unknown_004c9880": 0x1111,
+                    "unknown_004c9884": 0x2222,
+                },
+            )
+
+        t.check(
+            "game_voice_unknown_00054d00",
+            globals={**state(enabled, initialized), "unknown_004c9966": struct.pack("<H", random_.getrandbits(16) | 0x8001)},
+        )
+
+        for found in (1, 0):
+            for unknown741c in (1, 0):
+                for first in (0, NONE):
+                    for name in ("game_voice_get_local_peer", "game_voice_session_unknown40"):
+                        session = a_session(unknown741c, first)
+                        t.check(
+                            name,
+                            globals=state(enabled, initialized),
+                            externals={"game_voice_get_session": session_at(found, session)},
+                            extra=[session],
+                        )
+
+        for peer in (0, 3, NONE, 15):
+            for other in (peer, 0, NONE, 7):
+                t.check(
+                    "game_voice_unknown_000549d0",
+                    globals={**state(enabled, initialized), "unknown_004c9878": other},
+                    externals={"game_voice_get_local_peer": gives(peer)},
+                )
+            for is_it in (1, 0, 0x100):
+                for other in (NONE, 0, 5):
+                    t.check(
+                        "game_voice_unknown_00054c70",
+                        globals={**state(enabled, initialized), "unknown_004c9878": other},
+                        externals={"game_voice_unknown_000549d0": gives(is_it)},
+                    )
+
+        for there in (True, False):
+            membership = Buffer(random_.randbytes(MEMBERSHIP_SIZE))
+            for peer in (0, 1, 15, NONE):
+                t.check(
+                    "game_voice_local_peer_unknownA8",
+                    globals=state(enabled, initialized),
+                    externals={
+                        "game_voice_get_membership": gives_buffer(membership, there),
+                        "game_voice_get_local_peer": gives(peer),
+                    },
+                    extra=[membership],
+                )
+            for name in ("game_voice_get_players", "game_voice_get_player_array"):
+                t.check(
+                    name,
+                    globals=state(enabled, initialized),
+                    externals={"game_voice_get_membership": gives_buffer(membership, there)},
+                    extra=[membership],
+                )
+
+            for player in (0, 1, 9, 15):
+                for local in (1 << player, 0xFFFFFFFF ^ (1 << player), 0, 0xFFFFFFFF):
+                    t.check(
+                        "game_voice_player_identifier",
+                        player,
+                        globals=state(enabled, initialized),
+                        externals={
+                            "unknown_00054d20": gives(local),
+                            "game_voice_get_player_array": gives_buffer(membership, there, PLAYERS),
+                        },
+                        extra=[membership],
+                    )
+
+        for n in range(40):
+            # sixteen players: some of this console, some with the number looked for
+            identifier = random_.choice((0, 5, 0x12345678, NONE))
+            peer = random_.choice((0, 2, NONE))
+            data = bytearray(random_.randbytes(MEMBERSHIP_SIZE))
+            for player in range(16):
+                at = PLAYERS + player * PLAYER_SIZE
+                struct.pack_into("<I", data, at + 0xC, random_.choice((peer, peer, 1, 3)) & 0xFFFFFFFF)
+                struct.pack_into("<I", data, at + 0x14, random_.choice((identifier, identifier ^ 1, 9)) & 0xFFFFFFFF)
+            struct.pack_into("<I", data, MEMBERSHIP_PLAYERS, random_.choice((0xFFFF, 0, random_.getrandbits(16), 0x8000, 0xFFFF0000)))
+            membership = Buffer(bytes(data))
+            t.check(
+                "game_voice_find_local_player",
+                identifier,
+                globals=state(enabled, initialized),
+                externals={
+                    "game_voice_get_membership": gives_buffer(membership, random_.getrandbits(3) != 0),
+                    "game_voice_get_local_peer": gives(peer),
+                },
+                extra=[membership],
+            )

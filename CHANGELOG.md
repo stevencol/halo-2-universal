@@ -2,6 +2,58 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — La voz: las consolas y los jugadores de la sesión
+
+Quince funciones en `networking/game_voice.c`, de 880 bytes entre las quince. De 982 funciones se pasa a
+997, el 8,85 % de las del juego (el 5,711 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_voice_update_session_source` | `0x000547e0` | `networking/game_voice.c` |
+| `game_voice_unknown_00054810` | `0x00054810` | `networking/game_voice.c` |
+| `game_voice_unknown_00054850` | `0x00054850` | `networking/game_voice.c` |
+| `game_voice_unknown_00054990` | `0x00054990` | `networking/game_voice.c` |
+| `game_voice_unknown_000549d0` | `0x000549d0` | `networking/game_voice.c` |
+| `game_voice_get_local_peer` | `0x00054a20` | `networking/game_voice.c` |
+| `game_voice_session_unknown40` | `0x00054a70` | `networking/game_voice.c` |
+| `game_voice_local_peer_unknownA8` | `0x00054ac0` | `networking/game_voice.c` |
+| `game_voice_get_players` | `0x00054b10` | `networking/game_voice.c` |
+| `game_voice_get_player_array` | `0x00054b40` | `networking/game_voice.c` |
+| `game_voice_find_local_player` | `0x00054b70` | `networking/game_voice.c` |
+| `game_voice_player_identifier` | `0x00054c20` | `networking/game_voice.c` |
+| `game_voice_unknown_00054c70` | `0x00054c70` | `networking/game_voice.c` |
+| `game_voice_unknown_00054cc0` | `0x00054cc0` | `networking/game_voice.c` |
+| `game_voice_unknown_00054d00` | `0x00054d00` | `networking/game_voice.c` |
+
+### Lo que se sabe
+
+- La sesión guarda qué consola es esta (`0x72d8`) y, en lo que dice de quién
+  está, una lista de hasta 16 jugadores desde `0x10d4`, de `0x13c` bytes
+  cada uno: de cada jugador, de qué consola es (`0xc`) y el número por el
+  que lo conoce la voz (`0x14`), que es el que `voice.c` convierte en el
+  jugador de la biblioteca.
+- `game_voice_find_local_player` busca, entre los jugadores de esta
+  consola, el que tiene un número; `game_voice_player_identifier` hace el
+  camino contrario.
+- De dónde sale la sesión (`0x004c988c`) lo decide
+  `game_voice_update_session_source` con lo que le da `0x000596d0`: 1 o 2,
+  y 0 si no hay nada.
+- Hay una consola apuntada en `0x004c9878` (NONE si ninguna); dos funciones
+  preguntan si es esta y si es otra. Con lo que se sabe, podría ser la que
+  manda en la voz de la partida.
+- Tres funciones pasan el encargo a algo que vive en `0x00525a00`
+  (`0x000564c0`, `0x00056160` y `0x00056220`, sin descompilar).
+- Varias llevan su dirección en el nombre porque aún no se sabe qué
+  preguntan.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- Las mutaciones de los hitos 266 a 272 corren aparte; su resultado irá en
+  una entrada posterior.
+
 ## 2026-10-08 — La voz y la sesión de red: quién está en la partida y qué se sabe de su voz
 
 Once funciones en `networking/game_voice.c`, de 550 bytes entre las once. De 971 funciones se pasa a
