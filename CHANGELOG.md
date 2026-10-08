@@ -2,6 +2,58 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — El identificador y la clave de una sesión
+
+Cuatro funciones en `networking/network_session.c`, 410 bytes entre todas. De 1110
+funciones se pasa a 1114, el 9,89 % de las del juego (el 6,390 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_create_identifier` | `0x0005fa30` | `networking/network_session.c` |
+| `network_session_use_identifier` | `0x0005fac0` | `networking/network_session.c` |
+| `network_session_set_identifier` | `0x0005fb00` | `networking/network_session.c` |
+| `network_session_forget_identifier` | `0x0005fb60` | `networking/network_session.c` |
+
+Son las dos maneras de preparar una sesión para la red que usa
+`network_session_start` (hito 314), y las dos piezas de que están hechas.
+
+### Lo que se sabe
+
+- Una sesión se conoce en la red por **ocho bytes** (ya vistos en el hito
+  290, en su `0x1C`) y tiene además una **clave de dieciséis**, en `0x25`
+  (sin alinear), y un número en `0x3C`. El byte de `0x24` dice si los
+  tiene.
+- Fuera de la sesión se guardan en una tabla, `0x004cf7d4`: ocho entradas
+  de 32 bytes, por el número que la sesión tiene en `0x38`.
+- `network_session_forget_identifier` los suelta: avisa a la biblioteca de
+  la consola (`0x003cd147` con `0x10`, y `0x003cd0e1` para la entrada de
+  la tabla), deja a NONE el primer número de lo que la sesión recibió al
+  prepararse, y borra identificador, clave y número.
+- `network_session_set_identifier` los pone, avisa a `0x00075a90` y a la
+  biblioteca (`0x003cd147` con 1).
+- `network_session_use_identifier` usa el identificador y la clave que le
+  dan (es entrar en la sesión de otro);
+  `network_session_create_identifier` los hace nuevos con `0x0007a8a0` (es
+  crear una sesión propia) y los recoge de la tabla.
+- Los tamaños (8 y 16 bytes) y el par «empezar / acabar» cuadran con los
+  identificadores y claves de sesión de las bibliotecas de red de la
+  consola; los nombres de esas funciones no están confirmados.
+
+### Lo que enseñó
+
+- `network_session_use_identifier` no usa su cuarto argumento. Al estar ya
+  en el mismo archivo que quien la llama, el compilador deja de pasarlo, y
+  la prueba de `network_session_start` tuvo que dejar de compararlo. Es el
+  aviso de siempre: lo que una función no usa no se puede comparar.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (44
+  funciones).
+- Las mutaciones de los hitos 280 a 315 están pendientes.
+
 ## 2026-10-08 — Arrancar una sesión de red
 
 Una función en `networking/network_session.c`, de 628 bytes. De 1109 funciones se pasa a

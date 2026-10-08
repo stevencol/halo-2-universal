@@ -270,3 +270,5 @@ address,name,source
 004d8b19,unknown_004d8b19,source/networking/network_session.c
 004cf792,unknown_004cf792,source/networking/network_session.c
 004cf793,unknown_004cf793,source/networking/network_session.c
+004cf7d4,unknown_004cf7d4,source/networking/network_session.c
+004cf8d4,unknown_004cf8d4,source/networking/network_session.c

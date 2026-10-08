@@ -490,8 +490,12 @@ def run(t) -> None:
             },
             externals={
                 "unknown_0007a9b0": asks,
-                "unknown_0005fa30": lambda harness, arguments, could=could: could,
-                "unknown_0005fac0": lambda harness, arguments, could=could: could,
+                "network_session_create_identifier": lambda harness, arguments, could=could: could,
+                # the fourth thing is not used: source/ does not give it
+                "network_session_use_identifier": lambda harness, arguments, could=could: (
+                    could,
+                    (harness.normalize(arguments[0]), arguments[1], arguments[2], arguments[4]),
+                ),
                 "GetTickCount": lambda harness, arguments, value=random_.getrandbits(32): value,
                 "XGetLanguage": lambda harness, arguments, value=random_.randrange(12): value,
                 "unknown_0007ad80": at_random,
@@ -500,4 +504,83 @@ def run(t) -> None:
                 "unknown_00061390": lambda harness, arguments: 0,
                 "unknown_00062e70": lambda harness, arguments: 0,
             },
+        )
+
+    # ---------- what a session is known by in the network
+
+    ENTRIES = 0x80
+
+    def known_session(has: int) -> Buffer:
+        # what the session was given when it was set up goes after it
+        data = bytearray(random_.randbytes(ENTRIES + 0x14 + 4 * 0x24))
+        struct.pack_into("<I", data, 8, ENTRIES)
+        struct.pack_into("<I", data, 0x10, random_.randrange(4))
+        struct.pack_into("<I", data, 0x38, random_.randrange(8))
+        data[0x24] = has
+        return Buffer(bytes(data), pointers=(8,))
+
+    def keys() -> GlobalData:
+        data = bytearray(random_.randbytes(0x100))
+        for index in range(8):
+            data[index * 0x20] = random_.choice((1, 1, 0x80, 0))
+        return GlobalData(bytes(data))
+
+    def told() -> bytes:
+        return bytes((random_.choice((1, 1, 0x80, 0)),))
+
+    library = {"unknown_003cd147": lambda harness, arguments: 0, "unknown_003cd0e1": lambda harness, arguments: 0}
+
+    for n in range(60):
+        t.check(
+            "network_session_forget_identifier",
+            known_session(random_.choice((1, 1, 0x80, 0))),
+            globals={"unknown_004cf7d4": keys(), "unknown_004cf8d4": told()},
+            externals=library,
+        )
+    for n in range(40):
+        t.check(
+            "network_session_set_identifier",
+            known_session(random_.choice((1, 0))),
+            Buffer(random_.randbytes(8)),
+            Buffer(random_.randbytes(16)),
+            random_.choice((0, 1, NONE, random_.getrandbits(32))),
+            globals={"unknown_004cf7d4": keys(), "unknown_004cf8d4": told()},
+            externals={**library, "unknown_00075a90": lambda harness, arguments: 0},
+        )
+    for n in range(80):
+        t.check(
+            "network_session_use_identifier",
+            known_session(random_.choice((1, 1, 0x80, 0))),
+            Buffer(random_.randbytes(16)),
+            random_.choice((0, 1, random_.getrandbits(32))),
+            random_.getrandbits(32),
+            Buffer(random_.randbytes(8)),
+            globals={"unknown_004cf7d4": keys(), "unknown_004cf8d4": told()},
+            externals={
+                **library,
+                "unknown_00075a90": lambda harness, arguments: 0,
+                "unknown_0007a920": lambda harness, arguments, could=random_.choice((1, 1, 0x80, 0, 0x100)): could,
+            },
+        )
+    for n in range(120):
+        made = random_.choice((None, None, 1, 0x80, 0))
+        made_bytes = random_.randbytes(0x18)
+
+        could = random_.choice((1, 1, 1, 0x80, 0, 0x100))
+
+        def makes(harness, arguments, made=made, made_bytes=made_bytes, could=could):
+            # only a byte of the last thing counts
+            if made is not None:
+                at = harness.global_addresses["unknown_004cf7d4"] + (arguments[1] & 7) * 0x20
+                harness.mu.mem_write(at, bytes((made,)))
+                harness.mu.mem_write(at + 8, made_bytes)
+            return could, (arguments[0], arguments[1], arguments[2] & 0xFF)
+
+        t.check(
+            "network_session_create_identifier",
+            known_session(random_.choice((1, 1, 0x80, 0))),
+            random_.choice((0, 0, 1, random_.getrandbits(32))),
+            random_.choice((0, 1, 2, 2, 2, 5, 0x102, 0x202)),
+            globals={"unknown_004cf7d4": keys(), "unknown_004cf8d4": told()},
+            externals={**library, "unknown_00075a90": lambda harness, arguments: 0, "unknown_0007a8a0": makes},
         )

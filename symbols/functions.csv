@@ -692,8 +692,15 @@ address,name,source,arguments,returns,convention
 00059a30,network_life_cycle_request_new1,source/networking/network_life_cycle.c,edx esi edi ebx stack,void,stdcall
 00059bd0,network_session_start,source/networking/network_session.c,stack stack stack stack stack stack stack stack stack stack,bool,stdcall
 0007a9b0,unknown_0007a9b0,,,void
-0005fa30,unknown_0005fa30,,edi stack stack,bool,stdcall
-0005fac0,unknown_0005fac0,,ecx eax ebx stack stack,bool,stdcall
+0005fa30,network_session_create_identifier,source/networking/network_session.c,edi stack stack,bool,stdcall
+0005fac0,network_session_use_identifier,source/networking/network_session.c,ecx eax ebx stack stack,bool,stdcall
+0005fb00,network_session_set_identifier,source/networking/network_session.c,esi ecx eax edx,void
+0005fb60,network_session_forget_identifier,source/networking/network_session.c,esi,void
+0007a920,unknown_0007a920,,eax edi stack stack stack,bool,stdcall
+0007a8a0,unknown_0007a8a0,,esi stack stack,bool,stdcall
+00075a90,unknown_00075a90,,eax edi edx ecx stack stack,void,stdcall
+003cd147,unknown_003cd147,,stack stack stack stack stack,int,stdcall
+003cd0e1,unknown_003cd0e1,,stack,int,stdcall
 0005fbd0,unknown_0005fbd0,,stack stack stack stack stack stack,void,stdcall
 00061390,unknown_00061390,,esi,void
 00062e70,unknown_00062e70,,ecx eax stack stack stack stack,void,stdcall
