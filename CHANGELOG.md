@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Arrancar la sesión de la partida en red
+
+Dos funciones en `networking/network_life_cycle.c`, de 213 bytes entre las dos. De 1080 funciones se pasa a
+1082, el 9,60 % de las del juego (el 6,085 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_life_cycle_unknown_00059890` | `0x00059890` | `networking/network_life_cycle.c` |
+| `network_life_cycle_request_new1` | `0x00059a30` | `networking/network_life_cycle.c` |
+
+`network_life_cycle_unknown_00059890` era `unknown_00059890`, la que
+llaman las dos primeras funciones del archivo (hito 287).
+
+### Lo que se sabe
+
+- Arranca la sesión si no hay ninguna: se lo pide a `0x00059bd0` (diez
+  argumentos, sin descompilar) y, si se pudo, hace una cosa más con la
+  sesión recién arrancada (`0x00065770`). Devuelve si arrancó.
+- La petición de la primera clase lleva cuatro números, cada uno con su
+  tope: 15, 15, 63 y 1.023.
+
+### Corregido
+
+- `network_life_cycle_unknown_000591e0` y `..._000591f0` (hito 287) no
+  devolvían nada. Devuelven lo que diga la función de arriba: si la sesión
+  arrancó. Las pruebas no lo notaban porque no comparaban ningún resultado;
+  ahora sí.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- Las mutaciones de los hitos 269 a 279 corren aparte; las de 280 a 291
+  están pendientes.
+
 ## 2026-10-08 — Más de la partida en red: qué sesión, y lo que se le pide
 
 Siete funciones en `networking/network_life_cycle.c`, de 388 bytes entre las siete. De 1073 funciones se pasa a

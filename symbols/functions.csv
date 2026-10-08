@@ -684,8 +684,8 @@ address,name,source,arguments,returns,convention
 00058d70,network_session_established,source/networking/network_session.c,eax,bool
 00058d90,network_session_unknown_00058d90,source/networking/network_session.c,edx,bool
 00070570,unknown_00070570,,ecx,int
-000591e0,network_life_cycle_unknown_000591e0,source/networking/network_life_cycle.c,,void
-000591f0,network_life_cycle_unknown_000591f0,source/networking/network_life_cycle.c,,void
+000591e0,network_life_cycle_unknown_000591e0,source/networking/network_life_cycle.c,,bool
+000591f0,network_life_cycle_unknown_000591f0,source/networking/network_life_cycle.c,,bool
 00059280,network_life_cycle_unknown_00059280,source/networking/network_life_cycle.c,,void
 00059360,network_life_cycle_unknown_00059360,source/networking/network_life_cycle.c,stack,void,stdcall
 000593a0,network_life_cycle_unknown_000593a0,source/networking/network_life_cycle.c,stack,void,stdcall
@@ -693,7 +693,10 @@ address,name,source,arguments,returns,convention
 00059590,network_life_cycle_unknown_00059590,source/networking/network_life_cycle.c,,int
 000595e0,network_life_cycle_unknown_000595e0,source/networking/network_life_cycle.c,,void
 00059610,network_life_cycle_unknown_00059610,source/networking/network_life_cycle.c,,bool
-00059890,unknown_00059890,,stack stack stack,void,stdcall
+00059890,network_life_cycle_unknown_00059890,source/networking/network_life_cycle.c,stack stack stack,bool,stdcall
+00059a30,network_life_cycle_request_new1,source/networking/network_life_cycle.c,edx esi edi ebx stack,void,stdcall
+00059bd0,unknown_00059bd0,,stack stack stack stack stack stack stack stack stack stack,bool,stdcall
+00065770,unknown_00065770,,edi,void
 000598f0,network_life_cycle_unknown_000598f0,source/networking/network_life_cycle.c,eax,void
 00059780,network_life_cycle_get_any_session,source/networking/network_life_cycle.c,edx,bool
 000597d0,network_life_cycle_get_state_session,source/networking/network_life_cycle.c,esi,bool

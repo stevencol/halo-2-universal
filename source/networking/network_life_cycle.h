@@ -59,8 +59,12 @@ enum
 	_network_life_cycle_unknown_00059570_4= 4,
 
 	/* the most that the number of a request of the second or the third kind
-	can be */
-	MAXIMUM_NETWORK_LIFE_CYCLE_REQUEST_VALUE= 0x3FF
+	can be, and the last of the first kind; and the most that the other
+	three numbers of the first kind can be */
+	MAXIMUM_NETWORK_LIFE_CYCLE_REQUEST_VALUE= 0x3FF,
+	MAXIMUM_NETWORK_LIFE_CYCLE_REQUEST_UNKNOWN4= 15,
+	MAXIMUM_NETWORK_LIFE_CYCLE_REQUEST_UNKNOWN8= 15,
+	MAXIMUM_NETWORK_LIFE_CYCLE_REQUEST_UNKNOWNC= 63
 };
 
 /* something that is asked of the network game: its kind, and numbers that
@@ -103,6 +107,8 @@ struct network_life_cycle_handler
 
 /* ---------- prototypes/NETWORK_LIFE_CYCLE.C */
 
+boolean NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_unknown_00059890(long unknown0, long unknown4, long unknown8);
+
 boolean network_life_cycle_in_state5(void);
 long network_life_cycle_get_state(void);
 boolean network_life_cycle_local_peer_is_host(void);
@@ -113,8 +119,8 @@ long network_life_cycle_unknown_00059500(void);
 long network_life_cycle_unknown_00059570(void);
 boolean network_life_cycle_get_session(byte **session);
 boolean network_life_cycle_get_other_session(byte **session);
-void network_life_cycle_unknown_000591e0(void);
-void network_life_cycle_unknown_000591f0(void);
+boolean network_life_cycle_unknown_000591e0(void);
+boolean network_life_cycle_unknown_000591f0(void);
 void network_life_cycle_unknown_00059280(void);
 void NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_unknown_00059360(boolean unknown);
 void NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_unknown_000593a0(boolean unknown);
@@ -132,6 +138,8 @@ void network_life_cycle_unknown_000598f0(const byte *session);
 void network_life_cycle_request_new2(struct network_life_cycle_request *request, long value);
 void network_life_cycle_request_new3(struct network_life_cycle_request *request, long value);
 void network_life_cycle_request_new4(struct network_life_cycle_request *request);
+void NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_request_new1(long unknown4, long unknown8, long unknownC,
+	long unknown10, struct network_life_cycle_request *request);
 
 /* ---------- globals */
 

@@ -20,8 +20,11 @@ is a guess, and so are the names of its functions.
 /* 0x00070570: something that unknown_00527500 says, in the sixth state */
 long unknown_00070570(byte *unknown);
 
-/* 0x00059890: of this file */
-void __attribute__((stdcall)) unknown_00059890(long unknown0, long unknown4, long unknown8);
+/* 0x00059bd0: starts a session; whether it could. 0x00065770: something
+that is done with a session that has just started */
+boolean __attribute__((stdcall)) unknown_00059bd0(byte *session, long unknown4, long unknown8, long unknownC,
+	long unknown10, long unknown14, long unknown18, long unknown1C, long *unknown20, long unknown24);
+void unknown_00065770(byte *session);
 
 /* 0x0005a520, 0x0005a400, 0x0005b570, 0x0005a6e0: things that are done
 with a session; 0x0005b1e0: something of it */
@@ -243,18 +246,20 @@ boolean network_life_cycle_get_other_session(
 	return result;
 }
 
-/* 0x000591e0 */
-void network_life_cycle_unknown_000591e0(
+/* 0x000591e0: starts the session, if there is none, in one way; whether it
+was started */
+boolean network_life_cycle_unknown_000591e0(
 	void)
 {
-	unknown_00059890(0, 0, 0);
+	return network_life_cycle_unknown_00059890(0, 0, 0);
 }
 
-/* 0x000591f0 */
-void network_life_cycle_unknown_000591f0(
+/* 0x000591f0: starts the session, if there is none, in another way; whether
+it was started */
+boolean network_life_cycle_unknown_000591f0(
 	void)
 {
-	unknown_00059890(1, 0, 0);
+	return network_life_cycle_unknown_00059890(1, 0, 0);
 }
 
 /* 0x00059280: in the fifth state, with unknown_005274fc at 0: sets
@@ -659,4 +664,59 @@ void network_life_cycle_request_new4(
 {
 	memset(request, 0, sizeof(*request));
 	request->kind= 4;
+}
+
+/* a number, no less than 0 and no more than a most */
+static inline __attribute__((always_inline)) long network_life_cycle_pin(
+	long value,
+	long maximum)
+{
+	if (value<0)
+	{
+		return 0;
+	}
+
+	return value>maximum ? maximum : value;
+}
+
+/* 0x00059a30: a request of the first kind, with its four numbers */
+void NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_request_new1(
+	long unknown4,
+	long unknown8,
+	long unknownC,
+	long unknown10,
+	struct network_life_cycle_request *request)
+{
+	memset(request, 0, sizeof(*request));
+	request->kind= 1;
+	request->unknown4= network_life_cycle_pin(unknown4, MAXIMUM_NETWORK_LIFE_CYCLE_REQUEST_UNKNOWN4);
+	request->unknown8= network_life_cycle_pin(unknown8, MAXIMUM_NETWORK_LIFE_CYCLE_REQUEST_UNKNOWN8);
+	request->unknownC= network_life_cycle_pin(unknownC, MAXIMUM_NETWORK_LIFE_CYCLE_REQUEST_UNKNOWNC);
+	request->unknown10= network_life_cycle_pin(unknown10, MAXIMUM_NETWORK_LIFE_CYCLE_REQUEST_VALUE);
+}
+
+/* 0x00059890: starts the session, if there is none, with three numbers;
+whether it was started */
+boolean NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_unknown_00059890(
+	long unknown0,
+	long unknown4,
+	long unknown8)
+{
+	byte *session= network_life_cycle_session;
+	boolean result= FALSE;
+
+	if (*(const long *)(session+NETWORK_SESSION_STATE_OFFSET)==_network_session_state_none)
+	{
+		long unknown[2];
+
+		unknown[0]= 0;
+		unknown[1]= 0;
+		if (unknown_00059bd0(session, unknown0, 0, unknown4, unknown8, 0, 0, 0, unknown, 0))
+		{
+			result= TRUE;
+			unknown_00065770(session);
+		}
+	}
+
+	return result;
 }

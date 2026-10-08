@@ -112,8 +112,9 @@ def run(t) -> None:
             **{name: (lambda harness, arguments, result=result: result) for name, result in results.items()},
         }
 
-    t.check("network_life_cycle_unknown_000591e0", externals=plain("unknown_00059890"))
-    t.check("network_life_cycle_unknown_000591f0", externals=plain("unknown_00059890"))
+    for started in (1, 0, 0x100):
+        t.check("network_life_cycle_unknown_000591e0", externals=plain(network_life_cycle_unknown_00059890=started))
+        t.check("network_life_cycle_unknown_000591f0", externals=plain(network_life_cycle_unknown_00059890=started))
 
     def holder(a_session: Buffer, offset: int) -> tuple:
         """Something that has a session at an offset: the session comes after it in the same buffer."""
@@ -326,3 +327,34 @@ def run(t) -> None:
         t.check("network_life_cycle_request_new2", Buffer(random_.randbytes(0x1C)), value)
         t.check("network_life_cycle_request_new3", Buffer(random_.randbytes(0x1C)), value)
     t.check("network_life_cycle_request_new4", Buffer(random_.randbytes(0x1C)))
+
+    # ---------- starting the session
+
+    values = (0, 1, 15, 16, 63, 64, 0x3FF, 0x400, NONE, 0x80000000, 0x7FFFFFFF)
+    for n in range(40):
+        t.check(
+            "network_life_cycle_request_new1",
+            random_.choice(values),
+            random_.choice(values),
+            random_.choice(values),
+            random_.choice(values),
+            Buffer(random_.randbytes(0x1C)),
+        )
+
+    def start(could: int):
+        def handler(harness, arguments):
+            # the two numbers that it is given a place for are in the stack
+            return could, (*arguments[:8], bytes(harness.mu.mem_read(arguments[8], 8)), arguments[9])
+
+        return handler
+
+    for state in (0, 0, 3, 8):
+        for could in (1, 0, 0x100):
+            t.check(
+                "network_life_cycle_unknown_00059890",
+                random_.getrandbits(32),
+                random_.getrandbits(32),
+                random_.getrandbits(32),
+                globals={"network_life_cycle_session": session(state)},
+                externals={"unknown_00059bd0": start(could), "unknown_00065770": lambda harness, arguments: 0},
+            )
