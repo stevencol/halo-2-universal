@@ -224,6 +224,13 @@ address,name,source
 00527e78,unknown_00527e78,source/networking/network_life_cycle.c
 00527fa8,unknown_00527fa8,source/networking/network_life_cycle.c
 00527500,unknown_00527500,source/networking/network_life_cycle.c
+00527400,unknown_00527400,source/networking/network_life_cycle.c
+00527fa0,unknown_00527fa0,source/networking/network_life_cycle.c
+005274fc,unknown_005274fc,source/networking/network_life_cycle.c
+005274e1,unknown_005274e1,source/networking/network_life_cycle.c
+00510518,unknown_00510518,source/networking/network_life_cycle.c
+0051051c,unknown_0051051c,source/networking/network_life_cycle.c
+0051051d,unknown_0051051d,source/networking/network_life_cycle.c
 004c987c,unknown_004c987c,source/networking/game_voice.c
 004c9898,game_voice_session_players,source/networking/game_voice.c
 004c99d4,game_voice_muted_players,source/networking/game_voice.c

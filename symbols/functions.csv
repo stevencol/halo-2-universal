@@ -684,6 +684,22 @@ address,name,source,arguments,returns,convention
 00058d70,network_session_established,source/networking/network_session.c,eax,bool
 00058d90,network_session_unknown_00058d90,source/networking/network_session.c,edx,bool
 00070570,unknown_00070570,,ecx,int
+000591e0,network_life_cycle_unknown_000591e0,source/networking/network_life_cycle.c,,void
+000591f0,network_life_cycle_unknown_000591f0,source/networking/network_life_cycle.c,,void
+00059280,network_life_cycle_unknown_00059280,source/networking/network_life_cycle.c,,void
+00059360,network_life_cycle_unknown_00059360,source/networking/network_life_cycle.c,stack,void,stdcall
+000593a0,network_life_cycle_unknown_000593a0,source/networking/network_life_cycle.c,stack,void,stdcall
+00059530,network_life_cycle_unknown_00059530,source/networking/network_life_cycle.c,,void
+00059590,network_life_cycle_unknown_00059590,source/networking/network_life_cycle.c,,int
+000595e0,network_life_cycle_unknown_000595e0,source/networking/network_life_cycle.c,,void
+00059610,network_life_cycle_unknown_00059610,source/networking/network_life_cycle.c,,bool
+00059890,unknown_00059890,,stack stack stack,void,stdcall
+000598f0,unknown_000598f0,,eax,void
+0005a520,unknown_0005a520,,eax,void
+0005a400,unknown_0005a400,,ecx stack,void,stdcall
+0005b570,unknown_0005b570,,edx,void
+0005a6e0,unknown_0005a6e0,,edx,void
+0005b1e0,unknown_0005b1e0,,eax ebx,bool
 00056380,voice_queues_build_packet,source/networking/voice_routing.c,eax stack stack stack,int,stdcall
 00056000,voice_queue_keep,source/networking/voice_routing.c,eax stack,void,stdcall
 00055c40,voice_queue_write,source/networking/voice_routing.c,esi eax edx stack stack stack,int,stdcall

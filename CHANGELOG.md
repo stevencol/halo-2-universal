@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Nueve funciones pequeñas más de la partida en red
+
+Nueve funciones en `networking/network_life_cycle.c`, de 430 bytes entre las nueve. De 1056 funciones se pasa a
+1065, el 9,45 % de las del juego (el 6,038 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_life_cycle_unknown_000591e0` | `0x000591e0` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_000591f0` | `0x000591f0` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_00059280` | `0x00059280` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_00059360` | `0x00059360` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_000593a0` | `0x000593a0` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_00059530` | `0x00059530` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_00059590` | `0x00059590` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_000595e0` | `0x000595e0` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_00059610` | `0x00059610` | `networking/network_life_cycle.c` |
+
+Todas llevan su dirección en el nombre: se sabe lo que hacen, pero aún no
+para qué. Casi todas miran el estado de la partida en red o de una de sus
+sesiones y pasan el encargo a una función que todavía no está descompilada.
+
+### Lo que se sabe
+
+- Tres cosas más de la partida en red tienen una sesión: lo que apunta
+  `0x00527400` (en su `0x30`), lo que apunta `0x00527fa0` (en su `0x38`) y
+  lo del sexto estado, `0x00527500`, que en su `0x8` apunta a algo que la
+  tiene en `0x30`.
+- Dos funciones hacen lo mismo con cada una de las dos sesiones
+  (`0x00059360` y `0x000593a0`): si hay sesión, `0x000598f0` y luego una de
+  dos cosas según un sí o un no.
+- Varias repiten «la sesión dice quién está y esta consola la lleva», que
+  es `network_session_local_peer_is_host` metida dentro.
+- Quedan apuntadas siete funciones de las sesiones.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- La batería completa del hito 278 y las mutaciones de los hitos 269 a 287
+  corren aparte o están pendientes; su resultado irá en una entrada
+  posterior.
+
 ## 2026-10-08 — La partida en red y sus sesiones: catorce funciones pequeñas
 
 Catorce funciones en dos archivos nuevos, `networking/network_session.c` (4) y

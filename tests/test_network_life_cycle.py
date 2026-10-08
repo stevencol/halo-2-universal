@@ -95,7 +95,7 @@ def run(t) -> None:
     for life_cycle_state in (0, 5, 6, 7, 8, NONE):
         t.check(
             "network_life_cycle_unknown_00059570",
-            globals={"unknown_00527334": life_cycle_state, "unknown_00527500": GlobalRange(4)},
+            globals={"unknown_00527334": life_cycle_state, "unknown_00527500": GlobalRange(0x10)},
             externals={
                 "unknown_00070570": lambda harness, arguments, result=random_.getrandbits(32): (
                     result,
@@ -103,3 +103,99 @@ def run(t) -> None:
                 )
             },
         )
+
+    # ---------- things that are done with the sessions
+
+    def plain(*names: str, **results: int) -> dict:
+        return {
+            **{name: (lambda harness, arguments: 0) for name in names},
+            **{name: (lambda harness, arguments, result=result: result) for name, result in results.items()},
+        }
+
+    t.check("network_life_cycle_unknown_000591e0", externals=plain("unknown_00059890"))
+    t.check("network_life_cycle_unknown_000591f0", externals=plain("unknown_00059890"))
+
+    def holder(a_session: Buffer, offset: int) -> tuple:
+        """Something that has a session at an offset: the session comes after it in the same buffer."""
+        data = bytearray(random_.randbytes(offset + 4)) + a_session.data
+        struct.pack_into("<I", data, offset, offset + 4)
+        return Buffer(bytes(data), pointers=(offset,))
+
+    for there in (1, 0):
+        for life_cycle_state in (5, 4, 6):
+            for other in (0, 1):
+                for state in STATES:
+                    for same in (True, False):
+                        t.check(
+                            "network_life_cycle_unknown_00059280",
+                            globals={
+                                "unknown_00527330": bytes((there,)),
+                                "unknown_00527334": life_cycle_state,
+                                "unknown_005274fc": other,
+                                "unknown_00527400": holder(session(state, **peers(same)), 0x30),
+                                "unknown_005274e1": bytes((random_.choice((0, 0x80)),)),
+                            },
+                        )
+
+    for state in STATES:
+        for flag in (1, 0, 0x100, 0x80):
+            for name, other in (
+                ("network_life_cycle_unknown_00059360", "network_life_cycle_session"),
+                ("network_life_cycle_unknown_000593a0", "network_life_cycle_other_session"),
+            ):
+                t.check(
+                    name,
+                    flag,
+                    globals={
+                        "network_life_cycle_session": session(state if other.endswith("cycle_session") else 0),
+                        "network_life_cycle_other_session": session(0 if other.endswith("cycle_session") else state),
+                    },
+                    externals=plain("unknown_000598f0", "unknown_0005a520", "unknown_0005a400"),
+                )
+        for same in (True, False):
+            t.check(
+                "network_life_cycle_unknown_00059530",
+                globals={"network_life_cycle_session": session(state, **peers(same))},
+                externals=plain("unknown_0005b570"),
+            )
+            for life_cycle_state in (0, 1, 2, 7, NONE):
+                for says in (1, 0, 0x100):
+                    t.check(
+                        "network_life_cycle_unknown_00059610",
+                        globals={
+                            "unknown_00527334": life_cycle_state,
+                            "network_life_cycle_session": session(state, **peers(same)),
+                        },
+                        externals=plain(unknown_0005b1e0=says),
+                    )
+        for life_cycle_state in (7, 6, 0):
+            for has in (1, 0, 0x80):
+                data = bytearray(session(state, x49ac=random_.getrandbits(32) | 4).data)
+                data[0x49A8] = has
+                t.check(
+                    "network_life_cycle_unknown_00059590",
+                    globals={
+                        "unknown_00527334": life_cycle_state,
+                        "unknown_00527fa0": holder(Buffer(bytes(data)), 0x38),
+                    },
+                )
+
+    for life_cycle_state in (6, 5, 7, 0):
+        for unknown in (1, 0):
+            # what unknown_00527500 points to, with a session after it
+            thing = holder(Buffer(random_.randbytes(0x10)), 0x30)
+
+            def a_thing(harness, arguments):
+                return 0, (arguments[0],)
+
+            t.check(
+                "network_life_cycle_unknown_000595e0",
+                globals={
+                    "unknown_00527334": life_cycle_state,
+                    "unknown_00510518": unknown,
+                    "unknown_0051051c": bytes((0x40,)),
+                    "unknown_0051051d": bytes((0x40,)),
+                    "unknown_00527500+0x8": thing,
+                },
+                externals={"unknown_0005a6e0": a_thing},
+            )
