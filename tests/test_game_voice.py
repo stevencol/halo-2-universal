@@ -335,7 +335,7 @@ def run(t) -> None:
                                 ),
                             },
                             externals={
-                                "unknown_000536b0": lambda harness, arguments, with_headset=with_headset: with_headset,
+                                "game_voice_controller_can_talk": lambda harness, arguments, with_headset=with_headset: with_headset,
                                 "voice_play_message": lambda harness, arguments: (
                                     0,
                                     (arguments[0], arguments[1] & 0xFF, arguments[2], arguments[3], harness.normalize(arguments[4])),
@@ -698,11 +698,11 @@ def run(t) -> None:
             for player in (0, 1, 9, 15):
                 for local in (1 << player, 0xFFFFFFFF ^ (1 << player), 0, 0xFFFFFFFF):
                     t.check(
-                        "game_voice_player_identifier",
+                        "game_voice_player_controller",
                         player,
                         globals=state(enabled, initialized),
                         externals={
-                            "unknown_00054d20": gives(local),
+                            "game_voice_get_local_players": gives(local),
                             "game_voice_get_player_array": gives_buffer(membership, there, PLAYERS),
                         },
                         extra=[membership],
@@ -728,4 +728,121 @@ def run(t) -> None:
                     "game_voice_get_local_peer": gives(peer),
                 },
                 extra=[membership],
+            )
+
+    # ---------- who can talk and who is talking
+
+    TALKED = 0x8C
+    PROFILE_SIZE = 0xC70
+
+    for enabled, initialized in active():
+        for controller in range(4):
+            for setting in (0, 3, 1):
+                for headset in (1, 0, 0x80):
+                    for flags in (0x20, 0, 0xFFFFFFDF, 0xFFFFFFFF):
+                        for says in (1, 0, 0x100):
+                            profiles = bytearray(random_.randbytes(4 * PROFILE_SIZE))
+                            struct.pack_into("<I", profiles, controller * PROFILE_SIZE, flags)
+                            t.check(
+                                "game_voice_controller_can_talk",
+                                controller,
+                                globals={
+                                    **state(enabled, initialized, headsets=tuple(headset if n == controller else random_.getrandbits(1) for n in range(4))),
+                                    "game_voice_controller_settings": struct.pack(
+                                        "<4I", *(setting if n == controller else random_.randint(0, 3) for n in range(4))
+                                    ),
+                                    "unknown_0054e8e0": bytes(profiles),
+                                },
+                                externals={"unknown_001906da": gives(says)},
+                            )
+
+            t.check(
+                "game_voice_get_controller_setting",
+                controller,
+                globals={
+                    **state(enabled, initialized),
+                    "game_voice_controller_settings": struct.pack("<4I", *(random_.getrandbits(32) | 1 for _ in range(4))),
+                },
+            )
+            t.check(
+                "game_voice_set_controller_setting",
+                controller,
+                random_.getrandbits(32),
+                globals={
+                    **state(enabled, initialized),
+                    "game_voice_controller_settings": struct.pack("<4I", *(random_.getrandbits(32) for _ in range(4))),
+                },
+            )
+            for player in (NONE, 0, 7, 15):
+                t.check(
+                    "game_voice_controller_player_words",
+                    controller,
+                    globals={
+                        **state(enabled, initialized),
+                        "unknown_004c9968": struct.pack("<16H", *(random_.getrandbits(16) | 1 for _ in range(16))),
+                        "game_voice_player_flag_words": struct.pack("<16H", *(random_.getrandbits(16) | 0x8000 for _ in range(16))),
+                    },
+                    externals={"game_voice_find_local_player": gives(player)},
+                )
+
+        for player in (0, 6, 15):
+            for local in (1 << player, 0xFFFFFFFF ^ (1 << player)):
+                for controller in (0, 3, NONE):
+                    for talked in (1, 0, 0x80):
+                        data = bytearray(random_.randbytes(VOICE_SIZE))
+                        data[VOICE_INITIALIZED] = initialized
+                        if controller != NONE:
+                            data[TALKED + controller] = talked
+                        t.check(
+                            "game_voice_player_is_talking",
+                            player,
+                            globals={"game_voice_enabled": bytes((enabled,)), "voice_globals": GlobalData(bytes(data))},
+                            externals={
+                                "game_voice_get_local_players": gives(local),
+                                "game_voice_player_controller": gives(controller),
+                                "voice_remote_talker_is_talking": voice_call(talked),
+                            },
+                        )
+
+        for unknown in (0, 1, 2, 0x101):
+            for name in ("game_voice_unknown_00054ec0", "game_voice_unknown_00054ef0"):
+                t.check(name, globals={**state(enabled, initialized), "unknown_004c9888": unknown})
+        t.check(
+            "game_voice_get_session_source",
+            globals={**state(enabled, initialized), "game_voice_session_source": random_.getrandbits(32) | 1},
+        )
+
+        for there in (True, True, False):
+            for n in range(6):
+                peer = random_.choice((0, 2, NONE))
+                data = bytearray(random_.randbytes(MEMBERSHIP_SIZE))
+                for player in range(16):
+                    struct.pack_into("<I", data, PLAYERS + player * PLAYER_SIZE + 0xC, random_.choice((peer, peer, 1, 3)) & 0xFFFFFFFF)
+                membership = Buffer(bytes(data))
+                t.check(
+                    "game_voice_get_local_players",
+                    globals=state(enabled, initialized),
+                    externals={
+                        "game_voice_get_membership": gives_buffer(membership, there),
+                        "game_voice_get_players": gives(random_.choice((0xFFFF, 0, random_.getrandbits(16), 0xFFFFFFFF, 0x8001))),
+                        "game_voice_get_local_peer": gives(peer),
+                    },
+                    extra=[membership],
+                )
+
+    for start in (b"", b"x" * 0x90):
+        for format_, first, second in (
+            (b"player identifier change", 0, 0),
+            (b"%d and %d", 0xFFFFFFFF, 12),
+            (b"%0127d|", 5, 0),
+            (b"%0126d|", 5, 0),
+            (b"%0200x", 0xABC, 0),
+            (b"", 0, 0),
+        ):
+            t.check(
+                "game_voice_text_printf",
+                Buffer((start + b"\0" + random_.randbytes(0x90))[:0x88]),
+                Buffer(format_ + b"\0"),
+                first,
+                second,
             )

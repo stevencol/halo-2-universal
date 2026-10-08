@@ -229,7 +229,7 @@ def run(t) -> None:
     for initialized, flags in states():
         for result in (0, 1, FAILED, 0x100):
             t.check(
-                "voice_remote_talker_unknown_000551c0",
+                "voice_remote_talker_is_talking",
                 a_voice(initialized, flags),
                 random_.choice(identifiers),
                 externals={"unknown_00332e18": lambda harness, arguments, result=result: result},

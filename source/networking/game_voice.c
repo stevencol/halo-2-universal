@@ -14,13 +14,15 @@ are the names of its functions.
 #include "game_voice.h"
 
 #include "game/game.h"
+#include "input/input.h"
+
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
 #include "main/main_game.h"
 #include "saved games/saved_game_files.h"
 
 /* ---------- prototypes of functions not decompiled yet */
-
-/* 0x000536b0: something of a controller's player */
-boolean unknown_000536b0(long controller_index);
 
 /* 0x00059670, 0x000596a0: the session of the network game, from one place
 or the other; whether there is one */
@@ -39,8 +41,8 @@ long unknown_00056220(byte *unknown, long unknown0);
 comes from; whether there is one */
 boolean unknown_000596d0(byte **unknown);
 
-/* 0x00054d20: of this file: a bit for each player of this console */
-unsigned long unknown_00054d20(void);
+/* 0x001906da: something of the player of a gamepad */
+boolean unknown_001906da(long gamepad_index);
 
 /* 0x000649c0: something of the network game; NULL if there is none */
 byte *unknown_000649c0(void);
@@ -400,8 +402,8 @@ void game_voice_remote_talker_data(
 }
 
 /* 0x000538e0: a controller plays a message, unless its player wants none.
-It is played without a headset if the player wants that, or if what
-unknown_000536b0 says of the player is not so */
+It is played without a headset if the player wants that, or if the
+controller cannot talk */
 void game_voice_play_message(
 	long controller_index,
 	const long *message,
@@ -412,7 +414,7 @@ void game_voice_play_message(
 		long setting= game_voice_controller_settings[controller_index];
 		boolean without_headset= FALSE;
 
-		if (setting==_game_voice_controller_setting1 || !unknown_000536b0(controller_index))
+		if (setting==_game_voice_controller_setting1 || !game_voice_controller_can_talk(controller_index))
 		{
 			without_headset= TRUE;
 		}
@@ -813,11 +815,11 @@ byte *game_voice_get_player_array(
 	return NULL;
 }
 
-/* 0x00054b70: the player of this console that the voice knows by a number;
-NONE if there is none. The game has game_voice_get_player_array and
+/* 0x00054b70: the player of this console that has a controller; NONE if
+there is none. The game has game_voice_get_player_array and
 game_voice_get_players in the function itself */
 long game_voice_find_local_player(
-	long identifier)
+	long controller_index)
 {
 	if (game_voice_active())
 	{
@@ -845,7 +847,7 @@ long game_voice_find_local_player(
 
 				if ((mask&(1u<<player_index)) &&
 					*(const long *)(player+GAME_VOICE_MEMBERSHIP_PLAYER_PEER_OFFSET)==peer &&
-					*(const long *)(player+GAME_VOICE_MEMBERSHIP_PLAYER_IDENTIFIER_OFFSET)==identifier)
+					*(const long *)(player+GAME_VOICE_MEMBERSHIP_PLAYER_CONTROLLER_OFFSET)==controller_index)
 				{
 					return player_index;
 				}
@@ -856,21 +858,21 @@ long game_voice_find_local_player(
 	return NONE;
 }
 
-/* 0x00054c20: the number that the voice knows a player of this console by;
-NONE if it is not one */
-long game_voice_player_identifier(
+/* 0x00054c20: the controller of a player of this console; NONE if it is
+not one */
+long game_voice_player_controller(
 	long player_index)
 {
 	if (game_voice_active())
 	{
-		if ((1u<<player_index)&unknown_00054d20())
+		if ((1u<<player_index)&game_voice_get_local_players())
 		{
 			const byte *players= game_voice_get_player_array();
 
 			if (players)
 			{
 				return *(const long *)(players+player_index*GAME_VOICE_MEMBERSHIP_PLAYER_SIZE+
-					GAME_VOICE_MEMBERSHIP_PLAYER_IDENTIFIER_OFFSET);
+					GAME_VOICE_MEMBERSHIP_PLAYER_CONTROLLER_OFFSET);
 			}
 		}
 	}
@@ -921,4 +923,186 @@ unsigned long game_voice_unknown_00054d00(
 	void)
 {
 	return game_voice_active() ? unknown_004c9966 : 0;
+}
+
+/* 0x000536b0: whether the player of a controller can talk: the controller
+has a headset, its player does not have the third setting and, with a flag
+of what the game knows of the player, what unknown_001906da says */
+boolean game_voice_controller_can_talk(
+	long controller_index)
+{
+	if (game_voice_active())
+	{
+		boolean setting_allows= game_voice_controller_settings[controller_index]!=_game_voice_controller_setting3;
+		boolean has_headset= voice_globals.controller_has_headset[controller_index];
+		boolean allowed= TRUE;
+		unsigned long flags;
+
+		memcpy(&flags, unknown_0054e8e0[controller_index]+UNKNOWN_0054E8E0_FLAGS_OFFSET, sizeof(flags));
+		if ((flags>>_unknown_0054e8e0_unknown5_bit)&1)
+		{
+			allowed= unknown_001906da(controller_index);
+		}
+		if (has_headset && setting_allows && allowed)
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x00053750: whether a player is talking: one of this console, if the
+library gave something that its controller's player said since the last
+time; another, if the library says so */
+boolean game_voice_player_is_talking(
+	long player_index)
+{
+	if (game_voice_active())
+	{
+		if ((1u<<player_index)&game_voice_get_local_players())
+		{
+			long controller_index= game_voice_player_controller(player_index);
+
+			if (controller_index==NONE)
+			{
+				return FALSE;
+			}
+
+			return voice_globals.initialized ? voice_globals.controller_talked[controller_index] : FALSE;
+		}
+
+		return voice_remote_talker_is_talking(&voice_globals, player_index);
+	}
+
+	return FALSE;
+}
+
+/* 0x00054d20: a bit for each player of the session that is of this console */
+unsigned long game_voice_get_local_players(
+	void)
+{
+	unsigned long local_players= 0;
+
+	if (game_voice_active())
+	{
+		const byte *membership= game_voice_get_membership();
+
+		if (membership)
+		{
+			const byte *players= membership+GAME_VOICE_MEMBERSHIP_PLAYER_ARRAY_OFFSET;
+			unsigned long mask= game_voice_get_players();
+			long peer= game_voice_get_local_peer();
+			long player_index;
+
+			for (player_index= 0; player_index<MAXIMUM_GAME_VOICE_PLAYERS; player_index++)
+			{
+				if ((mask&(1u<<player_index)) &&
+					*(const long *)(players+player_index*GAME_VOICE_MEMBERSHIP_PLAYER_SIZE+
+					GAME_VOICE_MEMBERSHIP_PLAYER_PEER_OFFSET)==peer)
+				{
+					local_players|= 1u<<player_index;
+				}
+			}
+		}
+	}
+
+	return local_players;
+}
+
+/* 0x00054ec0 */
+boolean game_voice_unknown_00054ec0(
+	void)
+{
+	boolean result= FALSE;
+
+	if (game_voice_active())
+	{
+		result= unknown_004c9888!=0;
+	}
+
+	return result;
+}
+
+/* 0x00054ef0 */
+boolean game_voice_unknown_00054ef0(
+	void)
+{
+	boolean result= FALSE;
+
+	if (game_voice_active())
+	{
+		result= unknown_004c9888==1;
+	}
+
+	return result;
+}
+
+/* 0x00054f20: which of the two places the session comes from; 0 with no
+voice */
+long game_voice_get_session_source(
+	void)
+{
+	return game_voice_active() ? game_voice_session_source : 0;
+}
+
+/* 0x00054f40: the two numbers of 16 bits of the player of a controller, as
+one: its bits of the others below, and what the game knows of its voice
+above. 0 if the controller has no player */
+unsigned long game_voice_controller_player_words(
+	long controller_index)
+{
+	unsigned long result= 0;
+
+	if (game_voice_active())
+	{
+		long player_index= game_voice_find_local_player(controller_index);
+		word low= 0;
+		word high= 0;
+
+		if (player_index!=NONE)
+		{
+			low= unknown_004c9968[player_index];
+			high= game_voice_player_flag_words[player_index];
+		}
+		result= ((unsigned long)high<<16)|low;
+	}
+
+	return result;
+}
+
+/* 0x00054f90: what a controller's player wants of the voice; 0 with no
+voice */
+long game_voice_get_controller_setting(
+	long controller_index)
+{
+	return game_voice_active() ? game_voice_controller_settings[controller_index] : 0;
+}
+
+/* 0x00054fc0 */
+void game_voice_set_controller_setting(
+	long controller_index,
+	long setting)
+{
+	if (game_voice_active())
+	{
+		game_voice_controller_settings[controller_index]= setting;
+	}
+}
+
+/* 0x00055060: writes formatted text to a text of GAME_VOICE_TEXT_SIZE; the
+text */
+char *game_voice_text_printf(
+	char *text,
+	const char *format,
+	...)
+{
+	va_list arguments;
+
+	va_start(arguments, format);
+	vsnprintf(text, GAME_VOICE_TEXT_SIZE-1, format, arguments);
+	va_end(arguments);
+	text[GAME_VOICE_TEXT_SIZE-1]= 0;
+
+	return text;
 }

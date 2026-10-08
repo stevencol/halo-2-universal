@@ -204,7 +204,7 @@ boolean voice_start(struct voice_globals *voice);
 void voice_initialize(struct voice_globals *voice, long kind);
 void voice_dispose(struct voice_globals *voice);
 boolean voice_has_remote_talker(const struct voice_globals *voice, long identifier);
-boolean voice_remote_talker_unknown_000551c0(const struct voice_globals *voice, long identifier);
+boolean voice_remote_talker_is_talking(const struct voice_globals *voice, long identifier);
 void voice_set_controller_mask(struct voice_globals *voice, long controller_index, const real *mask);
 void voice_remote_talker_unknown_00055250(const struct voice_globals *voice, long identifier, long unknown4,
 	void *unknown8);

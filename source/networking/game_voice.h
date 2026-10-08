@@ -48,7 +48,15 @@ enum
 	NUMBER_OF_GAME_VOICE_MASKS= 2,
 
 	/* the players of a game: each has a bit in the numbers of 16 bits */
-	MAXIMUM_GAME_VOICE_PLAYERS= 16
+	MAXIMUM_GAME_VOICE_PLAYERS= 16,
+
+	/* of a text that game_voice_text_printf writes */
+	GAME_VOICE_TEXT_SIZE= 0x80,
+
+	/* in what the game knows of the player of a gamepad (unknown_0054e8e0):
+	with this flag, what unknown_001906da says of the gamepad counts */
+	UNKNOWN_0054E8E0_FLAGS_OFFSET= 0,
+	_unknown_0054e8e0_unknown5_bit= 5
 };
 
 /* what the game knows of the voice of a player (0x004c9988): what each
@@ -76,12 +84,12 @@ enum
 	GAME_VOICE_SESSION_MEMBERSHIP_OFFSET= 0x4C,
 	/* in that: a bit for each player that there is */
 	GAME_VOICE_MEMBERSHIP_PLAYERS_OFFSET= 0x10D0,
-	/* and then the players: of each, the console that it is of and the
-	number that the voice knows it by */
+	/* and then the players: of each, the console that it is of and which of
+	its controllers it has */
 	GAME_VOICE_MEMBERSHIP_PLAYER_ARRAY_OFFSET= 0x10D4,
 	GAME_VOICE_MEMBERSHIP_PLAYER_SIZE= 0x13C,
 	GAME_VOICE_MEMBERSHIP_PLAYER_PEER_OFFSET= 0xC,
-	GAME_VOICE_MEMBERSHIP_PLAYER_IDENTIFIER_OFFSET= 0x14,
+	GAME_VOICE_MEMBERSHIP_PLAYER_CONTROLLER_OFFSET= 0x14,
 	/* the consoles: a number of each */
 	GAME_VOICE_MEMBERSHIP_PEER_SIZE= 0x10C,
 	GAME_VOICE_MEMBERSHIP_PEER_UNKNOWNA8_OFFSET= 0xA8,
@@ -178,8 +186,18 @@ long game_voice_session_unknown40(void);
 long game_voice_local_peer_unknownA8(void);
 unsigned long game_voice_get_players(void);
 byte *game_voice_get_player_array(void);
-long game_voice_find_local_player(long identifier);
-long game_voice_player_identifier(long player_index);
+long game_voice_find_local_player(long controller_index);
+long game_voice_player_controller(long player_index);
+unsigned long game_voice_get_local_players(void);
+boolean game_voice_controller_can_talk(long controller_index);
+boolean game_voice_player_is_talking(long player_index);
+boolean game_voice_unknown_00054ec0(void);
+boolean game_voice_unknown_00054ef0(void);
+long game_voice_get_session_source(void);
+unsigned long game_voice_controller_player_words(long controller_index);
+long game_voice_get_controller_setting(long controller_index);
+void game_voice_set_controller_setting(long controller_index, long setting);
+char *game_voice_text_printf(char *text, const char *format, ...);
 boolean game_voice_unknown_00054c70(void);
 long game_voice_unknown_00054cc0(void);
 unsigned long game_voice_unknown_00054d00(void);

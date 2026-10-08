@@ -56,7 +56,7 @@ on, and has none */
 long unknown_00332db7(void *engine, struct voice_talker talker);
 long unknown_00332dd3(void *engine, struct voice_talker talker);
 
-/* 0x00332e18: something of a player of another console; 0 if not */
+/* 0x00332e18: whether a player of another console is talking */
 long unknown_00332e18(void *engine, struct voice_talker talker);
 
 /* 0x00332e34: something for a player of another console */
@@ -341,9 +341,9 @@ boolean voice_has_remote_talker(
 	return found;
 }
 
-/* 0x000551c0: something that the library says of a player of another
-console */
-boolean voice_remote_talker_unknown_000551c0(
+/* 0x000551c0: whether a player of another console is talking, as the
+library says */
+boolean voice_remote_talker_is_talking(
 	const struct voice_globals *voice,
 	long identifier)
 {

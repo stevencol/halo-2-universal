@@ -2,6 +2,63 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Quién puede hablar y quién está hablando: más de mil funciones
+
+Diez funciones en `networking/game_voice.c`, de 620 bytes entre las diez. De 997 funciones se pasa a
+1007, el 8,94 % de las del juego (el 5,733 % de sus bytes). **El proyecto pasa de las mil funciones.**
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_voice_controller_can_talk` | `0x000536b0` | `networking/game_voice.c` |
+| `game_voice_player_is_talking` | `0x00053750` | `networking/game_voice.c` |
+| `game_voice_get_local_players` | `0x00054d20` | `networking/game_voice.c` |
+| `game_voice_unknown_00054ec0` | `0x00054ec0` | `networking/game_voice.c` |
+| `game_voice_unknown_00054ef0` | `0x00054ef0` | `networking/game_voice.c` |
+| `game_voice_get_session_source` | `0x00054f20` | `networking/game_voice.c` |
+| `game_voice_controller_player_words` | `0x00054f40` | `networking/game_voice.c` |
+| `game_voice_get_controller_setting` | `0x00054f90` | `networking/game_voice.c` |
+| `game_voice_set_controller_setting` | `0x00054fc0` | `networking/game_voice.c` |
+| `game_voice_text_printf` | `0x00055060` | `networking/game_voice.c` |
+
+`game_voice_controller_can_talk` y `game_voice_get_local_players` eran
+`unknown_000536b0` y `unknown_00054d20`.
+
+### Cambiado
+
+- Con `game_voice_player_is_talking` se aclaran tres nombres de los hitos
+  266 y 272. El «número por el que la voz conoce a un jugador» es, en los
+  jugadores de esta consola, **su mando**: `game_voice_player_identifier`
+  pasa a ser `game_voice_player_controller`. Y lo que la biblioteca dice de
+  un jugador de otra consola en `0x000551c0` es **si está hablando**:
+  `voice_remote_talker_unknown_000551c0` pasa a ser
+  `voice_remote_talker_is_talking`. A los jugadores de otras consolas la
+  voz los conoce por su número de jugador en la partida.
+
+### Lo que se sabe
+
+- Un jugador de esta consola «está hablando» si la biblioteca ha dado algo
+  que dijo desde la última vez; uno de otra consola, si la biblioteca lo
+  dice.
+- El jugador de un mando «puede hablar» si el mando tiene auriculares, su
+  ajuste de voz no es el 3 y, cuando lo que el juego sabe del jugador tiene
+  cierto bit, si además lo permite `0x001906da` (por lo que mira, la cuenta
+  en línea del jugador).
+- Los jugadores de esta consola son los de la sesión cuya consola es esta:
+  `game_voice_get_local_players` da un bit por cada uno.
+- `game_voice_text_printf` escribe un texto de 128 caracteres; lo usa la
+  función que avisa de un cambio de jugador (`0x00054590`).
+
+### Batería completa
+
+Se lanzó en el hito 265 y sigue corriendo aparte; su resultado irá en una
+entrada posterior, con el de las mutaciones de los hitos 266 a 273.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo y las de `voice`.
+
 ## 2026-10-08 — La voz: las consolas y los jugadores de la sesión
 
 Quince funciones en `networking/game_voice.c`, de 880 bytes entre las quince. De 982 funciones se pasa a
