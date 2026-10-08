@@ -17,17 +17,16 @@ voice.c, from 0x00055960 on.
 #include "networking/game_voice.h"
 #include "objects/objects.h"
 #include "scenario/scenario.h"
+#include "sound/sound_definitions.h"
 
 #include <string.h>
 
 /* ---------- prototypes of functions not decompiled yet */
 
 
-/* 0x000586f0: where the voice of what is at a place comes out of, and how
-loud, for a player of this console that hears it: how many pairs, and the
-pairs, of which there is room for four */
-void __attribute__((stdcall)) unknown_000586f0(long listener_player_index, byte *channels, unsigned long *count,
-	struct voice_mix_bin *mix_bins, const real_point3d *position);
+/* 0x00192d40: how much of a sound that comes from a side is for each of
+five places that it can come out of, by a number */
+void __attribute__((stdcall)) unknown_00192d40(real *gains, const real_vector3d *direction, long unknown);
 
 /* 0x001896c0: plays a sound, as loud as a number says. 0x00189760: plays a
 sound where what it is given says */
@@ -1754,7 +1753,7 @@ void VOICE_ROUTING_CALLBACK voice_channels_update_team(
 			continue;
 		}
 		gamepad_index= *(const long *)(datum+VOICE_PLAYER_DATUM_GAMEPAD_OFFSET);
-		unknown28= *(const short *)(datum+VOICE_PLAYER_DATUM_UNKNOWN28_OFFSET);
+		unknown28= *(const short *)(datum+VOICE_PLAYER_DATUM_LISTENER_OFFSET);
 		if (gamepad_index==NONE || unknown28==NONE || unknown_00147da5(unknown28))
 		{
 			continue;
@@ -2085,7 +2084,7 @@ void VOICE_ROUTING_CALLBACK voice_channels_route_player_to_controllers(
 /* 0x00058590: where the voice of a player of another console comes out, in
 the place after the four controllers, by how it is heard. Not heard: never.
 In the second way: out of the three of the front. In the third: out of what
-unknown_000586f0 says for the player of this console that hears it and where
+voice_channels_get_mix_bins says for the player of this console that hears it and where
 the object of the player is, if the player has a voice and an object. And in
 any way that it is heard, first of all */
 void VOICE_ROUTING_CALLBACK voice_channels_route_player_to_output(
@@ -2125,11 +2124,123 @@ void VOICE_ROUTING_CALLBACK voice_channels_route_player_to_output(
 					struct voice_mix_bins mix_bins= { 0, pairs };
 
 					unknown_000caf90(object_index, &position);
-					unknown_000586f0(listener_player_index, channels, &mix_bins.count, pairs, &position);
+					voice_channels_get_mix_bins(listener_player_index, channels, &mix_bins.count, pairs, &position);
 					voice_remote_talker_unknown_00055250(&voice_globals, player_index, VOICE_CHANNELS_OUTPUT, &mix_bins);
 				}
 			}
 		}
 	}
 	voice_remote_talker_set_priority(&voice_globals, player_index, VOICE_CHANNELS_OUTPUT, _voice_priority_first);
+}
+
+/* 0x000586f0: where the voice of what is at a place comes out of, and how
+loud, for a player of this console that hears it: how many pairs, and the
+pairs. The place is seen from the one that hears the sounds of the game for
+the player; unknown_00192d40 says how much there is for each of five places
+by the side that it comes from, and the one with the least is left out. Each
+of the other four has less the less there is for it, and less the farther the
+place is: much less past how far a voice is heard. If nothing hears for the
+player, there is one pair: the third of the front, as loud as it gets */
+void VOICE_ROUTING_CALLBACK voice_channels_get_mix_bins(
+	long listener_player_index,
+	byte *channels,
+	unsigned long *count,
+	struct voice_mix_bin *mix_bins,
+	const real_point3d *position)
+{
+	static const unsigned long speaker_mix_bins[NUMBER_OF_VOICE_CHANNELS_SPEAKERS]= { 0, 1, 4, 5, 2 };
+	const byte *datum= game_voice_get_player_datum(listener_player_index);
+	const struct sound_listener *listener= NULL;
+
+	if (datum)
+	{
+		short listener_index= *(const short *)(datum+VOICE_PLAYER_DATUM_LISTENER_OFFSET);
+
+		if (listener_index!=NONE)
+		{
+			listener= (const struct sound_listener *)(game_sound_globals+VOICE_GAME_SOUND_GLOBALS_LISTENERS_OFFSET)+
+				listener_index;
+		}
+	}
+	if (listener && listener->valid)
+	{
+		real gains[NUMBER_OF_VOICE_CHANNELS_SPEAKERS];
+		real values[NUMBER_OF_VOICE_CHANNELS_SPEAKERS];
+		real_point3d local;
+		real_vector3d direction;
+		long double sum;
+		real distance, range, slope, volume, minimum;
+		long lowest= 0;
+		long written= 0;
+		long index;
+
+		matrix4x3_inverse_transform_point(&listener->matrix, position, &local);
+		direction.i= local.x;
+		direction.j= local.y;
+		direction.k= local.z;
+		/* the game does this with the old instructions for reals of the
+		processor */
+		sum= (long double)direction.k*direction.k+(long double)direction.j*direction.j;
+		sum+= (long double)direction.i*direction.i;
+		distance= (real)__builtin_sqrtl(sum);
+		range= VOICE_NEAR_DEFAULT_DISTANCE;
+		if (unknown_00510c94)
+		{
+			range= *(const real *)((const byte *)unknown_00510c94+UNKNOWN_00510C94_VOICE_DISTANCE_OFFSET);
+		}
+		slope= (real)*(const long *)(channels+VOICE_CHANNELS_DISTANCE_VOLUME_OFFSET);
+		if (distance>range)
+		{
+			real far= slope/range*(distance-range)*VOICE_FAR_VOLUME_SCALE;
+
+			volume= slope*distance/(range+VOICE_NEAR_EXTRA_DISTANCE)+far;
+		}
+		else
+		{
+			volume= slope*distance/(range+VOICE_NEAR_EXTRA_DISTANCE);
+		}
+		normalize3d(&direction);
+		unknown_00192d40(gains, &direction, channels[VOICE_CHANNELS_UNKNOWN190_OFFSET]);
+		minimum= gains[0];
+		for (index= 1; index<NUMBER_OF_VOICE_CHANNELS_SPEAKERS; index++)
+		{
+			if (minimum>gains[index])
+			{
+				minimum= gains[index];
+				lowest= index;
+			}
+		}
+		for (index= 0; index<NUMBER_OF_VOICE_CHANNELS_SPEAKERS; index++)
+		{
+			if (index!=lowest)
+			{
+				values[written]= gains[index];
+				mix_bins[written].mix_bin= speaker_mix_bins[index];
+				written++;
+			}
+		}
+		for (index= 0; index<MAXIMUM_VOICE_CHANNELS_MIX_BINS; index++)
+		{
+			real speaker= (real)*(const long *)(channels+VOICE_CHANNELS_SPEAKER_VOLUME_OFFSET);
+			long whole= (long)((1.0f-values[index])*speaker);
+			long result= (long)((real)whole+volume);
+
+			if (result<VOICE_CHANNELS_MINIMUM_VOLUME)
+			{
+				result= VOICE_CHANNELS_MINIMUM_VOLUME;
+			}
+			else if (result>VOICE_CHANNELS_MAXIMUM_VOLUME)
+			{
+				result= VOICE_CHANNELS_MAXIMUM_VOLUME;
+			}
+			mix_bins[index].volume= result;
+		}
+		*count= MAXIMUM_VOICE_CHANNELS_MIX_BINS;
+	}
+	else
+	{
+		mix_bins[0].volume= 0;
+		mix_bins[0].mix_bin= 2;
+		*count= 1;
+	}
 }

@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 312.
+**Última actualización:** 2026-10-08, al terminar el hito 313.
 
 ## Dónde estamos
 
-- **1108 funciones descompiladas de 11.265: el 9,84 % del juego** (el
-  6,330 % de los bytes de código).
-- Las 1108 están comprobadas contra el ejecutable original: las 1090 del
+- **1109 funciones descompiladas de 11.265: el 9,84 % del juego** (el
+  6,355 % de los bytes de código).
+- Las 1109 están comprobadas contra el ejecutable original: las 1090 del
   hito 296 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile where a remote voice comes out by how it is heard* (ver `git log`).
+- Último hito: *Decompile the speakers that a positioned voice comes out of* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 536 funciones apuntadas pero sin descompilar (las que el código
   llama); 448 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -118,10 +118,10 @@ Módulos (funciones hechas / archivo):
       `0x00055080` a `0x00055920`)
 - [x] Lista de silenciados — `networking\voice_mute_list.c` (7: completo,
       de `0x00058a50` a `0x00058cb0`)
-- [ ] La voz entre consolas — `networking\voice_routing.c` (39: a quién
+- [x] La voz entre consolas — `networking\voice_routing.c` (40: a quién
       habla cada jugador, las colas, lo que una consola manda a otra y
       quién oye a quién y los sonidos; va de `0x00055960` en adelante y
-      falta 1 función: `0x000586f0`)
+      está completo)
 - [ ] Matemáticas reales — `math\real_math.c` (40 de unas 50, con dos que están lejos de las demás)
 - [x] Matrices — `math\matrix_math.c` (26: completo)
 - [ ] Números aleatorios — `math\random_math.c` (2)
@@ -222,8 +222,7 @@ Módulos (funciones hechas / archivo):
       desde el hito 269).
 - [x] ~~`voice.c`~~ (hito 268): completo.
 - [x] ~~`game_voice.c`~~ (hito 278): completo.
-- [ ] **El resto de `voice_routing.c`**: `0x000586f0` (por qué altavoces
-      sale la voz según dónde está quien habla).
+- [x] ~~El resto de `voice_routing.c`~~ (hito 313).
 - [ ] **La sesión de red**, desde `0x00059bd0`, que la arranca (628
       bytes), y lo que hace la partida en cada estado (`0x0006dec0`).
 - [x] ~~Cinco direcciones repetidas en `symbols\functions.csv`~~ (hito

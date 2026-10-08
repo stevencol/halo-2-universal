@@ -2,6 +2,50 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — La voz colocada en el espacio: `voice_routing.c` completo
+
+Una función en `networking/voice_routing.c`, de 737 bytes, y con ella el archivo queda
+completo. De 1108 funciones se pasa a 1109, el 9,84 % de las del juego (el 6,355 %
+de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_channels_get_mix_bins` | `0x000586f0` | `networking/voice_routing.c` |
+
+Era `unknown_000586f0`, la que dice por qué altavoces sale la voz de un
+jugador que se oye «de la tercera manera» y cuánto por cada uno.
+`voice_routing.c` queda completo: 40 funciones, de `0x00055960` a
+`0x000589e0`.
+
+### Lo que se sabe
+
+- El número de 16 bits del `0x28` de un jugador (hitos 307 y 309) es **cuál
+  de los que oyen los sonidos del juego** le corresponde (`sound_listener`,
+  en `game_sound_globals+0x88`). Renombrado a
+  `VOICE_PLAYER_DATUM_LISTENER_OFFSET`.
+- La posición de quien habla se pasa a como se ve desde ese oyente
+  (`matrix4x3_inverse_transform_point`), se mide la distancia y se
+  normaliza la dirección.
+- `0x00192d40` (sin descompilar) reparte la dirección entre cinco
+  altavoces, que son los pares 0, 1, 4, 5 y 2 de la biblioteca de sonido
+  (delante izquierda y derecha, detrás izquierda y derecha, y centro). El
+  que menos tiene se descarta: salen cuatro pares.
+- El volumen de cada uno baja con lo poco que le toca (por el número del
+  `0x18C` de «quién oye a quién») y con la distancia (por el del `0x188`),
+  y mucho más deprisa (por 150) pasada la distancia a la que se oye una
+  voz. Queda entre -10.000 y 0.
+- Si nadie oye por el jugador, un solo par: el centro, a todo volumen.
+- La distancia se calcula con las instrucciones antiguas de reales
+  (`long double`), como en `voice_get_distance`.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo (40 funciones).
+- La batería completa se lanza con este hito, en la copia de comprobación.
+- Las mutaciones de los hitos 280 a 313 están pendientes.
+
 ## 2026-10-08 — Por dónde sale la voz según cómo se oye
 
 Una función en `networking/voice_routing.c`, de 339 bytes. De 1107 funciones se pasa a

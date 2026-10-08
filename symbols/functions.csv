@@ -799,7 +799,8 @@ address,name,source,arguments,returns,convention
 00057eb0,voice_channels_route_player,source/networking/voice_routing.c,eax stack stack stack,void,stdcall
 000583c0,voice_channels_route_player_to_controllers,source/networking/voice_routing.c,edx stack stack,void,stdcall
 00058590,voice_channels_route_player_to_output,source/networking/voice_routing.c,eax edi stack stack,void,stdcall
-000586f0,unknown_000586f0,,eax stack stack stack stack,void,stdcall
+000586f0,voice_channels_get_mix_bins,source/networking/voice_routing.c,eax stack stack stack stack,void,stdcall
+00192d40,unknown_00192d40,,ebx stack stack,void,stdcall
 00332e58,unknown_00332e58,,stack stack stack stack stack stack,int
 000589e0,voice_player_unknown_000589e0,source/networking/voice_routing.c,eax,bool
 00057790,voice_channels_time_is_recent,source/networking/voice_routing.c,eax ecx,bool

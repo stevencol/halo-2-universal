@@ -11,6 +11,7 @@ a guess, and so are the names of its functions.
 
 #include "cseries/cseries.h"
 #include "math/real_math.h"
+#include "networking/voice.h"
 
 /* ---------- constants */
 
@@ -97,6 +98,20 @@ enum
 	VOICE_CHANNELS_OUTPUT= 4,
 	/* how many pairs it can be given */
 	MAXIMUM_VOICE_CHANNELS_MIX_BINS= 4,
+	/* and of how many places the game asks how much of a voice is for each:
+	the one with the least is left out */
+	NUMBER_OF_VOICE_CHANNELS_SPEAKERS= 5,
+	/* how much less of a voice there is for each world unit that it is far,
+	how much less in a place that has none of it, and a byte that
+	unknown_00192d40 is given */
+	VOICE_CHANNELS_DISTANCE_VOLUME_OFFSET= 0x188,
+	VOICE_CHANNELS_SPEAKER_VOLUME_OFFSET= 0x18C,
+	VOICE_CHANNELS_UNKNOWN190_OFFSET= 0x190,
+	/* the least and the most that a voice is given */
+	VOICE_CHANNELS_MINIMUM_VOLUME= -10000,
+	VOICE_CHANNELS_MAXIMUM_VOLUME= 0,
+	/* in game_sound_globals: those that hear the sounds of the game */
+	VOICE_GAME_SOUND_GLOBALS_LISTENERS_OFFSET= 0x88,
 	/* and the numbers that unknown_00332e58 is given for it */
 	_voice_priority_first= 0,
 	_voice_priority_never= NONE,
@@ -136,10 +151,11 @@ enum
 	/* in what unknown_00510c94 points to: how far a voice is heard */
 	UNKNOWN_00510C94_VOICE_DISTANCE_OFFSET= 0x290,
 
-	/* in a player of the game: its gamepad and a number of 16 bits, both NONE
-	for a player that is not played here */
+	/* in a player of the game: its gamepad and which of those that hear the
+	sounds of the game it is, of 16 bits, both NONE for a player that is not
+	played here */
 	VOICE_PLAYER_DATUM_GAMEPAD_OFFSET= 0x24,
-	VOICE_PLAYER_DATUM_UNKNOWN28_OFFSET= 0x28,
+	VOICE_PLAYER_DATUM_LISTENER_OFFSET= 0x28,
 
 	/* in a player of the game: a number that is NONE or not, and an object;
 	and in the object, a time of the game, in ticks */
@@ -156,6 +172,9 @@ seconds */
 how much farther than what it says, in world units */
 #define VOICE_NEAR_DEFAULT_DISTANCE 8.0f
 #define VOICE_NEAR_EXTRA_DISTANCE 1.5f
+
+/* how much faster a voice gets lower past how far it is heard */
+#define VOICE_FAR_VOLUME_SCALE 150.0f
 
 /* what voice_players_get_distance says when it does not know */
 #define VOICE_PLAYERS_NO_DISTANCE -1.0f
@@ -247,6 +266,8 @@ void VOICE_ROUTING_CALLBACK voice_channels_route_player_to_controllers(byte *cha
 	long player_index);
 void VOICE_ROUTING_CALLBACK voice_channels_route_player_to_output(long how, long player_index, byte *channels,
 	long listener_player_index);
+void VOICE_ROUTING_CALLBACK voice_channels_get_mix_bins(long listener_player_index, byte *channels,
+	unsigned long *count, struct voice_mix_bin *mix_bins, const real_point3d *position);
 long VOICE_ROUTING_CALLBACK voice_channels_get_how(long local_player_index, const byte *channels, long player_index,
 	long unknown);
 void VOICE_ROUTING_CALLBACK voice_route_peers(const byte *unknown, unsigned long peers, word *words);

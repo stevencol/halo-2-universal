@@ -1241,9 +1241,76 @@ def run(t) -> None:
                     "game_voice_unknown_00054df0": gives(random_.choice((1, 1, 1, 0))),
                     "game_voice_get_player_datum": lambda harness, arguments, datum=datum, n=n: datum.address if n % 6 else 0,
                     "unknown_000caf90": where,
-                    "unknown_000586f0": comes_out,
+                    "voice_channels_get_mix_bins": comes_out,
                     "unknown_00332e34": mix_bins,
                     "unknown_00332e58": gives(0),
                 },
                 extra=[datum],
             )
+
+    # ---------- where the voice of what is at a place comes out
+
+    LISTENERS, LISTENER_SIZE = 0x88, 0x48
+
+    for n in range(700):
+        data = bytearray(random_.randbytes(0x34))
+        struct.pack_into("<H", data, 0x28, random_.choice((0, 1, 2, 3, 3, 0xFFFF)))
+        datum = Buffer(bytes(data))
+        sound = bytearray(random_.randbytes(0x20C))
+        there = [tuple(random_.uniform(-20, 20) for _ in range(3)) for _ in range(4)]
+        for listener in range(4):
+            at = LISTENERS + listener * LISTENER_SIZE
+            sound[at + 6] = random_.choice((1, 1, 1, 1, 0x80, 0))
+            struct.pack_into(
+                "<13f",
+                sound,
+                at + 8,
+                random_.choice((1.0, 1.0, 1.0, 0.5, 3.0)),
+                *(random_.uniform(-1, 1) for _ in range(9)),
+                *there[listener],
+            )
+        range_ = random_.choice((8.0, 8.0, 3.0, 20.0, 0.0, float("nan"), None))
+        game = bytearray(random_.randbytes(0x294))
+        if range_ is not None:
+            struct.pack_into("<f", game, 0x290, range_)
+        channels_data = bytearray(random_.randbytes(0x214))
+        struct.pack_into(
+            "<iiB",
+            channels_data,
+            0x188,
+            random_.choice((-100, -100, -600, -5, 0, 50, 0x7FFFFFFF)),
+            random_.choice((-1000, -1000, -2400, -10000, 0, 300, -0x80000000)),
+            random_.getrandbits(8),
+        )
+        place = random_.choice(
+            (
+                tuple(random_.uniform(-30, 30) for _ in range(3)),
+                tuple(random_.uniform(-30, 30) for _ in range(3)),
+                tuple(x + random_.uniform(-2, 2) for x in there[random_.randrange(4)]),
+                there[random_.randrange(4)],
+            )
+        )
+        gains = [random_.choice((0.0, 0.25, 0.25, 0.5, 0.75, 1.0, 1.0, 2.0, -1.0, float("nan"))) for _ in range(5)]
+
+        def how_much(harness, arguments, gains=gains):
+            # the side is in the stack, and so is where the answer goes
+            harness.mu.mem_write(arguments[0], struct.pack("<5f", *gains))
+            return 0, (bytes(harness.mu.mem_read(arguments[1], 0xC)), arguments[2])
+
+        t.check(
+            "voice_channels_get_mix_bins",
+            random_.randrange(16),
+            Buffer(bytes(channels_data)),
+            Buffer(random_.randbytes(4)),
+            Buffer(random_.randbytes(0x20)),
+            Buffer(struct.pack("<3f", *place)),
+            globals={
+                "game_sound_globals": Buffer(bytes(sound)),
+                "unknown_00510c94": Buffer(bytes(game)) if range_ is not None else 0,
+            },
+            externals={
+                "game_voice_get_player_datum": lambda harness, arguments, datum=datum, n=n: datum.address if n % 9 else 0,
+                "unknown_00192d40": how_much,
+            },
+            extra=[datum],
+        )
