@@ -1493,3 +1493,80 @@ def run(t) -> None:
                     "network_life_cycle_session": Buffer(bytes(data)),
                 },
             )
+
+    # ---------- a session goes into its third, fourth, sixth and tenth states
+
+    nothing = lambda harness, arguments: 0  # noqa: E731
+
+    for n in range(30):
+        t.check(
+            "network_session_enter_state3",
+            Buffer(bytes(whole_session())),
+            globals=clock(),
+            externals={"GetTickCount": ticks(), "unknown_00062990": nothing},
+        )
+        t.check(
+            "network_session_enter_state4",
+            Buffer(bytes(whole_session())),
+            globals=clock(),
+            externals={"GetTickCount": ticks(), "unknown_00062480": nothing},
+        )
+        t.check(
+            "network_session_enter_state6",
+            Buffer(bytes(with_channels()), pointers=(8,)),
+            externals={"unknown_00075e80": sends},
+        )
+        t.check("network_session_enter_state10", Buffer(bytes(whole_session())), random_.getrandbits(32))
+
+    for name, at, limit_name, other in (
+        ("network_session_unknown_000618d0", 0x7488, "unknown_004cf4a4", "unknown_000623e0"),
+        ("network_session_unknown_00061910", 0x7420, "unknown_004cf4ac", "unknown_00062480"),
+    ):
+        for n in range(120):
+            data = whole_session()
+            now = random_.getrandbits(32)
+            limit = random_.choice((0, 1000, 1000, 30000, 0x7FFFFFFF, 0xFFFFFFFF))
+            ago = random_.choice((0, 1, 999, 1000, 1001, 29999, 30001, 0x7FFFFFFF, 0x80000001, 0xFFFFFFFF))
+            struct.pack_into("<I", data, at, (now - ago) & 0xFFFFFFFF)
+            t.check(
+                name,
+                Buffer(bytes(data)),
+                globals={
+                    "unknown_00510548": bytes((random_.choice((0, 0, 1)),)),
+                    "unknown_0051054c": struct.pack("<I", now),
+                    limit_name: struct.pack("<I", limit),
+                },
+                externals={"GetTickCount": lambda harness, arguments, now=now: now, "unknown_0005a520": nothing, other: nothing},
+            )
+
+    for n in range(160):
+        data = whole_session()
+        peer = random_.randrange(16)
+        struct.pack_into("<I", data, 0x742C, random_.choice((peer, peer, random_.randrange(16), NONE)))
+        t.check(
+            "network_session_unknown_00061950",
+            peer,
+            Buffer(bytes(data)),
+            globals=clock(),
+            externals={"GetTickCount": ticks()},
+        )
+
+    for n in range(160):
+        t.check(
+            "network_session_get_channel_peer",
+            Buffer(bytes(with_peers())),
+            random_.choice((NONE, 0, 1, 2, 3, 4, 5)),
+        )
+
+    # ---------- something comes from the console that runs a session
+
+    for name, other in (("network_session_unknown_0005e150", "unknown_00062ab0"), ("network_session_unknown_0005e1a0", None)):
+        for n in range(60):
+            externals = {
+                "network_session_address_is_host": lambda harness, arguments, value=random_.choice((1, 1, 1, 0x80, 0, 0x100)): value,
+                "network_session_matches_state1_address": lambda harness, arguments, value=random_.choice((1, 0x80, 0, 0, 0x100)): value,
+                "unknown_0005a520": nothing,
+            }
+            if other:
+                externals[other] = nothing
+            t.check(name, Buffer(random_.randbytes(0x14)), Buffer(bytes(whole_session())), externals=externals)

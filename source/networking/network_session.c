@@ -49,6 +49,14 @@ long language_from_xbox_language(long xbox_language);
 network_life_cycle.c */
 void unknown_0005a520(byte *session);
 
+/* 0x00062990, 0x00062480, 0x000623e0, 0x00062ab0: what a session does each
+time in its third state, in its fourth, in another and when something comes
+from the console that runs it */
+void unknown_00062990(byte *session);
+void unknown_00062480(byte *session);
+void unknown_000623e0(byte *session);
+void unknown_00062ab0(byte *session);
+
 /* 0x000614a0: something that the console that runs a session does with it
 in its fifth state, with a byte and a number */
 void unknown_000614a0(boolean unknown, byte *session, long unknown4);
@@ -59,6 +67,11 @@ void unknown_000614a0(boolean unknown, byte *session, long unknown4);
 kept, and that time */
 extern boolean unknown_00510548;
 extern long unknown_0051054c;
+
+/* 0x004cf4a4, 0x004cf4ac: how long a session waits in two of its states
+before unknown_0005a520 is done with it, in milliseconds */
+long unknown_004cf4a4;
+long unknown_004cf4ac;
 
 /* 0x004d8b18, 0x004d8b19: with both, a session that is started asks what
 the console is known by in the network */
@@ -2262,4 +2275,182 @@ boolean NETWORK_SESSION_CALLBACK network_player_identifier_equal(
 
 	return identifier[0]==other[0] && identifier[1]==other[1] &&
 		(!with_flags || !((identifier[2]^other[2])&NETWORK_SESSION_PLAYER_IDENTIFIER_FLAGS_MASK));
+}
+
+/* what a session has from its state on starts over, and it goes into a
+state: the game has this in each function that changes the state */
+static inline __attribute__((always_inline)) byte *network_session_set_state(
+	byte *session,
+	long state)
+{
+	byte *data= session+NETWORK_SESSION_STATE_DATA_OFFSET;
+
+	memset(data, 0, NETWORK_SESSION_STATE_DATA_SIZE);
+	*(long *)(session+NETWORK_SESSION_STATE_OFFSET)= state;
+
+	return data;
+}
+
+/* how many milliseconds ago a time was: the game takes one from the other
+as the processor does, so that it can come out less than nothing */
+static inline __attribute__((always_inline)) long network_session_elapsed(
+	long time)
+{
+	return (long)((unsigned long)network_session_time()-(unsigned long)time);
+}
+
+/* 0x0005e150: something comes from an address of the game: whether it is
+that of the console that runs a session. If it is, and it is the one that the
+session keeps in its first state, unknown_0005a520 is done; if it is not
+that one, unknown_00062ab0 is. The game asks twice whether it is the one
+that the session keeps */
+boolean network_session_unknown_0005e150(
+	const struct transport_address *address,
+	byte *session)
+{
+	if (!network_session_address_is_host(session, address))
+	{
+		return FALSE;
+	}
+	if (network_session_matches_state1_address(session, address))
+	{
+		if (network_session_matches_state1_address(session, address))
+		{
+			unknown_0005a520(session);
+		}
+	}
+	else
+	{
+		unknown_00062ab0(session);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005e1a0: the same, but if the address is not the one that the session
+keeps in its first state, the session goes into its tenth state with a 1 */
+boolean network_session_unknown_0005e1a0(
+	const struct transport_address *address,
+	byte *session)
+{
+	if (!network_session_address_is_host(session, address))
+	{
+		return FALSE;
+	}
+	if (network_session_matches_state1_address(session, address))
+	{
+		if (network_session_matches_state1_address(session, address))
+		{
+			unknown_0005a520(session);
+		}
+	}
+	else
+	{
+		*(long *)network_session_set_state(session, _network_session_state10)= 1;
+	}
+
+	return TRUE;
+}
+
+/* 0x0005f5c0: which console of a session has a channel; NONE if none: it is
+network_session_find_peer_by_channel, with its arguments in other places */
+long NETWORK_SESSION_CALLBACK network_session_get_channel_peer(
+	const byte *session,
+	long channel_index)
+{
+	return network_session_find_peer_by_channel(session, channel_index);
+}
+
+/* 0x000612c0: a session goes into its third state: the 0x34 bytes of 0x761C
+start over (network_session_reset_unknown761c, which the game has here), the
+state starts now, and unknown_00062990 is done */
+void network_session_enter_state3(
+	byte *session)
+{
+	long now= network_session_time();
+
+	network_session_reset_unknown761c(session);
+	*(long *)network_session_set_state(session, _network_session_state3)= now;
+	unknown_00062990(session);
+}
+
+/* 0x00061330: a session goes into its fourth state: it starts now, with
+NONE after the time, and unknown_00062480 is done */
+void network_session_enter_state4(
+	byte *session)
+{
+	long now= network_session_time();
+	long *data= (long *)network_session_set_state(session, _network_session_state4);
+
+	data[0]= now;
+	data[1]= NONE;
+	unknown_00062480(session);
+}
+
+/* 0x00061450: a session goes into its sixth state: each console is sent
+something of the kind 0xD in both ways, with what the session is known by */
+void network_session_enter_state6(
+	byte *session)
+{
+	byte identifier[NETWORK_SESSION_IDENTIFIER_SIZE];
+
+	memcpy(identifier, session+NETWORK_SESSION_IDENTIFIER_OFFSET, sizeof(identifier));
+	network_session_send_to_peers(_network_session_send_both, session, _network_session_message_unknownD,
+		sizeof(identifier), identifier);
+	network_session_set_state(session, _network_session_state6);
+}
+
+/* 0x000616b0: a session goes into its tenth state, with a number */
+void NETWORK_SESSION_CALLBACK network_session_enter_state10(
+	byte *session,
+	long unknown)
+{
+	*(long *)network_session_set_state(session, _network_session_state10)= unknown;
+}
+
+/* 0x000618d0: unknown_0005a520 is done with a session if the time of 0x7488
+was more than unknown_004cf4a4 milliseconds ago; if not, unknown_000623e0 */
+void network_session_unknown_000618d0(
+	byte *session)
+{
+	if (network_session_elapsed(*(const long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN68_OFFSET))>unknown_004cf4a4)
+	{
+		unknown_0005a520(session);
+	}
+	else
+	{
+		unknown_000623e0(session);
+	}
+}
+
+/* 0x00061910: unknown_0005a520 is done with a session if its state started
+more than unknown_004cf4ac milliseconds ago; if not, unknown_00062480 */
+void network_session_unknown_00061910(
+	byte *session)
+{
+	if (network_session_elapsed(*(const long *)(session+NETWORK_SESSION_STATE_DATA_OFFSET))>unknown_004cf4ac)
+	{
+		unknown_0005a520(session);
+	}
+	else
+	{
+		unknown_00062480(session);
+	}
+}
+
+/* 0x00061950: in what a session has from its state on, a console loses its
+bit; and if it is the one that the session has there, there is none any
+more, since now */
+void network_session_unknown_00061950(
+	long peer_index,
+	byte *session)
+{
+	*(unsigned long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN4_OFFSET)&= ~(1u<<peer_index);
+	if (*(const long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWNC_OFFSET)==peer_index)
+	{
+		session[NETWORK_SESSION_STATE_DATA_UNKNOWN1C_OFFSET]= FALSE;
+		session[NETWORK_SESSION_STATE_DATA_UNKNOWN10_OFFSET]= FALSE;
+		*(long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWNC_OFFSET)= NONE;
+		*(long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN8_OFFSET)= network_session_time();
+	}
 }

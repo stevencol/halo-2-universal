@@ -1760,3 +1760,17 @@ address,name,source,arguments,returns,convention
 00063d00,network_player_identifier_equal,source/networking/network_session.c,ecx edx stack,bool,stdcall
 00063e00,network_life_cycle_session_is_open,source/networking/network_life_cycle.c,,bool
 00063f00,network_life_cycle_unknown_00063f00,source/networking/network_life_cycle.c,,bool
+0005e150,network_session_unknown_0005e150,source/networking/network_session.c,eax ecx,bool
+0005e1a0,network_session_unknown_0005e1a0,source/networking/network_session.c,eax esi,bool
+0005f5c0,network_session_get_channel_peer,source/networking/network_session.c,ecx stack,int,stdcall
+000612c0,network_session_enter_state3,source/networking/network_session.c,eax,void
+00061330,network_session_enter_state4,source/networking/network_session.c,eax,void
+00061450,network_session_enter_state6,source/networking/network_session.c,esi,void
+000616b0,network_session_enter_state10,source/networking/network_session.c,esi stack,void,stdcall
+000618d0,network_session_unknown_000618d0,source/networking/network_session.c,eax,void
+00061910,network_session_unknown_00061910,source/networking/network_session.c,eax,void
+00061950,network_session_unknown_00061950,source/networking/network_session.c,ecx esi,void
+00062990,unknown_00062990,,esi,void
+00062480,unknown_00062480,,esi,void
+000623e0,unknown_000623e0,,esi,void
+00062ab0,unknown_00062ab0,,esi,void

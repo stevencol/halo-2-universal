@@ -148,6 +148,15 @@ enum
 	/* of the twelve bytes that a player is known by: the bits of the last
 	four that count when two are compared */
 	NETWORK_SESSION_PLAYER_IDENTIFIER_FLAGS_MASK= 3,
+	/* in what the session has from its state on: in most states it starts
+	with the time that the state started; a bit for each console, and the
+	four things of one of them, in one state; and a time in another */
+	NETWORK_SESSION_STATE_DATA_UNKNOWN4_OFFSET= 0x7424,
+	NETWORK_SESSION_STATE_DATA_UNKNOWN8_OFFSET= 0x7428,
+	NETWORK_SESSION_STATE_DATA_UNKNOWNC_OFFSET= 0x742C,
+	NETWORK_SESSION_STATE_DATA_UNKNOWN10_OFFSET= 0x7430,
+	NETWORK_SESSION_STATE_DATA_UNKNOWN1C_OFFSET= 0x743C,
+	NETWORK_SESSION_STATE_DATA_UNKNOWN68_OFFSET= 0x7488,
 	/* in who is in the session: how many consoles, and the consoles */
 	NETWORK_SESSION_PEER_COUNT_OFFSET= 0x54,
 	NETWORK_SESSION_PEER_ARRAY_OFFSET= 0x58,
@@ -430,6 +439,16 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_set_player_unknownA8(long 
 	const byte *unknownA8);
 boolean NETWORK_SESSION_CALLBACK network_session_host_unknown_0005aeb0(byte *session, long unknown);
 void network_session_reset_unknown761c(byte *session);
+boolean network_session_unknown_0005e150(const struct transport_address *address, byte *session);
+boolean network_session_unknown_0005e1a0(const struct transport_address *address, byte *session);
+long NETWORK_SESSION_CALLBACK network_session_get_channel_peer(const byte *session, long channel_index);
+void network_session_enter_state3(byte *session);
+void network_session_enter_state4(byte *session);
+void network_session_enter_state6(byte *session);
+void NETWORK_SESSION_CALLBACK network_session_enter_state10(byte *session, long unknown);
+void network_session_unknown_000618d0(byte *session);
+void network_session_unknown_00061910(byte *session);
+void network_session_unknown_00061950(long peer_index, byte *session);
 long network_count_bits(unsigned long value);
 boolean NETWORK_SESSION_CALLBACK network_player_identifier_equal(const unsigned long *identifier,
 	const unsigned long *other, boolean with_flags);
@@ -528,6 +547,8 @@ boolean NETWORK_SESSION_CALLBACK network_session_create_identifier(byte *session
 
 /* ---------- globals */
 
+extern long unknown_004cf4a4;
+extern long unknown_004cf4ac;
 extern boolean unknown_004d8b18;
 extern boolean unknown_004d8b19;
 

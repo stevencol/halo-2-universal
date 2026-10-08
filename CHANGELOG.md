@@ -2,6 +2,61 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — La sesión cambia de estado
+
+Diez funciones en `networking/network_session.c`, 739 bytes entre todas. De 1216
+funciones se pasa a 1226, el 10,88 % de las del juego (el 6,755 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_unknown_0005e150` | `0x0005e150` | `networking/network_session.c` |
+| `network_session_unknown_0005e1a0` | `0x0005e1a0` | `networking/network_session.c` |
+| `network_session_get_channel_peer` | `0x0005f5c0` | `networking/network_session.c` |
+| `network_session_enter_state3` | `0x000612c0` | `networking/network_session.c` |
+| `network_session_enter_state4` | `0x00061330` | `networking/network_session.c` |
+| `network_session_enter_state6` | `0x00061450` | `networking/network_session.c` |
+| `network_session_enter_state10` | `0x000616b0` | `networking/network_session.c` |
+| `network_session_unknown_000618d0` | `0x000618d0` | `networking/network_session.c` |
+| `network_session_unknown_00061910` | `0x00061910` | `networking/network_session.c` |
+| `network_session_unknown_00061950` | `0x00061950` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- Cambiar de estado es siempre lo mismo: se borran los 504 bytes que la
+  sesión tiene a partir del estado y se pone el nuevo. En casi todos, esos
+  bytes empiezan con **cuándo empezó el estado**.
+  - **Tercero** (`network_session_enter_state3`): empieza ahora, y los 52
+    bytes de `0x761C` vuelven a empezar.
+  - **Cuarto** (`network_session_enter_state4`): empieza ahora, con NONE
+    detrás de la hora.
+  - **Sexto** (`network_session_enter_state6`): antes se manda a todas las
+    consolas algo de la clase `0xD`, con los ocho bytes de la sesión. Es lo
+    mismo que se manda a una consola al sacarla (hito 321): el sexto estado
+    es el de **la consola que lleva la sesión cuando la deshace**.
+  - **Décimo** (`network_session_enter_state10`): con un número, que es por
+    qué se acaba.
+- Dos funciones miran si un estado lleva demasiado tiempo
+  (`unknown_004cf4a4` y `unknown_004cf4ac`, en milisegundos): si se ha
+  pasado se hace `0x0005a520` con la sesión, y si no, lo de cada vez.
+- `network_session_unknown_0005e150` y `…0005e1a0` atienden algo que llega
+  de la consola que lleva la sesión: si es la dirección que la sesión
+  guarda en su primer estado se hace `0x0005a520`; si no, una hace
+  `0x00062ab0` y la otra pasa la sesión al décimo estado con un 1.
+- `network_session_get_channel_peer` es
+  `network_session_find_peer_by_channel` (hito 320) con los argumentos en
+  otros sitios: el juego la tiene dos veces.
+
+### Sin comprobar
+
+- El juego pregunta dos veces seguidas si la dirección es la que la sesión
+  guarda; las pruebas dan la misma respuesta las dos veces.
+- En este hito se pasaron las pruebas de `network_life_cycle` (134
+  funciones).
+- Las mutaciones de los hitos 280 a 308 y 321 a 336 están pendientes; las
+  de los hitos 309 a 320 seguían corriendo.
+
 ## 2026-10-08 — Contar bits, comparar jugadores y dos preguntas a la partida
 
 Dos funciones en `networking/network_session.c` y dos en `networking/network_life_cycle.c`,
