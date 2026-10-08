@@ -913,5 +913,63 @@ def run(t) -> None:
             "network_session_remove_peer",
             Buffer(bytes(data), pointers=(8,)),
             random_.choice((random_.randrange(count), count - 1, 0)),
-            externals={"unknown_0005a2e0": lambda harness, arguments: 0},
+            externals={"network_session_stop_waiting_if_done": lambda harness, arguments: 0},
+        )
+
+    # ---------- the consoles that have not answered, and a player that comes in
+
+    def waiting() -> bytearray:
+        data = with_peers()
+        struct.pack_into("<I", data, 0x54, random_.choice((0, 1, 3, 5, 16)))
+        data[0x765C] = random_.choice((0, 1, 1, 1, 0x80))
+        few = random_.choice((0, 0, 1, 4))
+        for peer in range(16):
+            at = 0x72DC + peer * 0x14
+            data[at + 1] = random_.choice((0, 1, 1, 0x80))
+            data[at + 2] = random_.choice((0, 1, 0x80)) if random_.randrange(8) < few else 0
+        return data
+
+    for n in range(240):
+        t.check("network_session_stop_waiting_if_done", Buffer(bytes(waiting())))
+
+    for n in range(400):
+        data = waiting()
+        answer = bytearray(random_.randbytes(0x10))
+        if n % 5:
+            answer[8:12] = data[0x4980:0x4984]
+        if n % 7:
+            answer[12:16] = data[0x497C:0x4980]
+        channel = random_.choice((NONE, 0, 1, 2, 3, 4))
+        if n % 2:
+            # the console of the answer has not answered
+            for peer in range(16):
+                at = 0x72DC + peer * 0x14
+                if data[at] and struct.unpack_from("<I", data, at + 4)[0] == channel:
+                    data[at + 2] = 1
+                    break
+        t.check(
+            "network_session_peer_answered",
+            Buffer(bytes(data)),
+            random_.getrandbits(32),
+            Buffer(bytes(answer)),
+            externals={"unknown_00075ce0": lambda harness, arguments, channel=channel: channel},
+        )
+
+    for n in range(160):
+        data = consistent()
+        to = REQUESTS + random_.randrange(16) * REQUEST + 0xA
+        identifier = bytes(data[to : to + 12]) if n % 3 else random_.randbytes(12)
+        t.check(
+            "network_session_add_player",
+            Buffer(identifier),
+            Buffer(bytes(data), pointers=(8,)),
+            random_.randrange(16),
+            random_.randrange(16),
+            random_.randrange(4),
+        )
+    for n in range(80):
+        t.check(
+            "network_session_remove_player_and_count",
+            Buffer(bytes(consistent()), pointers=(8,)),
+            random_.randrange(16),
         )

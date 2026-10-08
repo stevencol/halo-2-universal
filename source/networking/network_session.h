@@ -137,6 +137,16 @@ enum
 	NETWORK_SESSION_MEMBERSHIP_PLAYER_ARRAY_OFFSET= 0x10D4,
 	NETWORK_SESSION_PLAYER_SIZE= 0x13C,
 	NETWORK_SESSION_PLAYER_IDENTIFIER_SIZE= 0xC,
+	/* of a player: a number that starts at NONE, and two things of 0x90
+	bytes that start empty */
+	NETWORK_SESSION_PLAYER_UNKNOWN14_OFFSET= 0x14,
+	NETWORK_SESSION_PLAYER_UNKNOWN18_OFFSET= 0x18,
+	NETWORK_SESSION_PLAYER_UNKNOWNA8_OFFSET= 0xA8,
+	NETWORK_SESSION_PLAYER_UNKNOWN18_SIZE= 0x90,
+	/* in what a console sends to answer: the two numbers that the session
+	has at 0x4980 and 0x497C */
+	NETWORK_SESSION_ANSWER_UNKNOWN8_OFFSET= 0x8,
+	NETWORK_SESSION_ANSWER_UNKNOWNC_OFFSET= 0xC,
 	/* how many players there are; and of a player, its console and which of
 	the players of its console it is */
 	NETWORK_SESSION_MEMBERSHIP_PLAYER_COUNT_OFFSET= 0x10CC,
@@ -253,6 +263,11 @@ void NETWORK_SESSION_CALLBACK network_session_peer_state_new(boolean unknown1, b
 void NETWORK_SESSION_CALLBACK network_session_add_peer(byte *session, long peer_index, const byte *address,
 	boolean unknown1, long unknown4, const long *unknownF0);
 boolean network_session_matches_state1_address(const byte *session, const struct transport_address *address);
+void network_session_stop_waiting_if_done(byte *session);
+boolean NETWORK_SESSION_CALLBACK network_session_peer_answered(byte *session, long unknown, const byte *answer);
+void NETWORK_SESSION_CALLBACK network_session_add_player(const byte *identifier, byte *session, long peer_index,
+	long player_index, long peer_player_index);
+void network_session_remove_player_and_count(byte *session, long player_index);
 void network_session_remove_peer(byte *session, long peer_index);
 void NETWORK_SESSION_CALLBACK network_session_remove_player(byte *session, long player_index);
 boolean NETWORK_SESSION_CALLBACK network_session_find_request(byte *session, const byte *identifier,

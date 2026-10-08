@@ -59,10 +59,6 @@ one of two ways */
 void __attribute__((stdcall)) unknown_00075e80(boolean unknown, long channel_index, byte *unknown8, long index,
 	long type, long size, const void *data);
 
-/* 0x0005a2e0: something that is done with a session when who is in it has
-changed */
-void unknown_0005a2e0(byte *session);
-
 /* 0x0011ca80, of cseries.c */
 long language_from_xbox_language(long xbox_language);
 
@@ -987,7 +983,7 @@ each: the players of those consoles, the console that runs the session, this
 console and the one at 0x40 are told. If it was the console that runs the
 session, the first one is now. The first number of who is in the session and
 the one at 0x7618 count one more for each player and one more at the end;
-and unknown_0005a2e0 is done */
+and network_session_stop_waiting_if_done is done */
 void network_session_remove_peer(
 	byte *session,
 	long peer_index)
@@ -1054,5 +1050,127 @@ void network_session_remove_peer(
 	(*(long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET))--;
 	(*(long *)membership)++;
 	(*(long *)(session+NETWORK_SESSION_UNKNOWN7618_OFFSET))++;
-	unknown_0005a2e0(session);
+	network_session_stop_waiting_if_done(session);
+}
+
+/* 0x0005a2e0: in the last four states, a session that waits (the byte at
+0x765C) stops waiting if no console has the third byte of what the session
+keeps of it: it looks like the byte says that the console has not answered
+yet */
+void network_session_stop_waiting_if_done(
+	byte *session)
+{
+	if (network_session_established(session) && network_session_unknown_00058d20(session) &&
+		session[NETWORK_SESSION_UNKNOWN765C_OFFSET])
+	{
+		long peer_index;
+
+		for (peer_index= 0; peer_index<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET); peer_index++)
+		{
+			const struct network_session_peer_state *state=
+				(const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index;
+
+			if (state->unknown2)
+			{
+				return;
+			}
+		}
+		session[NETWORK_SESSION_UNKNOWN765C_OFFSET]= FALSE;
+	}
+}
+
+/* 0x0005a340: a console answers a session that waits: by a number of it,
+which unknown_00075ce0 finds the thing of the console with. It counts if the
+console is of the session and is not this one, the session waits, the two
+numbers of the answer are those of the session and the console had not
+answered: then it has, and if no console that has the second byte is left
+to answer, the session stops waiting. Whether it counted */
+boolean NETWORK_SESSION_CALLBACK network_session_peer_answered(
+	byte *session,
+	long unknown,
+	const byte *answer)
+{
+	long channel_index= unknown_00075ce0(*(const byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+		*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), unknown);
+	long peer_index= network_session_find_peer_by_channel(session, channel_index);
+	struct network_session_peer_state *state;
+	long index;
+
+	if (peer_index==NONE || peer_index==*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET) ||
+		!session[NETWORK_SESSION_UNKNOWN765C_OFFSET] ||
+		*(const long *)(answer+NETWORK_SESSION_ANSWER_UNKNOWNC_OFFSET)!=
+			*(const long *)(session+NETWORK_SESSION_UNKNOWN497C_OFFSET) ||
+		*(const long *)(answer+NETWORK_SESSION_ANSWER_UNKNOWN8_OFFSET)!=
+			*(const long *)(session+NETWORK_SESSION_UNKNOWN4980_OFFSET))
+	{
+		return FALSE;
+	}
+	state= (struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index;
+	if (!state->unknown2)
+	{
+		return FALSE;
+	}
+	state->unknown2= FALSE;
+	for (index= 0; index<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET); index++)
+	{
+		state= (struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+index;
+		if (state->unknown1 && state->unknown2)
+		{
+			return TRUE;
+		}
+	}
+	if (session[NETWORK_SESSION_UNKNOWN765C_OFFSET])
+	{
+		session[NETWORK_SESSION_UNKNOWN765C_OFFSET]= FALSE;
+	}
+
+	return TRUE;
+}
+
+/* 0x000600f0: a player comes into a session, at a place: it is known by
+twelve bytes, and it is of a console, at one of the places that the console
+has for its players. The console has one player more, and so does the
+session, with its bit. In the last four states, if the player had asked to
+come in, what it asked says that the session has it */
+void NETWORK_SESSION_CALLBACK network_session_add_player(
+	const byte *identifier,
+	byte *session,
+	long peer_index,
+	long player_index,
+	long peer_player_index)
+{
+	byte *membership= session+NETWORK_SESSION_MEMBERSHIP_OFFSET;
+	byte *player= membership+NETWORK_SESSION_MEMBERSHIP_PLAYER_ARRAY_OFFSET+player_index*NETWORK_SESSION_PLAYER_SIZE;
+	byte *peer= session+NETWORK_SESSION_PEER_ARRAY_OFFSET+peer_index*NETWORK_SESSION_PEER_SIZE;
+
+	memcpy(player, identifier, NETWORK_SESSION_PLAYER_IDENTIFIER_SIZE);
+	*(long *)(player+NETWORK_SESSION_PLAYER_PEER_PLAYER_OFFSET)= peer_player_index;
+	*(long *)(player+NETWORK_SESSION_PLAYER_PEER_OFFSET)= peer_index;
+	*(long *)(player+NETWORK_SESSION_PLAYER_UNKNOWN14_OFFSET)= NONE;
+	memset(player+NETWORK_SESSION_PLAYER_UNKNOWN18_OFFSET, 0, NETWORK_SESSION_PLAYER_UNKNOWN18_SIZE);
+	memset(player+NETWORK_SESSION_PLAYER_UNKNOWNA8_OFFSET, 0, NETWORK_SESSION_PLAYER_UNKNOWN18_SIZE);
+	*(long *)(peer+NETWORK_SESSION_PEER_PLAYERS_OFFSET+peer_player_index*sizeof(long))= player_index;
+	(*(long *)(peer+NETWORK_SESSION_PEER_PLAYER_COUNT_OFFSET))++;
+	*(unsigned long *)(membership+NETWORK_SESSION_MEMBERSHIP_PLAYERS_OFFSET)|= 1u<<player_index;
+	(*(long *)(membership+NETWORK_SESSION_MEMBERSHIP_PLAYER_COUNT_OFFSET))++;
+	if (network_session_unknown_00058d20(session))
+	{
+		struct network_session_player_request *request= NULL;
+
+		if (network_session_find_request(session, player, &request))
+		{
+			request->has_player= TRUE;
+		}
+	}
+}
+
+/* 0x000601e0: a player goes out of a session, and the two numbers that
+count what changes in it count one more */
+void network_session_remove_player_and_count(
+	byte *session,
+	long player_index)
+{
+	network_session_remove_player(session, player_index);
+	(*(long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET))++;
+	(*(long *)(session+NETWORK_SESSION_UNKNOWN7618_OFFSET))++;
 }

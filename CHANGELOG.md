@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Un jugador entra, y las consolas que faltan por contestar
+
+Cuatro funciones en `networking/network_session.c`, 550 bytes entre todas. De 1139
+funciones se pasa a 1143, el 10,15 % de las del juego (el 6,523 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_stop_waiting_if_done` | `0x0005a2e0` | `networking/network_session.c` |
+| `network_session_peer_answered` | `0x0005a340` | `networking/network_session.c` |
+| `network_session_add_player` | `0x000600f0` | `networking/network_session.c` |
+| `network_session_remove_player_and_count` | `0x000601e0` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_add_player` es la contraria de
+  `network_session_remove_player` (hito 322): pone a un jugador en su sitio
+  con los doce bytes por los que se le conoce, su consola y su sitio entre
+  los de ella, y sube las cuentas. Si había pedido entrar, su petición pasa
+  a decir que la sesión ya lo tiene.
+- El byte `0x765C` de la sesión es que **está esperando**: la consola que
+  lleva la sesión ha cambiado algo y espera a que las demás contesten. El
+  tercer byte de lo que guarda de cada consola es que **esa aún no ha
+  contestado** (al entrar en el quinto estado se copia del segundo, que es
+  si se habla con ella).
+- `network_session_peer_answered` apunta la respuesta de una consola: vale
+  si la sesión espera, la consola no es esta y los dos números de la
+  respuesta son los de la sesión (`0x4980` y `0x497C`). Cuando no queda
+  ninguna por contestar, deja de esperar.
+- `network_session_stop_waiting_if_done` (era `unknown_0005a2e0`) hace esa
+  misma comprobación cuando una consola sale de la sesión.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (69
+  funciones).
+- Las mutaciones de los hitos 280 a 308 y 321 a 323 están pendientes; las
+  de los hitos 309 a 320 estaban corriendo al cerrar este hito.
+
 ## 2026-10-08 — Una consola y sus jugadores salen de la sesión
 
 Tres funciones en `networking/network_session.c`, 731 bytes entre todas. De 1136
