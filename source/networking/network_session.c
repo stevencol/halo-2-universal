@@ -66,6 +66,10 @@ boolean __attribute__((stdcall)) unknown_0005df30(byte *session, boolean unknown
 network_life_cycle.c */
 void __attribute__((stdcall)) unknown_0005a400(byte *session, long unknown);
 
+/* 0x0005a220: something that the console that runs a session does with a
+number */
+void unknown_0005a220(byte *session, long unknown);
+
 /* 0x000614a0: something that the console that runs a session does with it
 in its fifth state, with a byte and a number */
 void unknown_000614a0(boolean unknown, byte *session, long unknown4);
@@ -2635,4 +2639,199 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_remove_peer_player(
 	}
 
 	return FALSE;
+}
+
+/* what the console that leads a session sends to ask for a change: empty,
+with what the session is known by */
+static inline __attribute__((always_inline)) void network_session_parameters_request_new(
+	const byte *session,
+	byte *request)
+{
+	memset(request, 0, NETWORK_SESSION_PARAMETERS_REQUEST_SIZE);
+	memcpy(request, session+NETWORK_SESSION_IDENTIFIER_OFFSET, NETWORK_SESSION_IDENTIFIER_SIZE);
+}
+
+/* it is sent to the console that runs the session, the one at 0x40, if the
+session keeps the second byte of it */
+static inline __attribute__((always_inline)) void network_session_parameters_request_send(
+	byte *session,
+	const byte *request)
+{
+	const struct network_session_peer_state *state=
+		(const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+
+		*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET);
+
+	if (state->unknown1)
+	{
+		unknown_00075e80(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+			*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_parameters_request,
+			NETWORK_SESSION_PARAMETERS_REQUEST_SIZE, request);
+	}
+}
+
+/* 0x0005b1e0: the console that leads a session (the one that who is in it
+says runs it) asks for something with a number: if it does run it,
+unknown_0005a220 is done; if not, it is asked of the one that does. FALSE if
+this console does not lead the session */
+boolean network_session_leader_unknown_0005b1e0(
+	byte *session,
+	long unknown)
+{
+	if (!network_session_local_peer_is_host(session))
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		unknown_0005a220(session, unknown);
+	}
+	else
+	{
+		byte request[NETWORK_SESSION_PARAMETERS_REQUEST_SIZE];
+
+		network_session_parameters_request_new(session, request);
+		request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWNC_OFFSET]= TRUE;
+		*(long *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWNC_OFFSET)= unknown;
+		network_session_parameters_request_send(session, request);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005b2c0: the console that leads a session sets the number of 0x49A4,
+or asks the one that runs it to; FALSE if it does not lead it */
+boolean network_session_leader_set_unknown49a4(
+	byte *session,
+	long unknown49a4)
+{
+	if (!network_session_local_peer_is_host(session))
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		network_session_parameters_changed(session);
+		*(long *)(session+NETWORK_SESSION_UNKNOWN49A4_OFFSET)= unknown49a4;
+	}
+	else
+	{
+		byte request[NETWORK_SESSION_PARAMETERS_REQUEST_SIZE];
+
+		network_session_parameters_request_new(session, request);
+		request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN49A4_OFFSET]= TRUE;
+		*(long *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN49A4_OFFSET)= unknown49a4;
+		network_session_parameters_request_send(session, request);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005b3a0: the console that leads a session sets the byte of 0x49C4, or
+asks the one that runs it to; FALSE if it does not lead it */
+boolean network_session_leader_set_unknown49c4(
+	byte *session)
+{
+	if (!network_session_local_peer_is_host(session))
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		network_session_parameters_changed(session);
+		session[NETWORK_SESSION_UNKNOWN49C4_OFFSET]= TRUE;
+	}
+	else
+	{
+		byte request[NETWORK_SESSION_PARAMETERS_REQUEST_SIZE];
+
+		network_session_parameters_request_new(session, request);
+		request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN49C4_OFFSET]= TRUE;
+		request[NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN49C4_OFFSET]= TRUE;
+		network_session_parameters_request_send(session, request);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005b490: the console that leads a session sets the number of 0x49C8,
+or asks the one that runs it to; FALSE if it does not lead it */
+boolean network_session_leader_set_unknown49c8(
+	byte *session,
+	long unknown49c8)
+{
+	if (!network_session_local_peer_is_host(session))
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		network_session_parameters_changed(session);
+		*(long *)(session+NETWORK_SESSION_UNKNOWN49C8_OFFSET)= unknown49c8;
+	}
+	else
+	{
+		byte request[NETWORK_SESSION_PARAMETERS_REQUEST_SIZE];
+
+		network_session_parameters_request_new(session, request);
+		request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN49C8_OFFSET]= TRUE;
+		*(long *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN49C8_OFFSET)= unknown49c8;
+		network_session_parameters_request_send(session, request);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005b570: the console that leads a session sets the number of 0x49F8 to
+zero, or asks the one that runs it to; FALSE if it does not lead it */
+boolean network_session_leader_clear_unknown49f8(
+	byte *session)
+{
+	if (!network_session_local_peer_is_host(session))
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		network_session_parameters_changed(session);
+		*(long *)(session+NETWORK_SESSION_UNKNOWN49F8_OFFSET)= 0;
+	}
+	else
+	{
+		byte request[NETWORK_SESSION_PARAMETERS_REQUEST_SIZE];
+
+		network_session_parameters_request_new(session, request);
+		request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN49F8_OFFSET]= TRUE;
+		*(long *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN49F8_OFFSET)= 0;
+		network_session_parameters_request_send(session, request);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005b8e0: the console that leads a session sets the number of 0x4DAC,
+or asks the one that runs it to; FALSE if it does not lead it */
+boolean network_session_leader_set_unknown4dac(
+	byte *session,
+	long unknown4dac)
+{
+	if (!network_session_local_peer_is_host(session))
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		network_session_parameters_changed(session);
+		*(long *)(session+NETWORK_SESSION_UNKNOWN4DAC_OFFSET)= unknown4dac;
+	}
+	else
+	{
+		byte request[NETWORK_SESSION_PARAMETERS_REQUEST_SIZE];
+
+		network_session_parameters_request_new(session, request);
+		request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN4DAC_OFFSET]= TRUE;
+		*(long *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN4DAC_OFFSET)= unknown4dac;
+		network_session_parameters_request_send(session, request);
+	}
+
+	return TRUE;
 }

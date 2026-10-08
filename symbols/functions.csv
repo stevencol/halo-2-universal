@@ -750,9 +750,14 @@ address,name,source,arguments,returns,convention
 00059ab0,network_life_cycle_request_new4,source/networking/network_life_cycle.c,eax,void
 0005a520,unknown_0005a520,,eax,void
 0005a400,unknown_0005a400,,ecx stack,void,stdcall
-0005b570,unknown_0005b570,,edx,void
+0005b570,network_session_leader_clear_unknown49f8,source/networking/network_session.c,edx,bool
+0005b2c0,network_session_leader_set_unknown49a4,source/networking/network_session.c,edx esi,bool
+0005b3a0,network_session_leader_set_unknown49c4,source/networking/network_session.c,edx,bool
+0005b490,network_session_leader_set_unknown49c8,source/networking/network_session.c,edx esi,bool
+0005b8e0,network_session_leader_set_unknown4dac,source/networking/network_session.c,edx esi,bool
+0005a220,unknown_0005a220,,esi edi,void
 0005a6e0,unknown_0005a6e0,,edx,void
-0005b1e0,unknown_0005b1e0,,eax ebx,bool
+0005b1e0,network_session_leader_unknown_0005b1e0,source/networking/network_session.c,eax ebx,bool
 00056380,voice_queues_build_packet,source/networking/voice_routing.c,eax stack stack stack,int,stdcall
 00056000,voice_queue_keep,source/networking/voice_routing.c,eax stack,void,stdcall
 00055c40,voice_queue_write,source/networking/voice_routing.c,esi eax edx stack stack stack,int,stdcall

@@ -27,9 +27,7 @@ void unknown_00065770(byte *session);
 with a session; 0x0005b1e0: something of it */
 void unknown_0005a520(byte *session);
 void __attribute__((stdcall)) unknown_0005a400(byte *session, long unknown);
-void unknown_0005b570(byte *session);
 void unknown_0005a6e0(byte *session);
-boolean unknown_0005b1e0(byte *session, long unknown);
 
 /* 0x0006dec0: what the network game is doing does its work of the frame: it
 is given where what it is doing is kept. 0x00073040, 0x000737b0: the work of
@@ -351,7 +349,7 @@ void network_life_cycle_unknown_00059530(
 		*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET)==
 		*(const long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET))
 	{
-		unknown_0005b570(session);
+		network_session_leader_clear_unknown49f8(session);
 	}
 }
 
@@ -396,7 +394,7 @@ void network_life_cycle_unknown_000595e0(
 }
 
 /* 0x00059610: in the first state, yes; in the others but 0, what
-unknown_0005b1e0 says of the session, if this console runs it */
+network_session_leader_unknown_0005b1e0 says of the session, if this console runs it */
 boolean network_life_cycle_unknown_00059610(
 	void)
 {
@@ -415,7 +413,7 @@ boolean network_life_cycle_unknown_00059610(
 			*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET)==
 			*(const long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET))
 		{
-			if (unknown_0005b1e0(session, 1))
+			if (network_session_leader_unknown_0005b1e0(session, 1))
 			{
 				return TRUE;
 			}

@@ -157,7 +157,7 @@ def run(t) -> None:
             t.check(
                 "network_life_cycle_unknown_00059530",
                 globals={"network_life_cycle_session": session(state, **peers(same))},
-                externals=plain("unknown_0005b570"),
+                externals=plain("network_session_leader_clear_unknown49f8"),
             )
             for life_cycle_state in (0, 1, 2, 7, NONE):
                 for says in (1, 0, 0x100):
@@ -167,7 +167,7 @@ def run(t) -> None:
                             "unknown_00527334": life_cycle_state,
                             "network_life_cycle_session": session(state, **peers(same)),
                         },
-                        externals=plain(unknown_0005b1e0=says),
+                        externals=plain(network_session_leader_unknown_0005b1e0=says),
                     )
         for life_cycle_state in (7, 6, 0):
             for has in (1, 0, 0x80):
@@ -1644,3 +1644,32 @@ def run(t) -> None:
             Buffer(bytes(message)),
             externals={"network_observer_find_channel": which_channel()},
         )
+
+    # ---------- the console that leads a session asks for a change
+
+    def sends_all(harness, arguments):
+        # all of what is sent, which is in the stack
+        return 0, (arguments[0] & 0xFF, *arguments[1:6], bytes(harness.mu.mem_read(arguments[6], arguments[5] & 0xFFFF)))
+
+    def led() -> Buffer:
+        data = with_channels()
+        local = random_.randrange(16)
+        struct.pack_into("<I", data, LOCAL_PEER, local)
+        struct.pack_into("<I", data, HOST_PEER, random_.choice((local, local, local, local ^ 1)))
+        struct.pack_into("<I", data, 0x40, random_.randrange(16))
+        struct.pack_into("<I", data, STATE, random_.choice((3, 3, 4, 5, 6, 8, 3, 0, 2, 9)))
+        for peer in range(16):
+            data[0x72DC + peer * 0x14 + 1] = random_.choice((0, 1, 1, 0x80))
+        return Buffer(bytes(data), pointers=(8,))
+
+    for name, has_value in (
+        ("network_session_leader_unknown_0005b1e0", True),
+        ("network_session_leader_set_unknown49a4", True),
+        ("network_session_leader_set_unknown49c4", False),
+        ("network_session_leader_set_unknown49c8", True),
+        ("network_session_leader_clear_unknown49f8", False),
+        ("network_session_leader_set_unknown4dac", True),
+    ):
+        for n in range(80):
+            arguments = (led(), random_.getrandbits(32)) if has_value else (led(),)
+            t.check(name, *arguments, externals={"unknown_00075e80": sends_all, "unknown_0005a220": nothing})

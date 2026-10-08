@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Pedir un cambio a quien lleva la sesión
+
+Seis funciones en `networking/network_session.c`, 1.325 bytes entre todas. De 1232
+funciones se pasa a 1238, el 10,99 % de las del juego (el 6,824 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_leader_unknown_0005b1e0` | `0x0005b1e0` | `networking/network_session.c` |
+| `network_session_leader_set_unknown49a4` | `0x0005b2c0` | `networking/network_session.c` |
+| `network_session_leader_set_unknown49c4` | `0x0005b3a0` | `networking/network_session.c` |
+| `network_session_leader_set_unknown49c8` | `0x0005b490` | `networking/network_session.c` |
+| `network_session_leader_clear_unknown49f8` | `0x0005b570` | `networking/network_session.c` |
+| `network_session_leader_set_unknown4dac` | `0x0005b8e0` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- En una sesión hay **dos consolas que mandan** y pueden no ser la misma:
+  la que «quién está en ella» dice que la lleva (`0x50`: la llamo la que la
+  **dirige**) y la que la lleva de verdad en la red (`0x40`, estados 5 a
+  8). Estas seis funciones son de la primera: si además la lleva de verdad,
+  cambia el dato y sube el contador (como en el hito 332); si no, **se lo
+  pide** a la otra.
+- La petición es un mensaje de la clase `0x22` y 1.436 bytes: los ocho
+  bytes por los que se conoce a la sesión y, para cada dato que se puede
+  cambiar, un byte que dice si cambia y luego el dato. De momento se
+  conocen seis sitios de ese mensaje (`0x8`, `0x20`, `0x28`, `0x2A`, `0x32`
+  y `0x3D0`).
+- Dos de ellas eran las que usaba `network_life_cycle.c`:
+  `network_session_leader_unknown_0005b1e0` y
+  `network_session_leader_clear_unknown49f8` (antes `unknown_0005b570`).
+
+### Lo que enseñó
+
+- `0x0005b570` parecía recibir un valor en `ebx` que quien la llama no
+  pone. Antes de darlo por un argumento escondido se miró entera: el `ebx`
+  es un cero que la propia función pone al empezar. No había fallo en el
+  hito anterior.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (146
+  funciones).
+- Las mutaciones de los hitos 280 a 308 y 321 a 338 están pendientes; las
+  de los hitos 309 a 320 seguían corriendo.
+
 ## 2026-10-08 — Lo que llega de las otras consolas
 
 Seis funciones en `networking/network_session.c`, 713 bytes entre todas. De 1226
