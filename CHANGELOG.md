@@ -2,6 +2,59 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Los jugadores que piden entrar y el quinto estado de la sesión
+
+Cinco funciones en `networking/network_session.c`, 641 bytes entre todas. De 1120
+funciones se pasa a 1125, el 9,99 % de las del juego (el 6,441 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_find_player` | `0x0005f890` | `networking/network_session.c` |
+| `network_session_reset_requests` | `0x00060fa0` | `networking/network_session.c` |
+| `network_session_enter_state5` | `0x00061390` | `networking/network_session.c` |
+| `network_session_request_players` | `0x00062e70` | `networking/network_session.c` |
+| `network_session_request_player` | `0x00062eb0` | `networking/network_session.c` |
+
+Con estas, todo lo que `network_session_start` (hito 314) hace con la sesión
+está descompilado; solo le queda fuera `0x0007ad80` (los bytes al azar).
+
+### Lo que se sabe
+
+- En `0x7668` la sesión tiene sitio para **dieciséis jugadores que piden
+  entrar**, de 36 bytes cada uno: si lo hay, si la sesión ya tiene a ese
+  jugador, ocho bytes de la consola que pide, los doce bytes por los que
+  se conoce al jugador, un número suyo, cuándo pidió y un número común a
+  los que piden juntos.
+- `network_session_request_player` ocupa el primer sitio libre;
+  `network_session_request_players` lo hace con varios hasta que uno no
+  cabe. `network_session_find_player` busca a un jugador de la sesión por
+  sus doce bytes.
+- `network_session_enter_state5` pone la sesión en su quinto estado y borra
+  lo que tiene a partir del estado (504 bytes). Viniendo de un estado
+  anterior, antes olvida lo que la sesión «iba a ser» y quién pedía entrar
+  (`network_session_reset_requests`), y apunta que la consola que lleva la
+  sesión es esta. Es lo último que hace una sesión al arrancar: el quinto
+  estado es el de **la consola que lleva la sesión**.
+
+### Lo que enseñó
+
+- En el hito 314 dos argumentos de `network_session_start` estaban
+  nombrados al revés: el sexto es cuántos jugadores piden entrar, y el
+  décimo es otro número (el común a todos ellos). Se comportaba igual; solo
+  cambian los nombres.
+
+### Batería completa
+
+La del hito 313 seguía en marcha al cerrar este hito.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (51
+  funciones).
+- Las mutaciones de los hitos 280 a 318 están pendientes.
+
 ## 2026-10-08 — Una consola entra en la sesión
 
 Dos funciones en `networking/network_session.c`, 415 bytes entre las dos. De 1118

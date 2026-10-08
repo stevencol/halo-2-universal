@@ -501,8 +501,8 @@ def run(t) -> None:
                 "unknown_0007ad80": at_random,
                 "network_session_add_peer": comes_in,
                 "time": lambda harness, arguments, value=random_.getrandbits(31): value,
-                "unknown_00061390": lambda harness, arguments: 0,
-                "unknown_00062e70": lambda harness, arguments: 0,
+                "network_session_enter_state5": lambda harness, arguments: 0,
+                "network_session_request_players": lambda harness, arguments: 0,
             },
         )
 
@@ -619,6 +619,77 @@ def run(t) -> None:
             random_.choice((0, 1, 1, 0x80, 0x100, 0x1FF)),
             random_.choice((NONE, 0, 3, random_.getrandbits(32))),
             random_.choice((Buffer(random_.randbytes(8)), Buffer(random_.randbytes(8)), 0)),
+            globals=clock(),
+            externals={"GetTickCount": ticks()},
+        )
+
+    # ---------- the players that ask to come into a session, and its fifth state
+
+    MEMBERSHIP, PLAYER_MASK, PLAYER_ARRAY, PLAYER = 0x4C, 0x111C, 0x1120, 0x13C
+    REQUESTS, REQUEST = 0x7668, 0x24
+
+    def whole_session(full: bool = False) -> bytearray:
+        data = bytearray(random_.randbytes(0x78B8))
+        struct.pack_into("<I", data, STATE, random_.choice((0, 1, 3, 4, 5, 5, 6, 7, 8, 9)))
+        struct.pack_into("<I", data, MEMBERSHIP, random_.choice((0, 0, 7, NONE)))
+        struct.pack_into("<I", data, 0x54, random_.choice((0, 1, 2, 5, 16)))
+        data[0x765C] = random_.choice((0, 1))
+        for peer in range(16):
+            data[0x72DC + peer * 0x14 + 1] = random_.choice((0, 0, 0, 1, 0x80))
+        for request in range(16):
+            data[REQUESTS + request * REQUEST] = 1 if full else random_.choice((0, 1, 1, 0x80))
+        return data
+
+    def known_by(data: bytearray) -> bytes:
+        # what a player of the session is known by, most of the time
+        player = random_.randrange(16)
+        at = PLAYER_ARRAY + player * PLAYER
+        if random_.randrange(5) == 0:
+            return random_.randbytes(12)
+        if random_.randrange(4) == 0:
+            # only the last of the twelve bytes is not the same
+            return bytes(data[at : at + 11]) + bytes((data[at + 11] ^ 0x40,))
+        return bytes(data[at : at + 12])
+
+    for n in range(200):
+        data = whole_session()
+        t.check("network_session_find_player", Buffer(bytes(data)), Buffer(known_by(data)))
+    for n in range(40):
+        t.check("network_session_reset_requests", Buffer(bytes(whole_session())), random_.choice((0, 1, 0x80, 0x100)))
+    for n in range(80):
+        t.check(
+            "network_session_enter_state5",
+            Buffer(bytes(whole_session())),
+            globals=clock(),
+            externals={"GetTickCount": ticks()},
+        )
+    for n in range(120):
+        data = whole_session(full=n % 6 == 0)
+        t.check(
+            "network_session_request_player",
+            Buffer(known_by(data)),
+            Buffer(random_.randbytes(8)),
+            Buffer(bytes(data)),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            globals=clock(),
+            externals={"GetTickCount": ticks()},
+        )
+    for n in range(120):
+        data = whole_session(full=n % 6 == 0)
+        if n % 3 == 0:
+            # room for two more
+            free = random_.sample(range(16), 2)
+            for request in range(16):
+                data[REQUESTS + request * REQUEST] = 0 if request in free else 1
+        t.check(
+            "network_session_request_players",
+            Buffer(b"".join(known_by(data) for _ in range(4))),
+            Buffer(random_.randbytes(8)),
+            Buffer(bytes(data)),
+            random_.choice((0, 1, 2, 3, 4, NONE)),
+            random_.getrandbits(32),
+            Buffer(random_.randbytes(16)),
             globals=clock(),
             externals={"GetTickCount": ticks()},
         )

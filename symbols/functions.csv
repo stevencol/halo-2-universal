@@ -707,8 +707,11 @@ address,name,source,arguments,returns,convention
 003cd0e1,unknown_003cd0e1,,stack,int,stdcall
 0005fbd0,network_session_add_peer,source/networking/network_session.c,stack stack stack stack stack stack,void,stdcall
 0005f900,network_session_peer_state_new,source/networking/network_session.c,eax edx ecx stack,void,stdcall
-00061390,unknown_00061390,,esi,void
-00062e70,unknown_00062e70,,ecx eax stack stack stack stack,void,stdcall
+00061390,network_session_enter_state5,source/networking/network_session.c,esi,void
+00062e70,network_session_request_players,source/networking/network_session.c,ecx eax stack stack stack stack,bool,stdcall
+00062eb0,network_session_request_player,source/networking/network_session.c,edx ebx stack stack stack,bool,stdcall
+00060fa0,network_session_reset_requests,source/networking/network_session.c,edx stack,void,stdcall
+0005f890,network_session_find_player,source/networking/network_session.c,ecx stack,int,stdcall
 00059200,network_life_cycle_unknown_00059200,source/networking/network_life_cycle.c,ecx edx stack stack,void,stdcall
 00059230,network_life_cycle_unknown_00059230,source/networking/network_life_cycle.c,ecx edx stack,void,stdcall
 0006f200,unknown_0006f200,,eax edx stack stack stack,void,stdcall

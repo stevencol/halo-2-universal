@@ -116,8 +116,24 @@ enum
 	NETWORK_SESSION_PEER_UNKNOWNFC_OFFSET= 0xFC,
 	NETWORK_SESSION_PEER_UNKNOWNFC_COUNT= 4,
 	/* a byte of the session that goes to what it keeps of a console that
-	comes in */
+	comes in, and two numbers that go with it: one of 0x4980 and a time */
 	NETWORK_SESSION_UNKNOWN765C_OFFSET= 0x765C,
+	NETWORK_SESSION_UNKNOWN7660_OFFSET= 0x7660,
+	NETWORK_SESSION_UNKNOWN7664_OFFSET= 0x7664,
+	NETWORK_SESSION_UNKNOWN44_OFFSET= 0x44,
+	/* what the session has from its state on, which starts over in the
+	fifth state */
+	NETWORK_SESSION_STATE_DATA_OFFSET= 0x7420,
+	NETWORK_SESSION_STATE_DATA_SIZE= 0x1F8,
+	/* in who is in the session: a bit for each player that there is, and
+	the players, which start with the twelve bytes that each is known by */
+	NETWORK_SESSION_MEMBERSHIP_PLAYERS_OFFSET= 0x10D0,
+	NETWORK_SESSION_MEMBERSHIP_PLAYER_ARRAY_OFFSET= 0x10D4,
+	NETWORK_SESSION_PLAYER_SIZE= 0x13C,
+	NETWORK_SESSION_PLAYER_IDENTIFIER_SIZE= 0xC,
+	MAXIMUM_NETWORK_SESSION_PLAYERS= 16,
+	/* the players that ask to come into the session, at 0x7668 */
+	MAXIMUM_NETWORK_SESSION_PLAYER_REQUESTS= 16,
 	/* and after the rest of the session: GetTickCount with the other sign,
 	and the time of the C library */
 	NETWORK_SESSION_UNKNOWN78B0_OFFSET= 0x78B0,
@@ -151,6 +167,28 @@ struct network_session_peer_state
 typedef char verify_network_session_peer_state_size[
 	sizeof(struct network_session_peer_state) == 0x14 ? 1 : -1];
 
+/* a player that asks to come into a session: whether there is one; whether
+the session has the player already; eight bytes of the console that asks;
+what the player is known by; a number of the player; when it asked; and a
+number of all those that asked with it */
+struct network_session_player_request
+{
+	boolean valid;
+	boolean has_player;
+	byte unknown2[8];
+	byte identifier[NETWORK_SESSION_PLAYER_IDENTIFIER_SIZE];
+	byte pad16[2];
+	long unknown18;
+	long time;
+	long unknown20;
+};
+
+typedef char verify_network_session_player_request_size[
+	sizeof(struct network_session_player_request) == 0x24 ? 1 : -1];
+typedef char verify_network_session_player_requests_size[
+	sizeof(struct network_session_player_request)*MAXIMUM_NETWORK_SESSION_PLAYER_REQUESTS ==
+	NETWORK_SESSION_UNKNOWN7668_SIZE ? 1 : -1];
+
 /* a number that network_session_start leaves in a session */
 #define NETWORK_SESSION_UNKNOWN4DA8_VALUE 0xDEADBEEFu
 
@@ -181,12 +219,20 @@ boolean network_session_unknown_00058d90(const byte *session);
 boolean NETWORK_SESSION_CALLBACK network_session_initialize(byte *session, byte *unknown8, byte **table,
 	long index, long unknown14, long unknown38, long unknown4);
 boolean NETWORK_SESSION_CALLBACK network_session_start(byte *session, long unknown18, long unknown8, long unknownC,
-	long unknown10, long unknown14, const byte *identifiers, const long *unknown1C, long *unknown20, long count);
+	long unknown10, long player_count, const byte *identifiers, const long *unknown1C, long *unknown20,
+	long unknown24);
 
 void NETWORK_SESSION_CALLBACK network_session_peer_state_new(boolean unknown1, byte *session, long peer_index,
 	long unknown4);
 void NETWORK_SESSION_CALLBACK network_session_add_peer(byte *session, long peer_index, const byte *address,
 	boolean unknown1, long unknown4, const long *unknownF0);
+long NETWORK_SESSION_CALLBACK network_session_find_player(const byte *session, const byte *identifier);
+void NETWORK_SESSION_CALLBACK network_session_reset_requests(byte *session, boolean unknown);
+void network_session_enter_state5(byte *session);
+boolean NETWORK_SESSION_CALLBACK network_session_request_players(const byte *identifiers, const long *unknown2,
+	byte *session, long player_count, long unknown20, const long *unknown18s);
+boolean NETWORK_SESSION_CALLBACK network_session_request_player(const byte *identifier, const long *unknown2,
+	byte *session, long unknown20, long unknown18);
 void network_session_forget_identifier(byte *session);
 void network_session_set_identifier(byte *session, const byte *identifier, const byte *key, long unknown3C);
 boolean NETWORK_SESSION_CALLBACK network_session_use_identifier(byte *session, const byte *key, long unknown8,

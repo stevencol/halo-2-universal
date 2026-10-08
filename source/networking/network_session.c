@@ -43,15 +43,6 @@ long __attribute__((stdcall)) unknown_003cd147(const byte *identifier, const voi
 /* 0x0007ad80: fills a buffer with bytes made at random */
 void unknown_0007ad80(long size, void *buffer);
 
-/* 0x00061390: something that is done with a session when who is in it
-changes */
-void unknown_00061390(byte *session);
-
-/* 0x00062e70: does something in a session with each of a number of things
-of twelve bytes, and with a number of each */
-void __attribute__((stdcall)) unknown_00062e70(const byte *identifiers, long *unknown20, byte *session,
-	long unknown14, long count, const long *unknown1C);
-
 /* 0x0011ca80, of cseries.c */
 long language_from_xbox_language(long xbox_language);
 
@@ -199,20 +190,20 @@ console has to be known by something in it, and network_session_use_identifier (
 fourth and fifth things) or network_session_create_identifier (without) has to be able to get
 it ready. Then what the session knows starts over: when it started, the
 language, eight bytes made at random; nobody is in it but this console, which
-network_session_add_peer puts first; and what it will be says nothing. At last, if it
-is given a number of things that is NONE or more than none, they go to
-unknown_00062e70 */
+network_session_add_peer puts first; and what it will be says nothing. At last, if its
+last number is NONE or more than none, the players that it is given ask to
+come in: network_session_request_players */
 boolean NETWORK_SESSION_CALLBACK network_session_start(
 	byte *session,
 	long unknown18,
 	long unknown8,
 	long unknownC,
 	long unknown10,
-	long unknown14,
+	long player_count,
 	const byte *identifiers,
 	const long *unknown1C,
 	long *unknown20,
-	long count)
+	long unknown24)
 {
 	byte address[NETWORK_SESSION_ADDRESS_SIZE];
 
@@ -287,10 +278,10 @@ boolean NETWORK_SESSION_CALLBACK network_session_start(
 	session[NETWORK_SESSION_UNKNOWN78AC_OFFSET]= TRUE;
 	*(long *)(session+NETWORK_SESSION_UNKNOWN78B0_OFFSET)= -network_session_time();
 	*(long *)(session+NETWORK_SESSION_UNKNOWN78B4_OFFSET)= time(NULL);
-	unknown_00061390(session);
-	if (count==NONE || count>0)
+	network_session_enter_state5(session);
+	if (unknown24==NONE || unknown24>0)
 	{
-		unknown_00062e70(identifiers, unknown20, session, unknown14, count, unknown1C);
+		network_session_request_players(identifiers, unknown20, session, player_count, unknown24, unknown1C);
 	}
 
 	return TRUE;
@@ -470,4 +461,160 @@ void NETWORK_SESSION_CALLBACK network_session_add_peer(
 		*(long *)(peer+NETWORK_SESSION_PEER_UNKNOWNF0_OFFSET+sizeof(long))= unknownF0[1];
 	}
 	network_session_peer_state_new(unknown1, session, peer_index, unknown4);
+}
+
+/* 0x0005f890: which player of a session is known by twelve bytes; NONE if
+none is, or if the session has no state or says nothing of who is in it */
+long NETWORK_SESSION_CALLBACK network_session_find_player(
+	const byte *session,
+	const byte *identifier)
+{
+	if (network_session_state(session)!=_network_session_state_none &&
+		*(const long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET)!=NONE)
+	{
+		const byte *membership= session+NETWORK_SESSION_MEMBERSHIP_OFFSET;
+		unsigned long players= *(const unsigned long *)(membership+NETWORK_SESSION_MEMBERSHIP_PLAYERS_OFFSET);
+		long player_index;
+
+		for (player_index= 0; player_index<MAXIMUM_NETWORK_SESSION_PLAYERS; player_index++)
+		{
+			if ((players&(1u<<player_index)) && memcmp(identifier,
+				membership+NETWORK_SESSION_MEMBERSHIP_PLAYER_ARRAY_OFFSET+player_index*NETWORK_SESSION_PLAYER_SIZE,
+				NETWORK_SESSION_PLAYER_IDENTIFIER_SIZE)==0)
+			{
+				return player_index;
+			}
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x00060fa0: what a session will be says nothing, nobody asks to come into
+it, and what it keeps of each console goes back to how it was when it came
+in, but for its first byte and its number. With the thing that it is given,
+its two numbers go back to 16 and its first number counts one more */
+void NETWORK_SESSION_CALLBACK network_session_reset_requests(
+	byte *session,
+	boolean unknown)
+{
+	long peer_index;
+
+	memset(session+NETWORK_SESSION_OTHER_MEMBERSHIP_OFFSET, 0, NETWORK_SESSION_MEMBERSHIP_SIZE);
+	*(long *)(session+NETWORK_SESSION_OTHER_MEMBERSHIP_OFFSET)= NONE;
+	memset(session+NETWORK_SESSION_UNKNOWN5E28_OFFSET, 0, NETWORK_SESSION_UNKNOWN4978_SIZE);
+	memset(session+NETWORK_SESSION_UNKNOWN7668_OFFSET, 0, NETWORK_SESSION_UNKNOWN7668_SIZE);
+	*(long *)(session+NETWORK_SESSION_UNKNOWN5E28_OFFSET)= NONE;
+	session[NETWORK_SESSION_UNKNOWN765C_OFFSET]= FALSE;
+	*(long *)(session+NETWORK_SESSION_UNKNOWN44_OFFSET)= NONE;
+	for (peer_index= 0; peer_index<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET); peer_index++)
+	{
+		struct network_session_peer_state *state=
+			(struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index;
+
+		state->unknown2= FALSE;
+		state->unknown8= NONE;
+		state->unknownC= NONE;
+		state->unknown3= FALSE;
+	}
+	if (unknown)
+	{
+		*(long *)(session+NETWORK_SESSION_UNKNOWN4990_OFFSET)= NETWORK_SESSION_UNKNOWN4990_DEFAULT;
+		*(long *)(session+NETWORK_SESSION_UNKNOWN4994_OFFSET)= NETWORK_SESSION_UNKNOWN4990_DEFAULT;
+		(*(long *)(session+NETWORK_SESSION_UNKNOWN4978_OFFSET))++;
+	}
+}
+
+/* 0x00061390: a session goes into its fifth state, and what it has from its
+state on starts over. From a state before the fifth, network_session_reset_requests
+is done first; the third byte of what is kept of each console is its second,
+and if any has it the session keeps a number and the time; and the console
+that runs the session at 0x40 is this one */
+void network_session_enter_state5(
+	byte *session)
+{
+	if (!network_session_unknown_00058d20(session))
+	{
+		boolean any= FALSE;
+		long peer_index;
+
+		network_session_reset_requests(session, TRUE);
+		for (peer_index= 0; peer_index<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET); peer_index++)
+		{
+			struct network_session_peer_state *state=
+				(struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index;
+
+			state->unknown2= state->unknown1;
+			if (state->unknown1)
+			{
+				any= TRUE;
+			}
+		}
+		if (any)
+		{
+			*(long *)(session+NETWORK_SESSION_UNKNOWN7660_OFFSET)=
+				*(const long *)(session+NETWORK_SESSION_UNKNOWN4980_OFFSET);
+			session[NETWORK_SESSION_UNKNOWN765C_OFFSET]= TRUE;
+			*(long *)(session+NETWORK_SESSION_UNKNOWN7664_OFFSET)= network_session_time();
+		}
+		*(long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET)= *(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET);
+	}
+	memset(session+NETWORK_SESSION_STATE_DATA_OFFSET, 0, NETWORK_SESSION_STATE_DATA_SIZE);
+	*(long *)(session+NETWORK_SESSION_STATE_OFFSET)= _network_session_state5;
+}
+
+/* 0x00062e70: each of a number of players asks to come into a session, with
+a number of its own, until one cannot; whether all could */
+boolean NETWORK_SESSION_CALLBACK network_session_request_players(
+	const byte *identifiers,
+	const long *unknown2,
+	byte *session,
+	long player_count,
+	long unknown20,
+	const long *unknown18s)
+{
+	boolean result= TRUE;
+	long index;
+
+	for (index= 0; index<player_count && result; index++)
+	{
+		result= network_session_request_player(identifiers+index*NETWORK_SESSION_PLAYER_IDENTIFIER_SIZE, unknown2,
+			session, unknown20, unknown18s[index]);
+	}
+
+	return result;
+}
+
+/* 0x00062eb0: a player asks to come into a session: it takes the first
+place that is free of the sixteen, with what the player is known by, eight
+bytes, two numbers and the time; and whether the session has the player
+already is looked at. FALSE if no place is free */
+boolean NETWORK_SESSION_CALLBACK network_session_request_player(
+	const byte *identifier,
+	const long *unknown2,
+	byte *session,
+	long unknown20,
+	long unknown18)
+{
+	struct network_session_player_request *request=
+		(struct network_session_player_request *)(session+NETWORK_SESSION_UNKNOWN7668_OFFSET);
+	const struct network_session_player_request *end= request+MAXIMUM_NETWORK_SESSION_PLAYER_REQUESTS;
+
+	for (; request<end; request++)
+	{
+		if (!request->valid)
+		{
+			memcpy(request->identifier, identifier, sizeof(request->identifier));
+			request->time= network_session_time();
+			request->unknown20= unknown20;
+			memcpy(request->unknown2, unknown2, sizeof(request->unknown2));
+			request->unknown18= unknown18;
+			request->valid= TRUE;
+			request->has_player= network_session_find_player(session, request->identifier)!=NONE;
+
+			return TRUE;
+		}
+	}
+
+	return FALSE;
 }
