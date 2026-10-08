@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 285.
+**Última actualización:** 2026-10-08, al terminar el hito 286.
 
 ## Dónde estamos
 
-- **1042 funciones descompiladas de 11.265: el 9,25 % del juego** (el
-  6,007 % de los bytes de código).
-- Las 1042 están comprobadas contra el ejecutable original: las 940 del
+- **1056 funciones descompiladas de 11.265: el 9,37 % del juego** (el
+  6,022 % de los bytes de código).
+- Las 1056 están comprobadas contra el ejecutable original: las 940 del
   hito 265 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile which consoles get what a player said, and which by the chosen one* (ver `git log`).
+- Último hito: *Start network_session.c and network_life_cycle.c with fourteen small functions* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 522 funciones apuntadas pero sin descompilar (las que el código
-  llama); 434 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 521 funciones apuntadas pero sin descompilar (las que el código
+  llama); 433 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -109,6 +109,11 @@ Módulos (funciones hechas / archivo):
       terminar líneas o triángulos; faltan `0x0001e930` y `0x0001eb00`, que
       preparan la consola para dibujar)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
+- [ ] Sesión de red — `networking\network_session.c` (4: el estado de una
+      sesión; empieza hacia `0x00058d20`)
+- [ ] Partida en red — `networking\network_life_cycle.c` (10: qué está
+      haciendo y sus dos sesiones; de `0x000591e0` a `0x000596d0` hay
+      unas 25 funciones pequeñas)
 - [x] Voz de los jugadores — `networking\voice.c` (22: completo, de
       `0x00055080` a `0x00055920`)
 - [ ] La voz entre consolas — `networking\voice_routing.c` (19: a quién
@@ -218,6 +223,8 @@ Módulos (funciones hechas / archivo):
 - [ ] **El resto de `voice_routing.c`**: `0x00056c60` y de `0x00056df0`
       en adelante (quién oye a quién: unas 18 funciones, bastante
       grandes).
+- [ ] **El resto de `network_life_cycle.c`**, de `0x000591e0` a
+      `0x000596d0`: unas 15 funciones pequeñas que faltan.
 - [ ] **Los fondos de los objetos**: `0x000bc280`, `0x000bc380`,
       `0x000bf360`.
 - [ ] **Los otros pares de la tabla de `0x00453c00`**: `0x00081780`,

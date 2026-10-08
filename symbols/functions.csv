@@ -669,8 +669,21 @@ address,name,source,arguments,returns,convention
 00053d90,game_voice_unknown_00053d90,source/networking/game_voice.c,,bool
 00053db0,game_voice_message_is_sound_file,source/networking/game_voice.c,ecx edx,bool
 00053de0,game_voice_get_membership,source/networking/game_voice.c,,int
-00059670,unknown_00059670,,edx,bool
-000596a0,unknown_000596a0,,edx,bool
+00059670,network_life_cycle_get_session,source/networking/network_life_cycle.c,edx,bool
+000596a0,network_life_cycle_get_other_session,source/networking/network_life_cycle.c,edx,bool
+00059260,network_life_cycle_in_state5,source/networking/network_life_cycle.c,,bool
+000592d0,network_life_cycle_get_state,source/networking/network_life_cycle.c,,int
+000592f0,network_life_cycle_local_peer_is_host,source/networking/network_life_cycle.c,,bool
+00059330,network_life_cycle_unknown_00059330,source/networking/network_life_cycle.c,,bool
+00059470,network_life_cycle_unknown_00059470,source/networking/network_life_cycle.c,,bool
+000594f0,network_life_cycle_unknown_000594f0,source/networking/network_life_cycle.c,,int
+00059500,network_life_cycle_unknown_00059500,source/networking/network_life_cycle.c,,int
+00059570,network_life_cycle_unknown_00059570,source/networking/network_life_cycle.c,,int
+00058d20,network_session_unknown_00058d20,source/networking/network_session.c,ecx,bool
+00058d50,network_session_local_peer_is_host,source/networking/network_session.c,edx,bool
+00058d70,network_session_established,source/networking/network_session.c,eax,bool
+00058d90,network_session_unknown_00058d90,source/networking/network_session.c,edx,bool
+00070570,unknown_00070570,,ecx,int
 00056380,voice_queues_build_packet,source/networking/voice_routing.c,eax stack stack stack,int,stdcall
 00056000,voice_queue_keep,source/networking/voice_routing.c,eax stack,void,stdcall
 00055c40,voice_queue_write,source/networking/voice_routing.c,esi eax edx stack stack stack,int,stdcall

@@ -21,14 +21,10 @@ are the names of its functions.
 #include <stdio.h>
 #include <string.h>
 #include "main/main_game.h"
+#include "networking/network_life_cycle.h"
 #include "saved games/saved_game_files.h"
 
 /* ---------- prototypes of functions not decompiled yet */
-
-/* 0x00059670, 0x000596a0: the session of the network game, from one place
-or the other; whether there is one */
-boolean unknown_00059670(byte **session);
-boolean unknown_000596a0(byte **session);
 
 
 /* 0x000596d0: something of the network game that says where the session
@@ -636,9 +632,9 @@ boolean game_voice_get_session(
 		switch (game_voice_session_source)
 		{
 		case _game_voice_session_source1:
-			return unknown_00059670(session);
+			return network_life_cycle_get_session(session);
 		case _game_voice_session_source2:
-			return unknown_000596a0(session);
+			return network_life_cycle_get_other_session(session);
 		}
 	}
 
@@ -1470,7 +1466,7 @@ unsigned long game_voice_unknown_00053c70(
 		byte *session= NULL;
 		byte *other_session= NULL;
 
-		if (unknown_000596a0(&session) && unknown_00059670(&other_session))
+		if (network_life_cycle_get_other_session(&session) && network_life_cycle_get_session(&other_session))
 		{
 			const byte *membership= NULL;
 			long count;

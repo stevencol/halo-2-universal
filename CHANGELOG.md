@@ -2,6 +2,57 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — La partida en red y sus sesiones: catorce funciones pequeñas
+
+Catorce funciones en dos archivos nuevos, `networking/network_session.c` (4) y
+`networking/network_life_cycle.c` (10), de 480 bytes entre todas. De 1042 funciones se pasa a
+1056, el 9,37 % de las del juego (el 6,022 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_unknown_00058d20` | `0x00058d20` | `networking/network_session.c` |
+| `network_session_local_peer_is_host` | `0x00058d50` | `networking/network_session.c` |
+| `network_session_established` | `0x00058d70` | `networking/network_session.c` |
+| `network_session_unknown_00058d90` | `0x00058d90` | `networking/network_session.c` |
+| `network_life_cycle_in_state5` | `0x00059260` | `networking/network_life_cycle.c` |
+| `network_life_cycle_get_state` | `0x000592d0` | `networking/network_life_cycle.c` |
+| `network_life_cycle_local_peer_is_host` | `0x000592f0` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_00059330` | `0x00059330` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_00059470` | `0x00059470` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_000594f0` | `0x000594f0` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_00059500` | `0x00059500` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_00059570` | `0x00059570` | `networking/network_life_cycle.c` |
+| `network_life_cycle_get_session` | `0x00059670` | `networking/network_life_cycle.c` |
+| `network_life_cycle_get_other_session` | `0x000596a0` | `networking/network_life_cycle.c` |
+
+Las dos últimas eran `unknown_00059670` y `unknown_000596a0`, de donde
+`game_voice.c` saca la sesión con la que va la voz (hito 271). Lo que falta
+de la voz («quién oye a quién») son funciones grandes con distancias; antes
+van estas, que son la base de todo lo de red.
+
+### Lo que se sabe
+
+- Una sesión tiene un estado, de 0 (no hay) a 8. Del 3 al 8 dice quién
+  está en ella: es la condición que `game_voice.c` miraba sin nombre.
+- La consola que lleva la sesión está en su `0x50`; esta consola, en
+  `0x72d8`. «Esta consola lleva la sesión» es que sean la misma.
+- La partida en red tiene dos sesiones (`0x00527364` y `0x0052736c`) y un
+  número que dice qué está haciendo (`0x00527334`, de 0 a 9), que ya
+  estaba en `main_game.c`.
+- Los nombres de los dos archivos son suposiciones (el segundo es el del
+  archivo de Halo 3 para lo mismo).
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de los dos archivos y las de
+  `game_voice`.
+- El tamaño de `0x00527500` no se conoce.
+- La batería completa del hito 278 y las mutaciones de los hitos 269 a 286
+  corren aparte o están pendientes; su resultado irá en una entrada
+  posterior.
+
 ## 2026-10-08 — A qué consolas va cada cosa: directa o por la consola elegida
 
 Dos funciones en `networking/voice_routing.c`, de 969 bytes entre las dos. De 1040 funciones se pasa a

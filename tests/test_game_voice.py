@@ -484,8 +484,8 @@ def run(t) -> None:
                             "game_voice_session_source": source,
                         },
                         externals={
-                            "unknown_00059670": lambda harness, arguments, found=found: found,
-                            "unknown_000596a0": lambda harness, arguments, found=found: found ^ 1,
+                            "network_life_cycle_get_session": lambda harness, arguments, found=found: found,
+                            "network_life_cycle_get_other_session": lambda harness, arguments, found=found: found ^ 1,
                         },
                     )
 
@@ -1156,8 +1156,8 @@ def run(t) -> None:
                         "game_voice_unknown_00053c70",
                         globals={**state(enabled, initialized), "game_voice_session_source": source},
                         externals={
-                            "unknown_000596a0": place(found, session),
-                            "unknown_00059670": place(other_found, other),
+                            "network_life_cycle_get_other_session": place(found, session),
+                            "network_life_cycle_get_session": place(other_found, other),
                             "unknown_0005f760": which,
                         },
                         extra=[session, other],
