@@ -10,6 +10,10 @@ guess, and so are the names of its functions.
 
 #include "voice.h"
 
+#include "memory/crc.h"
+
+#include <stdarg.h>
+#include <stdio.h>
 #include <string.h>
 
 /* ---------- prototypes of functions of the console's libraries */
@@ -61,6 +65,10 @@ long unknown_00332e34(void *engine, struct voice_talker talker, long unknown4, v
 
 /* 0x00332dad: the levels of the voice of a controller */
 long unknown_00332dad(void *engine, long controller_index, real *levels);
+
+/* 0x00332df4: what a player of another console said, as it came from the
+network */
+long unknown_00332df4(void *engine, struct voice_talker talker, const void *data, long size);
 
 /* 0x00332e8a, 0x00332e81: a controller plays a message, and records one */
 long unknown_00332e8a(void *engine, long controller_index, long size, const void *message, unsigned long unknown);
@@ -575,4 +583,66 @@ long VOICE_CALLBACK voice_callback_message_stopped(
 	voice->controller_message_busy[controller_index]= FALSE;
 
 	return 0;
+}
+
+/* 0x000553b0: gives the library what a player of another console said. If
+the library does not take it, the game makes its checksum and a text with
+the mode of each controller, and does nothing with them: what told of it is
+not in this build */
+void voice_remote_talker_data(
+	const void *data,
+	long size,
+	const struct voice_globals *voice,
+	long identifier)
+{
+	if (voice->initialized)
+	{
+		if (unknown_00332df4(voice->engine, voice_talker_new(identifier), data, size)<0)
+		{
+			unsigned long checksum;
+			char text[VOICE_TEXT_SIZE];
+			long controller_index;
+
+			text[0]= 0;
+			checksum= 0xFFFFFFFF;
+			crc_checksum_buffer(data, size, &checksum);
+			strncpy(text, "voice_modes:", VOICE_TEXT_SIZE);
+			text[VOICE_TEXT_SIZE-1]= 0;
+			for (controller_index= 0; controller_index!=NONE; controller_index= voice_next_controller(controller_index))
+			{
+				voice_text_append(text, "(c#%d %d)", controller_index,
+					voice->initialized ? voice->controller_modes[controller_index] : 0);
+			}
+		}
+	}
+}
+
+/* 0x00055920: writes formatted text after what a text of VOICE_TEXT_SIZE
+has; the text */
+char *voice_text_append(
+	char *text,
+	const char *format,
+	...)
+{
+	unsigned long length= 0;
+	unsigned long size;
+	char *end;
+	va_list arguments;
+
+	while (text[length])
+	{
+		length++;
+		if (length>=VOICE_TEXT_SIZE-1)
+		{
+			break;
+		}
+	}
+	size= VOICE_TEXT_SIZE-length;
+	end= text+length;
+	va_start(arguments, format);
+	vsnprintf(end, size-1, format, arguments);
+	va_end(arguments);
+	end[size-1]= 0;
+
+	return text;
 }

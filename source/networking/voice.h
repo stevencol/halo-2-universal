@@ -82,7 +82,11 @@ enum
 	VOICE_MESSAGE_FILE_TAG= 0x46464952, /* RIFF */
 	VOICE_MESSAGE_FORM_TAG= 0x45564157, /* WAVE */
 	VOICE_MESSAGE_FORMAT_TAG= 0x20746d66, /* fmt */
-	VOICE_MESSAGE_MINIMUM_SIZE= 0x10
+	VOICE_MESSAGE_MINIMUM_SIZE= 0x10,
+
+	/* of the text that is made when the library does not take what a player
+	of another console said */
+	VOICE_TEXT_SIZE= 0x80
 };
 
 /* as the library calls the game */
@@ -203,6 +207,8 @@ void voice_play_message(const long *message, boolean unknown, long size, long co
 	struct voice_globals *voice);
 void voice_record_message(unsigned long buffer_size, long controller_index, struct voice_globals *voice,
 	long unknown, void *buffer, long *size, long *length);
+void voice_remote_talker_data(const void *data, long size, const struct voice_globals *voice, long identifier);
+char *voice_text_append(char *text, const char *format, ...);
 long VOICE_CALLBACK voice_callback_headset_changed(struct voice_globals *voice, long controller_index, long change);
 long VOICE_CALLBACK voice_callback_data_ready(struct voice_globals *voice, long controller_index,
 	unsigned long size, void *data);

@@ -664,6 +664,9 @@ address,name,source,arguments,returns,convention
 00055630,voice_callback_unknown8,source/networking/voice.c,stack stack stack stack,int,stdcall
 00055640,voice_callback_message_recorded,source/networking/voice.c,stack stack stack stack,int,stdcall
 00055680,voice_callback_message_stopped,source/networking/voice.c,stack stack,int,stdcall
+000553b0,voice_remote_talker_data,source/networking/voice.c,ecx eax stack stack,void
+00055920,voice_text_append,source/networking/voice.c,ebx stack stack stack,string
+00332df4,unknown_00332df4,,stack stack stack stack stack stack,int
 00332e8a,unknown_00332e8a,,stack stack stack stack stack,int
 00332e81,unknown_00332e81,,stack stack stack stack stack,int
 00053a20,unknown_00053a20,,stack stack stack,void,stdcall

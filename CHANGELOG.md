@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Lo que dijo un jugador de otra consola: `voice.c`, completo
+
+Dos funciones en `networking/voice.c`, de 307 bytes entre las dos: las últimas del archivo. De 954 funciones se pasa a
+956, el 8,49 % de las del juego (el 5,630 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_remote_talker_data` | `0x000553b0` | `networking/voice.c` |
+| `voice_text_append` | `0x00055920` | `networking/voice.c` |
+
+Con ellas `voice.c` tiene sus 22 funciones, de `0x00055080` a `0x00055920`.
+
+### Lo que se sabe
+
+- `voice_remote_talker_data` le da a la biblioteca lo que dijo un jugador
+  de otra consola, tal como llegó por la red (`0x00332df4`).
+- Si la biblioteca no lo acepta, el juego calcula la suma de comprobación
+  de lo que llegó y arma un texto, `voice_modes:(c#0 2)(c#1 2)...`, con el
+  modo de cada mando... y no hace nada con ninguno de los dos. Es lo que
+  queda de un aviso de depuración que esta versión del juego ya no tiene.
+  Está escrito igual, con sus llamadas.
+- `voice_text_append` añade texto con formato a un texto de 128
+  caracteres. Es `csnzappendf` de `cseries.c` con el tamaño fijo.
+- `0x00055960` y `0x00055990`, que vienen después, no son de este archivo:
+  trabajan con otra estructura y con las variables del módulo de encima.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- Las mutaciones de los hitos 266, 267 y 268 corren aparte; su resultado
+  irá en una entrada posterior.
+
 ## 2026-10-08 — Los mensajes de voz y lo que la biblioteca le avisa al juego
 
 Ocho funciones en `networking/voice.c`. De 946 funciones se pasa a

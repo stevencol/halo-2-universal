@@ -404,3 +404,53 @@ def run(t) -> None:
     for _ in range(3):
         t.check("voice_callback_unknownC", voice(), *(random_.getrandbits(32) for _ in range(4)))
         t.check("voice_callback_unknown8", voice(), *(random_.getrandbits(32) for _ in range(3)))
+
+    # ---------- what a player of another console said
+
+    TEXT_SIZE = 0x80
+
+    def text_of(harness, address: int) -> bytes:
+        return bytes(harness.mu.mem_read(address, TEXT_SIZE)).split(b"\0", 1)[0]
+
+    def append_text(harness, arguments):
+        # the text is in the stack, and the format is not at the same place
+        # in the game and in source/: what they say is compared
+        text, format_, controller, mode = arguments
+        return text, (text_of(harness, text), text_of(harness, format_), controller, mode)
+
+    for started in (1, 0x80, 0, 1):
+        for result in (FAILED, 0, 1, 0x80000000):
+            for size in (0, 1, 0x25):
+                voice_data = bytearray(random_.randbytes(VOICE_SIZE))
+                voice_data[VOICE_INITIALIZED] = started
+                struct.pack_into("<I", voice_data, VOICE_ENGINE, ENGINE)
+                t.check(
+                    "voice_remote_talker_data",
+                    Buffer(random_.randbytes(0x28)),
+                    size,
+                    Buffer(bytes(voice_data)),
+                    random_.choice(identifiers),
+                    externals={
+                        # the data is the test's buffer, at the same place in both
+                        "unknown_00332df4": lambda harness, arguments, result=result: result,
+                        "voice_text_append": append_text,
+                    },
+                )
+
+    for start in (b"", b"voice_modes:", b"x" * 0x70, b"y" * 0x7D, b"z" * 0x7E, b"w" * 0x7F, b"v" * 0x90):
+        for format_, first, second in (
+            (b"(c#%d %d)", 2, 3),
+            (b"(c#%d %d)", 0xFFFFFFFF, 0x7FFFFFFF),
+            (b"", 0, 0),
+            (b"%d", 5, 0),
+            (b"%08x%08x!", 0x12345678, 0x9ABCDEF0),
+        ):
+            # past its size, the text of the test goes on with no zero
+            text = (start + b"\0" + random_.randbytes(TEXT_SIZE))[:TEXT_SIZE] if len(start) < TEXT_SIZE else start[:TEXT_SIZE]
+            t.check(
+                "voice_text_append",
+                Buffer(text + bytes(1) + random_.randbytes(7)),
+                Buffer(format_ + b"\0"),
+                first,
+                second,
+            )
