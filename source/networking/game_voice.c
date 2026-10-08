@@ -30,11 +30,6 @@ or the other; whether there is one */
 boolean unknown_00059670(byte **session);
 boolean unknown_000596a0(byte **session);
 
-/* 0x00056380: something that 0x00525a00 does with three numbers */
-long unknown_00056380(long unknown4, byte *unknown, long unknown0, long unknown8);
-
-/* 0x000564c0: more that 0x00525a00 does */
-void unknown_000564c0(long unknown4, byte *unknown, long unknown0);
 
 /* 0x000596d0: something of the network game that says where the session
 comes from; whether there is one */
@@ -538,17 +533,18 @@ void game_voice_stop_message_with_headset(
 	}
 }
 
-/* 0x00053b00: hands three numbers on to unknown_00056380; 0 with no voice */
-long game_voice_unknown_00053b00(
-	long unknown0,
-	long unknown4,
-	long unknown8)
+/* 0x00053b00: writes what there is to send to a console of what the players
+said; how much it is, and 0 with no voice (voice_queues_build_packet) */
+long game_voice_build_packet(
+	long peer,
+	byte *packet,
+	long size)
 {
 	long result= 0;
 
 	if (game_voice_active() && unknown_004c9888!=0)
 	{
-		result= unknown_00056380(unknown4, unknown_00525a00, unknown0, unknown8);
+		result= voice_queues_build_packet(packet, unknown_00525a00, peer, size);
 	}
 
 	return result;
@@ -723,40 +719,41 @@ void game_voice_update_session_source(
 	}
 }
 
-/* 0x00054810 */
-void game_voice_unknown_00054810(
-	long unknown0,
-	long unknown4)
+/* 0x00054810: takes what another console sent of what its players said
+(voice_queues_read_packet) */
+void game_voice_read_packet(
+	const byte *packet,
+	long size)
 {
 	if (game_voice_active() && unknown_004c9888!=0)
 	{
-		unknown_000564c0(unknown4, unknown_00525a00, unknown0);
+		voice_queues_read_packet(size, unknown_00525a00, packet);
 	}
 }
 
-/* 0x00054850 */
-boolean game_voice_unknown_00054850(
-	long unknown)
+/* 0x00054850: whether there is something to send to a console */
+boolean game_voice_has_packet_for_peer(
+	long peer)
 {
 	boolean result= FALSE;
 
 	if (game_voice_active() && unknown_004c9888!=0)
 	{
-		result= voice_queues_go_to_peer(unknown, unknown_00525a00);
+		result= voice_queues_go_to_peer(peer, unknown_00525a00);
 	}
 
 	return result;
 }
 
-/* 0x00054990 */
-long game_voice_unknown_00054990(
-	long unknown)
+/* 0x00054990: how much there is to send to a console */
+long game_voice_packet_size_for_peer(
+	long peer)
 {
 	long result= 0;
 
 	if (game_voice_active() && unknown_004c9888!=0)
 	{
-		result= voice_queues_size_for_peer(unknown_00525a00, unknown);
+		result= voice_queues_size_for_peer(unknown_00525a00, peer);
 	}
 
 	return result;

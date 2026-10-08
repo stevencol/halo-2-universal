@@ -232,3 +232,79 @@ def run(t) -> None:
                             globals={**state(enabled, initialized), "unknown_004c9878": chosen},
                             externals={"voice_queues_go_to_peer": gives(goes)},
                         )
+
+    # ---------- what goes from one console to another
+
+    ENTRY_SIZE = 0x12
+
+    for count in (0, 1, 2, 7, 15):
+        for entries in (0, 0xFFFF, 1, 0x8000, 0x5555, 0xAAAA, 0xFFFF0000, 0x10001, random_.getrandbits(16), random_.getrandbits(16)):
+            data = bytearray(random_.randbytes(QUEUE_SIZE))
+            struct.pack_into("<I", data, 4, count)
+            t.check("voice_queue_keep", Buffer(bytes(data)), entries)
+
+    def nth(name: str, values: list):
+        def handler(harness, arguments):
+            calls = sum(1 for call in harness._calls if call[0] == name)
+            # whether the console is the chosen one comes as a byte in a place of four
+            return values[min(calls, len(values) - 1)], (*arguments[:-1], arguments[-1] & 0xFF)
+
+        return handler
+
+    for on in (1, 1, 1, 0):
+        for enabled, initialized in active():
+            for peer in (0, 9):
+                for size in (0x200, 15, 14, 0x40):
+                    for n in range(6):
+                        data = queues(on)
+                        for player in range(16):
+                            at = 4 + player * QUEUE_SIZE
+                            data[at] = random_.choice((0, 1, 1, 0x80))
+                            struct.pack_into("<H", data, at + 8, random_.choice((0, 0xFFFF, 1 << peer, random_.getrandbits(16))))
+                        # what each queue writes: enough of them fill the room, and one can fail
+                        written = [random_.choice((5, 13, 24, 24, 0x30)) for _ in range(16)]
+                        if n == 4:
+                            written[random_.randrange(4)] = random_.choice((0, 0xFFFFFFFF))
+                        t.check(
+                            "voice_queues_build_packet",
+                            Buffer(random_.randbytes(0x210)),
+                            Buffer(bytes(data)),
+                            peer,
+                            size,
+                            globals={**state(enabled, initialized), "unknown_004c9878": random_.choice((peer, peer, 3, NONE))},
+                            externals={
+                                "voice_queues_go_to_peer": gives(1 if n != 5 else 0),
+                                "unknown_00055c40": nth("unknown_00055c40", written),
+                            },
+                        )
+
+    for on in (1, 1, 1, 0):
+        for flags in (0, 1, 0xFE, 0xFF):
+            for chosen in (1, 0):
+                for queue_count in (1, 2, 5, 15, 0, 16, 0xFF):
+                    for n in range(5):
+                        data = bytearray(random_.randbytes(0x200))
+                        data[0], data[1] = flags, queue_count
+                        # the queues are the test's: each takes so much, and the next starts there
+                        taken = [random_.choice((4, 12, 20)) for _ in range(16)]
+                        if n == 3:
+                            taken[random_.randrange(3)] = random_.choice((0, 0xFFFFFFFF))
+                        at = 2
+                        for index in range(16):
+                            data[at] = random_.randint(0, 15) if n != 4 or index != 1 else 16
+                            data[at + 1] = random_.choice((1, 3, 15, 15, 0, 16)) if n == 2 else random_.randint(1, 15)
+                            if 1 <= data[at + 1] <= 15 and taken[index] not in (0, 0xFFFFFFFF):
+                                at += taken[index]
+                        calls_taken = taken
+
+                        def take(harness, arguments, calls_taken=calls_taken, data=data):
+                            calls = sum(1 for call in harness._calls if call[0] == "unknown_00055e10")
+                            return calls_taken[min(calls, 15)], (*arguments[:-1], arguments[-1] & 0xFF)
+
+                        t.check(
+                            "voice_queues_read_packet",
+                            random_.choice((0x200, 0x40, 2)),
+                            Buffer(bytes(queues(on))),
+                            Buffer(bytes(data)),
+                            externals={"game_voice_unknown_000549d0": gives(chosen), "unknown_00055e10": take},
+                        )

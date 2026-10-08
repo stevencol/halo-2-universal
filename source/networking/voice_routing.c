@@ -33,6 +33,12 @@ boolean unknown_000589e0(long player);
 network game */
 unsigned long __attribute__((stdcall)) unknown_00056c60(byte *channels, long player_index);
 
+/* 0x00055c40: writes what a queue has for a console; how much it is, and 0
+or less if there was no room. 0x00055e10: takes what a queue of another
+console had; how much it was, and 0 or less if it was not right */
+long __attribute__((stdcall)) unknown_00055c40(long peer, byte *out, byte *header, long size, boolean is_chosen);
+long __attribute__((stdcall)) unknown_00055e10(byte *queue, const byte *in, long size, boolean is_chosen);
+
 /* 0x00056990: something made of who a player talks to; 0x000565c0: the two
 numbers of 16 bits that unknown_00527104 gives for it */
 long unknown_00056990(unsigned long targets);
@@ -373,4 +379,140 @@ long voice_queues_size_for_peer(
 	}
 
 	return size;
+}
+
+/* 0x00056000: leaves in a queue only those of its things that have their
+bit in a number, in the order that they had */
+void VOICE_ROUTING_CALLBACK voice_queue_keep(
+	byte *queue,
+	unsigned long entries)
+{
+	long *count= (long *)(queue+VOICE_QUEUE_COUNT_OFFSET);
+	long kept= 0;
+	long index;
+
+	for (index= 0; index<*count; index++)
+	{
+		if ((entries&0xFFFF)&(1u<<(index&0x1F)))
+		{
+			if (index!=kept)
+			{
+				memcpy(queue+VOICE_QUEUE_ENTRIES_OFFSET+kept*VOICE_QUEUE_ENTRY_SIZE,
+					queue+VOICE_QUEUE_ENTRIES_OFFSET+index*VOICE_QUEUE_ENTRY_SIZE, VOICE_QUEUE_ENTRY_SIZE);
+			}
+			kept++;
+		}
+	}
+	*count= kept;
+}
+
+/* 0x00056380: writes what there is to send to a console of what the queues
+have, in room of a size; how much was written, and 0 if nothing: with
+nothing for the console, with too little room, or if no queue could write.
+The first bit of the first byte says whether the console is the one chosen
+for the voice: the rest of the byte is left as it was */
+long VOICE_ROUTING_CALLBACK voice_queues_build_packet(
+	byte *packet,
+	byte *queues,
+	long peer,
+	long size)
+{
+	if (queues[VOICE_QUEUES_ON_OFFSET] && voice_queues_go_to_peer(peer, queues) && size>=VOICE_PACKET_MINIMUM_SIZE)
+	{
+		long queue_count= 0;
+		boolean is_chosen= (voice_routing_active() ? unknown_004c9878 : 0)==peer;
+		long remaining= size-VOICE_PACKET_HEADER_SIZE;
+		byte *out= packet+VOICE_PACKET_HEADER_SIZE;
+		long player_index;
+
+		if (is_chosen)
+		{
+			packet[VOICE_PACKET_FLAGS_OFFSET]|= 1;
+		}
+		else
+		{
+			packet[VOICE_PACKET_FLAGS_OFFSET]&= 0xFE;
+		}
+		for (player_index= 0; player_index<MAXIMUM_VOICE_ROUTING_PLAYERS; player_index++)
+		{
+			const byte *queue= queues+VOICE_QUEUES_QUEUE_OFFSET+player_index*VOICE_QUEUE_SIZE;
+
+			if (queue[VOICE_QUEUE_ACTIVE_OFFSET] &&
+				((1u<<(peer&0x1F))&*(const word *)(queue+VOICE_QUEUE_PEERS_OFFSET)) && remaining>0)
+			{
+				long written= unknown_00055c40(peer, out+VOICE_PACKET_QUEUE_SIZE, out, remaining, is_chosen);
+
+				if (written<=0)
+				{
+					break;
+				}
+				queue_count++;
+				out+= written;
+				remaining-= written;
+			}
+		}
+		if (queue_count>0)
+		{
+			packet[VOICE_PACKET_QUEUE_COUNT_OFFSET]= (byte)queue_count;
+
+			return size-remaining;
+		}
+		packet[VOICE_PACKET_QUEUE_COUNT_OFFSET]= 0;
+	}
+
+	return 0;
+}
+
+/* 0x000564c0: takes what another console sent of what its players said:
+each queue goes to that of its player. One that says that it is for the
+console chosen for the voice is only taken by that console. It is left as
+soon as something is not right: a count of queues or a player out of range,
+or a queue that is not taken. A queue with a count of things out of range is
+passed over, without going on to the next */
+void VOICE_ROUTING_CALLBACK voice_queues_read_packet(
+	long size,
+	byte *queues,
+	const byte *packet)
+{
+	if (queues[VOICE_QUEUES_ON_OFFSET])
+	{
+		boolean for_chosen= packet[VOICE_PACKET_FLAGS_OFFSET]&1;
+		long remaining= size-VOICE_PACKET_HEADER_SIZE;
+		long queue_count;
+		const byte *in;
+		long index;
+
+		if (for_chosen && !game_voice_unknown_000549d0())
+		{
+			return;
+		}
+		queue_count= packet[VOICE_PACKET_QUEUE_COUNT_OFFSET];
+		if (queue_count<1 || queue_count>MAXIMUM_VOICE_QUEUE_ENTRIES-1)
+		{
+			return;
+		}
+		in= packet+VOICE_PACKET_HEADER_SIZE;
+		for (index= 0; index<packet[VOICE_PACKET_QUEUE_COUNT_OFFSET]; index++)
+		{
+			long player_index= in[VOICE_PACKET_QUEUE_PLAYER_OFFSET];
+			long entry_count= in[VOICE_PACKET_QUEUE_ENTRY_COUNT_OFFSET];
+
+			if (player_index>MAXIMUM_VOICE_ROUTING_PLAYERS-1)
+			{
+				return;
+			}
+			if (entry_count>=1 && entry_count<=MAXIMUM_VOICE_QUEUE_ENTRIES-1)
+			{
+				long taken= unknown_00055e10(queues+VOICE_QUEUES_QUEUE_OFFSET+player_index*VOICE_QUEUE_SIZE, in,
+					remaining, for_chosen);
+
+				if (taken<=0)
+				{
+					return;
+				}
+				remaining-= taken;
+				in+= taken;
+			}
+		}
+	}
 }

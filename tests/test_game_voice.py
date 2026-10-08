@@ -417,7 +417,7 @@ def run(t) -> None:
     for enabled, initialized in active():
         for unknown in (1, 0, 0x100):
             t.check(
-                "game_voice_unknown_00053b00",
+                "game_voice_build_packet",
                 random_.getrandbits(32),
                 random_.getrandbits(32),
                 random_.getrandbits(32),
@@ -427,7 +427,7 @@ def run(t) -> None:
                     "unknown_00525a00": GlobalRange(0x1704),
                 },
                 externals={
-                    "unknown_00056380": lambda harness, arguments, result=random_.getrandbits(32): (
+                    "voice_queues_build_packet": lambda harness, arguments, result=random_.getrandbits(32): (
                         result,
                         (arguments[0], harness.normalize(arguments[1]), arguments[2], arguments[3]),
                     )
@@ -602,21 +602,21 @@ def run(t) -> None:
         for unknown in (1, 0, 3):
             both = {**state(enabled, initialized), "unknown_004c9888": unknown, "unknown_00525a00": GlobalRange(0x1704)}
             t.check(
-                "game_voice_unknown_00054810",
+                "game_voice_read_packet",
                 random_.getrandbits(32),
                 random_.getrandbits(32),
                 globals=both,
-                externals={"unknown_000564c0": with_525a00(0, 1)},
+                externals={"voice_queues_read_packet": with_525a00(0, 1)},
             )
             for result in (1, 0, 0x100, 0xFFFFFF01):
                 t.check(
-                    "game_voice_unknown_00054850",
+                    "game_voice_has_packet_for_peer",
                     random_.getrandbits(32),
                     globals=both,
                     externals={"voice_queues_go_to_peer": with_525a00(result, 1)},
                 )
             t.check(
-                "game_voice_unknown_00054990",
+                "game_voice_packet_size_for_peer",
                 random_.getrandbits(32),
                 globals=both,
                 externals={"voice_queues_size_for_peer": with_525a00(random_.getrandbits(32), 0)},

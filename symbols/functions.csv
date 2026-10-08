@@ -660,7 +660,7 @@ address,name,source,arguments,returns,convention
 000536b0,game_voice_controller_can_talk,source/networking/game_voice.c,eax,bool
 00053f50,game_voice_library_begin,source/networking/game_voice.c,,void
 00053f80,game_voice_library_end,source/networking/game_voice.c,,void
-00053b00,game_voice_unknown_00053b00,source/networking/game_voice.c,stack stack stack,int
+00053b00,game_voice_build_packet,source/networking/game_voice.c,stack stack stack,int
 00053b40,game_voice_player_can_be_heard,source/networking/game_voice.c,eax,bool
 00053b90,game_voice_player_voice_off,source/networking/game_voice.c,ebx,bool
 00053bb0,game_voice_player_not_allowed,source/networking/game_voice.c,ebx,bool
@@ -671,13 +671,16 @@ address,name,source,arguments,returns,convention
 00053de0,game_voice_get_membership,source/networking/game_voice.c,,int
 00059670,unknown_00059670,,edx,bool
 000596a0,unknown_000596a0,,edx,bool
-00056380,unknown_00056380,,eax stack stack stack,int
+00056380,voice_queues_build_packet,source/networking/voice_routing.c,eax stack stack stack,int,stdcall
+00056000,voice_queue_keep,source/networking/voice_routing.c,eax stack,void,stdcall
+00055c40,unknown_00055c40,,eax edx stack stack stack,int,stdcall
+00055e10,unknown_00055e10,,stack stack stack stack,int,stdcall
 000649c0,unknown_000649c0,,,int
 003212c5,_clearfp,,,int
 000547e0,game_voice_update_session_source,source/networking/game_voice.c,,void
-00054810,game_voice_unknown_00054810,source/networking/game_voice.c,stack stack,void
-00054850,game_voice_unknown_00054850,source/networking/game_voice.c,stack,bool
-00054990,game_voice_unknown_00054990,source/networking/game_voice.c,stack,int
+00054810,game_voice_read_packet,source/networking/game_voice.c,stack stack,void
+00054850,game_voice_has_packet_for_peer,source/networking/game_voice.c,stack,bool
+00054990,game_voice_packet_size_for_peer,source/networking/game_voice.c,stack,int
 000549d0,game_voice_unknown_000549d0,source/networking/game_voice.c,,bool
 00054a20,game_voice_get_local_peer,source/networking/game_voice.c,,int
 00054a70,game_voice_session_unknown40,source/networking/game_voice.c,,int
@@ -689,7 +692,7 @@ address,name,source,arguments,returns,convention
 00054c70,game_voice_unknown_00054c70,source/networking/game_voice.c,,bool
 00054cc0,game_voice_unknown_00054cc0,source/networking/game_voice.c,,int
 00054d00,game_voice_get_talkers,source/networking/game_voice.c,,int
-000564c0,unknown_000564c0,,eax stack stack,void
+000564c0,voice_queues_read_packet,source/networking/voice_routing.c,eax stack stack,void,stdcall
 00056160,voice_queues_go_to_peer,source/networking/voice_routing.c,ecx edx,bool
 00056220,voice_queues_size_for_peer,source/networking/voice_routing.c,eax esi,int
 000596d0,unknown_000596d0,,edi,bool

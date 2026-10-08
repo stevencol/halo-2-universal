@@ -2,6 +2,55 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Lo que una consola le manda a otra de la voz
+
+Tres funciones en `networking/voice_routing.c`, de 642 bytes entre las tres. De 1034 funciones se pasa a
+1037, el 9,21 % de las del juego (el 5,931 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_queue_keep` | `0x00056000` | `networking/voice_routing.c` |
+| `voice_queues_build_packet` | `0x00056380` | `networking/voice_routing.c` |
+| `voice_queues_read_packet` | `0x000564c0` | `networking/voice_routing.c` |
+
+Las dos últimas eran `unknown_00056380` y `unknown_000564c0`.
+
+### Cambiado
+
+- Con ellas se sabe qué eran cuatro funciones de `game_voice.c` que
+  llevaban su dirección en el nombre (hitos 271 y 272):
+  `game_voice_build_packet` (`0x00053b00`), `game_voice_read_packet`
+  (`0x00054810`), `game_voice_has_packet_for_peer` (`0x00054850`) y
+  `game_voice_packet_size_for_peer` (`0x00054990`). Sus argumentos tienen
+  ya nombre y tipo.
+
+### Lo que se sabe
+
+- Lo que una consola le manda a otra de la voz empieza con dos bytes: uno
+  cuyo primer bit dice que la otra es la consola elegida para la voz, y
+  cuántas colas vienen detrás (de 1 a 15). Cada cola empieza con su jugador
+  (de 0 a 15) y cuántas cosas trae (de 1 a 15).
+- Al escribir, no se escribe nada con menos de 15 bytes de sitio, y se
+  para en la primera cola que no cabe. Al leer, lo que dice ser para la
+  consola elegida solo lo acepta esa consola, y se deja de leer en cuanto
+  algo no cuadra.
+- Al leer hay un descuido del juego: una cola con una cuenta de cosas fuera
+  de rango se salta sin avanzar a la siguiente, así que se vuelve a mirar
+  la misma hasta agotar la cuenta de colas. Está escrito igual.
+- `voice_queue_keep` deja en una cola solo las cosas cuyo bit está en un
+  número, en su orden.
+- Escribir y leer cada cola lo hacen `0x00055c40` y `0x00055e10`, sin
+  descompilar.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo y las de `game_voice`.
+- La batería completa del hito 278 y las mutaciones de los hitos 269 a 282
+  corren aparte o están pendientes; su resultado irá en una entrada
+  posterior.
+
 ## 2026-10-08 — La cola de lo que dice un jugador, y cuánto hay que mandar a cada consola
 
 Dos funciones en `networking/voice_routing.c`, de 590 bytes entre las dos. De 1032 funciones se pasa a

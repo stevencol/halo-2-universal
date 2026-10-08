@@ -53,6 +53,15 @@ enum
 	and this much for each thing, or a little more if the console is the
 	one chosen for the voice */
 	VOICE_PACKET_HEADER_SIZE= 2,
+	/* what goes to a console starts with a byte whose first bit says that
+	the console is the one chosen for the voice, and how many queues follow.
+	It is not written with room for less than this */
+	VOICE_PACKET_FLAGS_OFFSET= 0,
+	VOICE_PACKET_QUEUE_COUNT_OFFSET= 1,
+	VOICE_PACKET_MINIMUM_SIZE= 15,
+	/* each queue in it starts with its player and how many things */
+	VOICE_PACKET_QUEUE_PLAYER_OFFSET= 0,
+	VOICE_PACKET_QUEUE_ENTRY_COUNT_OFFSET= 1,
 	VOICE_PACKET_QUEUE_SIZE= 2,
 	VOICE_PACKET_ENTRY_SIZE= 11,
 	VOICE_PACKET_CHOSEN_PEER_ENTRY_EXTRA_SIZE= 2,
@@ -82,6 +91,9 @@ void voice_targets_update(byte *targets);
 void VOICE_ROUTING_CALLBACK voice_queue_add(const word *words, byte *queue, const void *data, unsigned long size,
 	const boolean *unknown);
 long voice_queues_size_for_peer(const byte *queues, long peer);
+void VOICE_ROUTING_CALLBACK voice_queue_keep(byte *queue, unsigned long entries);
+long VOICE_ROUTING_CALLBACK voice_queues_build_packet(byte *packet, byte *queues, long peer, long size);
+void VOICE_ROUTING_CALLBACK voice_queues_read_packet(long size, byte *queues, const byte *packet);
 void voice_unknown_00527104_get_words(unsigned long targets, word *words, byte *unknown);
 
 #endif
