@@ -62,13 +62,8 @@ console of it, with a byte, two numbers and a thing or none; whether it did */
 boolean __attribute__((stdcall)) unknown_0005df30(byte *session, boolean unknown8, long unknownC, long unknown10,
 	long peer_index, const byte *unknown14);
 
-/* 0x0005a400: something that is done with a session, with a number: see
-network_life_cycle.c */
-void __attribute__((stdcall)) unknown_0005a400(byte *session, long unknown);
-
-/* 0x0005a220: something that the console that runs a session does with a
-number */
-void unknown_0005a220(byte *session, long unknown);
+/* 0x00061180: what a session in its first state does to go out of it */
+void unknown_00061180(byte *session);
 
 /* 0x000614a0: something that the console that runs a session does with it
 in its fifth state, with a byte and a number */
@@ -2526,7 +2521,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_unknown_0005dea0(
 
 /* 0x0005e5b0: something comes by one of the game's channels. If it is from
 the console that runs a session: unknown_00062ab0 is done, in a session that
-says who is in it and that this console does not run; and unknown_0005a400,
+says who is in it and that this console does not run; and network_session_leave,
 in a session in its first state. TRUE */
 boolean network_session_unknown_0005e5b0(
 	byte *session,
@@ -2544,7 +2539,7 @@ boolean network_session_unknown_0005e5b0(
 	else if (network_session_state(session)==_network_session_state1 &&
 		peer_index==*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET))
 	{
-		unknown_0005a400(session, 0);
+		network_session_leave(session, 0);
 	}
 
 	return TRUE;
@@ -2671,7 +2666,7 @@ static inline __attribute__((always_inline)) void network_session_parameters_req
 
 /* 0x0005b1e0: the console that leads a session (the one that who is in it
 says runs it) asks for something with a number: if it does run it,
-unknown_0005a220 is done; if not, it is asked of the one that does. FALSE if
+network_session_host_set_unknown4980 is done; if not, it is asked of the one that does. FALSE if
 this console does not lead the session */
 boolean network_session_leader_unknown_0005b1e0(
 	byte *session,
@@ -2683,7 +2678,7 @@ boolean network_session_leader_unknown_0005b1e0(
 	}
 	if (network_session_unknown_00058d20(session))
 	{
-		unknown_0005a220(session, unknown);
+		network_session_host_set_unknown4980(session, unknown);
 	}
 	else
 	{
@@ -3157,6 +3152,145 @@ boolean NETWORK_SESSION_CALLBACK network_session_leader_set_unknown5ddc(
 			memcpy(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN5DDC_OFFSET, unknown5ddc,
 				NETWORK_SESSION_UNKNOWN5DDC_SIZE);
 		}
+		network_session_parameters_request_send(session, request);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005a220: the console that runs a session sets the number of 0x4980, if
+it is another: the session waits for each console that it talks with to
+answer, since now (see network_session_peer_answered); the number of 0x497C
+and the one that counts what changes count one more, and the time of what
+the session knows is now. With no console to wait for, it does not wait */
+void network_session_host_set_unknown4980(
+	byte *session,
+	long unknown4980)
+{
+	boolean any= FALSE;
+	long peer_index;
+
+	if (*(const long *)(session+NETWORK_SESSION_UNKNOWN4980_OFFSET)==unknown4980)
+	{
+		return;
+	}
+	for (peer_index= 0; peer_index<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET); peer_index++)
+	{
+		struct network_session_peer_state *state=
+			(struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index;
+
+		if (state->unknown1)
+		{
+			state->unknown2= TRUE;
+			any= TRUE;
+		}
+	}
+	*(long *)(session+NETWORK_SESSION_UNKNOWN7660_OFFSET)= *(const long *)(session+NETWORK_SESSION_UNKNOWN4980_OFFSET);
+	session[NETWORK_SESSION_UNKNOWN765C_OFFSET]= TRUE;
+	*(long *)(session+NETWORK_SESSION_UNKNOWN7664_OFFSET)= network_session_time();
+	*(long *)(session+NETWORK_SESSION_UNKNOWN4980_OFFSET)= unknown4980;
+	(*(long *)(session+NETWORK_SESSION_UNKNOWN497C_OFFSET))++;
+	*(long *)(session+NETWORK_SESSION_START_TIME_OFFSET)= network_session_time();
+	network_session_parameters_changed(session);
+	if (!any && session[NETWORK_SESSION_UNKNOWN765C_OFFSET])
+	{
+		session[NETWORK_SESSION_UNKNOWN765C_OFFSET]= FALSE;
+	}
+}
+
+/* 0x0005a400: this console goes out of a session, by its state. Nothing
+with no state, if network_session_unknown_00058d90 says so, or with the byte
+of 0x48. In the first state unknown_00061180 is done; from the third it
+goes into the fourth; in the fifth and the seventh, with the thing that it
+is given it goes into the sixth, and without it unknown_000614a0 is done (in
+the seventh, only a byte is set); in the eighth a byte is set; in the ninth,
+with the thing the other consoles are sent something of the kind 0x17, and
+without it unknown_0005a520 is done; and in the tenth, unknown_0005a520
+without it */
+void NETWORK_SESSION_CALLBACK network_session_leave(
+	byte *session,
+	boolean unknown)
+{
+	long state= network_session_state(session);
+
+	if (state==_network_session_state_none || network_session_unknown_00058d90(session) ||
+		session[NETWORK_SESSION_UNKNOWN48_OFFSET])
+	{
+		return;
+	}
+	switch (state)
+	{
+	case _network_session_state1:
+		unknown_00061180(session);
+		break;
+	case _network_session_state3:
+		network_session_enter_state4(session);
+		break;
+	case _network_session_state5:
+	case _network_session_state7:
+		if (unknown)
+		{
+			network_session_enter_state6(session);
+		}
+		else if (state==_network_session_state7)
+		{
+			session[NETWORK_SESSION_UNKNOWN7420_OFFSET]= TRUE;
+		}
+		else
+		{
+			unknown_000614a0(TRUE, session, NONE);
+		}
+		break;
+	case _network_session_state8:
+		session[NETWORK_SESSION_UNKNOWN7420_OFFSET]= TRUE;
+		break;
+	case _network_session_state9:
+		if (unknown)
+		{
+			byte message[NETWORK_SESSION_MESSAGE_UNKNOWN17_SIZE];
+
+			memset(message, 0, sizeof(message));
+			memcpy(message, session+NETWORK_SESSION_IDENTIFIER_OFFSET, NETWORK_SESSION_IDENTIFIER_SIZE);
+			*(long *)(message+NETWORK_SESSION_MESSAGE_UNKNOWN17_UNKNOWN8_OFFSET)= NETWORK_SESSION_MESSAGE_UNKNOWN17_UNKNOWN8;
+			network_session_send_to_peers(_network_session_send_both, session, _network_session_message_unknown17,
+				sizeof(message), message);
+		}
+		else
+		{
+			unknown_0005a520(session);
+		}
+		break;
+	case _network_session_state10:
+		if (!unknown)
+		{
+			unknown_0005a520(session);
+		}
+		break;
+	}
+}
+
+/* 0x0005a6e0: the byte of 0x49FC of a session is set: by this console if
+it runs the session, and if not it is asked of the one that does. FALSE if
+the session does not say who is in it */
+boolean network_session_request_unknown49fc(
+	byte *session)
+{
+	if (!network_session_established(session))
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		network_session_parameters_changed(session);
+		session[NETWORK_SESSION_UNKNOWN49FC_OFFSET]= TRUE;
+	}
+	else
+	{
+		byte request[NETWORK_SESSION_PARAMETERS_REQUEST_SIZE];
+
+		network_session_parameters_request_new(session, request);
+		request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN49FC_OFFSET]= TRUE;
+		request[NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN49FC_OFFSET]= TRUE;
 		network_session_parameters_request_send(session, request);
 	}
 

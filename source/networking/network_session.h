@@ -217,6 +217,15 @@ enum
 	_network_session_message_unknown23= 0x23,
 	NETWORK_SESSION_MESSAGE_UNKNOWN23_SIZE= 0x20,
 	NETWORK_SESSION_MESSAGE_UNKNOWN14_SIZE= 0xC,
+	NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN49FC_OFFSET= 0x30,
+	NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN49FC_OFFSET= 0x31,
+	/* what the console that runs a session sends to the others when it
+	goes out of it in the ninth state: of this kind and size, with what the
+	session is known by and a number */
+	_network_session_message_unknown17= 0x17,
+	NETWORK_SESSION_MESSAGE_UNKNOWN17_SIZE= 0x34,
+	NETWORK_SESSION_MESSAGE_UNKNOWN17_UNKNOWN8_OFFSET= 0x8,
+	NETWORK_SESSION_MESSAGE_UNKNOWN17_UNKNOWN8= 0xA,
 	/* the thing of 0x4D10 is a text of up to 127 characters; and after the
 	number of 0x4DAC, the session knows a thing of 0x130 bytes, which counts
 	only if the number at its 0x44 is not zero */
@@ -521,6 +530,9 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_set_player_unknownA8(long 
 	const byte *unknownA8);
 boolean NETWORK_SESSION_CALLBACK network_session_host_unknown_0005aeb0(byte *session, long unknown);
 void network_session_reset_unknown761c(byte *session);
+void network_session_host_set_unknown4980(byte *session, long unknown4980);
+void NETWORK_SESSION_CALLBACK network_session_leave(byte *session, boolean unknown);
+boolean network_session_request_unknown49fc(byte *session);
 boolean network_session_leader_unknown_0005b1e0(byte *session, long unknown);
 boolean network_session_leader_set_unknown49a4(byte *session, long unknown49a4);
 boolean network_session_leader_set_unknown49c4(byte *session);

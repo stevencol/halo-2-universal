@@ -23,11 +23,8 @@ long unknown_00070570(byte *unknown);
 /* 0x00065770: something that is done with a session that has just started */
 void unknown_00065770(byte *session);
 
-/* 0x0005a520, 0x0005a400, 0x0005b570, 0x0005a6e0: things that are done
-with a session; 0x0005b1e0: something of it */
+/* 0x0005a520: something that is done with a session */
 void unknown_0005a520(byte *session);
-void __attribute__((stdcall)) unknown_0005a400(byte *session, long unknown);
-void unknown_0005a6e0(byte *session);
 
 /* 0x0006dec0: what the network game is doing does its work of the frame: it
 is given where what it is doing is kept. 0x00073040, 0x000737b0: the work of
@@ -318,7 +315,7 @@ static inline __attribute__((always_inline)) void network_life_cycle_unknown_000
 		}
 		else
 		{
-			unknown_0005a400(session, 0);
+			network_session_leave(session, 0);
 		}
 	}
 }
@@ -389,7 +386,7 @@ void network_life_cycle_unknown_000595e0(
 			unknown_0051051d= TRUE;
 		}
 		memcpy(&unknown, unknown_00527500+UNKNOWN_00527500_UNKNOWN8_OFFSET, sizeof(unknown));
-		unknown_0005a6e0(*(byte *const *)(unknown+UNKNOWN_00527508_SESSION_OFFSET));
+		network_session_request_unknown49fc(*(byte *const *)(unknown+UNKNOWN_00527508_SESSION_OFFSET));
 	}
 }
 

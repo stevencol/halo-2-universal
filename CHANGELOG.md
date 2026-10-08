@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Salir de una sesión
+
+Tres funciones en `networking/network_session.c`, 588 bytes entre todas. De 1247
+funciones se pasa a 1250, el 11,10 % de las del juego (el 6,922 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_host_set_unknown4980` | `0x0005a220` | `networking/network_session.c` |
+| `network_session_leave` | `0x0005a400` | `networking/network_session.c` |
+| `network_session_request_unknown49fc` | `0x0005a6e0` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_leave` era `unknown_0005a400`, a la que llama la partida
+  (hito 288): **salir de la sesión**, según su estado. Es una tabla de
+  saltos de diez casillas:
+  - sin estado, o si `network_session_unknown_00058d90` dice que sí (los
+    estados 2, 4 y 6, que son los de «estoy saliendo»), o con el byte de
+    `0x48`, nada;
+  - en el **primero** (entrando), `0x00061180`;
+  - en el **tercero**, pasa al cuarto;
+  - en el **quinto** y el **séptimo** (llevando la sesión): con el
+    argumento pasa al sexto, que avisa a todas; sin él, `0x000614a0`;
+  - en el **octavo**, solo pone un byte;
+  - en el **noveno**, con el argumento manda a las demás algo de la clase
+    `0x17`; sin él, `0x0005a520`;
+  - en el **décimo**, `0x0005a520` si no lleva el argumento.
+  Se ve así que los estados pares 2, 4 y 6 son los de salida de los impares
+  1, 3 y 5.
+- `network_session_host_set_unknown4980` cambia el número de `0x4980` (el
+  que se compara con las respuestas de las consolas, hito 323): al
+  cambiarlo, la sesión se pone a **esperar** a que contesten todas las
+  consolas con las que habla, y suben el número de `0x497C` y el contador.
+  Es lo que `network_session_leader_unknown_0005b1e0` pide (hito 338).
+- `network_session_request_unknown49fc` pone el byte de `0x49FC`, o lo pide
+  a quien lleva la sesión (otro sitio del mensaje de petición: `0x30`).
+
+### Sin comprobar
+
+- Con un estado mayor que diez el juego salta a donde diga lo que haya
+  detrás de la tabla; aquí no se hace nada. No se prueba.
+- En este hito se pasaron las pruebas de `network_life_cycle` (158
+  funciones).
+- Las mutaciones de los hitos 280 a 308 y 321 a 342 están pendientes; las
+  de los hitos 314 a 320 seguían corriendo.
+
 ## 2026-10-08 — La petición de la clase 0x23 y la última del molde
 
 Dos funciones en `networking/network_session.c`, 633 bytes entre las dos. De 1245

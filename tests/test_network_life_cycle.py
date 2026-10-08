@@ -151,7 +151,7 @@ def run(t) -> None:
                         "network_life_cycle_session": session(state if other.endswith("cycle_session") else 0),
                         "network_life_cycle_other_session": session(0 if other.endswith("cycle_session") else state),
                     },
-                    externals=plain("network_life_cycle_unknown_000598f0", "unknown_0005a520", "unknown_0005a400"),
+                    externals=plain("network_life_cycle_unknown_000598f0", "unknown_0005a520", "network_session_leave"),
                 )
         for same in (True, False):
             t.check(
@@ -198,7 +198,7 @@ def run(t) -> None:
                     "unknown_0051051d": bytes((0x40,)),
                     "unknown_00527500+0x8": thing,
                 },
-                externals={"unknown_0005a6e0": a_thing},
+                externals={"network_session_request_unknown49fc": a_thing},
             )
 
     # ---------- the network game stops
@@ -1604,7 +1604,7 @@ def run(t) -> None:
             externals={
                 "network_observer_find_channel": which_channel(),
                 "unknown_00062ab0": nothing,
-                "unknown_0005a400": nothing,
+                "network_session_leave": nothing,
             },
         )
     for n in range(240):
@@ -1672,7 +1672,7 @@ def run(t) -> None:
     ):
         for n in range(80):
             arguments = (led(), random_.getrandbits(32)) if has_value else (led(),)
-            t.check(name, *arguments, externals={"unknown_00075e80": sends_all, "unknown_0005a220": nothing})
+            t.check(name, *arguments, externals={"unknown_00075e80": sends_all, "network_session_host_set_unknown4980": nothing})
 
     # ---------- four more changes that the console that leads a session asks for
 
@@ -1746,3 +1746,42 @@ def run(t) -> None:
             Buffer(bytes(thing)) if n % 5 else 0,
             externals={"unknown_00075e80": sends_all},
         )
+
+    # ---------- leaving a session, and two more
+
+    for n in range(240):
+        data = waiting()
+        same = struct.unpack_from("<I", data, 0x4980)[0]
+        t.check(
+            "network_session_host_set_unknown4980",
+            Buffer(bytes(data)),
+            random_.choice((same, same ^ 1, random_.getrandbits(32))),
+            globals=clock(),
+            externals={"GetTickCount": ticks()},
+        )
+
+    for n in range(400):
+        data = with_channels()
+        struct.pack_into("<I", data, STATE, random_.choice((0, 1, 2, 3, 4, 5, 5, 6, 7, 7, 8, 9, 9, 10, 10)))
+        struct.pack_into("<I", data, 0x54, random_.choice((0, 1, 3, 16)))
+        data[0x48] = random_.choice((0, 0, 0, 0, 1, 0x80))
+        data[0x7420] = random_.choice((0, 0, 0, 1))
+        for peer in range(16):
+            data[0x72DC + peer * 0x14 + 1] = random_.choice((0, 1, 1, 0x80))
+        t.check(
+            "network_session_leave",
+            Buffer(bytes(data), pointers=(8,)),
+            random_.choice((0, 0, 1, 1, 0x80, 0x100)),
+            globals=clock(),
+            externals={
+                "GetTickCount": ticks(),
+                "unknown_00062480": nothing,
+                "unknown_00075e80": sends_all,
+                "unknown_00061180": nothing,
+                "unknown_000614a0": lambda harness, arguments: (0, (arguments[0] & 0xFF, *arguments[1:])),
+                "unknown_0005a520": nothing,
+            },
+        )
+
+    for n in range(120):
+        t.check("network_session_request_unknown49fc", led(), externals={"unknown_00075e80": sends_all})
