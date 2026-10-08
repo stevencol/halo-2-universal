@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Avisar a una consola y sacarla de la sesión
+
+Tres funciones en `networking/network_session.c`, 337 bytes entre todas. De 1133
+funciones se pasa a 1136, el 10,08 % de las del juego (el 6,479 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_matches_state1_address` | `0x0005c8f0` | `networking/network_session.c` |
+| `network_session_remove_peer_with_message_e` | `0x0005fd10` | `networking/network_session.c` |
+| `network_session_remove_peer_with_message_d` | `0x0005fda0` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_matches_state1_address` era `unknown_0005c8f0` (hito
+  320): en su primer estado la sesión guarda una dirección del juego en
+  `0x7448`, y esto dice si otra es la misma (mismo tamaño, mayor que cero,
+  y mismos bytes). Es la dirección de quien lleva la sesión cuando aún no
+  se sabe quién más está: el primer estado es el de **estar entrando**.
+- Las otras dos mandan algo a una consola y la sacan de la sesión
+  (`0x0005fe20`, sin descompilar). Lo que mandan lleva los ocho bytes por
+  los que se conoce a la sesión, y es de la clase `0xE` en una y `0xD` en
+  la otra; la de `0xE` no hace nada en los tres últimos estados.
+- Solo se manda a una consola con el segundo byte de lo que la sesión
+  guarda de ella (el que recibe al entrar): es, entonces, **si se habla
+  con ella directamente**. Se manda con `0x00075e80` de dos maneras si su
+  canal está en el estado 7, y de una sola si no.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (62
+  funciones).
+- Las mutaciones de los hitos 280 a 308 y la del 321 están pendientes; las
+  de los hitos 309 a 320 están escritas (132) y esperan a que termine la
+  batería completa del hito 313.
+
 ## 2026-10-08 — Más maneras de buscar una consola en la sesión
 
 Cinco funciones en `networking/network_session.c`, 401 bytes entre todas. De 1128

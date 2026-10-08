@@ -141,6 +141,16 @@ enum
 	byte with a bit for each session that uses it */
 	NETWORK_SESSION_UNKNOWN8_CHANNEL_SIZE= 0x528,
 	NETWORK_SESSION_UNKNOWN8_CHANNEL_SESSIONS_OFFSET= 0xB1,
+	/* the first thing of one of those: 7 when it can be sent things in the
+	other way too */
+	NETWORK_SESSION_UNKNOWN8_CHANNEL_STATE_OFFSET= 0xA8,
+	_network_session_unknown8_channel_state7= 7,
+	/* two kinds of what a console is sent before it is taken out of the
+	session: what the session is known by goes with both */
+	_network_session_message_unknownD= 0xD,
+	_network_session_message_unknownE= 0xE,
+	/* in its first state, the session keeps an address of the game */
+	NETWORK_SESSION_STATE1_ADDRESS_OFFSET= 0x7448,
 	/* the players that ask to come into the session, at 0x7668 */
 	MAXIMUM_NETWORK_SESSION_PLAYER_REQUESTS= 16,
 	/* and after the rest of the session: GetTickCount with the other sign,
@@ -235,6 +245,9 @@ void NETWORK_SESSION_CALLBACK network_session_peer_state_new(boolean unknown1, b
 	long unknown4);
 void NETWORK_SESSION_CALLBACK network_session_add_peer(byte *session, long peer_index, const byte *address,
 	boolean unknown1, long unknown4, const long *unknownF0);
+boolean network_session_matches_state1_address(const byte *session, const struct transport_address *address);
+void network_session_remove_peer_with_message_e(long peer_index, byte *session);
+void network_session_remove_peer_with_message_d(long peer_index, byte *session);
 boolean NETWORK_SESSION_CALLBACK network_session_channel_is_host(const byte *session, long unknown);
 long network_session_find_peer_by_channel(const byte *session, long channel_index);
 long network_session_find_peer_by_transport_address(const byte *session, const struct transport_address *address);

@@ -1674,4 +1674,8 @@ address,name,source,arguments,returns,convention
 0005f7c0,network_session_address_is_host,source/networking/network_session.c,eax edi,bool
 00075ce0,unknown_00075ce0,,edx edi eax,int
 0007ab60,unknown_0007ab60,,ecx edx stack stack stack stack,bool,stdcall
-0005c8f0,unknown_0005c8f0,,ecx eax,bool
+0005c8f0,network_session_matches_state1_address,source/networking/network_session.c,ecx eax,bool
+0005fd10,network_session_remove_peer_with_message_e,source/networking/network_session.c,eax esi,void
+0005fda0,network_session_remove_peer_with_message_d,source/networking/network_session.c,eax esi,void
+00075e80,unknown_00075e80,,ecx eax stack stack stack stack stack,void,stdcall
+0005fe20,unknown_0005fe20,,eax ebx,void

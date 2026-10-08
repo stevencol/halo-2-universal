@@ -813,6 +813,51 @@ def run(t) -> None:
             Buffer(random_.randbytes(0x14)),
             externals={
                 "unknown_0007ab60": known(data),
-                "unknown_0005c8f0": lambda harness, arguments, same=random_.choice((0, 0, 0, 1, 0x80, 0x100)): same,
+                "network_session_matches_state1_address": lambda harness, arguments, same=random_.choice((0, 0, 0, 1, 0x80, 0x100)): same,
             },
         )
+
+    # ---------- the address that a session keeps in its first state
+
+    for n in range(240):
+        data = whole_session()
+        struct.pack_into("<I", data, STATE, random_.choice((1, 1, 1, 0, 2, 5)))
+        size = random_.choice((4, 4, 4, 16, 6, 1, 0, 0xFFFF, 0x8004))
+        address = bytearray(random_.randbytes(0x14))
+        struct.pack_into("<H", address, 0x12, size)
+        kept = bytearray(address)
+        way = random_.randrange(6)
+        if way == 0 and 0 < size <= 16:
+            # the last byte that counts is not the same
+            kept[size - 1] ^= 0x20
+        elif way == 1 and size < 16:
+            # the first byte that does not count is not the same
+            kept[size] ^= 0x20
+        elif way == 2:
+            struct.pack_into("<H", kept, 0x12, random_.choice((4, 16, 6, 0)))
+        elif way == 3:
+            kept[0] ^= 1
+        data[0x7448 : 0x7448 + 0x14] = kept
+        t.check("network_session_matches_state1_address", Buffer(bytes(data)), Buffer(bytes(address)))
+
+    # ---------- a console is told and taken out of a session
+
+    def sends(harness, arguments):
+        # what is sent is in the stack, and only a byte of the first thing counts
+        return 0, (arguments[0] & 0xFF, *arguments[1:6], bytes(harness.mu.mem_read(arguments[6], arguments[5] & 0xFF)))
+
+    for name in ("network_session_remove_peer_with_message_e", "network_session_remove_peer_with_message_d"):
+        for n in range(120):
+            data = whole_session() + bytearray(random_.randbytes(8 + 4 * 0x528))
+            struct.pack_into("<I", data, 8, CHANNELS)
+            struct.pack_into("<I", data, 0x10, random_.randrange(4))
+            for peer in range(16):
+                struct.pack_into("<I", data, 0x72DC + peer * 0x14 + 4, random_.randrange(4))
+            for channel in range(4):
+                struct.pack_into("<I", data, CHANNELS + channel * 0x528 + 0xA8, random_.choice((7, 7, 6, 0, 8)))
+            t.check(
+                name,
+                random_.randrange(16),
+                Buffer(bytes(data), pointers=(8,)),
+                externals={"unknown_00075e80": sends, "unknown_0005fe20": lambda harness, arguments: 0},
+            )

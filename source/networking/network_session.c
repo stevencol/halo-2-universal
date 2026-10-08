@@ -53,9 +53,14 @@ it could */
 boolean __attribute__((stdcall)) unknown_0007ab60(const struct transport_address *address, long unknown3C,
 	long unknown4, long unknown8, long unknownC, byte *peer_address);
 
-/* 0x0005c8f0: whether an address of the game is the one that a session in
-its first state keeps */
-boolean unknown_0005c8f0(const byte *session, const struct transport_address *address);
+/* 0x00075e80: sends something of a kind and a size to the console of one of
+the things of 0x528 bytes of what a session was given when it was set up, in
+one of two ways */
+void __attribute__((stdcall)) unknown_00075e80(boolean unknown, long channel_index, byte *unknown8, long index,
+	long type, long size, const void *data);
+
+/* 0x0005fe20: a console is taken out of a session */
+void unknown_0005fe20(byte *session, long peer_index);
 
 /* 0x0011ca80, of cseries.c */
 long language_from_xbox_language(long xbox_language);
@@ -822,7 +827,7 @@ boolean network_session_address_is_host(
 	const byte *session,
 	const struct transport_address *address)
 {
-	if (unknown_0005c8f0(session, address))
+	if (network_session_matches_state1_address(session, address))
 	{
 		return TRUE;
 	}
@@ -838,4 +843,80 @@ boolean network_session_address_is_host(
 	}
 
 	return FALSE;
+}
+
+/* 0x0005c8f0: whether an address of the game is the one that a session in
+its first state keeps: of the same size, which is more than none, and with
+the same bytes */
+boolean network_session_matches_state1_address(
+	const byte *session,
+	const struct transport_address *address)
+{
+	if (network_session_state(session)==_network_session_state1)
+	{
+		const struct transport_address *kept=
+			(const struct transport_address *)(session+NETWORK_SESSION_STATE1_ADDRESS_OFFSET);
+
+		if (address->address_size>0 && address->address_size==kept->address_size &&
+			memcmp(address, kept, address->address_size)==0)
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* a console is sent something of a kind, with what the session is known by,
+and taken out of the session. Only a console that has the second byte of
+what the session keeps of it is sent anything; it is sent in the two ways if
+its thing is in the seventh state. The game has this in each of the two
+functions that do it */
+static inline __attribute__((always_inline)) void network_session_remove_peer_with_message(
+	long peer_index,
+	byte *session,
+	long type)
+{
+	const struct network_session_peer_state *state=
+		(const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index;
+	byte identifier[NETWORK_SESSION_IDENTIFIER_SIZE];
+
+	memcpy(identifier, session+NETWORK_SESSION_IDENTIFIER_OFFSET, sizeof(identifier));
+	if (state->unknown1)
+	{
+		byte *unknown8= *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET);
+
+		if (*(const long *)(unknown8+state->unknown4*NETWORK_SESSION_UNKNOWN8_CHANNEL_SIZE+
+			NETWORK_SESSION_UNKNOWN8_CHANNEL_STATE_OFFSET)==_network_session_unknown8_channel_state7)
+		{
+			unknown_00075e80(FALSE, state->unknown4, unknown8, *(const long *)(session+NETWORK_SESSION_INDEX_OFFSET),
+				type, sizeof(identifier), identifier);
+		}
+		unknown_00075e80(TRUE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+			*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), type, sizeof(identifier), identifier);
+	}
+	unknown_0005fe20(session, peer_index);
+}
+
+/* 0x0005fd10: a console is sent something of the kind 0xE and taken out of
+a session. Nothing in the last three states */
+void network_session_remove_peer_with_message_e(
+	long peer_index,
+	byte *session)
+{
+	long state= network_session_state(session);
+
+	if (state!=_network_session_state7 && state!=_network_session_state6 && state!=_network_session_state8)
+	{
+		network_session_remove_peer_with_message(peer_index, session, _network_session_message_unknownE);
+	}
+}
+
+/* 0x0005fda0: a console is sent something of the kind 0xD and taken out of
+a session, in any state */
+void network_session_remove_peer_with_message_d(
+	long peer_index,
+	byte *session)
+{
+	network_session_remove_peer_with_message(peer_index, session, _network_session_message_unknownD);
 }
