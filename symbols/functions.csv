@@ -694,7 +694,13 @@ address,name,source,arguments,returns,convention
 000595e0,network_life_cycle_unknown_000595e0,source/networking/network_life_cycle.c,,void
 00059610,network_life_cycle_unknown_00059610,source/networking/network_life_cycle.c,,bool
 00059890,unknown_00059890,,stack stack stack,void,stdcall
-000598f0,unknown_000598f0,,eax,void
+000598f0,network_life_cycle_unknown_000598f0,source/networking/network_life_cycle.c,eax,void
+00059780,network_life_cycle_get_any_session,source/networking/network_life_cycle.c,edx,bool
+000597d0,network_life_cycle_get_state_session,source/networking/network_life_cycle.c,esi,bool
+00059840,network_life_cycle_unknown_00059840,source/networking/network_life_cycle.c,esi,bool
+000599b0,network_life_cycle_request_new2,source/networking/network_life_cycle.c,eax edx,void
+000599f0,network_life_cycle_request_new3,source/networking/network_life_cycle.c,eax edx,void
+00059ab0,network_life_cycle_request_new4,source/networking/network_life_cycle.c,eax,void
 0005a520,unknown_0005a520,,eax,void
 0005a400,unknown_0005a400,,ecx stack,void,stdcall
 0005b570,unknown_0005b570,,edx,void

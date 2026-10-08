@@ -18,6 +18,10 @@ enum
 	/* in a session: its state, 0 for none; which console this one is and
 	which one runs the session; and more that is only read */
 	NETWORK_SESSION_UNKNOWN18_OFFSET= 0x18,
+	/* eight bytes that the session is known by, and whether it has them */
+	NETWORK_SESSION_IDENTIFIER_OFFSET= 0x1C,
+	NETWORK_SESSION_IDENTIFIER_SIZE= 0x8,
+	NETWORK_SESSION_HAS_IDENTIFIER_OFFSET= 0x24,
 	NETWORK_SESSION_HOST_PEER_OFFSET= 0x50,
 	NETWORK_SESSION_UNKNOWN49A8_OFFSET= 0x49A8,
 	NETWORK_SESSION_UNKNOWN49AC_OFFSET= 0x49AC,

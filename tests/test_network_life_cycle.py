@@ -150,7 +150,7 @@ def run(t) -> None:
                         "network_life_cycle_session": session(state if other.endswith("cycle_session") else 0),
                         "network_life_cycle_other_session": session(0 if other.endswith("cycle_session") else state),
                     },
-                    externals=plain("unknown_000598f0", "unknown_0005a520", "unknown_0005a400"),
+                    externals=plain("network_life_cycle_unknown_000598f0", "unknown_0005a520", "unknown_0005a400"),
                 )
         for same in (True, False):
             t.check(
@@ -222,7 +222,7 @@ def run(t) -> None:
                     "unknown_0052737d": bytes((0x40,)),
                     **handlers,
                 },
-                externals=plain("unknown_000598f0", "unknown_0005a520"),
+                externals=plain("network_life_cycle_unknown_000598f0", "unknown_0005a520"),
                 mocks=[
                     Mock(lambda call: 0, stack_arguments=3, registers=("ecx",)),
                     Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
@@ -269,3 +269,60 @@ def run(t) -> None:
                             },
                             externals=plain(unknown_000641f0=unknown, unknown_00192e60=thing, unknown_00193470=says),
                         )
+
+    # ---------- which session
+
+    for there in (1, 0, 0x80):
+        for state, other_state in ((3, 3), (0, 3), (3, 0), (0, 0)):
+            for place in (Buffer(random_.randbytes(4)), 0):
+                sessions = {
+                    "unknown_00527330": bytes((there,)),
+                    "network_life_cycle_session": session(state),
+                    "network_life_cycle_other_session": session(other_state),
+                }
+                t.check("network_life_cycle_get_any_session", place, globals=sessions)
+                for life_cycle_state in range(11):
+                    t.check(
+                        "network_life_cycle_get_state_session",
+                        place,
+                        globals={**sessions, "unknown_00527334": life_cycle_state},
+                    )
+        for state in STATES:
+            for value in (1, 0, 2):
+                for place in (Buffer(random_.randbytes(4)), 0):
+                    t.check(
+                        "network_life_cycle_unknown_00059840",
+                        place,
+                        globals={"unknown_00527330": bytes((there,)), "network_life_cycle_session": session(state, x18=value)},
+                    )
+
+    for unknown in (1, 0):
+        for same in ("same", "first half", "second half", "no"):
+            identifier = random_.randbytes(8)
+            # the session has what it is known by: with none the game reads at no address
+            data = bytearray(session(3).data)
+            data[0x24] = random_.choice((1, 0x80))
+            data[0x1C:0x24] = identifier
+            if same == "first half":
+                data[0x1C] ^= 1
+            elif same == "second half":
+                data[0x23] ^= 0x80
+            elif same == "no":
+                data[0x1C:0x24] = random_.randbytes(8)
+            t.check(
+                "network_life_cycle_unknown_000598f0",
+                Buffer(bytes(data)),
+                globals={
+                    "unknown_00510518": unknown,
+                    "unknown_00510528": identifier,
+                    "unknown_0051051c": bytes((0x40,)),
+                    "unknown_0051051d": bytes((0x40,)),
+                },
+            )
+
+    # ---------- what is asked of the network game
+
+    for value in (0, 1, 0x3FE, 0x3FF, 0x400, NONE, 0x80000000, 0x7FFFFFFF):
+        t.check("network_life_cycle_request_new2", Buffer(random_.randbytes(0x1C)), value)
+        t.check("network_life_cycle_request_new3", Buffer(random_.randbytes(0x1C)), value)
+    t.check("network_life_cycle_request_new4", Buffer(random_.randbytes(0x1C)))

@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Más de la partida en red: qué sesión, y lo que se le pide
+
+Siete funciones en `networking/network_life_cycle.c`, de 388 bytes entre las siete. De 1073 funciones se pasa a
+1080, el 9,59 % de las del juego (el 6,078 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_life_cycle_get_any_session` | `0x00059780` | `networking/network_life_cycle.c` |
+| `network_life_cycle_get_state_session` | `0x000597d0` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_00059840` | `0x00059840` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_000598f0` | `0x000598f0` | `networking/network_life_cycle.c` |
+| `network_life_cycle_request_new2` | `0x000599b0` | `networking/network_life_cycle.c` |
+| `network_life_cycle_request_new3` | `0x000599f0` | `networking/network_life_cycle.c` |
+| `network_life_cycle_request_new4` | `0x00059ab0` | `networking/network_life_cycle.c` |
+
+`network_life_cycle_unknown_000598f0` era `unknown_000598f0`, la que el
+hito 287 dejó apuntada.
+
+### Lo que se sabe
+
+- Hay cuatro maneras de pedir «la sesión»: la primera, la otra, cualquiera
+  de las dos (la otra primero) y la del estado en que está la partida. La
+  última se parece a la «de ahora» del hito 289, sin el caso especial del
+  sexto estado.
+- Una sesión se conoce por ocho bytes (en su `0x1c`, y un byte al lado que
+  dice si los tiene). El juego guarda los de una (`0x00510528`) y levanta
+  dos flags cuando se toca esa misma sesión.
+- A la partida en red se le piden cosas con una estructura de 28 bytes: de
+  qué clase es la petición y unos números que valen 0 salvo uno, que no
+  puede pasar de 1.023. Hay tres funciones que la rellenan, para las
+  clases 2, 3 y 4.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- `network_life_cycle_unknown_000598f0` con una sesión que no tiene sus
+  ocho bytes: el juego compara con lo que haya en la dirección 0 y se
+  para.
+- Las mutaciones de los hitos 269 a 279 corren aparte; las de 280 a 290
+  están pendientes.
+
 ## 2026-10-08 — La partida en red deja lo que hace, y la sesión de cada momento
 
 Tres funciones en `networking/network_life_cycle.c`, de 351 bytes entre las tres. De 1070 funciones se pasa a

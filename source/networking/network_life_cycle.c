@@ -23,9 +23,8 @@ long unknown_00070570(byte *unknown);
 /* 0x00059890: of this file */
 void __attribute__((stdcall)) unknown_00059890(long unknown0, long unknown4, long unknown8);
 
-/* 0x000598f0, 0x0005a520, 0x0005a400, 0x0005b570, 0x0005a6e0: things that
-are done with a session; 0x0005b1e0: something of it */
-void unknown_000598f0(byte *session);
+/* 0x0005a520, 0x0005a400, 0x0005b570, 0x0005a6e0: things that are done
+with a session; 0x0005b1e0: something of it */
 void unknown_0005a520(byte *session);
 void __attribute__((stdcall)) unknown_0005a400(byte *session, long unknown);
 void unknown_0005b570(byte *session);
@@ -74,6 +73,9 @@ struct network_life_cycle_handler *network_life_cycle_handlers[NUMBER_OF_NETWORK
 works; the second is cleared by it */
 boolean unknown_0052737c;
 boolean unknown_0052737d;
+
+/* 0x00510528: eight bytes that a session is known by */
+byte unknown_00510528[NETWORK_SESSION_IDENTIFIER_SIZE];
 
 /* 0x00510518, 0x0051051c, 0x0051051d: if the first is not 0, the other two
 are set before some things are done */
@@ -284,7 +286,7 @@ static inline __attribute__((always_inline)) void network_life_cycle_unknown_000
 {
 	if (*(const long *)(session+NETWORK_SESSION_STATE_OFFSET)!=_network_session_state_none)
 	{
-		unknown_000598f0(session);
+		network_life_cycle_unknown_000598f0(session);
 		if (unknown)
 		{
 			unknown_0005a520(session);
@@ -404,12 +406,12 @@ void network_life_cycle_end(
 {
 	if (*(const long *)(network_life_cycle_other_session+NETWORK_SESSION_STATE_OFFSET)!=_network_session_state_none)
 	{
-		unknown_000598f0(network_life_cycle_other_session);
+		network_life_cycle_unknown_000598f0(network_life_cycle_other_session);
 		unknown_0005a520(network_life_cycle_other_session);
 	}
 	if (*(const long *)(network_life_cycle_session+NETWORK_SESSION_STATE_OFFSET)!=_network_session_state_none)
 	{
-		unknown_000598f0(network_life_cycle_session);
+		network_life_cycle_unknown_000598f0(network_life_cycle_session);
 		unknown_0005a520(network_life_cycle_session);
 	}
 	unknown_0052737d= FALSE;
@@ -501,4 +503,160 @@ boolean network_life_cycle_get_current_session(
 	}
 
 	return result;
+}
+
+/* 0x00059780: a session of the network game, the other one first; whether
+there is one */
+boolean network_life_cycle_get_any_session(
+	byte **session)
+{
+	boolean result= FALSE;
+
+	if (unknown_00527330 && *(const long *)(network_life_cycle_other_session+NETWORK_SESSION_STATE_OFFSET)!=
+		_network_session_state_none)
+	{
+		if (session)
+		{
+			*session= network_life_cycle_other_session;
+		}
+		result= TRUE;
+	}
+	if (!result && unknown_00527330 &&
+		*(const long *)(network_life_cycle_session+NETWORK_SESSION_STATE_OFFSET)!=_network_session_state_none)
+	{
+		if (session)
+		{
+			*session= network_life_cycle_session;
+		}
+		result= TRUE;
+	}
+
+	return result;
+}
+
+/* 0x000597d0: the session of what the network game is doing: the session in
+the first six states, and the other one in the last three; whether there is
+one */
+boolean network_life_cycle_get_state_session(
+	byte **session)
+{
+	byte *state_session;
+
+	switch (network_life_cycle_get_state())
+	{
+	case _network_life_cycle_state1:
+	case _network_life_cycle_state2:
+	case _network_life_cycle_state3:
+	case _network_life_cycle_state4:
+	case _network_life_cycle_state5:
+	case _network_life_cycle_state6:
+		state_session= network_life_cycle_session;
+		break;
+	case _network_life_cycle_state7:
+	case _network_life_cycle_state8:
+	case _network_life_cycle_state9:
+		state_session= network_life_cycle_other_session;
+		break;
+	default:
+		return FALSE;
+	}
+	if (*(const long *)(state_session+NETWORK_SESSION_STATE_OFFSET)!=_network_session_state_none)
+	{
+		if (session)
+		{
+			*session= state_session;
+		}
+
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+/* 0x00059840: the session, if it is in one of its last four states and a
+number of it is 1; whether it is so */
+boolean network_life_cycle_unknown_00059840(
+	byte **session)
+{
+	if (unknown_00527330)
+	{
+		long state= *(const long *)(network_life_cycle_session+NETWORK_SESSION_STATE_OFFSET);
+
+		if ((state==_network_session_state5 || state==_network_session_state6 || state==_network_session_state7 ||
+			state==_network_session_state8) &&
+			*(const long *)(network_life_cycle_session+NETWORK_SESSION_UNKNOWN18_OFFSET)==1)
+		{
+			if (session)
+			{
+				*session= network_life_cycle_session;
+			}
+
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x000598f0: with unknown_00510518 not 0: if a session is the one that
+unknown_00510528 says, the two flags are set. The game does not see whether
+the session has what it is known by */
+void network_life_cycle_unknown_000598f0(
+	const byte *session)
+{
+	if (unknown_00510518)
+	{
+		const byte *identifier= NULL;
+
+		if (*(const long *)(session+NETWORK_SESSION_STATE_OFFSET)!=_network_session_state_none &&
+			session[NETWORK_SESSION_HAS_IDENTIFIER_OFFSET])
+		{
+			identifier= session+NETWORK_SESSION_IDENTIFIER_OFFSET;
+		}
+		if (!memcmp(unknown_00510528, identifier, NETWORK_SESSION_IDENTIFIER_SIZE))
+		{
+			unknown_0051051c= TRUE;
+			unknown_0051051d= TRUE;
+		}
+	}
+}
+
+/* a number, no less than 0 and no more than the most */
+static inline __attribute__((always_inline)) long network_life_cycle_request_pin(
+	long value)
+{
+	if (value<0)
+	{
+		return 0;
+	}
+
+	return value>MAXIMUM_NETWORK_LIFE_CYCLE_REQUEST_VALUE ? MAXIMUM_NETWORK_LIFE_CYCLE_REQUEST_VALUE : value;
+}
+
+/* 0x000599b0: a request of the second kind, with its number */
+void network_life_cycle_request_new2(
+	struct network_life_cycle_request *request,
+	long value)
+{
+	memset(request, 0, sizeof(*request));
+	request->kind= 2;
+	request->unknown14= network_life_cycle_request_pin(value);
+}
+
+/* 0x000599f0: a request of the third kind, with its number */
+void network_life_cycle_request_new3(
+	struct network_life_cycle_request *request,
+	long value)
+{
+	memset(request, 0, sizeof(*request));
+	request->kind= 3;
+	request->unknown18= network_life_cycle_request_pin(value);
+}
+
+/* 0x00059ab0: a request of the fourth kind */
+void network_life_cycle_request_new4(
+	struct network_life_cycle_request *request)
+{
+	memset(request, 0, sizeof(*request));
+	request->kind= 4;
 }

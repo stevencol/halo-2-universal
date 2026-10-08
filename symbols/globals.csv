@@ -226,6 +226,7 @@ address,name,source
 00527e78,unknown_00527e78,source/networking/network_life_cycle.c
 00527fa8,unknown_00527fa8,source/networking/network_life_cycle.c
 00527500,unknown_00527500,source/networking/network_life_cycle.c
+00510528,unknown_00510528,source/networking/network_life_cycle.c
 00527338,network_life_cycle_handlers,source/networking/network_life_cycle.c
 0052737c,unknown_0052737c,source/networking/network_life_cycle.c
 0052737d,unknown_0052737d,source/networking/network_life_cycle.c
