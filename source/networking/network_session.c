@@ -1174,3 +1174,88 @@ void network_session_remove_player_and_count(
 	(*(long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET))++;
 	(*(long *)(session+NETWORK_SESSION_UNKNOWN7618_OFFSET))++;
 }
+
+/* 0x00062e30: how many more players a session has room for: the number at
+0x4994, less the players that it has and those that ask to come in and are
+not in it yet */
+long network_session_free_player_places(
+	const byte *session)
+{
+	const struct network_session_player_request *request=
+		(const struct network_session_player_request *)(session+NETWORK_SESSION_UNKNOWN7668_OFFSET);
+	const struct network_session_player_request *end= request+MAXIMUM_NETWORK_SESSION_PLAYER_REQUESTS;
+	long waiting= 0;
+
+	for (; request<end; request++)
+	{
+		if (request->valid && !request->has_player)
+		{
+			waiting++;
+		}
+	}
+
+	return *(const long *)(session+NETWORK_SESSION_UNKNOWN4994_OFFSET)-
+		*(const long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET+NETWORK_SESSION_MEMBERSHIP_PLAYER_COUNT_OFFSET)-waiting;
+}
+
+/* 0x00060000: the player that is known by twelve bytes is the one that a
+console has at one of its places; which player of the session it is, or NONE
+if it cannot be. If the console has it there already, nothing changes. If it
+has another, that one goes out. The player does not come in if it is in the
+session already, if what the session has at 0x78A8 says no, or if it had not
+asked to come in and there is no room; if it does, it takes the first place
+that is free */
+long NETWORK_SESSION_CALLBACK network_session_add_peer_player(
+	byte *session,
+	long peer_index,
+	long peer_player_index,
+	const byte *identifier)
+{
+	byte *membership= session+NETWORK_SESSION_MEMBERSHIP_OFFSET;
+	long player_index= *(const long *)(session+NETWORK_SESSION_PEER_ARRAY_OFFSET+peer_index*NETWORK_SESSION_PEER_SIZE+
+		NETWORK_SESSION_PEER_PLAYERS_OFFSET+peer_player_index*sizeof(long));
+	struct network_session_unknown78A8 *object;
+	struct network_session_player_request *request;
+	unsigned long players;
+	long index;
+
+	if (player_index!=NONE)
+	{
+		if (memcmp(membership+NETWORK_SESSION_MEMBERSHIP_PLAYER_ARRAY_OFFSET+player_index*NETWORK_SESSION_PLAYER_SIZE,
+			identifier, NETWORK_SESSION_PLAYER_IDENTIFIER_SIZE)==0)
+		{
+			return player_index;
+		}
+		network_session_remove_player(session, player_index);
+		(*(long *)membership)++;
+		(*(long *)(session+NETWORK_SESSION_UNKNOWN7618_OFFSET))++;
+		player_index= NONE;
+	}
+	if (network_session_find_player(session, identifier)!=NONE)
+	{
+		return player_index;
+	}
+	object= *(struct network_session_unknown78A8 **)(session+NETWORK_SESSION_UNKNOWN78A8_OFFSET);
+	if (object && !object->functions->player_can_join(object, identifier))
+	{
+		return player_index;
+	}
+	if (!network_session_find_request(session, identifier, &request) && network_session_free_player_places(session)<=0)
+	{
+		return player_index;
+	}
+	players= *(const unsigned long *)(membership+NETWORK_SESSION_MEMBERSHIP_PLAYERS_OFFSET);
+	for (index= 0; index<MAXIMUM_NETWORK_SESSION_PLAYERS; index++)
+	{
+		if (!(players&(1u<<index)))
+		{
+			player_index= index;
+			break;
+		}
+	}
+	network_session_add_player(identifier, session, peer_index, player_index, peer_player_index);
+	(*(long *)membership)++;
+	(*(long *)(session+NETWORK_SESSION_UNKNOWN7618_OFFSET))++;
+
+	return player_index;
+}

@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — El jugador de una consola entra en la sesión
+
+Dos funciones en `networking/network_session.c`, 291 bytes entre las dos. De 1143
+funciones se pasa a 1145, el 10,16 % de las del juego (el 6,532 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_add_peer_player` | `0x00060000` | `networking/network_session.c` |
+| `network_session_free_player_places` | `0x00062e30` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_add_peer_player` es la que decide si el jugador que una
+  consola dice tener en uno de sus cuatro sitios entra en la sesión, y
+  devuelve qué jugador de la sesión es (o NONE):
+  - si la consola ya lo tiene ahí, nada cambia;
+  - si tiene a otro, ese sale;
+  - no entra si ya está en la sesión, si lo que la sesión tiene en `0x78A8`
+    dice que no, o si no había pedido entrar y no queda sitio;
+  - si entra, ocupa el primer sitio libre de los dieciséis.
+- Lo de `0x78A8` es un objeto con tabla de funciones; la cuarta dice si un
+  jugador puede entrar. Es la primera vez que se ve para qué sirve.
+- `network_session_free_player_places` cuenta el sitio que queda: el
+  número de `0x4994` (16 al arrancar: es **el máximo de jugadores**) menos
+  los que hay y menos los que han pedido entrar y aún no están.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (71
+  funciones).
+- Las mutaciones de los hitos 280 a 308 y 321 a 324 están pendientes; las
+  de los hitos 309 a 320 estaban corriendo al cerrar este hito.
+
 ## 2026-10-08 — Un jugador entra, y las consolas que faltan por contestar
 
 Cuatro funciones en `networking/network_session.c`, 550 bytes entre todas. De 1139

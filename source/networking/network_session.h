@@ -225,6 +225,24 @@ typedef char verify_network_session_player_requests_size[
 	sizeof(struct network_session_player_request)*MAXIMUM_NETWORK_SESSION_PLAYER_REQUESTS ==
 	NETWORK_SESSION_UNKNOWN7668_SIZE ? 1 : -1];
 
+/* what a session has at 0x78A8, if it has it: something that is asked, by
+its fourth function, whether a player can come in */
+struct network_session_unknown78A8;
+
+struct network_session_unknown78A8_functions
+{
+	void *unknown0;
+	void *unknown4;
+	void *unknown8;
+	boolean (__attribute__((thiscall)) *player_can_join)(struct network_session_unknown78A8 *object,
+		const byte *identifier);
+};
+
+struct network_session_unknown78A8
+{
+	const struct network_session_unknown78A8_functions *functions;
+};
+
 /* a number that network_session_start leaves in a session */
 #define NETWORK_SESSION_UNKNOWN4DA8_VALUE 0xDEADBEEFu
 
@@ -268,6 +286,9 @@ boolean NETWORK_SESSION_CALLBACK network_session_peer_answered(byte *session, lo
 void NETWORK_SESSION_CALLBACK network_session_add_player(const byte *identifier, byte *session, long peer_index,
 	long player_index, long peer_player_index);
 void network_session_remove_player_and_count(byte *session, long player_index);
+long NETWORK_SESSION_CALLBACK network_session_add_peer_player(byte *session, long peer_index,
+	long peer_player_index, const byte *identifier);
+long network_session_free_player_places(const byte *session);
 void network_session_remove_peer(byte *session, long peer_index);
 void NETWORK_SESSION_CALLBACK network_session_remove_player(byte *session, long player_index);
 boolean NETWORK_SESSION_CALLBACK network_session_find_request(byte *session, const byte *identifier,

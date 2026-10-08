@@ -973,3 +973,59 @@ def run(t) -> None:
             Buffer(bytes(consistent()), pointers=(8,)),
             random_.randrange(16),
         )
+
+    # ---------- a player of a console comes into a session
+
+    def room(data: bytearray) -> None:
+        struct.pack_into("<I", data, 0x4994, random_.choice((16, 16, 16, 0, 4, 8, 32)))
+        struct.pack_into("<I", data, 0x1118, random_.choice((0, 1, 4, 8, 15, 16)))
+        for request in range(16):
+            at = REQUESTS + request * REQUEST
+            data[at] = random_.choice((0, 0, 1, 0x80))
+            data[at + 1] = random_.choice((0, 0, 1, 0x80))
+
+    for n in range(200):
+        data = whole_session()
+        room(data)
+        t.check("network_session_free_player_places", Buffer(bytes(data)))
+
+    OBJECT = CHANNELS + 4 * 0x528
+
+    for n in range(400):
+        data = consistent()
+        room(data)
+        struct.pack_into("<I", data, PLAYER_MASK, random_.choice((0, 1, 0xFF, 0x7FFF, 0xFFFF, random_.getrandbits(16))))
+        # what says whether a player can come in goes after the rest, with its functions after it
+        assert len(data) == OBJECT
+        data += struct.pack("<5I", OBJECT + 4, 0x11, 0x22, 0x33, mock_address(0))
+        pointers = [8, OBJECT]
+        if n % 4:
+            struct.pack_into("<I", data, 0x78A8, OBJECT)
+            pointers.append(0x78A8)
+        else:
+            struct.pack_into("<I", data, 0x78A8, 0)
+        peer, place = random_.randrange(16), random_.randrange(4)
+        there = struct.unpack_from("<I", data, PEERS + peer * PEER + 0xFC + place * 4)[0]
+        way = random_.randrange(6)
+        if way == 0 and there != NONE:
+            # the player that the console has there
+            at = PLAYER_ARRAY + there * PLAYER
+            identifier = bytes(data[at : at + 12])
+        elif way == 1:
+            # a player of the session
+            at = PLAYER_ARRAY + random_.randrange(16) * PLAYER
+            identifier = bytes(data[at : at + 12])
+        elif way == 2:
+            # a player that asks to come in
+            at = REQUESTS + random_.randrange(16) * REQUEST + 0xA
+            identifier = bytes(data[at : at + 12])
+        else:
+            identifier = random_.randbytes(12)
+        t.check(
+            "network_session_add_peer_player",
+            Buffer(bytes(data), pointers=tuple(pointers)),
+            peer,
+            place,
+            Buffer(identifier),
+            mocks=[Mock(lambda call, can=random_.choice((1, 1, 1, 0x80, 0, 0x100)): can, stack_arguments=1, registers=("ecx",))],
+        )

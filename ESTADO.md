@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 323.
+**Última actualización:** 2026-10-08, al terminar el hito 324.
 
 ## Dónde estamos
 
-- **1143 funciones descompiladas de 11.265: el 10,15 % del juego** (el
-  6,523 % de los bytes de código).
-- Las 1143 están comprobadas contra el ejecutable original: las 1109 del
+- **1145 funciones descompiladas de 11.265: el 10,16 % del juego** (el
+  6,532 % de los bytes de código).
+- Las 1145 están comprobadas contra el ejecutable original: las 1109 del
   hito 313 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a player comes into a session and how consoles answer* (ver `git log`).
+- Último hito: *Decompile how a console's player comes into a session* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 543 funciones apuntadas pero sin descompilar (las que el código
   llama); 455 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -109,7 +109,7 @@ Módulos (funciones hechas / archivo):
       terminar líneas o triángulos; faltan `0x0001e930` y `0x0001eb00`, que
       preparan la consola para dibujar)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
-- [ ] Sesión de red — `networking\network_session.c` (35: el estado de
+- [ ] Sesión de red — `networking\network_session.c` (37: el estado de
       una sesión, prepararla, arrancarla, su identificador y su clave,
       las consolas que entran y salen, cómo buscarlas, y los jugadores
       que lo piden;
@@ -230,7 +230,7 @@ Módulos (funciones hechas / archivo):
 - [x] ~~`game_voice.c`~~ (hito 278): completo.
 - [x] ~~El resto de `voice_routing.c`~~ (hito 313).
 - [ ] **La sesión de red**: lo que hay alrededor de lo ya hecho
-      (`0x0005a400`, `0x00060000`, `0x00061050`), `0x00075ce0`,
+      (`0x0005a400`, `0x000602b0`, `0x00061050`), `0x00075ce0`,
       `0x00075e80`,
       `0x0007ab60`,
       `0x00075a90`, lo que sigue en `transport_security.c`

@@ -1685,3 +1685,5 @@ address,name,source,arguments,returns,convention
 0005a340,network_session_peer_answered,source/networking/network_session.c,esi eax stack,bool,stdcall
 000600f0,network_session_add_player,source/networking/network_session.c,eax edx ecx stack stack,void,stdcall
 000601e0,network_session_remove_player_and_count,source/networking/network_session.c,ecx eax,void
+00060000,network_session_add_peer_player,source/networking/network_session.c,ebx stack stack stack,int,stdcall
+00062e30,network_session_free_player_places,source/networking/network_session.c,esi,int
