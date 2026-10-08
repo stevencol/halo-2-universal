@@ -95,6 +95,8 @@ enum
 	/* the place where the voice of a player heard in those ways comes out:
 	the one after the four controllers */
 	VOICE_CHANNELS_OUTPUT= 4,
+	/* how many pairs it can be given */
+	MAXIMUM_VOICE_CHANNELS_MIX_BINS= 4,
 	/* and the numbers that unknown_00332e58 is given for it */
 	_voice_priority_first= 0,
 	_voice_priority_never= NONE,
@@ -243,6 +245,8 @@ void VOICE_ROUTING_CALLBACK voice_channels_route_player(byte *channels, long pla
 	const struct voice_channel_listener *listeners, long count);
 void VOICE_ROUTING_CALLBACK voice_channels_route_player_to_controllers(byte *channels, unsigned long listeners,
 	long player_index);
+void VOICE_ROUTING_CALLBACK voice_channels_route_player_to_output(long how, long player_index, byte *channels,
+	long listener_player_index);
 long VOICE_ROUTING_CALLBACK voice_channels_get_how(long local_player_index, const byte *channels, long player_index,
 	long unknown);
 void VOICE_ROUTING_CALLBACK voice_route_peers(const byte *unknown, unsigned long peers, word *words);

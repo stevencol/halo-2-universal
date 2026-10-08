@@ -1164,7 +1164,7 @@ def run(t) -> None:
                 globals=state(enabled, initialized),
                 externals={
                     "voice_channels_route_player_to_controllers": gives(0),
-                    "unknown_00058590": gives(0),
+                    "voice_channels_route_player_to_output": gives(0),
                     "unknown_00332e34": mix_bins,
                     "unknown_00332e58": gives(0),
                 },
@@ -1198,4 +1198,52 @@ def run(t) -> None:
                     "unknown_00332e58": gives(0),
                 },
                 extra=[membership],
+            )
+
+    # ---------- where the voice of a player comes out, by how it is heard
+
+    for enabled, initialized in active():
+        for n in range(120):
+            how = random_.choice((0, 1, 2, 3, 3, 3, 4, 0xFFFFFFFF))
+            data = bytearray(random_.randbytes(0x34))
+            struct.pack_into("<I", data, 0x2C, random_.choice((0xE1740003, 0xE1740003, 0xE1740003, NONE)))
+            datum = Buffer(bytes(data))
+            place = struct.pack("<3f", *(random_.uniform(-50, 50) for _ in range(3)))
+            pairs = random_.randbytes(0x20)
+            pair_count = random_.randrange(5)
+
+            def where(harness, arguments, place=place):
+                harness.mu.mem_write(arguments[1], place)
+                return 0, (arguments[0],)
+
+            def comes_out(harness, arguments, pairs=pairs, pair_count=pair_count):
+                # how many pairs and the pairs are in the stack, and so is the place
+                listener, channels_, count_at, pairs_at, place_at = arguments
+                record = (
+                    listener,
+                    harness.normalize(channels_),
+                    bytes(harness.mu.mem_read(count_at, 4)),
+                    bytes(harness.mu.mem_read(pairs_at, 0x20)),
+                    bytes(harness.mu.mem_read(place_at, 0xC)),
+                )
+                harness.mu.mem_write(count_at, struct.pack("<I", pair_count))
+                harness.mu.mem_write(pairs_at, pairs)
+                return 0, record
+
+            t.check(
+                "voice_channels_route_player_to_output",
+                how,
+                random_.choice((random_.randrange(16), random_.randrange(16), 0x80000000 | random_.randrange(16))),
+                Buffer(random_.randbytes(0x214)),
+                random_.randrange(16),
+                globals=state(enabled, initialized),
+                externals={
+                    "game_voice_unknown_00054df0": gives(random_.choice((1, 1, 1, 0))),
+                    "game_voice_get_player_datum": lambda harness, arguments, datum=datum, n=n: datum.address if n % 6 else 0,
+                    "unknown_000caf90": where,
+                    "unknown_000586f0": comes_out,
+                    "unknown_00332e34": mix_bins,
+                    "unknown_00332e58": gives(0),
+                },
+                extra=[datum],
             )

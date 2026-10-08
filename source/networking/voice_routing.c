@@ -23,10 +23,11 @@ voice.c, from 0x00055960 on.
 /* ---------- prototypes of functions not decompiled yet */
 
 
-/* 0x00058590: what who hears whom does with the player of this console that
-hears a player in a way, of those that are not the first */
-void __attribute__((stdcall)) unknown_00058590(long how, long player_index, byte *channels,
-	long listener_player_index);
+/* 0x000586f0: where the voice of what is at a place comes out of, and how
+loud, for a player of this console that hears it: how many pairs, and the
+pairs, of which there is room for four */
+void __attribute__((stdcall)) unknown_000586f0(long listener_player_index, byte *channels, unsigned long *count,
+	struct voice_mix_bin *mix_bins, const real_point3d *position);
 
 /* 0x001896c0: plays a sound, as loud as a number says. 0x00189760: plays a
 sound where what it is given says */
@@ -1943,7 +1944,7 @@ voice_channels_route_player_to_controllers, a bit for each. Each of the others h
 set in what it hears, and the rest have it cleared. If any hears it in the
 second way, its voice comes out of the three of the front, and first of all;
 if not, the nearest of those that hear it in the third way goes to
-unknown_00058590; and with none, its voice never comes out there. The game
+voice_channels_route_player_to_output; and with none, its voice never comes out there. The game
 has voice_remote_talker_unknown_00055250 in the function itself */
 void VOICE_ROUTING_CALLBACK voice_channels_route_player(
 	byte *channels,
@@ -1999,7 +2000,7 @@ void VOICE_ROUTING_CALLBACK voice_channels_route_player(
 	}
 	else if (nearest!=NONE)
 	{
-		unknown_00058590(_voice_hears3, player_index, channels, listeners[nearest].player_index);
+		voice_channels_route_player_to_output(_voice_hears3, player_index, channels, listeners[nearest].player_index);
 	}
 	else
 	{
@@ -2079,4 +2080,56 @@ void VOICE_ROUTING_CALLBACK voice_channels_route_player_to_controllers(
 			voice_remote_talker_set_priority(&voice_globals, player_index, controller_index, _voice_priority_never);
 		}
 	}
+}
+
+/* 0x00058590: where the voice of a player of another console comes out, in
+the place after the four controllers, by how it is heard. Not heard: never.
+In the second way: out of the three of the front. In the third: out of what
+unknown_000586f0 says for the player of this console that hears it and where
+the object of the player is, if the player has a voice and an object. And in
+any way that it is heard, first of all */
+void VOICE_ROUTING_CALLBACK voice_channels_route_player_to_output(
+	long how,
+	long player_index,
+	byte *channels,
+	long listener_player_index)
+{
+	if (how==_voice_hears_none)
+	{
+		voice_remote_talker_set_priority(&voice_globals, player_index, VOICE_CHANNELS_OUTPUT, _voice_priority_never);
+
+		return;
+	}
+	if (how==_voice_hears2)
+	{
+		struct voice_mix_bin front[MAXIMUM_VOICE_CHANNELS_MIX_BINS]= { { 0, 0 }, { 1, 0 }, { 2, 0 } };
+		struct voice_mix_bins mix_bins= { 3, front };
+
+		voice_remote_talker_unknown_00055250(&voice_globals, player_index, VOICE_CHANNELS_OUTPUT, &mix_bins);
+	}
+	else if (how==_voice_hears3)
+	{
+		real_point3d position= { 0.0f, 0.0f, 0.0f };
+
+		if (game_voice_unknown_00054df0(player_index))
+		{
+			const byte *datum= game_voice_get_player_datum(player_index);
+
+			if (datum)
+			{
+				long object_index= *(const long *)(datum+VOICE_PLAYER_DATUM_UNKNOWN2C_OFFSET);
+
+				if (object_index!=NONE)
+				{
+					struct voice_mix_bin pairs[MAXIMUM_VOICE_CHANNELS_MIX_BINS]= { { 0, 0 } };
+					struct voice_mix_bins mix_bins= { 0, pairs };
+
+					unknown_000caf90(object_index, &position);
+					unknown_000586f0(listener_player_index, channels, &mix_bins.count, pairs, &position);
+					voice_remote_talker_unknown_00055250(&voice_globals, player_index, VOICE_CHANNELS_OUTPUT, &mix_bins);
+				}
+			}
+		}
+	}
+	voice_remote_talker_set_priority(&voice_globals, player_index, VOICE_CHANNELS_OUTPUT, _voice_priority_first);
 }

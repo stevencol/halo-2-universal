@@ -2,6 +2,39 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Por dónde sale la voz según cómo se oye
+
+Una función en `networking/voice_routing.c`, de 339 bytes. De 1107 funciones se pasa a
+1108, el 9,84 % de las del juego (el 6,330 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_channels_route_player_to_output` | `0x00058590` | `networking/voice_routing.c` |
+
+Era `unknown_00058590`, a la que `voice_channels_route_player` (hito 310)
+da el jugador de esta consola más cercano de los que oyen a uno de otra de
+la tercera manera.
+
+### Lo que se sabe
+
+- Recibe la manera en `eax` y el jugador en `edi`; el juego solo la llama
+  con la tercera, pero trata las cuatro:
+  - **no se oye**: prioridad `NONE` en la «salida 4» y nada más;
+  - **segunda**: los tres pares delanteros `{0,0}`, `{1,0}`, `{2,0}`;
+  - **tercera**: si el jugador tiene voz y objeto, pregunta dónde está el
+    objeto y `0x000586f0` (sin descompilar) dice por dónde sale la voz y
+    cuánto para quien le oye: hasta cuatro pares;
+  - y en todas las que se oye, prioridad 0.
+- Con esto la tercera manera queda clara: es la voz **colocada en el
+  espacio**, que sale por los altavoces según dónde está quien habla.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- Las mutaciones de los hitos 280 a 312 están pendientes.
+
 ## 2026-10-08 — Los mandos que oyen a un jugador de otra consola
 
 Una función en `networking/voice_routing.c`, de 461 bytes. De 1106 funciones se pasa a
