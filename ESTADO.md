@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 299.
+**Última actualización:** 2026-10-08, al terminar el hito 300.
 
 ## Dónde estamos
 
-- **1093 funciones descompiladas de 11.265: el 9,70 % del juego** (el
-  6,144 % de los bytes de código).
-- Las 1093 están comprobadas contra el ejecutable original: las 1023 del
+- **1095 funciones descompiladas de 11.265: el 9,72 % del juego** (el
+  6,151 % de los bytes de código).
+- Las 1095 están comprobadas contra el ejecutable original: las 1023 del
   hito 278 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile whether a local player can hear a player of another console* (ver `git log`).
+- Último hito: *Decompile the sounds of the voice* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 537 funciones apuntadas pero sin descompilar (las que el código
   llama); 449 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -118,10 +118,11 @@ Módulos (funciones hechas / archivo):
       `0x00055080` a `0x00055920`)
 - [x] Lista de silenciados — `networking\voice_mute_list.c` (7: completo,
       de `0x00058a50` a `0x00058cb0`)
-- [ ] La voz entre consolas — `networking\voice_routing.c` (24: a quién
+- [ ] La voz entre consolas — `networking\voice_routing.c` (26: a quién
       habla cada jugador, las colas, lo que una consola manda a otra y
-      quién oye a quién; va de `0x00055960` en adelante y faltan unas
-      13 funciones: las de quién oye a quién dentro de la partida)
+      quién oye a quién y los sonidos; va de `0x00055960` en adelante y
+      faltan unas 11 funciones: las de quién oye a quién dentro de la
+      partida)
 - [ ] Matemáticas reales — `math\real_math.c` (40 de unas 50, con dos que están lejos de las demás)
 - [x] Matrices — `math\matrix_math.c` (26: completo)
 - [ ] Números aleatorios — `math\random_math.c` (2)
@@ -252,6 +253,11 @@ Módulos (funciones hechas / archivo):
 
 ## Avisos para no perder tiempo
 
+- Una función que aún no está descompilada puede recibir argumentos en
+  registros que no se ven hasta leer su código: lo que se apunta de ella
+  en `symbols\functions.csv` sale solo de cómo la llama quien ya está
+  descompilado. Al descompilarla hay que revisar a todos los que la
+  llaman (pasó en los hitos 283 y 300).
 - Una función que acaba saltando a otra (`jmp` en vez de `call` y `ret`)
   devuelve lo que esa devuelva. Si la otra aún no está descompilada no
   se sabe si es algo: quedan por mirar `0x00059200`, `0x00059230`,

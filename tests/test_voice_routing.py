@@ -634,7 +634,9 @@ def run(t) -> None:
                     "game_voice_player_has_muted": lambda harness, arguments, muted=muted: (
                         muted[arguments[0] & 15] >> (arguments[1] & 15) & 1
                     ),
-                    "unknown_000574e0": lambda harness, arguments: 0,
+                    # what the function is given and does not look at is not compared: the
+                    # compiler of source/ does not pass it
+                    "voice_play_sound_by_number": lambda harness, arguments: (0, tuple(arguments[:2])),
                 },
                 extra=[membership],
             )
@@ -670,3 +672,81 @@ def run(t) -> None:
                 },
                 extra=[membership],
             )
+
+    # ---------- the sounds of the voice
+
+    def sounds_case(count: int, sound_tags: list):
+        """The globals of the game, the tags and what has the sounds, in one
+        buffer: each points to the next."""
+        tag_index = random_.randrange(8)
+        game_globals = bytearray(random_.randbytes(0x170))
+        struct.pack_into("<I", game_globals, 0x16C, random_.getrandbits(16) << 16 | tag_index)
+        instances = bytearray(random_.randbytes(8 * 16))
+        tag = bytearray(random_.randbytes(0x10))
+        block = bytearray(random_.randbytes(0x98))
+        elements = bytearray(random_.randbytes(8 * 8))
+        for n, sound_tag in enumerate(sound_tags):
+            struct.pack_into("<I", elements, n * 8 + 4, sound_tag)
+        instances_at = 0
+        tag_at = len(instances)
+        block_at = tag_at + len(tag)
+        elements_at = block_at + len(block)
+        struct.pack_into("<I", instances, tag_index * 16 + 8, tag_at)
+        struct.pack_into("<I", tag, 0xC, block_at)
+        struct.pack_into("<iI", block, 0x90, count, elements_at)
+        tags = Buffer(
+            bytes(instances + tag + block + elements),
+            pointers=(tag_index * 16 + 8, tag_at + 0xC, block_at + 0x94),
+        )
+        return Buffer(bytes(game_globals)), tags
+
+    for count in (8, 3, 2, 0, -1):
+        for sound in (0, 2, 7):
+            sound_tags = [random_.choice((0xE1740005, 0xE1740005, NONE)) for _ in range(8)]
+            game_globals, tags = sounds_case(count, sound_tags)
+            t.check(
+                "voice_play_sound_by_number",
+                sound,
+                random_.randrange(16),
+                0x80345000,
+                globals={"global_game_globals": game_globals, "global_tag_instances": tags},
+                externals={"voice_play_sound": lambda harness, arguments: 0},
+            )
+
+    def request(harness, arguments):
+        # what it is played with is in the stack
+        return 0, (bytes(harness.mu.mem_read(arguments[0], 0x10)),)
+
+    for enabled, initialized in active():
+        for player in (0, 9, 15):
+            for controllers in ((0, 0), (3, 3), (NONE, 0), (1, NONE), (2, 1)):
+                for setting in (0, 1, 2, 3):
+                    for talks in (1, 0):
+                        for says in (1, 0):
+                            calls = {"n": 0}
+
+                            def controller(harness, arguments, controllers=controllers):
+                                n = sum(1 for call in harness._calls if call[0] == "game_voice_player_controller")
+                                return controllers[min(n, 1)]
+
+                            settings = [random_.randint(0, 3) for _ in range(4)]
+                            if controllers[0] != NONE:
+                                settings[controllers[0]] = setting
+                            t.check(
+                                "voice_play_sound",
+                                player,
+                                0xE1740005,
+                                globals={
+                                    **state(enabled, initialized),
+                                    "game_voice_controller_settings": struct.pack("<4I", *settings),
+                                    "game_voice_talkers": struct.pack(
+                                        "<H", (1 << player) if talks else 0xFFFF ^ (1 << player)
+                                    ),
+                                },
+                                externals={
+                                    "game_voice_player_controller": controller,
+                                    "unknown_001906da": gives(says),
+                                    "unknown_001896c0": lambda harness, arguments: 0,
+                                    "unknown_00189760": request,
+                                },
+                            )

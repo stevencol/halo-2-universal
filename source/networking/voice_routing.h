@@ -92,6 +92,20 @@ enum
 	heard */
 	_voice_sound_unknown2= 2,
 
+	/* where the sounds of the voice are: the globals of the game have a tag
+	at 0x16c, which points at 0xc to what has the sounds, how many and
+	where: eight bytes each, with the tag of the sound in the second half */
+	GAME_GLOBALS_UNKNOWN16C_OFFSET= 0x16C,
+	UNKNOWN_TAG_BLOCK_ADDRESS_OFFSET= 0xC,
+	VOICE_SOUNDS_COUNT_OFFSET= 0x90,
+	VOICE_SOUNDS_ADDRESS_OFFSET= 0x94,
+	VOICE_SOUND_SIZE= 0x8,
+	VOICE_SOUND_TAG_INDEX_OFFSET= 0x4,
+
+	/* where a sound is played that only the player of a gamepad hears: one
+	of these for each gamepad */
+	VOICE_SOUND_GAMEPAD_OUTPUT= 0x14000140,
+
 	/* in a player of the game: a number that is NONE or not, and an object;
 	and in the object, a time of the game, in ticks */
 	VOICE_PLAYER_DATUM_UNKNOWN2C_OFFSET= 0x2C,
@@ -106,6 +120,20 @@ seconds */
 /* how soon after it started a player's voice has to end for the sound to be
 played, in seconds */
 #define VOICE_CHANNELS_ENDED_SECONDS 0.3f
+
+/* ---------- structures */
+
+/* what a sound is played with, when it is not played for everybody */
+struct voice_sound_request
+{
+	long output;
+	long sound_index;
+	real scale;
+	long unknownC;
+};
+
+typedef char verify_voice_sound_request_size[
+	sizeof(struct voice_sound_request) == 0x10 ? 1 : -1];
 
 /* a function that takes its arguments off the stack */
 #define VOICE_ROUTING_CALLBACK __attribute__((stdcall))
@@ -134,6 +162,8 @@ boolean voice_channels_time_is_recent(const byte *channels, long player_index);
 unsigned long VOICE_ROUTING_CALLBACK voice_channels_get_player_by_team(const byte *channels, long player_index);
 void VOICE_ROUTING_CALLBACK voice_channels_update_ended(byte *channels);
 boolean voice_players_can_hear(long player_index, long local_player_index);
+void VOICE_ROUTING_CALLBACK voice_play_sound_by_number(long sound, long player_index, byte *unused);
+void VOICE_ROUTING_CALLBACK voice_play_sound(long player_index, long sound_index);
 void VOICE_ROUTING_CALLBACK voice_route_peers(const byte *unknown, unsigned long peers, word *words);
 void VOICE_ROUTING_CALLBACK voice_route_assign(long *budget, unsigned long *peers, unsigned long allowed,
 	unsigned long *direct, boolean through_chosen, long chosen_peer, boolean *more);

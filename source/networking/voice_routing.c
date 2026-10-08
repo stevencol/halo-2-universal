@@ -11,9 +11,11 @@ voice.c, from 0x00055960 on.
 
 #include "voice_routing.h"
 
+#include "cache/cache_files.h"
 #include "game/game.h"
 #include "networking/game_voice.h"
 #include "objects/objects.h"
+#include "scenario/scenario.h"
 
 #include <string.h>
 
@@ -27,8 +29,13 @@ void __attribute__((stdcall)) unknown_00057360(byte *channels);
 void __attribute__((stdcall)) unknown_000577d0(byte *channels);
 void __attribute__((stdcall)) unknown_00057960(byte *channels);
 
-/* 0x000574e0: a sound of the voice is played, by its number */
-void __attribute__((stdcall)) unknown_000574e0(long sound, byte *channels);
+/* 0x001896c0: plays a sound, as loud as a number says. 0x00189760: plays a
+sound where what it is given says */
+void unknown_001896c0(long sound_index, real scale);
+void unknown_00189760(const struct voice_sound_request *request);
+
+/* 0x001906da: something of the player of a gamepad: see game_voice.c */
+boolean unknown_001906da(long gamepad_index);
 
 /* 0x00192950: something of a player, when game_voice_unknown_00053d90 says
 so */
@@ -1056,7 +1063,7 @@ void VOICE_ROUTING_CALLBACK voice_channels_update_ended(
 						!game_voice_player_has_muted(other_index, player_index) &&
 						!game_voice_player_has_muted(player_index, other_index))
 					{
-						unknown_000574e0(_voice_sound_unknown2, channels);
+						voice_play_sound_by_number(_voice_sound_unknown2, other_index, channels);
 					}
 				}
 				*started= 0;
@@ -1131,4 +1138,70 @@ boolean voice_players_can_hear(
 	}
 
 	return FALSE;
+}
+
+/* 0x000574e0: plays a sound of the voice for a player of this console, by
+its number among those that the globals of the game have; nothing if there
+is none with that number. The game is given something more, which it does
+not look at */
+void VOICE_ROUTING_CALLBACK voice_play_sound_by_number(
+	long sound,
+	long player_index,
+	byte *unused)
+{
+	long tag_index= *(const long *)((const byte *)global_game_globals+GAME_GLOBALS_UNKNOWN16C_OFFSET);
+	const byte *tag= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+	const byte *sounds= *(byte *const *)(tag+UNKNOWN_TAG_BLOCK_ADDRESS_OFFSET);
+
+	(void)unused;
+
+	if (sound<*(const long *)(sounds+VOICE_SOUNDS_COUNT_OFFSET))
+	{
+		long sound_index= *(const long *)(*(byte *const *)(sounds+VOICE_SOUNDS_ADDRESS_OFFSET)+sound*VOICE_SOUND_SIZE+
+			VOICE_SOUND_TAG_INDEX_OFFSET);
+
+		if (sound_index!=NONE)
+		{
+			voice_play_sound(player_index, sound_index);
+		}
+	}
+}
+
+/* 0x00057530: plays a sound for a player of this console: not at all if it
+wants no voice, or if unknown_001906da says no of its gamepad. For everybody
+to hear, if it has the first setting or it has no voice; if not, where only
+the player of its gamepad hears it */
+void VOICE_ROUTING_CALLBACK voice_play_sound(
+	long player_index,
+	long sound_index)
+{
+	long controller_index= game_voice_player_controller(player_index);
+
+	if (controller_index!=NONE)
+	{
+		long setting= voice_routing_active() ? game_voice_controller_settings[controller_index] : 0;
+		unsigned long talkers= voice_routing_active() ? game_voice_talkers : 0;
+
+		if (setting!=_game_voice_controller_setting3 && unknown_001906da(controller_index))
+		{
+			if (setting==_game_voice_controller_setting1 || !(talkers&(1u<<(player_index&0x1F))))
+			{
+				unknown_001896c0(sound_index, 1.0f);
+			}
+			else
+			{
+				controller_index= game_voice_player_controller(player_index);
+				if (controller_index!=NONE)
+				{
+					struct voice_sound_request request;
+
+					request.output= VOICE_SOUND_GAMEPAD_OUTPUT+controller_index;
+					request.sound_index= sound_index;
+					request.scale= 1.0f;
+					request.unknownC= 0;
+					unknown_00189760(&request);
+				}
+			}
+		}
+	}
 }

@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Hito 300: los sonidos de la voz
+
+Dos funciones en `networking/voice_routing.c`, de 217 bytes entre las dos. De 1093 funciones se pasa a
+1095, el 9,72 % de las del juego (el 6,151 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_play_sound_by_number` | `0x000574e0` | `networking/voice_routing.c` |
+| `voice_play_sound` | `0x00057530` | `networking/voice_routing.c` |
+
+`voice_play_sound_by_number` era `unknown_000574e0`, el sonido que el hito
+298 hace sonar.
+
+### Lo que se sabe
+
+- Los sonidos de la voz (el pitido de cuando alguien deja de hablar, y los
+  demás) están en los datos del juego: las «globals» del juego apuntan a
+  un tag (`0x16c`) que tiene una lista de sonidos, y se piden por su
+  número.
+- El sonido es **para un jugador de esta consola**. Si ese jugador no
+  quiere voz (ajuste 3) o su cuenta no la permite, no suena. Si tiene el
+  ajuste 1 o no tiene voz, suena para todos, por los altavoces. Y si no,
+  suena solo en los auriculares de su mando: hay una salida de sonido por
+  mando (`0x14000140` más el número del mando).
+- Es la primera función de la voz que lee los tags del mapa.
+
+### Corregido
+
+- En `voice_channels_update_ended` (hito 298) a la llamada del sonido le
+  faltaba un argumento: **para qué jugador** suena, que el juego pasa en un
+  registro. La prueba no lo notaba porque la función estaba simulada con
+  los argumentos que se le conocían. Ahora compara también el jugador.
+- Es el mismo tipo de descuido que el del hito 283: una función aún sin
+  descompilar puede recibir cosas en registros que no se ven hasta leerla.
+  Apuntado en `ESTADO.md`.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- A `voice_play_sound_by_number` el juego le da un argumento más, que no
+  mira. El compilador de `source/` no lo pasa, y no se compara.
+- Un mando con un número fuera de 0 a 3: el juego salta por una tabla de
+  cuatro.
+- La batería completa del hito 296 corre aparte; las mutaciones de los
+  hitos 280 a 300 están pendientes.
+
 ## 2026-10-08 — Si un jugador de esta consola puede oír a uno de otra
 
 Una función en `networking/voice_routing.c`, de 230 bytes. De 1092 funciones se pasa a
