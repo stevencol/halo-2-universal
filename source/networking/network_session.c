@@ -1289,3 +1289,78 @@ void NETWORK_SESSION_CALLBACK network_session_peer_properties_get_update(
 		update->unknownC4= properties->unknownC4;
 	}
 }
+
+/* 0x0005a600: what a session is known by in the network; NULL if it has no
+state or is known by nothing */
+const byte *network_session_get_identifier(
+	const byte *session)
+{
+	if (network_session_state(session)!=_network_session_state_none && session[NETWORK_SESSION_HAS_IDENTIFIER_OFFSET])
+	{
+		return session+NETWORK_SESSION_IDENTIFIER_OFFSET;
+	}
+
+	return NULL;
+}
+
+/* 0x0005a620: what a session is known by in the network, its key and the
+two numbers that go with them, each if there is where to put it; FALSE, and
+nothing, if the session has no state or is known by nothing */
+boolean NETWORK_SESSION_CALLBACK network_session_get_security(
+	const byte *session,
+	byte *key,
+	long *unknown38,
+	long *unknown3C,
+	byte *identifier)
+{
+	if (network_session_state(session)==_network_session_state_none || !session[NETWORK_SESSION_HAS_IDENTIFIER_OFFSET])
+	{
+		return FALSE;
+	}
+	if (identifier)
+	{
+		memcpy(identifier, session+NETWORK_SESSION_IDENTIFIER_OFFSET, NETWORK_SESSION_IDENTIFIER_SIZE);
+	}
+	if (key)
+	{
+		memcpy(key, session+NETWORK_SESSION_KEY_OFFSET, NETWORK_SESSION_KEY_SIZE);
+	}
+	if (unknown38)
+	{
+		*unknown38= *(const long *)(session+NETWORK_SESSION_UNKNOWN38_OFFSET);
+	}
+	if (unknown3C)
+	{
+		*unknown3C= *(const long *)(session+NETWORK_SESSION_UNKNOWN3C_OFFSET);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005a680: who is in a session; and which console this one is and which
+one runs the session, each if there is where to put it */
+byte *network_session_get_membership(
+	long *local_peer,
+	byte *session,
+	long *host_peer)
+{
+	if (local_peer)
+	{
+		*local_peer= *(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET);
+	}
+	if (host_peer)
+	{
+		*host_peer= *(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET);
+	}
+
+	return session+NETWORK_SESSION_MEMBERSHIP_OFFSET;
+}
+
+/* 0x0005a6a0: whether a console of a session has a channel; 1 or 0. The
+game has network_session_find_peer_by_channel in the function itself */
+long network_session_has_channel_peer(
+	const byte *session,
+	long channel_index)
+{
+	return network_session_find_peer_by_channel(session, channel_index)!=NONE;
+}

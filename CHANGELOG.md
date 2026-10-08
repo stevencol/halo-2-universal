@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Cuatro cosas que se le preguntan a la sesión
+
+Cuatro funciones en `networking/network_session.c`, 203 bytes entre todas. De 1164
+funciones se pasa a 1168, el 10,37 % de las del juego (el 6,607 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_get_identifier` | `0x0005a600` | `networking/network_session.c` |
+| `network_session_get_security` | `0x0005a620` | `networking/network_session.c` |
+| `network_session_get_membership` | `0x0005a680` | `networking/network_session.c` |
+| `network_session_has_channel_peer` | `0x0005a6a0` | `networking/network_session.c` |
+
+Son consultas pequeñas, de las que hay muchas en esta zona (quedan unas
+ochenta funciones de menos de 160 bytes entre `0x00058d00` y `0x00064000`).
+
+### Lo que se sabe
+
+- `network_session_get_identifier` da los ocho bytes por los que se conoce
+  a la sesión, o nada si no tiene estado o no se la conoce por nada;
+  `network_session_get_security` da además la clave y los dos números que
+  van con ellos, cada cosa solo si hay dónde ponerla.
+- `network_session_get_membership` da «quién está en la sesión», y de paso
+  qué consola es esta y cuál lleva la sesión.
+- `network_session_has_channel_peer` dice si alguna consola de la sesión
+  tiene un canal.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (76
+  funciones).
+- Las mutaciones de los hitos 280 a 308 y 321 a 329 están pendientes; las
+  de los hitos 309 a 320 seguían corriendo.
+
 ## 2026-10-08 — De una dirección a quién es la consola
 
 Dos funciones en `networking/transport_security.c`, 426 bytes entre las dos. De 1162

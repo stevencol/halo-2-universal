@@ -1062,3 +1062,30 @@ def run(t) -> None:
             Buffer(bytes(current)),
             Buffer(bytes(baseline)) if n % 8 else 0,
         )
+
+    # ---------- four things that a session is asked
+
+    def maybe(size: int):
+        return random_.choice((Buffer(random_.randbytes(size)), Buffer(random_.randbytes(size)), 0))
+
+    for n in range(60):
+        data = with_peers()
+        # the place of the session is given back: its address is the same in the game and in source/
+        t.check("network_session_get_identifier", Buffer(bytes(data)))
+    for n in range(160):
+        t.check(
+            "network_session_get_security",
+            Buffer(bytes(with_peers())),
+            maybe(16),
+            maybe(4),
+            maybe(4),
+            maybe(8),
+        )
+    for n in range(60):
+        t.check("network_session_get_membership", maybe(4), Buffer(bytes(with_peers())), maybe(4))
+    for n in range(160):
+        t.check(
+            "network_session_has_channel_peer",
+            Buffer(bytes(with_peers())),
+            random_.choice((NONE, 0, 1, 2, 3, 4, 5)),
+        )

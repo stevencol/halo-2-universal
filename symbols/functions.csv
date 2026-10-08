@@ -1709,3 +1709,7 @@ address,name,source,arguments,returns,convention
 00060000,network_session_add_peer_player,source/networking/network_session.c,ebx stack stack stack,int,stdcall
 00062e30,network_session_free_player_places,source/networking/network_session.c,esi,int
 000602b0,network_session_peer_properties_get_update,source/networking/network_session.c,ebx stack stack,void,stdcall
+0005a600,network_session_get_identifier,source/networking/network_session.c,ecx,int
+0005a620,network_session_get_security,source/networking/network_session.c,ecx edx edi ebx stack,bool,stdcall
+0005a680,network_session_get_membership,source/networking/network_session.c,eax ecx edx,int
+0005a6a0,network_session_has_channel_peer,source/networking/network_session.c,eax edx,int

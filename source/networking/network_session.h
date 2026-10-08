@@ -329,6 +329,11 @@ void NETWORK_SESSION_CALLBACK network_session_peer_state_new(boolean unknown1, b
 	long unknown4);
 void NETWORK_SESSION_CALLBACK network_session_add_peer(byte *session, long peer_index, const byte *address,
 	boolean unknown1, long unknown4, const long *unknownF0);
+const byte *network_session_get_identifier(const byte *session);
+boolean NETWORK_SESSION_CALLBACK network_session_get_security(const byte *session, byte *key, long *unknown38,
+	long *unknown3C, byte *identifier);
+byte *network_session_get_membership(long *local_peer, byte *session, long *host_peer);
+long network_session_has_channel_peer(const byte *session, long channel_index);
 boolean network_session_matches_state1_address(const byte *session, const struct transport_address *address);
 void network_session_stop_waiting_if_done(byte *session);
 boolean NETWORK_SESSION_CALLBACK network_session_peer_answered(byte *session, long unknown, const byte *answer);
