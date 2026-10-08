@@ -15,6 +15,7 @@ Halo 1's main.c.
 #include "cache/geometry_cache.h"
 #include "cache/texture_cache.h"
 #include "main/main_game.h"
+#include "networking/network_life_cycle.h"
 
 #include "cache/cache_files.h"
 #include "input/input.h"
@@ -65,7 +66,6 @@ void unknown_00155f80(void);
 void unknown_00092f80(long unknown);
 void unknown_0008df50(void);
 void unknown_000680f0(void);
-void unknown_00059940(void);
 boolean unknown_00068250(void);
 void unknown_00146660(float seconds, float *unknown_real, long *unknown_long);
 void unknown_001870a0(float seconds, float unknown_real);
@@ -92,9 +92,6 @@ void unknown_00190e37(void);
 
 /* 0x001896c0: plays a sound, as loud as it is told */
 void unknown_001896c0(long sound_index, real scale);
-
-/* 0x000593e0 */
-void unknown_000593e0(void);
 
 /* ---------- constants */
 
@@ -425,7 +422,7 @@ void main_loop_body(
 	}
 	unknown_0008df50();
 	unknown_000680f0();
-	unknown_00059940();
+	network_life_cycle_update();
 
 	if (unknown_00068250())
 	{
@@ -567,7 +564,7 @@ void main_files_damaged(
 	unknown_004ed3a0= GetTickCount();
 	if (unknown_00527330 && (unknown_00527334==3 || unknown_00527334==8))
 	{
-		unknown_000593e0();
+		network_life_cycle_end();
 	}
 }
 

@@ -132,6 +132,7 @@ void NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_unknown_00059200(long unknow
 	boolean unknownC);
 void NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_unknown_00059230(long unknown0, long unknown4, long unknown8);
 void network_life_cycle_end(void);
+void network_life_cycle_update(void);
 boolean NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_unknown_000594a0(long unknown0, long unknown4, long unknown8);
 boolean network_life_cycle_get_current_session(byte **session);
 boolean network_life_cycle_get_any_session(byte **session);
@@ -152,6 +153,9 @@ extern long unknown_00527e78;
 extern long unknown_00527fa8;
 extern byte unknown_00527500[UNKNOWN_00527500_SIZE];
 extern byte unknown_005273f8[];
+extern byte unknown_0047708c[];
+extern byte unknown_0047712c[];
+extern byte *unknown_00527360;
 extern byte *unknown_00527400;
 extern byte *unknown_00527fa0;
 extern long unknown_005274fc;

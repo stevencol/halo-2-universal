@@ -28,7 +28,7 @@ PLAIN = (
     "main_revert_map_private main_reset_map_private main_switch_structure_bsp_private main_save_map_private "
     "unknown_0012bbd0 main_unknown4E_private input_update input_abstraction_update saved_game_files_find_unit_files global_preferences_flush "
     "font_cache_frame cached_map_file_copy_update unknown_00163820 unknown_001479c3 unknown_00155f80 "
-    "unknown_00092f80 unknown_0008df50 unknown_000680f0 unknown_00059940 unknown_001870a0 unknown_0008dfc0 "
+    "unknown_00092f80 unknown_0008df50 unknown_000680f0 network_life_cycle_update unknown_001870a0 unknown_0008dfc0 "
     "game_frame unknown_001554b0 unknown_0016f280 unknown_00222a70 unknown_00223240 sound_update "
     "unknown_000681e0 unknown_00222d80"
 ).split()

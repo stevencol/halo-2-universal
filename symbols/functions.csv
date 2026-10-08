@@ -489,7 +489,6 @@ address,name,source,arguments,returns,convention
 00092f80,unknown_00092f80,,stack,void
 0008df50,unknown_0008df50,,,void
 000680f0,unknown_000680f0,,,void
-00059940,unknown_00059940,,,void
 00068250,unknown_00068250,,,bool
 00146660,unknown_00146660,,stack stack stack,void
 001870a0,unknown_001870a0,,stack stack,void
@@ -701,6 +700,11 @@ address,name,source,arguments,returns,convention
 00059230,network_life_cycle_unknown_00059230,source/networking/network_life_cycle.c,ecx edx stack,void,stdcall
 0006f200,unknown_0006f200,,eax edx stack stack stack,void,stdcall
 0006f3a0,unknown_0006f3a0,,ebx stack stack stack,void,stdcall
+00059940,network_life_cycle_update,source/networking/network_life_cycle.c,,void
+0006dec0,unknown_0006dec0,,esi,void
+00073040,unknown_00073040,,ecx,void
+000737b0,unknown_000737b0,,eax,void
+00075800,unknown_00075800,,ebx stack,int,stdcall
 00065770,unknown_00065770,,edi,void
 000598f0,network_life_cycle_unknown_000598f0,source/networking/network_life_cycle.c,eax,void
 00059780,network_life_cycle_get_any_session,source/networking/network_life_cycle.c,edx,bool
@@ -886,7 +890,6 @@ address,name,source,arguments,returns,convention
 0018eaa0,main_game_load_map,source/main/main_game.c,eax,bool
 0018efa0,main_game_load_failed,source/main/main_game.c,,void
 0014bac0,unknown_0014bac0,,,void
-000593e0,unknown_000593e0,,,void
 00149318,unknown_00149318,,,bool
 0018f0a0,main_game_campaign_started,source/main/main_game.c,stack,void
 0012bf90,unknown_0012bf90,,,bool

@@ -11,6 +11,7 @@ game (0x001240b0 to 0x00124490, 0x00124640, 0x00124770 on).
 
 #include "game_state.h"
 
+#include "networking/network_life_cycle.h"
 #include "cache/cache_files.h"
 #include "game/game.h"
 #include "main/main.h"
@@ -26,9 +27,6 @@ game (0x001240b0 to 0x00124490, 0x00124640, 0x00124770 on).
 #include "tag_files/files.h"
 
 /* ---------- prototypes of functions not decompiled yet: the states in files */
-
-/* 0x000593e0: tells the network game that the game changes */
-void unknown_000593e0(void);
 
 enum
 {
@@ -500,7 +498,7 @@ void game_state_load_saved_game(
 	if (game_state_saved_game_read_header(GAME_STATE_HEADER_SIZE, GAME_STATE_SIZE, saved_game, &header) &&
 		game_state_header_valid(&header))
 	{
-		unknown_000593e0();
+		network_life_cycle_end();
 		game_state_header_make_local(&header);
 		if (main_game_globals && main_game_globals->active &&
 			game_options_match(&main_game_globals->options, &header.options) &&
@@ -540,7 +538,7 @@ void game_state_load_core(
 	{
 		return;
 	}
-	unknown_000593e0();
+	network_life_cycle_end();
 	game_state_header_make_local(&header);
 	if (!main_game_globals || !main_game_globals->active ||
 		!game_options_match(&main_game_globals->options, &header.options))

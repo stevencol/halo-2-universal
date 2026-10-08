@@ -191,7 +191,7 @@ def run(t) -> None:
         }
         return {
             "game_state_header_valid": lambda harness, arguments, valid=random_.random() < 0.85: (valid, ()),
-            "unknown_000593e0": lambda harness, arguments: 0,
+            "network_life_cycle_end": lambda harness, arguments: 0,
             "game_options_match": options_match,
             "scenario_switch_structure_bsp": lambda harness, arguments, result=random_.random() < 0.8: result,
             "game_state_headers_match": headers_match,

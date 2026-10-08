@@ -3,7 +3,7 @@
 import random
 import struct
 
-from difftest import Buffer, GlobalRange, Mock, mock_address
+from difftest import Buffer, GlobalData, GlobalRange, Mock, mock_address
 
 NONE = 0xFFFFFFFF
 SESSION_SIZE = 0x7424
@@ -409,3 +409,32 @@ def run(t) -> None:
             globals=flags,
             externals={"unknown_0006f3a0": asked()},
         )
+
+    # ---------- each frame
+
+    def with_places(result: int = 0):
+        return lambda harness, arguments: (result, tuple(harness.normalize(argument) for argument in arguments))
+
+    for there in (1, 0, 0x80):
+        for watched in (1, 0):
+            for has in (0x80345000, 0, 1):
+                t.check(
+                    "network_life_cycle_update",
+                    globals={
+                        "unknown_00527330": bytes((there,)),
+                        "unknown_00527334": GlobalData(struct.pack("<I", random_.randint(0, 9))),
+                        "unknown_0047708c": GlobalRange(0xA0),
+                        "unknown_0047712c": GlobalRange(0xA0),
+                        "unknown_00527360": 0x80346000,
+                        "unknown_00510518": watched,
+                        "unknown_00510528": GlobalRange(8),
+                        "unknown_0051051c": bytes((0x40,)),
+                        "unknown_0051051d": bytes((0x40,)),
+                    },
+                    externals={
+                        "unknown_0006dec0": with_places(),
+                        "unknown_00073040": with_places(),
+                        "unknown_000737b0": with_places(),
+                        "unknown_00075800": with_places(has),
+                    },
+                )

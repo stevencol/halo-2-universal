@@ -322,7 +322,7 @@ def run(t) -> None:
             externals={
                 "unknown_00121b00": lambda harness, arguments, right=random_.choice((1, 1, 0, 0x100)): right,
                 "GetTickCount": lambda harness, arguments: 0x12345,
-                "unknown_000593e0": lambda harness, arguments: 0,
+                "network_life_cycle_end": lambda harness, arguments: 0,
                 "unknown_00121570": name_of_list,
                 "async_read_whole_file": remember(start),
                 "SwitchToThread": wait,
@@ -347,6 +347,6 @@ def run(t) -> None:
             },
             externals={
                 "GetTickCount": lambda harness, arguments: 0x12345,
-                "unknown_000593e0": lambda harness, arguments: 0,
+                "network_life_cycle_end": lambda harness, arguments: 0,
             },
         )

@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — La partida en red, cada fotograma
+
+Una función en `networking/network_life_cycle.c`, de 106 bytes. De 1088 funciones se pasa a
+1089, el 9,67 % de las del juego (el 6,112 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_life_cycle_update` | `0x00059940` | `networking/network_life_cycle.c` |
+
+Era `unknown_00059940`, la que el bucle principal (`main.c`) llama cada
+fotograma. Con ella, de `0x000591e0` a `0x00059ab0` no queda nada por
+descompilar.
+
+### Lo que se sabe
+
+- Cada fotograma, si hay partida en red: lo que la partida está haciendo
+  hace su trabajo (`0x0006dec0`, que recibe dónde se guarda el estado) y lo
+  hacen dos cosas más (`0x0047708c` y `0x0047712c`, del mismo tipo).
+- Si se está vigilando una sesión (sus ocho bytes en `0x00510528`) y ya no
+  aparece, se levanta el primer flag y se baja el segundo: es el aviso de
+  «la sesión que seguías ha desaparecido».
+
+### Cambiado
+
+- `main.c`, `main_game.c` y `game_state.c` llamaban a esta función y a
+  `network_life_cycle_end` (hito 289) por su dirección, con una fila aparte
+  en la lista de funciones. Ahora las llaman por su nombre y las dos filas
+  sobrantes ya no están: por eso baja en dos la cuenta de funciones
+  «apuntadas sin descompilar».
+- Quedan en la lista cinco direcciones repetidas de sesiones anteriores,
+  con el mismo arreglo pendiente (`0x0018eb80`, `0x0018e700`, `0x0018e810`,
+  `0x0018efa0` y `0x0012e150`). Apuntado en `ESTADO.md`.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo y las de `main`,
+  `main_game`, `game_state` y `fonts`.
+- Los tamaños de `0x0047708c` y `0x0047712c` son suposiciones.
+- Las mutaciones de los hitos 280 a 295 están pendientes.
+
 ## 2026-10-08 — Dos encargos más de la partida en red, y un hueco de las pruebas cerrado
 
 Dos funciones en `networking/network_life_cycle.c`, de 86 bytes entre las dos. De 1086 funciones se pasa a

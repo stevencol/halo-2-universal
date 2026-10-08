@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 294.
+**Última actualización:** 2026-10-08, al terminar el hito 295.
 
 ## Dónde estamos
 
-- **1088 funciones descompiladas de 11.265: el 9,66 % del juego** (el
-  6,109 % de los bytes de código).
-- Las 1088 están comprobadas contra el ejecutable original: las 1023 del
+- **1089 funciones descompiladas de 11.265: el 9,67 % del juego** (el
+  6,112 % de los bytes de código).
+- Las 1089 están comprobadas contra el ejecutable original: las 1023 del
   hito 278 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile two functions more of network_life_cycle.c and close a gap in a test* (ver `git log`).
+- Último hito: *Decompile the frame of the network game* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 540 funciones apuntadas pero sin descompilar (las que el código
-  llama); 452 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 542 funciones apuntadas pero sin descompilar (las que el código
+  llama); 454 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -111,9 +111,9 @@ Módulos (funciones hechas / archivo):
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
 - [ ] Sesión de red — `networking\network_session.c` (5: el estado de una
       sesión y prepararla; lo que sigue, desde `0x00059bd0`, es grande)
-- [ ] Partida en red — `networking\network_life_cycle.c` (33: qué está
-      haciendo, sus dos sesiones y lo que se le pide; de `0x000591e0` a
-      `0x00059ab0` queda `0x00059940`)
+- [x] Partida en red — `networking\network_life_cycle.c` (34: qué está
+      haciendo, sus dos sesiones, lo que se le pide y su fotograma; de
+      `0x000591e0` a `0x00059ab0`, completo)
 - [x] Voz de los jugadores — `networking\voice.c` (22: completo, de
       `0x00055080` a `0x00055920`)
 - [x] Lista de silenciados — `networking\voice_mute_list.c` (7: completo,
@@ -225,8 +225,13 @@ Módulos (funciones hechas / archivo):
 - [ ] **El resto de `voice_routing.c`**: `0x00056c60` y de `0x00056df0`
       en adelante (quién oye a quién: unas 18 funciones, bastante
       grandes).
-- [ ] **El resto de `network_life_cycle.c`**: `0x00059940`; y la sesión,
-      desde `0x00059bd0`, que la arranca (628 bytes).
+- [ ] **La sesión de red**, desde `0x00059bd0`, que la arranca (628
+      bytes), y lo que hace la partida en cada estado (`0x0006dec0`).
+- [ ] **Cinco direcciones repetidas en `symbols\functions.csv`**
+      (`0x0018eb80`, `0x0018e700`, `0x0018e810`, `0x0018efa0` y
+      `0x0012e150`): están descompiladas, pero algún archivo las llama
+      aún por su dirección. Hay que llamarlas por su nombre y quitar la
+      fila de más, como se hizo en el hito 295.
 - [ ] **Los fondos de los objetos**: `0x000bc280`, `0x000bc380`,
       `0x000bf360`.
 - [ ] **Los otros pares de la tabla de `0x00453c00`**: `0x00081780`,

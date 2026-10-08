@@ -362,7 +362,7 @@ def run(t) -> None:
             "main_game_change",
             Buffer(bytes(data)) if random_.random() < 0.85 else 0,
             globals={"main_game_load_globals": change_globals(0, 0), **network_game()},
-            externals={"GetTickCount": lambda harness, arguments: 0x4321, **stand_ins("unknown_000593e0")},
+            externals={"GetTickCount": lambda harness, arguments: 0x4321, **stand_ins("network_life_cycle_end")},
         )
 
     for _ in range(200):
@@ -430,7 +430,7 @@ def run(t) -> None:
                     "main_game_load_fail": lambda harness, arguments: (0, (arguments[0] & 0xFF,)),
                     **stand_ins(
                         "unknown_0011c840",
-                        "unknown_000593e0",
+                        "network_life_cycle_end",
                         cached_map_file_status=status,
                         main_game_unknown_0018f100=random_.random() < 0.6,
                     ),

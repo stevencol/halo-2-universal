@@ -34,6 +34,15 @@ void unknown_0005b570(byte *session);
 void unknown_0005a6e0(byte *session);
 boolean unknown_0005b1e0(byte *session, long unknown);
 
+/* 0x0006dec0: what the network game is doing does its work of the frame: it
+is given where what it is doing is kept. 0x00073040, 0x000737b0: the work of
+the frame of unknown_0047708c and unknown_0047712c. 0x00075800: something
+that unknown_00527360 has for the eight bytes of a session; 0 if nothing */
+void unknown_0006dec0(long *life_cycle);
+void unknown_00073040(byte *unknown);
+void unknown_000737b0(byte *unknown);
+long __attribute__((stdcall)) unknown_00075800(byte *unknown, const byte *identifier);
+
 /* 0x0006f200, 0x0006f3a0: two things that are asked of unknown_005273f8 */
 void __attribute__((stdcall)) unknown_0006f200(boolean unknownC, byte *unknown, long unknown4, long unknown0,
 	long unknown8);
@@ -62,6 +71,13 @@ long unknown_00527fa8;
 /* 0x00527500: something of the sixth state: at 8 it points to what has a
 session at 0x30. Its size is not known */
 byte unknown_00527500[UNKNOWN_00527500_SIZE];
+
+/* 0x0047708c, 0x0047712c: two things of the same kind that work each frame;
+the second has functions of its own. Their sizes are guesses. 0x00527360:
+something that says whether the session that is watched is still there */
+byte unknown_0047708c[0xA0];
+byte unknown_0047712c[0xA0];
+byte *unknown_00527360;
 
 /* 0x005273f8: something of the network game that two things are asked of.
 What unknown_00527400 points to is at 8 of it */
@@ -763,4 +779,31 @@ void NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_unknown_00059230(
 {
 	network_life_cycle_set_flags();
 	unknown_0006f3a0(unknown_005273f8, unknown4, unknown0, unknown8);
+}
+
+/* 0x00059940: the network game, each frame, if there is one: what it is
+doing works, and so do two more things. And if a session is watched and
+unknown_00527360 has nothing for it, the first flag is set and the second
+cleared */
+void network_life_cycle_update(
+	void)
+{
+	if (unknown_00527330)
+	{
+		unknown_0006dec0(&unknown_00527334);
+		unknown_00073040(unknown_0047708c);
+		unknown_00073040(unknown_0047712c);
+		unknown_000737b0(unknown_0047712c);
+		if (unknown_00510518)
+		{
+			if (!unknown_00075800(unknown_00527360, unknown_00510528))
+			{
+				if (unknown_00510518)
+				{
+					unknown_0051051c= TRUE;
+					unknown_0051051d= FALSE;
+				}
+			}
+		}
+	}
 }

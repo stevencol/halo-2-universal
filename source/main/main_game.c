@@ -19,6 +19,7 @@ The names are guesses.
 #include "interface/user_interface_memory.h"
 #include "saved games/game_state.h"
 #include "main/main.h"
+#include "networking/network_life_cycle.h"
 #include "memory/data.h"
 #include "memory/physical_memory.h"
 #include "scenario/scenario.h"
@@ -68,9 +69,6 @@ boolean unknown_00163890(const char *map_name, long two);
 
 /* 0x0014bac0: before the game on a map is started again */
 void unknown_0014bac0(void);
-
-/* 0x000593e0: tells the network game that the game changes */
-void unknown_000593e0(void);
 
 /* 0x00149318: whether the change of game has to wait */
 boolean unknown_00149318(void);
@@ -561,7 +559,7 @@ void main_game_change(
 				}
 			}
 		}
-		unknown_000593e0();
+		network_life_cycle_end();
 	}
 }
 
@@ -684,7 +682,7 @@ boolean main_game_load_map(
 		main_game_load_globals.change_time= (unsigned long)GetTickCount();
 		if (main_game_unknown_00527330_wants_to_know())
 		{
-			unknown_000593e0();
+			network_life_cycle_end();
 		}
 		break;
 	}
