@@ -307,7 +307,11 @@ enum
 	_network_session_state5,
 	_network_session_state6,
 	_network_session_state7,
-	_network_session_state8
+	_network_session_state8,
+	_network_session_state9,
+	/* the one that the session goes into when the console that runs it
+	takes itself out */
+	_network_session_state10
 };
 
 /* a function that takes its arguments off the stack */
@@ -329,6 +333,14 @@ void NETWORK_SESSION_CALLBACK network_session_peer_state_new(boolean unknown1, b
 	long unknown4);
 void NETWORK_SESSION_CALLBACK network_session_add_peer(byte *session, long peer_index, const byte *address,
 	boolean unknown1, long unknown4, const long *unknownF0);
+boolean network_session_host_remove_peer(byte *session, long peer_index);
+boolean network_session_host_set_local(byte *session);
+boolean NETWORK_SESSION_CALLBACK network_session_host_set_player_unknownA8(long player_index, byte *session,
+	const byte *unknownA8);
+boolean network_session_in_last_three_states(const byte *session);
+boolean NETWORK_SESSION_CALLBACK network_session_is_full_for(const byte *session, long peer_count, long player_count);
+boolean NETWORK_SESSION_CALLBACK network_session_has_room_for_players(boolean all_new, const byte *identifiers,
+	byte *session, long player_count);
 const byte *network_session_get_identifier(const byte *session);
 boolean NETWORK_SESSION_CALLBACK network_session_get_security(const byte *session, byte *key, long *unknown38,
 	long *unknown3C, byte *identifier);

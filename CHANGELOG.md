@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Lo que hace con la sesión la consola que la lleva
+
+Seis funciones en `networking/network_session.c`, 510 bytes entre todas. De 1168
+funciones se pasa a 1174, el 10,42 % de las del juego (el 6,624 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_host_remove_peer` | `0x0005ade0` | `networking/network_session.c` |
+| `network_session_host_set_local` | `0x0005ae50` | `networking/network_session.c` |
+| `network_session_host_set_player_unknownA8` | `0x0005aed0` | `networking/network_session.c` |
+| `network_session_in_last_three_states` | `0x0005af50` | `networking/network_session.c` |
+| `network_session_is_full_for` | `0x0005af70` | `networking/network_session.c` |
+| `network_session_has_room_for_players` | `0x0005afc0` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_host_remove_peer` es **echar a una consola**: solo lo
+  hace la que lleva la sesión. A otra consola se le avisa y se la saca
+  (hito 321). Si se echa a sí misma, la sesión pasa a un **décimo estado**
+  que no se había visto, con un 1 al principio de lo que tiene a partir del
+  estado: es deshacer la sesión.
+- `network_session_host_set_local` apunta en «quién está» que la consola
+  que lleva la sesión es esta.
+- `network_session_host_set_player_unknownA8` cambia, en el quinto estado,
+  el segundo de los dos bloques de 144 bytes de un jugador.
+- Los números de `0x4990` y `0x4994` (16 los dos al arrancar) son **el
+  máximo de consolas y el de jugadores**: `network_session_is_full_for`
+  dice si no caben tantas consolas o tantos jugadores más.
+- `network_session_has_room_for_players` dice si caben unos jugadores,
+  contando con que los que ya habían pedido entrar tienen su sitio guardado.
+- Cada cambio en «quién está» sube los dos contadores (`0x4C` y `0x7618`),
+  como en los hitos 322 a 324.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (82
+  funciones).
+- Las mutaciones de los hitos 280 a 308 y 321 a 330 están pendientes; las
+  de los hitos 309 a 320 seguían corriendo.
+
 ## 2026-10-08 — Cuatro cosas que se le preguntan a la sesión
 
 Cuatro funciones en `networking/network_session.c`, 203 bytes entre todas. De 1164

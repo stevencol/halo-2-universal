@@ -1089,3 +1089,56 @@ def run(t) -> None:
             Buffer(bytes(with_peers())),
             random_.choice((NONE, 0, 1, 2, 3, 4, 5)),
         )
+
+    # ---------- what the console that runs a session does with it
+
+    for n in range(160):
+        data = with_peers()
+        local = struct.unpack_from("<I", data, LOCAL_PEER)[0]
+        t.check(
+            "network_session_host_remove_peer",
+            Buffer(bytes(data)),
+            random_.choice((local, random_.randrange(4), random_.randrange(16))),
+            externals={"network_session_remove_peer_with_message_e": lambda harness, arguments: 0},
+        )
+    for n in range(160):
+        data = with_peers()
+        if n % 3 == 0:
+            data[HOST_PEER : HOST_PEER + 4] = data[LOCAL_PEER : LOCAL_PEER + 4]
+        t.check("network_session_host_set_local", Buffer(bytes(data)))
+    for n in range(120):
+        t.check(
+            "network_session_host_set_player_unknownA8",
+            random_.randrange(16),
+            Buffer(bytes(with_peers())),
+            Buffer(random_.randbytes(0x90)),
+        )
+    for state in STATES:
+        t.check("network_session_in_last_three_states", session(state))
+    for n in range(300):
+        data = with_peers()
+        struct.pack_into("<II", data, 0x4990, random_.choice((16, 16, 4, 0)), random_.choice((16, 16, 8, 0)))
+        struct.pack_into("<I", data, 0x54, random_.choice((0, 1, 3, 4, 15, 16)))
+        struct.pack_into("<I", data, 0x1118, random_.choice((0, 1, 7, 8, 15, 16)))
+        t.check(
+            "network_session_is_full_for",
+            Buffer(bytes(data)),
+            random_.choice((0, 1, 1, 2, 16, NONE)),
+            random_.choice((0, 1, 1, 4, 16, NONE)),
+        )
+    for n in range(300):
+        data = whole_session()
+        room(data)
+        count = random_.choice((0, 1, 2, 4, 4, 4))
+        identifiers = b""
+        for _ in range(4):
+            # a player that asks to come in, or one that does not
+            at = REQUESTS + random_.randrange(16) * REQUEST + 0xA
+            identifiers += bytes(data[at : at + 12]) if random_.randrange(2) else random_.randbytes(12)
+        t.check(
+            "network_session_has_room_for_players",
+            random_.choice((0, 0, 1, 0x80, 0x100)),
+            Buffer(identifiers),
+            Buffer(bytes(data)),
+            count,
+        )

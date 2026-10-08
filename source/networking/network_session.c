@@ -1364,3 +1364,127 @@ long network_session_has_channel_peer(
 {
 	return network_session_find_peer_by_channel(session, channel_index)!=NONE;
 }
+
+/* 0x0005ade0: the console that runs a session takes a console out of it;
+whether it is the one that runs it (the last four states). Another console
+is told and taken out (network_session_remove_peer_with_message_e); if it is
+this console itself, the session goes into its tenth state, with a 1 at the
+start of what it has from its state on */
+boolean network_session_host_remove_peer(
+	byte *session,
+	long peer_index)
+{
+	if (!network_session_unknown_00058d20(session))
+	{
+		return FALSE;
+	}
+	if (*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET)==peer_index)
+	{
+		memset(session+NETWORK_SESSION_STATE_DATA_OFFSET, 0, NETWORK_SESSION_STATE_DATA_SIZE);
+		*(long *)(session+NETWORK_SESSION_STATE_DATA_OFFSET)= 1;
+		*(long *)(session+NETWORK_SESSION_STATE_OFFSET)= _network_session_state10;
+	}
+	else
+	{
+		network_session_remove_peer_with_message_e(peer_index, session);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005ae50: in the last four states, the console that runs a session, as
+who is in it says, is this one: if it was not, the two numbers that count
+what changes count one more. Whether the session is in one of those states */
+boolean network_session_host_set_local(
+	byte *session)
+{
+	if (!network_session_established(session) || !network_session_unknown_00058d20(session))
+	{
+		return FALSE;
+	}
+	if (*(const long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET)!=*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET))
+	{
+		*(long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET)= *(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET);
+		(*(long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET))++;
+		(*(long *)(session+NETWORK_SESSION_UNKNOWN7618_OFFSET))++;
+	}
+
+	return TRUE;
+}
+
+/* 0x0005aed0: in the fifth state, the second of the two things of 0x90
+bytes of a player is what it is given, and the two numbers that count what
+changes count one more. Whether the session is in that state */
+boolean NETWORK_SESSION_CALLBACK network_session_host_set_player_unknownA8(
+	long player_index,
+	byte *session,
+	const byte *unknownA8)
+{
+	if (network_session_state(session)!=_network_session_state5)
+	{
+		return FALSE;
+	}
+	memcpy(session+NETWORK_SESSION_MEMBERSHIP_OFFSET+NETWORK_SESSION_MEMBERSHIP_PLAYER_ARRAY_OFFSET+
+		player_index*NETWORK_SESSION_PLAYER_SIZE+NETWORK_SESSION_PLAYER_UNKNOWNA8_OFFSET, unknownA8,
+		NETWORK_SESSION_PLAYER_UNKNOWN18_SIZE);
+	(*(long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET))++;
+	(*(long *)(session+NETWORK_SESSION_UNKNOWN7618_OFFSET))++;
+
+	return TRUE;
+}
+
+/* 0x0005af50: whether a session is in one of its last three states */
+boolean network_session_in_last_three_states(
+	const byte *session)
+{
+	long state= network_session_state(session);
+
+	return state==_network_session_state7 || state==_network_session_state6 || state==_network_session_state8;
+}
+
+/* 0x0005af70: whether a session that says who is in it has no room for a
+number of consoles more, or for a number of players more: the most that it
+can have of each are at 0x4990 and 0x4994 */
+boolean NETWORK_SESSION_CALLBACK network_session_is_full_for(
+	const byte *session,
+	long peer_count,
+	long player_count)
+{
+	if (!network_session_established(session))
+	{
+		return FALSE;
+	}
+
+	return *(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET)+peer_count>
+			*(const long *)(session+NETWORK_SESSION_UNKNOWN4990_OFFSET) ||
+		*(const long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET+NETWORK_SESSION_MEMBERSHIP_PLAYER_COUNT_OFFSET)+
+			player_count>*(const long *)(session+NETWORK_SESSION_UNKNOWN4994_OFFSET);
+}
+
+/* 0x0005afc0: whether a session has room for a number of players: those of
+them that had asked to come in have their room already, unless the first
+thing says that none had. The game has network_session_free_player_places in
+the function itself */
+boolean NETWORK_SESSION_CALLBACK network_session_has_room_for_players(
+	boolean all_new,
+	const byte *identifiers,
+	byte *session,
+	long player_count)
+{
+	long asked= 0;
+
+	if (!all_new)
+	{
+		long index;
+
+		for (index= 0; index<player_count; index++)
+		{
+			if (network_session_find_request(session, identifiers+index*NETWORK_SESSION_PLAYER_IDENTIFIER_SIZE, NULL))
+			{
+				asked++;
+			}
+		}
+	}
+
+	return player_count<=network_session_free_player_places(session)+asked;
+}
