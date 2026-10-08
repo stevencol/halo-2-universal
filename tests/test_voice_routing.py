@@ -1058,7 +1058,7 @@ def run(t) -> None:
                     "game_voice_unknown_00054df0": lambda harness, arguments, has=has: has >> (arguments[0] & 15) & 1,
                     "game_voice_get_player_datum": datum_of,
                     "unknown_00147da5": lambda harness, arguments, stopped=stopped: stopped[arguments[0] & 3],
-                    "unknown_00057620": lambda harness, arguments: 0,
+                    "voice_channels_update_team_button": lambda harness, arguments: 0,
                     "voice_channels_time_is_recent": lambda harness, arguments, recent=recent: recent >> (arguments[1] & 15) & 1,
                     "voice_players_can_hear": lambda harness, arguments, can=can: can[arguments[1] & 15] >> (arguments[0] & 15) & 1,
                 },
@@ -1095,3 +1095,46 @@ def run(t) -> None:
                 },
                 extra=[membership],
             )
+
+    # ---------- the button to talk to the team
+
+    INPUT_SIZE = 0x1B0
+    HANDLES, STATES, STATE_SIZE, SUPPRESSED_STATE = 0x14, 0x24, 0x48, 0x154
+
+    for n in range(600):
+        player = random_.randrange(16)
+        gamepad = random_.randrange(4)
+        now = random_.choice((100000, 0x7FFFFFF0, 0x80000010))
+        seconds_per_tick = 1 / 30
+        limit, quiet = random_.choice(((10.0, 1.0), (10.0, 1.0), (2.0, 0.5), (0.0, 0.0), (float("nan"), 1.0), (10.0, float("nan"))))
+        inputs = bytearray(random_.randbytes(INPUT_SIZE))
+        inputs[1] = random_.choice((0, 0, 0, 1))
+        for other in range(4):
+            struct.pack_into("<I", inputs, HANDLES + other * 4, random_.choice((0x1234, 0x1234, 0x1234, 0)))
+        for at in (STATES + gamepad * STATE_SIZE, SUPPRESSED_STATE):
+            inputs[at + 0x15] = random_.choice((0, 0, 1, 0xFF))
+            inputs[at + 0x18] = random_.choice((0, 0, 0, 1, 0x80))
+        data = bytearray(random_.randbytes(0x214))
+        started = random_.choice((None, None, 0, 1, 29, 30, 31, 59, 60, 61, 299, 300, 301, 100000, -5))
+        last = random_.choice((None, 0, 1, 14, 15, 16, 29, 30, 31, 100000, -5))
+        struct.pack_into("<I", data, 0x194 + player * 4, 0 if started is None else (now - started) & 0xFFFFFFFF)
+        struct.pack_into("<I", data, 0x1D4 + player * 4, 0 if last is None else (now - last) & 0xFFFFFFFF)
+        time = bytearray(random_.randbytes(0xC))
+        struct.pack_into("<fI", time, 4, seconds_per_tick, now)
+        t.check(
+            "voice_channels_update_team_button",
+            player,
+            Buffer(bytes(data)),
+            random_.getrandbits(16) << 16 | gamepad,
+            globals={
+                "input_globals": bytes(inputs),
+                "game_time_globals": Buffer(bytes(time)),
+                "unknown_004cf738": struct.pack("<f", limit),
+                "unknown_004cf734": struct.pack("<f", quiet),
+            },
+            externals={
+                "voice_player_unknown_000589e0": gives(random_.choice((1, 1, 1, 0))),
+                "game_voice_player_is_talking": gives(random_.choice((0, 0, 1))),
+                "voice_play_sound_by_number": lambda harness, arguments: (0, tuple(arguments[:2])),
+            },
+        )

@@ -788,7 +788,7 @@ address,name,source,arguments,returns,convention
 00057080,voice_channels_update_near,source/networking/voice_routing.c,stack,void,stdcall
 00057360,voice_channels_update_team,source/networking/voice_routing.c,stack,void,stdcall
 00147da5,unknown_00147da5,,edi,bool
-00057620,unknown_00057620,,eax edi stack,void,stdcall
+00057620,voice_channels_update_team_button,source/networking/voice_routing.c,eax edi stack,void,stdcall
 000577d0,voice_channels_update_dead,source/networking/voice_routing.c,stack,void,stdcall
 00057960,voice_channels_update_by_team,source/networking/voice_routing.c,stack,void,stdcall
 00057b60,voice_players_same_team,source/networking/voice_routing.c,eax ecx,int

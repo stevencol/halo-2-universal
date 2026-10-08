@@ -87,8 +87,19 @@ enum
 	/* a bit for each player of another console that some player of this one
 	hears now */
 	VOICE_CHANNELS_HEARD_OFFSET= 0xC4,
-	/* and a time of the game for each player, in ticks; 0 for none */
+	/* and a time of the game for each player, in ticks; 0 for none: when it
+	started to talk to its team */
 	VOICE_CHANNELS_TIMES_OFFSET= 0x194,
+	/* and when it last pressed the button or said something */
+	VOICE_CHANNELS_LAST_TIMES_OFFSET= 0x1D4,
+	/* the buttons to talk to the team: the sixth of those that say how hard
+	they are pressed, and the first of the others */
+	VOICE_TEAM_ANALOG_BUTTON= 5,
+	VOICE_TEAM_DIGITAL_BUTTON= 0,
+	/* the sounds of the voice for when a player starts to talk to its team
+	and for when it stops */
+	_voice_sound_team_start= 0,
+	_voice_sound_team_end= 1,
 	/* another time for each player: when what it said started to come */
 	VOICE_CHANNELS_STARTED_OFFSET= 0x148,
 	/* the sound of the voice that is played when a player stops being
@@ -112,10 +123,10 @@ enum
 	/* in what unknown_00510c94 points to: how far a voice is heard */
 	UNKNOWN_00510C94_VOICE_DISTANCE_OFFSET= 0x290,
 
-	/* in a player of the game: a number and its gamepad, of 16 bits, both
-	NONE for a player that is not played here */
-	VOICE_PLAYER_DATUM_UNKNOWN24_OFFSET= 0x24,
-	VOICE_PLAYER_DATUM_GAMEPAD_OFFSET= 0x28,
+	/* in a player of the game: its gamepad and a number of 16 bits, both NONE
+	for a player that is not played here */
+	VOICE_PLAYER_DATUM_GAMEPAD_OFFSET= 0x24,
+	VOICE_PLAYER_DATUM_UNKNOWN28_OFFSET= 0x28,
 
 	/* in a player of the game: a number that is NONE or not, and an object;
 	and in the object, a time of the game, in ticks */
@@ -184,6 +195,7 @@ typedef char verify_voice_channel_listener_size[
 /* ---------- globals */
 
 extern real unknown_004cf738;
+extern real unknown_004cf734;
 
 /* ---------- prototypes/VOICE_ROUTING.C */
 
@@ -215,6 +227,7 @@ void VOICE_ROUTING_CALLBACK voice_channels_update_near(byte *channels);
 void VOICE_ROUTING_CALLBACK voice_channels_player_talked(byte *channels, long player_index, long unknown);
 void VOICE_ROUTING_CALLBACK voice_channels_update_team(byte *channels);
 void VOICE_ROUTING_CALLBACK voice_channels_update_dead(byte *channels);
+void VOICE_ROUTING_CALLBACK voice_channels_update_team_button(long player_index, byte *channels, long gamepad_index);
 long VOICE_ROUTING_CALLBACK voice_channels_get_how(long local_player_index, const byte *channels, long player_index,
 	long unknown);
 void VOICE_ROUTING_CALLBACK voice_route_peers(const byte *unknown, unsigned long peers, word *words);

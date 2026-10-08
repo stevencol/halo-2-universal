@@ -13,6 +13,7 @@ voice.c, from 0x00055960 on.
 
 #include "cache/cache_files.h"
 #include "game/game.h"
+#include "input/input.h"
 #include "networking/game_voice.h"
 #include "objects/objects.h"
 #include "scenario/scenario.h"
@@ -35,11 +36,8 @@ void unknown_00189760(const struct voice_sound_request *request);
 /* 0x001906da: something of the player of a gamepad: see game_voice.c */
 boolean unknown_001906da(long gamepad_index);
 
-/* 0x00147da5: something of the gamepad of a player that stops it from
-talking to its team. 0x00057620: what the buttons of a gamepad say of
-talking to the team: it keeps the time in who hears whom */
-boolean unknown_00147da5(long gamepad_index);
-void __attribute__((stdcall)) unknown_00057620(long player_index, byte *channels, long unknown);
+/* 0x00147da5: something of a player that stops it from talking to its team */
+boolean unknown_00147da5(long unknown);
 
 /* 0x000caf90: where an object is */
 void unknown_000caf90(long object_index, real_point3d *position);
@@ -57,8 +55,11 @@ struct unknown_00510c94;
 extern struct unknown_00510c94 *unknown_00510c94;
 
 /* 0x004cf738: how long the time that who hears whom has for a player counts
-as a moment ago, in seconds */
+as a moment ago, in seconds: how long a player talks to its team for, at the
+most. 0x004cf734: how long after the last thing it said or pressed it stops
+talking to its team */
 real unknown_004cf738;
+real unknown_004cf734;
 
 /* ---------- code */
 
@@ -1738,8 +1739,8 @@ void VOICE_ROUTING_CALLBACK voice_channels_update_team(
 		unsigned long *listeners= (unsigned long *)(channels+VOICE_CHANNELS_UNKNOWN44_OFFSET+
 			local_player_index*sizeof(long));
 		const byte *datum;
-		long unknown24;
-		short gamepad_index;
+		long gamepad_index;
+		short unknown28;
 		long player_index;
 
 		if (!(local_players&bit) || !(talkers&bit) || !game_voice_unknown_00054df0(local_player_index))
@@ -1751,13 +1752,13 @@ void VOICE_ROUTING_CALLBACK voice_channels_update_team(
 		{
 			continue;
 		}
-		unknown24= *(const long *)(datum+VOICE_PLAYER_DATUM_UNKNOWN24_OFFSET);
-		gamepad_index= *(const short *)(datum+VOICE_PLAYER_DATUM_GAMEPAD_OFFSET);
-		if (unknown24==NONE || gamepad_index==NONE || unknown_00147da5(gamepad_index))
+		gamepad_index= *(const long *)(datum+VOICE_PLAYER_DATUM_GAMEPAD_OFFSET);
+		unknown28= *(const short *)(datum+VOICE_PLAYER_DATUM_UNKNOWN28_OFFSET);
+		if (gamepad_index==NONE || unknown28==NONE || unknown_00147da5(unknown28))
 		{
 			continue;
 		}
-		unknown_00057620(local_player_index, channels, unknown24);
+		voice_channels_update_team_button(local_player_index, channels, gamepad_index);
 		if (!voice_channels_time_is_recent(channels, local_player_index))
 		{
 			continue;
@@ -1865,5 +1866,73 @@ void VOICE_ROUTING_CALLBACK voice_channels_update_dead(
 			}
 			*listeners|= bit;
 		}
+	}
+}
+
+/* 0x00057620: each frame, for a player of this console: whether it talks to
+its team, by the buttons of its gamepad. It starts when a button is pressed,
+with a sound, if voice_player_unknown_000589e0 says so of it. It goes on while
+the button is pressed or the player says something, for no longer than
+unknown_004cf738 seconds; and it stops, with another sound, after
+unknown_004cf734 seconds of neither, when the time is up, or when
+voice_player_unknown_000589e0 says no. Nothing if the gamepad is not plugged
+in. The game has input_get_gamepad_state in the function itself */
+void VOICE_ROUTING_CALLBACK voice_channels_update_team_button(
+	long player_index,
+	byte *channels,
+	long gamepad_index)
+{
+	const struct gamepad_state *state= input_get_gamepad_state((short)gamepad_index);
+	unsigned long *started= (unsigned long *)(channels+VOICE_CHANNELS_TIMES_OFFSET+player_index*sizeof(long));
+	unsigned long *last= (unsigned long *)(channels+VOICE_CHANNELS_LAST_TIMES_OFFSET+player_index*sizeof(long));
+	boolean out;
+	unsigned long now;
+	boolean pressed;
+
+	if (!state)
+	{
+		return;
+	}
+	out= !voice_player_unknown_000589e0(player_index);
+	now= game_time_globals->time;
+	pressed= state->analog_button_frames_down[VOICE_TEAM_ANALOG_BUTTON]>0 ||
+		state->digital_button_frames_down[VOICE_TEAM_DIGITAL_BUTTON]>0;
+	if (!*started)
+	{
+		if (pressed && !out)
+		{
+			voice_play_sound_by_number(_voice_sound_team_start, player_index, channels);
+			*started= now;
+			*last= now;
+		}
+
+		return;
+	}
+	if (!((real)(long)(now-*started)*game_time_globals->seconds_per_tick>=unknown_004cf738) && !out)
+	{
+		if (pressed || game_voice_player_is_talking(player_index))
+		{
+			*last= now;
+
+			return;
+		}
+		if (!((real)(long)(now-*last)*game_time_globals->seconds_per_tick>=unknown_004cf734))
+		{
+			return;
+		}
+		voice_play_sound_by_number(_voice_sound_team_end, player_index, channels);
+		*started= 0;
+		*last= 0;
+
+		return;
+	}
+	if (*last)
+	{
+		voice_play_sound_by_number(_voice_sound_team_end, player_index, channels);
+		*last= 0;
+	}
+	if (!pressed)
+	{
+		*started= 0;
 	}
 }

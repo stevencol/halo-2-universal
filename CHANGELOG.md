@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — El botón de hablar al equipo
+
+Una función en `networking/voice_routing.c`, de 358 bytes. De 1104 funciones se pasa a
+1105, el 9,81 % de las del juego (el 6,261 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_channels_update_team_button` | `0x00057620` | `networking/voice_routing.c` |
+
+Era `unknown_00057620`, la que `voice_channels_update_team` (hito 307)
+llama por cada jugador de esta consola para saber si está hablando a su
+equipo.
+
+### Lo que se sabe
+
+- Mira dos botones del mando del jugador: el sexto de los analógicos y el
+  primero de los digitales. Con el mando desenchufado no hace nada.
+- Guarda dos momentos por jugador en «quién oye a quién»: en `0x194` cuándo
+  empezó a hablar al equipo, y en `0x1D4` (nuevo) la última vez que pulsó o
+  dijo algo.
+- Empieza al pulsar, con el sonido 0 de la voz, si
+  `voice_player_unknown_000589e0` dice que sí del jugador (está vivo).
+- Sigue mientras pulse o hable (`game_voice_player_is_talking`), como mucho
+  `unknown_004cf738` segundos.
+- Termina, con el sonido 1, tras `unknown_004cf734` segundos (nuevo) sin
+  pulsar ni hablar, al agotarse el tiempo o si el jugador muere. Si se agotó
+  con el botón pulsado, no vuelve a empezar hasta que lo suelte.
+- Los dos campos del jugador del hito 307 estaban nombrados al revés: el
+  mando es el de `0x24` (es el que se pasa a esta función) y el de `0x28`,
+  de 16 bits, es otro número sin nombre. Corregido.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- Las mutaciones de los hitos 280 a 309 están pendientes.
+
 ## 2026-10-08 — Los que están fuera de la partida hablan entre ellos
 
 Una función en `networking/voice_routing.c`, de 379 bytes. De 1103 funciones se pasa a
