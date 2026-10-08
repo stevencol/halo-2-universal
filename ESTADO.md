@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 292.
+**Última actualización:** 2026-10-08, al terminar el hito 293.
 
 ## Dónde estamos
 
-- **1083 funciones descompiladas de 11.265: el 9,61 % del juego** (el
-  6,094 % de los bytes de código).
-- Las 1083 están comprobadas contra el ejecutable original: las 1023 del
+- **1086 funciones descompiladas de 11.265: el 9,64 % del juego** (el
+  6,106 % de los bytes de código).
+- Las 1086 están comprobadas contra el ejecutable original: las 1023 del
   hito 278 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the setting up of a session of the network game* (ver `git log`).
+- Último hito: *Decompile the asking for the mute list: voice_mute_list.c is complete* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 533 funciones apuntadas pero sin descompilar (las que el código
-  llama); 445 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 538 funciones apuntadas pero sin descompilar (las que el código
+  llama); 450 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -116,9 +116,8 @@ Módulos (funciones hechas / archivo):
       `0x00059ab0` quedan `0x00059200`, `0x00059230` y `0x00059940`)
 - [x] Voz de los jugadores — `networking\voice.c` (22: completo, de
       `0x00055080` a `0x00055920`)
-- [ ] Lista de silenciados — `networking\voice_mute_list.c` (4; faltan
-      `0x00058a90`, `0x00058b00` y `0x00058b70`, que hablan con la
-      biblioteca de red)
+- [x] Lista de silenciados — `networking\voice_mute_list.c` (7: completo,
+      de `0x00058a50` a `0x00058cb0`)
 - [ ] La voz entre consolas — `networking\voice_routing.c` (20: a quién
       habla cada jugador, las colas, lo que una consola manda a otra y
       quién oye a quién; va de `0x00055960` en adelante y faltan unas

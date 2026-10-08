@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Pedir la lista de silenciados a la biblioteca: `voice_mute_list.c`, completo
+
+Tres funciones en `networking/voice_mute_list.c`, de 359 bytes entre las tres: las que faltaban. De 1083 funciones se pasa a
+1086, el 9,64 % de las del juego (el 6,106 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_mute_list_startup` | `0x00058a90` | `networking/voice_mute_list.c` |
+| `voice_mute_list_stop` | `0x00058b00` | `networking/voice_mute_list.c` |
+| `voice_mute_list_request` | `0x00058b70` | `networking/voice_mute_list.c` |
+
+`voice_mute_list_request` era `unknown_00058b70`. Con ellas el archivo
+tiene sus 7 funciones, de `0x00058a50` a `0x00058cb0`.
+
+### Lo que se sabe
+
+- Lo que el juego le pide a la biblioteca de red no se contesta en el acto:
+  se apunta en una tabla de «cosas pedidas» (`0x0006b730` da una nueva,
+  `0x0006b910` dice dónde está, `0x0006b640` la da por terminada) con su
+  clase, para quién es y lo que la biblioteca dio para preguntar cómo va.
+- Aquí hay dos clases: la `0xb`, «prepárate para llevar las listas», una
+  para todos los mandos; y la `0xc`, «dame la lista de este mando», una
+  por mando: hasta 250 jugadores, en la memoria de `game_voice.c`, con el
+  sitio donde la biblioteca dejará cuántos son.
+- Mientras la biblioteca no conteste, la cuenta del mando es NONE, que es
+  lo que el resto del código entiende por «lista no conocida» (hito 277).
+- Al dejar de pedir la lista de un mando, si ya no se pide ninguna, la
+  biblioteca deja de llevar las listas.
+- Un descuido del juego: si la biblioteca no puede prepararse, el juego da
+  por terminado lo que tenía apuntado (que era nada) y no lo que acababa de
+  pedir, que se queda en la tabla. Está escrito igual.
+
+### Mutaciones
+
+Las de los hitos 269 a 279 siguen corriendo aparte (van por la mitad, con
+un solo cambio sin notar, que no altera nada: mirar que haya jugadores en
+la sesión antes de un bucle que sin ellos no encuentra nada).
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- Las mutaciones de los hitos 280 a 293 están pendientes.
+
 ## 2026-10-08 — Preparar una sesión de red
 
 Una función en `networking/network_session.c`, de 242 bytes. De 1082 funciones se pasa a

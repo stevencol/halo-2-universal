@@ -22,19 +22,47 @@ player, and wants to hear it again; less than 0 if it could not be done */
 long unknown_003a084c(long controller_index, struct voice_mute_list_player player);
 long unknown_003a086e(long controller_index, struct voice_mute_list_player player);
 
+/* 0x003a0841: the library gets ready to keep the lists. 0x003a0832: asks for
+the list of a gamepad: up to so many players, in room that is given, with a
+place for how many there are. Both give something to ask how it goes with,
+and less than 0 if they could not start */
+long unknown_003a0841(long unknown, long *handle);
+long unknown_003a0832(long controller_index, long maximum_count, long unknown, long *handle, void *players,
+	long *count);
+
 /* ---------- prototypes of functions not decompiled yet */
 
 /* 0x0006cd50: what a session of the network game is doing */
 long unknown_0006cd50(long session_index);
 
-/* 0x00058b70: of this file: asks the library for the list of a gamepad */
-void unknown_00058b70(long controller_index);
+/* 0x0006b730: something new that the library of the network is asked;
+NONE if there is no room, or with no session in its first state.
+0x0006b910: where it is; NULL if it is no more. 0x0006b640: it is asked no
+more. 0x0006b890: something of a kind that is asked; 0 if nothing is */
+long unknown_0006b730(void);
+byte *unknown_0006b910(long task);
+void unknown_0006b640(long task);
+long __attribute__((stdcall)) unknown_0006b890(long unknown, long kind);
 
 /* ---------- constants */
 
 enum
 {
-	_unknown_0006cd50_state1= 1
+	_unknown_0006cd50_state1= 1,
+
+	/* something that the library is asked: its state, its kind, who it is
+	for and what the library gave to ask how it goes with */
+	ONLINE_TASK_STATE_OFFSET= 0x2,
+	ONLINE_TASK_KIND_OFFSET= 0x4,
+	ONLINE_TASK_OWNER_OFFSET= 0x8,
+	ONLINE_TASK_HANDLE_OFFSET= 0xC,
+	/* the two kinds of this file, and the state that each starts in */
+	_online_task_kind_mute_list_startup= 0xB,
+	_online_task_kind_mute_list_get= 0xC,
+	_online_task_mute_list_startup_state= 1,
+	_online_task_mute_list_get_state= 9,
+	/* what unknown_0006b890 is asked with, when the gamepad does not matter */
+	ONLINE_TASK_ANY_OWNER= 0xFF
 };
 
 /* ---------- globals */
@@ -75,7 +103,7 @@ static inline __attribute__((always_inline)) void voice_mute_list_change(
 	{
 		if (change(controller_index, *player)>=0)
 		{
-			unknown_00058b70(controller_index);
+			voice_mute_list_request(controller_index);
 		}
 	}
 }
@@ -125,4 +153,102 @@ boolean VOICE_MUTE_LIST_CALLBACK voice_mute_list_has_player(
 	}
 
 	return FALSE;
+}
+
+/* 0x00058a90: the library gets ready to keep the lists, if it is not asked
+to yet. If the library cannot start, the game lets go of what unknown_004c99c0
+has, which is nothing, and not of what it has just taken */
+void VOICE_MUTE_LIST_CALLBACK voice_mute_list_startup(
+	long unknown)
+{
+	if (unknown_004c99c0==NONE)
+	{
+		long task= unknown_0006b730();
+
+		if (task!=NONE)
+		{
+			byte *datum= unknown_0006b910(task);
+
+			if (datum)
+			{
+				if (unknown_003a0841(0, (long *)(datum+ONLINE_TASK_HANDLE_OFFSET))>=0)
+				{
+					*(word *)(datum+ONLINE_TASK_STATE_OFFSET)= _online_task_mute_list_startup_state;
+					*(long *)(datum+ONLINE_TASK_KIND_OFFSET)= _online_task_kind_mute_list_startup;
+					*(long *)(datum+ONLINE_TASK_OWNER_OFFSET)= unknown;
+					unknown_004c99c0= task;
+				}
+				else
+				{
+					unknown_0006b640(unknown_004c99c0);
+					unknown_004c99c0= NONE;
+				}
+			}
+		}
+	}
+}
+
+/* 0x00058b00: the list of a gamepad is asked for no more, and is not known;
+and if no list is asked for, the library keeps the lists no more */
+void voice_mute_list_stop(
+	long controller_index)
+{
+	long startup_task= unknown_004c99c0;
+	long task= voice_mute_list_tasks[controller_index];
+
+	if (task!=NONE)
+	{
+		unknown_0006b640(task);
+		voice_mute_list_tasks[controller_index]= NONE;
+		game_voice_muted_player_counts[controller_index]= NONE;
+		memset(game_voice_muted_players[controller_index], 0, sizeof(game_voice_muted_players[controller_index]));
+	}
+	if (startup_task!=NONE)
+	{
+		if (!unknown_0006b890(ONLINE_TASK_ANY_OWNER, _online_task_kind_mute_list_get))
+		{
+			unknown_0006b640(startup_task);
+			unknown_004c99c0= NONE;
+		}
+	}
+}
+
+/* 0x00058b70: asks the library for the list of a gamepad, if it is not
+asked for already. The list is not known until the library gives it */
+void voice_mute_list_request(
+	long controller_index)
+{
+	long *task= &voice_mute_list_tasks[controller_index];
+	long new_task;
+	byte *datum;
+
+	if (*task!=NONE && unknown_0006b910(*task))
+	{
+		return;
+	}
+	new_task= unknown_0006b730();
+	if (new_task==NONE)
+	{
+		return;
+	}
+	datum= unknown_0006b910(new_task);
+	if (!datum)
+	{
+		return;
+	}
+	game_voice_muted_player_counts[controller_index]= NONE;
+	if (unknown_003a0832(controller_index, MAXIMUM_GAME_VOICE_MUTED_PLAYERS, 0,
+		(long *)(datum+ONLINE_TASK_HANDLE_OFFSET), game_voice_muted_players[controller_index],
+		&game_voice_muted_player_counts[controller_index])>=0)
+	{
+		*(long *)(datum+ONLINE_TASK_OWNER_OFFSET)= controller_index;
+		*(word *)(datum+ONLINE_TASK_STATE_OFFSET)= _online_task_mute_list_get_state;
+		*(long *)(datum+ONLINE_TASK_KIND_OFFSET)= _online_task_kind_mute_list_get;
+		*task= new_task;
+	}
+	else
+	{
+		unknown_0006b640(*task);
+		*task= NONE;
+	}
 }

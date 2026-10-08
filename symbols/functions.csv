@@ -788,7 +788,15 @@ address,name,source,arguments,returns,convention
 00058cb0,voice_mute_list_has_player,source/networking/voice_mute_list.c,edx stack,bool,stdcall
 003a084c,unknown_003a084c,,stack stack stack stack,int
 003a086e,unknown_003a086e,,stack stack stack stack,int
-00058b70,unknown_00058b70,,eax,void
+00058b70,voice_mute_list_request,source/networking/voice_mute_list.c,eax,void
+00058a90,voice_mute_list_startup,source/networking/voice_mute_list.c,stack,void,stdcall
+00058b00,voice_mute_list_stop,source/networking/voice_mute_list.c,esi,void
+0006b730,unknown_0006b730,,,int
+0006b910,unknown_0006b910,,eax,int
+0006b640,unknown_0006b640,,edi,void
+0006b890,unknown_0006b890,,ebx stack,int,stdcall
+003a0841,unknown_003a0841,,stack stack,int
+003a0832,unknown_003a0832,,stack stack stack stack stack stack,int
 00055990,voice_targets_update,source/networking/voice_routing.c,eax,void
 00055960,voice_targets_get,source/networking/voice_routing.c,esi ebx,int
 00056590,voice_unknown_00527104_get_words,source/networking/voice_routing.c,eax esi edi,void

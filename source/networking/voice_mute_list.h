@@ -27,6 +27,9 @@ struct voice_mute_list_player
 /* ---------- prototypes/VOICE_MUTE_LIST.C */
 
 void voice_mute_list_reset(long controller_index);
+void VOICE_MUTE_LIST_CALLBACK voice_mute_list_startup(long unknown);
+void voice_mute_list_stop(long controller_index);
+void voice_mute_list_request(long controller_index);
 void voice_mute_list_add(long controller_index, const struct voice_mute_list_player *player);
 void voice_mute_list_remove(long controller_index, const struct voice_mute_list_player *player);
 boolean VOICE_MUTE_LIST_CALLBACK voice_mute_list_has_player(long controller_index,
