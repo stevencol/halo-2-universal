@@ -107,7 +107,7 @@ def run(t) -> None:
                         for name in (
                             "voice_channels_update_ended",
                             "voice_channels_update_near",
-                            "unknown_00057360",
+                            "voice_channels_update_team",
                             "unknown_000577d0",
                             "voice_channels_update_by_team",
                         )
@@ -1021,3 +1021,46 @@ def run(t) -> None:
                             "unknown_00057eb0": hands_on,
                         },
                     )
+
+    # ---------- who hears each player of this console by the team channel
+
+    for enabled, initialized in active():
+        for n in range(40):
+            local = random_.choice((1, 3, 0x8001, random_.getrandbits(16)))
+            membership = bytearray(random_.randbytes(MEMBERSHIP_PLAYERS + 4))
+            struct.pack_into("<I", membership, MEMBERSHIP_PLAYERS, random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16))))
+            membership = Buffer(bytes(membership))
+            has = random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16)))
+            datums = []
+            for player in range(16):
+                data = bytearray(random_.randbytes(0x34))
+                struct.pack_into("<I", data, 0x24, random_.choice((0x00050000 + player, 0x00050000 + player, NONE)))
+                struct.pack_into("<H", data, 0x28, random_.choice((player & 3, player & 3, 0xFFFF)))
+                datums.append(Buffer(bytes(data)))
+            there = [random_.choice((True, True, True, False)) for _ in range(16)]
+            stopped = [random_.choice((0, 0, 0, 1)) for _ in range(4)]
+            recent = random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16)))
+            can = [random_.getrandbits(16) for _ in range(16)]
+
+            def datum_of(harness, arguments, datums=datums, there=there):
+                player = arguments[0] & 15
+                return datums[player].address if there[player] else 0
+
+            t.check(
+                "voice_channels_update_team",
+                Buffer(random_.randbytes(0x88)),
+                globals={**state(enabled, initialized), "game_voice_talkers": struct.pack("<H", random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16))))},
+                externals={
+                    "game_voice_get_local_players": gives(local),
+                    "game_voice_get_membership": lambda harness, arguments, membership=membership, n=n: (
+                        membership.address if n % 10 else 0
+                    ),
+                    "game_voice_unknown_00054df0": lambda harness, arguments, has=has: has >> (arguments[0] & 15) & 1,
+                    "game_voice_get_player_datum": datum_of,
+                    "unknown_00147da5": lambda harness, arguments, stopped=stopped: stopped[arguments[0] & 3],
+                    "unknown_00057620": lambda harness, arguments: 0,
+                    "voice_channels_time_is_recent": lambda harness, arguments, recent=recent: recent >> (arguments[1] & 15) & 1,
+                    "voice_players_can_hear": lambda harness, arguments, can=can: can[arguments[1] & 15] >> (arguments[0] & 15) & 1,
+                },
+                extra=[membership, *datums],
+            )

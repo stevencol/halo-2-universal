@@ -21,10 +21,8 @@ voice.c, from 0x00055960 on.
 
 /* ---------- prototypes of functions not decompiled yet */
 
-/* 0x00057360, 0x000577d0: what is done each frame with who hears whom, in one
-state of the network game, after voice_channels_update_ended and
-voice_channels_update_near */
-void __attribute__((stdcall)) unknown_00057360(byte *channels);
+/* 0x000577d0: the last of what is done each frame with who hears whom, in
+one state of the network game */
 void __attribute__((stdcall)) unknown_000577d0(byte *channels);
 
 /* 0x00057eb0: what who hears whom does with how each of the players of this
@@ -39,6 +37,12 @@ void unknown_00189760(const struct voice_sound_request *request);
 
 /* 0x001906da: something of the player of a gamepad: see game_voice.c */
 boolean unknown_001906da(long gamepad_index);
+
+/* 0x00147da5: something of the gamepad of a player that stops it from
+talking to its team. 0x00057620: what the buttons of a gamepad say of
+talking to the team: it keeps the time in who hears whom */
+boolean unknown_00147da5(long gamepad_index);
+void __attribute__((stdcall)) unknown_00057620(long player_index, byte *channels, long unknown);
 
 /* 0x000caf90: where an object is */
 void unknown_000caf90(long object_index, real_point3d *position);
@@ -159,7 +163,7 @@ void voice_channels_update(
 		{
 			voice_channels_update_ended(channels);
 			voice_channels_update_near(channels);
-			unknown_00057360(channels);
+			voice_channels_update_team(channels);
 			unknown_000577d0(channels);
 		}
 		else if (unknown_004c9888==_game_voice_network2 || unknown_004c9888==_game_voice_network3)
@@ -1685,5 +1689,97 @@ void VOICE_ROUTING_CALLBACK voice_channels_player_talked(
 			listeners[local_player_index].how= how;
 		}
 		unknown_00057eb0(channels, player_index, listeners, MAXIMUM_VOICE_ROUTING_PLAYERS);
+	}
+}
+
+/* 0x00057360: each frame, in a game that goes on: for each player of this
+console that has a voice, a bit for each player of another console that
+hears it by the team channel: those that can hear it, as
+voice_players_can_hear has it, while its time is a moment ago. It is the
+second number that who hears whom has for each player. Nothing with no
+session. The game has game_voice_get_player_array, game_voice_get_players
+and game_voice_get_talkers in the function itself */
+void VOICE_ROUTING_CALLBACK voice_channels_update_team(
+	byte *channels)
+{
+	unsigned long local_players= game_voice_get_local_players();
+	const byte *players= NULL;
+	unsigned long session_players= 0;
+	unsigned long talkers= 0;
+	long local_player_index;
+
+	if (voice_routing_active())
+	{
+		const byte *membership= game_voice_get_membership();
+
+		if (membership)
+		{
+			players= membership+GAME_VOICE_MEMBERSHIP_PLAYER_ARRAY_OFFSET;
+		}
+	}
+	memset(channels+VOICE_CHANNELS_UNKNOWN44_OFFSET, 0, MAXIMUM_VOICE_ROUTING_PLAYERS*sizeof(long));
+	if (!players)
+	{
+		return;
+	}
+	if (voice_routing_active())
+	{
+		const byte *membership= game_voice_get_membership();
+
+		if (membership)
+		{
+			session_players= *(const unsigned long *)(membership+GAME_VOICE_MEMBERSHIP_PLAYERS_OFFSET);
+		}
+	}
+	if (voice_routing_active())
+	{
+		talkers= game_voice_talkers;
+	}
+	for (local_player_index= 0; local_player_index<MAXIMUM_VOICE_ROUTING_PLAYERS; local_player_index++)
+	{
+		unsigned long bit= 1u<<local_player_index;
+		unsigned long *listeners= (unsigned long *)(channels+VOICE_CHANNELS_UNKNOWN44_OFFSET+
+			local_player_index*sizeof(long));
+		const byte *datum;
+		long unknown24;
+		short gamepad_index;
+		long player_index;
+
+		if (!(local_players&bit) || !(talkers&bit) || !game_voice_unknown_00054df0(local_player_index))
+		{
+			continue;
+		}
+		datum= game_voice_get_player_datum(local_player_index);
+		if (!datum)
+		{
+			continue;
+		}
+		unknown24= *(const long *)(datum+VOICE_PLAYER_DATUM_UNKNOWN24_OFFSET);
+		gamepad_index= *(const short *)(datum+VOICE_PLAYER_DATUM_GAMEPAD_OFFSET);
+		if (unknown24==NONE || gamepad_index==NONE || unknown_00147da5(gamepad_index))
+		{
+			continue;
+		}
+		unknown_00057620(local_player_index, channels, unknown24);
+		if (!voice_channels_time_is_recent(channels, local_player_index))
+		{
+			continue;
+		}
+		for (player_index= 0; player_index<MAXIMUM_VOICE_ROUTING_PLAYERS; player_index++)
+		{
+			unsigned long other_bit= 1u<<player_index;
+
+			if ((session_players&other_bit) && !(local_players&other_bit) && game_voice_unknown_00054df0(player_index))
+			{
+				if (voice_players_can_hear(player_index, local_player_index))
+				{
+					*listeners|= other_bit;
+				}
+				else
+				{
+					*listeners&= ~other_bit;
+				}
+			}
+		}
 	}
 }

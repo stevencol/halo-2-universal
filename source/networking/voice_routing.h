@@ -112,6 +112,11 @@ enum
 	/* in what unknown_00510c94 points to: how far a voice is heard */
 	UNKNOWN_00510C94_VOICE_DISTANCE_OFFSET= 0x290,
 
+	/* in a player of the game: a number and its gamepad, of 16 bits, both
+	NONE for a player that is not played here */
+	VOICE_PLAYER_DATUM_UNKNOWN24_OFFSET= 0x24,
+	VOICE_PLAYER_DATUM_GAMEPAD_OFFSET= 0x28,
+
 	/* in a player of the game: a number that is NONE or not, and an object;
 	and in the object, a time of the game, in ticks */
 	VOICE_PLAYER_DATUM_UNKNOWN2C_OFFSET= 0x2C,
@@ -208,6 +213,7 @@ long VOICE_ROUTING_CALLBACK voice_player_hears(long how, long local_player_index
 real voice_players_get_distance(long local_player_index, long player_index);
 void VOICE_ROUTING_CALLBACK voice_channels_update_near(byte *channels);
 void VOICE_ROUTING_CALLBACK voice_channels_player_talked(byte *channels, long player_index, long unknown);
+void VOICE_ROUTING_CALLBACK voice_channels_update_team(byte *channels);
 long VOICE_ROUTING_CALLBACK voice_channels_get_how(long local_player_index, const byte *channels, long player_index,
 	long unknown);
 void VOICE_ROUTING_CALLBACK voice_route_peers(const byte *unknown, unsigned long peers, word *words);

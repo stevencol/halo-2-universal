@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — El canal de equipo: quién oye a cada jugador de esta consola
+
+Una función en `networking/voice_routing.c`, de 378 bytes. De 1102 funciones se pasa a
+1103, el 9,79 % de las del juego (el 6,236 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_channels_update_team` | `0x00057360` | `networking/voice_routing.c` |
+
+Era `unknown_00057360`, la tercera de las cuatro cosas que
+`voice_channels_update` hace cada fotograma con una partida en marcha.
+
+### Lo que se sabe
+
+- Rellena el «segundo número» de cada jugador de esta consola: un bit por
+  cada jugador de otra consola que le oye por el canal de equipo. Solo
+  mientras su «momento» sea reciente (`voice_channels_time_is_recent`,
+  hito 296), y solo los que pueden oírle según la partida (hito 299).
+- Ese momento lo pone `0x00057620` (sin descompilar) mirando los botones
+  del mando del jugador: es el botón de hablar al equipo. Con eso cuadra
+  todo: por cercanía se habla siempre, y al equipo mientras se pulsa.
+- De cada jugador de la partida se leen dos cosas nuevas: un número en su
+  `0x24` y su mando en `0x28` (16 bits); con cualquiera en NONE el jugador
+  no se juega en esta consola.
+
+### Batería completa
+
+La del hito 296 terminó: 1.090 funciones, las 1.090 bien.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- Las mutaciones de los hitos 280 a 307 están pendientes.
+
 ## 2026-10-08 — Llega algo que dijo un jugador, con la partida en marcha
 
 Una función en `networking/voice_routing.c`, de 358 bytes. De 1101 funciones se pasa a
