@@ -1570,3 +1570,77 @@ def run(t) -> None:
             if other:
                 externals[other] = nothing
             t.check(name, Buffer(random_.randbytes(0x14)), Buffer(bytes(whole_session())), externals=externals)
+
+    # ---------- six things that come from other consoles
+
+    def does(harness, arguments):
+        # only a byte of the second thing counts
+        return 1, (harness.normalize(arguments[0]), arguments[1] & 0xFF, *arguments[2:])
+
+    def which_channel():
+        return lambda harness, arguments, channel=random_.choice((NONE, 0, 1, 2, 3, 4)): channel
+
+    for n in range(80):
+        t.check(
+            "network_session_host_unknown_0005bec0",
+            Buffer(bytes(with_peers())),
+            externals={"unknown_0005df30": does},
+        )
+    for n in range(240):
+        message = bytearray(random_.randbytes(0x40))
+        struct.pack_into("<I", message, 0x10, random_.choice((0, 1, 1, 2, NONE)))
+        t.check(
+            "network_session_host_unknown_0005dea0",
+            Buffer(bytes(message)),
+            Buffer(bytes(with_peers())),
+            random_.getrandbits(32),
+            externals={"network_observer_find_channel": which_channel(), "unknown_0005df30": does},
+        )
+    for n in range(240):
+        t.check(
+            "network_session_unknown_0005e5b0",
+            Buffer(bytes(with_peers())),
+            random_.getrandbits(32),
+            externals={
+                "network_observer_find_channel": which_channel(),
+                "unknown_00062ab0": nothing,
+                "unknown_0005a400": nothing,
+            },
+        )
+    for n in range(240):
+        data = with_peers()
+        if n % 4:
+            struct.pack_into("<I", data, STATE, 8)
+        t.check(
+            "network_session_unknown_0005e640",
+            Buffer(bytes(data)),
+            random_.getrandbits(32),
+            externals={"network_observer_find_channel": which_channel()},
+        )
+    for n in range(300):
+        data = consistent()
+        struct.pack_into("<I", data, LOCAL_PEER, random_.randrange(16))
+        message = bytearray(random_.randbytes(0x18))
+        struct.pack_into("<I", message, 8, random_.choice((0, 1, 2, 3, 3, 4, NONE, 0x80000000)))
+        t.check(
+            "network_session_local_player_accepted",
+            Buffer(bytes(data), pointers=(8,)),
+            Buffer(bytes(message)),
+            random_.getrandbits(32),
+            externals={
+                "network_session_channel_is_host": lambda harness, arguments, value=random_.choice((1, 1, 1, 0x80, 0, 0x100)): value
+            },
+        )
+    for n in range(300):
+        data = consistent()
+        for peer in range(16):
+            data[0x72DC + peer * 0x14] = random_.choice((0, 1, 1, 0x80))
+        message = bytearray(random_.randbytes(0x18))
+        struct.pack_into("<I", message, 8, random_.choice((0, 1, 2, 3, 3, 4, NONE, 0x80000000)))
+        t.check(
+            "network_session_host_remove_peer_player",
+            Buffer(bytes(data), pointers=(8,)),
+            random_.getrandbits(32),
+            Buffer(bytes(message)),
+            externals={"network_observer_find_channel": which_channel()},
+        )

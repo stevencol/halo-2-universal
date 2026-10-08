@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Lo que llega de las otras consolas
+
+Seis funciones en `networking/network_session.c`, 713 bytes entre todas. De 1226
+funciones se pasa a 1232, el 10,94 % de las del juego (el 6,779 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_host_unknown_0005bec0` | `0x0005bec0` | `networking/network_session.c` |
+| `network_session_host_unknown_0005dea0` | `0x0005dea0` | `networking/network_session.c` |
+| `network_session_unknown_0005e5b0` | `0x0005e5b0` | `networking/network_session.c` |
+| `network_session_unknown_0005e640` | `0x0005e640` | `networking/network_session.c` |
+| `network_session_local_player_accepted` | `0x0005f120` | `networking/network_session.c` |
+| `network_session_host_remove_peer_player` | `0x0005f190` | `networking/network_session.c` |
+
+Todas empiezan igual: de por qué canal del juego llega algo sacan qué
+consola de la sesión lo manda (el observador dice qué canal suyo es, y la
+sesión qué consola tiene ese canal).
+
+### Lo que se sabe
+
+- Los 52 bytes de `0x761C` (hito 291) son **cuatro entradas de 13 bytes**,
+  una por cada jugador que esta consola puede tener: si la consola que
+  lleva la sesión ha dicho que ese jugador entra, y por qué se le conoce.
+  `network_session_local_player_accepted` las rellena cuando llega ese
+  aviso (solo si viene de quien lleva la sesión, y si esta consola no tiene
+  ya un jugador en ese sitio).
+- `network_session_host_remove_peer_player` es lo contrario, en la consola
+  que lleva la sesión: otra consola avisa de que su jugador de un sitio se
+  va, y sale de la sesión.
+- `network_session_unknown_0005e640`: en el octavo estado, la consola que
+  manda algo recibe su bit en lo que la sesión tiene a partir del estado
+  (`0x7430`) y se le borra el cuarto byte de lo que se guarda de ella.
+- Las otras tres pasan lo que llega a funciones aún sin descompilar
+  (`0x0005df30`, `0x00062ab0`, `0x0005a400`). `0x0005df30` recibe además un
+  argumento en `edi`, que solo se ve en quien la llama.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (140
+  funciones).
+- Las mutaciones de los hitos 280 a 308 y 321 a 337 están pendientes; las
+  de los hitos 309 a 320 seguían corriendo.
+
 ## 2026-10-08 — La sesión cambia de estado
 
 Diez funciones en `networking/network_session.c`, 739 bytes entre todas. De 1216

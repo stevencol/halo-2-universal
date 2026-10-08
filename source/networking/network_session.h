@@ -157,6 +157,19 @@ enum
 	NETWORK_SESSION_STATE_DATA_UNKNOWN10_OFFSET= 0x7430,
 	NETWORK_SESSION_STATE_DATA_UNKNOWN1C_OFFSET= 0x743C,
 	NETWORK_SESSION_STATE_DATA_UNKNOWN68_OFFSET= 0x7488,
+	/* in what comes from another console about one of its players: which of
+	its four places the player has, and what the player is known by. In
+	another thing that comes: a byte, two numbers and, if the second number
+	is 1, more */
+	NETWORK_SESSION_MESSAGE_PEER_PLAYER_OFFSET= 0x8,
+	NETWORK_SESSION_MESSAGE_IDENTIFIER_OFFSET= 0xC,
+	NETWORK_SESSION_MESSAGE_UNKNOWN8_OFFSET= 0x8,
+	NETWORK_SESSION_MESSAGE_UNKNOWNC_OFFSET= 0xC,
+	NETWORK_SESSION_MESSAGE_UNKNOWN10_OFFSET= 0x10,
+	NETWORK_SESSION_MESSAGE_UNKNOWN14_OFFSET= 0x14,
+	/* in the fifth of the last four states, what the session has from its
+	state on has a bit for each console at 0x10 */
+	NETWORK_SESSION_STATE8_PEERS_OFFSET= 0x7430,
 	/* in who is in the session: how many consoles, and the consoles */
 	NETWORK_SESSION_PEER_COUNT_OFFSET= 0x54,
 	NETWORK_SESSION_PEER_ARRAY_OFFSET= 0x58,
@@ -392,6 +405,21 @@ enum
 	MAXIMUM_NETWORK_SESSION_ROSTER_UNKNOWN288= 0x3FFFFFFF
 };
 
+/* what a session keeps at 0x761C for each of the four players that this
+console can have: whether the console that runs the session has said that
+the player comes in, and what the player is known by */
+#pragma pack(push, 1)
+struct network_session_local_player
+{
+	boolean valid;
+	byte identifier[NETWORK_SESSION_PLAYER_IDENTIFIER_SIZE];
+};
+#pragma pack(pop)
+
+typedef char verify_network_session_local_players_size[
+	sizeof(struct network_session_local_player)*MAXIMUM_NETWORK_SESSION_PEER_PLAYERS ==
+	NETWORK_SESSION_UNKNOWN761C_SIZE ? 1 : -1];
+
 /* a number that network_session_start leaves in a session */
 #define NETWORK_SESSION_UNKNOWN4DA8_VALUE 0xDEADBEEFu
 
@@ -439,6 +467,15 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_set_player_unknownA8(long 
 	const byte *unknownA8);
 boolean NETWORK_SESSION_CALLBACK network_session_host_unknown_0005aeb0(byte *session, long unknown);
 void network_session_reset_unknown761c(byte *session);
+boolean network_session_host_unknown_0005bec0(byte *session);
+boolean NETWORK_SESSION_CALLBACK network_session_host_unknown_0005dea0(const byte *message, byte *session,
+	long channel);
+boolean network_session_unknown_0005e5b0(byte *session, long channel);
+boolean NETWORK_SESSION_CALLBACK network_session_unknown_0005e640(byte *session, long channel);
+boolean NETWORK_SESSION_CALLBACK network_session_local_player_accepted(byte *session, const byte *message,
+	long channel);
+boolean NETWORK_SESSION_CALLBACK network_session_host_remove_peer_player(byte *session, long channel,
+	const byte *message);
 boolean network_session_unknown_0005e150(const struct transport_address *address, byte *session);
 boolean network_session_unknown_0005e1a0(const struct transport_address *address, byte *session);
 long NETWORK_SESSION_CALLBACK network_session_get_channel_peer(const byte *session, long channel_index);
