@@ -2,6 +2,60 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — El observador de la red: sesiones y canales
+
+Seis funciones en un archivo nuevo, `networking/network_observer.c`, 482 bytes entre todas.
+De 1146 funciones se pasa a 1152, el 10,23 % de las del juego (el 6,560 % de sus
+bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_dispose` | `0x00075a40` | `networking/network_observer.c` |
+| `network_observer_set_session` | `0x00075a90` | `networking/network_observer.c` |
+| `network_observer_get_unknown4e08` | `0x00075c80` | `networking/network_observer.c` |
+| `network_observer_find_channel` | `0x00075ce0` | `networking/network_observer.c` |
+| `network_observer_find_channel_by_unknown1e` | `0x00075d30` | `networking/network_observer.c` |
+| `network_observer_channel_unknown_00075e40` | `0x00075e40` | `networking/network_observer.c` |
+
+Es «lo que una sesión recibe al prepararse» (hito 291), que hasta ahora no
+tenía nombre: lo llamo **observador**, una conjetura como el nombre del
+archivo.
+
+### Lo que se sabe
+
+- Tiene algo de cada una de las cuatro sesiones (36 bytes desde `0x14`: la
+  sesión, dos números, los ocho bytes por los que se la conoce y su clave)
+  y **quince canales** de `0x528` bytes desde `0xA8`, uno por consola con
+  la que esta habla. De cada canal: un estado (cero si no se usa), un bit
+  por sesión que lo usa, cuál de los canales del juego es (los de
+  `0x004d87d4`, de `0xF8` bytes) y seis bytes por los que se le puede
+  buscar.
+- `network_observer_set_session` y `network_observer_find_channel` eran
+  `unknown_00075a90` y `unknown_00075ce0`, a las que llama la sesión (hitos
+  315 y 320): el «número» que la sesión guarda de cada consola es el de su
+  canal aquí, y el que recibían `network_session_channel_is_host` y
+  `network_session_peer_answered` es el del canal del juego.
+- `network_observer_get_unknown4e08` da dos números y qué parte es una
+  cuenta de la suma de dos: parece una estadística de lo que se pierde.
+
+### Lo que enseñó
+
+- La suma de las dos cuentas se desborda en el juego como en el procesador
+  (dos números muy grandes suman menos que nada, y entonces no hay
+  estadística). En C eso no está definido y el compilador lo aprovechaba:
+  la prueba lo cazó. Se suma sin signo.
+
+### Sin comprobar
+
+- `0x00075970`, que prepara el observador, no está en la lista de funciones
+  de Ghidra; queda para cuando se vea cómo contarla.
+- En este hito se pasaron las pruebas de `network_observer` (6) y de
+  `network_life_cycle` (72).
+- Las mutaciones de los hitos 280 a 308 y 321 a 326 están pendientes; las
+  de los hitos 309 a 320 seguían corriendo.
+
 ## 2026-10-08 — Lo que ha cambiado de una consola
 
 Una función en `networking/network_session.c`, de 333 bytes. De 1145 funciones se pasa a

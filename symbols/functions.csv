@@ -702,7 +702,13 @@ address,name,source,arguments,returns,convention
 0005fb60,network_session_forget_identifier,source/networking/network_session.c,esi,void
 0007a920,transport_security_set_key,source/networking/transport_security.c,eax edi stack stack stack,bool,stdcall
 0007a8a0,transport_security_create_key,source/networking/transport_security.c,esi stack stack,bool,stdcall
-00075a90,unknown_00075a90,,eax edi edx ecx stack stack,void,stdcall
+00075a90,network_observer_set_session,source/networking/network_observer.c,eax edi edx ecx stack stack,void,stdcall
+00075a40,network_observer_dispose,source/networking/network_observer.c,ebx,void
+00075c80,network_observer_get_unknown4e08,source/networking/network_observer.c,ecx stack stack stack,bool,stdcall
+00075d30,network_observer_find_channel_by_unknown1e,source/networking/network_observer.c,edx ebx stack,int,stdcall
+00075e40,network_observer_channel_unknown_00075e40,source/networking/network_observer.c,eax ecx,void
+00076ef0,unknown_00076ef0,,eax ecx,void
+00088650,unknown_00088650,,esi edi,void
 003cd147,unknown_003cd147,,stack stack stack stack stack,int,stdcall
 003cd0e1,unknown_003cd0e1,,stack,int,stdcall
 0005fbd0,network_session_add_peer,source/networking/network_session.c,stack stack stack stack stack stack,void,stdcall
@@ -1672,7 +1678,7 @@ address,name,source,arguments,returns,convention
 0005f6a0,network_session_find_peer_by_transport_address,source/networking/network_session.c,esi ecx,int
 0005f6f0,network_session_find_peer_by_unknownA,source/networking/network_session.c,ecx stack,int,stdcall
 0005f7c0,network_session_address_is_host,source/networking/network_session.c,eax edi,bool
-00075ce0,unknown_00075ce0,,edx edi eax,int
+00075ce0,network_observer_find_channel,source/networking/network_observer.c,edx edi eax,int
 0007ab60,unknown_0007ab60,,ecx edx stack stack stack stack,bool,stdcall
 0005c8f0,network_session_matches_state1_address,source/networking/network_session.c,ecx eax,bool
 0005fd10,network_session_remove_peer_with_message_e,source/networking/network_session.c,eax esi,void

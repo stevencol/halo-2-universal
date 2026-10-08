@@ -11,6 +11,7 @@ the names of its functions.
 #include "network_session.h"
 
 #include "cache/cache_files.h"
+#include "networking/network_observer.h"
 #include "text/unicode.h"
 
 #include <string.h>
@@ -30,12 +31,6 @@ int wcsncmp(const wchar *a, const wchar *b, size_t count);
 
 /* ---------- prototypes of functions not decompiled yet */
 
-/* 0x00075a90: tells what a session is given when it is set up what the
-session is known by, its key and two numbers; with NONE for the first
-number, only that */
-void __attribute__((stdcall)) unknown_00075a90(long index, byte *entries, const byte *identifier, const byte *key,
-	long unknown38, long unknown3C);
-
 /* 0x003cd147, of the console's libraries: something that is started (1) or
 ended (0x10) for what a session is known by */
 long __attribute__((stdcall)) unknown_003cd147(const byte *identifier, const void *unknown4, unsigned long unknown8,
@@ -43,10 +38,6 @@ long __attribute__((stdcall)) unknown_003cd147(const byte *identifier, const voi
 
 /* 0x0007ad80: fills a buffer with bytes made at random */
 void unknown_0007ad80(long size, void *buffer);
-
-/* 0x00075ce0: which of the things of 0x528 bytes of what a session was given
-when it was set up has a number and the bit of the session; NONE if none */
-long unknown_00075ce0(const byte *unknown8, long index, long unknown);
 
 /* 0x0007ab60: what a console is known by in the network, from an address of
 the game and the number that goes with what a session is known by; whether
@@ -349,7 +340,7 @@ void network_session_set_identifier(
 	memcpy(session+NETWORK_SESSION_IDENTIFIER_OFFSET, identifier, NETWORK_SESSION_IDENTIFIER_SIZE);
 	memcpy(session+NETWORK_SESSION_KEY_OFFSET, key, NETWORK_SESSION_KEY_SIZE);
 	*(long *)(session+NETWORK_SESSION_UNKNOWN3C_OFFSET)= unknown3C;
-	unknown_00075a90(*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET),
+	network_observer_set_session(*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET),
 		*(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET), session+NETWORK_SESSION_IDENTIFIER_OFFSET,
 		session+NETWORK_SESSION_KEY_OFFSET, *(const long *)(session+NETWORK_SESSION_UNKNOWN38_OFFSET), unknown3C);
 	if (unknown_004cf8d4)
@@ -750,7 +741,7 @@ long network_session_find_peer_by_channel(
 }
 
 /* 0x0005f600: whether something comes from the console that runs a session:
-by a number of it, which unknown_00075ce0 finds the thing of the console
+by a number of it, which network_observer_find_channel finds the thing of the console
 with. Never in the last four states, which are those of the console that
 runs the session itself */
 boolean NETWORK_SESSION_CALLBACK network_session_channel_is_host(
@@ -759,7 +750,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_channel_is_host(
 {
 	if (network_session_has_host(session) && !network_session_unknown_00058d20(session))
 	{
-		long channel_index= unknown_00075ce0(*(const byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+		long channel_index= network_observer_find_channel(*(const byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 			*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), unknown);
 		long peer_index= network_session_find_peer_by_channel(session, channel_index);
 
@@ -1081,7 +1072,7 @@ void network_session_stop_waiting_if_done(
 }
 
 /* 0x0005a340: a console answers a session that waits: by a number of it,
-which unknown_00075ce0 finds the thing of the console with. It counts if the
+which network_observer_find_channel finds the thing of the console with. It counts if the
 console is of the session and is not this one, the session waits, the two
 numbers of the answer are those of the session and the console had not
 answered: then it has, and if no console that has the second byte is left
@@ -1091,7 +1082,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_peer_answered(
 	long unknown,
 	const byte *answer)
 {
-	long channel_index= unknown_00075ce0(*(const byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+	long channel_index= network_observer_find_channel(*(const byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 		*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), unknown);
 	long peer_index= network_session_find_peer_by_channel(session, channel_index);
 	struct network_session_peer_state *state;

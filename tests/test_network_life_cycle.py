@@ -545,7 +545,7 @@ def run(t) -> None:
             Buffer(random_.randbytes(16)),
             random_.choice((0, 1, NONE, random_.getrandbits(32))),
             globals={"unknown_004cf7d4": keys(), "unknown_004cf8d4": told()},
-            externals={**library, "unknown_00075a90": lambda harness, arguments: 0},
+            externals={**library, "network_observer_set_session": lambda harness, arguments: 0},
         )
     for n in range(80):
         t.check(
@@ -558,7 +558,7 @@ def run(t) -> None:
             globals={"unknown_004cf7d4": keys(), "unknown_004cf8d4": told()},
             externals={
                 **library,
-                "unknown_00075a90": lambda harness, arguments: 0,
+                "network_observer_set_session": lambda harness, arguments: 0,
                 "transport_security_set_key": lambda harness, arguments, could=random_.choice((1, 1, 0x80, 0, 0x100)): could,
             },
         )
@@ -582,7 +582,7 @@ def run(t) -> None:
             random_.choice((0, 0, 1, random_.getrandbits(32))),
             random_.choice((0, 1, 2, 2, 2, 5, 0x102, 0x202)),
             globals={"unknown_004cf7d4": keys(), "unknown_004cf8d4": told()},
-            externals={**library, "unknown_00075a90": lambda harness, arguments: 0, "transport_security_create_key": makes},
+            externals={**library, "network_observer_set_session": lambda harness, arguments: 0, "transport_security_create_key": makes},
         )
 
     # ---------- a console comes into a session
@@ -769,7 +769,7 @@ def run(t) -> None:
             "network_session_channel_is_host",
             Buffer(bytes(with_peers())),
             random_.getrandbits(32),
-            externals={"unknown_00075ce0": lambda harness, arguments, channel=channel: channel},
+            externals={"network_observer_find_channel": lambda harness, arguments, channel=channel: channel},
         )
     for n in range(200):
         data = with_peers()
@@ -952,7 +952,7 @@ def run(t) -> None:
             Buffer(bytes(data)),
             random_.getrandbits(32),
             Buffer(bytes(answer)),
-            externals={"unknown_00075ce0": lambda harness, arguments, channel=channel: channel},
+            externals={"network_observer_find_channel": lambda harness, arguments, channel=channel: channel},
         )
 
     for n in range(160):

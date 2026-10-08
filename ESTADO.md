@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 325.
+**Última actualización:** 2026-10-08, al terminar el hito 326.
 
 ## Dónde estamos
 
-- **1146 funciones descompiladas de 11.265: el 10,17 % del juego** (el
-  6,543 % de los bytes de código).
-- Las 1146 están comprobadas contra el ejecutable original: las 1109 del
+- **1152 funciones descompiladas de 11.265: el 10,23 % del juego** (el
+  6,560 % de los bytes de código).
+- Las 1152 están comprobadas contra el ejecutable original: las 1109 del
   hito 313 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile what has changed of a console of a session* (ver `git log`).
+- Último hito: *Decompile the first functions of the network observer* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 543 funciones apuntadas pero sin descompilar (las que el código
   llama); 455 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -117,6 +117,9 @@ Módulos (funciones hechas / archivo):
 - [ ] Dirección y claves de red — `networking\transport_security.c` (4:
       lo que la consola es en la red y la clave de cada sesión; va de
       `0x0007a8a0` en adelante)
+- [ ] Observador de la red — `networking\network_observer.c` (6: lo que
+      tiene de cada sesión y sus canales con las otras consolas; va de
+      `0x00075970` a `0x0007a4a0` y casi todo falta)
 - [x] Partida en red — `networking\network_life_cycle.c` (34: qué está
       haciendo, sus dos sesiones, lo que se le pide y su fotograma; de
       `0x000591e0` a `0x00059ab0`, completo)
@@ -230,10 +233,9 @@ Módulos (funciones hechas / archivo):
 - [x] ~~`game_voice.c`~~ (hito 278): completo.
 - [x] ~~El resto de `voice_routing.c`~~ (hito 313).
 - [ ] **La sesión de red**: lo que hay alrededor de lo ya hecho
-      (`0x0005a400`, `0x00060400`, `0x00061050`), `0x00075ce0`,
-      `0x00075e80`,
-      `0x0007ab60`,
-      `0x00075a90`, lo que sigue en `transport_security.c`
+      (`0x0005a400`, `0x00060400`, `0x00061050`), el observador
+      (`0x00075970`, `0x00075da0`, `0x00075e80`, `0x00076ef0`),
+      `0x0007ab60`, lo que sigue en `transport_security.c`
       (`0x0007aaa0`), y lo que hace la partida en cada estado
       (`0x0006dec0`).
 - [x] ~~Cinco direcciones repetidas en `symbols\functions.csv`~~ (hito
