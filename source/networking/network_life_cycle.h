@@ -110,6 +110,8 @@ struct network_life_cycle_handler
 boolean NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_unknown_00059890(long unknown0, long unknown4, long unknown8);
 
 boolean network_life_cycle_in_state5(void);
+boolean network_life_cycle_session_is_open(void);
+boolean network_life_cycle_unknown_00063f00(void);
 long network_life_cycle_get_state(void);
 boolean network_life_cycle_local_peer_is_host(void);
 boolean network_life_cycle_unknown_00059330(void);

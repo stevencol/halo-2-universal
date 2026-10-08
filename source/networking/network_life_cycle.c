@@ -804,3 +804,54 @@ void network_life_cycle_update(
 		}
 	}
 }
+
+/* 0x00063e00: whether the session of the network game has room and takes
+players: it says who is in it, its number of 0x498C is zero, it has fewer
+players than it can have, the network game is not in its states from the
+sixth to the ninth, and the 16 bits of 0x5DD0 of the session are NONE. FALSE
+with no network game. The game has it far from the rest of this file */
+boolean network_life_cycle_session_is_open(
+	void)
+{
+	if (unknown_00527330)
+	{
+		const byte *session= network_life_cycle_session;
+		long state= *(const long *)(session+NETWORK_SESSION_STATE_OFFSET);
+
+		if (state!=_network_session_state_none && state>=_network_session_state3 && state<=_network_session_state8 &&
+			*(const long *)(session+NETWORK_SESSION_UNKNOWN498C_OFFSET)==0 &&
+			*(const long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET+NETWORK_SESSION_MEMBERSHIP_PLAYER_COUNT_OFFSET)<
+				*(const long *)(session+NETWORK_SESSION_UNKNOWN4994_OFFSET) &&
+			unknown_00527334!=_network_life_cycle_state6 && unknown_00527334!=_network_life_cycle_state7 &&
+			unknown_00527334!=_network_life_cycle_state8 && unknown_00527334!=_network_life_cycle_state9 &&
+			*(const short *)(session+NETWORK_SESSION_UNKNOWN5DD0_OFFSET)==NONE)
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x00063f00: whether this console runs the session of the network game,
+as who is in it says, and the number of 0x4980 of the session is 1. FALSE
+with no network game, or with a session that does not say who is in it */
+boolean network_life_cycle_unknown_00063f00(
+	void)
+{
+	if (unknown_00527330)
+	{
+		const byte *session= network_life_cycle_session;
+		long state= *(const long *)(session+NETWORK_SESSION_STATE_OFFSET);
+
+		if (state!=_network_session_state_none && state>=_network_session_state3 && state<=_network_session_state8 &&
+			*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET)==
+				*(const long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET) &&
+			*(const long *)(session+NETWORK_SESSION_UNKNOWN4980_OFFSET)==1)
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}

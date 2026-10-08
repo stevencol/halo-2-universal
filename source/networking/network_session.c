@@ -2234,3 +2234,32 @@ boolean NETWORK_SESSION_CALLBACK network_session_roster_has_any_player(
 
 	return found;
 }
+
+/* 0x00063ca0: how many bits of a number are set */
+long network_count_bits(
+	unsigned long value)
+{
+	value= ((value>>1)&0x55555555)+(value&0x55555555);
+	value= ((value>>2)&0x33333333)+(value&0x33333333);
+	value= ((value>>4)&0x0F0F0F0F)+(value&0x0F0F0F0F);
+	value= ((value>>8)&0x00FF00FF)+(value&0x00FF00FF);
+
+	return (value>>16)+(value&0xFFFF);
+}
+
+/* 0x00063d00: whether two players are known by the same: the first eight of
+their twelve bytes, and with the last thing two bits of the rest too. FALSE
+with no player */
+boolean NETWORK_SESSION_CALLBACK network_player_identifier_equal(
+	const unsigned long *identifier,
+	const unsigned long *other,
+	boolean with_flags)
+{
+	if (!identifier || !other)
+	{
+		return FALSE;
+	}
+
+	return identifier[0]==other[0] && identifier[1]==other[1] &&
+		(!with_flags || !((identifier[2]^other[2])&NETWORK_SESSION_PLAYER_IDENTIFIER_FLAGS_MASK));
+}

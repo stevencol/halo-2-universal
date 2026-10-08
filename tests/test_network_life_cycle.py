@@ -1442,3 +1442,54 @@ def run(t) -> None:
             Buffer(bytes(data)),
             random_.choice((0, 1, 2, 4, 4, NONE)),
         )
+
+    # ---------- the bits of a number, and two players
+
+    for value in (0, 1, 0x80000000, 0xFFFFFFFF, 0x55555555, 0xAAAAAAAA, 0x00010000, 0x0000FFFF, 0xFFFF0000):
+        t.check("network_count_bits", value)
+    for n in range(100):
+        t.check("network_count_bits", random_.getrandbits(32) & random_.getrandbits(32) if n % 2 else random_.getrandbits(32))
+
+    for n in range(300):
+        identifier = bytearray(random_.randbytes(12))
+        other = bytearray(identifier)
+        way = random_.randrange(7)
+        if way == 0:
+            other[random_.randrange(8)] ^= 1 << random_.randrange(8)
+        elif way == 1:
+            # two of the bits that count
+            other[8] ^= random_.choice((1, 2, 3))
+        elif way == 2:
+            # bits that do not count
+            other[8] ^= random_.choice((4, 0x80))
+            other[9 + random_.randrange(3)] ^= 0xFF
+        t.check(
+            "network_player_identifier_equal",
+            Buffer(bytes(identifier)) if n % 11 else 0,
+            Buffer(bytes(other)) if n % 13 else 0,
+            random_.choice((0, 1, 1, 0x80, 0x100)),
+        )
+
+    # ---------- two things that the session of the network game is asked
+
+    for name in ("network_life_cycle_session_is_open", "network_life_cycle_unknown_00063f00"):
+        for n in range(400):
+            data = bytearray(random_.randbytes(0x78B8))
+            struct.pack_into("<I", data, STATE, random_.choice((3, 4, 5, 5, 5, 8, 0, 1, 2, 9)))
+            struct.pack_into("<I", data, 0x498C, random_.choice((0, 0, 0, 0, 1, NONE)))
+            struct.pack_into("<I", data, 0x4994, random_.choice((16, 16, 8, 0)))
+            struct.pack_into("<I", data, 0x1118, random_.choice((0, 3, 7, 8, 15, 16, NONE)))
+            struct.pack_into("<H", data, 0x5DD0, random_.choice((0xFFFF, 0xFFFF, 0xFFFF, 0, 5)))
+            struct.pack_into("<I", data, 0x5DD2, random_.getrandbits(16))
+            struct.pack_into("<I", data, 0x4980, random_.choice((1, 1, 1, 0, 2)))
+            local = random_.choice((0, 1, 3, NONE))
+            struct.pack_into("<I", data, LOCAL_PEER, local)
+            struct.pack_into("<I", data, HOST_PEER, random_.choice((local, local, local ^ 1)))
+            t.check(
+                name,
+                globals={
+                    "unknown_00527330": bytes((random_.choice((1, 1, 1, 1, 0x80, 0)),)),
+                    "unknown_00527334": random_.choice((1, 2, 3, 4, 5, 5, 5, 6, 7, 8, 9, 10)),
+                    "network_life_cycle_session": Buffer(bytes(data)),
+                },
+            )

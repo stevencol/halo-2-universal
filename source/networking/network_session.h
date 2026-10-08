@@ -145,6 +145,9 @@ enum
 	NETWORK_SESSION_JOIN_PLAYERS_OFFSET= 0x4,
 	NETWORK_SESSION_JOIN_UNKNOWN14C_OFFSET= 0x14C,
 	NETWORK_SESSION_JOIN_ADDRESS_OFFSET= 0x188,
+	/* of the twelve bytes that a player is known by: the bits of the last
+	four that count when two are compared */
+	NETWORK_SESSION_PLAYER_IDENTIFIER_FLAGS_MASK= 3,
 	/* in who is in the session: how many consoles, and the consoles */
 	NETWORK_SESSION_PEER_COUNT_OFFSET= 0x54,
 	NETWORK_SESSION_PEER_ARRAY_OFFSET= 0x58,
@@ -427,6 +430,9 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_set_player_unknownA8(long 
 	const byte *unknownA8);
 boolean NETWORK_SESSION_CALLBACK network_session_host_unknown_0005aeb0(byte *session, long unknown);
 void network_session_reset_unknown761c(byte *session);
+long network_count_bits(unsigned long value);
+boolean NETWORK_SESSION_CALLBACK network_player_identifier_equal(const unsigned long *identifier,
+	const unsigned long *other, boolean with_flags);
 long NETWORK_SESSION_CALLBACK network_session_roster_find_player(const struct network_session_roster *roster,
 	const byte *identifier);
 long network_session_roster_group_maximum_unknown248(const struct network_session_roster *roster, long group_index);

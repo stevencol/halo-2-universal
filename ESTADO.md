@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 334.
+**Última actualización:** 2026-10-08, al terminar el hito 335.
 
 ## Dónde estamos
 
-- **1212 funciones descompiladas de 11.265: el 10,76 % del juego** (el
-  6,718 % de los bytes de código).
-- Las 1212 están comprobadas contra el ejecutable original: las 1109 del
+- **1216 funciones descompiladas de 11.265: el 10,79 % del juego** (el
+  6,731 % de los bytes de código).
+- Las 1216 están comprobadas contra el ejecutable original: las 1109 del
   hito 313 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the groups and players of a session's roster* (ver `git log`).
+- Último hito: *Decompile four small network helpers* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 545 funciones apuntadas pero sin descompilar (las que el código
   llama); 447 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -109,7 +109,7 @@ Módulos (funciones hechas / archivo):
       terminar líneas o triángulos; faltan `0x0001e930` y `0x0001eb00`, que
       preparan la consola para dibujar)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
-- [ ] Sesión de red — `networking\network_session.c` (86: el estado de
+- [ ] Sesión de red — `networking\network_session.c` (88: el estado de
       una sesión, prepararla, arrancarla, su identificador y su clave,
       las consolas que entran y salen, cómo buscarlas, y los jugadores
       que lo piden;
@@ -121,7 +121,7 @@ Módulos (funciones hechas / archivo):
 - [ ] Observador de la red — `networking\network_observer.c` (6: lo que
       tiene de cada sesión y sus canales con las otras consolas; va de
       `0x00075970` a `0x0007a4a0` y casi todo falta)
-- [x] Partida en red — `networking\network_life_cycle.c` (34: qué está
+- [x] Partida en red — `networking\network_life_cycle.c` (36: qué está
       haciendo, sus dos sesiones, lo que se le pide y su fotograma; de
       `0x000591e0` a `0x00059ab0`, completo)
 - [x] Voz de los jugadores — `networking\voice.c` (22: completo, de

@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Contar bits, comparar jugadores y dos preguntas a la partida
+
+Dos funciones en `networking/network_session.c` y dos en `networking/network_life_cycle.c`,
+371 bytes entre todas. De 1212 funciones se pasa a 1216, el 10,79 % de las del juego
+(el 6,731 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_count_bits` | `0x00063ca0` | `networking/network_session.c` |
+| `network_player_identifier_equal` | `0x00063d00` | `networking/network_session.c` |
+| `network_life_cycle_session_is_open` | `0x00063e00` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_00063f00` | `0x00063f00` | `networking/network_life_cycle.c` |
+
+### Lo que se sabe
+
+- `network_count_bits` cuenta los bits puestos de un número, con el truco
+  de sumar por pares, de cuatro en cuatro, de ocho en ocho…
+- `network_player_identifier_equal` dice si dos jugadores son el mismo por
+  sus doce bytes: cuentan los ocho primeros y, si se pide, dos bits de los
+  otros cuatro. Es la misma comparación que hace la voz con quien habla
+  (`VOICE_TALKER_FLAGS_MASK`, hito 264): los doce bytes de un jugador son
+  un número de 64 bits y unos indicadores.
+- `network_life_cycle_session_is_open` dice si la sesión de la partida
+  admite jugadores: dice quién está, su número de `0x498C` es cero, tiene
+  menos jugadores que su máximo, la partida no está en sus estados sexto a
+  noveno y los 16 bits de `0x5DD0` son NONE.
+- `network_life_cycle_unknown_00063f00` dice si esta consola lleva la
+  sesión de la partida y su número de `0x4980` es 1.
+- Las dos últimas están en el juego lejos del resto de
+  `network_life_cycle.c` (en `0x00063e00`), pero leen sus variables; van
+  ahí hasta que se vea de qué archivo son.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (124
+  funciones).
+- Las mutaciones de los hitos 280 a 308 y 321 a 335 están pendientes; las
+  de los hitos 309 a 320 seguían corriendo.
+
 ## 2026-10-08 — Los grupos y los jugadores de la lista de la sesión
 
 Seis funciones en `networking/network_session.c`, 466 bytes entre todas. De 1206
