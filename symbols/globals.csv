@@ -219,6 +219,8 @@ address,name,source
 004c9888,unknown_004c9888,source/networking/game_voice.c
 004c988c,game_voice_session_source,source/networking/game_voice.c
 004c9878,unknown_004c9878,source/networking/game_voice.c
+004c99c0,unknown_004c99c0,source/networking/voice_mute_list.c
+004c99c4,voice_mute_list_tasks,source/networking/voice_mute_list.c
 00527364,network_life_cycle_session,source/networking/network_life_cycle.c
 0052736c,network_life_cycle_other_session,source/networking/network_life_cycle.c
 00527e78,unknown_00527e78,source/networking/network_life_cycle.c

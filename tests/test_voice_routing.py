@@ -130,7 +130,7 @@ def run(t) -> None:
                                 externals={
                                     "game_voice_unknown_00054df0": gives(is_one),
                                     "game_voice_get_player_datum": gives(0x80345000 if has_datum else 0),
-                                    "unknown_000589e0": gives(says),
+                                    "voice_player_unknown_000589e0": gives(says),
                                 },
                             )
 
@@ -507,3 +507,43 @@ def run(t) -> None:
                     "voice_route_assign": assign([random_.choice((0xFFFF, 0, random_.getrandbits(16))) for _ in range(3)]),
                 },
             )
+
+    # ---------- a player and its object
+
+    def a_player_case(unknown2c: int, has_object: bool, ticks_ago: int, seconds_per_tick: float):
+        now = random_.choice((1000, 0x7FFFFFF0, 0x80000010, 0xFFFFFFF0))
+        # the objects, in one buffer: the array, sixteen headers of twelve
+        # bytes that it points to, and the object that one of them points to
+        index = random_.randrange(16)
+        array = bytearray(random_.randbytes(0x4C))
+        struct.pack_into("<I", array, 0x44, 0x4C)
+        headers = bytearray(random_.randbytes(16 * 12))
+        struct.pack_into("<I", headers, index * 12 + 8, 0x4C + 16 * 12)
+        an_object = bytearray(random_.randbytes(0x2E4))
+        struct.pack_into("<I", an_object, 0x2E0, (now - ticks_ago) & 0xFFFFFFFF)
+        objects = Buffer(bytes(array) + bytes(headers) + bytes(an_object), pointers=(0x44, 0x4C + index * 12 + 8))
+        datum = bytearray(random_.randbytes(0x34))
+        struct.pack_into("<I", datum, 0x2C, unknown2c & 0xFFFFFFFF)
+        struct.pack_into("<I", datum, 0x30, (random_.getrandbits(16) << 16 | index) if has_object else NONE)
+        time = bytearray(random_.randbytes(0xC))
+        struct.pack_into("<fI", time, 4, seconds_per_tick, now)
+        return objects, Buffer(bytes(datum)), Buffer(bytes(time))
+
+    for is_one in (1, 0):
+        for has_datum in (True, False):
+            for unknown2c in (NONE, 0, 5):
+                for has_object in (True, False):
+                    for ticks_ago, seconds_per_tick in ((0, 1 / 30), (30, 1 / 30), (31, 1 / 30), (29, 1 / 30), (-5, 1 / 30), (60, 1 / 60), (61, 1 / 60), (1, 1.0), (2, 1.0), (10, float("nan")), (0x7FFFFFFF, 1 / 30)):
+                        objects, datum, time = a_player_case(unknown2c, has_object, ticks_ago, seconds_per_tick)
+                        t.check(
+                            "voice_player_unknown_000589e0",
+                            random_.getrandbits(4),
+                            globals={"object_header_data": objects, "game_time_globals": time},
+                            externals={
+                                "game_voice_unknown_00054df0": gives(is_one),
+                                "game_voice_get_player_datum": lambda harness, arguments, datum=datum, has_datum=has_datum: (
+                                    datum.address if has_datum else 0
+                                ),
+                            },
+                            extra=[datum],
+                        )

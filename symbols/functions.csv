@@ -765,7 +765,14 @@ address,name,source,arguments,returns,convention
 00057360,unknown_00057360,,stack,void,stdcall
 000577d0,unknown_000577d0,,stack,void,stdcall
 00057960,unknown_00057960,,stack,void,stdcall
-000589e0,unknown_000589e0,,eax,bool
+000589e0,voice_player_unknown_000589e0,source/networking/voice_routing.c,eax,bool
+00058a50,voice_mute_list_reset,source/networking/voice_mute_list.c,edx,void
+00058c10,voice_mute_list_add,source/networking/voice_mute_list.c,esi ebx,void
+00058c60,voice_mute_list_remove,source/networking/voice_mute_list.c,esi ebx,void
+00058cb0,voice_mute_list_has_player,source/networking/voice_mute_list.c,edx stack,bool,stdcall
+003a084c,unknown_003a084c,,stack stack stack stack,int
+003a086e,unknown_003a086e,,stack stack stack stack,int
+00058b70,unknown_00058b70,,eax,void
 00055990,voice_targets_update,source/networking/voice_routing.c,eax,void
 00055960,voice_targets_get,source/networking/voice_routing.c,esi ebx,int
 00056590,voice_unknown_00527104_get_words,source/networking/voice_routing.c,eax esi edi,void

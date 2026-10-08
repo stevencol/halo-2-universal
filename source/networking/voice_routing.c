@@ -11,7 +11,9 @@ voice.c, from 0x00055960 on.
 
 #include "voice_routing.h"
 
+#include "game/game.h"
 #include "networking/game_voice.h"
+#include "objects/objects.h"
 
 #include <string.h>
 
@@ -25,9 +27,6 @@ void __attribute__((stdcall)) unknown_00057080(byte *channels);
 void __attribute__((stdcall)) unknown_00057360(byte *channels);
 void __attribute__((stdcall)) unknown_000577d0(byte *channels);
 void __attribute__((stdcall)) unknown_00057960(byte *channels);
-
-/* 0x000589e0: something of a player */
-boolean unknown_000589e0(long player);
 
 /* 0x00056c60: as voice_channels_get_player, in the other states of the
 network game */
@@ -149,7 +148,7 @@ void voice_channels_update(
 }
 
 /* 0x00056bd0: a bit for each player that a player of the game hears, most
-likely: its third number if unknown_000589e0 says not, and its first two
+likely: its third number if voice_player_unknown_000589e0 says not, and its first two
 together if it says so. 0 out of the first state of the network game, or if
 the player is not one that the voice has. The game reads the numbers of the
 one that it has at 0x00527108, whatever it is given */
@@ -163,7 +162,7 @@ unsigned long voice_channels_get_player(
 		unsigned long first= 0;
 		unsigned long second= 0;
 
-		if (!unknown_000589e0(player))
+		if (!voice_player_unknown_000589e0(player))
 		{
 			return (unsigned long)voice_channels_get_unknown84(unknown_00527108, player);
 		}
@@ -884,4 +883,42 @@ void VOICE_ROUTING_CALLBACK voice_route_assign(
 			(*budget)--;
 		}
 	}
+}
+
+/* 0x000589e0: of a player that the voice has: whether a number of it is not
+NONE, or it has no object, or it is no more than a second since a time of
+its object. FALSE for a player that the voice does not have */
+boolean voice_player_unknown_000589e0(
+	long player)
+{
+	if (game_voice_unknown_00054df0(player))
+	{
+		const byte *datum= game_voice_get_player_datum(player);
+
+		if (datum)
+		{
+			long object_index;
+			const struct object_header_datum *header;
+			long ticks;
+
+			if (*(const long *)(datum+VOICE_PLAYER_DATUM_UNKNOWN2C_OFFSET)!=NONE)
+			{
+				return TRUE;
+			}
+			object_index= *(const long *)(datum+VOICE_PLAYER_DATUM_OBJECT_OFFSET);
+			if (object_index==NONE)
+			{
+				return TRUE;
+			}
+			header= (const struct object_header_datum *)object_header_data->data+(object_index&0xFFFF);
+			ticks= (long)(game_time_globals->time-
+				*(const unsigned long *)((const byte *)header->datum+VOICE_OBJECT_UNKNOWN2E0_OFFSET));
+			if (VOICE_PLAYER_UNKNOWN_000589E0_SECONDS>=(real)ticks*game_time_globals->seconds_per_tick)
+			{
+				return TRUE;
+			}
+		}
+	}
+
+	return FALSE;
 }

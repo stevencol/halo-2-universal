@@ -82,8 +82,18 @@ enum
 	VOICE_CHANNELS_ON_OFFSET= 0,
 	VOICE_CHANNELS_UNKNOWN4_OFFSET= 0x4,
 	VOICE_CHANNELS_UNKNOWN44_OFFSET= 0x44,
-	VOICE_CHANNELS_UNKNOWN84_OFFSET= 0x84
+	VOICE_CHANNELS_UNKNOWN84_OFFSET= 0x84,
+
+	/* in a player of the game: a number that is NONE or not, and an object;
+	and in the object, a time of the game, in ticks */
+	VOICE_PLAYER_DATUM_UNKNOWN2C_OFFSET= 0x2C,
+	VOICE_PLAYER_DATUM_OBJECT_OFFSET= 0x30,
+	VOICE_OBJECT_UNKNOWN2E0_OFFSET= 0x2E0
 };
+
+/* how long after that time voice_player_unknown_000589e0 still says so, in
+seconds */
+#define VOICE_PLAYER_UNKNOWN_000589E0_SECONDS 1.0f
 
 /* a function that takes its arguments off the stack */
 #define VOICE_ROUTING_CALLBACK __attribute__((stdcall))
@@ -103,6 +113,7 @@ void VOICE_ROUTING_CALLBACK voice_queue_add(const word *words, byte *queue, cons
 	const boolean *unknown);
 long voice_queues_size_for_peer(const byte *queues, long peer);
 unsigned long voice_targets_to_peers(unsigned long targets);
+boolean voice_player_unknown_000589e0(long player);
 void VOICE_ROUTING_CALLBACK voice_route_peers(const byte *unknown, unsigned long peers, word *words);
 void VOICE_ROUTING_CALLBACK voice_route_assign(long *budget, unsigned long *peers, unsigned long allowed,
 	unsigned long *direct, boolean through_chosen, long chosen_peer, boolean *more);

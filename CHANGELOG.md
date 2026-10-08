@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — La lista de «a quién no quiero oír», y un jugador y su objeto
+
+Cinco funciones: cuatro en un archivo nuevo, `networking/voice_mute_list.c`, y una en
+`networking/voice_routing.c`; 472 bytes entre las cinco. De 1065 funciones se pasa a
+1070, el 9,50 % de las del juego (el 6,052 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_mute_list_reset` | `0x00058a50` | `networking/voice_mute_list.c` |
+| `voice_mute_list_add` | `0x00058c10` | `networking/voice_mute_list.c` |
+| `voice_mute_list_remove` | `0x00058c60` | `networking/voice_mute_list.c` |
+| `voice_mute_list_has_player` | `0x00058cb0` | `networking/voice_mute_list.c` |
+| `voice_player_unknown_000589e0` | `0x000589e0` | `networking/voice_routing.c` |
+
+`voice_player_unknown_000589e0` era `unknown_000589e0`, la que
+`voice_channels_get_player` (hito 279) llamaba sin conocer.
+
+### Lo que se sabe
+
+- La lista de jugadores a los que el jugador de un mando no quiere oír
+  (hito 277) la guarda la biblioteca de red de la consola. El juego le dice
+  «a este no quiero oírle» (`0x003a084c`) o «a este sí otra vez»
+  (`0x003a086e`), y si la biblioteca lo acepta vuelve a pedirle la lista
+  entera (`0x00058b70`, sin descompilar). Solo lo hace con una sesión de
+  red en su primer estado y con la lista ya conocida.
+- Preguntar si un jugador está en la lista es recorrerla comparando sus
+  doce bytes, como hace `game_voice_update_local_player` por dentro.
+- `voice_player_unknown_000589e0` mira el objeto de un jugador de la
+  partida: dice que sí si el jugador tiene cierto número, si no tiene
+  objeto, o si no ha pasado más de un segundo desde un momento apuntado en
+  su objeto. Es la primera función de la voz que mira el mundo del juego
+  (la tabla de objetos y el reloj de la partida), y con reales: la prueba
+  incluye los límites exactos y un tiempo que no es un número.
+
+### Batería completa
+
+La del hito 278 terminó: 1.023 funciones, las 1.023 bien. Es la primera
+con `voice.c` y `game_voice.c` completos.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de los dos archivos.
+- Las mutaciones de los hitos 269 a 279 corren aparte; las de 280 a 288
+  están pendientes.
+
 ## 2026-10-08 — Nueve funciones pequeñas más de la partida en red
 
 Nueve funciones en `networking/network_life_cycle.c`, de 430 bytes entre las nueve. De 1056 funciones se pasa a

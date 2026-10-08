@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 287.
+**Última actualización:** 2026-10-08, al terminar el hito 288.
 
 ## Dónde estamos
 
-- **1065 funciones descompiladas de 11.265: el 9,45 % del juego** (el
-  6,038 % de los bytes de código).
-- Las 1065 están comprobadas contra el ejecutable original: las 940 del
-  hito 265 con la batería completa, y las de después con sus propias pruebas
+- **1070 funciones descompiladas de 11.265: el 9,50 % del juego** (el
+  6,052 % de los bytes de código).
+- Las 1070 están comprobadas contra el ejecutable original: las 1023 del
+  hito 278 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile nine small functions more of network_life_cycle.c* (ver `git log`).
+- Último hito: *Start voice_mute_list.c, and decompile a function of a player and its object* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 528 funciones apuntadas pero sin descompilar (las que el código
-  llama); 440 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 530 funciones apuntadas pero sin descompilar (las que el código
+  llama); 442 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -117,10 +117,13 @@ Módulos (funciones hechas / archivo):
       `0x000596d0`)
 - [x] Voz de los jugadores — `networking\voice.c` (22: completo, de
       `0x00055080` a `0x00055920`)
-- [ ] La voz entre consolas — `networking\voice_routing.c` (19: a quién
+- [ ] Lista de silenciados — `networking\voice_mute_list.c` (4; faltan
+      `0x00058a90`, `0x00058b00` y `0x00058b70`, que hablan con la
+      biblioteca de red)
+- [ ] La voz entre consolas — `networking\voice_routing.c` (20: a quién
       habla cada jugador, las colas, lo que una consola manda a otra y
       quién oye a quién; va de `0x00055960` en adelante y faltan unas
-      18 funciones)
+      17 funciones)
 - [ ] Matemáticas reales — `math\real_math.c` (40 de unas 50, con dos que están lejos de las demás)
 - [x] Matrices — `math\matrix_math.c` (26: completo)
 - [ ] Números aleatorios — `math\random_math.c` (2)
