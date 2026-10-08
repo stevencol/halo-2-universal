@@ -1282,3 +1282,88 @@ def run(t) -> None:
                 Buffer(bytes(data)),
                 externals={"unknown_0005a520": lambda harness, arguments: 0},
             )
+
+    # ---------- sending to the consoles of a session
+
+    for n in range(20):
+        t.check("network_session_reset_unknown761c", Buffer(bytes(whole_session())))
+
+    def with_channels() -> bytearray:
+        data = whole_session() + bytearray(random_.randbytes(8 + 4 * 0x528))
+        struct.pack_into("<I", data, 8, CHANNELS)
+        struct.pack_into("<I", data, 0x10, random_.randrange(4))
+        for peer in range(16):
+            struct.pack_into("<I", data, 0x72DC + peer * 0x14 + 4, random_.randrange(4))
+        for channel in range(4):
+            struct.pack_into("<I", data, CHANNELS + channel * 0x528 + 0xA8, random_.choice((7, 7, 6, 0, 8)))
+        return data
+
+    for n in range(240):
+        t.check(
+            "network_session_send_to_peer",
+            random_.randrange(16),
+            random_.choice((0, 1, 2, 2, 3, NONE)),
+            Buffer(bytes(with_channels()), pointers=(8,)),
+            random_.randrange(0x30),
+            8,
+            Buffer(random_.randbytes(8)),
+            externals={"unknown_00075e80": sends},
+        )
+    for n in range(120):
+        t.check(
+            "network_session_send_to_peers",
+            random_.choice((0, 1, 2, 2, 3)),
+            Buffer(bytes(with_channels()), pointers=(8,)),
+            random_.randrange(0x30),
+            8,
+            Buffer(random_.randbytes(8)),
+            externals={"unknown_00075e80": sends},
+        )
+
+    # ---------- the players that ask to come in, again
+
+    for n in range(160):
+        data = whole_session()
+        now = random_.getrandbits(32)
+        for request in range(16):
+            at = REQUESTS + request * REQUEST
+            limit = random_.choice((NONE, 0, 1000, 1000, 30000, 0x80000000))
+            ago = random_.choice((0, 1, 999, 1000, 1001, 29999, 30001, 0x7FFFFFFF, 0x80000001))
+            struct.pack_into("<I", data, at + 0x1C, (now - ago) & 0xFFFFFFFF)
+            struct.pack_into("<I", data, at + 0x20, limit)
+        t.check(
+            "network_session_requests_expire",
+            Buffer(bytes(data)),
+            globals={"unknown_00510548": bytes((random_.choice((0, 0, 1)),)), "unknown_0051054c": struct.pack("<I", now)},
+            externals={"GetTickCount": lambda harness, arguments, now=now: now},
+        )
+    for n in range(160):
+        data = whole_session()
+        eight = random_.randbytes(8)
+        for request in random_.sample(range(16), random_.choice((0, 1, 3, 16))):
+            at = REQUESTS + request * REQUEST + 2
+            data[at : at + 8] = eight if random_.randrange(4) else eight[:7] + bytes((eight[7] ^ 1,))
+        t.check("network_session_requests_remove", Buffer(bytes(data)), Buffer(eight))
+
+    # ---------- whether a console can come in
+
+    for n in range(500):
+        data = with_peers()
+        room(data)
+        struct.pack_into("<I", data, STATE, random_.choice((5, 5, 5, 5, 5, 6, 7, 8, 3, 0)))
+        struct.pack_into("<I", data, 0x498C, random_.choice((0, 0, 1, 1, 2, NONE)))
+        struct.pack_into("<I", data, 0x4990, random_.choice((16, 16, 2, 0)))
+        struct.pack_into("<I", data, 0x54, random_.choice((1, 2, 3, 15, 16)))
+        join = bytearray(random_.randbytes(0x1AC))
+        struct.pack_into("<I", join, 0, random_.choice((0, 1, 1, 2, 4)))
+        join[0x14C] = random_.choice((0, 0, 1, 0x80))
+        for player in range(4):
+            # a player that asks to come in, or one that does not
+            at = REQUESTS + random_.randrange(16) * REQUEST + 0xA
+            if random_.randrange(2):
+                join[4 + player * 12 : 16 + player * 12] = data[at : at + 12]
+        if n % 4 == 0:
+            # the console is in the session already
+            at = PEERS + random_.randrange(4) * PEER
+            join[0x188 : 0x188 + 0x24] = data[at : at + 0x24]
+        t.check("network_session_host_check_join", Buffer(bytes(data)), Buffer(bytes(join)))

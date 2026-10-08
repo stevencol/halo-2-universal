@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Mandar algo a las consolas, y quién puede entrar
+
+Seis funciones en `networking/network_session.c`, 526 bytes entre todas. De 1200
+funciones se pasa a 1206, el 10,71 % de las del juego (el 6,703 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_reset_unknown761c` | `0x00062b40` | `networking/network_session.c` |
+| `network_session_send_to_peer` | `0x00062d20` | `networking/network_session.c` |
+| `network_session_send_to_peers` | `0x00062da0` | `networking/network_session.c` |
+| `network_session_requests_expire` | `0x00062de0` | `networking/network_session.c` |
+| `network_session_requests_remove` | `0x00062fa0` | `networking/network_session.c` |
+| `network_session_host_check_join` | `0x00062fe0` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_send_to_peer` manda algo (una clase, un tamaño y los
+  datos) a una consola de la sesión por su canal, de una manera, de la otra
+  o de las dos; `network_session_send_to_peers`, a todas. Es lo que las dos
+  funciones del hito 321 tenían metido dentro con «las dos maneras».
+- El último número de una petición de entrada (hito 318) es **cuánto dura**,
+  en milisegundos: `network_session_requests_expire` quita las que han
+  pasado de ahí (NONE es que no caducan).
+  `network_session_requests_remove` quita las de una consola, por sus ocho
+  bytes.
+- `network_session_host_check_join` decide si una consola que pide entrar
+  puede: solo lo dice la consola que lleva la sesión, y solo en el quinto
+  estado (3 si no); no con más de 1 en `0x498C` (2); una consola que ya
+  está, puede; otra necesita sitio para una consola y para sus jugadores
+  (4 si no cabe). De lo que manda la que pide se conocen ya cuatro cosas:
+  cuántos jugadores trae, por qué se conoce a cada uno, un byte y los 36
+  bytes de la consola.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (114
+  funciones).
+- Las mutaciones de los hitos 280 a 308 y 321 a 333 están pendientes; las
+  de los hitos 309 a 320 seguían corriendo.
+
 ## 2026-10-08 — La consola que lleva la sesión cambia sus datos
 
 Dieciséis funciones en `networking/network_session.c`, 1.426 bytes entre todas. De 1184

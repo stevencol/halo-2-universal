@@ -1745,3 +1745,9 @@ address,name,source,arguments,returns,convention
 0005af50,network_session_in_last_three_states,source/networking/network_session.c,eax,bool
 0005af70,network_session_is_full_for,source/networking/network_session.c,ecx stack stack,bool,stdcall
 0005afc0,network_session_has_room_for_players,source/networking/network_session.c,eax ecx ebx stack,bool,stdcall
+00062b40,network_session_reset_unknown761c,source/networking/network_session.c,edx,void
+00062d20,network_session_send_to_peer,source/networking/network_session.c,eax ebx esi stack stack stack,void,stdcall
+00062da0,network_session_send_to_peers,source/networking/network_session.c,eax ecx stack stack stack,void,stdcall
+00062de0,network_session_requests_expire,source/networking/network_session.c,eax,void
+00062fa0,network_session_requests_remove,source/networking/network_session.c,edx stack,int,stdcall
+00062fe0,network_session_host_check_join,source/networking/network_session.c,eax edi,int

@@ -128,6 +128,23 @@ enum
 	NETWORK_SESSION_STATE2_ADDRESS_OFFSET= 0x7444,
 	/* in a thing that a session is given: what a session is known by */
 	NETWORK_SESSION_UNKNOWN5DDC_IDENTIFIER_OFFSET= 0x4,
+	/* how something is sent to a console of the session: in one way, in the
+	other, or in both (the first only if its channel is in the seventh
+	state) */
+	_network_session_send_unknown0= 0,
+	_network_session_send_unknown1= 1,
+	_network_session_send_both= 2,
+	/* what network_session_host_check_join says: it can, or why not */
+	_network_session_join_ok= 0,
+	_network_session_join_unknown2= 2,
+	_network_session_join_not_host= 3,
+	_network_session_join_full= 4,
+	/* in what a console that asks to come in sends: how many players, what
+	each is known by, a byte, and what the console is known by */
+	NETWORK_SESSION_JOIN_PLAYER_COUNT_OFFSET= 0,
+	NETWORK_SESSION_JOIN_PLAYERS_OFFSET= 0x4,
+	NETWORK_SESSION_JOIN_UNKNOWN14C_OFFSET= 0x14C,
+	NETWORK_SESSION_JOIN_ADDRESS_OFFSET= 0x188,
 	/* in who is in the session: how many consoles, and the consoles */
 	NETWORK_SESSION_PEER_COUNT_OFFSET= 0x54,
 	NETWORK_SESSION_PEER_ARRAY_OFFSET= 0x58,
@@ -379,6 +396,14 @@ boolean network_session_host_set_local(byte *session);
 boolean NETWORK_SESSION_CALLBACK network_session_host_set_player_unknownA8(long player_index, byte *session,
 	const byte *unknownA8);
 boolean NETWORK_SESSION_CALLBACK network_session_host_unknown_0005aeb0(byte *session, long unknown);
+void network_session_reset_unknown761c(byte *session);
+void NETWORK_SESSION_CALLBACK network_session_send_to_peer(long peer_index, long mode, byte *session, long type,
+	long size, const void *data);
+void NETWORK_SESSION_CALLBACK network_session_send_to_peers(long mode, byte *session, long type, long size,
+	const void *data);
+void network_session_requests_expire(byte *session);
+long NETWORK_SESSION_CALLBACK network_session_requests_remove(byte *session, const byte *unknown2);
+long network_session_host_check_join(byte *session, const byte *join);
 boolean network_session_unknown_0005c190(const byte *unknown, const byte *session);
 boolean network_session_host_set_unknown49f0(const long *unknown49f0, byte *session);
 boolean network_session_host_clear_unknown49fc(byte *session);

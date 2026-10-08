@@ -1969,3 +1969,146 @@ void network_session_unknown_0005c990(
 		unknown_0005a520(session);
 	}
 }
+
+/* 0x00062b40: the 0x34 bytes of 0x761C of a session start over, and the
+number after them counts one more; the two after that are NONE */
+void network_session_reset_unknown761c(
+	byte *session)
+{
+	(*(long *)(session+NETWORK_SESSION_UNKNOWN7650_OFFSET))++;
+	memset(session+NETWORK_SESSION_UNKNOWN761C_OFFSET, 0, NETWORK_SESSION_UNKNOWN761C_SIZE);
+	*(long *)(session+NETWORK_SESSION_UNKNOWN7654_OFFSET)= NONE;
+	*(long *)(session+NETWORK_SESSION_UNKNOWN7658_OFFSET)= NONE;
+}
+
+/* 0x00062d20: something of a kind and a size is sent to a console of a
+session, in one way, in the other or in both: see
+_network_session_send_both. Only to a console that has the second byte of
+what the session keeps of it */
+void NETWORK_SESSION_CALLBACK network_session_send_to_peer(
+	long peer_index,
+	long mode,
+	byte *session,
+	long type,
+	long size,
+	const void *data)
+{
+	const struct network_session_peer_state *state=
+		(const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index;
+
+	if (!state->unknown1)
+	{
+		return;
+	}
+	if (mode==_network_session_send_unknown0 || (mode==_network_session_send_both &&
+		*(const long *)(*(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET)+
+			state->unknown4*NETWORK_SESSION_UNKNOWN8_CHANNEL_SIZE+NETWORK_SESSION_UNKNOWN8_CHANNEL_STATE_OFFSET)==
+			_network_session_unknown8_channel_state7))
+	{
+		unknown_00075e80(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+			*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), type, size, data);
+	}
+	if (mode==_network_session_send_unknown1 || mode==_network_session_send_both)
+	{
+		unknown_00075e80(TRUE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+			*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), type, size, data);
+	}
+}
+
+/* 0x00062da0: something is sent to each console of a session */
+void NETWORK_SESSION_CALLBACK network_session_send_to_peers(
+	long mode,
+	byte *session,
+	long type,
+	long size,
+	const void *data)
+{
+	long peer_index;
+
+	for (peer_index= 0; peer_index<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET); peer_index++)
+	{
+		network_session_send_to_peer(peer_index, mode, session, type, size, data);
+	}
+}
+
+/* 0x00062de0: the players that asked to come into a session longer ago than
+their last number says, in milliseconds, do not ask any more. With NONE for
+that number, they always do */
+void network_session_requests_expire(
+	byte *session)
+{
+	struct network_session_player_request *request=
+		(struct network_session_player_request *)(session+NETWORK_SESSION_UNKNOWN7668_OFFSET);
+	const struct network_session_player_request *end= request+MAXIMUM_NETWORK_SESSION_PLAYER_REQUESTS;
+
+	for (; request<end; request++)
+	{
+		if (request->valid && request->unknown20!=NONE &&
+			(unsigned long)(network_session_time()-request->time)>(unsigned long)request->unknown20)
+		{
+			request->valid= FALSE;
+		}
+	}
+}
+
+/* 0x00062fa0: the players that asked to come into a session with eight
+bytes of their console do not ask any more; how many they were */
+long NETWORK_SESSION_CALLBACK network_session_requests_remove(
+	byte *session,
+	const byte *unknown2)
+{
+	struct network_session_player_request *request=
+		(struct network_session_player_request *)(session+NETWORK_SESSION_UNKNOWN7668_OFFSET);
+	const struct network_session_player_request *end= request+MAXIMUM_NETWORK_SESSION_PLAYER_REQUESTS;
+	long count= 0;
+
+	for (; request<end; request++)
+	{
+		if (request->valid && memcmp(unknown2, request->unknown2, sizeof(request->unknown2))==0)
+		{
+			request->valid= FALSE;
+			count++;
+		}
+	}
+
+	return count;
+}
+
+/* 0x00062fe0: whether a console that asks to come into a session can: 0 if
+it can, and if not why. Only the console that runs the session says, and
+only in the fifth state; not with more than 1 at 0x498C. A console that is
+in the session already can; another needs room for one console and for its
+players, of which those that had asked have theirs */
+long network_session_host_check_join(
+	byte *session,
+	const byte *join)
+{
+	long state= network_session_state(session);
+	long player_count;
+
+	if (!network_session_unknown_00058d20(session))
+	{
+		return _network_session_join_not_host;
+	}
+	if (*(const long *)(session+NETWORK_SESSION_UNKNOWN498C_OFFSET)>1)
+	{
+		return _network_session_join_unknown2;
+	}
+	if (state==_network_session_state7 || state==_network_session_state6 || state==_network_session_state8)
+	{
+		return _network_session_join_not_host;
+	}
+	if (network_session_find_peer(session, join+NETWORK_SESSION_JOIN_ADDRESS_OFFSET)!=NONE)
+	{
+		return _network_session_join_ok;
+	}
+	player_count= *(const long *)(join+NETWORK_SESSION_JOIN_PLAYER_COUNT_OFFSET);
+	if (network_session_is_full_for(session, 1, player_count) ||
+		!network_session_has_room_for_players(join[NETWORK_SESSION_JOIN_UNKNOWN14C_OFFSET],
+			join+NETWORK_SESSION_JOIN_PLAYERS_OFFSET, session, player_count))
+	{
+		return _network_session_join_full;
+	}
+
+	return _network_session_join_ok;
+}
