@@ -10,6 +10,7 @@ so are the names of its functions.
 #define __NETWORK_SESSION_H
 
 #include "cseries/cseries.h"
+#include "networking/transport_security.h"
 
 /* ---------- constants */
 
@@ -28,7 +29,6 @@ enum
 	NETWORK_SESSION_UNKNOWN18_OFFSET= 0x18,
 	/* eight bytes that the session is known by, and whether it has them */
 	NETWORK_SESSION_IDENTIFIER_OFFSET= 0x1C,
-	NETWORK_SESSION_IDENTIFIER_SIZE= 0x8,
 	NETWORK_SESSION_HAS_IDENTIFIER_OFFSET= 0x24,
 	NETWORK_SESSION_UNKNOWN38_OFFSET= 0x38,
 	NETWORK_SESSION_UNKNOWN40_OFFSET= 0x40,
@@ -100,35 +100,15 @@ enum
 	NETWORK_SESSION_UNKNOWN78B0_OFFSET= 0x78B0,
 	NETWORK_SESSION_UNKNOWN78B4_OFFSET= 0x78B4,
 
-	/* what this console is known by in the network: the same size as the
-	console's libraries have for it */
-	NETWORK_SESSION_ADDRESS_SIZE= 0x24,
-
 	/* the key of a session, after what it is known by and whether it has
-	them, and a number that goes with them: NONE with none */
+	them, and a number that goes with them: NONE with none. The sizes are in
+	transport_security.h */
 	NETWORK_SESSION_KEY_OFFSET= 0x25,
-	NETWORK_SESSION_KEY_SIZE= 0x10,
 	NETWORK_SESSION_UNKNOWN3C_OFFSET= 0x3C,
-	MAXIMUM_NETWORK_SESSION_KEYS= 8,
 	/* what unknown_003cd147 is told */
 	_unknown_003cd147_start= 1,
 	_unknown_003cd147_end= 0x10
 };
-
-/* what a session is known by in the network and its key, as they are kept
-out of the session */
-struct network_session_key
-{
-	boolean valid;
-	byte unknown1;
-	byte pad2[2];
-	long unknown4;
-	byte identifier[NETWORK_SESSION_IDENTIFIER_SIZE];
-	byte key[NETWORK_SESSION_KEY_SIZE];
-};
-
-typedef char verify_network_session_key_size[
-	sizeof(struct network_session_key) == 0x20 ? 1 : -1];
 
 /* a number that network_session_start leaves in a session */
 #define NETWORK_SESSION_UNKNOWN4DA8_VALUE 0xDEADBEEFu
@@ -170,11 +150,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_create_identifier(byte *session
 
 /* ---------- globals */
 
-extern struct network_session_key unknown_004cf7d4[MAXIMUM_NETWORK_SESSION_KEYS];
-extern boolean unknown_004cf8d4;
 extern boolean unknown_004d8b18;
 extern boolean unknown_004d8b19;
-extern boolean unknown_004cf792;
-extern byte unknown_004cf793[NETWORK_SESSION_ADDRESS_SIZE];
 
 #endif

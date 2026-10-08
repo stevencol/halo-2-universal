@@ -691,13 +691,17 @@ address,name,source,arguments,returns,convention
 00059890,network_life_cycle_unknown_00059890,source/networking/network_life_cycle.c,stack stack stack,bool,stdcall
 00059a30,network_life_cycle_request_new1,source/networking/network_life_cycle.c,edx esi edi ebx stack,void,stdcall
 00059bd0,network_session_start,source/networking/network_session.c,stack stack stack stack stack stack stack stack stack stack,bool,stdcall
-0007a9b0,unknown_0007a9b0,,,void
+0007a9b0,transport_security_get_address,source/networking/transport_security.c,,bool
+0007a9a0,transport_security_forget_address,source/networking/transport_security.c,stack,void,stdcall
+003cd0cb,unknown_003cd0cb,,stack stack,int,stdcall
+003cd0d6,unknown_003cd0d6,,stack stack,int,stdcall
+003cd17d,unknown_003cd17d,,stack,int,stdcall
 0005fa30,network_session_create_identifier,source/networking/network_session.c,edi stack stack,bool,stdcall
 0005fac0,network_session_use_identifier,source/networking/network_session.c,ecx eax ebx stack stack,bool,stdcall
 0005fb00,network_session_set_identifier,source/networking/network_session.c,esi ecx eax edx,void
 0005fb60,network_session_forget_identifier,source/networking/network_session.c,esi,void
-0007a920,unknown_0007a920,,eax edi stack stack stack,bool,stdcall
-0007a8a0,unknown_0007a8a0,,esi stack stack,bool,stdcall
+0007a920,transport_security_set_key,source/networking/transport_security.c,eax edi stack stack stack,bool,stdcall
+0007a8a0,transport_security_create_key,source/networking/transport_security.c,esi stack stack,bool,stdcall
 00075a90,unknown_00075a90,,eax edi edx ecx stack stack,void,stdcall
 003cd147,unknown_003cd147,,stack stack stack stack stack,int,stdcall
 003cd0e1,unknown_003cd0e1,,stack,int,stdcall

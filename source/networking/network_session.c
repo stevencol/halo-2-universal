@@ -27,31 +27,16 @@ long time(long *timer);
 
 /* ---------- prototypes of functions not decompiled yet */
 
-/* 0x0007a9b0: asks the console what it is known by in the network, if it
-has not been said yet: see unknown_004cf792 */
-void unknown_0007a9b0(void);
-
-/* 0x0007a920: keeps what a session is known by in the network, and its key,
-at a place of unknown_004cf7d4; the console's library is told of them unless
-the first thing says not to. Whether it could. 0x0007a8a0: the same with ones
-that it makes: all zeros if the first thing is not zero, and if it is zero,
-ones that the console's library makes */
-boolean __attribute__((stdcall)) unknown_0007a920(long index, const byte *key, long unknown4, boolean unknown1,
-	const byte *identifier);
-boolean __attribute__((stdcall)) unknown_0007a8a0(long unknown4, long index, boolean unknown);
-
 /* 0x00075a90: tells what a session is given when it is set up what the
 session is known by, its key and two numbers; with NONE for the first
 number, only that */
 void __attribute__((stdcall)) unknown_00075a90(long index, byte *entries, const byte *identifier, const byte *key,
 	long unknown38, long unknown3C);
 
-/* 0x003cd147, 0x003cd0e1, of the console's libraries: something that is
-started (1) or ended (0x10) for what a session is known by, and something
-that what a session is known by is taken out of */
+/* 0x003cd147, of the console's libraries: something that is started (1) or
+ended (0x10) for what a session is known by */
 long __attribute__((stdcall)) unknown_003cd147(const byte *identifier, const void *unknown4, unsigned long unknown8,
 	unsigned long unknownC, unsigned long flags);
-long __attribute__((stdcall)) unknown_003cd0e1(const byte *identifier);
 
 /* 0x0007ad80: fills a buffer with bytes made at random */
 void unknown_0007ad80(long size, void *buffer);
@@ -85,16 +70,8 @@ the console is known by in the network */
 boolean unknown_004d8b18;
 boolean unknown_004d8b19;
 
-/* 0x004cf792, 0x004cf793: whether it is known what this console is known by
-in the network, and what it is */
-boolean unknown_004cf792;
-byte unknown_004cf793[NETWORK_SESSION_ADDRESS_SIZE];
-
-/* 0x004cf7d4: what each session is known by in the network, and its key; by
-the number that a session has at 0x38. 0x004cf8d4: with it, the console's
-library is told when a session starts and stops being known by something */
-struct network_session_key unknown_004cf7d4[MAXIMUM_NETWORK_SESSION_KEYS];
-boolean unknown_004cf8d4;
+/* 0x004cf792, 0x004cf793, 0x004cf7d4 and 0x004cf8d4 are of
+transport_security.c */
 
 /* ---------- code */
 
@@ -250,7 +227,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_start(
 	{
 		if (unknown_004d8b18 && unknown_004d8b19)
 		{
-			unknown_0007a9b0();
+			transport_security_get_address();
 		}
 		memcpy(address, unknown_004cf793, sizeof(address));
 		if (!unknown_004cf792)
@@ -377,7 +354,7 @@ void network_session_set_identifier(
 }
 
 /* 0x0005fac0: a session is known in the network by what it is given, with
-the key that it is given; whether unknown_0007a920 could keep them. The
+the key that it is given; whether transport_security_set_key could keep them. The
 fourth thing is not used */
 boolean NETWORK_SESSION_CALLBACK network_session_use_identifier(
 	byte *session,
@@ -388,7 +365,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_use_identifier(
 {
 	(void)unknown18;
 	network_session_forget_identifier(session);
-	if (unknown_0007a920(*(const long *)(session+NETWORK_SESSION_UNKNOWN38_OFFSET), key, unknown8, FALSE,
+	if (transport_security_set_key(*(const long *)(session+NETWORK_SESSION_UNKNOWN38_OFFSET), key, unknown8, FALSE,
 		identifier))
 	{
 		network_session_set_identifier(session, identifier, key, unknown8);
@@ -400,7 +377,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_use_identifier(
 }
 
 /* 0x0005fa30: a session is known in the network by something that
-unknown_0007a8a0 makes, with its key; whether it could. What it makes is
+transport_security_create_key makes, with its key; whether it could. What it makes is
 taken from the place of the session in unknown_004cf7d4 */
 boolean NETWORK_SESSION_CALLBACK network_session_create_identifier(
 	byte *session,
@@ -408,7 +385,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_create_identifier(
 	long unknown18)
 {
 	network_session_forget_identifier(session);
-	if (unknown_0007a8a0(unknown8, *(const long *)(session+NETWORK_SESSION_UNKNOWN38_OFFSET), unknown18==2))
+	if (transport_security_create_key(unknown8, *(const long *)(session+NETWORK_SESSION_UNKNOWN38_OFFSET), unknown18==2))
 	{
 		const struct network_session_key *made=
 			&unknown_004cf7d4[*(const long *)(session+NETWORK_SESSION_UNKNOWN38_OFFSET)];

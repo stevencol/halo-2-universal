@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 315.
+**Última actualización:** 2026-10-08, al terminar el hito 316.
 
 ## Dónde estamos
 
-- **1114 funciones descompiladas de 11.265: el 9,89 % del juego** (el
-  6,390 % de los bytes de código).
-- Las 1114 están comprobadas contra el ejecutable original: las 1090 del
+- **1118 funciones descompiladas de 11.265: el 9,92 % del juego** (el
+  6,406 % de los bytes de código).
+- Las 1118 están comprobadas contra el ejecutable original: las 1090 del
   hito 296 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a session gets its network identifier and key* (ver `git log`).
+- Último hito: *Decompile the console's network address and the session keys* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 544 funciones apuntadas pero sin descompilar (las que el código
   llama); 456 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -112,6 +112,9 @@ Módulos (funciones hechas / archivo):
 - [ ] Sesión de red — `networking\network_session.c` (10: el estado de
       una sesión, prepararla, arrancarla y su identificador y su clave;
       lo que sigue está en `0x0005fbd0` y más adelante)
+- [ ] Dirección y claves de red — `networking\transport_security.c` (4:
+      lo que la consola es en la red y la clave de cada sesión; va de
+      `0x0007a8a0` en adelante)
 - [x] Partida en red — `networking\network_life_cycle.c` (34: qué está
       haciendo, sus dos sesiones, lo que se le pide y su fotograma; de
       `0x000591e0` a `0x00059ab0`, completo)
@@ -226,9 +229,9 @@ Módulos (funciones hechas / archivo):
 - [x] ~~El resto de `voice_routing.c`~~ (hito 313).
 - [ ] **La sesión de red**: lo que queda de lo que llama
       `network_session_start` (`0x0005fbd0`, `0x00061390`,
-      `0x00062e70`), las claves (`0x0007a8a0`, `0x0007a920`,
-      `0x0007a9b0`, `0x00075a90`), y lo que hace la partida en cada
-      estado (`0x0006dec0`).
+      `0x00062e70`), `0x00075a90`, lo que sigue en
+      `transport_security.c` (`0x0007aaa0`), y lo que hace la partida
+      en cada estado (`0x0006dec0`).
 - [x] ~~Cinco direcciones repetidas en `symbols\functions.csv`~~ (hito
       296).
 - [ ] **Los fondos de los objetos**: `0x000bc280`, `0x000bc380`,

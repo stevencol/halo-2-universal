@@ -489,7 +489,7 @@ def run(t) -> None:
                 "global_language": struct.pack("<I", random_.choice((NONE, NONE, 0, 3))),
             },
             externals={
-                "unknown_0007a9b0": asks,
+                "transport_security_get_address": asks,
                 "network_session_create_identifier": lambda harness, arguments, could=could: could,
                 # the fourth thing is not used: source/ does not give it
                 "network_session_use_identifier": lambda harness, arguments, could=could: (
@@ -559,7 +559,7 @@ def run(t) -> None:
             externals={
                 **library,
                 "unknown_00075a90": lambda harness, arguments: 0,
-                "unknown_0007a920": lambda harness, arguments, could=random_.choice((1, 1, 0x80, 0, 0x100)): could,
+                "transport_security_set_key": lambda harness, arguments, could=random_.choice((1, 1, 0x80, 0, 0x100)): could,
             },
         )
     for n in range(120):
@@ -582,5 +582,5 @@ def run(t) -> None:
             random_.choice((0, 0, 1, random_.getrandbits(32))),
             random_.choice((0, 1, 2, 2, 2, 5, 0x102, 0x202)),
             globals={"unknown_004cf7d4": keys(), "unknown_004cf8d4": told()},
-            externals={**library, "unknown_00075a90": lambda harness, arguments: 0, "unknown_0007a8a0": makes},
+            externals={**library, "unknown_00075a90": lambda harness, arguments: 0, "transport_security_create_key": makes},
         )

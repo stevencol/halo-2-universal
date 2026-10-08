@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — La dirección de la consola y las claves de las sesiones
+
+Cuatro funciones en un archivo nuevo, `networking/transport_security.c`, 493 bytes entre
+todas. De 1114 funciones se pasa a 1118, el 9,92 % de las del juego (el 6,406 % de
+sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `transport_security_create_key` | `0x0007a8a0` | `networking/transport_security.c` |
+| `transport_security_set_key` | `0x0007a920` | `networking/transport_security.c` |
+| `transport_security_forget_address` | `0x0007a9a0` | `networking/transport_security.c` |
+| `transport_security_get_address` | `0x0007a9b0` | `networking/transport_security.c` |
+
+Son las funciones de las que dependían los hitos 314 y 315: quién es esta
+consola en la red y qué clave tiene cada sesión. El nombre del archivo es
+una conjetura.
+
+### Lo que se sabe
+
+- `transport_security_get_address` pregunta a la biblioteca de la consola
+  (`0x003cd17d`) cómo se la conoce en la red: 36 bytes, que van a
+  `0x004cf793`. La respuesta trae un número: 0 es «todavía no» (se volverá
+  a preguntar), 1 es «nada» (no se conoce, pero ya se preguntó), y con
+  cualquiera de los bits `0x1C` los cuatro primeros bytes son una dirección,
+  que se guarda al revés en `0x004cf7b8` como dirección del juego: 16 bytes,
+  un puerto y cuántos bytes cuentan (4).
+- `transport_security_forget_address` hace que se vuelva a preguntar.
+- `transport_security_set_key` guarda el identificador (8 bytes) y la clave
+  (16) de una sesión en su entrada de la tabla `0x004cf7d4`, sacando antes
+  de la biblioteca lo que hubiera (`0x003cd0e1`) y dándole lo nuevo
+  (`0x003cd0d6`) salvo que se le diga que no.
+- `transport_security_create_key` los hace: todo ceros si el primer
+  argumento no es cero (una sesión que no sale a la red), y si es cero los
+  hace la biblioteca (`0x003cd0cb`); el bit alto del primer byte del
+  identificador lo pone el juego.
+- Las variables `0x004cf792`, `0x004cf793`, `0x004cf7d4` y `0x004cf8d4`
+  pasan de `network_session.c` a este archivo, que es de quien son.
+
+### Sin comprobar
+
+- Si la biblioteca no puede hacer la clave, el juego sigue con lo que
+  hubiera en la pila. En las pruebas la biblioteca siempre escribe algo.
+- En este hito se pasaron las pruebas de `transport_security` (4) y de
+  `network_life_cycle` (44).
+- Las mutaciones de los hitos 280 a 316 están pendientes.
+
 ## 2026-10-08 — El identificador y la clave de una sesión
 
 Cuatro funciones en `networking/network_session.c`, 410 bytes entre todas. De 1110
