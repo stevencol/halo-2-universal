@@ -191,7 +191,7 @@ def run(t) -> None:
                     targets,
                     Buffer(random_.randbytes(4)),
                     Buffer(bytes(data)),
-                    externals={"unknown_00056990": gives(unknown4), "unknown_000565c0": gives(0)},
+                    externals={"voice_targets_to_peers": gives(unknown4), "unknown_000565c0": gives(0)},
                 )
 
     # ---------- a queue
@@ -411,3 +411,34 @@ def run(t) -> None:
                         "voice_queue_add": add,
                     },
                 )
+
+    # ---------- from players to consoles
+
+    PLAYERS = 0x10D4
+    PLAYER_SIZE = 0x13C
+
+    for enabled, initialized in active():
+        for n in range(24):
+            local_peer = random_.choice((0, 2, 15, NONE))
+            data = bytearray(random_.randbytes(PLAYERS + 16 * PLAYER_SIZE))
+            struct.pack_into("<I", data, MEMBERSHIP_PLAYERS, random_.choice((0xFFFF, 0, random_.getrandbits(16), 0xFFFFFFFF)))
+            for player in range(16):
+                struct.pack_into(
+                    "<I",
+                    data,
+                    PLAYERS + player * PLAYER_SIZE + 0xC,
+                    random_.choice((local_peer, random_.randint(0, 15), random_.randint(0, 15), NONE, 31)) & 0xFFFFFFFF,
+                )
+            membership = Buffer(bytes(data))
+            t.check(
+                "voice_targets_to_peers",
+                random_.choice((0xFFFF, 0, random_.getrandbits(16), 0xFFFFFFFF, 1)),
+                globals=state(enabled, initialized),
+                externals={
+                    "game_voice_get_membership": lambda harness, arguments, membership=membership, n=n: (
+                        membership.address if n % 8 else 0
+                    ),
+                    "game_voice_get_local_peer": gives(local_peer),
+                },
+                extra=[membership],
+            )

@@ -2,6 +2,35 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — De jugadores a consolas
+
+Una función en `networking/voice_routing.c`, de 335 bytes. De 1039 funciones se pasa a
+1040, el 9,23 % de las del juego (el 5,974 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_targets_to_peers` | `0x00056990` | `networking/voice_routing.c` |
+
+Era `unknown_00056990`, la que `voice_unknown_00527104_get_words` (hito
+280) llama con el número de «a quién habla un jugador».
+
+### Lo que se sabe
+
+- Convierte jugadores en consolas: de un bit por jugador saca un bit por
+  cada consola en la que está alguno de ellos, sin contar esta. Es el paso
+  que faltaba entre «a quién habla cada jugador» (hito 280) y «a qué
+  consolas va cada cosa de la cola» (hito 281).
+- Sin sesión, o si no se sabe qué consola es esta, no va a ninguna.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- La batería completa del hito 278 y las mutaciones de los hitos 269 a 284
+  corren aparte o están pendientes; su resultado irá en una entrada
+  posterior.
+
 ## 2026-10-08 — Una cola dentro de lo que va de una consola a otra
 
 Dos funciones en `networking/voice_routing.c`, de 937 bytes entre las dos. De 1037 funciones se pasa a

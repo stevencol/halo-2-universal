@@ -102,6 +102,7 @@ void voice_targets_update(byte *targets);
 void VOICE_ROUTING_CALLBACK voice_queue_add(const word *words, byte *queue, const void *data, unsigned long size,
 	const boolean *unknown);
 long voice_queues_size_for_peer(const byte *queues, long peer);
+unsigned long voice_targets_to_peers(unsigned long targets);
 void VOICE_ROUTING_CALLBACK voice_queue_keep(byte *queue, unsigned long entries);
 long VOICE_ROUTING_CALLBACK voice_queue_write(byte *queue, long peer, byte *out, byte *header, long size,
 	boolean is_chosen);

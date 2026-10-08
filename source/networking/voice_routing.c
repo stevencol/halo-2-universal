@@ -37,9 +37,8 @@ unsigned long __attribute__((stdcall)) unknown_00056c60(byte *channels, long pla
 voice comes from another console, with the flag of what it said */
 void __attribute__((stdcall)) unknown_00056df0(byte *channels, long player_index, long flag);
 
-/* 0x00056990: something made of who a player talks to; 0x000565c0: the two
-numbers of 16 bits that unknown_00527104 gives for it */
-long unknown_00056990(unsigned long targets);
+/* 0x000565c0: the two numbers of 16 bits that unknown_00527104 gives for the
+consoles that something goes to */
 void __attribute__((stdcall)) unknown_000565c0(byte *unknown, long unknown4, word *words);
 
 /* ---------- code */
@@ -296,7 +295,7 @@ void voice_unknown_00527104_get_words(
 	words[0]= 0;
 	if (unknown[0] && targets)
 	{
-		long unknown4= unknown_00056990(targets);
+		long unknown4= voice_targets_to_peers(targets);
 
 		if (unknown4)
 		{
@@ -698,4 +697,59 @@ long VOICE_ROUTING_CALLBACK voice_queue_read(
 	} while (index<header[VOICE_PACKET_QUEUE_ENTRY_COUNT_OFFSET]);
 
 	return taken;
+}
+
+/* 0x00056990: the consoles of the players that a player talks to: a bit for
+each, but for this one. 0 with no session. The game has
+game_voice_get_player_array and game_voice_get_players in the function
+itself */
+unsigned long voice_targets_to_peers(
+	unsigned long targets)
+{
+	const byte *players= NULL;
+	unsigned long session_players= 0;
+	unsigned long peers= 0;
+	long local_peer;
+
+	if (voice_routing_active())
+	{
+		const byte *membership= game_voice_get_membership();
+
+		if (membership)
+		{
+			players= membership+GAME_VOICE_MEMBERSHIP_PLAYER_ARRAY_OFFSET;
+		}
+	}
+	if (voice_routing_active())
+	{
+		const byte *membership= game_voice_get_membership();
+
+		if (membership)
+		{
+			session_players= *(const unsigned long *)(membership+GAME_VOICE_MEMBERSHIP_PLAYERS_OFFSET);
+		}
+	}
+	local_peer= game_voice_get_local_peer();
+	if (players && session_players && local_peer!=NONE)
+	{
+		long player_index;
+
+		for (player_index= 0; player_index<MAXIMUM_VOICE_ROUTING_PLAYERS; player_index++)
+		{
+			unsigned long bit= 1u<<player_index;
+
+			if ((targets&bit) && (session_players&bit))
+			{
+				long peer= *(const long *)(players+player_index*GAME_VOICE_MEMBERSHIP_PLAYER_SIZE+
+					GAME_VOICE_MEMBERSHIP_PLAYER_PEER_OFFSET);
+
+				if (peer!=local_peer && peer!=NONE)
+				{
+					peers|= 1u<<(peer&0x1F);
+				}
+			}
+		}
+	}
+
+	return peers;
 }

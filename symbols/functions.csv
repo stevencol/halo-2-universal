@@ -741,7 +741,7 @@ address,name,source,arguments,returns,convention
 00055960,voice_targets_get,source/networking/voice_routing.c,esi ebx,int
 00056590,voice_unknown_00527104_get_words,source/networking/voice_routing.c,eax esi edi,void
 00056c60,unknown_00056c60,,eax stack,int,stdcall
-00056990,unknown_00056990,,ebx,int
+00056990,voice_targets_to_peers,source/networking/voice_routing.c,ebx,int
 000565c0,unknown_000565c0,,stack stack stack,void,stdcall
 00056130,voice_queues_add,source/networking/voice_routing.c,eax ecx ebx stack stack stack,void
 0005f760,unknown_0005f760,,ecx stack,int
