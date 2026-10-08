@@ -27,11 +27,8 @@ void __attribute__((stdcall)) unknown_00057080(byte *channels);
 void __attribute__((stdcall)) unknown_00057360(byte *channels);
 void __attribute__((stdcall)) unknown_000577d0(byte *channels);
 
-/* 0x00057d60: how a player of this console hears a player of another: 0 if
-it does not. It is given what was found of the two before. 0x00057eb0: what
-who hears whom does with how each of the players of this console hears a
-player */
-long __attribute__((stdcall)) unknown_00057d60(long unknown, long local_player_index, long player_index);
+/* 0x00057eb0: what who hears whom does with how each of the players of this
+console hears a player */
 void __attribute__((stdcall)) unknown_00057eb0(byte *channels, long player_index,
 	const struct voice_channel_listener *listeners, long count);
 
@@ -1243,7 +1240,7 @@ void VOICE_ROUTING_CALLBACK voice_channels_update_by_team(
 
 				if (local_players&(1u<<local_player_index))
 				{
-					how= unknown_00057d60(voice_players_same_team(player_index, local_player_index), local_player_index,
+					how= voice_player_hears(voice_players_same_team(player_index, local_player_index), local_player_index,
 						player_index);
 					if (how)
 					{
@@ -1302,4 +1299,84 @@ long voice_players_same_team(
 	}
 
 	return 1;
+}
+
+/* 0x00057d60: how a player of this console hears a player of another, from
+how it would by the game alone: 1, 2 or 3, where 1 becomes the first way if
+the player of this console has a voice and the second if not. Not at all if
+either wants not to hear the other, if the player of this console has no
+gamepad or wants no voice, or if some player of this console wants not to
+hear the other and the way is the second or the third. By the setting of the
+gamepad: with the first, the second way unless it is the third; with the
+second, always the first way. The game has game_voice_player_has_muted in
+the function itself */
+long VOICE_ROUTING_CALLBACK voice_player_hears(
+	long how,
+	long local_player_index,
+	long player_index)
+{
+	long result= _voice_hears_none;
+	long controller_index;
+	unsigned long local_players;
+	long other_index;
+
+	if (voice_routing_active())
+	{
+		if (((1u<<(player_index&0x1F))&game_voice_player_mutes[local_player_index]) ||
+			((1u<<(local_player_index&0x1F))&game_voice_player_mutes[player_index]))
+		{
+			return _voice_hears_none;
+		}
+	}
+	switch (how)
+	{
+	case 0:
+		return _voice_hears_none;
+	case 1:
+		result= (game_voice_get_talkers()&(1u<<(local_player_index&0x1F))) ? _voice_hears1 : _voice_hears2;
+		break;
+	case 2:
+		result= _voice_hears2;
+		break;
+	case 3:
+		result= _voice_hears3;
+		break;
+	default:
+		return _voice_hears_none;
+	}
+	controller_index= game_voice_player_controller(local_player_index);
+	if (controller_index==NONE)
+	{
+		return _voice_hears_none;
+	}
+	switch (game_voice_get_controller_setting(controller_index))
+	{
+	case _game_voice_controller_setting1:
+		if (result!=_voice_hears3)
+		{
+			result= _voice_hears2;
+		}
+		break;
+	case 2:
+		return _voice_hears1;
+	case _game_voice_controller_setting3:
+		return _voice_hears_none;
+	default:
+		if (result!=_voice_hears2 && result!=_voice_hears3)
+		{
+			return result;
+		}
+		break;
+	}
+	local_players= game_voice_get_local_players();
+	for (other_index= 0; other_index<MAXIMUM_VOICE_ROUTING_PLAYERS; other_index++)
+	{
+		if ((local_players&(1u<<other_index)) && voice_routing_active() &&
+			((1u<<(player_index&0x1F))&game_voice_player_mutes[other_index]))
+		{
+			return _voice_hears_none;
+		}
+	}
+
+	return result;
 }

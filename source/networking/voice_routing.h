@@ -138,6 +138,18 @@ struct voice_sound_request
 typedef char verify_voice_sound_request_size[
 	sizeof(struct voice_sound_request) == 0x10 ? 1 : -1];
 
+/* how a player of this console hears a player of another. What tells the
+second way from the third is not known: with the first setting of its gamepad
+a player hears in the second way what is not of the third */
+enum
+{
+	_voice_hears_none,
+	_voice_hears1,
+	_voice_hears2,
+	_voice_hears3,
+	NUMBER_OF_VOICE_HEARS
+};
+
 /* how a player of this console hears a player: which player it is, how it
 hears it (0 if it does not) and something more that is not set here */
 struct voice_channel_listener
@@ -181,6 +193,7 @@ void VOICE_ROUTING_CALLBACK voice_play_sound_by_number(long sound, long player_i
 void VOICE_ROUTING_CALLBACK voice_play_sound(long player_index, long sound_index);
 void VOICE_ROUTING_CALLBACK voice_channels_update_by_team(byte *channels);
 long voice_players_same_team(long player_index, long local_player_index);
+long VOICE_ROUTING_CALLBACK voice_player_hears(long how, long local_player_index, long player_index);
 void VOICE_ROUTING_CALLBACK voice_route_peers(const byte *unknown, unsigned long peers, word *words);
 void VOICE_ROUTING_CALLBACK voice_route_assign(long *budget, unsigned long *peers, unsigned long allowed,
 	unsigned long *direct, boolean through_chosen, long chosen_peer, boolean *more);

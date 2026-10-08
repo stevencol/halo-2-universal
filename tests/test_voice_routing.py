@@ -777,7 +777,7 @@ def run(t) -> None:
                         (harness.normalize(arguments[0]), arguments[1]),
                     ),
                     "voice_players_same_team": lambda harness, arguments, same=same: same[arguments[0] & 15] >> (arguments[1] & 15) & 1,
-                    "unknown_00057d60": lambda harness, arguments, how=how: how[arguments[2] & 15][arguments[1] & 15] * (arguments[0] + 1),
+                    "voice_player_hears": lambda harness, arguments, how=how: how[arguments[2] & 15][arguments[1] & 15] * (arguments[0] + 1),
                     "unknown_00057eb0": hands_on,
                 },
             )
@@ -805,3 +805,36 @@ def run(t) -> None:
                     },
                     extra=[membership],
                 )
+
+    # ---------- how one player hears another
+
+    for enabled, initialized in active():
+        for how in (0, 1, 2, 3, 4, NONE):
+            for setting in (0, 1, 2, 3, 4):
+                for n in range(10):
+                    player, local_player = random_.sample(range(16), 2)
+                    mutes = [0] * 16
+                    if n == 1:
+                        mutes[local_player] = 1 << player
+                    elif n == 2:
+                        mutes[player] = 1 << local_player
+                    elif n in (3, 4):
+                        # another player wants not to hear it: one of this console, or not
+                        mutes[random_.choice([other for other in range(16) if other not in (player, local_player)])] = 1 << player
+                    elif n == 5:
+                        mutes = [random_.getrandbits(16) & ~(1 << player) for _ in range(16)]
+                        mutes[player] &= ~(1 << local_player)
+                    local = random_.choice((0xFFFF, 1 << local_player, random_.getrandbits(16) | 1 << local_player))
+                    t.check(
+                        "voice_player_hears",
+                        how,
+                        local_player,
+                        player,
+                        globals={**state(enabled, initialized), "game_voice_player_mutes": struct.pack("<16H", *mutes)},
+                        externals={
+                            "game_voice_get_talkers": gives(random_.choice((0xFFFF, 0, 1 << local_player, 0xFFFF ^ (1 << local_player)))),
+                            "game_voice_player_controller": gives(random_.choice((0, 3, 3, NONE)) if n != 9 else NONE),
+                            "game_voice_get_controller_setting": gives(setting),
+                            "game_voice_get_local_players": gives(local),
+                        },
+                    )

@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Cómo oye un jugador de esta consola a uno de otra
+
+Una función en `networking/voice_routing.c`, de 309 bytes. De 1097 funciones se pasa a
+1098, el 9,75 % de las del juego (el 6,177 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_player_hears` | `0x00057d60` | `networking/voice_routing.c` |
+
+Era `unknown_00057d60`, la que decide cada entrada de la lista del hito
+301.
+
+### Lo que se sabe
+
+- Hay tres maneras de oír a alguien, además de «no le oye». La partida
+  propone una (1, 2 o 3), y esta función la ajusta al jugador que escucha:
+  - no le oye si alguno de los dos ha silenciado al otro, si el que
+    escucha no tiene mando o su ajuste es el 3 (sin voz);
+  - con el ajuste 2, siempre de la primera manera;
+  - con el ajuste 1, de la segunda (salvo que fuera la tercera);
+  - la manera 1 que propone la partida pasa a ser la segunda si el que
+    escucha no tiene voz él mismo.
+- Y una regla más: si se le oye de la segunda o la tercera manera y
+  **cualquier** jugador de esta consola le ha silenciado, no se le oye. Por
+  lo que hace, la segunda y la tercera son las que suenan por los altavoces
+  de la tele, que oyen todos los de la consola, y la primera la de los
+  auriculares.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- La batería completa del hito 296 corre aparte; las mutaciones de los
+  hitos 280 a 302 están pendientes.
+
 ## 2026-10-08 — Quién oye a quién, cada fotograma, fuera de la partida
 
 Dos funciones en `networking/voice_routing.c`, de 464 bytes entre las dos. De 1095 funciones se pasa a
