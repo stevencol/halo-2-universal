@@ -94,6 +94,17 @@ enum
 	NETWORK_SESSION_UNKNOWN4DAC_OFFSET= 0x4DAC,
 	NETWORK_SESSION_UNKNOWN5DD0_OFFSET= 0x5DD0,
 	NETWORK_SESSION_UNKNOWN5E20_OFFSET= 0x5E20,
+	/* more that a session that says who is in it can be asked for: a byte;
+	a thing of the session that is there if a byte says so; a byte and a
+	thing that go with the two numbers of 0x4D08; and a thing of 0x44 bytes
+	that is there if a byte says so */
+	NETWORK_SESSION_UNKNOWN49C4_OFFSET= 0x49C4,
+	NETWORK_SESSION_UNKNOWN49FD_OFFSET= 0x49FD,
+	NETWORK_SESSION_UNKNOWN4A00_OFFSET= 0x4A00,
+	NETWORK_SESSION_UNKNOWN4D10_OFFSET= 0x4D10,
+	NETWORK_SESSION_UNKNOWN5DD8_OFFSET= 0x5DD8,
+	NETWORK_SESSION_UNKNOWN5DDC_OFFSET= 0x5DDC,
+	NETWORK_SESSION_UNKNOWN5DDC_SIZE= 0x44,
 	/* in who is in the session: how many consoles, and the consoles */
 	NETWORK_SESSION_PEER_COUNT_OFFSET= 0x54,
 	NETWORK_SESSION_PEER_ARRAY_OFFSET= 0x58,
@@ -292,6 +303,13 @@ typedef char verify_network_session_peer_properties_update_size[
 typedef char verify_network_session_peer_properties_update_unknown84_offset[
 	offsetof(struct network_session_peer_properties_update, unknown84) == 0x90 ? 1 : -1];
 
+/* the eight bytes made at random of a session, as two numbers */
+struct network_session_random
+{
+	unsigned long low;
+	unsigned long high;
+};
+
 /* a number that network_session_start leaves in a session */
 #define NETWORK_SESSION_UNKNOWN4DA8_VALUE 0xDEADBEEFu
 
@@ -337,7 +355,18 @@ boolean network_session_host_remove_peer(byte *session, long peer_index);
 boolean network_session_host_set_local(byte *session);
 boolean NETWORK_SESSION_CALLBACK network_session_host_set_player_unknownA8(long player_index, byte *session,
 	const byte *unknownA8);
+boolean NETWORK_SESSION_CALLBACK network_session_host_unknown_0005aeb0(byte *session, long unknown);
 boolean network_session_in_last_three_states(const byte *session);
+boolean network_session_get_unknown49c4(const byte *session);
+long network_session_get_unknown49c8(const byte *session);
+const byte *network_session_get_unknown4a00(const byte *session);
+long network_session_get_chosen_peer(const byte *session);
+boolean NETWORK_SESSION_CALLBACK network_session_get_unknown4d08(const byte *session, long *unknown4d08,
+	long *unknown4d0c, const byte **unknown4d10);
+struct network_session_random network_session_get_random(const byte *session);
+long network_session_get_language(const byte *session);
+long network_session_get_maximum_players(const byte *session);
+boolean NETWORK_SESSION_CALLBACK network_session_get_unknown5ddc(const byte *session, byte *unknown5ddc);
 boolean NETWORK_SESSION_CALLBACK network_session_is_full_for(const byte *session, long peer_count, long player_count);
 boolean NETWORK_SESSION_CALLBACK network_session_has_room_for_players(boolean all_new, const byte *identifiers,
 	byte *session, long player_count);

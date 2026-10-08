@@ -1142,3 +1142,48 @@ def run(t) -> None:
             Buffer(bytes(data)),
             count,
         )
+
+    # ---------- ten more things that a session is asked
+
+    def asked_session() -> Buffer:
+        data = with_peers()
+        for at in (0x49C4, 0x49FD, 0x4D10, 0x5DD8):
+            data[at] = random_.choice((0, 1, 1, 0x80))
+        struct.pack_into("<I", data, 0x4D0C, random_.choice((NONE, 0, 5, random_.getrandbits(32))))
+        return Buffer(bytes(data))
+
+    for name in (
+        "network_session_get_unknown49c4",
+        "network_session_get_unknown49c8",
+        "network_session_get_unknown4a00",
+        "network_session_get_chosen_peer",
+        "network_session_get_random",
+        "network_session_get_maximum_players",
+    ):
+        for n in range(60):
+            t.check(name, asked_session())
+    for n in range(160):
+        t.check(
+            "network_session_get_unknown4d08",
+            asked_session(),
+            Buffer(random_.randbytes(4)),
+            Buffer(random_.randbytes(4)),
+            Buffer(random_.randbytes(4)),
+        )
+    for n in range(100):
+        t.check("network_session_get_unknown5ddc", asked_session(), Buffer(random_.randbytes(0x48)))
+    for n in range(80):
+        t.check(
+            "network_session_get_language",
+            asked_session(),
+            globals={"global_language": struct.pack("<I", random_.choice((NONE, NONE, 0, 3)))},
+            externals={"XGetLanguage": lambda harness, arguments, value=random_.randrange(12): value},
+        )
+    for n in range(60):
+        t.check(
+            "network_session_host_unknown_0005aeb0",
+            asked_session(),
+            random_.getrandbits(32),
+            # only a byte of the first thing counts: the game leaves the rest of the session's address in it
+            externals={"unknown_000614a0": lambda harness, arguments: (0, (arguments[0] & 0xFF, *arguments[1:]))},
+        )

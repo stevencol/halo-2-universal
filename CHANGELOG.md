@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Diez consultas más a la sesión
+
+Diez funciones en `networking/network_session.c`, 384 bytes entre todas. De 1174
+funciones se pasa a 1184, el 10,51 % de las del juego (el 6,637 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_host_unknown_0005aeb0` | `0x0005aeb0` | `networking/network_session.c` |
+| `network_session_get_unknown49c4` | `0x0005b040` | `networking/network_session.c` |
+| `network_session_get_unknown49c8` | `0x0005b060` | `networking/network_session.c` |
+| `network_session_get_unknown4a00` | `0x0005b080` | `networking/network_session.c` |
+| `network_session_get_chosen_peer` | `0x0005b0b0` | `networking/network_session.c` |
+| `network_session_get_unknown4d08` | `0x0005b0d0` | `networking/network_session.c` |
+| `network_session_get_random` | `0x0005b120` | `networking/network_session.c` |
+| `network_session_get_language` | `0x0005b150` | `networking/network_session.c` |
+| `network_session_get_maximum_players` | `0x0005b180` | `networking/network_session.c` |
+| `network_session_get_unknown5ddc` | `0x0005b1a0` | `networking/network_session.c` |
+
+Casi todas son iguales: si la sesión dice quién está en ella (estados 3 a
+8) dan un dato suyo, y si no, un valor por omisión.
+
+### Lo que se sabe
+
+- `network_session_get_chosen_peer` era `unknown_0005b0b0`, la que usa la
+  voz para saber por qué consola se reparte (hito 277): es el número de
+  `0x5E20`.
+- `network_session_get_random` da los ocho bytes al azar de la sesión
+  (hito 314) en dos registros; `network_session_get_language`, su idioma, o
+  el del juego si no hay sesión; `network_session_get_maximum_players`, su
+  máximo de jugadores, o 16.
+- Las demás dan datos que aún no tienen nombre: un byte (`0x49C4`), un
+  número (`0x49C8`), una cosa en `0x4A00` si un byte dice que está, dos
+  números con una cosa en `0x4D10`, y 68 bytes en `0x5DDC` si un byte dice
+  que están.
+- `network_session_host_unknown_0005aeb0` llama a `0x000614a0` (sin
+  descompilar) en el quinto estado: esa pone la sesión en el séptimo.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (92) y de
+  `game_voice` (71).
+- Las mutaciones de los hitos 280 a 308 y 321 a 331 están pendientes; las
+  de los hitos 309 a 320 seguían corriendo.
+
 ## 2026-10-08 — Lo que hace con la sesión la consola que la lleva
 
 Seis funciones en `networking/network_session.c`, 510 bytes entre todas. De 1168

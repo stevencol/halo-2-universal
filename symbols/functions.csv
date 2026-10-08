@@ -813,7 +813,17 @@ address,name,source,arguments,returns,convention
 000541a0,game_voice_update_local_player,source/networking/game_voice.c,stack,void,stdcall
 00053e30,game_voice_update_chosen_peer,source/networking/game_voice.c,,void
 00054890,game_voice_unknown_00054890,source/networking/game_voice.c,stack,bool
-0005b0b0,unknown_0005b0b0,,edx,int
+0005b0b0,network_session_get_chosen_peer,source/networking/network_session.c,edx,int
+0005aeb0,network_session_host_unknown_0005aeb0,source/networking/network_session.c,eax stack,bool,stdcall
+0005b040,network_session_get_unknown49c4,source/networking/network_session.c,edx,bool
+0005b060,network_session_get_unknown49c8,source/networking/network_session.c,edx,int
+0005b080,network_session_get_unknown4a00,source/networking/network_session.c,edx,int
+0005b0d0,network_session_get_unknown4d08,source/networking/network_session.c,ecx esi stack stack,bool,stdcall
+0005b120,network_session_get_random,source/networking/network_session.c,esi,pair
+0005b150,network_session_get_language,source/networking/network_session.c,esi,int
+0005b180,network_session_get_maximum_players,source/networking/network_session.c,edx,int
+0005b1a0,network_session_get_unknown5ddc,source/networking/network_session.c,edx stack,bool,stdcall
+000614a0,unknown_000614a0,,eax ebx ecx,void
 0005c6d0,unknown_0005c6d0,,ecx stack,void
 00056b70,voice_channels_update,source/networking/voice_routing.c,esi,void
 00056bd0,voice_channels_get_player,source/networking/voice_routing.c,eax ecx,int

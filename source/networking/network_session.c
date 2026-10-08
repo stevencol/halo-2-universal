@@ -45,6 +45,10 @@ void __attribute__((stdcall)) unknown_00075e80(boolean unknown, long channel_ind
 /* 0x0011ca80, of cseries.c */
 long language_from_xbox_language(long xbox_language);
 
+/* 0x000614a0: something that the console that runs a session does with it
+in its fifth state, with a byte and a number */
+void unknown_000614a0(boolean unknown, byte *session, long unknown4);
+
 /* ---------- globals */
 
 /* 0x00510548, 0x0051054c, of main.c: whether the time is the one that was
@@ -1487,4 +1491,132 @@ boolean NETWORK_SESSION_CALLBACK network_session_has_room_for_players(
 	}
 
 	return player_count<=network_session_free_player_places(session)+asked;
+}
+
+/* 0x0005aeb0: in the fifth state, unknown_000614a0 is done with a number
+and no byte; whether the session is in that state */
+boolean NETWORK_SESSION_CALLBACK network_session_host_unknown_0005aeb0(
+	byte *session,
+	long unknown)
+{
+	if (network_session_state(session)!=_network_session_state5)
+	{
+		return FALSE;
+	}
+	unknown_000614a0(FALSE, session, unknown);
+
+	return TRUE;
+}
+
+/* 0x0005b040: a byte of a session that says who is in it; FALSE if it does
+not */
+boolean network_session_get_unknown49c4(
+	const byte *session)
+{
+	return network_session_established(session) ? session[NETWORK_SESSION_UNKNOWN49C4_OFFSET] : FALSE;
+}
+
+/* 0x0005b060: a number of a session that says who is in it; NONE if it does
+not */
+long network_session_get_unknown49c8(
+	const byte *session)
+{
+	return network_session_established(session) ? *(const long *)(session+NETWORK_SESSION_UNKNOWN49C8_OFFSET) : NONE;
+}
+
+/* 0x0005b080: a thing of a session that says who is in it, if a byte says
+that it is there; NULL if not */
+const byte *network_session_get_unknown4a00(
+	const byte *session)
+{
+	if (network_session_established(session) && session[NETWORK_SESSION_UNKNOWN49FD_OFFSET])
+	{
+		return session+NETWORK_SESSION_UNKNOWN4A00_OFFSET;
+	}
+
+	return NULL;
+}
+
+/* 0x0005b0b0: the console that a session that says who is in it has chosen
+for something (the voice goes through it: see game_voice.c); NONE if it does
+not say who is in it */
+long network_session_get_chosen_peer(
+	const byte *session)
+{
+	return network_session_established(session) ? *(const long *)(session+NETWORK_SESSION_UNKNOWN5E20_OFFSET) : NONE;
+}
+
+/* 0x0005b0d0: two numbers and a thing of a session that says who is in it;
+FALSE, and nothing, if it does not, if the second number is NONE or if the
+first byte of the thing is zero */
+boolean NETWORK_SESSION_CALLBACK network_session_get_unknown4d08(
+	const byte *session,
+	long *unknown4d08,
+	long *unknown4d0c,
+	const byte **unknown4d10)
+{
+	if (!network_session_established(session) || *(const long *)(session+NETWORK_SESSION_UNKNOWN4D0C_OFFSET)==NONE ||
+		!session[NETWORK_SESSION_UNKNOWN4D10_OFFSET])
+	{
+		return FALSE;
+	}
+	*unknown4d08= *(const long *)(session+NETWORK_SESSION_UNKNOWN4D08_OFFSET);
+	*unknown4d0c= *(const long *)(session+NETWORK_SESSION_UNKNOWN4D0C_OFFSET);
+	*unknown4d10= session+NETWORK_SESSION_UNKNOWN4D10_OFFSET;
+
+	return TRUE;
+}
+
+/* 0x0005b120: the eight bytes made at random of a session that says who is
+in it; all ones if it does not */
+struct network_session_random network_session_get_random(
+	const byte *session)
+{
+	struct network_session_random random= { NONE, NONE };
+
+	if (network_session_established(session))
+	{
+		random.low= *(const unsigned long *)(session+NETWORK_SESSION_RANDOM_OFFSET);
+		random.high= *(const unsigned long *)(session+NETWORK_SESSION_RANDOM_OFFSET+sizeof(long));
+	}
+
+	return random;
+}
+
+/* 0x0005b150: the language of a session that says who is in it; the
+language of the game if it does not */
+long network_session_get_language(
+	const byte *session)
+{
+	if (global_language==NONE)
+	{
+		global_language= language_from_xbox_language(XGetLanguage());
+	}
+
+	return network_session_established(session) ? *(const long *)(session+NETWORK_SESSION_LANGUAGE_OFFSET) :
+		global_language;
+}
+
+/* 0x0005b180: the most players that a session that says who is in it can
+have; 16 if it does not */
+long network_session_get_maximum_players(
+	const byte *session)
+{
+	return network_session_established(session) ? *(const long *)(session+NETWORK_SESSION_UNKNOWN4994_OFFSET) :
+		NETWORK_SESSION_UNKNOWN4990_DEFAULT;
+}
+
+/* 0x0005b1a0: a thing of 0x44 bytes of a session that says who is in it, if
+a byte says that it is there; FALSE, and nothing, if not */
+boolean NETWORK_SESSION_CALLBACK network_session_get_unknown5ddc(
+	const byte *session,
+	byte *unknown5ddc)
+{
+	if (!network_session_established(session) || !session[NETWORK_SESSION_UNKNOWN5DD8_OFFSET])
+	{
+		return FALSE;
+	}
+	memcpy(unknown5ddc, session+NETWORK_SESSION_UNKNOWN5DDC_OFFSET, NETWORK_SESSION_UNKNOWN5DDC_SIZE);
+
+	return TRUE;
 }
