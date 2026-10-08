@@ -103,6 +103,9 @@ boolean transport_security_get_address(void);
 boolean transport_security_get_addresses(byte *address, struct transport_address *transport_address);
 boolean TRANSPORT_SECURITY_CALLBACK transport_security_address_from_peer_address(long index,
 	struct transport_address *address, const byte *peer_address, long unknown, long port);
+boolean TRANSPORT_SECURITY_CALLBACK transport_security_peer_address_from_address(
+	const struct transport_address *address, long unknown, long *index, byte *identifier, byte *key,
+	byte *peer_address);
 boolean transport_address_connect(const struct transport_address *address);
 long transport_address_get_connect_status(const struct transport_address *address);
 void transport_security_random_identifier(byte *identifier);
@@ -112,6 +115,8 @@ boolean TRANSPORT_SECURITY_CALLBACK transport_security_address_from_key(long ind
 void transport_security_get_unknown7cc(void);
 boolean transport_address_get_secure_in_address(const struct transport_address *address, unsigned long *in_address);
 boolean transport_address_valid(const struct transport_address *address);
+boolean TRANSPORT_SECURITY_CALLBACK transport_address_equal(const struct transport_address *address,
+	const struct transport_address *other, boolean with_port);
 
 /* ---------- globals */
 

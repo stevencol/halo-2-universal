@@ -803,7 +803,7 @@ def run(t) -> None:
             "network_session_find_peer_by_transport_address",
             Buffer(bytes(data)),
             Buffer(random_.randbytes(0x14)),
-            externals={"unknown_0007ab60": known(data)},
+            externals={"transport_security_peer_address_from_address": known(data)},
         )
     for n in range(300):
         data = with_peers()
@@ -812,7 +812,7 @@ def run(t) -> None:
             Buffer(bytes(data)),
             Buffer(random_.randbytes(0x14)),
             externals={
-                "unknown_0007ab60": known(data),
+                "transport_security_peer_address_from_address": known(data),
                 "network_session_matches_state1_address": lambda harness, arguments, same=random_.choice((0, 0, 0, 1, 0x80, 0x100)): same,
             },
         )

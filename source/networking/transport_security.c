@@ -35,6 +35,10 @@ session; zero if it could */
 long __attribute__((stdcall)) XNetXnAddrToInAddr(const byte *address, const byte *identifier,
 	unsigned long *in_address);
 
+/* 0x003cd32d: what a console is known by, and what the session that it is
+of is known by, from its address; zero if it could */
+long __attribute__((stdcall)) XNetInAddrToXnAddr(unsigned long in_address, byte *address, byte *identifier);
+
 /* 0x003cd34f, 0x003cd35a: starts talking with an address, zero if it could;
 and how that goes, 0 to 3 */
 long __attribute__((stdcall)) XNetConnect(unsigned long in_address);
@@ -407,6 +411,92 @@ boolean transport_address_valid(
 			}
 			break;
 		}
+	}
+
+	return FALSE;
+}
+
+/* 0x0007ab60: what a console is known by in the network, from its address
+of the game, which has to be one of four bytes and not zero; whether it
+could. With the second thing, it is the address with zeros after it, and
+nothing else is known. Without it, the address has to be one that the
+console's library gave, and the library says what the console and its
+session are known by; and if a place has a session that is known by that,
+which place it is and its key. What is not known is NONE or zeros; each is
+given if there is where to put it */
+boolean TRANSPORT_SECURITY_CALLBACK transport_security_peer_address_from_address(
+	const struct transport_address *address,
+	long unknown,
+	long *index,
+	byte *identifier,
+	byte *key,
+	byte *peer_address)
+{
+	boolean result= FALSE;
+	long found_index= NONE;
+	byte found_identifier[NETWORK_SESSION_IDENTIFIER_SIZE]= { 0 };
+	byte found_key[NETWORK_SESSION_KEY_SIZE]= { 0 };
+
+	if (address->address_size==TRANSPORT_ADDRESS_IPV4_SIZE && address->address.ipv4!=0)
+	{
+		if (unknown)
+		{
+			memset(peer_address, 0, NETWORK_SESSION_ADDRESS_SIZE);
+			*(unsigned long *)peer_address= transport_security_swap(address->address.ipv4);
+			result= TRUE;
+		}
+		else
+		{
+			unsigned long in_address;
+
+			if (transport_address_get_secure_in_address(address, &in_address) &&
+				XNetInAddrToXnAddr(in_address, peer_address, found_identifier)==0)
+			{
+				long key_index;
+
+				result= TRUE;
+				for (key_index= 0; key_index<MAXIMUM_NETWORK_SESSION_KEYS; key_index++)
+				{
+					const struct network_session_key *entry= &unknown_004cf7d4[key_index];
+
+					if (entry->valid && memcmp(entry->identifier, found_identifier, sizeof(found_identifier))==0)
+					{
+						found_index= key_index;
+						memcpy(found_key, entry->key, sizeof(found_key));
+						break;
+					}
+				}
+			}
+		}
+	}
+	if (index)
+	{
+		*index= found_index;
+	}
+	if (identifier)
+	{
+		memcpy(identifier, found_identifier, sizeof(found_identifier));
+	}
+	if (key)
+	{
+		memcpy(key, found_key, sizeof(found_key));
+	}
+
+	return result;
+}
+
+/* 0x0007af80: whether two addresses of the game are the same: of the same
+size, which is more than none, and with the same bytes; and with the same
+port too, if the last thing says so */
+boolean TRANSPORT_SECURITY_CALLBACK transport_address_equal(
+	const struct transport_address *address,
+	const struct transport_address *other,
+	boolean with_port)
+{
+	if (other->address_size>0 && other->address_size==address->address_size &&
+		memcmp(other, address, other->address_size)==0 && (!with_port || other->port==address->port))
+	{
+		return TRUE;
 	}
 
 	return FALSE;

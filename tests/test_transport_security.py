@@ -254,3 +254,66 @@ def run(t) -> None:
                 globals={"unknown_004cf7d4": GlobalData(bytes(table))},
                 externals={"XNetXnAddrToInAddr": lambda harness, arguments, could=could, value=value: gives(harness, arguments, could, value)},
             )
+
+    # ---------- from an address of the game to what a console is known by
+
+    for n in range(400):
+        table = bytearray(keys().data)
+        session_identifier = random_.randbytes(8)
+        way = random_.randrange(4)
+        if way == 0:
+            # a place has a session that is known by what the library says
+            at = random_.randrange(8) * 0x20
+            table[at + 8 : at + 16] = session_identifier
+        elif way == 1:
+            # two places have it: one of them may not be in use
+            for at in random_.sample(range(0, 0x100, 0x20), 2):
+                table[at + 8 : at + 16] = session_identifier
+        elif way == 2:
+            at = random_.randrange(8) * 0x20
+            table[at + 8 : at + 15] = session_identifier[:7]
+        known_by = random_.randbytes(0x24)
+        could = random_.choice((0, 0, 0, 1, FAILED))
+
+        def says(harness, arguments, known_by=known_by, session_identifier=session_identifier, could=could):
+            # what the session is known by goes to the stack
+            harness.mu.mem_write(arguments[1], known_by)
+            harness.mu.mem_write(arguments[2], session_identifier)
+            return could, (arguments[0], arguments[1])
+
+        t.check(
+            "transport_security_peer_address_from_address",
+            Buffer(an_address()),
+            random_.choice((0, 0, 0, 1, random_.getrandbits(32))),
+            random_.choice((Buffer(random_.randbytes(4)), Buffer(random_.randbytes(4)), 0)),
+            random_.choice((Buffer(random_.randbytes(8)), Buffer(random_.randbytes(8)), 0)),
+            random_.choice((Buffer(random_.randbytes(16)), Buffer(random_.randbytes(16)), 0)),
+            Buffer(random_.randbytes(0x24)),
+            globals={"unknown_004cf7d4": GlobalData(bytes(table))},
+            externals={"XNetInAddrToXnAddr": says},
+        )
+
+    # ---------- two addresses of the game
+
+    for n in range(400):
+        size = random_.choice((4, 4, 4, 16, 16, 6, 1, 0, 0xFFFF, 0x8004))
+        address = bytearray(random_.randbytes(0x14))
+        struct.pack_into("<H", address, 0x12, size)
+        other = bytearray(address)
+        way = random_.randrange(7)
+        if way == 0 and 0 < size <= 16:
+            other[size - 1] ^= 0x20
+        elif way == 1 and size < 16:
+            other[size] ^= 0x20
+        elif way == 2:
+            struct.pack_into("<H", other, 0x12, random_.choice((4, 16, 6, 0)))
+        elif way == 3:
+            other[0x10 + random_.randrange(2)] ^= 1
+        elif way == 4:
+            other[0] ^= 1
+        t.check(
+            "transport_address_equal",
+            Buffer(bytes(address)),
+            Buffer(bytes(other)),
+            random_.choice((0, 1, 1, 0x80, 0x100)),
+        )

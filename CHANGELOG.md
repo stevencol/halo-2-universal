@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — De una dirección a quién es la consola
+
+Dos funciones en `networking/transport_security.c`, 426 bytes entre las dos. De 1162
+funciones se pasa a 1164, el 10,33 % de las del juego (el 6,600 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `transport_security_peer_address_from_address` | `0x0007ab60` | `networking/transport_security.c` |
+| `transport_address_equal` | `0x0007af80` | `networking/transport_security.c` |
+
+### Lo que se sabe
+
+- `transport_security_peer_address_from_address` era `unknown_0007ab60`, la
+  que usa la sesión para saber qué consola suya tiene una dirección (hito
+  320). De una dirección del juego saca los 36 bytes con que se conoce a la
+  consola:
+  - con su segundo argumento (el número de `0x3C` de la sesión, que se ve
+    así que es **si la sesión no sale a la red de verdad**), son la propia
+    dirección y ceros;
+  - sin él, se los pide a la biblioteca (`XNetInAddrToXnAddr`), que da
+    también por qué se conoce a la sesión de esa consola; y si alguna de las
+    ocho sesiones guardadas se conoce por eso, da cuál es y su clave.
+- `transport_address_equal` dice si dos direcciones del juego son la misma,
+  con el puerto o sin él. Es lo que `network_session_matches_state1_address`
+  (hito 321) tenía metido dentro.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `transport_security` (16) y de
+  `network_life_cycle` (72).
+- Las mutaciones de los hitos 280 a 308 y 321 a 328 están pendientes; las
+  de los hitos 309 a 320 seguían corriendo.
+
 ## 2026-10-08 — Las direcciones de la red y los nombres de la biblioteca de la consola
 
 Diez funciones en `networking/transport_security.c`, 773 bytes entre todas. De 1152

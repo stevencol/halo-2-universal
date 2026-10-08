@@ -36,12 +36,6 @@ ended (0x10) for what a session is known by */
 long __attribute__((stdcall)) XNetQosListen(const byte *identifier, const void *unknown4, unsigned long unknown8,
 	unsigned long unknownC, unsigned long flags);
 
-/* 0x0007ab60: what a console is known by in the network, from an address of
-the game and the number that goes with what a session is known by; whether
-it could */
-boolean __attribute__((stdcall)) unknown_0007ab60(const struct transport_address *address, long unknown3C,
-	long unknown4, long unknown8, long unknownC, byte *peer_address);
-
 /* 0x00075e80: sends something of a kind and a size to the console of one of
 the things of 0x528 bytes of what a session was given when it was set up, in
 one of two ways */
@@ -762,7 +756,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_channel_is_host(
 
 /* 0x0005f6a0: which console of a session has an address of the game; NONE
 if none, if the session has no state or is known by nothing, or if
-unknown_0007ab60 cannot say what the console of the address is known by */
+transport_security_peer_address_from_address cannot say what the console of the address is known by */
 long network_session_find_peer_by_transport_address(
 	const byte *session,
 	const struct transport_address *address)
@@ -771,7 +765,8 @@ long network_session_find_peer_by_transport_address(
 	{
 		byte peer_address[NETWORK_SESSION_ADDRESS_SIZE];
 
-		if (unknown_0007ab60(address, *(const long *)(session+NETWORK_SESSION_UNKNOWN3C_OFFSET), 0, 0, 0, peer_address))
+		if (transport_security_peer_address_from_address(address, *(const long *)(session+NETWORK_SESSION_UNKNOWN3C_OFFSET), NULL, NULL, NULL,
+			peer_address))
 		{
 			return network_session_find_peer(session, peer_address);
 		}

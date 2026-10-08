@@ -1692,7 +1692,9 @@ address,name,source,arguments,returns,convention
 0005f6f0,network_session_find_peer_by_unknownA,source/networking/network_session.c,ecx stack,int,stdcall
 0005f7c0,network_session_address_is_host,source/networking/network_session.c,eax edi,bool
 00075ce0,network_observer_find_channel,source/networking/network_observer.c,edx edi eax,int
-0007ab60,unknown_0007ab60,,ecx edx stack stack stack stack,bool,stdcall
+0007ab60,transport_security_peer_address_from_address,source/networking/transport_security.c,ecx edx stack stack stack stack,bool,stdcall
+0007af80,transport_address_equal,source/networking/transport_security.c,ebx stack stack,bool,stdcall
+003cd32d,XNetInAddrToXnAddr,,stack stack stack,int,stdcall
 0005c8f0,network_session_matches_state1_address,source/networking/network_session.c,ecx eax,bool
 0005fd10,network_session_remove_peer_with_message_e,source/networking/network_session.c,eax esi,void
 0005fda0,network_session_remove_peer_with_message_d,source/networking/network_session.c,eax esi,void
