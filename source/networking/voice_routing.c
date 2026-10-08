@@ -27,11 +27,12 @@ void __attribute__((stdcall)) unknown_00057360(byte *channels);
 void __attribute__((stdcall)) unknown_000577d0(byte *channels);
 void __attribute__((stdcall)) unknown_00057960(byte *channels);
 
-/* 0x00057270: something of two players: whether the second can have heard
-the first, most likely. 0x000574e0: a sound of the voice is played, by its
-number */
-boolean unknown_00057270(long player_index, long other_player_index);
+/* 0x000574e0: a sound of the voice is played, by its number */
 void __attribute__((stdcall)) unknown_000574e0(long sound, byte *channels);
+
+/* 0x00192950: something of a player, when game_voice_unknown_00053d90 says
+so */
+boolean unknown_00192950(long player_index);
 
 /* 0x00056df0: something that who hears whom is told of a player whose
 voice comes from another console, with the flag of what it said */
@@ -1012,7 +1013,7 @@ unsigned long VOICE_ROUTING_CALLBACK voice_channels_get_player_by_team(
 player of another console that the voice has and that
 voice_player_unknown_000589e0 says no of, if its time is less than three
 tenths of a second ago: a sound is played for each player of this console
-that unknown_00057270 says so of, when neither wants not to hear the other;
+that voice_players_can_hear says so of, when neither wants not to hear the other;
 and the player has no time any more. The game has game_voice_get_players in
 the function itself */
 void VOICE_ROUTING_CALLBACK voice_channels_update_ended(
@@ -1051,7 +1052,7 @@ void VOICE_ROUTING_CALLBACK voice_channels_update_ended(
 					unsigned long other_bit= 1u<<other_index;
 
 					if ((session_players&other_bit) && (local_players&other_bit) &&
-						game_voice_unknown_00054df0(other_index) && unknown_00057270(player_index, other_index) &&
+						game_voice_unknown_00054df0(other_index) && voice_players_can_hear(player_index, other_index) &&
 						!game_voice_player_has_muted(other_index, player_index) &&
 						!game_voice_player_has_muted(player_index, other_index))
 					{
@@ -1062,4 +1063,72 @@ void VOICE_ROUTING_CALLBACK voice_channels_update_ended(
 			}
 		}
 	}
+}
+
+/* 0x00057270: whether a player of this console can hear a player of
+another, by the game that is played: always, if game_voice_unknown_00053d40
+says no; if it says so, when the two are of the same team, or, when
+game_voice_unknown_00053d90 says so, when unknown_00192950 says no of both.
+FALSE if the session does not have the two, or they are not one of this
+console and one of another. The game has game_voice_get_player_array and
+game_voice_get_players in the function itself */
+boolean voice_players_can_hear(
+	long player_index,
+	long local_player_index)
+{
+	const byte *players= NULL;
+	unsigned long local_players;
+	unsigned long session_players= 0;
+	unsigned long bit= 1u<<(player_index&0x1F);
+	unsigned long local_bit= 1u<<(local_player_index&0x1F);
+
+	if (voice_routing_active())
+	{
+		const byte *membership= game_voice_get_membership();
+
+		if (membership)
+		{
+			players= membership+GAME_VOICE_MEMBERSHIP_PLAYER_ARRAY_OFFSET;
+		}
+	}
+	local_players= game_voice_get_local_players();
+	if (voice_routing_active())
+	{
+		const byte *membership= game_voice_get_membership();
+
+		if (membership)
+		{
+			session_players= *(const unsigned long *)(membership+GAME_VOICE_MEMBERSHIP_PLAYERS_OFFSET);
+		}
+	}
+	if ((session_players&local_bit) && (session_players&bit) && (local_players&local_bit) && !(local_players&bit))
+	{
+		if (!game_voice_unknown_00053d40())
+		{
+			return TRUE;
+		}
+		if (game_voice_unknown_00053d90())
+		{
+			if (unknown_00192950(local_player_index))
+			{
+				return FALSE;
+			}
+
+			return !unknown_00192950(player_index);
+		}
+		else
+		{
+			long local_team= (signed char)players[local_player_index*GAME_VOICE_MEMBERSHIP_PLAYER_SIZE+
+				GAME_VOICE_MEMBERSHIP_PLAYER_TEAM_OFFSET];
+			long team= (signed char)players[player_index*GAME_VOICE_MEMBERSHIP_PLAYER_SIZE+
+				GAME_VOICE_MEMBERSHIP_PLAYER_TEAM_OFFSET];
+
+			if (local_team!=NONE && team!=NONE && local_team==team)
+			{
+				return TRUE;
+			}
+		}
+	}
+
+	return FALSE;
 }

@@ -630,11 +630,43 @@ def run(t) -> None:
                     "game_voice_get_local_players": gives(local),
                     "game_voice_unknown_00054df0": lambda harness, arguments, has=has: has >> (arguments[0] & 15) & 1,
                     "voice_player_unknown_000589e0": lambda harness, arguments, still=still: still >> (arguments[0] & 15) & 1,
-                    "unknown_00057270": lambda harness, arguments, can=can: can[arguments[0] & 15] >> (arguments[1] & 15) & 1,
+                    "voice_players_can_hear": lambda harness, arguments, can=can: can[arguments[0] & 15] >> (arguments[1] & 15) & 1,
                     "game_voice_player_has_muted": lambda harness, arguments, muted=muted: (
                         muted[arguments[0] & 15] >> (arguments[1] & 15) & 1
                     ),
                     "unknown_000574e0": lambda harness, arguments: 0,
+                },
+                extra=[membership],
+            )
+
+    # ---------- whether one player can hear another
+
+    for enabled, initialized in active():
+        for n in range(80):
+            player, local_player = random_.sample(range(16), 2)
+            data = bytearray(random_.randbytes(PLAYERS + 16 * PLAYER_SIZE))
+            mask = random_.choice((0xFFFF, 0xFFFF, 0xFFFF, random_.getrandbits(16), 0xFFFF ^ (1 << player), 0xFFFF ^ (1 << local_player)))
+            struct.pack_into("<I", data, MEMBERSHIP_PLAYERS, mask)
+            teams = [random_.choice((0, 0, 1, 0xFF)) for _ in range(16)]
+            if n % 4 == 0:
+                teams[player] = teams[local_player]
+            for other in range(16):
+                data[PLAYERS + other * PLAYER_SIZE + 0x124] = teams[other]
+            membership = Buffer(bytes(data))
+            local = random_.choice((1 << local_player, 1 << local_player, (1 << local_player) | (1 << player), 0, random_.getrandbits(16)))
+            says = [random_.choice((0, 0, 1)) for _ in range(16)]
+            t.check(
+                "voice_players_can_hear",
+                player,
+                local_player,
+                globals=state(enabled, initialized),
+                externals={
+                    # the game does not see whether the session has players: it always has here
+                    "game_voice_get_membership": lambda harness, arguments, membership=membership: membership.address,
+                    "game_voice_get_local_players": gives(local),
+                    "game_voice_unknown_00053d40": gives(random_.choice((1, 1, 0))),
+                    "game_voice_unknown_00053d90": gives(random_.choice((1, 0, 0))),
+                    "unknown_00192950": lambda harness, arguments, says=says: says[arguments[0] & 15],
                 },
                 extra=[membership],
             )

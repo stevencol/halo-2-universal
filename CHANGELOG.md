@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Si un jugador de esta consola puede oír a uno de otra
+
+Una función en `networking/voice_routing.c`, de 230 bytes. De 1092 funciones se pasa a
+1093, el 9,70 % de las del juego (el 6,144 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_players_can_hear` | `0x00057270` | `networking/voice_routing.c` |
+
+Era `unknown_00057270`, la condición que `voice_channels_update_ended`
+(hito 298) dejó sin nombre.
+
+### Lo que se sabe
+
+- Un jugador de esta consola puede oír a uno de otra según el tipo de
+  partida. Si la partida no restringe la voz
+  (`game_voice_unknown_00053d40` dice que no), siempre. Si la restringe,
+  solo a los de su mismo equipo; salvo en un caso
+  (`game_voice_unknown_00053d90`) en que lo decide otra cosa de cada
+  jugador (`0x00192950`, sin descompilar): se oyen si ninguno de los dos la
+  cumple.
+- Con esto `game_voice_unknown_00053d40` queda bastante claro: es «en esta
+  partida la voz va por equipos».
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- Una sesión sin jugadores con la voz por equipos: el juego lee los
+  equipos de una lista que no hay.
+- La batería completa del hito 296 corre aparte; las mutaciones de los
+  hitos 280 a 299 están pendientes.
+
 ## 2026-10-08 — Quién oye a quién, dentro de la partida: el primer paso de cada fotograma
 
 Una función en `networking/voice_routing.c`, de 276 bytes. De 1091 funciones se pasa a

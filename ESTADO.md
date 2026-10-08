@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 298.
+**Última actualización:** 2026-10-08, al terminar el hito 299.
 
 ## Dónde estamos
 
-- **1092 funciones descompiladas de 11.265: el 9,69 % del juego** (el
-  6,136 % de los bytes de código).
-- Las 1092 están comprobadas contra el ejecutable original: las 1023 del
+- **1093 funciones descompiladas de 11.265: el 9,70 % del juego** (el
+  6,144 % de los bytes de código).
+- Las 1093 están comprobadas contra el ejecutable original: las 1023 del
   hito 278 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the first of what who hears whom does each frame in a game* (ver `git log`).
+- Último hito: *Decompile whether a local player can hear a player of another console* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 537 funciones apuntadas pero sin descompilar (las que el código
   llama); 449 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -118,10 +118,10 @@ Módulos (funciones hechas / archivo):
       `0x00055080` a `0x00055920`)
 - [x] Lista de silenciados — `networking\voice_mute_list.c` (7: completo,
       de `0x00058a50` a `0x00058cb0`)
-- [ ] La voz entre consolas — `networking\voice_routing.c` (23: a quién
+- [ ] La voz entre consolas — `networking\voice_routing.c` (24: a quién
       habla cada jugador, las colas, lo que una consola manda a otra y
       quién oye a quién; va de `0x00055960` en adelante y faltan unas
-      14 funciones: las de quién oye a quién dentro de la partida)
+      13 funciones: las de quién oye a quién dentro de la partida)
 - [ ] Matemáticas reales — `math\real_math.c` (40 de unas 50, con dos que están lejos de las demás)
 - [x] Matrices — `math\matrix_math.c` (26: completo)
 - [ ] Números aleatorios — `math\random_math.c` (2)
