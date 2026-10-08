@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 295.
+**Última actualización:** 2026-10-08, al terminar el hito 296.
 
 ## Dónde estamos
 
-- **1089 funciones descompiladas de 11.265: el 9,67 % del juego** (el
-  6,112 % de los bytes de código).
-- Las 1089 están comprobadas contra el ejecutable original: las 1023 del
+- **1090 funciones descompiladas de 11.265: el 9,68 % del juego** (el
+  6,114 % de los bytes de código).
+- Las 1090 están comprobadas contra el ejecutable original: las 1023 del
   hito 278 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the frame of the network game* (ver `git log`).
+- Último hito: *Call five functions by their names, and decompile a time of who hears whom* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 542 funciones apuntadas pero sin descompilar (las que el código
-  llama); 454 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 537 funciones apuntadas pero sin descompilar (las que el código
+  llama); 449 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -118,10 +118,10 @@ Módulos (funciones hechas / archivo):
       `0x00055080` a `0x00055920`)
 - [x] Lista de silenciados — `networking\voice_mute_list.c` (7: completo,
       de `0x00058a50` a `0x00058cb0`)
-- [ ] La voz entre consolas — `networking\voice_routing.c` (20: a quién
+- [ ] La voz entre consolas — `networking\voice_routing.c` (21: a quién
       habla cada jugador, las colas, lo que una consola manda a otra y
       quién oye a quién; va de `0x00055960` en adelante y faltan unas
-      17 funciones)
+      16 funciones)
 - [ ] Matemáticas reales — `math\real_math.c` (40 de unas 50, con dos que están lejos de las demás)
 - [x] Matrices — `math\matrix_math.c` (26: completo)
 - [ ] Números aleatorios — `math\random_math.c` (2)
@@ -227,11 +227,8 @@ Módulos (funciones hechas / archivo):
       grandes).
 - [ ] **La sesión de red**, desde `0x00059bd0`, que la arranca (628
       bytes), y lo que hace la partida en cada estado (`0x0006dec0`).
-- [ ] **Cinco direcciones repetidas en `symbols\functions.csv`**
-      (`0x0018eb80`, `0x0018e700`, `0x0018e810`, `0x0018efa0` y
-      `0x0012e150`): están descompiladas, pero algún archivo las llama
-      aún por su dirección. Hay que llamarlas por su nombre y quitar la
-      fila de más, como se hizo en el hito 295.
+- [x] ~~Cinco direcciones repetidas en `symbols\functions.csv`~~ (hito
+      296).
 - [ ] **Los fondos de los objetos**: `0x000bc280`, `0x000bc380`,
       `0x000bf360`.
 - [ ] **Los otros pares de la tabla de `0x00453c00`**: `0x00081780`,

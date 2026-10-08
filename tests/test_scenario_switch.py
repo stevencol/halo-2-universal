@@ -95,7 +95,7 @@ def run(t) -> None:
             Buffer(bytes(reference)),
             globals={"global_tag_instances": INSTANCES, "cache_file_globals": random_.randbytes(0x810)},
             memory={INSTANCES: instances(random_)},
-            externals={"unknown_0012e150": nothing},
+            externals={"geometry_cache_delete_tag_blocks": nothing},
         )
 
     # ---------- changing the structure bsp
@@ -214,7 +214,7 @@ def run(t) -> None:
                             memory=memory,
                             externals={
                                 "scenario_switch_structure_bsp": lambda harness, arguments, switched=switched: switched,
-                                "unknown_0018efa0": nothing,
+                                "main_game_load_failed": nothing,
                                 **messages,
                             },
                         )

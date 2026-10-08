@@ -38,12 +38,6 @@ long GetTickCount(void);
 
 /* ---------- prototypes of functions not decompiled yet */
 
-/* 0x0018eb80: ends the game that is being played, if there is one */
-void unknown_0018eb80(void);
-
-/* 0x0018e700: starts the map again */
-void unknown_0018e700(void);
-
 /* 0x00163b60: whether something stops the game from going back to a
 checkpoint now */
 boolean unknown_00163b60(void);
@@ -58,7 +52,6 @@ boolean unknown_0014a224(void);
 /* what a frame calls, in the order that it calls them. Their names are not
 known; the three with a name are what the game asked the loop for */
 void unknown_002237d4(void);
-void unknown_0018e810(void);
 void unknown_0012bbd0(void);
 void unknown_00163820(void);
 void unknown_001479c3(float seconds);
@@ -83,9 +76,6 @@ void unknown_00222d80(void);
 The names are guesses */
 void hud_messages_unknown_0024cdaf(void);
 void hud_print_message(long local_player_index, const wchar *text);
-
-/* 0x0018efa0: what the loop does when a structure bsp cannot be loaded */
-void unknown_0018efa0(void);
 
 /* 0x00190e37: what main_unknown4E_private does before its message */
 void unknown_00190e37(void);
@@ -204,7 +194,7 @@ void main_loop(
 		main_loop_body();
 	}
 
-	unknown_0018eb80();
+	main_game_unload();
 	game_dispose();
 }
 
@@ -341,7 +331,7 @@ void main_loop_body(
 	{
 		main_game_goto_main_menu(0);
 	}
-	unknown_0018e810();
+	main_game_change_update();
 
 	if (main_globals.revert_map_if_possible)
 	{
@@ -545,7 +535,7 @@ void main_switch_structure_bsp_private(
 	}
 	if (!switched)
 	{
-		unknown_0018efa0();
+		main_game_load_failed();
 	}
 	main_globals.switch_structure_bsp= FALSE;
 	main_globals.switch_structure_bsp_index= NONE;
@@ -699,7 +689,7 @@ void main_reset_map_private(
 	{
 		if (!game_time_globals->initialized || !game_time_globals->paused)
 		{
-			unknown_0018e700();
+			main_game_restart();
 			main_globals.reset_map= FALSE;
 		}
 	}

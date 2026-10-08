@@ -37,6 +37,12 @@ voice comes from another console, with the flag of what it said */
 void __attribute__((stdcall)) unknown_00056df0(byte *channels, long player_index, long flag);
 
 
+/* ---------- globals */
+
+/* 0x004cf738: how long the time that who hears whom has for a player counts
+as a moment ago, in seconds */
+real unknown_004cf738;
+
 /* ---------- code */
 
 /* whether there is a voice for the game to do something with: as in
@@ -917,6 +923,28 @@ boolean voice_player_unknown_000589e0(
 			{
 				return TRUE;
 			}
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x00057790: whether the time that who hears whom has for a player is less
+than unknown_004cf738 seconds ago; FALSE if it has none. The ticks are taken
+as a number without sign */
+boolean voice_channels_time_is_recent(
+	const byte *channels,
+	long player_index)
+{
+	unsigned long time= *(const unsigned long *)(channels+VOICE_CHANNELS_TIMES_OFFSET+player_index*sizeof(long));
+
+	if (time)
+	{
+		real seconds= (real)(unsigned long)(game_time_globals->time-time)*game_time_globals->seconds_per_tick;
+
+		if (unknown_004cf738>seconds)
+		{
+			return TRUE;
 		}
 	}
 

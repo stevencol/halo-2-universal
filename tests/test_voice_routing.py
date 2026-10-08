@@ -547,3 +547,21 @@ def run(t) -> None:
                             },
                             extra=[datum],
                         )
+
+    # ---------- a time that who hears whom has
+
+    for player in (0, 7, 15):
+        for seconds_per_tick in (1 / 30, 1 / 60):
+            for limit in (2.0, 0.5, 0.0, -1.0, float("nan"), float("inf")):
+                for ticks_ago in (None, 0, 1, 14, 15, 16, 29, 30, 31, 59, 60, 61, 119, 120, 121, 100000, -1, -100):
+                    now = random_.choice((1000000, 0x7FFFFFF0, 0x80000010))
+                    data = bytearray(random_.randbytes(0x194 + 16 * 4))
+                    struct.pack_into("<I", data, 0x194 + player * 4, 0 if ticks_ago is None else (now - ticks_ago) & 0xFFFFFFFF)
+                    time = bytearray(random_.randbytes(0xC))
+                    struct.pack_into("<fI", time, 4, seconds_per_tick, now)
+                    t.check(
+                        "voice_channels_time_is_recent",
+                        Buffer(bytes(data)),
+                        player,
+                        globals={"game_time_globals": Buffer(bytes(time)), "unknown_004cf738": struct.pack("<f", limit)},
+                    )

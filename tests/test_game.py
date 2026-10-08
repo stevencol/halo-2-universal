@@ -183,7 +183,7 @@ def run(t) -> None:
                 "main_time_initialize": nothing,
                 "game_initialize": nothing,
                 "main_loop_body": frame,
-                "unknown_0018eb80": nothing,
+                "main_game_unload": nothing,
             },
         )
 
@@ -224,7 +224,7 @@ def run(t) -> None:
                         GAME: Memory(bytes(data)),
                         TIME: Memory(struct.pack("<BBhfI", initialized, paused, 30, 1 / 30, 100)),
                     },
-                    externals={"unknown_0018e700": nothing},
+                    externals={"main_game_restart": nothing},
                 )
 
     for unknown6 in (0, 1, 5):

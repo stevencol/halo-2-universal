@@ -24,7 +24,7 @@ CORE_NAME = 0x6
 
 # what a frame calls, with no arguments or with plain ones
 PLAIN = (
-    "unknown_002237d4 main_game_goto_main_menu unknown_0018e810 main_revert_map_if_possible_private "
+    "unknown_002237d4 main_game_goto_main_menu main_game_change_update main_revert_map_if_possible_private "
     "main_revert_map_private main_reset_map_private main_switch_structure_bsp_private main_save_map_private "
     "unknown_0012bbd0 main_unknown4E_private input_update input_abstraction_update saved_game_files_find_unit_files global_preferences_flush "
     "font_cache_frame cached_map_file_copy_update unknown_00163820 unknown_001479c3 unknown_00155f80 "

@@ -10,6 +10,7 @@ a guess, and so are the names of its functions.
 #define __VOICE_ROUTING_H
 
 #include "cseries/cseries.h"
+#include "math/real_math.h"
 
 /* ---------- constants */
 
@@ -83,6 +84,8 @@ enum
 	VOICE_CHANNELS_UNKNOWN4_OFFSET= 0x4,
 	VOICE_CHANNELS_UNKNOWN44_OFFSET= 0x44,
 	VOICE_CHANNELS_UNKNOWN84_OFFSET= 0x84,
+	/* and a time of the game for each player, in ticks; 0 for none */
+	VOICE_CHANNELS_TIMES_OFFSET= 0x194,
 
 	/* in a player of the game: a number that is NONE or not, and an object;
 	and in the object, a time of the game, in ticks */
@@ -97,6 +100,10 @@ seconds */
 
 /* a function that takes its arguments off the stack */
 #define VOICE_ROUTING_CALLBACK __attribute__((stdcall))
+
+/* ---------- globals */
+
+extern real unknown_004cf738;
 
 /* ---------- prototypes/VOICE_ROUTING.C */
 
@@ -114,6 +121,7 @@ void VOICE_ROUTING_CALLBACK voice_queue_add(const word *words, byte *queue, cons
 long voice_queues_size_for_peer(const byte *queues, long peer);
 unsigned long voice_targets_to_peers(unsigned long targets);
 boolean voice_player_unknown_000589e0(long player);
+boolean voice_channels_time_is_recent(const byte *channels, long player_index);
 void VOICE_ROUTING_CALLBACK voice_route_peers(const byte *unknown, unsigned long peers, word *words);
 void VOICE_ROUTING_CALLBACK voice_route_assign(long *budget, unsigned long *peers, unsigned long allowed,
 	unsigned long *direct, boolean through_chosen, long chosen_peer, boolean *more);

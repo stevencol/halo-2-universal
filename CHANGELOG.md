@@ -2,6 +2,57 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Limpieza de la lista de funciones, las mutaciones de la voz y un reloj
+
+Una función en `networking/voice_routing.c`, de 62 bytes. De 1089 funciones se pasa a
+1090, el 9,68 % de las del juego (el 6,114 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_channels_time_is_recent` | `0x00057790` | `networking/voice_routing.c` |
+
+### Lo que se sabe
+
+- «Quién oye a quién» guarda un momento de la partida por jugador
+  (`0x194`). La función dice si ese momento fue hace menos de cierto tiempo
+  (`0x004cf738`, en segundos): seguramente «acaba de hablar».
+- El juego hace esta cuenta con las instrucciones antiguas de reales del
+  procesador, y toma los ticks como un número sin signo.
+
+### Cambiado: la lista de funciones, sin direcciones repetidas
+
+- Cinco funciones ya descompiladas en sesiones anteriores seguían
+  llamándose por su dirección desde `main.c` y `cache_files.c`, con una
+  fila de más cada una en `symbols\functions.csv`: `main_game_unload`,
+  `main_game_restart`, `main_game_change_update`, `main_game_load_failed` y
+  `geometry_cache_delete_tag_blocks`. Ahora se llaman por su nombre y las
+  cinco filas sobrantes ya no están. La lista no tiene ninguna dirección
+  repetida.
+- Corregida una frase de la entrada del hito 295, que decía que la cuenta
+  de funciones apuntadas bajaba y no era así.
+
+### Mutaciones
+
+Las de `game_voice.c` y `voice_routing.c` tal como estaban en el hito 279
+(hitos 269 a 279) terminaron: setenta y un cambios a mano, y las pruebas
+notan sesenta y nueve.
+
+- Uno no altera nada: mirar que la sesión tenga jugadores antes de un
+  bucle que sin ellos no encuentra a nadie.
+- El otro era un hueco de verdad en la prueba de la consola elegida, ya
+  cerrado en el hito 294.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo y las de `main`,
+  `main_game`, `game`, `scenario`, `cache` y `map`.
+- `voice_channels_time_is_recent` con más de 16 millones de ticks desde
+  aquel momento (unos tres días de partida): el juego guarda ahí más cifras
+  del tiempo que `source/`, y el resultado podría diferir en el último bit.
+- Las mutaciones de los hitos 280 a 296 están pendientes.
+
 ## 2026-10-08 — La partida en red, cada fotograma
 
 Una función en `networking/network_life_cycle.c`, de 106 bytes. De 1088 funciones se pasa a
@@ -31,8 +82,8 @@ descompilar.
 - `main.c`, `main_game.c` y `game_state.c` llamaban a esta función y a
   `network_life_cycle_end` (hito 289) por su dirección, con una fila aparte
   en la lista de funciones. Ahora las llaman por su nombre y las dos filas
-  sobrantes ya no están: por eso baja en dos la cuenta de funciones
-  «apuntadas sin descompilar».
+  sobrantes ya no están. (La cuenta de funciones «apuntadas sin descompilar»
+  sube aun así en dos: este hito apunta cuatro nuevas.)
 - Quedan en la lista cinco direcciones repetidas de sesiones anteriores,
   con el mismo arreglo pendiente (`0x0018eb80`, `0x0018e700`, `0x0018e810`,
   `0x0018efa0` y `0x0012e150`). Apuntado en `ESTADO.md`.

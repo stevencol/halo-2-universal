@@ -298,8 +298,6 @@ address,name,source,arguments,returns,convention
 0012bf40,main_cancel_map_copy_and_wait,source/main/main.c,,void
 0012b450,main_loop_body,source/main/main.c,,void
 0012b0e0,main_time_update,source/main/main.c,,real:xmm0
-0018eb80,unknown_0018eb80,,,void
-0018e700,unknown_0018e700,,,void
 00163b60,unknown_00163b60,,,bool
 0012b2a0,unknown_0012b2a0,,,void
 0019d650,unknown_0019d650,,ebx,void
@@ -472,7 +470,6 @@ address,name,source,arguments,returns,convention
 0014a224,unknown_0014a224,,,bool
 002237d4,unknown_002237d4,,,void
 0018f1c0,main_game_goto_main_menu,source/main/main_game.c,stack,void
-0018e810,unknown_0018e810,,,void
 0012bd40,main_switch_structure_bsp_private,source/main/main.c,,void
 0012bb20,main_save_map_private,source/main/main.c,,void
 0012bbd0,unknown_0012bbd0,,,void
@@ -505,10 +502,8 @@ address,name,source,arguments,returns,convention
 0024cdaf,hud_messages_unknown_0024cdaf,,,void
 001a0180,unicode_string_list_get_string,source/text/unicode_string_list.c,eax edi stack,void
 0024cbee,hud_print_message,,eax stack,void
-0018efa0,unknown_0018efa0,,,void
 00190e37,unknown_00190e37,,,void
 0016e2c0,unknown_0016e2c0,,eax,void
-0012e150,unknown_0012e150,,ebx,void
 00138110,game_options_new_default,source/game/game.c,esi,void
 00137f70,game_run_ticks,source/game/game.c,eax ebx,void
 00138800,game_in_progress,source/game/game.c,,bool
@@ -790,6 +785,7 @@ address,name,source,arguments,returns,convention
 000577d0,unknown_000577d0,,stack,void,stdcall
 00057960,unknown_00057960,,stack,void,stdcall
 000589e0,voice_player_unknown_000589e0,source/networking/voice_routing.c,eax,bool
+00057790,voice_channels_time_is_recent,source/networking/voice_routing.c,eax ecx,bool
 00058a50,voice_mute_list_reset,source/networking/voice_mute_list.c,edx,void
 00058c10,voice_mute_list_add,source/networking/voice_mute_list.c,esi ebx,void
 00058c60,voice_mute_list_remove,source/networking/voice_mute_list.c,esi ebx,void

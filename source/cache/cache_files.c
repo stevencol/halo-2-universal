@@ -11,6 +11,7 @@ gives the address it has there.
 #include "cseries/cseries.h"
 #include "main/global_preferences.h"
 #include "memory/binary_search.h"
+#include "cache/geometry_cache.h"
 #include "cache/texture_cache.h"
 #include "memory/physical_memory.h"
 #include "scenario/scenario.h"
@@ -48,11 +49,6 @@ long GetTickCount(void);
 
 /* 0x002d1d66 */
 void SetLastError(uint32_t error);
-
-/* ---------- prototypes of functions not decompiled yet */
-
-/* 0x0012e150: lets go of what the game keeps for a tag, as its textures */
-void unknown_0012e150(long tag_index);
 
 /* ---------- constants */
 
@@ -1609,11 +1605,11 @@ tag and that of its lightmap have no address. The name is a guess */
 void cache_file_structure_bsp_unload(
 	const struct scenario_structure_bsp_reference *reference)
 {
-	unknown_0012e150((long)reference->structure_bsp.index);
+	geometry_cache_delete_tag_blocks((long)reference->structure_bsp.index);
 	global_tag_instances[(short)reference->structure_bsp.index].address= 0;
 	if (reference->structure_lightmap.index!=(uint32_t)NONE)
 	{
-		unknown_0012e150((long)reference->structure_lightmap.index);
+		geometry_cache_delete_tag_blocks((long)reference->structure_lightmap.index);
 		global_tag_instances[(short)reference->structure_lightmap.index].address= 0;
 	}
 	cache_file_globals.structure_bsp_header= NULL;
