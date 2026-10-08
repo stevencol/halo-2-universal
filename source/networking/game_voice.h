@@ -50,9 +50,9 @@ enum
 	/* the players of a game: each has a bit in the numbers of 16 bits */
 	MAXIMUM_GAME_VOICE_PLAYERS= 16,
 
-	/* what the game keeps of the players that talk: its size is all that is
-	known */
-	UNKNOWN_004C989C_SIZE= 0xC0,
+	/* the twelve bytes that each of the sixteen players of the session is
+	known by, as they were the last time */
+	GAME_VOICE_SESSION_PLAYER_IDENTIFIERS_SIZE= 0xC0,
 
 	/* the states of the network game (unknown_00527334) that the voice looks
 	at, and what it makes of them (unknown_004c9888) */
@@ -294,6 +294,7 @@ void game_voice_update_chosen_peer(void);
 boolean game_voice_unknown_00054890(long peer);
 void game_voice_update_players(void);
 void GAME_VOICE_CALLBACK game_voice_update_local_player(long player_index);
+void game_voice_update_session_players(void);
 boolean game_voice_unknown_00054c70(void);
 long game_voice_unknown_00054cc0(void);
 unsigned long game_voice_get_talkers(void);
@@ -309,7 +310,7 @@ extern boolean game_voice_enabled;
 extern long unknown_004c9888;
 extern long game_voice_session_source;
 extern long unknown_004c9878;
-extern long unknown_004c9898;
+extern long game_voice_session_players;
 extern byte game_voice_muted_players[MAXIMUM_VOICE_CONTROLLERS][MAXIMUM_GAME_VOICE_MUTED_PLAYERS][GAME_VOICE_MUTED_PLAYER_SIZE];
 extern long game_voice_muted_player_counts[MAXIMUM_VOICE_CONTROLLERS];
 extern long unknown_004ce120;
@@ -317,7 +318,7 @@ extern long unknown_004ce124;
 extern byte unknown_005259b8[UNKNOWN_005259B8_SIZE];
 extern byte unknown_00527104[UNKNOWN_00527104_SIZE];
 extern byte unknown_00527108[UNKNOWN_00527108_SIZE];
-extern byte unknown_004c989c[UNKNOWN_004C989C_SIZE];
+extern byte game_voice_session_player_identifiers[GAME_VOICE_SESSION_PLAYER_IDENTIFIERS_SIZE];
 extern byte unknown_004cd904[UNKNOWN_004CD904_COUNT][UNKNOWN_004CD904_SIZE];
 extern byte *unknown_004e9ae8;
 extern long unknown_0055e4d0[UNKNOWN_0055E4D0_COUNT];

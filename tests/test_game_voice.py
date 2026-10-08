@@ -872,8 +872,8 @@ def run(t) -> None:
         "game_voice_reset_players",
         globals={
             "game_voice_talkers": struct.pack("<H", 0xFFFF),
-            "unknown_004c9898": 0x12345678,
-            "unknown_004c989c": random_.randbytes(0xC0),
+            "game_voice_session_players": 0x12345678,
+            "game_voice_session_player_identifiers": random_.randbytes(0xC0),
             "game_voice_player_mutes": random_.randbytes(0x20),
             "game_voice_player_flag_words": random_.randbytes(0x20),
             "game_voice_pool": 0x80100000,
@@ -1047,7 +1047,7 @@ def run(t) -> None:
                                 "game_voice_library_update",
                                 "game_voice_update_session_source",
                                 "game_voice_update_network_state",
-                                "unknown_00054590",
+                                "game_voice_update_session_players",
                                 "voice_remove_remote_talkers",
                                 "game_voice_reset_players",
                                 "game_voice_update_players",
@@ -1364,3 +1364,47 @@ def run(t) -> None:
             },
             extra=[membership],
         )
+
+    # ---------- whether the players of the session are the same
+
+    def session_players_case(kind: str):
+        """What the session says, and what the game had: the same, or not the same in one way or another."""
+        mask = random_.choice((0xFFFF, 0, random_.getrandbits(16), 0x8001))
+        data = bytearray(random_.randbytes(MEMBERSHIP_SIZE))
+        struct.pack_into("<I", data, MEMBERSHIP_PLAYERS, mask)
+        had = bytearray()
+        for player in range(16):
+            at = PLAYERS + player * PLAYER_SIZE
+            had += data[at : at + 0xC] if mask >> player & 1 else bytes(0xC)
+        had_mask = mask
+        if kind == "mask":
+            had_mask = mask ^ (1 << random_.randrange(32))
+        elif kind == "identifier":
+            had[random_.randrange(0xC0)] ^= 1 << random_.randrange(8)
+        elif kind == "last identifier":
+            had[0xBF] ^= 0x80
+        return bytes(data), had_mask, bytes(had)
+
+    for enabled, initialized in active():
+        for kind in ("same", "mask", "identifier", "last identifier", "same", "identifier"):
+            for there in (True, True, False):
+                data, had_mask, had = session_players_case(kind)
+                membership = Buffer(data)
+                if not there and kind == "same":
+                    # with no session there are no players
+                    had_mask, had = 0, bytes(0xC0)
+                t.check(
+                    "game_voice_update_session_players",
+                    globals={
+                        **state(enabled, initialized),
+                        "game_voice_session_players": had_mask,
+                        "game_voice_session_player_identifiers": had,
+                        "unknown_00525a00": GlobalRange(4),
+                        "game_voice_pool": 0x80100000,
+                    },
+                    externals={
+                        "game_voice_get_membership": gives_buffer(membership, there),
+                        "unknown_000560e0": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                    },
+                    extra=[membership],
+                )

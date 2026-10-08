@@ -715,7 +715,8 @@ address,name,source,arguments,returns,convention
 000696d0,unknown_000696d0,,eax,bool
 00053610,game_voice_update,source/networking/game_voice.c,,void
 00053c70,game_voice_unknown_00053c70,source/networking/game_voice.c,,int
-00054590,unknown_00054590,,,void
+00054590,game_voice_update_session_players,source/networking/game_voice.c,,void
+000560e0,unknown_000560e0,,eax,void
 00054030,game_voice_update_players,source/networking/game_voice.c,,void
 000541a0,game_voice_update_local_player,source/networking/game_voice.c,stack,void,stdcall
 00053e30,game_voice_update_chosen_peer,source/networking/game_voice.c,,void

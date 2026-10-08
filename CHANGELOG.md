@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Si los jugadores de la sesión son los mismos: `game_voice.c`, completo
+
+Una función en `networking/game_voice.c`, de 582 bytes: la última del archivo. De 1022 funciones se pasa a
+1023, el 9,08 % de las del juego (el 5,855 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_voice_update_session_players` | `0x00054590` | `networking/game_voice.c` |
+
+Era `unknown_00054590`. Con ella `game_voice.c` tiene sus 71 funciones, de
+`0x00053290` a `0x00055060`: todo lo que el juego hace con la voz de los
+jugadores, encima de `voice.c` (22 funciones). Son los dos primeros
+archivos de red del proyecto que quedan completos.
+
+### Cambiado
+
+- Lo que el hito 274 llamó «lo de los jugadores que hablan» (`0x004c9898` y
+  los 192 bytes de `0x004c989c`) son los jugadores que la sesión tenía la
+  última vez: un bit por cada uno y los doce bytes por los que se conoce a
+  cada uno. Pasan a ser `game_voice_session_players` y
+  `game_voice_session_player_identifiers`.
+
+### Lo que se sabe
+
+- Cada fotograma el juego mira si los jugadores de la sesión son los de la
+  última vez: los mismos bits y cada uno con los mismos doce bytes. Si algo
+  cambió, guarda los nuevos y se lo dice a lo que vive en `0x00525a00`
+  (`0x000560e0`, sin descompilar).
+- También arma un texto que dice cuál de las dos cosas cambió («session
+  player mask change» o «player identifier change») y no hace nada con él:
+  otro resto de un aviso de depuración que esta versión ya no tiene, como
+  el del hito 268.
+
+### Corregido
+
+- `ESTADO.md` llevaba desde el hito 275 la cuenta de funciones del archivo
+  sin actualizar (63). Son 71.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- La batería completa y las mutaciones de los hitos 266 a 278 corren
+  aparte; su resultado irá en una entrada posterior.
+
 ## 2026-10-08 — Cada jugador, cada fotograma: quién tiene voz y a quién no quiere oír
 
 Dos funciones en `networking/game_voice.c`, de 983 bytes entre las dos. De 1020 funciones se pasa a

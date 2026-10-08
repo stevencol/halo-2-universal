@@ -52,8 +52,9 @@ boolean unknown_00068250(void);
 /* 0x000696d0: something of what unknown_004cf770 has of a player */
 boolean unknown_000696d0(const byte *unknown);
 
-/* 0x00054590: of this file: something that it does each frame */
-void unknown_00054590(void);
+/* 0x000560e0: what unknown_00525a00 does when the players of the session
+are others */
+void unknown_000560e0(byte *unknown);
 
 /* 0x0005b0b0, 0x0005c6d0: the console that a session has chosen for
 something, and choosing it */
@@ -140,11 +141,11 @@ not to hear, and how many: NONE if they are not known */
 byte game_voice_muted_players[MAXIMUM_VOICE_CONTROLLERS][MAXIMUM_GAME_VOICE_MUTED_PLAYERS][GAME_VOICE_MUTED_PLAYER_SIZE];
 long game_voice_muted_player_counts[MAXIMUM_VOICE_CONTROLLERS];
 
-/* 0x004c9898, 0x004c989c: of the players that talk, emptied with the
-players: a number, and 0xc0 bytes (twelve for each of sixteen players, it
-may be) */
-long unknown_004c9898;
-byte unknown_004c989c[UNKNOWN_004C989C_SIZE];
+/* 0x004c9898, 0x004c989c: the players that the session had the last time: a
+bit for each, and the twelve bytes that each is known by (zeros for one that
+there is not) */
+long game_voice_session_players;
+byte game_voice_session_player_identifiers[GAME_VOICE_SESSION_PLAYER_IDENTIFIERS_SIZE];
 
 /* 0x004cd904: what the game keeps of each profile. How many there are is a
 guess */
@@ -1226,8 +1227,8 @@ void game_voice_reset_players(
 	void)
 {
 	game_voice_talkers= 0;
-	unknown_004c9898= 0;
-	memset(unknown_004c989c, 0, sizeof(unknown_004c989c));
+	game_voice_session_players= 0;
+	memset(game_voice_session_player_identifiers, 0, sizeof(game_voice_session_player_identifiers));
 	memset(game_voice_player_mutes, 0, sizeof(game_voice_player_mutes));
 	memset(game_voice_player_flag_words, 0, sizeof(game_voice_player_flag_words));
 }
@@ -1409,7 +1410,7 @@ void game_voice_update(
 			{
 				unknown_004c9888= _game_voice_network_none;
 			}
-			unknown_00054590();
+			game_voice_update_session_players();
 			if (!game_voice_unknown_00054ec0())
 			{
 				voice_remove_remote_talkers(&voice_globals);
@@ -1816,4 +1817,79 @@ void GAME_VOICE_CALLBACK game_voice_update_local_player(
 		}
 	}
 	game_voice_talkers&= (word)~(1u<<player_index);
+}
+
+/* 0x00054590: each frame, sees whether the players of the session are the
+ones of the last time: the same bits, and each known by the same twelve
+bytes. If not, keeps the new ones and tells unknown_00525a00. The game also
+makes a text that says which of the two changed, and does nothing with it:
+what told of it is not in this build. It has game_voice_get_player_array
+and game_voice_get_players in the function itself */
+void game_voice_update_session_players(
+	void)
+{
+	const byte *players= NULL;
+	unsigned long session_players= 0;
+	char text[GAME_VOICE_TEXT_SIZE];
+	byte none[GAME_VOICE_PLAYER_IDENTIFIER_SIZE];
+	boolean changed= FALSE;
+	long player_index;
+
+	if (game_voice_active())
+	{
+		const byte *membership= game_voice_get_membership();
+
+		if (membership)
+		{
+			players= membership+GAME_VOICE_MEMBERSHIP_PLAYER_ARRAY_OFFSET;
+		}
+	}
+	if (game_voice_active())
+	{
+		const byte *membership= game_voice_get_membership();
+
+		if (membership)
+		{
+			session_players= *(const unsigned long *)(membership+GAME_VOICE_MEMBERSHIP_PLAYERS_OFFSET);
+		}
+	}
+	text[0]= 0;
+	memset(none, 0, sizeof(none));
+	if ((unsigned long)game_voice_session_players!=session_players)
+	{
+		strncpy(text, "session player mask change", GAME_VOICE_TEXT_SIZE);
+		text[GAME_VOICE_TEXT_SIZE-1]= 0;
+		changed= TRUE;
+	}
+	else
+	{
+		for (player_index= 0; player_index<MAXIMUM_GAME_VOICE_PLAYERS; player_index++)
+		{
+			const byte *identifier= (session_players&(1u<<player_index)) ?
+				players+player_index*GAME_VOICE_MEMBERSHIP_PLAYER_SIZE+GAME_VOICE_MEMBERSHIP_PLAYER_IDENTIFIER_OFFSET :
+				none;
+
+			if (memcmp(game_voice_session_player_identifiers+player_index*GAME_VOICE_PLAYER_IDENTIFIER_SIZE,
+				identifier, GAME_VOICE_PLAYER_IDENTIFIER_SIZE))
+			{
+				game_voice_text_printf(text, "player identifier change");
+				changed= TRUE;
+				break;
+			}
+		}
+	}
+	if (changed)
+	{
+		game_voice_session_players= (long)session_players;
+		for (player_index= 0; player_index<MAXIMUM_GAME_VOICE_PLAYERS; player_index++)
+		{
+			const byte *identifier= (session_players&(1u<<player_index)) ?
+				players+player_index*GAME_VOICE_MEMBERSHIP_PLAYER_SIZE+GAME_VOICE_MEMBERSHIP_PLAYER_IDENTIFIER_OFFSET :
+				none;
+
+			memcpy(game_voice_session_player_identifiers+player_index*GAME_VOICE_PLAYER_IDENTIFIER_SIZE, identifier,
+				GAME_VOICE_PLAYER_IDENTIFIER_SIZE);
+		}
+		unknown_000560e0(unknown_00525a00);
+	}
 }
