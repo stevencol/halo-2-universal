@@ -129,8 +129,14 @@ number of it picks from. The size of the table is a guess */
 byte *unknown_004e9ae8;
 long unknown_0055e4d0[UNKNOWN_0055E4D0_COUNT];
 
+/* 0x004c987c: how the voice goes between the consoles: with 1 or 2, by the
+console chosen for the voice when it can; with 2, to one console alone if it
+cannot (voice_route_peers) */
+long unknown_004c987c;
+
 /* 0x004c9880, 0x004c9884: what game_voice_unknown_00054cc0 gives when
-unknown_004c9888 is 1, and when it is 2 or 3 */
+unknown_004c9888 is 1, and when it is 2 or 3: to how many consoles
+something that a player said can go from this one */
 long unknown_004c9880;
 long unknown_004c9884;
 

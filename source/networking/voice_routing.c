@@ -37,9 +37,6 @@ unsigned long __attribute__((stdcall)) unknown_00056c60(byte *channels, long pla
 voice comes from another console, with the flag of what it said */
 void __attribute__((stdcall)) unknown_00056df0(byte *channels, long player_index, long flag);
 
-/* 0x000565c0: the two numbers of 16 bits that unknown_00527104 gives for the
-consoles that something goes to */
-void __attribute__((stdcall)) unknown_000565c0(byte *unknown, long unknown4, word *words);
 
 /* ---------- code */
 
@@ -299,7 +296,7 @@ void voice_unknown_00527104_get_words(
 
 		if (unknown4)
 		{
-			unknown_000565c0(unknown, unknown4, words);
+			voice_route_peers(unknown, unknown4, words);
 		}
 	}
 }
@@ -670,7 +667,7 @@ long VOICE_ROUTING_CALLBACK voice_queue_read(
 
 				words[0]= 0;
 				words[1]= 0;
-				unknown_000565c0(unknown_00527104, peers, words);
+				voice_route_peers(unknown_00527104, peers, words);
 				voice_queue_add(words, queue, in+VOICE_PACKET_ENTRY_PEERS_OFFSET+sizeof(peers), VOICE_QUEUE_DATA_SIZE,
 					in+VOICE_PACKET_ENTRY_FLAG_OFFSET);
 			}
@@ -752,4 +749,139 @@ unsigned long voice_targets_to_peers(
 	}
 
 	return peers;
+}
+
+/* 0x000565c0: says where something that a player said goes, of the consoles
+that it is for: the first number, a bit for each console that this one sends
+it to; the second, a bit for each console that the one chosen for the voice
+has to send it on to. Both 0 if unknown_00527104 is not on, there are no
+consoles or it can go to none.
+
+It goes straight to the consoles that this one is joined to, as many as
+game_voice_unknown_00054cc0 says, first to those that the two sessions share
+when the session comes from the second place. What is left over, and the
+consoles that this one is not joined to, goes by the chosen one, if there is
+one that is not this console and this one is joined to it. With
+unknown_004c987c at 1 or 2 everything goes by the chosen one */
+void VOICE_ROUTING_CALLBACK voice_route_peers(
+	const byte *unknown,
+	unsigned long peers,
+	word *words)
+{
+	long budget;
+	boolean through_chosen;
+	long chosen_peer;
+	long mode;
+	unsigned long joined;
+	unsigned long chosen_bit;
+	unsigned long direct= 0;
+	unsigned long relayed= 0;
+	boolean more= FALSE;
+
+	words[1]= 0;
+	words[0]= 0;
+	if (!unknown[0] || !peers)
+	{
+		return;
+	}
+	budget= game_voice_unknown_00054cc0();
+	if (budget<=0)
+	{
+		return;
+	}
+	through_chosen= game_voice_unknown_00054c70();
+	chosen_peer= voice_routing_active() ? unknown_004c9878 : 0;
+	mode= game_voice_enabled ? unknown_004c987c : 0;
+	joined= (unsigned long)game_voice_local_peer_unknownA8();
+	chosen_bit= 1u<<(chosen_peer&0x1F);
+	if ((joined&chosen_bit) && through_chosen && (mode==1 || mode==2))
+	{
+		more= TRUE;
+	}
+	else
+	{
+		if (!(joined&chosen_bit))
+		{
+			through_chosen= FALSE;
+		}
+		if (!through_chosen && mode==2)
+		{
+			budget= 1;
+		}
+		long source= game_voice_get_session_source();
+
+		relayed= ~joined&peers;
+		peers&= joined;
+		if (relayed&0xFFFF)
+		{
+			more= TRUE;
+		}
+		if (source==_game_voice_session_source2)
+		{
+			voice_route_assign(&budget, &peers, game_voice_unknown_00053c70(), &direct, through_chosen, chosen_peer,
+				&more);
+		}
+		if (!(budget==1 && through_chosen && more))
+		{
+			voice_route_assign(&budget, &peers, 0xFFFFFFFF, &direct, through_chosen, chosen_peer, &more);
+		}
+	}
+	if (!through_chosen)
+	{
+		relayed= 0;
+	}
+	else if (more)
+	{
+		direct|= 1u<<(chosen_peer&0x1F);
+		relayed|= peers;
+	}
+	else if (peers&chosen_bit)
+	{
+		direct|= chosen_bit;
+		relayed|= chosen_bit;
+	}
+	words[0]= (word)direct;
+	words[1]= (word)relayed;
+}
+
+/* 0x00056790: of the consoles that are left and that are allowed, gives a
+bit to as many as the budget says, from the first on, and takes them from
+those that are left. The chosen console is passed over when things can go
+by it; and then the last of the budget is not given if more than that one
+console is left, or more was left before: it says so and stops, for the
+last to be the chosen one */
+void VOICE_ROUTING_CALLBACK voice_route_assign(
+	long *budget,
+	unsigned long *peers,
+	unsigned long allowed,
+	unsigned long *direct,
+	boolean through_chosen,
+	long chosen_peer,
+	boolean *more)
+{
+	long peer;
+
+	for (peer= 0; peer<MAXIMUM_VOICE_ROUTING_PLAYERS; peer++)
+	{
+		unsigned long bit= 1u<<peer;
+
+		if ((*peers&bit) && (allowed&bit) && *budget>0)
+		{
+			if (through_chosen && chosen_peer==peer)
+			{
+				continue;
+			}
+			if (*budget==1 && through_chosen)
+			{
+				*more= *more || bit!=*peers;
+				if (*more)
+				{
+					return;
+				}
+			}
+			*(word *)direct|= (word)bit;
+			*peers&= ~bit;
+			(*budget)--;
+		}
+	}
 }

@@ -219,6 +219,7 @@ address,name,source
 004c9888,unknown_004c9888,source/networking/game_voice.c
 004c988c,game_voice_session_source,source/networking/game_voice.c
 004c9878,unknown_004c9878,source/networking/game_voice.c
+004c987c,unknown_004c987c,source/networking/game_voice.c
 004c9898,game_voice_session_players,source/networking/game_voice.c
 004c99d4,game_voice_muted_players,source/networking/game_voice.c
 004cd854,game_voice_muted_player_counts,source/networking/game_voice.c

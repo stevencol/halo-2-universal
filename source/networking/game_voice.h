@@ -311,6 +311,7 @@ extern boolean game_voice_enabled;
 extern long unknown_004c9888;
 extern long game_voice_session_source;
 extern long unknown_004c9878;
+extern long unknown_004c987c;
 extern long game_voice_session_players;
 extern byte game_voice_muted_players[MAXIMUM_VOICE_CONTROLLERS][MAXIMUM_GAME_VOICE_MUTED_PLAYERS][GAME_VOICE_MUTED_PLAYER_SIZE];
 extern long game_voice_muted_player_counts[MAXIMUM_VOICE_CONTROLLERS];

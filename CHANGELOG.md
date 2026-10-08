@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — A qué consolas va cada cosa: directa o por la consola elegida
+
+Dos funciones en `networking/voice_routing.c`, de 969 bytes entre las dos. De 1040 funciones se pasa a
+1042, el 9,25 % de las del juego (el 6,007 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_route_peers` | `0x000565c0` | `networking/voice_routing.c` |
+| `voice_route_assign` | `0x00056790` | `networking/voice_routing.c` |
+
+`voice_route_peers` era `unknown_000565c0`. Es la decisión que le faltaba al
+camino de la voz: los dos números de 16 bits que acompañan a cada cosa de
+una cola.
+
+### Lo que se sabe
+
+- **El primer número** es un bit por cada consola a la que esta manda la
+  cosa directamente. **El segundo**, un bit por cada consola a la que tiene
+  que reenviarla la consola elegida para la voz.
+- Va directa a las consolas a las que esta está unida, hasta un máximo
+  (`game_voice_unknown_00054cc0`: cuántas consolas admite cada envío, según
+  el estado de la red). Si la sesión sale del segundo sitio, primero a las
+  consolas que las dos sesiones comparten.
+- Lo que no cabe en ese máximo, y las consolas a las que esta no está
+  unida, va por la elegida, siempre que haya una, no sea esta y esta esté
+  unida a ella. Entonces el último hueco del máximo se guarda para la
+  elegida.
+- `0x004c987c` es el modo: con 1 o 2, todo va por la elegida cuando se
+  puede; con 2 y sin poder, a una sola consola.
+- `voice_route_assign` es quien reparte los bits, de la primera consola en
+  adelante.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- La batería completa del hito 278 y las mutaciones de los hitos 269 a 285
+  corren aparte o están pendientes; su resultado irá en una entrada
+  posterior.
+
 ## 2026-10-08 — De jugadores a consolas
 
 Una función en `networking/voice_routing.c`, de 335 bytes. De 1039 funciones se pasa a

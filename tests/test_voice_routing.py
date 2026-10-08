@@ -191,7 +191,7 @@ def run(t) -> None:
                     targets,
                     Buffer(random_.randbytes(4)),
                     Buffer(bytes(data)),
-                    externals={"voice_targets_to_peers": gives(unknown4), "unknown_000565c0": gives(0)},
+                    externals={"voice_targets_to_peers": gives(unknown4), "voice_route_peers": gives(0)},
                 )
 
     # ---------- a queue
@@ -407,7 +407,7 @@ def run(t) -> None:
                         ),
                         "unknown_00056df0": routed("unknown_00056df0"),
                         "game_voice_remote_talker_data": gives(0),
-                        "unknown_000565c0": words_for,
+                        "voice_route_peers": words_for,
                         "voice_queue_add": add,
                     },
                 )
@@ -441,4 +441,69 @@ def run(t) -> None:
                     "game_voice_get_local_peer": gives(local_peer),
                 },
                 extra=[membership],
+            )
+
+    # ---------- which consoles something goes to
+
+    for through_chosen in (0, 1, 0x80):
+        for n in range(60):
+            chosen_peer = random_.choice((0, 3, 15, NONE, 16))
+            peers = random_.choice((0xFFFF, 0, 1 << random_.randrange(16), random_.getrandbits(16), random_.getrandbits(32)))
+            t.check(
+                "voice_route_assign",
+                Buffer(struct.pack("<i", random_.choice((1, 1, 2, 3, 16, 0, -1)))),
+                Buffer(struct.pack("<I", peers)),
+                random_.choice((0xFFFFFFFF, 0xFFFFFFFF, random_.getrandbits(16), 0)),
+                Buffer(struct.pack("<I", random_.choice((0, 0, random_.getrandbits(32))))),
+                through_chosen,
+                chosen_peer,
+                Buffer(bytes((random_.choice((0, 0, 1, 0x80)), 0x55))),
+            )
+
+    def assign(budgets: list):
+        """The test's own way of giving consoles their bits: all that are left
+        and allowed, and what it is told with is compared."""
+
+        def handler(harness, arguments):
+            budget, left, allowed, direct, through_chosen, chosen_peer, more = arguments
+            (now,) = struct.unpack("<I", harness.mu.mem_read(left, 4))
+            (have,) = struct.unpack("<I", harness.mu.mem_read(direct, 4))
+            (count,) = struct.unpack("<i", harness.mu.mem_read(budget, 4))
+            flag = bytes(harness.mu.mem_read(more, 1))
+            calls = sum(1 for call in harness._calls if call[0] == "voice_route_assign")
+            given = now & allowed & budgets[calls % len(budgets)]
+            harness.mu.mem_write(left, struct.pack("<I", now & ~given))
+            harness.mu.mem_write(direct, struct.pack("<I", have | given & 0xFFFF))
+            harness.mu.mem_write(budget, struct.pack("<i", count - bin(given).count("1")))
+            if calls % 3 == 1:
+                harness.mu.mem_write(more, b"\1")
+            return 0, (count, now, allowed, have, through_chosen & 0xFF, chosen_peer, flag)
+
+        return handler
+
+    for on in (1, 1, 1, 1, 0):
+        for n in range(120):
+            chosen_peer = random_.choice((0, 3, 15, NONE))
+            enabled, initialized = random_.choice(((1, 1), (1, 1), (1, 1), (0, 1), (1, 0)))
+            joined = random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16), 0, (1 << (chosen_peer & 15)) | random_.getrandbits(16)))
+            data = bytearray(random_.randbytes(4))
+            data[0] = on
+            t.check(
+                "voice_route_peers",
+                Buffer(bytes(data)),
+                random_.choice((0xFFFF, 0, 1 << random_.randrange(16), random_.getrandbits(16), random_.getrandbits(32), 0x10000)),
+                Buffer(random_.randbytes(4)),
+                globals={
+                    **state(enabled, initialized),
+                    "unknown_004c9878": chosen_peer,
+                    "unknown_004c987c": random_.choice((0, 1, 2, 3)),
+                },
+                externals={
+                    "game_voice_unknown_00054cc0": gives(random_.choice((1, 1, 2, 4, 16, 0, 0xFFFFFFFF))),
+                    "game_voice_unknown_00054c70": gives(random_.choice((1, 1, 0, 0x100))),
+                    "game_voice_local_peer_unknownA8": gives(joined),
+                    "game_voice_get_session_source": gives(random_.choice((1, 2, 2, 0))),
+                    "game_voice_unknown_00053c70": gives(random_.choice((0xFFFF, random_.getrandbits(16), 0))),
+                    "voice_route_assign": assign([random_.choice((0xFFFF, 0, random_.getrandbits(16))) for _ in range(3)]),
+                },
             )
