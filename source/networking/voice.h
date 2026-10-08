@@ -30,12 +30,21 @@ enum
 	_voice_kind_full
 };
 
-/* what each controller starts with */
+/* what the library does with a voice: each controller has one of them, and
+the library is told which of them the game uses */
 enum
 {
-	_voice_controller_unknown2= 2,
-	/* in a campaign */
-	_voice_controller_unknown3
+	_voice_mode_unknown0,
+	_voice_mode_unknown1,
+	/* what each controller starts with; not used in a campaign */
+	_voice_mode_unknown2,
+	/* what each controller starts with in a campaign */
+	_voice_mode_unknown3,
+	NUMBER_OF_VOICE_MODES,
+
+	/* those that the game uses: all of them, and in a campaign */
+	VOICE_MODES_FULL= 0xF,
+	VOICE_MODES_SESSION= 0xB
 };
 
 enum
@@ -45,7 +54,10 @@ enum
 	VOICE_ENGINE_FULL_UNKNOWN8= 5,
 	VOICE_ENGINE_UNKNOWN4= 4,
 	VOICE_ENGINE_UNKNOWN14= 11,
-	VOICE_ENGINE_UNKNOWN18= 32
+	VOICE_ENGINE_UNKNOWN18= 32,
+
+	/* what the library is told when the game uses _voice_mode_unknown2 */
+	VOICE_ENGINE_UNKNOWN_00332E7C_VALUE= 15
 };
 
 /* ---------- structures */
@@ -74,13 +86,29 @@ struct voice_globals
 	boolean initialized;
 	byte pad5[3];
 	long kind;
-	unsigned long unknownC;
+	/* a bit for each of the modes that the game uses */
+	unsigned long modes;
 	/* of the console's library; NULL if there is none */
 	void *engine;
 	/* -1 when the voice starts */
 	real controller_levels[MAXIMUM_VOICE_CONTROLLERS][NUMBER_OF_VOICE_CONTROLLER_LEVELS];
-	long controller_unknown54[MAXIMUM_VOICE_CONTROLLERS];
-	byte unknown64[0x2C];
+	long controller_modes[MAXIMUM_VOICE_CONTROLLERS];
+	/* the first thing that the library says of the controller was 0 when the
+	voice started */
+	boolean controller_unknown64[MAXIMUM_VOICE_CONTROLLERS];
+	byte unknown68[0x20];
+	/* FALSE when the voice starts */
+	boolean controller_unknown88[MAXIMUM_VOICE_CONTROLLERS];
+	boolean controller_unknown8C[MAXIMUM_VOICE_CONTROLLERS];
+};
+
+/* what the library says of a controller. Only the first thing of it is
+looked at */
+struct voice_controller_status
+{
+	long unknown0;
+	long unknown4;
+	long unknown8;
 };
 
 typedef char verify_voice_engine_parameters_size[
@@ -88,8 +116,10 @@ typedef char verify_voice_engine_parameters_size[
 #if defined(__i386__)
 typedef char verify_voice_globals_size[
 	sizeof(struct voice_globals) == 0x90 ? 1 : -1];
-typedef char verify_voice_globals_controller_unknown54_offset[
-	offsetof(struct voice_globals, controller_unknown54) == 0x54 ? 1 : -1];
+typedef char verify_voice_globals_controller_modes_offset[
+	offsetof(struct voice_globals, controller_modes) == 0x54 ? 1 : -1];
+typedef char verify_voice_globals_controller_unknown88_offset[
+	offsetof(struct voice_globals, controller_unknown88) == 0x88 ? 1 : -1];
 #endif
 
 /* ---------- prototypes/VOICE.C */
@@ -97,9 +127,13 @@ typedef char verify_voice_globals_controller_unknown54_offset[
 void voice_reset_controller_levels(struct voice_globals *voice);
 void voice_reset_controllers(struct voice_globals *voice);
 boolean voice_engine_parameters_new(struct voice_engine_parameters *parameters, const struct voice_globals *voice);
+boolean voice_start(struct voice_globals *voice);
+void voice_initialize(struct voice_globals *voice, long kind);
+void voice_dispose(struct voice_globals *voice);
 
 /* ---------- globals */
 
 extern struct voice_globals voice_globals;
+extern void *voice_modes[NUMBER_OF_VOICE_MODES];
 
 #endif

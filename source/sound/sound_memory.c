@@ -14,15 +14,6 @@ are the names of its functions.
 #include "main/main_game.h"
 #include "saved games/saved_game_files.h"
 
-/* ---------- prototypes of functions not decompiled yet */
-
-/* 0x00055810: starts the voice with the console's library; whether it
-could */
-boolean unknown_00055810(struct voice_globals *voice);
-
-/* 0x000550b0: stops the voice, if it was started */
-void unknown_000550b0(struct voice_globals *voice);
-
 /* ---------- globals */
 
 /* 0x004c995c, 0x004c9960 and 0x004c9964: the pools, and whether the second
@@ -92,7 +83,7 @@ and a new one goes where there is room among the others. With 0x000533e0, in
 the table of those that take memory then (0x00453c00).
 
 The game does not see whether there was memory for the pool before it writes
-in it */
+in it. It has voice_initialize in the function itself */
 void SOUND_MEMORY_CALLBACK sound_memory_pool_new(
 	long configuration)
 {
@@ -129,14 +120,7 @@ void SOUND_MEMORY_CALLBACK sound_memory_pool_new(
 		sound_memory_pool->no_references= TRUE;
 		sound_memory_pool->fill_gaps= TRUE;
 		sound_memory_pool->unknown3E= TRUE;
-		if (!voice_globals.initialized)
-		{
-			voice_globals.engine= NULL;
-			voice_globals.kind= kind;
-			voice_reset_controller_levels(&voice_globals);
-			voice_reset_controllers(&voice_globals);
-			voice_globals.initialized= unknown_00055810(&voice_globals);
-		}
+		voice_initialize(&voice_globals, kind);
 	}
 }
 
@@ -146,7 +130,7 @@ void sound_memory_pool_delete(
 {
 	if (sound_memory_pool)
 	{
-		unknown_000550b0(&voice_globals);
+		voice_dispose(&voice_globals);
 		memory_pool_delete(sound_memory_pool);
 		sound_memory_pool= NULL;
 	}

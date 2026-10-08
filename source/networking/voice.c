@@ -12,6 +12,43 @@ guess, and so are the names of its functions.
 
 #include <string.h>
 
+/* ---------- prototypes of functions of the console's libraries */
+
+/* the library of the voice. What each does is a guess, by how the game
+calls it; all of them but the last two say whether they could, as a number
+that is less than 0 if not */
+
+/* 0x00333055: makes the engine of the voice */
+long unknown_00333055(const struct voice_engine_parameters *parameters, void **engine);
+
+/* 0x00332d8f: the game uses a mode */
+long unknown_00332d8f(void *engine, void *mode);
+
+/* 0x00332d94: who the engine tells what happens */
+long unknown_00332d94(void *engine, struct voice_globals *voice);
+
+/* 0x00332e7c */
+long unknown_00332e7c(void *engine, long value);
+
+/* 0x00332da3, 0x00332f27: a controller has a voice from now on, and it has
+none */
+long unknown_00332da3(void *engine, long controller_index);
+long unknown_00332f27(void *engine, long controller_index);
+
+/* 0x00332da8: the mode of the voice of a controller */
+long unknown_00332da8(void *engine, long controller_index, void *mode);
+
+/* 0x00332db2: what the engine knows of the voice of a controller */
+long unknown_00332db2(void *engine, long controller_index, struct voice_controller_status *status);
+
+/* 0x003330f8: lets go of the engine */
+long unknown_003330f8(void *engine);
+
+/* ---------- prototypes of functions not decompiled yet */
+
+/* 0x000552a0: before a voice that uses _voice_mode_unknown2 stops */
+void unknown_000552a0(struct voice_globals *voice);
+
 /* ---------- globals */
 
 /* 0x00476fc8 */
@@ -21,6 +58,9 @@ struct voice_globals voice_globals;
 processor of the console's sound. The first thing of it is what the
 console's library needs of them for the voice; NULL if there is none */
 extern byte *unknown_00510c90;
+
+/* 0x0052731c: what the library knows each mode by */
+void *voice_modes[NUMBER_OF_VOICE_MODES];
 
 /* ---------- code */
 
@@ -59,16 +99,16 @@ void voice_reset_controller_levels(
 	}
 }
 
-/* 0x00055720: what each controller starts with, by what the voice is */
+/* 0x00055720: the mode that each controller starts with, by what the voice is */
 void voice_reset_controllers(
 	struct voice_globals *voice)
 {
-	long unknown= voice->kind==_voice_kind_session ? _voice_controller_unknown3 : _voice_controller_unknown2;
+	long mode= voice->kind==_voice_kind_session ? _voice_mode_unknown3 : _voice_mode_unknown2;
 	long controller_index;
 
 	for (controller_index= 0; controller_index!=NONE; controller_index= voice_next_controller(controller_index))
 	{
-		voice->controller_unknown54[controller_index]= unknown;
+		voice->controller_modes[controller_index]= mode;
 	}
 }
 
@@ -104,4 +144,104 @@ boolean voice_engine_parameters_new(
 	parameters->unknown20= 0;
 
 	return TRUE;
+}
+
+/* 0x00055810: makes the engine of the voice and tells it the modes that the
+game uses, who it tells what happens, and that each controller has a voice,
+in the mode it starts with. FALSE only if there was nothing to ask the
+engine with: if the library says that it could not do something, the rest is
+not done, and the voice is taken as started all the same */
+boolean voice_start(
+	struct voice_globals *voice)
+{
+	struct voice_engine_parameters parameters;
+	struct voice_controller_status status;
+	boolean started= voice_engine_parameters_new(&parameters, voice);
+
+	if (started)
+	{
+		long result= unknown_00333055(&parameters, &voice->engine);
+
+		if (result>=0)
+		{
+			unsigned long mode;
+
+			voice->modes= 0;
+			voice->modes= voice->kind==_voice_kind_session ? VOICE_MODES_SESSION : VOICE_MODES_FULL;
+			for (mode= 0; mode<NUMBER_OF_VOICE_MODES; mode++)
+			{
+				if (voice->modes&(1u<<mode))
+				{
+					result= unknown_00332d8f(voice->engine, voice_modes[mode]);
+				}
+			}
+			if (result>=0)
+			{
+				result= unknown_00332d94(voice->engine, voice);
+				if (voice->modes&(1u<<_voice_mode_unknown2))
+				{
+					unknown_00332e7c(voice->engine, VOICE_ENGINE_UNKNOWN_00332E7C_VALUE);
+				}
+				if (result>=0)
+				{
+					long controller_index;
+
+					for (controller_index= 0; controller_index!=NONE; controller_index= voice_next_controller(controller_index))
+					{
+						unknown_00332da3(voice->engine, controller_index);
+						unknown_00332da8(voice->engine, controller_index,
+							voice_modes[voice->controller_modes[controller_index]]);
+						unknown_00332db2(voice->engine, controller_index, &status);
+						voice->controller_unknown64[controller_index]= status.unknown0==0;
+						voice->controller_unknown8C[controller_index]= FALSE;
+						voice->controller_unknown88[controller_index]= FALSE;
+					}
+					started= TRUE;
+				}
+			}
+		}
+	}
+
+	return started;
+}
+
+/* 0x00055080: starts a voice of a kind, if it is not started */
+void voice_initialize(
+	struct voice_globals *voice,
+	long kind)
+{
+	if (!voice->initialized)
+	{
+		voice->engine= NULL;
+		voice->kind= kind;
+		voice_reset_controller_levels(voice);
+		voice_reset_controllers(voice);
+		voice->initialized= voice_start(voice);
+	}
+}
+
+/* 0x000550b0: stops the voice, if it was started: no controller has a
+voice, and the engine is let go of */
+void voice_dispose(
+	struct voice_globals *voice)
+{
+	if (voice->initialized)
+	{
+		long controller_index;
+
+		for (controller_index= 0; controller_index!=NONE; controller_index= voice_next_controller(controller_index))
+		{
+			unknown_00332f27(voice->engine, controller_index);
+		}
+		if (voice->modes&(1u<<_voice_mode_unknown2))
+		{
+			unknown_000552a0(voice);
+		}
+		if (voice->engine)
+		{
+			unknown_003330f8(voice->engine);
+			voice->engine= NULL;
+		}
+	}
+	voice->initialized= FALSE;
 }

@@ -641,8 +641,19 @@ address,name,source,arguments,returns,convention
 000556a0,voice_reset_controller_levels,source/networking/voice.c,edx,void
 00055720,voice_reset_controllers,source/networking/voice.c,edx,void
 00055780,voice_engine_parameters_new,source/networking/voice.c,ecx stack,bool
-00055810,unknown_00055810,,edi,bool
-000550b0,unknown_000550b0,,eax,void
+00055810,voice_start,source/networking/voice.c,edi,bool
+000550b0,voice_dispose,source/networking/voice.c,eax,void
+00055080,voice_initialize,source/networking/voice.c,eax stack,void
+000552a0,unknown_000552a0,,esi,void
+00333055,unknown_00333055,,stack stack,int
+00332d8f,unknown_00332d8f,,stack stack,int
+00332d94,unknown_00332d94,,stack stack,int
+00332e7c,unknown_00332e7c,,stack stack,int
+00332da3,unknown_00332da3,,stack stack,int
+00332f27,unknown_00332f27,,stack stack,int
+00332da8,unknown_00332da8,,stack stack stack,int
+00332db2,unknown_00332db2,,stack stack stack,int
+003330f8,unknown_003330f8,,stack,int
 000b3db0,unknown_000b3db0,,,void
 000b3d30,unknown_000b3d30,,stack,void,stdcall
 0021ebe0,unknown_0021ebe0,,,void

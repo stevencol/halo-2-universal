@@ -98,7 +98,7 @@ def run(t) -> None:
                 externals={
                     "voice_reset_controller_levels": with_voice(),
                     "voice_reset_controllers": with_voice(),
-                    "unknown_00055810": with_voice(random_.choice((1, 0, 0x100, 0xFFFFFF01))),
+                    "voice_start": with_voice(random_.choice((1, 0, 0x100, 0xFFFFFF01))),
                 },
                 extra=[memory],
             )
@@ -121,7 +121,7 @@ def run(t) -> None:
         t.check(
             "sound_memory_pool_delete",
             globals={"sound_memory_pool": pool if has_pool else 0, "voice_globals": voice(random_.choice((0, 1)))},
-            externals={"unknown_000550b0": stop},
+            externals={"voice_dispose": stop},
             mocks=[
                 Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
                 Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),

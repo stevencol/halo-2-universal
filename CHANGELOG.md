@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Arrancar y parar la voz de los jugadores
+
+Tres funciones en `networking/voice.c`, de 428 bytes entre las tres. De 937 funciones se pasa a
+940, el 8,34 % de las del juego (el 5,592 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_start` | `0x00055810` | `networking/voice.c` |
+| `voice_initialize` | `0x00055080` | `networking/voice.c` |
+| `voice_dispose` | `0x000550b0` | `networking/voice.c` |
+
+`voice_start` y `voice_dispose` eran `unknown_00055810` y
+`unknown_000550b0`, las dos que `sound_memory.c` dejó pendientes en el hito
+263. `voice_initialize` es nueva en la lista: el juego la tiene también
+metida dentro de `sound_memory_pool_new`, que ahora la llama.
+
+### Lo que se sabe
+
+- La voz va sobre una biblioteca de la consola: nueve funciones suyas
+  quedan apuntadas (`0x00333055`, que crea el motor, y ocho más, de
+  `0x00332d8f` a `0x003330f8`). Qué hace cada una se deduce de cómo las
+  llama el juego; sus nombres de verdad no se saben.
+- Hay cuatro «modos» de voz (`voice_modes`, `0x0052731c`: lo que la
+  biblioteca entiende por cada uno). El juego usa los cuatro, salvo en una
+  campaña dentro de una sesión, donde no usa el 2. Cada mando empieza en el
+  modo 2, o en el 3 en esa campaña (hito 264): el campo de `0xC` de
+  `voice_globals` es qué modos se usan, un bit por modo.
+- Al arrancar, cada mando recibe una voz y su modo, y se apunta si lo
+  primero que la biblioteca dice de él es 0 (`0x64`); dos bytes más por
+  mando empiezan en falso (`0x88` y `0x8C`).
+- `voice_start` solo devuelve falso si no había con qué pedir el motor
+  (`voice_engine_parameters_new`). Si la biblioteca dice que algo no se
+  pudo, el juego deja lo demás sin hacer y aun así da la voz por
+  arrancada. Está escrito igual.
+- Al parar: se quita la voz de cada mando, se llama a `0x000552a0` si se
+  usaba el modo 2 y se suelta el motor.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo y las de `sound_memory`.
+- Las mutaciones de este hito corren aparte; su resultado irá en una
+  entrada posterior.
+
 ## 2026-10-08 — La voz de los jugadores: lo que se prepara antes de arrancarla
 
 Tres funciones en un archivo nuevo, `networking/voice.c`, de 299 bytes entre las tres. De 934 funciones se pasa a
