@@ -380,7 +380,7 @@ def run(t) -> None:
                 controller,
                 size,
                 0x80345000 + random_.getrandbits(8),
-                externals={"unknown_00053a20": lambda harness, arguments: 0},
+                externals={"game_voice_local_data_ready": lambda harness, arguments: 0},
             )
 
         for wanted in ((True, True), (True, False), (False, True), (False, False)):

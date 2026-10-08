@@ -713,6 +713,17 @@ address,name,source,arguments,returns,convention
 00054fe0,game_voice_update_profile,source/networking/game_voice.c,stack,void
 00332f22,unknown_00332f22,,stack,int
 000696d0,unknown_000696d0,,eax,bool
+00053610,game_voice_update,source/networking/game_voice.c,,void
+00053c70,game_voice_unknown_00053c70,source/networking/game_voice.c,,int
+00054590,unknown_00054590,,,void
+00054030,unknown_00054030,,,void
+00053e30,unknown_00053e30,,,void
+00056b70,unknown_00056b70,,esi,void
+00055990,unknown_00055990,,eax,void
+00055960,unknown_00055960,,esi ebx,int
+00056590,unknown_00056590,,eax esi edi,void
+00056130,unknown_00056130,,eax ecx ebx stack stack stack,void
+0005f760,unknown_0005f760,,ecx stack,int
 00332e93,unknown_00332e93,,stack stack,int
 000550b0,voice_dispose,source/networking/voice.c,eax,void
 00055080,voice_initialize,source/networking/voice.c,eax stack,void
@@ -741,7 +752,7 @@ address,name,source,arguments,returns,convention
 00332df4,unknown_00332df4,,stack stack stack stack stack stack,int
 00332e8a,unknown_00332e8a,,stack stack stack stack stack,int
 00332e81,unknown_00332e81,,stack stack stack stack stack,int
-00053a20,unknown_00053a20,,stack stack stack,void,stdcall
+00053a20,game_voice_local_data_ready,source/networking/game_voice.c,stack stack stack,void,stdcall
 00333055,unknown_00333055,,stack stack,int
 00332d8f,unknown_00332d8f,,stack stack,int
 00332d94,unknown_00332d94,,stack stack,int

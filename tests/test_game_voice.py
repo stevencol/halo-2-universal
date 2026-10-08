@@ -1014,3 +1014,151 @@ def run(t) -> None:
                     globals={"unknown_0054e8e0": bytes(profiles), "unknown_004cd904": bytes(kept)},
                     externals={"game_voice_controller_player_words": gives(random_.getrandbits(32))},
                 )
+
+    # ---------- the frame, and what a player said
+
+    def named(*names: str, **results: object) -> dict:
+        """Functions that do nothing here: the calls to them are compared, with
+        their pointers to globals as the places they point to."""
+
+        def handler(result):
+            return lambda harness, arguments: (result, tuple(harness.normalize(argument) for argument in arguments))
+
+        return {**{name: handler(0) for name in names}, **{name: handler(result) for name, result in results.items()}}
+
+    for enabled, initialized in active():
+        for kind in (2, 1, 0):
+            for source in (1, 0, 2):
+                for network in (1, 0):
+                    for first_on in (1, 0, 0x80):
+                        first = bytearray(random_.randbytes(0x48))
+                        first[0] = first_on
+                        t.check(
+                            "game_voice_update",
+                            globals={
+                                **state(enabled, initialized),
+                                "game_voice_kind": kind,
+                                "game_voice_session_source": source,
+                                "unknown_004c9888": 0x55,
+                                "unknown_005259b8": GlobalData(bytes(first)),
+                                "unknown_00527108": GlobalRange(0x84),
+                            },
+                            externals=named(
+                                "game_voice_library_update",
+                                "game_voice_update_session_source",
+                                "game_voice_update_network_state",
+                                "unknown_00054590",
+                                "voice_remove_remote_talkers",
+                                "game_voice_reset_players",
+                                "unknown_00054030",
+                                "unknown_00053e30",
+                                "unknown_00056b70",
+                                "unknown_00055990",
+                                game_voice_unknown_00054ec0=network,
+                            ),
+                        )
+
+    def nth(name: str, *values: int):
+        def handler(harness, arguments):
+            calls = sum(1 for call in harness._calls if call[0] == name)
+            return values[min(calls, len(values) - 1)]
+
+        return handler
+
+    def data_cases():
+        # (the player of the controller, then again; its flags; the third flag; the number; the first word; the third thing on; its number of the player)
+        yield (3, 3), 0, 0, 0x55, 7, 1, 1
+        yield (3, 5), 0, 0, 0x55, 7, 1, 0
+        yield (3, 3), 0, 0, 0x55, 7, 0, 1
+        yield (0, 0), 0xFFFD, 0, 1, 0xFFFF, 0x80, 0x100
+        yield (NONE, 3), 0, 0, 0x55, 7, 1, 1
+        yield (3, NONE), 0, 0, 0x55, 7, 1, 1
+        yield (3, 3), 2, 0, 0x55, 7, 1, 1
+        yield (3, 3), 0, 1, 0x55, 7, 1, 1
+        yield (3, 3), 0, 0, 0, 7, 1, 1
+        yield (3, 3), 0, 0, 0x55, 0, 1, 1
+        yield (15, 15), 1, 0, 0x80000000, 0x10000, 1, 1
+        yield (15, 15), 1, 0, 0x80000000, 0x10001, 1, 1
+
+    for enabled, initialized in active():
+        for players, flags, third, number, first_word, on, of_player in data_cases():
+            thing = bytearray(random_.randbytes(0x84))
+            thing[0] = on
+            for player in range(16):
+                struct.pack_into("<I", thing, 0x44 + player * 4, of_player if player in players else 0)
+
+            def words(harness, arguments, first_word=first_word):
+                # the two numbers are in the stack, and so is the flag
+                harness.mu.mem_write(arguments[1], struct.pack("<2H", first_word & 0xFFFF, 0x1234))
+                return 0, (arguments[0], harness.normalize(arguments[2]))
+
+            def on_its_way(harness, arguments):
+                player, unknown, two, data, size, flag = arguments
+                return 0, (
+                    player,
+                    harness.normalize(unknown),
+                    bytes(harness.mu.mem_read(two, 4)),
+                    data,
+                    size,
+                    bytes(harness.mu.mem_read(flag, 1)),
+                )
+
+            t.check(
+                "game_voice_local_data_ready",
+                random_.randint(0, 3),
+                0x80345000,
+                random_.getrandbits(16),
+                globals={
+                    **state(enabled, initialized),
+                    "unknown_005259b8": GlobalRange(0x48),
+                    "unknown_00527104": GlobalRange(4),
+                    "unknown_00527108": GlobalData(bytes(thing)),
+                    "unknown_00525a00": GlobalRange(4),
+                },
+                externals={
+                    "game_voice_find_local_player": nth("game_voice_find_local_player", *players),
+                    "game_voice_player_flags": gives(flags),
+                    "game_voice_player_unknown2": gives(third),
+                    "unknown_00055960": lambda harness, arguments, number=number: (
+                        number,
+                        (harness.normalize(arguments[0]), arguments[1]),
+                    ),
+                    "unknown_00056590": words,
+                    "unknown_00056130": on_its_way,
+                },
+            )
+
+    def place(found: int, session: Buffer):
+        def handler(harness, arguments):
+            if found:
+                harness.mu.mem_write(arguments[0], struct.pack("<I", session.address))
+            return found, ()
+
+        return handler
+
+    for enabled, initialized in active():
+        for source in (2, 1, 0):
+            for found, other_found in ((1, 1), (0, 1), (1, 0)):
+                for count in (0, 1, 5, 16, 0xFFFFFFFF):
+                    data = bytearray(random_.randbytes(SESSION_SIZE))
+                    struct.pack_into("<I", data, 0x741C, 1)
+                    struct.pack_into("<I", data, MEMBERSHIP, 0)
+                    struct.pack_into("<I", data, MEMBERSHIP + 8, count)
+                    session = Buffer(bytes(data))
+                    other = Buffer(random_.randbytes(0x10))
+                    in_other = [random_.choice((NONE, 0, 3)) for _ in range(16)]
+
+                    def which(harness, arguments, session=session, in_other=in_other):
+                        peer = (arguments[1] - session.address - MEMBERSHIP - 0xC) // 0x10C
+                        return in_other[peer], (arguments[0], arguments[1])
+
+                    t.check(
+                        "game_voice_unknown_00053c70",
+                        globals={**state(enabled, initialized), "game_voice_session_source": source},
+                        externals={
+                            "unknown_000596a0": place(found, session),
+                            "unknown_00059670": place(other_found, other),
+                            "unknown_0005f760": which,
+                        },
+                        extra=[session, other],
+                    )

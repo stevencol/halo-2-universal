@@ -94,6 +94,20 @@ enum
 	UNKNOWN_004E9AE8_UNKNOWNC14_OFFSET= 0xC14,
 	UNKNOWN_0055E4D0_COUNT= 16,
 
+	/* three things that the voice hands what the players say to. Of the
+	first, at 0x005259b8: whether it is on, and a number for each player.
+	Of the third, at 0x00527108: whether it is on, and at 0x44 a number for
+	each player. Their sizes are guesses */
+	UNKNOWN_005259B8_SIZE= 0x48,
+	UNKNOWN_00527104_SIZE= 0x4,
+	UNKNOWN_00527108_SIZE= 0x84,
+	UNKNOWN_00527108_PLAYERS_OFFSET= 0x44,
+
+	/* in what the session says of who is in it: how many consoles, and the
+	consoles */
+	GAME_VOICE_MEMBERSHIP_PEER_COUNT_OFFSET= 0x8,
+	GAME_VOICE_MEMBERSHIP_PEER_ARRAY_OFFSET= 0xC,
+
 	/* of a text that game_voice_text_printf writes */
 	GAME_VOICE_TEXT_SIZE= 0x80,
 
@@ -173,7 +187,8 @@ enum
 	_game_voice_controller_setting3= 3
 };
 
-/* as main_game.c calls those that take memory when a map is loaded */
+/* as main_game.c calls those that take memory when a map is loaded, and as
+voice.c calls what takes what a player said */
 #define GAME_VOICE_CALLBACK __attribute__((stdcall))
 
 /* ---------- structures */
@@ -254,6 +269,9 @@ void game_voice_update_network_state(void);
 boolean game_voice_unknown_00054df0(long player);
 byte *game_voice_get_player_datum(long player);
 void game_voice_update_profile(long controller_index);
+void game_voice_update(void);
+void GAME_VOICE_CALLBACK game_voice_local_data_ready(long controller_index, void *data, unsigned long size);
+unsigned long game_voice_unknown_00053c70(void);
 boolean game_voice_unknown_00054c70(void);
 long game_voice_unknown_00054cc0(void);
 unsigned long game_voice_get_remote_talkers(void);
@@ -270,6 +288,9 @@ extern long unknown_004c9888;
 extern long game_voice_session_source;
 extern long unknown_004c9878;
 extern long unknown_004c9898;
+extern byte unknown_005259b8[UNKNOWN_005259B8_SIZE];
+extern byte unknown_00527104[UNKNOWN_00527104_SIZE];
+extern byte unknown_00527108[UNKNOWN_00527108_SIZE];
 extern byte unknown_004c989c[UNKNOWN_004C989C_SIZE];
 extern byte unknown_004cd904[UNKNOWN_004CD904_COUNT][UNKNOWN_004CD904_SIZE];
 extern byte *unknown_004e9ae8;

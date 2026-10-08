@@ -52,6 +52,34 @@ boolean unknown_00068250(void);
 /* 0x000696d0: something of what unknown_004cf770 has of a player */
 boolean unknown_000696d0(const byte *unknown);
 
+/* 0x00054590, 0x00054030, 0x00053e30: of this file: three things that it
+does each frame */
+void unknown_00054590(void);
+void unknown_00054030(void);
+void unknown_00053e30(void);
+
+/* 0x00056b70, 0x00055990: what unknown_00527108 and unknown_005259b8 do
+each frame */
+void unknown_00056b70(byte *unknown);
+void unknown_00055990(byte *unknown);
+
+/* 0x00055960: the number that unknown_005259b8 has for a player; 0 if it has
+none */
+long unknown_00055960(byte *unknown, long player_index);
+
+/* 0x00056590: two numbers of 16 bits that unknown_00527104 gives for the
+number that unknown_005259b8 has for a player */
+void unknown_00056590(long unknown0, word *words, byte *unknown);
+
+/* 0x00056130: what a player said goes on its way: to the other consoles,
+most likely */
+void unknown_00056130(long player_index, byte *unknown, word *words, void *data, unsigned long size,
+	boolean *unknown10);
+
+/* 0x0005f760: which console of a session a console of another is; NONE if
+none */
+long unknown_0005f760(byte *session, const byte *peer);
+
 /* 0x001906da: something of the player of a gamepad */
 boolean unknown_001906da(long gamepad_index);
 
@@ -91,6 +119,12 @@ long game_voice_session_source;
 /* 0x004c9878: a console of the session; NONE if none. With no voice it
 counts as 0 */
 long unknown_004c9878;
+
+/* 0x005259b8, 0x00527104, 0x00527108: three things that the voice hands
+what the players say to */
+byte unknown_005259b8[UNKNOWN_005259B8_SIZE];
+byte unknown_00527104[UNKNOWN_00527104_SIZE];
+byte unknown_00527108[UNKNOWN_00527108_SIZE];
 
 /* 0x004c9898, 0x004c989c: of the players that talk, emptied with the
 players: a number, and 0xc0 bytes (twelve for each of sixteen players, it
@@ -1340,4 +1374,129 @@ void game_voice_update_profile(
 		memcpy(profile+UNKNOWN_004CD904_UNKNOWN14_OFFSET, unknown, sizeof(unknown));
 		memcpy(profile+UNKNOWN_004CD904_VOICE_WORDS_OFFSET, &words, sizeof(words));
 	}
+}
+
+/* 0x00053610: the voice, each frame: the engine does its work and, with a
+full voice, the game looks at where the session comes from and at the state
+of the network game. With no network the players of other consoles lose
+their voices and nothing is known of any player; with one, the rest of what
+is done each frame */
+void game_voice_update(
+	void)
+{
+	if (game_voice_active())
+	{
+		game_voice_library_update();
+		if (game_voice_kind==_voice_kind_full)
+		{
+			game_voice_update_session_source();
+			game_voice_update_network_state();
+			if (!(game_voice_active() && game_voice_session_source!=0))
+			{
+				unknown_004c9888= _game_voice_network_none;
+			}
+			unknown_00054590();
+			if (!game_voice_unknown_00054ec0())
+			{
+				voice_remove_remote_talkers(&voice_globals);
+				game_voice_reset_players();
+				return;
+			}
+			unknown_00054030();
+			unknown_00053e30();
+			unknown_00056b70(unknown_00527108);
+			if (unknown_005259b8[0])
+			{
+				unknown_00055990(unknown_005259b8);
+			}
+		}
+	}
+}
+
+/* 0x00053a20: the library gave something that the player of a controller
+said (voice_callback_data_ready). It goes on its way if the controller has a
+player, the player has neither the second flag nor the third, unknown_005259b8
+has a number for the player and unknown_00527104 gives something for that
+number. The game has game_voice_player_unknown1 in the function itself */
+void GAME_VOICE_CALLBACK game_voice_local_data_ready(
+	long controller_index,
+	void *data,
+	unsigned long size)
+{
+	if (game_voice_active())
+	{
+		long player_index= game_voice_find_local_player(controller_index);
+
+		if (player_index!=NONE &&
+			!(game_voice_active() &&
+			((game_voice_player_flags(player_index)>>_game_voice_player_unknown1_bit)&1)) &&
+			!game_voice_player_unknown2(player_index))
+		{
+			long unknown= unknown_00055960(unknown_005259b8, player_index);
+
+			if (unknown)
+			{
+				word words[2];
+				boolean flag;
+
+				words[0]= 0;
+				words[1]= 0;
+				flag= FALSE;
+				unknown_00056590(unknown, words, unknown_00527104);
+				if (words[0])
+				{
+					player_index= game_voice_find_local_player(controller_index);
+					if (player_index!=NONE)
+					{
+						if (unknown_00527108[0] &&
+							*(const long *)(unknown_00527108+UNKNOWN_00527108_PLAYERS_OFFSET+
+							player_index*sizeof(long)))
+						{
+							flag= TRUE;
+						}
+						unknown_00056130(player_index, unknown_00525a00, words, data, size, &flag);
+					}
+				}
+			}
+		}
+	}
+}
+
+/* 0x00053c70: with a session from the second place: a bit for each of its
+consoles that the session of the first place has too. The game does not see
+whether the session says who is in it */
+unsigned long game_voice_unknown_00053c70(
+	void)
+{
+	unsigned long result= 0;
+
+	if (game_voice_active() && game_voice_session_source==_game_voice_session_source2)
+	{
+		byte *session= NULL;
+		byte *other_session= NULL;
+
+		if (unknown_000596a0(&session) && unknown_00059670(&other_session))
+		{
+			const byte *membership= NULL;
+			long count;
+			long peer;
+
+			if (*(const long *)(session+GAME_VOICE_SESSION_UNKNOWN741C_OFFSET) &&
+				*(const long *)(session+GAME_VOICE_SESSION_MEMBERSHIP_OFFSET)!=NONE)
+			{
+				membership= session+GAME_VOICE_SESSION_MEMBERSHIP_OFFSET;
+			}
+			count= *(const long *)(membership+GAME_VOICE_MEMBERSHIP_PEER_COUNT_OFFSET);
+			for (peer= 0; peer<count; peer++)
+			{
+				if (unknown_0005f760(other_session, membership+GAME_VOICE_MEMBERSHIP_PEER_ARRAY_OFFSET+
+					peer*GAME_VOICE_MEMBERSHIP_PEER_SIZE)!=NONE)
+				{
+					result|= 1u<<peer;
+				}
+			}
+		}
+	}
+
+	return result;
 }

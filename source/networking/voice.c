@@ -11,6 +11,7 @@ guess, and so are the names of its functions.
 #include "voice.h"
 
 #include "memory/crc.h"
+#include "networking/game_voice.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -76,11 +77,6 @@ long unknown_00332df4(void *engine, struct voice_talker talker, const void *data
 long unknown_00332e8a(void *engine, long controller_index, long size, const void *message, unsigned long unknown);
 long unknown_00332e81(void *engine, long controller_index, long unknown, unsigned long buffer_size, void *buffer);
 
-/* ---------- prototypes of functions not decompiled yet */
-
-/* 0x00053a20: what the game does with what a player said. It takes its
-arguments off the stack */
-void __attribute__((stdcall)) unknown_00053a20(long controller_index, void *data, unsigned long size);
 
 /* ---------- globals */
 
@@ -518,7 +514,7 @@ long VOICE_CALLBACK voice_callback_data_ready(
 	if (size>0)
 	{
 		voice->controller_talked[controller_index]= TRUE;
-		unknown_00053a20(controller_index, data, size);
+		game_voice_local_data_ready(controller_index, data, size);
 	}
 
 	return 0;

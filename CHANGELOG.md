@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — La voz de cada fotograma, y lo que dice un jugador de esta consola
+
+Tres funciones en `networking/game_voice.c`, de 573 bytes entre las tres. De 1015 funciones se pasa a
+1018, el 9,04 % de las del juego (el 5,785 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_voice_update` | `0x00053610` | `networking/game_voice.c` |
+| `game_voice_local_data_ready` | `0x00053a20` | `networking/game_voice.c` |
+| `game_voice_unknown_00053c70` | `0x00053c70` | `networking/game_voice.c` |
+
+`game_voice_local_data_ready` era `unknown_00053a20`, la que `voice.c`
+llama cuando la biblioteca da lo que dijo un jugador (hito 267).
+
+### Lo que se sabe
+
+- `game_voice_update` es la voz de cada fotograma. El motor hace su
+  trabajo; con la voz completa se mira de dónde sale la sesión y el estado
+  de la red; sin red, los jugadores de otras consolas pierden la voz y se
+  olvida todo lo de los jugadores; con red, se hace lo demás (tres
+  funciones del archivo aún sin descompilar y dos de lo que viene después
+  de `voice.c`).
+- Lo que dice un jugador de esta consola sigue su camino solo si su mando
+  tiene jugador en la sesión, el jugador no tiene ni el segundo flag ni el
+  tercero (lo que apunta a que son «silenciado» de dos maneras), y dos
+  cosas que aún no se conocen (`0x005259b8` y `0x00527104`) dan algo para
+  él. Entonces se entrega a `0x00056130`, que por lo que recibe lo manda a
+  las otras consolas.
+- `game_voice_unknown_00053c70` da, con la sesión del segundo sitio, un bit
+  por cada consola suya que también está en la del primero.
+
+### Batería completa
+
+La del hito 265 terminó: 940 funciones, las 940 bien.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo y las de `voice`.
+- En `game_voice_unknown_00053c70`, una sesión que no dice quién está en
+  ella: el juego lee de la dirección 8 y se para.
+- Los tamaños de `0x005259b8`, `0x00527104` y `0x00527108` son
+  suposiciones.
+- Las mutaciones de los hitos 266 a 275 corren aparte (las de 266 a 268 se
+  lanzaron y no llegaron a correr: la copia de comprobación no cambió de
+  commit; están relanzadas).
+
 ## 2026-10-08 — La voz, cada fotograma: el motor, el estado de la red y cada jugador
 
 Ocho funciones en `networking/game_voice.c`, de 890 bytes entre las ocho. De 1007 funciones se pasa a

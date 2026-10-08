@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 274.
+**Última actualización:** 2026-10-08, al terminar el hito 275.
 
 ## Dónde estamos
 
-- **1015 funciones descompiladas de 11.265: el 9,01 % del juego** (el
-  5,766 % de los bytes de código).
-- Las 1015 están comprobadas contra el ejecutable original: las 931 del
-  hito 261 con la batería completa, y las de después con sus propias pruebas
+- **1018 funciones descompiladas de 11.265: el 9,04 % del juego** (el
+  5,785 % de los bytes de código).
+- Las 1018 están comprobadas contra el ejecutable original: las 940 del
+  hito 265 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile what the voice does each frame with the engine, the network and each player* (ver `git log`).
+- Último hito: *Decompile the frame of the voice and what a local player said* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 516 funciones apuntadas pero sin descompilar (las que el código
-  llama); 428 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 524 funciones apuntadas pero sin descompilar (las que el código
+  llama); 436 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -140,7 +140,7 @@ Módulos (funciones hechas / archivo):
       máscaras y los mensajes, la sesión, sus consolas y sus jugadores,
       quién puede hablar y quién habla, y parte de lo de cada
       fotograma; era `sound\sound_memory.c`. Va de `0x00053290` a
-      `0x00055060`: faltan 8 funciones, las más grandes)
+      `0x00055060`: faltan 5 funciones, las más grandes)
 - [x] Preferencias guardadas — `main\global_preferences.c` (15: completo)
 - [ ] Juego y tabla de sistemas — `game\game.c` (25): la tabla, lo que la
       recorre, las opciones (por defecto, validar, comparar, los jugadores
@@ -210,9 +210,9 @@ Módulos (funciones hechas / archivo):
 - [x] ~~El fondo de la voz~~ (hito 263; el archivo es `game_voice.c`
       desde el hito 269).
 - [x] ~~`voice.c`~~ (hito 268): completo.
-- [ ] **El resto de `game_voice.c`**: `0x00053610`, `0x00053a20`,
-      `0x00053c70`, `0x00053e30`, `0x00054030`, `0x000541a0`,
-      `0x00054590` y `0x00054890` (8 funciones, las más grandes; casi todas empiezan mirando
+- [ ] **El resto de `game_voice.c`**: `0x00053e30`, `0x00054030`,
+      `0x000541a0`, `0x00054590` y `0x00054890` (5 funciones, las más
+      grandes; casi todas empiezan mirando
       `game_voice_enabled` y `voice_globals.initialized`), y lo que sigue
       a `voice.c` desde `0x00055960`.
 - [ ] **Los fondos de los objetos**: `0x000bc280`, `0x000bc380`,
@@ -238,6 +238,10 @@ Módulos (funciones hechas / archivo):
 
 ## Avisos para no perder tiempo
 
+- En la copia de comprobación (`C:\Users\steve\halo-2-check`) hay que
+  cambiar de commit con `git checkout -f --detach <commit>`: las
+  mutaciones dejan los archivos con otros finales de línea y sin `-f`
+  el cambio no se hace, sin avisar.
 - Antes de pasar las pruebas en una terminal nueva hay que poner delante
   en el `PATH` el clang de Visual Studio
   (`C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\Llvm\x64\bin`):

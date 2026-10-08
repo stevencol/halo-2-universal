@@ -220,6 +220,9 @@ address,name,source
 004c988c,game_voice_session_source,source/networking/game_voice.c
 004c9878,unknown_004c9878,source/networking/game_voice.c
 004c9898,unknown_004c9898,source/networking/game_voice.c
+005259b8,unknown_005259b8,source/networking/game_voice.c
+00527104,unknown_00527104,source/networking/game_voice.c
+00527108,unknown_00527108,source/networking/game_voice.c
 004c989c,unknown_004c989c,source/networking/game_voice.c
 004cd904,unknown_004cd904,source/networking/game_voice.c
 004e9ae8,unknown_004e9ae8,source/networking/game_voice.c
