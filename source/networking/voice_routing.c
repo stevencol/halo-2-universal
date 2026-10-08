@@ -22,12 +22,18 @@ voice.c, from 0x00055960 on.
 /* ---------- prototypes of functions not decompiled yet */
 
 /* 0x00057080, 0x00057360, 0x000577d0: what is done each frame with who hears
-whom, in one state of the network game, after voice_channels_update_ended;
-0x00057960: in the others */
+whom, in one state of the network game, after voice_channels_update_ended */
 void __attribute__((stdcall)) unknown_00057080(byte *channels);
 void __attribute__((stdcall)) unknown_00057360(byte *channels);
 void __attribute__((stdcall)) unknown_000577d0(byte *channels);
-void __attribute__((stdcall)) unknown_00057960(byte *channels);
+
+/* 0x00057d60: how a player of this console hears a player of another: 0 if
+it does not. It is given what was found of the two before. 0x00057eb0: what
+who hears whom does with how each of the players of this console hears a
+player */
+long __attribute__((stdcall)) unknown_00057d60(long unknown, long local_player_index, long player_index);
+void __attribute__((stdcall)) unknown_00057eb0(byte *channels, long player_index,
+	const struct voice_channel_listener *listeners, long count);
 
 /* 0x001896c0: plays a sound, as loud as a number says. 0x00189760: plays a
 sound where what it is given says */
@@ -157,7 +163,7 @@ void voice_channels_update(
 		}
 		else if (unknown_004c9888==_game_voice_network2 || unknown_004c9888==_game_voice_network3)
 		{
-			unknown_00057960(channels);
+			voice_channels_update_by_team(channels);
 		}
 	}
 }
@@ -1204,4 +1210,96 @@ void VOICE_ROUTING_CALLBACK voice_play_sound(
 			}
 		}
 	}
+}
+
+/* 0x00057960: each frame, out of the first state of the network game: for
+each player of another console that has a voice, says how each player of
+this console hears it, and hands that on. The players that somebody hears
+have their bit in who hears whom. The game has game_voice_get_talkers and
+game_voice_has_remote_talker in the function itself */
+void VOICE_ROUTING_CALLBACK voice_channels_update_by_team(
+	byte *channels)
+{
+	unsigned long local_players= game_voice_get_local_players();
+	unsigned long talkers= voice_routing_active() ? game_voice_talkers : 0;
+	unsigned long *heard= (unsigned long *)(channels+VOICE_CHANNELS_HEARD_OFFSET);
+	long player_index;
+
+	*heard= 0;
+	for (player_index= 0; player_index<MAXIMUM_VOICE_ROUTING_PLAYERS; player_index++)
+	{
+		unsigned long bit= 1u<<player_index;
+
+		if (!(local_players&bit) && (talkers&bit) && voice_routing_active() &&
+			voice_has_remote_talker(&voice_globals, player_index))
+		{
+			struct voice_channel_listener listeners[MAXIMUM_VOICE_ROUTING_PLAYERS];
+			long local_player_index;
+
+			memset(listeners, 0, sizeof(listeners));
+			for (local_player_index= 0; local_player_index<MAXIMUM_VOICE_ROUTING_PLAYERS; local_player_index++)
+			{
+				long how= 0;
+
+				if (local_players&(1u<<local_player_index))
+				{
+					how= unknown_00057d60(voice_players_same_team(player_index, local_player_index), local_player_index,
+						player_index);
+					if (how)
+					{
+						*heard|= bit;
+					}
+				}
+				listeners[local_player_index].player_index= local_player_index;
+				listeners[local_player_index].how= how;
+			}
+			unknown_00057eb0(channels, player_index, listeners, MAXIMUM_VOICE_ROUTING_PLAYERS);
+		}
+	}
+}
+
+/* 0x00057b60: whether two players are of the same team, in the third state
+of the network game: 1 if so, and 0 if not, or if one has no team or the
+session does not have the two. Always 1 with no voice or in another state.
+The game has game_voice_get_player_array and game_voice_get_players in the
+function itself */
+long voice_players_same_team(
+	long player_index,
+	long local_player_index)
+{
+	if (voice_routing_active() && unknown_004c9888==_game_voice_network3)
+	{
+		const byte *players= NULL;
+		unsigned long session_players= 0;
+		const byte *membership= game_voice_get_membership();
+
+		if (membership)
+		{
+			players= membership+GAME_VOICE_MEMBERSHIP_PLAYER_ARRAY_OFFSET;
+		}
+		if (voice_routing_active())
+		{
+			membership= game_voice_get_membership();
+			if (membership)
+			{
+				session_players= *(const unsigned long *)(membership+GAME_VOICE_MEMBERSHIP_PLAYERS_OFFSET);
+			}
+		}
+		if ((session_players&(1u<<(local_player_index&0x1F))) && (session_players&(1u<<(player_index&0x1F))))
+		{
+			long local_team= (signed char)players[local_player_index*GAME_VOICE_MEMBERSHIP_PLAYER_SIZE+
+				GAME_VOICE_MEMBERSHIP_PLAYER_TEAM_OFFSET];
+			long team= (signed char)players[player_index*GAME_VOICE_MEMBERSHIP_PLAYER_SIZE+
+				GAME_VOICE_MEMBERSHIP_PLAYER_TEAM_OFFSET];
+
+			if (local_team!=NONE && team!=NONE && local_team==team)
+			{
+				return 1;
+			}
+		}
+
+		return 0;
+	}
+
+	return 1;
 }

@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Quién oye a quién, cada fotograma, fuera de la partida
+
+Dos funciones en `networking/voice_routing.c`, de 464 bytes entre las dos. De 1095 funciones se pasa a
+1097, el 9,74 % de las del juego (el 6,167 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_channels_update_by_team` | `0x00057960` | `networking/voice_routing.c` |
+| `voice_players_same_team` | `0x00057b60` | `networking/voice_routing.c` |
+
+`voice_channels_update_by_team` era `unknown_00057960`, lo que
+`voice_channels_update` (hito 279) hace cada fotograma en los estados 2 y
+3 de la red.
+
+### Lo que se sabe
+
+- Para cada jugador de otra consola que tiene voz, el juego arma una lista
+  de 16 entradas, una por jugador: cómo le oye cada jugador de **esta**
+  consola (0 si no le oye). Esa lista se entrega a `0x00057eb0`, que es la
+  función grande de este archivo (1.287 bytes) y la que al final le dice a
+  la biblioteca cómo mezclar las voces.
+- Los jugadores a los que alguien de esta consola oye quedan apuntados con
+  un bit en `0xc4`.
+- `voice_players_same_team` dice si dos jugadores son del mismo equipo, y
+  solo importa en el tercer estado: en los demás contesta siempre que sí.
+- Cómo se oye a alguien lo decide `0x00057d60` (sin descompilar), que
+  recibe ese «mismo equipo» en un registro: visto al leerla antes de
+  escribir a quien la llama, como manda el aviso del hito 300.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- La batería completa del hito 296 corre aparte; las mutaciones de los
+  hitos 280 a 301 están pendientes.
+
 ## 2026-10-08 — Hito 300: los sonidos de la voz
 
 Dos funciones en `networking/voice_routing.c`, de 217 bytes entre las dos. De 1093 funciones se pasa a

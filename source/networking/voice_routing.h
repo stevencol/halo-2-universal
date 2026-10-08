@@ -84,6 +84,9 @@ enum
 	VOICE_CHANNELS_UNKNOWN4_OFFSET= 0x4,
 	VOICE_CHANNELS_UNKNOWN44_OFFSET= 0x44,
 	VOICE_CHANNELS_UNKNOWN84_OFFSET= 0x84,
+	/* a bit for each player of another console that some player of this one
+	hears now */
+	VOICE_CHANNELS_HEARD_OFFSET= 0xC4,
 	/* and a time of the game for each player, in ticks; 0 for none */
 	VOICE_CHANNELS_TIMES_OFFSET= 0x194,
 	/* another time for each player: when what it said started to come */
@@ -135,6 +138,18 @@ struct voice_sound_request
 typedef char verify_voice_sound_request_size[
 	sizeof(struct voice_sound_request) == 0x10 ? 1 : -1];
 
+/* how a player of this console hears a player: which player it is, how it
+hears it (0 if it does not) and something more that is not set here */
+struct voice_channel_listener
+{
+	long player_index;
+	long how;
+	long unknown8;
+};
+
+typedef char verify_voice_channel_listener_size[
+	sizeof(struct voice_channel_listener) == 0xC ? 1 : -1];
+
 /* a function that takes its arguments off the stack */
 #define VOICE_ROUTING_CALLBACK __attribute__((stdcall))
 
@@ -164,6 +179,8 @@ void VOICE_ROUTING_CALLBACK voice_channels_update_ended(byte *channels);
 boolean voice_players_can_hear(long player_index, long local_player_index);
 void VOICE_ROUTING_CALLBACK voice_play_sound_by_number(long sound, long player_index, byte *unused);
 void VOICE_ROUTING_CALLBACK voice_play_sound(long player_index, long sound_index);
+void VOICE_ROUTING_CALLBACK voice_channels_update_by_team(byte *channels);
+long voice_players_same_team(long player_index, long local_player_index);
 void VOICE_ROUTING_CALLBACK voice_route_peers(const byte *unknown, unsigned long peers, word *words);
 void VOICE_ROUTING_CALLBACK voice_route_assign(long *budget, unsigned long *peers, unsigned long allowed,
 	unsigned long *direct, boolean through_chosen, long chosen_peer, boolean *more);

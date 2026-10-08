@@ -109,7 +109,7 @@ def run(t) -> None:
                             "unknown_00057080",
                             "unknown_00057360",
                             "unknown_000577d0",
-                            "unknown_00057960",
+                            "voice_channels_update_by_team",
                         )
                     },
                 )
@@ -750,3 +750,58 @@ def run(t) -> None:
                                     "unknown_00189760": request,
                                 },
                             )
+
+    # ---------- who hears whom, each frame, out of a game
+
+    for enabled, initialized in active():
+        for n in range(40):
+            local = random_.choice((1, 0x8001, random_.getrandbits(16), 0xF, 0))
+            talkers = random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16)))
+            voices = random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16)))
+            same = [random_.getrandbits(16) for _ in range(16)]
+            how = [[random_.choice((0, 0, 1, 2, 3)) for _ in range(16)] for _ in range(16)]
+
+            def hands_on(harness, arguments):
+                # how each player of this console hears the player is in the stack
+                channels_, player, listeners, count = arguments
+                return 0, (channels_, player, bytes(harness.mu.mem_read(listeners, 0xC0)), count)
+
+            t.check(
+                "voice_channels_update_by_team",
+                Buffer(random_.randbytes(0xC8)),
+                globals={**state(enabled, initialized), "game_voice_talkers": struct.pack("<H", talkers)},
+                externals={
+                    "game_voice_get_local_players": gives(local),
+                    "voice_has_remote_talker": lambda harness, arguments, voices=voices: (
+                        voices >> (arguments[1] & 15) & 1,
+                        (harness.normalize(arguments[0]), arguments[1]),
+                    ),
+                    "voice_players_same_team": lambda harness, arguments, same=same: same[arguments[0] & 15] >> (arguments[1] & 15) & 1,
+                    "unknown_00057d60": lambda harness, arguments, how=how: how[arguments[2] & 15][arguments[1] & 15] * (arguments[0] + 1),
+                    "unknown_00057eb0": hands_on,
+                },
+            )
+
+        for network in (3, 3, 3, 2, 1, 0):
+            for n in range(12):
+                player, local_player = random_.sample(range(16), 2)
+                data = bytearray(random_.randbytes(PLAYERS + 16 * PLAYER_SIZE))
+                mask = random_.choice((0xFFFF, 0xFFFF, 0xFFFF ^ (1 << player), 0xFFFF ^ (1 << local_player), random_.getrandbits(16)))
+                struct.pack_into("<I", data, MEMBERSHIP_PLAYERS, mask)
+                teams = [random_.choice((0, 0, 1, 0xFF)) for _ in range(16)]
+                if n % 3 == 0:
+                    teams[player] = teams[local_player]
+                for other in range(16):
+                    data[PLAYERS + other * PLAYER_SIZE + 0x124] = teams[other]
+                membership = Buffer(bytes(data))
+                t.check(
+                    "voice_players_same_team",
+                    player,
+                    local_player,
+                    globals={**state(enabled, initialized), "unknown_004c9888": network},
+                    externals={
+                        # the game does not see whether the session has players: it always has here
+                        "game_voice_get_membership": lambda harness, arguments, membership=membership: membership.address
+                    },
+                    extra=[membership],
+                )
