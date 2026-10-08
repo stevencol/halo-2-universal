@@ -1051,7 +1051,7 @@ def run(t) -> None:
                                 "voice_remove_remote_talkers",
                                 "game_voice_reset_players",
                                 "unknown_00054030",
-                                "unknown_00053e30",
+                                "game_voice_update_chosen_peer",
                                 "unknown_00056b70",
                                 "unknown_00055990",
                                 game_voice_unknown_00054ec0=network,
@@ -1162,3 +1162,105 @@ def run(t) -> None:
                         },
                         extra=[session, other],
                     )
+
+    # ---------- the console chosen for the voice
+
+    PEER_SIZE = 0x10C
+
+    def peers(count: int, local: int, least9c: int, leasta0: int) -> bytes:
+        """What the session says of who is in it: consoles that can be chosen
+        and that cannot, each for one reason or another."""
+        data = bytearray(random_.randbytes(MEMBERSHIP_SIZE))
+        struct.pack_into("<I", data, 8, count & 0xFFFFFFFF)
+        everyone = ((1 << count) - 1) & 0xFFFFFFFF if 0 <= count < 32 else 0
+        for peer in range(16):
+            at = peer * PEER_SIZE
+            good = random_.getrandbits(2) != 0
+            values = [
+                least9c + random_.randint(0, 5),
+                leasta0 + random_.randint(0, 9),
+                random_.choice((0, 1, 2)),
+                everyone,
+            ]
+            if not good:
+                which = random_.randrange(4)
+                values[which] = (least9c - 1, leasta0 - 1, 3, everyone ^ 1)[which]
+            struct.pack_into("<4i", data, at + 0x9C, values[0], values[1], values[2], struct.unpack("<i", struct.pack("<I", values[3]))[0])
+        return bytes(data)
+
+    for enabled, initialized in active():
+        for n in range(60):
+            count = random_.choice((0, 1, 2, 4, 8, 16, -1))
+            local = random_.choice((0, 0, 1, 3, NONE))
+            host = random_.choice((local, local, local, 0, 2, NONE))
+            least9c, leasta0 = random_.randint(1, 50), random_.randint(1, 50)
+            membership = Buffer(peers(count, local, least9c, leasta0))
+            session = Buffer(random_.randbytes(0x10))
+            has_session = random_.getrandbits(3) != 0
+            has_membership = random_.getrandbits(3) != 0
+            now = random_.choice((NONE, 0, 1, 2, 3))
+
+            def get_session(harness, arguments, session=session, has_session=has_session):
+                # the place for the session is in the stack
+                if has_session:
+                    harness.mu.mem_write(arguments[0], struct.pack("<I", session.address))
+                return has_session, ()
+
+            t.check(
+                "game_voice_update_chosen_peer",
+                globals={
+                    **state(enabled, initialized),
+                    "unknown_004c9878": 0x55,
+                    "unknown_004ce120": leasta0,
+                    "unknown_004ce124": least9c,
+                },
+                externals={
+                    "game_voice_get_session": get_session,
+                    "game_voice_get_membership": gives_buffer(membership, has_membership),
+                    "game_voice_get_local_peer": gives(local),
+                    "game_voice_session_unknown40": gives(host),
+                    "game_voice_unknown_00054ef0": gives(random_.getrandbits(1)),
+                    "unknown_0005b0b0": gives(now),
+                    "unknown_0005c6d0": lambda harness, arguments: 0,
+                },
+                extra=[membership, session],
+            )
+
+        for n in range(40):
+            peer = random_.choice((0, 1, 5, 15))
+            local = random_.choice((0, 0xFFFF, 1 << random_.randrange(16), random_.getrandbits(16)))
+            # of each player: its flags, the third flag, its number and its first word
+            flags = [random_.choice((0, 0, 0, 2, 0xFFFD)) for _ in range(16)]
+            third = [random_.choice((0, 0, 0, 1)) for _ in range(16)]
+            numbers = [random_.choice((0, 0x55, 0x80000000)) for _ in range(16)]
+            first_words = [random_.choice((0, 1 << peer, 0xFFFF ^ (1 << peer), 0xFFFF)) for _ in range(16)]
+            membership = Buffer(random_.randbytes(0x10))
+
+            def words(harness, arguments, first_words=first_words):
+                # the two numbers are in the stack; the number of the player says which player
+                player = sum(1 for call in harness._calls if call[0] == "unknown_00056590")
+                harness.mu.mem_write(arguments[1], struct.pack("<2H", first_words[player % 16], 0x1234))
+                return 0, (arguments[0], harness.normalize(arguments[2]))
+
+            t.check(
+                "game_voice_unknown_00054890",
+                peer,
+                globals={
+                    **state(enabled, initialized),
+                    "unknown_005259b8": GlobalRange(0x48),
+                    "unknown_00527104": GlobalRange(4),
+                },
+                externals={
+                    "game_voice_get_membership": gives_buffer(membership, random_.getrandbits(3) != 0),
+                    "game_voice_unknown_000549d0": gives(random_.choice((0, 0, 0, 1))),
+                    "game_voice_get_local_players": gives(local),
+                    "game_voice_player_flags": lambda harness, arguments, flags=flags: flags[arguments[0] & 15],
+                    "game_voice_player_unknown2": lambda harness, arguments, third=third: third[arguments[0] & 15],
+                    "unknown_00055960": lambda harness, arguments, numbers=numbers: (
+                        numbers[arguments[1] & 15],
+                        (harness.normalize(arguments[0]), arguments[1]),
+                    ),
+                    "unknown_00056590": words,
+                },
+                extra=[membership],
+            )

@@ -108,6 +108,15 @@ enum
 	GAME_VOICE_MEMBERSHIP_PEER_COUNT_OFFSET= 0x8,
 	GAME_VOICE_MEMBERSHIP_PEER_ARRAY_OFFSET= 0xC,
 
+	/* of each console, in what the session says of who is in it: two
+	numbers that have to be no less than unknown_004ce124 and
+	unknown_004ce120, a number that is 3 for a console that cannot be chosen,
+	and a bit for each console that it is joined to */
+	GAME_VOICE_MEMBERSHIP_PEER_UNKNOWN9C_OFFSET= 0x9C,
+	GAME_VOICE_MEMBERSHIP_PEER_UNKNOWNA0_OFFSET= 0xA0,
+	GAME_VOICE_MEMBERSHIP_PEER_UNKNOWNA4_OFFSET= 0xA4,
+	_game_voice_peer_unknownA4_3= 3,
+
 	/* of a text that game_voice_text_printf writes */
 	GAME_VOICE_TEXT_SIZE= 0x80,
 
@@ -272,6 +281,8 @@ void game_voice_update_profile(long controller_index);
 void game_voice_update(void);
 void GAME_VOICE_CALLBACK game_voice_local_data_ready(long controller_index, void *data, unsigned long size);
 unsigned long game_voice_unknown_00053c70(void);
+void game_voice_update_chosen_peer(void);
+boolean game_voice_unknown_00054890(long peer);
 boolean game_voice_unknown_00054c70(void);
 long game_voice_unknown_00054cc0(void);
 unsigned long game_voice_get_remote_talkers(void);
@@ -288,6 +299,8 @@ extern long unknown_004c9888;
 extern long game_voice_session_source;
 extern long unknown_004c9878;
 extern long unknown_004c9898;
+extern long unknown_004ce120;
+extern long unknown_004ce124;
 extern byte unknown_005259b8[UNKNOWN_005259B8_SIZE];
 extern byte unknown_00527104[UNKNOWN_00527104_SIZE];
 extern byte unknown_00527108[UNKNOWN_00527108_SIZE];

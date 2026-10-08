@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — La consola elegida para la voz de la partida
+
+Dos funciones en `networking/game_voice.c`, de 536 bytes entre las dos. De 1018 funciones se pasa a
+1020, el 9,05 % de las del juego (el 5,803 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_voice_update_chosen_peer` | `0x00053e30` | `networking/game_voice.c` |
+| `game_voice_unknown_00054890` | `0x00054890` | `networking/game_voice.c` |
+
+`game_voice_update_chosen_peer` era `unknown_00053e30`, una de las tres que
+`game_voice_update` (hito 275) dejó apuntadas.
+
+### Lo que se sabe
+
+- La consola de `0x004c9878` es **la elegida para la voz**: por lo que se
+  ve, la que reparte la voz entre las demás. La consola que lleva la sesión
+  la elige cada fotograma: de las otras, la de mayor «segundo número» entre
+  las que se pueden elegir, llegan a dos mínimos (`0x004ce120` y
+  `0x004ce124`) y están unidas a todas las consolas de la partida. Si no
+  hay ninguna, se queda ella misma, salvo en un caso. Luego se lo dice a la
+  sesión (`0x0005c6d0`) si esta tenía otra.
+- Las demás consolas no eligen: toman la que dice la sesión (`0x0005b0b0`).
+- El número de `0xa8` de cada consola (hito 272) es un bit por cada consola
+  a la que está unida.
+- `game_voice_unknown_00054890` dice si a una consola le llega la voz de
+  esta: siempre si esta es la elegida, y si no, cuando lo que dice algún
+  jugador suyo va dirigido a ella.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- Las mutaciones de los hitos 266 a 276 corren aparte; su resultado irá en
+  una entrada posterior.
+
 ## 2026-10-08 — La voz de cada fotograma, y lo que dice un jugador de esta consola
 
 Tres funciones en `networking/game_voice.c`, de 573 bytes entre las tres. De 1015 funciones se pasa a

@@ -52,11 +52,14 @@ boolean unknown_00068250(void);
 /* 0x000696d0: something of what unknown_004cf770 has of a player */
 boolean unknown_000696d0(const byte *unknown);
 
-/* 0x00054590, 0x00054030, 0x00053e30: of this file: three things that it
-does each frame */
+/* 0x00054590, 0x00054030: of this file: two things that it does each frame */
 void unknown_00054590(void);
 void unknown_00054030(void);
-void unknown_00053e30(void);
+
+/* 0x0005b0b0, 0x0005c6d0: the console that a session has chosen for
+something, and choosing it */
+long unknown_0005b0b0(byte *session);
+void unknown_0005c6d0(byte *session, long peer);
 
 /* 0x00056b70, 0x00055990: what unknown_00527108 and unknown_005259b8 do
 each frame */
@@ -116,8 +119,9 @@ long unknown_004c9888;
 /* 0x004c988c: which of two things gives the session of the network game */
 long game_voice_session_source;
 
-/* 0x004c9878: a console of the session; NONE if none. With no voice it
-counts as 0 */
+/* 0x004c9878: the console of the session that is chosen for the voice
+(game_voice_update_chosen_peer); NONE if none. With no voice it counts as
+0 */
 long unknown_004c9878;
 
 /* 0x005259b8, 0x00527104, 0x00527108: three things that the voice hands
@@ -125,6 +129,11 @@ what the players say to */
 byte unknown_005259b8[UNKNOWN_005259B8_SIZE];
 byte unknown_00527104[UNKNOWN_00527104_SIZE];
 byte unknown_00527108[UNKNOWN_00527108_SIZE];
+
+/* 0x004ce120, 0x004ce124: the least that two numbers of a console have to
+be for it to be chosen */
+long unknown_004ce120;
+long unknown_004ce124;
 
 /* 0x004c9898, 0x004c989c: of the players that talk, emptied with the
 players: a number, and 0xc0 bytes (twelve for each of sixteen players, it
@@ -821,8 +830,8 @@ long game_voice_session_unknown40(
 	return NONE;
 }
 
-/* 0x00054ac0: a number that the session has of this console; 0 with no
-session */
+/* 0x00054ac0: a bit for each console that this one is joined to, as the
+session has it; 0 with no session */
 long game_voice_local_peer_unknownA8(
 	void)
 {
@@ -1403,7 +1412,7 @@ void game_voice_update(
 				return;
 			}
 			unknown_00054030();
-			unknown_00053e30();
+			game_voice_update_chosen_peer();
 			unknown_00056b70(unknown_00527108);
 			if (unknown_005259b8[0])
 			{
@@ -1493,6 +1502,119 @@ unsigned long game_voice_unknown_00053c70(
 					peer*GAME_VOICE_MEMBERSHIP_PEER_SIZE)!=NONE)
 				{
 					result|= 1u<<peer;
+				}
+			}
+		}
+	}
+
+	return result;
+}
+
+/* 0x00053e30: says which console of the session is chosen for the voice
+(unknown_004c9878). A console that does not run the session takes the one
+that the session has. The one that runs it chooses: of the others, the one
+with the greatest second number among those that can be chosen, have their
+two numbers no less than the least and are joined to every console; if
+there is none, this one, unless game_voice_unknown_00054ef0 says so; and
+tells the session if it had another */
+void game_voice_update_chosen_peer(
+	void)
+{
+	byte *session;
+
+	unknown_004c9878= NONE;
+	if (game_voice_active())
+	{
+		session= NULL;
+		if (game_voice_get_session(&session))
+		{
+			const byte *membership= game_voice_get_membership();
+			long local_peer= game_voice_get_local_peer();
+			long host_peer= game_voice_session_unknown40();
+
+			if (membership && local_peer!=NONE && host_peer!=NONE)
+			{
+				if (local_peer==host_peer)
+				{
+					long count= *(const long *)(membership+GAME_VOICE_MEMBERSHIP_PEER_COUNT_OFFSET);
+					long chosen= NONE;
+					long greatest= 0;
+					long peer;
+
+					for (peer= 0; peer<count; peer++)
+					{
+						const byte *entry= membership+peer*GAME_VOICE_MEMBERSHIP_PEER_SIZE;
+						long value= *(const long *)(entry+GAME_VOICE_MEMBERSHIP_PEER_UNKNOWNA0_OFFSET);
+
+						if (local_peer!=peer &&
+							*(const long *)(entry+GAME_VOICE_MEMBERSHIP_PEER_UNKNOWNA4_OFFSET)!=_game_voice_peer_unknownA4_3 &&
+							*(const long *)(entry+GAME_VOICE_MEMBERSHIP_PEER_UNKNOWN9C_OFFSET)>=unknown_004ce124 &&
+							value>=unknown_004ce120 &&
+							*(const long *)(entry+GAME_VOICE_MEMBERSHIP_PEER_UNKNOWNA8_OFFSET)==(1<<count)-1 &&
+							value>greatest)
+						{
+							chosen= peer;
+							greatest= value;
+						}
+					}
+					if (chosen==NONE && !game_voice_unknown_00054ef0())
+					{
+						chosen= local_peer;
+					}
+					if (unknown_0005b0b0(session)!=chosen)
+					{
+						unknown_0005c6d0(session, chosen);
+					}
+					unknown_004c9878= chosen;
+				}
+				else
+				{
+					unknown_004c9878= unknown_0005b0b0(session);
+				}
+			}
+		}
+	}
+}
+
+/* 0x00054890: whether this console is the one chosen for the voice, or
+what some player of it says goes to a console: one that has neither the
+second flag nor the third, and whose number of unknown_005259b8 gets from
+unknown_00527104 the bit of the console. FALSE with no session */
+boolean game_voice_unknown_00054890(
+	long peer)
+{
+	boolean result= FALSE;
+
+	if (game_voice_active() && game_voice_get_membership())
+	{
+		unsigned long local_players;
+		long player_index;
+
+		if (game_voice_unknown_000549d0())
+		{
+			return TRUE;
+		}
+		local_players= game_voice_get_local_players();
+		for (player_index= 0; player_index<MAXIMUM_GAME_VOICE_PLAYERS; player_index++)
+		{
+			if ((local_players&(1u<<player_index)) &&
+				!(game_voice_active() &&
+				((game_voice_player_flags(player_index)>>_game_voice_player_unknown1_bit)&1)) &&
+				!game_voice_player_unknown2(player_index))
+			{
+				long unknown= unknown_00055960(unknown_005259b8, player_index);
+
+				if (unknown)
+				{
+					word words[2];
+
+					words[0]= 0;
+					words[1]= 0;
+					unknown_00056590(unknown, words, unknown_00527104);
+					if (words[0]&(1u<<peer))
+					{
+						return TRUE;
+					}
 				}
 			}
 		}
