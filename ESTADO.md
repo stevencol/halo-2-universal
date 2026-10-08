@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 276.
+**Última actualización:** 2026-10-08, al terminar el hito 277.
 
 ## Dónde estamos
 
-- **1020 funciones descompiladas de 11.265: el 9,05 % del juego** (el
-  5,803 % de los bytes de código).
-- Las 1020 están comprobadas contra el ejecutable original: las 940 del
+- **1022 funciones descompiladas de 11.265: el 9,07 % del juego** (el
+  5,836 % de los bytes de código).
+- Las 1022 están comprobadas contra el ejecutable original: las 940 del
   hito 265 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the choosing of the console of the voice* (ver `git log`).
+- Último hito: *Decompile each player of the session, each frame* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 525 funciones apuntadas pero sin descompilar (las que el código
-  llama); 437 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 524 funciones apuntadas pero sin descompilar (las que el código
+  llama); 436 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -140,7 +140,7 @@ Módulos (funciones hechas / archivo):
       máscaras y los mensajes, la sesión, sus consolas y sus jugadores,
       quién puede hablar y quién habla, y parte de lo de cada
       fotograma; era `sound\sound_memory.c`. Va de `0x00053290` a
-      `0x00055060`: faltan 3 funciones, las más grandes)
+      `0x00055060`: falta una función, `0x00054590`)
 - [x] Preferencias guardadas — `main\global_preferences.c` (15: completo)
 - [ ] Juego y tabla de sistemas — `game\game.c` (25): la tabla, lo que la
       recorre, las opciones (por defecto, validar, comparar, los jugadores
@@ -210,8 +210,7 @@ Módulos (funciones hechas / archivo):
 - [x] ~~El fondo de la voz~~ (hito 263; el archivo es `game_voice.c`
       desde el hito 269).
 - [x] ~~`voice.c`~~ (hito 268): completo.
-- [ ] **El resto de `game_voice.c`**: `0x00054030`, `0x000541a0` y
-      `0x00054590` (3 funciones, las más grandes; casi todas empiezan mirando
+- [ ] **El resto de `game_voice.c`**: `0x00054590` (una función; casi todas empiezan mirando
       `game_voice_enabled` y `voice_globals.initialized`), y lo que sigue
       a `voice.c` desde `0x00055960`.
 - [ ] **Los fondos de los objetos**: `0x000bc280`, `0x000bc380`,

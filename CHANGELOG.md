@@ -2,6 +2,56 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Cada jugador, cada fotograma: quién tiene voz y a quién no quiere oír
+
+Dos funciones en `networking/game_voice.c`, de 983 bytes entre las dos. De 1020 funciones se pasa a
+1022, el 9,07 % de las del juego (el 5,836 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_voice_update_players` | `0x00054030` | `networking/game_voice.c` |
+| `game_voice_update_local_player` | `0x000541a0` | `networking/game_voice.c` |
+
+Eran `unknown_00054030` y `unknown_000541a0`. Con ellas se entienden los
+flags y los números de 16 bits que los hitos 270 a 274 dejaron sin nombre.
+
+### Cambiado
+
+- Los tres flags de la voz de un jugador (`0x004c9988`) son: **puede
+  hablar**, **no quiere voz** (el ajuste 3 de su mando) y **no se le
+  permite** (lo que dice `0x001906da` de su cuenta). Pasan a llamarse así
+  ellos y las funciones que preguntan por ellos:
+  `game_voice_player_voice_off`, `game_voice_player_not_allowed` y
+  `game_voice_player_can_be_heard` (era `game_voice_unknown_00053b40`).
+- El número de 16 bits de cada jugador en `0x004c9968` es **a quién no
+  quiere oír**: `game_voice_player_mutes`, y
+  `game_voice_player_has_muted` la función que lo pregunta.
+- `0x004c9966` no es solo de los jugadores de otras consolas: es un bit por
+  cada jugador con voz (`game_voice_talkers`). Uno de esta consola lo tiene
+  si puede hablar.
+
+### Lo que se sabe
+
+- Cada fotograma se recorren los 16 jugadores. Al que no está en la sesión
+  se le quita la voz en la biblioteca y su bit. Al de otra consola se le da
+  o se le quita la voz (hito 274). Al de esta consola se le pone el modo de
+  su mando (el 2 si quiere y puede tener voz, el 0 si no) y sus tres flags.
+- Cada mando tiene una lista de hasta 250 jugadores a los que su jugador
+  no quiere oír (`0x004c99d4`, 16 bytes cada uno), y cuántos hay
+  (`0x004cd854`). A un jugador se le reconoce por sus doce primeros bytes,
+  que son los mismos con los que empieza cada jugador de la sesión. De ahí
+  sale el número de «a quién no quiere oír».
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- `game_voice_update_local_player` sin voz y con lista: el juego compara
+  con los jugadores de una sesión que no hay y se para.
+- Las mutaciones de los hitos 266 a 277 corren aparte; su resultado irá en
+  una entrada posterior.
+
 ## 2026-10-08 — La consola elegida para la voz de la partida
 
 Dos funciones en `networking/game_voice.c`, de 536 bytes entre las dos. De 1018 funciones se pasa a

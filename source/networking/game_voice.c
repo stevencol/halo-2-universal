@@ -52,9 +52,8 @@ boolean unknown_00068250(void);
 /* 0x000696d0: something of what unknown_004cf770 has of a player */
 boolean unknown_000696d0(const byte *unknown);
 
-/* 0x00054590, 0x00054030: of this file: two things that it does each frame */
+/* 0x00054590: of this file: something that it does each frame */
 void unknown_00054590(void);
-void unknown_00054030(void);
 
 /* 0x0005b0b0, 0x0005c6d0: the console that a session has chosen for
 something, and choosing it */
@@ -109,8 +108,9 @@ long game_voice_kind;
 /* 0x004c99b8: the game has to do with the voice at all */
 boolean game_voice_enabled;
 
-/* 0x004c9966: a bit for each player of another console that has a voice */
-word game_voice_remote_talkers;
+/* 0x004c9966: a bit for each player that has a voice: one of this console,
+if it can talk; one of another, if the library has given it a voice */
+word game_voice_talkers;
 
 /* 0x004c9888: 0 when what a player of another console said is not given to
 the library */
@@ -134,6 +134,11 @@ byte unknown_00527108[UNKNOWN_00527108_SIZE];
 be for it to be chosen */
 long unknown_004ce120;
 long unknown_004ce124;
+
+/* 0x004c99d4, 0x004cd854: the players that the player of each gamepad wants
+not to hear, and how many: NONE if they are not known */
+byte game_voice_muted_players[MAXIMUM_VOICE_CONTROLLERS][MAXIMUM_GAME_VOICE_MUTED_PLAYERS][GAME_VOICE_MUTED_PLAYER_SIZE];
+long game_voice_muted_player_counts[MAXIMUM_VOICE_CONTROLLERS];
 
 /* 0x004c9898, 0x004c989c: of the players that talk, emptied with the
 players: a number, and 0xc0 bytes (twelve for each of sixteen players, it
@@ -162,8 +167,9 @@ word game_voice_player_flag_words[MAXIMUM_GAME_VOICE_PLAYERS];
 is not known */
 byte unknown_00525a00[4];
 
-/* 0x004c9968: for each player, a bit for each of the others */
-word unknown_004c9968[MAXIMUM_GAME_VOICE_PLAYERS];
+/* 0x004c9968: for each player, a bit for each of the others that it wants
+not to hear */
+word game_voice_player_mutes[MAXIMUM_GAME_VOICE_PLAYERS];
 
 /* 0x004c99a8: what each controller's player wants of the voice */
 long game_voice_controller_settings[MAXIMUM_VOICE_CONTROLLERS];
@@ -385,7 +391,7 @@ void game_voice_stop(
 	if (game_voice_active())
 	{
 		voice_dispose(&voice_globals);
-		game_voice_remote_talkers= 0;
+		game_voice_talkers= 0;
 	}
 }
 
@@ -437,8 +443,8 @@ void game_voice_set_controller_mask(
 	}
 }
 
-/* 0x00053850: whether a player has the bit of another */
-boolean game_voice_unknown_00053850(
+/* 0x00053850: whether a player wants not to hear another */
+boolean game_voice_player_has_muted(
 	long player_index,
 	long other_player_index)
 {
@@ -446,7 +452,7 @@ boolean game_voice_unknown_00053850(
 
 	if (game_voice_active())
 	{
-		result= ((1<<other_player_index)&unknown_004c9968[player_index])!=0;
+		result= ((1<<other_player_index)&game_voice_player_mutes[player_index])!=0;
 	}
 
 	return result;
@@ -570,17 +576,17 @@ long game_voice_unknown_00053b00(
 	return result;
 }
 
-/* 0x00053b40: whether a player has the first flag and not the second */
-boolean game_voice_unknown_00053b40(
+/* 0x00053b40: whether a player can talk and wants a voice */
+boolean game_voice_player_can_be_heard(
 	long player_index)
 {
 	boolean result= FALSE;
 
 	if (game_voice_active())
 	{
-		if ((game_voice_player_flags(player_index)&(1u<<_game_voice_player_unknown0_bit)) &&
+		if ((game_voice_player_flags(player_index)&(1u<<_game_voice_player_can_talk_bit)) &&
 			!(game_voice_active() &&
-			((game_voice_player_flags(player_index)>>_game_voice_player_unknown1_bit)&1)))
+			((game_voice_player_flags(player_index)>>_game_voice_player_voice_off_bit)&1)))
 		{
 			result= TRUE;
 		}
@@ -590,28 +596,28 @@ boolean game_voice_unknown_00053b40(
 }
 
 /* 0x00053b90 */
-boolean game_voice_player_unknown1(
+boolean game_voice_player_voice_off(
 	long player_index)
 {
 	boolean result= FALSE;
 
 	if (game_voice_active())
 	{
-		result= (game_voice_player_flags(player_index)>>_game_voice_player_unknown1_bit)&1;
+		result= (game_voice_player_flags(player_index)>>_game_voice_player_voice_off_bit)&1;
 	}
 
 	return result;
 }
 
 /* 0x00053bb0 */
-boolean game_voice_player_unknown2(
+boolean game_voice_player_not_allowed(
 	long player_index)
 {
 	boolean result= FALSE;
 
 	if (game_voice_active())
 	{
-		result= (game_voice_player_flags(player_index)>>_game_voice_player_unknown2_bit)&1;
+		result= (game_voice_player_flags(player_index)>>_game_voice_player_not_allowed_bit)&1;
 	}
 
 	return result;
@@ -987,12 +993,11 @@ long game_voice_unknown_00054cc0(
 	return 0;
 }
 
-/* 0x00054d00: a bit for each player of another console that has a voice; 0
-with no voice */
-unsigned long game_voice_get_remote_talkers(
+/* 0x00054d00: a bit for each player that has a voice; 0 with no voice */
+unsigned long game_voice_get_talkers(
 	void)
 {
-	return game_voice_active() ? game_voice_remote_talkers : 0;
+	return game_voice_active() ? game_voice_talkers : 0;
 }
 
 /* 0x000536b0: whether the player of a controller can talk: the controller
@@ -1132,7 +1137,7 @@ unsigned long game_voice_controller_player_words(
 
 		if (player_index!=NONE)
 		{
-			low= unknown_004c9968[player_index];
+			low= game_voice_player_mutes[player_index];
 			high= game_voice_player_flag_words[player_index];
 		}
 		result= ((unsigned long)high<<16)|low;
@@ -1220,16 +1225,16 @@ boolean game_voice_unknown_00053d40(
 void game_voice_reset_players(
 	void)
 {
-	game_voice_remote_talkers= 0;
+	game_voice_talkers= 0;
 	unknown_004c9898= 0;
 	memset(unknown_004c989c, 0, sizeof(unknown_004c989c));
-	memset(unknown_004c9968, 0, sizeof(unknown_004c9968));
+	memset(game_voice_player_mutes, 0, sizeof(game_voice_player_mutes));
 	memset(game_voice_player_flag_words, 0, sizeof(game_voice_player_flag_words));
 }
 
 /* 0x00054410: takes what the session says of the voice of a player, and has
 the library give the player a voice or take it away, by what
-game_voice_unknown_00053b40 says. The game does not see whether there is a
+game_voice_player_can_be_heard says. The game does not see whether there is a
 session, and has game_voice_get_player_array and
 game_voice_has_remote_talker in the function itself */
 void game_voice_update_player(
@@ -1242,9 +1247,9 @@ void game_voice_update_player(
 	boolean has_voice= FALSE;
 	boolean result;
 
-	unknown_004c9968[player_index]= *(const word *)(player+GAME_VOICE_MEMBERSHIP_PLAYER_UNKNOWN138_OFFSET);
+	game_voice_player_mutes[player_index]= *(const word *)(player+GAME_VOICE_MEMBERSHIP_PLAYER_MUTES_OFFSET);
 	game_voice_player_flag_words[player_index]= *(const word *)(player+GAME_VOICE_MEMBERSHIP_PLAYER_FLAGS_OFFSET);
-	wanted= game_voice_unknown_00053b40(player_index);
+	wanted= game_voice_player_can_be_heard(player_index);
 	if (game_voice_active())
 	{
 		has_voice= voice_has_remote_talker(&voice_globals, player_index);
@@ -1261,11 +1266,11 @@ void game_voice_update_player(
 	}
 	if (result)
 	{
-		game_voice_remote_talkers|= (word)(1u<<player_index);
+		game_voice_talkers|= (word)(1u<<player_index);
 	}
 	else
 	{
-		game_voice_remote_talkers&= (word)~(1u<<player_index);
+		game_voice_talkers&= (word)~(1u<<player_index);
 	}
 }
 
@@ -1411,7 +1416,7 @@ void game_voice_update(
 				game_voice_reset_players();
 				return;
 			}
-			unknown_00054030();
+			game_voice_update_players();
 			game_voice_update_chosen_peer();
 			unknown_00056b70(unknown_00527108);
 			if (unknown_005259b8[0])
@@ -1426,7 +1431,7 @@ void game_voice_update(
 said (voice_callback_data_ready). It goes on its way if the controller has a
 player, the player has neither the second flag nor the third, unknown_005259b8
 has a number for the player and unknown_00527104 gives something for that
-number. The game has game_voice_player_unknown1 in the function itself */
+number. The game has game_voice_player_voice_off in the function itself */
 void GAME_VOICE_CALLBACK game_voice_local_data_ready(
 	long controller_index,
 	void *data,
@@ -1438,8 +1443,8 @@ void GAME_VOICE_CALLBACK game_voice_local_data_ready(
 
 		if (player_index!=NONE &&
 			!(game_voice_active() &&
-			((game_voice_player_flags(player_index)>>_game_voice_player_unknown1_bit)&1)) &&
-			!game_voice_player_unknown2(player_index))
+			((game_voice_player_flags(player_index)>>_game_voice_player_voice_off_bit)&1)) &&
+			!game_voice_player_not_allowed(player_index))
 		{
 			long unknown= unknown_00055960(unknown_005259b8, player_index);
 
@@ -1599,8 +1604,8 @@ boolean game_voice_unknown_00054890(
 		{
 			if ((local_players&(1u<<player_index)) &&
 				!(game_voice_active() &&
-				((game_voice_player_flags(player_index)>>_game_voice_player_unknown1_bit)&1)) &&
-				!game_voice_player_unknown2(player_index))
+				((game_voice_player_flags(player_index)>>_game_voice_player_voice_off_bit)&1)) &&
+				!game_voice_player_not_allowed(player_index))
 			{
 				long unknown= unknown_00055960(unknown_005259b8, player_index);
 
@@ -1621,4 +1626,194 @@ boolean game_voice_unknown_00054890(
 	}
 
 	return result;
+}
+
+/* 0x00054030: each frame, each of the sixteen players. One that the session
+does not have loses the voice that the library gave it, and its bit. One of
+another console: game_voice_update_player. One of this console: the same
+loss, and game_voice_update_local_player. The game has
+game_voice_get_players in the function itself, and where a player loses its
+voice, game_voice_has_remote_talker and voice_remote_talker_set */
+void game_voice_update_players(
+	void)
+{
+	if (game_voice_active() && game_voice_get_membership())
+	{
+		unsigned long local_players= game_voice_get_local_players();
+		unsigned long players= 0;
+		long player_index;
+
+		if (game_voice_active())
+		{
+			const byte *membership= game_voice_get_membership();
+
+			if (membership)
+			{
+				players= *(const unsigned long *)(membership+GAME_VOICE_MEMBERSHIP_PLAYERS_OFFSET);
+			}
+		}
+		for (player_index= 0; player_index<MAXIMUM_GAME_VOICE_PLAYERS; player_index++)
+		{
+			unsigned long bit= 1u<<player_index;
+
+			if (players&bit)
+			{
+				if (local_players&bit)
+				{
+					if (game_voice_active() && voice_has_remote_talker(&voice_globals, player_index))
+					{
+						voice_remote_talker_set(&voice_globals, player_index, FALSE);
+					}
+					game_voice_update_local_player(player_index);
+				}
+				else
+				{
+					game_voice_update_player(player_index);
+				}
+			}
+			else
+			{
+				if (game_voice_active() && voice_has_remote_talker(&voice_globals, player_index))
+				{
+					voice_remote_talker_set(&voice_globals, player_index, FALSE);
+				}
+				game_voice_talkers&= (word)~bit;
+			}
+		}
+	}
+}
+
+/* 0x000541a0: each frame, a player of this console. By whether its
+controller can talk, whether its player wants a voice and whether it is
+allowed one, sets the mode of the controller (the third one for a voice, the
+first for none) and the three flags of the player. Then, if the list of
+those that the player wants not to hear is known, says which of the players
+of other consoles are in it; has what the game keeps of the profile brought
+up to date; and gives the player its bit, or takes it away */
+void GAME_VOICE_CALLBACK game_voice_update_local_player(
+	long player_index)
+{
+	long controller_index= game_voice_player_controller(player_index);
+
+	if (controller_index!=NONE)
+	{
+		const byte *players= NULL;
+		boolean voice_off;
+		boolean allowed= TRUE;
+		boolean can_talk;
+		long mode;
+		const byte *profile;
+		unsigned long flags;
+		word player_flags;
+
+		if (game_voice_active())
+		{
+			const byte *membership= game_voice_get_membership();
+
+			if (membership)
+			{
+				players= membership+GAME_VOICE_MEMBERSHIP_PLAYER_ARRAY_OFFSET;
+			}
+		}
+		voice_off= game_voice_controller_settings[controller_index]==_game_voice_controller_setting3;
+		mode= voice_globals.initialized ? voice_globals.controller_modes[controller_index] : 0;
+		profile= unknown_0054e8e0[controller_index];
+		memcpy(&flags, profile+UNKNOWN_0054E8E0_FLAGS_OFFSET, sizeof(flags));
+		if ((flags>>_unknown_0054e8e0_unknown5_bit)&1)
+		{
+			allowed= unknown_001906da(controller_index);
+		}
+		can_talk= game_voice_controller_can_talk(controller_index) && !voice_off && allowed;
+
+		player_flags= game_voice_player_flag_words[player_index];
+		if (!voice_off && allowed)
+		{
+			if (mode==_voice_mode_unknown0)
+			{
+				game_voice_set_controller_mode(controller_index, _voice_mode_unknown2);
+				player_flags= game_voice_player_flag_words[player_index];
+			}
+			player_flags&= (word)~(1u<<_game_voice_player_voice_off_bit);
+		}
+		else
+		{
+			if (mode==_voice_mode_unknown2)
+			{
+				game_voice_set_controller_mode(controller_index, _voice_mode_unknown0);
+				player_flags= game_voice_player_flag_words[player_index];
+			}
+			if (voice_off)
+			{
+				player_flags|= 1u<<_game_voice_player_voice_off_bit;
+			}
+			else
+			{
+				player_flags&= (word)~(1u<<_game_voice_player_voice_off_bit);
+			}
+		}
+		if (can_talk)
+		{
+			player_flags|= 1u<<_game_voice_player_can_talk_bit;
+		}
+		else
+		{
+			player_flags&= (word)~(1u<<_game_voice_player_can_talk_bit);
+		}
+		if (!allowed)
+		{
+			player_flags|= 1u<<_game_voice_player_not_allowed_bit;
+		}
+		else
+		{
+			player_flags&= (word)~(1u<<_game_voice_player_not_allowed_bit);
+		}
+		game_voice_player_flag_words[player_index]= player_flags;
+
+		memcpy(&flags, profile+UNKNOWN_0054E8E0_FLAGS_OFFSET, sizeof(flags));
+		if (((flags>>_unknown_0054e8e0_unknown5_bit)&1) && game_voice_muted_player_counts[controller_index]!=NONE)
+		{
+			long count= game_voice_muted_player_counts[controller_index];
+			unsigned long session_players= game_voice_get_players();
+			unsigned long local_players= game_voice_get_local_players();
+			long other_index;
+
+			for (other_index= 0; other_index<MAXIMUM_GAME_VOICE_PLAYERS; other_index++)
+			{
+				unsigned long bit= 1u<<other_index;
+
+				if ((session_players&bit) && !(local_players&bit))
+				{
+					const byte *other= players+other_index*GAME_VOICE_MEMBERSHIP_PLAYER_SIZE+
+						GAME_VOICE_MEMBERSHIP_PLAYER_IDENTIFIER_OFFSET;
+					boolean muted= FALSE;
+					long index;
+
+					for (index= 0; index<count; index++)
+					{
+						if (!memcmp(game_voice_muted_players[controller_index][index], other,
+							GAME_VOICE_PLAYER_IDENTIFIER_SIZE))
+						{
+							muted= TRUE;
+							break;
+						}
+					}
+					if (muted)
+					{
+						game_voice_player_mutes[player_index]|= (word)bit;
+					}
+					else
+					{
+						game_voice_player_mutes[player_index]&= (word)~bit;
+					}
+				}
+			}
+		}
+		game_voice_update_profile(controller_index);
+		if (can_talk)
+		{
+			game_voice_talkers|= (word)(1u<<player_index);
+			return;
+		}
+	}
+	game_voice_talkers&= (word)~(1u<<player_index);
 }

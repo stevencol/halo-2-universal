@@ -117,6 +117,13 @@ enum
 	GAME_VOICE_MEMBERSHIP_PEER_UNKNOWNA4_OFFSET= 0xA4,
 	_game_voice_peer_unknownA4_3= 3,
 
+	/* the players that the player of each gamepad wants not to hear: up to
+	250, of 16 bytes each. A player is known by the first twelve */
+	MAXIMUM_GAME_VOICE_MUTED_PLAYERS= 250,
+	GAME_VOICE_MUTED_PLAYER_SIZE= 0x10,
+	GAME_VOICE_PLAYER_IDENTIFIER_SIZE= 0xC,
+	GAME_VOICE_MEMBERSHIP_PLAYER_IDENTIFIER_OFFSET= 0,
+
 	/* of a text that game_voice_text_printf writes */
 	GAME_VOICE_TEXT_SIZE= 0x80,
 
@@ -126,13 +133,15 @@ enum
 	_unknown_0054e8e0_unknown5_bit= 5
 };
 
-/* what the game knows of the voice of a player (0x004c9988): what each
-flag is is not known */
+/* what the game knows of the voice of a player (0x004c9988): its player
+can talk; it wants no voice (the third setting); and it is not allowed to
+talk. The names are guesses, by what game_voice_update_local_player sets
+them with */
 enum
 {
-	_game_voice_player_unknown0_bit,
-	_game_voice_player_unknown1_bit,
-	_game_voice_player_unknown2_bit
+	_game_voice_player_can_talk_bit,
+	_game_voice_player_voice_off_bit,
+	_game_voice_player_not_allowed_bit
 };
 
 /* which of two things gives the session of the network game (0x004c988c) */
@@ -165,7 +174,7 @@ enum
 	GAME_VOICE_SESSION_UNKNOWN40_OFFSET= 0x40,
 	/* the last of a player: its bits of the others, and what the game knows
 	of its voice */
-	GAME_VOICE_MEMBERSHIP_PLAYER_UNKNOWN138_OFFSET= 0x138,
+	GAME_VOICE_MEMBERSHIP_PLAYER_MUTES_OFFSET= 0x138,
 	GAME_VOICE_MEMBERSHIP_PLAYER_FLAGS_OFFSET= 0x13A,
 	/* in what unknown_000596d0 gives, and what it is when the session comes
 	from the second place */
@@ -229,7 +238,7 @@ boolean game_voice_has_remote_talker(long identifier);
 void game_voice_set_controller_mode(long controller_index, long mode);
 long game_voice_get_controller_mode(long controller_index);
 void game_voice_set_controller_mask(long mask, long controller_index);
-boolean game_voice_unknown_00053850(long player_index, long other_player_index);
+boolean game_voice_player_has_muted(long player_index, long other_player_index);
 void game_voice_remote_talker_data(long identifier, const void *data, long size);
 void game_voice_play_message(long controller_index, const long *message, long size);
 void game_voice_stop_message(long controller_index);
@@ -238,9 +247,9 @@ void game_voice_record_message(long controller_index, void *buffer, long *size, 
 	unsigned long buffer_size, long *length);
 void game_voice_stop_message_with_headset(long controller_index);
 long game_voice_unknown_00053b00(long unknown0, long unknown4, long unknown8);
-boolean game_voice_unknown_00053b40(long player_index);
-boolean game_voice_player_unknown1(long player_index);
-boolean game_voice_player_unknown2(long player_index);
+boolean game_voice_player_can_be_heard(long player_index);
+boolean game_voice_player_voice_off(long player_index);
+boolean game_voice_player_not_allowed(long player_index);
 unsigned long game_voice_player_flags(long player_index);
 boolean game_voice_get_session(byte **session);
 boolean game_voice_unknown_00053d90(void);
@@ -283,9 +292,11 @@ void GAME_VOICE_CALLBACK game_voice_local_data_ready(long controller_index, void
 unsigned long game_voice_unknown_00053c70(void);
 void game_voice_update_chosen_peer(void);
 boolean game_voice_unknown_00054890(long peer);
+void game_voice_update_players(void);
+void GAME_VOICE_CALLBACK game_voice_update_local_player(long player_index);
 boolean game_voice_unknown_00054c70(void);
 long game_voice_unknown_00054cc0(void);
-unsigned long game_voice_get_remote_talkers(void);
+unsigned long game_voice_get_talkers(void);
 
 /* ---------- globals */
 
@@ -299,6 +310,8 @@ extern long unknown_004c9888;
 extern long game_voice_session_source;
 extern long unknown_004c9878;
 extern long unknown_004c9898;
+extern byte game_voice_muted_players[MAXIMUM_VOICE_CONTROLLERS][MAXIMUM_GAME_VOICE_MUTED_PLAYERS][GAME_VOICE_MUTED_PLAYER_SIZE];
+extern long game_voice_muted_player_counts[MAXIMUM_VOICE_CONTROLLERS];
 extern long unknown_004ce120;
 extern long unknown_004ce124;
 extern byte unknown_005259b8[UNKNOWN_005259B8_SIZE];
@@ -312,10 +325,10 @@ extern long unknown_004c9880;
 extern long unknown_004c9884;
 extern word game_voice_player_flag_words[MAXIMUM_GAME_VOICE_PLAYERS];
 extern byte unknown_00525a00[];
-extern word unknown_004c9968[MAXIMUM_GAME_VOICE_PLAYERS];
+extern word game_voice_player_mutes[MAXIMUM_GAME_VOICE_PLAYERS];
 extern long game_voice_controller_settings[MAXIMUM_VOICE_CONTROLLERS];
 extern const real game_voice_masks[NUMBER_OF_GAME_VOICE_MASKS][NUMBER_OF_VOICE_MASK_VALUES];
-extern word game_voice_remote_talkers;
+extern word game_voice_talkers;
 extern struct allocation *unknown_0046dd54;
 extern struct game_voice_allocation game_voice_allocation;
 

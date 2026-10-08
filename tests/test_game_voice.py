@@ -168,7 +168,7 @@ def run(t) -> None:
                 globals={
                     "game_voice_enabled": bytes((enabled,)),
                     "voice_globals": voice(initialized),
-                    "game_voice_remote_talkers": struct.pack("<H", random_.getrandbits(16) | 1),
+                    "game_voice_talkers": struct.pack("<H", random_.getrandbits(16) | 1),
                 },
                 externals={"voice_dispose": voice_call()},
             )
@@ -223,7 +223,7 @@ def run(t) -> None:
                             "game_voice_use_menu_pool": bytes((random_.choice((1, 0x80)),)),
                             "game_voice_enabled": bytes((enabled,)),
                             "voice_globals": voice(initialized),
-                            "game_voice_remote_talkers": struct.pack("<H", random_.getrandbits(16) | 1),
+                            "game_voice_talkers": struct.pack("<H", random_.getrandbits(16) | 1),
                         },
                         externals={"voice_dispose": stop},
                         mocks=[
@@ -366,10 +366,10 @@ def run(t) -> None:
                     words = [random_.getrandbits(16) for _ in range(16)]
                     words[player] = bits
                     t.check(
-                        "game_voice_unknown_00053850",
+                        "game_voice_player_has_muted",
                         player,
                         other,
-                        globals={**state(enabled, initialized), "unknown_004c9968": struct.pack("<16H", *words)},
+                        globals={**state(enabled, initialized), "game_voice_player_mutes": struct.pack("<16H", *words)},
                     )
 
         for unknown in (1, 0, 2, 0x100):
@@ -437,13 +437,13 @@ def run(t) -> None:
         for player in (0, 5, 15):
             for values in ((1,), (3,), (0,), (2,), (0xFFFD,), (0x10001, 0x10000), (1, 2), (5, 0xFFFFFFFD), (0xFFFE, 0)):
                 t.check(
-                    "game_voice_unknown_00053b40",
+                    "game_voice_player_can_be_heard",
                     player,
                     globals=state(enabled, initialized),
                     externals={"game_voice_player_flags": flags_of(*values)},
                 )
             for value in (0, 1, 2, 4, 0xFFFD, 0xFFFB, 0x10006):
-                for name in ("game_voice_player_unknown1", "game_voice_player_unknown2"):
+                for name in ("game_voice_player_voice_off", "game_voice_player_not_allowed"):
                     t.check(
                         name,
                         player,
@@ -644,8 +644,8 @@ def run(t) -> None:
             )
 
         t.check(
-            "game_voice_get_remote_talkers",
-            globals={**state(enabled, initialized), "game_voice_remote_talkers": struct.pack("<H", random_.getrandbits(16) | 0x8001)},
+            "game_voice_get_talkers",
+            globals={**state(enabled, initialized), "game_voice_talkers": struct.pack("<H", random_.getrandbits(16) | 0x8001)},
         )
 
         for found in (1, 0):
@@ -779,7 +779,7 @@ def run(t) -> None:
                     controller,
                     globals={
                         **state(enabled, initialized),
-                        "unknown_004c9968": struct.pack("<16H", *(random_.getrandbits(16) | 1 for _ in range(16))),
+                        "game_voice_player_mutes": struct.pack("<16H", *(random_.getrandbits(16) | 1 for _ in range(16))),
                         "game_voice_player_flag_words": struct.pack("<16H", *(random_.getrandbits(16) | 0x8000 for _ in range(16))),
                     },
                     externals={"game_voice_find_local_player": gives(player)},
@@ -871,10 +871,10 @@ def run(t) -> None:
     t.check(
         "game_voice_reset_players",
         globals={
-            "game_voice_remote_talkers": struct.pack("<H", 0xFFFF),
+            "game_voice_talkers": struct.pack("<H", 0xFFFF),
             "unknown_004c9898": 0x12345678,
             "unknown_004c989c": random_.randbytes(0xC0),
-            "unknown_004c9968": random_.randbytes(0x20),
+            "game_voice_player_mutes": random_.randbytes(0x20),
             "game_voice_player_flag_words": random_.randbytes(0x20),
             "game_voice_pool": 0x80100000,
         },
@@ -943,14 +943,14 @@ def run(t) -> None:
                             player,
                             globals={
                                 **state(enabled, initialized),
-                                "unknown_004c9968": random_.randbytes(0x20),
+                                "game_voice_player_mutes": random_.randbytes(0x20),
                                 "game_voice_player_flag_words": random_.randbytes(0x20),
-                                "game_voice_remote_talkers": struct.pack("<H", random_.choice((0, 0xFFFF, random_.getrandbits(16)))),
+                                "game_voice_talkers": struct.pack("<H", random_.choice((0, 0xFFFF, random_.getrandbits(16)))),
                             },
                             externals={
                                 # the game does not see whether there is a session: there always is one here
                                 "game_voice_get_membership": gives_buffer(membership),
-                                "game_voice_unknown_00053b40": gives(wanted),
+                                "game_voice_player_can_be_heard": gives(wanted),
                                 "voice_has_remote_talker": voice_call(has),
                                 "voice_remote_talker_set": lambda harness, arguments, set_=set_: (
                                     set_,
@@ -1050,7 +1050,7 @@ def run(t) -> None:
                                 "unknown_00054590",
                                 "voice_remove_remote_talkers",
                                 "game_voice_reset_players",
-                                "unknown_00054030",
+                                "game_voice_update_players",
                                 "game_voice_update_chosen_peer",
                                 "unknown_00056b70",
                                 "unknown_00055990",
@@ -1118,7 +1118,7 @@ def run(t) -> None:
                 externals={
                     "game_voice_find_local_player": nth("game_voice_find_local_player", *players),
                     "game_voice_player_flags": gives(flags),
-                    "game_voice_player_unknown2": gives(third),
+                    "game_voice_player_not_allowed": gives(third),
                     "unknown_00055960": lambda harness, arguments, number=number: (
                         number,
                         (harness.normalize(arguments[0]), arguments[1]),
@@ -1255,7 +1255,7 @@ def run(t) -> None:
                     "game_voice_unknown_000549d0": gives(random_.choice((0, 0, 0, 1))),
                     "game_voice_get_local_players": gives(local),
                     "game_voice_player_flags": lambda harness, arguments, flags=flags: flags[arguments[0] & 15],
-                    "game_voice_player_unknown2": lambda harness, arguments, third=third: third[arguments[0] & 15],
+                    "game_voice_player_not_allowed": lambda harness, arguments, third=third: third[arguments[0] & 15],
                     "unknown_00055960": lambda harness, arguments, numbers=numbers: (
                         numbers[arguments[1] & 15],
                         (harness.normalize(arguments[0]), arguments[1]),
@@ -1264,3 +1264,103 @@ def run(t) -> None:
                 },
                 extra=[membership],
             )
+
+    # ---------- the players, each frame
+
+    for enabled, initialized in active():
+        for n in range(12):
+            membership = bytearray(random_.randbytes(MEMBERSHIP_SIZE))
+            struct.pack_into("<I", membership, MEMBERSHIP_PLAYERS, random_.choice((0xFFFF, 0, random_.getrandbits(16), 0xFFFF00FF)))
+            membership = Buffer(bytes(membership))
+            have_voices = random_.getrandbits(16)
+            data = bytearray(random_.randbytes(VOICE_SIZE))
+            data[VOICE_INITIALIZED] = initialized
+            # with the mode of the players of other consoles, or without it
+            struct.pack_into("<2I", data, 0xC, random_.choice((0xF, 0xF, 0xB)), ENGINE)
+            t.check(
+                "game_voice_update_players",
+                globals={
+                    "game_voice_enabled": bytes((enabled,)),
+                    "voice_globals": GlobalData(bytes(data)),
+                    "game_voice_talkers": struct.pack("<H", random_.choice((0xFFFF, random_.getrandbits(16)))),
+                },
+                externals={
+                    "game_voice_get_membership": gives_buffer(membership, n != 3),
+                    "game_voice_get_local_players": gives(random_.choice((0, 1, 0x8001, random_.getrandbits(16)))),
+                    "voice_has_remote_talker": lambda harness, arguments, have_voices=have_voices: (
+                        (have_voices >> (arguments[1] & 15)) & 1,
+                        (harness.normalize(arguments[0]), arguments[1]),
+                    ),
+                    "unknown_00332dd3": lambda harness, arguments: 0,
+                    "game_voice_update_local_player": lambda harness, arguments: 0,
+                    "game_voice_update_player": lambda harness, arguments: 0,
+                },
+                extra=[membership],
+            )
+
+    def set_mode(harness, arguments):
+        # the mode is the test's to set: it is what the function reads next of the voice
+        return 0, tuple(arguments)
+
+    for n in range(240):
+        player = random_.choice((0, 3, 15))
+        controller = random_.choice((0, 1, 3, 3, 3, NONE))
+        setting = random_.choice((0, 1, 3))
+        mode = random_.choice((0, 2, 3, 0, 2))
+        initialized = random_.choice((1, 1, 1, 0))
+        flag5 = random_.choice((0x20, 0x20, 0, 0xFFFFFFDF))
+        count = random_.choice((0, 1, 3, 250, NONE, 2))
+        if not initialized:
+            # with no voice the game has no players to look for in the list, and does not see it
+            count = random_.choice((0, NONE))
+        membership = bytearray(random_.randbytes(MEMBERSHIP_SIZE))
+        lists = bytearray(random_.randbytes(4 * 250 * 0x10))
+        if controller != NONE and count not in (0, NONE):
+            # some of the players are in the list, at any place of it; and one nearly
+            for other in random_.sample(range(16), 6):
+                at = controller * 4000 + random_.randrange(count) * 0x10
+                lists[at : at + 0xC] = membership[PLAYERS + other * PLAYER_SIZE : PLAYERS + other * PLAYER_SIZE + 0xC]
+            other = random_.randrange(16)
+            at = controller * 4000 + random_.randrange(count) * 0x10
+            lists[at : at + 0xC] = membership[PLAYERS + other * PLAYER_SIZE : PLAYERS + other * PLAYER_SIZE + 0xC]
+            lists[at + 0xB] ^= 0x10
+        membership = Buffer(bytes(membership))
+        profiles = bytearray(random_.randbytes(4 * PROFILE_SIZE))
+        counts = [random_.choice((0, 5, NONE)) for _ in range(4)]
+        modes = [random_.randint(0, 3) for _ in range(4)]
+        settings = [random_.randint(0, 3) for _ in range(4)]
+        if controller != NONE:
+            struct.pack_into("<I", profiles, controller * PROFILE_SIZE, flag5 | (random_.getrandbits(32) & ~0x20 if flag5 else 0) if flag5 != 0xFFFFFFDF else flag5)
+            counts[controller] = count
+            modes[controller] = mode
+            settings[controller] = setting
+        data = bytearray(random_.randbytes(VOICE_SIZE))
+        data[VOICE_INITIALIZED] = initialized
+        struct.pack_into("<4I", data, VOICE_MODES_OFFSET, *modes)
+        t.check(
+            "game_voice_update_local_player",
+            player,
+            globals={
+                "game_voice_enabled": bytes((1,)),
+                "voice_globals": GlobalData(bytes(data)),
+                "game_voice_controller_settings": struct.pack("<4I", *settings),
+                "unknown_0054e8e0": bytes(profiles),
+                "game_voice_muted_players": bytes(lists),
+                "game_voice_muted_player_counts": struct.pack("<4I", *counts),
+                "game_voice_player_flag_words": random_.randbytes(0x20),
+                "game_voice_player_mutes": random_.randbytes(0x20),
+                "game_voice_talkers": struct.pack("<H", random_.choice((0xFFFF, 0, random_.getrandbits(16)))),
+            },
+            externals={
+                "game_voice_player_controller": gives(controller),
+                # the game does not see whether there is a session: there always is one here
+                "game_voice_get_membership": gives_buffer(membership),
+                "unknown_001906da": gives(random_.choice((1, 1, 0))),
+                "game_voice_controller_can_talk": gives(random_.choice((1, 1, 0))),
+                "game_voice_set_controller_mode": set_mode,
+                "game_voice_get_players": gives(random_.choice((0xFFFF, random_.getrandbits(16), 0))),
+                "game_voice_get_local_players": gives(random_.choice((0, 1 << player, random_.getrandbits(16)))),
+                "game_voice_update_profile": lambda harness, arguments: 0,
+            },
+            extra=[membership],
+        )

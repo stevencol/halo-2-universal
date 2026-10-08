@@ -220,6 +220,8 @@ address,name,source
 004c988c,game_voice_session_source,source/networking/game_voice.c
 004c9878,unknown_004c9878,source/networking/game_voice.c
 004c9898,unknown_004c9898,source/networking/game_voice.c
+004c99d4,game_voice_muted_players,source/networking/game_voice.c
+004cd854,game_voice_muted_player_counts,source/networking/game_voice.c
 004ce120,unknown_004ce120,source/networking/game_voice.c
 004ce124,unknown_004ce124,source/networking/game_voice.c
 005259b8,unknown_005259b8,source/networking/game_voice.c
@@ -233,9 +235,9 @@ address,name,source
 004c9884,unknown_004c9884,source/networking/game_voice.c
 004c9988,game_voice_player_flag_words,source/networking/game_voice.c
 00525a00,unknown_00525a00,source/networking/game_voice.c
-004c9968,unknown_004c9968,source/networking/game_voice.c
+004c9968,game_voice_player_mutes,source/networking/game_voice.c
 004c99a8,game_voice_controller_settings,source/networking/game_voice.c
 0043fe48,game_voice_masks,source/networking/game_voice.c
-004c9966,game_voice_remote_talkers,source/networking/game_voice.c
+004c9966,game_voice_talkers,source/networking/game_voice.c
 0046dd54,unknown_0046dd54,source/networking/game_voice.c
 0045095c,voice_callbacks,source/networking/voice.c
