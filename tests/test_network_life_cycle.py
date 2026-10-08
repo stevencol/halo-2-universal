@@ -498,7 +498,7 @@ def run(t) -> None:
                 ),
                 "GetTickCount": lambda harness, arguments, value=random_.getrandbits(32): value,
                 "XGetLanguage": lambda harness, arguments, value=random_.randrange(12): value,
-                "unknown_0007ad80": at_random,
+                "transport_security_random_bytes": at_random,
                 "network_session_add_peer": comes_in,
                 "time": lambda harness, arguments, value=random_.getrandbits(31): value,
                 "network_session_enter_state5": lambda harness, arguments: 0,
@@ -528,7 +528,7 @@ def run(t) -> None:
     def told() -> bytes:
         return bytes((random_.choice((1, 1, 0x80, 0)),))
 
-    library = {"unknown_003cd147": lambda harness, arguments: 0, "unknown_003cd0e1": lambda harness, arguments: 0}
+    library = {"XNetQosListen": lambda harness, arguments: 0, "XNetUnregisterKey": lambda harness, arguments: 0}
 
     for n in range(60):
         t.check(

@@ -515,7 +515,20 @@ address,name,source,arguments,returns,convention
 00138960,game_lost,source/game/game.c,eax,void
 001389c0,game_finish,source/game/game.c,,void
 00138a10,game_finished_wait_over,source/game/game.c,,int
-0007ad80,unknown_0007ad80,,edi stack,void
+0007ad80,transport_security_random_bytes,source/networking/transport_security.c,edi stack,void
+0007aaa0,transport_security_get_addresses,source/networking/transport_security.c,eax ebx,bool
+0007ab10,transport_security_address_from_peer_address,source/networking/transport_security.c,eax ecx ebx stack stack,bool,stdcall
+0007acc0,transport_address_connect,source/networking/transport_security.c,ecx,bool
+0007acf0,transport_address_get_connect_status,source/networking/transport_security.c,ecx,int
+0007ad50,transport_security_random_identifier,source/networking/transport_security.c,ebx,void
+0007adf0,transport_security_address_from_key,source/networking/transport_security.c,eax edx esi stack stack,bool,stdcall
+0007ae70,transport_security_get_unknown7cc,source/networking/transport_security.c,,void
+0007aec0,transport_address_get_secure_in_address,source/networking/transport_security.c,ecx edi,bool
+0007af40,transport_address_valid,source/networking/transport_security.c,edx,bool
+003cd0c0,XNetRandom,,stack stack,int,stdcall
+003cd0ec,XNetXnAddrToInAddr,,stack stack stack,int,stdcall
+003cd34f,XNetConnect,,stack,int,stdcall
+003cd35a,XNetGetConnectStatus,,stack,int,stdcall
 00137fe0,game_tick,source/game/game.c,,void
 00121220,global_preferences_reset,source/main/global_preferences.c,,void
 00121280,global_preferences_validate,source/main/global_preferences.c,eax,void
@@ -693,9 +706,9 @@ address,name,source,arguments,returns,convention
 00059bd0,network_session_start,source/networking/network_session.c,stack stack stack stack stack stack stack stack stack stack,bool,stdcall
 0007a9b0,transport_security_get_address,source/networking/transport_security.c,,bool
 0007a9a0,transport_security_forget_address,source/networking/transport_security.c,stack,void,stdcall
-003cd0cb,unknown_003cd0cb,,stack stack,int,stdcall
-003cd0d6,unknown_003cd0d6,,stack stack,int,stdcall
-003cd17d,unknown_003cd17d,,stack,int,stdcall
+003cd0cb,XNetCreateKey,,stack stack,int,stdcall
+003cd0d6,XNetRegisterKey,,stack stack,int,stdcall
+003cd17d,XNetGetTitleXnAddr,,stack,int,stdcall
 0005fa30,network_session_create_identifier,source/networking/network_session.c,edi stack stack,bool,stdcall
 0005fac0,network_session_use_identifier,source/networking/network_session.c,ecx eax ebx stack stack,bool,stdcall
 0005fb00,network_session_set_identifier,source/networking/network_session.c,esi ecx eax edx,void
@@ -709,8 +722,8 @@ address,name,source,arguments,returns,convention
 00075e40,network_observer_channel_unknown_00075e40,source/networking/network_observer.c,eax ecx,void
 00076ef0,unknown_00076ef0,,eax ecx,void
 00088650,unknown_00088650,,esi edi,void
-003cd147,unknown_003cd147,,stack stack stack stack stack,int,stdcall
-003cd0e1,unknown_003cd0e1,,stack,int,stdcall
+003cd147,XNetQosListen,,stack stack stack stack stack,int,stdcall
+003cd0e1,XNetUnregisterKey,,stack,int,stdcall
 0005fbd0,network_session_add_peer,source/networking/network_session.c,stack stack stack stack stack stack,void,stdcall
 0005f900,network_session_peer_state_new,source/networking/network_session.c,eax edx ecx stack,void,stdcall
 00061390,network_session_enter_state5,source/networking/network_session.c,esi,void

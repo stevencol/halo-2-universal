@@ -368,7 +368,7 @@ def run(t) -> None:
                     "unknown_00510c49": unknown,
                     "xbox_video_settings": struct.pack("<h6B", refresh_rate, 0, 0, 0, 0, 0, 0),
                 },
-                externals={"unknown_0007ad80": random_bytes},
+                externals={"transport_security_random_bytes": random_bytes},
             )
 
     # ---------- the ticks of a frame

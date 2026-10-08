@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 326.
+**Última actualización:** 2026-10-08, al terminar el hito 327.
 
 ## Dónde estamos
 
-- **1152 funciones descompiladas de 11.265: el 10,23 % del juego** (el
-  6,560 % de los bytes de código).
-- Las 1152 están comprobadas contra el ejecutable original: las 1109 del
+- **1162 funciones descompiladas de 11.265: el 10,32 % del juego** (el
+  6,586 % de los bytes de código).
+- Las 1162 están comprobadas contra el ejecutable original: las 1109 del
   hito 313 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the first functions of the network observer* (ver `git log`).
+- Último hito: *Decompile the rest of the network addresses* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 543 funciones apuntadas pero sin descompilar (las que el código
-  llama); 455 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 546 funciones apuntadas pero sin descompilar (las que el código
+  llama); 449 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -114,9 +114,10 @@ Módulos (funciones hechas / archivo):
       las consolas que entran y salen, cómo buscarlas, y los jugadores
       que lo piden;
       faltan muchas, de `0x0005a400` en adelante)
-- [ ] Dirección y claves de red — `networking\transport_security.c` (4:
-      lo que la consola es en la red y la clave de cada sesión; va de
-      `0x0007a8a0` en adelante)
+- [ ] Dirección y claves de red — `networking\transport_security.c` (14:
+      lo que la consola es en la red, la clave de cada sesión y las
+      direcciones; de `0x0007a8a0` a `0x0007af40`, y faltan `0x0007ab60`
+      y lo que sigue desde `0x0007af80`)
 - [ ] Observador de la red — `networking\network_observer.c` (6: lo que
       tiene de cada sesión y sus canales con las otras consolas; va de
       `0x00075970` a `0x0007a4a0` y casi todo falta)
@@ -236,7 +237,7 @@ Módulos (funciones hechas / archivo):
       (`0x0005a400`, `0x00060400`, `0x00061050`), el observador
       (`0x00075970`, `0x00075da0`, `0x00075e80`, `0x00076ef0`),
       `0x0007ab60`, lo que sigue en `transport_security.c`
-      (`0x0007aaa0`), y lo que hace la partida en cada estado
+      (`0x0007af80`), y lo que hace la partida en cada estado
       (`0x0006dec0`).
 - [x] ~~Cinco direcciones repetidas en `symbols\functions.csv`~~ (hito
       296).

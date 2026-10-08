@@ -181,9 +181,9 @@ enum
 	transport_security.h */
 	NETWORK_SESSION_KEY_OFFSET= 0x25,
 	NETWORK_SESSION_UNKNOWN3C_OFFSET= 0x3C,
-	/* what unknown_003cd147 is told */
-	_unknown_003cd147_start= 1,
-	_unknown_003cd147_end= 0x10
+	/* what XNetQosListen is told */
+	_xnet_qos_listen_enable= 1,
+	_xnet_qos_listen_release= 0x10
 };
 
 /* what a session keeps of each console that is in it, at 0x72DC, apart from

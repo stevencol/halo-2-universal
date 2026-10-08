@@ -2,6 +2,56 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Las direcciones de la red y los nombres de la biblioteca de la consola
+
+Diez funciones en `networking/transport_security.c`, 773 bytes entre todas. De 1152
+funciones se pasa a 1162, el 10,32 % de las del juego (el 6,586 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `transport_security_get_addresses` | `0x0007aaa0` | `networking/transport_security.c` |
+| `transport_security_address_from_peer_address` | `0x0007ab10` | `networking/transport_security.c` |
+| `transport_address_connect` | `0x0007acc0` | `networking/transport_security.c` |
+| `transport_address_get_connect_status` | `0x0007acf0` | `networking/transport_security.c` |
+| `transport_security_random_identifier` | `0x0007ad50` | `networking/transport_security.c` |
+| `transport_security_random_bytes` | `0x0007ad80` | `networking/transport_security.c` |
+| `transport_security_address_from_key` | `0x0007adf0` | `networking/transport_security.c` |
+| `transport_security_get_unknown7cc` | `0x0007ae70` | `networking/transport_security.c` |
+| `transport_address_get_secure_in_address` | `0x0007aec0` | `networking/transport_security.c` |
+| `transport_address_valid` | `0x0007af40` | `networking/transport_security.c` |
+
+### Lo que se sabe
+
+- La lista de funciones de Ghidra **sí tiene los nombres** de la biblioteca
+  de red de la consola. Confirman lo supuesto en los hitos 315 y 316, y las
+  funciones que tenían nombre provisional pasan a llamarse como son:
+  `XNetCreateKey`, `XNetRegisterKey`, `XNetUnregisterKey`, `XNetQosListen`
+  y `XNetGetTitleXnAddr`. Las de este hito: `XNetRandom`,
+  `XNetXnAddrToInAddr`, `XNetConnect` y `XNetGetConnectStatus`.
+- `transport_address_valid` dice si una dirección del juego lo es: de
+  cuatro bytes y distinta de cero, o de dieciséis y no toda ceros.
+- `transport_address_get_secure_in_address` la pasa a como la tiene la
+  biblioteca, y dice si es de las que la biblioteca da (empiezan por cero).
+  Con eso, `transport_address_connect` empieza a hablar con ella y
+  `transport_address_get_connect_status` dice cómo va (0 a 3, o 4).
+- `transport_security_address_from_key` hace el camino contrario: de cómo
+  se conoce a una consola a su dirección del juego, con la clave de una
+  sesión; `transport_security_address_from_peer_address` prueba con las
+  ocho si no se dice cuál.
+- `transport_security_random_bytes` era `unknown_0007ad80` (la usaban
+  `game.c` y la sesión): bytes al azar, de la biblioteca si está, y si no
+  de la hora, `rand` y `GetTickCount` con un generador sencillo.
+  `transport_security_random_identifier` saca ocho que no sean todo ceros.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `transport_security` (14),
+  `network_life_cycle` (72), `game` y `game_voice`.
+- Las mutaciones de los hitos 280 a 308 y 321 a 327 están pendientes; las
+  de los hitos 309 a 320 seguían corriendo.
+
 ## 2026-10-08 — El observador de la red: sesiones y canales
 
 Seis funciones en un archivo nuevo, `networking/network_observer.c`, 482 bytes entre todas.

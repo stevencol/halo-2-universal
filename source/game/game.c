@@ -13,6 +13,8 @@ these functions calls the parts by name.
 #include "sound/sound_definitions.h"
 #include "game.h"
 
+#include "networking/transport_security.h"
+
 #include "input/input_abstraction.h"
 
 #include "cache/animation_cache.h"
@@ -38,8 +40,7 @@ wchar *wcsncpy(wchar *destination, const wchar *source, size_t count);
 /* 0x0019d650: sets up a part of the options of a multiplayer game */
 void unknown_0019d650(void *unknown);
 
-/* 0x0007ad80: fills a buffer with bytes made at random */
-void unknown_0007ad80(long size, void *buffer);
+/* 0x0007ad80 is transport_security_random_bytes, of transport_security.c */
 
 /* 0x0017bc40, 0x0017d690, 0x000d4db0, 0x0018c060, 0x002118c0, 0x00134e00,
 0x00039e50 and 0x00176f60: what is updated by the frame, with its seconds
@@ -567,7 +568,7 @@ void game_options_new_default(
 	options->tick_rate= (short)(refresh_rate/2);
 	options->unknown14= NONE;
 	options->unknown18= NONE;
-	unknown_0007ad80(sizeof(options->game_instance), options->game_instance);
+	transport_security_random_bytes(sizeof(options->game_instance), options->game_instance);
 	options->random_seed= GAME_DEFAULT_RANDOM_SEED;
 }
 

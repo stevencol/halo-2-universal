@@ -33,11 +33,8 @@ int wcsncmp(const wchar *a, const wchar *b, size_t count);
 
 /* 0x003cd147, of the console's libraries: something that is started (1) or
 ended (0x10) for what a session is known by */
-long __attribute__((stdcall)) unknown_003cd147(const byte *identifier, const void *unknown4, unsigned long unknown8,
+long __attribute__((stdcall)) XNetQosListen(const byte *identifier, const void *unknown4, unsigned long unknown8,
 	unsigned long unknownC, unsigned long flags);
-
-/* 0x0007ad80: fills a buffer with bytes made at random */
-void unknown_0007ad80(long size, void *buffer);
 
 /* 0x0007ab60: what a console is known by in the network, from an address of
 the game and the number that goes with what a session is known by; whether
@@ -261,7 +258,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_start(
 	*(long *)(session+NETWORK_SESSION_UNKNOWN49C8_OFFSET)= NONE;
 	*(long *)(session+NETWORK_SESSION_UNKNOWN4D08_OFFSET)= NONE;
 	*(long *)(session+NETWORK_SESSION_UNKNOWN4D0C_OFFSET)= NONE;
-	unknown_0007ad80(NETWORK_SESSION_RANDOM_SIZE, session+NETWORK_SESSION_RANDOM_OFFSET);
+	transport_security_random_bytes(NETWORK_SESSION_RANDOM_SIZE, session+NETWORK_SESSION_RANDOM_OFFSET);
 	*(short *)(session+NETWORK_SESSION_UNKNOWN5DD0_OFFSET)= NONE;
 	*(long *)(session+NETWORK_SESSION_UNKNOWN49B4_OFFSET)= NONE;
 	*(long *)(session+NETWORK_SESSION_UNKNOWN5E20_OFFSET)= NONE;
@@ -309,12 +306,12 @@ void network_session_forget_identifier(
 
 		if (unknown_004cf8d4)
 		{
-			unknown_003cd147(session+NETWORK_SESSION_IDENTIFIER_OFFSET, NULL, 0, 0, _unknown_003cd147_end);
+			XNetQosListen(session+NETWORK_SESSION_IDENTIFIER_OFFSET, NULL, 0, 0, _xnet_qos_listen_release);
 		}
 		key= &unknown_004cf7d4[*(const long *)(session+NETWORK_SESSION_UNKNOWN38_OFFSET)];
 		if (key->valid)
 		{
-			unknown_003cd0e1(key->identifier);
+			XNetUnregisterKey(key->identifier);
 			key->valid= FALSE;
 		}
 		entry= *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET)+
@@ -345,7 +342,7 @@ void network_session_set_identifier(
 		session+NETWORK_SESSION_KEY_OFFSET, *(const long *)(session+NETWORK_SESSION_UNKNOWN38_OFFSET), unknown3C);
 	if (unknown_004cf8d4)
 	{
-		unknown_003cd147(session+NETWORK_SESSION_IDENTIFIER_OFFSET, NULL, 0, 0, _unknown_003cd147_start);
+		XNetQosListen(session+NETWORK_SESSION_IDENTIFIER_OFFSET, NULL, 0, 0, _xnet_qos_listen_enable);
 	}
 }
 
