@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 291.
+**Última actualización:** 2026-10-08, al terminar el hito 292.
 
 ## Dónde estamos
 
-- **1082 funciones descompiladas de 11.265: el 9,60 % del juego** (el
-  6,085 % de los bytes de código).
-- Las 1082 están comprobadas contra el ejecutable original: las 1023 del
+- **1083 funciones descompiladas de 11.265: el 9,61 % del juego** (el
+  6,094 % de los bytes de código).
+- Las 1083 están comprobadas contra el ejecutable original: las 1023 del
   hito 278 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the starting of the session of the network game* (ver `git log`).
+- Último hito: *Decompile the setting up of a session of the network game* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 533 funciones apuntadas pero sin descompilar (las que el código
   llama); 445 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -109,8 +109,8 @@ Módulos (funciones hechas / archivo):
       terminar líneas o triángulos; faltan `0x0001e930` y `0x0001eb00`, que
       preparan la consola para dibujar)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
-- [ ] Sesión de red — `networking\network_session.c` (4: el estado de una
-      sesión; empieza hacia `0x00058d20`)
+- [ ] Sesión de red — `networking\network_session.c` (5: el estado de una
+      sesión y prepararla; lo que sigue, desde `0x00059bd0`, es grande)
 - [ ] Partida en red — `networking\network_life_cycle.c` (31: qué está
       haciendo, sus dos sesiones y lo que se le pide; de `0x000591e0` a
       `0x00059ab0` quedan `0x00059200`, `0x00059230` y `0x00059940`)
@@ -252,6 +252,10 @@ Módulos (funciones hechas / archivo):
 
 ## Avisos para no perder tiempo
 
+- Una función que acaba saltando a otra (`jmp` en vez de `call` y `ret`)
+  devuelve lo que esa devuelva. Si la otra aún no está descompilada no
+  se sabe si es algo: quedan por mirar `0x00059360`, `0x000593a0`,
+  `0x00059530`, `0x000595e0` y `game_voice_read_packet`.
 - En la copia de comprobación (`C:\Users\steve\halo-2-check`) hay que
   cambiar de commit con `git checkout -f --detach <commit>`: las
   mutaciones dejan los archivos con otros finales de línea y sin `-f`

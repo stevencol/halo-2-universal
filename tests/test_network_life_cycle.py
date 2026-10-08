@@ -358,3 +358,17 @@ def run(t) -> None:
                 globals={"network_life_cycle_session": session(state)},
                 externals={"unknown_00059bd0": start(could), "unknown_00065770": lambda harness, arguments: 0},
             )
+
+    # ---------- a session is set up
+
+    for index in (0, 1, 3):
+        t.check(
+            "network_session_initialize",
+            Buffer(random_.randbytes(0x78B0 + 0x10)),
+            Buffer(random_.randbytes(4 * 0x24)),
+            Buffer(random_.randbytes(4 * 4)),
+            index,
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+        )

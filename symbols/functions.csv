@@ -683,6 +683,7 @@ address,name,source,arguments,returns,convention
 00058d50,network_session_local_peer_is_host,source/networking/network_session.c,edx,bool
 00058d70,network_session_established,source/networking/network_session.c,eax,bool
 00058d90,network_session_unknown_00058d90,source/networking/network_session.c,edx,bool
+00059ad0,network_session_initialize,source/networking/network_session.c,edx ecx eax stack stack stack stack,bool,stdcall
 00070570,unknown_00070570,,ecx,int
 000591e0,network_life_cycle_unknown_000591e0,source/networking/network_life_cycle.c,,bool
 000591f0,network_life_cycle_unknown_000591f0,source/networking/network_life_cycle.c,,bool

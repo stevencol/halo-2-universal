@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Preparar una sesión de red
+
+Una función en `networking/network_session.c`, de 242 bytes. De 1082 funciones se pasa a
+1083, el 9,61 % de las del juego (el 6,094 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_initialize` | `0x00059ad0` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- Una sesión mide `0x78b0` bytes (casi 31 KB). Al prepararla queda sin
+  estado, sin saber qué consola es esta, y apuntada en dos sitios: la tabla
+  de las sesiones y algo que tiene una entrada de `0x24` bytes por sesión.
+- Dentro lleva **dos** listas de quién está (`0x4c` y `0x24e0`, de `0x2494`
+  bytes cada una: la de ahora y, por lo que parece, la que viene) y otras
+  dos cosas de `0x14b0` bytes (`0x4978` y `0x5e28`). Las cuatro empiezan
+  con un NONE que significa «no dice nada»: es lo que `game_voice.c` mira
+  antes de fiarse de la lista (hito 271).
+- El tamaño de la lista casa con el que salió de la voz: 16 jugadores de
+  `0x13c` bytes desde su `0x10d4`.
+
+### Aviso
+
+- Una función que acaba saltando a otra devuelve lo que esa devuelva. En
+  el hito 291 dos funciones dadas por «no devuelven nada» sí devolvían. De
+  este archivo y del anterior quedan cinco que acaban así en funciones aún
+  sin descompilar (`0x00059360`, `0x000593a0`, `0x00059530`, `0x000595e0` y
+  `game_voice_read_packet`): hay que mirarlas cuando se sepa qué devuelve
+  aquello a lo que saltan. Apuntado en `ESTADO.md`.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- Las mutaciones de los hitos 269 a 279 corren aparte; las de 280 a 292
+  están pendientes.
+
 ## 2026-10-08 — Arrancar la sesión de la partida en red
 
 Dos funciones en `networking/network_life_cycle.c`, de 213 bytes entre las dos. De 1080 funciones se pasa a
