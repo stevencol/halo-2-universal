@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Cuatro peticiones más de quien dirige la sesión
+
+Cuatro funciones en `networking/network_session.c`, 902 bytes entre todas. De 1238
+funciones se pasa a 1242, el 11,03 % de las del juego (el 6,854 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_leader_set_unknown49a1` | `0x0005bb20` | `networking/network_session.c` |
+| `network_session_leader_set_unknown5dd0` | `0x0005bc10` | `networking/network_session.c` |
+| `network_session_leader_set_language` | `0x0005bd00` | `networking/network_session.c` |
+| `network_session_leader_set_unknown498c` | `0x0005bde0` | `networking/network_session.c` |
+
+Son del molde del hito 338: la consola que dirige la sesión cambia un dato
+si además la lleva, y si no se lo pide a la que la lleva.
+
+### Lo que se sabe
+
+- `network_session_leader_set_language` cambia el **idioma** de la sesión
+  (`0x4988`).
+- `network_session_leader_set_unknown498c` cambia el número de `0x498C`,
+  el que tiene que ser cero para que la sesión admita jugadores (hito 335)
+  y no pasar de 1 para que alguien pueda entrar (hito 333): es **lo
+  cerrada que está** la sesión.
+- `network_session_leader_set_unknown5dd0` cambia los 16 bits de `0x5DD0`,
+  que tienen que ser NONE para que la sesión admita jugadores.
+- `network_session_leader_set_unknown49a1` cambia un byte (`0x49A1`).
+- Del mensaje de petición (clase `0x22`) se conocen ya diez sitios.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (150
+  funciones).
+- Las mutaciones de los hitos 280 a 308 y 321 a 339 están pendientes; las
+  de los hitos 309 a 320 seguían corriendo.
+
 ## 2026-10-08 — Pedir un cambio a quien lleva la sesión
 
 Seis funciones en `networking/network_session.c`, 1.325 bytes entre todas. De 1232

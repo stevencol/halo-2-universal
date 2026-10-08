@@ -2835,3 +2835,116 @@ boolean network_session_leader_set_unknown4dac(
 
 	return TRUE;
 }
+
+/* 0x0005bb20: the console that leads a session sets the byte of 0x49A1 from
+the one that it is given a place of, or asks the one that runs it to; FALSE
+if it does not lead it */
+boolean network_session_leader_set_unknown49a1(
+	byte *session,
+	const byte *unknown49a1)
+{
+	if (!network_session_local_peer_is_host(session))
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		session[NETWORK_SESSION_UNKNOWN49A1_OFFSET]= *unknown49a1;
+		network_session_parameters_changed(session);
+	}
+	else
+	{
+		byte request[NETWORK_SESSION_PARAMETERS_REQUEST_SIZE];
+
+		network_session_parameters_request_new(session, request);
+		request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN49A1_OFFSET]= TRUE;
+		request[NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN49A1_OFFSET]= *unknown49a1;
+		network_session_parameters_request_send(session, request);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005bc10: the console that leads a session sets the 16 bits of 0x5DD0,
+or asks the one that runs it to; FALSE if it does not lead it */
+boolean network_session_leader_set_unknown5dd0(
+	byte *session,
+	short unknown5dd0)
+{
+	if (!network_session_local_peer_is_host(session))
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		network_session_parameters_changed(session);
+		*(short *)(session+NETWORK_SESSION_UNKNOWN5DD0_OFFSET)= unknown5dd0;
+	}
+	else
+	{
+		byte request[NETWORK_SESSION_PARAMETERS_REQUEST_SIZE];
+
+		network_session_parameters_request_new(session, request);
+		request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN5DD0_OFFSET]= TRUE;
+		*(short *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN5DD0_OFFSET)= unknown5dd0;
+		network_session_parameters_request_send(session, request);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005bd00: the console that leads a session sets its language, or asks
+the one that runs it to; FALSE if it does not lead it */
+boolean network_session_leader_set_language(
+	byte *session,
+	long language)
+{
+	if (!network_session_local_peer_is_host(session))
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		network_session_parameters_changed(session);
+		*(long *)(session+NETWORK_SESSION_LANGUAGE_OFFSET)= language;
+	}
+	else
+	{
+		byte request[NETWORK_SESSION_PARAMETERS_REQUEST_SIZE];
+
+		network_session_parameters_request_new(session, request);
+		request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_LANGUAGE_OFFSET]= TRUE;
+		*(long *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_LANGUAGE_OFFSET)= language;
+		network_session_parameters_request_send(session, request);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005bde0: the console that leads a session sets the number of 0x498C,
+or asks the one that runs it to; FALSE if it does not lead it */
+boolean network_session_leader_set_unknown498c(
+	byte *session,
+	long unknown498c)
+{
+	if (!network_session_local_peer_is_host(session))
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		network_session_parameters_changed(session);
+		*(long *)(session+NETWORK_SESSION_UNKNOWN498C_OFFSET)= unknown498c;
+	}
+	else
+	{
+		byte request[NETWORK_SESSION_PARAMETERS_REQUEST_SIZE];
+
+		network_session_parameters_request_new(session, request);
+		request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN498C_OFFSET]= TRUE;
+		*(long *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN498C_OFFSET)= unknown498c;
+		network_session_parameters_request_send(session, request);
+	}
+
+	return TRUE;
+}

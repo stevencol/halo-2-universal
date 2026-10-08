@@ -1673,3 +1673,20 @@ def run(t) -> None:
         for n in range(80):
             arguments = (led(), random_.getrandbits(32)) if has_value else (led(),)
             t.check(name, *arguments, externals={"unknown_00075e80": sends_all, "unknown_0005a220": nothing})
+
+    # ---------- four more changes that the console that leads a session asks for
+
+    for name in (
+        "network_session_leader_set_unknown5dd0",
+        "network_session_leader_set_language",
+        "network_session_leader_set_unknown498c",
+    ):
+        for n in range(80):
+            t.check(name, led(), random_.getrandbits(32), externals={"unknown_00075e80": sends_all})
+    for n in range(80):
+        t.check(
+            "network_session_leader_set_unknown49a1",
+            led(),
+            Buffer(random_.randbytes(4)),
+            externals={"unknown_00075e80": sends_all},
+        )

@@ -188,6 +188,16 @@ enum
 	NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN49F8_OFFSET= 0x34,
 	NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN4DAC_OFFSET= 0x3D0,
 	NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN4DAC_OFFSET= 0x3D4,
+	NETWORK_SESSION_PARAMETERS_REQUEST_HAS_LANGUAGE_OFFSET= 0x10,
+	NETWORK_SESSION_PARAMETERS_REQUEST_LANGUAGE_OFFSET= 0x14,
+	NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN498C_OFFSET= 0x18,
+	NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN498C_OFFSET= 0x1C,
+	NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN49A1_OFFSET= 0x54E,
+	NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN49A1_OFFSET= 0x54F,
+	NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN5DD0_OFFSET= 0x550,
+	NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN5DD0_OFFSET= 0x552,
+	/* a byte of what the session knows */
+	NETWORK_SESSION_UNKNOWN49A1_OFFSET= 0x49A1,
 	/* in who is in the session: how many consoles, and the consoles */
 	NETWORK_SESSION_PEER_COUNT_OFFSET= 0x54,
 	NETWORK_SESSION_PEER_ARRAY_OFFSET= 0x58,
@@ -491,6 +501,10 @@ boolean network_session_leader_set_unknown49c4(byte *session);
 boolean network_session_leader_set_unknown49c8(byte *session, long unknown49c8);
 boolean network_session_leader_clear_unknown49f8(byte *session);
 boolean network_session_leader_set_unknown4dac(byte *session, long unknown4dac);
+boolean network_session_leader_set_unknown49a1(byte *session, const byte *unknown49a1);
+boolean network_session_leader_set_unknown5dd0(byte *session, short unknown5dd0);
+boolean network_session_leader_set_language(byte *session, long language);
+boolean network_session_leader_set_unknown498c(byte *session, long unknown498c);
 boolean network_session_host_unknown_0005bec0(byte *session);
 boolean NETWORK_SESSION_CALLBACK network_session_host_unknown_0005dea0(const byte *message, byte *session,
 	long channel);
