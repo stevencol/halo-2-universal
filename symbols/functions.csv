@@ -644,7 +644,18 @@ address,name,source,arguments,returns,convention
 00055810,voice_start,source/networking/voice.c,edi,bool
 000550b0,voice_dispose,source/networking/voice.c,eax,void
 00055080,voice_initialize,source/networking/voice.c,eax stack,void
-000552a0,unknown_000552a0,,esi,void
+000552a0,voice_remove_remote_talkers,source/networking/voice.c,esi,void
+00055130,voice_has_remote_talker,source/networking/voice.c,eax stack,bool
+000551c0,voice_remote_talker_unknown_000551c0,source/networking/voice.c,eax stack,bool
+00055210,voice_update_controller_levels,source/networking/voice.c,ebx eax esi,void
+00055250,voice_remote_talker_unknown_00055250,source/networking/voice.c,esi stack stack stack,void
+00055330,voice_remote_talker_set,source/networking/voice.c,ecx eax stack,bool
+00332def,unknown_00332def,,stack stack stack,int
+00332db7,unknown_00332db7,,stack stack stack stack,int
+00332dd3,unknown_00332dd3,,stack stack stack stack,int
+00332e18,unknown_00332e18,,stack stack stack stack,int
+00332e34,unknown_00332e34,,stack stack stack stack stack stack,int
+00332dad,unknown_00332dad,,stack stack stack,int
 00333055,unknown_00333055,,stack stack,int
 00332d8f,unknown_00332d8f,,stack stack,int
 00332d94,unknown_00332d94,,stack stack,int

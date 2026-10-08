@@ -84,7 +84,7 @@ def run(t) -> None:
                     "unknown_00332da8",
                     "unknown_00332f27",
                     "unknown_003330f8",
-                    "unknown_000552a0",
+                    "voice_remove_remote_talkers",
                 )
             },
         }
@@ -156,5 +156,135 @@ def run(t) -> None:
                 t.check(
                     "voice_dispose",
                     Buffer(bytes(data)),
-                    externals={**library({}, 0, [0]), "unknown_000552a0": before_stop},
+                    externals={**library({}, 0, [0]), "voice_remove_remote_talkers": before_stop},
+                )
+
+    # ---------- the players of other consoles
+
+    ENGINE = 0x80400000
+    TALKER_SIZE = 0xC
+    LEVELS = 0x14
+
+    def a_voice(initialized: int, flags: int) -> Buffer:
+        data = bytearray(random_.randbytes(VOICE_SIZE))
+        data[VOICE_INITIALIZED] = initialized
+        struct.pack_into("<2I", data, VOICE_MODES, flags, ENGINE)
+        return Buffer(bytes(data))
+
+    def states():
+        # started and with the mode of the players of other consoles; then, what lacks one or the other
+        yield 1, 0xF
+        yield 0x80, 4
+        yield 1, 0xFFFFFFFB
+        yield 0, 0xF
+        yield 1, 0xF
+
+    def talkers_list(talkers: list[tuple[int, int, int]], result: int = 0):
+        def handler(harness, arguments):
+            # the count and the talkers go to the stack, which is not at the
+            # same place in the game and in source/
+            engine, count, place = arguments
+            harness.mu.mem_write(count, struct.pack("<I", len(talkers)))
+            harness.mu.mem_write(place, b"".join(struct.pack("<3I", *talker) for talker in talkers))
+            return result, (engine,)
+
+        return handler
+
+    def some_talkers(identifier: int) -> list[tuple[int, int, int]]:
+        """Up to as many as the engine has room for; one of them can be the one looked for, or nearly."""
+        low = identifier & 0xFFFFFFFF
+        high = 0xFFFFFFFF if low & 0x80000000 else 0
+        near = [
+            (low, high, 0),
+            (low, high, 0xFFFFFFFC),
+            (low, high, 1),
+            (low, high, 2),
+            (low, high ^ 1, 0),
+            (low ^ 0x100, high, 0),
+            (low, high ^ 0xFFFFFFFF, 0),
+        ]
+        talkers = [
+            (random_.getrandbits(32), random_.choice((0, 0xFFFFFFFF, 0x00090000)), random_.getrandbits(3))
+            for _ in range(random_.choice((0, 1, 3, 29, 30)))
+        ]
+        if talkers and random_.getrandbits(2):
+            talkers[random_.randrange(len(talkers))] = random_.choice(near)
+        return talkers
+
+    identifiers = (0, 1, 0x7FFFFFFF, 0x80000000, 0xFFFFFFFF, 0x12345678, 0xC0000005)
+
+    for initialized, flags in states():
+        for n in range(24):
+            identifier = random_.choice(identifiers)
+            t.check(
+                "voice_has_remote_talker",
+                a_voice(initialized, flags),
+                identifier,
+                externals={
+                    "unknown_00332def": talkers_list(some_talkers(identifier), random_.choice((0, 0, 0, 1, FAILED)))
+                },
+            )
+
+    for initialized, flags in states():
+        for result in (0, 1, FAILED, 0x100):
+            t.check(
+                "voice_remote_talker_unknown_000551c0",
+                a_voice(initialized, flags),
+                random_.choice(identifiers),
+                externals={"unknown_00332e18": lambda harness, arguments, result=result: result},
+            )
+
+    for initialized in (1, 0x80, 0, 1):
+        for controller in range(4):
+            for result in (0, 1, FAILED):
+                given = random_.randbytes(0x10)
+
+                def levels(harness, arguments, result=result, given=given):
+                    harness.mu.mem_write(arguments[2], given)
+                    return result
+
+                t.check(
+                    "voice_update_controller_levels",
+                    a_voice(initialized, random_.getrandbits(32)),
+                    controller,
+                    Buffer(random_.randbytes(0x10)),
+                    externals={"unknown_00332dad": levels},
+                )
+
+    for initialized in (1, 0x80, 0, 1):
+        for identifier in identifiers:
+            t.check(
+                "voice_remote_talker_unknown_00055250",
+                a_voice(initialized, random_.getrandbits(32)),
+                identifier,
+                random_.getrandbits(32),
+                0x80345000 + random_.getrandbits(8),
+                externals={"unknown_00332e34": lambda harness, arguments: 0},
+            )
+
+    for initialized, flags in states():
+        for n in range(8):
+            t.check(
+                "voice_remove_remote_talkers",
+                a_voice(initialized, flags),
+                externals={
+                    "unknown_00332def": talkers_list(
+                        some_talkers(random_.choice(identifiers)), random_.choice((0, 0, 0, 1, FAILED))
+                    ),
+                    "unknown_00332dd3": lambda harness, arguments: FAILED,
+                },
+            )
+
+    for initialized, flags in states():
+        for has_voice in (1, 0, 0x100, 0x80):
+            for result in (0, 1, FAILED):
+                t.check(
+                    "voice_remote_talker_set",
+                    a_voice(initialized, flags),
+                    random_.choice(identifiers),
+                    has_voice,
+                    externals={
+                        "unknown_00332db7": lambda harness, arguments, result=result: result,
+                        "unknown_00332dd3": lambda harness, arguments, result=result: result,
+                    },
                 )

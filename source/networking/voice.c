@@ -44,10 +44,23 @@ long unknown_00332db2(void *engine, long controller_index, struct voice_controll
 /* 0x003330f8: lets go of the engine */
 long unknown_003330f8(void *engine);
 
-/* ---------- prototypes of functions not decompiled yet */
+/* 0x00332def: the players of other consoles that have a voice, and how
+many: there is room for MAXIMUM_VOICE_REMOTE_TALKERS */
+long unknown_00332def(void *engine, unsigned long *count, struct voice_talker *talkers);
 
-/* 0x000552a0: before a voice that uses _voice_mode_unknown2 stops */
-void unknown_000552a0(struct voice_globals *voice);
+/* 0x00332db7, 0x00332dd3: a player of another console has a voice from now
+on, and has none */
+long unknown_00332db7(void *engine, struct voice_talker talker);
+long unknown_00332dd3(void *engine, struct voice_talker talker);
+
+/* 0x00332e18: something of a player of another console; 0 if not */
+long unknown_00332e18(void *engine, struct voice_talker talker);
+
+/* 0x00332e34: something for a player of another console */
+long unknown_00332e34(void *engine, struct voice_talker talker, long unknown4, void *unknown8);
+
+/* 0x00332dad: the levels of the voice of a controller */
+long unknown_00332dad(void *engine, long controller_index, real *levels);
 
 /* ---------- globals */
 
@@ -63,6 +76,26 @@ extern byte *unknown_00510c90;
 void *voice_modes[NUMBER_OF_VOICE_MODES];
 
 /* ---------- code */
+
+/* a player of another console, as the library knows one */
+static inline __attribute__((always_inline)) struct voice_talker voice_talker_new(
+	long identifier)
+{
+	struct voice_talker talker;
+
+	talker.identifier= identifier;
+	talker.flags= 0;
+
+	return talker;
+}
+
+/* whether the voice has players of other consoles: only one that uses
+_voice_mode_unknown2 does */
+static inline __attribute__((always_inline)) boolean voice_has_remote_talkers(
+	const struct voice_globals *voice)
+{
+	return voice->initialized && (voice->modes&(1u<<_voice_mode_unknown2));
+}
 
 /* the controller after one, and the first after NONE; NONE after the last.
 The game has this in each loop over the controllers */
@@ -235,7 +268,7 @@ void voice_dispose(
 		}
 		if (voice->modes&(1u<<_voice_mode_unknown2))
 		{
-			unknown_000552a0(voice);
+			voice_remove_remote_talkers(voice);
 		}
 		if (voice->engine)
 		{
@@ -244,4 +277,129 @@ void voice_dispose(
 		}
 	}
 	voice->initialized= FALSE;
+}
+
+/* 0x00055130: whether a player of another console has a voice */
+boolean voice_has_remote_talker(
+	const struct voice_globals *voice,
+	long identifier)
+{
+	boolean found= FALSE;
+
+	if (voice_has_remote_talkers(voice))
+	{
+		unsigned long count;
+		struct voice_talker talkers[MAXIMUM_VOICE_REMOTE_TALKERS];
+
+		if (unknown_00332def(voice->engine, &count, talkers)>=0)
+		{
+			struct voice_talker talker= voice_talker_new(identifier);
+			unsigned long index;
+
+			for (index= 0; index<count && !found; index++)
+			{
+				found= talkers[index].identifier==talker.identifier &&
+					!((talkers[index].flags^talker.flags)&VOICE_TALKER_FLAGS_MASK);
+			}
+		}
+	}
+
+	return found;
+}
+
+/* 0x000551c0: something that the library says of a player of another
+console */
+boolean voice_remote_talker_unknown_000551c0(
+	const struct voice_globals *voice,
+	long identifier)
+{
+	boolean result= FALSE;
+
+	if (voice_has_remote_talkers(voice))
+	{
+		result= unknown_00332e18(voice->engine, voice_talker_new(identifier))!=0;
+	}
+
+	return result;
+}
+
+/* 0x00055210: asks the library for the levels of the voice of a controller,
+and keeps them if it gives them */
+void voice_update_controller_levels(
+	struct voice_globals *voice,
+	long controller_index,
+	real *levels)
+{
+	if (voice->initialized)
+	{
+		if (unknown_00332dad(voice->engine, controller_index, levels)>=0)
+		{
+			memcpy(voice->controller_levels[controller_index], levels, sizeof(voice->controller_levels[controller_index]));
+		}
+	}
+}
+
+/* 0x00055250: something that the library is told of a player of another
+console */
+void voice_remote_talker_unknown_00055250(
+	const struct voice_globals *voice,
+	long identifier,
+	long unknown4,
+	void *unknown8)
+{
+	if (voice->initialized)
+	{
+		unknown_00332e34(voice->engine, voice_talker_new(identifier), unknown4, unknown8);
+	}
+}
+
+/* 0x000552a0: no player of another console has a voice. Each is known here
+by the low half of its number: the game has voice_remote_talker_set in the
+loop itself */
+void voice_remove_remote_talkers(
+	struct voice_globals *voice)
+{
+	if (voice_has_remote_talkers(voice))
+	{
+		unsigned long count;
+		struct voice_talker talkers[MAXIMUM_VOICE_REMOTE_TALKERS];
+
+		if (unknown_00332def(voice->engine, &count, talkers)>=0)
+		{
+			unsigned long index;
+
+			for (index= 0; index<count; index++)
+			{
+				voice_remote_talker_set(voice, (long)talkers[index].identifier, FALSE);
+			}
+		}
+	}
+}
+
+/* 0x00055330: a player of another console has a voice from now on, or has
+none; whether the library could */
+boolean voice_remote_talker_set(
+	const struct voice_globals *voice,
+	long identifier,
+	boolean has_voice)
+{
+	if (voice_has_remote_talkers(voice))
+	{
+		if (has_voice)
+		{
+			if (unknown_00332db7(voice->engine, voice_talker_new(identifier))>=0)
+			{
+				return TRUE;
+			}
+		}
+		else
+		{
+			if (unknown_00332dd3(voice->engine, voice_talker_new(identifier))>=0)
+			{
+				return TRUE;
+			}
+		}
+	}
+
+	return FALSE;
 }

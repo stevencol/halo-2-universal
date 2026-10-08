@@ -17,7 +17,12 @@ enum
 {
 	/* one voice for each controller */
 	MAXIMUM_VOICE_CONTROLLERS= 4,
-	NUMBER_OF_VOICE_CONTROLLER_LEVELS= 4
+	NUMBER_OF_VOICE_CONTROLLER_LEVELS= 4,
+	/* the players of other consoles that the engine can have a voice for */
+	MAXIMUM_VOICE_REMOTE_TALKERS= 30,
+	/* what of the flags of two players has to be the same for them to be
+	the same player */
+	VOICE_TALKER_FLAGS_MASK= 3
 };
 
 /* what the voice is told that it is, by how much of it the game has */
@@ -102,6 +107,15 @@ struct voice_globals
 	boolean controller_unknown8C[MAXIMUM_VOICE_CONTROLLERS];
 };
 
+/* a player of another console, as the console's libraries know one: a
+number of 64 bits and flags. The game makes it from a number of 32 bits,
+with the sign, and no flags */
+struct voice_talker
+{
+	long long identifier;
+	unsigned long flags;
+};
+
 /* what the library says of a controller. Only the first thing of it is
 looked at */
 struct voice_controller_status
@@ -114,6 +128,8 @@ struct voice_controller_status
 typedef char verify_voice_engine_parameters_size[
 	sizeof(struct voice_engine_parameters) == (sizeof(void *) == 4 ? 0x24 : 0x28) ? 1 : -1];
 #if defined(__i386__)
+typedef char verify_voice_talker_size[
+	sizeof(struct voice_talker) == 0xC ? 1 : -1];
 typedef char verify_voice_globals_size[
 	sizeof(struct voice_globals) == 0x90 ? 1 : -1];
 typedef char verify_voice_globals_controller_modes_offset[
@@ -130,6 +146,13 @@ boolean voice_engine_parameters_new(struct voice_engine_parameters *parameters, 
 boolean voice_start(struct voice_globals *voice);
 void voice_initialize(struct voice_globals *voice, long kind);
 void voice_dispose(struct voice_globals *voice);
+boolean voice_has_remote_talker(const struct voice_globals *voice, long identifier);
+boolean voice_remote_talker_unknown_000551c0(const struct voice_globals *voice, long identifier);
+void voice_update_controller_levels(struct voice_globals *voice, long controller_index, real *levels);
+void voice_remote_talker_unknown_00055250(const struct voice_globals *voice, long identifier, long unknown4,
+	void *unknown8);
+void voice_remove_remote_talkers(struct voice_globals *voice);
+boolean voice_remote_talker_set(const struct voice_globals *voice, long identifier, boolean has_voice);
 
 /* ---------- globals */
 

@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Las voces de los jugadores de otras consolas
+
+Seis funciones en `networking/voice.c`, de 580 bytes entre las seis. De 940 funciones se pasa a
+946, el 8,40 % de las del juego (el 5,612 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_has_remote_talker` | `0x00055130` | `networking/voice.c` |
+| `voice_remote_talker_unknown_000551c0` | `0x000551c0` | `networking/voice.c` |
+| `voice_update_controller_levels` | `0x00055210` | `networking/voice.c` |
+| `voice_remote_talker_unknown_00055250` | `0x00055250` | `networking/voice.c` |
+| `voice_remove_remote_talkers` | `0x000552a0` | `networking/voice.c` |
+| `voice_remote_talker_set` | `0x00055330` | `networking/voice.c` |
+
+`voice_remove_remote_talkers` era `unknown_000552a0`, la que `voice_dispose`
+(hito 265) llama al parar la voz. Las otras cinco son nuevas en la lista.
+
+### Lo que se sabe
+
+- La biblioteca conoce a un jugador de otra consola por doce bytes: un
+  número de 64 bits y unos flags (`voice_talker`). El juego lo hace siempre
+  a partir de un número de 32 bits, con su signo, y sin flags.
+- El motor guarda hasta 30 jugadores de otras consolas con voz, y da la
+  lista entera cuando se le pide (`0x00332def`). Para saber si uno tiene voz
+  el juego pide la lista y la recorre: dos jugadores son el mismo si tienen
+  el mismo número y los dos bits bajos de los flags iguales.
+- Solo una voz que usa el modo 2 tiene jugadores de otras consolas: es la
+  de las partidas que no son campaña. Casi todas las funciones miran eso
+  antes de nada.
+- Dar y quitar la voz a un jugador es una sola función con un sí o un no
+  (`voice_remote_talker_set`). Al parar la voz se le quita a todos, y ahí el
+  juego usa solo la mitad baja del número de cada uno.
+- `voice_update_controller_levels` pide a la biblioteca los cuatro reales de
+  un mando y, si se los da, los guarda en `voice_globals` (los que el hito
+  264 pone a -1).
+- De dos funciones no se sabe qué preguntan o dicen de un jugador
+  (`0x000551c0` y `0x00055250`): llevan su dirección en el nombre.
+- Seis funciones más de la biblioteca quedan apuntadas.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- Una lista de más de 30 jugadores: el juego no tiene sitio para ella.
+- Las mutaciones de este hito corren aparte; su resultado irá en una
+  entrada posterior.
+
 ## 2026-10-08 — Arrancar y parar la voz de los jugadores
 
 Tres funciones en `networking/voice.c`, de 428 bytes entre las tres. De 937 funciones se pasa a
