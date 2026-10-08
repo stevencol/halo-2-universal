@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Los que están fuera de la partida hablan entre ellos
+
+Una función en `networking/voice_routing.c`, de 379 bytes. De 1103 funciones se pasa a
+1104, el 9,80 % de las del juego (el 6,249 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_channels_update_dead` | `0x000577d0` | `networking/voice_routing.c` |
+
+Era `unknown_000577d0`, la última de las cuatro cosas que
+`voice_channels_update` hace cada fotograma con una partida en marcha. Las
+cuatro están ya descompiladas.
+
+### Lo que se sabe
+
+- Rellena el «tercer número» de cada jugador de esta consola: si
+  `voice_player_unknown_000589e0` dice que no de él (está muerto), un bit
+  por cada jugador de otra consola que también lo esté y con el que pueda
+  hablar según la partida: cualquiera si la voz no va por equipos, y los
+  de su equipo si va.
+- Con esto los tres números de «quién oye a quién» tienen sentido: **cerca**
+  (`0x4`, hito 305), **equipo** (`0x44`, hito 307) y **muertos** (`0x84`).
+  `voice_channels_get_player` (hito 279) da los muertos a un muerto y
+  cerca más equipo a un vivo.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- Las mutaciones de los hitos 280 a 308 están pendientes.
+
 ## 2026-10-08 — El canal de equipo: quién oye a cada jugador de esta consola
 
 Una función en `networking/voice_routing.c`, de 378 bytes. De 1102 funciones se pasa a

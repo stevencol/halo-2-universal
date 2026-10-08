@@ -214,6 +214,7 @@ real voice_players_get_distance(long local_player_index, long player_index);
 void VOICE_ROUTING_CALLBACK voice_channels_update_near(byte *channels);
 void VOICE_ROUTING_CALLBACK voice_channels_player_talked(byte *channels, long player_index, long unknown);
 void VOICE_ROUTING_CALLBACK voice_channels_update_team(byte *channels);
+void VOICE_ROUTING_CALLBACK voice_channels_update_dead(byte *channels);
 long VOICE_ROUTING_CALLBACK voice_channels_get_how(long local_player_index, const byte *channels, long player_index,
 	long unknown);
 void VOICE_ROUTING_CALLBACK voice_route_peers(const byte *unknown, unsigned long peers, word *words);

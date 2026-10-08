@@ -21,9 +21,6 @@ voice.c, from 0x00055960 on.
 
 /* ---------- prototypes of functions not decompiled yet */
 
-/* 0x000577d0: the last of what is done each frame with who hears whom, in
-one state of the network game */
-void __attribute__((stdcall)) unknown_000577d0(byte *channels);
 
 /* 0x00057eb0: what who hears whom does with how each of the players of this
 console hears a player */
@@ -164,7 +161,7 @@ void voice_channels_update(
 			voice_channels_update_ended(channels);
 			voice_channels_update_near(channels);
 			voice_channels_update_team(channels);
-			unknown_000577d0(channels);
+			voice_channels_update_dead(channels);
 		}
 		else if (unknown_004c9888==_game_voice_network2 || unknown_004c9888==_game_voice_network3)
 		{
@@ -1780,6 +1777,93 @@ void VOICE_ROUTING_CALLBACK voice_channels_update_team(
 					*listeners&= ~other_bit;
 				}
 			}
+		}
+	}
+}
+
+/* 0x000577d0: each frame, in a game that goes on: for each player of this
+console that voice_player_unknown_000589e0 says no of, a bit for each player
+of another console that it says no of too and that it can talk with by the
+game that is played: any, if game_voice_unknown_00053d40 says no; those of
+its team, or those that unknown_00192950 says no of when it says no of the
+player too, if it says so. It is the third number that who hears whom has
+for each player. Nothing with no session. The game has
+game_voice_get_player_array and game_voice_get_players in the function
+itself */
+void VOICE_ROUTING_CALLBACK voice_channels_update_dead(
+	byte *channels)
+{
+	unsigned long local_players= game_voice_get_local_players();
+	const byte *players= NULL;
+	unsigned long session_players= 0;
+	long local_player_index;
+
+	if (voice_routing_active())
+	{
+		const byte *membership= game_voice_get_membership();
+
+		if (membership)
+		{
+			players= membership+GAME_VOICE_MEMBERSHIP_PLAYER_ARRAY_OFFSET;
+		}
+	}
+	if (voice_routing_active())
+	{
+		const byte *membership= game_voice_get_membership();
+
+		if (membership)
+		{
+			session_players= *(const unsigned long *)(membership+GAME_VOICE_MEMBERSHIP_PLAYERS_OFFSET);
+		}
+	}
+	memset(channels+VOICE_CHANNELS_UNKNOWN84_OFFSET, 0, MAXIMUM_VOICE_ROUTING_PLAYERS*sizeof(long));
+	if (!players)
+	{
+		return;
+	}
+	for (local_player_index= 0; local_player_index<MAXIMUM_VOICE_ROUTING_PLAYERS; local_player_index++)
+	{
+		unsigned long *listeners= (unsigned long *)(channels+VOICE_CHANNELS_UNKNOWN84_OFFSET+
+			local_player_index*sizeof(long));
+		long player_index;
+
+		if (!(local_players&(1u<<local_player_index)) || !game_voice_unknown_00054df0(local_player_index) ||
+			voice_player_unknown_000589e0(local_player_index))
+		{
+			continue;
+		}
+		for (player_index= 0; player_index<MAXIMUM_VOICE_ROUTING_PLAYERS; player_index++)
+		{
+			unsigned long bit= 1u<<player_index;
+
+			if (!(session_players&bit) || (local_players&bit) || !game_voice_unknown_00054df0(player_index) ||
+				voice_player_unknown_000589e0(player_index))
+			{
+				continue;
+			}
+			if (game_voice_unknown_00053d40())
+			{
+				if (game_voice_unknown_00053d90())
+				{
+					if (unknown_00192950(local_player_index) || unknown_00192950(player_index))
+					{
+						continue;
+					}
+				}
+				else
+				{
+					long local_team= (signed char)players[local_player_index*GAME_VOICE_MEMBERSHIP_PLAYER_SIZE+
+						GAME_VOICE_MEMBERSHIP_PLAYER_TEAM_OFFSET];
+					long team= (signed char)players[player_index*GAME_VOICE_MEMBERSHIP_PLAYER_SIZE+
+						GAME_VOICE_MEMBERSHIP_PLAYER_TEAM_OFFSET];
+
+					if (local_team==NONE || team==NONE || local_team!=team)
+					{
+						continue;
+					}
+				}
+			}
+			*listeners|= bit;
 		}
 	}
 }

@@ -108,7 +108,7 @@ def run(t) -> None:
                             "voice_channels_update_ended",
                             "voice_channels_update_near",
                             "voice_channels_update_team",
-                            "unknown_000577d0",
+                            "voice_channels_update_dead",
                             "voice_channels_update_by_team",
                         )
                     },
@@ -1063,4 +1063,35 @@ def run(t) -> None:
                     "voice_players_can_hear": lambda harness, arguments, can=can: can[arguments[1] & 15] >> (arguments[0] & 15) & 1,
                 },
                 extra=[membership, *datums],
+            )
+
+    # ---------- the players that are out of the game talk among themselves
+
+    for enabled, initialized in active():
+        for n in range(48):
+            local = random_.choice((1, 3, 0x8001, random_.getrandbits(16)))
+            data = bytearray(random_.randbytes(PLAYERS + 16 * PLAYER_SIZE))
+            struct.pack_into("<I", data, MEMBERSHIP_PLAYERS, random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16))))
+            for other in range(16):
+                data[PLAYERS + other * PLAYER_SIZE + 0x124] = random_.choice((0, 0, 1, 0xFF))
+            membership = Buffer(bytes(data))
+            has = random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16)))
+            alive = random_.choice((0, 0, random_.getrandbits(16)))
+            other_thing = [random_.choice((0, 0, 1)) for _ in range(16)]
+            t.check(
+                "voice_channels_update_dead",
+                Buffer(random_.randbytes(0xC8)),
+                globals=state(enabled, initialized),
+                externals={
+                    "game_voice_get_local_players": gives(local),
+                    "game_voice_get_membership": lambda harness, arguments, membership=membership, n=n: (
+                        membership.address if n % 12 else 0
+                    ),
+                    "game_voice_unknown_00054df0": lambda harness, arguments, has=has: has >> (arguments[0] & 15) & 1,
+                    "voice_player_unknown_000589e0": lambda harness, arguments, alive=alive: alive >> (arguments[0] & 15) & 1,
+                    "game_voice_unknown_00053d40": gives(random_.choice((1, 1, 0))),
+                    "game_voice_unknown_00053d90": gives(random_.choice((1, 0, 0))),
+                    "unknown_00192950": lambda harness, arguments, other_thing=other_thing: other_thing[arguments[0] & 15],
+                },
+                extra=[membership],
             )
