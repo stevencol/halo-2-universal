@@ -194,6 +194,8 @@ void VOICE_ROUTING_CALLBACK voice_play_sound(long player_index, long sound_index
 void VOICE_ROUTING_CALLBACK voice_channels_update_by_team(byte *channels);
 long voice_players_same_team(long player_index, long local_player_index);
 long VOICE_ROUTING_CALLBACK voice_player_hears(long how, long local_player_index, long player_index);
+long VOICE_ROUTING_CALLBACK voice_channels_get_how(long local_player_index, const byte *channels, long player_index,
+	long unknown);
 void VOICE_ROUTING_CALLBACK voice_route_peers(const byte *unknown, unsigned long peers, word *words);
 void VOICE_ROUTING_CALLBACK voice_route_assign(long *budget, unsigned long *peers, unsigned long allowed,
 	unsigned long *direct, boolean through_chosen, long chosen_peer, boolean *more);

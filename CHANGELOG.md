@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Cómo hace la partida que se oiga a un jugador
+
+Una función en `networking/voice_routing.c`, de 307 bytes. De 1098 funciones se pasa a
+1099, el 9,76 % de las del juego (el 6,187 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_channels_get_how` | `0x00057c20` | `networking/voice_routing.c` |
+
+Es la que propone la manera (1, 2 o 3) que `voice_player_hears` (hito 302)
+ajusta después, con una partida en marcha.
+
+### Lo que se sabe
+
+- Aquí se ve por fin qué son las tres maneras:
+  - **la segunda** es la de los dos jugadores de los que
+    `voice_player_unknown_000589e0` dice que no: por lo que mira esa función
+    (un jugador sin objeto, o con poco tiempo desde un momento de su
+    objeto), son los muertos, que se oyen entre ellos;
+  - **la primera** es la del canal de equipo: cuando la función recibe un
+    1 y los dos pueden oírse según las reglas de la partida (hito 299);
+  - **la tercera** es la de cercanía: cuando el otro está en el primer
+    número que «quién oye a quién» guarda del jugador de esta consola, que
+    será «a quién tiene cerca».
+- Y a un muerto no le oye un vivo: si esa función dice que no solo del
+  otro, nada.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- La batería completa del hito 296 corre aparte; las mutaciones de los
+  hitos 280 a 303 están pendientes.
+
 ## 2026-10-08 — Cómo oye un jugador de esta consola a uno de otra
 
 Una función en `networking/voice_routing.c`, de 309 bytes. De 1097 funciones se pasa a

@@ -1380,3 +1380,77 @@ long VOICE_ROUTING_CALLBACK voice_player_hears(
 
 	return result;
 }
+
+/* 0x00057c20: how the game has a player of this console hear a player of
+another, in a game that goes on: 0 for not at all, or one of three ways.
+The second, if voice_player_unknown_000589e0 says no of both. Not at all, if
+it says no of the other alone. The first, with a 1 in what the function is
+told, if the two can hear each other as voice_players_can_hear has it. And
+if not, the third way if the other has its bit in the first number that who
+hears whom has for the player of this console. 0 with no voice or no
+session */
+long VOICE_ROUTING_CALLBACK voice_channels_get_how(
+	long local_player_index,
+	const byte *channels,
+	long player_index,
+	long unknown)
+{
+	const byte *membership;
+	const byte *players;
+	unsigned long near= 0;
+
+	if (!voice_routing_active())
+	{
+		return _voice_hears_none;
+	}
+	membership= game_voice_get_membership();
+	if (!membership)
+	{
+		return _voice_hears_none;
+	}
+	players= membership+GAME_VOICE_MEMBERSHIP_PLAYER_ARRAY_OFFSET;
+	if (channels[VOICE_CHANNELS_ON_OFFSET])
+	{
+		near= *(const unsigned long *)(channels+VOICE_CHANNELS_UNKNOWN4_OFFSET+local_player_index*sizeof(long));
+	}
+	if (!voice_player_unknown_000589e0(local_player_index) && !voice_player_unknown_000589e0(player_index))
+	{
+		return _voice_hears2;
+	}
+	if (!voice_player_unknown_000589e0(player_index))
+	{
+		return _voice_hears_none;
+	}
+	if (unknown==1)
+	{
+		if (!game_voice_unknown_00053d40())
+		{
+			return _voice_hears1;
+		}
+		if (game_voice_unknown_00053d90())
+		{
+			if (!unknown_00192950(local_player_index) && !unknown_00192950(player_index))
+			{
+				return _voice_hears1;
+			}
+		}
+		else
+		{
+			long local_team= (signed char)players[local_player_index*GAME_VOICE_MEMBERSHIP_PLAYER_SIZE+
+				GAME_VOICE_MEMBERSHIP_PLAYER_TEAM_OFFSET];
+			long team= (signed char)players[player_index*GAME_VOICE_MEMBERSHIP_PLAYER_SIZE+
+				GAME_VOICE_MEMBERSHIP_PLAYER_TEAM_OFFSET];
+
+			if (local_team!=NONE && team!=NONE && local_team==team)
+			{
+				return _voice_hears1;
+			}
+		}
+	}
+	if (near&(1u<<(player_index&0x1F)))
+	{
+		return _voice_hears3;
+	}
+
+	return _voice_hears_none;
+}

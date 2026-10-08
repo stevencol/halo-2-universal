@@ -838,3 +838,43 @@ def run(t) -> None:
                             "game_voice_get_local_players": gives(local),
                         },
                     )
+
+    # ---------- how the game has one player hear another
+
+    for enabled, initialized in active():
+        for n in range(120):
+            player, local_player = random_.sample(range(16), 2)
+            data = bytearray(random_.randbytes(PLAYERS + 16 * PLAYER_SIZE))
+            teams = [random_.choice((0, 0, 1, 0xFF)) for _ in range(16)]
+            if n % 4 == 0:
+                teams[player] = teams[local_player]
+            for other in range(16):
+                data[PLAYERS + other * PLAYER_SIZE + 0x124] = teams[other]
+            membership = Buffer(bytes(data))
+            channels_ = channels(random_.choice((1, 1, 1, 0)))
+            struct.pack_into(
+                "<I",
+                channels_,
+                4 + local_player * 4,
+                random_.choice((1 << player, 0xFFFF ^ (1 << player), 0xFFFF, 0)),
+            )
+            alive = [random_.choice((1, 1, 0)) for _ in range(16)]
+            other_thing = [random_.choice((0, 0, 1)) for _ in range(16)]
+            t.check(
+                "voice_channels_get_how",
+                local_player,
+                Buffer(bytes(channels_)),
+                player,
+                random_.choice((1, 1, 0, 2)),
+                globals=state(enabled, initialized),
+                externals={
+                    "game_voice_get_membership": lambda harness, arguments, membership=membership, n=n: (
+                        membership.address if n % 15 else 0
+                    ),
+                    "voice_player_unknown_000589e0": lambda harness, arguments, alive=alive: alive[arguments[0] & 15],
+                    "game_voice_unknown_00053d40": gives(random_.choice((1, 1, 0))),
+                    "game_voice_unknown_00053d90": gives(random_.choice((1, 0, 0))),
+                    "unknown_00192950": lambda harness, arguments, other_thing=other_thing: other_thing[arguments[0] & 15],
+                },
+                extra=[membership],
+            )
