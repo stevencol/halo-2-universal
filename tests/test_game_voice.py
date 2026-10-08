@@ -382,8 +382,8 @@ def run(t) -> None:
                     globals={**state(enabled, initialized), "unknown_004c9888": unknown},
                     externals={
                         "game_voice_has_remote_talker": lambda harness, arguments, found=found: found,
-                        "unknown_00053f50": lambda harness, arguments: 0,
-                        "unknown_00053f80": lambda harness, arguments: 0,
+                        "game_voice_library_begin": lambda harness, arguments: 0,
+                        "game_voice_library_end": lambda harness, arguments: 0,
                         "voice_remote_talker_data": lambda harness, arguments: (
                             0,
                             (arguments[0], arguments[1], harness.normalize(arguments[2]), arguments[3]),
@@ -398,3 +398,149 @@ def run(t) -> None:
                 controller,
                 globals={"voice_globals": a_voice(initialized, modes=tuple(random_.getrandbits(32) for _ in range(4)))},
             )
+
+    # ---------- the players and the session
+
+    SESSION_SIZE = 0x7420
+    MEMBERSHIP = 0x4C
+    MEMBERSHIP_PLAYERS = 0x10D0
+
+    def flags_of(*values: int):
+        """What game_voice_player_flags says, call after call; the last thing for the calls after."""
+
+        def handler(harness, arguments):
+            calls = sum(1 for call in harness._calls if call[0] == "game_voice_player_flags")
+            return values[min(calls, len(values) - 1)]
+
+        return handler
+
+    for enabled, initialized in active():
+        for unknown in (1, 0, 0x100):
+            t.check(
+                "game_voice_unknown_00053b00",
+                random_.getrandbits(32),
+                random_.getrandbits(32),
+                random_.getrandbits(32),
+                globals={
+                    **state(enabled, initialized),
+                    "unknown_004c9888": unknown,
+                    "unknown_00525a00": GlobalRange(4),
+                },
+                externals={
+                    "unknown_00056380": lambda harness, arguments, result=random_.getrandbits(32): (
+                        result,
+                        (arguments[0], harness.normalize(arguments[1]), arguments[2], arguments[3]),
+                    )
+                },
+            )
+
+        for player in (0, 5, 15):
+            for values in ((1,), (3,), (0,), (2,), (0xFFFD,), (0x10001, 0x10000), (1, 2), (5, 0xFFFFFFFD), (0xFFFE, 0)):
+                t.check(
+                    "game_voice_unknown_00053b40",
+                    player,
+                    globals=state(enabled, initialized),
+                    externals={"game_voice_player_flags": flags_of(*values)},
+                )
+            for value in (0, 1, 2, 4, 0xFFFD, 0xFFFB, 0x10006):
+                for name in ("game_voice_player_unknown1", "game_voice_player_unknown2"):
+                    t.check(
+                        name,
+                        player,
+                        globals=state(enabled, initialized),
+                        externals={"game_voice_player_flags": flags_of(value)},
+                    )
+
+            for has_membership in (True, False):
+                for players in (1 << player, 0xFFFFFFFF ^ (1 << player), 0xFFFFFFFF, 0):
+                    membership = bytearray(random_.randbytes(MEMBERSHIP_PLAYERS + 4))
+                    struct.pack_into("<I", membership, MEMBERSHIP_PLAYERS, players)
+                    membership = Buffer(bytes(membership))
+                    t.check(
+                        "game_voice_player_flags",
+                        player,
+                        globals={
+                            **state(enabled, initialized),
+                            "game_voice_player_flag_words": struct.pack("<16H", *(random_.getrandbits(16) | 1 for _ in range(16))),
+                        },
+                        externals={
+                            "game_voice_get_membership": lambda harness, arguments, membership=membership, has_membership=has_membership: (
+                                membership.address if has_membership else 0
+                            )
+                        },
+                        extra=[membership],
+                    )
+
+        for unknown in (1, 0):
+            for source in (1, 2, 0, 3, 0xFFFFFFFF):
+                for found in (1, 0, 0x100):
+                    place = Buffer(random_.randbytes(4))
+                    t.check(
+                        "game_voice_get_session",
+                        place,
+                        globals={
+                            **state(enabled, initialized),
+                            "unknown_004c9888": unknown,
+                            "game_voice_session_source": source,
+                        },
+                        externals={
+                            "unknown_00059670": lambda harness, arguments, found=found: found,
+                            "unknown_000596a0": lambda harness, arguments, found=found: found ^ 1,
+                        },
+                    )
+
+        for found in (1, 0):
+            for unknown741c in (1, 0, 0x100):
+                for first in (0, NONE, 5):
+                    session = bytearray(random_.randbytes(SESSION_SIZE))
+                    struct.pack_into("<I", session, 0x741C, unknown741c)
+                    struct.pack_into("<I", session, MEMBERSHIP, first)
+                    session = Buffer(bytes(session))
+
+                    def get_session(harness, arguments, session=session, found=found):
+                        # the place for the session is in the stack
+                        if found:
+                            harness.mu.mem_write(arguments[0], struct.pack("<I", session.address))
+                        return found, ()
+
+                    t.check(
+                        "game_voice_get_membership",
+                        globals=state(enabled, initialized),
+                        externals={"game_voice_get_session": get_session},
+                        extra=[session],
+                    )
+
+    for state_ in (7, 6, 8, 0, 0x107):
+        thing = bytearray(random_.randbytes(0x48))
+        struct.pack_into("<I", thing, 0x44, state_)
+        thing = Buffer(bytes(thing))
+        for there in (True, False):
+            t.check(
+                "game_voice_unknown_00053d90",
+                externals={
+                    "unknown_000649c0": lambda harness, arguments, thing=thing, there=there: thing.address if there else 0
+                },
+                extra=[thing],
+            )
+
+    def sound_file(file: bytes = b"RIFF", form: bytes = b"WAVE", format_: bytes = b"fmt ") -> Buffer:
+        return Buffer(file + random_.randbytes(4) + form + format_ + random_.randbytes(0x10))
+
+    for message in (
+        sound_file(),
+        sound_file(file=b"RIFX"),
+        sound_file(file=b"\0IFF"),
+        sound_file(form=b"WAVF"),
+        sound_file(format_=b"fmt\0"),
+        sound_file(format_=b"fmu "),
+    ):
+        for size in (0x20, 0x11, 0x10, 0, 0x80000020, 0x7FFFFFFF):
+            t.check("game_voice_message_is_sound_file", message, size)
+
+    # how the processor is set is the emulator's, and is not compared: only
+    # what the C library is asked
+    t.check("game_voice_library_begin", externals={"_control87": lambda harness, arguments: 0})
+    t.check(
+        "game_voice_library_end",
+        externals={"_control87": lambda harness, arguments: 0, "_clearfp": lambda harness, arguments: 0},
+    )

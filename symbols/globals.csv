@@ -217,6 +217,9 @@ address,name,source
 0052731c,voice_modes,source/networking/voice.c
 004c99b8,game_voice_enabled,source/networking/game_voice.c
 004c9888,unknown_004c9888,source/networking/game_voice.c
+004c988c,game_voice_session_source,source/networking/game_voice.c
+004c9988,game_voice_player_flag_words,source/networking/game_voice.c
+00525a00,unknown_00525a00,source/networking/game_voice.c
 004c9968,unknown_004c9968,source/networking/game_voice.c
 004c99a8,game_voice_controller_settings,source/networking/game_voice.c
 0043fe48,game_voice_masks,source/networking/game_voice.c

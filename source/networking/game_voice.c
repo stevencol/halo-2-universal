@@ -22,11 +22,20 @@ are the names of its functions.
 /* 0x000536b0: something of a controller's player */
 boolean unknown_000536b0(long controller_index);
 
-/* 0x00053f50, 0x00053f80: before and after the library works: how the
-processor rounds and what it does with an error in a real is set for the
-library, and put back as the game has it */
-void unknown_00053f50(void);
-void unknown_00053f80(void);
+/* 0x00059670, 0x000596a0: the session of the network game, from one place
+or the other; whether there is one */
+boolean unknown_00059670(byte **session);
+boolean unknown_000596a0(byte **session);
+
+/* 0x00056380: something that 0x00525a00 does with three numbers */
+long unknown_00056380(long unknown4, byte *unknown, long unknown0, long unknown8);
+
+/* 0x000649c0: something of the network game; NULL if there is none */
+byte *unknown_000649c0(void);
+
+/* of the C library: 0x003212d6 and 0x003212c5 */
+unsigned int _control87(unsigned int value, unsigned int mask);
+unsigned int _clearfp(void);
 
 /* ---------- globals */
 
@@ -50,6 +59,16 @@ word unknown_004c9966;
 /* 0x004c9888: 0 when what a player of another console said is not given to
 the library */
 long unknown_004c9888;
+
+/* 0x004c988c: which of two things gives the session of the network game */
+long game_voice_session_source;
+
+/* 0x004c9988: what the game knows of the voice of each player */
+word game_voice_player_flag_words[MAXIMUM_GAME_VOICE_PLAYERS];
+
+/* 0x00525a00: something that game_voice_unknown_00053b00 hands on. Its size
+is not known */
+byte unknown_00525a00[4];
 
 /* 0x004c9968: for each player, a bit for each of the others */
 word unknown_004c9968[MAXIMUM_GAME_VOICE_PLAYERS];
@@ -327,9 +346,9 @@ void game_voice_remote_talker_data(
 	{
 		if (game_voice_has_remote_talker(identifier))
 		{
-			unknown_00053f50();
+			game_voice_library_begin();
 			voice_remote_talker_data(data, size, &voice_globals, identifier);
-			unknown_00053f80();
+			game_voice_library_end();
 		}
 	}
 }
@@ -416,4 +435,173 @@ void game_voice_stop_message_with_headset(
 		}
 		voice_globals.controller_message_busy[controller_index]= FALSE;
 	}
+}
+
+/* 0x00053b00: hands three numbers on to unknown_00056380; 0 with no voice */
+long game_voice_unknown_00053b00(
+	long unknown0,
+	long unknown4,
+	long unknown8)
+{
+	long result= 0;
+
+	if (game_voice_active() && unknown_004c9888!=0)
+	{
+		result= unknown_00056380(unknown4, unknown_00525a00, unknown0, unknown8);
+	}
+
+	return result;
+}
+
+/* 0x00053b40: whether a player has the first flag and not the second */
+boolean game_voice_unknown_00053b40(
+	long player_index)
+{
+	boolean result= FALSE;
+
+	if (game_voice_active())
+	{
+		if ((game_voice_player_flags(player_index)&(1u<<_game_voice_player_unknown0_bit)) &&
+			!(game_voice_active() &&
+			((game_voice_player_flags(player_index)>>_game_voice_player_unknown1_bit)&1)))
+		{
+			result= TRUE;
+		}
+	}
+
+	return result;
+}
+
+/* 0x00053b90 */
+boolean game_voice_player_unknown1(
+	long player_index)
+{
+	boolean result= FALSE;
+
+	if (game_voice_active())
+	{
+		result= (game_voice_player_flags(player_index)>>_game_voice_player_unknown1_bit)&1;
+	}
+
+	return result;
+}
+
+/* 0x00053bb0 */
+boolean game_voice_player_unknown2(
+	long player_index)
+{
+	boolean result= FALSE;
+
+	if (game_voice_active())
+	{
+		result= (game_voice_player_flags(player_index)>>_game_voice_player_unknown2_bit)&1;
+	}
+
+	return result;
+}
+
+/* 0x00053be0: what the game knows of the voice of a player: 0 if the
+session does not have the player */
+unsigned long game_voice_player_flags(
+	long player_index)
+{
+	if (game_voice_active())
+	{
+		unsigned long players= 0;
+		const byte *membership= game_voice_get_membership();
+
+		if (membership)
+		{
+			players= *(const unsigned long *)(membership+GAME_VOICE_MEMBERSHIP_PLAYERS_OFFSET);
+		}
+		if (players&(1u<<player_index))
+		{
+			return game_voice_player_flag_words[player_index];
+		}
+	}
+
+	return 0;
+}
+
+/* 0x00053c30: the session of the network game that the voice goes with;
+whether there is one */
+boolean game_voice_get_session(
+	byte **session)
+{
+	if (game_voice_active() && unknown_004c9888!=0)
+	{
+		switch (game_voice_session_source)
+		{
+		case _game_voice_session_source1:
+			return unknown_00059670(session);
+		case _game_voice_session_source2:
+			return unknown_000596a0(session);
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x00053d90 */
+boolean game_voice_unknown_00053d90(
+	void)
+{
+	const byte *unknown= unknown_000649c0();
+
+	return unknown && *(const long *)(unknown+UNKNOWN_000649C0_STATE_OFFSET)==_unknown_000649c0_state7;
+}
+
+/* 0x00053db0: whether a message is a sound file: see voice_play_message */
+boolean game_voice_message_is_sound_file(
+	const long *message,
+	long size)
+{
+	return size>VOICE_MESSAGE_MINIMUM_SIZE && message[0]==VOICE_MESSAGE_FILE_TAG &&
+		message[2]==VOICE_MESSAGE_FORM_TAG && message[3]==VOICE_MESSAGE_FORMAT_TAG;
+}
+
+/* 0x00053de0: what the session says of who is in it; NULL if there is no
+session or it says nothing */
+byte *game_voice_get_membership(
+	void)
+{
+	if (game_voice_active())
+	{
+		byte *session= NULL;
+
+		if (game_voice_get_session(&session))
+		{
+			if (!*(const long *)(session+GAME_VOICE_SESSION_UNKNOWN741C_OFFSET))
+			{
+				return NULL;
+			}
+			if (*(const long *)(session+GAME_VOICE_SESSION_MEMBERSHIP_OFFSET)==NONE)
+			{
+				return NULL;
+			}
+
+			return session+GAME_VOICE_SESSION_MEMBERSHIP_OFFSET;
+		}
+	}
+
+	return NULL;
+}
+
+/* 0x00053f50: before the library of the voice works: the reals as it wants
+them, and no error in one stops the program */
+void game_voice_library_begin(
+	void)
+{
+	_control87(GAME_VOICE_FLOATING_POINT_CONTROL, GAME_VOICE_FLOATING_POINT_LIBRARY_MASK);
+	__builtin_ia32_ldmxcsr(__builtin_ia32_stmxcsr()|GAME_VOICE_MXCSR_EXCEPTION_MASKS);
+}
+
+/* 0x00053f80: after the library of the voice works: the errors that it left
+noted are forgotten, and the reals are as the game has them */
+void game_voice_library_end(
+	void)
+{
+	__builtin_ia32_ldmxcsr(__builtin_ia32_stmxcsr()&~(unsigned int)GAME_VOICE_MXCSR_EXCEPTION_FLAGS);
+	_clearfp();
+	_control87(GAME_VOICE_FLOATING_POINT_CONTROL, GAME_VOICE_FLOATING_POINT_MASK);
 }

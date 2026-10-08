@@ -2,6 +2,55 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — La voz y la sesión de red: quién está en la partida y qué se sabe de su voz
+
+Once funciones en `networking/game_voice.c`, de 550 bytes entre las once. De 971 funciones se pasa a
+982, el 8,72 % de las del juego (el 5,678 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_voice_unknown_00053b00` | `0x00053b00` | `networking/game_voice.c` |
+| `game_voice_unknown_00053b40` | `0x00053b40` | `networking/game_voice.c` |
+| `game_voice_player_unknown1` | `0x00053b90` | `networking/game_voice.c` |
+| `game_voice_player_unknown2` | `0x00053bb0` | `networking/game_voice.c` |
+| `game_voice_player_flags` | `0x00053be0` | `networking/game_voice.c` |
+| `game_voice_get_session` | `0x00053c30` | `networking/game_voice.c` |
+| `game_voice_unknown_00053d90` | `0x00053d90` | `networking/game_voice.c` |
+| `game_voice_message_is_sound_file` | `0x00053db0` | `networking/game_voice.c` |
+| `game_voice_get_membership` | `0x00053de0` | `networking/game_voice.c` |
+| `game_voice_library_begin` | `0x00053f50` | `networking/game_voice.c` |
+| `game_voice_library_end` | `0x00053f80` | `networking/game_voice.c` |
+
+Las dos últimas eran `unknown_00053f50` y `unknown_00053f80`, las que el
+hito 270 dejó apuntadas.
+
+### Lo que se sabe
+
+- La voz va con una sesión de la partida en red, que viene de uno de dos
+  sitios según `0x004c988c` (`0x00059670` o `0x000596a0`, sin descompilar).
+  De la sesión se mira quién está en ella: un bit por jugador en `0x10d0`
+  de lo que hay en su `0x4c`.
+- De cada jugador el juego guarda 16 bits sobre su voz (`0x004c9988`), que
+  solo valen si el jugador está en la sesión. Tres funciones preguntan por
+  sus tres primeros bits; qué significa cada uno aún no se sabe.
+- Antes de que trabaje la biblioteca de la voz el juego le pone los reales
+  como ella los quiere y hace que ningún error en uno pare el programa; al
+  acabar olvida los errores que quedaron apuntados y los deja como los
+  tiene el juego.
+- `game_voice_message_is_sound_file` es la comprobación de `RIFF`, `WAVE`
+  y `fmt ` que `voice_play_message` (hito 267) tiene metida dentro.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- En `game_voice_library_begin` y `game_voice_library_end`, cómo queda el
+  registro del procesador que cambian (el de los reales de SSE): las
+  pruebas solo comparan lo que se le pide a la biblioteca de C.
+- Las mutaciones de los hitos 266 a 271 corren aparte; su resultado irá en
+  una entrada posterior.
+
 ## 2026-10-08 — Once funciones pequeñas de la voz: modos, máscaras y mensajes
 
 Once funciones en `networking/game_voice.c`, de 475 bytes entre las once. De 960 funciones se pasa a

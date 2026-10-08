@@ -51,6 +51,48 @@ enum
 	MAXIMUM_GAME_VOICE_PLAYERS= 16
 };
 
+/* what the game knows of the voice of a player (0x004c9988): what each
+flag is is not known */
+enum
+{
+	_game_voice_player_unknown0_bit,
+	_game_voice_player_unknown1_bit,
+	_game_voice_player_unknown2_bit
+};
+
+/* which of two things gives the session of the network game (0x004c988c) */
+enum
+{
+	_game_voice_session_source1= 1,
+	_game_voice_session_source2
+};
+
+enum
+{
+	/* in what unknown_00059670 and unknown_000596a0 give: a number that is 0
+	with no session, and what of it the voice is told of, which starts with
+	a number that is NONE if there is none */
+	GAME_VOICE_SESSION_UNKNOWN741C_OFFSET= 0x741C,
+	GAME_VOICE_SESSION_MEMBERSHIP_OFFSET= 0x4C,
+	/* in that: a bit for each player that there is */
+	GAME_VOICE_MEMBERSHIP_PLAYERS_OFFSET= 0x10D0,
+
+	/* in what unknown_000649c0 gives, and what it is when
+	game_voice_unknown_00053d90 says so */
+	UNKNOWN_000649C0_STATE_OFFSET= 0x44,
+	_unknown_000649c0_state7= 7,
+
+	/* _control87: how the library of the voice wants the reals, and how the
+	game has them */
+	GAME_VOICE_FLOATING_POINT_CONTROL= 0x9001F,
+	GAME_VOICE_FLOATING_POINT_LIBRARY_MASK= 0x8001F,
+	GAME_VOICE_FLOATING_POINT_MASK= 0xFFFFF,
+	/* of the register of the reals of the other kind: no error stops the
+	program, and the errors that are noted */
+	GAME_VOICE_MXCSR_EXCEPTION_MASKS= 0x1F80,
+	GAME_VOICE_MXCSR_EXCEPTION_FLAGS= 0x3F
+};
+
 /* what a controller's player wants of the voice (0x004c99a8). What the
 others are is not known */
 enum
@@ -99,6 +141,17 @@ boolean game_voice_message_busy(long controller_index);
 void game_voice_record_message(long controller_index, void *buffer, long *size, long unknown,
 	unsigned long buffer_size, long *length);
 void game_voice_stop_message_with_headset(long controller_index);
+long game_voice_unknown_00053b00(long unknown0, long unknown4, long unknown8);
+boolean game_voice_unknown_00053b40(long player_index);
+boolean game_voice_player_unknown1(long player_index);
+boolean game_voice_player_unknown2(long player_index);
+unsigned long game_voice_player_flags(long player_index);
+boolean game_voice_get_session(byte **session);
+boolean game_voice_unknown_00053d90(void);
+boolean game_voice_message_is_sound_file(const long *message, long size);
+byte *game_voice_get_membership(void);
+void game_voice_library_begin(void);
+void game_voice_library_end(void);
 
 /* ---------- globals */
 
@@ -109,6 +162,9 @@ extern long game_voice_amount;
 extern long game_voice_kind;
 extern boolean game_voice_enabled;
 extern long unknown_004c9888;
+extern long game_voice_session_source;
+extern word game_voice_player_flag_words[MAXIMUM_GAME_VOICE_PLAYERS];
+extern byte unknown_00525a00[];
 extern word unknown_004c9968[MAXIMUM_GAME_VOICE_PLAYERS];
 extern long game_voice_controller_settings[MAXIMUM_VOICE_CONTROLLERS];
 extern const real game_voice_masks[NUMBER_OF_GAME_VOICE_MASKS][NUMBER_OF_VOICE_MASK_VALUES];

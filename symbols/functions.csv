@@ -658,8 +658,22 @@ address,name,source,arguments,returns,convention
 000539a0,game_voice_record_message,source/networking/game_voice.c,ebx edx ecx stack stack stack,void
 000539e0,game_voice_stop_message_with_headset,source/networking/game_voice.c,esi,void
 000536b0,unknown_000536b0,,eax,bool
-00053f50,unknown_00053f50,,,void
-00053f80,unknown_00053f80,,,void
+00053f50,game_voice_library_begin,source/networking/game_voice.c,,void
+00053f80,game_voice_library_end,source/networking/game_voice.c,,void
+00053b00,game_voice_unknown_00053b00,source/networking/game_voice.c,stack stack stack,int
+00053b40,game_voice_unknown_00053b40,source/networking/game_voice.c,eax,bool
+00053b90,game_voice_player_unknown1,source/networking/game_voice.c,ebx,bool
+00053bb0,game_voice_player_unknown2,source/networking/game_voice.c,ebx,bool
+00053be0,game_voice_player_flags,source/networking/game_voice.c,ebx,int
+00053c30,game_voice_get_session,source/networking/game_voice.c,edx,bool
+00053d90,game_voice_unknown_00053d90,source/networking/game_voice.c,,bool
+00053db0,game_voice_message_is_sound_file,source/networking/game_voice.c,ecx edx,bool
+00053de0,game_voice_get_membership,source/networking/game_voice.c,,int
+00059670,unknown_00059670,,edx,bool
+000596a0,unknown_000596a0,,edx,bool
+00056380,unknown_00056380,,eax stack stack stack,int
+000649c0,unknown_000649c0,,,int
+003212c5,_clearfp,,,int
 00332e93,unknown_00332e93,,stack stack,int
 000550b0,voice_dispose,source/networking/voice.c,eax,void
 00055080,voice_initialize,source/networking/voice.c,eax stack,void
