@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Más maneras de buscar una consola en la sesión
+
+Cinco funciones en `networking/network_session.c`, 401 bytes entre todas. De 1128
+funciones se pasa a 1133, el 10,06 % de las del juego (el 6,468 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_channel_is_host` | `0x0005f600` | `networking/network_session.c` |
+| `network_session_find_peer_by_channel` | `0x0005f670` | `networking/network_session.c` |
+| `network_session_find_peer_by_transport_address` | `0x0005f6a0` | `networking/network_session.c` |
+| `network_session_find_peer_by_unknownA` | `0x0005f6f0` | `networking/network_session.c` |
+| `network_session_address_is_host` | `0x0005f7c0` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- Una consola de la sesión se puede buscar de cuatro maneras: por los 36
+  bytes con que se la conoce (hito 319), por el número que la sesión guarda
+  de ella (`network_session_find_peer_by_channel`), por una dirección del
+  juego (`network_session_find_peer_by_transport_address`, que antes la
+  pasa a esos 36 bytes con `0x0007ab60`) y por seis bytes de los 36, desde
+  el `0xA` (`network_session_find_peer_by_unknownA`): es donde las
+  bibliotecas de la consola tienen los de su tarjeta de red.
+- Las otras dos dicen si algo **viene de la consola que lleva la sesión**
+  (la del `0x40`): por un número (`network_session_channel_is_host`) o por
+  una dirección (`network_session_address_is_host`). En el primer estado,
+  cuando aún no se sabe quién está, vale la dirección que la sesión guarda
+  (`0x0005c8f0`).
+- El `0x40` de la sesión es, entonces, **la consola que la lleva**, y el
+  número que se guarda de cada consola es el de su canal en lo que la sesión
+  recibió al prepararse (`0x00075ce0` lo busca ahí).
+
+### Lo que enseñó
+
+- `network_session_find_peer_by_transport_address` recibe la dirección en
+  `ecx` y no la toca: solo la deja pasar a `0x0007ab60`. No se veía en su
+  código, sino en quien la llama. Es el aviso de los argumentos escondidos
+  en registros, otra vez.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (59
+  funciones).
+- Las mutaciones de los hitos 280 a 320 están pendientes.
+
 ## 2026-10-08 — Buscar una consola en una sesión
 
 Tres funciones en `networking/network_session.c`, 392 bytes entre todas. De 1125

@@ -101,6 +101,10 @@ enum
 	characters of 16 bits, of 16 and of 32; four numbers that start at NONE;
 	and two more that it comes in with or not */
 	NETWORK_SESSION_PEER_ADDRESS_OFFSET= 0,
+	/* six bytes of what it is known by, which a console can be looked for
+	by: where the console's libraries have those of its network card */
+	NETWORK_SESSION_PEER_ADDRESS_UNKNOWNA_OFFSET= 0xA,
+	NETWORK_SESSION_PEER_ADDRESS_UNKNOWNA_SIZE= 6,
 	NETWORK_SESSION_PEER_UNKNOWN28_OFFSET= 0x28,
 	NETWORK_SESSION_PEER_UNKNOWN28_LENGTH= 16,
 	NETWORK_SESSION_PEER_UNKNOWN48_OFFSET= 0x48,
@@ -231,7 +235,12 @@ void NETWORK_SESSION_CALLBACK network_session_peer_state_new(boolean unknown1, b
 	long unknown4);
 void NETWORK_SESSION_CALLBACK network_session_add_peer(byte *session, long peer_index, const byte *address,
 	boolean unknown1, long unknown4, const long *unknownF0);
+boolean NETWORK_SESSION_CALLBACK network_session_channel_is_host(const byte *session, long unknown);
+long network_session_find_peer_by_channel(const byte *session, long channel_index);
+long network_session_find_peer_by_transport_address(const byte *session, const struct transport_address *address);
+long NETWORK_SESSION_CALLBACK network_session_find_peer_by_unknownA(const byte *session, const byte *unknownA);
 long NETWORK_SESSION_CALLBACK network_session_find_peer(const byte *session, const byte *address);
+boolean network_session_address_is_host(const byte *session, const struct transport_address *address);
 boolean NETWORK_SESSION_CALLBACK network_session_has_players_of(const byte *session, const byte *other_session);
 long NETWORK_SESSION_CALLBACK network_session_find_player(const byte *session, const byte *identifier);
 void network_session_peer_state_delete(byte *session, long peer_index);

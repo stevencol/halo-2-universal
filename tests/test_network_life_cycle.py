@@ -743,3 +743,76 @@ def run(t) -> None:
             Buffer(bytes(data), pointers=(8,)),
             random_.randrange(16),
         )
+
+    # ---------- more ways of finding a console of a session
+
+    def with_peers() -> bytearray:
+        data = whole_session()
+        data[0x24] = random_.choice((0, 1, 1, 0x80))
+        struct.pack_into("<I", data, 0x40, random_.choice((0, 1, 2, 3, NONE)))
+        struct.pack_into("<I", data, LOCAL_PEER, random_.choice((0, 1, 2, 3, NONE)))
+        for peer in range(16):
+            at = 0x72DC + peer * 0x14
+            data[at] = random_.choice((0, 1, 1, 0x80))
+            struct.pack_into("<I", data, at + 4, random_.choice((NONE, 0, 1, 2, 3, 4)))
+        return data
+
+    for n in range(160):
+        t.check(
+            "network_session_find_peer_by_channel",
+            Buffer(bytes(with_peers())),
+            random_.choice((NONE, 0, 1, 2, 3, 4, 5)),
+        )
+    for n in range(240):
+        channel = random_.choice((NONE, 0, 1, 2, 3, 4))
+        t.check(
+            "network_session_channel_is_host",
+            Buffer(bytes(with_peers())),
+            random_.getrandbits(32),
+            externals={"unknown_00075ce0": lambda harness, arguments, channel=channel: channel},
+        )
+    for n in range(200):
+        data = with_peers()
+        peer = random_.randrange(16)
+        at = PEERS + peer * PEER + 0xA
+        six = bytes(data[at : at + 6])
+        if n % 4 == 0:
+            six = six[:5] + bytes((six[5] ^ 1,))
+        if n % 7 == 0:
+            six = random_.randbytes(6)
+        t.check("network_session_find_peer_by_unknownA", Buffer(bytes(data)), Buffer(six))
+
+    def known(data: bytearray):
+        # what the console of the address is known by is that of a console of the session, most of the time
+        peer = random_.randrange(4)
+        address = bytes(data[PEERS + peer * PEER : PEERS + peer * PEER + 0x24])
+        if random_.randrange(5) == 0:
+            address = random_.randbytes(0x24)
+        could = random_.choice((1, 1, 1, 0x80, 0, 0x100))
+
+        def handler(harness, arguments):
+            # where it goes is in the stack
+            harness.mu.mem_write(arguments[5], address)
+            return could, tuple(arguments[:5])
+
+        return handler
+
+    for n in range(200):
+        data = with_peers()
+        t.check(
+            "network_session_find_peer_by_transport_address",
+            Buffer(bytes(data)),
+            Buffer(random_.randbytes(0x14)),
+            externals={"unknown_0007ab60": known(data)},
+        )
+    for n in range(300):
+        data = with_peers()
+        t.check(
+            "network_session_address_is_host",
+            Buffer(bytes(data)),
+            Buffer(random_.randbytes(0x14)),
+            externals={
+                "unknown_0007ab60": known(data),
+                "unknown_0005c8f0": lambda harness, arguments, same=random_.choice((0, 0, 0, 1, 0x80, 0x100)): same,
+            },
+        )

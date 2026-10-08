@@ -43,6 +43,20 @@ long __attribute__((stdcall)) unknown_003cd147(const byte *identifier, const voi
 /* 0x0007ad80: fills a buffer with bytes made at random */
 void unknown_0007ad80(long size, void *buffer);
 
+/* 0x00075ce0: which of the things of 0x528 bytes of what a session was given
+when it was set up has a number and the bit of the session; NONE if none */
+long unknown_00075ce0(const byte *unknown8, long index, long unknown);
+
+/* 0x0007ab60: what a console is known by in the network, from an address of
+the game and the number that goes with what a session is known by; whether
+it could */
+boolean __attribute__((stdcall)) unknown_0007ab60(const struct transport_address *address, long unknown3C,
+	long unknown4, long unknown8, long unknownC, byte *peer_address);
+
+/* 0x0005c8f0: whether an address of the game is the one that a session in
+its first state keeps */
+boolean unknown_0005c8f0(const byte *session, const struct transport_address *address);
+
 /* 0x0011ca80, of cseries.c */
 long language_from_xbox_language(long xbox_language);
 
@@ -695,4 +709,133 @@ void network_session_peer_state_delete(
 	}
 	memset(state, 0, sizeof(*state));
 	state->unknown4= NONE;
+}
+
+/* whether a session is in its first state or says who is in it: the game
+has this in the functions that ask whether something comes from the console
+that runs the session */
+static inline __attribute__((always_inline)) boolean network_session_has_host(
+	const byte *session)
+{
+	long state= network_session_state(session);
+
+	return (state>_network_session_state2 && state<=_network_session_state8) || state==_network_session_state1;
+}
+
+/* 0x0005f670: which console of a session has a number in what the session
+keeps of each; NONE if none has it or the number is NONE */
+long network_session_find_peer_by_channel(
+	const byte *session,
+	long channel_index)
+{
+	if (channel_index!=NONE)
+	{
+		const struct network_session_peer_state *state=
+			(const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET);
+		long peer_index;
+
+		for (peer_index= 0; peer_index<MAXIMUM_NETWORK_SESSION_PLAYERS; peer_index++, state++)
+		{
+			if (state->valid && state->unknown4==channel_index)
+			{
+				return peer_index;
+			}
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x0005f600: whether something comes from the console that runs a session:
+by a number of it, which unknown_00075ce0 finds the thing of the console
+with. Never in the last four states, which are those of the console that
+runs the session itself */
+boolean NETWORK_SESSION_CALLBACK network_session_channel_is_host(
+	const byte *session,
+	long unknown)
+{
+	if (network_session_has_host(session) && !network_session_unknown_00058d20(session))
+	{
+		long channel_index= unknown_00075ce0(*(const byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+			*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), unknown);
+		long peer_index= network_session_find_peer_by_channel(session, channel_index);
+
+		if (peer_index!=NONE && peer_index==*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET))
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x0005f6a0: which console of a session has an address of the game; NONE
+if none, if the session has no state or is known by nothing, or if
+unknown_0007ab60 cannot say what the console of the address is known by */
+long network_session_find_peer_by_transport_address(
+	const byte *session,
+	const struct transport_address *address)
+{
+	if (network_session_state(session)!=_network_session_state_none && session[NETWORK_SESSION_HAS_IDENTIFIER_OFFSET])
+	{
+		byte peer_address[NETWORK_SESSION_ADDRESS_SIZE];
+
+		if (unknown_0007ab60(address, *(const long *)(session+NETWORK_SESSION_UNKNOWN3C_OFFSET), 0, 0, 0, peer_address))
+		{
+			return network_session_find_peer(session, peer_address);
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x0005f6f0: which console of a session has six bytes in what it is known
+by in the network; NONE if none has them, or if the session has no state or
+says nothing of who is in it */
+long NETWORK_SESSION_CALLBACK network_session_find_peer_by_unknownA(
+	const byte *session,
+	const byte *unknownA)
+{
+	if (network_session_state(session)!=_network_session_state_none &&
+		*(const long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET)!=NONE)
+	{
+		long peer_count= *(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET);
+		long peer_index;
+
+		for (peer_index= 0; peer_index<peer_count; peer_index++)
+		{
+			if (memcmp(session+NETWORK_SESSION_PEER_ARRAY_OFFSET+peer_index*NETWORK_SESSION_PEER_SIZE+
+				NETWORK_SESSION_PEER_ADDRESS_UNKNOWNA_OFFSET, unknownA, NETWORK_SESSION_PEER_ADDRESS_UNKNOWNA_SIZE)==0)
+			{
+				return peer_index;
+			}
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x0005f7c0: whether an address of the game is that of the console that
+runs a session: the one that the session keeps in its first state, or that of
+a console of the session that is not this one and is the one at 0x40 */
+boolean network_session_address_is_host(
+	const byte *session,
+	const struct transport_address *address)
+{
+	if (unknown_0005c8f0(session, address))
+	{
+		return TRUE;
+	}
+	if (network_session_has_host(session))
+	{
+		long peer_index= network_session_find_peer_by_transport_address(session, address);
+
+		if (peer_index!=NONE && peer_index!=*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET) &&
+			peer_index==*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET))
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
 }
