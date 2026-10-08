@@ -797,7 +797,7 @@ address,name,source,arguments,returns,convention
 000caf90,unknown_000caf90,,eax esi,void
 00057c20,voice_channels_get_how,source/networking/voice_routing.c,eax ecx stack stack,int,stdcall
 00057eb0,voice_channels_route_player,source/networking/voice_routing.c,eax stack stack stack,void,stdcall
-000583c0,unknown_000583c0,,edx stack stack,void,stdcall
+000583c0,voice_channels_route_player_to_controllers,source/networking/voice_routing.c,edx stack stack,void,stdcall
 00058590,unknown_00058590,,eax edi stack stack,void,stdcall
 00332e58,unknown_00332e58,,stack stack stack stack stack stack,int
 000589e0,voice_player_unknown_000589e0,source/networking/voice_routing.c,eax,bool

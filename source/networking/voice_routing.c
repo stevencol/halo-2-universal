@@ -23,10 +23,8 @@ voice.c, from 0x00055960 on.
 /* ---------- prototypes of functions not decompiled yet */
 
 
-/* 0x000583c0: what who hears whom does with the players of this console
-that hear a player in the first way: a bit for each. 0x00058590: the same
-with the one that hears it in a way, of those that are not the first */
-void __attribute__((stdcall)) unknown_000583c0(byte *channels, unsigned long listeners, long player_index);
+/* 0x00058590: what who hears whom does with the player of this console that
+hears a player in a way, of those that are not the first */
 void __attribute__((stdcall)) unknown_00058590(long how, long player_index, byte *channels,
 	long listener_player_index);
 
@@ -1941,7 +1939,7 @@ void VOICE_ROUTING_CALLBACK voice_channels_update_team_button(
 
 /* 0x00057eb0: what is done with how each player of this console hears a
 player of another. Those that hear it in the first way go to
-unknown_000583c0, a bit for each. Each of the others has the bit of the player
+voice_channels_route_player_to_controllers, a bit for each. Each of the others has the bit of the player
 set in what it hears, and the rest have it cleared. If any hears it in the
 second way, its voice comes out of the three of the front, and first of all;
 if not, the nearest of those that hear it in the third way goes to
@@ -1990,7 +1988,7 @@ void VOICE_ROUTING_CALLBACK voice_channels_route_player(
 			*hears&= ~bit;
 		}
 	}
-	unknown_000583c0(channels, first, player_index);
+	voice_channels_route_player_to_controllers(channels, first, player_index);
 	if (second)
 	{
 		struct voice_mix_bin front[]= { { 0, 0 }, { 1, 0 }, { 2, 0 } };
@@ -2006,5 +2004,79 @@ void VOICE_ROUTING_CALLBACK voice_channels_route_player(
 	else
 	{
 		voice_remote_talker_set_priority(&voice_globals, player_index, VOICE_CHANNELS_OUTPUT, _voice_priority_never);
+	}
+}
+
+/* 0x000583c0: what is done with the players of this console that hear a
+player of another in the first way, a bit for each. Each of them has the bit
+of the player set in what it hears in that way, and the rest have it cleared.
+Then, for each controller: if one of them has it, the voice of the player
+comes first of all in it, after unknown_00332e34 is given the third of the
+front for the place after the four controllers; if none has it, the voice
+never comes out of it. A player has a controller if it is of this console and
+there is a session. The game has game_voice_get_player_array and
+voice_remote_talker_unknown_00055250 in the function itself */
+void VOICE_ROUTING_CALLBACK voice_channels_route_player_to_controllers(
+	byte *channels,
+	unsigned long listeners,
+	long player_index)
+{
+	unsigned long bit= 1u<<player_index;
+	unsigned long controllers= 0;
+	long listener_index;
+	long controller_index;
+
+	for (listener_index= 0; listener_index<MAXIMUM_VOICE_ROUTING_PLAYERS; listener_index++)
+	{
+		unsigned long *hears= (unsigned long *)(channels+VOICE_CHANNELS_LISTENER_HEARS_FIRST_OFFSET+
+			listener_index*sizeof(long));
+		long listener_controller_index= NONE;
+
+		if (voice_routing_active() && (game_voice_get_local_players()&(1u<<listener_index)))
+		{
+			const byte *players= NULL;
+
+			if (voice_routing_active())
+			{
+				const byte *membership= game_voice_get_membership();
+
+				if (membership)
+				{
+					players= membership+GAME_VOICE_MEMBERSHIP_PLAYER_ARRAY_OFFSET;
+				}
+			}
+			if (players)
+			{
+				listener_controller_index= *(const long *)(players+listener_index*GAME_VOICE_MEMBERSHIP_PLAYER_SIZE+
+					GAME_VOICE_MEMBERSHIP_PLAYER_CONTROLLER_OFFSET);
+			}
+		}
+		if (listeners&(1u<<listener_index))
+		{
+			*hears|= bit;
+			if (listener_controller_index!=NONE)
+			{
+				controllers|= 1u<<listener_controller_index;
+			}
+		}
+		else
+		{
+			*hears&= ~bit;
+		}
+	}
+	for (controller_index= 0; controller_index!=NONE; controller_index= voice_next_controller(controller_index))
+	{
+		if (controllers&(1u<<controller_index))
+		{
+			struct voice_mix_bin middle[]= { { 2, 0 } };
+			struct voice_mix_bins mix_bins= { sizeof(middle)/sizeof(middle[0]), middle };
+
+			voice_remote_talker_unknown_00055250(&voice_globals, player_index, VOICE_CHANNELS_OUTPUT, &mix_bins);
+			voice_remote_talker_set_priority(&voice_globals, player_index, controller_index, _voice_priority_first);
+		}
+		else
+		{
+			voice_remote_talker_set_priority(&voice_globals, player_index, controller_index, _voice_priority_never);
+		}
 	}
 }

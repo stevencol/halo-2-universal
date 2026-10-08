@@ -1163,9 +1163,39 @@ def run(t) -> None:
                 count,
                 globals=state(enabled, initialized),
                 externals={
-                    "unknown_000583c0": gives(0),
+                    "voice_channels_route_player_to_controllers": gives(0),
                     "unknown_00058590": gives(0),
                     "unknown_00332e34": mix_bins,
                     "unknown_00332e58": gives(0),
                 },
+            )
+
+    # ---------- the controllers that hear a player of another console in the first way
+
+    for enabled, initialized in active():
+        for n in range(120):
+            data = bytearray(random_.randbytes(PLAYERS + 16 * PLAYER_SIZE))
+            for other in range(16):
+                struct.pack_into(
+                    "<I",
+                    data,
+                    PLAYERS + other * PLAYER_SIZE + 0x14,
+                    random_.choice((0, 1, 2, 3, other & 3, NONE, NONE, 5, 35)),
+                )
+            membership = Buffer(bytes(data))
+            t.check(
+                "voice_channels_route_player_to_controllers",
+                Buffer(random_.randbytes(0x214)),
+                random_.choice((0, 1, 0x8001, 0xFFFF, random_.getrandbits(16), random_.getrandbits(32))),
+                random_.choice((random_.randrange(16), random_.randrange(16), 0x80000000 | random_.randrange(16))),
+                globals=state(enabled, initialized),
+                externals={
+                    "game_voice_get_local_players": gives(random_.choice((1, 3, 0xFFFF, random_.getrandbits(16), random_.getrandbits(16)))),
+                    "game_voice_get_membership": lambda harness, arguments, membership=membership, n=n: (
+                        membership.address if n % 10 else 0
+                    ),
+                    "unknown_00332e34": mix_bins,
+                    "unknown_00332e58": gives(0),
+                },
+                extra=[membership],
             )

@@ -230,6 +230,26 @@ static inline __attribute__((always_inline)) struct voice_talker voice_talker_ne
 	return talker;
 }
 
+/* the controller after one, and the first after NONE; NONE after the last.
+The game has this in each loop over the controllers */
+static inline __attribute__((always_inline)) long voice_next_controller(
+	long controller_index)
+{
+	switch (controller_index)
+	{
+	case NONE:
+		return 0;
+	case 0:
+		return 1;
+	case 1:
+		return 2;
+	case 2:
+		return 3;
+	}
+
+	return NONE;
+}
+
 /* gives unknown_00332e58 its number for a player of another console, if the
 voice was started */
 static inline __attribute__((always_inline)) void voice_remote_talker_set_priority(

@@ -90,6 +90,8 @@ enum
 	/* for each player of this console, a bit for each player that it hears
 	in the second way or the third */
 	VOICE_CHANNELS_LISTENER_HEARS_OFFSET= 0xC8,
+	/* and a bit for each player that it hears in the first way */
+	VOICE_CHANNELS_LISTENER_HEARS_FIRST_OFFSET= 0x108,
 	/* the place where the voice of a player heard in those ways comes out:
 	the one after the four controllers */
 	VOICE_CHANNELS_OUTPUT= 4,
@@ -239,6 +241,8 @@ void VOICE_ROUTING_CALLBACK voice_channels_update_dead(byte *channels);
 void VOICE_ROUTING_CALLBACK voice_channels_update_team_button(long player_index, byte *channels, long gamepad_index);
 void VOICE_ROUTING_CALLBACK voice_channels_route_player(byte *channels, long player_index,
 	const struct voice_channel_listener *listeners, long count);
+void VOICE_ROUTING_CALLBACK voice_channels_route_player_to_controllers(byte *channels, unsigned long listeners,
+	long player_index);
 long VOICE_ROUTING_CALLBACK voice_channels_get_how(long local_player_index, const byte *channels, long player_index,
 	long unknown);
 void VOICE_ROUTING_CALLBACK voice_route_peers(const byte *unknown, unsigned long peers, word *words);

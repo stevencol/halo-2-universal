@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Los mandos que oyen a un jugador de otra consola
+
+Una función en `networking/voice_routing.c`, de 461 bytes. De 1106 funciones se pasa a
+1107, el 9,83 % de las del juego (el 6,319 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_channels_route_player_to_controllers` | `0x000583c0` | `networking/voice_routing.c` |
+
+Era `unknown_000583c0`, a la que `voice_channels_route_player` (hito 310)
+da los jugadores de esta consola que oyen a uno de otra de la primera
+manera.
+
+### Lo que se sabe
+
+- Apunta en `0x108` de «quién oye a quién» (nuevo: un número por jugador
+  de esta consola) a quién oye cada uno de la primera manera.
+- De cada jugador que le oye saca su mando, de lo que la sesión dice de
+  quién está en ella, y junta un bit por mando.
+- Luego recorre los cuatro mandos: en los que le oyen, prioridad 0 para
+  ese jugador (después de dar a `0x00332e34` el par `{2,0}` para la
+  «salida 4»); en los demás, prioridad `NONE`. Cuadra con que la primera
+  manera es la voz por el auricular de cada mando.
+- `voice_next_controller` pasa también de `voice.c` a `voice.h`: el juego
+  la tiene metida en cada bucle sobre los mandos, y este está fuera de
+  `voice.c`.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de la voz (67 funciones de
+  `voice`, `voice_routing` y `voice_mute_list`).
+- Las mutaciones de los hitos 280 a 311 están pendientes.
+
 ## 2026-10-08 — Por dónde sale la voz de un jugador de otra consola
 
 Una función en `networking/voice_routing.c`, de 1.287 bytes. De 1105 funciones se pasa a

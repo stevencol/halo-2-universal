@@ -115,26 +115,6 @@ static inline __attribute__((always_inline)) boolean voice_has_remote_talkers(
 	return voice->initialized && (voice->modes&(1u<<_voice_mode_unknown2));
 }
 
-/* the controller after one, and the first after NONE; NONE after the last.
-The game has this in each loop over the controllers */
-static inline __attribute__((always_inline)) long voice_next_controller(
-	long controller_index)
-{
-	switch (controller_index)
-	{
-	case NONE:
-		return 0;
-	case 0:
-		return 1;
-	case 1:
-		return 2;
-	case 2:
-		return 3;
-	}
-
-	return NONE;
-}
-
 /* 0x000556a0: the voice of no controller is changed */
 void voice_reset_controller_masks(
 	struct voice_globals *voice)
