@@ -50,6 +50,50 @@ enum
 	/* the players of a game: each has a bit in the numbers of 16 bits */
 	MAXIMUM_GAME_VOICE_PLAYERS= 16,
 
+	/* what the game keeps of the players that talk: its size is all that is
+	known */
+	UNKNOWN_004C989C_SIZE= 0xC0,
+
+	/* the states of the network game (unknown_00527334) that the voice looks
+	at, and what it makes of them (unknown_004c9888) */
+	_network_game_state3= 3,
+	_network_game_state7= 7,
+	_network_game_state8= 8,
+	_network_game_state_last= 9,
+	_game_voice_network_none= 0,
+	_game_voice_network1,
+	_game_voice_network2,
+	_game_voice_network3,
+
+	/* in what unknown_000649c0 gives */
+	UNKNOWN_000649C0_FLAGS_OFFSET= 0x48,
+
+	/* what the game keeps of a profile (0x004cd904): whether it is there,
+	the gamepad that has it, a part that is left as it is and the numbers of
+	the voice of the gamepad's player */
+	UNKNOWN_004CD904_SIZE= 0xD0,
+	UNKNOWN_004CD904_COUNT= 4,
+	UNKNOWN_004CD904_GAMEPAD_OFFSET= 0x10,
+	UNKNOWN_004CD904_UNKNOWN14_OFFSET= 0x14,
+	UNKNOWN_004CD904_UNKNOWN14_SIZE= 0x90,
+	UNKNOWN_004CD904_VOICE_WORDS_OFFSET= 0xA4,
+	/* in what the game knows of the player of a gamepad: which profile */
+	UNKNOWN_0054E8E0_PROFILE_OFFSET= 4,
+
+	/* in what unknown_004cf770 points to: something of each player */
+	UNKNOWN_004CF770_PLAYER_OFFSET= 0x7C,
+	UNKNOWN_004CF770_PLAYER_SIZE= 0x88,
+
+	/* a player of player_data */
+	GAME_VOICE_PLAYER_DATUM_SIZE= 0x21C,
+
+	/* in the game's globals: flags of the kind of game. With the first one
+	and what unknown_0055e4d0 has, game_voice_unknown_00053d40 says so */
+	MAIN_GAME_GLOBALS_VARIANT_FLAGS_OFFSET= 0x184,
+	/* in what unknown_004e9ae8 points to: which of unknown_0055e4d0 */
+	UNKNOWN_004E9AE8_UNKNOWNC14_OFFSET= 0xC14,
+	UNKNOWN_0055E4D0_COUNT= 16,
+
 	/* of a text that game_voice_text_printf writes */
 	GAME_VOICE_TEXT_SIZE= 0x80,
 
@@ -96,6 +140,10 @@ enum
 	/* in the session: this console, and another number */
 	GAME_VOICE_SESSION_LOCAL_PEER_OFFSET= 0x72D8,
 	GAME_VOICE_SESSION_UNKNOWN40_OFFSET= 0x40,
+	/* the last of a player: its bits of the others, and what the game knows
+	of its voice */
+	GAME_VOICE_MEMBERSHIP_PLAYER_UNKNOWN138_OFFSET= 0x138,
+	GAME_VOICE_MEMBERSHIP_PLAYER_FLAGS_OFFSET= 0x13A,
 	/* in what unknown_000596d0 gives, and what it is when the session comes
 	from the second place */
 	UNKNOWN_000596D0_UNKNOWN14_OFFSET= 0x14,
@@ -198,9 +246,17 @@ unsigned long game_voice_controller_player_words(long controller_index);
 long game_voice_get_controller_setting(long controller_index);
 void game_voice_set_controller_setting(long controller_index, long setting);
 char *game_voice_text_printf(char *text, const char *format, ...);
+void game_voice_library_update(void);
+boolean game_voice_unknown_00053d40(void);
+void game_voice_reset_players(void);
+void game_voice_update_player(long player_index);
+void game_voice_update_network_state(void);
+boolean game_voice_unknown_00054df0(long player);
+byte *game_voice_get_player_datum(long player);
+void game_voice_update_profile(long controller_index);
 boolean game_voice_unknown_00054c70(void);
 long game_voice_unknown_00054cc0(void);
-unsigned long game_voice_unknown_00054d00(void);
+unsigned long game_voice_get_remote_talkers(void);
 
 /* ---------- globals */
 
@@ -213,6 +269,11 @@ extern boolean game_voice_enabled;
 extern long unknown_004c9888;
 extern long game_voice_session_source;
 extern long unknown_004c9878;
+extern long unknown_004c9898;
+extern byte unknown_004c989c[UNKNOWN_004C989C_SIZE];
+extern byte unknown_004cd904[UNKNOWN_004CD904_COUNT][UNKNOWN_004CD904_SIZE];
+extern byte *unknown_004e9ae8;
+extern long unknown_0055e4d0[UNKNOWN_0055E4D0_COUNT];
 extern long unknown_004c9880;
 extern long unknown_004c9884;
 extern word game_voice_player_flag_words[MAXIMUM_GAME_VOICE_PLAYERS];
@@ -220,7 +281,7 @@ extern byte unknown_00525a00[];
 extern word unknown_004c9968[MAXIMUM_GAME_VOICE_PLAYERS];
 extern long game_voice_controller_settings[MAXIMUM_VOICE_CONTROLLERS];
 extern const real game_voice_masks[NUMBER_OF_GAME_VOICE_MASKS][NUMBER_OF_VOICE_MASK_VALUES];
-extern word unknown_004c9966;
+extern word game_voice_remote_talkers;
 extern struct allocation *unknown_0046dd54;
 extern struct game_voice_allocation game_voice_allocation;
 

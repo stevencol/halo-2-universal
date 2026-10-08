@@ -15,6 +15,7 @@ are the names of its functions.
 
 #include "game/game.h"
 #include "input/input.h"
+#include "main/main.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -40,6 +41,16 @@ long unknown_00056220(byte *unknown, long unknown0);
 /* 0x000596d0: something of the network game that says where the session
 comes from; whether there is one */
 boolean unknown_000596d0(byte **unknown);
+
+/* 0x00332f22, of the console's library of the voice: the engine does its
+work of each frame */
+long unknown_00332f22(void *engine);
+
+/* 0x00068250: something of the network game */
+boolean unknown_00068250(void);
+
+/* 0x000696d0: something of what unknown_004cf770 has of a player */
+boolean unknown_000696d0(const byte *unknown);
 
 /* 0x001906da: something of the player of a gamepad */
 boolean unknown_001906da(long gamepad_index);
@@ -67,8 +78,8 @@ long game_voice_kind;
 /* 0x004c99b8: the game has to do with the voice at all */
 boolean game_voice_enabled;
 
-/* 0x004c9966: something of the voice that is no more when it stops */
-word unknown_004c9966;
+/* 0x004c9966: a bit for each player of another console that has a voice */
+word game_voice_remote_talkers;
 
 /* 0x004c9888: 0 when what a player of another console said is not given to
 the library */
@@ -80,6 +91,21 @@ long game_voice_session_source;
 /* 0x004c9878: a console of the session; NONE if none. With no voice it
 counts as 0 */
 long unknown_004c9878;
+
+/* 0x004c9898, 0x004c989c: of the players that talk, emptied with the
+players: a number, and 0xc0 bytes (twelve for each of sixteen players, it
+may be) */
+long unknown_004c9898;
+byte unknown_004c989c[UNKNOWN_004C989C_SIZE];
+
+/* 0x004cd904: what the game keeps of each profile. How many there are is a
+guess */
+byte unknown_004cd904[UNKNOWN_004CD904_COUNT][UNKNOWN_004CD904_SIZE];
+
+/* 0x004e9ae8, 0x0055e4d0: something else of the game, and a table that a
+number of it picks from. The size of the table is a guess */
+byte *unknown_004e9ae8;
+long unknown_0055e4d0[UNKNOWN_0055E4D0_COUNT];
 
 /* 0x004c9880, 0x004c9884: what game_voice_unknown_00054cc0 gives when
 unknown_004c9888 is 1, and when it is 2 or 3 */
@@ -316,7 +342,7 @@ void game_voice_stop(
 	if (game_voice_active())
 	{
 		voice_dispose(&voice_globals);
-		unknown_004c9966= 0;
+		game_voice_remote_talkers= 0;
 	}
 }
 
@@ -918,11 +944,12 @@ long game_voice_unknown_00054cc0(
 	return 0;
 }
 
-/* 0x00054d00: unknown_004c9966; 0 with no voice */
-unsigned long game_voice_unknown_00054d00(
+/* 0x00054d00: a bit for each player of another console that has a voice; 0
+with no voice */
+unsigned long game_voice_get_remote_talkers(
 	void)
 {
-	return game_voice_active() ? unknown_004c9966 : 0;
+	return game_voice_active() ? game_voice_remote_talkers : 0;
 }
 
 /* 0x000536b0: whether the player of a controller can talk: the controller
@@ -1105,4 +1132,212 @@ char *game_voice_text_printf(
 	text[GAME_VOICE_TEXT_SIZE-1]= 0;
 
 	return text;
+}
+
+/* 0x00053580: the engine of the voice does its work of the frame. What each
+controller's player said is forgotten first: the engine gives it again as
+it works. The game has game_voice_library_begin, game_voice_library_end and
+a function of voice.c in this one */
+void game_voice_library_update(
+	void)
+{
+	if (game_voice_active())
+	{
+		game_voice_library_begin();
+		if (voice_globals.initialized)
+		{
+			memset(voice_globals.controller_talked, 0, sizeof(voice_globals.controller_talked));
+			unknown_00332f22(voice_globals.engine);
+		}
+		game_voice_library_end();
+	}
+}
+
+/* 0x00053d40: with a flag of the kind of game, if unknown_0055e4d0 has
+something for the number of unknown_004e9ae8; or what
+game_voice_unknown_00053d90 says, which the game has in this one */
+boolean game_voice_unknown_00053d40(
+	void)
+{
+	boolean flag= FALSE;
+	const byte *unknown;
+	boolean state7;
+
+	if (unknown_0055e4d0[*(const long *)(unknown_004e9ae8+UNKNOWN_004E9AE8_UNKNOWNC14_OFFSET)])
+	{
+		flag= *((const byte *)main_game_globals+MAIN_GAME_GLOBALS_VARIANT_FLAGS_OFFSET)&1;
+	}
+	unknown= unknown_000649c0();
+	state7= unknown && *(const long *)(unknown+UNKNOWN_000649C0_STATE_OFFSET)==_unknown_000649c0_state7;
+
+	return flag || state7;
+}
+
+/* 0x00053fb0: nothing is known of the voice of any player */
+void game_voice_reset_players(
+	void)
+{
+	game_voice_remote_talkers= 0;
+	unknown_004c9898= 0;
+	memset(unknown_004c989c, 0, sizeof(unknown_004c989c));
+	memset(unknown_004c9968, 0, sizeof(unknown_004c9968));
+	memset(game_voice_player_flag_words, 0, sizeof(game_voice_player_flag_words));
+}
+
+/* 0x00054410: takes what the session says of the voice of a player, and has
+the library give the player a voice or take it away, by what
+game_voice_unknown_00053b40 says. The game does not see whether there is a
+session, and has game_voice_get_player_array and
+game_voice_has_remote_talker in the function itself */
+void game_voice_update_player(
+	long player_index)
+{
+	const byte *membership= game_voice_active() ? game_voice_get_membership() : NULL;
+	const byte *players= membership ? membership+GAME_VOICE_MEMBERSHIP_PLAYER_ARRAY_OFFSET : NULL;
+	const byte *player= players+player_index*GAME_VOICE_MEMBERSHIP_PLAYER_SIZE;
+	boolean wanted;
+	boolean has_voice= FALSE;
+	boolean result;
+
+	unknown_004c9968[player_index]= *(const word *)(player+GAME_VOICE_MEMBERSHIP_PLAYER_UNKNOWN138_OFFSET);
+	game_voice_player_flag_words[player_index]= *(const word *)(player+GAME_VOICE_MEMBERSHIP_PLAYER_FLAGS_OFFSET);
+	wanted= game_voice_unknown_00053b40(player_index);
+	if (game_voice_active())
+	{
+		has_voice= voice_has_remote_talker(&voice_globals, player_index);
+	}
+	result= wanted;
+	if (has_voice!=wanted)
+	{
+		boolean set= voice_remote_talker_set(&voice_globals, player_index, wanted);
+
+		if (wanted)
+		{
+			result= set;
+		}
+	}
+	if (result)
+	{
+		game_voice_remote_talkers|= (word)(1u<<player_index);
+	}
+	else
+	{
+		game_voice_remote_talkers&= (word)~(1u<<player_index);
+	}
+}
+
+/* 0x000544e0: what the voice makes of the state of the network game */
+void game_voice_update_network_state(
+	void)
+{
+	long state= unknown_00527330 ? unknown_00527334 : 0;
+
+	if (state<1 || state>_network_game_state_last)
+	{
+		unknown_004c9888= _game_voice_network_none;
+		return;
+	}
+	switch (state)
+	{
+	case _network_game_state3:
+		if (game_in_progress() && unknown_00068250())
+		{
+			unknown_004c9888= _game_voice_network1;
+			return;
+		}
+		break;
+	case _network_game_state8:
+		if (game_in_progress() && unknown_00068250())
+		{
+			unknown_004c9888= _game_voice_network1;
+			return;
+		}
+		/* fall through */
+	case _network_game_state7:
+		{
+			const byte *unknown= unknown_000649c0();
+
+			if (unknown && (unknown[UNKNOWN_000649C0_FLAGS_OFFSET]&1))
+			{
+				unknown_004c9888= _game_voice_network3;
+				return;
+			}
+		}
+		break;
+	}
+	unknown_004c9888= _game_voice_network2;
+}
+
+/* 0x00054df0: something of a player, in a game that goes on: what
+unknown_000696d0 says of what unknown_004cf770 has of it */
+boolean game_voice_unknown_00054df0(
+	long player)
+{
+	if (game_voice_active() && main_game_globals)
+	{
+		if (!main_game_globals->active || !unknown_004cf770.unknownC)
+		{
+			return FALSE;
+		}
+		else
+		{
+			unsigned long index= (unsigned long)player&0xFFFF;
+
+			if (index<MAXIMUM_GAME_VOICE_PLAYERS)
+			{
+				const byte *unknown= unknown_004cf770.unknownC+index*UNKNOWN_004CF770_PLAYER_SIZE+
+					UNKNOWN_004CF770_PLAYER_OFFSET;
+
+				if (*(const long *)unknown!=NONE && unknown_000696d0(unknown))
+				{
+					return TRUE;
+				}
+			}
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x00054e60: a player of the game, if game_voice_unknown_00054df0 says so;
+NULL if not */
+byte *game_voice_get_player_datum(
+	long player)
+{
+	if (game_voice_active() && game_voice_unknown_00054df0(player))
+	{
+		long handle= NONE;
+
+		if (player!=NONE)
+		{
+			handle= ((long)*(const short *)((const byte *)player_data->data+player_data->size*player)<<16)|player;
+		}
+
+		return (byte *)player_data->data+(handle&0xFFFF)*GAME_VOICE_PLAYER_DATUM_SIZE;
+	}
+
+	return NULL;
+}
+
+/* 0x00054fe0: what the game keeps of the profile of a gamepad's player gets
+the gamepad and the numbers of the voice of the player. The game copies a
+part of it out and back in around that */
+void game_voice_update_profile(
+	long controller_index)
+{
+	long profile_index;
+
+	memcpy(&profile_index, unknown_0054e8e0[controller_index]+UNKNOWN_0054E8E0_PROFILE_OFFSET, sizeof(profile_index));
+	if (profile_index!=NONE && unknown_004cd904[profile_index][0])
+	{
+		byte *profile= unknown_004cd904[profile_index];
+		byte unknown[UNKNOWN_004CD904_UNKNOWN14_SIZE];
+		unsigned long words;
+
+		memcpy(unknown, profile+UNKNOWN_004CD904_UNKNOWN14_OFFSET, sizeof(unknown));
+		words= game_voice_controller_player_words(controller_index);
+		memcpy(profile+UNKNOWN_004CD904_GAMEPAD_OFFSET, &controller_index, sizeof(controller_index));
+		memcpy(profile+UNKNOWN_004CD904_UNKNOWN14_OFFSET, unknown, sizeof(unknown));
+		memcpy(profile+UNKNOWN_004CD904_VOICE_WORDS_OFFSET, &words, sizeof(words));
+	}
 }

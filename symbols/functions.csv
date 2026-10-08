@@ -688,7 +688,7 @@ address,name,source,arguments,returns,convention
 00054c20,game_voice_player_controller,source/networking/game_voice.c,eax,int
 00054c70,game_voice_unknown_00054c70,source/networking/game_voice.c,,bool
 00054cc0,game_voice_unknown_00054cc0,source/networking/game_voice.c,,int
-00054d00,game_voice_unknown_00054d00,source/networking/game_voice.c,,int
+00054d00,game_voice_get_remote_talkers,source/networking/game_voice.c,,int
 000564c0,unknown_000564c0,,eax stack stack,void
 00056160,unknown_00056160,,ecx edx,bool
 00056220,unknown_00056220,,eax esi,int
@@ -703,6 +703,16 @@ address,name,source,arguments,returns,convention
 00054fc0,game_voice_set_controller_setting,source/networking/game_voice.c,ecx stack,void
 00055060,game_voice_text_printf,source/networking/game_voice.c,esi stack stack stack,string
 001906da,unknown_001906da,,eax,bool
+00053580,game_voice_library_update,source/networking/game_voice.c,,void
+00053d40,game_voice_unknown_00053d40,source/networking/game_voice.c,,bool
+00053fb0,game_voice_reset_players,source/networking/game_voice.c,,void
+00054410,game_voice_update_player,source/networking/game_voice.c,esi,void
+000544e0,game_voice_update_network_state,source/networking/game_voice.c,,void
+00054df0,game_voice_unknown_00054df0,source/networking/game_voice.c,ecx,bool
+00054e60,game_voice_get_player_datum,source/networking/game_voice.c,esi,int
+00054fe0,game_voice_update_profile,source/networking/game_voice.c,stack,void
+00332f22,unknown_00332f22,,stack,int
+000696d0,unknown_000696d0,,eax,bool
 00332e93,unknown_00332e93,,stack stack,int
 000550b0,voice_dispose,source/networking/voice.c,eax,void
 00055080,voice_initialize,source/networking/voice.c,eax stack,void

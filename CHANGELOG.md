@@ -2,6 +2,61 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — La voz, cada fotograma: el motor, el estado de la red y cada jugador
+
+Ocho funciones en `networking/game_voice.c`, de 890 bytes entre las ocho. De 1007 funciones se pasa a
+1015, el 9,01 % de las del juego (el 5,766 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_voice_library_update` | `0x00053580` | `networking/game_voice.c` |
+| `game_voice_unknown_00053d40` | `0x00053d40` | `networking/game_voice.c` |
+| `game_voice_reset_players` | `0x00053fb0` | `networking/game_voice.c` |
+| `game_voice_update_player` | `0x00054410` | `networking/game_voice.c` |
+| `game_voice_update_network_state` | `0x000544e0` | `networking/game_voice.c` |
+| `game_voice_unknown_00054df0` | `0x00054df0` | `networking/game_voice.c` |
+| `game_voice_get_player_datum` | `0x00054e60` | `networking/game_voice.c` |
+| `game_voice_update_profile` | `0x00054fe0` | `networking/game_voice.c` |
+
+### Cambiado
+
+- El número de 16 bits de `0x004c9966` es un bit por cada jugador de otra
+  consola al que la biblioteca le ha dado voz: `unknown_004c9966` pasa a ser
+  `game_voice_remote_talkers`, y `game_voice_unknown_00054d00`,
+  `game_voice_get_remote_talkers`.
+
+### Lo que se sabe
+
+- Cada fotograma el motor de la voz hace su trabajo
+  (`game_voice_library_update`). Antes se olvida qué mandos han hablado: el
+  motor lo vuelve a decir mientras trabaja, y de ahí sale el «está
+  hablando» del hito 273.
+- `game_voice_update_player` copia de la sesión los dos números de 16 bits
+  de un jugador y hace que la biblioteca le dé voz o se la quite, según
+  diga `game_voice_unknown_00053b40` (tiene el primer bit y no el segundo).
+  Si la biblioteca no puede dársela, el jugador queda sin su bit.
+- `0x004c9888` es lo que la voz saca del estado de la partida en red
+  (`0x00527334`): 0 si no hay red, 1 en los estados 3 y 8 con una partida
+  en marcha, 3 en el 7 (y en el 8 sin partida) si lo dice un flag de la
+  red, y 2 en lo demás.
+- `game_voice_update_profile` apunta, en lo que el juego guarda del perfil
+  del jugador de un mando, el mando y los dos números de la voz de su
+  jugador.
+- El juego tiene 192 bytes más sobre los jugadores que hablan
+  (`0x004c989c`), que por ahora solo se vacían.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- `game_voice_update_player` sin voz o sin sesión: el juego lee los
+  jugadores de una sesión que no hay y se para.
+- Los tamaños de dos tablas son suposiciones (`0x004cd904`, de 4, y
+  `0x0055e4d0`, de 16).
+- Las mutaciones de los hitos 266 a 274 corren aparte; su resultado irá en
+  una entrada posterior.
+
 ## 2026-10-08 — Quién puede hablar y quién está hablando: más de mil funciones
 
 Diez funciones en `networking/game_voice.c`, de 620 bytes entre las diez. De 997 funciones se pasa a
