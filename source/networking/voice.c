@@ -62,10 +62,34 @@ long unknown_00332e34(void *engine, struct voice_talker talker, long unknown4, v
 /* 0x00332dad: the levels of the voice of a controller */
 long unknown_00332dad(void *engine, long controller_index, real *levels);
 
+/* 0x00332e8a, 0x00332e81: a controller plays a message, and records one */
+long unknown_00332e8a(void *engine, long controller_index, long size, const void *message, unsigned long unknown);
+long unknown_00332e81(void *engine, long controller_index, long unknown, unsigned long buffer_size, void *buffer);
+
+/* ---------- prototypes of functions not decompiled yet */
+
+/* 0x00053a20: what the game does with what a player said. It takes its
+arguments off the stack */
+void __attribute__((stdcall)) unknown_00053a20(long controller_index, void *data, unsigned long size);
+
 /* ---------- globals */
 
+/* 0x0045095c */
+const struct voice_callbacks voice_callbacks=
+{
+	voice_callback_data_ready,
+	voice_callback_headset_changed,
+	voice_callback_unknown8,
+	voice_callback_unknownC,
+	voice_callback_message_recorded,
+	voice_callback_message_stopped
+};
+
 /* 0x00476fc8 */
-struct voice_globals voice_globals;
+struct voice_globals voice_globals=
+{
+	&voice_callbacks
+};
 
 /* 0x00510c90, of sound_manager.c: what the game knows of the effects of the
 processor of the console's sound. The first thing of it is what the
@@ -225,9 +249,9 @@ boolean voice_start(
 						unknown_00332da8(voice->engine, controller_index,
 							voice_modes[voice->controller_modes[controller_index]]);
 						unknown_00332db2(voice->engine, controller_index, &status);
-						voice->controller_unknown64[controller_index]= status.unknown0==0;
-						voice->controller_unknown8C[controller_index]= FALSE;
-						voice->controller_unknown88[controller_index]= FALSE;
+						voice->controller_has_headset[controller_index]= status.unknown0==0;
+						voice->controller_talked[controller_index]= FALSE;
+						voice->controller_message_busy[controller_index]= FALSE;
 					}
 					started= TRUE;
 				}
@@ -402,4 +426,153 @@ boolean voice_remote_talker_set(
 	}
 
 	return FALSE;
+}
+
+/* 0x000554c0: a controller plays a message, which is a sound file. Only one
+in _voice_mode_unknown3 does, and only with a headset, if the message is not
+to be played without one */
+void voice_play_message(
+	const long *message,
+	boolean unknown,
+	long size,
+	long controller_index,
+	struct voice_globals *voice)
+{
+	if (voice->initialized && voice->controller_modes[controller_index]==_voice_mode_unknown3 &&
+		size>VOICE_MESSAGE_MINIMUM_SIZE && message[0]==VOICE_MESSAGE_FILE_TAG && message[2]==VOICE_MESSAGE_FORM_TAG &&
+		message[3]==VOICE_MESSAGE_FORMAT_TAG && (unknown || voice->controller_has_headset[controller_index]))
+	{
+		if (unknown_00332e8a(voice->engine, controller_index, size, message, unknown)>=0)
+		{
+			voice->controller_message_busy[controller_index]= TRUE;
+		}
+	}
+}
+
+/* 0x00055520: a controller records a message in a buffer, which is emptied
+first. Its size and its length are 0 until the library says that the message
+is done (voice_callback_message_recorded). Only a controller in
+_voice_mode_unknown3 and with a headset does */
+void voice_record_message(
+	unsigned long buffer_size,
+	long controller_index,
+	struct voice_globals *voice,
+	long unknown,
+	void *buffer,
+	long *size,
+	long *length)
+{
+	*size= 0;
+	*length= 0;
+	memset(buffer, 0, buffer_size);
+	if (voice->initialized && voice->controller_modes[controller_index]==_voice_mode_unknown3 &&
+		voice->controller_has_headset[controller_index])
+	{
+		voice->controller_message_size[controller_index]= NULL;
+		voice->controller_message_length[controller_index]= NULL;
+		if (unknown_00332e81(voice->engine, controller_index, unknown, buffer_size, buffer)>=0)
+		{
+			voice->controller_message_size[controller_index]= size;
+			voice->controller_message_length[controller_index]= length;
+			voice->controller_message_busy[controller_index]= TRUE;
+		}
+	}
+}
+
+/* 0x000555b0: a headset was plugged into a controller or taken out of it */
+long VOICE_CALLBACK voice_callback_headset_changed(
+	struct voice_globals *voice,
+	long controller_index,
+	long change)
+{
+	if (change==_voice_headset_plugged_in)
+	{
+		voice->controller_has_headset[controller_index]= TRUE;
+	}
+	else if (change==_voice_headset_taken_out)
+	{
+		voice->controller_has_headset[controller_index]= FALSE;
+	}
+
+	return 0;
+}
+
+/* 0x000555f0: the library has something that the player of a controller
+said */
+long VOICE_CALLBACK voice_callback_data_ready(
+	struct voice_globals *voice,
+	long controller_index,
+	unsigned long size,
+	void *data)
+{
+	if (size>0)
+	{
+		voice->controller_talked[controller_index]= TRUE;
+		unknown_00053a20(controller_index, data, size);
+	}
+
+	return 0;
+}
+
+/* 0x00055620 */
+long VOICE_CALLBACK voice_callback_unknownC(
+	struct voice_globals *voice,
+	long unknown4,
+	long unknown8,
+	long unknownC,
+	long unknown10)
+{
+	(void)voice;
+	(void)unknown4;
+	(void)unknown8;
+	(void)unknownC;
+	(void)unknown10;
+
+	return VOICE_NOT_IMPLEMENTED;
+}
+
+/* 0x00055630 */
+long VOICE_CALLBACK voice_callback_unknown8(
+	struct voice_globals *voice,
+	long unknown4,
+	long unknown8,
+	long unknownC)
+{
+	(void)voice;
+	(void)unknown4;
+	(void)unknown8;
+	(void)unknownC;
+
+	return VOICE_NOT_IMPLEMENTED;
+}
+
+/* 0x00055640: the message that a controller recorded is done: its size and
+its length go where voice_record_message was told */
+long VOICE_CALLBACK voice_callback_message_recorded(
+	struct voice_globals *voice,
+	long controller_index,
+	long length,
+	long size)
+{
+	if (voice->controller_message_size[controller_index])
+	{
+		*voice->controller_message_size[controller_index]= size;
+	}
+	if (voice->controller_message_length[controller_index])
+	{
+		*voice->controller_message_length[controller_index]= length;
+	}
+	voice->controller_message_busy[controller_index]= FALSE;
+
+	return 0;
+}
+
+/* 0x00055680: the message that a controller played is over */
+long VOICE_CALLBACK voice_callback_message_stopped(
+	struct voice_globals *voice,
+	long controller_index)
+{
+	voice->controller_message_busy[controller_index]= FALSE;
+
+	return 0;
 }

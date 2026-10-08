@@ -215,3 +215,4 @@ address,name,source
 00476fbc,sound_memory_allocation,source/sound/sound_memory.c
 00476fc8,voice_globals,source/networking/voice.c
 0052731c,voice_modes,source/networking/voice.c
+0045095c,voice_callbacks,source/networking/voice.c

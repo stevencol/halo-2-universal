@@ -656,6 +656,17 @@ address,name,source,arguments,returns,convention
 00332e18,unknown_00332e18,,stack stack stack stack,int
 00332e34,unknown_00332e34,,stack stack stack stack stack stack,int
 00332dad,unknown_00332dad,,stack stack stack,int
+000554c0,voice_play_message,source/networking/voice.c,ecx edx ebx edi stack,void
+00055520,voice_record_message,source/networking/voice.c,edx ebx esi stack stack stack stack,void
+000555b0,voice_callback_headset_changed,source/networking/voice.c,stack stack stack,int,stdcall
+000555f0,voice_callback_data_ready,source/networking/voice.c,stack stack stack stack,int,stdcall
+00055620,voice_callback_unknownC,source/networking/voice.c,stack stack stack stack stack,int,stdcall
+00055630,voice_callback_unknown8,source/networking/voice.c,stack stack stack stack,int,stdcall
+00055640,voice_callback_message_recorded,source/networking/voice.c,stack stack stack stack,int,stdcall
+00055680,voice_callback_message_stopped,source/networking/voice.c,stack stack,int,stdcall
+00332e8a,unknown_00332e8a,,stack stack stack stack stack,int
+00332e81,unknown_00332e81,,stack stack stack stack stack,int
+00053a20,unknown_00053a20,,stack stack stack,void,stdcall
 00333055,unknown_00333055,,stack stack,int
 00332d8f,unknown_00332d8f,,stack stack,int
 00332d94,unknown_00332d94,,stack stack,int

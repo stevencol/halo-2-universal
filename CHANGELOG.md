@@ -2,6 +2,58 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Los mensajes de voz y lo que la biblioteca le avisa al juego
+
+Ocho funciones en `networking/voice.c`. De 946 funciones se pasa a
+954, el 8,47 % de las del juego (el 5,620 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_play_message` | `0x000554c0` | `networking/voice.c` |
+| `voice_record_message` | `0x00055520` | `networking/voice.c` |
+| `voice_callback_headset_changed` | `0x000555b0` | `networking/voice.c` |
+| `voice_callback_data_ready` | `0x000555f0` | `networking/voice.c` |
+| `voice_callback_unknownC` | `0x00055620` | `networking/voice.c` |
+| `voice_callback_unknown8` | `0x00055630` | `networking/voice.c` |
+| `voice_callback_message_recorded` | `0x00055640` | `networking/voice.c` |
+| `voice_callback_message_stopped` | `0x00055680` | `networking/voice.c` |
+
+Las ocho son nuevas en la lista. Seis de ellas no las llama el juego: las
+llama la biblioteca de la consola, por una tabla (`voice_callbacks`,
+`0x0045095c`) a la que apunta lo primero de `voice_globals`. Ghidra no las
+tiene en su lista, así que no suman bytes.
+
+### Lo que se sabe
+
+- Con la tabla se entiende el resto de `voice_globals`, que queda sin
+  huecos: si cada mando tiene auriculares (`0x64`; la biblioteca avisa
+  cuando se enchufan y cuando se quitan), dónde dejar el tamaño y la
+  duración del mensaje que graba (`0x68` y `0x78`), si está grabando o
+  reproduciendo un mensaje (`0x88`) y si su jugador ha hablado (`0x8C`).
+- Un mando graba y reproduce mensajes solo en el modo 3, el de la campaña
+  en sesión. Un mensaje que se reproduce es un archivo de sonido: el juego
+  mira que empiece por `RIFF`, `WAVE` y `fmt ` y que mida más de 16 bytes.
+- Al grabar, el juego vacía el búfer y pone a 0 el tamaño y la duración; la
+  biblioteca avisa cuando el mensaje está hecho y entonces se rellenan.
+- Cuando un jugador habla, la biblioteca da lo que dijo y el juego se lo
+  pasa a `0x00053a20`, del módulo de encima, aún sin descompilar.
+- Dos de los avisos no hacen nada: devuelven «no implementado».
+- Los nombres de los campos y de los avisos son suposiciones, por cómo se
+  usan.
+
+### Mutaciones
+
+Las del hito 265 terminaron: treinta y un cambios a mano, y las pruebas
+notan los treinta y uno.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo y las de `sound_memory`.
+- Las mutaciones de los hitos 266 y 267 corren aparte; su resultado irá en
+  una entrada posterior.
+
 ## 2026-10-08 — Las voces de los jugadores de otras consolas
 
 Seis funciones en `networking/voice.c`, de 580 bytes entre las seis. De 940 funciones se pasa a

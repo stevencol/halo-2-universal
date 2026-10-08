@@ -12,6 +12,7 @@ PARAMETERS_SIZE = 0x24
 VOICE_INITIALIZED = 4
 VOICE_MODES = 0xC
 VOICE_CONTROLLER_MODES = 0x54
+VOICE_ENGINE = 0x10
 STATUS_SIZE = 0xC
 FAILED = 0x80004005
 
@@ -288,3 +289,118 @@ def run(t) -> None:
                         "unknown_00332dd3": lambda harness, arguments, result=result: result,
                     },
                 )
+
+    # ---------- the messages
+
+    HEADSET = 0x64
+    MESSAGE_SIZE = 0x68
+    MESSAGE_LENGTH = 0x78
+    MESSAGE_BUSY = 0x88
+    TALKED = 0x8C
+
+    def controller_voice(initialized: int, controller: int, mode: int, headset: int) -> bytearray:
+        data = bytearray(random_.randbytes(VOICE_SIZE))
+        data[VOICE_INITIALIZED] = initialized
+        struct.pack_into("<I", data, VOICE_ENGINE, ENGINE)
+        struct.pack_into("<I", data, VOICE_CONTROLLER_MODES + controller * 4, mode)
+        data[HEADSET + controller] = headset
+        return data
+
+    def sound_file(file: bytes = b"RIFF", form: bytes = b"WAVE", format_: bytes = b"fmt ") -> Buffer:
+        return Buffer(file + random_.randbytes(4) + form + format_ + random_.randbytes(0x10))
+
+    def message_cases():
+        # (started, mode, headset, size, the message, without a headset)
+        yield 1, 3, 1, 0x20, sound_file(), 0
+        yield 0x80, 3, 0, 0x11, sound_file(), 1
+        yield 1, 3, 0x80, 0x7FFFFFFF, sound_file(), 0x80
+        yield 1, 3, 0, 0x20, sound_file(), 0
+        yield 0, 3, 1, 0x20, sound_file(), 1
+        yield 1, 2, 1, 0x20, sound_file(), 1
+        yield 1, 0x103, 1, 0x20, sound_file(), 1
+        yield 1, 3, 1, 0x10, sound_file(), 1
+        yield 1, 3, 1, 0, sound_file(), 1
+        yield 1, 3, 1, 0x80000020, sound_file(), 1
+        yield 1, 3, 1, 0x20, sound_file(file=b"RIFX"), 1
+        yield 1, 3, 1, 0x20, sound_file(form=b"WAVF"), 1
+        yield 1, 3, 1, 0x20, sound_file(format_=b"fmt\0"), 1
+        yield 1, 3, 1, 0x20, sound_file(file=b"\0IFF"), 1
+
+    for started, mode, headset, size, message, unknown in message_cases():
+        for controller in range(4):
+            for result in (0, 1, FAILED):
+                t.check(
+                    "voice_play_message",
+                    message,
+                    unknown,
+                    size,
+                    controller,
+                    Buffer(bytes(controller_voice(started, controller, mode, headset))),
+                    externals={"unknown_00332e8a": lambda harness, arguments, result=result: result},
+                )
+
+    for started, mode, headset in ((1, 3, 1), (0x80, 3, 0x80), (0, 3, 1), (1, 2, 1), (1, 3, 0), (1, 0x103, 1)):
+        for controller in range(4):
+            for result in (0, 1, FAILED):
+                for buffer_size in (0, 1, 3, 4, 0x25, 0x40):
+                    # what the library records is the test's
+                    recorded = random_.randbytes(buffer_size)
+
+                    def record(harness, arguments, result=result, recorded=recorded):
+                        harness.mu.mem_write(arguments[4], recorded)
+                        return result
+
+                    # the two places are kept in the voice: all in one buffer,
+                    # so that they are at the same address in both
+                    voice_data = controller_voice(started, controller, mode, headset)
+                    for offset in (*range(MESSAGE_SIZE, MESSAGE_BUSY, 4),):
+                        struct.pack_into("<I", voice_data, offset, random_.getrandbits(32))
+                    t.check(
+                        "voice_record_message",
+                        buffer_size,
+                        controller,
+                        Buffer(bytes(voice_data)),
+                        random_.getrandbits(32),
+                        Buffer(random_.randbytes(0x48)),
+                        Buffer(random_.randbytes(4)),
+                        Buffer(random_.randbytes(4)),
+                        externals={"unknown_00332e81": record},
+                    )
+
+    # ---------- what the library tells the game
+
+    for controller in range(4):
+        for change in (0, 1, 2, 0xFFFFFFFF, 0x100):
+            t.check("voice_callback_headset_changed", voice(), controller, change)
+
+        for size in (0, 1, 0x80000000, 0x40):
+            t.check(
+                "voice_callback_data_ready",
+                voice(),
+                controller,
+                size,
+                0x80345000 + random_.getrandbits(8),
+                externals={"unknown_00053a20": lambda harness, arguments: 0},
+            )
+
+        for wanted in ((True, True), (True, False), (False, True), (False, False)):
+            # the voice, and after it the two places
+            data = bytearray(voice().data) + random_.randbytes(8)
+            struct.pack_into("<I", data, MESSAGE_SIZE + controller * 4, VOICE_SIZE if wanted[0] else 0)
+            struct.pack_into("<I", data, MESSAGE_LENGTH + controller * 4, VOICE_SIZE + 4 if wanted[1] else 0)
+            pointers = tuple(
+                offset + controller * 4 for offset, is_wanted in zip((MESSAGE_SIZE, MESSAGE_LENGTH), wanted) if is_wanted
+            )
+            t.check(
+                "voice_callback_message_recorded",
+                Buffer(bytes(data), pointers=pointers),
+                controller,
+                random_.getrandbits(32),
+                random_.getrandbits(32),
+            )
+
+        t.check("voice_callback_message_stopped", voice(), controller)
+
+    for _ in range(3):
+        t.check("voice_callback_unknownC", voice(), *(random_.getrandbits(32) for _ in range(4)))
+        t.check("voice_callback_unknown8", voice(), *(random_.getrandbits(32) for _ in range(3)))

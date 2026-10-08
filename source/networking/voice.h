@@ -65,6 +65,31 @@ enum
 	VOICE_ENGINE_UNKNOWN_00332E7C_VALUE= 15
 };
 
+/* what the library tells of what a player talks and listens with */
+enum
+{
+	_voice_headset_plugged_in,
+	_voice_headset_taken_out
+};
+
+enum
+{
+	/* what a function that the library calls says when it does nothing */
+	VOICE_NOT_IMPLEMENTED= (long)0x80004001,
+
+	/* a message that is played is a sound file: how it starts, and it is
+	longer than this */
+	VOICE_MESSAGE_FILE_TAG= 0x46464952, /* RIFF */
+	VOICE_MESSAGE_FORM_TAG= 0x45564157, /* WAVE */
+	VOICE_MESSAGE_FORMAT_TAG= 0x20746d66, /* fmt */
+	VOICE_MESSAGE_MINIMUM_SIZE= 0x10
+};
+
+/* as the library calls the game */
+#define VOICE_CALLBACK __attribute__((stdcall))
+
+struct voice_globals;
+
 /* ---------- structures */
 
 /* what the console's library starts the voice with */
@@ -86,8 +111,7 @@ struct voice_engine_parameters
 /* 0x00476fc8 */
 struct voice_globals
 {
-	/* the functions of an object */
-	void *unknown0;
+	const struct voice_callbacks *callbacks;
 	boolean initialized;
 	byte pad5[3];
 	long kind;
@@ -98,13 +122,33 @@ struct voice_globals
 	/* -1 when the voice starts */
 	real controller_levels[MAXIMUM_VOICE_CONTROLLERS][NUMBER_OF_VOICE_CONTROLLER_LEVELS];
 	long controller_modes[MAXIMUM_VOICE_CONTROLLERS];
-	/* the first thing that the library says of the controller was 0 when the
-	voice started */
-	boolean controller_unknown64[MAXIMUM_VOICE_CONTROLLERS];
-	byte unknown68[0x20];
-	/* FALSE when the voice starts */
-	boolean controller_unknown88[MAXIMUM_VOICE_CONTROLLERS];
-	boolean controller_unknown8C[MAXIMUM_VOICE_CONTROLLERS];
+	/* the controller has what a player talks and listens with: the first
+	thing that the library says of it is 0, when the voice starts, and the
+	library tells when it is plugged in and taken out */
+	boolean controller_has_headset[MAXIMUM_VOICE_CONTROLLERS];
+	/* where the size and the length of the message that the controller
+	records are left when it is done; NULL if nobody wants them */
+	long *controller_message_size[MAXIMUM_VOICE_CONTROLLERS];
+	long *controller_message_length[MAXIMUM_VOICE_CONTROLLERS];
+	/* the controller records a message or plays one */
+	boolean controller_message_busy[MAXIMUM_VOICE_CONTROLLERS];
+	/* the library gave something that the controller's player said */
+	boolean controller_talked[MAXIMUM_VOICE_CONTROLLERS];
+};
+
+/* the functions that the library tells the game what happens with: the
+first thing of voice_globals points to them. Each gets the voice first */
+struct voice_callbacks
+{
+	long (VOICE_CALLBACK *data_ready)(struct voice_globals *voice, long controller_index, unsigned long size,
+		void *data);
+	long (VOICE_CALLBACK *headset_changed)(struct voice_globals *voice, long controller_index, long change);
+	long (VOICE_CALLBACK *unknown8)(struct voice_globals *voice, long unknown4, long unknown8, long unknownC);
+	long (VOICE_CALLBACK *unknownC)(struct voice_globals *voice, long unknown4, long unknown8, long unknownC,
+		long unknown10);
+	long (VOICE_CALLBACK *message_recorded)(struct voice_globals *voice, long controller_index, long length,
+		long size);
+	long (VOICE_CALLBACK *message_stopped)(struct voice_globals *voice, long controller_index);
 };
 
 /* a player of another console, as the console's libraries know one: a
@@ -134,8 +178,10 @@ typedef char verify_voice_globals_size[
 	sizeof(struct voice_globals) == 0x90 ? 1 : -1];
 typedef char verify_voice_globals_controller_modes_offset[
 	offsetof(struct voice_globals, controller_modes) == 0x54 ? 1 : -1];
-typedef char verify_voice_globals_controller_unknown88_offset[
-	offsetof(struct voice_globals, controller_unknown88) == 0x88 ? 1 : -1];
+typedef char verify_voice_globals_controller_message_busy_offset[
+	offsetof(struct voice_globals, controller_message_busy) == 0x88 ? 1 : -1];
+typedef char verify_voice_callbacks_size[
+	sizeof(struct voice_callbacks) == 0x18 ? 1 : -1];
 #endif
 
 /* ---------- prototypes/VOICE.C */
@@ -153,9 +199,24 @@ void voice_remote_talker_unknown_00055250(const struct voice_globals *voice, lon
 	void *unknown8);
 void voice_remove_remote_talkers(struct voice_globals *voice);
 boolean voice_remote_talker_set(const struct voice_globals *voice, long identifier, boolean has_voice);
+void voice_play_message(const long *message, boolean unknown, long size, long controller_index,
+	struct voice_globals *voice);
+void voice_record_message(unsigned long buffer_size, long controller_index, struct voice_globals *voice,
+	long unknown, void *buffer, long *size, long *length);
+long VOICE_CALLBACK voice_callback_headset_changed(struct voice_globals *voice, long controller_index, long change);
+long VOICE_CALLBACK voice_callback_data_ready(struct voice_globals *voice, long controller_index,
+	unsigned long size, void *data);
+long VOICE_CALLBACK voice_callback_unknownC(struct voice_globals *voice, long unknown4, long unknown8,
+	long unknownC, long unknown10);
+long VOICE_CALLBACK voice_callback_unknown8(struct voice_globals *voice, long unknown4, long unknown8,
+	long unknownC);
+long VOICE_CALLBACK voice_callback_message_recorded(struct voice_globals *voice, long controller_index,
+	long length, long size);
+long VOICE_CALLBACK voice_callback_message_stopped(struct voice_globals *voice, long controller_index);
 
 /* ---------- globals */
 
+extern const struct voice_callbacks voice_callbacks;
 extern struct voice_globals voice_globals;
 extern void *voice_modes[NUMBER_OF_VOICE_MODES];
 
