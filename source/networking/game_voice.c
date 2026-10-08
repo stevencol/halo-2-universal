@@ -22,6 +22,7 @@ are the names of its functions.
 #include <string.h>
 #include "main/main_game.h"
 #include "networking/network_life_cycle.h"
+#include "networking/network_session.h"
 #include "saved games/saved_game_files.h"
 
 /* ---------- prototypes of functions not decompiled yet */
@@ -43,10 +44,6 @@ something, and choosing it */
 long unknown_0005b0b0(byte *session);
 void unknown_0005c6d0(byte *session, long peer);
 
-
-/* 0x0005f760: which console of a session a console of another is; NONE if
-none */
-long unknown_0005f760(byte *session, const byte *peer);
 
 /* 0x001906da: something of the player of a gamepad */
 boolean unknown_001906da(long gamepad_index);
@@ -1476,7 +1473,7 @@ unsigned long game_voice_unknown_00053c70(
 			count= *(const long *)(membership+GAME_VOICE_MEMBERSHIP_PEER_COUNT_OFFSET);
 			for (peer= 0; peer<count; peer++)
 			{
-				if (unknown_0005f760(other_session, membership+GAME_VOICE_MEMBERSHIP_PEER_ARRAY_OFFSET+
+				if (network_session_find_peer(other_session, membership+GAME_VOICE_MEMBERSHIP_PEER_ARRAY_OFFSET+
 					peer*GAME_VOICE_MEMBERSHIP_PEER_SIZE)!=NONE)
 				{
 					result|= 1u<<peer;

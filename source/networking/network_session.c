@@ -618,3 +618,81 @@ boolean NETWORK_SESSION_CALLBACK network_session_request_player(
 
 	return FALSE;
 }
+
+/* 0x0005f760: which console of a session is known in the network by what it
+is given; NONE if none is, or if the session has no state or says nothing of
+who is in it */
+long NETWORK_SESSION_CALLBACK network_session_find_peer(
+	const byte *session,
+	const byte *address)
+{
+	if (network_session_state(session)!=_network_session_state_none &&
+		*(const long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET)!=NONE)
+	{
+		long peer_count= *(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET);
+		long peer_index;
+
+		for (peer_index= 0; peer_index<peer_count; peer_index++)
+		{
+			if (memcmp(address, session+NETWORK_SESSION_PEER_ARRAY_OFFSET+peer_index*NETWORK_SESSION_PEER_SIZE,
+				NETWORK_SESSION_ADDRESS_SIZE)==0)
+			{
+				return peer_index;
+			}
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x0005f810: whether each player of a session is a player of another too.
+FALSE if either does not say who is in it */
+boolean NETWORK_SESSION_CALLBACK network_session_has_players_of(
+	const byte *session,
+	const byte *other_session)
+{
+	if (network_session_established(other_session) && network_session_established(session))
+	{
+		const byte *membership= session+NETWORK_SESSION_MEMBERSHIP_OFFSET;
+		unsigned long players= *(const unsigned long *)(membership+NETWORK_SESSION_MEMBERSHIP_PLAYERS_OFFSET);
+		long player_index;
+
+		for (player_index= 0; player_index<MAXIMUM_NETWORK_SESSION_PLAYERS; player_index++)
+		{
+			if ((players&(1u<<player_index)) && network_session_find_player(other_session,
+				membership+NETWORK_SESSION_MEMBERSHIP_PLAYER_ARRAY_OFFSET+player_index*NETWORK_SESSION_PLAYER_SIZE)==NONE)
+			{
+				return FALSE;
+			}
+		}
+
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+/* 0x0005f970: what a session keeps of a console is no more. If it had a
+number, the thing of that number in what the session was given when it was
+set up loses the bit of the session. Before that the game looks, in the last
+four states, for another console that has the three first bytes set, and
+does nothing with what it finds */
+void network_session_peer_state_delete(
+	byte *session,
+	long peer_index)
+{
+	struct network_session_peer_state *state=
+		(struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index;
+
+	if (state->unknown4!=NONE)
+	{
+		byte *channel= *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET)+
+			state->unknown4*NETWORK_SESSION_UNKNOWN8_CHANNEL_SIZE;
+
+		channel[NETWORK_SESSION_UNKNOWN8_CHANNEL_SESSIONS_OFFSET]&=
+			(byte)~(1u<<*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET));
+		state->unknown4= NONE;
+	}
+	memset(state, 0, sizeof(*state));
+	state->unknown4= NONE;
+}

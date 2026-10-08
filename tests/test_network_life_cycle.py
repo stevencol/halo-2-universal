@@ -693,3 +693,53 @@ def run(t) -> None:
             globals=clock(),
             externals={"GetTickCount": ticks()},
         )
+
+    # ---------- a console of a session, the players of two sessions, and a console that is no more
+
+    PEERS, PEER = 0x58, 0x10C
+
+    for n in range(200):
+        data = whole_session()
+        peer = random_.randrange(16)
+        address = bytes(data[PEERS + peer * PEER : PEERS + peer * PEER + 0x24])
+        if n % 4 == 0:
+            address = address[:0x23] + bytes((address[0x23] ^ 1,))
+        if n % 7 == 0:
+            address = random_.randbytes(0x24)
+        t.check("network_session_find_peer", Buffer(bytes(data)), Buffer(address))
+
+    for n in range(200):
+        data = whole_session()
+        other = whole_session()
+        if n % 3:
+            struct.pack_into("<I", data, STATE, random_.choice((3, 4, 5, 8)))
+            struct.pack_into("<I", other, STATE, random_.choice((3, 4, 5, 8)))
+        struct.pack_into("<I", other, MEMBERSHIP, random_.choice((0, 0, 0, NONE)))
+        mask = random_.choice((0, 1, 0x8001, random_.getrandbits(16)))
+        struct.pack_into("<I", data, PLAYER_MASK, mask)
+        struct.pack_into("<I", other, PLAYER_MASK, random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16))))
+        # the players of one are in the other, in another order; but for one, some of the time
+        order = random_.sample(range(16), 16)
+        for player in range(16):
+            at, to = PLAYER_ARRAY + player * PLAYER, PLAYER_ARRAY + order[player] * PLAYER
+            other[to : to + 12] = data[at : at + 12]
+        if n % 4 == 0:
+            other[PLAYER_ARRAY + random_.randrange(16) * PLAYER + 5] ^= 0x10
+        t.check("network_session_has_players_of", Buffer(bytes(data)), Buffer(bytes(other)))
+
+    CHANNELS = 0x78C0
+
+    for n in range(120):
+        data = whole_session() + bytearray(random_.randbytes(8 + 4 * 0x528))
+        struct.pack_into("<I", data, 8, CHANNELS)
+        struct.pack_into("<I", data, 0x10, random_.choice((0, 1, 2, 3, 7, 9)))
+        for peer in range(16):
+            at = 0x72DC + peer * 0x14
+            data[at] = random_.choice((0, 1, 1))
+            data[at + 2] = random_.choice((0, 1, 1))
+            struct.pack_into("<I", data, at + 4, random_.choice((NONE, NONE, 0, 1, 2, 3)))
+        t.check(
+            "network_session_peer_state_delete",
+            Buffer(bytes(data), pointers=(8,)),
+            random_.randrange(16),
+        )

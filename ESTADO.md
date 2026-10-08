@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 318.
+**Última actualización:** 2026-10-08, al terminar el hito 319.
 
 ## Dónde estamos
 
-- **1125 funciones descompiladas de 11.265: el 9,99 % del juego** (el
-  6,441 % de los bytes de código).
-- Las 1125 están comprobadas contra el ejecutable original: las 1090 del
+- **1128 funciones descompiladas de 11.265: el 10,01 % del juego** (el
+  6,455 % de los bytes de código).
+- Las 1128 están comprobadas contra el ejecutable original: las 1090 del
   hito 296 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the players that ask to come into a session* (ver `git log`).
+- Último hito: *Decompile how a session finds a console and drops one* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 541 funciones apuntadas pero sin descompilar (las que el código
-  llama); 453 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 540 funciones apuntadas pero sin descompilar (las que el código
+  llama); 452 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -109,10 +109,10 @@ Módulos (funciones hechas / archivo):
       terminar líneas o triángulos; faltan `0x0001e930` y `0x0001eb00`, que
       preparan la consola para dibujar)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
-- [ ] Sesión de red — `networking\network_session.c` (17: el estado de
+- [ ] Sesión de red — `networking\network_session.c` (20: el estado de
       una sesión, prepararla, arrancarla, su identificador y su clave,
-      una consola que entra y los jugadores que lo piden; faltan muchas,
-      de `0x0005f760` en adelante)
+      las consolas que entran y salen y los jugadores que lo piden;
+      faltan muchas, de `0x0005a400` en adelante)
 - [ ] Dirección y claves de red — `networking\transport_security.c` (4:
       lo que la consola es en la red y la clave de cada sesión; va de
       `0x0007a8a0` en adelante)
@@ -229,7 +229,7 @@ Módulos (funciones hechas / archivo):
 - [x] ~~`game_voice.c`~~ (hito 278): completo.
 - [x] ~~El resto de `voice_routing.c`~~ (hito 313).
 - [ ] **La sesión de red**: lo que hay alrededor de lo ya hecho
-      (`0x0005f760`, `0x0005f970`, `0x0005fd10`, `0x00061050`),
+      (`0x0005f6a0`, `0x0005f7c0`, `0x0005fd10`, `0x00061050`),
       `0x00075a90`, lo que sigue en `transport_security.c`
       (`0x0007aaa0`), y lo que hace la partida en cada estado
       (`0x0006dec0`).

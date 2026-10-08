@@ -848,7 +848,9 @@ address,name,source,arguments,returns,convention
 000565c0,voice_route_peers,source/networking/voice_routing.c,stack stack stack,void,stdcall
 00056790,voice_route_assign,source/networking/voice_routing.c,ebx edx stack stack stack stack stack,void,stdcall
 00056130,voice_queues_add,source/networking/voice_routing.c,eax ecx ebx stack stack stack,void
-0005f760,unknown_0005f760,,ecx stack,int
+0005f760,network_session_find_peer,source/networking/network_session.c,ecx stack,int,stdcall
+0005f810,network_session_has_players_of,source/networking/network_session.c,ecx stack,bool,stdcall
+0005f970,network_session_peer_state_delete,source/networking/network_session.c,edi edx,void
 00332e93,unknown_00332e93,,stack stack,int
 000550b0,voice_dispose,source/networking/voice.c,eax,void
 00055080,voice_initialize,source/networking/voice.c,eax stack,void

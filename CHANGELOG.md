@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Buscar una consola en una sesión
+
+Tres funciones en `networking/network_session.c`, 392 bytes entre todas. De 1125
+funciones se pasa a 1128, el 10,01 % de las del juego (el 6,455 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_find_peer` | `0x0005f760` | `networking/network_session.c` |
+| `network_session_has_players_of` | `0x0005f810` | `networking/network_session.c` |
+| `network_session_peer_state_delete` | `0x0005f970` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_find_peer` era `unknown_0005f760`, la que usaba la voz
+  (`game_voice.c`) para saber qué consola de una sesión es una de otra: las
+  compara por los 36 bytes con que se las conoce en la red.
+- `network_session_has_players_of` dice si todos los jugadores de una
+  sesión están también en otra (por sus doce bytes). Sirve para pasar de
+  una sesión a la otra de la partida.
+- `network_session_peer_state_delete` borra lo que la sesión guarda aparte
+  de una consola. Si tenía número, ese número es el de una cosa de `0x528`
+  bytes en lo que la sesión recibió al prepararse, que tiene un byte con un
+  bit por sesión: se le quita el de esta. Parece el canal por el que se
+  habla con esa consola.
+- Antes de eso el juego busca, en los cuatro últimos estados, otra consola
+  con los tres primeros bytes puestos, y no hace nada con lo que encuentra:
+  es lo que queda de una comprobación que el juego final no hace.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (54) y de
+  `game_voice` (71).
+- Las mutaciones de los hitos 280 a 319 están pendientes.
+
 ## 2026-10-08 — Los jugadores que piden entrar y el quinto estado de la sesión
 
 Cinco funciones en `networking/network_session.c`, 641 bytes entre todas. De 1120

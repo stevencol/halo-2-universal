@@ -1158,7 +1158,7 @@ def run(t) -> None:
                         externals={
                             "network_life_cycle_get_other_session": place(found, session),
                             "network_life_cycle_get_session": place(other_found, other),
-                            "unknown_0005f760": which,
+                            "network_session_find_peer": which,
                         },
                         extra=[session, other],
                     )

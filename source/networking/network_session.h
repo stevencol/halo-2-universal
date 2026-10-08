@@ -132,6 +132,11 @@ enum
 	NETWORK_SESSION_PLAYER_SIZE= 0x13C,
 	NETWORK_SESSION_PLAYER_IDENTIFIER_SIZE= 0xC,
 	MAXIMUM_NETWORK_SESSION_PLAYERS= 16,
+	/* in what the session was given when it was set up: things of 0x528
+	bytes, one for each console that the session has a number of; each has a
+	byte with a bit for each session that uses it */
+	NETWORK_SESSION_UNKNOWN8_CHANNEL_SIZE= 0x528,
+	NETWORK_SESSION_UNKNOWN8_CHANNEL_SESSIONS_OFFSET= 0xB1,
 	/* the players that ask to come into the session, at 0x7668 */
 	MAXIMUM_NETWORK_SESSION_PLAYER_REQUESTS= 16,
 	/* and after the rest of the session: GetTickCount with the other sign,
@@ -226,7 +231,10 @@ void NETWORK_SESSION_CALLBACK network_session_peer_state_new(boolean unknown1, b
 	long unknown4);
 void NETWORK_SESSION_CALLBACK network_session_add_peer(byte *session, long peer_index, const byte *address,
 	boolean unknown1, long unknown4, const long *unknownF0);
+long NETWORK_SESSION_CALLBACK network_session_find_peer(const byte *session, const byte *address);
+boolean NETWORK_SESSION_CALLBACK network_session_has_players_of(const byte *session, const byte *other_session);
 long NETWORK_SESSION_CALLBACK network_session_find_player(const byte *session, const byte *identifier);
+void network_session_peer_state_delete(byte *session, long peer_index);
 void NETWORK_SESSION_CALLBACK network_session_reset_requests(byte *session, boolean unknown);
 void network_session_enter_state5(byte *session);
 boolean NETWORK_SESSION_CALLBACK network_session_request_players(const byte *identifiers, const long *unknown2,
