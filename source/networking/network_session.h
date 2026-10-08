@@ -10,6 +10,7 @@ so are the names of its functions.
 #define __NETWORK_SESSION_H
 
 #include "cseries/cseries.h"
+#include "text/unicode.h"
 #include "networking/transport_security.h"
 
 /* ---------- constants */
@@ -243,6 +244,54 @@ struct network_session_unknown78A8
 	const struct network_session_unknown78A8_functions *functions;
 };
 
+/* what a session knows of a console apart from what it is known by in the
+network and its players: from 0x28 of the console. Two texts, and numbers */
+struct network_session_peer_properties
+{
+	wchar unknown0[NETWORK_SESSION_PEER_UNKNOWN28_LENGTH];
+	wchar unknown20[NETWORK_SESSION_PEER_UNKNOWN48_LENGTH];
+	long unknown60;
+	long unknown64;
+	long unknown68;
+	long unknown6C;
+	long unknown70;
+	long unknown74[4];
+	/* these are aligned to four bytes */
+	long unknown84[NETWORK_SESSION_PEER_UNKNOWNAC_SIZE/sizeof(long)];
+	long unknownC4;
+};
+
+/* what has changed of that: each part of it goes after a byte that says
+whether it has */
+struct network_session_peer_properties_update
+{
+	boolean has_texts;
+	wchar unknown0[NETWORK_SESSION_PEER_UNKNOWN28_LENGTH];
+	wchar unknown20[NETWORK_SESSION_PEER_UNKNOWN48_LENGTH];
+	boolean has_unknown60;
+	long unknown60;
+	long unknown64;
+	boolean has_unknown68;
+	long unknown68;
+	long unknown6C;
+	long unknown70;
+	long unknown74[4];
+	boolean has_unknown84;
+	long unknown84[NETWORK_SESSION_PEER_UNKNOWNAC_SIZE/sizeof(long)];
+	boolean has_unknownC4;
+	long unknownC4;
+};
+
+typedef char verify_network_session_peer_properties_size[
+	sizeof(struct network_session_peer_properties) == 0xC8 ? 1 : -1];
+typedef char verify_network_session_peer_properties_end[
+	NETWORK_SESSION_PEER_UNKNOWN28_OFFSET+sizeof(struct network_session_peer_properties) ==
+	NETWORK_SESSION_PEER_UNKNOWNF0_OFFSET ? 1 : -1];
+typedef char verify_network_session_peer_properties_update_size[
+	sizeof(struct network_session_peer_properties_update) == 0xD8 ? 1 : -1];
+typedef char verify_network_session_peer_properties_update_unknown84_offset[
+	offsetof(struct network_session_peer_properties_update, unknown84) == 0x90 ? 1 : -1];
+
 /* a number that network_session_start leaves in a session */
 #define NETWORK_SESSION_UNKNOWN4DA8_VALUE 0xDEADBEEFu
 
@@ -289,6 +338,9 @@ void network_session_remove_player_and_count(byte *session, long player_index);
 long NETWORK_SESSION_CALLBACK network_session_add_peer_player(byte *session, long peer_index,
 	long peer_player_index, const byte *identifier);
 long network_session_free_player_places(const byte *session);
+void NETWORK_SESSION_CALLBACK network_session_peer_properties_get_update(
+	struct network_session_peer_properties_update *update, const struct network_session_peer_properties *properties,
+	const struct network_session_peer_properties *baseline);
 void network_session_remove_peer(byte *session, long peer_index);
 void NETWORK_SESSION_CALLBACK network_session_remove_player(byte *session, long player_index);
 boolean NETWORK_SESSION_CALLBACK network_session_find_request(byte *session, const byte *identifier,

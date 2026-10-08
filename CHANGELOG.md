@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Lo que ha cambiado de una consola
+
+Una función en `networking/network_session.c`, de 333 bytes. De 1145 funciones se pasa a
+1146, el 10,17 % de las del juego (el 6,543 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_peer_properties_get_update` | `0x000602b0` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- Lo que la sesión sabe de una consola, aparte de cómo se la conoce en la
+  red y de sus jugadores, son 200 bytes desde su `0x28`: dos textos (de 16
+  y de 32 caracteres), dos números, tres números con cuatro más (los que
+  la voz ya leía en `0x9C`–`0xA8`), 64 bytes y un número. Ahora tienen
+  estructura: `network_session_peer_properties`.
+- Esta función los compara con los de antes y apunta **solo lo que ha
+  cambiado**: cinco partes, cada una detrás de un byte que dice si ha
+  cambiado. Sin nada con que comparar, ha cambiado todo. Es como la sesión
+  prepara lo que manda a las demás consolas.
+- Los textos se comparan como textos: lo que haya detrás de su final no
+  cuenta.
+- La parte de 64 bytes está alineada a cuatro: no son bytes sueltos.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (72
+  funciones).
+- Las mutaciones de los hitos 280 a 308 y 321 a 325 están pendientes; las
+  de los hitos 309 a 320 estaban corriendo al cerrar este hito
+  (`transport_security`: 19 de 19 cazadas).
+
 ## 2026-10-08 — El jugador de una consola entra en la sesión
 
 Dos funciones en `networking/network_session.c`, 291 bytes entre las dos. De 1143

@@ -1029,3 +1029,36 @@ def run(t) -> None:
             Buffer(identifier),
             mocks=[Mock(lambda call, can=random_.choice((1, 1, 1, 0x80, 0, 0x100)): can, stack_arguments=1, registers=("ecx",))],
         )
+
+    # ---------- what has changed of a console of a session
+
+    def text(length: int) -> bytes:
+        # a text of characters of 16 bits that ends somewhere, or does not
+        characters = [random_.randrange(1, 0x10000) for _ in range(length)]
+        end = random_.choice((0, 1, length // 2, length - 1, length))
+        if end < length:
+            characters[end] = 0
+        return struct.pack(f"<{length}H", *characters)
+
+    for n in range(400):
+        current = bytearray(text(16) + text(32) + random_.randbytes(0xC8 - 0x60))
+        baseline = bytearray(current)
+        for _ in range(random_.choice((0, 0, 1, 1, 2, 5))):
+            way = random_.randrange(9)
+            if way == 0:
+                # a character of the first text, which is after its end or not
+                baseline[random_.randrange(16) * 2] ^= 1
+            elif way == 1:
+                baseline[0x20 + random_.randrange(32) * 2] ^= 1
+            elif way == 2:
+                baseline[random_.choice((0x1E, 0x5E))] ^= 0x40
+            else:
+                # a byte of one of the other parts
+                at = {3: 0x60, 4: 0x64, 5: 0x68 + random_.randrange(12), 6: 0x74 + random_.randrange(16), 7: 0x84 + random_.randrange(0x40), 8: 0xC4}[way]
+                baseline[at + (random_.randrange(4) if way in (3, 4, 8) else 0)] ^= 0x10
+        t.check(
+            "network_session_peer_properties_get_update",
+            Buffer(random_.randbytes(0xD8)),
+            Buffer(bytes(current)),
+            Buffer(bytes(baseline)) if n % 8 else 0,
+        )

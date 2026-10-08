@@ -1687,3 +1687,4 @@ address,name,source,arguments,returns,convention
 000601e0,network_session_remove_player_and_count,source/networking/network_session.c,ecx eax,void
 00060000,network_session_add_peer_player,source/networking/network_session.c,ebx stack stack stack,int,stdcall
 00062e30,network_session_free_player_places,source/networking/network_session.c,esi,int
+000602b0,network_session_peer_properties_get_update,source/networking/network_session.c,ebx stack stack,void,stdcall

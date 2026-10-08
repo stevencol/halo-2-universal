@@ -26,6 +26,7 @@ long GetTickCount(void);
 /* of the C library */
 long time(long *timer);
 wchar *wcsncpy(wchar *destination, const wchar *source, size_t count);
+int wcsncmp(const wchar *a, const wchar *b, size_t count);
 
 /* ---------- prototypes of functions not decompiled yet */
 
@@ -1258,4 +1259,50 @@ long NETWORK_SESSION_CALLBACK network_session_add_peer_player(
 	(*(long *)(session+NETWORK_SESSION_UNKNOWN7618_OFFSET))++;
 
 	return player_index;
+}
+
+/* 0x000602b0: what has changed of what a session knows of a console, from
+what it was: each part that is not the same is copied, and its byte set.
+With nothing to compare with, all of it has changed. What has not changed is
+left as it was */
+void NETWORK_SESSION_CALLBACK network_session_peer_properties_get_update(
+	struct network_session_peer_properties_update *update,
+	const struct network_session_peer_properties *properties,
+	const struct network_session_peer_properties *baseline)
+{
+	if (!baseline || wcsncmp(properties->unknown0, baseline->unknown0, NETWORK_SESSION_PEER_UNKNOWN28_LENGTH)!=0 ||
+		wcsncmp(properties->unknown20, baseline->unknown20, NETWORK_SESSION_PEER_UNKNOWN48_LENGTH)!=0)
+	{
+		update->has_texts= TRUE;
+		wcsncpy(update->unknown0, properties->unknown0, NETWORK_SESSION_PEER_UNKNOWN28_LENGTH-1);
+		update->unknown0[NETWORK_SESSION_PEER_UNKNOWN28_LENGTH-1]= 0;
+		wcsncpy(update->unknown20, properties->unknown20, NETWORK_SESSION_PEER_UNKNOWN48_LENGTH-1);
+		update->unknown20[NETWORK_SESSION_PEER_UNKNOWN48_LENGTH-1]= 0;
+	}
+	if (!baseline || properties->unknown60!=baseline->unknown60 || properties->unknown64!=baseline->unknown64)
+	{
+		update->has_unknown60= TRUE;
+		update->unknown60= properties->unknown60;
+		update->unknown64= properties->unknown64;
+	}
+	if (!baseline || properties->unknown68!=baseline->unknown68 || properties->unknown6C!=baseline->unknown6C ||
+		properties->unknown70!=baseline->unknown70 ||
+		memcmp(properties->unknown74, baseline->unknown74, sizeof(properties->unknown74))!=0)
+	{
+		update->has_unknown68= TRUE;
+		update->unknown68= properties->unknown68;
+		update->unknown6C= properties->unknown6C;
+		update->unknown70= properties->unknown70;
+		memcpy(update->unknown74, properties->unknown74, sizeof(update->unknown74));
+	}
+	if (!baseline || memcmp(properties->unknown84, baseline->unknown84, sizeof(properties->unknown84))!=0)
+	{
+		update->has_unknown84= TRUE;
+		memcpy(update->unknown84, properties->unknown84, sizeof(update->unknown84));
+	}
+	if (!baseline || properties->unknownC4!=baseline->unknownC4)
+	{
+		update->has_unknownC4= TRUE;
+		update->unknownC4= properties->unknownC4;
+	}
 }
