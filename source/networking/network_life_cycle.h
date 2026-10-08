@@ -45,7 +45,36 @@ enum
 	UNKNOWN_00527FA0_SESSION_OFFSET= 0x38,
 	UNKNOWN_00527500_SIZE= 0x10,
 	UNKNOWN_00527500_UNKNOWN8_OFFSET= 0x8,
-	UNKNOWN_00527508_SESSION_OFFSET= 0x30
+	UNKNOWN_00527508_SESSION_OFFSET= 0x30,
+
+	/* one thing for each of the ten things that the network game can be
+	doing: the first is that of doing nothing */
+	NUMBER_OF_NETWORK_LIFE_CYCLE_STATES= 10,
+
+	/* what network_life_cycle_unknown_000594f0 says when
+	network_life_cycle_unknown_000594a0 goes on, and what
+	network_life_cycle_unknown_00059570 says then */
+	_network_life_cycle_unknown_000594f0_3= 3,
+	_network_life_cycle_unknown_00059570_2= 2,
+	_network_life_cycle_unknown_00059570_4= 4
+};
+
+/* the functions of what the network game can be doing: what is known of
+them is how network_life_cycle_end calls them */
+struct network_life_cycle_handler;
+
+struct network_life_cycle_handler_functions
+{
+	void *unknown0;
+	void (__attribute__((thiscall)) *enter)(struct network_life_cycle_handler *handler,
+		struct network_life_cycle_handler *from, long unknown4, long unknown8);
+	void (__attribute__((thiscall)) *exit)(struct network_life_cycle_handler *handler,
+		struct network_life_cycle_handler *to);
+};
+
+struct network_life_cycle_handler
+{
+	const struct network_life_cycle_handler_functions *functions;
 };
 
 /* a function that takes its arguments off the stack */
@@ -72,6 +101,9 @@ void network_life_cycle_unknown_00059530(void);
 long network_life_cycle_unknown_00059590(void);
 void network_life_cycle_unknown_000595e0(void);
 boolean network_life_cycle_unknown_00059610(void);
+void network_life_cycle_end(void);
+boolean NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_unknown_000594a0(long unknown0, long unknown4, long unknown8);
+boolean network_life_cycle_get_current_session(byte **session);
 
 /* ---------- globals */
 
@@ -87,5 +119,8 @@ extern boolean unknown_005274e1;
 extern long unknown_00510518;
 extern boolean unknown_0051051c;
 extern boolean unknown_0051051d;
+extern struct network_life_cycle_handler *network_life_cycle_handlers[NUMBER_OF_NETWORK_LIFE_CYCLE_STATES];
+extern boolean unknown_0052737c;
+extern boolean unknown_0052737d;
 
 #endif

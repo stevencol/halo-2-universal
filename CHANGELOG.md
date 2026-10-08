@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — La partida en red deja lo que hace, y la sesión de cada momento
+
+Tres funciones en `networking/network_life_cycle.c`, de 351 bytes entre las tres. De 1070 funciones se pasa a
+1073, el 9,53 % de las del juego (el 6,064 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_life_cycle_end` | `0x000593e0` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_000594a0` | `0x000594a0` | `networking/network_life_cycle.c` |
+| `network_life_cycle_get_current_session` | `0x000596d0` | `networking/network_life_cycle.c` |
+
+`network_life_cycle_get_current_session` era `unknown_000596d0`, la que
+`game_voice_update_session_source` (hito 272) llama para saber con qué
+sesión va la voz.
+
+### Lo que se sabe
+
+- Cada una de las diez cosas que la partida en red puede estar haciendo
+  tiene «quien la hace»: un objeto con sus funciones
+  (`network_life_cycle_handlers`, `0x00527338`). Al dejar lo que hace, la
+  partida suelta las dos sesiones, avisa a quien lo hacía de que se pasa a
+  no hacer nada, y a «no hacer nada» de que se viene de aquello. Es la
+  primera vez que las pruebas siguen llamadas por las funciones de un
+  objeto del juego.
+- La sesión «de ahora» depende de lo que se esté haciendo: la primera en
+  los cinco primeros estados, la otra en los tres últimos, y en el sexto la
+  primera salvo en un caso en que se da la otra.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo y las de `game_voice`.
+- Las mutaciones de los hitos 269 a 279 corren aparte; las de 280 a 289
+  están pendientes.
+
 ## 2026-10-08 — La lista de «a quién no quiero oír», y un jugador y su objeto
 
 Cinco funciones: cuatro en un archivo nuevo, `networking/voice_mute_list.c`, y una en

@@ -725,7 +725,13 @@ address,name,source,arguments,returns,convention
 000564c0,voice_queues_read_packet,source/networking/voice_routing.c,eax stack stack,void,stdcall
 00056160,voice_queues_go_to_peer,source/networking/voice_routing.c,ecx edx,bool
 00056220,voice_queues_size_for_peer,source/networking/voice_routing.c,eax esi,int
-000596d0,unknown_000596d0,,edi,bool
+000596d0,network_life_cycle_get_current_session,source/networking/network_life_cycle.c,edi,bool
+000593e0,network_life_cycle_end,source/networking/network_life_cycle.c,,void
+000594a0,network_life_cycle_unknown_000594a0,source/networking/network_life_cycle.c,stack stack stack,bool,stdcall
+000705f0,unknown_000705f0,,eax stack stack stack,bool,stdcall
+000641f0,unknown_000641f0,,,int
+00192e60,unknown_00192e60,,eax,int
+00193470,unknown_00193470,,eax,bool
 00054d20,game_voice_get_local_players,source/networking/game_voice.c,,int
 00053750,game_voice_player_is_talking,source/networking/game_voice.c,esi,bool
 00054ec0,game_voice_unknown_00054ec0,source/networking/game_voice.c,,bool

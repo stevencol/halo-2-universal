@@ -3,7 +3,7 @@
 import random
 import struct
 
-from difftest import Buffer, GlobalRange
+from difftest import Buffer, GlobalRange, Mock, mock_address
 
 NONE = 0xFFFFFFFF
 SESSION_SIZE = 0x7424
@@ -199,3 +199,73 @@ def run(t) -> None:
                 },
                 externals={"unknown_0005a6e0": a_thing},
             )
+
+    # ---------- the network game stops
+
+    def a_handler() -> Buffer:
+        # what does a state: its functions come after the pointer to them
+        return Buffer(struct.pack("<4I", 4, 0x55555555, mock_address(0), mock_address(1)), pointers=(0,))
+
+    for life_cycle_state in range(10):
+        for state, other_state in ((3, 3), (0, 3), (3, 0), (0, 0)):
+            none, doing = a_handler(), a_handler()
+            handlers = {"network_life_cycle_handlers": none}
+            if life_cycle_state:
+                handlers[f"network_life_cycle_handlers+{life_cycle_state * 4:#x}"] = doing
+            t.check(
+                "network_life_cycle_end",
+                globals={
+                    "unknown_00527334": life_cycle_state,
+                    "network_life_cycle_session": session(state),
+                    "network_life_cycle_other_session": session(other_state),
+                    "unknown_0052737c": bytes((0x40,)),
+                    "unknown_0052737d": bytes((0x40,)),
+                    **handlers,
+                },
+                externals=plain("unknown_000598f0", "unknown_0005a520"),
+                mocks=[
+                    Mock(lambda call: 0, stack_arguments=3, registers=("ecx",)),
+                    Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
+                ],
+            )
+
+    for first, second in ((3, 0), (2, 3), (2, 2), (0, 3), (1, 3)):
+        for life_cycle_state in (6, 7, 5, 0):
+            for says in (2, 4, 0, 3, 5):
+                for result in (1, 0, 0x100):
+                    t.check(
+                        "network_life_cycle_unknown_000594a0",
+                        random_.getrandbits(32),
+                        random_.getrandbits(32),
+                        random_.getrandbits(32),
+                        globals={
+                            "unknown_00527e78": first,
+                            "unknown_00527fa8": second,
+                            "unknown_00527334": life_cycle_state,
+                            "unknown_00527500": GlobalRange(0x10),
+                        },
+                        externals={
+                            "unknown_00070570": lambda harness, arguments, says=says: (says, (harness.normalize(arguments[0]),)),
+                            "unknown_000705f0": lambda harness, arguments, result=result: (
+                                result,
+                                (harness.normalize(arguments[0]), *arguments[1:]),
+                            ),
+                        },
+                    )
+
+    for there in (1, 0):
+        for life_cycle_state in range(11):
+            for state, other_state in ((3, 3), (0, 3), (3, 0), (0, 0)):
+                for unknown, thing, says in ((5, 0x80345000, 0), (NONE, 0x80345000, 0), (5, 0, 0), (5, 0x80345000, 1)):
+                    for place in (Buffer(random_.randbytes(4)), 0):
+                        t.check(
+                            "network_life_cycle_get_current_session",
+                            place,
+                            globals={
+                                "unknown_00527330": bytes((there,)),
+                                "unknown_00527334": life_cycle_state,
+                                "network_life_cycle_session": session(state),
+                                "network_life_cycle_other_session": session(other_state),
+                            },
+                            externals=plain(unknown_000641f0=unknown, unknown_00192e60=thing, unknown_00193470=says),
+                        )

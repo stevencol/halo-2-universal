@@ -32,6 +32,15 @@ void unknown_0005b570(byte *session);
 void unknown_0005a6e0(byte *session);
 boolean unknown_0005b1e0(byte *session, long unknown);
 
+/* 0x000705f0: more that unknown_00527500 says, with three numbers */
+boolean __attribute__((stdcall)) unknown_000705f0(byte *unknown, long unknown0, long unknown4, long unknown8);
+
+/* 0x000641f0: something of the network game; NONE if none. 0x00192e60: what
+there is for it; NULL if nothing. 0x00193470: something of that */
+long unknown_000641f0(void);
+byte *unknown_00192e60(long unknown);
+boolean unknown_00193470(byte *unknown);
+
 /* ---------- globals */
 
 /* 0x00527364, 0x0052736c: the two sessions of the network game */
@@ -56,6 +65,15 @@ byte *unknown_00527fa0;
 is set when this console runs the session or there is none */
 long unknown_005274fc;
 boolean unknown_005274e1;
+
+/* 0x00527338: what does each of the things that the network game can be
+doing */
+struct network_life_cycle_handler *network_life_cycle_handlers[NUMBER_OF_NETWORK_LIFE_CYCLE_STATES];
+
+/* 0x0052737c, 0x0052737d: the first is set while network_life_cycle_end
+works; the second is cleared by it */
+boolean unknown_0052737c;
+boolean unknown_0052737d;
 
 /* 0x00510518, 0x0051051c, 0x0051051d: if the first is not 0, the other two
 are set before some things are done */
@@ -376,4 +394,111 @@ boolean network_life_cycle_unknown_00059610(
 	}
 
 	return FALSE;
+}
+
+/* 0x000593e0: the network game stops what it is doing: the two sessions are
+left, and what it was doing is told that it goes to doing nothing, and doing
+nothing that it comes from that */
+void network_life_cycle_end(
+	void)
+{
+	if (*(const long *)(network_life_cycle_other_session+NETWORK_SESSION_STATE_OFFSET)!=_network_session_state_none)
+	{
+		unknown_000598f0(network_life_cycle_other_session);
+		unknown_0005a520(network_life_cycle_other_session);
+	}
+	if (*(const long *)(network_life_cycle_session+NETWORK_SESSION_STATE_OFFSET)!=_network_session_state_none)
+	{
+		unknown_000598f0(network_life_cycle_session);
+		unknown_0005a520(network_life_cycle_session);
+	}
+	unknown_0052737d= FALSE;
+	unknown_0052737c= TRUE;
+	if (unknown_00527334!=_network_life_cycle_state_none)
+	{
+		struct network_life_cycle_handler *handler= network_life_cycle_handlers[unknown_00527334];
+		struct network_life_cycle_handler *none= network_life_cycle_handlers[_network_life_cycle_state_none];
+
+		handler->functions->exit(handler, none);
+		unknown_00527334= _network_life_cycle_state_none;
+		none->functions->enter(none, handler, 0, 0);
+	}
+	unknown_0052737c= FALSE;
+}
+
+/* 0x000594a0: what unknown_000705f0 says with three numbers, when
+network_life_cycle_unknown_000594f0 says 3 and
+network_life_cycle_unknown_00059570 says 2 or 4; FALSE if not. The game has
+those two in the function itself */
+boolean NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_unknown_000594a0(
+	long unknown0,
+	long unknown4,
+	long unknown8)
+{
+	if (network_life_cycle_unknown_000594f0()==_network_life_cycle_unknown_000594f0_3)
+	{
+		long unknown= network_life_cycle_unknown_00059570();
+
+		if (unknown==_network_life_cycle_unknown_00059570_2 || unknown==_network_life_cycle_unknown_00059570_4)
+		{
+			return unknown_000705f0(unknown_00527500, unknown0, unknown4, unknown8);
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x000596d0: the session that goes with what the network game is doing;
+whether there is one. In the first five states, the session; in the last
+three, the other one. In the sixth, the session, or the other one when
+unknown_000641f0 has something that unknown_00193470 says no of and there is
+another session: then it says that there is one, and gives it if a place for
+it is given */
+boolean network_life_cycle_get_current_session(
+	byte **session)
+{
+	boolean result= FALSE;
+
+	switch (network_life_cycle_get_state())
+	{
+	case _network_life_cycle_state1:
+	case _network_life_cycle_state2:
+	case _network_life_cycle_state3:
+	case _network_life_cycle_state4:
+	case _network_life_cycle_state5:
+		result= network_life_cycle_get_session(session);
+		break;
+	case _network_life_cycle_state6:
+		{
+			long unknown= unknown_000641f0();
+
+			result= network_life_cycle_get_session(session);
+			if (unknown!=NONE)
+			{
+				byte *thing= unknown_00192e60(unknown);
+
+				if (thing && !unknown_00193470(thing))
+				{
+					byte *other_session;
+
+					if (network_life_cycle_get_other_session(&other_session))
+					{
+						result= TRUE;
+						if (session)
+						{
+							*session= other_session;
+						}
+					}
+				}
+			}
+		}
+		break;
+	case _network_life_cycle_state7:
+	case _network_life_cycle_state8:
+	case _network_life_cycle_state9:
+		result= network_life_cycle_get_other_session(session);
+		break;
+	}
+
+	return result;
 }

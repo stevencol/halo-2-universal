@@ -586,7 +586,7 @@ def run(t) -> None:
             t.check(
                 "game_voice_update_session_source",
                 globals={"game_voice_session_source": random_.getrandbits(32) | 4},
-                externals={"unknown_000596d0": session_source},
+                externals={"network_life_cycle_get_current_session": session_source},
                 extra=[thing],
             )
 

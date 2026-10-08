@@ -27,10 +27,6 @@ are the names of its functions.
 /* ---------- prototypes of functions not decompiled yet */
 
 
-/* 0x000596d0: something of the network game that says where the session
-comes from; whether there is one */
-boolean unknown_000596d0(byte **unknown);
-
 /* 0x00332f22, of the console's library of the voice: the engine does its
 work of each frame */
 long unknown_00332f22(void *engine);
@@ -706,14 +702,14 @@ void game_voice_library_end(
 }
 
 /* 0x000547e0: says which of the two places the session comes from: none, if
-unknown_000596d0 gives nothing */
+network_life_cycle_get_current_session gives nothing */
 void game_voice_update_session_source(
 	void)
 {
 	byte *unknown;
 
 	game_voice_session_source= 0;
-	if (unknown_000596d0(&unknown))
+	if (network_life_cycle_get_current_session(&unknown))
 	{
 		game_voice_session_source=
 			(*(const long *)(unknown+UNKNOWN_000596D0_UNKNOWN14_OFFSET)==_unknown_000596d0_unknown14_2)+

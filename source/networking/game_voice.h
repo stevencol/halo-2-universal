@@ -177,7 +177,8 @@ enum
 	of its voice */
 	GAME_VOICE_MEMBERSHIP_PLAYER_MUTES_OFFSET= 0x138,
 	GAME_VOICE_MEMBERSHIP_PLAYER_FLAGS_OFFSET= 0x13A,
-	/* in what unknown_000596d0 gives, and what it is when the session comes
+	/* in the session that network_life_cycle_get_current_session gives, and
+	what it is when the session comes
 	from the second place */
 	UNKNOWN_000596D0_UNKNOWN14_OFFSET= 0x14,
 	_unknown_000596d0_unknown14_2= 2,
