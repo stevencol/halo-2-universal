@@ -2948,3 +2948,124 @@ boolean network_session_leader_set_unknown498c(
 
 	return TRUE;
 }
+
+/* 0x0005b650: the console that leads a session sets its roster, or says
+that there is none, or asks the one that runs it to; whether it could: it
+has to lead the session, and the roster has to be right */
+boolean network_session_leader_set_roster(
+	const struct network_session_roster *roster,
+	byte *session)
+{
+	if (!network_session_local_peer_is_host(session) || (roster && !network_session_roster_valid(roster)))
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		if (roster)
+		{
+			session[NETWORK_SESSION_UNKNOWN49FD_OFFSET]= TRUE;
+			memcpy(session+NETWORK_SESSION_UNKNOWN4A00_OFFSET, roster, sizeof(*roster));
+		}
+		else
+		{
+			session[NETWORK_SESSION_UNKNOWN49FD_OFFSET]= FALSE;
+			memset(session+NETWORK_SESSION_UNKNOWN4A00_OFFSET, 0, sizeof(*roster));
+		}
+		network_session_parameters_changed(session);
+	}
+	else
+	{
+		byte request[NETWORK_SESSION_PARAMETERS_REQUEST_SIZE];
+
+		network_session_parameters_request_new(session, request);
+		request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_ROSTER_OFFSET]= TRUE;
+		if (roster)
+		{
+			request[NETWORK_SESSION_PARAMETERS_REQUEST_ROSTER_VALID_OFFSET]= TRUE;
+			memcpy(request+NETWORK_SESSION_PARAMETERS_REQUEST_ROSTER_OFFSET, roster, sizeof(*roster));
+		}
+		network_session_parameters_request_send(session, request);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005b790: the console that leads a session sets the two numbers of
+0x4D08 and the text of 0x4D10, or asks the one that runs it to; FALSE if it
+does not lead it */
+boolean NETWORK_SESSION_CALLBACK network_session_leader_set_unknown4d08(
+	byte *session,
+	const char *unknown4d10,
+	long unknown4d08,
+	long unknown4d0c)
+{
+	if (!network_session_local_peer_is_host(session))
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		char *text= (char *)(session+NETWORK_SESSION_UNKNOWN4D10_OFFSET);
+
+		*(long *)(session+NETWORK_SESSION_UNKNOWN4D08_OFFSET)= unknown4d08;
+		*(long *)(session+NETWORK_SESSION_UNKNOWN4D0C_OFFSET)= unknown4d0c;
+		strncpy(text, unknown4d10, NETWORK_SESSION_UNKNOWN4D10_SIZE);
+		text[NETWORK_SESSION_UNKNOWN4D10_SIZE-1]= 0;
+		network_session_parameters_changed(session);
+	}
+	else
+	{
+		byte request[NETWORK_SESSION_PARAMETERS_REQUEST_SIZE];
+		char *text= (char *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN4D10_OFFSET);
+
+		network_session_parameters_request_new(session, request);
+		request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN4D08_OFFSET]= TRUE;
+		*(long *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN4D08_OFFSET)= unknown4d08;
+		*(long *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN4D0C_OFFSET)= unknown4d0c;
+		strncpy(text, unknown4d10, NETWORK_SESSION_UNKNOWN4D10_SIZE);
+		text[NETWORK_SESSION_UNKNOWN4D10_SIZE-1]= 0;
+		network_session_parameters_request_send(session, request);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005b9d0: the console that leads a session sets the thing of 0x4DB0, or
+asks the one that runs it to; FALSE if it does not lead it. With no thing,
+or with one whose number at 0x44 is zero, it is all zeros */
+boolean network_session_leader_set_unknown4db0(
+	const byte *unknown4db0,
+	byte *session)
+{
+	byte thing[NETWORK_SESSION_UNKNOWN4DB0_SIZE];
+
+	if (unknown4db0 && *(const long *)(unknown4db0+NETWORK_SESSION_UNKNOWN4DB0_UNKNOWN44_OFFSET)!=0)
+	{
+		memcpy(thing, unknown4db0, sizeof(thing));
+	}
+	else
+	{
+		memset(thing, 0, sizeof(thing));
+	}
+	if (!network_session_local_peer_is_host(session))
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		network_session_parameters_changed(session);
+		memcpy(session+NETWORK_SESSION_UNKNOWN4DB0_OFFSET, thing, sizeof(thing));
+	}
+	else
+	{
+		byte request[NETWORK_SESSION_PARAMETERS_REQUEST_SIZE];
+
+		network_session_parameters_request_new(session, request);
+		request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN4DB0_OFFSET]= TRUE;
+		memcpy(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN4DB0_OFFSET, thing, sizeof(thing));
+		network_session_parameters_request_send(session, request);
+	}
+
+	return TRUE;
+}

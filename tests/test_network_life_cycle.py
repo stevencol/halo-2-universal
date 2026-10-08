@@ -1690,3 +1690,35 @@ def run(t) -> None:
             Buffer(random_.randbytes(4)),
             externals={"unknown_00075e80": sends_all},
         )
+
+    # ---------- three bigger changes that the console that leads a session asks for
+
+    for n in range(160):
+        there = n % 4 != 0
+        t.check(
+            "network_session_leader_set_roster",
+            Buffer(bytes(roster(right=n % 5 != 0))) if there else 0,
+            led(),
+            externals={"unknown_00075e80": sends_all},
+        )
+    for n in range(120):
+        length = random_.choice((0, 5, 0x7E, 0x7F, 0x80, 0x90))
+        text_ = bytes(random_.randrange(1, 256) for _ in range(length)) + bytes(1) + random_.randbytes(0x100 - length)
+        t.check(
+            "network_session_leader_set_unknown4d08",
+            led(),
+            Buffer(text_),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            externals={"unknown_00075e80": sends_all},
+        )
+    for n in range(120):
+        thing = bytearray(random_.randbytes(0x130))
+        if n % 3 == 0:
+            struct.pack_into("<I", thing, 0x44, 0)
+        t.check(
+            "network_session_leader_set_unknown4db0",
+            Buffer(bytes(thing)) if n % 5 else 0,
+            led(),
+            externals={"unknown_00075e80": sends_all},
+        )

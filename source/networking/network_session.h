@@ -198,6 +198,22 @@ enum
 	NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN5DD0_OFFSET= 0x552,
 	/* a byte of what the session knows */
 	NETWORK_SESSION_UNKNOWN49A1_OFFSET= 0x49A1,
+	NETWORK_SESSION_PARAMETERS_REQUEST_HAS_ROSTER_OFFSET= 0x38,
+	NETWORK_SESSION_PARAMETERS_REQUEST_ROSTER_VALID_OFFSET= 0x39,
+	NETWORK_SESSION_PARAMETERS_REQUEST_ROSTER_OFFSET= 0x3C,
+	NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN4D08_OFFSET= 0x344,
+	NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN4D08_OFFSET= 0x348,
+	NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN4D0C_OFFSET= 0x34C,
+	NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN4D10_OFFSET= 0x350,
+	NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN4DB0_OFFSET= 0x3D8,
+	NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN4DB0_OFFSET= 0x3DC,
+	/* the thing of 0x4D10 is a text of up to 127 characters; and after the
+	number of 0x4DAC, the session knows a thing of 0x130 bytes, which counts
+	only if the number at its 0x44 is not zero */
+	NETWORK_SESSION_UNKNOWN4D10_SIZE= 0x80,
+	NETWORK_SESSION_UNKNOWN4DB0_OFFSET= 0x4DB0,
+	NETWORK_SESSION_UNKNOWN4DB0_SIZE= 0x130,
+	NETWORK_SESSION_UNKNOWN4DB0_UNKNOWN44_OFFSET= 0x44,
 	/* in who is in the session: how many consoles, and the consoles */
 	NETWORK_SESSION_PEER_COUNT_OFFSET= 0x54,
 	NETWORK_SESSION_PEER_ARRAY_OFFSET= 0x58,
@@ -501,6 +517,10 @@ boolean network_session_leader_set_unknown49c4(byte *session);
 boolean network_session_leader_set_unknown49c8(byte *session, long unknown49c8);
 boolean network_session_leader_clear_unknown49f8(byte *session);
 boolean network_session_leader_set_unknown4dac(byte *session, long unknown4dac);
+boolean network_session_leader_set_roster(const struct network_session_roster *roster, byte *session);
+boolean NETWORK_SESSION_CALLBACK network_session_leader_set_unknown4d08(byte *session, const char *unknown4d10,
+	long unknown4d08, long unknown4d0c);
+boolean network_session_leader_set_unknown4db0(const byte *unknown4db0, byte *session);
 boolean network_session_leader_set_unknown49a1(byte *session, const byte *unknown49a1);
 boolean network_session_leader_set_unknown5dd0(byte *session, short unknown5dd0);
 boolean network_session_leader_set_language(byte *session, long language);

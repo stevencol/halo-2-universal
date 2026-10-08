@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Tres peticiones grandes de quien dirige la sesión
+
+Tres funciones en `networking/network_session.c`, 976 bytes entre todas. De 1242
+funciones se pasa a 1245, el 11,05 % de las del juego (el 6,887 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_leader_set_roster` | `0x0005b650` | `networking/network_session.c` |
+| `network_session_leader_set_unknown4d08` | `0x0005b790` | `networking/network_session.c` |
+| `network_session_leader_set_unknown4db0` | `0x0005b9d0` | `networking/network_session.c` |
+
+Del mismo molde que los hitos 338 y 339, con datos más grandes.
+
+### Lo que se sabe
+
+- `network_session_leader_set_roster` pone la lista de grupos y jugadores
+  (hito 334) o dice que no hay; antes comprueba que la lista esté bien.
+- `network_session_leader_set_unknown4d08` pone los dos números de
+  `0x4D08` y lo de `0x4D10`, que resulta ser un **texto** de hasta 127
+  caracteres (se copia con `strncpy` y se le pone el cero final).
+- `network_session_leader_set_unknown4db0` pone un bloque de 304 bytes en
+  `0x4DB0` (nuevo), que solo cuenta si el número de su `0x44` no es cero:
+  si no, va todo a ceros.
+- Del mensaje de petición se conocen ya trece sitios; el mayor es la lista,
+  de 776 bytes, en `0x3C`.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (153
+  funciones).
+- Las mutaciones de los hitos 280 a 308 y 321 a 340 están pendientes; las
+  de los hitos 309 a 320 seguían corriendo.
+
 ## 2026-10-08 — Cuatro peticiones más de quien dirige la sesión
 
 Cuatro funciones en `networking/network_session.c`, 902 bytes entre todas. De 1238
