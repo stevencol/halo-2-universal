@@ -1678,4 +1678,7 @@ address,name,source,arguments,returns,convention
 0005fd10,network_session_remove_peer_with_message_e,source/networking/network_session.c,eax esi,void
 0005fda0,network_session_remove_peer_with_message_d,source/networking/network_session.c,eax esi,void
 00075e80,unknown_00075e80,,ecx eax stack stack stack stack stack,void,stdcall
-0005fe20,unknown_0005fe20,,eax ebx,void
+0005fe20,network_session_remove_peer,source/networking/network_session.c,eax ebx,void
+00060200,network_session_remove_player,source/networking/network_session.c,esi stack,void,stdcall
+00062f40,network_session_find_request,source/networking/network_session.c,edx stack stack,bool,stdcall
+0005a2e0,unknown_0005a2e0,,edx,void

@@ -2,6 +2,62 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Una consola y sus jugadores salen de la sesión
+
+Tres funciones en `networking/network_session.c`, 731 bytes entre todas. De 1136
+funciones se pasa a 1139, el 10,11 % de las del juego (el 6,504 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_remove_peer` | `0x0005fe20` | `networking/network_session.c` |
+| `network_session_remove_player` | `0x00060200` | `networking/network_session.c` |
+| `network_session_find_request` | `0x00062f40` | `networking/network_session.c` |
+
+`network_session_remove_peer` era `unknown_0005fe20`, con la que acababan
+las dos funciones del hito 321.
+
+### Lo que se sabe
+
+- De cada consola la sesión sabe **cuántos jugadores tiene** (`0xF8`) y
+  **cuáles son** (los cuatro números de `0xFC`, NONE donde no hay). Y de
+  cada jugador, su consola (`0xC`) y qué sitio ocupa entre los de ella
+  (`0x10`). La cuenta de jugadores de la sesión está en `0x10CC` de «quién
+  está en ella», antes del bit de cada uno.
+- `network_session_remove_player` quita a un jugador de todo eso. En los
+  cuatro últimos estados (los de la consola que lleva la sesión), si ese
+  jugador había pedido entrar, su petición deja de decir que la sesión lo
+  tiene (`network_session_find_request` la busca).
+- `network_session_remove_peer` quita a los jugadores de la consola, baja
+  un sitio a las consolas que van detrás (y a lo que se guarda aparte de
+  cada una) y corrige todos los números de consola que quedan por encima:
+  el de cada jugador, el de quien lleva la sesión, el de esta consola y el
+  del `0x40`. Si la que sale llevaba la sesión, pasa a llevarla la primera.
+- El primer número de «quién está en ella» (`0x4C`) y el de `0x7618`
+  cuentan uno más por cada cambio: son **contadores de versión**.
+
+### Lo que enseñó
+
+- `network_session_remove_peer` acaba saltando a otra función en vez de
+  llamarla, así que no tiene `ret`. El arnés buscaba el primer `ret` a
+  partir de una función de `source/` para saber cuántos argumentos quita de
+  la pila, y encontraba el de la función siguiente: las pruebas del hito
+  321, que la sustituyen, se rompieron. Ahora `tools/difftest.py` mira solo
+  dentro de la función (su tamaño está en la tabla de símbolos), y si no
+  hay `ret` vale lo que dice `symbols/functions.csv`.
+
+### Batería completa
+
+La del hito 313 terminó: 1.109 funciones, las 1.109 bien. Es anterior al
+cambio del arnés; después de él se pasaron las pruebas de `network_life_cycle`
+(65), `voice*` (69), `game_voice` (71) y `transport_security` (4).
+
+### Sin comprobar
+
+- Las mutaciones de los hitos 280 a 308, 321 y 322 están pendientes; las de
+  los hitos 309 a 320 (132) se lanzan con este hito.
+
 ## 2026-10-08 — Avisar a una consola y sacarla de la sesión
 
 Tres funciones en `networking/network_session.c`, 337 bytes entre todas. De 1133

@@ -59,8 +59,9 @@ one of two ways */
 void __attribute__((stdcall)) unknown_00075e80(boolean unknown, long channel_index, byte *unknown8, long index,
 	long type, long size, const void *data);
 
-/* 0x0005fe20: a console is taken out of a session */
-void unknown_0005fe20(byte *session, long peer_index);
+/* 0x0005a2e0: something that is done with a session when who is in it has
+changed */
+void unknown_0005a2e0(byte *session);
 
 /* 0x0011ca80, of cseries.c */
 long language_from_xbox_language(long xbox_language);
@@ -466,9 +467,9 @@ void NETWORK_SESSION_CALLBACK network_session_add_peer(
 	text[NETWORK_SESSION_PEER_UNKNOWN48_LENGTH-1]= 0;
 	*(long *)(peer+NETWORK_SESSION_PEER_UNKNOWN88_OFFSET)= 0;
 	*(long *)(peer+NETWORK_SESSION_PEER_UNKNOWN8C_OFFSET)= 0;
-	for (index= 0; index<NETWORK_SESSION_PEER_UNKNOWNFC_COUNT; index++)
+	for (index= 0; index<MAXIMUM_NETWORK_SESSION_PEER_PLAYERS; index++)
 	{
-		*(long *)(peer+NETWORK_SESSION_PEER_UNKNOWNFC_OFFSET+index*sizeof(long))= NONE;
+		*(long *)(peer+NETWORK_SESSION_PEER_PLAYERS_OFFSET+index*sizeof(long))= NONE;
 	}
 	memset(peer+NETWORK_SESSION_PEER_UNKNOWN90_OFFSET, 0, NETWORK_SESSION_PEER_UNKNOWN90_SIZE);
 	memset(peer+NETWORK_SESSION_PEER_UNKNOWNAC_OFFSET, 0, NETWORK_SESSION_PEER_UNKNOWNAC_SIZE);
@@ -895,7 +896,7 @@ static inline __attribute__((always_inline)) void network_session_remove_peer_wi
 		unknown_00075e80(TRUE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 			*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), type, sizeof(identifier), identifier);
 	}
-	unknown_0005fe20(session, peer_index);
+	network_session_remove_peer(session, peer_index);
 }
 
 /* 0x0005fd10: a console is sent something of the kind 0xE and taken out of
@@ -919,4 +920,139 @@ void network_session_remove_peer_with_message_d(
 	byte *session)
 {
 	network_session_remove_peer_with_message(peer_index, session, _network_session_message_unknownD);
+}
+
+/* 0x00062f40: whether a player that is known by twelve bytes asks to come
+into a session; and which of those that ask it is, if there is where to say
+it */
+boolean NETWORK_SESSION_CALLBACK network_session_find_request(
+	byte *session,
+	const byte *identifier,
+	struct network_session_player_request **found)
+{
+	struct network_session_player_request *request=
+		(struct network_session_player_request *)(session+NETWORK_SESSION_UNKNOWN7668_OFFSET);
+	const struct network_session_player_request *end= request+MAXIMUM_NETWORK_SESSION_PLAYER_REQUESTS;
+
+	for (; request<end; request++)
+	{
+		if (request->valid && memcmp(identifier, request->identifier, sizeof(request->identifier))==0)
+		{
+			if (found)
+			{
+				*found= request;
+			}
+
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x00060200: a player goes out of a session: its console has one player
+less and no player at its place, and the session has one less and not its
+bit. In the last four states, if the player asked to come in, what it asked
+says that the session does not have it any more */
+void NETWORK_SESSION_CALLBACK network_session_remove_player(
+	byte *session,
+	long player_index)
+{
+	byte *membership= session+NETWORK_SESSION_MEMBERSHIP_OFFSET;
+	const byte *player= membership+NETWORK_SESSION_MEMBERSHIP_PLAYER_ARRAY_OFFSET+player_index*NETWORK_SESSION_PLAYER_SIZE;
+
+	if (network_session_unknown_00058d20(session))
+	{
+		struct network_session_player_request *request= NULL;
+
+		if (network_session_find_request(session, player, &request))
+		{
+			request->has_player= FALSE;
+		}
+	}
+	*(long *)(session+NETWORK_SESSION_PEER_ARRAY_OFFSET+
+		*(const long *)(player+NETWORK_SESSION_PLAYER_PEER_OFFSET)*NETWORK_SESSION_PEER_SIZE+
+		NETWORK_SESSION_PEER_PLAYERS_OFFSET+
+		*(const long *)(player+NETWORK_SESSION_PLAYER_PEER_PLAYER_OFFSET)*sizeof(long))= NONE;
+	(*(long *)(session+NETWORK_SESSION_PEER_ARRAY_OFFSET+
+		*(const long *)(player+NETWORK_SESSION_PLAYER_PEER_OFFSET)*NETWORK_SESSION_PEER_SIZE+
+		NETWORK_SESSION_PEER_PLAYER_COUNT_OFFSET))--;
+	*(unsigned long *)(membership+NETWORK_SESSION_MEMBERSHIP_PLAYERS_OFFSET)&= ~(1u<<player_index);
+	(*(long *)(membership+NETWORK_SESSION_MEMBERSHIP_PLAYER_COUNT_OFFSET))--;
+}
+
+/* 0x0005fe20: a console goes out of a session, and its players with it. The
+consoles after it move one place down, and so does what the session keeps of
+each: the players of those consoles, the console that runs the session, this
+console and the one at 0x40 are told. If it was the console that runs the
+session, the first one is now. The first number of who is in the session and
+the one at 0x7618 count one more for each player and one more at the end;
+and unknown_0005a2e0 is done */
+void network_session_remove_peer(
+	byte *session,
+	long peer_index)
+{
+	byte *membership= session+NETWORK_SESSION_MEMBERSHIP_OFFSET;
+	long remaining= *(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET)-peer_index-1;
+	byte *peer= session+NETWORK_SESSION_PEER_ARRAY_OFFSET+peer_index*NETWORK_SESSION_PEER_SIZE;
+	struct network_session_peer_state *state=
+		(struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index;
+	long peer_count;
+	long index;
+
+	for (index= 0; index<MAXIMUM_NETWORK_SESSION_PEER_PLAYERS; index++)
+	{
+		long player_index= *(const long *)(peer+NETWORK_SESSION_PEER_PLAYERS_OFFSET+index*sizeof(long));
+
+		if (player_index!=NONE)
+		{
+			network_session_remove_player(session, player_index);
+			(*(long *)membership)++;
+			(*(long *)(session+NETWORK_SESSION_UNKNOWN7618_OFFSET))++;
+		}
+	}
+	for (index= 0; index<MAXIMUM_NETWORK_SESSION_PLAYERS; index++)
+	{
+		if (*(const unsigned long *)(membership+NETWORK_SESSION_MEMBERSHIP_PLAYERS_OFFSET)&(1u<<index))
+		{
+			long *player_peer= (long *)(membership+NETWORK_SESSION_MEMBERSHIP_PLAYER_ARRAY_OFFSET+
+				index*NETWORK_SESSION_PLAYER_SIZE+NETWORK_SESSION_PLAYER_PEER_OFFSET);
+
+			if (*player_peer>peer_index)
+			{
+				(*player_peer)--;
+			}
+		}
+	}
+	if (*(const long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET)==peer_index)
+	{
+		*(long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET)= 0;
+	}
+	network_session_peer_state_delete(session, peer_index);
+	if (remaining>0)
+	{
+		memmove(peer, peer+NETWORK_SESSION_PEER_SIZE, remaining*NETWORK_SESSION_PEER_SIZE);
+		memmove(state, state+1, remaining*sizeof(*state));
+		if (*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET)>peer_index)
+		{
+			(*(long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET))--;
+		}
+		if (*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET)>peer_index)
+		{
+			(*(long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET))--;
+		}
+		if (*(const long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET)>peer_index)
+		{
+			(*(long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET))--;
+		}
+	}
+	peer_count= *(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET);
+	memset(session+NETWORK_SESSION_PEER_ARRAY_OFFSET+(peer_count-1)*NETWORK_SESSION_PEER_SIZE, 0,
+		NETWORK_SESSION_PEER_SIZE);
+	memset((struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+(peer_count-1), 0,
+		sizeof(*state));
+	(*(long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET))--;
+	(*(long *)membership)++;
+	(*(long *)(session+NETWORK_SESSION_UNKNOWN7618_OFFSET))++;
+	unknown_0005a2e0(session);
 }

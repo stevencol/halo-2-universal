@@ -496,8 +496,12 @@ class Harness:
         self.mu.hook_add(UC_HOOK_CODE, self._external_hook, user_data=(name, "original"), begin=address, end=address)
         if name in self.functions:
             address = self.functions[name]
-            # a function of source/ that takes its arguments off the stack, as the game's does
-            for instruction in Cs(CS_ARCH_X86, CS_MODE_32).disasm(bytes(self.mu.mem_read(address, 0x2000)), address):
+            # a function of source/ that takes its arguments off the stack, as the game's does.
+            # Only the function itself is looked at: one that ends by jumping to another has
+            # no ret, and the first one after it is of another function; for it,
+            # symbols/functions.csv says what it takes off the stack
+            size = self.function_sizes.get(name) or 0x2000
+            for instruction in Cs(CS_ARCH_X86, CS_MODE_32).disasm(bytes(self.mu.mem_read(address, size)), address):
                 if instruction.mnemonic == "ret":
                     self._external_cleanup_ours[name] = int(instruction.op_str, 0) if instruction.op_str else 0
                     break
@@ -571,17 +575,21 @@ class Harness:
 
         functions: dict[str, int] = {}
         self.variables: dict[str, int] = {}
+        # how many bytes each function of source/ has
+        self.function_sizes: dict[str, int] = {}
         sections = [struct.unpack_from("<10I", elf, section_offset + n * section_size) for n in range(section_count)]
         for section in sections:
             if section[1] != 2:  # SHT_SYMTAB
                 continue
             strings_offset = sections[section[6]][4]
             for at in range(section[4], section[4] + section[5], 16):
-                name, value, _, info = struct.unpack_from("<3IB", elf, at)
+                name, value, size, info = struct.unpack_from("<3IB", elf, at)
                 if info & 0xF in (1, 2):  # STT_OBJECT, STT_FUNC
                     end = elf.index(b"\0", strings_offset + name)
                     table = functions if info & 0xF == 2 else self.variables
                     table[elf[strings_offset + name : end].decode()] = value
+                    if info & 0xF == 2:
+                        self.function_sizes[elf[strings_offset + name : end].decode()] = size
         return functions
 
     # ---------- calling

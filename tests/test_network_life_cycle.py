@@ -859,5 +859,59 @@ def run(t) -> None:
                 name,
                 random_.randrange(16),
                 Buffer(bytes(data), pointers=(8,)),
-                externals={"unknown_00075e80": sends, "unknown_0005fe20": lambda harness, arguments: 0},
+                externals={"unknown_00075e80": sends, "network_session_remove_peer": lambda harness, arguments: 0},
             )
+
+    # ---------- a console and its players go out of a session
+
+    def consistent() -> bytearray:
+        # a session whose players have consoles and places that are in it
+        data = whole_session() + bytearray(random_.randbytes(8 + 4 * 0x528))
+        struct.pack_into("<I", data, 8, CHANNELS)
+        struct.pack_into("<I", data, 0x10, random_.randrange(4))
+        struct.pack_into("<I", data, 0x54, random_.choice((1, 2, 3, 5, 16)))
+        struct.pack_into("<I", data, 0x40, random_.choice((0, 1, 2, 3, NONE)))
+        struct.pack_into("<I", data, LOCAL_PEER, random_.choice((0, 1, 2, 3, NONE)))
+        struct.pack_into("<I", data, HOST_PEER, random_.choice((0, 1, 2, 3)))
+        for player in range(16):
+            at = PLAYER_ARRAY + player * PLAYER
+            struct.pack_into("<II", data, at + 0xC, random_.randrange(16), random_.randrange(4))
+        for peer in range(16):
+            for place in range(4):
+                struct.pack_into("<I", data, PEERS + peer * PEER + 0xFC + place * 4, random_.choice((NONE, NONE, random_.randrange(16))))
+            struct.pack_into("<I", data, 0x72DC + peer * 0x14 + 4, random_.choice((NONE, 0, 1, 2, 3)))
+        # some of the players that ask to come in are players of the session
+        for request in range(16):
+            if random_.randrange(2):
+                at = PLAYER_ARRAY + random_.randrange(16) * PLAYER
+                to = REQUESTS + request * REQUEST + 0xA
+                data[to : to + 12] = data[at : at + 12]
+        return data
+
+    for n in range(160):
+        data = consistent()
+        to = REQUESTS + random_.randrange(16) * REQUEST + 0xA
+        identifier = bytes(data[to : to + 12])
+        if n % 4 == 0:
+            identifier = identifier[:11] + bytes((identifier[11] ^ 2,))
+        t.check(
+            "network_session_find_request",
+            Buffer(bytes(data), pointers=(8,)),
+            Buffer(identifier),
+            random_.choice((Buffer(random_.randbytes(4), places=(0,)), Buffer(random_.randbytes(4), places=(0,)), 0)),
+        )
+    for n in range(160):
+        t.check(
+            "network_session_remove_player",
+            Buffer(bytes(consistent()), pointers=(8,)),
+            random_.randrange(16),
+        )
+    for n in range(240):
+        data = consistent()
+        count = struct.unpack_from("<I", data, 0x54)[0]
+        t.check(
+            "network_session_remove_peer",
+            Buffer(bytes(data), pointers=(8,)),
+            random_.choice((random_.randrange(count), count - 1, 0)),
+            externals={"unknown_0005a2e0": lambda harness, arguments: 0},
+        )

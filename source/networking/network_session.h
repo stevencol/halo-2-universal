@@ -98,8 +98,10 @@ enum
 	NETWORK_SESSION_PEER_ARRAY_OFFSET= 0x58,
 	NETWORK_SESSION_PEER_SIZE= 0x10C,
 	/* of a console: what it is known by in the network; two texts of
-	characters of 16 bits, of 16 and of 32; four numbers that start at NONE;
-	and two more that it comes in with or not */
+	characters of 16 bits, of 16 and of 32; how many players it has and
+	which they are, NONE where there is none; and two numbers that it comes
+	in with or not */
+	NETWORK_SESSION_PEER_PLAYER_COUNT_OFFSET= 0xF8,
 	NETWORK_SESSION_PEER_ADDRESS_OFFSET= 0,
 	/* six bytes of what it is known by, which a console can be looked for
 	by: where the console's libraries have those of its network card */
@@ -117,8 +119,8 @@ enum
 	NETWORK_SESSION_PEER_UNKNOWNAC_SIZE= 0x40,
 	NETWORK_SESSION_PEER_UNKNOWNEC_OFFSET= 0xEC,
 	NETWORK_SESSION_PEER_UNKNOWNF0_OFFSET= 0xF0,
-	NETWORK_SESSION_PEER_UNKNOWNFC_OFFSET= 0xFC,
-	NETWORK_SESSION_PEER_UNKNOWNFC_COUNT= 4,
+	NETWORK_SESSION_PEER_PLAYERS_OFFSET= 0xFC,
+	MAXIMUM_NETWORK_SESSION_PEER_PLAYERS= 4,
 	/* a byte of the session that goes to what it keeps of a console that
 	comes in, and two numbers that go with it: one of 0x4980 and a time */
 	NETWORK_SESSION_UNKNOWN765C_OFFSET= 0x765C,
@@ -135,6 +137,11 @@ enum
 	NETWORK_SESSION_MEMBERSHIP_PLAYER_ARRAY_OFFSET= 0x10D4,
 	NETWORK_SESSION_PLAYER_SIZE= 0x13C,
 	NETWORK_SESSION_PLAYER_IDENTIFIER_SIZE= 0xC,
+	/* how many players there are; and of a player, its console and which of
+	the players of its console it is */
+	NETWORK_SESSION_MEMBERSHIP_PLAYER_COUNT_OFFSET= 0x10CC,
+	NETWORK_SESSION_PLAYER_PEER_OFFSET= 0xC,
+	NETWORK_SESSION_PLAYER_PEER_PLAYER_OFFSET= 0x10,
 	MAXIMUM_NETWORK_SESSION_PLAYERS= 16,
 	/* in what the session was given when it was set up: things of 0x528
 	bytes, one for each console that the session has a number of; each has a
@@ -246,6 +253,10 @@ void NETWORK_SESSION_CALLBACK network_session_peer_state_new(boolean unknown1, b
 void NETWORK_SESSION_CALLBACK network_session_add_peer(byte *session, long peer_index, const byte *address,
 	boolean unknown1, long unknown4, const long *unknownF0);
 boolean network_session_matches_state1_address(const byte *session, const struct transport_address *address);
+void network_session_remove_peer(byte *session, long peer_index);
+void NETWORK_SESSION_CALLBACK network_session_remove_player(byte *session, long player_index);
+boolean NETWORK_SESSION_CALLBACK network_session_find_request(byte *session, const byte *identifier,
+	struct network_session_player_request **found);
 void network_session_remove_peer_with_message_e(long peer_index, byte *session);
 void network_session_remove_peer_with_message_d(long peer_index, byte *session);
 boolean NETWORK_SESSION_CALLBACK network_session_channel_is_host(const byte *session, long unknown);
