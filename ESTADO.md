@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 313.
+**Última actualización:** 2026-10-08, al terminar el hito 314.
 
 ## Dónde estamos
 
-- **1109 funciones descompiladas de 11.265: el 9,84 % del juego** (el
-  6,355 % de los bytes de código).
-- Las 1109 están comprobadas contra el ejecutable original: las 1090 del
+- **1110 funciones descompiladas de 11.265: el 9,85 % del juego** (el
+  6,376 % de los bytes de código).
+- Las 1110 están comprobadas contra el ejecutable original: las 1090 del
   hito 296 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the speakers that a positioned voice comes out of* (ver `git log`).
+- Último hito: *Decompile how a network session is started* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 536 funciones apuntadas pero sin descompilar (las que el código
-  llama); 448 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 541 funciones apuntadas pero sin descompilar (las que el código
+  llama); 453 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -109,8 +109,9 @@ Módulos (funciones hechas / archivo):
       terminar líneas o triángulos; faltan `0x0001e930` y `0x0001eb00`, que
       preparan la consola para dibujar)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
-- [ ] Sesión de red — `networking\network_session.c` (5: el estado de una
-      sesión y prepararla; lo que sigue, desde `0x00059bd0`, es grande)
+- [ ] Sesión de red — `networking\network_session.c` (6: el estado de una
+      sesión, prepararla y arrancarla; lo que sigue está en `0x0005fa30`
+      y más adelante)
 - [x] Partida en red — `networking\network_life_cycle.c` (34: qué está
       haciendo, sus dos sesiones, lo que se le pide y su fotograma; de
       `0x000591e0` a `0x00059ab0`, completo)
@@ -223,8 +224,10 @@ Módulos (funciones hechas / archivo):
 - [x] ~~`voice.c`~~ (hito 268): completo.
 - [x] ~~`game_voice.c`~~ (hito 278): completo.
 - [x] ~~El resto de `voice_routing.c`~~ (hito 313).
-- [ ] **La sesión de red**, desde `0x00059bd0`, que la arranca (628
-      bytes), y lo que hace la partida en cada estado (`0x0006dec0`).
+- [ ] **La sesión de red**: lo que `network_session_start` llama
+      (`0x0005fa30`, `0x0005fac0`, `0x0005fbd0`, `0x00061390`,
+      `0x00062e70`, `0x0007a9b0`), y lo que hace la partida en cada
+      estado (`0x0006dec0`).
 - [x] ~~Cinco direcciones repetidas en `symbols\functions.csv`~~ (hito
       296).
 - [ ] **Los fondos de los objetos**: `0x000bc280`, `0x000bc380`,

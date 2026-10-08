@@ -356,7 +356,7 @@ def run(t) -> None:
                 random_.getrandbits(32),
                 random_.getrandbits(32),
                 globals={"network_life_cycle_session": session(state)},
-                externals={"unknown_00059bd0": start(could), "unknown_00065770": lambda harness, arguments: 0},
+                externals={"network_session_start": start(could), "unknown_00065770": lambda harness, arguments: 0},
             )
 
     # ---------- a session is set up
@@ -438,3 +438,66 @@ def run(t) -> None:
                         "unknown_00075800": with_places(has),
                     },
                 )
+
+    # ---------- a session is started
+
+    for n in range(240):
+        known = random_.choice((1, 1, 1, 0x80, 0))
+        told = random_.choice((None, None, (1, random_.randbytes(0x24)), (0, random_.randbytes(0x24))))
+        could = random_.choice((1, 1, 1, 0x80, 0, 0x100))
+        random_bytes = random_.randbytes(8)
+
+        def asks(harness, arguments, told=told):
+            # what the console is known by can come while the session starts
+            if told is not None:
+                harness.mu.mem_write(harness.global_addresses["unknown_004cf792"], bytes((told[0],)))
+                harness.mu.mem_write(harness.global_addresses["unknown_004cf793"], told[1])
+            return 0
+
+        def at_random(harness, arguments, random_bytes=random_bytes):
+            harness.mu.mem_write(arguments[1], random_bytes[: min(arguments[0], 8)])
+            return 0, (arguments[0], harness.normalize(arguments[1]))
+
+        def comes_in(harness, arguments):
+            # what the console is known by is in the stack
+            return 0, (
+                harness.normalize(arguments[0]),
+                arguments[1],
+                bytes(harness.mu.mem_read(arguments[2], 0x24)),
+                *arguments[3:],
+            )
+
+        t.check(
+            "network_session_start",
+            Buffer(random_.randbytes(0x78B8 + 0x10)),
+            random_.choice((0, 1, 1, 2, 2, 5)),
+            random_.getrandbits(32),
+            random_.choice((0, random_.getrandbits(32), random_.getrandbits(32))),
+            random_.choice((0, random_.getrandbits(32), random_.getrandbits(32))),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            random_.choice((NONE, NONE, 0, 1, 4, 0xFFFFFFFE, 0x80000000)),
+            globals={
+                "unknown_004d8b18": bytes((random_.choice((1, 1, 0x80, 0)),)),
+                "unknown_004d8b19": bytes((random_.choice((1, 1, 0x80, 0)),)),
+                "unknown_004cf792": bytes((known,)),
+                "unknown_004cf793": random_.randbytes(0x24),
+                "unknown_00510548": bytes((random_.choice((0, 0, 1, 0x80)),)),
+                "unknown_0051054c": random_.randbytes(4),
+                "global_language": struct.pack("<I", random_.choice((NONE, NONE, 0, 3))),
+            },
+            externals={
+                "unknown_0007a9b0": asks,
+                "unknown_0005fa30": lambda harness, arguments, could=could: could,
+                "unknown_0005fac0": lambda harness, arguments, could=could: could,
+                "GetTickCount": lambda harness, arguments, value=random_.getrandbits(32): value,
+                "XGetLanguage": lambda harness, arguments, value=random_.randrange(12): value,
+                "unknown_0007ad80": at_random,
+                "unknown_0005fbd0": comes_in,
+                "time": lambda harness, arguments, value=random_.getrandbits(31): value,
+                "unknown_00061390": lambda harness, arguments: 0,
+                "unknown_00062e70": lambda harness, arguments: 0,
+            },
+        )

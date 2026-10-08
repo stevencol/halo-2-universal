@@ -15,7 +15,8 @@ so are the names of its functions.
 
 enum
 {
-	NETWORK_SESSION_SIZE= 0x78B0,
+	/* no less than this: network_session_start writes up to here */
+	NETWORK_SESSION_SIZE= 0x78B8,
 
 	/* in a session: its state, 0 for none; which console this one is and
 	which one runs the session; and more that is only read */
@@ -66,8 +67,46 @@ enum
 	NETWORK_SESSION_UNKNOWN49F8_OFFSET= 0x49F8,
 	NETWORK_SESSION_LOCAL_PEER_OFFSET= 0x72D8,
 	NETWORK_SESSION_STATE_OFFSET= 0x741C,
-	NETWORK_SESSION_UNKNOWN7420_OFFSET= 0x7420
+	NETWORK_SESSION_UNKNOWN7420_OFFSET= 0x7420,
+
+	/* what network_session_start sets in the first of the two things of
+	0x14B0 bytes: when the session started (GetTickCount), the language of
+	the game, two numbers that start at 16, eight bytes made at random, and
+	more that is not known */
+	NETWORK_SESSION_UNKNOWN497C_OFFSET= 0x497C,
+	NETWORK_SESSION_UNKNOWN4980_OFFSET= 0x4980,
+	NETWORK_SESSION_START_TIME_OFFSET= 0x4984,
+	NETWORK_SESSION_LANGUAGE_OFFSET= 0x4988,
+	NETWORK_SESSION_UNKNOWN498C_OFFSET= 0x498C,
+	NETWORK_SESSION_UNKNOWN4990_OFFSET= 0x4990,
+	NETWORK_SESSION_UNKNOWN4994_OFFSET= 0x4994,
+	NETWORK_SESSION_UNKNOWN4990_DEFAULT= 16,
+	NETWORK_SESSION_UNKNOWN49A4_OFFSET= 0x49A4,
+	NETWORK_SESSION_UNKNOWN49B0_OFFSET= 0x49B0,
+	NETWORK_SESSION_UNKNOWN49B4_OFFSET= 0x49B4,
+	NETWORK_SESSION_UNKNOWN49C8_OFFSET= 0x49C8,
+	NETWORK_SESSION_UNKNOWN4D08_OFFSET= 0x4D08,
+	NETWORK_SESSION_UNKNOWN4D0C_OFFSET= 0x4D0C,
+	NETWORK_SESSION_RANDOM_OFFSET= 0x4DA0,
+	NETWORK_SESSION_RANDOM_SIZE= 0x8,
+	NETWORK_SESSION_UNKNOWN4DA8_OFFSET= 0x4DA8,
+	NETWORK_SESSION_UNKNOWN4DAC_OFFSET= 0x4DAC,
+	NETWORK_SESSION_UNKNOWN5DD0_OFFSET= 0x5DD0,
+	NETWORK_SESSION_UNKNOWN5E20_OFFSET= 0x5E20,
+	/* in who is in the session: how many consoles */
+	NETWORK_SESSION_PEER_COUNT_OFFSET= 0x54,
+	/* and after the rest of the session: GetTickCount with the other sign,
+	and the time of the C library */
+	NETWORK_SESSION_UNKNOWN78B0_OFFSET= 0x78B0,
+	NETWORK_SESSION_UNKNOWN78B4_OFFSET= 0x78B4,
+
+	/* what this console is known by in the network: the same size as the
+	console's libraries have for it */
+	NETWORK_SESSION_ADDRESS_SIZE= 0x24
 };
+
+/* a number that network_session_start leaves in a session */
+#define NETWORK_SESSION_UNKNOWN4DA8_VALUE 0xDEADBEEFu
 
 /* the states of a session. From the third one to the last, the session
 says who is in it */
@@ -95,5 +134,14 @@ boolean network_session_established(const byte *session);
 boolean network_session_unknown_00058d90(const byte *session);
 boolean NETWORK_SESSION_CALLBACK network_session_initialize(byte *session, byte *unknown8, byte **table,
 	long index, long unknown14, long unknown38, long unknown4);
+boolean NETWORK_SESSION_CALLBACK network_session_start(byte *session, long unknown18, long unknown8, long unknownC,
+	long unknown10, long unknown14, const byte *identifiers, const long *unknown1C, long *unknown20, long count);
+
+/* ---------- globals */
+
+extern boolean unknown_004d8b18;
+extern boolean unknown_004d8b19;
+extern boolean unknown_004cf792;
+extern byte unknown_004cf793[NETWORK_SESSION_ADDRESS_SIZE];
 
 #endif

@@ -266,3 +266,7 @@ address,name,source
 004c9966,game_voice_talkers,source/networking/game_voice.c
 0046dd54,unknown_0046dd54,source/networking/game_voice.c
 0045095c,voice_callbacks,source/networking/voice.c
+004d8b18,unknown_004d8b18,source/networking/network_session.c
+004d8b19,unknown_004d8b19,source/networking/network_session.c
+004cf792,unknown_004cf792,source/networking/network_session.c
+004cf793,unknown_004cf793,source/networking/network_session.c

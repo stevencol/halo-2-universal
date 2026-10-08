@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Arrancar una sesión de red
+
+Una función en `networking/network_session.c`, de 628 bytes. De 1109 funciones se pasa a
+1110, el 9,85 % de las del juego (el 6,376 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_start` | `0x00059bd0` | `networking/network_session.c` |
+
+Era `unknown_00059bd0`, a la que llama `network_life_cycle_unknown_00059890`
+(hito 290) cuando la partida quiere una sesión. Tiene diez argumentos y
+llama a once funciones, seis de ellas sin descompilar.
+
+### Lo que se sabe
+
+- El primer número que recibe (se guarda en el `0x18` de la sesión) dice
+  si la sesión es de red. Con cero no lo es, y esta consola entra con una
+  dirección a ceros.
+- Si lo es, la consola tiene que saber **cómo se la conoce en la red**:
+  36 bytes en `0x004cf793` (el mismo tamaño que la dirección de una
+  consola en sus bibliotecas), con un byte delante (`0x004cf792`) que dice
+  si los tiene. Si hace falta se piden antes (`0x0007a9b0`). Sin ellos,
+  o si `0x0005fa30` / `0x0005fac0` no pueden preparar la sesión, no
+  arranca.
+- Después, lo que la sesión sabe empieza de cero: cuándo arrancó
+  (`GetTickCount`, o el tiempo que guarda `main.c`), el idioma del juego,
+  dos números a 16, ocho bytes al azar, y un `0xDEADBEEF` en `0x4DA8`.
+- En ella no hay nadie más que esta consola, que entra la primera
+  (`0x0005fbd0`) y es la que la lleva; lo que la sesión «va a ser» no dice
+  nada (NONE).
+- La sesión mide al menos `0x78B8` bytes, ocho más de lo apuntado: al final
+  hay `GetTickCount` cambiado de signo y la hora de la biblioteca de C.
+- Si recibe una cuenta de cosas (identificadores de 12 bytes, que es lo que
+  mide el de un jugador), van a `0x00062e70`.
+
+### Batería completa
+
+La del hito 313 estaba en marcha al cerrar este hito.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (40
+  funciones).
+- Las mutaciones de los hitos 280 a 314 están pendientes.
+
 ## 2026-10-08 — La voz colocada en el espacio: `voice_routing.c` completo
 
 Una función en `networking/voice_routing.c`, de 737 bytes, y con ella el archivo queda

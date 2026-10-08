@@ -20,10 +20,7 @@ is a guess, and so are the names of its functions.
 /* 0x00070570: something that unknown_00527500 says, in the sixth state */
 long unknown_00070570(byte *unknown);
 
-/* 0x00059bd0: starts a session; whether it could. 0x00065770: something
-that is done with a session that has just started */
-boolean __attribute__((stdcall)) unknown_00059bd0(byte *session, long unknown4, long unknown8, long unknownC,
-	long unknown10, long unknown14, long unknown18, long unknown1C, long *unknown20, long unknown24);
+/* 0x00065770: something that is done with a session that has just started */
 void unknown_00065770(byte *session);
 
 /* 0x0005a520, 0x0005a400, 0x0005b570, 0x0005a6e0: things that are done
@@ -736,7 +733,7 @@ boolean NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_unknown_00059890(
 
 		unknown[0]= 0;
 		unknown[1]= 0;
-		if (unknown_00059bd0(session, unknown0, 0, unknown4, unknown8, 0, 0, 0, unknown, 0))
+		if (network_session_start(session, unknown0, 0, unknown4, unknown8, 0, 0, 0, unknown, 0))
 		{
 			result= TRUE;
 			unknown_00065770(session);
