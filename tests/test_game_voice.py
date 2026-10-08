@@ -1053,7 +1053,7 @@ def run(t) -> None:
                                 "game_voice_update_players",
                                 "game_voice_update_chosen_peer",
                                 "voice_channels_update",
-                                "unknown_00055990",
+                                "voice_targets_update",
                                 game_voice_unknown_00054ec0=network,
                             ),
                         )
@@ -1123,7 +1123,7 @@ def run(t) -> None:
                         number,
                         (harness.normalize(arguments[0]), arguments[1]),
                     ),
-                    "unknown_00056590": words,
+                    "voice_unknown_00527104_get_words": words,
                     "voice_queues_add": on_its_way,
                 },
             )
@@ -1238,7 +1238,7 @@ def run(t) -> None:
 
             def words(harness, arguments, first_words=first_words):
                 # the two numbers are in the stack; the number of the player says which player
-                player = sum(1 for call in harness._calls if call[0] == "unknown_00056590")
+                player = sum(1 for call in harness._calls if call[0] == "voice_unknown_00527104_get_words")
                 harness.mu.mem_write(arguments[1], struct.pack("<2H", first_words[player % 16], 0x1234))
                 return 0, (arguments[0], harness.normalize(arguments[2]))
 
@@ -1260,7 +1260,7 @@ def run(t) -> None:
                         numbers[arguments[1] & 15],
                         (harness.normalize(arguments[0]), arguments[1]),
                     ),
-                    "unknown_00056590": words,
+                    "voice_unknown_00527104_get_words": words,
                 },
                 extra=[membership],
             )

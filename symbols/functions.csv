@@ -733,9 +733,12 @@ address,name,source,arguments,returns,convention
 000577d0,unknown_000577d0,,stack,void,stdcall
 00057960,unknown_00057960,,stack,void,stdcall
 000589e0,unknown_000589e0,,eax,bool
-00055990,unknown_00055990,,eax,void
+00055990,voice_targets_update,source/networking/voice_routing.c,eax,void
 00055960,voice_targets_get,source/networking/voice_routing.c,esi ebx,int
-00056590,unknown_00056590,,eax esi edi,void
+00056590,voice_unknown_00527104_get_words,source/networking/voice_routing.c,eax esi edi,void
+00056c60,unknown_00056c60,,eax stack,int,stdcall
+00056990,unknown_00056990,,ebx,int
+000565c0,unknown_000565c0,,stack stack stack,void,stdcall
 00056130,voice_queues_add,source/networking/voice_routing.c,eax ecx ebx stack stack stack,void
 0005f760,unknown_0005f760,,ecx stack,int
 00332e93,unknown_00332e93,,stack stack,int

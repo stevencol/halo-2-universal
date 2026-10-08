@@ -133,3 +133,63 @@ def run(t) -> None:
                                     "unknown_000589e0": gives(says),
                                 },
                             )
+
+    # ---------- who each player talks to, each frame
+
+    MEMBERSHIP_PLAYERS = 0x10D0
+
+    for on in (1, 1, 1, 0):
+        for enabled, initialized in active():
+            for network in (1, 2, 3, 0):
+                for n in range(6):
+                    membership = bytearray(random_.randbytes(MEMBERSHIP_PLAYERS + 4))
+                    struct.pack_into("<I", membership, MEMBERSHIP_PLAYERS, random_.choice((0xFFFF, random_.getrandbits(16), 0xFFFFFFFF)))
+                    membership = Buffer(bytes(membership))
+                    local = random_.choice((1, 0x8001, random_.getrandbits(16), 0xF))
+                    # of each player: its flags, by the bits that are looked at
+                    flags = [random_.choice((0, 0, 0, 2, 4, 6, 0xFFF9)) for _ in range(16)]
+                    hears = [random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16))) for _ in range(16)]
+                    data = bytearray(random_.randbytes(0x48))
+                    data[0] = on
+                    t.check(
+                        "voice_targets_update",
+                        Buffer(bytes(data)),
+                        globals={
+                            **state(enabled, initialized),
+                            "unknown_004c9888": network,
+                            "game_voice_talkers": struct.pack("<H", random_.choice((0xFFFF, local, random_.getrandbits(16)))),
+                            "game_voice_player_mutes": struct.pack(
+                                "<16H", *(random_.choice((0, 0, random_.getrandbits(16))) for _ in range(16))
+                            ),
+                            "unknown_00527108": GlobalRange(CHANNELS_SIZE),
+                        },
+                        externals={
+                            "game_voice_get_membership": lambda harness, arguments, membership=membership, n=n: (
+                                membership.address if n != 5 else 0
+                            ),
+                            "game_voice_get_local_players": gives(local),
+                            "game_voice_player_flags": lambda harness, arguments, flags=flags: flags[arguments[0] & 15],
+                            "voice_channels_get_player": lambda harness, arguments, hears=hears: (
+                                hears[arguments[1] & 15],
+                                (harness.normalize(arguments[0]), arguments[1]),
+                            ),
+                            "unknown_00056c60": lambda harness, arguments, hears=hears: (
+                                hears[arguments[1] & 15] ^ 0x5555,
+                                (harness.normalize(arguments[0]), arguments[1]),
+                            ),
+                        },
+                        extra=[membership],
+                    )
+
+    for on in (1, 0, 0x80):
+        for targets in (0x55, 0, 0x80000000):
+            for unknown4 in (7, 0):
+                data = bytearray(random_.randbytes(4))
+                data[0] = on
+                t.check(
+                    "voice_unknown_00527104_get_words",
+                    targets,
+                    Buffer(random_.randbytes(4)),
+                    Buffer(bytes(data)),
+                    externals={"unknown_00056990": gives(unknown4), "unknown_000565c0": gives(0)},
+                )

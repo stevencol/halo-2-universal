@@ -33,6 +33,15 @@ void __attribute__((stdcall)) unknown_00057960(byte *channels);
 /* 0x000589e0: something of a player */
 boolean unknown_000589e0(long player);
 
+/* 0x00056c60: as voice_channels_get_player, in the other states of the
+network game */
+unsigned long __attribute__((stdcall)) unknown_00056c60(byte *channels, long player_index);
+
+/* 0x00056990: something made of who a player talks to; 0x000565c0: the two
+numbers of 16 bits that unknown_00527104 gives for it */
+long unknown_00056990(unsigned long targets);
+void __attribute__((stdcall)) unknown_000565c0(byte *unknown, long unknown4, word *words);
+
 /* ---------- code */
 
 /* whether there is a voice for the game to do something with: as in
@@ -188,4 +197,110 @@ long voice_channels_get_unknown84(
 	}
 
 	return 0;
+}
+
+/* 0x00055990: each frame, says who each player of this console talks to, if
+it has a voice: the players of other consoles that the session has, less
+those that it wants not to hear, and of them only those that hear it by who
+hears whom; and less each one that wants not to hear it, wants no voice or
+is not allowed one. The game has game_voice_get_players,
+game_voice_get_talkers, game_voice_player_has_muted,
+game_voice_player_voice_off and game_voice_player_not_allowed in the
+function itself */
+void voice_targets_update(
+	byte *targets)
+{
+	if (targets[VOICE_TARGETS_ON_OFFSET])
+	{
+		unsigned long session_players= 0;
+		unsigned long local_players;
+		unsigned long remote_players;
+		unsigned long talkers= 0;
+		long player_index;
+
+		if (voice_routing_active())
+		{
+			const byte *membership= game_voice_get_membership();
+
+			if (membership)
+			{
+				session_players= *(const unsigned long *)(membership+GAME_VOICE_MEMBERSHIP_PLAYERS_OFFSET);
+			}
+		}
+		local_players= game_voice_get_local_players();
+		remote_players= ~local_players&session_players;
+		if (voice_routing_active())
+		{
+			talkers= game_voice_talkers;
+		}
+		memset(targets+VOICE_TARGETS_PLAYERS_OFFSET, 0, VOICE_TARGETS_PLAYERS_SIZE);
+		for (player_index= 0; player_index<MAXIMUM_VOICE_ROUTING_PLAYERS; player_index++)
+		{
+			unsigned long bit= 1u<<player_index;
+
+			if ((local_players&bit) && (talkers&bit))
+			{
+				unsigned long mutes= 0;
+				unsigned long player_targets;
+				long other_index;
+
+				if (voice_routing_active())
+				{
+					mutes= game_voice_player_mutes[player_index];
+				}
+				player_targets= ~mutes&remote_players;
+				if (voice_routing_active())
+				{
+					if (unknown_004c9888==_game_voice_network1)
+					{
+						player_targets&= voice_channels_get_player(unknown_00527108, player_index);
+					}
+					else if (unknown_004c9888==_game_voice_network2 || unknown_004c9888==_game_voice_network3)
+					{
+						player_targets&= unknown_00056c60(unknown_00527108, player_index);
+					}
+				}
+				for (other_index= 0; other_index<MAXIMUM_VOICE_ROUTING_PLAYERS; other_index++)
+				{
+					unsigned long other_bit= 1u<<other_index;
+
+					if ((player_targets&other_bit) && game_voice_enabled)
+					{
+						if (voice_globals.initialized &&
+							((bit&game_voice_player_mutes[other_index]) ||
+							((game_voice_player_flags(other_index)>>_game_voice_player_voice_off_bit)&1)))
+						{
+							player_targets&= ~other_bit;
+						}
+						else if (voice_routing_active() &&
+							((game_voice_player_flags(other_index)>>_game_voice_player_not_allowed_bit)&1))
+						{
+							player_targets&= ~other_bit;
+						}
+					}
+				}
+				*(unsigned long *)(targets+VOICE_TARGETS_PLAYERS_OFFSET+player_index*sizeof(long))= player_targets;
+			}
+		}
+	}
+}
+
+/* 0x00056590: the two numbers of 16 bits that unknown_00527104 gives for who
+a player talks to: 0 if it is not on or the player talks to nobody */
+void voice_unknown_00527104_get_words(
+	unsigned long targets,
+	word *words,
+	byte *unknown)
+{
+	words[1]= 0;
+	words[0]= 0;
+	if (unknown[0] && targets)
+	{
+		long unknown4= unknown_00056990(targets);
+
+		if (unknown4)
+		{
+			unknown_000565c0(unknown, unknown4, words);
+		}
+	}
 }

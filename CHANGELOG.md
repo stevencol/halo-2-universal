@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — A quién habla cada jugador, cada fotograma
+
+Dos funciones en `networking/voice_routing.c`, de 469 bytes entre las dos. De 1030 funciones se pasa a
+1032, el 9,16 % de las del juego (el 5,890 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_targets_update` | `0x00055990` | `networking/voice_routing.c` |
+| `voice_unknown_00527104_get_words` | `0x00056590` | `networking/voice_routing.c` |
+
+Eran `unknown_00055990` y `unknown_00056590`, las dos últimas que
+`game_voice.c` llamaba de este archivo sin conocerlas.
+
+### Lo que se sabe
+
+- `voice_targets_update` decide, cada fotograma, a quién habla cada jugador
+  de esta consola que tiene voz. Parte de los jugadores de otras consolas
+  que hay en la sesión y va quitando: a los que él no quiere oír, a los que
+  no le oyen según «quién oye a quién» (que depende del estado de la red),
+  y a cada uno que no quiere oírle a él, no quiere voz o no tiene permiso.
+  Lo que queda es un bit por jugador, y es el número que el hito 275 vio
+  pasar camino de las colas.
+- Es la función que junta todo lo de los hitos 270 a 277: los silencios,
+  los tres flags de cada jugador y quién tiene voz.
+- `voice_unknown_00527104_get_words` pide, para ese número, los dos números
+  de 16 bits que da lo de `0x00527104` (dos funciones suyas quedan
+  apuntadas). El primero es un bit por consola a la que va lo dicho.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo y las de `game_voice`.
+- La batería completa del hito 278 y las mutaciones de los hitos 269 a 280
+  corren aparte o están pendientes; su resultado irá en una entrada
+  posterior.
+
 ## 2026-10-08 — La voz entre consolas: a quién habla cada uno, las colas y quién oye a quién
 
 Siete funciones en un archivo nuevo, `networking/voice_routing.c`, de 570 bytes entre las siete. De 1023 funciones se pasa a

@@ -21,6 +21,7 @@ enum
 	for each player */
 	VOICE_TARGETS_ON_OFFSET= 0,
 	VOICE_TARGETS_PLAYERS_OFFSET= 0x4,
+	VOICE_TARGETS_PLAYERS_SIZE= 0x40,
 
 	/* the queues of what the players said (0x00525a00): whether they are on,
 	and a queue for each player. Of a queue: whether it is in use, how many
@@ -57,5 +58,7 @@ boolean voice_queues_go_to_peer(long peer, const byte *queues);
 void voice_channels_update(byte *channels);
 unsigned long voice_channels_get_player(byte *channels, long player);
 long voice_channels_get_unknown84(const byte *channels, long player_index);
+void voice_targets_update(byte *targets);
+void voice_unknown_00527104_get_words(unsigned long targets, word *words, byte *unknown);
 
 #endif

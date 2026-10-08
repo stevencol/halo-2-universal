@@ -57,13 +57,6 @@ something, and choosing it */
 long unknown_0005b0b0(byte *session);
 void unknown_0005c6d0(byte *session, long peer);
 
-/* 0x00055990: what unknown_005259b8 does each frame */
-void unknown_00055990(byte *unknown);
-
-/* 0x00056590: two numbers of 16 bits that unknown_00527104 gives for the
-number that unknown_005259b8 has for a player */
-void unknown_00056590(long unknown0, word *words, byte *unknown);
-
 
 /* 0x0005f760: which console of a session a console of another is; NONE if
 none */
@@ -1407,7 +1400,7 @@ void game_voice_update(
 			voice_channels_update(unknown_00527108);
 			if (unknown_005259b8[0])
 			{
-				unknown_00055990(unknown_005259b8);
+				voice_targets_update(unknown_005259b8);
 			}
 		}
 	}
@@ -1442,7 +1435,7 @@ void GAME_VOICE_CALLBACK game_voice_local_data_ready(
 				words[0]= 0;
 				words[1]= 0;
 				flag= FALSE;
-				unknown_00056590(unknown, words, unknown_00527104);
+				voice_unknown_00527104_get_words(unknown, words, unknown_00527104);
 				if (words[0])
 				{
 					player_index= game_voice_find_local_player(controller_index);
@@ -1601,7 +1594,7 @@ boolean game_voice_unknown_00054890(
 
 					words[0]= 0;
 					words[1]= 0;
-					unknown_00056590(unknown, words, unknown_00527104);
+					voice_unknown_00527104_get_words(unknown, words, unknown_00527104);
 					if (words[0]&(1u<<peer))
 					{
 						return TRUE;
