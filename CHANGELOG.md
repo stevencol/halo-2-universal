@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Llega algo que dijo un jugador, con la partida en marcha
+
+Una función en `networking/voice_routing.c`, de 358 bytes. De 1101 funciones se pasa a
+1102, el 9,78 % de las del juego (el 6,223 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_channels_player_talked` | `0x00056df0` | `networking/voice_routing.c` |
+
+Era `unknown_00056df0`, la que `voice_queue_read` (hito 283) llama cada vez
+que llega algo que dijo un jugador de otra consola.
+
+### Lo que se sabe
+
+- Junta las tres funciones de los hitos 302 a 304: para cada jugador de
+  esta consola pregunta cómo propone la partida que oiga al que habló
+  (`voice_channels_get_how`), lo ajusta a ese jugador
+  (`voice_player_hears`) y, si le oye por cercanía, apunta a qué distancia
+  está (`voice_players_get_distance`). La lista de 16 se entrega a
+  `0x00057eb0`.
+- La tercera cosa de cada entrada de esa lista, que el hito 301 dejó sin
+  nombre, es esa distancia: un real.
+- Si alguien le oye por el canal de equipo, se guarda la hora en el `0x148`
+  del que habló: es el «momento» que miraba el hito 298. Aquella función
+  hace sonar el pitido cuando hace más de... no: cuando hace **menos** de
+  tres décimas que llegó lo último, y luego lo borra; es decir, suena una
+  vez por cada tanda de voz por el canal de equipo.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- La batería completa del hito 296 corre aparte; las mutaciones de los
+  hitos 280 a 306 están pendientes.
+
 ## 2026-10-08 — La voz por cercanía: quién está cerca de quién
 
 Una función en `networking/voice_routing.c`, de 489 bytes. De 1100 funciones se pasa a

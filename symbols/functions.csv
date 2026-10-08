@@ -717,7 +717,7 @@ address,name,source,arguments,returns,convention
 00056000,voice_queue_keep,source/networking/voice_routing.c,eax stack,void,stdcall
 00055c40,voice_queue_write,source/networking/voice_routing.c,esi eax edx stack stack stack,int,stdcall
 00055e10,voice_queue_read,source/networking/voice_routing.c,stack stack stack stack,int,stdcall
-00056df0,unknown_00056df0,,stack stack stack,void,stdcall
+00056df0,voice_channels_player_talked,source/networking/voice_routing.c,stack stack stack,void,stdcall
 000649c0,unknown_000649c0,,,int
 003212c5,_clearfp,,,int
 000547e0,game_voice_update_session_source,source/networking/game_voice.c,,void

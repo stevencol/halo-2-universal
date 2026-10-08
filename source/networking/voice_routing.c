@@ -47,10 +47,6 @@ void unknown_000caf90(long object_index, real_point3d *position);
 so */
 boolean unknown_00192950(long player_index);
 
-/* 0x00056df0: something that who hears whom is told of a player whose
-voice comes from another console, with the flag of what it said */
-void __attribute__((stdcall)) unknown_00056df0(byte *channels, long player_index, long flag);
-
 
 /* ---------- globals */
 
@@ -679,7 +675,7 @@ long VOICE_ROUTING_CALLBACK voice_queue_read(
 			{
 				if (game_voice_has_remote_talker(*(const long *)(queue+VOICE_QUEUE_PLAYER_OFFSET)))
 				{
-					unknown_00056df0(unknown_00527108, *(const long *)(queue+VOICE_QUEUE_PLAYER_OFFSET),
+					voice_channels_player_talked(unknown_00527108, *(const long *)(queue+VOICE_QUEUE_PLAYER_OFFSET),
 						in[VOICE_PACKET_ENTRY_FLAG_OFFSET]);
 					game_voice_remote_talker_data(*(const long *)(queue+VOICE_QUEUE_PLAYER_OFFSET),
 						in+VOICE_PACKET_ENTRY_PEERS_OFFSET+sizeof(peers), VOICE_QUEUE_DATA_SIZE);
@@ -706,7 +702,7 @@ long VOICE_ROUTING_CALLBACK voice_queue_read(
 			if (voice_routing_active() &&
 				voice_has_remote_talker(&voice_globals, *(const long *)(queue+VOICE_QUEUE_PLAYER_OFFSET)))
 			{
-				unknown_00056df0(unknown_00527108, *(const long *)(queue+VOICE_QUEUE_PLAYER_OFFSET),
+				voice_channels_player_talked(unknown_00527108, *(const long *)(queue+VOICE_QUEUE_PLAYER_OFFSET),
 					in[VOICE_PACKET_ENTRY_FLAG_OFFSET]);
 				game_voice_remote_talker_data(*(const long *)(queue+VOICE_QUEUE_PLAYER_OFFSET),
 					in+VOICE_PACKET_ENTRY_PEERS_OFFSET, VOICE_QUEUE_DATA_SIZE);
@@ -1637,5 +1633,57 @@ void VOICE_ROUTING_CALLBACK voice_channels_update_near(
 				*near|= bit;
 			}
 		}
+	}
+}
+
+/* 0x00056df0: something that a player of another console said has come, in
+a game that goes on: says how each player of this console hears it, with how
+far it is for those that hear it by being near, and hands that on. If some
+player hears it in the first way, the time is kept; and if any hears it at
+all, the player has its bit. Nothing if who hears whom is not on, out of the
+first state of the network game or if the player has no voice. The game has
+game_voice_has_remote_talker in the function itself */
+void VOICE_ROUTING_CALLBACK voice_channels_player_talked(
+	byte *channels,
+	long player_index,
+	long unknown)
+{
+	if (channels[VOICE_CHANNELS_ON_OFFSET] && voice_routing_active() && unknown_004c9888==_game_voice_network1 &&
+		voice_has_remote_talker(&voice_globals, player_index))
+	{
+		unsigned long local_players= game_voice_get_local_players();
+		boolean player_valid= game_voice_unknown_00054df0(player_index);
+		struct voice_channel_listener listeners[MAXIMUM_VOICE_ROUTING_PLAYERS];
+		long local_player_index;
+
+		memset(listeners, 0, sizeof(listeners));
+		for (local_player_index= 0; local_player_index<MAXIMUM_VOICE_ROUTING_PLAYERS; local_player_index++)
+		{
+			long how= _voice_hears_none;
+
+			if ((local_players&(1u<<local_player_index)) && game_voice_unknown_00054df0(local_player_index) &&
+				player_valid)
+			{
+				long proposed= voice_channels_get_how(local_player_index, channels, player_index, unknown);
+
+				how= voice_player_hears(proposed, local_player_index, player_index);
+				if (proposed==_voice_hears1)
+				{
+					*(unsigned long *)(channels+VOICE_CHANNELS_STARTED_OFFSET+player_index*sizeof(long))=
+						game_time_globals->time;
+				}
+				if (how==_voice_hears3)
+				{
+					listeners[local_player_index].distance= voice_players_get_distance(local_player_index, player_index);
+				}
+				if (how)
+				{
+					*(unsigned long *)(channels+VOICE_CHANNELS_HEARD_OFFSET)|= 1u<<(player_index&0x1F);
+				}
+			}
+			listeners[local_player_index].player_index= local_player_index;
+			listeners[local_player_index].how= how;
+		}
+		unknown_00057eb0(channels, player_index, listeners, MAXIMUM_VOICE_ROUTING_PLAYERS);
 	}
 }

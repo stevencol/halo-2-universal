@@ -405,7 +405,7 @@ def run(t) -> None:
                             has,
                             (harness.normalize(arguments[0]), arguments[1]),
                         ),
-                        "unknown_00056df0": routed("unknown_00056df0"),
+                        "voice_channels_player_talked": routed("voice_channels_player_talked"),
                         "game_voice_remote_talker_data": gives(0),
                         "voice_route_peers": words_for,
                         "voice_queue_add": add,
@@ -972,3 +972,52 @@ def run(t) -> None:
                 },
                 extra=[membership, *datums],
             )
+
+    # ---------- a player of another console talked
+
+    def as_real(value: float) -> int:
+        return struct.unpack("<I", struct.pack("<f", value))[0]
+
+    for on in (1, 1, 1, 0):
+        for enabled, initialized in active():
+            for network in (1, 1, 1, 2, 0):
+                for n in range(6):
+                    player = random_.randrange(16)
+                    local = random_.choice((1, 0x8001, random_.getrandbits(16), 0xFFFF))
+                    has = random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16)))
+                    proposed = [random_.choice((0, 1, 2, 3)) for _ in range(16)]
+                    heard = [random_.choice((0, 1, 2, 3, 3)) for _ in range(16)]
+                    distances = [random_.uniform(0, 20) for _ in range(16)]
+                    time = bytearray(random_.randbytes(0xC))
+                    struct.pack_into("<I", time, 8, random_.getrandbits(32) | 1)
+                    data = channels(on) + bytearray(random_.randbytes(0x1D8 - CHANNELS_SIZE))
+
+                    def hands_on(harness, arguments):
+                        channels_, player_, listeners, count = arguments
+                        return 0, (channels_, player_, bytes(harness.mu.mem_read(listeners, 0xC0)), count)
+
+                    t.check(
+                        "voice_channels_player_talked",
+                        Buffer(bytes(data)),
+                        player,
+                        random_.choice((0, 1)),
+                        globals={
+                            **state(enabled, initialized),
+                            "unknown_004c9888": network,
+                            "game_time_globals": Buffer(bytes(time)),
+                        },
+                        externals={
+                            "voice_has_remote_talker": lambda harness, arguments, n=n: (
+                                1 if n else 0,
+                                (harness.normalize(arguments[0]), arguments[1]),
+                            ),
+                            "game_voice_get_local_players": gives(local),
+                            "game_voice_unknown_00054df0": lambda harness, arguments, has=has: has >> (arguments[0] & 15) & 1,
+                            "voice_channels_get_how": lambda harness, arguments, proposed=proposed: proposed[arguments[0] & 15],
+                            "voice_player_hears": lambda harness, arguments, heard=heard: heard[arguments[1] & 15] if arguments[0] else 0,
+                            "voice_players_get_distance": lambda harness, arguments, distances=distances: as_real(
+                                distances[arguments[0] & 15]
+                            ),
+                            "unknown_00057eb0": hands_on,
+                        },
+                    )

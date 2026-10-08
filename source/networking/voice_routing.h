@@ -162,12 +162,12 @@ enum
 };
 
 /* how a player of this console hears a player: which player it is, how it
-hears it (0 if it does not) and something more that is not set here */
+hears it (0 if it does not) and, in the third way, how far it is */
 struct voice_channel_listener
 {
 	long player_index;
 	long how;
-	long unknown8;
+	real distance;
 };
 
 typedef char verify_voice_channel_listener_size[
@@ -207,6 +207,7 @@ long voice_players_same_team(long player_index, long local_player_index);
 long VOICE_ROUTING_CALLBACK voice_player_hears(long how, long local_player_index, long player_index);
 real voice_players_get_distance(long local_player_index, long player_index);
 void VOICE_ROUTING_CALLBACK voice_channels_update_near(byte *channels);
+void VOICE_ROUTING_CALLBACK voice_channels_player_talked(byte *channels, long player_index, long unknown);
 long VOICE_ROUTING_CALLBACK voice_channels_get_how(long local_player_index, const byte *channels, long player_index,
 	long unknown);
 void VOICE_ROUTING_CALLBACK voice_route_peers(const byte *unknown, unsigned long peers, word *words);
