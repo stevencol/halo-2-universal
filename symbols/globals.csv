@@ -210,3 +210,7 @@ address,name,source
 004e8c24,player_data,source/main/main.c
 0047f088,unknown_0047f088,source/sound/sound_manager.c
 004e9c8c,unknown_004e9c8c,source/sound/sound_manager.c
+004c9890,sound_memory_voice,source/sound/sound_memory.c
+004c9894,sound_memory_voice_kind,source/sound/sound_memory.c
+00476fbc,sound_memory_allocation,source/sound/sound_memory.c
+00476fc8,voice_globals,source/sound/sound_memory.c

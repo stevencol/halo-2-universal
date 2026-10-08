@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-04, al terminar el hito 262.
+**Última actualización:** 2026-10-08, al terminar el hito 263.
 
 ## Dónde estamos
 
-- **932 funciones descompiladas de 11.265: el 8,27 % del juego** (el
+- **934 funciones descompiladas de 11.265: el 8,29 % del juego** (el
   5,568 % de los bytes de código).
-- Las 932 están comprobadas contra el ejecutable original: las 931 del
+- Las 934 están comprobadas contra el ejecutable original: las 931 del
   hito 261 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile what each controller says, each time* (ver `git log`).
+- Último hito: *Decompile the making and the giving back of the voice pool* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 486 funciones apuntadas pero sin descompilar (las que el código
-  llama); 399 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 488 funciones apuntadas pero sin descompilar (las que el código
+  llama); 401 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -133,8 +133,8 @@ Módulos (funciones hechas / archivo):
       (17; falta guardar/cargar núcleo y partida guardada)
 - [x] Arranque del juego — `shell\shell.c` (12, con la memoria que piden
       las bibliotecas de la consola)
-- [ ] Memoria del sonido — `sound\sound_memory.c` (2; faltan `0x00053310`,
-      que la prepara, y `0x000533e0`, que la deshace)
+- [x] Memoria de la voz — `sound\sound_memory.c` (4: completo, con el par
+      de la tabla de los que toman memoria al cargar un mapa)
 - [x] Preferencias guardadas — `main\global_preferences.c` (15: completo)
 - [ ] Juego y tabla de sistemas — `game\game.c` (25): la tabla, lo que la
       recorre, las opciones (por defecto, validar, comparar, los jugadores
@@ -201,11 +201,13 @@ Módulos (funciones hechas / archivo):
 - [x] ~~`find_files_next`~~ (hito 44).
 - [x] ~~Fondo de memoria (`memory_pool.c`)~~ (hito 37).
 - [x] ~~El fondo de memoria de la interfaz~~ (hito 38).
-- [ ] **El fondo de la voz** («voice pool», `0x004c995c`): `0x00053290`
-      (pedir), `0x000532e0` (soltar) y el par de la tabla, `0x00053310` y
-      `0x000533e0`, que además prepara la voz (`0x000556a0`, `0x00055720`,
-      `0x00055810`). También usan fondos los objetos (`0x000bc280`,
-      `0x000bc380`, `0x000bf360`).
+- [x] ~~El fondo de la voz~~ (hito 263): `sound_memory.c` completo.
+- [ ] **La voz de los jugadores** (`voice_globals`, `0x00476fc8`): lo que
+      la arranca y la para (`0x000550b0`, `0x000556a0`, `0x00055720`,
+      `0x00055780`, `0x00055810`) y el módulo que la usa, de `0x00053420`
+      a `0x000541a0` (unas 39 funciones pequeñas).
+- [ ] **Los fondos de los objetos**: `0x000bc280`, `0x000bc380`,
+      `0x000bf360`.
 - [ ] **Los otros pares de la tabla de `0x00453c00`**: `0x00081780`,
       `0x002157e0`, `0x000b3d30`, `0x0021ebc0` y sus parejas.
 - [ ] **La tabla de `0x00453c00`**: ocho pares de funciones (soltar y
@@ -227,6 +229,10 @@ Módulos (funciones hechas / archivo):
 
 ## Avisos para no perder tiempo
 
+- Antes de pasar las pruebas en una terminal nueva hay que poner delante
+  en el `PATH` el clang de Visual Studio
+  (`C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\Llvm\x64\bin`):
+  con el de llvm-mingw, que es el que sale si no, `game.c` no compila.
 - No hace falta esperar a comprobaciones largas, pero una mutación que deja
   un bucle sin fin se corta sola a las 10.000 llamadas simuladas.
 - El compilador de `source\` (clang) quita cosas que el del juego no quitó:

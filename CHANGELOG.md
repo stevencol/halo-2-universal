@@ -2,6 +2,62 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — El fondo de memoria de la voz, al cargar un mapa
+
+Dos funciones en `sound/sound_memory.c`, que queda completo. De 932 funciones se pasa a
+934, el 8,29 % de las del juego (el 5,568 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_memory_pool_new` | `0x00053310` | `sound/sound_memory.c` |
+| `sound_memory_pool_delete` | `0x000533e0` | `sound/sound_memory.c` |
+
+Eran `unknown_00053310` y `unknown_000533e0`: el cuarto par de la tabla de
+los que toman memoria al cargar un mapa (`main_game_memory_users`,
+`0x00453c00`). Con ellas la tabla tiene cinco pares de ocho.
+
+### Lo que se sabe
+
+- El fondo de `sound_memory.c` se llama en el juego «voice pool»: es la
+  memoria de la voz de los jugadores en las partidas en red, no la del
+  sonido en general. Mide `0x78000` bytes y se pide a la misma reserva que
+  da su memoria a los archivos de los jugadores (`0x004508fc`).
+- Según cómo se reparte la memoria de la partida, el juego tiene toda la
+  voz (cualquier partida que no sea campaña), una parte (campaña dentro de
+  una sesión de red) o ninguna (campaña sin sesión). Lo apunta en
+  `0x004c9890` y `0x004c9894`. Solo en el primer caso hay fondo.
+- Al crear el fondo se arranca la voz, si no lo estaba: `0x00476fc8` es su
+  estructura (`voice_globals`, `0x90` bytes), de la que aquí se conocen tres
+  campos. Lo hacen tres funciones aún sin descompilar (`0x000556a0`,
+  `0x00055720` y `0x00055810`); `0x000550b0` la para antes de devolver el
+  fondo.
+- El juego no mira si hubo memoria para el fondo antes de escribir en él.
+- Ghidra no tiene estas dos funciones en su lista (solo se llega a ellas por
+  la tabla), así que no suman bytes al porcentaje de código.
+
+### Entorno
+
+- En una terminal nueva el `clang` que sale primero es el de llvm-mingw
+  (22), que ya no compila `game.c`: da por error lo que el de Visual Studio
+  (19) da por aviso. Hay que poner delante en el `PATH` el de
+  `Visual Studio\2022\BuildTools\VC\Tools\Llvm\x64\bin`. Apuntado en
+  `ESTADO.md`.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo y las de `main_game`.
+- El caso de que no haya memoria para el fondo: el juego escribe en la
+  dirección `0x3c` y se para.
+- En la prueba, las funciones de la reserva son de la prueba: el arnés no
+  sabe simular una función no descompilada a la que `source/` llama con su
+  primer argumento en `ecx`.
+
+### Mutaciones
+
+Veinte cambios a mano: las pruebas notan los veinte.
+
 ## 2026-10-05 — Lo que dice cada mando, cada fotograma
 
 Una función en `input/input_abstraction.c`, de 1.993 bytes. De 931 funciones se pasa a
