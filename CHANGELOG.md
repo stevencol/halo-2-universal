@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Una consola entra en la sesión
+
+Dos funciones en `networking/network_session.c`, 415 bytes entre las dos. De 1118
+funciones se pasa a 1120, el 9,94 % de las del juego (el 6,420 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_peer_state_new` | `0x0005f900` | `networking/network_session.c` |
+| `network_session_add_peer` | `0x0005fbd0` | `networking/network_session.c` |
+
+`network_session_add_peer` era `unknown_0005fbd0`, con la que
+`network_session_start` (hito 314) mete a esta consola en la sesión recién
+arrancada.
+
+### Lo que se sabe
+
+- Las consolas de una sesión están en «quién está en ella» desde `0x58`,
+  `0x10C` bytes cada una (lo mismo que ya se leía en la voz), con la cuenta
+  en `0x54`.
+- Al entrar, de una consola solo se sabe **cómo se la conoce en la red**
+  (los 36 bytes del principio) y, si se dan, dos números en `0xF0`. Sus dos
+  textos (de 16 y de 32 caracteres de 16 bits) quedan vacíos y cuatro
+  números de `0xFC` a NONE.
+- Aparte, la sesión guarda de cada consola 20 bytes en `0x72DC`: si la hay,
+  tres bytes, un número que recibe (NONE para esta consola), dos a NONE y
+  cuándo entró (`GetTickCount`). Eso lo arranca
+  `network_session_peer_state_new`.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (46
+  funciones).
+- Las mutaciones de los hitos 280 a 317 están pendientes.
+
 ## 2026-10-08 — La dirección de la consola y las claves de las sesiones
 
 Cuatro funciones en un archivo nuevo, `networking/transport_security.c`, 493 bytes entre

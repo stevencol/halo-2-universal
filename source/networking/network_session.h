@@ -93,8 +93,31 @@ enum
 	NETWORK_SESSION_UNKNOWN4DAC_OFFSET= 0x4DAC,
 	NETWORK_SESSION_UNKNOWN5DD0_OFFSET= 0x5DD0,
 	NETWORK_SESSION_UNKNOWN5E20_OFFSET= 0x5E20,
-	/* in who is in the session: how many consoles */
+	/* in who is in the session: how many consoles, and the consoles */
 	NETWORK_SESSION_PEER_COUNT_OFFSET= 0x54,
+	NETWORK_SESSION_PEER_ARRAY_OFFSET= 0x58,
+	NETWORK_SESSION_PEER_SIZE= 0x10C,
+	/* of a console: what it is known by in the network; two texts of
+	characters of 16 bits, of 16 and of 32; four numbers that start at NONE;
+	and two more that it comes in with or not */
+	NETWORK_SESSION_PEER_ADDRESS_OFFSET= 0,
+	NETWORK_SESSION_PEER_UNKNOWN28_OFFSET= 0x28,
+	NETWORK_SESSION_PEER_UNKNOWN28_LENGTH= 16,
+	NETWORK_SESSION_PEER_UNKNOWN48_OFFSET= 0x48,
+	NETWORK_SESSION_PEER_UNKNOWN48_LENGTH= 32,
+	NETWORK_SESSION_PEER_UNKNOWN88_OFFSET= 0x88,
+	NETWORK_SESSION_PEER_UNKNOWN8C_OFFSET= 0x8C,
+	NETWORK_SESSION_PEER_UNKNOWN90_OFFSET= 0x90,
+	NETWORK_SESSION_PEER_UNKNOWN90_SIZE= 0xC,
+	NETWORK_SESSION_PEER_UNKNOWNAC_OFFSET= 0xAC,
+	NETWORK_SESSION_PEER_UNKNOWNAC_SIZE= 0x40,
+	NETWORK_SESSION_PEER_UNKNOWNEC_OFFSET= 0xEC,
+	NETWORK_SESSION_PEER_UNKNOWNF0_OFFSET= 0xF0,
+	NETWORK_SESSION_PEER_UNKNOWNFC_OFFSET= 0xFC,
+	NETWORK_SESSION_PEER_UNKNOWNFC_COUNT= 4,
+	/* a byte of the session that goes to what it keeps of a console that
+	comes in */
+	NETWORK_SESSION_UNKNOWN765C_OFFSET= 0x765C,
 	/* and after the rest of the session: GetTickCount with the other sign,
 	and the time of the C library */
 	NETWORK_SESSION_UNKNOWN78B0_OFFSET= 0x78B0,
@@ -109,6 +132,24 @@ enum
 	_unknown_003cd147_start= 1,
 	_unknown_003cd147_end= 0x10
 };
+
+/* what a session keeps of each console that is in it, at 0x72DC, apart from
+who is in it: whether there is one, three bytes, a number that it is given
+(NONE for this console), two that start at NONE and when it came in */
+struct network_session_peer_state
+{
+	boolean valid;
+	boolean unknown1;
+	boolean unknown2;
+	boolean unknown3;
+	long unknown4;
+	long unknown8;
+	long unknownC;
+	long time;
+};
+
+typedef char verify_network_session_peer_state_size[
+	sizeof(struct network_session_peer_state) == 0x14 ? 1 : -1];
 
 /* a number that network_session_start leaves in a session */
 #define NETWORK_SESSION_UNKNOWN4DA8_VALUE 0xDEADBEEFu
@@ -142,6 +183,10 @@ boolean NETWORK_SESSION_CALLBACK network_session_initialize(byte *session, byte 
 boolean NETWORK_SESSION_CALLBACK network_session_start(byte *session, long unknown18, long unknown8, long unknownC,
 	long unknown10, long unknown14, const byte *identifiers, const long *unknown1C, long *unknown20, long count);
 
+void NETWORK_SESSION_CALLBACK network_session_peer_state_new(boolean unknown1, byte *session, long peer_index,
+	long unknown4);
+void NETWORK_SESSION_CALLBACK network_session_add_peer(byte *session, long peer_index, const byte *address,
+	boolean unknown1, long unknown4, const long *unknownF0);
 void network_session_forget_identifier(byte *session);
 void network_session_set_identifier(byte *session, const byte *identifier, const byte *key, long unknown3C);
 boolean NETWORK_SESSION_CALLBACK network_session_use_identifier(byte *session, const byte *key, long unknown8,

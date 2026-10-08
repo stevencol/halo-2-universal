@@ -499,7 +499,7 @@ def run(t) -> None:
                 "GetTickCount": lambda harness, arguments, value=random_.getrandbits(32): value,
                 "XGetLanguage": lambda harness, arguments, value=random_.randrange(12): value,
                 "unknown_0007ad80": at_random,
-                "unknown_0005fbd0": comes_in,
+                "network_session_add_peer": comes_in,
                 "time": lambda harness, arguments, value=random_.getrandbits(31): value,
                 "unknown_00061390": lambda harness, arguments: 0,
                 "unknown_00062e70": lambda harness, arguments: 0,
@@ -583,4 +583,42 @@ def run(t) -> None:
             random_.choice((0, 1, 2, 2, 2, 5, 0x102, 0x202)),
             globals={"unknown_004cf7d4": keys(), "unknown_004cf8d4": told()},
             externals={**library, "unknown_00075a90": lambda harness, arguments: 0, "transport_security_create_key": makes},
+        )
+
+    # ---------- a console comes into a session
+
+    def clock() -> dict:
+        return {
+            "unknown_00510548": bytes((random_.choice((0, 0, 1, 0x80)),)),
+            "unknown_0051054c": random_.randbytes(4),
+        }
+
+    def ticks():
+        return lambda harness, arguments, value=random_.getrandbits(32): value
+
+    for n in range(80):
+        data = bytearray(random_.randbytes(0x78B8))
+        data[0x765C] = random_.choice((0, 1, 0x80))
+        t.check(
+            "network_session_peer_state_new",
+            random_.choice((0, 1, 1, 0x80, 0x100, 0x1FF)),
+            Buffer(bytes(data)),
+            random_.randrange(16),
+            random_.choice((NONE, 0, 3, random_.getrandbits(32))),
+            globals=clock(),
+            externals={"GetTickCount": ticks()},
+        )
+    for n in range(80):
+        data = bytearray(random_.randbytes(0x78B8))
+        data[0x765C] = random_.choice((0, 1, 0x80))
+        t.check(
+            "network_session_add_peer",
+            Buffer(bytes(data)),
+            random_.randrange(17),
+            Buffer(random_.randbytes(0x24)),
+            random_.choice((0, 1, 1, 0x80, 0x100, 0x1FF)),
+            random_.choice((NONE, 0, 3, random_.getrandbits(32))),
+            random_.choice((Buffer(random_.randbytes(8)), Buffer(random_.randbytes(8)), 0)),
+            globals=clock(),
+            externals={"GetTickCount": ticks()},
         )

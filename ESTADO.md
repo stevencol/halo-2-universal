@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 316.
+**Última actualización:** 2026-10-08, al terminar el hito 317.
 
 ## Dónde estamos
 
-- **1118 funciones descompiladas de 11.265: el 9,92 % del juego** (el
-  6,406 % de los bytes de código).
-- Las 1118 están comprobadas contra el ejecutable original: las 1090 del
+- **1120 funciones descompiladas de 11.265: el 9,94 % del juego** (el
+  6,420 % de los bytes de código).
+- Las 1120 están comprobadas contra el ejecutable original: las 1090 del
   hito 296 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the console's network address and the session keys* (ver `git log`).
+- Último hito: *Decompile how a console comes into a session* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 544 funciones apuntadas pero sin descompilar (las que el código
-  llama); 456 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 543 funciones apuntadas pero sin descompilar (las que el código
+  llama); 455 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -109,9 +109,9 @@ Módulos (funciones hechas / archivo):
       terminar líneas o triángulos; faltan `0x0001e930` y `0x0001eb00`, que
       preparan la consola para dibujar)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
-- [ ] Sesión de red — `networking\network_session.c` (10: el estado de
-      una sesión, prepararla, arrancarla y su identificador y su clave;
-      lo que sigue está en `0x0005fbd0` y más adelante)
+- [ ] Sesión de red — `networking\network_session.c` (12: el estado de
+      una sesión, prepararla, arrancarla, su identificador y su clave, y
+      una consola que entra; faltan muchas, de `0x0005f760` en adelante)
 - [ ] Dirección y claves de red — `networking\transport_security.c` (4:
       lo que la consola es en la red y la clave de cada sesión; va de
       `0x0007a8a0` en adelante)
@@ -228,10 +228,10 @@ Módulos (funciones hechas / archivo):
 - [x] ~~`game_voice.c`~~ (hito 278): completo.
 - [x] ~~El resto de `voice_routing.c`~~ (hito 313).
 - [ ] **La sesión de red**: lo que queda de lo que llama
-      `network_session_start` (`0x0005fbd0`, `0x00061390`,
-      `0x00062e70`), `0x00075a90`, lo que sigue en
-      `transport_security.c` (`0x0007aaa0`), y lo que hace la partida
-      en cada estado (`0x0006dec0`).
+      `network_session_start` (`0x00061390`, `0x00062e70`),
+      `0x00075a90`, lo que sigue en `transport_security.c`
+      (`0x0007aaa0`), y lo que hace la partida en cada estado
+      (`0x0006dec0`).
 - [x] ~~Cinco direcciones repetidas en `symbols\functions.csv`~~ (hito
       296).
 - [ ] **Los fondos de los objetos**: `0x000bc280`, `0x000bc380`,

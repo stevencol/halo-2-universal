@@ -11,6 +11,7 @@ the names of its functions.
 #include "network_session.h"
 
 #include "cache/cache_files.h"
+#include "text/unicode.h"
 
 #include <string.h>
 
@@ -24,6 +25,7 @@ long GetTickCount(void);
 
 /* of the C library */
 long time(long *timer);
+wchar *wcsncpy(wchar *destination, const wchar *source, size_t count);
 
 /* ---------- prototypes of functions not decompiled yet */
 
@@ -40,11 +42,6 @@ long __attribute__((stdcall)) unknown_003cd147(const byte *identifier, const voi
 
 /* 0x0007ad80: fills a buffer with bytes made at random */
 void unknown_0007ad80(long size, void *buffer);
-
-/* 0x0005fbd0: a console comes into a session, at a place: it is given what
-the console is known by and three more things */
-void __attribute__((stdcall)) unknown_0005fbd0(byte *session, long peer_index, const byte *address, long unknownC,
-	long unknown10, long *unknown14);
 
 /* 0x00061390: something that is done with a session when who is in it
 changes */
@@ -202,7 +199,7 @@ console has to be known by something in it, and network_session_use_identifier (
 fourth and fifth things) or network_session_create_identifier (without) has to be able to get
 it ready. Then what the session knows starts over: when it started, the
 language, eight bytes made at random; nobody is in it but this console, which
-unknown_0005fbd0 puts first; and what it will be says nothing. At last, if it
+network_session_add_peer puts first; and what it will be says nothing. At last, if it
 is given a number of things that is NONE or more than none, they go to
 unknown_00062e70 */
 boolean NETWORK_SESSION_CALLBACK network_session_start(
@@ -278,7 +275,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_start(
 	session[NETWORK_SESSION_UNKNOWN48_OFFSET]= 0;
 	*(long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET)= 0;
 	*(long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET)= 0;
-	unknown_0005fbd0(session, *(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET), address, 0, NONE,
+	network_session_add_peer(session, *(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET), address, 0, NONE,
 		unknown20);
 	(*(long *)(session+NETWORK_SESSION_UNKNOWN7618_OFFSET))++;
 	*(long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET)= 0;
@@ -404,4 +401,73 @@ boolean NETWORK_SESSION_CALLBACK network_session_create_identifier(
 	}
 
 	return FALSE;
+}
+
+/* 0x0005f900: what a session keeps of a console that comes in, at a place:
+there is one, since now, with a byte and a number that it is given. With the
+byte and a byte of the session, another byte is set */
+void NETWORK_SESSION_CALLBACK network_session_peer_state_new(
+	boolean unknown1,
+	byte *session,
+	long peer_index,
+	long unknown4)
+{
+	struct network_session_peer_state *state=
+		(struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index;
+
+	memset(state, 0, sizeof(*state));
+	state->unknown4= unknown4;
+	state->valid= TRUE;
+	state->unknown1= unknown1;
+	state->unknown8= NONE;
+	state->unknownC= NONE;
+	state->unknown3= FALSE;
+	if (unknown1 && session[NETWORK_SESSION_UNKNOWN765C_OFFSET])
+	{
+		state->unknown2= TRUE;
+	}
+	state->time= network_session_time();
+}
+
+/* 0x0005fbd0: a console comes into a session, at a place: there is one more
+in it, and all that is known of this one is what it is known by in the
+network and, if they are given, two numbers. Its texts are empty. What the
+session keeps of it apart is started too */
+void NETWORK_SESSION_CALLBACK network_session_add_peer(
+	byte *session,
+	long peer_index,
+	const byte *address,
+	boolean unknown1,
+	long unknown4,
+	const long *unknownF0)
+{
+	static const wchar empty[]= { 0 };
+	byte *peer= session+NETWORK_SESSION_PEER_ARRAY_OFFSET+peer_index*NETWORK_SESSION_PEER_SIZE;
+	wchar *text;
+	long index;
+
+	(*(long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET))++;
+	memset(peer, 0, NETWORK_SESSION_PEER_SIZE);
+	text= (wchar *)(peer+NETWORK_SESSION_PEER_UNKNOWN28_OFFSET);
+	wcsncpy(text, empty, NETWORK_SESSION_PEER_UNKNOWN28_LENGTH-1);
+	text[NETWORK_SESSION_PEER_UNKNOWN28_LENGTH-1]= 0;
+	text= (wchar *)(peer+NETWORK_SESSION_PEER_UNKNOWN48_OFFSET);
+	wcsncpy(text, empty, NETWORK_SESSION_PEER_UNKNOWN48_LENGTH-1);
+	text[NETWORK_SESSION_PEER_UNKNOWN48_LENGTH-1]= 0;
+	*(long *)(peer+NETWORK_SESSION_PEER_UNKNOWN88_OFFSET)= 0;
+	*(long *)(peer+NETWORK_SESSION_PEER_UNKNOWN8C_OFFSET)= 0;
+	for (index= 0; index<NETWORK_SESSION_PEER_UNKNOWNFC_COUNT; index++)
+	{
+		*(long *)(peer+NETWORK_SESSION_PEER_UNKNOWNFC_OFFSET+index*sizeof(long))= NONE;
+	}
+	memset(peer+NETWORK_SESSION_PEER_UNKNOWN90_OFFSET, 0, NETWORK_SESSION_PEER_UNKNOWN90_SIZE);
+	memset(peer+NETWORK_SESSION_PEER_UNKNOWNAC_OFFSET, 0, NETWORK_SESSION_PEER_UNKNOWNAC_SIZE);
+	*(long *)(peer+NETWORK_SESSION_PEER_UNKNOWNEC_OFFSET)= 0;
+	memcpy(peer+NETWORK_SESSION_PEER_ADDRESS_OFFSET, address, NETWORK_SESSION_ADDRESS_SIZE);
+	if (unknownF0)
+	{
+		*(long *)(peer+NETWORK_SESSION_PEER_UNKNOWNF0_OFFSET)= unknownF0[0];
+		*(long *)(peer+NETWORK_SESSION_PEER_UNKNOWNF0_OFFSET+sizeof(long))= unknownF0[1];
+	}
+	network_session_peer_state_new(unknown1, session, peer_index, unknown4);
 }
