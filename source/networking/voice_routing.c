@@ -40,6 +40,9 @@ void unknown_00189760(const struct voice_sound_request *request);
 /* 0x001906da: something of the player of a gamepad: see game_voice.c */
 boolean unknown_001906da(long gamepad_index);
 
+/* 0x000caf90: where an object is */
+void unknown_000caf90(long object_index, real_point3d *position);
+
 /* 0x00192950: something of a player, when game_voice_unknown_00053d90 says
 so */
 boolean unknown_00192950(long player_index);
@@ -1453,4 +1456,63 @@ long VOICE_ROUTING_CALLBACK voice_channels_get_how(
 	}
 
 	return _voice_hears_none;
+}
+
+/* 0x00057a80: how far a player is from another, from where the object of
+each is: for the first, the one it has at 0x2c or, with none there, the one
+at 0x30; for the second, only the one at 0x2c. -1 if the voice does not have
+one of the two, or one has no object */
+real voice_players_get_distance(
+	long local_player_index,
+	long player_index)
+{
+	real_point3d position= {0.0f, 0.0f, 0.0f};
+	real_point3d other_position= {0.0f, 0.0f, 0.0f};
+	real distance= VOICE_PLAYERS_NO_DISTANCE;
+	const byte *datum;
+	long object_index;
+
+	if (!game_voice_unknown_00054df0(local_player_index))
+	{
+		return distance;
+	}
+	datum= game_voice_get_player_datum(local_player_index);
+	if (!datum)
+	{
+		return distance;
+	}
+	object_index= *(const long *)(datum+VOICE_PLAYER_DATUM_UNKNOWN2C_OFFSET);
+	if (object_index==NONE)
+	{
+		object_index= *(const long *)(datum+VOICE_PLAYER_DATUM_OBJECT_OFFSET);
+		if (object_index==NONE)
+		{
+			return distance;
+		}
+	}
+	unknown_000caf90(object_index, &position);
+	if (game_voice_unknown_00054df0(player_index))
+	{
+		datum= game_voice_get_player_datum(player_index);
+		if (datum)
+		{
+			object_index= *(const long *)(datum+VOICE_PLAYER_DATUM_UNKNOWN2C_OFFSET);
+			if (object_index!=NONE)
+			{
+				/* the game does this with the old instructions for reals of the
+				processor, which keep what is in between in more room */
+				long double dx, dy, dz, sum;
+
+				unknown_000caf90(object_index, &other_position);
+				dx= (long double)other_position.x-position.x;
+				dy= (long double)other_position.y-position.y;
+				dz= (long double)other_position.z-position.z;
+				sum= dz*dz+dx*dx;
+				sum+= dy*dy;
+				distance= (real)__builtin_sqrtl(sum);
+			}
+		}
+	}
+
+	return distance;
 }

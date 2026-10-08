@@ -791,6 +791,8 @@ address,name,source,arguments,returns,convention
 00057960,voice_channels_update_by_team,source/networking/voice_routing.c,stack,void,stdcall
 00057b60,voice_players_same_team,source/networking/voice_routing.c,eax ecx,int
 00057d60,voice_player_hears,source/networking/voice_routing.c,eax edx stack,int,stdcall
+00057a80,voice_players_get_distance,source/networking/voice_routing.c,eax edi,real:xmm0
+000caf90,unknown_000caf90,,eax esi,void
 00057c20,voice_channels_get_how,source/networking/voice_routing.c,eax ecx stack stack,int,stdcall
 00057eb0,unknown_00057eb0,,eax stack stack stack,void,stdcall
 000589e0,voice_player_unknown_000589e0,source/networking/voice_routing.c,eax,bool

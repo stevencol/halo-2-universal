@@ -878,3 +878,46 @@ def run(t) -> None:
                 },
                 extra=[membership],
             )
+
+    # ---------- how far two players are
+
+    def a_datum(first: int, second: int) -> Buffer:
+        data = bytearray(random_.randbytes(0x34))
+        struct.pack_into("<2I", data, 0x2C, first & 0xFFFFFFFF, second & 0xFFFFFFFF)
+        return Buffer(bytes(data))
+
+    for n in range(160):
+        local_player, player = random_.sample(range(16), 2)
+        has = [random_.choice((1, 1, 1, 0)) for _ in range(16)]
+        local_datum = a_datum(random_.choice((0xE0010005, NONE)), random_.choice((0xE0020006, 0xE0020006, NONE)))
+        other_datum = a_datum(random_.choice((0xE0030007, 0xE0030007, NONE)), random_.choice((0xE0040008, NONE)))
+        there = [random_.choice((True, True, True, False)) for _ in range(2)]
+        scale = random_.choice((1.0, 100.0, 0.001, 1e10, 1e-20))
+        points = {
+            object_index: struct.pack("<3f", *(random_.uniform(-scale, scale) for _ in range(3)))
+            for object_index in (0xE0010005, 0xE0020006, 0xE0030007, 0xE0040008)
+        }
+        if n % 9 == 0:
+            points[0xE0030007] = points[0xE0010005]
+
+        def datum_of(harness, arguments, local_player=local_player, local_datum=local_datum, other_datum=other_datum, there=there):
+            if arguments[0] == local_player:
+                return local_datum.address if there[0] else 0
+            return other_datum.address if there[1] else 0
+
+        def where(harness, arguments, points=points):
+            # the place for where the object is is in the stack
+            harness.mu.mem_write(arguments[1], points[arguments[0]])
+            return 0, (arguments[0],)
+
+        t.check(
+            "voice_players_get_distance",
+            local_player,
+            player,
+            externals={
+                "game_voice_unknown_00054df0": lambda harness, arguments, has=has: has[arguments[0] & 15],
+                "game_voice_get_player_datum": datum_of,
+                "unknown_000caf90": where,
+            },
+            extra=[local_datum, other_datum],
+        )

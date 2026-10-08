@@ -120,6 +120,9 @@ enum
 seconds */
 #define VOICE_PLAYER_UNKNOWN_000589E0_SECONDS 1.0f
 
+/* what voice_players_get_distance says when it does not know */
+#define VOICE_PLAYERS_NO_DISTANCE -1.0f
+
 /* how soon after it started a player's voice has to end for the sound to be
 played, in seconds */
 #define VOICE_CHANNELS_ENDED_SECONDS 0.3f
@@ -194,6 +197,7 @@ void VOICE_ROUTING_CALLBACK voice_play_sound(long player_index, long sound_index
 void VOICE_ROUTING_CALLBACK voice_channels_update_by_team(byte *channels);
 long voice_players_same_team(long player_index, long local_player_index);
 long VOICE_ROUTING_CALLBACK voice_player_hears(long how, long local_player_index, long player_index);
+real voice_players_get_distance(long local_player_index, long player_index);
 long VOICE_ROUTING_CALLBACK voice_channels_get_how(long local_player_index, const byte *channels, long player_index,
 	long unknown);
 void VOICE_ROUTING_CALLBACK voice_route_peers(const byte *unknown, unsigned long peers, word *words);

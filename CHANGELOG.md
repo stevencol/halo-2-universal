@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — A qué distancia están dos jugadores: 1.100 funciones
+
+Una función en `networking/voice_routing.c`, de 219 bytes. De 1099 funciones se pasa a
+1100, el 9,76 % de las del juego (el 6,195 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_players_get_distance` | `0x00057a80` | `networking/voice_routing.c` |
+
+### Lo que se sabe
+
+- Da la distancia entre el objeto de un jugador y el de otro (dónde está
+  cada objeto lo dice `0x000caf90`, sin descompilar), o -1 si la voz no
+  tiene a alguno o alguno no tiene objeto. Es la base de la voz por
+  cercanía.
+- Del primer jugador vale el objeto de su `0x2c` o, si no tiene, el de su
+  `0x30`; del segundo, solo el de `0x2c`. Así que `0x2c` es el objeto que
+  el jugador lleva ahora (su cuerpo) y `0x30` uno de reserva (seguramente
+  el último que tuvo, para seguir oyendo desde donde murió).
+
+### La cuenta, igual que el juego bit a bit
+
+- El juego hace esta cuenta con las instrucciones antiguas de reales del
+  procesador, que guardan los pasos intermedios con más sitio para el
+  exponente. Con las de `source/` (las modernas) el resultado difería en
+  las últimas cifras cuando las distancias eran minúsculas (del orden de
+  10⁻²⁰): los cuadrados no cabían en un real corriente.
+- Escrita con el mismo tipo de real que usa el juego ahí, las 160 pruebas
+  dan exactamente lo mismo, con distancias de 10⁻²⁰ a 10¹⁰.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- La batería completa del hito 296 corre aparte; las mutaciones de los
+  hitos 280 a 304 están pendientes.
+
 ## 2026-10-08 — Cómo hace la partida que se oiga a un jugador
 
 Una función en `networking/voice_routing.c`, de 307 bytes. De 1098 funciones se pasa a
