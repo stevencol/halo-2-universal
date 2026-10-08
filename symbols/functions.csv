@@ -636,12 +636,16 @@ address,name,source,arguments,returns,convention
 001a474c,user_interface_memory_pool_new,source/interface/user_interface_memory.c,stack,void
 00215810,saved_game_files_free_memory,source/saved games/saved_game_files.c,,void
 002157e0,saved_game_files_allocate_memory,source/saved games/saved_game_files.c,stack,void
-000533e0,sound_memory_pool_delete,source/sound/sound_memory.c,,void
-00053310,sound_memory_pool_new,source/sound/sound_memory.c,stack,void,stdcall
+000533e0,game_voice_pool_delete,source/networking/game_voice.c,,void
+00053310,game_voice_pool_new,source/networking/game_voice.c,stack,void,stdcall
 000556a0,voice_reset_controller_levels,source/networking/voice.c,edx,void
 00055720,voice_reset_controllers,source/networking/voice.c,edx,void
 00055780,voice_engine_parameters_new,source/networking/voice.c,ecx stack,bool
 00055810,voice_start,source/networking/voice.c,edi,bool
+00053420,game_voice_menu_pool_new,source/networking/game_voice.c,,void
+000534a0,game_voice_menu_pool_delete,source/networking/game_voice.c,,void
+00053510,game_voice_start,source/networking/game_voice.c,,void
+00053550,game_voice_stop,source/networking/game_voice.c,,void
 000550b0,voice_dispose,source/networking/voice.c,eax,void
 00055080,voice_initialize,source/networking/voice.c,eax stack,void
 000552a0,voice_remove_remote_talkers,source/networking/voice.c,esi,void
@@ -1062,8 +1066,8 @@ address,name,source,arguments,returns,convention
 0012c090,xmem_static_allocate,source/shell/shell.c,stack stack,int
 002d09c0,XMemAllocDefault,,stack stack,int,stdcall
 002d0a60,XMemFreeDefault,,stack stack,void,stdcall
-00053290,sound_memory_allocate,source/sound/sound_memory.c,eax stack,int
-000532e0,sound_memory_free,source/sound/sound_memory.c,stack stack,void
+00053290,game_voice_allocate,source/networking/game_voice.c,eax stack,int
+000532e0,game_voice_free,source/networking/game_voice.c,stack stack,void
 0011d790,quaternion_to_axis_angle,source/math/real_math.c,eax esi edi,void
 001421b0,matrix4x3_from_point_and_quaternion,source/math/matrix_math.c,edx esi ecx,void
 00142360,matrix4x3_to_orientation,source/math/matrix_math.c,esi eax,void

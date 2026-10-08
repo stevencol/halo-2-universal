@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 268.
+**Última actualización:** 2026-10-08, al terminar el hito 269.
 
 ## Dónde estamos
 
-- **956 funciones descompiladas de 11.265: el 8,49 % del juego** (el
-  5,630 % de los bytes de código).
-- Las 956 están comprobadas contra el ejecutable original: las 931 del
+- **960 funciones descompiladas de 11.265: el 8,52 % del juego** (el
+  5,641 % de los bytes de código).
+- Las 960 están comprobadas contra el ejecutable original: las 931 del
   hito 261 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile what a player of another console said: voice.c is complete* (ver `git log`).
+- Último hito: *Rename sound_memory.c to game_voice.c and decompile its other pool* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 503 funciones apuntadas pero sin descompilar (las que el código
   llama); 416 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -135,8 +135,10 @@ Módulos (funciones hechas / archivo):
       (17; falta guardar/cargar núcleo y partida guardada)
 - [x] Arranque del juego — `shell\shell.c` (12, con la memoria que piden
       las bibliotecas de la consola)
-- [x] Memoria de la voz — `sound\sound_memory.c` (4: completo, con el par
-      de la tabla de los que toman memoria al cargar un mapa)
+- [ ] Lo que el juego hace con la voz — `networking\game_voice.c` (8: los
+      dos fondos de memoria, y arrancar y parar la voz; era
+      `sound\sound_memory.c`. Va de `0x00053290` a `0x00055060`: faltan
+      unas 66 funciones, desde `0x00053580`)
 - [x] Preferencias guardadas — `main\global_preferences.c` (15: completo)
 - [ ] Juego y tabla de sistemas — `game\game.c` (25): la tabla, lo que la
       recorre, las opciones (por defecto, validar, comparar, los jugadores
@@ -203,12 +205,13 @@ Módulos (funciones hechas / archivo):
 - [x] ~~`find_files_next`~~ (hito 44).
 - [x] ~~Fondo de memoria (`memory_pool.c`)~~ (hito 37).
 - [x] ~~El fondo de memoria de la interfaz~~ (hito 38).
-- [x] ~~El fondo de la voz~~ (hito 263): `sound_memory.c` completo.
+- [x] ~~El fondo de la voz~~ (hito 263; el archivo es `game_voice.c`
+      desde el hito 269).
 - [x] ~~`voice.c`~~ (hito 268): completo.
-- [ ] **El módulo que usa la voz**, de `0x00053420` a `0x00055060` (unas
-      70 funciones, casi todas pequeñas; casi todas empiezan mirando
-      `0x004c99b8` y `voice_globals.initialized`), y lo que sigue a
-      `voice.c` desde `0x00055960`.
+- [ ] **El resto de `game_voice.c`**, de `0x00053580` a `0x00055060` (unas
+      66 funciones, casi todas pequeñas; casi todas empiezan mirando
+      `game_voice_enabled` y `voice_globals.initialized`), y lo que sigue
+      a `voice.c` desde `0x00055960`.
 - [ ] **Los fondos de los objetos**: `0x000bc280`, `0x000bc380`,
       `0x000bf360`.
 - [ ] **Los otros pares de la tabla de `0x00453c00`**: `0x00081780`,

@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — `sound_memory.c` pasa a ser `game_voice.c`, con el fondo de la voz y del menú
+
+Cuatro funciones en `networking/game_voice.c`, de 302 bytes entre las cuatro. De 956 funciones se pasa a
+960, el 8,52 % de las del juego (el 5,641 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_voice_menu_pool_new` | `0x00053420` | `networking/game_voice.c` |
+| `game_voice_menu_pool_delete` | `0x000534a0` | `networking/game_voice.c` |
+| `game_voice_start` | `0x00053510` | `networking/game_voice.c` |
+| `game_voice_stop` | `0x00053550` | `networking/game_voice.c` |
+
+### Cambiado
+
+- `sound/sound_memory.c` se llama ahora `networking/game_voice.c`, y sus
+  funciones y variables `game_voice_...` en vez de `sound_memory_...`. En el
+  hito 263 se dio el archivo por completo, pero sigue: lo que viene después
+  de sus cuatro funciones es lo que el juego hace con la voz de los
+  jugadores, hasta `0x00055060` (unas 70 funciones), y el fondo de memoria
+  era solo el principio. Las pruebas son `tests\test_game_voice.py`.
+- El «otro fondo» (`0x004c9960`) es `game_voice_menu_pool`: el juego lo
+  llama «voice y menu pool».
+
+### Lo que se sabe
+
+- Hay dos fondos y nunca los dos a la vez. En una partida que no es
+  campaña, el de la voz (`0x78000` bytes, hito 263). En una campaña dentro
+  de una sesión de red, el de la voz y del menú (`0x61800` bytes), que se
+  pide a la reserva cuya memoria presta la caché de texturas
+  (`0x0046dd54`) y, si no la hay, a la general.
+- `0x004c99b8` dice si el juego tiene que ver con la voz
+  (`game_voice_enabled`): casi todas las funciones del módulo lo miran
+  primero, junto con si la voz está arrancada.
+- La voz se arranca si es completa, o si es la de una sesión y la partida
+  es una campaña.
+- Al parar la voz se pone a 0 un número de 16 bits (`0x004c9966`) del que
+  aún no se sabe más.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo, las de `shell` y las de
+  `main_game`.
+- Las mutaciones de los hitos 266 a 269 corren aparte; su resultado irá en
+  una entrada posterior.
+
 ## 2026-10-08 — Lo que dijo un jugador de otra consola: `voice.c`, completo
 
 Dos funciones en `networking/voice.c`, de 307 bytes entre las dos: las últimas del archivo. De 954 funciones se pasa a

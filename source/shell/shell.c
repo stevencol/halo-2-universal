@@ -16,7 +16,7 @@ shell_dispose are those of Halo 1's shell.c; the other names are guesses.
 #include "cache/animation_cache.h"
 #include "cache/cache_files.h"
 #include "cache/texture_cache.h"
-#include "sound/sound_memory.h"
+#include "networking/game_voice.h"
 #include "bitmaps/bitmap_definitions.h"
 #include "input/input.h"
 #include "cseries/async.h"
@@ -188,7 +188,7 @@ void *__attribute__((stdcall)) XMemAlloc(
 	}
 	if (allocator>XMEM_SOUND_FIRST_ALLOCATOR_ID-1 && allocator<=XMEM_SOUND_LAST_ALLOCATOR_ID)
 	{
-		return sound_memory_allocate(size, attributes);
+		return game_voice_allocate(size, attributes);
 	}
 
 	return XMemAllocDefault(size, attributes);
@@ -213,7 +213,7 @@ void __attribute__((stdcall)) XMemFree(
 	}
 	else if (allocator>XMEM_SOUND_FIRST_ALLOCATOR_ID-1 && allocator<=XMEM_SOUND_LAST_ALLOCATOR_ID)
 	{
-		sound_memory_free(address, attributes);
+		game_voice_free(address, attributes);
 
 		return;
 	}

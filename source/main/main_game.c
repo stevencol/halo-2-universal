@@ -22,7 +22,7 @@ The names are guesses.
 #include "memory/data.h"
 #include "memory/physical_memory.h"
 #include "scenario/scenario.h"
-#include "sound/sound_memory.h"
+#include "networking/game_voice.h"
 
 #include <string.h>
 
@@ -147,7 +147,7 @@ struct main_game_memory_user main_game_memory_users[NUMBER_OF_MAIN_GAME_MEMORY_U
 	{unknown_00081f80, (void (MAIN_GAME_CALLBACK *)(long))unknown_00081780},
 	{user_interface_memory_pool_delete, user_interface_memory_pool_new},
 	{saved_game_files_free_memory, saved_game_files_allocate_memory},
-	{sound_memory_pool_delete, sound_memory_pool_new},
+	{game_voice_pool_delete, game_voice_pool_new},
 	{unknown_000b3db0, (void (MAIN_GAME_CALLBACK *)(long))unknown_000b3d30},
 	{unknown_0021ebe0, (void (MAIN_GAME_CALLBACK *)(long))unknown_0021ebc0},
 	{animation_cache_free_memory, animation_cache_allocate_memory},
