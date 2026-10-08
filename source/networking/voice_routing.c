@@ -33,11 +33,9 @@ boolean unknown_000589e0(long player);
 network game */
 unsigned long __attribute__((stdcall)) unknown_00056c60(byte *channels, long player_index);
 
-/* 0x00055c40: writes what a queue has for a console; how much it is, and 0
-or less if there was no room. 0x00055e10: takes what a queue of another
-console had; how much it was, and 0 or less if it was not right */
-long __attribute__((stdcall)) unknown_00055c40(long peer, byte *out, byte *header, long size, boolean is_chosen);
-long __attribute__((stdcall)) unknown_00055e10(byte *queue, const byte *in, long size, boolean is_chosen);
+/* 0x00056df0: something that who hears whom is told of a player whose
+voice comes from another console, with the flag of what it said */
+void __attribute__((stdcall)) unknown_00056df0(byte *channels, long player_index, long flag);
 
 /* 0x00056990: something made of who a player talks to; 0x000565c0: the two
 numbers of 16 bits that unknown_00527104 gives for it */
@@ -440,7 +438,7 @@ long VOICE_ROUTING_CALLBACK voice_queues_build_packet(
 			if (queue[VOICE_QUEUE_ACTIVE_OFFSET] &&
 				((1u<<(peer&0x1F))&*(const word *)(queue+VOICE_QUEUE_PEERS_OFFSET)) && remaining>0)
 			{
-				long written= unknown_00055c40(peer, out+VOICE_PACKET_QUEUE_SIZE, out, remaining, is_chosen);
+				long written= voice_queue_write((byte *)queue, peer, out+VOICE_PACKET_QUEUE_SIZE, out, remaining, is_chosen);
 
 				if (written<=0)
 				{
@@ -503,7 +501,7 @@ void VOICE_ROUTING_CALLBACK voice_queues_read_packet(
 			}
 			if (entry_count>=1 && entry_count<=MAXIMUM_VOICE_QUEUE_ENTRIES-1)
 			{
-				long taken= unknown_00055e10(queues+VOICE_QUEUES_QUEUE_OFFSET+player_index*VOICE_QUEUE_SIZE, in,
+				long taken= voice_queue_read(queues+VOICE_QUEUES_QUEUE_OFFSET+player_index*VOICE_QUEUE_SIZE, in,
 					remaining, for_chosen);
 
 				if (taken<=0)
@@ -515,4 +513,189 @@ void VOICE_ROUTING_CALLBACK voice_queues_read_packet(
 			}
 		}
 	}
+}
+
+/* 0x00055c40: writes the things that a queue has for a console, as many as
+there is room for, after two bytes with the player of the queue and how
+many they are; how much was written. Each thing is no longer for that
+console: one that is for no console is taken out of the queue. For the
+console chosen for the voice each thing has the consoles that it goes to: if
+it has none, the console itself. 0 with a queue that is not in use or with
+no room for one thing, and -1 if the queue has nothing for the console */
+long VOICE_ROUTING_CALLBACK voice_queue_write(
+	byte *queue,
+	long peer,
+	byte *out,
+	byte *header,
+	long size,
+	boolean is_chosen)
+{
+	long *count= (long *)(queue+VOICE_QUEUE_COUNT_OFFSET);
+	word *peers= (word *)(queue+VOICE_QUEUE_PEERS_OFFSET);
+	unsigned long bit= 1u<<(peer&0x1F);
+	long written= 0;
+	unsigned long kept;
+	long entry_size;
+	long index;
+
+	if (!queue[VOICE_QUEUE_ACTIVE_OFFSET])
+	{
+		return 0;
+	}
+	if (!(bit&*peers) || peer<0 || peer>MAXIMUM_VOICE_ROUTING_PLAYERS-1)
+	{
+		return NONE;
+	}
+	kept= (1u<<(*count&0x1F))-1;
+	size-= VOICE_PACKET_QUEUE_SIZE;
+	entry_size= (is_chosen ? VOICE_PACKET_CHOSEN_PEER_ENTRY_EXTRA_SIZE : 0)+VOICE_PACKET_ENTRY_SIZE;
+	if (size<entry_size)
+	{
+		return 0;
+	}
+	for (index= 0; index<*count; index++)
+	{
+		byte *entry= queue+VOICE_QUEUE_ENTRIES_OFFSET+index*VOICE_QUEUE_ENTRY_SIZE;
+		word *entry_peers= (word *)(entry+VOICE_QUEUE_ENTRY_PEERS_OFFSET);
+
+		if (bit&*entry_peers)
+		{
+			if (size<entry_size)
+			{
+				break;
+			}
+			out[VOICE_PACKET_ENTRY_FLAG_OFFSET]= entry[VOICE_QUEUE_ENTRY_FLAG_OFFSET];
+			if (is_chosen)
+			{
+				word targets= *(const word *)(entry+VOICE_QUEUE_ENTRY_WORDS_OFFSET+sizeof(word));
+
+				if (!targets)
+				{
+					targets= (word)(1u<<peer);
+				}
+				memcpy(out+VOICE_PACKET_ENTRY_PEERS_OFFSET, &targets, sizeof(targets));
+				out+= VOICE_PACKET_ENTRY_PEERS_OFFSET+sizeof(targets);
+			}
+			else
+			{
+				out+= VOICE_PACKET_ENTRY_PEERS_OFFSET;
+			}
+			memcpy(out, entry+VOICE_QUEUE_ENTRY_DATA_OFFSET, VOICE_QUEUE_DATA_SIZE);
+			out+= VOICE_QUEUE_DATA_SIZE;
+			*entry_peers&= (word)~(1u<<peer);
+			(*(long *)(queue+VOICE_QUEUE_PEER_COUNTS_OFFSET+peer*sizeof(long)))--;
+			if (!*entry_peers)
+			{
+				kept&= ~(1u<<(index&0x1F));
+			}
+			written++;
+			size-= entry_size;
+		}
+	}
+	header[VOICE_PACKET_QUEUE_ENTRY_COUNT_OFFSET]= (byte)written;
+	header[VOICE_PACKET_QUEUE_PLAYER_OFFSET]= queue[VOICE_QUEUE_PLAYER_OFFSET];
+	if ((kept&0xFFFF)!=(1u<<(*count&0x1F))-1)
+	{
+		voice_queue_keep(queue, kept);
+	}
+	*peers= 0;
+	for (index= 0; index<*count; index++)
+	{
+		*peers|= *(const word *)(queue+VOICE_QUEUE_ENTRIES_OFFSET+index*VOICE_QUEUE_ENTRY_SIZE+
+			VOICE_QUEUE_ENTRY_PEERS_OFFSET);
+	}
+
+	return written*entry_size+VOICE_PACKET_QUEUE_SIZE;
+}
+
+/* 0x00055e10: takes the things of a queue that another console sent, which
+start after the two bytes of the queue; how much was taken, and -1 if
+something is not right. What a player said goes to the library, if the
+player has a voice, and who hears whom is told. A console chosen for the
+voice gets each thing with the consoles that it goes to: its own bit is for
+this console, and with the others the thing goes to the queue of the player,
+to be sent on. The game has game_voice_has_remote_talker in the function
+itself, where the thing is not for the chosen console */
+long VOICE_ROUTING_CALLBACK voice_queue_read(
+	byte *queue,
+	const byte *in,
+	long size,
+	boolean for_chosen)
+{
+	const byte *header= in;
+	long count= header[VOICE_PACKET_QUEUE_ENTRY_COUNT_OFFSET];
+	long entry_size= (for_chosen ? VOICE_PACKET_CHOSEN_PEER_ENTRY_EXTRA_SIZE : 0)+VOICE_PACKET_ENTRY_SIZE;
+	long taken= VOICE_PACKET_QUEUE_SIZE;
+	long index= 0;
+
+	if (count<1 || count>MAXIMUM_VOICE_PACKET_QUEUE_ENTRIES)
+	{
+		return NONE;
+	}
+	size-= VOICE_PACKET_QUEUE_SIZE;
+	in+= VOICE_PACKET_QUEUE_SIZE;
+	do
+	{
+		if (size<entry_size)
+		{
+			return NONE;
+		}
+		if (for_chosen)
+		{
+			long local_peer= game_voice_get_local_peer();
+			word peers;
+
+			if (local_peer==NONE || in[VOICE_PACKET_ENTRY_FLAG_OFFSET]>MAXIMUM_VOICE_PACKET_ENTRY_FLAG)
+			{
+				return NONE;
+			}
+			memcpy(&peers, in+VOICE_PACKET_ENTRY_PEERS_OFFSET, sizeof(peers));
+			if (!peers)
+			{
+				return NONE;
+			}
+			if (peers&(1u<<(local_peer&0x1F)))
+			{
+				if (game_voice_has_remote_talker(*(const long *)(queue+VOICE_QUEUE_PLAYER_OFFSET)))
+				{
+					unknown_00056df0(unknown_00527108, *(const long *)(queue+VOICE_QUEUE_PLAYER_OFFSET),
+						in[VOICE_PACKET_ENTRY_FLAG_OFFSET]);
+					game_voice_remote_talker_data(*(const long *)(queue+VOICE_QUEUE_PLAYER_OFFSET),
+						in+VOICE_PACKET_ENTRY_PEERS_OFFSET+sizeof(peers), VOICE_QUEUE_DATA_SIZE);
+				}
+				peers&= (word)~(1u<<(local_peer&0x1F));
+			}
+			if (peers)
+			{
+				word words[2];
+
+				words[0]= 0;
+				words[1]= 0;
+				unknown_000565c0(unknown_00527104, peers, words);
+				voice_queue_add(words, queue, in+VOICE_PACKET_ENTRY_PEERS_OFFSET+sizeof(peers), VOICE_QUEUE_DATA_SIZE,
+					in+VOICE_PACKET_ENTRY_FLAG_OFFSET);
+			}
+		}
+		else
+		{
+			if (in[VOICE_PACKET_ENTRY_FLAG_OFFSET]>MAXIMUM_VOICE_PACKET_ENTRY_FLAG)
+			{
+				return NONE;
+			}
+			if (voice_routing_active() &&
+				voice_has_remote_talker(&voice_globals, *(const long *)(queue+VOICE_QUEUE_PLAYER_OFFSET)))
+			{
+				unknown_00056df0(unknown_00527108, *(const long *)(queue+VOICE_QUEUE_PLAYER_OFFSET),
+					in[VOICE_PACKET_ENTRY_FLAG_OFFSET]);
+				game_voice_remote_talker_data(*(const long *)(queue+VOICE_QUEUE_PLAYER_OFFSET),
+					in+VOICE_PACKET_ENTRY_PEERS_OFFSET, VOICE_QUEUE_DATA_SIZE);
+			}
+		}
+		size-= entry_size;
+		taken+= entry_size;
+		in+= entry_size;
+		index++;
+	} while (index<header[VOICE_PACKET_QUEUE_ENTRY_COUNT_OFFSET]);
+
+	return taken;
 }

@@ -274,7 +274,7 @@ def run(t) -> None:
                             globals={**state(enabled, initialized), "unknown_004c9878": random_.choice((peer, peer, 3, NONE))},
                             externals={
                                 "voice_queues_go_to_peer": gives(1 if n != 5 else 0),
-                                "unknown_00055c40": nth("unknown_00055c40", written),
+                                "voice_queue_write": nth("voice_queue_write", written),
                             },
                         )
 
@@ -298,7 +298,7 @@ def run(t) -> None:
                         calls_taken = taken
 
                         def take(harness, arguments, calls_taken=calls_taken, data=data):
-                            calls = sum(1 for call in harness._calls if call[0] == "unknown_00055e10")
+                            calls = sum(1 for call in harness._calls if call[0] == "voice_queue_read")
                             return calls_taken[min(calls, 15)], (*arguments[:-1], arguments[-1] & 0xFF)
 
                         t.check(
@@ -306,5 +306,108 @@ def run(t) -> None:
                             random_.choice((0x200, 0x40, 2)),
                             Buffer(bytes(queues(on))),
                             Buffer(bytes(data)),
-                            externals={"game_voice_unknown_000549d0": gives(chosen), "unknown_00055e10": take},
+                            externals={"game_voice_unknown_000549d0": gives(chosen), "voice_queue_read": take},
                         )
+
+    # ---------- a queue, in what goes from one console to another
+
+    def a_queue(active_: int, count: int, peer: int) -> bytearray:
+        """A queue with its things: each for some consoles, and the queue with
+        the bits of all of them and how many go to each."""
+        data = bytearray(random_.randbytes(QUEUE_SIZE))
+        data[0] = active_
+        struct.pack_into("<I", data, 4, count)
+        all_peers = 0
+        counts = [0] * 16
+        for index in range(count):
+            peers = random_.choice((1 << peer, 1 << peer, (1 << peer) | random_.getrandbits(16), random_.getrandbits(16) & ~(1 << peer), 0))
+            struct.pack_into("<H", data, 0x10 + index * ENTRY_SIZE + 6, peers)
+            struct.pack_into("<H", data, 0x10 + index * ENTRY_SIZE + 2, random_.choice((0, 0, random_.getrandbits(16))))
+            all_peers |= peers
+            for other in range(16):
+                counts[other] += peers >> other & 1
+        struct.pack_into("<H", data, 8, all_peers)
+        struct.pack_into("<16I", data, 0x130, *counts)
+        return data
+
+    for active_ in (1, 1, 1, 0x80, 0):
+        for count in (0, 1, 2, 5, 15):
+            for peer in (0, 7, 15):
+                for is_chosen in (0, 1, 0x80):
+                    for size in (0x200, 0, 2, 12, 13, 14, 15, 28, 40, 60):
+                        data = a_queue(active_, count, peer)
+                        if size == 0:
+                            # a queue that says it has something for the console, and has not
+                            struct.pack_into("<H", data, 8, struct.unpack_from("<H", data, 8)[0] | 1 << peer)
+                        t.check(
+                            "voice_queue_write",
+                            Buffer(bytes(data)),
+                            peer,
+                            Buffer(random_.randbytes(0x110)),
+                            Buffer(random_.randbytes(2)),
+                            size,
+                            is_chosen,
+                        )
+
+    for peer in (16, 31, NONE, 0x80000000):
+        data = a_queue(1, 3, 0)
+        struct.pack_into("<H", data, 8, 0xFFFF)
+        t.check("voice_queue_write", Buffer(bytes(data)), peer, Buffer(random_.randbytes(0x110)), Buffer(random_.randbytes(2)), 0x100, 0)
+
+    def routed(name: str):
+        def handler(harness, arguments):
+            return 0, tuple(harness.normalize(argument) for argument in arguments)
+
+        return handler
+
+    def words_for(harness, arguments):
+        # the two numbers are in the stack
+        harness.mu.mem_write(arguments[2], struct.pack("<2H", arguments[1] & 0xFFFF, 0x4321))
+        return 0, (harness.normalize(arguments[0]), arguments[1])
+
+    def add(harness, arguments):
+        words, queue, data, size, flag = arguments
+        return 0, (bytes(harness.mu.mem_read(words, 4)), queue, data, size, flag)
+
+    for for_chosen in (1, 0, 0x80):
+        entry = 13 if for_chosen else 11
+        for count in (1, 2, 5, 16, 0, 17, 0xFF):
+            for n in range(14):
+                local_peer = random_.choice((0, 3, 15)) if n != 9 else NONE
+                packet = bytearray(random_.randbytes(2 + 17 * 13 + 8))
+                packet[1] = count
+                for index in range(17):
+                    at = 2 + index * entry
+                    packet[at] = random_.choice((0, 1)) if n != 10 or index != 1 else random_.choice((2, 0xFF))
+                    if for_chosen:
+                        peers = random_.choice((1 << local_peer & 0xFFFF, (1 << local_peer & 0xFFFF) | random_.getrandbits(16), random_.getrandbits(16) | 0x10000 >> 16 | 1 << ((local_peer + 1) & 15)))
+                        if n == 11 and index == min(count, 16) - 1:
+                            peers = 0
+                        struct.pack_into("<H", packet, at + 1, peers & 0xFFFF)
+                size = 2 + min(max(count, 1), 16) * entry + random_.choice((0, 0, 5, -1, -entry)) if n < 12 else random_.choice((0, 1, 2, entry + 1))
+                data = bytearray(random_.randbytes(QUEUE_SIZE))
+                struct.pack_into("<I", data, 0xC, random_.randint(0, 15))
+                t.check(
+                    "voice_queue_read",
+                    Buffer(bytes(data)),
+                    Buffer(bytes(packet)),
+                    size & 0xFFFFFFFF,
+                    for_chosen,
+                    globals={
+                        **state(*random_.choice(((1, 1), (1, 1), (0, 1), (1, 0)))),
+                        "unknown_00527108": GlobalRange(CHANNELS_SIZE),
+                        "unknown_00527104": GlobalRange(4),
+                    },
+                    externals={
+                        "game_voice_get_local_peer": gives(local_peer),
+                        "game_voice_has_remote_talker": gives(random_.choice((1, 1, 0))),
+                        "voice_has_remote_talker": lambda harness, arguments, has=random_.choice((1, 1, 0)): (
+                            has,
+                            (harness.normalize(arguments[0]), arguments[1]),
+                        ),
+                        "unknown_00056df0": routed("unknown_00056df0"),
+                        "game_voice_remote_talker_data": gives(0),
+                        "unknown_000565c0": words_for,
+                        "voice_queue_add": add,
+                    },
+                )

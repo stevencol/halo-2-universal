@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Una cola dentro de lo que va de una consola a otra
+
+Dos funciones en `networking/voice_routing.c`, de 937 bytes entre las dos. De 1037 funciones se pasa a
+1039, el 9,22 % de las del juego (el 5,963 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_queue_write` | `0x00055c40` | `networking/voice_routing.c` |
+| `voice_queue_read` | `0x00055e10` | `networking/voice_routing.c` |
+
+Eran `unknown_00055c40` y `unknown_00055e10`. Con ellas está entero el
+camino de lo que dice un jugador: de la biblioteca a su cola, de la cola a
+lo que se manda a otra consola, y allí de vuelta a la biblioteca.
+
+### Lo que se sabe
+
+- **La consola elegida para la voz reenvía.** A las demás consolas cada
+  cosa les llega con 11 bytes (un flag y los 10 de lo dicho) y la dan a su
+  biblioteca. A la elegida le llegan 13: dos bytes más con un bit por cada
+  consola a la que va. Si su propio bit está, la oye ella también; y si
+  quedan otros, la mete en la cola del jugador para mandarla a esas
+  consolas. Por eso lo que va a la elegida ocupa más (hito 281).
+- Al escribir, cada cosa escrita deja de ser «para esa consola»; la que ya
+  no es para ninguna se saca de la cola (`voice_queue_keep`).
+- Una cosa sin consolas que va a la elegida lleva el bit de la propia
+  elegida.
+- Cada cola sabe de qué jugador es (`0xc`).
+- El flag de cada cosa solo puede ser 0 o 1, y con él se avisa a «quién oye
+  a quién» (`0x00056df0`, sin descompilar).
+
+### Corregido
+
+- En `voice_queues_build_packet` (hito 282) a quien escribe cada cola le
+  faltaba un argumento: la cola, que el juego le da en un registro. Las
+  pruebas no lo notaban porque esa función estaba simulada.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- La batería completa del hito 278 y las mutaciones de los hitos 269 a 283
+  corren aparte o están pendientes; su resultado irá en una entrada
+  posterior.
+
 ## 2026-10-08 — Lo que una consola le manda a otra de la voz
 
 Tres funciones en `networking/voice_routing.c`, de 642 bytes entre las tres. De 1034 funciones se pasa a

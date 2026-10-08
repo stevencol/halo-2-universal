@@ -33,6 +33,8 @@ enum
 	VOICE_QUEUE_ACTIVE_OFFSET= 0,
 	VOICE_QUEUE_COUNT_OFFSET= 0x4,
 	VOICE_QUEUE_PEERS_OFFSET= 0x8,
+	/* and which player it is of */
+	VOICE_QUEUE_PLAYER_OFFSET= 0xC,
 	VOICE_QUEUE_ENTRIES_OFFSET= 0x10,
 	VOICE_QUEUE_ENTRIES_SIZE= 0x120,
 	VOICE_QUEUE_PEER_COUNTS_OFFSET= 0x130,
@@ -62,6 +64,15 @@ enum
 	/* each queue in it starts with its player and how many things */
 	VOICE_PACKET_QUEUE_PLAYER_OFFSET= 0,
 	VOICE_PACKET_QUEUE_ENTRY_COUNT_OFFSET= 1,
+	/* each thing in it: its flag, which is 0 or 1; for the console chosen
+	for the voice, a bit for each console that it goes to; and what the
+	player said */
+	VOICE_PACKET_ENTRY_FLAG_OFFSET= 0,
+	VOICE_PACKET_ENTRY_PEERS_OFFSET= 1,
+	MAXIMUM_VOICE_PACKET_ENTRY_FLAG= 1,
+	/* a queue that is read can say that it has one thing more than a queue
+	has room for */
+	MAXIMUM_VOICE_PACKET_QUEUE_ENTRIES= 16,
 	VOICE_PACKET_QUEUE_SIZE= 2,
 	VOICE_PACKET_ENTRY_SIZE= 11,
 	VOICE_PACKET_CHOSEN_PEER_ENTRY_EXTRA_SIZE= 2,
@@ -92,6 +103,9 @@ void VOICE_ROUTING_CALLBACK voice_queue_add(const word *words, byte *queue, cons
 	const boolean *unknown);
 long voice_queues_size_for_peer(const byte *queues, long peer);
 void VOICE_ROUTING_CALLBACK voice_queue_keep(byte *queue, unsigned long entries);
+long VOICE_ROUTING_CALLBACK voice_queue_write(byte *queue, long peer, byte *out, byte *header, long size,
+	boolean is_chosen);
+long VOICE_ROUTING_CALLBACK voice_queue_read(byte *queue, const byte *in, long size, boolean for_chosen);
 long VOICE_ROUTING_CALLBACK voice_queues_build_packet(byte *packet, byte *queues, long peer, long size);
 void VOICE_ROUTING_CALLBACK voice_queues_read_packet(long size, byte *queues, const byte *packet);
 void voice_unknown_00527104_get_words(unsigned long targets, word *words, byte *unknown);
