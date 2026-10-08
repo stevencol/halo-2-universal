@@ -638,7 +638,7 @@ address,name,source,arguments,returns,convention
 002157e0,saved_game_files_allocate_memory,source/saved games/saved_game_files.c,stack,void
 000533e0,game_voice_pool_delete,source/networking/game_voice.c,,void
 00053310,game_voice_pool_new,source/networking/game_voice.c,stack,void,stdcall
-000556a0,voice_reset_controller_levels,source/networking/voice.c,edx,void
+000556a0,voice_reset_controller_masks,source/networking/voice.c,edx,void
 00055720,voice_reset_controllers,source/networking/voice.c,edx,void
 00055780,voice_engine_parameters_new,source/networking/voice.c,ecx stack,bool
 00055810,voice_start,source/networking/voice.c,edi,bool
@@ -646,12 +646,27 @@ address,name,source,arguments,returns,convention
 000534a0,game_voice_menu_pool_delete,source/networking/game_voice.c,,void
 00053510,game_voice_start,source/networking/game_voice.c,,void
 00053550,game_voice_stop,source/networking/game_voice.c,,void
+00053720,game_voice_has_remote_talker,source/networking/game_voice.c,stack,bool
+000537b0,game_voice_set_controller_mode,source/networking/game_voice.c,edi esi,void
+000537f0,game_voice_get_controller_mode,source/networking/game_voice.c,stack,int
+00053810,game_voice_set_controller_mask,source/networking/game_voice.c,ecx stack,void
+00053850,game_voice_unknown_00053850,source/networking/game_voice.c,stack stack,bool
+00053890,game_voice_remote_talker_data,source/networking/game_voice.c,esi stack stack,void
+000538e0,game_voice_play_message,source/networking/game_voice.c,eax stack stack,void
+00053940,game_voice_stop_message,source/networking/game_voice.c,esi,void
+00053970,game_voice_message_busy,source/networking/game_voice.c,stack,bool
+000539a0,game_voice_record_message,source/networking/game_voice.c,ebx edx ecx stack stack stack,void
+000539e0,game_voice_stop_message_with_headset,source/networking/game_voice.c,esi,void
+000536b0,unknown_000536b0,,eax,bool
+00053f50,unknown_00053f50,,,void
+00053f80,unknown_00053f80,,,void
+00332e93,unknown_00332e93,,stack stack,int
 000550b0,voice_dispose,source/networking/voice.c,eax,void
 00055080,voice_initialize,source/networking/voice.c,eax stack,void
 000552a0,voice_remove_remote_talkers,source/networking/voice.c,esi,void
 00055130,voice_has_remote_talker,source/networking/voice.c,eax stack,bool
 000551c0,voice_remote_talker_unknown_000551c0,source/networking/voice.c,eax stack,bool
-00055210,voice_update_controller_levels,source/networking/voice.c,ebx eax esi,void
+00055210,voice_set_controller_mask,source/networking/voice.c,ebx eax esi,void
 00055250,voice_remote_talker_unknown_00055250,source/networking/voice.c,esi stack stack stack,void
 00055330,voice_remote_talker_set,source/networking/voice.c,ecx eax stack,bool
 00332def,unknown_00332def,,stack stack stack,int

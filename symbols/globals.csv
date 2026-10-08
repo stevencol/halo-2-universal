@@ -216,6 +216,10 @@ address,name,source
 00476fc8,voice_globals,source/networking/voice.c
 0052731c,voice_modes,source/networking/voice.c
 004c99b8,game_voice_enabled,source/networking/game_voice.c
+004c9888,unknown_004c9888,source/networking/game_voice.c
+004c9968,unknown_004c9968,source/networking/game_voice.c
+004c99a8,game_voice_controller_settings,source/networking/game_voice.c
+0043fe48,game_voice_masks,source/networking/game_voice.c
 004c9966,unknown_004c9966,source/networking/game_voice.c
 0046dd54,unknown_0046dd54,source/networking/game_voice.c
 0045095c,voice_callbacks,source/networking/voice.c

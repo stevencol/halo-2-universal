@@ -39,8 +39,7 @@ none */
 long unknown_00332da3(void *engine, long controller_index);
 long unknown_00332f27(void *engine, long controller_index);
 
-/* 0x00332da8: the mode of the voice of a controller */
-long unknown_00332da8(void *engine, long controller_index, void *mode);
+/* 0x00332da8 (in voice.h): the mode of the voice of a controller */
 
 /* 0x00332db2: what the engine knows of the voice of a controller */
 long unknown_00332db2(void *engine, long controller_index, struct voice_controller_status *status);
@@ -63,8 +62,11 @@ long unknown_00332e18(void *engine, struct voice_talker talker);
 /* 0x00332e34: something for a player of another console */
 long unknown_00332e34(void *engine, struct voice_talker talker, long unknown4, void *unknown8);
 
-/* 0x00332dad: the levels of the voice of a controller */
-long unknown_00332dad(void *engine, long controller_index, real *levels);
+/* 0x00332dad: what the voice of a controller's player is changed with */
+long unknown_00332dad(void *engine, long controller_index, const real *mask);
+
+/* 0x00332e93 (in voice.h): a controller stops the message that it records
+or plays */
 
 /* 0x00332df4: what a player of another console said, as it came from the
 network */
@@ -149,18 +151,18 @@ static inline __attribute__((always_inline)) long voice_next_controller(
 	return NONE;
 }
 
-/* 0x000556a0: no level of any controller is known */
-void voice_reset_controller_levels(
+/* 0x000556a0: the voice of no controller is changed */
+void voice_reset_controller_masks(
 	struct voice_globals *voice)
 {
 	long controller_index;
 
 	for (controller_index= 0; controller_index!=NONE; controller_index= voice_next_controller(controller_index))
 	{
-		voice->controller_levels[controller_index][3]= -1.0f;
-		voice->controller_levels[controller_index][2]= -1.0f;
-		voice->controller_levels[controller_index][1]= -1.0f;
-		voice->controller_levels[controller_index][0]= -1.0f;
+		voice->controller_masks[controller_index][3]= -1.0f;
+		voice->controller_masks[controller_index][2]= -1.0f;
+		voice->controller_masks[controller_index][1]= -1.0f;
+		voice->controller_masks[controller_index][0]= -1.0f;
 	}
 }
 
@@ -279,7 +281,7 @@ void voice_initialize(
 	{
 		voice->engine= NULL;
 		voice->kind= kind;
-		voice_reset_controller_levels(voice);
+		voice_reset_controller_masks(voice);
 		voice_reset_controllers(voice);
 		voice->initialized= voice_start(voice);
 	}
@@ -355,18 +357,18 @@ boolean voice_remote_talker_unknown_000551c0(
 	return result;
 }
 
-/* 0x00055210: asks the library for the levels of the voice of a controller,
-and keeps them if it gives them */
-void voice_update_controller_levels(
+/* 0x00055210: tells the library what to change the voice of a controller's
+player with, and keeps it if the library takes it */
+void voice_set_controller_mask(
 	struct voice_globals *voice,
 	long controller_index,
-	real *levels)
+	const real *mask)
 {
 	if (voice->initialized)
 	{
-		if (unknown_00332dad(voice->engine, controller_index, levels)>=0)
+		if (unknown_00332dad(voice->engine, controller_index, mask)>=0)
 		{
-			memcpy(voice->controller_levels[controller_index], levels, sizeof(voice->controller_levels[controller_index]));
+			memcpy(voice->controller_masks[controller_index], mask, sizeof(voice->controller_masks[controller_index]));
 		}
 	}
 }

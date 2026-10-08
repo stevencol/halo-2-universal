@@ -3,7 +3,7 @@
 import random
 import struct
 
-from difftest import Buffer, GlobalData, Memory, Mock, mock_address
+from difftest import Buffer, GlobalData, GlobalRange, Memory, Mock, mock_address
 
 
 def run(t) -> None:
@@ -56,6 +56,7 @@ def run(t) -> None:
     VOICE_SIZE = 0x90
     VOICE_INITIALIZED = 4
     POOL_SIZE = 0x40
+    FAILED = 0x80004005
     # in the memory of the console, which the emulator has
     FUNCTIONS = 0x80001000
 
@@ -96,7 +97,7 @@ def run(t) -> None:
                     Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
                 ],
                 externals={
-                    "voice_reset_controller_levels": with_voice(),
+                    "voice_reset_controller_masks": with_voice(),
                     "voice_reset_controllers": with_voice(),
                     "voice_start": with_voice(random_.choice((1, 0, 0x100, 0xFFFFFF01))),
                 },
@@ -231,3 +232,169 @@ def run(t) -> None:
                         ],
                         extra=[] if has_pool else [pool],
                     )
+
+    # ---------- small things of the voice
+
+    ENGINE = 0x80400000
+    VOICE_MODES_OFFSET = 0x54
+    HEADSET = 0x64
+    MESSAGE_BUSY = 0x88
+
+    def active():
+        # the game has to do with the voice and the voice is started; then, what lacks one or the other
+        yield 1, 1
+        yield 0x80, 0x80
+        yield 0, 1
+        yield 1, 0
+        yield 1, 1
+
+    def a_voice(initialized: int, modes: tuple = (), headsets: tuple = ()) -> GlobalData:
+        data = bytearray(random_.randbytes(VOICE_SIZE))
+        data[VOICE_INITIALIZED] = initialized
+        struct.pack_into("<I", data, 0x10, ENGINE)
+        for controller, mode in enumerate(modes):
+            struct.pack_into("<I", data, VOICE_MODES_OFFSET + controller * 4, mode)
+        for controller, headset in enumerate(headsets):
+            data[HEADSET + controller] = headset
+        return GlobalData(bytes(data))
+
+    def state(enabled: int, initialized: int, **voice_options) -> dict:
+        return {"game_voice_enabled": bytes((enabled,)), "voice_globals": a_voice(initialized, **voice_options)}
+
+    identifiers = (0, 1, 0x80000000, 0xFFFFFFFF, 0x12345678)
+
+    for enabled, initialized in active():
+        for found in (1, 0, 0x100, 0xFFFFFF01):
+            t.check(
+                "game_voice_has_remote_talker",
+                random_.choice(identifiers),
+                globals=state(enabled, initialized),
+                externals={"voice_has_remote_talker": voice_call(found)},
+            )
+
+        for controller in range(4):
+            for mode in range(4):
+                t.check(
+                    "game_voice_set_controller_mode",
+                    controller,
+                    mode,
+                    globals={
+                        **state(enabled, initialized),
+                        "voice_modes": struct.pack("<4I", *(0x00340000 + random_.getrandbits(16) for _ in range(4))),
+                    },
+                    externals={
+                        "unknown_00332da8": lambda harness, arguments, result=random_.choice((0, 1, FAILED)): result
+                    },
+                )
+
+            for mask in (0, 1):
+                t.check(
+                    "game_voice_set_controller_mask",
+                    mask,
+                    controller,
+                    globals={**state(enabled, initialized), "game_voice_masks": GlobalRange(0x20)},
+                    externals={
+                        "voice_set_controller_mask": lambda harness, arguments: (
+                            0,
+                            (
+                                harness.normalize(arguments[0]),
+                                arguments[1],
+                                harness.normalize(arguments[2]),
+                                bytes(harness.mu.mem_read(arguments[2], 0x10)),
+                            ),
+                        )
+                    },
+                )
+
+            t.check("game_voice_message_busy", controller, globals=state(enabled, initialized))
+
+            for mode in (3, 2, 0x103):
+                for headset in (1, 0, 0x80):
+                    modes = tuple(mode if n == controller else random_.randint(0, 3) for n in range(4))
+                    headsets = tuple(headset if n == controller else random_.getrandbits(1) for n in range(4))
+                    for name in ("game_voice_stop_message", "game_voice_stop_message_with_headset"):
+                        t.check(
+                            name,
+                            controller,
+                            globals=state(enabled, initialized, modes=modes, headsets=headsets),
+                            externals={"unknown_00332e93": lambda harness, arguments: FAILED},
+                        )
+
+            for setting in (0, 1, 2, 3):
+                for with_headset in (1, 0):
+                    for message, size in ((0x80345000, 0x20), (0, 0x20), (0x80345000, 0), (0x80345000, 0x80000000), (0x80345000, 1)):
+                        t.check(
+                            "game_voice_play_message",
+                            controller,
+                            message,
+                            size,
+                            globals={
+                                **state(enabled, initialized),
+                                "game_voice_controller_settings": struct.pack(
+                                    "<4I", *(setting if n == controller else random_.randint(0, 3) for n in range(4))
+                                ),
+                            },
+                            externals={
+                                "unknown_000536b0": lambda harness, arguments, with_headset=with_headset: with_headset,
+                                "voice_play_message": lambda harness, arguments: (
+                                    0,
+                                    (arguments[0], arguments[1] & 0xFF, arguments[2], arguments[3], harness.normalize(arguments[4])),
+                                ),
+                            },
+                        )
+
+            t.check(
+                "game_voice_record_message",
+                controller,
+                0x80345000,
+                0x80346000,
+                random_.getrandbits(32),
+                random_.getrandbits(16),
+                0x80347000,
+                globals=state(enabled, initialized),
+                externals={
+                    "voice_record_message": lambda harness, arguments: (
+                        0,
+                        (arguments[0], arguments[1], harness.normalize(arguments[2]), *arguments[3:]),
+                    )
+                },
+            )
+
+        for player in (0, 1, 7, 15):
+            for other in (0, 3, 15):
+                for bits in (0, 0xFFFF, 1 << other, 0xFFFF ^ (1 << other)):
+                    words = [random_.getrandbits(16) for _ in range(16)]
+                    words[player] = bits
+                    t.check(
+                        "game_voice_unknown_00053850",
+                        player,
+                        other,
+                        globals={**state(enabled, initialized), "unknown_004c9968": struct.pack("<16H", *words)},
+                    )
+
+        for unknown in (1, 0, 2, 0x100):
+            for found in (1, 0):
+                t.check(
+                    "game_voice_remote_talker_data",
+                    random_.choice(identifiers),
+                    0x80345000,
+                    random_.getrandbits(8),
+                    globals={**state(enabled, initialized), "unknown_004c9888": unknown},
+                    externals={
+                        "game_voice_has_remote_talker": lambda harness, arguments, found=found: found,
+                        "unknown_00053f50": lambda harness, arguments: 0,
+                        "unknown_00053f80": lambda harness, arguments: 0,
+                        "voice_remote_talker_data": lambda harness, arguments: (
+                            0,
+                            (arguments[0], arguments[1], harness.normalize(arguments[2]), arguments[3]),
+                        ),
+                    },
+                )
+
+    for initialized in (1, 0x80, 0):
+        for controller in range(4):
+            t.check(
+                "game_voice_get_controller_mode",
+                controller,
+                globals={"voice_globals": a_voice(initialized, modes=tuple(random_.getrandbits(32) for _ in range(4)))},
+            )

@@ -17,7 +17,7 @@ enum
 {
 	/* one voice for each controller */
 	MAXIMUM_VOICE_CONTROLLERS= 4,
-	NUMBER_OF_VOICE_CONTROLLER_LEVELS= 4,
+	NUMBER_OF_VOICE_MASK_VALUES= 4,
 	/* the players of other consoles that the engine can have a voice for */
 	MAXIMUM_VOICE_REMOTE_TALKERS= 30,
 	/* what of the flags of two players has to be the same for them to be
@@ -123,8 +123,10 @@ struct voice_globals
 	unsigned long modes;
 	/* of the console's library; NULL if there is none */
 	void *engine;
-	/* -1 when the voice starts */
-	real controller_levels[MAXIMUM_VOICE_CONTROLLERS][NUMBER_OF_VOICE_CONTROLLER_LEVELS];
+	/* what the library changes the voice of each controller's player with,
+	as it was last told: four reals, -1 for what is left as it is. All -1
+	when the voice starts */
+	real controller_masks[MAXIMUM_VOICE_CONTROLLERS][NUMBER_OF_VOICE_MASK_VALUES];
 	long controller_modes[MAXIMUM_VOICE_CONTROLLERS];
 	/* the controller has what a player talks and listens with: the first
 	thing that the library says of it is 0, when the voice starts, and the
@@ -188,9 +190,14 @@ typedef char verify_voice_callbacks_size[
 	sizeof(struct voice_callbacks) == 0x18 ? 1 : -1];
 #endif
 
+/* ---------- prototypes of functions of the console's libraries that other files call */
+
+long unknown_00332da8(void *engine, long controller_index, void *mode);
+long unknown_00332e93(void *engine, long controller_index);
+
 /* ---------- prototypes/VOICE.C */
 
-void voice_reset_controller_levels(struct voice_globals *voice);
+void voice_reset_controller_masks(struct voice_globals *voice);
 void voice_reset_controllers(struct voice_globals *voice);
 boolean voice_engine_parameters_new(struct voice_engine_parameters *parameters, const struct voice_globals *voice);
 boolean voice_start(struct voice_globals *voice);
@@ -198,7 +205,7 @@ void voice_initialize(struct voice_globals *voice, long kind);
 void voice_dispose(struct voice_globals *voice);
 boolean voice_has_remote_talker(const struct voice_globals *voice, long identifier);
 boolean voice_remote_talker_unknown_000551c0(const struct voice_globals *voice, long identifier);
-void voice_update_controller_levels(struct voice_globals *voice, long controller_index, real *levels);
+void voice_set_controller_mask(struct voice_globals *voice, long controller_index, const real *mask);
 void voice_remote_talker_unknown_00055250(const struct voice_globals *voice, long identifier, long unknown4,
 	void *unknown8);
 void voice_remove_remote_talkers(struct voice_globals *voice);

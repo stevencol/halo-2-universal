@@ -27,7 +27,7 @@ def run(t) -> None:
         return Buffer(bytes(data))
 
     for _ in range(4):
-        t.check("voice_reset_controller_levels", voice())
+        t.check("voice_reset_controller_masks", voice())
 
     for kind in (0, 1, 2, 3, -1, 0x101):
         t.check("voice_reset_controllers", voice(kind))
@@ -137,7 +137,7 @@ def run(t) -> None:
                 Buffer(bytes(data)),
                 random_.choice((0, 1, 2, 0x12345678)),
                 externals={
-                    "voice_reset_controller_levels": with_voice(),
+                    "voice_reset_controller_masks": with_voice(),
                     "voice_reset_controllers": with_voice(),
                     "voice_start": with_voice(started),
                 },
@@ -245,7 +245,7 @@ def run(t) -> None:
                     return result
 
                 t.check(
-                    "voice_update_controller_levels",
+                    "voice_set_controller_mask",
                     a_voice(initialized, random_.getrandbits(32)),
                     controller,
                     Buffer(random_.randbytes(0x10)),

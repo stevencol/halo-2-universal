@@ -17,6 +17,17 @@ are the names of its functions.
 #include "main/main_game.h"
 #include "saved games/saved_game_files.h"
 
+/* ---------- prototypes of functions not decompiled yet */
+
+/* 0x000536b0: something of a controller's player */
+boolean unknown_000536b0(long controller_index);
+
+/* 0x00053f50, 0x00053f80: before and after the library works: how the
+processor rounds and what it does with an error in a real is set for the
+library, and put back as the game has it */
+void unknown_00053f50(void);
+void unknown_00053f80(void);
+
 /* ---------- globals */
 
 /* 0x004c995c, 0x004c9960 and 0x004c9964: the pools, and whether the second
@@ -36,6 +47,23 @@ boolean game_voice_enabled;
 /* 0x004c9966: something of the voice that is no more when it stops */
 word unknown_004c9966;
 
+/* 0x004c9888: 0 when what a player of another console said is not given to
+the library */
+long unknown_004c9888;
+
+/* 0x004c9968: for each player, a bit for each of the others */
+word unknown_004c9968[MAXIMUM_GAME_VOICE_PLAYERS];
+
+/* 0x004c99a8: what each controller's player wants of the voice */
+long game_voice_controller_settings[MAXIMUM_VOICE_CONTROLLERS];
+
+/* 0x0043fe48: what the library changes the voice of a player with */
+const real game_voice_masks[NUMBER_OF_GAME_VOICE_MASKS][NUMBER_OF_VOICE_MASK_VALUES]=
+{
+	{-1.0f, -1.0f, -1.0f, -1.0f},
+	{0.95f, 0.5f, 0.35f, -1.0f}
+};
+
 /* 0x0046dd54: what the memory of the pool of the voice and of the menu is
 asked of; the heap's, if it is NULL. The game has it point to an allocation
 whose memory the texture cache lends (0x0047d8e4: see main_game.c) */
@@ -50,6 +78,14 @@ struct game_voice_allocation game_voice_allocation=
 };
 
 /* ---------- code */
+
+/* whether there is a voice for the game to do something with: nearly every
+function of the file starts with this */
+static inline __attribute__((always_inline)) boolean game_voice_active(
+	void)
+{
+	return game_voice_enabled && voice_globals.initialized;
+}
 
 /* the pool that the memory comes from now */
 static inline __attribute__((always_inline)) struct memory_pool *game_voice_get_pool(
@@ -210,9 +246,174 @@ void game_voice_start(
 void game_voice_stop(
 	void)
 {
-	if (game_voice_enabled && voice_globals.initialized)
+	if (game_voice_active())
 	{
 		voice_dispose(&voice_globals);
 		unknown_004c9966= 0;
+	}
+}
+
+/* 0x00053720: whether a player of another console has a voice */
+boolean game_voice_has_remote_talker(
+	long identifier)
+{
+	boolean result= FALSE;
+
+	if (game_voice_active())
+	{
+		result= voice_has_remote_talker(&voice_globals, identifier);
+	}
+
+	return result;
+}
+
+/* 0x000537b0: the mode of the voice of a controller. The game has a
+function of voice.c in this one, which it has no copy of */
+void game_voice_set_controller_mode(
+	long controller_index,
+	long mode)
+{
+	if (game_voice_active())
+	{
+		if (unknown_00332da8(voice_globals.engine, controller_index, voice_modes[mode])>=0)
+		{
+			voice_globals.controller_modes[controller_index]= mode;
+		}
+	}
+}
+
+/* 0x000537f0: the mode of the voice of a controller; 0 with no voice */
+long game_voice_get_controller_mode(
+	long controller_index)
+{
+	return voice_globals.initialized ? voice_globals.controller_modes[controller_index] : 0;
+}
+
+/* 0x00053810: the way that the voice of a controller's player is changed:
+one of game_voice_masks */
+void game_voice_set_controller_mask(
+	long mask,
+	long controller_index)
+{
+	if (game_voice_active())
+	{
+		voice_set_controller_mask(&voice_globals, controller_index, game_voice_masks[mask]);
+	}
+}
+
+/* 0x00053850: whether a player has the bit of another */
+boolean game_voice_unknown_00053850(
+	long player_index,
+	long other_player_index)
+{
+	boolean result= FALSE;
+
+	if (game_voice_active())
+	{
+		result= ((1<<other_player_index)&unknown_004c9968[player_index])!=0;
+	}
+
+	return result;
+}
+
+/* 0x00053890: what a player of another console said, as it came from the
+network, goes to the library, if the player has a voice */
+void game_voice_remote_talker_data(
+	long identifier,
+	const void *data,
+	long size)
+{
+	if (game_voice_active() && unknown_004c9888!=0)
+	{
+		if (game_voice_has_remote_talker(identifier))
+		{
+			unknown_00053f50();
+			voice_remote_talker_data(data, size, &voice_globals, identifier);
+			unknown_00053f80();
+		}
+	}
+}
+
+/* 0x000538e0: a controller plays a message, unless its player wants none.
+It is played without a headset if the player wants that, or if what
+unknown_000536b0 says of the player is not so */
+void game_voice_play_message(
+	long controller_index,
+	const long *message,
+	long size)
+{
+	if (game_voice_active())
+	{
+		long setting= game_voice_controller_settings[controller_index];
+		boolean without_headset= FALSE;
+
+		if (setting==_game_voice_controller_setting1 || !unknown_000536b0(controller_index))
+		{
+			without_headset= TRUE;
+		}
+		if (setting!=_game_voice_controller_setting3 && message && size>0)
+		{
+			voice_play_message(message, without_headset, size, controller_index, &voice_globals);
+		}
+	}
+}
+
+/* 0x00053940: a controller stops the message that it records or plays. The
+game has a function of voice.c in this one, which it has no copy of */
+void game_voice_stop_message(
+	long controller_index)
+{
+	if (game_voice_active())
+	{
+		if (voice_globals.controller_modes[controller_index]==_voice_mode_unknown3)
+		{
+			unknown_00332e93(voice_globals.engine, controller_index);
+		}
+		voice_globals.controller_message_busy[controller_index]= FALSE;
+	}
+}
+
+/* 0x00053970: whether a controller records a message or plays one */
+boolean game_voice_message_busy(
+	long controller_index)
+{
+	boolean result= FALSE;
+
+	if (game_voice_active())
+	{
+		result= voice_globals.controller_message_busy[controller_index];
+	}
+
+	return result;
+}
+
+/* 0x000539a0: a controller records a message: see voice_record_message */
+void game_voice_record_message(
+	long controller_index,
+	void *buffer,
+	long *size,
+	long unknown,
+	unsigned long buffer_size,
+	long *length)
+{
+	if (game_voice_active())
+	{
+		voice_record_message(buffer_size, controller_index, &voice_globals, unknown, buffer, size, length);
+	}
+}
+
+/* 0x000539e0: as game_voice_stop_message, but the library is only told if
+the controller has a headset */
+void game_voice_stop_message_with_headset(
+	long controller_index)
+{
+	if (game_voice_active())
+	{
+		if (voice_globals.controller_modes[controller_index]==_voice_mode_unknown3 &&
+			voice_globals.controller_has_headset[controller_index])
+		{
+			unknown_00332e93(voice_globals.engine, controller_index);
+		}
+		voice_globals.controller_message_busy[controller_index]= FALSE;
 	}
 }

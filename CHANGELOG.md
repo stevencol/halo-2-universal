@@ -2,6 +2,62 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Once funciones pequeñas de la voz: modos, máscaras y mensajes
+
+Once funciones en `networking/game_voice.c`, de 475 bytes entre las once. De 960 funciones se pasa a
+971, el 8,62 % de las del juego (el 5,660 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_voice_has_remote_talker` | `0x00053720` | `networking/game_voice.c` |
+| `game_voice_set_controller_mode` | `0x000537b0` | `networking/game_voice.c` |
+| `game_voice_get_controller_mode` | `0x000537f0` | `networking/game_voice.c` |
+| `game_voice_set_controller_mask` | `0x00053810` | `networking/game_voice.c` |
+| `game_voice_unknown_00053850` | `0x00053850` | `networking/game_voice.c` |
+| `game_voice_remote_talker_data` | `0x00053890` | `networking/game_voice.c` |
+| `game_voice_play_message` | `0x000538e0` | `networking/game_voice.c` |
+| `game_voice_stop_message` | `0x00053940` | `networking/game_voice.c` |
+| `game_voice_message_busy` | `0x00053970` | `networking/game_voice.c` |
+| `game_voice_record_message` | `0x000539a0` | `networking/game_voice.c` |
+| `game_voice_stop_message_with_headset` | `0x000539e0` | `networking/game_voice.c` |
+
+Casi todas son la misma idea: si el juego tiene que ver con la voz y la voz
+está arrancada, pasan el encargo a `voice.c`; si no, no hacen nada.
+
+### Cambiado
+
+- Los cuatro reales por mando de `voice_globals` no eran «niveles»: son lo
+  que la biblioteca usa para **cambiar la voz** del jugador (una máscara).
+  `voice_update_controller_levels` pasa a ser `voice_set_controller_mask`,
+  `voice_reset_controller_levels` a `voice_reset_controller_masks`, y el
+  campo a `controller_masks`. La función no pide nada a la biblioteca: le
+  dice la máscara y, si la acepta, la guarda.
+
+### Lo que se sabe
+
+- El juego tiene dos máscaras (`game_voice_masks`, `0x0043fe48`): la que no
+  cambia nada (cuatro -1) y una que deforma la voz (0,95, 0,5 y 0,35), para
+  que no se reconozca al que habla.
+- Cada mando tiene un ajuste de voz del jugador (`0x004c99a8`): con el 3 no
+  se le reproducen mensajes, y con el 1 se reproducen sin auriculares.
+- Cada jugador de la partida (hasta 16) tiene un número de 16 bits con un
+  bit por cada uno de los demás (`0x004c9968`); aún no se sabe si es a
+  quién oye o a quién ha silenciado.
+- Antes y después de dar a la biblioteca lo que dijo un jugador de otra
+  consola, el juego cambia cómo redondea el procesador (`0x00053f50` y
+  `0x00053f80`, sin descompilar): la biblioteca lo quiere de otra manera.
+- En tres de ellas el juego tiene dentro una función de `voice.c` de la que
+  no guarda copia aparte (cambiar el modo de un mando, leerlo y parar un
+  mensaje).
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo y las de `voice`.
+- Las mutaciones de los hitos 266 a 270 corren aparte; su resultado irá en
+  una entrada posterior.
+
 ## 2026-10-08 — `sound_memory.c` pasa a ser `game_voice.c`, con el fondo de la voz y del menú
 
 Cuatro funciones en `networking/game_voice.c`, de 302 bytes entre las cuatro. De 956 funciones se pasa a

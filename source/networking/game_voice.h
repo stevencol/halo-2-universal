@@ -41,6 +41,24 @@ enum
 	_game_voice_full
 };
 
+enum
+{
+	/* the ways that the voice of a player can be changed: not at all, and
+	so that it is not known */
+	NUMBER_OF_GAME_VOICE_MASKS= 2,
+
+	/* the players of a game: each has a bit in the numbers of 16 bits */
+	MAXIMUM_GAME_VOICE_PLAYERS= 16
+};
+
+/* what a controller's player wants of the voice (0x004c99a8). What the
+others are is not known */
+enum
+{
+	_game_voice_controller_setting1= 1,
+	_game_voice_controller_setting3= 3
+};
+
 /* as main_game.c calls those that take memory when a map is loaded */
 #define GAME_VOICE_CALLBACK __attribute__((stdcall))
 
@@ -69,6 +87,18 @@ void game_voice_menu_pool_new(void);
 void game_voice_menu_pool_delete(void);
 void game_voice_start(void);
 void game_voice_stop(void);
+boolean game_voice_has_remote_talker(long identifier);
+void game_voice_set_controller_mode(long controller_index, long mode);
+long game_voice_get_controller_mode(long controller_index);
+void game_voice_set_controller_mask(long mask, long controller_index);
+boolean game_voice_unknown_00053850(long player_index, long other_player_index);
+void game_voice_remote_talker_data(long identifier, const void *data, long size);
+void game_voice_play_message(long controller_index, const long *message, long size);
+void game_voice_stop_message(long controller_index);
+boolean game_voice_message_busy(long controller_index);
+void game_voice_record_message(long controller_index, void *buffer, long *size, long unknown,
+	unsigned long buffer_size, long *length);
+void game_voice_stop_message_with_headset(long controller_index);
 
 /* ---------- globals */
 
@@ -78,6 +108,10 @@ extern boolean game_voice_use_menu_pool;
 extern long game_voice_amount;
 extern long game_voice_kind;
 extern boolean game_voice_enabled;
+extern long unknown_004c9888;
+extern word unknown_004c9968[MAXIMUM_GAME_VOICE_PLAYERS];
+extern long game_voice_controller_settings[MAXIMUM_VOICE_CONTROLLERS];
+extern const real game_voice_masks[NUMBER_OF_GAME_VOICE_MASKS][NUMBER_OF_VOICE_MASK_VALUES];
 extern word unknown_004c9966;
 extern struct allocation *unknown_0046dd54;
 extern struct game_voice_allocation game_voice_allocation;
