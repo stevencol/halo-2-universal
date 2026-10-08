@@ -23,10 +23,12 @@ voice.c, from 0x00055960 on.
 /* ---------- prototypes of functions not decompiled yet */
 
 
-/* 0x00057eb0: what who hears whom does with how each of the players of this
-console hears a player */
-void __attribute__((stdcall)) unknown_00057eb0(byte *channels, long player_index,
-	const struct voice_channel_listener *listeners, long count);
+/* 0x000583c0: what who hears whom does with the players of this console
+that hear a player in the first way: a bit for each. 0x00058590: the same
+with the one that hears it in a way, of those that are not the first */
+void __attribute__((stdcall)) unknown_000583c0(byte *channels, unsigned long listeners, long player_index);
+void __attribute__((stdcall)) unknown_00058590(long how, long player_index, byte *channels,
+	long listener_player_index);
 
 /* 0x001896c0: plays a sound, as loud as a number says. 0x00189760: plays a
 sound where what it is given says */
@@ -1265,7 +1267,7 @@ void VOICE_ROUTING_CALLBACK voice_channels_update_by_team(
 				listeners[local_player_index].player_index= local_player_index;
 				listeners[local_player_index].how= how;
 			}
-			unknown_00057eb0(channels, player_index, listeners, MAXIMUM_VOICE_ROUTING_PLAYERS);
+			voice_channels_route_player(channels, player_index, listeners, MAXIMUM_VOICE_ROUTING_PLAYERS);
 		}
 	}
 }
@@ -1686,7 +1688,7 @@ void VOICE_ROUTING_CALLBACK voice_channels_player_talked(
 			listeners[local_player_index].player_index= local_player_index;
 			listeners[local_player_index].how= how;
 		}
-		unknown_00057eb0(channels, player_index, listeners, MAXIMUM_VOICE_ROUTING_PLAYERS);
+		voice_channels_route_player(channels, player_index, listeners, MAXIMUM_VOICE_ROUTING_PLAYERS);
 	}
 }
 
@@ -1934,5 +1936,75 @@ void VOICE_ROUTING_CALLBACK voice_channels_update_team_button(
 	if (!pressed)
 	{
 		*started= 0;
+	}
+}
+
+/* 0x00057eb0: what is done with how each player of this console hears a
+player of another. Those that hear it in the first way go to
+unknown_000583c0, a bit for each. Each of the others has the bit of the player
+set in what it hears, and the rest have it cleared. If any hears it in the
+second way, its voice comes out of the three of the front, and first of all;
+if not, the nearest of those that hear it in the third way goes to
+unknown_00058590; and with none, its voice never comes out there. The game
+has voice_remote_talker_unknown_00055250 in the function itself */
+void VOICE_ROUTING_CALLBACK voice_channels_route_player(
+	byte *channels,
+	long player_index,
+	const struct voice_channel_listener *listeners,
+	long count)
+{
+	unsigned long bit= 1u<<player_index;
+	unsigned long first= 0;
+	boolean second= FALSE;
+	long nearest= NONE;
+	long index;
+
+	for (index= 0; index<count; index++)
+	{
+		const struct voice_channel_listener *listener= &listeners[index];
+		unsigned long *hears= (unsigned long *)(channels+VOICE_CHANNELS_LISTENER_HEARS_OFFSET+
+			listener->player_index*sizeof(long));
+
+		if (listener->how==_voice_hears1)
+		{
+			first|= 1u<<listener->player_index;
+		}
+		else
+		{
+			first&= ~(1u<<listener->player_index);
+		}
+		if (listener->how==_voice_hears2 || listener->how==_voice_hears3)
+		{
+			*hears|= bit;
+			if (listener->how==_voice_hears2)
+			{
+				second= TRUE;
+			}
+			else if (!second && (nearest==NONE || listeners[nearest].distance>listener->distance))
+			{
+				nearest= index;
+			}
+		}
+		else
+		{
+			*hears&= ~bit;
+		}
+	}
+	unknown_000583c0(channels, first, player_index);
+	if (second)
+	{
+		struct voice_mix_bin front[]= { { 0, 0 }, { 1, 0 }, { 2, 0 } };
+		struct voice_mix_bins mix_bins= { sizeof(front)/sizeof(front[0]), front };
+
+		voice_remote_talker_unknown_00055250(&voice_globals, player_index, VOICE_CHANNELS_OUTPUT, &mix_bins);
+		voice_remote_talker_set_priority(&voice_globals, player_index, VOICE_CHANNELS_OUTPUT, _voice_priority_first);
+	}
+	else if (nearest!=NONE)
+	{
+		unknown_00058590(_voice_hears3, player_index, channels, listeners[nearest].player_index);
+	}
+	else
+	{
+		voice_remote_talker_set_priority(&voice_globals, player_index, VOICE_CHANNELS_OUTPUT, _voice_priority_never);
 	}
 }

@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Por dónde sale la voz de un jugador de otra consola
+
+Una función en `networking/voice_routing.c`, de 1.287 bytes. De 1105 funciones se pasa a
+1106, el 9,82 % de las del juego (el 6,304 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_channels_route_player` | `0x00057eb0` | `networking/voice_routing.c` |
+
+Era `unknown_00057eb0`, «la grande» que quedaba de quién oye a quién: lo
+que se hace con cómo oye cada jugador de esta consola a uno de otra. Es
+grande porque el compilador desenrolló su bucle de cuatro en cuatro; en C
+son unas sesenta líneas.
+
+### Lo que se sabe
+
+- Los que le oyen de la primera manera van, un bit por cada uno, a
+  `0x000583c0` (sin descompilar), que recorre los cuatro mandos: es la voz
+  que sale por el auricular.
+- De cada uno de los demás se apunta en `0xC8` de «quién oye a quién»
+  (nuevo: un número por jugador de esta consola) si oye al jugador de la
+  segunda manera o de la tercera.
+- Si alguno le oye de la segunda manera, su voz sale por la «salida 4» (la
+  que sigue a los cuatro mandos) con tres pares `{0,0}`, `{1,0}`, `{2,0}`,
+  que cuadran con izquierda, derecha y centro delanteros de la biblioteca
+  de sonido de la consola, y con prioridad 0.
+- Si no, el más cercano de los que le oyen de la tercera manera (la que
+  lleva distancia) va a `0x00058590` (sin descompilar), que coloca la voz
+  según dónde está cada uno.
+- Y si no hay ninguno, prioridad `NONE` en la salida 4: nunca suena ahí.
+- La función nueva de la biblioteca es `0x00332e58`: da ese número a un
+  jugador de otra consola en una salida. Los nombres de «salida» y
+  «prioridad» son una conjetura, por los valores que se le pasan.
+- `voice_talker_new` pasa de `voice.c` a `voice.h`, porque el juego la
+  tiene metida en cada función que la usa, también fuera de `voice.c`.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `voice_routing`, `voice` y
+  `game_voice`.
+- No se prueba que la biblioteca apague la voz entre las dos llamadas del
+  caso de la segunda manera (el juego vuelve a mirar si está arrancada).
+- Las mutaciones de los hitos 280 a 310 están pendientes.
+
 ## 2026-10-08 — El botón de hablar al equipo
 
 Una función en `networking/voice_routing.c`, de 358 bytes. De 1104 funciones se pasa a

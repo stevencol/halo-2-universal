@@ -87,6 +87,15 @@ enum
 	/* a bit for each player of another console that some player of this one
 	hears now */
 	VOICE_CHANNELS_HEARD_OFFSET= 0xC4,
+	/* for each player of this console, a bit for each player that it hears
+	in the second way or the third */
+	VOICE_CHANNELS_LISTENER_HEARS_OFFSET= 0xC8,
+	/* the place where the voice of a player heard in those ways comes out:
+	the one after the four controllers */
+	VOICE_CHANNELS_OUTPUT= 4,
+	/* and the numbers that unknown_00332e58 is given for it */
+	_voice_priority_first= 0,
+	_voice_priority_never= NONE,
 	/* and a time of the game for each player, in ticks; 0 for none: when it
 	started to talk to its team */
 	VOICE_CHANNELS_TIMES_OFFSET= 0x194,
@@ -228,6 +237,8 @@ void VOICE_ROUTING_CALLBACK voice_channels_player_talked(byte *channels, long pl
 void VOICE_ROUTING_CALLBACK voice_channels_update_team(byte *channels);
 void VOICE_ROUTING_CALLBACK voice_channels_update_dead(byte *channels);
 void VOICE_ROUTING_CALLBACK voice_channels_update_team_button(long player_index, byte *channels, long gamepad_index);
+void VOICE_ROUTING_CALLBACK voice_channels_route_player(byte *channels, long player_index,
+	const struct voice_channel_listener *listeners, long count);
 long VOICE_ROUTING_CALLBACK voice_channels_get_how(long local_player_index, const byte *channels, long player_index,
 	long unknown);
 void VOICE_ROUTING_CALLBACK voice_route_peers(const byte *unknown, unsigned long peers, word *words);

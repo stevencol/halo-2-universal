@@ -107,18 +107,6 @@ void *voice_modes[NUMBER_OF_VOICE_MODES];
 
 /* ---------- code */
 
-/* a player of another console, as the library knows one */
-static inline __attribute__((always_inline)) struct voice_talker voice_talker_new(
-	long identifier)
-{
-	struct voice_talker talker;
-
-	talker.identifier= identifier;
-	talker.flags= 0;
-
-	return talker;
-}
-
 /* whether the voice has players of other consoles: only one that uses
 _voice_mode_unknown2 does */
 static inline __attribute__((always_inline)) boolean voice_has_remote_talkers(

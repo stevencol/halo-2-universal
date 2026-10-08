@@ -779,7 +779,7 @@ def run(t) -> None:
                     ),
                     "voice_players_same_team": lambda harness, arguments, same=same: same[arguments[0] & 15] >> (arguments[1] & 15) & 1,
                     "voice_player_hears": lambda harness, arguments, how=how: how[arguments[2] & 15][arguments[1] & 15] * (arguments[0] + 1),
-                    "unknown_00057eb0": hands_on,
+                    "voice_channels_route_player": hands_on,
                 },
             )
 
@@ -1018,7 +1018,7 @@ def run(t) -> None:
                             "voice_players_get_distance": lambda harness, arguments, distances=distances: as_real(
                                 distances[arguments[0] & 15]
                             ),
-                            "unknown_00057eb0": hands_on,
+                            "voice_channels_route_player": hands_on,
                         },
                     )
 
@@ -1138,3 +1138,34 @@ def run(t) -> None:
                 "voice_play_sound_by_number": lambda harness, arguments: (0, tuple(arguments[:2])),
             },
         )
+
+    # ---------- how each player of this console hears a player of another
+
+    def mix_bins(harness, arguments):
+        # what the voice comes out of is in the stack
+        count, pairs = struct.unpack("<II", harness.mu.mem_read(arguments[5], 8))
+        return 0, (*arguments[:5], count, bytes(harness.mu.mem_read(pairs, 8 * min(count, 8))))
+
+    for enabled, initialized in active():
+        for n in range(160):
+            count = random_.choice((16, 16, 16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 13))
+            ways = random_.choice(((0, 1, 3), (0, 1, 3, 3), (0, 1, 2, 3), (0, 0, 0, 2, 3, 3, 3), (0, 1), (3,), (0, 1, 2, 3, 4, 0xFFFFFFFF)))
+            distances = random_.choice(((1.0, 2.0, 2.0, 0.5, 7.25), (1.0, 2.0, float("nan"), -3.0, 0.0), (5.0,)))
+            data = b"".join(
+                struct.pack("<IIf", random_.randrange(16), random_.choice(ways), random_.choice(distances))
+                for _ in range(16)
+            )
+            t.check(
+                "voice_channels_route_player",
+                Buffer(random_.randbytes(0x214)),
+                random_.choice((random_.randrange(16), random_.randrange(16), 0x80000000 | random_.randrange(16))),
+                Buffer(data),
+                count,
+                globals=state(enabled, initialized),
+                externals={
+                    "unknown_000583c0": gives(0),
+                    "unknown_00058590": gives(0),
+                    "unknown_00332e34": mix_bins,
+                    "unknown_00332e58": gives(0),
+                },
+            )

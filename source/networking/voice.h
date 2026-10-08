@@ -166,6 +166,22 @@ struct voice_talker
 	unsigned long flags;
 };
 
+/* what unknown_00332e34 is given: a number of pairs and the pairs. The
+numbers look like those of the console's sound library for where a sound comes
+out and how loud: 0, 1 and 2 are the left, the right and the middle of the
+front, and 0 is as loud as it gets */
+struct voice_mix_bin
+{
+	unsigned long mix_bin;
+	long volume;
+};
+
+struct voice_mix_bins
+{
+	unsigned long count;
+	const struct voice_mix_bin *mix_bins;
+};
+
 /* what the library says of a controller. Only the first thing of it is
 looked at */
 struct voice_controller_status
@@ -194,6 +210,39 @@ typedef char verify_voice_callbacks_size[
 
 long unknown_00332da8(void *engine, long controller_index, void *mode);
 long unknown_00332e93(void *engine, long controller_index);
+
+/* 0x00332e58: a number for a player of another console and one of the places
+where a voice comes out. The game gives 0 or NONE: it looks like how much its
+voice matters there, with NONE for never */
+long unknown_00332e58(void *engine, struct voice_talker talker, long output, long priority);
+
+/* ---------- what the game has in each function that uses it */
+
+/* a player of another console, as the library knows one */
+static inline __attribute__((always_inline)) struct voice_talker voice_talker_new(
+	long identifier)
+{
+	struct voice_talker talker;
+
+	talker.identifier= identifier;
+	talker.flags= 0;
+
+	return talker;
+}
+
+/* gives unknown_00332e58 its number for a player of another console, if the
+voice was started */
+static inline __attribute__((always_inline)) void voice_remote_talker_set_priority(
+	const struct voice_globals *voice,
+	long identifier,
+	long output,
+	long priority)
+{
+	if (voice->initialized)
+	{
+		unknown_00332e58(voice->engine, voice_talker_new(identifier), output, priority);
+	}
+}
 
 /* ---------- prototypes/VOICE.C */
 
