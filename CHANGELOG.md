@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Quién oye a quién fuera de la partida: todos, o los del equipo
+
+Una función en `networking/voice_routing.c`, de 368 bytes. De 1090 funciones se pasa a
+1091, el 9,68 % de las del juego (el 6,127 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_channels_get_player_by_team` | `0x00056c60` | `networking/voice_routing.c` |
+
+Era `unknown_00056c60`, la que `voice_targets_update` (hito 280) llama en
+los estados 2 y 3 de la red.
+
+### Lo que se sabe
+
+- Con esto se entienden los tres estados que la voz saca de la red
+  (hito 274). En el **1** hay partida en marcha y quién oye a quién sale
+  del mundo del juego (lo que queda por descompilar: distancias). En el
+  **2** se oyen todos los jugadores de la sesión. En el **3**, solo los del
+  mismo equipo.
+- El equipo de cada jugador es un byte con signo en su `0x124` dentro de la
+  lista de la sesión; -1 es «sin equipo», y sin equipo no se oye a nadie.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo.
+- El tercer estado con una sesión sin jugadores: el juego lee los equipos
+  de una lista que no hay y se para.
+- La batería completa del hito 296 corre aparte; las mutaciones de los
+  hitos 280 a 297 están pendientes.
+
 ## 2026-10-08 — Limpieza de la lista de funciones, las mutaciones de la voz y un reloj
 
 Una función en `networking/voice_routing.c`, de 62 bytes. De 1089 funciones se pasa a

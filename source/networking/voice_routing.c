@@ -28,10 +28,6 @@ void __attribute__((stdcall)) unknown_00057360(byte *channels);
 void __attribute__((stdcall)) unknown_000577d0(byte *channels);
 void __attribute__((stdcall)) unknown_00057960(byte *channels);
 
-/* 0x00056c60: as voice_channels_get_player, in the other states of the
-network game */
-unsigned long __attribute__((stdcall)) unknown_00056c60(byte *channels, long player_index);
-
 /* 0x00056df0: something that who hears whom is told of a player whose
 voice comes from another console, with the flag of what it said */
 void __attribute__((stdcall)) unknown_00056df0(byte *channels, long player_index, long flag);
@@ -258,7 +254,7 @@ void voice_targets_update(
 					}
 					else if (unknown_004c9888==_game_voice_network2 || unknown_004c9888==_game_voice_network3)
 					{
-						player_targets&= unknown_00056c60(unknown_00527108, player_index);
+						player_targets&= voice_channels_get_player_by_team(unknown_00527108, player_index);
 					}
 				}
 				for (other_index= 0; other_index<MAXIMUM_VOICE_ROUTING_PLAYERS; other_index++)
@@ -949,4 +945,60 @@ boolean voice_channels_time_is_recent(
 	}
 
 	return FALSE;
+}
+
+/* 0x00056c60: a bit for each player that hears a player, out of the first
+state of the network game: in the second, every player of the session; in
+the third, those of its team, and nobody if it has none or the session does
+not have it. 0 if who hears whom is not on, or in any other state. The game
+does not see whether the session has players before it looks at their teams */
+unsigned long VOICE_ROUTING_CALLBACK voice_channels_get_player_by_team(
+	const byte *channels,
+	long player_index)
+{
+	unsigned long result= 0;
+
+	if (channels[VOICE_CHANNELS_ON_OFFSET] && voice_routing_active() &&
+		(unknown_004c9888==_game_voice_network2 || unknown_004c9888==_game_voice_network3))
+	{
+		long network= unknown_004c9888;
+		unsigned long session_players= 0;
+		const byte *membership= game_voice_get_membership();
+
+		if (membership)
+		{
+			session_players= *(const unsigned long *)(membership+GAME_VOICE_MEMBERSHIP_PLAYERS_OFFSET);
+		}
+		if (network!=_game_voice_network3)
+		{
+			return session_players;
+		}
+		else
+		{
+			const byte *players= game_voice_get_player_array();
+
+			if (session_players&(1u<<(player_index&0x1F)))
+			{
+				long team= (signed char)players[player_index*GAME_VOICE_MEMBERSHIP_PLAYER_SIZE+
+					GAME_VOICE_MEMBERSHIP_PLAYER_TEAM_OFFSET];
+				long other_index;
+
+				for (other_index= 0; other_index<MAXIMUM_VOICE_ROUTING_PLAYERS; other_index++)
+				{
+					if (other_index!=player_index && (session_players&(1u<<other_index)))
+					{
+						long other_team= (signed char)players[other_index*GAME_VOICE_MEMBERSHIP_PLAYER_SIZE+
+							GAME_VOICE_MEMBERSHIP_PLAYER_TEAM_OFFSET];
+
+						if (team!=NONE && other_team!=NONE && team==other_team)
+						{
+							result|= 1u<<other_index;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return result;
 }

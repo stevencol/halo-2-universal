@@ -173,7 +173,7 @@ def run(t) -> None:
                                 hears[arguments[1] & 15],
                                 (harness.normalize(arguments[0]), arguments[1]),
                             ),
-                            "unknown_00056c60": lambda harness, arguments, hears=hears: (
+                            "voice_channels_get_player_by_team": lambda harness, arguments, hears=hears: (
                                 hears[arguments[1] & 15] ^ 0x5555,
                                 (harness.normalize(arguments[0]), arguments[1]),
                             ),
@@ -564,4 +564,36 @@ def run(t) -> None:
                         Buffer(bytes(data)),
                         player,
                         globals={"game_time_globals": Buffer(bytes(time)), "unknown_004cf738": struct.pack("<f", limit)},
+                    )
+
+    # ---------- who hears whom, by teams
+
+    for on in (1, 1, 1, 0):
+        for enabled, initialized in active():
+            for network in (3, 3, 2, 1, 0, 4):
+                for n in range(8):
+                    player = random_.choice((0, 5, 15))
+                    data = bytearray(random_.randbytes(PLAYERS + 16 * PLAYER_SIZE))
+                    mask = random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16), 0xFFFF ^ (1 << player), 0xFFFFFFFF))
+                    struct.pack_into("<I", data, MEMBERSHIP_PLAYERS, mask)
+                    for other in range(16):
+                        data[PLAYERS + other * PLAYER_SIZE + 0x124] = random_.choice((0, 0, 1, 1, 7, 0xFF, 0x80))
+                    if n == 1:
+                        data[PLAYERS + player * PLAYER_SIZE + 0x124] = 0xFF
+                    membership = Buffer(bytes(data))
+                    channels_ = channels(on)
+                    t.check(
+                        "voice_channels_get_player_by_team",
+                        Buffer(bytes(channels_)),
+                        player,
+                        globals={**state(enabled, initialized), "unknown_004c9888": network},
+                        externals={
+                            # the game does not see whether there are players: there are, here, in the third state
+                            "game_voice_get_membership": lambda harness, arguments, membership=membership, n=n, network=network: (
+                                membership.address if n != 7 or network == 3 else 0
+                            ),
+                            "game_voice_get_player_array": lambda harness, arguments, membership=membership: membership.address
+                            + PLAYERS,
+                        },
+                        extra=[membership],
                     )

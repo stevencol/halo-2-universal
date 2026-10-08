@@ -804,7 +804,7 @@ address,name,source,arguments,returns,convention
 00055990,voice_targets_update,source/networking/voice_routing.c,eax,void
 00055960,voice_targets_get,source/networking/voice_routing.c,esi ebx,int
 00056590,voice_unknown_00527104_get_words,source/networking/voice_routing.c,eax esi edi,void
-00056c60,unknown_00056c60,,eax stack,int,stdcall
+00056c60,voice_channels_get_player_by_team,source/networking/voice_routing.c,eax stack,int,stdcall
 00056990,voice_targets_to_peers,source/networking/voice_routing.c,ebx,int
 000565c0,voice_route_peers,source/networking/voice_routing.c,stack stack stack,void,stdcall
 00056790,voice_route_assign,source/networking/voice_routing.c,ebx edx stack stack stack stack stack,void,stdcall

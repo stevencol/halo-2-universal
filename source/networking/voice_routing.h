@@ -122,6 +122,7 @@ long voice_queues_size_for_peer(const byte *queues, long peer);
 unsigned long voice_targets_to_peers(unsigned long targets);
 boolean voice_player_unknown_000589e0(long player);
 boolean voice_channels_time_is_recent(const byte *channels, long player_index);
+unsigned long VOICE_ROUTING_CALLBACK voice_channels_get_player_by_team(const byte *channels, long player_index);
 void VOICE_ROUTING_CALLBACK voice_route_peers(const byte *unknown, unsigned long peers, word *words);
 void VOICE_ROUTING_CALLBACK voice_route_assign(long *budget, unsigned long *peers, unsigned long allowed,
 	unsigned long *direct, boolean through_chosen, long chosen_peer, boolean *more);
