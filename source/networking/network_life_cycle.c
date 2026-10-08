@@ -34,6 +34,11 @@ void unknown_0005b570(byte *session);
 void unknown_0005a6e0(byte *session);
 boolean unknown_0005b1e0(byte *session, long unknown);
 
+/* 0x0006f200, 0x0006f3a0: two things that are asked of unknown_005273f8 */
+void __attribute__((stdcall)) unknown_0006f200(boolean unknownC, byte *unknown, long unknown4, long unknown0,
+	long unknown8);
+void __attribute__((stdcall)) unknown_0006f3a0(byte *unknown, long unknown4, long unknown0, long unknown8);
+
 /* 0x000705f0: more that unknown_00527500 says, with three numbers */
 boolean __attribute__((stdcall)) unknown_000705f0(byte *unknown, long unknown0, long unknown4, long unknown8);
 
@@ -57,6 +62,10 @@ long unknown_00527fa8;
 /* 0x00527500: something of the sixth state: at 8 it points to what has a
 session at 0x30. Its size is not known */
 byte unknown_00527500[UNKNOWN_00527500_SIZE];
+
+/* 0x005273f8: something of the network game that two things are asked of.
+What unknown_00527400 points to is at 8 of it */
+byte unknown_005273f8[8];
 
 /* 0x00527400, 0x00527fa0: two things of the network game that have a
 session, at 0x30 and at 0x38 */
@@ -719,4 +728,39 @@ boolean NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_unknown_00059890(
 	}
 
 	return result;
+}
+
+/* the two flags are set, if unknown_00510518 is not 0: the game has this
+before some things are done */
+static inline __attribute__((always_inline)) void network_life_cycle_set_flags(
+	void)
+{
+	if (unknown_00510518)
+	{
+		unknown_0051051c= TRUE;
+		unknown_0051051d= TRUE;
+	}
+}
+
+/* 0x00059200: something that is asked of unknown_005273f8, with three
+numbers and a yes or a no */
+void NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_unknown_00059200(
+	long unknown0,
+	long unknown4,
+	long unknown8,
+	boolean unknownC)
+{
+	network_life_cycle_set_flags();
+	unknown_0006f200(unknownC, unknown_005273f8, unknown4, unknown0, unknown8);
+}
+
+/* 0x00059230: another thing that is asked of unknown_005273f8, with three
+numbers */
+void NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_unknown_00059230(
+	long unknown0,
+	long unknown4,
+	long unknown8)
+{
+	network_life_cycle_set_flags();
+	unknown_0006f3a0(unknown_005273f8, unknown4, unknown0, unknown8);
 }

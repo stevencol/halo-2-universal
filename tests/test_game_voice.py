@@ -1408,3 +1408,54 @@ def run(t) -> None:
                     },
                     extra=[membership],
                 )
+
+    # ---------- the console chosen for the voice: one console alone that falls short
+
+    # the mutations found that no case had a console that could be chosen but
+    # for one thing, with no other to choose: each thing is tried alone here
+    for short in ("nothing", "first number", "second number", "cannot be chosen", "not joined to all", "is this one"):
+        for says in (0, 1):
+            count = 2
+            local = 0
+            least9c, leasta0 = 20, 30
+            data = bytearray(random_.randbytes(MEMBERSHIP_SIZE))
+            struct.pack_into("<I", data, 8, count)
+            for peer in range(16):
+                # every console but the second falls short in everything
+                struct.pack_into("<4i", data, peer * PEER_SIZE + 0x9C, 0, 0, 3, 0)
+            values = [least9c, leasta0, 0, (1 << count) - 1]
+            if short == "first number":
+                values[0] = least9c - 1
+            elif short == "second number":
+                values[1] = leasta0 - 1
+            elif short == "cannot be chosen":
+                values[2] = 3
+            elif short == "not joined to all":
+                values[3] = 1
+            struct.pack_into("<4i", data, (0 if short == "is this one" else 1) * PEER_SIZE + 0x9C, *values)
+            membership = Buffer(bytes(data))
+            session = Buffer(random_.randbytes(0x10))
+
+            def get_session(harness, arguments, session=session):
+                harness.mu.mem_write(arguments[0], struct.pack("<I", session.address))
+                return 1, ()
+
+            t.check(
+                "game_voice_update_chosen_peer",
+                globals={
+                    **state(1, 1),
+                    "unknown_004c9878": 0x55,
+                    "unknown_004ce120": leasta0,
+                    "unknown_004ce124": least9c,
+                },
+                externals={
+                    "game_voice_get_session": get_session,
+                    "game_voice_get_membership": gives_buffer(membership),
+                    "game_voice_get_local_peer": gives(local),
+                    "game_voice_session_unknown40": gives(local),
+                    "game_voice_unknown_00054ef0": gives(says),
+                    "unknown_0005b0b0": gives(NONE),
+                    "unknown_0005c6d0": lambda harness, arguments: 0,
+                },
+                extra=[membership, session],
+            )

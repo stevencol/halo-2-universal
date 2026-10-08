@@ -697,6 +697,10 @@ address,name,source,arguments,returns,convention
 00059890,network_life_cycle_unknown_00059890,source/networking/network_life_cycle.c,stack stack stack,bool,stdcall
 00059a30,network_life_cycle_request_new1,source/networking/network_life_cycle.c,edx esi edi ebx stack,void,stdcall
 00059bd0,unknown_00059bd0,,stack stack stack stack stack stack stack stack stack stack,bool,stdcall
+00059200,network_life_cycle_unknown_00059200,source/networking/network_life_cycle.c,ecx edx stack stack,void,stdcall
+00059230,network_life_cycle_unknown_00059230,source/networking/network_life_cycle.c,ecx edx stack,void,stdcall
+0006f200,unknown_0006f200,,eax edx stack stack stack,void,stdcall
+0006f3a0,unknown_0006f3a0,,ebx stack stack stack,void,stdcall
 00065770,unknown_00065770,,edi,void
 000598f0,network_life_cycle_unknown_000598f0,source/networking/network_life_cycle.c,eax,void
 00059780,network_life_cycle_get_any_session,source/networking/network_life_cycle.c,edx,bool

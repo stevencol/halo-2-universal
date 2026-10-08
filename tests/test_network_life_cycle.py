@@ -372,3 +372,40 @@ def run(t) -> None:
             random_.getrandbits(32),
             random_.getrandbits(32),
         )
+
+    # ---------- two things that are asked
+
+    def asked(byte_at: int = -1):
+        def handler(harness, arguments):
+            return 0, tuple(
+                (argument & 0xFF) if n == byte_at else harness.normalize(argument) for n, argument in enumerate(arguments)
+            )
+
+        return handler
+
+    for unknown in (1, 0):
+        flags = {
+            "unknown_00510518": unknown,
+            "unknown_0051051c": bytes((0x40,)),
+            "unknown_0051051d": bytes((0x40,)),
+            "unknown_005273f8": GlobalRange(8),
+        }
+        for flag in (1, 0, 0x180):
+            t.check(
+                "network_life_cycle_unknown_00059200",
+                random_.getrandbits(32),
+                random_.getrandbits(32),
+                random_.getrandbits(32),
+                flag,
+                globals=flags,
+                # the yes or the no comes as a byte in a place of four
+                externals={"unknown_0006f200": asked(0)},
+            )
+        t.check(
+            "network_life_cycle_unknown_00059230",
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            globals=flags,
+            externals={"unknown_0006f3a0": asked()},
+        )

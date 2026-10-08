@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Dos encargos más de la partida en red, y un hueco de las pruebas cerrado
+
+Dos funciones en `networking/network_life_cycle.c`, de 86 bytes entre las dos. De 1086 funciones se pasa a
+1088, el 9,66 % de las del juego (el 6,109 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_life_cycle_unknown_00059200` | `0x00059200` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_00059230` | `0x00059230` | `networking/network_life_cycle.c` |
+
+Con ellas, de `0x000591e0` a `0x00059ab0` solo queda `0x00059940`.
+
+### Lo que se sabe
+
+- Las dos levantan los dos flags (si `0x00510518` no es 0) y pasan tres
+  números a algo que vive en `0x005273f8` (`0x0006f200` y `0x0006f3a0`, sin
+  descompilar). Lo que apunta `0x00527400` (hito 287) está dentro de eso
+  mismo, en su `0x8`.
+
+### Mutaciones: un hueco de verdad
+
+Las mutaciones de los hitos 269 a 279, que siguen corriendo, encontraron
+que la prueba de `game_voice_update_chosen_peer` (hito 276) no notaba si
+se quitaba una de las condiciones para elegir consola: el mínimo del
+«segundo número». Los casos al azar nunca dejaban a una consola que
+fallara **solo** en eso sin otra mejor que elegir.
+
+- Añadidos doce casos a mano: una sola consola candidata que falla en una
+  única cosa cada vez (o en ninguna).
+- Comprobado a mano: con la condición quitada las pruebas ahora fallan, y
+  con el código bien pasan las 312.
+
+El otro cambio sin notar hasta ahora no altera nada (hito 293).
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo y las de
+  `game_voice_update_chosen_peer`.
+- Las dos funciones de este hito acaban en una llamada y devuelven lo que
+  esa devuelva, si es que devuelve algo: se suman a la lista de
+  `ESTADO.md`.
+- Las mutaciones de los hitos 280 a 294 están pendientes.
+
 ## 2026-10-08 — Pedir la lista de silenciados a la biblioteca: `voice_mute_list.c`, completo
 
 Tres funciones en `networking/voice_mute_list.c`, de 359 bytes entre las tres: las que faltaban. De 1083 funciones se pasa a
