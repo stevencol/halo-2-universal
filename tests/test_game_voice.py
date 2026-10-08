@@ -424,7 +424,7 @@ def run(t) -> None:
                 globals={
                     **state(enabled, initialized),
                     "unknown_004c9888": unknown,
-                    "unknown_00525a00": GlobalRange(4),
+                    "unknown_00525a00": GlobalRange(0x1704),
                 },
                 externals={
                     "unknown_00056380": lambda harness, arguments, result=random_.getrandbits(32): (
@@ -600,7 +600,7 @@ def run(t) -> None:
 
     for enabled, initialized in active():
         for unknown in (1, 0, 3):
-            both = {**state(enabled, initialized), "unknown_004c9888": unknown, "unknown_00525a00": GlobalRange(4)}
+            both = {**state(enabled, initialized), "unknown_004c9888": unknown, "unknown_00525a00": GlobalRange(0x1704)}
             t.check(
                 "game_voice_unknown_00054810",
                 random_.getrandbits(32),
@@ -613,7 +613,7 @@ def run(t) -> None:
                     "game_voice_unknown_00054850",
                     random_.getrandbits(32),
                     globals=both,
-                    externals={"unknown_00056160": with_525a00(result, 1)},
+                    externals={"voice_queues_go_to_peer": with_525a00(result, 1)},
                 )
             t.check(
                 "game_voice_unknown_00054990",
@@ -1041,7 +1041,7 @@ def run(t) -> None:
                                 "game_voice_session_source": source,
                                 "unknown_004c9888": 0x55,
                                 "unknown_005259b8": GlobalData(bytes(first)),
-                                "unknown_00527108": GlobalRange(0x84),
+                                "unknown_00527108": GlobalRange(0xC4),
                             },
                             externals=named(
                                 "game_voice_library_update",
@@ -1052,7 +1052,7 @@ def run(t) -> None:
                                 "game_voice_reset_players",
                                 "game_voice_update_players",
                                 "game_voice_update_chosen_peer",
-                                "unknown_00056b70",
+                                "voice_channels_update",
                                 "unknown_00055990",
                                 game_voice_unknown_00054ec0=network,
                             ),
@@ -1113,18 +1113,18 @@ def run(t) -> None:
                     "unknown_005259b8": GlobalRange(0x48),
                     "unknown_00527104": GlobalRange(4),
                     "unknown_00527108": GlobalData(bytes(thing)),
-                    "unknown_00525a00": GlobalRange(4),
+                    "unknown_00525a00": GlobalRange(0x1704),
                 },
                 externals={
                     "game_voice_find_local_player": nth("game_voice_find_local_player", *players),
                     "game_voice_player_flags": gives(flags),
                     "game_voice_player_not_allowed": gives(third),
-                    "unknown_00055960": lambda harness, arguments, number=number: (
+                    "voice_targets_get": lambda harness, arguments, number=number: (
                         number,
                         (harness.normalize(arguments[0]), arguments[1]),
                     ),
                     "unknown_00056590": words,
-                    "unknown_00056130": on_its_way,
+                    "voice_queues_add": on_its_way,
                 },
             )
 
@@ -1256,7 +1256,7 @@ def run(t) -> None:
                     "game_voice_get_local_players": gives(local),
                     "game_voice_player_flags": lambda harness, arguments, flags=flags: flags[arguments[0] & 15],
                     "game_voice_player_not_allowed": lambda harness, arguments, third=third: third[arguments[0] & 15],
-                    "unknown_00055960": lambda harness, arguments, numbers=numbers: (
+                    "voice_targets_get": lambda harness, arguments, numbers=numbers: (
                         numbers[arguments[1] & 15],
                         (harness.normalize(arguments[0]), arguments[1]),
                     ),
@@ -1399,12 +1399,12 @@ def run(t) -> None:
                         **state(enabled, initialized),
                         "game_voice_session_players": had_mask,
                         "game_voice_session_player_identifiers": had,
-                        "unknown_00525a00": GlobalRange(4),
+                        "unknown_00525a00": GlobalRange(0x1704),
                         "game_voice_pool": 0x80100000,
                     },
                     externals={
                         "game_voice_get_membership": gives_buffer(membership, there),
-                        "unknown_000560e0": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                        "voice_queues_reset": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                     },
                     extra=[membership],
                 )

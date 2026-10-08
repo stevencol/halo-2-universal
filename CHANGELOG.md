@@ -2,6 +2,55 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — La voz entre consolas: a quién habla cada uno, las colas y quién oye a quién
+
+Siete funciones en un archivo nuevo, `networking/voice_routing.c`, de 570 bytes entre las siete. De 1023 funciones se pasa a
+1030, el 9,14 % de las del juego (el 5,874 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_targets_get` | `0x00055960` | `networking/voice_routing.c` |
+| `voice_queues_reset` | `0x000560e0` | `networking/voice_routing.c` |
+| `voice_queues_add` | `0x00056130` | `networking/voice_routing.c` |
+| `voice_queues_go_to_peer` | `0x00056160` | `networking/voice_routing.c` |
+| `voice_channels_update` | `0x00056b70` | `networking/voice_routing.c` |
+| `voice_channels_get_player` | `0x00056bd0` | `networking/voice_routing.c` |
+| `voice_channels_get_unknown84` | `0x00056dd0` | `networking/voice_routing.c` |
+
+Cinco de ellas eran las `unknown_...` que `game_voice.c` llamaba sin
+conocer. Es lo que viene en el juego después de `voice.c`.
+
+### Lo que se sabe
+
+- Las cuatro «cosas» a las que la voz entrega lo que dicen los jugadores
+  (hito 275) están una detrás de otra en la memoria del juego, y cada una
+  empieza con un byte que dice si está en marcha:
+  - `0x005259b8`: a quién habla cada jugador (un número por jugador);
+  - `0x00525a00`: una cola por jugador con lo que ha dicho, de `0x170`
+    bytes: si está en uso, cuántas cosas tiene, un bit por consola a la que
+    van, las cosas y cuántas van a cada consola. Mide `0x1704` bytes, no 4
+    como se supuso;
+  - `0x00527104`: cuatro bytes de los que solo se conoce el primero;
+  - `0x00527108`: quién oye a quién, tres números por jugador.
+- A una cola solo entra lo dicho si mide exactamente 10 bytes.
+- `voice_channels_update` hace cuatro cosas cada fotograma en el estado 1
+  de la red y una sola en el 2 y el 3 (las cinco, sin descompilar).
+
+### Mutaciones
+
+Las de los hitos 266 a 268 terminaron: 24 de 24, 32 de 32 y 13 de 14. La
+que las pruebas no notan no cambia nada: `voice_text_append` escribiendo
+un carácter más, que luego se pisa con el cero del final.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo y las de `game_voice`.
+- La batería completa del hito 278 y las mutaciones de los hitos 269 a 279
+  corren aparte o están pendientes; su resultado irá en una entrada
+  posterior.
+
 ## 2026-10-08 — Si los jugadores de la sesión son los mismos: `game_voice.c`, completo
 
 Una función en `networking/game_voice.c`, de 582 bytes: la última del archivo. De 1022 funciones se pasa a

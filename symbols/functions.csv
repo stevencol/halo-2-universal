@@ -690,7 +690,7 @@ address,name,source,arguments,returns,convention
 00054cc0,game_voice_unknown_00054cc0,source/networking/game_voice.c,,int
 00054d00,game_voice_get_talkers,source/networking/game_voice.c,,int
 000564c0,unknown_000564c0,,eax stack stack,void
-00056160,unknown_00056160,,ecx edx,bool
+00056160,voice_queues_go_to_peer,source/networking/voice_routing.c,ecx edx,bool
 00056220,unknown_00056220,,eax esi,int
 000596d0,unknown_000596d0,,edi,bool
 00054d20,game_voice_get_local_players,source/networking/game_voice.c,,int
@@ -716,18 +716,27 @@ address,name,source,arguments,returns,convention
 00053610,game_voice_update,source/networking/game_voice.c,,void
 00053c70,game_voice_unknown_00053c70,source/networking/game_voice.c,,int
 00054590,game_voice_update_session_players,source/networking/game_voice.c,,void
-000560e0,unknown_000560e0,,eax,void
+000560e0,voice_queues_reset,source/networking/voice_routing.c,eax,void
 00054030,game_voice_update_players,source/networking/game_voice.c,,void
 000541a0,game_voice_update_local_player,source/networking/game_voice.c,stack,void,stdcall
 00053e30,game_voice_update_chosen_peer,source/networking/game_voice.c,,void
 00054890,game_voice_unknown_00054890,source/networking/game_voice.c,stack,bool
 0005b0b0,unknown_0005b0b0,,edx,int
 0005c6d0,unknown_0005c6d0,,ecx stack,void
-00056b70,unknown_00056b70,,esi,void
+00056b70,voice_channels_update,source/networking/voice_routing.c,esi,void
+00056bd0,voice_channels_get_player,source/networking/voice_routing.c,eax ecx,int
+00056dd0,voice_channels_get_unknown84,source/networking/voice_routing.c,ecx stack,int
+00055b40,unknown_00055b40,,ebx stack stack stack stack,void,stdcall
+00056f60,unknown_00056f60,,stack,void,stdcall
+00057080,unknown_00057080,,stack,void,stdcall
+00057360,unknown_00057360,,stack,void,stdcall
+000577d0,unknown_000577d0,,stack,void,stdcall
+00057960,unknown_00057960,,stack,void,stdcall
+000589e0,unknown_000589e0,,eax,bool
 00055990,unknown_00055990,,eax,void
-00055960,unknown_00055960,,esi ebx,int
+00055960,voice_targets_get,source/networking/voice_routing.c,esi ebx,int
 00056590,unknown_00056590,,eax esi edi,void
-00056130,unknown_00056130,,eax ecx ebx stack stack stack,void
+00056130,voice_queues_add,source/networking/voice_routing.c,eax ecx ebx stack stack stack,void
 0005f760,unknown_0005f760,,ecx stack,int
 00332e93,unknown_00332e93,,stack stack,int
 000550b0,voice_dispose,source/networking/voice.c,eax,void

@@ -12,6 +12,7 @@ the file is a guess, and so are the names of its functions.
 #include "cseries/cseries.h"
 #include "memory/memory_pool.h"
 #include "networking/voice.h"
+#include "networking/voice_routing.h"
 
 /* ---------- constants */
 
@@ -94,13 +95,13 @@ enum
 	UNKNOWN_004E9AE8_UNKNOWNC14_OFFSET= 0xC14,
 	UNKNOWN_0055E4D0_COUNT= 16,
 
-	/* three things that the voice hands what the players say to. Of the
-	first, at 0x005259b8: whether it is on, and a number for each player.
-	Of the third, at 0x00527108: whether it is on, and at 0x44 a number for
-	each player. Their sizes are guesses */
+	/* four things that the voice hands what the players say to, one after
+	another in the game's memory: see voice_routing.h. The size of the last
+	is a guess */
 	UNKNOWN_005259B8_SIZE= 0x48,
+	UNKNOWN_00525A00_SIZE= 0x1704,
 	UNKNOWN_00527104_SIZE= 0x4,
-	UNKNOWN_00527108_SIZE= 0x84,
+	UNKNOWN_00527108_SIZE= 0xC4,
 	UNKNOWN_00527108_PLAYERS_OFFSET= 0x44,
 
 	/* in what the session says of who is in it: how many consoles, and the
@@ -325,7 +326,7 @@ extern long unknown_0055e4d0[UNKNOWN_0055E4D0_COUNT];
 extern long unknown_004c9880;
 extern long unknown_004c9884;
 extern word game_voice_player_flag_words[MAXIMUM_GAME_VOICE_PLAYERS];
-extern byte unknown_00525a00[];
+extern byte unknown_00525a00[UNKNOWN_00525A00_SIZE];
 extern word game_voice_player_mutes[MAXIMUM_GAME_VOICE_PLAYERS];
 extern long game_voice_controller_settings[MAXIMUM_VOICE_CONTROLLERS];
 extern const real game_voice_masks[NUMBER_OF_GAME_VOICE_MASKS][NUMBER_OF_VOICE_MASK_VALUES];

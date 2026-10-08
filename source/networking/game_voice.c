@@ -33,9 +33,8 @@ boolean unknown_000596a0(byte **session);
 /* 0x00056380: something that 0x00525a00 does with three numbers */
 long unknown_00056380(long unknown4, byte *unknown, long unknown0, long unknown8);
 
-/* 0x000564c0, 0x00056160, 0x00056220: more that 0x00525a00 does */
+/* 0x000564c0, 0x00056220: more that 0x00525a00 does */
 void unknown_000564c0(long unknown4, byte *unknown, long unknown0);
-boolean unknown_00056160(long unknown0, byte *unknown);
 long unknown_00056220(byte *unknown, long unknown0);
 
 /* 0x000596d0: something of the network game that says where the session
@@ -52,32 +51,19 @@ boolean unknown_00068250(void);
 /* 0x000696d0: something of what unknown_004cf770 has of a player */
 boolean unknown_000696d0(const byte *unknown);
 
-/* 0x000560e0: what unknown_00525a00 does when the players of the session
-are others */
-void unknown_000560e0(byte *unknown);
 
 /* 0x0005b0b0, 0x0005c6d0: the console that a session has chosen for
 something, and choosing it */
 long unknown_0005b0b0(byte *session);
 void unknown_0005c6d0(byte *session, long peer);
 
-/* 0x00056b70, 0x00055990: what unknown_00527108 and unknown_005259b8 do
-each frame */
-void unknown_00056b70(byte *unknown);
+/* 0x00055990: what unknown_005259b8 does each frame */
 void unknown_00055990(byte *unknown);
-
-/* 0x00055960: the number that unknown_005259b8 has for a player; 0 if it has
-none */
-long unknown_00055960(byte *unknown, long player_index);
 
 /* 0x00056590: two numbers of 16 bits that unknown_00527104 gives for the
 number that unknown_005259b8 has for a player */
 void unknown_00056590(long unknown0, word *words, byte *unknown);
 
-/* 0x00056130: what a player said goes on its way: to the other consoles,
-most likely */
-void unknown_00056130(long player_index, byte *unknown, word *words, void *data, unsigned long size,
-	boolean *unknown10);
 
 /* 0x0005f760: which console of a session a console of another is; NONE if
 none */
@@ -164,9 +150,8 @@ long unknown_004c9884;
 /* 0x004c9988: what the game knows of the voice of each player */
 word game_voice_player_flag_words[MAXIMUM_GAME_VOICE_PLAYERS];
 
-/* 0x00525a00: something that game_voice_unknown_00053b00 hands on. Its size
-is not known */
-byte unknown_00525a00[4];
+/* 0x00525a00: the queues of what the players said (voice_routing.h) */
+byte unknown_00525a00[UNKNOWN_00525A00_SIZE];
 
 /* 0x004c9968: for each player, a bit for each of the others that it wants
 not to hear */
@@ -765,7 +750,7 @@ boolean game_voice_unknown_00054850(
 
 	if (game_voice_active() && unknown_004c9888!=0)
 	{
-		result= unknown_00056160(unknown, unknown_00525a00);
+		result= voice_queues_go_to_peer(unknown, unknown_00525a00);
 	}
 
 	return result;
@@ -1419,7 +1404,7 @@ void game_voice_update(
 			}
 			game_voice_update_players();
 			game_voice_update_chosen_peer();
-			unknown_00056b70(unknown_00527108);
+			voice_channels_update(unknown_00527108);
 			if (unknown_005259b8[0])
 			{
 				unknown_00055990(unknown_005259b8);
@@ -1447,7 +1432,7 @@ void GAME_VOICE_CALLBACK game_voice_local_data_ready(
 			((game_voice_player_flags(player_index)>>_game_voice_player_voice_off_bit)&1)) &&
 			!game_voice_player_not_allowed(player_index))
 		{
-			long unknown= unknown_00055960(unknown_005259b8, player_index);
+			long unknown= voice_targets_get(unknown_005259b8, player_index);
 
 			if (unknown)
 			{
@@ -1469,7 +1454,7 @@ void GAME_VOICE_CALLBACK game_voice_local_data_ready(
 						{
 							flag= TRUE;
 						}
-						unknown_00056130(player_index, unknown_00525a00, words, data, size, &flag);
+						voice_queues_add(player_index, unknown_00525a00, words, data, size, &flag);
 					}
 				}
 			}
@@ -1608,7 +1593,7 @@ boolean game_voice_unknown_00054890(
 				((game_voice_player_flags(player_index)>>_game_voice_player_voice_off_bit)&1)) &&
 				!game_voice_player_not_allowed(player_index))
 			{
-				long unknown= unknown_00055960(unknown_005259b8, player_index);
+				long unknown= voice_targets_get(unknown_005259b8, player_index);
 
 				if (unknown)
 				{
@@ -1890,6 +1875,6 @@ void game_voice_update_session_players(
 			memcpy(game_voice_session_player_identifiers+player_index*GAME_VOICE_PLAYER_IDENTIFIER_SIZE, identifier,
 				GAME_VOICE_PLAYER_IDENTIFIER_SIZE);
 		}
-		unknown_000560e0(unknown_00525a00);
+		voice_queues_reset(unknown_00525a00);
 	}
 }
