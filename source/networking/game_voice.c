@@ -33,9 +33,8 @@ boolean unknown_000596a0(byte **session);
 /* 0x00056380: something that 0x00525a00 does with three numbers */
 long unknown_00056380(long unknown4, byte *unknown, long unknown0, long unknown8);
 
-/* 0x000564c0, 0x00056220: more that 0x00525a00 does */
+/* 0x000564c0: more that 0x00525a00 does */
 void unknown_000564c0(long unknown4, byte *unknown, long unknown0);
-long unknown_00056220(byte *unknown, long unknown0);
 
 /* 0x000596d0: something of the network game that says where the session
 comes from; whether there is one */
@@ -757,7 +756,7 @@ long game_voice_unknown_00054990(
 
 	if (game_voice_active() && unknown_004c9888!=0)
 	{
-		result= unknown_00056220(unknown_00525a00, unknown);
+		result= voice_queues_size_for_peer(unknown_00525a00, unknown);
 	}
 
 	return result;

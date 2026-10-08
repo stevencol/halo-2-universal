@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 280.
+**Última actualización:** 2026-10-08, al terminar el hito 281.
 
 ## Dónde estamos
 
-- **1032 funciones descompiladas de 11.265: el 9,16 % del juego** (el
-  5,890 % de los bytes de código).
-- Las 1032 están comprobadas contra el ejecutable original: las 940 del
+- **1034 funciones descompiladas de 11.265: el 9,18 % del juego** (el
+  5,910 % de los bytes de código).
+- Las 1034 están comprobadas contra el ejecutable original: las 940 del
   hito 265 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile who each player talks to, each frame* (ver `git log`).
+- Último hito: *Decompile the queue of what a player said and how much goes to a console* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 527 funciones apuntadas pero sin descompilar (las que el código
-  llama); 439 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 525 funciones apuntadas pero sin descompilar (las que el código
+  llama); 437 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -111,9 +111,9 @@ Módulos (funciones hechas / archivo):
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
 - [x] Voz de los jugadores — `networking\voice.c` (22: completo, de
       `0x00055080` a `0x00055920`)
-- [ ] La voz entre consolas — `networking\voice_routing.c` (9: a quién
+- [ ] La voz entre consolas — `networking\voice_routing.c` (11: a quién
       habla cada jugador, las colas y quién oye a quién; va de
-      `0x00055960` en adelante y faltan unas 28 funciones)
+      `0x00055960` en adelante y faltan unas 26 funciones)
 - [ ] Matemáticas reales — `math\real_math.c` (40 de unas 50, con dos que están lejos de las demás)
 - [x] Matrices — `math\matrix_math.c` (26: completo)
 - [ ] Números aleatorios — `math\random_math.c` (2)
@@ -214,10 +214,10 @@ Módulos (funciones hechas / archivo):
       desde el hito 269).
 - [x] ~~`voice.c`~~ (hito 268): completo.
 - [x] ~~`game_voice.c`~~ (hito 278): completo.
-- [ ] **El resto de `voice_routing.c`**: de `0x00055b40` a `0x00056000`,
-      de `0x00056220` a `0x000564c0`, de `0x000565c0` a `0x00056990`,
-      `0x00056c60` y de `0x00056df0` en adelante (unas 28 funciones,
-      bastante grandes).
+- [ ] **El resto de `voice_routing.c`**: `0x00055c40`, `0x00055e10`,
+      `0x00056000`, `0x00056380`, `0x000564c0`, de `0x000565c0` a
+      `0x00056990`, `0x00056c60` y de `0x00056df0` en adelante (unas 26
+      funciones, bastante grandes).
 - [ ] **Los fondos de los objetos**: `0x000bc280`, `0x000bc380`,
       `0x000bf360`.
 - [ ] **Los otros pares de la tabla de `0x00453c00`**: `0x00081780`,

@@ -619,7 +619,7 @@ def run(t) -> None:
                 "game_voice_unknown_00054990",
                 random_.getrandbits(32),
                 globals=both,
-                externals={"unknown_00056220": with_525a00(random_.getrandbits(32), 0)},
+                externals={"voice_queues_size_for_peer": with_525a00(random_.getrandbits(32), 0)},
             )
 
             for value in (0x12345678, 0):

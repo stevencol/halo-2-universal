@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — La cola de lo que dice un jugador, y cuánto hay que mandar a cada consola
+
+Dos funciones en `networking/voice_routing.c`, de 590 bytes entre las dos. De 1032 funciones se pasa a
+1034, el 9,18 % de las del juego (el 5,910 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_queue_add` | `0x00055b40` | `networking/voice_routing.c` |
+| `voice_queues_size_for_peer` | `0x00056220` | `networking/voice_routing.c` |
+
+Eran `unknown_00055b40` y `unknown_00056220`.
+
+### Lo que se sabe
+
+- Cada cosa de una cola mide 18 bytes: los dos números de 16 bits que dicen
+  adónde va, un flag, el primer número otra vez y los 10 bytes de lo que
+  dijo el jugador. En una cola caben 15; cuando va a entrar la decimosexta,
+  la cola se vacía entera y se empieza de nuevo.
+- Con cada cosa que entra, la cola suma uno a la cuenta de cada consola a
+  la que va y apunta el bit de esa consola.
+- `voice_queues_size_for_peer` dice cuántos bytes hay que mandar a una
+  consola: 2, más 2 por cada cola que tenga algo para ella, más 11 por cada
+  cosa (13 si esa consola es la elegida para la voz, que por tanto recibe
+  algo más con cada una: seguramente a quién hay que reenviarla).
+- `voice_queue_add` pregunta qué consola es esta y no usa la respuesta.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo y las de `game_voice`.
+- Una cola con una cuenta que no es de una cola (negativa o enorme): el
+  juego escribe donde le lleve.
+- La batería completa del hito 278 y las mutaciones de los hitos 269 a 281
+  corren aparte o están pendientes; su resultado irá en una entrada
+  posterior.
+
 ## 2026-10-08 — A quién habla cada jugador, cada fotograma
 
 Dos funciones en `networking/voice_routing.c`, de 469 bytes entre las dos. De 1030 funciones se pasa a

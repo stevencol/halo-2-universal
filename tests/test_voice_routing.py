@@ -64,7 +64,7 @@ def run(t) -> None:
                     0x80346000,
                     size,
                     0x80347000,
-                    externals={"unknown_00055b40": gives(0)},
+                    externals={"voice_queue_add": gives(0)},
                 )
 
         for peer in (0, 5, 15):
@@ -193,3 +193,42 @@ def run(t) -> None:
                     Buffer(bytes(data)),
                     externals={"unknown_00056990": gives(unknown4), "unknown_000565c0": gives(0)},
                 )
+
+    # ---------- a queue
+
+    for active_ in (1, 0x80, 0):
+        # a count that is not of a queue is not tried: the game writes where it takes it
+        for count in (0, 1, 7, 14, 15, 16):
+            for words in (0, 1, 0x8000, 0xFFFF, 0x12345678, 0xFFFFFFFF, 0x00010000):
+                for size in (10, 0, 3, 9):
+                    data = bytearray(random_.randbytes(QUEUE_SIZE + 0x10))
+                    data[0] = active_
+                    struct.pack_into("<I", data, 4, count)
+                    t.check(
+                        "voice_queue_add",
+                        Buffer(struct.pack("<I", words)),
+                        Buffer(bytes(data)),
+                        Buffer(random_.randbytes(0x10)),
+                        size,
+                        Buffer(bytes((random_.choice((0, 1, 0x80)),))),
+                        externals={"game_voice_get_local_peer": gives(random_.choice((0, 3, NONE)))},
+                    )
+
+    for on in (1, 0, 0x80):
+        for enabled, initialized in active():
+            for peer in (0, 5, 15):
+                for chosen in (peer, 0, NONE, 7):
+                    for goes in (1, 0):
+                        data = queues(on)
+                        for player in range(16):
+                            at = 4 + player * QUEUE_SIZE
+                            data[at] = random_.choice((0, 1, 1, 0x80))
+                            struct.pack_into("<H", data, at + 8, random_.choice((0, 0xFFFF, 1 << peer, random_.getrandbits(16))))
+                            struct.pack_into("<16I", data, at + 0x130, *(random_.randint(0, 15) for _ in range(16)))
+                        t.check(
+                            "voice_queues_size_for_peer",
+                            Buffer(bytes(data)),
+                            peer,
+                            globals={**state(enabled, initialized), "unknown_004c9878": chosen},
+                            externals={"voice_queues_go_to_peer": gives(goes)},
+                        )

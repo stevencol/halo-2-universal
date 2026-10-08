@@ -17,10 +17,6 @@ voice.c, from 0x00055960 on.
 
 /* ---------- prototypes of functions not decompiled yet */
 
-/* 0x00055b40: puts what a player said in its queue */
-void __attribute__((stdcall)) unknown_00055b40(word *words, byte *queue, void *data, unsigned long size,
-	boolean *unknown);
-
 /* 0x00056f60, 0x00057080, 0x00057360, 0x000577d0: what is done each frame
 with who hears whom, in one state of the network game; 0x00057960: in the
 others */
@@ -101,7 +97,7 @@ void voice_queues_add(
 {
 	if (queues[VOICE_QUEUES_ON_OFFSET] && size==VOICE_QUEUE_DATA_SIZE)
 	{
-		unknown_00055b40(words, queues+VOICE_QUEUES_QUEUE_OFFSET+player_index*VOICE_QUEUE_SIZE, data,
+		voice_queue_add(words, queues+VOICE_QUEUES_QUEUE_OFFSET+player_index*VOICE_QUEUE_SIZE, data,
 			VOICE_QUEUE_DATA_SIZE, unknown);
 	}
 }
@@ -303,4 +299,78 @@ void voice_unknown_00527104_get_words(
 			unknown_000565c0(unknown, unknown4, words);
 		}
 	}
+}
+
+/* 0x00055b40: puts what a player said at the end of a queue that is in use,
+with where it goes; the queue is emptied first if it is full. The game asks
+which console this one is and does nothing with the answer */
+void VOICE_ROUTING_CALLBACK voice_queue_add(
+	const word *words,
+	byte *queue,
+	const void *data,
+	unsigned long size,
+	const boolean *unknown)
+{
+	if (queue[VOICE_QUEUE_ACTIVE_OFFSET])
+	{
+		long *count= (long *)(queue+VOICE_QUEUE_COUNT_OFFSET);
+		word *peers= (word *)(queue+VOICE_QUEUE_PEERS_OFFSET);
+		long *peer_counts= (long *)(queue+VOICE_QUEUE_PEER_COUNTS_OFFSET);
+		byte *entry;
+		long peer;
+
+		game_voice_get_local_peer();
+		if (*count+1>=MAXIMUM_VOICE_QUEUE_ENTRIES)
+		{
+			*count= 0;
+			*peers= 0;
+			memset(queue+VOICE_QUEUE_ENTRIES_OFFSET, 0, VOICE_QUEUE_ENTRIES_SIZE);
+			memset(peer_counts, 0, VOICE_QUEUE_PEER_COUNTS_SIZE);
+		}
+		entry= queue+VOICE_QUEUE_ENTRIES_OFFSET+*count*VOICE_QUEUE_ENTRY_SIZE;
+		*(word *)(entry+VOICE_QUEUE_ENTRY_PEERS_OFFSET)= words[0];
+		for (peer= 0; peer<MAXIMUM_VOICE_ROUTING_PLAYERS; peer++)
+		{
+			if (words[0]&(1u<<peer))
+			{
+				peer_counts[peer]++;
+			}
+		}
+		memcpy(entry+VOICE_QUEUE_ENTRY_WORDS_OFFSET, words, 2*sizeof(word));
+		entry[VOICE_QUEUE_ENTRY_FLAG_OFFSET]= *unknown;
+		memcpy(entry+VOICE_QUEUE_ENTRY_DATA_OFFSET, data, size);
+		*peers|= words[0];
+		*count= *count+1;
+	}
+}
+
+/* 0x00056220: how much there is to send to a console of what the queues
+have; 0 if nothing goes to it */
+long voice_queues_size_for_peer(
+	const byte *queues,
+	long peer)
+{
+	long size= 0;
+
+	if (queues[VOICE_QUEUES_ON_OFFSET] && voice_queues_go_to_peer(peer, queues))
+	{
+		long chosen_peer= voice_routing_active() ? unknown_004c9878 : 0;
+		boolean is_chosen= chosen_peer==peer;
+		long player_index;
+
+		size= VOICE_PACKET_HEADER_SIZE;
+		for (player_index= 0; player_index<MAXIMUM_VOICE_ROUTING_PLAYERS; player_index++)
+		{
+			const byte *queue= queues+VOICE_QUEUES_QUEUE_OFFSET+player_index*VOICE_QUEUE_SIZE;
+
+			if (queue[VOICE_QUEUE_ACTIVE_OFFSET] &&
+				((1u<<(peer&0x1F))&*(const word *)(queue+VOICE_QUEUE_PEERS_OFFSET)))
+			{
+				size+= (is_chosen*VOICE_PACKET_CHOSEN_PEER_ENTRY_EXTRA_SIZE+VOICE_PACKET_ENTRY_SIZE)*
+					*(const long *)(queue+VOICE_QUEUE_PEER_COUNTS_OFFSET+peer*sizeof(long))+VOICE_PACKET_QUEUE_SIZE;
+			}
+		}
+	}
+
+	return size;
 }
