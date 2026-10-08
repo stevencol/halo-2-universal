@@ -10,6 +10,7 @@ the file is a guess, and so are the names of its functions.
 
 #include "cseries/cseries.h"
 #include "memory/memory_pool.h"
+#include "networking/voice.h"
 
 /* ---------- constants */
 
@@ -37,14 +38,6 @@ enum
 	_sound_memory_voice_full
 };
 
-/* what the voice is told that it is, in each of them */
-enum
-{
-	_voice_kind_none,
-	_voice_kind_session,
-	_voice_kind_full
-};
-
 /* as main_game.c calls those that take memory when a map is loaded */
 #define SOUND_MEMORY_CALLBACK __attribute__((stdcall))
 
@@ -58,25 +51,9 @@ struct sound_memory_allocation
 	long unknown;
 };
 
-/* 0x00476fc8: the voice of the players of the network game. Only what this
-file sets is known */
-struct voice_globals
-{
-	void *unknown0;
-	boolean initialized;
-	byte pad5[3];
-	long kind;
-	unsigned long unknownC;
-	/* of the console's library; NULL if there is none */
-	void *engine;
-	byte unknown14[0x7C];
-};
-
 #if defined(__i386__)
 typedef char verify_sound_memory_allocation_size[
 	sizeof(struct sound_memory_allocation) == 0x8 ? 1 : -1];
-typedef char verify_voice_globals_size[
-	sizeof(struct voice_globals) == 0x90 ? 1 : -1];
 #endif
 
 /* ---------- prototypes/SOUND_MEMORY.C */
@@ -94,6 +71,5 @@ extern boolean sound_memory_use_other_pool;
 extern long sound_memory_voice;
 extern long sound_memory_voice_kind;
 extern struct sound_memory_allocation sound_memory_allocation;
-extern struct voice_globals voice_globals;
 
 #endif

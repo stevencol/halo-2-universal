@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — La voz de los jugadores: lo que se prepara antes de arrancarla
+
+Tres funciones en un archivo nuevo, `networking/voice.c`, de 299 bytes entre las tres. De 934 funciones se pasa a
+937, el 8,32 % de las del juego (el 5,578 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `voice_reset_controller_levels` | `0x000556a0` | `networking/voice.c` |
+| `voice_reset_controllers` | `0x00055720` | `networking/voice.c` |
+| `voice_engine_parameters_new` | `0x00055780` | `networking/voice.c` |
+
+Las dos primeras eran `unknown_000556a0` y `unknown_00055720`, las que
+`sound_memory_pool_new` (hito 263) llama antes de arrancar la voz. La
+tercera la llama quien la arranca, `0x00055810`, que es lo siguiente.
+
+### Lo que se sabe
+
+- `voice_globals` (`0x00476fc8`) pasa a `networking/voice.h` y gana dos
+  campos: dieciséis reales desde `0x14` (cuatro por mando, que empiezan en
+  -1) y un número por mando desde `0x54` (3 en una campaña dentro de una
+  sesión, 2 en lo demás).
+- A la biblioteca de la consola se le piden nueve números para arrancar la
+  voz (`voice_engine_parameters`). Con la voz completa los de `0` y `8` son
+  15 y 5, y si no 0: casan con quince jugadores remotos, que son los de una
+  partida de dieciséis. El de `4` es siempre 4, como los mandos.
+- El de `0x10` es lo primero de `unknown_00510c90`, que ya estaba en
+  `sound_manager.c`: lo que el juego sabe de los efectos del procesador de
+  sonido de la consola. Sin eso la voz no arranca.
+- Los bucles sobre los mandos no cuentan de 0 a 3: el juego pregunta cada
+  vez cuál es el mando siguiente con una tabla de saltos (0, 1, 2, 3 y
+  fin). Está escrito igual, en `voice_next_controller`.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas del archivo y las de `sound_memory`.
+
+### Mutaciones
+
+Veinte cambios a mano: las pruebas notan los veinte.
+
 ## 2026-10-08 — El fondo de memoria de la voz, al cargar un mapa
 
 Dos funciones en `sound/sound_memory.c`, que queda completo. De 932 funciones se pasa a

@@ -96,8 +96,8 @@ def run(t) -> None:
                     Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
                 ],
                 externals={
-                    "unknown_000556a0": with_voice(),
-                    "unknown_00055720": with_voice(),
+                    "voice_reset_controller_levels": with_voice(),
+                    "voice_reset_controllers": with_voice(),
                     "unknown_00055810": with_voice(random_.choice((1, 0, 0x100, 0xFFFFFF01))),
                 },
                 extra=[memory],

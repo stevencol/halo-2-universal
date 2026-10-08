@@ -213,4 +213,4 @@ address,name,source
 004c9890,sound_memory_voice,source/sound/sound_memory.c
 004c9894,sound_memory_voice_kind,source/sound/sound_memory.c
 00476fbc,sound_memory_allocation,source/sound/sound_memory.c
-00476fc8,voice_globals,source/sound/sound_memory.c
+00476fc8,voice_globals,source/networking/voice.c

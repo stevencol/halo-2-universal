@@ -638,8 +638,9 @@ address,name,source,arguments,returns,convention
 002157e0,saved_game_files_allocate_memory,source/saved games/saved_game_files.c,stack,void
 000533e0,sound_memory_pool_delete,source/sound/sound_memory.c,,void
 00053310,sound_memory_pool_new,source/sound/sound_memory.c,stack,void,stdcall
-000556a0,unknown_000556a0,,edx,void
-00055720,unknown_00055720,,edx,void
+000556a0,voice_reset_controller_levels,source/networking/voice.c,edx,void
+00055720,voice_reset_controllers,source/networking/voice.c,edx,void
+00055780,voice_engine_parameters_new,source/networking/voice.c,ecx stack,bool
 00055810,unknown_00055810,,edi,bool
 000550b0,unknown_000550b0,,eax,void
 000b3db0,unknown_000b3db0,,,void

@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 263.
+**Última actualización:** 2026-10-08, al terminar el hito 264.
 
 ## Dónde estamos
 
-- **934 funciones descompiladas de 11.265: el 8,29 % del juego** (el
-  5,568 % de los bytes de código).
-- Las 934 están comprobadas contra el ejecutable original: las 931 del
+- **937 funciones descompiladas de 11.265: el 8,32 % del juego** (el
+  5,578 % de los bytes de código).
+- Las 937 están comprobadas contra el ejecutable original: las 931 del
   hito 261 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the making and the giving back of the voice pool* (ver `git log`).
+- Último hito: *Start voice.c with three small functions* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 488 funciones apuntadas pero sin descompilar (las que el código
-  llama); 401 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 486 funciones apuntadas pero sin descompilar (las que el código
+  llama); 399 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -109,6 +109,9 @@ Módulos (funciones hechas / archivo):
       terminar líneas o triángulos; faltan `0x0001e930` y `0x0001eb00`, que
       preparan la consola para dibujar)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
+- [ ] Voz de los jugadores — `networking\voice.c` (3; faltan las que la
+      arrancan y la paran, `0x00055810` y `0x000550b0`, y el resto del
+      archivo, que va de `0x00054f20` a `0x00055990` más o menos)
 - [ ] Matemáticas reales — `math\real_math.c` (40 de unas 50, con dos que están lejos de las demás)
 - [x] Matrices — `math\matrix_math.c` (26: completo)
 - [ ] Números aleatorios — `math\random_math.c` (2)
@@ -203,8 +206,8 @@ Módulos (funciones hechas / archivo):
 - [x] ~~El fondo de memoria de la interfaz~~ (hito 38).
 - [x] ~~El fondo de la voz~~ (hito 263): `sound_memory.c` completo.
 - [ ] **La voz de los jugadores** (`voice_globals`, `0x00476fc8`): lo que
-      la arranca y la para (`0x000550b0`, `0x000556a0`, `0x00055720`,
-      `0x00055780`, `0x00055810`) y el módulo que la usa, de `0x00053420`
+      la arranca y la para (`0x000550b0`, `0x00055080` y `0x00055810`; lo
+      que preparan antes está en el hito 264) y el módulo que la usa, de `0x00053420`
       a `0x000541a0` (unas 39 funciones pequeñas).
 - [ ] **Los fondos de los objetos**: `0x000bc280`, `0x000bc380`,
       `0x000bf360`.

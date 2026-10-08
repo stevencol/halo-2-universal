@@ -16,10 +16,6 @@ are the names of its functions.
 
 /* ---------- prototypes of functions not decompiled yet */
 
-/* 0x000556a0, 0x00055720: fill in parts of the voice, before it is started */
-void unknown_000556a0(struct voice_globals *voice);
-void unknown_00055720(struct voice_globals *voice);
-
 /* 0x00055810: starts the voice with the console's library; whether it
 could */
 boolean unknown_00055810(struct voice_globals *voice);
@@ -47,9 +43,6 @@ struct sound_memory_allocation sound_memory_allocation=
 	{&saved_game_files_allocation_functions},
 	SOUND_MEMORY_ALLOCATION_UNKNOWN
 };
-
-/* 0x00476fc8 */
-struct voice_globals voice_globals;
 
 /* ---------- code */
 
@@ -140,8 +133,8 @@ void SOUND_MEMORY_CALLBACK sound_memory_pool_new(
 		{
 			voice_globals.engine= NULL;
 			voice_globals.kind= kind;
-			unknown_000556a0(&voice_globals);
-			unknown_00055720(&voice_globals);
+			voice_reset_controller_levels(&voice_globals);
+			voice_reset_controllers(&voice_globals);
 			voice_globals.initialized= unknown_00055810(&voice_globals);
 		}
 	}
