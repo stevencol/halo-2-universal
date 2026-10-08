@@ -105,6 +105,29 @@ enum
 	NETWORK_SESSION_UNKNOWN5DD8_OFFSET= 0x5DD8,
 	NETWORK_SESSION_UNKNOWN5DDC_OFFSET= 0x5DDC,
 	NETWORK_SESSION_UNKNOWN5DDC_SIZE= 0x44,
+	/* and more that the console that runs the session sets: 0x1C bytes; two
+	numbers that are there if a byte says so; a number; a byte; eight bytes
+	that are there if a byte says so; and two things, of 0x6C and of 0xE40
+	bytes, that are there if a byte says so */
+	NETWORK_SESSION_UNKNOWN49CC_OFFSET= 0x49CC,
+	NETWORK_SESSION_UNKNOWN49CC_SIZE= 0x1C,
+	NETWORK_SESSION_UNKNOWN49E8_OFFSET= 0x49E8,
+	NETWORK_SESSION_UNKNOWN49F0_OFFSET= 0x49F0,
+	NETWORK_SESSION_UNKNOWN49FC_OFFSET= 0x49FC,
+	NETWORK_SESSION_UNKNOWN4A00_SIZE= 0x308,
+	NETWORK_SESSION_UNKNOWN4998_OFFSET= 0x4998,
+	NETWORK_SESSION_UNKNOWN4999_OFFSET= 0x4999,
+	NETWORK_SESSION_UNKNOWN4999_SIZE= 0x8,
+	NETWORK_SESSION_UNKNOWN4F20_OFFSET= 0x4F20,
+	NETWORK_SESSION_UNKNOWN4F24_OFFSET= 0x4F24,
+	NETWORK_SESSION_UNKNOWN4F24_SIZE= 0x6C,
+	NETWORK_SESSION_UNKNOWN4F90_OFFSET= 0x4F90,
+	NETWORK_SESSION_UNKNOWN4F90_SIZE= 0xE40,
+	/* in its second state, the session keeps an address of the game too,
+	four bytes before where it keeps one in the first */
+	NETWORK_SESSION_STATE2_ADDRESS_OFFSET= 0x7444,
+	/* in a thing that a session is given: what a session is known by */
+	NETWORK_SESSION_UNKNOWN5DDC_IDENTIFIER_OFFSET= 0x4,
 	/* in who is in the session: how many consoles, and the consoles */
 	NETWORK_SESSION_PEER_COUNT_OFFSET= 0x54,
 	NETWORK_SESSION_PEER_ARRAY_OFFSET= 0x58,
@@ -356,6 +379,24 @@ boolean network_session_host_set_local(byte *session);
 boolean NETWORK_SESSION_CALLBACK network_session_host_set_player_unknownA8(long player_index, byte *session,
 	const byte *unknownA8);
 boolean NETWORK_SESSION_CALLBACK network_session_host_unknown_0005aeb0(byte *session, long unknown);
+boolean network_session_unknown_0005c190(const byte *unknown, const byte *session);
+boolean network_session_host_set_unknown49f0(const long *unknown49f0, byte *session);
+boolean network_session_host_clear_unknown49fc(byte *session);
+boolean network_session_host_set_unknown49f8(byte *session, long unknown49f8);
+boolean network_session_host_set_unknown49cc(byte *session, const byte *unknown49cc);
+boolean NETWORK_SESSION_CALLBACK network_session_host_set_unknown4a00(const byte *unknown4a00, byte *session);
+boolean NETWORK_SESSION_CALLBACK network_session_host_set_unknown5ddc(const byte *unknown5ddc, byte *session);
+boolean NETWORK_SESSION_CALLBACK network_session_host_set_maximum_players(byte *session, long maximum_players);
+boolean NETWORK_SESSION_CALLBACK network_session_host_set_random(byte *session, unsigned long low,
+	unsigned long high);
+boolean network_session_host_clear_unknown49c4(byte *session);
+boolean NETWORK_SESSION_CALLBACK network_session_host_set_unknown4da8(byte *session, long unknown4da8);
+boolean NETWORK_SESSION_CALLBACK network_session_host_set_unknown4f24(const byte *unknown4f24, byte *session,
+	const byte *unknown4f90);
+boolean network_session_host_set_unknown4999(const byte *unknown4999, byte *session);
+void network_session_host_set_chosen_peer(byte *session, long peer_index);
+boolean network_session_matches_state2_address(const struct transport_address *address, const byte *session);
+void network_session_unknown_0005c990(const struct transport_address *address, byte *session);
 boolean network_session_in_last_three_states(const byte *session);
 boolean network_session_get_unknown49c4(const byte *session);
 long network_session_get_unknown49c8(const byte *session);

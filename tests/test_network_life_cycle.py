@@ -1187,3 +1187,98 @@ def run(t) -> None:
             # only a byte of the first thing counts: the game leaves the rest of the session's address in it
             externals={"unknown_000614a0": lambda harness, arguments: (0, (arguments[0] & 0xFF, *arguments[1:]))},
         )
+
+    # ---------- the console that runs a session changes what the session knows
+
+    def hosted() -> bytearray:
+        data = with_peers()
+        for at in (0x49C4, 0x49E8, 0x49FC, 0x49FD, 0x4998, 0x4F20, 0x5DD8):
+            data[at] = random_.choice((0, 1, 1, 0x80))
+        return data
+
+    for n in range(160):
+        data = hosted()
+        thing = bytearray(random_.randbytes(0x44))
+        if n % 3 == 0:
+            thing[4:12] = data[0x1C:0x24]
+        elif n % 3 == 1:
+            thing[4:11] = data[0x1C:0x23]
+        t.check(
+            "network_session_unknown_0005c190",
+            Buffer(bytes(thing)) if n % 9 else 0,
+            Buffer(bytes(data)),
+        )
+    for n in range(100):
+        t.check("network_session_host_set_unknown49f0", maybe(8), Buffer(bytes(hosted())))
+    for n in range(80):
+        t.check("network_session_host_clear_unknown49fc", Buffer(bytes(hosted())))
+        t.check("network_session_host_clear_unknown49c4", Buffer(bytes(hosted())))
+    for n in range(100):
+        data = hosted()
+        same = struct.unpack_from("<I", data, 0x49F8)[0]
+        t.check("network_session_host_set_unknown49f8", Buffer(bytes(data)), random_.choice((same, same ^ 1, random_.getrandbits(32))))
+    for n in range(120):
+        data = hosted()
+        thing = bytearray(data[0x49CC : 0x49CC + 0x1C])
+        if n % 3:
+            thing[random_.choice((0, 0x1B, random_.randrange(0x1C)))] ^= 4
+        t.check("network_session_host_set_unknown49cc", Buffer(bytes(data)), Buffer(bytes(thing)))
+    for n in range(120):
+        t.check(
+            "network_session_host_set_unknown4a00",
+            maybe(0x308),
+            Buffer(bytes(hosted())),
+            externals={"unknown_00063340": lambda harness, arguments, right=random_.choice((1, 1, 1, 0x80, 0, 0x100)): right},
+        )
+    for n in range(160):
+        data = hosted()
+        thing = bytearray(random_.randbytes(0x44))
+        if n % 4 == 0:
+            thing[4:12] = data[0x1C:0x24]
+        t.check(
+            "network_session_host_set_unknown5ddc",
+            Buffer(bytes(thing)) if n % 5 else 0,
+            Buffer(bytes(data)),
+        )
+    for n in range(60):
+        t.check("network_session_host_set_maximum_players", Buffer(bytes(hosted())), random_.getrandbits(32))
+        t.check("network_session_host_set_random", Buffer(bytes(hosted())), random_.getrandbits(32), random_.getrandbits(32))
+        t.check("network_session_host_set_unknown4da8", Buffer(bytes(hosted())), random_.getrandbits(32))
+        t.check("network_session_host_set_chosen_peer", Buffer(bytes(hosted())), random_.choice((NONE, 0, 3, random_.getrandbits(32))))
+    for n in range(100):
+        there = n % 4 != 0
+        t.check(
+            "network_session_host_set_unknown4f24",
+            Buffer(random_.randbytes(0x6C)) if there else 0,
+            Buffer(bytes(hosted())),
+            Buffer(random_.randbytes(0xE40)) if there or n % 8 else 0,
+        )
+    for n in range(100):
+        t.check("network_session_host_set_unknown4999", maybe(8), Buffer(bytes(hosted())))
+
+    # ---------- the address that a session keeps in its second state
+
+    for name in ("network_session_matches_state2_address", "network_session_unknown_0005c990"):
+        for n in range(240):
+            data = whole_session()
+            struct.pack_into("<I", data, STATE, random_.choice((2, 2, 2, 0, 1, 5)))
+            size = random_.choice((4, 4, 4, 16, 6, 1, 0, 0xFFFF, 0x8004))
+            address = bytearray(random_.randbytes(0x14))
+            struct.pack_into("<H", address, 0x12, size)
+            kept = bytearray(address)
+            way = random_.randrange(6)
+            if way == 0 and 0 < size <= 16:
+                kept[size - 1] ^= 0x20
+            elif way == 1 and size < 16:
+                kept[size] ^= 0x20
+            elif way == 2:
+                struct.pack_into("<H", kept, 0x12, random_.choice((4, 16, 6, 0)))
+            elif way == 3:
+                kept[0] ^= 1
+            data[0x7444 : 0x7444 + 0x14] = kept
+            t.check(
+                name,
+                Buffer(bytes(address)),
+                Buffer(bytes(data)),
+                externals={"unknown_0005a520": lambda harness, arguments: 0},
+            )

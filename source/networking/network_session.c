@@ -45,6 +45,14 @@ void __attribute__((stdcall)) unknown_00075e80(boolean unknown, long channel_ind
 /* 0x0011ca80, of cseries.c */
 long language_from_xbox_language(long xbox_language);
 
+/* 0x00063340: whether a thing of 0x308 bytes that a session is given is
+right */
+boolean unknown_00063340(const byte *unknown4a00);
+
+/* 0x0005a520: something that is done with a session: see
+network_life_cycle.c */
+void unknown_0005a520(byte *session);
+
 /* 0x000614a0: something that the console that runs a session does with it
 in its fifth state, with a byte and a number */
 void unknown_000614a0(boolean unknown, byte *session, long unknown4);
@@ -1619,4 +1627,345 @@ boolean NETWORK_SESSION_CALLBACK network_session_get_unknown5ddc(
 	memcpy(unknown5ddc, session+NETWORK_SESSION_UNKNOWN5DDC_OFFSET, NETWORK_SESSION_UNKNOWN5DDC_SIZE);
 
 	return TRUE;
+}
+
+/* whether a session is in one of the four states of the console that runs
+it: the game asks first whether it says who is in it, in each function that
+changes what the session knows */
+static inline __attribute__((always_inline)) boolean network_session_is_host(
+	const byte *session)
+{
+	return network_session_established(session) && network_session_unknown_00058d20(session);
+}
+
+/* what the session knows has changed: the number at its start counts it */
+static inline __attribute__((always_inline)) void network_session_parameters_changed(
+	byte *session)
+{
+	(*(long *)(session+NETWORK_SESSION_UNKNOWN4978_OFFSET))++;
+}
+
+/* whether an address of the game is one that a session keeps: of the same
+size, which is more than none, and with the same bytes */
+static inline __attribute__((always_inline)) boolean network_session_address_equal(
+	const struct transport_address *address,
+	const struct transport_address *kept)
+{
+	return address->address_size>0 && address->address_size==kept->address_size &&
+		memcmp(address, kept, address->address_size)==0;
+}
+
+/* 0x0005c190: FALSE if a session has a state and a thing that it is given
+has, after its first four bytes, what the session is known by; TRUE if not,
+or with no thing */
+boolean network_session_unknown_0005c190(
+	const byte *unknown,
+	const byte *session)
+{
+	if (network_session_state(session)!=_network_session_state_none && unknown &&
+		memcmp(unknown+NETWORK_SESSION_UNKNOWN5DDC_IDENTIFIER_OFFSET, session+NETWORK_SESSION_IDENTIFIER_OFFSET,
+			NETWORK_SESSION_IDENTIFIER_SIZE)==0)
+	{
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+/* 0x0005c1c0: the console that runs a session sets the two numbers of
+0x49F0, or says that there are none; whether it is the one that runs it */
+boolean network_session_host_set_unknown49f0(
+	const long *unknown49f0,
+	byte *session)
+{
+	if (!network_session_is_host(session))
+	{
+		return FALSE;
+	}
+	session[NETWORK_SESSION_UNKNOWN49E8_OFFSET]= unknown49f0!=NULL;
+	if (unknown49f0)
+	{
+		*(long *)(session+NETWORK_SESSION_UNKNOWN49F0_OFFSET)= unknown49f0[0];
+		*(long *)(session+NETWORK_SESSION_UNKNOWN49F0_OFFSET+sizeof(long))= unknown49f0[1];
+	}
+	else
+	{
+		*(long *)(session+NETWORK_SESSION_UNKNOWN49F0_OFFSET)= 0;
+		*(long *)(session+NETWORK_SESSION_UNKNOWN49F0_OFFSET+sizeof(long))= 0;
+	}
+	network_session_parameters_changed(session);
+
+	return TRUE;
+}
+
+/* 0x0005c240: the console that runs a session clears the byte of 0x49FC,
+if it was set; whether it is the one that runs it */
+boolean network_session_host_clear_unknown49fc(
+	byte *session)
+{
+	if (!network_session_is_host(session))
+	{
+		return FALSE;
+	}
+	if (session[NETWORK_SESSION_UNKNOWN49FC_OFFSET])
+	{
+		session[NETWORK_SESSION_UNKNOWN49FC_OFFSET]= FALSE;
+		network_session_parameters_changed(session);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005c290: the console that runs a session sets the number of 0x49F8, if
+it is another; whether it is the one that runs it */
+boolean network_session_host_set_unknown49f8(
+	byte *session,
+	long unknown49f8)
+{
+	if (!network_session_is_host(session))
+	{
+		return FALSE;
+	}
+	if (*(const long *)(session+NETWORK_SESSION_UNKNOWN49F8_OFFSET)!=unknown49f8)
+	{
+		*(long *)(session+NETWORK_SESSION_UNKNOWN49F8_OFFSET)= unknown49f8;
+		network_session_parameters_changed(session);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005c2e0: the console that runs a session sets the 0x1C bytes of
+0x49CC, if they are others; whether it is the one that runs it */
+boolean network_session_host_set_unknown49cc(
+	byte *session,
+	const byte *unknown49cc)
+{
+	if (!network_session_is_host(session))
+	{
+		return FALSE;
+	}
+	if (memcmp(unknown49cc, session+NETWORK_SESSION_UNKNOWN49CC_OFFSET, NETWORK_SESSION_UNKNOWN49CC_SIZE)!=0)
+	{
+		memcpy(session+NETWORK_SESSION_UNKNOWN49CC_OFFSET, unknown49cc, NETWORK_SESSION_UNKNOWN49CC_SIZE);
+		network_session_parameters_changed(session);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005c350: the console that runs a session sets the thing of 0x4A00, or
+says that there is none; whether it could: it has to be the one that runs
+it, and unknown_00063340 has to say that the thing is right */
+boolean NETWORK_SESSION_CALLBACK network_session_host_set_unknown4a00(
+	const byte *unknown4a00,
+	byte *session)
+{
+	if (!network_session_is_host(session))
+	{
+		return FALSE;
+	}
+	if (unknown4a00)
+	{
+		if (!unknown_00063340(unknown4a00))
+		{
+			return FALSE;
+		}
+		session[NETWORK_SESSION_UNKNOWN49FD_OFFSET]= TRUE;
+		memcpy(session+NETWORK_SESSION_UNKNOWN4A00_OFFSET, unknown4a00, NETWORK_SESSION_UNKNOWN4A00_SIZE);
+	}
+	else
+	{
+		session[NETWORK_SESSION_UNKNOWN49FD_OFFSET]= FALSE;
+		memset(session+NETWORK_SESSION_UNKNOWN4A00_OFFSET, 0, NETWORK_SESSION_UNKNOWN4A00_SIZE);
+	}
+	network_session_parameters_changed(session);
+
+	return TRUE;
+}
+
+/* 0x0005c3f0: the console that runs a session sets the thing of 0x5DDC, or
+says that there is none; whether it could: it has to be the one that runs
+it, and the thing cannot have what this session is known by */
+boolean NETWORK_SESSION_CALLBACK network_session_host_set_unknown5ddc(
+	const byte *unknown5ddc,
+	byte *session)
+{
+	if (!network_session_is_host(session))
+	{
+		return FALSE;
+	}
+	if (unknown5ddc)
+	{
+		if (!network_session_unknown_0005c190(unknown5ddc, session))
+		{
+			return FALSE;
+		}
+		session[NETWORK_SESSION_UNKNOWN5DD8_OFFSET]= TRUE;
+		memcpy(session+NETWORK_SESSION_UNKNOWN5DDC_OFFSET, unknown5ddc, NETWORK_SESSION_UNKNOWN5DDC_SIZE);
+	}
+	else
+	{
+		session[NETWORK_SESSION_UNKNOWN5DD8_OFFSET]= FALSE;
+		memset(session+NETWORK_SESSION_UNKNOWN5DDC_OFFSET, 0, NETWORK_SESSION_UNKNOWN5DDC_SIZE);
+	}
+	network_session_parameters_changed(session);
+
+	return TRUE;
+}
+
+/* 0x0005c490: the console that runs a session sets the most players that
+it can have; whether it is the one that runs it */
+boolean NETWORK_SESSION_CALLBACK network_session_host_set_maximum_players(
+	byte *session,
+	long maximum_players)
+{
+	if (!network_session_is_host(session))
+	{
+		return FALSE;
+	}
+	*(long *)(session+NETWORK_SESSION_UNKNOWN4994_OFFSET)= maximum_players;
+	network_session_parameters_changed(session);
+
+	return TRUE;
+}
+
+/* 0x0005c4e0: the console that runs a session sets its eight bytes made at
+random; whether it is the one that runs it */
+boolean NETWORK_SESSION_CALLBACK network_session_host_set_random(
+	byte *session,
+	unsigned long low,
+	unsigned long high)
+{
+	if (!network_session_is_host(session))
+	{
+		return FALSE;
+	}
+	*(unsigned long *)(session+NETWORK_SESSION_RANDOM_OFFSET)= low;
+	network_session_parameters_changed(session);
+	*(unsigned long *)(session+NETWORK_SESSION_RANDOM_OFFSET+sizeof(long))= high;
+
+	return TRUE;
+}
+
+/* 0x0005c530: the console that runs a session clears the byte of 0x49C4;
+whether it is the one that runs it */
+boolean network_session_host_clear_unknown49c4(
+	byte *session)
+{
+	if (!network_session_is_host(session))
+	{
+		return FALSE;
+	}
+	session[NETWORK_SESSION_UNKNOWN49C4_OFFSET]= FALSE;
+	network_session_parameters_changed(session);
+
+	return TRUE;
+}
+
+/* 0x0005c570: the console that runs a session sets the number of 0x4DA8;
+whether it is the one that runs it */
+boolean NETWORK_SESSION_CALLBACK network_session_host_set_unknown4da8(
+	byte *session,
+	long unknown4da8)
+{
+	if (!network_session_is_host(session))
+	{
+		return FALSE;
+	}
+	*(long *)(session+NETWORK_SESSION_UNKNOWN4DA8_OFFSET)= unknown4da8;
+	network_session_parameters_changed(session);
+
+	return TRUE;
+}
+
+/* 0x0005c5c0: the console that runs a session sets the two things of 0x4F24
+and 0x4F90, or says that there are none; whether it is the one that runs
+it */
+boolean NETWORK_SESSION_CALLBACK network_session_host_set_unknown4f24(
+	const byte *unknown4f24,
+	byte *session,
+	const byte *unknown4f90)
+{
+	if (!network_session_is_host(session))
+	{
+		return FALSE;
+	}
+	if (unknown4f24)
+	{
+		session[NETWORK_SESSION_UNKNOWN4F20_OFFSET]= TRUE;
+		memcpy(session+NETWORK_SESSION_UNKNOWN4F24_OFFSET, unknown4f24, NETWORK_SESSION_UNKNOWN4F24_SIZE);
+		memcpy(session+NETWORK_SESSION_UNKNOWN4F90_OFFSET, unknown4f90, NETWORK_SESSION_UNKNOWN4F90_SIZE);
+	}
+	else
+	{
+		session[NETWORK_SESSION_UNKNOWN4F20_OFFSET]= FALSE;
+		memset(session+NETWORK_SESSION_UNKNOWN4F24_OFFSET, 0, NETWORK_SESSION_UNKNOWN4F24_SIZE);
+		memset(session+NETWORK_SESSION_UNKNOWN4F90_OFFSET, 0, NETWORK_SESSION_UNKNOWN4F90_SIZE);
+	}
+	network_session_parameters_changed(session);
+
+	return TRUE;
+}
+
+/* 0x0005c660: the console that runs a session sets the eight bytes of
+0x4999, or says that there are none; whether it is the one that runs it */
+boolean network_session_host_set_unknown4999(
+	const byte *unknown4999,
+	byte *session)
+{
+	if (!network_session_is_host(session))
+	{
+		return FALSE;
+	}
+	if (unknown4999)
+	{
+		session[NETWORK_SESSION_UNKNOWN4998_OFFSET]= TRUE;
+		memcpy(session+NETWORK_SESSION_UNKNOWN4999_OFFSET, unknown4999, NETWORK_SESSION_UNKNOWN4999_SIZE);
+	}
+	else
+	{
+		session[NETWORK_SESSION_UNKNOWN4998_OFFSET]= FALSE;
+	}
+	network_session_parameters_changed(session);
+
+	return TRUE;
+}
+
+/* 0x0005c6d0: the console that runs a session chooses a console for
+something: see network_session_get_chosen_peer. Nothing if it is not the one
+that runs it */
+void network_session_host_set_chosen_peer(
+	byte *session,
+	long peer_index)
+{
+	if (network_session_is_host(session))
+	{
+		*(long *)(session+NETWORK_SESSION_UNKNOWN5E20_OFFSET)= peer_index;
+		network_session_parameters_changed(session);
+	}
+}
+
+/* 0x0005c940: whether an address of the game is the one that a session in
+its second state keeps */
+boolean network_session_matches_state2_address(
+	const struct transport_address *address,
+	const byte *session)
+{
+	return network_session_state(session)==_network_session_state2 && network_session_address_equal(address,
+		(const struct transport_address *)(session+NETWORK_SESSION_STATE2_ADDRESS_OFFSET));
+}
+
+/* 0x0005c990: unknown_0005a520 is done with a session in its second state,
+if an address of the game is the one that it keeps. The game has
+network_session_matches_state2_address in the function itself */
+void network_session_unknown_0005c990(
+	const struct transport_address *address,
+	byte *session)
+{
+	if (network_session_state(session)==_network_session_state2 && network_session_address_equal(address,
+		(const struct transport_address *)(session+NETWORK_SESSION_STATE2_ADDRESS_OFFSET)))
+	{
+		unknown_0005a520(session);
+	}
 }

@@ -824,7 +824,23 @@ address,name,source,arguments,returns,convention
 0005b180,network_session_get_maximum_players,source/networking/network_session.c,edx,int
 0005b1a0,network_session_get_unknown5ddc,source/networking/network_session.c,edx stack,bool,stdcall
 000614a0,unknown_000614a0,,eax ebx ecx,void
-0005c6d0,unknown_0005c6d0,,ecx stack,void
+0005c6d0,network_session_host_set_chosen_peer,source/networking/network_session.c,ecx stack,void
+0005c190,network_session_unknown_0005c190,source/networking/network_session.c,eax edx,bool
+0005c1c0,network_session_host_set_unknown49f0,source/networking/network_session.c,esi edx,bool
+0005c240,network_session_host_clear_unknown49fc,source/networking/network_session.c,edx,bool
+0005c290,network_session_host_set_unknown49f8,source/networking/network_session.c,edx esi,bool
+0005c2e0,network_session_host_set_unknown49cc,source/networking/network_session.c,edx ebx,bool
+0005c350,network_session_host_set_unknown4a00,source/networking/network_session.c,eax stack,bool,stdcall
+0005c3f0,network_session_host_set_unknown5ddc,source/networking/network_session.c,eax stack,bool,stdcall
+0005c490,network_session_host_set_maximum_players,source/networking/network_session.c,edx stack,bool,stdcall
+0005c4e0,network_session_host_set_random,source/networking/network_session.c,edx stack stack,bool,stdcall
+0005c530,network_session_host_clear_unknown49c4,source/networking/network_session.c,edx,bool
+0005c570,network_session_host_set_unknown4da8,source/networking/network_session.c,edx stack,bool,stdcall
+0005c5c0,network_session_host_set_unknown4f24,source/networking/network_session.c,eax edx stack,bool,stdcall
+0005c660,network_session_host_set_unknown4999,source/networking/network_session.c,esi edx,bool
+0005c940,network_session_matches_state2_address,source/networking/network_session.c,eax ecx,bool
+0005c990,network_session_unknown_0005c990,source/networking/network_session.c,ecx eax,void
+00063340,unknown_00063340,,ecx,bool
 00056b70,voice_channels_update,source/networking/voice_routing.c,esi,void
 00056bd0,voice_channels_get_player,source/networking/voice_routing.c,eax ecx,int
 00056dd0,voice_channels_get_unknown84,source/networking/voice_routing.c,ecx stack,int

@@ -39,9 +39,7 @@ boolean unknown_00068250(void);
 boolean unknown_000696d0(const byte *unknown);
 
 
-/* 0x0005c6d0: a session chooses a console for something: see
-network_session_get_chosen_peer */
-void unknown_0005c6d0(byte *session, long peer);
+/* 0x0005c6d0 is network_session_host_set_chosen_peer, of network_session.c */
 
 
 /* 0x001906da: something of the player of a gamepad */
@@ -1537,7 +1535,7 @@ void game_voice_update_chosen_peer(
 					}
 					if (network_session_get_chosen_peer(session)!=chosen)
 					{
-						unknown_0005c6d0(session, chosen);
+						network_session_host_set_chosen_peer(session, chosen);
 					}
 					unknown_004c9878= chosen;
 				}

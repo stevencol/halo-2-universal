@@ -1221,7 +1221,7 @@ def run(t) -> None:
                     "game_voice_session_unknown40": gives(host),
                     "game_voice_unknown_00054ef0": gives(random_.getrandbits(1)),
                     "network_session_get_chosen_peer": gives(now),
-                    "unknown_0005c6d0": lambda harness, arguments: 0,
+                    "network_session_host_set_chosen_peer": lambda harness, arguments: 0,
                 },
                 extra=[membership, session],
             )
@@ -1455,7 +1455,7 @@ def run(t) -> None:
                     "game_voice_session_unknown40": gives(local),
                     "game_voice_unknown_00054ef0": gives(says),
                     "network_session_get_chosen_peer": gives(NONE),
-                    "unknown_0005c6d0": lambda harness, arguments: 0,
+                    "network_session_host_set_chosen_peer": lambda harness, arguments: 0,
                 },
                 extra=[membership, session],
             )

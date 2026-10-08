@@ -2,6 +2,64 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — La consola que lleva la sesión cambia sus datos
+
+Dieciséis funciones en `networking/network_session.c`, 1.426 bytes entre todas. De 1184
+funciones se pasa a 1200, el 10,65 % de las del juego (el 6,685 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_unknown_0005c190` | `0x0005c190` | `networking/network_session.c` |
+| `network_session_host_set_unknown49f0` | `0x0005c1c0` | `networking/network_session.c` |
+| `network_session_host_clear_unknown49fc` | `0x0005c240` | `networking/network_session.c` |
+| `network_session_host_set_unknown49f8` | `0x0005c290` | `networking/network_session.c` |
+| `network_session_host_set_unknown49cc` | `0x0005c2e0` | `networking/network_session.c` |
+| `network_session_host_set_unknown4a00` | `0x0005c350` | `networking/network_session.c` |
+| `network_session_host_set_unknown5ddc` | `0x0005c3f0` | `networking/network_session.c` |
+| `network_session_host_set_maximum_players` | `0x0005c490` | `networking/network_session.c` |
+| `network_session_host_set_random` | `0x0005c4e0` | `networking/network_session.c` |
+| `network_session_host_clear_unknown49c4` | `0x0005c530` | `networking/network_session.c` |
+| `network_session_host_set_unknown4da8` | `0x0005c570` | `networking/network_session.c` |
+| `network_session_host_set_unknown4f24` | `0x0005c5c0` | `networking/network_session.c` |
+| `network_session_host_set_unknown4999` | `0x0005c660` | `networking/network_session.c` |
+| `network_session_host_set_chosen_peer` | `0x0005c6d0` | `networking/network_session.c` |
+| `network_session_matches_state2_address` | `0x0005c940` | `networking/network_session.c` |
+| `network_session_unknown_0005c990` | `0x0005c990` | `networking/network_session.c` |
+
+Trece de ellas son del mismo molde: solo hacen algo si esta consola lleva
+la sesión (estados 5 a 8), cambian un dato de «lo que la sesión sabe» (el
+bloque de `0x4978`) y suben el número de su principio, que es su
+**contador de cambios**; las demás consolas se enteran por él.
+
+### Lo que se sabe
+
+- Los datos que se cambian: el máximo de jugadores (`0x4994`), los ocho
+  bytes al azar (`0x4DA0`), la consola elegida para la voz (`0x5E20`:
+  `network_session_host_set_chosen_peer` era `unknown_0005c6d0`, la que
+  usa la voz en el hito 277), y otros que aún no tienen nombre: 28 bytes en
+  `0x49CC`, dos números en `0x49F0`, un número en `0x49F8`, 776 bytes en
+  `0x4A00`, ocho bytes en `0x4999`, 68 en `0x5DDC` y dos bloques grandes
+  (108 y 3.648 bytes) en `0x4F24` y `0x4F90`. Los opcionales llevan delante
+  un byte que dice si están.
+- Varias solo escriben si el dato es distinto, y entonces el contador no
+  sube: no se molesta a las demás consolas por nada.
+- El bloque de `0x5DDC` lleva, tras sus cuatro primeros bytes, por qué se
+  conoce a una sesión, y no se admite si es esta misma
+  (`network_session_unknown_0005c190`): parece la sesión a la que hay que
+  pasar.
+- En el segundo estado la sesión guarda también una dirección, cuatro bytes
+  antes que en el primero (`0x7444`):
+  `network_session_matches_state2_address` la compara.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (108) y de
+  `game_voice` (71).
+- Las mutaciones de los hitos 280 a 308 y 321 a 332 están pendientes; las
+  de los hitos 309 a 320 seguían corriendo.
+
 ## 2026-10-08 — Diez consultas más a la sesión
 
 Diez funciones en `networking/network_session.c`, 384 bytes entre todas. De 1174
