@@ -438,6 +438,26 @@ enum
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1C0_OFFSET= 0x1C0,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1C4_OFFSET= 0x1C4,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1DC_OFFSET= 0x1DC,
+	/* one more number that a channel of the game has for a channel. And of
+	what the observer has at 0x10: how old the last numbers of a channel
+	can be to count, and from what average on they are bad; every how long
+	it looks at how much it lets have; from what part of bad channels on
+	things go badly; after how many bad times it lets have less, how much
+	less than what it sent, and how often; after how many good times it
+	lets have more; how far the times are counted; and how much more it
+	lets have, and how far under the number of 0x4E24 that has to be */
+	NETWORK_CHANNEL_UNKNOWN10_UNKNOWN970_OFFSET= 0x970,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN100_OFFSET= 0x100,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN104_OFFSET= 0x104,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN118_OFFSET= 0x118,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN11C_OFFSET= 0x11C,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN120_OFFSET= 0x120,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN124_OFFSET= 0x124,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN128_OFFSET= 0x128,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN12C_OFFSET= 0x12C,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN130_OFFSET= 0x130,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN13C_OFFSET= 0x13C,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN140_OFFSET= 0x140,
 	NETWORK_OBSERVER_PARAMETERS_RATE_PERIOD_OFFSET= 0xF8,
 	NETWORK_OBSERVER_PARAMETERS_WINDOW_COUNT_OFFSET= 0xFC,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
@@ -518,6 +538,10 @@ as more */
 /* the bits of a byte, and a rate of packets that is none: the most that a
 real can be */
 #define NETWORK_OBSERVER_BITS_PER_BYTE 8.0f
+
+/* what turns bits a second into the units of 1024 that the observer counts
+what it lets its channels have in */
+#define NETWORK_OBSERVER_UNITS_PER_BIT 0.0009765625f
 #define NETWORK_OBSERVER_NO_PACKET_RATE 3.4028234663852886e+38f
 
 /* the tries that a channel has at something: how many, and how long after it
@@ -590,6 +614,7 @@ long NETWORK_OBSERVER_CALLBACK network_observer_compare_channels(long channel_in
 	const real *values);
 void NETWORK_OBSERVER_CALLBACK network_observer_channel_start_flow(long channel_index, byte *observer);
 void NETWORK_OBSERVER_CALLBACK network_observer_update_flow(byte *observer);
+void network_observer_update_bandwidth(byte *observer);
 long NETWORK_OBSERVER_CALLBACK network_observer_acquire_channel(byte *observer, long session_index,
 	const byte *unknown14);
 void NETWORK_OBSERVER_CALLBACK network_observer_release_game_channels(byte *observer);

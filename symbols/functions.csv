@@ -1889,7 +1889,7 @@ address,name,source,arguments,returns,convention
 00077580,network_observer_channel_unused_expired,source/networking/network_observer.c,eax ecx edi,bool
 000773a0,network_observer_channel_unknown_000773a0,source/networking/network_observer.c,eax stack,void,stdcall
 00077480,network_observer_channel_update_probe,source/networking/network_observer.c,eax edx,void
-000779f0,unknown_000779f0,,edi,void
+000779f0,network_observer_update_bandwidth,source/networking/network_observer.c,edi,void
 00078ac0,network_observer_update_flow,source/networking/network_observer.c,stack,void,stdcall
 0007a4a0,unknown_0007a4a0,,eax,void
 0007b4c0,transport_qos_new,source/networking/transport_qos.c,eax edx ecx stack,int,stdcall

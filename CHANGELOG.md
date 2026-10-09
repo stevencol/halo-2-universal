@@ -2,6 +2,59 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Cuánto deja mandar el observador, y cómo lo reparte
+
+Una función en `networking/network_observer.c`, de 1414 bytes. De 1389
+funciones se pasa a 1390, el 12,34 % de las del juego (el 8,326 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_update_bandwidth` | `0x000779f0` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_observer_update_bandwidth` era `unknown_000779f0`, la primera de
+  las tres cosas que `network_observer_update` hace cada vez (hito 373).
+  Es **el otro control de la conexión**, distinto del caudal de cada canal
+  (hitos 377 a 399): este lleva una sola cifra para toda la consola,
+  **cuánto deja mandar entre todos los canales por los que va el juego**,
+  y la reparte.
+  - Cada cierto tiempo cuenta **cuántos canales van mal**: los conectados
+    cuya segunda serie de últimos números (hito 372) da una media alta.
+    Si son una parte suficiente, es una vez mala más; si no, una buena.
+  - Tras varias veces malas seguidas, **baja** lo que deja mandar: no más
+    de lo que de verdad ha mandado últimamente, menos un margen. Tras
+    varias buenas, lo **sube** un paso, siempre que quede por debajo del
+    tope. Es el mismo esquema que el del caudal de un canal: bajar deprisa
+    y subir despacio.
+  - Lo cuenta en unidades de 1024 bits por segundo. Son los tres números
+    de `0x4E20`, `0x4E24` y `0x4E28` que el hito 376 ponía a su valor de
+    partida.
+  - Después **lo reparte a partes iguales** entre los canales conectados
+    cuyo canal del juego tiene algo en `0x3C`: a cada uno sus bits por
+    segundo (`0x480`), sus paquetes por segundo (`0x484`, completos o a la
+    mitad según lo que tenga en `0x3C`) y cuánto puede mandar de golpe
+    (`0x488`), que sale de dos números que el canal del juego tiene para
+    él. Los demás canales se quedan sin parte.
+- En el juego tiene escritas dentro, tres veces, las funciones del hito
+  388 que pasan de bits a paquetes por segundo; aquí se las llama.
+
+### Comprobado rompiendo líneas
+
+- Treinta y dos líneas rotas, una cada vez: las pruebas fallaron en
+  treinta y una. La otra faltaba en las pruebas (que no haya nada que
+  repartir) y ahora falla.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_observer` (71 funciones).
+- Del observador solo queda una función: `0x00075fc0`, la que decide
+  cuándo le toca mandar a un canal.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — El caudal de todos los canales, cada vez
 
 Una función en `networking/network_observer.c`, de 923 bytes. De 1388

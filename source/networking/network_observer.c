@@ -682,14 +682,13 @@ things that are done with the observer each time, after its channels */
 boolean network_observer_channel_unused_expired(long channel_index, byte *observer, long unknown);
 void __attribute__((stdcall)) network_observer_channel_unknown_000773a0(long channel_index, byte *observer);
 void network_observer_channel_update_probe(long channel_index, byte *observer);
-void unknown_000779f0(byte *observer);
 
 /* 0x00075da0: what the observer does each time. Each channel that is in
 use: if no session uses it and network_observer_channel_unused_expired says so, it is no more
 (network_observer_channel_delete); and if it still is in use, it follows its
 connection (network_observer_channel_update_connection) and network_observer_channel_update_game_channel,
 network_observer_channel_update_tries, network_observer_channel_unknown_000773a0 and network_observer_channel_update_probe are done with it. Then
-unknown_000779f0, network_observer_update_flow and network_observer_update_voice_mode, with the observer */
+network_observer_update_bandwidth, network_observer_update_flow and network_observer_update_voice_mode, with the observer */
 void NETWORK_OBSERVER_CALLBACK network_observer_update(
 	byte *observer)
 {
@@ -717,7 +716,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_update(
 			network_observer_channel_update_probe(channel_index, observer);
 		}
 	}
-	unknown_000779f0(observer);
+	network_observer_update_bandwidth(observer);
 	network_observer_update_flow(observer);
 	network_observer_update_voice_mode(observer);
 }
@@ -3670,4 +3669,238 @@ void NETWORK_OBSERVER_CALLBACK network_observer_update_flow(
 		*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F30_OFFSET)= network_time_since(0);
 	}
 	network_observer_update_interval(observer);
+}
+
+/* 0x000779f0: what the observer does, every so long (the number at 0x118 of
+what it has at 0x10), with how much it lets the channels that the game sends
+by have between them.
+
+It counts how badly things go: of the channels in their seventh state whose
+second set of last numbers is not older than the number at 0x100, the ones
+whose numbers are, on average, the real at 0x104 or more. If they are the
+part that the real at 0x11C says or more, this is one more time in a row
+that things go badly (0x4F14), and if not, one more that they go well
+(0x4F10); neither is counted past the number at 0x130.
+
+With its byte of 0x4E00, and what it has sent of late in units of 1024 bits
+a second (its count of 0x4E30): after enough bad times in a row, and not
+more often than the number at 0x128 says, what it lets have (0x4E20 and
+0x4E28) is no more than what it sent, less the number at 0x124, and no less
+than the number at 0x138; and the number of 0x4E24 is no more than what it
+sent. After enough good times, the number of 0x4E20 is no less than what it
+sent, and what it lets have goes up by the number at 0x140, from what it was
+or from what it sent as its byte of 0x4F18 says, if that leaves the number
+at 0x13C under the one of 0x4E24.
+
+Then each channel has no part; and the ones in their seventh state whose
+channel of the game has something at 0x3C share what it lets have: so many
+bits a second each (0x4F20), the packets a second that those give, in full
+and with no more than half the times a second that the game goes (0x4F24 and
+0x4F28, which a channel has as what its channel of the game has at 0x3C
+says), and how much it can send at once, by two numbers that its channel of
+the game has for it */
+void network_observer_update_bandwidth(
+	byte *observer)
+{
+	const byte *parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+	long indices[MAXIMUM_NETWORK_OBSERVER_CHANNELS];
+	long count= 0;
+	long channel_index;
+	long index;
+	boolean bad= FALSE;
+
+	if (network_time_since(*(const long *)(observer+NETWORK_OBSERVER_UNKNOWN4F08_OFFSET))<
+		*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN118_OFFSET))
+	{
+		return;
+	}
+	if (observer[NETWORK_OBSERVER_UNKNOWN4E00_OFFSET])
+	{
+		long total_count= 0;
+		long bad_count= 0;
+
+		for (channel_index= 0; channel_index<MAXIMUM_NETWORK_OBSERVER_CHANNELS; channel_index++)
+		{
+			const byte *channel= network_observer_channel(observer, channel_index);
+			const struct network_window *window=
+				(const struct network_window *)(channel+NETWORK_OBSERVER_CHANNEL_WINDOW360_OFFSET);
+
+			if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)==_network_observer_channel_state7 &&
+				window->span<=*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN100_OFFSET))
+			{
+				total_count++;
+				if ((real)(long)window->sum/(real)window->count>=
+					*(const real *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN104_OFFSET))
+				{
+					bad_count++;
+				}
+			}
+		}
+		bad= total_count>0 && (real)bad_count/(real)total_count>=
+			*(const real *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN11C_OFFSET);
+	}
+	/* the game adds as the processor does */
+	if (bad)
+	{
+		long times= (long)(*(const unsigned long *)(observer+NETWORK_OBSERVER_UNKNOWN4F14_OFFSET)+1);
+
+		*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F10_OFFSET)= 0;
+		if (times>*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN130_OFFSET))
+		{
+			times= *(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN130_OFFSET);
+		}
+		*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F14_OFFSET)= times;
+	}
+	else
+	{
+		long times= (long)(*(const unsigned long *)(observer+NETWORK_OBSERVER_UNKNOWN4F10_OFFSET)+1);
+
+		*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F14_OFFSET)= 0;
+		if (times>*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN130_OFFSET))
+		{
+			times= *(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN130_OFFSET);
+		}
+		*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F10_OFFSET)= times;
+	}
+	if (observer[NETWORK_OBSERVER_UNKNOWN4E00_OFFSET])
+	{
+		struct network_rate *rate= (struct network_rate *)(observer+NETWORK_OBSERVER_UNKNOWN4E30_OFFSET);
+		long sent;
+
+		network_rate_update(rate);
+		sent= lrintf((real)(long)rate->spans_size*rate->per_second*NETWORK_OBSERVER_BITS_PER_BYTE*
+			NETWORK_OBSERVER_UNITS_PER_BIT);
+		parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+		if (*(const long *)(observer+NETWORK_OBSERVER_UNKNOWN4F14_OFFSET)>=
+			*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN120_OFFSET))
+		{
+			if (network_time_since(*(const long *)(observer+NETWORK_OBSERVER_UNKNOWN4F0C_OFFSET))>=
+				*(const long *)(*(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET)+
+				NETWORK_OBSERVER_PARAMETERS_UNKNOWN128_OFFSET))
+			{
+				long unknown4e20= *(const long *)(observer+NETWORK_OBSERVER_UNKNOWN4E20_OFFSET);
+				long less;
+
+				parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+				less= (long)((unsigned long)sent-*(const unsigned long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN124_OFFSET));
+				if (unknown4e20>less)
+				{
+					unknown4e20= less;
+				}
+				if (unknown4e20<=*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN138_OFFSET))
+				{
+					unknown4e20= *(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN138_OFFSET);
+				}
+				*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4E20_OFFSET)= unknown4e20;
+				*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4E28_OFFSET)= unknown4e20;
+				if (*(const long *)(observer+NETWORK_OBSERVER_UNKNOWN4E24_OFFSET)>sent)
+				{
+					*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4E24_OFFSET)= sent;
+				}
+				*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F0C_OFFSET)= network_time_since(0);
+			}
+		}
+		else if (*(const long *)(observer+NETWORK_OBSERVER_UNKNOWN4F10_OFFSET)>=
+			*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN12C_OFFSET))
+		{
+			long more;
+
+			if (sent>*(const long *)(observer+NETWORK_OBSERVER_UNKNOWN4E20_OFFSET))
+			{
+				*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4E20_OFFSET)= sent;
+			}
+			more= (long)(*(const unsigned long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN140_OFFSET)+
+				(observer[NETWORK_OBSERVER_UNKNOWN4F18_OFFSET] ?
+				*(const unsigned long *)(observer+NETWORK_OBSERVER_UNKNOWN4E28_OFFSET) : (unsigned long)sent));
+			if (more>*(const long *)(observer+NETWORK_OBSERVER_UNKNOWN4E28_OFFSET) &&
+				(long)(*(const unsigned long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN13C_OFFSET)+(unsigned long)more)<
+				*(const long *)(observer+NETWORK_OBSERVER_UNKNOWN4E24_OFFSET))
+			{
+				*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4E28_OFFSET)= more;
+				*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F10_OFFSET)= 0;
+			}
+		}
+	}
+	for (channel_index= 0; channel_index<MAXIMUM_NETWORK_OBSERVER_CHANNELS; channel_index++)
+	{
+		byte *channel= (byte *)network_observer_channel(observer, channel_index);
+		long game_channel_index= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET);
+
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN480_OFFSET)= NONE;
+		*(real *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN484_OFFSET)= -1.0f;
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN488_OFFSET)= NONE;
+		if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)==_network_observer_channel_state7 &&
+			game_channel_index!=NONE &&
+			*(const byte **)(unknown_004d87d4+game_channel_index*NETWORK_CHANNEL_SIZE+NETWORK_CHANNEL_UNKNOWN3C_OFFSET)!=NULL)
+		{
+			indices[count++]= channel_index;
+		}
+	}
+	if (count>0)
+	{
+		*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F1C_OFFSET)= count;
+		if (observer[NETWORK_OBSERVER_UNKNOWN4E00_OFFSET])
+		{
+			/* the game multiplies as the processor does, and has the three
+			functions that give these written here */
+			long bits_per_second= (long)(*(const unsigned long *)(observer+NETWORK_OBSERVER_UNKNOWN4E28_OFFSET)<<10)/count;
+			real packet_rate;
+
+			*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F20_OFFSET)= bits_per_second;
+			packet_rate= network_observer_packet_rate(observer, bits_per_second, TRUE, FALSE);
+			*(real *)(observer+NETWORK_OBSERVER_UNKNOWN4F24_OFFSET)= packet_rate;
+			*(real *)(observer+NETWORK_OBSERVER_UNKNOWN4F28_OFFSET)=
+				network_observer_packet_rate(observer, bits_per_second, TRUE, TRUE);
+			observer[NETWORK_OBSERVER_UNKNOWN4F18_OFFSET]= network_observer_packet_rate_low(TRUE, packet_rate, observer, TRUE, FALSE);
+		}
+		else
+		{
+			*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F20_OFFSET)= NONE;
+			*(real *)(observer+NETWORK_OBSERVER_UNKNOWN4F24_OFFSET)= -1.0f;
+			*(real *)(observer+NETWORK_OBSERVER_UNKNOWN4F28_OFFSET)= -1.0f;
+			observer[NETWORK_OBSERVER_UNKNOWN4F18_OFFSET]= FALSE;
+		}
+	}
+	for (index= 0; index<count; index++)
+	{
+		byte *channel= (byte *)network_observer_channel(observer, indices[index]);
+		const byte *game_channel= unknown_004d87d4+
+			*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET)*NETWORK_CHANNEL_SIZE;
+		const byte *unknown3c= *(const byte **)(game_channel+NETWORK_CHANNEL_UNKNOWN3C_OFFSET);
+		long bits_per_second= *(const long *)(observer+NETWORK_OBSERVER_UNKNOWN4F20_OFFSET);
+
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN480_OFFSET)= bits_per_second;
+		*(real *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN484_OFFSET)=
+			*(const real *)(observer+(unknown3c!=NULL && unknown3c[NETWORK_CHANNEL_UNKNOWN3C_UNKNOWN30_OFFSET] ?
+			NETWORK_OBSERVER_UNKNOWN4F24_OFFSET : NETWORK_OBSERVER_UNKNOWN4F28_OFFSET));
+		if (bits_per_second>=0)
+		{
+			unsigned long unknown96c= 0;
+			unsigned long unknown970= 0;
+			long unknown488;
+
+			if (*(const long *)(game_channel+NETWORK_CHANNEL_STATE_OFFSET)==_network_channel_state5 &&
+				(game_channel[NETWORK_CHANNEL_UNKNOWN48_OFFSET]&_network_channel_unknown48_bit8))
+			{
+				const byte *own= unknown_004d87d8+*(const long *)(game_channel+NETWORK_CHANNEL_UNKNOWN10_OFFSET)*
+					NETWORK_CHANNEL_UNKNOWN10_SIZE;
+
+				unknown96c= *(const unsigned long *)(own+NETWORK_CHANNEL_UNKNOWN10_UNKNOWN96C_OFFSET);
+				unknown970= *(const unsigned long *)(own+NETWORK_CHANNEL_UNKNOWN10_UNKNOWN970_OFFSET);
+			}
+			/* the game adds and multiplies as the processor does */
+			unknown488= (long)((unknown96c+unknown970*2)*(unsigned long)bits_per_second)/NETWORK_OBSERVER_BITS_PER_BYTE_MILLISECOND;
+			parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+			if (unknown488<=*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWNE0_OFFSET))
+			{
+				unknown488= *(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWNE0_OFFSET);
+			}
+			*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN488_OFFSET)= unknown488;
+		}
+		else
+		{
+			*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN488_OFFSET)= NONE;
+		}
+	}
+	*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F08_OFFSET)= network_time_since(0);
 }

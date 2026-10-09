@@ -465,7 +465,7 @@ def run(t) -> None:
                 "network_observer_channel_update_tries": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
                 "network_observer_channel_unknown_000773a0": with_channel_and_observer,
                 "network_observer_channel_update_probe": with_channel_and_observer,
-                "unknown_000779f0": with_observer,
+                "network_observer_update_bandwidth": with_observer,
                 "network_observer_update_flow": with_observer,
                 "network_observer_update_voice_mode": with_observer,
             },
@@ -1844,4 +1844,79 @@ def run(t) -> None:
                 Mock(lambda call, yes=random_.getrandbits(15): (yes >> call.stack[0]) & 1, stack_arguments=1, registers=("ecx",)),
                 Mock(lambda call, peers=[random_.choice((NONE, 0, 1, 2, 3)) for channel in range(15)]: peers[call.stack[0]], stack_arguments=1, registers=("ecx",)),
             ],
+        )
+
+    # ---------- how much the observer lets its channels have between them
+
+    for n in range(2500):
+        setup = at_time()
+        now = struct.unpack("<I", setup["globals"]["unknown_0051054c"])[0]
+        data = observer() + bytearray(random_.randbytes(0x144))
+        struct.pack_into("<I", data, 0x10, SIZE)
+        struct.pack_into("<i", data, SIZE + 0xE0, random_.choice((0, 500, 4000)))
+        # the rates of packets, and the sizes of one
+        struct.pack_into("<i4f", data, SIZE + 0x9C, 4, 1.0, 0.5, 0.25, 0.125)
+        struct.pack_into("<iif", data, SIZE + 0x108, random_.choice((0, 45, 200)), random_.choice((0, 90, 400)), random_.choice((0.5, 1.0, 2.0)))
+        struct.pack_into("<if", data, SIZE + 0x100, random_.choice((1000, 5000)), random_.choice((0.05, 0.5, 1.0)))
+        struct.pack_into(
+            "<if5i",
+            data,
+            SIZE + 0x118,
+            random_.choice((1000, 1000, 0)),
+            random_.choice((0.25, 0.5, 1.0)),
+            random_.choice((1, 3)),
+            random_.choice((0, 64)),
+            random_.choice((1000, 1000, 0)),
+            random_.choice((1, 3)),
+            random_.choice((3, 10)),
+        )
+        struct.pack_into("<3i", data, SIZE + 0x138, random_.choice((16, 64)), random_.choice((0, 32)), random_.choice((8, 64)))
+        data[0x4E00] = random_.choice((1, 1, 1, 0, 0x80))
+        struct.pack_into("<3i", data, 0x4E20, random_.choice((64, 256, 1024, 100000)), random_.choice((64, 256, 1024, 100000)), random_.choice((0, 1, 64, 256, 1024)))
+        # what it has sent of late
+        sent = a_rate(now)
+        struct.pack_into("<I", sent, 0xD0, random_.choice((0, 1000, 16000, 64000, 1000000)))
+        struct.pack_into("<f", sent, 0x24, random_.choice((1.0, 0.5, 0.05)))
+        data[0x4E30 : 0x4E30 + len(sent)] = sent
+        struct.pack_into("<I", data, 0x4F08, (now - random_.choice((0, 999, 1000, 1001, 5000, 5000))) & 0xFFFFFFFF)
+        struct.pack_into("<I", data, 0x4F0C, (now - random_.choice((0, 999, 1000, 1001, 5000))) & 0xFFFFFFFF)
+        struct.pack_into("<ii", data, 0x4F10, random_.choice((0, 1, 2, 5, 10)), random_.choice((0, 1, 2, 5, 10)))
+        data[0x4F18] = random_.choice((0, 1, 0x80))
+        # the channels of the game, and after them what some of them have at 0x3C
+        channels = game_channels()
+        things = len(channels)
+        game_pointers = []
+        for other in range(6):
+            struct.pack_into("<I", channels, other * 0xF8 + 0x10, random_.randrange(3))
+            thing = random_.choice((None, 0, 1, 2))
+            struct.pack_into("<I", channels, other * 0xF8 + 0x3C, 0 if thing is None else things + thing * 0x34)
+            if thing is not None:
+                game_pointers.append(other * 0xF8 + 0x3C)
+            channels[other * 0xF8 + 0x48] = random_.choice((0, 8, 8, 0xFF, 0xF7))
+            struct.pack_into("<i", channels, other * 0xF8 + 0x54, random_.choice((0, 2, 3, 5, 5, 5)))
+        for thing in (0, 1, 0x80):
+            block = bytearray(random_.randbytes(0x34))
+            block[0x30] = thing
+            channels += block
+        own = bytearray(random_.randbytes(3 * 0x97C))
+        for other in range(3):
+            struct.pack_into("<ii", own, other * 0x97C + 0x96C, random_.choice((0, 33, 100, 250)), random_.choice((0, 5, 40)))
+        seventh = random_.choice((0.3, 0.6, 1.0))
+        for channel in range(15):
+            at = CHANNELS + channel * CHANNEL
+            if random_.random() < seventh:
+                struct.pack_into("<I", data, at, 7)
+            # the second set of last numbers: how many, their sum and how old the oldest is
+            struct.pack_into("<I", data, at + 0x360, random_.choice((1, 2, 16, 32, 32, 0)))
+            struct.pack_into("<Ii", data, at + 0x468, random_.choice((0, 0, 1, 2, 8, 16, 32)), random_.choice((0, 999, 1000, 1001, 5000, 5001)))
+        t.check(
+            "network_observer_update_bandwidth",
+            Buffer(bytes(data), pointers=(0x10,)),
+            globals=dict(
+                setup["globals"],
+                unknown_004d87d4=Buffer(bytes(channels), pointers=tuple(game_pointers)),
+                unknown_004d87d8=Buffer(bytes(own)),
+                xbox_video_settings=video(),
+            ),
+            externals=setup["externals"],
         )
