@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Un canal pregunta por su consola
+
+Una función en `networking/network_observer.c`, de 252 bytes. De 1333
+funciones se pasa a 1334, el 11,84 % de las del juego (el 7,773 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_channel_update_probe` | `0x00077480` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_observer_channel_update_probe` (antes `unknown_00077480`): cada
+  canal del observador **pregunta una vez a la red por su consola**. Lo
+  pide con lo que identifica a la primera sesión que usa el canal, su clave
+  y lo que el canal tiene en `0x14` (`unknown_0007b4c0`), y guarda el
+  número de la petición en `0x70` (el mismo número que
+  `network_observer_channel_delete` suelta, hito 371).
+- Cuando la petición termina, guarda lo encontrado en `0x74` y marca dos
+  bits del byte de `0x8` del canal: «ya preguntó» (8) y «tiene respuesta»
+  (`0x10`). Por lo que se pide y cómo se usa, parece **la medida de la
+  calidad de la conexión** con esa consola (lo que las bibliotecas de la
+  consola llaman QoS), pero no está confirmado.
+
+### Corregido
+
+- En la cabecera del observador había quedado, desde el hito 372, un
+  comentario pegado al `#define` de la línea siguiente. Compilaba igual,
+  pero estaba mal puesto; ya está en su línea.
+
+### Comprobado rompiendo líneas
+
+- Seis líneas rotas, una cada vez: las pruebas fallaron en las seis.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_observer` (25 funciones).
+- La batería completa del hito 371 sigue corriendo.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Dos plazos de un canal del observador
 
 Dos funciones en `networking/network_observer.c`, 499 bytes entre las dos. De 1331

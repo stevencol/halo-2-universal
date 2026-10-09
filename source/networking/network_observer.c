@@ -678,7 +678,7 @@ done with a channel each time. 0x000779f0, 0x00078ac0, 0x0007a4a0: three
 things that are done with the observer each time, after its channels */
 boolean network_observer_channel_unused_expired(long channel_index, byte *observer, long unknown);
 void __attribute__((stdcall)) network_observer_channel_unknown_000773a0(long channel_index, byte *observer);
-void unknown_00077480(long channel_index, byte *observer);
+void network_observer_channel_update_probe(long channel_index, byte *observer);
 void unknown_000779f0(byte *observer);
 void __attribute__((stdcall)) unknown_00078ac0(byte *observer);
 void unknown_0007a4a0(byte *observer);
@@ -687,7 +687,7 @@ void unknown_0007a4a0(byte *observer);
 use: if no session uses it and network_observer_channel_unused_expired says so, it is no more
 (network_observer_channel_delete); and if it still is in use, it follows its
 connection (network_observer_channel_update_connection) and unknown_00076ff0,
-unknown_000776a0, network_observer_channel_unknown_000773a0 and unknown_00077480 are done with it. Then
+unknown_000776a0, network_observer_channel_unknown_000773a0 and network_observer_channel_update_probe are done with it. Then
 unknown_000779f0, unknown_00078ac0 and unknown_0007a4a0, with the observer */
 void NETWORK_OBSERVER_CALLBACK network_observer_update(
 	byte *observer)
@@ -713,7 +713,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_update(
 			unknown_00076ff0(channel_index, observer);
 			unknown_000776a0(observer, channel_index);
 			network_observer_channel_unknown_000773a0(channel_index, observer);
-			unknown_00077480(channel_index, observer);
+			network_observer_channel_update_probe(channel_index, observer);
 		}
 	}
 	unknown_000779f0(observer);
@@ -826,5 +826,66 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_000773a0(
 	else
 	{
 		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN94_OFFSET)= network_time_since(0);
+	}
+}
+
+/* 0x0007b4c0: something of the network is asked for, for a session and a
+console; its number, NONE if it cannot be. 0x0007b6c0: whether it is done.
+0x0007b7b0: what it found goes where it is told; whether there is any */
+long __attribute__((stdcall)) unknown_0007b4c0(long unknown0, long unknown4, long unknown8,
+	const struct network_observer_probe *probe);
+boolean unknown_0007b6c0(long unknown);
+boolean __attribute__((stdcall)) unknown_0007b7b0(long unknown, byte *result, long unknown4);
+
+/* 0x00077480: a channel of the observer asks, once, for something of the
+network about its console (unknown_0007b4c0), for the first session that
+uses it and is known by something: with what the session is known by, its
+key and what the channel has at 0x14. The number of what was asked for is
+kept at 0x70. When it is done (unknown_0007b6c0): what it found is kept at
+0x74 and, if there is any, the bit 0x10 of the byte of 0x8 is set and the
+numbers of 0x8C and 0x90 are zero; it is let go of (unknown_0007b650); and
+the bit 8 of that byte says that the channel has asked already */
+void network_observer_channel_update_probe(
+	long channel_index,
+	byte *observer)
+{
+	byte *channel= (byte *)network_observer_channel(observer, channel_index);
+	long unknown70;
+
+	if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)!=0 &&
+		*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN70_OFFSET)==NONE &&
+		!(channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN8_OFFSET]&_network_observer_channel_probed_bit))
+	{
+		long session_index;
+
+		for (session_index= 0; session_index<MAXIMUM_NETWORK_OBSERVER_SESSIONS; session_index++)
+		{
+			const byte *session= observer+NETWORK_OBSERVER_SESSIONS_OFFSET+session_index*NETWORK_OBSERVER_SESSION_SIZE;
+
+			if ((channel[NETWORK_OBSERVER_CHANNEL_SESSIONS_OFFSET]&(1u<<session_index)) &&
+				*(const long *)(session+NETWORK_OBSERVER_SESSION_UNKNOWN4_OFFSET)!=NONE)
+			{
+				struct network_observer_probe probe;
+
+				memcpy(probe.identifier, session+NETWORK_OBSERVER_SESSION_IDENTIFIER_OFFSET, sizeof(probe.identifier));
+				memcpy(probe.key, session+NETWORK_OBSERVER_SESSION_KEY_OFFSET, sizeof(probe.key));
+				memcpy(probe.unknown14, channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN14_OFFSET, sizeof(probe.unknown14));
+				*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN70_OFFSET)= unknown_0007b4c0(NONE, 1, 0, &probe);
+				break;
+			}
+		}
+	}
+	unknown70= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN70_OFFSET);
+	if (unknown70!=NONE && unknown_0007b6c0(unknown70))
+	{
+		if (unknown_0007b7b0(unknown70, channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN74_OFFSET, 0))
+		{
+			channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN8_OFFSET]|= _network_observer_channel_has_probe_bit;
+			*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN90_OFFSET)= 0;
+			*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN8C_OFFSET)= 0;
+		}
+		unknown_0007b650(*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN70_OFFSET));
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN70_OFFSET)= NONE;
+		channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN8_OFFSET]|= _network_observer_channel_probed_bit;
 	}
 }

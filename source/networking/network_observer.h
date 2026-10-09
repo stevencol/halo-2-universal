@@ -132,6 +132,15 @@ enum
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN80_OFFSET= 0x80,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN84_OFFSET= 0x84,
 	_unknown_00088650_unknown10= 0x10,
+	/* more of a channel: two bits of its byte of 0x8 (it has asked for
+	something of the network about its console, and it has what was
+	found); where what was found is kept; and two numbers that start over
+	with it */
+	_network_observer_channel_probed_bit= 0x8,
+	_network_observer_channel_has_probe_bit= 0x10,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN74_OFFSET= 0x74,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN8C_OFFSET= 0x8C,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN90_OFFSET= 0x90,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
 	_unknown_00088650_unknown11= 0x11
 };
@@ -156,7 +165,19 @@ struct network_window
 
 typedef char verify_network_window_size[sizeof(struct network_window) == 0x110 ? 1 : -1];
 
-/* a function that takes its arguments off the stack */#define NETWORK_OBSERVER_CALLBACK __attribute__((stdcall))
+/* what a channel asks with for something of the network about its console:
+what a session is known by, its key, and what the channel has at 0x14 */
+struct network_observer_probe
+{
+	byte identifier[NETWORK_OBSERVER_SESSION_IDENTIFIER_SIZE];
+	byte key[NETWORK_OBSERVER_SESSION_KEY_SIZE];
+	byte unknown14[0x24];
+};
+
+typedef char verify_network_observer_probe_size[sizeof(struct network_observer_probe) == 0x3C ? 1 : -1];
+
+/* a function that takes its arguments off the stack */
+#define NETWORK_OBSERVER_CALLBACK __attribute__((stdcall))
 
 /* ---------- prototypes/NETWORK_OBSERVER.C */
 
@@ -177,6 +198,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_set_pending(long channel
 boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_alive(long channel_index, const byte *observer);
 long network_observer_channel_connect_status(const byte *observer, long channel_index);
 long network_unknown_00075910(const byte *unknown);
+void network_observer_channel_update_probe(long channel_index, byte *observer);
 boolean network_observer_channel_unused_expired(long channel_index, byte *observer, long unknown);
 void NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_000773a0(long channel_index, byte *observer);
 void NETWORK_OBSERVER_CALLBACK network_observer_update(byte *observer);

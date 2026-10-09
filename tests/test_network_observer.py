@@ -464,7 +464,7 @@ def run(t) -> None:
                 "unknown_00076ff0": with_channel_and_observer,
                 "unknown_000776a0": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
                 "network_observer_channel_unknown_000773a0": with_channel_and_observer,
-                "unknown_00077480": with_channel_and_observer,
+                "network_observer_channel_update_probe": with_channel_and_observer,
                 "unknown_000779f0": with_observer,
                 "unknown_00078ac0": with_observer,
                 "unknown_0007a4a0": with_observer,
@@ -532,4 +532,34 @@ def run(t) -> None:
                 "unknown_0051054c": struct.pack("<I", now),
             },
             externals={"GetTickCount": lambda harness, arguments, now=now: now, "unknown_00088650": told},
+        )
+
+    # ---------- a channel asks for something of the network about its console
+
+    for n in range(800):
+        data = observer()
+        channel = random_.randrange(15)
+        at = CHANNELS + channel * CHANNEL
+        struct.pack_into("<I", data, at + 0x70, random_.choice((NONE, NONE, 5)))
+        data[at + 8] = random_.choice((0, 0, 0x10, 8, 0xF7, 0xFF))
+        for session in range(4):
+            struct.pack_into("<I", data, SESSIONS + session * 0x24 + 4, random_.choice((NONE, NONE, 0, 3)))
+
+        def asks(harness, arguments, number=random_.choice((NONE, 5, 6))):
+            # what it asks with is in the stack
+            return number, (arguments[0], arguments[1], arguments[2], bytes(harness.mu.mem_read(arguments[3], 0x3C)))
+
+        def found(harness, arguments, any=random_.choice((1, 1, 0, 0x100))):
+            return any, (arguments[0], harness.normalize(arguments[1]), arguments[2])
+
+        t.check(
+            "network_observer_channel_update_probe",
+            channel,
+            Buffer(bytes(data)),
+            externals={
+                "unknown_0007b4c0": asks,
+                "unknown_0007b6c0": lambda harness, arguments, done=random_.choice((1, 1, 0, 0x100)): (done, (arguments[0],)),
+                "unknown_0007b7b0": found,
+                "unknown_0007b650": lambda harness, arguments: (0, (arguments[0],)),
+            },
         )
