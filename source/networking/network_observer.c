@@ -3183,3 +3183,139 @@ void network_observer_update_interval(
 	observer[NETWORK_OBSERVER_UNKNOWN4F3D_OFFSET]= FALSE;
 	observer[NETWORK_OBSERVER_UNKNOWN4F3E_OFFSET]= FALSE;
 }
+
+/* 0x000880b0, of the channels of the game: whether some bits are ones that
+this console can do. 0x00088360: a channel of the game is given a number of
+what it talks with */
+boolean unknown_000880b0(unsigned long flags);
+void __attribute__((stdcall)) unknown_00088360(byte *game_channel, long identifier);
+
+/* what a console that asks to be talked with is told, when it is not: the
+number that it gave, and why */
+struct network_observer_connect_refusal
+{
+	long identifier;
+	long reason;
+};
+
+/* 0x000785d0: a console asks, from an address of the game, to be talked
+with, with a number and some bits. It is told no (a message of the fifth
+kind, sent to the address) and why: 4 if the console's libraries are not
+talking with the address; 1 if it is this console's own address, the bits
+have others than the first six, or they are ones that this console cannot
+do (unknown_000880b0, with the first two the other way around); and 3 if no
+channel that a session uses is for what the console is known by.
+
+With such a channel: if its channel of the game is past its second state
+and talks with another address, or with this one and another number, it is
+told 6 (unknown_00088650). Then, if it is not past its second state, the
+address is this one from now on, with what the session is known by and its
+key and no session of its own; the channel of the game starts to connect
+(unknown_00088220, with nothing); and the channel is in its sixth state,
+with no tries. The channel of the game is given the number, and what is done
+with a channel each time is done with it */
+void NETWORK_OBSERVER_CALLBACK network_observer_handle_connect_request(
+	byte *observer,
+	const struct transport_address *address,
+	const byte *request)
+{
+	struct network_observer_connect_refusal refusal;
+	byte identifier[NETWORK_OBSERVER_SESSION_IDENTIFIER_SIZE];
+	byte key[NETWORK_OBSERVER_SESSION_KEY_SIZE];
+	byte unknown14[NETWORK_OBSERVER_CHANNEL_UNKNOWN14_SIZE];
+	long unknown4;
+	long reason;
+	long channel_index= NONE;
+
+	if (transport_address_get_connect_status(address)!=_network_observer_connect_status2)
+	{
+		reason= NETWORK_OBSERVER_REFUSAL_NOT_CONNECTED;
+	}
+	else
+	{
+		unsigned long flags= *(const unsigned long *)(request+NETWORK_OBSERVER_CONNECT_REQUEST_FLAGS_OFFSET);
+
+		reason= NETWORK_OBSERVER_REFUSAL_UNKNOWN1;
+		if (!(address->address_size==sizeof(address->address.ipv4) && address->address.ipv4==NETWORK_OBSERVER_LOOPBACK_ADDRESS) &&
+			!(flags&NETWORK_OBSERVER_CONNECT_REQUEST_OTHER_FLAGS) &&
+			unknown_000880b0(((flags>>1)&1) | ((flags&1)<<1) | (flags&NETWORK_OBSERVER_CONNECT_REQUEST_SAME_FLAGS)))
+		{
+			reason= NETWORK_OBSERVER_REFUSAL_NO_CHANNEL;
+			if (transport_security_peer_address_from_address(address, 0, &unknown4, identifier, key, unknown14))
+			{
+				long index;
+
+				for (index= 0; index<MAXIMUM_NETWORK_OBSERVER_CHANNELS; index++)
+				{
+					const byte *channel= network_observer_channel(observer, index);
+
+					if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)!=0 &&
+						memcmp(unknown14, channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN14_OFFSET, sizeof(unknown14))==0 &&
+						channel[NETWORK_OBSERVER_CHANNEL_SESSIONS_OFFSET])
+					{
+						channel_index= index;
+						break;
+					}
+				}
+			}
+		}
+	}
+	if (channel_index==NONE)
+	{
+		refusal.identifier= *(const long *)(request+NETWORK_OBSERVER_CONNECT_REQUEST_IDENTIFIER_OFFSET);
+		refusal.reason= reason;
+		unknown_0007b140(*(const long *)(observer+NETWORK_OBSERVER_UNKNOWN8_OFFSET), address,
+			_network_message_connect_refuse, sizeof(refusal), &refusal);
+
+		return;
+	}
+	{
+		byte *channel= (byte *)network_observer_channel(observer, channel_index);
+		byte *game_channel= unknown_004d87d4+
+			*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET)*NETWORK_CHANNEL_SIZE;
+		struct transport_address current;
+		unsigned long difference;
+		boolean connect= TRUE;
+
+		network_channel_get_address(game_channel, &current);
+		difference= *(const unsigned long *)(request+NETWORK_OBSERVER_CONNECT_REQUEST_IDENTIFIER_OFFSET)-
+			*(const unsigned long *)(game_channel+NETWORK_CHANNEL_UNKNOWN50_OFFSET);
+		if (*(const long *)(game_channel+NETWORK_CHANNEL_STATE_OFFSET)>_network_channel_state2)
+		{
+			if (!transport_address_equal(address, &current, FALSE))
+			{
+				byte other_identifier[NETWORK_OBSERVER_SESSION_IDENTIFIER_SIZE];
+				byte other_unknown14[NETWORK_OBSERVER_CHANNEL_UNKNOWN14_SIZE];
+				long other_unknown4;
+
+				/* the game asks these two of the address that it had, for
+				nothing */
+				transport_security_peer_address_from_address(&current, 0, &other_unknown4, other_identifier, NULL,
+					other_unknown14);
+				transport_address_get_connect_status(&current);
+				unknown_00088650(game_channel, _unknown_00088650_unknown6);
+			}
+			else if (*(const long *)(game_channel+NETWORK_CHANNEL_UNKNOWN50_OFFSET)!=NONE && difference!=0)
+			{
+				unknown_00088650(game_channel, _unknown_00088650_unknown6);
+			}
+			connect= *(const long *)(game_channel+NETWORK_CHANNEL_STATE_OFFSET)<=_network_channel_state2;
+		}
+		if (connect)
+		{
+			transport_address_connect(address);
+			*(struct transport_address *)(channel+NETWORK_OBSERVER_CHANNEL_ADDRESS_OFFSET)= *address;
+			*(long *)(channel+NETWORK_OBSERVER_CHANNEL_SESSION_UNKNOWN4_OFFSET)= unknown4;
+			memcpy(channel+NETWORK_OBSERVER_CHANNEL_SESSION_IDENTIFIER_OFFSET, identifier, sizeof(identifier));
+			memcpy(channel+NETWORK_OBSERVER_CHANNEL_SESSION_KEY_OFFSET, key, sizeof(key));
+			*(long *)(channel+NETWORK_OBSERVER_CHANNEL_SESSION_OFFSET)= NONE;
+			unknown_00088220(address, game_channel, FALSE);
+			network_observer_channel_set_state(_network_observer_channel_state6, observer, channel_index);
+			*(short *)(channel+NETWORK_OBSERVER_CHANNEL_TRIES_OFFSET)= 0;
+			network_observer_channel_update_game_channel(channel_index, observer);
+		}
+		unknown_00088360(game_channel, *(const long *)(request+NETWORK_OBSERVER_CONNECT_REQUEST_IDENTIFIER_OFFSET));
+		network_observer_channel_update_connection(channel_index, observer);
+		network_observer_channel_update_game_channel(channel_index, observer);
+	}
+}

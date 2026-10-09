@@ -395,6 +395,23 @@ enum
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN19C_OFFSET= 0x19C,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1A4_OFFSET= 0x1A4,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1A8_OFFSET= 0x1A8,
+	/* what a console that asks to be talked with sends: a number, and bits
+	(the first two say something of the two consoles, and are told the
+	other way around; four more are told as they are; with any other it is
+	not talked with). Why it is told no. The kind of message that says so.
+	This console's own address. One more number of a channel of the game,
+	and one more thing that it is told */
+	NETWORK_OBSERVER_CONNECT_REQUEST_IDENTIFIER_OFFSET= 0x0,
+	NETWORK_OBSERVER_CONNECT_REQUEST_FLAGS_OFFSET= 0x4,
+	NETWORK_OBSERVER_CONNECT_REQUEST_SAME_FLAGS= 0x3C,
+	NETWORK_OBSERVER_CONNECT_REQUEST_OTHER_FLAGS= 0xC0,
+	NETWORK_OBSERVER_REFUSAL_UNKNOWN1= 1,
+	NETWORK_OBSERVER_REFUSAL_NO_CHANNEL= 3,
+	NETWORK_OBSERVER_REFUSAL_NOT_CONNECTED= 4,
+	_network_message_connect_refuse= 5,
+	NETWORK_OBSERVER_LOOPBACK_ADDRESS= 0x7F000001,
+	NETWORK_CHANNEL_UNKNOWN50_OFFSET= 0x50,
+	_unknown_00088650_unknown6= 0x6,
 	NETWORK_OBSERVER_PARAMETERS_RATE_PERIOD_OFFSET= 0xF8,
 	NETWORK_OBSERVER_PARAMETERS_WINDOW_COUNT_OFFSET= 0xFC,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
@@ -577,6 +594,8 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_forget_address(long chan
 boolean NETWORK_OBSERVER_CALLBACK network_observer_session_get_address(const byte *observer, const byte *peer_address,
 	struct transport_address *address, long session_index, long *unknown4, byte *identifier, byte *key);
 boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_find_address(long channel_index, byte *observer);
+void NETWORK_OBSERVER_CALLBACK network_observer_handle_connect_request(byte *observer,
+	const struct transport_address *address, const byte *request);
 void NETWORK_OBSERVER_CALLBACK network_observer_channel_send(boolean out_of_band, long channel_index, byte *observer,
 	long session_index, long type, long size, const void *data);
 

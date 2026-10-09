@@ -1593,3 +1593,83 @@ def run(t) -> None:
                 network_observer_new_interval=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
             ),
         )
+
+    # ---------- a console asks to be talked with
+
+    for n in range(2500):
+        data = observer()
+        console = random_.randbytes(0x24)
+        number = random_.choice((0, 5, 5, 0x1234, NONE))
+        way = random_.randrange(6)
+        found = random_.randrange(15)
+        at = CHANNELS + found * CHANNEL
+        if way != 0:
+            # a channel is for the console; a session uses it, mostly, and it is in use, mostly
+            data[at + 0x14 : at + 0x38] = console
+            struct.pack_into("<I", data, at, 0 if way == 1 else random_.choice((2, 3, 7)))
+            data[at + 9] = 0 if way == 2 else random_.choice((1, 2, 0xF))
+            struct.pack_into("<I", data, at + 0xC, random_.randrange(6))
+        channels = game_channels()
+        for other in range(6):
+            struct.pack_into("<I", channels, other * 0xF8 + 0x50, random_.choice((NONE, number, number, (number - 1) & 0xFFFFFFFF)))
+            struct.pack_into("<i", channels, other * 0xF8 + 0x54, random_.choice((0, 1, 2, 3, 3, 5, 5)))
+        address = bytearray(random_.randbytes(0x14))
+        struct.pack_into("<h", address, 0x12, random_.choice((4, 4, 4, 16)))
+        if n % 9 == 0:
+            # this console's own address
+            address[0:4] = bytes((1, 0, 0, 0x7F))
+        # the address that the channel of the game talks with: this one, with any port, or another
+        current = bytes(address)
+        same = random_.choice((0, 1, 1, 2))
+        if same == 0:
+            current = random_.randbytes(0x12) + bytes(address[0x12:0x14])
+        elif same == 2:
+            current = bytes(address[0:0x10]) + random_.randbytes(2) + bytes(address[0x12:0x14])
+
+        def known(harness, arguments, could=random_.choice((1, 1, 1, 1, 0)), console=console, values=(random_.getrandbits(32), random_.randbytes(8), random_.randbytes(16))):
+            # what the console and its session are known by goes where each thing says, in the stack
+            for where, value in zip(arguments[2:6], (struct.pack("<I", values[0]), values[1], values[2], console)):
+                if where:
+                    harness.mu.mem_write(where, value)
+            return could, (bytes(harness.mu.mem_read(arguments[0], 0x14)), arguments[1], arguments[2] != 0, arguments[3] != 0, arguments[4] != 0, arguments[5] != 0)
+
+        def talks_with(harness, arguments, current=current):
+            harness.mu.mem_write(arguments[1], current)
+            return 1, (harness.normalize(arguments[0]),)
+
+        def closes(harness, arguments, does=random_.choice((1, 1, 0)), state=random_.choice((1, 2))):
+            # a channel of the game that is told this is not past its second state any more, mostly
+            if does:
+                harness.mu.mem_write(arguments[0] + 0x54, struct.pack("<I", state))
+            return 0, (harness.normalize(arguments[0]), arguments[1])
+
+        t.check(
+            "network_observer_handle_connect_request",
+            Buffer(bytes(data)),
+            Buffer(bytes(address)),
+            Buffer(struct.pack("<II", number, random_.choice((0, 1, 2, 3, 0x15, 0x2A, 0x3F, 0x3F, 0x40, 0x80, 0x100, 0x13F, random_.getrandbits(6)))) + random_.randbytes(8)),
+            globals={"unknown_004d87d4": Buffer(bytes(channels))},
+            externals={
+                "transport_address_get_connect_status": lambda harness, arguments, status=random_.choice((2, 2, 2, 2, 2, 0, 1, 4)): (
+                    status,
+                    (bytes(harness.mu.mem_read(arguments[0], 0x14)),),
+                ),
+                "unknown_000880b0": lambda harness, arguments, can=random_.choice((1, 1, 1, 0)): (can, (arguments[0],)),
+                "transport_security_peer_address_from_address": known,
+                "unknown_0007b140": lambda harness, arguments: (
+                    0,
+                    (arguments[0], harness.normalize(arguments[1]), arguments[2], arguments[3], bytes(harness.mu.mem_read(arguments[4], 8))),
+                ),
+                "network_channel_get_address": talks_with,
+                "unknown_00088650": closes,
+                "transport_address_connect": lambda harness, arguments: (1, (harness.normalize(arguments[0]),)),
+                "unknown_00088220": lambda harness, arguments: (
+                    0,
+                    (harness.normalize(arguments[0]), harness.normalize(arguments[1]), arguments[2]),
+                ),
+                "network_observer_channel_set_state": goes,
+                "network_observer_channel_update_game_channel": with_channel_and_observer,
+                "network_observer_channel_update_connection": with_channel_and_observer,
+                "unknown_00088360": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+            },
+        )

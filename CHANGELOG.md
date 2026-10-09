@@ -2,6 +2,55 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Una consola pide que se hable con ella
+
+Una función en `networking/network_observer.c`, de 673 bytes. De 1385
+funciones se pasa a 1386, el 12,30 % de las del juego (el 8,213 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_handle_connect_request` | `0x000785d0` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_observer_handle_connect_request` es **el otro lado del hito
+  387**: allí un canal intentaba conectar; aquí llega la petición de otra
+  consola, con un número y unos bits.
+- Puede decir que no, con un mensaje de la quinta clase mandado a la
+  dirección (por lo que manda los mensajes sin canal, hito 394), que lleva
+  el número que se dio y **el motivo**:
+  - 4: las bibliotecas de la consola no están hablando con esa dirección.
+  - 1: es la dirección de esta misma consola, o los bits no valen.
+  - 3: no hay ningún canal, usado por alguna sesión, para esa consola.
+- Si hay canal: si su canal del juego ya estaba conectado con otra
+  dirección, o con esta pero con otro número (la consola ha vuelto a
+  empezar), se le corta (`unknown_00088650`, con un 6). Y si no está
+  conectado, el canal toma esa dirección, con cómo se conoce a la sesión y
+  su clave, el canal del juego empieza a conectar y el canal del
+  observador pasa al **sexto estado**: el mismo al que llega por su
+  cuenta el que intenta conectar.
+- De los bits de la petición se usan seis; los dos primeros se dan la
+  vuelta antes de preguntar si esta consola puede con ellos
+  (`unknown_000880b0`, nueva): lo que para una es «yo» para la otra es
+  «tú».
+
+### Comprobado rompiendo líneas
+
+- Veintitrés líneas rotas, una cada vez: las pruebas fallaron en las
+  veintitrés.
+
+### Sin comprobar
+
+- En el juego, cuando el canal del juego hablaba con otra dirección, se
+  preguntan dos cosas de esa dirección cuyo resultado no se usa. Se dejan.
+- No mira que el canal encontrado tenga canal del juego; en las pruebas
+  siempre lo tiene.
+- En este hito se pasaron las pruebas de `network_observer` (67 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — El final de cada intervalo del caudal
 
 Una función en `networking/network_observer.c`, de 541 bytes. De 1384
