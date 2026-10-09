@@ -286,6 +286,8 @@ address,name,source
 00528b28,unknown_00528b28,source/networking/network_channel.c
 00529188,unknown_00529188,source/networking/network_channel.c
 004cf6d4,unknown_004cf6d4,source/networking/network_channel.c
+004cf728,unknown_004cf728,source/networking/network_channel.c
+004cf72c,unknown_004cf72c,source/networking/network_channel.c
 0046725c,unknown_0046725c,source/networking/transport_security.c
 004cf790,unknown_004cf790,source/networking/transport_security.c
 004cf7cc,unknown_004cf7cc,source/networking/transport_security.c

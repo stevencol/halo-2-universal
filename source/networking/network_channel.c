@@ -686,3 +686,151 @@ void __attribute__((stdcall)) network_channel_unknown3c_new(
 	}
 	unknown3c->unknown31= FALSE;
 }
+
+/* 0x00096ce0: something that one of the things of unknown_004d87d8 does,
+with two numbers that it gives, until it says no. 0x000965e0: the next thing
+that happened to one of them, with three numbers; nothing when there is no
+more */
+boolean __attribute__((stdcall)) unknown_00096ce0(byte *unknown10, long unknown, long *unknown8, long *unknownC);
+long __attribute__((stdcall)) unknown_000965e0(byte *unknown10, long *unknown4, long *unknown8, long *unknownC);
+
+/* 0x004cf728, 0x004cf72c: what a number of a thing of unknown_004d87d8 is
+taken times, and what it has more, for the most that something took to be
+in time */
+real unknown_004cf728;
+long unknown_004cf72c;
+
+/* a real as the whole number that it is nearest to: the game rounds with
+the old processor's instructions, in place */
+long lrintf(float value);
+
+/* what a channel is of an observer by: something with functions, of which
+the third is told that something of a size came by a channel, and the fourth
+that something of a channel was answered, or was not */
+struct network_channel_owner;
+
+struct network_channel_owner_functions
+{
+	void *unknown0[2];
+	void (__attribute__((thiscall)) *received)(struct network_channel_owner *owner, long channel_index, long unknown4,
+		long unknown8);
+	void (__attribute__((thiscall)) *answered)(struct network_channel_owner *owner, long channel_index, boolean answered,
+		boolean in_time);
+};
+
+struct network_channel_owner
+{
+	const struct network_channel_owner_functions *functions;
+};
+
+/* one of the things that a channel has: something with functions, of which
+the seventh and the eighth are told what happened to something of it */
+struct network_channel_part_object;
+
+struct network_channel_part_functions
+{
+	void *unknown0[6];
+	void (__attribute__((thiscall)) *unknown18)(struct network_channel_part_object *part, long unknown);
+	void (__attribute__((thiscall)) *unknown1c)(struct network_channel_part_object *part, long unknown, boolean answered);
+};
+
+struct network_channel_part_object
+{
+	const struct network_channel_part_functions *functions;
+};
+
+/* 0x00088db0: what is done each time with a channel that has one of the
+things of unknown_004d87d8: that does what it does until it says no
+(unknown_00096ce0), and each thing that happened to it is seen to
+(unknown_000965e0), by its kind. With 1 and 4: the fifth time of the channel
+is now; a channel in its fourth state is in the fifth; and the observer that
+has the channel is told, with two of the numbers. With 4, each of the
+channel's things of the kind 4 is told, with the other number. With 1, 2 and
+3, each of the kind 8 is told, with that number and whether it is not 3; and
+the observer is told that too, and whether it was in time: it was with 3,
+and with the others if the last number is no less than what a number of the
+thing gives */
+void network_channel_update_unknown10(
+	byte *channel)
+{
+	byte *unknown10;
+	long unknown8;
+	long unknownC;
+	long unknown4;
+	long scratch8;
+	long scratchC;
+	long kind;
+
+	if (!(channel[NETWORK_CHANNEL_UNKNOWN48_OFFSET]&_network_channel_unknown48_bit8))
+	{
+		return;
+	}
+	unknown10= unknown_004d87d8+*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN10_OFFSET)*NETWORK_CHANNEL_UNKNOWN10_SIZE;
+	while (unknown_00096ce0(unknown10, 0, &scratch8, &scratchC))
+	{
+	}
+	for (kind= unknown_000965e0(unknown10, &unknown4, &unknown8, &unknownC); kind!=0;
+		kind= unknown_000965e0(unknown10, &unknown4, &unknown8, &unknownC))
+	{
+		struct network_channel_owner *owner;
+
+		if (kind==_network_channel_event4 || kind==_network_channel_event1)
+		{
+			network_channel_set_time(_network_channel_time_received, channel);
+			if (*(const long *)(channel+NETWORK_CHANNEL_STATE_OFFSET)==_network_channel_state4)
+			{
+				*(long *)(channel+NETWORK_CHANNEL_STATE_OFFSET)= _network_channel_state5;
+			}
+			owner= *(struct network_channel_owner **)(channel+NETWORK_CHANNEL_OBSERVER_OFFSET);
+			if (owner)
+			{
+				owner->functions->received(owner, *(const long *)(channel+NETWORK_CHANNEL_UNKNOWN44_OFFSET), unknown8,
+					unknownC);
+			}
+		}
+		if (kind==_network_channel_event4)
+		{
+			struct network_channel_part_iterator iterator= {_network_channel_part_bit4, NONE, NONE, 0, NULL};
+
+			while (network_channel_parts_next(channel, &iterator))
+			{
+				struct network_channel_part_object *part= iterator.part;
+
+				part->functions->unknown18(part, unknown4);
+			}
+		}
+		else if (kind==_network_channel_event1 || kind==_network_channel_event2 || kind==_network_channel_event3)
+		{
+			struct network_channel_part_iterator iterator= {_network_channel_part_bit8, NONE, NONE, 0, NULL};
+			boolean answered= kind!=_network_channel_event3;
+
+			while (network_channel_parts_next(channel, &iterator))
+			{
+				struct network_channel_part_object *part= iterator.part;
+
+				part->functions->unknown1c(part, unknown4, answered);
+			}
+			owner= *(struct network_channel_owner **)(channel+NETWORK_CHANNEL_OBSERVER_OFFSET);
+			if (owner)
+			{
+				boolean in_time= TRUE;
+
+				if (answered)
+				{
+					long unknown968= *(const long *)(unknown10+NETWORK_CHANNEL_UNKNOWN10_UNKNOWN968_OFFSET);
+					long most= lrintf((real)unknown968*unknown_004cf728);
+					/* the game adds as the processor does */
+					long other= (long)((unsigned long)unknown968+(unsigned long)unknown_004cf72c);
+
+					if (most<=other)
+					{
+						most= other;
+					}
+					in_time= unknownC>=most;
+				}
+				owner->functions->answered(owner, *(const long *)(channel+NETWORK_CHANNEL_UNKNOWN44_OFFSET), answered,
+					in_time);
+			}
+		}
+	}
+}

@@ -92,7 +92,19 @@ enum
 	/* how many things what a channel has at 0x3C can have, and what the
 	index of a thing of a channel is made of */
 	MAXIMUM_NETWORK_CHANNEL_UNKNOWN3C_PARTS= 4,
-	NETWORK_CHANNEL_PART_INDEX_MASK= 0x7FFFFFFF
+	NETWORK_CHANNEL_PART_INDEX_MASK= 0x7FFFFFFF,
+	/* the kinds of thing that can happen to a channel's thing of
+	unknown_004d87d8; which of the channel's times is the one of when
+	something last came; two bits of the kinds of a channel's things; and
+	one more number of the thing of unknown_004d87d8 */
+	_network_channel_event1= 1,
+	_network_channel_event2= 2,
+	_network_channel_event3= 3,
+	_network_channel_event4= 4,
+	_network_channel_time_received= 4,
+	_network_channel_part_bit4= 0x4,
+	_network_channel_part_bit8= 0x8,
+	NETWORK_CHANNEL_UNKNOWN10_UNKNOWN968_OFFSET= 0x968
 };
 
 /* the bit of the index of a thing of a channel that says that it is one of
@@ -200,6 +212,7 @@ boolean __attribute__((stdcall)) network_channel_parts_next(const byte *channel,
 void __attribute__((stdcall)) network_channel_unknown3c_new(struct network_channel_unknown3c *unknown3c,
 	boolean unknown30, void *const *parts, long unknown4, void (__attribute__((stdcall)) *closed)(long unknown4),
 	long part_count, const unsigned long *types);
+void network_channel_update_unknown10(byte *channel);
 long __attribute__((stdcall)) network_channel_take_unknown10(long owner);
 long __attribute__((stdcall)) network_channel_take_unknown14(long owner);
 long network_channel_unknown_00088fd0(const byte *game_channel);

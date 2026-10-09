@@ -330,3 +330,76 @@ def run(t) -> None:
             count if n % 10 else -1,
             Buffer(random_.randbytes(16)),
         )
+
+    # ---------- what happens to a channel's thing of the first kind is seen to
+
+    for n in range(1200):
+        setup = at_time()
+        data = channel()
+        struct.pack_into("<I", data, 0x10, random_.randrange(3))
+        data[0x48] = random_.choice((8, 8, 8, 0x18, 0x38, 0, 0x10))
+        struct.pack_into("<i", data, 0x54, random_.choice((3, 4, 4, 5)))
+        pointers = []
+        # after the channel: its observer, a thing with functions, and their tables
+        owner, part, owner_table, part_table = (len(data) + offset for offset in (0, 4, 8, 0x18))
+        tail = struct.pack("<II", owner_table, part_table)
+        tail += struct.pack("<4I", 0x11, 0x22, mock_address(0), mock_address(1))
+        tail += struct.pack("<8I", 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, mock_address(2), mock_address(3))
+        pointers += [owner, part]
+        if random_.random() < 0.8:
+            struct.pack_into("<I", data, 0x40, owner)
+            pointers.append(0x40)
+        else:
+            struct.pack_into("<I", data, 0x40, 0)
+        # the things of the channel: of some kinds, and all of them the same thing
+        count = random_.choice((0, 1, 2, 3))
+        struct.pack_into("<i", data, 0x20, count)
+        for place in range(3):
+            struct.pack_into("<II", data, 0x24 + place * 8, random_.choice((1, 4, 8, 0xC, 0x19, 0x31, 0x3D)), part)
+            pointers.append(0x24 + place * 8 + 4)
+        struct.pack_into("<I", data, 0x3C, 0)
+        data += tail
+        # the things of the first kind: each keeps how many times it does what it does, and what happened to it
+        own = bytearray(random_.randbytes(3 * OWN))
+        for other in range(3):
+            struct.pack_into("<i", own, other * OWN + 0x100, random_.choice((0, 0, 1, 3)))
+            struct.pack_into("<i", own, other * OWN + 0x104, 0)
+            events = [random_.choice((1, 1, 2, 3, 4, 4, 5)) for event in range(random_.choice((0, 1, 2, 4)))] + [0]
+            struct.pack_into(f"<{len(events)}i", own, other * OWN + 0x108, *events)
+            struct.pack_into("<i", own, other * OWN + 0x968, random_.choice((0, 100, 101, 400)))
+
+        def does(harness, arguments):
+            # as many times as the thing says, and one less each time
+            left = struct.unpack("<i", harness.mu.mem_read(arguments[0] + 0x100, 4))[0]
+            if left > 0:
+                harness.mu.mem_write(arguments[0] + 0x100, struct.pack("<i", left - 1))
+            return left > 0, (harness.normalize(arguments[0]), arguments[1])
+
+        def happened(harness, arguments):
+            # the next of what the thing has, with three numbers that go where the last things say, in the stack
+            at = struct.unpack("<i", harness.mu.mem_read(arguments[0] + 0x104, 4))[0]
+            harness.mu.mem_write(arguments[0] + 0x104, struct.pack("<i", at + 1))
+            kind = struct.unpack("<i", harness.mu.mem_read(arguments[0] + 0x108 + at * 4, 4))[0]
+            for place, value in zip(arguments[1:4], (0x1000 + at, 0x2000 + at, (99, 100, 150, 151, 500)[at % 5])):
+                harness.mu.mem_write(place, struct.pack("<I", value))
+            return kind, (harness.normalize(arguments[0]),)
+
+        t.check(
+            "network_channel_update_unknown10",
+            Buffer(bytes(data), pointers=tuple(pointers)),
+            globals=dict(
+                setup["globals"],
+                unknown_004d87d8=Buffer(bytes(own)),
+                unknown_004d87dc=Buffer(random_.randbytes(3 * OTHER)),
+                unknown_004cf728=struct.pack("<f", random_.choice((1.0, 1.5, 2.0))),
+                unknown_004cf72c=struct.pack("<i", random_.choice((0, 50, 100))),
+            ),
+            externals=dict(setup["externals"], unknown_00096ce0=does, unknown_000965e0=happened),
+            mocks=[
+                Mock(lambda call: 0, stack_arguments=3, registers=("ecx",)),
+                # the two bytes that it is told are the low ones of what is in the stack
+                Mock(lambda call: 0, stack_arguments=3, registers=("ecx",), record=lambda call: (call.registers["ecx"], call.stack[0], call.stack[1] & 0xFF, call.stack[2] & 0xFF)),
+                Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
+                Mock(lambda call: 0, stack_arguments=2, registers=("ecx",), record=lambda call: (call.registers["ecx"], call.stack[0], call.stack[1] & 0xFF)),
+            ],
+        )

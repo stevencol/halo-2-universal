@@ -1898,6 +1898,9 @@ address,name,source,arguments,returns,convention
 00082150,network_channel_take_unknown14,source/networking/network_channel.c,stack,int,stdcall
 000891e0,network_channel_parts_next,source/networking/network_channel.c,ebx stack,bool,stdcall
 000892f0,network_channel_unknown3c_new,source/networking/network_channel.c,eax ecx edx stack stack stack stack,void,stdcall
+00088db0,network_channel_update_unknown10,source/networking/network_channel.c,esi,void
+00096ce0,unknown_00096ce0,,stack stack stack stack,bool,stdcall
+000965e0,unknown_000965e0,,eax stack stack stack,int,stdcall
 00078190,network_observer_packet_rate_low,source/networking/network_observer.c,ecx xmm1 stack stack stack,bool,stdcall
 00078090,network_observer_packet_rate,source/networking/network_observer.c,ecx stack stack stack,real:xmm0,stdcall
 00079600,network_observer_channel_set_flow,source/networking/network_observer.c,eax ecx xmm5 stack stack,void,stdcall

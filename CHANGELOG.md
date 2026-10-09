@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Lo que le pasa a la pieza principal de un canal
+
+Una función en `networking/network_channel.c`, de 533 bytes. De 1420
+funciones se pasa a 1421, el 12,61 % de las del juego (el 8,517 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_channel_update_unknown10` | `0x00088db0` | `networking/network_channel.c` |
+
+### Lo que se sabe
+
+- `network_channel_update_unknown10` es lo que un canal hace cada vez con
+  su pieza de la primera tabla (`unknown_004d87d8`): la deja trabajar y
+  luego **atiende, una por una, las cosas que le han pasado**
+  (`unknown_000965e0` las va dando, con una clase del 1 al 4 y tres
+  números).
+  - Clases 1 y 4: ha llegado algo. El canal apunta la hora, pasa del
+    cuarto estado al quinto si estaba esperando (**así es como un canal
+    queda conectado del todo**) y avisa al observador.
+  - Clase 4: se avisa a las piezas de la clase 4 del canal.
+  - Clases 1, 2 y 3: se avisa a las piezas de la clase 8, y al observador,
+    de si algo que se mandó fue contestado (1 y 2) o no (3), y de si llegó
+    a tiempo.
+- **Aquí se cierra el círculo con el observador.** El canal le avisa por
+  dos funciones de una tabla que el observador tiene al principio, y son
+  dos que ya estaban descompiladas sin saber quién las llamaba: la del
+  hito 377 («algo de un tamaño ha pasado por un canal») y la del hito 372
+  («a un canal se le dice si algo fue así o no»). Está comprobado en el
+  ejecutable: la tabla está en `0x00450e10` y las tiene en tercer y
+  cuarto lugar; en el sexto está la del hito 401, la que dice si un canal
+  puede mandar. El control del caudal de los hitos 377 a 399 se alimenta
+  de aquí: de cada paquete contestado o perdido.
+- Por lo que hace, la pieza de la primera tabla es **lo que lleva la
+  cuenta de los paquetes mandados y de sus respuestas**.
+
+### Comprobado rompiendo líneas
+
+- Trece líneas rotas, una cada vez: las pruebas fallaron en las trece.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_channel` (20 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Recorrer las piezas de un canal del juego
 
 Dos funciones en `networking/network_channel.c`, 338 bytes entre las dos. De 1418
