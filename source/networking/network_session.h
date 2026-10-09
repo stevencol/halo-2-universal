@@ -606,6 +606,10 @@ long network_session_election_new(const byte *session, struct network_session_el
 long network_session_election_find(const struct network_session_election *election, const byte *address);
 long network_session_election_add_unknownB8(const byte *address, struct network_session_election *election);
 long network_session_election_add_unknownBC(const byte *address, struct network_session_election *election);
+boolean NETWORK_SESSION_CALLBACK network_session_election_add_other(const byte *address,
+	struct network_session_election *election, const byte *other_address);
+boolean NETWORK_SESSION_CALLBACK network_session_election_set_unknownBC(struct network_session_election *election,
+	const byte *address, boolean set);
 void network_session_enter_state2(byte *session);
 void network_session_state3_update(byte *session);
 void network_session_state4_update(byte *session);

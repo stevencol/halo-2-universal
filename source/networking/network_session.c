@@ -3733,3 +3733,75 @@ long network_session_election_add_unknownBC(
 
 	return index;
 }
+
+/* 0x00062c20: of two consoles, each known by something, one is this one:
+the other gets its bit in the first of the two numbers of the ninth state,
+and is known of from now on if it was not. FALSE if neither is this one, if
+there is no other, if it had its bit already or if there is no room for it */
+boolean NETWORK_SESSION_CALLBACK network_session_election_add_other(
+	const byte *address,
+	struct network_session_election *election,
+	const byte *other_address)
+{
+	const byte *other;
+	long index;
+
+	if (memcmp(election->local_address, address, sizeof(election->local_address))==0)
+	{
+		other= other_address;
+	}
+	else if (memcmp(election->local_address, other_address, sizeof(election->local_address))==0)
+	{
+		other= address;
+	}
+	else
+	{
+		return FALSE;
+	}
+	if (!other)
+	{
+		return FALSE;
+	}
+	index= network_session_election_find(election, other);
+	if (index!=NONE && (election->unknownB8&(1u<<index)))
+	{
+		return FALSE;
+	}
+
+	return network_session_election_add_unknownB8(other, election)!=NONE;
+}
+
+/* 0x00062ca0: a console gets its bit in the second of the two numbers of
+the ninth state, or loses it; whether that changes anything. To get it, it
+cannot have it; to lose it, it has to have it */
+boolean NETWORK_SESSION_CALLBACK network_session_election_set_unknownBC(
+	struct network_session_election *election,
+	const byte *address,
+	boolean set)
+{
+	long index= network_session_election_find(election, address);
+	boolean has= index!=NONE && (election->unknownBC&(1u<<index));
+
+	if (set)
+	{
+		if (has)
+		{
+			return FALSE;
+		}
+		network_session_election_add_unknownBC(address, election);
+	}
+	else
+	{
+		if (!has)
+		{
+			return FALSE;
+		}
+		index= network_session_election_find(election, address);
+		if (index!=NONE)
+		{
+			election->unknownBC&= ~(1u<<index);
+		}
+	}
+
+	return TRUE;
+}

@@ -1803,3 +1803,5 @@ address,name,source,arguments,returns,convention
 0005b9d0,network_session_leader_set_unknown4db0,source/networking/network_session.c,eax edx,bool
 0005bf10,network_session_unknown_0005bf10,source/networking/network_session.c,ecx edx ebx stack stack,bool,stdcall
 0005c010,network_session_leader_set_unknown5ddc,source/networking/network_session.c,edx stack,bool,stdcall
+00062c20,network_session_election_add_other,source/networking/network_session.c,edx stack stack,bool,stdcall
+00062ca0,network_session_election_set_unknownBC,source/networking/network_session.c,eax edi stack,bool,stdcall

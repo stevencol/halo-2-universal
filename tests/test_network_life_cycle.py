@@ -1999,3 +1999,29 @@ def run(t) -> None:
         for n in range(300):
             election_, address = election()
             t.check(name, address, election_)
+
+    # ---------- two more of what a session has in its ninth state
+
+    for n in range(400):
+        election_, address = election()
+        local = bytes(election_.data[0x24:0x48])
+        way = random_.randrange(5)
+        if way == 0:
+            first, second = Buffer(local), address
+        elif way == 1:
+            first, second = address, Buffer(local)
+        elif way == 2:
+            first, second = Buffer(local), 0
+        elif way == 3:
+            first, second = Buffer(local[:0x23] + bytes((local[0x23] ^ 1,))), address
+        else:
+            first, second = Buffer(local), Buffer(local)
+        t.check("network_session_election_add_other", first, election_, second)
+    for n in range(400):
+        election_, address = election()
+        t.check(
+            "network_session_election_set_unknownBC",
+            election_,
+            address,
+            random_.choice((0, 1, 1, 0x80, 0x100)),
+        )

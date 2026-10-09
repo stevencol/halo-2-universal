@@ -2,6 +2,36 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Dos más del noveno estado
+
+Dos funciones en `networking/network_session.c`, 248 bytes entre las dos. De 1264
+funciones se pasa a 1266, el 11,24 % de las del juego (el 7,000 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_election_add_other` | `0x00062c20` | `networking/network_session.c` |
+| `network_session_election_set_unknownBC` | `0x00062ca0` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_election_add_other`: de dos consolas, una tiene que ser
+  esta; la otra recibe su bit en el primero de los dos números de la lista
+  del noveno estado (hito 346), y entra en la lista si no estaba. No vale
+  si ya lo tenía.
+- `network_session_election_set_unknownBC` pone o quita el bit de una
+  consola en el segundo número, y dice si eso cambió algo.
+- El primer número parece «con quién puedo hablar» (se marca por parejas,
+  yo y otra) y el segundo algo que cada consola da o retira.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (173
+  funciones).
+- La batería completa del hito 343 seguía corriendo.
+- Las mutaciones de los hitos 280 a 308 y 321 a 347 están pendientes.
+
 ## 2026-10-08 — Lo que la sesión guarda cuando se queda sin quien la lleva
 
 Cinco funciones en `networking/network_session.c`, 648 bytes entre todas. De 1259
