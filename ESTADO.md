@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 404.
+**Última actualización:** 2026-10-08, al terminar el hito 405.
 
 ## Dónde estamos
 
-- **1400 funciones descompiladas de 11.265: el 12,43 % del juego** (el
-  8,410 % de los bytes de código).
-- Las 1400 están comprobadas contra el ejecutable original: las 1390 del
+- **1401 funciones descompiladas de 11.265: el 12,44 % del juego** (el
+  8,423 % de los bytes de código).
+- Las 1401 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a message goes in the gateway's packet* (ver `git log`).
+- Último hito: *Decompile how the gateway reads a packet: the module is whole* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 555 funciones apuntadas pero sin descompilar (las que el código
-  llama); 453 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 556 funciones apuntadas pero sin descompilar (las que el código
+  llama); 454 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -121,10 +121,10 @@ Módulos (funciones hechas / archivo):
       lo que la consola es en la red, la clave de cada sesión y las
       direcciones; de `0x0007a8a0` a `0x0007af80`, y falta lo que sigue
       desde `0x0007afd0`)
-- [ ] Mensajes que no van por un canal —
-  `networking\network_message_gateway.c` (5: meter un mensaje en el
-  paquete, mandar el paquete pendiente, y con qué empieza un mensaje).
-  Falta recibir un paquete (`0x0007afd0`).
+- [x] Mensajes que no van por un canal —
+  `networking\network_message_gateway.c` (6: meter un mensaje en el
+  paquete, mandarlo, leer el que llega, y con qué empieza un mensaje).
+  Entero.
 - [x] Intentos de medir la conexión — `networking\transport_qos.c` (8: la
   tabla de intentos, empezar uno, soltarlo, cómo va y qué encontró con
   cada consola). Entero.

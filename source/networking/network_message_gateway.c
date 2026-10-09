@@ -176,3 +176,56 @@ boolean __attribute__((stdcall)) network_message_gateway_send(
 		network_message_gateway_flush(gateway);
 	}
 }
+
+/* 0x000938e0: a message of a kind that came from an address of the game is
+given to what it is for, by something */
+void __attribute__((stdcall)) unknown_000938e0(long type, const void *data, void *unknown10,
+	const struct transport_address *address);
+
+/* 0x0007afd0: a packet that came from an address of the game is read;
+whether it was good. It is not if it starts with the word of a build for
+testing. While a bit says that there is one more message: its kind and size
+are read, and what the function of its kind reads of it; and if the gateway
+has something at 0x10, the message is given to what it is for
+(unknown_000938e0). A message that is not good ends it, with the ones before
+given already. The game has bitstream_begin_reading and bitstream_read_bool
+written here */
+boolean __attribute__((stdcall)) network_message_gateway_receive(
+	byte *gateway,
+	const struct transport_address *address,
+	struct bitstream *stream)
+{
+	byte data[MAXIMUM_NETWORK_MESSAGE_SIZE];
+
+	bitstream_begin_reading(stream);
+	if (bitstream_overflowed(stream))
+	{
+		return FALSE;
+	}
+	while (bitstream_read_bool(stream))
+	{
+		const struct network_message_type *types=
+			*(const struct network_message_type **)(gateway+NETWORK_MESSAGE_GATEWAY_TYPES_OFFSET);
+		long type= NONE;
+		long size= 0;
+		void *unknown10;
+
+		if (!network_message_header_read(&type, stream, types, &size))
+		{
+			return FALSE;
+		}
+		memset(data, 0, size);
+		if (!types[type].decode(stream, size, data))
+		{
+			return FALSE;
+		}
+		unknown10= *(void **)(gateway+NETWORK_MESSAGE_GATEWAY_UNKNOWN10_OFFSET);
+		if (unknown10)
+		{
+			unknown_000938e0(type, data, unknown10, address);
+		}
+	}
+	stream->unknownC= _bitstream_unknownC_read;
+
+	return TRUE;
+}

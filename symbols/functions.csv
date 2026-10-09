@@ -1793,6 +1793,8 @@ address,name,source,arguments,returns,convention
 00062ab0,network_session_host_lost,source/networking/network_session.c,esi,void
 000616e0,network_session_enter_state9,source/networking/network_session.c,stack,void,stdcall
 0007b140,network_message_gateway_send,source/networking/network_message_gateway.c,stack stack stack stack stack,bool,stdcall
+0007afd0,network_message_gateway_receive,source/networking/network_message_gateway.c,ecx stack stack,bool,stdcall
+000938e0,unknown_000938e0,,eax ecx edx stack,void,stdcall
 00062b70,network_session_election_new,source/networking/network_session.c,edx ebx,int
 00063ba0,network_session_election_find,source/networking/network_session.c,ecx edx,int
 00063c00,network_session_election_add_unknownB8,source/networking/network_session.c,eax esi,int

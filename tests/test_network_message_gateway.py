@@ -165,3 +165,56 @@ def run(t) -> None:
             },
             mocks=[Mock(writes, stack_arguments=3)],
         )
+
+    # ---------- a packet of messages is read
+
+    for n in range(800):
+        data = gateway() + bytearray()
+        # the kinds of message go after the gateway: each has the function that reads one
+        kinds = len(data)
+        struct.pack_into("<I", data, 0xC, kinds)
+        struct.pack_into("<I", data, 0x10, random_.choice((0, 0x1234, 0x1234)))
+        for other in range(0x2D):
+            data += struct.pack("<B3x2i2i3I", 1, 0, 0, 0, 0xFFFF, 0x11, mock_address(0), 0x33)
+        size = random_.choice((4, 5, 8, 40))
+        packet = bytearray(a_stream(size, random_.getrandbits(8)).data)
+        # a packet with many messages, or with few, or of a build for testing
+        ones = random_.choice((0xFF, 0xFF, 0x55, 0x00))
+        for at in range(0x34, 0x34 + size):
+            packet[at] = ones if ones in (0xFF, 0x00) else random_.getrandbits(8)
+        if n % 10 == 0:
+            packet[0x34:0x38] = b"gbed"
+        good = random_.choice((100, 100, 3, 5))
+        reads = random_.choice((0, 8, 33))
+
+        def header(harness, arguments, good=good):
+            # the kind and the size go where the first and the last thing say, in the stack; the stream has gone on
+            at = struct.unpack("<i", harness.mu.mem_read(arguments[1] + 0x10, 4))[0]
+            harness.mu.mem_write(arguments[1] + 0x10, struct.pack("<i", at + 24))
+            harness.mu.mem_write(arguments[0], struct.pack("<I", (at * 7) % 0x2D))
+            harness.mu.mem_write(arguments[3], struct.pack("<I", (at % 5) * 8))
+            return (at // 24) % good != good - 1, (harness.normalize(arguments[1]), harness.normalize(arguments[2]))
+
+        def decodes(call, reads=reads, good=good):
+            at = struct.unpack("<i", t.harness.mu.mem_read(call.stack[0] + 0x10, 4))[0]
+            t.harness.mu.mem_write(call.stack[0] + 0x10, struct.pack("<i", at + reads))
+            # what it reads is the message, which it leaves where the last thing says
+            t.harness.mu.mem_write(call.stack[2], struct.pack("<I", at))
+            return at % (good + 2) != good
+
+        t.check(
+            "network_message_gateway_receive",
+            Buffer(bytes(data), pointers=(0xC,)),
+            Buffer(random_.randbytes(0x14)),
+            Buffer(bytes(packet), pointers=(0,)),
+            externals={
+                "network_message_header_read": header,
+                "unknown_000938e0": lambda harness, arguments: (
+                    0,
+                    # what is after the message is whatever was in the stack
+                    (arguments[0], bytes(harness.mu.mem_read(arguments[1], 4)), arguments[2], harness.normalize(arguments[3])),
+                ),
+            },
+            # the message is empty when the function of its kind is given it
+            mocks=[Mock(decodes, stack_arguments=3, record=lambda call: (call.stack[0], call.stack[1], bytes(t.harness.mu.mem_read(call.stack[2], call.stack[1]))))],
+        )

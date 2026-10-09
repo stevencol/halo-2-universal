@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Un paquete de mensajes se lee: el módulo, entero
+
+Una función en `networking/network_message_gateway.c`, de 368 bytes. De 1400
+funciones se pasa a 1401, el 12,44 % de las del juego (el 8,423 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_message_gateway_receive` | `0x0007afd0` | `networking/network_message_gateway.c` |
+
+### Lo que se sabe
+
+- **`network_message_gateway.c` está entero**: las cuatro funciones del
+  tramo `0x0007afd0` a `0x0007b3d2` y las dos de la cabecera de un mensaje
+  que el juego tiene en otro sitio (hitos 394 y 403 a 405).
+- `network_message_gateway_receive` es **el camino de vuelta del hito
+  404**: lee un paquete que ha llegado de una dirección.
+  - Si el paquete empieza por la palabra de una versión de pruebas, no
+    vale (hito 402).
+  - Mientras un bit diga que hay otro mensaje: lee su clase y su tamaño
+    (hito 403), deja que la función de su clase lo lea en un hueco de
+    hasta `0x10000` bytes puesto a cero, y **se lo da a quien le toque**
+    (`unknown_000938e0`, la que reparte por clases; sin descompilar).
+  - Un mensaje malo corta la lectura, pero los anteriores ya se han
+    repartido.
+- En el juego tiene escritas dentro dos funciones del flujo de bits
+  (empezar a leer y leer un bit); aquí se las llama.
+
+### Comprobado rompiendo líneas
+
+- Diez líneas rotas, una cada vez: las pruebas fallaron en las diez.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_message_gateway` (6
+  funciones).
+- En las pruebas, leer la cabecera de cada mensaje y leer el mensaje están
+  sustituidos por algo que solo hace avanzar el flujo; la cabecera tiene
+  sus propias pruebas (hito 403).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Un mensaje entra en el paquete
 
 Una función en `networking/network_message_gateway.c`, de 478 bytes. De 1399
