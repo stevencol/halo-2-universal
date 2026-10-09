@@ -2023,3 +2023,11 @@ address,name,source,arguments,returns,convention
 0008a580,simulation_entity_database_unknown_0008a580,source/networking/simulation_entity_database.c,ecx stack stack stack stack,int,stdcall
 0008a5c0,simulation_entity_database_write_creation,source/networking/simulation_entity_database.c,ecx stack stack stack stack stack stack,bool,stdcall
 0008aa50,simulation_entity_database_read_update,source/networking/simulation_entity_database.c,ecx stack stack stack stack stack stack,bool,stdcall
+0008a210,simulation_entity_database_create_entities,source/networking/simulation_entity_database.c,eax stack stack stack,bool,stdcall
+0008a920,simulation_entity_database_created_remote,source/networking/simulation_entity_database.c,ecx stack stack stack stack stack,void,stdcall
+0008ac40,simulation_entity_database_set_state,source/networking/simulation_entity_database.c,ecx stack stack stack stack,int,stdcall
+0008aca0,simulation_entity_database_unknown_0008aca0,source/networking/simulation_entity_database.c,ecx stack stack stack,void,stdcall
+0008ace0,simulation_entity_database_deleting,source/networking/simulation_entity_database.c,ecx stack,void,stdcall
+0008ad20,simulation_entity_database_deleted,source/networking/simulation_entity_database.c,ecx stack,void,stdcall
+0008ad30,simulation_entity_database_adopt,source/networking/simulation_entity_database.c,ecx stack,bool,stdcall
+0008ad70,simulation_entity_database_adopted,source/networking/simulation_entity_database.c,ecx,void

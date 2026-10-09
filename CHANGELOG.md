@@ -2,6 +2,60 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Varias cosas de una vez, y siete funciones más de la tabla
+
+Ocho funciones en `networking/simulation_entity_database.c`. De 1461
+funciones se pasa a 1469, el 13,04 % de las del juego (el 8,747 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_entity_database_create_entities` | `0x0008a210` | `networking/simulation_entity_database.c` |
+| `simulation_entity_database_created_remote` | `0x0008a920` | `networking/simulation_entity_database.c` |
+| `simulation_entity_database_set_state` | `0x0008ac40` | `networking/simulation_entity_database.c` |
+| `simulation_entity_database_unknown_0008aca0` | `0x0008aca0` | `networking/simulation_entity_database.c` |
+| `simulation_entity_database_deleting` | `0x0008ace0` | `networking/simulation_entity_database.c` |
+| `simulation_entity_database_deleted` | `0x0008ad20` | `networking/simulation_entity_database.c` |
+| `simulation_entity_database_adopt` | `0x0008ad30` | `networking/simulation_entity_database.c` |
+| `simulation_entity_database_adopted` | `0x0008ad70` | `networking/simulation_entity_database.c` |
+
+### Lo que se sabe
+
+- `simulation_entity_database_create_entities` crea **hasta cuatro cosas
+  de una vez, encadenadas** (un vehículo con su torreta, por ejemplo):
+  memoria para cada una, sitios para todas (hito 416) y cada una apuntada
+  con su clase. Si falta algo, se devuelve toda la memoria.
+- **La tabla `0x00450d60` está leída entera**: son dieciséis funciones, y
+  es por donde la tabla de cosas del hito 416 habla con este módulo. Las
+  seis que aquella llamaba sin saber a quién ya tienen nombre y cuerpo:
+  - la 3, `..._created_remote`: llega una cosa que hizo otra consola. Se
+    queda con la memoria que venía con ella, y su clase dice si ya está
+    para contarse.
+  - la 11, `..._deleting`, y la 13, `..._deleted`: una cosa se está
+    borrando, y ya está borrada.
+  - la 14, `..._adopt`, y la 15, `..._adopted`: esta consola se queda con
+    las cosas de otra. Cada número cuenta un uso más de su sitio, igual
+    que hace la tabla de cosas con los suyos (hito 418).
+  - la 16 era la del hito 421 (qué contar a una consola nueva).
+- Además: la 8, `..._set_state`, pone el estado de una cosa tal como
+  llegó y avisa a su clase; y la 10 da un real de una cosa: nada, o 0,85.
+- De la tabla de una clase se conocen ya dieciséis funciones.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las ocho** y en las de los hitos 420 a
+  422. Tanda de los hitos 415 y 419, hecha: 26 de 26 en
+  `network_channel_write_packet` y 20 de 20 en el gestor de sucesos.
+- Siete de las ocho no están en la lista de Ghidra y cuentan de más en el
+  porcentaje (son ya once funciones así).
+- De la tabla faltan cuatro: `0x0008a460`, `0x0008a6f0`, `0x0008a9c0` y
+  `0x0008aac0` (y la `0x002ed7f0`, que es de otro sitio).
+- En este hito se pasaron las pruebas de `simulation_entity_database`
+  (20 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Crear una cosa, y escribirla y leerla en un paquete
 
 Cuatro funciones en `networking/simulation_entity_database.c`. De 1457

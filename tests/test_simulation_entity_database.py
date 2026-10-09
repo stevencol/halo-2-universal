@@ -10,9 +10,9 @@ COUNT = 0x400
 ENTITY = 0x20
 # in one buffer: what the things are; the kinds that there are, four kinds and their functions; the heap of the
 # network, and what gives its memory with its functions
-DATABASE, TYPES, KINDS, KIND_TABLE, HEAP, ALLOCATOR, TABLE, END = 0x0, 0x8014, 0x8028, 0x8038, 0x808C, 0x8094, 0x809C, 0x81D0
+DATABASE, TYPES, KINDS, KIND_TABLE, HEAP, ALLOCATOR, TABLE, END = 0x0, 0x8014, 0x8028, 0x8038, 0x80A0, 0x80A8, 0x80B0, 0x81E4
 # and after them: how many times what gives the memory was asked, what it answers, and the memory that it gives
-ASKED, ANSWERS, GIVEN = 0x80C8, 0x80CC, 0x80D0
+ASKED, ANSWERS, GIVEN = 0x80DC, 0x80E0, 0x80E4
 KIND_COUNT = 4
 
 
@@ -32,6 +32,7 @@ def run(t) -> None:
             struct.pack_into("<I", data, KINDS + kind * 4, KIND_TABLE)
             pointers += [TYPES + 4 + kind * 4, KINDS + kind * 4]
         struct.pack_into("<21I", data, KIND_TABLE, *(0x11 * (n + 1) for n in range(20)), mock_address(2))
+        struct.pack_into("<5I", data, KIND_TABLE + 0x54, *(mock_address(n) for n in range(14, 19)))
         struct.pack_into("<3I", data, KIND_TABLE + 8, mock_address(3), mock_address(4), mock_address(5))
         struct.pack_into("<2I", data, KIND_TABLE + 0x48, mock_address(6), mock_address(7))
         struct.pack_into("<I4B", data, ASKED, 0, *random_.choice(((1, 1, 1, 1), (1, 1, 1, 1), (0, 1, 0, 0), (0, 0, 1, 1), (0, 0, 0, 0))))
@@ -268,3 +269,86 @@ def run(t) -> None:
             Buffer(random_.randbytes(4)),
             mocks=mocks,
         )
+
+    # ---------- some new things at once
+
+    def table_mocks(sizes=(0x40, 0x40), says: int = 1, value: int = 0) -> list:
+        """All the functions that there are, in their places."""
+        return [
+            *all_mocks(*sizes, 5),
+            Mock(lambda call: 0xFF, stack_arguments=0, registers=("ecx",)),
+            Mock(lambda call: 0, stack_arguments=4, registers=("ecx",)),
+            Mock(lambda call: 0, stack_arguments=4, registers=("ecx",)),
+            Mock(lambda call: 0, stack_arguments=8, registers=("ecx",)),
+            Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
+            Mock(lambda call: says, stack_arguments=6, registers=("ecx",)),
+            Mock(lambda call: value, stack_arguments=4, registers=("ecx",)),
+            Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
+            Mock(lambda call: says, stack_arguments=1, registers=("ecx",)),
+        ]
+
+    for n in range(400):
+        data = world(manager=random_.choice((0.0, 0.5, 0.995, 0.999, 1.0)))
+        count = random_.choice((0, 1, 2, 3, 4, 4))
+        t.check(
+            "simulation_entity_database_create_entities",
+            Buffer(random_.randbytes(16)),
+            data,
+            count,
+            Buffer(struct.pack("<4I", *(random_.randrange(KIND_COUNT) for kind in range(4)))),
+            globals={"unknown_004d87f8": Pointer(data, HEAP)},
+            mocks=table_mocks((random_.choice((0, 1, 0x40, 0x100)), random_.choice((0, NONE, 5, 0x100)))),
+        )
+
+    # ---------- more of the functions that only the table has
+
+    for n in range(300):
+        entity = random_.choice((0, 0x3FF, random_.randrange(COUNT))) | random_.getrandbits(22) << 10
+        place = 0x14 + (entity & 0x3FF) * ENTITY
+        says = random_.choice((0, 1, 1, 0x100))
+        t.check(
+            "simulation_entity_database_created_remote",
+            world(),
+            entity,
+            random_.randrange(KIND_COUNT),
+            random_.getrandbits(32),
+            random_.choice((2, 2, 2, 0, 1, 3)),
+            Buffer(random_.randbytes(0x20)),
+            mocks=table_mocks(says=says),
+        )
+        # how the thing is has a place: the memory that the heap gives, here
+        data = world()
+        raw = bytearray(data.data)
+        size = random_.choice((0, 1, 3, 4, 0x40, 0x100))
+        struct.pack_into("<II", raw, place + 0x18, size, GIVEN)
+        update = struct.pack("<II", random_.getrandbits(32), 8) + random_.randbytes(size + 4)
+        t.check(
+            "simulation_entity_database_set_state",
+            Buffer(bytes(raw), pointers=(*data.pointers, place + 0x1C)),
+            entity,
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            Buffer(update, pointers=(4,)),
+            mocks=table_mocks(value=random_.getrandbits(32)),
+        )
+        raw = bytearray(world().data)
+        raw[place + 7] = random_.choice((0, 1, 0x7F, 0x80, 0xFF))
+        t.check(
+            "simulation_entity_database_unknown_0008aca0",
+            Buffer(bytes(raw), pointers=data.pointers),
+            entity,
+            random_.getrandbits(32),
+            Buffer(random_.randbytes(4)),
+        )
+        t.check("simulation_entity_database_deleting", world(), entity, mocks=table_mocks())
+        t.check("simulation_entity_database_adopt", world(), entity, mocks=table_mocks(says=says))
+        data = world(random_.choice((0.5, 1.0)))
+        t.check(
+            "simulation_entity_database_deleted",
+            data,
+            entity,
+            globals={"unknown_004d87f8": Pointer(data, HEAP)},
+            mocks=table_mocks(),
+        )
+    for n in range(60):
+        t.check("simulation_entity_database_adopted", world(), mocks=table_mocks())

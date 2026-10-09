@@ -357,3 +357,191 @@ boolean __attribute__((stdcall)) simulation_entity_database_read_update(
 	return type->functions->encode_state(type, FALSE, flags, read, entity->state_size, entity->state_data, unknown, stream,
 		unknown2) && *read!=0;
 }
+
+/* 0x0008a210: so many new things at once, four at the most, each of a kind:
+memory for each, places and numbers for them all
+(replication_entity_manager_create_entities), and each is of its kind with
+its memory. Their numbers are given; FALSE, with the memory taken back, if
+there is no memory or no places. The game has
+simulation_entity_database_set_entity written here */
+boolean __attribute__((stdcall)) simulation_entity_database_create_entities(
+	long *entities,
+	struct simulation_entity_database *database,
+	long count,
+	const long *types)
+{
+	void *creation_data[MAXIMUM_REPLICATION_ENTITY_CHAIN]= {NULL};
+	void *state_data[MAXIMUM_REPLICATION_ENTITY_CHAIN]= {NULL};
+	long creation_size[MAXIMUM_REPLICATION_ENTITY_CHAIN]= {0};
+	long state_size[MAXIMUM_REPLICATION_ENTITY_CHAIN]= {0};
+	boolean result= TRUE;
+	long index;
+
+	for (index= 0; index<count; index++)
+	{
+		if (!simulation_entity_database_allocate_creation_data(database, types[index], &creation_size[index],
+			&creation_data[index]) ||
+			!simulation_entity_database_allocate_state_data(database, types[index], &state_size[index], &state_data[index]))
+		{
+			result= FALSE;
+			break;
+		}
+	}
+	if (result && !replication_entity_manager_create_entities(database->manager, count, entities))
+	{
+		result= FALSE;
+	}
+	if (!result)
+	{
+		for (index= 0; index<count; index++)
+		{
+			if (creation_data[index])
+			{
+				network_heap_free(creation_data[index]);
+			}
+			if (state_data[index])
+			{
+				network_heap_free(state_data[index]);
+			}
+		}
+
+		return FALSE;
+	}
+	for (index= 0; index<count; index++)
+	{
+		simulation_entity_database_set_entity(entities[index], database, (short)types[index], creation_size[index],
+			creation_data[index], state_size[index], state_data[index]);
+	}
+
+	return TRUE;
+}
+
+/* 0x0008a920: a thing that another console made is here, with a number
+and of a kind: it has what came with it, which is not what came's any more
+(so many pairs of numbers of it are zeros: one, and the count that is
+given). Its kind is told, by its twenty-third function, and says whether the
+thing is there to be told of. It is the third function of what the things
+are of, which the table at 0x00450d60 has, as the ones below are, and
+Ghidra's list has none of them; the game has
+simulation_entity_database_set_entity written here */
+void __attribute__((stdcall)) simulation_entity_database_created_remote(
+	struct simulation_entity_database *database,
+	long entity_index,
+	long type_index,
+	long unknown,
+	long count,
+	struct simulation_entity_creation *creation)
+{
+	struct simulation_entity *entity= &database->entities[entity_index&REPLICATION_ENTITY_INDEX_MASK];
+	long creation_size= creation->creation_size;
+	void *creation_data= creation->creation_data;
+	long state_size= creation->state_size;
+	void *state_data= creation->state_data;
+	struct simulation_entity_type *type;
+
+	memset(creation, 0, (unsigned long)count*2*sizeof(long));
+	type= database->types->types[type_index];
+	simulation_entity_database_set_entity(entity_index, database, (short)type_index, creation_size, creation_data,
+		state_size, state_data);
+	entity->exists= type->functions->created_remote(type, entity, creation_size, creation_data, unknown, entity->state_size,
+		state_data)!=0;
+}
+
+/* 0x0008ac40: how the thing of a number is is what came: a copy of it; and
+its kind is told, by its twenty-fourth function, with a number. What the
+kind says. The eighth function of the table */
+long __attribute__((stdcall)) simulation_entity_database_set_state(
+	struct simulation_entity_database *database,
+	long entity_index,
+	long unknown4,
+	long unknown8,
+	const struct simulation_entity_update *update)
+{
+	struct simulation_entity *entity= &database->entities[entity_index&REPLICATION_ENTITY_INDEX_MASK];
+	struct simulation_entity_type *type= database->types->types[entity->type];
+
+	memcpy(entity->state_data, update->state_data, entity->state_size);
+
+	return type->functions->state_set(type, entity, unknown4, entity->state_size, entity->state_data);
+}
+
+/* 0x0008aca0: a real of the thing of a number: nothing if its second byte
+is more than nothing, and 0.85 if not. The tenth function of the table */
+void __attribute__((stdcall)) simulation_entity_database_unknown_0008aca0(
+	struct simulation_entity_database *database,
+	long entity_index,
+	long unknown,
+	real *result)
+{
+	const struct simulation_entity *entity= &database->entities[entity_index&REPLICATION_ENTITY_INDEX_MASK];
+
+	*result= (signed char)entity->unknown7>0 ? 0.0f : 0.85f;
+}
+
+/* 0x0008ace0: the thing of a number is being done with: if it is there to
+be told of, its kind is told, by its twenty-fifth function, and it is not
+there any more, with nothing changed. The eleventh function of the table */
+void __attribute__((stdcall)) simulation_entity_database_deleting(
+	struct simulation_entity_database *database,
+	long entity_index)
+{
+	struct simulation_entity *entity= &database->entities[entity_index&REPLICATION_ENTITY_INDEX_MASK];
+
+	if (entity->exists)
+	{
+		struct simulation_entity_type *type= database->types->types[entity->type];
+
+		type->functions->deleting(type, entity);
+		entity->exists= FALSE;
+		entity->pending= 0;
+	}
+}
+
+/* 0x0008ad20: the thing of a number is done with
+(simulation_entity_database_free_entity). The thirteenth function of the
+table */
+void __attribute__((stdcall)) simulation_entity_database_deleted(
+	struct simulation_entity_database *database,
+	long entity_index)
+{
+	simulation_entity_database_free_entity(entity_index, database);
+}
+
+/* 0x0008ad30: whether the thing of a number, which another console made,
+can be this one's: what its kind says, by its twenty-sixth function. The
+fourteenth function of the table */
+boolean __attribute__((stdcall)) simulation_entity_database_adopt(
+	struct simulation_entity_database *database,
+	long entity_index)
+{
+	struct simulation_entity *entity= &database->entities[entity_index&REPLICATION_ENTITY_INDEX_MASK];
+	struct simulation_entity_type *type= database->types->types[entity->type];
+
+	return type->functions->adopt(type, entity)!=0;
+}
+
+/* 0x0008ad70: the things that another console made are this one's: the
+number of each thing that there is says that its place has been used once
+more, as replication_entity_manager_adopt_entities does with its own, and
+its kind is told, by its twenty-second function. The fifteenth function of
+the table */
+void simulation_entity_database_adopted(
+	struct simulation_entity_database *database)
+{
+	long index;
+
+	for (index= 0; index<MAXIMUM_SIMULATION_ENTITIES; index++)
+	{
+		struct simulation_entity *entity= &database->entities[index];
+
+		if (entity->entity_index!=NONE)
+		{
+			struct simulation_entity_type *type= database->types->types[entity->type];
+			unsigned long entity_index= (unsigned long)entity->entity_index;
+
+			entity->entity_index= (long)((((entity_index>>REPLICATION_ENTITY_SALT_SHIFT)+1)%REPLICATION_ENTITY_SALT_COUNT)<<
+				REPLICATION_ENTITY_SALT_SHIFT|(entity_index&REPLICATION_ENTITY_INDEX_MASK));
+			type->functions->adopted(type, entity);
+		}
+	}
+}

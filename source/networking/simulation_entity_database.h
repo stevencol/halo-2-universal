@@ -11,6 +11,7 @@ functions.
 #define __SIMULATION_ENTITY_DATABASE_H
 
 #include "cseries/cseries.h"
+#include "math/real_math.h"
 #include "networking/bitstream.h"
 #include "networking/replication_entity_manager.h"
 
@@ -56,7 +57,12 @@ made, and the fifteenth writes or reads how it is, for some bits, and says
 which it did. The nineteenth is
 told that a thing is there, with what was said of it when it was made; the
 twentieth builds how it is from that; and the twenty-first is asked what of a
-thing is to be told of, from the bits of what changed */
+thing is to be told of, from the bits of what changed. The twenty-second is
+told that a thing is this console's now; the twenty-third, that a thing that
+another console made is here, and says whether it is there to be told of;
+the twenty-fourth, that how a thing is was said again; the twenty-fifth, that
+a thing is being done with; and the twenty-sixth says whether a thing that
+another console made can be this one's */
 struct simulation_entity_type;
 
 struct simulation_entity_type_functions
@@ -83,11 +89,37 @@ struct simulation_entity_type_functions
 		void *creation_data, long state_size, void *state_data);
 	boolean (__attribute__((thiscall)) *get_update)(struct simulation_entity_type *type,
 		struct simulation_entity *entity, unsigned long *flags, long state_size, void *state_data);
+	void (__attribute__((thiscall)) *adopted)(struct simulation_entity_type *type, struct simulation_entity *entity);
+	boolean (__attribute__((thiscall)) *created_remote)(struct simulation_entity_type *type,
+		struct simulation_entity *entity, long creation_size, void *creation_data, long unknown, long state_size,
+		void *state_data);
+	long (__attribute__((thiscall)) *state_set)(struct simulation_entity_type *type, struct simulation_entity *entity,
+		long unknown, long state_size, void *state_data);
+	void (__attribute__((thiscall)) *deleting)(struct simulation_entity_type *type, struct simulation_entity *entity);
+	boolean (__attribute__((thiscall)) *adopt)(struct simulation_entity_type *type, struct simulation_entity *entity);
 };
 
 struct simulation_entity_type
 {
 	const struct simulation_entity_type_functions *functions;
+};
+
+/* what comes with a thing that another console made: what was said of it
+when it was made and how it is, each of a size and in memory of the heap of
+the network, which the thing keeps */
+struct simulation_entity_creation
+{
+	short creation_size;
+	void *creation_data;
+	short state_size;
+	void *state_data;
+};
+
+/* how a thing is, as it came: something, and where it is */
+struct simulation_entity_update
+{
+	long unknown0;
+	const void *state_data;
 };
 
 /* the kinds that there are */
@@ -128,6 +160,21 @@ boolean __attribute__((stdcall)) simulation_entity_database_write_creation(struc
 	long entity_index, unsigned long flags, long unknown, struct bitstream *stream, long unknown2, unsigned long *written);
 boolean __attribute__((stdcall)) simulation_entity_database_read_update(struct simulation_entity_database *database,
 	long entity_index, unsigned long flags, long unknown, struct bitstream *stream, long unknown2, unsigned long *read);
+boolean __attribute__((stdcall)) simulation_entity_database_create_entities(long *entities,
+	struct simulation_entity_database *database, long count, const long *types);
+void __attribute__((stdcall)) simulation_entity_database_created_remote(struct simulation_entity_database *database,
+	long entity_index, long type_index, long unknown, long count, struct simulation_entity_creation *creation);
+long __attribute__((stdcall)) simulation_entity_database_set_state(struct simulation_entity_database *database,
+	long entity_index, long unknown4, long unknown8, const struct simulation_entity_update *update);
+void __attribute__((stdcall)) simulation_entity_database_unknown_0008aca0(struct simulation_entity_database *database,
+	long entity_index, long unknown, real *result);
+void __attribute__((stdcall)) simulation_entity_database_deleting(struct simulation_entity_database *database,
+	long entity_index);
+void __attribute__((stdcall)) simulation_entity_database_deleted(struct simulation_entity_database *database,
+	long entity_index);
+boolean __attribute__((stdcall)) simulation_entity_database_adopt(struct simulation_entity_database *database,
+	long entity_index);
+void simulation_entity_database_adopted(struct simulation_entity_database *database);
 void simulation_entity_database_activate_entity(long entity_index, struct simulation_entity_database *database);
 unsigned long __attribute__((stdcall)) simulation_entity_database_get_initial_update(
 	struct simulation_entity_database *database, long entity_index);
