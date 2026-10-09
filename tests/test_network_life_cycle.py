@@ -2295,3 +2295,64 @@ def run(t) -> None:
             Buffer(bytes(message)),
             externals={"network_observer_find_channel": from_channel(channel)},
         )
+
+    # ---------- three more things that come: of the time, of a console, and by a channel
+
+    for n in range(500):
+        data = with_peers()
+        data[0x7420] = random_.choice((0, 0, 1))
+        message = bytearray(random_.randbytes(0x1C))
+        struct.pack_into("<H", message, 0x18, random_.choice((0, 0, 1, 1, 2, 0x100, 0x101)))
+        if n % 5 == 0:
+            # times that are near each other
+            base = random_.getrandbits(32)
+            for at in (8, 0xC, 0x10, 0x14):
+                struct.pack_into("<I", message, at, (base + random_.randrange(-50, 50)) & 0xFFFFFFFF)
+        t.check(
+            "network_session_synchronize_time",
+            Buffer(bytes(data)),
+            Buffer(random_.randbytes(0x14)),
+            Buffer(bytes(message)),
+            globals=clock(),
+            externals={
+                "GetTickCount": ticks(),
+                "transport_security_peer_address_from_address": known(data),
+                "network_session_matches_state1_address": lambda harness, arguments, same=random_.choice((0, 0, 1, 1, 0x80, 0x100)): same,
+                "unknown_0007b140": sends_to_address,
+            },
+        )
+
+    def leaves(harness, arguments):
+        return 0, (harness.normalize(arguments[0]), arguments[1])
+
+    for n in range(500):
+        data = consistent()
+        data[0x7420] = random_.choice((0, 0, 1))
+        struct.pack_into("<I", data, 0x40, random_.choice((0, 1, 2, 3, 3, NONE)))
+        for peer in range(16):
+            data[0x72DC + peer * 0x14 + 1] = random_.choice((0, 1, 1, 0x80))
+        message = bytearray(random_.randbytes(0x30))
+        said = random_.choice((0, 0, 1, 2, 3, 5, 15, 16, 0x7FFF, 0x8000, 0xFFFF))
+        struct.pack_into("<H", message, 0x2C, said)
+        if said < 16 and n % 5:
+            message[8:0x2C] = data[PEERS + said * PEER : PEERS + said * PEER + 0x24]
+            if n % 5 == 1:
+                message[8 + random_.randrange(0x24)] ^= 4
+        t.check(
+            "network_session_unknown_0005e210",
+            Buffer(bytes(data), pointers=(8,)),
+            Buffer(bytes(message)),
+            externals={"network_session_leave": leaves, "unknown_00075e80": sends_all},
+        )
+
+    for n in range(500):
+        data = consistent()
+        struct.pack_into("<I", data, 0x40, random_.randrange(16))
+        for peer in range(16):
+            data[0x72DC + peer * 0x14] = random_.choice((0, 1, 1, 0x80))
+        t.check(
+            "network_session_unknown_0005e6b0",
+            Buffer(bytes(data), pointers=(8,)),
+            random_.getrandbits(32),
+            externals={"network_observer_find_channel": which_channel(), "unknown_00075e80": sends_all},
+        )

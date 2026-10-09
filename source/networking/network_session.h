@@ -393,6 +393,29 @@ enum
 	by, the place and what the player is known by */
 	_network_session_message_unknown1E= 0x1E,
 	NETWORK_SESSION_MESSAGE_UNKNOWN1E_SIZE= 0x18,
+	/* in what is sent of the kind 0x18: the four numbers, which look like
+	times, and the 16 bits, which are 0 in what asks and 1 in what answers */
+	NETWORK_SESSION_MESSAGE_UNKNOWN18_UNKNOWN8_OFFSET= 0x8,
+	NETWORK_SESSION_MESSAGE_UNKNOWN18_UNKNOWNC_OFFSET= 0xC,
+	NETWORK_SESSION_MESSAGE_UNKNOWN18_UNKNOWN10_OFFSET= 0x10,
+	NETWORK_SESSION_MESSAGE_UNKNOWN18_UNKNOWN14_OFFSET= 0x14,
+	NETWORK_SESSION_MESSAGE_UNKNOWN18_ANSWER_OFFSET= 0x18,
+	/* what a console passes on to the console that runs a session when it
+	is told of a console of it: of this kind and size, with what the session
+	is known by, what that console is known by and which it is */
+	_network_session_message_unknown10= 0x10,
+	NETWORK_SESSION_MESSAGE_UNKNOWN10_SIZE= 0x2E,
+	/* what a console that does not run a session answers by a channel: of
+	this kind and size, with what the session is known by, a byte that is 1,
+	whether the channel is of a console of the session, and, if the session
+	says who is in it, a byte that is 1 and what the console that runs it is
+	known by */
+	_network_session_message_unknown13= 0x13,
+	NETWORK_SESSION_MESSAGE_UNKNOWN13_SIZE= 0x30,
+	NETWORK_SESSION_MESSAGE_UNKNOWN13_UNKNOWN8_OFFSET= 0x8,
+	NETWORK_SESSION_MESSAGE_UNKNOWN13_IS_PEER_OFFSET= 0x9,
+	NETWORK_SESSION_MESSAGE_UNKNOWN13_HAS_HOST_OFFSET= 0xA,
+	NETWORK_SESSION_MESSAGE_UNKNOWN13_HOST_OFFSET= 0xC,
 
 	/* the key of a session, after what it is known by and whether it has
 	them, and a number that goes with them: NONE with none. The sizes are in
@@ -642,6 +665,10 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_set_peer_properties(byte *
 	const byte *message);
 boolean NETWORK_SESSION_CALLBACK network_session_host_add_peer_player(byte *session, long channel, const byte *message);
 boolean NETWORK_SESSION_CALLBACK network_session_host_set_peer_player(byte *session, long channel, const byte *message);
+boolean NETWORK_SESSION_CALLBACK network_session_synchronize_time(byte *session,
+	const struct transport_address *address, const byte *message);
+boolean NETWORK_SESSION_CALLBACK network_session_unknown_0005e210(byte *session, const byte *message);
+boolean network_session_unknown_0005e6b0(byte *session, long channel);
 boolean network_session_remove_peer_with_message_c(byte *session, long peer_index);
 void NETWORK_SESSION_CALLBACK network_session_peer_properties_apply_update(
 	struct network_session_peer_properties *properties, const struct network_session_peer_properties_update *update);

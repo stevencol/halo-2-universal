@@ -2,6 +2,56 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — La hora de la sesión, y dos avisos más
+
+Tres funciones en `networking/network_session.c`, 881 bytes entre todas. De 1279
+funciones se pasa a 1282, el 11,38 % de las del juego (el 7,107 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_synchronize_time` | `0x0005e030` | `networking/network_session.c` |
+| `network_session_unknown_0005e210` | `0x0005e210` | `networking/network_session.c` |
+| `network_session_unknown_0005e6b0` | `0x0005e6b0` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_synchronize_time` atiende el mensaje de la clase `0x18`,
+  el que una sesión en su tercer estado manda una y otra vez a la consola
+  que la lleva (hito 345). Ahora se ve para qué: **es para poner en hora**.
+  - La consola que lleva la sesión, si el mensaje pregunta (sus 16 bits
+    valen 0) y viene de otra consola de la sesión, lo devuelve tal cual a la
+    dirección de la que vino, con los 16 bits a 1.
+  - La otra consola, cuando recibe la respuesta de la que lleva la sesión,
+    calcula la mitad de (tercer número − primero) + (cuarto − segundo) y lo
+    guarda en `0x78B0`: es la cuenta de siempre para saber cuánto va
+    adelantado un reloj respecto de otro con cuatro horas apuntadas. Pone a
+    1 el byte de `0x78AC` y apunta la hora en `0x7654`.
+  - Que los cuatro números sean horas es lo que la cuenta da a entender; no
+    se ha visto todavía quién los rellena.
+- `network_session_unknown_0005e210`: a la consola le hablan de una consola
+  de la sesión (cuál es y cómo se la conoce). Si la sesión no dice quién
+  está en ella, se sale de la sesión. Si la consola es de la sesión y no es
+  la de `0x40`, se apunta en `0x44` y se le pasa lo mismo a la de `0x40` con
+  un mensaje de la clase `0x10`. Es el primer salto del aviso que atiende
+  `network_session_unknown_0005e340` (hito 349).
+- `network_session_unknown_0005e6b0`: llega algo por un canal. La consola
+  que lleva la sesión solo pone a 0 el cuarto byte de lo que guarda de quien
+  lo manda. Cualquier otra **contesta con un mensaje de la clase `0x13`**:
+  lo que identifica a la sesión, si el canal es de una consola de la sesión
+  y, si lo sabe, cómo se conoce a la consola de `0x40`. Parece la manera de
+  decir «yo no llevo esta sesión, la lleva esta otra».
+
+### Sin comprobar
+
+- En `network_session_unknown_0005e6b0` el juego busca la consola del canal
+  con el bucle escrito dentro; aquí se llama a
+  `network_session_find_peer_by_channel`, que hace lo mismo.
+- En este hito se pasaron las pruebas de `network_life_cycle` (189
+  funciones).
+- Las mutaciones de los hitos 280 a 308 y 321 a 352 están pendientes.
+
 ## 2026-10-08 — Lo que una consola dice de sí misma y de sus jugadores
 
 Tres funciones en `networking/network_session.c`, 837 bytes entre todas. De 1276

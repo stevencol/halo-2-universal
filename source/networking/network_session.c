@@ -4236,3 +4236,153 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_set_peer_player(
 
 	return TRUE;
 }
+
+/* 0x0005e030: something of the kind 0x18 comes from an address of the game;
+its four numbers look like times. In a session that this console runs, if it
+asks, is from another console of the session and network_session_unknown_00058d90
+says no, the same is sent back to the address as an answer. In another that
+is in its first state or says who is in it, if it answers and is from the
+console that runs the session: half of what the third number is over the
+first plus what the fourth is over the second is kept at 0x78B0, the byte of
+0x78AC is set, and the time of 0x7654 is now. Whether any of that was done */
+boolean NETWORK_SESSION_CALLBACK network_session_synchronize_time(
+	byte *session,
+	const struct transport_address *address,
+	const byte *message)
+{
+	if (!network_session_has_host(session))
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		long peer_index= network_session_find_peer_by_transport_address(session, address);
+
+		if (peer_index!=NONE && peer_index!=*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET) &&
+			*(const short *)(message+NETWORK_SESSION_MESSAGE_UNKNOWN18_ANSWER_OFFSET)==0 &&
+			!network_session_unknown_00058d90(session))
+		{
+			byte answer[NETWORK_SESSION_MESSAGE_UNKNOWN18_SIZE];
+
+			memcpy(answer, message, sizeof(answer));
+			*(short *)(answer+NETWORK_SESSION_MESSAGE_UNKNOWN18_ANSWER_OFFSET)= 1;
+			unknown_0007b140(*(const long *)(session+NETWORK_SESSION_UNKNOWN4_OFFSET), address,
+				_network_session_message_unknown18, sizeof(answer), answer);
+
+			return TRUE;
+		}
+	}
+	else if (network_session_address_is_host(session, address) &&
+		*(const short *)(message+NETWORK_SESSION_MESSAGE_UNKNOWN18_ANSWER_OFFSET)==1)
+	{
+		unsigned long first= *(const unsigned long *)(message+NETWORK_SESSION_MESSAGE_UNKNOWN18_UNKNOWN10_OFFSET)-
+			*(const unsigned long *)(message+NETWORK_SESSION_MESSAGE_UNKNOWN18_UNKNOWN8_OFFSET);
+		unsigned long second= *(const unsigned long *)(message+NETWORK_SESSION_MESSAGE_UNKNOWN18_UNKNOWN14_OFFSET)-
+			*(const unsigned long *)(message+NETWORK_SESSION_MESSAGE_UNKNOWN18_UNKNOWNC_OFFSET);
+
+		*(long *)(session+NETWORK_SESSION_UNKNOWN78B0_OFFSET)= (long)(first+second)/2;
+		session[NETWORK_SESSION_UNKNOWN78AC_OFFSET]= TRUE;
+		*(long *)(session+NETWORK_SESSION_UNKNOWN7654_OFFSET)= network_session_time();
+
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+/* 0x0005e210: a console is told of a console of a session, by which it is
+and by what it is known by. A session that does not say who is in it is left
+(network_session_leave with nothing), and FALSE. FALSE too if the console
+is not one of the session, is not known by that, or is the one at 0x40. If
+not, TRUE: and unless it is this console and network_session_unknown_00058d90 says yes,
+the console is kept at 0x44 and the console at 0x40 is sent something of the
+kind 0x10 with the same, if the second byte of what the session keeps of it
+is set */
+boolean NETWORK_SESSION_CALLBACK network_session_unknown_0005e210(
+	byte *session,
+	const byte *message)
+{
+	long said;
+
+	if (!network_session_established(session))
+	{
+		network_session_leave(session, 0);
+
+		return FALSE;
+	}
+	said= *(const short *)(message+NETWORK_SESSION_MESSAGE_PEER_INDEX_OFFSET);
+	if (said<0 || said>=*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET) ||
+		memcmp(message+NETWORK_SESSION_MESSAGE_PEER_ADDRESS_OFFSET,
+			session+NETWORK_SESSION_PEER_ARRAY_OFFSET+said*NETWORK_SESSION_PEER_SIZE, NETWORK_SESSION_ADDRESS_SIZE)!=0 ||
+		said==*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET))
+	{
+		return FALSE;
+	}
+	if (said!=*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET) || !network_session_unknown_00058d90(session))
+	{
+		const struct network_session_peer_state *host;
+		byte passed[NETWORK_SESSION_MESSAGE_UNKNOWN10_SIZE];
+
+		memset(passed, 0, sizeof(passed));
+		memcpy(passed, session+NETWORK_SESSION_IDENTIFIER_OFFSET, NETWORK_SESSION_IDENTIFIER_SIZE);
+		*(long *)(session+NETWORK_SESSION_UNKNOWN44_OFFSET)= said;
+		*(short *)(passed+NETWORK_SESSION_MESSAGE_PEER_INDEX_OFFSET)=
+			*(const short *)(message+NETWORK_SESSION_MESSAGE_PEER_INDEX_OFFSET);
+		memcpy(passed+NETWORK_SESSION_MESSAGE_PEER_ADDRESS_OFFSET, message+NETWORK_SESSION_MESSAGE_PEER_ADDRESS_OFFSET,
+			NETWORK_SESSION_ADDRESS_SIZE);
+		host= (const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+
+			*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET);
+		if (host->unknown1)
+		{
+			unknown_00075e80(FALSE, host->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+				*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_unknown10,
+				sizeof(passed), passed);
+		}
+	}
+
+	return TRUE;
+}
+
+/* 0x0005e6b0: something comes by one of the game's channels. In a session
+in one of its last four states: if it is from another console of the
+session, the fourth byte of what the session keeps of it is cleared, and
+TRUE; if not, FALSE. In any other state, something of the kind 0x13 is sent
+back by the channel, and TRUE: what the session is known by, a byte that is
+1, whether the channel is of a console of the session, and, in a session that
+says who is in it, a byte that is 1 and what the console at 0x40 is known
+by */
+boolean network_session_unknown_0005e6b0(
+	byte *session,
+	long channel)
+{
+	long channel_index= network_observer_find_channel(*(const byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+		*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), channel);
+	long peer_index= network_session_find_peer_by_channel(session, channel_index);
+	byte answer[NETWORK_SESSION_MESSAGE_UNKNOWN13_SIZE];
+
+	if (network_session_unknown_00058d20(session))
+	{
+		if (peer_index==NONE || peer_index==*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET))
+		{
+			return FALSE;
+		}
+		((struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index)->unknown3= FALSE;
+
+		return TRUE;
+	}
+	memset(answer, 0, sizeof(answer));
+	memcpy(answer, session+NETWORK_SESSION_IDENTIFIER_OFFSET, NETWORK_SESSION_IDENTIFIER_SIZE);
+	answer[NETWORK_SESSION_MESSAGE_UNKNOWN13_UNKNOWN8_OFFSET]= TRUE;
+	answer[NETWORK_SESSION_MESSAGE_UNKNOWN13_IS_PEER_OFFSET]= peer_index!=NONE;
+	if (network_session_established(session))
+	{
+		answer[NETWORK_SESSION_MESSAGE_UNKNOWN13_HAS_HOST_OFFSET]= TRUE;
+		memcpy(answer+NETWORK_SESSION_MESSAGE_UNKNOWN13_HOST_OFFSET, session+NETWORK_SESSION_PEER_ARRAY_OFFSET+
+			*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET)*NETWORK_SESSION_PEER_SIZE, NETWORK_SESSION_ADDRESS_SIZE);
+	}
+	unknown_00075e80(FALSE, channel_index, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+		*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_unknown13, sizeof(answer),
+		answer);
+
+	return TRUE;
+}
