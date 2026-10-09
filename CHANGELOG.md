@@ -2,6 +2,56 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — El caudal de un canal baja
+
+Tres funciones en `networking/network_observer.c`, 897 bytes entre todas. De 1364
+funciones se pasa a 1367, el 12,13 % de las del juego (el 8,017 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_packet_rate_bits_per_second` | `0x00078150` | `networking/network_observer.c` |
+| `network_observer_channel_lower_flow` | `0x00079c00` | `networking/network_observer.c` |
+| `network_observer_channel_drop_flow` | `0x00079850` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- Eran las dos «cosas que se hacen con un canal» que quedaban sin nombre
+  desde los hitos 379 y 381, y son **las dos maneras de bajar el caudal**:
+  - `network_observer_channel_drop_flow` (antes `unknown_00079850`) es la
+    **bajada pasajera**, cuando se pierden demasiados de los últimos
+    avisos: retiene el caudal que había (para devolverlo después, hito
+    389) y deja el canal con una parte de él (un real, `0x180`), sin
+    bajar de unos mínimos. Cada vez suma al número de `0x4D8`, y cuando
+    llega a un tope baja el caudal del todo.
+  - `network_observer_channel_lower_flow` (antes `unknown_00079c00`) es la
+    **bajada definitiva**: quita una parte de los bits por segundo (un
+    real, `0x198`, con un máximo), baja el otro número en proporción y
+    recalcula los paquetes por segundo. Si había un caudal retenido, el
+    que baja es ese, y el del canal no puede quedar por encima.
+- `network_observer_packet_rate_bits_per_second` es la inversa de la del
+  hito 388: de paquetes por segundo a bits por segundo.
+- Con la bajada pasajera se ve qué limita el otro número del caudal
+  (`0x498`): lo que cabe en los paquetes que hay en los milisegundos del
+  número de `0x4F0`, más dos. Parece **cuánto se puede mandar de golpe**.
+- Un detalle del juego que se deja igual: con caudal retenido, la bajada
+  definitiva da los paquetes por segundo del canal sin decimales.
+
+### Comprobado rompiendo líneas
+
+- Veinticinco líneas rotas, una cada vez: las pruebas fallaron en las
+  veinticinco.
+
+### Sin comprobar
+
+- Las dos dividen entre números del canal sin mirar que no sean cero; las
+  pruebas no dan ceros ahí.
+- En este hito se pasaron las pruebas de `network_observer` (58 funciones).
+- Del caudal queda `0x00079de0`, la que prueba a subirlo.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Lo que se hace con el caudal de un canal cada vez
 
 Tres funciones en `networking/network_observer.c`, 1160 bytes entre todas. De 1361

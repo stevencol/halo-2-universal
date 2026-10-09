@@ -665,7 +665,7 @@ def run(t) -> None:
             Buffer(bytes(data), pointers=(0x10,)),
             channel,
             random_.choice((0, 0, 1, 0x100, 0x80)),
-            externals={"unknown_00079850": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1]))},
+            externals={"network_observer_channel_drop_flow": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1]))},
         )
 
     # ---------- how many bits a second a channel does
@@ -700,7 +700,7 @@ def run(t) -> None:
             "network_observer_channel_unknown_0007a160",
             channel,
             Buffer(bytes(data), pointers=(0x10,)),
-            externals={"unknown_00079c00": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2]))},
+            externals={"network_observer_channel_lower_flow": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2]))},
         )
 
     # ---------- the channels of the game are let go of, and something is asked about a channel
@@ -1219,7 +1219,7 @@ def run(t) -> None:
                 ),
                 network_observer_channel_restore_flow=with_channel_and_observer,
                 network_observer_channel_unknown_0007a160=with_channel_and_observer,
-                unknown_00079c00=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2])),
+                network_observer_channel_lower_flow=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2])),
                 unknown_00079de0=tried,
             ),
         )
@@ -1245,6 +1245,82 @@ def run(t) -> None:
             globals=setup["globals"],
             externals=dict(
                 setup["externals"],
-                unknown_00079c00=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2])),
+                network_observer_channel_lower_flow=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2])),
+            ),
+        )
+
+    # ---------- the flow of a channel goes down
+
+    for n in range(600):
+        data = observer() + bytearray(random_.randbytes(0x114))
+        struct.pack_into("<I", data, 0x10, SIZE)
+        struct.pack_into("<ii", data, SIZE + 0x108, random_.choice((0, 0, 45, 1000)), random_.choice((0, 90, 0x20000000)))
+        t.check(
+            "network_observer_packet_rate_bits_per_second",
+            Buffer(bytes(data), pointers=(0x10,)),
+            random_.choice((0, 0, 1)),
+            f32(random_.choice((0.0, 1.0, 7.5, 12.5, 15.0, 29.97, 30.0, 0.001388, 0.004166, 0.006944, -1.0, 1e9, 1e30))),
+        )
+
+    def a_rate_of_packets(harness, arguments, rate=None):
+        return f32(rate), (harness.normalize(arguments[0]), arguments[1], arguments[2], arguments[3])
+
+    def a_flow(data: bytearray, at: int) -> None:
+        # the flow of a channel, and the one that is held
+        for flow in (0x494, 0x4CC):
+            struct.pack_into("<ii", data, at + flow, random_.choice((1, 999, 1000, 8000, 8001, 64000, 100000, -8000)), random_.choice((0, 500, 4000, 4001, 32000)))
+        struct.pack_into("<f", data, at + 0x49C, random_.choice((0.0, 5.0, 7.5, 15.5, 29.97, 30.0)))
+        data[at + 0x48E] = random_.choice((0, 1))
+        data[at + 0x490] = random_.choice((0, 1))
+        data[at + 0x4C0] = random_.choice((0, 0, 1, 0x80))
+
+    for n in range(1200):
+        data = observer() + bytearray(random_.randbytes(0x19C))
+        struct.pack_into("<I", data, 0x10, SIZE)
+        struct.pack_into("<i", data, SIZE + 0xE0, random_.choice((0, 500, 4000)))
+        struct.pack_into("<i", data, SIZE + 0x14C, random_.choice((0, 1000, 8000)))
+        struct.pack_into("<if", data, SIZE + 0x194, random_.choice((1000, 100000)), random_.choice((0.1, 0.25, 0.5, 0.0)))
+        channel = random_.randrange(15)
+        at = CHANNELS + channel * CHANNEL
+        a_flow(data, at)
+        data[at + 0x4F4] = random_.choice((0, 0, 1, 0x80))
+        t.check(
+            "network_observer_channel_lower_flow",
+            Buffer(bytes(data), pointers=(0x10,)),
+            channel,
+            random_.choice((0, 0, 1)),
+            externals={
+                "network_observer_channel_unknown_00079a10": with_channel_and_observer,
+                "network_observer_channel_restore_flow": with_channel_and_observer,
+                "network_observer_packet_rate": lambda harness, arguments, rate=random_.choice((7.5, 15.0, 15.5, 29.97, 30.0)): a_rate_of_packets(harness, arguments, rate),
+                "network_observer_channel_set_flow": flows,
+                "network_observer_channel_reset_unknown4dc": with_channel_and_observer,
+            },
+        )
+
+    for n in range(1200):
+        setup = at_time()
+        data = observer() + bytearray(random_.randbytes(0x18C))
+        struct.pack_into("<I", data, 0x10, SIZE)
+        struct.pack_into("<i", data, SIZE + 0xE0, random_.choice((0, 500, 4000)))
+        struct.pack_into("<i", data, SIZE + 0x14C, random_.choice((0, 1000, 8000)))
+        struct.pack_into("<fii", data, SIZE + 0x180, random_.choice((0.5, 0.75, 0.3)), random_.choice((1, 5)), random_.choice((3, 10)))
+        channel = random_.randrange(15)
+        at = CHANNELS + channel * CHANNEL
+        a_flow(data, at)
+        struct.pack_into("<i", data, at + 0x4D8, random_.choice((0, 2, 5, 9, -3)))
+        struct.pack_into("<I", data, at + 0x4DC, random_.choice((0, 1, 2, 3, 4)))
+        struct.pack_into("<i", data, at + 0x4F0, random_.choice((0, 1, 33, 100, 1000, 30000)))
+        t.check(
+            "network_observer_channel_drop_flow",
+            Buffer(bytes(data), pointers=(0x10,)),
+            channel,
+            globals=setup["globals"],
+            externals=dict(
+                setup["externals"],
+                network_observer_channel_restore_flow=with_channel_and_observer,
+                network_observer_packet_rate=lambda harness, arguments, rate=random_.choice((0.0, 7.5, 15.0, 29.97, 30.0)): a_rate_of_packets(harness, arguments, rate),
+                network_observer_channel_set_flow=flows,
+                network_observer_channel_lower_flow=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2])),
             ),
         )

@@ -1083,13 +1083,13 @@ void network_window_reset(
 
 /* 0x00079850: something that is done with a channel of the observer when
 too many of the last things that it was told of were not so */
-void __attribute__((stdcall)) unknown_00079850(byte *observer, long channel_index);
+void __attribute__((stdcall)) network_observer_channel_drop_flow(byte *observer, long channel_index);
 
 /* 0x000797b0: a channel of the observer is told one more thing, which is so
 or not (a byte): it keeps a bit for each of the last ones that were not, as
 many as the number at 0x174 of what the observer has at 0x10 says, and how
 many of those bits are set. When they are as many as that number times the
-real at 0x178, or more, unknown_00079850 is done and the count starts
+real at 0x178, or more, network_observer_channel_drop_flow is done and the count starts
 over */
 void NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_000797b0(
 	byte *observer,
@@ -1117,7 +1117,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_000797b0(
 		if ((real)count>=(real)*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN174_OFFSET)*
 			*(const real *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN178_OFFSET))
 		{
-			unknown_00079850(observer, channel_index);
+			network_observer_channel_drop_flow(observer, channel_index);
 			*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4B8_OFFSET)= 0;
 			*(unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4BC_OFFSET)= 0;
 		}
@@ -1163,7 +1163,7 @@ long network_observer_channel_unknown4a4_bits_per_second(
 
 /* 0x00079c00: something that is done with a channel of the observer, with a
 number, when its flow is to change */
-void __attribute__((stdcall)) unknown_00079c00(byte *observer, long channel_index, long unknown);
+void __attribute__((stdcall)) network_observer_channel_lower_flow(byte *observer, long channel_index, boolean unknown);
 
 /* 0x00079d90: the number of 0x4DC of a channel of the observer is none of
 them, since now, if it was one */
@@ -1184,7 +1184,7 @@ void network_observer_channel_reset_unknown4dc(
 observer. Once the times are as many as the number at 0x1E4 of what the
 observer has at 0x10, the number of 0x4F0 of the channel goes up by the one
 at 0x1E8; before that, every so many times as the one at 0x1E0 says,
-unknown_00079c00 is done with nothing */
+network_observer_channel_lower_flow is done with nothing */
 void network_observer_channel_unknown_0007a160(
 	long channel_index,
 	byte *observer)
@@ -1201,7 +1201,7 @@ void network_observer_channel_unknown_0007a160(
 	}
 	else if (count%*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN1E0_OFFSET)==0)
 	{
-		unknown_00079c00(observer, channel_index, 0);
+		network_observer_channel_lower_flow(observer, channel_index, 0);
 	}
 }
 
@@ -2216,7 +2216,7 @@ byte of 0x4F3C of the observer is set. With any other, after an interval
 with nothing noted, it is 0 again (network_observer_channel_reset_unknown4dc).
 With 2, as network_observer_channel_unknown_0007a1c0 says: with 0, it is 3;
 with 1, the flow that was kept is back (network_observer_channel_restore_flow);
-with 2, unknown_00079c00 with 1. With the others, if no flow is held and the
+with 2, network_observer_channel_lower_flow with 1. With the others, if no flow is held and the
 number of 0x4D8 is nothing: when the number of 0x4B0, less the one of 0x4B4,
 is over the one of 0x4F0 and the margin, something has gone well once more
 (network_observer_channel_unknown_0007a160); if not, unknown_00079de0 is
@@ -2267,7 +2267,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_update_flow(
 			network_observer_channel_restore_flow(channel_index, observer);
 			break;
 		default:
-			unknown_00079c00(observer, channel_index, TRUE);
+			network_observer_channel_lower_flow(observer, channel_index, TRUE);
 			break;
 		}
 
@@ -2297,7 +2297,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_update_flow(
 }
 
 /* 0x00079a10: the channel of the observer that has the most of something
-has its flow changed (unknown_00079c00, with nothing), since now, if it was
+has its flow changed (network_observer_channel_lower_flow, with nothing), since now, if it was
 not done in the time that the number at 0x1BC of what the observer has at
 0x10 says. What counts of a channel is the more of its numbers of 0x510 and
 0x514; the one that is given counts with the number at 0x1B8 more, and only
@@ -2361,6 +2361,217 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_00079a10(
 	{
 		return;
 	}
-	unknown_00079c00(observer, most_index, FALSE);
+	network_observer_channel_lower_flow(observer, most_index, FALSE);
 	*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F34_OFFSET)= network_time_since(0);
+}
+
+/* a real as the whole number that it is nearest to: the game rounds with
+the old processor's instructions, in place */
+long lrintf(float value);
+
+/* 0x00078150: how many bits a second so many packets a second are, with
+packets of one of the two sizes of what the observer has at 0x10 (in bytes,
+and 0x168 bits more each) */
+long NETWORK_OBSERVER_CALLBACK network_observer_packet_rate_bits_per_second(
+	const byte *observer,
+	boolean unknown,
+	real packet_rate)
+{
+	const byte *parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+	/* the game adds and multiplies as the processor does */
+	long packet_bits= (long)(*(const unsigned long *)(parameters+(unknown ?
+		NETWORK_OBSERVER_PARAMETERS_UNKNOWN10C_OFFSET : NETWORK_OBSERVER_PARAMETERS_UNKNOWN108_OFFSET))*8+
+		NETWORK_OBSERVER_PACKET_HEADER_BITS);
+
+	return lrintf((real)packet_bits*packet_rate);
+}
+
+/* 0x00079c00: the flow of a channel of the observer goes down for good.
+With a byte, the channel that has the most of something has its own changed
+first (network_observer_channel_unknown_00079a10); a flow that was kept is
+back (network_observer_channel_restore_flow); and nothing has gone well any
+time. Its bits a second, or the ones of the flow that is held if one is, go
+down by the part that the real at 0x198 of what the observer has at 0x10
+says, and by no more than the number at 0x194, and are no less than the
+number at 0x14C; its number of 0x498 goes down as much, and is no less than
+the number at 0xE0; and its packets a second are what those bits a second
+give (network_observer_packet_rate). With a flow held, that is the flow that
+is held from now on, and the one that the channel has is no more than it in
+any of the three; with none, it is the flow of the channel. Three bytes of
+the observer are set, the third only with the byte; and the number of 0x4DC
+of the channel is none of them (network_observer_channel_reset_unknown4dc) */
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_lower_flow(
+	byte *observer,
+	long channel_index,
+	boolean unknown)
+{
+	byte *channel= (byte *)network_observer_channel(observer, channel_index);
+	const byte *parameters;
+	long bits_per_second;
+	long unknown498;
+	long less;
+	long lower_bits_per_second;
+	long lower_unknown498;
+	real packet_rate;
+
+	if (unknown)
+	{
+		network_observer_channel_unknown_00079a10(channel_index, observer);
+	}
+	if (channel[NETWORK_OBSERVER_CHANNEL_KEPT_FLOW_OFFSET])
+	{
+		network_observer_channel_restore_flow(channel_index, observer);
+	}
+	*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4EC_OFFSET)= 0;
+	if (channel[NETWORK_OBSERVER_CHANNEL_HELD_FLOW_OFFSET])
+	{
+		bits_per_second= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_HELD_BITS_PER_SECOND_OFFSET);
+		unknown498= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_HELD_UNKNOWN498_OFFSET);
+	}
+	else
+	{
+		bits_per_second= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_BITS_PER_SECOND_OFFSET);
+		unknown498= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN498_OFFSET);
+	}
+	parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+	less= lrintf((real)bits_per_second**(const real *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN198_OFFSET));
+	if (less>*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN194_OFFSET))
+	{
+		less= *(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN194_OFFSET);
+	}
+	/* the game takes away and multiplies as the processor does */
+	lower_bits_per_second= (long)((unsigned long)bits_per_second-(unsigned long)less);
+	if (lower_bits_per_second<=*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN14C_OFFSET))
+	{
+		lower_bits_per_second= *(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN14C_OFFSET);
+	}
+	lower_unknown498= (long)((unsigned long)lower_bits_per_second*(unsigned long)unknown498)/bits_per_second;
+	if (lower_unknown498<=*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWNE0_OFFSET))
+	{
+		lower_unknown498= *(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWNE0_OFFSET);
+	}
+	packet_rate= network_observer_packet_rate(observer, lower_bits_per_second,
+		channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48E_OFFSET], channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN490_OFFSET]);
+	if (channel[NETWORK_OBSERVER_CHANNEL_HELD_FLOW_OFFSET])
+	{
+		long now_bits_per_second= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_BITS_PER_SECOND_OFFSET);
+		long now_unknown498= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN498_OFFSET);
+		real now_packet_rate= *(const real *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN49C_OFFSET);
+
+		if (now_bits_per_second>lower_bits_per_second)
+		{
+			now_bits_per_second= lower_bits_per_second;
+		}
+		if (now_unknown498>lower_unknown498)
+		{
+			now_unknown498= lower_unknown498;
+		}
+		if (now_packet_rate>packet_rate)
+		{
+			now_packet_rate= packet_rate;
+		}
+		/* the game gives the packets a second without what they have after
+		the point */
+		network_observer_channel_set_flow(channel_index, observer, (real)(long)now_packet_rate, now_bits_per_second,
+			now_unknown498);
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_HELD_BITS_PER_SECOND_OFFSET)= lower_bits_per_second;
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_HELD_UNKNOWN498_OFFSET)= lower_unknown498;
+		*(real *)(channel+NETWORK_OBSERVER_CHANNEL_HELD_PACKET_RATE_OFFSET)= packet_rate;
+	}
+	else
+	{
+		network_observer_channel_set_flow(channel_index, observer, packet_rate, lower_bits_per_second, lower_unknown498);
+	}
+	observer[NETWORK_OBSERVER_UNKNOWN4F3C_OFFSET]= TRUE;
+	observer[NETWORK_OBSERVER_UNKNOWN4F3D_OFFSET]= TRUE;
+	if (unknown)
+	{
+		observer[NETWORK_OBSERVER_UNKNOWN4F3E_OFFSET]= TRUE;
+	}
+	network_observer_channel_reset_unknown4dc(channel_index, observer);
+}
+
+/* 0x00079850: the flow of a channel of the observer drops for a while, when
+too many of the last things that it was told of were not so. The flow that
+it has is held, since now, with what its number of 0x4B0 is; in the third or
+fourth phase of its flow (0x4DC), the flow that was kept is back first
+(network_observer_channel_restore_flow). Its bits a second and its number of
+0x498 are the part of what they were that the real at 0x180 of what the
+observer has at 0x10 says, and no less than the numbers at 0x14C and 0xE0;
+its packets a second are what those bits a second give
+(network_observer_packet_rate); and the number of 0x498 is no more than what
+goes in so many packets as there are in the milliseconds of its number of
+0x4F0, and two more. Its number of 0x4D8 goes up by the number at 0x184, and
+when it is the one at 0x188 or more, the flow goes down for good
+(network_observer_channel_lower_flow, with nothing) and it is nothing */
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_drop_flow(
+	byte *observer,
+	long channel_index)
+{
+	byte *channel= (byte *)network_observer_channel(observer, channel_index);
+	long bits_per_second= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_BITS_PER_SECOND_OFFSET);
+	long unknown498= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN498_OFFSET);
+	const byte *parameters;
+	long now;
+	long phase;
+	long unknown4f0;
+	long packets;
+	long most;
+	long unknown4d8;
+	real packet_rate;
+
+	*(real *)(channel+NETWORK_OBSERVER_CHANNEL_HELD_PACKET_RATE_OFFSET)=
+		*(const real *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN49C_OFFSET);
+	*(long *)(channel+NETWORK_OBSERVER_CHANNEL_HELD_BITS_PER_SECOND_OFFSET)= bits_per_second;
+	channel[NETWORK_OBSERVER_CHANNEL_HELD_FLOW_OFFSET]= TRUE;
+	*(long *)(channel+NETWORK_OBSERVER_CHANNEL_HELD_UNKNOWN498_OFFSET)= unknown498;
+	*(long *)(channel+NETWORK_OBSERVER_CHANNEL_HELD_UNKNOWN4B0_OFFSET)=
+		*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4B0_OFFSET);
+	now= network_time_since(0);
+	*(long *)(channel+NETWORK_OBSERVER_CHANNEL_HELD_TIME_OFFSET)= now;
+	*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4E0_OFFSET)= now;
+	phase= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4DC_OFFSET);
+	if (phase==2 || phase==3)
+	{
+		network_observer_channel_restore_flow(channel_index, observer);
+	}
+	parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+	bits_per_second= lrintf((real)*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_BITS_PER_SECOND_OFFSET)*
+		*(const real *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN180_OFFSET));
+	unknown498= lrintf((real)*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN498_OFFSET)*
+		*(const real *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN180_OFFSET));
+	if (bits_per_second<=*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN14C_OFFSET))
+	{
+		bits_per_second= *(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN14C_OFFSET);
+	}
+	if (unknown498<=*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWNE0_OFFSET))
+	{
+		unknown498= *(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWNE0_OFFSET);
+	}
+	packet_rate= network_observer_packet_rate(observer, bits_per_second,
+		channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48E_OFFSET], channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN490_OFFSET]);
+	unknown4f0= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4F0_OFFSET);
+	packets= (long)((unsigned long)(long)((real)unknown4f0*packet_rate*NETWORK_OBSERVER_SECONDS_PER_MILLISECOND)+1);
+	/* the game adds and multiplies as the processor does */
+	most= (long)((unsigned long)(packets+1)*(unsigned long)((long)((unsigned long)unknown4f0*(unsigned long)bits_per_second)/
+		(long)((unsigned long)packets*NETWORK_OBSERVER_BITS_PER_BYTE_MILLISECOND)));
+	parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+	if (most<=*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWNE0_OFFSET))
+	{
+		most= *(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWNE0_OFFSET);
+	}
+	if (unknown498>most)
+	{
+		unknown498= most;
+	}
+	network_observer_channel_set_flow(channel_index, observer, packet_rate, bits_per_second, unknown498);
+	parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+	unknown4d8= (long)(*(const unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4D8_OFFSET)+
+		*(const unsigned long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN184_OFFSET));
+	*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4D8_OFFSET)= unknown4d8;
+	if (unknown4d8>=*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN188_OFFSET))
+	{
+		network_observer_channel_lower_flow(observer, channel_index, FALSE);
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4D8_OFFSET)= 0;
+	}
 }

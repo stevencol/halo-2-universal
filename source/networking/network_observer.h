@@ -201,7 +201,7 @@ enum
 	/* more of a channel: a number that says how its flow is, and when it
 	last was none of them; how many times something has gone well, and a
 	number that goes up when they are many. And of what the observer has at
-	0x10: every how many of those times unknown_00079c00 is done, from how
+	0x10: every how many of those times network_observer_channel_lower_flow is done, from how
 	many on the number goes up, and by how much */
 	NETWORK_OBSERVER_CHANNEL_UNKNOWN4DC_OFFSET= 0x4DC,
 	NETWORK_OBSERVER_CHANNEL_UNKNOWN4E0_OFFSET= 0x4E0,
@@ -350,6 +350,22 @@ enum
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1BC_OFFSET= 0x1BC,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1EC_OFFSET= 0x1EC,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1F0_OFFSET= 0x1F0,
+	/* two more bytes of the observer that are set when the flow of a
+	channel goes down. And of what the observer has at 0x10: the least
+	that the number of 0x498 and the bits a second of a channel are; the
+	part of its flow that a channel has when it drops; how much its number
+	of 0x4D8 goes up then, and how much it has to be for the flow to go
+	down for good; and by how much it goes down, at the most and as a
+	part of what it is */
+	NETWORK_OBSERVER_UNKNOWN4F3D_OFFSET= 0x4F3D,
+	NETWORK_OBSERVER_UNKNOWN4F3E_OFFSET= 0x4F3E,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWNE0_OFFSET= 0xE0,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN14C_OFFSET= 0x14C,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN180_OFFSET= 0x180,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN184_OFFSET= 0x184,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN188_OFFSET= 0x188,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN194_OFFSET= 0x194,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN198_OFFSET= 0x198,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
 	_unknown_00088650_unknown11= 0x11
 };
@@ -422,6 +438,9 @@ as more */
 #define NETWORK_OBSERVER_PAL_TICK_RATE 25.0f
 #define NETWORK_OBSERVER_PACKET_RATE_EPSILON 0.0001f
 
+/* what turns milliseconds into seconds */
+#define NETWORK_OBSERVER_SECONDS_PER_MILLISECOND 0.001f
+
 /* the tries that a channel has at something: how many, and how long after it
 went into its state each one is, in milliseconds */
 struct network_observer_tries
@@ -475,6 +494,11 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_00079660(long un
 	long channel_index, long unknown96c);
 void NETWORK_OBSERVER_CALLBACK network_observer_channel_update_flow(byte *observer, long channel_index);
 void NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_00079a10(long channel_index, byte *observer);
+long NETWORK_OBSERVER_CALLBACK network_observer_packet_rate_bits_per_second(const byte *observer, boolean unknown,
+	real packet_rate);
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_lower_flow(byte *observer, long channel_index,
+	boolean unknown);
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_drop_flow(byte *observer, long channel_index);
 void NETWORK_OBSERVER_CALLBACK network_observer_release_game_channels(byte *observer);
 boolean network_observer_channel_unknown_00077940(byte *observer, long channel_index);
 void network_observer_channel_reset_unknown4dc(long channel_index, byte *observer);
