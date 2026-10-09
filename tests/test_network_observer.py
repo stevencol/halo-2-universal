@@ -289,7 +289,7 @@ def run(t) -> None:
             Buffer(random_.randbytes(size)),
             globals={"unknown_004d87d4": Buffer(bytes(channels)), "unknown_004d87dc": Buffer(bytes(16))},
             externals={
-                "unknown_000783d0": finds,
+                "network_observer_session_get_address": finds,
                 "unknown_0007b140": lambda harness, arguments: (
                     0,
                     (arguments[0], bytes(harness.mu.mem_read(arguments[1], 0x14)), arguments[2], arguments[3], harness.normalize(arguments[4])),
@@ -747,4 +747,67 @@ def run(t) -> None:
             globals=setup["globals"],
             externals=setup["externals"],
             mocks=[Mock(lambda call, yes=yes: (call.registers["ecx"] // 4) % 4 in yes, stack_arguments=1, registers=("ecx",))],
+        )
+
+    # ---------- the address of the game of a console, for a session and for a channel
+
+    def an_address(harness, arguments, could=None, address=None):
+        # the address goes where the second thing says
+        harness.mu.mem_write(arguments[1], address)
+        return could, (arguments[0], bytes(harness.mu.mem_read(arguments[2], 0x24)), arguments[3], arguments[4])
+
+    for n in range(500):
+        data = observer()
+        for session in range(4):
+            struct.pack_into("<II", data, SESSIONS + session * 0x24, random_.choice((0, 5, 5, 5)), random_.choice((NONE, 0, 3, 3)))
+        address = random_.randbytes(0x14)
+        t.check(
+            "network_observer_session_get_address",
+            Buffer(bytes(data)),
+            Buffer(random_.randbytes(0x24)),
+            Buffer(random_.randbytes(0x14)),
+            random_.randrange(4),
+            Buffer(random_.randbytes(4)),
+            Buffer(random_.randbytes(8)),
+            Buffer(random_.randbytes(16)),
+            externals={
+                "transport_security_address_from_peer_address": lambda harness, arguments, could=random_.choice((1, 1, 1, 0, 0x100)), address=address: an_address(
+                    harness, arguments, could, address
+                ),
+                "transport_address_connect": lambda harness, arguments, could=random_.choice((1, 1, 1, 0, 0x100)): (
+                    could,
+                    (bytes(harness.mu.mem_read(arguments[0], 0x14)),),
+                ),
+            },
+        )
+
+    for n in range(500):
+        data = observer()
+        channel = random_.randrange(15)
+        at = CHANNELS + channel * CHANNEL
+        struct.pack_into("<I", data, at + 0x38, random_.choice((0, 0, 1, 5, 0xF, random_.getrandbits(32))))
+        # which sessions give an address: the same each time that one is asked
+        giving = random_.sample(range(4), random_.choice((0, 1, 2, 4)))
+
+        def gives(harness, arguments, giving=giving):
+            could = arguments[3] in giving
+            harness.mu.mem_write(arguments[2], bytes((arguments[3] + 1,)) * 0x14 if could else bytes(0x14))
+            if could:
+                harness.mu.mem_write(arguments[4], struct.pack("<I", 0x40 + arguments[3]))
+                harness.mu.mem_write(arguments[5], bytes((0x50 + arguments[3],)) * 8)
+                harness.mu.mem_write(arguments[6], bytes((0x60 + arguments[3],)) * 16)
+            return could, tuple(harness.normalize(argument) for argument in arguments)
+
+        t.check(
+            "network_observer_channel_find_address",
+            channel,
+            Buffer(bytes(data)),
+            externals={
+                "network_observer_channel_connect_status": lambda harness, arguments, status=random_.choice((0, 0, 1, 2, 3, NONE)): (
+                    status,
+                    (harness.normalize(arguments[0]), arguments[1]),
+                ),
+                "unknown_000784a0": noted,
+                "network_observer_session_get_address": gives,
+            },
         )

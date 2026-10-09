@@ -216,6 +216,16 @@ enum
 	_network_channel_state4= 4,
 	_unknown_00088650_unknown3= 0x3,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN70_OFFSET= 0x70,
+	/* more of a channel: a bit for each session whose address was tried and
+	did not do; the session that its address is of; and that session's
+	number of 0x4, what it is known by and its key, as they were then. The
+	port that the address is asked for with */
+	NETWORK_OBSERVER_CHANNEL_FAILED_SESSIONS_OFFSET= 0x38,
+	NETWORK_OBSERVER_CHANNEL_SESSION_OFFSET= 0x3C,
+	NETWORK_OBSERVER_CHANNEL_SESSION_UNKNOWN4_OFFSET= 0x40,
+	NETWORK_OBSERVER_CHANNEL_SESSION_IDENTIFIER_OFFSET= 0x44,
+	NETWORK_OBSERVER_CHANNEL_SESSION_KEY_OFFSET= 0x4C,
+	NETWORK_OBSERVER_PORT= 1000,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
 	_unknown_00088650_unknown11= 0x11
 };
@@ -330,6 +340,9 @@ void network_observer_channel_update_connection(long channel_index, byte *observ
 void network_observer_channel_connect(long channel_index, byte *observer);
 struct transport_address;
 boolean network_channel_get_address(const byte *game_channel, struct transport_address *address);
+boolean NETWORK_OBSERVER_CALLBACK network_observer_session_get_address(const byte *observer, const byte *peer_address,
+	struct transport_address *address, long session_index, long *unknown4, byte *identifier, byte *key);
+boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_find_address(long channel_index, byte *observer);
 void NETWORK_OBSERVER_CALLBACK network_observer_channel_send(boolean out_of_band, long channel_index, byte *observer,
 	long session_index, long type, long size, const void *data);
 

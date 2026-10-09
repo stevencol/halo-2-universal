@@ -353,8 +353,6 @@ own, for a session; whether it could. 0x00095580: something of a kind and a
 size is put in what a channel of the game has to send */
 void __attribute__((stdcall)) unknown_0007b140(long unknown4, const struct transport_address *address, long type,
 	long size, const void *data);
-boolean __attribute__((stdcall)) unknown_000783d0(byte *observer, const byte *channel_unknown14,
-	struct transport_address *address, long session_index, byte **unknown0, long *unknown4, long *unknown8);
 void __attribute__((stdcall)) unknown_00095580(byte *unknown, long type, long size, const void *data);
 
 /* 0x004d87dc: things of 0x2850 bytes, one for each of what the channels of
@@ -394,7 +392,7 @@ channel of the observer, for a session; nothing is done with a channel that
 is none of the game. In one way, it is put in what the channel of the game
 has to send, if that one is past its second state, and the kind is no more
 one that the channel has to send. In the other, it is sent to the address of
-the game of the channel: its own, or with none the one that unknown_000783d0
+the game of the channel: its own, or with none the one that network_observer_session_get_address
 gives, if it can */
 void NETWORK_OBSERVER_CALLBACK network_observer_channel_send(
 	boolean out_of_band,
@@ -425,12 +423,12 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_send(
 		}
 		else
 		{
-			byte *unknown0= game_channel;
 			long unknown4;
-			long unknown8;
+			byte identifier[NETWORK_OBSERVER_SESSION_IDENTIFIER_SIZE];
+			byte key[NETWORK_OBSERVER_SESSION_KEY_SIZE];
 
-			if (!unknown_000783d0(observer, channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN14_OFFSET, &address, session_index,
-				&unknown0, &unknown4, &unknown8))
+			if (!network_observer_session_get_address(observer, channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN14_OFFSET, &address, session_index,
+				&unknown4, identifier, key))
 			{
 				return;
 			}
@@ -1275,6 +1273,83 @@ boolean network_observer_channel_unknown_00077940(
 			{
 				return TRUE;
 			}
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x000783d0: the address of the game of a console that is known by
+something, for a session of the observer: the one that the console's
+libraries give for the number of 0x4 of the session, the one of 0x8 and the
+port 1000, if it can be connected to (transport_address_connect). With it go
+that number of 0x4, what the session is known by and its key. FALSE, and an
+empty address, if the observer has no such session, the session is known by
+nothing, or there is no such address */
+boolean NETWORK_OBSERVER_CALLBACK network_observer_session_get_address(
+	const byte *observer,
+	const byte *peer_address,
+	struct transport_address *address,
+	long session_index,
+	long *unknown4,
+	byte *identifier,
+	byte *key)
+{
+	const byte *session= observer+NETWORK_OBSERVER_SESSIONS_OFFSET+session_index*NETWORK_OBSERVER_SESSION_SIZE;
+	struct transport_address found;
+
+	if (*(const long *)(session+NETWORK_OBSERVER_SESSION_SESSION_OFFSET)!=0 &&
+		*(const long *)(session+NETWORK_OBSERVER_SESSION_UNKNOWN4_OFFSET)!=NONE &&
+		transport_security_address_from_peer_address(*(const long *)(session+NETWORK_OBSERVER_SESSION_UNKNOWN4_OFFSET),
+			&found, peer_address, *(const long *)(session+NETWORK_OBSERVER_SESSION_UNKNOWN8_OFFSET), NETWORK_OBSERVER_PORT) &&
+		transport_address_connect(&found))
+	{
+		*address= found;
+		*unknown4= *(const long *)(session+NETWORK_OBSERVER_SESSION_UNKNOWN4_OFFSET);
+		memcpy(identifier, session+NETWORK_OBSERVER_SESSION_IDENTIFIER_OFFSET, NETWORK_OBSERVER_SESSION_IDENTIFIER_SIZE);
+		memcpy(key, session+NETWORK_OBSERVER_SESSION_KEY_OFFSET, NETWORK_OBSERVER_SESSION_KEY_SIZE);
+
+		return TRUE;
+	}
+	memset(address, 0, sizeof(*address));
+
+	return FALSE;
+}
+
+/* 0x00078330: a channel of the observer gets an address of the game for its
+console, unless the one that it has is being connected to or is connected
+(network_observer_channel_connect_status 1 or 2). If not, unknown_000784a0
+notes it with nothing, and the first session that uses the channel, has not
+failed before and gives one (network_observer_session_get_address) is the
+session of the channel from now on. Whether the channel has an address */
+boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_find_address(
+	long channel_index,
+	byte *observer)
+{
+	byte *channel= (byte *)network_observer_channel(observer, channel_index);
+	long status= network_observer_channel_connect_status(observer, channel_index);
+	long session_index;
+
+	if (status>0 && status<=_network_observer_connect_status2)
+	{
+		return TRUE;
+	}
+	unknown_000784a0(channel_index, observer, FALSE, 0);
+	for (session_index= 0; session_index<MAXIMUM_NETWORK_OBSERVER_SESSIONS; session_index++)
+	{
+		unsigned long bit= 1u<<session_index;
+
+		if ((channel[NETWORK_OBSERVER_CHANNEL_SESSIONS_OFFSET]&bit) &&
+			!(*(const unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_FAILED_SESSIONS_OFFSET)&bit) &&
+			network_observer_session_get_address(observer, channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN14_OFFSET,
+				(struct transport_address *)(channel+NETWORK_OBSERVER_CHANNEL_ADDRESS_OFFSET), session_index,
+				(long *)(channel+NETWORK_OBSERVER_CHANNEL_SESSION_UNKNOWN4_OFFSET),
+				channel+NETWORK_OBSERVER_CHANNEL_SESSION_IDENTIFIER_OFFSET,
+				channel+NETWORK_OBSERVER_CHANNEL_SESSION_KEY_OFFSET))
+		{
+			*(long *)(channel+NETWORK_OBSERVER_CHANNEL_SESSION_OFFSET)= session_index;
+
+			return TRUE;
 		}
 	}
 

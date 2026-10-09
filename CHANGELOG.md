@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — La dirección de la consola de un canal
+
+Dos funciones en `networking/network_observer.c`, 354 bytes entre las dos. De 1346
+funciones se pasa a 1348, el 11,97 % de las del juego (el 7,844 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_session_get_address` | `0x000783d0` | `networking/network_observer.c` |
+| `network_observer_channel_find_address` | `0x00078330` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_observer_session_get_address` (antes `unknown_000783d0`) saca
+  **la dirección del juego de una consola para una sesión**: se la pide a
+  las bibliotecas de la consola con la clave registrada de la sesión y el
+  puerto 1000, y comprueba que se puede conectar. Devuelve con ella el
+  número de la clave, lo que identifica a la sesión y su clave.
+- `network_observer_channel_find_address` busca dirección para un canal:
+  prueba con cada sesión que usa el canal y que no haya fallado antes (un
+  bit por sesión en el `0x38` del canal), y la primera que da dirección
+  queda como **la sesión del canal** (`0x3C`), con sus datos copiados en el
+  canal (`0x40` a `0x5C`). Si la dirección que ya tiene está conectando o
+  conectada, no hace nada.
+- Con esto se sabe qué son los `0x48` bytes del canal entre `0x14` y
+  `0x70`: cómo se conoce a la consola, las sesiones que fallaron, la
+  sesión elegida, sus datos y la dirección.
+
+### Corregido
+
+- **Un fallo mío del hito 370.** `network_observer_channel_send` llamaba a
+  esta función dándole, para lo que identifica a la sesión y su clave, dos
+  huecos de 4 bytes; la función escribe 8 y 16. Las pruebas no lo veían
+  porque en ellas la función estaba sustituida y no escribía ahí. En el
+  juego esos huecos tienen su tamaño; ahora aquí también.
+
+### Comprobado rompiendo líneas
+
+- Seis líneas rotas, una cada vez: las pruebas fallaron en las seis.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_observer` (39 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Soltar los canales del juego, y una pregunta a las sesiones
 
 Dos funciones en `networking/network_observer.c`, 280 bytes entre las dos. De 1344

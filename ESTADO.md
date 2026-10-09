@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 382.
+**Última actualización:** 2026-10-08, al terminar el hito 383.
 
 ## Dónde estamos
 
-- **1346 funciones descompiladas de 11.265: el 11,95 % del juego** (el
-  7,832 % de los bytes de código).
-- Las 1346 están comprobadas contra el ejecutable original: las 1328 del
+- **1348 funciones descompiladas de 11.265: el 11,97 % del juego** (el
+  7,844 % de los bytes de código).
+- Las 1348 están comprobadas contra el ejecutable original: las 1328 del
   hito 371 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how the observer lets go of the game's channels and asks its sessions* (ver `git log`).
+- Último hito: *Decompile how a channel of the observer finds its console's address* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 558 funciones apuntadas pero sin descompilar (las que el código
-  llama); 460 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 557 funciones apuntadas pero sin descompilar (las que el código
+  llama); 459 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -119,7 +119,7 @@ Módulos (funciones hechas / archivo):
       lo que la consola es en la red, la clave de cada sesión y las
       direcciones; de `0x0007a8a0` a `0x0007af80`, y falta lo que sigue
       desde `0x0007afd0`)
-- [ ] Observador de la red — `networking\network_observer.c` (37: lo que
+- [ ] Observador de la red — `networking\network_observer.c` (39: lo que
       tiene de cada sesión y sus canales con las otras consolas; va de
       `0x00075970` a `0x0007a4a0` y casi todo falta)
 - [x] Partida en red — `networking\network_life_cycle.c` (42: qué está
@@ -265,6 +265,10 @@ Módulos (funciones hechas / archivo):
 
 ## Avisos para no perder tiempo
 
+- Al declarar una función que aún no está descompilada, lo que recibe
+  por puntero para escribir hay que darlo del tamaño que el juego le
+  da (mirar los huecos de la pila de quien la llama): las pruebas no
+  lo comprueban mientras la función esté sustituida (hito 383).
 - Una cuenta con signo que puede desbordarse (multiplicar, sumar) hay
   que escribirla sin signo y convertir al final: el compilador de
   `source\` da por hecho que no se desborda y la simplifica, y el
