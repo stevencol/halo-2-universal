@@ -1813,7 +1813,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_update_game_channel(
 
 /* 0x00088220, of the channels of the game: one of them starts to connect to
 an address of the game, with a byte */
-void __attribute__((stdcall)) unknown_00088220(const struct transport_address *address, byte *game_channel, boolean unknown);
+void __attribute__((stdcall)) network_channel_connect(const struct transport_address *address, byte *game_channel, boolean unknown);
 
 /* 0x000776a0: a channel of the observer that has a channel of the game
 tries again when it is time to. In its first state for as long as the number
@@ -1944,7 +1944,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_update_tries(
 
 		return;
 	}
-	unknown_00088220((const struct transport_address *)(channel+NETWORK_OBSERVER_CHANNEL_ADDRESS_OFFSET), game_channel, TRUE);
+	network_channel_connect((const struct transport_address *)(channel+NETWORK_OBSERVER_CHANNEL_ADDRESS_OFFSET), game_channel, TRUE);
 	network_observer_channel_set_state(
 		*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)==_network_observer_channel_state5 ?
 		_network_observer_channel_state6 : _network_observer_channel_state8, observer, channel_index);
@@ -2823,7 +2823,7 @@ void network_observer_update_voice_mode(
 
 /* 0x00082060, of the channels of the game: one that is not in use is taken,
 with a name and a number; which, or NONE */
-long __attribute__((stdcall)) unknown_00082060(const char *name, long unknown);
+long __attribute__((stdcall)) network_channel_allocate(const char *name, long unknown);
 
 /* the four bytes of the address of the internet that what a channel of the
 observer has at 0x14 starts with, from the first on, as the number that the
@@ -2861,7 +2861,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_take_game_channels(
 
 			csnzprintf(name, sizeof(name), "%hd.%hd.%hd.%hd", address>>24, (address>>16)&0xFF, (address>>8)&0xFF,
 				address&0xFF);
-			game_channel_index= unknown_00082060(name, NETWORK_OBSERVER_GAME_CHANNEL_UNKNOWN);
+			game_channel_index= network_channel_allocate(name, NETWORK_OBSERVER_GAME_CHANNEL_UNKNOWN);
 			*(long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET)= game_channel_index;
 			if (game_channel_index!=NONE)
 			{
@@ -2947,7 +2947,7 @@ long NETWORK_OBSERVER_CALLBACK network_observer_acquire_channel(
 			unknown14[NETWORK_OBSERVER_UNKNOWN14_ETHERNET_OFFSET], unknown14[NETWORK_OBSERVER_UNKNOWN14_ETHERNET_OFFSET+1],
 			unknown14[NETWORK_OBSERVER_UNKNOWN14_ETHERNET_OFFSET+2], unknown14[NETWORK_OBSERVER_UNKNOWN14_ETHERNET_OFFSET+3],
 			unknown14[NETWORK_OBSERVER_UNKNOWN14_ETHERNET_OFFSET+4], unknown14[NETWORK_OBSERVER_UNKNOWN14_ETHERNET_OFFSET+5]);
-		game_channel_index= unknown_00082060(name, NETWORK_OBSERVER_GAME_CHANNEL_UNKNOWN);
+		game_channel_index= network_channel_allocate(name, NETWORK_OBSERVER_GAME_CHANNEL_UNKNOWN);
 		if (game_channel_index==NONE)
 		{
 			return NONE;
@@ -3208,7 +3208,7 @@ and talks with another address, or with this one and another number, it is
 told 6 (network_channel_close). Then, if it is not past its second state, the
 address is this one from now on, with what the session is known by and its
 key and no session of its own; the channel of the game starts to connect
-(unknown_00088220, with nothing); and the channel is in its sixth state,
+(network_channel_connect, with nothing); and the channel is in its sixth state,
 with no tries. The channel of the game is given the number, and what is done
 with a channel each time is done with it */
 void NETWORK_OBSERVER_CALLBACK network_observer_handle_connect_request(
@@ -3306,7 +3306,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_handle_connect_request(
 			memcpy(channel+NETWORK_OBSERVER_CHANNEL_SESSION_IDENTIFIER_OFFSET, identifier, sizeof(identifier));
 			memcpy(channel+NETWORK_OBSERVER_CHANNEL_SESSION_KEY_OFFSET, key, sizeof(key));
 			*(long *)(channel+NETWORK_OBSERVER_CHANNEL_SESSION_OFFSET)= NONE;
-			unknown_00088220(address, game_channel, FALSE);
+			network_channel_connect(address, game_channel, FALSE);
 			network_observer_channel_set_state(_network_observer_channel_state6, observer, channel_index);
 			*(short *)(channel+NETWORK_OBSERVER_CHANNEL_TRIES_OFFSET)= 0;
 			network_observer_channel_update_game_channel(channel_index, observer);

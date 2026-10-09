@@ -2,6 +2,57 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Tomar un canal del juego y empezar a conectar
+
+Tres funciones en `networking/network_channel.c`, 700 bytes entre todas. De 1413
+funciones se pasa a 1416, el 12,57 % de las del juego (el 8,481 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_channel_allocate` | `0x00082060` | `networking/network_channel.c` |
+| `network_channel_new` | `0x00088110` | `networking/network_channel.c` |
+| `network_channel_connect` | `0x00088220` | `networking/network_channel.c` |
+
+### Lo que se sabe
+
+- Son las dos primeras cosas que le pasan a un canal del juego, y las dos
+  las pedía el observador sin saber qué eran (hitos 387 y 392).
+- `network_channel_allocate` (antes `unknown_00082060`) busca **el primer
+  canal sin usar** y lo prepara. Una sorpresa: **el nombre que se le da no
+  se mira**. El observador componía con cuidado un texto con la dirección
+  de internet y la de la tarjeta de red de la consola (hito 392), y aquí
+  se tira: es otro resto de la versión de pruebas.
+- `network_channel_new` prepara el canal: sus bits, su número y las cuatro
+  cosas que comparten todos los canales (de qué son, por dónde mandan los
+  mensajes sin canal —que es la pasarela del hito 405—, una tercera cosa y
+  sus plazos de reintento). Según tres de sus bits, el canal toma hasta
+  **tres piezas**: una de cada una de las dos tablas que ya se conocían
+  (`unknown_004d87d8` y `unknown_004d87dc`) y una que lleva dentro. El
+  número `0x38` con que el observador pedía un canal son esos tres bits.
+- `network_channel_connect` (antes `unknown_00088220`) empieza a conectar
+  con una dirección: tercer estado, un **número nuevo para esta conexión**
+  (el siguiente de un contador que comparten todos los canales) y, si se
+  le pide, el primer intento (hito 407). Ese número es el que viaja en la
+  petición y el que el hito 397 comparaba para saber si la otra consola
+  había vuelto a empezar.
+
+### Comprobado rompiendo líneas
+
+- Diecinueve líneas rotas, una cada vez: las pruebas fallaron en las
+  diecinueve.
+
+### Sin comprobar
+
+- Los tamaños de tres de las cuatro cosas que comparten los canales
+  (`unknown_00528000`, `unknown_00528b28`, `unknown_00529188`) salen de la
+  distancia entre sus direcciones; solo se usan sus direcciones.
+- En este hito se pasaron las pruebas de `network_channel` (15 funciones) y
+  las de `network_observer`, que usan los nombres nuevos.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Un canal del juego pide conectar, y le contestan
 
 Tres funciones en `networking/network_channel.c`, 387 bytes entre todas. De 1410

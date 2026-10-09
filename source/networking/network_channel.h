@@ -64,7 +64,27 @@ enum
 	_network_channel_state_connecting= 3,
 	_network_channel_closed_timeout= 4,
 	_network_message_connect_request= 4,
-	_network_message_connect_established= 6
+	_network_message_connect_established= 6,
+	/* more of a channel: one more thing that it is given; what it has
+	itself that is one of its parts; how many parts it has, and which; and a
+	byte that it starts to talk with. Of what it is of: the next number that
+	one of its channels gives what it talks with. Two more of its bits, and
+	the two that it does not have with another console. Its first state,
+	one more reason that it stops with, and the kinds of its parts */
+	NETWORK_CHANNEL_UNKNOWN8_OFFSET= 0x8,
+	NETWORK_CHANNEL_UNKNOWN18_OFFSET= 0x18,
+	NETWORK_CHANNEL_PART_COUNT_OFFSET= 0x20,
+	NETWORK_CHANNEL_PARTS_OFFSET= 0x24,
+	MAXIMUM_NETWORK_CHANNEL_PARTS= 3,
+	NETWORK_CHANNEL_UNKNOWN84_OFFSET= 0x84,
+	NETWORK_CHANNEL_UNKNOWN0_NEXT_IDENTIFIER_OFFSET= 0x4,
+	_network_channel_unknown48_bit20= 0x20,
+	_network_channel_unknown48_bitsC0= 0xC0,
+	_network_channel_state_new= 1,
+	_network_channel_closed_unknown2= 2,
+	_network_channel_part_unknown18= 0x1,
+	_network_channel_part_unknown14= 0x19,
+	_network_channel_part_unknown10= 0x31
 };
 
 /* ---------- structures */
@@ -96,6 +116,13 @@ struct network_channel_closed_message
 	long unknown50;
 	long unknown4c;
 	long reason;
+};
+
+/* one of the things that a channel has: of what kind, and which */
+struct network_channel_part
+{
+	long type;
+	void *part;
 };
 
 /* the tries of a channel at talking with another console: how long there
@@ -132,6 +159,11 @@ void network_channel_set_time(long index, byte *channel);
 void __attribute__((stdcall)) network_channel_send_established(byte *channel, boolean established);
 void __attribute__((stdcall)) network_channel_accept(byte *channel, long identifier);
 void network_channel_update_connecting(byte *channel);
+void __attribute__((stdcall)) network_channel_connect(const struct transport_address *address, byte *channel,
+	boolean unknown);
+boolean __attribute__((stdcall)) network_channel_new(unsigned long flags, long index, byte *unknown0, byte *gateway,
+	byte *unknown8, const struct network_channel_tries *tries, byte *channel);
+long __attribute__((stdcall)) network_channel_allocate(const char *name, long flags);
 long network_channel_unknown_00088fd0(const byte *game_channel);
 long network_channel_unknown_00089000(const byte *game_channel);
 long network_channel_unknown_00089030(const byte *game_channel);

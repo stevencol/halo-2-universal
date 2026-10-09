@@ -1053,7 +1053,7 @@ def run(t) -> None:
                     found,
                     (arguments[0], harness.normalize(arguments[1])),
                 ),
-                unknown_00088220=lambda harness, arguments: (
+                network_channel_connect=lambda harness, arguments: (
                     0,
                     (harness.normalize(arguments[0]), harness.normalize(arguments[1]), arguments[2]),
                 ),
@@ -1431,7 +1431,7 @@ def run(t) -> None:
             Buffer(bytes(data)),
             globals={"unknown_004d87d4": Buffer(bytes(game_channels()))},
             externals={
-                "unknown_00082060": taken,
+                "network_channel_allocate": taken,
                 "network_observer_channel_update_connection": with_channel_and_observer,
                 "network_observer_channel_update_game_channel": with_channel_and_observer,
                 "network_observer_channel_update_tries": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
@@ -1481,7 +1481,7 @@ def run(t) -> None:
             globals=dict(setup["globals"], unknown_004d87d4=Buffer(bytes(game_channels()))),
             externals=dict(
                 setup["externals"],
-                unknown_00082060=taken,
+                network_channel_allocate=taken,
                 network_observer_channel_forget_address=noted,
                 network_channel_release=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                 transport_qos_delete=lambda harness, arguments: (0, (arguments[0],)),
@@ -1663,7 +1663,7 @@ def run(t) -> None:
                 "network_channel_get_address": talks_with,
                 "network_channel_close": closes,
                 "transport_address_connect": lambda harness, arguments: (1, (harness.normalize(arguments[0]),)),
-                "unknown_00088220": lambda harness, arguments: (
+                "network_channel_connect": lambda harness, arguments: (
                     0,
                     (harness.normalize(arguments[0]), harness.normalize(arguments[1]), arguments[2]),
                 ),

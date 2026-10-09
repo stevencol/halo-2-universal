@@ -3,7 +3,7 @@
 import random
 import struct
 
-from difftest import Buffer, Mock, mock_address
+from difftest import Buffer, GlobalData, Mock, mock_address
 
 NONE = 0xFFFFFFFF
 CHANNEL = 0xF8
@@ -175,4 +175,87 @@ def run(t) -> None:
                 network_channel_close=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
                 network_message_gateway_send=to_address,
             ),
+        )
+
+    # ---------- a channel starts to talk, and a channel that was not in use is taken
+
+    for n in range(800):
+        setup = at_time()
+        # what the channel is of goes after it: its second number is the next one that a channel gives
+        data = channel() + bytearray(struct.pack("<II", random_.getrandbits(32), random_.choice((0, 7, 0xFFFFFFFE, NONE, random_.getrandbits(32)))))
+        struct.pack_into("<I", data, 0x0, CHANNEL)
+        struct.pack_into("<I", data, 0x48, random_.choice((0, 0x38, 0xF8, 0xC0, 0xFFFFFFFF)))
+        address = bytearray(random_.randbytes(0x14))
+        struct.pack_into("<h", address, 0x12, random_.choice((4, 4, 16)))
+        if n % 5 == 0:
+            # this console's own address
+            address[0:4] = bytes((1, 0, 0, 0x7F))
+        t.check(
+            "network_channel_connect",
+            Buffer(bytes(address)),
+            Buffer(bytes(data), pointers=(0x0,)),
+            random_.choice((0, 1, 1, 0x80)),
+            globals=dict(setup["globals"], **things()),
+            externals=dict(
+                setup["externals"],
+                unknown_00092d10=lambda harness, arguments, could=random_.choice((1, 1, 1, 0)): (
+                    could,
+                    (harness.normalize(arguments[0]), arguments[1], arguments[2], harness.normalize(arguments[3])),
+                ),
+                network_channel_close=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                network_channel_update_connecting=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                network_channel_reset_times=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                unknown_00095cf0=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                unknown_00094bf0=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+            ),
+        )
+
+    def takes(harness, arguments, which=None):
+        return which, (arguments[0],)
+
+    for n in range(600):
+        t.check(
+            "network_channel_new",
+            random_.choice((0, 8, 0x10, 0x20, 0x38, 0x38, 0x18, 0x28, 0x30, 0xFF, random_.getrandbits(32))),
+            random_.randrange(6),
+            Buffer(random_.randbytes(8)),
+            Buffer(random_.randbytes(8)),
+            Buffer(random_.randbytes(8)),
+            Buffer(random_.randbytes(12)),
+            Buffer(bytes(channel())),
+            globals=things(),
+            externals={
+                "unknown_000820f0": lambda harness, arguments, which=random_.choice((0, 1, 2, 2, NONE)): takes(harness, arguments, which),
+                "unknown_00082150": lambda harness, arguments, which=random_.choice((0, 1, 2, 2, NONE)): takes(harness, arguments, which),
+                "network_channel_release": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+            },
+        )
+
+    for n in range(400):
+        count = random_.choice((0, 1, 6, 6, 6, -1))
+        channels = bytearray()
+        for other in range(6):
+            data = channel()
+            struct.pack_into("<i", data, 0x54, random_.choice((0, 0, 2, 5, 5, 5)) if n % 6 else 5)
+            channels += data
+        t.check(
+            "network_channel_allocate",
+            Buffer(b"10.0.0.5\0"),
+            random_.choice((0x38, 0x38, 0, random_.getrandbits(32))),
+            globals={
+                "unknown_004d8ba0": bytes((random_.choice((1, 1, 1, 0, 0x80)),)),
+                "unknown_004d87d0": struct.pack("<i", count),
+                "unknown_004d87d4": Buffer(bytes(channels)),
+                # the four things that every channel is given
+                "unknown_00528000": GlobalData(bytes(4)),
+                "unknown_00528b28": GlobalData(bytes(4)),
+                "unknown_00529188": GlobalData(bytes(4)),
+                "unknown_004cf6d4": GlobalData(bytes(12)),
+            },
+            externals={
+                "network_channel_new": lambda harness, arguments, could=random_.choice((1, 1, 0)): (
+                    could,
+                    tuple(harness.normalize(argument) for argument in arguments),
+                )
+            },
         )

@@ -314,3 +314,198 @@ void network_channel_update_connecting(
 			(channel+NETWORK_CHANNEL_TRIES_OFFSET))->period+(unsigned long)network_time_since(0));
 	}
 }
+
+/* 0x00092d10: what a channel is of has, for the channel's number in its
+list, the number that the channel gives what it talks with and the address;
+whether it could. 0x00095cf0: one of the things of unknown_004d87d8 starts
+over. 0x000820f0, 0x00082150: one of the things of unknown_004d87d8, and of
+unknown_004d87dc, that is no one's is taken; which, or NONE */
+boolean __attribute__((stdcall)) unknown_00092d10(byte *unknown0, long unknown44, long identifier,
+	const struct transport_address *address);
+void unknown_00095cf0(byte *unknown10);
+long __attribute__((stdcall)) unknown_000820f0(long unknown);
+long __attribute__((stdcall)) unknown_00082150(long unknown);
+
+/* ---------- globals */
+
+/* 0x004d87d0: how many channels of the game there are. 0x004d8ba0, of
+main.c: whether there are any */
+long unknown_004d87d0;
+extern boolean unknown_004d8ba0;
+
+/* 0x00528000, 0x00528b28, 0x00529188, 0x004cf6d4: what every channel of the
+game is of; what sends its messages that go by no channel, which is the
+gateway; one more thing that it is given; and its tries at talking with
+another console */
+byte unknown_00528000[0xB28];
+byte unknown_00528b28[0x660];
+byte unknown_00529188[4];
+struct network_channel_tries unknown_004cf6d4;
+
+/* 0x00088220: a channel starts to talk with an address of the game: it is in
+its third state, with the address and a byte; unless the address is this
+console's own, it has not the seventh and eighth of its bits; and it gives
+what it talks with a new number, the next one of what it is of. If that
+cannot have it (unknown_00092d10), the channel stops, with 2 for a reason.
+If not: with the byte, it starts to try, since now, and makes its first try
+(network_channel_update_connecting); its six times are now; and its things
+of unknown_004d87d8 and unknown_004d87dc start over */
+void __attribute__((stdcall)) network_channel_connect(
+	const struct transport_address *address,
+	byte *channel,
+	boolean unknown)
+{
+	byte *unknown0;
+	long identifier;
+	long index;
+
+	*(struct transport_address *)(channel+NETWORK_CHANNEL_ADDRESS_OFFSET)= *address;
+	*(long *)(channel+NETWORK_CHANNEL_STATE_OFFSET)= _network_channel_state_connecting;
+	channel[NETWORK_CHANNEL_UNKNOWN84_OFFSET]= unknown;
+	if (!(address->address_size==sizeof(address->address.ipv4) && address->address.ipv4==NETWORK_OBSERVER_LOOPBACK_ADDRESS))
+	{
+		*(unsigned long *)(channel+NETWORK_CHANNEL_UNKNOWN48_OFFSET)&= ~(unsigned long)_network_channel_unknown48_bitsC0;
+	}
+	unknown0= *(byte **)(channel+NETWORK_CHANNEL_UNKNOWN0_OFFSET);
+	identifier= *(const long *)(unknown0+NETWORK_CHANNEL_UNKNOWN0_NEXT_IDENTIFIER_OFFSET);
+	/* the game adds as the processor does */
+	*(long *)(unknown0+NETWORK_CHANNEL_UNKNOWN0_NEXT_IDENTIFIER_OFFSET)= (long)((unsigned long)identifier+1);
+	if ((long)((unsigned long)identifier+1)==NONE)
+	{
+		*(long *)(unknown0+NETWORK_CHANNEL_UNKNOWN0_NEXT_IDENTIFIER_OFFSET)= 0;
+	}
+	*(long *)(channel+NETWORK_CHANNEL_UNKNOWN4C_OFFSET)= identifier;
+	*(long *)(channel+NETWORK_CHANNEL_UNKNOWN50_OFFSET)= NONE;
+	if (!unknown_00092d10(*(byte **)(channel+NETWORK_CHANNEL_UNKNOWN0_OFFSET),
+		*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN44_OFFSET), identifier,
+		(const struct transport_address *)(channel+NETWORK_CHANNEL_ADDRESS_OFFSET)))
+	{
+		network_channel_close(channel, _network_channel_closed_unknown2);
+
+		return;
+	}
+	if (channel[NETWORK_CHANNEL_UNKNOWN84_OFFSET])
+	{
+		*(long *)(channel+NETWORK_CHANNEL_UNKNOWN88_OFFSET)= network_time_since(0);
+		*(long *)(channel+NETWORK_CHANNEL_UNKNOWN8C_OFFSET)= network_time_since(0);
+		*(long *)(channel+NETWORK_CHANNEL_UNKNOWN90_OFFSET)= 0;
+		network_channel_update_connecting(channel);
+	}
+	network_channel_reset_times(channel);
+	index= *(const long *)(channel+NETWORK_CHANNEL_UNKNOWN10_OFFSET);
+	if (index!=NONE)
+	{
+		unknown_00095cf0(unknown_004d87d8+index*NETWORK_CHANNEL_UNKNOWN10_SIZE);
+	}
+	index= *(const long *)(channel+NETWORK_CHANNEL_UNKNOWN14_OFFSET);
+	if (index!=NONE)
+	{
+		unknown_00094bf0(unknown_004d87dc+index*NETWORK_CHANNEL_UNKNOWN14_SIZE);
+	}
+}
+
+/* one more of the things that a channel has, of a kind */
+static inline __attribute__((always_inline)) void network_channel_add_part(
+	byte *channel,
+	long type,
+	void *part)
+{
+	struct network_channel_part *parts= (struct network_channel_part *)(channel+NETWORK_CHANNEL_PARTS_OFFSET);
+	long count= *(const long *)(channel+NETWORK_CHANNEL_PART_COUNT_OFFSET);
+
+	parts[count].part= part;
+	parts[count].type= type;
+	*(long *)(channel+NETWORK_CHANNEL_PART_COUNT_OFFSET)= (long)((unsigned long)count+1);
+}
+
+/* 0x00088110: a channel that was not in use is, in its first state: with
+its bits, its number, the four things that it is given, and no address nor
+numbers of what it talks with. For each of three of its bits it has one
+more thing: one of unknown_004d87d8, one of unknown_004d87dc (each taken
+now), and what it has itself at 0x18. If one cannot be taken, the channel is
+let go of; whether it could */
+boolean __attribute__((stdcall)) network_channel_new(
+	unsigned long flags,
+	long index,
+	byte *unknown0,
+	byte *gateway,
+	byte *unknown8,
+	const struct network_channel_tries *tries,
+	byte *channel)
+{
+	*(long *)(channel+NETWORK_CHANNEL_STATE_OFFSET)= _network_channel_state_new;
+	*(long *)(channel+NETWORK_CHANNEL_UNKNOWN58_OFFSET)= 0;
+	memset(channel+NETWORK_CHANNEL_LAST_ADDRESS_OFFSET, 0, sizeof(struct transport_address));
+	*(unsigned long *)(channel+NETWORK_CHANNEL_UNKNOWN48_OFFSET)= flags;
+	*(long *)(channel+NETWORK_CHANNEL_UNKNOWN44_OFFSET)= index;
+	*(byte **)(channel+NETWORK_CHANNEL_UNKNOWN0_OFFSET)= unknown0;
+	*(byte **)(channel+NETWORK_CHANNEL_UNKNOWN8_OFFSET)= unknown8;
+	*(byte **)(channel+NETWORK_CHANNEL_GATEWAY_OFFSET)= gateway;
+	*(long *)(channel+NETWORK_CHANNEL_UNKNOWN4C_OFFSET)= NONE;
+	*(long *)(channel+NETWORK_CHANNEL_UNKNOWN50_OFFSET)= NONE;
+	*(const struct network_channel_tries **)(channel+NETWORK_CHANNEL_TRIES_OFFSET)= tries;
+	*(long *)(channel+NETWORK_CHANNEL_PART_COUNT_OFFSET)= 0;
+	memset(channel+NETWORK_CHANNEL_PARTS_OFFSET, 0, MAXIMUM_NETWORK_CHANNEL_PARTS*sizeof(struct network_channel_part));
+	*(long *)(channel+NETWORK_CHANNEL_UNKNOWN3C_OFFSET)= 0;
+	*(long *)(channel+NETWORK_CHANNEL_OBSERVER_OFFSET)= 0;
+	if (channel[NETWORK_CHANNEL_UNKNOWN48_OFFSET]&_network_channel_unknown48_bit8)
+	{
+		long taken= unknown_000820f0(0);
+
+		*(long *)(channel+NETWORK_CHANNEL_UNKNOWN10_OFFSET)= taken;
+		if (taken==NONE)
+		{
+			network_channel_release(channel);
+
+			return FALSE;
+		}
+		network_channel_add_part(channel, _network_channel_part_unknown10, unknown_004d87d8+taken*NETWORK_CHANNEL_UNKNOWN10_SIZE);
+	}
+	if (channel[NETWORK_CHANNEL_UNKNOWN48_OFFSET]&_network_channel_unknown48_bit10)
+	{
+		long taken= unknown_00082150(0);
+
+		*(long *)(channel+NETWORK_CHANNEL_UNKNOWN14_OFFSET)= taken;
+		if (taken==NONE)
+		{
+			network_channel_release(channel);
+
+			return FALSE;
+		}
+		network_channel_add_part(channel, _network_channel_part_unknown14, unknown_004d87dc+taken*NETWORK_CHANNEL_UNKNOWN14_SIZE);
+	}
+	if (channel[NETWORK_CHANNEL_UNKNOWN48_OFFSET]&_network_channel_unknown48_bit20)
+	{
+		network_channel_add_part(channel, _network_channel_part_unknown18, channel+NETWORK_CHANNEL_UNKNOWN18_OFFSET);
+	}
+
+	return TRUE;
+}
+
+/* 0x00082060: a channel of the game that is not in use is taken, with some
+bits; which, or NONE if there are no channels, none is free, or the first
+free one cannot have what its bits ask for. The name that it is given is not
+looked at. The game has it far from the other functions of the channels */
+long __attribute__((stdcall)) network_channel_allocate(
+	const char *name,
+	long flags)
+{
+	long index;
+
+	if (!unknown_004d8ba0 || unknown_004d87d0<=0)
+	{
+		return NONE;
+	}
+	for (index= 0; index<unknown_004d87d0; index++)
+	{
+		byte *channel= unknown_004d87d4+index*NETWORK_CHANNEL_SIZE;
+
+		if (*(const long *)(channel+NETWORK_CHANNEL_STATE_OFFSET)==_network_channel_state_none)
+		{
+			return network_channel_new(flags, index, unknown_00528000, unknown_00528b28, unknown_00529188, &unknown_004cf6d4,
+				channel) ? index : NONE;
+		}
+	}
+
+	return NONE;
+}

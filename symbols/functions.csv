@@ -1890,7 +1890,12 @@ address,name,source,arguments,returns,convention
 0007b650,transport_qos_delete,source/networking/transport_qos.c,edi,void
 00076ff0,network_observer_channel_update_game_channel,source/networking/network_observer.c,ebx stack,void,stdcall
 000776a0,network_observer_channel_update_tries,source/networking/network_observer.c,ecx stack,void,stdcall
-00088220,unknown_00088220,,eax stack stack,void,stdcall
+00088220,network_channel_connect,source/networking/network_channel.c,eax stack stack,void,stdcall
+00088110,network_channel_new,source/networking/network_channel.c,stack edx stack stack stack stack esi,bool,stdcall
+00092d10,unknown_00092d10,,esi stack stack stack,bool,stdcall
+00095cf0,unknown_00095cf0,,esi,void
+000820f0,unknown_000820f0,,stack,int,stdcall
+00082150,unknown_00082150,,stack,int,stdcall
 00078190,network_observer_packet_rate_low,source/networking/network_observer.c,ecx xmm1 stack stack stack,bool,stdcall
 00078090,network_observer_packet_rate,source/networking/network_observer.c,ecx stack stack stack,real:xmm0,stdcall
 00079600,network_observer_channel_set_flow,source/networking/network_observer.c,eax ecx xmm5 stack stack,void,stdcall
@@ -1940,7 +1945,7 @@ address,name,source,arguments,returns,convention
 00088360,network_channel_accept,source/networking/network_channel.c,esi stack,void,stdcall
 00089180,network_channel_send_established,source/networking/network_channel.c,eax stack,void,stdcall
 000890b0,network_channel_update_connecting,source/networking/network_channel.c,eax,void
-00082060,unknown_00082060,,stack stack,int,stdcall
+00082060,network_channel_allocate,source/networking/network_channel.c,stack stack,int,stdcall
 00092870,network_rate_new,source/networking/network_observer.c,eax ecx,void
 000929d0,network_window_reset,source/networking/network_observer.c,esi,void
 00079850,network_observer_channel_drop_flow,source/networking/network_observer.c,edi stack,void,stdcall
