@@ -5038,11 +5038,9 @@ void NETWORK_SESSION_CALLBACK network_session_enter_state8(
 }
 
 /* 0x00060400: makes what is sent to a console to tell it who is in a
-session: all of it, or with a baseline what has changed since. 0x000609e0
-does the same with what the session knows */
+session: all of it, or with a baseline what has changed since.
+network_session_parameters_get_update does the same with what the session knows */
 void __attribute__((stdcall)) unknown_00060400(byte *session, const byte *membership, const byte *baseline,
-	byte *update);
-void __attribute__((stdcall)) unknown_000609e0(byte *session, const byte *parameters, const byte *baseline,
 	byte *update);
 
 /* 0x000768b0, 0x00076930, of network_observer.c: whether one of the channels
@@ -5181,11 +5179,11 @@ void network_session_send_parameters_updates(
 	}
 	if (all_peers)
 	{
-		unknown_000609e0(session, session+NETWORK_SESSION_UNKNOWN4978_OFFSET, NULL, all);
+		network_session_parameters_get_update(session, session+NETWORK_SESSION_UNKNOWN4978_OFFSET, NULL, all);
 	}
 	if (changes_peers)
 	{
-		unknown_000609e0(session, session+NETWORK_SESSION_UNKNOWN4978_OFFSET,
+		network_session_parameters_get_update(session, session+NETWORK_SESSION_UNKNOWN4978_OFFSET,
 			session+NETWORK_SESSION_UNKNOWN5E28_OFFSET, changes);
 	}
 	for (peer_index= 0; peer_index<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET); peer_index++)
@@ -6554,4 +6552,286 @@ boolean NETWORK_SESSION_CALLBACK network_session_parameters_update_received(
 	}
 
 	return TRUE;
+}
+
+/* where something that a session knows is, in what it knows or in a copy of
+it that is only read */
+static inline __attribute__((always_inline)) const byte *network_session_parameters_get(
+	const byte *parameters,
+	long session_offset)
+{
+	return parameters+(session_offset-NETWORK_SESSION_UNKNOWN4978_OFFSET);
+}
+
+/* whether a thing of a size is not the same in what a session knows and in
+what it knew: the game has this for each thing, and with nothing that it
+knew every thing is taken as another */
+static inline __attribute__((always_inline)) boolean network_session_parameters_differ(
+	const byte *parameters,
+	const byte *baseline,
+	long session_offset,
+	long size)
+{
+	return !baseline || memcmp(network_session_parameters_get(parameters, session_offset),
+		network_session_parameters_get(baseline, session_offset), size)!=0;
+}
+
+/* 0x000609e0: what the console that runs a session sends to a console to
+tell it what the session knows: what the session is known by, the number
+that what it knows has, and each thing, after a byte that says that it
+comes. With what the session knew the last time, the number of that goes
+too, and only the things that are not the same come; without it, the number
+is NONE and every thing comes. With the numbers of 0x4980 and 0x497C goes
+the byte of 0x765C of the session, which asks for an answer. The thing of
+0x49CC goes as its kind and the numbers that its kind is made with.
+network_session_parameters_apply_update takes all of it on the other side */
+void NETWORK_SESSION_CALLBACK network_session_parameters_get_update(
+	const byte *session,
+	const byte *parameters,
+	const byte *baseline,
+	byte *update)
+{
+	memset(update, 0, NETWORK_SESSION_MESSAGE_PARAMETERS_UPDATE_SIZE);
+	memcpy(update, session+NETWORK_SESSION_IDENTIFIER_OFFSET, NETWORK_SESSION_IDENTIFIER_SIZE);
+	*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_VERSION_OFFSET)= *(const long *)parameters;
+	*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_BASELINE_OFFSET)= baseline ? *(const long *)baseline : NONE;
+	if (network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_UNKNOWN497C_OFFSET, 2*sizeof(long)))
+	{
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_UNKNOWN4980_OFFSET]= TRUE;
+		*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN4980_OFFSET)=
+			*(const long *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN4980_OFFSET);
+		*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN497C_OFFSET)=
+			*(const long *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN497C_OFFSET);
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_ANSWER_OFFSET]= session[NETWORK_SESSION_UNKNOWN765C_OFFSET];
+	}
+	if (network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_LANGUAGE_OFFSET, sizeof(long)))
+	{
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_LANGUAGE_OFFSET]= TRUE;
+		*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_LANGUAGE_OFFSET)=
+			*(const long *)network_session_parameters_get(parameters, NETWORK_SESSION_LANGUAGE_OFFSET);
+	}
+	if (network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_UNKNOWN498C_OFFSET, sizeof(long)))
+	{
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_UNKNOWN498C_OFFSET]= TRUE;
+		*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN498C_OFFSET)=
+			*(const long *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN498C_OFFSET);
+	}
+	if (network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_UNKNOWN4990_OFFSET, 2*sizeof(long)))
+	{
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_UNKNOWN4990_OFFSET]= TRUE;
+		*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN4990_OFFSET)=
+			*(const long *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN4990_OFFSET);
+		*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN4994_OFFSET)=
+			*(const long *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN4994_OFFSET);
+	}
+	if (network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_UNKNOWN4998_OFFSET,
+		1+NETWORK_SESSION_UNKNOWN4999_SIZE))
+	{
+		boolean unknown4998= *network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN4998_OFFSET);
+
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_UNKNOWN4998_OFFSET]= TRUE;
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN4998_OFFSET]= unknown4998;
+		if (unknown4998)
+		{
+			memcpy(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN4999_OFFSET,
+				network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN4999_OFFSET),
+				NETWORK_SESSION_UNKNOWN4999_SIZE);
+		}
+	}
+	if (network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_UNKNOWN49A4_OFFSET, sizeof(long)))
+	{
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_UNKNOWN49A4_OFFSET]= TRUE;
+		*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN49A4_OFFSET)=
+			*(const long *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN49A4_OFFSET);
+	}
+	if (network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_UNKNOWN49C4_OFFSET, 1))
+	{
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_UNKNOWN49C4_OFFSET]= TRUE;
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN49C4_OFFSET]=
+			*network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN49C4_OFFSET);
+	}
+	if (network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_UNKNOWN49C8_OFFSET, sizeof(long)))
+	{
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_UNKNOWN49C8_OFFSET]= TRUE;
+		*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN49C8_OFFSET)=
+			*(const long *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN49C8_OFFSET);
+	}
+	if (network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_UNKNOWN49FC_OFFSET, 1))
+	{
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_UNKNOWN49FC_OFFSET]= TRUE;
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN49FC_OFFSET]=
+			*network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN49FC_OFFSET);
+	}
+	if (network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_UNKNOWN49F8_OFFSET, sizeof(long)))
+	{
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_UNKNOWN49F8_OFFSET]= TRUE;
+		*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN49F8_OFFSET)=
+			*(const long *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN49F8_OFFSET);
+	}
+	if (network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_UNKNOWN49CC_OFFSET,
+		NETWORK_SESSION_UNKNOWN49CC_SIZE))
+	{
+		const long *request= (const long *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN49CC_OFFSET);
+		long *numbers= (long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN49CC_KIND1_OFFSET);
+
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_UNKNOWN49CC_OFFSET]= TRUE;
+		*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN49CC_KIND_OFFSET)= request[0];
+		switch (request[0])
+		{
+		case 1:
+			numbers[0]= request[1];
+			numbers[1]= request[2];
+			numbers[2]= request[3];
+			numbers[3]= request[4];
+			break;
+		case 2:
+			*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN49CC_KIND2_OFFSET)= request[5];
+			break;
+		case 3:
+			*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN49CC_KIND3_OFFSET)= request[6];
+			break;
+		}
+	}
+	if (!baseline ||
+		*network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN49FD_OFFSET)!=
+			*network_session_parameters_get(baseline, NETWORK_SESSION_UNKNOWN49FD_OFFSET) ||
+		network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_UNKNOWN4A00_OFFSET,
+			NETWORK_SESSION_UNKNOWN4A00_SIZE))
+	{
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_ROSTER_OFFSET]= TRUE;
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_ROSTER_VALID_OFFSET]=
+			*network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN49FD_OFFSET);
+		memcpy(update+NETWORK_SESSION_PARAMETERS_UPDATE_ROSTER_OFFSET,
+			network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN4A00_OFFSET), NETWORK_SESSION_UNKNOWN4A00_SIZE);
+	}
+	if (!baseline ||
+		*network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN49E8_OFFSET)!=
+			*network_session_parameters_get(baseline, NETWORK_SESSION_UNKNOWN49E8_OFFSET) ||
+		network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_UNKNOWN49F0_OFFSET, 2*sizeof(long)))
+	{
+		const long *unknown49f0= (const long *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN49F0_OFFSET);
+
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_UNKNOWN49E8_OFFSET]= TRUE;
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN49E8_OFFSET]=
+			*network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN49E8_OFFSET);
+		*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN49F0_OFFSET)= unknown49f0[0];
+		*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN49F0_OFFSET+sizeof(long))= unknown49f0[1];
+	}
+	if (network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_UNKNOWN4D08_OFFSET, 2*sizeof(long)) ||
+		strncmp((const char *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN4D10_OFFSET),
+			(const char *)network_session_parameters_get(baseline, NETWORK_SESSION_UNKNOWN4D10_OFFSET),
+			NETWORK_SESSION_UNKNOWN4D10_SIZE)!=0)
+	{
+		char *text= (char *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN4D10_OFFSET);
+
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_UNKNOWN4D08_OFFSET]= TRUE;
+		*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN4D08_OFFSET)=
+			*(const long *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN4D08_OFFSET);
+		*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN4D0C_OFFSET)=
+			*(const long *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN4D0C_OFFSET);
+		strncpy(text, (const char *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN4D10_OFFSET),
+			NETWORK_SESSION_UNKNOWN4D10_SIZE);
+		text[NETWORK_SESSION_UNKNOWN4D10_SIZE-1]= 0;
+	}
+	if (network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_RANDOM_OFFSET, NETWORK_SESSION_RANDOM_SIZE))
+	{
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_RANDOM_OFFSET]= TRUE;
+		memcpy(update+NETWORK_SESSION_PARAMETERS_UPDATE_RANDOM_OFFSET,
+			network_session_parameters_get(parameters, NETWORK_SESSION_RANDOM_OFFSET), NETWORK_SESSION_RANDOM_SIZE);
+	}
+	if (network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_UNKNOWN4DA8_OFFSET, sizeof(long)))
+	{
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_UNKNOWN4DA8_OFFSET]= TRUE;
+		*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN4DA8_OFFSET)=
+			*(const long *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN4DA8_OFFSET);
+	}
+	if (network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_UNKNOWN4DAC_OFFSET, sizeof(long)))
+	{
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_UNKNOWN4DAC_OFFSET]= TRUE;
+		*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN4DAC_OFFSET)=
+			*(const long *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN4DAC_OFFSET);
+	}
+	if (network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_UNKNOWN4DB0_OFFSET,
+		NETWORK_SESSION_UNKNOWN4DB0_SIZE))
+	{
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_UNKNOWN4DB0_OFFSET]= TRUE;
+		memcpy(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN4DB0_OFFSET,
+			network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN4DB0_OFFSET), NETWORK_SESSION_UNKNOWN4DB0_SIZE);
+	}
+	if (!baseline ||
+		wcsncmp((const wchar *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN4EE0_OFFSET),
+			(const wchar *)network_session_parameters_get(baseline, NETWORK_SESSION_UNKNOWN4EE0_OFFSET),
+			NETWORK_SESSION_UNKNOWN4EE0_LENGTH)!=0)
+	{
+		wchar *text= (wchar *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN4EE0_OFFSET);
+
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_UNKNOWN4EE0_OFFSET]= TRUE;
+		wcsncpy(text, (const wchar *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN4EE0_OFFSET),
+			NETWORK_SESSION_UNKNOWN4EE0_LENGTH-1);
+		text[NETWORK_SESSION_UNKNOWN4EE0_LENGTH-1]= 0;
+	}
+	if (!baseline ||
+		*network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN4F20_OFFSET)!=
+			*network_session_parameters_get(baseline, NETWORK_SESSION_UNKNOWN4F20_OFFSET) ||
+		network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_UNKNOWN4F24_OFFSET,
+			NETWORK_SESSION_UNKNOWN4F24_SIZE) ||
+		network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_UNKNOWN4F90_OFFSET,
+			NETWORK_SESSION_UNKNOWN4F90_SIZE))
+	{
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_UNKNOWN4F20_OFFSET]= TRUE;
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN4F20_OFFSET]=
+			*network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN4F20_OFFSET);
+		memcpy(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN4F24_OFFSET,
+			network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN4F24_OFFSET), NETWORK_SESSION_UNKNOWN4F24_SIZE);
+		memcpy(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN4F90_OFFSET,
+			network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN4F90_OFFSET), NETWORK_SESSION_UNKNOWN4F90_SIZE);
+	}
+	if (network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_UNKNOWN49A1_OFFSET, 1))
+	{
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_UNKNOWN49A1_OFFSET]= TRUE;
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN49A1_OFFSET]=
+			*network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN49A1_OFFSET);
+	}
+	if (network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_UNKNOWN5DD0_OFFSET, sizeof(short)))
+	{
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_UNKNOWN5DD0_OFFSET]= TRUE;
+		*(short *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN5DD0_OFFSET)=
+			*(const short *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN5DD0_OFFSET);
+	}
+	if (!baseline ||
+		*network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN49A8_OFFSET)!=
+			*network_session_parameters_get(baseline, NETWORK_SESSION_UNKNOWN49A8_OFFSET) ||
+		network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_UNKNOWN49AC_OFFSET,
+			3*sizeof(long)+NETWORK_SESSION_UNKNOWN49B8_SIZE))
+	{
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_UNKNOWN49A8_OFFSET]= TRUE;
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN49A8_OFFSET]=
+			*network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN49A8_OFFSET);
+		*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN49AC_OFFSET)=
+			*(const long *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN49AC_OFFSET);
+		*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN49B0_OFFSET)=
+			*(const long *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN49B0_OFFSET);
+		*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN49B4_OFFSET)=
+			*(const long *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN49B4_OFFSET);
+		memcpy(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN49B8_OFFSET,
+			network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN49B8_OFFSET), NETWORK_SESSION_UNKNOWN49B8_SIZE);
+	}
+	if (!baseline ||
+		*network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN5DD8_OFFSET)!=
+			*network_session_parameters_get(baseline, NETWORK_SESSION_UNKNOWN5DD8_OFFSET) ||
+		network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_UNKNOWN5DDC_OFFSET,
+			NETWORK_SESSION_UNKNOWN5DDC_SIZE))
+	{
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_UNKNOWN5DDC_OFFSET]= TRUE;
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN5DDC_VALID_OFFSET]=
+			*network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN5DD8_OFFSET);
+		memcpy(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN5DDC_OFFSET,
+			network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN5DDC_OFFSET), NETWORK_SESSION_UNKNOWN5DDC_SIZE);
+	}
+	if (network_session_parameters_differ(parameters, baseline, NETWORK_SESSION_UNKNOWN5E20_OFFSET, sizeof(long)))
+	{
+		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_UNKNOWN5E20_OFFSET]= TRUE;
+		*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN5E20_OFFSET)=
+			*(const long *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN5E20_OFFSET);
+	}
 }

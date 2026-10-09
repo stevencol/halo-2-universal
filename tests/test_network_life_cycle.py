@@ -2584,7 +2584,7 @@ def run(t) -> None:
 
     for name, version, last_version, has, maker, size in (
         ("network_session_send_membership_updates", 0x4C, 0x24E0, 8, "unknown_00060400", 0x489C),
-        ("network_session_send_parameters_updates", 0x4978, 0x5E28, 0xC, "unknown_000609e0", 0x14D8),
+        ("network_session_send_parameters_updates", 0x4978, 0x5E28, 0xC, "network_session_parameters_get_update", 0x14D8),
     ):
         for n in range(400):
             data = with_real_channels()
@@ -3157,4 +3157,45 @@ def run(t) -> None:
                 "network_session_host_lost": then(),
                 "unknown_00075e80": sends_all,
             },
+        )
+
+    # ---------- what the console that runs a session sends to tell what the session knows is made
+
+    # where things start and end in what a session knows, and the bytes between them that are not of any
+    KNOWN_PLACES = (
+        0x0, 0x4, 0x8, 0xB, 0xC, 0x10, 0x14, 0x18, 0x1C, 0x20, 0x21, 0x28, 0x29, 0x2A, 0x2C, 0x30, 0x31, 0x34, 0x38,
+        0x3C, 0x40, 0x4B, 0x4C, 0x4D, 0x50, 0x54, 0x58, 0x5C, 0x60, 0x64, 0x68, 0x6C, 0x6F, 0x70, 0x71, 0x78, 0x7F,
+        0x80, 0x84, 0x85, 0x86, 0x88, 0x38F, 0x390, 0x394, 0x398, 0x416, 0x417, 0x418, 0x428, 0x42F, 0x430, 0x434,
+        0x438, 0x567, 0x568, 0x5A5, 0x5A6, 0x5A7, 0x5A8, 0x5A9, 0x5AC, 0x617, 0x618, 0x1457, 0x1458, 0x1459, 0x145A,
+        0x1460, 0x1461, 0x1464, 0x14A7, 0x14A8, 0x14AB, 0x14AC,
+    )  # fmt: skip
+
+    for n in range(1500):
+        parameters = bytearray(random_.randbytes(0x14B0))
+        struct.pack_into("<I", parameters, 0x54, random_.choice((0, 1, 1, 2, 3, 4, 7)))
+        parameters[0x20] = random_.choice((0, 1, 0x80))
+        if n % 3:
+            # the two texts end somewhere
+            parameters[0x398 + random_.randrange(0x80)] = 0
+            struct.pack_into("<H", parameters, 0x568 + 2 * random_.randrange(0x20), 0)
+        else:
+            for at in range(0x398, 0x418):
+                parameters[at] = parameters[at] or 1
+            for at in range(0x568, 0x5A8, 2):
+                parameters[at] = parameters[at] or 1
+        if n % 4 == 0:
+            baseline = 0
+        else:
+            # what the session knew is what it knows, but for a few bytes
+            known = bytearray(parameters)
+            for change in range(random_.choice((0, 1, 1, 2, 3, 6))):
+                at = random_.choice(KNOWN_PLACES) if random_.randrange(4) else random_.randrange(0x14B0)
+                known[at] ^= random_.choice((1, 0x20, 0x80))
+            baseline = Buffer(bytes(known))
+        t.check(
+            "network_session_parameters_get_update",
+            Buffer(bytes(whole_session())),
+            Buffer(bytes(parameters)),
+            baseline,
+            Buffer(random_.randbytes(0x14D8)),
         )

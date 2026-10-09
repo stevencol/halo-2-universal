@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Preparar «lo que la sesión sabe» para mandarlo
+
+Una función en `networking/network_session.c`, de 1.471 bytes. De 1308
+funciones se pasa a 1309, el 11,62 % de las del juego (el 7,500 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_parameters_get_update` | `0x000609e0` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_parameters_get_update` era `unknown_000609e0`, la función
+  que `network_session_send_parameters_updates` (hito 356) llamaba sin que
+  estuviera descompilada. **Prepara el mensaje de la clase `0x21`**: lo que
+  identifica a la sesión, la versión de lo que sabe, y cada cosa detrás de
+  un byte que dice que viene.
+- Si se le da lo que la sesión sabía la última vez, pone también la versión
+  de eso y **solo las cosas que no son iguales**; si no se le da, la versión
+  va a NONE y van todas.
+- Es el espejo exacto de `network_session_parameters_apply_update` (hito
+  363): las mismas veinticinco cosas en los mismos sitios. Dos detalles:
+  - con los números de `0x4980` y `0x497C` va el byte de `0x765C` de la
+    sesión, que es el que **pide respuesta** (el mensaje `0x24`);
+  - la cosa de `0x49CC` va como su clase y los números con que se hace esa
+    clase (cuatro para la primera, uno para la segunda y la tercera).
+- Los dos textos se comparan como textos: lo que haya después de su final
+  no cuenta. Los bytes de relleno entre una cosa y la siguiente tampoco.
+- Con esto **el camino de «lo que la sesión sabe» está entero**, de punta a
+  punta: pedir el cambio (`0x22`), atenderlo (hito 362), preparar el mensaje
+  (este), repartirlo (hito 356), recibirlo y aplicarlo (hito 363) y
+  contestar (`0x24`).
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (216
+  funciones).
+
 ## 2026-10-08 — Recibir «lo que la sesión sabe»
 
 Dos funciones en `networking/network_session.c`, 1.295 bytes entre las dos. De 1306

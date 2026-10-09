@@ -901,6 +901,8 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_join_requested(const byte 
 	const struct transport_address *address);
 boolean NETWORK_SESSION_CALLBACK network_session_host_parameters_requested(const byte *request, byte *session,
 	long channel);
+void NETWORK_SESSION_CALLBACK network_session_parameters_get_update(const byte *session, const byte *parameters,
+	const byte *baseline, byte *update);
 boolean NETWORK_SESSION_CALLBACK network_session_parameters_apply_update(const byte *session, const byte *update,
 	byte *parameters);
 boolean NETWORK_SESSION_CALLBACK network_session_parameters_update_received(byte *session, const byte *update);
