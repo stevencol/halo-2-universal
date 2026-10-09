@@ -429,3 +429,145 @@ def run(t) -> None:
             random_.getrandbits(32),
         )
         t.check("network_channel_unknown18_read", Buffer(bytes(part)), random_.getrandbits(32), a_stream(size, position))
+    # ---------- a packet that came by a channel is read
+
+    def put_bits(data: bytearray, position: int, value: int, count: int) -> None:
+        for bit in range(count):
+            at = position + bit
+            if at >> 3 < len(data):
+                data[at >> 3] = data[at >> 3] & ~(1 << (at & 7)) | ((value >> bit) & 1) << (at & 7)
+
+    for n in range(1600):
+        setup = at_time()
+        look_only = random_.choice((0, 0, 0, 1))
+        data = channel()
+        struct.pack_into("<II", data, 0x10, random_.randrange(3), random_.randrange(3))
+        data[0x48] = random_.choice((0, 8, 0x10, 0x18, 0x18, 0xFF, 0xE7))
+        pointers = []
+        # after the channel: its observer and its table, the table of the things, and four things. Each thing has, after
+        # its functions, how it says that its reading went, the number that it gives, and how many bits it reads
+        crafted = random_.random() < 0.6
+        owner, owner_table, part_table, parts = (len(data) + offset for offset in (0, 4, 0x14, 0x34))
+        tail = struct.pack("<I", owner_table)
+        tail += struct.pack("<4I", 0x11, mock_address(0), 0x33, 0x44)
+        tail += struct.pack("<8I", 0x11, 0x22, 0x33, 0x44, 0x55, mock_address(1), 0x77, 0x88)
+        pointers.append(owner)
+        went = random_.choice(((0,), (0,), (0,), (0, 0, 0, 1), (0, 0, 0, 2), (0, 0, 0, 3), (0, 1, 2, 3)))
+        for place in range(4):
+            pointers.append(parts + place * 0x10)
+            tail += struct.pack(
+                "<4I",
+                part_table,
+                random_.choice(went),
+                random_.choice((NONE, 0, 7, random_.getrandbits(32))),
+                0 if crafted else random_.choice((0, 0, 1, 5, 8)),
+            )
+        if random_.random() < 0.85:
+            struct.pack_into("<I", data, 0x40, owner)
+            pointers.append(0x40)
+        else:
+            struct.pack_into("<I", data, 0x40, 0)
+        # the things of the channel, and what it has at 0x3C, with its own
+        struct.pack_into("<i", data, 0x20, random_.choice((0, 1, 2, 3)))
+        for place in range(3):
+            struct.pack_into("<II", data, 0x24 + place * 8, random_.choice((1, 1, 0, 4, 0x19, 0x31, 0x30)), parts + random_.randrange(4) * 0x10)
+            pointers.append(0x24 + place * 8 + 4)
+        if random_.random() < 0.6:
+            second = len(data) + len(tail)
+            struct.pack_into("<I", data, 0x3C, second)
+            pointers.append(0x3C)
+            tail += struct.pack("<B3x3I", 1, random_.getrandbits(32), 0x99, random_.choice((0, 1, 2, 4)))
+            for place in range(4):
+                tail += struct.pack("<II", random_.choice((1, 1, 0, 4, 0x19, 0x30)), parts + random_.randrange(4) * 0x10)
+                pointers.append(second + 0x10 + place * 8 + 4)
+            tail += bytes((random_.choice((0, 1)), random_.choice((0, 0, 1, 2)), 0, 0))
+        else:
+            struct.pack_into("<I", data, 0x3C, 0)
+        data += tail
+        # the packet. One that is made on purpose has, where it is read from, the bit that says that there is more and
+        # how many bits, and ends just there or a byte before or after; the things read nothing of it
+        if crafted:
+            more = random_.choice((0, 1, 1, 1, 1))
+            bit_count = random_.choice((0, 1, 7, 8, 0x100, 0x2FFF, 0x3000, 0x3001, 0x3FFF, 0x2000))
+            start = 32 if not look_only else random_.choice((0, 3, 32))
+            start += -(start + 15 + bit_count) % 8
+            size = (start + 15 + bit_count) // 8 + random_.choice((0, 0, -1, 1, -2))
+            packet = bytearray(random_.randbytes(max(size, 1)))
+            size = len(packet)
+            put_bits(packet, start, more | bit_count << 1, 15)
+            if not look_only:
+                # read from the start, after the word that only the game for testing does not have
+                put_bits(packet, 0, random_.getrandbits(32) | 1, 32)
+                put_bits(packet, 32, random_.getrandbits(start - 32), start - 32)
+                if start > 32:
+                    # the things read nothing, so what is read is from the start: the bit is there
+                    start = 32
+                    put_bits(packet, start, more | bit_count << 1, 15)
+        else:
+            size = random_.choice((1, 3, 4, 5, 8, 0x40, 0x700))
+            packet = bytearray(random_.randbytes(size))
+            start = random_.choice((0, 0, 1, 31, 32, size * 8 - 1, size * 8, size * 8 + 1))
+            if random_.random() < 0.15:
+                packet[:4] = (b"gbed" + bytes(4))[: max(size, 4)][:4] if size >= 4 else packet[:4]
+            elif random_.random() < 0.1:
+                packet[:4] = b"debg"[: len(packet[:4])]
+        header = struct.pack(
+            "<I4iB3x7i", 0x34, size, 1, random_.choice((1, 3, 5)), start, random_.choice((0, 0, 0, 1)) if look_only else random_.choice((0, 1)), *(random_.getrandbits(8) for bit in range(7))
+        )
+        stream = Buffer(header + bytes(packet) + random_.randbytes(8), pointers=(0,))
+        # the things of the second kind: each keeps how many messages it has whole
+        other = bytearray(random_.randbytes(3 * OTHER))
+        for thing in range(3):
+            struct.pack_into("<i", other, thing * OTHER + 0x100, random_.choice((0, 0, 1, 3)))
+
+        def reads(call):
+            # one of the channel's things reads its own: it gives its number and goes on in the packet
+            mu = t.harness.mu
+            went_, number, bits = struct.unpack("<3I", mu.mem_read(call.registers["ecx"] + 4, 12))
+            if number != NONE:
+                mu.mem_write(call.stack[0], struct.pack("<I", number))
+            position = struct.unpack("<i", mu.mem_read(call.stack[1] + 0x10, 4))[0]
+            mu.mem_write(call.stack[1] + 0x10, struct.pack("<i", position + bits))
+            return went_
+
+        def read_record(call):
+            # the number that the things before gave is in the stack
+            return call.registers["ecx"], bytes(t.harness.mu.mem_read(call.stack[0], 4)), call.stack[1]
+
+        def whole(harness, arguments):
+            # the next message of the thing: its kind, its size and what it says
+            left = struct.unpack("<i", harness.mu.mem_read(arguments[0] + 0x100, 4))[0]
+            if left > 0:
+                harness.mu.mem_write(arguments[0] + 0x100, struct.pack("<i", left - 1))
+                harness.mu.mem_write(arguments[1], struct.pack("<I", 0x10 + left))
+                harness.mu.mem_write(arguments[2], struct.pack("<I", 0x200 + left))
+                harness.mu.mem_write(arguments[3], bytes((left,)) * 0x20)
+            return left > 0, (harness.normalize(arguments[0]),)
+
+        t.check(
+            "network_channel_read_packet",
+            stream,
+            Buffer(bytes(data), pointers=tuple(pointers)),
+            random_.getrandbits(32),
+            look_only,
+            globals=dict(
+                setup["globals"],
+                unknown_004d87d8=Buffer(random_.randbytes(3 * OWN)),
+                unknown_004d87dc=Buffer(bytes(other)),
+            ),
+            externals=dict(
+                setup["externals"],
+                unknown_00096ce0=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                unknown_000965e0=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                unknown_00096860=lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]))),
+                unknown_00095840=whole,
+                unknown_00093aa0=lambda harness, arguments: (
+                    0,
+                    (bytes(harness.mu.mem_read(arguments[0], 0x20)), arguments[1], arguments[2], arguments[3], arguments[4]),
+                ),
+            ),
+            mocks=[
+                Mock(lambda call: 0, stack_arguments=2, registers=("ecx",)),
+                Mock(reads, stack_arguments=2, registers=("ecx",), record=read_record),
+            ],
+        )

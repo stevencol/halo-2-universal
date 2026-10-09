@@ -705,13 +705,15 @@ the old processor's instructions, in place */
 long lrintf(float value);
 
 /* what a channel is of an observer by: something with functions, of which
-the third is told that something of a size came by a channel, and the fourth
-that something of a channel was answered, or was not */
+the second is told that a packet came by a channel, the third that something
+of a size did, and the fourth that something of a channel was answered, or
+was not */
 struct network_channel_owner;
 
 struct network_channel_owner_functions
 {
-	void *unknown0[2];
+	void *unknown0;
+	void (__attribute__((thiscall)) *read)(struct network_channel_owner *owner, long channel_index, long unknown);
 	void (__attribute__((thiscall)) *received)(struct network_channel_owner *owner, long channel_index, long unknown4,
 		long unknown8);
 	void (__attribute__((thiscall)) *answered)(struct network_channel_owner *owner, long channel_index, boolean answered,
@@ -724,12 +726,15 @@ struct network_channel_owner
 };
 
 /* one of the things that a channel has: something with functions, of which
-the seventh and the eighth are told what happened to something of it */
+the sixth reads its own of a packet, and the seventh and the eighth are told
+what happened to something of it */
 struct network_channel_part_object;
 
 struct network_channel_part_functions
 {
-	void *unknown0[6];
+	void *unknown0[5];
+	long (__attribute__((thiscall)) *read)(struct network_channel_part_object *part, long *unknown4,
+		struct bitstream *stream);
 	void (__attribute__((thiscall)) *unknown18)(struct network_channel_part_object *part, long unknown);
 	void (__attribute__((thiscall)) *unknown1c)(struct network_channel_part_object *part, long unknown, boolean answered);
 };
@@ -859,4 +864,130 @@ long __attribute__((stdcall)) network_channel_unknown18_read(
 	struct bitstream *stream)
 {
 	return bitstream_read_bool(stream)!=unknown18[NETWORK_CHANNEL_UNKNOWN18_UNKNOWN5_OFFSET];
+}
+/* 0x00096860: one of the things of unknown_004d87d8 is told a number that
+came in a packet. 0x00095840: the next message that one of the things of
+unknown_004d87dc has whole, with its kind and its size; whether there is
+one. 0x00093aa0: a message that came by a channel is given to what it is
+for */
+void unknown_00096860(long unknown, byte *unknown10);
+boolean __attribute__((stdcall)) unknown_00095840(byte *unknown14, long *type, long *size, void *data);
+void __attribute__((stdcall)) unknown_00093aa0(const void *data, long unknown44, byte *unknown8, long type, long size);
+
+/* 0x00088750: a packet that came by a channel is read; whether it was good.
+Each of the channel's things reads its own of it, by its sixth function,
+which says how it went: well, well and that is all of the packet, or badly;
+only the ones with the first bit, unless what the channel has at 0x3C has
+its second byte, which the channel notes. After them, a bit says whether
+there is more, of so many bits (0x3000 at the most), which is read and left.
+A stream that is past its end, or that is of a build for testing, is bad.
+
+A good packet, unless it is only looked at: the fourth time of the channel
+is now; what happened to its thing of unknown_004d87d8 is seen to
+(network_channel_update_unknown10), and that is told the number that the
+things read; and each message that its thing of unknown_004d87dc has whole
+now is given to what it is for (unknown_00093aa0). And the observer that has
+the channel is told, by its second function, with the number that came with
+the packet */
+boolean __attribute__((stdcall)) network_channel_read_packet(
+	struct bitstream *stream,
+	byte *channel,
+	long unknown,
+	boolean look_only)
+{
+	byte data[MAXIMUM_NETWORK_MESSAGE_SIZE];
+	byte rest[NETWORK_CHANNEL_PACKET_REST_SIZE];
+	struct network_channel_part_iterator iterator;
+	const struct network_channel_unknown3c *unknown3c;
+	struct network_channel_owner *owner;
+	long unknown10_number= NONE;
+	long result= _network_channel_read_good;
+	boolean good= FALSE;
+
+	if (!look_only)
+	{
+		bitstream_begin_reading(stream);
+	}
+	unknown3c= *(const struct network_channel_unknown3c **)(channel+NETWORK_CHANNEL_UNKNOWN3C_OFFSET);
+	if (unknown3c && unknown3c->unknown31)
+	{
+		iterator.mask= 0;
+		channel[NETWORK_CHANNEL_UNKNOWN1D_OFFSET]= TRUE;
+	}
+	else
+	{
+		iterator.mask= _network_channel_part_bit1;
+		channel[NETWORK_CHANNEL_UNKNOWN1D_OFFSET]= FALSE;
+	}
+	iterator.index= NONE;
+	iterator.absolute= NONE;
+	iterator.type= 0;
+	iterator.part= NULL;
+	while (result==_network_channel_read_good && network_channel_parts_next(channel, &iterator))
+	{
+		struct network_channel_part_object *part= iterator.part;
+
+		result= part->functions->read(part, &unknown10_number, stream);
+	}
+	if (result==_network_channel_read_good && bitstream_read_bool(stream))
+	{
+		long bit_count= (long)bitstream_read_integer(stream, NETWORK_CHANNEL_PACKET_REST_BITS);
+
+		if (bit_count<=0 || bit_count>NETWORK_CHANNEL_PACKET_REST_SIZE*8)
+		{
+			result= _network_channel_read_bad;
+		}
+		else
+		{
+			bitstream_read_bits(stream, rest, bit_count);
+			if (bitstream_overflowed(stream))
+			{
+				result= _network_channel_read_bad;
+			}
+		}
+	}
+	if (bitstream_overflowed(stream))
+	{
+		result= _network_channel_read_bad;
+	}
+	if (result==_network_channel_read_good || result==_network_channel_read_end)
+	{
+		if (result==_network_channel_read_end)
+		{
+			/* the game multiplies as the processor does */
+			stream->position= (long)((unsigned long)stream->size<<3);
+		}
+		stream->unknownC= _bitstream_unknownC_read;
+		good= TRUE;
+		if (!look_only)
+		{
+			network_channel_set_time(_network_channel_time_read, channel);
+			network_channel_update_unknown10(channel);
+			if (channel[NETWORK_CHANNEL_UNKNOWN48_OFFSET]&_network_channel_unknown48_bit8)
+			{
+				unknown_00096860(unknown10_number, unknown_004d87d8+
+					*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN10_OFFSET)*NETWORK_CHANNEL_UNKNOWN10_SIZE);
+			}
+			if (channel[NETWORK_CHANNEL_UNKNOWN48_OFFSET]&_network_channel_unknown48_bit10)
+			{
+				byte *unknown14= unknown_004d87dc+*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN14_OFFSET)*
+					NETWORK_CHANNEL_UNKNOWN14_SIZE;
+				long type;
+				long size;
+
+				while (unknown_00095840(unknown14, &type, &size, data))
+				{
+					unknown_00093aa0(data, *(const long *)(channel+NETWORK_CHANNEL_UNKNOWN44_OFFSET),
+						*(byte **)(channel+NETWORK_CHANNEL_UNKNOWN8_OFFSET), type, size);
+				}
+			}
+		}
+	}
+	owner= *(struct network_channel_owner **)(channel+NETWORK_CHANNEL_OBSERVER_OFFSET);
+	if (owner && !look_only)
+	{
+		owner->functions->read(owner, *(const long *)(channel+NETWORK_CHANNEL_UNKNOWN44_OFFSET), unknown);
+	}
+
+	return good;
 }

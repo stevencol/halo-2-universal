@@ -2,6 +2,58 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Leer un paquete que llega por un canal
+
+Una función en `networking/network_channel.c`, de 544 bytes. De 1425
+funciones se pasa a 1426, el 12,66 % de las del juego (el 8,531 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_channel_read_packet` | `0x00088750` | `networking/network_channel.c` |
+
+### Lo que se sabe
+
+- `network_channel_read_packet` es **lo que un canal hace con cada paquete
+  que le llega**:
+  - Cada pieza del canal lee lo suyo, por la sexta función de su tabla, y
+    dice cómo le fue: bien, bien y el paquete se acaba aquí, o mal. Solo
+    leen las piezas con el primer bit, salvo que lo que el canal tiene en
+    `0x3C` tenga su segundo byte: entonces leen todas, y el canal lo
+    apunta en `0x1D`.
+  - Después un bit dice si hay más, y catorce bits cuántos bits son
+    (`0x3000` como mucho: 1536 bytes). Se leen y **se tiran**: el juego
+    final no hace nada con ellos.
+  - Un paquete que se pasa de su final no vale, y uno que empieza con la
+    palabra `debg` tampoco: es la marca de la versión de pruebas.
+- Con un paquete bueno, el canal apunta la hora, atiende lo que le ha
+  pasado a su pieza principal (hito 411), le da el número que las piezas
+  han leído (`unknown_00096860`) y **reparte los mensajes que su segunda
+  pieza tiene ya enteros** (`unknown_00095840` los da uno por uno, y
+  `unknown_00093aa0` los lleva a quien toca). Por lo que hace, la segunda
+  pieza es la que junta los mensajes que llegan en trozos.
+- Al final avisa al observador por la segunda función de su tabla, que es
+  la del hito 412 que no hace nada.
+- El último argumento hace que el paquete solo se mire: se lee desde donde
+  esté, y no se apunta ni se reparte nada.
+
+### Comprobado rompiendo líneas
+
+- Treinta y cuatro líneas rotas, una cada vez: las pruebas fallaron en
+  treinta y tres. La que no se nota es quitar la comprobación de que el
+  paquete se ha pasado justo después de leer el resto: se vuelve a
+  comprobar dos líneas más abajo, así que no cambia nada.
+
+### Sin comprobar
+
+- Las piezas solo pueden contestar del 0 al 3: con otro número el juego
+  salta por una tabla de cuatro sitios. No se prueba.
+- En este hito se pasaron las pruebas de `network_channel` (23 funciones).
+- Del módulo quedan dos: `0x000883c0` y `0x00088980`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — La pieza que el canal lleva dentro
 
 Dos funciones en `networking/network_channel.c`, 104 bytes entre las dos. De 1423

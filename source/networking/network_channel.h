@@ -109,7 +109,21 @@ enum
 	/* of what a channel has itself at 0x18, after its functions: the byte
 	that it writes, and the one that what it reads has to be */
 	NETWORK_CHANNEL_UNKNOWN18_UNKNOWN4_OFFSET= 0x4,
-	NETWORK_CHANNEL_UNKNOWN18_UNKNOWN5_OFFSET= 0x5
+	NETWORK_CHANNEL_UNKNOWN18_UNKNOWN5_OFFSET= 0x5,
+	/* how one of a channel's things says that it read its own of a packet:
+	well, well and that is all of the packet, or badly; the bit of the kinds
+	of the things that read; a byte of the channel that says that all of
+	them did; what a packet can have after them, in bytes, and the bits of
+	the count of its bits; and which of the channel's times is the one of
+	when a packet was last read */
+	_network_channel_read_good= 0,
+	_network_channel_read_end= 1,
+	_network_channel_read_bad= 3,
+	_network_channel_part_bit1= 0x1,
+	NETWORK_CHANNEL_UNKNOWN1D_OFFSET= 0x1D,
+	NETWORK_CHANNEL_PACKET_REST_SIZE= 0x600,
+	NETWORK_CHANNEL_PACKET_REST_BITS= 14,
+	_network_channel_time_read= 3
 };
 
 /* the bit of the index of a thing of a channel that says that it is one of
@@ -222,6 +236,8 @@ boolean __attribute__((stdcall)) network_channel_unknown18_write(const byte *unk
 	struct bitstream *stream, long unknownC, long unknown10);
 long __attribute__((stdcall)) network_channel_unknown18_read(const byte *unknown18, long unknown4,
 	struct bitstream *stream);
+boolean __attribute__((stdcall)) network_channel_read_packet(struct bitstream *stream, byte *channel, long unknown,
+	boolean look_only);
 long __attribute__((stdcall)) network_channel_take_unknown10(long owner);
 long __attribute__((stdcall)) network_channel_take_unknown14(long owner);
 long network_channel_unknown_00088fd0(const byte *game_channel);
