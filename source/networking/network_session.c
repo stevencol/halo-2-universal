@@ -5551,3 +5551,158 @@ void NETWORK_SESSION_CALLBACK network_session_state7_update(
 		}
 	}
 }
+
+/* 0x004cf4cc: how long a session in its ninth state waits for a console
+before it takes it as one that does not answer, in milliseconds.
+0x004cf4d0: how long it waits after the console that it has chosen changed.
+0x004cf4d4: how often it sends what it sends there. 0x004cf4c8: how long
+the ninth state lasts at most */
+long unknown_004cf4cc;
+long unknown_004cf4d0;
+long unknown_004cf4d4;
+long unknown_004cf4c8;
+
+/* 0x00061ef0: what a session does again and again in its ninth state, in
+which the consoles that are left without the one that ran the session agree
+on which runs it.
+
+Each console but this one that has had its bit in the first number of the
+state (at 0xD0) for unknown_004cf4cc milliseconds, as the time that the
+session keeps of it says, loses it and has it in the second (at 0xD4); and
+one with a bit in neither has it in the second once the state started that
+long ago.
+
+If the console that the session has chosen (at 0xC) is this one: the session
+goes into its eighth state, with 1, when each console either has its bit in
+the second number or is one of those that are known of and has its bit in
+the second number of those; but with any console in the second number of
+the state, only once the state started unknown_004cf4cc milliseconds ago
+and the time of 0x8 was unknown_004cf4d0 milliseconds ago. If it is another
+and has its bit in the second number of the state, what the session has of
+those that are known of starts over, the console that is chosen is this one
+and the time of 0x8 is now.
+
+Then, if it is still in the ninth state: each console that the session keeps
+the second byte of is sent, in the other way, something of the kind 0x16
+with what the session is known by and what it has of the consoles that are
+known of: the first time, every unknown_004cf4d4 milliseconds, and half a
+second after it last did if the time of 0x8 is later than that. And the
+session is disconnected once the state started unknown_004cf4c8 milliseconds
+ago */
+void NETWORK_SESSION_CALLBACK network_session_state9_update(
+	byte *session)
+{
+	byte *data= session+NETWORK_SESSION_STATE_DATA_OFFSET;
+	struct network_session_election *election=
+		(struct network_session_election *)(data+NETWORK_SESSION_STATE9_UNKNOWN10_OFFSET);
+	unsigned long *local_peers= (unsigned long *)(data+NETWORK_SESSION_STATE9_LOCAL_PEERS_OFFSET);
+	unsigned long *host_peers= (unsigned long *)(data+NETWORK_SESSION_STATE9_HOST_PEERS_OFFSET);
+	long peer_index;
+	long chosen;
+	long last;
+	boolean send;
+
+	for (peer_index= 0; peer_index<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET); peer_index++)
+	{
+		unsigned long bit= 1u<<peer_index;
+
+		if (peer_index==*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET))
+		{
+			continue;
+		}
+		if (*local_peers&bit)
+		{
+			if (network_session_time()-*(const long *)(data+NETWORK_SESSION_STATE9_PEER_TIMES_OFFSET+
+				peer_index*sizeof(long))>=unknown_004cf4cc)
+			{
+				*local_peers&= ~bit;
+				*host_peers|= bit;
+			}
+			if (*local_peers&bit)
+			{
+				continue;
+			}
+		}
+		if (!(*host_peers&bit) &&
+			network_session_time()-*(const long *)(data+NETWORK_SESSION_STATE9_START_OFFSET)>=unknown_004cf4cc)
+		{
+			*host_peers|= bit;
+		}
+	}
+	chosen= *(const long *)(data+NETWORK_SESSION_STATE9_UNKNOWNC_OFFSET);
+	if (chosen==*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET))
+	{
+		long gone= 0;
+		long waiting= 0;
+
+		for (peer_index= 0; peer_index<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET); peer_index++)
+		{
+			if (*host_peers&(1u<<peer_index))
+			{
+				gone++;
+			}
+			else
+			{
+				long index= network_session_election_find(election,
+					session+NETWORK_SESSION_PEER_ARRAY_OFFSET+peer_index*NETWORK_SESSION_PEER_SIZE);
+
+				if (index==NONE || !(election->unknownBC&(1u<<index)))
+				{
+					waiting++;
+				}
+			}
+		}
+		if ((gone<=0 ||
+				(network_session_time()-*(const long *)(data+NETWORK_SESSION_STATE9_START_OFFSET)>=unknown_004cf4cc &&
+				network_session_time()-*(const long *)(data+NETWORK_SESSION_STATE9_UNKNOWN8_OFFSET)>=unknown_004cf4d0)) &&
+			waiting==0)
+		{
+			network_session_enter_state8(session, TRUE);
+		}
+	}
+	else if (*host_peers&(1u<<chosen))
+	{
+		*(long *)(data+NETWORK_SESSION_STATE9_UNKNOWNC_OFFSET)= network_session_election_new(session, election);
+		*(long *)(data+NETWORK_SESSION_STATE9_UNKNOWN8_OFFSET)= network_session_time();
+	}
+	if (network_session_state(session)!=_network_session_state9)
+	{
+		return;
+	}
+	last= *(const long *)(data+NETWORK_SESSION_STATE9_SENT_OFFSET);
+	if (last==0 || network_session_time()-last>=unknown_004cf4d4)
+	{
+		send= TRUE;
+	}
+	else
+	{
+		last= *(const long *)(data+NETWORK_SESSION_STATE9_SENT_OFFSET);
+		send= *(const long *)(data+NETWORK_SESSION_STATE9_UNKNOWN8_OFFSET)-last>0 &&
+			network_session_time()-last>=NETWORK_SESSION_STATE9_SEND_AGAIN_MILLISECONDS;
+	}
+	if (send)
+	{
+		byte message[NETWORK_SESSION_MESSAGE_UNKNOWN16_SIZE];
+
+		memset(message, 0, sizeof(message));
+		memcpy(message, session+NETWORK_SESSION_IDENTIFIER_OFFSET, NETWORK_SESSION_IDENTIFIER_SIZE);
+		memcpy(message+NETWORK_SESSION_MESSAGE_UNKNOWN16_ELECTION_OFFSET, election, sizeof(*election));
+		for (peer_index= 0; peer_index<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET); peer_index++)
+		{
+			const struct network_session_peer_state *state=
+				(const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index;
+
+			if (state->unknown1)
+			{
+				unknown_00075e80(TRUE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+					*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_unknown16,
+					sizeof(message), message);
+			}
+		}
+		*(long *)(data+NETWORK_SESSION_STATE9_SENT_OFFSET)= network_session_time();
+	}
+	if (network_session_time()-*(const long *)(data+NETWORK_SESSION_STATE9_START_OFFSET)>=unknown_004cf4c8)
+	{
+		network_session_disconnect(session);
+	}
+}

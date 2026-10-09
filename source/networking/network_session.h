@@ -471,6 +471,18 @@ enum
 	0x10 says it); and to that one, with only what the session is known by */
 	NETWORK_SESSION_STATE_DATA_UNKNOWN20_OFFSET= 0x7440,
 	NETWORK_SESSION_PEER_UNKNOWN9C_OFFSET= 0x9C,
+	/* more of what the session has from its state on in the ninth: when it
+	last sent what it sends there, zero before the first time; and after the
+	two numbers with a bit for each console, a time for each console. What
+	it sends is of this kind and size, with what the session is known by
+	and what it has of the consoles that are known of; and it sends it
+	again this long after, if things have changed since */
+	NETWORK_SESSION_STATE9_SENT_OFFSET= 0x4,
+	NETWORK_SESSION_STATE9_PEER_TIMES_OFFSET= 0xD8,
+	_network_session_message_unknown16= 0x16,
+	NETWORK_SESSION_MESSAGE_UNKNOWN16_SIZE= 0xC8,
+	NETWORK_SESSION_MESSAGE_UNKNOWN16_ELECTION_OFFSET= 0x8,
+	NETWORK_SESSION_STATE9_SEND_AGAIN_MILLISECONDS= 500,
 	_network_session_message_unknownF= 0xF,
 	_network_session_message_unknown11= 0x11,
 	_network_session_message_unknown12= 0x12,
@@ -757,6 +769,7 @@ void network_session_send_membership_updates(byte *session);
 void network_session_send_parameters_updates(byte *session);
 void NETWORK_SESSION_CALLBACK network_session_state7_update(byte *session);
 void network_session_state8_update(byte *session);
+void NETWORK_SESSION_CALLBACK network_session_state9_update(byte *session);
 void network_session_update(byte *session);
 boolean network_session_remove_peer_with_message_c(byte *session, long peer_index);
 void NETWORK_SESSION_CALLBACK network_session_peer_properties_apply_update(

@@ -292,3 +292,7 @@ address,name,source
 004cf4b4,unknown_004cf4b4,source/networking/network_session.c
 004cf4b8,unknown_004cf4b8,source/networking/network_session.c
 004cf4bc,unknown_004cf4bc,source/networking/network_session.c
+004cf4c8,unknown_004cf4c8,source/networking/network_session.c
+004cf4cc,unknown_004cf4cc,source/networking/network_session.c
+004cf4d0,unknown_004cf4d0,source/networking/network_session.c
+004cf4d4,unknown_004cf4d4,source/networking/network_session.c

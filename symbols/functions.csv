@@ -1844,5 +1844,5 @@ address,name,source,arguments,returns,convention
 00061e00,network_session_state8_update,source/networking/network_session.c,eax,void
 0005a090,network_session_update,source/networking/network_session.c,eax,void
 00061ac0,network_session_state7_update,source/networking/network_session.c,stack,void,stdcall
-00061ef0,network_session_state9_update,,stack,void,stdcall
+00061ef0,network_session_state9_update,source/networking/network_session.c,stack,void,stdcall
 000619b0,unknown_000619b0,,eax edx ecx stack,bool,stdcall

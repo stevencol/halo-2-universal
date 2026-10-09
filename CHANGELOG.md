@@ -2,6 +2,66 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — El noveno estado: ponerse de acuerdo en quién lleva la sesión
+
+Una función en `networking/network_session.c`, de 833 bytes. De 1299
+funciones se pasa a 1300, el 11,54 % de las del juego (el 7,320 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_state9_update` | `0x00061ef0` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_state9_update` es lo que la sesión repite en su noveno
+  estado, al que se llega cuando **se pierde la consola que la llevaba**
+  (`network_session_host_lost`): las que quedan se ponen de acuerdo en cuál
+  la lleva ahora.
+  1. **Dar por perdidas a las que no contestan.** Cada consola tiene un bit
+     en uno de dos números: el de `0xD0` (se espera algo de ella) o el de
+     `0xD4` (ya no se espera). Pasa del primero al segundo a los
+     `unknown_004cf4cc` milisegundos de la hora que la sesión guarda de
+     ella (una por consola, desde `0xD8`); y las que no estaban en ninguno,
+     cuando el estado lleva ese tiempo.
+  2. **Si la elegida es esta consola** (`0xC`): cuando cada una de las demás
+     o está dada por perdida o está entre las conocidas con su bit puesto
+     (lo que pone `network_session_election_set_unknownBC`, hito 347), la
+     sesión pasa al octavo estado, que es donde esta consola empieza a
+     llevarla (hito 355). Si hay alguna dada por perdida, antes se espera a
+     que el estado lleve `unknown_004cf4cc` milisegundos y a que la elegida
+     no haya cambiado en `unknown_004cf4d0`.
+  3. **Si la elegida es otra y está dada por perdida**, se empieza de nuevo
+     con esta consola como elegida (`network_session_election_new`).
+  4. **Contarlo a las demás**: un mensaje de la clase `0x16` (`0xC8` bytes:
+     lo que identifica a la sesión y lo que se sabe de las consolas
+     conocidas) a cada consola, la primera vez, cada `unknown_004cf4d4`
+     milisegundos, y medio segundo después del último si algo cambió desde
+     entonces.
+  5. A los `unknown_004cf4c8` milisegundos de empezar el estado, la sesión
+     se desconecta.
+- Con este hito **todos los estados de la sesión que tienen función propia
+  la tienen descompilada** (el tercero y el quinto no tienen), y
+  `network_session_update` ya no llama a nada sin descompilar para ninguno.
+- Es el único sitio visto hasta ahora en que `unknown_00075e80` se llama
+  con su primer byte a 1 para todas las consolas a la vez (la «otra manera»
+  de mandar).
+
+### Comprobado rompiendo líneas
+
+- Doce líneas rotas, una cada vez (los cuatro tiempos, los bits de las
+  consolas, cuándo se pasa al octavo estado y cuándo se manda el mensaje):
+  las pruebas fallaron en las doce.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (207
+  funciones).
+- La batería completa del hito 358 se lanzó en la copia de comprobación;
+  su resultado irá en una entrada posterior.
+- Las mutaciones de los hitos 280 a 308, 321 a 353 y 355 están pendientes.
+
 ## 2026-10-08 — El séptimo estado: buscar otra consola que lleve la sesión
 
 Una función en `networking/network_session.c`, de 828 bytes. De 1298

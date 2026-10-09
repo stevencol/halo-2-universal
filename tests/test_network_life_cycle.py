@@ -2732,3 +2732,58 @@ def run(t) -> None:
                 "network_session_leave": leaves,
             },
         )
+
+    # ---------- the ninth state: the consoles that are left agree on which runs the session
+
+    for n in range(1200):
+        data = with_real_channels()
+        count = struct.unpack_from("<I", data, 0x54)[0]
+        everyone = (1 << count) - 1
+        local = random_.randrange(count)
+        struct.pack_into("<I", data, STATE, random_.choice((9, 9, 9, 9, 5)))
+        struct.pack_into("<I", data, LOCAL_PEER, local)
+        now = random_.getrandbits(32)
+        struct.pack_into("<I", data, 0x7420, (now - random_.choice(AGO)) & 0xFFFFFFFF)
+        struct.pack_into("<I", data, 0x7424, random_.choice((0, (now - random_.choice((0, 499, 500, 501, 1000, 30001))) & 0xFFFFFFFF)))
+        struct.pack_into("<I", data, 0x7428, (now - random_.choice((0, 400, 499, 600, 1001, 30001))) & 0xFFFFFFFF)
+        struct.pack_into("<I", data, 0x742C, random_.choice((local, local, local, random_.randrange(count), NONE)))
+        # the consoles that are known of: some are those of the session
+        known_count = random_.choice((0, 1, 5, 16, 16))
+        struct.pack_into("<I", data, 0x7430 + 0x54, known_count)
+        for peer in random_.sample(range(count), random_.randrange(count + 1)):
+            at = 0x7430 + 0x58 + random_.randrange(16) * 6
+            data[at : at + 6] = data[PEERS + peer * PEER + 0xA : PEERS + peer * PEER + 0x10]
+        struct.pack_into("<I", data, 0x7430 + 0xBC, random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16), 0)))
+        struct.pack_into("<I", data, 0x74F0, random_.choice((0, random_.getrandbits(16) & everyone, everyone)))
+        struct.pack_into("<I", data, 0x74F4, random_.choice((0, 0, random_.getrandbits(16) & everyone, everyone & ~(1 << local), everyone)))
+        for peer in range(16):
+            struct.pack_into("<I", data, 0x74F8 + peer * 4, (now - random_.choice(AGO)) & 0xFFFFFFFF)
+
+        def goes_on(harness, arguments, leaves_ninth=random_.choice((True, True, False))):
+            # the session goes into its eighth state, most of the time
+            if leaves_ninth:
+                harness.mu.mem_write(arguments[0] + STATE, struct.pack("<I", 8))
+            return 0, (harness.normalize(arguments[0]), arguments[1])
+
+        t.check(
+            "network_session_state9_update",
+            Buffer(bytes(data), pointers=(8,)),
+            globals={
+                "unknown_00510548": bytes((random_.choice((0, 0, 1)),)),
+                "unknown_0051054c": struct.pack("<I", now),
+                "unknown_004cf4c8": struct.pack("<I", random_.choice(LIMITS)),
+                "unknown_004cf4cc": struct.pack("<I", random_.choice(LIMITS)),
+                "unknown_004cf4d0": struct.pack("<I", random_.choice(LIMITS)),
+                "unknown_004cf4d4": struct.pack("<I", random_.choice(LIMITS)),
+            },
+            externals={
+                "GetTickCount": lambda harness, arguments, now=now: now,
+                "network_session_election_new": lambda harness, arguments, which=random_.randrange(16): (
+                    which,
+                    (harness.normalize(arguments[0]), harness.normalize(arguments[1])),
+                ),
+                "network_session_enter_state8": goes_on,
+                "unknown_00075e80": sends_all,
+                "network_session_disconnect": then(),
+            },
+        )
