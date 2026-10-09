@@ -988,6 +988,7 @@ long network_time(void);
 boolean NETWORK_SESSION_CALLBACK network_session_election_received(byte *session,
 	const struct transport_address *address, const byte *message, long *reason, boolean *has_host_address,
 	byte *host_address);
+boolean NETWORK_SESSION_CALLBACK network_session_membership_update_received(byte *session, const byte *update);
 void NETWORK_SESSION_CALLBACK network_session_membership_get_update(const byte *session, const byte *membership,
 	const byte *baseline, byte *update);
 void NETWORK_SESSION_CALLBACK network_session_parameters_get_update(const byte *session, const byte *parameters,

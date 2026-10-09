@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 366.
+**Última actualización:** 2026-10-08, al terminar el hito 367.
 
 ## Dónde estamos
 
-- **1312 funciones descompiladas de 11.265: el 11,65 % del juego** (el
-  7,593 % de los bytes de código).
-- Las 1312 están comprobadas contra el ejecutable original: las 1299 del
+- **1313 funciones descompiladas de 11.265: el 11,66 % del juego** (el
+  7,680 % de los bytes de código).
+- Las 1313 están comprobadas contra el ejecutable original: las 1299 del
   hito 358 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a session takes what a console in its ninth state sends* (ver `git log`).
+- Último hito: *Decompile how a console takes what the host says of who is in a session* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 546 funciones apuntadas pero sin descompilar (las que el código
   llama); 448 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -109,7 +109,7 @@ Módulos (funciones hechas / archivo):
       terminar líneas o triángulos; faltan `0x0001e930` y `0x0001eb00`, que
       preparan la consola para dibujar)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
-- [ ] Sesión de red — `networking\network_session.c` (180: el estado de
+- [ ] Sesión de red — `networking\network_session.c` (181: el estado de
       una sesión, prepararla, arrancarla, su identificador y su clave,
       las consolas que entran y salen, cómo buscarlas, y los jugadores
       que lo piden;

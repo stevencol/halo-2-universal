@@ -2,6 +2,64 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Recibir «quién está»
+
+Una función en `networking/network_session.c`, de 2.578 bytes: la más grande de la
+sesión. De 1312 funciones se pasa a 1313, el 11,66 % de las del juego (el
+7,680 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_membership_update_received` | `0x0005cb80` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- Es **el otro extremo del hito 365**: lo que hace una consola cuando la que
+  lleva la sesión le manda «quién está» (el mensaje de la clase `0x19`).
+- Si el mensaje trae solo lo que cambió desde una versión que no es la que
+  la consola tiene, da por perdida a la que lleva la sesión
+  (`network_session_host_lost`) y no hace más.
+- Si no, guarda una copia de cómo estaba todo y va por pasos:
+  1. **Repasa las consolas del mensaje** sin tocar nada: la que entra tiene
+     que traer todo lo suyo y un sitio válido; la que sale y la que sigue
+     tienen que conocerse igual que la del sitio que dicen, y cada sitio
+     solo puede nombrarse una vez.
+  2. **Las coloca**: la nueva en su sitio (que no puede ser el de una que
+     sigue); la que cambió de sitio se copia desde la copia de antes; a la
+     que cambió se le aplica lo que cambió
+     (`network_session_peer_properties_apply_update`, hito 349).
+  3. **Cuenta cuántas quedan**: con «todo», son las que vienen, desde el
+     primer sitio; con «lo que cambió», no puede quedar ningún hueco entre
+     ellas.
+  4. **Lo que la sesión guarda de cada consola va con ella** a su sitio
+     nuevo; para una consola nueva se pide canal (`unknown_00076aa0`) y se
+     empieza de cero. Si no hay canal, falla.
+  5. La consola que lleva la sesión, esta consola y la consola de cada
+     jugador pasan a su sitio nuevo. Las dos primeras tienen que seguir
+     estando; un jugador cuya consola ya no está, deja de estar.
+  6. La consola que dirige la sesión, si viene (con «todo» tiene que venir).
+  7. **Los jugadores**: sale, entra (no puede estar ya, y su sitio en su
+     consola tiene que estar libre) o cambia. Al que entra se le pone además
+     lo mismo que al que cambia.
+- Si algo falla, lo hecho hasta ahí se queda hecho, se pone a 1 el byte de
+  `0x48` y **la sesión se desconecta**.
+- Un detalle que no cuadra con quien manda el mensaje: al que entra o cambia
+  se le copian siempre su número y sus dos trozos, sin mirar el byte que
+  dice si vienen. Está descompilado como lo hace el juego.
+- Con este hito **el camino de «quién está» también está entero**. Entre
+  `0x00059e50` y `0x000631f0` solo queda sin descompilar `0x000619b0` (cuál
+  de dos consolas es mejor para llevar la sesión). Alrededor quedan
+  `0x00058ee0` y `0x000590b0` antes, y once funciones de `0x00063220` a
+  `0x00064060` después.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (220
+  funciones).
+- Las dieciocho líneas rotas del hito 366 se detectaron todas.
+
 ## 2026-10-08 — Lo que llega de una consola en su noveno estado
 
 Dos funciones en `networking/network_session.c`, 1.280 bytes entre las dos. De 1310

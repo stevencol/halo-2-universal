@@ -3368,3 +3368,112 @@ def run(t) -> None:
                 "network_session_unknown_00061950": takes_out,
             },
         )
+
+    # ---------- what the console that runs a session sends to tell who is in it comes
+
+    def a_peer_update(old_index: int, new_index: int, address: bytes, has: int) -> bytearray:
+        entry = bytearray(random_.randbytes(0x104))
+        struct.pack_into("<hh", entry, 0, old_index, new_index)
+        entry[4:0x28] = address
+        entry[0x28] = has
+        entry[0x29] = random_.choice((0, 1, 0x80))
+        # which things of what the session knows of the console come
+        for at in (0x2C, 0x8E, 0x98, 0xB8, 0xFC):
+            entry[at] = random_.choice((0, 1, 1))
+        return entry
+
+    def channel_for(harness, arguments):
+        # the channel of a console is said by the first byte of what it is known by: the same each time
+        known_as = bytes(harness.mu.mem_read(arguments[2], 0x24))
+        return (NONE if known_as[0] % 7 == 0 else known_as[0] % 4), (arguments[0], arguments[1], known_as)
+
+    for n in range(2500):
+        data = consistent()
+        count = struct.unpack_from("<I", data, 0x54)[0]
+        struct.pack_into("<I", data, LOCAL_PEER, random_.randrange(count))
+        struct.pack_into("<I", data, 0x40, random_.randrange(count))
+        struct.pack_into("<I", data, MEMBERSHIP, 7)
+        data[0x765C] = random_.choice((0, 1))
+        for player in range(16):
+            struct.pack_into("<I", data, PLAYER_ARRAY + player * PLAYER + 0xC, random_.randrange(count))
+
+        def address_of(peer: int) -> bytes:
+            return bytes(data[PEERS + peer * PEER : PEERS + peer * PEER + 0x24])
+
+        update = bytearray(random_.randbytes(0x489C))
+        everything = n % 5 == 0
+        struct.pack_into("<II", update, 8, 9, NONE if everything else random_.choice((7, 7, 7, 7, 7, 7, 7, 6)))
+        entries = []
+        if everything:
+            # all of who is in it: the consoles, from the first place on; some are those of the last time
+            length = random_.choice((1, 2, 4, 16, count))
+            for place in range(length):
+                address = address_of(random_.randrange(count)) if random_.randrange(2) else random_.randbytes(0x24)
+                entries.append(a_peer_update(-1, place, address, 1))
+        else:
+            # what has changed: some go out, the rest close up or change places, some are another, some come in
+            gone = [peer for peer in range(count) if random_.randrange(4) == 0]
+            order = [peer for peer in range(count) if peer not in gone]
+            if random_.randrange(4) == 0:
+                random_.shuffle(order)
+            for peer in gone:
+                entries.append(a_peer_update(peer, -1, address_of(peer), 0))
+            for place, peer in enumerate(order):
+                another = random_.randrange(3) == 0
+                if place != peer or another:
+                    entries.append(a_peer_update(peer, place, address_of(peer), 1 if another else 0))
+            length = min(16, len(order) + random_.choice((0, 0, 1, 2)))
+            for place in range(len(order), length):
+                entries.append(a_peer_update(-1, place, random_.randbytes(0x24), 1))
+        # something of it is wrong, now and then
+        wrong = random_.randrange(10)
+        if entries and wrong == 0:
+            random_.choice(entries)[4 + random_.randrange(0x24)] ^= 1
+        elif entries and wrong == 1:
+            struct.pack_into("<h", random_.choice(entries), 2, random_.choice((16, -2, 5, -1)))
+        elif entries and wrong == 2:
+            random_.choice(entries)[0x28] = random_.choice((0, 1))
+        elif entries and wrong == 3:
+            struct.pack_into("<h", random_.choice(entries), 0, random_.choice((count, -2, 0, -1)))
+        elif entries and wrong == 4:
+            entries.append(bytearray(random_.choice(entries)))
+        elif entries and wrong == 5:
+            entries.pop(random_.randrange(len(entries)))
+        if random_.randrange(6) == 0:
+            random_.shuffle(entries)
+        entries = entries[:32]
+        struct.pack_into("<h", update, 0x10, len(entries))
+        for at, entry in enumerate(entries):
+            update[0x14 + at * 0x104 : 0x14 + (at + 1) * 0x104] = entry
+        # the console that leads it
+        update[0x4894] = random_.choice((1, 1, 1, 0, 0x80))
+        some_place = random_.randrange(max(length, 1))
+        struct.pack_into("<i", update, 0x4898, random_.choice((some_place, some_place, some_place, length, -1, 16)))
+        # the players
+        changes = []
+        for change in range(random_.choice((0, 1, 2, 4))):
+            entry = bytearray(random_.randbytes(0x140))
+            player = random_.randrange(16)
+            struct.pack_into("<hh", entry, 0, random_.choice((player, player, player, player, 16, -1)), random_.choice((0, 1, 1, 2, 2, 3)))
+            struct.pack_into("<hh", entry, 0x10, random_.choice((some_place, some_place, some_place, length, -1)), random_.choice((0, 1, 2, 3, 3, 4, -1)))
+            if random_.randrange(8) == 0:
+                # one that is in the session already
+                at = PLAYER_ARRAY + random_.randrange(16) * PLAYER
+                entry[4:0x10] = data[at : at + 12]
+            changes.append(entry)
+        struct.pack_into("<h", update, 0x12, len(changes))
+        for at, entry in enumerate(changes):
+            update[0x2094 + at * 0x140 : 0x2094 + (at + 1) * 0x140] = entry
+        t.check(
+            "network_session_membership_update_received",
+            Buffer(bytes(data), pointers=(8,)),
+            Buffer(bytes(update)),
+            globals=clock(),
+            externals={
+                "GetTickCount": ticks(),
+                "unknown_00076aa0": channel_for,
+                "network_session_peer_state_delete": lambda harness, arguments: (0, (arguments[0], arguments[1])),
+                "network_session_host_lost": then(),
+                "network_session_disconnect": then(),
+            },
+        )
