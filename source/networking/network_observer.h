@@ -637,6 +637,10 @@ long NETWORK_OBSERVER_CALLBACK network_observer_compare_channels(long channel_in
 void NETWORK_OBSERVER_CALLBACK network_observer_channel_start_flow(long channel_index, byte *observer);
 void NETWORK_OBSERVER_CALLBACK network_observer_update_flow(byte *observer);
 void network_observer_update_bandwidth(byte *observer);
+void NETWORK_OBSERVER_CALLBACK network_observer_unknown_00076640(const byte *observer, long game_channel_index,
+	long unknown);
+void NETWORK_OBSERVER_CALLBACK network_observer_sent(byte *observer, long game_channel_index, long size,
+	boolean unknown);
 boolean NETWORK_OBSERVER_CALLBACK network_observer_game_channel_can_send(byte *observer, long game_channel_index,
 	boolean unknown4, boolean unknown8, boolean unknownC, boolean *unknown10, boolean *wanted, long *size,
 	long *voice_size, long maximum_voice_size, byte *voice_packet);

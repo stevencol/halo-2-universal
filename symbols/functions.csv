@@ -1943,6 +1943,8 @@ address,name,source,arguments,returns,convention
 00078a90,network_observer_compare_channels,source/networking/network_observer.c,stack stack stack,int,stdcall
 00078e60,network_observer_channel_start_flow,source/networking/network_observer.c,eax stack,void,stdcall
 00075fc0,network_observer_game_channel_can_send,source/networking/network_observer.c,ecx stack stack stack stack stack stack stack stack stack stack,bool,stdcall
+00076640,network_observer_unknown_00076640,source/networking/network_observer.c,ecx stack stack,void,stdcall
+00076670,network_observer_sent,source/networking/network_observer.c,ecx stack stack stack,void,stdcall
 00089030,network_channel_unknown_00089030,source/networking/network_channel.c,ecx,int
 00088fd0,network_channel_unknown_00088fd0,source/networking/network_channel.c,ecx,int
 00089000,network_channel_unknown_00089000,source/networking/network_channel.c,ecx,int

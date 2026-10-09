@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Dos funciones del observador que no estaban en la lista
+
+Dos funciones en `networking/network_observer.c`, 199 bytes entre las dos. De 1421
+funciones se pasa a 1423, el 12,63 % de las del juego (el 8,517 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_sent` | `0x00076670` | `networking/network_observer.c` |
+| `network_observer_unknown_00076640` | `0x00076640` | `networking/network_observer.c` |
+
+### Corregido
+
+- **En el hito 401 dije que el observador estaba entero, y no lo estaba.**
+  Le faltaban dos funciones que no salen en la lista de Ghidra, porque
+  nada las llama por su dirección: solo están en la tabla de funciones del
+  observador (`0x00450e10`, la del hito 411), y Ghidra no las vio. Las
+  encontré al mirar esa tabla. Con ellas son 74.
+- Queda dicho en `ESTADO.md`: «entero» solo vale lo que valga la lista. Un
+  módulo con tablas de funciones puede tener más.
+
+### Lo que se sabe
+
+- La tabla del observador tiene siete funciones, y es por donde un canal
+  del juego le habla: mandé algo, llegó algo, me contestaron o no, ¿puedo
+  mandar?, y ha llegado un paquete sin canal.
+- `network_observer_sent` es la primera: **un canal del juego ha mandado
+  algo de un tamaño**. El observador lo suma a lo que lleva mandado (la
+  cuenta de `0x4E30`, de donde el hito 400 sacaba cuánto se manda de
+  verdad) y, si el canal tiene caudal, a los bytes de su intervalo (de
+  donde salen los bits por segundo del hito 380).
+- `network_observer_unknown_00076640` es la segunda: busca el canal y no
+  hace nada con él. Es lo que queda de algo que hacía la versión de
+  pruebas.
+
+### Comprobado rompiendo líneas
+
+- Nueve líneas rotas, una cada vez: las pruebas fallaron en las nueve.
+
+### Sin comprobar
+
+- Si ningún canal del observador es el del juego, `network_observer_sent`
+  mira un byte de antes del primer canal; se deja igual.
+- En este hito se pasaron las pruebas de `network_observer` (74 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Lo que le pasa a la pieza principal de un canal
 
 Una función en `networking/network_channel.c`, de 533 bytes. De 1420

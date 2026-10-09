@@ -4225,3 +4225,71 @@ boolean NETWORK_OBSERVER_CALLBACK network_observer_game_channel_can_send(
 
 	return result;
 }
+
+/* 0x00076640: the second of the functions that a channel of the game can
+call of its observer, with two things. It looks for the channel of the
+observer that the channel of the game is of, and does nothing with it:
+nothing is left of what it did. Ghidra's list does not have this function
+nor the next one: nothing calls them by their address */
+void NETWORK_OBSERVER_CALLBACK network_observer_unknown_00076640(
+	const byte *observer,
+	long game_channel_index,
+	long unknown)
+{
+	long channel_index;
+
+	for (channel_index= 0; channel_index<MAXIMUM_NETWORK_OBSERVER_CHANNELS; channel_index++)
+	{
+		const byte *channel= network_observer_channel(observer, channel_index);
+
+		if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)!=0 &&
+			*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET)==game_channel_index)
+		{
+			break;
+		}
+	}
+}
+
+/* 0x00076670: the first of those functions: the observer is told that a
+channel of the game sent something of a size. It counts it in what it has
+sent, in all and in the span of now (network_rate_update); and if the
+channel of the observer that the channel of the game is of has a flow, in
+the bytes of its interval too, where a byte notes that it was so. With no
+such channel, the game looks at what would be the one before the first */
+void NETWORK_OBSERVER_CALLBACK network_observer_sent(
+	byte *observer,
+	long game_channel_index,
+	long size,
+	boolean unknown)
+{
+	struct network_rate *rate= (struct network_rate *)(observer+NETWORK_OBSERVER_UNKNOWN4E30_OFFSET);
+	long channel_index= NONE;
+	long index;
+	byte *channel;
+
+	for (index= 0; index<MAXIMUM_NETWORK_OBSERVER_CHANNELS; index++)
+	{
+		channel= (byte *)network_observer_channel(observer, index);
+		if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)!=0 &&
+			*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET)==game_channel_index)
+		{
+			channel_index= index;
+			break;
+		}
+	}
+	network_rate_update(rate);
+	/* the game adds as the processor does */
+	rate->total_count++;
+	rate->total_size= (long long)((unsigned long long)rate->total_size+(unsigned long long)(long long)size);
+	rate->size+= (unsigned long)size;
+	rate->count++;
+	channel= (byte *)network_observer_channel(observer, channel_index);
+	if (channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48C_OFFSET])
+	{
+		*(unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4A4_OFFSET)+= (unsigned long)size;
+		if (unknown)
+		{
+			channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN4A1_OFFSET]= TRUE;
+		}
+	}
+}

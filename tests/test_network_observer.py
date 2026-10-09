@@ -2007,3 +2007,30 @@ def run(t) -> None:
                 ),
             ),
         )
+
+    # ---------- two functions that only a channel of the game calls, by the observer's table
+
+    for n in range(60):
+        t.check("network_observer_unknown_00076640", Buffer(bytes(observer())), random_.choice((NONE, 0, 1, 5, 9)), random_.getrandbits(32))
+
+    for n in range(800):
+        setup = at_time()
+        now = struct.unpack("<I", setup["globals"]["unknown_0051054c"])[0]
+        data = observer()
+        sent = a_rate(now)
+        struct.pack_into("<QQ", sent, 0, random_.choice((0, 5, 0xFFFFFFFF, 0xFFFFFFFFFFFFFFFF)), random_.choice((0, 5, 0xFFFFFFFF, 0x7FFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF)))
+        data[0x4E30 : 0x4E30 + len(sent)] = sent
+        # what would be the channel before the first has its byte in what the observer has at 0xC
+        data[0xC] = random_.choice((0, 0, 1))
+        for channel in range(15):
+            data[CHANNELS + channel * CHANNEL + 0x48C] = random_.choice((0, 1, 1, 0x80))
+            data[CHANNELS + channel * CHANNEL + 0x4A1] = random_.choice((0, 0, 1))
+        t.check(
+            "network_observer_sent",
+            Buffer(bytes(data)),
+            random_.choice((NONE, 0, 1, 2, 3, 4, 5, 9)),
+            random_.choice((0, 1, 37, 1200, NONE, 0x80000000, random_.getrandbits(32))),
+            random_.choice((0, 1, 0x80)),
+            globals=setup["globals"],
+            externals=setup["externals"],
+        )
