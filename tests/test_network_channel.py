@@ -288,3 +288,45 @@ def run(t) -> None:
                 globals=globals_,
                 externals={starts: lambda harness, arguments: (0, (harness.normalize(arguments[0]),))},
             )
+
+    # ---------- the things that a channel has, one after another
+
+    KINDS = (0, 1, 8, 0x19, 0x31, 0x39, 0xFF)
+
+    for n in range(2500):
+        data = channel()
+        own = random_.choice((0, 1, 2, 3))
+        struct.pack_into("<i", data, 0x20, own)
+        for place in range(3):
+            struct.pack_into("<II", data, 0x24 + place * 8, random_.choice(KINDS), random_.getrandbits(32))
+        pointers = []
+        if random_.random() < 0.7:
+            # what the channel has at 0x3C goes after it, with things of its own
+            struct.pack_into("<I", data, 0x3C, len(data))
+            pointers.append(0x3C)
+            thing = bytearray(random_.randbytes(0x34))
+            struct.pack_into("<i", thing, 0xC, random_.choice((0, 1, 2, 4, 4)))
+            for place in range(4):
+                struct.pack_into("<II", thing, 0x10 + place * 8, random_.choice(KINDS), random_.getrandbits(32))
+            data += thing
+        else:
+            struct.pack_into("<I", data, 0x3C, 0)
+        index = random_.choice((NONE, NONE, 0, 1, 2, 3, 0x7FFFFFFF, 0x80000000, 0x80000001, 0x80000003, 0x80000004, 0xFFFFFFFE))
+        t.check(
+            "network_channel_parts_next",
+            Buffer(bytes(data), pointers=tuple(pointers)),
+            Buffer(struct.pack("<IIi", random_.choice((0, 0, 1, 8, 0x11, 0x30, 0x100)), index, random_.choice((0, 1, 5, -1))) + random_.randbytes(8)),
+        )
+
+    for n in range(200):
+        count = random_.choice((0, 1, 2, 4))
+        t.check(
+            "network_channel_unknown3c_new",
+            Buffer(random_.randbytes(0x34)),
+            random_.choice((0, 1, 0x80)),
+            Buffer(random_.randbytes(16)),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            count if n % 10 else -1,
+            Buffer(random_.randbytes(16)),
+        )

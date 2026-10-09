@@ -88,8 +88,16 @@ enum
 	/* one more number of the things of unknown_004d87dc, and where in what
 	every channel is of it is given to point */
 	NETWORK_CHANNEL_UNKNOWN14_UNKNOWNC_OFFSET= 0xC,
-	UNKNOWN_00528000_UNKNOWN588_OFFSET= 0x588
+	UNKNOWN_00528000_UNKNOWN588_OFFSET= 0x588,
+	/* how many things what a channel has at 0x3C can have, and what the
+	index of a thing of a channel is made of */
+	MAXIMUM_NETWORK_CHANNEL_UNKNOWN3C_PARTS= 4,
+	NETWORK_CHANNEL_PART_INDEX_MASK= 0x7FFFFFFF
 };
+
+/* the bit of the index of a thing of a channel that says that it is one of
+what the channel has at 0x3C */
+#define NETWORK_CHANNEL_PART_SECOND_BIT 0x80000000u
 
 /* ---------- structures */
 
@@ -104,15 +112,6 @@ struct network_channel_time
 
 typedef char verify_network_channel_time_size[sizeof(struct network_channel_time) == 0x10 ? 1 : -1];
 
-/* what a channel has at 0x3C: something that is told when the channel stops
-talking, by a function and with a number */
-struct network_channel_unknown3c
-{
-	long unknown0;
-	long unknown4;
-	void (__attribute__((stdcall)) *closed)(long unknown4);
-};
-
 /* what a channel says when it stops talking: the two numbers of what it
 talked with, and why */
 struct network_channel_closed_message
@@ -125,7 +124,35 @@ struct network_channel_closed_message
 /* one of the things that a channel has: of what kind, and which */
 struct network_channel_part
 {
-	long type;
+	unsigned long type;
+	void *part;
+};
+
+/* what a channel has at 0x3C: something that is told when the channel stops
+talking, by a function and with a number, and that has things of its own
+that go with the channel's; and two bytes */
+struct network_channel_unknown3c
+{
+	boolean valid;
+	long unknown4;
+	void (__attribute__((stdcall)) *closed)(long unknown4);
+	long part_count;
+	struct network_channel_part parts[MAXIMUM_NETWORK_CHANNEL_UNKNOWN3C_PARTS];
+	boolean unknown30;
+	boolean unknown31;
+};
+
+typedef char verify_network_channel_unknown3c_size[sizeof(struct network_channel_unknown3c) == 0x34 || sizeof(void *) != 4 ? 1 : -1];
+
+/* where one is in going through the things that a channel has: the bits
+that are asked for, the index, a count of them all, and the thing: its
+kind and which */
+struct network_channel_part_iterator
+{
+	unsigned long mask;
+	long index;
+	long absolute;
+	unsigned long type;
 	void *part;
 };
 
@@ -168,6 +195,11 @@ void __attribute__((stdcall)) network_channel_connect(const struct transport_add
 boolean __attribute__((stdcall)) network_channel_new(unsigned long flags, long index, byte *unknown0, byte *gateway,
 	byte *unknown8, const struct network_channel_tries *tries, byte *channel);
 long __attribute__((stdcall)) network_channel_allocate(const char *name, long flags);
+boolean __attribute__((stdcall)) network_channel_parts_next(const byte *channel,
+	struct network_channel_part_iterator *iterator);
+void __attribute__((stdcall)) network_channel_unknown3c_new(struct network_channel_unknown3c *unknown3c,
+	boolean unknown30, void *const *parts, long unknown4, void (__attribute__((stdcall)) *closed)(long unknown4),
+	long part_count, const unsigned long *types);
 long __attribute__((stdcall)) network_channel_take_unknown10(long owner);
 long __attribute__((stdcall)) network_channel_take_unknown14(long owner);
 long network_channel_unknown_00088fd0(const byte *game_channel);

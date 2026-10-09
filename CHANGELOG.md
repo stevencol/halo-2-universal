@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Recorrer las piezas de un canal del juego
+
+Dos funciones en `networking/network_channel.c`, 338 bytes entre las dos. De 1418
+funciones se pasa a 1420, el 12,61 % de las del juego (el 8,499 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_channel_parts_next` | `0x000891e0` | `networking/network_channel.c` |
+| `network_channel_unknown3c_new` | `0x000892f0` | `networking/network_channel.c` |
+
+### Lo que se sabe
+
+- `network_channel_parts_next` **recorre las piezas de un canal**, una por
+  llamada: primero las suyas (las del hito 408, hasta tres) y luego las de
+  lo que el canal tiene en `0x3C`. Se le puede pedir solo las de cierta
+  clase: cada pieza lleva unos bits, y vale la que tiene todos los que se
+  piden. Es como las funciones grandes del módulo (las que escriben y leen
+  un paquete, que faltan) hablan con cada pieza sin saber cuáles hay.
+- Así se sabe por fin **qué es lo que un canal tiene en `0x3C`**, que el
+  observador miraba desde el hito 398 sin entenderlo: un segundo juego de
+  piezas, de hasta cuatro, que alguien de fuera le cuelga al canal, con
+  una función a la que se avisa cuando el canal se cierra (hito 406) y
+  dos bytes. `network_channel_unknown3c_new` lo prepara.
+
+### Comprobado rompiendo líneas
+
+- Dieciséis líneas rotas, una cada vez: las pruebas fallaron en quince. La
+  otra no cambia nada: un índice que se pasa del último número posible
+  acaba igual en la segunda lista.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_channel` (19 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Las dos piezas que toma un canal del juego
 
 Dos funciones en `networking/network_channel.c`, 195 bytes entre las dos. De 1416

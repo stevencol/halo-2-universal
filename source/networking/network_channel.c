@@ -566,3 +566,123 @@ long __attribute__((stdcall)) network_channel_take_unknown14(
 
 	return NONE;
 }
+
+/* 0x000891e0: the next of the things that a channel has, of a kind: first
+its own, and then the ones of what it has at 0x3C. The one after NONE is the
+first. A thing is of the kind if its bits have all the ones that are asked
+for. Whether there is one more; with none, the index is NONE again. The high
+bit of the index says that the thing is one of the second ones; the other
+number counts them all */
+boolean __attribute__((stdcall)) network_channel_parts_next(
+	const byte *channel,
+	struct network_channel_part_iterator *iterator)
+{
+	long index= iterator->index;
+	long absolute= iterator->absolute;
+	const struct network_channel_part *part;
+
+	for (;;)
+	{
+		const struct network_channel_unknown3c *unknown3c;
+		const struct network_channel_part *parts= NULL;
+		boolean first= FALSE;
+		long count= 0;
+		long place;
+
+		part= NULL;
+		if (index==NONE)
+		{
+			index= 0;
+			absolute= 0;
+			first= TRUE;
+		}
+		if (index>=0)
+		{
+			place= index&NETWORK_CHANNEL_PART_INDEX_MASK;
+			if (!first)
+			{
+				/* the game adds as the processor does */
+				place= (long)((unsigned long)place+1);
+				index= place&NETWORK_CHANNEL_PART_INDEX_MASK;
+				absolute= place;
+				first= TRUE;
+			}
+			if (place>=0 && place<*(const long *)(channel+NETWORK_CHANNEL_PART_COUNT_OFFSET))
+			{
+				part= (const struct network_channel_part *)(channel+NETWORK_CHANNEL_PARTS_OFFSET)+place;
+			}
+			else
+			{
+				absolute= *(const long *)(channel+NETWORK_CHANNEL_PART_COUNT_OFFSET);
+				index= (long)NETWORK_CHANNEL_PART_SECOND_BIT;
+			}
+		}
+		if (index<0)
+		{
+			place= index&NETWORK_CHANNEL_PART_INDEX_MASK;
+			if (!first)
+			{
+				place= (long)((unsigned long)place+1);
+				index= (long)((unsigned long)place|NETWORK_CHANNEL_PART_SECOND_BIT);
+				absolute= (long)(*(const unsigned long *)(channel+NETWORK_CHANNEL_PART_COUNT_OFFSET)+(unsigned long)place);
+			}
+			unknown3c= *(const struct network_channel_unknown3c **)(channel+NETWORK_CHANNEL_UNKNOWN3C_OFFSET);
+			if (unknown3c)
+			{
+				count= unknown3c->part_count;
+				parts= unknown3c->parts;
+			}
+			if (place<0 || place>=count)
+			{
+				index= NONE;
+				absolute= NONE;
+				break;
+			}
+			part= parts+place;
+		}
+		if ((part->type&iterator->mask)==iterator->mask)
+		{
+			break;
+		}
+	}
+	iterator->index= index;
+	iterator->absolute= absolute;
+	if (index==NONE)
+	{
+		iterator->part= NULL;
+		iterator->type= 0;
+
+		return FALSE;
+	}
+	iterator->part= part->part;
+	iterator->type= part->type;
+
+	return TRUE;
+}
+
+/* 0x000892f0: what a channel can have at 0x3C is set up: with a byte, a
+number, the function that is told when the channel stops talking, and so
+many things, each of a kind */
+void __attribute__((stdcall)) network_channel_unknown3c_new(
+	struct network_channel_unknown3c *unknown3c,
+	boolean unknown30,
+	void *const *parts,
+	long unknown4,
+	void (__attribute__((stdcall)) *closed)(long unknown4),
+	long part_count,
+	const unsigned long *types)
+{
+	long index;
+
+	unknown3c->unknown30= unknown30;
+	unknown3c->unknown4= unknown4;
+	unknown3c->valid= TRUE;
+	unknown3c->closed= closed;
+	unknown3c->part_count= part_count;
+	for (index= 0; index<part_count; index++)
+	{
+		unknown3c->parts[index].type= types[index];
+		unknown3c->parts[index].part= parts[index];
+	}
+	unknown3c->unknown31= FALSE;
+}

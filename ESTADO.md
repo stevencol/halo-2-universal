@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 409.
+**Última actualización:** 2026-10-08, al terminar el hito 410.
 
 ## Dónde estamos
 
-- **1418 funciones descompiladas de 11.265: el 12,59 % del juego** (el
-  8,488 % de los bytes de código).
-- Las 1418 están comprobadas contra el ejecutable original: las 1390 del
+- **1420 funciones descompiladas de 11.265: el 12,61 % del juego** (el
+  8,499 % de los bytes de código).
+- Las 1420 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a channel of the game takes its two parts* (ver `git log`).
+- Último hito: *Decompile how the parts of a channel of the game are gone through* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 550 funciones apuntadas pero sin descompilar (las que el código
   llama); 448 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -128,10 +128,11 @@ Módulos (funciones hechas / archivo):
 - [x] Intentos de medir la conexión — `networking\transport_qos.c` (8: la
   tabla de intentos, empezar uno, soltarlo, cómo va y qué encontró con
   cada consola). Entero.
-- [ ] Canales del juego — `networking\network_channel.c` (17: tomar un
-      canal, pedir conexión y contestar, cerrarlo, soltarlo, sus horas
-      y lo que el observador les pregunta; quedan unas diez, de
-      `0x00088060` a `0x000893c0`)
+- [ ] Canales del juego — `networking\network_channel.c` (19: tomar un
+      canal, pedir conexión y contestar, cerrarlo, soltarlo, recorrer
+      sus piezas, sus horas y lo que el observador les pregunta;
+      quedan `0x00088060`, `0x000883c0`, `0x00088750`, `0x00088980`,
+      `0x00088db0`, `0x00089340`, `0x00089390` y `0x000893c0`)
 - [x] Observador de la red — `networking\network_observer.c` (72: lo que
       tiene de cada sesión, sus canales con las otras consolas y sus
       estados, el caudal de cada uno y cuándo puede mandar; de
