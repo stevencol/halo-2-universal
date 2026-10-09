@@ -1853,3 +1853,5 @@ address,name,source,arguments,returns,convention
 000630f0,network_session_host_answer_join,source/networking/network_session.c,eax esi stack stack,bool,stdcall
 00063080,network_session_host_join_requested,source/networking/network_session.c,eax ebx stack,bool,stdcall
 0005dac0,network_session_host_parameters_requested,source/networking/network_session.c,eax stack stack,bool,stdcall
+0005d5a0,network_session_parameters_apply_update,source/networking/network_session.c,stack stack stack,bool,stdcall
+0005d9e0,network_session_parameters_update_received,source/networking/network_session.c,stack stack,bool,stdcall

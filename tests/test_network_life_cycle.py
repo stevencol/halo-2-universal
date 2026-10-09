@@ -3096,3 +3096,65 @@ def run(t) -> None:
                 ),
             },
         )
+
+    # ---------- what the console that runs a session sends to tell what the session knows
+
+    # where each byte that says whether a thing comes is, in what is sent
+    UPDATE_HAS = (
+        0x10, 0x1C, 0x24, 0x2C, 0x38, 0x42, 0x48, 0x4A, 0x50, 0x52, 0x70, 0x78, 0x88, 0x394, 0x420, 0x430, 0x438, 0x440,
+        0x574, 0x5B6, 0x1464, 0x1466, 0x146A, 0x1484, 0x14CC,
+    )  # fmt: skip
+
+    for n in range(1200):
+        data = whole_session()
+        struct.pack_into("<I", data, STATE, random_.choice((0, 3, 3, 4, 5)))
+        version = random_.choice((7, 7, NONE, 0))
+        struct.pack_into("<I", data, 0x4978, version)
+        update = bytearray(random_.randbytes(0x14D8))
+        struct.pack_into("<I", update, 0xC, random_.choice((NONE, NONE, version, version, 6)))
+        for has in UPDATE_HAS:
+            update[has] = random_.choice((0, 1, 1, 0x80))
+        # the bytes that say whether a thing is there, and the kinds of two things
+        for at in (0x39, 0x79, 0x89, 0x1485):
+            update[at] = random_.choice((0, 1, 1, 0x80))
+        struct.pack_into("<I", update, 0x54, random_.choice((0, 1, 2, 3, 4, 5, NONE)))
+        struct.pack_into("<I", update, 0x1470, random_.choice((0, 1, 1, 2, 3)))
+        if random_.randrange(4) == 0:
+            # the thing of 0x5DDC has what this session is known by
+            update[0x148C:0x1494] = data[0x1C:0x24]
+        t.check(
+            "network_session_parameters_apply_update",
+            Buffer(bytes(data)),
+            Buffer(bytes(update)),
+            Buffer(random_.randbytes(0x14B0)),
+            globals=clock(),
+            externals={
+                "GetTickCount": ticks(),
+                "network_session_roster_valid": lambda harness, arguments, right=random_.choice((1, 1, 1, 0, 0x100)): (right, (arguments[0],)),
+            },
+        )
+
+    for n in range(400):
+        data = consistent()
+        struct.pack_into("<I", data, 0x40, random_.randrange(16))
+        for peer in range(16):
+            data[0x72DC + peer * 0x14 + 1] = random_.choice((0, 1, 1, 0x80))
+        update = bytearray(random_.randbytes(0x14D8))
+        update[0x10] = random_.choice((0, 1, 1, 0x80))
+        update[0x11] = random_.choice((0, 1, 1, 0x80))
+
+        def applies(harness, arguments, right=random_.choice((1, 1, 1, 0, 0x100)), seed=random_.randrange(256)):
+            # what the session knows after it goes where the last thing says, which is in the stack
+            harness.mu.mem_write(arguments[2], bytes((seed + i * 13) & 0xFF for i in range(0x14B0)))
+            return right, (arguments[0], arguments[1])
+
+        t.check(
+            "network_session_parameters_update_received",
+            Buffer(bytes(data), pointers=(8,)),
+            Buffer(bytes(update)),
+            externals={
+                "network_session_parameters_apply_update": applies,
+                "network_session_host_lost": then(),
+                "unknown_00075e80": sends_all,
+            },
+        )

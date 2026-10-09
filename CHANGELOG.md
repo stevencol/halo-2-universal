@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Recibir «lo que la sesión sabe»
+
+Dos funciones en `networking/network_session.c`, 1.295 bytes entre las dos. De 1306
+funciones se pasa a 1308, el 11,61 % de las del juego (el 7,450 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_parameters_apply_update` | `0x0005d5a0` | `networking/network_session.c` |
+| `network_session_parameters_update_received` | `0x0005d9e0` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- Es **el otro extremo del hito 356**: lo que hace una consola cuando la que
+  lleva la sesión le manda «lo que la sesión sabe» (el mensaje de la clase
+  `0x21`).
+- `network_session_parameters_apply_update` calcula cómo queda lo que la
+  sesión sabe después del mensaje, sin tocar todavía la sesión:
+  - si el mensaje trae **solo lo que cambió** desde una versión que no es la
+    que la consola tiene, no vale;
+  - si vale, toma la versión nueva y cada una de las veinticinco cosas que
+    el mensaje puede traer, cada una detrás de un byte que dice si viene.
+    Algunas llevan un segundo byte que dice si la cosa «está»;
+  - la cosa de `0x49CC` viene de una de cuatro maneras, y se monta con las
+    cuatro funciones de `network_life_cycle.c` que ya estaban
+    descompiladas (`network_life_cycle_request_new1` a `new4`);
+  - como en el hito 362, la de `0x4A00` y la de `0x5DDC` tienen que ser
+    correctas; si no, se dejan como estaban y la función devuelve FALSE.
+- `network_session_parameters_update_received` lo aplica: si salió bien, eso
+  pasa a ser lo que la sesión sabe, y si el mensaje lo pide contesta a la
+  consola que lleva la sesión con un mensaje de la clase `0x24` (los dos
+  números de `0x4980` y `0x497C`). Si salió mal, da por perdida a la que
+  lleva la sesión (`network_session_host_lost`).
+- Con esto **el mensaje `0x21` tiene nombre para todos sus trozos**
+  (`NETWORK_SESSION_PARAMETERS_UPDATE_...` en `network_session.h`), que es
+  lo que hará falta para descompilar quien lo prepara, `unknown_000609e0`.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (215
+  funciones).
+
 ## 2026-10-08 — La consola que lleva la sesión atiende los cambios que le piden
 
 Una función en `networking/network_session.c`, de 986 bytes. De 1305
