@@ -1920,3 +1920,90 @@ def run(t) -> None:
             ),
             externals=setup["externals"],
         )
+
+    # ---------- whether a channel of the game can send a packet now
+
+    for n in range(4000):
+        setup = at_time()
+        data = observer() + bytearray(random_.randbytes(0xF0))
+        struct.pack_into("<I", data, 0x10, SIZE)
+        struct.pack_into("<3f", data, SIZE + 0x90, random_.choice((1.0, 4.0)), random_.choice((0.05, 0.1)), random_.choice((0.5, 1.0)))
+        struct.pack_into("<3f", data, SIZE + 0xE4, random_.choice((0.25, 0.5)), random_.choice((0.5, 1.0)), random_.choice((0.125, 1.0)))
+        frame = random_.choice((1000, 0x1_0000_0005, 0xFFFF_FFF0, random_.getrandbits(40)))
+        # the channels of the game, and after them what some of them have at 0x3C
+        channels = game_channels()
+        things = len(channels)
+        game_pointers = []
+        for other in range(6):
+            thing = random_.choice((None, None, 0, 1, 2))
+            struct.pack_into("<I", channels, other * 0xF8 + 0x3C, 0 if thing is None else things + thing * 0x34)
+            if thing is not None:
+                game_pointers.append(other * 0xF8 + 0x3C)
+            channels[other * 0xF8 + 0x48] = random_.choice((0, 8, 8, 0xFF, 0xF7))
+            struct.pack_into("<i", channels, other * 0xF8 + 0x54, random_.choice((0, 2, 3, 5, 5, 5)))
+        for thing in (0, 1, 0x80):
+            block = bytearray(random_.randbytes(0x34))
+            block[0x30] = thing
+            channels += block
+        for channel in range(15):
+            at = CHANNELS + channel * CHANNEL
+            # most channels are in use, each with a channel of the game of its own or with none
+            struct.pack_into("<I", data, at, random_.choice((0, 1, 7, 7, 7)))
+            struct.pack_into("<I", data, at + 0xC, channel if channel < 6 and random_.random() < 0.9 else NONE)
+            # how long ago, in pictures, it could last send
+            struct.pack_into("<Q", data, at + 0x478, (frame - random_.choice((0, 1, 2, 3, 4, 8, 59, 60, 61, 600, -5))) & 0xFFFFFFFFFFFFFFFF)
+            # its part of what the observer lets have, and its flow
+            struct.pack_into("<IfI", data, at + 0x480, random_.choice((NONE, 736, 744, 8000, 64000, 1000000)), random_.choice((-1.0, 0.0, 7.5, 15.0, 30.0)), random_.choice((NONE, 200, 1400, 100000)))
+            data[at + 0x48C] = random_.choice((0, 1, 1, 0x80))
+            data[at + 0x48D] = random_.choice((0, 1, 0x80))
+            data[at + 0x48E] = random_.choice((0, 1, 0x80))
+            struct.pack_into("<iif", data, at + 0x494, random_.choice((736, 744, 8000, 64000, 1000000, 0, -8)), random_.choice((200, 1400, 100000, 0)), random_.choice((0.0, 7.5, 15.0, 30.0, 60.0)))
+            data[at + 0x4A1] = 0
+            data[at + 0x4A2] = 0
+            struct.pack_into("<I", data, at + 0x4DC, random_.choice((0, 1, 2, 2, 3)))
+
+        def has_voice(harness, arguments, has=random_.choice((0, 0, 1, 1, 1)), size=random_.choice((0, 37, 300, 1400))):
+            # how much the voice has goes where the third thing says, which is in the stack
+            if has:
+                harness.mu.mem_write(arguments[2], struct.pack("<I", size))
+            return has, (arguments[0], arguments[1])
+
+        t.check(
+            "network_observer_game_channel_can_send",
+            Buffer(bytes(data), pointers=(0x10,)),
+            random_.choice((0, 1, 2, 3, 4, 5, 5, 6)),
+            random_.choice((0, 0, 1)),
+            random_.choice((0, 1)),
+            random_.choice((0, 1)),
+            Buffer(random_.randbytes(1)),
+            Buffer(random_.randbytes(1)),
+            Buffer(random_.randbytes(4)),
+            Buffer(random_.randbytes(4)),
+            random_.choice((0, 100, 0x200, 2000)),
+            Buffer(random_.randbytes(16)),
+            globals=dict(
+                setup["globals"],
+                unknown_004d87d4=Buffer(bytes(channels), pointers=tuple(game_pointers)),
+                xbox_video_settings=video(),
+                unknown_004e6398=struct.pack("<Q", frame),
+                unknown_004cf5d0=struct.pack("<f", random_.choice((0.0, 10.0, 30.0))),
+            ),
+            externals=dict(
+                setup["externals"],
+                network_observer_channel_unknown_00077940=lambda harness, arguments, urgent=random_.choice((0, 0, 0, 1)): (
+                    urgent,
+                    (harness.normalize(arguments[0]), arguments[1]),
+                ),
+                network_observer_voice_has_packet=has_voice,
+                unknown_00089030=lambda harness, arguments, waiting=random_.choice((0, 16, 64, 127, 128, 512, 100000)): (
+                    waiting,
+                    (harness.normalize(arguments[0]),),
+                ),
+                unknown_00088fd0=lambda harness, arguments, sent=random_.choice((0, 100, 1000, 1400, 100000)): (sent, (harness.normalize(arguments[0]),)),
+                unknown_00089000=lambda harness, arguments, count=random_.choice((0, 1, 1, 3, 20, -1)): (count, (harness.normalize(arguments[0]),)),
+                network_observer_voice_build_packet=lambda harness, arguments, wrote=random_.choice((0, 0, 20, 100, 0x516, 0x517, 2000)): (
+                    wrote,
+                    (arguments[0], arguments[1], harness.normalize(arguments[2])),
+                ),
+            ),
+        )

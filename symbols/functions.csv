@@ -1918,6 +1918,10 @@ address,name,source,arguments,returns,convention
 000785d0,network_observer_handle_connect_request,source/networking/network_observer.c,stack stack stack,void,stdcall
 00078a90,network_observer_compare_channels,source/networking/network_observer.c,stack stack stack,int,stdcall
 00078e60,network_observer_channel_start_flow,source/networking/network_observer.c,eax stack,void,stdcall
+00075fc0,network_observer_game_channel_can_send,source/networking/network_observer.c,ecx stack stack stack stack stack stack stack stack stack stack,bool,stdcall
+00089030,unknown_00089030,,ecx,int
+00088fd0,unknown_00088fd0,,ecx,int
+00089000,unknown_00089000,,ecx,int
 000880b0,unknown_000880b0,,ecx,bool
 00088360,unknown_00088360,,esi stack,void,stdcall
 00082060,unknown_00082060,,stack stack,int,stdcall

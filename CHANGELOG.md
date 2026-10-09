@@ -2,6 +2,74 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Cuándo puede mandar un canal: el observador, entero
+
+Una función en `networking/network_observer.c`, de 1369 bytes. De 1390
+funciones se pasa a 1391, el 12,35 % de las del juego (el 8,372 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_game_channel_can_send` | `0x00075fc0` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- **Con esta función `network_observer.c` está entero**: sus 72 funciones
+  están descompiladas y comprobadas contra el juego (hitos 326, 369 a 392
+  y 395 a 401). Van de `0x00075970` a `0x0007a740`, más unas pocas que
+  el juego tiene en otro sitio. En ese tramo la lista de Ghidra tiene una
+  entrada más, `0x000778ec`, que no es una función: es el final de
+  `network_observer_channel_update_tries`.
+- `network_observer_game_channel_can_send` es **para lo que sirve todo lo
+  demás**: un canal del juego pregunta si puede mandar un paquete ahora, y
+  de qué tamaño. Aquí se juntan el caudal de cada canal (hitos 377 a 399)
+  y lo que el observador deja mandar entre todos (hito 400).
+  - **Cada cuánto**: según los paquetes por segundo que le tocan (los de
+    su caudal, o su parte del reparto). El tiempo no lo mide con el
+    reloj sino **en imágenes**: tienen que haber pasado, desde la última
+    vez que pudo mandar, las imágenes que hay entre dos paquetes. Por eso
+    el canal guardaba aquel número de 64 bits del hito 386.
+  - **Cuánto**: lo que dan sus bits por segundo en las imágenes que han
+    pasado, menos los 45 bytes que lleva de más cada paquete; y no más de
+    lo que cabe en lo que puede tener mandado sin contestar. Si no llega
+    a 48 bytes, no manda.
+  - Si algo corre prisa (la pregunta del hito 382 a las sesiones), manda
+    sin mirar nada de eso.
+  - **La voz va dentro del mismo paquete**: se le da una parte del sitio
+    (un real, según lo que el canal del juego tenga en `0x3C`), escribe lo
+    suyo (hito 395) y el resto es para el juego. Un paquete entero no pasa
+    de `0x516` bytes.
+  - De paso anota en el caudal del canal **qué se quedó corto** (los
+    avisos del hito 385): si la voz no cupo entera, o si no había sitio
+    por lo ya mandado. Es de ahí de donde el control del caudal sabe qué
+    subir.
+- Tres funciones nuevas de los canales del juego, aún sin descompilar:
+  `unknown_00089030`, `unknown_00088fd0` y `unknown_00089000`. Y un real
+  nuevo, `unknown_004cf5d0`.
+
+### La batería completa
+
+- Se lanzó entera en el hito 400, en el otro árbol de trabajo, y sigue
+  corriendo al cerrar este hito. La última que terminó es la del hito 385
+  (1354 de 1354).
+
+### Comprobado rompiendo líneas
+
+- Cuarenta y tres líneas rotas, una cada vez: las pruebas fallaron en
+  treinta y ocho.
+  - Una faltaba en las pruebas (que queden justo 48 bytes) y ahora falla.
+  - Las otras cuatro no cambian nada: un byte que se pone cuando ya no se
+    mira; dividir de otra manera un número que, si es negativo, lleva a no
+    mandar igual; un tamaño de partida que se recorta al mismo tope; y
+    dar un byte por otro que a esas alturas vale lo mismo.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_observer` (72 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Cuánto deja mandar el observador, y cómo lo reparte
 
 Una función en `networking/network_observer.c`, de 1414 bytes. De 1389

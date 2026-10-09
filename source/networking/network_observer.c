@@ -3904,3 +3904,324 @@ void network_observer_update_bandwidth(
 	}
 	*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F08_OFFSET)= network_time_since(0);
 }
+
+/* 0x00089030, 0x00088fd0, 0x00089000, of the channels of the game: three
+numbers of one of them: something that it has waiting, how many bytes it has
+sent that were not answered, and in how many packets */
+long unknown_00089030(const byte *game_channel);
+long unknown_00088fd0(const byte *game_channel);
+long unknown_00089000(const byte *game_channel);
+
+/* 0x004cf5d0: the packets a second of a channel that has no flow and whose
+channel of the game has nothing at 0x3C, when it has something of the voice
+to send */
+real unknown_004cf5d0;
+
+/* 0x00075fc0: whether a channel of the game can send a packet now, and of
+what size; FALSE if no channel of the observer in use is that one.
+
+The packets a second that it can do: with something to send that is not
+urgent (the channel of the game has something at 0x3C, or the voice has
+something for its console), the ones of its flow, or of its part of what the
+observer lets have, or unknown_004cf5d0; with nothing of that, none with the
+first byte, and 4 or nothing as the second says; and any when it is urgent
+(network_observer_channel_unknown_00077940). A channel of the game in its
+fifth state with little waiting does no fewer than what two reals of what
+the observer has at 0x10 give for how much it is. It cannot send until as
+many pictures have gone by, since it last could, as there are between two
+packets; nor, with bits a second to keep to, until those give 48 bytes after
+the 45 that a packet has more; nor if what it sent and was not answered
+leaves less room than that in what it can send at once (and then that is
+noted of its flow).
+
+Then the voice writes what it has, in a part of the room that a real says,
+no more than it is given room for; and what is left is the size, no less
+than 48 bytes, in eights, and no more than what is left of 0x516. With all
+that go whether the third byte is so, which it is when there was something
+to send, and whether the channel wanted more flow than it has */
+boolean NETWORK_OBSERVER_CALLBACK network_observer_game_channel_can_send(
+	byte *observer,
+	long game_channel_index,
+	boolean unknown4,
+	boolean unknown8,
+	boolean unknownC,
+	boolean *unknown10,
+	boolean *wanted,
+	long *size,
+	long *voice_size,
+	long maximum_voice_size,
+	byte *voice_packet)
+{
+	long channel_index= NONE;
+	byte *channel;
+	const byte *game_channel;
+	const byte *parameters;
+	const byte *unknown3c;
+	long long frame;
+	long now;
+	long refresh_rate;
+	long frames;
+	long period_frames= NONE;
+	long bits_per_second= NONE;
+	long unknown498= NONE;
+	long available= NONE;
+	long bytes= NONE;
+	long voice_bytes;
+	long voice_written= 0;
+	long most;
+	long index;
+	real packet_rate= -1.0f;
+	boolean urgent= FALSE;
+	boolean limited;
+	boolean has_voice;
+	boolean has_flow;
+	boolean wants= FALSE;
+	boolean noted= FALSE;
+	boolean result;
+
+	for (index= 0; index<MAXIMUM_NETWORK_OBSERVER_CHANNELS; index++)
+	{
+		channel= (byte *)network_observer_channel(observer, index);
+		if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)!=0 &&
+			*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET)==game_channel_index)
+		{
+			channel_index= index;
+			break;
+		}
+	}
+	if (channel_index==NONE)
+	{
+		return FALSE;
+	}
+	channel= (byte *)network_observer_channel(observer, channel_index);
+	game_channel= unknown_004d87d4+game_channel_index*NETWORK_CHANNEL_SIZE;
+	if (network_observer_channel_unknown_00077940(observer, channel_index))
+	{
+		unknown8= TRUE;
+		unknownC= TRUE;
+		urgent= TRUE;
+	}
+	has_voice= network_observer_voice_has_packet(channel_index, FALSE, &voice_bytes);
+	now= network_time_since(0);
+	frame= unknown_004e6398;
+	unknown3c= *(const byte **)(game_channel+NETWORK_CHANNEL_UNKNOWN3C_OFFSET);
+	limited= (unknown3c!=NULL || has_voice) && !urgent;
+	has_flow= channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48C_OFFSET];
+	if (!urgent)
+	{
+		if (has_flow)
+		{
+			if (channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48D_OFFSET] &&
+				*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4DC_OFFSET)==2)
+			{
+				wants= TRUE;
+				limited= TRUE;
+			}
+			else if (channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48E_OFFSET])
+			{
+				wants= TRUE;
+			}
+		}
+		if (limited)
+		{
+			if (has_flow)
+			{
+				packet_rate= *(const real *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN49C_OFFSET);
+			}
+			else if (unknown3c!=NULL)
+			{
+				packet_rate= *(const real *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN484_OFFSET);
+			}
+			else
+			{
+				packet_rate= unknown_004cf5d0;
+			}
+		}
+		else if (!unknown4)
+		{
+			packet_rate= unknown8 ? NETWORK_OBSERVER_UNKNOWN8_PACKET_RATE : 0.0f;
+		}
+	}
+	if (*(const long *)(game_channel+NETWORK_CHANNEL_STATE_OFFSET)==_network_channel_state5 && !urgent)
+	{
+		long unit= (game_channel[NETWORK_CHANNEL_UNKNOWN48_OFFSET]&_network_channel_unknown48_bit8) ?
+			NETWORK_OBSERVER_WAITING_UNIT : 0;
+		real waiting= (real)unknown_00089030(game_channel);
+
+		parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+		waiting= waiting/((real)unit**(const real *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN90_OFFSET));
+		if (1.0f>waiting)
+		{
+			real period= (*(const real *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN98_OFFSET)-
+				*(const real *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN94_OFFSET))*(1.0f-waiting)+
+				*(const real *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN94_OFFSET);
+
+			if (!(packet_rate>0.0f) || !(1.0f/period>packet_rate))
+			{
+				packet_rate= 1.0f/period;
+			}
+		}
+	}
+	if (limited)
+	{
+		if (has_flow)
+		{
+			bits_per_second= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_BITS_PER_SECOND_OFFSET);
+			unknown498= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN498_OFFSET);
+		}
+		else
+		{
+			bits_per_second= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN480_OFFSET);
+			unknown498= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN488_OFFSET);
+		}
+		unknownC= TRUE;
+	}
+	/* the game adds, takes away and multiplies as the processor does */
+	frames= (long)((unsigned long)unknown_004e6398-*(const unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN478_OFFSET));
+	refresh_rate= xbox_video_settings.refresh_rate;
+	if (refresh_rate<=0)
+	{
+		refresh_rate= NETWORK_OBSERVER_DEFAULT_REFRESH_RATE;
+	}
+	if (frames<0)
+	{
+		*(long long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN478_OFFSET)= unknown_004e6398;
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN470_OFFSET)= now;
+		frames= 0;
+	}
+	if (packet_rate>0.0f)
+	{
+		period_frames= lrintf((real)refresh_rate/packet_rate);
+		if (frames<period_frames)
+		{
+			return FALSE;
+		}
+	}
+	else if (packet_rate==0.0f)
+	{
+		return FALSE;
+	}
+	if (bits_per_second>=0)
+	{
+		available= (long)((unsigned long)frames*(unsigned long)bits_per_second)/refresh_rate/8;
+		bytes= (long)((unsigned long)available-NETWORK_OBSERVER_PACKET_HEADER_BYTES);
+		if (bytes<NETWORK_OBSERVER_MINIMUM_PACKET_SIZE)
+		{
+			return FALSE;
+		}
+	}
+	if (period_frames>=0)
+	{
+		unsigned long long stamp= *(const unsigned long long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN478_OFFSET)+
+			(unsigned long long)(long long)period_frames;
+
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN470_OFFSET)= now;
+		*(unsigned long long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN478_OFFSET)= stamp;
+		if ((long long)(stamp+(unsigned long long)(long long)period_frames)<=frame)
+		{
+			*(long long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN478_OFFSET)= frame;
+		}
+	}
+	result= TRUE;
+	if (wants)
+	{
+		noted= TRUE;
+	}
+	if (unknown498>=0 && available>=0)
+	{
+		long waiting_bytes= unknown_00088fd0(game_channel);
+		long waiting_count= unknown_00089000(game_channel);
+
+		if (waiting_count>0 && (long)((unsigned long)waiting_bytes+(unsigned long)available)>unknown498)
+		{
+			long room= (long)((unsigned long)unknown498-(unsigned long)waiting_bytes);
+
+			if (room<waiting_bytes/waiting_count)
+			{
+				result= FALSE;
+			}
+			else if ((long)((unsigned long)room-NETWORK_OBSERVER_PACKET_HEADER_BYTES)<NETWORK_OBSERVER_MINIMUM_PACKET_SIZE)
+			{
+				result= FALSE;
+			}
+			else
+			{
+				bytes= (long)((unsigned long)room-NETWORK_OBSERVER_PACKET_HEADER_BYTES);
+			}
+			if (channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48C_OFFSET])
+			{
+				channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN4A2_OFFSET]= TRUE;
+			}
+			if (!result)
+			{
+				return FALSE;
+			}
+		}
+	}
+	if (has_voice)
+	{
+		real part= 1.0f;
+		long voice_room;
+
+		if (unknown4)
+		{
+			parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+			if (*(const byte **)(game_channel+NETWORK_CHANNEL_UNKNOWN3C_OFFSET)==NULL)
+			{
+				part= *(const real *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWNEC_OFFSET);
+			}
+			else if (network_unknown_00075910(game_channel))
+			{
+				part= *(const real *)(*(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET)+
+					NETWORK_OBSERVER_PARAMETERS_UNKNOWNE4_OFFSET);
+			}
+			else
+			{
+				part= *(const real *)(*(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET)+
+					NETWORK_OBSERVER_PARAMETERS_UNKNOWNE8_OFFSET);
+			}
+		}
+		voice_room= bytes>=0 ? lrintf((real)bytes*part) : NETWORK_OBSERVER_DEFAULT_VOICE_ROOM;
+		if (voice_room>maximum_voice_size)
+		{
+			voice_room= maximum_voice_size;
+		}
+		if (channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48C_OFFSET] && voice_room<voice_bytes)
+		{
+			channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN4A1_OFFSET]= TRUE;
+		}
+		voice_written= network_observer_voice_build_packet(channel_index, voice_room, voice_packet);
+	}
+	if (bytes>=0)
+	{
+		bytes= (long)((unsigned long)bytes-(unsigned long)voice_written);
+		if (bytes<=NETWORK_OBSERVER_MINIMUM_PACKET_SIZE)
+		{
+			bytes= NETWORK_OBSERVER_MINIMUM_PACKET_SIZE;
+		}
+	}
+	else
+	{
+		bytes= NETWORK_OBSERVER_DEFAULT_PACKET_SIZE;
+	}
+	most= (long)(NETWORK_OBSERVER_MAXIMUM_PACKET_SIZE-(unsigned long)voice_written);
+	most-= most%8;
+	if (most<0)
+	{
+		return FALSE;
+	}
+	if (bytes>8)
+	{
+		bytes-= bytes%8;
+	}
+	if (bytes>most)
+	{
+		bytes= most;
+	}
+	*size= bytes;
+	*voice_size= voice_written;
+	*unknown10= unknownC;
+	*wanted= noted;
+
+	return result;
+}

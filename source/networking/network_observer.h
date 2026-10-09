@@ -458,6 +458,24 @@ enum
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN130_OFFSET= 0x130,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN13C_OFFSET= 0x13C,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN140_OFFSET= 0x140,
+	/* of what the observer has at 0x10: three reals for how often a channel
+	of the game with little waiting sends, and three for what part of a
+	packet the voice can have. What that waiting is counted in. And the
+	sizes of a packet, in bytes: what each has more, the least and the most
+	that there is room for, and what there is with nothing to keep to, for
+	the packet and for the voice */
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN90_OFFSET= 0x90,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN94_OFFSET= 0x94,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN98_OFFSET= 0x98,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWNE4_OFFSET= 0xE4,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWNE8_OFFSET= 0xE8,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWNEC_OFFSET= 0xEC,
+	NETWORK_OBSERVER_WAITING_UNIT= 0x80,
+	NETWORK_OBSERVER_PACKET_HEADER_BYTES= 0x2D,
+	NETWORK_OBSERVER_MINIMUM_PACKET_SIZE= 0x30,
+	NETWORK_OBSERVER_MAXIMUM_PACKET_SIZE= 0x516,
+	NETWORK_OBSERVER_DEFAULT_PACKET_SIZE= 0x600,
+	NETWORK_OBSERVER_DEFAULT_VOICE_ROOM= 0x200,
 	NETWORK_OBSERVER_PARAMETERS_RATE_PERIOD_OFFSET= 0xF8,
 	NETWORK_OBSERVER_PARAMETERS_WINDOW_COUNT_OFFSET= 0xFC,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
@@ -539,6 +557,10 @@ as more */
 real can be */
 #define NETWORK_OBSERVER_BITS_PER_BYTE 8.0f
 
+/* the packets a second of a channel of the game that has nothing to keep to
+and is asked with its second byte */
+#define NETWORK_OBSERVER_UNKNOWN8_PACKET_RATE 4.0f
+
 /* what turns bits a second into the units of 1024 that the observer counts
 what it lets its channels have in */
 #define NETWORK_OBSERVER_UNITS_PER_BIT 0.0009765625f
@@ -615,6 +637,9 @@ long NETWORK_OBSERVER_CALLBACK network_observer_compare_channels(long channel_in
 void NETWORK_OBSERVER_CALLBACK network_observer_channel_start_flow(long channel_index, byte *observer);
 void NETWORK_OBSERVER_CALLBACK network_observer_update_flow(byte *observer);
 void network_observer_update_bandwidth(byte *observer);
+boolean NETWORK_OBSERVER_CALLBACK network_observer_game_channel_can_send(byte *observer, long game_channel_index,
+	boolean unknown4, boolean unknown8, boolean unknownC, boolean *unknown10, boolean *wanted, long *size,
+	long *voice_size, long maximum_voice_size, byte *voice_packet);
 long NETWORK_OBSERVER_CALLBACK network_observer_acquire_channel(byte *observer, long session_index,
 	const byte *unknown14);
 void NETWORK_OBSERVER_CALLBACK network_observer_release_game_channels(byte *observer);
@@ -663,5 +688,6 @@ extern long unknown_004ce12c[MAXIMUM_NETWORK_OBSERVER_VOICE_CONSOLES+1];
 extern long unknown_004ce174[MAXIMUM_NETWORK_OBSERVER_VOICE_CONSOLES+1];
 extern long long unknown_004e6398;
 extern boolean unknown_004cf73c;
+extern real unknown_004cf5d0;
 
 #endif
