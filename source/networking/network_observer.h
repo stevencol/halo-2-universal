@@ -366,6 +366,17 @@ enum
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN188_OFFSET= 0x188,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN194_OFFSET= 0x194,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN198_OFFSET= 0x198,
+	/* how many channels of the observer are trying more flow, and how many
+	can at once; one more byte of a channel; and of what the observer has
+	at 0x10: a byte, the most bits a second that a channel has, and by how
+	much they go up, at the most and as a part of what they are */
+	NETWORK_OBSERVER_UNKNOWN4F40_OFFSET= 0x4F40,
+	NETWORK_OBSERVER_UNKNOWN4F44_OFFSET= 0x4F44,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN48F_OFFSET= 0x48F,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN144_OFFSET= 0x144,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN150_OFFSET= 0x150,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN18C_OFFSET= 0x18C,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN190_OFFSET= 0x190,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
 	_unknown_00088650_unknown11= 0x11
 };
@@ -441,6 +452,11 @@ as more */
 /* what turns milliseconds into seconds */
 #define NETWORK_OBSERVER_SECONDS_PER_MILLISECOND 0.001f
 
+/* the bits of a byte, and a rate of packets that is none: the most that a
+real can be */
+#define NETWORK_OBSERVER_BITS_PER_BYTE 8.0f
+#define NETWORK_OBSERVER_NO_PACKET_RATE 3.4028234663852886e+38f
+
 /* the tries that a channel has at something: how many, and how long after it
 went into its state each one is, in milliseconds */
 struct network_observer_tries
@@ -499,6 +515,10 @@ long NETWORK_OBSERVER_CALLBACK network_observer_packet_rate_bits_per_second(cons
 void NETWORK_OBSERVER_CALLBACK network_observer_channel_lower_flow(byte *observer, long channel_index,
 	boolean unknown);
 void NETWORK_OBSERVER_CALLBACK network_observer_channel_drop_flow(byte *observer, long channel_index);
+real NETWORK_OBSERVER_CALLBACK network_observer_next_packet_rate(real packet_rate, const byte *observer, boolean half);
+boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_raise_flow(byte *observer, long channel_index,
+	boolean *unknown);
+void network_observer_update_voice_mode(const byte *observer);
 void NETWORK_OBSERVER_CALLBACK network_observer_release_game_channels(byte *observer);
 boolean network_observer_channel_unknown_00077940(byte *observer, long channel_index);
 void network_observer_channel_reset_unknown4dc(long channel_index, byte *observer);
@@ -542,5 +562,6 @@ extern byte *unknown_004d87d8;
 extern long unknown_004ce12c[MAXIMUM_NETWORK_OBSERVER_VOICE_CONSOLES+1];
 extern long unknown_004ce174[MAXIMUM_NETWORK_OBSERVER_VOICE_CONSOLES+1];
 extern long long unknown_004e6398;
+extern boolean unknown_004cf73c;
 
 #endif

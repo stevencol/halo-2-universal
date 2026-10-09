@@ -2,6 +2,67 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — El caudal de un canal sube, y el modo de la voz
+
+Tres funciones en `networking/network_observer.c`, 1729 bytes entre todas. De 1367
+funciones se pasa a 1370, el 12,16 % de las del juego (el 8,076 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_next_packet_rate` | `0x00078210` | `networking/network_observer.c` |
+| `network_observer_channel_raise_flow` | `0x00079de0` | `networking/network_observer.c` |
+| `network_observer_update_voice_mode` | `0x0007a4a0` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_observer_channel_raise_flow` (antes `unknown_00079de0`) es la
+  que faltaba del control del caudal: **el canal prueba a mandar más**.
+  Con ella está entero el ciclo: probar más (este hito), ver cómo va y
+  quedarse o volver atrás (hitos 385 y 389), y bajar (hito 390).
+  - Hay tres cosas que pueden subir: los bits por segundo (una parte de
+    lo que hay, con un máximo por vez y un techo), el otro número del
+    caudal (lo que ocupa un paquete; por eso se sabe ya que `0x498` son
+    **bytes**) y los paquetes por segundo (el siguiente ritmo de la
+    lista, `network_observer_next_packet_rate`).
+  - Solo sube **una** cada vez, y solo si en el intervalo se anotó que
+    hacía falta (los tres avisos del hito 385 son eso: qué se quedó
+    corto).
+  - Antes de subir guarda el caudal que tenía, para poder volver (hito
+    388), y pone la fase a 2.
+  - No prueban todos los canales a la vez: el observador cuenta cuántos
+    están probando (`0x4F40`) y tiene un máximo (`0x4F44`). El observador
+    es, pues, más largo de lo que se creía: pasa de `0x4F40`.
+  - Si no puede subir nada, lo dice con un byte, y la fase vuelve a 0.
+- `network_observer_update_voice_mode` es la segunda que une el observador
+  con la voz (la primera, en el hito 385): decide **cómo va la voz entre
+  las consolas** (`unknown_004c987c` de `game_voice.c`: directa, o a
+  través de la consola elegida) según cómo van los caudales: si alguno
+  está retenido, o se anotó algo de alguno. Usa un byte nuevo,
+  `unknown_004cf73c`.
+
+### La batería completa
+
+- Se pasó entera en el hito 385, en el otro árbol de trabajo: **1354 de
+  1354 funciones** iguales que las del juego.
+
+### Comprobado rompiendo líneas
+
+- Treinta y una líneas rotas, una cada vez: las pruebas fallaron en
+  veintinueve. Las otras dos faltaban en las pruebas y ahora fallan:
+  redondear en vez de truncar lo que suben los bits por segundo (todos
+  los casos daban números enteros), y contar un ritmo de cero paquetes
+  como si no lo fuera (solo se nota con el otro número negativo).
+
+### Sin comprobar
+
+- Divide entre los bits por segundo del canal sin mirar que no sean cero;
+  las pruebas no dan ceros ahí.
+- En este hito se pasaron las pruebas de `network_observer` (61 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — El caudal de un canal baja
 
 Tres funciones en `networking/network_observer.c`, 897 bytes entre todas. De 1364

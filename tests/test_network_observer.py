@@ -1220,7 +1220,7 @@ def run(t) -> None:
                 network_observer_channel_restore_flow=with_channel_and_observer,
                 network_observer_channel_unknown_0007a160=with_channel_and_observer,
                 network_observer_channel_lower_flow=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2])),
-                unknown_00079de0=tried,
+                network_observer_channel_raise_flow=tried,
             ),
         )
 
@@ -1323,4 +1323,90 @@ def run(t) -> None:
                 network_observer_channel_set_flow=flows,
                 network_observer_channel_lower_flow=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2])),
             ),
+        )
+
+    # ---------- the flow of a channel goes up
+
+    for n in range(1000):
+        data = observer() + bytearray(random_.randbytes(0x114))
+        struct.pack_into("<I", data, 0x10, SIZE)
+        count = random_.choice((0, 1, 2, 3, 4, 5, 7, 8, 8))
+        way = random_.randrange(3)
+        if way == 0:
+            rates = sorted((random_.choice((1.0, 0.5, 0.25, 0.1, 0.0)) for index in range(count)), reverse=True)
+        elif way == 1:
+            rates = [1.0 / (1 << index) for index in range(count)]
+        else:
+            rates = [random_.choice((1.0, 0.5, 0.25, 0.0)) for index in range(count)]
+        struct.pack_into(f"<i{count}f", data, SIZE + 0x9C, count, *rates)
+        t.check(
+            "network_observer_next_packet_rate",
+            f32(random_.choice((-1.0, 0.0, 1.0, 3.0, 3.75, 6.25, 7.5, 7.4999, 12.5, 14.9999, 15.0, 25.0, 29.9999, 30.0, 60.0))),
+            Buffer(bytes(data), pointers=(0x10,)),
+            random_.choice((0, 0, 1)),
+            globals={"xbox_video_settings": video()},
+        )
+
+    for n in range(2500):
+        setup = at_time()
+        now = struct.unpack("<I", setup["globals"]["unknown_0051054c"])[0]
+        # the observer goes on for two numbers more: how many channels are trying more flow, and how many can
+        data = observer() + bytearray(struct.pack("<ii", random_.choice((0, 1, 2)), random_.choice((1, 2, 2)))) + bytearray(random_.randbytes(0x1A4))
+        parameters = SIZE + 8
+        struct.pack_into("<I", data, 0x10, parameters)
+        data[parameters + 0x144] = random_.choice((0, 1, 0x80))
+        struct.pack_into("<i", data, parameters + 0x150, random_.choice((8000, 64000, 100000, 100000)))
+        struct.pack_into("<if", data, parameters + 0x18C, random_.choice((1000, 100000)), random_.choice((0.1, 0.25, 0.0)))
+        struct.pack_into("<i", data, parameters + 0x1A0, random_.choice((1000, 1000, 1000, 0)))
+        struct.pack_into("<I", data, 0x4F38, (now - random_.choice((0, 999, 1000, 1000, 1001, 5000, 5000))) & 0xFFFFFFFF)
+        channel = random_.randrange(15)
+        at = CHANNELS + channel * CHANNEL
+        struct.pack_into("<ii", data, at + 0x494, random_.choice((1000, 1006, 8000, 8003, 64000, 64000, 100000, -8000)), random_.choice((0, 500, 4000, -4000)))
+        rate = random_.choice((0.0, 7.5, 15.0, 15.0, 30.0))
+        struct.pack_into("<f", data, at + 0x49C, rate)
+        for byte in (0x48E, 0x490):
+            data[at + byte] = random_.choice((0, 1))
+        for byte in (0x4A0, 0x4A1, 0x4A2):
+            data[at + byte] = random_.choice((0, 1, 1, 0x80))
+        struct.pack_into("<I", data, at + 0x4A8, random_.choice((0, 1, 1500, 100000)))
+        t.check(
+            "network_observer_channel_raise_flow",
+            Buffer(bytes(data), pointers=(0x10,)),
+            channel,
+            Buffer(random_.randbytes(1)),
+            globals=setup["globals"],
+            externals=dict(
+                setup["externals"],
+                network_observer_next_packet_rate=lambda harness, arguments, next=random_.choice((rate, rate, rate + 0.00005, rate + 0.0002, rate + 7.5, 30.0)): (
+                    f32(next),
+                    (arguments[0], harness.normalize(arguments[1]), arguments[2]),
+                ),
+                # the byte is the low one of a register
+                network_observer_packet_rate_bits_per_second=lambda harness, arguments, bits=random_.choice((0, 1000, 20000, 200000)): (
+                    bits,
+                    (harness.normalize(arguments[0]), arguments[1] & 0xFF, arguments[2]),
+                ),
+                network_observer_channel_set_flow=flows,
+            ),
+        )
+
+    # ---------- how the voice goes between the consoles, by the flow of the channels
+
+    for n in range(1000):
+        data = observer()
+        chances = [random_.choice((0.0, 0.0, 0.08, 0.5)) for byte in range(5)]
+        for channel in range(15):
+            at = CHANNELS + channel * CHANNEL
+            data[at + 0x48C] = random_.choice((0, 1, 1, 0x80))
+            data[at + 0x48E] = random_.choice((0, 1, 1, 0x80))
+            for chance, byte in zip(chances, (0x48F, 0x4C0, 0x50C, 0x50D, 0x50E)):
+                data[at + byte] = random_.choice((1, 0x80)) if random_.random() < chance else 0
+        t.check(
+            "network_observer_update_voice_mode",
+            Buffer(bytes(data)),
+            globals={
+                "unknown_004cf73c": bytes((random_.choice((0, 1, 1, 0x80)),)),
+                "game_voice_enabled": bytes((random_.choice((0, 1, 1, 1, 0x80)),)),
+                "unknown_004c987c": random_.randbytes(4),
+            },
         )

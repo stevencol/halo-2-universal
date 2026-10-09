@@ -1901,7 +1901,9 @@ address,name,source,arguments,returns,convention
 00079660,network_observer_channel_unknown_00079660,source/networking/network_observer.c,eax ecx stack stack stack,void,stdcall
 0007a330,network_observer_channel_update_flow,source/networking/network_observer.c,eax stack,void,stdcall
 00079a10,network_observer_channel_unknown_00079a10,source/networking/network_observer.c,eax stack,void,stdcall
-00079de0,unknown_00079de0,,edi stack stack,bool,stdcall
+00079de0,network_observer_channel_raise_flow,source/networking/network_observer.c,edi stack stack,bool,stdcall
+00078210,network_observer_next_packet_rate,source/networking/network_observer.c,xmm3 stack stack,real:xmm0,stdcall
+0007a4a0,network_observer_update_voice_mode,source/networking/network_observer.c,eax,void
 00092870,network_rate_new,source/networking/network_observer.c,eax ecx,void
 000929d0,network_window_reset,source/networking/network_observer.c,esi,void
 00079850,network_observer_channel_drop_flow,source/networking/network_observer.c,edi stack,void,stdcall
