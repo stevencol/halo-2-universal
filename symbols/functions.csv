@@ -1898,3 +1898,6 @@ address,name,source,arguments,returns,convention
 00079850,unknown_00079850,,edi stack,void,stdcall
 00079560,network_observer_channel_unknown4a8_bits_per_second,source/networking/network_observer.c,eax ecx,int
 000795b0,network_observer_channel_unknown4a4_bits_per_second,source/networking/network_observer.c,eax ecx,int
+00079d90,network_observer_channel_reset_unknown4dc,source/networking/network_observer.c,eax ecx,void
+0007a160,network_observer_channel_unknown_0007a160,source/networking/network_observer.c,edi ecx,void
+00079c00,unknown_00079c00,,ecx stack stack,void,stdcall

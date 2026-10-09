@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Dos piezas del caudal de un canal
+
+Dos funciones en `networking/network_observer.c`, 151 bytes entre las dos. De 1342
+funciones se pasa a 1344, el 11,93 % de las del juego (el 7,823 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_channel_reset_unknown4dc` | `0x00079d90` | `networking/network_observer.c` |
+| `network_observer_channel_unknown_0007a160` | `0x0007a160` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- Son dos piezas del control del caudal de un canal (hitos 376 a 380):
+  - `network_observer_channel_unknown_0007a160` cuenta **las veces que algo
+    ha ido bien**. Cada tantas (el número de `0x1E0` de lo que el observador
+    guarda en `0x10`) hace `unknown_00079c00` con un cero; y cuando ya son
+    muchas (`0x1E4`), sube otro número del canal de golpe (`0x1E8`). Parece
+    la subida gradual del caudal cuando la conexión aguanta, la contraria
+    de la del hito 379.
+  - `network_observer_channel_reset_unknown4dc` pone a cero el número que
+    dice en qué fase está el caudal del canal, y apunta la hora.
+
+### Comprobado rompiendo líneas
+
+- Tres líneas rotas, una cada vez: las pruebas fallaron en las tres.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_observer` (35 funciones).
+- Lo que queda de esta parte (`0x00079850`, `0x00079c00`, `0x00079600`,
+  `0x0007a2a0`...) hace cuentas con reales y con el redondeo del procesador
+  antiguo (`fistp`): va más despacio.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Cuántos bits por segundo lleva un canal
 
 Dos funciones en `networking/network_observer.c`, 156 bytes entre las dos. De 1340

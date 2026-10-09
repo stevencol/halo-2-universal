@@ -1158,3 +1158,47 @@ long network_observer_channel_unknown4a4_bits_per_second(
 {
 	return network_observer_channel_bits_per_second(observer, channel_index, NETWORK_OBSERVER_CHANNEL_UNKNOWN4A4_OFFSET);
 }
+
+/* 0x00079c00: something that is done with a channel of the observer, with a
+number, when its flow is to change */
+void __attribute__((stdcall)) unknown_00079c00(byte *observer, long channel_index, long unknown);
+
+/* 0x00079d90: the number of 0x4DC of a channel of the observer is none of
+them, since now, if it was one */
+void network_observer_channel_reset_unknown4dc(
+	long channel_index,
+	byte *observer)
+{
+	byte *channel= (byte *)network_observer_channel(observer, channel_index);
+
+	if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4DC_OFFSET)!=0)
+	{
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4DC_OFFSET)= 0;
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4E0_OFFSET)= network_time_since(0);
+	}
+}
+
+/* 0x0007a160: something has gone well once more for a channel of the
+observer. Once the times are as many as the number at 0x1E4 of what the
+observer has at 0x10, the number of 0x4F0 of the channel goes up by the one
+at 0x1E8; before that, every so many times as the one at 0x1E0 says,
+unknown_00079c00 is done with nothing */
+void network_observer_channel_unknown_0007a160(
+	long channel_index,
+	byte *observer)
+{
+	byte *channel= (byte *)network_observer_channel(observer, channel_index);
+	const byte *parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+	long count= ++*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4EC_OFFSET);
+
+	if (count>=*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN1E4_OFFSET))
+	{
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4F0_OFFSET)=
+			(long)(*(const unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4F0_OFFSET)+
+			*(const unsigned long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN1E8_OFFSET));
+	}
+	else if (count%*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN1E0_OFFSET)==0)
+	{
+		unknown_00079c00(observer, channel_index, 0);
+	}
+}

@@ -680,3 +680,25 @@ def run(t) -> None:
             for at in (0x4A4, 0x4A8):
                 struct.pack_into("<I", data, CHANNELS + channel * CHANNEL + at, random_.choice((0, 1, 1500, 268435, 268436, 0x10000000, random_.getrandbits(32))))
             t.check(name, channel, Buffer(bytes(data)), globals=setup["globals"], externals=setup["externals"])
+
+    # ---------- two small things of the flow of a channel
+
+    for n in range(200):
+        setup = at_time()
+        data = observer()
+        channel = random_.randrange(15)
+        struct.pack_into("<I", data, CHANNELS + channel * CHANNEL + 0x4DC, random_.choice((0, 0, 1, 2, 3)))
+        t.check("network_observer_channel_reset_unknown4dc", channel, Buffer(bytes(data)), globals=setup["globals"], externals=setup["externals"])
+
+    for n in range(500):
+        data = observer() + bytearray(random_.randbytes(0x1EC))
+        struct.pack_into("<I", data, 0x10, SIZE)
+        struct.pack_into("<iii", data, SIZE + 0x1E0, random_.choice((1, 2, 3, 5)), random_.choice((4, 10, 100)), random_.choice((1, 16, 1000)))
+        channel = random_.randrange(15)
+        struct.pack_into("<i", data, CHANNELS + channel * CHANNEL + 0x4EC, random_.choice((0, 1, 2, 3, 4, 8, 9, 10, 99, 100, 1000, -1, -7)))
+        t.check(
+            "network_observer_channel_unknown_0007a160",
+            channel,
+            Buffer(bytes(data), pointers=(0x10,)),
+            externals={"unknown_00079c00": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2]))},
+        )

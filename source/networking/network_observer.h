@@ -198,6 +198,18 @@ enum
 	NETWORK_OBSERVER_CHANNEL_UNKNOWN4A4_OFFSET= 0x4A4,
 	NETWORK_OBSERVER_CHANNEL_UNKNOWN4A8_OFFSET= 0x4A8,
 	NETWORK_OBSERVER_BITS_PER_BYTE_MILLISECOND= 8000,
+	/* more of a channel: a number that says how its flow is, and when it
+	last was none of them; how many times something has gone well, and a
+	number that goes up when they are many. And of what the observer has at
+	0x10: every how many of those times unknown_00079c00 is done, from how
+	many on the number goes up, and by how much */
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN4DC_OFFSET= 0x4DC,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN4E0_OFFSET= 0x4E0,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN4EC_OFFSET= 0x4EC,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN4F0_OFFSET= 0x4F0,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1E0_OFFSET= 0x1E0,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1E4_OFFSET= 0x1E4,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1E8_OFFSET= 0x1E8,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
 	_unknown_00088650_unknown11= 0x11
 };
@@ -285,6 +297,8 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_set_pending(long channel
 boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_alive(long channel_index, const byte *observer);
 long network_observer_channel_connect_status(const byte *observer, long channel_index);
 long network_unknown_00075910(const byte *unknown);
+void network_observer_channel_reset_unknown4dc(long channel_index, byte *observer);
+void network_observer_channel_unknown_0007a160(long channel_index, byte *observer);
 long network_observer_channel_unknown4a8_bits_per_second(long channel_index, const byte *observer);
 long network_observer_channel_unknown4a4_bits_per_second(long channel_index, const byte *observer);
 void NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_000797b0(byte *observer, long channel_index,
