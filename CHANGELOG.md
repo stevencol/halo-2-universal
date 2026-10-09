@@ -2,6 +2,62 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Un mensaje entra en el paquete
+
+Una función en `networking/network_message_gateway.c`, de 478 bytes. De 1399
+funciones se pasa a 1400, el 12,43 % de las del juego (el 8,410 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_message_gateway_send` | `0x0007b140` | `networking/network_message_gateway.c` |
+
+### Lo que se sabe
+
+- `network_message_gateway_send` era `unknown_0007b140`, la que el
+  observador y las sesiones llaman desde hace muchos hitos para **mandar
+  un mensaje a una dirección sin pasar por un canal**. No lo manda en el
+  momento: lo mete en el paquete pendiente.
+  - Si el paquete pendiente es para otra dirección, sale antes (hito 394).
+  - Si no hay paquete, empieza uno de `0x518` bytes para esa dirección.
+  - El mensaje entra detrás de **un bit a 1, que dice «hay otro mensaje»**:
+    su clase y su tamaño (hito 403) y lo que escribe la función de su
+    clase. El bit que el hito 394 añadía al cerrar el paquete es el
+    contrario: «no hay más».
+  - Si no cabe, **se deshace** (hito 402: para esto guardaba el flujo
+    posiciones a las que volver), se manda el paquete como estaba y el
+    mensaje va en uno nuevo. Si no cabe ni en uno nuevo, no se manda, y la
+    función lo dice.
+- Devuelve si el mensaje entró. Quienes la llaman no lo miran.
+- En el juego tiene escritas dentro varias funciones del flujo de bits
+  (empezar a escribir, guardar una posición, escribir un bit); aquí se
+  llama a las que ya están descompiladas.
+
+### El arnés
+
+- La función de cada clase de mensaje se sustituye en las pruebas, y tiene
+  que hacer avanzar el flujo como si escribiera. Lo que sustituye a una
+  función llamada por un puntero no recibía la memoria; las pruebas la
+  toman del arnés (`t.harness.mu`).
+
+### Comprobado rompiendo líneas
+
+- Diecisiete líneas rotas, una cada vez: las pruebas fallaron en quince.
+  - Una faltaba en las pruebas (que el paquete nuevo no herede un número
+    del anterior) y ahora falla.
+  - La otra no cambia nada: mandar el paquete pendiente cuando no lo hay
+    no hace nada.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_message_gateway` (5
+  funciones) y las de `network_observer` y `network_life_cycle`, que la
+  sustituyen por su nombre nuevo.
+- Del módulo queda recibir un paquete (`0x0007afd0`).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Con qué empieza un mensaje, y un texto del flujo de bits
 
 Tres funciones, 315 bytes entre todas: dos en `networking/network_message_gateway.c` y una en

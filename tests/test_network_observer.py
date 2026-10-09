@@ -290,7 +290,7 @@ def run(t) -> None:
             globals={"unknown_004d87d4": Buffer(bytes(channels)), "unknown_004d87dc": Buffer(bytes(16))},
             externals={
                 "network_observer_session_get_address": finds,
-                "unknown_0007b140": lambda harness, arguments: (
+                "network_message_gateway_send": lambda harness, arguments: (
                     0,
                     (arguments[0], bytes(harness.mu.mem_read(arguments[1], 0x14)), arguments[2], arguments[3], harness.normalize(arguments[4])),
                 ),
@@ -1656,7 +1656,7 @@ def run(t) -> None:
                 ),
                 "unknown_000880b0": lambda harness, arguments, can=random_.choice((1, 1, 1, 0)): (can, (arguments[0],)),
                 "transport_security_peer_address_from_address": known,
-                "unknown_0007b140": lambda harness, arguments: (
+                "network_message_gateway_send": lambda harness, arguments: (
                     0,
                     (arguments[0], harness.normalize(arguments[1]), arguments[2], arguments[3], bytes(harness.mu.mem_read(arguments[4], 8))),
                 ),

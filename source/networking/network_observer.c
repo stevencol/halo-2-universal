@@ -351,7 +351,7 @@ long network_observer_channel_connect_status(
 game. 0x000783d0: the address of the game of a channel that has none of its
 own, for a session; whether it could. 0x00095580: something of a kind and a
 size is put in what a channel of the game has to send */
-void __attribute__((stdcall)) unknown_0007b140(long unknown4, const struct transport_address *address, long type,
+boolean __attribute__((stdcall)) network_message_gateway_send(byte *gateway, const struct transport_address *address, long type,
 	long size, const void *data);
 void __attribute__((stdcall)) unknown_00095580(byte *unknown, long type, long size, const void *data);
 
@@ -433,7 +433,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_send(
 				return;
 			}
 		}
-		unknown_0007b140(*(const long *)(observer+NETWORK_OBSERVER_UNKNOWN8_OFFSET), &address, type, size, data);
+		network_message_gateway_send(*(byte **)(observer+NETWORK_OBSERVER_UNKNOWN8_OFFSET), &address, type, size, data);
 	}
 	else if (*(const long *)(game_channel+NETWORK_CHANNEL_STATE_OFFSET)>_network_channel_state2)
 	{
@@ -3261,7 +3261,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_handle_connect_request(
 	{
 		refusal.identifier= *(const long *)(request+NETWORK_OBSERVER_CONNECT_REQUEST_IDENTIFIER_OFFSET);
 		refusal.reason= reason;
-		unknown_0007b140(*(const long *)(observer+NETWORK_OBSERVER_UNKNOWN8_OFFSET), address,
+		network_message_gateway_send(*(byte **)(observer+NETWORK_OBSERVER_UNKNOWN8_OFFSET), address,
 			_network_message_connect_refuse, sizeof(refusal), &refusal);
 
 		return;

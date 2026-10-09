@@ -47,7 +47,7 @@ long language_from_xbox_language(long xbox_language);
 
 /* 0x0007b140: sends something of a kind and a size to an address of the
 game */
-void __attribute__((stdcall)) unknown_0007b140(long unknown4, const struct transport_address *address, long type,
+boolean __attribute__((stdcall)) network_message_gateway_send(byte *gateway, const struct transport_address *address, long type,
 	long size, const void *data);
 
 /* ---------- globals */
@@ -3454,7 +3454,7 @@ void network_session_unknown_000623e0(
 		memcpy(message, session+NETWORK_SESSION_IDENTIFIER_OFFSET, NETWORK_SESSION_IDENTIFIER_SIZE);
 		*(long *)(message+8)= *(const long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN5C_OFFSET);
 		*(long *)(message+0xC)= *(const long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN60_OFFSET);
-		unknown_0007b140(*(const long *)(session+NETWORK_SESSION_UNKNOWN4_OFFSET),
+		network_message_gateway_send(*(byte **)(session+NETWORK_SESSION_UNKNOWN4_OFFSET),
 			(const struct transport_address *)(session+NETWORK_SESSION_STATE2_ADDRESS_OFFSET), _network_session_message_unknown9,
 			sizeof(message), message);
 		*(long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN6C_OFFSET)= network_session_time();
@@ -4266,7 +4266,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_synchronize_time(
 
 			memcpy(answer, message, sizeof(answer));
 			*(short *)(answer+NETWORK_SESSION_MESSAGE_UNKNOWN18_ANSWER_OFFSET)= 1;
-			unknown_0007b140(*(const long *)(session+NETWORK_SESSION_UNKNOWN4_OFFSET), address,
+			network_message_gateway_send(*(byte **)(session+NETWORK_SESSION_UNKNOWN4_OFFSET), address,
 				_network_session_message_unknown18, sizeof(answer), answer);
 
 			return TRUE;
@@ -4810,7 +4810,7 @@ void network_session_state1_send(
 		NETWORK_SESSION_IDENTIFIER_SIZE);
 	memcpy(message+NETWORK_SESSION_MESSAGE_UNKNOWN8_UNKNOWNC_OFFSET, session+NETWORK_SESSION_STATE1_UNKNOWN3C_OFFSET,
 		NETWORK_SESSION_STATE1_UNKNOWN3C_SIZE);
-	unknown_0007b140(*(const long *)(session+NETWORK_SESSION_UNKNOWN4_OFFSET),
+	network_message_gateway_send(*(byte **)(session+NETWORK_SESSION_UNKNOWN4_OFFSET),
 		(const struct transport_address *)(session+NETWORK_SESSION_STATE1_ADDRESS_OFFSET),
 		_network_session_message_unknown8, sizeof(message), message);
 	(*(long *)(session+NETWORK_SESSION_STATE1_UNKNOWN1F0_OFFSET))++;
@@ -5978,7 +5978,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_answer_join(
 	memset(message, 0, sizeof(message));
 	memcpy(message, session+NETWORK_SESSION_IDENTIFIER_OFFSET, NETWORK_SESSION_IDENTIFIER_SIZE);
 	*(long *)(message+NETWORK_SESSION_MESSAGE_JOIN_REFUSED_REASON_OFFSET)= reason;
-	unknown_0007b140(*(const long *)(session+NETWORK_SESSION_UNKNOWN4_OFFSET), address,
+	network_message_gateway_send(*(byte **)(session+NETWORK_SESSION_UNKNOWN4_OFFSET), address,
 		_network_session_message_join_refused, sizeof(message), message);
 
 	return FALSE;

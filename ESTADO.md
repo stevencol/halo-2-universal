@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 403.
+**Última actualización:** 2026-10-08, al terminar el hito 404.
 
 ## Dónde estamos
 
-- **1399 funciones descompiladas de 11.265: el 12,42 % del juego** (el
-  8,394 % de los bytes de código).
-- Las 1399 están comprobadas contra el ejecutable original: las 1390 del
+- **1400 funciones descompiladas de 11.265: el 12,43 % del juego** (el
+  8,410 % de los bytes de código).
+- Las 1400 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the header of a message and a text reader of the bitstream* (ver `git log`).
+- Último hito: *Decompile how a message goes in the gateway's packet* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 556 funciones apuntadas pero sin descompilar (las que el código
-  llama); 454 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 555 funciones apuntadas pero sin descompilar (las que el código
+  llama); 453 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -122,10 +122,9 @@ Módulos (funciones hechas / archivo):
       direcciones; de `0x0007a8a0` a `0x0007af80`, y falta lo que sigue
       desde `0x0007afd0`)
 - [ ] Mensajes que no van por un canal —
-  `networking\network_message_gateway.c` (4: mandar el paquete pendiente,
-  y con qué empieza un mensaje).
-  Faltan recibir un paquete (`0x0007afd0`) y añadir un mensaje
-  (`0x0007b140`).
+  `networking\network_message_gateway.c` (5: meter un mensaje en el
+  paquete, mandar el paquete pendiente, y con qué empieza un mensaje).
+  Falta recibir un paquete (`0x0007afd0`).
 - [x] Intentos de medir la conexión — `networking\transport_qos.c` (8: la
   tabla de intentos, empezar uno, soltarlo, cómo va y qué encontró con
   cada consola). Entero.

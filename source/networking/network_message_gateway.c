@@ -109,3 +109,70 @@ boolean __attribute__((stdcall)) network_message_header_read(
 
 	return FALSE;
 }
+
+/* 0x0007b140: a message of a kind and a size is to go to an address of the
+game; whether it is in the packet. If the packet that has not been sent is
+for another address, it is sent first. With no packet, one starts, of 0x518
+bytes, for the address. The message goes in after a bit that says that there
+is one more: its kind and size, and what the function of its kind writes of
+it. If it does not fit, it is taken back; the packet is sent, and the
+message goes in a new one; and one that does not fit in a new packet does
+not go. The game has several functions of the stream written here */
+boolean __attribute__((stdcall)) network_message_gateway_send(
+	byte *gateway,
+	const struct transport_address *address,
+	long type,
+	long size,
+	const void *data)
+{
+	struct bitstream *stream= (struct bitstream *)(gateway+NETWORK_MESSAGE_GATEWAY_STREAM_OFFSET);
+
+	if (gateway[NETWORK_MESSAGE_GATEWAY_PENDING_OFFSET] &&
+		!transport_address_equal(address,
+		(const struct transport_address *)(gateway+NETWORK_MESSAGE_GATEWAY_ADDRESS_OFFSET), FALSE))
+	{
+		network_message_gateway_flush(gateway);
+	}
+	for (;;)
+	{
+		const struct network_message_type *types;
+		boolean started= FALSE;
+
+		if (!gateway[NETWORK_MESSAGE_GATEWAY_PENDING_OFFSET])
+		{
+			stream->size= NETWORK_MESSAGE_GATEWAY_PACKET_SIZE;
+			stream->data= (unsigned long *)(gateway+NETWORK_MESSAGE_GATEWAY_PACKET_OFFSET);
+			stream->unknown8= 1;
+			stream->unknownC= _bitstream_writing;
+			memset(stream->data, 0, stream->size);
+			stream->position= 0;
+			stream->position_count= 0;
+			stream->error= FALSE;
+			stream->unknown2C= 0;
+			stream->unknown30= 0;
+			*(struct transport_address *)(gateway+NETWORK_MESSAGE_GATEWAY_ADDRESS_OFFSET)= *address;
+			gateway[NETWORK_MESSAGE_GATEWAY_PENDING_OFFSET]= TRUE;
+			started= TRUE;
+		}
+		stream->positions[stream->position_count]= stream->position;
+		stream->position_count++;
+		bitstream_write_bool(stream, TRUE);
+		types= *(const struct network_message_type **)(gateway+NETWORK_MESSAGE_GATEWAY_TYPES_OFFSET);
+		network_message_header_write(stream, type, size);
+		types[type].encode(stream, size, data);
+		/* the game adds as the processor does: there has to be room for the
+		bit that ends the packet too */
+		if ((long)((unsigned long)stream->position+1)<=(long)((unsigned long)stream->size<<3))
+		{
+			stream->position_count--;
+
+			return TRUE;
+		}
+		bitstream_pop_position(stream, TRUE);
+		if (started)
+		{
+			return FALSE;
+		}
+		network_message_gateway_flush(gateway);
+	}
+}

@@ -1884,7 +1884,7 @@ def run(t) -> None:
             "network_session_unknown_000623e0",
             Buffer(bytes(data)),
             globals=setup["globals"],
-            externals={"GetTickCount": setup["tick"], "unknown_0007b140": sends_to_address},
+            externals={"GetTickCount": setup["tick"], "network_message_gateway_send": sends_to_address},
         )
 
     def fills(harness, arguments):
@@ -2318,7 +2318,7 @@ def run(t) -> None:
                 "GetTickCount": ticks(),
                 "transport_security_peer_address_from_address": known(data),
                 "network_session_matches_state1_address": lambda harness, arguments, same=random_.choice((0, 0, 1, 1, 0x80, 0x100)): same,
-                "unknown_0007b140": sends_to_address,
+                "network_message_gateway_send": sends_to_address,
             },
         )
 
@@ -2480,7 +2480,7 @@ def run(t) -> None:
             "network_session_state1_send",
             Buffer(bytes(data), pointers=(8,)),
             globals=setup["globals"],
-            externals={"GetTickCount": setup["tick"], "network_observer_channel_connect_status": is_ready(), "unknown_0007b140": sends_all_to_address},
+            externals={"GetTickCount": setup["tick"], "network_observer_channel_connect_status": is_ready(), "network_message_gateway_send": sends_all_to_address},
         )
 
     for n in range(600):
@@ -2983,7 +2983,7 @@ def run(t) -> None:
             Buffer(bytes(whole_session())),
             Buffer(random_.randbytes(0x14)),
             random_.choice((0, 0, 0, 2, 3, 4)),
-            externals={"network_session_host_accept_join": lets_in, "unknown_0007b140": sends_all_to_address},
+            externals={"network_session_host_accept_join": lets_in, "network_message_gateway_send": sends_all_to_address},
         )
 
     for n in range(400):

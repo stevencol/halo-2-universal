@@ -3,7 +3,7 @@
 import random
 import struct
 
-from difftest import Buffer
+from difftest import Buffer, Mock, mock_address
 
 NONE = 0xFFFFFFFF
 SIZE = 0x680
@@ -113,4 +113,55 @@ def run(t) -> None:
             Buffer(bytes(stream_), pointers=(0,)),
             Buffer(bytes(kinds)),
             Buffer(random_.randbytes(4)),
+        )
+
+    # ---------- a message goes in the packet
+
+    for n in range(1200):
+        data = gateway() + bytearray()
+        # the kinds of message go after the gateway: each has the function that writes one
+        kinds = len(data)
+        struct.pack_into("<I", data, 0xC, kinds)
+        for other in range(0x2D):
+            data += struct.pack("<B3x2i2i3I", 1, 0, 0, 0, 0xFFFF, mock_address(0), 0x22, 0x33)
+        size = random_.choice((4, 16))
+        address = bytearray(random_.randbytes(0x14))
+        struct.pack_into("<h", address, 0x12, size)
+        way = random_.randrange(4)
+        if way == 0:
+            # the packet that has not been sent is for this address
+            data[ADDRESS : ADDRESS + 0x14] = address
+        elif way == 1:
+            # or for this address with another port, which is the same
+            data[ADDRESS : ADDRESS + 0x14] = address[0:0x10] + random_.randbytes(2) + address[0x12:0x14]
+        # the packet that has not been sent, with room for more or with next to none
+        position = random_.choice((0, 9, 800, 0x518 * 8 - 400, 0x518 * 8 - 60, 0x518 * 8 - 27, 0x518 * 8 - 26, 0x518 * 8 - 25, 0x518 * 8 - 1))
+        struct.pack_into("<iiIi", data, STREAM + 4, 0x518, random_.choice((1, 1, 4)), 1, position)
+        data[STREAM + 0x14] = 0
+        struct.pack_into("<i", data, STREAM + 0x18, random_.choice((0, 1)))
+        for bit in range(position, 0x518 * 8):
+            data[0x15 + (bit >> 3)] &= ~(1 << (bit & 7))
+        # how many bits the function of the kind writes of the message
+        wrote = random_.choice((0, 8, 32, 300, 0x518 * 8 - 26, 0x518 * 8 - 25, 0x518 * 8))
+
+        def writes(call, wrote=wrote):
+            stream_ = call.stack[0]
+            at = struct.unpack("<i", t.harness.mu.mem_read(stream_ + 0x10, 4))[0]
+            t.harness.mu.mem_write(stream_ + 0x10, struct.pack("<i", at + wrote))
+            return 0
+
+        t.check(
+            "network_message_gateway_send",
+            Buffer(bytes(data), pointers=(0xC, STREAM)),
+            Buffer(bytes(address)),
+            random_.randrange(0x2D),
+            random_.choice((0, 8, 0x518)),
+            Buffer(random_.randbytes(16)),
+            externals={
+                "unknown_00093100": lambda harness, arguments: (
+                    0,
+                    (harness.normalize(arguments[0]), harness.normalize(arguments[1]), arguments[2], arguments[3]),
+                )
+            },
+            mocks=[Mock(writes, stack_arguments=3)],
         )

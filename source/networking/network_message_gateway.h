@@ -22,6 +22,9 @@ enum
 	that has not been sent; the address of the game that it is for; and
 	what writes it, bit by bit */
 	NETWORK_MESSAGE_GATEWAY_UNKNOWN8_OFFSET= 0x8,
+	NETWORK_MESSAGE_GATEWAY_TYPES_OFFSET= 0xC,
+	NETWORK_MESSAGE_GATEWAY_PACKET_OFFSET= 0x15,
+	NETWORK_MESSAGE_GATEWAY_PACKET_SIZE= 0x518,
 	NETWORK_MESSAGE_GATEWAY_PENDING_OFFSET= 0x14,
 	NETWORK_MESSAGE_GATEWAY_ADDRESS_OFFSET= 0x618,
 	NETWORK_MESSAGE_GATEWAY_STREAM_OFFSET= 0x62C,
@@ -45,7 +48,7 @@ struct network_message_type
 	long unknown8;
 	long minimum_size;
 	long maximum_size;
-	void *encode;
+	void (__attribute__((stdcall)) *encode)(struct bitstream *stream, long size, const void *data);
 	void *decode;
 	long unknown1C;
 };
@@ -58,6 +61,8 @@ void network_message_gateway_flush(byte *gateway);
 void network_message_gateway_flush_address(const struct transport_address *address, byte *gateway);
 void __attribute__((stdcall)) network_message_header_write(struct bitstream *stream, unsigned long type,
 	unsigned long size);
+boolean __attribute__((stdcall)) network_message_gateway_send(byte *gateway, const struct transport_address *address,
+	long type, long size, const void *data);
 boolean __attribute__((stdcall)) network_message_header_read(long *type, struct bitstream *stream,
 	const struct network_message_type *types, long *size);
 
