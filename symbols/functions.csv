@@ -1814,3 +1814,6 @@ address,name,source,arguments,returns,convention
 0005ee70,network_session_host_change_leader,source/networking/network_session.c,stack stack stack,bool,stdcall
 0005ef20,network_session_host_leader_removes_peer,source/networking/network_session.c,stack stack stack,bool,stdcall
 0005f3c0,network_session_unknown_0005f3c0,source/networking/network_session.c,ecx stack stack,bool,stdcall
+0005ed90,network_session_host_set_peer_properties,source/networking/network_session.c,stack stack stack,bool,stdcall
+0005efd0,network_session_host_add_peer_player,source/networking/network_session.c,stack stack stack,bool,stdcall
+0005f230,network_session_host_set_peer_player,source/networking/network_session.c,stack stack stack,bool,stdcall

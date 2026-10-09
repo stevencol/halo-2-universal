@@ -2208,3 +2208,90 @@ def run(t) -> None:
             random_.choice((NONE, 0, 1, 2, 3, 4)),
             random_.choice((0, 0, 1, 0x80, 0x100)),
         )
+
+    # ---------- three things that a console says of itself and of its players
+
+    def hosted_with_channels() -> tuple:
+        # a session that this console runs, most of the time; each console has the channel of its number
+        data = consistent()
+        struct.pack_into("<I", data, STATE, random_.choice((5, 5, 5, 6, 7, 8, 3, 0)))
+        struct.pack_into("<I", data, 0x54, random_.choice((4, 16, 16)))
+        struct.pack_into("<I", data, MEMBERSHIP, random_.choice((0, 7, NONE)))
+        struct.pack_into("<I", data, LOCAL_PEER, random_.choice((0, 0, 1, 2, 3, NONE)))
+        for peer in range(16):
+            at = 0x72DC + peer * 0x14
+            data[at] = 1
+            data[at + 1] = random_.choice((0, 1, 1, 0x80))
+            struct.pack_into("<I", data, at + 4, peer)
+        return data, random_.choice((0, 1, 2, 3, 3, NONE))
+
+    def from_channel(channel: int):
+        return lambda harness, arguments: channel
+
+    for n in range(400):
+        data, channel = hosted_with_channels()
+        message = bytearray(random_.randbytes(0xD0))
+        if channel != NONE:
+            at = PEERS + channel * PEER
+            data[at + 0x24] = random_.choice((0, 0, 1, 0x80))
+            if n % 3:
+                message[8:0xD0] = data[at + 0x28 : at + 0xF0]
+            if n % 3 == 2:
+                # one byte of it is another
+                message[8 + random_.randrange(0xC8)] ^= 0x10
+        t.check(
+            "network_session_host_set_peer_properties",
+            Buffer(bytes(data), pointers=(8,)),
+            random_.getrandbits(32),
+            Buffer(bytes(message)),
+            externals={"network_observer_find_channel": from_channel(channel)},
+        )
+
+    for n in range(400):
+        data, channel = hosted_with_channels()
+        message = bytearray(random_.randbytes(0xB0))
+        struct.pack_into("<I", message, 8, random_.choice((0, 1, 2, 3)))
+
+        def comes_in(harness, arguments, player=random_.choice((NONE, NONE, random_.randrange(16)))):
+            # what the player is known by is in what comes
+            return player, (harness.normalize(arguments[0]), arguments[1], arguments[2], bytes(harness.mu.mem_read(arguments[3], 12)))
+
+        t.check(
+            "network_session_host_add_peer_player",
+            Buffer(bytes(data), pointers=(8,)),
+            random_.getrandbits(32),
+            Buffer(bytes(message)),
+            externals={
+                "network_observer_find_channel": from_channel(channel),
+                "network_session_add_peer_player": comes_in,
+                "unknown_00075e80": sends_all,
+            },
+        )
+
+    for n in range(500):
+        data, channel = hosted_with_channels()
+        message = bytearray(random_.randbytes(0xA4))
+        place = random_.choice((0, 1, 2, 3, 3, 4, NONE, 0x80000000))
+        struct.pack_into("<I", message, 8, place)
+        if channel != NONE and place < 4:
+            if n % 4 == 0:
+                struct.pack_into("<I", data, PEERS + channel * PEER + 0xFC + place * 4, NONE)
+            player = struct.unpack_from("<I", data, PEERS + channel * PEER + 0xFC + place * 4)[0]
+            if player != NONE:
+                # each of the three things is what the player has already, or not
+                at = PLAYER_ARRAY + player * PLAYER
+                if random_.randrange(3):
+                    message[0xC:0x10] = data[at + 0x14 : at + 0x18]
+                if random_.randrange(3):
+                    message[0x10:0xA0] = data[at + 0x18 : at + 0xA8]
+                    if random_.randrange(4) == 0:
+                        message[0x10 + random_.randrange(0x90)] ^= 0x10
+                if random_.randrange(3):
+                    message[0xA0:0xA4] = data[at + 0x138 : at + 0x13C]
+        t.check(
+            "network_session_host_set_peer_player",
+            Buffer(bytes(data), pointers=(8,)),
+            random_.getrandbits(32),
+            Buffer(bytes(message)),
+            externals={"network_observer_find_channel": from_channel(channel)},
+        )

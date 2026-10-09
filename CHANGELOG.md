@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Lo que una consola dice de sí misma y de sus jugadores
+
+Tres funciones en `networking/network_session.c`, 837 bytes entre todas. De 1276
+funciones se pasa a 1279, el 11,35 % de las del juego (el 7,078 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_host_set_peer_properties` | `0x0005ed90` | `networking/network_session.c` |
+| `network_session_host_add_peer_player` | `0x0005efd0` | `networking/network_session.c` |
+| `network_session_host_set_peer_player` | `0x0005f230` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- Las tres son avisos que otra consola de la sesión le manda a la que la
+  lleva. Solo valen si esta consola lleva la sesión y el aviso viene de
+  otra consola que está en ella.
+- `network_session_host_set_peer_properties`: la consola dice **lo que la
+  sesión debe saber de ella** (los dos textos y los números, `0xC8` bytes
+  desde el `0x28` de la consola). Se pone a 1 el byte `0x24` de la consola,
+  y si algo cambió suben los dos contadores.
+- `network_session_host_add_peer_player`: la consola dice que **entra un
+  jugador** en uno de sus cuatro sitios. Si entra
+  (`network_session_add_peer_player`, hito 327), se guardan su número, sus
+  primeros `0x90` bytes y el número del final (`0x138`). Si no entra, la
+  consola recibe un mensaje de la clase `0x1E` con lo que identifica a la
+  sesión, el sitio y lo que identifica al jugador: es la **negativa**.
+- `network_session_host_set_peer_player`: la consola dice **cómo es ahora
+  el jugador** de uno de sus sitios: las mismas tres cosas, y los contadores
+  suben si alguna era distinta.
+- Del jugador se conoce ahora un número más, el de `0x138`, que es lo
+  último que tiene.
+
+### Sin comprobar
+
+- En `network_session_host_add_peer_player` el juego no mira que el sitio
+  esté entre 0 y 3 antes de llamar a `network_session_add_peer_player`; en
+  las pruebas esa función está sustituida y el sitio siempre es válido.
+- En este hito se pasaron las pruebas de `network_life_cycle` (186
+  funciones).
+- Las mutaciones de los hitos 280 a 308 y 321 a 351 están pendientes.
+
 ## 2026-10-08 — Cuatro avisos más que atiende la sesión
 
 Cuatro funciones en `networking/network_session.c`, 674 bytes entre todas. De 1272

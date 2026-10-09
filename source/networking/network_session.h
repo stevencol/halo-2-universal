@@ -372,6 +372,27 @@ enum
 	and the time of the C library */
 	NETWORK_SESSION_UNKNOWN78B0_OFFSET= 0x78B0,
 	NETWORK_SESSION_UNKNOWN78B4_OFFSET= 0x78B4,
+	/* a byte of a console that is set when the console says what the
+	session is to know of it, which comes at 0x8; and a number at the end of
+	a player */
+	NETWORK_SESSION_PEER_UNKNOWN24_OFFSET= 0x24,
+	NETWORK_SESSION_MESSAGE_PEER_PROPERTIES_OFFSET= 0x8,
+	NETWORK_SESSION_PLAYER_UNKNOWN138_OFFSET= 0x138,
+	/* in what a console sends when a player of it comes in, after the place
+	and what the player is known by: the number, the first thing of 0x90
+	bytes and the last number of the player. And in what it sends when the
+	player changes, after the place */
+	NETWORK_SESSION_MESSAGE_ADD_PLAYER_UNKNOWN14_OFFSET= 0x18,
+	NETWORK_SESSION_MESSAGE_ADD_PLAYER_UNKNOWN18_OFFSET= 0x1C,
+	NETWORK_SESSION_MESSAGE_ADD_PLAYER_UNKNOWN138_OFFSET= 0xAC,
+	NETWORK_SESSION_MESSAGE_SET_PLAYER_UNKNOWN14_OFFSET= 0xC,
+	NETWORK_SESSION_MESSAGE_SET_PLAYER_UNKNOWN18_OFFSET= 0x10,
+	NETWORK_SESSION_MESSAGE_SET_PLAYER_UNKNOWN138_OFFSET= 0xA0,
+	/* what the console that runs a session sends to a console whose player
+	does not come in: of this kind and size, with what the session is known
+	by, the place and what the player is known by */
+	_network_session_message_unknown1E= 0x1E,
+	NETWORK_SESSION_MESSAGE_UNKNOWN1E_SIZE= 0x18,
 
 	/* the key of a session, after what it is known by and whether it has
 	them, and a number that goes with them: NONE with none. The sizes are in
@@ -617,6 +638,10 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_leader_removes_peer(byte *
 	const byte *message);
 boolean NETWORK_SESSION_CALLBACK network_session_unknown_0005f3c0(const byte *session, long channel_index,
 	boolean unknown);
+boolean NETWORK_SESSION_CALLBACK network_session_host_set_peer_properties(byte *session, long channel,
+	const byte *message);
+boolean NETWORK_SESSION_CALLBACK network_session_host_add_peer_player(byte *session, long channel, const byte *message);
+boolean NETWORK_SESSION_CALLBACK network_session_host_set_peer_player(byte *session, long channel, const byte *message);
 boolean network_session_remove_peer_with_message_c(byte *session, long peer_index);
 void NETWORK_SESSION_CALLBACK network_session_peer_properties_apply_update(
 	struct network_session_peer_properties *properties, const struct network_session_peer_properties_update *update);

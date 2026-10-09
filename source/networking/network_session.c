@@ -4059,3 +4059,180 @@ boolean NETWORK_SESSION_CALLBACK network_session_unknown_0005f3c0(
 
 	return !network_session_unknown_00058d90(session) || host;
 }
+
+/* 0x0005ed90: another console of a session tells the console that runs it
+what the session is to know of it apart from what it is known by and its
+players: the byte of the console at 0x24 is set, what comes is kept if it is
+not what the session knew, and the two numbers that count what changes count
+one more if anything did. Whether what comes is from another console of a
+session that this one runs */
+boolean NETWORK_SESSION_CALLBACK network_session_host_set_peer_properties(
+	byte *session,
+	long channel,
+	const byte *message)
+{
+	long peer_index;
+	byte *peer;
+	boolean changed= FALSE;
+
+	if (!network_session_is_host(session))
+	{
+		return FALSE;
+	}
+	peer_index= network_session_channel_peer(session, channel);
+	if (peer_index==NONE || peer_index==*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET))
+	{
+		return FALSE;
+	}
+	peer= session+NETWORK_SESSION_PEER_ARRAY_OFFSET+peer_index*NETWORK_SESSION_PEER_SIZE;
+	if (!peer[NETWORK_SESSION_PEER_UNKNOWN24_OFFSET])
+	{
+		peer[NETWORK_SESSION_PEER_UNKNOWN24_OFFSET]= TRUE;
+		changed= TRUE;
+	}
+	if (memcmp(peer+NETWORK_SESSION_PEER_UNKNOWN28_OFFSET, message+NETWORK_SESSION_MESSAGE_PEER_PROPERTIES_OFFSET,
+		sizeof(struct network_session_peer_properties))!=0)
+	{
+		memcpy(peer+NETWORK_SESSION_PEER_UNKNOWN28_OFFSET, message+NETWORK_SESSION_MESSAGE_PEER_PROPERTIES_OFFSET,
+			sizeof(struct network_session_peer_properties));
+		changed= TRUE;
+	}
+	if (changed)
+	{
+		(*(long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET))++;
+		(*(long *)(session+NETWORK_SESSION_UNKNOWN7618_OFFSET))++;
+	}
+
+	return TRUE;
+}
+
+/* 0x0005efd0: another console of a session tells the console that runs it
+that a player comes in at one of its four places (network_session_add_peer_player).
+If the player comes in, the number and the first thing of 0x90 bytes of the
+player, and the number at its end, are what comes. If not, the console is
+sent something of the kind 0x1E, if the second byte of what the session
+keeps of it is set: what the session is known by, the place and what the
+player is known by. Whether what comes is from another console of a session
+that this one runs */
+boolean NETWORK_SESSION_CALLBACK network_session_host_add_peer_player(
+	byte *session,
+	long channel,
+	const byte *message)
+{
+	long peer_index;
+	long player_index;
+
+	if (!network_session_is_host(session))
+	{
+		return FALSE;
+	}
+	peer_index= network_session_channel_peer(session, channel);
+	if (peer_index==NONE || peer_index==*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET))
+	{
+		return FALSE;
+	}
+	player_index= network_session_add_peer_player(session, peer_index,
+		*(const long *)(message+NETWORK_SESSION_MESSAGE_PEER_PLAYER_OFFSET), message+NETWORK_SESSION_MESSAGE_IDENTIFIER_OFFSET);
+	if (player_index!=NONE)
+	{
+		byte *player= session+NETWORK_SESSION_MEMBERSHIP_OFFSET+NETWORK_SESSION_MEMBERSHIP_PLAYER_ARRAY_OFFSET+
+			player_index*NETWORK_SESSION_PLAYER_SIZE;
+
+		*(long *)(player+NETWORK_SESSION_PLAYER_UNKNOWN14_OFFSET)=
+			*(const long *)(message+NETWORK_SESSION_MESSAGE_ADD_PLAYER_UNKNOWN14_OFFSET);
+		memcpy(player+NETWORK_SESSION_PLAYER_UNKNOWN18_OFFSET, message+NETWORK_SESSION_MESSAGE_ADD_PLAYER_UNKNOWN18_OFFSET,
+			NETWORK_SESSION_PLAYER_UNKNOWN18_SIZE);
+		*(long *)(player+NETWORK_SESSION_PLAYER_UNKNOWN138_OFFSET)=
+			*(const long *)(message+NETWORK_SESSION_MESSAGE_ADD_PLAYER_UNKNOWN138_OFFSET);
+	}
+	else
+	{
+		const struct network_session_peer_state *state=
+			(const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index;
+		byte answer[NETWORK_SESSION_MESSAGE_UNKNOWN1E_SIZE];
+
+		memset(answer, 0, sizeof(answer));
+		memcpy(answer, session+NETWORK_SESSION_IDENTIFIER_OFFSET, NETWORK_SESSION_IDENTIFIER_SIZE);
+		*(long *)(answer+NETWORK_SESSION_MESSAGE_PEER_PLAYER_OFFSET)=
+			*(const long *)(message+NETWORK_SESSION_MESSAGE_PEER_PLAYER_OFFSET);
+		memcpy(answer+NETWORK_SESSION_MESSAGE_IDENTIFIER_OFFSET, message+NETWORK_SESSION_MESSAGE_IDENTIFIER_OFFSET,
+			NETWORK_SESSION_PLAYER_IDENTIFIER_SIZE);
+		if (state->unknown1)
+		{
+			unknown_00075e80(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+				*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_unknown1E,
+				sizeof(answer), answer);
+		}
+	}
+
+	return TRUE;
+}
+
+/* 0x0005f230: another console of a session tells the console that runs it
+what the player at one of its four places is like now: the number and the
+first thing of 0x90 bytes of the player, and the number at its end, are
+what comes, and the two numbers that count what changes count one more if
+any of them was another. Whether what comes is from another console of a
+session that this one runs and the console has a player there */
+boolean NETWORK_SESSION_CALLBACK network_session_host_set_peer_player(
+	byte *session,
+	long channel,
+	const byte *message)
+{
+	long peer_index;
+	long peer_player_index;
+	long player_index;
+	byte *player;
+	boolean changed= FALSE;
+
+	if (!network_session_is_host(session))
+	{
+		return FALSE;
+	}
+	peer_index= network_session_channel_peer(session, channel);
+	if (peer_index==NONE || peer_index==*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET))
+	{
+		return FALSE;
+	}
+	peer_player_index= *(const long *)(message+NETWORK_SESSION_MESSAGE_PEER_PLAYER_OFFSET);
+	if (peer_player_index<0 || peer_player_index>=MAXIMUM_NETWORK_SESSION_PEER_PLAYERS)
+	{
+		return FALSE;
+	}
+	player_index= *(const long *)(session+NETWORK_SESSION_PEER_ARRAY_OFFSET+peer_index*NETWORK_SESSION_PEER_SIZE+
+		NETWORK_SESSION_PEER_PLAYERS_OFFSET+peer_player_index*sizeof(long));
+	if (player_index==NONE)
+	{
+		return FALSE;
+	}
+	player= session+NETWORK_SESSION_MEMBERSHIP_OFFSET+NETWORK_SESSION_MEMBERSHIP_PLAYER_ARRAY_OFFSET+
+		player_index*NETWORK_SESSION_PLAYER_SIZE;
+	if (*(const long *)(player+NETWORK_SESSION_PLAYER_UNKNOWN14_OFFSET)!=
+		*(const long *)(message+NETWORK_SESSION_MESSAGE_SET_PLAYER_UNKNOWN14_OFFSET))
+	{
+		*(long *)(player+NETWORK_SESSION_PLAYER_UNKNOWN14_OFFSET)=
+			*(const long *)(message+NETWORK_SESSION_MESSAGE_SET_PLAYER_UNKNOWN14_OFFSET);
+		changed= TRUE;
+	}
+	if (memcmp(player+NETWORK_SESSION_PLAYER_UNKNOWN18_OFFSET, message+NETWORK_SESSION_MESSAGE_SET_PLAYER_UNKNOWN18_OFFSET,
+		NETWORK_SESSION_PLAYER_UNKNOWN18_SIZE)!=0)
+	{
+		memcpy(player+NETWORK_SESSION_PLAYER_UNKNOWN18_OFFSET, message+NETWORK_SESSION_MESSAGE_SET_PLAYER_UNKNOWN18_OFFSET,
+			NETWORK_SESSION_PLAYER_UNKNOWN18_SIZE);
+		changed= TRUE;
+	}
+	if (*(const long *)(player+NETWORK_SESSION_PLAYER_UNKNOWN138_OFFSET)!=
+		*(const long *)(message+NETWORK_SESSION_MESSAGE_SET_PLAYER_UNKNOWN138_OFFSET))
+	{
+		*(long *)(player+NETWORK_SESSION_PLAYER_UNKNOWN138_OFFSET)=
+			*(const long *)(message+NETWORK_SESSION_MESSAGE_SET_PLAYER_UNKNOWN138_OFFSET);
+		changed= TRUE;
+	}
+	if (changed)
+	{
+		(*(long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET))++;
+		(*(long *)(session+NETWORK_SESSION_UNKNOWN7618_OFFSET))++;
+	}
+
+	return TRUE;
+}
