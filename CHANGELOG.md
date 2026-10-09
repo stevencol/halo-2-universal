@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Lo que el observador hace en cada vuelta
+
+Una función en `networking/network_observer.c`, de 151 bytes. De 1330
+funciones se pasa a 1331, el 11,82 % de las del juego (el 7,748 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_update` | `0x00075da0` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_observer_update` es **el paso del observador**, como
+  `network_session_update` lo es de la sesión (hito 357). Recorre sus quince
+  canales y, con cada uno que está en uso:
+  - si ninguna sesión lo usa ya y `unknown_00077580` lo confirma, lo deja
+    vacío (`network_observer_channel_delete`, hito 371);
+  - si sigue en uso, sigue su conexión
+    (`network_observer_channel_update_connection`, hito 371) y hace cuatro
+    cosas más que aún no están descompiladas.
+- Al final hace tres cosas con el observador entero, tampoco descompiladas
+  todavía.
+- Sirve de **mapa de lo que queda del observador**: las siete funciones que
+  llama y no están (`0x00076ff0`, `0x000773a0`, `0x00077480`,
+  `0x00077580`, `0x000776a0`, `0x000779f0`, `0x00078ac0`, `0x0007a4a0`)
+  quedan apuntadas con cómo se las llama.
+
+### Comprobado rompiendo líneas
+
+- Cuatro líneas rotas, una cada vez: las pruebas fallaron en las cuatro.
+
+### Sin comprobar
+
+- En las pruebas todo lo que llama está sustituido; lo que sustituye a
+  dejar vacío el canal lo deja de verdad sin uso la mayoría de las veces,
+  para comprobar que la función lo vuelve a mirar.
+- En este hito se pasaron las pruebas de `network_observer` (22 funciones).
+- La batería completa del hito 371 sigue corriendo.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Los últimos números de un canal
 
 Dos funciones en `networking/network_observer.c`, 246 bytes entre las dos. De 1328

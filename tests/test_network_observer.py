@@ -434,3 +434,39 @@ def run(t) -> None:
             globals=setup["globals"],
             externals=setup["externals"],
         )
+
+    # ---------- what the observer does each time
+
+    for n in range(300):
+        data = observer()
+        # which channels are let go of, the same each time that it is asked
+        going = random_.sample(range(15), random_.choice((0, 3, 8, 15)))
+
+        def goes(harness, arguments, going=going):
+            return arguments[0] in going, (arguments[0], harness.normalize(arguments[1]), arguments[2])
+
+        def gone(harness, arguments, really=random_.choice((True, True, False))):
+            # the channel is not in use any more, most of the time
+            if really:
+                harness.mu.mem_write(arguments[1] + CHANNELS + arguments[0] * CHANNEL, bytes(4))
+            return 0, (arguments[0], harness.normalize(arguments[1]))
+
+        def with_observer(harness, arguments):
+            return 0, (harness.normalize(arguments[0]),)
+
+        t.check(
+            "network_observer_update",
+            Buffer(bytes(data)),
+            externals={
+                "unknown_00077580": goes,
+                "network_observer_channel_delete": gone,
+                "network_observer_channel_update_connection": with_channel_and_observer,
+                "unknown_00076ff0": with_channel_and_observer,
+                "unknown_000776a0": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                "unknown_000773a0": with_channel_and_observer,
+                "unknown_00077480": with_channel_and_observer,
+                "unknown_000779f0": with_observer,
+                "unknown_00078ac0": with_observer,
+                "unknown_0007a4a0": with_observer,
+            },
+        )

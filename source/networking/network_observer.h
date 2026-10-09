@@ -162,6 +162,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_set_pending(long channel
 boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_alive(long channel_index, const byte *observer);
 long network_observer_channel_connect_status(const byte *observer, long channel_index);
 long network_unknown_00075910(const byte *unknown);
+void NETWORK_OBSERVER_CALLBACK network_observer_update(byte *observer);
 void network_window_add(struct network_window *window, long value);
 void NETWORK_OBSERVER_CALLBACK network_observer_unknown_00076810(byte *observer, long game_channel_index, long unknown4,
 	byte unknown8);

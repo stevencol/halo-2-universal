@@ -671,3 +671,52 @@ void NETWORK_OBSERVER_CALLBACK network_observer_unknown_00076810(
 		unknown_000797b0(observer, channel_index, unknown4);
 	}
 }
+
+/* 0x00077580: whether a channel of the observer that no session uses is to
+be let go of, with a number. 0x000773a0, 0x00077480: two more things that are
+done with a channel each time. 0x000779f0, 0x00078ac0, 0x0007a4a0: three
+things that are done with the observer each time, after its channels */
+boolean unknown_00077580(long channel_index, byte *observer, long unknown);
+void __attribute__((stdcall)) unknown_000773a0(long channel_index, byte *observer);
+void unknown_00077480(long channel_index, byte *observer);
+void unknown_000779f0(byte *observer);
+void __attribute__((stdcall)) unknown_00078ac0(byte *observer);
+void unknown_0007a4a0(byte *observer);
+
+/* 0x00075da0: what the observer does each time. Each channel that is in
+use: if no session uses it and unknown_00077580 says so, it is no more
+(network_observer_channel_delete); and if it still is in use, it follows its
+connection (network_observer_channel_update_connection) and unknown_00076ff0,
+unknown_000776a0, unknown_000773a0 and unknown_00077480 are done with it. Then
+unknown_000779f0, unknown_00078ac0 and unknown_0007a4a0, with the observer */
+void NETWORK_OBSERVER_CALLBACK network_observer_update(
+	byte *observer)
+{
+	long channel_index;
+
+	for (channel_index= 0; channel_index<MAXIMUM_NETWORK_OBSERVER_CHANNELS; channel_index++)
+	{
+		const byte *channel= network_observer_channel(observer, channel_index);
+
+		if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)==0)
+		{
+			continue;
+		}
+		if (!channel[NETWORK_OBSERVER_CHANNEL_SESSIONS_OFFSET] &&
+			unknown_00077580(channel_index, observer, NETWORK_OBSERVER_CHANNEL_DELETED_REASON))
+		{
+			network_observer_channel_delete(channel_index, observer);
+		}
+		if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)!=0)
+		{
+			network_observer_channel_update_connection(channel_index, observer);
+			unknown_00076ff0(channel_index, observer);
+			unknown_000776a0(observer, channel_index);
+			unknown_000773a0(channel_index, observer);
+			unknown_00077480(channel_index, observer);
+		}
+	}
+	unknown_000779f0(observer);
+	unknown_00078ac0(observer);
+	unknown_0007a4a0(observer);
+}
