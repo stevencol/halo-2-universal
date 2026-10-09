@@ -464,6 +464,15 @@ enum
 	NETWORK_SESSION_MESSAGE_MEMBERSHIP_UPDATE_SIZE= 0x489C,
 	_network_session_message_parameters_update= 0x21,
 	NETWORK_SESSION_MESSAGE_PARAMETERS_UPDATE_SIZE= 0x14D8,
+	/* more of what the session has from its state on in the seventh: when
+	it told the console that it has chosen. A number of a console that has
+	a bit for each console that it has something to do with. And two kinds
+	of what is sent there: to all, which console is chosen (as the kind
+	0x10 says it); and to that one, with only what the session is known by */
+	NETWORK_SESSION_STATE_DATA_UNKNOWN20_OFFSET= 0x7440,
+	NETWORK_SESSION_PEER_UNKNOWN9C_OFFSET= 0x9C,
+	_network_session_message_unknownF= 0xF,
+	_network_session_message_unknown11= 0x11,
 	_network_session_message_unknown12= 0x12,
 	/* the first thing of a channel when it is 1 */
 	_network_session_unknown8_channel_state1= 1,
@@ -746,6 +755,7 @@ void network_session_send_unknown12(byte *session);
 void NETWORK_SESSION_CALLBACK network_session_enter_state8(byte *session, boolean unknown);
 void network_session_send_membership_updates(byte *session);
 void network_session_send_parameters_updates(byte *session);
+void NETWORK_SESSION_CALLBACK network_session_state7_update(byte *session);
 void network_session_state8_update(byte *session);
 void network_session_update(byte *session);
 boolean network_session_remove_peer_with_message_c(byte *session, long peer_index);

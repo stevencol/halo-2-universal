@@ -5369,3 +5369,185 @@ void network_session_update(
 		network_session_send_parameters_updates(session);
 	}
 }
+
+/* 0x000619b0: whether, of two consoles of those that are in a session, the
+second is better than the first to run it */
+boolean __attribute__((stdcall)) unknown_000619b0(long best, long candidate, const byte *peers, long peer_count);
+
+/* 0x004cf4b8: how long a session in its seventh state waits with no console
+chosen before it gives up, in milliseconds. 0x004cf4b4: how long it waits for
+the consoles to answer about the one that is chosen. 0x004cf4bc: how long it
+waits for the one that is chosen once it has told it */
+long unknown_004cf4b8;
+long unknown_004cf4b4;
+long unknown_004cf4bc;
+
+/* the console that a session in its seventh state has chosen; NONE with
+none */
+static inline __attribute__((always_inline)) long network_session_state7_chosen(
+	const byte *session)
+{
+	return *(const long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWNC_OFFSET);
+}
+
+/* 0x00061ac0: what a session does again and again in its seventh state, in
+which the console that runs it looks for another to run it.
+
+With no console chosen: of those that have their bit at 0x4 and have who is
+in the session and what it knows as they are now (and, without the first
+byte of the state, whose number at 0x9C is a bit for each console), the best
+is chosen, as unknown_000619b0 says; without that byte this console counts too, and
+if it is the best none is chosen. The one that is chosen loses its bit. The
+state is over if no console has its bit, or if this console is the best and
+all those that have their bit were looked at.
+
+With a console chosen: the others are sent something of the kind 0xF that
+says which, once; when all have answered (the bits at 0x18), or after
+unknown_004cf4b4 milliseconds if the one that is chosen has, that one is sent
+something of the kind 0x11 and is the console at 0x44; if it has not
+answered by then, or unknown_004cf4bc milliseconds after it is sent that,
+there is none chosen any more (network_session_unknown_00061950). With none
+chosen, the state is over too after unknown_004cf4b8 milliseconds.
+
+When the state is over the session goes into its fifth state, and with the
+first byte that the state had it is left (network_session_leave with 1) */
+void NETWORK_SESSION_CALLBACK network_session_state7_update(
+	byte *session)
+{
+	boolean done= FALSE;
+
+	if (network_session_state7_chosen(session)==NONE)
+	{
+		if (*(const unsigned long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN4_OFFSET)==0)
+		{
+			done= TRUE;
+		}
+		else
+		{
+			long best= session[NETWORK_SESSION_STATE_DATA_OFFSET] ? NONE :
+				*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET);
+			unsigned long looked_at= 0;
+			long peer_index;
+
+			for (peer_index= 0; peer_index<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET); peer_index++)
+			{
+				const struct network_session_peer_state *state=
+					(const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index;
+				unsigned long bit= 1u<<peer_index;
+
+				if (!(*(const unsigned long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN4_OFFSET)&bit) ||
+					state->unknown8!=*(const long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET) ||
+					state->unknownC!=*(const long *)(session+NETWORK_SESSION_UNKNOWN4978_OFFSET))
+				{
+					continue;
+				}
+				if (!session[NETWORK_SESSION_STATE_DATA_OFFSET] &&
+					*(const unsigned long *)(session+NETWORK_SESSION_PEER_ARRAY_OFFSET+peer_index*NETWORK_SESSION_PEER_SIZE+
+						NETWORK_SESSION_PEER_UNKNOWN9C_OFFSET)!=
+					(1u<<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET))-1)
+				{
+					continue;
+				}
+				looked_at|= bit;
+				if (best==NONE || unknown_000619b0(best, peer_index, session+NETWORK_SESSION_PEER_ARRAY_OFFSET,
+					*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET)))
+				{
+					best= peer_index;
+				}
+			}
+			if (best!=*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET))
+			{
+				if (best!=NONE)
+				{
+					unsigned long peers= *(const unsigned long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN4_OFFSET);
+
+					*(long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWNC_OFFSET)= best;
+					*(unsigned long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN4_OFFSET)= peers&~(1u<<best);
+				}
+			}
+			else if (looked_at==*(const unsigned long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN4_OFFSET))
+			{
+				done= TRUE;
+			}
+		}
+	}
+	if (network_session_state7_chosen(session)==NONE)
+	{
+		if (network_session_time()-*(const long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN8_OFFSET)>=unknown_004cf4b8)
+		{
+			done= TRUE;
+		}
+	}
+	else
+	{
+		if (!session[NETWORK_SESSION_STATE_DATA_UNKNOWN10_OFFSET])
+		{
+			long chosen= network_session_state7_chosen(session);
+			byte message[NETWORK_SESSION_MESSAGE_UNKNOWN10_SIZE];
+
+			memset(message, 0, sizeof(message));
+			memcpy(message, session+NETWORK_SESSION_IDENTIFIER_OFFSET, NETWORK_SESSION_IDENTIFIER_SIZE);
+			*(short *)(message+NETWORK_SESSION_MESSAGE_PEER_INDEX_OFFSET)= (short)chosen;
+			memcpy(message+NETWORK_SESSION_MESSAGE_PEER_ADDRESS_OFFSET,
+				session+NETWORK_SESSION_PEER_ARRAY_OFFSET+chosen*NETWORK_SESSION_PEER_SIZE, NETWORK_SESSION_ADDRESS_SIZE);
+			network_session_send_to_peers(_network_session_send_unknown0, session, _network_session_message_unknownF,
+				sizeof(message), message);
+			session[NETWORK_SESSION_STATE_DATA_UNKNOWN10_OFFSET]= TRUE;
+			*(long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN14_OFFSET)= network_session_time();
+			*(unsigned long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN18_OFFSET)=
+				1u<<*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET);
+		}
+		if (!session[NETWORK_SESSION_STATE_DATA_UNKNOWN1C_OFFSET])
+		{
+			long since= *(const long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN14_OFFSET);
+			long now= network_session_time();
+			unsigned long answered= *(const unsigned long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN18_OFFSET);
+			boolean tell= answered==(1u<<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET))-1;
+
+			if (!tell && now-since>=unknown_004cf4b4)
+			{
+				if (answered&(1u<<network_session_state7_chosen(session)))
+				{
+					tell= TRUE;
+				}
+				else
+				{
+					network_session_unknown_00061950(network_session_state7_chosen(session), session);
+				}
+			}
+			if (tell)
+			{
+				const struct network_session_peer_state *state=
+					(const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+
+					network_session_state7_chosen(session);
+				byte identifier[NETWORK_SESSION_IDENTIFIER_SIZE];
+
+				memcpy(identifier, session+NETWORK_SESSION_IDENTIFIER_OFFSET, sizeof(identifier));
+				if (state->unknown1)
+				{
+					unknown_00075e80(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+						*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_unknown11,
+						sizeof(identifier), identifier);
+				}
+				session[NETWORK_SESSION_STATE_DATA_UNKNOWN1C_OFFSET]= TRUE;
+				*(long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN20_OFFSET)= network_session_time();
+				*(long *)(session+NETWORK_SESSION_UNKNOWN44_OFFSET)= network_session_state7_chosen(session);
+			}
+		}
+		if (session[NETWORK_SESSION_STATE_DATA_UNKNOWN1C_OFFSET] &&
+			network_session_time()-*(const long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN20_OFFSET)>=unknown_004cf4bc)
+		{
+			network_session_unknown_00061950(network_session_state7_chosen(session), session);
+		}
+	}
+	if (done)
+	{
+		boolean leave= session[NETWORK_SESSION_STATE_DATA_OFFSET];
+
+		network_session_enter_state5(session);
+		if (leave)
+		{
+			network_session_leave(session, TRUE);
+		}
+	}
+}

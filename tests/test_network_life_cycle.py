@@ -2676,3 +2676,59 @@ def run(t) -> None:
                 "network_session_send_parameters_updates": then(),
             },
         )
+
+    # ---------- the seventh state: the console that runs a session looks for another to run it
+
+    LIMITS = (0, 1000, 1000, 30000, 0x7FFFFFFF)
+    AGO = (0, 1, 999, 1000, 1001, 29999, 30001)
+
+    for n in range(1200):
+        data = with_real_channels()
+        count = struct.unpack_from("<I", data, 0x54)[0]
+        everyone = (1 << count) - 1
+        local = random_.randrange(count)
+        struct.pack_into("<I", data, STATE, 7)
+        struct.pack_into("<I", data, LOCAL_PEER, local)
+        struct.pack_into("<I", data, MEMBERSHIP, 7)
+        struct.pack_into("<I", data, 0x4978, 9)
+        for peer in range(16):
+            at = 0x72DC + peer * 0x14
+            struct.pack_into("<II", data, at + 8, random_.choice((7, 7, 7, 6)), random_.choice((9, 9, 9, NONE)))
+            struct.pack_into("<I", data, PEERS + peer * PEER + 0x9C, random_.choice((everyone, everyone, everyone, everyone >> 1, 0xFFFF)))
+        chosen = random_.choice((NONE, NONE, random_.randrange(count)))
+        data[0x7420] = random_.choice((0, 0, 1, 0x80))
+        struct.pack_into("<I", data, 0x7424, random_.choice((0, random_.getrandbits(16) & everyone, random_.getrandbits(16) & everyone, everyone)))
+        struct.pack_into("<I", data, 0x742C, chosen)
+        data[0x7430] = random_.choice((0, 1, 1))
+        struct.pack_into("<I", data, 0x7438, random_.choice((everyone, everyone, 0, random_.getrandbits(16) & everyone, 1 << (chosen & 15))))
+        data[0x743C] = random_.choice((0, 0, 1))
+        now = random_.getrandbits(32)
+        for at in (0x7428, 0x7434, 0x7440):
+            struct.pack_into("<I", data, at, (now - random_.choice(AGO)) & 0xFFFFFFFF)
+        t.check(
+            "network_session_state7_update",
+            Buffer(bytes(data), pointers=(8,)),
+            globals={
+                "unknown_00510548": bytes((random_.choice((0, 0, 1)),)),
+                "unknown_0051054c": struct.pack("<I", now),
+                "unknown_004cf4b4": struct.pack("<I", random_.choice(LIMITS)),
+                "unknown_004cf4b8": struct.pack("<I", random_.choice(LIMITS)),
+                "unknown_004cf4bc": struct.pack("<I", random_.choice(LIMITS)),
+            },
+            externals={
+                "GetTickCount": lambda harness, arguments, now=now: now,
+                # which of two consoles is the better one, the same each time that it is asked
+                "unknown_000619b0": lambda harness, arguments, salt=random_.randrange(8): (
+                    ((arguments[0] * 5 + arguments[1] * 3 + salt) >> 1) & 1,
+                    (arguments[0], arguments[1], harness.normalize(arguments[2]), arguments[3]),
+                ),
+                "network_session_send_to_peers": lambda harness, arguments: (
+                    0,
+                    (arguments[0], harness.normalize(arguments[1]), arguments[2], arguments[3], bytes(harness.mu.mem_read(arguments[4], 0x2E))),
+                ),
+                "network_session_unknown_00061950": takes_out,
+                "unknown_00075e80": sends_all,
+                "network_session_enter_state5": then(),
+                "network_session_leave": leaves,
+            },
+        )

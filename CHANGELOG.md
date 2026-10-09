@@ -2,6 +2,63 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — El séptimo estado: buscar otra consola que lleve la sesión
+
+Una función en `networking/network_session.c`, de 828 bytes. De 1298
+funciones se pasa a 1299, el 11,53 % de las del juego (el 7,292 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_state7_update` | `0x00061ac0` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_state7_update` es lo que la sesión repite en su séptimo
+  estado: la consola que la lleva **busca a otra para pasarle la sesión**
+  (lo que pasa cuando el anfitrión se va y la partida sigue). Va por pasos:
+  1. **Elegir.** De las consolas candidatas (los bits de `0x7424`) que ya
+     tienen al día «quién está» y «lo que la sesión sabe», se queda con la
+     mejor; cuál es mejor de dos lo dice `unknown_000619b0`, que aún no
+     está descompilada. Si el estado no empezó con su primer byte, esta
+     consola también cuenta, y si resulta la mejor no se elige a ninguna.
+     Sin ese byte solo valen las consolas cuyo número de `0x9C` tiene un
+     bit por cada consola de la sesión.
+  2. **Avisar a todas** con un mensaje de la clase `0xF` de cuál es la
+     elegida (una sola vez), y apuntar la hora.
+  3. **Esperar las respuestas** (los bits de `0x7438`, que pone
+     `network_session_unknown_0005e340`, hito 349). Cuando han contestado
+     todas, o a los `unknown_004cf4b4` milisegundos si ha contestado la
+     elegida, **se lo dice a la elegida** con un mensaje `0x11`, y la
+     apunta en `0x44`.
+  4. Si la elegida no contesta a tiempo (`unknown_004cf4b4`, o
+     `unknown_004cf4bc` después del mensaje `0x11`), se descarta y se
+     vuelve a elegir (`network_session_unknown_00061950`).
+- El estado se acaba, y la sesión vuelve al quinto, cuando no quedan
+  candidatas, cuando esta consola es la mejor, o a los `unknown_004cf4b8`
+  milisegundos sin ninguna elegida. Si el estado empezó con su primer byte,
+  además la consola se sale de la sesión.
+- Encaja con lo ya descompilado: `0xF` → `0x10` (hito 352) → respuestas →
+  `0x11` → `0x13` y `0x14` (hito 354).
+- El número de `0x9C` de cada consola parece decir **con qué consolas
+  tiene trato**; es el primero de los cuatro de `unknown74` de lo que la
+  sesión sabe de ella.
+
+### Comprobado rompiendo líneas
+
+- Diez líneas rotas a mano, una cada vez (comparaciones de tiempo, lo que
+  se apunta, lo que se manda y cómo se elige): las pruebas fallaron en las
+  diez.
+
+### Sin comprobar
+
+- `unknown_000619b0` está sustituida en las pruebas por algo que contesta
+  siempre lo mismo a la misma pregunta.
+- En este hito se pasaron las pruebas de `network_life_cycle` (206
+  funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353 y 355 están pendientes.
+
 ## 2026-10-08 — Lo que la sesión hace en cada vuelta
 
 Dos funciones en `networking/network_session.c`, 590 bytes entre las dos. De 1296
