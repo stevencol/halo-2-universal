@@ -2,6 +2,74 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Lo que un canal hace cada vez, y cómo escribe un paquete
+
+Dos funciones en `networking/network_channel.c`, 1573 bytes entre las dos. De 1426
+funciones se pasa a 1428, el 12,68 % de las del juego (el 8,584 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_channel_update` | `0x000883c0` | `networking/network_channel.c` |
+| `network_channel_write_packet` | `0x00088980` | `networking/network_channel.c` |
+
+### Cambio en la forma de trabajar
+
+- Desde este hito, por acuerdo con el usuario, para ir más deprisa: cada
+  función entra con su prueba contra el juego, como siempre, pero **romper
+  líneas se hace por tandas**, no en cada hito. Lo que se encuentre luego
+  se corrige en un hito de corrección.
+
+### Lo que se sabe
+
+- `network_channel_update` es lo que se hace cada vez con un canal:
+  - Si está pidiendo conexión, sigue intentándolo (hito 407). Si lleva en
+    el cuarto estado más de lo que dice el cuarto número de lo que tiene
+    en `0xC` (que no se conocía), se cierra con el motivo 7.
+  - Cada pieza de la clase `0x10` dice si el canal debe cerrarse, y por
+    qué. Con la primera que lo dice, se cierra.
+  - Cada pieza que escribe dice si tiene algo que mandar y si es urgente.
+    Con eso **el observador decide si el canal puede mandar ahora** (la
+    función del hito 401) y da el tamaño y lo que la voz tiene para esa
+    consola. Sin observador, se manda si alguna pieza tiene algo.
+  - Se escribe y se manda el paquete, se apuntan las horas, y se atiende
+    lo que le ha pasado a la pieza principal (hito 411).
+- `network_channel_write_packet` escribe el paquete, y es el reverso de la
+  lectura del hito 414:
+  - Con número, se lo pide a la pieza principal (`unknown_00096510`); si
+    no hay, no se manda nada.
+  - Cada pieza dice cuántos bits necesita como poco. Si caben todas, cada
+    una escribe lo suyo, sabiendo lo que las demás no necesitan.
+  - **Si el canal quería más caudal del que tiene, el paquete se rellena
+    con ceros hasta el final.** Es lo que la lectura tiraba sin mirar:
+    relleno para medir si la línea aguanta más.
+  - Se manda (`unknown_000931a0`) con la voz, y se avisa del tamaño a la
+    pieza principal (`unknown_00096810`) y al observador (hito 412).
+- Con esto se conoce la tabla de una pieza entera salvo la primera
+  función: ¿cerrar?, ¿tienes algo?, ¿cuántos bits?, escribe, lee, y los
+  dos avisos.
+
+### Corregido
+
+- En el hito 413 quité de `ESTADO.md` dos funciones pendientes del módulo
+  que no están hechas: `0x00088060` y `0x000893c0`. Vuelven a la lista.
+- Las pruebas del módulo podían fallar por casualidad: una hora al azar
+  que coincidiera con la dirección de una función se tomaba por ella. Ya
+  no se eligen esas horas.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos funciones.** De
+  `network_channel_update` se rompieron doce líneas antes de parar: once
+  notadas, y la otra (el motivo de cierre empieza en cero) ya tiene su
+  caso en las pruebas.
+- El relleno se escribe en `0x600` bytes de ceros: un paquete mayor se
+  saldría. No se prueba, y el juego no los hace mayores.
+- En este hito se pasaron las pruebas de `network_channel` (25 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Leer un paquete que llega por un canal
 
 Una función en `networking/network_channel.c`, de 544 bytes. De 1425

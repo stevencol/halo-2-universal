@@ -29,6 +29,9 @@ def run(t) -> None:
 
     def at_time() -> dict:
         now = random_.getrandbits(32)
+        # not a number that is the address of a function of source/, which would be taken for one
+        while 0x20000000 <= now < 0x21000000:
+            now = random_.getrandbits(32)
         return {
             "globals": {
                 "unknown_00510548": bytes((random_.choice((0, 0, 1)),)),
@@ -569,5 +572,257 @@ def run(t) -> None:
             mocks=[
                 Mock(lambda call: 0, stack_arguments=2, registers=("ecx",)),
                 Mock(reads, stack_arguments=2, registers=("ecx",), record=read_record),
+            ],
+        )
+
+    # ---------- what is done each time with a channel
+
+    for n in range(2000):
+        setup = at_time()
+        now = setup["externals"]["GetTickCount"](None, None)
+        data = channel()
+        struct.pack_into("<II", data, 0x10, random_.randrange(3), random_.randrange(3))
+        data[0x48] = random_.choice((0, 8, 8, 0x18, 0x10, 0xFF, 0xE7))
+        struct.pack_into("<i", data, 0x54, random_.choice((0, 2, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6)))
+        data[0x84] = random_.choice((0, 1, 1, 0x80))
+        # how long it has been in its fourth state, by what it has at 0xC: just enough, or not
+        timeout = random_.choice((0, 100, 5000))
+        struct.pack_into("<I", data, 0x94, (now - timeout - random_.choice((-1, 0, 0, 1, 1, 1000))) & 0xFFFFFFFF)
+        struct.pack_into("<I", data, 0x88, (now - random_.choice((0, 50, 5000))) & 0xFFFFFFFF)
+        struct.pack_into("<I", data, 0x8C, (now - random_.choice((-50, 0, 50))) & 0xFFFFFFFF)
+        struct.pack_into("<i", data, 0x90, random_.choice((0, 1, 5)))
+        pointers = [0xC]
+        # after the channel: what it has at 0xC, its observer and its table, the table of the things, and four things.
+        # Each thing has, after its functions: whether the channel is to stop and why, and whether it has something to
+        # send and whether that is urgent
+        tries, owner, owner_table, part_table, parts = (len(data) + offset for offset in (0, 0x10, 0x14, 0x2C, 0x4C))
+        struct.pack_into("<I", data, 0xC, tries)
+        tail = struct.pack("<4i", random_.choice((10, 100)), random_.choice((1, 3)), random_.choice((1000, 10000)), timeout)
+        tail += struct.pack("<I", owner_table)
+        tail += struct.pack("<6I", 0x11, 0x22, 0x33, 0x44, 0x55, mock_address(0))
+        tail += struct.pack("<8I", 0x11, mock_address(1), mock_address(2), 0x44, 0x55, 0x66, 0x77, 0x88)
+        pointers.append(owner)
+        stops = random_.choice((0, 0, 0, 1))
+        for place in range(4):
+            pointers.append(parts + place * 0x14)
+            tail += struct.pack(
+                "<5I",
+                part_table,
+                random_.choice((0, 0, 0, 1, 0x100)) if stops else 0,
+                random_.choice((6, 9, 0x11, NONE, random_.getrandbits(32))),
+                random_.choice((0, 0, 1, 0x100)),
+                random_.choice((0, 0, 1, 0x100)),
+            )
+        if random_.random() < 0.7:
+            struct.pack_into("<I", data, 0x40, owner)
+            pointers.append(0x40)
+        else:
+            struct.pack_into("<I", data, 0x40, 0)
+        struct.pack_into("<i", data, 0x20, random_.choice((0, 1, 2, 3)))
+        kinds = (1, 1, 0, 0x10, 0x11, 0x21, 0x20, 0x31, 0x19)
+        for place in range(3):
+            struct.pack_into("<II", data, 0x24 + place * 8, random_.choice(kinds), parts + random_.randrange(4) * 0x14)
+            pointers.append(0x24 + place * 8 + 4)
+        if random_.random() < 0.6:
+            second = len(data) + len(tail)
+            struct.pack_into("<I", data, 0x3C, second)
+            pointers.append(0x3C)
+            tail += struct.pack("<B3x3I", 1, random_.getrandbits(32), mock_address(3), random_.choice((0, 1, 2, 4)))
+            for place in range(4):
+                tail += struct.pack("<II", random_.choice(kinds), parts + random_.randrange(4) * 0x14)
+                pointers.append(second + 0x10 + place * 8 + 4)
+            tail += bytes((random_.choice((0, 1)), random_.choice((0, 0, 1, 2)), 0, 0))
+        else:
+            struct.pack_into("<I", data, 0x3C, 0)
+        data += tail
+
+        def stops_(call):
+            # one of the channel's things says whether the channel is to stop, and why
+            mu = t.harness.mu
+            stop, reason = struct.unpack("<2I", mu.mem_read(call.registers["ecx"] + 4, 8))
+            # with NONE it gives no reason: the one that there was is the one
+            if stop and reason != NONE:
+                mu.mem_write(call.stack[0], struct.pack("<I", reason))
+            return stop
+
+        def has(call):
+            # and whether it has something to send, and whether that is urgent: a byte, written only when it is
+            mu = t.harness.mu
+            something, urgent = struct.unpack("<2I", mu.mem_read(call.registers["ecx"] + 0xC, 8))
+            if urgent:
+                mu.mem_write(call.stack[0], b"\x01")
+            return something
+
+        def can_send(
+            call,
+            can=random_.choice((0, 1, 1, 1, 0x100)),
+            unknown10=random_.choice((0, 0, 1)),
+            wanted=random_.choice((0, 1)),
+            size=random_.choice((0x30, 0x100, 0x516)),
+            voice_size=random_.choice((0, 0, 1, 0x80, NONE)),
+            voice=random_.randbytes(0x200),
+        ):
+            # the observer says whether the channel can send, and gives the rest
+            mu = t.harness.mu
+            mu.mem_write(call.stack[4], bytes((unknown10,)))
+            mu.mem_write(call.stack[5], bytes((wanted,)))
+            mu.mem_write(call.stack[6], struct.pack("<I", size))
+            mu.mem_write(call.stack[7], struct.pack("<I", voice_size))
+            mu.mem_write(call.stack[9], voice)
+            return can
+
+        def can_send_record(call):
+            # the three bytes are the low ones of what is in the stack, and the rest are places in it
+            return call.registers["ecx"], call.stack[0], call.stack[1] & 0xFF, call.stack[2] & 0xFF, call.stack[3] & 0xFF, call.stack[8]
+
+        def writes(harness, arguments):
+            # the stream that the packet is written in is in the stack, and so are the three numbers: a byte of each
+            mu = harness.mu
+            stream_ = bytes(mu.mem_read(arguments[2], 0x1C))
+            return 0, (
+                arguments[0] & 0xFF,
+                harness.normalize(arguments[1]),
+                stream_[4:0x15],
+                stream_[0x18:0x1C],
+                arguments[3] & 0xFF,
+                arguments[4],
+                bytes(mu.mem_read(arguments[5], 0x200)) if arguments[5] else None,
+                *(bytes(mu.mem_read(arguments[place], 1)) for place in (6, 7, 8)),
+            )
+
+        t.check(
+            "network_channel_update",
+            Buffer(bytes(data), pointers=tuple(pointers)),
+            globals=dict(
+                setup["globals"],
+                unknown_004d87d8=Buffer(random_.randbytes(3 * OWN)),
+                unknown_004d87dc=Buffer(random_.randbytes(3 * OTHER)),
+            ),
+            externals=dict(
+                setup["externals"],
+                network_message_gateway_send=lambda harness, arguments: (
+                    0,
+                    (arguments[0], harness.normalize(arguments[1]), arguments[2], arguments[3], bytes(harness.mu.mem_read(arguments[4], arguments[3]))),
+                ),
+                unknown_00092e00=lambda harness, arguments: (1, (arguments[0], arguments[1])),
+                network_channel_write_packet=writes,
+                unknown_00096ce0=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                unknown_000965e0=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+            ),
+            mocks=[
+                Mock(can_send, stack_arguments=10, registers=("ecx",), record=can_send_record),
+                Mock(stops_, stack_arguments=1, registers=("ecx",), record=lambda call: (call.registers["ecx"],)),
+                Mock(has, stack_arguments=1, registers=("ecx",), record=lambda call: (call.registers["ecx"],)),
+                Mock(lambda call: 0, stack_arguments=1),
+            ],
+        )
+
+    # ---------- a channel writes a packet, and sends it
+
+    for n in range(2000):
+        setup = at_time()
+        data = channel()
+        struct.pack_into("<II", data, 0x10, random_.randrange(3), random_.randrange(3))
+        pointers = []
+        size = random_.choice((1, 5, 8, 0x10, 0x30, 0x33, 0x100, 0x516, 0x600))
+        bits = size * 8
+        crafted = random_.random() < 0.5
+        # after the channel: its observer and its table, the table of the things, and four things. Each thing has,
+        # after its functions: the bits that it says that it needs, how many more than it is given it writes, and what
+        # it says when it has written
+        owner, owner_table, part_table, parts = (len(data) + offset for offset in (0, 4, 0x14, 0x34))
+        tail = struct.pack("<I", owner_table)
+        tail += struct.pack("<4I", mock_address(0), 0x22, 0x33, 0x44)
+        tail += struct.pack("<8I", 0x11, 0x22, 0x33, mock_address(1), mock_address(2), 0x66, 0x77, 0x88)
+        pointers.append(owner)
+        for place in range(4):
+            pointers.append(parts + place * 0x10)
+            if crafted:
+                # one thing, that leaves so many bits
+                needs = max(bits - random_.choice((0, 1, 2, 15, 16, 17, 18, 100)), 0)
+                more = random_.choice((0, 0, 0, 0, 1, 2, -1 & 0xFFFFFFFF))
+            else:
+                needs = random_.choice((0, 0, 1, 8, 13, 64, bits // 4, bits // 2, bits - 1, bits, NONE))
+                more = random_.choice((0, 0, 0, 0, 1, 8, 64, -1 & 0xFFFFFFFF))
+            tail += struct.pack("<4I", part_table, needs, more, random_.choice((0, 0, 1, 0x100)))
+        if random_.random() < 0.85:
+            struct.pack_into("<I", data, 0x40, owner)
+            pointers.append(0x40)
+        else:
+            struct.pack_into("<I", data, 0x40, 0)
+        kinds = (1, 1, 1, 0, 4, 0x19, 0x31, 0x30)
+        struct.pack_into("<i", data, 0x20, 1 if crafted else random_.choice((0, 1, 2, 3)))
+        for place in range(3):
+            struct.pack_into("<II", data, 0x24 + place * 8, 1 if crafted else random_.choice(kinds), parts + random_.randrange(4) * 0x10)
+            pointers.append(0x24 + place * 8 + 4)
+        if not crafted and random_.random() < 0.6:
+            second = len(data) + len(tail)
+            struct.pack_into("<I", data, 0x3C, second)
+            pointers.append(0x3C)
+            tail += struct.pack("<B3x3I", 1, random_.getrandbits(32), 0x99, random_.choice((0, 1, 2, 4)))
+            for place in range(4):
+                tail += struct.pack("<II", random_.choice(kinds), parts + random_.randrange(4) * 0x10)
+                pointers.append(second + 0x10 + place * 8 + 4)
+            tail += bytes((random_.choice((0, 1)), random_.choice((0, 0, 1, 2)), 0, 0))
+        else:
+            struct.pack_into("<I", data, 0x3C, 0)
+        data += tail
+        header = struct.pack("<I4iB3x7i", 0x34, size, random_.choice((1, 8, 3)), random_.choice((0, 1, 3)), random_.getrandbits(8), random_.choice((0, 1)), *(random_.getrandbits(8) for bit in range(7)))
+        stream = Buffer(header + random_.randbytes(size) + random_.randbytes(8), pointers=(0,))
+
+        def needs_(call):
+            return struct.unpack("<I", t.harness.mu.mem_read(call.registers["ecx"] + 4, 4))[0]
+
+        def writes_(call):
+            # the thing writes its bits, and some more or one less: the stream goes on
+            mu = t.harness.mu
+            more_, said = struct.unpack("<2I", mu.mem_read(call.registers["ecx"] + 8, 8))
+            position = struct.unpack("<I", mu.mem_read(call.stack[1] + 0x10, 4))[0]
+            mu.mem_write(call.stack[1] + 0x10, struct.pack("<I", (position + call.stack[2] + more_) & 0xFFFFFFFF))
+            return said
+
+        def number(harness, arguments, number_=random_.choice((NONE, 0, 1, 7, random_.getrandbits(31)))):
+            return number_, (harness.normalize(arguments[0]), arguments[1])
+
+        def sends(harness, arguments, sent_=random_.choice((0, 0, 1, 0x40, NONE))):
+            # the packet is what the stream has, of the size that it has now
+            mu = harness.mu
+            stream_ = bytes(mu.mem_read(arguments[1], 0x34))
+            size_ = struct.unpack_from("<i", stream_, 4)[0]
+            mu.mem_write(arguments[5], struct.pack("<I", sent_))
+            return 0, (
+                arguments[0],
+                harness.normalize(arguments[1]),
+                stream_[4:0x15],
+                bytes(mu.mem_read(arguments[1] + 0x34, max(min(size_, size + 8), 0))),
+                arguments[2],
+                arguments[3],
+                arguments[4],
+            )
+
+        t.check(
+            "network_channel_write_packet",
+            random_.choice((0, 1, 1)),
+            Buffer(bytes(data), pointers=tuple(pointers)),
+            stream,
+            random_.choice((0, 1, 1, 0x100)),
+            random_.choice((0, 1, 0x80, NONE)),
+            random_.getrandbits(32),
+            *(Buffer(random_.randbytes(4)) if random_.random() < 0.8 else 0 for place in range(3)),
+            globals=dict(
+                setup["globals"],
+                unknown_004d87d8=Buffer(random_.randbytes(3 * OWN)),
+                unknown_004d87dc=Buffer(random_.randbytes(3 * OTHER)),
+            ),
+            externals=dict(
+                setup["externals"],
+                unknown_00096510=number,
+                unknown_00096810=lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]), arguments[2])),
+                unknown_000931a0=sends,
+            ),
+            mocks=[
+                Mock(lambda call: 0, stack_arguments=3, registers=("ecx",), record=lambda call: (call.registers["ecx"], call.stack[0], call.stack[1], call.stack[2] & 0xFF)),
+                Mock(needs_, stack_arguments=2, registers=("ecx",)),
+                Mock(writes_, stack_arguments=4, registers=("ecx",)),
             ],
         )

@@ -705,19 +705,25 @@ the old processor's instructions, in place */
 long lrintf(float value);
 
 /* what a channel is of an observer by: something with functions, of which
-the second is told that a packet came by a channel, the third that something
+the first is told that a channel sent something of a size, the second that a packet came by a channel, the third that something
 of a size did, and the fourth that something of a channel was answered, or
-was not */
+was not; and the sixth says whether a channel can send a packet now, as
+network_observer_game_channel_can_send does */
 struct network_channel_owner;
 
 struct network_channel_owner_functions
 {
-	void *unknown0;
+	void (__attribute__((thiscall)) *sent)(struct network_channel_owner *owner, long channel_index, long size,
+		boolean unknown);
 	void (__attribute__((thiscall)) *read)(struct network_channel_owner *owner, long channel_index, long unknown);
 	void (__attribute__((thiscall)) *received)(struct network_channel_owner *owner, long channel_index, long unknown4,
 		long unknown8);
 	void (__attribute__((thiscall)) *answered)(struct network_channel_owner *owner, long channel_index, boolean answered,
 		boolean in_time);
+	void *unknown10;
+	boolean (__attribute__((thiscall)) *can_send)(struct network_channel_owner *owner, long channel_index,
+		boolean unknown4, boolean unknown8, boolean unknownC, boolean *unknown10, boolean *wanted, long *size,
+		long *voice_size, long maximum_voice_size, byte *voice_packet);
 };
 
 struct network_channel_owner
@@ -726,13 +732,22 @@ struct network_channel_owner
 };
 
 /* one of the things that a channel has: something with functions, of which
-the sixth reads its own of a packet, and the seventh and the eighth are told
-what happened to something of it */
+the second says whether the channel is to stop, and why; the third, whether
+it has something to send, and whether that is urgent; the fourth, how many
+bits it needs in a packet; the fifth writes its own in one; the sixth reads its
+own of a packet; and the seventh and the eighth are told what happened to
+something of it */
 struct network_channel_part_object;
 
 struct network_channel_part_functions
 {
-	void *unknown0[5];
+	void *unknown0;
+	boolean (__attribute__((thiscall)) *closes)(struct network_channel_part_object *part, long *reason);
+	boolean (__attribute__((thiscall)) *has_something)(struct network_channel_part_object *part, boolean *urgent);
+	long (__attribute__((thiscall)) *minimum_bits)(struct network_channel_part_object *part, long available,
+		long left);
+	boolean (__attribute__((thiscall)) *write)(struct network_channel_part_object *part, long number,
+		struct bitstream *stream, long bits, long rest);
 	long (__attribute__((thiscall)) *read)(struct network_channel_part_object *part, long *unknown4,
 		struct bitstream *stream);
 	void (__attribute__((thiscall)) *unknown18)(struct network_channel_part_object *part, long unknown);
@@ -990,4 +1005,332 @@ boolean __attribute__((stdcall)) network_channel_read_packet(
 	}
 
 	return good;
+}
+
+/* 0x000883c0: what is done each time with a channel. One that is trying to
+talk with another console, and has the byte that says so, goes on trying
+(network_channel_update_connecting). One in its fourth state for longer than
+the fourth number of what it has at 0xC stops, with 7 for a reason.
+
+From its fourth state on, each of its things of the kind 0x10 is asked, by
+its second function, whether the channel is to stop, and why; with the first
+that says so, it does. Then each of its things that write in a packet (the
+ones with the first bit, or all of them, as when a packet is read) is asked,
+by its third function, whether it has something to send, and whether that is
+urgent; what is urgent only counts in a channel that has a thing of
+unknown_004d87d8. The observer that has the channel says, by its sixth
+function, whether it can send now, with what the voice has for it; with no
+observer, it can if a thing has something, in 0x600 bytes. If so the packet
+is written and sent (network_channel_write_packet), and the first time of the channel is
+now; the second, with the byte that the observer gave; and the third, if
+the voice had something.
+
+And what happened to its thing of unknown_004d87d8 is seen to
+(network_channel_update_unknown10) */
+void network_channel_update(
+	byte *channel)
+{
+	if (*(const long *)(channel+NETWORK_CHANNEL_STATE_OFFSET)==_network_channel_state_connecting &&
+		channel[NETWORK_CHANNEL_UNKNOWN84_OFFSET])
+	{
+		network_channel_update_connecting(channel);
+	}
+	if (*(const long *)(channel+NETWORK_CHANNEL_STATE_OFFSET)==_network_channel_state4 &&
+		network_time_since(*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN94_OFFSET))>
+		(*(const struct network_channel_tries **)(channel+NETWORK_CHANNEL_TRIES_OFFSET))->state4_timeout)
+	{
+		network_channel_close(channel, _network_channel_closed_state4_timeout);
+	}
+	if (*(const long *)(channel+NETWORK_CHANNEL_STATE_OFFSET)>=_network_channel_state4)
+	{
+		struct network_channel_part_iterator iterator= {_network_channel_part_bit10, NONE, NONE, 0, NULL};
+
+		while (network_channel_parts_next(channel, &iterator))
+		{
+			struct network_channel_part_object *part= iterator.part;
+			long reason= 0;
+
+			if (part->functions->closes(part, &reason))
+			{
+				network_channel_close(channel, reason);
+				break;
+			}
+		}
+	}
+	if (*(const long *)(channel+NETWORK_CHANNEL_STATE_OFFSET)>=_network_channel_state4)
+	{
+		byte packet[NETWORK_CHANNEL_PACKET_SIZE];
+		byte voice_packet[NETWORK_CHANNEL_VOICE_PACKET_SIZE];
+		struct network_channel_part_iterator iterator;
+		const struct network_channel_unknown3c *unknown3c;
+		struct network_channel_owner *owner;
+		/* the game keeps a byte of each, and the function that writes the
+		packet gives a number in each */
+		long has_first= FALSE;
+		long has_second= FALSE;
+		long urgent= FALSE;
+		boolean can_send;
+		boolean unknown10;
+		boolean wanted;
+		long size;
+		long voice_size;
+
+		unknown3c= *(const struct network_channel_unknown3c **)(channel+NETWORK_CHANNEL_UNKNOWN3C_OFFSET);
+		iterator.mask= unknown3c && unknown3c->unknown31 ? 0 : _network_channel_part_bit1;
+		iterator.index= NONE;
+		iterator.absolute= NONE;
+		iterator.type= 0;
+		iterator.part= NULL;
+		while (network_channel_parts_next(channel, &iterator))
+		{
+			struct network_channel_part_object *part= iterator.part;
+			boolean part_urgent= FALSE;
+
+			if (part->functions->has_something(part, &part_urgent))
+			{
+				if (iterator.type&_network_channel_part_bit20)
+				{
+					has_second= TRUE;
+				}
+				else
+				{
+					has_first= TRUE;
+				}
+				if (part_urgent)
+				{
+					urgent= TRUE;
+				}
+			}
+		}
+		if (!(channel[NETWORK_CHANNEL_UNKNOWN48_OFFSET]&_network_channel_unknown48_bit8))
+		{
+			urgent= FALSE;
+		}
+		owner= *(struct network_channel_owner **)(channel+NETWORK_CHANNEL_OBSERVER_OFFSET);
+		if (owner)
+		{
+			can_send= owner->functions->can_send(owner, *(const long *)(channel+NETWORK_CHANNEL_UNKNOWN44_OFFSET),
+				(boolean)has_first, (boolean)has_second, (boolean)urgent, &unknown10, &wanted, &size, &voice_size,
+				NETWORK_CHANNEL_VOICE_PACKET_SIZE, voice_packet);
+		}
+		else
+		{
+			can_send= has_first || has_second;
+			unknown10= (boolean)urgent;
+			wanted= FALSE;
+			size= NETWORK_CHANNEL_PACKET_SIZE;
+			voice_size= 0;
+		}
+		if (can_send)
+		{
+			struct bitstream stream;
+
+			stream.data= (unsigned long *)packet;
+			stream.size= size;
+			stream.unknown8= 1;
+			stream.unknownC= 0;
+			stream.position= 0;
+			stream.error= FALSE;
+			stream.position_count= 0;
+			network_channel_write_packet(unknown10, channel, &stream, wanted, voice_size, voice_size>0 ? voice_packet : NULL, &urgent,
+				&has_first, &has_second);
+			network_channel_set_time(_network_channel_time_sent, channel);
+			if (unknown10)
+			{
+				network_channel_set_time(_network_channel_time_unknown1, channel);
+			}
+			if (voice_size>0)
+			{
+				network_channel_set_time(_network_channel_time_voice, channel);
+			}
+		}
+	}
+	if (*(const long *)(channel+NETWORK_CHANNEL_STATE_OFFSET)>=_network_channel_state4)
+	{
+		network_channel_update_unknown10(channel);
+	}
+}
+
+/* 0x00096510: one of the things of unknown_004d87d8 gives the number of the
+next packet, at a time; NONE if it cannot. 0x00096810: and is told the size
+that the packet of a number was sent with. 0x000931a0: a packet that a
+stream has is sent to what a channel talks with, with what the voice has for
+it; the size that it was sent with, or nothing */
+long __attribute__((stdcall)) unknown_00096510(byte *unknown10, long time);
+void unknown_00096810(long number, byte *unknown10, long size);
+void __attribute__((stdcall)) unknown_000931a0(long unknown44, struct bitstream *stream, byte *unknown0, long voice_size,
+	const byte *voice_packet, long *sent_size);
+
+/* 0x00088980: a channel writes a packet in a stream, and sends it. With the
+first byte, the packet has a number, which the channel's thing of
+unknown_004d87d8 gives (unknown_00096510); with none to give, nothing is
+done.
+
+The stream is written from the start, in eights of bytes. Each of the
+channel's things that write (the ones with the first bit, or all of them,
+which the channel notes, as when a packet is read) says, by its fourth
+function, how many bits it needs at the least, of the ones that there are
+and the ones that are left. If they all fit, with one bit more, each writes
+its own, by its fifth function, with the number of the packet, its bits and
+the ones that the others do not need; and no more is done if one leaves less
+room than the rest need. Then, if the channel wanted more flow than it has
+and there are more than fifteen bits left, the packet is filled: a bit, the
+count of the bits that are left in fourteen, and so many zeros; if not, a
+bit that says that there is no more.
+
+The packet is sent (unknown_000931a0), with what the voice has; the thing of
+unknown_004d87d8 is told the size that it was sent with (unknown_00096810);
+and so is the observer that has the channel, by its first function, with
+whether any of the things said so when it wrote. Three numbers are given
+back, if they are asked for: the size that was sent, and, if something was,
+the size of the packet and the one of the voice */
+void __attribute__((stdcall)) network_channel_write_packet(
+	boolean numbered,
+	byte *channel,
+	struct bitstream *stream,
+	boolean wanted,
+	long voice_size,
+	const byte *voice_packet,
+	long *sent_size_out,
+	long *packet_size_out,
+	long *voice_size_out)
+{
+	byte zeros[NETWORK_CHANNEL_PACKET_SIZE];
+	long sizes[MAXIMUM_NETWORK_CHANNEL_PARTS+MAXIMUM_NETWORK_CHANNEL_UNKNOWN3C_PARTS]= {0};
+	struct network_channel_part_iterator iterator;
+	const struct network_channel_unknown3c *unknown3c;
+	struct network_channel_owner *owner;
+	byte *unknown10= NULL;
+	long number= NONE;
+	long sent_size= 0;
+	long packet_size= 0;
+	long sent_voice_size= 0;
+	boolean unknown= FALSE;
+	unsigned long mask;
+	long available;
+	long total= 0;
+	long left;
+	long over;
+
+	if (numbered)
+	{
+		unknown10= unknown_004d87d8+*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN10_OFFSET)*NETWORK_CHANNEL_UNKNOWN10_SIZE;
+		number= unknown_00096510(unknown10, network_time_since(0));
+		if (number==NONE)
+		{
+			goto done;
+		}
+	}
+	stream->unknownC= _bitstream_writing;
+	stream->unknown8= NETWORK_CHANNEL_PACKET_ALIGNMENT;
+	memset(stream->data, 0, stream->size);
+	stream->position= 0;
+	stream->position_count= 0;
+	stream->error= FALSE;
+	stream->unknown2C= 0;
+	stream->unknown30= 0;
+	/* the game multiplies and adds as the processor does, here and below */
+	available= (long)((unsigned long)stream->size<<3);
+	unknown3c= *(const struct network_channel_unknown3c **)(channel+NETWORK_CHANNEL_UNKNOWN3C_OFFSET);
+	if (unknown3c && unknown3c->unknown31)
+	{
+		mask= 0;
+		channel[NETWORK_CHANNEL_UNKNOWN1C_OFFSET]= TRUE;
+	}
+	else
+	{
+		mask= _network_channel_part_bit1;
+		channel[NETWORK_CHANNEL_UNKNOWN1C_OFFSET]= FALSE;
+	}
+	iterator.mask= mask;
+	iterator.index= NONE;
+	iterator.absolute= NONE;
+	iterator.type= 0;
+	iterator.part= NULL;
+	while (network_channel_parts_next(channel, &iterator))
+	{
+		struct network_channel_part_object *part= iterator.part;
+		long size= part->functions->minimum_bits(part, available, (long)((unsigned long)available-(unsigned long)total));
+
+		total= (long)((unsigned long)total+(unsigned long)size);
+		sizes[iterator.absolute]= size;
+	}
+	total= (long)((unsigned long)total+1);
+	if (total>available)
+	{
+		goto done;
+	}
+	iterator.mask= mask;
+	iterator.index= NONE;
+	iterator.absolute= NONE;
+	iterator.type= 0;
+	iterator.part= NULL;
+	while (network_channel_parts_next(channel, &iterator))
+	{
+		struct network_channel_part_object *part= iterator.part;
+		long size= sizes[iterator.absolute];
+
+		total= (long)((unsigned long)total-(unsigned long)size);
+		if (part->functions->write(part, number, stream, size, total))
+		{
+			unknown= TRUE;
+		}
+		if ((long)(((unsigned long)stream->size<<3)-(unsigned long)stream->position)<total)
+		{
+			goto done;
+		}
+	}
+	left= (long)(((unsigned long)stream->size<<3)-(unsigned long)stream->position);
+	if (wanted && left>NETWORK_CHANNEL_PACKET_REST_BITS+1)
+	{
+		long rest_bits= left-(NETWORK_CHANNEL_PACKET_REST_BITS+1);
+		long rest_size= (rest_bits+7)/8;
+
+		bitstream_write_bool(stream, TRUE);
+		bitstream_write_integer_checked((unsigned long)rest_bits, NETWORK_CHANNEL_PACKET_REST_BITS, stream);
+		memset(zeros, 0, rest_size);
+		bitstream_write_bits(stream, zeros, rest_bits);
+	}
+	else
+	{
+		bitstream_write_bool(stream, FALSE);
+	}
+	stream->size= (stream->position+7)/8;
+	over= stream->size%stream->unknown8;
+	if (over!=0)
+	{
+		stream->size= (long)((unsigned long)stream->unknown8-(unsigned long)over+(unsigned long)stream->size);
+	}
+	stream->unknownC= _bitstream_unknownC_finished;
+	unknown_000931a0(*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN44_OFFSET), stream,
+		*(byte **)(channel+NETWORK_CHANNEL_UNKNOWN0_OFFSET), voice_size, voice_packet, &sent_size);
+	if (sent_size>0)
+	{
+		packet_size= stream->size;
+		sent_voice_size= voice_size;
+	}
+	if (number!=NONE)
+	{
+		unknown_00096810(number, unknown_004d87d8+
+			*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN10_OFFSET)*NETWORK_CHANNEL_UNKNOWN10_SIZE, sent_size);
+	}
+	owner= *(struct network_channel_owner **)(channel+NETWORK_CHANNEL_OBSERVER_OFFSET);
+	if (owner)
+	{
+		owner->functions->sent(owner, *(const long *)(channel+NETWORK_CHANNEL_UNKNOWN44_OFFSET), sent_size, unknown);
+	}
+
+done:
+	if (sent_size_out)
+	{
+		*sent_size_out= sent_size;
+	}
+	if (packet_size_out)
+	{
+		*packet_size_out= packet_size;
+	}
+	if (voice_size_out)
+	{
+		*voice_size_out= sent_voice_size;
+	}
 }

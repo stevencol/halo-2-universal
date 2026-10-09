@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 414.
+**Última actualización:** 2026-10-08, al terminar el hito 415.
 
 ## Dónde estamos
 
-- **1426 funciones descompiladas de 11.265: el 12,66 % del juego** (el
-  8,531 % de los bytes de código).
-- Las 1426 están comprobadas contra el ejecutable original: las 1390 del
+- **1428 funciones descompiladas de 11.265: el 12,68 % del juego** (el
+  8,584 % de los bytes de código).
+- Las 1428 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a channel reads a packet* (ver `git log`).
+- Último hito: *Decompile how a channel is updated and writes a packet* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 555 funciones apuntadas pero sin descompilar (las que el código
-  llama); 453 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 558 funciones apuntadas pero sin descompilar (las que el código
+  llama); 456 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -128,10 +128,12 @@ Módulos (funciones hechas / archivo):
 - [x] Intentos de medir la conexión — `networking\transport_qos.c` (8: la
   tabla de intentos, empezar uno, soltarlo, cómo va y qué encontró con
   cada consola). Entero.
-- [ ] Canales del juego — `networking\network_channel.c` (23: tomar un
+- [ ] Canales del juego — `networking\network_channel.c` (25: tomar un
       canal, pedir conexión y contestar, cerrarlo, soltarlo, recorrer
       sus piezas, sus horas y lo que el observador les pregunta;
-      leer un paquete; quedan `0x000883c0` y `0x00088980`)
+      leer y escribir un paquete y lo que se hace cada vez; quedan
+      `0x00088060` y `0x000893c0`; romper líneas pendiente en
+      `0x000883c0` y `0x00088980`)
 - [x] Observador de la red — `networking\network_observer.c` (74: lo que
       tiene de cada sesión, sus canales con las otras consolas y sus
       estados, el caudal de cada uno y cuándo puede mandar; de

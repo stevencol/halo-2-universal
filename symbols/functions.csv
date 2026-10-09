@@ -1980,3 +1980,8 @@ address,name,source,arguments,returns,convention
 00096860,unknown_00096860,,eax ecx,void
 00095840,unknown_00095840,,stack stack stack stack,bool,stdcall
 00093aa0,unknown_00093aa0,,eax ecx edx stack stack,void,stdcall
+000883c0,network_channel_update,source/networking/network_channel.c,eax,void
+00088980,network_channel_write_packet,source/networking/network_channel.c,eax stack stack stack stack stack stack stack stack,void,stdcall
+00096510,unknown_00096510,,esi stack,int,stdcall
+00096810,unknown_00096810,,eax ecx edi,void
+000931a0,unknown_000931a0,,eax ecx stack stack stack stack,void,stdcall

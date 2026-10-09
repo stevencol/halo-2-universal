@@ -123,7 +123,25 @@ enum
 	NETWORK_CHANNEL_UNKNOWN1D_OFFSET= 0x1D,
 	NETWORK_CHANNEL_PACKET_REST_SIZE= 0x600,
 	NETWORK_CHANNEL_PACKET_REST_BITS= 14,
-	_network_channel_time_read= 3
+	_network_channel_time_read= 3,
+	/* the reason that a channel stops with when it is in its fourth state
+	for too long; two more bits of the kinds of a channel's things; the
+	sizes of a packet that a channel writes and of what the voice has for
+	it; and three more of the channel's times: when it last sent a packet,
+	one with the byte that the observer gives, and one with voice */
+	_network_channel_closed_state4_timeout= 7,
+	_network_channel_part_bit10= 0x10,
+	_network_channel_part_bit20= 0x20,
+	NETWORK_CHANNEL_PACKET_SIZE= 0x600,
+	NETWORK_CHANNEL_VOICE_PACKET_SIZE= 0x200,
+	_network_channel_time_sent= 0,
+	_network_channel_time_unknown1= 1,
+	_network_channel_time_voice= 2,
+	/* what the size of a packet that a channel writes is a whole number of,
+	in bytes; and a byte of the channel that says that all of its things
+	wrote in the last one */
+	NETWORK_CHANNEL_PACKET_ALIGNMENT= 8,
+	NETWORK_CHANNEL_UNKNOWN1C_OFFSET= 0x1C
 };
 
 /* the bit of the index of a thing of a channel that says that it is one of
@@ -188,12 +206,14 @@ struct network_channel_part_iterator
 };
 
 /* the tries of a channel at talking with another console: how long there
-is between two, how many there are, and how long it tries for in all */
+is between two, how many there are, and how long it tries for in all; and
+how long it can be in its fourth state */
 struct network_channel_tries
 {
 	long period;
 	long count;
 	long timeout;
+	long state4_timeout;
 };
 
 /* what a channel asks to be talked with by: its number, and its bits */
@@ -232,6 +252,10 @@ void __attribute__((stdcall)) network_channel_unknown3c_new(struct network_chann
 	boolean unknown30, void *const *parts, long unknown4, void (__attribute__((stdcall)) *closed)(long unknown4),
 	long part_count, const unsigned long *types);
 void network_channel_update_unknown10(byte *channel);
+void network_channel_update(byte *channel);
+void __attribute__((stdcall)) network_channel_write_packet(boolean numbered, byte *channel, struct bitstream *stream,
+	boolean wanted, long voice_size, const byte *voice_packet, long *sent_size_out, long *packet_size_out,
+	long *voice_size_out);
 boolean __attribute__((stdcall)) network_channel_unknown18_write(const byte *unknown18, long unknown4,
 	struct bitstream *stream, long unknownC, long unknown10);
 long __attribute__((stdcall)) network_channel_unknown18_read(const byte *unknown18, long unknown4,
