@@ -2,6 +2,62 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — El primer estado de la sesión, y cuando la lleva otra consola
+
+Tres funciones en `networking/network_session.c`, 918 bytes entre todas. De 1288
+funciones se pasa a 1291, el 11,46 % de las del juego (el 7,191 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_unknown_0005e3f0` | `0x0005e3f0` | `networking/network_session.c` |
+| `network_session_state1_send` | `0x00062300` | `networking/network_session.c` |
+| `network_session_state1_update` | `0x000617c0` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_state1_update` es **lo que la sesión repite en su primer
+  estado**, el de quien está entrando en una sesión de otra consola:
+  - mientras `unknown_00078580` no diga 2 del número que la sesión tiene en
+    `0x7420`, espera; si pasa más de `unknown_004cf498` milisegundos desde
+    que entró en el estado, se sale de la sesión;
+  - cuando dice 2, apunta la hora (`0x760C`) la primera vez. Si ya le llegó
+    «quién está» y «lo que la sesión sabe» (los dos empiezan en NONE), pasa
+    al tercer estado y manda un mensaje de la clase `0x15` a la consola que
+    dirige la sesión. Si no le llegan en `unknown_004cf49c` milisegundos,
+    se sale.
+- `network_session_state1_send` es lo que manda mientras tanto a la
+  dirección que guarda: un mensaje de la clase `8`, de `0x1B8` bytes, con un
+  2, lo que identifica a la sesión y los `0x1AC` bytes de `0x745C`. No más
+  de una vez cada `unknown_004cf494` milisegundos; cuenta las veces en
+  `0x7610`. Es **la petición de entrar**.
+- `network_session_unknown_0005e3f0`: llega algo de la dirección de otra
+  consola de la sesión, y esa consola **pasa a ser la que la lleva** (la de
+  `0x40`). Vale siempre en el noveno estado; en los demás, si es la que la
+  sesión tenía apuntada en `0x44` (hito 352) o si la que la llevaba ya no
+  responde (`unknown_000769a0`). Si esta consola era la que la llevaba, se
+  lo dice a las demás con un mensaje `0x13` y olvida a los jugadores que
+  pedían entrar. Después contesta a la nueva con un mensaje `0x14`.
+- Con esto se ve la cadena entera de cuando cambia quien lleva la sesión:
+  `0x10` (hito 352) → `0x13` → `0x14`.
+- Tres tiempos más con nombre provisional: `unknown_004cf494`,
+  `unknown_004cf498` y `unknown_004cf49c`.
+
+### Comprobado rompiendo líneas
+
+- Cuatro líneas rotas a mano, una cada vez (un `>` por `>=`, una clase de
+  mensaje, un argumento y un dato del mensaje): las pruebas fallaron las
+  cuatro veces.
+
+### Sin comprobar
+
+- `unknown_00078580` y `unknown_000769a0` son del observador de la red y
+  no están descompiladas: aquí solo se sabe cómo se las llama.
+- En este hito se pasaron las pruebas de `network_life_cycle` (198
+  funciones).
+- Las mutaciones de los hitos 280 a 308 y 321 a 353 están pendientes.
+
 ## 2026-10-08 — Lo que esta consola le dice a la que lleva la sesión
 
 Seis funciones en `networking/network_session.c`, 1.581 bytes entre todas. De 1282

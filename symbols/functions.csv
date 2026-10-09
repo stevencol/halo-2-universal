@@ -1826,3 +1826,8 @@ address,name,source,arguments,returns,convention
 0005aae0,network_session_remove_local_player,source/networking/network_session.c,eax edx,bool
 0005aba0,network_session_change_leader,source/networking/network_session.c,stack stack,bool,stdcall
 0005acc0,network_session_leader_remove_peer,source/networking/network_session.c,stack stack,bool,stdcall
+0005e3f0,network_session_unknown_0005e3f0,source/networking/network_session.c,stack stack,bool,stdcall
+00062300,network_session_state1_send,source/networking/network_session.c,ebx,void
+000617c0,network_session_state1_update,source/networking/network_session.c,eax,void
+000769a0,unknown_000769a0,,eax stack,bool,stdcall
+00078580,unknown_00078580,,ecx eax,int

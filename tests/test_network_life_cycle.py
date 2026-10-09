@@ -2435,3 +2435,76 @@ def run(t) -> None:
                     "unknown_00075e80": sends_all,
                 },
             )
+
+    # ---------- another console is taken to run a session, and what a session does in its first state
+
+    for n in range(600):
+        data = consistent()
+        struct.pack_into("<I", data, STATE, random_.choice((9, 3, 3, 4, 5, 5, 7, 7, 8, 0, 1)))
+        data[0x7420] = random_.choice((0, 1, 1))
+        struct.pack_into("<I", data, 0x40, random_.randrange(4))
+        struct.pack_into("<I", data, 0x44, random_.choice((NONE, random_.randrange(4), random_.randrange(4))))
+        struct.pack_into("<I", data, LOCAL_PEER, random_.choice((0, 5, 9)))
+        for peer in range(16):
+            data[0x72DC + peer * 0x14 + 1] = random_.choice((0, 1, 1, 0x80))
+        t.check(
+            "network_session_unknown_0005e3f0",
+            Buffer(bytes(data), pointers=(8,)),
+            Buffer(random_.randbytes(0x14)),
+            externals={
+                "transport_security_peer_address_from_address": known(data),
+                "network_session_matches_state1_address": lambda harness, arguments, same=random_.choice((0, 0, 1, 1, 0x80, 0x100)): same,
+                "unknown_000769a0": lambda harness, arguments, says=random_.choice((0, 0, 1, 0x100)): (says, (arguments[0], arguments[1])),
+                "network_session_send_to_peers": lambda harness, arguments: (
+                    0,
+                    (arguments[0], harness.normalize(arguments[1]), arguments[2], arguments[3], bytes(harness.mu.mem_read(arguments[4], 0x30))),
+                ),
+                "network_session_reset_requests": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                "network_session_enter_state3": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "network_session_leave": leaves,
+                "unknown_00075e80": sends_all,
+            },
+        )
+
+    def sends_all_to_address(harness, arguments):
+        # all of what is sent, which is in the stack
+        return 0, (arguments[0], harness.normalize(arguments[1]), arguments[2], arguments[3], bytes(harness.mu.mem_read(arguments[4], arguments[3] & 0xFFFF)))
+
+    def is_ready():
+        return lambda harness, arguments, says=random_.choice((2, 2, 2, 0, 1, 3)): (says, (arguments[0], arguments[1]))
+
+    for n in range(300):
+        data = consistent()
+        setup = waits(data, 0x7614, "unknown_004cf494")
+        t.check(
+            "network_session_state1_send",
+            Buffer(bytes(data), pointers=(8,)),
+            globals=setup["globals"],
+            externals={"GetTickCount": setup["tick"], "unknown_00078580": is_ready(), "unknown_0007b140": sends_all_to_address},
+        )
+
+    for n in range(600):
+        data = consistent()
+        struct.pack_into("<I", data, STATE, random_.choice((1, 1, 1, 3)))
+        struct.pack_into("<I", data, MEMBERSHIP, random_.choice((NONE, 0, 7)))
+        struct.pack_into("<I", data, 0x4978, random_.choice((NONE, 3)))
+        for peer in range(16):
+            data[0x72DC + peer * 0x14 + 1] = random_.choice((0, 1, 1, 0x80))
+        # the two times and the two limits are set apart, so that each is the one that counts in its case
+        setup = waits(data, 0x7608, "unknown_004cf498")
+        other = waits(data, 0x760C, "unknown_004cf49c")
+        struct.pack_into("<I", data, 0x760C, random_.choice((0, (struct.unpack("<I", setup["globals"]["unknown_0051054c"])[0] - random_.choice((0, 999, 1001, 30001))) & 0xFFFFFFFF)))
+        setup["globals"]["unknown_004cf49c"] = other["globals"]["unknown_004cf49c"]
+        t.check(
+            "network_session_state1_update",
+            Buffer(bytes(data), pointers=(8,)),
+            globals=setup["globals"],
+            externals={
+                "GetTickCount": setup["tick"],
+                "unknown_00078580": is_ready(),
+                "network_session_enter_state3": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "network_session_leave": leaves,
+                "network_session_state1_send": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "unknown_00075e80": sends_all,
+            },
+        )

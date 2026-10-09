@@ -4679,3 +4679,204 @@ boolean NETWORK_SESSION_CALLBACK network_session_leader_remove_peer(
 
 	return TRUE;
 }
+
+/* 0x000769a0, of network_observer.c: something of one of the channels of
+what a session was given when it was set up, that has to do with how long
+ago things were */
+boolean __attribute__((stdcall)) unknown_000769a0(long channel_index, const byte *unknown8);
+
+/* 0x00078580, of network_observer.c: a number that says how something of
+one of those channels is */
+long unknown_00078580(const byte *unknown8, long channel_index);
+
+/* 0x004cf494: how long a session in its first state waits before it sends
+again what it sends there, in milliseconds. 0x004cf498, 0x004cf49c: how long
+it waits in that state before it is left: since it went into it, while
+unknown_00078580 does not say 2, and since it first did, after */
+long unknown_004cf494;
+long unknown_004cf498;
+long unknown_004cf49c;
+
+/* 0x0005e3f0: something comes from an address of the game that is of
+another console of a session, which that console is taken to run from now
+on: in the ninth state; or, in a session that says who is in it, if it is
+not the one at 0x40 already and either it is the one at 0x44, or this
+console does not run the session and unknown_000769a0 says no of the channel
+of the one at 0x40. Then: if this console ran the session, the others are
+sent something of the kind 0x13 with what that console is known by, and the
+players that ask to come in are forgotten; the console is the one at 0x40,
+there is none at 0x44, and the session goes into its third state unless it
+is in the fourth. After that, in any case: FALSE if the address is not of
+the console that runs the session; if it is, that console is sent something
+of the kind 0x14 and TRUE, and the session is left if it was in the seventh
+state with its byte set when this console ran it */
+boolean NETWORK_SESSION_CALLBACK network_session_unknown_0005e3f0(
+	byte *session,
+	const struct transport_address *address)
+{
+	long peer_index= network_session_find_peer_by_transport_address(session, address);
+	boolean leave= FALSE;
+	byte identifier[NETWORK_SESSION_IDENTIFIER_SIZE];
+
+	if (peer_index!=NONE && peer_index!=*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET))
+	{
+		boolean take= FALSE;
+
+		if (network_session_state(session)==_network_session_state9)
+		{
+			take= TRUE;
+		}
+		else if (network_session_established(session))
+		{
+			long host= *(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET);
+
+			if (peer_index!=host)
+			{
+				take= peer_index==*(const long *)(session+NETWORK_SESSION_UNKNOWN44_OFFSET) ||
+					(!network_session_unknown_00058d20(session) && !unknown_000769a0(
+						((const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+host)->unknown4,
+						*(const byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET)));
+			}
+		}
+		if (take)
+		{
+			boolean was_host= FALSE;
+
+			if (network_session_unknown_00058d20(session))
+			{
+				byte message[NETWORK_SESSION_MESSAGE_UNKNOWN13_SIZE];
+
+				memset(message, 0, sizeof(message));
+				memcpy(message, session+NETWORK_SESSION_IDENTIFIER_OFFSET, NETWORK_SESSION_IDENTIFIER_SIZE);
+				message[NETWORK_SESSION_MESSAGE_UNKNOWN13_UNKNOWN8_OFFSET]= TRUE;
+				message[NETWORK_SESSION_MESSAGE_UNKNOWN13_IS_PEER_OFFSET]= TRUE;
+				message[NETWORK_SESSION_MESSAGE_UNKNOWN13_HAS_HOST_OFFSET]= TRUE;
+				memcpy(message+NETWORK_SESSION_MESSAGE_UNKNOWN13_HOST_OFFSET,
+					session+NETWORK_SESSION_PEER_ARRAY_OFFSET+peer_index*NETWORK_SESSION_PEER_SIZE,
+					NETWORK_SESSION_ADDRESS_SIZE);
+				network_session_send_to_peers(_network_session_send_unknown0, session, _network_session_message_unknown13,
+					sizeof(message), message);
+				was_host= TRUE;
+				if (network_session_state(session)==_network_session_state7 && session[NETWORK_SESSION_STATE_DATA_OFFSET])
+				{
+					leave= TRUE;
+				}
+			}
+			*(long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET)= peer_index;
+			*(long *)(session+NETWORK_SESSION_UNKNOWN44_OFFSET)= NONE;
+			if (was_host)
+			{
+				network_session_reset_requests(session, 0);
+			}
+			if (network_session_state(session)!=_network_session_state4)
+			{
+				network_session_enter_state3(session);
+			}
+		}
+	}
+	if (!network_session_address_is_host(session, address))
+	{
+		return FALSE;
+	}
+	memcpy(identifier, session+NETWORK_SESSION_IDENTIFIER_OFFSET, sizeof(identifier));
+	network_session_send_to_host(session, _network_session_message_unknown14, sizeof(identifier), identifier);
+	if (leave)
+	{
+		network_session_leave(session, 0);
+	}
+
+	return TRUE;
+}
+
+/* 0x00062300: in its first state, a session sends the address that it keeps
+something of the kind 8, if unknown_00078580 says 2 of the number that it has there and
+it last did more than unknown_004cf494 milliseconds ago: a 2, what the
+session is known by and the 0x1AC bytes that it has at 0x3C from its state
+on. It counts one more and the time is now */
+void network_session_state1_send(
+	byte *session)
+{
+	byte message[NETWORK_SESSION_MESSAGE_UNKNOWN8_SIZE];
+
+	if (unknown_00078580(*(const byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+			*(const long *)(session+NETWORK_SESSION_STATE1_UNKNOWN0_OFFSET))!=_network_session_state1_unknown0_ready ||
+		network_session_time()-*(const long *)(session+NETWORK_SESSION_STATE1_UNKNOWN1F4_OFFSET)<=unknown_004cf494)
+	{
+		return;
+	}
+	memset(message, 0, sizeof(message));
+	*(short *)message= NETWORK_SESSION_MESSAGE_UNKNOWN8_UNKNOWN0;
+	memcpy(message+NETWORK_SESSION_MESSAGE_UNKNOWN8_IDENTIFIER_OFFSET, session+NETWORK_SESSION_IDENTIFIER_OFFSET,
+		NETWORK_SESSION_IDENTIFIER_SIZE);
+	memcpy(message+NETWORK_SESSION_MESSAGE_UNKNOWN8_UNKNOWNC_OFFSET, session+NETWORK_SESSION_STATE1_UNKNOWN3C_OFFSET,
+		NETWORK_SESSION_STATE1_UNKNOWN3C_SIZE);
+	unknown_0007b140(*(const long *)(session+NETWORK_SESSION_UNKNOWN4_OFFSET),
+		(const struct transport_address *)(session+NETWORK_SESSION_STATE1_ADDRESS_OFFSET),
+		_network_session_message_unknown8, sizeof(message), message);
+	(*(long *)(session+NETWORK_SESSION_STATE1_UNKNOWN1F0_OFFSET))++;
+	*(long *)(session+NETWORK_SESSION_STATE1_UNKNOWN1F4_OFFSET)= network_session_time();
+}
+
+/* 0x000617c0: what a session does again and again in its first state.
+While unknown_00078580 does not say 2 of the number that it has there, it is left
+(network_session_leave with nothing) if it went into the state more than
+unknown_004cf498 milliseconds ago. Once it says 2: the time of 0x1EC is
+now, if it had none; if the session has who is in it and what it knows, it
+goes into its third state and the console that leads it is sent something of
+the kind 0x15; if not, it is left if that time was more than
+unknown_004cf49c milliseconds ago. A session that is not left and is still
+in the first state does network_session_state1_send */
+void network_session_state1_update(
+	byte *session)
+{
+	long since= 0;
+	long limit= 0;
+	boolean entered= FALSE;
+
+	if (unknown_00078580(*(const byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+		*(const long *)(session+NETWORK_SESSION_STATE1_UNKNOWN0_OFFSET))!=_network_session_state1_unknown0_ready)
+	{
+		since= *(const long *)(session+NETWORK_SESSION_STATE1_UNKNOWN1E8_OFFSET);
+		limit= unknown_004cf498;
+	}
+	else
+	{
+		if (*(const long *)(session+NETWORK_SESSION_STATE1_UNKNOWN1EC_OFFSET)==0)
+		{
+			*(long *)(session+NETWORK_SESSION_STATE1_UNKNOWN1EC_OFFSET)= network_session_time();
+		}
+		if (*(const long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET)!=NONE &&
+			*(const long *)(session+NETWORK_SESSION_UNKNOWN4978_OFFSET)!=NONE)
+		{
+			const struct network_session_peer_state *leader;
+			byte identifier[NETWORK_SESSION_IDENTIFIER_SIZE];
+
+			network_session_enter_state3(session);
+			memcpy(identifier, session+NETWORK_SESSION_IDENTIFIER_OFFSET, sizeof(identifier));
+			leader= (const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+
+				*(const long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET);
+			if (leader->unknown1)
+			{
+				unknown_00075e80(FALSE, leader->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+					*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_unknown15,
+					sizeof(identifier), identifier);
+			}
+			entered= TRUE;
+		}
+		else
+		{
+			since= *(const long *)(session+NETWORK_SESSION_STATE1_UNKNOWN1EC_OFFSET);
+			limit= unknown_004cf49c;
+		}
+	}
+	if (!entered && network_session_time()-since>limit)
+	{
+		network_session_leave(session, 0);
+
+		return;
+	}
+	if (network_session_state(session)==_network_session_state1)
+	{
+		network_session_state1_send(session);
+	}
+}

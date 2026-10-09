@@ -284,3 +284,6 @@ address,name,source
 004cf4b0,unknown_004cf4b0,source/networking/network_session.c
 004cf4d8,unknown_004cf4d8,source/networking/network_session.c
 004cf4dc,unknown_004cf4dc,source/networking/network_session.c
+004cf494,unknown_004cf494,source/networking/network_session.c
+004cf498,unknown_004cf498,source/networking/network_session.c
+004cf49c,unknown_004cf49c,source/networking/network_session.c

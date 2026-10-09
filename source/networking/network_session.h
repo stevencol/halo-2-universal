@@ -425,6 +425,30 @@ enum
 	NETWORK_SESSION_MESSAGE_REMOVE_PLAYER_SIZE= 0xC,
 	_network_session_message_set_player= 0x20,
 	NETWORK_SESSION_MESSAGE_SET_PLAYER_SIZE= 0xA4,
+	/* more of what the session has from its state on in the first state: a
+	number that unknown_00078580 is asked about, and what it has to say for
+	the session to go on; 0x1AC bytes that are sent; a time that starts at
+	zero; and how many times and when it last sent what it sends there */
+	NETWORK_SESSION_STATE1_UNKNOWN0_OFFSET= 0x7420,
+	_network_session_state1_unknown0_ready= 2,
+	NETWORK_SESSION_STATE1_UNKNOWN3C_OFFSET= 0x745C,
+	NETWORK_SESSION_STATE1_UNKNOWN3C_SIZE= 0x1AC,
+	NETWORK_SESSION_STATE1_UNKNOWN1EC_OFFSET= 0x760C,
+	NETWORK_SESSION_STATE1_UNKNOWN1F0_OFFSET= 0x7610,
+	NETWORK_SESSION_STATE1_UNKNOWN1F4_OFFSET= 0x7614,
+	/* what a session in its first state sends again and again to the
+	address that it keeps: of this kind and size, with a 2 in 16 bits, what
+	the session is known by, and those 0x1AC bytes */
+	_network_session_message_unknown8= 0x8,
+	NETWORK_SESSION_MESSAGE_UNKNOWN8_SIZE= 0x1B8,
+	NETWORK_SESSION_MESSAGE_UNKNOWN8_UNKNOWN0= 2,
+	NETWORK_SESSION_MESSAGE_UNKNOWN8_IDENTIFIER_OFFSET= 0x4,
+	NETWORK_SESSION_MESSAGE_UNKNOWN8_UNKNOWNC_OFFSET= 0xC,
+	/* two kinds of what is sent with only what the session is known by: to
+	the console that runs it when it is taken for that, and to the one that
+	leads it when the session comes to say who is in it */
+	_network_session_message_unknown14= 0x14,
+	_network_session_message_unknown15= 0x15,
 	_network_session_message_unknown13= 0x13,
 	NETWORK_SESSION_MESSAGE_UNKNOWN13_SIZE= 0x30,
 	NETWORK_SESSION_MESSAGE_UNKNOWN13_UNKNOWN8_OFFSET= 0x8,
@@ -693,6 +717,10 @@ boolean NETWORK_SESSION_CALLBACK network_session_set_local_player(byte *session,
 boolean network_session_remove_local_player(byte *session, long peer_player_index);
 boolean NETWORK_SESSION_CALLBACK network_session_change_leader(byte *session, const byte *peer_address);
 boolean NETWORK_SESSION_CALLBACK network_session_leader_remove_peer(byte *session, const byte *peer_address);
+boolean NETWORK_SESSION_CALLBACK network_session_unknown_0005e3f0(byte *session,
+	const struct transport_address *address);
+void network_session_state1_send(byte *session);
+void network_session_state1_update(byte *session);
 boolean network_session_remove_peer_with_message_c(byte *session, long peer_index);
 void NETWORK_SESSION_CALLBACK network_session_peer_properties_apply_update(
 	struct network_session_peer_properties *properties, const struct network_session_peer_properties_update *update);
