@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Soltar los canales del juego, y una pregunta a las sesiones
+
+Dos funciones en `networking/network_observer.c`, 280 bytes entre las dos. De 1344
+funciones se pasa a 1346, el 11,95 % de las del juego (el 7,832 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_release_game_channels` | `0x00078880` | `networking/network_observer.c` |
+| `network_observer_channel_unknown_00077940` | `0x00077940` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_observer_release_game_channels`: cada canal del observador que
+  está en uso **suelta su canal del juego** y se queda sin él. Al que ya
+  había pasado de su segundo estado se le avisa antes con un 3
+  (`unknown_00088650`).
+- `network_observer_channel_unknown_00077940`: pregunta algo de un canal a lo
+  que cada sesión que lo usa tiene en el observador, por su **primera
+  función**, y devuelve si alguna dice que sí. Solo pregunta si el canal
+  del juego está en su cuarto estado o más allá y lleva callado el plazo de
+  `0x70`. Con la del hito 371 se conocen ya dos de las cinco funciones de
+  eso que cada sesión tiene en el observador.
+
+### Comprobado rompiendo líneas
+
+- Cinco líneas rotas, una cada vez: las pruebas fallaron en las cinco.
+
+### Sin comprobar
+
+- `network_observer_release_game_channels` no mira si el canal en uso tiene
+  canal del juego; en las pruebas siempre lo tiene.
+- En este hito se pasaron las pruebas de `network_observer` (37 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Dos piezas del caudal de un canal
 
 Dos funciones en `networking/network_observer.c`, 151 bytes entre las dos. De 1342

@@ -210,6 +210,12 @@ enum
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1E0_OFFSET= 0x1E0,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1E4_OFFSET= 0x1E4,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1E8_OFFSET= 0x1E8,
+	/* the state of a channel of the game from which network_observer_channel_unknown_00077940
+	asks about it, what it is told when all the channels are let go of, and
+	one more number of what the observer has at 0x10 */
+	_network_channel_state4= 4,
+	_unknown_00088650_unknown3= 0x3,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN70_OFFSET= 0x70,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
 	_unknown_00088650_unknown11= 0x11
 };
@@ -297,6 +303,8 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_set_pending(long channel
 boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_alive(long channel_index, const byte *observer);
 long network_observer_channel_connect_status(const byte *observer, long channel_index);
 long network_unknown_00075910(const byte *unknown);
+void NETWORK_OBSERVER_CALLBACK network_observer_release_game_channels(byte *observer);
+boolean network_observer_channel_unknown_00077940(byte *observer, long channel_index);
 void network_observer_channel_reset_unknown4dc(long channel_index, byte *observer);
 void network_observer_channel_unknown_0007a160(long channel_index, byte *observer);
 long network_observer_channel_unknown4a8_bits_per_second(long channel_index, const byte *observer);

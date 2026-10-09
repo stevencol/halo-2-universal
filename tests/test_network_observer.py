@@ -702,3 +702,49 @@ def run(t) -> None:
             Buffer(bytes(data), pointers=(0x10,)),
             externals={"unknown_00079c00": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2]))},
         )
+
+    # ---------- the channels of the game are let go of, and something is asked about a channel
+
+    for n in range(200):
+        data = observer()
+        for channel in range(15):
+            # a channel that is in use has a channel of the game
+            struct.pack_into("<I", data, CHANNELS + channel * CHANNEL + 0xC, random_.randrange(6))
+        channels = game_channels()
+        for other in range(6):
+            struct.pack_into("<i", channels, other * 0xF8 + 0x54, random_.choice((0, 1, 2, 3, 5)))
+        t.check(
+            "network_observer_release_game_channels",
+            Buffer(bytes(data)),
+            globals={"unknown_004d87d4": Buffer(bytes(channels))},
+            externals={
+                "unknown_00088650": told,
+                "unknown_00076ff0": with_channel_and_observer,
+                "unknown_000886e0": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+            },
+        )
+
+    for n in range(600):
+        setup = at_time()
+        now = struct.unpack("<I", setup["globals"]["unknown_0051054c"])[0]
+        data, pointers = with_owners()
+        # the first function of what each session has is the one that is asked
+        struct.pack_into("<5I", data, SIZE + 16, mock_address(0), 0x22, 0x33, 0x44, 0x55)
+        data += bytearray(random_.randbytes(0x74))
+        struct.pack_into("<I", data, 0x10, SIZE + 36)
+        struct.pack_into("<I", data, SIZE + 36 + 0x70, random_.choice((1000, 1000, 30000)))
+        channels = game_channels()
+        for other in range(6):
+            struct.pack_into("<i", channels, other * 0xF8 + 0x54, random_.choice((0, 2, 3, 4, 4, 5, 5, 7)))
+            struct.pack_into("<I", channels, other * 0xF8 + 0xA8, (now - random_.choice((0, 999, 1000, 1001, 30001))) & 0xFFFFFFFF)
+        setup["globals"]["unknown_004d87d4"] = Buffer(bytes(channels))
+        # which of them say yes: the same each time that one is asked
+        yes = random_.sample(range(4), random_.choice((0, 0, 1, 2, 4)))
+        t.check(
+            "network_observer_channel_unknown_00077940",
+            Buffer(bytes(data), pointers=pointers + (0x10,)),
+            random_.randrange(15),
+            globals=setup["globals"],
+            externals=setup["externals"],
+            mocks=[Mock(lambda call, yes=yes: (call.registers["ecx"] // 4) % 4 in yes, stack_arguments=1, registers=("ecx",))],
+        )

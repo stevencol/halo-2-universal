@@ -462,12 +462,13 @@ void __attribute__((stdcall)) unknown_000776a0(byte *observer, long channel_inde
 
 /* what the observer has of a session starts with something that is told of
 its channels: by its fifth function, that one of them is in its first state
-again */
+again; and asked something of one of them, by its first */
 struct network_observer_session_owner;
 
 struct network_observer_session_owner_functions
 {
-	void *unknown0[4];
+	boolean (__attribute__((thiscall)) *channel_unknown0)(struct network_observer_session_owner *owner, long channel_index);
+	void *unknown4[3];
 	void (__attribute__((thiscall)) *channel_reset)(struct network_observer_session_owner *owner, long channel_index);
 };
 
@@ -1201,4 +1202,81 @@ void network_observer_channel_unknown_0007a160(
 	{
 		unknown_00079c00(observer, channel_index, 0);
 	}
+}
+
+/* 0x00078880: each channel of the observer that is in use lets go of its
+channel of the game, and has none: one that is past its second state is told
+3 first (unknown_00088650), and unknown_00076ff0 is done with the channel */
+void NETWORK_OBSERVER_CALLBACK network_observer_release_game_channels(
+	byte *observer)
+{
+	long channel_index;
+
+	for (channel_index= 0; channel_index<MAXIMUM_NETWORK_OBSERVER_CHANNELS; channel_index++)
+	{
+		byte *channel= (byte *)network_observer_channel(observer, channel_index);
+
+		if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)!=0)
+		{
+			byte *game_channel= unknown_004d87d4+
+				*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET)*NETWORK_CHANNEL_SIZE;
+
+			if (*(const long *)(game_channel+NETWORK_CHANNEL_STATE_OFFSET)>_network_channel_state2)
+			{
+				unknown_00088650(game_channel, _unknown_00088650_unknown3);
+				unknown_00076ff0(channel_index, observer);
+			}
+			unknown_000886e0(unknown_004d87d4+
+				*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET)*NETWORK_CHANNEL_SIZE);
+			*(long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET)= NONE;
+		}
+	}
+}
+
+/* 0x00077940: whether what any session that uses a channel of the observer
+has in it says yes of the channel, by its first function. Only if the
+channel of the game is in its fourth state or after, and its time of 0xA8
+was as long ago as the number at 0x70 of what the observer has at 0x10
+says */
+boolean network_observer_channel_unknown_00077940(
+	byte *observer,
+	long channel_index)
+{
+	const byte *channel= network_observer_channel(observer, channel_index);
+	long game_channel_index= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET);
+	const byte *game_channel;
+	const byte *parameters;
+	long session_index;
+
+	if (game_channel_index==NONE)
+	{
+		return FALSE;
+	}
+	game_channel= unknown_004d87d4+game_channel_index*NETWORK_CHANNEL_SIZE;
+	if (*(const long *)(game_channel+NETWORK_CHANNEL_STATE_OFFSET)<_network_channel_state4)
+	{
+		return FALSE;
+	}
+	parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+	if (network_time_since(*(const long *)(game_channel+NETWORK_CHANNEL_UNKNOWNA8_OFFSET))<
+		*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN70_OFFSET))
+	{
+		return FALSE;
+	}
+	for (session_index= 0; session_index<MAXIMUM_NETWORK_OBSERVER_SESSIONS; session_index++)
+	{
+		if (channel[NETWORK_OBSERVER_CHANNEL_SESSIONS_OFFSET]&(1u<<session_index))
+		{
+			struct network_observer_session_owner *owner= *(struct network_observer_session_owner **)(observer+
+				NETWORK_OBSERVER_SESSIONS_OFFSET+session_index*NETWORK_OBSERVER_SESSION_SIZE+
+				NETWORK_OBSERVER_SESSION_SESSION_OFFSET);
+
+			if (owner->functions->channel_unknown0(owner, channel_index))
+			{
+				return TRUE;
+			}
+		}
+	}
+
+	return FALSE;
 }
