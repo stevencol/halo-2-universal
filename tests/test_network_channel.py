@@ -120,3 +120,59 @@ def run(t) -> None:
                 "unknown_00094bf0": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
             },
         )
+
+    # ---------- a channel says that it talks, is given what it talks with, and tries to talk
+
+    def message(harness, arguments):
+        # the message is in the stack: what it says is what counts
+        return 0, (harness.normalize(arguments[0]), arguments[1], arguments[2], bytes(harness.mu.mem_read(arguments[3], arguments[2])))
+
+    def to_address(harness, arguments):
+        return 0, (arguments[0], harness.normalize(arguments[1]), arguments[2], arguments[3], bytes(harness.mu.mem_read(arguments[4], arguments[3])))
+
+    for n in range(400):
+        data = channel()
+        struct.pack_into("<I", data, 0x14, random_.randrange(3))
+        t.check(
+            "network_channel_send_established",
+            Buffer(bytes(data)),
+            random_.choice((0, 1, 1, 0x80)),
+            globals=things(),
+            externals={"unknown_00095580": message, "network_message_gateway_send": to_address},
+        )
+
+    for n in range(400):
+        setup = at_time()
+        data = channel()
+        struct.pack_into("<i", data, 0x54, random_.choice((2, 3, 3, 3, 4, 5)))
+        t.check(
+            "network_channel_accept",
+            Buffer(bytes(data)),
+            random_.getrandbits(32),
+            globals=setup["globals"],
+            externals=dict(
+                setup["externals"],
+                network_channel_reset_times=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                network_channel_send_established=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1] & 0xFF)),
+            ),
+        )
+
+    for n in range(800):
+        setup = at_time()
+        now = struct.unpack("<I", setup["globals"]["unknown_0051054c"])[0]
+        # what the channel has at 0xC goes after it
+        data = channel() + bytearray(struct.pack("<3i", random_.choice((500, 2000)), random_.choice((0, 3, 3, 10)), random_.choice((5000, 5000, 0))))
+        struct.pack_into("<I", data, 0xC, CHANNEL)
+        struct.pack_into("<I", data, 0x88, (now - random_.choice((0, 4999, 5000, 5001, 0x80000000))) & 0xFFFFFFFF)
+        struct.pack_into("<I", data, 0x8C, (now - random_.choice((0, 0, 1, 500, -1, -500))) & 0xFFFFFFFF)
+        struct.pack_into("<i", data, 0x90, random_.choice((0, 2, 3, 4, 10, -1)))
+        t.check(
+            "network_channel_update_connecting",
+            Buffer(bytes(data), pointers=(0xC,)),
+            globals=setup["globals"],
+            externals=dict(
+                setup["externals"],
+                network_channel_close=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                network_message_gateway_send=to_address,
+            ),
+        )

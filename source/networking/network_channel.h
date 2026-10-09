@@ -50,7 +50,21 @@ enum
 	_network_channel_state_closed= 2,
 	_network_message_connect_closed= 7,
 	_network_channel_closed_by_other= 6,
-	_network_channel_closed_released= 3
+	_network_channel_closed_released= 3,
+	/* more of a channel: its tries at talking with another console; when it
+	started, when the next one is, and how many it has made; and when it
+	was given what it talks with. The state in which it tries, the reason
+	that it stops with when it has tried for too long, and the kinds of
+	the messages that ask to be talked with and say that it is so */
+	NETWORK_CHANNEL_TRIES_OFFSET= 0xC,
+	NETWORK_CHANNEL_UNKNOWN88_OFFSET= 0x88,
+	NETWORK_CHANNEL_UNKNOWN8C_OFFSET= 0x8C,
+	NETWORK_CHANNEL_UNKNOWN90_OFFSET= 0x90,
+	NETWORK_CHANNEL_UNKNOWN94_OFFSET= 0x94,
+	_network_channel_state_connecting= 3,
+	_network_channel_closed_timeout= 4,
+	_network_message_connect_request= 4,
+	_network_message_connect_established= 6
 };
 
 /* ---------- structures */
@@ -84,6 +98,30 @@ struct network_channel_closed_message
 	long reason;
 };
 
+/* the tries of a channel at talking with another console: how long there
+is between two, how many there are, and how long it tries for in all */
+struct network_channel_tries
+{
+	long period;
+	long count;
+	long timeout;
+};
+
+/* what a channel asks to be talked with by: its number, and its bits */
+struct network_channel_request_message
+{
+	long unknown4c;
+	unsigned long flags;
+};
+
+/* what a channel says when it talks: the two numbers of what it talks
+with */
+struct network_channel_established_message
+{
+	long unknown50;
+	long unknown4c;
+};
+
 /* ---------- prototypes/NETWORK_CHANNEL.C */
 
 boolean network_channel_flags_valid(unsigned long flags);
@@ -91,6 +129,9 @@ void network_channel_close(byte *channel, long unknown);
 void __attribute__((stdcall)) network_channel_release(byte *game_channel);
 void network_channel_reset_times(byte *channel);
 void network_channel_set_time(long index, byte *channel);
+void __attribute__((stdcall)) network_channel_send_established(byte *channel, boolean established);
+void __attribute__((stdcall)) network_channel_accept(byte *channel, long identifier);
+void network_channel_update_connecting(byte *channel);
 long network_channel_unknown_00088fd0(const byte *game_channel);
 long network_channel_unknown_00089000(const byte *game_channel);
 long network_channel_unknown_00089030(const byte *game_channel);

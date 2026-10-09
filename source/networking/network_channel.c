@@ -218,3 +218,99 @@ long network_channel_unknown_00089070(
 
 	return 0;
 }
+
+/* 0x00095580: a message of a kind and a size is put in what one of the
+things of unknown_004d87dc has to send */
+void __attribute__((stdcall)) unknown_00095580(byte *unknown14, long type, long size, const void *data);
+
+/* 0x00089180: a channel says that it talks with the other console (a
+message of the sixth kind, with the two numbers of what it talks with): with
+one of the things of unknown_004d87dc, by it, and only with a byte; with
+none, to the address, by what sends the messages that go by no channel */
+void __attribute__((stdcall)) network_channel_send_established(
+	byte *channel,
+	boolean established)
+{
+	struct network_channel_established_message message;
+
+	message.unknown50= *(const long *)(channel+NETWORK_CHANNEL_UNKNOWN50_OFFSET);
+	message.unknown4c= *(const long *)(channel+NETWORK_CHANNEL_UNKNOWN4C_OFFSET);
+	if (channel[NETWORK_CHANNEL_UNKNOWN48_OFFSET]&_network_channel_unknown48_bit10)
+	{
+		if (established)
+		{
+			unknown_00095580(unknown_004d87dc+*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN14_OFFSET)*
+				NETWORK_CHANNEL_UNKNOWN14_SIZE, _network_message_connect_established, sizeof(message), &message);
+		}
+	}
+	else
+	{
+		network_message_gateway_send(*(byte **)(channel+NETWORK_CHANNEL_GATEWAY_OFFSET),
+			(const struct transport_address *)(channel+NETWORK_CHANNEL_ADDRESS_OFFSET),
+			_network_message_connect_established, sizeof(message), &message);
+	}
+}
+
+/* 0x00088360: a channel is given the number of what it talks with, which
+asked to be talked with. One in its third state is in the fourth, since
+now, with that number and its six times now; and in the fifth if it has
+none of the things of unknown_004d87dc. In any state it says that it talks
+(network_channel_send_established), with whether it was in the third */
+void __attribute__((stdcall)) network_channel_accept(
+	byte *channel,
+	long identifier)
+{
+	boolean established= FALSE;
+
+	if (*(const long *)(channel+NETWORK_CHANNEL_STATE_OFFSET)==_network_channel_state_connecting)
+	{
+		*(long *)(channel+NETWORK_CHANNEL_STATE_OFFSET)= _network_channel_state4;
+		*(long *)(channel+NETWORK_CHANNEL_UNKNOWN94_OFFSET)= network_time_since(0);
+		*(long *)(channel+NETWORK_CHANNEL_UNKNOWN50_OFFSET)= identifier;
+		established= TRUE;
+		network_channel_reset_times(channel);
+		if (!(channel[NETWORK_CHANNEL_UNKNOWN48_OFFSET]&_network_channel_unknown48_bit10))
+		{
+			*(long *)(channel+NETWORK_CHANNEL_STATE_OFFSET)= _network_channel_state5;
+		}
+	}
+	network_channel_send_established(channel, established);
+}
+
+/* 0x000890b0: what is done each time with a channel that is trying to talk
+with another console. After the time that it has for it (the third number
+of what it has at 0xC) it stops, with 4 for a reason. If not, when it is
+time for one more try, and it has not made as many as the second number
+says, it asks again to be talked with (a message of the fourth kind, with
+its number and its bits), and the next try is after the first number */
+void network_channel_update_connecting(
+	byte *channel)
+{
+	const struct network_channel_tries *tries;
+
+	if (network_time_since(*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN88_OFFSET))>=
+		(*(const struct network_channel_tries **)(channel+NETWORK_CHANNEL_TRIES_OFFSET))->timeout)
+	{
+		network_channel_close(channel, _network_channel_closed_timeout);
+
+		return;
+	}
+	if (network_time_since(*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN8C_OFFSET))<0)
+	{
+		return;
+	}
+	tries= *(const struct network_channel_tries **)(channel+NETWORK_CHANNEL_TRIES_OFFSET);
+	if (*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN90_OFFSET)<tries->count)
+	{
+		struct network_channel_request_message message;
+
+		message.unknown4c= *(const long *)(channel+NETWORK_CHANNEL_UNKNOWN4C_OFFSET);
+		message.flags= *(const unsigned long *)(channel+NETWORK_CHANNEL_UNKNOWN48_OFFSET);
+		network_message_gateway_send(*(byte **)(channel+NETWORK_CHANNEL_GATEWAY_OFFSET),
+			(const struct transport_address *)(channel+NETWORK_CHANNEL_ADDRESS_OFFSET), _network_message_connect_request,
+			sizeof(message), &message);
+		/* the game adds as the processor does */
+		*(long *)(channel+NETWORK_CHANNEL_UNKNOWN8C_OFFSET)= (long)((unsigned long)(*(const struct network_channel_tries **)
+			(channel+NETWORK_CHANNEL_TRIES_OFFSET))->period+(unsigned long)network_time_since(0));
+	}
+}

@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Un canal del juego pide conectar, y le contestan
+
+Tres funciones en `networking/network_channel.c`, 387 bytes entre todas. De 1410
+funciones se pasa a 1413, el 12,54 % de las del juego (el 8,458 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_channel_update_connecting` | `0x000890b0` | `networking/network_channel.c` |
+| `network_channel_accept` | `0x00088360` | `networking/network_channel.c` |
+| `network_channel_send_established` | `0x00089180` | `networking/network_channel.c` |
+
+### Lo que se sabe
+
+- Son **las dos puntas de una conexión**, vistas desde el canal del juego.
+  Con ellas se puede seguir el saludo entero:
+  1. `network_channel_update_connecting`: el canal que quiere conectar
+     manda cada cierto tiempo **una petición** (mensaje de la cuarta
+     clase, con su número y sus bits), un número limitado de veces. Si
+     pasa el plazo sin respuesta, se cierra con el motivo 4.
+  2. La otra consola recibe la petición: es el hito 397. Si la acepta,
+     llama a `network_channel_accept` (antes `unknown_00088360`), que
+     guarda el número del otro, pone el canal en marcha y...
+  3. ...contesta con `network_channel_send_established`: **un mensaje de la
+     sexta clase** con los dos números, el suyo y el del otro.
+- Ya se conocen cuatro de las 45 clases de mensaje: 4, pedir conexión; 5,
+  negarla (hito 397); 6, conexión hecha; 7, conexión cerrada (hito 406).
+- Un canal con una de las cosas de `unknown_004d87dc` manda el mensaje de
+  conexión hecha por ella, y no por el camino de los mensajes sin canal.
+
+### Comprobado rompiendo líneas
+
+- Dieciséis líneas rotas, una cada vez: las pruebas fallaron en las
+  dieciséis.
+
+### Sin comprobar
+
+- `network_channel_update_connecting` no cuenta el intento que hace: el
+  número de intentos (`0x90`) lo sube otra función.
+- En este hito se pasaron las pruebas de `network_channel` (12 funciones) y
+  las de `network_observer`, que usan un nombre nuevo.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Los canales del juego: cerrar uno, soltarlo, y lo que el observador les pregunta
 
 Nueve funciones en un archivo nuevo, `networking/network_channel.c`, 650 bytes entre todas. De 1401

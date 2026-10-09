@@ -1937,7 +1937,9 @@ address,name,source,arguments,returns,convention
 00088fd0,network_channel_unknown_00088fd0,source/networking/network_channel.c,ecx,int
 00089000,network_channel_unknown_00089000,source/networking/network_channel.c,ecx,int
 000880b0,network_channel_flags_valid,source/networking/network_channel.c,ecx,bool
-00088360,unknown_00088360,,esi stack,void,stdcall
+00088360,network_channel_accept,source/networking/network_channel.c,esi stack,void,stdcall
+00089180,network_channel_send_established,source/networking/network_channel.c,eax stack,void,stdcall
+000890b0,network_channel_update_connecting,source/networking/network_channel.c,eax,void
 00082060,unknown_00082060,,stack stack,int,stdcall
 00092870,network_rate_new,source/networking/network_observer.c,eax ecx,void
 000929d0,network_window_reset,source/networking/network_observer.c,esi,void

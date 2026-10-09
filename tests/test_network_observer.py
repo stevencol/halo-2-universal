@@ -1670,7 +1670,7 @@ def run(t) -> None:
                 "network_observer_channel_set_state": goes,
                 "network_observer_channel_update_game_channel": with_channel_and_observer,
                 "network_observer_channel_update_connection": with_channel_and_observer,
-                "unknown_00088360": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                "network_channel_accept": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
             },
         )
 

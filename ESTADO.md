@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 406.
+**Última actualización:** 2026-10-08, al terminar el hito 407.
 
 ## Dónde estamos
 
-- **1410 funciones descompiladas de 11.265: el 12,52 % del juego** (el
-  8,445 % de los bytes de código).
-- Las 1410 están comprobadas contra el ejecutable original: las 1390 del
+- **1413 funciones descompiladas de 11.265: el 12,54 % del juego** (el
+  8,458 % de los bytes de código).
+- Las 1413 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Start network_channel.c: closing a channel, letting go of it, what the observer asks* (ver `git log`).
+- Último hito: *Decompile how a channel of the game asks to connect and is answered* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 551 funciones apuntadas pero sin descompilar (las que el código
-  llama); 449 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 550 funciones apuntadas pero sin descompilar (las que el código
+  llama); 448 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -128,9 +128,10 @@ Módulos (funciones hechas / archivo):
 - [x] Intentos de medir la conexión — `networking\transport_qos.c` (8: la
   tabla de intentos, empezar uno, soltarlo, cómo va y qué encontró con
   cada consola). Entero.
-- [ ] Canales del juego — `networking\network_channel.c` (9: cerrar un
-      canal, soltarlo, sus horas y lo que el observador les pregunta;
-      quedan unas quince, de `0x00088060` a `0x000893c0`)
+- [ ] Canales del juego — `networking\network_channel.c` (12: pedir
+      conexión y contestar, cerrar un canal, soltarlo, sus horas y lo
+      que el observador les pregunta; quedan unas doce, de `0x00088060`
+      a `0x000893c0`)
 - [x] Observador de la red — `networking\network_observer.c` (72: lo que
       tiene de cada sesión, sus canales con las otras consolas y sus
       estados, el caudal de cada uno y cuándo puede mandar; de

@@ -3185,7 +3185,7 @@ void network_observer_update_interval(
 this console can do. 0x00088360: a channel of the game is given a number of
 what it talks with */
 boolean network_channel_flags_valid(unsigned long flags);
-void __attribute__((stdcall)) unknown_00088360(byte *game_channel, long identifier);
+void __attribute__((stdcall)) network_channel_accept(byte *game_channel, long identifier);
 
 /* what a console that asks to be talked with is told, when it is not: the
 number that it gave, and why */
@@ -3311,7 +3311,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_handle_connect_request(
 			*(short *)(channel+NETWORK_OBSERVER_CHANNEL_TRIES_OFFSET)= 0;
 			network_observer_channel_update_game_channel(channel_index, observer);
 		}
-		unknown_00088360(game_channel, *(const long *)(request+NETWORK_OBSERVER_CONNECT_REQUEST_IDENTIFIER_OFFSET));
+		network_channel_accept(game_channel, *(const long *)(request+NETWORK_OBSERVER_CONNECT_REQUEST_IDENTIFIER_OFFSET));
 		network_observer_channel_update_connection(channel_index, observer);
 		network_observer_channel_update_game_channel(channel_index, observer);
 	}
