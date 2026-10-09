@@ -611,6 +611,12 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_set_player_unknownA8(long 
 	const byte *unknownA8);
 boolean NETWORK_SESSION_CALLBACK network_session_host_unknown_0005aeb0(byte *session, long unknown);
 void network_session_reset_unknown761c(byte *session);
+boolean network_session_unknown_0005ece0(byte *session, const struct transport_address *address);
+boolean NETWORK_SESSION_CALLBACK network_session_host_change_leader(byte *session, long channel, const byte *message);
+boolean NETWORK_SESSION_CALLBACK network_session_host_leader_removes_peer(byte *session, long channel,
+	const byte *message);
+boolean NETWORK_SESSION_CALLBACK network_session_unknown_0005f3c0(const byte *session, long channel_index,
+	boolean unknown);
 boolean network_session_remove_peer_with_message_c(byte *session, long peer_index);
 void NETWORK_SESSION_CALLBACK network_session_peer_properties_apply_update(
 	struct network_session_peer_properties *properties, const struct network_session_peer_properties_update *update);

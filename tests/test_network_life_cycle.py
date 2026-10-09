@@ -2142,3 +2142,69 @@ def run(t) -> None:
             Buffer(bytes(message)),
             externals={"network_observer_find_channel": which_channel()},
         )
+
+    # ---------- four more things that a session does with what comes
+
+    for n in range(400):
+        data = with_peers()
+        struct.pack_into("<I", data, STATE, random_.choice((9, 9, 9, 9, 3, 8)))
+        struct.pack_into("<I", data, 0x7430 + 0x54, random_.choice((0, 1, 5, 16)))
+        peer = random_.choice((NONE, 0, 1, 2, 3, 5))
+        if peer != NONE and random_.randrange(2):
+            # the console is one of those that are known of
+            at = 0x7430 + 0x58 + random_.randrange(16) * 6
+            data[at : at + 6] = data[PEERS + peer * PEER + 0xA : PEERS + peer * PEER + 0x10]
+        # which console the address is of is said by what the console's library says that it is known by
+        known_by = random_.randbytes(0x24) if peer == NONE else bytes(data[PEERS + peer * PEER : PEERS + peer * PEER + 0x24])
+
+        def of_peer(harness, arguments, known_by=known_by):
+            harness.mu.mem_write(arguments[5], known_by)
+            return 1, tuple(arguments[:5])
+
+        t.check(
+            "network_session_unknown_0005ece0",
+            Buffer(bytes(data)),
+            Buffer(random_.randbytes(0x14)),
+            globals=clock(),
+            externals={"GetTickCount": ticks(), "transport_security_peer_address_from_address": of_peer},
+        )
+
+    for name in ("network_session_host_change_leader", "network_session_host_leader_removes_peer"):
+        for n in range(400):
+            data = with_peers()
+            struct.pack_into("<I", data, STATE, random_.choice((5, 5, 5, 6, 7, 8, 3, 0)))
+            struct.pack_into("<I", data, 0x54, random_.choice((2, 4, 16)))
+            struct.pack_into("<I", data, MEMBERSHIP, 0)
+            leader = random_.randrange(4)
+            struct.pack_into("<I", data, HOST_PEER, leader)
+            struct.pack_into("<I", data, LOCAL_PEER, random_.choice((leader ^ 1, leader ^ 1, leader ^ 1, leader)))
+            for peer in range(16):
+                at = 0x72DC + peer * 0x14
+                data[at] = 1
+                struct.pack_into("<I", data, at + 4, peer)
+            message = bytearray(random_.randbytes(0x30))
+            said = random_.randrange(4)
+            if n % 5:
+                message[8:0x2C] = data[PEERS + said * PEER : PEERS + said * PEER + 0x24]
+            t.check(
+                name,
+                Buffer(bytes(data)),
+                random_.getrandbits(32),
+                Buffer(bytes(message)),
+                externals={
+                    "network_observer_find_channel": lambda harness, arguments, channel=random_.choice((leader, leader, leader, leader ^ 1, NONE)): channel,
+                    "network_session_remove_peer_with_message_e": nothing,
+                },
+            )
+
+    for n in range(400):
+        data = with_peers()
+        data[0x7420] = random_.choice((0, 0, 1))
+        for peer in range(16):
+            struct.pack_into("<I", data, PEERS + peer * PEER + 0xF8, random_.choice((0, 0, 1, 4)))
+        t.check(
+            "network_session_unknown_0005f3c0",
+            Buffer(bytes(data)),
+            random_.choice((NONE, 0, 1, 2, 3, 4)),
+            random_.choice((0, 0, 1, 0x80, 0x100)),
+        )

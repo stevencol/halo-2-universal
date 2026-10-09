@@ -3926,3 +3926,136 @@ boolean NETWORK_SESSION_CALLBACK network_session_unknown_0005e340(
 
 	return FALSE;
 }
+
+/* 0x0005ece0: in the ninth state, something comes from an address of the
+game that is of another console of the session: the console loses its bit in
+the first of the two numbers that the session has after what it has for that
+state, has it in the second, and loses it in the second of those of the
+consoles that are known of (network_session_election_set_unknownBC); if that
+changes anything, the time is now. TRUE; FALSE out of the ninth state or if
+the address is of no other console */
+boolean network_session_unknown_0005ece0(
+	byte *session,
+	const struct transport_address *address)
+{
+	long peer_index;
+	unsigned long bit;
+	byte *data= session+NETWORK_SESSION_STATE_DATA_OFFSET;
+
+	if (network_session_state(session)!=_network_session_state9)
+	{
+		return FALSE;
+	}
+	peer_index= network_session_find_peer_by_transport_address(session, address);
+	if (peer_index==NONE || peer_index==*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET))
+	{
+		return FALSE;
+	}
+	bit= 1u<<peer_index;
+	*(unsigned long *)(data+NETWORK_SESSION_STATE9_LOCAL_PEERS_OFFSET)&= ~bit;
+	*(unsigned long *)(data+NETWORK_SESSION_STATE9_HOST_PEERS_OFFSET)|= bit;
+	if (network_session_election_set_unknownBC((struct network_session_election *)(data+NETWORK_SESSION_STATE9_UNKNOWN10_OFFSET),
+		session+NETWORK_SESSION_PEER_ARRAY_OFFSET+peer_index*NETWORK_SESSION_PEER_SIZE, FALSE))
+	{
+		*(long *)(data+NETWORK_SESSION_STATE9_UNKNOWN8_OFFSET)= network_session_time();
+	}
+
+	return TRUE;
+}
+
+/* 0x0005ee70: the console that leads a session tells the one that runs it
+that another console leads it from now on: who is in the session says so,
+and the two numbers that count what changes count one more if it is another.
+Only if what comes is from the console that leads the session, which is not
+this one, and the console that it says is in the session. Whether it was
+so */
+boolean NETWORK_SESSION_CALLBACK network_session_host_change_leader(
+	byte *session,
+	long channel,
+	const byte *message)
+{
+	long peer_index;
+	long said;
+
+	if (!network_session_is_host(session))
+	{
+		return FALSE;
+	}
+	peer_index= network_session_channel_peer(session, channel);
+	said= network_session_find_peer(session, message+NETWORK_SESSION_MESSAGE_PEER_ADDRESS_OFFSET);
+	if (peer_index!=*(const long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET) ||
+		peer_index==*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET) || said==NONE)
+	{
+		return FALSE;
+	}
+	if (*(const long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET)!=said)
+	{
+		*(long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET)= said;
+		(*(long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET))++;
+		(*(long *)(session+NETWORK_SESSION_UNKNOWN7618_OFFSET))++;
+	}
+
+	return TRUE;
+}
+
+/* 0x0005ef20: the console that leads a session tells the one that runs it
+to take a console out: another one goes out with something of the kind 0xE,
+and if it is this one the session goes into its tenth state with a 1. Only
+if what comes is from the console that leads the session, which is not this
+one, and the console that it says is in the session and is not itself.
+Whether it was so */
+boolean NETWORK_SESSION_CALLBACK network_session_host_leader_removes_peer(
+	byte *session,
+	long channel,
+	const byte *message)
+{
+	long peer_index;
+	long said;
+
+	if (!network_session_is_host(session))
+	{
+		return FALSE;
+	}
+	peer_index= network_session_channel_peer(session, channel);
+	said= network_session_find_peer(session, message+NETWORK_SESSION_MESSAGE_PEER_ADDRESS_OFFSET);
+	if (peer_index!=*(const long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET) ||
+		peer_index==*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET) || said==NONE || said==peer_index)
+	{
+		return FALSE;
+	}
+	if (said==*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET))
+	{
+		network_session_enter_state10(session, 1);
+	}
+	else
+	{
+		network_session_remove_peer_with_message_e(said, session);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005f3c0: something of the console of a session that has a channel.
+FALSE if no console has it. For the console that runs the session, TRUE,
+unless the console has no players and the last thing is not given. For
+another, TRUE only if network_session_unknown_00058d90 says no */
+boolean NETWORK_SESSION_CALLBACK network_session_unknown_0005f3c0(
+	const byte *session,
+	long channel_index,
+	boolean unknown)
+{
+	long peer_index= network_session_find_peer_by_channel(session, channel_index);
+	boolean host= network_session_unknown_00058d20(session);
+
+	if (peer_index==NONE)
+	{
+		return FALSE;
+	}
+	if (host && !unknown && *(const long *)(session+NETWORK_SESSION_PEER_ARRAY_OFFSET+
+		peer_index*NETWORK_SESSION_PEER_SIZE+NETWORK_SESSION_PEER_PLAYER_COUNT_OFFSET)==0)
+	{
+		return FALSE;
+	}
+
+	return !network_session_unknown_00058d90(session) || host;
+}

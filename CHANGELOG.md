@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Cuatro avisos más que atiende la sesión
+
+Cuatro funciones en `networking/network_session.c`, 674 bytes entre todas. De 1272
+funciones se pasa a 1276, el 11,33 % de las del juego (el 7,050 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_unknown_0005ece0` | `0x0005ece0` | `networking/network_session.c` |
+| `network_session_host_change_leader` | `0x0005ee70` | `networking/network_session.c` |
+| `network_session_host_leader_removes_peer` | `0x0005ef20` | `networking/network_session.c` |
+| `network_session_unknown_0005f3c0` | `0x0005f3c0` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_host_change_leader`: la consola que dirige la sesión le
+  dice a la que la lleva que **pasa a dirigirla otra**; «quién está» lo
+  apunta y suben los contadores.
+- `network_session_host_leader_removes_peer`: la que dirige le pide a la
+  que la lleva que **eche a una consola**. Si es otra, sale con el mensaje
+  `0xE` (hito 321); si es la propia consola que lleva la sesión, la sesión
+  pasa al décimo estado con un 1.
+- Las dos solo valen si el aviso viene de la consola que dirige la sesión,
+  que no puede ser esta, y si la consola de la que habla está en la sesión.
+- `network_session_unknown_0005ece0`: en el noveno estado, llega algo de la
+  dirección de otra consola: pierde su bit en un número, lo gana en otro y
+  lo pierde en la lista de consolas (hito 347).
+- `network_session_unknown_0005f3c0` dice algo de la consola de un canal.
+
+### Lo que enseñó
+
+- En `network_session_unknown_0005ece0` leí mal una etiqueta del final:
+  cuando lo de dentro no cambia nada el juego **también devuelve TRUE**, y
+  solo se salta apuntar la hora. La prueba lo cazó a la primera. Antes de
+  dar con ello sospeché del arnés y del compilador; no era ninguno. Para
+  mirar nuestro código compilado quedó un guion pequeño que desensambla una
+  función de la imagen de las pruebas.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (183
+  funciones).
+- La batería completa del hito 343 seguía corriendo.
+- Las mutaciones de los hitos 280 a 308 y 321 a 350 están pendientes.
+
 ## 2026-10-08 — Sacar a una consola de otra manera, y aplicar lo que cambió
 
 Tres funciones en `networking/network_session.c`, 557 bytes entre todas. De 1269
