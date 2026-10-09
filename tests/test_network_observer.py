@@ -466,7 +466,7 @@ def run(t) -> None:
                 "network_observer_channel_unknown_000773a0": with_channel_and_observer,
                 "network_observer_channel_update_probe": with_channel_and_observer,
                 "unknown_000779f0": with_observer,
-                "unknown_00078ac0": with_observer,
+                "network_observer_update_flow": with_observer,
                 "network_observer_update_voice_mode": with_observer,
             },
         )
@@ -1747,4 +1747,101 @@ def run(t) -> None:
                 xbox_video_settings=video(),
             ),
             externals=setup["externals"],
+        )
+
+    # ---------- what the observer does with the flow of its channels each time
+
+    for n in range(1500):
+        setup = at_time()
+        now = struct.unpack("<I", setup["globals"]["unknown_0051054c"])[0]
+        data, pointers = with_owners()
+        # the second function of what each session has is the one that is asked
+        struct.pack_into("<5I", data, SIZE + 16, 0x11, mock_address(0), 0x33, 0x44, 0x55)
+        data += bytearray(random_.randbytes(0x1E0))
+        parameters = SIZE + 36
+        struct.pack_into("<I", data, 0x10, parameters)
+        struct.pack_into("<i", data, parameters + 0x148, random_.choice((1000, 1000, 0)))
+        struct.pack_into("<if", data, parameters + 0x1C0, random_.choice((1, 2, 4, 15)), random_.choice((0.0, 0.25, 0.5, 1.0)))
+        struct.pack_into("<I", data, parameters + 0x1D4, random_.choice((0, 5, 30)))
+        struct.pack_into("<I", data, parameters + 0x1DC, random_.choice((0, 7, 60)))
+        data[0x4E00] = random_.choice((1, 1, 1, 0, 0x80))
+        struct.pack_into("<I", data, 0x4F30, (now - random_.choice((0, 999, 1000, 1001, 5000))) & 0xFFFFFFFF)
+        # the channels of the game, and after them what some of them have at 0x3C
+        channels = game_channels()
+        things = len(channels)
+        game_pointers = []
+        for other in range(6):
+            thing = random_.choice((None, 0, 1, 2))
+            struct.pack_into("<I", channels, other * 0xF8 + 0x3C, 0 if thing is None else things + thing * 0x34)
+            if thing is not None:
+                game_pointers.append(other * 0xF8 + 0x3C)
+            struct.pack_into("<i", channels, other * 0xF8 + 0x54, random_.choice((0, 2, 3, 5, 5, 5, 5)))
+        for thing in (0, 1, 0x80):
+            block = bytearray(random_.randbytes(0x34))
+            block[0x30] = thing
+            channels += block
+        for channel in range(15):
+            at = CHANNELS + channel * CHANNEL
+            game_channel = random_.randrange(6)
+            struct.pack_into("<I", data, at + 0xC, game_channel)
+            data[at + 0x48C] = random_.choice((0, 1, 1, 0x80))
+            # the two bytes of the channel are as its channel of the game has it, mostly
+            thing = struct.unpack_from("<I", channels, game_channel * 0xF8 + 0x3C)[0]
+            has = int(thing != 0)
+            byte = channels[thing + 0x30] if thing else 0
+            data[at + 0x48D] = random_.choice((0, 1, 0x80))
+            data[at + 0x48E] = has if random_.random() < 0.8 else random_.choice((0, 1, 0x80))
+            data[at + 0x48F] = int(byte != 0) if random_.random() < 0.8 else random_.choice((0, 1, 0x80))
+            struct.pack_into("<II", data, at + 0x4B0, random_.choice((0, 10, 50, 100, 130, 0x7FFFFFFF)), random_.choice((0, 5, 10, 50)))
+            struct.pack_into("<I", data, at + 0x4DC, random_.choice((0, 1, 2, 3, 3)))
+            data[at + 0x4F4] = random_.choice((0, 0, 1, 0x80))
+            struct.pack_into("<I", data, at + 0x504, random_.choice((10, 20, 50, 100, 0x7FFFFFFF)))
+        # the session that the voice goes with: its sixth function says which console a channel is for
+        session = bytearray(random_.randbytes(0x7420))
+        struct.pack_into("<7I", session, 0, 4, 0x11, 0x22, 0x33, 0x44, 0x55, mock_address(1))
+        struct.pack_into("<I", session, 0x741C, random_.choice((0, 1, 1, 5)))
+        other_session = bytearray(session)
+        struct.pack_into("<I", other_session, 0x741C, random_.choice((0, 1, 1, 5)))
+        voice = bytearray(random_.randbytes(0x90))
+        voice[4] = random_.choice((1, 1, 1, 0, 0x80))
+        values = [random_.choice((0.0, 1.0, 1.0, 2.5, -3.0, 100.0, 7.0)) for channel in range(15)]
+        starts = random_.choice((1, 1, 1, 0))
+
+        def started(harness, arguments, starts=starts):
+            # a channel whose flow starts has one, mostly
+            if starts:
+                harness.mu.mem_write(arguments[1] + CHANNELS + arguments[0] * CHANNEL + 0x48C, b"\x01")
+            return 0, (arguments[0], harness.normalize(arguments[1]))
+
+        t.check(
+            "network_observer_update_flow",
+            Buffer(bytes(data), pointers=pointers + (0x10,)),
+            globals=dict(
+                setup["globals"],
+                unknown_004d87d4=Buffer(bytes(channels), pointers=tuple(game_pointers)),
+                game_voice_enabled=bytes((random_.choice((1, 1, 1, 0, 0x80)),)),
+                voice_globals=bytes(voice),
+                unknown_004c9888=struct.pack("<I", random_.choice((0, 1, 1, 2))),
+                game_voice_session_source=struct.pack("<I", random_.choice((0, 1, 1, 2, 2, 3))),
+                unknown_00527330=bytes((random_.choice((1, 1, 1, 0, 0x80)),)),
+                network_life_cycle_session=Buffer(bytes(session), pointers=(0,)),
+                network_life_cycle_other_session=Buffer(bytes(other_session), pointers=(0,)),
+            ),
+            externals=dict(
+                setup["externals"],
+                network_observer_channel_start_flow=started,
+                game_voice_unknown_00054890=lambda harness, arguments: (arguments[0] % 2, (arguments[0],)),
+                network_observer_channel_lower_flow=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2])),
+                network_observer_channel_unknown_0007a2a0=lambda harness, arguments, values=values: (
+                    f32(values[arguments[0]]),
+                    (arguments[0], harness.normalize(arguments[1])),
+                ),
+                network_observer_channel_update_flow=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                network_observer_update_interval=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+            ),
+            mocks=[
+                # which of the sessions say so: the same each time that one is asked of a channel
+                Mock(lambda call, yes=random_.getrandbits(15): (yes >> call.stack[0]) & 1, stack_arguments=1, registers=("ecx",)),
+                Mock(lambda call, peers=[random_.choice((NONE, 0, 1, 2, 3)) for channel in range(15)]: peers[call.stack[0]], stack_arguments=1, registers=("ecx",)),
+            ],
         )

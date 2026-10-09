@@ -465,7 +465,7 @@ struct network_observer_session_owner;
 struct network_observer_session_owner_functions
 {
 	boolean (__attribute__((thiscall)) *channel_unknown0)(struct network_observer_session_owner *owner, long channel_index);
-	void *unknown4;
+	boolean (__attribute__((thiscall)) *channel_unknown4)(struct network_observer_session_owner *owner, long channel_index);
 	boolean (__attribute__((thiscall)) *channel_wanted)(struct network_observer_session_owner *owner, long channel_index,
 		boolean was_established);
 	void (__attribute__((thiscall)) *channel_established)(struct network_observer_session_owner *owner, long channel_index,
@@ -683,14 +683,13 @@ boolean network_observer_channel_unused_expired(long channel_index, byte *observ
 void __attribute__((stdcall)) network_observer_channel_unknown_000773a0(long channel_index, byte *observer);
 void network_observer_channel_update_probe(long channel_index, byte *observer);
 void unknown_000779f0(byte *observer);
-void __attribute__((stdcall)) unknown_00078ac0(byte *observer);
 
 /* 0x00075da0: what the observer does each time. Each channel that is in
 use: if no session uses it and network_observer_channel_unused_expired says so, it is no more
 (network_observer_channel_delete); and if it still is in use, it follows its
 connection (network_observer_channel_update_connection) and network_observer_channel_update_game_channel,
 network_observer_channel_update_tries, network_observer_channel_unknown_000773a0 and network_observer_channel_update_probe are done with it. Then
-unknown_000779f0, unknown_00078ac0 and network_observer_update_voice_mode, with the observer */
+unknown_000779f0, network_observer_update_flow and network_observer_update_voice_mode, with the observer */
 void NETWORK_OBSERVER_CALLBACK network_observer_update(
 	byte *observer)
 {
@@ -719,7 +718,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_update(
 		}
 	}
 	unknown_000779f0(observer);
-	unknown_00078ac0(observer);
+	network_observer_update_flow(observer);
 	network_observer_update_voice_mode(observer);
 }
 
@@ -3494,4 +3493,181 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_start_flow(
 	/* the game has network_observer_channel_set_flow written here */
 	network_observer_channel_set_flow(channel_index, observer, packet_rate, bits_per_second,
 		network_observer_flow_unknown498(observer, unknown4f0, packet_rate, bits_per_second));
+}
+
+#include "cseries/sort.h"
+
+/* 0x00078ac0: what the observer does with the flow of its channels each
+time. Each channel in use that has a flow loses it (and the interval is to
+be done with now) if the observer's byte of 0x4E00 is not set, its channel
+of the game is not in its fifth state, or what that has at 0x3C is not as
+the channel's two bytes say; and one that has none starts one
+(network_observer_channel_start_flow), with the byte and the channel of the
+game in its fifth state. Of each one with a flow, its byte of 0x48D is
+whether a session that uses it says so, by its second function, or the voice
+has something for its console (game_voice_unknown_00054890).
+
+Then, a channel that has a flow kept, and whose number of 0x4B0, less the
+one of 0x4B4, is over the one of 0x504 and a margin, has its flow go down
+for good (network_observer_channel_lower_flow, with the byte).
+
+And every so long (the number at 0x148 of what the observer has at 0x10):
+no channel is trying more flow, and so many can as the part of the ones with
+a flow that the real at 0x1C4 says, one at least and the number at 0x1C0 at
+most; the channels with a flow, in order of the real that
+network_observer_channel_unknown_0007a2a0 gives each, the ones with less
+first, have done what is done with the flow of a channel each time
+(network_observer_channel_update_flow); the interval is looked at
+(network_observer_update_interval); and a channel that tried more flow and
+it went well (3 of its number of 0x4DC) can try again, with nothing gone
+well yet. The interval is looked at in any case */
+void NETWORK_OBSERVER_CALLBACK network_observer_update_flow(
+	byte *observer)
+{
+	boolean enabled= observer[NETWORK_OBSERVER_UNKNOWN4E00_OFFSET];
+	const byte *parameters;
+	long channel_index;
+
+	for (channel_index= 0; channel_index<MAXIMUM_NETWORK_OBSERVER_CHANNELS; channel_index++)
+	{
+		byte *channel= (byte *)network_observer_channel(observer, channel_index);
+		const byte *game_channel;
+		struct network_observer_session_owner *voice;
+		boolean wanted= FALSE;
+		boolean connected;
+		long session_index;
+
+		if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)==0)
+		{
+			continue;
+		}
+		game_channel= unknown_004d87d4+*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET)*NETWORK_CHANNEL_SIZE;
+		connected= enabled && *(const long *)(game_channel+NETWORK_CHANNEL_STATE_OFFSET)==_network_channel_state5;
+		if (channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48C_OFFSET])
+		{
+			const byte *unknown3c= *(const byte **)(game_channel+NETWORK_CHANNEL_UNKNOWN3C_OFFSET);
+
+			if (!(connected && (unknown3c!=NULL)==channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48E_OFFSET] &&
+				(unknown3c!=NULL && unknown3c[NETWORK_CHANNEL_UNKNOWN3C_UNKNOWN30_OFFSET])==
+				channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48F_OFFSET]))
+			{
+				channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48C_OFFSET]= FALSE;
+				observer[NETWORK_OBSERVER_UNKNOWN4F3C_OFFSET]= TRUE;
+			}
+		}
+		if (connected && !channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48C_OFFSET])
+		{
+			network_observer_channel_start_flow(channel_index, observer);
+			observer[NETWORK_OBSERVER_UNKNOWN4F3C_OFFSET]= TRUE;
+		}
+		if (!channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48C_OFFSET])
+		{
+			continue;
+		}
+		for (session_index= 0; session_index<MAXIMUM_NETWORK_OBSERVER_SESSIONS; session_index++)
+		{
+			if (channel[NETWORK_OBSERVER_CHANNEL_SESSIONS_OFFSET]&(1u<<session_index))
+			{
+				struct network_observer_session_owner *owner= *(struct network_observer_session_owner **)(observer+
+					NETWORK_OBSERVER_SESSIONS_OFFSET+session_index*NETWORK_OBSERVER_SESSION_SIZE+
+					NETWORK_OBSERVER_SESSION_SESSION_OFFSET);
+
+				if (owner->functions->channel_unknown4(owner, channel_index))
+				{
+					wanted= TRUE;
+					break;
+				}
+			}
+		}
+		/* the game has game_voice_get_session, and what it calls, written
+		here */
+		voice= network_observer_voice_session();
+		if (voice)
+		{
+			long peer= voice->functions->channel_peer(voice, channel_index);
+
+			if (peer!=NONE && game_voice_unknown_00054890(peer))
+			{
+				wanted= TRUE;
+			}
+		}
+		channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48D_OFFSET]= wanted;
+	}
+	for (channel_index= 0; channel_index<MAXIMUM_NETWORK_OBSERVER_CHANNELS; channel_index++)
+	{
+		const byte *channel= network_observer_channel(observer, channel_index);
+
+		if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)!=0 &&
+			channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48C_OFFSET] && channel[NETWORK_OBSERVER_CHANNEL_KEPT_FLOW_OFFSET])
+		{
+			unsigned long margin;
+
+			parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+			margin= *(const unsigned long *)(parameters+(channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48E_OFFSET] ?
+				NETWORK_OBSERVER_PARAMETERS_UNKNOWN1DC_OFFSET : NETWORK_OBSERVER_PARAMETERS_UNKNOWN1D4_OFFSET));
+			/* the game adds and takes away as the processor does */
+			if ((long)(*(const unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4B0_OFFSET)-
+				*(const unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4B4_OFFSET))>
+				(long)(*(const unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN504_OFFSET)+margin))
+			{
+				network_observer_channel_lower_flow(observer, channel_index, TRUE);
+			}
+		}
+	}
+	parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+	if (network_time_since(*(const long *)(observer+NETWORK_OBSERVER_UNKNOWN4F30_OFFSET))>=
+		*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN148_OFFSET))
+	{
+		real values[MAXIMUM_NETWORK_OBSERVER_CHANNELS];
+		long indices[MAXIMUM_NETWORK_OBSERVER_CHANNELS];
+		long count= 0;
+		long unused;
+		long most;
+		long index;
+
+		memset(values, 0, sizeof(values));
+		*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F40_OFFSET)= 0;
+		for (channel_index= 0; channel_index<MAXIMUM_NETWORK_OBSERVER_CHANNELS; channel_index++)
+		{
+			const byte *channel= network_observer_channel(observer, channel_index);
+
+			if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)!=0 &&
+				channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48C_OFFSET])
+			{
+				indices[count++]= channel_index;
+				values[channel_index]= network_observer_channel_unknown_0007a2a0(channel_index, observer);
+			}
+		}
+		parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+		most= lrintf((real)count**(const real *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN1C4_OFFSET));
+		if (most<1)
+		{
+			most= 1;
+		}
+		else if (most>*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN1C0_OFFSET))
+		{
+			most= *(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN1C0_OFFSET);
+		}
+		*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F44_OFFSET)= most;
+		qsort_4byte(indices, count, &unused, (sort_compare_4byte_proc)network_observer_compare_channels, values);
+		for (index= 0; index<count; index++)
+		{
+			network_observer_channel_update_flow(observer, indices[index]);
+		}
+		network_observer_update_interval(observer);
+		for (channel_index= 0; channel_index<MAXIMUM_NETWORK_OBSERVER_CHANNELS; channel_index++)
+		{
+			byte *channel= (byte *)network_observer_channel(observer, channel_index);
+
+			if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)!=0 &&
+				channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48C_OFFSET] &&
+				*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4DC_OFFSET)==3)
+			{
+				*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4DC_OFFSET)= 1;
+				*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4EC_OFFSET)= 0;
+			}
+		}
+		*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F30_OFFSET)= network_time_since(0);
+	}
+	network_observer_update_interval(observer);
 }

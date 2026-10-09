@@ -429,6 +429,15 @@ enum
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN160_OFFSET= 0x160,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN164_OFFSET= 0x164,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN16C_OFFSET= 0x16C,
+	/* one more byte of the observer, with which its channels have a flow.
+	And of what it has at 0x10: every how long what is done with the flow of
+	each channel is done; how many channels can try more flow at once, at
+	the most and as a part of the ones with a flow; and one more margin */
+	NETWORK_OBSERVER_UNKNOWN4E00_OFFSET= 0x4E00,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN148_OFFSET= 0x148,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1C0_OFFSET= 0x1C0,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1C4_OFFSET= 0x1C4,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1DC_OFFSET= 0x1DC,
 	NETWORK_OBSERVER_PARAMETERS_RATE_PERIOD_OFFSET= 0xF8,
 	NETWORK_OBSERVER_PARAMETERS_WINDOW_COUNT_OFFSET= 0xFC,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
@@ -580,6 +589,7 @@ void network_observer_update_interval(byte *observer);
 long NETWORK_OBSERVER_CALLBACK network_observer_compare_channels(long channel_index, long other_index,
 	const real *values);
 void NETWORK_OBSERVER_CALLBACK network_observer_channel_start_flow(long channel_index, byte *observer);
+void NETWORK_OBSERVER_CALLBACK network_observer_update_flow(byte *observer);
 long NETWORK_OBSERVER_CALLBACK network_observer_acquire_channel(byte *observer, long session_index,
 	const byte *unknown14);
 void NETWORK_OBSERVER_CALLBACK network_observer_release_game_channels(byte *observer);

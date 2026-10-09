@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 398.
+**Última actualización:** 2026-10-08, al terminar el hito 399.
 
 ## Dónde estamos
 
-- **1388 funciones descompiladas de 11.265: el 12,32 % del juego** (el
-  8,247 % de los bytes de código).
-- Las 1388 están comprobadas contra el ejecutable original: las 1354 del
+- **1389 funciones descompiladas de 11.265: el 12,33 % del juego** (el
+  8,278 % de los bytes de código).
+- Las 1389 están comprobadas contra el ejecutable original: las 1354 del
   hito 385 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a channel's flow starts* (ver `git log`).
+- Último hito: *Decompile what the observer does with the flow of its channels each time* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 555 funciones apuntadas pero sin descompilar (las que el código
-  llama); 453 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 554 funciones apuntadas pero sin descompilar (las que el código
+  llama); 452 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -126,7 +126,7 @@ Módulos (funciones hechas / archivo):
 - [x] Intentos de medir la conexión — `networking\transport_qos.c` (8: la
   tabla de intentos, empezar uno, soltarlo, cómo va y qué encontró con
   cada consola). Entero.
-- [ ] Observador de la red — `networking\network_observer.c` (69: lo que
+- [ ] Observador de la red — `networking\network_observer.c` (70: lo que
       tiene de cada sesión y sus canales con las otras consolas; va de
       `0x00075970` a `0x0007a4a0` y casi todo falta)
 - [x] Partida en red — `networking\network_life_cycle.c` (42: qué está

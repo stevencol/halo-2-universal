@@ -2,6 +2,56 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — El caudal de todos los canales, cada vez
+
+Una función en `networking/network_observer.c`, de 923 bytes. De 1388
+funciones se pasa a 1389, el 12,33 % de las del juego (el 8,278 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_update_flow` | `0x00078ac0` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_observer_update_flow` era `unknown_00078ac0`, una de las tres
+  cosas que `network_observer_update` hace cada vez. Es **la que mueve
+  todo el control del caudal**: con ella, todo lo de los hitos 377 a 398
+  queda enlazado desde arriba, sin ninguna pieza suelta.
+  - Primero decide **qué canales tienen caudal**: lo pierde el que ya no
+    está conectado (o cuyo canal del juego ha cambiado en lo que tiene en
+    `0x3C`), y lo estrena el que acaba de conectarse (hito 398). El byte
+    de `0x4E00` del observador lo apaga todo.
+  - De cada canal con caudal apunta en un byte si **alguien lo necesita
+    ahora**: una sesión que lo usa (por su segunda función; con esta se
+    conocen ya las seis de esa tabla) o la voz, si tiene algo para esa
+    consola.
+  - Si un canal que estaba probando a mandar más se retrasa demasiado,
+    le baja el caudal sin esperar al final del intervalo.
+  - Y cada cierto tiempo hace la ronda: calcula cuántos canales pueden
+    probar a la vez (una parte de los que tienen caudal), **ordena los
+    canales** por el real del hito 388 —los que menos tienen, primero— y
+    con cada uno hace lo del hito 389. Así se ve para qué era ese real:
+    decide a quién le toca antes subir.
+- En el juego está escrita dentro la función que da la sesión de la voz,
+  con las dos que esta llama; aquí se las llama.
+
+### Comprobado rompiendo líneas
+
+- Veinticuatro líneas rotas, una cada vez: las pruebas fallaron en las
+  veinticuatro.
+
+### Sin comprobar
+
+- No mira que un canal en uso tenga canal del juego; en las pruebas
+  siempre lo tiene.
+- En este hito se pasaron las pruebas de `network_observer` (70 funciones).
+- Del observador quedan dos funciones grandes: `0x00075fc0` (cuándo le
+  toca mandar a un canal) y `0x000779f0`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — El caudal de un canal empieza
 
 Dos funciones en `networking/network_observer.c`, 1049 bytes entre las dos. De 1386
