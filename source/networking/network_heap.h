@@ -48,6 +48,28 @@ extern struct network_heap *unknown_004d87f8;
 
 /* ---------- code */
 
+/* the heap of the network gives so much memory, or NULL; if it has none it
+makes room and tries once more. The game has this written wherever it does
+it */
+static inline __attribute__((always_inline)) void *network_heap_allocate(
+	long size)
+{
+	struct network_heap *heap= unknown_004d87f8;
+	void *memory= heap->allocator->functions->allocate(heap->allocator, size, 0, 0);
+
+	if (!memory)
+	{
+		heap->allocator->functions->compact(heap->allocator, 0);
+		memory= heap->allocator->functions->allocate(heap->allocator, size, 0, 0);
+	}
+	if (memory)
+	{
+		heap->count++;
+	}
+
+	return memory;
+}
+
 /* the heap of the network takes back something that it gave. It is asked
 how much it is first, and nothing is done with that: the game has this
 written wherever it does it */

@@ -2,6 +2,57 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Activar una cosa, y la memoria de lo que se dice de ella
+
+Cinco funciones: cuatro en `networking/simulation_entity_database.c` y una en
+`networking/replication_event_manager.c`. De 1452
+funciones se pasa a 1457, el 12,93 % de las del juego (el 8,722 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_entity_database_activate_entity` | `0x0008a400` | `networking/simulation_entity_database.c` |
+| `simulation_entity_database_get_initial_update` | `0x0008add0` | `networking/simulation_entity_database.c` |
+| `simulation_entity_database_allocate_creation_data` | `0x0008af70` | `networking/simulation_entity_database.c` |
+| `simulation_entity_database_allocate_state_data` | `0x0008b010` | `networking/simulation_entity_database.c` |
+| `replication_event_set_data` | `0x0008b0a0` | `networking/replication_event_manager.c` |
+
+### Lo que se sabe
+
+- **La tabla de funciones de una clase de cosa** se va viendo. Cada clase
+  dice cuánto ocupa el estado de una cosa suya (función 3), cuánto lo que
+  se dice al crearla (4) y cuántos bits de «esto ha cambiado» tiene (5);
+  se le avisa de que una cosa ya está (19), construye el estado a partir
+  de lo que se dijo al crearla (20) y dice qué hay que contar de ella (21).
+- `simulation_entity_database_activate_entity` pone una cosa en marcha:
+  avisa a su clase, le hace construir el estado y **marca todos sus bits
+  como cambiados**, para que se cuente entera la primera vez.
+- `simulation_entity_database_get_initial_update` dice qué hay que contar
+  de una cosa a una consola que no sabe nada de ella: el estado se
+  construye de nuevo en un búfer de ceros de hasta 1024 bytes y se
+  pregunta a la clase con todos los bits. Es, por su forma, la función 16
+  de la tabla del hito 417 (la que se pregunta al llegar una vista nueva).
+- `simulation_entity_database_allocate_creation_data` y
+  `..._allocate_state_data` piden al montón de la red la memoria de los
+  dos trozos de una cosa, a ceros. La primera no pide nada si la clase no
+  dice nada al crear; la segunda pide siempre.
+- `replication_event_set_data` guarda en un suceso una copia de lo que
+  lleva aparte. Lo que en el hito 419 era un número sin nombre del suceso
+  (`0x1C`) es el tamaño de eso.
+- Pedir memoria al montón (pedir, hacer sitio si no hay, pedir otra vez)
+  está también una sola vez, en `networking/network_heap.h`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las cinco** y en las cuatro del hito 420.
+- El búfer del estado es de 1024 bytes: una clase que dijera más se
+  saldría. No se prueba.
+- En este hito se pasaron las pruebas de `simulation_entity_database` (8
+  funciones) y de `replication_event_manager` (6).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Lo que cada cosa es: su clase y lo que se dijo de ella
 
 Cuatro funciones en un archivo nuevo, `networking/simulation_entity_database.c`. De 1448

@@ -134,3 +134,101 @@ void simulation_entity_database_free_entity(
 	entity->entity_index= NONE;
 	entity->type= NONE;
 }
+
+/* 0x0008a400: the thing of a number is there to be told of. Its kind is
+told, by its nineteenth function, with what was said of it when it was made;
+builds how it is from that, by its twentieth; and all of its bits of what
+changes are set (the processor shifts by the low five bits of how many) */
+void simulation_entity_database_activate_entity(
+	long entity_index,
+	struct simulation_entity_database *database)
+{
+	struct simulation_entity *entity= &database->entities[entity_index&REPLICATION_ENTITY_INDEX_MASK];
+	struct simulation_entity_type *type= database->types->types[entity->type];
+
+	type->functions->created(type, entity, entity->creation_size, entity->creation_data);
+	type->functions->build_state(type, entity->creation_size, entity->creation_data, entity->state_size,
+		entity->state_data);
+	entity->exists= TRUE;
+	entity->pending= (1u<<(type->functions->state_bit_count(type)&31))-1;
+}
+
+/* 0x0008add0: what of the thing of a number is to be told to a console
+that knows nothing of it: its kind builds how a thing is from what was said
+of this one when it was made, in a buffer of zeros, and is asked what of it
+is to be told, from all of its bits; nothing if it says no */
+unsigned long __attribute__((stdcall)) simulation_entity_database_get_initial_update(
+	struct simulation_entity_database *database,
+	long entity_index)
+{
+	byte state[MAXIMUM_SIMULATION_ENTITY_STATE_SIZE];
+	struct simulation_entity *entity= &database->entities[entity_index&REPLICATION_ENTITY_INDEX_MASK];
+	struct simulation_entity_type *type= database->types->types[entity->type];
+	long state_size= type->functions->state_size(type);
+	unsigned long flags;
+
+	memset(state, 0, state_size);
+	type->functions->build_state(type, entity->creation_size, entity->creation_data, state_size, state);
+	flags= (1u<<(type->functions->state_bit_count(type)&31))-1;
+	if (!type->functions->get_update(type, entity, &flags, state_size, state))
+	{
+		return 0;
+	}
+
+	return flags;
+}
+
+/* 0x0008af70: memory for what is said of a thing of a kind when it is made,
+of the size that the kind says, with zeros; with no size there is none, and
+that is well. The size and the memory are given; FALSE if the heap of the
+network has none */
+boolean __attribute__((stdcall)) simulation_entity_database_allocate_creation_data(
+	const struct simulation_entity_database *database,
+	long type_index,
+	long *size_out,
+	void **data_out)
+{
+	struct simulation_entity_type *type= database->types->types[type_index];
+	long size= type->functions->creation_size(type);
+	boolean result= TRUE;
+	void *data= NULL;
+
+	if (size>0)
+	{
+		data= network_heap_allocate(size);
+		if (data)
+		{
+			memset(data, 0, size);
+		}
+		else
+		{
+			result= FALSE;
+		}
+	}
+	*size_out= size;
+	*data_out= data;
+
+	return result;
+}
+
+/* 0x0008b010: and for how a thing of a kind is; this is asked for whatever
+the size */
+boolean __attribute__((stdcall)) simulation_entity_database_allocate_state_data(
+	const struct simulation_entity_database *database,
+	long type_index,
+	long *size_out,
+	void **data_out)
+{
+	struct simulation_entity_type *type= database->types->types[type_index];
+	long size= type->functions->state_size(type);
+	void *data= network_heap_allocate(size);
+
+	if (data)
+	{
+		memset(data, 0, size);
+	}
+	*size_out= size;
+	*data_out= data;
+
+	return data!=NULL;
+}

@@ -14,6 +14,8 @@ its functions.
 
 #include "networking/network_observer.h"
 
+#include <string.h>
+
 /* ---------- prototypes of functions not decompiled yet */
 
 /* 0x00096ed0: something that is done with a view of the things that
@@ -70,7 +72,7 @@ struct replication_event *replication_event_manager_new_event(
 	event->unknown10= NONE;
 	event->unknown14= NONE;
 	event->data= NULL;
-	event->unknown1C= 0;
+	event->data_size= 0;
 	event->view_mask= 0;
 	event->unknown24= 0;
 	for (link= &manager->events; *link; link= &(*link)->next)
@@ -160,4 +162,25 @@ void __attribute__((stdcall)) replication_event_manager_send_event(
 		manager->client->functions->dropped(manager->client, event);
 		replication_event_manager_remove_event(event, manager);
 	}
+}
+
+/* 0x0008b0a0: a thing that happens has something more, of a size: a copy
+of it, in memory of the heap of the network; FALSE, with nothing done, if
+there is none */
+boolean __attribute__((stdcall)) replication_event_set_data(
+	long size,
+	struct replication_event *event,
+	const void *data)
+{
+	void *memory= network_heap_allocate(size);
+
+	if (!memory)
+	{
+		return FALSE;
+	}
+	event->data_size= size;
+	event->data= memory;
+	memcpy(memory, data, size);
+
+	return TRUE;
 }

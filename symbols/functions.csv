@@ -2014,3 +2014,8 @@ address,name,source,arguments,returns,convention
 0008a090,simulation_entity_database_flush_updates,source/networking/simulation_entity_database.c,stack,void,stdcall
 0008ae80,simulation_entity_database_set_entity,source/networking/simulation_entity_database.c,ecx edx stack stack stack stack stack,void,stdcall
 0008aed0,simulation_entity_database_free_entity,source/networking/simulation_entity_database.c,eax ecx,void
+0008a400,simulation_entity_database_activate_entity,source/networking/simulation_entity_database.c,eax ecx,void
+0008add0,simulation_entity_database_get_initial_update,source/networking/simulation_entity_database.c,ecx stack,int,stdcall
+0008af70,simulation_entity_database_allocate_creation_data,source/networking/simulation_entity_database.c,eax edx stack stack,bool,stdcall
+0008b010,simulation_entity_database_allocate_state_data,source/networking/simulation_entity_database.c,eax edx stack stack,bool,stdcall
+0008b0a0,replication_event_set_data,source/networking/replication_event_manager.c,eax ebx stack,bool,stdcall

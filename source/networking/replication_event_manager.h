@@ -31,7 +31,7 @@ enum
 /* ---------- structures */
 
 /* one of the things that happen: its state; when it was to be told of;
-what it has more, which is taken from the heap of the network as it is; a
+what it has more, which is taken from the heap of the network, and its size; a
 bit for each view that has it still to tell; and the next one */
 struct replication_event
 {
@@ -42,7 +42,7 @@ struct replication_event
 	long unknown10;
 	long unknown14;
 	void *data;
-	long unknown1C;
+	long data_size;
 	unsigned long view_mask;
 	long unknown24;
 	struct replication_event *next;
@@ -85,6 +85,8 @@ struct replication_event *replication_event_manager_new_event(struct replication
 void replication_event_manager_remove_event(struct replication_event *event, struct replication_event_manager *manager);
 struct replication_event *__attribute__((stdcall)) replication_event_free(struct replication_event *event,
 	unsigned long flags);
+boolean __attribute__((stdcall)) replication_event_set_data(long size, struct replication_event *event,
+	const void *data);
 void __attribute__((stdcall)) replication_event_manager_send_event(struct replication_event *event,
 	struct replication_event_manager *manager, unsigned long view_mask);
 

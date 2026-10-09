@@ -17,7 +17,9 @@ functions.
 
 enum
 {
-	MAXIMUM_SIMULATION_ENTITIES= MAXIMUM_REPLICATION_ENTITIES
+	MAXIMUM_SIMULATION_ENTITIES= MAXIMUM_REPLICATION_ENTITIES,
+	/* the most that how a thing is can be, in bytes */
+	MAXIMUM_SIMULATION_ENTITY_STATE_SIZE= 0x400
 };
 
 /* ---------- structures */
@@ -42,13 +44,25 @@ struct simulation_entity
 
 typedef char verify_simulation_entity_size[sizeof(struct simulation_entity) == 0x20 || sizeof(void *) != 4 ? 1 : -1];
 
-/* a kind of thing: something with functions, of which the twenty-first is
-asked what of a thing is to be told of, from the bits of what changed */
+/* a kind of thing: something with functions. The third and the fourth say
+the sizes of how a thing of the kind is and of what is said of it when it is
+made, and the fifth how many bits of what changes it has. The nineteenth is
+told that a thing is there, with what was said of it when it was made; the
+twentieth builds how it is from that; and the twenty-first is asked what of a
+thing is to be told of, from the bits of what changed */
 struct simulation_entity_type;
 
 struct simulation_entity_type_functions
 {
-	void *unknown0[20];
+	void *unknown0[2];
+	long (__attribute__((thiscall)) *state_size)(struct simulation_entity_type *type);
+	long (__attribute__((thiscall)) *creation_size)(struct simulation_entity_type *type);
+	long (__attribute__((thiscall)) *state_bit_count)(struct simulation_entity_type *type);
+	void *unknown14[13];
+	void (__attribute__((thiscall)) *created)(struct simulation_entity_type *type, struct simulation_entity *entity,
+		long creation_size, void *creation_data);
+	void (__attribute__((thiscall)) *build_state)(struct simulation_entity_type *type, long creation_size,
+		void *creation_data, long state_size, void *state_data);
 	boolean (__attribute__((thiscall)) *get_update)(struct simulation_entity_type *type,
 		struct simulation_entity *entity, unsigned long *flags, long state_size, void *state_data);
 };
@@ -88,6 +102,13 @@ void __attribute__((stdcall)) simulation_entity_database_flush_updates(struct si
 void __attribute__((stdcall)) simulation_entity_database_set_entity(long entity_index,
 	struct simulation_entity_database *database, short type, long creation_size, void *creation_data, long state_size,
 	void *state_data);
+void simulation_entity_database_activate_entity(long entity_index, struct simulation_entity_database *database);
+unsigned long __attribute__((stdcall)) simulation_entity_database_get_initial_update(
+	struct simulation_entity_database *database, long entity_index);
+boolean __attribute__((stdcall)) simulation_entity_database_allocate_creation_data(
+	const struct simulation_entity_database *database, long type_index, long *size, void **data);
+boolean __attribute__((stdcall)) simulation_entity_database_allocate_state_data(
+	const struct simulation_entity_database *database, long type_index, long *size, void **data);
 void simulation_entity_database_free_entity(long entity_index, struct simulation_entity_database *database);
 
 #endif

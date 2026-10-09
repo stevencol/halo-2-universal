@@ -165,3 +165,18 @@ def run(t) -> None:
             externals=setup["externals"],
             mocks=mocks(),
         )
+
+    # ---------- a thing that happens has something more
+
+    for n in range(300):
+        data, nodes = world(answers=random_.choice(((1, 1, 1, 1), (0, 1, 0, 0), (0, 0, 1, 1), (0, 0, 0, 0))))
+        size = random_.choice((0, 1, 3, 4, 7, 0x20, EVENT))
+        t.check(
+            "replication_event_set_data",
+            size,
+            Pointer(data, random_.choice((*nodes, LOOSE))),
+            Buffer(random_.randbytes(size + 4)),
+            extra=[data],
+            globals={"unknown_004d87f8": Pointer(data, HEAP)},
+            mocks=mocks(),
+        )
