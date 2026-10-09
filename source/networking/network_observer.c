@@ -889,3 +889,63 @@ void network_observer_channel_update_probe(
 		channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN8_OFFSET]|= _network_observer_channel_probed_bit;
 	}
 }
+
+/* 0x00075af0: what the observer keeps after its channels starts over: a
+number that is the one at 0x138 of what it has at 0x10; 0x400; the bigger of
+that first number and the number of 0x4E04, in units of 1024, less the one at
+0x134; three numbers that are NONE and three more further on; three times
+that are now; a byte that is 1; and the rest zero. And no channel that is in
+use has its byte of 0x48C */
+void network_observer_reset_unknown4e08(
+	byte *observer)
+{
+	const byte *parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+	long unknown4e04;
+	long unknown4e28;
+	long channel_index;
+
+	*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4E20_OFFSET)=
+		*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN138_OFFSET);
+	*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4E24_OFFSET)= NETWORK_OBSERVER_UNKNOWN4E24_DEFAULT;
+	observer[NETWORK_OBSERVER_UNKNOWN4E14_OFFSET]= FALSE;
+	*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4E08_OFFSET)= NONE;
+	*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4E0C_OFFSET)= NONE;
+	*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4E10_OFFSET)= NONE;
+	*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4E18_OFFSET)= 0;
+	*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4E1C_OFFSET)= 0;
+	memset(observer+NETWORK_OBSERVER_UNKNOWN4E30_OFFSET, 0, NETWORK_OBSERVER_UNKNOWN4E30_SIZE);
+	*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4E58_OFFSET)= 0;
+	memset(observer+NETWORK_OBSERVER_UNKNOWN4E5C_OFFSET, 0, NETWORK_OBSERVER_UNKNOWN4E5C_SIZE);
+	unknown4e04= *(const long *)(observer+NETWORK_OBSERVER_UNKNOWN4E04_OFFSET);
+	parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+	unknown4e28= unknown4e04/NETWORK_OBSERVER_UNKNOWN4E04_UNIT-
+		*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN134_OFFSET);
+	if (unknown4e28<=*(const long *)(observer+NETWORK_OBSERVER_UNKNOWN4E20_OFFSET))
+	{
+		unknown4e28= *(const long *)(observer+NETWORK_OBSERVER_UNKNOWN4E20_OFFSET);
+	}
+	*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4E28_OFFSET)= unknown4e28;
+	*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F08_OFFSET)= network_time_since(0);
+	*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F0C_OFFSET)= network_time_since(0);
+	*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F10_OFFSET)= 0;
+	*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F14_OFFSET)= 0;
+	observer[NETWORK_OBSERVER_UNKNOWN4F18_OFFSET]= FALSE;
+	*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F1C_OFFSET)= 0;
+	*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F20_OFFSET)= 0;
+	*(real *)(observer+NETWORK_OBSERVER_UNKNOWN4F24_OFFSET)= 0.0f;
+	*(real *)(observer+NETWORK_OBSERVER_UNKNOWN4F28_OFFSET)= 0.0f;
+	*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F30_OFFSET)= NONE;
+	*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F34_OFFSET)= NONE;
+	*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F38_OFFSET)= NONE;
+	observer[NETWORK_OBSERVER_UNKNOWN4F3C_OFFSET]= TRUE;
+	*(long *)(observer+NETWORK_OBSERVER_UNKNOWN4F2C_OFFSET)= network_time_since(0);
+	for (channel_index= 0; channel_index<MAXIMUM_NETWORK_OBSERVER_CHANNELS; channel_index++)
+	{
+		byte *channel= (byte *)network_observer_channel(observer, channel_index);
+
+		if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)!=0)
+		{
+			channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48C_OFFSET]= FALSE;
+		}
+	}
+}

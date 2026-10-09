@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Las cuentas del observador empiezan de nuevo
+
+Una función en `networking/network_observer.c`, de 390 bytes. De 1334
+funciones se pasa a 1335, el 11,85 % de las del juego (el 7,786 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_reset_unknown4e08` | `0x00075af0` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_observer_reset_unknown4e08` deja como al principio todo lo que el
+  observador guarda después de sus canales (de `0x4E08` a `0x4F3C`): tres
+  horas que pasan a ser «ahora», seis números que quedan en NONE, un byte a
+  1 y el resto a cero. Dos números salen de lo que el observador tiene en
+  `0x10`: uno tal cual, y otro que es el mayor entre ese y el número de
+  `0x4E04` dividido por 1024 menos un margen. Por las unidades, parecen
+  **los límites de lo que se puede mandar por segundo**, pero no está
+  confirmado.
+- Además quita el byte de `0x48C` de cada canal en uso (el que hace que al
+  canal se le lleve más cuenta, hito 372).
+- Con esto tienen nombre (provisional) todos los sitios de esa parte del
+  observador, que es lo que usan las funciones grandes que quedan.
+
+### Comprobado rompiendo líneas
+
+- Cinco líneas rotas, una cada vez: las pruebas fallaron en las cinco.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_observer` (26 funciones).
+- La batería completa del hito 371 sigue corriendo.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Un canal pregunta por su consola
 
 Una función en `networking/network_observer.c`, de 252 bytes. De 1333

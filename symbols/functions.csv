@@ -1889,3 +1889,4 @@ address,name,source,arguments,returns,convention
 0007b4c0,unknown_0007b4c0,,eax edx ecx stack,int,stdcall
 0007b6c0,unknown_0007b6c0,,eax,bool
 0007b7b0,unknown_0007b7b0,,eax edi stack,bool,stdcall
+00075af0,network_observer_reset_unknown4e08,source/networking/network_observer.c,esi,void

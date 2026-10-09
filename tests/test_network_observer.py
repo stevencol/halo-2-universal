@@ -563,3 +563,20 @@ def run(t) -> None:
                 "unknown_0007b650": lambda harness, arguments: (0, (arguments[0],)),
             },
         )
+
+    # ---------- what the observer keeps after its channels starts over
+
+    for n in range(300):
+        data = observer() + bytearray(random_.randbytes(0x13C))
+        struct.pack_into("<I", data, 0x10, SIZE)
+        struct.pack_into("<i", data, 0x4E04, random_.choice((0, 1023, 1024, 0x100000, 0x7FFFFFFF, -1, -1024, -1025, random_.getrandbits(31))))
+        struct.pack_into("<ii", data, SIZE + 0x134, random_.choice((0, 10, 1024, -5)), random_.choice((0, 16, 1000, -1, 0x1FFFFF)))
+        for channel in range(15):
+            data[CHANNELS + channel * CHANNEL + 0x48C] = random_.choice((0, 1, 0x80))
+        setup = at_time()
+        t.check(
+            "network_observer_reset_unknown4e08",
+            Buffer(bytes(data), pointers=(0x10,)),
+            globals=setup["globals"],
+            externals=setup["externals"],
+        )
