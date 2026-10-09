@@ -45,7 +45,8 @@ funciones se pasa a 1276, el 11,33 % de las del juego (el 7,050 % de sus bytes).
 
 - En este hito se pasaron las pruebas de `network_life_cycle` (183
   funciones).
-- La batería completa del hito 343 seguía corriendo.
+- La batería completa del hito 343 terminó después: 1.253 funciones, las
+  1.253 bien. Es la primera completa con el arnés cambiado en el hito 322.
 - Las mutaciones de los hitos 280 a 308 y 321 a 350 están pendientes.
 
 ## 2026-10-08 — Sacar a una consola de otra manera, y aplicar lo que cambió

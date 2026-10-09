@@ -9,8 +9,8 @@ detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
 - **1276 funciones descompiladas de 11.265: el 11,33 % del juego** (el
   7,050 % de los bytes de código).
-- Las 1276 están comprobadas contra el ejecutable original: las 1109 del
-  hito 313 con la batería completa, y las de después con sus propias pruebas
+- Las 1276 están comprobadas contra el ejecutable original: las 1253 del
+  hito 343 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
 - Último hito: *Decompile four more things a session does with what comes* (ver `git log`).
   El árbol de trabajo está limpio.
