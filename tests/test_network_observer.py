@@ -126,3 +126,114 @@ def run(t) -> None:
             },
             externals={"GetTickCount": lambda harness, arguments, now=now: now},
         )
+
+    # ---------- a session of the three, by what it is known by
+
+    for n in range(200):
+        size = 0x7420
+        data = bytearray(random_.randbytes(12 + 3 * size))
+        pointers = []
+        identifier = random_.randbytes(8)
+        for session in range(3):
+            at = 12 + session * size
+            if random_.randrange(5) == 0:
+                struct.pack_into("<I", data, session * 4, 0)
+            else:
+                struct.pack_into("<I", data, session * 4, at)
+                pointers.append(session * 4)
+            struct.pack_into("<I", data, at + 0x741C, random_.choice((0, 1, 5, 5, 9)))
+            data[at + 0x24] = random_.choice((0, 1, 1, 0x80))
+            way = random_.randrange(3)
+            if way == 0:
+                data[at + 0x1C : at + 0x24] = identifier
+            elif way == 1:
+                data[at + 0x1C : at + 0x24] = identifier[:7] + bytes((identifier[7] ^ 1,))
+        t.check("network_sessions_find", Buffer(bytes(data), pointers=tuple(pointers)), Buffer(identifier))
+
+    # ---------- things that are asked of a channel, whose channel of the game is in its fifth state
+
+    def game_channels() -> bytearray:
+        channels = bytearray(random_.randbytes(6 * 0xF8))
+        for channel in range(6):
+            struct.pack_into("<i", channels, channel * 0xF8 + 0x54, random_.choice((5, 5, 5, 5, 0, 2, 3, 6)))
+        return channels
+
+    TYPES = (0, 1, 5, 0x19, 0x21, 31, 32, 40, 63)
+
+    for n in range(400):
+        data = observer()
+        kind = random_.choice(TYPES)
+        for channel in range(15):
+            # the kind has its bit, or not
+            at = CHANNELS + channel * CHANNEL + 0x520
+            bits = random_.getrandbits(64)
+            bits = bits | 1 << kind if random_.randrange(2) else bits & ~(1 << kind)
+            struct.pack_into("<Q", data, at, bits)
+        t.check(
+            "network_observer_channel_unknown_000768b0",
+            random_.randrange(15),
+            Buffer(bytes(data)),
+            kind,
+            globals={"unknown_004d87d4": Buffer(bytes(game_channels()))},
+            externals={
+                "unknown_00089070": lambda harness, arguments, waiting=random_.choice((0, 0xFFF, 0x1000, 0x2FFF, 0x3000, 0x40000000)): (
+                    waiting,
+                    (harness.normalize(arguments[0]),),
+                )
+            },
+        )
+
+    for n in range(400):
+        t.check(
+            "network_observer_channel_set_pending",
+            random_.randrange(15),
+            Buffer(bytes(observer())),
+            random_.choice(TYPES),
+            globals={"unknown_004d87d4": Buffer(bytes(game_channels()))},
+        )
+
+    for n in range(600):
+        now = random_.getrandbits(32)
+        channels = game_channels()
+        for channel in range(6):
+            for at in (0xA8, 0xD8):
+                struct.pack_into("<I", channels, channel * 0xF8 + at, (now - random_.choice((0, 999, 1000, 1001, 29999, 30000, 30001))) & 0xFFFFFFFF)
+        # what the observer has at 0x10 goes after it
+        data = observer() + bytearray(random_.randbytes(0x80))
+        struct.pack_into("<I", data, 0x10, SIZE)
+        struct.pack_into("<II", data, SIZE + 0x78, random_.choice((1000, 30000, 0)), random_.choice((1000, 30000, 0)))
+        t.check(
+            "network_observer_channel_alive",
+            random_.randrange(15),
+            Buffer(bytes(data), pointers=(0x10,)),
+            globals={
+                "unknown_004d87d4": Buffer(bytes(channels)),
+                "unknown_00510548": bytes((random_.choice((0, 0, 1)),)),
+                "unknown_0051054c": struct.pack("<I", now),
+            },
+            externals={"GetTickCount": lambda harness, arguments, now=now: now},
+        )
+
+    for n in range(400):
+        data = observer()
+        channel = random_.randrange(15)
+        at = CHANNELS + channel * CHANNEL + 0x5C
+        struct.pack_into("<H", data, at + 0x12, random_.choice((4, 4, 0xFFFF, 16, 16, 0, 6)))
+        way = random_.randrange(4)
+        if way == 0:
+            data[at : at + 16] = bytes(16)
+        elif way == 1:
+            data[at : at + 4] = bytes(4)
+        elif way == 2:
+            data[at : at + 16] = bytes(14) + b"\x01\x00"
+        t.check(
+            "network_observer_channel_connect_status",
+            Buffer(bytes(data)),
+            channel,
+            externals={
+                "transport_address_get_connect_status": lambda harness, arguments, status=random_.choice((0, 1, 2, 3)): (
+                    status,
+                    (harness.normalize(arguments[0]),),
+                )
+            },
+        )

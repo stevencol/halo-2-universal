@@ -60,6 +60,28 @@ enum
 	NETWORK_CHANNEL_SIZE= 0xF8,
 	NETWORK_CHANNEL_STATE_OFFSET= 0x54,
 	_network_channel_state2= 2,
+	/* more of a channel: its address of the game, and a bit for each kind
+	of thing that it has to send, in 64 bits; and how much its channel of
+	the game can have waiting for it to take more: with none of the kind to
+	send yet, and with it */
+	NETWORK_OBSERVER_CHANNEL_ADDRESS_OFFSET= 0x5C,
+	NETWORK_OBSERVER_CHANNEL_PENDING_OFFSET= 0x520,
+	NETWORK_OBSERVER_CHANNEL_WAITING_LIMIT= 0x4000,
+	NETWORK_OBSERVER_CHANNEL_PENDING_LIMIT= 0xC000,
+	/* more of a channel of the game: the state in which things can be
+	asked of it, and two times. And two numbers of what the observer has at
+	0x10: how long ago each of those times can be */
+	_network_channel_state5= 5,
+	NETWORK_CHANNEL_UNKNOWNA8_OFFSET= 0xA8,
+	NETWORK_CHANNEL_UNKNOWND8_OFFSET= 0xD8,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN78_OFFSET= 0x78,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN7C_OFFSET= 0x7C,
+	/* the sessions of a table of them, and what counts of each: its state,
+	whether it is known by something in the network, and what by */
+	MAXIMUM_NETWORK_SESSIONS= 3,
+	NETWORK_SESSIONS_SESSION_STATE_OFFSET= 0x741C,
+	NETWORK_SESSIONS_SESSION_HAS_IDENTIFIER_OFFSET= 0x24,
+	NETWORK_SESSIONS_SESSION_IDENTIFIER_OFFSET= 0x1C,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
 	_unknown_00088650_unknown11= 0x11
 };
@@ -79,6 +101,12 @@ long network_observer_find_channel(const byte *observer, long session_index, lon
 long NETWORK_OBSERVER_CALLBACK network_observer_find_channel_by_unknown1e(const byte *observer, const byte *unknown1e,
 	long session_index);
 void network_observer_channel_unknown_00075e40(long channel_index, const byte *observer);
+long NETWORK_OBSERVER_CALLBACK network_sessions_find(byte *sessions, const byte *identifier);
+boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_000768b0(long channel_index, byte *observer,
+	long type);
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_set_pending(long channel_index, byte *observer, long type);
+boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_alive(long channel_index, const byte *observer);
+long network_observer_channel_connect_status(const byte *observer, long channel_index);
 
 /* ---------- globals */
 

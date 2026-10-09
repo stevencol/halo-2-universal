@@ -199,3 +199,150 @@ long NETWORK_OBSERVER_CALLBACK network_time_since(
 {
 	return (long)((unsigned long)(unknown_00510548 ? unknown_0051054c : GetTickCount())-(unsigned long)time);
 }
+
+#include "networking/transport_security.h"
+
+/* 0x00089070, of the channels of the game: a number of one of them, which
+is how much it has waiting to be sent, in units of four */
+long unknown_00089070(const byte *game_channel);
+
+/* the channel of the game that a channel of the observer is, if it is one
+and it is in its fifth state; NULL if not. The game has this in each function
+that asks something of it */
+static inline __attribute__((always_inline)) byte *network_observer_channel_connected_game_channel(
+	const byte *observer,
+	long channel_index)
+{
+	long channel= *(const long *)(network_observer_channel(observer, channel_index)+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET);
+
+	if (channel!=NONE)
+	{
+		byte *game_channel= unknown_004d87d4+channel*NETWORK_CHANNEL_SIZE;
+
+		if (*(const long *)(game_channel+NETWORK_CHANNEL_STATE_OFFSET)==_network_channel_state5)
+		{
+			return game_channel;
+		}
+	}
+
+	return NULL;
+}
+
+/* 0x00075800: the session, of the three of a table, that has a state and is
+known by eight bytes in the network; 0 if none. The game has it before the
+functions of the observer */
+long NETWORK_OBSERVER_CALLBACK network_sessions_find(
+	byte *sessions,
+	const byte *identifier)
+{
+	byte **table= (byte **)sessions;
+	long index;
+
+	for (index= 0; index<MAXIMUM_NETWORK_SESSIONS; index++)
+	{
+		const byte *session= table[index];
+
+		if (session && *(const long *)(session+NETWORK_SESSIONS_SESSION_STATE_OFFSET)!=0 &&
+			session[NETWORK_SESSIONS_SESSION_HAS_IDENTIFIER_OFFSET] &&
+			memcmp(session+NETWORK_SESSIONS_SESSION_IDENTIFIER_OFFSET, identifier, NETWORK_OBSERVER_SESSION_IDENTIFIER_SIZE)==0)
+		{
+			return (long)session;
+		}
+	}
+
+	return 0;
+}
+
+/* 0x000768b0: whether a channel of the observer can take something more of
+a kind to send: its channel of the game has to be in its fifth state, and
+what that one has waiting (unknown_00089070, times four as the processor
+multiplies, so that a big number comes out small) has to be less than 0x4000, or than 0xC000 if the channel has something of that kind to send
+already (a bit for each kind, in 64 bits) */
+boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_000768b0(
+	long channel_index,
+	byte *observer,
+	long type)
+{
+	const byte *channel= network_observer_channel(observer, channel_index);
+	const byte *game_channel= network_observer_channel_connected_game_channel(observer, channel_index);
+	unsigned long low= (unsigned long)type<32 ? 1u<<type : 0;
+	unsigned long high= (unsigned long)type>=32 && (unsigned long)type<64 ? 1u<<(type-32) : 0;
+
+	if (!game_channel)
+	{
+		return FALSE;
+	}
+	if ((*(const unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_PENDING_OFFSET)&low) ||
+		(*(const unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_PENDING_OFFSET+sizeof(long))&high))
+	{
+		return (long)((unsigned long)unknown_00089070(game_channel)*4)<NETWORK_OBSERVER_CHANNEL_PENDING_LIMIT;
+	}
+
+	return (long)((unsigned long)unknown_00089070(game_channel)*4)<NETWORK_OBSERVER_CHANNEL_WAITING_LIMIT;
+}
+
+/* 0x00076930: a channel of the observer has something of a kind to send, if
+its channel of the game is in its fifth state: the kind gets its bit */
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_set_pending(
+	long channel_index,
+	byte *observer,
+	long type)
+{
+	byte *channel= (byte *)network_observer_channel(observer, channel_index);
+	unsigned long low= (unsigned long)type<32 ? 1u<<type : 0;
+	unsigned long high= (unsigned long)type>=32 && (unsigned long)type<64 ? 1u<<(type-32) : 0;
+
+	if (network_observer_channel_connected_game_channel(observer, channel_index))
+	{
+		*(unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_PENDING_OFFSET)|= low;
+		*(unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_PENDING_OFFSET+sizeof(long))|= high;
+	}
+}
+
+/* 0x000769a0: whether the console of a channel of the observer is there
+still: FALSE if its channel of the game is not in its fifth state; and FALSE
+too if the time of 0xA8 of that one was less ago than the number at 0x78 of
+what the observer has at 0x10 says, and the time of 0xD8 was as long ago as
+the number at 0x7C says, or longer */
+boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_alive(
+	long channel_index,
+	const byte *observer)
+{
+	const byte *game_channel= network_observer_channel_connected_game_channel(observer, channel_index);
+	const byte *parameters;
+	long since_unknownA8;
+	long unknownD8= 0;
+	long now;
+
+	if (!game_channel)
+	{
+		return FALSE;
+	}
+	since_unknownA8= network_time_since(*(const long *)(game_channel+NETWORK_CHANNEL_UNKNOWNA8_OFFSET));
+	if (*(const long *)(game_channel+NETWORK_CHANNEL_STATE_OFFSET)>_network_channel_state2)
+	{
+		unknownD8= *(const long *)(game_channel+NETWORK_CHANNEL_UNKNOWND8_OFFSET);
+	}
+	now= network_time_since(0);
+	parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+
+	return since_unknownA8>=*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN78_OFFSET) ||
+		(long)((unsigned long)now-(unsigned long)unknownD8)<*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN7C_OFFSET);
+}
+
+/* 0x00078580: how the address of the game of a channel of the observer is,
+as transport_address_get_connect_status says; 0 if it has none */
+long network_observer_channel_connect_status(
+	const byte *observer,
+	long channel_index)
+{
+	const struct transport_address *address=
+		(const struct transport_address *)(network_observer_channel(observer, channel_index)+NETWORK_OBSERVER_CHANNEL_ADDRESS_OFFSET);
+
+	if (!transport_address_valid(address))
+	{
+		return 0;
+	}
+
+	return transport_address_get_connect_status(address);
+}

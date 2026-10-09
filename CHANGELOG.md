@@ -2,6 +2,63 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Cinco funciones del observador que la sesión usaba a ciegas
+
+Cinco funciones en `networking/network_observer.c`, 519 bytes entre todas. De 1316
+funciones se pasa a 1321, el 11,73 % de las del juego (el 7,707 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_sessions_find` | `0x00075800` | `networking/network_observer.c` |
+| `network_observer_channel_unknown_000768b0` | `0x000768b0` | `networking/network_observer.c` |
+| `network_observer_channel_set_pending` | `0x00076930` | `networking/network_observer.c` |
+| `network_observer_channel_alive` | `0x000769a0` | `networking/network_observer.c` |
+| `network_observer_channel_connect_status` | `0x00078580` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- Las cinco eran funciones «sin nombre» que la sesión de red llamaba desde
+  hace varios hitos. Ya tienen código y nombre, y dicen qué mira la sesión
+  de cada canal:
+  - `network_observer_channel_alive` (antes `unknown_000769a0`): si la
+    consola del otro lado **sigue ahí**. Mira dos horas del canal del juego
+    contra dos plazos que el observador tiene en lo que guarda en `0x10`.
+    Es lo que decide, en los hitos 354 y 366, si se da por perdida a la
+    consola que lleva la sesión.
+  - `network_observer_channel_connect_status` (antes `unknown_00078580`):
+    cómo va la conexión con la dirección del canal. Es lo que el primer
+    estado de la sesión espera que valga 2 (hito 354).
+  - `network_observer_channel_unknown_000768b0` y
+    `network_observer_channel_set_pending`: cada canal tiene **un bit por
+    cada clase de mensaje que tiene pendiente de mandar** (64 bits en su
+    `0x520`). La primera dice si el canal admite otro mensaje de una clase
+    (según cuánto tiene en cola el canal del juego); la segunda apunta la
+    clase como pendiente. Es lo que usa el reparto del hito 356.
+  - `network_sessions_find` (antes `unknown_00075800`): cuál de las tres
+    sesiones de una tabla se conoce en la red por unos ocho bytes.
+- Las cuatro del canal solo hacen algo si el canal del juego está en su
+  quinto estado.
+
+### Lo que enseñó
+
+- `network_observer_channel_unknown_000768b0` falló a la primera en un caso
+  rebuscado: multiplica por cuatro un número que puede no caber, y el
+  compilador de `source\` **da por hecho que una cuenta con signo no se
+  desborda** y la simplifica; el juego multiplica sin más. Hay que escribir
+  esas cuentas sin signo. Queda apuntado en los avisos de `ESTADO.md`.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_observer` (13 funciones)
+  y las de `network_life_cycle` (223 funciones).
+- `0x000619b0` (cuál de dos consolas es mejor para llevar la sesión) queda
+  sin descompilar: usa la potencia de la biblioteca C del juego
+  (`_CIpow`), que el arnés de pruebas todavía no tiene.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355, 368 y 369 están
+  pendientes.
+
 ## 2026-10-09 — Tres preguntas más a la sesión de la partida
 
 Tres funciones en `networking/network_life_cycle.c`, 248 bytes entre todas. De 1313

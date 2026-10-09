@@ -31,7 +31,7 @@ that unknown_00527360 has for the eight bytes of a session; 0 if nothing */
 void unknown_0006dec0(long *life_cycle);
 void unknown_00073040(byte *unknown);
 void unknown_000737b0(byte *unknown);
-long __attribute__((stdcall)) unknown_00075800(byte *unknown, const byte *identifier);
+long __attribute__((stdcall)) network_sessions_find(byte *unknown, const byte *identifier);
 
 /* 0x0006f200, 0x0006f3a0: two things that are asked of unknown_005273f8 */
 void __attribute__((stdcall)) unknown_0006f200(boolean unknownC, byte *unknown, long unknown4, long unknown0,
@@ -786,7 +786,7 @@ void network_life_cycle_update(
 		unknown_000737b0(unknown_0047712c);
 		if (unknown_00510518)
 		{
-			if (!unknown_00075800(unknown_00527360, unknown_00510528))
+			if (!network_sessions_find(unknown_00527360, unknown_00510528))
 			{
 				if (unknown_00510518)
 				{

@@ -4683,16 +4683,16 @@ boolean NETWORK_SESSION_CALLBACK network_session_leader_remove_peer(
 /* 0x000769a0, of network_observer.c: something of one of the channels of
 what a session was given when it was set up, that has to do with how long
 ago things were */
-boolean __attribute__((stdcall)) unknown_000769a0(long channel_index, const byte *unknown8);
+boolean __attribute__((stdcall)) network_observer_channel_alive(long channel_index, const byte *unknown8);
 
 /* 0x00078580, of network_observer.c: a number that says how something of
 one of those channels is */
-long unknown_00078580(const byte *unknown8, long channel_index);
+long network_observer_channel_connect_status(const byte *unknown8, long channel_index);
 
 /* 0x004cf494: how long a session in its first state waits before it sends
 again what it sends there, in milliseconds. 0x004cf498, 0x004cf49c: how long
 it waits in that state before it is left: since it went into it, while
-unknown_00078580 does not say 2, and since it first did, after */
+network_observer_channel_connect_status does not say 2, and since it first did, after */
 long unknown_004cf494;
 long unknown_004cf498;
 long unknown_004cf49c;
@@ -4701,7 +4701,7 @@ long unknown_004cf49c;
 another console of a session, which that console is taken to run from now
 on: in the ninth state; or, in a session that says who is in it, if it is
 not the one at 0x40 already and either it is the one at 0x44, or this
-console does not run the session and unknown_000769a0 says no of the channel
+console does not run the session and network_observer_channel_alive says no of the channel
 of the one at 0x40. Then: if this console ran the session, the others are
 sent something of the kind 0x13 with what that console is known by, and the
 players that ask to come in are forgotten; the console is the one at 0x40,
@@ -4733,7 +4733,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_unknown_0005e3f0(
 			if (peer_index!=host)
 			{
 				take= peer_index==*(const long *)(session+NETWORK_SESSION_UNKNOWN44_OFFSET) ||
-					(!network_session_unknown_00058d20(session) && !unknown_000769a0(
+					(!network_session_unknown_00058d20(session) && !network_observer_channel_alive(
 						((const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+host)->unknown4,
 						*(const byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET)));
 			}
@@ -4789,7 +4789,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_unknown_0005e3f0(
 }
 
 /* 0x00062300: in its first state, a session sends the address that it keeps
-something of the kind 8, if unknown_00078580 says 2 of the number that it has there and
+something of the kind 8, if network_observer_channel_connect_status says 2 of the number that it has there and
 it last did more than unknown_004cf494 milliseconds ago: a 2, what the
 session is known by and the 0x1AC bytes that it has at 0x3C from its state
 on. It counts one more and the time is now */
@@ -4798,7 +4798,7 @@ void network_session_state1_send(
 {
 	byte message[NETWORK_SESSION_MESSAGE_UNKNOWN8_SIZE];
 
-	if (unknown_00078580(*(const byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+	if (network_observer_channel_connect_status(*(const byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 			*(const long *)(session+NETWORK_SESSION_STATE1_UNKNOWN0_OFFSET))!=_network_session_state1_unknown0_ready ||
 		network_session_time()-*(const long *)(session+NETWORK_SESSION_STATE1_UNKNOWN1F4_OFFSET)<=unknown_004cf494)
 	{
@@ -4818,7 +4818,7 @@ void network_session_state1_send(
 }
 
 /* 0x000617c0: what a session does again and again in its first state.
-While unknown_00078580 does not say 2 of the number that it has there, it is left
+While network_observer_channel_connect_status does not say 2 of the number that it has there, it is left
 (network_session_leave with nothing) if it went into the state more than
 unknown_004cf498 milliseconds ago. Once it says 2: the time of 0x1EC is
 now, if it had none; if the session has who is in it and what it knows, it
@@ -4833,7 +4833,7 @@ void network_session_state1_update(
 	long limit= 0;
 	boolean entered= FALSE;
 
-	if (unknown_00078580(*(const byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+	if (network_observer_channel_connect_status(*(const byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 		*(const long *)(session+NETWORK_SESSION_STATE1_UNKNOWN0_OFFSET))!=_network_session_state1_unknown0_ready)
 	{
 		since= *(const long *)(session+NETWORK_SESSION_STATE1_UNKNOWN1E8_OFFSET);
@@ -5040,15 +5040,15 @@ void NETWORK_SESSION_CALLBACK network_session_enter_state8(
 /* 0x000768b0, 0x00076930, of network_observer.c: whether one of the channels
 of what a session was given when it was set up still has something of a kind
 to send, and something that is done with it then */
-boolean __attribute__((stdcall)) unknown_000768b0(long channel_index, byte *unknown8, long type);
-void __attribute__((stdcall)) unknown_00076930(long channel_index, byte *unknown8, long type);
+boolean __attribute__((stdcall)) network_observer_channel_unknown_000768b0(long channel_index, byte *unknown8, long type);
+void __attribute__((stdcall)) network_observer_channel_set_pending(long channel_index, byte *unknown8, long type);
 
 /* 0x00062640: the console that runs a session tells the others who is in it.
 Each console that the session keeps the second byte of and not the fourth,
 whose channel has 7 as its first thing and that does not have who is in the
 session as it is now (the number at 0x8 of what the session keeps of it is
 not the one at the start of who is in it) is told: unless its channel still
-has something of the kind 0x19 to send (unknown_00076930 then), or the session is in
+has something of the kind 0x19 to send (network_observer_channel_set_pending then), or the session is in
 its eighth state. A console that has who was in it the last time is sent
 what has changed since; any other, all of it. Each is sent something of the
 kind 0x19 and has the number of now. And who is in the session is kept as
@@ -5074,9 +5074,9 @@ void network_session_send_membership_updates(
 		{
 			continue;
 		}
-		if (unknown_000768b0(state->unknown4, unknown8, _network_session_message_membership_update))
+		if (network_observer_channel_unknown_000768b0(state->unknown4, unknown8, _network_session_message_membership_update))
 		{
-			unknown_00076930(state->unknown4, unknown8, _network_session_message_membership_update);
+			network_observer_channel_set_pending(state->unknown4, unknown8, _network_session_message_membership_update);
 		}
 		else if (network_session_state(session)!=_network_session_state8)
 		{
@@ -5155,9 +5155,9 @@ void network_session_send_parameters_updates(
 		{
 			continue;
 		}
-		if (unknown_000768b0(state->unknown4, unknown8, _network_session_message_parameters_update))
+		if (network_observer_channel_unknown_000768b0(state->unknown4, unknown8, _network_session_message_parameters_update))
 		{
-			unknown_00076930(state->unknown4, unknown8, _network_session_message_parameters_update);
+			network_observer_channel_set_pending(state->unknown4, unknown8, _network_session_message_parameters_update);
 		}
 		else if (network_session_state(session)!=_network_session_state8)
 		{
@@ -5706,7 +5706,7 @@ long __attribute__((stdcall)) unknown_00076aa0(byte *unknown8, long index, const
 
 /* 0x00075800: the session that the table of sessions has for the eight bytes
 that one is known by; 0 if none */
-long __attribute__((stdcall)) unknown_00075800(byte *unknown, const byte *identifier);
+long __attribute__((stdcall)) network_sessions_find(byte *unknown, const byte *identifier);
 
 /* where something that a session has from its state on is, in a copy of
 it */
@@ -5791,7 +5791,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_join(
 	byte request[NETWORK_SESSION_STATE1_UNKNOWN3C_SIZE];
 	byte *other;
 
-	other= (byte *)unknown_00075800(*(byte **)(session+NETWORK_SESSION_TABLE_OFFSET), identifier);
+	other= (byte *)network_sessions_find(*(byte **)(session+NETWORK_SESSION_TABLE_OFFSET), identifier);
 	if (other)
 	{
 		network_session_disconnect(other);
@@ -7137,7 +7137,7 @@ the session is answered with something of the kind 0x12
 and no (5) in the others, with the console that runs the session.
 
 In a session that another console runs: no while the channel of that console
-is as unknown_000769a0 wants it, with that console: (4) if what comes says that it ran
+is as network_observer_channel_alive wants it, with that console: (4) if what comes says that it ran
 the session, (6) if not. No (8) with nobody in the session yet. Yes, with
 nothing done, if that channel has 7 as its first thing and what comes does
 not say that that console ran the session. If not, the session goes into its
@@ -7232,7 +7232,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_election_received(
 
 			return FALSE;
 		}
-		if (unknown_000769a0(host->unknown4, *(const byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET)))
+		if (network_observer_channel_alive(host->unknown4, *(const byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET)))
 		{
 			*reason= was_host ? _network_session_election_host_alive : _network_session_election_other_host_alive;
 			*has_host_address= TRUE;

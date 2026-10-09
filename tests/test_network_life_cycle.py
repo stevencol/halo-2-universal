@@ -435,7 +435,7 @@ def run(t) -> None:
                         "unknown_0006dec0": with_places(),
                         "unknown_00073040": with_places(),
                         "unknown_000737b0": with_places(),
-                        "unknown_00075800": with_places(has),
+                        "network_sessions_find": with_places(has),
                     },
                 )
 
@@ -2454,7 +2454,7 @@ def run(t) -> None:
             externals={
                 "transport_security_peer_address_from_address": known(data),
                 "network_session_matches_state1_address": lambda harness, arguments, same=random_.choice((0, 0, 1, 1, 0x80, 0x100)): same,
-                "unknown_000769a0": lambda harness, arguments, says=random_.choice((0, 0, 1, 0x100)): (says, (arguments[0], arguments[1])),
+                "network_observer_channel_alive": lambda harness, arguments, says=random_.choice((0, 0, 1, 0x100)): (says, (arguments[0], arguments[1])),
                 "network_session_send_to_peers": lambda harness, arguments: (
                     0,
                     (arguments[0], harness.normalize(arguments[1]), arguments[2], arguments[3], bytes(harness.mu.mem_read(arguments[4], 0x30))),
@@ -2480,7 +2480,7 @@ def run(t) -> None:
             "network_session_state1_send",
             Buffer(bytes(data), pointers=(8,)),
             globals=setup["globals"],
-            externals={"GetTickCount": setup["tick"], "unknown_00078580": is_ready(), "unknown_0007b140": sends_all_to_address},
+            externals={"GetTickCount": setup["tick"], "network_observer_channel_connect_status": is_ready(), "unknown_0007b140": sends_all_to_address},
         )
 
     for n in range(600):
@@ -2501,7 +2501,7 @@ def run(t) -> None:
             globals=setup["globals"],
             externals={
                 "GetTickCount": setup["tick"],
-                "unknown_00078580": is_ready(),
+                "network_observer_channel_connect_status": is_ready(),
                 "network_session_enter_state3": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                 "network_session_leave": leaves,
                 "network_session_state1_send": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
@@ -2604,8 +2604,8 @@ def run(t) -> None:
                 name,
                 Buffer(bytes(data), pointers=(8,)),
                 externals={
-                    "unknown_000768b0": lambda harness, arguments, busy=busy: (arguments[0] in busy, (arguments[0], arguments[1], arguments[2])),
-                    "unknown_00076930": lambda harness, arguments: (0, (arguments[0], arguments[1], arguments[2])),
+                    "network_observer_channel_unknown_000768b0": lambda harness, arguments, busy=busy: (arguments[0] in busy, (arguments[0], arguments[1], arguments[2])),
+                    "network_observer_channel_set_pending": lambda harness, arguments: (0, (arguments[0], arguments[1], arguments[2])),
                     maker: makes(size),
                     "unknown_00075e80": sends_all,
                 },
@@ -2871,7 +2871,7 @@ def run(t) -> None:
             },
             externals={
                 "GetTickCount": ticks(),
-                "unknown_00075800": lambda harness, arguments, other=random_.choice((0, 0, 0x12345678)): (
+                "network_sessions_find": lambda harness, arguments, other=random_.choice((0, 0, 0x12345678)): (
                     other,
                     (arguments[0], bytes(harness.mu.mem_read(arguments[1], 8))),
                 ),
@@ -3362,7 +3362,7 @@ def run(t) -> None:
             externals={
                 "GetTickCount": ticks(),
                 "transport_security_peer_address_from_address": known(data),
-                "unknown_000769a0": lambda harness, arguments, says=random_.choice((0, 0, 1, 0x100)): (says, (arguments[0], arguments[1])),
+                "network_observer_channel_alive": lambda harness, arguments, says=random_.choice((0, 0, 1, 0x100)): (says, (arguments[0], arguments[1])),
                 "network_session_enter_state9": then(random_.choice((None, 9))),
                 "unknown_00075e80": sends_all,
                 "network_session_unknown_00061950": takes_out,
