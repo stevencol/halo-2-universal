@@ -834,3 +834,29 @@ void network_channel_update_unknown10(
 		}
 	}
 }
+
+/* 0x00089340: what a channel has itself at 0x18 writes itself in a packet:
+one bit, its byte of 0x4. It says FALSE. It is one of its functions, which
+the table at 0x00450d50 has; the game has bitstream_write_bool written
+here */
+boolean __attribute__((stdcall)) network_channel_unknown18_write(
+	const byte *unknown18,
+	long unknown4,
+	struct bitstream *stream,
+	long unknownC,
+	long unknown10)
+{
+	bitstream_write_bool(stream, unknown18[NETWORK_CHANNEL_UNKNOWN18_UNKNOWN4_OFFSET]);
+
+	return FALSE;
+}
+
+/* 0x00089390: and reads itself from one: one bit, which is not good (1) if
+it is not its byte of 0x5 */
+long __attribute__((stdcall)) network_channel_unknown18_read(
+	const byte *unknown18,
+	long unknown4,
+	struct bitstream *stream)
+{
+	return bitstream_read_bool(stream)!=unknown18[NETWORK_CHANNEL_UNKNOWN18_UNKNOWN5_OFFSET];
+}

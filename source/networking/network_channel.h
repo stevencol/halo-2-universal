@@ -10,6 +10,7 @@ the names of its functions.
 #define __NETWORK_CHANNEL_H
 
 #include "cseries/cseries.h"
+#include "networking/bitstream.h"
 #include "networking/network_observer.h"
 
 /* ---------- constants */
@@ -104,7 +105,11 @@ enum
 	_network_channel_time_received= 4,
 	_network_channel_part_bit4= 0x4,
 	_network_channel_part_bit8= 0x8,
-	NETWORK_CHANNEL_UNKNOWN10_UNKNOWN968_OFFSET= 0x968
+	NETWORK_CHANNEL_UNKNOWN10_UNKNOWN968_OFFSET= 0x968,
+	/* of what a channel has itself at 0x18, after its functions: the byte
+	that it writes, and the one that what it reads has to be */
+	NETWORK_CHANNEL_UNKNOWN18_UNKNOWN4_OFFSET= 0x4,
+	NETWORK_CHANNEL_UNKNOWN18_UNKNOWN5_OFFSET= 0x5
 };
 
 /* the bit of the index of a thing of a channel that says that it is one of
@@ -213,6 +218,10 @@ void __attribute__((stdcall)) network_channel_unknown3c_new(struct network_chann
 	boolean unknown30, void *const *parts, long unknown4, void (__attribute__((stdcall)) *closed)(long unknown4),
 	long part_count, const unsigned long *types);
 void network_channel_update_unknown10(byte *channel);
+boolean __attribute__((stdcall)) network_channel_unknown18_write(const byte *unknown18, long unknown4,
+	struct bitstream *stream, long unknownC, long unknown10);
+long __attribute__((stdcall)) network_channel_unknown18_read(const byte *unknown18, long unknown4,
+	struct bitstream *stream);
 long __attribute__((stdcall)) network_channel_take_unknown10(long owner);
 long __attribute__((stdcall)) network_channel_take_unknown14(long owner);
 long network_channel_unknown_00088fd0(const byte *game_channel);

@@ -403,3 +403,29 @@ def run(t) -> None:
                 Mock(lambda call: 0, stack_arguments=2, registers=("ecx",), record=lambda call: (call.registers["ecx"], call.stack[0], call.stack[1] & 0xFF)),
             ],
         )
+
+    # ---------- what a channel has itself writes itself in a packet, and reads itself
+
+    def a_stream(size: int, position: int, blank: bool = False) -> Buffer:
+        data = bytearray(random_.randbytes(size))
+        if blank:
+            for bit in range(max(position, 0), size * 8):
+                data[bit >> 3] &= ~(1 << (bit & 7))
+        header = struct.pack("<I4iB3x7i", 0x34, size, 1, 1, position, 0, *(random_.getrandbits(8) for n in range(7)))
+        return Buffer(header + bytes(data) + random_.randbytes(8), pointers=(0,))
+
+    for n in range(300):
+        size = random_.choice((1, 4, 8))
+        position = random_.choice((0, 1, 7, 8, size * 8 - 1, size * 8, size * 8 + 3))
+        part = bytearray(random_.randbytes(8))
+        part[4] = random_.choice((0, 1, 1, 0x80))
+        part[5] = random_.choice((0, 1, 1))
+        t.check(
+            "network_channel_unknown18_write",
+            Buffer(bytes(part)),
+            random_.getrandbits(32),
+            a_stream(size, position, blank=True),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+        )
+        t.check("network_channel_unknown18_read", Buffer(bytes(part)), random_.getrandbits(32), a_stream(size, position))

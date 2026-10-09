@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — La pieza que el canal lleva dentro
+
+Dos funciones en `networking/network_channel.c`, 104 bytes entre las dos. De 1423
+funciones se pasa a 1425, el 12,65 % de las del juego (el 8,521 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_channel_unknown18_write` | `0x00089340` | `networking/network_channel.c` |
+| `network_channel_unknown18_read` | `0x00089390` | `networking/network_channel.c` |
+
+### Lo que se sabe
+
+- La tercera pieza de un canal del juego, la que lleva dentro (en `0x18`,
+  hito 408), es muy poca cosa: **un bit en cada paquete**.
+  - `network_channel_unknown18_write` escribe su byte de `0x4` como un
+    bit.
+  - `network_channel_unknown18_read` lee un bit y dice que el paquete no
+    vale si no es su byte de `0x5`.
+- Las dos están en una tabla de funciones (`0x00450d50`), que es como el
+  canal las llama al recorrer sus piezas (hito 410).
+
+### Corregido
+
+- En el hito 412 escribí que la tabla del observador tiene siete
+  funciones. Son **seis** (y la quinta no hace nada): la séptima
+  dirección que hay después, la de leer un paquete sin canal (hito 405),
+  es ya la tabla de lo que manda esos mensajes.
+
+### Comprobado rompiendo líneas
+
+- Cuatro líneas rotas, una cada vez: las pruebas fallaron en las cuatro.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_channel` (22 funciones).
+- Del módulo quedan las tres grandes: `0x000883c0`, `0x00088750` y
+  `0x00088980` (escribir y leer un paquete).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Dos funciones del observador que no estaban en la lista
 
 Dos funciones en `networking/network_observer.c`, 199 bytes entre las dos. De 1421
