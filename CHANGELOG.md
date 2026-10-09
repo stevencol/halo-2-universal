@@ -2,6 +2,64 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Los canales del juego: cerrar uno, soltarlo, y lo que el observador les pregunta
+
+Nueve funciones en un archivo nuevo, `networking/network_channel.c`, 650 bytes entre todas. De 1401
+funciones se pasa a 1410, el 12,52 % de las del juego (el 8,445 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_channel_flags_valid` | `0x000880b0` | `networking/network_channel.c` |
+| `network_channel_close` | `0x00088650` | `networking/network_channel.c` |
+| `network_channel_release` | `0x000886e0` | `networking/network_channel.c` |
+| `network_channel_reset_times` | `0x00088d20` | `networking/network_channel.c` |
+| `network_channel_set_time` | `0x00088d70` | `networking/network_channel.c` |
+| `network_channel_unknown_00088fd0` | `0x00088fd0` | `networking/network_channel.c` |
+| `network_channel_unknown_00089000` | `0x00089000` | `networking/network_channel.c` |
+| `network_channel_unknown_00089030` | `0x00089030` | `networking/network_channel.c` |
+| `network_channel_unknown_00089070` | `0x00089070` | `networking/network_channel.c` |
+
+### Lo que se sabe
+
+- Empieza el módulo de **los canales del juego**, los que el observador
+  maneja desde fuera (hitos 371 a 401). Son nueve de las funciones que el
+  observador llamaba sin que se supiera qué hacían.
+- `network_channel_close` era `unknown_00088650`, «lo que se le dice a un
+  canal del juego, con un número». Es **cerrar el canal, con un motivo**:
+  - Si estaba conectado, y no es la otra consola la que cierra (motivo 6),
+    se le avisa: un mensaje de la séptima clase, por el camino de los
+    mensajes sin canal (hito 404), con el motivo.
+  - El canal vuelve a su segundo estado y guarda el motivo en `0x58`: lo
+    que el hito 386 leía para decidir si reintentar.
+  - Los números que el observador pasaba (3, 6, `0xD`, `0xE`, `0xF`,
+    `0x10`, `0x11`) son, pues, **motivos de cierre**.
+- `network_channel_release` (antes `unknown_000886e0`) deja un canal sin
+  usar: lo cierra si hace falta y suelta las dos cosas que tenía.
+- `network_channel_flags_valid` (antes `unknown_000880b0`) dice si los
+  bits de una petición de conexión (hito 397) son una combinación que
+  vale.
+- `network_channel_reset_times` y `network_channel_set_time`: un canal
+  lleva **seis horas**, cada una por el reloj y por la cuenta de imágenes.
+- Las cuatro que quedan dan números de lo que el canal tiene suyo; el
+  observador las usa para saber cuánto hay mandado sin contestar y cuánto
+  espera para salir (hitos 370 y 401).
+
+### Comprobado rompiendo líneas
+
+- Veinticuatro líneas rotas, una cada vez: las pruebas fallaron en las
+  veinticuatro.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_channel` (9 funciones) y
+  las de `network_observer` (72), que las sustituyen por sus nombres
+  nuevos.
+- Del módulo quedan unas quince funciones, de `0x00088060` a `0x000893c0`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Un paquete de mensajes se lee: el módulo, entero
 
 Una función en `networking/network_message_gateway.c`, de 368 bytes. De 1400

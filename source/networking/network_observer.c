@@ -21,7 +21,7 @@ void network_observer_channel_delete(long channel_index, byte *observer);
 
 /* 0x00088650: something that one of the game's channels is told, with a
 number */
-void unknown_00088650(byte *channel, long unknown);
+void network_channel_close(byte *channel, long unknown);
 
 /* ---------- prototypes of functions of the console's libraries */
 
@@ -173,7 +173,7 @@ long NETWORK_OBSERVER_CALLBACK network_observer_find_channel_by_unknown1e(
 
 /* 0x00075e40: the channel of the game that a channel of the observer is, if
 it is one and its state is more than the second, is told 0x11 by
-unknown_00088650 */
+network_channel_close */
 void network_observer_channel_unknown_00075e40(
 	long channel_index,
 	const byte *observer)
@@ -186,7 +186,7 @@ void network_observer_channel_unknown_00075e40(
 
 		if (*(const long *)(game_channel+NETWORK_CHANNEL_STATE_OFFSET)>_network_channel_state2)
 		{
-			unknown_00088650(game_channel, _unknown_00088650_unknown11);
+			network_channel_close(game_channel, _network_channel_close_unknown11);
 		}
 	}
 }
@@ -204,7 +204,7 @@ long NETWORK_OBSERVER_CALLBACK network_time_since(
 
 /* 0x00089070, of the channels of the game: a number of one of them, which
 is how much it has waiting to be sent, in units of four */
-long unknown_00089070(const byte *game_channel);
+long network_channel_unknown_00089070(const byte *game_channel);
 
 /* the channel of the game that a channel of the observer is, if it is one
 and it is in its fifth state; NULL if not. The game has this in each function
@@ -255,7 +255,7 @@ long NETWORK_OBSERVER_CALLBACK network_sessions_find(
 
 /* 0x000768b0: whether a channel of the observer can take something more of
 a kind to send: its channel of the game has to be in its fifth state, and
-what that one has waiting (unknown_00089070, times four as the processor
+what that one has waiting (network_channel_unknown_00089070, times four as the processor
 multiplies, so that a big number comes out small) has to be less than 0x4000, or than 0xC000 if the channel has something of that kind to send
 already (a bit for each kind, in 64 bits) */
 boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_000768b0(
@@ -275,10 +275,10 @@ boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_000768b0(
 	if ((*(const unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_PENDING_OFFSET)&low) ||
 		(*(const unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_PENDING_OFFSET+sizeof(long))&high))
 	{
-		return (long)((unsigned long)unknown_00089070(game_channel)*4)<NETWORK_OBSERVER_CHANNEL_PENDING_LIMIT;
+		return (long)((unsigned long)network_channel_unknown_00089070(game_channel)*4)<NETWORK_OBSERVER_CHANNEL_PENDING_LIMIT;
 	}
 
-	return (long)((unsigned long)unknown_00089070(game_channel)*4)<NETWORK_OBSERVER_CHANNEL_WAITING_LIMIT;
+	return (long)((unsigned long)network_channel_unknown_00089070(game_channel)*4)<NETWORK_OBSERVER_CHANNEL_WAITING_LIMIT;
 }
 
 /* 0x00076930: a channel of the observer has something of a kind to send, if
@@ -451,7 +451,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_send(
 byte and a number. 0x000886e0: a channel of the game is let go of.
 0x0007b650: something of the network that a number says is let go of */
 void __attribute__((stdcall)) network_observer_channel_forget_address(long channel_index, byte *observer, boolean unknown0, long unknown4);
-void __attribute__((stdcall)) unknown_000886e0(byte *game_channel);
+void __attribute__((stdcall)) network_channel_release(byte *game_channel);
 void transport_qos_delete(long index);
 
 /* what the observer has of a session starts with something that is told of
@@ -528,7 +528,7 @@ void network_observer_channel_delete(
 	game_channel_index= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET);
 	if (game_channel_index!=NONE)
 	{
-		unknown_000886e0(unknown_004d87d4+game_channel_index*NETWORK_CHANNEL_SIZE);
+		network_channel_release(unknown_004d87d4+game_channel_index*NETWORK_CHANNEL_SIZE);
 		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET)= NONE;
 	}
 	unknown70= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN70_OFFSET);
@@ -729,9 +729,9 @@ long unknown_004cf568;
 
 /* 0x00077580: whether a channel of the observer that no session uses is to
 be let go of. If its channel of the game is in its fifth state: with less
-than 0x4000 waiting to be sent (unknown_00089070) it has nothing left to
+than 0x4000 waiting to be sent (network_channel_unknown_00089070) it has nothing left to
 send; with more, that channel is told the number that is given
-(unknown_00088650). The channel keeps when it was first asked this, and when
+(network_channel_close). The channel keeps when it was first asked this, and when
 it was first asked with something left to send. Yes, once the first was
 more than unknown_004cf56c milliseconds ago; yes too with something left to
 send for more than unknown_004cf568 milliseconds; and if not, only if the
@@ -748,13 +748,13 @@ boolean network_observer_channel_unused_expired(
 
 	if (game_channel)
 	{
-		if (unknown_00089070(game_channel)<NETWORK_OBSERVER_CHANNEL_WAITING_LIMIT)
+		if (network_channel_unknown_00089070(game_channel)<NETWORK_OBSERVER_CHANNEL_WAITING_LIMIT)
 		{
 			waiting= FALSE;
 		}
 		else
 		{
-			unknown_00088650(game_channel, unknown);
+			network_channel_close(game_channel, unknown);
 		}
 	}
 	if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNUSED_TIME_OFFSET)==0)
@@ -790,7 +790,7 @@ boolean network_observer_channel_unused_expired(
 /* 0x000773a0: a channel of the observer that is in use and whose channel of
 the game is in its fifth state and had its time of 0x98 less ago than the
 number at 0x74 of what the observer has at 0x10 says: that channel is told
-0x10 (unknown_00088650) if the time that the channel of the observer keeps
+0x10 (network_channel_close) if the time that the channel of the observer keeps
 at 0x94 was as long ago as the number at 0x80 says and the time of 0xC8 of
 the channel of the game as long ago as the one at 0x84 says. In any other
 case the time of 0x94 is now */
@@ -820,7 +820,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_000773a0(
 		if (since_unknown94>=*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN80_OFFSET) &&
 			since_unknownC8>=*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN84_OFFSET))
 		{
-			unknown_00088650(game_channel, _unknown_00088650_unknown10);
+			network_channel_close(game_channel, _network_channel_close_unknown10);
 		}
 	}
 	else
@@ -1202,7 +1202,7 @@ void network_observer_channel_unknown_0007a160(
 
 /* 0x00078880: each channel of the observer that is in use lets go of its
 channel of the game, and has none: one that is past its second state is told
-3 first (unknown_00088650), and network_observer_channel_update_game_channel is done with the channel */
+3 first (network_channel_close), and network_observer_channel_update_game_channel is done with the channel */
 void NETWORK_OBSERVER_CALLBACK network_observer_release_game_channels(
 	byte *observer)
 {
@@ -1219,10 +1219,10 @@ void NETWORK_OBSERVER_CALLBACK network_observer_release_game_channels(
 
 			if (*(const long *)(game_channel+NETWORK_CHANNEL_STATE_OFFSET)>_network_channel_state2)
 			{
-				unknown_00088650(game_channel, _unknown_00088650_unknown3);
+				network_channel_close(game_channel, _network_channel_close_unknown3);
 				network_observer_channel_update_game_channel(channel_index, observer);
 			}
-			unknown_000886e0(unknown_004d87d4+
+			network_channel_release(unknown_004d87d4+
 				*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET)*NETWORK_CHANNEL_SIZE);
 			*(long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET)= NONE;
 		}
@@ -1362,7 +1362,7 @@ long __attribute__((stdcall)) XNetUnregisterInAddr(unsigned long in_address);
 
 /* 0x000784a0: a channel of the observer has no address of the game any
 more. Its channel of the game, if it is past its second state, is told a
-number (unknown_00088650). And if it had an address: network_message_gateway_flush_address is
+number (network_channel_close). And if it had an address: network_message_gateway_flush_address is
 told; with a byte, the session that the address was of is one that failed;
 the console's libraries let go of the address; and it is empty */
 void NETWORK_OBSERVER_CALLBACK network_observer_channel_forget_address(
@@ -1382,7 +1382,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_forget_address(
 
 		if (*(const long *)(game_channel+NETWORK_CHANNEL_STATE_OFFSET)>_network_channel_state2)
 		{
-			unknown_00088650(game_channel, unknown);
+			network_channel_close(game_channel, unknown);
 		}
 	}
 	if (!transport_address_valid(address))
@@ -3184,7 +3184,7 @@ void network_observer_update_interval(
 /* 0x000880b0, of the channels of the game: whether some bits are ones that
 this console can do. 0x00088360: a channel of the game is given a number of
 what it talks with */
-boolean unknown_000880b0(unsigned long flags);
+boolean network_channel_flags_valid(unsigned long flags);
 void __attribute__((stdcall)) unknown_00088360(byte *game_channel, long identifier);
 
 /* what a console that asks to be talked with is told, when it is not: the
@@ -3200,12 +3200,12 @@ with, with a number and some bits. It is told no (a message of the fifth
 kind, sent to the address) and why: 4 if the console's libraries are not
 talking with the address; 1 if it is this console's own address, the bits
 have others than the first six, or they are ones that this console cannot
-do (unknown_000880b0, with the first two the other way around); and 3 if no
+do (network_channel_flags_valid, with the first two the other way around); and 3 if no
 channel that a session uses is for what the console is known by.
 
 With such a channel: if its channel of the game is past its second state
 and talks with another address, or with this one and another number, it is
-told 6 (unknown_00088650). Then, if it is not past its second state, the
+told 6 (network_channel_close). Then, if it is not past its second state, the
 address is this one from now on, with what the session is known by and its
 key and no session of its own; the channel of the game starts to connect
 (unknown_00088220, with nothing); and the channel is in its sixth state,
@@ -3235,7 +3235,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_handle_connect_request(
 		reason= NETWORK_OBSERVER_REFUSAL_UNKNOWN1;
 		if (!(address->address_size==sizeof(address->address.ipv4) && address->address.ipv4==NETWORK_OBSERVER_LOOPBACK_ADDRESS) &&
 			!(flags&NETWORK_OBSERVER_CONNECT_REQUEST_OTHER_FLAGS) &&
-			unknown_000880b0(((flags>>1)&1) | ((flags&1)<<1) | (flags&NETWORK_OBSERVER_CONNECT_REQUEST_SAME_FLAGS)))
+			network_channel_flags_valid(((flags>>1)&1) | ((flags&1)<<1) | (flags&NETWORK_OBSERVER_CONNECT_REQUEST_SAME_FLAGS)))
 		{
 			reason= NETWORK_OBSERVER_REFUSAL_NO_CHANNEL;
 			if (transport_security_peer_address_from_address(address, 0, &unknown4, identifier, key, unknown14))
@@ -3290,11 +3290,11 @@ void NETWORK_OBSERVER_CALLBACK network_observer_handle_connect_request(
 				transport_security_peer_address_from_address(&current, 0, &other_unknown4, other_identifier, NULL,
 					other_unknown14);
 				transport_address_get_connect_status(&current);
-				unknown_00088650(game_channel, _unknown_00088650_unknown6);
+				network_channel_close(game_channel, _network_channel_close_unknown6);
 			}
 			else if (*(const long *)(game_channel+NETWORK_CHANNEL_UNKNOWN50_OFFSET)!=NONE && difference!=0)
 			{
-				unknown_00088650(game_channel, _unknown_00088650_unknown6);
+				network_channel_close(game_channel, _network_channel_close_unknown6);
 			}
 			connect= *(const long *)(game_channel+NETWORK_CHANNEL_STATE_OFFSET)<=_network_channel_state2;
 		}
@@ -3908,9 +3908,9 @@ void network_observer_update_bandwidth(
 /* 0x00089030, 0x00088fd0, 0x00089000, of the channels of the game: three
 numbers of one of them: something that it has waiting, how many bytes it has
 sent that were not answered, and in how many packets */
-long unknown_00089030(const byte *game_channel);
-long unknown_00088fd0(const byte *game_channel);
-long unknown_00089000(const byte *game_channel);
+long network_channel_unknown_00089030(const byte *game_channel);
+long network_channel_unknown_00088fd0(const byte *game_channel);
+long network_channel_unknown_00089000(const byte *game_channel);
 
 /* 0x004cf5d0: the packets a second of a channel that has no flow and whose
 channel of the game has nothing at 0x3C, when it has something of the voice
@@ -4046,7 +4046,7 @@ boolean NETWORK_OBSERVER_CALLBACK network_observer_game_channel_can_send(
 	{
 		long unit= (game_channel[NETWORK_CHANNEL_UNKNOWN48_OFFSET]&_network_channel_unknown48_bit8) ?
 			NETWORK_OBSERVER_WAITING_UNIT : 0;
-		real waiting= (real)unknown_00089030(game_channel);
+		real waiting= (real)network_channel_unknown_00089030(game_channel);
 
 		parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
 		waiting= waiting/((real)unit**(const real *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN90_OFFSET));
@@ -4129,8 +4129,8 @@ boolean NETWORK_OBSERVER_CALLBACK network_observer_game_channel_can_send(
 	}
 	if (unknown498>=0 && available>=0)
 	{
-		long waiting_bytes= unknown_00088fd0(game_channel);
-		long waiting_count= unknown_00089000(game_channel);
+		long waiting_bytes= network_channel_unknown_00088fd0(game_channel);
+		long waiting_count= network_channel_unknown_00089000(game_channel);
 
 		if (waiting_count>0 && (long)((unsigned long)waiting_bytes+(unsigned long)available)>unknown498)
 		{

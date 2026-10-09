@@ -122,7 +122,7 @@ enum
 	whether it is to be let go of; and when it was first asked that with
 	something left to send. Two times of a channel of the game. Three more
 	numbers of what the observer has at 0x10. And one more thing that
-	unknown_00088650 is told */
+	network_channel_close is told */
 	NETWORK_OBSERVER_CHANNEL_UNKNOWN94_OFFSET= 0x94,
 	NETWORK_OBSERVER_CHANNEL_UNUSED_TIME_OFFSET= 0x98,
 	NETWORK_OBSERVER_CHANNEL_WAITING_TIME_OFFSET= 0x9C,
@@ -131,7 +131,7 @@ enum
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN74_OFFSET= 0x74,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN80_OFFSET= 0x80,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN84_OFFSET= 0x84,
-	_unknown_00088650_unknown10= 0x10,
+	_network_channel_close_unknown10= 0x10,
 	/* more of a channel: two bits of its byte of 0x8 (it has asked for
 	something of the network about its console, and it has what was
 	found); where what was found is kept; and two numbers that start over
@@ -214,7 +214,7 @@ enum
 	asks about it, what it is told when all the channels are let go of, and
 	one more number of what the observer has at 0x10 */
 	_network_channel_state4= 4,
-	_unknown_00088650_unknown3= 0x3,
+	_network_channel_close_unknown3= 0x3,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN70_OFFSET= 0x70,
 	/* more of a channel: a bit for each session whose address was tried and
 	did not do; the session that its address is of; and that session's
@@ -411,7 +411,7 @@ enum
 	_network_message_connect_refuse= 5,
 	NETWORK_OBSERVER_LOOPBACK_ADDRESS= 0x7F000001,
 	NETWORK_CHANNEL_UNKNOWN50_OFFSET= 0x50,
-	_unknown_00088650_unknown6= 0x6,
+	_network_channel_close_unknown6= 0x6,
 	/* a byte and a time of the observer; how much of a channel is what it
 	keeps of its flow; something that a channel of the game has, with a
 	byte. And of what the observer has at 0x10: how long after that time
@@ -478,8 +478,8 @@ enum
 	NETWORK_OBSERVER_DEFAULT_VOICE_ROOM= 0x200,
 	NETWORK_OBSERVER_PARAMETERS_RATE_PERIOD_OFFSET= 0xF8,
 	NETWORK_OBSERVER_PARAMETERS_WINDOW_COUNT_OFFSET= 0xFC,
-	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
-	_unknown_00088650_unknown11= 0x11
+	/* what network_observer_channel_unknown_00075e40 gives network_channel_close */
+	_network_channel_close_unknown11= 0x11
 };
 
 /* the last numbers that are kept of something: how many are kept, where the

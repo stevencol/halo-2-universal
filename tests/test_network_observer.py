@@ -110,7 +110,7 @@ def run(t) -> None:
             random_.randrange(15),
             Buffer(bytes(observer())),
             globals={"unknown_004d87d4": Buffer(bytes(channels))},
-            externals={"unknown_00088650": lambda harness, arguments: 0},
+            externals={"network_channel_close": lambda harness, arguments: 0},
         )
 
     # ---------- how long ago a time was
@@ -176,7 +176,7 @@ def run(t) -> None:
             kind,
             globals={"unknown_004d87d4": Buffer(bytes(game_channels()))},
             externals={
-                "unknown_00089070": lambda harness, arguments, waiting=random_.choice((0, 0xFFF, 0x1000, 0x2FFF, 0x3000, 0x40000000)): (
+                "network_channel_unknown_00089070": lambda harness, arguments, waiting=random_.choice((0, 0xFFF, 0x1000, 0x2FFF, 0x3000, 0x40000000)): (
                     waiting,
                     (harness.normalize(arguments[0]),),
                 )
@@ -351,7 +351,7 @@ def run(t) -> None:
             globals={"unknown_004d87d4": Buffer(bytes(game_channels()))},
             externals={
                 "network_observer_channel_forget_address": noted,
-                "unknown_000886e0": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "network_channel_release": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                 "transport_qos_delete": lambda harness, arguments: (0, (arguments[0],)),
             },
         )
@@ -502,11 +502,11 @@ def run(t) -> None:
             },
             externals={
                 "GetTickCount": lambda harness, arguments, now=now: now,
-                "unknown_00089070": lambda harness, arguments, waiting=random_.choice((0, 0x3FFF, 0x4000, 0x10000)): (
+                "network_channel_unknown_00089070": lambda harness, arguments, waiting=random_.choice((0, 0x3FFF, 0x4000, 0x10000)): (
                     waiting,
                     (harness.normalize(arguments[0]),),
                 ),
-                "unknown_00088650": told,
+                "network_channel_close": told,
             },
         )
 
@@ -531,7 +531,7 @@ def run(t) -> None:
                 "unknown_00510548": bytes((random_.choice((0, 0, 1)),)),
                 "unknown_0051054c": struct.pack("<I", now),
             },
-            externals={"GetTickCount": lambda harness, arguments, now=now: now, "unknown_00088650": told},
+            externals={"GetTickCount": lambda harness, arguments, now=now: now, "network_channel_close": told},
         )
 
     # ---------- a channel asks for something of the network about its console
@@ -718,9 +718,9 @@ def run(t) -> None:
             Buffer(bytes(data)),
             globals={"unknown_004d87d4": Buffer(bytes(channels))},
             externals={
-                "unknown_00088650": told,
+                "network_channel_close": told,
                 "network_observer_channel_update_game_channel": with_channel_and_observer,
-                "unknown_000886e0": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "network_channel_release": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
             },
         )
 
@@ -842,7 +842,7 @@ def run(t) -> None:
             random_.choice((0, 0xD, 0xE, random_.getrandbits(32))),
             globals={"unknown_004d87d4": Buffer(bytes(channels))},
             externals={
-                "unknown_00088650": told,
+                "network_channel_close": told,
                 "network_message_gateway_flush_address": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
                 "transport_address_get_secure_in_address": secure,
                 "XNetUnregisterInAddr": lambda harness, arguments: (0, (arguments[0],)),
@@ -1483,7 +1483,7 @@ def run(t) -> None:
                 setup["externals"],
                 unknown_00082060=taken,
                 network_observer_channel_forget_address=noted,
-                unknown_000886e0=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                network_channel_release=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                 transport_qos_delete=lambda harness, arguments: (0, (arguments[0],)),
             ),
             mocks=[Mock(lambda call: 0, stack_arguments=3, registers=("ecx",))],
@@ -1654,14 +1654,14 @@ def run(t) -> None:
                     status,
                     (bytes(harness.mu.mem_read(arguments[0], 0x14)),),
                 ),
-                "unknown_000880b0": lambda harness, arguments, can=random_.choice((1, 1, 1, 0)): (can, (arguments[0],)),
+                "network_channel_flags_valid": lambda harness, arguments, can=random_.choice((1, 1, 1, 0)): (can, (arguments[0],)),
                 "transport_security_peer_address_from_address": known,
                 "network_message_gateway_send": lambda harness, arguments: (
                     0,
                     (arguments[0], harness.normalize(arguments[1]), arguments[2], arguments[3], bytes(harness.mu.mem_read(arguments[4], 8))),
                 ),
                 "network_channel_get_address": talks_with,
-                "unknown_00088650": closes,
+                "network_channel_close": closes,
                 "transport_address_connect": lambda harness, arguments: (1, (harness.normalize(arguments[0]),)),
                 "unknown_00088220": lambda harness, arguments: (
                     0,
@@ -1995,12 +1995,12 @@ def run(t) -> None:
                     (harness.normalize(arguments[0]), arguments[1]),
                 ),
                 network_observer_voice_has_packet=has_voice,
-                unknown_00089030=lambda harness, arguments, waiting=random_.choice((0, 16, 64, 127, 128, 512, 100000)): (
+                network_channel_unknown_00089030=lambda harness, arguments, waiting=random_.choice((0, 16, 64, 127, 128, 512, 100000)): (
                     waiting,
                     (harness.normalize(arguments[0]),),
                 ),
-                unknown_00088fd0=lambda harness, arguments, sent=random_.choice((0, 100, 1000, 1400, 100000)): (sent, (harness.normalize(arguments[0]),)),
-                unknown_00089000=lambda harness, arguments, count=random_.choice((0, 1, 1, 3, 20, -1)): (count, (harness.normalize(arguments[0]),)),
+                network_channel_unknown_00088fd0=lambda harness, arguments, sent=random_.choice((0, 100, 1000, 1400, 100000)): (sent, (harness.normalize(arguments[0]),)),
+                network_channel_unknown_00089000=lambda harness, arguments, count=random_.choice((0, 1, 1, 3, 20, -1)): (count, (harness.normalize(arguments[0]),)),
                 network_observer_voice_build_packet=lambda harness, arguments, wrote=random_.choice((0, 0, 20, 100, 0x516, 0x517, 2000)): (
                     wrote,
                     (arguments[0], arguments[1], harness.normalize(arguments[2])),
