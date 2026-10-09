@@ -1584,7 +1584,7 @@ def run(t) -> None:
         t.check(
             "network_session_host_unknown_0005bec0",
             Buffer(bytes(with_peers())),
-            externals={"unknown_0005df30": does},
+            externals={"network_session_host_set_unknown49a8": does},
         )
     for n in range(240):
         message = bytearray(random_.randbytes(0x40))
@@ -1594,7 +1594,7 @@ def run(t) -> None:
             Buffer(bytes(message)),
             Buffer(bytes(with_peers())),
             random_.getrandbits(32),
-            externals={"network_observer_find_channel": which_channel(), "unknown_0005df30": does},
+            externals={"network_observer_find_channel": which_channel(), "network_session_host_set_unknown49a8": does},
         )
     for n in range(240):
         t.check(
@@ -1733,7 +1733,7 @@ def run(t) -> None:
             random_.getrandbits(32),
             random_.choice((0, 1, 1, 2, NONE)),
             Buffer(random_.randbytes(12)),
-            externals={"unknown_00075e80": sends_all, "unknown_0005df30": does},
+            externals={"unknown_00075e80": sends_all, "network_session_host_set_unknown49a8": does},
         )
     for n in range(200):
         session_ = led()
@@ -1901,7 +1901,7 @@ def run(t) -> None:
             "network_session_enter_state9",
             Buffer(bytes(data)),
             globals=clock(),
-            externals={"GetTickCount": ticks(), "unknown_00062b70": fills},
+            externals={"GetTickCount": ticks(), "network_session_election_new": fills},
         )
 
     # ---------- the second state of a session, and what it does again and again in the third
@@ -1941,3 +1941,61 @@ def run(t) -> None:
             globals=globals_,
             externals={"GetTickCount": lambda harness, arguments, now=now: now, "unknown_00075e80": sends_all},
         )
+
+    # ---------- a thing that the console that runs a session sets
+
+    for n in range(600):
+        data = whole_session()
+        host = random_.randrange(4)
+        struct.pack_into("<I", data, HOST_PEER, host)
+        data[0x49A8] = random_.choice((0, 1, 1, 0x80))
+        struct.pack_into(
+            "<iii",
+            data,
+            0x49AC,
+            random_.choice((0, 1, 5, 9)),
+            random_.choice((0, 0, 1, 2)),
+            random_.choice((-1, 0, 5, 6, 9)),
+        )
+        t.check(
+            "network_session_host_set_unknown49a8",
+            Buffer(bytes(data)),
+            random_.choice((0, 1, 1, 0x80, 0x100)),
+            random_.choice((0, 1, 5, 9, 0xFFFFFFFF)),
+            random_.choice((0, 1, 1, 2)),
+            random_.choice((host, host, host ^ 1)),
+            Buffer(random_.randbytes(12)),
+        )
+
+    # ---------- what a session has in its ninth state
+
+    for n in range(60):
+        data = whole_session()
+        struct.pack_into("<I", data, LOCAL_PEER, random_.randrange(16))
+        struct.pack_into("<I", data, 0x40, random_.randrange(16))
+        t.check("network_session_election_new", Buffer(bytes(data)), Buffer(random_.randbytes(0xC0)))
+
+    def election():
+        data = bytearray(random_.randbytes(0xC0))
+        count = random_.choice((0, 1, 2, 5, 15, 16))
+        struct.pack_into("<I", data, 0x54, count)
+        address = bytearray(random_.randbytes(0x24))
+        way = random_.randrange(4)
+        if way and count:
+            # one of the consoles that are known of; two of them can have the same six bytes
+            index = random_.randrange(count)
+            address[0xA:0x10] = data[0x58 + index * 6 : 0x5E + index * 6]
+            if way == 2:
+                other = random_.randrange(16)
+                data[0x58 + other * 6 : 0x5E + other * 6] = address[0xA:0x10]
+            if way == 3:
+                address[0xF] ^= 1
+        return Buffer(bytes(data)), Buffer(bytes(address))
+
+    for n in range(300):
+        election_, address = election()
+        t.check("network_session_election_find", election_, address)
+    for name in ("network_session_election_add_unknownB8", "network_session_election_add_unknownBC"):
+        for n in range(300):
+            election_, address = election()
+            t.check(name, address, election_)

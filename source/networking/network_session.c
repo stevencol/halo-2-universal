@@ -50,15 +50,6 @@ game */
 void __attribute__((stdcall)) unknown_0007b140(long unknown4, const struct transport_address *address, long type,
 	long size, const void *data);
 
-/* 0x00062b70: fills something of what a session has from its state on in
-its ninth state; a number */
-long unknown_00062b70(byte *session, byte *unknown10);
-
-/* 0x0005df30: something that the console that runs a session does for a
-console of it, with a byte, two numbers and a thing or none; whether it did */
-boolean __attribute__((stdcall)) unknown_0005df30(byte *session, boolean unknown8, long unknownC, long unknown10,
-	long peer_index, const byte *unknown14);
-
 /* ---------- globals */
 
 /* 0x00510548, 0x0051054c, of main.c: whether the time is the one that was
@@ -2474,7 +2465,7 @@ static inline __attribute__((always_inline)) long network_session_channel_peer(
 		channel));
 }
 
-/* 0x0005bec0: the console that runs a session does unknown_0005df30 for the
+/* 0x0005bec0: the console that runs a session does network_session_host_set_unknown49a8 for the
 console that runs it, as who is in it says, with nothing; whether it is the
 one that runs it */
 boolean network_session_host_unknown_0005bec0(
@@ -2484,13 +2475,13 @@ boolean network_session_host_unknown_0005bec0(
 	{
 		return FALSE;
 	}
-	unknown_0005df30(session, FALSE, 0, 0, *(const long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET), NULL);
+	network_session_host_set_unknown49a8(session, FALSE, 0, 0, *(const long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET), NULL);
 
 	return TRUE;
 }
 
 /* 0x0005dea0: something comes to the console that runs a session from
-another console of it: unknown_0005df30 is done for that console with what
+another console of it: network_session_host_set_unknown49a8 is done for that console with what
 comes. FALSE if this console does not run the session or what comes is not
 from another console of it */
 boolean NETWORK_SESSION_CALLBACK network_session_host_unknown_0005dea0(
@@ -2511,7 +2502,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_unknown_0005dea0(
 		return FALSE;
 	}
 	unknown10= *(const long *)(message+NETWORK_SESSION_MESSAGE_UNKNOWN10_OFFSET);
-	unknown_0005df30(session, message[NETWORK_SESSION_MESSAGE_UNKNOWN8_OFFSET],
+	network_session_host_set_unknown49a8(session, message[NETWORK_SESSION_MESSAGE_UNKNOWN8_OFFSET],
 		*(const long *)(message+NETWORK_SESSION_MESSAGE_UNKNOWNC_OFFSET), unknown10, peer_index,
 		unknown10==1 ? message+NETWORK_SESSION_MESSAGE_UNKNOWN14_OFFSET : NULL);
 
@@ -3064,7 +3055,7 @@ boolean network_session_leader_set_unknown4db0(
 	return TRUE;
 }
 
-/* 0x0005bf10: unknown_0005df30 is done for this console, with a byte, two
+/* 0x0005bf10: network_session_host_set_unknown49a8 is done for this console, with a byte, two
 numbers and a thing: by this console if it runs the session, and if not it
 is asked of the one that does, with something of the kind 0x23 that
 network_session_host_unknown_0005dea0 takes there. FALSE if the session does
@@ -3082,7 +3073,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_unknown_0005bf10(
 	}
 	if (network_session_unknown_00058d20(session))
 	{
-		unknown_0005df30(session, unknown8, unknownC, unknown10, *(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET),
+		network_session_host_set_unknown49a8(session, unknown8, unknownC, unknown10, *(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET),
 			unknown14);
 	}
 	else
@@ -3471,7 +3462,7 @@ void network_session_unknown_000623e0(
 }
 
 /* 0x000616e0: a session goes into its ninth state, which is what it does
-when the console that ran it is lost: it starts now, unknown_00062b70 fills a
+when the console that ran it is lost: it starts now, network_session_election_new fills a
 thing of it and gives a number, and it has a bit for this console and one for
 the console that ran it. The 0x34 bytes of 0x761C start over */
 void NETWORK_SESSION_CALLBACK network_session_enter_state9(
@@ -3481,7 +3472,8 @@ void NETWORK_SESSION_CALLBACK network_session_enter_state9(
 
 	memset(data, 0, sizeof(data));
 	*(long *)(data+NETWORK_SESSION_STATE9_START_OFFSET)= network_session_time();
-	*(long *)(data+NETWORK_SESSION_STATE9_UNKNOWNC_OFFSET)= unknown_00062b70(session, data+NETWORK_SESSION_STATE9_UNKNOWN10_OFFSET);
+	*(long *)(data+NETWORK_SESSION_STATE9_UNKNOWNC_OFFSET)= network_session_election_new(session,
+		(struct network_session_election *)(data+NETWORK_SESSION_STATE9_UNKNOWN10_OFFSET));
 	*(long *)(data+NETWORK_SESSION_STATE9_UNKNOWN8_OFFSET)= network_session_time();
 	*(unsigned long *)(data+NETWORK_SESSION_STATE9_LOCAL_PEERS_OFFSET)=
 		1u<<*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET);
@@ -3575,4 +3567,169 @@ void network_session_state3_update(
 		*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_unknown18, sizeof(message),
 		message);
 	*(long *)(session+NETWORK_SESSION_UNKNOWN7658_OFFSET)= network_session_time();
+}
+
+/* 0x0005df30: the console that runs a session sets the byte of 0x49A8 and
+the three numbers and twelve bytes after it, for a console; whether anything
+changed. The byte is the one that it is given only for the console that who
+is in the session says runs it: for another, it stays. First, if the second
+number is not zero and the third is more than the first that comes, the
+second, the third and the bytes are emptied. The second number and the bytes
+are kept only if the byte is set and was set; and the bytes only with 1 for
+the number */
+boolean NETWORK_SESSION_CALLBACK network_session_host_set_unknown49a8(
+	byte *session,
+	boolean unknown49a8,
+	long unknown49ac,
+	long unknown49b0,
+	long peer_index,
+	const byte *unknown49b8)
+{
+	boolean changed= FALSE;
+	boolean keep;
+
+	if (peer_index!=*(const long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET))
+	{
+		unknown49a8= session[NETWORK_SESSION_UNKNOWN49A8_OFFSET];
+	}
+	if (*(const long *)(session+NETWORK_SESSION_UNKNOWN49B0_OFFSET)!=0 &&
+		*(const long *)(session+NETWORK_SESSION_UNKNOWN49B4_OFFSET)>unknown49ac)
+	{
+		*(long *)(session+NETWORK_SESSION_UNKNOWN49B0_OFFSET)= 0;
+		*(long *)(session+NETWORK_SESSION_UNKNOWN49B4_OFFSET)= NONE;
+		memset(session+NETWORK_SESSION_UNKNOWN49B8_OFFSET, 0, NETWORK_SESSION_UNKNOWN49B8_SIZE);
+		network_session_parameters_changed(session);
+		changed= TRUE;
+	}
+	keep= unknown49b0!=0 && unknown49a8 && session[NETWORK_SESSION_UNKNOWN49A8_OFFSET];
+	if (session[NETWORK_SESSION_UNKNOWN49A8_OFFSET]==unknown49a8 &&
+		*(const long *)(session+NETWORK_SESSION_UNKNOWN49AC_OFFSET)==unknown49ac &&
+		*(const long *)(session+NETWORK_SESSION_UNKNOWN49B0_OFFSET)==unknown49b0)
+	{
+		return changed;
+	}
+	session[NETWORK_SESSION_UNKNOWN49A8_OFFSET]= unknown49a8;
+	*(long *)(session+NETWORK_SESSION_UNKNOWN49AC_OFFSET)= unknown49ac;
+	if (keep)
+	{
+		*(long *)(session+NETWORK_SESSION_UNKNOWN49B0_OFFSET)= unknown49b0;
+		*(long *)(session+NETWORK_SESSION_UNKNOWN49B4_OFFSET)= unknown49ac;
+		if (unknown49b0==1)
+		{
+			memcpy(session+NETWORK_SESSION_UNKNOWN49B8_OFFSET, unknown49b8, NETWORK_SESSION_UNKNOWN49B8_SIZE);
+		}
+		else
+		{
+			memset(session+NETWORK_SESSION_UNKNOWN49B8_OFFSET, 0, NETWORK_SESSION_UNKNOWN49B8_SIZE);
+		}
+	}
+	else
+	{
+		*(long *)(session+NETWORK_SESSION_UNKNOWN49B0_OFFSET)= 0;
+		*(long *)(session+NETWORK_SESSION_UNKNOWN49B4_OFFSET)= NONE;
+		memset(session+NETWORK_SESSION_UNKNOWN49B8_OFFSET, 0, NETWORK_SESSION_UNKNOWN49B8_SIZE);
+	}
+	network_session_parameters_changed(session);
+
+	return TRUE;
+}
+
+/* 0x00062b70: what a session has in its ninth state starts: with what the
+console that ran it and this one are known by, the first number of who is in
+it, which console this one is and a number of it, and one console that is
+known of, this one, with its bit in the two numbers. Which console this one
+is */
+long network_session_election_new(
+	const byte *session,
+	struct network_session_election *election)
+{
+	const byte *peers= session+NETWORK_SESSION_PEER_ARRAY_OFFSET;
+	long local_peer= *(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET);
+	const byte *local= peers+local_peer*NETWORK_SESSION_PEER_SIZE;
+
+	memset(election, 0, sizeof(*election));
+	memcpy(election->host_address, peers+*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET)*NETWORK_SESSION_PEER_SIZE,
+		sizeof(election->host_address));
+	memcpy(election->local_address, local, sizeof(election->local_address));
+	election->membership_unknown0= *(const long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET);
+	election->local_peer= local_peer;
+	election->unknown50= *(const long *)(local+NETWORK_SESSION_PEER_UNKNOWN94_OFFSET);
+	memcpy(election->unknownA[0], local+NETWORK_SESSION_PEER_ADDRESS_UNKNOWNA_OFFSET, sizeof(election->unknownA[0]));
+	election->count= 1;
+	election->unknownB8= 1;
+	election->unknownBC= 1;
+
+	return local_peer;
+}
+
+/* 0x00063ba0: which of the consoles that are known of in the ninth state is
+the one that is known by something: by its six bytes, and the last one that
+has them; NONE if none */
+long network_session_election_find(
+	const struct network_session_election *election,
+	const byte *address)
+{
+	long found= NONE;
+	long index;
+
+	for (index= 0; index<election->count; index++)
+	{
+		if (memcmp(address+NETWORK_SESSION_PEER_ADDRESS_UNKNOWNA_OFFSET, election->unknownA[index],
+			sizeof(election->unknownA[index]))==0)
+		{
+			found= index;
+		}
+	}
+
+	return found;
+}
+
+/* the console that is known by something is one of those that are known of
+in the ninth state: a new one, if it was not and there is room for it. Which
+it is; NONE if there is no room */
+static inline __attribute__((always_inline)) long network_session_election_add(
+	const byte *address,
+	struct network_session_election *election)
+{
+	long index= network_session_election_find(election, address);
+
+	if (index==NONE && (unsigned long)election->count<MAXIMUM_NETWORK_SESSION_PLAYERS)
+	{
+		index= election->count++;
+		memcpy(election->unknownA[index], address+NETWORK_SESSION_PEER_ADDRESS_UNKNOWNA_OFFSET,
+			sizeof(election->unknownA[index]));
+	}
+
+	return index;
+}
+
+/* 0x00063c00: a console is known of in the ninth state, and has its bit in
+the first of the two numbers; which it is, or NONE */
+long network_session_election_add_unknownB8(
+	const byte *address,
+	struct network_session_election *election)
+{
+	long index= network_session_election_add(address, election);
+
+	if (index!=NONE)
+	{
+		election->unknownB8|= 1u<<index;
+	}
+
+	return index;
+}
+
+/* 0x00063c50: the same, with the bit in the second of the two numbers */
+long network_session_election_add_unknownBC(
+	const byte *address,
+	struct network_session_election *election)
+{
+	long index= network_session_election_add(address, election);
+
+	if (index!=NONE)
+	{
+		election->unknownBC|= 1u<<index;
+	}
+
+	return index;
 }

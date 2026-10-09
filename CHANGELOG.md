@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Lo que la sesión guarda cuando se queda sin quien la lleva
+
+Cinco funciones en `networking/network_session.c`, 648 bytes entre todas. De 1259
+funciones se pasa a 1264, el 11,22 % de las del juego (el 6,992 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_host_set_unknown49a8` | `0x0005df30` | `networking/network_session.c` |
+| `network_session_election_new` | `0x00062b70` | `networking/network_session.c` |
+| `network_session_election_find` | `0x00063ba0` | `networking/network_session.c` |
+| `network_session_election_add_unknownB8` | `0x00063c00` | `networking/network_session.c` |
+| `network_session_election_add_unknownBC` | `0x00063c50` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- En el noveno estado (hito 344), tras las horas, la sesión tiene 192 bytes
+  que ahora tienen estructura (`network_session_election`, nombre
+  conjeturado): cómo se conoce a la consola que la llevaba y a esta, el
+  contador de «quién está», qué consola es esta y un número suyo, y **la
+  lista de consolas de las que se sabe**, cada una por seis bytes (los de
+  su tarjeta de red), con un bit por consola en dos números.
+  `network_session_election_new` la empieza con esta consola sola; las
+  otras tres buscan una consola en la lista o la añaden marcando su bit en
+  uno u otro número. Son las que quedaron sin hacer en el hito 335 por no
+  saber de qué eran.
+- `network_session_host_set_unknown49a8` era `unknown_0005df30`, a la que
+  llegaban los mensajes de la clase `0x23` (hitos 337 y 341): pone un byte,
+  tres números y doce bytes de «lo que la sesión sabe» (`0x49A8` a
+  `0x49C4`). El byte solo lo cambia la consola que dirige la sesión; los
+  doce bytes (lo que mide lo que identifica a un jugador) solo se guardan
+  con un 1 en el segundo número.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (171
+  funciones).
+- La batería completa del hito 343 seguía corriendo.
+- Las mutaciones de los hitos 280 a 308 y 321 a 346 están pendientes.
+
 ## 2026-10-08 — El segundo estado de la sesión y lo que repite en el tercero
 
 Dos funciones en `networking/network_session.c` y una en `networking/network_observer.c`,

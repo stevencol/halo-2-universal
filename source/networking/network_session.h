@@ -269,6 +269,11 @@ enum
 	NETWORK_SESSION_STATE2_UNKNOWN60_OFFSET= 0x60,
 	NETWORK_SESSION_STATE2_UNKNOWN64_OFFSET= 0x64,
 	NETWORK_SESSION_STATE2_START_OFFSET= 0x68,
+	/* twelve bytes that go with the byte and the three numbers of 0x49A8;
+	and a number of a console */
+	NETWORK_SESSION_UNKNOWN49B8_OFFSET= 0x49B8,
+	NETWORK_SESSION_UNKNOWN49B8_SIZE= 0xC,
+	NETWORK_SESSION_PEER_UNKNOWN94_OFFSET= 0x94,
 	/* the thing of 0x4D10 is a text of up to 127 characters; and after the
 	number of 0x4DAC, the session knows a thing of 0x130 bytes, which counts
 	only if the number at its 0x44 is not zero */
@@ -527,6 +532,27 @@ typedef char verify_network_session_local_players_size[
 	sizeof(struct network_session_local_player)*MAXIMUM_NETWORK_SESSION_PEER_PLAYERS ==
 	NETWORK_SESSION_UNKNOWN761C_SIZE ? 1 : -1];
 
+/* what a session has in its ninth state, after the times: what the console
+that ran it and this one are known by; the first number of who is in it;
+which console this one is and a number of it; and the consoles that are
+known of, by six bytes each, with a bit for each in two numbers. The name is
+a guess */
+struct network_session_election
+{
+	byte host_address[NETWORK_SESSION_ADDRESS_SIZE];
+	byte local_address[NETWORK_SESSION_ADDRESS_SIZE];
+	long membership_unknown0;
+	long local_peer;
+	long unknown50;
+	long count;
+	byte unknownA[MAXIMUM_NETWORK_SESSION_PLAYERS][NETWORK_SESSION_PEER_ADDRESS_UNKNOWNA_SIZE];
+	unsigned long unknownB8;
+	unsigned long unknownBC;
+};
+
+typedef char verify_network_session_election_size[
+	sizeof(struct network_session_election) == 0xC0 ? 1 : -1];
+
 /* a number that network_session_start leaves in a session */
 #define NETWORK_SESSION_UNKNOWN4DA8_VALUE 0xDEADBEEFu
 
@@ -574,6 +600,12 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_set_player_unknownA8(long 
 	const byte *unknownA8);
 boolean NETWORK_SESSION_CALLBACK network_session_host_unknown_0005aeb0(byte *session, long unknown);
 void network_session_reset_unknown761c(byte *session);
+boolean NETWORK_SESSION_CALLBACK network_session_host_set_unknown49a8(byte *session, boolean unknown49a8,
+	long unknown49ac, long unknown49b0, long peer_index, const byte *unknown49b8);
+long network_session_election_new(const byte *session, struct network_session_election *election);
+long network_session_election_find(const struct network_session_election *election, const byte *address);
+long network_session_election_add_unknownB8(const byte *address, struct network_session_election *election);
+long network_session_election_add_unknownBC(const byte *address, struct network_session_election *election);
 void network_session_enter_state2(byte *session);
 void network_session_state3_update(byte *session);
 void network_session_state4_update(byte *session);

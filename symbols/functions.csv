@@ -1783,14 +1783,17 @@ address,name,source,arguments,returns,convention
 00062ab0,network_session_host_lost,source/networking/network_session.c,esi,void
 000616e0,network_session_enter_state9,source/networking/network_session.c,stack,void,stdcall
 0007b140,unknown_0007b140,,stack stack stack stack stack,void,stdcall
-00062b70,unknown_00062b70,,edx ebx,int
+00062b70,network_session_election_new,source/networking/network_session.c,edx ebx,int
+00063ba0,network_session_election_find,source/networking/network_session.c,ecx edx,int
+00063c00,network_session_election_add_unknownB8,source/networking/network_session.c,eax esi,int
+00063c50,network_session_election_add_unknownBC,source/networking/network_session.c,eax esi,int
 0005bec0,network_session_host_unknown_0005bec0,source/networking/network_session.c,ecx,bool
 0005dea0,network_session_host_unknown_0005dea0,source/networking/network_session.c,ebx stack stack,bool,stdcall
 0005e5b0,network_session_unknown_0005e5b0,source/networking/network_session.c,ecx eax,bool
 0005e640,network_session_unknown_0005e640,source/networking/network_session.c,stack stack,bool,stdcall
 0005f120,network_session_local_player_accepted,source/networking/network_session.c,esi edi stack,bool,stdcall
 0005f190,network_session_host_remove_peer_player,source/networking/network_session.c,stack stack stack,bool,stdcall
-0005df30,unknown_0005df30,,ecx edx eax edi stack stack,bool,stdcall
+0005df30,network_session_host_set_unknown49a8,source/networking/network_session.c,ecx edx eax edi stack stack,bool,stdcall
 0005bb20,network_session_leader_set_unknown49a1,source/networking/network_session.c,edx esi,bool
 0005bc10,network_session_leader_set_unknown5dd0,source/networking/network_session.c,edx esi,bool
 0005bd00,network_session_leader_set_language,source/networking/network_session.c,edx esi,bool
