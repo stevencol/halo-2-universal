@@ -599,6 +599,27 @@ enum
 	NETWORK_SESSION_ANSWER_UNKNOWN8_OFFSET */
 	_network_session_message_parameters_answer= 0x24,
 	NETWORK_SESSION_MESSAGE_PARAMETERS_ANSWER_SIZE= 0x10,
+	/* what the console that runs a session sends to tell the others who is
+	in it (the kind 0x19): what the session is known by; the number that who
+	is in it has now, and the one that the console has to have for this to
+	be what has changed since (NONE if it is all of it); how many consoles
+	and how many players it brings, in 16 bits each; up to 32 of each; and
+	the console that leads the session, after a byte that says that it
+	comes */
+	NETWORK_SESSION_MEMBERSHIP_UPDATE_VERSION_OFFSET= 0x8,
+	NETWORK_SESSION_MEMBERSHIP_UPDATE_BASELINE_OFFSET= 0xC,
+	NETWORK_SESSION_MEMBERSHIP_UPDATE_PEER_COUNT_OFFSET= 0x10,
+	NETWORK_SESSION_MEMBERSHIP_UPDATE_PLAYER_COUNT_OFFSET= 0x12,
+	NETWORK_SESSION_MEMBERSHIP_UPDATE_PEERS_OFFSET= 0x14,
+	NETWORK_SESSION_MEMBERSHIP_UPDATE_PLAYERS_OFFSET= 0x2094,
+	NETWORK_SESSION_MEMBERSHIP_UPDATE_HAS_HOST_PEER_OFFSET= 0x4894,
+	NETWORK_SESSION_MEMBERSHIP_UPDATE_HOST_PEER_OFFSET= 0x4898,
+	MAXIMUM_NETWORK_SESSION_MEMBERSHIP_UPDATES= 32,
+	/* what it says of a player: that it goes out, that it comes in, or
+	that it is another */
+	_network_session_membership_player_removed= 0,
+	_network_session_membership_player_added= 1,
+	_network_session_membership_player_changed= 2,
 	_network_session_message_unknownF= 0xF,
 	_network_session_message_unknown11= 0x11,
 	_network_session_message_unknown12= 0x12,
@@ -734,6 +755,51 @@ typedef char verify_network_session_peer_properties_update_size[
 typedef char verify_network_session_peer_properties_update_unknown84_offset[
 	offsetof(struct network_session_peer_properties_update, unknown84) == 0x90 ? 1 : -1];
 
+/* a console in what is sent to tell who is in a session: which it was the
+last time and which it is now (NONE in the first for one that comes in, and
+in the second for one that goes out); what it is known by; and, if a byte
+says so, its byte of 0x24 and what has changed of what the session knows of
+it */
+struct network_session_membership_peer_update
+{
+	short baseline_index;
+	short index;
+	byte address[NETWORK_SESSION_ADDRESS_SIZE];
+	boolean has_properties;
+	boolean unknown24;
+	byte pad2A[2];
+	struct network_session_peer_properties_update properties;
+};
+
+/* a player in it: which it is and what is said of it; for one that comes
+in, what it is known by, its console and its place; and, if a byte says so,
+its number, its two things of 0x90 bytes and its last number */
+struct network_session_membership_player_update
+{
+	short index;
+	short kind;
+	byte identifier[NETWORK_SESSION_PLAYER_IDENTIFIER_SIZE];
+	short peer;
+	short peer_player;
+	boolean has_data;
+	byte pad15[3];
+	long unknown14;
+	byte unknown18[NETWORK_SESSION_PLAYER_UNKNOWN18_SIZE];
+	byte unknownA8[NETWORK_SESSION_PLAYER_UNKNOWN18_SIZE];
+	long unknown138;
+};
+
+typedef char verify_network_session_membership_peer_update_size[
+	sizeof(struct network_session_membership_peer_update) == 0x104 ? 1 : -1];
+typedef char verify_network_session_membership_player_update_size[
+	sizeof(struct network_session_membership_player_update) == 0x140 ? 1 : -1];
+typedef char verify_network_session_membership_update_size[
+	NETWORK_SESSION_MEMBERSHIP_UPDATE_PEERS_OFFSET+
+	MAXIMUM_NETWORK_SESSION_MEMBERSHIP_UPDATES*sizeof(struct network_session_membership_peer_update) ==
+	NETWORK_SESSION_MEMBERSHIP_UPDATE_PLAYERS_OFFSET &&
+	NETWORK_SESSION_MEMBERSHIP_UPDATE_PLAYERS_OFFSET+
+	MAXIMUM_NETWORK_SESSION_MEMBERSHIP_UPDATES*sizeof(struct network_session_membership_player_update) ==
+	NETWORK_SESSION_MEMBERSHIP_UPDATE_HAS_HOST_PEER_OFFSET ? 1 : -1];
 /* the eight bytes made at random of a session, as two numbers */
 struct network_session_random
 {
@@ -901,6 +967,8 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_join_requested(const byte 
 	const struct transport_address *address);
 boolean NETWORK_SESSION_CALLBACK network_session_host_parameters_requested(const byte *request, byte *session,
 	long channel);
+void NETWORK_SESSION_CALLBACK network_session_membership_get_update(const byte *session, const byte *membership,
+	const byte *baseline, byte *update);
 void NETWORK_SESSION_CALLBACK network_session_parameters_get_update(const byte *session, const byte *parameters,
 	const byte *baseline, byte *update);
 boolean NETWORK_SESSION_CALLBACK network_session_parameters_apply_update(const byte *session, const byte *update,

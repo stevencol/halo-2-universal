@@ -2583,7 +2583,7 @@ def run(t) -> None:
         return handler
 
     for name, version, last_version, has, maker, size in (
-        ("network_session_send_membership_updates", 0x4C, 0x24E0, 8, "unknown_00060400", 0x489C),
+        ("network_session_send_membership_updates", 0x4C, 0x24E0, 8, "network_session_membership_get_update", 0x489C),
         ("network_session_send_parameters_updates", 0x4978, 0x5E28, 0xC, "network_session_parameters_get_update", 0x14D8),
     ):
         for n in range(400):
@@ -3198,4 +3198,97 @@ def run(t) -> None:
             Buffer(bytes(parameters)),
             baseline,
             Buffer(random_.randbytes(0x14D8)),
+        )
+
+    # ---------- what the console that runs a session sends to tell who is in it is made
+
+    M_PEERS = 0xC
+    M_MASK = 0x10D0
+    M_PLAYERS = 0x10D4
+
+    def a_peer() -> bytearray:
+        peer = bytearray(random_.randbytes(PEER))
+        peer[0x24] = random_.choice((0, 1, 1, 0x80))
+        if random_.randrange(2):
+            # its two texts end somewhere
+            struct.pack_into("<H", peer, 0x28 + 2 * random_.randrange(16), 0)
+            struct.pack_into("<H", peer, 0x48 + 2 * random_.randrange(32), 0)
+        return peer
+
+    for n in range(1200):
+        count = random_.choice((1, 2, 3, 4, 8, 16))
+        now = bytearray(random_.randbytes(0x2494))
+        struct.pack_into("<III", now, 0, random_.choice((7, 8, NONE)), random_.randrange(16), count)
+        peers = [a_peer() for peer in range(count)]
+        for peer in range(count):
+            now[M_PEERS + peer * PEER : M_PEERS + (peer + 1) * PEER] = peers[peer]
+        struct.pack_into("<I", now, M_MASK, random_.choice((0, 1, 0xFFFF, random_.getrandbits(16), random_.getrandbits(16))))
+        for player in range(16):
+            at = M_PLAYERS + player * PLAYER
+            struct.pack_into("<II", now, at + 0xC, random_.randrange(count), random_.randrange(4))
+            if random_.randrange(4) == 0:
+                struct.pack_into("<I", now, at + 0x14, NONE)
+        if n % 4 == 0:
+            before = 0
+        else:
+            # who was in it the last time: some of the consoles of now, some of them changed, and some others
+            old = bytearray(now)
+            kept = [peer for peer in range(count) if random_.randrange(4)]
+            if random_.randrange(3) == 0:
+                random_.shuffle(kept)
+            old_peers = []
+            for peer in kept:
+                one = bytearray(peers[peer])
+                way = random_.randrange(6)
+                if way == 0:
+                    one[0x24] ^= 1
+                elif way == 1:
+                    one[0x28 + random_.randrange(0xC8)] ^= 0x10
+                elif way == 2:
+                    one[0xF0 + random_.randrange(0x1C)] ^= 0x10
+                old_peers.append(one)
+            for extra in range(random_.choice((0, 0, 1, 2))):
+                if len(old_peers) < 16:
+                    old_peers.insert(random_.randrange(len(old_peers) + 1), a_peer())
+            # where each console of now was
+            was_at = {}
+            for at, one in enumerate(old_peers):
+                for peer in range(count):
+                    if one[:0x24] == peers[peer][:0x24]:
+                        was_at[peer] = at
+            struct.pack_into("<I", old, 8, len(old_peers))
+            for at, one in enumerate(old_peers):
+                old[M_PEERS + at * PEER : M_PEERS + (at + 1) * PEER] = one
+            if random_.randrange(3) == 0:
+                struct.pack_into("<I", old, 4, random_.randrange(16))
+            if random_.randrange(3) == 0:
+                struct.pack_into("<I", old, 0, random_.choice((7, 6)))
+            struct.pack_into("<I", old, M_MASK, struct.unpack_from("<I", now, M_MASK)[0] ^ random_.choice((0, 0, 1 << random_.randrange(16), random_.getrandbits(16))))
+            for player in range(16):
+                at = M_PLAYERS + player * PLAYER
+                peer = struct.unpack_from("<I", now, at + 0xC)[0]
+                # the console of the player, as it was then; another if the console was not there
+                struct.pack_into("<I", old, at + 0xC, was_at.get(peer, random_.randrange(16)))
+                way = random_.randrange(12)
+                if way == 0:
+                    old[at + random_.randrange(12)] ^= 4
+                elif way == 1:
+                    struct.pack_into("<I", old, at + 0xC, random_.randrange(16))
+                elif way == 2:
+                    old[at + 0x10] ^= 1
+                elif way == 3:
+                    old[at + 0x14 + random_.randrange(4)] ^= 2
+                elif way == 4:
+                    old[at + 0x18 + random_.randrange(0x90)] ^= 2
+                elif way == 5:
+                    old[at + 0xA8 + random_.randrange(0x90)] ^= 2
+                elif way == 6:
+                    old[at + 0x138 + random_.randrange(4)] ^= 2
+            before = Buffer(bytes(old))
+        t.check(
+            "network_session_membership_get_update",
+            Buffer(bytes(whole_session())),
+            Buffer(bytes(now)),
+            before,
+            Buffer(random_.randbytes(0x489C)),
         )

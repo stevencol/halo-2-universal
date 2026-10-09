@@ -2,6 +2,55 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Preparar «quién está» para mandarlo
+
+Una función en `networking/network_session.c`, de 1.494 bytes. De 1309
+funciones se pasa a 1310, el 11,63 % de las del juego (el 7,550 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_membership_get_update` | `0x00060400` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_membership_get_update` era `unknown_00060400`, la otra
+  función que quedaba sin descompilar detrás de
+  `network_session_send_membership_updates` (hito 356). **Prepara el
+  mensaje de la clase `0x19`**: quién está en la sesión.
+- El mensaje (`0x489C` bytes) ya tiene forma conocida: lo que identifica a
+  la sesión, la versión de ahora y la de antes, hasta 32 **consolas** de
+  `0x104` bytes y hasta 32 **jugadores** de `0x140`, y la consola que
+  dirige la sesión. Los dos trozos son estructuras en `network_session.h`.
+- Con lo que había la última vez, solo va lo que cambió:
+  - **Consolas.** Una consola de antes es la de ahora que se conoce igual
+    (sus `0x24` bytes). La que ya no está va como «fuera»; la nueva va con
+    todo lo que la sesión sabe de ella; la que sigue va solo si lo que se
+    sabe de ella cambió (y entonces solo lo que cambió,
+    `network_session_peer_properties_get_update`, hito 325) o si **cambió
+    de sitio** en la lista.
+  - **Jugadores.** Un jugador de antes es el de ahora en su mismo sitio si
+    se le conoce igual, está en el mismo sitio de su consola y su consola
+    es la misma. Si no, va como «fuera» (salvo que su consola ya no esté:
+    se sobreentiende). El nuevo va con cómo se le conoce, su consola y su
+    sitio; y él, o el que cambió, con su número, sus dos trozos de `0x90`
+    bytes y su último número. Un jugador cuyo número es NONE va sin eso.
+- Sin lo de la última vez, van todas las consolas y todos los jugadores.
+
+### Batería completa y líneas rotas
+
+- **La batería completa del hito 358 terminó: 1.299 funciones, las 1.299
+  bien.** Es la segunda completa con el arnés cambiado en el hito 322.
+- Las veinticinco líneas rotas de los hitos 363 y 364 se detectaron todas.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (217
+  funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 365 están
+  pendientes.
+
 ## 2026-10-08 — Preparar «lo que la sesión sabe» para mandarlo
 
 Una función en `networking/network_session.c`, de 1.471 bytes. De 1308

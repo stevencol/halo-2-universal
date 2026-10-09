@@ -5037,12 +5037,6 @@ void NETWORK_SESSION_CALLBACK network_session_enter_state8(
 	network_session_send_unknown12(session);
 }
 
-/* 0x00060400: makes what is sent to a console to tell it who is in a
-session: all of it, or with a baseline what has changed since.
-network_session_parameters_get_update does the same with what the session knows */
-void __attribute__((stdcall)) unknown_00060400(byte *session, const byte *membership, const byte *baseline,
-	byte *update);
-
 /* 0x000768b0, 0x00076930, of network_observer.c: whether one of the channels
 of what a session was given when it was set up still has something of a kind
 to send, and something that is done with it then */
@@ -5098,11 +5092,11 @@ void network_session_send_membership_updates(
 	}
 	if (all_peers)
 	{
-		unknown_00060400(session, session+NETWORK_SESSION_MEMBERSHIP_OFFSET, NULL, all);
+		network_session_membership_get_update(session, session+NETWORK_SESSION_MEMBERSHIP_OFFSET, NULL, all);
 	}
 	if (changes_peers)
 	{
-		unknown_00060400(session, session+NETWORK_SESSION_MEMBERSHIP_OFFSET,
+		network_session_membership_get_update(session, session+NETWORK_SESSION_MEMBERSHIP_OFFSET,
 			session+NETWORK_SESSION_OTHER_MEMBERSHIP_OFFSET, changes);
 	}
 	for (peer_index= 0; peer_index<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET); peer_index++)
@@ -6833,5 +6827,253 @@ void NETWORK_SESSION_CALLBACK network_session_parameters_get_update(
 		update[NETWORK_SESSION_PARAMETERS_UPDATE_HAS_UNKNOWN5E20_OFFSET]= TRUE;
 		*(long *)(update+NETWORK_SESSION_PARAMETERS_UPDATE_UNKNOWN5E20_OFFSET)=
 			*(const long *)network_session_parameters_get(parameters, NETWORK_SESSION_UNKNOWN5E20_OFFSET);
+	}
+}
+
+/* where something of who is in a session is, in who is in it or in a copy
+of it that is only read */
+static inline __attribute__((always_inline)) const byte *network_session_membership_get(
+	const byte *membership,
+	long session_offset)
+{
+	return membership+(session_offset-NETWORK_SESSION_MEMBERSHIP_OFFSET);
+}
+
+/* one more console in what is sent to tell who is in a session, and one more
+player: the game has these each time that it adds one */
+static inline __attribute__((always_inline)) struct network_session_membership_peer_update *
+network_session_membership_update_new_peer(
+	byte *update)
+{
+	short *count= (short *)(update+NETWORK_SESSION_MEMBERSHIP_UPDATE_PEER_COUNT_OFFSET);
+
+	return (struct network_session_membership_peer_update *)(update+NETWORK_SESSION_MEMBERSHIP_UPDATE_PEERS_OFFSET)+
+		(*count)++;
+}
+
+static inline __attribute__((always_inline)) struct network_session_membership_player_update *
+network_session_membership_update_new_player(
+	byte *update)
+{
+	short *count= (short *)(update+NETWORK_SESSION_MEMBERSHIP_UPDATE_PLAYER_COUNT_OFFSET);
+
+	return (struct network_session_membership_player_update *)(update+NETWORK_SESSION_MEMBERSHIP_UPDATE_PLAYERS_OFFSET)+
+		(*count)++;
+}
+
+/* 0x00060400: what the console that runs a session sends to a console to
+tell it who is in the session: what the session is known by, the number
+that who is in it has, and the consoles and the players that it has to add,
+change or take out. With who was in it the last time, the number of that
+goes too and only what is not the same comes; without it, the number is NONE
+and every console and every player comes.
+
+A console of the last time is the one of now that is known by the same. One
+that is no more goes as taken out. One of now that was not there goes with
+all that the session knows of it; one that was, only if what the session
+knows of it is another (with what has changed of it:
+network_session_peer_properties_get_update) or if it is at another place.
+
+A player of the last time is the one of now at its place if it is known by
+the same, at the same place of its console, and its console is the same.
+One that is no more, or is another, goes as taken out, unless its console is
+no more. One of now that was not there goes with what it is known by, its
+console and its place; and it, or one whose number, two things of 0x90
+bytes or last number are other, with those: but a player whose number is
+NONE goes with a byte that says that it has none.
+
+And the console that leads the session goes if it is another */
+void NETWORK_SESSION_CALLBACK network_session_membership_get_update(
+	const byte *session,
+	const byte *membership,
+	const byte *baseline,
+	byte *update)
+{
+	long new_index_of[MAXIMUM_NETWORK_SESSION_PLAYERS];
+	long old_index_of[MAXIMUM_NETWORK_SESSION_PLAYERS];
+	const byte *peers= network_session_membership_get(membership, NETWORK_SESSION_PEER_ARRAY_OFFSET);
+	const byte *players= membership+NETWORK_SESSION_MEMBERSHIP_PLAYER_ARRAY_OFFSET;
+	unsigned long same_players= 0;
+	long index;
+	long other;
+
+	memset(update, 0, NETWORK_SESSION_MESSAGE_MEMBERSHIP_UPDATE_SIZE);
+	memcpy(update, session+NETWORK_SESSION_IDENTIFIER_OFFSET, NETWORK_SESSION_IDENTIFIER_SIZE);
+	*(long *)(update+NETWORK_SESSION_MEMBERSHIP_UPDATE_VERSION_OFFSET)= *(const long *)membership;
+	*(long *)(update+NETWORK_SESSION_MEMBERSHIP_UPDATE_BASELINE_OFFSET)= baseline ? *(const long *)baseline : NONE;
+	for (index= 0; index<MAXIMUM_NETWORK_SESSION_PLAYERS; index++)
+	{
+		new_index_of[index]= NONE;
+		old_index_of[index]= NONE;
+	}
+	if (baseline)
+	{
+		const byte *old_peers= network_session_membership_get(baseline, NETWORK_SESSION_PEER_ARRAY_OFFSET);
+
+		for (other= 0; other<*(const long *)network_session_membership_get(baseline, NETWORK_SESSION_PEER_COUNT_OFFSET);
+			other++)
+		{
+			for (index= 0;
+				index<*(const long *)network_session_membership_get(membership, NETWORK_SESSION_PEER_COUNT_OFFSET);
+				index++)
+			{
+				if (memcmp(old_peers+other*NETWORK_SESSION_PEER_SIZE, peers+index*NETWORK_SESSION_PEER_SIZE,
+					NETWORK_SESSION_ADDRESS_SIZE)==0)
+				{
+					new_index_of[other]= index;
+					old_index_of[index]= other;
+				}
+			}
+		}
+		for (other= 0; other<*(const long *)network_session_membership_get(baseline, NETWORK_SESSION_PEER_COUNT_OFFSET);
+			other++)
+		{
+			if (new_index_of[other]==NONE)
+			{
+				struct network_session_membership_peer_update *gone= network_session_membership_update_new_peer(update);
+
+				gone->index= NONE;
+				gone->baseline_index= (short)other;
+				memcpy(gone->address, old_peers+other*NETWORK_SESSION_PEER_SIZE, sizeof(gone->address));
+				gone->has_properties= FALSE;
+			}
+		}
+	}
+	for (index= 0; index<*(const long *)network_session_membership_get(membership, NETWORK_SESSION_PEER_COUNT_OFFSET);
+		index++)
+	{
+		const byte *peer= peers+index*NETWORK_SESSION_PEER_SIZE;
+		const struct network_session_peer_properties *properties=
+			(const struct network_session_peer_properties *)(peer+NETWORK_SESSION_PEER_UNKNOWN28_OFFSET);
+		struct network_session_membership_peer_update *entry;
+
+		other= old_index_of[index];
+		if (other==NONE)
+		{
+			entry= network_session_membership_update_new_peer(update);
+			entry->index= (short)index;
+			entry->baseline_index= NONE;
+			memcpy(entry->address, peer, sizeof(entry->address));
+			entry->has_properties= TRUE;
+			entry->unknown24= peer[NETWORK_SESSION_PEER_UNKNOWN24_OFFSET];
+			network_session_peer_properties_get_update(&entry->properties, properties, NULL);
+		}
+		else
+		{
+			const byte *old_peer= network_session_membership_get(baseline, NETWORK_SESSION_PEER_ARRAY_OFFSET)+
+				other*NETWORK_SESSION_PEER_SIZE;
+			const struct network_session_peer_properties *old_properties=
+				(const struct network_session_peer_properties *)(old_peer+NETWORK_SESSION_PEER_UNKNOWN28_OFFSET);
+			boolean changed= peer[NETWORK_SESSION_PEER_UNKNOWN24_OFFSET]!=old_peer[NETWORK_SESSION_PEER_UNKNOWN24_OFFSET] ||
+				memcmp(properties, old_properties, sizeof(*properties))!=0;
+
+			if (!changed && index==other)
+			{
+				continue;
+			}
+			entry= network_session_membership_update_new_peer(update);
+			entry->baseline_index= (short)other;
+			entry->index= (short)index;
+			memcpy(entry->address, peer, sizeof(entry->address));
+			if (changed)
+			{
+				entry->has_properties= TRUE;
+				entry->unknown24= peer[NETWORK_SESSION_PEER_UNKNOWN24_OFFSET];
+				network_session_peer_properties_get_update(&entry->properties, properties, old_properties);
+			}
+		}
+	}
+	if (baseline)
+	{
+		const byte *old_players= baseline+NETWORK_SESSION_MEMBERSHIP_PLAYER_ARRAY_OFFSET;
+
+		for (index= 0; index<MAXIMUM_NETWORK_SESSION_PLAYERS; index++)
+		{
+			const byte *player= players+index*NETWORK_SESSION_PLAYER_SIZE;
+			const byte *old_player= old_players+index*NETWORK_SESSION_PLAYER_SIZE;
+			unsigned long bit= 1u<<index;
+			long old_peer;
+
+			if (!(*(const unsigned long *)(baseline+NETWORK_SESSION_MEMBERSHIP_PLAYERS_OFFSET)&bit))
+			{
+				continue;
+			}
+			old_peer= *(const long *)(old_player+NETWORK_SESSION_PLAYER_PEER_OFFSET);
+			if ((*(const unsigned long *)(membership+NETWORK_SESSION_MEMBERSHIP_PLAYERS_OFFSET)&bit) &&
+				memcmp(player, old_player, NETWORK_SESSION_PLAYER_IDENTIFIER_SIZE)==0 &&
+				new_index_of[old_peer]!=NONE &&
+				*(const long *)(player+NETWORK_SESSION_PLAYER_PEER_OFFSET)==new_index_of[old_peer] &&
+				*(const long *)(player+NETWORK_SESSION_PLAYER_PEER_PLAYER_OFFSET)==
+					*(const long *)(old_player+NETWORK_SESSION_PLAYER_PEER_PLAYER_OFFSET))
+			{
+				same_players|= bit;
+			}
+			else if (new_index_of[old_peer]!=NONE)
+			{
+				struct network_session_membership_player_update *gone= network_session_membership_update_new_player(update);
+
+				gone->index= (short)index;
+				gone->kind= _network_session_membership_player_removed;
+			}
+		}
+	}
+	for (index= 0; index<MAXIMUM_NETWORK_SESSION_PLAYERS; index++)
+	{
+		const byte *player= players+index*NETWORK_SESSION_PLAYER_SIZE;
+		unsigned long bit= 1u<<index;
+		struct network_session_membership_player_update *entry;
+		long unknown14= *(const long *)(player+NETWORK_SESSION_PLAYER_UNKNOWN14_OFFSET);
+
+		if (!(*(const unsigned long *)(membership+NETWORK_SESSION_MEMBERSHIP_PLAYERS_OFFSET)&bit))
+		{
+			continue;
+		}
+		if (same_players&bit)
+		{
+			const byte *old_player= baseline+NETWORK_SESSION_MEMBERSHIP_PLAYER_ARRAY_OFFSET+index*NETWORK_SESSION_PLAYER_SIZE;
+
+			if (unknown14==*(const long *)(old_player+NETWORK_SESSION_PLAYER_UNKNOWN14_OFFSET) &&
+				memcmp(player+NETWORK_SESSION_PLAYER_UNKNOWN18_OFFSET, old_player+NETWORK_SESSION_PLAYER_UNKNOWN18_OFFSET,
+					NETWORK_SESSION_PLAYER_UNKNOWN18_SIZE)==0 &&
+				memcmp(player+NETWORK_SESSION_PLAYER_UNKNOWNA8_OFFSET, old_player+NETWORK_SESSION_PLAYER_UNKNOWNA8_OFFSET,
+					NETWORK_SESSION_PLAYER_UNKNOWN18_SIZE)==0 &&
+				*(const long *)(player+NETWORK_SESSION_PLAYER_UNKNOWN138_OFFSET)==
+					*(const long *)(old_player+NETWORK_SESSION_PLAYER_UNKNOWN138_OFFSET))
+			{
+				continue;
+			}
+			entry= network_session_membership_update_new_player(update);
+			entry->index= (short)index;
+			entry->kind= _network_session_membership_player_changed;
+		}
+		else
+		{
+			entry= network_session_membership_update_new_player(update);
+			entry->index= (short)index;
+			entry->kind= _network_session_membership_player_added;
+			memcpy(entry->identifier, player, sizeof(entry->identifier));
+			entry->peer= *(const short *)(player+NETWORK_SESSION_PLAYER_PEER_OFFSET);
+			entry->peer_player= *(const short *)(player+NETWORK_SESSION_PLAYER_PEER_PLAYER_OFFSET);
+		}
+		if (unknown14==NONE)
+		{
+			entry->has_data= FALSE;
+		}
+		else
+		{
+			entry->has_data= TRUE;
+			entry->unknown14= unknown14;
+			memcpy(entry->unknown18, player+NETWORK_SESSION_PLAYER_UNKNOWN18_OFFSET, sizeof(entry->unknown18));
+			memcpy(entry->unknownA8, player+NETWORK_SESSION_PLAYER_UNKNOWNA8_OFFSET, sizeof(entry->unknownA8));
+			entry->unknown138= *(const long *)(player+NETWORK_SESSION_PLAYER_UNKNOWN138_OFFSET);
+		}
+	}
+	if (!baseline ||
+		*(const long *)network_session_membership_get(membership, NETWORK_SESSION_HOST_PEER_OFFSET)!=
+		*(const long *)network_session_membership_get(baseline, NETWORK_SESSION_HOST_PEER_OFFSET))
+	{
+		update[NETWORK_SESSION_MEMBERSHIP_UPDATE_HAS_HOST_PEER_OFFSET]= TRUE;
+		*(long *)(update+NETWORK_SESSION_MEMBERSHIP_UPDATE_HOST_PEER_OFFSET)=
+			*(const long *)network_session_membership_get(membership, NETWORK_SESSION_HOST_PEER_OFFSET);
 	}
 }
