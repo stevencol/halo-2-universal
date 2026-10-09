@@ -47,7 +47,7 @@ def run(t) -> None:
             # no thing is after itself: what a thing has after it is in a place after its own, so it ends
             pass
         struct.pack_into("<i", data, 0x2044, random_.choice((0, 0, 1, 0x200, 0x3FF, 0x400, random_.randrange(COUNT))) if next_ is None else next_)
-        tail = struct.pack("<I", SIZE + 4) + struct.pack("<16I", 0x11, 0x22, mock_address(3), *(0x11 * (n + 4) for n in range(7)), mock_address(0), 0xCC, mock_address(1), 0xEE, 0xFF, mock_address(2))
+        tail = struct.pack("<I", SIZE + 4) + struct.pack("<16I", 0x11, 0x22, mock_address(3), *(0x11 * (n + 4) for n in range(7)), mock_address(0), 0xCC, mock_address(1), mock_address(4), mock_address(5), mock_address(2))
         tail += bytes(0x80 - len(tail)) + random_.randbytes(VIEWS * 0x10)
         return Buffer(bytes(data) + tail, pointers=tuple(pointers))
 
@@ -132,7 +132,7 @@ def run(t) -> None:
         # a thing that some thing has after it, mostly, or one that is the first
         wanted = [struct.unpack_from("<I", raw, 0x48 + index * 8)[0] for index in range(COUNT) if raw[0x44 + index * 8] & 1]
         wanted = [entity for entity in wanted if entity != NONE]
-        firsts = [raw[0x45 + index * 8] << 28 | index for index in range(COUNT) if raw[0x44 + index * 8] & 9 == 9]
+        firsts = [(raw[0x45 + index * 8] & 0xF) << 28 | index for index in range(COUNT) if raw[0x44 + index * 8] & 9 == 9]
         entity = random_.choice((an_entity(), NONE, *(random_.choice(wanted) for place in range(3) if wanted), *(random_.choice(firsts) for place in range(2) if firsts)))
         t.check("replication_entity_manager_find_chain", data, Buffer(bytes(0x1000)), entity)
 
@@ -208,5 +208,75 @@ def run(t) -> None:
                 *client_mocks(),
                 Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
                 Mock(lambda call: 0, stack_arguments=5, registers=("ecx",)),
+            ],
+        )
+
+    # ---------- the views have more to say of a thing
+
+    VIEW = 0x5038
+    for n in range(500):
+        data = manager()
+        raw = bytearray(data.data)
+        pointers = list(data.pointers)
+        entity = an_entity()
+        place = entity & 0x3FF
+        struct.pack_into("<H", raw, 0x46 + place * 8, random_.choice((0, 0, 0xFFFF, random_.getrandbits(16), random_.getrandbits(16))))
+        # two views, each in some of the places; in each the thing is in a state, with something to say of it or not
+        views = [len(raw), len(raw) + VIEW]
+        for view in views:
+            made = bytearray(random_.randbytes(VIEW))
+            struct.pack_into("<I", made, 0xC, random_.choice((*range(16), 31, 32, random_.getrandbits(32))))
+            struct.pack_into("<I", made, 0x14, 0)
+            pointers.append(view + 0x14)
+            struct.pack_into("<IH", made, 0x24 + place * 20 + 4, random_.choice((0, 0, 0, 1, random_.getrandbits(32))), random_.choice((0, 1, 2, 3, 3, 3, 4)))
+            struct.pack_into("<i", made, 0x5034, random_.choice((0, 1, 7, -1)))
+            raw += made
+        for slot in range(VIEWS):
+            pointers = [pointer for pointer in pointers if pointer != 4 + slot * 4]
+            which = random_.choice((None, None, 0, 1))
+            struct.pack_into("<I", raw, 4 + slot * 4, 0 if which is None else views[which])
+            if which is not None:
+                pointers.append(4 + slot * 4)
+        t.check(
+            "replication_entity_manager_mark_entity",
+            Buffer(bytes(raw), pointers=tuple(pointers)),
+            entity,
+            random_.choice((0, 1, 2, 0x80000000, random_.getrandbits(32))),
+        )
+
+    # ---------- the things that another console made are this one's
+
+    for n in range(300):
+        data = manager(random_.choice((0.0, 0.05, 0.3, 1.0)))
+        raw = bytearray(data.data)
+        for index in range(COUNT):
+            flags = raw[0x44 + index * 8] & 0x1F
+            if flags & 9 == 9 and not flags & 4:
+                # a first one that is not made has things after it that there are: those are made below
+                flags &= ~8
+            raw[0x44 + index * 8] = flags
+            struct.pack_into("<I", raw, 0x48 + index * 8, random_.choice((NONE, NONE, random_.getrandbits(32))))
+        taken = random_.sample(range(COUNT), 40)
+        for chain in range(8):
+            places = taken[chain * 4 : chain * 4 + random_.choice((1, 2, 3, 4))]
+            for position, place in enumerate(places):
+                after = NONE if position + 1 == len(places) else places[position + 1] | (raw[0x45 + places[position + 1] * 8] & 0xF) << 28
+                raw[0x44 + place * 8] = (9 if position == 0 else 0x11) | random_.choice((0, 0, 2))
+                struct.pack_into("<hI", raw, 0x46 + place * 8, random_.choice((0, 0, 1)), after)
+
+        def adopts(call, kind=random_.choice((0, 1, 2, 2, 3))):
+            # what the things are of says whether a thing can be this console's: none, all, or some
+            return (0, 1, (call.stack[0] * 7 >> 2) & 3 != 0, (call.stack[0] >> 1) & 1)[kind]
+
+        t.check(
+            "replication_entity_manager_adopt_entities",
+            Buffer(bytes(raw), pointers=data.pointers),
+            externals=view_stubs,
+            mocks=[
+                *client_mocks(),
+                Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
+                Mock(lambda call: 0, stack_arguments=5, registers=("ecx",)),
+                Mock(adopts, stack_arguments=1, registers=("ecx",)),
+                Mock(lambda call: 0, stack_arguments=0, registers=("ecx",)),
             ],
         )

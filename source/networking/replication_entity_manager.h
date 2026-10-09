@@ -35,7 +35,15 @@ enum
 	_replication_entity_other_bit= 0x10,
 	/* the size of the last of the three things that go with a thing that
 	another console made */
-	REPLICATION_ENTITY_CREATION_DATA_SIZE= 0x10
+	REPLICATION_ENTITY_CREATION_DATA_SIZE= 0x10,
+	/* of a view: which of the views it is; what keeps the things; what it
+	has of each thing; and how many things it has something to say of. The
+	state of a thing in a view in which that is counted */
+	REPLICATION_ENTITY_VIEW_INDEX_OFFSET= 0xC,
+	REPLICATION_ENTITY_VIEW_MANAGER_OFFSET= 0x14,
+	REPLICATION_ENTITY_VIEW_ENTITIES_OFFSET= 0x24,
+	REPLICATION_ENTITY_VIEW_PENDING_COUNT_OFFSET= 0x5034,
+	_replication_entity_view_state3= 3
 };
 
 /* ---------- structures */
@@ -51,11 +59,25 @@ struct replication_entity
 	long next;
 };
 
+/* what a view has of a thing: the bits of what it has to say of it, and
+the state that it is in there */
+struct replication_entity_view_entity
+{
+	long unknown0;
+	unsigned long pending;
+	short state;
+	short unknownA;
+	long unknownC;
+	long unknown10;
+};
+
 /* what the things are of: something with functions, of which the third is
 told that a thing was made by another console, with three things of it; the
 eleventh and the thirteenth, that a thing is being done with, and that it is
-done with; and the sixteenth gives something of a thing for a view that is
-new, or nothing */
+done with; the fourteenth, that a thing that another console made is this
+one's now, and says whether it can be; the fifteenth, that they all are; and
+the sixteenth gives something of a thing for a view that is new, or
+nothing */
 struct replication_entity_client;
 
 struct replication_entity_client_functions
@@ -67,7 +89,8 @@ struct replication_entity_client_functions
 	void (__attribute__((thiscall)) *deleting)(struct replication_entity_client *client, long entity);
 	void *unknown2C;
 	void (__attribute__((thiscall)) *deleted)(struct replication_entity_client *client, long entity);
-	void *unknown34[2];
+	boolean (__attribute__((thiscall)) *adopt)(struct replication_entity_client *client, long entity);
+	void (__attribute__((thiscall)) *adopted)(struct replication_entity_client *client);
 	long (__attribute__((thiscall)) *unknown3C)(struct replication_entity_client *client, long entity);
 };
 
@@ -106,6 +129,9 @@ void __attribute__((stdcall)) replication_entity_manager_add_view(byte *view, st
 	long view_index);
 void __attribute__((stdcall)) replication_entity_manager_create_entities_remote(const long *unknown4,
 	struct replication_entity_manager *manager, long count, const long *entities, const long *unknown8, byte *unknown10);
+void __attribute__((stdcall)) replication_entity_manager_mark_entity(struct replication_entity_manager *manager,
+	long entity, unsigned long flags);
+void replication_entity_manager_adopt_entities(struct replication_entity_manager *manager);
 long replication_entity_manager_allocate_index(struct replication_entity_manager *manager);
 long replication_entity_manager_create_entity(long index, struct replication_entity_manager *manager);
 long replication_entity_manager_get_chain(long entity, long *entities, const struct replication_entity_manager *manager);

@@ -2002,3 +2002,5 @@ address,name,source,arguments,returns,convention
 000898c0,replication_entity_manager_add_view,source/networking/replication_entity_manager.c,eax ebx stack,void,stdcall
 00089950,replication_entity_manager_create_entities_remote,source/networking/replication_entity_manager.c,eax stack stack stack stack stack,void,stdcall
 000980d0,unknown_000980d0,,ecx edx esi,void
+00089710,replication_entity_manager_mark_entity,source/networking/replication_entity_manager.c,eax edi stack,void,stdcall
+00089a20,replication_entity_manager_adopt_entities,source/networking/replication_entity_manager.c,ebx,void

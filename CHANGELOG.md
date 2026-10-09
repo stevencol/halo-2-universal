@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Marcar una cosa para las vistas, y quedarse con las de otra consola
+
+Dos funciones en `networking/replication_entity_manager.c`, 952 bytes entre las dos. De 1441
+funciones se pasa a 1443, el 12,81 % de las del juego (el 8,666 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `replication_entity_manager_mark_entity` | `0x00089710` | `networking/replication_entity_manager.c` |
+| `replication_entity_manager_adopt_entities` | `0x00089a20` | `networking/replication_entity_manager.c` |
+
+### Lo que se sabe
+
+- `replication_entity_manager_mark_entity` es **cómo se dice que algo de
+  una cosa ha cambiado**: a cada vista se le suman los bits de lo que
+  tiene que contar de esa cosa. Si la cosa está en su tercer estado en la
+  vista y la vista no tenía nada pendiente de ella, la vista cuenta una
+  cosa más con algo que decir (salvo que la cuenta de la cosa tenga el bit
+  de esa vista).
+  - De una vista se sabe ya algo: cuál es (`0xC`), su tabla (`0x14`), 20
+    bytes por cosa desde `0x24` (lo pendiente y el estado) y la cuenta de
+    cosas con algo pendiente (`0x5034`).
+  - El juego tiene el bucle de las quince vistas desenrollado de cinco en
+    cinco; en C es un bucle.
+- `replication_entity_manager_adopt_entities` es lo que pasa cuando **esta
+  consola se queda con las cosas que hizo otra** (por lo que hace, cuando
+  pasa a mandar ella): cada cosa en uso y sin crear queda creada y se
+  pregunta por ella a lo que las cosas son; si dice que no, se borra. Las
+  cadenas van juntas desde su primera. Después todos los sitios en uso
+  cuentan un uso más, y los números de «la siguiente» se ponen al día.
+  - Al poner al día el número de la siguiente solo se guardan el sitio y
+    las veces usado: los bits de en medio se pierden.
+- De la tabla de lo que las cosas son se conocen ya seis funciones: 3, 11,
+  13, 14, 15 y 16.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos**, en las trece de los hitos 416
+  y 417 y en `network_channel_write_packet` (hito 415).
+- En este hito se pasaron las pruebas de `replication_entity_manager`
+  (15 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Borrar cadenas, una vista más y las cosas que hizo otra consola
 
 Cuatro funciones en `networking/replication_entity_manager.c`. De 1437

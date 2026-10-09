@@ -387,3 +387,107 @@ void __attribute__((stdcall)) replication_entity_manager_create_entities_remote(
 			unknown10+index*REPLICATION_ENTITY_CREATION_DATA_SIZE);
 	}
 }
+
+/* 0x00089710: every view has more to say of a thing: the bits that are
+given. A view in which the thing is in its third state, and that had nothing
+to say of it, has one more thing to say something of; but not if the thing's
+count of what still has it has the bit of the view (the processor shifts by
+the low five bits of which view it is) */
+void __attribute__((stdcall)) replication_entity_manager_mark_entity(
+	struct replication_entity_manager *manager,
+	long entity_index,
+	unsigned long flags)
+{
+	long view_index;
+
+	for (view_index= 0; view_index<MAXIMUM_REPLICATION_ENTITY_VIEWS; view_index++)
+	{
+		byte *view= manager->views[view_index];
+
+		if (view)
+		{
+			long index= entity_index&REPLICATION_ENTITY_INDEX_MASK;
+			struct replication_entity_view_entity *entity=
+				(struct replication_entity_view_entity *)(view+REPLICATION_ENTITY_VIEW_ENTITIES_OFFSET)+index;
+
+			if (entity->state==_replication_entity_view_state3)
+			{
+				const struct replication_entity_manager *view_manager=
+					*(const struct replication_entity_manager **)(view+REPLICATION_ENTITY_VIEW_MANAGER_OFFSET);
+
+				if (!((1u<<(*(const long *)(view+REPLICATION_ENTITY_VIEW_INDEX_OFFSET)&31))&
+					(word)view_manager->entities[index].unknown2) && entity->pending==0)
+				{
+					(*(long *)(view+REPLICATION_ENTITY_VIEW_PENDING_COUNT_OFFSET))++;
+				}
+			}
+			entity->pending|= flags;
+		}
+	}
+}
+
+/* 0x00089a20: the things that another console made are this one's now.
+Each thing in use that is not made is: it has the bit, and what the things
+are of is told, by its fourteenth function; if that says no, the thing is to
+be done with. The ones that were made at once go together, from the first,
+and with the first no they are all to be done with; one that is another of
+them and not the first is left for its first. Then every place in use has
+been used once more, and so says the number of the thing after each. And
+what the things are of is told that it is done, by its fifteenth */
+void replication_entity_manager_adopt_entities(
+	struct replication_entity_manager *manager)
+{
+	long index;
+
+	for (index= 0; index<MAXIMUM_REPLICATION_ENTITIES; index++)
+	{
+		struct replication_entity *entity= &manager->entities[index];
+
+		if ((entity->flags&_replication_entity_used_bit) && !(entity->flags&_replication_entity_created_bit))
+		{
+			long entity_index= (long)((unsigned long)entity->salt<<REPLICATION_ENTITY_SALT_SHIFT|(unsigned long)index);
+
+			if (entity->flags&_replication_entity_first_bit)
+			{
+				long entities[MAXIMUM_REPLICATION_ENTITY_CHAIN];
+				long count= replication_entity_manager_get_chain(entity_index, entities, manager);
+				long place;
+
+				for (place= 0; place<count; place++)
+				{
+					manager->entities[entities[place]&REPLICATION_ENTITY_INDEX_MASK].flags|= _replication_entity_created_bit;
+					if (!manager->client->functions->adopt(manager->client, entities[place]))
+					{
+						replication_entity_manager_delete_chain(entity_index, manager);
+						break;
+					}
+				}
+			}
+			else if (!(entity->flags&_replication_entity_other_bit))
+			{
+				entity->flags|= _replication_entity_created_bit;
+				if (!manager->client->functions->adopt(manager->client, entity_index))
+				{
+					replication_entity_manager_delete_entity(manager, entity_index);
+				}
+			}
+		}
+	}
+	for (index= 0; index<MAXIMUM_REPLICATION_ENTITIES; index++)
+	{
+		struct replication_entity *entity= &manager->entities[index];
+
+		if (entity->flags&_replication_entity_used_bit)
+		{
+			entity->salt= (byte)((entity->salt+1)%REPLICATION_ENTITY_SALT_COUNT);
+			if (entity->next!=NONE)
+			{
+				unsigned long next= (unsigned long)entity->next;
+
+				entity->next= (long)((((next>>REPLICATION_ENTITY_SALT_SHIFT)+1)%REPLICATION_ENTITY_SALT_COUNT)<<
+					REPLICATION_ENTITY_SALT_SHIFT|(next&REPLICATION_ENTITY_INDEX_MASK));
+			}
+		}
+	}
+	manager->client->functions->adopted(manager->client);
+}
