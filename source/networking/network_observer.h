@@ -300,6 +300,34 @@ enum
 	NETWORK_OBSERVER_PARAMETERS_CONNECT_TRIES_OFFSET= 0x24,
 	NETWORK_OBSERVER_PARAMETERS_RECONNECT_TRIES_OFFSET= 0x48,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN6C_OFFSET= 0x6C,
+	/* the flow of a channel: its bits a second and one more number (its
+	packets a second are the real of 0x49C); three bytes that say when
+	packets are few; a time; and a flow that is kept. Of what the observer
+	has at 0x10: the rates of packets, which are parts of the times a
+	second that the game goes; two sizes of a packet, in bytes; a real that
+	says which part of those times is few; and three numbers for the real
+	that network_observer_channel_unknown_0007a2a0 gives. The bits that
+	each packet has more, and the picture a second of a console that goes
+	fewer times */
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN48D_OFFSET= 0x48D,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN490_OFFSET= 0x490,
+	NETWORK_OBSERVER_CHANNEL_BITS_PER_SECOND_OFFSET= 0x494,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN498_OFFSET= 0x498,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN4E8_OFFSET= 0x4E8,
+	NETWORK_OBSERVER_CHANNEL_KEPT_FLOW_OFFSET= 0x4F4,
+	NETWORK_OBSERVER_CHANNEL_KEPT_BITS_PER_SECOND_OFFSET= 0x4F8,
+	NETWORK_OBSERVER_CHANNEL_KEPT_UNKNOWN498_OFFSET= 0x4FC,
+	NETWORK_OBSERVER_CHANNEL_KEPT_PACKET_RATE_OFFSET= 0x500,
+	NETWORK_OBSERVER_PARAMETERS_PACKET_RATE_COUNT_OFFSET= 0x9C,
+	NETWORK_OBSERVER_PARAMETERS_PACKET_RATES_OFFSET= 0xA0,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN108_OFFSET= 0x108,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN10C_OFFSET= 0x10C,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN110_OFFSET= 0x110,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1C8_OFFSET= 0x1C8,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1CC_OFFSET= 0x1CC,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1D0_OFFSET= 0x1D0,
+	NETWORK_OBSERVER_PACKET_HEADER_BITS= 0x168,
+	NETWORK_OBSERVER_PAL_REFRESH_RATE= 50,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
 	_unknown_00088650_unknown11= 0x11
 };
@@ -365,6 +393,13 @@ struct network_rate
 typedef char verify_network_rate_size[sizeof(struct network_rate) == 0xD4 || sizeof(struct network_rate) == 0xD8 ? 1 : -1];
 typedef char verify_network_rate_spans_count_offset[offsetof(struct network_rate, spans_count) == 0xCC ? 1 : -1];
 
+/* how many times a second the game goes, and with the picture at 50 a
+second; and how much more than a rate of packets another has to be to count
+as more */
+#define NETWORK_OBSERVER_TICK_RATE 30.0f
+#define NETWORK_OBSERVER_PAL_TICK_RATE 25.0f
+#define NETWORK_OBSERVER_PACKET_RATE_EPSILON 0.0001f
+
 /* the tries that a channel has at something: how many, and how long after it
 went into its state each one is, in milliseconds */
 struct network_observer_tries
@@ -406,6 +441,14 @@ void NETWORK_OBSERVER_CALLBACK network_observer_unknown_00077f90(long unknown_ea
 void NETWORK_OBSERVER_CALLBACK network_observer_update_voice_console_counts(const byte *observer);
 void NETWORK_OBSERVER_CALLBACK network_observer_channel_update_game_channel(long channel_index, byte *observer);
 void NETWORK_OBSERVER_CALLBACK network_observer_channel_update_tries(byte *observer, long channel_index);
+boolean NETWORK_OBSERVER_CALLBACK network_observer_packet_rate_low(boolean unknown, real packet_rate,
+	const byte *observer, boolean unknown4, boolean half);
+real NETWORK_OBSERVER_CALLBACK network_observer_packet_rate(const byte *observer, long bits_per_second,
+	boolean unknown4, boolean half);
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_set_flow(long channel_index, byte *observer, real packet_rate,
+	long bits_per_second, long unknown498);
+void network_observer_channel_restore_flow(long channel_index, byte *observer);
+real network_observer_channel_unknown_0007a2a0(long channel_index, const byte *observer);
 void NETWORK_OBSERVER_CALLBACK network_observer_release_game_channels(byte *observer);
 boolean network_observer_channel_unknown_00077940(byte *observer, long channel_index);
 void network_observer_channel_reset_unknown4dc(long channel_index, byte *observer);

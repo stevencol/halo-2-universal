@@ -3,7 +3,7 @@
 import random
 import struct
 
-from difftest import Buffer, Mock, mock_address
+from difftest import Buffer, Mock, f32, mock_address
 
 NONE = 0xFFFFFFFF
 SIZE = 0x4F40
@@ -1059,4 +1059,97 @@ def run(t) -> None:
                 ),
             ),
             mocks=[Mock(lambda call, yes=yes: (call.registers["ecx"] // 4) % 4 in yes, stack_arguments=2, registers=("ecx",))],
+        )
+
+    # ---------- how many packets a second, and whether they are few
+
+    def video() -> bytes:
+        # how many pictures a second the console shows, and the rest of what it is set to
+        return struct.pack("<h", random_.choice((0, 50, 50, 60, -1, 49, 51))) + random_.randbytes(6)
+
+    for n in range(800):
+        data = observer() + bytearray(random_.randbytes(0x114))
+        struct.pack_into("<I", data, 0x10, SIZE)
+        struct.pack_into("<f", data, SIZE + 0x110, random_.choice((0.0, 0.5, 0.5, 1.0, 2.0)))
+        t.check(
+            "network_observer_packet_rate_low",
+            random_.choice((0, 1)),
+            f32(random_.choice((-1.0, 0.0, 12.4998, 12.4999, 12.5, 14.9998, 14.9999, 15.0, 24.9998, 24.9999, 25.0, 29.9998, 29.9999, 30.0, 59.0, 60.0))),
+            Buffer(bytes(data), pointers=(0x10,)),
+            random_.choice((0, 1)),
+            random_.choice((0, 1)),
+            globals={"xbox_video_settings": video()},
+        )
+
+    for n in range(1200):
+        data = observer() + bytearray(random_.randbytes(0x114))
+        struct.pack_into("<I", data, 0x10, SIZE)
+        count = random_.choice((1, 2, 4, 8, 8))
+        way = random_.randrange(3)
+        if way == 0:
+            rates = sorted((random_.choice((1.0, 0.5, 0.25, 0.1, 0.0)) for index in range(count)), reverse=True)
+        elif way == 1:
+            rates = [1.0 / (1 << index) for index in range(count)]
+        else:
+            rates = [random_.choice((1.0, 0.5, 0.25, 0.0)) for index in range(count)]
+        struct.pack_into(f"<i{count}f", data, SIZE + 0x9C, count, *rates)
+        struct.pack_into("<ii", data, SIZE + 0x108, random_.choice((0, 0, 45, 1000)), random_.choice((0, 90, 0x20000000)))
+        t.check(
+            "network_observer_packet_rate",
+            Buffer(bytes(data), pointers=(0x10,)),
+            random_.choice((0, 1, 360, 1350, 1349, 2700, 2699, 2250, 4500, 5400, 5399, 9000, 10800, 10799, 21600, 100000, 0x7FFFFFFF, NONE)),
+            random_.choice((0, 0, 1)),
+            random_.choice((0, 0, 1)),
+            globals={"xbox_video_settings": video()},
+        )
+
+    # ---------- the flow of a channel
+
+    def few(harness, arguments, low=None):
+        # the first byte is the low one of a register
+        return low, (arguments[0] & 0xFF, arguments[1], harness.normalize(arguments[2]), arguments[3], arguments[4])
+
+    for n in range(300):
+        data = observer()
+        t.check(
+            "network_observer_channel_set_flow",
+            random_.randrange(15),
+            Buffer(bytes(data)),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            externals={"network_observer_packet_rate_low": lambda harness, arguments, low=random_.choice((0, 1)): few(harness, arguments, low)},
+        )
+
+    def flows(harness, arguments):
+        return 0, (arguments[0], harness.normalize(arguments[1]), arguments[2], arguments[3], arguments[4])
+
+    for n in range(200):
+        data = observer()
+        channel = random_.randrange(15)
+        data[CHANNELS + channel * CHANNEL + 0x4F4] = random_.choice((0, 1, 1, 0x80))
+        t.check(
+            "network_observer_channel_restore_flow",
+            channel,
+            Buffer(bytes(data)),
+            externals={"network_observer_channel_set_flow": flows},
+        )
+
+    for n in range(600):
+        setup = at_time()
+        now = struct.unpack("<I", setup["globals"]["unknown_0051054c"])[0]
+        data = observer() + bytearray(random_.randbytes(0x1D4))
+        struct.pack_into("<I", data, 0x10, SIZE)
+        struct.pack_into("<fif", data, SIZE + 0x1C8, random_.choice((0.0, 1000.0, 999.5, 999.5, 64000.0)), random_.choice((0, 1, 8, 8, 1000, 0x10000, -1)), random_.choice((0.0, 0.5, 1.0)))
+        channel = random_.randrange(15)
+        at = CHANNELS + channel * CHANNEL
+        struct.pack_into("<i", data, at + 0x494, random_.choice((0, 1, 1000, 64000, 0x7FFFFFFF, -1)))
+        struct.pack_into("<I", data, at + 0x4DC, random_.choice((0, 1, 1, 1, 2, 3)))
+        struct.pack_into("<I", data, at + 0x4E8, random_.choice((NONE, NONE, (now - random_.choice((0, 1, 124, 125, 126, 1000, 0x10000, 0x80000000))) & 0xFFFFFFFF)))
+        t.check(
+            "network_observer_channel_unknown_0007a2a0",
+            channel,
+            Buffer(bytes(data), pointers=(0x10,)),
+            globals=setup["globals"],
+            externals=setup["externals"],
         )

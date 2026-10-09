@@ -1954,3 +1954,179 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_update_tries(
 		*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)==_network_observer_channel_state5 ?
 		_network_observer_channel_state6 : _network_observer_channel_state8, observer, channel_index);
 }
+
+/* how many times a second the game goes: 25 with the picture at 50 a second,
+and 30 if not */
+static inline __attribute__((always_inline)) real network_observer_tick_rate(
+	void)
+{
+	return xbox_video_settings.refresh_rate==NETWORK_OBSERVER_PAL_REFRESH_RATE ?
+		NETWORK_OBSERVER_PAL_TICK_RATE : NETWORK_OBSERVER_TICK_RATE;
+}
+
+/* 0x00078190: whether so many packets a second are few: with a byte, fewer
+than the part of the times a second that the game goes that the real at
+0x110 of what the observer has at 0x10 says; and with another, fewer than
+those times, or than half of them with a third byte */
+boolean NETWORK_OBSERVER_CALLBACK network_observer_packet_rate_low(
+	boolean unknown,
+	real packet_rate,
+	const byte *observer,
+	boolean unknown4,
+	boolean half)
+{
+	real tick_rate= network_observer_tick_rate();
+	real rate= packet_rate+NETWORK_OBSERVER_PACKET_RATE_EPSILON;
+	boolean low= FALSE;
+
+	if (unknown && *(const real *)(*(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET)+
+		NETWORK_OBSERVER_PARAMETERS_UNKNOWN110_OFFSET)*tick_rate>rate)
+	{
+		low= TRUE;
+	}
+	if (unknown4)
+	{
+		if (half)
+		{
+			tick_rate*= 0.5f;
+		}
+		if (tick_rate>rate)
+		{
+			low= TRUE;
+		}
+	}
+
+	return low;
+}
+
+/* 0x00078090: how many packets a second so many bits a second are, with
+packets of one of the two sizes of what the observer has at 0x10 (in bytes,
+and 0x168 bits more each): the first of the rates of that, which are parts
+of the times a second that the game goes, that they are enough for, and the
+last one if they are enough for none or it is none; and with a byte, no more
+than half of those times */
+real NETWORK_OBSERVER_CALLBACK network_observer_packet_rate(
+	const byte *observer,
+	long bits_per_second,
+	boolean unknown4,
+	boolean half)
+{
+	const byte *parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+	real tick_rate= network_observer_tick_rate();
+	/* the game adds and multiplies as the processor does */
+	long packet_bits= (long)(*(const unsigned long *)(parameters+(unknown4 ?
+		NETWORK_OBSERVER_PARAMETERS_UNKNOWN10C_OFFSET : NETWORK_OBSERVER_PARAMETERS_UNKNOWN108_OFFSET))*8+
+		NETWORK_OBSERVER_PACKET_HEADER_BITS);
+	real packets= (real)bits_per_second/(real)packet_bits;
+	long count= *(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_PACKET_RATE_COUNT_OFFSET);
+	const real *rates= (const real *)(parameters+NETWORK_OBSERVER_PARAMETERS_PACKET_RATES_OFFSET);
+	real rate= 0.0f;
+	boolean found= FALSE;
+	long index;
+
+	for (index= 0; index<count-1; index++)
+	{
+		rate= rates[index]*tick_rate;
+		if (packets>=rate)
+		{
+			found= rate!=0.0f;
+			break;
+		}
+	}
+	if (!found)
+	{
+		rate= rates[count-1]*tick_rate;
+	}
+	if (half)
+	{
+		real half_rate= tick_rate*0.5f;
+
+		if (rate>half_rate)
+		{
+			rate= half_rate;
+		}
+	}
+
+	return rate;
+}
+
+/* 0x00079600: the flow of a channel of the observer is so many packets a
+second, so many bits a second and one more number; and its byte of 0x4A0 is
+whether those packets are few (network_observer_packet_rate_low, with its
+bytes of 0x48D, 0x48E and 0x490) */
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_set_flow(
+	long channel_index,
+	byte *observer,
+	real packet_rate,
+	long bits_per_second,
+	long unknown498)
+{
+	byte *channel= (byte *)network_observer_channel(observer, channel_index);
+
+	channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN4A0_OFFSET]= network_observer_packet_rate_low(
+		channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48D_OFFSET], packet_rate, observer,
+		channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48E_OFFSET], channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN490_OFFSET]);
+	*(long *)(channel+NETWORK_OBSERVER_CHANNEL_BITS_PER_SECOND_OFFSET)= bits_per_second;
+	*(real *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN49C_OFFSET)= packet_rate;
+	*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN498_OFFSET)= unknown498;
+}
+
+/* 0x0007a110: a channel of the observer that has a flow kept (its byte of
+0x4F4) has that flow again, and none kept; and its number of 0x4DC is 1 */
+void network_observer_channel_restore_flow(
+	long channel_index,
+	byte *observer)
+{
+	byte *channel= (byte *)network_observer_channel(observer, channel_index);
+
+	if (channel[NETWORK_OBSERVER_CHANNEL_KEPT_FLOW_OFFSET])
+	{
+		network_observer_channel_set_flow(channel_index, observer,
+			*(const real *)(channel+NETWORK_OBSERVER_CHANNEL_KEPT_PACKET_RATE_OFFSET),
+			*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_KEPT_BITS_PER_SECOND_OFFSET),
+			*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_KEPT_UNKNOWN498_OFFSET));
+		channel[NETWORK_OBSERVER_CHANNEL_KEPT_FLOW_OFFSET]= FALSE;
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4DC_OFFSET)= 1;
+	}
+}
+
+/* 0x0007a2a0: a real of a channel of the observer whose number of 0x4DC is
+1, and nothing of any other: how long ago its time of 0x4E8 was, times the
+number at 0x1CC of what the observer has at 0x10, and no more than the real
+at 0x1C8, which it is with no such time; less its bits a second times the
+real at 0x1D0 */
+real network_observer_channel_unknown_0007a2a0(
+	long channel_index,
+	const byte *observer)
+{
+	const byte *channel= network_observer_channel(observer, channel_index);
+	const byte *parameters;
+	long time;
+	real result;
+
+	if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4DC_OFFSET)!=1)
+	{
+		return 0.0f;
+	}
+	time= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4E8_OFFSET);
+	if (time!=NONE)
+	{
+		unsigned long elapsed= (unsigned long)network_time_since(time);
+
+		parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+		/* the game multiplies as the processor does */
+		result= (real)(long)(elapsed**(const unsigned long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN1CC_OFFSET));
+		if (result>*(const real *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN1C8_OFFSET))
+		{
+			result= *(const real *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN1C8_OFFSET);
+		}
+	}
+	else
+	{
+		parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+		result= *(const real *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN1C8_OFFSET);
+	}
+
+	return result-(real)*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_BITS_PER_SECOND_OFFSET)*
+		*(const real *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN1D0_OFFSET);
+}

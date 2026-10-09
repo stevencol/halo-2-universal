@@ -1877,6 +1877,11 @@ address,name,source,arguments,returns,convention
 00076ff0,network_observer_channel_update_game_channel,source/networking/network_observer.c,ebx stack,void,stdcall
 000776a0,network_observer_channel_update_tries,source/networking/network_observer.c,ecx stack,void,stdcall
 00088220,unknown_00088220,,eax stack stack,void,stdcall
+00078190,network_observer_packet_rate_low,source/networking/network_observer.c,ecx xmm1 stack stack stack,bool,stdcall
+00078090,network_observer_packet_rate,source/networking/network_observer.c,ecx stack stack stack,real:xmm0,stdcall
+00079600,network_observer_channel_set_flow,source/networking/network_observer.c,eax ecx xmm5 stack stack,void,stdcall
+0007a110,network_observer_channel_restore_flow,source/networking/network_observer.c,eax ecx,void
+0007a2a0,network_observer_channel_unknown_0007a2a0,source/networking/network_observer.c,eax esi,real:xmm0
 00092a30,network_window_add,source/networking/network_observer.c,esi edi,void
 00076810,network_observer_unknown_00076810,source/networking/network_observer.c,ecx stack stack stack,void,stdcall
 000797b0,network_observer_channel_unknown_000797b0,source/networking/network_observer.c,eax edx stack,void,stdcall

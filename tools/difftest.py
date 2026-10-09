@@ -65,6 +65,10 @@ REGISTERS = {
     "xmm1": x86.UC_X86_REG_XMM1,
     "xmm2": x86.UC_X86_REG_XMM2,
     "xmm3": x86.UC_X86_REG_XMM3,
+    "xmm4": x86.UC_X86_REG_XMM4,
+    "xmm5": x86.UC_X86_REG_XMM5,
+    "xmm6": x86.UC_X86_REG_XMM6,
+    "xmm7": x86.UC_X86_REG_XMM7,
 }
 
 COMPILE_FLAGS = [

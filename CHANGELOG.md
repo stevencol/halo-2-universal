@@ -2,6 +2,64 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Cuántos paquetes por segundo manda un canal
+
+Cinco funciones en `networking/network_observer.c`, 586 bytes entre todas. De 1356
+funciones se pasa a 1361, el 12,08 % de las del juego (el 7,948 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_packet_rate_low` | `0x00078190` | `networking/network_observer.c` |
+| `network_observer_packet_rate` | `0x00078090` | `networking/network_observer.c` |
+| `network_observer_channel_set_flow` | `0x00079600` | `networking/network_observer.c` |
+| `network_observer_channel_restore_flow` | `0x0007a110` | `networking/network_observer.c` |
+| `network_observer_channel_unknown_0007a2a0` | `0x0007a2a0` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- **El caudal de un canal son tres números**, y ya se sabe qué son dos:
+  los bits por segundo (`0x494`) y los **paquetes por segundo** (`0x49C`,
+  que es un real: en el hito 385 se daba por entero). Los pone
+  `network_observer_channel_set_flow`, que además apunta en un byte si esos
+  paquetes son pocos.
+- `network_observer_packet_rate` saca los paquetes por segundo de los bits
+  por segundo: divide entre lo que ocupa un paquete (uno de dos tamaños en
+  bytes, más `0x168` bits de cabecera) y se queda con el primer ritmo de
+  una lista que eso alcanza a pagar. Los ritmos son **partes de las veces
+  por segundo que va el juego**: 30, o 25 con la imagen a 50 por segundo
+  (PAL). Con un byte, no pasa de la mitad.
+- `network_observer_packet_rate_low` dice si un ritmo es poco: menos que
+  una parte de esas veces por segundo, o menos que todas (o la mitad),
+  según tres bytes del canal.
+- `network_observer_channel_restore_flow`: un canal puede tener **un caudal
+  guardado** (`0x4F4` a `0x500`); esta se lo devuelve.
+- `network_observer_channel_unknown_0007a2a0` da un real de un canal cuyo
+  número de `0x4DC` es 1: el tiempo desde una hora suya por un número, con
+  un tope, menos sus bits por segundo por otro. Parece cuánto puede subir.
+
+### El arnés
+
+- Una de estas recibe un real en un registro que el arnés no conocía
+  (`xmm5`). `tools\difftest.py` admite ahora de `xmm0` a `xmm7`.
+
+### Comprobado rompiendo líneas
+
+- Veintidós líneas rotas, una cada vez: las pruebas fallaron en veinte.
+  - Una no se veía: subir el tope en uno. En las pruebas el tope era
+    siempre un número entero, como lo que se compara con él. Ahora hay
+    topes con decimales, y falla.
+  - La que queda no cambia nada: mirar un ritmo más de la lista da el
+    mismo que se toma al final.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_observer` (52 funciones).
+- Los bytes que se dan a estas funciones son 0 o 1 en las pruebas.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Los intentos de un canal
 
 Una función en `networking/network_observer.c`, de 637 bytes. De 1355
