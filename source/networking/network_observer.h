@@ -111,12 +111,37 @@ enum
 	_network_observer_connect_status2= 2,
 	NETWORK_OBSERVER_CHANNEL_LOST_REASON= 0xD,
 	NETWORK_OBSERVER_CHANNEL_DELETED_REASON= 0xE,
+	/* more of a channel: two sets of the last numbers of something, and a
+	byte that says whether more is done with what the channel is told */
+	NETWORK_OBSERVER_CHANNEL_WINDOW250_OFFSET= 0x250,
+	NETWORK_OBSERVER_CHANNEL_WINDOW360_OFFSET= 0x360,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN48C_OFFSET= 0x48C,
+	MAXIMUM_NETWORK_WINDOW_SAMPLES= 32,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
 	_unknown_00088650_unknown11= 0x11
 };
 
-/* a function that takes its arguments off the stack */
-#define NETWORK_OBSERVER_CALLBACK __attribute__((stdcall))
+/* the last numbers that are kept of something: how many are kept, where the
+next one goes, each with the time that it was added at, the sum of all, and
+how long ago the oldest was when the last one was added */
+struct network_window_sample
+{
+	long time;
+	long value;
+};
+
+struct network_window
+{
+	long count;
+	long index;
+	struct network_window_sample samples[MAXIMUM_NETWORK_WINDOW_SAMPLES];
+	unsigned long sum;
+	long span;
+};
+
+typedef char verify_network_window_size[sizeof(struct network_window) == 0x110 ? 1 : -1];
+
+/* a function that takes its arguments off the stack */#define NETWORK_OBSERVER_CALLBACK __attribute__((stdcall))
 
 /* ---------- prototypes/NETWORK_OBSERVER.C */
 
@@ -137,6 +162,9 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_set_pending(long channel
 boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_alive(long channel_index, const byte *observer);
 long network_observer_channel_connect_status(const byte *observer, long channel_index);
 long network_unknown_00075910(const byte *unknown);
+void network_window_add(struct network_window *window, long value);
+void NETWORK_OBSERVER_CALLBACK network_observer_unknown_00076810(byte *observer, long game_channel_index, long unknown4,
+	byte unknown8);
 void NETWORK_OBSERVER_CALLBACK network_observer_channel_set_state(long state, byte *observer, long channel_index);
 void network_observer_channel_delete(long channel_index, byte *observer);
 void network_observer_channel_update_connection(long channel_index, byte *observer);

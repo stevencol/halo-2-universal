@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Los últimos números de un canal
+
+Dos funciones en `networking/network_observer.c`, 246 bytes entre las dos. De 1328
+funciones se pasa a 1330, el 11,81 % de las del juego (el 7,743 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_window_add` | `0x00092a30` | `networking/network_observer.c` |
+| `network_observer_unknown_00076810` | `0x00076810` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_window_add` lleva **la cuenta de los últimos números de algo**:
+  hasta 32, cada uno con la hora en que llegó, la suma de todos y cuánto
+  hace del más viejo. El nuevo ocupa el sitio del más viejo. Es una
+  estructura de `0x110` bytes (`struct network_window`), y cada canal del
+  observador tiene dos, en `0x250` y en `0x360`. Con la suma y el tiempo se
+  puede sacar una media por segundo: parece lo que usa el juego para medir
+  cómo va la conexión con cada consola.
+- `network_observer_unknown_00076810`: al observador le dicen dos cosas de un
+  canal del juego, y las apunta en esas dos cuentas del canal que le
+  corresponde: en la primera si la primera cosa *no* se cumple, y en la
+  segunda el segundo byte tal cual.
+- `network_window_add` está en el ejecutable lejos del observador
+  (`0x00092a30`); de momento vive en el mismo archivo.
+
+### Comprobado rompiendo líneas
+
+- Seis líneas rotas, una cada vez: las pruebas fallaron en las seis.
+
+### Sin comprobar
+
+- `network_observer_unknown_00076810` no mira si encontró el canal: si no hay
+  ninguno que sea ese canal del juego, el juego escribe antes del primer
+  canal. En las pruebas siempre lo hay.
+- En este hito se pasaron las pruebas de `network_observer` (21 funciones).
+- La batería completa del hito 371 está corriendo en la copia de
+  comprobación.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — El estado de un canal del observador
 
 Cuatro funciones en `networking/network_observer.c`, 434 bytes entre todas. De 1324

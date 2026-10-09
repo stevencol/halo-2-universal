@@ -389,3 +389,48 @@ def run(t) -> None:
                 "unknown_000776a0": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
             },
         )
+
+    # ---------- the last numbers that are kept of something
+
+    def a_window() -> bytearray:
+        window = bytearray(random_.randbytes(0x110))
+        count = random_.choice((1, 2, 16, 32))
+        struct.pack_into("<II", window, 0, count, random_.randrange(count))
+        return window
+
+    for n in range(300):
+        setup = at_time()
+        t.check(
+            "network_window_add",
+            Buffer(bytes(a_window())),
+            random_.choice((0, 1, 0xFF, random_.getrandbits(32))),
+            globals=setup["globals"],
+            externals=setup["externals"],
+        )
+
+    for n in range(400):
+        data = observer()
+        channel = random_.randrange(15)
+        game_channel = 9
+        for other in range(15):
+            at = CHANNELS + other * CHANNEL
+            # another channel has the same channel of the game, but is not in use
+            if other < channel and random_.randrange(3) == 0:
+                struct.pack_into("<II", data, at, 0, game_channel)
+                struct.pack_into("<I", data, at + 0xC, game_channel)
+            data[at + 0x48C] = random_.choice((0, 1, 0x80))
+            data[at + 0x250 : at + 0x360] = a_window()
+            data[at + 0x360 : at + 0x470] = a_window()
+        struct.pack_into("<I", data, CHANNELS + channel * CHANNEL, random_.choice((1, 3, 7)))
+        struct.pack_into("<I", data, CHANNELS + channel * CHANNEL + 0xC, game_channel)
+        setup = at_time()
+        setup["externals"]["unknown_000797b0"] = lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2]))
+        t.check(
+            "network_observer_unknown_00076810",
+            Buffer(bytes(data)),
+            game_channel,
+            random_.choice((0, 1, 0x100, 0x101, 0x80)),
+            random_.choice((0, 1, 0x80, 0x1FF)),
+            globals=setup["globals"],
+            externals=setup["externals"],
+        )

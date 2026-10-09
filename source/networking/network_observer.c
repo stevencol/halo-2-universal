@@ -604,3 +604,70 @@ void network_observer_channel_connect(
 	unknown_00076ff0(channel_index, observer);
 	unknown_000776a0(observer, channel_index);
 }
+
+/* 0x000797b0: something more that is done with a channel of the observer
+whose byte of 0x48C is set, with a byte */
+void __attribute__((stdcall)) unknown_000797b0(byte *observer, long channel_index, long unknown);
+
+/* 0x00092a30: one more number in the last ones that are kept of something,
+with the time: it takes the place of the oldest, the sum of all has it and
+not that one, and how long ago the oldest was is kept. The game has it far
+from the functions of the observer */
+void network_window_add(
+	struct network_window *window,
+	long value)
+{
+	long now= network_time_since(0);
+	struct network_window_sample *oldest= window->samples+window->index;
+
+	window->span= (long)((unsigned long)now-(unsigned long)oldest->time);
+	window->sum-= (unsigned long)oldest->value;
+	oldest->time= now;
+	window->samples[window->index].value= value;
+	window->sum+= (unsigned long)value;
+	window->index= (window->index+1)%window->count;
+}
+
+/* which channel of the observer is in use and is one of the channels of the
+game; NONE if none. The game has this in each function that is told of a
+channel of the game */
+static inline __attribute__((always_inline)) long network_observer_find_game_channel(
+	const byte *observer,
+	long game_channel_index)
+{
+	long channel_index;
+
+	for (channel_index= 0; channel_index<MAXIMUM_NETWORK_OBSERVER_CHANNELS; channel_index++)
+	{
+		const byte *channel= network_observer_channel(observer, channel_index);
+
+		if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)!=0 &&
+			*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET)==game_channel_index)
+		{
+			return channel_index;
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x00076810: the observer is told two things of a channel of the game: the
+channel of the observer that it is keeps whether the first is not so in the
+numbers of 0x250, and the second in those of 0x360; and with its byte of
+0x48C, unknown_000797b0 is told the first */
+void NETWORK_OBSERVER_CALLBACK network_observer_unknown_00076810(
+	byte *observer,
+	long game_channel_index,
+	long unknown4,
+	byte unknown8)
+{
+	long channel_index= network_observer_find_game_channel(observer, game_channel_index);
+	byte *channel= (byte *)network_observer_channel(observer, channel_index);
+
+	network_window_add((struct network_window *)(channel+NETWORK_OBSERVER_CHANNEL_WINDOW250_OFFSET), (byte)unknown4==0);
+	network_window_add((struct network_window *)(channel+NETWORK_OBSERVER_CHANNEL_WINDOW360_OFFSET), unknown8);
+	if (channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48C_OFFSET])
+	{
+		unknown_000797b0(observer, channel_index, unknown4);
+	}
+}
