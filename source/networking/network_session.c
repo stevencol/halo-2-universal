@@ -45,16 +45,17 @@ void __attribute__((stdcall)) unknown_00075e80(boolean unknown, long channel_ind
 /* 0x0011ca80, of cseries.c */
 long language_from_xbox_language(long xbox_language);
 
-/* 0x000616e0: what a session that another console runs does when that
-console is lost */
-void __attribute__((stdcall)) unknown_000616e0(byte *session);
-
-/* 0x00062990, 0x00062480, 0x000623e0, 0x00062ab0: what a session does each
-time in its third state, in its fourth, in another and when something comes
-from the console that runs it */
+/* 0x00062990: what a session does each time in its third state */
 void unknown_00062990(byte *session);
-void unknown_00062480(byte *session);
-void unknown_000623e0(byte *session);
+
+/* 0x0007b140: sends something of a kind and a size to an address of the
+game */
+void __attribute__((stdcall)) unknown_0007b140(long unknown4, const struct transport_address *address, long type,
+	long size, const void *data);
+
+/* 0x00062b70: fills something of what a session has from its state on in
+its ninth state; a number */
+long unknown_00062b70(byte *session, byte *unknown10);
 
 /* 0x0005df30: something that the console that runs a session does for a
 console of it, with a byte, two numbers and a thing or none; whether it did */
@@ -72,9 +73,12 @@ extern boolean unknown_00510548;
 extern long unknown_0051054c;
 
 /* 0x004cf4a4, 0x004cf4ac: how long a session waits in two of its states
-before network_session_disconnect is done with it, in milliseconds */
+before it is disconnected, in milliseconds. 0x004cf4a0, 0x004cf4b0: how long
+it waits in those states before it sends again what it sends */
 long unknown_004cf4a4;
 long unknown_004cf4ac;
+long unknown_004cf4a0;
+long unknown_004cf4b0;
 
 /* 0x004d8b18, 0x004d8b19: with both, a session that is started asks what
 the console is known by in the network */
@@ -2378,7 +2382,7 @@ void network_session_enter_state3(
 }
 
 /* 0x00061330: a session goes into its fourth state: it starts now, with
-NONE after the time, and unknown_00062480 is done */
+NONE after the time, and network_session_state4_update is done */
 void network_session_enter_state4(
 	byte *session)
 {
@@ -2387,7 +2391,7 @@ void network_session_enter_state4(
 
 	data[0]= now;
 	data[1]= NONE;
-	unknown_00062480(session);
+	network_session_state4_update(session);
 }
 
 /* 0x00061450: a session goes into its sixth state: each console is sent
@@ -2412,7 +2416,7 @@ void NETWORK_SESSION_CALLBACK network_session_enter_state10(
 }
 
 /* 0x000618d0: network_session_disconnect is done with a session if the time of 0x7488
-was more than unknown_004cf4a4 milliseconds ago; if not, unknown_000623e0 */
+was more than unknown_004cf4a4 milliseconds ago; if not, network_session_unknown_000623e0 */
 void network_session_unknown_000618d0(
 	byte *session)
 {
@@ -2422,12 +2426,12 @@ void network_session_unknown_000618d0(
 	}
 	else
 	{
-		unknown_000623e0(session);
+		network_session_unknown_000623e0(session);
 	}
 }
 
 /* 0x00061910: network_session_disconnect is done with a session if its state started
-more than unknown_004cf4ac milliseconds ago; if not, unknown_00062480 */
+more than unknown_004cf4ac milliseconds ago; if not, network_session_state4_update */
 void network_session_unknown_00061910(
 	byte *session)
 {
@@ -2437,7 +2441,7 @@ void network_session_unknown_00061910(
 	}
 	else
 	{
-		unknown_00062480(session);
+		network_session_state4_update(session);
 	}
 }
 
@@ -3382,7 +3386,7 @@ void network_session_enter_state7(
 /* 0x00062ab0: the console that runs a session is lost, or says that the
 session is over. In a session that says who is in it, that another console
 runs and that has more than one console, the channel of that console is told
-(network_observer_channel_unknown_00075e40) and unknown_000616e0 is done: but
+(network_observer_channel_unknown_00075e40) and network_session_enter_state9 is done: but
 not in the fourth state, nor in the sixth, nor in the last two with their
 first byte set. In any other case the session is disconnected */
 void network_session_host_lost(
@@ -3415,10 +3419,74 @@ void network_session_host_lost(
 			*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET);
 
 		network_observer_channel_unknown_00075e40(host->unknown4, *(const byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET));
-		unknown_000616e0(session);
+		network_session_enter_state9(session);
 	}
 	else
 	{
 		network_session_disconnect(session);
 	}
+}
+
+/* 0x00062480: in its fourth state, a session sends the console that runs it
+something of the kind 0xB, with what the session is known by, in both ways:
+the first time, and again each time that unknown_004cf4b0 milliseconds have
+gone by since the last. When it sent it is kept after the time of the
+state */
+void network_session_state4_update(
+	byte *session)
+{
+	long last= *(const long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN4_OFFSET);
+
+	if (last==NONE || network_session_elapsed(last)>unknown_004cf4b0)
+	{
+		byte identifier[NETWORK_SESSION_IDENTIFIER_SIZE];
+
+		memcpy(identifier, session+NETWORK_SESSION_IDENTIFIER_OFFSET, sizeof(identifier));
+		network_session_send_to_peer(*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET), _network_session_send_both,
+			session, _network_session_message_unknownB, sizeof(identifier), identifier);
+		*(long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN4_OFFSET)= network_session_time();
+	}
+}
+
+/* 0x000623e0: a session sends the address that it keeps in its second
+state something of the kind 9, with what the session is known by and two
+numbers: each time that unknown_004cf4a0 milliseconds have gone by since the
+last */
+void network_session_unknown_000623e0(
+	byte *session)
+{
+	if (network_session_elapsed(*(const long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN6C_OFFSET))>unknown_004cf4a0)
+	{
+		byte message[NETWORK_SESSION_MESSAGE_UNKNOWN9_SIZE];
+
+		memset(message, 0, sizeof(message));
+		memcpy(message, session+NETWORK_SESSION_IDENTIFIER_OFFSET, NETWORK_SESSION_IDENTIFIER_SIZE);
+		*(long *)(message+8)= *(const long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN5C_OFFSET);
+		*(long *)(message+0xC)= *(const long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN60_OFFSET);
+		unknown_0007b140(*(const long *)(session+NETWORK_SESSION_UNKNOWN4_OFFSET),
+			(const struct transport_address *)(session+NETWORK_SESSION_STATE2_ADDRESS_OFFSET), _network_session_message_unknown9,
+			sizeof(message), message);
+		*(long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN6C_OFFSET)= network_session_time();
+	}
+}
+
+/* 0x000616e0: a session goes into its ninth state, which is what it does
+when the console that ran it is lost: it starts now, unknown_00062b70 fills a
+thing of it and gives a number, and it has a bit for this console and one for
+the console that ran it. The 0x34 bytes of 0x761C start over */
+void NETWORK_SESSION_CALLBACK network_session_enter_state9(
+	byte *session)
+{
+	byte data[NETWORK_SESSION_STATE9_SIZE];
+
+	memset(data, 0, sizeof(data));
+	*(long *)(data+NETWORK_SESSION_STATE9_START_OFFSET)= network_session_time();
+	*(long *)(data+NETWORK_SESSION_STATE9_UNKNOWNC_OFFSET)= unknown_00062b70(session, data+NETWORK_SESSION_STATE9_UNKNOWN10_OFFSET);
+	*(long *)(data+NETWORK_SESSION_STATE9_UNKNOWN8_OFFSET)= network_session_time();
+	*(unsigned long *)(data+NETWORK_SESSION_STATE9_LOCAL_PEERS_OFFSET)=
+		1u<<*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET);
+	*(unsigned long *)(data+NETWORK_SESSION_STATE9_HOST_PEERS_OFFSET)=
+		1u<<*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET);
+	network_session_reset_unknown761c(session);
+	memcpy(network_session_set_state(session, _network_session_state9), data, sizeof(data));
 }

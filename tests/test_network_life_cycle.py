@@ -1509,7 +1509,7 @@ def run(t) -> None:
             "network_session_enter_state4",
             Buffer(bytes(whole_session())),
             globals=clock(),
-            externals={"GetTickCount": ticks(), "unknown_00062480": nothing},
+            externals={"GetTickCount": ticks(), "network_session_state4_update": nothing},
         )
         t.check(
             "network_session_enter_state6",
@@ -1519,8 +1519,8 @@ def run(t) -> None:
         t.check("network_session_enter_state10", Buffer(bytes(whole_session())), random_.getrandbits(32))
 
     for name, at, limit_name, other in (
-        ("network_session_unknown_000618d0", 0x7488, "unknown_004cf4a4", "unknown_000623e0"),
-        ("network_session_unknown_00061910", 0x7420, "unknown_004cf4ac", "unknown_00062480"),
+        ("network_session_unknown_000618d0", 0x7488, "unknown_004cf4a4", "network_session_unknown_000623e0"),
+        ("network_session_unknown_00061910", 0x7420, "unknown_004cf4ac", "network_session_state4_update"),
     ):
         for n in range(120):
             data = whole_session()
@@ -1775,7 +1775,7 @@ def run(t) -> None:
             globals=clock(),
             externals={
                 "GetTickCount": ticks(),
-                "unknown_00062480": nothing,
+                "network_session_state4_update": nothing,
                 "unknown_00075e80": sends_all,
                 "unknown_00061180": nothing,
                 "network_session_enter_state7": lambda harness, arguments: (0, (arguments[0] & 0xFF, *arguments[1:])),
@@ -1840,6 +1840,66 @@ def run(t) -> None:
             externals={
                 "network_session_disconnect": nothing,
                 "network_observer_channel_unknown_00075e40": nothing,
-                "unknown_000616e0": nothing,
+                "network_session_enter_state9": nothing,
             },
+        )
+
+    # ---------- what a session does again and again in two states, and its ninth state
+
+    def waits(data: bytearray, at: int, limit_name: str, never: bool = False) -> dict:
+        now = random_.getrandbits(32)
+        limit = random_.choice((0, 1000, 1000, 30000, 0x7FFFFFFF, 0xFFFFFFFF))
+        ago = random_.choice((0, 1, 999, 1000, 1001, 29999, 30001, 0x7FFFFFFF, 0x80000001, 0xFFFFFFFF))
+        struct.pack_into("<I", data, at, NONE if never else (now - ago) & 0xFFFFFFFF)
+        return {
+            "globals": {
+                "unknown_00510548": bytes((random_.choice((0, 0, 1)),)),
+                "unknown_0051054c": struct.pack("<I", now),
+                limit_name: struct.pack("<I", limit),
+            },
+            "tick": lambda harness, arguments, now=now: now,
+        }
+
+    for n in range(200):
+        data = with_channels()
+        struct.pack_into("<I", data, 0x40, random_.randrange(16))
+        for peer in range(16):
+            data[0x72DC + peer * 0x14 + 1] = random_.choice((0, 1, 1, 0x80))
+        setup = waits(data, 0x7424, "unknown_004cf4b0", never=n % 5 == 0)
+        t.check(
+            "network_session_state4_update",
+            Buffer(bytes(data), pointers=(8,)),
+            globals=setup["globals"],
+            externals={"GetTickCount": setup["tick"], "unknown_00075e80": sends_all},
+        )
+
+    def sends_to_address(harness, arguments):
+        # what is sent is in the stack
+        return 0, (arguments[0], harness.normalize(arguments[1]), arguments[2], arguments[3], bytes(harness.mu.mem_read(arguments[4], arguments[3] & 0xFF)))
+
+    for n in range(200):
+        data = whole_session()
+        setup = waits(data, 0x748C, "unknown_004cf4a0")
+        t.check(
+            "network_session_unknown_000623e0",
+            Buffer(bytes(data)),
+            globals=setup["globals"],
+            externals={"GetTickCount": setup["tick"], "unknown_0007b140": sends_to_address},
+        )
+
+    def fills(harness, arguments):
+        # where it goes is in the stack; what was there has to be zeros
+        before = bytes(harness.mu.mem_read(arguments[1], 0xC0))
+        harness.mu.mem_write(arguments[1], bytes(range(1, 0xC1)))
+        return 0x1234, (harness.normalize(arguments[0]), before)
+
+    for n in range(60):
+        data = whole_session()
+        struct.pack_into("<I", data, LOCAL_PEER, random_.randrange(16))
+        struct.pack_into("<I", data, 0x40, random_.randrange(16))
+        t.check(
+            "network_session_enter_state9",
+            Buffer(bytes(data)),
+            globals=clock(),
+            externals={"GetTickCount": ticks(), "unknown_00062b70": fills},
         )

@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Lo que la sesión repite, y su noveno estado
+
+Tres funciones en `networking/network_session.c`, 578 bytes entre todas. De 1253
+funciones se pasa a 1256, el 11,15 % de las del juego (el 6,959 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_enter_state9` | `0x000616e0` | `networking/network_session.c` |
+| `network_session_unknown_000623e0` | `0x000623e0` | `networking/network_session.c` |
+| `network_session_state4_update` | `0x00062480` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_state4_update` (era `unknown_00062480`): en el cuarto
+  estado, la sesión manda a quien la lleva algo de la clase `0xB` con sus
+  ocho bytes, la primera vez y luego cada `unknown_004cf4b0` milisegundos.
+  El cuarto estado es **salir avisando**, y eso es el aviso, repetido hasta
+  que contesten o se agote el tiempo (hito 336).
+- `network_session_unknown_000623e0`: lo mismo hacia la dirección que la
+  sesión guarda en su segundo estado, con algo de la clase 9 (los ocho
+  bytes y dos números), cada `unknown_004cf4a0` milisegundos. No va por un
+  canal sino directo a la dirección (`0x0007b140`).
+- `network_session_enter_state9` (era `unknown_000616e0`) pone el noveno
+  estado, el de cuando **se ha perdido a quien llevaba la sesión** (hito
+  343): cuándo empezó, una cosa que rellena `0x00062b70`, un bit de esta
+  consola y otro de la que la llevaba. Es donde las consolas que quedan
+  eligen quién la lleva ahora.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (164
+  funciones).
+- La batería completa del hito 343 estaba corriendo al cerrar este hito.
+- Las mutaciones de los hitos 280 a 308 y 321 a 344 están pendientes.
+
 ## 2026-10-08 — Desconectar la sesión, y su séptimo estado
 
 Tres funciones en `networking/network_session.c`, 561 bytes entre todas. De 1250

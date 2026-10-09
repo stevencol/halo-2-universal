@@ -1777,10 +1777,12 @@ address,name,source,arguments,returns,convention
 00061910,network_session_unknown_00061910,source/networking/network_session.c,eax,void
 00061950,network_session_unknown_00061950,source/networking/network_session.c,ecx esi,void
 00062990,unknown_00062990,,esi,void
-00062480,unknown_00062480,,esi,void
-000623e0,unknown_000623e0,,esi,void
+00062480,network_session_state4_update,source/networking/network_session.c,esi,void
+000623e0,network_session_unknown_000623e0,source/networking/network_session.c,esi,void
 00062ab0,network_session_host_lost,source/networking/network_session.c,esi,void
-000616e0,unknown_000616e0,,stack,void,stdcall
+000616e0,network_session_enter_state9,source/networking/network_session.c,stack,void,stdcall
+0007b140,unknown_0007b140,,stack stack stack stack stack,void,stdcall
+00062b70,unknown_00062b70,,edx ebx,int
 0005bec0,network_session_host_unknown_0005bec0,source/networking/network_session.c,ecx,bool
 0005dea0,network_session_host_unknown_0005dea0,source/networking/network_session.c,ebx stack stack,bool,stdcall
 0005e5b0,network_session_unknown_0005e5b0,source/networking/network_session.c,ecx eax,bool
