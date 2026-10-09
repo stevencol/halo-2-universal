@@ -410,6 +410,21 @@ enum
 	whether the channel is of a console of the session, and, if the session
 	says who is in it, a byte that is 1 and what the console that runs it is
 	known by */
+	/* what a console sends to the console that runs a session, of each kind
+	and size: what the session is to know of it; a player of it that comes
+	in, changes or goes out; and, from the console that leads the session,
+	that another leads it or goes out */
+	_network_session_message_peer_properties= 0x1A,
+	NETWORK_SESSION_MESSAGE_PEER_PROPERTIES_SIZE= 0xD0,
+	_network_session_message_change_leader= 0x1B,
+	_network_session_message_leader_removes_peer= 0x1C,
+	NETWORK_SESSION_MESSAGE_CHANGE_LEADER_SIZE= 0x2C,
+	_network_session_message_add_player= 0x1D,
+	NETWORK_SESSION_MESSAGE_ADD_PLAYER_SIZE= 0xB0,
+	_network_session_message_remove_player= 0x1F,
+	NETWORK_SESSION_MESSAGE_REMOVE_PLAYER_SIZE= 0xC,
+	_network_session_message_set_player= 0x20,
+	NETWORK_SESSION_MESSAGE_SET_PLAYER_SIZE= 0xA4,
 	_network_session_message_unknown13= 0x13,
 	NETWORK_SESSION_MESSAGE_UNKNOWN13_SIZE= 0x30,
 	NETWORK_SESSION_MESSAGE_UNKNOWN13_UNKNOWN8_OFFSET= 0x8,
@@ -669,6 +684,15 @@ boolean NETWORK_SESSION_CALLBACK network_session_synchronize_time(byte *session,
 	const struct transport_address *address, const byte *message);
 boolean NETWORK_SESSION_CALLBACK network_session_unknown_0005e210(byte *session, const byte *message);
 boolean network_session_unknown_0005e6b0(byte *session, long channel);
+boolean network_session_set_local_peer_properties(const struct network_session_peer_properties *properties,
+	byte *session);
+boolean NETWORK_SESSION_CALLBACK network_session_add_local_player(byte *session, const byte *unknown18,
+	const byte *identifier, long peer_player_index, long unknown14, long unknown138);
+boolean NETWORK_SESSION_CALLBACK network_session_set_local_player(byte *session, const byte *unknown18,
+	long unknown138, long peer_player_index, long unknown14);
+boolean network_session_remove_local_player(byte *session, long peer_player_index);
+boolean NETWORK_SESSION_CALLBACK network_session_change_leader(byte *session, const byte *peer_address);
+boolean NETWORK_SESSION_CALLBACK network_session_leader_remove_peer(byte *session, const byte *peer_address);
 boolean network_session_remove_peer_with_message_c(byte *session, long peer_index);
 void NETWORK_SESSION_CALLBACK network_session_peer_properties_apply_update(
 	struct network_session_peer_properties *properties, const struct network_session_peer_properties_update *update);

@@ -4386,3 +4386,296 @@ boolean network_session_unknown_0005e6b0(
 
 	return TRUE;
 }
+
+/* who is in a session, or what it knows of them, has changed: the two
+numbers that count it count one more. The game has this in each function
+that changes it */
+static inline __attribute__((always_inline)) void network_session_membership_changed(
+	byte *session)
+{
+	(*(long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET))++;
+	(*(long *)(session+NETWORK_SESSION_UNKNOWN7618_OFFSET))++;
+}
+
+/* something is sent to the console that runs a session, the one at 0x40, if
+the session keeps the second byte of it: the game has this in each function
+that tells that console something */
+static inline __attribute__((always_inline)) void network_session_send_to_host(
+	byte *session,
+	long type,
+	long size,
+	const void *data)
+{
+	const struct network_session_peer_state *state=
+		(const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+
+		*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET);
+
+	if (state->unknown1)
+	{
+		unknown_00075e80(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+			*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), type, size, data);
+	}
+}
+
+/* 0x0005a790: this console says what a session is to know of it apart from
+what it is known by and its players. If it runs the session, that is kept,
+the byte of the console at 0x24 is set and the two numbers that count what
+changes count one more; if not, the console that runs it is sent it
+(network_session_host_set_peer_properties takes it there). FALSE in a session that does
+not say who is in it */
+boolean network_session_set_local_peer_properties(
+	const struct network_session_peer_properties *properties,
+	byte *session)
+{
+	if (!network_session_established(session))
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		byte *peer= session+NETWORK_SESSION_PEER_ARRAY_OFFSET+
+			*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET)*NETWORK_SESSION_PEER_SIZE;
+
+		peer[NETWORK_SESSION_PEER_UNKNOWN24_OFFSET]= TRUE;
+		memcpy(peer+NETWORK_SESSION_PEER_UNKNOWN28_OFFSET, properties, sizeof(*properties));
+		network_session_membership_changed(session);
+	}
+	else
+	{
+		byte message[NETWORK_SESSION_MESSAGE_PEER_PROPERTIES_SIZE];
+
+		memset(message, 0, sizeof(message));
+		memcpy(message, session+NETWORK_SESSION_IDENTIFIER_OFFSET, NETWORK_SESSION_IDENTIFIER_SIZE);
+		memcpy(message+NETWORK_SESSION_MESSAGE_PEER_PROPERTIES_OFFSET, properties, sizeof(*properties));
+		network_session_send_to_host(session, _network_session_message_peer_properties, sizeof(message), message);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005a880: a player of this console comes into a session at one of its
+four places, with a number, its first thing of 0x90 bytes and its last
+number. If this console runs the session, the player comes in
+(network_session_add_peer_player) and those are kept: FALSE if it cannot.
+If not, the console that runs it is sent it
+(network_session_host_add_peer_player takes it there). FALSE in a session
+that does not say who is in it */
+boolean NETWORK_SESSION_CALLBACK network_session_add_local_player(
+	byte *session,
+	const byte *unknown18,
+	const byte *identifier,
+	long peer_player_index,
+	long unknown14,
+	long unknown138)
+{
+	if (!network_session_established(session))
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		long player_index= network_session_add_peer_player(session,
+			*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET), peer_player_index, identifier);
+		byte *player;
+
+		if (player_index==NONE)
+		{
+			return FALSE;
+		}
+		player= session+NETWORK_SESSION_MEMBERSHIP_OFFSET+NETWORK_SESSION_MEMBERSHIP_PLAYER_ARRAY_OFFSET+
+			player_index*NETWORK_SESSION_PLAYER_SIZE;
+		*(long *)(player+NETWORK_SESSION_PLAYER_UNKNOWN14_OFFSET)= unknown14;
+		memcpy(player+NETWORK_SESSION_PLAYER_UNKNOWN18_OFFSET, unknown18, NETWORK_SESSION_PLAYER_UNKNOWN18_SIZE);
+		*(long *)(player+NETWORK_SESSION_PLAYER_UNKNOWN138_OFFSET)= unknown138;
+	}
+	else
+	{
+		byte message[NETWORK_SESSION_MESSAGE_ADD_PLAYER_SIZE];
+
+		memset(message, 0, sizeof(message));
+		memcpy(message, session+NETWORK_SESSION_IDENTIFIER_OFFSET, NETWORK_SESSION_IDENTIFIER_SIZE);
+		*(long *)(message+NETWORK_SESSION_MESSAGE_PEER_PLAYER_OFFSET)= peer_player_index;
+		memcpy(message+NETWORK_SESSION_MESSAGE_IDENTIFIER_OFFSET, identifier, NETWORK_SESSION_PLAYER_IDENTIFIER_SIZE);
+		*(long *)(message+NETWORK_SESSION_MESSAGE_ADD_PLAYER_UNKNOWN14_OFFSET)= unknown14;
+		memcpy(message+NETWORK_SESSION_MESSAGE_ADD_PLAYER_UNKNOWN18_OFFSET, unknown18,
+			NETWORK_SESSION_PLAYER_UNKNOWN18_SIZE);
+		*(long *)(message+NETWORK_SESSION_MESSAGE_ADD_PLAYER_UNKNOWN138_OFFSET)= unknown138;
+		network_session_send_to_host(session, _network_session_message_add_player, sizeof(message), message);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005a9c0: the player that this console has at one of its four places is
+like this now: a number, its first thing of 0x90 bytes and its last number.
+If this console runs the session, those are kept and the two numbers that
+count what changes count one more: FALSE if it has no player there. If not,
+the console that runs it is sent it (network_session_host_set_peer_player
+takes it there). FALSE in a session that does not say who is in it */
+boolean NETWORK_SESSION_CALLBACK network_session_set_local_player(
+	byte *session,
+	const byte *unknown18,
+	long unknown138,
+	long peer_player_index,
+	long unknown14)
+{
+	if (!network_session_established(session))
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		long player_index= *(const long *)(session+NETWORK_SESSION_PEER_ARRAY_OFFSET+
+			*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET)*NETWORK_SESSION_PEER_SIZE+
+			NETWORK_SESSION_PEER_PLAYERS_OFFSET+peer_player_index*sizeof(long));
+		byte *player;
+
+		if (player_index==NONE)
+		{
+			return FALSE;
+		}
+		player= session+NETWORK_SESSION_MEMBERSHIP_OFFSET+NETWORK_SESSION_MEMBERSHIP_PLAYER_ARRAY_OFFSET+
+			player_index*NETWORK_SESSION_PLAYER_SIZE;
+		*(long *)(player+NETWORK_SESSION_PLAYER_UNKNOWN14_OFFSET)= unknown14;
+		memcpy(player+NETWORK_SESSION_PLAYER_UNKNOWN18_OFFSET, unknown18, NETWORK_SESSION_PLAYER_UNKNOWN18_SIZE);
+		*(long *)(player+NETWORK_SESSION_PLAYER_UNKNOWN138_OFFSET)= unknown138;
+		network_session_membership_changed(session);
+	}
+	else
+	{
+		byte message[NETWORK_SESSION_MESSAGE_SET_PLAYER_SIZE];
+
+		memset(message, 0, sizeof(message));
+		memcpy(message, session+NETWORK_SESSION_IDENTIFIER_OFFSET, NETWORK_SESSION_IDENTIFIER_SIZE);
+		*(long *)(message+NETWORK_SESSION_MESSAGE_PEER_PLAYER_OFFSET)= peer_player_index;
+		*(long *)(message+NETWORK_SESSION_MESSAGE_SET_PLAYER_UNKNOWN14_OFFSET)= unknown14;
+		memcpy(message+NETWORK_SESSION_MESSAGE_SET_PLAYER_UNKNOWN18_OFFSET, unknown18,
+			NETWORK_SESSION_PLAYER_UNKNOWN18_SIZE);
+		*(long *)(message+NETWORK_SESSION_MESSAGE_SET_PLAYER_UNKNOWN138_OFFSET)= unknown138;
+		network_session_send_to_host(session, _network_session_message_set_player, sizeof(message), message);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005aae0: the player that this console has at one of its four places
+goes out of a session. If this console runs the session, the player goes out
+and the two numbers that count what changes count one more: FALSE if it has
+no player there. If not, the console that runs it is sent it
+(network_session_host_remove_peer_player takes it there). FALSE in a session
+that does not say who is in it */
+boolean network_session_remove_local_player(
+	byte *session,
+	long peer_player_index)
+{
+	if (!network_session_established(session))
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		long player_index= *(const long *)(session+NETWORK_SESSION_PEER_ARRAY_OFFSET+
+			*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET)*NETWORK_SESSION_PEER_SIZE+
+			NETWORK_SESSION_PEER_PLAYERS_OFFSET+peer_player_index*sizeof(long));
+
+		if (player_index==NONE)
+		{
+			return FALSE;
+		}
+		network_session_remove_player(session, player_index);
+		network_session_membership_changed(session);
+	}
+	else
+	{
+		byte message[NETWORK_SESSION_MESSAGE_REMOVE_PLAYER_SIZE];
+
+		memset(message, 0, sizeof(message));
+		memcpy(message, session+NETWORK_SESSION_IDENTIFIER_OFFSET, NETWORK_SESSION_IDENTIFIER_SIZE);
+		*(long *)(message+NETWORK_SESSION_MESSAGE_PEER_PLAYER_OFFSET)= peer_player_index;
+		network_session_send_to_host(session, _network_session_message_remove_player, sizeof(message), message);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005aba0: the console that leads a session, which is this one, says
+that the console that is known by something leads it from now on. If this
+console runs the session too, who is in it says so and the two numbers that
+count what changes count one more; if not, the console that runs it is sent
+it (network_session_host_change_leader takes it there). FALSE if this
+console does not lead the session, or the other is not in it or is this
+one */
+boolean NETWORK_SESSION_CALLBACK network_session_change_leader(
+	byte *session,
+	const byte *peer_address)
+{
+	long leader;
+	long peer_index;
+
+	if (!network_session_established(session) || !network_session_local_peer_is_host(session))
+	{
+		return FALSE;
+	}
+	leader= *(const long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET);
+	peer_index= network_session_find_peer(session, peer_address);
+	if (peer_index==NONE || peer_index==leader)
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		*(long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET)= peer_index;
+		network_session_membership_changed(session);
+	}
+	else
+	{
+		byte message[NETWORK_SESSION_MESSAGE_CHANGE_LEADER_SIZE];
+
+		memset(message, 0, sizeof(message));
+		memcpy(message, session+NETWORK_SESSION_IDENTIFIER_OFFSET, NETWORK_SESSION_IDENTIFIER_SIZE);
+		memcpy(message+NETWORK_SESSION_MESSAGE_PEER_ADDRESS_OFFSET, peer_address, NETWORK_SESSION_ADDRESS_SIZE);
+		network_session_send_to_host(session, _network_session_message_change_leader, sizeof(message), message);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005acc0: the console that leads a session, which is this one, takes
+out of it the console that is known by something. If this console runs the
+session too, the console goes out with something of the kind 0xE; if not,
+the console that runs it is sent it (network_session_host_leader_removes_peer
+takes it there). FALSE if this console does not lead the session, or the
+other is not in it or is this one */
+boolean NETWORK_SESSION_CALLBACK network_session_leader_remove_peer(
+	byte *session,
+	const byte *peer_address)
+{
+	long local;
+	long peer_index;
+
+	if (!network_session_established(session) || !network_session_local_peer_is_host(session))
+	{
+		return FALSE;
+	}
+	local= *(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET);
+	peer_index= network_session_find_peer(session, peer_address);
+	if (peer_index==NONE || peer_index==local)
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		network_session_remove_peer_with_message_e(peer_index, session);
+	}
+	else
+	{
+		byte message[NETWORK_SESSION_MESSAGE_CHANGE_LEADER_SIZE];
+
+		memset(message, 0, sizeof(message));
+		memcpy(message, session+NETWORK_SESSION_IDENTIFIER_OFFSET, NETWORK_SESSION_IDENTIFIER_SIZE);
+		memcpy(message+NETWORK_SESSION_MESSAGE_PEER_ADDRESS_OFFSET, peer_address, NETWORK_SESSION_ADDRESS_SIZE);
+		network_session_send_to_host(session, _network_session_message_leader_removes_peer, sizeof(message), message);
+	}
+
+	return TRUE;
+}

@@ -2,6 +2,55 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Lo que esta consola le dice a la que lleva la sesión
+
+Seis funciones en `networking/network_session.c`, 1.581 bytes entre todas. De 1282
+funciones se pasa a 1288, el 11,43 % de las del juego (el 7,161 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_set_local_peer_properties` | `0x0005a790` | `networking/network_session.c` |
+| `network_session_add_local_player` | `0x0005a880` | `networking/network_session.c` |
+| `network_session_set_local_player` | `0x0005a9c0` | `networking/network_session.c` |
+| `network_session_remove_local_player` | `0x0005aae0` | `networking/network_session.c` |
+| `network_session_change_leader` | `0x0005aba0` | `networking/network_session.c` |
+| `network_session_leader_remove_peer` | `0x0005acc0` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- Son **el otro extremo** de seis avisos ya descompilados: lo que hace la
+  consola que quiere el cambio. Las seis siguen el mismo dibujo: si esta
+  consola lleva la sesión, hace el cambio ella misma; si no, se lo manda a
+  la que la lleva (la de `0x40`), que lo atiende con la función pareja.
+
+| Lo que pide | Mensaje | Quien lo atiende |
+| --- | --- | --- |
+| `network_session_set_local_peer_properties` | `0x1A`, `0xD0` bytes | `network_session_host_set_peer_properties` (hito 351) |
+| `network_session_change_leader` | `0x1B`, `0x2C` bytes | `network_session_host_change_leader` (hito 350) |
+| `network_session_leader_remove_peer` | `0x1C`, `0x2C` bytes | `network_session_host_leader_removes_peer` (hito 350) |
+| `network_session_add_local_player` | `0x1D`, `0xB0` bytes | `network_session_host_add_peer_player` (hito 351) |
+| `network_session_remove_local_player` | `0x1F`, `0xC` bytes | `network_session_host_remove_peer_player` (hito 337) |
+| `network_session_set_local_player` | `0x20`, `0xA4` bytes | `network_session_host_set_peer_player` (hito 351) |
+
+- Con esto las clases de mensaje `0x1A` a `0x20` tienen nombre, y los
+  tamaños y los sitios de cada dato coinciden en los dos extremos.
+- Las dos últimas de la lista solo las hace la consola que dirige la
+  sesión (la que «quién está» dice), y no valen para sí misma.
+- Quedaron dos trozos que el juego repite en todas, escritos una vez:
+  `network_session_send_to_host` y `network_session_membership_changed`.
+
+### Sin comprobar
+
+- `network_session_set_local_player` y `network_session_remove_local_player`
+  no miran que el sitio esté entre 0 y 3; en las pruebas siempre lo está.
+- En la entrada del hito 351 se corrigió una referencia:
+  `network_session_add_peer_player` es del hito 324, no del 327.
+- En este hito se pasaron las pruebas de `network_life_cycle` (195
+  funciones).
+- Las mutaciones de los hitos 280 a 308 y 321 a 353 están pendientes.
+
 ## 2026-10-08 — La hora de la sesión, y dos avisos más
 
 Tres funciones en `networking/network_session.c`, 881 bytes entre todas. De 1279
@@ -76,7 +125,7 @@ funciones se pasa a 1279, el 11,35 % de las del juego (el 7,078 % de sus bytes).
   y si algo cambió suben los dos contadores.
 - `network_session_host_add_peer_player`: la consola dice que **entra un
   jugador** en uno de sus cuatro sitios. Si entra
-  (`network_session_add_peer_player`, hito 327), se guardan su número, sus
+  (`network_session_add_peer_player`, hito 324), se guardan su número, sus
   primeros `0x90` bytes y el número del final (`0x138`). Si no entra, la
   consola recibe un mensaje de la clase `0x1E` con lo que identifica a la
   sesión, el sitio y lo que identifica al jugador: es la **negativa**.

@@ -1820,3 +1820,9 @@ address,name,source,arguments,returns,convention
 0005e030,network_session_synchronize_time,source/networking/network_session.c,stack stack ebx,bool,stdcall
 0005e210,network_session_unknown_0005e210,source/networking/network_session.c,stack stack,bool,stdcall
 0005e6b0,network_session_unknown_0005e6b0,source/networking/network_session.c,ecx eax,bool
+0005a790,network_session_set_local_peer_properties,source/networking/network_session.c,eax edx,bool
+0005a880,network_session_add_local_player,source/networking/network_session.c,ecx eax edx stack stack stack,bool,stdcall
+0005a9c0,network_session_set_local_player,source/networking/network_session.c,edx eax ebx stack stack,bool,stdcall
+0005aae0,network_session_remove_local_player,source/networking/network_session.c,eax edx,bool
+0005aba0,network_session_change_leader,source/networking/network_session.c,stack stack,bool,stdcall
+0005acc0,network_session_leader_remove_peer,source/networking/network_session.c,stack stack,bool,stdcall

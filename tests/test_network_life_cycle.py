@@ -2356,3 +2356,82 @@ def run(t) -> None:
             random_.getrandbits(32),
             externals={"network_observer_find_channel": which_channel(), "unknown_00075e80": sends_all},
         )
+
+    # ---------- six things that this console says of itself, of its players and of the session it leads
+
+    def local_session() -> bytearray:
+        # this console is one of the session, and so is the one that runs it
+        data = consistent()
+        struct.pack_into("<I", data, STATE, random_.choice((5, 5, 6, 7, 8, 3, 3, 4, 4, 0, 1, 9)))
+        struct.pack_into("<I", data, 0x54, random_.choice((4, 16, 16)))
+        struct.pack_into("<I", data, MEMBERSHIP, random_.choice((0, 7, NONE)))
+        struct.pack_into("<I", data, LOCAL_PEER, random_.randrange(16))
+        struct.pack_into("<I", data, 0x40, random_.randrange(16))
+        for peer in range(16):
+            data[0x72DC + peer * 0x14 + 1] = random_.choice((0, 1, 1, 0x80))
+        return data
+
+    for n in range(300):
+        t.check(
+            "network_session_set_local_peer_properties",
+            Buffer(random_.randbytes(0xC8)),
+            Buffer(bytes(local_session()), pointers=(8,)),
+            externals={"unknown_00075e80": sends_all},
+        )
+
+    for n in range(400):
+
+        def comes_in_here(harness, arguments, player=random_.choice((NONE, random_.randrange(16), random_.randrange(16)))):
+            return player, (harness.normalize(arguments[0]), arguments[1], arguments[2], bytes(harness.mu.mem_read(arguments[3], 12)))
+
+        t.check(
+            "network_session_add_local_player",
+            Buffer(bytes(local_session()), pointers=(8,)),
+            Buffer(random_.randbytes(0x90)),
+            Buffer(random_.randbytes(12)),
+            random_.randrange(4),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            externals={"network_session_add_peer_player": comes_in_here, "unknown_00075e80": sends_all},
+        )
+
+    for n in range(400):
+        t.check(
+            "network_session_set_local_player",
+            Buffer(bytes(local_session()), pointers=(8,)),
+            Buffer(random_.randbytes(0x90)),
+            random_.getrandbits(32),
+            random_.randrange(4),
+            random_.getrandbits(32),
+            externals={"unknown_00075e80": sends_all},
+        )
+
+    for n in range(300):
+        t.check(
+            "network_session_remove_local_player",
+            Buffer(bytes(local_session()), pointers=(8,)),
+            random_.randrange(4),
+            externals={
+                "network_session_remove_player": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                "unknown_00075e80": sends_all,
+            },
+        )
+
+    for name in ("network_session_change_leader", "network_session_leader_remove_peer"):
+        for n in range(400):
+            data = local_session()
+            local = struct.unpack_from("<I", data, LOCAL_PEER)[0]
+            struct.pack_into("<I", data, HOST_PEER, local if n % 4 else local ^ 1)
+            said = random_.choice((local, random_.randrange(4), random_.randrange(16), random_.randrange(16)))
+            known_as = bytes(data[PEERS + said * PEER : PEERS + said * PEER + 0x24])
+            if n % 6 == 0:
+                known_as = random_.randbytes(0x24)
+            t.check(
+                name,
+                Buffer(bytes(data), pointers=(8,)),
+                Buffer(known_as),
+                externals={
+                    "network_session_remove_peer_with_message_e": lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]))),
+                    "unknown_00075e80": sends_all,
+                },
+            )
