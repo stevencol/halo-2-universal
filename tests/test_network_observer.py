@@ -1488,3 +1488,68 @@ def run(t) -> None:
             ),
             mocks=[Mock(lambda call: 0, stack_arguments=3, registers=("ecx",))],
         )
+
+    # ---------- what the voice has to send by a channel
+
+    # the session that the voice goes with: its sixth function says which console a channel is for
+    voice_session = Buffer(struct.pack("<7I", 4, 0x11, 0x22, 0x33, 0x44, 0x55, mock_address(0)), pointers=(0,))
+
+    def with_voice() -> dict:
+        def a_session(harness, arguments, has=random_.choice((1, 1, 1, 0)), leaves=random_.choice((0, 1))):
+            # the session goes where the thing says, which is in the stack; one can be left there with no session to give
+            if has or leaves:
+                harness.mu.mem_write(arguments[0], struct.pack("<I", voice_session.address))
+            return has, ()
+
+        voice = bytearray(random_.randbytes(0x90))
+        voice[4] = random_.choice((1, 1, 1, 0, 0x80))
+        return {
+            "globals": {
+                "game_voice_enabled": bytes((random_.choice((1, 1, 1, 0, 0x80)),)),
+                "voice_globals": bytes(voice),
+                "unknown_004c9888": struct.pack("<I", random_.choice((0, 1, 1, 2, 3))),
+                "game_voice_session_source": struct.pack("<I", random_.choice((0, 1, 1, 2, 2, 3))),
+            },
+            "externals": {
+                "network_life_cycle_get_session": a_session,
+                "network_life_cycle_get_other_session": lambda harness, arguments: a_session(harness, arguments),
+            },
+            "mocks": [Mock(lambda call, peer=random_.choice((NONE, 0, 1, 5, 15)): peer, stack_arguments=1, registers=("ecx",))],
+        }
+
+    for n in range(500):
+        setup = with_voice()
+        t.check(
+            "network_observer_voice_has_packet",
+            random_.randrange(15),
+            random_.choice((0, 0, 1)),
+            Buffer(random_.randbytes(4)),
+            globals=setup["globals"],
+            externals=dict(
+                setup["externals"],
+                game_voice_unknown_00054890=lambda harness, arguments, so=random_.choice((0, 1)): (so, (arguments[0],)),
+                game_voice_has_packet_for_peer=lambda harness, arguments, has=random_.choice((0, 1, 1)): (has, (arguments[0],)),
+                game_voice_packet_size_for_peer=lambda harness, arguments, size=random_.choice((0, 37, 1200)): (size, (arguments[0],)),
+            ),
+            mocks=setup["mocks"],
+            extra=[voice_session],
+        )
+
+    for n in range(400):
+        setup = with_voice()
+        t.check(
+            "network_observer_voice_build_packet",
+            random_.randrange(15),
+            random_.choice((0, 37, 1200)),
+            Buffer(random_.randbytes(16)),
+            globals=setup["globals"],
+            externals=dict(
+                setup["externals"],
+                game_voice_build_packet=lambda harness, arguments, size=random_.choice((0, 37, 1200)): (
+                    size,
+                    (arguments[0], harness.normalize(arguments[1]), arguments[2]),
+                ),
+            ),
+            mocks=setup["mocks"],
+            extra=[voice_session],
+        )

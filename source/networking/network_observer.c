@@ -456,7 +456,7 @@ void transport_qos_delete(long index);
 
 /* what the observer has of a session starts with something that is told of
 its channels: by its fifth function, that one of them is in its first state
-again; by its fourth, that one of them has what its channel of the game is
+again; by its sixth, which of its consoles one of them is for; by its fourth, that one of them has what its channel of the game is
 of, or has it no more; and asked things of one of them: something by its
 first, and by its third whether it is still wanted, with whether it has had
 what its channel of the game is of */
@@ -471,6 +471,7 @@ struct network_observer_session_owner_functions
 	void (__attribute__((thiscall)) *channel_established)(struct network_observer_session_owner *owner, long channel_index,
 		long unknown10, boolean established);
 	void (__attribute__((thiscall)) *channel_reset)(struct network_observer_session_owner *owner, long channel_index);
+	long (__attribute__((thiscall)) *channel_peer)(struct network_observer_session_owner *owner, long channel_index);
 };
 
 struct network_observer_session_owner
@@ -2994,4 +2995,70 @@ long NETWORK_OBSERVER_CALLBACK network_observer_acquire_channel(
 	}
 
 	return channel_index;
+}
+
+/* the session of the network game that the voice goes with, as what a
+session has in the observer; NULL if there is none */
+static inline __attribute__((always_inline)) struct network_observer_session_owner *network_observer_voice_session(
+	void)
+{
+	byte *session= NULL;
+
+	return game_voice_get_session(&session) ? (struct network_observer_session_owner *)session : NULL;
+}
+
+/* 0x00076520: whether the voice has something to send to the console that a
+channel is for, in the session that the voice goes with (its sixth function
+says which console), and how much it is. With a byte, what
+game_voice_unknown_00054890 says of the console, and no size */
+boolean NETWORK_OBSERVER_CALLBACK network_observer_voice_has_packet(
+	long channel_index,
+	boolean unknown,
+	long *size)
+{
+	struct network_observer_session_owner *session= network_observer_voice_session();
+	boolean result= FALSE;
+
+	if (session)
+	{
+		long peer= session->functions->channel_peer(session, channel_index);
+
+		if (peer!=NONE)
+		{
+			if (unknown)
+			{
+				return game_voice_unknown_00054890(peer);
+			}
+			if (game_voice_has_packet_for_peer(peer))
+			{
+				result= TRUE;
+				*size= game_voice_packet_size_for_peer(peer);
+			}
+		}
+	}
+
+	return result;
+}
+
+/* 0x000765c0: what the voice has to send to the console that a channel is
+for is written (game_voice_build_packet); how much it is, and nothing with
+no session that the voice goes with or no such console */
+long NETWORK_OBSERVER_CALLBACK network_observer_voice_build_packet(
+	long channel_index,
+	long size,
+	byte *packet)
+{
+	struct network_observer_session_owner *session= network_observer_voice_session();
+
+	if (session)
+	{
+		long peer= session->functions->channel_peer(session, channel_index);
+
+		if (peer!=NONE)
+		{
+			return game_voice_build_packet(peer, packet, size);
+		}
+	}
+
+	return 0;
 }

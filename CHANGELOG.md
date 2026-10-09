@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — La voz que va por un canal
+
+Dos funciones en `networking/network_observer.c`, 269 bytes entre las dos. De 1382
+funciones se pasa a 1384, el 12,29 % de las del juego (el 8,172 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_voice_has_packet` | `0x00076520` | `networking/network_observer.c` |
+| `network_observer_voice_build_packet` | `0x000765c0` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- Son las dos por las que **la voz sale por un canal**:
+  - `network_observer_voice_has_packet` dice si la voz tiene algo que
+    mandar a la consola de un canal, y cuánto ocupa.
+  - `network_observer_voice_build_packet` lo escribe
+    (`game_voice_build_packet`).
+- Las dos preguntan a la sesión con la que va la voz **qué consola es la
+  de ese canal**, por la sexta función de lo que la sesión tiene en el
+  observador. Con esta son cinco las funciones conocidas de esa tabla, y
+  tiene al menos seis.
+- En el juego tienen escrita dentro la función que da la sesión de la voz
+  (`game_voice_get_session`); aquí se la llama.
+
+### Comprobado rompiendo líneas
+
+- Nueve líneas rotas, una cada vez: las pruebas fallaron en ocho. La otra
+  faltaba en las pruebas (usar una sesión que quedó a medio dar cuando no
+  hay ninguna) y ahora falla.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_observer` (65 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — El paquete de mensajes que no van por un canal
 
 Dos funciones en un archivo nuevo, `networking/network_message_gateway.c`, 158 bytes entre las dos. De 1380

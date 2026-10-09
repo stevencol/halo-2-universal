@@ -534,6 +534,8 @@ boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_raise_flow(byte *obse
 	boolean *unknown);
 void network_observer_update_voice_mode(const byte *observer);
 void NETWORK_OBSERVER_CALLBACK network_observer_take_game_channels(byte *observer);
+boolean NETWORK_OBSERVER_CALLBACK network_observer_voice_has_packet(long channel_index, boolean unknown, long *size);
+long NETWORK_OBSERVER_CALLBACK network_observer_voice_build_packet(long channel_index, long size, byte *packet);
 long NETWORK_OBSERVER_CALLBACK network_observer_acquire_channel(byte *observer, long session_index,
 	const byte *unknown14);
 void NETWORK_OBSERVER_CALLBACK network_observer_release_game_channels(byte *observer);
