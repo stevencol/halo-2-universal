@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 424.
+**Última actualización:** 2026-10-08, al terminar el hito 425.
 
 ## Dónde estamos
 
-- **1472 funciones descompiladas de 11.265: el 13,07 % del juego** (el
-  8,780 % de los bytes de código).
-- Las 1472 están comprobadas contra el ejecutable original: las 1390 del
+- **1475 funciones descompiladas de 11.265: el 13,09 % del juego** (el
+  8,795 % de los bytes de código).
+- Las 1475 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile reading an entity's creation and update from a packet* (ver `git log`).
+- Último hito: *Decompile three functions of the replication entity view* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 563 funciones apuntadas pero sin descompilar (las que el código
-  llama); 461 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 560 funciones apuntadas pero sin descompilar (las que el código
+  llama); 458 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -139,6 +139,10 @@ Módulos (funciones hechas / archivo):
       quedarse con lo que hizo otra consola; lo que sigue, de
       `0x00089dc0` a `0x0008a110`, es de otros módulos; romper
       líneas pendiente en las 15)
+- [ ] Vistas de las cosas — `networking\replication_entity_view.c`
+      (3: vaciar una vista, marcar una cosa y avisar de que se borra;
+      quedan 17 de la lista, de `0x00097f00` a `0x000998e0`; romper
+      líneas pendiente en las 3)
 - [ ] Lo que pasa en la partida —
       `networking\replication_event_manager.c` (6: la lista de
       sucesos, pedirlos al montón de la red, soltarlos y mandarlos

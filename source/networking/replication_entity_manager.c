@@ -12,18 +12,9 @@ its functions.
 
 #include "replication_entity_manager.h"
 
+#include "networking/replication_entity_view.h"
+
 #include <string.h>
-
-/* ---------- prototypes of functions not decompiled yet */
-
-/* 0x00097fe0: a view of the things starts over. 0x00099690: a view is told
-that a thing was made. 0x000995c0: and that one is being done with */
-void unknown_00097fe0(byte *view);
-void __attribute__((stdcall)) unknown_00099690(byte *view, long entity, long unknown);
-void unknown_000995c0(byte *view, long entity);
-
-/* 0x000980d0: a view is given something of a thing */
-void unknown_000980d0(long entity, byte *view, long unknown);
 
 /* ---------- code */
 
@@ -41,7 +32,7 @@ void replication_entity_manager_new(
 }
 
 /* 0x00089430: there are no things any more: each view starts over
-(unknown_00097fe0), and the first place is the next */
+(replication_entity_view_reset), and the first place is the next */
 void __attribute__((stdcall)) replication_entity_manager_reset(
 	struct replication_entity_manager *manager)
 {
@@ -51,7 +42,7 @@ void __attribute__((stdcall)) replication_entity_manager_reset(
 	{
 		if (manager->views[index])
 		{
-			unknown_00097fe0(manager->views[index]);
+			replication_entity_view_reset(manager->views[index]);
 		}
 	}
 	memset(manager->entities, 0, sizeof(manager->entities));
@@ -94,7 +85,7 @@ boolean __attribute__((stdcall)) replication_entity_manager_create_entities(
 
 /* 0x00089500: a thing is to be done with. It has the bit that says so;
 what the things are of is told; and so is each view that the mask has
-(unknown_000995c0). If nothing has it still, it is done with now: what the
+(replication_entity_view_delete_entity). If nothing has it still, it is done with now: what the
 things are of is told that too, and its place is not in use */
 void __attribute__((stdcall)) replication_entity_manager_delete_entity(
 	struct replication_entity_manager *manager,
@@ -112,7 +103,7 @@ void __attribute__((stdcall)) replication_entity_manager_delete_entity(
 		{
 			if (manager->view_mask&(1u<<index))
 			{
-				unknown_000995c0(manager->views[index], entity_index);
+				replication_entity_view_delete_entity(manager->views[index], entity_index);
 			}
 		}
 	}
@@ -281,7 +272,7 @@ void replication_entity_manager_delete_chain(
 			{
 				for (index= count-1; index>=0; index--)
 				{
-					unknown_000995c0(manager->views[view_index], entities[index]);
+					replication_entity_view_delete_entity(manager->views[view_index], entities[index]);
 				}
 			}
 		}
@@ -324,7 +315,7 @@ void __attribute__((stdcall)) replication_entity_manager_delete_entities_now(
 /* 0x000898c0: a view is one of the views, in a place, and the mask has it.
 It is told of each thing that is in use and made and not being done with
 (unknown_00099690), and given what the things are of has of it, by its
-sixteenth function, if it has something (unknown_000980d0) */
+sixteenth function, if it has something (replication_entity_view_mark_entity) */
 void __attribute__((stdcall)) replication_entity_manager_add_view(
 	byte *view,
 	struct replication_entity_manager *manager,
@@ -348,7 +339,7 @@ void __attribute__((stdcall)) replication_entity_manager_add_view(
 			unknown= manager->client->functions->unknown3C(manager->client, entity_index);
 			if (unknown!=0)
 			{
-				unknown_000980d0(entity_index, manager->views[view_index], unknown);
+				replication_entity_view_mark_entity(entity_index, manager->views[view_index], unknown);
 			}
 		}
 	}

@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Las vistas: lo que otra consola sabe de cada cosa
+
+Tres funciones en un archivo nuevo, `networking/replication_entity_view.c`, 428 bytes entre las tres. De 1472
+funciones se pasa a 1475, el 13,09 % de las del juego (el 8,795 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `replication_entity_view_reset` | `0x00097fe0` | `networking/replication_entity_view.c` |
+| `replication_entity_view_mark_entity` | `0x000980d0` | `networking/replication_entity_view.c` |
+| `replication_entity_view_delete_entity` | `0x000995c0` | `networking/replication_entity_view.c` |
+
+### Lo que se sabe
+
+- Empieza el módulo de **las vistas**: cada una es lo que una de las
+  otras consolas sabe de cada cosa (en qué estado está allí) y lo que
+  todavía hay que contarle. Eran tres de las funciones que la tabla de
+  cosas llamaba sin estar hechas.
+- `replication_entity_view_reset` vacía una vista: recoge lo que había
+  mandado y esperaba respuesta, y saca cada cosa de la vista. **Aquí se ve
+  qué es la «cuenta de quién la tiene todavía» de una cosa** (hito 416):
+  no es una cuenta, son bits, uno por vista. Una cosa borrada espera hasta
+  que todas las vistas la han soltado; al soltarla la última, se avisa y
+  su sitio queda libre.
+- `replication_entity_view_mark_entity` suma a una vista lo que hay que
+  contar de una cosa. Es lo mismo que el hito 418 hacía con las quince
+  vistas de una vez.
+- `replication_entity_view_delete_entity` avisa a una vista de que una
+  cosa se borra: si la otra consola aún no sabía de ella, se olvida sin
+  más; si sabía, la vista pone su bit en la cosa, que así espera a que
+  esa consola se entere.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las tres** y en las de los hitos 420 a
+  424. Tanda del hito 415, hecha: en `network_channel_update`, 32 líneas
+  rotas y las 32 notadas (una dejaba la prueba colgada). La de la tabla
+  de cosas está corriendo.
+- En este hito se pasaron las pruebas de `replication_entity_view` (3
+  funciones) y de `replication_entity_manager` (15).
+- Del módulo quedan 17 en la lista, de `0x00097f00` a `0x000998e0`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Leer de un paquete una cosa nueva y un cambio
 
 Tres funciones: dos en `networking/simulation_entity_database.c` y una en el archivo nuevo

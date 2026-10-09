@@ -52,9 +52,9 @@ def run(t) -> None:
         return Buffer(bytes(data) + tail, pointers=tuple(pointers))
 
     view_stubs = {
-        "unknown_00097fe0": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+        "replication_entity_view_reset": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
         "unknown_00099690": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2])),
-        "unknown_000995c0": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+        "replication_entity_view_delete_entity": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
     }
 
     def client_mocks() -> list:
@@ -174,7 +174,7 @@ def run(t) -> None:
 
     for n in range(120):
         gives = {
-            "unknown_000980d0": lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]), arguments[2])),
+            "replication_entity_view_mark_entity": lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]), arguments[2])),
         }
 
         def has(call, kind=random_.choice((0, 1, 2))):

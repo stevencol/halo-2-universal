@@ -59,16 +59,17 @@ struct replication_entity
 	long next;
 };
 
-/* what a view has of a thing: the bits of what it has to say of it, and
-the state that it is in there */
+/* what a view has of a thing: its number; the bits of what it has to say
+of it; the state that it is in there; and more numbers */
 struct replication_entity_view_entity
 {
-	long unknown0;
+	long entity_index;
 	unsigned long pending;
 	short state;
 	short unknownA;
 	long unknownC;
-	long unknown10;
+	short unknown10;
+	short unknown12;
 };
 
 /* what the things are of: something with functions, of which the third is

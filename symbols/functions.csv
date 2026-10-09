@@ -1994,14 +1994,14 @@ address,name,source,arguments,returns,convention
 00089cc0,replication_entity_manager_create_entity,source/networking/replication_entity_manager.c,ecx edx,int
 00089d20,replication_entity_manager_get_chain,source/networking/replication_entity_manager.c,ecx edx esi,int
 00089d50,replication_entity_manager_find_chain,source/networking/replication_entity_manager.c,ebx edx stack,int,stdcall
-00097fe0,unknown_00097fe0,,edi,void
-00099690,unknown_00099690,,eax ecx stack,void,stdcall
-000995c0,unknown_000995c0,,eax ecx,void
+00097fe0,replication_entity_view_reset,source/networking/replication_entity_view.c,edi,void
+00099690,unknown_00099690,,eax ecx stack,int,stdcall
+000995c0,replication_entity_view_delete_entity,source/networking/replication_entity_view.c,eax ecx,void
 00089570,replication_entity_manager_delete_chain,source/networking/replication_entity_manager.c,eax esi,void
 00089690,replication_entity_manager_delete_entities_now,source/networking/replication_entity_manager.c,ebx stack stack,void,stdcall
 000898c0,replication_entity_manager_add_view,source/networking/replication_entity_manager.c,eax ebx stack,void,stdcall
 00089950,replication_entity_manager_create_entities_remote,source/networking/replication_entity_manager.c,eax stack stack stack stack stack,void,stdcall
-000980d0,unknown_000980d0,,ecx edx esi,void
+000980d0,replication_entity_view_mark_entity,source/networking/replication_entity_view.c,ecx edx esi,void
 00089710,replication_entity_manager_mark_entity,source/networking/replication_entity_manager.c,eax edi stack,void,stdcall
 00089a20,replication_entity_manager_adopt_entities,source/networking/replication_entity_manager.c,ebx,void
 00089dc0,replication_event_manager_unknown_00089dc0,source/networking/replication_event_manager.c,eax,void
