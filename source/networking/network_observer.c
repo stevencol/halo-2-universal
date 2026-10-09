@@ -1037,3 +1037,44 @@ void NETWORK_OBSERVER_CALLBACK network_observer_unknown_00076720(
 		unknown_00079660(unknown, size, observer, channel_index, unknown96c);
 	}
 }
+
+/* 0x00092870: a count by spans of time starts, for a time in milliseconds
+that the twenty spans are: all of it is zero but that time, the twentieth of
+it that a span is, and 1000 over it, which turns a sum of the twenty spans
+into so much a second. The game has it far from the functions of the
+observer */
+void network_rate_new(
+	struct network_rate *rate,
+	long period)
+{
+	rate->period= period;
+	rate->span= period/MAXIMUM_NETWORK_RATE_SPANS;
+	rate->total_count= 0;
+	rate->total_size= 0;
+	rate->start= 0;
+	rate->per_second= NETWORK_RATE_MILLISECONDS_PER_SECOND/(real)period;
+	rate->count= 0;
+	rate->size= 0;
+	rate->index= 0;
+	memset(rate->spans, 0, sizeof(rate->spans));
+	rate->spans_count= 0;
+	rate->spans_size= 0;
+}
+
+/* 0x000929d0: the last numbers that are kept of something start over: each
+is zero and of now, and so are their sum and how long ago the oldest was */
+void network_window_reset(
+	struct network_window *window)
+{
+	long now= network_time_since(0);
+	long index;
+
+	for (index= 0; index<window->count; index++)
+	{
+		window->samples[index].time= now;
+		window->samples[index].value= 0;
+	}
+	window->index= 0;
+	window->sum= 0;
+	window->span= 0;
+}

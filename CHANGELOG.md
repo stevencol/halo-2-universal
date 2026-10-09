@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Las dos cuentas empiezan
+
+Dos funciones en `networking/network_observer.c`, 182 bytes entre las dos. De 1337
+funciones se pasa a 1339, el 11,89 % de las del juego (el 7,808 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_rate_new` | `0x00092870` | `networking/network_observer.c` |
+| `network_window_reset` | `0x000929d0` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_rate_new` prepara una cuenta por tramos (hito 377) para un
+  tiempo total en milisegundos. Con ella se aclaran los dos datos que
+  faltaban de `struct network_rate`: el de `0x1C` es **ese tiempo total**
+  (los veinte tramos), y el de `0x24` es un real, **1000 dividido por ese
+  tiempo**: lo que convierte una suma de los veinte tramos en «tanto por
+  segundo». Confirma que es un medidor de tráfico por segundo.
+- `network_window_reset` deja a cero la cuenta de los últimos números (hito
+  372), con todas sus horas en «ahora».
+
+### Comprobado rompiendo líneas
+
+- Cuatro líneas rotas, una cada vez: las pruebas fallaron en las cuatro.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_observer` (30 funciones).
+- La batería completa del hito 371 sigue corriendo.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Cuánto pasa por un canal
 
 Dos funciones en `networking/network_observer.c`, 445 bytes entre las dos. De 1335

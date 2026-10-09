@@ -632,3 +632,19 @@ def run(t) -> None:
             globals=setup["globals"],
             externals=setup["externals"],
         )
+
+    # ---------- the two counts start
+
+    for n in range(200):
+        t.check(
+            "network_rate_new",
+            Buffer(random_.randbytes(0xD4)),
+            random_.choice((1000, 2000, 20, 19, 21, 1, 39, 40, 0x7FFFFFFF, -1, -20, -39, -40, random_.getrandbits(31))),
+        )
+
+    for n in range(200):
+        setup = at_time()
+        window = a_window()
+        if n % 10 == 0:
+            struct.pack_into("<i", window, 0, random_.choice((0, -1)))
+        t.check("network_window_reset", Buffer(bytes(window)), globals=setup["globals"], externals=setup["externals"])

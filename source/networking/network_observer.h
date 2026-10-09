@@ -178,6 +178,7 @@ enum
 	bytes of unknown_004d87d8 is its own, which has a number at 0x96C */
 	NETWORK_OBSERVER_CHANNEL_RATE_OFFSET= 0x178,
 	MAXIMUM_NETWORK_RATE_SPANS= 20,
+	NETWORK_RATE_MILLISECONDS_PER_SECOND= 1000,
 	NETWORK_CHANNEL_UNKNOWN48_OFFSET= 0x48,
 	_network_channel_unknown48_bit8= 0x8,
 	NETWORK_CHANNEL_UNKNOWN10_OFFSET= 0x10,
@@ -220,8 +221,9 @@ typedef char verify_network_observer_probe_size[sizeof(struct network_observer_p
 
 /* the count of something by spans of time: how many there have been and of
 what size in all; when the span of now started, and how many and of what
-size there are in it; how long a span is; and the last twenty spans, with
-the sums of them */
+size there are in it; how long the twenty spans are, and one of them, in
+milliseconds, and what turns a sum of the twenty into so much a second; and
+the last twenty spans, with the sums of them */
 struct network_rate_span
 {
 	unsigned long count;
@@ -235,9 +237,9 @@ struct network_rate
 	unsigned long start;
 	unsigned long count;
 	unsigned long size;
-	long unknown1C;
+	long period;
 	unsigned long span;
-	long unknown24;
+	real per_second;
 	long index;
 	struct network_rate_span spans[MAXIMUM_NETWORK_RATE_SPANS];
 	unsigned long spans_count;
@@ -270,6 +272,8 @@ boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_alive(long channel_in
 long network_observer_channel_connect_status(const byte *observer, long channel_index);
 long network_unknown_00075910(const byte *unknown);
 void network_rate_update(struct network_rate *rate);
+void network_rate_new(struct network_rate *rate, long period);
+void network_window_reset(struct network_window *window);
 void NETWORK_OBSERVER_CALLBACK network_observer_unknown_00076720(byte *observer, long game_channel_index, long size,
 	long unknown);
 void network_observer_reset_unknown4e08(byte *observer);
