@@ -249,6 +249,8 @@ address,name,source
 004cd854,game_voice_muted_player_counts,source/networking/game_voice.c
 004ce120,unknown_004ce120,source/networking/game_voice.c
 004ce124,unknown_004ce124,source/networking/game_voice.c
+004ce12c,unknown_004ce12c,source/networking/network_observer.c
+004ce174,unknown_004ce174,source/networking/network_observer.c
 005259b8,unknown_005259b8,source/networking/game_voice.c
 00527104,unknown_00527104,source/networking/game_voice.c
 00527108,unknown_00527108,source/networking/game_voice.c

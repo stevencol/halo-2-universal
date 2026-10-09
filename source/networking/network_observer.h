@@ -226,6 +226,43 @@ enum
 	NETWORK_OBSERVER_CHANNEL_SESSION_IDENTIFIER_OFFSET= 0x44,
 	NETWORK_OBSERVER_CHANNEL_SESSION_KEY_OFFSET= 0x4C,
 	NETWORK_OBSERVER_PORT= 1000,
+	/* more of a channel: a byte that says which of two margins is its own;
+	a number that is given with others; three bytes that are noted in an
+	interval, and the three that keep them; four numbers that say how its
+	flow is; how many intervals in a row had some of the three bytes, and
+	how many had none; and one more number that is given. Of what the
+	observer has at 0x10: the least that an interval lasts, and the two
+	margins. And how the flow of a channel can be */
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN48E_OFFSET= 0x48E,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN49C_OFFSET= 0x49C,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN4A0_OFFSET= 0x4A0,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN4A1_OFFSET= 0x4A1,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN4A2_OFFSET= 0x4A2,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN4B0_OFFSET= 0x4B0,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN4B4_OFFSET= 0x4B4,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN504_OFFSET= 0x504,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN508_OFFSET= 0x508,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN50C_OFFSET= 0x50C,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN50D_OFFSET= 0x50D,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN50E_OFFSET= 0x50E,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN514_OFFSET= 0x514,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN518_OFFSET= 0x518,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN51C_OFFSET= 0x51C,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1A0_OFFSET= 0x1A0,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1D4_OFFSET= 0x1D4,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1D8_OFFSET= 0x1D8,
+	_network_observer_channel_flow0= 0,
+	_network_observer_channel_flow1,
+	_network_observer_channel_flow2,
+	/* of what the observer has at 0x10: a real that the first number that
+	network_observer_unknown_00077f90 is told is taken times, how long one of the two
+	counts has to be the one for it to go up, and what part of the way the
+	number of 0x4E0C goes up. And to how many consoles, at the most,
+	something that a player said can go */
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1AC_OFFSET= 0x1AC,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1B0_OFFSET= 0x1B0,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1B4_OFFSET= 0x1B4,
+	MAXIMUM_NETWORK_OBSERVER_VOICE_CONSOLES= 16,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
 	_unknown_00088650_unknown11= 0x11
 };
@@ -313,6 +350,13 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_set_pending(long channel
 boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_alive(long channel_index, const byte *observer);
 long network_observer_channel_connect_status(const byte *observer, long channel_index);
 long network_unknown_00075910(const byte *unknown);
+boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_get_unknown4b0(long channel_index, const byte *observer,
+	long *unknown4b0, long *unknown49c, long *unknown514, long *percent);
+void NETWORK_OBSERVER_CALLBACK network_observer_new_interval(byte *observer);
+long NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_0007a1c0(byte *observer, long channel_index);
+void NETWORK_OBSERVER_CALLBACK network_observer_unknown_00077f90(long unknown_eax, long unknown_ecx, byte *observer,
+	long unknown4);
+void NETWORK_OBSERVER_CALLBACK network_observer_update_voice_console_counts(const byte *observer);
 void NETWORK_OBSERVER_CALLBACK network_observer_release_game_channels(byte *observer);
 boolean network_observer_channel_unknown_00077940(byte *observer, long channel_index);
 void network_observer_channel_reset_unknown4dc(long channel_index, byte *observer);
@@ -353,5 +397,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_send(boolean out_of_band
 extern byte *unknown_004d87d4;
 extern byte *unknown_004d87dc;
 extern byte *unknown_004d87d8;
+extern long unknown_004ce12c[MAXIMUM_NETWORK_OBSERVER_VOICE_CONSOLES+1];
+extern long unknown_004ce174[MAXIMUM_NETWORK_OBSERVER_VOICE_CONSOLES+1];
 
 #endif

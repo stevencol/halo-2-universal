@@ -2,6 +2,72 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — El intervalo del caudal, y a cuántas consolas llega la voz
+
+Cinco funciones en `networking/network_observer.c`, 1054 bytes entre todas. De 1349
+funciones se pasa a 1354, el 12,02 % de las del juego (el 7,887 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_channel_get_unknown4b0` | `0x00078a10` | `networking/network_observer.c` |
+| `network_observer_new_interval` | `0x00079480` | `networking/network_observer.c` |
+| `network_observer_channel_unknown_0007a1c0` | `0x0007a1c0` | `networking/network_observer.c` |
+| `network_observer_unknown_00077f90` | `0x00077f90` | `networking/network_observer.c` |
+| `network_observer_update_voice_console_counts` | `0x0007a740` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_observer_update_voice_console_counts` es la que más enseña: une
+  el observador con la voz. Con el número de `0x4E04` del observador (lo
+  que la conexión da de sí) y **dos tablas de mínimos**, una entrada por
+  cada número de consolas de 1 a 16 (`unknown_004ce12c` y
+  `unknown_004ce174`, nuevas), decide **a cuántas consolas puede llegar lo
+  que dice un jugador** desde esta. Son los dos números de `game_voice.c`
+  (`unknown_004c9880` y `unknown_004c9884`) que ninguna función
+  descompilada escribía. Si no llega ni para una, cero.
+- `network_observer_new_interval` **cierra el intervalo** en el que se
+  cuentan los bytes de cada canal (el de los bits por segundo del hito
+  380) y abre otro. De cada canal: guarda los tres avisos que se anotaron
+  en el intervalo (solo si pasó algún byte), lleva la cuenta de cuántos
+  intervalos seguidos han ido sin avisos y cuántos con ellos, y baja el
+  número de `0x4F0` si el de `0x4B0` es menor.
+  - Pide la hora dos veces y calcula los bits por segundo de `0x4A8` sin
+    usar ninguna de las dos cosas: se deja igual, para que se llame lo
+    mismo que en el juego.
+- `network_observer_channel_unknown_0007a1c0` dice **cómo va el caudal de
+  un canal** con un número: 2 si el número de `0x4B0` pasa de un tope
+  (`0x504`) más un margen; 0 si va por encima de los bits por segundo de
+  `0x508` sin pasarse del otro tope; 1 en lo demás, y antes de que el
+  intervalo haya durado lo mínimo. El margen es uno de dos, según un byte
+  del canal.
+- `network_observer_unknown_00077f90` recibe tres números. Con dos de ellos
+  decide **cuál de las dos cuentas del observador sube** (las del hito 326,
+  de las que se saca una fracción) y solo la sube cuando lleva un tiempo
+  siendo la misma. Con el otro lleva un máximo (`0x4E08`) y un número que
+  se le acerca poco a poco, solo hacia arriba (`0x4E0C`).
+- `network_observer_channel_get_unknown4b0` da cuatro números de un canal:
+  tres tal cual y un **tanto por ciento** (la suma de los últimos números
+  de `0x250` entre cuántos son).
+
+### Comprobado rompiendo líneas
+
+- Veinte líneas rotas, una cada vez: las pruebas fallaron en diecinueve.
+  - Una no se veía: dar por bueno el canal número 15, que no existe. Las
+    pruebas no ponían nada detrás del observador. Ahora sí, y falla.
+  - La que queda no cambia nada: subir el número de `0x4E0C` cuando el
+    que llega es igual lo deja como estaba.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_observer` (45 funciones).
+- No se sabe quién rellena las dos tablas de mínimos. Su tamaño (17 números cada
+  una) sale de lo que esta función lee; entre las dos quedan 4 bytes sin
+  dueño.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Un canal olvida su dirección
 
 Una función en `networking/network_observer.c`, de 214 bytes. De 1348

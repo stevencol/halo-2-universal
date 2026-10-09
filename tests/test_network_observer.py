@@ -848,3 +848,123 @@ def run(t) -> None:
                 "XNetUnregisterInAddr": lambda harness, arguments: (0, (arguments[0],)),
             },
         )
+
+    # ---------- four numbers of a channel
+
+    for n in range(400):
+        data = observer()
+        channel = random_.choice((random_.randrange(15),) * 6 + (0, 14, 15, 16, NONE, 0x7FFFFFFF, 0x80000000))
+        if channel < 15:
+            at = CHANNELS + channel * CHANNEL
+            data[at + 0x48C] = random_.choice((0, 1, 1, 1, 0x80))
+            # how many numbers are kept, and the sum of them
+            struct.pack_into("<I", data, at + 0x250, random_.choice((1, 2, 16, 32, 32)))
+            struct.pack_into("<I", data, at + 0x358, random_.choice((0, 1, 3, 16, 31, 1000, 0x7FFFFFFF, 0x80000000, NONE)))
+        else:
+            # what would be one channel more is not looked at, whatever it has
+            data += bytes((1,)) * CHANNEL
+        t.check(
+            "network_observer_channel_get_unknown4b0",
+            channel,
+            Buffer(bytes(data)),
+            Buffer(random_.randbytes(4)),
+            Buffer(random_.randbytes(4)),
+            Buffer(random_.randbytes(4)),
+            Buffer(random_.randbytes(4)),
+        )
+
+    # ---------- an interval of the flow is over, and how the flow of a channel is
+
+    for n in range(300):
+        setup = at_time()
+        now = struct.unpack("<I", setup["globals"]["unknown_0051054c"])[0]
+        data = observer()
+        struct.pack_into("<I", data, 0x4F38, (now - random_.choice((0, 1, 1000, 30001, 0x80000000))) & 0xFFFFFFFF)
+        for channel in range(15):
+            at = CHANNELS + channel * CHANNEL
+            data[at + 0x48C] = random_.choice((0, 1, 1, 1, 0x80))
+            for byte in (0x4A0, 0x4A1, 0x4A2):
+                data[at + byte] = random_.choice((0, 0, 0, 1, 0x80))
+            for byte in (0x50C, 0x50D, 0x50E):
+                data[at + byte] = random_.choice((0, 0, 0, 0, 0, 1, 2))
+            struct.pack_into("<I", data, at + 0x4A4, random_.choice((0, 0, 1, 1500, random_.getrandbits(32))))
+            struct.pack_into("<I", data, at + 0x4B0, random_.choice((0, 5, 100, 101, NONE, random_.getrandbits(32))))
+            struct.pack_into("<I", data, at + 0x4F0, random_.choice((0, 5, 100, 101, NONE, random_.getrandbits(32))))
+            struct.pack_into("<II", data, at + 0x518, random_.choice((0, 3, NONE)), random_.choice((0, 3, NONE)))
+        t.check("network_observer_new_interval", Buffer(bytes(data)), globals=setup["globals"], externals=setup["externals"])
+
+    for n in range(800):
+        setup = at_time()
+        now = struct.unpack("<I", setup["globals"]["unknown_0051054c"])[0]
+        data = observer() + bytearray(random_.randbytes(0x1DC))
+        struct.pack_into("<I", data, 0x10, SIZE)
+        struct.pack_into("<i", data, SIZE + 0x1A0, random_.choice((1000, 1000, 1000, 0, -1)))
+        struct.pack_into("<II", data, SIZE + 0x1D4, random_.choice((0, 5, 30)), random_.choice((0, 7, 60, NONE)))
+        struct.pack_into("<I", data, 0x4F38, (now - random_.choice((0, 999, 1000, 1000, 1001, 5000, 5000))) & 0xFFFFFFFF)
+        channel = random_.randrange(15)
+        at = CHANNELS + channel * CHANNEL
+        data[at + 0x48E] = random_.choice((0, 0, 1, 0x80))
+        struct.pack_into("<I", data, at + 0x4A8, random_.choice((0, 1, 100, 1500, 100000)))
+        struct.pack_into("<II", data, at + 0x4B0, random_.choice((0, 10, 20, 50, 100, 130, 0x7FFFFFFF, 0x80000000)), random_.choice((0, 5, 10, 50, 0x7FFFFFFF)))
+        struct.pack_into("<I", data, at + 0x4F0, random_.choice((0, 10, 20, 45, 50, 100, 0x7FFFFFFF)))
+        struct.pack_into("<Ii", data, at + 0x504, random_.choice((10, 20, 50, 100, 100, 1000, 0x7FFFFFFF)), random_.choice((0, 1, 8, 160, 1600, 0x7FFFFFFF, -1)))
+        t.check(
+            "network_observer_channel_unknown_0007a1c0",
+            Buffer(bytes(data), pointers=(0x10,)),
+            channel,
+            globals=setup["globals"],
+            externals=dict(setup["externals"], network_observer_channel_unknown_0007a160=with_channel_and_observer),
+        )
+
+    # ---------- the observer is told three numbers
+
+    for n in range(800):
+        setup = at_time()
+        now = struct.unpack("<I", setup["globals"]["unknown_0051054c"])[0]
+        data = observer() + bytearray(random_.randbytes(0x1B8))
+        struct.pack_into("<I", data, 0x10, SIZE)
+        struct.pack_into("<f", data, SIZE + 0x1AC, random_.choice((0.5, 1.0, 1.5, 0.0)))
+        struct.pack_into("<ii", data, SIZE + 0x1B0, random_.choice((1000, 1000, 0, 5000, -1)), random_.choice((0, 1, 2, 3, 31)))
+        struct.pack_into("<II", data, 0x4E08, random_.choice((0, 50, 100, NONE, 0x7FFFFFFF)), random_.choice((NONE, 0, 50, 99, 100, 0x80000000)))
+        struct.pack_into("<I", data, 0x4E10, random_.choice((NONE, (now - random_.choice((0, 999, 1000, 1001, 5001))) & 0xFFFFFFFF)))
+        data[0x4E14] = random_.choice((0, 0, 1, 1, 2))
+        t.check(
+            "network_observer_unknown_00077f90",
+            random_.choice((0, NONE, 1, 10, 10, 100, 1000, 0x7FFFFFFF)),
+            random_.choice((0, 49, 50, 51, 99, 100, 101, 1000, NONE, 0x7FFFFFFF, 0x80000000)),
+            Buffer(bytes(data), pointers=(0x10,)),
+            random_.choice((0, 4, 5, 6, 10, 11, 15, 16, 100, 150, 151, NONE, random_.getrandbits(32))),
+            globals=setup["globals"],
+            externals=setup["externals"],
+        )
+
+    # ---------- to how many consoles something that a player said can go
+
+    for n in range(600):
+        data = observer()
+        struct.pack_into("<i", data, 0x4E04, random_.choice((0, 1, 5, 10, 17, 30, 64, 1000, -1, -1000)))
+        tables = []
+        for table in range(2):
+            way = random_.randrange(4)
+            if way == 0:
+                values = [random_.randrange(-5, 70) for count in range(17)]
+            elif way == 1:
+                step = random_.choice((1, 2, 4, 64))
+                values = [count * step for count in range(17)]
+            elif way == 2:
+                values = [random_.choice((2000, 2000, 2000, 10, -2000)) for count in range(17)]
+            else:
+                values = [2000] * 17
+                values[random_.randrange(17)] = random_.choice((0, 5, 1000, 1001))
+            tables.append(struct.pack("<17i", *values))
+        t.check(
+            "network_observer_update_voice_console_counts",
+            Buffer(bytes(data)),
+            globals={
+                "unknown_004ce12c": tables[0],
+                "unknown_004ce174": tables[1],
+                "game_voice_enabled": bytes((random_.choice((0, 1, 1, 1, 0x80)),)),
+                "unknown_004c9880": random_.randbytes(4),
+                "unknown_004c9884": random_.randbytes(4),
+            },
+        )

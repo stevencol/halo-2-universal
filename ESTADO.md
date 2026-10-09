@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 384.
+**Última actualización:** 2026-10-08, al terminar el hito 385.
 
 ## Dónde estamos
 
-- **1349 funciones descompiladas de 11.265: el 11,98 % del juego** (el
-  7,852 % de los bytes de código).
-- Las 1349 están comprobadas contra el ejecutable original: las 1328 del
+- **1354 funciones descompiladas de 11.265: el 12,02 % del juego** (el
+  7,887 % de los bytes de código).
+- Las 1354 están comprobadas contra el ejecutable original: las 1328 del
   hito 371 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a channel of the observer forgets its address* (ver `git log`).
+- Último hito: *Decompile the flow's interval and how far the voice can go* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 558 funciones apuntadas pero sin descompilar (las que el código
   llama); 459 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -119,7 +119,7 @@ Módulos (funciones hechas / archivo):
       lo que la consola es en la red, la clave de cada sesión y las
       direcciones; de `0x0007a8a0` a `0x0007af80`, y falta lo que sigue
       desde `0x0007afd0`)
-- [ ] Observador de la red — `networking\network_observer.c` (40: lo que
+- [ ] Observador de la red — `networking\network_observer.c` (45: lo que
       tiene de cada sesión y sus canales con las otras consolas; va de
       `0x00075970` a `0x0007a4a0` y casi todo falta)
 - [x] Partida en red — `networking\network_life_cycle.c` (42: qué está
