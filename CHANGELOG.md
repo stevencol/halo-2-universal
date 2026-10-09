@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — El estado de un canal del observador
+
+Cuatro funciones en `networking/network_observer.c`, 434 bytes entre todas. De 1324
+funciones se pasa a 1328, el 11,79 % de las del juego (el 7,735 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_channel_connect` | `0x00076a40` | `networking/network_observer.c` |
+| `network_observer_channel_delete` | `0x00076ef0` | `networking/network_observer.c` |
+| `network_observer_channel_update_connection` | `0x00076f50` | `networking/network_observer.c` |
+| `network_observer_channel_set_state` | `0x00077330` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- Cada canal del observador tiene **un estado** (su primer número) y la
+  hora en que entró en él. Se van viendo los estados:
+  - 0: el canal no se usa;
+  - 1: recién puesto a cero, o caído. Al entrar en él se avisa a lo que
+    cada sesión que usa el canal tiene en el observador (su quinta
+    función). Es el estado que la sesión mira para echar a una consola
+    (hito 357);
+  - 2: se le ha pedido conectar;
+  - 3: conectando: sigue cómo va la dirección de la consola; si llega a
+    conectarse pasa al 4, si falla vuelve al 2 y cuenta un intento más;
+  - 4 en adelante: conectado; si la conexión se pierde vuelve al 2;
+  - 7: listo para mandar (lo que la sesión espera en muchos sitios).
+- `network_observer_channel_set_state` es quien cambia el estado.
+- `network_observer_channel_update_connection` es el paso que sigue a la
+  conexión, como se cuenta arriba.
+- `network_observer_channel_connect` (antes `unknown_00076a40`) es lo que
+  la sesión llama para **abrir el canal** con una consola: del estado 1
+  pasa al 2 y hace ya lo de cada vuelta.
+- `network_observer_channel_delete` (antes `unknown_00076ef0`) deja el
+  canal vacío: suelta el canal del juego y lo que su número de `0x70` dice.
+
+### Comprobado rompiendo líneas
+
+- Ocho líneas rotas, una cada vez: las pruebas fallaron en las ocho.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_observer` (19 funciones)
+  y las de `network_life_cycle` (223 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Mandar algo por un canal
 
 Tres funciones en `networking/network_observer.c`, 383 bytes entre todas. De 1321

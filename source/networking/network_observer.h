@@ -94,6 +94,23 @@ enum
 	NETWORK_CHANNEL_ADDRESS_OFFSET= 0x70,
 	NETWORK_UNKNOWN_00075910_UNKNOWN3C_OFFSET= 0x3C,
 	NETWORK_UNKNOWN_00075910_UNKNOWN30_OFFSET= 0x30,
+	/* more of a channel: when it went into its state; a byte whose first
+	bit is set when it is asked to connect; how many times it has tried, in
+	16 bits; and a number of something of the network, NONE for none. Its
+	states, and how its address of the game is. And what unknown_000784a0 is told when it
+	loses its console, and when it is no more */
+	NETWORK_OBSERVER_CHANNEL_STATE_TIME_OFFSET= 0x4,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN8_OFFSET= 0x8,
+	NETWORK_OBSERVER_CHANNEL_TRIES_OFFSET= 0xA,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN70_OFFSET= 0x70,
+	_network_observer_channel_state1= 1,
+	_network_observer_channel_state2= 2,
+	_network_observer_channel_state3= 3,
+	_network_observer_channel_state4= 4,
+	_network_observer_connect_status1= 1,
+	_network_observer_connect_status2= 2,
+	NETWORK_OBSERVER_CHANNEL_LOST_REASON= 0xD,
+	NETWORK_OBSERVER_CHANNEL_DELETED_REASON= 0xE,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
 	_unknown_00088650_unknown11= 0x11
 };
@@ -120,6 +137,10 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_set_pending(long channel
 boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_alive(long channel_index, const byte *observer);
 long network_observer_channel_connect_status(const byte *observer, long channel_index);
 long network_unknown_00075910(const byte *unknown);
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_set_state(long state, byte *observer, long channel_index);
+void network_observer_channel_delete(long channel_index, byte *observer);
+void network_observer_channel_update_connection(long channel_index, byte *observer);
+void network_observer_channel_connect(long channel_index, byte *observer);
 struct transport_address;
 boolean network_channel_get_address(const byte *game_channel, struct transport_address *address);
 void NETWORK_OBSERVER_CALLBACK network_observer_channel_send(boolean out_of_band, long channel_index, byte *observer,

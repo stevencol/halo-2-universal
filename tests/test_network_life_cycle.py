@@ -2535,7 +2535,7 @@ def run(t) -> None:
         t.check(
             "network_session_unknown_00062240",
             Buffer(bytes(data), pointers=(8,)),
-            externals={"unknown_00076a40": with_channel},
+            externals={"network_observer_channel_connect": with_channel},
         )
 
     for n in range(500):
@@ -2565,7 +2565,7 @@ def run(t) -> None:
                 "GetTickCount": ticks(),
                 "network_session_enter_state5": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                 "network_session_reset_requests": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
-                "unknown_00076a40": with_channel,
+                "network_observer_channel_connect": with_channel,
                 "network_session_send_unknown12": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
             },
         )
@@ -2953,7 +2953,7 @@ def run(t) -> None:
                     (bytes(harness.mu.mem_read(arguments[0], 12)), arguments[1], arguments[2], arguments[3], arguments[4]),
                 ),
                 "network_session_add_peer": adds,
-                "unknown_00076a40": with_channel,
+                "network_observer_channel_connect": with_channel,
             },
         )
 

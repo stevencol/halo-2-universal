@@ -3,7 +3,7 @@
 import random
 import struct
 
-from difftest import Buffer
+from difftest import Buffer, Mock, mock_address
 
 NONE = 0xFFFFFFFF
 SIZE = 0x4F40
@@ -29,7 +29,7 @@ def run(t) -> None:
         t.check(
             "network_observer_dispose",
             Buffer(bytes(observer())),
-            externals={"unknown_00076ef0": lambda harness, arguments: 0},
+            externals={"network_observer_channel_delete": lambda harness, arguments: 0},
         )
 
     # ---------- what it has of a session
@@ -298,5 +298,94 @@ def run(t) -> None:
                     0,
                     (harness.normalize(arguments[0]), arguments[1], arguments[2], harness.normalize(arguments[3])),
                 ),
+            },
+        )
+
+    # ---------- the state of a channel
+
+    def with_owners() -> tuple:
+        # what the observer has of each session starts with something that has functions: they go after the observer
+        data = observer() + bytearray(16 + 20)
+        pointers = []
+        for session in range(4):
+            struct.pack_into("<I", data, SESSIONS + session * 0x24, SIZE + session * 4)
+            struct.pack_into("<I", data, SIZE + session * 4, SIZE + 16)
+            pointers += [SESSIONS + session * 0x24, SIZE + session * 4]
+        struct.pack_into("<5I", data, SIZE + 16, 0x11, 0x22, 0x33, 0x44, mock_address(0))
+        return data, tuple(pointers)
+
+    def at_time() -> dict:
+        now = random_.getrandbits(32)
+        return {
+            "globals": {"unknown_00510548": bytes((random_.choice((0, 0, 1)),)), "unknown_0051054c": struct.pack("<I", now)},
+            "externals": {"GetTickCount": lambda harness, arguments, now=now: now},
+        }
+
+    for n in range(400):
+        data, pointers = with_owners()
+        setup = at_time()
+        t.check(
+            "network_observer_channel_set_state",
+            random_.choice((0, 1, 1, 1, 2, 3, 7)),
+            Buffer(bytes(data), pointers=pointers),
+            random_.randrange(15),
+            globals=setup["globals"],
+            externals=setup["externals"],
+            mocks=[Mock(lambda call: 0, stack_arguments=1, registers=("ecx",))],
+        )
+
+    def noted(harness, arguments):
+        return 0, (arguments[0], harness.normalize(arguments[1]), arguments[2], arguments[3])
+
+    def with_channel_and_observer(harness, arguments):
+        return 0, (arguments[0], harness.normalize(arguments[1]))
+
+    for n in range(200):
+        data = observer()
+        channel = random_.randrange(15)
+        struct.pack_into("<I", data, CHANNELS + channel * CHANNEL + 0x70, random_.choice((NONE, 5, 0)))
+        t.check(
+            "network_observer_channel_delete",
+            channel,
+            Buffer(bytes(data)),
+            globals={"unknown_004d87d4": Buffer(bytes(game_channels()))},
+            externals={
+                "unknown_000784a0": noted,
+                "unknown_000886e0": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "unknown_0007b650": lambda harness, arguments: (0, (arguments[0],)),
+            },
+        )
+
+    for n in range(500):
+        data = observer()
+        channel = random_.randrange(15)
+        struct.pack_into("<i", data, CHANNELS + channel * CHANNEL, random_.choice((0, 1, 2, 3, 3, 3, 4, 7, -1)))
+        t.check(
+            "network_observer_channel_update_connection",
+            channel,
+            Buffer(bytes(data)),
+            externals={
+                "network_observer_channel_connect_status": lambda harness, arguments, status=random_.choice((0, 1, 2, 2, 3)): (
+                    status,
+                    (harness.normalize(arguments[0]), arguments[1]),
+                ),
+                "network_observer_channel_set_state": lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]), arguments[2])),
+                "unknown_000784a0": noted,
+            },
+        )
+
+    for n in range(300):
+        data = observer()
+        channel = random_.randrange(15)
+        struct.pack_into("<I", data, CHANNELS + channel * CHANNEL, random_.choice((1, 1, 2, 3, 7, 0)))
+        t.check(
+            "network_observer_channel_connect",
+            channel,
+            Buffer(bytes(data)),
+            externals={
+                "network_observer_channel_set_state": lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]), arguments[2])),
+                "network_observer_channel_update_connection": with_channel_and_observer,
+                "unknown_00076ff0": with_channel_and_observer,
+                "unknown_000776a0": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
             },
         )

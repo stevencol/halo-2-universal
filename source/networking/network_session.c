@@ -4883,7 +4883,7 @@ void network_session_state1_update(
 
 /* 0x00076a40, of network_observer.c: something is done with one of the
 channels of what a session was given when it was set up */
-void unknown_00076a40(long channel_index, byte *unknown8);
+void network_observer_channel_connect(long channel_index, byte *unknown8);
 
 /* 0x004cf4c4: how long a session in its eighth state waits for the consoles
 before it sends something of the kind 0x12 to the one that ran it too, in
@@ -4899,7 +4899,7 @@ static inline __attribute__((always_inline)) long network_session_channel_state(
 		channel_index*NETWORK_SESSION_UNKNOWN8_CHANNEL_SIZE+NETWORK_SESSION_UNKNOWN8_CHANNEL_STATE_OFFSET);
 }
 
-/* 0x00062240: in a session that is in any state, unknown_00076a40 is done with the
+/* 0x00062240: in a session that is in any state, network_observer_channel_connect is done with the
 channel of each console that the session keeps the second byte of, if the
 first thing of the channel is not 1. In a session that this console does not
 run, only if network_session_unknown_00058d90 says no and the session has who
@@ -4938,7 +4938,7 @@ void network_session_unknown_00062240(
 		}
 		if (network_session_channel_state(session, state->unknown4)!=_network_session_unknown8_channel_state1)
 		{
-			unknown_00076a40(state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET));
+			network_observer_channel_connect(state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET));
 		}
 	}
 }
@@ -4989,7 +4989,7 @@ void network_session_send_unknown12(
 state on starts with a byte that it is given (the second), the console that
 ran the session, the time, and the bit of this console at 0xC and at 0x10.
 From a state that is not one of the last four, network_session_reset_requests
-is done first and the console at 0x40 is this one. Then unknown_00076a40 is done with the
+is done first and the console at 0x40 is this one. Then network_observer_channel_connect is done with the
 channel of each console that the session keeps the second byte of and whose
 first thing is 1, and network_session_send_unknown12. With no more than one
 console there is no eighth state: the session goes into the fifth */
@@ -5031,7 +5031,7 @@ void NETWORK_SESSION_CALLBACK network_session_enter_state8(
 		if (state->unknown1 &&
 			network_session_channel_state(session, state->unknown4)==_network_session_unknown8_channel_state1)
 		{
-			unknown_00076a40(state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET));
+			network_observer_channel_connect(state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET));
 		}
 	}
 	network_session_send_unknown12(session);
@@ -5872,7 +5872,7 @@ ago, it is the same asking and nothing is done; if not, it goes out first,
 and the channel that it gets is told (network_observer_channel_unknown_00075e40).
 With no channel for the console, no (7). With the byte that it is given,
 each of its players asks to come in, after what it had asked before is
-forgotten. Then the console is the last of the session, unknown_00076a40 is done with
+forgotten. Then the console is the last of the session, network_observer_channel_connect is done with
 its channel, and the two numbers that count what changes count one more */
 boolean NETWORK_SESSION_CALLBACK network_session_host_accept_join(
 	byte *session,
@@ -5948,7 +5948,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_accept_join(
 	}
 	network_session_add_peer(session, *(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET), peer_address, TRUE,
 		channel_index, (const long *)unknown144);
-	unknown_00076a40(channel_index, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET));
+	network_observer_channel_connect(channel_index, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET));
 	network_session_membership_changed(session);
 
 	return TRUE;

@@ -720,7 +720,7 @@ address,name,source,arguments,returns,convention
 00075c80,network_observer_get_unknown4e08,source/networking/network_observer.c,ecx stack stack stack,bool,stdcall
 00075d30,network_observer_find_channel_by_unknown1e,source/networking/network_observer.c,edx ebx stack,int,stdcall
 00075e40,network_observer_channel_unknown_00075e40,source/networking/network_observer.c,eax ecx,void
-00076ef0,unknown_00076ef0,,eax ecx,void
+00076ef0,network_observer_channel_delete,source/networking/network_observer.c,eax ecx,void
 00088650,unknown_00088650,,esi edi,void
 003cd147,XNetQosListen,,stack stack stack stack stack,int,stdcall
 003cd0e1,XNetUnregisterKey,,stack,int,stdcall
@@ -1834,7 +1834,7 @@ address,name,source,arguments,returns,convention
 00062240,network_session_unknown_00062240,source/networking/network_session.c,edi,void
 00062550,network_session_send_unknown12,source/networking/network_session.c,esi,void
 00061570,network_session_enter_state8,source/networking/network_session.c,eax stack,void,stdcall
-00076a40,unknown_00076a40,,eax ecx,void
+00076a40,network_observer_channel_connect,source/networking/network_observer.c,eax ecx,void
 00062640,network_session_send_membership_updates,source/networking/network_session.c,ecx,void
 000627e0,network_session_send_parameters_updates,source/networking/network_session.c,ecx,void
 00060400,network_session_membership_get_update,source/networking/network_session.c,eax stack stack stack,void,stdcall
@@ -1869,3 +1869,10 @@ address,name,source,arguments,returns,convention
 00075930,network_channel_get_address,source/networking/network_observer.c,eax ecx,bool
 000783d0,unknown_000783d0,,ecx ebx edi eax stack stack stack,bool,stdcall
 00095580,unknown_00095580,,stack stack stack stack,void,stdcall
+00077330,network_observer_channel_set_state,source/networking/network_observer.c,eax ecx stack,void,stdcall
+00076f50,network_observer_channel_update_connection,source/networking/network_observer.c,esi edi,void
+000784a0,unknown_000784a0,,eax ecx stack stack,void,stdcall
+000886e0,unknown_000886e0,,stack,void,stdcall
+0007b650,unknown_0007b650,,edi,void
+00076ff0,unknown_00076ff0,,ebx stack,void,stdcall
+000776a0,unknown_000776a0,,ecx stack,void,stdcall
