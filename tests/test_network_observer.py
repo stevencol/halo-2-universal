@@ -1553,3 +1553,43 @@ def run(t) -> None:
             mocks=setup["mocks"],
             extra=[voice_session],
         )
+
+    # ---------- what is done with the interval of the flow each time
+
+    for n in range(1500):
+        setup = at_time()
+        now = struct.unpack("<I", setup["globals"]["unknown_0051054c"])[0]
+        data = observer() + bytearray(random_.randbytes(0x1B8))
+        struct.pack_into("<I", data, 0x10, SIZE)
+        struct.pack_into("<i", data, SIZE + 0x19C, random_.choice((1000, 1000, 0)))
+        struct.pack_into("<ii", data, SIZE + 0x1A4, random_.choice((1000, 3000, 3000)), random_.choice((0, 1000, 100000)))
+        struct.pack_into("<i", data, SIZE + 0x1B4, random_.choice((0, 1, 2, 3)))
+        struct.pack_into("<I", data, 0x4E0C, random_.choice((NONE, NONE, 0, 5000, 100000)))
+        struct.pack_into("<I", data, 0x4F38, (now - random_.choice((0, 999, 1000, 1001, 2999, 3000, 3001, 9000))) & 0xFFFFFFFF)
+        data[0x4F3C] = random_.choice((0, 0, 1, 0x80))
+        data[0x4F3D] = random_.choice((0, 0, 0, 1, 0x80))
+        data[0x4F3E] = random_.choice((0, 0, 1, 0x80))
+        held = random_.choice((0.0, 0.0, 0.0, 0.1, 0.5))
+        for channel in range(15):
+            at = CHANNELS + channel * CHANNEL
+            # now and then, no channel counts
+            data[at + 0x48C] = 0 if n % 12 == 0 else random_.choice((0, 1, 1, 0x80))
+            data[at + 0x4A0] = random_.choice((0, 0, 1, 0x80))
+            data[at + 0x4A1] = random_.choice((0, 0, 1, 0x80))
+            struct.pack_into("<II", data, at + 0x4A4, random_.choice((0, 1, 125, 1500, 100000)), random_.choice((0, 1, 125, 126, 375, 1500, 100000)))
+            struct.pack_into("<i", data, at + 0x4D8, random_.choice((1, 5)) if random_.random() < held else random_.choice((0, 0, -1)))
+            struct.pack_into("<I", data, at + 0x4DC, random_.choice((0, 1, 2, 3, 4)))
+        t.check(
+            "network_observer_update_interval",
+            Buffer(bytes(data), pointers=(0x10,)),
+            globals=setup["globals"],
+            externals=dict(
+                setup["externals"],
+                network_observer_channel_restore_flow=with_channel_and_observer,
+                network_observer_unknown_00077f90=lambda harness, arguments: (
+                    0,
+                    (arguments[0], arguments[1], harness.normalize(arguments[2]), arguments[3]),
+                ),
+                network_observer_new_interval=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+            ),
+        )

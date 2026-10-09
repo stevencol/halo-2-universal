@@ -389,6 +389,12 @@ enum
 	of a channel are for, and how many last numbers it keeps */
 	NETWORK_OBSERVER_CHANNEL_UNKNOWN14_SIZE= 0x24,
 	NETWORK_OBSERVER_UNKNOWN14_ETHERNET_OFFSET= 0xA,
+	/* three more numbers of what the observer has at 0x10: how long an
+	interval of the flow lasts at least, how long before what the channels
+	did in it counts, and the bits a second that one is short under */
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN19C_OFFSET= 0x19C,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1A4_OFFSET= 0x1A4,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1A8_OFFSET= 0x1A8,
 	NETWORK_OBSERVER_PARAMETERS_RATE_PERIOD_OFFSET= 0xF8,
 	NETWORK_OBSERVER_PARAMETERS_WINDOW_COUNT_OFFSET= 0xFC,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
@@ -536,6 +542,7 @@ void network_observer_update_voice_mode(const byte *observer);
 void NETWORK_OBSERVER_CALLBACK network_observer_take_game_channels(byte *observer);
 boolean NETWORK_OBSERVER_CALLBACK network_observer_voice_has_packet(long channel_index, boolean unknown, long *size);
 long NETWORK_OBSERVER_CALLBACK network_observer_voice_build_packet(long channel_index, long size, byte *packet);
+void network_observer_update_interval(byte *observer);
 long NETWORK_OBSERVER_CALLBACK network_observer_acquire_channel(byte *observer, long session_index,
 	const byte *unknown14);
 void NETWORK_OBSERVER_CALLBACK network_observer_release_game_channels(byte *observer);

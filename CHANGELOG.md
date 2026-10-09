@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — El final de cada intervalo del caudal
+
+Una función en `networking/network_observer.c`, de 541 bytes. De 1384
+funciones se pasa a 1385, el 12,29 % de las del juego (el 8,191 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_update_interval` | `0x00079260` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_observer_update_interval` es **lo que el observador hace con el
+  intervalo del caudal cada vez**: la que cierra el ciclo de los hitos 385
+  a 391. Solo actúa cuando el intervalo ha durado lo suyo, o cuando algo
+  pidió hacerlo ya (el byte de `0x4F3C`, que ponen las funciones que
+  cambian un caudal).
+  - Si en el intervalo **bajó un caudal del todo**, los canales que
+    estaban probando a mandar más vuelven al caudal que tenían guardado:
+    la prueba ya no vale.
+  - Si no, y el intervalo ha durado bastante, cada canal **guarda los
+    bits por segundo que ha hecho** (los dos números de `0x510` y
+    `0x514`, los que el hito 389 comparaba para ver «quién tiene más»), y
+    el observador recibe el resumen.
+  - Luego empieza un intervalo nuevo (hito 385).
+- Con el resumen se entiende por fin `network_observer_unknown_00077f90`
+  (hito 385): los tres números que recibía son **cuántos canales hay,
+  cuántos bits por segundo hacen entre todos, y cuántos de ellos van
+  bien**. De ahí salen el máximo de bits por segundo que se ha visto
+  (`0x4E08`), su media (`0x4E0C`) y las dos cuentas de intervalos buenos
+  y malos. Y `0x4E04`, lo que el hito 385 comparaba con las tablas de la
+  voz, es de la misma familia: lo que la conexión da de sí.
+
+### Comprobado rompiendo líneas
+
+- Dieciocho líneas rotas, una cada vez: las pruebas fallaron en
+  diecisiete. La otra faltaba en las pruebas (ningún canal que cuente) y
+  ahora falla.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_observer` (66 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — La voz que va por un canal
 
 Dos funciones en `networking/network_observer.c`, 269 bytes entre las dos. De 1382
