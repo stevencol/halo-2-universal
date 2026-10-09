@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — El mapa de la sesión de la partida
+
+Tres funciones en `networking/network_life_cycle.c`, 247 bytes entre todas. De 1266
+funciones se pasa a 1269, el 11,26 % de las del juego (el 7,008 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_life_cycle_set_map` | `0x00063f50` | `networking/network_life_cycle.c` |
+| `network_life_cycle_set_unknown49a4` | `0x00063fb0` | `networking/network_life_cycle.c` |
+| `network_life_cycle_set_map_and_unknown49a8` | `0x00063ff0` | `networking/network_life_cycle.c` |
+
+### Lo que se sabe
+
+- `network_life_cycle_set_map` era `unknown_00063f50`, la que `main_game.c`
+  llama al cargar un mapa («si otra cosa arranca la partida en el mapa»,
+  hito 190). Le pasa la campaña, el mapa y **el nombre del mapa**, y eso
+  es lo que la sesión guarda en `0x4D08`, `0x4D0C` y el texto de `0x4D10`:
+  la función del hito 340 pasa a llamarse `network_session_leader_set_map`.
+  Si esta consola no dirige la sesión devuelve TRUE sin hacer nada, y el
+  juego carga el mapa por su cuenta.
+- `network_life_cycle_set_unknown49a4` pone el número de `0x49A4` de la
+  sesión, y `network_life_cycle_set_map_and_unknown49a8` pone el mapa y
+  después hace `network_session_unknown_0005bf10` con todo a cero; las dos
+  solo si esta consola lleva la sesión y su número de `0x4980` es 1.
+- La segunda recibe su argumento en `esi`, que ella misma no toca: lo deja
+  pasar a la función de la sesión a la que salta.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (176) y de
+  `main_game` (23).
+- La batería completa del hito 343 seguía corriendo.
+- Las mutaciones de los hitos 280 a 308 y 321 a 348 están pendientes.
+
 ## 2026-10-08 — Dos más del noveno estado
 
 Dos funciones en `networking/network_session.c`, 248 bytes entre las dos. De 1264

@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 347.
+**Última actualización:** 2026-10-08, al terminar el hito 348.
 
 ## Dónde estamos
 
-- **1266 funciones descompiladas de 11.265: el 11,24 % del juego** (el
-  7,000 % de los bytes de código).
-- Las 1266 están comprobadas contra el ejecutable original: las 1109 del
+- **1269 funciones descompiladas de 11.265: el 11,26 % del juego** (el
+  7,008 % de los bytes de código).
+- Las 1269 están comprobadas contra el ejecutable original: las 1109 del
   hito 313 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile two more functions of a session's ninth-state data* (ver `git log`).
+- Último hito: *Decompile how the network game sets its session's map* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 540 funciones apuntadas pero sin descompilar (las que el código
-  llama); 442 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 539 funciones apuntadas pero sin descompilar (las que el código
+  llama); 441 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -121,7 +121,7 @@ Módulos (funciones hechas / archivo):
 - [ ] Observador de la red — `networking\network_observer.c` (7: lo que
       tiene de cada sesión y sus canales con las otras consolas; va de
       `0x00075970` a `0x0007a4a0` y casi todo falta)
-- [x] Partida en red — `networking\network_life_cycle.c` (36: qué está
+- [x] Partida en red — `networking\network_life_cycle.c` (39: qué está
       haciendo, sus dos sesiones, lo que se le pide y su fotograma; de
       `0x000591e0` a `0x00059ab0`, completo)
 - [x] Voz de los jugadores — `networking\voice.c` (22: completo, de

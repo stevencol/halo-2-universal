@@ -2979,7 +2979,7 @@ boolean network_session_leader_set_roster(
 /* 0x0005b790: the console that leads a session sets the two numbers of
 0x4D08 and the text of 0x4D10, or asks the one that runs it to; FALSE if it
 does not lead it */
-boolean NETWORK_SESSION_CALLBACK network_session_leader_set_unknown4d08(
+boolean NETWORK_SESSION_CALLBACK network_session_leader_set_map(
 	byte *session,
 	const char *unknown4d10,
 	long unknown4d08,

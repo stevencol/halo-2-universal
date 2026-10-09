@@ -848,3 +848,81 @@ boolean network_life_cycle_unknown_00063f00(
 
 	return FALSE;
 }
+
+/* the session of the network game, if there is a network game and the
+session has a state; NULL if not. The game has this in each function that
+uses it */
+static inline __attribute__((always_inline)) byte *network_life_cycle_session_or_null(
+	void)
+{
+	if (unknown_00527330 && *(const long *)(network_life_cycle_session+NETWORK_SESSION_STATE_OFFSET)!=
+		_network_session_state_none)
+	{
+		return network_life_cycle_session;
+	}
+
+	return NULL;
+}
+
+/* 0x00063f50: the map of the session of the network game is set, or asked
+for, if this console leads it (network_session_leader_set_map); TRUE too if
+it does not lead it, so that the game starts the map itself. FALSE with no
+network game, or with a session that does not say who is in it */
+boolean network_life_cycle_set_map(
+	long campaign,
+	long map,
+	const char *map_name)
+{
+	if (unknown_00527330)
+	{
+		byte *session= network_life_cycle_session;
+		long state= *(const long *)(session+NETWORK_SESSION_STATE_OFFSET);
+
+		if (state!=_network_session_state_none && state>=_network_session_state3 && state<=_network_session_state8)
+		{
+			if (*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET)!=
+				*(const long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET))
+			{
+				return TRUE;
+			}
+
+			return network_session_leader_set_map(session, map_name, campaign, map);
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x00063fb0: the number of 0x49A4 of the session of the network game is
+set, or asked for, if network_life_cycle_unknown_00063f00 says so; FALSE if
+it does not */
+boolean network_life_cycle_set_unknown49a4(
+	long unknown49a4)
+{
+	if (!network_life_cycle_unknown_00063f00())
+	{
+		return FALSE;
+	}
+
+	return network_session_leader_set_unknown49a4(network_life_cycle_session_or_null(), unknown49a4);
+}
+
+/* 0x00063ff0: the map of the session of the network game is set, and then
+network_session_unknown_0005bf10 is done with nothing, if
+network_life_cycle_unknown_00063f00 says so; whether both could */
+boolean NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_set_map_and_unknown49a8(
+	long campaign,
+	long map,
+	const char *map_name)
+{
+	byte *session;
+
+	if (!network_life_cycle_unknown_00063f00())
+	{
+		return FALSE;
+	}
+	session= network_life_cycle_session_or_null();
+
+	return network_session_leader_set_map(session, map_name, campaign, map) &&
+		network_session_unknown_0005bf10(session, FALSE, 0, 0, NULL);
+}

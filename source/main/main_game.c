@@ -11,6 +11,8 @@ The names are guesses.
 #include "text/unicode_string_list.h"
 #include "main_game.h"
 
+#include "networking/network_life_cycle.h"
+
 #include "cache/animation_cache.h"
 #include "cache/cache_files.h"
 #include "cache/geometry_cache.h"
@@ -94,9 +96,6 @@ const char *unknown_0019c270(long campaign, long map);
 players that go on to it, most likely */
 void unknown_00152450(struct game_options *options);
 void unknown_00152660(struct game_options *options);
-
-/* 0x00063f50: whether something else starts the game on the map */
-boolean unknown_00063f50(long campaign, long map, const char *map_name);
 
 /* of the C library */
 long time(long *timer);
@@ -821,7 +820,7 @@ void main_game_next_map(
 				options.random_seed= seed;
 				unknown_00152450(&options);
 				unknown_00152660(&options);
-				if (!unknown_00063f50(options.unknown14, map, map_name))
+				if (!network_life_cycle_set_map(options.unknown14, map, map_name))
 				{
 					main_game_change(&options);
 				}

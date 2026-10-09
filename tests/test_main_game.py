@@ -608,7 +608,7 @@ def run(t) -> None:
                 "GetTickCount": lambda harness, arguments, value=random_.getrandbits(32): value,
                 "unknown_00152450": change_options,
                 "unknown_00152660": lambda harness, arguments: (0, (options_of(harness, arguments[0]),)),
-                "unknown_00063f50": lambda harness, arguments, result=random_.choice((0, 1)): (
+                "network_life_cycle_set_map": lambda harness, arguments, result=random_.choice((0, 1)): (
                     result,
                     (arguments[0], arguments[1], string(harness, arguments[2])),
                 ),

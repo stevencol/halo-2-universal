@@ -1705,7 +1705,7 @@ def run(t) -> None:
         length = random_.choice((0, 5, 0x7E, 0x7F, 0x80, 0x90))
         text_ = bytes(random_.randrange(1, 256) for _ in range(length)) + bytes(1) + random_.randbytes(0x100 - length)
         t.check(
-            "network_session_leader_set_unknown4d08",
+            "network_session_leader_set_map",
             led(),
             Buffer(text_),
             random_.getrandbits(32),
@@ -2024,4 +2024,57 @@ def run(t) -> None:
             election_,
             address,
             random_.choice((0, 1, 1, 0x80, 0x100)),
+        )
+
+    # ---------- the map of the session of the network game
+
+    def game_session() -> dict:
+        data = bytearray(random_.randbytes(0x78B8))
+        struct.pack_into("<I", data, STATE, random_.choice((3, 4, 5, 5, 5, 8, 0, 1, 2, 9)))
+        struct.pack_into("<I", data, 0x4980, random_.choice((1, 1, 1, 0, 2)))
+        local = random_.choice((0, 1, 3, NONE))
+        struct.pack_into("<I", data, LOCAL_PEER, local)
+        struct.pack_into("<I", data, HOST_PEER, random_.choice((local, local, local ^ 1)))
+        return {
+            "unknown_00527330": bytes((random_.choice((1, 1, 1, 1, 0x80, 0)),)),
+            "network_life_cycle_session": Buffer(bytes(data)),
+        }
+
+    def says(values=(1, 1, 1, 0x80, 0, 0x100)):
+        return lambda harness, arguments, value=random_.choice(values): (
+            value,
+            tuple(harness.normalize(argument) for argument in arguments),
+        )
+
+    for n in range(200):
+        t.check(
+            "network_life_cycle_set_map",
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            Buffer(b"scenarios\\multi\\lockout\\lockout\0"),
+            globals=game_session(),
+            externals={"network_session_leader_set_map": says()},
+        )
+    for n in range(200):
+        t.check(
+            "network_life_cycle_set_unknown49a4",
+            random_.getrandbits(32),
+            globals=game_session(),
+            externals={"network_session_leader_set_unknown49a4": says()},
+        )
+    for n in range(300):
+        t.check(
+            "network_life_cycle_set_map_and_unknown49a8",
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            Buffer(b"scenarios\\multi\\lockout\\lockout\0"),
+            globals=game_session(),
+            externals={
+                "network_session_leader_set_map": says(),
+                # only a byte of the second thing counts
+                "network_session_unknown_0005bf10": lambda harness, arguments, value=random_.choice((1, 1, 0, 0x100)): (
+                    value,
+                    (harness.normalize(arguments[0]), arguments[1] & 0xFF, *arguments[2:]),
+                ),
+            },
         )

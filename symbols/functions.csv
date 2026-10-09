@@ -1050,7 +1050,9 @@ address,name,source,arguments,returns,convention
 0019c270,unknown_0019c270,,stack stack,pointer
 00152450,unknown_00152450,,eax,void
 00152660,unknown_00152660,,stack,void
-00063f50,unknown_00063f50,,stack stack stack,bool
+00063f50,network_life_cycle_set_map,source/networking/network_life_cycle.c,stack stack stack,bool
+00063fb0,network_life_cycle_set_unknown49a4,source/networking/network_life_cycle.c,esi,bool
+00063ff0,network_life_cycle_set_map_and_unknown49a8,source/networking/network_life_cycle.c,stack stack stack,bool,stdcall
 00321aae,time,,stack,int
 00321f75,rand,,,int
 00137000,find_files_next,source/tag_files/files_xbox.c,stack stack stack,bool
@@ -1799,7 +1801,7 @@ address,name,source,arguments,returns,convention
 0005bd00,network_session_leader_set_language,source/networking/network_session.c,edx esi,bool
 0005bde0,network_session_leader_set_unknown498c,source/networking/network_session.c,edx esi,bool
 0005b650,network_session_leader_set_roster,source/networking/network_session.c,eax ebx,bool
-0005b790,network_session_leader_set_unknown4d08,source/networking/network_session.c,esi edx stack stack,bool,stdcall
+0005b790,network_session_leader_set_map,source/networking/network_session.c,esi edx stack stack,bool,stdcall
 0005b9d0,network_session_leader_set_unknown4db0,source/networking/network_session.c,eax edx,bool
 0005bf10,network_session_unknown_0005bf10,source/networking/network_session.c,ecx edx ebx stack stack,bool,stdcall
 0005c010,network_session_leader_set_unknown5ddc,source/networking/network_session.c,edx stack,bool,stdcall

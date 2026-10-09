@@ -628,7 +628,7 @@ boolean network_session_leader_set_unknown49c8(byte *session, long unknown49c8);
 boolean network_session_leader_clear_unknown49f8(byte *session);
 boolean network_session_leader_set_unknown4dac(byte *session, long unknown4dac);
 boolean network_session_leader_set_roster(const struct network_session_roster *roster, byte *session);
-boolean NETWORK_SESSION_CALLBACK network_session_leader_set_unknown4d08(byte *session, const char *unknown4d10,
+boolean NETWORK_SESSION_CALLBACK network_session_leader_set_map(byte *session, const char *unknown4d10,
 	long unknown4d08, long unknown4d0c);
 boolean network_session_leader_set_unknown4db0(const byte *unknown4db0, byte *session);
 boolean NETWORK_SESSION_CALLBACK network_session_unknown_0005bf10(byte *session, boolean unknown8, long unknownC,
