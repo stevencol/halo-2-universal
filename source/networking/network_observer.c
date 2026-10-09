@@ -452,7 +452,7 @@ byte and a number. 0x000886e0: a channel of the game is let go of.
 0x0007b650: something of the network that a number says is let go of.
 0x00076ff0, 0x000776a0: two more things that are done with a channel of the
 observer each time */
-void __attribute__((stdcall)) unknown_000784a0(long channel_index, byte *observer, boolean unknown0, long unknown4);
+void __attribute__((stdcall)) network_observer_channel_forget_address(long channel_index, byte *observer, boolean unknown0, long unknown4);
 void __attribute__((stdcall)) unknown_000886e0(byte *game_channel);
 void unknown_0007b650(long unknown);
 void __attribute__((stdcall)) unknown_00076ff0(long channel_index, byte *observer);
@@ -509,7 +509,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_set_state(
 	}
 }
 
-/* 0x00076ef0: a channel of the observer is no more: unknown_000784a0 notes it with 0xE,
+/* 0x00076ef0: a channel of the observer is no more: network_observer_channel_forget_address notes it with 0xE,
 its channel of the game is let go of, and so is what its number of 0x70
 says; and all of it is empty, with NONE in those two */
 void network_observer_channel_delete(
@@ -520,7 +520,7 @@ void network_observer_channel_delete(
 	long game_channel_index;
 	long unknown70;
 
-	unknown_000784a0(channel_index, observer, FALSE, NETWORK_OBSERVER_CHANNEL_DELETED_REASON);
+	network_observer_channel_forget_address(channel_index, observer, FALSE, NETWORK_OBSERVER_CHANNEL_DELETED_REASON);
 	game_channel_index= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET);
 	if (game_channel_index!=NONE)
 	{
@@ -565,14 +565,14 @@ void network_observer_channel_update_connection(
 		}
 		else if (status!=_network_observer_connect_status1)
 		{
-			unknown_000784a0(channel_index, observer, TRUE, 0);
+			network_observer_channel_forget_address(channel_index, observer, TRUE, 0);
 			network_observer_channel_set_state(_network_observer_channel_state2, observer, channel_index);
 			(*(short *)(channel+NETWORK_OBSERVER_CHANNEL_TRIES_OFFSET))++;
 		}
 	}
 	else if (status!=_network_observer_connect_status2)
 	{
-		unknown_000784a0(channel_index, observer, TRUE, NETWORK_OBSERVER_CHANNEL_LOST_REASON);
+		network_observer_channel_forget_address(channel_index, observer, TRUE, NETWORK_OBSERVER_CHANNEL_LOST_REASON);
 		network_observer_channel_set_state(_network_observer_channel_state2, observer, channel_index);
 		*(short *)(channel+NETWORK_OBSERVER_CHANNEL_TRIES_OFFSET)= 0;
 	}
@@ -1318,7 +1318,7 @@ boolean NETWORK_OBSERVER_CALLBACK network_observer_session_get_address(
 
 /* 0x00078330: a channel of the observer gets an address of the game for its
 console, unless the one that it has is being connected to or is connected
-(network_observer_channel_connect_status 1 or 2). If not, unknown_000784a0
+(network_observer_channel_connect_status 1 or 2). If not, network_observer_channel_forget_address
 notes it with nothing, and the first session that uses the channel, has not
 failed before and gives one (network_observer_session_get_address) is the
 session of the channel from now on. Whether the channel has an address */
@@ -1334,7 +1334,7 @@ boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_find_address(
 	{
 		return TRUE;
 	}
-	unknown_000784a0(channel_index, observer, FALSE, 0);
+	network_observer_channel_forget_address(channel_index, observer, FALSE, 0);
 	for (session_index= 0; session_index<MAXIMUM_NETWORK_OBSERVER_SESSIONS; session_index++)
 	{
 		unsigned long bit= 1u<<session_index;
@@ -1354,4 +1354,56 @@ boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_find_address(
 	}
 
 	return FALSE;
+}
+
+/* 0x0007b390: something of the network that the observer was given is told
+that an address of the game is no more. 0x003cd344, of the console's
+libraries */
+void unknown_0007b390(const struct transport_address *address, long unknown8);
+long __attribute__((stdcall)) XNetUnregisterInAddr(unsigned long in_address);
+
+/* 0x000784a0: a channel of the observer has no address of the game any
+more. Its channel of the game, if it is past its second state, is told a
+number (unknown_00088650). And if it had an address: unknown_0007b390 is
+told; with a byte, the session that the address was of is one that failed;
+the console's libraries let go of the address; and it is empty */
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_forget_address(
+	long channel_index,
+	byte *observer,
+	boolean failed,
+	long unknown)
+{
+	byte *channel= (byte *)network_observer_channel(observer, channel_index);
+	long game_channel_index= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET);
+	struct transport_address *address= (struct transport_address *)(channel+NETWORK_OBSERVER_CHANNEL_ADDRESS_OFFSET);
+	unsigned long in_address;
+
+	if (game_channel_index!=NONE)
+	{
+		byte *game_channel= unknown_004d87d4+game_channel_index*NETWORK_CHANNEL_SIZE;
+
+		if (*(const long *)(game_channel+NETWORK_CHANNEL_STATE_OFFSET)>_network_channel_state2)
+		{
+			unknown_00088650(game_channel, unknown);
+		}
+	}
+	if (!transport_address_valid(address))
+	{
+		return;
+	}
+	unknown_0007b390(address, *(const long *)(observer+NETWORK_OBSERVER_UNKNOWN8_OFFSET));
+	if (failed)
+	{
+		long session_index= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_SESSION_OFFSET);
+
+		if (session_index>=0 && session_index<MAXIMUM_NETWORK_OBSERVER_SESSIONS)
+		{
+			*(unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_FAILED_SESSIONS_OFFSET)|= 1u<<session_index;
+		}
+	}
+	if (transport_address_get_secure_in_address(address, &in_address))
+	{
+		XNetUnregisterInAddr(in_address);
+	}
+	memset(address, 0, sizeof(*address));
 }

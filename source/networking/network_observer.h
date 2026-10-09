@@ -340,6 +340,8 @@ void network_observer_channel_update_connection(long channel_index, byte *observ
 void network_observer_channel_connect(long channel_index, byte *observer);
 struct transport_address;
 boolean network_channel_get_address(const byte *game_channel, struct transport_address *address);
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_forget_address(long channel_index, byte *observer,
+	boolean failed, long unknown);
 boolean NETWORK_OBSERVER_CALLBACK network_observer_session_get_address(const byte *observer, const byte *peer_address,
 	struct transport_address *address, long session_index, long *unknown4, byte *identifier, byte *key);
 boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_find_address(long channel_index, byte *observer);

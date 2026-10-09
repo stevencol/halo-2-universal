@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Un canal olvida su dirección
+
+Una función en `networking/network_observer.c`, de 214 bytes. De 1348
+funciones se pasa a 1349, el 11,98 % de las del juego (el 7,852 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_channel_forget_address` | `0x000784a0` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_observer_channel_forget_address` era `unknown_000784a0`, la que
+  en los hitos 371 y 383 «anotaba algo con un byte y un número». Es **lo
+  contrario del hito 383**: el canal se queda sin dirección.
+  - Si el canal del juego ya había pasado de su segundo estado, se le dice
+    el número que se da (es el motivo: `0xD` al perder la conexión, `0xE`
+    al vaciar el canal).
+  - Si tenía dirección: se avisa a `unknown_0007b390`; con el byte a 1, la
+    sesión de la que era la dirección **queda marcada como fallida** (para
+    que la búsqueda del hito 383 pruebe con otra); las bibliotecas de la
+    consola sueltan la dirección (`XNetUnregisterInAddr`); y queda vacía.
+- Con esta, el ciclo de la dirección de un canal está entero: buscarla
+  (hito 383), seguir cómo va (hito 371) y soltarla.
+
+### Comprobado rompiendo líneas
+
+- Cuatro líneas rotas, una cada vez: las pruebas fallaron en las cuatro.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_observer` (40 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — La dirección de la consola de un canal
 
 Dos funciones en `networking/network_observer.c`, 354 bytes entre las dos. De 1346

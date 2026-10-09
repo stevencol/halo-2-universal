@@ -350,7 +350,7 @@ def run(t) -> None:
             Buffer(bytes(data)),
             globals={"unknown_004d87d4": Buffer(bytes(game_channels()))},
             externals={
-                "unknown_000784a0": noted,
+                "network_observer_channel_forget_address": noted,
                 "unknown_000886e0": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                 "unknown_0007b650": lambda harness, arguments: (0, (arguments[0],)),
             },
@@ -370,7 +370,7 @@ def run(t) -> None:
                     (harness.normalize(arguments[0]), arguments[1]),
                 ),
                 "network_observer_channel_set_state": lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]), arguments[2])),
-                "unknown_000784a0": noted,
+                "network_observer_channel_forget_address": noted,
             },
         )
 
@@ -807,7 +807,44 @@ def run(t) -> None:
                     status,
                     (harness.normalize(arguments[0]), arguments[1]),
                 ),
-                "unknown_000784a0": noted,
+                "network_observer_channel_forget_address": noted,
                 "network_observer_session_get_address": gives,
+            },
+        )
+
+    # ---------- a channel has no address of the game any more
+
+    for n in range(600):
+        data = observer()
+        channel = random_.randrange(15)
+        at = CHANNELS + channel * CHANNEL
+        struct.pack_into("<H", data, at + 0x5C + 0x12, random_.choice((4, 4, 0xFFFF, 16, 16, 0, 6)))
+        way = random_.randrange(4)
+        if way == 0:
+            data[at + 0x5C : at + 0x5C + 16] = bytes(16)
+        elif way == 1:
+            data[at + 0x5C : at + 0x5C + 4] = bytes(4)
+        struct.pack_into("<i", data, at + 0x3C, random_.choice((0, 1, 3, 3, 4, -1, 31)))
+        channels = game_channels()
+        for other in range(6):
+            struct.pack_into("<i", channels, other * 0xF8 + 0x54, random_.choice((0, 1, 2, 3, 5)))
+
+        def secure(harness, arguments, could=random_.choice((1, 1, 0, 0x100)), value=random_.getrandbits(32)):
+            # the number of the address goes where the second thing says, which is in the stack
+            harness.mu.mem_write(arguments[1], struct.pack("<I", value))
+            return could, (harness.normalize(arguments[0]),)
+
+        t.check(
+            "network_observer_channel_forget_address",
+            channel,
+            Buffer(bytes(data)),
+            random_.choice((0, 1, 1, 0x80, 0x100)),
+            random_.choice((0, 0xD, 0xE, random_.getrandbits(32))),
+            globals={"unknown_004d87d4": Buffer(bytes(channels))},
+            externals={
+                "unknown_00088650": told,
+                "unknown_0007b390": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                "transport_address_get_secure_in_address": secure,
+                "XNetUnregisterInAddr": lambda harness, arguments: (0, (arguments[0],)),
             },
         )

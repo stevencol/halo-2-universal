@@ -1871,7 +1871,7 @@ address,name,source,arguments,returns,convention
 00095580,unknown_00095580,,stack stack stack stack,void,stdcall
 00077330,network_observer_channel_set_state,source/networking/network_observer.c,eax ecx stack,void,stdcall
 00076f50,network_observer_channel_update_connection,source/networking/network_observer.c,esi edi,void
-000784a0,unknown_000784a0,,eax ecx stack stack,void,stdcall
+000784a0,network_observer_channel_forget_address,source/networking/network_observer.c,eax ecx stack stack,void,stdcall
 000886e0,unknown_000886e0,,stack,void,stdcall
 0007b650,unknown_0007b650,,edi,void
 00076ff0,unknown_00076ff0,,ebx stack,void,stdcall
@@ -1904,3 +1904,5 @@ address,name,source,arguments,returns,convention
 00078880,network_observer_release_game_channels,source/networking/network_observer.c,stack,void,stdcall
 00077940,network_observer_channel_unknown_00077940,source/networking/network_observer.c,eax ebx,bool
 00078330,network_observer_channel_find_address,source/networking/network_observer.c,eax stack,bool,stdcall
+0007b390,unknown_0007b390,,eax ebx,void
+003cd344,XNetUnregisterInAddr,,stack,int,stdcall
