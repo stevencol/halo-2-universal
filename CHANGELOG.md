@@ -2,6 +2,78 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Lo que la sesión hace en cada vuelta
+
+Dos funciones en `networking/network_session.c`, 590 bytes entre las dos. De 1296
+funciones se pasa a 1298, el 11,52 % de las del juego (el 7,264 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_state8_update` | `0x00061e00` | `networking/network_session.c` |
+| `network_session_update` | `0x0005a090` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_update` es **el paso de la sesión**: lo que hace una y
+  otra vez, según su estado. Tiene una tabla de saltos (`0x0005a1f8`) con
+  una entrada por estado, y con ella quedan ordenadas las piezas de los
+  hitos anteriores:
+
+| Estado | Lo que hace |
+| --- | --- |
+| 1 | `network_session_state1_update` (hito 354) |
+| 2 | `network_session_unknown_000618d0` |
+| 3 | nada propio |
+| 4 | `network_session_unknown_00061910` |
+| 5 | nada propio |
+| 6 | `network_session_disconnect` |
+| 7 | `network_session_state7_update` (`0x00061ac0`, sin descompilar) |
+| 8 | `network_session_state8_update` |
+| 9 | `network_session_state9_update` (`0x00061ef0`, sin descompilar) |
+
+- Después, en todos los estados:
+  - la consola que lleva la sesión olvida a los jugadores que pidieron
+    entrar hace demasiado y, fuera de sus tres últimos estados, echa (con el
+    mensaje `0xD`) a las consolas cuyo canal ha vuelto a su primer dato 1:
+    son las que **se han caído**;
+  - la que no la lleva mira lo mismo del canal de la que la lleva, y si se
+    ha caído hace `network_session_host_lost`; si sigue en la sesión, hace
+    lo del tercer estado (hito 345);
+  - `network_session_unknown_00062240` (hito 355);
+  - y la que lleva la sesión reparte «quién está» y «lo que la sesión sabe»
+    (hito 356).
+- `network_session_state8_update`: en el octavo estado la sesión espera a
+  que todas las consolas contesten, o a que pasen `unknown_004cf4c0`
+  milisegundos. Entonces vuelve al quinto estado, echa a las que no
+  contestaron (o contestaron lo que pone su bit en `0x14`), reparte las dos
+  cosas, y según los dos bytes con que empezó el estado se sale de la
+  sesión o pasa al séptimo.
+- Las funciones de los estados séptimo y noveno quedan apuntadas con su
+  nombre, aún sin descompilar.
+
+### Corregido
+
+- `network_session_send_unknown12` (hito 355) es solo del octavo estado: la
+  llaman `network_session_enter_state8` y `network_session_state8_update`.
+  En el hito 355 puse «séptimo y octavo» sin haberlo visto; está corregido
+  en el código y en esa entrada.
+
+### Comprobado rompiendo líneas
+
+- Cinco líneas rotas a mano, una cada vez: las pruebas fallaron en las
+  cinco.
+
+### Sin comprobar
+
+- En las pruebas de `network_session_update` todo lo que llama está
+  sustituido; lo sustituido cambia a veces el estado de la sesión, para
+  comprobar que la función vuelve a leerlo donde el juego lo hace.
+- En este hito se pasaron las pruebas de `network_life_cycle` (205
+  funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353 y 355 están pendientes.
+
 ## 2026-10-08 — Repartir «quién está» y «lo que la sesión sabe»
 
 Dos funciones en `networking/network_session.c`, 845 bytes entre las dos. De 1294
@@ -68,7 +140,7 @@ funciones se pasa a 1294, el 11,49 % de las del juego (el 7,216 % de sus bytes).
   de un estado que no es de los cuatro últimos, olvida a los jugadores que
   pedían entrar y esta consola pasa a ser la de `0x40`. Con una sola
   consola no hay octavo estado: va al quinto.
-- `network_session_send_unknown12`: en los estados séptimo y octavo, manda
+- `network_session_send_unknown12`: en el octavo estado, manda
   un mensaje de la clase `0x12` a cada consola con canal listo (su primer
   dato vale 7) que aún no lo haya recibido. A la consola que llevaba la
   sesión solo se le manda cuando todas las demás ya están apuntadas, o

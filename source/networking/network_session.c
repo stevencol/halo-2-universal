@@ -4943,7 +4943,7 @@ void network_session_unknown_00062240(
 	}
 }
 
-/* 0x00062550: in its seventh and eighth states, a session sends something
+/* 0x00062550: in its eighth state, a session sends something
 of the kind 0x12, with what the session is known by, to each console that it
 keeps the second byte of, whose channel has 7 as its first thing and that
 has not been sent it yet (the bits at 0xC say which have). The console at
@@ -5217,4 +5217,155 @@ void network_session_send_parameters_updates(
 	}
 	memcpy(session+NETWORK_SESSION_UNKNOWN5E28_OFFSET, session+NETWORK_SESSION_UNKNOWN4978_OFFSET,
 		NETWORK_SESSION_UNKNOWN4978_SIZE);
+}
+
+/* 0x00061ac0, 0x00061ef0: what a session does again and again in its
+seventh and ninth states */
+void __attribute__((stdcall)) network_session_state7_update(byte *session);
+void __attribute__((stdcall)) network_session_state9_update(byte *session);
+
+/* 0x004cf4c0: how long a session in its eighth state waits for the consoles
+that have not answered, in milliseconds */
+long unknown_004cf4c0;
+
+/* 0x00061e00: what a session does again and again in its eighth state.
+network_session_send_unknown12; and then nothing more until each console has
+its bit at 0x10 or at 0x14, or the state started unknown_004cf4c0
+milliseconds ago or more. Then the session goes into its fifth state; each
+console but this one that had no bit at 0x10, or had it at 0x14, is taken
+out with something of the kind 0xD; the others are told who is in the
+session and what it knows; and, with the first byte that the state had, the
+session is left (network_session_leave with nothing), or, with the second,
+it goes into its seventh state for each console */
+void network_session_state8_update(
+	byte *session)
+{
+	const byte *data= session+NETWORK_SESSION_STATE_DATA_OFFSET;
+	unsigned long everyone;
+	unsigned long gone;
+	boolean leave;
+	boolean unknown1;
+	long peer_index;
+
+	network_session_send_unknown12(session);
+	everyone= (1u<<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET))-1;
+	if ((*(const unsigned long *)(data+NETWORK_SESSION_STATE8_UNKNOWN10_OFFSET)|
+			*(const unsigned long *)(data+NETWORK_SESSION_STATE8_UNKNOWN14_OFFSET))!=everyone &&
+		network_session_time()-*(const long *)(data+NETWORK_SESSION_STATE8_START_OFFSET)<unknown_004cf4c0)
+	{
+		return;
+	}
+	everyone= (1u<<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET))-1;
+	gone= (everyone&~*(const unsigned long *)(data+NETWORK_SESSION_STATE8_UNKNOWN10_OFFSET))|
+		*(const unsigned long *)(data+NETWORK_SESSION_STATE8_UNKNOWN14_OFFSET);
+	leave= data[0];
+	unknown1= data[NETWORK_SESSION_STATE8_UNKNOWN1_OFFSET];
+	network_session_enter_state5(session);
+	if (gone)
+	{
+		for (peer_index= *(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET)-1; peer_index>=0; peer_index--)
+		{
+			if (peer_index!=*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET) && (gone&(1u<<peer_index)))
+			{
+				network_session_remove_peer_with_message_d(peer_index, session);
+			}
+		}
+	}
+	network_session_send_membership_updates(session);
+	network_session_send_parameters_updates(session);
+	if (leave)
+	{
+		network_session_leave(session, 0);
+	}
+	else if (unknown1)
+	{
+		network_session_enter_state7(FALSE, session, NONE);
+	}
+}
+
+/* 0x0005a090: what a session does again and again, as its state says; a
+session that is in no state, or in the tenth, does nothing. First what each
+state has of its own. Then, in a session that this console runs: the players
+that asked to come in too long ago are forgotten, and, if it is not in one of
+its last three states, each console that the session keeps the second byte of
+and whose channel has 1 as its first thing is taken out with something of
+the kind 0xD. In another that says who is in it: if the channel of the
+console that runs it has 1 as its first thing, network_session_host_lost; and
+network_session_state3_update, if it still says who is in it. Then
+network_session_unknown_00062240; and the console that runs the session tells the
+others who is in it and what it knows */
+void network_session_update(
+	byte *session)
+{
+	long state= network_session_state(session);
+	long peer_index;
+
+	if (state==_network_session_state_none || state==_network_session_state10)
+	{
+		return;
+	}
+	switch (state)
+	{
+	case _network_session_state1:
+		network_session_state1_update(session);
+		break;
+	case _network_session_state2:
+		network_session_unknown_000618d0(session);
+		break;
+	case _network_session_state4:
+		network_session_unknown_00061910(session);
+		break;
+	case _network_session_state6:
+		network_session_disconnect(session);
+		break;
+	case _network_session_state7:
+		network_session_state7_update(session);
+		break;
+	case _network_session_state8:
+		network_session_state8_update(session);
+		break;
+	case _network_session_state9:
+		network_session_state9_update(session);
+		break;
+	}
+	if (network_session_unknown_00058d20(session))
+	{
+		network_session_requests_expire(session);
+		state= network_session_state(session);
+		if (state!=_network_session_state7 && state!=_network_session_state6 && state!=_network_session_state8)
+		{
+			for (peer_index= 0; peer_index<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET); peer_index++)
+			{
+				const struct network_session_peer_state *peer=
+					(const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index;
+
+				if (peer->unknown1 &&
+					network_session_channel_state(session, peer->unknown4)==_network_session_unknown8_channel_state1)
+				{
+					network_session_remove_peer_with_message_d(peer_index, session);
+				}
+			}
+		}
+	}
+	else if (network_session_established(session))
+	{
+		const struct network_session_peer_state *host=
+			(const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+
+			*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET);
+
+		if (network_session_channel_state(session, host->unknown4)==_network_session_unknown8_channel_state1)
+		{
+			network_session_host_lost(session);
+		}
+		if (network_session_established(session))
+		{
+			network_session_state3_update(session);
+		}
+	}
+	network_session_unknown_00062240(session);
+	if (network_session_unknown_00058d20(session))
+	{
+		network_session_send_membership_updates(session);
+		network_session_send_parameters_updates(session);
+	}
 }

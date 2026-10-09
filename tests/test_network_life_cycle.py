@@ -2610,3 +2610,69 @@ def run(t) -> None:
                     "unknown_00075e80": sends_all,
                 },
             )
+
+    # ---------- what a session does again and again
+
+    def then(new_state=None):
+        # something that is done with a session, which can leave it in another state
+        def handler(harness, arguments):
+            if new_state is not None:
+                harness.mu.mem_write(arguments[0] + STATE, struct.pack("<I", new_state))
+            return 0, (harness.normalize(arguments[0]),)
+
+        return handler
+
+    def takes_out(harness, arguments):
+        return 0, (arguments[0], harness.normalize(arguments[1]))
+
+    for n in range(500):
+        data = with_real_channels()
+        count = struct.unpack_from("<I", data, 0x54)[0]
+        everyone = (1 << count) - 1
+        struct.pack_into("<I", data, LOCAL_PEER, random_.randrange(count))
+        data[0x7420] = random_.choice((0, 0, 1, 0x80))
+        data[0x7421] = random_.choice((0, 1, 0x80))
+        struct.pack_into("<I", data, 0x7430, random_.choice((everyone, everyone, random_.getrandbits(16) & everyone, 0)))
+        struct.pack_into("<I", data, 0x7434, random_.choice((0, 0, random_.getrandbits(16) & everyone, everyone)))
+        setup = waits(data, 0x7428, "unknown_004cf4c0")
+        t.check(
+            "network_session_state8_update",
+            Buffer(bytes(data), pointers=(8,)),
+            globals=setup["globals"],
+            externals={
+                "GetTickCount": setup["tick"],
+                "network_session_send_unknown12": then(),
+                "network_session_enter_state5": then(),
+                "network_session_remove_peer_with_message_d": takes_out,
+                "network_session_send_membership_updates": then(),
+                "network_session_send_parameters_updates": then(),
+                "network_session_leave": leaves,
+                "network_session_enter_state7": lambda harness, arguments: (0, (arguments[0] & 0xFF, harness.normalize(arguments[1]), arguments[2])),
+            },
+        )
+
+    for n in range(900):
+        data = with_real_channels()
+        struct.pack_into("<I", data, STATE, random_.choice((0, 1, 2, 3, 3, 4, 4, 5, 5, 5, 6, 7, 8, 9, 10, 11, 0x103, NONE)))
+        struct.pack_into("<I", data, 0x40, random_.randrange(16))
+        own = then(random_.choice((None, None, None, 5, 3, 0)))
+        t.check(
+            "network_session_update",
+            Buffer(bytes(data), pointers=(8,)),
+            externals={
+                "network_session_state1_update": own,
+                "network_session_unknown_000618d0": own,
+                "network_session_unknown_00061910": own,
+                "network_session_disconnect": own,
+                "network_session_state7_update": own,
+                "network_session_state8_update": own,
+                "network_session_state9_update": own,
+                "network_session_requests_expire": then(random_.choice((None, None, None, 7, 3))),
+                "network_session_remove_peer_with_message_d": takes_out,
+                "network_session_host_lost": then(random_.choice((None, None, 9, 0))),
+                "network_session_state3_update": then(),
+                "network_session_unknown_00062240": then(random_.choice((None, None, None, 5, 3))),
+                "network_session_send_membership_updates": then(),
+                "network_session_send_parameters_updates": then(),
+            },
+        )

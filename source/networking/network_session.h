@@ -451,7 +451,7 @@ enum
 	from the bit for each console at 0x10: a byte that it is given, the
 	console that ran the session before, when the state started, a bit for
 	each console that has been sent something of the kind 0x12, and another
-	bit for each console at 0x14. In the seventh it has the last three too */
+	bit for each console at 0x14 */
 	NETWORK_SESSION_STATE8_UNKNOWN1_OFFSET= 0x1,
 	NETWORK_SESSION_STATE8_HOST_OFFSET= 0x4,
 	NETWORK_SESSION_STATE8_START_OFFSET= 0x8,
@@ -746,6 +746,8 @@ void network_session_send_unknown12(byte *session);
 void NETWORK_SESSION_CALLBACK network_session_enter_state8(byte *session, boolean unknown);
 void network_session_send_membership_updates(byte *session);
 void network_session_send_parameters_updates(byte *session);
+void network_session_state8_update(byte *session);
+void network_session_update(byte *session);
 boolean network_session_remove_peer_with_message_c(byte *session, long peer_index);
 void NETWORK_SESSION_CALLBACK network_session_peer_properties_apply_update(
 	struct network_session_peer_properties *properties, const struct network_session_peer_properties_update *update);
