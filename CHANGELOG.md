@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — La consola que lleva la sesión atiende a quien pide entrar
+
+Tres funciones en `networking/network_session.c`, 714 bytes entre todas. De 1302
+funciones se pasa a 1305, el 11,58 % de las del juego (el 7,374 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_host_accept_join` | `0x0005c720` | `networking/network_session.c` |
+| `network_session_host_answer_join` | `0x000630f0` | `networking/network_session.c` |
+| `network_session_host_join_requested` | `0x00063080` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- Es **el otro extremo del hito 360**: lo que hace la consola que lleva la
+  sesión cuando le llega la petición de entrar (el mensaje de la clase `8`).
+- `network_session_host_join_requested` saca la petición del mensaje y
+  pregunta si puede entrar (`network_session_host_check_join`, hito 333).
+  Si puede y la sesión tiene algo en `0x78A8`, **se lo deja a eso**: llama
+  a su primera función con la dirección y la petición. Con esto se conocen
+  las cuatro funciones de lo que hay en `0x78A8`: una consola pide entrar,
+  una consola ha salido, la sesión se ha desconectado, y si un jugador
+  puede entrar.
+- `network_session_host_answer_join` es la respuesta: si no hay razón en
+  contra intenta meterla; si no entra, manda a su dirección un mensaje de
+  la clase `0xA` con lo que identifica a la sesión y **el motivo**: es la
+  negativa.
+- `network_session_host_accept_join` mete a la consola en la sesión:
+  - si ya estaba (por los seis bytes de su tarjeta de red): si la petición
+    es la misma de hace poco (`unknown_004cf4a8` milisegundos) no hace
+    nada; si no, la saca primero y la vuelve a meter;
+  - le busca canal; si no hay, motivo 7 (y motivo 5 si estaba pero sin
+    canal apuntado);
+  - con el byte de la petición, apunta a sus jugadores como que piden
+    entrar, olvidando lo que hubieran pedido antes;
+  - la añade al final de «quién está», le abre el canal
+    (`unknown_00076a40`) y suben los contadores.
+- Los motivos de la negativa que se conocen: 2, 3 (no lleva la sesión), 4
+  (llena), 5 y 7.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (212
+  funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 361 están
+  pendientes.
+
 ## 2026-10-08 — Entrar en la sesión de otra consola
 
 Dos funciones en `networking/network_session.c`, 876 bytes entre las dos. De 1300

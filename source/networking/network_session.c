@@ -5866,3 +5866,158 @@ boolean NETWORK_SESSION_CALLBACK network_session_join(
 
 	return FALSE;
 }
+
+/* 0x004cf4a8: how long after a console came into a session what it sends
+again to ask to come in is taken as the same asking, in milliseconds */
+long unknown_004cf4a8;
+
+/* 0x0005c720: the console that runs a session lets a console that asks come
+in; whether it did, and why not if not. A console that is in the session
+already, by the six bytes of what it is known by: with nothing kept of its
+channel, no (5); if it is known by the same, has not said yet what the
+session is to know of it and came in less than unknown_004cf4a8 milliseconds
+ago, it is the same asking and nothing is done; if not, it goes out first,
+and the channel that it gets is told (network_observer_channel_unknown_00075e40).
+With no channel for the console, no (7). With the byte that it is given,
+each of its players asks to come in, after what it had asked before is
+forgotten. Then the console is the last of the session, unknown_00076a40 is done with
+its channel, and the two numbers that count what changes count one more */
+boolean NETWORK_SESSION_CALLBACK network_session_host_accept_join(
+	byte *session,
+	const byte *peer_address,
+	long player_count,
+	const byte *identifiers,
+	const long *unknownC4,
+	boolean has_unknown150,
+	long unknown150,
+	const byte *unknown144,
+	long *reason)
+{
+	byte unknownA[NETWORK_SESSION_PEER_ADDRESS_UNKNOWNA_SIZE];
+	long peer_index;
+	long channel_index;
+	long index;
+
+	memcpy(unknownA, peer_address+NETWORK_SESSION_PEER_ADDRESS_UNKNOWNA_OFFSET, sizeof(unknownA));
+	peer_index= network_session_find_peer_by_unknownA(session, unknownA);
+	if (peer_index!=NONE)
+	{
+		const struct network_session_peer_state *state=
+			(const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index;
+		const byte *peer= session+NETWORK_SESSION_PEER_ARRAY_OFFSET+peer_index*NETWORK_SESSION_PEER_SIZE;
+
+		if (!state->unknown1)
+		{
+			*reason= _network_session_join_unknown5;
+
+			return FALSE;
+		}
+		if (memcmp(peer, peer_address, NETWORK_SESSION_ADDRESS_SIZE)==0)
+		{
+			long since= state->time;
+			long now= network_session_time();
+
+			if (!peer[NETWORK_SESSION_PEER_UNKNOWN24_OFFSET] && now-since<unknown_004cf4a8)
+			{
+				return TRUE;
+			}
+		}
+		network_session_remove_peer(session, peer_index);
+	}
+	channel_index= unknown_00076aa0(*(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+		*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), peer_address);
+	if (channel_index==NONE)
+	{
+		*reason= _network_session_join_unknown7;
+
+		return FALSE;
+	}
+	if (peer_index!=NONE)
+	{
+		network_observer_channel_unknown_00075e40(channel_index, *(const byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET));
+	}
+	if (has_unknown150)
+	{
+		for (index= 0; index<player_count; index++)
+		{
+			const byte *identifier= identifiers+index*NETWORK_SESSION_PLAYER_IDENTIFIER_SIZE;
+			struct network_session_player_request *request;
+
+			if (network_session_find_request(session, identifier, &request))
+			{
+				request= NULL;
+				if (network_session_find_request(session, identifier, &request))
+				{
+					request->valid= FALSE;
+				}
+			}
+			network_session_request_player(identifier, (const long *)unknown144, session, unknown150, unknownC4[index]);
+		}
+	}
+	network_session_add_peer(session, *(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET), peer_address, TRUE,
+		channel_index, (const long *)unknown144);
+	unknown_00076a40(channel_index, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET));
+	network_session_membership_changed(session);
+
+	return TRUE;
+}
+
+/* 0x000630f0: the console that runs a session answers a console that asked
+to come in from an address of the game. With no reason against it,
+network_session_host_accept_join, and TRUE if it lets it in. If not, the
+address is sent something of the kind 0xA with what the session is known by
+and why not, and FALSE */
+boolean NETWORK_SESSION_CALLBACK network_session_host_answer_join(
+	const byte *request,
+	byte *session,
+	const struct transport_address *address,
+	long reason)
+{
+	byte message[NETWORK_SESSION_MESSAGE_JOIN_REFUSED_SIZE];
+
+	if (reason==_network_session_join_ok && network_session_host_accept_join(session,
+		request+NETWORK_SESSION_JOIN_ADDRESS_OFFSET, *(const long *)(request+NETWORK_SESSION_JOIN_PLAYER_COUNT_OFFSET),
+		request+NETWORK_SESSION_JOIN_PLAYERS_OFFSET, (const long *)(request+NETWORK_SESSION_JOIN_UNKNOWNC4_OFFSET),
+		request[NETWORK_SESSION_JOIN_UNKNOWN14C_OFFSET], *(const long *)(request+NETWORK_SESSION_JOIN_UNKNOWN150_OFFSET),
+		request+NETWORK_SESSION_JOIN_UNKNOWN144_OFFSET, &reason))
+	{
+		return TRUE;
+	}
+	memset(message, 0, sizeof(message));
+	memcpy(message, session+NETWORK_SESSION_IDENTIFIER_OFFSET, NETWORK_SESSION_IDENTIFIER_SIZE);
+	*(long *)(message+NETWORK_SESSION_MESSAGE_JOIN_REFUSED_REASON_OFFSET)= reason;
+	unknown_0007b140(*(const long *)(session+NETWORK_SESSION_UNKNOWN4_OFFSET), address,
+		_network_session_message_join_refused, sizeof(message), message);
+
+	return FALSE;
+}
+
+/* 0x00063080: what a console sends to ask to come into a session comes to
+the console that runs it, from an address of the game.
+network_session_host_check_join says whether it can. If it can and the
+session has something at 0x78A8, that is told, by its first function, with
+the address and what was sent, and it is left to it. If not,
+network_session_host_answer_join. TRUE */
+boolean NETWORK_SESSION_CALLBACK network_session_host_join_requested(
+	const byte *message,
+	byte *session,
+	const struct transport_address *address)
+{
+	byte request[NETWORK_SESSION_STATE1_UNKNOWN3C_SIZE];
+	struct network_session_unknown78A8 *object;
+	long reason;
+
+	memcpy(request, message+NETWORK_SESSION_MESSAGE_UNKNOWN8_UNKNOWNC_OFFSET, sizeof(request));
+	reason= network_session_host_check_join(session, request);
+	object= *(struct network_session_unknown78A8 **)(session+NETWORK_SESSION_UNKNOWN78A8_OFFSET);
+	if (reason==_network_session_join_ok && object)
+	{
+		object->functions->join_requested(object, address, request);
+	}
+	else
+	{
+		network_session_host_answer_join(request, session, address, reason);
+	}
+
+	return TRUE;
+}

@@ -2894,3 +2894,131 @@ def run(t) -> None:
                 "network_session_enter_state1": goes_in,
             },
         )
+
+    # ---------- the console that runs a session takes what a console sends to ask to come in
+
+    for n in range(900):
+        data = consistent()
+        room(data)
+        count = struct.unpack_from("<I", data, 0x54)[0]
+        now = random_.getrandbits(32)
+        peer = random_.randrange(count)
+        data[0x72DC + peer * 0x14 + 1] = random_.choice((0, 1, 1, 1))
+        struct.pack_into("<I", data, 0x72DC + peer * 0x14 + 0x10, (now - random_.choice((0, 999, 1000, 1001, 30001))) & 0xFFFFFFFF)
+        data[PEERS + peer * PEER + 0x24] = random_.choice((0, 0, 0, 1))
+        way = random_.randrange(4)
+        if way == 0:
+            # a console that is not in the session
+            known_as = random_.randbytes(0x24)
+        elif way == 1:
+            # one that is, by its six bytes, but is known by something else
+            known_as = bytearray(random_.randbytes(0x24))
+            known_as[0xA:0x10] = data[PEERS + peer * PEER + 0xA : PEERS + peer * PEER + 0x10]
+            known_as = bytes(known_as)
+        else:
+            known_as = bytes(data[PEERS + peer * PEER : PEERS + peer * PEER + 0x24])
+        players = random_.choice((0, 1, 2, 4))
+        identifiers = bytearray(random_.randbytes(16 * 12))
+        for player in range(players):
+            if random_.randrange(2):
+                # a player that asked before
+                at = REQUESTS + random_.randrange(16) * REQUEST + 0xA
+                identifiers[player * 12 : player * 12 + 12] = data[at : at + 12]
+        t.check(
+            "network_session_host_accept_join",
+            Buffer(bytes(data), pointers=(8,)),
+            Buffer(known_as),
+            players,
+            Buffer(bytes(identifiers)),
+            Buffer(random_.randbytes(16 * 4)),
+            random_.choice((0, 1, 1, 1, 0x80)),
+            random_.getrandbits(32),
+            Buffer(random_.randbytes(8)),
+            Buffer(random_.randbytes(4)),
+            globals={
+                "unknown_00510548": bytes((random_.choice((0, 0, 1)),)),
+                "unknown_0051054c": struct.pack("<I", now),
+                "unknown_004cf4a8": struct.pack("<I", random_.choice((0, 1000, 1000, 30000))),
+            },
+            externals={
+                "GetTickCount": lambda harness, arguments, now=now: now,
+                "unknown_00076aa0": lambda harness, arguments, channel=random_.choice((0, 1, 2, 3, 3, NONE)): (
+                    channel,
+                    (arguments[0], arguments[1], bytes(harness.mu.mem_read(arguments[2], 0x24))),
+                ),
+                "network_session_remove_peer": lambda harness, arguments: (0, (arguments[0], arguments[1])),
+                "network_observer_channel_unknown_00075e40": with_channel,
+                "network_session_request_player": lambda harness, arguments: (
+                    1,
+                    (bytes(harness.mu.mem_read(arguments[0], 12)), arguments[1], arguments[2], arguments[3], arguments[4]),
+                ),
+                "network_session_add_peer": adds,
+                "unknown_00076a40": with_channel,
+            },
+        )
+
+    for n in range(400):
+
+        def lets_in(harness, arguments, could=random_.choice((1, 1, 0, 0, 0x100)), why=random_.choice((5, 7))):
+            # why not goes where the last thing says, which is in the stack
+            if not could & 0xFF:
+                harness.mu.mem_write(arguments[8], struct.pack("<I", why))
+            return could, (
+                arguments[0],
+                bytes(harness.mu.mem_read(arguments[1], 0x24)),
+                arguments[2],
+                bytes(harness.mu.mem_read(arguments[3], 12)),
+                bytes(harness.mu.mem_read(arguments[4], 4)),
+                arguments[5],
+                arguments[6],
+                bytes(harness.mu.mem_read(arguments[7], 8)),
+            )
+
+        request = bytearray(random_.randbytes(0x1AC))
+        struct.pack_into("<I", request, 0, random_.choice((0, 1, 4, 16)))
+        request[0x14C] = random_.choice((0, 1, 0x80))
+        t.check(
+            "network_session_host_answer_join",
+            Buffer(bytes(request)),
+            Buffer(bytes(whole_session())),
+            Buffer(random_.randbytes(0x14)),
+            random_.choice((0, 0, 0, 2, 3, 4)),
+            externals={"network_session_host_accept_join": lets_in, "unknown_0007b140": sends_all_to_address},
+        )
+
+    for n in range(400):
+        data = consistent()
+        assert len(data) == OBJECT
+        # what the session has at 0x78A8 goes after the rest, with its functions after it
+        data += struct.pack("<5I", OBJECT + 4, mock_address(0), 0x22, 0x33, 0x44)
+        pointers = [8, OBJECT]
+        if n % 3:
+            struct.pack_into("<I", data, 0x78A8, OBJECT)
+            pointers.append(0x78A8)
+        else:
+            struct.pack_into("<I", data, 0x78A8, 0)
+        t.check(
+            "network_session_host_join_requested",
+            Buffer(random_.randbytes(0xC + 0x1AC)),
+            Buffer(bytes(data), pointers=tuple(pointers)),
+            Buffer(random_.randbytes(0x14)),
+            externals={
+                # what was sent is in the stack
+                "network_session_host_check_join": lambda harness, arguments, why=random_.choice((0, 0, 0, 2, 3, 4)): (
+                    why,
+                    (arguments[0], bytes(harness.mu.mem_read(arguments[1], 0x1AC))),
+                ),
+                "network_session_host_answer_join": lambda harness, arguments: (
+                    1,
+                    (bytes(harness.mu.mem_read(arguments[0], 0x1AC)), arguments[1], arguments[2], arguments[3]),
+                ),
+            },
+            mocks=[
+                Mock(
+                    lambda call: 0,
+                    stack_arguments=2,
+                    registers=("ecx",),
+                    record=lambda call: (call.registers["ecx"], call.stack[0], bytes(t.harness.mu.mem_read(call.stack[1], 0x1AC))),
+                )
+            ],
+        )

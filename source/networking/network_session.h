@@ -139,6 +139,16 @@ enum
 	_network_session_join_unknown2= 2,
 	_network_session_join_not_host= 3,
 	_network_session_join_full= 4,
+	/* and why network_session_host_accept_join does not let a console in:
+	the session keeps nothing of the channel of a console that is in it
+	already, or there is no channel for the console */
+	_network_session_join_unknown5= 5,
+	_network_session_join_unknown7= 7,
+	/* what a console that is not let in is sent: of this kind and size,
+	with what the session is known by and why not */
+	_network_session_message_join_refused= 0xA,
+	NETWORK_SESSION_MESSAGE_JOIN_REFUSED_SIZE= 0xC,
+	NETWORK_SESSION_MESSAGE_JOIN_REFUSED_REASON_OFFSET= 0x8,
 	/* in what a console that asks to come in sends: how many players, what
 	each is known by, a byte, and what the console is known by */
 	NETWORK_SESSION_JOIN_PLAYER_COUNT_OFFSET= 0,
@@ -562,13 +572,16 @@ typedef char verify_network_session_player_requests_size[
 	NETWORK_SESSION_UNKNOWN7668_SIZE ? 1 : -1];
 
 /* what a session has at 0x78A8, if it has it: something that is told, by
-its third function, that the session is disconnected, and asked, by its
-fourth, whether a player can come in */
+its first function, that a console asks to come in, with its address of the
+game and what it sent; by its second, that a console has gone out; by its
+third, that the session is disconnected; and asked, by its fourth, whether a
+player can come in */
 struct network_session_unknown78A8;
 
 struct network_session_unknown78A8_functions
 {
-	void *unknown0;
+	void (__attribute__((thiscall)) *join_requested)(struct network_session_unknown78A8 *object,
+		const struct transport_address *address, const byte *request);
 	void (__attribute__((thiscall)) *peer_removed)(struct network_session_unknown78A8 *object,
 		const long *unknownF0);
 	void (__attribute__((thiscall)) *disconnected)(struct network_session_unknown78A8 *object);
@@ -787,6 +800,13 @@ boolean NETWORK_SESSION_CALLBACK network_session_join(byte *session, long unknow
 	const byte *identifier, const byte *key, const byte *host_address, long player_count, const byte *identifiers,
 	const long *unknownC4, const long *unknown104, boolean has_unknown150, long unknown150, const byte *unknown144,
 	const byte *unknown154);
+boolean NETWORK_SESSION_CALLBACK network_session_host_accept_join(byte *session, const byte *peer_address,
+	long player_count, const byte *identifiers, const long *unknownC4, boolean has_unknown150, long unknown150,
+	const byte *unknown144, long *reason);
+boolean NETWORK_SESSION_CALLBACK network_session_host_answer_join(const byte *request, byte *session,
+	const struct transport_address *address, long reason);
+boolean NETWORK_SESSION_CALLBACK network_session_host_join_requested(const byte *message, byte *session,
+	const struct transport_address *address);
 void NETWORK_SESSION_CALLBACK network_session_state7_update(byte *session);
 void network_session_state8_update(byte *session);
 void NETWORK_SESSION_CALLBACK network_session_state9_update(byte *session);

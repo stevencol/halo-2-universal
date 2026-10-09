@@ -296,3 +296,4 @@ address,name,source
 004cf4cc,unknown_004cf4cc,source/networking/network_session.c
 004cf4d0,unknown_004cf4d0,source/networking/network_session.c
 004cf4d4,unknown_004cf4d4,source/networking/network_session.c
+004cf4a8,unknown_004cf4a8,source/networking/network_session.c
