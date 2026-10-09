@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 419.
+**Última actualización:** 2026-10-08, al terminar el hito 420.
 
 ## Dónde estamos
 
-- **1448 funciones descompiladas de 11.265: el 12,85 % del juego** (el
-  8,685 % de los bytes de código).
-- Las 1448 están comprobadas contra el ejecutable original: las 1390 del
+- **1452 funciones descompiladas de 11.265: el 12,89 % del juego** (el
+  8,700 % de los bytes de código).
+- Las 1452 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile five functions of the replication event manager* (ver `git log`).
+- Último hito: *Decompile four functions of the simulation entity database* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 563 funciones apuntadas pero sin descompilar (las que el código
   llama); 461 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -142,8 +142,12 @@ Módulos (funciones hechas / archivo):
 - [ ] Lo que pasa en la partida —
       `networking\replication_event_manager.c` (5: la lista de
       sucesos, pedirlos al montón de la red, soltarlos y mandarlos
-      contar; de `0x00089dc0` a `0x00089f20`; romper líneas pendiente
-      en las 5)
+      contar; de `0x00089dc0` a `0x00089f20`)
+- [ ] Lo que cada cosa es — `networking\simulation_entity_database.c`
+      (4: apuntar y quitar cosas, vaciar, y pasar los cambios a las
+      vistas; quedan 9 de la lista, de `0x0008a110` a `0x0008b0a0`,
+      y las de la tabla `0x00450d60` que la lista no tiene; romper
+      líneas pendiente en las 4)
 - [x] Observador de la red — `networking\network_observer.c` (74: lo que
       tiene de cada sesión, sus canales con las otras consolas y sus
       estados, el caudal de cada uno y cuándo puede mandar; de

@@ -2,6 +2,60 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Lo que cada cosa es: su clase y lo que se dijo de ella
+
+Cuatro funciones en un archivo nuevo, `networking/simulation_entity_database.c`. De 1448
+funciones se pasa a 1452, el 12,89 % de las del juego (el 8,700 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_entity_database_reset` | `0x0008a030` | `networking/simulation_entity_database.c` |
+| `simulation_entity_database_flush_updates` | `0x0008a090` | `networking/simulation_entity_database.c` |
+| `simulation_entity_database_set_entity` | `0x0008ae80` | `networking/simulation_entity_database.c` |
+| `simulation_entity_database_free_entity` | `0x0008aed0` | `networking/simulation_entity_database.c` |
+
+### Lo que se sabe
+
+- El cuarto módulo de la zona es **lo que las cosas son**. La tabla del
+  hito 416 solo sabía de números y sitios; esta guarda, para cada una de
+  las 1024, 32 bytes: su número, su clase, si ya está para contarse, los
+  bits de lo que ha cambiado, y dos trozos de memoria del montón de la red
+  (lo que se dijo de ella al crearla y cómo está ahora). El nombre del
+  archivo es una suposición.
+- `simulation_entity_database_set_entity` apunta una cosa, con su clase y
+  sus dos trozos.
+- `simulation_entity_database_free_entity` la quita y devuelve los trozos
+  al montón.
+- `simulation_entity_database_reset` las quita todas (la primera vez solo
+  pone la tabla a cero).
+- `simulation_entity_database_flush_updates` es **cómo los cambios llegan
+  a las otras consolas**: por cada cosa con algo cambiado, su clase dice
+  (función 21 de su tabla) qué hay que contar de ella, y eso se marca en
+  todas las vistas con la función del hito 418. Aquí se juntan los dos
+  módulos.
+- Lo de devolver memoria al montón, que el juego tiene escrito igual en
+  cada sitio, está ahora una sola vez, en `networking/network_heap.h`, y lo
+  usa también el gestor de sucesos del hito 419.
+
+### Aviso
+
+- La tabla de funciones `0x00450d60` es de este módulo y tiene funciones
+  que **no están en la lista de Ghidra** (`0x0008a460`, `0x0008a580`,
+  `0x0008a5c0`, `0x0008a920`, `0x0008aa50`, `0x0008ac40`). Hay que
+  hacerlas mirando la tabla, como en el hito 412.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las cuatro.** La tanda de los hitos 415 a
+  418 está corriendo; la del 419 ya se hizo: veinte líneas rotas, veinte
+  notadas.
+- En este hito se pasaron las pruebas de `simulation_entity_database` (4
+  funciones) y de `replication_event_manager` (5).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — La lista de lo que pasa en la partida
 
 Cinco funciones en un archivo nuevo, `networking/replication_event_manager.c`. De 1443

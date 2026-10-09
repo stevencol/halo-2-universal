@@ -11,6 +11,7 @@ its functions.
 #define __REPLICATION_EVENT_MANAGER_H
 
 #include "cseries/cseries.h"
+#include "networking/network_heap.h"
 
 /* ---------- constants */
 
@@ -76,35 +77,6 @@ struct replication_event_manager
 
 typedef char verify_replication_event_manager_size[sizeof(struct replication_event_manager) == 0x50 ||
 	sizeof(void *) != 4 ? 1 : -1];
-
-/* what gives and takes memory: something with functions, of which the first
-takes some back; the second says how much something is, if it knows; the
-sixth gives so much; and the eleventh makes room */
-struct network_heap_allocator;
-
-struct network_heap_allocator_functions
-{
-	void (__attribute__((thiscall)) *free)(struct network_heap_allocator *allocator, void *memory, long unknown);
-	boolean (__attribute__((thiscall)) *size)(struct network_heap_allocator *allocator, void *memory, long *size);
-	void *unknown8[3];
-	void *(__attribute__((thiscall)) *allocate)(struct network_heap_allocator *allocator, long size, long unknown4,
-		long unknown8);
-	void *unknown18[4];
-	void (__attribute__((thiscall)) *compact)(struct network_heap_allocator *allocator, long unknown);
-};
-
-struct network_heap_allocator
-{
-	const struct network_heap_allocator_functions *functions;
-};
-
-/* the heap of the network: what gives its memory, and how many things it
-has given that it has not taken back */
-struct network_heap
-{
-	struct network_heap_allocator *allocator;
-	long count;
-};
 
 /* ---------- prototypes/REPLICATION_EVENT_MANAGER.C */
 

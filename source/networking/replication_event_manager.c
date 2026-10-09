@@ -115,25 +115,14 @@ struct replication_event *__attribute__((stdcall)) replication_event_free(
 	unsigned long flags)
 {
 	void *data= event->data;
-	long size;
 
 	if (data)
 	{
-		struct network_heap *heap= unknown_004d87f8;
-
-		heap->allocator->functions->size(heap->allocator, data, &size);
-		heap= unknown_004d87f8;
-		heap->allocator->functions->free(heap->allocator, data, NONE);
-		heap->count--;
+		network_heap_free(data);
 	}
 	if (flags&_replication_event_free_event_bit)
 	{
-		struct network_heap *heap= unknown_004d87f8;
-
-		heap->allocator->functions->size(heap->allocator, event, &size);
-		heap= unknown_004d87f8;
-		heap->allocator->functions->free(heap->allocator, event, NONE);
-		heap->count--;
+		network_heap_free(event);
 	}
 
 	return event;

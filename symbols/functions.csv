@@ -2010,3 +2010,7 @@ address,name,source,arguments,returns,convention
 00089eb0,replication_event_free,source/networking/replication_event_manager.c,edi stack,int,stdcall
 00089f20,replication_event_manager_send_event,source/networking/replication_event_manager.c,esi stack stack,void,stdcall
 00096ed0,unknown_00096ed0,,stack,void,stdcall
+0008a030,simulation_entity_database_reset,source/networking/simulation_entity_database.c,ebx,void
+0008a090,simulation_entity_database_flush_updates,source/networking/simulation_entity_database.c,stack,void,stdcall
+0008ae80,simulation_entity_database_set_entity,source/networking/simulation_entity_database.c,ecx edx stack stack stack stack stack,void,stdcall
+0008aed0,simulation_entity_database_free_entity,source/networking/simulation_entity_database.c,eax ecx,void
