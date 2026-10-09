@@ -507,6 +507,12 @@ enum
 	NETWORK_SESSION_JOIN_UNKNOWN154_SIZE= 0x2C,
 	NETWORK_SESSION_JOIN_PORT= 1001,
 	NETWORK_SESSION_JOIN_LOOPBACK= 0x7F000001,
+	/* one more thing that can change in what the session knows: a text of
+	up to 31 characters of 16 bits, after the thing of 0x4DB0 */
+	NETWORK_SESSION_UNKNOWN4EE0_OFFSET= 0x4EE0,
+	NETWORK_SESSION_UNKNOWN4EE0_LENGTH= 32,
+	NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN4EE0_OFFSET= 0x50C,
+	NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN4EE0_OFFSET= 0x50E,
 	_network_session_message_unknownF= 0xF,
 	_network_session_message_unknown11= 0x11,
 	_network_session_message_unknown12= 0x12,
@@ -807,6 +813,8 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_answer_join(const byte *re
 	const struct transport_address *address, long reason);
 boolean NETWORK_SESSION_CALLBACK network_session_host_join_requested(const byte *message, byte *session,
 	const struct transport_address *address);
+boolean NETWORK_SESSION_CALLBACK network_session_host_parameters_requested(const byte *request, byte *session,
+	long channel);
 void NETWORK_SESSION_CALLBACK network_session_state7_update(byte *session);
 void network_session_state8_update(byte *session);
 void NETWORK_SESSION_CALLBACK network_session_state9_update(byte *session);

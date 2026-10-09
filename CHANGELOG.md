@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — La consola que lleva la sesión atiende los cambios que le piden
+
+Una función en `networking/network_session.c`, de 986 bytes. De 1305
+funciones se pasa a 1306, el 11,59 % de las del juego (el 7,407 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_host_parameters_requested` | `0x0005dac0` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_host_parameters_requested` atiende el mensaje de la
+  clase `0x22`, el que la consola que dirige la sesión manda para **cambiar
+  lo que la sesión sabe** (las funciones que lo mandan ya estaban
+  descompiladas). Recorre las dieciséis cosas que pueden cambiar; cada una lleva
+  delante un byte que dice si viene, y solo se toma si no es lo que la
+  sesión ya tenía.
+- Quince de las dieciséis solo valen si el mensaje viene de la consola que
+  dirige la sesión. La otra, el byte de `0x49FC`, la puede cambiar
+  cualquier consola de la sesión.
+- Dos de ellas pueden «estar o no estar» y además tienen que ser correctas:
+  la de `0x4A00` (`network_session_roster_valid`) y la de `0x5DDC`
+  (`network_session_unknown_0005c190`). Si no lo son, no se toman y la
+  función devuelve FALSE, pero lo demás del mensaje sí se toma.
+- El idioma no usa su byte: se toma si el número que viene no es cero.
+- Aparece una cosa que no se conocía: en `0x4EE0`, justo después de la de
+  `0x4DB0`, la sesión guarda **un texto de hasta 31 caracteres de 16 bits**.
+- Si algo cambió, sube la versión de «lo que la sesión sabe» (`0x4978`), y
+  con eso `network_session_send_parameters_updates` lo reparte (hito 356).
+
+### Comprobado rompiendo líneas
+
+- Quince líneas rotas, una cada vez, entre este hito y el 361: las pruebas
+  fallaron en trece. Las dos que se escaparon eran de este hito: **hasta
+  dónde se comparan los dos textos** (con un carácter menos, las pruebas
+  seguían pasando, porque ningún caso tenía dos textos iguales salvo en el
+  último carácter). Se añadieron esos casos y ahora fallan las dos.
+- Con esto las mutaciones del hito 361 ya no están pendientes.
+
+### Sin comprobar
+
+- En este hito se pasaron solo las pruebas de su función; las del archivo
+  entero de `network_life_cycle` se pasan con el hito 363.
+- Las mutaciones de los hitos 280 a 308, 321 a 353 y 355 siguen
+  pendientes.
+
 ## 2026-10-08 — La consola que lleva la sesión atiende a quien pide entrar
 
 Tres funciones en `networking/network_session.c`, 714 bytes entre todas. De 1302

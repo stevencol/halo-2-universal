@@ -6021,3 +6021,224 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_join_requested(
 
 	return TRUE;
 }
+
+/* 0x0005dac0: what a console sends to ask for a change in what a session
+knows comes to the console that runs it. From the console that leads the
+session, each thing that it says changes is taken, if it is not what the
+session had already: the number of 0x4980 (network_session_host_set_unknown4980),
+the language (which it says with a number that is not zero), the numbers of
+0x498C, 0x49A4, 0x49C8, 0x49F8 and 0x4DAC, the bytes of 0x49C4 and 0x49A1,
+the 16 bits of 0x5DD0, the two numbers and the text of 0x4D08, the thing of
+0x4DB0, the text of characters of 16 bits of 0x4EE0, and the two things that
+may be there or not: the one of 0x4A00, which has to be right
+(network_session_roster_valid), and the one of 0x5DDC, which has to be too
+(network_session_unknown_0005c190). From any console of the session, the byte of 0x49FC.
+If anything changed, the number at the start of what the session knows
+counts one more. FALSE if this console does not run the session, if what
+comes is not from another console of it, or if one of those two things was
+not right */
+boolean NETWORK_SESSION_CALLBACK network_session_host_parameters_requested(
+	const byte *request,
+	byte *session,
+	long channel)
+{
+	long peer_index;
+	boolean changed= FALSE;
+	boolean result= TRUE;
+
+	if (!network_session_is_host(session))
+	{
+		return FALSE;
+	}
+	peer_index= network_session_channel_peer(session, channel);
+	if (peer_index==NONE || peer_index==*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET))
+	{
+		return FALSE;
+	}
+	if (peer_index==*(const long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET))
+	{
+		long value;
+
+		if (request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWNC_OFFSET])
+		{
+			value= *(const long *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWNC_OFFSET);
+			if (*(const long *)(session+NETWORK_SESSION_UNKNOWN4980_OFFSET)!=value)
+			{
+				network_session_host_set_unknown4980(session, value);
+			}
+		}
+		value= *(const long *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_LANGUAGE_OFFSET);
+		if (value!=0 && *(const long *)(session+NETWORK_SESSION_LANGUAGE_OFFSET)!=value)
+		{
+			*(long *)(session+NETWORK_SESSION_LANGUAGE_OFFSET)= value;
+			changed= TRUE;
+		}
+		if (request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN498C_OFFSET])
+		{
+			value= *(const long *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN498C_OFFSET);
+			if (*(const long *)(session+NETWORK_SESSION_UNKNOWN498C_OFFSET)!=value)
+			{
+				*(long *)(session+NETWORK_SESSION_UNKNOWN498C_OFFSET)= value;
+				changed= TRUE;
+			}
+		}
+		if (request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN49A4_OFFSET])
+		{
+			value= *(const long *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN49A4_OFFSET);
+			if (*(const long *)(session+NETWORK_SESSION_UNKNOWN49A4_OFFSET)!=value)
+			{
+				*(long *)(session+NETWORK_SESSION_UNKNOWN49A4_OFFSET)= value;
+				changed= TRUE;
+			}
+		}
+		if (request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN49C4_OFFSET] &&
+			session[NETWORK_SESSION_UNKNOWN49C4_OFFSET]!=request[NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN49C4_OFFSET])
+		{
+			session[NETWORK_SESSION_UNKNOWN49C4_OFFSET]= request[NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN49C4_OFFSET];
+			changed= TRUE;
+		}
+		if (request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN49C8_OFFSET])
+		{
+			value= *(const long *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN49C8_OFFSET);
+			if (*(const long *)(session+NETWORK_SESSION_UNKNOWN49C8_OFFSET)!=value)
+			{
+				*(long *)(session+NETWORK_SESSION_UNKNOWN49C8_OFFSET)= value;
+				changed= TRUE;
+			}
+		}
+		if (request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN49F8_OFFSET])
+		{
+			value= *(const long *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN49F8_OFFSET);
+			if (*(const long *)(session+NETWORK_SESSION_UNKNOWN49F8_OFFSET)!=value)
+			{
+				*(long *)(session+NETWORK_SESSION_UNKNOWN49F8_OFFSET)= value;
+				changed= TRUE;
+			}
+		}
+		if (request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_ROSTER_OFFSET])
+		{
+			boolean valid= request[NETWORK_SESSION_PARAMETERS_REQUEST_ROSTER_VALID_OFFSET];
+			const byte *roster= request+NETWORK_SESSION_PARAMETERS_REQUEST_ROSTER_OFFSET;
+
+			if (valid!=session[NETWORK_SESSION_UNKNOWN49FD_OFFSET] ||
+				memcmp(session+NETWORK_SESSION_UNKNOWN4A00_OFFSET, roster, NETWORK_SESSION_UNKNOWN4A00_SIZE)!=0)
+			{
+				if (!valid)
+				{
+					session[NETWORK_SESSION_UNKNOWN49FD_OFFSET]= FALSE;
+					memset(session+NETWORK_SESSION_UNKNOWN4A00_OFFSET, 0, NETWORK_SESSION_UNKNOWN4A00_SIZE);
+					changed= TRUE;
+				}
+				else if (network_session_roster_valid((const struct network_session_roster *)roster))
+				{
+					session[NETWORK_SESSION_UNKNOWN49FD_OFFSET]= TRUE;
+					memcpy(session+NETWORK_SESSION_UNKNOWN4A00_OFFSET, roster, NETWORK_SESSION_UNKNOWN4A00_SIZE);
+					changed= TRUE;
+				}
+				else
+				{
+					result= FALSE;
+				}
+			}
+		}
+		if (request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN4D08_OFFSET])
+		{
+			long unknown4d08= *(const long *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN4D08_OFFSET);
+			long unknown4d0c= *(const long *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN4D0C_OFFSET);
+			const char *text= (const char *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN4D10_OFFSET);
+			char *kept= (char *)(session+NETWORK_SESSION_UNKNOWN4D10_OFFSET);
+
+			if (*(const long *)(session+NETWORK_SESSION_UNKNOWN4D08_OFFSET)!=unknown4d08 ||
+				*(const long *)(session+NETWORK_SESSION_UNKNOWN4D0C_OFFSET)!=unknown4d0c ||
+				strncmp(kept, text, NETWORK_SESSION_UNKNOWN4D10_SIZE)!=0)
+			{
+				*(long *)(session+NETWORK_SESSION_UNKNOWN4D08_OFFSET)= unknown4d08;
+				*(long *)(session+NETWORK_SESSION_UNKNOWN4D0C_OFFSET)= unknown4d0c;
+				strncpy(kept, text, NETWORK_SESSION_UNKNOWN4D10_SIZE);
+				kept[NETWORK_SESSION_UNKNOWN4D10_SIZE-1]= 0;
+				changed= TRUE;
+			}
+		}
+		if (request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN4DAC_OFFSET])
+		{
+			value= *(const long *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN4DAC_OFFSET);
+			if (*(const long *)(session+NETWORK_SESSION_UNKNOWN4DAC_OFFSET)!=value)
+			{
+				*(long *)(session+NETWORK_SESSION_UNKNOWN4DAC_OFFSET)= value;
+				changed= TRUE;
+			}
+		}
+		if (request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN4DB0_OFFSET] &&
+			memcmp(session+NETWORK_SESSION_UNKNOWN4DB0_OFFSET, request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN4DB0_OFFSET,
+				NETWORK_SESSION_UNKNOWN4DB0_SIZE)!=0)
+		{
+			memcpy(session+NETWORK_SESSION_UNKNOWN4DB0_OFFSET, request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN4DB0_OFFSET,
+				NETWORK_SESSION_UNKNOWN4DB0_SIZE);
+			changed= TRUE;
+		}
+		if (request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN4EE0_OFFSET])
+		{
+			const wchar *text= (const wchar *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN4EE0_OFFSET);
+			wchar *kept= (wchar *)(session+NETWORK_SESSION_UNKNOWN4EE0_OFFSET);
+
+			if (wcsncmp(kept, text, NETWORK_SESSION_UNKNOWN4EE0_LENGTH)!=0)
+			{
+				wcsncpy(kept, text, NETWORK_SESSION_UNKNOWN4EE0_LENGTH-1);
+				kept[NETWORK_SESSION_UNKNOWN4EE0_LENGTH-1]= 0;
+				changed= TRUE;
+			}
+		}
+		if (request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN49A1_OFFSET] &&
+			session[NETWORK_SESSION_UNKNOWN49A1_OFFSET]!=request[NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN49A1_OFFSET])
+		{
+			session[NETWORK_SESSION_UNKNOWN49A1_OFFSET]= request[NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN49A1_OFFSET];
+			changed= TRUE;
+		}
+		if (request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN5DD0_OFFSET] &&
+			*(const short *)(session+NETWORK_SESSION_UNKNOWN5DD0_OFFSET)!=
+			*(const short *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN5DD0_OFFSET))
+		{
+			*(short *)(session+NETWORK_SESSION_UNKNOWN5DD0_OFFSET)=
+				*(const short *)(request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN5DD0_OFFSET);
+			changed= TRUE;
+		}
+		if (request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN5DDC_OFFSET])
+		{
+			boolean valid= request[NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN5DDC_VALID_OFFSET];
+			const byte *unknown5ddc= request+NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN5DDC_OFFSET;
+
+			if (valid!=session[NETWORK_SESSION_UNKNOWN5DD8_OFFSET] ||
+				memcmp(session+NETWORK_SESSION_UNKNOWN5DDC_OFFSET, unknown5ddc, NETWORK_SESSION_UNKNOWN5DDC_SIZE)!=0)
+			{
+				if (!valid)
+				{
+					session[NETWORK_SESSION_UNKNOWN5DD8_OFFSET]= FALSE;
+					memset(session+NETWORK_SESSION_UNKNOWN5DDC_OFFSET, 0, NETWORK_SESSION_UNKNOWN5DDC_SIZE);
+					changed= TRUE;
+				}
+				else if (network_session_unknown_0005c190(unknown5ddc, session))
+				{
+					session[NETWORK_SESSION_UNKNOWN5DD8_OFFSET]= TRUE;
+					memcpy(session+NETWORK_SESSION_UNKNOWN5DDC_OFFSET, unknown5ddc, NETWORK_SESSION_UNKNOWN5DDC_SIZE);
+					changed= TRUE;
+				}
+				else
+				{
+					result= FALSE;
+				}
+			}
+		}
+	}
+	if (request[NETWORK_SESSION_PARAMETERS_REQUEST_HAS_UNKNOWN49FC_OFFSET] &&
+		session[NETWORK_SESSION_UNKNOWN49FC_OFFSET]!=request[NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN49FC_OFFSET])
+	{
+		session[NETWORK_SESSION_UNKNOWN49FC_OFFSET]= request[NETWORK_SESSION_PARAMETERS_REQUEST_UNKNOWN49FC_OFFSET];
+		changed= TRUE;
+	}
+	if (changed)
+	{
+		network_session_parameters_changed(session);
+	}
+
+	return result;
+}

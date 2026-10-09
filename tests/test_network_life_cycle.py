@@ -3022,3 +3022,77 @@ def run(t) -> None:
                 )
             ],
         )
+
+    # ---------- the console that runs a session takes what a console asks to change in what it knows
+
+    # each thing that can change: where its byte is in what comes, where it is there, where the session has it, its size
+    CHANGES = (
+        (0x8, 0xC, 0x4980, 4),
+        (0x10, 0x14, 0x4988, 4),
+        (0x18, 0x1C, 0x498C, 4),
+        (0x20, 0x24, 0x49A4, 4),
+        (0x28, 0x29, 0x49C4, 1),
+        (0x2A, 0x2C, 0x49C8, 4),
+        (0x30, 0x31, 0x49FC, 1),
+        (0x32, 0x34, 0x49F8, 4),
+        (0x38, 0x3C, 0x4A00, 0x308),
+        (0x344, 0x348, 0x4D08, 0x88),
+        (0x3D0, 0x3D4, 0x4DAC, 4),
+        (0x3D8, 0x3DC, 0x4DB0, 0x130),
+        (0x50C, 0x50E, 0x4EE0, 0x40),
+        (0x54E, 0x54F, 0x49A1, 1),
+        (0x550, 0x552, 0x5DD0, 2),
+        (0x554, 0x558, 0x5DDC, 0x44),
+    )
+
+    for n in range(1500):
+        data, channel = hosted_with_channels()
+        if channel != NONE:
+            struct.pack_into("<I", data, HOST_PEER, channel if n % 4 else channel ^ 1)
+        data[0x49FD] = random_.choice((0, 1, 1))
+        data[0x5DD8] = random_.choice((0, 1, 1))
+        if n % 3:
+            # the texts that the session has end somewhere
+            data[0x4D10 + random_.randrange(0x80)] = 0
+            struct.pack_into("<H", data, 0x4EE0 + 2 * random_.randrange(0x20), 0)
+        else:
+            # or they do not end: every character counts, up to the last
+            for at in range(0x4D10, 0x4D90):
+                data[at] = data[at] or 1
+            for at in range(0x4EE0, 0x4F20, 2):
+                data[at] = data[at] or 1
+        request = bytearray(random_.randbytes(0x59C))
+        for has, at, kept, size in CHANGES:
+            request[has] = random_.choice((0, 0, 1, 1, 0x80))
+            way = random_.randrange(4)
+            if way == 0:
+                # what the session has already
+                request[at : at + size] = data[kept : kept + size]
+            elif way == 1 and size > 4:
+                # all but one byte of it
+                request[at : at + size] = data[kept : kept + size]
+                request[at + random_.randrange(size)] ^= 0x20
+            elif way == 2 and size > 4:
+                # all but its last byte
+                request[at : at + size] = data[kept : kept + size]
+                request[at + size - 1] ^= 0x20
+        if random_.randrange(4) == 0:
+            struct.pack_into("<I", request, 0x14, 0)
+        # whether each of the two things that may be there is there, as the session says or not
+        request[0x39] = random_.choice((data[0x49FD], data[0x49FD], 0, 1, 0x80))
+        request[0x555] = random_.choice((data[0x5DD8], data[0x5DD8], 0, 1, 0x80))
+        t.check(
+            "network_session_host_parameters_requested",
+            Buffer(bytes(request)),
+            Buffer(bytes(data), pointers=(8,)),
+            random_.getrandbits(32),
+            externals={
+                "network_observer_find_channel": from_channel(channel),
+                "network_session_host_set_unknown4980": lambda harness, arguments: (0, (arguments[0], arguments[1])),
+                "network_session_roster_valid": lambda harness, arguments, right=random_.choice((1, 1, 0, 0x100)): (right, (arguments[0],)),
+                "network_session_unknown_0005c190": lambda harness, arguments, right=random_.choice((1, 1, 0, 0x100)): (
+                    right,
+                    (arguments[0], arguments[1]),
+                ),
+            },
+        )
