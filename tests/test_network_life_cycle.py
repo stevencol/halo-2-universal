@@ -2569,3 +2569,44 @@ def run(t) -> None:
                 "network_session_send_unknown12": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
             },
         )
+
+    # ---------- the console that runs a session tells the others who is in it and what it knows
+
+    def makes(size: int):
+        def handler(harness, arguments):
+            # what is made goes where the last thing says: one thing with a baseline, another without
+            baseline = arguments[2]
+            first = 0x40 if baseline else 0x80
+            harness.mu.mem_write(arguments[3], bytes((first + n * 7) & 0xFF for n in range(size)))
+            return 0, (harness.normalize(arguments[0]), harness.normalize(arguments[1]), harness.normalize(baseline) if baseline else 0)
+
+        return handler
+
+    for name, version, last_version, has, maker, size in (
+        ("network_session_send_membership_updates", 0x4C, 0x24E0, 8, "unknown_00060400", 0x489C),
+        ("network_session_send_parameters_updates", 0x4978, 0x5E28, 0xC, "unknown_000609e0", 0x14D8),
+    ):
+        for n in range(400):
+            data = with_real_channels()
+            struct.pack_into("<I", data, STATE, random_.choice((5, 5, 5, 6, 7, 8)))
+            now, last = random_.choice(((7, 6), (7, 6), (7, 7), (0, NONE), (NONE, 3)))
+            struct.pack_into("<I", data, version, now)
+            struct.pack_into("<I", data, last_version, last)
+            for peer in range(16):
+                at = 0x72DC + peer * 0x14
+                data[at + 3] = random_.choice((0, 0, 0, 1))
+                struct.pack_into("<I", data, at + has, random_.choice((now, last, last, NONE, 5)))
+            for channel in range(4):
+                struct.pack_into("<I", data, CHANNELS + channel * 0x528 + 0xA8, random_.choice((7, 7, 7, 1)))
+            # the channels that still have something of the kind to send
+            busy = random_.sample(range(4), random_.choice((0, 0, 1, 2)))
+            t.check(
+                name,
+                Buffer(bytes(data), pointers=(8,)),
+                externals={
+                    "unknown_000768b0": lambda harness, arguments, busy=busy: (arguments[0] in busy, (arguments[0], arguments[1], arguments[2])),
+                    "unknown_00076930": lambda harness, arguments: (0, (arguments[0], arguments[1], arguments[2])),
+                    maker: makes(size),
+                    "unknown_00075e80": sends_all,
+                },
+            )

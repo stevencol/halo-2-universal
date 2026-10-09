@@ -1835,3 +1835,9 @@ address,name,source,arguments,returns,convention
 00062550,network_session_send_unknown12,source/networking/network_session.c,esi,void
 00061570,network_session_enter_state8,source/networking/network_session.c,eax stack,void,stdcall
 00076a40,unknown_00076a40,,eax ecx,void
+00062640,network_session_send_membership_updates,source/networking/network_session.c,ecx,void
+000627e0,network_session_send_parameters_updates,source/networking/network_session.c,ecx,void
+00060400,unknown_00060400,,eax stack stack stack,void,stdcall
+000609e0,unknown_000609e0,,eax ebx stack stack,void,stdcall
+000768b0,unknown_000768b0,,eax ecx stack,bool,stdcall
+00076930,unknown_00076930,,eax ecx stack,void,stdcall

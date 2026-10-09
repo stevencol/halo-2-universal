@@ -458,6 +458,12 @@ enum
 	NETWORK_SESSION_STATE8_SENT_OFFSET= 0xC,
 	NETWORK_SESSION_STATE8_UNKNOWN10_OFFSET= 0x10,
 	NETWORK_SESSION_STATE8_UNKNOWN14_OFFSET= 0x14,
+	/* what the console that runs a session sends to the others to tell
+	them who is in it, and what it knows: of these kinds and sizes */
+	_network_session_message_membership_update= 0x19,
+	NETWORK_SESSION_MESSAGE_MEMBERSHIP_UPDATE_SIZE= 0x489C,
+	_network_session_message_parameters_update= 0x21,
+	NETWORK_SESSION_MESSAGE_PARAMETERS_UPDATE_SIZE= 0x14D8,
 	_network_session_message_unknown12= 0x12,
 	/* the first thing of a channel when it is 1 */
 	_network_session_unknown8_channel_state1= 1,
@@ -738,6 +744,8 @@ void network_session_state1_update(byte *session);
 void network_session_unknown_00062240(byte *session);
 void network_session_send_unknown12(byte *session);
 void NETWORK_SESSION_CALLBACK network_session_enter_state8(byte *session, boolean unknown);
+void network_session_send_membership_updates(byte *session);
+void network_session_send_parameters_updates(byte *session);
 boolean network_session_remove_peer_with_message_c(byte *session, long peer_index);
 void NETWORK_SESSION_CALLBACK network_session_peer_properties_apply_update(
 	struct network_session_peer_properties *properties, const struct network_session_peer_properties_update *update);

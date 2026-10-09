@@ -5036,3 +5036,185 @@ void NETWORK_SESSION_CALLBACK network_session_enter_state8(
 	}
 	network_session_send_unknown12(session);
 }
+
+/* 0x00060400: makes what is sent to a console to tell it who is in a
+session: all of it, or with a baseline what has changed since. 0x000609e0
+does the same with what the session knows */
+void __attribute__((stdcall)) unknown_00060400(byte *session, const byte *membership, const byte *baseline,
+	byte *update);
+void __attribute__((stdcall)) unknown_000609e0(byte *session, const byte *parameters, const byte *baseline,
+	byte *update);
+
+/* 0x000768b0, 0x00076930, of network_observer.c: whether one of the channels
+of what a session was given when it was set up still has something of a kind
+to send, and something that is done with it then */
+boolean __attribute__((stdcall)) unknown_000768b0(long channel_index, byte *unknown8, long type);
+void __attribute__((stdcall)) unknown_00076930(long channel_index, byte *unknown8, long type);
+
+/* 0x00062640: the console that runs a session tells the others who is in it.
+Each console that the session keeps the second byte of and not the fourth,
+whose channel has 7 as its first thing and that does not have who is in the
+session as it is now (the number at 0x8 of what the session keeps of it is
+not the one at the start of who is in it) is told: unless its channel still
+has something of the kind 0x19 to send (unknown_00076930 then), or the session is in
+its eighth state. A console that has who was in it the last time is sent
+what has changed since; any other, all of it. Each is sent something of the
+kind 0x19 and has the number of now. And who is in the session is kept as
+who was in it the last time */
+void network_session_send_membership_updates(
+	byte *session)
+{
+	byte changes[NETWORK_SESSION_MESSAGE_MEMBERSHIP_UPDATE_SIZE];
+	byte all[NETWORK_SESSION_MESSAGE_MEMBERSHIP_UPDATE_SIZE];
+	unsigned long changes_peers= 0;
+	unsigned long all_peers= 0;
+	long peer_index;
+
+	for (peer_index= 0; peer_index<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET); peer_index++)
+	{
+		const struct network_session_peer_state *state=
+			(const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index;
+		byte *unknown8= *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET);
+
+		if (!state->unknown1 || state->unknown3 ||
+			network_session_channel_state(session, state->unknown4)!=_network_session_unknown8_channel_state7 ||
+			state->unknown8==*(const long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET))
+		{
+			continue;
+		}
+		if (unknown_000768b0(state->unknown4, unknown8, _network_session_message_membership_update))
+		{
+			unknown_00076930(state->unknown4, unknown8, _network_session_message_membership_update);
+		}
+		else if (network_session_state(session)!=_network_session_state8)
+		{
+			if (state->unknown8!=NONE && state->unknown8==*(const long *)(session+NETWORK_SESSION_OTHER_MEMBERSHIP_OFFSET))
+			{
+				changes_peers|= 1u<<peer_index;
+			}
+			else
+			{
+				all_peers|= 1u<<peer_index;
+			}
+		}
+	}
+	if (all_peers)
+	{
+		unknown_00060400(session, session+NETWORK_SESSION_MEMBERSHIP_OFFSET, NULL, all);
+	}
+	if (changes_peers)
+	{
+		unknown_00060400(session, session+NETWORK_SESSION_MEMBERSHIP_OFFSET,
+			session+NETWORK_SESSION_OTHER_MEMBERSHIP_OFFSET, changes);
+	}
+	for (peer_index= 0; peer_index<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET); peer_index++)
+	{
+		struct network_session_peer_state *state=
+			(struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index;
+		unsigned long bit= 1u<<peer_index;
+		const byte *update;
+
+		if (changes_peers&bit)
+		{
+			update= changes;
+		}
+		else if (all_peers&bit)
+		{
+			update= all;
+		}
+		else
+		{
+			continue;
+		}
+		state->unknown8= *(const long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET);
+		if (state->unknown1)
+		{
+			unknown_00075e80(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+				*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_membership_update,
+				NETWORK_SESSION_MESSAGE_MEMBERSHIP_UPDATE_SIZE, update);
+		}
+	}
+	memcpy(session+NETWORK_SESSION_OTHER_MEMBERSHIP_OFFSET, session+NETWORK_SESSION_MEMBERSHIP_OFFSET,
+		NETWORK_SESSION_MEMBERSHIP_SIZE);
+}
+
+/* 0x000627e0: the console that runs a session tells the others what the
+session knows, as network_session_send_membership_updates tells them who is
+in it: with the number at 0xC of what the session keeps of each console, the
+kind 0x21, and what the session knew the last time at 0x5E28 */
+void network_session_send_parameters_updates(
+	byte *session)
+{
+	byte changes[NETWORK_SESSION_MESSAGE_PARAMETERS_UPDATE_SIZE];
+	byte all[NETWORK_SESSION_MESSAGE_PARAMETERS_UPDATE_SIZE];
+	unsigned long changes_peers= 0;
+	unsigned long all_peers= 0;
+	long peer_index;
+
+	for (peer_index= 0; peer_index<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET); peer_index++)
+	{
+		const struct network_session_peer_state *state=
+			(const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index;
+		byte *unknown8= *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET);
+
+		if (!state->unknown1 || state->unknown3 ||
+			network_session_channel_state(session, state->unknown4)!=_network_session_unknown8_channel_state7 ||
+			state->unknownC==*(const long *)(session+NETWORK_SESSION_UNKNOWN4978_OFFSET))
+		{
+			continue;
+		}
+		if (unknown_000768b0(state->unknown4, unknown8, _network_session_message_parameters_update))
+		{
+			unknown_00076930(state->unknown4, unknown8, _network_session_message_parameters_update);
+		}
+		else if (network_session_state(session)!=_network_session_state8)
+		{
+			if (state->unknownC!=NONE && state->unknownC==*(const long *)(session+NETWORK_SESSION_UNKNOWN5E28_OFFSET))
+			{
+				changes_peers|= 1u<<peer_index;
+			}
+			else
+			{
+				all_peers|= 1u<<peer_index;
+			}
+		}
+	}
+	if (all_peers)
+	{
+		unknown_000609e0(session, session+NETWORK_SESSION_UNKNOWN4978_OFFSET, NULL, all);
+	}
+	if (changes_peers)
+	{
+		unknown_000609e0(session, session+NETWORK_SESSION_UNKNOWN4978_OFFSET,
+			session+NETWORK_SESSION_UNKNOWN5E28_OFFSET, changes);
+	}
+	for (peer_index= 0; peer_index<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET); peer_index++)
+	{
+		struct network_session_peer_state *state=
+			(struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index;
+		unsigned long bit= 1u<<peer_index;
+		const byte *update;
+
+		if (changes_peers&bit)
+		{
+			update= changes;
+		}
+		else if (all_peers&bit)
+		{
+			update= all;
+		}
+		else
+		{
+			continue;
+		}
+		state->unknownC= *(const long *)(session+NETWORK_SESSION_UNKNOWN4978_OFFSET);
+		if (state->unknown1)
+		{
+			unknown_00075e80(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+				*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_parameters_update,
+				NETWORK_SESSION_MESSAGE_PARAMETERS_UPDATE_SIZE, update);
+		}
+	}
+	memcpy(session+NETWORK_SESSION_UNKNOWN5E28_OFFSET, session+NETWORK_SESSION_UNKNOWN4978_OFFSET,
+		NETWORK_SESSION_UNKNOWN4978_SIZE);
+}

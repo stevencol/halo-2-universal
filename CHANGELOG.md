@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Repartir «quién está» y «lo que la sesión sabe»
+
+Dos funciones en `networking/network_session.c`, 845 bytes entre las dos. De 1294
+funciones se pasa a 1296, el 11,50 % de las del juego (el 7,245 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_send_membership_updates` | `0x00062640` | `networking/network_session.c` |
+| `network_session_send_parameters_updates` | `0x000627e0` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- Son dos funciones gemelas: con ellas la consola que lleva la sesión
+  **mantiene al día a las demás**. Una reparte «quién está» (mensaje de la
+  clase `0x19`, `0x489C` bytes) y la otra «lo que la sesión sabe» (clase
+  `0x21`, `0x14D8` bytes).
+- Aquí se ve para qué sirven dos cosas que estaban sin explicar:
+  - el número con que empieza cada una de esas dos cosas (`0x4C` y
+    `0x4978`) es **su versión**: sube cada vez que algo cambia (son los
+    «contadores» de los hitos anteriores);
+  - de cada consola la sesión guarda qué versión tiene ya de cada cosa (los
+    números de `0x8` y `0xC` de lo que guarda de ella), y la copia de
+    `0x24E0` y `0x5E28` es **lo último que se repartió**.
+- Con eso decide qué mandar a cada consola: nada si ya tiene la versión de
+  ahora; **solo lo que cambió** si tiene la última repartida; **todo** si
+  tiene otra o ninguna. Lo que se manda lo preparan `unknown_00060400` y
+  `unknown_000609e0`, que aún no están descompiladas.
+- No se manda a una consola cuyo canal todavía tiene por enviar un mensaje
+  de la misma clase, ni en el octavo estado.
+
+### Comprobado rompiendo líneas
+
+- Cuatro líneas rotas a mano, una cada vez: las pruebas fallaron en las
+  cuatro (cada gemela en lo suyo).
+
+### Sin comprobar
+
+- Las dos reservan en la pila dos mensajes enteros (`0x914C` y `0x29C4`
+  bytes); en las pruebas lo que los rellena está sustituido.
+- En este hito se pasaron las pruebas de `network_life_cycle` (203
+  funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353 y 355 están pendientes.
+
 ## 2026-10-08 — El octavo estado de la sesión y los canales de las consolas
 
 Tres funciones en `networking/network_session.c`, 734 bytes entre todas. De 1291
