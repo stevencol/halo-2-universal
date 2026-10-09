@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Cuántas de las últimas cosas de un canal fallaron
+
+Una función en `networking/network_observer.c`, de 155 bytes. De 1339
+funciones se pasa a 1340, el 11,90 % de las del juego (el 7,813 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_channel_unknown_000797b0` | `0x000797b0` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_observer_channel_unknown_000797b0` (antes `unknown_000797b0`) es la
+  tercera cuenta que un canal lleva de su conexión, y la más directa: **un
+  bit por cada una de las últimas cosas que le dijeron, puesto si esa cosa
+  no se cumplió**, y cuántos bits hay puestos. Cuántas «últimas» cuentan lo
+  dice el observador (el número de `0x174` de lo que guarda en `0x10`).
+- Cuando los bits puestos llegan a ese número por un real (el de `0x178`),
+  es decir, **cuando falla demasiada parte de lo último**, se hace
+  `unknown_00079850` y la cuenta empieza de cero. Encaja con que sea la
+  cuenta de lo que se pierde por el camino y la reacción a perder
+  demasiado, pero `unknown_00079850` aún no está descompilada.
+- Es a lo que llama `network_observer_unknown_00076810` (hito 372) cuando el
+  canal tiene su byte de `0x48C`.
+
+### Batería completa
+
+- **La batería completa del hito 371 terminó: 1.328 funciones, las 1.328
+  bien.**
+
+### Comprobado rompiendo líneas
+
+- Cinco líneas rotas, una cada vez: las pruebas fallaron en las cinco.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_observer` (31 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Las dos cuentas empiezan
 
 Dos funciones en `networking/network_observer.c`, 182 bytes entre las dos. De 1337

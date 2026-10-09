@@ -424,7 +424,7 @@ def run(t) -> None:
         struct.pack_into("<I", data, CHANNELS + channel * CHANNEL, random_.choice((1, 3, 7)))
         struct.pack_into("<I", data, CHANNELS + channel * CHANNEL + 0xC, game_channel)
         setup = at_time()
-        setup["externals"]["unknown_000797b0"] = lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2]))
+        setup["externals"]["network_observer_channel_unknown_000797b0"] = lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2]))
         t.check(
             "network_observer_unknown_00076810",
             Buffer(bytes(data)),
@@ -648,3 +648,22 @@ def run(t) -> None:
         if n % 10 == 0:
             struct.pack_into("<i", window, 0, random_.choice((0, -1)))
         t.check("network_window_reset", Buffer(bytes(window)), globals=setup["globals"], externals=setup["externals"])
+
+    # ---------- how many of the last things that a channel was told of were not so
+
+    for n in range(600):
+        data = observer() + bytearray(random_.randbytes(0x17C))
+        struct.pack_into("<I", data, 0x10, SIZE)
+        last = random_.choice((1, 8, 16, 32))
+        struct.pack_into("<I", data, SIZE + 0x174, last)
+        struct.pack_into("<f", data, SIZE + 0x178, random_.choice((0.0, 0.25, 0.5, 1.0, 1.5)))
+        channel = random_.randrange(15)
+        bits = random_.getrandbits(last)
+        struct.pack_into("<II", data, CHANNELS + channel * CHANNEL + 0x4B8, bin(bits).count("1") if n % 5 else random_.randrange(40), bits)
+        t.check(
+            "network_observer_channel_unknown_000797b0",
+            Buffer(bytes(data), pointers=(0x10,)),
+            channel,
+            random_.choice((0, 0, 1, 0x100, 0x80)),
+            externals={"unknown_00079850": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1]))},
+        )

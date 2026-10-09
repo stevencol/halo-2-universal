@@ -184,6 +184,14 @@ enum
 	NETWORK_CHANNEL_UNKNOWN10_OFFSET= 0x10,
 	NETWORK_CHANNEL_UNKNOWN10_SIZE= 0x97C,
 	NETWORK_CHANNEL_UNKNOWN10_UNKNOWN96C_OFFSET= 0x96C,
+	/* more of a channel: of the last things that it was told of, a bit for
+	each that was not so, and how many of those bits are set. And of what
+	the observer has at 0x10: how many of the last things count, and what
+	part of them (a real) is too many */
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN4B8_OFFSET= 0x4B8,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN4BC_OFFSET= 0x4BC,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN174_OFFSET= 0x174,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN178_OFFSET= 0x178,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
 	_unknown_00088650_unknown11= 0x11
 };
@@ -271,6 +279,8 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_set_pending(long channel
 boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_alive(long channel_index, const byte *observer);
 long network_observer_channel_connect_status(const byte *observer, long channel_index);
 long network_unknown_00075910(const byte *unknown);
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_000797b0(byte *observer, long channel_index,
+	long unknown);
 void network_rate_update(struct network_rate *rate);
 void network_rate_new(struct network_rate *rate, long period);
 void network_window_reset(struct network_window *window);

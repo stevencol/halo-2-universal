@@ -607,7 +607,7 @@ void network_observer_channel_connect(
 
 /* 0x000797b0: something more that is done with a channel of the observer
 whose byte of 0x48C is set, with a byte */
-void __attribute__((stdcall)) unknown_000797b0(byte *observer, long channel_index, long unknown);
+void __attribute__((stdcall)) network_observer_channel_unknown_000797b0(byte *observer, long channel_index, long unknown);
 
 /* 0x00092a30: one more number in the last ones that are kept of something,
 with the time: it takes the place of the oldest, the sum of all has it and
@@ -654,7 +654,7 @@ static inline __attribute__((always_inline)) long network_observer_find_game_cha
 /* 0x00076810: the observer is told two things of a channel of the game: the
 channel of the observer that it is keeps whether the first is not so in the
 numbers of 0x250, and the second in those of 0x360; and with its byte of
-0x48C, unknown_000797b0 is told the first */
+0x48C, network_observer_channel_unknown_000797b0 is told the first */
 void NETWORK_OBSERVER_CALLBACK network_observer_unknown_00076810(
 	byte *observer,
 	long game_channel_index,
@@ -668,7 +668,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_unknown_00076810(
 	network_window_add((struct network_window *)(channel+NETWORK_OBSERVER_CHANNEL_WINDOW360_OFFSET), unknown8);
 	if (channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48C_OFFSET])
 	{
-		unknown_000797b0(observer, channel_index, unknown4);
+		network_observer_channel_unknown_000797b0(observer, channel_index, unknown4);
 	}
 }
 
@@ -1077,4 +1077,47 @@ void network_window_reset(
 	window->index= 0;
 	window->sum= 0;
 	window->span= 0;
+}
+
+/* 0x00079850: something that is done with a channel of the observer when
+too many of the last things that it was told of were not so */
+void __attribute__((stdcall)) unknown_00079850(byte *observer, long channel_index);
+
+/* 0x000797b0: a channel of the observer is told one more thing, which is so
+or not (a byte): it keeps a bit for each of the last ones that were not, as
+many as the number at 0x174 of what the observer has at 0x10 says, and how
+many of those bits are set. When they are as many as that number times the
+real at 0x178, or more, unknown_00079850 is done and the count starts
+over */
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_000797b0(
+	byte *observer,
+	long channel_index,
+	long unknown)
+{
+	byte *channel= (byte *)network_observer_channel(observer, channel_index);
+	const byte *parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+	unsigned long oldest= 1u<<((*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN174_OFFSET)-1)&31);
+	unsigned long bits= *(const unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4BC_OFFSET);
+
+	if (bits&oldest)
+	{
+		(*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4B8_OFFSET))--;
+	}
+	bits= (bits&~oldest)<<1;
+	*(unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4BC_OFFSET)= bits;
+	if (!(byte)unknown)
+	{
+		long count;
+
+		*(unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4BC_OFFSET)= bits|1;
+		count= ++*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4B8_OFFSET);
+		parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+		if ((real)count>=(real)*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN174_OFFSET)*
+			*(const real *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN178_OFFSET))
+		{
+			unknown_00079850(observer, channel_index);
+			*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4B8_OFFSET)= 0;
+			*(unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4BC_OFFSET)= 0;
+		}
+	}
 }
