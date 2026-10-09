@@ -247,6 +247,28 @@ enum
 	NETWORK_SESSION_STATE9_UNKNOWN10_OFFSET= 0x10,
 	NETWORK_SESSION_STATE9_LOCAL_PEERS_OFFSET= 0xD0,
 	NETWORK_SESSION_STATE9_HOST_PEERS_OFFSET= 0xD4,
+	/* what a session in its third state sends again and again to the
+	console that runs it: of this kind and size, with what the session is
+	known by, four numbers that are NONE and 16 bits that are zero */
+	_network_session_message_unknown18= 0x18,
+	NETWORK_SESSION_MESSAGE_UNKNOWN18_SIZE= 0x1C,
+	/* what the session has from its state on in the first state that goes
+	to the second: 0x24 bytes after the time, the address that it keeps,
+	two numbers, 0x24 bytes more and another number; and where each goes
+	in the second, which also has when it started */
+	NETWORK_SESSION_STATE1_UNKNOWN4_OFFSET= 0x7424,
+	NETWORK_SESSION_STATE1_UNKNOWN1BC_OFFSET= 0x75DC,
+	NETWORK_SESSION_STATE1_UNKNOWN1C0_OFFSET= 0x75E0,
+	NETWORK_SESSION_STATE1_UNKNOWN1C4_OFFSET= 0x75E4,
+	NETWORK_SESSION_STATE1_UNKNOWN1E8_OFFSET= 0x7608,
+	NETWORK_SESSION_STATE2_SIZE= 0x70,
+	NETWORK_SESSION_STATE2_UNKNOWN0_OFFSET= 0,
+	NETWORK_SESSION_STATE2_ADDRESS= 0x24,
+	NETWORK_SESSION_STATE2_UNKNOWN38_OFFSET= 0x38,
+	NETWORK_SESSION_STATE2_UNKNOWN5C_OFFSET= 0x5C,
+	NETWORK_SESSION_STATE2_UNKNOWN60_OFFSET= 0x60,
+	NETWORK_SESSION_STATE2_UNKNOWN64_OFFSET= 0x64,
+	NETWORK_SESSION_STATE2_START_OFFSET= 0x68,
 	/* the thing of 0x4D10 is a text of up to 127 characters; and after the
 	number of 0x4DAC, the session knows a thing of 0x130 bytes, which counts
 	only if the number at its 0x44 is not zero */
@@ -552,6 +574,8 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_set_player_unknownA8(long 
 	const byte *unknownA8);
 boolean NETWORK_SESSION_CALLBACK network_session_host_unknown_0005aeb0(byte *session, long unknown);
 void network_session_reset_unknown761c(byte *session);
+void network_session_enter_state2(byte *session);
+void network_session_state3_update(byte *session);
 void network_session_state4_update(byte *session);
 void network_session_unknown_000623e0(byte *session);
 void NETWORK_SESSION_CALLBACK network_session_enter_state9(byte *session);
@@ -698,6 +722,8 @@ boolean NETWORK_SESSION_CALLBACK network_session_create_identifier(byte *session
 extern long unknown_004cf4a0;
 extern long unknown_004cf4a4;
 extern long unknown_004cf4b0;
+extern long unknown_004cf4d8;
+extern long unknown_004cf4dc;
 extern long unknown_004cf4ac;
 extern boolean unknown_004d8b18;
 extern boolean unknown_004d8b19;

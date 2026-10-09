@@ -23,7 +23,17 @@ void unknown_00076ef0(long channel_index, byte *observer);
 number */
 void unknown_00088650(byte *channel, long unknown);
 
+/* ---------- prototypes of functions of the console's libraries */
+
+/* 0x003314b0 */
+long GetTickCount(void);
+
 /* ---------- globals */
+
+/* 0x00510548, 0x0051054c, of main.c: whether the time is the one that was
+kept, and that time */
+extern boolean unknown_00510548;
+extern long unknown_0051054c;
 
 /* 0x004d87d4: the channels of the game */
 byte *unknown_004d87d4;
@@ -179,4 +189,13 @@ void network_observer_channel_unknown_00075e40(
 			unknown_00088650(game_channel, _unknown_00088650_unknown11);
 		}
 	}
+}
+
+/* 0x00075890: how many milliseconds ago a time was: by the time that main.c
+kept, if it says so, and by GetTickCount if not. The game has it before the
+functions of the observer */
+long NETWORK_OBSERVER_CALLBACK network_time_since(
+	long time)
+{
+	return (long)((unsigned long)(unknown_00510548 ? unknown_0051054c : GetTickCount())-(unsigned long)time);
 }

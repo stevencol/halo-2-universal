@@ -69,6 +69,7 @@ enum
 
 /* ---------- prototypes/NETWORK_OBSERVER.C */
 
+long NETWORK_OBSERVER_CALLBACK network_time_since(long time);
 void network_observer_dispose(byte *observer);
 void NETWORK_OBSERVER_CALLBACK network_observer_set_session(long session_index, byte *observer, const byte *identifier,
 	const byte *key, long unknown4, long unknown8);

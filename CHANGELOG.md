@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — El segundo estado de la sesión y lo que repite en el tercero
+
+Dos funciones en `networking/network_session.c` y una en `networking/network_observer.c`,
+624 bytes entre todas. De 1256 funciones se pasa a 1259, el 11,18 % de las del
+juego (el 6,970 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_enter_state2` | `0x00061180` | `networking/network_session.c` |
+| `network_session_state3_update` | `0x00062990` | `networking/network_session.c` |
+| `network_time_since` | `0x00075890` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_session_enter_state2` (era `unknown_00061180`) es salir de una
+  sesión en la que se estaba **entrando**: lo que la sesión tenía a partir
+  del estado se conserva, recolocado (la dirección de quien la lleva pasa
+  de `0x7448` a `0x7444`, que es lo que se veía en el hito 332), con la
+  hora; lo demás se vacía, y se manda el primer aviso
+  (`network_session_unknown_000623e0`, hito 344).
+- `network_session_state3_update` (era `unknown_00062990`): en el tercer
+  estado la sesión manda a quien la lleva algo de la clase `0x18`, con sus
+  ocho bytes y cuatro NONE, respetando dos esperas (`unknown_004cf4d8` y
+  `unknown_004cf4dc`).
+- `network_time_since` dice cuántos milisegundos hace de una hora. Es lo
+  mismo que la sesión tiene metido dentro en muchos sitios; aquí el juego
+  lo tiene como función.
+- Con esto los estados de la sesión quedan así: 1 entrando, 2 dejando de
+  entrar, 3 dentro, 4 saliendo, 5 llevándola, 6 deshaciéndola, 7 y 8 otros
+  dos de quien la lleva, 9 sin quien la llevaba, 10 acabada.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (166) y de
+  `network_observer` (7).
+- La batería completa del hito 343 seguía corriendo.
+- Las mutaciones de los hitos 280 a 308 y 321 a 345 están pendientes.
+
 ## 2026-10-08 — Lo que la sesión repite, y su noveno estado
 
 Tres funciones en `networking/network_session.c`, 578 bytes entre todas. De 1253

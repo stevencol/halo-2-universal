@@ -750,7 +750,8 @@ address,name,source,arguments,returns,convention
 00059ab0,network_life_cycle_request_new4,source/networking/network_life_cycle.c,eax,void
 0005a520,network_session_disconnect,source/networking/network_session.c,eax,void
 0005a400,network_session_leave,source/networking/network_session.c,ecx stack,void,stdcall
-00061180,unknown_00061180,,ebx,void
+00061180,network_session_enter_state2,source/networking/network_session.c,ebx,void
+00075890,network_time_since,source/networking/network_observer.c,stack,int,stdcall
 0005b570,network_session_leader_clear_unknown49f8,source/networking/network_session.c,edx,bool
 0005b2c0,network_session_leader_set_unknown49a4,source/networking/network_session.c,edx esi,bool
 0005b3a0,network_session_leader_set_unknown49c4,source/networking/network_session.c,edx,bool
@@ -1776,7 +1777,7 @@ address,name,source,arguments,returns,convention
 000618d0,network_session_unknown_000618d0,source/networking/network_session.c,eax,void
 00061910,network_session_unknown_00061910,source/networking/network_session.c,eax,void
 00061950,network_session_unknown_00061950,source/networking/network_session.c,ecx esi,void
-00062990,unknown_00062990,,esi,void
+00062990,network_session_state3_update,source/networking/network_session.c,esi,void
 00062480,network_session_state4_update,source/networking/network_session.c,esi,void
 000623e0,network_session_unknown_000623e0,source/networking/network_session.c,esi,void
 00062ab0,network_session_host_lost,source/networking/network_session.c,esi,void

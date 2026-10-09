@@ -112,3 +112,17 @@ def run(t) -> None:
             globals={"unknown_004d87d4": Buffer(bytes(channels))},
             externals={"unknown_00088650": lambda harness, arguments: 0},
         )
+
+    # ---------- how long ago a time was
+
+    for n in range(40):
+        now = random_.getrandbits(32)
+        t.check(
+            "network_time_since",
+            random_.choice((now, now - 1, 0, random_.getrandbits(32))) & 0xFFFFFFFF,
+            globals={
+                "unknown_00510548": bytes((random_.choice((0, 0, 1, 0x80)),)),
+                "unknown_0051054c": random_.randbytes(4),
+            },
+            externals={"GetTickCount": lambda harness, arguments, now=now: now},
+        )

@@ -1503,7 +1503,7 @@ def run(t) -> None:
             "network_session_enter_state3",
             Buffer(bytes(whole_session())),
             globals=clock(),
-            externals={"GetTickCount": ticks(), "unknown_00062990": nothing},
+            externals={"GetTickCount": ticks(), "network_session_state3_update": nothing},
         )
         t.check(
             "network_session_enter_state4",
@@ -1777,7 +1777,7 @@ def run(t) -> None:
                 "GetTickCount": ticks(),
                 "network_session_state4_update": nothing,
                 "unknown_00075e80": sends_all,
-                "unknown_00061180": nothing,
+                "network_session_enter_state2": nothing,
                 "network_session_enter_state7": lambda harness, arguments: (0, (arguments[0] & 0xFF, *arguments[1:])),
                 "network_session_disconnect": nothing,
             },
@@ -1902,4 +1902,42 @@ def run(t) -> None:
             Buffer(bytes(data)),
             globals=clock(),
             externals={"GetTickCount": ticks(), "unknown_00062b70": fills},
+        )
+
+    # ---------- the second state of a session, and what it does again and again in the third
+
+    for n in range(60):
+        data = with_channels()
+        for peer in range(16):
+            at = 0x72DC + peer * 0x14
+            data[at] = random_.choice((0, 1, 1, 0x80))
+            struct.pack_into("<I", data, at + 4, random_.choice((NONE, 0, 1, 2, 3)))
+        t.check(
+            "network_session_enter_state2",
+            Buffer(bytes(data), pointers=(8,)),
+            globals=clock(),
+            externals={"GetTickCount": ticks(), "network_session_unknown_000623e0": nothing},
+        )
+
+    for n in range(400):
+        data = with_channels()
+        struct.pack_into("<I", data, 0x40, random_.randrange(16))
+        struct.pack_into("<I", data, STATE, random_.choice((3, 3, 3, 3, 4, 7, 8, 5)))
+        data[0x7420] = random_.choice((0, 0, 1))
+        for channel in range(4):
+            struct.pack_into("<I", data, CHANNELS + channel * 0x528 + 0xA8, random_.choice((7, 7, 7, 6)))
+        now = random_.getrandbits(32)
+        globals_ = {
+            "unknown_00510548": bytes((random_.choice((0, 0, 1)),)),
+            "unknown_0051054c": struct.pack("<I", now),
+        }
+        for at, name in ((0x7654, "unknown_004cf4d8"), (0x7658, "unknown_004cf4dc")):
+            ago = random_.choice((0, 999, 1000, 1001, 30001, 0x80000001))
+            struct.pack_into("<I", data, at, random_.choice((NONE, NONE, (now - ago) & 0xFFFFFFFF, (now - ago) & 0xFFFFFFFF)))
+            globals_[name] = struct.pack("<I", random_.choice((0, 1000, 1000, 30000, 0xFFFFFFFF)))
+        t.check(
+            "network_session_state3_update",
+            Buffer(bytes(data), pointers=(8,)),
+            globals=globals_,
+            externals={"GetTickCount": lambda harness, arguments, now=now: now, "unknown_00075e80": sends_all},
         )

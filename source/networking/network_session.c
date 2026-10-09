@@ -45,9 +45,6 @@ void __attribute__((stdcall)) unknown_00075e80(boolean unknown, long channel_ind
 /* 0x0011ca80, of cseries.c */
 long language_from_xbox_language(long xbox_language);
 
-/* 0x00062990: what a session does each time in its third state */
-void unknown_00062990(byte *session);
-
 /* 0x0007b140: sends something of a kind and a size to an address of the
 game */
 void __attribute__((stdcall)) unknown_0007b140(long unknown4, const struct transport_address *address, long type,
@@ -61,9 +58,6 @@ long unknown_00062b70(byte *session, byte *unknown10);
 console of it, with a byte, two numbers and a thing or none; whether it did */
 boolean __attribute__((stdcall)) unknown_0005df30(byte *session, boolean unknown8, long unknownC, long unknown10,
 	long peer_index, const byte *unknown14);
-
-/* 0x00061180: what a session in its first state does to go out of it */
-void unknown_00061180(byte *session);
 
 /* ---------- globals */
 
@@ -79,6 +73,12 @@ long unknown_004cf4a4;
 long unknown_004cf4ac;
 long unknown_004cf4a0;
 long unknown_004cf4b0;
+
+/* 0x004cf4d8, 0x004cf4dc: how long a session in its third state waits after
+the time of 0x7654, and after the last time, before it sends again what it
+sends there */
+long unknown_004cf4d8;
+long unknown_004cf4dc;
 
 /* 0x004d8b18, 0x004d8b19: with both, a session that is started asks what
 the console is known by in the network */
@@ -2370,7 +2370,7 @@ long NETWORK_SESSION_CALLBACK network_session_get_channel_peer(
 
 /* 0x000612c0: a session goes into its third state: the 0x34 bytes of 0x761C
 start over (network_session_reset_unknown761c, which the game has here), the
-state starts now, and unknown_00062990 is done */
+state starts now, and network_session_state3_update is done */
 void network_session_enter_state3(
 	byte *session)
 {
@@ -2378,7 +2378,7 @@ void network_session_enter_state3(
 
 	network_session_reset_unknown761c(session);
 	*(long *)network_session_set_state(session, _network_session_state3)= now;
-	unknown_00062990(session);
+	network_session_state3_update(session);
 }
 
 /* 0x00061330: a session goes into its fourth state: it starts now, with
@@ -3199,7 +3199,7 @@ void network_session_host_set_unknown4980(
 
 /* 0x0005a400: this console goes out of a session, by its state. Nothing
 with no state, if network_session_unknown_00058d90 says so, or with the byte
-of 0x48. In the first state unknown_00061180 is done; from the third it
+of 0x48. In the first state network_session_enter_state2 is done; from the third it
 goes into the fourth; in the fifth and the seventh, with the thing that it
 is given it goes into the sixth, and without it network_session_enter_state7 is done (in
 the seventh, only a byte is set); in the eighth a byte is set; in the ninth,
@@ -3220,7 +3220,7 @@ void NETWORK_SESSION_CALLBACK network_session_leave(
 	switch (state)
 	{
 	case _network_session_state1:
-		unknown_00061180(session);
+		network_session_enter_state2(session);
 		break;
 	case _network_session_state3:
 		network_session_enter_state4(session);
@@ -3489,4 +3489,90 @@ void NETWORK_SESSION_CALLBACK network_session_enter_state9(
 		1u<<*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET);
 	network_session_reset_unknown761c(session);
 	memcpy(network_session_set_state(session, _network_session_state9), data, sizeof(data));
+}
+
+/* 0x00061180: a session goes from its first state into its second, which is
+how this console goes out of a session that it was coming into: what it had
+from its state on is kept, in other places, with the time. Nobody is in the
+session any more, it knows nothing, nothing is kept of any console, and
+network_session_unknown_000623e0 sends for the first time */
+void network_session_enter_state2(
+	byte *session)
+{
+	byte data[NETWORK_SESSION_STATE2_SIZE];
+	long peer_index;
+
+	memset(data, 0, sizeof(data));
+	memcpy(data+NETWORK_SESSION_STATE2_UNKNOWN0_OFFSET, session+NETWORK_SESSION_STATE1_UNKNOWN4_OFFSET,
+		NETWORK_SESSION_ADDRESS_SIZE);
+	memcpy(data+NETWORK_SESSION_STATE2_ADDRESS, session+NETWORK_SESSION_STATE1_ADDRESS_OFFSET,
+		sizeof(struct transport_address));
+	memcpy(data+NETWORK_SESSION_STATE2_UNKNOWN38_OFFSET, session+NETWORK_SESSION_STATE1_UNKNOWN1C4_OFFSET,
+		NETWORK_SESSION_ADDRESS_SIZE);
+	*(long *)(data+NETWORK_SESSION_STATE2_UNKNOWN5C_OFFSET)=
+		*(const long *)(session+NETWORK_SESSION_STATE1_UNKNOWN1BC_OFFSET);
+	*(long *)(data+NETWORK_SESSION_STATE2_UNKNOWN60_OFFSET)=
+		*(const long *)(session+NETWORK_SESSION_STATE1_UNKNOWN1C0_OFFSET);
+	*(long *)(data+NETWORK_SESSION_STATE2_UNKNOWN64_OFFSET)=
+		*(const long *)(session+NETWORK_SESSION_STATE1_UNKNOWN1E8_OFFSET);
+	*(long *)(data+NETWORK_SESSION_STATE2_START_OFFSET)= network_session_time();
+	network_session_reset_unknown761c(session);
+	memset(session+NETWORK_SESSION_UNKNOWN4978_OFFSET, 0, NETWORK_SESSION_UNKNOWN4978_SIZE);
+	*(long *)(session+NETWORK_SESSION_UNKNOWN4978_OFFSET)= NONE;
+	memset(session+NETWORK_SESSION_MEMBERSHIP_OFFSET, 0, NETWORK_SESSION_MEMBERSHIP_SIZE);
+	*(long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET)= NONE;
+	*(long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET)= NONE;
+	for (peer_index= 0; peer_index<MAXIMUM_NETWORK_SESSION_PLAYERS; peer_index++)
+	{
+		if (((const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index)->valid)
+		{
+			network_session_peer_state_delete(session, peer_index);
+		}
+	}
+	*(long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET)= NONE;
+	memcpy(network_session_set_state(session, _network_session_state2), data, sizeof(data));
+	network_session_unknown_000623e0(session);
+}
+
+/* 0x00062990: in its third state, a session sends the console that runs it
+something of the kind 0x18, in the second way: only if the channel of that
+console is in its seventh state and network_session_unknown_00058d90 says no,
+when the time of 0x7654 is NONE or more than unknown_004cf4d8 milliseconds
+ago, and the last time that it sent (0x7658) is NONE or more than
+unknown_004cf4dc milliseconds ago */
+void network_session_state3_update(
+	byte *session)
+{
+	const struct network_session_peer_state *host=
+		(const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+
+		*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET);
+	byte message[NETWORK_SESSION_MESSAGE_UNKNOWN18_SIZE];
+	long time;
+
+	if (*(const long *)(*(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET)+
+		host->unknown4*NETWORK_SESSION_UNKNOWN8_CHANNEL_SIZE+NETWORK_SESSION_UNKNOWN8_CHANNEL_STATE_OFFSET)!=
+		_network_session_unknown8_channel_state7 || network_session_unknown_00058d90(session))
+	{
+		return;
+	}
+	time= *(const long *)(session+NETWORK_SESSION_UNKNOWN7654_OFFSET);
+	if (time!=NONE && network_session_elapsed(time)<=unknown_004cf4d8)
+	{
+		return;
+	}
+	time= *(const long *)(session+NETWORK_SESSION_UNKNOWN7658_OFFSET);
+	if (time!=NONE && network_time_since(time)<=unknown_004cf4dc)
+	{
+		return;
+	}
+	memset(message, 0, sizeof(message));
+	memcpy(message, session+NETWORK_SESSION_IDENTIFIER_OFFSET, NETWORK_SESSION_IDENTIFIER_SIZE);
+	*(long *)(message+0x8)= NONE;
+	*(long *)(message+0xC)= NONE;
+	*(long *)(message+0x10)= NONE;
+	*(long *)(message+0x14)= NONE;
+	unknown_00075e80(TRUE, host->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+		*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_unknown18, sizeof(message),
+		message);
+	*(long *)(session+NETWORK_SESSION_UNKNOWN7658_OFFSET)= network_session_time();
 }
