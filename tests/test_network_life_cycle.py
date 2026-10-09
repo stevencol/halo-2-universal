@@ -2508,3 +2508,64 @@ def run(t) -> None:
                 "unknown_00075e80": sends_all,
             },
         )
+
+    # ---------- the channels of the consoles, and the eighth state
+
+    def with_real_channels() -> bytearray:
+        # each console that the session keeps the second byte of has one of the four channels
+        data = consistent()
+        struct.pack_into("<I", data, LOCAL_PEER, random_.randrange(16))
+        for peer in range(16):
+            at = 0x72DC + peer * 0x14
+            data[at + 1] = random_.choice((0, 1, 1, 0x80))
+            struct.pack_into("<I", data, at + 4, random_.randrange(4))
+            data[PEERS + peer * PEER + 0x24] = random_.choice((0, 1, 1, 0x80))
+        for channel in range(4):
+            struct.pack_into("<I", data, CHANNELS + channel * 0x528 + 0xA8, random_.choice((1, 1, 7, 7, 0, 5)))
+        return data
+
+    def with_channel(harness, arguments):
+        return 0, (arguments[0], arguments[1])
+
+    for n in range(500):
+        data = with_real_channels()
+        struct.pack_into("<I", data, STATE, random_.choice((0, 1, 1, 2, 3, 3, 4, 5, 6, 7, 7, 8, 9)))
+        data[0x7420] = random_.choice((0, 0, 1))
+        struct.pack_into("<I", data, MEMBERSHIP, random_.choice((NONE, 0, 5, 5)))
+        t.check(
+            "network_session_unknown_00062240",
+            Buffer(bytes(data), pointers=(8,)),
+            externals={"unknown_00076a40": with_channel},
+        )
+
+    for n in range(500):
+        data = with_real_channels()
+        count = struct.unpack_from("<I", data, 0x54)[0]
+        everyone = (1 << count) - 1
+        struct.pack_into("<I", data, 0x7424, random_.randrange(count))
+        struct.pack_into("<I", data, 0x742C, random_.choice((0, 0, random_.getrandbits(16))))
+        struct.pack_into("<I", data, 0x7430, random_.choice((everyone, random_.getrandbits(16) & everyone, 0)))
+        struct.pack_into("<I", data, 0x7434, random_.choice((everyone, random_.getrandbits(16) & everyone, 0)))
+        setup = waits(data, 0x7428, "unknown_004cf4c4")
+        t.check(
+            "network_session_send_unknown12",
+            Buffer(bytes(data), pointers=(8,)),
+            globals=setup["globals"],
+            externals={"GetTickCount": setup["tick"], "unknown_00075e80": sends_all},
+        )
+
+    for n in range(400):
+        data = with_real_channels()
+        t.check(
+            "network_session_enter_state8",
+            Buffer(bytes(data), pointers=(8,)),
+            random_.choice((0, 1, 1, 0x80, 0x100, 0x101)),
+            globals=clock(),
+            externals={
+                "GetTickCount": ticks(),
+                "network_session_enter_state5": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "network_session_reset_requests": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                "unknown_00076a40": with_channel,
+                "network_session_send_unknown12": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+            },
+        )

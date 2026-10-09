@@ -4880,3 +4880,159 @@ void network_session_state1_update(
 		network_session_state1_send(session);
 	}
 }
+
+/* 0x00076a40, of network_observer.c: something is done with one of the
+channels of what a session was given when it was set up */
+void unknown_00076a40(long channel_index, byte *unknown8);
+
+/* 0x004cf4c4: how long a session in its eighth state waits for the consoles
+before it sends something of the kind 0x12 to the one that ran it too, in
+milliseconds */
+long unknown_004cf4c4;
+
+/* the first thing of the channel that a session has for a console */
+static inline __attribute__((always_inline)) long network_session_channel_state(
+	const byte *session,
+	long channel_index)
+{
+	return *(const long *)(*(const byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET)+
+		channel_index*NETWORK_SESSION_UNKNOWN8_CHANNEL_SIZE+NETWORK_SESSION_UNKNOWN8_CHANNEL_STATE_OFFSET);
+}
+
+/* 0x00062240: in a session that is in any state, unknown_00076a40 is done with the
+channel of each console that the session keeps the second byte of, if the
+first thing of the channel is not 1. In a session that this console does not
+run, only if network_session_unknown_00058d90 says no and the session has who
+is in it; and, if it is in its first state or says who is in it, only for
+the consoles that have their byte at 0x24 set */
+void network_session_unknown_00062240(
+	byte *session)
+{
+	long peer_index;
+
+	if (network_session_state(session)==_network_session_state_none)
+	{
+		return;
+	}
+	for (peer_index= 0; peer_index<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET); peer_index++)
+	{
+		const struct network_session_peer_state *state=
+			(const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index;
+
+		if (!state->unknown1)
+		{
+			continue;
+		}
+		if (!network_session_unknown_00058d20(session))
+		{
+			if (network_session_unknown_00058d90(session) ||
+				*(const long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET)==NONE)
+			{
+				continue;
+			}
+			if (network_session_has_host(session) && !session[NETWORK_SESSION_PEER_ARRAY_OFFSET+
+				peer_index*NETWORK_SESSION_PEER_SIZE+NETWORK_SESSION_PEER_UNKNOWN24_OFFSET])
+			{
+				continue;
+			}
+		}
+		if (network_session_channel_state(session, state->unknown4)!=_network_session_unknown8_channel_state1)
+		{
+			unknown_00076a40(state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET));
+		}
+	}
+}
+
+/* 0x00062550: in its seventh and eighth states, a session sends something
+of the kind 0x12, with what the session is known by, to each console that it
+keeps the second byte of, whose channel has 7 as its first thing and that
+has not been sent it yet (the bits at 0xC say which have). The console at
+0x4 is sent it only when the bit of that console, those at 0x10 and those
+at 0x14 are those of all the consoles, or the state started
+unknown_004cf4c4 milliseconds ago or more */
+void network_session_send_unknown12(
+	byte *session)
+{
+	byte *data= session+NETWORK_SESSION_STATE_DATA_OFFSET;
+	long peer_count= *(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET);
+	boolean all= TRUE;
+	long peer_index;
+
+	if (((1u<<*(const long *)(data+NETWORK_SESSION_STATE8_HOST_OFFSET))|
+		*(const unsigned long *)(data+NETWORK_SESSION_STATE8_UNKNOWN14_OFFSET)|
+		*(const unsigned long *)(data+NETWORK_SESSION_STATE8_UNKNOWN10_OFFSET))!=(1u<<peer_count)-1)
+	{
+		all= network_session_time()-*(const long *)(data+NETWORK_SESSION_STATE8_START_OFFSET)>=unknown_004cf4c4;
+	}
+	for (peer_index= 0; peer_index<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET); peer_index++)
+	{
+		const struct network_session_peer_state *state=
+			(const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index;
+		unsigned long bit= 1u<<peer_index;
+
+		if ((peer_index!=*(const long *)(data+NETWORK_SESSION_STATE8_HOST_OFFSET) || all) &&
+			!(*(const unsigned long *)(data+NETWORK_SESSION_STATE8_SENT_OFFSET)&bit) && state->unknown1 &&
+			network_session_channel_state(session, state->unknown4)==_network_session_unknown8_channel_state7)
+		{
+			byte identifier[NETWORK_SESSION_IDENTIFIER_SIZE];
+
+			memcpy(identifier, session+NETWORK_SESSION_IDENTIFIER_OFFSET, sizeof(identifier));
+			unknown_00075e80(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+				*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_unknown12,
+				sizeof(identifier), identifier);
+			*(unsigned long *)(data+NETWORK_SESSION_STATE8_SENT_OFFSET)|= bit;
+		}
+	}
+}
+
+/* 0x00061570: a session goes into its eighth state: what it has from its
+state on starts with a byte that it is given (the second), the console that
+ran the session, the time, and the bit of this console at 0xC and at 0x10.
+From a state that is not one of the last four, network_session_reset_requests
+is done first and the console at 0x40 is this one. Then unknown_00076a40 is done with the
+channel of each console that the session keeps the second byte of and whose
+first thing is 1, and network_session_send_unknown12. With no more than one
+console there is no eighth state: the session goes into the fifth */
+void NETWORK_SESSION_CALLBACK network_session_enter_state8(
+	byte *session,
+	boolean unknown)
+{
+	long host;
+	long now;
+	unsigned long local_bit;
+	long peer_index;
+	byte *data;
+
+	if (*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET)<=1)
+	{
+		network_session_enter_state5(session);
+
+		return;
+	}
+	host= *(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET);
+	if (!network_session_unknown_00058d20(session))
+	{
+		network_session_reset_requests(session, TRUE);
+		*(long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET)= *(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET);
+	}
+	now= network_session_time();
+	local_bit= 1u<<*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET);
+	data= network_session_set_state(session, _network_session_state8);
+	data[NETWORK_SESSION_STATE8_UNKNOWN1_OFFSET]= unknown;
+	*(long *)(data+NETWORK_SESSION_STATE8_HOST_OFFSET)= host;
+	*(long *)(data+NETWORK_SESSION_STATE8_START_OFFSET)= now;
+	*(unsigned long *)(data+NETWORK_SESSION_STATE8_SENT_OFFSET)= local_bit;
+	*(unsigned long *)(data+NETWORK_SESSION_STATE8_UNKNOWN10_OFFSET)= local_bit;
+	for (peer_index= 0; peer_index<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET); peer_index++)
+	{
+		const struct network_session_peer_state *state=
+			(const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index;
+
+		if (state->unknown1 &&
+			network_session_channel_state(session, state->unknown4)==_network_session_unknown8_channel_state1)
+		{
+			unknown_00076a40(state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET));
+		}
+	}
+	network_session_send_unknown12(session);
+}

@@ -447,6 +447,20 @@ enum
 	/* two kinds of what is sent with only what the session is known by: to
 	the console that runs it when it is taken for that, and to the one that
 	leads it when the session comes to say who is in it */
+	/* what the session has from its state on in the eighth state, apart
+	from the bit for each console at 0x10: a byte that it is given, the
+	console that ran the session before, when the state started, a bit for
+	each console that has been sent something of the kind 0x12, and another
+	bit for each console at 0x14. In the seventh it has the last three too */
+	NETWORK_SESSION_STATE8_UNKNOWN1_OFFSET= 0x1,
+	NETWORK_SESSION_STATE8_HOST_OFFSET= 0x4,
+	NETWORK_SESSION_STATE8_START_OFFSET= 0x8,
+	NETWORK_SESSION_STATE8_SENT_OFFSET= 0xC,
+	NETWORK_SESSION_STATE8_UNKNOWN10_OFFSET= 0x10,
+	NETWORK_SESSION_STATE8_UNKNOWN14_OFFSET= 0x14,
+	_network_session_message_unknown12= 0x12,
+	/* the first thing of a channel when it is 1 */
+	_network_session_unknown8_channel_state1= 1,
 	_network_session_message_unknown14= 0x14,
 	_network_session_message_unknown15= 0x15,
 	_network_session_message_unknown13= 0x13,
@@ -721,6 +735,9 @@ boolean NETWORK_SESSION_CALLBACK network_session_unknown_0005e3f0(byte *session,
 	const struct transport_address *address);
 void network_session_state1_send(byte *session);
 void network_session_state1_update(byte *session);
+void network_session_unknown_00062240(byte *session);
+void network_session_send_unknown12(byte *session);
+void NETWORK_SESSION_CALLBACK network_session_enter_state8(byte *session, boolean unknown);
 boolean network_session_remove_peer_with_message_c(byte *session, long peer_index);
 void NETWORK_SESSION_CALLBACK network_session_peer_properties_apply_update(
 	struct network_session_peer_properties *properties, const struct network_session_peer_properties_update *update);

@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 354.
+**Última actualización:** 2026-10-08, al terminar el hito 355.
 
 ## Dónde estamos
 
-- **1291 funciones descompiladas de 11.265: el 11,46 % del juego** (el
-  7,191 % de los bytes de código).
-- Las 1291 están comprobadas contra el ejecutable original: las 1253 del
+- **1294 funciones descompiladas de 11.265: el 11,49 % del juego** (el
+  7,216 % de los bytes de código).
+- Las 1294 están comprobadas contra el ejecutable original: las 1253 del
   hito 343 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile a session's first state and how another console comes to run it* (ver `git log`).
+- Último hito: *Decompile how a session goes into its eighth state and two walks over its consoles* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 541 funciones apuntadas pero sin descompilar (las que el código
-  llama); 443 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 542 funciones apuntadas pero sin descompilar (las que el código
+  llama); 444 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -109,7 +109,7 @@ Módulos (funciones hechas / archivo):
       terminar líneas o triángulos; faltan `0x0001e930` y `0x0001eb00`, que
       preparan la consola para dibujar)
 - [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
-- [ ] Sesión de red — `networking\network_session.c` (159: el estado de
+- [ ] Sesión de red — `networking\network_session.c` (162: el estado de
       una sesión, prepararla, arrancarla, su identificador y su clave,
       las consolas que entran y salen, cómo buscarlas, y los jugadores
       que lo piden;

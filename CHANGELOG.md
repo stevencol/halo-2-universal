@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — El octavo estado de la sesión y los canales de las consolas
+
+Tres funciones en `networking/network_session.c`, 734 bytes entre todas. De 1291
+funciones se pasa a 1294, el 11,49 % de las del juego (el 7,216 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_unknown_00062240` | `0x00062240` | `networking/network_session.c` |
+| `network_session_send_unknown12` | `0x00062550` | `networking/network_session.c` |
+| `network_session_enter_state8` | `0x00061570` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_enter_state8`: **la sesión entra en su octavo estado**.
+  Lo que guarda desde su estado empieza con un byte que le dan, la consola
+  que la llevaba, la hora y el bit de esta consola en dos sitios. Si venía
+  de un estado que no es de los cuatro últimos, olvida a los jugadores que
+  pedían entrar y esta consola pasa a ser la de `0x40`. Con una sola
+  consola no hay octavo estado: va al quinto.
+- `network_session_send_unknown12`: en los estados séptimo y octavo, manda
+  un mensaje de la clase `0x12` a cada consola con canal listo (su primer
+  dato vale 7) que aún no lo haya recibido. A la consola que llevaba la
+  sesión solo se le manda cuando todas las demás ya están apuntadas, o
+  cuando han pasado `unknown_004cf4c4` milisegundos.
+- `network_session_unknown_00062240` recorre las consolas y hace
+  `unknown_00076a40` con el canal de cada una, si el primer dato del canal
+  no es 1. Parece lo que **abre el canal** con las consolas que aún no lo
+  tienen; la consola que no lleva la sesión solo lo hace con las que ya
+  dijeron lo que la sesión debe saber de ellas (el byte `0x24`, hito 351).
+- De lo que la sesión guarda en el octavo estado se conocen ya seis datos,
+  con nombre en `network_session.h`.
+
+### Sin comprobar
+
+- `unknown_00076a40` es del observador de la red y no está descompilada.
+- En este hito se pasaron las pruebas de `network_life_cycle` (201
+  funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353 y 355 están pendientes
+  (del 354 se rompieron cuatro líneas a mano).
+
 ## 2026-10-08 — El primer estado de la sesión, y cuando la lleva otra consola
 
 Tres funciones en `networking/network_session.c`, 918 bytes entre todas. De 1288
