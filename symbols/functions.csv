@@ -1985,3 +1985,15 @@ address,name,source,arguments,returns,convention
 00096510,unknown_00096510,,esi stack,int,stdcall
 00096810,unknown_00096810,,eax ecx edi,void
 000931a0,unknown_000931a0,,eax ecx stack stack stack stack,void,stdcall
+000893c0,replication_entity_manager_new,source/networking/replication_entity_manager.c,ebx,void
+00089430,replication_entity_manager_reset,source/networking/replication_entity_manager.c,stack,void,stdcall
+00089470,replication_entity_manager_create_entities,source/networking/replication_entity_manager.c,eax ebx stack,bool,stdcall
+00089500,replication_entity_manager_delete_entity,source/networking/replication_entity_manager.c,edi stack,void,stdcall
+00089660,replication_entity_manager_delete_entity_now,source/networking/replication_entity_manager.c,ebx edi,void
+00089c40,replication_entity_manager_allocate_index,source/networking/replication_entity_manager.c,esi,int
+00089cc0,replication_entity_manager_create_entity,source/networking/replication_entity_manager.c,ecx edx,int
+00089d20,replication_entity_manager_get_chain,source/networking/replication_entity_manager.c,ecx edx esi,int
+00089d50,replication_entity_manager_find_chain,source/networking/replication_entity_manager.c,ebx edx stack,int,stdcall
+00097fe0,unknown_00097fe0,,edi,void
+00099690,unknown_00099690,,eax ecx stack,void,stdcall
+000995c0,unknown_000995c0,,eax ecx,void

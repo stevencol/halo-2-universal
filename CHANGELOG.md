@@ -2,6 +2,70 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — La tabla de las cosas que las consolas comparten
+
+Nueve funciones en un archivo nuevo, `networking/replication_entity_manager.c`. De 1428
+funciones se pasa a 1437, el 12,76 % de las del juego (el 8,611 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `replication_entity_manager_new` | `0x000893c0` | `networking/replication_entity_manager.c` |
+| `replication_entity_manager_reset` | `0x00089430` | `networking/replication_entity_manager.c` |
+| `replication_entity_manager_create_entities` | `0x00089470` | `networking/replication_entity_manager.c` |
+| `replication_entity_manager_delete_entity` | `0x00089500` | `networking/replication_entity_manager.c` |
+| `replication_entity_manager_delete_entity_now` | `0x00089660` | `networking/replication_entity_manager.c` |
+| `replication_entity_manager_allocate_index` | `0x00089c40` | `networking/replication_entity_manager.c` |
+| `replication_entity_manager_create_entity` | `0x00089cc0` | `networking/replication_entity_manager.c` |
+| `replication_entity_manager_get_chain` | `0x00089d20` | `networking/replication_entity_manager.c` |
+| `replication_entity_manager_find_chain` | `0x00089d50` | `networking/replication_entity_manager.c` |
+
+### Lo que se sabe
+
+- Justo después del canal en el ejecutable hay otro módulo: **una tabla de
+  1024 cosas que las consolas de una partida tienen en común**, con hasta
+  quince vistas de ellas (una por cada una de las otras consolas). Por la
+  forma es lo que en otros juegos de Bungie se llama el gestor de
+  entidades replicadas; el nombre del archivo es una suposición.
+- Cada cosa ocupa 8 bytes: unos bits (en uso, borrándose, creada, primera
+  de un grupo, otra del grupo), cuántas veces se ha usado su sitio (de 16),
+  una cuenta de quién la tiene todavía, y el número de la siguiente de su
+  grupo.
+- **El número de una cosa** es su sitio en los 10 bits bajos y las veces
+  que se ha usado el sitio en los 4 altos: así un número viejo no se
+  confunde con la cosa nueva que ocupa el mismo sitio.
+- Lo que hacen las nueve:
+  - Preparar la tabla y vaciarla (avisando a cada vista).
+  - Buscar un sitio libre, desde el siguiente al último que se dio y
+    dando la vuelta.
+  - Crear una cosa en un sitio, avisando a cada vista.
+  - **Crear hasta cuatro cosas de una vez, encadenadas**: la primera
+    lleva su bit y cada una el número de la siguiente.
+  - Borrar una cosa: se avisa a lo que las cosas son y a las vistas, y el
+    sitio queda libre cuando nadie la tiene ya. Y borrarla ya, sin
+    esperar ni avisar a las vistas.
+  - Dar los números de una cadena, y buscar la cadena en la que está una
+    cosa.
+
+### Corregido
+
+- `0x00088060` y `0x000893c0` no eran del canal, como puse en el hito 415:
+  la segunda es de este módulo y la primera compara dos cosas de otro. El
+  canal está entero con sus 25, y su tabla de funciones (`0x00450d40`)
+  no tiene más funciones suyas que las dos del hito 413.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las nueve**, y en las dos del hito 415.
+- Si al crear varias cosas falta sitio para una, los sitios que ya se
+  habían encontrado se quedan como en uso. Se deja igual que el juego.
+- En este hito se pasaron las pruebas de `replication_entity_manager`
+  (9 funciones).
+- Del módulo quedan 14 en la lista, de `0x00089570` a `0x0008a110`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Lo que un canal hace cada vez, y cómo escribe un paquete
 
 Dos funciones en `networking/network_channel.c`, 1573 bytes entre las dos. De 1426

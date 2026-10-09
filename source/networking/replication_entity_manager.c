@@ -1,0 +1,251 @@
+/*
+REPLICATION_ENTITY_MANAGER.C
+
+Decompiled from halo2ship.exe (Xbox, build 02.09.27.09809). Each function
+gives the address it has there.
+
+What keeps the things that the consoles of a game have in common: 1024 of
+them, each with a number, and up to fifteen views of them, one for each of
+the other consoles. The name of the file is a guess, and so are the names of
+its functions.
+*/
+
+#include "replication_entity_manager.h"
+
+#include <string.h>
+
+/* ---------- prototypes of functions not decompiled yet */
+
+/* 0x00097fe0: a view of the things starts over. 0x00099690: a view is told
+that a thing was made. 0x000995c0: and that one is being done with */
+void unknown_00097fe0(byte *view);
+void __attribute__((stdcall)) unknown_00099690(byte *view, long entity, long unknown);
+void unknown_000995c0(byte *view, long entity);
+
+/* ---------- code */
+
+/* 0x000893c0: what keeps the things is set up: with nothing that they are
+of, no views, no things, and the first place as the next. The game has
+replication_entity_manager_reset written here, which with no views does no
+more than that */
+void replication_entity_manager_new(
+	struct replication_entity_manager *manager)
+{
+	manager->client= NULL;
+	manager->view_mask= 0;
+	memset(manager->views, 0, sizeof(manager->views));
+	replication_entity_manager_reset(manager);
+}
+
+/* 0x00089430: there are no things any more: each view starts over
+(unknown_00097fe0), and the first place is the next */
+void __attribute__((stdcall)) replication_entity_manager_reset(
+	struct replication_entity_manager *manager)
+{
+	long index;
+
+	for (index= 0; index<MAXIMUM_REPLICATION_ENTITY_VIEWS; index++)
+	{
+		if (manager->views[index])
+		{
+			unknown_00097fe0(manager->views[index]);
+		}
+	}
+	memset(manager->entities, 0, sizeof(manager->entities));
+	manager->next_index= 0;
+}
+
+/* 0x00089470: so many things are made at once, four at the most, and their
+numbers are given; FALSE, with nothing given, if there is no place for one
+of them (and the places that were found are left as in use). The first has
+the bit that says so, and the others theirs; each has the number of the one
+after it, and the last has NONE. They are made from the last to the first */
+boolean __attribute__((stdcall)) replication_entity_manager_create_entities(
+	struct replication_entity_manager *manager,
+	long count,
+	long *entities)
+{
+	long indices[MAXIMUM_REPLICATION_ENTITY_CHAIN];
+	long index;
+
+	for (index= 0; index<count; index++)
+	{
+		indices[index]= replication_entity_manager_allocate_index(manager);
+		if (indices[index]==NONE)
+		{
+			return FALSE;
+		}
+	}
+	for (index= count-1; index>=0; index--)
+	{
+		struct replication_entity *entity;
+
+		entities[index]= replication_entity_manager_create_entity(indices[index], manager);
+		entity= &manager->entities[entities[index]&REPLICATION_ENTITY_INDEX_MASK];
+		entity->flags|= index==0 ? _replication_entity_first_bit : _replication_entity_other_bit;
+		entity->next= index+1<count ? entities[index+1] : NONE;
+	}
+
+	return TRUE;
+}
+
+/* 0x00089500: a thing is to be done with. It has the bit that says so;
+what the things are of is told; and so is each view that the mask has
+(unknown_000995c0). If nothing has it still, it is done with now: what the
+things are of is told that too, and its place is not in use */
+void __attribute__((stdcall)) replication_entity_manager_delete_entity(
+	struct replication_entity_manager *manager,
+	long entity_index)
+{
+	struct replication_entity *entity= &manager->entities[entity_index&REPLICATION_ENTITY_INDEX_MASK];
+
+	entity->flags|= _replication_entity_deleting_bit;
+	manager->client->functions->deleting(manager->client, entity_index);
+	if (manager->view_mask!=0)
+	{
+		long index;
+
+		for (index= 0; index<MAXIMUM_REPLICATION_ENTITY_VIEWS; index++)
+		{
+			if (manager->view_mask&(1u<<index))
+			{
+				unknown_000995c0(manager->views[index], entity_index);
+			}
+		}
+	}
+	if (entity->unknown2==0)
+	{
+		manager->client->functions->deleted(manager->client, entity_index);
+		entity->flags&= ~_replication_entity_used_bit;
+	}
+}
+
+/* 0x00089660: a thing is done with now, whatever has it still, and the
+views are not told */
+void replication_entity_manager_delete_entity_now(
+	struct replication_entity_manager *manager,
+	long entity_index)
+{
+	struct replication_entity *entity= &manager->entities[entity_index&REPLICATION_ENTITY_INDEX_MASK];
+
+	entity->flags|= _replication_entity_deleting_bit;
+	entity->unknown2= 0;
+	manager->client->functions->deleting(manager->client, entity_index);
+	manager->client->functions->deleted(manager->client, entity_index);
+	entity->flags&= ~_replication_entity_used_bit;
+}
+
+/* 0x00089c40: a place for a thing: the first that is not in use from the
+next one on, or else from the start up to it; NONE if they all are. It is in
+use, with no other bit, and the next place is the one after it */
+long replication_entity_manager_allocate_index(
+	struct replication_entity_manager *manager)
+{
+	long next= manager->next_index;
+	long found= NONE;
+	long index;
+
+	for (index= next; index<MAXIMUM_REPLICATION_ENTITIES; index++)
+	{
+		if (!(manager->entities[index].flags&_replication_entity_used_bit))
+		{
+			found= index;
+			break;
+		}
+	}
+	if (found==NONE)
+	{
+		for (index= 0; index<next; index++)
+		{
+			if (!(manager->entities[index].flags&_replication_entity_used_bit))
+			{
+				found= index;
+				break;
+			}
+		}
+	}
+	if (found==NONE)
+	{
+		return NONE;
+	}
+	manager->entities[found].flags= _replication_entity_used_bit;
+	manager->next_index= (found+1)%MAXIMUM_REPLICATION_ENTITIES;
+
+	return found;
+}
+
+/* 0x00089cc0: the thing of a place is made: it has the bit that says so,
+its place has been used once more (of sixteen), and it has no thing after
+it. Each view that there is is told (unknown_00099690). Its number */
+long replication_entity_manager_create_entity(
+	long index,
+	struct replication_entity_manager *manager)
+{
+	struct replication_entity *entity= &manager->entities[index];
+	long entity_index;
+	long view_index;
+
+	entity->flags|= _replication_entity_created_bit;
+	entity->next= NONE;
+	entity->salt= (byte)((entity->salt+1)%REPLICATION_ENTITY_SALT_COUNT);
+	entity_index= (long)((unsigned long)entity->salt<<REPLICATION_ENTITY_SALT_SHIFT|(unsigned long)index);
+	for (view_index= 0; view_index<MAXIMUM_REPLICATION_ENTITY_VIEWS; view_index++)
+	{
+		if (manager->views[view_index])
+		{
+			unknown_00099690(manager->views[view_index], entity_index, 1);
+		}
+	}
+
+	return entity_index;
+}
+
+/* 0x00089d20: the numbers of a thing and of the ones after it; how many */
+long replication_entity_manager_get_chain(
+	long entity_index,
+	long *entities,
+	const struct replication_entity_manager *manager)
+{
+	long count= 0;
+
+	while (entity_index!=NONE)
+	{
+		entities[count++]= entity_index;
+		entity_index= manager->entities[entity_index&REPLICATION_ENTITY_INDEX_MASK].next;
+	}
+
+	return count;
+}
+
+/* 0x00089d50: the things that were made at once with one: their numbers,
+from the first, and how many; nothing if none of the first ones that are in
+use has it after it */
+long __attribute__((stdcall)) replication_entity_manager_find_chain(
+	const struct replication_entity_manager *manager,
+	long *entities,
+	long entity_index)
+{
+	long index;
+
+	for (index= 0; index<MAXIMUM_REPLICATION_ENTITIES; index++)
+	{
+		const struct replication_entity *entity= &manager->entities[index];
+
+		if ((entity->flags&_replication_entity_used_bit) && (entity->flags&_replication_entity_first_bit))
+		{
+			long count= replication_entity_manager_get_chain(
+				(long)((unsigned long)entity->salt<<REPLICATION_ENTITY_SALT_SHIFT|(unsigned long)index), entities, manager);
+			long place;
+
+			for (place= 0; place<count; place++)
+			{
+				if (entities[place]==entity_index)
+				{
+					return count;
+				}
+			}
+		}
+	}
+
+	return 0;
+}
