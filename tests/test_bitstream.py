@@ -115,3 +115,13 @@ def run(t) -> None:
             if n % 8 == 1:
                 data[0x34] ^= 1
         t.check("bitstream_begin_reading", Buffer(bytes(data), pointers=(0,)))
+
+    for n in range(300):
+        size = random_.choice((2, 4, 8, 12, 40))
+        data = bytearray(whole(size, random_.choice((0, 0, 8, 16, 3, size * 8 - 16, size * 8))).data)
+        # a text that ends, sooner or later, or does not
+        end = random_.choice((0, 2, 4, 6, 10, None))
+        if end is not None and 0x34 + end + 2 <= len(data):
+            data[0x34 + end : 0x34 + end + 2] = b"\0\0"
+        maximum = random_.choice((1, 2, 3, 5, 8, 30))
+        t.check("bitstream_read_wide_string", Buffer(bytes(data), pointers=(0,)), Buffer(random_.randbytes(maximum * 2 + 2)), maximum)

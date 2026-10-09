@@ -37,8 +37,9 @@ struct bitstream
 	/* in bits; it can go past the end of the data, and what is past the end
 	is not written and is read as zeros */
 	long position;
-	/* what is read starts with the word that only a build for testing writes */
-	boolean unknown14;
+	/* something went wrong with what is read: it starts with the word that
+	only a build for testing writes, or a text has no end */
+	boolean error;
 	/* positions that were kept to go back to, the last one last */
 	long position_count;
 	long positions[MAXIMUM_BITSTREAM_POSITIONS];
@@ -64,5 +65,6 @@ void __attribute__((stdcall)) bitstream_write_bool(struct bitstream *stream, boo
 void __attribute__((stdcall)) bitstream_write_integer_checked(unsigned long value, long bit_count,
 	struct bitstream *stream);
 void __attribute__((stdcall)) bitstream_pop_position(struct bitstream *stream, boolean go_back);
+void __attribute__((stdcall)) bitstream_read_wide_string(struct bitstream *stream, word *string, long maximum_count);
 
 #endif

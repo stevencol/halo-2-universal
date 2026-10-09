@@ -106,6 +106,9 @@ address,name,source,arguments,returns,convention
 00194830,bitstream_write_bool,source/networking/bitstream.c,esi stack,void,stdcall
 001947e0,bitstream_write_integer_checked,source/networking/bitstream.c,ebx edi stack,void,stdcall
 00194710,bitstream_pop_position,source/networking/bitstream.c,esi stack,void,stdcall
+00194fa0,bitstream_read_wide_string,source/networking/bitstream.c,eax ebx stack,void,stdcall
+000937e0,network_message_header_write,source/networking/network_message_gateway.c,ebx edi stack,void,stdcall
+00093860,network_message_header_read,source/networking/network_message_gateway.c,eax ecx stack stack,bool,stdcall
 001d8d60,fast_quaternion_normalize,source/math/real_math.c,ecx,void
 000b66f0,csprintf256,source/cseries/cseries.c,esi stack stack,int
 0011c920,csstrcasecmp,source/cseries/cseries.c,ecx eax,int

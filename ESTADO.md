@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 402.
+**Última actualización:** 2026-10-08, al terminar el hito 403.
 
 ## Dónde estamos
 
-- **1396 funciones descompiladas de 11.265: el 12,39 % del juego** (el
-  8,384 % de los bytes de código).
-- Las 1396 están comprobadas contra el ejecutable original: las 1390 del
+- **1399 funciones descompiladas de 11.265: el 12,42 % del juego** (el
+  8,394 % de los bytes de código).
+- Las 1399 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile five more functions of the bitstream* (ver `git log`).
+- Último hito: *Decompile the header of a message and a text reader of the bitstream* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 556 funciones apuntadas pero sin descompilar (las que el código
   llama); 454 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -108,8 +108,9 @@ Módulos (funciones hechas / archivo):
 - [ ] Dibujo de depuración — `rasterizer\rasterizer_debug.c` (3: empezar y
       terminar líneas o triángulos; faltan `0x0001e930` y `0x0001eb00`, que
       preparan la consola para dibujar)
-- [ ] Flujo de bits de red — `networking\bitstream.c` (10; quedan las de
-      `0x00194870` a `0x00195ed0` que sean suyas, sin mirar aún)
+- [ ] Flujo de bits de red — `networking\bitstream.c` (11; lo que queda,
+      de `0x00194870` a `0x00195560`, comprime reales y direcciones con
+      logaritmos y ángulos del procesador antiguo)
 - [ ] Sesión de red — `networking\network_session.c` (181: el estado de
       una sesión, prepararla, arrancarla, su identificador y su clave,
       las consolas que entran y salen, cómo buscarlas, y los jugadores
@@ -121,7 +122,8 @@ Módulos (funciones hechas / archivo):
       direcciones; de `0x0007a8a0` a `0x0007af80`, y falta lo que sigue
       desde `0x0007afd0`)
 - [ ] Mensajes que no van por un canal —
-  `networking\network_message_gateway.c` (2: mandar el paquete pendiente).
+  `networking\network_message_gateway.c` (4: mandar el paquete pendiente,
+  y con qué empieza un mensaje).
   Faltan recibir un paquete (`0x0007afd0`) y añadir un mensaje
   (`0x0007b140`).
 - [x] Intentos de medir la conexión — `networking\transport_qos.c` (8: la

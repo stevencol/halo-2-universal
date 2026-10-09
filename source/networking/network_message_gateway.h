@@ -25,13 +25,40 @@ enum
 	NETWORK_MESSAGE_GATEWAY_PENDING_OFFSET= 0x14,
 	NETWORK_MESSAGE_GATEWAY_ADDRESS_OFFSET= 0x618,
 	NETWORK_MESSAGE_GATEWAY_STREAM_OFFSET= 0x62C,
+	/* how many kinds of message there are, and in how many bits a message
+	says its kind and its size */
+	NUMBER_OF_NETWORK_MESSAGE_TYPES= 0x2D,
+	NETWORK_MESSAGE_TYPE_BITS= 8,
+	NETWORK_MESSAGE_SIZE_BITS= 16,
 	/* what a stream that is done with is */
 	_bitstream_unknownC_finished= 2
 };
+
+/* ---------- structures */
+
+/* a kind of message: whether there is such a kind, the sizes that one can
+be of, and the two functions that write one and read one */
+struct network_message_type
+{
+	boolean valid;
+	long unknown4;
+	long unknown8;
+	long minimum_size;
+	long maximum_size;
+	void *encode;
+	void *decode;
+	long unknown1C;
+};
+
+typedef char verify_network_message_type_size[sizeof(struct network_message_type) == 0x20 || sizeof(void *) != 4 ? 1 : -1];
 
 /* ---------- prototypes/NETWORK_MESSAGE_GATEWAY.C */
 
 void network_message_gateway_flush(byte *gateway);
 void network_message_gateway_flush_address(const struct transport_address *address, byte *gateway);
+void __attribute__((stdcall)) network_message_header_write(struct bitstream *stream, unsigned long type,
+	unsigned long size);
+boolean __attribute__((stdcall)) network_message_header_read(long *type, struct bitstream *stream,
+	const struct network_message_type *types, long *size);
 
 #endif

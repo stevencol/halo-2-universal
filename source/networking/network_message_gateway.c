@@ -70,3 +70,42 @@ void network_message_gateway_flush_address(
 		}
 	}
 }
+
+/* 0x000937e0: a message starts: its kind, in 8 bits, and its size, in 16.
+The game has bitstream_write_integer_checked written here twice, and has
+this and the next one far from the functions of the gateway */
+void __attribute__((stdcall)) network_message_header_write(
+	struct bitstream *stream,
+	unsigned long type,
+	unsigned long size)
+{
+	bitstream_write_integer_checked(type, NETWORK_MESSAGE_TYPE_BITS, stream);
+	bitstream_write_integer_checked(size, NETWORK_MESSAGE_SIZE_BITS, stream);
+}
+
+/* 0x00093860: the kind and the size of the next message of a stream;
+whether they are good: the stream has them whole, there is such a kind, and
+the size is one that a message of that kind can be of */
+boolean __attribute__((stdcall)) network_message_header_read(
+	long *type,
+	struct bitstream *stream,
+	const struct network_message_type *types,
+	long *size)
+{
+	long message_size;
+
+	*type= (long)bitstream_read_integer(stream, NETWORK_MESSAGE_TYPE_BITS);
+	message_size= (long)bitstream_read_integer(stream, NETWORK_MESSAGE_SIZE_BITS);
+	*size= message_size;
+	if (!bitstream_overflowed(stream) && *type>=0 && *type<NUMBER_OF_NETWORK_MESSAGE_TYPES)
+	{
+		const struct network_message_type *message_type= &types[*type];
+
+		if (message_type->valid && message_size>=message_type->minimum_size && message_size<=message_type->maximum_size)
+		{
+			return !bitstream_overflowed(stream);
+		}
+	}
+
+	return FALSE;
+}

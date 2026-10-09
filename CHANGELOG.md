@@ -2,6 +2,57 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Con qué empieza un mensaje, y un texto del flujo de bits
+
+Tres funciones, 315 bytes entre todas: dos en `networking/network_message_gateway.c` y una en
+`networking/bitstream.c`. De 1396 funciones se pasa a 1399, el 12,42 % de las del juego
+(el 8,394 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_message_header_write` | `0x000937e0` | `networking/network_message_gateway.c` |
+| `network_message_header_read` | `0x00093860` | `networking/network_message_gateway.c` |
+| `bitstream_read_wide_string` | `0x00194fa0` | `networking/bitstream.c` |
+
+### Lo que se sabe
+
+- **Cada mensaje de la red empieza igual**: su clase, en 8 bits, y su
+  tamaño, en 16.
+  - `network_message_header_write` escribe eso.
+  - `network_message_header_read` lo lee y dice si vale: la clase tiene
+    que existir y el tamaño estar entre el mínimo y el máximo de esa
+    clase. Hay **45 clases de mensaje** (`0x2D`), y de cada una se guarda
+    en `0x20` bytes si existe, sus dos tamaños y las dos funciones que la
+    escriben y la leen.
+  - El juego las tiene lejos de las demás del módulo (`0x00093xxx`), junto
+    a la que reparte cada mensaje recibido a quien le toca (`0x000938e0`,
+    sin descompilar): ahí se ve que la petición de conexión del hito 397
+    es una de esas clases.
+- `bitstream_read_wide_string` lee un texto de caracteres de 16 bits. Si no
+  termina en el sitio que se le da, lo corta y marca el flujo como malo.
+  Así se sabe que el byte del flujo que el hito 402 tomaba por «empieza por
+  `debg`» es más general: **algo ha ido mal al leer**. Lo llamo `error`.
+
+### Comprobado rompiendo líneas
+
+- Trece líneas rotas, una cada vez: las pruebas fallaron en once.
+  - Una faltaba en las pruebas (dar por buena la clase número 45, que no
+    existe) y ahora falla.
+  - La otra no cambia nada: se mira dos veces si el flujo se ha pasado, y
+    quitar la primera da lo mismo.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `bitstream` (11 funciones) y de
+  `network_message_gateway` (4).
+- Lo que queda del flujo de bits hace cuentas con logaritmos y ángulos del
+  procesador antiguo (comprimir reales y direcciones): no va con el arnés
+  de ahora.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Más del flujo de bits: empezar a leer, un bit y volver atrás
 
 Cinco funciones en `networking/bitstream.c`, 354 bytes entre todas. De 1391

@@ -222,7 +222,7 @@ boolean bitstream_overflowed(
 {
 	boolean overflowed= stream->position>(long)((unsigned long)stream->size<<3);
 
-	if (stream->unknown14)
+	if (stream->error)
 	{
 		overflowed= TRUE;
 	}
@@ -239,15 +239,15 @@ void bitstream_begin_reading(
 	stream->unknownC= _bitstream_reading;
 	stream->position= 0;
 	stream->position_count= 0;
-	stream->unknown14= FALSE;
+	stream->error= FALSE;
 	if (bitstream_read_integer(stream, 32)==BITSTREAM_DEBUG_SIGNATURE)
 	{
-		stream->unknown14= TRUE;
+		stream->error= TRUE;
 	}
 	else
 	{
 		stream->position= 0;
-		stream->unknown14= FALSE;
+		stream->error= FALSE;
 	}
 }
 
@@ -313,4 +313,28 @@ void __attribute__((stdcall)) bitstream_pop_position(
 		}
 		stream->position= position;
 	}
+}
+
+/* 0x00194fa0: reads a text of characters of 16 bits, up to the one that
+ends it, into room for so many. One that does not end in that room is cut
+short there, and that is an error of the stream */
+void __attribute__((stdcall)) bitstream_read_wide_string(
+	struct bitstream *stream,
+	word *string,
+	long maximum_count)
+{
+	long index;
+
+	for (index= 0; index<maximum_count; index++)
+	{
+		word character= (word)bitstream_read_integer(stream, 16);
+
+		string[index]= character;
+		if (character==0)
+		{
+			return;
+		}
+	}
+	string[maximum_count-1]= 0;
+	stream->error= TRUE;
 }
