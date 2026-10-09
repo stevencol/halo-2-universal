@@ -2,6 +2,59 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Los intentos de un canal
+
+Una función en `networking/network_observer.c`, de 637 bytes. De 1355
+funciones se pasa a 1356, el 12,04 % de las del juego (el 7,929 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_channel_update_tries` | `0x000776a0` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_observer_channel_update_tries` era `unknown_000776a0`, la
+  tercera de las cosas que se hacen con cada canal cada vez. Con ella **el
+  ciclo de estados de un canal del observador está entero** (hitos 371,
+  386 y este): es la que decide cuándo se vuelve a intentar.
+  - Tras un tiempo en el primer estado, el canal empieza de nuevo: segundo
+    estado, sin intentos, sin dirección y sin sesiones fallidas; y se hace
+    otra vez todo lo de cada vez, llamándose a sí misma.
+  - En el cuarto estado (ya hay dirección), si se le pidió conectar, pasa
+    al quinto.
+  - En el segundo, el quinto o el noveno hay **un número de intentos, cada
+    uno con su espera** desde que entró en el estado. Son tres listas de
+    hasta 8 esperas en lo que el observador guarda en `0x10`: para buscar
+    dirección (`0x0`), para conectar (`0x24`) y para volver a conectar un
+    canal que ya estuvo conectado (`0x48`).
+  - Cuando toca: en el segundo estado busca dirección (hito 383) y pasa al
+    tercero, o al primero si no hay; en los otros, el canal del juego
+    empieza a conectar con la dirección (`unknown_00088220`, nueva) y pasa
+    al sexto estado desde el quinto, o al octavo desde el noveno.
+  - Sin intentos, vuelve al primer estado sin dirección.
+- Después del primer intento, o si el canal ya estuvo conectado, **alguna
+  sesión tiene que seguir queriéndolo**: se pregunta por la tercera
+  función de lo que cada sesión tiene en el observador. Si ninguna lo
+  quiere, el canal se suelta cuando lleva bastante sin usarse (hito 374).
+  Con esta son cuatro las funciones conocidas de las cinco.
+- El tercer bit del byte de `0x8` del canal, que el hito 386 ponía al
+  conectarse, es eso: el canal ya estuvo conectado alguna vez.
+
+### Comprobado rompiendo líneas
+
+- Veinte líneas rotas, una cada vez: las pruebas fallaron en las veinte.
+
+### Sin comprobar
+
+- Las pruebas sustituyen `network_observer_channel_set_state` por algo que
+  solo cambia el estado (sin eso, la función se llamaría a sí misma sin
+  fin en el primer estado: en el juego lo evita el mismo cambio).
+- En este hito se pasaron las pruebas de `network_observer` (47 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Un canal sigue el estado de su canal del juego
 
 Una función en `networking/network_observer.c`, de 821 bytes con sus tablas de saltos. De 1354

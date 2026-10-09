@@ -386,7 +386,7 @@ def run(t) -> None:
                 "network_observer_channel_set_state": lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]), arguments[2])),
                 "network_observer_channel_update_connection": with_channel_and_observer,
                 "network_observer_channel_update_game_channel": with_channel_and_observer,
-                "unknown_000776a0": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                "network_observer_channel_update_tries": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
             },
         )
 
@@ -462,7 +462,7 @@ def run(t) -> None:
                 "network_observer_channel_delete": gone,
                 "network_observer_channel_update_connection": with_channel_and_observer,
                 "network_observer_channel_update_game_channel": with_channel_and_observer,
-                "unknown_000776a0": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                "network_observer_channel_update_tries": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
                 "network_observer_channel_unknown_000773a0": with_channel_and_observer,
                 "network_observer_channel_update_probe": with_channel_and_observer,
                 "unknown_000779f0": with_observer,
@@ -1008,4 +1008,55 @@ def run(t) -> None:
             globals=setup["globals"],
             externals=dict(setup["externals"], network_observer_channel_forget_address=noted, network_observer_channel_set_state=goes),
             mocks=[Mock(lambda call: 0, stack_arguments=3, registers=("ecx",))],
+        )
+
+    # ---------- a channel tries again when it is time to
+
+    for n in range(2000):
+        setup = at_time()
+        now = struct.unpack("<I", setup["globals"]["unknown_0051054c"])[0]
+        data, pointers = with_owners()
+        # the third function of what each session has is the one that is asked
+        struct.pack_into("<5I", data, SIZE + 16, 0x11, 0x22, mock_address(0), 0x44, 0x55)
+        data += bytearray(random_.randbytes(0x70))
+        parameters = SIZE + 36
+        struct.pack_into("<I", data, 0x10, parameters)
+        for tries in (0, 0x24, 0x48):
+            struct.pack_into("<i8i", data, parameters + tries, random_.choice((0, 1, 3, 8, 8)), *(random_.choice((0, 1000, 5000)) for count in range(8)))
+        struct.pack_into("<i", data, parameters + 0x6C, random_.choice((1000, 1000, 5000)))
+        channel = random_.randrange(15)
+        at = CHANNELS + channel * CHANNEL
+        struct.pack_into("<I", data, at, random_.choice((0, 1, 1, 1, 2, 2, 2, 3, 4, 4, 5, 5, 5, 6, 7, 8, 9, 9, 9)))
+        struct.pack_into("<I", data, at + 4, (now - random_.choice((0, 999, 1000, 1001, 4999, 5000, 5001, 30000))) & 0xFFFFFFFF)
+        data[at + 8] = random_.choice((0, 0, 1, 1, 4, 5, 0xFB, 0xFF))
+        struct.pack_into("<h", data, at + 0xA, random_.choice((0, 0, 0, 1, 2, 3, 7, 8, 0x7FFF, -1)))
+        struct.pack_into("<I", data, at + 0xC, random_.choice((NONE, 0, 1, 2, 3, 4, 5, 5, 5)))
+        setup["globals"]["unknown_004d87d4"] = Buffer(bytes(game_channels()))
+        # which of them still want the channel: the same each time that one is asked
+        yes = random_.sample(range(4), random_.choice((0, 0, 1, 2, 4)))
+        t.check(
+            "network_observer_channel_update_tries",
+            Buffer(bytes(data), pointers=pointers + (0x10,)),
+            channel,
+            globals=setup["globals"],
+            externals=dict(
+                setup["externals"],
+                network_observer_channel_forget_address=noted,
+                network_observer_channel_set_state=goes,
+                network_observer_channel_update_connection=with_channel_and_observer,
+                network_observer_channel_update_game_channel=with_channel_and_observer,
+                network_observer_channel_unused_expired=lambda harness, arguments, expired=random_.choice((0, 1, 1, 0x100)): (
+                    expired,
+                    (arguments[0], harness.normalize(arguments[1]), arguments[2]),
+                ),
+                network_observer_channel_find_address=lambda harness, arguments, found=random_.choice((0, 1, 1, 0x100)): (
+                    found,
+                    (arguments[0], harness.normalize(arguments[1])),
+                ),
+                unknown_00088220=lambda harness, arguments: (
+                    0,
+                    (harness.normalize(arguments[0]), harness.normalize(arguments[1]), arguments[2]),
+                ),
+            ),
+            mocks=[Mock(lambda call, yes=yes: (call.registers["ecx"] // 4) % 4 in yes, stack_arguments=2, registers=("ecx",))],
         )

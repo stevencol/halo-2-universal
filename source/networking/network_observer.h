@@ -289,6 +289,17 @@ enum
 	NETWORK_CHANNEL_UNKNOWN58_OFFSET= 0x58,
 	NETWORK_OBSERVER_CHANNEL_REFUSED_REASON= 0xF,
 	NETWORK_OBSERVER_DEFAULT_REFRESH_RATE= 60,
+	/* the first bit of the byte of 0x8 of a channel: it was asked to
+	connect. And of what the observer has at 0x10: the tries that a channel
+	has to get an address, to connect, and to connect when it has had what
+	its channel of the game is of; and how long it stays in its first
+	state */
+	_network_observer_channel_connect_bit= 0x1,
+	MAXIMUM_NETWORK_OBSERVER_TRIES= 8,
+	NETWORK_OBSERVER_PARAMETERS_ADDRESS_TRIES_OFFSET= 0x0,
+	NETWORK_OBSERVER_PARAMETERS_CONNECT_TRIES_OFFSET= 0x24,
+	NETWORK_OBSERVER_PARAMETERS_RECONNECT_TRIES_OFFSET= 0x48,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN6C_OFFSET= 0x6C,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
 	_unknown_00088650_unknown11= 0x11
 };
@@ -354,6 +365,16 @@ struct network_rate
 typedef char verify_network_rate_size[sizeof(struct network_rate) == 0xD4 || sizeof(struct network_rate) == 0xD8 ? 1 : -1];
 typedef char verify_network_rate_spans_count_offset[offsetof(struct network_rate, spans_count) == 0xCC ? 1 : -1];
 
+/* the tries that a channel has at something: how many, and how long after it
+went into its state each one is, in milliseconds */
+struct network_observer_tries
+{
+	long count;
+	long delays[MAXIMUM_NETWORK_OBSERVER_TRIES];
+};
+
+typedef char verify_network_observer_tries_size[sizeof(struct network_observer_tries) == 0x24 ? 1 : -1];
+
 /* a function that takes its arguments off the stack */
 #define NETWORK_OBSERVER_CALLBACK __attribute__((stdcall))
 
@@ -384,6 +405,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_unknown_00077f90(long unknown_ea
 	long unknown4);
 void NETWORK_OBSERVER_CALLBACK network_observer_update_voice_console_counts(const byte *observer);
 void NETWORK_OBSERVER_CALLBACK network_observer_channel_update_game_channel(long channel_index, byte *observer);
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_update_tries(byte *observer, long channel_index);
 void NETWORK_OBSERVER_CALLBACK network_observer_release_game_channels(byte *observer);
 boolean network_observer_channel_unknown_00077940(byte *observer, long channel_index);
 void network_observer_channel_reset_unknown4dc(long channel_index, byte *observer);

@@ -449,24 +449,25 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_send(
 
 /* 0x000784a0: something that is noted of a channel of the observer, with a
 byte and a number. 0x000886e0: a channel of the game is let go of.
-0x0007b650: something of the network that a number says is let go of.
-0x000776a0: one more thing that is done with a channel of the observer each
-time */
+0x0007b650: something of the network that a number says is let go of */
 void __attribute__((stdcall)) network_observer_channel_forget_address(long channel_index, byte *observer, boolean unknown0, long unknown4);
 void __attribute__((stdcall)) unknown_000886e0(byte *game_channel);
 void unknown_0007b650(long unknown);
-void __attribute__((stdcall)) unknown_000776a0(byte *observer, long channel_index);
 
 /* what the observer has of a session starts with something that is told of
 its channels: by its fifth function, that one of them is in its first state
 again; by its fourth, that one of them has what its channel of the game is
-of, or has it no more; and asked something of one of them, by its first */
+of, or has it no more; and asked things of one of them: something by its
+first, and by its third whether it is still wanted, with whether it has had
+what its channel of the game is of */
 struct network_observer_session_owner;
 
 struct network_observer_session_owner_functions
 {
 	boolean (__attribute__((thiscall)) *channel_unknown0)(struct network_observer_session_owner *owner, long channel_index);
-	void *unknown4[2];
+	void *unknown4;
+	boolean (__attribute__((thiscall)) *channel_wanted)(struct network_observer_session_owner *owner, long channel_index,
+		boolean was_established);
 	void (__attribute__((thiscall)) *channel_established)(struct network_observer_session_owner *owner, long channel_index,
 		long unknown10, boolean established);
 	void (__attribute__((thiscall)) *channel_reset)(struct network_observer_session_owner *owner, long channel_index);
@@ -584,7 +585,7 @@ void network_observer_channel_update_connection(
 asked to connect: from its first state it goes into the second, with no
 tries; the first bit of its byte of 0x8 is set; and what is done with a
 channel each time is done now: network_observer_channel_update_connection, network_observer_channel_update_game_channel and
-unknown_000776a0 */
+network_observer_channel_update_tries */
 void network_observer_channel_connect(
 	long channel_index,
 	byte *observer)
@@ -603,7 +604,7 @@ void network_observer_channel_connect(
 	channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN8_OFFSET]|= 1;
 	network_observer_channel_update_connection(channel_index, observer);
 	network_observer_channel_update_game_channel(channel_index, observer);
-	unknown_000776a0(observer, channel_index);
+	network_observer_channel_update_tries(observer, channel_index);
 }
 
 /* 0x000797b0: something more that is done with a channel of the observer
@@ -688,7 +689,7 @@ void unknown_0007a4a0(byte *observer);
 use: if no session uses it and network_observer_channel_unused_expired says so, it is no more
 (network_observer_channel_delete); and if it still is in use, it follows its
 connection (network_observer_channel_update_connection) and network_observer_channel_update_game_channel,
-unknown_000776a0, network_observer_channel_unknown_000773a0 and network_observer_channel_update_probe are done with it. Then
+network_observer_channel_update_tries, network_observer_channel_unknown_000773a0 and network_observer_channel_update_probe are done with it. Then
 unknown_000779f0, unknown_00078ac0 and unknown_0007a4a0, with the observer */
 void NETWORK_OBSERVER_CALLBACK network_observer_update(
 	byte *observer)
@@ -712,7 +713,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_update(
 		{
 			network_observer_channel_update_connection(channel_index, observer);
 			network_observer_channel_update_game_channel(channel_index, observer);
-			unknown_000776a0(observer, channel_index);
+			network_observer_channel_update_tries(observer, channel_index);
 			network_observer_channel_unknown_000773a0(channel_index, observer);
 			network_observer_channel_update_probe(channel_index, observer);
 		}
@@ -1813,4 +1814,143 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_update_game_channel(
 	channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN8_OFFSET]|= _network_observer_channel_established_bit|_network_observer_channel_unknown8_bit4;
 	*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN10_OFFSET)= *(const long *)(game_channel+NETWORK_CHANNEL_UNKNOWN4C_OFFSET);
 	network_observer_channel_tell_established(observer, channel_index, TRUE);
+}
+
+/* 0x00088220, of the channels of the game: one of them starts to connect to
+an address of the game, with a byte */
+void __attribute__((stdcall)) unknown_00088220(const struct transport_address *address, byte *game_channel, boolean unknown);
+
+/* 0x000776a0: a channel of the observer that has a channel of the game
+tries again when it is time to. In its first state for as long as the number
+at 0x6C of what the observer has at 0x10 says, it goes into the second, with
+no tries, no address and no sessions that failed, and all that is done with
+a channel each time is done once more. In its fourth state, if it was asked
+to connect, it goes into the fifth, with no tries.
+
+Then, in its second, fifth or ninth state, it has so many tries, each so
+long after it went into the state: the ones to get an address in the second,
+the ones to connect in the others, and others again if it has had what its
+channel of the game is of. After the first try, or if it has had that, a
+session that uses it has to want it still (the third function of what each
+has in the observer): if none does, once the channel has been unused for long
+enough (network_observer_channel_unused_expired) it has no address and goes
+back to its first state. With no tries left, the same. When it is time for
+the try: in the second state it looks for an address
+(network_observer_channel_find_address) and goes into the third state with
+one, and into the first with none; in the others its channel of the game
+starts to connect to its address, and it goes into the sixth state from the
+fifth, and into the eighth from the ninth */
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_update_tries(
+	byte *observer,
+	long channel_index)
+{
+	byte *channel= (byte *)network_observer_channel(observer, channel_index);
+	long game_channel_index= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET);
+	const byte *parameters;
+	const struct network_observer_tries *tries;
+	byte *game_channel;
+	long state;
+	long try;
+
+	if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)==0 || game_channel_index==NONE)
+	{
+		return;
+	}
+	game_channel= unknown_004d87d4+game_channel_index*NETWORK_CHANNEL_SIZE;
+	parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+	if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)==_network_observer_channel_state1 &&
+		network_time_since(*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_TIME_OFFSET))>=
+		*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN6C_OFFSET))
+	{
+		network_observer_channel_set_state(_network_observer_channel_state2, observer, channel_index);
+		*(short *)(channel+NETWORK_OBSERVER_CHANNEL_TRIES_OFFSET)= 0;
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_FAILED_SESSIONS_OFFSET)= 0;
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_SESSION_OFFSET)= NONE;
+		network_observer_channel_forget_address(channel_index, observer, FALSE, 0);
+		network_observer_channel_update_connection(channel_index, observer);
+		network_observer_channel_update_game_channel(channel_index, observer);
+		network_observer_channel_update_tries(observer, channel_index);
+	}
+	if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)==_network_observer_channel_state4 &&
+		(channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN8_OFFSET]&_network_observer_channel_connect_bit))
+	{
+		network_observer_channel_set_state(_network_observer_channel_state5, observer, channel_index);
+		*(short *)(channel+NETWORK_OBSERVER_CHANNEL_TRIES_OFFSET)= 0;
+	}
+	state= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET);
+	if (state!=_network_observer_channel_state2 && state!=_network_observer_channel_state5 &&
+		state!=_network_observer_channel_state9)
+	{
+		return;
+	}
+	parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+	if (state==_network_observer_channel_state2)
+	{
+		tries= (const struct network_observer_tries *)(parameters+NETWORK_OBSERVER_PARAMETERS_ADDRESS_TRIES_OFFSET);
+	}
+	else if (!(channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN8_OFFSET]&_network_observer_channel_unknown8_bit4))
+	{
+		tries= (const struct network_observer_tries *)(parameters+NETWORK_OBSERVER_PARAMETERS_CONNECT_TRIES_OFFSET);
+	}
+	else
+	{
+		tries= (const struct network_observer_tries *)(parameters+NETWORK_OBSERVER_PARAMETERS_RECONNECT_TRIES_OFFSET);
+	}
+	if (*(const short *)(channel+NETWORK_OBSERVER_CHANNEL_TRIES_OFFSET)!=0 ||
+		(channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN8_OFFSET]&_network_observer_channel_unknown8_bit4))
+	{
+		boolean wanted= FALSE;
+		long session_index;
+
+		for (session_index= 0; session_index<MAXIMUM_NETWORK_OBSERVER_SESSIONS; session_index++)
+		{
+			if (channel[NETWORK_OBSERVER_CHANNEL_SESSIONS_OFFSET]&(1u<<session_index))
+			{
+				struct network_observer_session_owner *owner= *(struct network_observer_session_owner **)(observer+
+					NETWORK_OBSERVER_SESSIONS_OFFSET+session_index*NETWORK_OBSERVER_SESSION_SIZE+
+					NETWORK_OBSERVER_SESSION_SESSION_OFFSET);
+
+				if (owner->functions->channel_wanted(owner, channel_index,
+					(channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN8_OFFSET]&_network_observer_channel_unknown8_bit4)!=0))
+				{
+					wanted= TRUE;
+				}
+			}
+		}
+		if (!wanted)
+		{
+			if (network_observer_channel_unused_expired(channel_index, observer, 0))
+			{
+				network_observer_channel_forget_address(channel_index, observer, FALSE, 0);
+				network_observer_channel_set_state(_network_observer_channel_state1, observer, channel_index);
+			}
+
+			return;
+		}
+	}
+	*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNUSED_TIME_OFFSET)= 0;
+	*(long *)(channel+NETWORK_OBSERVER_CHANNEL_WAITING_TIME_OFFSET)= 0;
+	try= *(const short *)(channel+NETWORK_OBSERVER_CHANNEL_TRIES_OFFSET);
+	if (try<0 || try>=tries->count)
+	{
+		network_observer_channel_forget_address(channel_index, observer, FALSE, 0);
+		network_observer_channel_set_state(_network_observer_channel_state1, observer, channel_index);
+
+		return;
+	}
+	if (network_time_since(*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_TIME_OFFSET))<tries->delays[try])
+	{
+		return;
+	}
+	if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)==_network_observer_channel_state2)
+	{
+		network_observer_channel_set_state(network_observer_channel_find_address(channel_index, observer) ?
+			_network_observer_channel_state3 : _network_observer_channel_state1, observer, channel_index);
+
+		return;
+	}
+	unknown_00088220((const struct transport_address *)(channel+NETWORK_OBSERVER_CHANNEL_ADDRESS_OFFSET), game_channel, TRUE);
+	network_observer_channel_set_state(
+		*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)==_network_observer_channel_state5 ?
+		_network_observer_channel_state6 : _network_observer_channel_state8, observer, channel_index);
 }
