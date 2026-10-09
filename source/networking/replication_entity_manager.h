@@ -32,7 +32,10 @@ enum
 	_replication_entity_deleting_bit= 0x2,
 	_replication_entity_created_bit= 0x4,
 	_replication_entity_first_bit= 0x8,
-	_replication_entity_other_bit= 0x10
+	_replication_entity_other_bit= 0x10,
+	/* the size of the last of the three things that go with a thing that
+	another console made */
+	REPLICATION_ENTITY_CREATION_DATA_SIZE= 0x10
 };
 
 /* ---------- structures */
@@ -48,17 +51,24 @@ struct replication_entity
 	long next;
 };
 
-/* what the things are of: something with functions, of which the eleventh
-and the thirteenth are told that a thing is being done with, and that it is
-done with */
+/* what the things are of: something with functions, of which the third is
+told that a thing was made by another console, with three things of it; the
+eleventh and the thirteenth, that a thing is being done with, and that it is
+done with; and the sixteenth gives something of a thing for a view that is
+new, or nothing */
 struct replication_entity_client;
 
 struct replication_entity_client_functions
 {
-	void *unknown0[10];
+	void *unknown0[2];
+	void (__attribute__((thiscall)) *created)(struct replication_entity_client *client, long entity, long unknown4,
+		long unknown8, long unknownC, void *unknown10);
+	void *unknownC[7];
 	void (__attribute__((thiscall)) *deleting)(struct replication_entity_client *client, long entity);
 	void *unknown2C;
 	void (__attribute__((thiscall)) *deleted)(struct replication_entity_client *client, long entity);
+	void *unknown34[2];
+	long (__attribute__((thiscall)) *unknown3C)(struct replication_entity_client *client, long entity);
 };
 
 struct replication_entity_client
@@ -89,6 +99,13 @@ boolean __attribute__((stdcall)) replication_entity_manager_create_entities(stru
 void __attribute__((stdcall)) replication_entity_manager_delete_entity(struct replication_entity_manager *manager,
 	long entity);
 void replication_entity_manager_delete_entity_now(struct replication_entity_manager *manager, long entity);
+void replication_entity_manager_delete_chain(long entity, struct replication_entity_manager *manager);
+void __attribute__((stdcall)) replication_entity_manager_delete_entities_now(struct replication_entity_manager *manager,
+	long count, const long *entities);
+void __attribute__((stdcall)) replication_entity_manager_add_view(byte *view, struct replication_entity_manager *manager,
+	long view_index);
+void __attribute__((stdcall)) replication_entity_manager_create_entities_remote(const long *unknown4,
+	struct replication_entity_manager *manager, long count, const long *entities, const long *unknown8, byte *unknown10);
 long replication_entity_manager_allocate_index(struct replication_entity_manager *manager);
 long replication_entity_manager_create_entity(long index, struct replication_entity_manager *manager);
 long replication_entity_manager_get_chain(long entity, long *entities, const struct replication_entity_manager *manager);

@@ -1997,3 +1997,8 @@ address,name,source,arguments,returns,convention
 00097fe0,unknown_00097fe0,,edi,void
 00099690,unknown_00099690,,eax ecx stack,void,stdcall
 000995c0,unknown_000995c0,,eax ecx,void
+00089570,replication_entity_manager_delete_chain,source/networking/replication_entity_manager.c,eax esi,void
+00089690,replication_entity_manager_delete_entities_now,source/networking/replication_entity_manager.c,ebx stack stack,void,stdcall
+000898c0,replication_entity_manager_add_view,source/networking/replication_entity_manager.c,eax ebx stack,void,stdcall
+00089950,replication_entity_manager_create_entities_remote,source/networking/replication_entity_manager.c,eax stack stack stack stack stack,void,stdcall
+000980d0,unknown_000980d0,,ecx edx esi,void

@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Borrar cadenas, una vista más y las cosas que hizo otra consola
+
+Cuatro funciones en `networking/replication_entity_manager.c`. De 1437
+funciones se pasa a 1441, el 12,79 % de las del juego (el 8,634 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `replication_entity_manager_delete_chain` | `0x00089570` | `networking/replication_entity_manager.c` |
+| `replication_entity_manager_delete_entities_now` | `0x00089690` | `networking/replication_entity_manager.c` |
+| `replication_entity_manager_add_view` | `0x000898c0` | `networking/replication_entity_manager.c` |
+| `replication_entity_manager_create_entities_remote` | `0x00089950` | `networking/replication_entity_manager.c` |
+
+### Lo que se sabe
+
+- `replication_entity_manager_delete_chain` borra una cosa y las que van
+  detrás en su cadena, de la última a la primera: como el borrado de una
+  del hito 416, pero mirando solo si alguien tiene todavía la primera.
+- `replication_entity_manager_delete_entities_now` borra ya una lista de
+  cosas, después de soltarlas de su cadena.
+- `replication_entity_manager_add_view` **apunta una vista nueva** (otra
+  consola que entra) y le cuenta todas las cosas que ya existen: las que
+  están en uso, creadas y sin borrarse. Para cada una pregunta a lo que
+  las cosas son (función dieciséis de su tabla) si tiene algo que darle.
+- `replication_entity_manager_create_entities_remote` es el otro lado de
+  crear: **las cosas que hizo otra consola se ponen aquí con el mismo
+  número que tienen allí** (sitio y veces usado), encadenadas igual, y se
+  avisa de cada una a lo que las cosas son (función tres), con los tres
+  datos que venían con ella.
+- De la tabla de lo que las cosas son se conocen ya cuatro funciones: la
+  3 (creada por otra consola), la 11 y la 13 (borrándose y borrada) y la
+  16 (algo para una vista nueva).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las cuatro**, en las nueve del hito 416
+  y en `network_channel_write_packet` (hito 415).
+- Una cadena tiene cuatro cosas como mucho: con más,
+  `replication_entity_manager_delete_chain` se saldría de su lista. No se
+  prueba.
+- En este hito se pasaron las pruebas de `replication_entity_manager`
+  (13 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — La tabla de las cosas que las consolas comparten
 
 Nueve funciones en un archivo nuevo, `networking/replication_entity_manager.c`. De 1428

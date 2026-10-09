@@ -24,7 +24,7 @@ def run(t) -> None:
         mask = 0
         for view in range(VIEWS):
             if random_.random() < 0.6:
-                struct.pack_into("<I", data, 4 + view * 4, SIZE + 0x40 + view * 0x10)
+                struct.pack_into("<I", data, 4 + view * 4, SIZE + 0x80 + view * 0x10)
                 pointers.append(4 + view * 4)
                 if random_.random() < 0.7:
                     mask |= 1 << view
@@ -47,8 +47,8 @@ def run(t) -> None:
             # no thing is after itself: what a thing has after it is in a place after its own, so it ends
             pass
         struct.pack_into("<i", data, 0x2044, random_.choice((0, 0, 1, 0x200, 0x3FF, 0x400, random_.randrange(COUNT))) if next_ is None else next_)
-        tail = struct.pack("<I", SIZE + 4) + struct.pack("<13I", *(0x11 * (n + 1) for n in range(10)), mock_address(0), 0xCC, mock_address(1))
-        tail += bytes(0x40 - len(tail)) + random_.randbytes(VIEWS * 0x10)
+        tail = struct.pack("<I", SIZE + 4) + struct.pack("<16I", 0x11, 0x22, mock_address(3), *(0x11 * (n + 4) for n in range(7)), mock_address(0), 0xCC, mock_address(1), 0xEE, 0xFF, mock_address(2))
+        tail += bytes(0x80 - len(tail)) + random_.randbytes(VIEWS * 0x10)
         return Buffer(bytes(data) + tail, pointers=tuple(pointers))
 
     view_stubs = {
@@ -135,3 +135,78 @@ def run(t) -> None:
         firsts = [raw[0x45 + index * 8] << 28 | index for index in range(COUNT) if raw[0x44 + index * 8] & 9 == 9]
         entity = random_.choice((an_entity(), NONE, *(random_.choice(wanted) for place in range(3) if wanted), *(random_.choice(firsts) for place in range(2) if firsts)))
         t.check("replication_entity_manager_find_chain", data, Buffer(bytes(0x1000)), entity)
+
+    # ---------- some things are done with at once
+
+    def a_chain(data: Buffer, count: int, counted: int | None = None) -> tuple:
+        """So many things that are one after the other, in places of their own."""
+        raw = bytearray(data.data)
+        places = random_.sample(range(COUNT), count)
+        entities = [place | random_.getrandbits(4) << 28 for place in places]
+        for position, place in enumerate(places):
+            struct.pack_into("<I", raw, 0x48 + place * 8, entities[position + 1] if position + 1 < count else NONE)
+        if count and counted is not None:
+            struct.pack_into("<h", raw, 0x46 + places[0] * 8, counted)
+        return Buffer(bytes(raw), pointers=data.pointers), entities
+
+    for n in range(500):
+        data, entities = a_chain(manager(), random_.choice((1, 1, 2, 3, 4)), random_.choice((0, 0, 1, -1)))
+        t.check(
+            "replication_entity_manager_delete_chain",
+            random_.choice((entities[0], entities[0], entities[0], entities[-1], NONE)),
+            data,
+            externals=view_stubs,
+            mocks=client_mocks(),
+        )
+    for n in range(400):
+        count = random_.choice((0, 1, 2, 3, 4, 8))
+        data, entities = a_chain(manager(), count)
+        t.check(
+            "replication_entity_manager_delete_entities_now",
+            data,
+            count,
+            Buffer(struct.pack(f"<{count + 1}I", *entities, random_.getrandbits(32))),
+            externals=view_stubs,
+            mocks=client_mocks(),
+        )
+
+    # ---------- one more view
+
+    for n in range(120):
+        gives = {
+            "unknown_000980d0": lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]), arguments[2])),
+        }
+
+        def has(call, kind=random_.choice((0, 1, 2))):
+            # what the things are of has something of some things
+            return (0, 0x1234, (call.stack[0] & 1) * 0x77)[kind]
+
+        t.check(
+            "replication_entity_manager_add_view",
+            Buffer(random_.randbytes(0x20)),
+            manager(random_.choice((0.0, 0.02, 0.1, 1.0))),
+            random_.randrange(VIEWS),
+            externals=dict(view_stubs, **gives),
+            mocks=[*client_mocks(), Mock(has, stack_arguments=1, registers=("ecx",))],
+        )
+
+    # ---------- things that another console made
+
+    for n in range(400):
+        count = random_.choice((0, 1, 2, 3, 4))
+        entities = [place | random_.getrandbits(4) << 28 for place in random_.sample(range(COUNT), count)]
+        things = Buffer(random_.randbytes(count * 0x10 + 4))
+        t.check(
+            "replication_entity_manager_create_entities_remote",
+            Buffer(random_.randbytes(count * 4 + 4)),
+            manager(),
+            count,
+            Buffer(struct.pack(f"<{count + 1}I", *entities, random_.getrandbits(32))),
+            Buffer(random_.randbytes(count * 4 + 4)),
+            things,
+            mocks=[
+                *client_mocks(),
+                Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
+                Mock(lambda call: 0, stack_arguments=5, registers=("ecx",)),
+            ],
+        )
