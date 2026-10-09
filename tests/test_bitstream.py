@@ -63,3 +63,55 @@ def run(t) -> None:
                     Buffer(random_.randbytes(room)),
                     bit_count,
                 )
+
+    # ---------- a whole stream: with what it keeps after its position
+
+    def whole(size: int, position: int, state: int | None = None, blank: bool = False) -> Buffer:
+        data = bytearray(random_.randbytes(size))
+        if blank:
+            for bit in range(max(position, 0), size * 8):
+                data[bit >> 3] &= ~(1 << (bit & 7))
+        count = random_.choice((1, 2, 3, 4))
+        kept = [random_.choice((0, 1, 7, 8, 9, 31, 33, max(size * 8 - 12, 0), size * 8 - 1, size * 8, size * 8 + 5, max(position - 1, 0), position, position + 1)) for n in range(4)]
+        header = struct.pack(
+            "<I4iB3xi4iii",
+            0x34,
+            size,
+            random_.getrandbits(31),
+            random_.choice((1, 1, 3, 2)) if state is None else state,
+            position,
+            random_.choice((0, 0, 1, 0x80)),
+            count,
+            *kept,
+            random_.getrandbits(31),
+            random_.getrandbits(31),
+        )
+        # what is after the data is not the stream's to write
+        return Buffer(header + bytes(data) + random_.randbytes(8), pointers=(0,))
+
+    for size in (1, 4, 8, 12, 40):
+        for position in (*positions(random_, size), -1, -8, -9):
+            t.check("bitstream_overflowed", whole(size, position))
+            for value in (0, 1, 0x80, 1):
+                t.check("bitstream_write_bool", whole(size, position, blank=True), value)
+                t.check("bitstream_pop_position", whole(size, position), value)
+            for bit_count in (0, 1, 2, 7, 8, 16, 31, 32, 33):
+                for value in (0, 1, (1 << (bit_count & 31)) - 1, 1 << (bit_count & 31), random_.getrandbits(32)):
+                    t.check(
+                        "bitstream_write_integer_checked",
+                        value & 0xFFFFFFFF,
+                        bit_count,
+                        whole(size, max(position, 0), blank=True),
+                        # the line of text that is made for a number that does not fit
+                        externals={"csprintf256": lambda harness, arguments: (0, (arguments[2],))},
+                    )
+
+    for n in range(200):
+        size = random_.choice((4, 8, 12, 40, 3))
+        data = bytearray(whole(size, random_.getrandbits(8)).data)
+        if n % 2:
+            # the word of a build for testing, whole or not
+            data[0x34 : 0x34 + min(size, 4)] = b"gbed"[: min(size, 4)]
+            if n % 8 == 1:
+                data[0x34] ^= 1
+        t.check("bitstream_begin_reading", Buffer(bytes(data), pointers=(0,)))

@@ -2,6 +2,64 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Más del flujo de bits: empezar a leer, un bit y volver atrás
+
+Cinco funciones en `networking/bitstream.c`, 354 bytes entre todas. De 1391
+funciones se pasa a 1396, el 12,39 % de las del juego (el 8,384 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `bitstream_overflowed` | `0x001946f0` | `networking/bitstream.c` |
+| `bitstream_begin_reading` | `0x001947a0` | `networking/bitstream.c` |
+| `bitstream_write_bool` | `0x00194830` | `networking/bitstream.c` |
+| `bitstream_write_integer_checked` | `0x001947e0` | `networking/bitstream.c` |
+| `bitstream_pop_position` | `0x00194710` | `networking/bitstream.c` |
+
+### Lo que se sabe
+
+- Vuelvo al flujo de bits del hito 10, porque lo que manda los mensajes sin
+  canal (hito 394) lo usa por dentro. El flujo **es más largo de lo que se
+  creía**: después de su posición guarda un byte, **hasta cuatro
+  posiciones a las que volver** y dos números (`0x34` bytes en total).
+  - `bitstream_begin_reading` prepara un flujo para leerlo. Mira si empieza
+    por la palabra `debg`, la que escribe una versión de pruebas del
+    juego, y lo apunta.
+  - `bitstream_overflowed` dice si el flujo se ha pasado del final de sus
+    datos... o si empezaba por `debg`: esta versión del juego **da por
+    malo un paquete de una versión de pruebas**.
+  - `bitstream_write_bool` escribe un bit.
+  - `bitstream_write_integer_checked` escribe un número en tantos bits. Si
+    no cabe, compone un texto de aviso («%u exceeds max value of %u») con
+    el que no hace nada: es lo que queda de un aviso de la versión de
+    pruebas.
+  - `bitstream_pop_position` deja de guardar la última posición y, si se
+    le dice, **vuelve a ella**: en un flujo que se está escribiendo borra
+    lo que se había escrito desde allí. Es como se deshace un mensaje que
+    al final no cabe en el paquete.
+
+### La batería completa
+
+- La del hito 400 terminó: **1390 de 1390 funciones** iguales que las del
+  juego.
+
+### Comprobado rompiendo líneas
+
+- Veintidós líneas rotas, una cada vez: las pruebas fallaron en
+  dieciocho. Las otras cuatro faltaban en las pruebas y ahora fallan: tres
+  escribían justo después de los datos, donde las pruebas no miraban, y la
+  cuarta era el texto de aviso, que no dejaba rastro.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `bitstream` (10 funciones).
+- La entrada de `ESTADO.md` decía que al flujo de bits le quedaban 2
+  funciones. En la lista de Ghidra hay unas veinte más por esa zona
+  (`0x00194870` a `0x00195ed0`); no he mirado aún cuáles son suyas.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Cuándo puede mandar un canal: el observador, entero
 
 Una función en `networking/network_observer.c`, de 1369 bytes. De 1390

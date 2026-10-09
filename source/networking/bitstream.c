@@ -214,3 +214,103 @@ unsigned long bitstream_read_integer(
 
 	return result;
 }
+
+/* 0x001946f0: whether a stream is past the end of its data, or what is read
+started with the word of a build for testing */
+boolean bitstream_overflowed(
+	const struct bitstream *stream)
+{
+	boolean overflowed= stream->position>(long)((unsigned long)stream->size<<3);
+
+	if (stream->unknown14)
+	{
+		overflowed= TRUE;
+	}
+
+	return overflowed;
+}
+
+/* 0x001947a0: a stream is to be read, from the start, with no positions
+kept. If its first word is the one of a build for testing, that is noted and
+it is read from after it; if not, from the start */
+void bitstream_begin_reading(
+	struct bitstream *stream)
+{
+	stream->unknownC= _bitstream_reading;
+	stream->position= 0;
+	stream->position_count= 0;
+	stream->unknown14= FALSE;
+	if (bitstream_read_integer(stream, 32)==BITSTREAM_DEBUG_SIGNATURE)
+	{
+		stream->unknown14= TRUE;
+	}
+	else
+	{
+		stream->position= 0;
+		stream->unknown14= FALSE;
+	}
+}
+
+/* 0x00194830: writes a bit, if there is room for it */
+void __attribute__((stdcall)) bitstream_write_bool(
+	struct bitstream *stream,
+	boolean value)
+{
+	long position= stream->position;
+
+	if ((long)(((unsigned long)stream->size<<3)-(unsigned long)position)>=1 && value)
+	{
+		((byte *)stream->data)[position/8]|= (byte)(1<<SHIFT_COUNT(position%8));
+	}
+	stream->position= (long)((unsigned long)stream->position+1);
+}
+
+/* 0x001947e0: writes a number in so many bits. One that does not fit in them
+has a line of text made for it, which nothing is done with */
+void __attribute__((stdcall)) bitstream_write_integer_checked(
+	unsigned long value,
+	long bit_count,
+	struct bitstream *stream)
+{
+	if (bit_count<32 && value>=1u<<SHIFT_COUNT(bit_count))
+	{
+		char text[256];
+
+		text[0]= 0;
+		csprintf256(text, "%u exceeds max value of %u", value, 1u<<SHIFT_COUNT(bit_count));
+	}
+	bitstream_write_integer(stream, value, bit_count);
+}
+
+/* 0x00194710: the last position that a stream kept is not kept any more;
+and with a byte, the stream goes back to it. One that is being written then
+has zeros from there on, and notes how many bits were taken back, and one
+more thing taken back */
+void __attribute__((stdcall)) bitstream_pop_position(
+	struct bitstream *stream,
+	boolean go_back)
+{
+	long position= stream->positions[--stream->position_count];
+
+	if (go_back)
+	{
+		if (stream->unknownC==_bitstream_writing && position<stream->position)
+		{
+			long byte_index= position/8;
+			long rest;
+
+			stream->unknown2C= stream->position-position;
+			stream->unknown30++;
+			if (byte_index<stream->size)
+			{
+				((byte *)stream->data)[byte_index]&= (byte)((1<<SHIFT_COUNT(position%8))-1);
+			}
+			rest= stream->size-byte_index-1;
+			if (rest>0)
+			{
+				memset((byte *)stream->data+byte_index+1, 0, rest);
+			}
+		}
+		stream->position= position;
+	}
+}

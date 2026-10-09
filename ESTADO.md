@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 401.
+**Última actualización:** 2026-10-08, al terminar el hito 402.
 
 ## Dónde estamos
 
-- **1391 funciones descompiladas de 11.265: el 12,35 % del juego** (el
-  8,372 % de los bytes de código).
-- Las 1391 están comprobadas contra el ejecutable original: las 1354 del
-  hito 385 con la batería completa, y las de después con sus propias pruebas
+- **1396 funciones descompiladas de 11.265: el 12,39 % del juego** (el
+  8,384 % de los bytes de código).
+- Las 1396 están comprobadas contra el ejecutable original: las 1390 del
+  hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile when a channel of the game can send: the observer is whole* (ver `git log`).
+- Último hito: *Decompile five more functions of the bitstream* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 556 funciones apuntadas pero sin descompilar (las que el código
   llama); 454 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -108,7 +108,8 @@ Módulos (funciones hechas / archivo):
 - [ ] Dibujo de depuración — `rasterizer\rasterizer_debug.c` (3: empezar y
       terminar líneas o triángulos; faltan `0x0001e930` y `0x0001eb00`, que
       preparan la consola para dibujar)
-- [x] Flujo de bits de red — `networking\bitstream.c` (5; quedan 2)
+- [ ] Flujo de bits de red — `networking\bitstream.c` (10; quedan las de
+      `0x00194870` a `0x00195ed0` que sean suyas, sin mirar aún)
 - [ ] Sesión de red — `networking\network_session.c` (181: el estado de
       una sesión, prepararla, arrancarla, su identificador y su clave,
       las consolas que entran y salen, cómo buscarlas, y los jugadores

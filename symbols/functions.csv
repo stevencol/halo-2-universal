@@ -101,6 +101,11 @@ address,name,source,arguments,returns,convention
 001957d0,bitstream_read_bool,source/networking/bitstream.c,edi,bool
 00195820,bitstream_read_bits,source/networking/bitstream.c,ebx stack stack,void
 001959c0,bitstream_read_integer,source/networking/bitstream.c,edi stack,int
+001946f0,bitstream_overflowed,source/networking/bitstream.c,ecx,bool
+001947a0,bitstream_begin_reading,source/networking/bitstream.c,eax,void
+00194830,bitstream_write_bool,source/networking/bitstream.c,esi stack,void,stdcall
+001947e0,bitstream_write_integer_checked,source/networking/bitstream.c,ebx edi stack,void,stdcall
+00194710,bitstream_pop_position,source/networking/bitstream.c,esi stack,void,stdcall
 001d8d60,fast_quaternion_normalize,source/math/real_math.c,ecx,void
 000b66f0,csprintf256,source/cseries/cseries.c,esi stack stack,int
 0011c920,csstrcasecmp,source/cseries/cseries.c,ecx eax,int

@@ -13,6 +13,18 @@ Halo 1 has no such thing: the names of the functions are a guess.
 
 #include "cseries/cseries.h"
 
+/* ---------- constants */
+
+enum
+{
+	MAXIMUM_BITSTREAM_POSITIONS= 4,
+	/* what a stream is doing: being written, and being read */
+	_bitstream_writing= 1,
+	_bitstream_reading= 3,
+	/* 'debg': what a build for testing starts what it writes with */
+	BITSTREAM_DEBUG_SIGNATURE= 0x64656267
+};
+
 /* ---------- structures */
 
 struct bitstream
@@ -25,6 +37,15 @@ struct bitstream
 	/* in bits; it can go past the end of the data, and what is past the end
 	is not written and is read as zeros */
 	long position;
+	/* what is read starts with the word that only a build for testing writes */
+	boolean unknown14;
+	/* positions that were kept to go back to, the last one last */
+	long position_count;
+	long positions[MAXIMUM_BITSTREAM_POSITIONS];
+	/* how many bits the last thing that was taken back was, and how many
+	things were */
+	long unknown2C;
+	long unknown30;
 };
 
 typedef char verify_bitstream_position_offset[
@@ -37,5 +58,11 @@ void bitstream_write_integer(struct bitstream *stream, unsigned long value, long
 boolean bitstream_read_bool(struct bitstream *stream);
 void bitstream_read_bits(struct bitstream *stream, void *buffer, long bit_count);
 unsigned long bitstream_read_integer(struct bitstream *stream, long bit_count);
+boolean bitstream_overflowed(const struct bitstream *stream);
+void bitstream_begin_reading(struct bitstream *stream);
+void __attribute__((stdcall)) bitstream_write_bool(struct bitstream *stream, boolean value);
+void __attribute__((stdcall)) bitstream_write_integer_checked(unsigned long value, long bit_count,
+	struct bitstream *stream);
+void __attribute__((stdcall)) bitstream_pop_position(struct bitstream *stream, boolean go_back);
 
 #endif
