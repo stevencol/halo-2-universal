@@ -452,7 +452,7 @@ byte and a number. 0x000886e0: a channel of the game is let go of.
 0x0007b650: something of the network that a number says is let go of */
 void __attribute__((stdcall)) network_observer_channel_forget_address(long channel_index, byte *observer, boolean unknown0, long unknown4);
 void __attribute__((stdcall)) unknown_000886e0(byte *game_channel);
-void unknown_0007b650(long unknown);
+void transport_qos_delete(long index);
 
 /* what the observer has of a session starts with something that is told of
 its channels: by its fifth function, that one of them is in its first state
@@ -533,7 +533,7 @@ void network_observer_channel_delete(
 	unknown70= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN70_OFFSET);
 	if (unknown70!=NONE)
 	{
-		unknown_0007b650(unknown70);
+		transport_qos_delete(unknown70);
 		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN70_OFFSET)= NONE;
 	}
 	memset(channel, 0, NETWORK_OBSERVER_CHANNEL_SIZE);
@@ -831,22 +831,17 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_000773a0(
 	}
 }
 
-/* 0x0007b4c0: something of the network is asked for, for a session and a
-console; its number, NONE if it cannot be. 0x0007b6c0: whether it is done.
-0x0007b7b0: what it found goes where it is told; whether there is any */
-long __attribute__((stdcall)) unknown_0007b4c0(long unknown0, long unknown4, long unknown8,
-	const struct network_observer_probe *probe);
-boolean unknown_0007b6c0(long unknown);
-boolean __attribute__((stdcall)) unknown_0007b7b0(long unknown, byte *result, long unknown4);
+#include "networking/transport_qos.h"
 
-/* 0x00077480: a channel of the observer asks, once, for something of the
-network about its console (unknown_0007b4c0), for the first session that
-uses it and is known by something: with what the session is known by, its
-key and what the channel has at 0x14. The number of what was asked for is
-kept at 0x70. When it is done (unknown_0007b6c0): what it found is kept at
-0x74 and, if there is any, the bit 0x10 of the byte of 0x8 is set and the
-numbers of 0x8C and 0x90 are zero; it is let go of (unknown_0007b650); and
-the bit 8 of that byte says that the channel has asked already */
+/* 0x00077480: a channel of the observer makes, once, an attempt at finding
+out how the connection with its console is (transport_qos_new), for the
+first session that uses it and is known by something: with what the session
+is known by, its key and what the channel has at 0x14. The index of the
+attempt is kept at 0x70. When it is done (transport_qos_is_complete): what
+it found is kept at 0x74 and, if there is any, the bit 0x10 of the byte of
+0x8 is set and the numbers of 0x8C and 0x90 are zero; it is no more
+(transport_qos_delete); and the bit 8 of that byte says that the channel has
+asked already */
 void network_observer_channel_update_probe(
 	long channel_index,
 	byte *observer)
@@ -872,21 +867,23 @@ void network_observer_channel_update_probe(
 				memcpy(probe.identifier, session+NETWORK_OBSERVER_SESSION_IDENTIFIER_OFFSET, sizeof(probe.identifier));
 				memcpy(probe.key, session+NETWORK_OBSERVER_SESSION_KEY_OFFSET, sizeof(probe.key));
 				memcpy(probe.unknown14, channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN14_OFFSET, sizeof(probe.unknown14));
-				*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN70_OFFSET)= unknown_0007b4c0(NONE, 1, 0, &probe);
+				*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN70_OFFSET)= transport_qos_new(NONE, 1, 0,
+					(const struct transport_qos_target *)&probe);
 				break;
 			}
 		}
 	}
 	unknown70= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN70_OFFSET);
-	if (unknown70!=NONE && unknown_0007b6c0(unknown70))
+	if (unknown70!=NONE && transport_qos_is_complete(unknown70))
 	{
-		if (unknown_0007b7b0(unknown70, channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN74_OFFSET, 0))
+		if (transport_qos_get_result(unknown70,
+			(struct transport_qos_result *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN74_OFFSET), 0))
 		{
 			channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN8_OFFSET]|= _network_observer_channel_has_probe_bit;
 			*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN90_OFFSET)= 0;
 			*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN8C_OFFSET)= 0;
 		}
-		unknown_0007b650(*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN70_OFFSET));
+		transport_qos_delete(*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN70_OFFSET));
 		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN70_OFFSET)= NONE;
 		channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN8_OFFSET]|= _network_observer_channel_probed_bit;
 	}

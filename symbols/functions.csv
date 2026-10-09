@@ -1873,7 +1873,7 @@ address,name,source,arguments,returns,convention
 00076f50,network_observer_channel_update_connection,source/networking/network_observer.c,esi edi,void
 000784a0,network_observer_channel_forget_address,source/networking/network_observer.c,eax ecx stack stack,void,stdcall
 000886e0,unknown_000886e0,,stack,void,stdcall
-0007b650,unknown_0007b650,,edi,void
+0007b650,transport_qos_delete,source/networking/transport_qos.c,edi,void
 00076ff0,network_observer_channel_update_game_channel,source/networking/network_observer.c,ebx stack,void,stdcall
 000776a0,network_observer_channel_update_tries,source/networking/network_observer.c,ecx stack,void,stdcall
 00088220,unknown_00088220,,eax stack stack,void,stdcall
@@ -1892,9 +1892,16 @@ address,name,source,arguments,returns,convention
 000779f0,unknown_000779f0,,edi,void
 00078ac0,unknown_00078ac0,,stack,void,stdcall
 0007a4a0,unknown_0007a4a0,,eax,void
-0007b4c0,unknown_0007b4c0,,eax edx ecx stack,int,stdcall
-0007b6c0,unknown_0007b6c0,,eax,bool
-0007b7b0,unknown_0007b7b0,,eax edi stack,bool,stdcall
+0007b4c0,transport_qos_new,source/networking/transport_qos.c,eax edx ecx stack,int,stdcall
+0007b6c0,transport_qos_is_complete,source/networking/transport_qos.c,eax,bool
+0007b7b0,transport_qos_get_result,source/networking/transport_qos.c,eax edi stack,bool,stdcall
+0007b3e0,transport_qos_initialize,source/networking/transport_qos.c,,void
+0007b430,transport_qos_dispose,source/networking/transport_qos.c,,void
+0007b5e0,transport_qos_service_new,source/networking/transport_qos.c,,int
+0007b720,transport_qos_get_state,source/networking/transport_qos.c,eax ebx,int
+003cd156,XNetQosLookup,,stack stack stack stack stack stack stack stack stack stack stack stack,int,stdcall
+003cd172,XNetQosRelease,,stack,int,stdcall
+003cd365,XNetQosServiceLookup,,stack stack stack,int,stdcall
 00075af0,network_observer_reset_unknown4e08,source/networking/network_observer.c,esi,void
 000928e0,network_rate_update,source/networking/network_observer.c,esi,void
 00076720,network_observer_unknown_00076720,source/networking/network_observer.c,ecx stack stack stack,void,stdcall

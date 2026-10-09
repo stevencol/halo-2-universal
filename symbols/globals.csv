@@ -275,6 +275,9 @@ address,name,source
 004cf793,unknown_004cf793,source/networking/transport_security.c
 004cf7d4,unknown_004cf7d4,source/networking/transport_security.c
 004cf8d4,unknown_004cf8d4,source/networking/transport_security.c
+004cf8d8,transport_qos_attempts,source/networking/transport_qos.c
+00440188,transport_qos_probe_counts,source/networking/transport_qos.c
+00440190,transport_qos_bits_per_second,source/networking/transport_qos.c
 004cf791,unknown_004cf791,source/networking/transport_security.c
 004cf7b8,unknown_004cf7b8,source/networking/transport_security.c
 004d87d4,unknown_004d87d4,source/networking/network_observer.c

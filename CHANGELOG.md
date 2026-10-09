@@ -2,6 +2,75 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Los intentos de medir la conexión con otra consola
+
+Ocho funciones en un archivo nuevo, `networking/transport_qos.c`, 1109 bytes entre todas. De 1372
+funciones se pasa a 1380, el 12,25 % de las del juego (el 8,158 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `transport_qos_initialize` | `0x0007b3e0` | `networking/transport_qos.c` |
+| `transport_qos_dispose` | `0x0007b430` | `networking/transport_qos.c` |
+| `transport_qos_new` | `0x0007b4c0` | `networking/transport_qos.c` |
+| `transport_qos_service_new` | `0x0007b5e0` | `networking/transport_qos.c` |
+| `transport_qos_delete` | `0x0007b650` | `networking/transport_qos.c` |
+| `transport_qos_is_complete` | `0x0007b6c0` | `networking/transport_qos.c` |
+| `transport_qos_get_state` | `0x0007b720` | `networking/transport_qos.c` |
+| `transport_qos_get_result` | `0x0007b7b0` | `networking/transport_qos.c` |
+
+### Lo que se sabe
+
+- Es **un módulo entero y pequeño**, el que el observador usaba desde el
+  hito 375 sin saber qué era («algo de la red que se pide sobre una
+  consola»). Son los **intentos de medir cómo es la conexión con otras
+  consolas**: cuánto tarda una respuesta y cuántos bits por segundo pasan
+  en cada sentido. Lo hacen las bibliotecas de la consola
+  (`XNetQosLookup`); el juego solo lleva la cuenta de los intentos.
+- El nombre del archivo sale del que el juego da a su tabla: `transport
+  qos attempts`. Los de las funciones son míos.
+- La tabla (`transport_qos_attempts`) es una de las del hito 7, de 32
+  intentos como mucho; cada uno guarda lo que las bibliotecas llevan de
+  él.
+  - `transport_qos_new` empieza un intento sobre hasta 64 consolas; de
+    cada una da cómo se conoce a la sesión, su clave y cómo se conoce a
+    la consola. Hay **dos clases** de intento, con distinto número de
+    pruebas y de bits por segundo (8 y `0x4000`, o ninguna y `0x1000`).
+  - `transport_qos_service_new` empieza uno sobre el servicio.
+  - `transport_qos_is_complete` dice si ha terminado con todas.
+  - `transport_qos_get_state` dice cómo va con una consola: sin probar,
+    probando, con algo, terminado sin respuesta, consola que no admite
+    intentos, o terminado con respuesta.
+  - `transport_qos_get_result` da lo que encontró: pruebas mandadas y
+    contestadas, el tiempo de ida y vuelta menor y el mediano, los bits
+    por segundo de subida y de bajada, y lo que la consola mandó.
+  - `transport_qos_delete` lo suelta; `transport_qos_dispose`, todos.
+- Con esto se sabe qué son los `0x20` bytes que un canal del observador
+  guarda en `0x74` (hito 375): el resultado de su intento.
+
+### Con cuidado
+
+- La función de las bibliotecas que empieza un intento sobre el servicio
+  (`0x003cd365`) no tiene nombre en la lista de Ghidra. La llamo
+  `XNetQosServiceLookup` porque es la de esa biblioteca que recibe esas
+  tres cosas y cuyo resultado se suelta con `XNetQosRelease`.
+- `transport_qos_initialize` tiene escrita dentro, en el juego, la función
+  que crea una tabla (`data_new`); aquí se la llama.
+
+### Comprobado rompiendo líneas
+
+- Veintinueve líneas rotas, una cada vez: las pruebas fallaron en
+  veintiocho. La que queda no cambia nada: recortar a 64 consolas cuando
+  ya son 64.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `transport_qos` (8 funciones) y
+  las de `network_observer` (63), que usan sus nombres nuevos.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — El canal para una consola
 
 Dos funciones en `networking/network_observer.c`, 1344 bytes entre las dos. De 1370

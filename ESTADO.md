@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 392.
+**Última actualización:** 2026-10-08, al terminar el hito 393.
 
 ## Dónde estamos
 
-- **1372 funciones descompiladas de 11.265: el 12,18 % del juego** (el
-  8,121 % de los bytes de código).
-- Las 1372 están comprobadas contra el ejecutable original: las 1354 del
+- **1380 funciones descompiladas de 11.265: el 12,25 % del juego** (el
+  8,158 % de los bytes de código).
+- Las 1380 están comprobadas contra el ejecutable original: las 1354 del
   hito 385 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how the observer gives a channel for a console* (ver `git log`).
+- Último hito: *Decompile the attempts at measuring the connection (transport_qos.c)* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 554 funciones apuntadas pero sin descompilar (las que el código
-  llama); 455 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 553 funciones apuntadas pero sin descompilar (las que el código
+  llama); 451 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -119,6 +119,9 @@ Módulos (funciones hechas / archivo):
       lo que la consola es en la red, la clave de cada sesión y las
       direcciones; de `0x0007a8a0` a `0x0007af80`, y falta lo que sigue
       desde `0x0007afd0`)
+- [x] Intentos de medir la conexión — `networking\transport_qos.c` (8: la
+  tabla de intentos, empezar uno, soltarlo, cómo va y qué encontró con
+  cada consola). Entero.
 - [ ] Observador de la red — `networking\network_observer.c` (63: lo que
       tiene de cada sesión y sus canales con las otras consolas; va de
       `0x00075970` a `0x0007a4a0` y casi todo falta)

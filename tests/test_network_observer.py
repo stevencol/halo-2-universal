@@ -352,7 +352,7 @@ def run(t) -> None:
             externals={
                 "network_observer_channel_forget_address": noted,
                 "unknown_000886e0": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
-                "unknown_0007b650": lambda harness, arguments: (0, (arguments[0],)),
+                "transport_qos_delete": lambda harness, arguments: (0, (arguments[0],)),
             },
         )
 
@@ -557,10 +557,10 @@ def run(t) -> None:
             channel,
             Buffer(bytes(data)),
             externals={
-                "unknown_0007b4c0": asks,
-                "unknown_0007b6c0": lambda harness, arguments, done=random_.choice((1, 1, 0, 0x100)): (done, (arguments[0],)),
-                "unknown_0007b7b0": found,
-                "unknown_0007b650": lambda harness, arguments: (0, (arguments[0],)),
+                "transport_qos_new": asks,
+                "transport_qos_is_complete": lambda harness, arguments, done=random_.choice((1, 1, 0, 0x100)): (done, (arguments[0],)),
+                "transport_qos_get_result": found,
+                "transport_qos_delete": lambda harness, arguments: (0, (arguments[0],)),
             },
         )
 
@@ -1484,7 +1484,7 @@ def run(t) -> None:
                 unknown_00082060=taken,
                 network_observer_channel_forget_address=noted,
                 unknown_000886e0=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
-                unknown_0007b650=lambda harness, arguments: (0, (arguments[0],)),
+                transport_qos_delete=lambda harness, arguments: (0, (arguments[0],)),
             ),
             mocks=[Mock(lambda call: 0, stack_arguments=3, registers=("ecx",))],
         )
