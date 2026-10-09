@@ -225,8 +225,8 @@ def run(t) -> None:
             Buffer(bytes(channel())),
             globals=things(),
             externals={
-                "unknown_000820f0": lambda harness, arguments, which=random_.choice((0, 1, 2, 2, NONE)): takes(harness, arguments, which),
-                "unknown_00082150": lambda harness, arguments, which=random_.choice((0, 1, 2, 2, NONE)): takes(harness, arguments, which),
+                "network_channel_take_unknown10": lambda harness, arguments, which=random_.choice((0, 1, 2, 2, NONE)): takes(harness, arguments, which),
+                "network_channel_take_unknown14": lambda harness, arguments, which=random_.choice((0, 1, 2, 2, NONE)): takes(harness, arguments, which),
                 "network_channel_release": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
             },
         )
@@ -259,3 +259,32 @@ def run(t) -> None:
                 )
             },
         )
+
+    # ---------- one of the things that a channel has of its own is taken
+
+    for name, size, starts in (
+        ("network_channel_take_unknown10", OWN, "unknown_00095cf0"),
+        ("network_channel_take_unknown14", OTHER, "unknown_00094bf0"),
+    ):
+        for n in range(300):
+            count = random_.choice((0, 1, 3, 3, 3, -1))
+            table = bytearray(random_.randbytes(3 * size))
+            for other in range(3):
+                table[other * size + 4] = random_.choice((0, 1, 1, 0x80)) if n % 5 else 1
+            globals_ = {
+                "unknown_004d8ba0": bytes((random_.choice((1, 1, 1, 0, 0x80)),)),
+                "unknown_004d87d0": struct.pack("<i", count),
+                "unknown_00528000": GlobalData(bytes(0xB28)),
+                "unknown_004d87d8": Buffer(random_.randbytes(3 * OWN)),
+                "unknown_004d87dc": Buffer(random_.randbytes(3 * OTHER)),
+            }
+            # one of the second kind is left pointing at a place of what every channel is of
+            globals_["unknown_004d87d8" if size == OWN else "unknown_004d87dc"] = Buffer(
+                bytes(table), places=() if size == OWN else tuple(other * size + 0xC for other in range(3))
+            )
+            t.check(
+                name,
+                random_.getrandbits(32),
+                globals=globals_,
+                externals={starts: lambda harness, arguments: (0, (harness.normalize(arguments[0]),))},
+            )

@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Las dos piezas que toma un canal del juego
+
+Dos funciones en `networking/network_channel.c`, 195 bytes entre las dos. De 1416
+funciones se pasa a 1418, el 12,59 % de las del juego (el 8,488 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_channel_take_unknown10` | `0x000820f0` | `networking/network_channel.c` |
+| `network_channel_take_unknown14` | `0x00082150` | `networking/network_channel.c` |
+
+### Lo que se sabe
+
+- Son las que el hito 408 llamaba para dar a un canal sus piezas: cada una
+  busca **la primera libre** de una de las dos tablas (`unknown_004d87d8`,
+  de `0x97C` bytes cada pieza, y `unknown_004d87dc`, de `0x2850`), la pone
+  a cero con su función, apunta de quién es y la marca como ocupada.
+- Hay tantas piezas de cada tabla como canales: las tres tablas comparten
+  la misma cuenta (`unknown_004d87d0`).
+- A las de la segunda tabla se les da además un sitio dentro de lo que
+  comparten todos los canales (`0x588` bytes más allá de
+  `unknown_00528000`).
+
+### Comprobado rompiendo líneas
+
+- Ocho líneas rotas, una cada vez: las pruebas fallaron en las ocho.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_channel` (17 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Tomar un canal del juego y empezar a conectar
 
 Tres funciones en `networking/network_channel.c`, 700 bytes entre todas. De 1413

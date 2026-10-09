@@ -84,7 +84,11 @@ enum
 	_network_channel_closed_unknown2= 2,
 	_network_channel_part_unknown18= 0x1,
 	_network_channel_part_unknown14= 0x19,
-	_network_channel_part_unknown10= 0x31
+	_network_channel_part_unknown10= 0x31,
+	/* one more number of the things of unknown_004d87dc, and where in what
+	every channel is of it is given to point */
+	NETWORK_CHANNEL_UNKNOWN14_UNKNOWNC_OFFSET= 0xC,
+	UNKNOWN_00528000_UNKNOWN588_OFFSET= 0x588
 };
 
 /* ---------- structures */
@@ -164,6 +168,8 @@ void __attribute__((stdcall)) network_channel_connect(const struct transport_add
 boolean __attribute__((stdcall)) network_channel_new(unsigned long flags, long index, byte *unknown0, byte *gateway,
 	byte *unknown8, const struct network_channel_tries *tries, byte *channel);
 long __attribute__((stdcall)) network_channel_allocate(const char *name, long flags);
+long __attribute__((stdcall)) network_channel_take_unknown10(long owner);
+long __attribute__((stdcall)) network_channel_take_unknown14(long owner);
 long network_channel_unknown_00088fd0(const byte *game_channel);
 long network_channel_unknown_00089000(const byte *game_channel);
 long network_channel_unknown_00089030(const byte *game_channel);

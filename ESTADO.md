@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 408.
+**Última actualización:** 2026-10-08, al terminar el hito 409.
 
 ## Dónde estamos
 
-- **1416 funciones descompiladas de 11.265: el 12,57 % del juego** (el
-  8,481 % de los bytes de código).
-- Las 1416 están comprobadas contra el ejecutable original: las 1390 del
+- **1418 funciones descompiladas de 11.265: el 12,59 % del juego** (el
+  8,488 % de los bytes de código).
+- Las 1418 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a channel of the game is taken and starts to connect* (ver `git log`).
+- Último hito: *Decompile how a channel of the game takes its two parts* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 552 funciones apuntadas pero sin descompilar (las que el código
-  llama); 450 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 550 funciones apuntadas pero sin descompilar (las que el código
+  llama); 448 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -128,7 +128,7 @@ Módulos (funciones hechas / archivo):
 - [x] Intentos de medir la conexión — `networking\transport_qos.c` (8: la
   tabla de intentos, empezar uno, soltarlo, cómo va y qué encontró con
   cada consola). Entero.
-- [ ] Canales del juego — `networking\network_channel.c` (15: tomar un
+- [ ] Canales del juego — `networking\network_channel.c` (17: tomar un
       canal, pedir conexión y contestar, cerrarlo, soltarlo, sus horas
       y lo que el observador les pregunta; quedan unas diez, de
       `0x00088060` a `0x000893c0`)

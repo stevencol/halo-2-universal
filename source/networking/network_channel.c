@@ -323,8 +323,6 @@ unknown_004d87dc, that is no one's is taken; which, or NONE */
 boolean __attribute__((stdcall)) unknown_00092d10(byte *unknown0, long unknown44, long identifier,
 	const struct transport_address *address);
 void unknown_00095cf0(byte *unknown10);
-long __attribute__((stdcall)) unknown_000820f0(long unknown);
-long __attribute__((stdcall)) unknown_00082150(long unknown);
 
 /* ---------- globals */
 
@@ -450,7 +448,7 @@ boolean __attribute__((stdcall)) network_channel_new(
 	*(long *)(channel+NETWORK_CHANNEL_OBSERVER_OFFSET)= 0;
 	if (channel[NETWORK_CHANNEL_UNKNOWN48_OFFSET]&_network_channel_unknown48_bit8)
 	{
-		long taken= unknown_000820f0(0);
+		long taken= network_channel_take_unknown10(0);
 
 		*(long *)(channel+NETWORK_CHANNEL_UNKNOWN10_OFFSET)= taken;
 		if (taken==NONE)
@@ -463,7 +461,7 @@ boolean __attribute__((stdcall)) network_channel_new(
 	}
 	if (channel[NETWORK_CHANNEL_UNKNOWN48_OFFSET]&_network_channel_unknown48_bit10)
 	{
-		long taken= unknown_00082150(0);
+		long taken= network_channel_take_unknown14(0);
 
 		*(long *)(channel+NETWORK_CHANNEL_UNKNOWN14_OFFSET)= taken;
 		if (taken==NONE)
@@ -504,6 +502,65 @@ long __attribute__((stdcall)) network_channel_allocate(
 		{
 			return network_channel_new(flags, index, unknown_00528000, unknown_00528b28, unknown_00529188, &unknown_004cf6d4,
 				channel) ? index : NONE;
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x000820f0: the first of the things of unknown_004d87d8 that is no one's
+is someone's: it starts over, and has who; which, or NONE if there are no
+channels or all are someone's. There are as many as channels. The game has
+this and the next one far from the other functions of the channels */
+long __attribute__((stdcall)) network_channel_take_unknown10(
+	long owner)
+{
+	long index;
+
+	if (!unknown_004d8ba0 || unknown_004d87d0<=0)
+	{
+		return NONE;
+	}
+	for (index= 0; index<unknown_004d87d0; index++)
+	{
+		byte *unknown10= unknown_004d87d8+index*NETWORK_CHANNEL_UNKNOWN10_SIZE;
+
+		if (!unknown10[NETWORK_CHANNEL_UNKNOWN10_USED_OFFSET])
+		{
+			unknown_00095cf0(unknown10);
+			*(long *)(unknown10+NETWORK_CHANNEL_UNKNOWN10_OWNER_OFFSET)= owner;
+			unknown10[NETWORK_CHANNEL_UNKNOWN10_USED_OFFSET]= TRUE;
+
+			return index;
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x00082150: the same with the things of unknown_004d87dc, which also have
+a place of what every channel is of */
+long __attribute__((stdcall)) network_channel_take_unknown14(
+	long owner)
+{
+	long index;
+
+	if (!unknown_004d8ba0 || unknown_004d87d0<=0)
+	{
+		return NONE;
+	}
+	for (index= 0; index<unknown_004d87d0; index++)
+	{
+		byte *unknown14= unknown_004d87dc+index*NETWORK_CHANNEL_UNKNOWN14_SIZE;
+
+		if (!unknown14[NETWORK_CHANNEL_UNKNOWN14_USED_OFFSET])
+		{
+			unknown_00094bf0(unknown14);
+			*(long *)(unknown14+NETWORK_CHANNEL_UNKNOWN14_OWNER_OFFSET)= owner;
+			unknown14[NETWORK_CHANNEL_UNKNOWN14_USED_OFFSET]= TRUE;
+			*(byte **)(unknown14+NETWORK_CHANNEL_UNKNOWN14_UNKNOWNC_OFFSET)= unknown_00528000+UNKNOWN_00528000_UNKNOWN588_OFFSET;
+
+			return index;
 		}
 	}
 
