@@ -1880,8 +1880,8 @@ address,name,source,arguments,returns,convention
 00076810,network_observer_unknown_00076810,source/networking/network_observer.c,ecx stack stack stack,void,stdcall
 000797b0,unknown_000797b0,,eax edx stack,void,stdcall
 00075da0,network_observer_update,source/networking/network_observer.c,stack,void,stdcall
-00077580,unknown_00077580,,eax ecx edi,bool
-000773a0,unknown_000773a0,,eax stack,void,stdcall
+00077580,network_observer_channel_unused_expired,source/networking/network_observer.c,eax ecx edi,bool
+000773a0,network_observer_channel_unknown_000773a0,source/networking/network_observer.c,eax stack,void,stdcall
 00077480,unknown_00077480,,eax edx,void
 000779f0,unknown_000779f0,,edi,void
 00078ac0,unknown_00078ac0,,stack,void,stdcall

@@ -117,6 +117,21 @@ enum
 	NETWORK_OBSERVER_CHANNEL_WINDOW360_OFFSET= 0x360,
 	NETWORK_OBSERVER_CHANNEL_UNKNOWN48C_OFFSET= 0x48C,
 	MAXIMUM_NETWORK_WINDOW_SAMPLES= 32,
+	/* more of a channel: a time that is set while its channel of the game
+	is not as network_observer_channel_unknown_000773a0 wants it; when it was first asked
+	whether it is to be let go of; and when it was first asked that with
+	something left to send. Two times of a channel of the game. Three more
+	numbers of what the observer has at 0x10. And one more thing that
+	unknown_00088650 is told */
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN94_OFFSET= 0x94,
+	NETWORK_OBSERVER_CHANNEL_UNUSED_TIME_OFFSET= 0x98,
+	NETWORK_OBSERVER_CHANNEL_WAITING_TIME_OFFSET= 0x9C,
+	NETWORK_CHANNEL_UNKNOWN98_OFFSET= 0x98,
+	NETWORK_CHANNEL_UNKNOWNC8_OFFSET= 0xC8,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN74_OFFSET= 0x74,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN80_OFFSET= 0x80,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN84_OFFSET= 0x84,
+	_unknown_00088650_unknown10= 0x10,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
 	_unknown_00088650_unknown11= 0x11
 };
@@ -162,6 +177,8 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_set_pending(long channel
 boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_alive(long channel_index, const byte *observer);
 long network_observer_channel_connect_status(const byte *observer, long channel_index);
 long network_unknown_00075910(const byte *unknown);
+boolean network_observer_channel_unused_expired(long channel_index, byte *observer, long unknown);
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_000773a0(long channel_index, byte *observer);
 void NETWORK_OBSERVER_CALLBACK network_observer_update(byte *observer);
 void network_window_add(struct network_window *window, long value);
 void NETWORK_OBSERVER_CALLBACK network_observer_unknown_00076810(byte *observer, long game_channel_index, long unknown4,

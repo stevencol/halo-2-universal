@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Dos plazos de un canal del observador
+
+Dos funciones en `networking/network_observer.c`, 499 bytes entre las dos. De 1331
+funciones se pasa a 1333, el 11,83 % de las del juego (el 7,765 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_channel_unused_expired` | `0x00077580` | `networking/network_observer.c` |
+| `network_observer_channel_unknown_000773a0` | `0x000773a0` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_observer_channel_unused_expired` (antes `unknown_00077580`)
+  decide **cuándo se suelta un canal que ya no usa ninguna sesión**. No se
+  suelta de golpe: se le da tiempo a que salga lo que tenía por mandar.
+  - Si el canal del juego tiene poca cola (menos de `0x4000`), ya no le
+    queda nada; si tiene más, se le avisa (`unknown_00088650`).
+  - Se suelta cuando lleva sin uso más de `unknown_004cf56c` milisegundos;
+    o cuando lleva con cosas por mandar más de `unknown_004cf568`; o
+    enseguida, si no tiene dirección a la que mandar.
+- `network_observer_channel_unknown_000773a0` (antes `unknown_000773a0`): con
+  el canal del juego conectado y con actividad reciente, si llevan callados
+  bastante tanto el canal del observador como el del juego, le dice `0x10`
+  al canal del juego. Parece **el aviso para mantener viva la conexión**.
+  Los tres plazos están en lo que el observador guarda en `0x10`.
+- Corregido en la entrada del hito 373: las funciones que el paso del
+  observador llama sin estar descompiladas eran ocho, no siete; con este
+  hito quedan seis.
+
+### Comprobado rompiendo líneas
+
+- Ocho líneas rotas, una cada vez: las pruebas fallaron en siete. La otra
+  no cambia nada: es un caso que no puede darse donde está.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_observer` (24 funciones).
+- La batería completa del hito 371 sigue corriendo.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Lo que el observador hace en cada vuelta
 
 Una función en `networking/network_observer.c`, de 151 bytes. De 1330
@@ -25,7 +68,7 @@ funciones se pasa a 1331, el 11,82 % de las del juego (el 7,748 % de sus bytes).
     cosas más que aún no están descompiladas.
 - Al final hace tres cosas con el observador entero, tampoco descompiladas
   todavía.
-- Sirve de **mapa de lo que queda del observador**: las siete funciones que
+- Sirve de **mapa de lo que queda del observador**: las ocho funciones que
   llama y no están (`0x00076ff0`, `0x000773a0`, `0x00077480`,
   `0x00077580`, `0x000776a0`, `0x000779f0`, `0x00078ac0`, `0x0007a4a0`)
   quedan apuntadas con cómo se las llama.

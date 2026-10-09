@@ -676,18 +676,18 @@ void NETWORK_OBSERVER_CALLBACK network_observer_unknown_00076810(
 be let go of, with a number. 0x000773a0, 0x00077480: two more things that are
 done with a channel each time. 0x000779f0, 0x00078ac0, 0x0007a4a0: three
 things that are done with the observer each time, after its channels */
-boolean unknown_00077580(long channel_index, byte *observer, long unknown);
-void __attribute__((stdcall)) unknown_000773a0(long channel_index, byte *observer);
+boolean network_observer_channel_unused_expired(long channel_index, byte *observer, long unknown);
+void __attribute__((stdcall)) network_observer_channel_unknown_000773a0(long channel_index, byte *observer);
 void unknown_00077480(long channel_index, byte *observer);
 void unknown_000779f0(byte *observer);
 void __attribute__((stdcall)) unknown_00078ac0(byte *observer);
 void unknown_0007a4a0(byte *observer);
 
 /* 0x00075da0: what the observer does each time. Each channel that is in
-use: if no session uses it and unknown_00077580 says so, it is no more
+use: if no session uses it and network_observer_channel_unused_expired says so, it is no more
 (network_observer_channel_delete); and if it still is in use, it follows its
 connection (network_observer_channel_update_connection) and unknown_00076ff0,
-unknown_000776a0, unknown_000773a0 and unknown_00077480 are done with it. Then
+unknown_000776a0, network_observer_channel_unknown_000773a0 and unknown_00077480 are done with it. Then
 unknown_000779f0, unknown_00078ac0 and unknown_0007a4a0, with the observer */
 void NETWORK_OBSERVER_CALLBACK network_observer_update(
 	byte *observer)
@@ -703,7 +703,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_update(
 			continue;
 		}
 		if (!channel[NETWORK_OBSERVER_CHANNEL_SESSIONS_OFFSET] &&
-			unknown_00077580(channel_index, observer, NETWORK_OBSERVER_CHANNEL_DELETED_REASON))
+			network_observer_channel_unused_expired(channel_index, observer, NETWORK_OBSERVER_CHANNEL_DELETED_REASON))
 		{
 			network_observer_channel_delete(channel_index, observer);
 		}
@@ -712,11 +712,119 @@ void NETWORK_OBSERVER_CALLBACK network_observer_update(
 			network_observer_channel_update_connection(channel_index, observer);
 			unknown_00076ff0(channel_index, observer);
 			unknown_000776a0(observer, channel_index);
-			unknown_000773a0(channel_index, observer);
+			network_observer_channel_unknown_000773a0(channel_index, observer);
 			unknown_00077480(channel_index, observer);
 		}
 	}
 	unknown_000779f0(observer);
 	unknown_00078ac0(observer);
 	unknown_0007a4a0(observer);
+}
+
+/* 0x004cf56c: how long a channel of the observer that no session uses is
+kept at most, in milliseconds. 0x004cf568: how long it is kept while what it
+had to send has not gone */
+long unknown_004cf56c;
+long unknown_004cf568;
+
+/* 0x00077580: whether a channel of the observer that no session uses is to
+be let go of. If its channel of the game is in its fifth state: with less
+than 0x4000 waiting to be sent (unknown_00089070) it has nothing left to
+send; with more, that channel is told the number that is given
+(unknown_00088650). The channel keeps when it was first asked this, and when
+it was first asked with something left to send. Yes, once the first was
+more than unknown_004cf56c milliseconds ago; yes too with something left to
+send for more than unknown_004cf568 milliseconds; and if not, only if the
+channel has no address of the game */
+boolean network_observer_channel_unused_expired(
+	long channel_index,
+	byte *observer,
+	long unknown)
+{
+	byte *channel= (byte *)network_observer_channel(observer, channel_index);
+	byte *game_channel= network_observer_channel_connected_game_channel(observer, channel_index);
+	boolean waiting= TRUE;
+	boolean expired;
+
+	if (game_channel)
+	{
+		if (unknown_00089070(game_channel)<NETWORK_OBSERVER_CHANNEL_WAITING_LIMIT)
+		{
+			waiting= FALSE;
+		}
+		else
+		{
+			unknown_00088650(game_channel, unknown);
+		}
+	}
+	if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNUSED_TIME_OFFSET)==0)
+	{
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNUSED_TIME_OFFSET)= network_time_since(0);
+	}
+	expired= network_time_since(*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNUSED_TIME_OFFSET))>unknown_004cf56c;
+	if (waiting)
+	{
+		if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_WAITING_TIME_OFFSET)==0)
+		{
+			*(long *)(channel+NETWORK_OBSERVER_CHANNEL_WAITING_TIME_OFFSET)= network_time_since(0);
+		}
+		if (network_time_since(*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_WAITING_TIME_OFFSET))>unknown_004cf568 ||
+			expired)
+		{
+			return TRUE;
+		}
+	}
+	else
+	{
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_WAITING_TIME_OFFSET)= 0;
+		if (expired)
+		{
+			return TRUE;
+		}
+	}
+
+	return !transport_address_valid(
+		(const struct transport_address *)(channel+NETWORK_OBSERVER_CHANNEL_ADDRESS_OFFSET));
+}
+
+/* 0x000773a0: a channel of the observer that is in use and whose channel of
+the game is in its fifth state and had its time of 0x98 less ago than the
+number at 0x74 of what the observer has at 0x10 says: that channel is told
+0x10 (unknown_00088650) if the time that the channel of the observer keeps
+at 0x94 was as long ago as the number at 0x80 says and the time of 0xC8 of
+the channel of the game as long ago as the one at 0x84 says. In any other
+case the time of 0x94 is now */
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_000773a0(
+	long channel_index,
+	byte *observer)
+{
+	byte *channel= (byte *)network_observer_channel(observer, channel_index);
+	byte *game_channel;
+	const byte *parameters;
+
+	if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)==0)
+	{
+		return;
+	}
+	game_channel= network_observer_channel_connected_game_channel(observer, channel_index);
+	parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+	if (game_channel && network_time_since(*(const long *)(game_channel+NETWORK_CHANNEL_UNKNOWN98_OFFSET))<
+		*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN74_OFFSET))
+	{
+		long since_unknown94= network_time_since(*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN94_OFFSET));
+		long since_unknownC8= network_time_since(
+			*(const long *)(game_channel+NETWORK_CHANNEL_STATE_OFFSET)>_network_channel_state2 ?
+			*(const long *)(game_channel+NETWORK_CHANNEL_UNKNOWNC8_OFFSET) : 0);
+
+		parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+		if (since_unknown94>=*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN80_OFFSET) &&
+			since_unknownC8>=*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN84_OFFSET))
+		{
+			unknown_00088650(game_channel, _unknown_00088650_unknown10);
+		}
+	}
+	else
+	{
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN94_OFFSET)= network_time_since(0);
+	}
 }

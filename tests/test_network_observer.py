@@ -458,15 +458,78 @@ def run(t) -> None:
             "network_observer_update",
             Buffer(bytes(data)),
             externals={
-                "unknown_00077580": goes,
+                "network_observer_channel_unused_expired": goes,
                 "network_observer_channel_delete": gone,
                 "network_observer_channel_update_connection": with_channel_and_observer,
                 "unknown_00076ff0": with_channel_and_observer,
                 "unknown_000776a0": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
-                "unknown_000773a0": with_channel_and_observer,
+                "network_observer_channel_unknown_000773a0": with_channel_and_observer,
                 "unknown_00077480": with_channel_and_observer,
                 "unknown_000779f0": with_observer,
                 "unknown_00078ac0": with_observer,
                 "unknown_0007a4a0": with_observer,
             },
+        )
+
+    # ---------- two things of a channel that go by the time
+
+    AGES = (0, 999, 1000, 1001, 29999, 30000, 30001)
+
+    def told(harness, arguments):
+        return 0, (harness.normalize(arguments[0]), arguments[1])
+
+    for n in range(800):
+        now = random_.getrandbits(32) | 0x10000
+        data = observer()
+        channel = random_.randrange(15)
+        at = CHANNELS + channel * CHANNEL
+        for place in (0x98, 0x9C):
+            struct.pack_into("<I", data, at + place, random_.choice((0, (now - random_.choice(AGES)) & 0xFFFFFFFF)))
+        struct.pack_into("<H", data, at + 0x5C + 0x12, random_.choice((4, 4, 16, 0)))
+        if random_.randrange(3) == 0:
+            data[at + 0x5C : at + 0x5C + 16] = bytes(16)
+        t.check(
+            "network_observer_channel_unused_expired",
+            channel,
+            Buffer(bytes(data)),
+            random_.choice((0xE, 0x11, random_.getrandbits(32))),
+            globals={
+                "unknown_004d87d4": Buffer(bytes(game_channels())),
+                "unknown_00510548": bytes((random_.choice((0, 0, 1)),)),
+                "unknown_0051054c": struct.pack("<I", now),
+                "unknown_004cf56c": struct.pack("<I", random_.choice((1000, 30000))),
+                "unknown_004cf568": struct.pack("<I", random_.choice((1000, 30000))),
+            },
+            externals={
+                "GetTickCount": lambda harness, arguments, now=now: now,
+                "unknown_00089070": lambda harness, arguments, waiting=random_.choice((0, 0x3FFF, 0x4000, 0x10000)): (
+                    waiting,
+                    (harness.normalize(arguments[0]),),
+                ),
+                "unknown_00088650": told,
+            },
+        )
+
+    for n in range(800):
+        now = random_.getrandbits(32) | 0x10000
+        channels = game_channels()
+        for game_channel in range(6):
+            for place in (0x98, 0xC8):
+                struct.pack_into("<I", channels, game_channel * 0xF8 + place, (now - random_.choice(AGES)) & 0xFFFFFFFF)
+        data = observer() + bytearray(random_.randbytes(0x88))
+        struct.pack_into("<I", data, 0x10, SIZE)
+        struct.pack_into("<I", data, SIZE + 0x74, random_.choice((1000, 30000, 30000)))
+        struct.pack_into("<II", data, SIZE + 0x80, random_.choice((1000, 30000)), random_.choice((1000, 30000)))
+        channel = random_.randrange(15)
+        struct.pack_into("<I", data, CHANNELS + channel * CHANNEL + 0x94, (now - random_.choice(AGES)) & 0xFFFFFFFF)
+        t.check(
+            "network_observer_channel_unknown_000773a0",
+            channel,
+            Buffer(bytes(data), pointers=(0x10,)),
+            globals={
+                "unknown_004d87d4": Buffer(bytes(channels)),
+                "unknown_00510548": bytes((random_.choice((0, 0, 1)),)),
+                "unknown_0051054c": struct.pack("<I", now),
+            },
+            externals={"GetTickCount": lambda harness, arguments, now=now: now, "unknown_00088650": told},
         )

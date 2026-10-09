@@ -298,3 +298,5 @@ address,name,source
 004cf4d4,unknown_004cf4d4,source/networking/network_session.c
 004cf4a8,unknown_004cf4a8,source/networking/network_session.c
 004d87dc,unknown_004d87dc,source/networking/network_observer.c
+004cf56c,unknown_004cf56c,source/networking/network_observer.c
+004cf568,unknown_004cf568,source/networking/network_observer.c
