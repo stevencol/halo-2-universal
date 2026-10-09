@@ -232,3 +232,128 @@ boolean __attribute__((stdcall)) simulation_entity_database_allocate_state_data(
 
 	return data!=NULL;
 }
+
+/* 0x0008a110: a new thing of a kind: memory for what is said of it when it
+is made and for how it is, a place and a number for it
+(replication_entity_manager_allocate_index and _create_entity), and it is of
+the kind with all that. Its number; NONE, with the memory taken back, if
+there is no memory or no place */
+long __attribute__((stdcall)) simulation_entity_database_create_entity(
+	struct simulation_entity_database *database,
+	long type_index)
+{
+	long creation_size= 0;
+	void *creation_data= NULL;
+	long state_size;
+	void *state_data= NULL;
+
+	if (simulation_entity_database_allocate_creation_data(database, type_index, &creation_size, &creation_data) &&
+		simulation_entity_database_allocate_state_data(database, type_index, &state_size, &state_data))
+	{
+		struct replication_entity_manager *manager= database->manager;
+		long index= replication_entity_manager_allocate_index(manager);
+
+		if (index!=NONE)
+		{
+			long entity_index= replication_entity_manager_create_entity(index, manager);
+
+			if (entity_index!=NONE)
+			{
+				simulation_entity_database_set_entity(entity_index, database, (short)type_index, creation_size, creation_data,
+					state_size, state_data);
+
+				return entity_index;
+			}
+		}
+	}
+	if (creation_data)
+	{
+		network_heap_free(creation_data);
+	}
+	if (state_data)
+	{
+		network_heap_free(state_data);
+	}
+
+	return NONE;
+}
+
+/* 0x0008a580: the kind of the thing of a number does something with it and
+three numbers, by its eleventh function; what it says. It is one of the
+functions of what the things are of, which the table at 0x00450d60 has, and
+Ghidra's list does not have it */
+long __attribute__((stdcall)) simulation_entity_database_unknown_0008a580(
+	struct simulation_entity_database *database,
+	long entity_index,
+	long unknown4,
+	long unknown8,
+	long unknownC)
+{
+	struct simulation_entity *entity= &database->entities[entity_index&REPLICATION_ENTITY_INDEX_MASK];
+	struct simulation_entity_type *type= database->types->types[entity->type];
+
+	return type->functions->unknown28(type, entity, unknown4, unknown8, unknownC);
+}
+
+/* 0x0008a5c0: the thing of a number is written in a packet for a console
+that does not have it: its kind, in five bits; what was said of it when it
+was made, which its kind writes by its thirteenth function; and, if the kind
+has bits of what changes, a bit that says whether any of the ones that are
+asked for is one of them, and then how the thing is for those, which the kind
+writes by its fifteenth. Whether it went well: the kind said so, and wrote
+all the bits; the bits that it wrote are given. It is another of the
+functions of the table that Ghidra's list does not have; the game has
+bitstream_write_integer_checked and bitstream_write_bool written here */
+boolean __attribute__((stdcall)) simulation_entity_database_write_creation(
+	struct simulation_entity_database *database,
+	long entity_index,
+	unsigned long flags,
+	long unknown,
+	struct bitstream *stream,
+	long unknown2,
+	unsigned long *written)
+{
+	struct simulation_entity *entity= &database->entities[entity_index&REPLICATION_ENTITY_INDEX_MASK];
+	struct simulation_entity_type *type= database->types->types[entity->type];
+	unsigned long all;
+
+	*written= 0;
+	bitstream_write_integer_checked((unsigned long)(long)entity->type, SIMULATION_ENTITY_TYPE_BITS, stream);
+	type->functions->write_creation(type, entity->creation_size, entity->creation_data, unknown, stream);
+	all= type->functions->state_flags(type);
+	if (all==0)
+	{
+		return TRUE;
+	}
+	flags&= all;
+	bitstream_write_bool(stream, flags!=0);
+	if (flags==0)
+	{
+		return TRUE;
+	}
+
+	return type->functions->encode_state(type, TRUE, flags, written, entity->state_size, entity->state_data, unknown,
+		stream, unknown2) && *written==flags;
+}
+
+/* 0x0008aa50: how the thing of a number is is read from a packet, for some
+bits, by the fifteenth function of its kind; whether it went well: the kind
+said so, and read some bit; the bits that it read are given. Another of the
+functions of the table that Ghidra's list does not have */
+boolean __attribute__((stdcall)) simulation_entity_database_read_update(
+	struct simulation_entity_database *database,
+	long entity_index,
+	unsigned long flags,
+	long unknown,
+	struct bitstream *stream,
+	long unknown2,
+	unsigned long *read)
+{
+	struct simulation_entity *entity= &database->entities[entity_index&REPLICATION_ENTITY_INDEX_MASK];
+	struct simulation_entity_type *type= database->types->types[entity->type];
+
+	*read= 0;
+
+	return type->functions->encode_state(type, FALSE, flags, read, entity->state_size, entity->state_data, unknown, stream,
+		unknown2) && *read!=0;
+}

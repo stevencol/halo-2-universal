@@ -19,7 +19,7 @@ KIND_COUNT = 4
 def run(t) -> None:
     random_ = random.Random(420)
 
-    def world(fill: float | None = None, initialized: int | None = None) -> Buffer:
+    def world(fill: float | None = None, initialized: int | None = None, manager: float | None = None) -> Buffer:
         if fill is None:
             fill = random_.choice((0.0, 0.02, 0.3, 1.0))
         data = bytearray(random_.randbytes(END))
@@ -56,6 +56,20 @@ def run(t) -> None:
                 random_.getrandbits(8),
                 random_.choice((0, 0x2000 + index)),
             )
+        struct.pack_into("<3I", data, KIND_TABLE + 0x14, mock_address(10), 0x77, 0x88)
+        struct.pack_into("<I", data, KIND_TABLE + 0x28, mock_address(11))
+        struct.pack_into("<I", data, KIND_TABLE + 0x30, mock_address(12))
+        struct.pack_into("<I", data, KIND_TABLE + 0x38, mock_address(13))
+        if manager is not None:
+            # what keeps the things, after the rest: with no views, and so many of its places in use
+            struct.pack_into("<I", data, 0xC, END)
+            pointers.append(0xC)
+            made = bytearray(random_.randbytes(0x2048))
+            made[0:0x44] = bytes(0x44)
+            for index in range(COUNT):
+                made[0x44 + index * 8] = (made[0x44 + index * 8] & ~1) | (random_.random() < manager)
+            struct.pack_into("<i", made, 0x2044, random_.randrange(COUNT))
+            data += made
         return Buffer(bytes(data), pointers=tuple(pointers))
 
     def heap_mocks() -> list:
@@ -184,3 +198,73 @@ def run(t) -> None:
                 globals={"unknown_004d87f8": Pointer(data, HEAP)},
                 mocks=all_mocks(*sizes, bit_count, says),
             )
+
+    # ---------- a new thing
+
+    for n in range(400):
+        data = world(manager=random_.choice((0.0, 0.5, 0.999, 1.0, 1.0)))
+        t.check(
+            "simulation_entity_database_create_entity",
+            data,
+            random_.randrange(KIND_COUNT),
+            globals={"unknown_004d87f8": Pointer(data, HEAP)},
+            mocks=all_mocks(random_.choice((0, 1, 7, 0x40, 0x100)), random_.choice((0, 0, NONE, 5, 0x40, 0x100)), 0),
+        )
+
+    # ---------- the functions that only the table has
+
+    def a_packet() -> Buffer:
+        size = random_.choice((1, 4, 8, 0x40))
+        position = random_.choice((0, 0, 3, 8, size * 8 - 6, size * 8 - 5, size * 8 - 4, size * 8 - 1, size * 8, size * 8 + 2))
+        header = struct.pack("<I4iB3x7i", 0x34, size, 1, 1, max(position, 0), 0, *(random_.getrandbits(8) for n in range(7)))
+        return Buffer(header + bytes(size) + random_.randbytes(8), pointers=(0,))
+
+    for n in range(500):
+        entity = random_.choice((0, 0x3FF, random_.randrange(COUNT))) | random_.getrandbits(22) << 10
+        flags = random_.choice((0, 1, 6, 0xFF, random_.getrandbits(32)))
+        all_flags = random_.choice((0, 1, 0xFF, 0xF0, NONE))
+
+        def encodes(call, how=random_.choice((0, 0, 0, 1, 2, 3)), says=random_.choice((1, 1, 1, 0, 0x100))):
+            # the kind says which bits it did: the ones that it was asked for, fewer, none, or others
+            done = (call.stack[1], call.stack[1] & 0xFFFFFFFE, 0, call.stack[1] ^ 0x10)[how]
+            t.harness.mu.mem_write(call.stack[2], struct.pack("<I", done))
+            return says
+
+        mocks = [
+            *all_mocks(0x40, 0x40, 5),
+            Mock(lambda call: all_flags, stack_arguments=0, registers=("ecx",)),
+            Mock(lambda call, value=random_.getrandbits(32): value, stack_arguments=4, registers=("ecx",)),
+            Mock(lambda call: 0, stack_arguments=4, registers=("ecx",)),
+            # the first is a byte: the low one of what is in the stack
+            Mock(encodes, stack_arguments=8, registers=("ecx",), record=lambda call: (call.registers["ecx"], call.stack[0] & 0xFF, *call.stack[1:])),
+        ]
+        data = world()
+        t.check(
+            "simulation_entity_database_unknown_0008a580",
+            data,
+            entity,
+            *(random_.getrandbits(32) for value in range(3)),
+            mocks=mocks,
+        )
+        t.check(
+            "simulation_entity_database_read_update",
+            data,
+            entity,
+            flags,
+            random_.getrandbits(32),
+            a_packet(),
+            random_.getrandbits(32),
+            Buffer(random_.randbytes(4)),
+            mocks=mocks,
+        )
+        t.check(
+            "simulation_entity_database_write_creation",
+            data,
+            entity,
+            flags,
+            random_.getrandbits(32),
+            a_packet(),
+            random_.getrandbits(32),
+            Buffer(random_.randbytes(4)),
+            mocks=mocks,
+        )

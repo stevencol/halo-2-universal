@@ -2019,3 +2019,7 @@ address,name,source,arguments,returns,convention
 0008af70,simulation_entity_database_allocate_creation_data,source/networking/simulation_entity_database.c,eax edx stack stack,bool,stdcall
 0008b010,simulation_entity_database_allocate_state_data,source/networking/simulation_entity_database.c,eax edx stack stack,bool,stdcall
 0008b0a0,replication_event_set_data,source/networking/replication_event_manager.c,eax ebx stack,bool,stdcall
+0008a110,simulation_entity_database_create_entity,source/networking/simulation_entity_database.c,stack stack,int,stdcall
+0008a580,simulation_entity_database_unknown_0008a580,source/networking/simulation_entity_database.c,ecx stack stack stack stack,int,stdcall
+0008a5c0,simulation_entity_database_write_creation,source/networking/simulation_entity_database.c,ecx stack stack stack stack stack stack,bool,stdcall
+0008aa50,simulation_entity_database_read_update,source/networking/simulation_entity_database.c,ecx stack stack stack stack stack stack,bool,stdcall

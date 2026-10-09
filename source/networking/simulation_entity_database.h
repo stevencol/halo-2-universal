@@ -11,6 +11,7 @@ functions.
 #define __SIMULATION_ENTITY_DATABASE_H
 
 #include "cseries/cseries.h"
+#include "networking/bitstream.h"
 #include "networking/replication_entity_manager.h"
 
 /* ---------- constants */
@@ -19,7 +20,9 @@ enum
 {
 	MAXIMUM_SIMULATION_ENTITIES= MAXIMUM_REPLICATION_ENTITIES,
 	/* the most that how a thing is can be, in bytes */
-	MAXIMUM_SIMULATION_ENTITY_STATE_SIZE= 0x400
+	MAXIMUM_SIMULATION_ENTITY_STATE_SIZE= 0x400,
+	/* the bits that the kind of a thing is written in */
+	SIMULATION_ENTITY_TYPE_BITS= 5
 };
 
 /* ---------- structures */
@@ -46,7 +49,11 @@ typedef char verify_simulation_entity_size[sizeof(struct simulation_entity) == 0
 
 /* a kind of thing: something with functions. The third and the fourth say
 the sizes of how a thing of the kind is and of what is said of it when it is
-made, and the fifth how many bits of what changes it has. The nineteenth is
+made, and the fifth how many bits of what changes it has; the sixth, those
+bits, all of them. The eleventh does something with a thing and three
+numbers. The thirteenth writes in a packet what is said of a thing when it is
+made, and the fifteenth writes or reads how it is, for some bits, and says
+which it did. The nineteenth is
 told that a thing is there, with what was said of it when it was made; the
 twentieth builds how it is from that; and the twenty-first is asked what of a
 thing is to be told of, from the bits of what changed */
@@ -58,7 +65,18 @@ struct simulation_entity_type_functions
 	long (__attribute__((thiscall)) *state_size)(struct simulation_entity_type *type);
 	long (__attribute__((thiscall)) *creation_size)(struct simulation_entity_type *type);
 	long (__attribute__((thiscall)) *state_bit_count)(struct simulation_entity_type *type);
-	void *unknown14[13];
+	unsigned long (__attribute__((thiscall)) *state_flags)(struct simulation_entity_type *type);
+	void *unknown18[4];
+	long (__attribute__((thiscall)) *unknown28)(struct simulation_entity_type *type, struct simulation_entity *entity,
+		long unknown4, long unknown8, long unknownC);
+	void *unknown2C;
+	void (__attribute__((thiscall)) *write_creation)(struct simulation_entity_type *type, long creation_size,
+		void *creation_data, long unknown, struct bitstream *stream);
+	void *unknown34;
+	boolean (__attribute__((thiscall)) *encode_state)(struct simulation_entity_type *type, boolean write,
+		unsigned long flags, unsigned long *done, long state_size, void *state_data, long unknown,
+		struct bitstream *stream, long unknown2);
+	void *unknown3C[3];
 	void (__attribute__((thiscall)) *created)(struct simulation_entity_type *type, struct simulation_entity *entity,
 		long creation_size, void *creation_data);
 	void (__attribute__((thiscall)) *build_state)(struct simulation_entity_type *type, long creation_size,
@@ -102,6 +120,14 @@ void __attribute__((stdcall)) simulation_entity_database_flush_updates(struct si
 void __attribute__((stdcall)) simulation_entity_database_set_entity(long entity_index,
 	struct simulation_entity_database *database, short type, long creation_size, void *creation_data, long state_size,
 	void *state_data);
+long __attribute__((stdcall)) simulation_entity_database_create_entity(struct simulation_entity_database *database,
+	long type_index);
+long __attribute__((stdcall)) simulation_entity_database_unknown_0008a580(struct simulation_entity_database *database,
+	long entity_index, long unknown4, long unknown8, long unknownC);
+boolean __attribute__((stdcall)) simulation_entity_database_write_creation(struct simulation_entity_database *database,
+	long entity_index, unsigned long flags, long unknown, struct bitstream *stream, long unknown2, unsigned long *written);
+boolean __attribute__((stdcall)) simulation_entity_database_read_update(struct simulation_entity_database *database,
+	long entity_index, unsigned long flags, long unknown, struct bitstream *stream, long unknown2, unsigned long *read);
 void simulation_entity_database_activate_entity(long entity_index, struct simulation_entity_database *database);
 unsigned long __attribute__((stdcall)) simulation_entity_database_get_initial_update(
 	struct simulation_entity_database *database, long entity_index);

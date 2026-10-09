@@ -2,6 +2,55 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Crear una cosa, y escribirla y leerla en un paquete
+
+Cuatro funciones en `networking/simulation_entity_database.c`. De 1457
+funciones se pasa a 1461, el 12,97 % de las del juego (el 8,730 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_entity_database_create_entity` | `0x0008a110` | `networking/simulation_entity_database.c` |
+| `simulation_entity_database_unknown_0008a580` | `0x0008a580` | `networking/simulation_entity_database.c` |
+| `simulation_entity_database_write_creation` | `0x0008a5c0` | `networking/simulation_entity_database.c` |
+| `simulation_entity_database_read_update` | `0x0008aa50` | `networking/simulation_entity_database.c` |
+
+### Lo que se sabe
+
+- `simulation_entity_database_create_entity` es **crear una cosa de una
+  clase, de principio a fin**: pide la memoria de sus dos trozos (hito
+  421), le busca sitio y número en la tabla (hito 416) y la apunta (hito
+  420). Si falta memoria o sitio, devuelve lo que había pedido y no crea
+  nada. Junta tres hitos anteriores, y todo lo que llama está ya
+  descompilado.
+- Las otras tres **solo están en la tabla de funciones** `0x00450d60`
+  (Ghidra no las tiene en su lista), que es la tabla con la que este
+  módulo se presenta a la tabla de cosas del hito 416:
+  - `simulation_entity_database_write_creation` **escribe una cosa en un
+    paquete para una consola que no la tiene**: su clase en 5 bits, lo que
+    se dijo al crearla, un bit que dice si hay estado, y el estado para
+    los bits pedidos. Va bien si la clase escribió todos los bits.
+  - `simulation_entity_database_read_update` **lee de un paquete el
+    estado de una cosa**, por la misma función de la clase (la 15) con el
+    primer argumento al revés. Va bien si leyó algún bit.
+  - `simulation_entity_database_unknown_0008a580` pasa una cosa y tres
+    números a la función 11 de su clase.
+- De la tabla de una clase se conocen ya once funciones: 3, 4, 5, 6, 11,
+  13, 15, 19, 20 y 21.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las cuatro** y en las de los hitos 420 y
+  421.
+- Dos de las tres funciones de la tabla no están en la lista de Ghidra,
+  así que cuentan de más en el porcentaje (son ya cuatro con las del hito
+  412).
+- En este hito se pasaron las pruebas de `simulation_entity_database`
+  (12 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Activar una cosa, y la memoria de lo que se dice de ella
 
 Cinco funciones: cuatro en `networking/simulation_entity_database.c` y una en

@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 421.
+**Última actualización:** 2026-10-08, al terminar el hito 422.
 
 ## Dónde estamos
 
-- **1457 funciones descompiladas de 11.265: el 12,93 % del juego** (el
-  8,722 % de los bytes de código).
-- Las 1457 están comprobadas contra el ejecutable original: las 1390 del
+- **1461 funciones descompiladas de 11.265: el 12,97 % del juego** (el
+  8,730 % de los bytes de código).
+- Las 1461 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile five more functions of the entity database and the events* (ver `git log`).
+- Último hito: *Decompile creating an entity and three functions that only the table has* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 563 funciones apuntadas pero sin descompilar (las que el código
   llama); 461 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -144,11 +144,11 @@ Módulos (funciones hechas / archivo):
       sucesos, pedirlos al montón de la red, soltarlos y mandarlos
       contar; de `0x00089dc0` a `0x00089f20`, y `0x0008b0a0`)
 - [ ] Lo que cada cosa es — `networking\simulation_entity_database.c`
-      (8: apuntar, activar y quitar cosas, vaciar, pedir su memoria y
-      pasar los cambios a las vistas; quedan `0x0008a110`,
-      `0x0008a210`, `0x0008a6f0` y `0x0008aac0`, y las de la tabla
-      `0x00450d60` que la lista no tiene; romper líneas pendiente en
-      las 8)
+      (12: crear, apuntar, activar y quitar cosas, vaciar, pedir su
+      memoria, pasar los cambios a las vistas, y escribirlas y
+      leerlas en un paquete; quedan `0x0008a210`, `0x0008a460`,
+      `0x0008a6f0`, `0x0008a920`, `0x0008aac0` y `0x0008ac40`; romper
+      líneas pendiente en las 12)
 - [x] Observador de la red — `networking\network_observer.c` (74: lo que
       tiene de cada sesión, sus canales con las otras consolas y sus
       estados, el caudal de cada uno y cuándo puede mandar; de
