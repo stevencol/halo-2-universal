@@ -620,6 +620,23 @@ enum
 	_network_session_membership_player_removed= 0,
 	_network_session_membership_player_added= 1,
 	_network_session_membership_player_changed= 2,
+	/* why what a console in its ninth state sends is not taken: the
+	session is in no state; it does not say who is in it; network_session_unknown_00058d90
+	says yes in a session that this console does not run; the console that
+	runs the session is there still, and what comes says that it ran it;
+	this console runs the session; the console that runs it is there still,
+	and what comes says that another ran it; the console that it has chosen
+	is not of the session or not at the place that it says; nobody is in
+	the session yet; and it is not from another console of the session */
+	_network_session_election_no_session= 1,
+	_network_session_election_not_established= 2,
+	_network_session_election_unknown3= 3,
+	_network_session_election_host_alive= 4,
+	_network_session_election_is_host= 5,
+	_network_session_election_other_host_alive= 6,
+	_network_session_election_wrong_peer= 7,
+	_network_session_election_no_membership= 8,
+	_network_session_election_not_peer= 9,
 	_network_session_message_unknownF= 0xF,
 	_network_session_message_unknown11= 0x11,
 	_network_session_message_unknown12= 0x12,
@@ -967,6 +984,10 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_join_requested(const byte 
 	const struct transport_address *address);
 boolean NETWORK_SESSION_CALLBACK network_session_host_parameters_requested(const byte *request, byte *session,
 	long channel);
+long network_time(void);
+boolean NETWORK_SESSION_CALLBACK network_session_election_received(byte *session,
+	const struct transport_address *address, const byte *message, long *reason, boolean *has_host_address,
+	byte *host_address);
 void NETWORK_SESSION_CALLBACK network_session_membership_get_update(const byte *session, const byte *membership,
 	const byte *baseline, byte *update);
 void NETWORK_SESSION_CALLBACK network_session_parameters_get_update(const byte *session, const byte *parameters,

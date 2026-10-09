@@ -2,6 +2,62 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Lo que llega de una consola en su noveno estado
+
+Dos funciones en `networking/network_session.c`, 1.280 bytes entre las dos. De 1310
+funciones se pasa a 1312, el 11,65 % de las del juego (el 7,593 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_time` | `0x00075870` | `networking/network_session.c` |
+| `network_session_election_received` | `0x0005e7f0` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_election_received` es **el otro extremo del hito 359**:
+  atiende el mensaje de la clase `0x16`, el que una consola manda en su
+  noveno estado con lo que sabe de las consolas conocidas y a cuál ha
+  elegido para llevar la sesión.
+- Antes de nada decide si le toca. No lo toma, y dice por qué con un
+  número: si la sesión no está en ningún estado (1), si no dice quién está
+  en ella (2), si esta consola lleva la sesión (5), si la que la lleva sigue
+  ahí (4 o 6, y devuelve cómo se la conoce), si aún no sabe quién está (8),
+  o si no viene de otra consola de la sesión (9). En el octavo estado, y
+  cuando esta consola lleva la sesión, contesta con el mensaje `0x12` (el
+  que espera el octavo estado, hito 355).
+- Si la que llevaba la sesión ya no contesta, **la sesión entra en su
+  noveno estado** aquí, y compara lo que llega con lo que ella tiene:
+  - gana lo que trae una versión mayor de «quién está»;
+  - con la misma versión, si las dos consolas eligieron a la misma, **están
+    de acuerdo** y la que lo mandó queda apuntada como conforme;
+  - si eligieron distinto, se queda con **la mejor candidata**: la que
+    conoce a más consolas, luego la del número mayor, luego la que está
+    antes en la lista;
+  - si lo que llega elige a una consola que no es de la sesión, o no está
+    donde dice, motivo 7, y la que lo mandó pasa a las que no contestan.
+- Cuando se toma lo que llega, la sesión copia lo de la otra consola, apunta
+  a la elegida y la hora, y se da a sí misma por conforme.
+- `network_time` es la hora en milisegundos como función suelta: lo mismo
+  que el juego lleva escrito dentro de las demás funciones de la sesión.
+- Con este hito **el noveno estado está entero**: entrar, repetir (hito
+  359), mandar y recibir.
+
+### Lo que enseñó
+
+- En las pruebas del hito 364 llamé `known` a una variable, y así se llama
+  una función de las pruebas que las de este hito usan: las pruebas
+  reventaban antes de empezar. Era del archivo de pruebas, no del código.
+- La línea rota que se escapó en el hito 365 (un jugador cuya consola es
+  NONE no se distinguía) ya tiene su caso, y ahora se detecta: 15 de 15.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (219
+  funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353 y 355 están pendientes.
+
 ## 2026-10-08 — Preparar «quién está» para mandarlo
 
 Una función en `networking/network_session.c`, de 1.494 bytes. De 1309

@@ -7077,3 +7077,265 @@ void NETWORK_SESSION_CALLBACK network_session_membership_get_update(
 			*(const long *)network_session_membership_get(membership, NETWORK_SESSION_HOST_PEER_OFFSET);
 	}
 }
+
+/* 0x00075870: the time in milliseconds, as network_session_time has it:
+here the game has it as a function. It is far from the rest of this file */
+long network_time(
+	void)
+{
+	return unknown_00510548 ? unknown_0051054c : GetTickCount();
+}
+
+/* a console of a session is sent something of the kind 0x12, with what the
+session is known by, in the first way if its channel has 7 as its first
+thing and in the other way always, if the session keeps the second byte of
+it; and what the session keeps of it has no numbers of who is in the session
+nor of what it knows, and has its fourth byte. In the seventh state it is no
+more the console that is chosen (network_session_unknown_00061950) */
+static inline __attribute__((always_inline)) void network_session_election_answer_unknown12(
+	byte *session,
+	long peer_index)
+{
+	struct network_session_peer_state *state=
+		(struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index;
+	byte identifier[NETWORK_SESSION_IDENTIFIER_SIZE];
+
+	memcpy(identifier, session+NETWORK_SESSION_IDENTIFIER_OFFSET, sizeof(identifier));
+	if (state->unknown1)
+	{
+		if (network_session_channel_state(session, state->unknown4)==_network_session_unknown8_channel_state7)
+		{
+			unknown_00075e80(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+				*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_unknown12,
+				sizeof(identifier), identifier);
+		}
+		unknown_00075e80(TRUE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+			*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_unknown12,
+			sizeof(identifier), identifier);
+	}
+	state->unknown8= NONE;
+	state->unknownC= NONE;
+	state->unknown3= TRUE;
+	if (network_session_state(session)==_network_session_state7)
+	{
+		network_session_unknown_00061950(peer_index, session);
+	}
+}
+
+/* 0x0005e7f0: what a console in its ninth state sends (the kind 0x16: what
+it has of the consoles that are known of) comes from an address of the game.
+Whether it was taken; if not, why not, and for some of the reasons a byte
+that is set and what the console that runs the session is known by.
+
+A session in no state, or in the tenth: no (1). One that does not say who is
+in it and is not in the ninth: no (2). One for which
+network_session_unknown_00058d90 says yes and that this console does not run: no (3).
+
+In the eighth state, and in a session that this console runs: a console of
+the session is answered with something of the kind 0x12
+(the eighth state takes that), and yes; from any other, yes in the eighth
+and no (5) in the others, with the console that runs the session.
+
+In a session that another console runs: no while the channel of that console
+is as unknown_000769a0 wants it, with that console: (4) if what comes says that it ran
+the session, (6) if not. No (8) with nobody in the session yet. Yes, with
+nothing done, if that channel has 7 as its first thing and what comes does
+not say that that console ran the session. If not, the session goes into its
+ninth state.
+
+In the ninth state: no (9) if the address is not of another console of the
+session. If it is, each of the two is known of by the other from now on.
+Then what comes is compared with what the session has: with a bigger first
+number of who is in the session, what comes is taken, if the console that it
+has chosen is one of the session; with a smaller one, it is not. With the
+same: no (7) if the console that it has chosen is not of the session or is
+not at the place that it says, and the console that sent it is one that
+does not answer from now on; if it is the one that this console has chosen,
+the two agree and the console that sent it has its bit in the second number
+of those that are known of; and if it is another, the better of the two is
+kept: the one that knows of more consoles, then the one with the bigger
+number, then the one at the earlier place. The console that sent it is one
+that answers, since now. When what comes is taken, the time of 0x8 is now
+and this console has its bit in the second number; when the two do not
+agree, the console that sent it loses its bit there */
+boolean NETWORK_SESSION_CALLBACK network_session_election_received(
+	byte *session,
+	const struct transport_address *address,
+	const byte *message,
+	long *reason,
+	boolean *has_host_address,
+	byte *host_address)
+{
+	long peer_index= network_session_find_peer_by_transport_address(session, address);
+	long state= network_session_state(session);
+	struct network_session_election *own=
+		(struct network_session_election *)(session+NETWORK_SESSION_STATE_DATA_OFFSET+NETWORK_SESSION_STATE9_UNKNOWN10_OFFSET);
+	struct network_session_election theirs;
+	const byte *peers= session+NETWORK_SESSION_PEER_ARRAY_OFFSET;
+	const byte *peer;
+	const byte *local_peer;
+	boolean agree= FALSE;
+	boolean take= FALSE;
+	boolean result= FALSE;
+	unsigned long bit;
+	long chosen;
+
+	if (state==_network_session_state_none || state==_network_session_state10)
+	{
+		*reason= _network_session_election_no_session;
+
+		return FALSE;
+	}
+	if (state!=_network_session_state9)
+	{
+		const struct network_session_peer_state *host;
+		const byte *host_peer;
+		boolean was_host;
+
+		if (!network_session_established(session))
+		{
+			*reason= _network_session_election_not_established;
+
+			return FALSE;
+		}
+		if (network_session_unknown_00058d90(session) && !network_session_unknown_00058d20(session))
+		{
+			*reason= _network_session_election_unknown3;
+
+			return FALSE;
+		}
+		if (state==_network_session_state8)
+		{
+			if (peer_index!=NONE)
+			{
+				network_session_election_answer_unknown12(session, peer_index);
+			}
+
+			return TRUE;
+		}
+		host= (const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+
+			*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET);
+		host_peer= peers+*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET)*NETWORK_SESSION_PEER_SIZE;
+		was_host= memcmp(host_peer, message+NETWORK_SESSION_MESSAGE_UNKNOWN16_ELECTION_OFFSET,
+			NETWORK_SESSION_ADDRESS_SIZE)==0;
+		if (network_session_unknown_00058d20(session))
+		{
+			if (peer_index!=NONE)
+			{
+				network_session_election_answer_unknown12(session, peer_index);
+
+				return TRUE;
+			}
+			*reason= _network_session_election_is_host;
+			*has_host_address= TRUE;
+			memcpy(host_address, host_peer, NETWORK_SESSION_ADDRESS_SIZE);
+
+			return FALSE;
+		}
+		if (unknown_000769a0(host->unknown4, *(const byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET)))
+		{
+			*reason= was_host ? _network_session_election_host_alive : _network_session_election_other_host_alive;
+			*has_host_address= TRUE;
+			memcpy(host_address, host_peer, NETWORK_SESSION_ADDRESS_SIZE);
+
+			return FALSE;
+		}
+		if (*(const long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET)==NONE)
+		{
+			*reason= _network_session_election_no_membership;
+
+			return FALSE;
+		}
+		if (network_session_channel_state(session, host->unknown4)==_network_session_unknown8_channel_state7 && !was_host)
+		{
+			return TRUE;
+		}
+	}
+	if (network_session_state(session)!=_network_session_state9)
+	{
+		network_session_enter_state9(session);
+	}
+	if (peer_index==NONE || peer_index==*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET))
+	{
+		*reason= _network_session_election_not_peer;
+
+		return FALSE;
+	}
+	peer= peers+peer_index*NETWORK_SESSION_PEER_SIZE;
+	local_peer= peers+*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET)*NETWORK_SESSION_PEER_SIZE;
+	memcpy(&theirs, message+NETWORK_SESSION_MESSAGE_UNKNOWN16_ELECTION_OFFSET, sizeof(theirs));
+	network_session_election_add_other(local_peer, &theirs, peer);
+	network_session_election_add_other(local_peer, own, peer);
+	chosen= network_session_find_peer(session, theirs.local_address);
+	bit= 1u<<peer_index;
+	if (theirs.membership_unknown0>own->membership_unknown0)
+	{
+		take= chosen!=NONE;
+	}
+	else if (theirs.membership_unknown0==own->membership_unknown0)
+	{
+		if (chosen==NONE || chosen!=theirs.local_peer)
+		{
+			*(unsigned long *)(session+NETWORK_SESSION_STATE_DATA_OFFSET+NETWORK_SESSION_STATE9_LOCAL_PEERS_OFFSET)&= ~bit;
+			*(unsigned long *)(session+NETWORK_SESSION_STATE_DATA_OFFSET+NETWORK_SESSION_STATE9_HOST_PEERS_OFFSET)|= bit;
+			*reason= _network_session_election_wrong_peer;
+			if (network_session_election_set_unknownBC(own, peer, FALSE))
+			{
+				*(long *)(session+NETWORK_SESSION_STATE_DATA_OFFSET+NETWORK_SESSION_STATE9_UNKNOWN8_OFFSET)= network_time();
+			}
+
+			return FALSE;
+		}
+		if (chosen==own->local_peer)
+		{
+			agree= TRUE;
+		}
+		else
+		{
+			long own_count= network_count_bits(own->unknownB8);
+			long their_count= network_count_bits(theirs.unknownB8);
+
+			if (their_count!=own_count)
+			{
+				take= their_count>own_count;
+			}
+			else if (theirs.unknown50!=own->unknown50)
+			{
+				take= theirs.unknown50>own->unknown50;
+			}
+			else
+			{
+				take= theirs.local_peer<own->local_peer;
+			}
+		}
+	}
+	*(unsigned long *)(session+NETWORK_SESSION_STATE_DATA_OFFSET+NETWORK_SESSION_STATE9_LOCAL_PEERS_OFFSET)|= bit;
+	*(unsigned long *)(session+NETWORK_SESSION_STATE_DATA_OFFSET+NETWORK_SESSION_STATE9_HOST_PEERS_OFFSET)&= ~bit;
+	*(long *)(session+NETWORK_SESSION_STATE_DATA_OFFSET+NETWORK_SESSION_STATE9_PEER_TIMES_OFFSET+peer_index*sizeof(long))=
+		network_session_time();
+	if (agree)
+	{
+		if (network_session_election_set_unknownBC(own, peer, TRUE))
+		{
+			*(long *)(session+NETWORK_SESSION_STATE_DATA_OFFSET+NETWORK_SESSION_STATE9_UNKNOWN8_OFFSET)= network_time();
+		}
+
+		return TRUE;
+	}
+	if (take)
+	{
+		memcpy(own, &theirs, sizeof(*own));
+		*(long *)(session+NETWORK_SESSION_STATE_DATA_OFFSET+NETWORK_SESSION_STATE9_UNKNOWNC_OFFSET)= chosen;
+		*(long *)(session+NETWORK_SESSION_STATE_DATA_OFFSET+NETWORK_SESSION_STATE9_UNKNOWN8_OFFSET)= network_time();
+		network_session_election_set_unknownBC(own, local_peer, TRUE);
+
+		return TRUE;
+	}
+	result= TRUE;
+	if (network_session_election_set_unknownBC(own, peer, FALSE))
+	{
+		*(long *)(session+NETWORK_SESSION_STATE_DATA_OFFSET+NETWORK_SESSION_STATE9_UNKNOWN8_OFFSET)= network_time();
+	}
+
+	return result;
+}

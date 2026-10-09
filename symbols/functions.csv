@@ -1855,3 +1855,5 @@ address,name,source,arguments,returns,convention
 0005dac0,network_session_host_parameters_requested,source/networking/network_session.c,eax stack stack,bool,stdcall
 0005d5a0,network_session_parameters_apply_update,source/networking/network_session.c,stack stack stack,bool,stdcall
 0005d9e0,network_session_parameters_update_received,source/networking/network_session.c,stack stack,bool,stdcall
+00075870,network_time,source/networking/network_session.c,,int
+0005e7f0,network_session_election_received,source/networking/network_session.c,ebx ecx stack stack stack stack,bool,stdcall

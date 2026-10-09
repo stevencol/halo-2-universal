@@ -3187,11 +3187,11 @@ def run(t) -> None:
             baseline = 0
         else:
             # what the session knew is what it knows, but for a few bytes
-            known = bytearray(parameters)
+            knew = bytearray(parameters)
             for change in range(random_.choice((0, 1, 1, 2, 3, 6))):
                 at = random_.choice(KNOWN_PLACES) if random_.randrange(4) else random_.randrange(0x14B0)
-                known[at] ^= random_.choice((1, 0x20, 0x80))
-            baseline = Buffer(bytes(known))
+                knew[at] ^= random_.choice((1, 0x20, 0x80))
+            baseline = Buffer(bytes(knew))
         t.check(
             "network_session_parameters_get_update",
             Buffer(bytes(whole_session())),
@@ -3228,6 +3228,9 @@ def run(t) -> None:
             struct.pack_into("<II", now, at + 0xC, random_.randrange(count), random_.randrange(4))
             if random_.randrange(4) == 0:
                 struct.pack_into("<I", now, at + 0x14, NONE)
+            if random_.randrange(8) == 0:
+                # a player with no console
+                struct.pack_into("<I", now, at + 0xC, NONE)
         if n % 4 == 0:
             before = 0
         else:
@@ -3291,4 +3294,77 @@ def run(t) -> None:
             Buffer(bytes(now)),
             before,
             Buffer(random_.randbytes(0x489C)),
+        )
+
+    # ---------- the time, and what a console in its ninth state sends
+
+    for n in range(40):
+        t.check("network_time", globals=clock(), externals={"GetTickCount": ticks()})
+
+    ELECTION = 0x7430
+
+    for n in range(2000):
+        data = with_real_channels()
+        count = struct.unpack_from("<I", data, 0x54)[0]
+        local = random_.randrange(count)
+        state = random_.choice((0, 10, 2, 1, 3, 3, 4, 5, 6, 7, 8, 9, 9, 9, 9, 9, 9, 9))
+        struct.pack_into("<I", data, STATE, state)
+        struct.pack_into("<I", data, LOCAL_PEER, local)
+        struct.pack_into("<I", data, 0x40, random_.randrange(count))
+        struct.pack_into("<I", data, MEMBERSHIP, random_.choice((7, 7, 7, NONE)))
+        data[0x7420] = random_.choice((0, 0, 1))
+
+        def address_of(peer: int) -> bytes:
+            return bytes(data[PEERS + peer * PEER : PEERS + peer * PEER + 0x24])
+
+        # what the session has of the consoles that are known of: this console, and some of the others
+        own = bytearray(random_.randbytes(0xC0))
+        own[0x24:0x48] = address_of(local)
+        own_chosen = random_.randrange(count)
+        struct.pack_into("<IIII", own, 0x48, random_.choice((7, 7, 8)), own_chosen, random_.choice((3, 3, 5)), random_.choice((1, 5, 15, 16)))
+        own[0x58:0x5E] = address_of(local)[0xA:0x10]
+        for at in range(1, 16):
+            if random_.randrange(3) == 0:
+                own[0x58 + at * 6 : 0x5E + at * 6] = address_of(random_.randrange(count))[0xA:0x10]
+        struct.pack_into("<II", own, 0xB8, random_.getrandbits(16), random_.getrandbits(16))
+        data[ELECTION : ELECTION + 0xC0] = own
+        # and what comes: the same, or with one thing that is another
+        theirs = bytearray(own)
+        their_chosen = random_.choice((own_chosen, own_chosen, random_.randrange(count), random_.randrange(count)))
+        theirs[0x24:0x48] = address_of(their_chosen)
+        struct.pack_into("<I", theirs, 0x4C, their_chosen)
+        way = random_.randrange(10)
+        if way == 0:
+            struct.pack_into("<I", theirs, 0x48, 8)
+        elif way == 1:
+            struct.pack_into("<I", theirs, 0x48, 6)
+        elif way == 2:
+            theirs[0x24:0x48] = random_.randbytes(0x24)
+        elif way == 3:
+            struct.pack_into("<I", theirs, 0x4C, random_.randrange(16))
+        elif way == 4:
+            struct.pack_into("<I", theirs, 0xB8, random_.getrandbits(16))
+        elif way == 5:
+            struct.pack_into("<I", theirs, 0x50, random_.choice((2, 4, 5)))
+        elif way == 6:
+            struct.pack_into("<I", theirs, 0x48, random_.choice((8, 9)))
+            theirs[0x24:0x48] = random_.randbytes(0x24)
+        theirs[0:0x24] = address_of(struct.unpack_from("<I", data, 0x40)[0]) if random_.randrange(2) else random_.randbytes(0x24)
+        t.check(
+            "network_session_election_received",
+            Buffer(bytes(data), pointers=(8,)),
+            Buffer(random_.randbytes(0x14)),
+            Buffer(random_.randbytes(8) + bytes(theirs)),
+            Buffer(random_.randbytes(4)),
+            Buffer(random_.randbytes(1)),
+            Buffer(random_.randbytes(0x24)),
+            globals=clock(),
+            externals={
+                "GetTickCount": ticks(),
+                "transport_security_peer_address_from_address": known(data),
+                "unknown_000769a0": lambda harness, arguments, says=random_.choice((0, 0, 1, 0x100)): (says, (arguments[0], arguments[1])),
+                "network_session_enter_state9": then(random_.choice((None, 9))),
+                "unknown_00075e80": sends_all,
+                "network_session_unknown_00061950": takes_out,
+            },
         )
