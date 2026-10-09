@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 397.
+**Última actualización:** 2026-10-08, al terminar el hito 398.
 
 ## Dónde estamos
 
-- **1386 funciones descompiladas de 11.265: el 12,30 % del juego** (el
-  8,213 % de los bytes de código).
-- Las 1386 están comprobadas contra el ejecutable original: las 1354 del
+- **1388 funciones descompiladas de 11.265: el 12,32 % del juego** (el
+  8,247 % de los bytes de código).
+- Las 1388 están comprobadas contra el ejecutable original: las 1354 del
   hito 385 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how the observer handles a request to connect* (ver `git log`).
+- Último hito: *Decompile how a channel's flow starts* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 555 funciones apuntadas pero sin descompilar (las que el código
   llama); 453 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -126,7 +126,7 @@ Módulos (funciones hechas / archivo):
 - [x] Intentos de medir la conexión — `networking\transport_qos.c` (8: la
   tabla de intentos, empezar uno, soltarlo, cómo va y qué encontró con
   cada consola). Entero.
-- [ ] Observador de la red — `networking\network_observer.c` (67: lo que
+- [ ] Observador de la red — `networking\network_observer.c` (69: lo que
       tiene de cada sesión y sus canales con las otras consolas; va de
       `0x00075970` a `0x0007a4a0` y casi todo falta)
 - [x] Partida en red — `networking\network_life_cycle.c` (42: qué está
@@ -272,6 +272,10 @@ Módulos (funciones hechas / archivo):
 
 ## Avisos para no perder tiempo
 
+- Al dar nombre a una función hay que cambiarlo también donde otras la
+  llaman y en sus pruebas: si queda un `unknown_<dirección>` viejo, el
+  arnés lo resuelve por la dirección y las pruebas pasan igual (hito
+  398).
 - Al declarar una función que aún no está descompilada, lo que recibe
   por puntero para escribir hay que darlo del tamaño que el juego le
   da (mirar los huecos de la pila de quien la llama): las pruebas no

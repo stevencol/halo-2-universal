@@ -83,7 +83,7 @@ enum
 	NETWORK_SESSIONS_SESSION_HAS_IDENTIFIER_OFFSET= 0x24,
 	NETWORK_SESSIONS_SESSION_IDENTIFIER_OFFSET= 0x1C,
 	/* one more thing that the observer is given, and more of a channel:
-	something that unknown_000783d0 looks for an address with. Of a channel
+	something that network_observer_session_get_address looks for an address with. Of a channel
 	of the game: which of the things of 0x2850 bytes of unknown_004d87dc is
 	its own, and its address of the game. And of what network_unknown_00075910 is asked
 	about */
@@ -97,7 +97,7 @@ enum
 	/* more of a channel: when it went into its state; a byte whose first
 	bit is set when it is asked to connect; how many times it has tried, in
 	16 bits; and a number of something of the network, NONE for none. Its
-	states, and how its address of the game is. And what unknown_000784a0 is told when it
+	states, and how its address of the game is. And what network_observer_channel_forget_address is told when it
 	loses its console, and when it is no more */
 	NETWORK_OBSERVER_CHANNEL_STATE_TIME_OFFSET= 0x4,
 	NETWORK_OBSERVER_CHANNEL_UNKNOWN8_OFFSET= 0x8,
@@ -412,6 +412,23 @@ enum
 	NETWORK_OBSERVER_LOOPBACK_ADDRESS= 0x7F000001,
 	NETWORK_CHANNEL_UNKNOWN50_OFFSET= 0x50,
 	_unknown_00088650_unknown6= 0x6,
+	/* a byte and a time of the observer; how much of a channel is what it
+	keeps of its flow; something that a channel of the game has, with a
+	byte. And of what the observer has at 0x10: how long after that time
+	there is a least for each channel; the bits a second that a flow starts
+	with; the most that there is for all, with the byte and without; the
+	least for each channel; and the least that the number of 0x4F0 of a
+	channel is */
+	NETWORK_OBSERVER_UNKNOWN4E01_OFFSET= 0x4E01,
+	NETWORK_OBSERVER_CHANNEL_FLOW_SIZE= 0x94,
+	NETWORK_CHANNEL_UNKNOWN3C_OFFSET= 0x3C,
+	NETWORK_CHANNEL_UNKNOWN3C_UNKNOWN30_OFFSET= 0x30,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN154_OFFSET= 0x154,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN158_OFFSET= 0x158,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN15C_OFFSET= 0x15C,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN160_OFFSET= 0x160,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN164_OFFSET= 0x164,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN16C_OFFSET= 0x16C,
 	NETWORK_OBSERVER_PARAMETERS_RATE_PERIOD_OFFSET= 0xF8,
 	NETWORK_OBSERVER_PARAMETERS_WINDOW_COUNT_OFFSET= 0xFC,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
@@ -560,6 +577,9 @@ void NETWORK_OBSERVER_CALLBACK network_observer_take_game_channels(byte *observe
 boolean NETWORK_OBSERVER_CALLBACK network_observer_voice_has_packet(long channel_index, boolean unknown, long *size);
 long NETWORK_OBSERVER_CALLBACK network_observer_voice_build_packet(long channel_index, long size, byte *packet);
 void network_observer_update_interval(byte *observer);
+long NETWORK_OBSERVER_CALLBACK network_observer_compare_channels(long channel_index, long other_index,
+	const real *values);
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_start_flow(long channel_index, byte *observer);
 long NETWORK_OBSERVER_CALLBACK network_observer_acquire_channel(byte *observer, long session_index,
 	const byte *unknown14);
 void NETWORK_OBSERVER_CALLBACK network_observer_release_game_channels(byte *observer);

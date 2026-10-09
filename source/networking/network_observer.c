@@ -684,14 +684,13 @@ void __attribute__((stdcall)) network_observer_channel_unknown_000773a0(long cha
 void network_observer_channel_update_probe(long channel_index, byte *observer);
 void unknown_000779f0(byte *observer);
 void __attribute__((stdcall)) unknown_00078ac0(byte *observer);
-void unknown_0007a4a0(byte *observer);
 
 /* 0x00075da0: what the observer does each time. Each channel that is in
 use: if no session uses it and network_observer_channel_unused_expired says so, it is no more
 (network_observer_channel_delete); and if it still is in use, it follows its
 connection (network_observer_channel_update_connection) and network_observer_channel_update_game_channel,
 network_observer_channel_update_tries, network_observer_channel_unknown_000773a0 and network_observer_channel_update_probe are done with it. Then
-unknown_000779f0, unknown_00078ac0 and unknown_0007a4a0, with the observer */
+unknown_000779f0, unknown_00078ac0 and network_observer_update_voice_mode, with the observer */
 void NETWORK_OBSERVER_CALLBACK network_observer_update(
 	byte *observer)
 {
@@ -721,7 +720,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_update(
 	}
 	unknown_000779f0(observer);
 	unknown_00078ac0(observer);
-	unknown_0007a4a0(observer);
+	network_observer_update_voice_mode(observer);
 }
 
 /* 0x004cf56c: how long a channel of the observer that no session uses is
@@ -3318,4 +3317,181 @@ void NETWORK_OBSERVER_CALLBACK network_observer_handle_connect_request(
 		network_observer_channel_update_connection(channel_index, observer);
 		network_observer_channel_update_game_channel(channel_index, observer);
 	}
+}
+
+/* 0x00078a90: whether of two channels the second has more of a real than
+the first: what the channels are put in order with, the ones with less first */
+long NETWORK_OBSERVER_CALLBACK network_observer_compare_channels(
+	long channel_index,
+	long other_index,
+	const real *values)
+{
+	return values[other_index]>values[channel_index];
+}
+
+/* how much a channel can send at once: what goes in so many packets as
+there are in so many milliseconds, and two more, and no less than the number
+at 0xE0 of what the observer has at 0x10. The game adds and multiplies as
+the processor does */
+static inline __attribute__((always_inline)) long network_observer_flow_unknown498(
+	const byte *observer,
+	long milliseconds,
+	real packet_rate,
+	long bits_per_second)
+{
+	long packets= (long)((unsigned long)(long)((real)milliseconds*packet_rate*NETWORK_OBSERVER_SECONDS_PER_MILLISECOND)+1);
+	long most= (long)((unsigned long)(packets+1)*(unsigned long)((long)((unsigned long)milliseconds*(unsigned long)bits_per_second)/
+		(long)((unsigned long)packets*NETWORK_OBSERVER_BITS_PER_BYTE_MILLISECOND)));
+	long least= *(const long *)(*(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET)+
+		NETWORK_OBSERVER_PARAMETERS_UNKNOWNE0_OFFSET);
+
+	return most<=least ? least : most;
+}
+
+/* 0x00078e60: the flow of a channel of the observer starts. It starts with
+the bits a second that the number at 0x158 of what the observer has at 0x10
+says, unless that and what the channels that have a flow already do is more
+than there is for all: half of the number of 0x4E04 of the observer, or
+three quarters with its byte of 0x4E01, no more than the numbers at 0x15C
+and 0x160, and for a while after its time of 0x4F2C no less than the number
+at 0x164 for each channel. Then all of them, this one too, share what there
+is, or what the others did if it is more: this one has its part, no less
+than the number at 0x14C, and the others have theirs less in proportion
+(network_observer_channel_set_flow).
+
+All that the channel keeps of its flow is nothing, with its byte of 0x48C;
+three bytes say what its channel of the game has at 0x3C; its numbers of
+0x4F0 and 0x4B0 are the number that its channel of the game has for it, no
+less than the one at 0x16C; and its flow is those bits a second, the packets
+that they give (network_observer_packet_rate) and how much it can send at
+once */
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_start_flow(
+	long channel_index,
+	byte *observer)
+{
+	byte *channel= (byte *)network_observer_channel(observer, channel_index);
+	const byte *game_channel= unknown_004d87d4+
+		*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET)*NETWORK_CHANNEL_SIZE;
+	const byte *parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+	const byte *unknown3c;
+	long count= 0;
+	unsigned long total= 0;
+	long bits_per_second= *(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN158_OFFSET);
+	long budget= *(const long *)(observer+NETWORK_OBSERVER_UNKNOWN4E04_OFFSET);
+	long limit;
+	long unknown4f0;
+	long index;
+	real packet_rate;
+
+	for (index= 0; index<MAXIMUM_NETWORK_OBSERVER_CHANNELS; index++)
+	{
+		const byte *other= network_observer_channel(observer, index);
+
+		if (*(const long *)(other+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)!=0 && other[NETWORK_OBSERVER_CHANNEL_UNKNOWN48C_OFFSET])
+		{
+			count++;
+			total+= *(const unsigned long *)(other+NETWORK_OBSERVER_CHANNEL_BITS_PER_SECOND_OFFSET);
+		}
+	}
+	/* the game adds and multiplies as the processor does */
+	if (observer[NETWORK_OBSERVER_UNKNOWN4E01_OFFSET])
+	{
+		limit= *(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN160_OFFSET);
+		budget= (long)((unsigned long)budget*3)/4;
+	}
+	else
+	{
+		limit= *(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN15C_OFFSET);
+		budget= budget/2;
+	}
+	if (budget>limit)
+	{
+		budget= limit;
+	}
+	if (network_time_since(*(const long *)(observer+NETWORK_OBSERVER_UNKNOWN4F2C_OFFSET))<=
+		*(const long *)(*(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET)+
+		NETWORK_OBSERVER_PARAMETERS_UNKNOWN154_OFFSET))
+	{
+		long least= (long)((unsigned long)(count+1)**(const unsigned long *)(*(const byte **)(observer+
+			NETWORK_OBSERVER_UNKNOWN10_OFFSET)+NETWORK_OBSERVER_PARAMETERS_UNKNOWN164_OFFSET));
+
+		if (budget<=least)
+		{
+			budget= least;
+		}
+	}
+	if ((long)((unsigned long)bits_per_second+total)>budget)
+	{
+		long most= (long)total;
+
+		if (most<=budget)
+		{
+			most= budget;
+		}
+		parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+		bits_per_second= most/(count+1);
+		if (bits_per_second<=*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN14C_OFFSET))
+		{
+			bits_per_second= *(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN14C_OFFSET);
+		}
+		if (count>0 && (real)(long)total>0.0f)
+		{
+			real scale= (real)(long)((unsigned long)most-(unsigned long)bits_per_second)/(real)(long)total;
+
+			for (index= 0; index<MAXIMUM_NETWORK_OBSERVER_CHANNELS; index++)
+			{
+				const byte *other= network_observer_channel(observer, index);
+
+				if (*(const long *)(other+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)!=0 &&
+					other[NETWORK_OBSERVER_CHANNEL_UNKNOWN48C_OFFSET])
+				{
+					long other_bits_per_second= lrintf((real)*(const long *)(other+NETWORK_OBSERVER_CHANNEL_BITS_PER_SECOND_OFFSET)*scale);
+					long other_unknown498= lrintf((real)*(const long *)(other+NETWORK_OBSERVER_CHANNEL_UNKNOWN498_OFFSET)*scale);
+
+					parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+					if (other_bits_per_second<=*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN14C_OFFSET))
+					{
+						other_bits_per_second= *(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN14C_OFFSET);
+					}
+					if (other_unknown498<=*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWNE0_OFFSET))
+					{
+						other_unknown498= *(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWNE0_OFFSET);
+					}
+					/* the game gives the bytes of this channel, not of the
+					other */
+					network_observer_channel_set_flow(index, observer, network_observer_packet_rate(observer,
+						other_bits_per_second, channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48E_OFFSET],
+						channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN490_OFFSET]), other_bits_per_second, other_unknown498);
+				}
+			}
+		}
+	}
+	memset(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN48C_OFFSET, 0, NETWORK_OBSERVER_CHANNEL_FLOW_SIZE);
+	channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48C_OFFSET]= TRUE;
+	unknown3c= *(const byte **)(game_channel+NETWORK_CHANNEL_UNKNOWN3C_OFFSET);
+	channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48E_OFFSET]= unknown3c!=NULL;
+	channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48F_OFFSET]= unknown3c!=NULL && unknown3c[NETWORK_CHANNEL_UNKNOWN3C_UNKNOWN30_OFFSET];
+	channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN490_OFFSET]= unknown3c!=NULL && !unknown3c[NETWORK_CHANNEL_UNKNOWN3C_UNKNOWN30_OFFSET];
+	*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4E0_OFFSET)= NONE;
+	*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4E4_OFFSET)= NONE;
+	*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4E8_OFFSET)= NONE;
+	unknown4f0= 0;
+	if (*(const long *)(game_channel+NETWORK_CHANNEL_STATE_OFFSET)==_network_channel_state5 &&
+		(game_channel[NETWORK_CHANNEL_UNKNOWN48_OFFSET]&_network_channel_unknown48_bit8))
+	{
+		unknown4f0= *(const long *)(unknown_004d87d8+*(const long *)(game_channel+NETWORK_CHANNEL_UNKNOWN10_OFFSET)*
+			NETWORK_CHANNEL_UNKNOWN10_SIZE+NETWORK_CHANNEL_UNKNOWN10_UNKNOWN96C_OFFSET);
+	}
+	parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+	if (unknown4f0<=*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN16C_OFFSET))
+	{
+		unknown4f0= *(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_UNKNOWN16C_OFFSET);
+	}
+	*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4F0_OFFSET)= unknown4f0;
+	*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN4B0_OFFSET)= unknown4f0;
+	packet_rate= network_observer_packet_rate(observer, bits_per_second, channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48E_OFFSET],
+		channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN490_OFFSET]);
+	/* the game has network_observer_channel_set_flow written here */
+	network_observer_channel_set_flow(channel_index, observer, packet_rate, bits_per_second,
+		network_observer_flow_unknown498(observer, unknown4f0, packet_rate, bits_per_second));
 }

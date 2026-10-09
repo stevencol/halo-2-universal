@@ -154,7 +154,7 @@ enum
 
 enum
 {
-	/* in what unknown_00059670 and unknown_000596a0 give: a number that is 0
+	/* in what network_life_cycle_get_session and network_life_cycle_get_other_session give: a number that is 0
 	with no session, and what of it the voice is told of, which starts with
 	a number that is NONE if there is none */
 	GAME_VOICE_SESSION_UNKNOWN741C_OFFSET= 0x741C,

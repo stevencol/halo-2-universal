@@ -2,6 +2,69 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — El caudal de un canal empieza
+
+Dos funciones en `networking/network_observer.c`, 1049 bytes entre las dos. De 1386
+funciones se pasa a 1388, el 12,32 % de las del juego (el 8,247 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_channel_start_flow` | `0x00078e60` | `networking/network_observer.c` |
+| `network_observer_compare_channels` | `0x00078a90` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_observer_channel_start_flow` es **donde nace el caudal de un
+  canal**: lo que pone el byte de `0x48C` que todas las del caudal miran
+  («el canal tiene caudal»).
+  - Empieza con unos bits por segundo fijos (`0x158`), salvo que con eso
+    se pase de **lo que hay para todos**: la mitad del número de `0x4E04`
+    del observador (o tres cuartos, según un byte), con un tope. Entonces
+    se reparte: el canal nuevo se lleva su parte y **a los demás se les
+    baja el caudal en proporción**.
+  - Durante un rato después de una hora del observador (`0x4F2C`) hay un
+    mínimo garantizado por canal.
+  - Borra todo lo que el canal llevaba de su caudal (los `0x94` bytes
+    desde `0x48C`), apunta en tres bytes qué tiene su canal del juego en
+    `0x3C`, y toma como primer valor de su media (`0x4B0`, hito 389) el
+    número que el canal del juego tiene para él.
+  - Con esto queda claro que `0x4E04` es **lo que la conexión de esta
+    consola da de sí**, en bits por segundo: lo mismo que el hito 385
+    comparaba para decidir a cuántas consolas llega la voz.
+- `network_observer_compare_channels` compara dos canales por un real de
+  cada uno: es con lo que se ordenan (`qsort_4byte`) en la función que
+  falta, `0x00078ac0`.
+- Dentro del reparto el juego da los dos bytes **del canal nuevo**, no los
+  de cada canal, al calcular los paquetes por segundo de los otros. Se
+  deja igual.
+
+### Corregido
+
+- **Un descuido mío del hito 391.** Al dar nombre a
+  `network_observer_update_voice_mode` no cambié la llamada que
+  `network_observer_update` le hace: seguía con el nombre viejo
+  (`unknown_0007a4a0`), y su prueba también. Las pruebas pasaban porque el
+  arnés resuelve por su dirección cualquier nombre de esa forma. Ya están
+  los dos con el nombre nuevo.
+- De paso busqué más nombres viejos así en todo el código y las pruebas:
+  había otros siete, todos en comentarios. Corregidos.
+
+### Comprobado rompiendo líneas
+
+- Veinticinco líneas rotas, una cada vez: las pruebas fallaron en
+  veintitrés. Las otras dos no cambian nada: dividir de otra manera lo
+  que hay para todos solo se nota si es negativo, y entonces no se usa.
+
+### Sin comprobar
+
+- Divide entre números del canal del juego sin mirar que el canal tenga
+  uno; en las pruebas siempre lo tiene.
+- En este hito se pasaron las pruebas de `network_observer` (69 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Una consola pide que se hable con ella
 
 Una función en `networking/network_observer.c`, de 673 bytes. De 1385

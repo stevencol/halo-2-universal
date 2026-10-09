@@ -436,7 +436,7 @@ enum
 	_network_session_message_set_player= 0x20,
 	NETWORK_SESSION_MESSAGE_SET_PLAYER_SIZE= 0xA4,
 	/* more of what the session has from its state on in the first state: a
-	number that unknown_00078580 is asked about, and what it has to say for
+	number that network_observer_channel_connect_status is asked about, and what it has to say for
 	the session to go on; 0x1AC bytes that are sent; a time that starts at
 	zero; and how many times and when it last sent what it sends there */
 	NETWORK_SESSION_STATE1_UNKNOWN0_OFFSET= 0x7420,

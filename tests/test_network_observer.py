@@ -467,7 +467,7 @@ def run(t) -> None:
                 "network_observer_channel_update_probe": with_channel_and_observer,
                 "unknown_000779f0": with_observer,
                 "unknown_00078ac0": with_observer,
-                "unknown_0007a4a0": with_observer,
+                "network_observer_update_voice_mode": with_observer,
             },
         )
 
@@ -1672,4 +1672,79 @@ def run(t) -> None:
                 "network_observer_channel_update_connection": with_channel_and_observer,
                 "unknown_00088360": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
             },
+        )
+
+    # ---------- two channels are compared, and the flow of a channel starts
+
+    for n in range(200):
+        values = [random_.choice((0.0, 1.0, 1.0, -1.0, 2.5, 1e9)) for channel in range(15)]
+        t.check(
+            "network_observer_compare_channels",
+            random_.randrange(15),
+            random_.randrange(15),
+            Buffer(struct.pack("<15f", *values)),
+        )
+
+    for n in range(2500):
+        setup = at_time()
+        now = struct.unpack("<I", setup["globals"]["unknown_0051054c"])[0]
+        data = observer() + bytearray(random_.randbytes(0x170))
+        struct.pack_into("<I", data, 0x10, SIZE)
+        struct.pack_into("<i", data, SIZE + 0xE0, random_.choice((0, 500, 4000)))
+        # the rates of packets, and the sizes of one
+        struct.pack_into("<i4f", data, SIZE + 0x9C, 4, 1.0, 0.5, 0.25, 0.125)
+        struct.pack_into("<iif", data, SIZE + 0x108, random_.choice((0, 45, 200)), random_.choice((0, 90)), random_.choice((0.5, 1.0)))
+        struct.pack_into("<i", data, SIZE + 0x14C, random_.choice((1000, 4000)))
+        struct.pack_into(
+            "<5i",
+            data,
+            SIZE + 0x154,
+            random_.choice((1000, 5000)),
+            random_.choice((8000, 16000, 64000)),
+            random_.choice((16000, 64000)),
+            random_.choice((24000, 96000)),
+            random_.choice((1000, 4000)),
+        )
+        struct.pack_into("<i", data, SIZE + 0x16C, random_.choice((30, 100, 1000)))
+        data[0x4E01] = random_.choice((0, 0, 1, 0x80))
+        struct.pack_into("<i", data, 0x4E04, random_.choice((8000, 32000, 32001, 128000, 1000000, 3, -5)))
+        struct.pack_into("<I", data, 0x4F2C, (now - random_.choice((0, 999, 1000, 1001, 4999, 5000, 5001, 9000))) & 0xFFFFFFFF)
+        few = random_.choice((0, 0, 1, 2))
+        for channel in range(15):
+            at = CHANNELS + channel * CHANNEL
+            # with no other channel that has a flow, with one, or with many
+            data[at + 0x48C] = random_.choice((0, 1, 1, 0x80)) if few == 0 else int(few == 2 and channel == 7)
+            struct.pack_into("<ii", data, at + 0x494, random_.choice((1000, 8000, 8001, 16000, 64000)), random_.choice((500, 4000, 4001)))
+            struct.pack_into("<I", data, at + 0xC, random_.randrange(6))
+        channel = random_.randrange(15)
+        # the channels of the game, and after them what some of them have at 0x3C
+        channels = game_channels()
+        things = len(channels)
+        pointers = []
+        for other in range(6):
+            struct.pack_into("<I", channels, other * 0xF8 + 0x10, random_.randrange(3))
+            thing = random_.choice((None, 0, 1))
+            struct.pack_into("<I", channels, other * 0xF8 + 0x3C, 0 if thing is None else things + thing * 0x34)
+            if thing is not None:
+                pointers.append(other * 0xF8 + 0x3C)
+            channels[other * 0xF8 + 0x48] = random_.choice((0, 8, 8, 0xFF, 0xF7))
+            struct.pack_into("<i", channels, other * 0xF8 + 0x54, random_.choice((0, 2, 3, 5, 5, 5)))
+        for thing in (0, 1, 0x80):
+            block = bytearray(random_.randbytes(0x34))
+            block[0x30] = thing
+            channels += block
+        own = bytearray(random_.randbytes(3 * 0x97C))
+        for other in range(3):
+            struct.pack_into("<i", own, other * 0x97C + 0x96C, random_.choice((0, 33, 100, 250, 5000)))
+        t.check(
+            "network_observer_channel_start_flow",
+            channel,
+            Buffer(bytes(data), pointers=(0x10,)),
+            globals=dict(
+                setup["globals"],
+                unknown_004d87d4=Buffer(bytes(channels), pointers=tuple(pointers)),
+                unknown_004d87d8=Buffer(bytes(own)),
+                xbox_video_settings=video(),
+            ),
+            externals=setup["externals"],
         )

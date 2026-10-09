@@ -8727,7 +8727,7 @@ void sound_console_get_format(
 }
 
 /* 0x00220730: what the console calls for the stream of a voice of the
-console's sound: unknown_0021f4e0 gives it this function, with the number of
+console's sound: sound_console_voice_create_stream gives it this function, with the number of
 the voice. With something to tell, of a voice that there is, the thing that
 the voice has at 0x30 is told of it; and if the last number is 0 and the
 voice has neither of the flags 2 and 3, unknown_002ae820 is given the voice.

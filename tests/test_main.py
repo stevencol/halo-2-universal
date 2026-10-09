@@ -118,7 +118,7 @@ def run(t) -> None:
         harness.mu.mem_write(long_address, values[1])
         return 0, record
 
-    def unknown_00137f70(harness, arguments):
+    def ran_ticks(harness, arguments):
         return 0, (arguments[0], bytes(harness.mu.mem_read(arguments[1], 4)))
 
     def unknown_00092f80(harness, arguments):
@@ -180,6 +180,6 @@ def run(t) -> None:
                 "unknown_00068250": lambda harness, arguments, result=random_.choice((1, 1, 0)): result,
                 "unknown_00092f80": unknown_00092f80,
                 "unknown_00146660": lambda harness, arguments, values=values: unknown_00146660(harness, arguments, values),
-                "game_run_ticks": unknown_00137f70,
+                "game_run_ticks": ran_ticks,
             },
         )
