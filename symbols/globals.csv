@@ -316,3 +316,4 @@ address,name,source
 004cf73c,unknown_004cf73c,source/networking/network_observer.c
 004cf5d0,unknown_004cf5d0,source/networking/network_observer.c
 004d87d8,unknown_004d87d8,source/networking/network_observer.c
+004d87f8,unknown_004d87f8,source/networking/replication_event_manager.c

@@ -2,6 +2,55 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — La lista de lo que pasa en la partida
+
+Cinco funciones en un archivo nuevo, `networking/replication_event_manager.c`. De 1443
+funciones se pasa a 1448, el 12,85 % de las del juego (el 8,685 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `replication_event_manager_unknown_00089dc0` | `0x00089dc0` | `networking/replication_event_manager.c` |
+| `replication_event_manager_new_event` | `0x00089df0` | `networking/replication_event_manager.c` |
+| `replication_event_manager_remove_event` | `0x00089e70` | `networking/replication_event_manager.c` |
+| `replication_event_free` | `0x00089eb0` | `networking/replication_event_manager.c` |
+| `replication_event_manager_send_event` | `0x00089f20` | `networking/replication_event_manager.c` |
+
+### Lo que se sabe
+
+- Detrás de la tabla de cosas hay un tercer módulo pequeño: **la lista de
+  lo que pasa en la partida y hay que contar a las otras consolas** (un
+  disparo, un daño...). Las cosas duran; esto pasa una vez. El nombre del
+  archivo es una suposición.
+- Cada suceso son `0x2C` bytes que se piden al **montón de la red**
+  (`unknown_004d87f8`, que aparece aquí por primera vez): algo con una
+  tabla de funciones que da memoria, la recoge y hace sitio, y una cuenta
+  de lo que tiene dado.
+  - `replication_event_manager_new_event` pide uno; si no hay memoria,
+    manda hacer sitio y lo intenta otra vez. Lo pone al final de la lista.
+  - `replication_event_free` devuelve al montón lo que el suceso lleva
+    aparte y, con el primer bit, el suceso.
+  - `replication_event_manager_remove_event` lo saca de la lista y lo
+    suelta.
+- `replication_event_manager_send_event` es **mandar contar un suceso**:
+  se apunta la hora y, por cada vista de la máscara que exista, el suceso
+  queda pendiente en esa vista. Si no hay ninguna vista para él, se avisa
+  a lo que los sucesos son y se tira.
+- `replication_event_manager_unknown_00089dc0` hace algo con cada vista
+  (`unknown_00096ed0`, sin descompilar).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las cinco**, en las quince del gestor de
+  cosas (hitos 416 a 418) y en `network_channel_write_packet` (hito 415).
+- Al soltar un suceso el juego pregunta al montón cuánto ocupa y no hace
+  nada con la respuesta: resto de la versión de pruebas.
+- En este hito se pasaron las pruebas de `replication_event_manager`
+  (5 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Marcar una cosa para las vistas, y quedarse con las de otra consola
 
 Dos funciones en `networking/replication_entity_manager.c`, 952 bytes entre las dos. De 1441
