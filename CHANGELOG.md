@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Desconectar la sesión, y su séptimo estado
+
+Tres funciones en `networking/network_session.c`, 561 bytes entre todas. De 1250
+funciones se pasa a 1253, el 11,12 % de las del juego (el 6,940 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_disconnect` | `0x0005a520` | `networking/network_session.c` |
+| `network_session_enter_state7` | `0x000614a0` | `networking/network_session.c` |
+| `network_session_host_lost` | `0x00062ab0` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_disconnect` era `unknown_0005a520`, la que aparecía por
+  todas partes como «lo que se hace con una sesión»: la **desconecta**.
+  Primero esta consola sale (`network_session_leave`) y se avisa a lo que
+  la sesión tiene en `0x78A8` (su tercera función); después no queda nada
+  de ninguna consola, la sesión no se conoce por nada, nadie está ni pide
+  entrar, y se queda sin estado, como recién preparada.
+- `network_session_enter_state7` (era `unknown_000614a0`) pone el séptimo
+  estado: lo que la sesión tiene a partir del estado empieza con un byte,
+  un bit por cada consola a la que afecta (una, o todas menos esta), la
+  hora y NONE. Con una sola consola no hay séptimo estado.
+- `network_session_host_lost` (era `unknown_00062ab0`) es lo que pasa
+  cuando se pierde a quien lleva la sesión: casi siempre se desconecta;
+  solo en una sesión que lleva otra consola y con más de una consola se
+  avisa al canal y se hace `0x000616e0`, que será buscar quién la lleva
+  ahora.
+
+### Mutaciones
+
+Las de los hitos 309 a 320 terminaron: `voice_routing` 40 de 40,
+`transport_security` 19 de 19 y `network_session` 72 de 73. La que escapa
+es quitar el «mientras quepan» de `network_session_request_players`, y es
+equivalente: cuando no queda sitio libre ninguna petición posterior entra,
+así que seguir o parar da lo mismo.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (161) y de
+  `game_voice` (71).
+- Las mutaciones de los hitos 280 a 308 y 321 a 343 están pendientes.
+
 ## 2026-10-08 — Salir de una sesión
 
 Tres funciones en `networking/network_session.c`, 588 bytes entre todas. De 1247

@@ -748,7 +748,7 @@ address,name,source,arguments,returns,convention
 000599b0,network_life_cycle_request_new2,source/networking/network_life_cycle.c,eax edx,void
 000599f0,network_life_cycle_request_new3,source/networking/network_life_cycle.c,eax edx,void
 00059ab0,network_life_cycle_request_new4,source/networking/network_life_cycle.c,eax,void
-0005a520,unknown_0005a520,,eax,void
+0005a520,network_session_disconnect,source/networking/network_session.c,eax,void
 0005a400,network_session_leave,source/networking/network_session.c,ecx stack,void,stdcall
 00061180,unknown_00061180,,ebx,void
 0005b570,network_session_leader_clear_unknown49f8,source/networking/network_session.c,edx,bool
@@ -829,7 +829,7 @@ address,name,source,arguments,returns,convention
 0005b150,network_session_get_language,source/networking/network_session.c,esi,int
 0005b180,network_session_get_maximum_players,source/networking/network_session.c,edx,int
 0005b1a0,network_session_get_unknown5ddc,source/networking/network_session.c,edx stack,bool,stdcall
-000614a0,unknown_000614a0,,eax ebx ecx,void
+000614a0,network_session_enter_state7,source/networking/network_session.c,eax ebx ecx,void
 0005c6d0,network_session_host_set_chosen_peer,source/networking/network_session.c,ecx stack,void
 0005c190,network_session_unknown_0005c190,source/networking/network_session.c,eax edx,bool
 0005c1c0,network_session_host_set_unknown49f0,source/networking/network_session.c,esi edx,bool
@@ -1779,7 +1779,8 @@ address,name,source,arguments,returns,convention
 00062990,unknown_00062990,,esi,void
 00062480,unknown_00062480,,esi,void
 000623e0,unknown_000623e0,,esi,void
-00062ab0,unknown_00062ab0,,esi,void
+00062ab0,network_session_host_lost,source/networking/network_session.c,esi,void
+000616e0,unknown_000616e0,,stack,void,stdcall
 0005bec0,network_session_host_unknown_0005bec0,source/networking/network_session.c,ecx,bool
 0005dea0,network_session_host_unknown_0005dea0,source/networking/network_session.c,ebx stack stack,bool,stdcall
 0005e5b0,network_session_unknown_0005e5b0,source/networking/network_session.c,ecx eax,bool

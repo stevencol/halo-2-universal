@@ -23,8 +23,6 @@ long unknown_00070570(byte *unknown);
 /* 0x00065770: something that is done with a session that has just started */
 void unknown_00065770(byte *session);
 
-/* 0x0005a520: something that is done with a session */
-void unknown_0005a520(byte *session);
 
 /* 0x0006dec0: what the network game is doing does its work of the frame: it
 is given where what it is doing is kept. 0x00073040, 0x000737b0: the work of
@@ -311,7 +309,7 @@ static inline __attribute__((always_inline)) void network_life_cycle_unknown_000
 		network_life_cycle_unknown_000598f0(session);
 		if (unknown)
 		{
-			unknown_0005a520(session);
+			network_session_disconnect(session);
 		}
 		else
 		{
@@ -429,12 +427,12 @@ void network_life_cycle_end(
 	if (*(const long *)(network_life_cycle_other_session+NETWORK_SESSION_STATE_OFFSET)!=_network_session_state_none)
 	{
 		network_life_cycle_unknown_000598f0(network_life_cycle_other_session);
-		unknown_0005a520(network_life_cycle_other_session);
+		network_session_disconnect(network_life_cycle_other_session);
 	}
 	if (*(const long *)(network_life_cycle_session+NETWORK_SESSION_STATE_OFFSET)!=_network_session_state_none)
 	{
 		network_life_cycle_unknown_000598f0(network_life_cycle_session);
-		unknown_0005a520(network_life_cycle_session);
+		network_session_disconnect(network_life_cycle_session);
 	}
 	unknown_0052737d= FALSE;
 	unknown_0052737c= TRUE;

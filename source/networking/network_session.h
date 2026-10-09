@@ -365,15 +365,16 @@ typedef char verify_network_session_player_requests_size[
 	sizeof(struct network_session_player_request)*MAXIMUM_NETWORK_SESSION_PLAYER_REQUESTS ==
 	NETWORK_SESSION_UNKNOWN7668_SIZE ? 1 : -1];
 
-/* what a session has at 0x78A8, if it has it: something that is asked, by
-its fourth function, whether a player can come in */
+/* what a session has at 0x78A8, if it has it: something that is told, by
+its third function, that the session is disconnected, and asked, by its
+fourth, whether a player can come in */
 struct network_session_unknown78A8;
 
 struct network_session_unknown78A8_functions
 {
 	void *unknown0;
 	void *unknown4;
-	void *unknown8;
+	void (__attribute__((thiscall)) *disconnected)(struct network_session_unknown78A8 *object);
 	boolean (__attribute__((thiscall)) *player_can_join)(struct network_session_unknown78A8 *object,
 		const byte *identifier);
 };
@@ -530,6 +531,9 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_set_player_unknownA8(long 
 	const byte *unknownA8);
 boolean NETWORK_SESSION_CALLBACK network_session_host_unknown_0005aeb0(byte *session, long unknown);
 void network_session_reset_unknown761c(byte *session);
+void network_session_disconnect(byte *session);
+void network_session_enter_state7(boolean unknown, byte *session, long peer_index);
+void network_session_host_lost(byte *session);
 void network_session_host_set_unknown4980(byte *session, long unknown4980);
 void NETWORK_SESSION_CALLBACK network_session_leave(byte *session, boolean unknown);
 boolean network_session_request_unknown49fc(byte *session);

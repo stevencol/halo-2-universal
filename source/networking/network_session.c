@@ -45,9 +45,9 @@ void __attribute__((stdcall)) unknown_00075e80(boolean unknown, long channel_ind
 /* 0x0011ca80, of cseries.c */
 long language_from_xbox_language(long xbox_language);
 
-/* 0x0005a520: something that is done with a session: see
-network_life_cycle.c */
-void unknown_0005a520(byte *session);
+/* 0x000616e0: what a session that another console runs does when that
+console is lost */
+void __attribute__((stdcall)) unknown_000616e0(byte *session);
 
 /* 0x00062990, 0x00062480, 0x000623e0, 0x00062ab0: what a session does each
 time in its third state, in its fourth, in another and when something comes
@@ -55,7 +55,6 @@ from the console that runs it */
 void unknown_00062990(byte *session);
 void unknown_00062480(byte *session);
 void unknown_000623e0(byte *session);
-void unknown_00062ab0(byte *session);
 
 /* 0x0005df30: something that the console that runs a session does for a
 console of it, with a byte, two numbers and a thing or none; whether it did */
@@ -65,10 +64,6 @@ boolean __attribute__((stdcall)) unknown_0005df30(byte *session, boolean unknown
 /* 0x00061180: what a session in its first state does to go out of it */
 void unknown_00061180(byte *session);
 
-/* 0x000614a0: something that the console that runs a session does with it
-in its fifth state, with a byte and a number */
-void unknown_000614a0(boolean unknown, byte *session, long unknown4);
-
 /* ---------- globals */
 
 /* 0x00510548, 0x0051054c, of main.c: whether the time is the one that was
@@ -77,7 +72,7 @@ extern boolean unknown_00510548;
 extern long unknown_0051054c;
 
 /* 0x004cf4a4, 0x004cf4ac: how long a session waits in two of its states
-before unknown_0005a520 is done with it, in milliseconds */
+before network_session_disconnect is done with it, in milliseconds */
 long unknown_004cf4a4;
 long unknown_004cf4ac;
 
@@ -1518,7 +1513,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_has_room_for_players(
 	return player_count<=network_session_free_player_places(session)+asked;
 }
 
-/* 0x0005aeb0: in the fifth state, unknown_000614a0 is done with a number
+/* 0x0005aeb0: in the fifth state, network_session_enter_state7 is done with a number
 and no byte; whether the session is in that state */
 boolean NETWORK_SESSION_CALLBACK network_session_host_unknown_0005aeb0(
 	byte *session,
@@ -1528,7 +1523,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_unknown_0005aeb0(
 	{
 		return FALSE;
 	}
-	unknown_000614a0(FALSE, session, unknown);
+	network_session_enter_state7(FALSE, session, unknown);
 
 	return TRUE;
 }
@@ -1973,7 +1968,7 @@ boolean network_session_matches_state2_address(
 		(const struct transport_address *)(session+NETWORK_SESSION_STATE2_ADDRESS_OFFSET));
 }
 
-/* 0x0005c990: unknown_0005a520 is done with a session in its second state,
+/* 0x0005c990: network_session_disconnect is done with a session in its second state,
 if an address of the game is the one that it keeps. The game has
 network_session_matches_state2_address in the function itself */
 void network_session_unknown_0005c990(
@@ -1983,7 +1978,7 @@ void network_session_unknown_0005c990(
 	if (network_session_state(session)==_network_session_state2 && network_session_address_equal(address,
 		(const struct transport_address *)(session+NETWORK_SESSION_STATE2_ADDRESS_OFFSET)))
 	{
-		unknown_0005a520(session);
+		network_session_disconnect(session);
 	}
 }
 
@@ -2309,8 +2304,8 @@ static inline __attribute__((always_inline)) long network_session_elapsed(
 
 /* 0x0005e150: something comes from an address of the game: whether it is
 that of the console that runs a session. If it is, and it is the one that the
-session keeps in its first state, unknown_0005a520 is done; if it is not
-that one, unknown_00062ab0 is. The game asks twice whether it is the one
+session keeps in its first state, network_session_disconnect is done; if it is not
+that one, network_session_host_lost is. The game asks twice whether it is the one
 that the session keeps */
 boolean network_session_unknown_0005e150(
 	const struct transport_address *address,
@@ -2324,12 +2319,12 @@ boolean network_session_unknown_0005e150(
 	{
 		if (network_session_matches_state1_address(session, address))
 		{
-			unknown_0005a520(session);
+			network_session_disconnect(session);
 		}
 	}
 	else
 	{
-		unknown_00062ab0(session);
+		network_session_host_lost(session);
 	}
 
 	return TRUE;
@@ -2349,7 +2344,7 @@ boolean network_session_unknown_0005e1a0(
 	{
 		if (network_session_matches_state1_address(session, address))
 		{
-			unknown_0005a520(session);
+			network_session_disconnect(session);
 		}
 	}
 	else
@@ -2416,14 +2411,14 @@ void NETWORK_SESSION_CALLBACK network_session_enter_state10(
 	*(long *)network_session_set_state(session, _network_session_state10)= unknown;
 }
 
-/* 0x000618d0: unknown_0005a520 is done with a session if the time of 0x7488
+/* 0x000618d0: network_session_disconnect is done with a session if the time of 0x7488
 was more than unknown_004cf4a4 milliseconds ago; if not, unknown_000623e0 */
 void network_session_unknown_000618d0(
 	byte *session)
 {
 	if (network_session_elapsed(*(const long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN68_OFFSET))>unknown_004cf4a4)
 	{
-		unknown_0005a520(session);
+		network_session_disconnect(session);
 	}
 	else
 	{
@@ -2431,14 +2426,14 @@ void network_session_unknown_000618d0(
 	}
 }
 
-/* 0x00061910: unknown_0005a520 is done with a session if its state started
+/* 0x00061910: network_session_disconnect is done with a session if its state started
 more than unknown_004cf4ac milliseconds ago; if not, unknown_00062480 */
 void network_session_unknown_00061910(
 	byte *session)
 {
 	if (network_session_elapsed(*(const long *)(session+NETWORK_SESSION_STATE_DATA_OFFSET))>unknown_004cf4ac)
 	{
-		unknown_0005a520(session);
+		network_session_disconnect(session);
 	}
 	else
 	{
@@ -2520,7 +2515,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_unknown_0005dea0(
 }
 
 /* 0x0005e5b0: something comes by one of the game's channels. If it is from
-the console that runs a session: unknown_00062ab0 is done, in a session that
+the console that runs a session: network_session_host_lost is done, in a session that
 says who is in it and that this console does not run; and network_session_leave,
 in a session in its first state. TRUE */
 boolean network_session_unknown_0005e5b0(
@@ -2533,7 +2528,7 @@ boolean network_session_unknown_0005e5b0(
 	{
 		if (peer_index==*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET))
 		{
-			unknown_00062ab0(session);
+			network_session_host_lost(session);
 		}
 	}
 	else if (network_session_state(session)==_network_session_state1 &&
@@ -3202,10 +3197,10 @@ void network_session_host_set_unknown4980(
 with no state, if network_session_unknown_00058d90 says so, or with the byte
 of 0x48. In the first state unknown_00061180 is done; from the third it
 goes into the fourth; in the fifth and the seventh, with the thing that it
-is given it goes into the sixth, and without it unknown_000614a0 is done (in
+is given it goes into the sixth, and without it network_session_enter_state7 is done (in
 the seventh, only a byte is set); in the eighth a byte is set; in the ninth,
 with the thing the other consoles are sent something of the kind 0x17, and
-without it unknown_0005a520 is done; and in the tenth, unknown_0005a520
+without it network_session_disconnect is done; and in the tenth, network_session_disconnect
 without it */
 void NETWORK_SESSION_CALLBACK network_session_leave(
 	byte *session,
@@ -3238,7 +3233,7 @@ void NETWORK_SESSION_CALLBACK network_session_leave(
 		}
 		else
 		{
-			unknown_000614a0(TRUE, session, NONE);
+			network_session_enter_state7(TRUE, session, NONE);
 		}
 		break;
 	case _network_session_state8:
@@ -3257,13 +3252,13 @@ void NETWORK_SESSION_CALLBACK network_session_leave(
 		}
 		else
 		{
-			unknown_0005a520(session);
+			network_session_disconnect(session);
 		}
 		break;
 	case _network_session_state10:
 		if (!unknown)
 		{
-			unknown_0005a520(session);
+			network_session_disconnect(session);
 		}
 		break;
 	}
@@ -3295,4 +3290,135 @@ boolean network_session_request_unknown49fc(
 	}
 
 	return TRUE;
+}
+
+/* 0x0005a520: a session is disconnected: it goes back to how it is when it
+is set up, with no state. First this console goes out of it
+(network_session_leave) and what the session has at 0x78A8 is told; then
+nothing is kept of any console, it is known by nothing, nobody is in it and
+nobody asks to come in. Nothing with no state */
+void network_session_disconnect(
+	byte *session)
+{
+	struct network_session_unknown78A8 *object;
+	long peer_index;
+
+	if (network_session_state(session)==_network_session_state_none)
+	{
+		return;
+	}
+	network_session_leave(session, TRUE);
+	object= *(struct network_session_unknown78A8 **)(session+NETWORK_SESSION_UNKNOWN78A8_OFFSET);
+	if (object)
+	{
+		object->functions->disconnected(object);
+	}
+	for (peer_index= 0; peer_index<MAXIMUM_NETWORK_SESSION_PLAYERS; peer_index++)
+	{
+		if (((const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index)->valid)
+		{
+			network_session_peer_state_delete(session, peer_index);
+		}
+	}
+	(*(long *)(session+NETWORK_SESSION_UNKNOWN7650_OFFSET))++;
+	*(long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET)= NONE;
+	memset(session+NETWORK_SESSION_UNKNOWN761C_OFFSET, 0, NETWORK_SESSION_UNKNOWN761C_SIZE);
+	*(long *)(session+NETWORK_SESSION_UNKNOWN7654_OFFSET)= NONE;
+	*(long *)(session+NETWORK_SESSION_UNKNOWN7658_OFFSET)= NONE;
+	session[NETWORK_SESSION_UNKNOWN78AC_OFFSET]= FALSE;
+	session[NETWORK_SESSION_UNKNOWN765C_OFFSET]= FALSE;
+	network_session_forget_identifier(session);
+	memset(session+NETWORK_SESSION_IDENTIFIER_OFFSET, 0, NETWORK_SESSION_IDENTIFIER_SIZE);
+	session[NETWORK_SESSION_UNKNOWN48_OFFSET]= FALSE;
+	*(long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET)= NONE;
+	memset(session+NETWORK_SESSION_MEMBERSHIP_OFFSET, 0, NETWORK_SESSION_MEMBERSHIP_SIZE);
+	*(long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET)= NONE;
+	memset(session+NETWORK_SESSION_UNKNOWN4978_OFFSET, 0, NETWORK_SESSION_UNKNOWN4978_SIZE);
+	*(long *)(session+NETWORK_SESSION_UNKNOWN4978_OFFSET)= NONE;
+	memset(session+NETWORK_SESSION_UNKNOWN7668_OFFSET, 0, NETWORK_SESSION_UNKNOWN7668_SIZE);
+	*(long *)(session+NETWORK_SESSION_STATE_OFFSET)= _network_session_state_none;
+}
+
+/* 0x000614a0: the console that runs a session goes into its seventh state:
+what it has from its state on starts with a byte that it is given, a bit for
+a console (or, with NONE, for each console but this one), the time and NONE.
+With no more than one console there is no seventh state: with the byte, this
+console goes out of the session, and without it nothing is done */
+void network_session_enter_state7(
+	boolean unknown,
+	byte *session,
+	long peer_index)
+{
+	long peer_count= *(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET);
+	long now;
+	unsigned long peers;
+	byte *data;
+
+	if (peer_count<=1)
+	{
+		if (unknown)
+		{
+			network_session_leave(session, TRUE);
+		}
+
+		return;
+	}
+	now= network_session_time();
+	if (peer_index==NONE)
+	{
+		peers= ~(1u<<*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET))&((1u<<peer_count)-1);
+	}
+	else
+	{
+		peers= 1u<<peer_index;
+	}
+	data= network_session_set_state(session, _network_session_state7);
+	data[0]= unknown;
+	*(unsigned long *)(data+4)= peers;
+	*(long *)(data+8)= now;
+	*(long *)(data+0xC)= NONE;
+}
+
+/* 0x00062ab0: the console that runs a session is lost, or says that the
+session is over. In a session that says who is in it, that another console
+runs and that has more than one console, the channel of that console is told
+(network_observer_channel_unknown_00075e40) and unknown_000616e0 is done: but
+not in the fourth state, nor in the sixth, nor in the last two with their
+first byte set. In any other case the session is disconnected */
+void network_session_host_lost(
+	byte *session)
+{
+	long state= network_session_state(session);
+	boolean disconnect;
+
+	switch (state)
+	{
+	case _network_session_state2:
+	case _network_session_state4:
+	case _network_session_state6:
+		disconnect= TRUE;
+		break;
+	case _network_session_state7:
+	case _network_session_state8:
+		disconnect= session[NETWORK_SESSION_UNKNOWN7420_OFFSET]!=0;
+		break;
+	default:
+		disconnect= FALSE;
+		break;
+	}
+	if (!disconnect && network_session_established(session) && !network_session_unknown_00058d20(session) &&
+		*(const long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET)!=NONE &&
+		*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET)>1)
+	{
+		const struct network_session_peer_state *host=
+			(const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+
+			*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET);
+
+		network_observer_channel_unknown_00075e40(host->unknown4, *(const byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET));
+		unknown_000616e0(session);
+	}
+	else
+	{
+		network_session_disconnect(session);
+	}
 }
