@@ -251,6 +251,7 @@ address,name,source
 004ce124,unknown_004ce124,source/networking/game_voice.c
 004ce12c,unknown_004ce12c,source/networking/network_observer.c
 004ce174,unknown_004ce174,source/networking/network_observer.c
+004e6398,unknown_004e6398,source/networking/network_observer.c
 005259b8,unknown_005259b8,source/networking/game_voice.c
 00527104,unknown_00527104,source/networking/game_voice.c
 00527108,unknown_00527108,source/networking/game_voice.c

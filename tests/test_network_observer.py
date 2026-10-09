@@ -385,7 +385,7 @@ def run(t) -> None:
             externals={
                 "network_observer_channel_set_state": lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]), arguments[2])),
                 "network_observer_channel_update_connection": with_channel_and_observer,
-                "unknown_00076ff0": with_channel_and_observer,
+                "network_observer_channel_update_game_channel": with_channel_and_observer,
                 "unknown_000776a0": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
             },
         )
@@ -461,7 +461,7 @@ def run(t) -> None:
                 "network_observer_channel_unused_expired": goes,
                 "network_observer_channel_delete": gone,
                 "network_observer_channel_update_connection": with_channel_and_observer,
-                "unknown_00076ff0": with_channel_and_observer,
+                "network_observer_channel_update_game_channel": with_channel_and_observer,
                 "unknown_000776a0": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
                 "network_observer_channel_unknown_000773a0": with_channel_and_observer,
                 "network_observer_channel_update_probe": with_channel_and_observer,
@@ -719,7 +719,7 @@ def run(t) -> None:
             globals={"unknown_004d87d4": Buffer(bytes(channels))},
             externals={
                 "unknown_00088650": told,
-                "unknown_00076ff0": with_channel_and_observer,
+                "network_observer_channel_update_game_channel": with_channel_and_observer,
                 "unknown_000886e0": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
             },
         )
@@ -967,4 +967,45 @@ def run(t) -> None:
                 "unknown_004c9880": random_.randbytes(4),
                 "unknown_004c9884": random_.randbytes(4),
             },
+        )
+
+    # ---------- a channel follows the state of its channel of the game
+
+    def goes(harness, arguments):
+        # the channel is in the state from then on, as it is in the game
+        harness.mu.mem_write(arguments[1] + CHANNELS + arguments[2] * CHANNEL, struct.pack("<I", arguments[0]))
+        return 0, (arguments[0], harness.normalize(arguments[1]), arguments[2])
+
+    for n in range(1500):
+        setup = at_time()
+        data, pointers = with_owners()
+        # the fourth function of what each session has is the one that is told
+        struct.pack_into("<5I", data, SIZE + 16, 0x11, 0x22, 0x33, mock_address(0), 0x55)
+        channel = random_.randrange(15)
+        at = CHANNELS + channel * CHANNEL
+        game_channel = random_.choice((NONE, 0, 1, 2, 3, 4, 5, 5))
+        state = random_.choice((0, 1, 2, 3, 4, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8, 9))
+        struct.pack_into("<I", data, at, state)
+        data[at + 8] = random_.choice((0, 0, 1, 2, 2, 3, 4, 6, 0xF9, 0xFF))
+        struct.pack_into("<h", data, at + 0xA, random_.choice((0, 1, 5, 0x7FFF, -1)))
+        struct.pack_into("<II", data, at + 0xC, game_channel, random_.choice((7, 7, 8, NONE)))
+        for window in (0x250, 0x360):
+            struct.pack_into("<II", data, at + window, random_.choice((1, 2, 16, 32)), random_.randrange(32))
+        channels = game_channels()
+        for other in range(6):
+            struct.pack_into("<I", channels, other * 0xF8 + 0x4C, random_.choice((7, 7, 8)))
+            struct.pack_into("<i", channels, other * 0xF8 + 0x54, random_.choice((0, 1, 2, 2, 3, 4, 5, 5, 5, 6)))
+            struct.pack_into("<I", channels, other * 0xF8 + 0x58, random_.choice((0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 9, 10, 0x100, NONE)))
+        setup["globals"]["unknown_004d87d4"] = Buffer(bytes(channels))
+        setup["globals"]["xbox_video_settings"] = struct.pack("<h", random_.choice((60, 50, 0, -1, 1))) + random_.randbytes(6)
+        setup["globals"]["unknown_004e6398"] = struct.pack(
+            "<Q", random_.choice((0, 1, 59, 60, 61, 0x100000000, 0x10000003B, 0xFFFFFFFFFFFFFFFF, random_.getrandbits(64)))
+        )
+        t.check(
+            "network_observer_channel_update_game_channel",
+            channel,
+            Buffer(bytes(data), pointers=pointers),
+            globals=setup["globals"],
+            externals=dict(setup["externals"], network_observer_channel_forget_address=noted, network_observer_channel_set_state=goes),
+            mocks=[Mock(lambda call: 0, stack_arguments=3, registers=("ecx",))],
         )

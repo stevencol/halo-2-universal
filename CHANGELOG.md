@@ -2,6 +2,64 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Un canal sigue el estado de su canal del juego
+
+Una función en `networking/network_observer.c`, de 821 bytes con sus tablas de saltos. De 1354
+funciones se pasa a 1355, el 12,03 % de las del juego (el 7,907 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_channel_update_game_channel` | `0x00076ff0` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_observer_channel_update_game_channel` era `unknown_00076ff0`,
+  una de las tres cosas que se hacen con cada canal cada vez (hito 371). Es **la mitad que faltaba de los estados de un canal**: la
+  del hito 371 sigue cómo va su dirección; esta sigue cómo va su canal del
+  juego.
+  - Sin canal del juego: se queda sin dirección y vuelve al primer estado.
+  - En el sexto o el octavo estado: si el canal del juego llega a su quinto
+    estado, pasa al **séptimo** (está conectado). Si el canal del juego ha
+    caído a su segundo estado o antes, manda el número que este tiene en
+    `0x58` (por qué cayó): con 1, 2 o 5 se rinde (sin dirección, anotado
+    con `0xF`, primer estado); con 9 se queda sin dirección y sin
+    intentos; y en todos los demás casos cuenta un intento más y vuelve a
+    probar (quinto estado desde el sexto, noveno desde el octavo).
+  - En el séptimo: si el canal del juego ya no está en su quinto estado,
+    pasa al octavo, o al noveno si cayó del todo.
+- Después **avisa a las sesiones**. Cada sesión que usa el canal tiene en
+  el observador algo con cinco funciones; por la cuarta se le dice que el
+  canal está conectado, o que ha dejado de estarlo, con el número de
+  `0x4C` del canal del juego (que el canal guarda en `0x10`). Con esta
+  son tres las funciones conocidas de las cinco.
+- Al conectarse, el canal **pone a cero todo lo que mide**: sus dos
+  cuentas por tramos de tiempo (`0xA0` y `0x178`; ahora se sabe que la
+  primera también lo es), sus dos series de últimos números, tres números
+  más y dos horas. Una de esas horas no es de reloj: es un número de 64
+  bits de otra parte del juego (`unknown_004e6398`, nuevo) menos las
+  imágenes por segundo de la consola (60 si no lo dice), o sea, hace un
+  segundo contado en imágenes.
+
+### Comprobado rompiendo líneas
+
+- Veintitrés líneas rotas, una cada vez: las pruebas fallaron en veintidós.
+  La que no se veía (tratar un estado del canal del juego mayor que el
+  quinto como si fuera el quinto) faltaba en las pruebas: ningún canal del
+  juego pasaba del quinto. Ahora alguno sí, y falla.
+
+### Sin comprobar
+
+- Las pruebas sustituyen `network_observer_channel_set_state` por algo que
+  solo cambia el estado; la de verdad además apunta la hora y avisa a las
+  sesiones, y tiene sus propias pruebas (hito 371).
+- El juego elige con una tabla por el estado del canal, sin mirar que
+  esté entre 1 y 9; las pruebas no salen de ahí.
+- En este hito se pasaron las pruebas de `network_observer` (46 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — El intervalo del caudal, y a cuántas consolas llega la voz
 
 Cinco funciones en `networking/network_observer.c`, 1054 bytes entre todas. De 1349

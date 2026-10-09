@@ -263,6 +263,32 @@ enum
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1B0_OFFSET= 0x1B0,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1B4_OFFSET= 0x1B4,
 	MAXIMUM_NETWORK_OBSERVER_VOICE_CONSOLES= 16,
+	/* more of a channel: its states from the fifth on; two more bits of its
+	byte of 0x8 (the sessions were told that it has what its channel of the
+	game is of, and one more); what that is; the first of its two counts by
+	spans of time; and four things that start over with them. Of a channel
+	of the game: what it is of, and a number that says why it is not past
+	its second state. What a channel is told when that number is 1, 2 or
+	5. And how many pictures a second there are when the console does not
+	say */
+	_network_observer_channel_state5= 5,
+	_network_observer_channel_state6= 6,
+	_network_observer_channel_state7= 7,
+	_network_observer_channel_state8= 8,
+	_network_observer_channel_state9= 9,
+	_network_observer_channel_established_bit= 0x2,
+	_network_observer_channel_unknown8_bit4= 0x4,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN10_OFFSET= 0x10,
+	NETWORK_OBSERVER_CHANNEL_RATEA0_OFFSET= 0xA0,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN470_OFFSET= 0x470,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN478_OFFSET= 0x478,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN480_OFFSET= 0x480,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN484_OFFSET= 0x484,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN488_OFFSET= 0x488,
+	NETWORK_CHANNEL_UNKNOWN4C_OFFSET= 0x4C,
+	NETWORK_CHANNEL_UNKNOWN58_OFFSET= 0x58,
+	NETWORK_OBSERVER_CHANNEL_REFUSED_REASON= 0xF,
+	NETWORK_OBSERVER_DEFAULT_REFRESH_RATE= 60,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
 	_unknown_00088650_unknown11= 0x11
 };
@@ -357,6 +383,7 @@ long NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_0007a1c0(byte *o
 void NETWORK_OBSERVER_CALLBACK network_observer_unknown_00077f90(long unknown_eax, long unknown_ecx, byte *observer,
 	long unknown4);
 void NETWORK_OBSERVER_CALLBACK network_observer_update_voice_console_counts(const byte *observer);
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_update_game_channel(long channel_index, byte *observer);
 void NETWORK_OBSERVER_CALLBACK network_observer_release_game_channels(byte *observer);
 boolean network_observer_channel_unknown_00077940(byte *observer, long channel_index);
 void network_observer_channel_reset_unknown4dc(long channel_index, byte *observer);
@@ -399,5 +426,6 @@ extern byte *unknown_004d87dc;
 extern byte *unknown_004d87d8;
 extern long unknown_004ce12c[MAXIMUM_NETWORK_OBSERVER_VOICE_CONSOLES+1];
 extern long unknown_004ce174[MAXIMUM_NETWORK_OBSERVER_VOICE_CONSOLES+1];
+extern long long unknown_004e6398;
 
 #endif

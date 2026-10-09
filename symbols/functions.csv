@@ -1874,7 +1874,7 @@ address,name,source,arguments,returns,convention
 000784a0,network_observer_channel_forget_address,source/networking/network_observer.c,eax ecx stack stack,void,stdcall
 000886e0,unknown_000886e0,,stack,void,stdcall
 0007b650,unknown_0007b650,,edi,void
-00076ff0,unknown_00076ff0,,ebx stack,void,stdcall
+00076ff0,network_observer_channel_update_game_channel,source/networking/network_observer.c,ebx stack,void,stdcall
 000776a0,unknown_000776a0,,ecx stack,void,stdcall
 00092a30,network_window_add,source/networking/network_observer.c,esi edi,void
 00076810,network_observer_unknown_00076810,source/networking/network_observer.c,ecx stack stack stack,void,stdcall
