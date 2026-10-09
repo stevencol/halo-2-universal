@@ -3456,9 +3456,10 @@ def run(t) -> None:
             player = random_.randrange(16)
             struct.pack_into("<hh", entry, 0, random_.choice((player, player, player, player, 16, -1)), random_.choice((0, 1, 1, 2, 2, 3)))
             struct.pack_into("<hh", entry, 0x10, random_.choice((some_place, some_place, some_place, length, -1)), random_.choice((0, 1, 2, 3, 3, 4, -1)))
-            if random_.randrange(8) == 0:
+            there = [other for other in range(16) if struct.unpack_from("<I", data, 0x111C)[0] >> other & 1]
+            if there and random_.randrange(3) == 0:
                 # one that is in the session already
-                at = PLAYER_ARRAY + random_.randrange(16) * PLAYER
+                at = PLAYER_ARRAY + random_.choice(there) * PLAYER
                 entry[4:0x10] = data[at : at + 12]
             changes.append(entry)
         struct.pack_into("<h", update, 0x12, len(changes))
@@ -3475,5 +3476,44 @@ def run(t) -> None:
                 "network_session_peer_state_delete": lambda harness, arguments: (0, (arguments[0], arguments[1])),
                 "network_session_host_lost": then(),
                 "network_session_disconnect": then(),
+            },
+        )
+
+    # ---------- three more things that the session of the network game is asked
+
+    for n in range(200):
+        t.check(
+            "network_life_cycle_unknown_00063e90",
+            random_.getrandbits(32),
+            globals=game_session(),
+            externals={"unknown_00066050": says((0, 1, 2, 0x12345678))},
+        )
+
+    for n in range(200):
+
+        def works_out(harness, arguments, value=random_.getrandbits(32)):
+            # what it works out goes where the last thing says, which is in the stack
+            harness.mu.mem_write(arguments[5], struct.pack("<I", value))
+            return 0, tuple(harness.normalize(argument) for argument in arguments[:5])
+
+        t.check("network_life_cycle_unknown_00063ec0", globals=game_session(), externals={"unknown_0007e100": works_out})
+
+    for n in range(400):
+        setup = game_session()
+        data = bytearray(setup["network_life_cycle_session"].data)
+        struct.pack_into("<I", data, 0x18, random_.choice((0, 1, 1, 0x100)))
+        setup["network_life_cycle_session"] = Buffer(bytes(data))
+        t.check(
+            "network_life_cycle_set_unknown4db0",
+            Buffer(random_.randbytes(0x130)) if n % 3 else 0,
+            globals=setup,
+            externals={
+                "unknown_00161c90": says((1, 2, 2)),
+                "network_session_leader_set_unknown4db0": says(),
+                "network_session_leader_set_unknown4dac": says(),
+                "network_session_unknown_0005bf10": lambda harness, arguments, value=random_.choice((1, 1, 1, 0x80, 0, 0x100)): (
+                    value,
+                    (harness.normalize(arguments[0]), arguments[1] & 0xFF, arguments[2], arguments[3], arguments[4]),
+                ),
             },
         )

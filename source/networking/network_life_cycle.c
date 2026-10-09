@@ -926,3 +926,80 @@ boolean NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_set_map_and_unknown49a8(
 	return network_session_leader_set_map(session, map_name, campaign, map) &&
 		network_session_unknown_0005bf10(session, FALSE, 0, 0, NULL);
 }
+
+/* 0x00066050: something that is asked of a session with a number.
+0x0007e100: something that is worked out from who is in a session and one of
+its consoles, with three more things that are not given here, and left where
+the last one says. 0x00161c90: 1 or 2, as the number at 0x44 of a thing
+says */
+long unknown_00066050(byte *session, long unknown);
+void __attribute__((stdcall)) unknown_0007e100(long peer_index, const byte *membership, long unknown0, long unknown4,
+	long unknown8, long *result);
+long unknown_00161c90(const byte *unknown);
+
+/* 0x00063e90: what unknown_00066050 says of the session of the network game,
+with a number; 1 with no network game, or with a session that has no state */
+long NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_unknown_00063e90(
+	long unknown)
+{
+	byte *session= network_life_cycle_session_or_null();
+
+	if (!session)
+	{
+		return 1;
+	}
+
+	return unknown_00066050(session, unknown);
+}
+
+/* 0x00063ec0: what unknown_0007e100 works out from who is in the session of
+the network game and the console that runs it; 0 with no network game, or
+with a session that has no state */
+long network_life_cycle_unknown_00063ec0(
+	void)
+{
+	byte *session= network_life_cycle_session_or_null();
+	long result= 0;
+
+	if (session)
+	{
+		unknown_0007e100(*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET),
+			session+NETWORK_SESSION_MEMBERSHIP_OFFSET, 0, 0, 0, &result);
+	}
+
+	return result;
+}
+
+/* 0x00064060: the thing of 0x4DB0 of the session of the network game is set,
+or asked for, and with it the number of 0x4DAC: 0 in a session whose number
+of 0x18 is zero, 1 with no thing, and if not what unknown_00161c90 says of the thing.
+Then network_session_unknown_0005bf10 with nothing. Whether all three could; FALSE if
+network_life_cycle_unknown_00063f00 says no */
+boolean NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_set_unknown4db0(
+	const byte *unknown4db0)
+{
+	byte *session;
+	long unknown4dac;
+
+	if (!network_life_cycle_unknown_00063f00())
+	{
+		return FALSE;
+	}
+	session= network_life_cycle_session_or_null();
+	if (*(const long *)(session+NETWORK_SESSION_UNKNOWN18_OFFSET)==0)
+	{
+		unknown4dac= 0;
+	}
+	else if (!unknown4db0)
+	{
+		unknown4dac= 1;
+	}
+	else
+	{
+		unknown4dac= unknown_00161c90(unknown4db0);
+	}
+
+	return network_session_leader_set_unknown4db0(unknown4db0, session) &&
+		network_session_leader_set_unknown4dac(session, unknown4dac) &&
+		network_session_unknown_0005bf10(session, FALSE, 0, 0, NULL);
+}

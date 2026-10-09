@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 367.
+**Última actualización:** 2026-10-08, al terminar el hito 368.
 
 ## Dónde estamos
 
-- **1313 funciones descompiladas de 11.265: el 11,66 % del juego** (el
-  7,680 % de los bytes de código).
-- Las 1313 están comprobadas contra el ejecutable original: las 1299 del
+- **1316 funciones descompiladas de 11.265: el 11,68 % del juego** (el
+  7,688 % de los bytes de código).
+- Las 1316 están comprobadas contra el ejecutable original: las 1299 del
   hito 358 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a console takes what the host says of who is in a session* (ver `git log`).
+- Último hito: *Decompile three more things the network game asks of its session* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 546 funciones apuntadas pero sin descompilar (las que el código
-  llama); 448 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 549 funciones apuntadas pero sin descompilar (las que el código
+  llama); 451 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -113,7 +113,8 @@ Módulos (funciones hechas / archivo):
       una sesión, prepararla, arrancarla, su identificador y su clave,
       las consolas que entran y salen, cómo buscarlas, y los jugadores
       que lo piden;
-      faltan muchas, de `0x0005a400` en adelante)
+      falta `0x000619b0`, y alrededor `0x00058ee0`, `0x000590b0` y de
+      `0x00063220` a `0x00063980`)
 - [ ] Dirección y claves de red — `networking\transport_security.c` (16:
       lo que la consola es en la red, la clave de cada sesión y las
       direcciones; de `0x0007a8a0` a `0x0007af80`, y falta lo que sigue
@@ -121,7 +122,7 @@ Módulos (funciones hechas / archivo):
 - [ ] Observador de la red — `networking\network_observer.c` (7: lo que
       tiene de cada sesión y sus canales con las otras consolas; va de
       `0x00075970` a `0x0007a4a0` y casi todo falta)
-- [x] Partida en red — `networking\network_life_cycle.c` (39: qué está
+- [x] Partida en red — `networking\network_life_cycle.c` (42: qué está
       haciendo, sus dos sesiones, lo que se le pide y su fotograma; de
       `0x000591e0` a `0x00059ab0`, completo)
 - [x] Voz de los jugadores — `networking\voice.c` (22: completo, de

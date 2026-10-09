@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Tres preguntas más a la sesión de la partida
+
+Tres funciones en `networking/network_life_cycle.c`, 248 bytes entre todas. De 1313
+funciones se pasa a 1316, el 11,68 % de las del juego (el 7,688 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_life_cycle_unknown_00063e90` | `0x00063e90` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_00063ec0` | `0x00063ec0` | `networking/network_life_cycle.c` |
+| `network_life_cycle_set_unknown4db0` | `0x00064060` | `networking/network_life_cycle.c` |
+
+### Lo que se sabe
+
+- Son de la misma familia que las de los hitos 348 y anteriores: funciones
+  cortas con las que el resto del juego le pide algo a la sesión de la
+  partida en red, sin tocarla directamente.
+- `network_life_cycle_set_unknown4db0` cambia la cosa de `0x4DB0` de la
+  sesión (la de `0x130` bytes) y, con ella, el número de `0x4DAC`: 0 si la
+  sesión no es de red, 1 si no se da ninguna cosa, y si no lo que diga
+  `unknown_00161c90` de ella (1 o 2). Solo si esta consola dirige la sesión.
+- `network_life_cycle_unknown_00063e90` y `network_life_cycle_unknown_00063ec0`
+  devuelven lo que calculan dos funciones aún sin descompilar
+  (`unknown_00066050` y `unknown_0007e100`) con la sesión de la partida.
+
+### Líneas rotas del hito 367
+
+- Dieciocho líneas rotas: las pruebas fallaron en dieciséis. De las dos que
+  se escaparon, una **no cambia nada** (pone a cero un contador de una
+  consola que acaba de dejarse entera a cero) y la otra era un caso que
+  faltaba: un jugador que entra y ya está en la sesión. Se añadió y ahora
+  se detecta.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_life_cycle` (223
+  funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353 y 355 están pendientes.
+
 ## 2026-10-09 — Recibir «quién está»
 
 Una función en `networking/network_session.c`, de 2.578 bytes: la más grande de la

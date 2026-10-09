@@ -112,6 +112,9 @@ boolean NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_unknown_00059890(long unk
 boolean network_life_cycle_in_state5(void);
 boolean network_life_cycle_session_is_open(void);
 boolean network_life_cycle_unknown_00063f00(void);
+long NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_unknown_00063e90(long unknown);
+long network_life_cycle_unknown_00063ec0(void);
+boolean NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_set_unknown4db0(const byte *unknown4db0);
 boolean network_life_cycle_set_map(long campaign, long map, const char *map_name);
 boolean network_life_cycle_set_unknown49a4(long unknown49a4);
 boolean NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_set_map_and_unknown49a8(long campaign, long map,

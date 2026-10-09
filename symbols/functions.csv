@@ -1858,3 +1858,9 @@ address,name,source,arguments,returns,convention
 00075870,network_time,source/networking/network_session.c,,int
 0005e7f0,network_session_election_received,source/networking/network_session.c,ebx ecx stack stack stack stack,bool,stdcall
 0005cb80,network_session_membership_update_received,source/networking/network_session.c,stack stack,bool,stdcall
+00063e90,network_life_cycle_unknown_00063e90,source/networking/network_life_cycle.c,stack,int,stdcall
+00063ec0,network_life_cycle_unknown_00063ec0,source/networking/network_life_cycle.c,,int
+00064060,network_life_cycle_set_unknown4db0,source/networking/network_life_cycle.c,stack,bool,stdcall
+00066050,unknown_00066050,,eax ecx,int
+0007e100,unknown_0007e100,,eax edx stack stack stack stack,void,stdcall
+00161c90,unknown_00161c90,,ecx,int
