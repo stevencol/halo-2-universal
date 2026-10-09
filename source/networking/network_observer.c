@@ -346,3 +346,105 @@ long network_observer_channel_connect_status(
 
 	return transport_address_get_connect_status(address);
 }
+
+/* 0x0007b140: sends something of a kind and a size to an address of the
+game. 0x000783d0: the address of the game of a channel that has none of its
+own, for a session; whether it could. 0x00095580: something of a kind and a
+size is put in what a channel of the game has to send */
+void __attribute__((stdcall)) unknown_0007b140(long unknown4, const struct transport_address *address, long type,
+	long size, const void *data);
+boolean __attribute__((stdcall)) unknown_000783d0(byte *observer, const byte *channel_unknown14,
+	struct transport_address *address, long session_index, byte **unknown0, long *unknown4, long *unknown8);
+void __attribute__((stdcall)) unknown_00095580(byte *unknown, long type, long size, const void *data);
+
+/* 0x004d87dc: things of 0x2850 bytes, one for each of what the channels of
+the game say at 0x14 */
+byte *unknown_004d87dc;
+
+/* 0x00075910: whether what something has at 0x3C is there and has its byte
+of 0x30 set. The game has it before the functions of the observer */
+long network_unknown_00075910(
+	const byte *unknown)
+{
+	const byte *unknown3c= *(const byte **)(unknown+NETWORK_UNKNOWN_00075910_UNKNOWN3C_OFFSET);
+
+	return unknown3c && unknown3c[NETWORK_UNKNOWN_00075910_UNKNOWN30_OFFSET] ? 1 : 0;
+}
+
+/* 0x00075930: the address of the game of a channel of the game, which it
+has in any state after the first two; whether it has it. The game has it
+before the functions of the observer */
+boolean network_channel_get_address(
+	const byte *game_channel,
+	struct transport_address *address)
+{
+	long state= *(const long *)(game_channel+NETWORK_CHANNEL_STATE_OFFSET);
+
+	if (state==0 || state==1)
+	{
+		return FALSE;
+	}
+	memcpy(address, game_channel+NETWORK_CHANNEL_ADDRESS_OFFSET, sizeof(*address));
+
+	return TRUE;
+}
+
+/* 0x00075e80: something of a kind and a size is sent to the console of a
+channel of the observer, for a session; nothing is done with a channel that
+is none of the game. In one way, it is put in what the channel of the game
+has to send, if that one is past its second state, and the kind is no more
+one that the channel has to send. In the other, it is sent to the address of
+the game of the channel: its own, or with none the one that unknown_000783d0
+gives, if it can */
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_send(
+	boolean out_of_band,
+	long channel_index,
+	byte *observer,
+	long session_index,
+	long type,
+	long size,
+	const void *data)
+{
+	byte *channel= (byte *)network_observer_channel(observer, channel_index);
+	long game_channel_index= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET);
+	byte *game_channel;
+
+	if (game_channel_index==NONE)
+	{
+		return;
+	}
+	game_channel= unknown_004d87d4+game_channel_index*NETWORK_CHANNEL_SIZE;
+	if (out_of_band)
+	{
+		const struct transport_address *own= (const struct transport_address *)(channel+NETWORK_OBSERVER_CHANNEL_ADDRESS_OFFSET);
+		struct transport_address address;
+
+		if (transport_address_valid(own))
+		{
+			address= *own;
+		}
+		else
+		{
+			byte *unknown0= game_channel;
+			long unknown4;
+			long unknown8;
+
+			if (!unknown_000783d0(observer, channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN14_OFFSET, &address, session_index,
+				&unknown0, &unknown4, &unknown8))
+			{
+				return;
+			}
+		}
+		unknown_0007b140(*(const long *)(observer+NETWORK_OBSERVER_UNKNOWN8_OFFSET), &address, type, size, data);
+	}
+	else if (*(const long *)(game_channel+NETWORK_CHANNEL_STATE_OFFSET)>_network_channel_state2)
+	{
+		unsigned long low= (unsigned long)type<32 ? 1u<<type : 0;
+		unsigned long high= (unsigned long)type>=32 && (unsigned long)type<64 ? 1u<<(type-32) : 0;
+
+		*(unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_PENDING_OFFSET)&= ~low;
+		*(unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_PENDING_OFFSET+sizeof(long))&= ~high;
+		unknown_00095580(unknown_004d87dc+*(const long *)(game_channel+NETWORK_CHANNEL_UNKNOWN14_OFFSET)*
+			NETWORK_CHANNEL_UNKNOWN14_SIZE, type, size, data);
+	}
+}

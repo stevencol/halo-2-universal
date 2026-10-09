@@ -1738,7 +1738,7 @@ address,name,source,arguments,returns,convention
 0005c8f0,network_session_matches_state1_address,source/networking/network_session.c,ecx eax,bool
 0005fd10,network_session_remove_peer_with_message_e,source/networking/network_session.c,eax esi,void
 0005fda0,network_session_remove_peer_with_message_d,source/networking/network_session.c,eax esi,void
-00075e80,unknown_00075e80,,ecx eax stack stack stack stack stack,void,stdcall
+00075e80,network_observer_channel_send,source/networking/network_observer.c,ecx eax stack stack stack stack stack,void,stdcall
 0005fe20,network_session_remove_peer,source/networking/network_session.c,eax ebx,void
 00060200,network_session_remove_player,source/networking/network_session.c,esi stack,void,stdcall
 00062f40,network_session_find_request,source/networking/network_session.c,edx stack stack,bool,stdcall
@@ -1865,3 +1865,7 @@ address,name,source,arguments,returns,convention
 0007e100,unknown_0007e100,,eax edx stack stack stack stack,void,stdcall
 00161c90,unknown_00161c90,,ecx,int
 00089070,unknown_00089070,,ecx,int
+00075910,network_unknown_00075910,source/networking/network_observer.c,eax,int
+00075930,network_channel_get_address,source/networking/network_observer.c,eax ecx,bool
+000783d0,unknown_000783d0,,ecx ebx edi eax stack stack stack,bool,stdcall
+00095580,unknown_00095580,,stack stack stack stack,void,stdcall

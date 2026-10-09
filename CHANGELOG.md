@@ -2,6 +2,50 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Mandar algo por un canal
+
+Tres funciones en `networking/network_observer.c`, 383 bytes entre todas. De 1321
+funciones se pasa a 1324, el 11,75 % de las del juego (el 7,720 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_unknown_00075910` | `0x00075910` | `networking/network_observer.c` |
+| `network_channel_get_address` | `0x00075930` | `networking/network_observer.c` |
+| `network_observer_channel_send` | `0x00075e80` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_observer_channel_send` era `unknown_00075e80`, **la función con
+  la que la sesión manda todos sus mensajes** (la llamaba desde 21 sitios
+  sin que estuviera descompilada). Ahora se sabe qué son sus «dos maneras»,
+  que en los hitos anteriores se llamaban así sin más:
+  - **por el canal** (primer byte a 0): el mensaje se pone en la cola del
+    canal del juego, si ese canal ha pasado de su segundo estado, y la
+    clase deja de estar pendiente en el canal. Es la manera fiable.
+  - **directo a la dirección** (primer byte a 1): se manda tal cual a la
+    dirección de la consola (`unknown_0007b140`), la del canal o, si el
+    canal no tiene, la que encuentre `unknown_000783d0`. Es la manera que
+    no espera a que el canal esté listo, y por eso es la que usan el noveno
+    estado y las respuestas a quien aún no está conectado.
+- `network_channel_get_address`: la dirección de un canal del juego, que
+  la tiene desde su tercer estado.
+- `network_unknown_00075910`: una pregunta de una línea sobre algo que
+  todavía no se sabe qué es.
+
+### Comprobado rompiendo líneas
+
+- Siete líneas rotas, una cada vez, entre este hito y el 369: las pruebas
+  fallaron en las siete.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_observer` (16 funciones)
+  y las de `network_life_cycle` (223 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Cinco funciones del observador que la sesión usaba a ciegas
 
 Cinco funciones en `networking/network_observer.c`, 519 bytes entre todas. De 1316

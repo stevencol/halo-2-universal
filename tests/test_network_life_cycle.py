@@ -859,7 +859,7 @@ def run(t) -> None:
                 name,
                 random_.randrange(16),
                 Buffer(bytes(data), pointers=(8,)),
-                externals={"unknown_00075e80": sends, "network_session_remove_peer": lambda harness, arguments: 0},
+                externals={"network_observer_channel_send": sends, "network_session_remove_peer": lambda harness, arguments: 0},
             )
 
     # ---------- a console and its players go out of a session
@@ -1307,7 +1307,7 @@ def run(t) -> None:
             random_.randrange(0x30),
             8,
             Buffer(random_.randbytes(8)),
-            externals={"unknown_00075e80": sends},
+            externals={"network_observer_channel_send": sends},
         )
     for n in range(120):
         t.check(
@@ -1317,7 +1317,7 @@ def run(t) -> None:
             random_.randrange(0x30),
             8,
             Buffer(random_.randbytes(8)),
-            externals={"unknown_00075e80": sends},
+            externals={"network_observer_channel_send": sends},
         )
 
     # ---------- the players that ask to come in, again
@@ -1514,7 +1514,7 @@ def run(t) -> None:
         t.check(
             "network_session_enter_state6",
             Buffer(bytes(with_channels()), pointers=(8,)),
-            externals={"unknown_00075e80": sends},
+            externals={"network_observer_channel_send": sends},
         )
         t.check("network_session_enter_state10", Buffer(bytes(whole_session())), random_.getrandbits(32))
 
@@ -1672,7 +1672,7 @@ def run(t) -> None:
     ):
         for n in range(80):
             arguments = (led(), random_.getrandbits(32)) if has_value else (led(),)
-            t.check(name, *arguments, externals={"unknown_00075e80": sends_all, "network_session_host_set_unknown4980": nothing})
+            t.check(name, *arguments, externals={"network_observer_channel_send": sends_all, "network_session_host_set_unknown4980": nothing})
 
     # ---------- four more changes that the console that leads a session asks for
 
@@ -1682,13 +1682,13 @@ def run(t) -> None:
         "network_session_leader_set_unknown498c",
     ):
         for n in range(80):
-            t.check(name, led(), random_.getrandbits(32), externals={"unknown_00075e80": sends_all})
+            t.check(name, led(), random_.getrandbits(32), externals={"network_observer_channel_send": sends_all})
     for n in range(80):
         t.check(
             "network_session_leader_set_unknown49a1",
             led(),
             Buffer(random_.randbytes(4)),
-            externals={"unknown_00075e80": sends_all},
+            externals={"network_observer_channel_send": sends_all},
         )
 
     # ---------- three bigger changes that the console that leads a session asks for
@@ -1699,7 +1699,7 @@ def run(t) -> None:
             "network_session_leader_set_roster",
             Buffer(bytes(roster(right=n % 5 != 0))) if there else 0,
             led(),
-            externals={"unknown_00075e80": sends_all},
+            externals={"network_observer_channel_send": sends_all},
         )
     for n in range(120):
         length = random_.choice((0, 5, 0x7E, 0x7F, 0x80, 0x90))
@@ -1710,7 +1710,7 @@ def run(t) -> None:
             Buffer(text_),
             random_.getrandbits(32),
             random_.getrandbits(32),
-            externals={"unknown_00075e80": sends_all},
+            externals={"network_observer_channel_send": sends_all},
         )
     for n in range(120):
         thing = bytearray(random_.randbytes(0x130))
@@ -1720,7 +1720,7 @@ def run(t) -> None:
             "network_session_leader_set_unknown4db0",
             Buffer(bytes(thing)) if n % 5 else 0,
             led(),
-            externals={"unknown_00075e80": sends_all},
+            externals={"network_observer_channel_send": sends_all},
         )
 
     # ---------- two more things that are asked of the console that runs a session
@@ -1733,7 +1733,7 @@ def run(t) -> None:
             random_.getrandbits(32),
             random_.choice((0, 1, 1, 2, NONE)),
             Buffer(random_.randbytes(12)),
-            externals={"unknown_00075e80": sends_all, "network_session_host_set_unknown49a8": does},
+            externals={"network_observer_channel_send": sends_all, "network_session_host_set_unknown49a8": does},
         )
     for n in range(200):
         session_ = led()
@@ -1744,7 +1744,7 @@ def run(t) -> None:
             "network_session_leader_set_unknown5ddc",
             session_,
             Buffer(bytes(thing)) if n % 5 else 0,
-            externals={"unknown_00075e80": sends_all},
+            externals={"network_observer_channel_send": sends_all},
         )
 
     # ---------- leaving a session, and two more
@@ -1776,7 +1776,7 @@ def run(t) -> None:
             externals={
                 "GetTickCount": ticks(),
                 "network_session_state4_update": nothing,
-                "unknown_00075e80": sends_all,
+                "network_observer_channel_send": sends_all,
                 "network_session_enter_state2": nothing,
                 "network_session_enter_state7": lambda harness, arguments: (0, (arguments[0] & 0xFF, *arguments[1:])),
                 "network_session_disconnect": nothing,
@@ -1784,7 +1784,7 @@ def run(t) -> None:
         )
 
     for n in range(120):
-        t.check("network_session_request_unknown49fc", led(), externals={"unknown_00075e80": sends_all})
+        t.check("network_session_request_unknown49fc", led(), externals={"network_observer_channel_send": sends_all})
 
     # ---------- a session is disconnected, and its seventh state
 
@@ -1870,7 +1870,7 @@ def run(t) -> None:
             "network_session_state4_update",
             Buffer(bytes(data), pointers=(8,)),
             globals=setup["globals"],
-            externals={"GetTickCount": setup["tick"], "unknown_00075e80": sends_all},
+            externals={"GetTickCount": setup["tick"], "network_observer_channel_send": sends_all},
         )
 
     def sends_to_address(harness, arguments):
@@ -1939,7 +1939,7 @@ def run(t) -> None:
             "network_session_state3_update",
             Buffer(bytes(data), pointers=(8,)),
             globals=globals_,
-            externals={"GetTickCount": lambda harness, arguments, now=now: now, "unknown_00075e80": sends_all},
+            externals={"GetTickCount": lambda harness, arguments, now=now: now, "network_observer_channel_send": sends_all},
         )
 
     # ---------- a thing that the console that runs a session sets
@@ -2101,7 +2101,7 @@ def run(t) -> None:
             Buffer(bytes(data), pointers=tuple(pointers)),
             random_.randrange(count),
             globals=clock(),
-            externals={"GetTickCount": ticks(), "unknown_00075e80": sends_all},
+            externals={"GetTickCount": ticks(), "network_observer_channel_send": sends_all},
             # the two numbers that it is given are in the stack: only that it is told is compared
             mocks=[Mock(lambda call: 0, stack_arguments=1, registers=("ecx",), record=lambda call: ())],
         )
@@ -2264,7 +2264,7 @@ def run(t) -> None:
             externals={
                 "network_observer_find_channel": from_channel(channel),
                 "network_session_add_peer_player": comes_in,
-                "unknown_00075e80": sends_all,
+                "network_observer_channel_send": sends_all,
             },
         )
 
@@ -2342,7 +2342,7 @@ def run(t) -> None:
             "network_session_unknown_0005e210",
             Buffer(bytes(data), pointers=(8,)),
             Buffer(bytes(message)),
-            externals={"network_session_leave": leaves, "unknown_00075e80": sends_all},
+            externals={"network_session_leave": leaves, "network_observer_channel_send": sends_all},
         )
 
     for n in range(500):
@@ -2354,7 +2354,7 @@ def run(t) -> None:
             "network_session_unknown_0005e6b0",
             Buffer(bytes(data), pointers=(8,)),
             random_.getrandbits(32),
-            externals={"network_observer_find_channel": which_channel(), "unknown_00075e80": sends_all},
+            externals={"network_observer_find_channel": which_channel(), "network_observer_channel_send": sends_all},
         )
 
     # ---------- six things that this console says of itself, of its players and of the session it leads
@@ -2376,7 +2376,7 @@ def run(t) -> None:
             "network_session_set_local_peer_properties",
             Buffer(random_.randbytes(0xC8)),
             Buffer(bytes(local_session()), pointers=(8,)),
-            externals={"unknown_00075e80": sends_all},
+            externals={"network_observer_channel_send": sends_all},
         )
 
     for n in range(400):
@@ -2392,7 +2392,7 @@ def run(t) -> None:
             random_.randrange(4),
             random_.getrandbits(32),
             random_.getrandbits(32),
-            externals={"network_session_add_peer_player": comes_in_here, "unknown_00075e80": sends_all},
+            externals={"network_session_add_peer_player": comes_in_here, "network_observer_channel_send": sends_all},
         )
 
     for n in range(400):
@@ -2403,7 +2403,7 @@ def run(t) -> None:
             random_.getrandbits(32),
             random_.randrange(4),
             random_.getrandbits(32),
-            externals={"unknown_00075e80": sends_all},
+            externals={"network_observer_channel_send": sends_all},
         )
 
     for n in range(300):
@@ -2413,7 +2413,7 @@ def run(t) -> None:
             random_.randrange(4),
             externals={
                 "network_session_remove_player": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
-                "unknown_00075e80": sends_all,
+                "network_observer_channel_send": sends_all,
             },
         )
 
@@ -2432,7 +2432,7 @@ def run(t) -> None:
                 Buffer(known_as),
                 externals={
                     "network_session_remove_peer_with_message_e": lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]))),
-                    "unknown_00075e80": sends_all,
+                    "network_observer_channel_send": sends_all,
                 },
             )
 
@@ -2462,7 +2462,7 @@ def run(t) -> None:
                 "network_session_reset_requests": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
                 "network_session_enter_state3": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                 "network_session_leave": leaves,
-                "unknown_00075e80": sends_all,
+                "network_observer_channel_send": sends_all,
             },
         )
 
@@ -2505,7 +2505,7 @@ def run(t) -> None:
                 "network_session_enter_state3": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                 "network_session_leave": leaves,
                 "network_session_state1_send": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
-                "unknown_00075e80": sends_all,
+                "network_observer_channel_send": sends_all,
             },
         )
 
@@ -2551,7 +2551,7 @@ def run(t) -> None:
             "network_session_send_unknown12",
             Buffer(bytes(data), pointers=(8,)),
             globals=setup["globals"],
-            externals={"GetTickCount": setup["tick"], "unknown_00075e80": sends_all},
+            externals={"GetTickCount": setup["tick"], "network_observer_channel_send": sends_all},
         )
 
     for n in range(400):
@@ -2607,7 +2607,7 @@ def run(t) -> None:
                     "network_observer_channel_unknown_000768b0": lambda harness, arguments, busy=busy: (arguments[0] in busy, (arguments[0], arguments[1], arguments[2])),
                     "network_observer_channel_set_pending": lambda harness, arguments: (0, (arguments[0], arguments[1], arguments[2])),
                     maker: makes(size),
-                    "unknown_00075e80": sends_all,
+                    "network_observer_channel_send": sends_all,
                 },
             )
 
@@ -2727,7 +2727,7 @@ def run(t) -> None:
                     (arguments[0], harness.normalize(arguments[1]), arguments[2], arguments[3], bytes(harness.mu.mem_read(arguments[4], 0x2E))),
                 ),
                 "network_session_unknown_00061950": takes_out,
-                "unknown_00075e80": sends_all,
+                "network_observer_channel_send": sends_all,
                 "network_session_enter_state5": then(),
                 "network_session_leave": leaves,
             },
@@ -2783,7 +2783,7 @@ def run(t) -> None:
                     (harness.normalize(arguments[0]), harness.normalize(arguments[1])),
                 ),
                 "network_session_enter_state8": goes_on,
-                "unknown_00075e80": sends_all,
+                "network_observer_channel_send": sends_all,
                 "network_session_disconnect": then(),
             },
         )
@@ -3155,7 +3155,7 @@ def run(t) -> None:
             externals={
                 "network_session_parameters_apply_update": applies,
                 "network_session_host_lost": then(),
-                "unknown_00075e80": sends_all,
+                "network_observer_channel_send": sends_all,
             },
         )
 
@@ -3364,7 +3364,7 @@ def run(t) -> None:
                 "transport_security_peer_address_from_address": known(data),
                 "network_observer_channel_alive": lambda harness, arguments, says=random_.choice((0, 0, 1, 0x100)): (says, (arguments[0], arguments[1])),
                 "network_session_enter_state9": then(random_.choice((None, 9))),
-                "unknown_00075e80": sends_all,
+                "network_observer_channel_send": sends_all,
                 "network_session_unknown_00061950": takes_out,
             },
         )

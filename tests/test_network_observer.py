@@ -237,3 +237,66 @@ def run(t) -> None:
                 )
             },
         )
+
+    # ---------- two small things, and something is sent by a channel
+
+    for n in range(80):
+        # the thing, and what it has at 0x3C after it
+        data = bytearray(random_.randbytes(0x40 + 0x34))
+        data[0x40 + 0x30] = random_.choice((0, 1, 0x80))
+        if n % 4:
+            struct.pack_into("<I", data, 0x3C, 0x40)
+            t.check("network_unknown_00075910", Buffer(bytes(data), pointers=(0x3C,)))
+        else:
+            struct.pack_into("<I", data, 0x3C, 0)
+            t.check("network_unknown_00075910", Buffer(bytes(data)))
+
+    for n in range(80):
+        data = bytearray(random_.randbytes(0xF8))
+        struct.pack_into("<i", data, 0x54, random_.choice((0, 1, 2, 3, 5, -1)))
+        t.check("network_channel_get_address", Buffer(bytes(data)), Buffer(random_.randbytes(0x14)))
+
+    for n in range(800):
+        data = observer()
+        channel = random_.randrange(15)
+        at = CHANNELS + channel * CHANNEL
+        kind = random_.choice(TYPES)
+        bits = random_.getrandbits(64)
+        struct.pack_into("<Q", data, at + 0x520, bits | 1 << kind if random_.randrange(2) else bits & ~(1 << kind))
+        # its own address of the game: one, or none
+        struct.pack_into("<H", data, at + 0x5C + 0x12, random_.choice((4, 4, 16, 0)))
+        if random_.randrange(3) == 0:
+            data[at + 0x5C : at + 0x5C + 16] = bytes(16)
+        channels = game_channels()
+        for game_channel in range(6):
+            struct.pack_into("<i", channels, game_channel * 0xF8 + 0x54, random_.choice((0, 1, 2, 3, 5, 5)))
+            struct.pack_into("<I", channels, game_channel * 0xF8 + 0x14, random_.randrange(4))
+        size = random_.choice((8, 0x10, 0xC8))
+
+        def finds(harness, arguments, could=random_.choice((1, 1, 0, 0x100)), address=random_.randbytes(0x14)):
+            # the address goes where the third thing says, which is in the stack, as the last three do
+            harness.mu.mem_write(arguments[2], address)
+            return could, (harness.normalize(arguments[0]), harness.normalize(arguments[1]), arguments[3])
+
+        t.check(
+            "network_observer_channel_send",
+            random_.choice((0, 0, 1, 1, 0x80)),
+            channel,
+            Buffer(bytes(data)),
+            random_.randrange(4),
+            kind,
+            size,
+            Buffer(random_.randbytes(size)),
+            globals={"unknown_004d87d4": Buffer(bytes(channels)), "unknown_004d87dc": Buffer(bytes(16))},
+            externals={
+                "unknown_000783d0": finds,
+                "unknown_0007b140": lambda harness, arguments: (
+                    0,
+                    (arguments[0], bytes(harness.mu.mem_read(arguments[1], 0x14)), arguments[2], arguments[3], harness.normalize(arguments[4])),
+                ),
+                "unknown_00095580": lambda harness, arguments: (
+                    0,
+                    (harness.normalize(arguments[0]), arguments[1], arguments[2], harness.normalize(arguments[3])),
+                ),
+            },
+        )

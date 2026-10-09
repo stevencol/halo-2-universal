@@ -82,6 +82,18 @@ enum
 	NETWORK_SESSIONS_SESSION_STATE_OFFSET= 0x741C,
 	NETWORK_SESSIONS_SESSION_HAS_IDENTIFIER_OFFSET= 0x24,
 	NETWORK_SESSIONS_SESSION_IDENTIFIER_OFFSET= 0x1C,
+	/* one more thing that the observer is given, and more of a channel:
+	something that unknown_000783d0 looks for an address with. Of a channel
+	of the game: which of the things of 0x2850 bytes of unknown_004d87dc is
+	its own, and its address of the game. And of what network_unknown_00075910 is asked
+	about */
+	NETWORK_OBSERVER_UNKNOWN8_OFFSET= 0x8,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN14_OFFSET= 0x14,
+	NETWORK_CHANNEL_UNKNOWN14_OFFSET= 0x14,
+	NETWORK_CHANNEL_UNKNOWN14_SIZE= 0x2850,
+	NETWORK_CHANNEL_ADDRESS_OFFSET= 0x70,
+	NETWORK_UNKNOWN_00075910_UNKNOWN3C_OFFSET= 0x3C,
+	NETWORK_UNKNOWN_00075910_UNKNOWN30_OFFSET= 0x30,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
 	_unknown_00088650_unknown11= 0x11
 };
@@ -107,9 +119,15 @@ boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_000768b0(long
 void NETWORK_OBSERVER_CALLBACK network_observer_channel_set_pending(long channel_index, byte *observer, long type);
 boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_alive(long channel_index, const byte *observer);
 long network_observer_channel_connect_status(const byte *observer, long channel_index);
+long network_unknown_00075910(const byte *unknown);
+struct transport_address;
+boolean network_channel_get_address(const byte *game_channel, struct transport_address *address);
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_send(boolean out_of_band, long channel_index, byte *observer,
+	long session_index, long type, long size, const void *data);
 
 /* ---------- globals */
 
 extern byte *unknown_004d87d4;
+extern byte *unknown_004d87dc;
 
 #endif

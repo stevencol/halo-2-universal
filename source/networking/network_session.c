@@ -39,7 +39,7 @@ long __attribute__((stdcall)) XNetQosListen(const byte *identifier, const void *
 /* 0x00075e80: sends something of a kind and a size to the console of one of
 the things of 0x528 bytes of what a session was given when it was set up, in
 one of two ways */
-void __attribute__((stdcall)) unknown_00075e80(boolean unknown, long channel_index, byte *unknown8, long index,
+void __attribute__((stdcall)) network_observer_channel_send(boolean unknown, long channel_index, byte *unknown8, long index,
 	long type, long size, const void *data);
 
 /* 0x0011ca80, of cseries.c */
@@ -889,10 +889,10 @@ static inline __attribute__((always_inline)) void network_session_remove_peer_wi
 		if (*(const long *)(unknown8+state->unknown4*NETWORK_SESSION_UNKNOWN8_CHANNEL_SIZE+
 			NETWORK_SESSION_UNKNOWN8_CHANNEL_STATE_OFFSET)==_network_session_unknown8_channel_state7)
 		{
-			unknown_00075e80(FALSE, state->unknown4, unknown8, *(const long *)(session+NETWORK_SESSION_INDEX_OFFSET),
+			network_observer_channel_send(FALSE, state->unknown4, unknown8, *(const long *)(session+NETWORK_SESSION_INDEX_OFFSET),
 				type, sizeof(identifier), identifier);
 		}
-		unknown_00075e80(TRUE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+		network_observer_channel_send(TRUE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 			*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), type, sizeof(identifier), identifier);
 	}
 	network_session_remove_peer(session, peer_index);
@@ -2012,12 +2012,12 @@ void NETWORK_SESSION_CALLBACK network_session_send_to_peer(
 			state->unknown4*NETWORK_SESSION_UNKNOWN8_CHANNEL_SIZE+NETWORK_SESSION_UNKNOWN8_CHANNEL_STATE_OFFSET)==
 			_network_session_unknown8_channel_state7))
 	{
-		unknown_00075e80(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+		network_observer_channel_send(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 			*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), type, size, data);
 	}
 	if (mode==_network_session_send_unknown1 || mode==_network_session_send_both)
 	{
-		unknown_00075e80(TRUE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+		network_observer_channel_send(TRUE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 			*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), type, size, data);
 	}
 }
@@ -2648,7 +2648,7 @@ static inline __attribute__((always_inline)) void network_session_parameters_req
 
 	if (state->unknown1)
 	{
-		unknown_00075e80(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+		network_observer_channel_send(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 			*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_parameters_request,
 			NETWORK_SESSION_PARAMETERS_REQUEST_SIZE, request);
 	}
@@ -3094,7 +3094,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_unknown_0005bf10(
 		}
 		if (state->unknown1)
 		{
-			unknown_00075e80(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+			network_observer_channel_send(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 				*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_unknown23,
 				sizeof(message), message);
 		}
@@ -3563,7 +3563,7 @@ void network_session_state3_update(
 	*(long *)(message+0xC)= NONE;
 	*(long *)(message+0x10)= NONE;
 	*(long *)(message+0x14)= NONE;
-	unknown_00075e80(TRUE, host->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+	network_observer_channel_send(TRUE, host->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 		*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_unknown18, sizeof(message),
 		message);
 	*(long *)(session+NETWORK_SESSION_UNKNOWN7658_OFFSET)= network_session_time();
@@ -3842,7 +3842,7 @@ boolean network_session_remove_peer_with_message_c(
 	unknownF0[0]= *(const long *)(peer+NETWORK_SESSION_PEER_UNKNOWNF0_OFFSET);
 	unknownF0[1]= *(const long *)(peer+NETWORK_SESSION_PEER_UNKNOWNF0_OFFSET+sizeof(long));
 	memcpy(identifier, session+NETWORK_SESSION_IDENTIFIER_OFFSET, sizeof(identifier));
-	unknown_00075e80(TRUE,
+	network_observer_channel_send(TRUE,
 		((const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index)->unknown4,
 		*(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET), *(const long *)(session+NETWORK_SESSION_INDEX_OFFSET),
 		_network_session_message_unknownC, sizeof(identifier), identifier);
@@ -4159,7 +4159,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_add_peer_player(
 			NETWORK_SESSION_PLAYER_IDENTIFIER_SIZE);
 		if (state->unknown1)
 		{
-			unknown_00075e80(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+			network_observer_channel_send(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 				*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_unknown1E,
 				sizeof(answer), answer);
 		}
@@ -4334,7 +4334,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_unknown_0005e210(
 			*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET);
 		if (host->unknown1)
 		{
-			unknown_00075e80(FALSE, host->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+			network_observer_channel_send(FALSE, host->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 				*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_unknown10,
 				sizeof(passed), passed);
 		}
@@ -4380,7 +4380,7 @@ boolean network_session_unknown_0005e6b0(
 		memcpy(answer+NETWORK_SESSION_MESSAGE_UNKNOWN13_HOST_OFFSET, session+NETWORK_SESSION_PEER_ARRAY_OFFSET+
 			*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET)*NETWORK_SESSION_PEER_SIZE, NETWORK_SESSION_ADDRESS_SIZE);
 	}
-	unknown_00075e80(FALSE, channel_index, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+	network_observer_channel_send(FALSE, channel_index, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 		*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_unknown13, sizeof(answer),
 		answer);
 
@@ -4412,7 +4412,7 @@ static inline __attribute__((always_inline)) void network_session_send_to_host(
 
 	if (state->unknown1)
 	{
-		unknown_00075e80(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+		network_observer_channel_send(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 			*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), type, size, data);
 	}
 }
@@ -4857,7 +4857,7 @@ void network_session_state1_update(
 				*(const long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET);
 			if (leader->unknown1)
 			{
-				unknown_00075e80(FALSE, leader->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+				network_observer_channel_send(FALSE, leader->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 					*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_unknown15,
 					sizeof(identifier), identifier);
 			}
@@ -4977,7 +4977,7 @@ void network_session_send_unknown12(
 			byte identifier[NETWORK_SESSION_IDENTIFIER_SIZE];
 
 			memcpy(identifier, session+NETWORK_SESSION_IDENTIFIER_OFFSET, sizeof(identifier));
-			unknown_00075e80(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+			network_observer_channel_send(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 				*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_unknown12,
 				sizeof(identifier), identifier);
 			*(unsigned long *)(data+NETWORK_SESSION_STATE8_SENT_OFFSET)|= bit;
@@ -5121,7 +5121,7 @@ void network_session_send_membership_updates(
 		state->unknown8= *(const long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET);
 		if (state->unknown1)
 		{
-			unknown_00075e80(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+			network_observer_channel_send(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 				*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_membership_update,
 				NETWORK_SESSION_MESSAGE_MEMBERSHIP_UPDATE_SIZE, update);
 		}
@@ -5202,7 +5202,7 @@ void network_session_send_parameters_updates(
 		state->unknownC= *(const long *)(session+NETWORK_SESSION_UNKNOWN4978_OFFSET);
 		if (state->unknown1)
 		{
-			unknown_00075e80(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+			network_observer_channel_send(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 				*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_parameters_update,
 				NETWORK_SESSION_MESSAGE_PARAMETERS_UPDATE_SIZE, update);
 		}
@@ -5517,7 +5517,7 @@ void NETWORK_SESSION_CALLBACK network_session_state7_update(
 				memcpy(identifier, session+NETWORK_SESSION_IDENTIFIER_OFFSET, sizeof(identifier));
 				if (state->unknown1)
 				{
-					unknown_00075e80(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+					network_observer_channel_send(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 						*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_unknown11,
 						sizeof(identifier), identifier);
 				}
@@ -5686,7 +5686,7 @@ void NETWORK_SESSION_CALLBACK network_session_state9_update(
 
 			if (state->unknown1)
 			{
-				unknown_00075e80(TRUE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+				network_observer_channel_send(TRUE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 					*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_unknown16,
 					sizeof(message), message);
 			}
@@ -7105,11 +7105,11 @@ static inline __attribute__((always_inline)) void network_session_election_answe
 	{
 		if (network_session_channel_state(session, state->unknown4)==_network_session_unknown8_channel_state7)
 		{
-			unknown_00075e80(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+			network_observer_channel_send(FALSE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 				*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_unknown12,
 				sizeof(identifier), identifier);
 		}
-		unknown_00075e80(TRUE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+		network_observer_channel_send(TRUE, state->unknown4, *(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 			*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), _network_session_message_unknown12,
 			sizeof(identifier), identifier);
 	}
