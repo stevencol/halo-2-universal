@@ -483,6 +483,20 @@ enum
 	NETWORK_SESSION_MESSAGE_UNKNOWN16_SIZE= 0xC8,
 	NETWORK_SESSION_MESSAGE_UNKNOWN16_ELECTION_OFFSET= 0x8,
 	NETWORK_SESSION_STATE9_SEND_AGAIN_MILLISECONDS= 500,
+	/* more of what a console that asks to come in sends: two numbers for
+	each player, eight bytes, a number that is there if the byte of 0x14C
+	says so, and 0x2C bytes that may be left empty. The port that the
+	address of the console that runs the session is asked for with, and the
+	address of the game that is this console's own */
+	NETWORK_SESSION_JOIN_UNKNOWNC4_OFFSET= 0xC4,
+	NETWORK_SESSION_JOIN_UNKNOWN104_OFFSET= 0x104,
+	NETWORK_SESSION_JOIN_UNKNOWN144_OFFSET= 0x144,
+	NETWORK_SESSION_JOIN_UNKNOWN144_SIZE= 0x8,
+	NETWORK_SESSION_JOIN_UNKNOWN150_OFFSET= 0x150,
+	NETWORK_SESSION_JOIN_UNKNOWN154_OFFSET= 0x154,
+	NETWORK_SESSION_JOIN_UNKNOWN154_SIZE= 0x2C,
+	NETWORK_SESSION_JOIN_PORT= 1001,
+	NETWORK_SESSION_JOIN_LOOPBACK= 0x7F000001,
 	_network_session_message_unknownF= 0xF,
 	_network_session_message_unknown11= 0x11,
 	_network_session_message_unknown12= 0x12,
@@ -767,6 +781,12 @@ void network_session_send_unknown12(byte *session);
 void NETWORK_SESSION_CALLBACK network_session_enter_state8(byte *session, boolean unknown);
 void network_session_send_membership_updates(byte *session);
 void network_session_send_parameters_updates(byte *session);
+void NETWORK_SESSION_CALLBACK network_session_enter_state1(const struct transport_address *address, byte *session,
+	long channel_index, const byte *host_address, const byte *request);
+boolean NETWORK_SESSION_CALLBACK network_session_join(byte *session, long unknown18, long unknown3C,
+	const byte *identifier, const byte *key, const byte *host_address, long player_count, const byte *identifiers,
+	const long *unknownC4, const long *unknown104, boolean has_unknown150, long unknown150, const byte *unknown144,
+	const byte *unknown154);
 void NETWORK_SESSION_CALLBACK network_session_state7_update(byte *session);
 void network_session_state8_update(byte *session);
 void NETWORK_SESSION_CALLBACK network_session_state9_update(byte *session);

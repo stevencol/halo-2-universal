@@ -5706,3 +5706,163 @@ void NETWORK_SESSION_CALLBACK network_session_state9_update(
 		network_session_disconnect(session);
 	}
 }
+
+/* 0x00076aa0, of network_observer.c: the channel that what a session was
+given when it was set up has, or gets, for a console that is known by
+something; NONE if it has none to give */
+long __attribute__((stdcall)) unknown_00076aa0(byte *unknown8, long index, const byte *peer_address);
+
+/* 0x00075800: the session that the table of sessions has for the eight bytes
+that one is known by; 0 if none */
+long __attribute__((stdcall)) unknown_00075800(byte *unknown, const byte *identifier);
+
+/* where something that a session has from its state on is, in a copy of
+it */
+static inline __attribute__((always_inline)) byte *network_session_state_data_at(
+	byte *data,
+	long session_offset)
+{
+	return data+(session_offset-NETWORK_SESSION_STATE_DATA_OFFSET);
+}
+
+/* 0x00061050: a session goes into its first state, that of a console that
+asks to come into the session of another: what it has from its state on
+starts with the channel that it has for the console that runs the session,
+what that console is known by, its address of the game, what this console
+sends to ask (with eight bytes made at random at 0x180 of it), and the time.
+The session counts one more at 0x7650 and has no players of its own at
+0x761C; who is in it is the console that runs it, first, and this one,
+second; and network_session_state1_send is done */
+void NETWORK_SESSION_CALLBACK network_session_enter_state1(
+	const struct transport_address *address,
+	byte *session,
+	long channel_index,
+	const byte *host_address,
+	const byte *request)
+{
+	byte data[NETWORK_SESSION_STATE_DATA_SIZE];
+
+	memset(data, 0, sizeof(data));
+	*(long *)network_session_state_data_at(data, NETWORK_SESSION_STATE1_UNKNOWN0_OFFSET)= channel_index;
+	memcpy(network_session_state_data_at(data, NETWORK_SESSION_STATE1_UNKNOWN4_OFFSET), host_address,
+		NETWORK_SESSION_ADDRESS_SIZE);
+	memcpy(network_session_state_data_at(data, NETWORK_SESSION_STATE1_ADDRESS_OFFSET), address, sizeof(*address));
+	*(long *)network_session_state_data_at(data, NETWORK_SESSION_STATE1_UNKNOWN1E8_OFFSET)= network_session_time();
+	*(long *)network_session_state_data_at(data, NETWORK_SESSION_STATE1_UNKNOWN1EC_OFFSET)= 0;
+	memcpy(network_session_state_data_at(data, NETWORK_SESSION_STATE1_UNKNOWN3C_OFFSET), request,
+		NETWORK_SESSION_STATE1_UNKNOWN3C_SIZE);
+	transport_security_random_identifier(network_session_state_data_at(data, NETWORK_SESSION_STATE1_UNKNOWN1BC_OFFSET));
+	(*(long *)(session+NETWORK_SESSION_UNKNOWN7650_OFFSET))++;
+	memset(session+NETWORK_SESSION_UNKNOWN761C_OFFSET, 0, NETWORK_SESSION_UNKNOWN761C_SIZE);
+	*(long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET)= 0;
+	*(long *)(session+NETWORK_SESSION_UNKNOWN7654_OFFSET)= NONE;
+	*(long *)(session+NETWORK_SESSION_UNKNOWN7658_OFFSET)= NONE;
+	network_session_add_peer(session, 0, host_address, TRUE, channel_index, NULL);
+	network_session_add_peer(session, 1, request+NETWORK_SESSION_JOIN_ADDRESS_OFFSET, FALSE, NONE, NULL);
+	*(long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET)= 1;
+	memcpy(network_session_set_state(session, _network_session_state1), data, sizeof(data));
+	network_session_state1_send(session);
+}
+
+/* 0x00059e50: this console asks to come into the session of another console,
+which is known by something in the network, with a key and a number, and is
+run by a console that is known by something; whether it could start to. A
+session that is known by the same already is disconnected first. The console
+has to be known by something in the network; the key has to be taken
+(transport_security_set_key); the console that runs the session has to have
+an address of the game, which is not this console's own; and there has to be
+a channel for it. If any of that fails, the session is known by nothing.
+
+If not: who is in the session and what it knows say nothing yet, the session
+has no consoles, and what the console sends to ask is made: how many players
+and what each is known by, two numbers of each, eight bytes, a byte and a
+number that goes with it, 0x2C bytes that may not be given, and what this
+console is known by. And the session goes into its first state */
+boolean NETWORK_SESSION_CALLBACK network_session_join(
+	byte *session,
+	long unknown18,
+	long unknown3C,
+	const byte *identifier,
+	const byte *key,
+	const byte *host_address,
+	long player_count,
+	const byte *identifiers,
+	const long *unknownC4,
+	const long *unknown104,
+	boolean has_unknown150,
+	long unknown150,
+	const byte *unknown144,
+	const byte *unknown154)
+{
+	byte address[NETWORK_SESSION_ADDRESS_SIZE];
+	struct transport_address host_transport_address;
+	byte request[NETWORK_SESSION_STATE1_UNKNOWN3C_SIZE];
+	byte *other;
+
+	other= (byte *)unknown_00075800(*(byte **)(session+NETWORK_SESSION_TABLE_OFFSET), identifier);
+	if (other)
+	{
+		network_session_disconnect(other);
+	}
+	if (unknown_004d8b18 && unknown_004d8b19)
+	{
+		transport_security_get_address();
+	}
+	memcpy(address, unknown_004cf793, sizeof(address));
+	if (unknown_004cf792)
+	{
+		network_session_forget_identifier(session);
+		if (transport_security_set_key(*(const long *)(session+NETWORK_SESSION_UNKNOWN38_OFFSET), key, unknown3C, FALSE,
+			identifier))
+		{
+			network_session_set_identifier(session, identifier, key, unknown3C);
+			if (transport_security_address_from_peer_address(*(const long *)(session+NETWORK_SESSION_UNKNOWN38_OFFSET),
+					&host_transport_address, host_address, unknown3C, NETWORK_SESSION_JOIN_PORT) &&
+				!(host_transport_address.address_size==sizeof(host_transport_address.address.ipv4) &&
+					host_transport_address.address.ipv4==NETWORK_SESSION_JOIN_LOOPBACK))
+			{
+				long channel_index= unknown_00076aa0(*(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+					*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), host_address);
+
+				if (channel_index!=NONE)
+				{
+					*(long *)(session+NETWORK_SESSION_UNKNOWN18_OFFSET)= unknown18;
+					memset(session+NETWORK_SESSION_UNKNOWN4978_OFFSET, 0, NETWORK_SESSION_UNKNOWN4978_SIZE);
+					*(long *)(session+NETWORK_SESSION_UNKNOWN4978_OFFSET)= NONE;
+					session[NETWORK_SESSION_UNKNOWN48_OFFSET]= 0;
+					memset(session+NETWORK_SESSION_MEMBERSHIP_OFFSET, 0, NETWORK_SESSION_MEMBERSHIP_SIZE);
+					*(long *)(session+NETWORK_SESSION_MEMBERSHIP_OFFSET)= NONE;
+					*(long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET)= NONE;
+					memset(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET, 0, NETWORK_SESSION_UNKNOWN72DC_SIZE);
+					*(long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET)= NONE;
+					*(long *)(session+NETWORK_SESSION_UNKNOWN78B0_OFFSET)= -network_session_time();
+					session[NETWORK_SESSION_UNKNOWN78AC_OFFSET]= TRUE;
+					memset(request, 0, sizeof(request));
+					*(long *)(request+NETWORK_SESSION_JOIN_PLAYER_COUNT_OFFSET)= player_count;
+					memcpy(request+NETWORK_SESSION_JOIN_PLAYERS_OFFSET, identifiers,
+						player_count*NETWORK_SESSION_PLAYER_IDENTIFIER_SIZE);
+					memcpy(request+NETWORK_SESSION_JOIN_UNKNOWNC4_OFFSET, unknownC4, player_count*sizeof(long));
+					memcpy(request+NETWORK_SESSION_JOIN_UNKNOWN104_OFFSET, unknown104, player_count*sizeof(long));
+					request[NETWORK_SESSION_JOIN_UNKNOWN14C_OFFSET]= has_unknown150;
+					if (has_unknown150)
+					{
+						*(long *)(request+NETWORK_SESSION_JOIN_UNKNOWN150_OFFSET)= unknown150;
+					}
+					memcpy(request+NETWORK_SESSION_JOIN_UNKNOWN144_OFFSET, unknown144, NETWORK_SESSION_JOIN_UNKNOWN144_SIZE);
+					memcpy(request+NETWORK_SESSION_JOIN_ADDRESS_OFFSET, address, sizeof(address));
+					if (unknown154)
+					{
+						memcpy(request+NETWORK_SESSION_JOIN_UNKNOWN154_OFFSET, unknown154,
+							NETWORK_SESSION_JOIN_UNKNOWN154_SIZE);
+					}
+					network_session_enter_state1(&host_transport_address, session, channel_index, host_address, request);
+
+					return TRUE;
+				}
+			}
+		}
+	}
+	network_session_forget_identifier(session);
+
+	return FALSE;
+}

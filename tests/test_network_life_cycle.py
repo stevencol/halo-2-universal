@@ -2787,3 +2787,110 @@ def run(t) -> None:
                 "network_session_disconnect": then(),
             },
         )
+
+    # ---------- this console asks to come into the session of another
+
+    def random_identifier(harness, arguments):
+        # eight bytes go where it is told, which is in the stack: not the same place in the game and in source/
+        harness.mu.mem_write(arguments[0], bytes(range(0xA1, 0xA9)))
+        return 0, ()
+
+    def adds(harness, arguments):
+        # what the console is known by is in the stack, or in what is given
+        return 0, (
+            harness.normalize(arguments[0]),
+            arguments[1],
+            bytes(harness.mu.mem_read(arguments[2], 0x24)),
+            arguments[3],
+            arguments[4],
+            arguments[5],
+        )
+
+    for n in range(300):
+        t.check(
+            "network_session_enter_state1",
+            Buffer(random_.randbytes(0x14)),
+            Buffer(bytes(whole_session())),
+            random_.choice((0, 1, 2, 3, NONE)),
+            Buffer(random_.randbytes(0x24)),
+            Buffer(random_.randbytes(0x1AC)),
+            globals=clock(),
+            externals={
+                "GetTickCount": ticks(),
+                "transport_security_random_identifier": random_identifier,
+                "network_session_add_peer": adds,
+                "network_session_state1_send": then(),
+            },
+        )
+
+    for n in range(600):
+        data = whole_session()
+        count = random_.choice((0, 1, 1, 2, 4, 16))
+        loopback = random_.randrange(5) == 0
+        transport = bytearray(random_.randbytes(0x14))
+        if loopback or random_.randrange(4) == 0:
+            struct.pack_into("<I", transport, 0, 0x7F000001)
+        struct.pack_into("<H", transport, 0x12, 4 if loopback or random_.randrange(3) else 16)
+
+        def has_address(harness, arguments, transport=bytes(transport), could=random_.choice((1, 1, 1, 1, 0, 0x100))):
+            # the address of the game goes where the second thing says, which is in the stack
+            harness.mu.mem_write(arguments[1], transport)
+            return could, (arguments[0], harness.normalize(arguments[2]), arguments[3], arguments[4])
+
+        def goes_in(harness, arguments):
+            return 0, (
+                bytes(harness.mu.mem_read(arguments[0], 0x14)),
+                harness.normalize(arguments[1]),
+                arguments[2],
+                harness.normalize(arguments[3]),
+                bytes(harness.mu.mem_read(arguments[4], 0x1AC)),
+            )
+
+        t.check(
+            "network_session_join",
+            Buffer(bytes(data)),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            Buffer(random_.randbytes(8)),
+            Buffer(random_.randbytes(16)),
+            Buffer(random_.randbytes(0x24)),
+            count,
+            Buffer(random_.randbytes(16 * 12)),
+            Buffer(random_.randbytes(16 * 4)),
+            Buffer(random_.randbytes(16 * 4)),
+            random_.choice((0, 1, 1, 0x80, 0x100)),
+            random_.getrandbits(32),
+            Buffer(random_.randbytes(8)),
+            random_.choice((Buffer(random_.randbytes(0x2C)), Buffer(random_.randbytes(0x2C)), 0)),
+            globals={
+                **clock(),
+                "unknown_004d8b18": bytes((random_.choice((0, 1, 1)),)),
+                "unknown_004d8b19": bytes((random_.choice((0, 1, 1)),)),
+                "unknown_004cf792": bytes((random_.choice((0, 1, 1, 1, 0x80)),)),
+                "unknown_004cf793": random_.randbytes(0x24),
+            },
+            externals={
+                "GetTickCount": ticks(),
+                "unknown_00075800": lambda harness, arguments, other=random_.choice((0, 0, 0x12345678)): (
+                    other,
+                    (arguments[0], bytes(harness.mu.mem_read(arguments[1], 8))),
+                ),
+                "network_session_disconnect": lambda harness, arguments: (0, (arguments[0],)),
+                "transport_security_get_address": lambda harness, arguments: 1,
+                "network_session_forget_identifier": then(),
+                "transport_security_set_key": lambda harness, arguments, could=random_.choice((1, 1, 1, 1, 0, 0x100)): (
+                    could,
+                    (arguments[0], harness.normalize(arguments[1]), arguments[2], arguments[3], harness.normalize(arguments[4])),
+                ),
+                "network_session_set_identifier": lambda harness, arguments: (
+                    0,
+                    (harness.normalize(arguments[0]), harness.normalize(arguments[1]), harness.normalize(arguments[2]), arguments[3]),
+                ),
+                "transport_security_address_from_peer_address": has_address,
+                "unknown_00076aa0": lambda harness, arguments, channel=random_.choice((0, 1, 3, 3, NONE)): (
+                    channel,
+                    (arguments[0], arguments[1], harness.normalize(arguments[2])),
+                ),
+                "network_session_enter_state1": goes_in,
+            },
+        )

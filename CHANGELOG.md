@@ -2,6 +2,67 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Entrar en la sesión de otra consola
+
+Dos funciones en `networking/network_session.c`, 876 bytes entre las dos. De 1300
+funciones se pasa a 1302, el 11,56 % de las del juego (el 7,350 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_enter_state1` | `0x00061050` | `networking/network_session.c` |
+| `network_session_join` | `0x00059e50` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_join` es **la pareja de `network_session_start`**: en vez
+  de crear una sesión con esta consola sola, pide entrar en la de otra.
+  Recibe catorce cosas; las importantes: lo que identifica a la sesión, su
+  clave, cómo se conoce a la consola que la lleva, y los jugadores que
+  entran.
+  1. Si ya había una sesión con ese mismo identificador, la desconecta.
+  2. La consola tiene que ser conocida en la red; se registra la clave
+     (`transport_security_set_key`); se pide la dirección de la consola que
+     lleva la sesión, con el puerto 1001, y **no puede ser la de esta misma
+     consola** (`127.0.0.1`); y tiene que haber un canal para ella
+     (`unknown_00076aa0`). Si algo falla, la sesión se queda sin
+     identificador y devuelve FALSE.
+  3. Deja en blanco «quién está» y «lo que la sesión sabe» (a la espera de
+     que lleguen, hito 354) y prepara **la petición de entrar**: cuántos
+     jugadores y cómo se conoce a cada uno, dos números de cada uno, ocho
+     bytes, un byte con su número, `0x2C` bytes que pueden no darse, y cómo
+     se conoce a esta consola.
+- `network_session_enter_state1` pone la sesión en su primer estado con
+  todo eso: el canal, la consola que lleva la sesión (que queda la primera
+  de «quién está», y esta la segunda), su dirección, la petición y la hora.
+  A la petición le añade ocho bytes al azar en su `0x180`. Y manda la
+  petición por primera vez (`network_session_state1_send`, hito 354).
+- De la petición de entrar (`0x1AC` bytes) se conocen ahora todos los
+  trozos, con nombre en `network_session.h`.
+
+### Lo que enseñó
+
+- En una prueba comparé sin querer **una dirección de la pila**, que no es
+  la misma en el juego y en nuestro código, y la prueba falló con las dos
+  funciones haciendo lo mismo. Lo que sustituye a una función que recibe un
+  puntero a algo de la pila tiene que devolver qué comparar (lo apuntado, o
+  nada), no dejar que se comparen sus argumentos.
+
+### Comprobado rompiendo líneas
+
+- Once líneas rotas, una cada vez, entre las dos funciones: las pruebas
+  fallaron en las once.
+
+### Sin comprobar
+
+- En las pruebas de `network_session_join` todo lo que llama está
+  sustituido.
+- En este hito se pasaron solo las pruebas de las dos funciones; las del
+  archivo entero de `network_life_cycle` se pasan con el hito 361.
+- La batería completa del hito 358 sigue corriendo.
+- Las mutaciones de los hitos 280 a 308, 321 a 353 y 355 están pendientes.
+
 ## 2026-10-08 — El noveno estado: ponerse de acuerdo en quién lleva la sesión
 
 Una función en `networking/network_session.c`, de 833 bytes. De 1299
