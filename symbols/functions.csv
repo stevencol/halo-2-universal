@@ -1930,5 +1930,7 @@ address,name,source,arguments,returns,convention
 00078880,network_observer_release_game_channels,source/networking/network_observer.c,stack,void,stdcall
 00077940,network_observer_channel_unknown_00077940,source/networking/network_observer.c,eax ebx,bool
 00078330,network_observer_channel_find_address,source/networking/network_observer.c,eax stack,bool,stdcall
-0007b390,unknown_0007b390,,eax ebx,void
+0007b390,network_message_gateway_flush_address,source/networking/network_message_gateway.c,eax ebx,void
+0007b330,network_message_gateway_flush,source/networking/network_message_gateway.c,edi,void
+00093100,unknown_00093100,,edx ebx stack stack,void,stdcall
 003cd344,XNetUnregisterInAddr,,stack,int,stdcall

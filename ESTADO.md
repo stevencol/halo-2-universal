@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 393.
+**Última actualización:** 2026-10-08, al terminar el hito 394.
 
 ## Dónde estamos
 
-- **1380 funciones descompiladas de 11.265: el 12,25 % del juego** (el
-  8,158 % de los bytes de código).
-- Las 1380 están comprobadas contra el ejecutable original: las 1354 del
+- **1382 funciones descompiladas de 11.265: el 12,27 % del juego** (el
+  8,163 % de los bytes de código).
+- Las 1382 están comprobadas contra el ejecutable original: las 1354 del
   hito 385 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the attempts at measuring the connection (transport_qos.c)* (ver `git log`).
+- Último hito: *Start network_message_gateway.c: the packet of messages is sent* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 553 funciones apuntadas pero sin descompilar (las que el código
   llama); 451 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -119,6 +119,10 @@ Módulos (funciones hechas / archivo):
       lo que la consola es en la red, la clave de cada sesión y las
       direcciones; de `0x0007a8a0` a `0x0007af80`, y falta lo que sigue
       desde `0x0007afd0`)
+- [ ] Mensajes que no van por un canal —
+  `networking\network_message_gateway.c` (2: mandar el paquete pendiente).
+  Faltan recibir un paquete (`0x0007afd0`) y añadir un mensaje
+  (`0x0007b140`).
 - [x] Intentos de medir la conexión — `networking\transport_qos.c` (8: la
   tabla de intentos, empezar uno, soltarlo, cómo va y qué encontró con
   cada consola). Entero.

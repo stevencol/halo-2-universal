@@ -1359,12 +1359,12 @@ boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_find_address(
 /* 0x0007b390: something of the network that the observer was given is told
 that an address of the game is no more. 0x003cd344, of the console's
 libraries */
-void unknown_0007b390(const struct transport_address *address, long unknown8);
+void network_message_gateway_flush_address(const struct transport_address *address, byte *gateway);
 long __attribute__((stdcall)) XNetUnregisterInAddr(unsigned long in_address);
 
 /* 0x000784a0: a channel of the observer has no address of the game any
 more. Its channel of the game, if it is past its second state, is told a
-number (unknown_00088650). And if it had an address: unknown_0007b390 is
+number (unknown_00088650). And if it had an address: network_message_gateway_flush_address is
 told; with a byte, the session that the address was of is one that failed;
 the console's libraries let go of the address; and it is empty */
 void NETWORK_OBSERVER_CALLBACK network_observer_channel_forget_address(
@@ -1391,7 +1391,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_forget_address(
 	{
 		return;
 	}
-	unknown_0007b390(address, *(const long *)(observer+NETWORK_OBSERVER_UNKNOWN8_OFFSET));
+	network_message_gateway_flush_address(address, *(byte **)(observer+NETWORK_OBSERVER_UNKNOWN8_OFFSET));
 	if (failed)
 	{
 		long session_index= *(const long *)(channel+NETWORK_OBSERVER_CHANNEL_SESSION_OFFSET);

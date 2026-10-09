@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — El paquete de mensajes que no van por un canal
+
+Dos funciones en un archivo nuevo, `networking/network_message_gateway.c`, 158 bytes entre las dos. De 1380
+funciones se pasa a 1382, el 12,27 % de las del juego (el 8,163 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_message_gateway_flush` | `0x0007b330` | `networking/network_message_gateway.c` |
+| `network_message_gateway_flush_address` | `0x0007b390` | `networking/network_message_gateway.c` |
+
+### Lo que se sabe
+
+- Empieza otro módulo, el que está justo antes del de los intentos del
+  hito 393 (`0x0007afd0` a `0x0007b3d2`): **lo que manda los mensajes que
+  no van por un canal**, los que el observador y las sesiones mandan
+  directamente a una dirección (`unknown_0007b140`, que aún falta). Es la
+  «cosa de la red que el observador recibe» y guarda en `0x8`.
+- Junta en **un solo paquete** los mensajes para una misma dirección:
+  tiene si hay un paquete sin mandar (`0x14`), para qué dirección
+  (`0x618`) y lo que lo va escribiendo bit a bit (`0x62C`, un
+  `bitstream` del hito 10).
+  - `network_message_gateway_flush` **manda el paquete pendiente**:
+    escribe un bit más para cerrarlo, calcula cuántos bytes ocupa
+    (redondeando al múltiplo que el `bitstream` pide) y lo manda
+    (`unknown_00093100`, nueva).
+  - `network_message_gateway_flush_address` lo manda solo si es para una
+    dirección dada. El observador la llama cuando un canal se queda sin
+    dirección (hito 384): antes de soltarla, sale lo que hubiera
+    pendiente para ella.
+- El nombre del archivo es una suposición: es el que Halo 3 da a lo que
+  hace este trabajo.
+
+### Comprobado rompiendo líneas
+
+- Trece líneas rotas, una cada vez: las pruebas fallaron en las trece.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_message_gateway` (2
+  funciones) y la del observador que la usa.
+- Quedan las dos grandes del módulo: recibir un paquete (`0x0007afd0`) y
+  añadir un mensaje (`0x0007b140`).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Los intentos de medir la conexión con otra consola
 
 Ocho funciones en un archivo nuevo, `networking/transport_qos.c`, 1109 bytes entre todas. De 1372

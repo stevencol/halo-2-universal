@@ -843,7 +843,7 @@ def run(t) -> None:
             globals={"unknown_004d87d4": Buffer(bytes(channels))},
             externals={
                 "unknown_00088650": told,
-                "unknown_0007b390": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                "network_message_gateway_flush_address": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
                 "transport_address_get_secure_in_address": secure,
                 "XNetUnregisterInAddr": lambda harness, arguments: (0, (arguments[0],)),
             },
