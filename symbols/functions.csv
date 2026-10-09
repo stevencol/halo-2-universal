@@ -1848,7 +1848,7 @@ address,name,source,arguments,returns,convention
 000619b0,unknown_000619b0,,eax edx ecx stack,bool,stdcall
 00061050,network_session_enter_state1,source/networking/network_session.c,edx stack stack stack stack,void,stdcall
 00059e50,network_session_join,source/networking/network_session.c,stack stack stack stack stack stack stack stack stack stack stack stack stack stack,bool,stdcall
-00076aa0,unknown_00076aa0,,stack stack stack,int,stdcall
+00076aa0,network_observer_acquire_channel,source/networking/network_observer.c,stack stack stack,int,stdcall
 0005c720,network_session_host_accept_join,source/networking/network_session.c,stack stack stack stack stack stack stack stack stack,bool,stdcall
 000630f0,network_session_host_answer_join,source/networking/network_session.c,eax esi stack stack,bool,stdcall
 00063080,network_session_host_join_requested,source/networking/network_session.c,eax ebx stack,bool,stdcall
@@ -1904,6 +1904,8 @@ address,name,source,arguments,returns,convention
 00079de0,network_observer_channel_raise_flow,source/networking/network_observer.c,edi stack stack,bool,stdcall
 00078210,network_observer_next_packet_rate,source/networking/network_observer.c,xmm3 stack stack,real:xmm0,stdcall
 0007a4a0,network_observer_update_voice_mode,source/networking/network_observer.c,eax,void
+00078900,network_observer_take_game_channels,source/networking/network_observer.c,stack,void,stdcall
+00082060,unknown_00082060,,stack stack,int,stdcall
 00092870,network_rate_new,source/networking/network_observer.c,eax ecx,void
 000929d0,network_window_reset,source/networking/network_observer.c,esi,void
 00079850,network_observer_channel_drop_flow,source/networking/network_observer.c,edi stack,void,stdcall

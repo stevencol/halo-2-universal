@@ -2887,7 +2887,7 @@ def run(t) -> None:
                     (harness.normalize(arguments[0]), harness.normalize(arguments[1]), harness.normalize(arguments[2]), arguments[3]),
                 ),
                 "transport_security_address_from_peer_address": has_address,
-                "unknown_00076aa0": lambda harness, arguments, channel=random_.choice((0, 1, 3, 3, NONE)): (
+                "network_observer_acquire_channel": lambda harness, arguments, channel=random_.choice((0, 1, 3, 3, NONE)): (
                     channel,
                     (arguments[0], arguments[1], harness.normalize(arguments[2])),
                 ),
@@ -2942,7 +2942,7 @@ def run(t) -> None:
             },
             externals={
                 "GetTickCount": lambda harness, arguments, now=now: now,
-                "unknown_00076aa0": lambda harness, arguments, channel=random_.choice((0, 1, 2, 3, 3, NONE)): (
+                "network_observer_acquire_channel": lambda harness, arguments, channel=random_.choice((0, 1, 2, 3, 3, NONE)): (
                     channel,
                     (arguments[0], arguments[1], bytes(harness.mu.mem_read(arguments[2], 0x24))),
                 ),
@@ -3472,7 +3472,7 @@ def run(t) -> None:
             globals=clock(),
             externals={
                 "GetTickCount": ticks(),
-                "unknown_00076aa0": channel_for,
+                "network_observer_acquire_channel": channel_for,
                 "network_session_peer_state_delete": lambda harness, arguments: (0, (arguments[0], arguments[1])),
                 "network_session_host_lost": then(),
                 "network_session_disconnect": then(),

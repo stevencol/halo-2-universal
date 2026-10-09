@@ -1410,3 +1410,81 @@ def run(t) -> None:
                 "unknown_004c987c": random_.randbytes(4),
             },
         )
+
+    # ---------- each channel takes a channel of the game
+
+    def taken(harness, arguments):
+        # the name is in the stack: what it says is what counts, and which channel is taken goes by it
+        name = bytes(harness.mu.mem_read(arguments[0], 0x100)).split(b"\0")[0]
+        which = sum(name) % 8
+        return (NONE if which > 5 else which), (name, arguments[1])
+
+    for n in range(300):
+        data = observer()
+        for channel in range(15):
+            # the address of the internet of its console
+            data[CHANNELS + channel * CHANNEL + 0x14 : CHANNELS + channel * CHANNEL + 0x18] = bytes(
+                random_.choice((0, 1, 9, 10, 127, 128, 192, 255)) for part in range(4)
+            )
+        t.check(
+            "network_observer_take_game_channels",
+            Buffer(bytes(data)),
+            globals={"unknown_004d87d4": Buffer(bytes(game_channels()))},
+            externals={
+                "unknown_00082060": taken,
+                "network_observer_channel_update_connection": with_channel_and_observer,
+                "network_observer_channel_update_game_channel": with_channel_and_observer,
+                "network_observer_channel_update_tries": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+            },
+        )
+
+    # ---------- the channel for a console
+
+    for n in range(1200):
+        setup = at_time()
+        data, pointers = with_owners()
+        # the fourth function of what each session has is the one that is told
+        struct.pack_into("<5I", data, SIZE + 16, 0x11, 0x22, 0x33, mock_address(0), 0x55)
+        data += bytearray(random_.randbytes(0x100))
+        parameters = SIZE + 36
+        struct.pack_into("<I", data, 0x10, parameters)
+        struct.pack_into("<ii", data, parameters + 0xF8, random_.choice((1000, 2000, 20, 19)), random_.choice((1, 16, 32)))
+        console = bytes(random_.choice((0, 1, 9, 10, 127, 128, 192, 255)) for part in range(4)) + random_.randbytes(0x20)
+        way = random_.randrange(5)
+        for channel in range(15):
+            at = CHANNELS + channel * CHANNEL
+            struct.pack_into("<I", data, at + 0x70, random_.choice((NONE, 5, 0)))
+            if way >= 2:
+                # all of them are in use
+                struct.pack_into("<I", data, at, random_.choice((1, 2, 7)))
+            if way == 3:
+                # and sessions use them all
+                data[at + 9] = random_.choice((1, 2, 0xF))
+            if way == 2:
+                data[at + 9] = random_.choice((0, 1, 1, 2, 0xF))
+        if way == 0 or (way == 4 and n % 2):
+            # one of them is of the console already, whether it is in use or not
+            at = CHANNELS + random_.randrange(15) * CHANNEL
+            data[at + 0x14 : at + 0x38] = console
+            if n % 7 == 0:
+                struct.pack_into("<I", data, at, 0)
+        elif way == 1:
+            # one of them is of a console that is the same but for its last byte
+            at = CHANNELS + random_.randrange(15) * CHANNEL
+            data[at + 0x14 : at + 0x38] = console[:0x23] + bytes((console[0x23] ^ 1,))
+            struct.pack_into("<I", data, at, 2)
+        t.check(
+            "network_observer_acquire_channel",
+            Buffer(bytes(data), pointers=pointers + (0x10,)),
+            random_.randrange(4),
+            Buffer(console),
+            globals=dict(setup["globals"], unknown_004d87d4=Buffer(bytes(game_channels()))),
+            externals=dict(
+                setup["externals"],
+                unknown_00082060=taken,
+                network_observer_channel_forget_address=noted,
+                unknown_000886e0=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                unknown_0007b650=lambda harness, arguments: (0, (arguments[0],)),
+            ),
+            mocks=[Mock(lambda call: 0, stack_arguments=3, registers=("ecx",))],
+        )

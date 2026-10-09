@@ -2825,3 +2825,176 @@ void network_observer_update_voice_mode(
 		unknown_004c987c= mode;
 	}
 }
+
+/* 0x00082060, of the channels of the game: one that is not in use is taken,
+with a name and a number; which, or NONE */
+long __attribute__((stdcall)) unknown_00082060(const char *name, long unknown);
+
+/* the four bytes of the address of the internet that what a channel of the
+observer has at 0x14 starts with, from the first on, as the number that the
+game writes them from */
+static inline __attribute__((always_inline)) unsigned long network_observer_channel_internet_address(
+	const byte *unknown14)
+{
+	unsigned long address= *(const unsigned long *)unknown14;
+
+	return (address>>24) | ((address>>8)&0xFF00) | ((address<<8)&0xFF0000) | (address<<24);
+}
+
+/* 0x00078900: each channel of the observer that is in use takes a channel
+of the game, named after the address of the internet of its console, which
+has the observer as its own; with none to take, it has none. And what is
+done with a channel each time is done with it now
+(network_observer_channel_update_connection,
+network_observer_channel_update_game_channel and
+network_observer_channel_update_tries). It is the other way of
+network_observer_release_game_channels */
+void NETWORK_OBSERVER_CALLBACK network_observer_take_game_channels(
+	byte *observer)
+{
+	long channel_index;
+
+	for (channel_index= 0; channel_index<MAXIMUM_NETWORK_OBSERVER_CHANNELS; channel_index++)
+	{
+		byte *channel= (byte *)network_observer_channel(observer, channel_index);
+
+		if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)!=0)
+		{
+			unsigned long address= network_observer_channel_internet_address(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN14_OFFSET);
+			char name[NETWORK_CHANNEL_NAME_SIZE];
+			long game_channel_index;
+
+			csnzprintf(name, sizeof(name), "%hd.%hd.%hd.%hd", address>>24, (address>>16)&0xFF, (address>>8)&0xFF,
+				address&0xFF);
+			game_channel_index= unknown_00082060(name, NETWORK_OBSERVER_GAME_CHANNEL_UNKNOWN);
+			*(long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET)= game_channel_index;
+			if (game_channel_index!=NONE)
+			{
+				*(byte **)(unknown_004d87d4+game_channel_index*NETWORK_CHANNEL_SIZE+NETWORK_CHANNEL_OBSERVER_OFFSET)= observer;
+			}
+			network_observer_channel_update_connection(channel_index, observer);
+			network_observer_channel_update_game_channel(channel_index, observer);
+			network_observer_channel_update_tries(observer, channel_index);
+		}
+	}
+}
+
+/* 0x00076aa0: the channel of the observer for a console, which a session
+uses from now on; NONE if there is none to give. It is the one that is in
+use with what the console is known by; if none is, the first that is not in
+use, and with all in use, the first that no session uses, which is no more
+(network_observer_channel_delete). A new one takes a channel of the game,
+named after the console's address of the internet and its address of the
+network card, which has the observer as its own (with none to take, there is
+no channel); it is in its second state, with no tries, no address and no
+sessions that failed; it has what the console is known by; and its two
+counts by spans of time and its two sets of last numbers start, as long as
+two numbers of what the observer has at 0x10 say. If the sessions were told
+that the channel has what its channel of the game is of, this one is too */
+long NETWORK_OBSERVER_CALLBACK network_observer_acquire_channel(
+	byte *observer,
+	long session_index,
+	const byte *unknown14)
+{
+	long channel_index= NONE;
+	long index;
+	byte *channel;
+
+	for (index= 0; index<MAXIMUM_NETWORK_OBSERVER_CHANNELS; index++)
+	{
+		channel= (byte *)network_observer_channel(observer, index);
+		if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)!=0 &&
+			memcmp(unknown14, channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN14_OFFSET, NETWORK_OBSERVER_CHANNEL_UNKNOWN14_SIZE)==0)
+		{
+			channel_index= index;
+			break;
+		}
+	}
+	if (channel_index==NONE)
+	{
+		const byte *parameters;
+		unsigned long address;
+		char name[NETWORK_CHANNEL_NAME_SIZE];
+		long game_channel_index;
+		long new_index= NONE;
+
+		for (index= 0; index<MAXIMUM_NETWORK_OBSERVER_CHANNELS; index++)
+		{
+			if (*(const long *)(network_observer_channel(observer, index)+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)==0)
+			{
+				new_index= index;
+				break;
+			}
+		}
+		if (new_index==NONE)
+		{
+			for (index= 0; index<MAXIMUM_NETWORK_OBSERVER_CHANNELS; index++)
+			{
+				channel= (byte *)network_observer_channel(observer, index);
+				if (*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)!=0 &&
+					!channel[NETWORK_OBSERVER_CHANNEL_SESSIONS_OFFSET])
+				{
+					new_index= index;
+					break;
+				}
+			}
+			if (new_index==NONE)
+			{
+				return NONE;
+			}
+			network_observer_channel_delete(new_index, observer);
+		}
+		channel= (byte *)network_observer_channel(observer, new_index);
+		address= network_observer_channel_internet_address(unknown14);
+		csnzprintf(name, sizeof(name), "%hd.%hd.%hd.%hd", address>>24, (address>>16)&0xFF, (address>>8)&0xFF,
+			address&0xFF);
+		csnzappendf(name, sizeof(name), "!MAC=%02X:%02X:%02X:%02X:%02X:%02X",
+			unknown14[NETWORK_OBSERVER_UNKNOWN14_ETHERNET_OFFSET], unknown14[NETWORK_OBSERVER_UNKNOWN14_ETHERNET_OFFSET+1],
+			unknown14[NETWORK_OBSERVER_UNKNOWN14_ETHERNET_OFFSET+2], unknown14[NETWORK_OBSERVER_UNKNOWN14_ETHERNET_OFFSET+3],
+			unknown14[NETWORK_OBSERVER_UNKNOWN14_ETHERNET_OFFSET+4], unknown14[NETWORK_OBSERVER_UNKNOWN14_ETHERNET_OFFSET+5]);
+		game_channel_index= unknown_00082060(name, NETWORK_OBSERVER_GAME_CHANNEL_UNKNOWN);
+		if (game_channel_index==NONE)
+		{
+			return NONE;
+		}
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET)= game_channel_index;
+		*(byte **)(unknown_004d87d4+game_channel_index*NETWORK_CHANNEL_SIZE+NETWORK_CHANNEL_OBSERVER_OFFSET)= observer;
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_OFFSET)= _network_observer_channel_state2;
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_STATE_TIME_OFFSET)= network_time_since(0);
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN10_OFFSET)= NONE;
+		memcpy(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN14_OFFSET, unknown14, NETWORK_OBSERVER_CHANNEL_UNKNOWN14_SIZE);
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN94_OFFSET)= network_time_since(0);
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_UNUSED_TIME_OFFSET)= 0;
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_WAITING_TIME_OFFSET)= 0;
+		parameters= *(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET);
+		network_rate_new((struct network_rate *)(channel+NETWORK_OBSERVER_CHANNEL_RATEA0_OFFSET),
+			*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_RATE_PERIOD_OFFSET));
+		network_rate_new((struct network_rate *)(channel+NETWORK_OBSERVER_CHANNEL_RATE_OFFSET),
+			*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_RATE_PERIOD_OFFSET));
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_WINDOW250_OFFSET)=
+			*(const long *)(parameters+NETWORK_OBSERVER_PARAMETERS_WINDOW_COUNT_OFFSET);
+		network_window_reset((struct network_window *)(channel+NETWORK_OBSERVER_CHANNEL_WINDOW250_OFFSET));
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_WINDOW360_OFFSET)=
+			*(const long *)(*(const byte **)(observer+NETWORK_OBSERVER_UNKNOWN10_OFFSET)+
+			NETWORK_OBSERVER_PARAMETERS_WINDOW_COUNT_OFFSET);
+		network_window_reset((struct network_window *)(channel+NETWORK_OBSERVER_CHANNEL_WINDOW360_OFFSET));
+		*(short *)(channel+NETWORK_OBSERVER_CHANNEL_TRIES_OFFSET)= 0;
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_FAILED_SESSIONS_OFFSET)= 0;
+		*(long *)(channel+NETWORK_OBSERVER_CHANNEL_SESSION_OFFSET)= NONE;
+		network_observer_channel_forget_address(new_index, observer, FALSE, 0);
+		channel_index= new_index;
+	}
+	channel= (byte *)network_observer_channel(observer, channel_index);
+	channel[NETWORK_OBSERVER_CHANNEL_SESSIONS_OFFSET]|= (byte)(1u<<(session_index&31));
+	if (channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN8_OFFSET]&_network_observer_channel_established_bit)
+	{
+		struct network_observer_session_owner *owner= *(struct network_observer_session_owner **)(observer+
+			NETWORK_OBSERVER_SESSIONS_OFFSET+session_index*NETWORK_OBSERVER_SESSION_SIZE+
+			NETWORK_OBSERVER_SESSION_SESSION_OFFSET);
+
+		owner->functions->channel_established(owner, channel_index,
+			*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_UNKNOWN10_OFFSET), TRUE);
+	}
+
+	return channel_index;
+}

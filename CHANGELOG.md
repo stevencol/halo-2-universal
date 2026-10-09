@@ -2,6 +2,57 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — El canal para una consola
+
+Dos funciones en `networking/network_observer.c`, 1344 bytes entre las dos. De 1370
+funciones se pasa a 1372, el 12,18 % de las del juego (el 8,121 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_acquire_channel` | `0x00076aa0` | `networking/network_observer.c` |
+| `network_observer_take_game_channels` | `0x00078900` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_observer_acquire_channel` era `unknown_00076aa0`, la que las
+  sesiones llaman (desde `network_session.c`) para pedir **el canal de una
+  consola**. Es donde nacen los canales del observador:
+  - Si ya hay un canal para esa consola, es ese.
+  - Si no, toma el primero libre; y si están los quince en uso, **echa al
+    primero que ninguna sesión usa**.
+  - El canal nuevo toma un canal del juego (`unknown_00082060`, nueva), al
+    que da un nombre hecho con la dirección de internet de la consola y
+    la de su tarjeta de red (por ejemplo `10.0.0.5!MAC=00:50:F2:01:02:03`). Si no queda
+    ninguno, no hay canal.
+  - Empieza en el segundo estado, sin intentos ni dirección, y con sus
+    cuentas en marcha.
+  - La sesión que lo pide queda apuntada como una de las que lo usan.
+- Por el nombre se sabe ya qué son los `0x24` bytes que el canal guarda en
+  `0x14`, «cómo se conoce a la consola»: su dirección de internet en los
+  cuatro primeros y la de su tarjeta de red en `0xA`. Es la forma del
+  `XNADDR` de las bibliotecas de la consola.
+- `network_observer_take_game_channels` es la contraria de la del hito
+  382: cada canal en uso **vuelve a tomar un canal del juego** (aquí el
+  nombre es solo la dirección de internet) y se hace con él lo de cada
+  vez.
+
+### Comprobado rompiendo líneas
+
+- Veinticuatro líneas rotas, una cada vez: las pruebas fallaron en
+  veintitrés. La otra faltaba en las pruebas (dar por la misma consola a
+  una que solo cambia en el último byte) y ahora falla.
+
+### Sin comprobar
+
+- En el juego, echar a un canal está escrito dentro de la función; aquí se
+  llama a `network_observer_channel_delete`, que hace lo mismo.
+- En este hito se pasaron las pruebas de `network_observer` (63 funciones)
+  y las de `network_life_cycle`, que la sustituyen por su nombre nuevo.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — El caudal de un canal sube, y el modo de la voz
 
 Tres funciones en `networking/network_observer.c`, 1729 bytes entre todas. De 1367

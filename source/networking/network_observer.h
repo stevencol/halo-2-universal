@@ -377,6 +377,20 @@ enum
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN150_OFFSET= 0x150,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN18C_OFFSET= 0x18C,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN190_OFFSET= 0x190,
+	/* of a channel of the game: the observer that it is of. How long the
+	name that it is taken with can be, and the number that the observer
+	takes it with */
+	NETWORK_CHANNEL_OBSERVER_OFFSET= 0x40,
+	NETWORK_CHANNEL_NAME_SIZE= 0x100,
+	NETWORK_OBSERVER_GAME_CHANNEL_UNKNOWN= 0x38,
+	/* what a console is known by, which a channel has at 0x14: how long it
+	is, and where the six bytes of its address of the network card are. And
+	of what the observer has at 0x10: how long the counts by spans of time
+	of a channel are for, and how many last numbers it keeps */
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN14_SIZE= 0x24,
+	NETWORK_OBSERVER_UNKNOWN14_ETHERNET_OFFSET= 0xA,
+	NETWORK_OBSERVER_PARAMETERS_RATE_PERIOD_OFFSET= 0xF8,
+	NETWORK_OBSERVER_PARAMETERS_WINDOW_COUNT_OFFSET= 0xFC,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
 	_unknown_00088650_unknown11= 0x11
 };
@@ -519,6 +533,9 @@ real NETWORK_OBSERVER_CALLBACK network_observer_next_packet_rate(real packet_rat
 boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_raise_flow(byte *observer, long channel_index,
 	boolean *unknown);
 void network_observer_update_voice_mode(const byte *observer);
+void NETWORK_OBSERVER_CALLBACK network_observer_take_game_channels(byte *observer);
+long NETWORK_OBSERVER_CALLBACK network_observer_acquire_channel(byte *observer, long session_index,
+	const byte *unknown14);
 void NETWORK_OBSERVER_CALLBACK network_observer_release_game_channels(byte *observer);
 boolean network_observer_channel_unknown_00077940(byte *observer, long channel_index);
 void network_observer_channel_reset_unknown4dc(long channel_index, byte *observer);

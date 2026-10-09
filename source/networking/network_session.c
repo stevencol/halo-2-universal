@@ -5702,7 +5702,7 @@ void NETWORK_SESSION_CALLBACK network_session_state9_update(
 /* 0x00076aa0, of network_observer.c: the channel that what a session was
 given when it was set up has, or gets, for a console that is known by
 something; NONE if it has none to give */
-long __attribute__((stdcall)) unknown_00076aa0(byte *unknown8, long index, const byte *peer_address);
+long __attribute__((stdcall)) network_observer_acquire_channel(byte *unknown8, long index, const byte *peer_address);
 
 /* 0x00075800: the session that the table of sessions has for the eight bytes
 that one is known by; 0 if none */
@@ -5813,7 +5813,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_join(
 				!(host_transport_address.address_size==sizeof(host_transport_address.address.ipv4) &&
 					host_transport_address.address.ipv4==NETWORK_SESSION_JOIN_LOOPBACK))
 			{
-				long channel_index= unknown_00076aa0(*(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+				long channel_index= network_observer_acquire_channel(*(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 					*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), host_address);
 
 				if (channel_index!=NONE)
@@ -5916,7 +5916,7 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_accept_join(
 		}
 		network_session_remove_peer(session, peer_index);
 	}
-	channel_index= unknown_00076aa0(*(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+	channel_index= network_observer_acquire_channel(*(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 		*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), peer_address);
 	if (channel_index==NONE)
 	{
@@ -7600,7 +7600,7 @@ static boolean network_session_membership_apply_update(
 			long channel_index;
 
 			memset(state, 0, sizeof(*state));
-			channel_index= unknown_00076aa0(*(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
+			channel_index= network_observer_acquire_channel(*(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET),
 				*(const long *)(session+NETWORK_SESSION_INDEX_OFFSET), peers+index*NETWORK_SESSION_PEER_SIZE);
 			if (channel_index==NONE)
 			{
