@@ -328,6 +328,28 @@ enum
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1D0_OFFSET= 0x1D0,
 	NETWORK_OBSERVER_PACKET_HEADER_BITS= 0x168,
 	NETWORK_OBSERVER_PAL_REFRESH_RATE= 50,
+	/* more of the flow of a channel: a number that it is told; one that
+	goes towards how long it is between the times that it is told; a flow
+	that is held, since when, and what its number of 0x4B0 was then; a
+	number that goes down each time that it is told; when it was last told;
+	and one more number. Of what the observer has at 0x10: what part of the
+	way the numbers go; what a flow is held for; and four numbers more */
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN4AC_OFFSET= 0x4AC,
+	NETWORK_OBSERVER_CHANNEL_HELD_FLOW_OFFSET= 0x4C0,
+	NETWORK_OBSERVER_CHANNEL_HELD_TIME_OFFSET= 0x4C4,
+	NETWORK_OBSERVER_CHANNEL_HELD_UNKNOWN4B0_OFFSET= 0x4C8,
+	NETWORK_OBSERVER_CHANNEL_HELD_BITS_PER_SECOND_OFFSET= 0x4CC,
+	NETWORK_OBSERVER_CHANNEL_HELD_UNKNOWN498_OFFSET= 0x4D0,
+	NETWORK_OBSERVER_CHANNEL_HELD_PACKET_RATE_OFFSET= 0x4D4,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN4D8_OFFSET= 0x4D8,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN4E4_OFFSET= 0x4E4,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN510_OFFSET= 0x510,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN170_OFFSET= 0x170,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN17C_OFFSET= 0x17C,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1B8_OFFSET= 0x1B8,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1BC_OFFSET= 0x1BC,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1EC_OFFSET= 0x1EC,
+	NETWORK_OBSERVER_PARAMETERS_UNKNOWN1F0_OFFSET= 0x1F0,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
 	_unknown_00088650_unknown11= 0x11
 };
@@ -449,6 +471,10 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_set_flow(long channel_in
 	long bits_per_second, long unknown498);
 void network_observer_channel_restore_flow(long channel_index, byte *observer);
 real network_observer_channel_unknown_0007a2a0(long channel_index, const byte *observer);
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_00079660(long unknown, long size, byte *observer,
+	long channel_index, long unknown96c);
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_update_flow(byte *observer, long channel_index);
+void NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_00079a10(long channel_index, byte *observer);
 void NETWORK_OBSERVER_CALLBACK network_observer_release_game_channels(byte *observer);
 boolean network_observer_channel_unknown_00077940(byte *observer, long channel_index);
 void network_observer_channel_reset_unknown4dc(long channel_index, byte *observer);

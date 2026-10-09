@@ -2,6 +2,60 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Lo que se hace con el caudal de un canal cada vez
+
+Tres funciones en `networking/network_observer.c`, 1160 bytes entre todas. De 1361
+funciones se pasa a 1364, el 12,11 % de las del juego (el 7,987 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_channel_unknown_00079660` | `0x00079660` | `networking/network_observer.c` |
+| `network_observer_channel_update_flow` | `0x0007a330` | `networking/network_observer.c` |
+| `network_observer_channel_unknown_00079a10` | `0x00079a10` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_observer_channel_update_flow` es **lo que se hace con el caudal
+  de un canal cada vez**, según el número de `0x4DC` (la fase):
+  - En la 0, cuando lleva un tiempo así y ya son bastantes los intervalos
+    seguidos con avisos (hito 385), pasa a la 1.
+  - En cualquier otra, tras un intervalo sin avisos vuelve a la 0.
+  - En la 2 pregunta cómo va el caudal (hito 385): si va bien, pasa a la
+    3; si regular, recupera el caudal guardado (hito 388); si mal, lo
+    cambia (`unknown_00079c00`, con un 1).
+  - En las demás, si no hay caudal retenido: si el número de `0x4B0` se
+    pasa, cuenta una vez más que algo ha ido bien (hito 381); si no,
+    prueba otra cosa (`unknown_00079de0`, nueva), que puede devolverlo a
+    la fase 0.
+- `network_observer_channel_unknown_00079660` es lo que el hito 377
+  llamaba «algo que se le dice al canal con un tamaño». Suma el tamaño a
+  los bytes del intervalo, y con el primer número que recibe lleva una
+  **media que se acerca poco a poco** (`0x4B0`), y otra del tiempo entre
+  una vez y la siguiente (`0x4B4`). Además se ve que un canal puede tener
+  **un caudal retenido** (`0x4C0` a `0x4D4`), distinto del guardado del
+  hito 388: se le devuelve cuando ha pasado un tiempo proporcional a esa
+  media.
+- `network_observer_channel_unknown_00079a10` busca, entre los canales en
+  uso, **el que más tiene de algo** (el mayor de sus números de `0x510` y
+  `0x514`), siempre que supere al canal que se da por un margen, y le
+  cambia el caudal (`unknown_00079c00`, con un 0). No lo hace más de una
+  vez cada cierto tiempo.
+
+### Comprobado rompiendo líneas
+
+- Veintiséis líneas rotas, una cada vez: las pruebas fallaron en las
+  veintiséis.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_observer` (55 funciones).
+- Quedan del caudal las que hacen cuentas con reales y redondeo
+  (`0x00079850`, `0x00079c00`, `0x00079de0`).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Cuántos paquetes por segundo manda un canal
 
 Cinco funciones en `networking/network_observer.c`, 586 bytes entre todas. De 1356

@@ -619,7 +619,7 @@ def run(t) -> None:
         things = bytearray(random_.randbytes(3 * 0x97C))
         setup["globals"]["unknown_004d87d4"] = Buffer(bytes(channels))
         setup["globals"]["unknown_004d87d8"] = Buffer(bytes(things))
-        setup["externals"]["unknown_00079660"] = lambda harness, arguments: (
+        setup["externals"]["network_observer_channel_unknown_00079660"] = lambda harness, arguments: (
             0,
             (arguments[0], arguments[1], harness.normalize(arguments[2]), arguments[3], arguments[4]),
         )
@@ -1152,4 +1152,99 @@ def run(t) -> None:
             Buffer(bytes(data), pointers=(0x10,)),
             globals=setup["globals"],
             externals=setup["externals"],
+        )
+
+    # ---------- a channel is told of something of a size, and what is done with its flow each time
+
+    for n in range(1000):
+        setup = at_time()
+        now = struct.unpack("<I", setup["globals"]["unknown_0051054c"])[0]
+        data = observer() + bytearray(random_.randbytes(0x180))
+        struct.pack_into("<I", data, 0x10, SIZE)
+        struct.pack_into("<i", data, SIZE + 0x170, random_.choice((0, 1, 2, 3)))
+        struct.pack_into("<i", data, SIZE + 0x17C, random_.choice((0, 1, 2, 10)))
+        channel = random_.randrange(15)
+        at = CHANNELS + channel * CHANNEL
+        struct.pack_into("<II", data, at + 0x4B0, random_.choice((0, 50, 100, random_.getrandbits(32))), random_.choice((0, 16, 1000, random_.getrandbits(32))))
+        data[at + 0x4C0] = random_.choice((0, 1, 1, 0x80))
+        struct.pack_into("<I", data, at + 0x4C4, (now - random_.choice((0, 99, 100, 101, 499, 500, 501, 1000, 5000))) & 0xFFFFFFFF)
+        struct.pack_into("<i", data, at + 0x4C8, random_.choice((0, 10, 50, 100, 500)))
+        struct.pack_into("<i", data, at + 0x4D8, random_.choice((0, 1, 5, -1)))
+        struct.pack_into("<I", data, at + 0x4E4, random_.choice((NONE, (now - random_.choice((0, 16, 1000))) & 0xFFFFFFFF)))
+        t.check(
+            "network_observer_channel_unknown_00079660",
+            random_.choice((0, 50, 100, 100, random_.getrandbits(32))),
+            random_.choice((0, 1, 1500, random_.getrandbits(32))),
+            Buffer(bytes(data), pointers=(0x10,)),
+            channel,
+            random_.getrandbits(32),
+            globals=setup["globals"],
+            externals=dict(setup["externals"], network_observer_channel_set_flow=flows),
+        )
+
+    for n in range(1500):
+        setup = at_time()
+        now = struct.unpack("<I", setup["globals"]["unknown_0051054c"])[0]
+        data = observer() + bytearray(random_.randbytes(0x1F4))
+        struct.pack_into("<I", data, 0x10, SIZE)
+        struct.pack_into("<II", data, SIZE + 0x1D4, random_.choice((0, 5, 30)), random_.choice((0, 7, 60)))
+        struct.pack_into("<ii", data, SIZE + 0x1EC, random_.choice((0, 3, 3)), random_.choice((1000, 1000, 0)))
+        channel = random_.randrange(15)
+        at = CHANNELS + channel * CHANNEL
+        data[at + 0x48E] = random_.choice((0, 0, 1, 0x80))
+        struct.pack_into("<II", data, at + 0x4B0, random_.choice((0, 10, 50, 100, 130, 0x7FFFFFFF, 0x80000000)), random_.choice((0, 5, 10, 50)))
+        data[at + 0x4C0] = random_.choice((0, 0, 0, 0, 1, 0x80))
+        struct.pack_into("<i", data, at + 0x4D8, random_.choice((0, 0, 0, 0, 1, -1)))
+        struct.pack_into("<I", data, at + 0x4DC, random_.choice((0, 0, 1, 1, 1, 2, 2, 3, 3)))
+        struct.pack_into("<I", data, at + 0x4E0, random_.choice((NONE, (now - random_.choice((0, 999, 1000, 1001, 5000))) & 0xFFFFFFFF)))
+        struct.pack_into("<I", data, at + 0x4F0, random_.choice((0, 10, 20, 45, 50, 100, 0x7FFFFFFF)))
+        struct.pack_into("<ii", data, at + 0x518, random_.choice((0, 2, 3, 4)), random_.choice((0, 0, 0, 1, -1)))
+
+        def tried(harness, arguments, was=random_.choice((0, 0, 1)), unknown=random_.choice((0, 1, 1, 0x80))):
+            # a byte goes where the third thing says, which is in the stack
+            harness.mu.mem_write(arguments[2], bytes((unknown,)))
+            return was, (harness.normalize(arguments[0]), arguments[1])
+
+        t.check(
+            "network_observer_channel_update_flow",
+            Buffer(bytes(data), pointers=(0x10,)),
+            channel,
+            globals=setup["globals"],
+            externals=dict(
+                setup["externals"],
+                network_observer_channel_reset_unknown4dc=with_channel_and_observer,
+                network_observer_channel_unknown_0007a1c0=lambda harness, arguments, how=random_.choice((0, 1, 2, 3)): (
+                    how,
+                    (harness.normalize(arguments[0]), arguments[1]),
+                ),
+                network_observer_channel_restore_flow=with_channel_and_observer,
+                network_observer_channel_unknown_0007a160=with_channel_and_observer,
+                unknown_00079c00=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2])),
+                unknown_00079de0=tried,
+            ),
+        )
+
+    # ---------- the channel that has the most of something has its flow changed
+
+    for n in range(800):
+        setup = at_time()
+        now = struct.unpack("<I", setup["globals"]["unknown_0051054c"])[0]
+        data = observer() + bytearray(random_.randbytes(0x1C0))
+        struct.pack_into("<I", data, 0x10, SIZE)
+        struct.pack_into("<ii", data, SIZE + 0x1B8, random_.choice((0, 5, 100)), random_.choice((1000, 1000, 0)))
+        struct.pack_into("<I", data, 0x4F34, random_.choice((NONE, (now - random_.choice((0, 999, 1000, 1001, 5000, NONE))) & 0xFFFFFFFF)))
+        for channel in range(15):
+            at = CHANNELS + channel * CHANNEL
+            data[at + 0x48C] = random_.choice((0, 1, 1, 0x80))
+            data[at + 0x48E] = random_.choice((0, 0, 1, 0x80))
+            struct.pack_into("<ii", data, at + 0x510, random_.choice((0, 5, 10, 50, 100, 105, 106, 1000, -1)), random_.choice((0, 5, 10, 50, 100, 105, 106)))
+        t.check(
+            "network_observer_channel_unknown_00079a10",
+            random_.randrange(15),
+            Buffer(bytes(data), pointers=(0x10,)),
+            globals=setup["globals"],
+            externals=dict(
+                setup["externals"],
+                unknown_00079c00=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2])),
+            ),
         )
