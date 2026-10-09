@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Leer de un paquete una cosa nueva y un cambio
+
+Tres funciones: dos en `networking/simulation_entity_database.c` y una en el archivo nuevo
+`networking/network_heap.c`, 1 144 bytes entre las tres. De 1469
+funciones se pasa a 1472, el 13,07 % de las del juego (el 8,780 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_entity_database_decode_creation` | `0x0008a6f0` | `networking/simulation_entity_database.c` |
+| `simulation_entity_database_decode_update` | `0x0008aac0` | `networking/simulation_entity_database.c` |
+| `network_heap_allocate_block` | `0x00096e90` | `networking/network_heap.c` |
+
+### Lo que se sabe
+
+- `simulation_entity_database_decode_creation` es el reverso de escribir
+  una cosa (hito 422): **lee de un paquete una cosa que hizo otra
+  consola**. Su clase en 5 bits; memoria para lo que se dijo al crearla,
+  que la clase lee; el estado, que la clase construye a partir de eso; y,
+  si un bit del paquete lo dice, el estado tal como viene. Contesta 0 si
+  fue bien, 2 si no hay memoria y 3 si lo leído no vale (una clase que no
+  existe, o bits que la clase no tiene).
+- `simulation_entity_database_decode_update` **lee un cambio de una cosa
+  que ya existe**: parte de una copia de cómo está aquí (o de lo que la
+  clase construye, si el paquete viene en su cuarto estado) y la clase
+  lee encima lo que ha cambiado.
+- Las dos dejan la memoria en una lista de trozos de 8 bytes (tamaño,
+  clase de trozo y dónde está) en vez de tocar la cosa: quien las llama
+  decide luego. Son los trozos que la función 3 de la tabla se quedaba en
+  el hito 423; ahora se ve de dónde salen.
+- `network_heap_allocate_block` es pedir memoria al montón de la red, en
+  el único sitio donde el juego no lo tiene escrito en línea.
+- De la tabla `0x00450d60` quedan solo las dos que hacen cuentas con
+  reales: `0x0008a460` y `0x0008a9c0`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las tres** y en las de los hitos 420 a
+  423.
+- En este hito se pasaron las pruebas de `simulation_entity_database`
+  (23 funciones, con la del montón).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Varias cosas de una vez, y siete funciones más de la tabla
 
 Ocho funciones en `networking/simulation_entity_database.c`. De 1461

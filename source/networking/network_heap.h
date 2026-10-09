@@ -46,6 +46,10 @@ struct network_heap
 /* 0x004d87f8 */
 extern struct network_heap *unknown_004d87f8;
 
+/* ---------- prototypes/NETWORK_HEAP.C */
+
+void *network_heap_allocate_block(long size);
+
 /* ---------- code */
 
 /* the heap of the network gives so much memory, or NULL; if it has none it

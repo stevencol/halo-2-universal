@@ -545,3 +545,169 @@ void simulation_entity_database_adopted(
 		}
 	}
 }
+
+/* 0x0008a6f0: a thing that another console made is read from a packet: its
+kind, in five bits; memory for what was said of it when it was made, which
+the kind reads by its fourteenth function, and for how it is, which the kind
+builds from that; and, if the kind has bits of what changes and a bit of the
+packet says so, how it is, which the kind reads by its sixteenth. The kind
+and the bits that were read are given, and the two pieces of memory are the
+next two of a list, which has two more. How it went: well; there is no
+memory (2); or what was read is not good (3), which is also what is said of
+a kind that there is not. With that the memory is taken back. It is the
+second function of what the things are of, which the table at 0x00450d60
+has, as the one below is, and Ghidra's list has it */
+long __attribute__((stdcall)) simulation_entity_database_decode_creation(
+	struct simulation_entity_database *database,
+	long unknown4,
+	long *type_index_out,
+	unsigned long *flags_out,
+	long unknown10,
+	long *block_count,
+	struct simulation_entity_block *blocks,
+	struct bitstream *stream)
+{
+	long type_index= (long)bitstream_read_integer(stream, SIMULATION_ENTITY_TYPE_BITS);
+	struct simulation_entity_type *type= database->types->types[type_index];
+	long result= _simulation_entity_read_bad;
+	void *creation_data= NULL;
+	void *state_data;
+	long creation_size;
+	long state_size;
+	unsigned long all;
+	unsigned long flags;
+
+	if (!type)
+	{
+		return _simulation_entity_read_bad;
+	}
+	creation_size= type->functions->creation_size(type);
+	state_size= type->functions->state_size(type);
+	if (creation_size>0)
+	{
+		creation_data= network_heap_allocate_block(creation_size);
+		if (!creation_data)
+		{
+			result= _simulation_entity_read_no_memory;
+		}
+	}
+	state_data= network_heap_allocate(state_size);
+	if (!state_data)
+	{
+		result= _simulation_entity_read_no_memory;
+	}
+	if (creation_size!=0 && !creation_data)
+	{
+		goto free_state;
+	}
+	if (!state_data)
+	{
+		goto free_creation;
+	}
+	if (creation_size>0)
+	{
+		memset(creation_data, 0, creation_size);
+	}
+	if (!type->functions->read_creation(type, creation_size, creation_data, stream) ||
+		!type->functions->build_state(type, creation_size, creation_data, state_size, state_data))
+	{
+		result= _simulation_entity_read_bad;
+		goto free_creation;
+	}
+	all= type->functions->state_flags(type);
+	flags= 0;
+	if (all!=0 && bitstream_read_bool(stream))
+	{
+		if (!type->functions->decode_state(type, TRUE, &flags, state_size, state_data, stream) || (flags&~all))
+		{
+			result= _simulation_entity_read_bad;
+			goto free_creation;
+		}
+	}
+	*type_index_out= type_index;
+	*flags_out= flags;
+	blocks[*block_count].type= _simulation_entity_block_creation;
+	blocks[*block_count].size= (short)creation_size;
+	blocks[*block_count].data= creation_data;
+	blocks[*block_count+1].type= _simulation_entity_block_state;
+	blocks[*block_count+1].size= (short)state_size;
+	blocks[*block_count+1].data= state_data;
+	*block_count+= 2;
+
+	return _simulation_entity_read_good;
+
+free_creation:
+	if (creation_data)
+	{
+		network_heap_free(creation_data);
+	}
+free_state:
+	if (state_data)
+	{
+		network_heap_free(state_data);
+	}
+
+	return result;
+}
+
+/* 0x0008aac0: how the thing of a number is now is read from a packet, into
+memory of the heap of the network: a copy of how it is here, or, in a stream
+that is in its fourth state, what its kind builds from what was said of it
+when it was made; and then what the kind reads, by its sixteenth function.
+The bits that were read are given, and the memory is the next of a list,
+which has one more. How it went: well, or not (3): there is no such thing,
+or no memory, or the kind says no; and then the memory is taken back. The
+seventh function of the table */
+long __attribute__((stdcall)) simulation_entity_database_decode_update(
+	struct simulation_entity_database *database,
+	long entity_index,
+	unsigned long *flags_out,
+	long unknownC,
+	long *block_count,
+	struct simulation_entity_block *blocks,
+	struct bitstream *stream)
+{
+	struct simulation_entity *entity= &database->entities[entity_index&REPLICATION_ENTITY_INDEX_MASK];
+	struct simulation_entity_type *type;
+	unsigned long flags= 0;
+	void *state_data;
+
+	if (entity_index==NONE || entity->entity_index!=entity_index)
+	{
+		return _simulation_entity_read_bad;
+	}
+	type= database->types->types[entity->type];
+	state_data= network_heap_allocate(entity->state_size);
+	if (!state_data)
+	{
+		return _simulation_entity_read_bad;
+	}
+	if (stream->unknownC==_simulation_entity_stream_from_creation)
+	{
+		memset(state_data, 0, entity->state_size);
+		if (!type->functions->build_state(type, entity->creation_size, entity->creation_data, entity->state_size,
+			state_data))
+		{
+			network_heap_free(state_data);
+
+			return _simulation_entity_read_bad;
+		}
+	}
+	else
+	{
+		memcpy(state_data, entity->state_data, entity->state_size);
+	}
+	if (!type->functions->decode_state(type, FALSE, &flags, entity->state_size, state_data, stream))
+	{
+		network_heap_free(state_data);
+
+		return _simulation_entity_read_bad;
+	}
+	*flags_out= flags;
+	blocks[*block_count].type= _simulation_entity_block_state;
+	blocks[*block_count].size= (short)entity->state_size;
+	blocks[*block_count].data= state_data;
+	(*block_count)++;
+
+	return _simulation_entity_read_good;
+}

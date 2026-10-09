@@ -2031,3 +2031,6 @@ address,name,source,arguments,returns,convention
 0008ad20,simulation_entity_database_deleted,source/networking/simulation_entity_database.c,ecx stack,void,stdcall
 0008ad30,simulation_entity_database_adopt,source/networking/simulation_entity_database.c,ecx stack,bool,stdcall
 0008ad70,simulation_entity_database_adopted,source/networking/simulation_entity_database.c,ecx,void
+0008a6f0,simulation_entity_database_decode_creation,source/networking/simulation_entity_database.c,ecx stack stack stack stack stack stack stack,int,stdcall
+0008aac0,simulation_entity_database_decode_update,source/networking/simulation_entity_database.c,ecx stack stack stack stack stack stack,int,stdcall
+00096e90,network_heap_allocate_block,source/networking/network_heap.c,edi,int

@@ -10,9 +10,13 @@ COUNT = 0x400
 ENTITY = 0x20
 # in one buffer: what the things are; the kinds that there are, four kinds and their functions; the heap of the
 # network, and what gives its memory with its functions
-DATABASE, TYPES, KINDS, KIND_TABLE, HEAP, ALLOCATOR, TABLE, END = 0x0, 0x8014, 0x8028, 0x8038, 0x80A0, 0x80A8, 0x80B0, 0x81E4
+DATABASE, TYPES, KINDS, KIND_TABLE, HEAP, ALLOCATOR, TABLE, END = 0x0, 0x8014, 0x8098, 0x80A8, 0x8110, 0x8118, 0x8120, 0x8454
 # and after them: how many times what gives the memory was asked, what it answers, and the memory that it gives
-ASKED, ANSWERS, GIVEN = 0x80DC, 0x80E0, 0x80E4
+ASKED, ANSWERS, GIVEN = 0x814C, 0x8150, 0x8154
+# how a thing is, to copy from; and the memory that is given every other time
+SOURCE, GIVEN2 = 0x8254, 0x8354
+# the kinds that a packet can say
+ALL_KINDS = 32
 KIND_COUNT = 4
 
 
@@ -31,8 +35,17 @@ def run(t) -> None:
             struct.pack_into("<I", data, TYPES + 4 + kind * 4, KINDS + kind * 4)
             struct.pack_into("<I", data, KINDS + kind * 4, KIND_TABLE)
             pointers += [TYPES + 4 + kind * 4, KINDS + kind * 4]
+        for kind in range(KIND_COUNT, ALL_KINDS):
+            # the rest of the kinds: there are some, which are the first ones again
+            if random_.random() < 0.6:
+                struct.pack_into("<I", data, TYPES + 4 + kind * 4, KINDS + (kind % KIND_COUNT) * 4)
+                pointers.append(TYPES + 4 + kind * 4)
+            else:
+                struct.pack_into("<I", data, TYPES + 4 + kind * 4, 0)
         struct.pack_into("<21I", data, KIND_TABLE, *(0x11 * (n + 1) for n in range(20)), mock_address(2))
         struct.pack_into("<5I", data, KIND_TABLE + 0x54, *(mock_address(n) for n in range(14, 19)))
+        struct.pack_into("<I", data, KIND_TABLE + 0x3C, mock_address(19))
+        struct.pack_into("<I", data, KIND_TABLE + 0x34, mock_address(20))
         struct.pack_into("<3I", data, KIND_TABLE + 8, mock_address(3), mock_address(4), mock_address(5))
         struct.pack_into("<2I", data, KIND_TABLE + 0x48, mock_address(6), mock_address(7))
         struct.pack_into("<I4B", data, ASKED, 0, *random_.choice(((1, 1, 1, 1), (1, 1, 1, 1), (0, 1, 0, 0), (0, 0, 1, 1), (0, 0, 0, 0))))
@@ -167,7 +180,7 @@ def run(t) -> None:
             base = call.registers["ecx"] - ALLOCATOR
             asked = struct.unpack("<I", mu.mem_read(base + ASKED, 4))[0]
             mu.mem_write(base + ASKED, struct.pack("<I", asked + 1))
-            return base + GIVEN if mu.mem_read(base + ANSWERS + (asked & 3), 1)[0] else 0
+            return base + (GIVEN, GIVEN2)[asked & 1] if mu.mem_read(base + ANSWERS + (asked & 3), 1)[0] else 0
 
         return [
             *heap_mocks(),
@@ -352,3 +365,81 @@ def run(t) -> None:
         )
     for n in range(60):
         t.check("simulation_entity_database_adopted", world(), mocks=table_mocks())
+
+    # ---------- a thing is read from a packet
+
+    def reading_mocks(sizes, all_flags: int, says: tuple, how: int) -> list:
+        made = table_mocks(sizes)
+
+        def decodes(call):
+            # the kind reads some bits: all that there are, one of them, none, or one that there is not
+            done = (all_flags, all_flags & 0x10, 0, all_flags ^ 0x100)[how]
+            t.harness.mu.mem_write(call.stack[1], struct.pack("<I", done))
+            return says[2]
+
+        def decodes_record(call):
+            # where the bits go is in the stack; the first is a byte
+            return call.registers["ecx"], call.stack[0] & 0xFF, bytes(t.harness.mu.mem_read(call.stack[1], 4)), *call.stack[2:]
+
+        made[7] = Mock(lambda call: says[1], stack_arguments=4, registers=("ecx",))
+        made[10] = Mock(lambda call: all_flags, stack_arguments=0, registers=("ecx",))
+        return [
+            *made,
+            Mock(decodes, stack_arguments=5, registers=("ecx",), record=decodes_record),
+            Mock(lambda call: says[0], stack_arguments=3, registers=("ecx",)),
+        ]
+
+    def a_stream(state: int) -> Buffer:
+        size = random_.choice((1, 8, 8))
+        header = struct.pack("<I4iB3x7i", 0x34, size, 1, state, random_.choice((0, 0, 3, size * 8 - 5, size * 8)), 0, *(random_.getrandbits(8) for n in range(7)))
+        return Buffer(header + random_.randbytes(size) + random_.randbytes(8), pointers=(0,))
+
+    for n in range(700):
+        sizes = (random_.choice((0, 1, 0x40, 0x100)), random_.choice((0, 0, NONE, 5, 0x100)))
+        says = tuple(random_.choice((1, 1, 1, 1, 0, 0x100)) for value in range(3))
+        mocks = reading_mocks(sizes, random_.choice((0, 0xFF, 0xFF, 0x1F0, NONE)), says, random_.choice((0, 0, 1, 2, 3)))
+        data = world()
+        t.check(
+            "simulation_entity_database_decode_creation",
+            data,
+            random_.getrandbits(32),
+            Buffer(random_.randbytes(4)),
+            Buffer(random_.randbytes(4)),
+            random_.getrandbits(32),
+            Buffer(struct.pack("<i", random_.choice((0, 1, 2)))),
+            Buffer(random_.randbytes(0x28)),
+            a_stream(3),
+            globals={"unknown_004d87f8": Pointer(data, HEAP)},
+            mocks=mocks,
+        )
+        # a thing that there is, mostly, with how it is in a place
+        raw = bytearray(data.data)
+        place = 0x14 + random_.randrange(COUNT) * ENTITY
+        entity = (place - 0x14) // ENTITY | random_.getrandbits(4) << 28
+        there = random_.choice((entity, entity, entity, entity ^ 0x10000000, NONE))
+        struct.pack_into("<I", raw, place, there)
+        struct.pack_into("<II", raw, place + 0x18, random_.choice((0, 1, 3, 0x40, 0x100)), SOURCE)
+        t.check(
+            "simulation_entity_database_decode_update",
+            Buffer(bytes(raw), pointers=(*data.pointers, place + 0x1C)),
+            random_.choice((entity, entity, entity, NONE)),
+            Buffer(random_.randbytes(4)),
+            random_.getrandbits(32),
+            Buffer(struct.pack("<i", random_.choice((0, 1, 2)))),
+            Buffer(random_.randbytes(0x20)),
+            a_stream(random_.choice((4, 4, 3, 1))),
+            globals={"unknown_004d87f8": Pointer(data, HEAP)},
+            mocks=mocks,
+        )
+
+    # ---------- the heap gives memory
+
+    for n in range(100):
+        data = world()
+        t.check(
+            "network_heap_allocate_block",
+            random_.choice((0, 1, 0x40, 0x100)),
+            extra=[data],
+            globals={"unknown_004d87f8": Pointer(data, HEAP)},
+            mocks=table_mocks(),
+        )

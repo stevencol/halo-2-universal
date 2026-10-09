@@ -23,7 +23,19 @@ enum
 	/* the most that how a thing is can be, in bytes */
 	MAXIMUM_SIMULATION_ENTITY_STATE_SIZE= 0x400,
 	/* the bits that the kind of a thing is written in */
-	SIMULATION_ENTITY_TYPE_BITS= 5
+	SIMULATION_ENTITY_TYPE_BITS= 5,
+	/* what reading a thing from a packet can say: it went well, there is no
+	memory, or what was read is not good */
+	_simulation_entity_read_good= 0,
+	_simulation_entity_read_no_memory= 2,
+	_simulation_entity_read_bad= 3,
+	/* the kinds of memory that come with a thing: what was said of it when
+	it was made, and how it is */
+	_simulation_entity_block_creation= 0xC,
+	_simulation_entity_block_state= 0xD,
+	/* the state of a stream in which how a thing is is read from nothing,
+	and not from how the thing is here */
+	_simulation_entity_stream_from_creation= 4
 };
 
 /* ---------- structures */
@@ -53,8 +65,9 @@ the sizes of how a thing of the kind is and of what is said of it when it is
 made, and the fifth how many bits of what changes it has; the sixth, those
 bits, all of them. The eleventh does something with a thing and three
 numbers. The thirteenth writes in a packet what is said of a thing when it is
-made, and the fifteenth writes or reads how it is, for some bits, and says
-which it did. The nineteenth is
+made, and the fourteenth reads it; the fifteenth writes or reads how it is,
+for some bits, and says which it did, and the sixteenth reads it into memory
+that it is given. The nineteenth is
 told that a thing is there, with what was said of it when it was made; the
 twentieth builds how it is from that; and the twenty-first is asked what of a
 thing is to be told of, from the bits of what changed. The twenty-second is
@@ -78,14 +91,17 @@ struct simulation_entity_type_functions
 	void *unknown2C;
 	void (__attribute__((thiscall)) *write_creation)(struct simulation_entity_type *type, long creation_size,
 		void *creation_data, long unknown, struct bitstream *stream);
-	void *unknown34;
+	boolean (__attribute__((thiscall)) *read_creation)(struct simulation_entity_type *type, long creation_size,
+		void *creation_data, struct bitstream *stream);
 	boolean (__attribute__((thiscall)) *encode_state)(struct simulation_entity_type *type, boolean write,
 		unsigned long flags, unsigned long *done, long state_size, void *state_data, long unknown,
 		struct bitstream *stream, long unknown2);
-	void *unknown3C[3];
+	boolean (__attribute__((thiscall)) *decode_state)(struct simulation_entity_type *type, boolean creation,
+		unsigned long *flags, long state_size, void *state_data, struct bitstream *stream);
+	void *unknown40[2];
 	void (__attribute__((thiscall)) *created)(struct simulation_entity_type *type, struct simulation_entity *entity,
 		long creation_size, void *creation_data);
-	void (__attribute__((thiscall)) *build_state)(struct simulation_entity_type *type, long creation_size,
+	boolean (__attribute__((thiscall)) *build_state)(struct simulation_entity_type *type, long creation_size,
 		void *creation_data, long state_size, void *state_data);
 	boolean (__attribute__((thiscall)) *get_update)(struct simulation_entity_type *type,
 		struct simulation_entity *entity, unsigned long *flags, long state_size, void *state_data);
@@ -113,6 +129,15 @@ struct simulation_entity_creation
 	void *creation_data;
 	short state_size;
 	void *state_data;
+};
+
+/* memory of the heap of the network that comes with a thing: its size,
+its kind, and where it is */
+struct simulation_entity_block
+{
+	short size;
+	short type;
+	void *data;
 };
 
 /* how a thing is, as it came: something, and where it is */
@@ -175,6 +200,12 @@ void __attribute__((stdcall)) simulation_entity_database_deleted(struct simulati
 boolean __attribute__((stdcall)) simulation_entity_database_adopt(struct simulation_entity_database *database,
 	long entity_index);
 void simulation_entity_database_adopted(struct simulation_entity_database *database);
+long __attribute__((stdcall)) simulation_entity_database_decode_creation(struct simulation_entity_database *database,
+	long unknown4, long *type_index, unsigned long *flags, long unknown10, long *block_count,
+	struct simulation_entity_block *blocks, struct bitstream *stream);
+long __attribute__((stdcall)) simulation_entity_database_decode_update(struct simulation_entity_database *database,
+	long entity_index, unsigned long *flags, long unknownC, long *block_count, struct simulation_entity_block *blocks,
+	struct bitstream *stream);
 void simulation_entity_database_activate_entity(long entity_index, struct simulation_entity_database *database);
 unsigned long __attribute__((stdcall)) simulation_entity_database_get_initial_update(
 	struct simulation_entity_database *database, long entity_index);
