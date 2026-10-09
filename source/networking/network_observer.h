@@ -192,6 +192,12 @@ enum
 	NETWORK_OBSERVER_CHANNEL_UNKNOWN4BC_OFFSET= 0x4BC,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN174_OFFSET= 0x174,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN178_OFFSET= 0x178,
+	/* more of a channel: two numbers of bytes that are counted since the
+	time of 0x4F38 of the observer; and what turns bytes in so many
+	milliseconds into bits a second */
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN4A4_OFFSET= 0x4A4,
+	NETWORK_OBSERVER_CHANNEL_UNKNOWN4A8_OFFSET= 0x4A8,
+	NETWORK_OBSERVER_BITS_PER_BYTE_MILLISECOND= 8000,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
 	_unknown_00088650_unknown11= 0x11
 };
@@ -279,6 +285,8 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_set_pending(long channel
 boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_alive(long channel_index, const byte *observer);
 long network_observer_channel_connect_status(const byte *observer, long channel_index);
 long network_unknown_00075910(const byte *unknown);
+long network_observer_channel_unknown4a8_bits_per_second(long channel_index, const byte *observer);
+long network_observer_channel_unknown4a4_bits_per_second(long channel_index, const byte *observer);
 void NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_000797b0(byte *observer, long channel_index,
 	long unknown);
 void network_rate_update(struct network_rate *rate);

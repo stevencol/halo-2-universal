@@ -667,3 +667,16 @@ def run(t) -> None:
             random_.choice((0, 0, 1, 0x100, 0x80)),
             externals={"unknown_00079850": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1]))},
         )
+
+    # ---------- how many bits a second a channel does
+
+    for name in ("network_observer_channel_unknown4a8_bits_per_second", "network_observer_channel_unknown4a4_bits_per_second"):
+        for n in range(300):
+            setup = at_time()
+            now = struct.unpack("<I", setup["globals"]["unknown_0051054c"])[0]
+            data = observer()
+            struct.pack_into("<I", data, 0x4F38, (now - random_.choice((0, 1, 7, 1000, 30001, 0x7FFFFFFF, 0x80000000, NONE))) & 0xFFFFFFFF)
+            channel = random_.randrange(15)
+            for at in (0x4A4, 0x4A8):
+                struct.pack_into("<I", data, CHANNELS + channel * CHANNEL + at, random_.choice((0, 1, 1500, 268435, 268436, 0x10000000, random_.getrandbits(32))))
+            t.check(name, channel, Buffer(bytes(data)), globals=setup["globals"], externals=setup["externals"])

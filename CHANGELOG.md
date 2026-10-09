@@ -2,6 +2,39 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Cuántos bits por segundo lleva un canal
+
+Dos funciones en `networking/network_observer.c`, 156 bytes entre las dos. De 1340
+funciones se pasa a 1342, el 11,91 % de las del juego (el 7,818 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_observer_channel_unknown4a8_bits_per_second` | `0x00079560` | `networking/network_observer.c` |
+| `network_observer_channel_unknown4a4_bits_per_second` | `0x000795b0` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- Son dos funciones gemelas: cada una toma un número de bytes de un canal
+  (el de `0x4A8` o el de `0x4A4`), lo multiplica por 8000 y lo divide por
+  los milisegundos que han pasado desde la hora de `0x4F38` del observador.
+  Bytes por 8 bits, por 1000 milisegundos: **son bits por segundo**.
+- Esto confirma lo que en los hitos 376 a 379 era una sospecha: esta parte
+  del observador **mide y limita el caudal** de cada conexión. Los números
+  de `0x4A4` y `0x4A8` son bytes contados en el intervalo que empezó en
+  `0x4F38`.
+
+### Comprobado rompiendo líneas
+
+- Tres líneas rotas, una cada vez: las pruebas fallaron en las tres.
+
+### Sin comprobar
+
+- En este hito se pasaron las pruebas de `network_observer` (33 funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Cuántas de las últimas cosas de un canal fallaron
 
 Una función en `networking/network_observer.c`, de 155 bytes. De 1339

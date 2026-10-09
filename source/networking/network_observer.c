@@ -1121,3 +1121,40 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_unknown_000797b0(
 		}
 	}
 }
+
+/* how many bits a second a number of bytes of a channel is, counted since
+the time of 0x4F38 of the observer; 0 if that time is not before now. The
+game multiplies as the processor does */
+static inline __attribute__((always_inline)) long network_observer_channel_bits_per_second(
+	const byte *observer,
+	long channel_index,
+	long offset)
+{
+	const byte *channel= network_observer_channel(observer, channel_index);
+	long elapsed= network_time_since(*(const long *)(observer+NETWORK_OBSERVER_UNKNOWN4F38_OFFSET));
+
+	if (elapsed<=0)
+	{
+		return 0;
+	}
+
+	return (long)(*(const unsigned long *)(channel+offset)*NETWORK_OBSERVER_BITS_PER_BYTE_MILLISECOND)/elapsed;
+}
+
+/* 0x00079560: how many bits a second the number of 0x4A8 of a channel of the
+observer is */
+long network_observer_channel_unknown4a8_bits_per_second(
+	long channel_index,
+	const byte *observer)
+{
+	return network_observer_channel_bits_per_second(observer, channel_index, NETWORK_OBSERVER_CHANNEL_UNKNOWN4A8_OFFSET);
+}
+
+/* 0x000795b0: how many bits a second the number of 0x4A4 of a channel of the
+observer is */
+long network_observer_channel_unknown4a4_bits_per_second(
+	long channel_index,
+	const byte *observer)
+{
+	return network_observer_channel_bits_per_second(observer, channel_index, NETWORK_OBSERVER_CHANNEL_UNKNOWN4A4_OFFSET);
+}
