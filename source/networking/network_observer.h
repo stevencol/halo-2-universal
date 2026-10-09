@@ -173,6 +173,16 @@ enum
 	NETWORK_OBSERVER_UNKNOWN4E04_UNIT= 1024,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN134_OFFSET= 0x134,
 	NETWORK_OBSERVER_PARAMETERS_UNKNOWN138_OFFSET= 0x138,
+	/* more of a channel: the count of what comes or goes by it. And of a
+	channel of the game: a byte with bits, and which of the things of 0x97C
+	bytes of unknown_004d87d8 is its own, which has a number at 0x96C */
+	NETWORK_OBSERVER_CHANNEL_RATE_OFFSET= 0x178,
+	MAXIMUM_NETWORK_RATE_SPANS= 20,
+	NETWORK_CHANNEL_UNKNOWN48_OFFSET= 0x48,
+	_network_channel_unknown48_bit8= 0x8,
+	NETWORK_CHANNEL_UNKNOWN10_OFFSET= 0x10,
+	NETWORK_CHANNEL_UNKNOWN10_SIZE= 0x97C,
+	NETWORK_CHANNEL_UNKNOWN10_UNKNOWN96C_OFFSET= 0x96C,
 	/* what network_observer_channel_unknown_00075e40 gives unknown_00088650 */
 	_unknown_00088650_unknown11= 0x11
 };
@@ -208,6 +218,35 @@ struct network_observer_probe
 
 typedef char verify_network_observer_probe_size[sizeof(struct network_observer_probe) == 0x3C ? 1 : -1];
 
+/* the count of something by spans of time: how many there have been and of
+what size in all; when the span of now started, and how many and of what
+size there are in it; how long a span is; and the last twenty spans, with
+the sums of them */
+struct network_rate_span
+{
+	unsigned long count;
+	unsigned long size;
+};
+
+struct network_rate
+{
+	unsigned long long total_count;
+	long long total_size;
+	unsigned long start;
+	unsigned long count;
+	unsigned long size;
+	long unknown1C;
+	unsigned long span;
+	long unknown24;
+	long index;
+	struct network_rate_span spans[MAXIMUM_NETWORK_RATE_SPANS];
+	unsigned long spans_count;
+	unsigned long spans_size;
+};
+
+typedef char verify_network_rate_size[sizeof(struct network_rate) == 0xD4 || sizeof(struct network_rate) == 0xD8 ? 1 : -1];
+typedef char verify_network_rate_spans_count_offset[offsetof(struct network_rate, spans_count) == 0xCC ? 1 : -1];
+
 /* a function that takes its arguments off the stack */
 #define NETWORK_OBSERVER_CALLBACK __attribute__((stdcall))
 
@@ -230,6 +269,9 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_set_pending(long channel
 boolean NETWORK_OBSERVER_CALLBACK network_observer_channel_alive(long channel_index, const byte *observer);
 long network_observer_channel_connect_status(const byte *observer, long channel_index);
 long network_unknown_00075910(const byte *unknown);
+void network_rate_update(struct network_rate *rate);
+void NETWORK_OBSERVER_CALLBACK network_observer_unknown_00076720(byte *observer, long game_channel_index, long size,
+	long unknown);
 void network_observer_reset_unknown4e08(byte *observer);
 void network_observer_channel_update_probe(long channel_index, byte *observer);
 boolean network_observer_channel_unused_expired(long channel_index, byte *observer, long unknown);
@@ -251,5 +293,6 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_send(boolean out_of_band
 
 extern byte *unknown_004d87d4;
 extern byte *unknown_004d87dc;
+extern byte *unknown_004d87d8;
 
 #endif

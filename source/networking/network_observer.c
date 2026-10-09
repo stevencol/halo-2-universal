@@ -949,3 +949,91 @@ void network_observer_reset_unknown4e08(
 		}
 	}
 }
+
+/* 0x00079660: something more that is done with a channel of the observer
+whose byte of 0x48C is set, when something of a size is told of it */
+void __attribute__((stdcall)) unknown_00079660(long unknown, long size, byte *observer, long channel_index,
+	long unknown96c);
+
+/* 0x004d87d8: things of 0x97C bytes, one for each of what the channels of
+the game say at 0x10 */
+byte *unknown_004d87d8;
+
+/* 0x000928e0: how many of something, and of what size in all, there were in
+each of the last twenty spans of time: when a span is over, what was counted
+in it takes the place of the oldest, the sums of the twenty have it and not
+that one, and the next span starts. After more than twenty spans with
+nothing asked, all of it starts over. The game has it far from the functions
+of the observer */
+void network_rate_update(
+	struct network_rate *rate)
+{
+	unsigned long now= (unsigned long)network_time_since(0);
+
+	if (rate->start==0)
+	{
+		rate->start= now;
+	}
+	if (now<rate->span+rate->start)
+	{
+		return;
+	}
+	if ((long)((now-rate->start)/rate->span)>MAXIMUM_NETWORK_RATE_SPANS)
+	{
+		rate->spans_count= 0;
+		rate->spans_size= 0;
+		memset(rate->spans, 0, sizeof(rate->spans));
+		rate->start= now;
+
+		return;
+	}
+	do
+	{
+		struct network_rate_span *oldest= rate->spans+rate->index;
+
+		rate->spans_count= rate->spans_count-oldest->count+rate->count;
+		rate->spans_size= rate->spans_size-oldest->size+rate->size;
+		oldest->count= rate->count;
+		oldest->size= rate->size;
+		rate->index= (rate->index+1)%MAXIMUM_NETWORK_RATE_SPANS;
+		rate->count= 0;
+		rate->size= 0;
+		rate->start+= rate->span;
+	} while (now>=rate->span+rate->start);
+}
+
+/* 0x00076720: the observer is told that something of a size came or went by
+a channel of the game: the channel of the observer that it is counts it, in
+all and in the span of now (network_rate_update); and with its byte of
+0x48C, unknown_00079660 is told, with a number that the channel of the game
+has for it if it is in its fifth state with the bit 8 of its byte of 0x48 */
+void NETWORK_OBSERVER_CALLBACK network_observer_unknown_00076720(
+	byte *observer,
+	long game_channel_index,
+	long size,
+	long unknown)
+{
+	long channel_index= network_observer_find_game_channel(observer, game_channel_index);
+	byte *channel= (byte *)network_observer_channel(observer, channel_index);
+	const byte *game_channel= unknown_004d87d4+
+		*(const long *)(channel+NETWORK_OBSERVER_CHANNEL_CHANNEL_OFFSET)*NETWORK_CHANNEL_SIZE;
+	struct network_rate *rate= (struct network_rate *)(channel+NETWORK_OBSERVER_CHANNEL_RATE_OFFSET);
+
+	network_rate_update(rate);
+	rate->total_count++;
+	rate->total_size+= size;
+	rate->count++;
+	rate->size+= (unsigned long)size;
+	if (channel[NETWORK_OBSERVER_CHANNEL_UNKNOWN48C_OFFSET])
+	{
+		long unknown96c= 0;
+
+		if (*(const long *)(game_channel+NETWORK_CHANNEL_STATE_OFFSET)==_network_channel_state5 &&
+			(game_channel[NETWORK_CHANNEL_UNKNOWN48_OFFSET]&_network_channel_unknown48_bit8))
+		{
+			unknown96c= *(const long *)(unknown_004d87d8+*(const long *)(game_channel+NETWORK_CHANNEL_UNKNOWN10_OFFSET)*
+				NETWORK_CHANNEL_UNKNOWN10_SIZE+NETWORK_CHANNEL_UNKNOWN10_UNKNOWN96C_OFFSET);
+		}
+		unknown_00079660(unknown, size, observer, channel_index, unknown96c);
+	}
+}

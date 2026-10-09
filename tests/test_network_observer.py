@@ -580,3 +580,55 @@ def run(t) -> None:
             globals=setup["globals"],
             externals=setup["externals"],
         )
+
+    # ---------- the count of what comes and goes by a channel
+
+    def a_rate(now: int) -> bytearray:
+        rate = bytearray(random_.randbytes(0xD4))
+        span = random_.choice((1, 100, 1000, 1000))
+        ago = random_.choice((0, 1, span - 1, span, span + 1, 3 * span, 20 * span, 21 * span - 1, 21 * span, 50 * span))
+        struct.pack_into("<I", rate, 0x10, random_.choice((0, (now - ago) & 0xFFFFFFFF, (now - ago) & 0xFFFFFFFF)))
+        struct.pack_into("<I", rate, 0x20, span)
+        struct.pack_into("<I", rate, 0x28, random_.randrange(20))
+        return rate
+
+    for n in range(600):
+        setup = at_time()
+        now = struct.unpack("<I", setup["globals"]["unknown_0051054c"])[0]
+        t.check("network_rate_update", Buffer(bytes(a_rate(now))), globals=setup["globals"], externals=setup["externals"])
+
+    for n in range(500):
+        setup = at_time()
+        now = struct.unpack("<I", setup["globals"]["unknown_0051054c"])[0]
+        data = observer()
+        channel = random_.randrange(15)
+        game_channel = random_.randrange(6)
+        for other in range(15):
+            at = CHANNELS + other * CHANNEL
+            if struct.unpack_from("<I", data, at + 0xC)[0] == game_channel:
+                struct.pack_into("<I", data, at + 0xC, NONE)
+            data[at + 0x48C] = random_.choice((0, 1, 0x80))
+            data[at + 0x178 : at + 0x178 + 0xD4] = a_rate(now)
+        struct.pack_into("<I", data, CHANNELS + channel * CHANNEL, random_.choice((1, 3, 7)))
+        struct.pack_into("<I", data, CHANNELS + channel * CHANNEL + 0xC, game_channel)
+        struct.pack_into("<Q", data, CHANNELS + channel * CHANNEL + 0x178, random_.choice((0, 0xFFFFFFFF, random_.getrandbits(64))))
+        channels = game_channels()
+        for other in range(6):
+            channels[other * 0xF8 + 0x48] = random_.choice((0, 8, 8, 0xF7, 0xFF))
+            struct.pack_into("<I", channels, other * 0xF8 + 0x10, random_.randrange(3))
+        things = bytearray(random_.randbytes(3 * 0x97C))
+        setup["globals"]["unknown_004d87d4"] = Buffer(bytes(channels))
+        setup["globals"]["unknown_004d87d8"] = Buffer(bytes(things))
+        setup["externals"]["unknown_00079660"] = lambda harness, arguments: (
+            0,
+            (arguments[0], arguments[1], harness.normalize(arguments[2]), arguments[3], arguments[4]),
+        )
+        t.check(
+            "network_observer_unknown_00076720",
+            Buffer(bytes(data)),
+            game_channel,
+            random_.choice((0, 1, 100, 0x7FFFFFFF, NONE, 0x80000000)),
+            random_.getrandbits(32),
+            globals=setup["globals"],
+            externals=setup["externals"],
+        )

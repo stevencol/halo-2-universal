@@ -2,6 +2,50 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Cuánto pasa por un canal
+
+Dos funciones en `networking/network_observer.c`, 445 bytes entre las dos. De 1335
+funciones se pasa a 1337, el 11,87 % de las del juego (el 7,801 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_rate_update` | `0x000928e0` | `networking/network_observer.c` |
+| `network_observer_unknown_00076720` | `0x00076720` | `networking/network_observer.c` |
+
+### Lo que se sabe
+
+- `network_rate_update` lleva **la cuenta de algo por tramos de tiempo**
+  (`struct network_rate`, `0xD4` bytes): cuántas cosas y de qué tamaño en
+  total, cuántas en el tramo de ahora, y las de los últimos veinte tramos
+  con sus sumas. Cuando un tramo se acaba, lo contado en él ocupa el sitio
+  del más viejo. Si pasan más de veinte tramos sin que nadie pregunte,
+  empieza de cero. Con las sumas y la duración del tramo sale una media:
+  es **el medidor de tráfico**.
+- `network_observer_unknown_00076720`: al observador le dicen que algo de un
+  tamaño pasó por un canal del juego, y lo apunta en la cuenta del canal
+  que le corresponde (en su `0x178`): una cosa más, tantos bytes más, en el
+  total (64 bits) y en el tramo de ahora.
+- Con la del hito 372 son las dos maneras en que cada canal mide su
+  conexión: una por tramos de tiempo (esta) y otra por los últimos números
+  (aquella).
+- Como `network_window_add`, `network_rate_update` está en el ejecutable
+  lejos del observador (`0x000928e0`).
+
+### Comprobado rompiendo líneas
+
+- Seis líneas rotas, una cada vez: las pruebas fallaron en las seis.
+
+### Sin comprobar
+
+- Como la del hito 372, `network_observer_unknown_00076720` no mira si
+  encontró el canal; en las pruebas siempre lo hay.
+- En este hito se pasaron las pruebas de `network_observer` (28 funciones).
+- La batería completa del hito 371 sigue corriendo.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Las cuentas del observador empiezan de nuevo
 
 Una función en `networking/network_observer.c`, de 390 bytes. De 1334
