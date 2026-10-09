@@ -3805,3 +3805,124 @@ boolean NETWORK_SESSION_CALLBACK network_session_election_set_unknownBC(
 
 	return TRUE;
 }
+
+/* 0x0005c9e0: a console is taken out of a session: it is sent something of
+the kind 0xC in the second way, with what the session is known by, it goes
+out (network_session_remove_peer), and what the session has at 0x78A8 is
+told, with the two numbers that the console came in with. TRUE. But in the
+last three states it is not taken out, and FALSE: in the seventh
+network_session_unknown_00061950 is done for it, and in the eighth it gets
+its bit in what the session has from its state on */
+boolean network_session_remove_peer_with_message_c(
+	byte *session,
+	long peer_index)
+{
+	long state= network_session_state(session);
+	const byte *peer= session+NETWORK_SESSION_PEER_ARRAY_OFFSET+peer_index*NETWORK_SESSION_PEER_SIZE;
+	struct network_session_unknown78A8 *object;
+	byte identifier[NETWORK_SESSION_IDENTIFIER_SIZE];
+	long unknownF0[2];
+
+	if (state==_network_session_state7)
+	{
+		network_session_unknown_00061950(peer_index, session);
+
+		return FALSE;
+	}
+	if (state==_network_session_state6)
+	{
+		return FALSE;
+	}
+	if (state==_network_session_state8)
+	{
+		*(unsigned long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN14_OFFSET)|= 1u<<peer_index;
+
+		return FALSE;
+	}
+	unknownF0[0]= *(const long *)(peer+NETWORK_SESSION_PEER_UNKNOWNF0_OFFSET);
+	unknownF0[1]= *(const long *)(peer+NETWORK_SESSION_PEER_UNKNOWNF0_OFFSET+sizeof(long));
+	memcpy(identifier, session+NETWORK_SESSION_IDENTIFIER_OFFSET, sizeof(identifier));
+	unknown_00075e80(TRUE,
+		((const struct network_session_peer_state *)(session+NETWORK_SESSION_UNKNOWN72DC_OFFSET)+peer_index)->unknown4,
+		*(byte **)(session+NETWORK_SESSION_UNKNOWN8_OFFSET), *(const long *)(session+NETWORK_SESSION_INDEX_OFFSET),
+		_network_session_message_unknownC, sizeof(identifier), identifier);
+	network_session_remove_peer(session, peer_index);
+	object= *(struct network_session_unknown78A8 **)(session+NETWORK_SESSION_UNKNOWN78A8_OFFSET);
+	if (object)
+	{
+		object->functions->peer_removed(object, unknownF0);
+	}
+
+	return TRUE;
+}
+
+/* 0x0005cac0: what has changed of what a session knows of a console is put
+in it: each part whose byte says that it has. It is what
+network_session_peer_properties_get_update makes, the other way round */
+void NETWORK_SESSION_CALLBACK network_session_peer_properties_apply_update(
+	struct network_session_peer_properties *properties,
+	const struct network_session_peer_properties_update *update)
+{
+	if (update->has_texts)
+	{
+		wcsncpy(properties->unknown0, update->unknown0, NETWORK_SESSION_PEER_UNKNOWN28_LENGTH-1);
+		properties->unknown0[NETWORK_SESSION_PEER_UNKNOWN28_LENGTH-1]= 0;
+		wcsncpy(properties->unknown20, update->unknown20, NETWORK_SESSION_PEER_UNKNOWN48_LENGTH-1);
+		properties->unknown20[NETWORK_SESSION_PEER_UNKNOWN48_LENGTH-1]= 0;
+	}
+	if (update->has_unknown60)
+	{
+		properties->unknown60= update->unknown60;
+		properties->unknown64= update->unknown64;
+	}
+	if (update->has_unknown68)
+	{
+		properties->unknown68= update->unknown68;
+		properties->unknown6C= update->unknown6C;
+		properties->unknown70= update->unknown70;
+		memcpy(properties->unknown74, update->unknown74, sizeof(properties->unknown74));
+	}
+	if (update->has_unknown84)
+	{
+		memcpy(properties->unknown84, update->unknown84, sizeof(properties->unknown84));
+	}
+	if (update->has_unknownC4)
+	{
+		properties->unknownC4= update->unknownC4;
+	}
+}
+
+/* 0x0005e340: in the seventh state, with the byte of what the session has
+from its state on at 0x10, something comes from a console that is neither
+this one nor the one at 0x40: if it says the console that the session has
+there, by which it is and by what it is known by, the console that sent it
+gets its bit at 0x18. Whether it did */
+boolean NETWORK_SESSION_CALLBACK network_session_unknown_0005e340(
+	byte *session,
+	long channel,
+	const byte *message)
+{
+	if (network_session_state(session)==_network_session_state7 && session[NETWORK_SESSION_STATE_DATA_UNKNOWN10_OFFSET])
+	{
+		long peer_index= network_session_channel_peer(session, channel);
+
+		if (peer_index!=NONE && peer_index!=*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET) &&
+			peer_index!=*(const long *)(session+NETWORK_SESSION_UNKNOWN40_OFFSET))
+		{
+			long said= *(const short *)(message+NETWORK_SESSION_MESSAGE_PEER_INDEX_OFFSET);
+
+			if (said>=0 && said<*(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET) &&
+				said==*(const long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWNC_OFFSET) &&
+				memcmp(message+NETWORK_SESSION_MESSAGE_PEER_ADDRESS_OFFSET,
+					session+NETWORK_SESSION_PEER_ARRAY_OFFSET+said*NETWORK_SESSION_PEER_SIZE,
+					NETWORK_SESSION_ADDRESS_SIZE)==0)
+			{
+				*(unsigned long *)(session+NETWORK_SESSION_STATE_DATA_UNKNOWN18_OFFSET)|= 1u<<peer_index;
+
+				return TRUE;
+			}
+		}
+	}
+
+	return FALSE;
+}

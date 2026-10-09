@@ -274,6 +274,16 @@ enum
 	NETWORK_SESSION_UNKNOWN49B8_OFFSET= 0x49B8,
 	NETWORK_SESSION_UNKNOWN49B8_SIZE= 0xC,
 	NETWORK_SESSION_PEER_UNKNOWN94_OFFSET= 0x94,
+	/* what a console is sent when the session takes it out in another way:
+	of this kind, with what the session is known by */
+	_network_session_message_unknownC= 0xC,
+	/* in the seventh state, what the session has from its state on: a bit
+	for each console at 0x14 (in the eighth) and at 0x18; and in what comes
+	from a console then, what a console is known by and which it is */
+	NETWORK_SESSION_STATE_DATA_UNKNOWN14_OFFSET= 0x7434,
+	NETWORK_SESSION_STATE_DATA_UNKNOWN18_OFFSET= 0x7438,
+	NETWORK_SESSION_MESSAGE_PEER_ADDRESS_OFFSET= 0x8,
+	NETWORK_SESSION_MESSAGE_PEER_INDEX_OFFSET= 0x2C,
 	/* the thing of 0x4D10 is a text of up to 127 characters; and after the
 	number of 0x4DAC, the session knows a thing of 0x130 bytes, which counts
 	only if the number at its 0x44 is not zero */
@@ -421,7 +431,8 @@ struct network_session_unknown78A8;
 struct network_session_unknown78A8_functions
 {
 	void *unknown0;
-	void *unknown4;
+	void (__attribute__((thiscall)) *peer_removed)(struct network_session_unknown78A8 *object,
+		const long *unknownF0);
 	void (__attribute__((thiscall)) *disconnected)(struct network_session_unknown78A8 *object);
 	boolean (__attribute__((thiscall)) *player_can_join)(struct network_session_unknown78A8 *object,
 		const byte *identifier);
@@ -600,6 +611,10 @@ boolean NETWORK_SESSION_CALLBACK network_session_host_set_player_unknownA8(long 
 	const byte *unknownA8);
 boolean NETWORK_SESSION_CALLBACK network_session_host_unknown_0005aeb0(byte *session, long unknown);
 void network_session_reset_unknown761c(byte *session);
+boolean network_session_remove_peer_with_message_c(byte *session, long peer_index);
+void NETWORK_SESSION_CALLBACK network_session_peer_properties_apply_update(
+	struct network_session_peer_properties *properties, const struct network_session_peer_properties_update *update);
+boolean NETWORK_SESSION_CALLBACK network_session_unknown_0005e340(byte *session, long channel, const byte *message);
 boolean NETWORK_SESSION_CALLBACK network_session_host_set_unknown49a8(byte *session, boolean unknown49a8,
 	long unknown49ac, long unknown49b0, long peer_index, const byte *unknown49b8);
 long network_session_election_new(const byte *session, struct network_session_election *election);

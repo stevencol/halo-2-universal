@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-08 — Sacar a una consola de otra manera, y aplicar lo que cambió
+
+Tres funciones en `networking/network_session.c`, 557 bytes entre todas. De 1269
+funciones se pasa a 1272, el 11,29 % de las del juego (el 7,027 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_remove_peer_with_message_c` | `0x0005c9e0` | `networking/network_session.c` |
+| `network_session_peer_properties_apply_update` | `0x0005cac0` | `networking/network_session.c` |
+| `network_session_unknown_0005e340` | `0x0005e340` | `networking/network_session.c` |
+
+### Lo que se sabe
+
+- `network_session_remove_peer_with_message_c` es la tercera manera de
+  sacar a una consola (las de `0xD` y `0xE` son del hito 321): se le manda
+  algo de la clase `0xC`, sale, y se avisa a lo que la sesión tiene en
+  `0x78A8` (su **segunda** función, con los dos números con que la consola
+  entró). En los tres últimos estados no se la saca: en el séptimo y el
+  octavo solo se apunta.
+- `network_session_peer_properties_apply_update` es la pareja de
+  `network_session_peer_properties_get_update` (hito 325): pone en lo que
+  se sabe de una consola las partes que el mensaje dice que han cambiado.
+- `network_session_unknown_0005e340`: en el séptimo estado, una consola
+  dice de qué consola habla (cuál es y cómo se la conoce); si es la que la
+  sesión tiene apuntada, quien lo dice recibe su bit en `0x7438`.
+- De lo que la sesión tiene en `0x78A8` se conocen ya tres de sus cuatro
+  funciones: una consola ha salido, la sesión se ha desconectado, y si un
+  jugador puede entrar.
+
+### Sin comprobar
+
+- Los dos números que recibe la segunda función de `0x78A8` van en la pila
+  y el arnés no deja mirarlos desde ahí: solo se comprueba que se la llama.
+- En este hito se pasaron las pruebas de `network_life_cycle` (179
+  funciones).
+- La batería completa del hito 343 seguía corriendo.
+- Las mutaciones de los hitos 280 a 308 y 321 a 349 están pendientes.
+
 ## 2026-10-08 — El mapa de la sesión de la partida
 
 Tres funciones en `networking/network_life_cycle.c`, 247 bytes entre todas. De 1266

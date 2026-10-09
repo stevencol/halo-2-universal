@@ -1807,3 +1807,6 @@ address,name,source,arguments,returns,convention
 0005c010,network_session_leader_set_unknown5ddc,source/networking/network_session.c,edx stack,bool,stdcall
 00062c20,network_session_election_add_other,source/networking/network_session.c,edx stack stack,bool,stdcall
 00062ca0,network_session_election_set_unknownBC,source/networking/network_session.c,eax edi stack,bool,stdcall
+0005c9e0,network_session_remove_peer_with_message_c,source/networking/network_session.c,eax edi,bool
+0005cac0,network_session_peer_properties_apply_update,source/networking/network_session.c,ebx stack,void,stdcall
+0005e340,network_session_unknown_0005e340,source/networking/network_session.c,stack stack stack,bool,stdcall

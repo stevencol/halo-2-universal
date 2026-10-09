@@ -2078,3 +2078,67 @@ def run(t) -> None:
                 ),
             },
         )
+
+    # ---------- a console is taken out with another message
+
+    for n in range(300):
+        data = consistent()
+        for peer in range(16):
+            data[0x72DC + peer * 0x14] = random_.choice((0, 1, 1))
+        struct.pack_into("<I", data, STATE, random_.choice((3, 5, 5, 5, 6, 7, 8, 9, 1)))
+        struct.pack_into("<I", data, 0x742C, random_.randrange(16))
+        count = struct.unpack_from("<I", data, 0x54)[0]
+        assert len(data) == OBJECT
+        data += struct.pack("<5I", OBJECT + 4, 0x11, mock_address(0), 0x33, 0x44)
+        pointers = [8, OBJECT]
+        if n % 4:
+            struct.pack_into("<I", data, 0x78A8, OBJECT)
+            pointers.append(0x78A8)
+        else:
+            struct.pack_into("<I", data, 0x78A8, 0)
+        t.check(
+            "network_session_remove_peer_with_message_c",
+            Buffer(bytes(data), pointers=tuple(pointers)),
+            random_.randrange(count),
+            globals=clock(),
+            externals={"GetTickCount": ticks(), "unknown_00075e80": sends_all},
+            # the two numbers that it is given are in the stack: only that it is told is compared
+            mocks=[Mock(lambda call: 0, stack_arguments=1, registers=("ecx",), record=lambda call: ())],
+        )
+
+    # ---------- what changed of a console is put in it
+
+    for n in range(300):
+        update = bytearray(random_.randbytes(0xD8))
+        update[2:0x22] = text(16)
+        update[0x22:0x62] = text(32)
+        for at in (0, 0x62, 0x6C, 0x8C, 0xD0):
+            update[at] = random_.choice((0, 1, 1, 0x80))
+        t.check(
+            "network_session_peer_properties_apply_update",
+            Buffer(random_.randbytes(0xC8)),
+            Buffer(bytes(update)),
+        )
+
+    # ---------- something that comes in the seventh state
+
+    for n in range(400):
+        data = with_peers()
+        struct.pack_into("<I", data, STATE, random_.choice((7, 7, 7, 7, 8, 5)))
+        data[0x7430] = random_.choice((1, 1, 1, 0x80, 0))
+        count = random_.choice((1, 3, 16))
+        struct.pack_into("<I", data, 0x54, count)
+        said = random_.randrange(count)
+        struct.pack_into("<I", data, 0x742C, random_.choice((said, said, said, said ^ 1)))
+        message = bytearray(random_.randbytes(0x30))
+        message[8:0x2C] = data[PEERS + said * PEER : PEERS + said * PEER + 0x24]
+        struct.pack_into("<H", message, 0x2C, random_.choice((said, said, said, said, count, 0xFFFF)))
+        if n % 5 == 0:
+            message[8 + random_.randrange(0x24)] ^= 1
+        t.check(
+            "network_session_unknown_0005e340",
+            Buffer(bytes(data)),
+            random_.getrandbits(32),
+            Buffer(bytes(message)),
+            externals={"network_observer_find_channel": which_channel()},
+        )
