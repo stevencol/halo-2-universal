@@ -228,7 +228,7 @@ def run(t) -> None:
             Buffer(bytes(buffer), pointers=(0xC,) if there else ()),
             externals={
                 "texture_cache_return_memory": lambda harness, arguments: 0,
-                "unknown_00086b40": byte_and,
+                "simulation_view_events_set_ready": byte_and,
                 "simulation_world_unknown_0006b090": lambda harness, arguments: (0, (arguments[0] & 0xFF, harness.normalize(arguments[1]), harness.normalize(arguments[2]))),
                 "simulation_world_unknown_0006b110": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1] & 0xFF, harness.normalize(arguments[2]))),
             },
@@ -308,4 +308,19 @@ def run(t) -> None:
             Buffer(bytes(data), pointers=tuple(pointers)),
             externals={"replication_entity_view_next_entity": lambda harness, arguments, after=after: (after[arguments[0]], (arguments[0], harness.normalize(arguments[1])))},
             mocks=[Mock(lambda call: t.harness.mu.mem_read(call.stack[0], 1)[0], stack_arguments=1, registers=("ecx",))],
+        )
+
+    # ---------- what a view has at 0x6060 of what it has at 0x8 is told whether the view is ready
+
+    for n in range(600):
+        data = bytearray(random_.randbytes(0x4CD0 + 8))
+        struct.pack_into("<I", data, 0, 0x4CD0)
+        data[0x4CD0 + 2] = random_.choice((1, 2, 3, 4, 0x22))
+        data[5] = random_.choice((0, 1))
+        data[6] = random_.choice((0, 1))
+        t.check(
+            "simulation_view_events_set_ready",
+            random_.choice((0, 1, 1, 0x100)),
+            Buffer(bytes(data), pointers=(0,)),
+            globals={"unknown_00510ca2": bytes((random_.choice((0, 1)),))},
         )

@@ -97,6 +97,17 @@ enum
 	SIMULATION_DATABASE_ENTITY_SIZE= 0x20,
 	SIMULATION_DATABASE_ENTITY_TYPE_OFFSET= 0x4,
 	SIMULATION_DATABASE_ENTITY_INDEX_MASK= 0x3FF,
+	/* of what a view has at 0x6060 of what it has at 0x8: the view; a byte
+	that is set while a view of the second kind or of the fourth is ready,
+	and one for any other; a number; what is emptied when the view is ready,
+	and a number in it */
+	SIMULATION_VIEW_EVENTS_VIEW_OFFSET= 0x0,
+	SIMULATION_VIEW_EVENTS_UNKNOWN5_OFFSET= 0x5,
+	SIMULATION_VIEW_EVENTS_UNKNOWN6_OFFSET= 0x6,
+	SIMULATION_VIEW_EVENTS_UNKNOWN8_OFFSET= 0x8,
+	SIMULATION_VIEW_EVENTS_DATA_OFFSET= 0xC,
+	SIMULATION_VIEW_EVENTS_DATA_SIZE= 0x4CC0,
+	SIMULATION_VIEW_EVENTS_UNKNOWN4CCC_OFFSET= 0x4CCC,
 	_simulation_view_kind_1= 1,
 	_simulation_view_kind_2= 2,
 	_simulation_view_kind_3= 3,
@@ -149,5 +160,10 @@ boolean simulation_view_nothing_to_send(byte *view);
 void __attribute__((stdcall)) simulation_view_send_player_actions(byte *view, unsigned long players,
 	const void *actions);
 boolean simulation_view_entities_pending(byte *view);
+void simulation_view_events_set_ready(boolean ready, byte *events);
+
+/* ---------- globals */
+
+extern boolean unknown_00510ca2;
 
 #endif

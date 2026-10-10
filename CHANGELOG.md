@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Una vista queda lista: se vacía lo que guardaba
+
+Una función en `networking/simulation_view.c`, de 113 bytes. De 1593
+funciones se pasa a 1594, el 14,15 % de las del juego (el 9,428 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_view_events_set_ready` | `0x00086b40` | `networking/simulation_view.c` |
+
+### Lo que se sabe
+
+- `simulation_view_events_set_ready` era el aviso que una vista de la
+  tercera clase o la cuarta da a lo que tiene en `0x6060` de lo que lleva
+  en `0x8` (hito 462). **Al quedar lista la vista se vacía** lo que eso
+  guarda (19 648 bytes desde `0xC`) y su número vuelve a cero.
+  - Para una vista de la segunda clase o la cuarta (la que manda) se
+    marca su byte `0x5`.
+  - Para las demás se marca el `0x6`, y con él **un byte del juego**
+    (`0x00510ca2`): «hay una vista de las que siguen que está lista».
+  - Al dejar de estar lista se quitan esos bytes.
+- Por el sitio y por el tamaño (y porque el mensaje de `0x00094aa0`, el
+  único del hito 444 que queda, escribe ahí mismo), eso que guarda son
+  **los sucesos de la partida** que una consola cuenta a otra.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 441 a 469.
+- En este hito se pasaron las pruebas de la función y la de
+  `simulation_view_update_ready`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — ¿Le queda a la vista algo del juego por contar?
 
 Una función en `networking/simulation_view.c`, de 98 bytes. De 1592

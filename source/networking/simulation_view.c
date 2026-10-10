@@ -39,9 +39,6 @@ struct simulation_view_entity_client
 
 long GetTickCount(void);
 
-/* 0x00086b40: what a view of the third kind or of the fourth has at 0x6060
-of what it has at 0x8 is told whether the view is ready */
-void unknown_00086b40(boolean ready, byte *unknown);
 
 /* 0x000869a0: a view takes one of the things that come, with what it has
 at 0x94; whether it could. 0x000865d0: and then something follows */
@@ -61,6 +58,10 @@ could */
 kept, and that time */
 extern boolean unknown_00510548;
 extern long unknown_0051054c;
+
+/* 0x00510ca2: a view that is not of the second kind or of the fourth is
+ready */
+boolean unknown_00510ca2;
 
 /* ---------- code */
 
@@ -507,7 +508,7 @@ any more knows of no players, if it is of the second kind or of the fourth
 (and one of the second has NONE for what the players of the other console
 last said, and gives back its memory); one of the first kind has nothing at
 0xB0. A view of the third kind or of the fourth tells what it has at 0x8
-(unknown_00086b40), and the thing is told (simulation_world_unknown_0006b090).
+(simulation_view_events_set_ready), and the thing is told (simulation_world_unknown_0006b090).
 
 When the byte at 0x78 is another: that is noted, and the thing is told
 (simulation_world_unknown_0006b110) */
@@ -556,7 +557,7 @@ void simulation_view_update_ready(
 		kind= *(const word *)(view+SIMULATION_VIEW_KIND_OFFSET);
 		if (kind==_simulation_view_kind_3 || kind==_simulation_view_kind_4)
 		{
-			unknown_00086b40(ready, *(byte *const *)(view+SIMULATION_VIEW_UNKNOWN8_OFFSET)+SIMULATION_VIEW_UNKNOWN8_UNKNOWN6060_OFFSET);
+			simulation_view_events_set_ready(ready, *(byte *const *)(view+SIMULATION_VIEW_UNKNOWN8_OFFSET)+SIMULATION_VIEW_UNKNOWN8_UNKNOWN6060_OFFSET);
 		}
 		simulation_world_unknown_0006b090(ready, *(byte *const *)(view+SIMULATION_VIEW_WORLD_OFFSET), view);
 	}
@@ -661,6 +662,50 @@ boolean simulation_view_entities_pending(
 		if (client->functions->pending(client, entity))
 		{
 			return TRUE;
+		}
+	}
+}
+
+/* 0x00086b40: what a view of the third kind or of the fourth has at 0x6060
+of what it has at 0x8 is told whether the view is ready. When it is: what it
+keeps is emptied, with nothing for its number; if its view is of the second
+kind or of the fourth, a number in it is NONE and its first byte is set; if
+not, its second byte is set, and one of the game with it. When it is not:
+the bytes that were set are cleared, and the one of the game with the
+second */
+void simulation_view_events_set_ready(
+	boolean ready,
+	byte *events)
+{
+	if (ready)
+	{
+		const byte *view= *(const byte *const *)(events+SIMULATION_VIEW_EVENTS_VIEW_OFFSET);
+		unsigned long kind_bit= 1u<<(view[SIMULATION_VIEW_KIND_OFFSET]&31);
+
+		memset(events+SIMULATION_VIEW_EVENTS_DATA_OFFSET, 0, SIMULATION_VIEW_EVENTS_DATA_SIZE);
+		if (kind_bit&SIMULATION_VIEW_KINDS_2_AND_4)
+		{
+			*(long *)(events+SIMULATION_VIEW_EVENTS_UNKNOWN4CCC_OFFSET)= NONE;
+			*(long *)(events+SIMULATION_VIEW_EVENTS_UNKNOWN8_OFFSET)= 0;
+			events[SIMULATION_VIEW_EVENTS_UNKNOWN5_OFFSET]= TRUE;
+		}
+		else
+		{
+			*(long *)(events+SIMULATION_VIEW_EVENTS_UNKNOWN8_OFFSET)= 0;
+			unknown_00510ca2= TRUE;
+			events[SIMULATION_VIEW_EVENTS_UNKNOWN6_OFFSET]= TRUE;
+		}
+	}
+	else
+	{
+		if (events[SIMULATION_VIEW_EVENTS_UNKNOWN5_OFFSET])
+		{
+			events[SIMULATION_VIEW_EVENTS_UNKNOWN5_OFFSET]= FALSE;
+		}
+		if (events[SIMULATION_VIEW_EVENTS_UNKNOWN6_OFFSET])
+		{
+			unknown_00510ca2= FALSE;
+			events[SIMULATION_VIEW_EVENTS_UNKNOWN6_OFFSET]= FALSE;
 		}
 	}
 }

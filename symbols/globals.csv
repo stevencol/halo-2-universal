@@ -339,3 +339,4 @@ address,name,source
 004ced48,unknown_004ced48,source/networking/simulation_world.c
 004ced50,unknown_004ced50,source/networking/simulation_world.c
 004ced54,unknown_004ced54,source/networking/simulation_world.c
+00510ca2,unknown_00510ca2,source/networking/simulation_view.c
