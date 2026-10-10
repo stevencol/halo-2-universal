@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Qué pasa cuando un paquete llega, o se pierde
+
+Una función en `networking/replication_entity_view.c`, de 748 bytes. De 1488
+funciones se pasa a 1489, el 13,22 % de las del juego (el 8,900 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `replication_entity_view_packet_result` | `0x000992d0` | `networking/replication_entity_view.c` |
+
+### Lo que se sabe
+
+- `replication_entity_view_packet_result` es **lo que da sentido a todo
+  lo que la vista guardaba de cada paquete** (hito 427): se le dice el
+  número de un paquete y si llegó a la otra consola o se perdió.
+  - **Lo que se contó de una cosa.** Si el paquete se perdió, esos bits
+    vuelven a estar pendientes, **menos los que ya se volvieron a contar
+    en un paquete posterior** (no hace falta repetirlos). Si llegó, solo
+    se cuenta.
+  - **Una creación anunciada.** Si llegó, la cosa pasa al estado 3 («la
+    otra consola la tiene»). Si se perdió, vuelve al 1 para anunciarse
+    otra vez.
+  - **Un borrado anunciado.** Si se perdió, vuelve al estado 3 para
+    anunciarse otra vez. Si llegó, la cosa sale de la vista y la vista
+    quita su bit de la cosa; cuando ninguna vista la tiene ya, se avisa y
+    su sitio queda libre. Es el final de la vida de una cosa.
+  - Después todo lo guardado del paquete se devuelve al montón de la red.
+- Es la novena función de la tabla de una vista: la que
+  `replication_entity_view_reset` (hito 425) llamaba para dar por
+  perdidos todos los paquetes pendientes al vaciar la vista.
+- Con esta función la réplica aguanta paquetes perdidos sin repetir de
+  más: es el mecanismo de fiabilidad del juego en red, encima de un
+  transporte que no garantiza nada.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente** aquí y en las de los hitos 426 a 429.
+- En este hito se pasaron las pruebas de `replication_entity_view` (17
+  funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Lo que una vista hace con un anuncio que llega
 
 Dos funciones en `networking/replication_entity_view.c`, 735 bytes entre las dos. De 1486

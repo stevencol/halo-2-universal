@@ -432,3 +432,65 @@ def run(t) -> None:
             extra=[data],
             mocks=receiving_mocks(),
         )
+
+    # ---------- a view is told what became of a packet
+
+    for n in range(1500):
+        base = world(1.0, 0)
+        sent = sending(base, 0)
+        raw = bytearray(sent.data)
+        pointers = [pointer for pointer in sent.pointers if not PACKETS <= pointer < END2 and pointer != VIEW + 0x18]
+        # the heap takes memory back, and is asked how much it is
+        struct.pack_into("<2I", raw, TABLE, mock_address(9), mock_address(10))
+        # in the memory at the end: three packets, nine things said and six things made or done with
+        packets = [END2 + packet * 0x10 for packet in range(3)]
+        updates = [END2 + 0x30 + update * 0x10 for update in range(9)]
+        creations = [END2 + 0xC0 + creation * 0xC for creation in range(6)]
+        pool = [random_.randrange(COUNT) | random_.getrandbits(4) << 28 for entity in range(3)]
+        waiting = random_.choice((0, 1, 2, 3, 3, 3))
+        struct.pack_into("<I", raw, VIEW + 0x18, packets[0] if waiting else 0)
+        if waiting:
+            pointers.append(VIEW + 0x18)
+        free_updates, free_creations = list(updates), list(creations)
+        said = []
+        numbers = random_.sample(range(1, 100), 3)
+        for place, packet in enumerate(packets[:waiting]):
+            mine = [free_updates.pop() for update in range(random_.choice((0, 1, 2, 3)))]
+            made = [free_creations.pop() for creation in range(random_.choice((0, 0, 1, 2)))]
+            struct.pack_into("<4I", raw, packet, numbers[place], made[0] if made else 0, mine[0] if mine else 0, packets[place + 1] if place + 1 < waiting else 0)
+            pointers += [packet + offset for offset, there in ((4, made), (8, mine), (0xC, place + 1 < waiting)) if there]
+            for position, update in enumerate(mine):
+                entity = random_.choice(pool)
+                after = mine[position + 1] if position + 1 < len(mine) else 0
+                # what was said of the same thing in a packet before knows of this one, sometimes
+                before = [other for other, other_entity, other_place in said if other_entity == entity and other_place < place]
+                struct.pack_into("<4I", raw, update, entity, random_.choice((1, 6, 0xF0, random_.getrandbits(32))), 0, after)
+                if after:
+                    pointers.append(update + 0xC)
+                if before and random_.random() < 0.7:
+                    struct.pack_into("<I", raw, before[-1] + 8, update)
+                    pointers.append(before[-1] + 8)
+                said.append((update, entity, place))
+            for position, creation in enumerate(made):
+                after = made[position + 1] if position + 1 < len(made) else 0
+                struct.pack_into("<3I", raw, creation, random_.choice(pool), random_.choice((1, 1, 2, 2, 3)), after)
+                if after:
+                    pointers.append(creation + 8)
+        for entity in pool:
+            # the things that it is all of: with something to say of them or not, and still had by the view or not
+            place = entity & 0x3FF
+            struct.pack_into("<IIH", raw, VIEW + 0x24 + place * 20, entity, random_.choice((0, 0, 1, random_.getrandbits(32))), random_.choice((0, 1, 2, 2, 3, 3, 4)))
+        data = Buffer(bytes(raw), pointers=tuple(dict.fromkeys(pointers)))
+        t.check(
+            "replication_entity_view_packet_result",
+            Pointer(data, VIEW),
+            random_.choice((*numbers[: max(waiting, 1)], *numbers[: max(waiting, 1)], 0, random_.getrandbits(32))),
+            random_.choice((0, 1, 1, 0x80)),
+            extra=[data],
+            globals={"unknown_004d87f8": Pointer(data, HEAP)},
+            mocks=[
+                *receiving_mocks(),
+                Mock(lambda call: 0, stack_arguments=2, registers=("ecx",)),
+                Mock(lambda call, known=random_.choice((0, 1)): known, stack_arguments=2, registers=("ecx",), record=lambda call: (call.registers["ecx"], call.stack[0])),
+            ],
+        )

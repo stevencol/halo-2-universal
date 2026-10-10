@@ -111,12 +111,13 @@ struct replication_entity_view_message
 typedef char verify_replication_entity_view_message_size[sizeof(struct replication_entity_view_message) == 0x80 ?
 	1 : -1];
 
-/* the functions of a view, of which the ninth takes back one of the things
-that it has sent, by its number */
+/* the functions of a view, of which the ninth is told what became of a
+packet that it wrote in, by its number: whether it came to the other
+console; it is replication_entity_view_packet_result */
 struct replication_entity_view_functions
 {
 	void *unknown0[8];
-	void (__attribute__((thiscall)) *unsent)(byte *view, long unknown, long unknown2);
+	void (__attribute__((thiscall)) *packet_result)(byte *view, long number, boolean delivered);
 };
 
 /* ---------- prototypes/REPLICATION_ENTITY_VIEW.C */
@@ -136,6 +137,7 @@ void __attribute__((stdcall)) replication_entity_view_handle_message(byte *view,
 	struct replication_entity_view_message *message);
 boolean __attribute__((stdcall)) replication_entity_view_make_way(long entity_index, byte *view, long unknown,
 	void *unknown2);
+void __attribute__((stdcall)) replication_entity_view_packet_result(byte *view, long number, boolean delivered);
 void replication_entity_view_sent_creation(long entity_index, byte *view);
 void __attribute__((stdcall)) replication_entity_view_sent_deletion(byte *view, long entity_index);
 void __attribute__((stdcall)) replication_entity_view_sent_update(long entity_index, byte *view,

@@ -32,8 +32,9 @@ static inline __attribute__((always_inline)) struct replication_entity_view_enti
 	return (struct replication_entity_view_entity *)(view+REPLICATION_ENTITY_VIEW_ENTITIES_OFFSET)+index;
 }
 
-/* 0x00097fe0: a view starts over. Each thing that it has sent and waits to
-hear of is taken back, by its ninth function, until there is none. Each
+/* 0x00097fe0: a view starts over. Each packet that it wrote in and waits to
+hear of is as one that did not come, by its ninth function, until there is
+none. Each
 thing that is in some state in it is not in it any more; if the thing's count
 of what still has it had the bit of the view, it has not, and with no bit
 left the thing is done with: what the things are of is told, and its place
@@ -45,8 +46,8 @@ void replication_entity_view_reset(
 
 	while (*(long **)(view+REPLICATION_ENTITY_VIEW_SENT_OFFSET))
 	{
-		(*(const struct replication_entity_view_functions **)view)->unsent(view,
-			**(long **)(view+REPLICATION_ENTITY_VIEW_SENT_OFFSET), 0);
+		(*(const struct replication_entity_view_functions **)view)->packet_result(view,
+			**(long **)(view+REPLICATION_ENTITY_VIEW_SENT_OFFSET), FALSE);
 	}
 	for (index= 0; index<MAXIMUM_REPLICATION_ENTITIES; index++)
 	{
@@ -802,4 +803,151 @@ boolean __attribute__((stdcall)) replication_entity_view_make_way(
 		*(struct replication_entity_manager **)(view+REPLICATION_ENTITY_VIEW_MANAGER_OFFSET), count, entities);
 
 	return TRUE;
+}
+
+/* 0x000992d0: a view is told what became of a packet that it wrote in, by
+its number: whether it came to the other console. With no such packet
+nothing is done. It is the ninth function of a view.
+
+Of each thing that the view said something of in it: if the packet did not
+come, the view has those bits to say again, but not the ones that it said
+again in a packet after this one; and if it had nothing to say of the thing,
+which is in its third state and not being done with, it has one more to say
+something of. If it came, the view counts one more. What was said of the
+same thing before, that knew of this as the later one, knows of the one
+after this instead.
+
+Of each thing that the view said was made: if the packet came, the thing is
+in its third state, and the view counts one more; if not, it is in its first
+again, or in its third if it is being done with. Of each that it said was
+done with: if it did not come, it is in its third state again; if it came,
+it is in no state, the thing's count of what still has it has not the bit of
+the view, and with no bit left the thing is done with: what the things are
+of is told, and its place is not in use.
+
+And what the view kept of the packet is taken back by the heap of the
+network */
+void __attribute__((stdcall)) replication_entity_view_packet_result(
+	byte *view,
+	long number,
+	boolean delivered)
+{
+	struct replication_entity_view_packet **link= (struct replication_entity_view_packet **)(view+REPLICATION_ENTITY_VIEW_SENT_OFFSET);
+	struct replication_entity_view_packet *packet;
+	struct replication_entity_view_update *update;
+	struct replication_entity_view_update *next_update;
+	struct replication_entity_view_creation *creation;
+	struct replication_entity_view_creation *next_creation;
+
+	for (packet= *link; packet && packet->number!=number; packet= *link)
+	{
+		link= &packet->next;
+	}
+	if (!packet)
+	{
+		return;
+	}
+	for (update= packet->updates; update; update= next_update)
+	{
+		long entity_index= update->entity_index;
+		long index= entity_index&REPLICATION_ENTITY_INDEX_MASK;
+		const struct replication_entity_manager *manager=
+			*(const struct replication_entity_manager **)(view+REPLICATION_ENTITY_VIEW_MANAGER_OFFSET);
+		const struct replication_entity *entity= &manager->entities[index];
+		struct replication_entity_view_packet *other;
+
+		next_update= update->next;
+		if (!delivered)
+		{
+			struct replication_entity_view_entity *view_entity= replication_entity_view_entity_get(view, index);
+			unsigned long flags= update->flags;
+
+			for (other= packet->next; other; other= other->next)
+			{
+				struct replication_entity_view_update *other_update;
+
+				for (other_update= other->updates; other_update; other_update= other_update->next)
+				{
+					if (other_update->entity_index==entity_index)
+					{
+						flags&= ~other_update->flags;
+					}
+				}
+			}
+			if (flags!=0 && view_entity->pending==0 && view_entity->state==_replication_entity_view_state3 &&
+				!((word)entity->unknown2&(1u<<(*(const long *)(view+REPLICATION_ENTITY_VIEW_INDEX_OFFSET)&31))))
+			{
+				(*(long *)(view+REPLICATION_ENTITY_VIEW_PENDING_COUNT_OFFSET))++;
+			}
+			view_entity->pending|= flags;
+		}
+		else
+		{
+			(*(long *)(view+REPLICATION_ENTITY_VIEW_UNKNOWN5030_OFFSET))++;
+		}
+		for (other= *(struct replication_entity_view_packet **)(view+REPLICATION_ENTITY_VIEW_SENT_OFFSET);
+			other && other!=packet; other= other->next)
+		{
+			struct replication_entity_view_update *other_update;
+
+			for (other_update= other->updates; other_update; other_update= other_update->next)
+			{
+				if (other_update->entity_index==entity_index && other_update->newer==update)
+				{
+					other_update->newer= update->newer;
+					break;
+				}
+			}
+			if (other_update)
+			{
+				break;
+			}
+		}
+		network_heap_free(update);
+	}
+	for (creation= packet->creations; creation; creation= next_creation)
+	{
+		long entity_index= creation->entity_index;
+		long index= entity_index&REPLICATION_ENTITY_INDEX_MASK;
+		struct replication_entity_manager *manager=
+			*(struct replication_entity_manager **)(view+REPLICATION_ENTITY_VIEW_MANAGER_OFFSET);
+		struct replication_entity *entity= &manager->entities[index];
+		word bit= (word)(1u<<(*(const long *)(view+REPLICATION_ENTITY_VIEW_INDEX_OFFSET)&31));
+
+		next_creation= creation->next;
+		if (creation->type==_replication_entity_view_message_creation)
+		{
+			if (delivered)
+			{
+				byte *same_view= replication_entity_view_set_entity_state(view, entity_index, _replication_entity_view_state3);
+
+				(*(long *)(same_view+REPLICATION_ENTITY_VIEW_UNKNOWN5028_OFFSET))++;
+			}
+			else
+			{
+				replication_entity_view_set_entity_state(view, entity_index,
+					((word)entity->unknown2&bit) ? _replication_entity_view_state3 : _replication_entity_view_state1);
+			}
+		}
+		else if (!delivered)
+		{
+			replication_entity_view_set_entity_state(view, entity_index, _replication_entity_view_state3);
+		}
+		else
+		{
+			replication_entity_view_set_entity_state(view, entity_index, _replication_entity_view_state_none);
+			entity->unknown2= (short)((word)entity->unknown2&~bit);
+			manager= *(struct replication_entity_manager **)(view+REPLICATION_ENTITY_VIEW_MANAGER_OFFSET);
+			entity= &manager->entities[index];
+			if (entity->unknown2==0)
+			{
+				manager->client->functions->deleted(manager->client, entity_index);
+				entity->flags&= ~_replication_entity_used_bit;
+			}
+			(*(long *)(view+REPLICATION_ENTITY_VIEW_UNKNOWN5038_OFFSET))++;
+		}
+		network_heap_free(creation);
+	}
+	*link= packet->next;
+	network_heap_free(packet);
 }
