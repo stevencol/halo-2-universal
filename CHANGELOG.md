@@ -2,6 +2,69 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Los mensajes que tienen que llegar: cómo van en un paquete
+
+Tres funciones en `networking/network_message_queue.c`, 1 750 bytes entre las tres. De 1516
+funciones se pasa a 1519, el 13,48 % de las del juego (el 9,082 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_message_queue_write` | `0x00094e90` | `networking/network_message_queue.c` |
+| `network_message_queue_read` | `0x000951c0` | `networking/network_message_queue.c` |
+| `network_message_queue_packet_result` | `0x00095410` | `networking/network_message_queue.c` |
+
+### Lo que se sabe
+
+- Con estas tres está **el ciclo entero de un mensaje que tiene que
+  llegar**: se escribe en un paquete, la otra consola lo lee y lo guarda, y
+  cuando se sabe qué fue del paquete el mensaje se suelta o se vuelve a
+  mandar.
+- `network_message_queue_write` (la quinta de la tabla `0x00450db8`)
+  **escribe en el paquete los mensajes marcados para mandarse**. Cada uno
+  empieza con dos bits que dicen cómo viene su número:
+  - `1 1`: es el siguiente al mensaje anterior;
+  - `1 0` y 4 bits: a cuántos está del anterior (hasta 16);
+  - `0 1` y 10 bits: los bits bajos de su número (el primero del paquete, o
+    uno que queda lejos del anterior);
+  - `0 0`: no hay más mensajes.
+  Después va un bit que dice si se dan sus bits y, si es que sí, cuántos
+  son menos uno en 8 bits (si no, son 256), y los bits del mensaje.
+- Antes de cada mensaje guarda la posición del paquete. Si después de
+  escribirlo no queda sitio para lo que tiene que ir detrás, vuelve atrás,
+  deja de escribir y contesta que queda algo. Si ni el primero cabe, la
+  pieza no puede seguir, y el canal se cerrará con el motivo `0xC` (hito
+  439).
+- Un mensaje escrito deja de estar marcado, queda como mandado y apunta en
+  qué paquete fue.
+- `network_message_queue_read` (la sexta) **lee eso mismo** y guarda cada
+  mensaje con `network_message_queue_add_received` (hito 440). El número
+  que viene por sus 10 bits bajos es el más cercano al último que llegó.
+  Contesta 2 (paquete que no vale) si un número queda a más de 384 de los
+  que se guardan o si no se pudo guardar, y 3 si un mensaje dice «el
+  siguiente» sin que haya uno antes.
+- `network_message_queue_packet_result` (la octava): **qué fue de un
+  paquete.** Los mensajes que iban en él quedan como llegados, o marcados
+  otra vez para mandarse si el paquete se perdió. Y los primeros de la
+  ventana que ya llegaron se devuelven al montón de la red.
+- Se sabe ahora qué eran dos cosas del hito 440: la «clase» de un mensaje
+  llegado es su número de bits, y el byte que lo acompaña dice si ese
+  número venía en el paquete.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las tres.**
+- Al leer, los bits del último byte de un mensaje que el paquete no trae
+  quedan con lo que hubiera en la pila; las pruebas no han visto
+  diferencia.
+- `network_message_queue_write` no está en la lista de Ghidra y cuenta de
+  más en el porcentaje (son ya diecinueve funciones así).
+- En este hito se pasaron las pruebas de `network_message_queue` (9
+  funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Los mensajes que llegan en trozos
 
 Tres funciones en `networking/network_message_queue.c`, 863 bytes entre las tres. De 1513

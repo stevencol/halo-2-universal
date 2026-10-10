@@ -193,9 +193,9 @@ struct network_message_queue_received *network_message_queue_get_received(
 	return place==NONE ? NULL : (struct network_message_queue_received *)(queue+NETWORK_MESSAGE_QUEUE_RECEIVED_OFFSET)+place;
 }
 
-/* 0x00095bc0: a piece of a message came, with a number, a size, a byte and
-a kind: one of the things keeps a copy of it, in memory of the heap of the
-network. Whether it is well: it is with one from before the ones that are
+/* 0x00095bc0: a message came, with a number, a size in bytes, whether its
+bits were said, and how many they are: one of the things keeps a copy of it,
+in memory of the heap of the network. Whether it is well: it is with one from before the ones that are
 kept, and with one that is there already; it is not if there is no room for
 its number, or no memory. The messages that the thing knows of go on up to
 that one, as far as the ring has room, each new one with nothing */
@@ -203,8 +203,8 @@ boolean __attribute__((stdcall)) network_message_queue_add_received(
 	long sequence,
 	long size,
 	byte *queue,
-	boolean unknown,
-	word type,
+	boolean sized,
+	word bit_count,
 	const void *data)
 {
 	struct network_connection_window *received=
@@ -244,19 +244,292 @@ boolean __attribute__((stdcall)) network_message_queue_add_received(
 		return FALSE;
 	}
 	message->flags|= _network_message_queue_received_bit;
-	if (unknown)
+	if (sized)
 	{
-		message->flags|= _network_message_queue_received_unknown_bit;
+		message->flags|= _network_message_queue_received_sized_bit;
 	}
 	else
 	{
-		message->flags&= ~_network_message_queue_received_unknown_bit;
+		message->flags&= ~_network_message_queue_received_sized_bit;
 	}
 	message->data= memory;
-	message->type= type;
+	message->bit_count= bit_count;
 	message->size= (byte)size;
 	memcpy(memory, data, size);
 	*(long *)(queue+NETWORK_MESSAGE_QUEUE_RECEIVED_BYTES_OFFSET)+= size;
 
 	return TRUE;
+}
+
+/* 0x00094e90: one of the things writes its own in a packet of a number: the
+messages that it keeps that are to be sent now, from the first, each after
+keeping the position of the stream. Nothing with a packet of no number.
+
+A message starts with two bits that say how its number comes: set and set,
+it is the one after the message before it; set and clear, how far it is from
+that one, less one, in four bits, if that is no more than 0x10; clear and
+set, the low ten bits of the number, for the first one and for one further
+than that. Then a bit that says whether its bits are said, and if so how
+many, less one, in eight; and the bits of the message.
+
+If after that the stream has room for what is to come after and two bits
+more, the message is sent and not to be sent now, in that packet. If not,
+the stream goes back to where it was before the message, no more are
+written, and TRUE is what is said; and if it was the first one, the thing
+could not go on. At the end come two bits clear.
+
+The fifth function, with ones that Ghidra's list has not; the game has
+bitstream_write_bool and bitstream_write_integer_checked written here */
+boolean __attribute__((stdcall)) network_message_queue_write(
+	byte *queue,
+	long sequence,
+	struct bitstream *stream,
+	long bits,
+	long rest)
+{
+	const struct network_connection_window *sent=
+		(const struct network_connection_window *)(queue+NETWORK_MESSAGE_QUEUE_SENT_WINDOW_OFFSET);
+	boolean result= FALSE;
+	long last= NONE;
+	long current;
+
+	if (sequence==NONE)
+	{
+		return FALSE;
+	}
+	if (sent->newest!=sent->oldest)
+	{
+		for (current= sent->oldest+1; current<=sent->newest; current++)
+		{
+			struct network_message_queue_message *message=
+				(struct network_message_queue_message *)(queue+NETWORK_MESSAGE_QUEUE_SENT_OFFSET)+
+				network_message_queue_window_place(sent, current);
+			long distance;
+
+			if (!(message->flags&_network_message_queue_message_pending_bit))
+			{
+				continue;
+			}
+			stream->positions[stream->position_count]= stream->position;
+			stream->position_count++;
+			distance= (long)((unsigned long)current-(unsigned long)last);
+			if (last!=NONE && distance<=MAXIMUM_NETWORK_MESSAGE_QUEUE_DISTANCE)
+			{
+				bitstream_write_bool(stream, TRUE);
+				if (distance==1)
+				{
+					bitstream_write_bool(stream, TRUE);
+				}
+				else
+				{
+					bitstream_write_bool(stream, FALSE);
+					bitstream_write_integer_checked((unsigned long)distance-1, NETWORK_MESSAGE_QUEUE_DISTANCE_BITS, stream);
+				}
+			}
+			else
+			{
+				bitstream_write_bool(stream, FALSE);
+				bitstream_write_bool(stream, TRUE);
+				bitstream_write_integer_checked((unsigned long)current&(NETWORK_MESSAGE_QUEUE_SEQUENCE_RANGE-1),
+					NETWORK_MESSAGE_QUEUE_SEQUENCE_BITS, stream);
+			}
+			if (message->flags&_network_message_queue_message_sized_bit)
+			{
+				bitstream_write_bool(stream, TRUE);
+				bitstream_write_integer_checked((unsigned long)message->bit_count-1, NETWORK_MESSAGE_QUEUE_BIT_COUNT_BITS,
+					stream);
+			}
+			else
+			{
+				bitstream_write_bool(stream, FALSE);
+			}
+			bitstream_write_bits(stream, message->data, message->bit_count);
+			if ((long)(((unsigned long)stream->size<<3)-(unsigned long)stream->position)<(long)((unsigned long)rest+2))
+			{
+				if (last==NONE)
+				{
+					queue[NETWORK_MESSAGE_QUEUE_FULL_OFFSET]= TRUE;
+				}
+				result= TRUE;
+				bitstream_pop_position(stream, TRUE);
+				break;
+			}
+			stream->position_count--;
+			message->flags= (byte)((message->flags&~_network_message_queue_message_pending_bit)|
+				_network_message_queue_message_sent_bit);
+			message->packet_sequence= sequence;
+			last= current;
+		}
+	}
+	bitstream_write_bool(stream, FALSE);
+	bitstream_write_bool(stream, FALSE);
+
+	return result;
+}
+
+/* 0x000951c0: one of the things reads its own of a packet that came: what
+network_message_queue_write writes, message after message up to the two bits
+clear. Nothing with a packet of no number. The sixth function, and what it
+says is what network_connection_read does: well (0); that the packet is not
+one to read (2), with a message whose number is further than 0x180 after the
+last that came or before the first that is kept, or that the thing cannot
+keep (network_message_queue_add_received); or 3, with a message whose number
+is from the one before it and none before it.
+
+A number that comes by its low ten bits is the one nearest the last that
+came that has them. A message whose bits are not said has 0x100. In a stream
+that is only looked at the messages are read and nothing is done with them */
+long __attribute__((stdcall)) network_message_queue_read(
+	byte *queue,
+	const long *sequence_in,
+	struct bitstream *stream)
+{
+	const struct network_connection_window *received=
+		(const struct network_connection_window *)(queue+NETWORK_MESSAGE_QUEUE_RECEIVED_WINDOW_OFFSET);
+	byte data[MAXIMUM_NETWORK_MESSAGE_QUEUE_MESSAGE_BITS/8];
+	long last= NONE;
+
+	if (*sequence_in==NONE)
+	{
+		return _network_connection_read_good;
+	}
+	for (;;)
+	{
+		boolean first= bitstream_read_bool(stream);
+		boolean second= bitstream_read_bool(stream);
+		long sequence= NONE;
+		long bit_count;
+		boolean sized;
+		long size;
+
+		if (first)
+		{
+			long distance= 0;
+
+			if (!second)
+			{
+				distance= (long)bitstream_read_integer(stream, NETWORK_MESSAGE_QUEUE_DISTANCE_BITS);
+			}
+			if (stream->unknownC!=_network_connection_stream_look_only)
+			{
+				if (last==NONE)
+				{
+					return _network_message_queue_read_bad;
+				}
+				sequence= (long)((unsigned long)last+(unsigned long)distance+1);
+			}
+		}
+		else
+		{
+			long difference;
+
+			if (!second)
+			{
+				return _network_connection_read_good;
+			}
+			difference= (long)bitstream_read_integer(stream, NETWORK_MESSAGE_QUEUE_SEQUENCE_BITS);
+			if (stream->unknownC!=_network_connection_stream_look_only)
+			{
+				difference= (long)((unsigned long)difference-
+					(unsigned long)(received->newest&(NETWORK_MESSAGE_QUEUE_SEQUENCE_RANGE-1)));
+				if (difference>NETWORK_MESSAGE_QUEUE_SEQUENCE_RANGE/2)
+				{
+					difference-= NETWORK_MESSAGE_QUEUE_SEQUENCE_RANGE;
+				}
+				else if (difference<=-NETWORK_MESSAGE_QUEUE_SEQUENCE_RANGE/2)
+				{
+					difference+= NETWORK_MESSAGE_QUEUE_SEQUENCE_RANGE;
+				}
+				sequence= (long)((unsigned long)received->newest+(unsigned long)difference);
+				if ((long)((unsigned long)sequence-(unsigned long)received->newest)>NETWORK_MESSAGE_QUEUE_SEQUENCE_REACH ||
+					(long)((unsigned long)received->oldest-(unsigned long)sequence)>NETWORK_MESSAGE_QUEUE_SEQUENCE_REACH)
+				{
+					return _network_connection_read_no;
+				}
+			}
+		}
+		last= sequence;
+		sized= bitstream_read_bool(stream);
+		if (sized)
+		{
+			bit_count= (long)(bitstream_read_integer(stream, NETWORK_MESSAGE_QUEUE_BIT_COUNT_BITS)+1);
+			size= (bit_count+7)/8;
+		}
+		else
+		{
+			bit_count= MAXIMUM_NETWORK_MESSAGE_QUEUE_MESSAGE_BITS;
+			size= MAXIMUM_NETWORK_MESSAGE_QUEUE_MESSAGE_BITS/8;
+		}
+		bitstream_read_bits(stream, data, bit_count);
+		if (stream->unknownC==_network_connection_stream_look_only)
+		{
+			continue;
+		}
+		if (!network_message_queue_add_received(sequence, size, queue, sized, (word)bit_count, data))
+		{
+			return _network_connection_read_no;
+		}
+	}
+}
+
+/* 0x00095410: one of the things is told what became of the packet of a
+number: each message that it keeps that was sent in that packet is in none
+now, and it came there, or else it is to be sent now again. Then the first
+messages that it keeps are not kept any more, while they are ones that came
+there: the heap of the network takes each back (as
+network_message_queue_reset does), its size is taken from the bytes of the
+ones to send, and the ring starts one place on (the game has
+network_connection_window_advance written here). The eighth function */
+void __attribute__((stdcall)) network_message_queue_packet_result(
+	byte *queue,
+	long sequence,
+	boolean delivered)
+{
+	struct network_connection_window *sent=
+		(struct network_connection_window *)(queue+NETWORK_MESSAGE_QUEUE_SENT_WINDOW_OFFSET);
+	long current;
+
+	if (sent->newest!=sent->oldest)
+	{
+		for (current= sent->oldest+1; current<=sent->newest; current++)
+		{
+			struct network_message_queue_message *message=
+				(struct network_message_queue_message *)(queue+NETWORK_MESSAGE_QUEUE_SENT_OFFSET)+
+				network_message_queue_window_place(sent, current);
+
+			if (message->packet_sequence==sequence)
+			{
+				message->packet_sequence= NONE;
+				message->flags|= delivered ? _network_message_queue_message_delivered_bit :
+					_network_message_queue_message_pending_bit;
+			}
+		}
+	}
+	while (sent->newest!=sent->oldest)
+	{
+		long next= sent->oldest+1;
+		struct network_message_queue_message *message=
+			(struct network_message_queue_message *)(queue+NETWORK_MESSAGE_QUEUE_SENT_OFFSET)+
+			network_message_queue_window_place(sent, next);
+		struct network_heap *heap;
+		void *data;
+		long size;
+
+		if (!(message->flags&_network_message_queue_message_delivered_bit))
+		{
+			break;
+		}
+		*(long *)(queue+NETWORK_MESSAGE_QUEUE_SENT_BYTES_OFFSET)-= message->size;
+		data= message->data;
+		heap= unknown_004d87f8;
+		heap->allocator->functions->size(heap->allocator, data, &size);
+		heap= unknown_004d87f8;
+		heap->allocator->functions->free(heap->allocator, data, NONE);
+		if (data)
+		{
+			heap->count--;
+		}
+		message->data= NULL;
+		network_connection_window_advance(sent, next);
+	}
 }

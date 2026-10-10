@@ -119,3 +119,119 @@ def run(t) -> None:
             globals={"unknown_004d87f8": Pointer(memory, HEAP)},
             mocks=heap_mocks(),
         )
+
+    # ---------- what one of the things writes in a packet, what it reads, and what became of a packet
+
+    MESSAGES, MESSAGE_SPACE = 40, 0x40
+
+    def sending(packet=None) -> Buffer:
+        """One of the things with messages to send, each with its bits after the thing; some were sent in a packet."""
+        data = bytearray(random_.randbytes(SIZE + MESSAGES * MESSAGE_SPACE + 8))
+        size = random_.choice((0x40, 0x100))
+        oldest = random_.choice((0, 5, 1000, 0x3F0, random_.getrandbits(20)))
+        count = random_.choice((0, 1, 2, 5, 12, MESSAGES, random_.randrange(MESSAGES + 1)))
+        start = random_.randrange(size)
+        struct.pack_into("<B3x6i", data, 0x10, 1, size, oldest + count, oldest, size, start, count)
+        chance = random_.choice((0.05, 0.3, 0.6, 1.0))
+        first = random_.random() < 0.5
+        places = []
+        for message in range(count):
+            place = 0x2C + ((message + start) % size) * 12
+            flags = random_.getrandbits(8) & ~5
+            if random_.random() < chance:
+                flags |= 4
+            if packet is not None and (random_.random() < 0.7 if message else first):
+                flags |= 1
+            bits = random_.choice((1, 8, 13, 64, 0x100, 0x100, 0x1F3, 0, random_.randrange(1, 0x101)))
+            where = random_.choice((0, SIZE + message * MESSAGE_SPACE)) if packet is not None else SIZE + message * MESSAGE_SPACE
+            sent_in = random_.choice((packet, packet, 0xFFFFFFFF, random_.getrandbits(32))) if packet is not None else random_.getrandbits(32)
+            struct.pack_into("<BBHII", data, place, flags, random_.getrandbits(8), bits, where, sent_in)
+            if where:
+                places.append(place + 4)
+        data[4] = random_.choice((0, 1, 1, 0x80))
+        data[5] = random_.choice((0, 0, 1))
+        return Buffer(bytes(data), pointers=tuple(places))
+
+    def stream(size: int, mode: int, position: int, contents: bytes = b"") -> Buffer:
+        header = struct.pack("<I4iB3x7i", 0x34, size, 1, mode, position, 0, random_.randrange(4), *(random_.getrandbits(8) for value in range(6)))
+        return Buffer(header + contents.ljust(size, b"\0")[:size] + random_.randbytes(8), pointers=(0,))
+
+    for n in range(3000):
+        t.check(
+            "network_message_queue_write",
+            sending(),
+            random_.choice((0xFFFFFFFF, 0, 7, random_.getrandbits(32), random_.getrandbits(32))),
+            stream(random_.choice((4, 8, 16, 40, 64, 200, 200, 1200)), 1, random_.choice((0, 0, 0, 3, 8, 17))),
+            random_.getrandbits(32),
+            random_.choice((0, 0, 0, 5, 30, 100, 0x7FFFFFFF, 0xFFFFFFFE, random_.getrandbits(32))),
+        )
+
+    class Bits:
+        """What a packet has, bit after bit, from the low bit of each byte."""
+
+        def __init__(self) -> None:
+            self.value = 0
+            self.count = 0
+
+        def put(self, value: int, count: int) -> None:
+            self.value |= (value & ((1 << count) - 1)) << self.count
+            self.count += count
+
+        def bytes(self) -> bytes:
+            return self.value.to_bytes((self.count + 7) // 8 + 1, "little")
+
+    for n in range(3000):
+        data, _, _ = queue()
+        oldest, newest, size = with_received(data)
+        bits = Bits()
+        number = None
+        for message in range(random_.choice((0, 1, 1, 2, 3, 6))):
+            how = random_.choice((0, 0, 1, 1, 2)) if number is not None else random_.choice((0, 0, 0, 0, 1, 2))
+            if how == 0:
+                number = random_.choice((newest + 1, newest + 1, newest + 2, newest, oldest + 1, oldest, oldest - 3, oldest + size, oldest + size + 1, newest + 0x180, newest + 0x181, oldest - 0x180, oldest - 0x181, newest + 0x200, newest - 0x200, newest + 0x1FF, random_.getrandbits(10)))
+                bits.put(2, 2)
+                bits.put(number, 10)
+            elif how == 1:
+                number = (number or 0) + 1
+                bits.put(3, 2)
+            else:
+                distance = random_.randrange(16)
+                number = (number or 0) + distance + 1
+                bits.put(1, 2)
+                bits.put(distance, 4)
+            if random_.random() < 0.6:
+                count = random_.choice((1, 8, 13, 64, 0x100, random_.randrange(1, 0x101)))
+                bits.put(1, 1)
+                bits.put(count - 1, 8)
+            else:
+                count = 0x100
+                bits.put(0, 1)
+            bits.put(random_.getrandbits(count), count)
+        if random_.random() < 0.9:
+            bits.put(0, 2)
+        bits.put(random_.getrandbits(64), 64)
+        contents = bits.bytes() if random_.random() < 0.9 else random_.randbytes(40)
+        length = random_.choice((len(contents), len(contents), len(contents) + 4, max(len(contents) - 9, 1), 4))
+        memory = heap()
+        t.check(
+            "network_message_queue_read",
+            Buffer(bytes(data)),
+            Buffer(struct.pack("<I", random_.choice((0xFFFFFFFF, 0, 7, random_.getrandbits(32), random_.getrandbits(32))))),
+            stream(length, random_.choice((3, 3, 3, 3, 4)), random_.choice((0, 0, 0, 0, 3))),
+            extra=[memory],
+            globals={"unknown_004d87f8": Pointer(memory, HEAP)},
+            mocks=heap_mocks(),
+        )
+
+    for n in range(2000):
+        packet = random_.choice((0, 7, 0xFFFFFFFF, random_.getrandbits(32)))
+        memory = heap()
+        t.check(
+            "network_message_queue_packet_result",
+            sending(packet),
+            packet,
+            random_.choice((0, 1, 1, 0x100)),
+            extra=[memory],
+            globals={"unknown_004d87f8": Pointer(memory, HEAP)},
+            mocks=heap_mocks(),
+        )

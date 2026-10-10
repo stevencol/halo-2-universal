@@ -2067,3 +2067,6 @@ address,name,source,arguments,returns,convention
 00094e80,network_message_queue_minimum_bits,source/networking/network_message_queue.c,ecx stack stack,int,stdcall
 00095b70,network_message_queue_get_received,source/networking/network_message_queue.c,eax ecx,int
 00095bc0,network_message_queue_add_received,source/networking/network_message_queue.c,eax ebx stack stack stack stack,bool,stdcall
+00094e90,network_message_queue_write,source/networking/network_message_queue.c,ecx stack stack stack stack,bool,stdcall
+000951c0,network_message_queue_read,source/networking/network_message_queue.c,ecx stack stack,int,stdcall
+00095410,network_message_queue_packet_result,source/networking/network_message_queue.c,ecx stack stack,void,stdcall
