@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 484.
+**Última actualización:** 2026-10-08, al terminar el hito 485.
 
 ## Dónde estamos
 
-- **1626 funciones descompiladas de 11.265: el 14,43 % del juego** (el
-  9,585 % de los bytes de código).
-- Las 1626 están comprobadas contra el ejecutable original: las 1390 del
+- **1628 funciones descompiladas de 11.265: el 14,45 % del juego** (el
+  9,597 % de los bytes de código).
+- Las 1628 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the check of a player action* (ver `git log`).
+- Último hito: *Decompile how a view lets go of its channel and of its world* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 564 funciones apuntadas pero sin descompilar (las que el código
-  llama); 462 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 563 funciones apuntadas pero sin descompilar (las que el código
+  llama); 461 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -184,7 +184,8 @@ Módulos (funciones hechas / archivo):
       `unknown_004cf770`, y queda casi todo, de `0x00069300` a
       `0x0006ad40`)
 - [ ] Las vistas de la partida en red — `networking\simulation_view.c`
-      (20: poner una vista en un estado, seguir el del otro extremo,
+      (23: soltar su canal e irse de la partida, lo que le queda por
+      contar, poner una vista en un estado, seguir el del otro extremo,
       ver si está lista, darla por mala, marcar la que frena la partida, lo que hacen los
       jugadores de la otra consola y cuáles conoce, los trozos del
       estado del juego, desde qué número sigue la partida y pasar una

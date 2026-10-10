@@ -116,6 +116,41 @@ enum
 	_simulation_view_game_state_record_piece= 1,
 	_simulation_view_game_state_record_update= 2,
 	MAXIMUM_SIMULATION_VIEW_PACKED_UPDATE_SIZE= 0xFFFF,
+	/* more of a view: its place among the views of the thing; a byte and a
+	number that go with its channel. Of a channel of the game: something of
+	the view that has it. Of the thing: how many views it has. Of a channel
+	of the observer: its size, where the channels start, and a byte of bits
+	of which one says that a view has it */
+	SIMULATION_VIEW_INDEX_OFFSET= 0x10,
+	SIMULATION_VIEW_UNKNOWN40_OFFSET= 0x40,
+	SIMULATION_VIEW_UNKNOWN44_OFFSET= 0x44,
+	SIMULATION_VIEW_CHANNEL_UNKNOWN3C_OFFSET= 0x3C,
+	SIMULATION_WORLD_VIEW_COUNT_OFFSET= 0x3C,
+	SIMULATION_VIEW_OBSERVER_CHANNEL_SIZE= 0x528,
+	SIMULATION_VIEW_OBSERVER_CHANNELS_OFFSET= 0xA8,
+	SIMULATION_VIEW_OBSERVER_CHANNEL_FLAGS_OFFSET= 0x9,
+	_simulation_view_observer_channel_view_bit= 0x8,
+	/* of what a view of the third kind or of the fourth has at 0x8: numbers
+	that are taken from one another when its channel goes, a byte at 0x8 and
+	one at 0x38; what it has for the things that happen, at 0x5070, with a
+	byte; and for the players, at 0x5098, with a byte and a number. Of what
+	the thing has at 0x4: what keeps the things that the consoles share, with
+	its views from 0x4 and a bit for each at 0x40; and what keeps the things
+	that happen, at 0x2050, the same */
+	SIMULATION_VIEW_UNKNOWN8_UNKNOWN8_OFFSET= 0x8,
+	SIMULATION_VIEW_UNKNOWN8_UNKNOWN10_OFFSET= 0x10,
+	SIMULATION_VIEW_UNKNOWN8_UNKNOWN14_OFFSET= 0x14,
+	SIMULATION_VIEW_UNKNOWN8_UNKNOWN1C_OFFSET= 0x1C,
+	SIMULATION_VIEW_UNKNOWN8_UNKNOWN20_OFFSET= 0x20,
+	SIMULATION_VIEW_UNKNOWN8_UNKNOWN28_OFFSET= 0x28,
+	SIMULATION_VIEW_UNKNOWN8_UNKNOWN2C_OFFSET= 0x2C,
+	SIMULATION_VIEW_UNKNOWN8_UNKNOWN38_OFFSET= 0x38,
+	SIMULATION_VIEW_UNKNOWN8_EVENT_VIEW_OFFSET= 0x5070,
+	SIMULATION_VIEW_UNKNOWN8_UNKNOWN5098_OFFSET= 0x5098,
+	SIMULATION_WORLD_UNKNOWN4_VIEWS_OFFSET= 0x4,
+	SIMULATION_WORLD_UNKNOWN4_VIEW_MASK_OFFSET= 0x40,
+	SIMULATION_WORLD_UNKNOWN4_EVENT_VIEW_MASK_OFFSET= 0x2050,
+	SIMULATION_WORLD_UNKNOWN4_EVENT_VIEWS_OFFSET= 0x2054,
 	MAXIMUM_SIMULATION_VIEW_GAME_STATE_PIECE_SIZE= 0x400,
 	SIMULATION_VIEW_GAME_STATE_COMPRESSION_LEVEL= 9,
 	/* the size of the memory of the ring, and of the memory that the state
@@ -209,6 +244,8 @@ boolean __attribute__((stdcall)) simulation_view_queue_game_state(long capacity,
 boolean simulation_view_begin_send_game_state(byte *view);
 void __attribute__((stdcall)) simulation_view_send_game_state(byte *view);
 boolean __attribute__((stdcall)) simulation_view_queue_update(const void *update, byte *view);
+void simulation_view_release_channel(byte *view);
+void simulation_view_detach(byte *view);
 
 /* ---------- globals */
 

@@ -19,7 +19,7 @@ def run(t) -> None:
             Buffer(bytes(view)),
             externals={
                 "simulation_view_set_state": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2])),
-                "unknown_00085880": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "simulation_view_release_channel": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
             },
         )
 

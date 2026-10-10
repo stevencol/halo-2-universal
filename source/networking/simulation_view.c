@@ -17,6 +17,7 @@ is a guess, and so are the names of its functions.
 #include "saved games/game_state.h"
 #include "networking/network_channel.h"
 #include "networking/replication_entity_view.h"
+#include "networking/replication_event_view.h"
 #include "networking/simulation.h"
 #include "networking/simulation_world.h"
 
@@ -1006,4 +1007,92 @@ boolean __attribute__((stdcall)) simulation_view_queue_update(
 	(*(long *)(view+SIMULATION_VIEW_UNKNOWNAC_OFFSET))++;
 
 	return TRUE;
+}
+
+/* 0x00085880: a view lets go of its channel. One that is not in its first
+state goes to it. The channel of the game has nothing of the view. A view of
+the third kind or of the fourth takes itself out of what keeps the things
+that the consoles share and the things that happen: its view of each starts
+over (replication_entity_view_reset, replication_event_view_reset) and is
+not one of theirs any more, and what it has at 0x8 has its numbers and bytes
+as at the start. The channel of the observer has not the bit of a view; and
+the view has no observer, no channel of it, and no channel of the game. The
+game does not look whether there is a channel of the observer */
+void simulation_view_release_channel(
+	byte *view)
+{
+	byte *channel;
+	word kind;
+
+	if (*(const long *)(view+SIMULATION_VIEW_STATE_OFFSET)!=_simulation_view_state0)
+	{
+		simulation_view_set_state(view, _simulation_view_state0, NONE);
+	}
+	*(long *)(unknown_004d87d4+*(const long *)(view+SIMULATION_VIEW_CHANNEL_OFFSET)*NETWORK_CHANNEL_SIZE+
+		SIMULATION_VIEW_CHANNEL_UNKNOWN3C_OFFSET)= 0;
+	kind= *(const word *)(view+SIMULATION_VIEW_KIND_OFFSET);
+	view[SIMULATION_VIEW_UNKNOWN44_OFFSET]= FALSE;
+	if (kind==_simulation_view_kind_3 || kind==_simulation_view_kind_4)
+	{
+		byte *unknown8= *(byte *const *)(view+SIMULATION_VIEW_UNKNOWN8_OFFSET);
+		byte *unknown4= *(byte *const *)(*(byte *const *)(view+SIMULATION_VIEW_WORLD_OFFSET)+SIMULATION_WORLD_UNKNOWN4_OFFSET);
+		byte *event_view;
+		long index;
+
+		*(long *)(unknown8+SIMULATION_VIEW_UNKNOWN8_UNKNOWN28_OFFSET)-= *(const long *)(unknown8+SIMULATION_VIEW_UNKNOWN8_UNKNOWN20_OFFSET);
+		*(long *)(unknown8+SIMULATION_VIEW_UNKNOWN8_UNKNOWN14_OFFSET)= 0;
+		unknown8= *(byte *const *)(view+SIMULATION_VIEW_UNKNOWN8_OFFSET);
+		*(long *)(unknown8+SIMULATION_VIEW_UNKNOWN8_UNKNOWN28_OFFSET)-= *(const long *)(unknown8+SIMULATION_VIEW_UNKNOWN8_UNKNOWN1C_OFFSET);
+		*(long *)(unknown8+SIMULATION_VIEW_UNKNOWN8_UNKNOWN10_OFFSET)= 0;
+		*(long *)(*(byte *const *)(view+SIMULATION_VIEW_UNKNOWN8_OFFSET)+SIMULATION_VIEW_UNKNOWN8_UNKNOWN2C_OFFSET)= 0;
+		index= *(const long *)(view+SIMULATION_VIEW_INDEX_OFFSET);
+		replication_entity_view_reset(*(byte *const *)(unknown4+SIMULATION_WORLD_UNKNOWN4_VIEWS_OFFSET+index*4));
+		*(byte **)(unknown4+SIMULATION_WORLD_UNKNOWN4_VIEWS_OFFSET+index*4)= NULL;
+		*(unsigned long *)(unknown4+SIMULATION_WORLD_UNKNOWN4_VIEW_MASK_OFFSET)&= ~(1u<<(index&31));
+		index= *(const long *)(view+SIMULATION_VIEW_INDEX_OFFSET);
+		replication_event_view_reset(*(byte *const *)(unknown4+SIMULATION_WORLD_UNKNOWN4_EVENT_VIEWS_OFFSET+index*4));
+		*(unsigned long *)(unknown4+SIMULATION_WORLD_UNKNOWN4_EVENT_VIEW_MASK_OFFSET)&= ~(1u<<(index&31));
+		*(byte **)(unknown4+SIMULATION_WORLD_UNKNOWN4_EVENT_VIEWS_OFFSET+index*4)= NULL;
+		unknown8= *(byte *const *)(view+SIMULATION_VIEW_UNKNOWN8_OFFSET)+SIMULATION_VIEW_UNKNOWN8_UNKNOWN5098_OFFSET;
+		unknown8[8]= FALSE;
+		*(long *)(unknown8+0xC)= 0;
+		event_view= *(byte *const *)(view+SIMULATION_VIEW_UNKNOWN8_OFFSET)+SIMULATION_VIEW_UNKNOWN8_EVENT_VIEW_OFFSET;
+		replication_event_view_reset(event_view);
+		event_view[8]= FALSE;
+		(*(byte *const *)(view+SIMULATION_VIEW_UNKNOWN8_OFFSET))[SIMULATION_VIEW_UNKNOWN8_UNKNOWN38_OFFSET]= FALSE;
+		(*(byte *const *)(view+SIMULATION_VIEW_UNKNOWN8_OFFSET))[SIMULATION_VIEW_UNKNOWN8_UNKNOWN8_OFFSET]= FALSE;
+	}
+	channel= *(byte *const *)(view+SIMULATION_VIEW_OBSERVER_OFFSET)+
+		*(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET)*SIMULATION_VIEW_OBSERVER_CHANNEL_SIZE+
+		SIMULATION_VIEW_OBSERVER_CHANNELS_OFFSET;
+	channel[SIMULATION_VIEW_OBSERVER_CHANNEL_FLAGS_OFFSET]&= (byte)~_simulation_view_observer_channel_view_bit;
+	*(byte **)(view+SIMULATION_VIEW_OBSERVER_OFFSET)= NULL;
+	*(long *)(view+SIMULATION_VIEW_UNKNOWN40_OFFSET)= NONE;
+	*(long *)(view+SIMULATION_VIEW_CHANNEL_OFFSET)= NONE;
+	*(long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET)= NONE;
+}
+
+/* 0x00085600: a view is not of its thing any more: one of the second kind
+gives back its memory (simulation_view_unknown_00086590, written here); the
+thing has no view at its place, and one fewer; and the view has no thing,
+and no place */
+void simulation_view_detach(
+	byte *view)
+{
+	byte *world;
+
+	if (*(const word *)(view+SIMULATION_VIEW_KIND_OFFSET)==_simulation_view_kind_2 &&
+		*(void *const *)(view+SIMULATION_VIEW_UNKNOWN94_OFFSET))
+	{
+		*(long *)(view+SIMULATION_VIEW_UNKNOWN9C_OFFSET)= 0;
+		*(long *)(view+SIMULATION_VIEW_UNKNOWNA0_OFFSET)= 0;
+		texture_cache_return_memory(*(void *const *)(view+SIMULATION_VIEW_UNKNOWN94_OFFSET));
+		*(void **)(view+SIMULATION_VIEW_UNKNOWN94_OFFSET)= NULL;
+		*(long *)(view+SIMULATION_VIEW_UNKNOWN98_OFFSET)= 0;
+	}
+	world= *(byte *const *)(view+SIMULATION_VIEW_WORLD_OFFSET);
+	*(byte **)(world+SIMULATION_WORLD_VIEWS_OFFSET+*(const long *)(view+SIMULATION_VIEW_INDEX_OFFSET)*4)= NULL;
+	(*(long *)(world+SIMULATION_WORLD_VIEW_COUNT_OFFSET))--;
+	*(byte **)(view+SIMULATION_VIEW_WORLD_OFFSET)= NULL;
+	*(long *)(view+SIMULATION_VIEW_INDEX_OFFSET)= NONE;
 }

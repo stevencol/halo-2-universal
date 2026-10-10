@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Una vista suelta su canal, y se va de la partida
+
+Dos funciones en `networking/simulation_view.c`, 376 bytes entre las dos. De 1626
+funciones se pasa a 1628, el 14,45 % de las del juego (el 9,597 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_view_release_channel` | `0x00085880` | `networking/simulation_view.c` |
+| `simulation_view_detach` | `0x00085600` | `networking/simulation_view.c` |
+
+### Lo que se sabe
+
+- `simulation_view_release_channel` es **cuando una vista se queda sin su
+  consola** (la llama el hito 477):
+  - vuelve al primer estado;
+  - el canal del juego deja de apuntar a la vista;
+  - una vista de la tercera clase o la cuarta **se borra de los dos
+    registros de la partida**: el de las cosas que las consolas comparten
+    y el de los sucesos (hitos 416 a 431). Sus vistas de cada uno se
+    vacían (`replication_entity_view_reset`,
+    `replication_event_view_reset`) y se quitan de la lista y de la
+    máscara de cada registro;
+  - el canal del observador pierde el bit de «tiene vista», y la vista
+    queda sin observador ni canales.
+- Se ve con esto **qué es lo que la partida lleva en `0x4`**: primero el
+  registro de las cosas compartidas (sus vistas desde `0x4`, un bit por
+  vista en `0x40`), en `0x2050` el de los sucesos (igual), y en `0x2098`
+  lo que cada cosa es (hito 469).
+- `simulation_view_detach` saca a la vista de la partida: suelta su
+  memoria prestada si es de la segunda clase, la partida pierde la vista
+  de su sitio y cuenta una menos (`0x3C`), y la vista queda sin partida.
+  Es lo que hace con cada vista la función que las suelta todas
+  (`0x000693a0`).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos**, y en las de los hitos 441 a
+  484.
+- `simulation_view_release_channel` no mira si la vista tiene canal del
+  observador; con ninguno escribiría fuera. Las pruebas no lo dan.
+- En este hito se pasaron las pruebas de las dos funciones y la de
+  `simulation_view_disconnected`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — ¿Vale lo que hace un jugador?
 
 Una función en `game/player_action.c`, de 510 bytes. De 1625

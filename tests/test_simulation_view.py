@@ -470,3 +470,36 @@ def run(t) -> None:
             Buffer(bytes(view) + random_.randbytes(room + 4), pointers=(0xA0,)),
             externals={"simulation_update_encode": puts},
         )
+
+    # ---------- a view lets go of its channel, and of the thing
+
+    for n in range(800):
+        VIEW_, UNKNOWN8_, THING_, UNKNOWN4_ = 0x0, 0xC0, 0xC0 + 0x50B0, 0xC0 + 0x50B0 + 0x80
+        OBSERVER_ = UNKNOWN4_ + 0x2100
+        data = bytearray(random_.randbytes(OBSERVER_ + 2 * 0x528))
+        index = random_.randrange(15)
+        struct.pack_into("<3I", data, 0x8, UNKNOWN8_, THING_, index)
+        struct.pack_into("<H", data, 2, random_.choice((1, 2, 3, 3, 4, 4)))
+        struct.pack_into("<i", data, 0x2C, random_.choice((0, 0, 2, 5)))
+        struct.pack_into("<Ii", data, 0x20, OBSERVER_, random_.randrange(2))
+        struct.pack_into("<i", data, 0x3C, random_.randrange(3))
+        struct.pack_into("<I", data, 0x94, random_.choice((0, 0x5000, 0x5000)))
+        struct.pack_into("<I", data, THING_ + 4, UNKNOWN4_)
+        struct.pack_into("<i", data, THING_ + 0x3C, random_.choice((1, 5)))
+        struct.pack_into("<I", data, THING_ + 0x40 + index * 4, 0x1234)
+        whole = Buffer(bytes(data), pointers=(0x8, 0xC, 0x20, THING_ + 4))
+        t.check(
+            "simulation_view_release_channel",
+            whole,
+            globals={"unknown_004d87d4": Buffer(random_.randbytes(3 * 0xF8))},
+            externals={
+                "simulation_view_set_state": state,
+                "replication_entity_view_reset": lambda harness, arguments: (0, (arguments[0],)),
+                "replication_event_view_reset": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+            },
+        )
+        t.check(
+            "simulation_view_detach",
+            whole,
+            externals={"texture_cache_return_memory": lambda harness, arguments: (0, (arguments[0],))},
+        )

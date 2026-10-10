@@ -23,11 +23,10 @@ and so are the names of its functions.
 
 /* ---------- prototypes */
 
-/* 0x00085880: a view lets go of its channel. 0x00087d00, 0x00087e90: one of
+/* 0x00087d00, 0x00087e90: one of
 the things that come and wait is written in a stream, and read from one;
 whether what was read is good. 0x00083db0: something of what unknown_004cf780
 has */
-void unknown_00085880(byte *view);
 void __attribute__((stdcall)) unknown_00087d00(struct bitstream *stream, const void *update);
 boolean __attribute__((stdcall)) unknown_00087e90(struct bitstream *stream, void *update);
 long unknown_00083db0(long unknown);
@@ -57,7 +56,7 @@ extern long unknown_004cf780;
 
 /* 0x00068550: the channel of a view is gone: a view that is well goes to
 its first state and is as 1 says (simulation_view_fail, written here), and
-it lets go of the channel (unknown_00085880) */
+it lets go of the channel (simulation_view_release_channel) */
 void __attribute__((stdcall)) simulation_view_disconnected(
 	byte *view)
 {
@@ -66,7 +65,7 @@ void __attribute__((stdcall)) simulation_view_disconnected(
 		simulation_view_set_state(view, _simulation_view_state0, NONE);
 		*(long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)= 1;
 	}
-	unknown_00085880(view);
+	simulation_view_release_channel(view);
 }
 
 /* 0x000685f0: one of the things that come and wait is put in bytes, in
