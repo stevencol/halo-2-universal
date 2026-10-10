@@ -2081,7 +2081,7 @@ address,name,source,arguments,returns,convention
 00094a50,network_message_handler_unknown_00094a50,source/networking/network_message_handler.c,edi stack stack ebx,void,stdcall
 00094aa0,network_message_handler_unknown_00094aa0,source/networking/network_message_handler.c,esi ebx,void
 00085b20,unknown_00085b20,,eax edx edi,bool
-00085d00,unknown_00085d00,,ebx stack stack stack,bool,stdcall
+00085d00,simulation_view_set_players,source/networking/simulation_view.c,ebx stack stack stack,bool,stdcall
 00085dc0,simulation_view_unknown_00085dc0,source/networking/simulation_view.c,edi stack,bool,stdcall
 00085e70,unknown_00085e70,,edx ecx eax stack,bool,stdcall
 00085ed0,simulation_view_unknown_00085ed0,source/networking/simulation_view.c,esi ecx eax stack,bool,stdcall
@@ -2132,3 +2132,5 @@ address,name,source,arguments,returns,convention
 00069580,simulation_world_player_delete,source/networking/simulation_world.c,eax ecx,void
 000696f0,simulation_world_players_unknown25_mask,source/networking/simulation_world.c,edx,int
 0006a480,simulation_world_players_known_mask,source/networking/simulation_world.c,eax,int
+00069640,simulation_world_player_matches,source/networking/simulation_world.c,eax edx stack,bool,stdcall
+00083bd0,unknown_00083bd0,,ecx edx stack,bool,stdcall

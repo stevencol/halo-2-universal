@@ -558,3 +558,23 @@ def run(t) -> None:
         t.check("simulation_world_player_delete", random_.randrange(16) | random_.choice((0, 0x30000, 0xFFFF0000)), thing)
         t.check("simulation_world_players_unknown25_mask", thing)
         t.check("simulation_world_players_known_mask", thing)
+
+    # ---------- whether a player is the one that three numbers say
+
+    for n in range(2000):
+        world = bytearray(random_.randbytes(0x8FC))
+        for player in range(16):
+            if random_.random() < 0.3:
+                struct.pack_into("<i", world, 0x7C + player * 0x88, -1)
+        player = random_.choice((random_.randrange(16), random_.randrange(16), 16, 0xFFFF))
+        known_by = random_.randbytes(12)
+        if player < 16 and random_.random() < 0.7:
+            known_by = bytes(world[0x7C + player * 0x88 + 0xC:0x7C + player * 0x88 + 0x18])
+        has = random_.choice((0, 1, 1, 0x100))
+        t.check(
+            "simulation_world_player_matches",
+            player | random_.choice((0, 0x50000)),
+            Buffer(bytes(world)),
+            Buffer(known_by),
+            externals={"unknown_00083bd0": lambda harness, arguments, has=has: (has, (arguments[0] & 0xFF, arguments[1], harness.normalize(arguments[2])))},
+        )

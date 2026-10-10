@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — «Estos son los jugadores que conozco»
+
+Dos funciones: una en `networking/simulation_view.c` y otra en
+`networking/simulation_world.c`, 305 bytes entre las dos. De 1574
+funciones se pasa a 1576, el 13,99 % de las del juego (el 9,324 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_view_set_players` | `0x00085d00` | `networking/simulation_view.c` |
+| `simulation_world_player_matches` | `0x00069640` | `networking/simulation_world.c` |
+
+### Lo que se sabe
+
+- `simulation_view_set_players` es lo que una vista de la segunda clase o
+  la cuarta hace con el mensaje de `0x00094940` (hito 444): **la otra
+  consola dice qué jugadores conoce**, con dos bits por jugador y los
+  tres números (12 bytes) que identifican a cada uno.
+  - La vista se queda con los que tienen los dos bits y casan con lo que
+    la partida tiene de ese jugador: es el bit por jugador del hito 459.
+  - Si la vista ya pasó de prepararse y **le falta alguno de los
+    jugadores que la partida tiene marcados** (hito 445), se da por mala,
+    con el motivo `8`.
+- `simulation_world_player_matches` dice si un jugador de la partida es
+  el de esos tres números: tienen que ser los que la partida guarda de
+  él (en `0xC` de su sitio) y los que tiene lo primero que la partida
+  lleva (`0x00083bd0`; por cómo se usa, la lista de jugadores de la
+  sesión).
+- De los siete mensajes del hito 444 quedan por saber dos: el de
+  `0x00094910` (`0x00085b20`) y el de `0x00094aa0` (`0x00085e70`).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos**, y en las de los hitos 441 a
+  459.
+- En este hito se pasaron las pruebas de `simulation_view` (7
+  funciones), `network_message_handler` (7) y la de
+  `simulation_world_player_matches`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Qué jugadores conoce cada vista
 
 Tres funciones en `networking/simulation_world.c`, 505 bytes entre las tres. De 1571

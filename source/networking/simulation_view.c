@@ -264,3 +264,47 @@ boolean __attribute__((stdcall)) simulation_view_unknown_00085dc0(
 
 	return FALSE;
 }
+
+/* 0x00085d00: a view of the second kind or of the fourth is told the
+players that the other console knows of: two bits for each, and the three
+numbers that each is known by; whether that was heeded. It is not by a view
+of no channel or one that is not ready. The players that the view knows of
+are the ones with both bits that the thing has with those numbers
+(simulation_world_player_matches). And if the view is past being made
+ready, and that leaves out a player of the thing whose byte is set
+(simulation_world_players_unknown25_mask), the view goes to its first state
+and is as 8 says (simulation_view_fail, written here) */
+boolean __attribute__((stdcall)) simulation_view_set_players(
+	byte *view,
+	unsigned long players,
+	unsigned long valid,
+	const long *identifiers)
+{
+	unsigned long known= 0;
+	long player;
+
+	if (*(const long *)(view+SIMULATION_VIEW_CHANNEL_OFFSET)==NONE || !view[SIMULATION_VIEW_READY_OFFSET])
+	{
+		return FALSE;
+	}
+	for (player= 0; player<NUMBER_OF_SIMULATION_WORLD_PLAYERS; player++)
+	{
+		unsigned long bit= 1u<<player;
+
+		if ((players&bit) && (valid&bit) && simulation_world_player_matches(player,
+			*(byte *const *)(view+SIMULATION_VIEW_WORLD_OFFSET), identifiers+player*(SIMULATION_PLAYER_IDENTIFIER_SIZE/4)))
+		{
+			known|= bit;
+		}
+	}
+	if (simulation_view_established(view) &&
+		(~known&simulation_world_players_unknown25_mask(*(byte *const *)(view+SIMULATION_VIEW_WORLD_OFFSET))) &&
+		*(const long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)==0)
+	{
+		simulation_view_set_state(view, _simulation_view_state0, NONE);
+		*(long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)= _simulation_view_unknown28_players_missing;
+	}
+	*(unsigned long *)(view+SIMULATION_VIEW_PLAYER_MASK_OFFSET)= known;
+
+	return TRUE;
+}

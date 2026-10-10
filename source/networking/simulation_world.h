@@ -129,7 +129,12 @@ enum
 	_simulation_player_datum_unknown_bit= 0x2,
 	SIMULATION_PLAYER_DATUM_UNKNOWN2C_OFFSET= 0x2C,
 	/* of a view: a bit for each player of the game that it knows of */
-	SIMULATION_VIEW_PLAYER_MASK_OFFSET= 0x7C
+	SIMULATION_VIEW_PLAYER_MASK_OFFSET= 0x7C,
+	/* of what the thing has of a player: three numbers that it is known
+	by; and what the thing has first: something of the session */
+	SIMULATION_WORLD_PLAYER_IDENTIFIER_OFFSET= 0xC,
+	SIMULATION_PLAYER_IDENTIFIER_SIZE= 12,
+	SIMULATION_WORLD_UNKNOWN0_OFFSET= 0x0
 };
 
 /* ---------- structures */
@@ -204,6 +209,8 @@ void __attribute__((stdcall)) simulation_world_unknown_0006a770(byte *world);
 void simulation_world_player_delete(long player, byte *world);
 unsigned long simulation_world_players_unknown25_mask(const byte *world);
 unsigned long simulation_world_players_known_mask(const byte *world);
+boolean __attribute__((stdcall)) simulation_world_player_matches(long player, const byte *world,
+	const long *identifier);
 
 /* whether a view is past the states in which it is made ready: one of the
 second kind from the sixth state on, and any other from the fourth. The game

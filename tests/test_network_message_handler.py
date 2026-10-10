@@ -24,7 +24,7 @@ def run(t) -> None:
 
     externals = {
         "unknown_00085b20": view_and("number", "number"),
-        "unknown_00085d00": view_and("number", "number", "pointer"),
+        "simulation_view_set_players": view_and("number", "number", "pointer"),
         "simulation_view_unknown_00085dc0": view_and("number"),
         "unknown_00085e70": view_and("number", "number", "pointer"),
         "simulation_view_unknown_00085ed0": view_and("number", "number", "number"),

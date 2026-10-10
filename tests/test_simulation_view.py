@@ -122,3 +122,30 @@ def run(t) -> None:
                 "simulation_world_unknown_00069350": lambda harness, arguments: (0, (arguments[0] & 0xFF, harness.normalize(arguments[1]))),
             },
         )
+
+    # ---------- the players that the other console knows of
+
+    for n in range(2500):
+        view = a_view()
+        data = bytearray(view.data)
+        struct.pack_into("<i", data, 0x3C, random_.choice((-1, 0, 0, 0, 3)))
+        data[0x75] = random_.choice((0, 1, 1, 1, 0x80))
+        struct.pack_into("<H", data, 2, random_.choice((2, 2, 4, 1)))
+        struct.pack_into("<i", data, 0x2C, random_.choice((0, 2, 3, 4, 5, 6)))
+        pattern = random_.getrandbits(16)
+        needed = random_.choice((0, 0, random_.getrandbits(16), random_.getrandbits(16) & random_.getrandbits(16)))
+        t.check(
+            "simulation_view_set_players",
+            Buffer(bytes(data), pointers=view.pointers),
+            random_.choice((0xFFFF, random_.getrandbits(32))),
+            random_.choice((0xFFFF, random_.getrandbits(32))),
+            Buffer(random_.randbytes(16 * 12)),
+            externals={
+                "simulation_view_set_state": state,
+                "simulation_world_player_matches": lambda harness, arguments, pattern=pattern: (
+                    pattern >> (arguments[0] & 15) & 1,
+                    (arguments[0], harness.normalize(arguments[1]), harness.normalize(arguments[2])),
+                ),
+                "simulation_world_players_unknown25_mask": lambda harness, arguments, needed=needed: (needed, (harness.normalize(arguments[0]),)),
+            },
+        )

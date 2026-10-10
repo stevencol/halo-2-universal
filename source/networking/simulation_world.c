@@ -36,6 +36,10 @@ boolean __attribute__((stdcall)) unknown_00199740(const void *data, long size, v
 /* 0x000c6ef0: something of one of the other things of the thing is made
 ready. 0x000694c0: the thing gets a player of the game */
 void unknown_000c6ef0(byte *unknown14);
+
+/* 0x00083bd0: whether what the thing has first has a player, by its place,
+with the three numbers that it is known by */
+boolean __attribute__((stdcall)) unknown_00083bd0(long player, const void *unknown, const long *identifier);
 void __attribute__((stdcall)) unknown_000694c0(byte *world, long player);
 
 
@@ -1108,4 +1112,30 @@ unsigned long simulation_world_players_known_mask(
 	}
 
 	return mask;
+}
+
+/* 0x00069640: whether a player that the thing has, by the low word of its
+number, is the one that three numbers say: they are the ones that the thing
+has of it, and what the thing has first has it with them (unknown_00083bd0).
+FALSE with no such player */
+boolean __attribute__((stdcall)) simulation_world_player_matches(
+	long player,
+	const byte *world,
+	const long *identifier)
+{
+	unsigned long index= (unsigned long)player&0xFFFF;
+	const byte *player_data_;
+
+	if (index>=NUMBER_OF_SIMULATION_WORLD_PLAYERS)
+	{
+		return FALSE;
+	}
+	player_data_= world+index*SIMULATION_WORLD_PLAYER_SIZE+SIMULATION_WORLD_PLAYERS_OFFSET;
+	if (*(const long *)player_data_==NONE ||
+		memcmp(identifier, player_data_+SIMULATION_WORLD_PLAYER_IDENTIFIER_OFFSET, SIMULATION_PLAYER_IDENTIFIER_SIZE)!=0)
+	{
+		return FALSE;
+	}
+
+	return unknown_00083bd0((long)index, *(const void *const *)(world+SIMULATION_WORLD_UNKNOWN0_OFFSET), identifier)!=FALSE;
 }

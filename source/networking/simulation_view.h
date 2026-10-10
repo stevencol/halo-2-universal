@@ -53,7 +53,9 @@ enum
 	that it was sent could not be taken */
 	SIMULATION_VIEW_UNKNOWN80_OFFSET= 0x80,
 	_simulation_view_unknown28_remote_failed= 2,
-	_simulation_view_unknown28_game_state_failed= 5
+	_simulation_view_unknown28_game_state_failed= 5,
+	/* how a view is after it is told of fewer players than it has to know */
+	_simulation_view_unknown28_players_missing= 8
 };
 
 /* ---------- structures */
@@ -75,5 +77,7 @@ boolean __attribute__((stdcall)) simulation_view_unknown_00085f50(byte *view, bo
 boolean __attribute__((stdcall)) simulation_view_unknown_00085ed0(byte *view, long offset, long size,
 	const void *data);
 boolean __attribute__((stdcall)) simulation_view_unknown_00085dc0(byte *view, long number);
+boolean __attribute__((stdcall)) simulation_view_set_players(byte *view, unsigned long players,
+	unsigned long valid, const long *identifiers);
 
 #endif

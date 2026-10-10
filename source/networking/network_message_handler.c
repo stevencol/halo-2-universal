@@ -20,10 +20,9 @@ it). The name of the file is a guess, and so are the names of its functions.
 
 /* ---------- prototypes */
 
-/* 0x00085b20, 0x00085d00 and 0x00085e70: what a view does with what each
-message has; whether it could, most likely */
+/* 0x00085b20 and 0x00085e70: what a view does with what each message has;
+whether it could, most likely */
 boolean unknown_00085b20(byte *view, long unknown0, long unknown4);
-boolean __attribute__((stdcall)) unknown_00085d00(byte *view, long unknown0, long unknown4, const long *unknown8);
 boolean __attribute__((stdcall)) unknown_00085e70(byte *view, long unknown0, long unknown4, const long *unknown8);
 
 /* ---------- code */
@@ -58,7 +57,8 @@ void network_message_handler_unknown_00094910(
 }
 
 /* 0x00094940: a message with two numbers and something more, for a view of
-the second kind or of the fourth */
+the second kind or of the fourth: the players that the other console knows
+of (simulation_view_set_players) */
 void network_message_handler_unknown_00094940(
 	const long *message,
 	long channel_index)
@@ -67,7 +67,7 @@ void network_message_handler_unknown_00094940(
 
 	if (view && ((1u<<(view[SIMULATION_VIEW_KIND_OFFSET]&31))&((1u<<_simulation_view_kind2)|(1u<<_simulation_view_kind4))))
 	{
-		unknown_00085d00(view, message[0], message[1], &message[2]);
+		simulation_view_set_players(view, message[0], message[1], &message[2]);
 	}
 }
 
