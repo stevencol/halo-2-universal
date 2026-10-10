@@ -217,7 +217,7 @@ def run(t) -> None:
             "network_message_queue_read",
             Buffer(bytes(data)),
             Buffer(struct.pack("<I", random_.choice((0xFFFFFFFF, 0, 7, random_.getrandbits(32), random_.getrandbits(32))))),
-            stream(length, random_.choice((3, 3, 3, 3, 4)), random_.choice((0, 0, 0, 0, 3))),
+            stream(length, random_.choice((3, 3, 3, 3, 4)), 0, contents),
             extra=[memory],
             globals={"unknown_004d87f8": Pointer(memory, HEAP)},
             mocks=heap_mocks(),
