@@ -120,6 +120,14 @@ enum
 	of the game is packed into */
 	SIMULATION_VIEW_RING_SIZE= 0x80000,
 	SIMULATION_VIEW_PACKED_GAME_STATE_SIZE= 0x40000,
+	/* the kinds of the messages that say the number that the game goes on
+	from, and that have a piece of the state of the game; and the room that
+	the channel of the game has to have for one more of them: what its
+	second thing can still take, of 0x200 messages of 0x20 bytes */
+	_network_message_simulation_game_state_start= 0x29,
+	_network_message_simulation_game_state_piece= 0x2A,
+	SIMULATION_VIEW_SEND_QUEUE_MESSAGES= 0x200,
+	SIMULATION_VIEW_SEND_QUEUE_ROOM= 0x600,
 	_simulation_view_kind_1= 1,
 	_simulation_view_kind_2= 2,
 	_simulation_view_kind_3= 3,
@@ -160,6 +168,15 @@ struct simulation_view_game_state_record
 	long number;
 };
 
+/* a piece of the state of the game, as it goes to a console that comes
+in: where it goes, its size, and its bytes */
+struct simulation_view_game_state_piece_message
+{
+	long offset;
+	long size;
+	byte data[0x400];
+};
+
 typedef char verify_simulation_view_player_actions_message_size[
 	sizeof(struct simulation_view_player_actions_message) == 0x180 ? 1 : -1];
 
@@ -188,6 +205,7 @@ void __attribute__((stdcall)) simulation_view_reclaim_game_state(void *address, 
 boolean __attribute__((stdcall)) simulation_view_queue_game_state(long capacity, byte *view, long size,
 	const void *buffer);
 boolean simulation_view_begin_send_game_state(byte *view);
+void __attribute__((stdcall)) simulation_view_send_game_state(byte *view);
 
 /* ---------- globals */
 

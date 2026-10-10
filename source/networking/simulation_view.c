@@ -15,6 +15,7 @@ is a guess, and so are the names of its functions.
 #include "cache/texture_cache.h"
 #include "memory/ring_buffer.h"
 #include "saved games/game_state.h"
+#include "networking/network_channel.h"
 #include "networking/replication_entity_view.h"
 #include "networking/simulation_world.h"
 
@@ -45,11 +46,12 @@ long GetTickCount(void);
 /* 0x001995a0: the state of the game, from where it is, is packed into
 memory of a size; how many bytes it is then, and whether it could be.
 0x000869a0: a view takes one of the things that come, with what it has
-at 0x94; whether it could. 0x000865d0: and then something follows */
+at 0x94; whether it could. 0x00068670: one of the things that come is made
+from the bytes that were kept of it; whether it could be */
 boolean __attribute__((stdcall)) unknown_001995a0(const void *base, void *buffer, long *size_out, long capacity,
 	long level);
 boolean __attribute__((stdcall)) unknown_000869a0(const void *update, byte *view);
-void __attribute__((stdcall)) unknown_000865d0(byte *view);
+boolean unknown_00068670(const void *data, long size, void *update);
 
 /* 0x0006a7f0: the thing takes what some players of the other console do, as
 bits say which. 0x0006a990: it takes a piece of the state of the game, of a
@@ -344,7 +346,7 @@ boolean __attribute__((stdcall)) simulation_view_set_players(
 thing. In its sixth state, it is sent on to the other console as it is (a
 message of the kind 0x27, of 0x4048 bytes), if the view talks by a channel
 of the observer. In any other, and with something at 0x94, the view takes it
-(unknown_000869a0) and something follows (unknown_000865d0); if it could
+(unknown_000869a0) and something follows (simulation_view_send_game_state); if it could
 not, the view goes to its first state and is as 5 says (simulation_view_fail,
 written here). The game sends a copy */
 void simulation_view_send_update(
@@ -367,7 +369,7 @@ void simulation_view_send_update(
 	{
 		if (unknown_000869a0(update, view))
 		{
-			unknown_000865d0(view);
+			simulation_view_send_game_state(view);
 		}
 		else if (*(const long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)==0)
 		{
@@ -863,4 +865,115 @@ boolean simulation_view_begin_send_game_state(
 	}
 
 	return result;
+}
+
+/* 0x000865d0: what the ring of a view keeps for a console that comes in
+goes out, a thing at a time, while the view is of a channel, is ready, has
+things left, and the channel of the game is in its sixth state, has its
+second thing, and that has room for 0x600 bytes more of messages.
+
+Each thing is taken from the ring: its eight bytes, and what follows them.
+The number that the game goes on from goes in a message of the kind 0x29; a
+piece of the state of the game, in one of the kind 0x2A, with where it goes
+and its size; and anything else is one of the things that came while the
+state was sent: it is made again from its bytes (unknown_00068670) and goes
+as they do, in a message of the kind 0x27. If it could not be made, the view
+goes to its first state and is as 5 says (simulation_view_fail, written
+here), and no more goes out */
+void __attribute__((stdcall)) simulation_view_send_game_state(
+	byte *view)
+{
+	struct ring_buffer *ring= (struct ring_buffer *)(view+SIMULATION_VIEW_RING_OFFSET);
+
+	for (;;)
+	{
+		struct simulation_view_game_state_record record;
+		byte data[MAXIMUM_SIMULATION_VIEW_GAME_STATE_PIECE_SIZE];
+		const byte *channel;
+		const byte *queue;
+
+		if (*(const long *)(view+SIMULATION_VIEW_CHANNEL_OFFSET)==NONE || !view[SIMULATION_VIEW_READY_OFFSET] ||
+			*(const long *)(view+SIMULATION_VIEW_UNKNOWNAC_OFFSET)==0)
+		{
+			return;
+		}
+		channel= unknown_004d87d4+*(const long *)(view+SIMULATION_VIEW_CHANNEL_OFFSET)*NETWORK_CHANNEL_SIZE;
+		if (*(const long *)(channel+NETWORK_CHANNEL_STATE_OFFSET)!=_network_channel_state5 ||
+			!(channel[NETWORK_CHANNEL_UNKNOWN48_OFFSET]&_network_channel_unknown48_bit10))
+		{
+			return;
+		}
+		queue= unknown_004d87dc+*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN14_OFFSET)*NETWORK_CHANNEL_UNKNOWN14_SIZE;
+		if ((long)((SIMULATION_VIEW_SEND_QUEUE_MESSAGES-(*(const unsigned long *)(queue+NETWORK_CHANNEL_UNKNOWN14_UNKNOWN18_OFFSET)-
+			*(const unsigned long *)(queue+NETWORK_CHANNEL_UNKNOWN14_UNKNOWN1C_OFFSET)))<<5)<SIMULATION_VIEW_SEND_QUEUE_ROOM)
+		{
+			return;
+		}
+		ring_buffer_read(ring, ring->start, sizeof(record), &record);
+		ring->start= (long)((unsigned long)ring->start+sizeof(record))%ring->size;
+		ring->count-= (long)sizeof(record);
+		if (record.size>0)
+		{
+			ring_buffer_read(ring, ring->start, record.size, data);
+			ring->start= (long)((unsigned long)ring->start+(unsigned long)(long)record.size)%ring->size;
+			ring->count-= record.size;
+		}
+		switch (record.type)
+		{
+		case _simulation_view_game_state_record_start:
+		{
+			long number= record.number;
+
+			if (*(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET)!=NONE)
+			{
+				network_observer_channel_send(FALSE, *(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET),
+					*(byte *const *)(view+SIMULATION_VIEW_OBSERVER_OFFSET), SIMULATION_VIEW_SESSION_INDEX,
+					_network_message_simulation_game_state_start, sizeof(number), &number);
+			}
+			break;
+		}
+		case _simulation_view_game_state_record_piece:
+		{
+			struct simulation_view_game_state_piece_message message;
+
+			message.offset= record.number;
+			message.size= record.size;
+			if (record.size>0)
+			{
+				memcpy(message.data, data, record.size);
+			}
+			if (*(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET)!=NONE)
+			{
+				network_observer_channel_send(FALSE, *(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET),
+					*(byte *const *)(view+SIMULATION_VIEW_OBSERVER_OFFSET), SIMULATION_VIEW_SESSION_INDEX,
+					_network_message_simulation_game_state_piece, message.size+8, &message);
+			}
+			break;
+		}
+		default:
+		{
+			byte update[SIMULATION_VIEW_UPDATE_SIZE];
+
+			memset(update, 0, sizeof(update));
+			if (!unknown_00068670(data, record.size, update))
+			{
+				if (*(const long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)==0)
+				{
+					simulation_view_set_state(view, _simulation_view_state0, NONE);
+					*(long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)= _simulation_view_unknown28_game_state_failed;
+				}
+
+				return;
+			}
+			if (*(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET)!=NONE)
+			{
+				network_observer_channel_send(FALSE, *(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET),
+					*(byte *const *)(view+SIMULATION_VIEW_OBSERVER_OFFSET), SIMULATION_VIEW_SESSION_INDEX,
+					_network_message_simulation_update, sizeof(update), update);
+			}
+			break;
+		}
+		}
+		(*(long *)(view+SIMULATION_VIEW_UNKNOWNAC_OFFSET))--;
+	}
 }

@@ -200,7 +200,7 @@ def run(t) -> None:
                 "simulation_view_set_state": state,
                 "network_observer_channel_send": sends,
                 "unknown_000869a0": lambda harness, arguments, could=could: (could, (harness.normalize(arguments[0]), harness.normalize(arguments[1]))),
-                "unknown_000865d0": told,
+                "simulation_view_send_game_state": told,
             },
         )
 
@@ -401,4 +401,48 @@ def run(t) -> None:
                 ),
             },
             mocks=[Mock(lambda call: 0, stack_arguments=1)],
+        )
+
+    # ---------- what the ring of a view keeps goes out
+
+    for n in range(1500):
+        view = bytearray(random_.randbytes(0xC0))
+        channel = random_.choice((-1, 0, 1, 2, 2, 2))
+        struct.pack_into("<i", view, 0x3C, channel)
+        view[0x75] = random_.choice((0, 1, 1, 1, 1, 0x80))
+        struct.pack_into("<Ii", view, 0x20, 0x12345678, random_.choice((-1, 0, 3, 3)))
+        struct.pack_into("<i", view, 0x28, random_.choice((0, 0, 7)))
+        channels = bytearray(random_.randbytes(3 * 0xF8))
+        for index in range(3):
+            struct.pack_into("<i", channels, index * 0xF8 + 0x54, random_.choice((5, 5, 5, 5, 4)))
+            channels[index * 0xF8 + 0x48] = random_.getrandbits(8) | random_.choice((0x10, 0x10, 0x10, 0))
+            struct.pack_into("<i", channels, index * 0xF8 + 0x14, random_.randrange(2))
+        queues = bytearray(random_.randbytes(2 * 0x2850))
+        for index in range(2):
+            newest = random_.choice((0, 5, 1000))
+            struct.pack_into("<2i", queues, index * 0x2850 + 0x18, newest, newest - random_.choice((0, 0, 0x1CF, 0x1D0, 0x1D1, 0x200)))
+        # the things that the ring keeps: eight bytes of each, and what follows
+        things = bytearray()
+        count = random_.choice((0, 1, 2, 4, 6))
+        for thing in range(count):
+            kind = random_.choice((0, 1, 1, 1, 2, 2))
+            length = 0 if kind == 0 else random_.choice((0, 1, 0x33, 0x400)) if kind == 1 else random_.choice((1, 0x40, 0x200))
+            things += struct.pack("<2hI", kind, length, random_.getrandbits(32)) + random_.randbytes(length)
+        room = len(things) + random_.choice((0, 0, 16, 0x100)) or 8
+        start = random_.randrange(room)
+        memory = bytearray(random_.randbytes(room))
+        for place, value in enumerate(things):
+            memory[(start + place) % room] = value
+        struct.pack_into("<iI2i", view, 0x9C, room, 0xC0, start, len(things))
+        struct.pack_into("<i", view, 0xAC, random_.choice((count, count, count, max(count - 1, 0))))
+        made = random_.choice((1, 1, 1, 0, 0x100))
+        t.check(
+            "simulation_view_send_game_state",
+            Buffer(bytes(view) + bytes(memory) + random_.randbytes(4), pointers=(0xA0,)),
+            globals={"unknown_004d87d4": Buffer(bytes(channels)), "unknown_004d87dc": Buffer(bytes(queues))},
+            externals={
+                "simulation_view_set_state": state,
+                "network_observer_channel_send": sends,
+                "unknown_00068670": lambda harness, arguments, made=made: (made, (bytes(harness.mu.mem_read(arguments[0], arguments[1])), arguments[1])),
+            },
         )

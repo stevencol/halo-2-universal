@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — El estado del juego va saliendo, mensaje a mensaje
+
+Una función en `networking/simulation_view.c`, de 553 bytes. De 1601
+funciones se pasa a 1602, el 14,22 % de las del juego (el 9,494 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_view_send_game_state` | `0x000865d0` | `networking/simulation_view.c` |
+
+### Lo que se sabe
+
+- `simulation_view_send_game_state` **vacía el anillo de la vista** (hitos
+  472 a 474) hacia la consola que entra, una cosa cada vez, mientras:
+  la vista tenga canal y esté lista, le queden cosas, el canal del juego
+  esté en su sexto estado con su segunda pieza, y **a la cola de mensajes
+  de ese canal le quepan 1536 bytes más** (hito 441). Es lo que impide
+  que mandar el estado del juego ahogue al canal.
+- Según lo que diga la cabecera de ocho bytes de cada cosa:
+  - el número desde el que sigue la partida va en un mensaje de la clase
+    `0x29` (lo recibe el hito 455);
+  - un trozo del estado del juego, en uno de la clase `0x2A`, con dónde
+    va y cuánto mide (lo recibe el hito 449);
+  - y cualquier otra cosa es **una actualización que llegó mientras se
+    mandaba el estado**: se rehace a partir de sus bytes (`0x00068670`) y
+    va como todas, en un mensaje `0x27`. Así la consola que entra no
+    pierde nada de lo que pasó entretanto.
+- Con esto está **entera la entrada de una consola en una partida en
+  marcha**, de las dos puntas: decidir cuándo (464), comprimir y trocear
+  (473, 474), mandar (este), recibir los trozos (449, 456), cargarlo
+  (457), y ponerse al día (455, 446).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 441 a 474.
+- En este hito se pasaron las pruebas de la función (1500 casos, con el
+  anillo dando la vuelta) y la de `simulation_view_send_update`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Empezar a mandar el estado del juego a una consola que entra
 
 Una función en `networking/simulation_view.c`, de 674 bytes. De 1600
