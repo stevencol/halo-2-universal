@@ -62,6 +62,37 @@ def run(t) -> None:
             externals={
                 "unknown_0008b7f0": gives,
                 "unknown_000825e0": unpacks,
-                "unknown_0014d0a0": lambda harness, arguments, good=good: (good, (bytes(harness.mu.mem_read(arguments[0], 0x5C)),)),
+                "player_action_valid": lambda harness, arguments, good=good: (good, (bytes(harness.mu.mem_read(arguments[0], 0x5C)),)),
             },
         )
+
+    # ---------- whether what a player does is good
+
+    t.check("player_action_valid", 0)
+    reals = (0.0, 0.0, 0.0, 1.0, -1.0, 0.5, -0.5, 1.0000001, -1.0000001, 2.0, 1e30, float("inf"), float("-inf"), float("nan"), -0.0, 1e-40)
+    for n in range(20000):
+        action = bytearray(0x5C)
+        struct.pack_into("<6f", action, 0x4, *(random_.choice((0.0, 0.5, 1.0, -0.25)) for value in range(2)), random_.choice((0.0, 0.5, -1.0, 1.0)), random_.choice((0.0, 0.5, -1.0, 1.0)), random_.choice((0.0, 0.5, 1.0)), 0.25)
+        struct.pack_into("<2b2h", action, 0x20, random_.choice((-1, 0, 3)), random_.choice((-1, 1, 2)), random_.choice((-1, 0, 1)), random_.choice((-1, 0, 3)))
+        struct.pack_into("<h2xii", action, 0x28, random_.choice((0, 0, 1, 8)), random_.choice((5, 5, -1)), 7)
+        struct.pack_into("<i", action, 0x34, random_.choice((-1, 3, 3)))
+        struct.pack_into("<H2x2f", action, 0x4C, random_.choice((0, 0, 1, 2)), random_.choice((0.0, 0.0, 0.5, 1.0)), random_.choice((0.0, 0.0, 0.5)))
+        action[0x1D] = random_.choice((0, 0, 1))
+        # and then something of it is another
+        for change in range(random_.choice((0, 0, 1, 1, 2))):
+            what = random_.randrange(8)
+            if what == 0:
+                struct.pack_into("<f", action, random_.choice((0x4, 0x8, 0xC, 0x10, 0x14, 0x18, 0x50, 0x54)), random_.choice(reals))
+            elif what == 1:
+                struct.pack_into("<b", action, random_.choice((0x20, 0x21)), random_.choice((-1, -2, 0, 1, 3, 4, 127, -128)))
+            elif what == 2:
+                struct.pack_into("<h", action, random_.choice((0x22, 0x24, 0x28)), random_.choice((-1, -2, 0, 1, 2, 3, 4, 8, 9, 0x7FFF)))
+            elif what == 3:
+                action[0x1D] = random_.getrandbits(8)
+            elif what == 4:
+                struct.pack_into("<i", action, random_.choice((0x2C, 0x34)), random_.choice((-1, 0, 5)))
+            elif what == 5:
+                action[0x4C] = random_.getrandbits(8)
+            else:
+                action[random_.randrange(0x5C)] = random_.getrandbits(8)
+        t.check("player_action_valid", Buffer(bytes(action)))

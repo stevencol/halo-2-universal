@@ -31,11 +31,21 @@ enum
 	PLAYER_ACTION_UNKNOWN3C_OFFSET= 0x3C,
 	PLAYER_ACTION_UNKNOWN4C_OFFSET= 0x4C,
 	PLAYER_ACTION_UNKNOWN50_OFFSET= 0x50,
-	PLAYER_ACTION_UNKNOWN54_OFFSET= 0x54
+	PLAYER_ACTION_UNKNOWN54_OFFSET= 0x54,
+	/* more of it: six reals, of which two go from -1 to 1 and one from 0 to
+	1; and a byte of bits, of which only the first can be set */
+	PLAYER_ACTION_UNKNOWN4_OFFSET= 0x4,
+	PLAYER_ACTION_UNKNOWN8_OFFSET= 0x8,
+	PLAYER_ACTION_UNKNOWNC_OFFSET= 0xC,
+	PLAYER_ACTION_UNKNOWN10_OFFSET= 0x10,
+	PLAYER_ACTION_UNKNOWN14_OFFSET= 0x14,
+	PLAYER_ACTION_UNKNOWN18_OFFSET= 0x18,
+	PLAYER_ACTION_UNKNOWN1D_OFFSET= 0x1D
 };
 
 /* ---------- prototypes/PLAYER_ACTION.C */
 
 void player_action_clear(byte *action);
+boolean player_action_valid(const byte *action);
 
 #endif

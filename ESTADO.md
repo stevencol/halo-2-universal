@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 483.
+**Última actualización:** 2026-10-08, al terminar el hito 484.
 
 ## Dónde estamos
 
-- **1625 funciones descompiladas de 11.265: el 14,43 % del juego** (el
-  9,568 % de los bytes de código).
-- Las 1625 están comprobadas contra el ejecutable original: las 1390 del
+- **1626 funciones descompiladas de 11.265: el 14,43 % del juego** (el
+  9,585 % de los bytes de código).
+- Las 1626 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how the simulation gives the game a player's action* (ver `git log`).
+- Último hito: *Decompile the check of a player action* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 565 funciones apuntadas pero sin descompilar (las que el código
-  llama); 463 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 564 funciones apuntadas pero sin descompilar (las que el código
+  llama); 462 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -194,8 +194,9 @@ Módulos (funciones hechas / archivo):
       `networking\simulation_player.c` (2: apuntar uno nuevo y dar al
       juego lo que hace; queda el resto, de `0x000847d0` a
       `0x00085540`)
-- [ ] Lo que hace un jugador en un tick — `game\player_action.c` (1:
-      dejarlo en blanco; `0x0014d040`)
+- [ ] Lo que hace un jugador en un tick — `game\player_action.c` (2:
+      dejarlo en blanco y comprobar que vale; `0x0014d040` y
+      `0x0014d0a0`; sigue `0x0014d2a0`)
 - [ ] A quien se dan los mensajes de las vistas —
       `networking\network_message_handler.c` (7: de `0x00094910` a
       `0x00094aa0`, completo; falta lo que las vistas hacen con cada

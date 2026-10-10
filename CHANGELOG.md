@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — ¿Vale lo que hace un jugador?
+
+Una función en `game/player_action.c`, de 510 bytes. De 1625
+funciones se pasa a 1626, el 14,43 % de las del juego (el 9,585 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `player_action_valid` | `0x0014d0a0` | `game/player_action.c` |
+
+### Lo que se sabe
+
+- `player_action_valid` comprueba, campo a campo, que **lo que hace un
+  jugador tiene sentido** antes de dárselo al juego (hito 483). Es lo que
+  protege al juego de lo que llegue por la red, y de paso dice qué es
+  cada cosa de esos `0x5C` bytes:
+  - seis reales desde `0x4`, que no pueden ser infinitos ni «no número»:
+    el de `0x14` va de 0 a 1, y los de `0xC` y `0x10` de -1 a 1 (por los
+    rangos, lo de avanzar y girar);
+  - dos bytes en `0x20` y `0x21`, cada uno `-1` o de 0 a 3, y **no
+    pueden ser iguales** (parecen el arma a la que se cambia y la
+    granada);
+  - una palabra en `0x22` (`-1`, 0 o 1) y otra en `0x24` (`-1` o de 0 a
+    3);
+  - un byte de bits en `0x1D`, del que solo vale el primero;
+  - dos reales de 0 a 1 en `0x50` y `0x54`; si alguno no es cero, o el
+    primer bit de `0x4C` está puesto, el número de `0x34` no puede ser
+    `-1` (apuntar a algo necesita ese algo);
+  - y una palabra de 0 a 8 en `0x28`, con el número de detrás distinto de
+    `-1` si no es cero.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 441 a 483.
+- En este hito se pasaron las pruebas de la función con 20 000 casos, con
+  reales infinitos, «no número», de signo cambiado y muy pequeños.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Lo que hace un jugador, para el juego
 
 Una función en `networking/simulation_player.c`, de 255 bytes. De 1624
