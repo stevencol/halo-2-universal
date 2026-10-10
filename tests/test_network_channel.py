@@ -826,3 +826,37 @@ def run(t) -> None:
                 Mock(writes_, stack_arguments=4, registers=("ecx",)),
             ],
         )
+
+    # ---------- the messages that say that the other console talks with a channel, or does not any more
+
+    for n in range(1200):
+        channels = bytearray()
+        for index in range(3):
+            channels += channel()
+        index = random_.randrange(3)
+        mine, theirs = struct.unpack_from("<2I", channels, index * CHANNEL + 0x4C)
+        first = random_.choice((mine, mine, mine, mine ^ 1, random_.getrandbits(32)))
+        second = random_.choice((theirs, theirs, theirs ^ 1, random_.getrandbits(32)))
+        stubs = {
+            "network_channel_close": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+            # the address is in the stack: what it says is what counts
+            "network_channel_connect": lambda harness, arguments: (
+                0,
+                (bytes(harness.mu.mem_read(arguments[0], 0x14)), harness.normalize(arguments[1]), arguments[2] & 0xFF),
+            ),
+            "network_channel_accept": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+        }
+        t.check(
+            "network_channel_handle_established",
+            index,
+            Buffer(struct.pack("<2I", first, second)),
+            globals={"unknown_004d87d4": Buffer(bytes(channels))},
+            externals=stubs,
+        )
+        t.check(
+            "network_channel_handle_closed",
+            index,
+            Buffer(struct.pack("<3I", first, second, random_.getrandbits(32))),
+            globals={"unknown_004d87d4": Buffer(bytes(channels))},
+            externals=stubs,
+        )

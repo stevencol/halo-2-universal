@@ -2,6 +2,58 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Dos mensajes del canal, y la otra pieza empieza
+
+Cinco funciones: dos en `networking/network_channel.c` y tres en el archivo nuevo
+`networking/network_message_queue.c`. De 1508
+funciones se pasa a 1513, el 13,43 % de las del juego (el 9,021 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_channel_handle_established` | `0x00094b40` | `networking/network_channel.c` |
+| `network_channel_handle_closed` | `0x00094bb0` | `networking/network_channel.c` |
+| `network_message_queue_closes` | `0x000814c0` | `networking/network_message_queue.c` |
+| `network_message_queue_has_something` | `0x00094df0` | `networking/network_message_queue.c` |
+| `network_message_queue_minimum_bits` | `0x00094e80` | `networking/network_message_queue.c` |
+
+### Lo que se sabe
+
+- **Lo que un canal hace cuando le llegan los dos mensajes que él mismo
+  manda** (hitos 406 y 407):
+  - `network_channel_handle_established`: la otra consola dice «hablo
+    contigo». Si el canal ya hablaba con alguien de otro número, se cierra
+    y vuelve a empezar con la misma dirección; y queda hablando con quien
+    dice el mensaje. Es el otro extremo del apretón de manos.
+  - `network_channel_handle_closed`: la otra consola dice «ya no hablo
+    contigo». El canal se cierra con el motivo `0xA`.
+  - Los dos comprueban que el número del mensaje es el del canal, para no
+    hacer caso a mensajes viejos de otra conexión.
+- Empieza **la segunda pieza de un canal** (las «cosas de
+  `unknown_004d87dc`», 10 320 bytes cada una): la que manda mensajes que
+  tienen que llegar y junta los que llegan. Su tabla está en `0x00450db8`,
+  justo antes de la de la conexión, y tiene la misma forma. De momento
+  tres funciones suyas que el canal llama (hitos 414 y 415) y Ghidra no
+  tenía:
+  - la 2: ¿debe cerrarse el canal? Sí, con el motivo `0xC`, si la pieza
+    no pudo seguir.
+  - la 3: ¿hay algo que mandar? Sí, y urgente, si algún mensaje guardado
+    está marcado para mandarse ya. Usa la misma ventana deslizante que la
+    conexión (hito 433), con 12 bytes por mensaje.
+  - la 4: necesita dos bits como mínimo.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las cinco** y en las de los hitos 434 a
+  438.
+- Las tres de la tabla no están en la lista de Ghidra y cuentan de más en
+  el porcentaje (son ya dieciocho funciones así).
+- En este hito se pasaron las pruebas de `network_message_queue` (3
+  funciones) y las de las dos nuevas de `network_channel`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — La cabecera de cada paquete: lo que la conexión escribe
 
 Cuatro funciones en `networking/network_connection.c`, 1 432 bytes entre las cuatro. De 1504

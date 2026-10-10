@@ -1329,3 +1329,49 @@ done:
 		*voice_size_out= sent_voice_size;
 	}
 }
+
+/* 0x00094b40: a message came that says that the other console talks with a
+channel, by its number in the list: it is heeded by a channel past its second
+state whose number is the one that the message has for it. One that was
+talking already, with what has another number, stops (with 6) and starts
+again with the same address; and then, or if not, it talks with what the
+message says (network_channel_accept). It is with the functions that the
+messages are given to, before the things of unknown_004d87dc in the
+executable */
+void network_channel_handle_established(
+	long channel_index,
+	const struct network_channel_established_message *message)
+{
+	byte *channel= unknown_004d87d4+channel_index*NETWORK_CHANNEL_SIZE;
+	long state= *(const long *)(channel+NETWORK_CHANNEL_STATE_OFFSET);
+
+	if (state>_network_channel_state_closed &&
+		*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN4C_OFFSET)==message->unknown50)
+	{
+		if (state>=_network_channel_state4 && *(const long *)(channel+NETWORK_CHANNEL_UNKNOWN50_OFFSET)!=message->unknown4c)
+		{
+			struct transport_address address;
+
+			network_channel_get_address(channel, &address);
+			network_channel_close(channel, _network_channel_closed_by_other);
+			network_channel_connect(&address, channel, FALSE);
+		}
+		network_channel_accept(channel, message->unknown4c);
+	}
+}
+
+/* 0x00094bb0: a message came that says that the other console does not
+talk with a channel any more: a channel past its second state whose number
+is the one that the message has for it stops, with 0xA */
+void __attribute__((stdcall)) network_channel_handle_closed(
+	long channel_index,
+	const struct network_channel_closed_message *message)
+{
+	byte *channel= unknown_004d87d4+channel_index*NETWORK_CHANNEL_SIZE;
+
+	if (*(const long *)(channel+NETWORK_CHANNEL_STATE_OFFSET)>_network_channel_state_closed &&
+		*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN4C_OFFSET)==message->unknown50)
+	{
+		network_channel_close(channel, _network_channel_closed_remote);
+	}
+}

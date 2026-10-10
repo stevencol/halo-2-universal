@@ -137,6 +137,9 @@ enum
 	_network_channel_time_sent= 0,
 	_network_channel_time_unknown1= 1,
 	_network_channel_time_voice= 2,
+	/* the reason that a channel stops with when the other console says
+	that it does not talk with it any more */
+	_network_channel_closed_remote= 0xA,
 	/* what the size of a packet that a channel writes is a whole number of,
 	in bytes; and a byte of the channel that says that all of its things
 	wrote in the last one */
@@ -253,6 +256,10 @@ void __attribute__((stdcall)) network_channel_unknown3c_new(struct network_chann
 	long part_count, const unsigned long *types);
 void network_channel_update_unknown10(byte *channel);
 void network_channel_update(byte *channel);
+void network_channel_handle_established(long channel_index,
+	const struct network_channel_established_message *message);
+void __attribute__((stdcall)) network_channel_handle_closed(long channel_index,
+	const struct network_channel_closed_message *message);
 void __attribute__((stdcall)) network_channel_write_packet(boolean numbered, byte *channel, struct bitstream *stream,
 	boolean wanted, long voice_size, const byte *voice_packet, long *sent_size_out, long *packet_size_out,
 	long *voice_size_out);
