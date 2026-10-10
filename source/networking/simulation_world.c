@@ -29,10 +29,9 @@ and so are the names of its functions.
 boolean __attribute__((stdcall)) unknown_0006ab90(byte *world, const long *update);
 void unknown_000860b0(byte *view, long unknown);
 
-/* 0x0006b1f0: the thing is given a number. 0x0006ab10: the things that have
-come and wait are let go of, most likely. 0x00069f10: something that the
-thing does when its first view of the first kind or the third is ready */
-void __attribute__((stdcall)) unknown_0006b1f0(byte *world, long unknown);
+/* 0x0006ab10: the things that have come and wait are let go of, most
+likely. 0x00069f10: something that the thing does when its first view of the
+first kind or the third is ready */
 void __attribute__((stdcall)) unknown_0006ab10(byte *world);
 void unknown_00069f10(byte *world);
 
@@ -444,7 +443,8 @@ void simulation_world_take_update(
 
 /* 0x00069eb0: the first view of the first kind or of the third that the
 thing has, if it is of a channel and is well, goes to its second state; and
-the thing is given nothing (unknown_0006b1f0) */
+the number that the thing has at 0x18 is 3, with nothing
+(simulation_world_unknown_0006b1f0) */
 void simulation_world_unknown_00069eb0(
 	byte *world)
 {
@@ -454,7 +454,7 @@ void simulation_world_unknown_00069eb0(
 		*(const long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)==0)
 	{
 		simulation_view_set_state(view, 1, NONE);
-		unknown_0006b1f0(world, 0);
+		simulation_world_unknown_0006b1f0(world, 0);
 	}
 }
 
@@ -507,4 +507,61 @@ void __attribute__((stdcall)) simulation_world_unknown_0006b110(
 	{
 		unknown_00069f10(world);
 	}
+}
+
+/* 0x0006b160: the number that the thing has at 0x18 is another. Unless that
+is 4, the thing is not to bring the game up to what has come, and is not
+going; and if it was going, in its third state, the things that have come
+and wait are done with (unknown_0006ab10). From 3, and not to 4: the memory
+that the texture cache lent for the state of the game is given back, if the
+thing was being sent it, and its count goes on by one. From 4: the time is
+noted. The game has the time of the network written here */
+void simulation_world_set_unknown18(
+	byte *world,
+	long unknown18)
+{
+	if (unknown18!=_simulation_world_unknown18_4)
+	{
+		world[SIMULATION_WORLD_CATCH_UP_OFFSET]= FALSE;
+		if (world[SIMULATION_WORLD_GOING_OFFSET])
+		{
+			world[SIMULATION_WORLD_GOING_OFFSET]= FALSE;
+			if (*(const long *)(world+SIMULATION_WORLD_STATE_OFFSET)==_simulation_world_state3)
+			{
+				unknown_0006ab10(world);
+			}
+		}
+	}
+	switch (*(const long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET))
+	{
+	case _simulation_world_unknown18_3:
+		if (unknown18!=_simulation_world_unknown18_4)
+		{
+			if (simulation_world_receiving_game_state(world))
+			{
+				simulation_world_unknown_0006aae0(world);
+			}
+			(*(long *)(world+SIMULATION_WORLD_UNKNOWN30_OFFSET))++;
+		}
+		break;
+	case _simulation_world_unknown18_4:
+		*(long *)(world+SIMULATION_WORLD_UNKNOWN34_OFFSET)= unknown_00510548 ? unknown_0051054c : GetTickCount();
+		break;
+	}
+	*(long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET)= unknown18;
+}
+
+/* 0x0006b1f0: the number that the thing has at 0x18 is 3
+(simulation_world_set_unknown18, written here), and the time of that and a
+number that is given are kept */
+void __attribute__((stdcall)) simulation_world_unknown_0006b1f0(
+	byte *world,
+	long unknown)
+{
+	long time;
+
+	simulation_world_set_unknown18(world, _simulation_world_unknown18_3);
+	time= unknown_00510548 ? unknown_0051054c : GetTickCount();
+	*(long *)(world+SIMULATION_WORLD_UNKNOWN20_OFFSET)= unknown;
+	*(long *)(world+SIMULATION_WORLD_UNKNOWN1C_OFFSET)= time;
 }

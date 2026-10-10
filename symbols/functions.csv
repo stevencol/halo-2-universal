@@ -2108,8 +2108,9 @@ address,name,source,arguments,returns,convention
 0006ad40,simulation_world_get_view_by_unknown14,source/networking/simulation_world.c,stack ebx,pointer,stdcall
 0006ac30,simulation_world_take_update,source/networking/simulation_world.c,ebx eax,void
 00069eb0,simulation_world_unknown_00069eb0,source/networking/simulation_world.c,eax,void
-0006b1f0,unknown_0006b1f0,,eax stack,void,stdcall
+0006b1f0,simulation_world_unknown_0006b1f0,source/networking/simulation_world.c,eax stack,void,stdcall
 0006b2a0,simulation_world_unknown_0006b2a0,source/networking/simulation_world.c,esi,void
 0006b110,simulation_world_unknown_0006b110,source/networking/simulation_world.c,eax ecx stack,void,stdcall
 0006ab10,unknown_0006ab10,,stack,void,stdcall
 00069f10,unknown_00069f10,,eax,void
+0006b160,simulation_world_set_unknown18,source/networking/simulation_world.c,eax esi,void

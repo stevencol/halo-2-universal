@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — El segundo número de la partida en red
+
+Dos funciones en `networking/simulation_world.c`, 312 bytes entre las dos. De 1552
+funciones se pasa a 1554, el 13,79 % de las del juego (el 9,227 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_set_unknown18` | `0x0006b160` | `networking/simulation_world.c` |
+| `simulation_world_unknown_0006b1f0` | `0x0006b1f0` | `networking/simulation_world.c` |
+
+### Lo que se sabe
+
+- `simulation_world_set_unknown18` **cambia el segundo número de la
+  partida** (`0x18`, hito 451):
+  - si no pasa a 4, la partida **deja de estar en marcha** y de ponerse al
+    día, y si estaba en su tercer estado suelta la cola de lo que
+    esperaba;
+  - si estaba en 3 y no pasa a 4, devuelve la memoria prestada para el
+    estado del juego que estuviera recibiendo (hito 445) y una cuenta
+    suya sube uno: parece **la cuenta de intentos** de entrar;
+  - si estaba en 4, se apunta la hora.
+  Con el hito 451 se ve el dibujo: 4 es «jugando», y 3 «esperando para
+  entrar».
+- `simulation_world_unknown_0006b1f0` deja ese número en 3 y apunta
+  cuándo y con qué número se hizo. El juego tiene la función anterior
+  escrita dentro, entera.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos**, y en las de los hitos 441 a
+  451.
+- En este hito se pasaron las pruebas de las dos funciones y la de
+  `simulation_world_unknown_00069eb0`, que llama a la segunda.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — La partida en red se pone en marcha
 
 Dos funciones en `networking/simulation_world.c`, 182 bytes entre las dos. De 1550

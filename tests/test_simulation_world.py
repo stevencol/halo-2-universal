@@ -192,7 +192,7 @@ def run(t) -> None:
             a_world(random_, random_.randrange(4)),
             externals={
                 "simulation_view_set_state": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2])),
-                "unknown_0006b1f0": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                "simulation_world_unknown_0006b1f0": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
             },
         )
 
@@ -256,3 +256,24 @@ def run(t) -> None:
             Pointer(thing, of) if of else 0,
             externals={"unknown_00069f10": lambda harness, arguments: (0, (harness.normalize(arguments[0]),))},
         )
+
+    # ---------- the number that the thing has at 0x18
+
+    for n in range(2500):
+        world = bytearray(random_.randbytes(0x1220))
+        world[0x24] = random_.choice((0, 1, 1, 0x80))
+        struct.pack_into("<i", world, 0x8, random_.choice((0, 2, 3, 3, 3, 4, 5)))
+        struct.pack_into("<i", world, 0x18, random_.choice((1, 2, 3, 3, 4, 4, 5)))
+        struct.pack_into("<i", world, 0x1200, random_.choice((-1, -1, 0, 100)))
+        kept = random_.choice((0, 1, 0x80))
+        now = random_.getrandbits(32)
+        setup = dict(
+            globals={"unknown_00510548": bytes((kept,)), "unknown_0051054c": now if kept else random_.getrandbits(32)},
+            externals={
+                "GetTickCount": lambda harness, arguments, now=now: now,
+                "unknown_0006ab10": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "texture_cache_return_memory": lambda harness, arguments: 0,
+            },
+        )
+        t.check("simulation_world_set_unknown18", Buffer(bytes(world)), random_.choice((1, 2, 3, 4, 4, 5, 6)), **setup)
+        t.check("simulation_world_unknown_0006b1f0", Buffer(bytes(world)), random_.getrandbits(32), **setup)
