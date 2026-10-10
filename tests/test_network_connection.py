@@ -319,3 +319,56 @@ def run(t) -> None:
             externals=setup["externals"],
             mocks=[Mock(lambda call, cannot=random_.choice((0, 0, 0, 0, 0, 1, 0x100)): cannot, stack_arguments=1, registers=("ecx",))],
         )
+
+    # ---------- the functions that only the table has: what one of the things writes in a packet
+
+    for n in range(300):
+        data = bytearray(random_.randbytes(SIZE))
+        data[4] = random_.choice((0, 1, 1, 0x80))
+        data[5] = random_.choice((0, 1, 1, 0x80))
+        t.check("network_connection_closes", Buffer(bytes(data)), random_.choice((0, 1)) and Buffer(random_.randbytes(4)))
+
+    def receiving(kept: int | None = None) -> bytearray:
+        """One of the things with some packets that came, of which the first that is kept did not, mostly."""
+        data, ((came_oldest, came_newest), sent) = connection()
+        size = struct.unpack_from("<i", data, 0x10)[0]
+        if kept is not None:
+            came_newest = came_oldest + min(kept, size)
+            struct.pack_into("<i", data, 0x14, came_newest)
+        start = struct.unpack_from("<i", data, 0x20)[0]
+        struct.pack_into("<i", data, 0x1C, size)
+        struct.pack_into("<i", data, 0x24, came_newest - came_oldest)
+        data[0xC] = random_.choice((0, 1, 1, 1, 1, 1))
+        how = random_.choice((0, 0, 1, 2, 3))
+        for packet in range(came_newest - came_oldest):
+            came = (random_.random() < 0.7, True, packet != 0, packet != 0 and random_.random() < 0.9)[how] if how else random_.random() < 0.5
+            if packet == came_newest - came_oldest - 1:
+                came = True
+            word = random_.getrandbits(16)
+            struct.pack_into("<H", data, 0x4C + ((packet + start) % size) * 2, word | 1 if came else word & ~1)
+        struct.pack_into("<i", data, 0x950, random_.choice((came_newest, came_newest - 1, came_newest + 1)))
+        struct.pack_into("<i", data, 0x954, random_.choice((came_newest, came_newest - 1, came_newest + 1)))
+        data[0x958] = random_.choice((0, 1, 1, 0x80))
+        data[0x959] = random_.choice((0, 1, 1, 0x80))
+        return data
+
+    for n in range(2500):
+        data = receiving(random_.choice((None, None, 0, 1, 2, 5, 9, 10, 11, 40)))
+        if random_.random() < 0.3:
+            # nothing between the last packet that was sent and the one that they are counted from
+            struct.pack_into("<i", data, 0x44, struct.unpack_from("<i", data, 0x30)[0])
+        else:
+            struct.pack_into("<i", data, 0x44, struct.unpack_from("<i", data, 0x30)[0] - random_.choice((1, 5, 0x7F, 0x80, -1)))
+        t.check("network_connection_has_something", Buffer(bytes(data)), random_.choice((0, 1)) and Buffer(random_.randbytes(4)))
+        t.check("network_connection_minimum_bits", Buffer(bytes(data)), random_.getrandbits(32), random_.getrandbits(32))
+        size = random_.choice((40, 40, 40, 1, 2, 3, 4, 6))
+        position = random_.choice((0, 0, 0, 3, 8))
+        header = struct.pack("<I4iB3x7i", 0x34, size, 1, 1, position, 0, *(random_.getrandbits(8) for value in range(7)))
+        t.check(
+            "network_connection_write",
+            Buffer(bytes(data)),
+            random_.choice((0xFFFFFFFF, 0, 7, random_.getrandbits(32))),
+            Buffer(header + bytes(size) + random_.randbytes(8), pointers=(0,)),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+        )

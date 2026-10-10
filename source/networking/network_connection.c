@@ -773,3 +773,214 @@ long __attribute__((stdcall)) network_connection_receive_sequence(
 
 	return _network_connection_read_no;
 }
+
+/* 0x00081410: whether the channel of one of the things is to stop, and why:
+it is, with 0xB for a reason, if the thing is someone's and had no room for
+the number of a packet. It is the second function of the thing, which the
+table at 0x00450dd8 has, as the three below are, and Ghidra's list has none
+of them; this one is away from the rest in the executable */
+boolean __attribute__((stdcall)) network_connection_closes(
+	const byte *connection,
+	long *reason)
+{
+	if (connection[NETWORK_CONNECTION_USED_OFFSET] && connection[NETWORK_CONNECTION_FULL_OFFSET])
+	{
+		if (reason)
+		{
+			*reason= _network_connection_closed_full;
+		}
+
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+/* 0x00095dc0: whether one of the things has something to send: it has if
+packets came that it has not said of, or of which the other console waits
+for more than it said; or if a byte of it is not set. The third function */
+boolean __attribute__((stdcall)) network_connection_has_something(
+	const byte *connection,
+	boolean *urgent)
+{
+	const struct network_connection_window *received=
+		(const struct network_connection_window *)(connection+NETWORK_CONNECTION_RECEIVED_WINDOW_OFFSET);
+	boolean result= FALSE;
+
+	if (received->enabled && (*(const long *)(connection+NETWORK_CONNECTION_UNKNOWN950_OFFSET)<received->newest ||
+		*(const long *)(connection+NETWORK_CONNECTION_UNKNOWN954_OFFSET)<received->newest))
+	{
+		result= TRUE;
+	}
+	if (!connection[NETWORK_CONNECTION_UNKNOWN959_OFFSET])
+	{
+		result= TRUE;
+	}
+
+	return result;
+}
+
+/* 0x00095df0: how many bits one of the things needs in a packet, at the
+least: after not keeping the first packets that came any more
+(network_connection_advance_received), 0x13 if it is not in use for packets
+that come, 0x12 with none kept, 0x1A with nine or fewer, and 0x19 and one for
+each with more. The fourth function */
+long __attribute__((stdcall)) network_connection_minimum_bits(
+	byte *connection,
+	long available,
+	long left)
+{
+	const struct network_connection_window *received=
+		(const struct network_connection_window *)(connection+NETWORK_CONNECTION_RECEIVED_WINDOW_OFFSET);
+
+	network_connection_advance_received(connection);
+	if (!received->enabled)
+	{
+		return NETWORK_CONNECTION_BITS_NOT_RECEIVING;
+	}
+	if (received->newest==received->oldest)
+	{
+		return NETWORK_CONNECTION_BITS_NONE;
+	}
+	if (received->newest-received->oldest<=NETWORK_CONNECTION_FEW_PACKETS)
+	{
+		return NETWORK_CONNECTION_BITS_FEW;
+	}
+
+	return received->newest-received->oldest+NETWORK_CONNECTION_BITS_MANY;
+}
+
+/* whether the packet of a number came, by its word */
+static inline __attribute__((always_inline)) boolean network_connection_packet_received(
+	const byte *connection,
+	long sequence)
+{
+	const struct network_connection_window *received=
+		(const struct network_connection_window *)(connection+NETWORK_CONNECTION_RECEIVED_WINDOW_OFFSET);
+
+	return (((const word *)(connection+NETWORK_CONNECTION_RECEIVED_OFFSET))[network_connection_window_place(received,
+		sequence)]&_network_connection_received_bit)!=0;
+}
+
+/* 0x00095e40: one of the things writes its own in a packet: what
+network_connection_read reads. Whether the packet has a number; the low byte
+of the number of the last packet that the thing sent, and how far that is
+from the one that they are counted from, in seven bits (with nothing between
+them, a byte of the thing is set).
+
+Then, after not keeping the first packets that came any more, what it says
+of the packets that came. If it is not in use for them: nothing in eight
+bits, and three bits set. If it is: the low byte of the number of the last
+that came, which is noted as said, and the bits of the ones before it down
+to the first that is kept, a bit set for one that did not come, in the
+shortest of the ways: with none kept, two bits clear and a byte of the thing
+as a bit; with nine or fewer, the place of the only one that did not come,
+in three bits, after a bit clear and one set, or else eight bits, after a bit
+set and one clear; and with more, three bits (set, set, clear), how many in
+seven bits, and all of them.
+
+It says FALSE. The fifth function; the game has bitstream_write_bool and
+bitstream_write_integer_checked written here */
+boolean __attribute__((stdcall)) network_connection_write(
+	byte *connection,
+	long sequence,
+	struct bitstream *stream,
+	long bits,
+	long rest)
+{
+	const struct network_connection_window *received=
+		(const struct network_connection_window *)(connection+NETWORK_CONNECTION_RECEIVED_WINDOW_OFFSET);
+	const struct network_connection_window *sent=
+		(const struct network_connection_window *)(connection+NETWORK_CONNECTION_SENT_WINDOW_OFFSET);
+	long newest= sent->newest;
+	long distance= newest-*(const long *)(connection+NETWORK_CONNECTION_UNKNOWN44_OFFSET);
+	long other;
+
+	bitstream_write_bool(stream, sequence!=NONE);
+	bitstream_write_integer_checked((unsigned long)(newest&0xFF), NETWORK_CONNECTION_SEQUENCE_BITS, stream);
+	bitstream_write_integer_checked((unsigned long)distance, NETWORK_CONNECTION_UNKNOWN_BITS, stream);
+	if (distance==0)
+	{
+		connection[NETWORK_CONNECTION_UNKNOWN959_OFFSET]= TRUE;
+	}
+	network_connection_advance_received(connection);
+	if (!received->enabled)
+	{
+		bitstream_write_integer(stream, 0, NETWORK_CONNECTION_SEQUENCE_BITS);
+		bitstream_write_bool(stream, TRUE);
+		bitstream_write_bool(stream, TRUE);
+		bitstream_write_bool(stream, TRUE);
+
+		return FALSE;
+	}
+	other= received->newest-1;
+	bitstream_write_integer_checked((unsigned long)(received->newest&0xFF), NETWORK_CONNECTION_SEQUENCE_BITS, stream);
+	*(long *)(connection+NETWORK_CONNECTION_UNKNOWN950_OFFSET)= received->newest;
+	if (received->newest==received->oldest)
+	{
+		bitstream_write_bool(stream, FALSE);
+		bitstream_write_bool(stream, FALSE);
+		bitstream_write_bool(stream, connection[NETWORK_CONNECTION_UNKNOWN958_OFFSET]);
+	}
+	else if (received->newest-received->oldest<=NETWORK_CONNECTION_FEW_PACKETS)
+	{
+		unsigned long missing= 0;
+		boolean several= FALSE;
+		long first= NONE;
+		long bit;
+
+		for (bit= 0; other>received->oldest; other--, bit++)
+		{
+			if (!network_connection_packet_received(connection, other))
+			{
+				missing|= 1u<<(bit&31);
+				if (first==NONE)
+				{
+					first= bit;
+				}
+				else
+				{
+					several= TRUE;
+				}
+			}
+		}
+		if (several)
+		{
+			bitstream_write_bool(stream, TRUE);
+			bitstream_write_bool(stream, FALSE);
+			for (bit= 0; bit<NETWORK_CONNECTION_SHORT_BIT_COUNT; bit++)
+			{
+				bitstream_write_bool(stream, (missing&(1u<<bit))!=0);
+			}
+		}
+		else
+		{
+			bitstream_write_bool(stream, FALSE);
+			bitstream_write_bool(stream, TRUE);
+			bitstream_write_integer_checked((unsigned long)first, NETWORK_CONNECTION_ONE_BIT_BITS, stream);
+		}
+	}
+	else
+	{
+		bitstream_write_bool(stream, TRUE);
+		bitstream_write_bool(stream, TRUE);
+		bitstream_write_bool(stream, FALSE);
+		bitstream_write_integer_checked((unsigned long)(received->newest-received->oldest-1), NETWORK_CONNECTION_BIT_COUNT_BITS,
+			stream);
+		for (; other>received->oldest; other--)
+		{
+			/* the game looks at the word of the packet only if the stream has
+			room for the bit */
+			if ((long)(((unsigned long)stream->size<<3)-(unsigned long)stream->position)>=1)
+			{
+				bitstream_write_bool(stream, !network_connection_packet_received(connection, other));
+			}
+			else
+			{
+				bitstream_write_bool(stream, FALSE);
+			}
+		}
+	}
+
+	return FALSE;
+}

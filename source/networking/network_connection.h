@@ -88,7 +88,19 @@ enum
 	NETWORK_CONNECTION_ONE_BIT_BITS= 3,
 	NETWORK_CONNECTION_SHORT_BIT_COUNT= 8,
 	NETWORK_CONNECTION_BIT_COUNT_BITS= 7,
-	MAXIMUM_NETWORK_CONNECTION_BITS= 128
+	MAXIMUM_NETWORK_CONNECTION_BITS= 128,
+	/* a byte that says that one of the things is someone's; the reason
+	that a channel stops with when its thing has no room for the numbers of
+	its packets; the bits that the thing needs in a packet, with none that
+	came, with no thing that reads, with few, and more than how many with
+	many; and the most that are few */
+	NETWORK_CONNECTION_USED_OFFSET= 0x4,
+	_network_connection_closed_full= 0xB,
+	NETWORK_CONNECTION_BITS_NONE= 0x12,
+	NETWORK_CONNECTION_BITS_NOT_RECEIVING= 0x13,
+	NETWORK_CONNECTION_BITS_FEW= 0x1A,
+	NETWORK_CONNECTION_BITS_MANY= 0x19,
+	NETWORK_CONNECTION_FEW_PACKETS= 9
 };
 
 /* ---------- structures */
@@ -130,6 +142,11 @@ struct network_connection_sent_packet
 /* ---------- prototypes/NETWORK_CONNECTION.C */
 
 void network_connection_reset(byte *connection);
+boolean __attribute__((stdcall)) network_connection_closes(const byte *connection, long *reason);
+boolean __attribute__((stdcall)) network_connection_has_something(const byte *connection, boolean *urgent);
+long __attribute__((stdcall)) network_connection_minimum_bits(byte *connection, long available, long left);
+boolean __attribute__((stdcall)) network_connection_write(byte *connection, long sequence, struct bitstream *stream,
+	long bits, long rest);
 long __attribute__((stdcall)) network_connection_read(byte *connection, long *sequence, struct bitstream *stream);
 long __attribute__((stdcall)) network_connection_receive_sequence(byte *connection, long sequence_byte,
 	long *sequence, boolean numbered, long unknown);

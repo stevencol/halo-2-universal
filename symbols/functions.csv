@@ -2056,3 +2056,7 @@ address,name,source,arguments,returns,convention
 00096910,network_connection_acknowledge,source/networking/network_connection.c,eax edx stack stack stack,int,stdcall
 00096360,network_connection_read,source/networking/network_connection.c,ecx stack stack,int,stdcall
 00096710,network_connection_receive_sequence,source/networking/network_connection.c,ecx eax edx stack stack,int,stdcall
+00081410,network_connection_closes,source/networking/network_connection.c,ecx stack,bool,stdcall
+00095dc0,network_connection_has_something,source/networking/network_connection.c,ecx stack,bool,stdcall
+00095df0,network_connection_minimum_bits,source/networking/network_connection.c,ecx stack stack,int,stdcall
+00095e40,network_connection_write,source/networking/network_connection.c,ecx stack stack stack stack,bool,stdcall

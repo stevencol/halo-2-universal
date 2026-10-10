@@ -2,6 +2,57 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — La cabecera de cada paquete: lo que la conexión escribe
+
+Cuatro funciones en `networking/network_connection.c`, 1 432 bytes entre las cuatro. De 1504
+funciones se pasa a 1508, el 13,39 % de las del juego (el 9,016 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_connection_closes` | `0x00081410` | `networking/network_connection.c` |
+| `network_connection_has_something` | `0x00095dc0` | `networking/network_connection.c` |
+| `network_connection_minimum_bits` | `0x00095df0` | `networking/network_connection.c` |
+| `network_connection_write` | `0x00095e40` | `networking/network_connection.c` |
+
+### Lo que se sabe
+
+- Encontrada **la tabla de funciones de la conexión** (`0x00450dd8`),
+  buscando en los datos del ejecutable quién apuntaba a la función de
+  leer. Tiene ocho sitios, y cuatro funciones que Ghidra no tenía en su
+  lista. Son justo las que el canal llama a cada pieza (hitos 414 y 415):
+  - la 2, `network_connection_closes`: ¿debe cerrarse el canal? Sí, con
+    el motivo `0xB`, si la conexión se quedó sin números para sus
+    paquetes (hito 434).
+  - la 3, `network_connection_has_something`: ¿hay algo que mandar? Sí
+    si han llegado paquetes de los que aún no se ha dicho nada.
+  - la 4, `network_connection_minimum_bits`: cuántos bits necesita: 18,
+    19, 26, o 25 más uno por paquete.
+  - la 5, `network_connection_write`: **escribe la cabecera** que el hito
+    437 leía, eligiendo la forma más corta de decir qué paquetes han
+    llegado: ninguno pendiente; falta uno solo (su sitio en 3 bits);
+    faltan varios de los ocho últimos (8 bits); o la lista entera.
+- Lo escrito y lo leído casan bit a bit: en la forma «falta uno», un bit
+  puesto dice que ese paquete no llegó, que es como lo interpreta el
+  hito 436.
+- La conexión (pieza principal de un canal) queda con sus 18 funciones:
+  todo el mecanismo de fiabilidad del juego en red.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las cuatro** y en las de los hitos 434 a
+  437.
+- Estas cuatro no están en la lista de Ghidra y cuentan de más en el
+  porcentaje (son ya quince funciones así).
+- En la forma «falta uno» con ninguno que falte, el juego escribe «menos
+  uno» en tres bits (deja un aviso que nadie lee). No debería pasar,
+  porque antes suelta los paquetes llegados del principio; se hace igual.
+- En este hito se pasaron las pruebas de `network_connection` (18
+  funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — La cabecera de cada paquete: lo que la conexión lee
 
 Dos funciones en `networking/network_connection.c`, 671 bytes entre las dos. De 1502

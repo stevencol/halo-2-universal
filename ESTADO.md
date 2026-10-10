@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 437.
+**Última actualización:** 2026-10-08, al terminar el hito 438.
 
 ## Dónde estamos
 
-- **1504 funciones descompiladas de 11.265: el 13,35 % del juego** (el
+- **1508 funciones descompiladas de 11.265: el 13,39 % del juego** (el
   9,016 % de los bytes de código).
-- Las 1504 están comprobadas contra el ejecutable original: las 1390 del
+- Las 1508 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a connection reads its part of a packet* (ver `git log`).
+- Último hito: *Decompile how a connection writes its part of a packet* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 553 funciones apuntadas pero sin descompilar (las que el código
   llama); 451 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -153,14 +153,14 @@ Módulos (funciones hechas / archivo):
 - [ ] Vistas de los sucesos — `networking\replication_event_view.c`
       (1: vaciar una vista; quedan 7 de la lista, de `0x000970b0` a
       `0x00097d80`; romper líneas pendiente)
-- [ ] La pieza principal de un canal — `networking\network_connection.c`
-      (14: empezar de cero, el número de cada paquete, leer la
-      cabecera de un paquete, lo que la otra consola contesta, qué
-      fue de cada uno, dar por perdido el más viejo, el tiempo de ida
-      y vuelta y las ventanas de paquetes llegados y mandados; de
-      `0x00095cf0` a `0x00096d80`, completo por la lista; falta
-      localizar la que escribe la cabecera; romper líneas pendiente
-      en las 9 últimas)
+- [x] La pieza principal de un canal — `networking\network_connection.c`
+      (18: empezar de cero, el número de cada paquete, escribir y
+      leer la cabecera de un paquete, lo que la otra consola
+      contesta, qué fue de cada uno, dar por perdido el más viejo, el
+      tiempo de ida y vuelta, las ventanas de paquetes llegados y
+      mandados, y lo que el canal le pregunta; de `0x00095cf0` a
+      `0x00096d80`, completo, con su tabla `0x00450dd8`; romper
+      líneas pendiente en las 13 últimas)
 - [ ] Lo que cada cosa es — `networking\simulation_entity_database.c`
       (22, y una en `networking\network_heap.c`: crear una o varias,
       apuntar, activar y quitar cosas, vaciar, pedir su memoria,
