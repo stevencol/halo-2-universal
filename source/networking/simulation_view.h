@@ -70,6 +70,8 @@ enum
 	_simulation_view_state1= 1,
 	_simulation_view_state5= 5,
 	_simulation_view_unknown28_remote_reset= 6,
+	/* the kind of the message that says what the players of a console do */
+	_network_message_simulation_player_actions= 0x28,
 	/* more of a view: something that a view of the third kind or of the
 	fourth has, of which unknown_00086b40 is given what is at 0x6060; memory
 	that the texture cache lent, and three numbers that go with it; and a
@@ -97,6 +99,23 @@ struct simulation_view_state_message
 	long number;
 };
 
+/* what a view of the first kind says of what its players do: a count of
+these messages, the number of the last thing that the thing took, whether
+something came that it could not take, a bit for each player that it says
+of, and what each of the four does */
+struct simulation_view_player_actions_message
+{
+	long count;
+	long update;
+	boolean failed;
+	byte pad9[3];
+	unsigned long players;
+	byte actions[4][0x5C];
+};
+
+typedef char verify_simulation_view_player_actions_message_size[
+	sizeof(struct simulation_view_player_actions_message) == 0x180 ? 1 : -1];
+
 /* ---------- prototypes/SIMULATION_VIEW.C */
 
 void simulation_view_set_blocked(byte *view, boolean blocked);
@@ -114,6 +133,8 @@ boolean simulation_view_handle_remote_state(byte *view, long state, long number)
 void simulation_view_update_ready(byte *view);
 void simulation_view_unknown_00086590(byte *view);
 boolean simulation_view_nothing_to_send(byte *view);
+void __attribute__((stdcall)) simulation_view_send_player_actions(byte *view, unsigned long players,
+	const void *actions);
 
 /* ---------- prototypes of functions not decompiled yet */
 

@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Una consola manda lo que hacen sus jugadores
+
+Una función en `networking/simulation_view.c`, de 226 bytes. De 1588
+funciones se pasa a 1589, el 14,11 % de las del juego (el 9,411 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_view_send_player_actions` | `0x00085fc0` | `networking/simulation_view.c` |
+
+### Lo que se sabe
+
+- `simulation_view_send_player_actions` es **la otra punta del hito
+  449**: una vista con su byte de `0x78` puesto (las dos puntas en el
+  sexto estado, hito 462) manda a la consola que lleva la partida lo que
+  hacen los jugadores de esta. Es un mensaje de la clase `0x28`, de 384
+  bytes:
+  - una cuenta de estos mensajes, que sube uno cada vez;
+  - el número de la última actualización que la partida tomó (el suyo
+    menos uno): es lo que la otra consola mira para saber **quién va
+    atrasado** (hito 447);
+  - un byte que dice que llegó algo que no se pudo tomar (se perdió una
+    actualización, hito 446);
+  - cuatro bits de qué jugadores, y lo que hace cada uno (`0x5C` bytes).
+- Están ya las dos direcciones del juego en red de una partida en
+  marcha: de la consola que manda a las demás van las actualizaciones
+  (mensaje `0x27`, hito 461), y de las demás a ella lo que hacen sus
+  jugadores (mensaje `0x28`).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 441 a 465.
+- En este hito se pasó la prueba de la función (2000 casos, comparando
+  los 384 bytes del mensaje).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Memoria para el estado del juego que va a llegar
 
 Dos funciones: una en `networking/simulation_world.c` y otra en

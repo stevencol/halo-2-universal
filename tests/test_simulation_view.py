@@ -252,3 +252,22 @@ def run(t) -> None:
             Buffer(bytes(view)),
             externals={"unknown_00086ad0": lambda harness, arguments, more=more: (more, (harness.normalize(arguments[0]),))},
         )
+
+    # ---------- a view says what the players of this console do
+
+    for n in range(2000):
+        data = bytearray(random_.randbytes(0xC0 + 0x40))
+        struct.pack_into("<I", data, 0xC, 0xC0)
+        data[0x78] = random_.choice((0, 1, 1, 1, 0x80))
+        struct.pack_into("<Ii", data, 0x20, 0x12345678, random_.choice((-1, 0, 3, 3)))
+        struct.pack_into("<I", data, 0xB0, random_.choice((0, 5, 0xFFFFFFFF)))
+        struct.pack_into("<i", data, 0xC0 + 8, random_.choice((1, 2, 3, 3, 4, 5)))
+        struct.pack_into("<I", data, 0xC0 + 0x28, random_.choice((0, 1, 1000)))
+        data[0xC0 + 0x2C] = random_.choice((0, 1, 0x80))
+        t.check(
+            "simulation_view_send_player_actions",
+            Buffer(bytes(data), pointers=(0xC,)),
+            random_.choice((0xF, random_.getrandbits(4), random_.getrandbits(32))),
+            Buffer(random_.randbytes(4 * 0x5C)),
+            externals={"network_observer_channel_send": sends},
+        )

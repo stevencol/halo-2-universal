@@ -564,3 +564,46 @@ boolean simulation_view_nothing_to_send(
 
 	return !(*(void *const *)(view+SIMULATION_VIEW_UNKNOWN94_OFFSET) && *(const long *)(view+SIMULATION_VIEW_UNKNOWNAC_OFFSET)>0);
 }
+
+/* 0x00085fc0: a view whose byte at 0x78 is set says to the other console
+what the players of this one do, as four bits say which: a message of the
+kind 0x28, with a count of them that goes on by one, the number of the last
+thing that the thing took, and whether something came that it could not take
+(in its third state or its fifth). It is what simulation_view_unknown_00085f50
+takes at the other end */
+void __attribute__((stdcall)) simulation_view_send_player_actions(
+	byte *view,
+	unsigned long players,
+	const void *actions)
+{
+	struct simulation_view_player_actions_message message;
+	const byte *world;
+	long state;
+	long index;
+
+	if (!view[SIMULATION_VIEW_UNKNOWN78_OFFSET])
+	{
+		return;
+	}
+	memset(&message, 0, sizeof(message));
+	message.count= *(const long *)(view+SIMULATION_VIEW_UNKNOWNB0_OFFSET);
+	*(long *)(view+SIMULATION_VIEW_UNKNOWNB0_OFFSET)= (long)((unsigned long)message.count+1);
+	world= *(const byte *const *)(view+SIMULATION_VIEW_WORLD_OFFSET);
+	message.update= (long)(*(const unsigned long *)(world+SIMULATION_WORLD_UNKNOWN28_OFFSET)-1);
+	state= *(const long *)(world+SIMULATION_WORLD_STATE_OFFSET);
+	message.failed= state==3 || state==5 ? world[SIMULATION_WORLD_UNKNOWN2C_OFFSET] : FALSE;
+	message.players= players;
+	for (index= 0; index<4; index++)
+	{
+		if (players&(1u<<index))
+		{
+			memcpy(message.actions[index], (const byte *)actions+index*sizeof(message.actions[index]), sizeof(message.actions[index]));
+		}
+	}
+	if (*(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET)!=NONE)
+	{
+		network_observer_channel_send(FALSE, *(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET),
+			*(byte *const *)(view+SIMULATION_VIEW_OBSERVER_OFFSET), SIMULATION_VIEW_SESSION_INDEX,
+			_network_message_simulation_player_actions, sizeof(message), &message);
+	}
+}
