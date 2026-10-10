@@ -84,6 +84,19 @@ enum
 	SIMULATION_VIEW_UNKNOWNB0_OFFSET= 0xB0,
 	/* how much of the state of the game a view has left to send */
 	SIMULATION_VIEW_UNKNOWNAC_OFFSET= 0xAC,
+	/* of what a view has at 0x8: the view that it has of the things that the
+	consoles share (replication_entity_view.h). Of the thing: something at
+	0x4, which has at 0x2098 what the things are: at 0x10 of that, the ones
+	that each kind of thing is seen to by, from the second place on; and
+	from 0x14, 0x20 bytes of each thing, with its kind at 0x4 */
+	SIMULATION_VIEW_UNKNOWN8_ENTITY_VIEW_OFFSET= 0x30,
+	SIMULATION_WORLD_UNKNOWN4_OFFSET= 0x4,
+	SIMULATION_WORLD_UNKNOWN4_DATABASE_OFFSET= 0x2098,
+	SIMULATION_DATABASE_CLIENTS_OFFSET= 0x10,
+	SIMULATION_DATABASE_ENTITIES_OFFSET= 0x14,
+	SIMULATION_DATABASE_ENTITY_SIZE= 0x20,
+	SIMULATION_DATABASE_ENTITY_TYPE_OFFSET= 0x4,
+	SIMULATION_DATABASE_ENTITY_INDEX_MASK= 0x3FF,
 	_simulation_view_kind_1= 1,
 	_simulation_view_kind_2= 2,
 	_simulation_view_kind_3= 3,
@@ -135,11 +148,6 @@ void simulation_view_unknown_00086590(byte *view);
 boolean simulation_view_nothing_to_send(byte *view);
 void __attribute__((stdcall)) simulation_view_send_player_actions(byte *view, unsigned long players,
 	const void *actions);
-
-/* ---------- prototypes of functions not decompiled yet */
-
-/* 0x00086ad0: a view of the third kind or of the fourth has something more
-to send, of what it has at 0x8; whether it has */
-boolean unknown_00086ad0(byte *view);
+boolean simulation_view_entities_pending(byte *view);
 
 #endif

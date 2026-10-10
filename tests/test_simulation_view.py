@@ -250,7 +250,7 @@ def run(t) -> None:
         t.check(
             "simulation_view_nothing_to_send",
             Buffer(bytes(view)),
-            externals={"unknown_00086ad0": lambda harness, arguments, more=more: (more, (harness.normalize(arguments[0]),))},
+            externals={"simulation_view_entities_pending": lambda harness, arguments, more=more: (more, (harness.normalize(arguments[0]),))},
         )
 
     # ---------- a view says what the players of this console do
@@ -270,4 +270,42 @@ def run(t) -> None:
             random_.choice((0xF, random_.getrandbits(4), random_.getrandbits(32))),
             Buffer(random_.randbytes(4 * 0x5C)),
             externals={"network_observer_channel_send": sends},
+        )
+
+    # ---------- whether a view has things of the game left to tell of
+
+    from difftest import Mock, mock_address
+
+    OBJECT, THING, UNKNOWN4, DATABASE = 0x40, 0x80, 0x90, 0x90 + 0x2098
+    ENTITIES = DATABASE + 0x14
+    CLIENTS = ENTITIES + 0x400 * 0x20
+    CLIENT = CLIENTS + 9 * 4
+    FUNCTIONS = CLIENT + 4
+
+    for n in range(300):
+        data = bytearray(random_.randbytes(FUNCTIONS + 7 * 4))
+        struct.pack_into("<2I", data, 0x8, OBJECT, THING)
+        data[OBJECT + 0x39] = random_.choice((0, 1, 1, 1, 0x80))
+        struct.pack_into("<I", data, THING + 4, UNKNOWN4)
+        struct.pack_into("<I", data, DATABASE + 0x10, CLIENTS)
+        pointers = [0x8, 0xC, THING + 4, DATABASE + 0x10, CLIENT]
+        for kind in range(8):
+            struct.pack_into("<I", data, CLIENTS + 4 + kind * 4, CLIENT)
+            pointers.append(CLIENTS + 4 + kind * 4)
+        struct.pack_into("<I", data, CLIENT, FUNCTIONS)
+        struct.pack_into("<7I", data, FUNCTIONS, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, mock_address(0))
+        # the things that the view goes through, each after the one before, and which of them has something
+        order = random_.sample(range(0x400), random_.choice((0, 1, 3, 8)))
+        has = random_.choice((None, None, 0, len(order) - 1, 1))
+        for place, entity in enumerate(order):
+            struct.pack_into("<h", data, ENTITIES + entity * 0x20 + 4, random_.randrange(8))
+            data[ENTITIES + entity * 0x20] = 1 if place == has else 0
+        after = {0xFFFFFFFF: order[0] | 0x50000 if order else 0xFFFFFFFF}
+        for place, entity in enumerate(order):
+            after[entity | 0x50000] = order[place + 1] | 0x50000 if place + 1 < len(order) else 0xFFFFFFFF
+        t.check(
+            "simulation_view_entities_pending",
+            Buffer(bytes(data), pointers=tuple(pointers)),
+            externals={"replication_entity_view_next_entity": lambda harness, arguments, after=after: (after[arguments[0]], (arguments[0], harness.normalize(arguments[1])))},
+            mocks=[Mock(lambda call: t.harness.mu.mem_read(call.stack[0], 1)[0], stack_arguments=1, registers=("ecx",))],
         )

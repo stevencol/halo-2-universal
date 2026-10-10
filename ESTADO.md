@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 468.
+**Última actualización:** 2026-10-08, al terminar el hito 469.
 
 ## Dónde estamos
 
-- **1592 funciones descompiladas de 11.265: el 14,13 % del juego** (el
-  9,421 % de los bytes de código).
-- Las 1592 están comprobadas contra el ejecutable original: las 1390 del
+- **1593 funciones descompiladas de 11.265: el 14,14 % del juego** (el
+  9,424 % de los bytes de código).
+- Las 1593 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how the simulation world starts to wait for the other consoles* (ver `git log`).
+- Último hito: *Decompile whether a view has entities left to tell of* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 560 funciones apuntadas pero sin descompilar (las que el código
-  llama); 458 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 559 funciones apuntadas pero sin descompilar (las que el código
+  llama); 457 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -172,7 +172,7 @@ Módulos (funciones hechas / archivo):
       `unknown_004cf770`, y queda casi todo, de `0x00069300` a
       `0x0006ad40`)
 - [ ] Las vistas de la partida en red — `networking\simulation_view.c`
-      (13: poner una vista en un estado, seguir el del otro extremo,
+      (14: poner una vista en un estado, seguir el del otro extremo,
       ver si está lista, darla por mala, marcar la que frena la partida, lo que hacen los
       jugadores de la otra consola y cuáles conoce, los trozos del
       estado del juego, desde qué número sigue la partida y pasar una

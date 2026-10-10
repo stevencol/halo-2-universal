@@ -675,7 +675,7 @@ def run(t) -> None:
                 "network_time": lambda harness, arguments: 0x4321,
                 "unknown_000862e0": lambda harness, arguments, has_all=has_all: (has_all, (harness.normalize(arguments[0]),)),
                 "simulation_view_nothing_to_send": lambda harness, arguments, idle=idle: (idle, (harness.normalize(arguments[0]),)),
-                "unknown_00086ad0": views_done,
+                "simulation_view_entities_pending": views_done,
                 "simulation_view_unknown_00086590": views_done,
                 "network_observer_channel_send": channel_sends,
                 "simulation_view_update_ready": views_done,

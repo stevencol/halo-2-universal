@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — ¿Le queda a la vista algo del juego por contar?
+
+Una función en `networking/simulation_view.c`, de 98 bytes. De 1592
+funciones se pasa a 1593, el 14,14 % de las del juego (el 9,424 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_view_entities_pending` | `0x00086ad0` | `networking/simulation_view.c` |
+
+### Lo que se sabe
+
+- `simulation_view_entities_pending` une las vistas de la partida con
+  **las cosas que las consolas comparten** (los hitos 416 a 430): una
+  vista de la tercera clase o la cuarta tiene, en `0x30` de lo que lleva
+  en `0x8`, una vista de esas cosas (`replication_entity_view.c`). La
+  función las recorre con `replication_entity_view_next_entity` (hito
+  426) y pregunta, a quien se ocupa de cada clase de cosa, si esa cosa
+  tiene algo que todavía no se ha contado a la otra consola.
+- Lo que son las cosas está en `0x2098` de lo que la partida lleva en
+  `0x4`: `0x20` bytes por cosa desde `0x14`, con su clase en `0x4`, y en
+  `0x10` la lista de quién se ocupa de cada clase.
+- Es lo que decide si una vista de esas clases «no tiene nada más que
+  mandar» (hito 465) y puede pasar al sexto estado (hito 464): **una
+  consola no entra a jugar hasta que se le ha contado todo lo que hay en
+  el mapa.**
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 441 a 468.
+- En este hito se pasaron las pruebas de `simulation_view` (14
+  funciones) y la de `simulation_world_advance_view`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Empieza la espera
 
 Una función en `networking/simulation_world.c`, de 40 bytes. De 1591

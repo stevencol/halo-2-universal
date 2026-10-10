@@ -13,9 +13,27 @@ is a guess, and so are the names of its functions.
 
 #include "networking/network_observer.h"
 #include "cache/texture_cache.h"
+#include "networking/replication_entity_view.h"
 #include "networking/simulation_world.h"
 
 #include <string.h>
+
+/* ---------- structures */
+
+/* what sees to the things of a kind: something with functions, of which
+the seventh says whether a thing has something that is still to be told of */
+struct simulation_view_entity_client;
+
+struct simulation_view_entity_client_functions
+{
+	void *unknown0[6];
+	boolean (__attribute__((thiscall)) *pending)(struct simulation_view_entity_client *client, const byte *entity);
+};
+
+struct simulation_view_entity_client
+{
+	const struct simulation_view_entity_client_functions *functions;
+};
 
 /* ---------- prototypes */
 
@@ -550,7 +568,7 @@ void simulation_view_update_ready(
 }
 
 /* 0x00085cb0: whether a view has nothing more to send before the game goes
-on: one of the third kind or of the fourth, as unknown_00086ad0 says; any
+on: one of the third kind or of the fourth, as simulation_view_entities_pending says; any
 other, if it has no memory of the state of the game or nothing of it left */
 boolean simulation_view_nothing_to_send(
 	byte *view)
@@ -559,7 +577,7 @@ boolean simulation_view_nothing_to_send(
 
 	if (kind==_simulation_view_kind_3 || kind==_simulation_view_kind_4)
 	{
-		return !unknown_00086ad0(view);
+		return !simulation_view_entities_pending(view);
 	}
 
 	return !(*(void *const *)(view+SIMULATION_VIEW_UNKNOWN94_OFFSET) && *(const long *)(view+SIMULATION_VIEW_UNKNOWNAC_OFFSET)>0);
@@ -605,5 +623,44 @@ void __attribute__((stdcall)) simulation_view_send_player_actions(
 		network_observer_channel_send(FALSE, *(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET),
 			*(byte *const *)(view+SIMULATION_VIEW_OBSERVER_OFFSET), SIMULATION_VIEW_SESSION_INDEX,
 			_network_message_simulation_player_actions, sizeof(message), &message);
+	}
+}
+
+/* 0x00086ad0: whether a view of the third kind or of the fourth has things
+of the game left to tell of: one of the things that its view of them goes
+through (replication_entity_view_next_entity) has something still to be told
+of, as what sees to its kind says. FALSE if a byte of what the view has at
+0x8 is clear */
+boolean simulation_view_entities_pending(
+	byte *view)
+{
+	const byte *database;
+	long entity_index= NONE;
+
+	if (!(*(const byte *const *)(view+SIMULATION_VIEW_UNKNOWN8_OFFSET))[SIMULATION_VIEW_UNKNOWN8_UNKNOWN39_OFFSET])
+	{
+		return FALSE;
+	}
+	database= *(const byte *const *)(*(const byte *const *)(view+SIMULATION_VIEW_WORLD_OFFSET)+SIMULATION_WORLD_UNKNOWN4_OFFSET)+
+		SIMULATION_WORLD_UNKNOWN4_DATABASE_OFFSET;
+	for (;;)
+	{
+		struct simulation_view_entity_client *client;
+		const byte *entity;
+
+		entity_index= replication_entity_view_next_entity(entity_index,
+			*(byte *const *)(view+SIMULATION_VIEW_UNKNOWN8_OFFSET)+SIMULATION_VIEW_UNKNOWN8_ENTITY_VIEW_OFFSET);
+		if (entity_index==NONE)
+		{
+			return FALSE;
+		}
+		entity= database+SIMULATION_DATABASE_ENTITIES_OFFSET+
+			((unsigned long)entity_index&SIMULATION_DATABASE_ENTITY_INDEX_MASK)*SIMULATION_DATABASE_ENTITY_SIZE;
+		client= (*(struct simulation_view_entity_client *const *const *)(database+SIMULATION_DATABASE_CLIENTS_OFFSET))[
+			*(const short *)(entity+SIMULATION_DATABASE_ENTITY_TYPE_OFFSET)+1];
+		if (client->functions->pending(client, entity))
+		{
+			return TRUE;
+		}
 	}
 }

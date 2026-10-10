@@ -1296,7 +1296,7 @@ In its fifth state: if it has nothing more to send (simulation_view_nothing_to_s
 knows of every player, it is there; if not, nothing is said. And one that is
 there, with the number that the thing has at 0x18 being 4, goes to its sixth
 state (one of the second kind gives back its memory first, and any other has
-unknown_00086ad0 called).
+simulation_view_entities_pending called).
 
 A view that could not be brought on goes to its first state and is as 3
 says: the game has simulation_view_fail written here, and
@@ -1380,7 +1380,7 @@ long simulation_world_advance_view(
 		{
 			if (!second_kind)
 			{
-				unknown_00086ad0(view);
+				simulation_view_entities_pending(view);
 			}
 			else if (*(void *const *)(view+SIMULATION_VIEW_UNKNOWN94_OFFSET))
 			{
