@@ -12,6 +12,7 @@ is a guess, and so are the names of its functions.
 #include "simulation_view.h"
 
 #include "networking/network_observer.h"
+#include "networking/simulation_world.h"
 
 /* ---------- prototypes */
 
@@ -20,6 +21,15 @@ long GetTickCount(void);
 /* 0x000861c0: what follows from the state of a view and the one of the
 other console is seen to */
 void unknown_000861c0(byte *view);
+
+/* 0x0006a7f0: the thing takes what some players of the other console do, as
+bits say which. 0x0006a990: it takes a piece of the state of the game, of a
+size, that goes at a place; whether it could. 0x0006aa20: all of the state of
+the game has come, so many bytes: it is the one of the game now; whether it
+could */
+void __attribute__((stdcall)) unknown_0006a7f0(byte *world, byte *unknown14, long players, const void *actions);
+boolean __attribute__((stdcall)) unknown_0006a990(byte *world, long offset, long size, const void *data);
+boolean __attribute__((stdcall)) unknown_0006aa20(byte *world, long size);
 
 /* ---------- globals */
 
@@ -109,4 +119,104 @@ void __attribute__((stdcall)) simulation_view_set_state(
 			_network_message_simulation_view_state, sizeof(message), &message);
 	}
 	unknown_000861c0(view);
+}
+
+/* 0x000862c0: a view that is well goes to its first state, and is then as a
+number says. The game has this written in most of the places that do it */
+void __attribute__((stdcall)) simulation_view_fail(
+	byte *view,
+	long reason)
+{
+	if (*(const long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)==0)
+	{
+		simulation_view_set_state(view, _simulation_view_state0, NONE);
+		*(long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)= reason;
+	}
+}
+
+/* 0x00085f50: a view of the second kind is told what the other console
+says of its players: that it could not go on, or two numbers, of which the
+second is the one of what it is up to, and what some of its players do;
+whether that was heeded.
+
+If it could not go on, the view goes to its first state and is as 2 says
+(simulation_view_fail, written here). If not: numbers before the last that
+came are not heeded, nor one that is not before the one of the thing. The
+rest are; and if a number of the thing is 4, the two numbers are kept and
+the thing takes what the players do (unknown_0006a7f0) */
+boolean __attribute__((stdcall)) simulation_view_unknown_00085f50(
+	byte *view,
+	boolean failed,
+	long update,
+	long unknown0,
+	long players,
+	const void *actions)
+{
+	byte *world;
+
+	if (failed)
+	{
+		if (*(const long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)==0)
+		{
+			simulation_view_set_state(view, _simulation_view_state0, NONE);
+			*(long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)= _simulation_view_unknown28_remote_failed;
+		}
+
+		return TRUE;
+	}
+	if (unknown0<*(const long *)(view+SIMULATION_VIEW_UNKNOWN80_OFFSET) ||
+		update<*(const long *)(view+SIMULATION_VIEW_UNKNOWN84_OFFSET))
+	{
+		return FALSE;
+	}
+	world= *(byte *const *)(view+SIMULATION_VIEW_WORLD_OFFSET);
+	if (update>=*(const long *)(world+SIMULATION_WORLD_UNKNOWN28_OFFSET))
+	{
+		return FALSE;
+	}
+	if (*(const long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET)==_simulation_world_unknown18_4)
+	{
+		*(long *)(view+SIMULATION_VIEW_UNKNOWN84_OFFSET)= update;
+		*(long *)(view+SIMULATION_VIEW_UNKNOWN80_OFFSET)= unknown0;
+		unknown_0006a7f0(world, view+SIMULATION_VIEW_UNKNOWN14_OFFSET, players, actions);
+	}
+
+	return TRUE;
+}
+
+/* 0x00085ed0: a view of the first kind is given a piece of the state of
+the game that the other console sends, which goes at a place and is of a
+size; whether it was taken. It is not if the thing is not being sent the
+state of the game. A piece of some size is one more piece (unknown_0006a990);
+one of none says that it has all come, so many bytes (unknown_0006aa20). If
+the thing could not take it, the view goes to its first state and is as 5
+says (simulation_view_fail, written here) */
+boolean __attribute__((stdcall)) simulation_view_unknown_00085ed0(
+	byte *view,
+	long offset,
+	long size,
+	const void *data)
+{
+	byte *world= *(byte *const *)(view+SIMULATION_VIEW_WORLD_OFFSET);
+	boolean good;
+
+	if (!simulation_world_receiving_game_state(world))
+	{
+		return FALSE;
+	}
+	if (size>0)
+	{
+		good= unknown_0006a990(world, offset, size, data);
+	}
+	else
+	{
+		good= unknown_0006aa20(world, offset);
+	}
+	if (!good && *(const long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)==0)
+	{
+		simulation_view_set_state(view, _simulation_view_state0, NONE);
+		*(long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)= _simulation_view_unknown28_game_state_failed;
+	}
+
+	return good;
 }

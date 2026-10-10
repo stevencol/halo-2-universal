@@ -226,8 +226,7 @@ boolean simulation_world_unknown_000698e0(
 {
 	long next= (long)(*(const unsigned long *)(world+SIMULATION_WORLD_LAST_UPDATE_OFFSET)+1);
 
-	if (!(*(const long *)(world+SIMULATION_WORLD_STATE_OFFSET)==_simulation_world_state3 &&
-		*(const long *)(world+SIMULATION_WORLD_UNKNOWN1200_OFFSET)!=NONE))
+	if (!simulation_world_receiving_game_state(world))
 	{
 		if (update[0]<next)
 		{

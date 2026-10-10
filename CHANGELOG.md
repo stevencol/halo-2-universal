@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Lo que hacen los jugadores de la otra consola, y el estado del juego que llega a trozos
+
+Tres funciones en `networking/simulation_view.c`, 253 bytes entre las tres. De 1543
+funciones se pasa a 1546, el 13,72 % de las del juego (el 9,197 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_view_fail` | `0x000862c0` | `networking/simulation_view.c` |
+| `simulation_view_unknown_00085f50` | `0x00085f50` | `networking/simulation_view.c` |
+| `simulation_view_unknown_00085ed0` | `0x00085ed0` | `networking/simulation_view.c` |
+
+### Lo que se sabe
+
+- Empieza a verse **qué son dos de los mensajes del hito 444**:
+  - `simulation_view_unknown_00085f50` (mensaje de `0x000949d0`, para una
+    vista de la segunda clase): **lo que hacen los jugadores de la otra
+    consola.** Trae dos números (el segundo es por dónde va esa consola),
+    un byte que dice «no puedo seguir», qué jugadores (cuatro bits) y lo
+    que hace cada uno (cuatro bloques de `0x5C` bytes). No se hace caso a
+    uno más viejo que el último, ni a uno que no sea anterior al número
+    de la partida. Si vale, la partida se queda con lo que hacen
+    (`0x0006a7f0`). Ese segundo número es el que el hito 447 miraba para
+    saber qué vista frena la partida.
+  - `simulation_view_unknown_00085ed0` (mensaje de `0x00094a50`, para una
+    de la primera clase): **un trozo del estado del juego**, con dónde va
+    y cuánto mide. Es cómo una consola que entra recibe la partida: los
+    trozos se van copiando (`0x0006a990`, hasta `0x40000` bytes de
+    momento) y uno de tamaño cero dice «ya está todo»
+    (`0x0006aa20`, que lo carga como estado del juego). Solo si la
+    partida está en su tercer estado y esperando ese estado.
+- `simulation_view_fail`: una vista que estaba bien vuelve al primer
+  estado y queda marcada con un motivo. Los motivos que se conocen ya:
+  `2` la otra consola dijo que no podía seguir; `4` frenó la partida dos
+  segundos (hito 447); `5` no se pudo tomar el estado del juego; `7` se
+  le pidió un cambio de estado que no vale (hito 448).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las tres**, y en las de los hitos 441 a
+  448.
+- En este hito se pasaron las pruebas de `simulation_view` (5 funciones),
+  `network_message_handler` (7) y `simulation_world_unknown_000698e0`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — El estado de una vista, y cómo se lo dice a la otra consola
 
 Una función en `networking/simulation_view.c`, de 161 bytes. De 1542

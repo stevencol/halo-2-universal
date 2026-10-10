@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 448.
+**Última actualización:** 2026-10-08, al terminar el hito 449.
 
 ## Dónde estamos
 
-- **1543 funciones descompiladas de 11.265: el 13,70 % del juego** (el
-  9,188 % de los bytes de código).
-- Las 1543 están comprobadas contra el ejecutable original: las 1390 del
+- **1546 funciones descompiladas de 11.265: el 13,72 % del juego** (el
+  9,197 % de los bytes de código).
+- Las 1546 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a simulation view goes to a state* (ver `git log`).
+- Último hito: *Decompile how a view takes the other console's player actions and game state* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 558 funciones apuntadas pero sin descompilar (las que el código
-  llama); 456 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 559 funciones apuntadas pero sin descompilar (las que el código
+  llama); 457 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -166,8 +166,11 @@ Módulos (funciones hechas / archivo):
       `unknown_004cf770`, y queda casi todo, de `0x00069300` a
       `0x0006ad40`)
 - [ ] Las vistas de la partida en red — `networking\simulation_view.c`
-      (2: poner una vista en un estado y marcar la que frena la
-      partida; queda casi todo, de `0x00085b20` a `0x000862e0`)
+      (5: poner una vista en un estado, darla por mala, marcar la
+      que frena la partida, lo que hacen los jugadores de la otra
+      consola y los trozos del estado del juego; quedan `0x00085b20`,
+      `0x00085cb0`, `0x00085d00`, `0x00085dc0`, `0x00085e70`,
+      `0x00085fc0`, `0x000860b0`, `0x000861c0` y `0x000862e0`)
 - [ ] A quien se dan los mensajes de las vistas —
       `networking\network_message_handler.c` (7: de `0x00094910` a
       `0x00094aa0`, completo; falta lo que las vistas hacen con cada

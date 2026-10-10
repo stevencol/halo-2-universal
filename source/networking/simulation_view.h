@@ -45,7 +45,16 @@ enum
 	/* the kind of the message that says the state of a view, and what it
 	is sent for */
 	_network_message_simulation_view_state= 0x25,
-	SIMULATION_VIEW_SESSION_INDEX= 3
+	SIMULATION_VIEW_SESSION_INDEX= 3,
+	/* more of a view: something that unknown_0006a7f0 is given; and two
+	numbers of the last that came of what the players of the other console
+	do. How a view is after the other
+	console says that it could not go on, and after the state of the game
+	that it was sent could not be taken */
+	SIMULATION_VIEW_UNKNOWN14_OFFSET= 0x14,
+	SIMULATION_VIEW_UNKNOWN80_OFFSET= 0x80,
+	_simulation_view_unknown28_remote_failed= 2,
+	_simulation_view_unknown28_game_state_failed= 5
 };
 
 /* ---------- structures */
@@ -61,5 +70,10 @@ struct simulation_view_state_message
 
 void simulation_view_set_blocked(byte *view, boolean blocked);
 void __attribute__((stdcall)) simulation_view_set_state(byte *view, long state, long number);
+void __attribute__((stdcall)) simulation_view_fail(byte *view, long reason);
+boolean __attribute__((stdcall)) simulation_view_unknown_00085f50(byte *view, boolean failed, long update,
+	long unknown0, long players, const void *actions);
+boolean __attribute__((stdcall)) simulation_view_unknown_00085ed0(byte *view, long offset, long size,
+	const void *data);
 
 #endif

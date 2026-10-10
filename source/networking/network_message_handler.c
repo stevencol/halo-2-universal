@@ -15,20 +15,17 @@ it). The name of the file is a guess, and so are the names of its functions.
 #include "network_message_handler.h"
 
 #include "main/main_game.h"
+#include "networking/simulation_view.h"
 #include "networking/simulation_world.h"
 
 /* ---------- prototypes */
 
-/* 0x00085b20, 0x00085d00, 0x00085dc0, 0x00085e70, 0x00085ed0 and
-0x00085f50: what a view does with what each message has; whether it could,
-most likely */
+/* 0x00085b20, 0x00085d00, 0x00085dc0 and 0x00085e70: what a view does with
+what each message has; whether it could, most likely */
 boolean unknown_00085b20(byte *view, long unknown0, long unknown4);
 boolean __attribute__((stdcall)) unknown_00085d00(byte *view, long unknown0, long unknown4, const long *unknown8);
 boolean __attribute__((stdcall)) unknown_00085dc0(byte *view, long unknown0);
 boolean __attribute__((stdcall)) unknown_00085e70(byte *view, long unknown0, long unknown4, const long *unknown8);
-boolean __attribute__((stdcall)) unknown_00085ed0(byte *view, long unknown0, long unknown4, long unknown);
-boolean __attribute__((stdcall)) unknown_00085f50(byte *view, boolean unknown8, long unknown4, long unknown0,
-	long unknownC, const long *unknown10);
 
 /* ---------- code */
 
@@ -96,7 +93,8 @@ void __attribute__((stdcall)) network_message_handler_unknown_00094990(
 }
 
 /* 0x000949d0: a message with two numbers, a byte, one more number and
-something more, for a view of the second kind */
+something more, for a view of the second kind: what the other console says
+of its players (simulation_view_unknown_00085f50) */
 void network_message_handler_unknown_000949d0(
 	const long *message,
 	long channel_index)
@@ -105,7 +103,8 @@ void network_message_handler_unknown_000949d0(
 
 	if (view && *(const word *)(view+SIMULATION_VIEW_KIND_OFFSET)==_simulation_view_kind2)
 	{
-		unknown_00085f50(view, *(const boolean *)&message[2], message[1], message[0], message[3], &message[4]);
+		simulation_view_unknown_00085f50(view, *(const boolean *)&message[2], message[1], message[0], message[3],
+			&message[4]);
 	}
 }
 
@@ -124,7 +123,8 @@ void __attribute__((stdcall)) network_message_handler_unknown_00094a10(
 
 /* 0x00094a50: a message with two numbers, of which the second has to be a
 number that is given, for a view of the first kind, with one more thing that
-is given */
+is given: a piece of the state of the game, where it goes, its size, and its
+bytes (simulation_view_unknown_00085ed0) */
 void __attribute__((stdcall)) network_message_handler_unknown_00094a50(
 	const long *message,
 	long unknown,
@@ -135,7 +135,7 @@ void __attribute__((stdcall)) network_message_handler_unknown_00094a50(
 
 	if (unknown==message[1] && view && *(const word *)(view+SIMULATION_VIEW_KIND_OFFSET)==_simulation_view_kind1)
 	{
-		unknown_00085ed0(view, message[0], message[1], unknown2);
+		simulation_view_unknown_00085ed0(view, message[0], message[1], (const void *)unknown2);
 	}
 }
 

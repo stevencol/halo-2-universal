@@ -49,3 +49,56 @@ def run(t) -> None:
                 "unknown_000861c0": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
             },
         )
+
+    # ---------- a view that cannot go on, what the players of the other console do, and the state of the game
+
+    VIEW, WORLD = 0x90, 0x1210
+
+    def a_view() -> Buffer:
+        """A view, and after it the thing that it is of."""
+        data = bytearray(random_.randbytes(VIEW + WORLD))
+        struct.pack_into("<I", data, 0xC, VIEW)
+        struct.pack_into("<i", data, 0x28, random_.choice((0, 0, 0, 1, 7)))
+        struct.pack_into("<2i", data, 0x80, random_.choice((0, 5, 100)), random_.choice((0, 5, 100)))
+        struct.pack_into("<i", data, VIEW + 0x8, random_.choice((0, 1, 2, 3, 3, 3, 3, 4, 5)))
+        struct.pack_into("<i", data, VIEW + 0x18, random_.choice((0, 4, 4, 4)))
+        struct.pack_into("<i", data, VIEW + 0x28, random_.choice((0, 6, 101, 200)))
+        struct.pack_into("<i", data, VIEW + 0x1200, random_.choice((-1, 0, 0, 100)))
+        return Buffer(bytes(data), pointers=(0xC,))
+
+    state = lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2]))
+
+    for n in range(2500):
+        t.check("simulation_view_fail", a_view(), random_.choice((2, 4, 5, 7)), externals={"simulation_view_set_state": state})
+        t.check(
+            "simulation_view_unknown_00085f50",
+            a_view(),
+            random_.choice((0, 0, 0, 0, 1, 0x80)),
+            random_.choice((0, 4, 5, 6, 99, 100, 101, 199, 200, 0xFFFFFFFF)),
+            random_.choice((0, 4, 5, 6, 99, 100, 101, 0xFFFFFFFF)),
+            random_.getrandbits(4),
+            Buffer(random_.randbytes(4 * 0x5C)),
+            externals={
+                "simulation_view_set_state": state,
+                "unknown_0006a7f0": lambda harness, arguments: (
+                    0,
+                    (harness.normalize(arguments[0]), harness.normalize(arguments[1]), arguments[2], harness.normalize(arguments[3])),
+                ),
+            },
+        )
+        could = random_.choice((0, 1, 1, 0x100))
+        t.check(
+            "simulation_view_unknown_00085ed0",
+            a_view(),
+            random_.choice((0, 100, 0x3FE000)),
+            random_.choice((0, 0, 1, 100, 0xFFFFFFFF, 0x80000000)),
+            Buffer(random_.randbytes(0x80)),
+            externals={
+                "simulation_view_set_state": state,
+                "unknown_0006a990": lambda harness, arguments, could=could: (
+                    could,
+                    (harness.normalize(arguments[0]), arguments[1], arguments[2], harness.normalize(arguments[3])),
+                ),
+                "unknown_0006aa20": lambda harness, arguments, could=could: (could, (harness.normalize(arguments[0]), arguments[1])),
+            },
+        )

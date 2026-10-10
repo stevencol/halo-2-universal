@@ -74,6 +74,16 @@ struct simulation_view_iterator
 
 /* ---------- prototypes/SIMULATION_WORLD.C */
 
+/* whether the thing is being sent the state of the game: it is in its third
+state and has a count of the bytes that have come. The game has it written
+wherever it asks, with more states looked at than there is need for */
+static inline __attribute__((always_inline)) boolean simulation_world_receiving_game_state(
+	const byte *world)
+{
+	return *(const long *)(world+SIMULATION_WORLD_STATE_OFFSET)==_simulation_world_state3 &&
+		*(const long *)(world+SIMULATION_WORLD_UNKNOWN1200_OFFSET)!=NONE;
+}
+
 boolean __attribute__((stdcall)) simulation_world_next_view(struct simulation_view_iterator *iterator,
 	const byte *world, byte **view_out);
 byte *simulation_world_get_channel_view(const byte *world, long channel_index);
