@@ -1504,3 +1504,23 @@ void __attribute__((stdcall)) simulation_world_before_send_game_state(
 	world[SIMULATION_WORLD_SENDING_GAME_STATE_OFFSET]= TRUE;
 	*size_out= SIMULATION_GAME_STATE_SIZE;
 }
+
+/* 0x00069c50: the thing starts to wait before it goes: the number that it
+has at 0x18 is 3 (simulation_world_unknown_0006b1f0), with the consoles that
+it waits for: the ones that what it has first has. In its first state it
+waits for none, and starts to go at once
+(simulation_world_unknown_0006b2a0) */
+void simulation_world_unknown_00069c50(
+	byte *world)
+{
+	if (*(const long *)(world+SIMULATION_WORLD_STATE_OFFSET)==_simulation_world_state1)
+	{
+		simulation_world_unknown_0006b1f0(world, 0);
+		simulation_world_unknown_0006b2a0(world);
+	}
+	else
+	{
+		simulation_world_unknown_0006b1f0(world, *(const long *)(*(const byte *const *)(world+SIMULATION_WORLD_UNKNOWN0_OFFSET)+
+			SIMULATION_WORLD_UNKNOWN0_MACHINE_MASK_OFFSET));
+	}
+}

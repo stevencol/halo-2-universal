@@ -743,3 +743,15 @@ def run(t) -> None:
             globals={"game_state_before_save_procs": struct.pack("<4I", *(mock_address(index) for index in range(4)))},
             mocks=[Mock(lambda call: 0, stack_arguments=1) for index in range(4)],
         )
+
+    # ---------- the thing starts to wait for the other consoles
+
+    for n in range(1000):
+        data = bytearray(random_.randbytes(0x40 + 0x20))
+        struct.pack_into("<I", data, 0, 0x40)
+        struct.pack_into("<i", data, 0x8, random_.choice((0, 1, 1, 2, 3, 4)))
+        t.check(
+            "simulation_world_unknown_00069c50",
+            Buffer(bytes(data), pointers=(0,)),
+            externals={"simulation_world_unknown_0006b1f0": next_number, "simulation_world_unknown_0006b2a0": views_done},
+        )

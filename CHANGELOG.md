@@ -2,6 +2,33 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Empieza la espera
+
+Una función en `networking/simulation_world.c`, de 40 bytes. De 1591
+funciones se pasa a 1592, el 14,13 % de las del juego (el 9,421 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_unknown_00069c50` | `0x00069c50` | `networking/simulation_world.c` |
+
+### Lo que se sabe
+
+- `simulation_world_unknown_00069c50` es **el principio de la espera del
+  hito 463**: deja el segundo número de la partida en 3 («esperando») y
+  apunta **por qué consolas hay que esperar**: todas las que tiene la
+  sesión (los bits de `0x1C` de lo primero que lleva la partida).
+- Una partida en su primer estado (la de una sola consola, por lo que se
+  ve) no espera por nadie y se pone en marcha en el acto.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 441 a 467.
+- En este hito se pasó la prueba de la función.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Cuándo un jugador cuenta para todas las consolas
 
 Dos funciones en `networking/simulation_world.c`, 251 bytes entre las dos. De 1589
