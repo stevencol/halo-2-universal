@@ -58,9 +58,7 @@ boolean __attribute__((stdcall)) unknown_00083bd0(long player, const void *unkno
 void unknown_00155710(long controller);
 
 
-/* 0x000693a0: the views of the thing are done with: what main_game_unload
-ends the game in the network with. 0x0006a560: the thing is given a byte */
-void __attribute__((stdcall)) unknown_000693a0(void *world);
+/* 0x0006a560: the thing is given a byte */
 void __attribute__((stdcall)) unknown_0006a560(byte *world, boolean unknown);
 
 long GetTickCount(void);
@@ -85,6 +83,17 @@ long unknown_004ced4c;
 thing waits between starting to send it to one view and to the next, in
 milliseconds */
 long unknown_004ced48;
+
+/* 0x004d87ec, 0x004d87f0: the table of the views, and the one of what the
+views of the third kind and the fourth have at 0x8. 0x00450c94, 0x00450cd0,
+0x00450cf4, 0x00450d1c: the functions of four things that that has; only
+where they are is known here */
+struct data_array *unknown_004d87ec;
+struct data_array *unknown_004d87f0;
+void *unknown_00450c94[1];
+void *unknown_00450cd0[1];
+void *unknown_00450cf4[1];
+void *unknown_00450d1c[1];
 long unknown_004ced50;
 long unknown_004ced54;
 long unknown_004ced5c;
@@ -612,7 +621,7 @@ void __attribute__((stdcall)) simulation_world_unknown_0006b1f0(
 }
 
 /* 0x0006b040: the thing gives up: its views are done with
-(unknown_000693a0), and if the number that it has at 0x18 was from 3 to 6, it
+(simulation_world_delete_views), and if the number that it has at 0x18 was from 3 to 6, it
 is 2 (simulation_world_set_unknown18), and the time is noted. The game has
 the time of the network written here */
 void simulation_world_unknown_0006b040(
@@ -620,7 +629,7 @@ void simulation_world_unknown_0006b040(
 {
 	long unknown18;
 
-	unknown_000693a0(world);
+	simulation_world_delete_views(world);
 	unknown18= *(const long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET);
 	if (unknown18>=_simulation_world_unknown18_3 && unknown18<=_simulation_world_unknown18_6)
 	{
@@ -1677,4 +1686,53 @@ void __attribute__((stdcall)) simulation_world_add_player(
 	simulation_player_new(world+index*SIMULATION_WORLD_PLAYER_SIZE+SIMULATION_WORLD_PLAYERS_OFFSET,
 		(const long *)(datum+SIMULATION_PLAYER_DATUM_IDENTIFIER_OFFSET),
 		(const word *)(datum+SIMULATION_PLAYER_DATUM_MACHINE_IDENTIFIER_OFFSET), world, (long)index, player, state);
+}
+
+/* 0x000693a0: the views of the thing are done with: it is what
+main_game_unload ends the game in the network with. Each view that is of some
+kind lets go of its channel, if it has one of the observer
+(simulation_view_release_channel), and of its thing
+(simulation_view_detach), and is of no kind. Then its place in the table of
+the views is free; and if it has something at 0x8, the four things in that
+that have functions get them again, as when something made by the game is
+unmade, and its place in the other table is free too */
+void __attribute__((stdcall)) simulation_world_delete_views(
+	void *world)
+{
+	struct simulation_view_iterator iterator= {0xFFFFFFFF, 0};
+	byte *view;
+
+	while (simulation_world_next_view(&iterator, world, &view))
+	{
+		byte *data;
+		long index;
+
+		if (!view)
+		{
+			continue;
+		}
+		if (*(const word *)(view+SIMULATION_VIEW_KIND_OFFSET)!=0)
+		{
+			if (*(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET)!=NONE)
+			{
+				simulation_view_release_channel(view);
+			}
+			if (*(void *const *)(view+SIMULATION_VIEW_WORLD_OFFSET))
+			{
+				simulation_view_detach(view);
+			}
+			*(word *)(view+SIMULATION_VIEW_KIND_OFFSET)= 0;
+		}
+		data= *(byte *const *)(view+SIMULATION_VIEW_DATA_OFFSET);
+		index= *(const long *)(view+SIMULATION_VIEW_DATUM_INDEX_OFFSET);
+		datum_delete(unknown_004d87ec, index);
+		if (data)
+		{
+			*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN5098_OFFSET)= unknown_00450c94;
+			*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN5070_OFFSET)= unknown_00450d1c;
+			*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN30_OFFSET)= unknown_00450cd0;
+			*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN4_OFFSET)= unknown_00450cf4;
+			datum_delete(unknown_004d87f0, index);
+		}
+	}
 }

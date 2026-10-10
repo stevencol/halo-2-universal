@@ -10,6 +10,7 @@ name of the file is a guess, and so are the names of its functions.
 #define __SIMULATION_WORLD_H
 
 #include "cseries/cseries.h"
+#include "memory/data.h"
 
 /* ---------- constants */
 
@@ -172,7 +173,16 @@ enum
 	SIMULATION_PLAYER_DATUM_IDENTIFIER_OFFSET= 0x4,
 	SIMULATION_PLAYER_DATUM_MACHINE_IDENTIFIER_OFFSET= 0x14,
 	SIMULATION_PLAYER_DATUM_CONTROLLER_OFFSET= 0x28,
-	MAIN_GAME_GLOBALS_SIMULATION_OFFSET= 0xC
+	MAIN_GAME_GLOBALS_SIMULATION_OFFSET= 0xC,
+	/* of a view: its place in the table of the views, and in the table of
+	what the ones of the third kind and the fourth have at 0x8. Of that:
+	where the four things in it that have functions have them */
+	SIMULATION_VIEW_DATUM_INDEX_OFFSET= 0x4,
+	SIMULATION_VIEW_DATA_OFFSET= 0x8,
+	SIMULATION_VIEW_DATA_UNKNOWN4_OFFSET= 0x4,
+	SIMULATION_VIEW_DATA_UNKNOWN30_OFFSET= 0x30,
+	SIMULATION_VIEW_DATA_UNKNOWN5070_OFFSET= 0x5070,
+	SIMULATION_VIEW_DATA_UNKNOWN5098_OFFSET= 0x5098
 };
 
 /* ---------- structures */
@@ -264,6 +274,7 @@ void __attribute__((stdcall)) simulation_world_set_local_player_actions(const vo
 	unsigned long players);
 void __attribute__((stdcall)) simulation_world_set_other_unknown14(byte *world, long index, const void *unknown14);
 void __attribute__((stdcall)) simulation_world_add_player(byte *world, long player);
+void __attribute__((stdcall)) simulation_world_delete_views(void *world);
 
 /* whether a view is past the states in which it is made ready: one of the
 second kind from the sixth state on, and any other from the fourth. The game
@@ -278,6 +289,12 @@ static inline __attribute__((always_inline)) boolean simulation_view_established
 
 /* ---------- globals */
 
+extern struct data_array *unknown_004d87ec;
+extern struct data_array *unknown_004d87f0;
+extern void *unknown_00450c94[1];
+extern void *unknown_00450cd0[1];
+extern void *unknown_00450cf4[1];
+extern void *unknown_00450d1c[1];
 extern long unknown_004ced48;
 extern long unknown_004ced4c;
 extern long unknown_004ced50;

@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 485.
+**Última actualización:** 2026-10-08, al terminar el hito 486.
 
 ## Dónde estamos
 
-- **1628 funciones descompiladas de 11.265: el 14,45 % del juego** (el
-  9,597 % de los bytes de código).
-- Las 1628 están comprobadas contra el ejecutable original: las 1390 del
+- **1629 funciones descompiladas de 11.265: el 14,46 % del juego** (el
+  9,604 % de los bytes de código).
+- Las 1629 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a view lets go of its channel and of its world* (ver `git log`).
+- Último hito: *Decompile how the simulation world deletes its views* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 563 funciones apuntadas pero sin descompilar (las que el código
-  llama); 461 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 562 funciones apuntadas pero sin descompilar (las que el código
+  llama); 460 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -170,7 +170,8 @@ Módulos (funciones hechas / archivo):
       `0x000683a0`, `0x00068580` y de `0x00068a90` a
       `0x00069260`)
 - [ ] La partida en red y sus vistas — `networking\simulation_world.c`
-      (54: hacer la actualización de un tick, lo que hacen los
+      (55: soltar todas las vistas, hacer la actualización de un
+      tick, lo que hacen los
       jugadores de esta consola, llevar una vista hasta
       el final, la espera a las demás
       consolas, la cola de actualizaciones

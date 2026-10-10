@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Se acaba la partida en red: fuera todas las vistas
+
+Una función en `networking/simulation_world.c`, de 199 bytes. De 1628
+funciones se pasa a 1629, el 14,46 % de las del juego (el 9,604 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_delete_views` | `0x000693a0` | `networking/simulation_world.c` |
+
+### Lo que se sabe
+
+- `simulation_world_delete_views` es **con lo que `main_game_unload`
+  termina la partida en red** (hito 36), y con lo que la partida se da
+  por vencida (hito 453). Para cada vista:
+  - si es de alguna clase, suelta su canal y se va de la partida (hito
+    485), y queda sin clase;
+  - su sitio en la tabla de las vistas queda libre (`datum_delete`, hito
+    8);
+  - y si tiene algo en `0x8` (las vistas de la tercera clase y la
+    cuarta), su sitio en la otra tabla queda libre también.
+- Las vistas viven, pues, en **dos tablas de datos del juego**
+  (`0x004d87ec` y `0x004d87f0`), como los objetos o los jugadores.
+- Antes de soltar lo de `0x8`, el juego le vuelve a poner sus funciones a
+  las cuatro cosas que lleva dentro (en `0x4`, `0x30`, `0x5070` y
+  `0x5098`): es lo que hace un programa en C++ al destruir un objeto
+  hecho de otros. Las cuatro tablas de funciones (`0x00450c94`,
+  `0x00450cd0`, `0x00450cf4` y `0x00450d1c`) quedan apuntadas como
+  variables; es la primera vez que una función descompilada escribe la
+  dirección de una tabla.
+
+### Cambiado
+
+- `unknown_000693a0` tiene ya su nombre donde `main_game_unload` la
+  llama.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 441 a 485.
+- De las cuatro tablas solo se sabe dónde están, no qué tienen.
+- En este hito se pasaron las pruebas de la función, la de
+  `simulation_world_unknown_0006b040` y la de `main_game_unload`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Una vista suelta su canal, y se va de la partida
 
 Dos funciones en `networking/simulation_view.c`, 376 bytes entre las dos. De 1626

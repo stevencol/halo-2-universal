@@ -958,7 +958,7 @@ address,name,source,arguments,returns,convention
 000b3d30,unknown_000b3d30,,stack,void,stdcall
 0021ebe0,unknown_0021ebe0,,,void
 0021ebc0,unknown_0021ebc0,,stack,void,stdcall
-000693a0,unknown_000693a0,,stack,void,stdcall
+000693a0,simulation_world_delete_views,source/networking/simulation_world.c,stack,void,stdcall
 0006cd50,unknown_0006cd50,,eax,int
 001a01e0,language_texts_load,source/text/unicode_string_list.c,edi,void
 002186f0,sound_cache_close,source/sound/sound_manager.c,,void

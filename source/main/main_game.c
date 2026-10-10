@@ -49,7 +49,7 @@ void unknown_0021ebe0(void);
 void unknown_0021ebc0(long configuration);
 
 /* 0x000693a0: ends what unknown_004cf770 has going; of the network game */
-void __attribute__((stdcall)) unknown_000693a0(void *unknown);
+void __attribute__((stdcall)) simulation_world_delete_views(void *world); /* of simulation_world.c */
 
 /* 0x0006cd50: the state of a session of the network game */
 long unknown_0006cd50(long session_index);
@@ -241,7 +241,7 @@ void main_game_unload(
 			if (unknown[UNKNOWN_004CF770_ACTIVE_OFFSET] && !unknown_004cf770.unknownA &&
 				!main_game_load_globals.restarting)
 			{
-				unknown_000693a0(unknown);
+				simulation_world_delete_views(unknown);
 				unknown[UNKNOWN_004CF770_ACTIVE_OFFSET]= FALSE;
 			}
 		}

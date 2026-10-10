@@ -301,7 +301,7 @@ def run(t) -> None:
             },
             externals={
                 "GetTickCount": lambda harness, arguments, now=now: now,
-                "unknown_000693a0": views_done,
+                "simulation_world_delete_views": views_done,
                 "simulation_world_set_unknown18": next_number,
             },
         )
@@ -813,4 +813,48 @@ def run(t) -> None:
             random_.randrange(16) | random_.choice((0, 0x12340000, 0xFFFF0000)),
             globals={"player_data": Buffer(bytes(players), pointers=(0x44,)), "main_game_globals": Buffer(bytes(game))},
             externals={"unknown_00155710": lambda harness, arguments: 0},
+        )
+
+    # ---------- the views of the thing are done with
+
+    from difftest import GlobalRange
+
+    for n in range(500):
+        data = bytearray(random_.randbytes(0x80))
+        pointers = []
+        places = []
+        for index in range(15):
+            if random_.random() < 0.7:
+                struct.pack_into("<I", data, 0x40 + index * 4, 0)
+                continue
+            at = len(data)
+            view = bytearray(random_.randbytes(0xC0))
+            struct.pack_into("<H", view, 2, random_.choice((0, 1, 2, 3, 4)))
+            struct.pack_into("<i", view, 0x24, random_.choice((-1, 0, 3)))
+            struct.pack_into("<I", view, 0xC, random_.choice((0, 0x5000)))
+            struct.pack_into("<I", view, 0x4, random_.getrandbits(32))
+            has = random_.random() < 0.6
+            struct.pack_into("<I", view, 0x8, at + 0xC0 if has else 0)
+            data += view
+            pointers.append(0x40 + index * 4)
+            struct.pack_into("<I", data, 0x40 + index * 4, at)
+            if has:
+                pointers.append(at + 0x8)
+                places += [at + 0xC0 + offset for offset in (0x4, 0x30, 0x5070, 0x5098)]
+                data += random_.randbytes(0x50A0)
+        gone = lambda harness, arguments: (0, (harness.normalize(arguments[0]),))
+        t.check(
+            "simulation_world_delete_views",
+            Buffer(bytes(data), pointers=tuple(pointers), places=tuple(places)),
+            # the four tables of functions are only told of, for what points to them to be compared by which it is
+            globals={
+                "unknown_004d87ec": 0x111000,
+                "unknown_004d87f0": 0x222000,
+                **{name: GlobalRange(4) for name in ("unknown_00450c94", "unknown_00450cd0", "unknown_00450cf4", "unknown_00450d1c")},
+            },
+            externals={
+                "simulation_view_release_channel": gone,
+                "simulation_view_detach": gone,
+                "datum_delete": lambda harness, arguments: (0, (arguments[0], arguments[1])),
+            },
         )

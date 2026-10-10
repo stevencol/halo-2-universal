@@ -254,7 +254,7 @@ def run(t) -> None:
                 "physical_memory_globals": memory(),
             },
             externals=stand_ins(
-                "unknown_000693a0",
+                "simulation_world_delete_views",
                 "game_dispose_from_old_map",
                 "main_game_close_caches",
                 "scenario_unload",
