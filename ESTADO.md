@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 450.
+**Última actualización:** 2026-10-08, al terminar el hito 451.
 
 ## Dónde estamos
 
-- **1550 funciones descompiladas de 11.265: el 13,76 % del juego** (el
-  9,210 % de los bytes de código).
-- Las 1550 están comprobadas contra el ejecutable original: las 1390 del
+- **1552 funciones descompiladas de 11.265: el 13,78 % del juego** (el
+  9,216 % de los bytes de código).
+- Las 1552 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the update queue's head and two more view lookups* (ver `git log`).
+- Último hito: *Decompile how the simulation world starts going* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 560 funciones apuntadas pero sin descompilar (las que el código
-  llama); 458 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 562 funciones apuntadas pero sin descompilar (las que el código
+  llama); 460 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -160,10 +160,10 @@ Módulos (funciones hechas / archivo):
       tabla `0x00450db8`; completo; romper líneas pendiente en las
       cinco últimas)
 - [ ] La partida en red y sus vistas — `networking\simulation_world.c`
-      (16: recorrer las vistas, buscar una de tres maneras, un byte de
-      cada jugador, devolver memoria prestada, contar lo que espera,
-      ponerse al día, recibir una actualización, sacar la primera de la
-      cola y decir qué vista frena; es lo de
+      (18: recorrer las vistas, buscar una de tres maneras, un byte de
+      cada jugador, devolver memoria prestada, ponerse en marcha, contar
+      lo que espera, ponerse al día, recibir una actualización, sacar la
+      primera de la cola y decir qué vista frena; es lo de
       `unknown_004cf770`, y queda casi todo, de `0x00069300` a
       `0x0006ad40`)
 - [ ] Las vistas de la partida en red — `networking\simulation_view.c`

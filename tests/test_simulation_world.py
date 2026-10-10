@@ -221,3 +221,38 @@ def run(t) -> None:
                 Mock(lambda call, known=random_.choice((0, 1)): known, stack_arguments=2, registers=("ecx",), record=lambda call: (call.registers["ecx"], call.stack[0])),
             ],
         )
+
+    # ---------- the thing starts to go, and what it is told of a view
+
+    for n in range(2000):
+        world = bytearray(random_.randbytes(0x1220))
+        world[0x24] = random_.choice((0, 0, 1, 0x80))
+        struct.pack_into("<i", world, 0x8, random_.choice((0, 2, 3, 3, 3, 4)))
+        struct.pack_into("<i", world, 0x18, random_.choice((2, 3, 4, 4, 5)))
+        struct.pack_into("<I", world, 0x28, random_.choice((0, 5, 1000, 0x80000000)))
+        kept = random_.choice((0, 1, 0x80))
+        now = random_.getrandbits(32)
+        t.check(
+            "simulation_world_unknown_0006b2a0",
+            Buffer(bytes(world)),
+            globals={"unknown_00510548": bytes((kept,)), "unknown_0051054c": now if kept else random_.getrandbits(32)},
+            externals={
+                "GetTickCount": lambda harness, arguments, now=now: now,
+                "unknown_0006ab10": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+            },
+        )
+        thing = a_world(random_, 0)
+        data = bytearray(thing.data)
+        struct.pack_into("<i", data, 0x18, random_.choice((2, 3, 3, 3, 4)))
+        views = [struct.unpack_from("<I", data, 0x40 + index * 4)[0] for index in range(15)]
+        views = [view for view in views if view]
+        first = [view for view in views if 1 << (data[view + 2] & 31) & 0xA]
+        of = random_.choice(((first[0] if first else 0), (first[0] if first else 0), (random_.choice(views) if views else 0), 0))
+        thing = Buffer(bytes(data), pointers=thing.pointers)
+        t.check(
+            "simulation_world_unknown_0006b110",
+            thing,
+            random_.choice((0, 1, 1, 1, 0x100)),
+            Pointer(thing, of) if of else 0,
+            externals={"unknown_00069f10": lambda harness, arguments: (0, (harness.normalize(arguments[0]),))},
+        )

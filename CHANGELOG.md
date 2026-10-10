@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — La partida en red se pone en marcha
+
+Dos funciones en `networking/simulation_world.c`, 182 bytes entre las dos. De 1550
+funciones se pasa a 1552, el 13,78 % de las del juego (el 9,216 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_unknown_0006b2a0` | `0x0006b2a0` | `networking/simulation_world.c` |
+| `simulation_world_unknown_0006b110` | `0x0006b110` | `networking/simulation_world.c` |
+
+### Lo que se sabe
+
+- `simulation_world_unknown_0006b2a0` **pone la partida en marcha** (el
+  byte de `0x24` que miran los hitos 446 y 447): una cuenta suya vuelve a
+  cero; si está en su tercer estado, suelta lo que hubiera en la cola
+  (`0x0006ab10`) y pasa a esperar la actualización que lleva su número
+  (`0x28`). Si ya estaba en marcha solo deja de «ponerse al día».
+- La partida lleva además **un segundo número de cómo va** (`0x18`), que
+  aquí queda en 4. Es el que tiene que valer 4 para que se tomen las
+  actualizaciones y lo que hacen los jugadores (hitos 446 y 449). Si ya
+  valía 4 se apunta la hora.
+- `simulation_world_unknown_0006b110`: cuando una vista avisa de algo
+  con un byte puesto, y es la primera vista de la primera clase o la
+  tercera, y ese número de la partida vale 3, se sigue con `0x00069f10`.
+  La llama lo que mira qué se sigue del estado de una vista
+  (`0x000861c0`, hito 448).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos**, y en las de los hitos 441 a
+  450 (las listas de líneas de todos ellos están ya escritas, en
+  `build\line_breaking\make_441_450.py`).
+- Limpieza: dos comentarios de `simulation_world.c` que el cambio de
+  nombres del hito 447 dejó mal cortados o con un nombre viejo.
+- En este hito se pasaron las pruebas de las dos funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — La cola de lo que llega, y buscar una vista por lo que la identifica
 
 Cuatro funciones en `networking/simulation_world.c`. De 1546

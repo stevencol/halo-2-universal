@@ -29,8 +29,21 @@ and so are the names of its functions.
 boolean __attribute__((stdcall)) unknown_0006ab90(byte *world, const long *update);
 void unknown_000860b0(byte *view, long unknown);
 
-/* 0x0006b1f0: the thing is given a number */
+/* 0x0006b1f0: the thing is given a number. 0x0006ab10: the things that have
+come and wait are let go of, most likely. 0x00069f10: something that the
+thing does when its first view of the first kind or the third is ready */
 void __attribute__((stdcall)) unknown_0006b1f0(byte *world, long unknown);
+void __attribute__((stdcall)) unknown_0006ab10(byte *world);
+void unknown_00069f10(byte *world);
+
+long GetTickCount(void);
+
+/* ---------- globals */
+
+/* 0x00510548, 0x0051054c, of main.c: whether the time is the one that was
+kept, and that time */
+extern boolean unknown_00510548;
+extern long unknown_0051054c;
 
 /* ---------- code */
 
@@ -136,8 +149,8 @@ byte *simulation_world_unknown_0006acb0(
 	return view;
 }
 
-/* 0x0006aae0: the thing gives back the memory that the texture
-cache lent it, and has none */
+/* 0x0006aae0: the thing gives back the memory that the texture cache lent
+it, and has none */
 void simulation_world_unknown_0006aae0(
 	byte *world)
 {
@@ -146,9 +159,9 @@ void simulation_world_unknown_0006aae0(
 	*(long *)(world+SIMULATION_WORLD_UNKNOWN1200_OFFSET)= NONE;
 }
 
-/* 0x00069300: how many things wait for the thing to take, and
-whether they were counted here. None if it is not going. In its second state
-it is what unknown_00069790 says; in its third, from the first of the ones
+/* 0x00069300: how many things wait for the thing to take, and whether they
+were counted here. None if it is not going. In its second state it is what
+simulation_world_unknown_00069790 says; in its third, from the first of the ones
 that have come to the last, and those were counted; in the others, the most
 that there can be. The game has no more states than five in its table */
 long simulation_world_unknown_00069300(
@@ -442,5 +455,56 @@ void simulation_world_unknown_00069eb0(
 	{
 		simulation_view_set_state(view, 1, NONE);
 		unknown_0006b1f0(world, 0);
+	}
+}
+
+/* 0x0006b2a0: the thing starts to go, and its count starts over. One that
+was going already is only not to bring the game up to what has come. If
+not: in its third state, the things that have come and wait are done with
+(unknown_0006ab10), and the next one that it waits for is the one of its
+number; and it is going. And the number that it has at 0x18 is 4; if it was
+4 already, the time is noted. The game has the time of the network written
+here */
+void simulation_world_unknown_0006b2a0(
+	byte *world)
+{
+	*(long *)(world+SIMULATION_WORLD_UNKNOWN30_OFFSET)= 0;
+	if (world[SIMULATION_WORLD_GOING_OFFSET])
+	{
+		world[SIMULATION_WORLD_CATCH_UP_OFFSET]= FALSE;
+	}
+	else
+	{
+		long number= *(const long *)(world+SIMULATION_WORLD_UNKNOWN28_OFFSET);
+
+		if (*(const long *)(world+SIMULATION_WORLD_STATE_OFFSET)==_simulation_world_state3)
+		{
+			unknown_0006ab10(world);
+			*(long *)(world+SIMULATION_WORLD_LAST_UPDATE_OFFSET)= (long)((unsigned long)number-1);
+			*(long *)(world+SIMULATION_WORLD_FIRST_UPDATE_OFFSET)= number;
+		}
+		world[SIMULATION_WORLD_GOING_OFFSET]= TRUE;
+	}
+	if (*(const long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET)==_simulation_world_unknown18_4)
+	{
+		*(long *)(world+SIMULATION_WORLD_UNKNOWN34_OFFSET)= unknown_00510548 ? unknown_0051054c : GetTickCount();
+	}
+	*(long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET)= _simulation_world_unknown18_4;
+}
+
+/* 0x0006b110: the thing is told something of a view, with a byte: if the
+byte is set, the view is the first of the first kind or of the third that
+the thing has, and the number that the thing has at 0x18 is 3, something
+follows (unknown_00069f10). The game has simulation_world_unknown_0006acb0
+written here */
+void __attribute__((stdcall)) simulation_world_unknown_0006b110(
+	byte *world,
+	boolean unknown,
+	const byte *view)
+{
+	if (unknown && view==simulation_world_unknown_0006acb0(world) &&
+		*(const long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET)==_simulation_world_unknown18_3)
+	{
+		unknown_00069f10(world);
 	}
 }

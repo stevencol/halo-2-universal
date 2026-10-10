@@ -72,7 +72,13 @@ enum
 	SIMULATION_WORLD_UPDATE_COUNT_OFFSET= 0x1214,
 	SIMULATION_WORLD_FIRST_UPDATE_POINTER_OFFSET= 0x1218,
 	SIMULATION_WORLD_LAST_UPDATE_POINTER_OFFSET= 0x121C,
-	SIMULATION_UPDATE_SIZE= 0x4048
+	SIMULATION_UPDATE_SIZE= 0x4048,
+	/* more of the thing: a count that starts over when it starts to go,
+	and the time of something that happens to it when the number that it has
+	at 0x18 is 4 */
+	SIMULATION_WORLD_UNKNOWN30_OFFSET= 0x30,
+	SIMULATION_WORLD_UNKNOWN34_OFFSET= 0x34,
+	_simulation_world_unknown18_3= 3
 };
 
 /* ---------- structures */
@@ -122,5 +128,7 @@ byte *simulation_world_get_view_by_unknown1c(const byte *world, long unknown1c);
 byte *__attribute__((stdcall)) simulation_world_get_view_by_unknown14(const byte *world, const word *unknown14);
 void simulation_world_take_update(byte *world, void *update);
 void simulation_world_unknown_00069eb0(byte *world);
+void simulation_world_unknown_0006b2a0(byte *world);
+void __attribute__((stdcall)) simulation_world_unknown_0006b110(byte *world, boolean unknown, const byte *view);
 
 #endif
