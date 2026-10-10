@@ -105,10 +105,10 @@ def run(t) -> None:
     for n in range(60):
         data, nodes = world()
         t.check(
-            "replication_event_manager_unknown_00089dc0",
+            "replication_event_manager_reset_views",
             Pointer(data, MANAGER),
             extra=[data],
-            externals={"unknown_00096ed0": lambda harness, arguments: (0, (harness.normalize(arguments[0]),))},
+            externals={"replication_event_view_reset": lambda harness, arguments: (0, (harness.normalize(arguments[0]),))},
         )
 
     # ---------- a new thing that happens

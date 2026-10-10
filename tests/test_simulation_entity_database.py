@@ -238,10 +238,12 @@ def run(t) -> None:
         flags = random_.choice((0, 1, 6, 0xFF, random_.getrandbits(32)))
         all_flags = random_.choice((0, 1, 0xFF, 0xF0, NONE))
 
-        def encodes(call, how=random_.choice((0, 0, 0, 1, 2, 3)), says=random_.choice((1, 1, 1, 0, 0x100))):
+        def encodes(call, how=random_.choice((0, 0, 0, 1, 2, 3, 4)), says=random_.choice((1, 1, 1, 0, 0x100))):
             # the kind says which bits it did: the ones that it was asked for, fewer, none, or others
-            done = (call.stack[1], call.stack[1] & 0xFFFFFFFE, 0, call.stack[1] ^ 0x10)[how]
-            t.harness.mu.mem_write(call.stack[2], struct.pack("<I", done))
+            # or it says nothing of that, and what was there is what there is
+            if how < 4:
+                done = (call.stack[1], call.stack[1] & 0xFFFFFFFE, 0, call.stack[1] ^ 0x10)[how]
+                t.harness.mu.mem_write(call.stack[2], struct.pack("<I", done))
             return says
 
         mocks = [

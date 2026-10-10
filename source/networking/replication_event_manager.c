@@ -13,14 +13,9 @@ its functions.
 #include "replication_event_manager.h"
 
 #include "networking/network_observer.h"
+#include "networking/replication_event_view.h"
 
 #include <string.h>
-
-/* ---------- prototypes of functions not decompiled yet */
-
-/* 0x00096ed0: something that is done with a view of the things that
-happen */
-void __attribute__((stdcall)) unknown_00096ed0(byte *view);
 
 /* ---------- globals */
 
@@ -29,9 +24,9 @@ struct network_heap *unknown_004d87f8;
 
 /* ---------- code */
 
-/* 0x00089dc0: something is done with each view that there is
-(unknown_00096ed0) */
-void replication_event_manager_unknown_00089dc0(
+/* 0x00089dc0: each view that there is starts over
+(replication_event_view_reset) */
+void replication_event_manager_reset_views(
 	struct replication_event_manager *manager)
 {
 	long index;
@@ -40,7 +35,7 @@ void replication_event_manager_unknown_00089dc0(
 	{
 		if (manager->views[index])
 		{
-			unknown_00096ed0(manager->views[index]);
+			replication_event_view_reset(manager->views[index]);
 		}
 	}
 }
@@ -74,7 +69,7 @@ struct replication_event *replication_event_manager_new_event(
 	event->data= NULL;
 	event->data_size= 0;
 	event->view_mask= 0;
-	event->unknown24= 0;
+	event->sent_mask= 0;
 	for (link= &manager->events; *link; link= &(*link)->next)
 	{
 	}

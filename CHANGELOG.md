@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Las vistas de los sucesos: vaciar una
+
+Una función en un archivo nuevo, `networking/replication_event_view.c`, de 457 bytes. De 1489
+funciones se pasa a 1490, el 13,23 % de las del juego (el 8,915 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `replication_event_view_reset` | `0x00096ed0` | `networking/replication_event_view.c` |
+
+### Lo que se sabe
+
+- Los sucesos (hito 419) tienen sus propias vistas, como las cosas: lo que
+  a cada una de las otras consolas le falta por saber.
+- `replication_event_view_reset` vacía una: devuelve al montón lo que
+  guardaba de los paquetes sin contestar, y cada suceso que la vista
+  tenía pendiente deja de estarlo. **Un suceso que ya no espera a ninguna
+  vista se tira**: se avisa, se saca de la lista y se suelta, igual que
+  al mandarlo sin nadie a quien contárselo.
+- Era la función que el gestor de sucesos llamaba para cada vista sin
+  saberse qué hacía: `replication_event_manager_unknown_00089dc0` pasa a
+  llamarse `replication_event_manager_reset_views`.
+- Del suceso se conoce un campo más (`0x24`): un bit por cada vista que
+  lo ha mandado en un paquete del que todavía no se sabe nada.
+
+### Corregido
+
+- Las pruebas de `simulation_entity_database_read_update` no notaban que
+  se quitara la línea que pone a cero los bits leídos, porque la clase de
+  la cosa siempre los escribía. Ahora a veces no los escribe. La función
+  estaba bien.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente** aquí y en las de los hitos 426 a 430.
+- En este hito se pasaron las pruebas de `replication_event_view` (1
+  función), `replication_event_manager` (6) y
+  `simulation_entity_database` (23).
+- Del módulo quedan 8 en la lista, de `0x00096d80` a `0x00097d80`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Qué pasa cuando un paquete llega, o se pierde
 
 Una función en `networking/replication_entity_view.c`, de 748 bytes. De 1488

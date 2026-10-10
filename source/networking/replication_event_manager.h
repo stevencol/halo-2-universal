@@ -32,7 +32,8 @@ enum
 
 /* one of the things that happen: its state; when it was to be told of;
 what it has more, which is taken from the heap of the network, and its size; a
-bit for each view that has it still to tell; and the next one */
+bit for each view that has it still to tell, and one for each that told it
+in a packet that is not heard of yet; and the next one */
 struct replication_event
 {
 	long state;
@@ -44,7 +45,7 @@ struct replication_event
 	void *data;
 	long data_size;
 	unsigned long view_mask;
-	long unknown24;
+	unsigned long sent_mask;
 	struct replication_event *next;
 };
 
@@ -80,7 +81,7 @@ typedef char verify_replication_event_manager_size[sizeof(struct replication_eve
 
 /* ---------- prototypes/REPLICATION_EVENT_MANAGER.C */
 
-void replication_event_manager_unknown_00089dc0(struct replication_event_manager *manager);
+void replication_event_manager_reset_views(struct replication_event_manager *manager);
 struct replication_event *replication_event_manager_new_event(struct replication_event_manager *manager);
 void replication_event_manager_remove_event(struct replication_event *event, struct replication_event_manager *manager);
 struct replication_event *__attribute__((stdcall)) replication_event_free(struct replication_event *event,
