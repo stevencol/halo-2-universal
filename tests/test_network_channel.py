@@ -860,3 +860,20 @@ def run(t) -> None:
             globals={"unknown_004d87d4": Buffer(bytes(channels))},
             externals=stubs,
         )
+
+    # ---------- the message that says that the other console will not talk with a channel
+
+    for n in range(1500):
+        channels = bytearray()
+        for index in range(3):
+            channels += channel()
+        index = random_.randrange(3)
+        struct.pack_into("<i", channels, index * CHANNEL + 0x54, random_.choice((0, 1, 2, 3, 3, 4, 4, 5, 6, 7)))
+        mine = struct.unpack_from("<I", channels, index * CHANNEL + 0x4C)[0]
+        t.check(
+            "network_channel_handle_refused",
+            index,
+            Buffer(struct.pack("<2I", random_.choice((mine, mine, mine, mine, mine ^ 1, random_.getrandbits(32))), random_.randrange(8))),
+            globals={"unknown_004d87d4": Buffer(bytes(channels))},
+            externals={"network_channel_close": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1]))},
+        )

@@ -1375,3 +1375,31 @@ void __attribute__((stdcall)) network_channel_handle_closed(
 		network_channel_close(channel, _network_channel_closed_remote);
 	}
 }
+
+/* 0x00094ae0: a message came that says that the other console will not talk
+with a channel, and why: a channel past its second state, and not in the
+fifth, whose number is the one that the message has for it stops, with 5, if
+the reason is one of five (0, 1, 2, 5 or 6); with 3, 4 or 7 nothing is done.
+The game has no more reasons than those in its table */
+void network_channel_handle_refused(
+	long channel_index,
+	const struct network_channel_refused_message *message)
+{
+	byte *channel= unknown_004d87d4+channel_index*NETWORK_CHANNEL_SIZE;
+	long state= *(const long *)(channel+NETWORK_CHANNEL_STATE_OFFSET);
+
+	if (state>_network_channel_state_closed && state!=_network_channel_state5 &&
+		*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN4C_OFFSET)==message->unknown50)
+	{
+		switch (message->reason)
+		{
+		case _network_channel_refused_reason0:
+		case _network_channel_refused_reason1:
+		case _network_channel_refused_reason2:
+		case _network_channel_refused_reason5:
+		case _network_channel_refused_reason6:
+			network_channel_close(channel, _network_channel_closed_refused);
+			break;
+		}
+	}
+}

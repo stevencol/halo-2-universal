@@ -144,7 +144,15 @@ enum
 	in bytes; and a byte of the channel that says that all of its things
 	wrote in the last one */
 	NETWORK_CHANNEL_PACKET_ALIGNMENT= 8,
-	NETWORK_CHANNEL_UNKNOWN1C_OFFSET= 0x1C
+	NETWORK_CHANNEL_UNKNOWN1C_OFFSET= 0x1C,
+	/* the reason that a channel stops with when the other console says
+	that it will not talk with it; and the reasons that it gives */
+	_network_channel_closed_refused= 5,
+	_network_channel_refused_reason0= 0,
+	_network_channel_refused_reason1= 1,
+	_network_channel_refused_reason2= 2,
+	_network_channel_refused_reason5= 5,
+	_network_channel_refused_reason6= 6
 };
 
 /* the bit of the index of a thing of a channel that says that it is one of
@@ -170,6 +178,14 @@ struct network_channel_closed_message
 {
 	long unknown50;
 	long unknown4c;
+	long reason;
+};
+
+/* what a console says when it will not talk with a channel: the number of
+what the channel talks with, and why */
+struct network_channel_refused_message
+{
+	long unknown50;
 	long reason;
 };
 
@@ -260,6 +276,7 @@ void network_channel_handle_established(long channel_index,
 	const struct network_channel_established_message *message);
 void __attribute__((stdcall)) network_channel_handle_closed(long channel_index,
 	const struct network_channel_closed_message *message);
+void network_channel_handle_refused(long channel_index, const struct network_channel_refused_message *message);
 void __attribute__((stdcall)) network_channel_write_packet(boolean numbered, byte *channel, struct bitstream *stream,
 	boolean wanted, long voice_size, const byte *voice_packet, long *sent_size_out, long *packet_size_out,
 	long *voice_size_out);

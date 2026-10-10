@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 442.
+**Última actualización:** 2026-10-08, al terminar el hito 443.
 
 ## Dónde estamos
 
-- **1521 funciones descompiladas de 11.265: el 13,50 % del juego** (el
-  9,132 % de los bytes de código).
-- Las 1521 están comprobadas contra el ejecutable original: las 1390 del
+- **1522 funciones descompiladas de 11.265: el 13,51 % del juego** (el
+  9,134 % de los bytes de código).
+- Las 1522 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how the message queue cuts a message in pieces and puts them together* (ver `git log`).
+- Último hito: *Decompile the channel's handler of a refused connection* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 550 funciones apuntadas pero sin descompilar (las que el código
   llama); 448 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -128,7 +128,7 @@ Módulos (funciones hechas / archivo):
 - [x] Intentos de medir la conexión — `networking\transport_qos.c` (8: la
   tabla de intentos, empezar uno, soltarlo, cómo va y qué encontró con
   cada consola). Entero.
-- [x] Canales del juego — `networking\network_channel.c` (27: tomar un
+- [x] Canales del juego — `networking\network_channel.c` (28: tomar un
       canal, pedir conexión y contestar, cerrarlo, soltarlo, recorrer
       sus piezas, sus horas y lo que el observador les pregunta;
       leer y escribir un paquete y lo que se hace cada vez; completo;

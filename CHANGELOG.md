@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — El mensaje que dice «no hablo contigo»
+
+Una función en `networking/network_channel.c`, de 57 bytes. De 1521
+funciones se pasa a 1522, el 13,51 % de las del juego (el 9,134 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_channel_handle_refused` | `0x00094ae0` | `networking/network_channel.c` |
+
+### Lo que se sabe
+
+- `network_channel_handle_refused` es lo que un canal hace cuando le llega
+  el mensaje de la quinta clase (`_network_message_connect_refuse`): **la
+  otra consola no quiere hablar con él**, y dice por qué.
+- Solo hace caso un canal que esté pidiendo conexión o hablando (pasado
+  su segundo estado, y no en el quinto) y cuyo número sea el del mensaje,
+  como en los otros dos mensajes del canal (hito 439).
+- El motivo va de 0 a 7. Con 0, 1, 2, 5 o 6 el canal se cierra, con el
+  motivo `5`; con 3, 4 o 7 no se hace nada. El juego lo decide con una
+  tabla de ocho bytes que va detrás de la función.
+- Están ya los tres mensajes con los que dos consolas abren y cierran un
+  canal: establecido, cerrado y rechazado.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente** aquí y en las cinco de los hitos 441 y
+  442.
+- Con un motivo mayor que 7 el juego saltaría a donde diga lo que hay
+  detrás de su tabla; aquí no se hace nada. Las pruebas no lo dan.
+- En este hito se pasaron las pruebas de esta función y de
+  `network_channel_handle_closed`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Un mensaje se parte en trozos y se vuelve a juntar
 
 Dos funciones en `networking/network_message_queue.c`, 1 507 bytes entre las dos. De 1519

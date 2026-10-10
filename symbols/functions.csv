@@ -2062,6 +2062,7 @@ address,name,source,arguments,returns,convention
 00095e40,network_connection_write,source/networking/network_connection.c,ecx stack stack stack stack,bool,stdcall
 00094b40,network_channel_handle_established,source/networking/network_channel.c,eax ebx,void
 00094bb0,network_channel_handle_closed,source/networking/network_channel.c,eax stack,void,stdcall
+00094ae0,network_channel_handle_refused,source/networking/network_channel.c,eax edx,void
 000814c0,network_message_queue_closes,source/networking/network_message_queue.c,ecx stack,bool,stdcall
 00094df0,network_message_queue_has_something,source/networking/network_message_queue.c,ecx stack,bool,stdcall
 00094e80,network_message_queue_minimum_bits,source/networking/network_message_queue.c,ecx stack stack,int,stdcall
