@@ -2196,3 +2196,5 @@ address,name,source,arguments,returns,convention
 00081550,simulation_view_construct,source/networking/simulation_view.c,eax,void
 00081590,simulation_view_data_construct,source/networking/simulation_view.c,eax,void
 00321379,unknown_00321379,,stack,void
+000814f0,simulation_world_construct,source/networking/simulation_world.c,eax,void
+00081310,network_memory_unknown_00081310,source/networking/network_memory.c,eax,void

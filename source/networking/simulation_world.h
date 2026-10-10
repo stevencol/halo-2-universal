@@ -182,7 +182,9 @@ enum
 	SIMULATION_VIEW_DATA_UNKNOWN4_OFFSET= 0x4,
 	SIMULATION_VIEW_DATA_UNKNOWN30_OFFSET= 0x30,
 	SIMULATION_VIEW_DATA_UNKNOWN5070_OFFSET= 0x5070,
-	SIMULATION_VIEW_DATA_UNKNOWN5098_OFFSET= 0x5098
+	SIMULATION_VIEW_DATA_UNKNOWN5098_OFFSET= 0x5098,
+	/* a byte of one of the other things of the thing */
+	SIMULATION_WORLD_OTHER_UNKNOWNC_OFFSET= 0xC
 };
 
 /* ---------- structures */
@@ -275,6 +277,7 @@ void __attribute__((stdcall)) simulation_world_set_local_player_actions(const vo
 void __attribute__((stdcall)) simulation_world_set_other_unknown14(byte *world, long index, const void *unknown14);
 void __attribute__((stdcall)) simulation_world_add_player(byte *world, long player);
 void __attribute__((stdcall)) simulation_world_delete_views(void *world);
+void simulation_world_construct(byte *world);
 
 /* whether a view is past the states in which it is made ready: one of the
 second kind from the sixth state on, and any other from the fourth. The game

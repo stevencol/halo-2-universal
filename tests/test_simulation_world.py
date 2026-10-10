@@ -858,3 +858,8 @@ def run(t) -> None:
                 "datum_delete": lambda harness, arguments: (0, (arguments[0], arguments[1])),
             },
         )
+
+    # ---------- the thing is made
+
+    for n in range(200):
+        t.check("simulation_world_construct", Buffer(random_.randbytes(0x1220)))

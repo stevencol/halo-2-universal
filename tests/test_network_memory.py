@@ -46,3 +46,6 @@ def run(t) -> None:
             },
             mocks=[Mock(lambda call: 0, stack_arguments=1, registers=("ecx",))],
         )
+
+    for n in range(200):
+        t.check("network_memory_unknown_00081310", Buffer(random_.randbytes(0x4E0)))

@@ -1736,3 +1736,36 @@ void __attribute__((stdcall)) simulation_world_delete_views(
 		}
 	}
 }
+
+/* 0x000814f0: the thing is made: it has no players (each with NONE for its
+three numbers, nothing for the numbers that the player is known by, nothing
+at 0x20 and its two bytes clear), none of its other things (each with NONE
+for its two numbers, of nothing, and a byte clear), and is in no state */
+void simulation_world_construct(
+	byte *world)
+{
+	long index;
+
+	for (index= 0; index<NUMBER_OF_SIMULATION_WORLD_PLAYERS; index++)
+	{
+		byte *player_data_= world+index*SIMULATION_WORLD_PLAYER_SIZE+SIMULATION_WORLD_PLAYERS_OFFSET;
+
+		*(long *)player_data_= NONE;
+		*(long *)(player_data_+SIMULATION_WORLD_PLAYER_INDEX_OFFSET)= NONE;
+		*(long *)(player_data_+SIMULATION_WORLD_PLAYER_STATE_OFFSET)= NONE;
+		memset(player_data_+SIMULATION_WORLD_PLAYER_IDENTIFIER_OFFSET, 0, SIMULATION_PLAYER_IDENTIFIER_SIZE);
+		*(long *)(player_data_+SIMULATION_WORLD_PLAYER_UNKNOWN20_OFFSET)= 0;
+		player_data_[SIMULATION_WORLD_PLAYER_UNKNOWN25_OFFSET]= FALSE;
+		player_data_[SIMULATION_WORLD_PLAYER_UNKNOWN24_OFFSET]= FALSE;
+	}
+	for (index= 0; index<NUMBER_OF_SIMULATION_WORLD_OTHERS; index++)
+	{
+		byte *other= world+index*SIMULATION_WORLD_OTHER_SIZE+SIMULATION_WORLD_OTHERS_OFFSET;
+
+		*(long *)other= NONE;
+		*(long *)(other+SIMULATION_WORLD_OTHER_UNKNOWN4_OFFSET)= NONE;
+		*(void **)(other+SIMULATION_WORLD_OTHER_WORLD_OFFSET)= NULL;
+		other[SIMULATION_WORLD_OTHER_UNKNOWNC_OFFSET]= FALSE;
+	}
+	*(long *)(world+SIMULATION_WORLD_STATE_OFFSET)= 0;
+}

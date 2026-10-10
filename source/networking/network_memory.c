@@ -17,6 +17,8 @@ names of its functions.
 #include "networking/simulation_view.h"
 #include "networking/simulation_world.h"
 
+#include "math/real_math.h"
+
 /* ---------- prototypes */
 
 /* 0x00321379, of the console's libraries: memory is let go of */
@@ -108,4 +110,30 @@ void network_memory_free(
 	unknown_004d87c4= 0;
 	unknown_004d87c8= 0;
 	unknown_004d87cc= 0;
+}
+
+/* 0x00081310: something that the network has, at the start of what
+network_memory_unknown_000815e0 makes, is made: a byte, a number, a byte and
+six numbers more are nothing, and so are its four groups of two numbers and
+a real */
+void network_memory_unknown_00081310(
+	byte *unknown)
+{
+	long index;
+
+	for (index= 0; index<NETWORK_MEMORY_UNKNOWN_00081310_GROUP_COUNT; index++)
+	{
+		byte *group= unknown+NETWORK_MEMORY_UNKNOWN_00081310_GROUPS_OFFSET+index*NETWORK_MEMORY_UNKNOWN_00081310_GROUP_SIZE;
+
+		*(long *)group= 0;
+		*(long *)(group+4)= 0;
+		*(real *)(group+8)= 0.0f;
+	}
+	unknown[0]= FALSE;
+	*(long *)(unknown+4)= 0;
+	unknown[8]= FALSE;
+	for (index= 0; index<6; index++)
+	{
+		*(long *)(unknown+0xC+index*4)= 0;
+	}
 }

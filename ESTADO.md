@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 489.
+**Última actualización:** 2026-10-08, al terminar el hito 490.
 
 ## Dónde estamos
 
-- **1635 funciones descompiladas de 11.265: el 14,51 % del juego** (el
-  9,629 % de los bytes de código).
-- Las 1635 están comprobadas contra el ejecutable original: las 1390 del
+- **1637 funciones descompiladas de 11.265: el 14,53 % del juego** (el
+  9,637 % de los bytes de código).
+- Las 1637 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how the network frees its memory* (ver `git log`).
+- Último hito: *Decompile the constructor of the simulation world and one more* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 562 funciones apuntadas pero sin descompilar (las que el código
   llama); 460 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -170,7 +170,7 @@ Módulos (funciones hechas / archivo):
       `0x000683a0` y de `0x00068a90` a
       `0x00069260`)
 - [ ] La partida en red y sus vistas — `networking\simulation_world.c`
-      (55: soltar todas las vistas, hacer la actualización de un
+      (56: hacerla, soltar todas las vistas, hacer la actualización de un
       tick, lo que hacen los
       jugadores de esta consola, llevar una vista hasta
       el final, la espera a las demás
@@ -204,9 +204,10 @@ Módulos (funciones hechas / archivo):
       `0x00094aa0`, completo; falta lo que las vistas hacen con cada
       mensaje, de `0x00085b20` a `0x00085f50`, y `0x000698e0`; romper
       líneas pendiente)
-- [ ] La memoria de la red — `networking\network_memory.c` (1: soltarla
-      al cerrar un mapa, `0x00081f80`; falta tomarla, `0x00081780`, y lo
-      que la rodea, de `0x000815e0` a `0x000816f0`)
+- [ ] La memoria de la red — `networking\network_memory.c` (2: soltarla
+      al cerrar un mapa, `0x00081f80`, y un constructor; falta tomarla,
+      `0x00081780`, y lo que la rodea: `0x00081390`, `0x00081440`,
+      `0x000815e0` y `0x000816f0`)
 - [x] La pieza principal de un canal — `networking\network_connection.c`
       (18: empezar de cero, el número de cada paquete, escribir y
       leer la cabecera de un paquete, lo que la otra consola

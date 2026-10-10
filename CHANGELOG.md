@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — La partida en red, recién hecha
+
+Dos funciones: una en `networking/simulation_world.c` y otra en
+`networking/network_memory.c`, 214 bytes entre las dos. De 1635
+funciones se pasa a 1637, el 14,53 % de las del juego (el 9,637 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_construct` | `0x000814f0` | `networking/simulation_world.c` |
+| `network_memory_unknown_00081310` | `0x00081310` | `networking/network_memory.c` |
+
+### Lo que se sabe
+
+- `simulation_world_construct` deja **la partida en red recién hecha**:
+  sin ninguno de sus dieciséis jugadores (cada sitio con `-1` en sus tres
+  números y sus dos bytes quitados), sin ninguna de sus otras dieciséis
+  cosas, y en ningún estado. Es la que llama el constructor de todo lo de
+  la red (`0x000815e0`) sobre lo que hay en `0x1CB20` de ello: ahí es
+  donde vive la partida.
+- `network_memory_unknown_00081310` hace lo mismo con lo primero de ese
+  todo: unos números y cuatro grupos de dos números y un real, cada
+  `0xD8` bytes (por la forma, cuatro medidores).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos**, y en las de los hitos 456 a
+  489.
+- En este hito se pasaron las pruebas de las dos funciones y la de
+  `network_memory_free`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — La red suelta su memoria
 
 Una función en el archivo nuevo `networking/network_memory.c`, de 221 bytes. De 1634

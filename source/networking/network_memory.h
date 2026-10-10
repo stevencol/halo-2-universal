@@ -19,11 +19,17 @@ enum
 	/* of what unknown_004d87e8 is: where the two things in it that have
 	functions have them */
 	NETWORK_MEMORY_UNKNOWN_004D87E8_UNKNOWN2098_OFFSET= 0x2098,
-	NETWORK_MEMORY_UNKNOWN_004D87E8_UNKNOWNA0AC_OFFSET= 0xA0AC
+	NETWORK_MEMORY_UNKNOWN_004D87E8_UNKNOWNA0AC_OFFSET= 0xA0AC,
+	/* of what network_memory_unknown_00081310 makes: four groups of two
+	numbers and a real, 0xD8 bytes from one to the next */
+	NETWORK_MEMORY_UNKNOWN_00081310_GROUPS_OFFSET= 0x244,
+	NETWORK_MEMORY_UNKNOWN_00081310_GROUP_SIZE= 0xD8,
+	NETWORK_MEMORY_UNKNOWN_00081310_GROUP_COUNT= 4
 };
 
 /* ---------- prototypes/NETWORK_MEMORY.C */
 
 void network_memory_free(void);
+void network_memory_unknown_00081310(byte *unknown);
 
 #endif
