@@ -116,6 +116,17 @@ enum
 	_simulation_view_game_state_record_piece= 1,
 	_simulation_view_game_state_record_update= 2,
 	MAXIMUM_SIMULATION_VIEW_PACKED_UPDATE_SIZE= 0xFFFF,
+	/* the size of a view in its table, and of what some have at 0x8 in the
+	other; what of a view is nothing when it is made, and the bytes and the
+	one more thing with functions of what it has at 0x8 */
+	SIMULATION_VIEW_SIZE= 0xB4,
+	SIMULATION_VIEW_DATA_SIZE= 0xAD30,
+	SIMULATION_VIEW_UNKNOWN48_OFFSET= 0x48,
+	SIMULATION_VIEW_UNKNOWN54_OFFSET= 0x54,
+	SIMULATION_VIEW_UNKNOWN54_COUNT= 8,
+	SIMULATION_VIEW_DATA_UNKNOWN5078_OFFSET= 0x5078,
+	SIMULATION_VIEW_DATA_UNKNOWN50A0_OFFSET= 0x50A0,
+	SIMULATION_VIEW_DATA_UNKNOWN5FB8_OFFSET= 0x5FB8,
 	/* more of a view: its place among the views of the thing; a byte and a
 	number that go with its channel. Of a channel of the game: something of
 	the view that has it. Of the thing: how many views it has. Of a channel
@@ -248,9 +259,14 @@ void simulation_view_release_channel(byte *view);
 void simulation_view_detach(byte *view);
 byte *__attribute__((stdcall)) simulation_view_new(byte *view, const word *unknown14, long datum_index, long kind,
 	byte *data, long unknown1c);
+void simulation_view_construct(byte *view);
+void simulation_view_data_construct(byte *data);
+long __attribute__((stdcall)) simulation_view_allocate(byte **view_out, byte **data_out);
 
 /* ---------- globals */
 
 extern boolean unknown_00510ca2;
+extern boolean unknown_004d87e4;
+extern void *unknown_00450d14[1];
 
 #endif

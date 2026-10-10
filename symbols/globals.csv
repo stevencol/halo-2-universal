@@ -347,3 +347,5 @@ address,name,source
 00450cd0,unknown_00450cd0,source/networking/simulation_world.c
 00450cf4,unknown_00450cf4,source/networking/simulation_world.c
 00450d1c,unknown_00450d1c,source/networking/simulation_world.c
+004d87e4,unknown_004d87e4,source/networking/simulation_view.c
+00450d14,unknown_00450d14,source/networking/simulation_view.c

@@ -235,5 +235,5 @@ def run(t) -> None:
             random_.getrandbits(32),
             extra=[made],
             globals={"unknown_004cf770": bytes(there), "unknown_004cf770+0xc": thing},
-            externals={"unknown_000821c0": takes},
+            externals={"simulation_view_allocate": takes},
         )

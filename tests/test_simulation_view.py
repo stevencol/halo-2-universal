@@ -516,3 +516,34 @@ def run(t) -> None:
             0x12345000,
             random_.getrandbits(32),
         )
+
+    # ---------- a place for a view in the two tables
+
+    from difftest import GlobalRange
+
+    TABLES = {name: GlobalRange(4) for name in ("unknown_00450c94", "unknown_00450cd0", "unknown_00450cf4", "unknown_00450d1c", "unknown_00450d14")}
+    DATA_PLACES = (0x4, 0x30, 0x5070, 0x5098, 0x5FB8)
+
+    for n in range(300):
+        t.check("simulation_view_construct", Buffer(random_.randbytes(0xB4)))
+        t.check("simulation_view_data_construct", Buffer(random_.randbytes(0x6000), places=DATA_PLACES), globals=TABLES)
+        views = bytearray(random_.randbytes(0x4C + 4 * 0xB4))
+        struct.pack_into("<I", views, 0x44, 0x4C)
+        others = bytearray(random_.randbytes(0x4C + 2 * 0xAD30))
+        struct.pack_into("<I", others, 0x44, 0x4C)
+        place = random_.choice((0x50001, 0x50001, 0x70003, 0xFFFFFFFF))
+        t.check(
+            "simulation_view_allocate",
+            Buffer(random_.randbytes(4)),
+            Buffer(random_.randbytes(4)),
+            globals={
+                "unknown_004d87ec": Buffer(bytes(views), pointers=(0x44,)),
+                "unknown_004d87f0": Buffer(bytes(others), pointers=(0x44,), places=tuple(0x4C + 0xAD30 + offset for offset in DATA_PLACES)),
+                "unknown_004d87e4": bytes((random_.choice((0, 1, 1)),)),
+                **TABLES,
+            },
+            externals={
+                "datum_new": lambda harness, arguments, place=place: (place, (harness.normalize(arguments[0]),)),
+                "datum_new_at_index": lambda harness, arguments: (0x90001, (harness.normalize(arguments[0]), arguments[1])),
+            },
+        )

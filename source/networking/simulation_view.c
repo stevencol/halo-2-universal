@@ -71,6 +71,11 @@ extern long unknown_0051054c;
 ready */
 boolean unknown_00510ca2;
 
+/* 0x004d87e4: whether the views have something at 0x8. 0x00450d14: the
+functions of one more thing that that has */
+boolean unknown_004d87e4;
+void *unknown_00450d14[1];
+
 /* ---------- code */
 
 /* 0x00086140: a view is told whether it keeps the game from going on. When
@@ -1149,4 +1154,78 @@ byte *__attribute__((stdcall)) simulation_view_new(
 	}
 
 	return view;
+}
+
+/* 0x00081550: a view is made: what it has of its channel and the numbers
+after it are nothing, it is not ready, and its ring has no start and no
+bytes */
+void simulation_view_construct(
+	byte *view)
+{
+	long index;
+
+	view[SIMULATION_VIEW_UNKNOWN44_OFFSET]= FALSE;
+	for (index= 0; index<3; index++)
+	{
+		*(long *)(view+SIMULATION_VIEW_UNKNOWN48_OFFSET+index*4)= 0;
+	}
+	for (index= 0; index<SIMULATION_VIEW_UNKNOWN54_COUNT; index++)
+	{
+		*(long *)(view+SIMULATION_VIEW_UNKNOWN54_OFFSET+index*4)= 0;
+	}
+	view[SIMULATION_VIEW_READY_OFFSET]= FALSE;
+	*(long *)(view+SIMULATION_VIEW_UNKNOWN9C_OFFSET)= 0;
+	*(long *)(view+SIMULATION_VIEW_UNKNOWNA0_OFFSET)= 0;
+}
+
+/* 0x00081590: what a view has at 0x8 is made: each of the five things in it
+gets its functions, and the first four a byte that is clear */
+void simulation_view_data_construct(
+	byte *data)
+{
+	*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN4_OFFSET)= unknown_00450cf4;
+	data[SIMULATION_VIEW_UNKNOWN8_UNKNOWN8_OFFSET]= FALSE;
+	*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN30_OFFSET)= unknown_00450cd0;
+	data[SIMULATION_VIEW_UNKNOWN8_UNKNOWN38_OFFSET]= FALSE;
+	*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN5070_OFFSET)= unknown_00450d1c;
+	data[SIMULATION_VIEW_DATA_UNKNOWN5078_OFFSET]= FALSE;
+	*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN5098_OFFSET)= unknown_00450c94;
+	data[SIMULATION_VIEW_DATA_UNKNOWN50A0_OFFSET]= FALSE;
+	*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN5FB8_OFFSET)= unknown_00450d14;
+}
+
+/* 0x000821c0: a place is taken for a view in the table of the views
+(datum_new), and the view is made; and if the views have something at 0x8,
+the same place is taken in the other table (datum_new_at_index), and that is
+made too. The number of the place, or NONE; where the view is, and where the
+other thing is, or NULL */
+long __attribute__((stdcall)) simulation_view_allocate(
+	byte **view_out,
+	byte **data_out)
+{
+	byte *view= NULL;
+	byte *data= NULL;
+	long datum_index= datum_new(unknown_004d87ec);
+
+	if (datum_index!=NONE)
+	{
+		view= (byte *)unknown_004d87ec->data+((unsigned long)datum_index&0xFFFF)*SIMULATION_VIEW_SIZE;
+		if (view)
+		{
+			simulation_view_construct(view);
+		}
+		if (unknown_004d87e4)
+		{
+			data= (byte *)unknown_004d87f0->data+
+				((unsigned long)datum_new_at_index(unknown_004d87f0, datum_index)&0xFFFF)*SIMULATION_VIEW_DATA_SIZE;
+			if (data)
+			{
+				simulation_view_data_construct(data);
+			}
+		}
+	}
+	*view_out= view;
+	*data_out= data;
+
+	return datum_index;
 }

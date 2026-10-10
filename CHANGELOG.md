@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Sitio para una vista en las dos tablas
+
+Tres funciones en `networking/simulation_view.c`, 245 bytes entre las tres. De 1631
+funciones se pasa a 1634, el 14,51 % de las del juego (el 9,622 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_view_allocate` | `0x000821c0` | `networking/simulation_view.c` |
+| `simulation_view_construct` | `0x00081550` | `networking/simulation_view.c` |
+| `simulation_view_data_construct` | `0x00081590` | `networking/simulation_view.c` |
+
+### Lo que se sabe
+
+- `simulation_view_allocate` (lo que faltaba del hito 487) **toma sitio
+  para una vista** en la tabla de las vistas (`datum_new`, hito 8) y la
+  construye. Y si las vistas llevan algo en `0x8` (un byte del juego,
+  `0x004d87e4`, lo dice), toma **el mismo sitio** en la otra tabla
+  (`datum_new_at_index`) y lo construye también.
+- Se saben los tamaños: **una vista mide `0xB4` bytes** (180) y **lo que
+  lleva en `0x8`, `0xAD30`** (44 336): casi todo lo que una consola
+  guarda de otra está ahí.
+- `simulation_view_construct` pone a cero lo del canal y deja la vista
+  sin estar lista.
+- `simulation_view_data_construct` es el constructor de lo de `0x8`: da
+  sus funciones a las cinco cosas que lleva dentro (las cuatro del hito
+  486 y una más en `0x5FB8`, tabla `0x00450d14`). Es justo lo contrario
+  de lo que hace el hito 486 al soltarla.
+
+### Comprobado
+
+- La prueba de `network_message_queue_read` (hito 441) **no le daba el
+  paquete que construía**: lo leído era todo ceros y la función volvía en
+  la primera vuelta. Lo encontró la tanda de romper líneas (13 líneas
+  sin notar). Con el paquete de verdad la función pasa igual (3000
+  casos); la tanda de ese archivo se está repitiendo.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las tres**, y en las de los hitos 456 a
+  487.
+- En este hito se pasaron las pruebas de las tres funciones y la de
+  `simulation_view_create`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Nace una vista
 
 Dos funciones: una en `networking/simulation_view.c` y otra en
