@@ -2152,3 +2152,6 @@ address,name,source,arguments,returns,convention
 0006a860,simulation_world_before_send_game_state,source/networking/simulation_world.c,stack stack,void,stdcall
 00069c50,simulation_world_unknown_00069c50,source/networking/simulation_world.c,eax,void
 000979f0,replication_event_view_entity_deleting,source/networking/replication_event_view.c,eax esi,bool
+001a1900,ring_buffer_append,source/memory/ring_buffer.c,eax esi stack,int,stdcall
+001a1940,ring_buffer_write,source/memory/ring_buffer.c,ebx ecx stack stack,void,stdcall
+001a19a0,ring_buffer_read,source/memory/ring_buffer.c,ebx eax ecx stack,void,stdcall

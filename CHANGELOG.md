@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Un anillo de bytes
+
+Tres funciones en el archivo nuevo `memory/ring_buffer.c`, 224 bytes entre las tres. De 1595
+funciones se pasa a 1598, el 14,19 % de las del juego (el 9,437 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `ring_buffer_append` | `0x001a1900` | `memory/ring_buffer.c` |
+| `ring_buffer_write` | `0x001a1940` | `memory/ring_buffer.c` |
+| `ring_buffer_read` | `0x001a19a0` | `memory/ring_buffer.c` |
+
+### Lo que se sabe
+
+- Un **anillo de bytes**: una memoria de un tamaño en la que lo guardado
+  empieza en un sitio y sigue, dando la vuelta al llegar al final. Lleva
+  cuatro números: tamaño, memoria, dónde empieza y cuánto hay.
+  - `ring_buffer_write` y `ring_buffer_read` ponen y sacan tantos bytes
+    desde un sitio, partiéndolos en dos si dan la vuelta.
+  - `ring_buffer_append` añade detrás de lo que hay, y dice dónde quedó;
+    `-1` si no cabe.
+- Lo usa una vista de la segunda clase para **el estado del juego que le
+  manda a una consola que entra**: su anillo está en `0x9C` de la vista,
+  con los `0x80000` bytes que pide prestados (los que el hito 462
+  devolvía). Con esto se pueden hacer ya `0x000862e0` y `0x000865d0`,
+  que son las que lo llenan y lo van mandando.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las tres**, y en las de los hitos 441 a
+  471.
+- Con un sitio que no esté dentro del anillo el juego copiaría fuera; las
+  pruebas no lo dan.
+- En este hito se pasaron las pruebas de `ring_buffer` (3 funciones, 3000
+  casos cada una).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — ¿Se está borrando esa cosa para la otra consola?
 
 Una función en `networking/replication_event_view.c`, de 64 bytes. De 1594

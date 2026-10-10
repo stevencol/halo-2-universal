@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 471.
+**Última actualización:** 2026-10-08, al terminar el hito 472.
 
 ## Dónde estamos
 
-- **1595 funciones descompiladas de 11.265: el 14,16 % del juego** (el
-  9,430 % de los bytes de código).
-- Las 1595 están comprobadas contra el ejecutable original: las 1390 del
+- **1598 funciones descompiladas de 11.265: el 14,19 % del juego** (el
+  9,437 % de los bytes de código).
+- Las 1598 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile whether a shared entity is being deleted for a view* (ver `git log`).
+- Último hito: *Decompile the ring buffer* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 558 funciones apuntadas pero sin descompilar (las que el código
   llama); 456 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -71,6 +71,8 @@ Módulos (funciones hechas / archivo):
 - [x] Ordenar números — `cseries\sort.c` (4)
 - [x] Tabla hash — `memory\hash_table.c` (5)
 - [x] Vectores de bits — `memory\bit_vector.c` (5)
+- [x] Anillo de bytes — `memory\ring_buffer.c` (3: añadir, poner y sacar;
+      de `0x001a1900` a `0x001a19a0`)
 - [x] Caché de bloques de páginas — `memory\lruv_cache.c` (8, completo)
 - [x] Fondo de memoria — `memory\memory_pool.c` (11, completo)
 - [x] Caché de animaciones — `cache\xbox_animation_cache.c` (18, completo)
