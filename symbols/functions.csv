@@ -1977,13 +1977,13 @@ address,name,source,arguments,returns,convention
 00093100,unknown_00093100,,edx ebx stack stack,void,stdcall
 003cd344,XNetUnregisterInAddr,,stack,int,stdcall
 00088750,network_channel_read_packet,source/networking/network_channel.c,ecx edx stack stack,bool,stdcall
-00096860,unknown_00096860,,eax ecx,void
+00096860,network_connection_received,source/networking/network_connection.c,eax ecx,void
 00095840,unknown_00095840,,stack stack stack stack,bool,stdcall
 00093aa0,unknown_00093aa0,,eax ecx edx stack stack,void,stdcall
 000883c0,network_channel_update,source/networking/network_channel.c,eax,void
 00088980,network_channel_write_packet,source/networking/network_channel.c,eax stack stack stack stack stack stack stack stack,void,stdcall
 00096510,unknown_00096510,,esi stack,int,stdcall
-00096810,unknown_00096810,,eax ecx edi,void
+00096810,network_connection_set_sent_size,source/networking/network_connection.c,eax ecx edi,void
 000931a0,unknown_000931a0,,eax ecx stack stack stack stack,void,stdcall
 000893c0,replication_entity_manager_new,source/networking/replication_entity_manager.c,ebx,void
 00089430,replication_entity_manager_reset,source/networking/replication_entity_manager.c,stack,void,stdcall
@@ -2049,3 +2049,5 @@ address,name,source,arguments,returns,convention
 000991d0,replication_entity_view_make_way,source/networking/replication_entity_view.c,edx stack stack stack,bool,stdcall
 000992d0,replication_entity_view_packet_result,source/networking/replication_entity_view.c,ecx stack stack,void,stdcall
 00096d80,network_connection_update_times,source/networking/network_connection.c,ecx esi eax edx stack,void,stdcall
+000966d0,network_connection_get_sent_packet,source/networking/network_connection.c,eax ecx,int
+00096c50,network_connection_advance_received,source/networking/network_connection.c,ecx,void

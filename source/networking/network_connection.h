@@ -34,11 +34,52 @@ enum
 	_network_connection_event1= 1,
 	_network_connection_event_lost= 3,
 	_network_connection_event4= 4,
-	_network_connection_event5= 5
+	_network_connection_event5= 5,
+	/* more of one of them: what it knows of the packets that came, and a
+	word of each; what it knows of the ones that it sent, and what it keeps
+	of each; and the bytes that it has sent */
+	NETWORK_CONNECTION_RECEIVED_WINDOW_OFFSET= 0xC,
+	NETWORK_CONNECTION_SENT_WINDOW_OFFSET= 0x28,
+	NETWORK_CONNECTION_SENT_BYTES_OFFSET= 0x48,
+	NETWORK_CONNECTION_RECEIVED_OFFSET= 0x4C,
+	NETWORK_CONNECTION_SENT_OFFSET= 0x14C,
+	/* the bit of the word of a packet that says that it came */
+	_network_connection_received_bit= 0x1
+};
+
+/* ---------- structures */
+
+/* the numbers of some packets, one after the other, of which something is
+kept in a ring: whether it is in use; how many places the ring has; the number of the last
+packet, and of the one before the first; one more count of places; the
+place of the first, and how many there are */
+struct network_connection_window
+{
+	boolean enabled;
+	long size;
+	long newest;
+	long oldest;
+	long capacity;
+	long start;
+	long count;
+};
+
+/* what is kept of a packet that was sent: when, of what size, and more */
+struct network_connection_sent_packet
+{
+	long time;
+	long size;
+	long unknown8;
+	short unknownC;
+	word flags;
 };
 
 /* ---------- prototypes/NETWORK_CONNECTION.C */
 
+struct network_connection_sent_packet *network_connection_get_sent_packet(long sequence, byte *connection);
+void network_connection_set_sent_size(long sequence, byte *connection, long size);
+void network_connection_received(long sequence, byte *connection);
+void network_connection_advance_received(byte *connection);
 void __attribute__((stdcall)) network_connection_update_times(long event, byte *connection, long time, long unknown2,
 	long unknown);
 

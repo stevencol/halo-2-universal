@@ -58,7 +58,8 @@ def run(t) -> None:
                 "<IhBBIIIIII",
                 data,
                 0x14 + index * ENTITY,
-                (index | random_.getrandbits(4) << 28) if there else NONE,
+                # its number: its place, with the count of its place or with any other bits
+                (index | random_.choice((random_.getrandbits(4) << 28, random_.getrandbits(4) << 28, random_.getrandbits(21) << 10))) if there else NONE,
                 random_.randrange(KIND_COUNT),
                 random_.choice((0, 1, 1, 0x80)),
                 random_.getrandbits(8),

@@ -92,3 +92,116 @@ void __attribute__((stdcall)) network_connection_update_times(
 		*(long *)(connection+NETWORK_CONNECTION_LOSS_OFFSET)= loss>unknown_004cf720 ? unknown_004cf720 : loss;
 	}
 }
+
+/* the place in its ring of what is kept of the packet of a number, or NONE
+if the number is not one of the ones that there are. The game has this
+written wherever it looks for one; with no packets it starts from before the
+first place */
+static inline __attribute__((always_inline)) long network_connection_window_place(
+	const struct network_connection_window *window,
+	long sequence)
+{
+	if (sequence>window->oldest && sequence<=window->newest)
+	{
+		return (long)((unsigned long)sequence-(unsigned long)window->oldest-1+
+			(unsigned long)(window->count!=0 ? window->start : NONE))%window->size;
+	}
+
+	return NONE;
+}
+
+/* 0x000966d0: what one of the things keeps of the packet that it sent with
+a number, or NULL */
+struct network_connection_sent_packet *network_connection_get_sent_packet(
+	long sequence,
+	byte *connection)
+{
+	long place= network_connection_window_place(
+		(const struct network_connection_window *)(connection+NETWORK_CONNECTION_SENT_WINDOW_OFFSET), sequence);
+
+	return place==NONE ? NULL : (struct network_connection_sent_packet *)(connection+NETWORK_CONNECTION_SENT_OFFSET)+place;
+}
+
+/* 0x00096810: the packet that one of the things sent with a number was of a
+size, which is added to the bytes that it has sent. The game has
+network_connection_get_sent_packet written here, and does not look whether
+there is such a packet */
+void network_connection_set_sent_size(
+	long sequence,
+	byte *connection,
+	long size)
+{
+	network_connection_get_sent_packet(sequence, connection)->size= size;
+	*(long *)(connection+NETWORK_CONNECTION_SENT_BYTES_OFFSET)+= size;
+}
+
+/* 0x00096860: the packet of a number came, as one of the things is told;
+with NONE nothing is done. The packets that it knows of go on up to that
+one, one at a time, each new one with nothing in its word; and the word of
+that one has the bit that says that it came */
+void network_connection_received(
+	long sequence,
+	byte *connection)
+{
+	struct network_connection_window *window=
+		(struct network_connection_window *)(connection+NETWORK_CONNECTION_RECEIVED_WINDOW_OFFSET);
+	word *received= (word *)(connection+NETWORK_CONNECTION_RECEIVED_OFFSET);
+	word *packet;
+
+	if (sequence==NONE)
+	{
+		return;
+	}
+	while (sequence>window->newest)
+	{
+		long next= (long)((unsigned long)window->newest+1);
+
+		if (next>window->newest)
+		{
+			window->count= (long)((unsigned long)window->count+(unsigned long)next-(unsigned long)window->newest);
+			window->newest= next;
+		}
+		received[network_connection_window_place(window, window->newest)]= 0;
+	}
+	packet= &received[network_connection_window_place(window, sequence)];
+	if (!(*packet&_network_connection_received_bit))
+	{
+		*packet|= _network_connection_received_bit;
+	}
+}
+
+/* 0x00096c50: one of the things that is in use for packets that come does
+not keep the first ones that came any more: while the one after the last
+that it does not keep came, that is the last that it does not keep, and the
+ring starts one place on */
+void network_connection_advance_received(
+	byte *connection)
+{
+	struct network_connection_window *window=
+		(struct network_connection_window *)(connection+NETWORK_CONNECTION_RECEIVED_WINDOW_OFFSET);
+	const word *received= (const word *)(connection+NETWORK_CONNECTION_RECEIVED_OFFSET);
+
+	if (!window->enabled)
+	{
+		return;
+	}
+	while (window->newest!=window->oldest)
+	{
+		long next= (long)((unsigned long)window->oldest+1);
+		long count= (long)((unsigned long)next-(unsigned long)window->oldest);
+
+		if (!(received[network_connection_window_place(window, next)]&_network_connection_received_bit))
+		{
+			break;
+		}
+		if (count>0)
+		{
+			if (window->count>=count)
+			{
+				window->start= (window->start+count)%window->capacity;
+				window->count-= count;
+			}
+			window->oldest= next;
+		}
+	}
+}

@@ -2,6 +2,61 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Las dos ventanas de paquetes de una conexión
+
+Cuatro funciones en `networking/network_connection.c`, 427 bytes entre las cuatro. De 1491
+funciones se pasa a 1495, el 13,27 % de las del juego (el 8,938 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_connection_get_sent_packet` | `0x000966d0` | `networking/network_connection.c` |
+| `network_connection_set_sent_size` | `0x00096810` | `networking/network_connection.c` |
+| `network_connection_received` | `0x00096860` | `networking/network_connection.c` |
+| `network_connection_advance_received` | `0x00096c50` | `networking/network_connection.c` |
+
+### Lo que se sabe
+
+- La pieza principal de un canal lleva **dos ventanas deslizantes**, una
+  de los paquetes que han llegado y otra de los que ha mandado. Las dos
+  tienen la misma forma (28 bytes: si está en uso, cuántos sitios tiene
+  el anillo, el número del último paquete, el de antes del primero, y
+  dónde empieza y cuántos hay) y lo de cada paquete se guarda en un
+  anillo:
+  - de los que llegaron, una palabra por paquete (desde `0x4C`), con un
+    bit que dice «llegó»;
+  - de los mandados, 16 bytes por paquete (desde `0x14C`): cuándo, de qué
+    tamaño y unos bits.
+- `network_connection_received`: **ha llegado el paquete número tal.** La
+  ventana avanza hasta él, uno por uno, y se marca. Es lo que el canal
+  hacía con el número que leían sus piezas (hito 414).
+- `network_connection_advance_received`: los primeros de la ventana que
+  ya llegaron se sueltan, hasta el primero que falta.
+- `network_connection_get_sent_packet` da lo guardado de un paquete
+  mandado, y `network_connection_set_sent_size` apunta su tamaño y lo suma
+  a los bytes mandados (lo que el canal hacía al mandar, hito 415).
+- Dos de estas eran funciones que el canal llamaba sin estar hechas
+  (`unknown_00096860` y `unknown_00096810`).
+
+### Corregido
+
+- Al probar salió un fallo mío antes de entrar nada en el repositorio:
+  había puesto la ventana de los mandados cuatro bytes más allá de donde
+  está (cada ventana empieza con un byte que dice si está en uso). La
+  prueba contra el juego lo detectó a la primera.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente** aquí y en las de los hitos 426 a 432.
+- El juego no mira si el paquete existe antes de apuntarle el tamaño o
+  marcarlo: con un número de fuera de la ventana escribiría en la
+  dirección cero. Las pruebas solo usan números de dentro.
+- En este hito se pasaron las pruebas de `network_connection` (5
+  funciones) y `network_channel` (25).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Cuánto tarda en contestar la otra consola
 
 Una función en un archivo nuevo, `networking/network_connection.c`, de 268 bytes. De 1490

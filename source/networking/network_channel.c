@@ -11,6 +11,7 @@ the names of its functions.
 
 #include "network_channel.h"
 
+#include "networking/network_connection.h"
 #include "networking/network_message_gateway.h"
 
 #include <string.h>
@@ -885,7 +886,6 @@ came in a packet. 0x00095840: the next message that one of the things of
 unknown_004d87dc has whole, with its kind and its size; whether there is
 one. 0x00093aa0: a message that came by a channel is given to what it is
 for */
-void unknown_00096860(long unknown, byte *unknown10);
 boolean __attribute__((stdcall)) unknown_00095840(byte *unknown14, long *type, long *size, void *data);
 void __attribute__((stdcall)) unknown_00093aa0(const void *data, long unknown44, byte *unknown8, long type, long size);
 
@@ -980,7 +980,7 @@ boolean __attribute__((stdcall)) network_channel_read_packet(
 			network_channel_update_unknown10(channel);
 			if (channel[NETWORK_CHANNEL_UNKNOWN48_OFFSET]&_network_channel_unknown48_bit8)
 			{
-				unknown_00096860(unknown10_number, unknown_004d87d8+
+				network_connection_received(unknown10_number, unknown_004d87d8+
 					*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN10_OFFSET)*NETWORK_CHANNEL_UNKNOWN10_SIZE);
 			}
 			if (channel[NETWORK_CHANNEL_UNKNOWN48_OFFSET]&_network_channel_unknown48_bit10)
@@ -1157,7 +1157,6 @@ that the packet of a number was sent with. 0x000931a0: a packet that a
 stream has is sent to what a channel talks with, with what the voice has for
 it; the size that it was sent with, or nothing */
 long __attribute__((stdcall)) unknown_00096510(byte *unknown10, long time);
-void unknown_00096810(long number, byte *unknown10, long size);
 void __attribute__((stdcall)) unknown_000931a0(long unknown44, struct bitstream *stream, byte *unknown0, long voice_size,
 	const byte *voice_packet, long *sent_size);
 
@@ -1179,7 +1178,7 @@ count of the bits that are left in fourteen, and so many zeros; if not, a
 bit that says that there is no more.
 
 The packet is sent (unknown_000931a0), with what the voice has; the thing of
-unknown_004d87d8 is told the size that it was sent with (unknown_00096810);
+unknown_004d87d8 is told the size that it was sent with (network_connection_set_sent_size);
 and so is the observer that has the channel, by its first function, with
 whether any of the things said so when it wrote. Three numbers are given
 back, if they are asked for: the size that was sent, and, if something was,
@@ -1311,7 +1310,7 @@ void __attribute__((stdcall)) network_channel_write_packet(
 	}
 	if (number!=NONE)
 	{
-		unknown_00096810(number, unknown_004d87d8+
+		network_connection_set_sent_size(number, unknown_004d87d8+
 			*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN10_OFFSET)*NETWORK_CHANNEL_UNKNOWN10_SIZE, sent_size);
 	}
 	owner= *(struct network_channel_owner **)(channel+NETWORK_CHANNEL_OBSERVER_OFFSET);

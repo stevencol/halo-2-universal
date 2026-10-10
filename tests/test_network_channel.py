@@ -562,7 +562,7 @@ def run(t) -> None:
                 setup["externals"],
                 unknown_00096ce0=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
                 unknown_000965e0=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
-                unknown_00096860=lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]))),
+                network_connection_received=lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]))),
                 unknown_00095840=whole,
                 unknown_00093aa0=lambda harness, arguments: (
                     0,
@@ -817,7 +817,7 @@ def run(t) -> None:
             externals=dict(
                 setup["externals"],
                 unknown_00096510=number,
-                unknown_00096810=lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]), arguments[2])),
+                network_connection_set_sent_size=lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]), arguments[2])),
                 unknown_000931a0=sends,
             ),
             mocks=[
