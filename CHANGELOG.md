@@ -2,6 +2,55 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Los enchufes del juego
+
+Siete funciones en el archivo nuevo `networking/transport_endpoint.c`. De 1659
+funciones se pasa a 1666, el 14,79 % de las del juego (el 9,770 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `transport_endpoint_create` | `0x000b4d50` | `networking/transport_endpoint.c` |
+| `transport_endpoint_option_name` | `0x000b4da0` | `networking/transport_endpoint.c` |
+| `transport_endpoint_get_option` | `0x000b4e00` | `networking/transport_endpoint.c` |
+| `transport_endpoint_set_option` | `0x000b4e70` | `networking/transport_endpoint.c` |
+| `transport_endpoint_close` | `0x000b4f50` | `networking/transport_endpoint.c` |
+| `transport_endpoint_read` | `0x000b4fa0` | `networking/transport_endpoint.c` |
+| `transport_endpoint_write` | `0x000b5000` | `networking/transport_endpoint.c` |
+
+### Lo que se sabe
+
+- **Un enchufe del juego mide ocho bytes**, en memoria propia
+  (`VirtualAlloc`): el de las bibliotecas de la consola (o `-1`), sus bits
+  y su clase. Son los cuatro que lleva la lista de canales (hito 494), que
+  ahora usa esta estructura.
+- Nada de esto hace nada si la red no está (los dos bytes de
+  `0x004d8b18`).
+- `transport_endpoint_option_name` pasa las seis opciones del juego a las
+  de las bibliotecas: `SO_REUSEADDR`, `SO_LINGER`, `SO_BROADCAST`,
+  `SO_SNDBUF`, `SO_RCVBUF` y `0x4001`. La última se da como puntero a su
+  valor; las demás, como el valor.
+- `transport_endpoint_read` y `transport_endpoint_write` leen y escriben
+  por un enchufe que habla con otro (su primer bit). Si no se pudo
+  devuelven `-2` (no hay nada ahora, `WSAEWOULDBLOCK`), `-1` (no se
+  encuentra la otra consola, `WSAEHOSTUNREACH`; solo al escribir) o `-3`.
+  Leer cero bytes es que el otro cerró: el enchufe pierde tres bits
+  (`0x25`).
+- `transport_endpoint_close` es lo mismo que el juego tiene metido dentro
+  de `network_link_close_sockets`.
+- `getsockopt`, `setsockopt`, `recv` y `send` quedan con su nombre en la
+  tabla.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las siete**, y en las de los hitos 456 a
+  497.
+- En este hito se pasaron las pruebas de las siete funciones y todas las
+  de `network_link`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Los paquetes llegan
 
 Dos funciones en `networking/network_link.c`. De 1657

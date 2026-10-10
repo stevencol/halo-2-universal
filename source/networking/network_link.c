@@ -24,11 +24,11 @@ is shut down, and closed; and why the last thing asked of them was not done.
 /* 0x000b5110: bytes are sent by a socket to an address; how many were, or
 less than nothing */
 short __attribute__((stdcall)) unknown_000b5110(const struct transport_address *address,
-	struct network_link_socket *socket, const byte *bytes, long size);
+	struct transport_endpoint *socket, const byte *bytes, long size);
 
 /* 0x000b5060: bytes that came for a socket are taken, with the address that
 they came from; how many, and not more than nothing if there are none */
-short __attribute__((stdcall)) unknown_000b5060(struct network_link_socket *socket, byte *bytes, long size,
+short __attribute__((stdcall)) unknown_000b5060(struct transport_endpoint *socket, byte *bytes, long size,
 	struct transport_address *address);
 
 int __attribute__((stdcall)) shutdown(long socket, long how);
@@ -216,18 +216,18 @@ closed, if the network is there; and the memory of each is let go of */
 void __attribute__((stdcall)) network_link_close_sockets(
 	byte *link)
 {
-	struct network_link_socket **sockets= (struct network_link_socket **)(link+NETWORK_LINK_SOCKETS_OFFSET);
+	struct transport_endpoint **sockets= (struct transport_endpoint **)(link+NETWORK_LINK_SOCKETS_OFFSET);
 	long index;
 
 	for (index= 0; index<NUMBER_OF_NETWORK_LINK_SOCKETS; index++)
 	{
-		struct network_link_socket *socket= sockets[index];
+		struct transport_endpoint *socket= sockets[index];
 
 		if (socket)
 		{
 			if (socket->socket!=NONE && unknown_004d8b18 && unknown_004d8b19)
 			{
-				if (socket->flags&_network_link_socket_connected_bit)
+				if (socket->flags&_transport_endpoint_connected_bit)
 				{
 					if (shutdown(socket->socket, 2))
 					{
@@ -364,7 +364,7 @@ void __attribute__((stdcall)) network_link_send_bytes(
 	const byte *bytes)
 {
 	struct transport_address to= *address;
-	struct network_link_socket *socket;
+	struct transport_endpoint *socket;
 
 	switch (kind)
 	{
@@ -381,7 +381,7 @@ void __attribute__((stdcall)) network_link_send_bytes(
 		to.port= NETWORK_LINK_SOCKET3_PORT;
 		break;
 	}
-	socket= ((struct network_link_socket **)(link+NETWORK_LINK_SOCKETS_OFFSET))[kind];
+	socket= ((struct transport_endpoint **)(link+NETWORK_LINK_SOCKETS_OFFSET))[kind];
 	if (socket)
 	{
 		long sent= unknown_000b5110(&to, socket, bytes, size);
@@ -618,7 +618,7 @@ if they are good, given to who they are for (network_link_receive_packet) */
 void __attribute__((stdcall)) network_link_receive(
 	byte *link)
 {
-	struct network_link_socket **sockets= (struct network_link_socket **)(link+NETWORK_LINK_SOCKETS_OFFSET);
+	struct transport_endpoint **sockets= (struct transport_endpoint **)(link+NETWORK_LINK_SOCKETS_OFFSET);
 	boolean received;
 
 	do

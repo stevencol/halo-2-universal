@@ -2220,3 +2220,14 @@ address,name,source,arguments,returns,convention
 000b5110,unknown_000b5110,,esi stack stack stack,short,stdcall
 000933f0,network_link_receive_packet,source/networking/network_link.c,eax stack,void,stdcall
 000b5060,unknown_000b5060,,stack stack stack stack,short,stdcall
+000b4d50,transport_endpoint_create,source/networking/transport_endpoint.c,stack,pointer,stdcall
+000b4da0,transport_endpoint_option_name,source/networking/transport_endpoint.c,stack,int,stdcall
+000b4e00,transport_endpoint_get_option,source/networking/transport_endpoint.c,stack stack,int,stdcall
+000b4e70,transport_endpoint_set_option,source/networking/transport_endpoint.c,esi stack stack,bool,stdcall
+000b4f50,transport_endpoint_close,source/networking/transport_endpoint.c,esi,void
+000b4fa0,transport_endpoint_read,source/networking/transport_endpoint.c,esi stack stack,short,stdcall
+000b5000,transport_endpoint_write,source/networking/transport_endpoint.c,ecx stack stack,short,stdcall
+003cd1c3,getsockopt,,stack stack stack stack stack,int,stdcall
+003cd1b4,setsockopt,,stack stack stack stack stack,int,stdcall
+003cd211,recv,,stack stack stack stack,int,stdcall
+003cd23a,send,,stack stack stack stack,int,stdcall

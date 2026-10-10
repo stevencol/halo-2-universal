@@ -12,6 +12,7 @@ are the names of its functions.
 
 #include "cseries/cseries.h"
 #include "networking/bitstream.h"
+#include "networking/transport_endpoint.h"
 #include "networking/transport_security.h"
 
 /* ---------- constants */
@@ -37,7 +38,6 @@ enum
 	NETWORK_LINK_OPEN_OFFSET= 0x8,
 	NETWORK_LINK_SOCKETS_OFFSET= 0xC,
 	NUMBER_OF_NETWORK_LINK_SOCKETS= 4,
-	_network_link_socket_connected_bit= 0x1,
 	_network_channel_closed_unknown9= 9,
 	/* of a packet: what its bytes and its voice can be; the kind whose
 	bytes are sent as they are, with no voice; and what the network puts
@@ -83,14 +83,6 @@ struct network_link_channel
 	boolean unknown8;
 	byte pad[3];
 	struct transport_address address;
-};
-
-/* one of its sockets, in memory of its own: the socket of the console's
-libraries, or NONE, and its bits */
-struct network_link_socket
-{
-	long socket;
-	word flags;
 };
 
 /* a packet that it sends or has read: its kind, which is the socket that
