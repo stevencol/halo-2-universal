@@ -897,7 +897,7 @@ def run(t) -> None:
                             },
                             externals={
                                 "game_in_progress": gives(in_progress),
-                                "unknown_00068250": gives(other),
+                                "simulation_in_progress": gives(other),
                                 "unknown_000649c0": gives_buffer(thing, flags != 0xFE or in_progress),
                             },
                             extra=[thing],

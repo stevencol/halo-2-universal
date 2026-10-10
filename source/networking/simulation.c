@@ -11,11 +11,14 @@ and so are the names of its functions.
 
 #include "simulation.h"
 
+#include "game/game.h"
 #include "main/main_game.h"
+#include "saved games/game_state.h"
 #include "networking/bitstream.h"
 #include "networking/simulation_view.h"
 #include "networking/simulation_world.h"
 
+#include <limits.h>
 #include <string.h>
 
 /* ---------- prototypes */
@@ -28,6 +31,17 @@ void unknown_00085880(byte *view);
 void __attribute__((stdcall)) unknown_00087d00(struct bitstream *stream, const void *update);
 boolean __attribute__((stdcall)) unknown_00087e90(struct bitstream *stream, void *update);
 long unknown_00083db0(long unknown);
+
+/* 0x00069260: one of the things that come is made from what the game is
+doing. 0x00069a00, 0x00069b50: the thing passes on what the players do, and
+something more, of one of them. 0x000835c0: whether what unknown_004cf780 has
+lets the game go on a tick. 0x000683a0: one of the things that come is given
+to the game */
+void unknown_00069260(byte *world, long *update);
+void __attribute__((stdcall)) unknown_00069a00(const void *players, byte *world, long unknown8);
+void __attribute__((stdcall)) unknown_00069b50(const void *unknown610, byte *world, long unknown5cc);
+boolean unknown_000835c0(long unknown);
+void __attribute__((stdcall)) unknown_000683a0(long *update);
 
 long GetTickCount(void);
 
@@ -170,4 +184,155 @@ long simulation_unknown_000687e0(
 	}
 
 	return 0;
+}
+
+/* 0x00068090: the state of the game is about to be saved, as bits say: with
+a game in the network, and without the first bit, a thing that is not in its
+third state or its fifth notes it. It is the second of the things that are
+done before a state is saved (game_state_before_save_procs) */
+void GAME_STATE_PROC simulation_before_save(
+	unsigned long flags)
+{
+	if (unknown_004cf770.unknown0 && !(flags&1))
+	{
+		byte *world= unknown_004cf770.unknownC;
+		long state= *(const long *)(world+SIMULATION_WORLD_STATE_OFFSET);
+
+		if (state!=3 && state!=5)
+		{
+			world[SIMULATION_WORLD_SAVED_OFFSET]= TRUE;
+		}
+	}
+}
+
+/* 0x000680c0: how many of the things that come wait for the game to take,
+and whether they were counted (simulation_world_unknown_00069300); the most
+that there can be, with no game in the network or a thing that is not in
+use */
+long simulation_updates_waiting(
+	boolean *counted)
+{
+	*counted= FALSE;
+	if (!unknown_004cf770.unknown0 || !*(const long *)(unknown_004cf770.unknownC+SIMULATION_WORLD_STATE_OFFSET))
+	{
+		return LONG_MAX;
+	}
+
+	return simulation_world_unknown_00069300(unknown_004cf770.unknownC, counted);
+}
+
+/* 0x00068250: whether a game in the network is being played: there is one,
+there is a game and it is on, with something at 0x2 of it that is not NONE,
+it has not been said that it cannot go on, and the number that the thing has
+at 0x18 is 4 */
+boolean simulation_in_progress(
+	void)
+{
+	return unknown_004cf770.unknown0 && main_game_globals && main_game_globals->active &&
+		*(const short *)((const byte *)main_game_globals+2)!=NONE && !unknown_004cf770.unknown1[1] &&
+		*(const long *)(unknown_004cf770.unknownC+SIMULATION_WORLD_UNKNOWN18_OFFSET)==_simulation_world_unknown18_4;
+}
+
+/* 0x00068290: whether a game in the network is on its way to being played:
+there is one, it has not been said that it cannot go on, the thing is in
+use, and the number that it has at 0x18 is not 4 */
+boolean simulation_starting(
+	void)
+{
+	if (unknown_004cf770.unknown0 && !unknown_004cf770.unknown1[1])
+	{
+		const byte *world= unknown_004cf770.unknownC;
+
+		if (*(const long *)(world+SIMULATION_WORLD_STATE_OFFSET))
+		{
+			return *(const long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET)!=_simulation_world_unknown18_4;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x000682c0: 1 if there is a game in the network and it has been said
+that it cannot go on (simulation_fail); 0 if not */
+long simulation_failed(
+	void)
+{
+	return unknown_004cf770.unknown0 && unknown_004cf770.unknown1[1] ? 1 : 0;
+}
+
+/* 0x000682e0: one of the things that come is made from what the game is
+doing now (unknown_00069260), all zeros first. And a thing in its third state
+or its fifth, which takes them from another console, sees that the game is
+the same here: if the number of the one that was made is not the one of the
+thing, or the time of the game or its seed are others, a byte of the thing
+says that something is wrong; once it is set it is not looked at again */
+void simulation_build_update(
+	long *update)
+{
+	byte *world;
+	long state;
+
+	memset(update, 0, SIMULATION_UPDATE_DECODED_SIZE);
+	unknown_00069260(unknown_004cf770.unknownC, update);
+	world= unknown_004cf770.unknownC;
+	state= *(const long *)(world+SIMULATION_WORLD_STATE_OFFSET);
+	if ((state==3 || state==5) && !world[SIMULATION_WORLD_UNKNOWN2C_OFFSET])
+	{
+		if (update[0]!=*(const long *)(world+SIMULATION_WORLD_UNKNOWN28_OFFSET) ||
+			*(const unsigned long *)((const byte *)update+SIMULATION_UPDATE_GAME_TIME_OFFSET)!=game_time_globals->time ||
+			*(const unsigned long *)((const byte *)update+SIMULATION_UPDATE_RANDOM_SEED_OFFSET)!=*global_random_seed_reference)
+		{
+			world[SIMULATION_WORLD_UNKNOWN2C_OFFSET]= TRUE;
+		}
+	}
+}
+
+/* 0x000684e0: the thing is done with one of the things that come: in its
+second state, each view of the second kind is given it
+(simulation_world_unknown_00069880); in its fourth, what the players do and
+something more of it are passed on (unknown_00069a00, unknown_00069b50); in
+its third and its fifth, nothing. And the number of the thing is the one
+after it */
+void simulation_apply_update(
+	const long *update)
+{
+	byte *world= unknown_004cf770.unknownC;
+	long state= *(const long *)(world+SIMULATION_WORLD_STATE_OFFSET);
+
+	if (state!=3 && state!=5)
+	{
+		if (state==2)
+		{
+			simulation_world_unknown_00069880(world, update);
+			world= unknown_004cf770.unknownC;
+		}
+		else if (state==4)
+		{
+			unknown_00069a00((const byte *)update+SIMULATION_UPDATE_PLAYERS_OFFSET, world,
+				*(const long *)((const byte *)update+SIMULATION_UPDATE_UNKNOWN8_OFFSET));
+			unknown_00069b50((const byte *)update+SIMULATION_UPDATE_UNKNOWN610_OFFSET, world,
+				*(const long *)((const byte *)update+SIMULATION_UPDATE_UNKNOWN5CC_OFFSET));
+			world= unknown_004cf770.unknownC;
+		}
+	}
+	*(long *)(world+SIMULATION_WORLD_UNKNOWN28_OFFSET)= (long)((unsigned long)update[0]+1);
+}
+
+/* 0x000681e0: what the game in the network does each tick of the game: with
+one, a game that is on, nothing said of it not going on, and what
+unknown_004cf780 has letting it (unknown_000835c0), one of the things that
+come is made (simulation_build_update), given to the game (unknown_000683a0)
+and then to the thing (simulation_apply_update) */
+void simulation_update(
+	void)
+{
+	if (unknown_004cf770.unknown0 && main_game_globals && main_game_globals->active && !unknown_004cf770.unknown1[1] &&
+		unknown_000835c0(unknown_004cf780))
+	{
+		long update[SIMULATION_UPDATE_DECODED_SIZE/4];
+
+		simulation_build_update(update);
+		unknown_000683a0(update);
+		simulation_apply_update(update);
+	}
 }

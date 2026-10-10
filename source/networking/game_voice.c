@@ -34,7 +34,7 @@ work of each frame */
 long unknown_00332f22(void *engine);
 
 /* 0x00068250: something of the network game */
-boolean unknown_00068250(void);
+boolean simulation_in_progress(void);
 
 /* 0x000696d0 is simulation_world_player_unknown25, of simulation_world.c */
 
@@ -1255,14 +1255,14 @@ void game_voice_update_network_state(
 	switch (state)
 	{
 	case _network_game_state3:
-		if (game_in_progress() && unknown_00068250())
+		if (game_in_progress() && simulation_in_progress())
 		{
 			unknown_004c9888= _game_voice_network1;
 			return;
 		}
 		break;
 	case _network_game_state8:
-		if (game_in_progress() && unknown_00068250())
+		if (game_in_progress() && simulation_in_progress())
 		{
 			unknown_004c9888= _game_voice_network1;
 			return;

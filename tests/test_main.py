@@ -30,7 +30,7 @@ PLAIN = (
     "font_cache_frame cached_map_file_copy_update unknown_00163820 unknown_001479c3 unknown_00155f80 "
     "unknown_00092f80 unknown_0008df50 unknown_000680f0 network_life_cycle_update unknown_001870a0 unknown_0008dfc0 "
     "game_frame unknown_001554b0 unknown_0016f280 unknown_00222a70 unknown_00223240 sound_update "
-    "unknown_000681e0 unknown_00222d80"
+    "simulation_update unknown_00222d80"
 ).split()
 
 
@@ -177,7 +177,7 @@ def run(t) -> None:
                 "async_task_count": lambda harness, arguments: 7,
                 "game_state_load_core": load_core,
                 "GetTickCount": tick_counts(123, 6000, pause=paused_later),
-                "unknown_00068250": lambda harness, arguments, result=random_.choice((1, 1, 0)): result,
+                "simulation_in_progress": lambda harness, arguments, result=random_.choice((1, 1, 0)): result,
                 "unknown_00092f80": unknown_00092f80,
                 "unknown_00146660": lambda harness, arguments, values=values: unknown_00146660(harness, arguments, values),
                 "game_run_ticks": ran_ticks,

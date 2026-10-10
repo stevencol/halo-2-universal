@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 477.
+**Última actualización:** 2026-10-08, al terminar el hito 478.
 
 ## Dónde estamos
 
-- **1609 funciones descompiladas de 11.265: el 14,28 % del juego** (el
-  9,519 % de los bytes de código).
-- Las 1609 están comprobadas contra el ejecutable original: las 1390 del
+- **1617 funciones descompiladas de 11.265: el 14,35 % del juego** (el
+  9,536 % de los bytes de código).
+- Las 1617 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile six small functions of the simulation's top level* (ver `git log`).
+- Último hito: *Decompile what a game tick asks of the simulation* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 560 funciones apuntadas pero sin descompilar (las que el código
-  llama); 458 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 559 funciones apuntadas pero sin descompilar (las que el código
+  llama); 457 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -163,10 +163,12 @@ Módulos (funciones hechas / archivo):
       tabla `0x00450db8`; completo; romper líneas pendiente en las
       cinco últimas)
 - [ ] La partida en red, desde fuera — `networking\simulation.c`
-      (6: pasar una actualización a bytes y rehacerla, una consola que
-      ya está dentro, un canal que se va y la partida que no puede
-      seguir; de `0x00068550` a `0x000687e0`; queda el resto, de
-      `0x00068090` a `0x00069300`)
+      (14: lo que `game_tick` le pide (hacer la actualización de cada
+      tick y aplicarla), si se está jugando, pasar una actualización a
+      bytes y rehacerla, una consola que ya está dentro, un canal que
+      se va y la partida que no puede seguir; quedan `0x000680f0`,
+      `0x00068350`, `0x000683a0`, `0x00068580` y de `0x00068a90` a
+      `0x00069260`)
 - [ ] La partida en red y sus vistas — `networking\simulation_world.c`
       (50: llevar una vista hasta el final, la espera a las demás
       consolas, la cola de actualizaciones

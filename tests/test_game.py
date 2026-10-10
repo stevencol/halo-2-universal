@@ -506,11 +506,11 @@ def run_players_and_won(t) -> None:
         externals.update(
             {
                 "_control87": lambda harness, arguments: 0,
-                "unknown_000682e0": start,
+                "simulation_build_update": start,
                 "unknown_000683a0": decide,
                 "unknown_0014d3a0": with_state,
                 "unknown_00138db0": with_state,
-                "unknown_000684e0": with_state,
+                "simulation_apply_update": with_state,
             }
         )
         return externals

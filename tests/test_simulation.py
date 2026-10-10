@@ -96,3 +96,77 @@ def run(t) -> None:
             globals={"unknown_004cf770": bytes(there), "unknown_004cf780": 0x4321},
             externals={"unknown_00083db0": lambda harness, arguments: random_.choice((7,))},
         )
+
+    # ---------- what the rest of the game asks of the game in the network, and what it does each tick
+
+    for n in range(2500):
+        world = bytearray(random_.randbytes(0x1220))
+        state = random_.choice((0, 1, 2, 2, 3, 3, 4, 4, 5))
+        struct.pack_into("<i", world, 0x8, state)
+        struct.pack_into("<i", world, 0x18, random_.choice((1, 3, 4, 4, 4)))
+        world[0x2C] = random_.choice((0, 0, 0, 1))
+        number = random_.choice((0, 5, 1000))
+        struct.pack_into("<i", world, 0x28, number)
+        thing = Buffer(bytes(world))
+        there = bytearray(random_.randbytes(0x10))
+        there[0] = random_.choice((0, 1, 1, 1, 1, 1))
+        there[2] = random_.choice((0, 0, 0, 1))
+        struct.pack_into("<I", there, 0xC, 0)
+        game = bytearray(random_.randbytes(0x1130))
+        game[0x1120] = random_.choice((0, 1, 1, 1, 1))
+        struct.pack_into("<h", game, 2, random_.choice((-1, 0, 0, 0, 3)))
+        time = bytearray(random_.randbytes(0x10))
+        struct.pack_into("<I", time, 8, 777)
+        seed = Buffer(struct.pack("<I", 0x5EED))
+        globals_ = {
+            "unknown_004cf770": bytes(there),
+            "unknown_004cf770+0xc": thing,
+            "main_game_globals": random_.choice((0, 1, 1, 1, 1, 1)) and Buffer(bytes(game)),
+            "game_time_globals": Buffer(bytes(time)),
+            "global_random_seed_reference": seed,
+            "unknown_004cf780": 0x4321,
+        }
+        t.check("simulation_before_save", random_.choice((0, 0, 1, 2, 3)), globals=globals_)
+        waits = random_.choice((0, 3, 0x7FFFFFFF))
+        t.check(
+            "simulation_updates_waiting",
+            Buffer(random_.randbytes(4)),
+            globals=globals_,
+            externals={"simulation_world_unknown_00069300": lambda harness, arguments, waits=waits: (waits, (harness.normalize(arguments[0]), harness.normalize(arguments[1])))},
+        )
+        for name in ("simulation_in_progress", "simulation_starting", "simulation_failed"):
+            t.check(name, globals=globals_)
+
+        made = struct.pack("<I", random_.choice((number, number, number, number + 1)))
+        made_time = random_.choice((777, 777, 777, 778))
+        made_seed = random_.choice((0x5EED, 0x5EED, 0x5EED, 1))
+
+        def makes(harness, arguments, made=made, made_time=made_time, made_seed=made_seed):
+            harness.mu.mem_write(arguments[1], made)
+            harness.mu.mem_write(arguments[1] + 0x4040, struct.pack("<2I", made_time, made_seed))
+            return 0, (harness.normalize(arguments[0]), harness.normalize(arguments[1]))
+
+        t.check("simulation_build_update", Buffer(random_.randbytes(0x4048)), globals=globals_, externals={"unknown_00069260": makes})
+        passes = lambda harness, arguments: (0, (harness.normalize(arguments[0]), harness.normalize(arguments[1]), arguments[2]))
+        t.check(
+            "simulation_apply_update",
+            Buffer(random_.randbytes(0x4048)),
+            globals=globals_,
+            externals={
+                "simulation_world_unknown_00069880": lambda harness, arguments: (0, (harness.normalize(arguments[0]), harness.normalize(arguments[1]))),
+                "unknown_00069a00": passes,
+                "unknown_00069b50": passes,
+            },
+        )
+        lets = random_.choice((0, 1, 1, 1))
+        # the thing that is made is in the stack: where it is is not compared
+        t.check(
+            "simulation_update",
+            globals=globals_,
+            externals={
+                "unknown_000835c0": lambda harness, arguments, lets=lets: lets,
+                "simulation_build_update": lambda harness, arguments: (0, ()),
+                "unknown_000683a0": lambda harness, arguments: (0, ()),
+                "simulation_apply_update": lambda harness, arguments: (0, ()),
+            },
+        )

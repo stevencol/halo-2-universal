@@ -241,7 +241,7 @@ address,name,source,arguments,returns,convention
 00138180,game_options_verify,source/game/game.c,stack,bool
 0011c1b0,scenario_switch_structure_bsp,source/scenario/scenario.c,stack stack,bool
 001c3540,unknown_001c3540,,stack,void
-00068090,unknown_00068090,,stack,void
+00068090,simulation_before_save,source/networking/simulation.c,stack,void,stdcall
 0016eff0,unknown_0016eff0,,stack,void
 001e6af0,unknown_001e6af0,,stack,void
 001c3590,unknown_001c3590,,stack,void
@@ -494,7 +494,7 @@ address,name,source,arguments,returns,convention
 00092f80,unknown_00092f80,,stack,void
 0008df50,unknown_0008df50,,,void
 000680f0,unknown_000680f0,,,void
-00068250,unknown_00068250,,,bool
+00068250,simulation_in_progress,source/networking/simulation.c,,bool
 00146660,unknown_00146660,,stack stack stack,void
 001870a0,unknown_001870a0,,stack stack,void
 0008dfc0,unknown_0008dfc0,,,void
@@ -504,7 +504,7 @@ address,name,source,arguments,returns,convention
 00222a70,unknown_00222a70,,stack,void
 00223240,unknown_00223240,,,void
 00125b40,sound_update,source/sound/sound_manager.c,,void
-000681e0,unknown_000681e0,,,void
+000681e0,simulation_update,source/networking/simulation.c,,void
 00222d80,unknown_00222d80,,,void
 00122bc0,cache_file_structure_bsp_unload,source/cache/cache_files.c,edi,void
 0024cdaf,hud_messages_unknown_0024cdaf,,,void
@@ -1416,11 +1416,11 @@ address,name,source,arguments,returns,convention
 00224040,unknown_00224040,,stack ebx esi edi,void,stdcall
 00224080,unknown_00224080,,ebx stack stack stack,void,stdcall
 001362b0,bitmap_sample,source/bitmaps/bitmaps.c,eax xmm1 stack,int
-000682e0,unknown_000682e0,,eax,void
+000682e0,simulation_build_update,source/networking/simulation.c,eax,void
 000683a0,unknown_000683a0,,stack,void,stdcall
 0014d3a0,unknown_0014d3a0,,stack,void,stdcall
 00138db0,unknown_00138db0,,ebx,void
-000684e0,unknown_000684e0,,esi,void
+000684e0,simulation_apply_update,source/networking/simulation.c,esi,void
 001c83c0,unknown_001c83c0,,,void
 001fb510,unknown_001fb510,,,void
 0020b660,unknown_0020b660,,,void
@@ -2168,3 +2168,10 @@ address,name,source,arguments,returns,convention
 00087d00,unknown_00087d00,,eax stack,void,stdcall
 00087e90,unknown_00087e90,,eax stack,bool,stdcall
 00083db0,unknown_00083db0,,edi,int
+000680c0,simulation_updates_waiting,source/networking/simulation.c,edx,int
+00068290,simulation_starting,source/networking/simulation.c,,bool
+000682c0,simulation_failed,source/networking/simulation.c,,int
+00069260,unknown_00069260,,eax esi,void
+00069a00,unknown_00069a00,,eax stack stack,void,stdcall
+00069b50,unknown_00069b50,,eax stack stack,void,stdcall
+000835c0,unknown_000835c0,,edx,bool

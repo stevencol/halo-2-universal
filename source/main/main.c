@@ -59,7 +59,7 @@ void unknown_00155f80(void);
 void unknown_00092f80(long unknown);
 void unknown_0008df50(void);
 void unknown_000680f0(void);
-boolean unknown_00068250(void);
+boolean simulation_in_progress(void);
 void unknown_00146660(float seconds, float *unknown_real, long *unknown_long);
 void unknown_001870a0(float seconds, float unknown_real);
 void unknown_0008dfc0(void);
@@ -69,7 +69,7 @@ void unknown_00222a70(float seconds);
 void unknown_00223240(void);
 /* 0x00125b40 */
 void sound_update(void);
-void unknown_000681e0(void);
+void simulation_update(void);
 void unknown_00222d80(void);
 
 /* 0x0024cdaf and 0x0024cbee: the messages that the game shows the players.
@@ -414,7 +414,7 @@ void main_loop_body(
 	unknown_000680f0();
 	network_life_cycle_update();
 
-	if (unknown_00068250())
+	if (simulation_in_progress())
 	{
 		unknown_00146660(seconds, &unknown_real, &unknown_long);
 		unknown_001870a0(seconds, unknown_real);
@@ -429,7 +429,7 @@ void main_loop_body(
 	}
 	else
 	{
-		unknown_000681e0();
+		simulation_update();
 		unknown_0008dfc0();
 		unknown_00222d80();
 		unknown_00223240();

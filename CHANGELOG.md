@@ -2,6 +2,68 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Lo que `game_tick` le pide a la partida en red
+
+Ocho funciones en `networking/simulation.c`, 532 bytes entre las ocho. De 1609
+funciones se pasa a 1617, el 14,35 % de las del juego (el 9,536 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_before_save` | `0x00068090` | `networking/simulation.c` |
+| `simulation_updates_waiting` | `0x000680c0` | `networking/simulation.c` |
+| `simulation_update` | `0x000681e0` | `networking/simulation.c` |
+| `simulation_in_progress` | `0x00068250` | `networking/simulation.c` |
+| `simulation_starting` | `0x00068290` | `networking/simulation.c` |
+| `simulation_failed` | `0x000682c0` | `networking/simulation.c` |
+| `simulation_build_update` | `0x000682e0` | `networking/simulation.c` |
+| `simulation_apply_update` | `0x000684e0` | `networking/simulation.c` |
+
+### Lo que se sabe
+
+- **Lo que `game_tick` tenía «en la pila» (hito 30) es una actualización
+  de la partida en red**: los `0x4048` bytes de los hitos 450 y 461. Las
+  dos funciones que llamaba antes y después de mover el juego eran:
+  - `simulation_build_update` (antes): hace la actualización de este tick
+    a partir de lo que el juego está haciendo (`0x00069260`). Y en una
+    consola que **sigue** a otra (tercer o quinto estado de la partida)
+    comprueba que el juego va igual aquí que allí: mismo número, **misma
+    hora del juego y misma semilla de los números al azar**. Si no, marca
+    el byte de «algo va mal» (el que viaja en el mensaje `0x28`, hito
+    466). Es la detección de desincronización.
+  - `simulation_apply_update` (después): en la consola que manda
+    (segundo estado), la actualización va a cada vista (hito 461); en el
+    cuarto estado se pasa lo que hacen los jugadores (`0x00069a00`) y
+    algo más (`0x00069b50`); y el número de la partida avanza uno.
+- `simulation_update` hace las dos seguidas, con `0x000683a0` en medio,
+  sin mover el juego: lo llama el bucle principal (hito 25).
+- `simulation_in_progress` (la `unknown_00068250` que usaban la voz y el
+  bucle principal): hay partida en red y **se está jugando** (el segundo
+  número de la partida es 4). `simulation_starting`: la hay y aún no.
+  `simulation_failed`: la hay y se dijo que no puede seguir (hito 477).
+- `simulation_updates_waiting`: cuántas actualizaciones esperan (hito
+  446), visto desde fuera.
+- `simulation_before_save` es el **segundo de los cuatro avisos de antes
+  de guardar** (hito 22): la partida apunta que se guardó, salvo si sigue
+  a otra consola.
+
+### Cambiado
+
+- `unknown_00068090`, `unknown_000681e0`, `unknown_00068250`,
+  `unknown_000682e0` y `unknown_000684e0` tienen ya su nombre donde se
+  las llamaba (`game.c`, `main.c`, `game_state.c`, `game_voice.c`) y en
+  sus pruebas.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las ocho**, y en las de los hitos 441 a
+  477.
+- En este hito se pasaron las pruebas de `simulation` (14 funciones),
+  `game` (140), `main` (25), `game_state` (36) y `game_voice` (71).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — La partida en red, vista desde fuera
 
 Seis funciones en el archivo nuevo `networking/simulation.c`, 463 bytes entre las seis. De 1603

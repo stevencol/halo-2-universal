@@ -64,11 +64,11 @@ void unknown_00014600(void);
 tick does with what it has on the stack, before and after the systems are
 updated; the second says whether they are */
 struct game_tick_state;
-void unknown_000682e0(struct game_tick_state *state);
+void simulation_build_update(struct game_tick_state *state);
 void __attribute__((stdcall)) unknown_000683a0(struct game_tick_state *state);
 void __attribute__((stdcall)) unknown_0014d3a0(struct game_tick_state *state);
 void unknown_00138db0(struct game_tick_state *state);
-void unknown_000684e0(struct game_tick_state *state);
+void simulation_apply_update(struct game_tick_state *state);
 
 /* what is updated in a tick, in this order; animation_cache_idle is between
 the twenty-first and the twenty-second */
@@ -583,7 +583,7 @@ void game_tick(
 	struct game_tick_state state;
 
 	_control87(FLOATING_POINT_CONTROL, FLOATING_POINT_CONTROL_MASK);
-	unknown_000682e0(&state);
+	simulation_build_update(&state);
 	unknown_000683a0(&state);
 	if (state.update)
 	{
@@ -624,7 +624,7 @@ void game_tick(
 		}
 		unknown_00510c6c->seconds= game_time_globals->seconds_per_tick + unknown_00510c6c->seconds;
 	}
-	unknown_000684e0(&state);
+	simulation_apply_update(&state);
 	if (state.update)
 	{
 		game_time_globals->time++;
