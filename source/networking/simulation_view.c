@@ -13,6 +13,8 @@ is a guess, and so are the names of its functions.
 
 #include "networking/network_observer.h"
 #include "cache/texture_cache.h"
+#include "memory/ring_buffer.h"
+#include "saved games/game_state.h"
 #include "networking/replication_entity_view.h"
 #include "networking/simulation_world.h"
 
@@ -40,8 +42,12 @@ struct simulation_view_entity_client
 long GetTickCount(void);
 
 
-/* 0x000869a0: a view takes one of the things that come, with what it has
+/* 0x001995a0: the state of the game, from where it is, is packed into
+memory of a size; how many bytes it is then, and whether it could be.
+0x000869a0: a view takes one of the things that come, with what it has
 at 0x94; whether it could. 0x000865d0: and then something follows */
+boolean __attribute__((stdcall)) unknown_001995a0(const void *base, void *buffer, long *size_out, long capacity,
+	long level);
 boolean __attribute__((stdcall)) unknown_000869a0(const void *update, byte *view);
 void __attribute__((stdcall)) unknown_000865d0(byte *view);
 
@@ -708,4 +714,73 @@ void simulation_view_events_set_ready(
 			events[SIMULATION_VIEW_EVENTS_UNKNOWN6_OFFSET]= FALSE;
 		}
 	}
+}
+
+/* 0x00086aa0: the texture cache takes back memory that it lent: if it is
+the one of a view of the second kind, the view gives it back
+(simulation_view_unknown_00086590). It is what the cache is given with the
+memory, in unknown_000862e0 */
+void __attribute__((stdcall)) simulation_view_reclaim_game_state(
+	void *address,
+	byte *view)
+{
+	if (*(const word *)(view+SIMULATION_VIEW_KIND_OFFSET)==_simulation_view_kind_2 &&
+		*(void *const *)(view+SIMULATION_VIEW_UNKNOWN94_OFFSET) &&
+		*(void *const *)(view+SIMULATION_VIEW_UNKNOWN94_OFFSET)==address)
+	{
+		simulation_view_unknown_00086590(view);
+	}
+}
+
+/* 0x00086800: the state of the game goes into the ring of a view, to be
+sent to a console that comes in; whether it could. It is packed into memory
+that is given, of a size (unknown_001995a0); what that makes goes into the
+ring in pieces of no more than 0x400 bytes, each after eight bytes that say
+that it is a piece, its size and where it goes; and at the end eight more,
+of a piece of no size, with the size of it all. Each thing that goes into
+the ring is one more that the view has to send. FALSE if the state could not
+be packed, or the ring has no room. The game has ring_buffer_append written
+here */
+boolean __attribute__((stdcall)) simulation_view_queue_game_state(
+	long capacity,
+	byte *view,
+	long size,
+	const void *buffer)
+{
+	struct ring_buffer *ring= (struct ring_buffer *)(view+SIMULATION_VIEW_RING_OFFSET);
+	struct simulation_view_game_state_record record;
+	long packed_size;
+	long position= 0;
+	long remaining;
+	boolean result;
+
+	result= unknown_001995a0(game_state_globals.base_address, (void *)buffer, &packed_size, capacity,
+		SIMULATION_VIEW_GAME_STATE_COMPRESSION_LEVEL);
+	if (!result)
+	{
+		return FALSE;
+	}
+	for (remaining= packed_size; remaining>0; remaining-= record.size, position+= record.size)
+	{
+		record.type= _simulation_view_game_state_record_piece;
+		record.size= remaining>MAXIMUM_SIMULATION_VIEW_GAME_STATE_PIECE_SIZE ?
+			MAXIMUM_SIMULATION_VIEW_GAME_STATE_PIECE_SIZE : (short)remaining;
+		record.number= position;
+		if (ring_buffer_append(ring, sizeof(record), &record)==NONE ||
+			ring_buffer_append(ring, record.size, (const byte *)buffer+position)==NONE)
+		{
+			return FALSE;
+		}
+		(*(long *)(view+SIMULATION_VIEW_UNKNOWNAC_OFFSET))++;
+	}
+	record.type= _simulation_view_game_state_record_piece;
+	record.size= 0;
+	record.number= position;
+	if (ring_buffer_append(ring, sizeof(record), &record)==NONE)
+	{
+		return FALSE;
+	}
+	(*(long *)(view+SIMULATION_VIEW_UNKNOWNAC_OFFSET))++;
+
+	return result;
 }

@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — El estado del juego, comprimido y a trozos
+
+Dos funciones en `networking/simulation_view.c`, 443 bytes entre las dos. De 1598
+funciones se pasa a 1600, el 14,20 % de las del juego (el 9,452 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_view_queue_game_state` | `0x00086800` | `networking/simulation_view.c` |
+| `simulation_view_reclaim_game_state` | `0x00086aa0` | `networking/simulation_view.c` |
+
+### Lo que se sabe
+
+- `simulation_view_queue_game_state` es **cómo se prepara el estado del
+  juego para mandárselo a una consola que entra**:
+  - se **comprime** (`0x001995a0`, con nivel 9: la pareja de la
+    `0x00199740` del hito 457, que lo descomprime al llegar) en una
+    memoria que se le da;
+  - lo comprimido se mete en el anillo de la vista (hito 472) **en trozos
+    de hasta 1024 bytes**, cada uno detrás de ocho bytes que dicen «es un
+    trozo», cuánto mide y dónde va;
+  - y al final ocho bytes más, de un trozo de tamaño cero, con el tamaño
+    total. Es el «ya está todo» que el hito 449 veía llegar.
+  - Cada cosa metida en el anillo es una más que la vista tiene por
+    mandar (`0xAC`, lo que mira el hito 465).
+- `simulation_view_reclaim_game_state` es lo que la caché de texturas
+  llama cuando quiere recuperar esa memoria: si es la de una vista de la
+  segunda clase, la vista la suelta (hito 462).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos**, y en las de los hitos 441 a
+  472.
+- El juego tiene `ring_buffer_append` escrita dentro tres veces; aquí se
+  la llama.
+- No se sabe aún si `0x001995a0` recibe algo más en un registro (el
+  tamaño de lo que comprime); se verá al descompilarla.
+- En este hito se pasaron las pruebas de las dos funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Un anillo de bytes
 
 Tres funciones en el archivo nuevo `memory/ring_buffer.c`, 224 bytes entre las tres. De 1595

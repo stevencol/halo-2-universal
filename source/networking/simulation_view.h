@@ -108,6 +108,14 @@ enum
 	SIMULATION_VIEW_EVENTS_DATA_OFFSET= 0xC,
 	SIMULATION_VIEW_EVENTS_DATA_SIZE= 0x4CC0,
 	SIMULATION_VIEW_EVENTS_UNKNOWN4CCC_OFFSET= 0x4CCC,
+	/* the ring of a view of the second kind, in the memory at 0x94; the
+	kinds of what it keeps, the most bytes of a piece of the state of the
+	game, and how hard the state is packed */
+	SIMULATION_VIEW_RING_OFFSET= 0x9C,
+	_simulation_view_game_state_record_start= 0,
+	_simulation_view_game_state_record_piece= 1,
+	MAXIMUM_SIMULATION_VIEW_GAME_STATE_PIECE_SIZE= 0x400,
+	SIMULATION_VIEW_GAME_STATE_COMPRESSION_LEVEL= 9,
 	_simulation_view_kind_1= 1,
 	_simulation_view_kind_2= 2,
 	_simulation_view_kind_3= 3,
@@ -137,6 +145,17 @@ struct simulation_view_player_actions_message
 	byte actions[4][0x5C];
 };
 
+/* what goes before each thing that a view of the second kind keeps in its
+ring to send to a console that comes in: its kind, the size of what follows,
+and a number: for the first kind, the one that the game goes on from; for the
+second, where a piece of the state of the game goes */
+struct simulation_view_game_state_record
+{
+	short type;
+	short size;
+	long number;
+};
+
 typedef char verify_simulation_view_player_actions_message_size[
 	sizeof(struct simulation_view_player_actions_message) == 0x180 ? 1 : -1];
 
@@ -161,6 +180,9 @@ void __attribute__((stdcall)) simulation_view_send_player_actions(byte *view, un
 	const void *actions);
 boolean simulation_view_entities_pending(byte *view);
 void simulation_view_events_set_ready(boolean ready, byte *events);
+void __attribute__((stdcall)) simulation_view_reclaim_game_state(void *address, byte *view);
+boolean __attribute__((stdcall)) simulation_view_queue_game_state(long capacity, byte *view, long size,
+	const void *buffer);
 
 /* ---------- globals */
 

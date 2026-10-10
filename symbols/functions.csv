@@ -2155,3 +2155,6 @@ address,name,source,arguments,returns,convention
 001a1900,ring_buffer_append,source/memory/ring_buffer.c,eax esi stack,int,stdcall
 001a1940,ring_buffer_write,source/memory/ring_buffer.c,ebx ecx stack stack,void,stdcall
 001a19a0,ring_buffer_read,source/memory/ring_buffer.c,ebx eax ecx stack,void,stdcall
+00086aa0,simulation_view_reclaim_game_state,source/networking/simulation_view.c,stack stack,void,stdcall
+00086800,simulation_view_queue_game_state,source/networking/simulation_view.c,eax stack stack stack,bool,stdcall
+001995a0,unknown_001995a0,,stack stack stack stack stack,bool,stdcall

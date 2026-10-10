@@ -324,3 +324,37 @@ def run(t) -> None:
             Buffer(bytes(data), pointers=(0,)),
             globals={"unknown_00510ca2": bytes((random_.choice((0, 1)),))},
         )
+
+    # ---------- the state of the game goes into the ring of a view
+
+    for n in range(1500):
+        view = bytearray(random_.randbytes(0xC0))
+        struct.pack_into("<H", view, 2, random_.choice((2, 2, 2, 1, 4)))
+        memory = random_.choice((0, 0x5000, 0x5000, 0x6000))
+        struct.pack_into("<I", view, 0x94, memory)
+        t.check(
+            "simulation_view_reclaim_game_state",
+            random_.choice((0x5000, 0x5000, 0x6000, 0)),
+            Buffer(bytes(view)),
+            externals={"simulation_view_unknown_00086590": told},
+        )
+        room = random_.choice((0x10, 0x40, 0x500, 0x1000, 0x1000))
+        kept = random_.choice((0, 0, 8, room // 2))
+        struct.pack_into("<iI2i", view, 0x9C, room, 0xC0, random_.randrange(room), kept)
+        struct.pack_into("<i", view, 0xAC, random_.choice((0, 3)))
+        packed = random_.choice((0, 5, 0x400, 0x401, 0x850, -1))
+        good = random_.choice((1, 1, 1, 0, 0x100))
+
+        def packs(harness, arguments, packed=packed, good=good):
+            harness.mu.mem_write(arguments[2], struct.pack("<i", packed))
+            return good, (arguments[0], harness.normalize(arguments[1]), arguments[3], arguments[4])
+
+        t.check(
+            "simulation_view_queue_game_state",
+            0x40000,
+            Buffer(bytes(view) + random_.randbytes(room + 4), pointers=(0xA0,)),
+            0x3FE000,
+            Buffer(random_.randbytes(0x900)),
+            globals={"game_state_globals+0x2520": 0x61000},
+            externals={"unknown_001995a0": packs},
+        )
