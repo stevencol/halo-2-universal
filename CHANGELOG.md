@@ -2,6 +2,61 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — La cola de lo que llega, y buscar una vista por lo que la identifica
+
+Cuatro funciones en `networking/simulation_world.c`. De 1546
+funciones se pasa a 1550, el 13,76 % de las del juego (el 9,210 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_get_view_by_unknown1c` | `0x0006ace0` | `networking/simulation_world.c` |
+| `simulation_world_get_view_by_unknown14` | `0x0006ad40` | `networking/simulation_world.c` |
+| `simulation_world_take_update` | `0x0006ac30` | `networking/simulation_world.c` |
+| `simulation_world_unknown_00069eb0` | `0x00069eb0` | `networking/simulation_world.c` |
+
+### Lo que se sabe
+
+- **La cola de cosas que esperan** (hito 446) es una lista enlazada en
+  memoria del montón de la red: cada cosa mide `0x4048` bytes (16 456) y
+  detrás lleva dónde está la siguiente. La partida guarda la primera
+  (`0x1218`), la última (`0x121C`) y cuántas hay (`0x1214`).
+  `simulation_world_take_update` **saca la primera**: da una copia, pasa
+  a la siguiente, devuelve la memoria al montón, y el número de la
+  primera avanza uno.
+- Dos maneras más de buscar una vista, las dos entre las de la segunda
+  clase y la cuarta:
+  - `simulation_world_get_view_by_unknown1c`: por un número (`0x1C`);
+  - `simulation_world_get_view_by_unknown14`: por **los seis bytes** que
+    tiene en `0x14`. Son los mismos que la partida recibe con lo que
+    hacen los jugadores de la otra consola (hito 449): lo que identifica
+    a esa consola.
+- `simulation_world_unknown_00069eb0`: la primera vista de la primera
+  clase o de la tercera, si tiene canal y está bien, pasa al segundo
+  estado, y a la partida se le da «nada» (`0x0006b1f0`).
+
+### Cambiado
+
+- La prueba de `network_connection_acknowledge` (hito 436) sustituye, en
+  uno de cada tres casos, a `network_connection_update_times` para
+  comparar con qué suceso se la llama. La tanda de romper líneas encontró
+  que cambiar el suceso `5` por el `4` no se notaba, porque esa función
+  hace lo mismo con los dos. Ahora se nota (comprobado rompiendo la
+  línea a mano).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las cuatro**, y en las de los hitos 441
+  a 449.
+- `simulation_world_take_update` no mira si hay alguna cosa; el juego
+  tampoco.
+- En este hito se pasaron las pruebas de `simulation_world` (16
+  funciones), `simulation_view` (5), `network_message_handler` (7) y
+  `network_connection_acknowledge`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Lo que hacen los jugadores de la otra consola, y el estado del juego que llega a trozos
 
 Tres funciones en `networking/simulation_view.c`, 253 bytes entre las tres. De 1543

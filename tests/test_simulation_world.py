@@ -26,6 +26,9 @@ def a_world(random_, channel: int) -> Buffer:
         struct.pack_into("<H", view, 2, random_.choice((0, 1, 1, 1, 2, 2, 3, 3, 4, 5, 0x101, 0x21, random_.getrandbits(8))))
         struct.pack_into("<i", view, 0x3C, random_.choice((channel, channel, random_.randrange(4), -1)))
         struct.pack_into("<I", view, 0xC, at + VIEW)
+        struct.pack_into("<I", view, 0x1C, random_.choice((0, 1, 2, 3)))
+        view[0x14:0x1A] = bytes((random_.choice((1, 2)),)) * 5 + bytes((random_.choice((1, 2, 3)),))
+        struct.pack_into("<i", view, 0x28, random_.choice((0, 0, 0, 4)))
         view[0x78] = random_.choice((0, 1, 1, 0x80))
         struct.pack_into("<i", view, 0x84, random_.choice((0, 5, 100, 1000, 1200, random_.getrandbits(12))))
         other = bytearray(random_.randbytes(OTHER))
@@ -168,4 +171,53 @@ def run(t) -> None:
             a_world(random_, 0),
             random_.getrandbits(32),
             externals={"unknown_000860b0": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1]))},
+        )
+
+    # ---------- a view by what it is known by, the first thing that waits, and the first view on its way
+
+    from difftest import Mock, mock_address
+
+    NODE = 0x404C
+    HEAP, ALLOCATOR, TABLE, HEAP_SIZE = 0x0, 0x8, 0xC, 0x40
+
+    for n in range(1500):
+        t.check("simulation_world_get_view_by_unknown1c", a_world(random_, 0), random_.choice((0, 1, 2, 3, 7)))
+        t.check(
+            "simulation_world_get_view_by_unknown14",
+            a_world(random_, 0),
+            Buffer(bytes((random_.choice((1, 2)),)) * 5 + bytes((random_.choice((1, 2, 3)),)) + random_.randbytes(2)),
+        )
+        t.check(
+            "simulation_world_unknown_00069eb0",
+            a_world(random_, random_.randrange(4)),
+            externals={
+                "simulation_view_set_state": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2])),
+                "unknown_0006b1f0": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+            },
+        )
+
+    for n in range(300):
+        world = bytearray(random_.randbytes(0x1220))
+        node = len(world)
+        world += random_.randbytes(NODE)
+        last = random_.choice((True, True, False))
+        struct.pack_into("<2I", world, 0x1218, node, node if last else 0x1234)
+        struct.pack_into("<i", world, 0x1214, random_.choice((1, 2, 5)))
+        struct.pack_into("<i", world, 0x120C, random_.choice((0, 5, 1000)))
+        heap = bytearray(random_.randbytes(HEAP_SIZE))
+        struct.pack_into("<Ii", heap, HEAP, ALLOCATOR, random_.choice((1, 5, 5000)))
+        struct.pack_into("<I", heap, ALLOCATOR, TABLE)
+        struct.pack_into("<2I", heap, TABLE, mock_address(0), mock_address(1))
+        memory = Buffer(bytes(heap), pointers=(HEAP, ALLOCATOR))
+        t.check(
+            "simulation_world_take_update",
+            Buffer(bytes(world), pointers=(0x1218, 0x121C) if last else (0x1218,)),
+            Buffer(random_.randbytes(0x4048 + 8)),
+            extra=[memory],
+            globals={"unknown_004d87f8": Pointer(memory, HEAP)},
+            mocks=[
+                Mock(lambda call: 0, stack_arguments=2, registers=("ecx",)),
+                # where the size goes is in the stack
+                Mock(lambda call, known=random_.choice((0, 1)): known, stack_arguments=2, registers=("ecx",), record=lambda call: (call.registers["ecx"], call.stack[0])),
+            ],
         )

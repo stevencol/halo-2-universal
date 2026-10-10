@@ -59,7 +59,20 @@ enum
 	kind are counted from, and how far before it one of them can be */
 	SIMULATION_WORLD_UNKNOWN28_OFFSET= 0x28,
 	SIMULATION_WORLD_UNKNOWN_00069790_REACH= 0x81,
-	_simulation_view_kind2_bit= 0x4
+	_simulation_view_kind2_bit= 0x4,
+	/* the views of the second kind and of the fourth; of a view, six bytes
+	that it is known by, and a number that it is known by too */
+	SIMULATION_VIEW_KINDS_2_AND_4= 0x14,
+	SIMULATION_VIEW_UNKNOWN14_OFFSET= 0x14,
+	SIMULATION_VIEW_UNKNOWN14_SIZE= 6,
+	SIMULATION_VIEW_UNKNOWN1C_OFFSET= 0x1C,
+	/* more of the thing: how many things have come and wait, the first of
+	them and the last, each in memory of the heap of the network, of so many
+	bytes and then where the next one is */
+	SIMULATION_WORLD_UPDATE_COUNT_OFFSET= 0x1214,
+	SIMULATION_WORLD_FIRST_UPDATE_POINTER_OFFSET= 0x1218,
+	SIMULATION_WORLD_LAST_UPDATE_POINTER_OFFSET= 0x121C,
+	SIMULATION_UPDATE_SIZE= 0x4048
 };
 
 /* ---------- structures */
@@ -70,6 +83,14 @@ struct simulation_view_iterator
 {
 	unsigned long kind_mask;
 	long index;
+};
+
+/* one of the things that have come and wait, in memory of the heap of the
+network */
+struct simulation_update_node
+{
+	byte update[SIMULATION_UPDATE_SIZE];
+	struct simulation_update_node *next;
 };
 
 /* ---------- prototypes/SIMULATION_WORLD.C */
@@ -97,5 +118,9 @@ boolean simulation_world_unknown_000698e0(byte *world, const long *update);
 void simulation_world_unknown_0006a2a0(byte *view, byte *other);
 long simulation_world_unknown_00069790(byte *world);
 void __attribute__((stdcall)) simulation_world_unknown_00069880(byte *world, long unknown);
+byte *simulation_world_get_view_by_unknown1c(const byte *world, long unknown1c);
+byte *__attribute__((stdcall)) simulation_world_get_view_by_unknown14(const byte *world, const word *unknown14);
+void simulation_world_take_update(byte *world, void *update);
+void simulation_world_unknown_00069eb0(byte *world);
 
 #endif

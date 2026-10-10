@@ -250,7 +250,16 @@ def run(t) -> None:
                 unknown_004cf708=struct.pack("<I", random_.choice((0, 100))),
                 unknown_004cf724=struct.pack("<I", random_.choice((0, 10))),
             ),
-            externals=setup["externals"],
+            # one time in three the times of the thing do not follow: what they would be given is what counts
+            externals=dict(
+                setup["externals"],
+                network_connection_update_times=lambda harness, arguments: (
+                    0,
+                    (arguments[0], harness.normalize(arguments[1]), arguments[2], arguments[3], arguments[4]),
+                ),
+            )
+            if n % 3 == 0
+            else setup["externals"],
         )
 
     # ---------- the packets that come

@@ -15,7 +15,10 @@ and so are the names of its functions.
 #include "cache/texture_cache.h"
 #include "game/game.h"
 #include "main/main_game.h"
+#include "networking/network_heap.h"
 #include "networking/simulation_view.h"
+
+#include <string.h>
 
 #include <limits.h>
 
@@ -25,6 +28,9 @@ and so are the names of its functions.
 0x000860b0: a view of the second kind is given something */
 boolean __attribute__((stdcall)) unknown_0006ab90(byte *world, const long *update);
 void unknown_000860b0(byte *view, long unknown);
+
+/* 0x0006b1f0: the thing is given a number */
+void __attribute__((stdcall)) unknown_0006b1f0(byte *world, long unknown);
 
 /* ---------- code */
 
@@ -358,5 +364,83 @@ void __attribute__((stdcall)) simulation_world_unknown_00069880(
 	while (simulation_world_next_view(&iterator, world, &view))
 	{
 		unknown_000860b0(view, unknown);
+	}
+}
+
+/* 0x0006ace0: the view of the second kind or of the fourth that the thing
+has with a number, or NULL */
+byte *simulation_world_get_view_by_unknown1c(
+	const byte *world,
+	long unknown1c)
+{
+	struct simulation_view_iterator iterator= {SIMULATION_VIEW_KINDS_2_AND_4, 0};
+	byte *view;
+
+	while (simulation_world_next_view(&iterator, world, &view))
+	{
+		if (*(const long *)(view+SIMULATION_VIEW_UNKNOWN1C_OFFSET)==unknown1c)
+		{
+			return view;
+		}
+	}
+
+	return NULL;
+}
+
+/* 0x0006ad40: the view of the second kind or of the fourth that the thing
+has with the six bytes that it is known by, or NULL */
+byte *__attribute__((stdcall)) simulation_world_get_view_by_unknown14(
+	const byte *world,
+	const word *unknown14)
+{
+	struct simulation_view_iterator iterator= {SIMULATION_VIEW_KINDS_2_AND_4, 0};
+	byte *view;
+
+	while (simulation_world_next_view(&iterator, world, &view))
+	{
+		if (memcmp(view+SIMULATION_VIEW_UNKNOWN14_OFFSET, unknown14, SIMULATION_VIEW_UNKNOWN14_SIZE)==0)
+		{
+			return view;
+		}
+	}
+
+	return NULL;
+}
+
+/* 0x0006ac30: the first of the things that have come and wait is taken: a
+copy of it is given, the next one is the first (and if it was the last,
+there is no last), the heap of the network takes it back, there is one
+fewer, and the number of the first goes on by one. The game does not look
+whether there is one */
+void simulation_world_take_update(
+	byte *world,
+	void *update)
+{
+	struct simulation_update_node *node= *(struct simulation_update_node **)(world+SIMULATION_WORLD_FIRST_UPDATE_POINTER_OFFSET);
+
+	memcpy(update, node->update, sizeof(node->update));
+	*(struct simulation_update_node **)(world+SIMULATION_WORLD_FIRST_UPDATE_POINTER_OFFSET)= node->next;
+	if (*(struct simulation_update_node **)(world+SIMULATION_WORLD_LAST_UPDATE_POINTER_OFFSET)==node)
+	{
+		*(struct simulation_update_node **)(world+SIMULATION_WORLD_LAST_UPDATE_POINTER_OFFSET)= NULL;
+	}
+	network_heap_free(node);
+	(*(long *)(world+SIMULATION_WORLD_UPDATE_COUNT_OFFSET))--;
+	(*(long *)(world+SIMULATION_WORLD_FIRST_UPDATE_OFFSET))++;
+}
+
+/* 0x00069eb0: the first view of the first kind or of the third that the
+thing has, if it is of a channel and is well, goes to its second state; and
+the thing is given nothing (unknown_0006b1f0) */
+void simulation_world_unknown_00069eb0(
+	byte *world)
+{
+	byte *view= simulation_world_unknown_0006acb0(world);
+
+	if (view && *(const long *)(view+SIMULATION_VIEW_CHANNEL_OFFSET)!=NONE &&
+		*(const long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)==0)
+	{
+		simulation_view_set_state(view, 1, NONE);
+		unknown_0006b1f0(world, 0);
 	}
 }

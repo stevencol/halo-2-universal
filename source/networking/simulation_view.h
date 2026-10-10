@@ -46,12 +46,11 @@ enum
 	is sent for */
 	_network_message_simulation_view_state= 0x25,
 	SIMULATION_VIEW_SESSION_INDEX= 3,
-	/* more of a view: something that unknown_0006a7f0 is given; and two
-	numbers of the last that came of what the players of the other console
-	do. How a view is after the other
+	/* more of a view: two numbers of the last that came of what the players
+	of the other console do (what unknown_0006a7f0 is given is the six bytes
+	that the view is known by: see simulation_world.h). How a view is after the other
 	console says that it could not go on, and after the state of the game
 	that it was sent could not be taken */
-	SIMULATION_VIEW_UNKNOWN14_OFFSET= 0x14,
 	SIMULATION_VIEW_UNKNOWN80_OFFSET= 0x80,
 	_simulation_view_unknown28_remote_failed= 2,
 	_simulation_view_unknown28_game_state_failed= 5
