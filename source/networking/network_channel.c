@@ -1148,11 +1148,7 @@ void network_channel_update(
 
 /* 0x00096510: one of the things of unknown_004d87d8 gives the number of the
 next packet, at a time; NONE if it cannot. 0x00096810: and is told the size
-that the packet of a number was sent with. 0x000931a0: a packet that a
-stream has is sent to what a channel talks with, with what the voice has for
-it; the size that it was sent with, or nothing */
-void __attribute__((stdcall)) unknown_000931a0(long unknown44, struct bitstream *stream, byte *unknown0, long voice_size,
-	const byte *voice_packet, long *sent_size);
+that the packet of a number was sent with */
 
 /* 0x00088980: a channel writes a packet in a stream, and sends it. With the
 first byte, the packet has a number, which the channel's thing of
@@ -1171,7 +1167,7 @@ and there are more than fifteen bits left, the packet is filled: a bit, the
 count of the bits that are left in fourteen, and so many zeros; if not, a
 bit that says that there is no more.
 
-The packet is sent (unknown_000931a0), with what the voice has; the thing of
+The packet is sent (network_link_send_to_channel), with what the voice has; the thing of
 unknown_004d87d8 is told the size that it was sent with (network_connection_set_sent_size);
 and so is the observer that has the channel, by its first function, with
 whether any of the things said so when it wrote. Three numbers are given
@@ -1295,7 +1291,7 @@ void __attribute__((stdcall)) network_channel_write_packet(
 		stream->size= (long)((unsigned long)stream->unknown8-(unsigned long)over+(unsigned long)stream->size);
 	}
 	stream->unknownC= _bitstream_unknownC_finished;
-	unknown_000931a0(*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN44_OFFSET), stream,
+	network_link_send_to_channel(*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN44_OFFSET), stream,
 		*(byte **)(channel+NETWORK_CHANNEL_UNKNOWN0_OFFSET), voice_size, voice_packet, &sent_size);
 	if (sent_size>0)
 	{

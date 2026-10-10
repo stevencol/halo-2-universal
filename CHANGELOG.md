@@ -2,6 +2,55 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Los paquetes salen
+
+Cuatro funciones en `networking/network_link.c`. De 1653
+funciones se pasa a 1657, el 14,71 % de las del juego (el 9,730 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_link_send_bytes` | `0x00093730` | `networking/network_link.c` |
+| `network_link_send_packet` | `0x000932f0` | `networking/network_link.c` |
+| `network_link_send_to_address` | `0x00093100` | `networking/network_link.c` |
+| `network_link_send_to_channel` | `0x000931a0` | `networking/network_link.c` |
+
+### Lo que se sabe
+
+- **Cada enchufe tiene su puerto**: `1000` el primero, `1005` y `1006` los
+  dos por los que una consola habla consigo misma, y `1001` el cuarto,
+  el de los mensajes sin canal. `network_link_send_bytes` manda por el
+  enchufe de una clase a una dirección, en ese puerto; si no se pudo
+  (`-1`), el canal de esa dirección queda marcado en la lista y se para
+  en la siguiente vuelta (`network_link_update_channels`, hito 494).
+- `network_link_send_packet` hace los bytes de un paquete y los manda si
+  son entre `1` y `0x518`. Lo que no va a esta misma consola
+  (`127.0.0.1`) se cuenta dos veces: con su tamaño y con lo que ocupa en
+  el cable (las dos cuentas de `0x228` y `0x3D8`).
+- `network_link_send_to_address` manda lo que escribió un flujo a una
+  dirección, como paquete de la tercera clase: es lo que usa quien manda
+  los mensajes sin canal.
+- `network_link_send_to_channel` lo manda a aquello con lo que habla un
+  canal, con la voz detrás. Un canal sin usar o nuevo no manda nada; uno
+  que habla con esta misma consola manda por el segundo enchufe si tiene
+  el bit `0x40` y por el tercero si tiene el `0x80`, de modo que lo lee el
+  canal de la otra clase.
+
+### Cambiado
+
+- `unknown_00093100` y `unknown_000931a0`, que ya llamaban
+  `network_message_gateway.c` y `network_channel.c`, tienen su nombre.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las cuatro**, y en las de los hitos 456 a
+  495.
+- En este hito se pasaron las pruebas de las cuatro funciones y todas las
+  de `network_channel` y `network_message_gateway`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Un paquete y los bytes que se mandan
 
 Tres funciones en `networking/network_link.c`. De 1650

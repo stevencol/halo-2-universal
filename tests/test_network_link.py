@@ -162,3 +162,113 @@ def run(t) -> None:
             Buffer(bytes(packet)),
             Buffer(bytes(data)),
         )
+
+    # ---------- packets are sent
+
+    LOOPBACK = struct.pack("<I", 0x7F000001) + bytes(12) + struct.pack("<HH", 0x1234, 4)
+
+    def an_address() -> bytes:
+        address = bytearray(random_.randbytes(0x14))
+        address[1:4] = bytes(3)
+        struct.pack_into("<H", address, 0x12, random_.choice((4, 4, 16, 0)))
+        return random_.choice((bytes(address), bytes(address), LOOPBACK, LOOPBACK[:0x12] + struct.pack("<H", 16)))
+
+    def read(harness, address: int, size: int) -> bytes:
+        return bytes(harness.mu.mem_read(address, size)) if size else b""
+
+    for n in range(1500):
+        pool = [an_address() for index in range(3)]
+        channels = bytearray(random_.randbytes(CHANNELS * CHANNEL))
+        for index in range(CHANNELS):
+            channels[index * CHANNEL + 0x48] = random_.choice((0, 0x40, 0x80, 0xC0, 0xFF, 0x10))
+            struct.pack_into("<i", channels, index * CHANNEL + 0x54, random_.choice((0, 1, 2, 3, 4, 5, 5)))
+            channels[index * CHANNEL + 0x70:index * CHANNEL + 0x84] = random_.choice(pool)
+
+        def link() -> Buffer:
+            data = bytearray(random_.randbytes(0x588))
+            there = []
+            for index in range(4):
+                if random_.random() < 0.8:
+                    struct.pack_into("<I", data, 0xC + index * 4, 0x500 + index * 0x10)
+                    there.append(0xC + index * 4)
+                else:
+                    struct.pack_into("<I", data, 0xC + index * 4, 0)
+            struct.pack_into("<i", data, 0x20, random_.choice((0, 1, 5, 16)))
+            for index in range(16):
+                struct.pack_into("<I", data, 0x24 + index * 0x20, random_.randrange(CHANNELS))
+                data[0x30 + index * 0x20:0x44 + index * 0x20] = random_.choice(pool)
+            return Buffer(bytes(data), pointers=tuple(there))
+
+        size = random_.choice((1, 2, 0x40, 0x518, random_.randrange(1, 0x519)))
+        t.check(
+            "network_link_send_bytes",
+            link(),
+            random_.randrange(4),
+            Buffer(random_.choice(pool)),
+            size,
+            Buffer(random_.randbytes(0x518)),
+            globals={"unknown_004d87d4": Buffer(bytes(channels))},
+            externals={
+                "unknown_000b5110": lambda harness, arguments, sent=random_.choice((size, size, 0xFFFF, 0xFFFF, 0, 5)): (
+                    sent,
+                    (
+                        read(harness, arguments[0], 0x14),
+                        harness.normalize(arguments[1]),
+                        read(harness, arguments[2], arguments[3]),
+                        arguments[3],
+                    ),
+                ),
+            },
+        )
+
+        def a_packet() -> bytes:
+            packet = bytearray(random_.randbytes(0x824))
+            struct.pack_into("<I", packet, 0, random_.randrange(4))
+            packet[8:0x1C] = random_.choice(pool)
+            struct.pack_into("<I", packet, 0x1C, random_.choice((0, 0, 1, 0x123, 0x516, 0x517, 0x600, random_.randrange(0x601))))
+            struct.pack_into("<I", packet, 0x620, random_.choice((0, 0, 0, 1, 0x200, random_.randrange(0x201))))
+            return bytes(packet)
+
+        send_bytes = lambda harness, arguments: (
+            0,
+            (
+                harness.normalize(arguments[0]),
+                arguments[1],
+                harness.normalize(arguments[2]),
+                arguments[3],
+                read(harness, arguments[4], arguments[3]),
+            ),
+        )
+        t.check(
+            "network_link_send_packet",
+            Buffer(a_packet()),
+            link(),
+            externals={
+                "network_rate_update": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "network_link_send_bytes": send_bytes,
+            },
+        )
+
+        send_packet = lambda harness, arguments: (0, (read(harness, arguments[0], 0x824), harness.normalize(arguments[1])))
+        stream_size = random_.choice((0, 1, 0x123, 0x600, 0x600, 0x601, 0xFFFFFFFF, random_.randrange(0x601)))
+        stream = Buffer(struct.pack("<II", 0x40, stream_size) + random_.randbytes(0x38 + 0x600), pointers=(0,))
+        t.check(
+            "network_link_send_to_address",
+            Buffer(random_.choice(pool)),
+            stream,
+            link(),
+            random_.choice((Buffer(random_.randbytes(4)), 0)),
+            externals={"network_link_send_packet": send_packet},
+        )
+        stream = Buffer(struct.pack("<II", 0x40, stream_size) + random_.randbytes(0x38 + 0x600), pointers=(0,))
+        t.check(
+            "network_link_send_to_channel",
+            random_.randrange(CHANNELS),
+            random_.choice((stream, stream, stream, 0)),
+            link(),
+            random_.choice((0, 0, 1, 0x80, 0x200, 0x200, 0x201, 0xFFFFFFFF, random_.randrange(0x201))),
+            Buffer(random_.randbytes(0x200)),
+            random_.choice((Buffer(random_.randbytes(4)), Buffer(random_.randbytes(4)), 0)),
+            globals={"unknown_004d87d4": Buffer(bytes(channels))},
+            externals={"network_link_send_packet": send_packet},
+        )

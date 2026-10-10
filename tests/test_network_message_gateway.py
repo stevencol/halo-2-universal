@@ -39,7 +39,7 @@ def run(t) -> None:
             "network_message_gateway_flush",
             Buffer(bytes(data), pointers=(STREAM,)),
             externals={
-                "unknown_00093100": lambda harness, arguments: (
+                "network_link_send_to_address": lambda harness, arguments: (
                     0,
                     (harness.normalize(arguments[0]), harness.normalize(arguments[1]), arguments[2], arguments[3]),
                 )
@@ -158,7 +158,7 @@ def run(t) -> None:
             random_.choice((0, 8, 0x518)),
             Buffer(random_.randbytes(16)),
             externals={
-                "unknown_00093100": lambda harness, arguments: (
+                "network_link_send_to_address": lambda harness, arguments: (
                     0,
                     (harness.normalize(arguments[0]), harness.normalize(arguments[1]), arguments[2], arguments[3]),
                 )

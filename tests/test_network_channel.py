@@ -818,7 +818,7 @@ def run(t) -> None:
                 setup["externals"],
                 network_connection_new_sequence=number,
                 network_connection_set_sent_size=lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]), arguments[2])),
-                unknown_000931a0=sends,
+                network_link_send_to_channel=sends,
             ),
             mocks=[
                 Mock(lambda call: 0, stack_arguments=3, registers=("ecx",), record=lambda call: (call.registers["ecx"], call.stack[0], call.stack[1], call.stack[2] & 0xFF)),

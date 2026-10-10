@@ -12,14 +12,9 @@ and so are the names of its functions.
 
 #include "network_message_gateway.h"
 
+#include "networking/network_link.h"
+
 #include <string.h>
-
-/* ---------- prototypes of functions not decompiled yet */
-
-/* 0x00093100: what a stream wrote is sent to an address of the game, with
-something; how much was sent goes where it is told, if anywhere */
-void __attribute__((stdcall)) unknown_00093100(const struct transport_address *address, const struct bitstream *stream,
-	long unknown8, long *sent);
 
 /* ---------- code */
 
@@ -46,8 +41,8 @@ void network_message_gateway_flush(
 			stream->size= (long)((unsigned long)stream->unknown8-(unsigned long)over+(unsigned long)size);
 		}
 		stream->unknownC= _bitstream_unknownC_finished;
-		unknown_00093100((const struct transport_address *)(gateway+NETWORK_MESSAGE_GATEWAY_ADDRESS_OFFSET), stream,
-			*(const long *)(gateway+NETWORK_MESSAGE_GATEWAY_UNKNOWN8_OFFSET), NULL);
+		network_link_send_to_address((const struct transport_address *)(gateway+NETWORK_MESSAGE_GATEWAY_ADDRESS_OFFSET), stream,
+			*(byte *const *)(gateway+NETWORK_MESSAGE_GATEWAY_UNKNOWN8_OFFSET), NULL);
 		gateway[NETWORK_MESSAGE_GATEWAY_PENDING_OFFSET]= FALSE;
 	}
 }

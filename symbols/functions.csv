@@ -1974,7 +1974,7 @@ address,name,source,arguments,returns,convention
 00078330,network_observer_channel_find_address,source/networking/network_observer.c,eax stack,bool,stdcall
 0007b390,network_message_gateway_flush_address,source/networking/network_message_gateway.c,eax ebx,void
 0007b330,network_message_gateway_flush,source/networking/network_message_gateway.c,edi,void
-00093100,unknown_00093100,,edx ebx stack stack,void,stdcall
+00093100,network_link_send_to_address,source/networking/network_link.c,edx ebx stack stack,void,stdcall
 003cd344,XNetUnregisterInAddr,,stack,int,stdcall
 00088750,network_channel_read_packet,source/networking/network_channel.c,ecx edx stack stack,bool,stdcall
 00096860,network_connection_received,source/networking/network_connection.c,eax ecx,void
@@ -1984,7 +1984,7 @@ address,name,source,arguments,returns,convention
 00088980,network_channel_write_packet,source/networking/network_channel.c,eax stack stack stack stack stack stack stack stack,void,stdcall
 00096510,network_connection_new_sequence,source/networking/network_connection.c,esi stack,int,stdcall
 00096810,network_connection_set_sent_size,source/networking/network_connection.c,eax ecx edi,void
-000931a0,unknown_000931a0,,eax ecx stack stack stack stack,void,stdcall
+000931a0,network_link_send_to_channel,source/networking/network_link.c,eax ecx stack stack stack stack,void,stdcall
 000893c0,replication_entity_manager_new,source/networking/replication_entity_manager.c,ebx,void
 00089430,replication_entity_manager_reset,source/networking/replication_entity_manager.c,stack,void,stdcall
 00089470,replication_entity_manager_create_entities,source/networking/replication_entity_manager.c,eax ebx stack,bool,stdcall
@@ -2215,3 +2215,6 @@ address,name,source,arguments,returns,convention
 00093590,network_link_packet_pack,source/networking/network_link.c,eax edx ebx,void
 00093610,network_link_packet_unpack,source/networking/network_link.c,ecx edx stack,bool,stdcall
 000936c0,network_link_packet_wire_size,source/networking/network_link.c,edi,int
+00093730,network_link_send_bytes,source/networking/network_link.c,ebx edi stack stack stack,void,stdcall
+000932f0,network_link_send_packet,source/networking/network_link.c,ecx stack,void,stdcall
+000b5110,unknown_000b5110,,esi stack stack stack,short,stdcall

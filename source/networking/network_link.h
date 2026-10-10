@@ -11,6 +11,7 @@ are the names of its functions.
 #define __NETWORK_LINK_H
 
 #include "cseries/cseries.h"
+#include "networking/bitstream.h"
 #include "networking/transport_security.h"
 
 /* ---------- constants */
@@ -45,7 +46,22 @@ enum
 	NETWORK_LINK_PACKET_VOICE_SIZE= 0x200,
 	_network_link_packet_kind3= 3,
 	NETWORK_LINK_PACKET_KIND3_WIRE_SIZE= 0x2C,
-	NETWORK_LINK_PACKET_WIRE_SIZE= 0x2D
+	NETWORK_LINK_PACKET_WIRE_SIZE= 0x2D,
+	/* more of it: the counts of the packets that it sends and of what they
+	are on the wire. The most bytes that are sent at once, and the port of
+	each of its sockets. The kinds of the two sockets that a console talks
+	with itself by, and the address that says so */
+	NETWORK_LINK_SENT_RATE_OFFSET= 0x228,
+	NETWORK_LINK_SENT_WIRE_RATE_OFFSET= 0x3D8,
+	MAXIMUM_NETWORK_LINK_SENT_SIZE= 0x518,
+	NETWORK_LINK_SOCKET0_PORT= 1000,
+	NETWORK_LINK_SOCKET1_PORT= 1005,
+	NETWORK_LINK_SOCKET2_PORT= 1006,
+	NETWORK_LINK_SOCKET3_PORT= 1001,
+	_network_link_packet_kind0= 0,
+	_network_link_packet_kind1= 1,
+	_network_link_packet_kind2= 2,
+	NETWORK_LINK_LOOPBACK_ADDRESS= 0x7F000001
 };
 
 /* ---------- structures */
@@ -100,5 +116,12 @@ void network_link_packet_pack(const struct network_link_packet *packet, byte *by
 boolean __attribute__((stdcall)) network_link_packet_unpack(long size, struct network_link_packet *packet,
 	const byte *bytes);
 long network_link_packet_wire_size(const struct network_link_packet *packet);
+void __attribute__((stdcall)) network_link_send_bytes(byte *link, long kind, const struct transport_address *address,
+	long size, const byte *bytes);
+void __attribute__((stdcall)) network_link_send_packet(const struct network_link_packet *packet, byte *link);
+void __attribute__((stdcall)) network_link_send_to_address(const struct transport_address *address,
+	const struct bitstream *stream, byte *link, long *wire_size_out);
+void __attribute__((stdcall)) network_link_send_to_channel(long channel_index, const struct bitstream *stream,
+	byte *link, long voice_size, const byte *voice, long *wire_size_out);
 
 #endif

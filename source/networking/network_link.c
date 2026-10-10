@@ -20,6 +20,11 @@ name of the file is a guess, and so are the names of its functions.
 /* 0x003cd19e, 0x003cd193, 0x003cd718, of the console's libraries: a socket
 is shut down, and closed; and why the last thing asked of them was not done.
 0x003312fa and 0x002d1d3e: memory is let go of, and why not */
+/* 0x000b5110: bytes are sent by a socket to an address; how many were, or
+less than nothing */
+short __attribute__((stdcall)) unknown_000b5110(const struct transport_address *address,
+	struct network_link_socket *socket, const byte *bytes, long size);
+
 int __attribute__((stdcall)) shutdown(long socket, long how);
 int __attribute__((stdcall)) closesocket(long socket);
 int WSAGetLastError(void);
@@ -340,4 +345,190 @@ long network_link_packet_wire_size(
 
 	return packet->voice_size+(packet->kind!=_network_link_packet_kind3 ? NETWORK_LINK_PACKET_WIRE_SIZE :
 		NETWORK_LINK_PACKET_KIND3_WIRE_SIZE)+size;
+}
+
+/* 0x00093730: bytes are sent by one of its sockets to an address, at the
+port of that socket. If they could not be, the channel of that address and
+kind has its byte in the list, so that it stops (network_link_update_channels) */
+void __attribute__((stdcall)) network_link_send_bytes(
+	byte *link,
+	long kind,
+	const struct transport_address *address,
+	long size,
+	const byte *bytes)
+{
+	struct transport_address to= *address;
+	struct network_link_socket *socket;
+
+	switch (kind)
+	{
+	case _network_link_packet_kind0:
+		to.port= NETWORK_LINK_SOCKET0_PORT;
+		break;
+	case _network_link_packet_kind1:
+		to.port= NETWORK_LINK_SOCKET1_PORT;
+		break;
+	case _network_link_packet_kind2:
+		to.port= NETWORK_LINK_SOCKET2_PORT;
+		break;
+	case _network_link_packet_kind3:
+		to.port= NETWORK_LINK_SOCKET3_PORT;
+		break;
+	}
+	socket= ((struct network_link_socket **)(link+NETWORK_LINK_SOCKETS_OFFSET))[kind];
+	if (socket)
+	{
+		long sent= unknown_000b5110(&to, socket, bytes, size);
+
+		if (sent!=size && sent==NONE)
+		{
+			long found= network_link_find_channel(link, kind, address);
+
+			if (found!=NONE)
+			{
+				((struct network_link_channel *)(link+NETWORK_LINK_CHANNELS_OFFSET))[found].unknown8= TRUE;
+			}
+		}
+	}
+}
+
+/* one more packet of a size in one of the counts */
+static inline __attribute__((always_inline)) void network_link_rate_add(
+	struct network_rate *rate,
+	long size)
+{
+	network_rate_update(rate);
+	rate->total_count++;
+	rate->total_size+= size;
+	rate->count++;
+	rate->size+= (unsigned long)size;
+}
+
+/* 0x000932f0: a packet is sent: its bytes are made (network_link_packet_pack)
+and, if they are some and not too many, sent by the socket of its kind. One
+that does not go to this same console is counted, with its own size and with
+the one that it has on the wire */
+void __attribute__((stdcall)) network_link_send_packet(
+	const struct network_link_packet *packet,
+	byte *link)
+{
+	byte bytes[0x1000];
+	long size;
+
+	network_link_packet_pack(packet, bytes, &size);
+	if (!(packet->address.address_size==sizeof(packet->address.address.ipv4) &&
+		packet->address.address.ipv4==NETWORK_LINK_LOOPBACK_ADDRESS))
+	{
+		network_link_rate_add((struct network_rate *)(link+NETWORK_LINK_SENT_RATE_OFFSET), packet->size);
+		network_link_rate_add((struct network_rate *)(link+NETWORK_LINK_SENT_WIRE_RATE_OFFSET),
+			network_link_packet_wire_size(packet));
+	}
+	if (size<=MAXIMUM_NETWORK_LINK_SENT_SIZE && size>0)
+	{
+		network_link_send_bytes(link, packet->kind, &packet->address, size, bytes);
+	}
+}
+
+/* 0x00093100: what a stream wrote is sent to an address, as a packet of the
+third kind; what it is on the wire goes where it is told, if anywhere, and
+nothing if it is more than a packet can have */
+void __attribute__((stdcall)) network_link_send_to_address(
+	const struct transport_address *address,
+	const struct bitstream *stream,
+	byte *link,
+	long *wire_size_out)
+{
+	struct network_link_packet packet;
+	long wire_size= 0;
+
+	memset(&packet, 0, sizeof(packet));
+	packet.address= *address;
+	packet.kind= _network_link_packet_kind3;
+	packet.size= stream->size;
+	if ((unsigned long)packet.size<=NETWORK_LINK_PACKET_DATA_SIZE)
+	{
+		memcpy(packet.data, stream->data, (unsigned long)packet.size);
+		network_link_send_packet(&packet, link);
+		wire_size= network_link_packet_wire_size(&packet);
+	}
+	if (wire_size_out)
+	{
+		*wire_size_out= wire_size;
+	}
+}
+
+/* 0x000931a0: what a stream wrote, if there is one, is sent to what a
+channel talks with, with what the voice has for it; what it is on the wire
+goes where it is told, if anywhere, and nothing if it was not sent. A channel
+that is not in use or is new sends nothing. One that talks with this same
+console sends by the second socket if it has the bit 0x40 of its byte of
+0x48, and by the third if it has the bit 0x80; the others by the first */
+void __attribute__((stdcall)) network_link_send_to_channel(
+	long channel_index,
+	const struct bitstream *stream,
+	byte *link,
+	long voice_size,
+	const byte *voice,
+	long *wire_size_out)
+{
+	const byte *channel= unknown_004d87d4+channel_index*NETWORK_CHANNEL_SIZE;
+	struct network_link_packet packet;
+	long wire_size= 0;
+	long state;
+
+	memset(&packet, 0, sizeof(packet));
+	state= *(const long *)(channel+NETWORK_CHANNEL_STATE_OFFSET);
+	if (state!=_network_channel_state_none && state!=_network_channel_state_new)
+	{
+		packet.address= *(const struct transport_address *)(channel+NETWORK_CHANNEL_ADDRESS_OFFSET);
+		if (packet.address.address_size==sizeof(packet.address.address.ipv4) &&
+			packet.address.address.ipv4==NETWORK_LINK_LOOPBACK_ADDRESS)
+		{
+			if (state<=_network_channel_state_closed)
+			{
+				goto done;
+			}
+			if (channel[NETWORK_CHANNEL_UNKNOWN48_OFFSET]&_network_link_channel_bit40)
+			{
+				packet.kind= _network_link_packet_kind1;
+			}
+			else if (channel[NETWORK_CHANNEL_UNKNOWN48_OFFSET]&_network_link_channel_bit80)
+			{
+				packet.kind= _network_link_packet_kind2;
+			}
+			else
+			{
+				goto done;
+			}
+		}
+		else
+		{
+			packet.kind= _network_link_packet_kind0;
+		}
+		if (stream)
+		{
+			packet.size= stream->size;
+			if ((unsigned long)packet.size>NETWORK_LINK_PACKET_DATA_SIZE)
+			{
+				goto done;
+			}
+			memcpy(packet.data, stream->data, (unsigned long)packet.size);
+		}
+		if (voice_size>0)
+		{
+			packet.voice_size= voice_size;
+			if ((unsigned long)voice_size>NETWORK_LINK_PACKET_VOICE_SIZE)
+			{
+				goto done;
+			}
+			memcpy(packet.voice, voice, (unsigned long)voice_size);
+		}
+		network_link_send_packet(&packet, link);
+		wire_size= network_link_packet_wire_size(&packet);
+	}
+done:
+	if (wire_size_out)
+	{
+		*wire_size_out= wire_size;
+	}
 }

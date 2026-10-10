@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 495.
+**Última actualización:** 2026-10-08, al terminar el hito 496.
 
 ## Dónde estamos
 
-- **1653 funciones descompiladas de 11.265: el 14,67 % del juego** (el
-  9,704 % de los bytes de código).
-- Las 1653 están comprobadas contra el ejecutable original: las 1390 del
+- **1657 funciones descompiladas de 11.265: el 14,71 % del juego** (el
+  9,730 % de los bytes de código).
+- Las 1657 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a packet becomes the bytes that are sent* (ver `git log`).
+- Último hito: *Decompile how packets are sent* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 563 funciones apuntadas pero sin descompilar (las que el código
-  llama); 458 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 562 funciones apuntadas pero sin descompilar (las que el código
+  llama); 457 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -205,10 +205,9 @@ Módulos (funciones hechas / archivo):
       mensaje, de `0x00085b20` a `0x00085f50`, y `0x000698e0`; romper
       líneas pendiente)
 - [ ] La lista de canales por dirección — `networking\network_link.c`
-      (10: apuntar, quitar, buscar, parar todos, hacerlos avanzar, cerrar
-      sus enchufes y los bytes de un paquete; falta lo que lee de ellos,
-      `0x00092f80` y `0x000933f0`, y lo que manda, `0x00093100`,
-      `0x000931a0`, `0x000932f0` y `0x00093730`)
+      (14: apuntar, quitar, buscar, parar todos, hacerlos avanzar, cerrar
+      sus enchufes, los bytes de un paquete y mandarlos; falta lo que lee
+      de ellos, `0x00092f80` y `0x000933f0`, y abrir los enchufes)
 - [ ] Un bloque con suma, versión y tamaño — `networking\network_blob.c`
       (2: la suma y ver si vale; falta quién los usa, de `0x00080e10` a
       `0x00081230`)
