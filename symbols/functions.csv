@@ -2198,3 +2198,5 @@ address,name,source,arguments,returns,convention
 00321379,unknown_00321379,,stack,void
 000814f0,simulation_world_construct,source/networking/simulation_world.c,eax,void
 00081310,network_memory_unknown_00081310,source/networking/network_memory.c,eax,void
+000812a0,network_blob_checksum,source/networking/network_blob.c,eax ecx,int
+00081230,network_blob_verify,source/networking/network_blob.c,ecx edi edx,int

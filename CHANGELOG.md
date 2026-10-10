@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Un bloque con su suma, su versión y su tamaño
+
+Dos funciones en el archivo nuevo `networking/network_blob.c`. De 1637
+funciones se pasa a 1639, el 14,55 % de las del juego (el 9,642 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_blob_checksum` | `0x000812a0` | `networking/network_blob.c` |
+| `network_blob_verify` | `0x00081230` | `networking/network_blob.c` |
+
+### Lo que se sabe
+
+- Un bloque empieza con **doce bytes conocidos**: la suma de todo lo que
+  viene después de ella, una versión y su tamaño.
+- `network_blob_checksum` hace la suma: la de siempre
+  (`crc_checksum_buffer`, empezando en `0xFFFFFFFF`) de todo el bloque
+  menos sus cuatro primeros bytes.
+- `network_blob_verify` dice si un bloque vale (`1`) o por qué no:
+  - `10`: mide menos de `0x10` bytes, o no mide lo que dice;
+  - `9`: no mide lo que su clase manda (`0x28` de lo que la describe),
+    salvo que la clase sea la cuarta, que puede medir menos;
+  - `11` y `12`: su versión es más vieja o más nueva que la de su clase
+    (en `0x8` de lo primero a lo que apunta la descripción);
+  - `8`: la suma no es la suya.
+- Qué son los bloques no se sabe aún: el nombre del archivo y los de las
+  funciones son una suposición. Están justo antes de lo que la red toma al
+  abrir un mapa.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos**, y en las de los hitos 456 a
+  490.
+- En este hito se pasaron las pruebas de las dos funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — La partida en red, recién hecha
 
 Dos funciones: una en `networking/simulation_world.c` y otra en

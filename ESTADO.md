@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 490.
+**Última actualización:** 2026-10-08, al terminar el hito 491.
 
 ## Dónde estamos
 
-- **1637 funciones descompiladas de 11.265: el 14,53 % del juego** (el
-  9,637 % de los bytes de código).
-- Las 1637 están comprobadas contra el ejecutable original: las 1390 del
+- **1639 funciones descompiladas de 11.265: el 14,55 % del juego** (el
+  9,642 % de los bytes de código).
+- Las 1639 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the constructor of the simulation world and one more* (ver `git log`).
+- Último hito: *Decompile how a block with a checksum is verified* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 562 funciones apuntadas pero sin descompilar (las que el código
   llama); 460 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -204,6 +204,9 @@ Módulos (funciones hechas / archivo):
       `0x00094aa0`, completo; falta lo que las vistas hacen con cada
       mensaje, de `0x00085b20` a `0x00085f50`, y `0x000698e0`; romper
       líneas pendiente)
+- [ ] Un bloque con suma, versión y tamaño — `networking\network_blob.c`
+      (2: la suma y ver si vale; falta quién los usa, de `0x00080e10` a
+      `0x00081230`)
 - [ ] La memoria de la red — `networking\network_memory.c` (2: soltarla
       al cerrar un mapa, `0x00081f80`, y un constructor; falta tomarla,
       `0x00081780`, y lo que la rodea: `0x00081390`, `0x00081440`,
