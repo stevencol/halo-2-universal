@@ -2,6 +2,62 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Los enchufes, con dirección
+
+Ocho funciones en `networking/transport_endpoint.c`. De 1666
+funciones se pasa a 1674, el 14,86 % de las del juego (el 9,824 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `transport_address_to_sockaddr` | `0x000b5470` | `networking/transport_endpoint.c` |
+| `transport_address_from_sockaddr` | `0x000b5560` | `networking/transport_endpoint.c` |
+| `transport_endpoint_open` | `0x000b53e0` | `networking/transport_endpoint.c` |
+| `transport_endpoint_bind` | `0x000b4ed0` | `networking/transport_endpoint.c` |
+| `transport_endpoint_read_from` | `0x000b5060` | `networking/transport_endpoint.c` |
+| `transport_endpoint_write_to` | `0x000b5110` | `networking/transport_endpoint.c` |
+| `transport_endpoint_connect` | `0x000b51b0` | `networking/transport_endpoint.c` |
+| `transport_endpoint_connect_finished` | `0x000b52b0` | `networking/transport_endpoint.c` |
+
+### Lo que se sabe
+
+- **Una dirección del juego pasa a la de las bibliotecas** dando la vuelta
+  a los bytes del puerto y de la dirección: de cuatro bytes a `AF_INET`
+  (`0x10` bytes) y de dieciséis a `AF_INET6` (`0x1C`). Al revés, un tamaño
+  que no sea uno de esos dos deja la dirección a cero.
+- `transport_endpoint_open` da a un enchufe el de las bibliotecas si no lo
+  tenía, según su clase: la `2` es UDP, la `3` es **VDP** (el protocolo de
+  voz y datos de la consola, `254`) y la `4` es TCP. Los enchufes de la
+  lista de canales son de la clase `3`, menos el de los mensajes sin
+  canal, que es de la `2`.
+- `transport_endpoint_bind` lo ata a una dirección, y
+  `transport_endpoint_connect` empieza a hablar con otra **sin esperar**:
+  pide al enchufe que no espere (`FIONBIO`) y, si la conexión queda a
+  medias (`WSAEWOULDBLOCK`), también vale. `transport_endpoint_connect_finished`
+  dice luego, con `select`, si ya habla o si falló.
+- `transport_endpoint_read_from` y `transport_endpoint_write_to` son las
+  que usa la lista de canales para leer y mandar paquetes
+  (`recvfrom`, `sendto`), con los mismos `-1`, `-2` y `-3` del hito 498.
+- Con esto el archivo está entero salvo que haya algo más antes de
+  `0x000b4d50`.
+- `socket`, `bind`, `connect`, `select`, `__WSAFDIsSet`, `recvfrom`,
+  `sendto` e `ioctlsocket` quedan con su nombre en la tabla.
+
+### Cambiado
+
+- `unknown_000b5060` y `unknown_000b5110`, que llamaba `network_link.c`,
+  tienen su nombre.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las ocho**, y en las de los hitos 456 a
+  498.
+- En este hito se pasaron todas las pruebas de `transport_endpoint` y de
+  `network_link`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Los enchufes del juego
 
 Siete funciones en el archivo nuevo `networking/transport_endpoint.c`. De 1659

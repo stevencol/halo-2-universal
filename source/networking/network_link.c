@@ -21,16 +21,6 @@ name of the file is a guess, and so are the names of its functions.
 /* 0x003cd19e, 0x003cd193, 0x003cd718, of the console's libraries: a socket
 is shut down, and closed; and why the last thing asked of them was not done.
 0x003312fa and 0x002d1d3e: memory is let go of, and why not */
-/* 0x000b5110: bytes are sent by a socket to an address; how many were, or
-less than nothing */
-short __attribute__((stdcall)) unknown_000b5110(const struct transport_address *address,
-	struct transport_endpoint *socket, const byte *bytes, long size);
-
-/* 0x000b5060: bytes that came for a socket are taken, with the address that
-they came from; how many, and not more than nothing if there are none */
-short __attribute__((stdcall)) unknown_000b5060(struct transport_endpoint *socket, byte *bytes, long size,
-	struct transport_address *address);
-
 int __attribute__((stdcall)) shutdown(long socket, long how);
 int __attribute__((stdcall)) closesocket(long socket);
 int WSAGetLastError(void);
@@ -384,7 +374,7 @@ void __attribute__((stdcall)) network_link_send_bytes(
 	socket= ((struct transport_endpoint **)(link+NETWORK_LINK_SOCKETS_OFFSET))[kind];
 	if (socket)
 	{
-		long sent= unknown_000b5110(&to, socket, bytes, size);
+		long sent= transport_endpoint_write_to(&to, socket, bytes, (short)size);
 
 		if (sent!=size && sent==NONE)
 		{
@@ -634,7 +624,7 @@ void __attribute__((stdcall)) network_link_receive(
 		{
 			if (sockets[index])
 			{
-				long read= unknown_000b5060(sockets[index], bytes, sizeof(bytes), &address);
+				long read= transport_endpoint_read_from(sockets[index], bytes, sizeof(bytes), &address);
 
 				if (read>0 && transport_address_valid(&address))
 				{

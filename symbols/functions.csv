@@ -2217,9 +2217,9 @@ address,name,source,arguments,returns,convention
 000936c0,network_link_packet_wire_size,source/networking/network_link.c,edi,int
 00093730,network_link_send_bytes,source/networking/network_link.c,ebx edi stack stack stack,void,stdcall
 000932f0,network_link_send_packet,source/networking/network_link.c,ecx stack,void,stdcall
-000b5110,unknown_000b5110,,esi stack stack stack,short,stdcall
+000b5110,transport_endpoint_write_to,source/networking/transport_endpoint.c,esi stack stack stack,short,stdcall
 000933f0,network_link_receive_packet,source/networking/network_link.c,eax stack,void,stdcall
-000b5060,unknown_000b5060,,stack stack stack stack,short,stdcall
+000b5060,transport_endpoint_read_from,source/networking/transport_endpoint.c,stack stack stack stack,short,stdcall
 000b4d50,transport_endpoint_create,source/networking/transport_endpoint.c,stack,pointer,stdcall
 000b4da0,transport_endpoint_option_name,source/networking/transport_endpoint.c,stack,int,stdcall
 000b4e00,transport_endpoint_get_option,source/networking/transport_endpoint.c,stack stack,int,stdcall
@@ -2231,3 +2231,17 @@ address,name,source,arguments,returns,convention
 003cd1b4,setsockopt,,stack stack stack stack stack,int,stdcall
 003cd211,recv,,stack stack stack stack,int,stdcall
 003cd23a,send,,stack stack stack stack,int,stdcall
+000b5470,transport_address_to_sockaddr,source/networking/transport_endpoint.c,ecx edi esi,bool
+000b5560,transport_address_from_sockaddr,source/networking/transport_endpoint.c,ecx edx esi,bool
+000b53e0,transport_endpoint_open,source/networking/transport_endpoint.c,esi stack,bool,stdcall
+000b4ed0,transport_endpoint_bind,source/networking/transport_endpoint.c,eax stack,bool,stdcall
+000b51b0,transport_endpoint_connect,source/networking/transport_endpoint.c,eax stack,bool,stdcall
+000b52b0,transport_endpoint_connect_finished,source/networking/transport_endpoint.c,esi stack,bool,stdcall
+003cd188,socket,,stack stack stack,int,stdcall
+003cd1d2,bind,,stack stack stack,int,stdcall
+003cd1dd,connect,,stack stack stack,int,stdcall
+003cd1e8,select,,stack stack stack stack stack,int,stdcall
+003cd71d,__WSAFDIsSet,,stack stack,int,stdcall
+003cd22b,recvfrom,,stack stack stack stack stack stack,int,stdcall
+003cd254,sendto,,stack stack stack stack stack stack,int,stdcall
+003cd1a9,ioctlsocket,,stack stack stack,int,stdcall

@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 498.
+**Última actualización:** 2026-10-08, al terminar el hito 499.
 
 ## Dónde estamos
 
-- **1666 funciones descompiladas de 11.265: el 14,79 % del juego** (el
-  9,770 % de los bytes de código).
-- Las 1666 están comprobadas contra el ejecutable original: las 1390 del
+- **1674 funciones descompiladas de 11.265: el 14,86 % del juego** (el
+  9,824 % de los bytes de código).
+- Las 1674 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the sockets of the game: create, options, close, read and write* (ver `git log`).
+- Último hito: *Decompile the rest of the sockets: addresses, open, bind, connect, read from and write to* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 566 funciones apuntadas pero sin descompilar (las que el código
-  llama); 457 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 572 funciones apuntadas pero sin descompilar (las que el código
+  llama); 455 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -204,10 +204,9 @@ Módulos (funciones hechas / archivo):
       `0x00094aa0`, completo; falta lo que las vistas hacen con cada
       mensaje, de `0x00085b20` a `0x00085f50`, y `0x000698e0`; romper
       líneas pendiente)
-- [ ] Los enchufes del juego — `networking\transport_endpoint.c` (7:
-      hacer uno, sus opciones, cerrarlo, leer y escribir; falta leer y
-      escribir con dirección, `0x000b5060` y `0x000b5110`, atarlo a un
-      puerto, `0x000b4ed0`, y lo demás hasta `0x000b5650`)
+- [x] Los enchufes del juego — `networking\transport_endpoint.c` (15:
+      hacer uno, sus opciones, abrirlo, atarlo, conectarlo, cerrarlo, leer
+      y escribir, con dirección y sin ella)
 - [ ] La lista de canales por dirección — `networking\network_link.c`
       (16: apuntar, quitar, buscar, parar todos, hacerlos avanzar, cerrar
       sus enchufes, los bytes de un paquete, mandarlos y leerlos; falta

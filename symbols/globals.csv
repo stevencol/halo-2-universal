@@ -363,3 +363,4 @@ address,name,source
 00450e28,unknown_00450e28,source/networking/network_memory.c
 00450df8,unknown_00450df8,source/networking/network_memory.c
 00450da0,unknown_00450da0,source/networking/network_memory.c
+0048480c,unknown_0048480c,source/networking/transport_endpoint.c

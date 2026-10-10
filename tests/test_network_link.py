@@ -209,7 +209,7 @@ def run(t) -> None:
             Buffer(random_.randbytes(0x518)),
             globals={"unknown_004d87d4": Buffer(bytes(channels))},
             externals={
-                "unknown_000b5110": lambda harness, arguments, sent=random_.choice((size, size, 0xFFFF, 0xFFFF, 0, 5)): (
+                "transport_endpoint_write_to": lambda harness, arguments, sent=random_.choice((size, size, 0xFFFF, 0xFFFF, 0, 5)): (
                     sent,
                     (
                         read(harness, arguments[0], 0x14),
@@ -361,7 +361,7 @@ def run(t) -> None:
             script.append((random_.choice((len(data), len(data), len(data), 1, 0, 0xFFFF, 0xFFFD)), data, bytes(address)))
 
         def take(harness, arguments, script=script):
-            index = calls_so_far(harness, "unknown_000b5060")
+            index = calls_so_far(harness, "transport_endpoint_read_from")
             if index >= len(script):
                 return 0, (harness.normalize(arguments[0]), arguments[2])
             count, data, address = script[index]
@@ -373,7 +373,7 @@ def run(t) -> None:
             "network_link_receive",
             link(True),
             externals={
-                "unknown_000b5060": take,
+                "transport_endpoint_read_from": take,
                 "network_link_receive_packet": lambda harness, arguments: (
                     0,
                     (read(harness, arguments[0], 0x824), harness.normalize(arguments[1])),
