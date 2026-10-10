@@ -52,7 +52,7 @@ def run(t) -> None:
 
     # ---------- a view that cannot go on, what the players of the other console do, and the state of the game
 
-    VIEW, WORLD = 0x90, 0x1210
+    VIEW, WORLD = 0x90, 0x1220
 
     def a_view() -> Buffer:
         """A view, and after it the thing that it is of."""

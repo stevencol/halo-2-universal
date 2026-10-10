@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 457.
+**Última actualización:** 2026-10-08, al terminar el hito 458.
 
 ## Dónde estamos
 
-- **1566 funciones descompiladas de 11.265: el 13,90 % del juego** (el
-  9,279 % de los bytes de código).
-- Las 1566 están comprobadas contra el ejecutable original: las 1390 del
+- **1571 funciones descompiladas de 11.265: el 13,95 % del juego** (el
+  9,297 % de los bytes de código).
+- Las 1571 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how the simulation world takes player actions and loads the received game state* (ver `git log`).
+- Último hito: *Decompile the simulation world's players and its sixteen other things* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 557 funciones apuntadas pero sin descompilar (las que el código
-  llama); 455 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 559 funciones apuntadas pero sin descompilar (las que el código
+  llama); 457 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -160,8 +160,9 @@ Módulos (funciones hechas / archivo):
       tabla `0x00450db8`; completo; romper líneas pendiente en las
       cinco últimas)
 - [ ] La partida en red y sus vistas — `networking\simulation_world.c`
-      (31: la cola de actualizaciones entera, el estado del juego que
-      llega, lo que hacen los jugadores de otra consola, recorrer las vistas, buscar una de tres maneras, un byte de
+      (36: la cola de actualizaciones entera, el estado del juego que
+      llega, sus jugadores y lo que hacen los de otra consola, sus otras
+      dieciséis cosas, recorrer las vistas, buscar una de tres maneras, un byte de
       cada jugador, devolver memoria prestada, ponerse en marcha, su
       segundo número, darse por vencida, contar
       lo que espera, ponerse al día, recibir una actualización, sacar la

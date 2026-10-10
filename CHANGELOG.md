@@ -2,6 +2,55 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Los jugadores que la partida lleva, y sus otras dieciséis cosas
+
+Cinco funciones en `networking/simulation_world.c`, 527 bytes entre las cinco. De 1566
+funciones se pasa a 1571, el 13,95 % de las del juego (el 9,297 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_players_clear` | `0x0006a600` | `networking/simulation_world.c` |
+| `simulation_world_others_clear` | `0x0006a6f0` | `networking/simulation_world.c` |
+| `simulation_world_other_new` | `0x0006a690` | `networking/simulation_world.c` |
+| `simulation_world_unknown_000699a0` | `0x000699a0` | `networking/simulation_world.c` |
+| `simulation_world_unknown_0006a770` | `0x0006a770` | `networking/simulation_world.c` |
+
+### Lo que se sabe
+
+- Detrás de los dieciséis jugadores, la partida lleva **otras dieciséis
+  cosas** de `0x90` bytes, desde `0x8FC`: cada una con su propio número
+  (o `-1`), otro número, un puntero a la partida y algo en `0x14`. Se
+  cuentan a continuación de los jugadores: de 16 a 31.
+  - `simulation_world_other_new` toma una (la que se diga, o la primera
+    libre) y prepara lo que tiene en `0x14` (`0x000c6ef0`).
+  - `simulation_world_others_clear` las deja todas libres.
+- `simulation_world_players_clear` deja a la partida sin jugadores.
+- `simulation_world_unknown_0006a770` **vuelve a tomar los jugadores del
+  juego**: los quita todos y recorre los que hay de verdad (la tabla de
+  jugadores, con su vector de bits de los que están en uso), y cada uno
+  que no tenga cierto bit se lo queda la partida (`0x000694c0`).
+- `simulation_world_unknown_000699a0` da un número de un jugador (lo que
+  tiene en `0x2C`) o de una de las otras cosas, según el índice sea
+  menor que 16 o no.
+
+### Corregido
+
+- En las pruebas de `simulation_view` la partida medía 16 bytes de
+  menos, y lo que se escribía en `0x1210` quedaba fuera de lo que se
+  compara. Lo encontró la tanda de romper líneas de los hitos 441 a 455
+  (una línea de `simulation_view_unknown_00085dc0` que no se notaba).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las cinco**, y en las de los hitos 441 a
+  457.
+- En este hito se pasaron las pruebas de las cinco funciones y las de
+  `simulation_view` (6).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Los jugadores de otra consola, y el estado del juego ya recibido
 
 Tres funciones en `networking/simulation_world.c`, 488 bytes entre las tres. De 1563

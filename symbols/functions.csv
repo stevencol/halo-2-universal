@@ -2122,3 +2122,10 @@ address,name,source,arguments,returns,convention
 0006a8a0,unknown_0006a8a0,,stack,bool,stdcall
 0006a3b0,simulation_world_find_player,source/networking/simulation_world.c,stack stack stack,pointer,stdcall
 00199740,unknown_00199740,,stack stack stack stack,bool,stdcall
+0006a600,simulation_world_players_clear,source/networking/simulation_world.c,eax,void
+0006a6f0,simulation_world_others_clear,source/networking/simulation_world.c,eax,void
+0006a690,simulation_world_other_new,source/networking/simulation_world.c,eax edx stack,int,stdcall
+000699a0,simulation_world_unknown_000699a0,source/networking/simulation_world.c,ecx edx,int
+0006a770,simulation_world_unknown_0006a770,source/networking/simulation_world.c,stack,void,stdcall
+000c6ef0,unknown_000c6ef0,,edx,void
+000694c0,unknown_000694c0,,stack stack,void,stdcall

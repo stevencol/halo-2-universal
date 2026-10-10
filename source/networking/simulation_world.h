@@ -110,7 +110,24 @@ enum
 	SIMULATION_PLAYER_DATUM_MACHINE_OFFSET= 0x1A,
 	SIMULATION_PLAYER_DATUM_LOCAL_INDEX_OFFSET= 0x1C,
 	/* the size of the whole state of the game */
-	SIMULATION_GAME_STATE_SIZE= 0x3FE000
+	SIMULATION_GAME_STATE_SIZE= 0x3FE000,
+	/* more of what the thing has of a player: a number that is nothing
+	when there is none. And after the players, sixteen other things: each
+	starts with its own number, or NONE, and has a number, the thing, one
+	more number, and something at 0x14 */
+	SIMULATION_WORLD_PLAYER_UNKNOWN20_OFFSET= 0x20,
+	SIMULATION_WORLD_OTHERS_OFFSET= 0x8FC,
+	SIMULATION_WORLD_OTHER_SIZE= 0x90,
+	NUMBER_OF_SIMULATION_WORLD_OTHERS= 16,
+	SIMULATION_WORLD_OTHER_UNKNOWN4_OFFSET= 0x4,
+	SIMULATION_WORLD_OTHER_WORLD_OFFSET= 0x8,
+	SIMULATION_WORLD_OTHER_UNKNOWN10_OFFSET= 0x10,
+	SIMULATION_WORLD_OTHER_UNKNOWN14_OFFSET= 0x14,
+	/* of a player of the game: a byte with a bit that says that the thing
+	is not to have it, and a number */
+	SIMULATION_PLAYER_DATUM_FLAGS_OFFSET= 0x2,
+	_simulation_player_datum_unknown_bit= 0x2,
+	SIMULATION_PLAYER_DATUM_UNKNOWN2C_OFFSET= 0x2C
 };
 
 /* ---------- structures */
@@ -177,6 +194,11 @@ byte *__attribute__((stdcall)) simulation_world_find_player(byte *world, const w
 void __attribute__((stdcall)) simulation_world_set_player_actions(byte *world, const word *unknown14, long players,
 	const void *actions);
 boolean __attribute__((stdcall)) simulation_world_finish_game_state(byte *world, long size);
+void simulation_world_players_clear(byte *world);
+void simulation_world_others_clear(byte *world);
+long __attribute__((stdcall)) simulation_world_other_new(long index, byte *world, long unknown4);
+long simulation_world_unknown_000699a0(long index, const byte *world);
+void __attribute__((stdcall)) simulation_world_unknown_0006a770(byte *world);
 
 /* ---------- globals */
 

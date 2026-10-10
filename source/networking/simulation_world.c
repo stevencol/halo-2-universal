@@ -33,6 +33,11 @@ game is, and its size is given; whether it was good */
 void unknown_000860b0(byte *view, long unknown);
 boolean __attribute__((stdcall)) unknown_00199740(const void *data, long size, void *base, long *size_out);
 
+/* 0x000c6ef0: something of one of the other things of the thing is made
+ready. 0x000694c0: the thing gets a player of the game */
+void unknown_000c6ef0(byte *unknown14);
+void __attribute__((stdcall)) unknown_000694c0(byte *world, long player);
+
 
 /* 0x000693a0: the views of the thing are done with: what main_game_unload
 ends the game in the network with. 0x0006a560: the thing is given a byte */
@@ -895,4 +900,138 @@ boolean __attribute__((stdcall)) simulation_world_finish_game_state(
 	}
 
 	return result;
+}
+
+/* 0x0006a600: the thing has none of the players of the game: each one that
+it had has NONE for its three numbers, and nothing at 0x20. The game has the
+sixteen written four by four */
+void simulation_world_players_clear(
+	byte *world)
+{
+	long player;
+
+	for (player= 0; player<NUMBER_OF_SIMULATION_WORLD_PLAYERS; player++)
+	{
+		byte *player_data_= world+player*SIMULATION_WORLD_PLAYER_SIZE+SIMULATION_WORLD_PLAYERS_OFFSET;
+
+		if (*(const long *)player_data_!=NONE)
+		{
+			*(long *)player_data_= NONE;
+			*(long *)(player_data_+SIMULATION_WORLD_PLAYER_INDEX_OFFSET)= NONE;
+			*(long *)(player_data_+SIMULATION_WORLD_PLAYER_STATE_OFFSET)= NONE;
+			*(long *)(player_data_+SIMULATION_WORLD_PLAYER_UNKNOWN20_OFFSET)= 0;
+		}
+	}
+}
+
+/* 0x0006a6f0: the thing has none of its sixteen other things: each one that
+it had has NONE for its two numbers, and is of nothing */
+void simulation_world_others_clear(
+	byte *world)
+{
+	long index;
+
+	for (index= 0; index<NUMBER_OF_SIMULATION_WORLD_OTHERS; index++)
+	{
+		byte *other= world+index*SIMULATION_WORLD_OTHER_SIZE+SIMULATION_WORLD_OTHERS_OFFSET;
+
+		if (*(const long *)other!=NONE)
+		{
+			*(long *)other= NONE;
+			*(long *)(other+SIMULATION_WORLD_OTHER_UNKNOWN4_OFFSET)= NONE;
+			*(void **)(other+SIMULATION_WORLD_OTHER_WORLD_OFFSET)= NULL;
+		}
+	}
+}
+
+/* 0x0006a690: the thing has one more of its other things, with a number:
+at a place that is given, or with NONE the first that is free; its place, or
+NONE if there is none free. It is of the thing, with NONE at 0x10, and what
+it has at 0x14 is made ready (unknown_000c6ef0) */
+long __attribute__((stdcall)) simulation_world_other_new(
+	long index,
+	byte *world,
+	long unknown4)
+{
+	byte *other;
+
+	if (index==NONE)
+	{
+		for (index= 0; index<NUMBER_OF_SIMULATION_WORLD_OTHERS; index++)
+		{
+			if (*(const long *)(world+index*SIMULATION_WORLD_OTHER_SIZE+SIMULATION_WORLD_OTHERS_OFFSET)==NONE)
+			{
+				break;
+			}
+		}
+		if (index==NUMBER_OF_SIMULATION_WORLD_OTHERS)
+		{
+			return NONE;
+		}
+	}
+	other= world+index*SIMULATION_WORLD_OTHER_SIZE+SIMULATION_WORLD_OTHERS_OFFSET;
+	*(byte **)(other+SIMULATION_WORLD_OTHER_WORLD_OFFSET)= world;
+	*(long *)other= index;
+	*(long *)(other+SIMULATION_WORLD_OTHER_UNKNOWN4_OFFSET)= unknown4;
+	*(long *)(other+SIMULATION_WORLD_OTHER_UNKNOWN10_OFFSET)= NONE;
+	unknown_000c6ef0(other+SIMULATION_WORLD_OTHER_UNKNOWN14_OFFSET);
+
+	return index;
+}
+
+/* 0x000699a0: a number of a player of the game or of one of the other
+things of the thing, which are counted after the sixteen players: of a
+player that there is, what it has at 0x2C; of another thing that there is,
+its number; NONE if there is none */
+long simulation_world_unknown_000699a0(
+	long index,
+	const byte *world)
+{
+	if (index<NUMBER_OF_SIMULATION_WORLD_PLAYERS)
+	{
+		if (index!=NONE && index>=0 && index<player_data->first_unallocated)
+		{
+			const byte *datum= (const byte *)player_data->data+player_data->size*index;
+
+			if (*(const short *)datum!=0)
+			{
+				return *(const long *)(datum+SIMULATION_PLAYER_DATUM_UNKNOWN2C_OFFSET);
+			}
+		}
+	}
+	else if (index<NUMBER_OF_SIMULATION_WORLD_PLAYERS+NUMBER_OF_SIMULATION_WORLD_OTHERS)
+	{
+		const byte *other= world+(index-NUMBER_OF_SIMULATION_WORLD_PLAYERS)*SIMULATION_WORLD_OTHER_SIZE+SIMULATION_WORLD_OTHERS_OFFSET;
+
+		if (*(const long *)other!=NONE)
+		{
+			return *(const long *)(other+SIMULATION_WORLD_OTHER_UNKNOWN4_OFFSET);
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x0006a770: the thing has the players of the game again: none
+(simulation_world_players_clear), and then each player that there is in the
+game, but for the ones with a bit, is one that it gets (unknown_000694c0).
+The game has the going through the players written here */
+void __attribute__((stdcall)) simulation_world_unknown_0006a770(
+	byte *world)
+{
+	long index;
+
+	simulation_world_players_clear(world);
+	for (index= 0; index<player_data->first_unallocated; index++)
+	{
+		if (player_data->in_use_bit_vector[index>>5]&(1u<<(index&31)))
+		{
+			const byte *datum= (const byte *)player_data->data+player_data->size*index;
+
+			if (!(datum[SIMULATION_PLAYER_DATUM_FLAGS_OFFSET]&_simulation_player_datum_unknown_bit))
+			{
+				unknown_000694c0(world, (long)(((unsigned long)(long)*(const short *)datum<<16)|(unsigned long)index));
+			}
+		}
+	}
 }

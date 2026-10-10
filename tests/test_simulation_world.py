@@ -494,3 +494,52 @@ def run(t) -> None:
                 "texture_cache_return_memory": lambda harness, arguments: 0,
             },
         )
+
+    # ---------- the players that the thing has, and its other things
+
+    def some_players(count: int) -> Buffer:
+        """The players of the game: so many places, of which some are in use."""
+        players = bytearray(random_.randbytes(0x4C + 16 * 0x21C + 4))
+        struct.pack_into("<i", players, 0x24, 0x21C)
+        struct.pack_into("<i", players, 0x38, count)
+        struct.pack_into("<2I", players, 0x44, 0x4C, 0x4C + 16 * 0x21C)
+        for player in range(16):
+            struct.pack_into("<hB", players, 0x4C + player * 0x21C, random_.choice((0, 0x1234, -5)), random_.getrandbits(8))
+        return Buffer(bytes(players), pointers=(0x44, 0x48))
+
+    def cleared_world() -> bytearray:
+        world = bytearray(random_.randbytes(0x1220))
+        for index in range(16):
+            if random_.random() < 0.4:
+                struct.pack_into("<i", world, 0x7C + index * 0x88, -1)
+            if random_.random() < 0.4:
+                struct.pack_into("<i", world, 0x8FC + index * 0x90, -1)
+        return world
+
+    for n in range(1500):
+        world = cleared_world()
+        t.check("simulation_world_players_clear", Buffer(bytes(world)))
+        t.check("simulation_world_others_clear", Buffer(bytes(world)))
+        if random_.random() < 0.2:
+            for index in range(16):
+                struct.pack_into("<i", world, 0x8FC + index * 0x90, 7)
+        t.check(
+            "simulation_world_other_new",
+            random_.choice((0xFFFFFFFF, 0xFFFFFFFF, random_.randrange(16))),
+            Buffer(bytes(world)),
+            random_.getrandbits(32),
+            externals={"unknown_000c6ef0": views_done},
+        )
+        players = some_players(random_.choice((0, 5, 16, 16)))
+        t.check(
+            "simulation_world_unknown_000699a0",
+            random_.choice((0xFFFFFFFF, 0xFFFFFFFB, 32, 100, random_.randrange(16), random_.randrange(16), random_.randrange(16, 32))),
+            Buffer(bytes(world)),
+            globals={"player_data": players},
+        )
+        t.check(
+            "simulation_world_unknown_0006a770",
+            Buffer(bytes(world)),
+            globals={"player_data": players},
+            externals={"unknown_000694c0": next_number},
+        )
