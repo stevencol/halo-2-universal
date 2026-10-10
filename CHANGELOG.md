@@ -2,6 +2,58 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Cómo entra una consola en la partida, estado a estado
+
+Dos funciones en `networking/simulation_world.c`, 812 bytes entre las dos. De 1584
+funciones se pasa a 1586, el 14,08 % de las del juego (el 9,393 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_advance_view` | `0x0006a040` | `networking/simulation_world.c` |
+| `simulation_world_unknown_00069dd0` | `0x00069dd0` | `networking/simulation_world.c` |
+
+### Lo que se sabe
+
+- `simulation_world_advance_view` es **la máquina que lleva una vista
+  hasta el final**, un estado cada vez (era el `0x0006a040` del hito
+  463). Contesta 1 cuando ya llegó, 3 cuando no se pudo y nada mientras
+  va de camino:
+  - **al cuarto estado** pasa si es de la segunda clase, o si conoce a
+    todos los jugadores marcados de la partida (hito 459);
+  - **al quinto**: una vista que no es de la segunda clase pasa sin más.
+    Una de la segunda (otra consola que entra) pasa sin más si el juego
+    aún no ha empezado; si ya empezó, **antes se le manda el estado del
+    juego** (`0x000862e0`). Eso se hace **de pocas en pocas**: solo si
+    hay menos vistas recibiéndolo que las que dice el juego
+    (`0x004ced48`) y ha pasado un tiempo (`0x004ced54`) desde que se
+    empezó con la anterior. Si se le ha mandado demasiadas veces
+    (`0x004ced50`), no se pudo;
+  - **en el quinto**, cuando no le queda nada por mandar (`0x00085cb0`) y
+    conoce a todos los jugadores, ya llegó; y si la partida está
+    «jugando» (su segundo número es 4), pasa **al sexto**, que es en el
+    que las actualizaciones se le mandan tal cual (hito 461).
+  - Una vista con la que no se pudo vuelve al primer estado con el
+    motivo `3`.
+- Es la otra mitad del hito 449: allí se veía cómo una consola recibe el
+  estado del juego; aquí, cuándo decide mandarlo la que manda.
+- `simulation_world_unknown_00069dd0` devuelve al tercer estado, con su
+  número, a todas las vistas que lo habían pasado: es volver a empezar la
+  entrada de todas las consolas.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos**, y en las de los hitos 441 a
+  463.
+- La primera versión llamaba a `simulation_view_fail` donde el juego lo
+  tiene escrito dentro; la comparación de llamadas lo notó y está
+  escrito igual que en el juego.
+- En este hito se pasaron las pruebas de las dos funciones (la primera
+  con 5000 casos) y las de las dos del hito 463 que la llaman.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — La partida espera a las demás consolas
 
 Cuatro funciones en `networking/simulation_world.c`, 441 bytes entre las cuatro. De 1580

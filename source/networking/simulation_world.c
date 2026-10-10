@@ -19,6 +19,8 @@ and so are the names of its functions.
 #include "memory/data.h"
 #include "saved games/game_state.h"
 #include "networking/network_heap.h"
+#include "networking/network_observer.h"
+#include "networking/network_session.h"
 #include "networking/simulation_view.h"
 
 #include <string.h>
@@ -35,9 +37,13 @@ boolean __attribute__((stdcall)) unknown_00199740(const void *data, long size, v
 ready. 0x000694c0: the thing gets a player of the game */
 void unknown_000c6ef0(byte *unknown14);
 
-/* 0x0006a040: a view that is ready is brought on by the thing; something
-that is nothing if it is not there yet */
-long unknown_0006a040(byte *view, byte *world);
+/* 0x000862e0: a view of the second kind is sent the state of the game;
+whether it has all of it already. 0x00085cb0: whether a view has nothing
+more to send before the game goes on. 0x00086ad0: something of a view that
+is not of the second kind, when it goes to its sixth state */
+boolean unknown_000862e0(byte *view);
+boolean unknown_00085cb0(byte *view);
+void unknown_00086ad0(byte *view);
 
 /* 0x00083bd0: whether what the thing has first has a player, by its place,
 with the three numbers that it is known by */
@@ -66,6 +72,14 @@ long unknown_004ced58;
 /* 0x004ced4c: how long the thing waits for its first view of the first kind
 or of the third, in milliseconds */
 long unknown_004ced4c;
+
+/* 0x004ced48: how many views can be sent the state of the game at a time.
+0x004ced50: how many times one can be sent it. 0x004ced54: how long the
+thing waits between starting to send it to one view and to the next, in
+milliseconds */
+long unknown_004ced48;
+long unknown_004ced50;
+long unknown_004ced54;
 long unknown_004ced5c;
 
 /* ---------- code */
@@ -1175,7 +1189,7 @@ void simulation_world_unknown_0006b350(
 /* 0x00069d50: the thing, unless it is in its first state, brings on each
 view of the second kind or of the fourth that is well, has not its byte at
 0x78 set, and is not in its sixth state: one that is of a channel and ready,
-with unknown_0006a040; any other goes on to its next state
+with simulation_world_advance_view; any other goes on to its next state
 (simulation_world_unknown_0006a2a0) */
 void simulation_world_unknown_00069d50(
 	byte *world)
@@ -1194,7 +1208,7 @@ void simulation_world_unknown_00069d50(
 		{
 			if (*(const long *)(view+SIMULATION_VIEW_CHANNEL_OFFSET)!=NONE && view[SIMULATION_VIEW_READY_OFFSET])
 			{
-				unknown_0006a040(view, world);
+				simulation_world_advance_view(view, world);
 			}
 			else
 			{
@@ -1209,7 +1223,7 @@ it starts to go. For each console that there is, but for its own: the view
 that it has with that number (simulation_world_get_view_by_unknown1c), if
 it is well, is brought on as simulation_world_unknown_00069d50 does; and one
 that is ready, of a console that the thing waits for (a bit of what it has
-at 0x20), is there when unknown_0006a040 says so. When no console that it
+at 0x20), is there when simulation_world_advance_view says so. When no console that it
 waits for is missing, or the time that the game has for it has gone by since
 the one that the thing noted, the thing starts to go
 (simulation_world_unknown_0006b2a0). The game has the time of the network
@@ -1238,7 +1252,7 @@ void simulation_world_unknown_00069c80(
 			{
 				if (*(const long *)(view+SIMULATION_VIEW_CHANNEL_OFFSET)!=NONE && view[SIMULATION_VIEW_READY_OFFSET])
 				{
-					if ((*(const unsigned long *)(world+SIMULATION_WORLD_UNKNOWN20_OFFSET)&bit) && unknown_0006a040(view, world))
+					if ((*(const unsigned long *)(world+SIMULATION_WORLD_UNKNOWN20_OFFSET)&bit) && simulation_world_advance_view(view, world))
 					{
 						there|= bit;
 					}
@@ -1253,5 +1267,171 @@ void simulation_world_unknown_00069c80(
 	if (!(others&*(const unsigned long *)(world+SIMULATION_WORLD_UNKNOWN20_OFFSET)&~there) || elapsed>=unknown_004ced4c)
 	{
 		simulation_world_unknown_0006b2a0(world);
+	}
+}
+
+/* whether a view knows of every player of the thing whose byte is set */
+static inline __attribute__((always_inline)) boolean simulation_world_view_knows_players(
+	const byte *view,
+	const byte *world)
+{
+	unsigned long needed= simulation_world_players_unknown25_mask(world);
+
+	return (needed&*(const unsigned long *)(view+SIMULATION_VIEW_PLAYER_MASK_OFFSET))==needed;
+}
+
+/* 0x0006a040: a view that is ready is brought on by the thing, a state at a
+time; 1 when it is where it has to be, 3 when it could not be, and nothing
+while it is on its way.
+
+Before its fourth state: it goes to it, if it is of the second kind or knows
+of every player of the thing whose byte is set.
+
+In its fourth state: a view that is not of the second kind goes to its
+fifth, with a byte set in what it has at 0x8. One of the second kind goes to
+its fifth at once if the game has not started; if it has, it is sent the
+state of the game first (unknown_000862e0), which the thing starts with one
+view at a time: only if fewer views than the game has for it are being sent
+it, and so long has gone by since it last started. When the view has it all,
+it goes to its fifth state; if not, the time is noted, and a view that has
+been sent it too many times could not be brought on.
+
+In its fifth state: if it has nothing more to send (unknown_00085cb0) and
+knows of every player, it is there; if not, nothing is said. And one that is
+there, with the number that the thing has at 0x18 being 4, goes to its sixth
+state (one of the second kind gives back its memory first, and any other has
+unknown_00086ad0 called).
+
+A view that could not be brought on goes to its first state and is as 3
+says: the game has simulation_view_fail written here, and
+simulation_view_set_state in it */
+long simulation_world_advance_view(
+	byte *view,
+	byte *world)
+{
+	long result= _simulation_world_advance_view_waiting;
+	boolean second_kind= *(const short *)(view+SIMULATION_VIEW_KIND_OFFSET)==2;
+
+	if (*(const long *)(view+SIMULATION_VIEW_STATE_OFFSET)<3)
+	{
+		if (second_kind || simulation_world_view_knows_players(view, world))
+		{
+			simulation_view_set_state(view, 3, *(const long *)(view+SIMULATION_VIEW_STATE_NUMBER_OFFSET));
+		}
+	}
+	if (*(const long *)(view+SIMULATION_VIEW_STATE_OFFSET)==3)
+	{
+		if (!second_kind)
+		{
+			(*(byte *const *)(view+SIMULATION_VIEW_UNKNOWN8_OFFSET))[SIMULATION_VIEW_UNKNOWN8_UNKNOWN39_OFFSET]= TRUE;
+			simulation_view_set_state(view, 4, *(const long *)(view+SIMULATION_VIEW_STATE_NUMBER_OFFSET));
+		}
+		else if (game_time_globals->time==0)
+		{
+			simulation_view_set_state(view, 4, *(const long *)(view+SIMULATION_VIEW_STATE_NUMBER_OFFSET));
+		}
+		else
+		{
+			struct simulation_view_iterator iterator= {_simulation_view_kind2_bit, 0};
+			boolean allowed= TRUE;
+			long count= 0;
+			byte *other;
+			long last;
+
+			while (simulation_world_next_view(&iterator, world, &other))
+			{
+				if (*(void *const *)(other+SIMULATION_VIEW_UNKNOWN94_OFFSET))
+				{
+					count++;
+				}
+			}
+			if (count>=unknown_004ced48)
+			{
+				allowed= FALSE;
+			}
+			last= *(const long *)(world+SIMULATION_WORLD_GAME_STATE_SEND_TIME_OFFSET);
+			if ((last==NONE || network_time_since(last)>=unknown_004ced54) && allowed)
+			{
+				if (unknown_000862e0(view))
+				{
+					simulation_view_set_state(view, 4, *(const long *)(view+SIMULATION_VIEW_STATE_NUMBER_OFFSET));
+				}
+				else
+				{
+					long times= *(const long *)(view+SIMULATION_VIEW_GAME_STATE_SEND_COUNT_OFFSET);
+
+					*(long *)(world+SIMULATION_WORLD_GAME_STATE_SEND_TIME_OFFSET)= network_time();
+					if (times>=unknown_004ced50)
+					{
+						result= _simulation_world_advance_view_failed;
+					}
+				}
+			}
+		}
+	}
+	if (*(const long *)(view+SIMULATION_VIEW_STATE_OFFSET)==4)
+	{
+		if (!(unknown_00085cb0(view) && simulation_world_view_knows_players(view, world)))
+		{
+			return _simulation_world_advance_view_waiting;
+		}
+		result= _simulation_world_advance_view_there;
+	}
+	if (result==_simulation_world_advance_view_there)
+	{
+		if (*(const long *)(view+SIMULATION_VIEW_STATE_OFFSET)==4 &&
+			*(const long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET)==_simulation_world_unknown18_4)
+		{
+			if (!second_kind)
+			{
+				unknown_00086ad0(view);
+			}
+			else if (*(void *const *)(view+SIMULATION_VIEW_UNKNOWN94_OFFSET))
+			{
+				simulation_view_unknown_00086590(view);
+			}
+			simulation_view_set_state(view, 5, *(const long *)(view+SIMULATION_VIEW_STATE_NUMBER_OFFSET));
+		}
+	}
+	else if (result==_simulation_world_advance_view_failed && *(const long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)==0)
+	{
+		if (!(*(const long *)(view+SIMULATION_VIEW_STATE_OFFSET)==_simulation_view_state0 &&
+			*(const long *)(view+SIMULATION_VIEW_STATE_NUMBER_OFFSET)==NONE))
+		{
+			struct simulation_view_state_message message;
+
+			*(long *)(view+SIMULATION_VIEW_STATE_OFFSET)= _simulation_view_state0;
+			*(long *)(view+SIMULATION_VIEW_STATE_NUMBER_OFFSET)= NONE;
+			message.state= _simulation_view_state0;
+			message.number= NONE;
+			if (*(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET)!=NONE)
+			{
+				network_observer_channel_send(FALSE, *(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET),
+					*(byte *const *)(view+SIMULATION_VIEW_OBSERVER_OFFSET), SIMULATION_VIEW_SESSION_INDEX,
+					_network_message_simulation_view_state, sizeof(message), &message);
+			}
+			simulation_view_update_ready(view);
+		}
+		*(long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)= 3;
+	}
+
+	return result;
+}
+
+/* 0x00069dd0: each view of the thing that is well and past its third state
+goes back to it, with its number (simulation_view_set_state, written here) */
+void simulation_world_unknown_00069dd0(
+	byte *world)
+{
+	struct simulation_view_iterator iterator= {0xFFFFFFFF, 0};
+	byte *view;
+
+	while (simulation_world_next_view(&iterator, world, &view))
+	{
+		if (*(const long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)==0 &&
+			*(const long *)(view+SIMULATION_VIEW_STATE_OFFSET)>_simulation_view_state2)
+		{
+			simulation_view_set_state(view, _simulation_view_state2, *(const long *)(view+SIMULATION_VIEW_STATE_NUMBER_OFFSET));
+		}
 	}
 }

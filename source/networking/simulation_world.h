@@ -141,7 +141,17 @@ enum
 	SIMULATION_WORLD_UNKNOWN0_MACHINE_MASK_OFFSET= 0x1C,
 	SIMULATION_WORLD_MACHINE_INDEX_OFFSET= 0x14,
 	_simulation_world_unknown18_5= 5,
-	_simulation_world_state1= 1
+	_simulation_world_state1= 1,
+	/* more of the thing: when it last started to send a view the state of
+	the game, or NONE. More of a view: how many times it has been sent it;
+	and a byte of what it has at 0x30 of what it has at 0x8. What bringing a
+	view on says: nothing yet, there, or too many times */
+	SIMULATION_WORLD_GAME_STATE_SEND_TIME_OFFSET= 0x1208,
+	SIMULATION_VIEW_GAME_STATE_SEND_COUNT_OFFSET= 0x90,
+	SIMULATION_VIEW_UNKNOWN8_UNKNOWN39_OFFSET= 0x39,
+	_simulation_world_advance_view_waiting= 0,
+	_simulation_world_advance_view_there= 1,
+	_simulation_world_advance_view_failed= 3
 };
 
 /* ---------- structures */
@@ -222,6 +232,8 @@ void simulation_world_unknown_0006b310(byte *world);
 void simulation_world_unknown_0006b350(byte *world);
 void simulation_world_unknown_00069d50(byte *world);
 void simulation_world_unknown_00069c80(byte *world);
+long simulation_world_advance_view(byte *view, byte *world);
+void simulation_world_unknown_00069dd0(byte *world);
 
 /* whether a view is past the states in which it is made ready: one of the
 second kind from the sixth state on, and any other from the fourth. The game
@@ -236,7 +248,10 @@ static inline __attribute__((always_inline)) boolean simulation_view_established
 
 /* ---------- globals */
 
+extern long unknown_004ced48;
 extern long unknown_004ced4c;
+extern long unknown_004ced50;
+extern long unknown_004ced54;
 extern long unknown_004ced58;
 extern long unknown_004ced5c;
 

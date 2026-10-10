@@ -2142,4 +2142,8 @@ address,name,source,arguments,returns,convention
 0006b350,simulation_world_unknown_0006b350,source/networking/simulation_world.c,eax,void
 00069d50,simulation_world_unknown_00069d50,source/networking/simulation_world.c,eax,void
 00069c80,simulation_world_unknown_00069c80,source/networking/simulation_world.c,eax,void
-0006a040,unknown_0006a040,,eax ecx,int
+0006a040,simulation_world_advance_view,source/networking/simulation_world.c,eax ecx,int
+00069dd0,simulation_world_unknown_00069dd0,source/networking/simulation_world.c,eax,void
+000862e0,unknown_000862e0,,eax,bool
+00085cb0,unknown_00085cb0,,eax,bool
+00086ad0,unknown_00086ad0,,ebx,void

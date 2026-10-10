@@ -613,10 +613,78 @@ def run(t) -> None:
             },
             externals={
                 "GetTickCount": lambda harness, arguments, now=now: now,
-                "unknown_0006a040": brought,
+                "simulation_world_advance_view": brought,
                 "simulation_world_unknown_0006a2a0": lambda harness, arguments: (0, (harness.normalize(arguments[0]), harness.normalize(arguments[1]))),
                 "simulation_world_unknown_0006b2a0": views_done,
             },
         )
         t.check("simulation_world_unknown_00069d50", thing, **setup)
         t.check("simulation_world_unknown_00069c80", thing, **setup)
+
+    # ---------- a view is brought on, and the views go back to their third state
+
+    state_stand_in = lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2]))
+    channel_sends = lambda harness, arguments: (
+        0,
+        (arguments[0] & 0xFF, arguments[1], arguments[2], arguments[3], arguments[4], arguments[5], bytes(harness.mu.mem_read(arguments[6], 8))),
+    )
+
+    for n in range(5000):
+        thing = a_world(random_, 0, 0x1220)
+        data = bytearray(thing.data)
+        struct.pack_into("<i", data, 0x18, random_.choice((3, 4, 4, 4)))
+        struct.pack_into("<i", data, 0x1208, random_.choice((-1, -1, 1000)))
+        thing = Buffer(bytes(data), pointers=thing.pointers)
+        view = bytearray(random_.randbytes(0xC0 + 0x40))
+        struct.pack_into("<I", view, 0x8, 0xC0)
+        kind = random_.choice((1, 2, 2, 2, 3, 4))
+        at = random_.choice((0, 2, 2, 3, 3, 3, 4, 4, 5, 6))
+        struct.pack_into("<H", view, 2, kind)
+        struct.pack_into("<i", view, 0x28, random_.choice((0, 0, 0, 7)))
+        struct.pack_into("<2i", view, 0x2C, at, random_.choice((-1, 7, 7)))
+        struct.pack_into("<Ii", view, 0x20, 0x12345678, random_.choice((-1, 0, 3)))
+        struct.pack_into("<I", view, 0x7C, random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16))))
+        struct.pack_into("<i", view, 0x90, random_.choice((0, 2, 3, 4)))
+        struct.pack_into("<I", view, 0x94, random_.choice((0, 0x5000)))
+        needed = random_.choice((0, 0, random_.getrandbits(16) & random_.getrandbits(16)))
+        has_all = random_.choice((0, 1, 1))
+        idle = random_.choice((0, 1, 1))
+        since = random_.choice((0, 99, 100, 5000))
+        game_time = bytearray(random_.randbytes(0x10))
+        struct.pack_into("<I", game_time, 8, random_.choice((0, 1, 500, 500)))
+
+        def goes(harness, arguments):
+            # the view is in the state that it is given, as it would be
+            harness.mu.mem_write(arguments[0] + 0x2C, struct.pack("<2I", arguments[1], arguments[2]))
+            return 0, (harness.normalize(arguments[0]), arguments[1], arguments[2])
+
+        t.check(
+            "simulation_world_advance_view",
+            Buffer(bytes(view), pointers=(8,)),
+            thing,
+            globals={
+                "game_time_globals": Buffer(bytes(game_time)),
+                "unknown_004ced48": struct.pack("<i", random_.choice((0, 1, 2, 5, 5))),
+                "unknown_004ced50": struct.pack("<i", 3),
+                "unknown_004ced54": struct.pack("<i", 100),
+            },
+            externals={
+                "simulation_view_set_state": goes,
+                "simulation_world_players_unknown25_mask": lambda harness, arguments, needed=needed: (needed, (harness.normalize(arguments[0]),)),
+                "network_time_since": lambda harness, arguments, since=since: (since, (arguments[0],)),
+                "network_time": lambda harness, arguments: 0x4321,
+                "unknown_000862e0": lambda harness, arguments, has_all=has_all: (has_all, (harness.normalize(arguments[0]),)),
+                "unknown_00085cb0": lambda harness, arguments, idle=idle: (idle, (harness.normalize(arguments[0]),)),
+                "unknown_00086ad0": views_done,
+                "simulation_view_unknown_00086590": views_done,
+                "network_observer_channel_send": channel_sends,
+                "simulation_view_update_ready": views_done,
+            },
+        )
+
+    for n in range(1500):
+        t.check(
+            "simulation_world_unknown_00069dd0",
+            a_world(random_, 0),
+            externals={"network_observer_channel_send": channel_sends, "simulation_view_update_ready": views_done},
+        )
