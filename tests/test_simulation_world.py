@@ -315,3 +315,24 @@ def run(t) -> None:
             Buffer(bytes(data), pointers=thing.pointers),
             externals={"simulation_world_unknown_0006b040": views_done},
         )
+
+    # ---------- the thing is told that a view is ready
+
+    for n in range(2000):
+        thing = a_world(random_, 0)
+        data = thing.data
+        views = [struct.unpack_from("<I", data, 0x40 + index * 4)[0] for index in range(15)]
+        views = [view for view in views if view]
+        first = [view for view in views if 1 << (data[view + 2] & 31) & 0xA]
+        of = random_.choice(((first[0] if first else 0), (first[0] if first else 0), (random_.choice(views) if views else 0), 0))
+        there = bytearray(random_.randbytes(0x10))
+        there[8] = random_.choice((0, 1, 0x80))
+        struct.pack_into("<I", there, 0xC, 0)
+        t.check(
+            "simulation_world_unknown_0006b090",
+            random_.choice((0, 1, 1, 1, 0x100)),
+            thing,
+            Pointer(thing, of) if of else 0,
+            globals={"unknown_004cf770": bytes(there)},
+            externals={"unknown_0006a560": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1] & 0xFF))},
+        )

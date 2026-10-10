@@ -36,8 +36,9 @@ void __attribute__((stdcall)) unknown_0006ab10(byte *world);
 void unknown_00069f10(byte *world);
 
 /* 0x000693a0: the views of the thing are done with: what main_game_unload
-ends the game in the network with */
+ends the game in the network with. 0x0006a560: the thing is given a byte */
 void __attribute__((stdcall)) unknown_000693a0(void *world);
+void __attribute__((stdcall)) unknown_0006a560(byte *world, boolean unknown);
 
 long GetTickCount(void);
 
@@ -637,4 +638,28 @@ void simulation_world_unknown_00069fe0(
 		}
 	}
 	simulation_world_unknown_0006b040(world);
+}
+
+/* 0x0006b090: the thing is told that a view is ready, or not: if it is, and
+it is the first view of the first kind or of the third that the thing has,
+the thing is given a set byte (unknown_0006a560). Before that, the ninth
+byte of unknown_004cf770 is cleared if it was set; if it was not, the tenth
+is set. The game has simulation_world_unknown_0006acb0 written here */
+void __attribute__((stdcall)) simulation_world_unknown_0006b090(
+	boolean ready,
+	byte *world,
+	const byte *view)
+{
+	if (ready && view==simulation_world_unknown_0006acb0(world))
+	{
+		if (unknown_004cf770.unknown1[7])
+		{
+			unknown_004cf770.unknown1[7]= FALSE;
+		}
+		else
+		{
+			unknown_004cf770.unknown1[8]= TRUE;
+		}
+		unknown_0006a560(world, TRUE);
+	}
 }

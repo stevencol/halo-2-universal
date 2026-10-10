@@ -145,6 +145,7 @@ void __attribute__((stdcall)) simulation_world_unknown_0006b1f0(byte *world, lon
 void simulation_world_unknown_0006b040(byte *world);
 void simulation_world_unknown_00069f90(byte *world);
 void simulation_world_unknown_00069fe0(byte *world);
+void __attribute__((stdcall)) simulation_world_unknown_0006b090(boolean ready, byte *world, const byte *view);
 
 /* ---------- globals */
 

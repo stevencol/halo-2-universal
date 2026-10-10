@@ -2117,3 +2117,5 @@ address,name,source,arguments,returns,convention
 0006b040,simulation_world_unknown_0006b040,source/networking/simulation_world.c,edi,void
 00069f90,simulation_world_unknown_00069f90,source/networking/simulation_world.c,eax,void
 00069fe0,simulation_world_unknown_00069fe0,source/networking/simulation_world.c,eax,void
+0006b090,simulation_world_unknown_0006b090,source/networking/simulation_world.c,eax ecx stack,void,stdcall
+0006a560,unknown_0006a560,,eax stack,void,stdcall

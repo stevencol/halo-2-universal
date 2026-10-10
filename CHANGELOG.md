@@ -2,6 +2,36 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — La vista principal está lista
+
+Una función en `networking/simulation_world.c`, de 115 bytes. De 1557
+funciones se pasa a 1558, el 13,83 % de las del juego (el 9,238 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_unknown_0006b090` | `0x0006b090` | `networking/simulation_world.c` |
+
+### Lo que se sabe
+
+- `simulation_world_unknown_0006b090` es la pareja de la del hito 451
+  (`0x0006b110`): a la partida se le dice que **una vista está lista**.
+  Si es su vista principal (la primera de la primera clase o la
+  tercera), a la partida se le da un byte puesto (`0x0006a560`).
+- Antes toca dos bytes de `unknown_004cf770`: si el noveno estaba puesto
+  lo quita, y si no pone el décimo. Son dos avisos para quien lleva la
+  partida en red desde fuera; aún no se sabe quién los lee.
+- La llama, como a la otra, lo que mira qué se sigue del estado de una
+  vista (`0x000861c0`).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 441 a 453.
+- En este hito se pasó la prueba de la función.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Cuándo la partida en red se da por vencida
 
 Tres funciones en `networking/simulation_world.c`, 231 bytes entre las tres. De 1554
