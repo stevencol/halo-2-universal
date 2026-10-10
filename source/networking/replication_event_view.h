@@ -22,7 +22,13 @@ enum
 	REPLICATION_EVENT_VIEW_SENT_OFFSET= 0x10,
 	REPLICATION_EVENT_VIEW_MANAGER_OFFSET= 0x18,
 	REPLICATION_EVENT_VIEW_UNKNOWN1C_OFFSET= 0x1C,
-	REPLICATION_EVENT_VIEW_UNKNOWN24_OFFSET= 0x24
+	REPLICATION_EVENT_VIEW_UNKNOWN24_OFFSET= 0x24,
+	/* of what replication_event_view_entity_deleting is given: the view of
+	the game that it is of (simulation_view.h), which has at 0x8 something
+	with the view of the things that the consoles share at 0x30 */
+	REPLICATION_EVENT_VIEW_OWNER_VIEW_OFFSET= 0x4,
+	REPLICATION_EVENT_VIEW_OWNER_VIEW_UNKNOWN8_OFFSET= 0x8,
+	REPLICATION_EVENT_VIEW_OWNER_ENTITY_VIEW_OFFSET= 0x30
 };
 
 /* ---------- structures */
@@ -46,5 +52,6 @@ struct replication_event_view_packet
 /* ---------- prototypes/REPLICATION_EVENT_VIEW.C */
 
 void __attribute__((stdcall)) replication_event_view_reset(byte *view);
+boolean replication_event_view_entity_deleting(const byte *owner, long entity_index);
 
 #endif

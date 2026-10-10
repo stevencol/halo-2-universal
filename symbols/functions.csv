@@ -2151,3 +2151,4 @@ address,name,source,arguments,returns,convention
 0006a2e0,simulation_world_update_players_unknown25,source/networking/simulation_world.c,stack,void,stdcall
 0006a860,simulation_world_before_send_game_state,source/networking/simulation_world.c,stack stack,void,stdcall
 00069c50,simulation_world_unknown_00069c50,source/networking/simulation_world.c,eax,void
+000979f0,replication_event_view_entity_deleting,source/networking/replication_event_view.c,eax esi,bool

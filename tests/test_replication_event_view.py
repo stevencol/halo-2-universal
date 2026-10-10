@@ -90,3 +90,23 @@ def run(t) -> None:
                 Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
             ],
         )
+
+    # ---------- whether a thing is being taken away, for the other console of a view
+
+    OWNER, OWNER_VIEW, UNKNOWN8, ENTITY_VIEW = 0x0, 0x10, 0x20, 0x50
+    THINGS = ENTITY_VIEW + 0x24 + 0x400 * 0x14
+    random_2 = random.Random(471)
+
+    for n in range(1500):
+        data = bytearray(random_2.randbytes(THINGS + 0x44 + 0x400 * 8))
+        struct.pack_into("<I", data, OWNER + 4, OWNER_VIEW)
+        struct.pack_into("<I", data, OWNER_VIEW + 8, UNKNOWN8)
+        struct.pack_into("<I", data, ENTITY_VIEW + 0x14, THINGS)
+        index = random_2.randrange(0x400)
+        number = index | random_2.choice((0, 0x50000, 0xFFFFFC00))
+        struct.pack_into("<I", data, ENTITY_VIEW + 0x24 + index * 0x14, random_2.choice((number, number, number, number ^ 0x10000)))
+        t.check(
+            "replication_event_view_entity_deleting",
+            Buffer(bytes(data), pointers=(OWNER + 4, OWNER_VIEW + 8, ENTITY_VIEW + 0x14)),
+            number,
+        )

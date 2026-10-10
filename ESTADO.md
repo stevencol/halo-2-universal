@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 470.
+**Última actualización:** 2026-10-08, al terminar el hito 471.
 
 ## Dónde estamos
 
-- **1594 funciones descompiladas de 11.265: el 14,15 % del juego** (el
-  9,428 % de los bytes de código).
-- Las 1594 están comprobadas contra el ejecutable original: las 1390 del
+- **1595 funciones descompiladas de 11.265: el 14,16 % del juego** (el
+  9,430 % de los bytes de código).
+- Las 1595 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile what a view's event store does when the view is ready or not* (ver `git log`).
+- Último hito: *Decompile whether a shared entity is being deleted for a view* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 558 funciones apuntadas pero sin descompilar (las que el código
   llama); 456 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -151,8 +151,9 @@ Módulos (funciones hechas / archivo):
       sucesos, pedirlos al montón de la red, soltarlos y mandarlos
       contar; de `0x00089dc0` a `0x00089f20`, y `0x0008b0a0`)
 - [ ] Vistas de los sucesos — `networking\replication_event_view.c`
-      (1: vaciar una vista; quedan 7 de la lista, de `0x000970b0` a
-      `0x00097d80`; romper líneas pendiente)
+      (2: vaciar una vista y saber si una cosa se está borrando;
+      quedan 6 de la lista, de `0x000970b0` a `0x00097d80`; romper líneas
+      pendiente)
 - [x] La segunda pieza de un canal — `networking\network_message_queue.c`
       (11: lo que el canal le pregunta, vaciarla, guardar los
       mensajes que llegan, escribirlos y leerlos en un paquete, qué

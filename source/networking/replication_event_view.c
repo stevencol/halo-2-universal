@@ -12,6 +12,8 @@ functions.
 
 #include "replication_event_view.h"
 
+#include "networking/replication_entity_manager.h"
+
 /* ---------- code */
 
 /* 0x00096ed0: a view starts over. What it kept of the packets that it wrote
@@ -66,4 +68,32 @@ void __attribute__((stdcall)) replication_event_view_reset(
 	*(long *)(view+REPLICATION_EVENT_VIEW_EVENT_COUNT_OFFSET)= 0;
 	*(long *)(view+REPLICATION_EVENT_VIEW_UNKNOWN1C_OFFSET)= 0;
 	*(long *)(view+REPLICATION_EVENT_VIEW_UNKNOWN24_OFFSET)= 0;
+}
+
+/* 0x000979f0: whether one of the things that the consoles share is being
+taken away, for the other console of a view: it is the one that the view of
+them has at its place, it was made, and it is being taken away. FALSE if
+not, and for a thing that the view has not */
+boolean replication_event_view_entity_deleting(
+	const byte *owner,
+	long entity_index)
+{
+	const byte *entity_view= *(const byte *const *)(*(const byte *const *)(owner+REPLICATION_EVENT_VIEW_OWNER_VIEW_OFFSET)+
+		REPLICATION_EVENT_VIEW_OWNER_VIEW_UNKNOWN8_OFFSET)+REPLICATION_EVENT_VIEW_OWNER_ENTITY_VIEW_OFFSET;
+	unsigned long index= (unsigned long)entity_index&(MAXIMUM_REPLICATION_ENTITIES-1);
+
+	if (index<MAXIMUM_REPLICATION_ENTITIES &&
+		((const struct replication_entity_view_entity *)(entity_view+REPLICATION_ENTITY_VIEW_ENTITIES_OFFSET))[index].entity_index==entity_index)
+	{
+		const struct replication_entity_manager *manager=
+			*(const struct replication_entity_manager *const *)(entity_view+REPLICATION_ENTITY_VIEW_MANAGER_OFFSET);
+		byte flags= manager->entities[index].flags;
+
+		if (flags&_replication_entity_created_bit)
+		{
+			return (flags&_replication_entity_deleting_bit)!=0;
+		}
+	}
+
+	return FALSE;
 }

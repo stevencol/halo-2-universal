@@ -2,6 +2,39 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — ¿Se está borrando esa cosa para la otra consola?
+
+Una función en `networking/replication_event_view.c`, de 64 bytes. De 1594
+funciones se pasa a 1595, el 14,16 % de las del juego (el 9,430 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `replication_event_view_entity_deleting` | `0x000979f0` | `networking/replication_event_view.c` |
+
+### Lo que se sabe
+
+- `replication_event_view_entity_deleting` contesta si una de las cosas
+  que las consolas comparten **se está borrando** para la otra consola
+  de una vista: la vista de las cosas la tiene en su sitio con ese mismo
+  número, la cosa llegó a crearse (bit `0x4`, hito 416) y se está
+  borrando (bit `0x2`).
+- Llega a la vista de las cosas por el mismo camino que el hito 469: la
+  vista de la partida, lo que tiene en `0x8`, y de eso lo de `0x30`. Es
+  lo que mira quien manda los sucesos de la partida antes de contar uno
+  que habla de una cosa que ya se va.
+- De `replication_event_view.c` quedan seis funciones de la lista
+  (`0x000970b0` a `0x00097d80`), todas grandes.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 441 a 470.
+- En este hito se pasaron las pruebas de `replication_event_view` (2
+  funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Una vista queda lista: se vacía lo que guardaba
 
 Una función en `networking/simulation_view.c`, de 113 bytes. De 1593
