@@ -317,3 +317,11 @@ address,name,source
 004cf5d0,unknown_004cf5d0,source/networking/network_observer.c
 004d87d8,unknown_004d87d8,source/networking/network_observer.c
 004d87f8,unknown_004d87f8,source/networking/replication_event_manager.c
+004cf6f8,unknown_004cf6f8,source/networking/network_connection.c
+004cf6fc,unknown_004cf6fc,source/networking/network_connection.c
+004cf700,unknown_004cf700,source/networking/network_connection.c
+004cf704,unknown_004cf704,source/networking/network_connection.c
+004cf708,unknown_004cf708,source/networking/network_connection.c
+004cf71c,unknown_004cf71c,source/networking/network_connection.c
+004cf720,unknown_004cf720,source/networking/network_connection.c
+004cf724,unknown_004cf724,source/networking/network_connection.c

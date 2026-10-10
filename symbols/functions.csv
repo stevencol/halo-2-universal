@@ -2048,3 +2048,4 @@ address,name,source,arguments,returns,convention
 00098fb0,replication_entity_view_handle_message,source/networking/replication_entity_view.c,ecx stack,void,stdcall
 000991d0,replication_entity_view_make_way,source/networking/replication_entity_view.c,edx stack stack stack,bool,stdcall
 000992d0,replication_entity_view_packet_result,source/networking/replication_entity_view.c,ecx stack stack,void,stdcall
+00096d80,network_connection_update_times,source/networking/network_connection.c,ecx esi eax edx stack,void,stdcall

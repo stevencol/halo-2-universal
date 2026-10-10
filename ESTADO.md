@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 431.
+**Última actualización:** 2026-10-08, al terminar el hito 432.
 
 ## Dónde estamos
 
-- **1490 funciones descompiladas de 11.265: el 13,23 % del juego** (el
-  8,915 % de los bytes de código).
-- Las 1490 están comprobadas contra el ejecutable original: las 1390 del
+- **1491 funciones descompiladas de 11.265: el 13,24 % del juego** (el
+  8,924 % de los bytes de código).
+- Las 1491 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a view of the events starts over* (ver `git log`).
+- Último hito: *Decompile how a connection keeps its round trip time* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 559 funciones apuntadas pero sin descompilar (las que el código
   llama); 457 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -151,8 +151,13 @@ Módulos (funciones hechas / archivo):
       sucesos, pedirlos al montón de la red, soltarlos y mandarlos
       contar; de `0x00089dc0` a `0x00089f20`, y `0x0008b0a0`)
 - [ ] Vistas de los sucesos — `networking\replication_event_view.c`
-      (1: vaciar una vista; quedan 8 de la lista, de `0x00096d80` a
+      (1: vaciar una vista; quedan 7 de la lista, de `0x000970b0` a
       `0x00097d80`; romper líneas pendiente)
+- [ ] La pieza principal de un canal — `networking\network_connection.c`
+      (1: el tiempo de ida y vuelta; quedan las demás de
+      `0x00095cf0` a `0x00096d00`, entre ellas las que el canal llama:
+      `0x00095cf0`, `0x000965e0`, `0x00096510`, `0x00096810`,
+      `0x00096860` y `0x00096ce0`; romper líneas pendiente)
 - [ ] Lo que cada cosa es — `networking\simulation_entity_database.c`
       (22, y una en `networking\network_heap.c`: crear una o varias,
       apuntar, activar y quitar cosas, vaciar, pedir su memoria,

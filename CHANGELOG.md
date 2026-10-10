@@ -2,6 +2,50 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Cuánto tarda en contestar la otra consola
+
+Una función en un archivo nuevo, `networking/network_connection.c`, de 268 bytes. De 1490
+funciones se pasa a 1491, el 13,24 % de las del juego (el 8,924 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_connection_update_times` | `0x00096d80` | `networking/network_connection.c` |
+
+### Lo que se sabe
+
+- Primera función de la pieza principal de un canal (las «cosas de
+  `unknown_004d87d8`» de los hitos 406 a 415, la que lleva la cuenta de
+  los paquetes mandados y sus respuestas). El nombre del archivo es una
+  suposición.
+- `network_connection_update_times` es **el cálculo del tiempo de ida y
+  vuelta**, y es el mismo que usa TCP:
+  - Con cada respuesta, el tiempo suavizado se acerca al nuevo en una
+    parte de la diferencia, y aparte se lleva cuánto varía.
+  - La espera antes de dar un paquete por perdido es el tiempo suavizado
+    más unas veces la variación, con dos mínimos.
+  - Se guardan también el tiempo más corto visto y los datos de la última
+    respuesta.
+  - Hay un número de «pérdida» que sube con cada paquete sin respuesta
+    (hasta un tope) y baja con cada respuesta (hasta cero).
+- Los ocho números que gobiernan el cálculo (cuánto se suaviza, por
+  cuánto se multiplica, mínimos y topes) son globales, de `0x004cf6f8` a
+  `0x004cf724`. En el ejecutable están a cero: alguien los pone al
+  arrancar.
+- De aquí salen dos de los números que el observador y el canal ya leían
+  de esta pieza sin saber qué eran: `0x96C` es el tiempo suavizado y
+  `0x970` su variación (hito 380), y `0x968` el tiempo más corto (hito
+  411).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente** aquí y en las de los hitos 426 a 431.
+- En este hito se pasaron las pruebas de `network_connection` (1
+  función, 3000 casos).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Las vistas de los sucesos: vaciar una
 
 Una función en un archivo nuevo, `networking/replication_event_view.c`, de 457 bytes. De 1489

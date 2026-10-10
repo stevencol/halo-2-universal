@@ -320,7 +320,8 @@ def run(t) -> None:
     for n in range(300):
         entity = random_.choice((0, 0x3FF, random_.randrange(COUNT))) | random_.getrandbits(22) << 10
         place = 0x14 + (entity & 0x3FF) * ENTITY
-        says = random_.choice((0, 1, 1, 0x100))
+        # what the kind says is a byte: any that is not nothing is yes
+        says = random_.choice((0, 1, 1, 0x80, 2, 0x100))
         t.check(
             "simulation_entity_database_created_remote",
             world(),
