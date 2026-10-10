@@ -2171,7 +2171,11 @@ address,name,source,arguments,returns,convention
 000680c0,simulation_updates_waiting,source/networking/simulation.c,edx,int
 00068290,simulation_starting,source/networking/simulation.c,,bool
 000682c0,simulation_failed,source/networking/simulation.c,,int
-00069260,unknown_00069260,,eax esi,void
+00069260,simulation_world_build_update,source/networking/simulation_world.c,eax esi,void
 00069a00,unknown_00069a00,,eax stack stack,void,stdcall
 00069b50,unknown_00069b50,,eax stack stack,void,stdcall
 000835c0,unknown_000835c0,,edx,bool
+00068350,simulation_take_unknown_004cf780_change,source/networking/simulation.c,eax stack,void,stdcall
+00084270,unknown_00084270,,stack,void,stdcall
+00083610,unknown_00083610,,stack stack stack,void,stdcall
+00069110,unknown_00069110,,stack stack,void,stdcall

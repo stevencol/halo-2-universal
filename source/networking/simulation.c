@@ -32,12 +32,12 @@ void __attribute__((stdcall)) unknown_00087d00(struct bitstream *stream, const v
 boolean __attribute__((stdcall)) unknown_00087e90(struct bitstream *stream, void *update);
 long unknown_00083db0(long unknown);
 
-/* 0x00069260: one of the things that come is made from what the game is
-doing. 0x00069a00, 0x00069b50: the thing passes on what the players do, and
+/* 0x00084270: what unknown_004cf780 has is told that its change was taken.
+0x00069a00, 0x00069b50: the thing passes on what the players do, and
 something more, of one of them. 0x000835c0: whether what unknown_004cf780 has
 lets the game go on a tick. 0x000683a0: one of the things that come is given
 to the game */
-void unknown_00069260(byte *world, long *update);
+void __attribute__((stdcall)) unknown_00084270(byte *unknown);
 void __attribute__((stdcall)) unknown_00069a00(const void *players, byte *world, long unknown8);
 void __attribute__((stdcall)) unknown_00069b50(const void *unknown610, byte *world, long unknown5cc);
 boolean unknown_000835c0(long unknown);
@@ -261,7 +261,7 @@ long simulation_failed(
 }
 
 /* 0x000682e0: one of the things that come is made from what the game is
-doing now (unknown_00069260), all zeros first. And a thing in its third state
+doing now (simulation_world_build_update), all zeros first. And a thing in its third state
 or its fifth, which takes them from another console, sees that the game is
 the same here: if the number of the one that was made is not the one of the
 thing, or the time of the game or its seed are others, a byte of the thing
@@ -273,7 +273,7 @@ void simulation_build_update(
 	long state;
 
 	memset(update, 0, SIMULATION_UPDATE_DECODED_SIZE);
-	unknown_00069260(unknown_004cf770.unknownC, update);
+	simulation_world_build_update(unknown_004cf770.unknownC, update);
 	world= unknown_004cf770.unknownC;
 	state= *(const long *)(world+SIMULATION_WORLD_STATE_OFFSET);
 	if ((state==3 || state==5) && !world[SIMULATION_WORLD_UNKNOWN2C_OFFSET])
@@ -334,5 +334,25 @@ void simulation_update(
 		simulation_build_update(update);
 		unknown_000683a0(update);
 		simulation_apply_update(update);
+	}
+}
+
+/* 0x00068350: a change of what unknown_004cf780 has, if there is one that
+was not taken yet: a number and 0x60 bytes of it are given, it is told
+(unknown_00084270), and it has none; whether there was one */
+void __attribute__((stdcall)) simulation_take_unknown_004cf780_change(
+	long *change,
+	boolean *changed)
+{
+	byte *unknown= (byte *)unknown_004cf780;
+
+	*changed= FALSE;
+	if (unknown[SIMULATION_UNKNOWN_004CF780_CHANGED_OFFSET])
+	{
+		change[0]= *(const long *)(unknown+SIMULATION_UNKNOWN_004CF780_UNKNOWN1C_OFFSET);
+		memcpy(&change[1], unknown+SIMULATION_UNKNOWN_004CF780_UNKNOWN24_OFFSET, SIMULATION_UNKNOWN_004CF780_UNKNOWN24_SIZE);
+		unknown_00084270(unknown);
+		*changed= TRUE;
+		unknown[SIMULATION_UNKNOWN_004CF780_CHANGED_OFFSET]= FALSE;
 	}
 }

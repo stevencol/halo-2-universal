@@ -146,7 +146,7 @@ def run(t) -> None:
             harness.mu.mem_write(arguments[1] + 0x4040, struct.pack("<2I", made_time, made_seed))
             return 0, (harness.normalize(arguments[0]), harness.normalize(arguments[1]))
 
-        t.check("simulation_build_update", Buffer(random_.randbytes(0x4048)), globals=globals_, externals={"unknown_00069260": makes})
+        t.check("simulation_build_update", Buffer(random_.randbytes(0x4048)), globals=globals_, externals={"simulation_world_build_update": makes})
         passes = lambda harness, arguments: (0, (harness.normalize(arguments[0]), harness.normalize(arguments[1]), arguments[2]))
         t.check(
             "simulation_apply_update",
@@ -168,5 +168,42 @@ def run(t) -> None:
                 "simulation_build_update": lambda harness, arguments: (0, ()),
                 "unknown_000683a0": lambda harness, arguments: (0, ()),
                 "simulation_apply_update": lambda harness, arguments: (0, ()),
+            },
+        )
+
+    # ---------- the thing that comes of this tick is made
+
+    for n in range(2000):
+        other = bytearray(random_.randbytes(0x90))
+        other[0x84] = random_.choice((0, 1, 1, 0x80))
+        other = Buffer(bytes(other))
+        t.check(
+            "simulation_take_unknown_004cf780_change",
+            Buffer(random_.randbytes(0x64)),
+            Buffer(random_.randbytes(4)),
+            globals={"unknown_004cf780": other},
+            externals={"unknown_00084270": lambda harness, arguments: (0, (harness.normalize(arguments[0]),))},
+        )
+        world = bytearray(random_.randbytes(0x1220))
+        struct.pack_into("<i", world, 0x8, random_.choice((1, 2, 2, 3, 4, 5)))
+        world[0x2E] = random_.choice((0, 1, 1))
+        time = bytearray(random_.randbytes(0x10))
+        playing = random_.choice((0, 1, 1, 0x100))
+        two = lambda harness, arguments: (0, (harness.normalize(arguments[0]), harness.normalize(arguments[1])))
+        t.check(
+            "simulation_world_build_update",
+            Buffer(bytes(world)),
+            Buffer(random_.randbytes(0x4048)),
+            globals={
+                "game_time_globals": Buffer(bytes(time)),
+                "global_random_seed_reference": Buffer(random_.randbytes(4)),
+                "unknown_004cf780": 0x4321,
+            },
+            externals={
+                "simulation_world_take_update": two,
+                "simulation_take_unknown_004cf780_change": two,
+                "unknown_00083610": lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]), harness.normalize(arguments[2]))),
+                "simulation_in_progress": lambda harness, arguments, playing=playing: playing,
+                "unknown_00069110": two,
             },
         )

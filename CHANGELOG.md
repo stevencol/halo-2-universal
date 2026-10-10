@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — De qué está hecha una actualización
+
+Dos funciones: una en `networking/simulation_world.c` y otra en
+`networking/simulation.c`, 221 bytes entre las dos. De 1617
+funciones se pasa a 1619, el 14,37 % de las del juego (el 9,544 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_build_update` | `0x00069260` | `networking/simulation_world.c` |
+| `simulation_take_unknown_004cf780_change` | `0x00068350` | `networking/simulation.c` |
+
+### Lo que se sabe
+
+- `simulation_world_build_update` es lo que da la actualización de cada
+  tick (lo que faltaba del hito 478), y deja ver **las dos maneras de
+  jugar en red**:
+  - una consola que **sigue** (tercer estado) no hace nada propio: **saca
+    de la cola la siguiente que le mandaron** (hito 450). Por eso tiene
+    que comprobar luego que su juego va igual (hito 478).
+  - las demás la **hacen** con lo que pasa aquí. Una actualización lleva:
+    su número; la hora del juego y la semilla del azar (al final, en
+    `0x4040` y `0x4044`); el cambio de lo que tiene `unknown_004cf780`,
+    si lo hay, y lo que le pasó (`0x00083610`); si se está jugando; lo
+    que hacen los jugadores (`0x00069110`); y si el juego se guardó desde
+    la anterior (el aviso del hito 478, que se dice una sola vez).
+- `simulation_take_unknown_004cf780_change`: si lo que tiene
+  `unknown_004cf780` cambió y aún no se había recogido, da un número y 96
+  bytes suyos, se lo dice (`0x00084270`) y lo deja como recogido.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos**, y en las de los hitos 441 a
+  478.
+- En este hito se pasaron las pruebas de las dos funciones y la de
+  `simulation_build_update`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Lo que `game_tick` le pide a la partida en red
 
 Ocho funciones en `networking/simulation.c`, 532 bytes entre las ocho. De 1609

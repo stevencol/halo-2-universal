@@ -21,6 +21,7 @@ and so are the names of its functions.
 #include "networking/network_heap.h"
 #include "networking/network_observer.h"
 #include "networking/network_session.h"
+#include "networking/simulation.h"
 #include "networking/simulation_view.h"
 
 #include <string.h>
@@ -33,9 +34,18 @@ and so are the names of its functions.
 game is, and its size is given; whether it was good */
 boolean __attribute__((stdcall)) unknown_00199740(const void *data, long size, void *base, long *size_out);
 
-/* 0x000c6ef0: something of one of the other things of the thing is made
-ready. 0x000694c0: the thing gets a player of the game */
+/* 0x00083610: the things that happened to what unknown_004cf780 has are
+given, and how many. 0x00069110: what the players do goes into one of the
+things that come. 0x000c6ef0: something of one of the other things of the
+thing is made ready. 0x000694c0: the thing gets a player of the game */
+void __attribute__((stdcall)) unknown_00083610(long unknown, long *count, void *events);
+void __attribute__((stdcall)) unknown_00069110(byte *world, long *update);
 void unknown_000c6ef0(byte *unknown14);
+
+/* ---------- more globals */
+
+/* 0x004cf780, of game.c */
+extern long unknown_004cf780;
 
 
 /* 0x00083bd0: whether what the thing has first has a player, by its place,
@@ -1519,5 +1529,49 @@ void simulation_world_unknown_00069c50(
 	{
 		simulation_world_unknown_0006b1f0(world, *(const long *)(*(const byte *const *)(world+SIMULATION_WORLD_UNKNOWN0_OFFSET)+
 			SIMULATION_WORLD_UNKNOWN0_MACHINE_MASK_OFFSET));
+	}
+}
+
+/* 0x00069260: the thing gives the one of the things that come that is of
+this tick. In its third state it is the first of the ones that came from
+another console and wait (simulation_world_take_update). In any other it is
+made here: its number is the one of the thing; the time of the game and its
+seed; the change of what unknown_004cf780 has, if there is one
+(simulation_take_unknown_004cf780_change), and what happened to it
+(unknown_00083610); whether the game in the network is being played; and if
+it is, what the players do (unknown_00069110), and whether the state of the
+game was saved since the last one, which a thing that is not in its fifth
+state says once */
+void simulation_world_build_update(
+	byte *world,
+	long *update)
+{
+	byte *bytes= (byte *)update;
+	boolean in_progress;
+
+	if (*(const long *)(world+SIMULATION_WORLD_STATE_OFFSET)==_simulation_world_state3)
+	{
+		simulation_world_take_update(world, update);
+
+		return;
+	}
+	update[0]= *(const long *)(world+SIMULATION_WORLD_UNKNOWN28_OFFSET);
+	*(unsigned long *)(bytes+SIMULATION_UPDATE_GAME_TIME_OFFSET)= game_time_globals->time;
+	*(unsigned long *)(bytes+SIMULATION_UPDATE_RANDOM_SEED_OFFSET)= *global_random_seed_reference;
+	simulation_take_unknown_004cf780_change((long *)(bytes+SIMULATION_UPDATE_CHANGE_OFFSET), bytes+SIMULATION_UPDATE_CHANGED_OFFSET);
+	unknown_00083610(unknown_004cf780, (long *)(bytes+SIMULATION_UPDATE_EVENT_COUNT_OFFSET), bytes+SIMULATION_UPDATE_EVENTS_OFFSET);
+	in_progress= simulation_in_progress();
+	bytes[SIMULATION_UPDATE_IN_PROGRESS_OFFSET]= in_progress;
+	if (in_progress)
+	{
+		long state;
+
+		unknown_00069110(world, update);
+		state= *(const long *)(world+SIMULATION_WORLD_STATE_OFFSET);
+		if (state!=3 && state!=5 && world[SIMULATION_WORLD_SAVED_OFFSET])
+		{
+			bytes[SIMULATION_UPDATE_SAVED_OFFSET]= TRUE;
+			world[SIMULATION_WORLD_SAVED_OFFSET]= FALSE;
+		}
 	}
 }

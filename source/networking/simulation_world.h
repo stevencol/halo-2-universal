@@ -249,6 +249,7 @@ boolean __attribute__((stdcall)) simulation_world_begin_game_state(byte *world);
 void __attribute__((stdcall)) simulation_world_update_players_unknown25(byte *world);
 void __attribute__((stdcall)) simulation_world_before_send_game_state(byte *world, long *size_out);
 void simulation_world_unknown_00069c50(byte *world);
+void simulation_world_build_update(byte *world, long *update);
 
 /* whether a view is past the states in which it is made ready: one of the
 second kind from the sixth state on, and any other from the fourth. The game

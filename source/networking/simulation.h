@@ -33,7 +33,22 @@ enum
 	SIMULATION_UPDATE_UNKNOWN5CC_OFFSET= 0x5CC,
 	SIMULATION_UPDATE_UNKNOWN610_OFFSET= 0x610,
 	SIMULATION_UPDATE_GAME_TIME_OFFSET= 0x4040,
-	SIMULATION_UPDATE_RANDOM_SEED_OFFSET= 0x4044
+	SIMULATION_UPDATE_RANDOM_SEED_OFFSET= 0x4044,
+	/* more of one of the things that come: whether the game in the network
+	is being played; whether what unknown_004cf780 has changed, and the
+	change; some things that happened, and how many; and whether the state
+	of the game was saved. Of what unknown_004cf780 has: a byte that says
+	that it changed, a number, and 0x60 bytes */
+	SIMULATION_UPDATE_IN_PROGRESS_OFFSET= 0x4,
+	SIMULATION_UPDATE_CHANGED_OFFSET= 0xDD0,
+	SIMULATION_UPDATE_CHANGE_OFFSET= 0xDD4,
+	SIMULATION_UPDATE_EVENT_COUNT_OFFSET= 0xE38,
+	SIMULATION_UPDATE_EVENTS_OFFSET= 0xE3C,
+	SIMULATION_UPDATE_SAVED_OFFSET= 0x403C,
+	SIMULATION_UNKNOWN_004CF780_UNKNOWN1C_OFFSET= 0x1C,
+	SIMULATION_UNKNOWN_004CF780_UNKNOWN24_OFFSET= 0x24,
+	SIMULATION_UNKNOWN_004CF780_UNKNOWN24_SIZE= 0x60,
+	SIMULATION_UNKNOWN_004CF780_CHANGED_OFFSET= 0x84
 };
 
 /* ---------- prototypes/SIMULATION.C */
@@ -52,5 +67,6 @@ long simulation_failed(void);
 void simulation_build_update(long *update);
 void simulation_apply_update(const long *update);
 void simulation_update(void);
+void __attribute__((stdcall)) simulation_take_unknown_004cf780_change(long *change, boolean *changed);
 
 #endif
