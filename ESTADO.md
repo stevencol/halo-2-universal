@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 439.
+**Última actualización:** 2026-10-08, al terminar el hito 440.
 
 ## Dónde estamos
 
-- **1513 funciones descompiladas de 11.265: el 13,43 % del juego** (el
-  9,021 % de los bytes de código).
-- Las 1513 están comprobadas contra el ejecutable original: las 1390 del
+- **1516 funciones descompiladas de 11.265: el 13,46 % del juego** (el
+  9,050 % de los bytes de código).
+- Las 1516 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile two channel message handlers and three functions of the message queue* (ver `git log`).
+- Último hito: *Decompile how the message queue starts over and keeps what comes* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 553 funciones apuntadas pero sin descompilar (las que el código
-  llama); 451 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 552 funciones apuntadas pero sin descompilar (las que el código
+  llama); 450 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -154,9 +154,10 @@ Módulos (funciones hechas / archivo):
       (1: vaciar una vista; quedan 7 de la lista, de `0x000970b0` a
       `0x00097d80`; romper líneas pendiente)
 - [ ] La segunda pieza de un canal — `networking\network_message_queue.c`
-      (3: lo que el canal le pregunta; tabla `0x00450db8`; quedan
-      `0x00094bf0`, `0x00094e90`, `0x000951c0`, `0x00095410`,
-      `0x00095580`, `0x00095840`, `0x00095b70` y `0x00095bc0`; romper
+      (6: lo que el canal le pregunta, vaciarla y guardar los
+      mensajes que llegan; tabla `0x00450db8`; quedan `0x00094e90`
+      (escribir), `0x000951c0` (leer), `0x00095410`, `0x00095580`
+      (encolar) y `0x00095840` (sacar un mensaje entero); romper
       líneas pendiente)
 - [x] La pieza principal de un canal — `networking\network_connection.c`
       (18: empezar de cero, el número de cada paquete, escribir y

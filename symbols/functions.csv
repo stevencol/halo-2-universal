@@ -1877,7 +1877,7 @@ address,name,source,arguments,returns,convention
 00089070,network_channel_unknown_00089070,source/networking/network_channel.c,ecx,int
 00088d20,network_channel_reset_times,source/networking/network_channel.c,eax,void
 00088d70,network_channel_set_time,source/networking/network_channel.c,eax esi,void
-00094bf0,unknown_00094bf0,,esi,void
+00094bf0,network_message_queue_reset,source/networking/network_message_queue.c,esi,void
 00092e00,unknown_00092e00,,eax ebx,bool
 00075910,network_unknown_00075910,source/networking/network_observer.c,eax,int
 00075930,network_channel_get_address,source/networking/network_observer.c,eax ecx,bool
@@ -2065,3 +2065,5 @@ address,name,source,arguments,returns,convention
 000814c0,network_message_queue_closes,source/networking/network_message_queue.c,ecx stack,bool,stdcall
 00094df0,network_message_queue_has_something,source/networking/network_message_queue.c,ecx stack,bool,stdcall
 00094e80,network_message_queue_minimum_bits,source/networking/network_message_queue.c,ecx stack stack,int,stdcall
+00095b70,network_message_queue_get_received,source/networking/network_message_queue.c,eax ecx,int
+00095bc0,network_message_queue_add_received,source/networking/network_message_queue.c,eax ebx stack stack stack stack,bool,stdcall

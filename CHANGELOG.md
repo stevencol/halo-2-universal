@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Los mensajes que llegan en trozos
+
+Tres funciones en `networking/network_message_queue.c`, 863 bytes entre las tres. De 1513
+funciones se pasa a 1516, el 13,46 % de las del juego (el 9,050 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_message_queue_reset` | `0x00094bf0` | `networking/network_message_queue.c` |
+| `network_message_queue_get_received` | `0x00095b70` | `networking/network_message_queue.c` |
+| `network_message_queue_add_received` | `0x00095bc0` | `networking/network_message_queue.c` |
+
+### Lo que se sabe
+
+- La segunda pieza de un canal lleva también **dos ventanas deslizantes**,
+  como la conexión (hito 433): una de los mensajes que tiene para mandar
+  (12 bytes por mensaje, desde `0x2C`) y otra de los que han llegado (8
+  bytes por mensaje, desde `0x1848`: unos bits, el tamaño, la clase y
+  dónde está). Los mensajes en sí están en memoria del montón de la red, y
+  la pieza lleva la cuenta de los bytes de unos y de otros.
+- `network_message_queue_add_received`: **ha llegado un trozo con tal
+  número.** La ventana avanza hasta él mientras quepa, y se guarda una
+  copia. Los repetidos y los viejos se dan por buenos sin guardarlos;
+  falla si no cabe su número o no hay memoria.
+- `network_message_queue_get_received` da lo guardado de un mensaje
+  llegado.
+- `network_message_queue_reset` vacía la pieza: devuelve al montón todos
+  los mensajes, los de mandar y los llegados. Era la función que el canal
+  llamaba al soltarse (hito 406) sin estar hecha.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las tres** y en las de los hitos 434 a
+  439.
+- Al vaciar, de los mensajes de mandar el juego pide al montón que recoja
+  la memoria aunque no haya ninguna (con un puntero nulo). Se hace igual.
+- En este hito se pasaron las pruebas de `network_message_queue` (6
+  funciones) y `network_channel` (27).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Dos mensajes del canal, y la otra pieza empieza
 
 Cinco funciones: dos en `networking/network_channel.c` y tres en el archivo nuevo

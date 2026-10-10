@@ -120,7 +120,7 @@ def run(t) -> None:
             globals=things(),
             externals={
                 "network_channel_close": closed,
-                "unknown_00094bf0": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "network_message_queue_reset": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
             },
         )
 
@@ -209,7 +209,7 @@ def run(t) -> None:
                 network_channel_update_connecting=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                 network_channel_reset_times=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                 network_connection_reset=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
-                unknown_00094bf0=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                network_message_queue_reset=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
             ),
         )
 
@@ -267,7 +267,7 @@ def run(t) -> None:
 
     for name, size, starts in (
         ("network_channel_take_unknown10", OWN, "network_connection_reset"),
-        ("network_channel_take_unknown14", OTHER, "unknown_00094bf0"),
+        ("network_channel_take_unknown14", OTHER, "network_message_queue_reset"),
     ):
         for n in range(300):
             count = random_.choice((0, 1, 3, 3, 3, -1))

@@ -13,6 +13,7 @@ the names of its functions.
 
 #include "networking/network_connection.h"
 #include "networking/network_message_gateway.h"
+#include "networking/network_message_queue.h"
 
 #include <string.h>
 
@@ -23,7 +24,6 @@ more; whether it had it */
 boolean unknown_00092e00(byte *unknown0, long unknown44);
 
 /* 0x00094bf0: one of the things of unknown_004d87dc is done with */
-void unknown_00094bf0(byte *unknown14);
 
 /* ---------- code */
 
@@ -124,7 +124,7 @@ void __attribute__((stdcall)) network_channel_release(
 	{
 		byte *unknown14= unknown_004d87dc+index*NETWORK_CHANNEL_UNKNOWN14_SIZE;
 
-		unknown_00094bf0(unknown14);
+		network_message_queue_reset(unknown14);
 		unknown14[NETWORK_CHANNEL_UNKNOWN14_USED_OFFSET]= FALSE;
 		*(long *)(unknown14+NETWORK_CHANNEL_UNKNOWN14_OWNER_OFFSET)= 0;
 		*(long *)(channel+NETWORK_CHANNEL_UNKNOWN14_OFFSET)= NONE;
@@ -398,7 +398,7 @@ void __attribute__((stdcall)) network_channel_connect(
 	index= *(const long *)(channel+NETWORK_CHANNEL_UNKNOWN14_OFFSET);
 	if (index!=NONE)
 	{
-		unknown_00094bf0(unknown_004d87dc+index*NETWORK_CHANNEL_UNKNOWN14_SIZE);
+		network_message_queue_reset(unknown_004d87dc+index*NETWORK_CHANNEL_UNKNOWN14_SIZE);
 	}
 }
 
@@ -555,7 +555,7 @@ long __attribute__((stdcall)) network_channel_take_unknown14(
 
 		if (!unknown14[NETWORK_CHANNEL_UNKNOWN14_USED_OFFSET])
 		{
-			unknown_00094bf0(unknown14);
+			network_message_queue_reset(unknown14);
 			*(long *)(unknown14+NETWORK_CHANNEL_UNKNOWN14_OWNER_OFFSET)= owner;
 			unknown14[NETWORK_CHANNEL_UNKNOWN14_USED_OFFSET]= TRUE;
 			*(byte **)(unknown14+NETWORK_CHANNEL_UNKNOWN14_UNKNOWNC_OFFSET)= unknown_00528000+UNKNOWN_00528000_UNKNOWN588_OFFSET;
