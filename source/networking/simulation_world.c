@@ -14,7 +14,10 @@ and so are the names of its functions.
 
 #include "cache/texture_cache.h"
 #include "game/game.h"
+#include "main/main.h"
 #include "main/main_game.h"
+#include "memory/data.h"
+#include "saved games/game_state.h"
 #include "networking/network_heap.h"
 #include "networking/simulation_view.h"
 
@@ -24,8 +27,11 @@ and so are the names of its functions.
 
 /* ---------- prototypes */
 
-/* 0x000860b0: a view of the second kind is given something */
+/* 0x000860b0: a view of the second kind is given something. 0x00199740:
+the state of the game that came, of a size, is put where the state of the
+game is, and its size is given; whether it was good */
 void unknown_000860b0(byte *view, long unknown);
+boolean __attribute__((stdcall)) unknown_00199740(const void *data, long size, void *base, long *size_out);
 
 
 /* 0x000693a0: the views of the thing are done with: what main_game_unload
@@ -777,4 +783,116 @@ void simulation_world_unknown_00069f10(
 		}
 	}
 	simulation_world_unknown_0006b040(world);
+}
+
+/* 0x0006a3b0: what the thing has of a player of a console, by the six bytes
+that the console is known by and which of its players it is; NULL if there
+is no such console or no such player. The game looks through a copy of the
+consoles of players_globals */
+byte *__attribute__((stdcall)) simulation_world_find_player(
+	byte *world,
+	const word *unknown14,
+	long local_index)
+{
+	const byte *globals= (const byte *)players_globals;
+	unsigned long machine_mask= *(const unsigned long *)(globals+PLAYERS_GLOBALS_MACHINE_MASK_OFFSET);
+	long machine;
+	long player;
+
+	for (machine= 0; machine<NUMBER_OF_SIMULATION_MACHINES; machine++)
+	{
+		if ((machine_mask&(1u<<machine)) && memcmp(unknown14,
+			globals+PLAYERS_GLOBALS_MACHINES_OFFSET+machine*SIMULATION_VIEW_UNKNOWN14_SIZE, SIMULATION_VIEW_UNKNOWN14_SIZE)==0)
+		{
+			break;
+		}
+	}
+	if (machine==NUMBER_OF_SIMULATION_MACHINES)
+	{
+		return NULL;
+	}
+	for (player= 0; player<NUMBER_OF_SIMULATION_WORLD_PLAYERS; player++)
+	{
+		byte *player_data_= world+player*SIMULATION_WORLD_PLAYER_SIZE+SIMULATION_WORLD_PLAYERS_OFFSET;
+
+		if (*(const long *)player_data_!=NONE)
+		{
+			const byte *datum= (const byte *)player_data->data+
+				(*(const unsigned long *)(player_data_+SIMULATION_WORLD_PLAYER_INDEX_OFFSET)&0xFFFF)*SIMULATION_PLAYER_DATUM_SIZE;
+
+			if (*(const short *)(datum+SIMULATION_PLAYER_DATUM_MACHINE_OFFSET)==machine &&
+				*(const short *)(datum+SIMULATION_PLAYER_DATUM_LOCAL_INDEX_OFFSET)==local_index)
+			{
+				return player_data_;
+			}
+		}
+	}
+
+	return NULL;
+}
+
+/* 0x0006a7f0: the thing takes what some players of a console do, as four
+bits say which: for each of them that the thing has (simulation_world_find_player)
+and that is in its third state, what it does is kept, with the time of the
+game */
+void __attribute__((stdcall)) simulation_world_set_player_actions(
+	byte *world,
+	const word *unknown14,
+	long players,
+	const void *actions)
+{
+	long index;
+
+	for (index= 0; index<MAXIMUM_SIMULATION_CONSOLE_PLAYERS; index++)
+	{
+		if (players&(1<<index))
+		{
+			byte *player= simulation_world_find_player(world, unknown14, index);
+
+			if (player && *(const long *)(player+SIMULATION_WORLD_PLAYER_STATE_OFFSET)==_simulation_world_player_state3)
+			{
+				memcpy(player+SIMULATION_WORLD_PLAYER_ACTIONS_OFFSET, (const byte *)actions+index*SIMULATION_PLAYER_ACTIONS_SIZE,
+					SIMULATION_PLAYER_ACTIONS_SIZE);
+				*(unsigned long *)(player+SIMULATION_WORLD_PLAYER_ACTIONS_TIME_OFFSET)= game_time_globals->time;
+			}
+		}
+	}
+}
+
+/* 0x0006aa20: all of the state of the game has come, so many bytes; whether
+it is the state of the game now. Nothing is done unless the thing is being
+sent it, that many bytes have come, and there is memory with them. Between
+what is done before a state is loaded and after, it is put where the state
+of the game is (unknown_00199740); if that is not good, or it is not of the
+size of the whole state, the game says that its files are damaged
+(main_files_damaged). Then the memory goes back to the texture cache, as
+simulation_world_unknown_0006aae0 does (written here) */
+boolean __attribute__((stdcall)) simulation_world_finish_game_state(
+	byte *world,
+	long size)
+{
+	boolean result= FALSE;
+
+	if (simulation_world_receiving_game_state(world) &&
+		*(const long *)(world+SIMULATION_WORLD_UNKNOWN1200_OFFSET)==size &&
+		*(void *const *)(world+SIMULATION_WORLD_MEMORY_OFFSET))
+	{
+		void *base= game_state_globals.base_address;
+		long loaded_size;
+
+		game_state_call_before_load_procs(0);
+		if (unknown_00199740(*(void *const *)(world+SIMULATION_WORLD_MEMORY_OFFSET), size, base, &loaded_size) &&
+			loaded_size==SIMULATION_GAME_STATE_SIZE)
+		{
+			result= TRUE;
+		}
+		else
+		{
+			main_files_damaged();
+		}
+		game_state_call_after_load_procs(0);
+		simulation_world_unknown_0006aae0(world);
+	}
+
+	return result;
 }

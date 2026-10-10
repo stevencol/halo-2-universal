@@ -90,7 +90,27 @@ enum
 	_simulation_world_unknown18_6= 6,
 	SIMULATION_VIEW_READY_OFFSET= 0x75,
 	/* the most bytes of the state of the game that the thing is sent */
-	MAXIMUM_SIMULATION_WORLD_GAME_STATE_SIZE= 0x40000
+	MAXIMUM_SIMULATION_WORLD_GAME_STATE_SIZE= 0x40000,
+	/* of what the thing has of a player: which player of the game it is,
+	its state, when what it does last came, and what it does */
+	SIMULATION_WORLD_PLAYER_INDEX_OFFSET= 0x4,
+	SIMULATION_WORLD_PLAYER_STATE_OFFSET= 0x8,
+	SIMULATION_WORLD_PLAYER_ACTIONS_TIME_OFFSET= 0x28,
+	SIMULATION_WORLD_PLAYER_ACTIONS_OFFSET= 0x2C,
+	SIMULATION_PLAYER_ACTIONS_SIZE= 0x5C,
+	_simulation_world_player_state3= 3,
+	MAXIMUM_SIMULATION_CONSOLE_PLAYERS= 4,
+	/* of players_globals: a bit for each console that there is, and the six
+	bytes that each is known by. Of a player of the game: its size, the
+	console that it is of, and which of the players of that console it is */
+	PLAYERS_GLOBALS_MACHINE_MASK_OFFSET= 0x2C,
+	PLAYERS_GLOBALS_MACHINES_OFFSET= 0x30,
+	NUMBER_OF_SIMULATION_MACHINES= 16,
+	SIMULATION_PLAYER_DATUM_SIZE= 0x21C,
+	SIMULATION_PLAYER_DATUM_MACHINE_OFFSET= 0x1A,
+	SIMULATION_PLAYER_DATUM_LOCAL_INDEX_OFFSET= 0x1C,
+	/* the size of the whole state of the game */
+	SIMULATION_GAME_STATE_SIZE= 0x3FE000
 };
 
 /* ---------- structures */
@@ -153,6 +173,10 @@ boolean __attribute__((stdcall)) simulation_world_add_update(byte *world, const 
 boolean __attribute__((stdcall)) simulation_world_receive_game_state(byte *world, long offset, long size,
 	const void *data);
 void simulation_world_unknown_00069f10(byte *world);
+byte *__attribute__((stdcall)) simulation_world_find_player(byte *world, const word *unknown14, long local_index);
+void __attribute__((stdcall)) simulation_world_set_player_actions(byte *world, const word *unknown14, long players,
+	const void *actions);
+boolean __attribute__((stdcall)) simulation_world_finish_game_state(byte *world, long size);
 
 /* ---------- globals */
 

@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Los jugadores de otra consola, y el estado del juego ya recibido
+
+Tres funciones en `networking/simulation_world.c`, 488 bytes entre las tres. De 1563
+funciones se pasa a 1566, el 13,90 % de las del juego (el 9,279 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_find_player` | `0x0006a3b0` | `networking/simulation_world.c` |
+| `simulation_world_set_player_actions` | `0x0006a7f0` | `networking/simulation_world.c` |
+| `simulation_world_finish_game_state` | `0x0006aa20` | `networking/simulation_world.c` |
+
+### Lo que se sabe
+
+- `simulation_world_find_player` busca **lo que la partida tiene de un
+  jugador de una consola**: primero la consola, por sus seis bytes, entre
+  las dieciséis de `players_globals` (un bit por consola en `0x2C`, sus
+  seis bytes desde `0x30`); después, entre los dieciséis jugadores de la
+  partida, el que es de esa consola (palabra `0x1A` del jugador) y es su
+  jugador número tal (palabra `0x1C`).
+- `simulation_world_set_player_actions` (lo que faltaba del hito 449):
+  para cada uno de los hasta cuatro jugadores de la consola que diga la
+  máscara, si la partida lo tiene y está en su tercer estado, **guarda lo
+  que hace** (`0x5C` bytes, en `0x2C` de su sitio) con la hora del juego.
+- `simulation_world_finish_game_state` es **cuando ya llegó todo el
+  estado del juego**: entre los avisos de antes y de después de cargar un
+  estado (hito 22), lo pone donde va el estado del juego (`0x00199740`,
+  apuntada; por los argumentos parece que lo descomprime). Si no vale, o
+  no mide los `0x3FE000` bytes del estado entero, **el juego dice que sus
+  archivos están dañados**. Y devuelve la memoria prestada.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las tres**, y en las de los hitos 441 a
+  456.
+- `simulation_world_find_player` mira las consolas en una copia que hace
+  en la pila; aquí se miran donde están.
+- En este hito se pasaron las pruebas de las tres funciones y las de
+  `simulation_view` (6).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — La cola de actualizaciones entera, y un trozo del estado del juego
 
 Cuatro funciones en `networking/simulation_world.c`, 601 bytes entre las cuatro. De 1559

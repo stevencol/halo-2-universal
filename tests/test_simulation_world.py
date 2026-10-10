@@ -433,3 +433,64 @@ def run(t) -> None:
                 "simulation_world_unknown_0006b040": views_done,
             },
         )
+
+    # ---------- the players of a console, what they do, and the state of the game that came
+
+    def players_world() -> Buffer:
+        world = bytearray(random_.randbytes(0x1220))
+        for player in range(16):
+            place = 0x7C + player * 0x88
+            struct.pack_into("<iIi", world, place, random_.choice((-1, 5, 5, 5)), random_.randrange(16) | random_.getrandbits(16) << 16, random_.choice((3, 3, 3, 1)))
+        return Buffer(bytes(world))
+
+    for n in range(2000):
+        globals_ = bytearray(random_.randbytes(0x90))
+        struct.pack_into("<I", globals_, 0x2C, random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16))))
+        for machine in range(16):
+            globals_[0x30 + machine * 6:0x36 + machine * 6] = bytes((random_.choice((1, 2)),)) * 5 + bytes((random_.choice((1, 2, 3)),))
+        players = bytearray(random_.randbytes(0x4C + 16 * 0x21C))
+        struct.pack_into("<I", players, 0x44, 0x4C)
+        for player in range(16):
+            struct.pack_into("<2h", players, 0x4C + player * 0x21C + 0x1A, random_.choice((random_.randrange(16), random_.randrange(4))), random_.randrange(4))
+        setup = {"players_globals": Buffer(bytes(globals_)), "player_data": Buffer(bytes(players), pointers=(0x44,))}
+        known_by = Buffer(bytes((random_.choice((1, 2)),)) * 5 + bytes((random_.choice((1, 2, 3)),)) + random_.randbytes(2))
+        t.check("simulation_world_find_player", players_world(), known_by, random_.choice((0, 1, 2, 3, 3, 0x10003)), globals=setup)
+        world = players_world()
+        time = bytearray(random_.randbytes(0x10))
+
+        def finds(harness, arguments, world=world):
+            player = (arguments[2] * 5 + harness.mu.mem_read(arguments[1], 1)[0]) % 20
+            return world.address + 0x7C + player * 0x88 if player < 16 else 0, (harness.normalize(arguments[0]), harness.normalize(arguments[1]), arguments[2])
+
+        t.check(
+            "simulation_world_set_player_actions",
+            world,
+            known_by,
+            random_.choice((0xF, random_.getrandbits(4), random_.getrandbits(32))),
+            Buffer(random_.randbytes(4 * 0x5C)),
+            globals={"game_time_globals": Buffer(bytes(time))},
+            externals={"simulation_world_find_player": finds},
+        )
+        world = bytearray(random_.randbytes(0x1220))
+        struct.pack_into("<i", world, 0x8, random_.choice((0, 2, 3, 3, 3, 3, 4, 5)))
+        come = random_.choice((-1, 0, 0x100, 0x100, 0x100))
+        struct.pack_into("<iI", world, 0x1200, come, random_.choice((0, 0x5000, 0x5000, 0x5000)))
+        good, loaded = random_.choice(((1, 0x3FE000), (1, 0x3FE000), (0, 0x3FE000), (1, 0x3FD000), (0x100, 0x3FE000)))
+
+        def loads(harness, arguments, good=good, loaded=loaded):
+            harness.mu.mem_write(arguments[3], struct.pack("<I", loaded))
+            return good, (arguments[0], arguments[1], arguments[2])
+
+        t.check(
+            "simulation_world_finish_game_state",
+            Buffer(bytes(world)),
+            random_.choice((come, come, come, 0, 0x101)) & 0xFFFFFFFF,
+            globals={"game_state_globals+0x2520": 0x61000},
+            externals={
+                "game_state_call_before_load_procs": lambda harness, arguments: 0,
+                "game_state_call_after_load_procs": lambda harness, arguments: 0,
+                "unknown_00199740": loads,
+                "main_files_damaged": lambda harness, arguments: 0,
+                "texture_cache_return_memory": lambda harness, arguments: 0,
+            },
+        )

@@ -27,8 +27,6 @@ bits say which. 0x0006a990: it takes a piece of the state of the game, of a
 size, that goes at a place; whether it could. 0x0006aa20: all of the state of
 the game has come, so many bytes: it is the one of the game now; whether it
 could */
-void __attribute__((stdcall)) unknown_0006a7f0(byte *world, byte *unknown14, long players, const void *actions);
-boolean __attribute__((stdcall)) unknown_0006aa20(byte *world, long size);
 
 /* 0x0006a8a0: the thing makes ready for the game to go; whether it could.
 0x0006ab10: the things that have come and wait are let go of, most likely */
@@ -146,7 +144,7 @@ If it could not go on, the view goes to its first state and is as 2 says
 (simulation_view_fail, written here). If not: numbers before the last that
 came are not heeded, nor one that is not before the one of the thing. The
 rest are; and if a number of the thing is 4, the two numbers are kept and
-the thing takes what the players do (unknown_0006a7f0) */
+the thing takes what the players do (simulation_world_set_player_actions) */
 boolean __attribute__((stdcall)) simulation_view_unknown_00085f50(
 	byte *view,
 	boolean failed,
@@ -181,7 +179,7 @@ boolean __attribute__((stdcall)) simulation_view_unknown_00085f50(
 	{
 		*(long *)(view+SIMULATION_VIEW_UNKNOWN84_OFFSET)= update;
 		*(long *)(view+SIMULATION_VIEW_UNKNOWN80_OFFSET)= unknown0;
-		unknown_0006a7f0(world, view+SIMULATION_VIEW_UNKNOWN14_OFFSET, players, actions);
+		simulation_world_set_player_actions(world, view+SIMULATION_VIEW_UNKNOWN14_OFFSET, players, actions);
 	}
 
 	return TRUE;
@@ -191,7 +189,7 @@ boolean __attribute__((stdcall)) simulation_view_unknown_00085f50(
 the game that the other console sends, which goes at a place and is of a
 size; whether it was taken. It is not if the thing is not being sent the
 state of the game. A piece of some size is one more piece (simulation_world_receive_game_state);
-one of none says that it has all come, so many bytes (unknown_0006aa20). If
+one of none says that it has all come, so many bytes (simulation_world_finish_game_state). If
 the thing could not take it, the view goes to its first state and is as 5
 says (simulation_view_fail, written here) */
 boolean __attribute__((stdcall)) simulation_view_unknown_00085ed0(
@@ -213,7 +211,7 @@ boolean __attribute__((stdcall)) simulation_view_unknown_00085ed0(
 	}
 	else
 	{
-		good= unknown_0006aa20(world, offset);
+		good= simulation_world_finish_game_state(world, offset);
 	}
 	if (!good && *(const long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)==0)
 	{
