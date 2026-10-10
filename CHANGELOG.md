@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — La partida espera a las demás consolas
+
+Cuatro funciones en `networking/simulation_world.c`, 441 bytes entre las cuatro. De 1580
+funciones se pasa a 1584, el 14,06 % de las del juego (el 9,366 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_unknown_00069c80` | `0x00069c80` | `networking/simulation_world.c` |
+| `simulation_world_unknown_00069d50` | `0x00069d50` | `networking/simulation_world.c` |
+| `simulation_world_unknown_0006b310` | `0x0006b310` | `networking/simulation_world.c` |
+| `simulation_world_unknown_0006b350` | `0x0006b350` | `networking/simulation_world.c` |
+
+### Lo que se sabe
+
+- `simulation_world_unknown_00069c80` es **la espera de la consola que
+  manda antes de arrancar la partida**. Para cada consola que hay (un bit
+  por consola en lo primero que lleva la partida, `0x1C`), menos la
+  propia (`0x14` de la partida):
+  - busca su vista por su número (hito 450) y la hace avanzar: si aún no
+    está lista, al estado siguiente (hito 446); si lo está y es una de
+    las consolas por las que se espera (los bits de `0x20`, que se dan
+    en el hito 452), pregunta si ya llegó (`0x0006a040`).
+  - Cuando no falta ninguna de las esperadas, **o cuando se acaba el
+    tiempo** (`0x004ced4c`), la partida se pone en marcha (hito 451). No
+    espera para siempre a una consola lenta.
+- `simulation_world_unknown_00069d50` hace avanzar igual a todas las
+  vistas de la segunda clase o la cuarta que aún no han llegado al
+  final.
+- Dos cambios más del segundo número de la partida (hito 452):
+  `simulation_world_unknown_0006b310` (de 4 a 5, y de 3 o 5 a 6) y
+  `simulation_world_unknown_0006b350` (de 3, 4 o 5 a 6). Se sabe ya que
+  van 1, 2, 3, 4, 5 y 6; faltan por entender el 5 y el 6.
+- Se sabe ahora qué es la «otra cosa» del hito 446
+  (`simulation_world_unknown_0006a2a0`): es la propia partida, y lo que
+  cuenta en `0x38` es el número que da a cada vista al pasarla al tercer
+  estado.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las cuatro**, y en las de los hitos 441
+  a 462.
+- En este hito se pasaron las pruebas de las cuatro funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Cuándo una vista está lista
 
 Dos funciones en `networking/simulation_view.c`, 297 bytes entre las dos. De 1578

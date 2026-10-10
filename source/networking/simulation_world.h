@@ -134,7 +134,14 @@ enum
 	by; and what the thing has first: something of the session */
 	SIMULATION_WORLD_PLAYER_IDENTIFIER_OFFSET= 0xC,
 	SIMULATION_PLAYER_IDENTIFIER_SIZE= 12,
-	SIMULATION_WORLD_UNKNOWN0_OFFSET= 0x0
+	SIMULATION_WORLD_UNKNOWN0_OFFSET= 0x0,
+	/* of what the thing has first: a bit for each console that there is. Of
+	the thing: which console it is itself. And one more value of the number
+	that it has at 0x18 */
+	SIMULATION_WORLD_UNKNOWN0_MACHINE_MASK_OFFSET= 0x1C,
+	SIMULATION_WORLD_MACHINE_INDEX_OFFSET= 0x14,
+	_simulation_world_unknown18_5= 5,
+	_simulation_world_state1= 1
 };
 
 /* ---------- structures */
@@ -211,6 +218,10 @@ unsigned long simulation_world_players_unknown25_mask(const byte *world);
 unsigned long simulation_world_players_known_mask(const byte *world);
 boolean __attribute__((stdcall)) simulation_world_player_matches(long player, const byte *world,
 	const long *identifier);
+void simulation_world_unknown_0006b310(byte *world);
+void simulation_world_unknown_0006b350(byte *world);
+void simulation_world_unknown_00069d50(byte *world);
+void simulation_world_unknown_00069c80(byte *world);
 
 /* whether a view is past the states in which it is made ready: one of the
 second kind from the sixth state on, and any other from the fourth. The game

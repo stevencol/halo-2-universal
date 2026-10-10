@@ -35,6 +35,10 @@ boolean __attribute__((stdcall)) unknown_00199740(const void *data, long size, v
 ready. 0x000694c0: the thing gets a player of the game */
 void unknown_000c6ef0(byte *unknown14);
 
+/* 0x0006a040: a view that is ready is brought on by the thing; something
+that is nothing if it is not there yet */
+long unknown_0006a040(byte *view, byte *world);
+
 /* 0x00083bd0: whether what the thing has first has a player, by its place,
 with the three numbers that it is known by */
 boolean __attribute__((stdcall)) unknown_00083bd0(long player, const void *unknown, const long *identifier);
@@ -1136,4 +1140,118 @@ boolean __attribute__((stdcall)) simulation_world_player_matches(
 	}
 
 	return unknown_00083bd0((long)index, *(const void *const *)(world+SIMULATION_WORLD_UNKNOWN0_OFFSET), identifier)!=FALSE;
+}
+
+/* 0x0006b310: the number that the thing has at 0x18 goes on: from 4 to 5,
+and from 3 or 5 to 6 (simulation_world_set_unknown18) */
+void simulation_world_unknown_0006b310(
+	byte *world)
+{
+	long unknown18= *(const long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET);
+
+	if (unknown18==_simulation_world_unknown18_4)
+	{
+		simulation_world_set_unknown18(world, _simulation_world_unknown18_5);
+	}
+	else if (unknown18>=_simulation_world_unknown18_3 && unknown18<_simulation_world_unknown18_6)
+	{
+		simulation_world_set_unknown18(world, _simulation_world_unknown18_6);
+	}
+}
+
+/* 0x0006b350: the number that the thing has at 0x18 is 6, if it was 3, 4 or
+5 */
+void simulation_world_unknown_0006b350(
+	byte *world)
+{
+	long unknown18= *(const long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET);
+
+	if (unknown18>=_simulation_world_unknown18_3 && unknown18<_simulation_world_unknown18_6)
+	{
+		simulation_world_set_unknown18(world, _simulation_world_unknown18_6);
+	}
+}
+
+/* 0x00069d50: the thing, unless it is in its first state, brings on each
+view of the second kind or of the fourth that is well, has not its byte at
+0x78 set, and is not in its sixth state: one that is of a channel and ready,
+with unknown_0006a040; any other goes on to its next state
+(simulation_world_unknown_0006a2a0) */
+void simulation_world_unknown_00069d50(
+	byte *world)
+{
+	struct simulation_view_iterator iterator= {SIMULATION_VIEW_KINDS_2_AND_4, 0};
+	byte *view;
+
+	if (*(const long *)(world+SIMULATION_WORLD_STATE_OFFSET)==_simulation_world_state1)
+	{
+		return;
+	}
+	while (simulation_world_next_view(&iterator, world, &view))
+	{
+		if (*(const long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)==0 && !view[SIMULATION_VIEW_UNKNOWN78_OFFSET] &&
+			*(const long *)(view+SIMULATION_VIEW_STATE_OFFSET)!=_simulation_view_state5)
+		{
+			if (*(const long *)(view+SIMULATION_VIEW_CHANNEL_OFFSET)!=NONE && view[SIMULATION_VIEW_READY_OFFSET])
+			{
+				unknown_0006a040(view, world);
+			}
+			else
+			{
+				simulation_world_unknown_0006a2a0(view, world);
+			}
+		}
+	}
+}
+
+/* 0x00069c80: the thing waits for the views of the other consoles before
+it starts to go. For each console that there is, but for its own: the view
+that it has with that number (simulation_world_get_view_by_unknown1c), if
+it is well, is brought on as simulation_world_unknown_00069d50 does; and one
+that is ready, of a console that the thing waits for (a bit of what it has
+at 0x20), is there when unknown_0006a040 says so. When no console that it
+waits for is missing, or the time that the game has for it has gone by since
+the one that the thing noted, the thing starts to go
+(simulation_world_unknown_0006b2a0). The game has the time of the network
+written here */
+void simulation_world_unknown_00069c80(
+	byte *world)
+{
+	unsigned long machines= *(const unsigned long *)(*(const byte *const *)(world+SIMULATION_WORLD_UNKNOWN0_OFFSET)+
+		SIMULATION_WORLD_UNKNOWN0_MACHINE_MASK_OFFSET);
+	long since= *(const long *)(world+SIMULATION_WORLD_UNKNOWN1C_OFFSET);
+	long elapsed= (long)((unsigned long)(unknown_00510548 ? unknown_0051054c : GetTickCount())-(unsigned long)since);
+	unsigned long others= 0;
+	unsigned long there= 0;
+	long machine;
+
+	for (machine= 0; machine<NUMBER_OF_SIMULATION_MACHINES; machine++)
+	{
+		unsigned long bit= 1u<<machine;
+
+		if ((machines&bit) && machine!=*(const long *)(world+SIMULATION_WORLD_MACHINE_INDEX_OFFSET))
+		{
+			byte *view= simulation_world_get_view_by_unknown1c(world, machine);
+
+			others|= bit;
+			if (view && *(const long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)==0)
+			{
+				if (*(const long *)(view+SIMULATION_VIEW_CHANNEL_OFFSET)!=NONE && view[SIMULATION_VIEW_READY_OFFSET])
+				{
+					if ((*(const unsigned long *)(world+SIMULATION_WORLD_UNKNOWN20_OFFSET)&bit) && unknown_0006a040(view, world))
+					{
+						there|= bit;
+					}
+				}
+				else
+				{
+					simulation_world_unknown_0006a2a0(view, world);
+				}
+			}
+		}
+	}
+	if (!(others&*(const unsigned long *)(world+SIMULATION_WORLD_UNKNOWN20_OFFSET)&~there) || elapsed>=unknown_004ced4c)
+	{
+		simulation_world_unknown_0006b2a0(world);
+	}
 }

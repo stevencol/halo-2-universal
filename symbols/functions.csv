@@ -2138,3 +2138,8 @@ address,name,source,arguments,returns,convention
 000865d0,unknown_000865d0,,stack,void,stdcall
 00086590,simulation_view_unknown_00086590,source/networking/simulation_view.c,edi,void
 00086b40,unknown_00086b40,,eax edx,void
+0006b310,simulation_world_unknown_0006b310,source/networking/simulation_world.c,eax,void
+0006b350,simulation_world_unknown_0006b350,source/networking/simulation_world.c,eax,void
+00069d50,simulation_world_unknown_00069d50,source/networking/simulation_world.c,eax,void
+00069c80,simulation_world_unknown_00069c80,source/networking/simulation_world.c,eax,void
+0006a040,unknown_0006a040,,eax ecx,int

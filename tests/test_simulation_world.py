@@ -578,3 +578,45 @@ def run(t) -> None:
             Buffer(known_by),
             externals={"unknown_00083bd0": lambda harness, arguments, has=has: (has, (arguments[0] & 0xFF, arguments[1], harness.normalize(arguments[2])))},
         )
+
+    # ---------- the second number goes on, and the views are brought on
+
+    for n in range(2500):
+        world = bytearray(random_.randbytes(0x40))
+        struct.pack_into("<i", world, 0x18, random_.choice((0, 1, 2, 3, 4, 5, 6, 7)))
+        for name in ("simulation_world_unknown_0006b310", "simulation_world_unknown_0006b350"):
+            t.check(name, Buffer(bytes(world)), externals={"simulation_world_set_unknown18": next_number})
+        thing = a_world(random_, 0)
+        data = bytearray(thing.data)
+        struct.pack_into("<i", data, 0x8, random_.choice((1, 2, 3, 3, 4)))
+        at = len(data)
+        data += random_.randbytes(0x20)
+        struct.pack_into("<I", data, at + 0x1C, random_.choice((0xF, 0xF, 0x5, random_.getrandbits(16))))
+        struct.pack_into("<I", data, 0, at)
+        struct.pack_into("<i", data, 0x14, random_.choice((0, 1, 2, 3)))
+        struct.pack_into("<I", data, 0x20, random_.choice((0, 0xF, 0xF, random_.getrandbits(4))))
+        kept = random_.choice((0, 1, 0x80))
+        now = random_.getrandbits(32)
+        struct.pack_into("<I", data, 0x1C, (now - random_.choice((0, 4999, 5000, 5001))) & 0xFFFFFFFF)
+        thing = Buffer(bytes(data), pointers=thing.pointers + (0,))
+        pattern = random_.getrandbits(8)
+
+        def brought(harness, arguments, pattern=pattern):
+            view = harness.normalize(arguments[0])
+            return pattern >> (harness.mu.mem_read(arguments[0] + 0x1C, 1)[0] & 7) & 1, (view, harness.normalize(arguments[1]))
+
+        setup = dict(
+            globals={
+                "unknown_00510548": bytes((kept,)),
+                "unknown_0051054c": now if kept else random_.getrandbits(32),
+                "unknown_004ced4c": struct.pack("<i", 5000),
+            },
+            externals={
+                "GetTickCount": lambda harness, arguments, now=now: now,
+                "unknown_0006a040": brought,
+                "simulation_world_unknown_0006a2a0": lambda harness, arguments: (0, (harness.normalize(arguments[0]), harness.normalize(arguments[1]))),
+                "simulation_world_unknown_0006b2a0": views_done,
+            },
+        )
+        t.check("simulation_world_unknown_00069d50", thing, **setup)
+        t.check("simulation_world_unknown_00069c80", thing, **setup)
