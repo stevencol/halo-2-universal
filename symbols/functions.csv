@@ -1878,7 +1878,7 @@ address,name,source,arguments,returns,convention
 00088d20,network_channel_reset_times,source/networking/network_channel.c,eax,void
 00088d70,network_channel_set_time,source/networking/network_channel.c,eax esi,void
 00094bf0,network_message_queue_reset,source/networking/network_message_queue.c,esi,void
-00092e00,unknown_00092e00,,eax ebx,bool
+00092e00,network_link_remove_channel,source/networking/network_link.c,eax ebx,bool
 00075910,network_unknown_00075910,source/networking/network_observer.c,eax,int
 00075930,network_channel_get_address,source/networking/network_observer.c,eax ecx,bool
 000783d0,network_observer_session_get_address,source/networking/network_observer.c,ecx ebx edi eax stack stack stack,bool,stdcall
@@ -1892,7 +1892,7 @@ address,name,source,arguments,returns,convention
 000776a0,network_observer_channel_update_tries,source/networking/network_observer.c,ecx stack,void,stdcall
 00088220,network_channel_connect,source/networking/network_channel.c,eax stack stack,void,stdcall
 00088110,network_channel_new,source/networking/network_channel.c,stack edx stack stack stack stack esi,bool,stdcall
-00092d10,unknown_00092d10,,esi stack stack stack,bool,stdcall
+00092d10,network_link_add_channel,source/networking/network_link.c,esi stack stack stack,bool,stdcall
 00095cf0,network_connection_reset,source/networking/network_connection.c,esi,void
 000820f0,network_channel_take_unknown10,source/networking/network_channel.c,stack,int,stdcall
 00082150,network_channel_take_unknown14,source/networking/network_channel.c,stack,int,stdcall
@@ -2203,3 +2203,6 @@ address,name,source,arguments,returns,convention
 00081390,network_channel_construct,source/networking/network_channel.c,esi,pointer
 00081440,network_memory_unknown_00081440,source/networking/network_memory.c,edx,pointer
 000815e0,network_memory_construct,source/networking/network_memory.c,esi,pointer
+00092e50,network_link_find_channel,source/networking/network_link.c,ecx stack stack,int,stdcall
+00092ef0,network_link_channel_of_address,source/networking/network_link.c,esi eax ecx,int
+00092f10,network_link_close_channels,source/networking/network_link.c,stack,void,stdcall

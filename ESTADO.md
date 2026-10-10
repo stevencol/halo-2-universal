@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 492.
+**Última actualización:** 2026-10-08, al terminar el hito 493.
 
 ## Dónde estamos
 
-- **1642 funciones descompiladas de 11.265: el 14,58 % del juego** (el
-  9,658 % de los bytes de código).
-- Las 1642 están comprobadas contra el ejecutable original: las 1390 del
+- **1647 funciones descompiladas de 11.265: el 14,62 % del juego** (el
+  9,678 % de los bytes de código).
+- Las 1647 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the constructors of a channel and of all that the network has* (ver `git log`).
+- Último hito: *Decompile the list of channels by address* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 562 funciones apuntadas pero sin descompilar (las que el código
-  llama); 460 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 560 funciones apuntadas pero sin descompilar (las que el código
+  llama); 458 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -204,6 +204,9 @@ Módulos (funciones hechas / archivo):
       `0x00094aa0`, completo; falta lo que las vistas hacen con cada
       mensaje, de `0x00085b20` a `0x00085f50`, y `0x000698e0`; romper
       líneas pendiente)
+- [ ] La lista de canales por dirección — `networking\network_link.c`
+      (5: apuntar, quitar, buscar y parar todos; faltan sus enchufes,
+      `0x00092c70`, y lo que lee de ellos, `0x00092f80`)
 - [ ] Un bloque con suma, versión y tamaño — `networking\network_blob.c`
       (2: la suma y ver si vale; falta quién los usa, de `0x00080e10` a
       `0x00081230`)

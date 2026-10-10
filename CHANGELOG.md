@@ -2,6 +2,60 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — La lista de canales por dirección
+
+Cinco funciones en el archivo nuevo `networking/network_link.c`. De 1642
+funciones se pasa a 1647, el 14,62 % de las del juego (el 9,678 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_link_add_channel` | `0x00092d10` | `networking/network_link.c` |
+| `network_link_remove_channel` | `0x00092e00` | `networking/network_link.c` |
+| `network_link_find_channel` | `0x00092e50` | `networking/network_link.c` |
+| `network_link_channel_of_address` | `0x00092ef0` | `networking/network_link.c` |
+| `network_link_close_channels` | `0x00092f10` | `networking/network_link.c` |
+
+### Lo que se sabe
+
+- Aquello de lo que son todos los canales (`0x00528000`) lleva **una lista
+  de hasta dieciséis canales**, cada uno con la dirección con la que habla:
+  así lo que llega de una dirección se da a su canal. Cada sitio mide
+  `0x20` bytes: el número del canal, el número que el canal da a quien
+  habla con él, un byte y la dirección.
+- `network_link_find_channel` busca el primero de una dirección: mismo
+  tamaño (mayor que cero) y mismos bytes, como `transport_address_equal`
+  sin el puerto. Se puede pedir además una clase: que el canal hable y
+  tenga el bit `0x80` de su byte de `0x48`, o el `0x40`.
+- `network_link_add_channel` apunta un canal. Si la dirección ya es de
+  otro canal de la misma clase, ese otro se suelta
+  (`network_channel_release`), salvo que los dos lleven el mismo número en
+  `0x4C`: entonces no se apunta. Tampoco si la lista está llena.
+- `network_link_remove_channel` lo quita poniendo el último en su sitio, y
+  `network_link_close_channels` para todos los canales de la lista y la
+  vacía.
+- **Lo que hace `network_memory_construct` (hito 492) está en
+  `0x00528000`**: lo primero es esto mismo, en `0xB28` (`0x00528b28`) está
+  lo que manda los mensajes sin canal y en `0x11A0` (`0x005291a0`) el
+  observador. Así `network_memory_unknown_00081310` y
+  `network_memory_unknown_00081440` son los constructores de esta lista y
+  del observador: sus nombres se cambiarán.
+
+### Cambiado
+
+- `unknown_00092d10` y `unknown_00092e00`, que ya llamaba
+  `network_channel.c`, tienen su nombre.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las cinco**, y en las de los hitos 456 a
+  492.
+- En este hito se pasaron las pruebas de las cinco funciones y todas las
+  de `network_channel`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Todo lo de la red, recién hecho
 
 Tres funciones: una en `networking/network_channel.c` y dos en

@@ -101,7 +101,7 @@ def run(t) -> None:
             random_.choice((0, 3, 6, 6, 0xD, 0x11, random_.getrandbits(32))),
             externals={
                 "network_message_gateway_send": sent,
-                "unknown_00092e00": lambda harness, arguments: (1, (arguments[0], arguments[1])),
+                "network_link_remove_channel": lambda harness, arguments: (1, (arguments[0], arguments[1])),
             },
             mocks=[Mock(lambda call: 0, stack_arguments=1)],
         )
@@ -201,7 +201,7 @@ def run(t) -> None:
             globals=dict(setup["globals"], **things()),
             externals=dict(
                 setup["externals"],
-                unknown_00092d10=lambda harness, arguments, could=random_.choice((1, 1, 1, 0)): (
+                network_link_add_channel=lambda harness, arguments, could=random_.choice((1, 1, 1, 0)): (
                     could,
                     (harness.normalize(arguments[0]), arguments[1], arguments[2], harness.normalize(arguments[3])),
                 ),
@@ -704,7 +704,7 @@ def run(t) -> None:
                     0,
                     (arguments[0], harness.normalize(arguments[1]), arguments[2], arguments[3], bytes(harness.mu.mem_read(arguments[4], arguments[3]))),
                 ),
-                unknown_00092e00=lambda harness, arguments: (1, (arguments[0], arguments[1])),
+                network_link_remove_channel=lambda harness, arguments: (1, (arguments[0], arguments[1])),
                 network_channel_write_packet=writes,
                 network_connection_drop_oldest_sent=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
                 network_connection_next_event=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),

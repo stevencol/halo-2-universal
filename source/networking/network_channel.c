@@ -12,16 +12,13 @@ the names of its functions.
 #include "network_channel.h"
 
 #include "networking/network_connection.h"
+#include "networking/network_link.h"
 #include "networking/network_message_gateway.h"
 #include "networking/network_message_queue.h"
 
 #include <string.h>
 
 /* ---------- prototypes of functions not decompiled yet */
-
-/* 0x00092e00: what a channel is of does not have its number in its list any
-more; whether it had it */
-boolean unknown_00092e00(byte *unknown0, long unknown44);
 
 /* 0x00094bf0: one of the things of unknown_004d87dc is done with */
 
@@ -101,7 +98,7 @@ void network_channel_close(
 	{
 		unknown3c->closed(unknown3c->unknown4);
 	}
-	unknown_00092e00(*(byte **)(channel+NETWORK_CHANNEL_UNKNOWN0_OFFSET),
+	network_link_remove_channel(*(byte **)(channel+NETWORK_CHANNEL_UNKNOWN0_OFFSET),
 		*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN44_OFFSET));
 	memcpy(channel+NETWORK_CHANNEL_LAST_ADDRESS_OFFSET, channel+NETWORK_CHANNEL_ADDRESS_OFFSET,
 		sizeof(struct transport_address));
@@ -321,13 +318,9 @@ void network_channel_update_connecting(
 	}
 }
 
-/* 0x00092d10: what a channel is of has, for the channel's number in its
-list, the number that the channel gives what it talks with and the address;
-whether it could. 0x00095cf0: one of the things of unknown_004d87d8 starts
-over. 0x000820f0, 0x00082150: one of the things of unknown_004d87d8, and of
-unknown_004d87dc, that is no one's is taken; which, or NONE */
-boolean __attribute__((stdcall)) unknown_00092d10(byte *unknown0, long unknown44, long identifier,
-	const struct transport_address *address);
+/* 0x00095cf0: one of the things of unknown_004d87d8 starts over. 0x000820f0,
+0x00082150: one of the things of unknown_004d87d8, and of unknown_004d87dc,
+that is no one's is taken; which, or NONE */
 
 /* ---------- globals */
 
@@ -349,7 +342,7 @@ struct network_channel_tries unknown_004cf6d4;
 its third state, with the address and a byte; unless the address is this
 console's own, it has not the seventh and eighth of its bits; and it gives
 what it talks with a new number, the next one of what it is of. If that
-cannot have it (unknown_00092d10), the channel stops, with 2 for a reason.
+cannot have it (network_link_add_channel), the channel stops, with 2 for a reason.
 If not: with the byte, it starts to try, since now, and makes its first try
 (network_channel_update_connecting); its six times are now; and its things
 of unknown_004d87d8 and unknown_004d87dc start over */
@@ -379,7 +372,7 @@ void __attribute__((stdcall)) network_channel_connect(
 	}
 	*(long *)(channel+NETWORK_CHANNEL_UNKNOWN4C_OFFSET)= identifier;
 	*(long *)(channel+NETWORK_CHANNEL_UNKNOWN50_OFFSET)= NONE;
-	if (!unknown_00092d10(*(byte **)(channel+NETWORK_CHANNEL_UNKNOWN0_OFFSET),
+	if (!network_link_add_channel(*(byte **)(channel+NETWORK_CHANNEL_UNKNOWN0_OFFSET),
 		*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN44_OFFSET), identifier,
 		(const struct transport_address *)(channel+NETWORK_CHANNEL_ADDRESS_OFFSET)))
 	{
