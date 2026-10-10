@@ -358,3 +358,47 @@ def run(t) -> None:
             globals={"game_state_globals+0x2520": 0x61000},
             externals={"unknown_001995a0": packs},
         )
+
+    # ---------- a view starts to send the state of the game
+
+    for n in range(400):
+        data = bytearray(random_.randbytes(0xC0 + 0x1220))
+        struct.pack_into("<I", data, 0xC, 0xC0)
+        struct.pack_into("<i", data, 0x90, random_.choice((0, 2)))
+        cache = bytearray(random_.randbytes(0x40))
+        # a cache with no pages lends nothing; how long the game would wait for one that has none free is a matter of
+        # the clock of the processor
+        struct.pack_into("<i", cache, 0x30, random_.choice((0, 100, 100, 100, 100)))
+        ring_memory = Buffer(random_.randbytes(0x40))
+        queued = random_.choice((0, 1, 1, 1, 0x100))
+
+        def lends(harness, arguments, ring_memory=ring_memory):
+            first = not any(call[0] == "texture_cache_steal_memory_now" for call in harness._calls)
+            return (ring_memory.address if first else 0x700000), (arguments[0], harness.normalize(arguments[1]), arguments[2], arguments[3] != 0)
+
+        def before(harness, arguments):
+            harness.mu.mem_write(arguments[1], struct.pack("<I", 0x3FE000))
+            return 0, (harness.normalize(arguments[0]),)
+
+        t.check(
+            "simulation_view_begin_send_game_state",
+            Buffer(bytes(data), pointers=(0xC,)),
+            extra=[ring_memory],
+            globals={
+                "texture_cache_globals+0x10": Buffer(bytes(cache)),
+                "game_state_after_save_procs": struct.pack("<I", mock_address(0)),
+            },
+            externals={
+                "texture_cache_steal_memory_now": lends,
+                "texture_cache_idle": lambda harness, arguments: 0,
+                "texture_cache_return_memory": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "simulation_world_before_send_game_state": before,
+                # the size is not compared: the function does nothing with it, and the compiler of source/, which
+                # has it in the same file, does not set it
+                "simulation_view_queue_game_state": lambda harness, arguments, queued=queued: (
+                    queued,
+                    (arguments[0], harness.normalize(arguments[1]), arguments[3]),
+                ),
+            },
+            mocks=[Mock(lambda call: 0, stack_arguments=1)],
+        )

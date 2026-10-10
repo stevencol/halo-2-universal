@@ -784,3 +784,83 @@ boolean __attribute__((stdcall)) simulation_view_queue_game_state(
 
 	return result;
 }
+
+/* 0x000862e0: a view of the second kind starts to send the state of the
+game to its console, one more time; whether all of it is ready to go. The
+texture cache lends memory for the ring of the view, to be given back with
+simulation_view_reclaim_game_state, and more to pack the state into, each
+with a short wait; with either missing, nothing is done.
+
+The ring starts with eight bytes that say the number that the game goes on
+from; then, between what is done before a state is saved and after
+(simulation_world_before_send_game_state, and the first thing of after), the
+packed state goes in, in pieces (simulation_view_queue_game_state). If that
+could not be, the view gives its memory back. The memory that the state was
+packed into goes back to the cache at the end. The game has
+texture_cache_steal_memory written here twice, and ring_buffer_append */
+boolean simulation_view_begin_send_game_state(
+	byte *view)
+{
+	boolean result= FALSE;
+	void *memory;
+	void *buffer;
+
+	(*(long *)(view+SIMULATION_VIEW_GAME_STATE_SEND_COUNT_OFFSET))++;
+	memory= texture_cache_steal_memory(_texture_cache_steal_wait_short, SIMULATION_VIEW_RING_SIZE, (long)view, NULL,
+		(texture_cache_stolen_memory_proc)simulation_view_reclaim_game_state);
+	buffer= texture_cache_steal_memory(_texture_cache_steal_wait_short, SIMULATION_VIEW_PACKED_GAME_STATE_SIZE, 0, NULL, NULL);
+	if (memory)
+	{
+		if (!buffer)
+		{
+			texture_cache_return_memory(memory);
+
+			return result;
+		}
+		else
+		{
+			struct ring_buffer *ring= (struct ring_buffer *)(view+SIMULATION_VIEW_RING_OFFSET);
+			byte *world= *(byte *const *)(view+SIMULATION_VIEW_WORLD_OFFSET);
+			struct simulation_view_game_state_record record;
+
+			*(void **)(view+SIMULATION_VIEW_UNKNOWN94_OFFSET)= memory;
+			*(long *)(view+SIMULATION_VIEW_UNKNOWN98_OFFSET)= SIMULATION_VIEW_RING_SIZE;
+			ring->size= SIMULATION_VIEW_RING_SIZE;
+			ring->data= memory;
+			ring->start= 0;
+			ring->count= 0;
+			*(long *)(view+SIMULATION_VIEW_UNKNOWNAC_OFFSET)= 0;
+			record.type= _simulation_view_game_state_record_start;
+			record.size= 0;
+			record.number= *(const long *)(world+SIMULATION_WORLD_UNKNOWN28_OFFSET);
+			if (ring_buffer_append(ring, sizeof(record), &record)==NONE)
+			{
+				simulation_view_unknown_00086590(view);
+			}
+			else
+			{
+				long size;
+
+				result= TRUE;
+				(*(long *)(view+SIMULATION_VIEW_UNKNOWNAC_OFFSET))++;
+				simulation_world_before_send_game_state(*(byte *const *)(view+SIMULATION_VIEW_WORLD_OFFSET), &size);
+				if (!simulation_view_queue_game_state(SIMULATION_VIEW_PACKED_GAME_STATE_SIZE, view, size, buffer))
+				{
+					result= FALSE;
+				}
+				(*(byte *const *)(view+SIMULATION_VIEW_WORLD_OFFSET))[SIMULATION_WORLD_SENDING_GAME_STATE_OFFSET]= FALSE;
+				game_state_after_save_procs[0](0);
+				if (!result)
+				{
+					simulation_view_unknown_00086590(view);
+				}
+			}
+		}
+	}
+	if (buffer)
+	{
+		texture_cache_return_memory(buffer);
+	}
+
+	return result;
+}

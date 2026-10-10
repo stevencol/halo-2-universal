@@ -116,6 +116,10 @@ enum
 	_simulation_view_game_state_record_piece= 1,
 	MAXIMUM_SIMULATION_VIEW_GAME_STATE_PIECE_SIZE= 0x400,
 	SIMULATION_VIEW_GAME_STATE_COMPRESSION_LEVEL= 9,
+	/* the size of the memory of the ring, and of the memory that the state
+	of the game is packed into */
+	SIMULATION_VIEW_RING_SIZE= 0x80000,
+	SIMULATION_VIEW_PACKED_GAME_STATE_SIZE= 0x40000,
 	_simulation_view_kind_1= 1,
 	_simulation_view_kind_2= 2,
 	_simulation_view_kind_3= 3,
@@ -183,6 +187,7 @@ void simulation_view_events_set_ready(boolean ready, byte *events);
 void __attribute__((stdcall)) simulation_view_reclaim_game_state(void *address, byte *view);
 boolean __attribute__((stdcall)) simulation_view_queue_game_state(long capacity, byte *view, long size,
 	const void *buffer);
+boolean simulation_view_begin_send_game_state(byte *view);
 
 /* ---------- globals */
 

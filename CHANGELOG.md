@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Empezar a mandar el estado del juego a una consola que entra
+
+Una función en `networking/simulation_view.c`, de 674 bytes. De 1600
+funciones se pasa a 1601, el 14,21 % de las del juego (el 9,475 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_view_begin_send_game_state` | `0x000862e0` | `networking/simulation_view.c` |
+
+### Lo que se sabe
+
+- `simulation_view_begin_send_game_state` es lo que la partida llama
+  cuando decide que a una consola le toca recibir el estado del juego
+  (hito 464). Junta lo de los últimos hitos:
+  - apunta un intento más (la cuenta que, si pasa de un límite, da la
+    vista por imposible);
+  - **pide prestadas dos memorias a la caché de texturas**: 512 KB para
+    el anillo de la vista (con `simulation_view_reclaim_game_state` para
+    cuando la caché la quiera de vuelta, hito 473) y 256 KB para
+    comprimir;
+  - el anillo empieza con ocho bytes que dicen **desde qué número sigue
+    la partida** (lo que al otro lado toma el hito 455);
+  - hace lo de antes de guardar una partida (hito 467), mete el estado
+    comprimido a trozos (hito 473) y hace lo de después de guardar;
+  - devuelve la memoria de comprimir. Si algo falló, la vista suelta
+    también la del anillo.
+- Contesta si quedó todo listo para ir saliendo. Lo que lo va sacando
+  del anillo y mandando es `0x000865d0`, que queda.
+- Se ve que el juego **para un momento para hacer esto**: son los mismos
+  pasos que al guardar una partida, y por eso se hace con una sola
+  consola cada vez (hito 464).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 441 a 473.
+- No se prueba que la caché no dé la memoria a la primera (depende del
+  reloj, como en el hito 465); sí que no tenga ninguna que dar.
+- El tamaño que se pasa a `simulation_view_queue_game_state` no se
+  compara: esa función no lo usa, y el compilador de `source\`, que la
+  tiene en el mismo archivo, no lo pone.
+- En este hito se pasaron las pruebas de `simulation_view` (18
+  funciones) y la de `simulation_world_advance_view`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — El estado del juego, comprimido y a trozos
 
 Dos funciones en `networking/simulation_view.c`, 443 bytes entre las dos. De 1598

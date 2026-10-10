@@ -37,9 +37,6 @@ boolean __attribute__((stdcall)) unknown_00199740(const void *data, long size, v
 ready. 0x000694c0: the thing gets a player of the game */
 void unknown_000c6ef0(byte *unknown14);
 
-/* 0x000862e0: a view of the second kind is sent the state of the game;
-whether it has all of it already */
-boolean unknown_000862e0(byte *view);
 
 /* 0x00083bd0: whether what the thing has first has a player, by its place,
 with the three numbers that it is known by */
@@ -1286,7 +1283,7 @@ of every player of the thing whose byte is set.
 In its fourth state: a view that is not of the second kind goes to its
 fifth, with a byte set in what it has at 0x8. One of the second kind goes to
 its fifth at once if the game has not started; if it has, it is sent the
-state of the game first (unknown_000862e0), which the thing starts with one
+state of the game first (simulation_view_begin_send_game_state), which the thing starts with one
 view at a time: only if fewer views than the game has for it are being sent
 it, and so long has gone by since it last started. When the view has it all,
 it goes to its fifth state; if not, the time is noted, and a view that has
@@ -1348,7 +1345,7 @@ long simulation_world_advance_view(
 			last= *(const long *)(world+SIMULATION_WORLD_GAME_STATE_SEND_TIME_OFFSET);
 			if ((last==NONE || network_time_since(last)>=unknown_004ced54) && allowed)
 			{
-				if (unknown_000862e0(view))
+				if (simulation_view_begin_send_game_state(view))
 				{
 					simulation_view_set_state(view, 4, *(const long *)(view+SIMULATION_VIEW_STATE_NUMBER_OFFSET));
 				}

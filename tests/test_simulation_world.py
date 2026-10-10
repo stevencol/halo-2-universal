@@ -673,7 +673,7 @@ def run(t) -> None:
                 "simulation_world_players_unknown25_mask": lambda harness, arguments, needed=needed: (needed, (harness.normalize(arguments[0]),)),
                 "network_time_since": lambda harness, arguments, since=since: (since, (arguments[0],)),
                 "network_time": lambda harness, arguments: 0x4321,
-                "unknown_000862e0": lambda harness, arguments, has_all=has_all: (has_all, (harness.normalize(arguments[0]),)),
+                "simulation_view_begin_send_game_state": lambda harness, arguments, has_all=has_all: (has_all, (harness.normalize(arguments[0]),)),
                 "simulation_view_nothing_to_send": lambda harness, arguments, idle=idle: (idle, (harness.normalize(arguments[0]),)),
                 "simulation_view_entities_pending": views_done,
                 "simulation_view_unknown_00086590": views_done,
