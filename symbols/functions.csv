@@ -958,7 +958,7 @@ address,name,source,arguments,returns,convention
 000b3d30,unknown_000b3d30,,stack,void,stdcall
 0021ebe0,unknown_0021ebe0,,,void
 0021ebc0,unknown_0021ebc0,,stack,void,stdcall
-000693a0,unknown_000693a0,,stack esi,void
+000693a0,unknown_000693a0,,stack,void,stdcall
 0006cd50,unknown_0006cd50,,eax,int
 001a01e0,language_texts_load,source/text/unicode_string_list.c,edi,void
 002186f0,sound_cache_close,source/sound/sound_manager.c,,void
@@ -2114,3 +2114,6 @@ address,name,source,arguments,returns,convention
 0006ab10,unknown_0006ab10,,stack,void,stdcall
 00069f10,unknown_00069f10,,eax,void
 0006b160,simulation_world_set_unknown18,source/networking/simulation_world.c,eax esi,void
+0006b040,simulation_world_unknown_0006b040,source/networking/simulation_world.c,edi,void
+00069f90,simulation_world_unknown_00069f90,source/networking/simulation_world.c,eax,void
+00069fe0,simulation_world_unknown_00069fe0,source/networking/simulation_world.c,eax,void

@@ -35,6 +35,10 @@ first kind or the third is ready */
 void __attribute__((stdcall)) unknown_0006ab10(byte *world);
 void unknown_00069f10(byte *world);
 
+/* 0x000693a0: the views of the thing are done with: what main_game_unload
+ends the game in the network with */
+void __attribute__((stdcall)) unknown_000693a0(void *world);
+
 long GetTickCount(void);
 
 /* ---------- globals */
@@ -43,6 +47,11 @@ long GetTickCount(void);
 kept, and that time */
 extern boolean unknown_00510548;
 extern long unknown_0051054c;
+
+/* 0x004ced58, 0x004ced5c: how many times the thing can be on its way to
+going before it gives up, and for how long each time, in milliseconds */
+long unknown_004ced58;
+long unknown_004ced5c;
 
 /* ---------- code */
 
@@ -564,4 +573,68 @@ void __attribute__((stdcall)) simulation_world_unknown_0006b1f0(
 	time= unknown_00510548 ? unknown_0051054c : GetTickCount();
 	*(long *)(world+SIMULATION_WORLD_UNKNOWN20_OFFSET)= unknown;
 	*(long *)(world+SIMULATION_WORLD_UNKNOWN1C_OFFSET)= time;
+}
+
+/* 0x0006b040: the thing gives up: its views are done with
+(unknown_000693a0), and if the number that it has at 0x18 was from 3 to 6, it
+is 2 (simulation_world_set_unknown18), and the time is noted. The game has
+the time of the network written here */
+void simulation_world_unknown_0006b040(
+	byte *world)
+{
+	long unknown18;
+
+	unknown_000693a0(world);
+	unknown18= *(const long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET);
+	if (unknown18>=_simulation_world_unknown18_3 && unknown18<=_simulation_world_unknown18_6)
+	{
+		simulation_world_set_unknown18(world, _simulation_world_unknown18_2);
+		*(long *)(world+SIMULATION_WORLD_UNKNOWN1C_OFFSET)= unknown_00510548 ? unknown_0051054c : GetTickCount();
+	}
+}
+
+/* 0x00069f90: the thing has been on its way for too long, or too many
+times: if its count is as many as the game has for it, or the time since the
+one that it noted is as long as the game has for it, and the number that it
+has at 0x18 is not 1, it gives up (simulation_world_unknown_0006b040) and
+that number is 1 */
+void simulation_world_unknown_00069f90(
+	byte *world)
+{
+	long since= *(const long *)(world+SIMULATION_WORLD_UNKNOWN34_OFFSET);
+	long now= unknown_00510548 ? unknown_0051054c : GetTickCount();
+
+	if (*(const long *)(world+SIMULATION_WORLD_UNKNOWN30_OFFSET)<unknown_004ced58 &&
+		(long)((unsigned long)now-(unsigned long)since)<unknown_004ced5c)
+	{
+		return;
+	}
+	if (*(const long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET)!=_simulation_world_unknown18_1)
+	{
+		simulation_world_unknown_0006b040(world);
+		simulation_world_set_unknown18(world, _simulation_world_unknown18_1);
+	}
+}
+
+/* 0x00069fe0: the thing gives up (simulation_world_unknown_0006b040) if it
+has no view of the first kind or of the third; or if the first one is of no
+channel, or is not ready, and the number that the thing has at 0x18 is not 3.
+The game has simulation_world_unknown_0006acb0 written here */
+void simulation_world_unknown_00069fe0(
+	byte *world)
+{
+	const byte *view= simulation_world_unknown_0006acb0(world);
+
+	if (view)
+	{
+		if (*(const long *)(view+SIMULATION_VIEW_CHANNEL_OFFSET)!=NONE && view[SIMULATION_VIEW_READY_OFFSET])
+		{
+			return;
+		}
+		if (*(const long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET)==_simulation_world_unknown18_3)
+		{
+			return;
+		}
+	}
+	simulation_world_unknown_0006b040(world);
 }

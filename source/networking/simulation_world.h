@@ -82,7 +82,13 @@ enum
 	/* more of the thing: when the number that it has at 0x18 was last 3,
 	and a number that it was given then */
 	SIMULATION_WORLD_UNKNOWN1C_OFFSET= 0x1C,
-	SIMULATION_WORLD_UNKNOWN20_OFFSET= 0x20
+	SIMULATION_WORLD_UNKNOWN20_OFFSET= 0x20,
+	/* more values of the number that the thing has at 0x18; and a byte of a
+	view that says that it is ready */
+	_simulation_world_unknown18_1= 1,
+	_simulation_world_unknown18_2= 2,
+	_simulation_world_unknown18_6= 6,
+	SIMULATION_VIEW_READY_OFFSET= 0x75
 };
 
 /* ---------- structures */
@@ -136,5 +142,13 @@ void simulation_world_unknown_0006b2a0(byte *world);
 void __attribute__((stdcall)) simulation_world_unknown_0006b110(byte *world, boolean unknown, const byte *view);
 void simulation_world_set_unknown18(byte *world, long unknown18);
 void __attribute__((stdcall)) simulation_world_unknown_0006b1f0(byte *world, long unknown);
+void simulation_world_unknown_0006b040(byte *world);
+void simulation_world_unknown_00069f90(byte *world);
+void simulation_world_unknown_00069fe0(byte *world);
+
+/* ---------- globals */
+
+extern long unknown_004ced58;
+extern long unknown_004ced5c;
 
 #endif

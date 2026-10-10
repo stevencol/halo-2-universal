@@ -30,6 +30,7 @@ def a_world(random_, channel: int) -> Buffer:
         view[0x14:0x1A] = bytes((random_.choice((1, 2)),)) * 5 + bytes((random_.choice((1, 2, 3)),))
         struct.pack_into("<i", view, 0x28, random_.choice((0, 0, 0, 4)))
         view[0x78] = random_.choice((0, 1, 1, 0x80))
+        view[0x75] = random_.choice((0, 1, 1, 0x80))
         struct.pack_into("<i", view, 0x84, random_.choice((0, 5, 100, 1000, 1200, random_.getrandbits(12))))
         other = bytearray(random_.randbytes(OTHER))
         other[0x24] = random_.choice((0, 1, 1, 0x80))
@@ -277,3 +278,40 @@ def run(t) -> None:
         )
         t.check("simulation_world_set_unknown18", Buffer(bytes(world)), random_.choice((1, 2, 3, 4, 4, 5, 6)), **setup)
         t.check("simulation_world_unknown_0006b1f0", Buffer(bytes(world)), random_.getrandbits(32), **setup)
+
+    # ---------- the thing gives up
+
+    views_done = lambda harness, arguments: (0, (harness.normalize(arguments[0]),))
+    next_number = lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1]))
+
+    for n in range(2500):
+        world = bytearray(random_.randbytes(0x1220))
+        struct.pack_into("<i", world, 0x18, random_.choice((0, 1, 2, 3, 4, 5, 6, 7)))
+        struct.pack_into("<i", world, 0x30, random_.choice((0, 1, 4, 5, 6)))
+        kept = random_.choice((0, 1, 0x80))
+        now = random_.getrandbits(32)
+        struct.pack_into("<I", world, 0x34, (now - random_.choice((0, 1, 999, 1000, 1001, 60000))) & 0xFFFFFFFF)
+        setup = dict(
+            globals={
+                "unknown_00510548": bytes((kept,)),
+                "unknown_0051054c": now if kept else random_.getrandbits(32),
+                "unknown_004ced58": struct.pack("<i", 5),
+                "unknown_004ced5c": struct.pack("<i", 1000),
+            },
+            externals={
+                "GetTickCount": lambda harness, arguments, now=now: now,
+                "unknown_000693a0": views_done,
+                "simulation_world_set_unknown18": next_number,
+            },
+        )
+        t.check("simulation_world_unknown_0006b040", Buffer(bytes(world)), **setup)
+        setup["externals"]["simulation_world_unknown_0006b040"] = views_done
+        t.check("simulation_world_unknown_00069f90", Buffer(bytes(world)), **setup)
+        thing = a_world(random_, 0)
+        data = bytearray(thing.data)
+        struct.pack_into("<i", data, 0x18, random_.choice((2, 3, 3, 4)))
+        t.check(
+            "simulation_world_unknown_00069fe0",
+            Buffer(bytes(data), pointers=thing.pointers),
+            externals={"simulation_world_unknown_0006b040": views_done},
+        )

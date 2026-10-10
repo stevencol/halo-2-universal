@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Cuándo la partida en red se da por vencida
+
+Tres funciones en `networking/simulation_world.c`, 231 bytes entre las tres. De 1554
+funciones se pasa a 1557, el 13,82 % de las del juego (el 9,235 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_unknown_0006b040` | `0x0006b040` | `networking/simulation_world.c` |
+| `simulation_world_unknown_00069f90` | `0x00069f90` | `networking/simulation_world.c` |
+| `simulation_world_unknown_00069fe0` | `0x00069fe0` | `networking/simulation_world.c` |
+
+### Lo que se sabe
+
+- `simulation_world_unknown_0006b040` es **darse por vencida**: suelta
+  todas sus vistas (`0x000693a0`, lo mismo con lo que `main_game_unload`
+  termina la partida en red, hito 36) y, si su segundo número iba de 3 a
+  6, lo deja en 2 y apunta la hora.
+- Dos motivos para hacerlo:
+  - `simulation_world_unknown_00069f90`: **demasiado tiempo o demasiados
+    intentos.** Si la cuenta de intentos (hito 452) llega a la que tiene
+    el juego (`0x004ced58`), o ha pasado desde la hora apuntada el tiempo
+    que tiene el juego (`0x004ced5c`, en milisegundos), se da por vencida
+    y el segundo número queda en 1.
+  - `simulation_world_unknown_00069fe0`: **se quedó sin su vista
+    principal** (la primera de la primera clase o la tercera): no la
+    tiene, o no tiene canal o no está lista (byte `0x75` de la vista) y
+    el segundo número no es 3.
+- Del segundo número de la partida se sabe ya: 1 «falló», 2 «se dio por
+  vencida», 3 «esperando para entrar», 4 «jugando».
+
+### Corregido
+
+- `unknown_000693a0` estaba apuntada con dos argumentos (uno en `esi`);
+  **solo recibe uno, en la pila**, y lo quita ella. `main_game_unload`
+  la llama ya así. Es otro caso del aviso de ESTADO.md (como el del hito
+  445).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las tres**, y en las de los hitos 441 a
+  452.
+- En este hito se pasaron las pruebas de las tres funciones y la de
+  `main_game_unload`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — El segundo número de la partida en red
 
 Dos funciones en `networking/simulation_world.c`, 312 bytes entre las dos. De 1552
