@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 454.
+**Última actualización:** 2026-10-08, al terminar el hito 455.
 
 ## Dónde estamos
 
-- **1558 funciones descompiladas de 11.265: el 13,83 % del juego** (el
-  9,238 % de los bytes de código).
-- Las 1558 están comprobadas contra el ejecutable original: las 1390 del
+- **1559 funciones descompiladas de 11.265: el 13,84 % del juego** (el
+  9,244 % de los bytes de código).
+- Las 1559 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile what the simulation world does when its main view is ready* (ver `git log`).
+- Último hito: *Decompile how a view takes the number the game goes on from* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 562 funciones apuntadas pero sin descompilar (las que el código
   llama); 460 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -168,10 +168,11 @@ Módulos (funciones hechas / archivo):
       `unknown_004cf770`, y queda casi todo, de `0x00069300` a
       `0x0006ad40`)
 - [ ] Las vistas de la partida en red — `networking\simulation_view.c`
-      (5: poner una vista en un estado, darla por mala, marcar la
+      (6: poner una vista en un estado, darla por mala, marcar la
       que frena la partida, lo que hacen los jugadores de la otra
-      consola y los trozos del estado del juego; quedan `0x00085b20`,
-      `0x00085cb0`, `0x00085d00`, `0x00085dc0`, `0x00085e70`,
+      consola, los trozos del estado del juego y desde qué número
+      sigue la partida; quedan `0x00085b20`,
+      `0x00085cb0`, `0x00085d00`, `0x00085e70`,
       `0x00085fc0`, `0x000860b0`, `0x000861c0` y `0x000862e0`)
 - [ ] A quien se dan los mensajes de las vistas —
       `networking\network_message_handler.c` (7: de `0x00094910` a

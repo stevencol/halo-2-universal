@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — «La partida sigue desde aquí»
+
+Una función en `networking/simulation_view.c`, de 170 bytes. De 1558
+funciones se pasa a 1559, el 13,84 % de las del juego (el 9,244 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_view_unknown_00085dc0` | `0x00085dc0` | `networking/simulation_view.c` |
+
+### Lo que se sabe
+
+- `simulation_view_unknown_00085dc0` es lo que hace una vista de la
+  primera clase con el mensaje de `0x00094a10` (hito 444), que trae un
+  solo número: **el número desde el que sigue la partida.**
+- Solo se hace caso si la partida está «esperando para entrar» (su
+  segundo número es 3, hito 452) y no está recibiendo el estado del
+  juego. Entonces la partida se prepara (`0x0006a8a0`) y, si puede:
+  - ese número pasa a ser el suyo;
+  - **se pone en marcha**, igual que en el hito 451 (el juego lo tiene
+    escrito otra vez aquí);
+  - y el juego **se pone al día** con lo que haya llegado (hito 446).
+- Si no puede prepararse, la vista vuelve al primer estado con el motivo
+  `5`, el mismo que cuando no se puede tomar el estado del juego (hito
+  449).
+- Se ve ya el orden de entrada de una consola en una partida: primero
+  los trozos del estado del juego (hito 449), y luego este mensaje, que
+  dice desde qué número hay que aplicar las actualizaciones.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 441 a 454.
+- En este hito se pasaron las pruebas de `simulation_view` (6 funciones)
+  y la de `network_message_handler_unknown_00094a10`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — La vista principal está lista
 
 Una función en `networking/simulation_world.c`, de 115 bytes. De 1557

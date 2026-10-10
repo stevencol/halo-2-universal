@@ -31,6 +31,11 @@ void __attribute__((stdcall)) unknown_0006a7f0(byte *world, byte *unknown14, lon
 boolean __attribute__((stdcall)) unknown_0006a990(byte *world, long offset, long size, const void *data);
 boolean __attribute__((stdcall)) unknown_0006aa20(byte *world, long size);
 
+/* 0x0006a8a0: the thing makes ready for the game to go; whether it could.
+0x0006ab10: the things that have come and wait are let go of, most likely */
+boolean __attribute__((stdcall)) unknown_0006a8a0(byte *world);
+void __attribute__((stdcall)) unknown_0006ab10(byte *world);
+
 /* ---------- globals */
 
 /* 0x00510548, 0x0051054c, of main.c: whether the time is the one that was
@@ -219,4 +224,47 @@ boolean __attribute__((stdcall)) simulation_view_unknown_00085ed0(
 	}
 
 	return good;
+}
+
+/* 0x00085dc0: a view of the first kind is told the number that the game
+goes on from; whether that was heeded. It is only if the number that the
+thing has at 0x18 is 3 and the thing is not being sent the state of the
+game. Then the thing makes ready (unknown_0006a8a0); if it could, the number
+is the one of the thing, it starts to go as simulation_world_unknown_0006b2a0
+has it (written here), and the game is brought up to what has come
+(simulation_world_unknown_00069350). If it could not, the view goes to its
+first state and is as 5 says (simulation_view_fail, written here) */
+boolean __attribute__((stdcall)) simulation_view_unknown_00085dc0(
+	byte *view,
+	long number)
+{
+	byte *world= *(byte *const *)(view+SIMULATION_VIEW_WORLD_OFFSET);
+
+	if (*(const long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET)!=_simulation_world_unknown18_3 ||
+		simulation_world_receiving_game_state(world))
+	{
+		return FALSE;
+	}
+	if (unknown_0006a8a0(world))
+	{
+		world= *(byte *const *)(view+SIMULATION_VIEW_WORLD_OFFSET);
+		*(long *)(world+SIMULATION_WORLD_UNKNOWN28_OFFSET)= number;
+		if (*(const long *)(world+SIMULATION_WORLD_STATE_OFFSET)==_simulation_world_state3)
+		{
+			unknown_0006ab10(world);
+			*(long *)(world+SIMULATION_WORLD_LAST_UPDATE_OFFSET)= (long)((unsigned long)number-1);
+			*(long *)(world+SIMULATION_WORLD_FIRST_UPDATE_OFFSET)= number;
+		}
+		world[SIMULATION_WORLD_GOING_OFFSET]= TRUE;
+		simulation_world_unknown_00069350(TRUE, *(byte *const *)(view+SIMULATION_VIEW_WORLD_OFFSET));
+
+		return TRUE;
+	}
+	if (*(const long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)==0)
+	{
+		simulation_view_set_state(view, _simulation_view_state0, NONE);
+		*(long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)= _simulation_view_unknown28_game_state_failed;
+	}
+
+	return FALSE;
 }

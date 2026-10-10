@@ -20,11 +20,10 @@ it). The name of the file is a guess, and so are the names of its functions.
 
 /* ---------- prototypes */
 
-/* 0x00085b20, 0x00085d00, 0x00085dc0 and 0x00085e70: what a view does with
-what each message has; whether it could, most likely */
+/* 0x00085b20, 0x00085d00 and 0x00085e70: what a view does with what each
+message has; whether it could, most likely */
 boolean unknown_00085b20(byte *view, long unknown0, long unknown4);
 boolean __attribute__((stdcall)) unknown_00085d00(byte *view, long unknown0, long unknown4, const long *unknown8);
-boolean __attribute__((stdcall)) unknown_00085dc0(byte *view, long unknown0);
 boolean __attribute__((stdcall)) unknown_00085e70(byte *view, long unknown0, long unknown4, const long *unknown8);
 
 /* ---------- code */
@@ -108,7 +107,8 @@ void network_message_handler_unknown_000949d0(
 	}
 }
 
-/* 0x00094a10: a message with a number, for a view of the first kind */
+/* 0x00094a10: a message with a number, for a view of the first kind: the
+number that the game goes on from (simulation_view_unknown_00085dc0) */
 void __attribute__((stdcall)) network_message_handler_unknown_00094a10(
 	const long *message,
 	long channel_index)
@@ -117,7 +117,7 @@ void __attribute__((stdcall)) network_message_handler_unknown_00094a10(
 
 	if (view && *(const word *)(view+SIMULATION_VIEW_KIND_OFFSET)==_simulation_view_kind1)
 	{
-		unknown_00085dc0(view, message[0]);
+		simulation_view_unknown_00085dc0(view, message[0]);
 	}
 }
 

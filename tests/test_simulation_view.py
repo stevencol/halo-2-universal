@@ -102,3 +102,23 @@ def run(t) -> None:
                 "unknown_0006aa20": lambda harness, arguments, could=could: (could, (harness.normalize(arguments[0]), arguments[1])),
             },
         )
+
+    # ---------- the number that the game goes on from
+
+    for n in range(2500):
+        view = a_view()
+        data = bytearray(view.data)
+        struct.pack_into("<i", data, VIEW + 0x18, random_.choice((2, 3, 3, 3, 3, 4)))
+        data[VIEW + 0x24] = random_.choice((0, 1))
+        could = random_.choice((0, 1, 1, 0x100))
+        t.check(
+            "simulation_view_unknown_00085dc0",
+            Buffer(bytes(data), pointers=view.pointers),
+            random_.choice((0, 5, 1000, 0x80000000, random_.getrandbits(32))),
+            externals={
+                "simulation_view_set_state": state,
+                "unknown_0006a8a0": lambda harness, arguments, could=could: (could, (harness.normalize(arguments[0]),)),
+                "unknown_0006ab10": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "simulation_world_unknown_00069350": lambda harness, arguments: (0, (arguments[0] & 0xFF, harness.normalize(arguments[1]))),
+            },
+        )

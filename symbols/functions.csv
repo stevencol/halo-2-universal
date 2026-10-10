@@ -2082,7 +2082,7 @@ address,name,source,arguments,returns,convention
 00094aa0,network_message_handler_unknown_00094aa0,source/networking/network_message_handler.c,esi ebx,void
 00085b20,unknown_00085b20,,eax edx edi,bool
 00085d00,unknown_00085d00,,ebx stack stack stack,bool,stdcall
-00085dc0,unknown_00085dc0,,edi stack,bool,stdcall
+00085dc0,simulation_view_unknown_00085dc0,source/networking/simulation_view.c,edi stack,bool,stdcall
 00085e70,unknown_00085e70,,edx ecx eax stack,bool,stdcall
 00085ed0,simulation_view_unknown_00085ed0,source/networking/simulation_view.c,esi ecx eax stack,bool,stdcall
 00085f50,simulation_view_unknown_00085f50,source/networking/simulation_view.c,eax ecx edx edi stack stack,bool,stdcall
@@ -2119,3 +2119,4 @@ address,name,source,arguments,returns,convention
 00069fe0,simulation_world_unknown_00069fe0,source/networking/simulation_world.c,eax,void
 0006b090,simulation_world_unknown_0006b090,source/networking/simulation_world.c,eax ecx stack,void,stdcall
 0006a560,unknown_0006a560,,eax stack,void,stdcall
+0006a8a0,unknown_0006a8a0,,stack,bool,stdcall

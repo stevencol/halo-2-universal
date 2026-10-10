@@ -74,5 +74,6 @@ boolean __attribute__((stdcall)) simulation_view_unknown_00085f50(byte *view, bo
 	long unknown0, long players, const void *actions);
 boolean __attribute__((stdcall)) simulation_view_unknown_00085ed0(byte *view, long offset, long size,
 	const void *data);
+boolean __attribute__((stdcall)) simulation_view_unknown_00085dc0(byte *view, long number);
 
 #endif
