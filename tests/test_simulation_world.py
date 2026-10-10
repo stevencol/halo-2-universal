@@ -172,7 +172,7 @@ def run(t) -> None:
             "simulation_world_unknown_00069880",
             a_world(random_, 0),
             random_.getrandbits(32),
-            externals={"unknown_000860b0": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1]))},
+            externals={"simulation_view_send_update": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1]))},
         )
 
     # ---------- a view by what it is known by, the first thing that waits, and the first view on its way

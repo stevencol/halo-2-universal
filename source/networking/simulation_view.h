@@ -55,7 +55,21 @@ enum
 	_simulation_view_unknown28_remote_failed= 2,
 	_simulation_view_unknown28_game_state_failed= 5,
 	/* how a view is after it is told of fewer players than it has to know */
-	_simulation_view_unknown28_players_missing= 8
+	_simulation_view_unknown28_players_missing= 8,
+	/* more of a view: the state of the other end of it and the number that
+	goes with it, as it last said; and something that a view that is not in
+	its sixth state has to take the things that come. The kind of the
+	message that one of those things goes in, its size, and the state of a
+	view in which it is sent on as it is. How a view is after the other end
+	went back to its first state, or to a state that does not follow */
+	SIMULATION_VIEW_REMOTE_STATE_OFFSET= 0x34,
+	SIMULATION_VIEW_REMOTE_STATE_NUMBER_OFFSET= 0x38,
+	SIMULATION_VIEW_UNKNOWN94_OFFSET= 0x94,
+	_network_message_simulation_update= 0x27,
+	SIMULATION_VIEW_UPDATE_SIZE= 0x4048,
+	_simulation_view_state1= 1,
+	_simulation_view_state5= 5,
+	_simulation_view_unknown28_remote_reset= 6
 };
 
 /* ---------- structures */
@@ -79,5 +93,7 @@ boolean __attribute__((stdcall)) simulation_view_unknown_00085ed0(byte *view, lo
 boolean __attribute__((stdcall)) simulation_view_unknown_00085dc0(byte *view, long number);
 boolean __attribute__((stdcall)) simulation_view_set_players(byte *view, unsigned long players,
 	unsigned long valid, const long *identifiers);
+void simulation_view_send_update(byte *view, const void *update);
+boolean simulation_view_handle_remote_state(byte *view, long state, long number);
 
 #endif

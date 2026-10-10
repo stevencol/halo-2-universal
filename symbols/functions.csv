@@ -2080,7 +2080,7 @@ address,name,source,arguments,returns,convention
 00094a10,network_message_handler_unknown_00094a10,source/networking/network_message_handler.c,stack ebx,void,stdcall
 00094a50,network_message_handler_unknown_00094a50,source/networking/network_message_handler.c,edi stack stack ebx,void,stdcall
 00094aa0,network_message_handler_unknown_00094aa0,source/networking/network_message_handler.c,esi ebx,void
-00085b20,unknown_00085b20,,eax edx edi,bool
+00085b20,simulation_view_handle_remote_state,source/networking/simulation_view.c,eax edx edi,bool
 00085d00,simulation_view_set_players,source/networking/simulation_view.c,ebx stack stack stack,bool,stdcall
 00085dc0,simulation_view_unknown_00085dc0,source/networking/simulation_view.c,edi stack,bool,stdcall
 00085e70,unknown_00085e70,,edx ecx eax stack,bool,stdcall
@@ -2098,7 +2098,7 @@ address,name,source,arguments,returns,convention
 00085a70,simulation_view_set_state,source/networking/simulation_view.c,ecx stack stack,void,stdcall
 00069880,simulation_world_unknown_00069880,source/networking/simulation_world.c,eax stack,void,stdcall
 00086140,simulation_view_set_blocked,source/networking/simulation_view.c,esi ebx,void
-000860b0,unknown_000860b0,,ebx ecx,void
+000860b0,simulation_view_send_update,source/networking/simulation_view.c,ebx ecx,void
 000861c0,unknown_000861c0,,eax,void
 000862c0,simulation_view_fail,source/networking/simulation_view.c,esi stack,void,stdcall
 0006a7f0,simulation_world_set_player_actions,source/networking/simulation_world.c,stack stack stack stack,void,stdcall
@@ -2134,3 +2134,5 @@ address,name,source,arguments,returns,convention
 0006a480,simulation_world_players_known_mask,source/networking/simulation_world.c,eax,int
 00069640,simulation_world_player_matches,source/networking/simulation_world.c,eax edx stack,bool,stdcall
 00083bd0,unknown_00083bd0,,ecx edx stack,bool,stdcall
+000869a0,unknown_000869a0,,ecx stack,bool,stdcall
+000865d0,unknown_000865d0,,stack,void,stdcall

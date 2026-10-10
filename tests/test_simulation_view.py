@@ -149,3 +149,57 @@ def run(t) -> None:
                 "simulation_world_players_unknown25_mask": lambda harness, arguments, needed=needed: (needed, (harness.normalize(arguments[0]),)),
             },
         )
+
+    # ---------- the state of the other end of a view, and one of the things that come
+
+    sends = lambda harness, arguments: (
+        0,
+        (arguments[0] & 0xFF, arguments[1], arguments[2], arguments[3], arguments[4], arguments[5], bytes(harness.mu.mem_read(arguments[6], arguments[5]))),
+    )
+    told = lambda harness, arguments: (0, (harness.normalize(arguments[0]),))
+
+    for n in range(6000):
+        view = a_view()
+        data = bytearray(view.data)
+        there = random_.random() < 0.95
+        struct.pack_into("<I", data, 0xC, VIEW if there else 0)
+        struct.pack_into("<i", data, 0x3C, random_.choice((-1, 0, 0, 0, 0, 3)))
+        struct.pack_into("<H", data, 2, random_.choice((1, 2, 2, 3, 4)))
+        own = random_.choice((0, 1, 2, 2, 3, 4, 5, 6))
+        own_number = random_.choice((-1, 7, 7))
+        was = random_.choice((0, 1, 2, 3, 4, own, own - 1))
+        struct.pack_into("<2i", data, 0x2C, own, own_number)
+        struct.pack_into("<2i", data, 0x34, was, random_.choice((-1, 7, 7, 8)))
+        struct.pack_into("<Ii", data, 0x20, 0x12345678, random_.choice((-1, 0, 3, 3)))
+        t.check(
+            "simulation_view_handle_remote_state",
+            Buffer(bytes(data), pointers=view.pointers if there else ()),
+            random_.choice((0, 1, 2, 2, 3, 4, 5, was + 1, was + 1, own, own + 1)) & 0xFFFFFFFF,
+            random_.choice((-1, 7, 7, 7, 8)) & 0xFFFFFFFF,
+            externals={
+                "simulation_view_set_state": state,
+                "simulation_view_fail": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                "network_observer_channel_send": sends,
+                "unknown_000861c0": told,
+            },
+        )
+
+    for n in range(400):
+        view = a_view()
+        data = bytearray(view.data) + bytearray(8)
+        struct.pack_into("<i", data, 0x2C, random_.choice((5, 5, 5, 0, 3, 4, 6)))
+        struct.pack_into("<Ii", data, 0x20, 0x12345678, random_.choice((-1, 0, 3, 3)))
+        data += bytearray(8)
+        struct.pack_into("<I", data, 0x94, random_.choice((0, 1, 1, 1)))
+        could = random_.choice((0, 1, 1, 0x100))
+        t.check(
+            "simulation_view_send_update",
+            Buffer(bytes(data), pointers=view.pointers),
+            Buffer(random_.randbytes(0x4048)),
+            externals={
+                "simulation_view_set_state": state,
+                "network_observer_channel_send": sends,
+                "unknown_000869a0": lambda harness, arguments, could=could: (could, (harness.normalize(arguments[0]), harness.normalize(arguments[1]))),
+                "unknown_000865d0": told,
+            },
+        )

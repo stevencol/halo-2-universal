@@ -179,7 +179,7 @@ void simulation_world_unknown_00069350(boolean catch_up, byte *world);
 boolean simulation_world_unknown_000698e0(byte *world, const long *update);
 void simulation_world_unknown_0006a2a0(byte *view, byte *other);
 long simulation_world_unknown_00069790(byte *world);
-void __attribute__((stdcall)) simulation_world_unknown_00069880(byte *world, long unknown);
+void __attribute__((stdcall)) simulation_world_unknown_00069880(byte *world, const void *update);
 byte *simulation_world_get_view_by_unknown1c(const byte *world, long unknown1c);
 byte *__attribute__((stdcall)) simulation_world_get_view_by_unknown14(const byte *world, const word *unknown14);
 void simulation_world_take_update(byte *world, void *update);

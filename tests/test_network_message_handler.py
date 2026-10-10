@@ -23,7 +23,7 @@ def run(t) -> None:
         return handler
 
     externals = {
-        "unknown_00085b20": view_and("number", "number"),
+        "simulation_view_handle_remote_state": view_and("number", "number"),
         "simulation_view_set_players": view_and("number", "number", "pointer"),
         "simulation_view_unknown_00085dc0": view_and("number"),
         "unknown_00085e70": view_and("number", "number", "pointer"),

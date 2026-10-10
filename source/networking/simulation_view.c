@@ -14,6 +14,8 @@ is a guess, and so are the names of its functions.
 #include "networking/network_observer.h"
 #include "networking/simulation_world.h"
 
+#include <string.h>
+
 /* ---------- prototypes */
 
 long GetTickCount(void);
@@ -21,6 +23,11 @@ long GetTickCount(void);
 /* 0x000861c0: what follows from the state of a view and the one of the
 other console is seen to */
 void unknown_000861c0(byte *view);
+
+/* 0x000869a0: a view takes one of the things that come, with what it has
+at 0x94; whether it could. 0x000865d0: and then something follows */
+boolean __attribute__((stdcall)) unknown_000869a0(const void *update, byte *view);
+void __attribute__((stdcall)) unknown_000865d0(byte *view);
 
 /* 0x0006a7f0: the thing takes what some players of the other console do, as
 bits say which. 0x0006a990: it takes a piece of the state of the game, of a
@@ -305,6 +312,155 @@ boolean __attribute__((stdcall)) simulation_view_set_players(
 		*(long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)= _simulation_view_unknown28_players_missing;
 	}
 	*(unsigned long *)(view+SIMULATION_VIEW_PLAYER_MASK_OFFSET)= known;
+
+	return TRUE;
+}
+
+/* 0x000860b0: a view is given one of the things that come and wait for the
+thing. In its sixth state, it is sent on to the other console as it is (a
+message of the kind 0x27, of 0x4048 bytes), if the view talks by a channel
+of the observer. In any other, and with something at 0x94, the view takes it
+(unknown_000869a0) and something follows (unknown_000865d0); if it could
+not, the view goes to its first state and is as 5 says (simulation_view_fail,
+written here). The game sends a copy */
+void simulation_view_send_update(
+	byte *view,
+	const void *update)
+{
+	if (*(const long *)(view+SIMULATION_VIEW_STATE_OFFSET)==_simulation_view_state5)
+	{
+		byte copy[SIMULATION_VIEW_UPDATE_SIZE];
+
+		memcpy(copy, update, sizeof(copy));
+		if (*(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET)!=NONE)
+		{
+			network_observer_channel_send(FALSE, *(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET),
+				*(byte *const *)(view+SIMULATION_VIEW_OBSERVER_OFFSET), SIMULATION_VIEW_SESSION_INDEX,
+				_network_message_simulation_update, sizeof(copy), copy);
+		}
+	}
+	else if (*(void *const *)(view+SIMULATION_VIEW_UNKNOWN94_OFFSET))
+	{
+		if (unknown_000869a0(update, view))
+		{
+			unknown_000865d0(view);
+		}
+		else if (*(const long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)==0)
+		{
+			simulation_view_set_state(view, _simulation_view_state0, NONE);
+			*(long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)= _simulation_view_unknown28_game_state_failed;
+		}
+	}
+}
+
+/* 0x00085b20: the other end of a view says its state, and the number that
+goes with it: what the message of the kind 0x25 has
+(simulation_view_set_state sends it). FALSE, with nothing done, for a view
+of no thing or of no channel. They are kept; then, if the view is well:
+
+A view of the second kind or of the fourth is the one that leads. In its
+first two states it says its own state again, unless the other end is in
+them too with no number. In its third: nothing if the other end is in the
+third with the same number; if it was there with that number before, it has
+gone back, and the view is as 7 says; if it is in the second, the view says
+its state again; and if it is in the first, the view goes back to its
+second. Past the third: the other end has to follow one state at a time,
+with the same number, no further than the view; if not the view is as 7
+says, or as 6 if the other end went back to its first state.
+
+Any other view follows: it goes to the state that the other end says, if
+that is the third and the view has no number or the same one, or a later
+one with the same number. If not: a view from its third state on is as 6
+says; one before that says its own state again if the other end was in its
+first state and is not any more.
+
+At the end, what follows from the two states is seen to
+(unknown_000861c0) */
+boolean simulation_view_handle_remote_state(
+	byte *view,
+	long state,
+	long number)
+{
+	long old_state;
+	long old_number;
+	long own_state;
+	boolean send= FALSE;
+
+	if (!*(void *const *)(view+SIMULATION_VIEW_WORLD_OFFSET) || *(const long *)(view+SIMULATION_VIEW_CHANNEL_OFFSET)==NONE)
+	{
+		return FALSE;
+	}
+	old_state= *(const long *)(view+SIMULATION_VIEW_REMOTE_STATE_OFFSET);
+	old_number= *(const long *)(view+SIMULATION_VIEW_REMOTE_STATE_NUMBER_OFFSET);
+	*(long *)(view+SIMULATION_VIEW_REMOTE_STATE_OFFSET)= state;
+	*(long *)(view+SIMULATION_VIEW_REMOTE_STATE_NUMBER_OFFSET)= number;
+	own_state= *(const long *)(view+SIMULATION_VIEW_STATE_OFFSET);
+	if (*(const long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)==0)
+	{
+		long own_number= *(const long *)(view+SIMULATION_VIEW_STATE_NUMBER_OFFSET);
+
+		if ((1u<<(view[SIMULATION_VIEW_KIND_OFFSET]&31))&SIMULATION_VIEW_KINDS_2_AND_4)
+		{
+			if (own_state<_simulation_view_state2)
+			{
+				send= state>=_simulation_view_state2 || number!=NONE;
+			}
+			else if (own_state==_simulation_view_state2)
+			{
+				if (state==_simulation_view_state2 && number==own_number)
+				{
+				}
+				else if (old_state==_simulation_view_state2 && old_number==own_number)
+				{
+					simulation_view_fail(view, _simulation_view_unknown28_bad_state);
+				}
+				else if (state>=_simulation_view_state1)
+				{
+					send= TRUE;
+				}
+				else
+				{
+					simulation_view_set_state(view, _simulation_view_state1, NONE);
+				}
+			}
+			else if (state==_simulation_view_state0)
+			{
+				simulation_view_fail(view, _simulation_view_unknown28_remote_reset);
+			}
+			else if (!(number==own_number && state>_simulation_view_state2 && state<=own_state &&
+				state==(long)((unsigned long)old_state+1)))
+			{
+				simulation_view_fail(view, _simulation_view_unknown28_bad_state);
+			}
+		}
+		else if ((state==_simulation_view_state2 && (own_number==NONE || own_number==number)) ||
+			(state>_simulation_view_state2 && own_number==number))
+		{
+			simulation_view_set_state(view, state, number);
+		}
+		else if (own_state>=_simulation_view_state2)
+		{
+			simulation_view_fail(view, _simulation_view_unknown28_remote_reset);
+		}
+		else
+		{
+			send= old_state==_simulation_view_state0 && state>_simulation_view_state0;
+		}
+	}
+	if (send)
+	{
+		struct simulation_view_state_message message;
+
+		message.state= own_state;
+		message.number= *(const long *)(view+SIMULATION_VIEW_STATE_NUMBER_OFFSET);
+		if (*(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET)!=NONE)
+		{
+			network_observer_channel_send(FALSE, *(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET),
+				*(byte *const *)(view+SIMULATION_VIEW_OBSERVER_OFFSET), SIMULATION_VIEW_SESSION_INDEX,
+				_network_message_simulation_view_state, sizeof(message), &message);
+		}
+	}
+	unknown_000861c0(view);
 
 	return TRUE;
 }

@@ -27,10 +27,8 @@ and so are the names of its functions.
 
 /* ---------- prototypes */
 
-/* 0x000860b0: a view of the second kind is given something. 0x00199740:
-the state of the game that came, of a size, is put where the state of the
+/* 0x00199740: the state of the game that came, of a size, is put where the state of the
 game is, and its size is given; whether it was good */
-void unknown_000860b0(byte *view, long unknown);
 boolean __attribute__((stdcall)) unknown_00199740(const void *data, long size, void *base, long *size_out);
 
 /* 0x000c6ef0: something of one of the other things of the thing is made
@@ -387,17 +385,17 @@ long simulation_world_unknown_00069790(
 }
 
 /* 0x00069880: each view of the second kind that the thing has is given
-something (unknown_000860b0) */
+one of the things that come and wait (simulation_view_send_update) */
 void __attribute__((stdcall)) simulation_world_unknown_00069880(
 	byte *world,
-	long unknown)
+	const void *update)
 {
 	struct simulation_view_iterator iterator= {_simulation_view_kind2_bit, 0};
 	byte *view;
 
 	while (simulation_world_next_view(&iterator, world, &view))
 	{
-		unknown_000860b0(view, unknown);
+		simulation_view_send_update(view, update);
 	}
 }
 

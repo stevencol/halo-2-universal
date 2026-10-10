@@ -20,9 +20,8 @@ it). The name of the file is a guess, and so are the names of its functions.
 
 /* ---------- prototypes */
 
-/* 0x00085b20 and 0x00085e70: what a view does with what each message has;
+/* 0x00085e70: what a view of the third kind does with what its message has;
 whether it could, most likely */
-boolean unknown_00085b20(byte *view, long unknown0, long unknown4);
 boolean __attribute__((stdcall)) unknown_00085e70(byte *view, long unknown0, long unknown4, const long *unknown8);
 
 /* ---------- code */
@@ -43,7 +42,8 @@ static inline __attribute__((always_inline)) byte *network_message_handler_get_v
 }
 
 /* 0x00094910: a message with two numbers, for the view of the channel, of
-whatever kind */
+whatever kind: the state of the other end of the view
+(simulation_view_handle_remote_state) */
 void network_message_handler_unknown_00094910(
 	const long *message,
 	long channel_index)
@@ -52,7 +52,7 @@ void network_message_handler_unknown_00094910(
 
 	if (view)
 	{
-		unknown_00085b20(view, message[0], message[1]);
+		simulation_view_handle_remote_state(view, message[0], message[1]);
 	}
 }
 

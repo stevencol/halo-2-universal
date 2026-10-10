@@ -2,6 +2,58 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — El apretón de manos de una vista
+
+Dos funciones en `networking/simulation_view.c`, 532 bytes entre las dos. De 1576
+funciones se pasa a 1578, el 14,01 % de las del juego (el 9,342 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_view_handle_remote_state` | `0x00085b20` | `networking/simulation_view.c` |
+| `simulation_view_send_update` | `0x000860b0` | `networking/simulation_view.c` |
+
+### Lo que se sabe
+
+- `simulation_view_handle_remote_state` es lo que una vista hace con el
+  mensaje `0x25` (hito 448), que llega por `0x00094910`: **el otro
+  extremo dice en qué estado está**. Es el apretón de manos entero:
+  - **Una vista de la segunda clase o la cuarta es la que manda.** En sus
+    dos primeros estados repite su estado al otro extremo. En el tercero
+    espera a que el otro llegue al tercero con el mismo número; si el
+    otro está en el segundo, le repite el suyo; si está en el primero,
+    vuelve ella al segundo. Pasado el tercero, el otro tiene que ir
+    **de uno en uno, con el mismo número y sin adelantarla**: si no, la
+    vista se da por mala (motivo `7`, o `6` si el otro volvió al primer
+    estado).
+  - **Las demás vistas siguen**: pasan al estado que diga el otro extremo
+    si es el tercero (sin número propio, o con el mismo) o uno posterior
+    con el mismo número. Si no, una que ya iba por el tercero se da por
+    mala (`6`), y una anterior repite su estado si el otro acaba de salir
+    del primero.
+  - Al final se mira qué se sigue de los dos estados (`0x000861c0`).
+- Los estados y números del otro extremo se guardan en `0x34` y `0x38`
+  de la vista.
+- `simulation_view_send_update` da a una vista una actualización de la
+  cola. **En su sexto estado la manda tal cual a la otra consola**:
+  mensaje de la clase `0x27`, de `0x4048` bytes. En otro estado, si
+  tiene algo en `0x94`, la toma por ahí (`0x000869a0`); si no puede, se
+  da por mala con el motivo `5`.
+- De los siete mensajes del hito 444 solo queda el de `0x00094aa0`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos**, y en las de los hitos 441 a
+  460.
+- En `simulation_view_handle_remote_state` el juego salta entre ramas; aquí
+  está escrito con condiciones, comprobado con 6000 casos.
+- En este hito se pasaron las pruebas de `simulation_view` (9
+  funciones), `network_message_handler` (7) y la de
+  `simulation_world_unknown_00069880`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — «Estos son los jugadores que conozco»
 
 Dos funciones: una en `networking/simulation_view.c` y otra en
