@@ -12,6 +12,7 @@ functions.
 
 #include "cseries/cseries.h"
 #include "networking/replication_entity_manager.h"
+#include "networking/bitstream.h"
 
 /* ---------- constants */
 
@@ -39,10 +40,49 @@ enum
 	that it is in */
 	_replication_entity_view_state_none= 0,
 	_replication_entity_view_state1= 1,
-	_replication_entity_view_state2= 2
+	_replication_entity_view_state2= 2,
+	_replication_entity_view_state4= 4,
+	/* where a view has the packet that it is writing; a byte that says that
+	the heap of the network had no memory for something that it sent; what
+	a packet says of a thing, in three bits: that it is made, or done with;
+	and the kinds of what a view keeps of that */
+	REPLICATION_ENTITY_VIEW_PACKET_OFFSET= 0x1C,
+	REPLICATION_ENTITY_VIEW_NO_MEMORY_OFFSET= 0xA,
+	REPLICATION_ENTITY_VIEW_MESSAGE_BITS= 3,
+	_replication_entity_view_message_creation= 1,
+	_replication_entity_view_message_deletion= 2
 };
 
 /* ---------- structures */
+
+/* what a view keeps of what it wrote in a packet, until it hears of the
+packet. Of a thing that it said was made or done with: its number, which of
+the two, and the next one. Of a thing that it said something of: its
+number, the bits of what it said, the one that was said later of the same
+thing, and the next one. And of the packet: its number, the first of each,
+and the next packet */
+struct replication_entity_view_creation
+{
+	long entity_index;
+	long type;
+	struct replication_entity_view_creation *next;
+};
+
+struct replication_entity_view_update
+{
+	long entity_index;
+	unsigned long flags;
+	struct replication_entity_view_update *newer;
+	struct replication_entity_view_update *next;
+};
+
+struct replication_entity_view_packet
+{
+	long number;
+	struct replication_entity_view_creation *creations;
+	struct replication_entity_view_update *updates;
+	struct replication_entity_view_packet *next;
+};
 
 /* the functions of a view, of which the ninth takes back one of the things
 that it has sent, by its number */
@@ -57,6 +97,14 @@ struct replication_entity_view_functions
 void replication_entity_view_reset(byte *view);
 void replication_entity_view_mark_entity(long entity_index, byte *view, unsigned long flags);
 void replication_entity_view_delete_entity(byte *view, long entity_index);
+boolean __attribute__((stdcall)) replication_entity_view_write_creation(struct bitstream *stream, byte *view,
+	long index, long unknown, long bits_after);
+boolean __attribute__((stdcall)) replication_entity_view_write_deletion(long index, struct bitstream *stream,
+	byte *view, long bits_after);
+void replication_entity_view_sent_creation(long entity_index, byte *view);
+void __attribute__((stdcall)) replication_entity_view_sent_deletion(byte *view, long entity_index);
+void __attribute__((stdcall)) replication_entity_view_sent_update(long entity_index, byte *view,
+	unsigned long flags);
 void replication_entity_view_new(struct replication_entity_manager *manager, long index, byte *view);
 long replication_entity_view_next_entity(long entity_index, const byte *view);
 boolean replication_entity_view_unknown_00099640(long entity_index, const byte *view);

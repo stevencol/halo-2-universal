@@ -2037,3 +2037,9 @@ address,name,source,arguments,returns,convention
 00097f60,replication_entity_view_new,source/networking/replication_entity_view.c,eax ecx edx,void
 00098480,replication_entity_view_next_entity,source/networking/replication_entity_view.c,ecx edi,int
 00099640,replication_entity_view_unknown_00099640,source/networking/replication_entity_view.c,edx edi,bool
+00098620,replication_entity_view_write_creation,source/networking/replication_entity_view.c,eax ecx stack stack stack,bool,stdcall
+000986d0,replication_entity_view_write_deletion,source/networking/replication_entity_view.c,eax ecx edx stack,bool,stdcall
+00098ac0,replication_entity_view_sent_creation,source/networking/replication_entity_view.c,ebx edi,void
+00098b60,replication_entity_view_sent_deletion,source/networking/replication_entity_view.c,edi stack,void,stdcall
+00098bf0,replication_entity_view_sent_update,source/networking/replication_entity_view.c,ebx stack stack,void,stdcall
+000b5650,unknown_000b5650,,eax stack,void,stdcall

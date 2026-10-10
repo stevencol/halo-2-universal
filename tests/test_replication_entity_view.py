@@ -136,3 +136,137 @@ def run(t) -> None:
             random_.choice((0, 0, 1, 2, 3, 3, 4)),
             extra=[data],
         )
+
+    # ---------- what a view writes in a packet, and what it keeps of it
+
+    # after the rest: the heap of the network, what gives its memory with its functions, how many times it was asked
+    # and what it answers, the memory that it gives, three packets and six things said in them
+    HEAP, ALLOCATOR, TABLE, ASKED, ANSWERS, GIVEN, PACKETS, UPDATES, END2 = (END + offset for offset in (0, 8, 0xC, 0x38, 0x3C, 0x40, 0x50, 0x80, 0xE0))
+
+    def sending(data: Buffer, entity: int) -> Buffer:
+        raw = bytearray(data.data) + bytearray(random_.randbytes(END2 - END))
+        pointers = [*(pointer for pointer in data.pointers if pointer != VIEW + 0x18), HEAP, ALLOCATOR, VIEW + 0x1C]
+        struct.pack_into("<I", raw, CLIENT_TABLE, mock_address(4))
+        struct.pack_into("<Ii", raw, HEAP, ALLOCATOR, random_.choice((0, 5)))
+        struct.pack_into("<I", raw, ALLOCATOR, TABLE)
+        struct.pack_into("<11I", raw, TABLE, 0x11, 0x22, 0x33, 0x44, 0x55, mock_address(2), 0x77, 0x88, 0x99, 0xAA, mock_address(3))
+        struct.pack_into("<I4B", raw, ASKED, 0, *random_.choice(((1, 1, 1, 1), (1, 1, 1, 1), (0, 1, 1, 1), (0, 0, 1, 1), (1, 0, 0, 1))))
+        # the packets that the view waits to hear of, one after the other; the one that it writes is one of them, or not
+        waiting = random_.choice((0, 1, 2, 3))
+        struct.pack_into("<I", raw, VIEW + 0x18, PACKETS if waiting else 0)
+        if waiting:
+            pointers.append(VIEW + 0x18)
+        struct.pack_into("<I", raw, VIEW + 0x1C, PACKETS + random_.choice((0, 0, 2)) * 0x10)
+        said = list(range(6))
+        random_.shuffle(said)
+        for packet in range(3):
+            mine = [said.pop() for update in range(random_.choice((0, 1, 2)))]
+            struct.pack_into("<4I", raw, PACKETS + packet * 0x10, random_.getrandbits(32), 0, UPDATES + mine[0] * 0x10 if mine else 0, PACKETS + (packet + 1) * 0x10 if packet + 1 < waiting else 0)
+            if mine:
+                pointers.append(PACKETS + packet * 0x10 + 8)
+            if packet + 1 < waiting:
+                pointers.append(PACKETS + packet * 0x10 + 0xC)
+            for place, update in enumerate(mine):
+                after = mine[place + 1] if place + 1 < len(mine) else None
+                struct.pack_into("<4I", raw, UPDATES + update * 0x10, random_.choice((entity, entity, random_.getrandbits(32))), random_.getrandbits(32), 0, 0 if after is None else UPDATES + after * 0x10)
+                if after is not None:
+                    pointers.append(UPDATES + update * 0x10 + 0xC)
+        return Buffer(bytes(raw), pointers=tuple(pointers))
+
+    def sending_mocks(says: int = 1, wrote: int = 0, bits: int = 0) -> list:
+        def gives(call):
+            mu = t.harness.mu
+            base = call.registers["ecx"] - ALLOCATOR
+            asked = struct.unpack("<I", mu.mem_read(base + ASKED, 4))[0]
+            mu.mem_write(base + ASKED, struct.pack("<I", asked + 1))
+            return base + GIVEN if mu.mem_read(base + ANSWERS + (asked & 3), 1)[0] else 0
+
+        def writes(call):
+            # what the things are of writes the thing: so many bits, and says which bits of how it is it wrote
+            mu = t.harness.mu
+            position = struct.unpack("<i", mu.mem_read(call.stack[3] + 0x10, 4))[0]
+            mu.mem_write(call.stack[3] + 0x10, struct.pack("<i", position + bits))
+            mu.mem_write(call.stack[5], struct.pack("<I", wrote))
+            return says
+
+        def writes_record(call):
+            # where the bits go is in the stack
+            return call.registers["ecx"], *call.stack[:5]
+
+        return [
+            *mocks(),
+            Mock(gives, stack_arguments=3, registers=("ecx",)),
+            Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
+            Mock(writes, stack_arguments=6, registers=("ecx",), record=writes_record),
+        ]
+
+    def number(harness, arguments):
+        # the number of the thing is written: fourteen bits
+        position = struct.unpack("<i", harness.mu.mem_read(arguments[1] + 0x10, 4))[0]
+        harness.mu.mem_write(arguments[1] + 0x10, struct.pack("<i", position + 14))
+        return 0, (arguments[0], harness.normalize(arguments[1]))
+
+    def at_time() -> dict:
+        now = random_.getrandbits(32)
+        while 0x20000000 <= now < 0x21000000:
+            now = random_.getrandbits(32)
+        return {
+            "globals": {"unknown_00510548": bytes((random_.choice((0, 0, 1)),)), "unknown_0051054c": struct.pack("<I", now)},
+            "externals": {"GetTickCount": lambda harness, arguments, now=now: now},
+        }
+
+    def a_stream() -> Buffer:
+        size = random_.choice((4, 8, 16))
+        position = random_.choice((0, 0, 5, size * 4, size * 8 - 20, size * 8 - 17, size * 8 - 3))
+        kept = random_.choice((0, 1, 3))
+        header = struct.pack("<I4iB3x7i", 0x34, size, 1, 1, position, 0, kept, *(random_.randrange(position + 1) for n in range(4)), 0, 0)
+        return Buffer(header + bytes(size) + random_.randbytes(8), pointers=(0,))
+
+    for n in range(700):
+        setup = at_time()
+        base = world(1.0, 0)
+        raw = bytearray(base.data)
+        place = random_.choice((0, 0x3FF, random_.randrange(COUNT)))
+        entity = place | random_.getrandbits(4) << 28
+        struct.pack_into("<IIH", raw, VIEW + 0x24 + place * 20, entity, random_.choice((0, 1, 0xF0, random_.getrandbits(32))), random_.choice((0, 1, 1, 2, 3, 3)))
+        data = sending(Buffer(bytes(raw), pointers=base.pointers), entity)
+        globals_ = dict(setup["globals"], unknown_004d87f8=Pointer(data, HEAP))
+        externals = dict(setup["externals"], unknown_000b5650=number)
+        wrote = random_.choice((0, 0, 1, 0xF0, random_.getrandbits(32)))
+        made = sending_mocks(random_.choice((1, 1, 1, 0, 0x100)), wrote, random_.choice((0, 3, 40)))
+        after = random_.choice((0, 0, 1, 15, 47, 64))
+        t.check("replication_entity_view_sent_creation", entity, Pointer(data, VIEW), extra=[data], globals=globals_, externals=externals, mocks=made)
+        t.check("replication_entity_view_sent_deletion", Pointer(data, VIEW), entity, extra=[data], globals=globals_, externals=externals, mocks=made)
+        t.check(
+            "replication_entity_view_sent_update",
+            entity,
+            Pointer(data, VIEW),
+            random_.choice((0, 1, 0xF0, NONE, random_.getrandbits(32))),
+            extra=[data],
+            globals=globals_,
+            externals=externals,
+            mocks=made,
+        )
+        t.check(
+            "replication_entity_view_write_deletion",
+            place,
+            a_stream(),
+            Pointer(data, VIEW),
+            after,
+            extra=[data],
+            globals=globals_,
+            externals=externals,
+            mocks=made,
+        )
+        t.check(
+            "replication_entity_view_write_creation",
+            a_stream(),
+            Pointer(data, VIEW),
+            place,
+            random_.getrandbits(32),
+            after,
+            extra=[data],
+            globals=globals_,
+            externals=externals,
+            mocks=made,
+        )

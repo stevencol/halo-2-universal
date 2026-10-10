@@ -12,6 +12,14 @@ functions.
 
 #include "replication_entity_view.h"
 
+#include "networking/network_heap.h"
+#include "networking/network_observer.h"
+
+/* ---------- prototypes of functions not decompiled yet */
+
+/* 0x000b5650: the number of a thing is written in a stream */
+void __attribute__((stdcall)) unknown_000b5650(long entity_index, struct bitstream *stream);
+
 /* ---------- code */
 
 /* what a view has of the thing of a place */
@@ -315,4 +323,194 @@ byte *__attribute__((stdcall)) replication_entity_view_set_entity_state(
 	view_entity->state= (short)state;
 
 	return view;
+}
+
+/* a stream keeps where it is, to go back to */
+static inline __attribute__((always_inline)) void replication_entity_view_push_position(
+	struct bitstream *stream)
+{
+	stream->positions[stream->position_count]= stream->position;
+	stream->position_count++;
+}
+
+/* 0x00098620: a view writes in a packet that the thing that it has in a
+place is made: 1 in three bits, its number (unknown_000b5650), and the thing
+itself, which what the things are of writes, by its first function, with the
+bits of what the view has to say of it. If that went well and so many bits
+are left after it, the view keeps that it said so
+(replication_entity_view_sent_creation) and, if something of how the thing is
+was written, that too (replication_entity_view_sent_update); if not, the
+stream goes back to where it was. Whether it was written */
+boolean __attribute__((stdcall)) replication_entity_view_write_creation(
+	struct bitstream *stream,
+	byte *view,
+	long index,
+	long unknown,
+	long bits_after)
+{
+	struct replication_entity_view_entity *view_entity= replication_entity_view_entity_get(view, index);
+	long entity_index= view_entity->entity_index;
+	struct replication_entity_manager *manager;
+	unsigned long written= 0;
+
+	replication_entity_view_push_position(stream);
+	bitstream_write_integer(stream, _replication_entity_view_message_creation, REPLICATION_ENTITY_VIEW_MESSAGE_BITS);
+	unknown_000b5650(entity_index, stream);
+	manager= *(struct replication_entity_manager **)(view+REPLICATION_ENTITY_VIEW_MANAGER_OFFSET);
+	if (manager->client->functions->write_creation(manager->client, entity_index, view_entity->pending, unknown, stream,
+		bits_after, &written) &&
+		(long)(((unsigned long)stream->size<<3)-(unsigned long)stream->position)>=bits_after)
+	{
+		stream->position_count--;
+		replication_entity_view_sent_creation(entity_index, view);
+		if (written!=0)
+		{
+			replication_entity_view_sent_update(entity_index, view, written);
+		}
+
+		return TRUE;
+	}
+	bitstream_pop_position(stream, TRUE);
+
+	return FALSE;
+}
+
+/* 0x000986d0: a view writes in a packet that the thing that it has in a
+place is done with: 2 in three bits, and its number. If so many bits are
+left after it, the view keeps that it said so
+(replication_entity_view_sent_deletion); if not, the stream goes back to
+where it was. Whether it was written */
+boolean __attribute__((stdcall)) replication_entity_view_write_deletion(
+	long index,
+	struct bitstream *stream,
+	byte *view,
+	long bits_after)
+{
+	long entity_index= replication_entity_view_entity_get(view, index)->entity_index;
+
+	replication_entity_view_push_position(stream);
+	bitstream_write_integer(stream, _replication_entity_view_message_deletion, REPLICATION_ENTITY_VIEW_MESSAGE_BITS);
+	unknown_000b5650(entity_index, stream);
+	if ((long)(((unsigned long)stream->size<<3)-(unsigned long)stream->position)>=bits_after)
+	{
+		stream->position_count--;
+		replication_entity_view_sent_deletion(view, entity_index);
+
+		return TRUE;
+	}
+	bitstream_pop_position(stream, TRUE);
+
+	return FALSE;
+}
+
+/* what a view keeps of having said in a packet that a thing is made or done
+with: the first of the ones of the packet that it is writing; with no memory
+for it, the view notes that */
+static inline __attribute__((always_inline)) void replication_entity_view_keep_creation(
+	byte *view,
+	long entity_index,
+	long type)
+{
+	struct replication_entity_view_creation *creation= network_heap_allocate(sizeof(struct replication_entity_view_creation));
+
+	if (creation)
+	{
+		struct replication_entity_view_packet *packet;
+
+		creation->type= 0;
+		creation->next= NULL;
+		packet= *(struct replication_entity_view_packet **)(view+REPLICATION_ENTITY_VIEW_PACKET_OFFSET);
+		creation->next= packet->creations;
+		packet= *(struct replication_entity_view_packet **)(view+REPLICATION_ENTITY_VIEW_PACKET_OFFSET);
+		packet->creations= creation;
+		creation->entity_index= entity_index;
+		creation->type= type;
+	}
+	else
+	{
+		view[REPLICATION_ENTITY_VIEW_NO_MEMORY_OFFSET]= TRUE;
+	}
+}
+
+/* 0x00098ac0: a view said in the packet that it is writing that a thing is
+made: it keeps that, a number of the thing in the view has its first bit,
+and the thing is in its second state there */
+void replication_entity_view_sent_creation(
+	long entity_index,
+	byte *view)
+{
+	replication_entity_view_keep_creation(view, entity_index, _replication_entity_view_message_creation);
+	replication_entity_view_entity_get(view, entity_index&REPLICATION_ENTITY_INDEX_MASK)->unknown10|= 1;
+	replication_entity_view_set_entity_state(view, entity_index, _replication_entity_view_state2);
+}
+
+/* 0x00098b60: a view said that a thing is done with: it keeps that, and
+the thing is in its fourth state there */
+void __attribute__((stdcall)) replication_entity_view_sent_deletion(
+	byte *view,
+	long entity_index)
+{
+	replication_entity_view_keep_creation(view, entity_index, _replication_entity_view_message_deletion);
+	replication_entity_view_set_entity_state(view, entity_index, _replication_entity_view_state4);
+}
+
+/* 0x00098bf0: a view said in the packet that it is writing something of
+how a thing is: some bits. It keeps that, the first of the ones of the
+packet; and what it said of the same thing before, in the last of the
+packets that it waits to hear of that has it, knows that there is this later
+one. With no memory for it, the view notes that. The view has those bits of
+the thing no more to say, as of now; and if the thing is in its third state
+there with nothing left to say, the view has one less to say something of */
+void __attribute__((stdcall)) replication_entity_view_sent_update(
+	long entity_index,
+	byte *view,
+	unsigned long flags)
+{
+	struct replication_entity_view_update *update= network_heap_allocate(sizeof(struct replication_entity_view_update));
+	struct replication_entity_view_entity *view_entity=
+		replication_entity_view_entity_get(view, entity_index&REPLICATION_ENTITY_INDEX_MASK);
+
+	if (update)
+	{
+		struct replication_entity_view_packet *packet;
+		struct replication_entity_view_update *older= NULL;
+
+		update->newer= NULL;
+		update->next= NULL;
+		packet= *(struct replication_entity_view_packet **)(view+REPLICATION_ENTITY_VIEW_PACKET_OFFSET);
+		update->next= packet->updates;
+		packet= *(struct replication_entity_view_packet **)(view+REPLICATION_ENTITY_VIEW_PACKET_OFFSET);
+		packet->updates= update;
+		for (packet= *(struct replication_entity_view_packet **)(view+REPLICATION_ENTITY_VIEW_SENT_OFFSET); packet;
+			packet= packet->next)
+		{
+			struct replication_entity_view_update *other;
+
+			for (other= packet->updates; other; other= other->next)
+			{
+				if (other->entity_index==entity_index)
+				{
+					older= other;
+					break;
+				}
+			}
+		}
+		if (older)
+		{
+			older->newer= update;
+		}
+		update->entity_index= entity_index;
+		update->flags= flags;
+		update->newer= NULL;
+	}
+	else
+	{
+		view[REPLICATION_ENTITY_VIEW_NO_MEMORY_OFFSET]= TRUE;
+	}
+	view_entity->pending&= ~flags;
+	view_entity->unknownC= network_time_since(0);
+	if (view_entity->state==_replication_entity_view_state3 && view_entity->pending==0)
+	{
+		(*(long *)(view+REPLICATION_ENTITY_VIEW_PENDING_COUNT_OFFSET))--;
+	}
 }

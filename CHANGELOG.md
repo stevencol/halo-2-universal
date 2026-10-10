@@ -2,6 +2,56 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Lo que una vista escribe en un paquete, y lo que guarda de ello
+
+Cinco funciones en `networking/replication_entity_view.c`, 823 bytes entre las cinco. De 1479
+funciones se pasa a 1484, el 13,17 % de las del juego (el 8,843 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `replication_entity_view_write_creation` | `0x00098620` | `networking/replication_entity_view.c` |
+| `replication_entity_view_write_deletion` | `0x000986d0` | `networking/replication_entity_view.c` |
+| `replication_entity_view_sent_creation` | `0x00098ac0` | `networking/replication_entity_view.c` |
+| `replication_entity_view_sent_deletion` | `0x00098b60` | `networking/replication_entity_view.c` |
+| `replication_entity_view_sent_update` | `0x00098bf0` | `networking/replication_entity_view.c` |
+
+### Lo que se sabe
+
+- **Cómo una vista le anuncia una cosa a su consola.** Cada anuncio
+  empieza con tres bits: 1 es «se ha creado» y 2 «se ha borrado»; detrás
+  va el número de la cosa (`unknown_000b5650`).
+  - `replication_entity_view_write_creation` escribe la creación: lo de
+    la cosa lo escribe la primera función de la tabla `0x00450d60`, que es
+    la del hito 422. Aquí se cierra ese círculo: se ve quién la llamaba.
+  - `replication_entity_view_write_deletion` escribe el borrado.
+  - Las dos guardan dónde iba el paquete antes de escribir; **si después
+    no quedan los bits que se piden, el paquete vuelve a donde estaba** y
+    no se cuenta nada.
+- **Lo que la vista guarda de lo que ha mandado**, hasta saber si el
+  paquete llegó. Son trozos del montón de la red colgados del paquete que
+  se está escribiendo:
+  - `..._sent_creation` y `..._sent_deletion`: 12 bytes (la cosa, si es
+    creación o borrado, y el siguiente). La cosa pasa al estado 2
+    («anunciada, esperando») o al 4 («borrado anunciado»).
+  - `..._sent_update`: 16 bytes (la cosa, los bits que se contaron, y un
+    enlace a lo que se contó después de la misma cosa en otro paquete).
+    Esos bits dejan de estar pendientes en la vista.
+  - Si el montón no tiene memoria, la vista lo apunta en un byte.
+- Con esto se conocen los estados de una cosa en una vista: 0 no está,
+  1 por anunciar, 2 anunciada, 3 la otra consola la tiene, 4 borrado
+  anunciado.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las cinco** y en las cuatro del hito 426.
+- En este hito se pasaron las pruebas de `replication_entity_view` (12
+  funciones).
+- Del módulo quedan 8 en la lista.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — El estado de una cosa en una vista
 
 Cuatro funciones en `networking/replication_entity_view.c`, 636 bytes entre las cuatro. De 1475

@@ -11,6 +11,7 @@ its functions.
 #define __REPLICATION_ENTITY_MANAGER_H
 
 #include "cseries/cseries.h"
+#include "networking/bitstream.h"
 
 /* ---------- constants */
 
@@ -73,7 +74,8 @@ struct replication_entity_view_entity
 	short unknown12;
 };
 
-/* what the things are of: something with functions, of which the third is
+/* what the things are of: something with functions, of which the first
+writes a thing in a packet for a console that does not have it; the third is
 told that a thing was made by another console, with three things of it; the
 eleventh and the thirteenth, that a thing is being done with, and that it is
 done with; the fourteenth, that a thing that another console made is this
@@ -84,7 +86,9 @@ struct replication_entity_client;
 
 struct replication_entity_client_functions
 {
-	void *unknown0[2];
+	boolean (__attribute__((thiscall)) *write_creation)(struct replication_entity_client *client, long entity,
+		unsigned long flags, long unknown, struct bitstream *stream, long unknown2, unsigned long *written);
+	void *unknown4;
 	void (__attribute__((thiscall)) *created)(struct replication_entity_client *client, long entity, long unknown4,
 		long unknown8, long unknownC, void *unknown10);
 	void *unknownC[7];
