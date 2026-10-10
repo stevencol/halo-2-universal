@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — La red suelta su memoria
+
+Una función en el archivo nuevo `networking/network_memory.c`, de 221 bytes. De 1634
+funciones se pasa a 1635, el 14,51 % de las del juego (el 9,629 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_memory_free` | `0x00081f80` | `networking/network_memory.c` |
+
+### Lo que se sabe
+
+- `network_memory_free` es **uno de los ocho pares de la tabla de
+  `0x00453c00`** (hito 36): lo que la red suelta cuando se cierra un mapa.
+  Era el primer punto pendiente de «los otros pares» en ESTADO.md. De un
+  golpe enseña todo lo que la red tiene mientras hay mapa:
+  - el observador suelta los canales del juego
+    (`network_observer_release_game_channels`, hito 373);
+  - lo que la partida en red lleva en `0x4` (`0x004d87e8`: las cosas
+    compartidas, los sucesos y lo que cada cosa es, hito 485) se deshace;
+  - las dos tablas de las vistas (hito 488) dejan de valer;
+  - los canales del juego y sus dos piezas (`0x004d87d4`, `d8`, `dc`) se
+    olvidan;
+  - el montón de la red pide a quien le da la memoria que acabe (su
+    decimocuarta función) y se libera;
+  - y todo lo demás queda a cero.
+- La pareja, la que lo toma todo al abrir un mapa, es `0x00081780`, de
+  2035 bytes: queda apuntada.
+
+### Cambiado
+
+- `unknown_00081f80` tiene ya su nombre en la tabla de `main_game.c`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 488.
+- En este hito se pasaron las pruebas de la función y las de `main_game`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Sitio para una vista en las dos tablas
 
 Tres funciones en `networking/simulation_view.c`, 245 bytes entre las tres. De 1631

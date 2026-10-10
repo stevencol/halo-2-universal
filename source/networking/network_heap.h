@@ -26,6 +26,9 @@ struct network_heap_allocator_functions
 		long unknown8);
 	void *unknown18[4];
 	void (__attribute__((thiscall)) *compact)(struct network_heap_allocator *allocator, long unknown);
+	void *unknown2C[2];
+	/* the fourteenth: it is done with, and with a bit its memory is let go of */
+	void (__attribute__((thiscall)) *dispose)(struct network_heap_allocator *allocator, long flags);
 };
 
 struct network_heap_allocator
