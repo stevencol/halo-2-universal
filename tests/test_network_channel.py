@@ -208,7 +208,7 @@ def run(t) -> None:
                 network_channel_close=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
                 network_channel_update_connecting=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                 network_channel_reset_times=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
-                unknown_00095cf0=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                network_connection_reset=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                 unknown_00094bf0=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
             ),
         )
@@ -266,7 +266,7 @@ def run(t) -> None:
     # ---------- one of the things that a channel has of its own is taken
 
     for name, size, starts in (
-        ("network_channel_take_unknown10", OWN, "unknown_00095cf0"),
+        ("network_channel_take_unknown10", OWN, "network_connection_reset"),
         ("network_channel_take_unknown14", OTHER, "unknown_00094bf0"),
     ):
         for n in range(300):
@@ -397,7 +397,7 @@ def run(t) -> None:
                 unknown_004cf728=struct.pack("<f", random_.choice((1.0, 1.5, 2.0))),
                 unknown_004cf72c=struct.pack("<i", random_.choice((0, 50, 100))),
             ),
-            externals=dict(setup["externals"], unknown_00096ce0=does, unknown_000965e0=happened),
+            externals=dict(setup["externals"], network_connection_drop_oldest_sent=does, unknown_000965e0=happened),
             mocks=[
                 Mock(lambda call: 0, stack_arguments=3, registers=("ecx",)),
                 # the two bytes that it is told are the low ones of what is in the stack
@@ -560,7 +560,7 @@ def run(t) -> None:
             ),
             externals=dict(
                 setup["externals"],
-                unknown_00096ce0=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                network_connection_drop_oldest_sent=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
                 unknown_000965e0=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                 network_connection_received=lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]))),
                 unknown_00095840=whole,
@@ -706,7 +706,7 @@ def run(t) -> None:
                 ),
                 unknown_00092e00=lambda harness, arguments: (1, (arguments[0], arguments[1])),
                 network_channel_write_packet=writes,
-                unknown_00096ce0=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                network_connection_drop_oldest_sent=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
                 unknown_000965e0=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
             ),
             mocks=[
@@ -816,7 +816,7 @@ def run(t) -> None:
             ),
             externals=dict(
                 setup["externals"],
-                unknown_00096510=number,
+                network_connection_new_sequence=number,
                 network_connection_set_sent_size=lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]), arguments[2])),
                 unknown_000931a0=sends,
             ),

@@ -97,3 +97,87 @@ def run(t) -> None:
             word = word | 1 if packet < came else word & ~1
             struct.pack_into("<H", data, 0x4C + place * 2, word)
         t.check("network_connection_advance_received", Buffer(bytes(data)))
+
+    # ---------- one of the things starts over, and the packets that it sends
+
+    from difftest import Mock, mock_address
+
+    def at_time() -> dict:
+        now = random_.getrandbits(32)
+        while 0x20000000 <= now < 0x21000000:
+            now = random_.getrandbits(32)
+        return {
+            "now": now,
+            "globals": {"unknown_00510548": bytes((random_.choice((0, 0, 1)),)), "unknown_0051054c": struct.pack("<I", now)},
+            "externals": {"GetTickCount": lambda harness, arguments, now=now: now},
+        }
+
+    for n in range(300):
+        setup = at_time()
+        t.check(
+            "network_connection_reset",
+            Buffer(random_.randbytes(SIZE)),
+            globals=dict(
+                setup["globals"],
+                unknown_004cf6e8=struct.pack("<I", random_.choice((0, 1, 7, 1000, random_.getrandbits(32)))),
+                **{name: struct.pack("<I", random_.getrandbits(32)) for name in ("unknown_004cf70c", "unknown_004cf710", "unknown_004cf714", "unknown_004cf718")},
+            ),
+            externals=setup["externals"],
+        )
+
+    for n in range(1000):
+        data, (came, (oldest, newest)) = connection(empty=random_.random() < 0.2)
+        size, _, _, capacity, start, count = struct.unpack_from("<6i", data, 0x2C)
+        struct.pack_into("<i", data, 0x40, random_.choice((newest - oldest, newest - oldest, 0)))
+        t.check(
+            "network_connection_window_advance",
+            Buffer(bytes(data[0x28:0x44])),
+            random_.choice((oldest, oldest + 1, newest, newest + 1, oldest - 1, oldest + random_.randrange(0, 0x100))) & 0xFFFFFFFF,
+        )
+
+    def sending(full: bool = False) -> tuple:
+        """One of the things, with its functions after it, and packets that it sent, each at a time."""
+        setup = at_time()
+        data, (came, (oldest, newest)) = connection()
+        size = struct.unpack_from("<i", data, 0x2C)[0]
+        if full:
+            newest = oldest + size
+            struct.pack_into("<i", data, 0x30, newest)
+        struct.pack_into("<i", data, 0x40, newest - oldest)
+        struct.pack_into("<i", data, 0x38, size)
+        start = struct.unpack_from("<i", data, 0x3C)[0]
+        wait = random_.choice((0, 100, 1000))
+        struct.pack_into("<i", data, 0x974, wait)
+        for packet in range(newest - oldest):
+            place = 0x14C + ((packet + start) % size) * 16
+            # sent just so long ago that it has been waited for, or not
+            struct.pack_into("<I", data, place, (setup["now"] - wait - 50 - random_.choice((-1, 0, 0, 1, 500, -500))) & 0xFFFFFFFF)
+            struct.pack_into("<H", data, place + 0xE, random_.choice((0, 0, 0, 1, 4, 2, 0xFFF8)))
+        struct.pack_into("<I", data, 0, SIZE)
+        buffer = bytes(data) + struct.pack("<II", 0x11, mock_address(0))
+        return setup, buffer, oldest, newest
+
+    for n in range(1500):
+        setup, buffer, oldest, newest = sending(random_.random() < 0.3)
+        data = bytearray(buffer)
+        # the number that they are counted from: the first one, mostly, or one before or far from it
+        struct.pack_into("<i", data, 0x44, random_.choice((oldest + 1, oldest + 1, newest, oldest, newest - 0x7F, newest - 0x7E, newest + 5)))
+        struct.pack_into("<i", data, 0x94C, random_.choice((newest, newest, oldest, newest - 0x7F, newest - 0x80, newest - 0x81)))
+        globals_ = dict(setup["globals"], unknown_004cf6f4=struct.pack("<i", 50))
+        t.check(
+            "network_connection_drop_oldest_sent",
+            Buffer(bytes(data), pointers=(0,)),
+            random_.choice((0, 0, 0, 1, 0x100)),
+            Buffer(random_.randbytes(4)),
+            Buffer(random_.randbytes(4)),
+            globals=globals_,
+            externals=setup["externals"],
+        )
+        t.check(
+            "network_connection_new_sequence",
+            Buffer(bytes(data), pointers=(0,)),
+            random_.getrandbits(32),
+            globals=globals_,
+            externals=setup["externals"],
+            mocks=[Mock(lambda call, cannot=random_.choice((0, 0, 0, 1, 0x100)): cannot, stack_arguments=1, registers=("ecx",))],
+        )

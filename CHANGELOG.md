@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — El número de cada paquete que se manda
+
+Cuatro funciones en `networking/network_connection.c`, 596 bytes entre las cuatro. De 1495
+funciones se pasa a 1499, el 13,31 % de las del juego (el 8,958 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_connection_reset` | `0x00095cf0` | `networking/network_connection.c` |
+| `network_connection_new_sequence` | `0x00096510` | `networking/network_connection.c` |
+| `network_connection_drop_oldest_sent` | `0x00096ce0` | `networking/network_connection.c` |
+| `network_connection_window_advance` | `0x001a4840` | `networking/network_connection.c` |
+
+### Lo que se sabe
+
+- `network_connection_reset` pone una conexión a cero. **El número del
+  primer paquete sale de la hora** (multiplicada por un número del juego,
+  en milésimas, y recortada a un byte), así dos conexiones seguidas no
+  empiezan igual. Los tiempos de ida y vuelta empiezan en cuatro valores
+  que el juego tiene en `0x004cf70c` a `0x004cf718`.
+- `network_connection_new_sequence` da **el número del siguiente paquete
+  que se manda**, o nada si no se puede: si la conexión dice que no puede
+  mandar, o si el número quedaría a 128 o más del último contestado o del
+  primero de la cuenta, o si el anillo sigue lleno. Entonces apunta que
+  está llena. Si el anillo estaba lleno, antes suelta el más viejo.
+- `network_connection_drop_oldest_sent` **da por perdido el paquete más
+  viejo sin contestar** cuando toca: si ya tiene uno de dos bits, si se le
+  obliga, o si se ha esperado por él el tiempo de espera del hito 432 más
+  un margen. Avisa con el número 6 y el del paquete: es de aquí de donde
+  le llegaba al canal «un paquete no fue contestado» (hito 411).
+- `network_connection_window_advance` adelanta el principio de una
+  ventana. Está lejos del resto en el ejecutable (`0x001a4840`), junto a
+  otras cosas genéricas.
+- Tres de estas eran funciones que el canal llamaba sin estar hechas. De
+  las seis que llamaba de esta pieza queda una: `0x000965e0`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las cuatro.** Tanda de los hitos 420 a
+  424, hecha: 61 líneas rotas, 56 notadas; cuatro de las otras cinco ya
+  tienen su caso en las pruebas (se comprueba en la tanda que corre
+  ahora) y la quinta no se puede notar desde fuera.
+- En este hito se pasaron las pruebas de `network_connection` (9
+  funciones) y `network_channel` (25).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Las dos ventanas de paquetes de una conexión
 
 Cuatro funciones en `networking/network_connection.c`, 427 bytes entre las cuatro. De 1491

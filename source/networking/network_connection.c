@@ -11,6 +11,10 @@ the file is a guess, and so are the names of its functions.
 
 #include "network_connection.h"
 
+#include "networking/network_observer.h"
+
+#include <string.h>
+
 /* ---------- globals */
 
 /* 0x004cf6f8, 0x004cf6fc: by how many bits a new time is taken into the
@@ -20,6 +24,17 @@ gives. 0x004cf708: the least wait. 0x004cf71c, 0x004cf720: what a packet
 with no answer adds to the loss, and the most that that is. 0x004cf724: what
 an answer takes from it */
 long unknown_004cf6f8;
+
+/* 0x004cf6e8: what the time is taken times, in thousandths, for the number
+of the first packet. 0x004cf6f4: what is waited for an answer more than the
+wait. 0x004cf70c to 0x004cf718: what one of the things starts with: the least
+time, the smoothed one, how much it changes, and the wait */
+long unknown_004cf6e8;
+long unknown_004cf6f4;
+long unknown_004cf70c;
+long unknown_004cf710;
+long unknown_004cf714;
+long unknown_004cf718;
 long unknown_004cf6fc;
 long unknown_004cf700;
 long unknown_004cf704;
@@ -203,5 +218,165 @@ void network_connection_advance_received(
 			}
 			window->oldest= next;
 		}
+	}
+}
+
+/* 0x00095cf0: one of the things starts over. The number of the packets that
+it sends starts from the time, taken times a number, in thousandths and of
+no more than a byte: no packets sent, with that number; none that came, and
+that not in use; the most of what was answered is the number before; and its
+times are the ones that the game has for the start, with no loss */
+void network_connection_reset(
+	byte *connection)
+{
+	struct network_connection_window *received=
+		(struct network_connection_window *)(connection+NETWORK_CONNECTION_RECEIVED_WINDOW_OFFSET);
+	struct network_connection_window *sent=
+		(struct network_connection_window *)(connection+NETWORK_CONNECTION_SENT_WINDOW_OFFSET);
+	long sequence;
+
+	connection[NETWORK_CONNECTION_FULL_OFFSET]= FALSE;
+	sequence= (long)(((unsigned long)unknown_004cf6e8*(unsigned long)network_time_since(0))/1000&0xFF);
+	sent->newest= sequence;
+	sent->oldest= sequence;
+	sent->start= 0;
+	sent->count= 0;
+	sent->enabled= TRUE;
+	received->newest= 0;
+	received->oldest= 0;
+	received->start= 0;
+	received->count= 0;
+	received->enabled= FALSE;
+	*(long *)(connection+NETWORK_CONNECTION_UNKNOWN44_OFFSET)= sequence;
+	*(long *)(connection+NETWORK_CONNECTION_SENT_BYTES_OFFSET)= 0;
+	*(long *)(connection+NETWORK_CONNECTION_UNKNOWN950_OFFSET)= 0;
+	*(long *)(connection+NETWORK_CONNECTION_UNKNOWN954_OFFSET)= 0;
+	*(long *)(connection+NETWORK_CONNECTION_LAST_UNKNOWN_OFFSET)= 0;
+	*(long *)(connection+NETWORK_CONNECTION_LAST_TIME_OFFSET)= 0;
+	*(long *)(connection+NETWORK_CONNECTION_LAST_UNKNOWN2_OFFSET)= 0;
+	connection[NETWORK_CONNECTION_UNKNOWN958_OFFSET]= FALSE;
+	*(long *)(connection+NETWORK_CONNECTION_UNKNOWN94C_OFFSET)= sequence-1;
+	connection[NETWORK_CONNECTION_UNKNOWN959_OFFSET]= TRUE;
+	*(long *)(connection+NETWORK_CONNECTION_LEAST_TIME_OFFSET)= unknown_004cf70c;
+	*(long *)(connection+NETWORK_CONNECTION_SMOOTHED_TIME_OFFSET)= unknown_004cf710;
+	*(long *)(connection+NETWORK_CONNECTION_TIME_DEVIATION_OFFSET)= unknown_004cf714;
+	*(long *)(connection+NETWORK_CONNECTION_LOSS_OFFSET)= 0;
+	*(long *)(connection+NETWORK_CONNECTION_TIMEOUT_OFFSET)= unknown_004cf718;
+}
+
+/* 0x00096510: the number for one more packet that one of the things sends,
+at a time; NONE if it cannot send now, as its second function says, or if it
+has no room, and then it notes that. If the ring is full, the first of the
+packets that it keeps is not kept any more
+(network_connection_drop_oldest_sent, whatever its bits). There is no room
+if the number would be 0x80 or more after the most of what was answered, or
+after the number that they are counted from, or if the ring is still full.
+The packet is kept from now, with how far its number is from that one */
+long __attribute__((stdcall)) network_connection_new_sequence(
+	byte *connection,
+	long time)
+{
+	struct network_connection_window *sent=
+		(struct network_connection_window *)(connection+NETWORK_CONNECTION_SENT_WINDOW_OFFSET);
+	struct network_connection_sent_packet *packet;
+	long sequence;
+	long newest;
+
+	if ((*(const struct network_connection_functions **)connection)->cannot_send(connection, 0))
+	{
+		return NONE;
+	}
+	if (sent->newest-sent->oldest>=sent->size)
+	{
+		long dropped_sequence;
+		long event;
+
+		network_connection_drop_oldest_sent(connection, TRUE, &event, &dropped_sequence);
+	}
+	newest= sent->newest;
+	if (*(const long *)(connection+NETWORK_CONNECTION_UNKNOWN94C_OFFSET)-newest+NETWORK_CONNECTION_SEQUENCE_RANGE<=0 ||
+		newest-sent->oldest>=sent->size ||
+		newest-*(const long *)(connection+NETWORK_CONNECTION_UNKNOWN44_OFFSET)+1>=NETWORK_CONNECTION_SEQUENCE_RANGE)
+	{
+		connection[NETWORK_CONNECTION_FULL_OFFSET]= TRUE;
+
+		return NONE;
+	}
+	sequence= newest+1;
+	if (sequence>newest)
+	{
+		sent->count+= sequence-newest;
+		sent->newest= sequence;
+	}
+	connection[NETWORK_CONNECTION_UNKNOWN959_OFFSET]= FALSE;
+	packet= network_connection_get_sent_packet(sequence, connection);
+	memset(packet, 0, sizeof(*packet));
+	packet->unknownC= (short)(sequence-*(const long *)(connection+NETWORK_CONNECTION_UNKNOWN44_OFFSET));
+	packet->time= time;
+	packet->unknown8= NONE;
+
+	return sequence;
+}
+
+/* 0x00096ce0: the first of the packets that one of the things sent and
+keeps is not kept any more, if it is time: it has one of two bits, or it is
+to be so whatever, or it has been waited for as long as the wait and what the
+game has more. Whether it was so; then 6 and its number are given. Nothing is
+done with no packets, nor with one whose number is after the one that they
+are counted from */
+boolean __attribute__((stdcall)) network_connection_drop_oldest_sent(
+	byte *connection,
+	boolean force,
+	long *event,
+	long *sequence_out)
+{
+	struct network_connection_window *sent=
+		(struct network_connection_window *)(connection+NETWORK_CONNECTION_SENT_WINDOW_OFFSET);
+	const struct network_connection_sent_packet *packet;
+	long sequence;
+
+	*event= 0;
+	if (sent->newest==sent->oldest)
+	{
+		return FALSE;
+	}
+	sequence= sent->oldest+1;
+	if (sequence>*(const long *)(connection+NETWORK_CONNECTION_UNKNOWN44_OFFSET))
+	{
+		return FALSE;
+	}
+	packet= network_connection_get_sent_packet(sequence, connection);
+	if (!(packet->flags&_network_connection_sent_bit4) && !force && !(packet->flags&_network_connection_sent_bit1) &&
+		network_time_since(packet->time)<(long)(*(const unsigned long *)(connection+NETWORK_CONNECTION_TIMEOUT_OFFSET)+
+		(unsigned long)unknown_004cf6f4))
+	{
+		return FALSE;
+	}
+	*event= _network_connection_event_dropped;
+	*sequence_out= sequence;
+	network_connection_window_advance(sent, sequence);
+
+	return TRUE;
+}
+
+/* 0x001a4840: the packets of some, of which something is kept in a ring,
+start after one of a number: if that is after the one that they started
+after, the ring starts so many places on and has so many fewer, unless it
+has not so many. It is away from the rest in the executable, with other
+things of the kind */
+void network_connection_window_advance(
+	struct network_connection_window *window,
+	long sequence)
+{
+	long count= (long)((unsigned long)sequence-(unsigned long)window->oldest);
+
+	if (count>0)
+	{
+		if (window->count>=count)
+		{
+			window->start= (long)((unsigned long)window->start+(unsigned long)count)%window->capacity;
+			window->count-= count;
+		}
+		window->oldest= sequence;
 	}
 }

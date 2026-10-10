@@ -1893,7 +1893,7 @@ address,name,source,arguments,returns,convention
 00088220,network_channel_connect,source/networking/network_channel.c,eax stack stack,void,stdcall
 00088110,network_channel_new,source/networking/network_channel.c,stack edx stack stack stack stack esi,bool,stdcall
 00092d10,unknown_00092d10,,esi stack stack stack,bool,stdcall
-00095cf0,unknown_00095cf0,,esi,void
+00095cf0,network_connection_reset,source/networking/network_connection.c,esi,void
 000820f0,network_channel_take_unknown10,source/networking/network_channel.c,stack,int,stdcall
 00082150,network_channel_take_unknown14,source/networking/network_channel.c,stack,int,stdcall
 000891e0,network_channel_parts_next,source/networking/network_channel.c,ebx stack,bool,stdcall
@@ -1901,7 +1901,7 @@ address,name,source,arguments,returns,convention
 00088db0,network_channel_update_unknown10,source/networking/network_channel.c,esi,void
 00089340,network_channel_unknown18_write,source/networking/network_channel.c,ecx stack stack stack stack,bool,stdcall
 00089390,network_channel_unknown18_read,source/networking/network_channel.c,ecx stack stack,int,stdcall
-00096ce0,unknown_00096ce0,,stack stack stack stack,bool,stdcall
+00096ce0,network_connection_drop_oldest_sent,source/networking/network_connection.c,stack stack stack stack,bool,stdcall
 000965e0,unknown_000965e0,,eax stack stack stack,int,stdcall
 00078190,network_observer_packet_rate_low,source/networking/network_observer.c,ecx xmm1 stack stack stack,bool,stdcall
 00078090,network_observer_packet_rate,source/networking/network_observer.c,ecx stack stack stack,real:xmm0,stdcall
@@ -1982,7 +1982,7 @@ address,name,source,arguments,returns,convention
 00093aa0,unknown_00093aa0,,eax ecx edx stack stack,void,stdcall
 000883c0,network_channel_update,source/networking/network_channel.c,eax,void
 00088980,network_channel_write_packet,source/networking/network_channel.c,eax stack stack stack stack stack stack stack stack,void,stdcall
-00096510,unknown_00096510,,esi stack,int,stdcall
+00096510,network_connection_new_sequence,source/networking/network_connection.c,esi stack,int,stdcall
 00096810,network_connection_set_sent_size,source/networking/network_connection.c,eax ecx edi,void
 000931a0,unknown_000931a0,,eax ecx stack stack stack stack,void,stdcall
 000893c0,replication_entity_manager_new,source/networking/replication_entity_manager.c,ebx,void
@@ -2051,3 +2051,4 @@ address,name,source,arguments,returns,convention
 00096d80,network_connection_update_times,source/networking/network_connection.c,ecx esi eax edx stack,void,stdcall
 000966d0,network_connection_get_sent_packet,source/networking/network_connection.c,eax ecx,int
 00096c50,network_connection_advance_received,source/networking/network_connection.c,ecx,void
+001a4840,network_connection_window_advance,source/networking/network_connection.c,esi ebx,void

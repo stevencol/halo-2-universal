@@ -325,3 +325,9 @@ address,name,source
 004cf71c,unknown_004cf71c,source/networking/network_connection.c
 004cf720,unknown_004cf720,source/networking/network_connection.c
 004cf724,unknown_004cf724,source/networking/network_connection.c
+004cf6e8,unknown_004cf6e8,source/networking/network_connection.c
+004cf6f4,unknown_004cf6f4,source/networking/network_connection.c
+004cf70c,unknown_004cf70c,source/networking/network_connection.c
+004cf710,unknown_004cf710,source/networking/network_connection.c
+004cf714,unknown_004cf714,source/networking/network_connection.c
+004cf718,unknown_004cf718,source/networking/network_connection.c

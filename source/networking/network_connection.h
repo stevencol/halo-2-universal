@@ -44,7 +44,23 @@ enum
 	NETWORK_CONNECTION_RECEIVED_OFFSET= 0x4C,
 	NETWORK_CONNECTION_SENT_OFFSET= 0x14C,
 	/* the bit of the word of a packet that says that it came */
-	_network_connection_received_bit= 0x1
+	_network_connection_received_bit= 0x1,
+	/* more: a byte that says that it could not give a number for a packet;
+	the number of a packet that it sent, from which the others are counted;
+	two numbers and two bytes; how far the numbers of the packets that it
+	sends can be from that and from the most of what was answered; two of
+	the bits of a packet that was sent, with which it is not waited for;
+	and what is said of one that is not kept any more */
+	NETWORK_CONNECTION_FULL_OFFSET= 0x5,
+	NETWORK_CONNECTION_UNKNOWN44_OFFSET= 0x44,
+	NETWORK_CONNECTION_UNKNOWN950_OFFSET= 0x950,
+	NETWORK_CONNECTION_UNKNOWN954_OFFSET= 0x954,
+	NETWORK_CONNECTION_UNKNOWN958_OFFSET= 0x958,
+	NETWORK_CONNECTION_UNKNOWN959_OFFSET= 0x959,
+	NETWORK_CONNECTION_SEQUENCE_RANGE= 0x80,
+	_network_connection_sent_bit1= 0x1,
+	_network_connection_sent_bit4= 0x4,
+	_network_connection_event_dropped= 6
 };
 
 /* ---------- structures */
@@ -64,7 +80,16 @@ struct network_connection_window
 	long count;
 };
 
-/* what is kept of a packet that was sent: when, of what size, and more */
+/* the functions of one of the things, of which the second says whether it
+cannot send now */
+struct network_connection_functions
+{
+	void *unknown0;
+	boolean (__attribute__((thiscall)) *cannot_send)(byte *connection, long unknown);
+};
+
+/* what is kept of a packet that was sent: when, of what size, a number, how
+far its number is from the one that they are counted from, and its bits */
 struct network_connection_sent_packet
 {
 	long time;
@@ -76,6 +101,11 @@ struct network_connection_sent_packet
 
 /* ---------- prototypes/NETWORK_CONNECTION.C */
 
+void network_connection_reset(byte *connection);
+long __attribute__((stdcall)) network_connection_new_sequence(byte *connection, long time);
+boolean __attribute__((stdcall)) network_connection_drop_oldest_sent(byte *connection, boolean force, long *event,
+	long *sequence);
+void network_connection_window_advance(struct network_connection_window *window, long sequence);
 struct network_connection_sent_packet *network_connection_get_sent_packet(long sequence, byte *connection);
 void network_connection_set_sent_size(long sequence, byte *connection, long size);
 void network_connection_received(long sequence, byte *connection);

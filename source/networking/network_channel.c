@@ -323,7 +323,6 @@ over. 0x000820f0, 0x00082150: one of the things of unknown_004d87d8, and of
 unknown_004d87dc, that is no one's is taken; which, or NONE */
 boolean __attribute__((stdcall)) unknown_00092d10(byte *unknown0, long unknown44, long identifier,
 	const struct transport_address *address);
-void unknown_00095cf0(byte *unknown10);
 
 /* ---------- globals */
 
@@ -394,7 +393,7 @@ void __attribute__((stdcall)) network_channel_connect(
 	index= *(const long *)(channel+NETWORK_CHANNEL_UNKNOWN10_OFFSET);
 	if (index!=NONE)
 	{
-		unknown_00095cf0(unknown_004d87d8+index*NETWORK_CHANNEL_UNKNOWN10_SIZE);
+		network_connection_reset(unknown_004d87d8+index*NETWORK_CHANNEL_UNKNOWN10_SIZE);
 	}
 	index= *(const long *)(channel+NETWORK_CHANNEL_UNKNOWN14_OFFSET);
 	if (index!=NONE)
@@ -528,7 +527,7 @@ long __attribute__((stdcall)) network_channel_take_unknown10(
 
 		if (!unknown10[NETWORK_CHANNEL_UNKNOWN10_USED_OFFSET])
 		{
-			unknown_00095cf0(unknown10);
+			network_connection_reset(unknown10);
 			*(long *)(unknown10+NETWORK_CHANNEL_UNKNOWN10_OWNER_OFFSET)= owner;
 			unknown10[NETWORK_CHANNEL_UNKNOWN10_USED_OFFSET]= TRUE;
 
@@ -692,7 +691,6 @@ void __attribute__((stdcall)) network_channel_unknown3c_new(
 with two numbers that it gives, until it says no. 0x000965e0: the next thing
 that happened to one of them, with three numbers; nothing when there is no
 more */
-boolean __attribute__((stdcall)) unknown_00096ce0(byte *unknown10, long unknown, long *unknown8, long *unknownC);
 long __attribute__((stdcall)) unknown_000965e0(byte *unknown10, long *unknown4, long *unknown8, long *unknownC);
 
 /* 0x004cf728, 0x004cf72c: what a number of a thing of unknown_004d87d8 is
@@ -762,7 +760,7 @@ struct network_channel_part_object
 
 /* 0x00088db0: what is done each time with a channel that has one of the
 things of unknown_004d87d8: that does what it does until it says no
-(unknown_00096ce0), and each thing that happened to it is seen to
+(network_connection_drop_oldest_sent), and each thing that happened to it is seen to
 (unknown_000965e0), by its kind. With 1 and 4: the fifth time of the channel
 is now; a channel in its fourth state is in the fifth; and the observer that
 has the channel is told, with two of the numbers. With 4, each of the
@@ -787,7 +785,7 @@ void network_channel_update_unknown10(
 		return;
 	}
 	unknown10= unknown_004d87d8+*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN10_OFFSET)*NETWORK_CHANNEL_UNKNOWN10_SIZE;
-	while (unknown_00096ce0(unknown10, 0, &scratch8, &scratchC))
+	while (network_connection_drop_oldest_sent(unknown10, 0, &scratch8, &scratchC))
 	{
 	}
 	for (kind= unknown_000965e0(unknown10, &unknown4, &unknown8, &unknownC); kind!=0;
@@ -1156,13 +1154,12 @@ next packet, at a time; NONE if it cannot. 0x00096810: and is told the size
 that the packet of a number was sent with. 0x000931a0: a packet that a
 stream has is sent to what a channel talks with, with what the voice has for
 it; the size that it was sent with, or nothing */
-long __attribute__((stdcall)) unknown_00096510(byte *unknown10, long time);
 void __attribute__((stdcall)) unknown_000931a0(long unknown44, struct bitstream *stream, byte *unknown0, long voice_size,
 	const byte *voice_packet, long *sent_size);
 
 /* 0x00088980: a channel writes a packet in a stream, and sends it. With the
 first byte, the packet has a number, which the channel's thing of
-unknown_004d87d8 gives (unknown_00096510); with none to give, nothing is
+unknown_004d87d8 gives (network_connection_new_sequence); with none to give, nothing is
 done.
 
 The stream is written from the start, in eights of bytes. Each of the
@@ -1214,7 +1211,7 @@ void __attribute__((stdcall)) network_channel_write_packet(
 	if (numbered)
 	{
 		unknown10= unknown_004d87d8+*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN10_OFFSET)*NETWORK_CHANNEL_UNKNOWN10_SIZE;
-		number= unknown_00096510(unknown10, network_time_since(0));
+		number= network_connection_new_sequence(unknown10, network_time_since(0));
 		if (number==NONE)
 		{
 			goto done;
