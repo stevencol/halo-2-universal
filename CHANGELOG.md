@@ -2,6 +2,55 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — La vista que frena la partida
+
+Tres funciones: dos en `networking/simulation_world.c` y una en el archivo nuevo
+`networking/simulation_view.c`. De 1539
+funciones se pasa a 1542, el 13,69 % de las del juego (el 9,183 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_unknown_00069790` | `0x00069790` | `networking/simulation_world.c` |
+| `simulation_world_unknown_00069880` | `0x00069880` | `networking/simulation_world.c` |
+| `simulation_view_set_blocked` | `0x00086140` | `networking/simulation_view.c` |
+
+### Lo que se sabe
+
+- `simulation_world_unknown_00069790` es la cuenta de **cuántas cosas
+  esperan en el segundo estado** de la partida (lo que faltaba del hito
+  446). Mira las vistas de la segunda clase que cuentan y se queda con la
+  que va más atrasada (el número más bajo en `0x84`): lo que espera es lo
+  que ese número le saca al de la partida (`0x28`) menos 129. Si no le
+  saca nada, no espera nada, y **esa vista es la que frena la partida**.
+- Después se lo dice a cada vista de la segunda clase con
+  `simulation_view_set_blocked`, la primera función de las vistas:
+  - al empezar a frenar se apunta la hora;
+  - **una vista que lleva dos segundos frenando la partida, y estaba
+    bien, se da por mala**: se le pasa «nada» (`0x00085a70`) y queda en
+    el estado 4. Es el «esperando a un jugador» que acaba echándolo.
+- `simulation_world_unknown_00069880` pasa una cosa a cada vista de la
+  segunda clase (`0x000860b0`).
+
+### Corregido
+
+- **Lo que cada vista tiene en `0xC` es la propia partida**, no otra cosa
+  aparte: `0x00069790` recorre las vistas de lo mismo que recibe
+  `0x00069300`. Los nombres de los hitos 444 a 446 que decían «lo que una
+  vista tiene en `0xC`» dicen ya «la partida» (`SIMULATION_WORLD_...`), y
+  lo que se miraba en `0x8` para saber si está en marcha es su estado.
+  No cambia lo que hace el código.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las tres**, y en las de los hitos 441 a
+  446.
+- En este hito se pasaron las pruebas de `simulation_world` (12
+  funciones), `simulation_view` (1) y `network_message_handler` (7).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Ponerse al día con lo que llega de la otra consola
 
 Cuatro funciones en `networking/simulation_world.c`. De 1535

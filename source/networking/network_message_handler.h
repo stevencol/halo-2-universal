@@ -20,10 +20,7 @@ enum
 	_simulation_view_kind1= 1,
 	_simulation_view_kind2= 2,
 	_simulation_view_kind3= 3,
-	_simulation_view_kind4= 4,
-	/* a byte of what a view has at 0xC that says that it is going, and
-	takes what network_message_handler_unknown_00094990 gives it */
-	SIMULATION_VIEW_UNKNOWNC_UNKNOWN24_OFFSET= 0x24
+	_simulation_view_kind4= 4
 };
 
 /* ---------- prototypes/NETWORK_MESSAGE_HANDLER.C */

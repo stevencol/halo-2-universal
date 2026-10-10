@@ -6,7 +6,7 @@ import struct
 from difftest import Buffer
 
 WORLD = 0x80
-VIEW = 0x40
+VIEW = 0x90
 OTHER = 0x28
 
 
@@ -14,6 +14,7 @@ def a_world(random_, channel: int) -> Buffer:
     """What the game in the network has going, with some of its fifteen views after it, and after each what it has at 0xC."""
     data = bytearray(random_.randbytes(WORLD))
     struct.pack_into("<I", data, 8, random_.choice((0, 1, 1, 1, 1, 0x1234)))
+    struct.pack_into("<i", data, 0x28, random_.choice((0, 5, 100, 1000, 1129, 1130, random_.getrandbits(12))))
     pointers = []
     chance = random_.choice((0.1, 0.5, 0.9))
     for index in range(15):
@@ -25,6 +26,8 @@ def a_world(random_, channel: int) -> Buffer:
         struct.pack_into("<H", view, 2, random_.choice((0, 1, 1, 1, 2, 2, 3, 3, 4, 5, 0x101, 0x21, random_.getrandbits(8))))
         struct.pack_into("<i", view, 0x3C, random_.choice((channel, channel, random_.randrange(4), -1)))
         struct.pack_into("<I", view, 0xC, at + VIEW)
+        view[0x78] = random_.choice((0, 1, 1, 0x80))
+        struct.pack_into("<i", view, 0x84, random_.choice((0, 5, 100, 1000, 1200, random_.getrandbits(12))))
         other = bytearray(random_.randbytes(OTHER))
         other[0x24] = random_.choice((0, 1, 1, 0x80))
         data += view + other
@@ -112,13 +115,13 @@ def run(t) -> None:
 
     for n in range(2500):
         thing = a_thing()
-        t.check("simulation_world_unknown_00069300", thing, Buffer(random_.randbytes(4)), externals={"unknown_00069790": waits})
+        t.check("simulation_world_unknown_00069300", thing, Buffer(random_.randbytes(4)), externals={"simulation_world_unknown_00069790": waits})
         thing = a_thing()
         t.check(
             "simulation_world_unknown_00069350",
             random_.choice((0, 1, 1, 1, 0x80)),
             thing,
-            externals={"unknown_00069790": waits, "game_tick": ticks(thing)},
+            externals={"simulation_world_unknown_00069790": waits, "game_tick": ticks(thing)},
         )
         thing = a_thing(random_.choice((None, None, 3, 2)))
         last, = struct.unpack_from("<i", thing.data, 0x1210)
@@ -135,7 +138,7 @@ def run(t) -> None:
             Buffer(struct.pack("<i", last + random_.choice((1, 1, 1, 1, 0, 2, -3))) + random_.randbytes(0x1C)),
             globals={"main_game_globals": random_.choice((0, 1, 1, 1, 1)) and Buffer(bytes(game)), "unknown_004cf770": bytes(there)},
             externals={
-                "unknown_00069790": waits,
+                "simulation_world_unknown_00069790": waits,
                 "game_tick": ticks(thing),
                 "unknown_0006ab90": lambda harness, arguments, could=could: could,
             },
@@ -148,4 +151,21 @@ def run(t) -> None:
             Buffer(bytes(view)),
             Buffer(random_.randbytes(0x40)),
             externals={"unknown_00085a70": lambda harness, arguments: 0},
+        )
+
+    # ---------- the things that wait in the second state, and what the views of the second kind are told
+
+    blocked = lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1] & 0xFF))
+
+    for n in range(2500):
+        t.check(
+            "simulation_world_unknown_00069790",
+            a_world(random_, 0),
+            externals={"simulation_view_set_blocked": blocked},
+        )
+        t.check(
+            "simulation_world_unknown_00069880",
+            a_world(random_, 0),
+            random_.getrandbits(32),
+            externals={"unknown_000860b0": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1]))},
         )

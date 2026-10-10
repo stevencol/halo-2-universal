@@ -34,12 +34,12 @@ boolean __attribute__((stdcall)) unknown_00085f50(byte *view, boolean unknown8, 
 
 /* the view that the game in the network has of a channel of the game, by the
 number of the channel in the list; NULL if there is no game in the network,
-or it is not going, or it has none. The game has this written at the start
+or it is not in use, or it has none. The game has this written at the start
 of each function */
 static inline __attribute__((always_inline)) byte *network_message_handler_get_view(
 	long channel_index)
 {
-	if (unknown_004cf770.unknown0 && *(void *const *)(unknown_004cf770.unknownC+SIMULATION_WORLD_UNKNOWN8_OFFSET))
+	if (unknown_004cf770.unknown0 && *(void *const *)(unknown_004cf770.unknownC+SIMULATION_WORLD_STATE_OFFSET))
 	{
 		return simulation_world_get_channel_view(unknown_004cf770.unknownC, channel_index);
 	}
@@ -75,8 +75,9 @@ void network_message_handler_unknown_00094940(
 	}
 }
 
-/* 0x00094990: a message for what a view of the first kind has at 0xC, if a
-byte of that says so */
+/* 0x00094990: a message for the thing that a view of the first kind is of,
+if it is going: something that came for it to take
+(simulation_world_unknown_000698e0) */
 void __attribute__((stdcall)) network_message_handler_unknown_00094990(
 	const long *message,
 	long channel_index)
@@ -85,11 +86,11 @@ void __attribute__((stdcall)) network_message_handler_unknown_00094990(
 
 	if (view && *(const word *)(view+SIMULATION_VIEW_KIND_OFFSET)==_simulation_view_kind1)
 	{
-		byte *unknown= *(byte *const *)(view+SIMULATION_VIEW_UNKNOWNC_OFFSET);
+		byte *world= *(byte *const *)(view+SIMULATION_VIEW_WORLD_OFFSET);
 
-		if (unknown[SIMULATION_VIEW_UNKNOWNC_UNKNOWN24_OFFSET])
+		if (world[SIMULATION_WORLD_GOING_OFFSET])
 		{
-			simulation_world_unknown_000698e0(unknown, message);
+			simulation_world_unknown_000698e0(world, message);
 		}
 	}
 }
