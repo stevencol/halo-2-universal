@@ -185,8 +185,7 @@ Módulos (funciones hechas / archivo):
       contesta, qué fue de cada uno, dar por perdido el más viejo, el
       tiempo de ida y vuelta, las ventanas de paquetes llegados y
       mandados, y lo que el canal le pregunta; de `0x00095cf0` a
-      `0x00096d80`, completo, con su tabla `0x00450dd8`; romper
-      líneas pendiente en las 13 últimas)
+      `0x00096d80`, completo, con su tabla `0x00450dd8`)
 - [ ] Lo que cada cosa es — `networking\simulation_entity_database.c`
       (22, y una en `networking\network_heap.c`: crear una o varias,
       apuntar, activar y quitar cosas, vaciar, pedir su memoria,
@@ -393,19 +392,31 @@ Módulos (funciones hechas / archivo):
 - Los mapas del juego están en
   `E:\Datos\Downloads\juegos\roms\xbox\Halo 2`; no se copian ni se tocan.
 
-## Romper líneas: dónde quedó (2026-10-09, tras el hito 440)
+## Romper líneas: dónde quedó (2026-10-10, tras el hito 455)
 
-- **Hecho:** hitos 415 a 433, completo. Todas las líneas rotas se notan,
-  salvo cuatro que no se pueden notar: dos dan lo mismo rotas que enteras
-  (hitos 420 y 432) y dos las pruebas no las pueden ver (un byte que se pone
-  y se quita dentro de la misma función, y pasar un «sí» a 1).
-- Las vistas de los hitos 426 a 430 se terminaron después: 46 líneas
-  rotas, las 46 notadas.
-- **Pendiente, y por donde se sigue:** hitos 434 a 440 (`network_connection.c` desde
+- **Hecho:** hitos 415 a 440, completo. De los hitos 415 a 433, todas las
+  líneas rotas se notan salvo cuatro que no se pueden notar: dos dan lo
+  mismo rotas que enteras (hitos 420 y 432) y dos las pruebas no las pueden
+  ver (un byte que se pone y se quita dentro de la misma función, y pasar un
+  «sí» a 1).
+- **Hitos 434 a 440** (`network_connection.c` desde
   `network_connection_reset`, `network_message_queue.c`, los dos mensajes
-  del canal y `replication_event_set_data` del hito 421). Hay que escribir
-  sus archivos de líneas.
-- **Cómo se lanza:** `python build\line_breaking\break_lines.py <fuente>
+  del canal y `replication_event_set_data`): 108 líneas rotas, 106
+  notadas. Las 2 que no:
+  - en `network_message_queue_reset`, restar el tamaño de un mensaje a una
+    cuenta que la misma función deja luego a cero: no se puede notar;
+  - en `network_connection_acknowledge`, cambiar el suceso `5` por el `4`:
+    era un hueco de la prueba, porque quien recibe el suceso hace lo mismo
+    con los dos. La prueba se reforzó en el hito 450 y ya lo nota.
+  No hizo falta corregir código. Informe: `build\line_breaking\batch_report6.txt`.
+- **Pendiente, y por donde se sigue:** hitos 441 a 455
+  (`network_message_queue.c` desde `network_message_queue_write`,
+  `network_channel_handle_refused`, `simulation_world.c`,
+  `simulation_view.c` y `network_message_handler.c`). Sus archivos de
+  líneas están escritos: los genera `build\line_breaking\make_441_450.py`,
+  y `build\line_breaking\run_441_450.py` lanza la tanda entera (informe en
+  `batch_report7.txt`).
+- **Cómo se lanza una tanda suelta:** `python build\line_breaking\break_lines.py <fuente>
   <prueba> <funciones,separadas,por,comas> <archivo de líneas> <informe>`.
   Trabaja en la copia `C:\Users\steve\halo-2-check` (antes, `git checkout
   -q -f --detach <commit>` ahí). Los informes de las tandas hechas están en

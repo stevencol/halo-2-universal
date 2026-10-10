@@ -2,6 +2,30 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Romper líneas: hitos 434 a 440
+
+Sin funciones nuevas. Tanda de romper líneas de los hitos 434 a 440: 108
+líneas rotas, 106 notadas.
+
+### Comprobado
+
+- `replication_event_set_data` (hito 421): 4 de 4.
+- Los dos mensajes del canal (hito 439): 8 de 8.
+- `network_message_queue.c` (hitos 439 y 440, seis funciones): 27 de 28. La
+  que no se nota no se puede notar: resta el tamaño de un mensaje a una
+  cuenta que `network_message_queue_reset` deja a cero al acabar.
+- `network_connection.c` desde `network_connection_reset` (hitos 434 a 438,
+  trece funciones): 67 de 68. La que no se notaba era un hueco de
+  la prueba de `network_connection_acknowledge`, ya reforzada (hito 450).
+- No hizo falta corregir código.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en los hitos 441 a 455**; sus listas de líneas
+  están escritas.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — «La partida sigue desde aquí»
 
 Una función en `networking/simulation_view.c`, de 170 bytes. De 1558
