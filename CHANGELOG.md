@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — La cola de actualizaciones entera, y un trozo del estado del juego
+
+Cuatro funciones en `networking/simulation_world.c`, 601 bytes entre las cuatro. De 1559
+funciones se pasa a 1563, el 13,87 % de las del juego (el 9,262 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_clear_updates` | `0x0006ab10` | `networking/simulation_world.c` |
+| `simulation_world_add_update` | `0x0006ab90` | `networking/simulation_world.c` |
+| `simulation_world_receive_game_state` | `0x0006a990` | `networking/simulation_world.c` |
+| `simulation_world_unknown_00069f10` | `0x00069f10` | `networking/simulation_world.c` |
+
+### Lo que se sabe
+
+- **La cola de actualizaciones queda entera** (con el hito 450):
+  - `simulation_world_add_update` mete una al final: pide `0x404C` bytes
+    al montón de la red, copia la actualización y apunta su número como
+    el de la última que llegó. Es lo que el hito 446 llamaba «se guarda».
+  - `simulation_world_clear_updates` las suelta todas y deja la cola
+    vacía.
+- `simulation_world_receive_game_state` es **el trozo del estado del
+  juego** del hito 449: se copia en la memoria prestada solo si llega
+  justo donde acaba lo ya recibido, y la cuenta de lo recibido avanza.
+  El máximo es `0x40000` bytes (262 144).
+- `simulation_world_unknown_00069f10`: la partida mira su vista
+  principal. Si ya tiene su byte puesto, **se pone en marcha** (hito
+  451). Si no, la espera el tiempo que diga el juego (`0x004ced4c`)
+  desde la hora apuntada, y después **se da por vencida** (hito 453).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las cuatro**, y en las de los hitos 441
+  a 455 (su tanda está en marcha).
+- **Un fallo del juego, que se copia igual:** en
+  `simulation_world_receive_game_state` el sitio más el tamaño se suman
+  sin mirar si se desbordan; con un tamaño enorme la suma sale negativa,
+  pasa por buena y el juego copia fuera de la memoria. Las pruebas lo
+  encontraron (el emulador se paró en los dos lados) y no dan ya ese
+  caso.
+- En este hito se pasaron las pruebas de `simulation_world` (28
+  funciones), `simulation_view` (6) y `network_message_handler` (7).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Romper líneas: hitos 434 a 440
 
 Sin funciones nuevas. Tanda de romper líneas de los hitos 434 a 440: 108

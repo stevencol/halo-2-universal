@@ -88,7 +88,9 @@ enum
 	_simulation_world_unknown18_1= 1,
 	_simulation_world_unknown18_2= 2,
 	_simulation_world_unknown18_6= 6,
-	SIMULATION_VIEW_READY_OFFSET= 0x75
+	SIMULATION_VIEW_READY_OFFSET= 0x75,
+	/* the most bytes of the state of the game that the thing is sent */
+	MAXIMUM_SIMULATION_WORLD_GAME_STATE_SIZE= 0x40000
 };
 
 /* ---------- structures */
@@ -146,9 +148,15 @@ void simulation_world_unknown_0006b040(byte *world);
 void simulation_world_unknown_00069f90(byte *world);
 void simulation_world_unknown_00069fe0(byte *world);
 void __attribute__((stdcall)) simulation_world_unknown_0006b090(boolean ready, byte *world, const byte *view);
+void __attribute__((stdcall)) simulation_world_clear_updates(byte *world);
+boolean __attribute__((stdcall)) simulation_world_add_update(byte *world, const long *update);
+boolean __attribute__((stdcall)) simulation_world_receive_game_state(byte *world, long offset, long size,
+	const void *data);
+void simulation_world_unknown_00069f10(byte *world);
 
 /* ---------- globals */
 
+extern long unknown_004ced4c;
 extern long unknown_004ced58;
 extern long unknown_004ced5c;
 

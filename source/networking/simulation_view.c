@@ -28,13 +28,11 @@ size, that goes at a place; whether it could. 0x0006aa20: all of the state of
 the game has come, so many bytes: it is the one of the game now; whether it
 could */
 void __attribute__((stdcall)) unknown_0006a7f0(byte *world, byte *unknown14, long players, const void *actions);
-boolean __attribute__((stdcall)) unknown_0006a990(byte *world, long offset, long size, const void *data);
 boolean __attribute__((stdcall)) unknown_0006aa20(byte *world, long size);
 
 /* 0x0006a8a0: the thing makes ready for the game to go; whether it could.
 0x0006ab10: the things that have come and wait are let go of, most likely */
 boolean __attribute__((stdcall)) unknown_0006a8a0(byte *world);
-void __attribute__((stdcall)) unknown_0006ab10(byte *world);
 
 /* ---------- globals */
 
@@ -192,7 +190,7 @@ boolean __attribute__((stdcall)) simulation_view_unknown_00085f50(
 /* 0x00085ed0: a view of the first kind is given a piece of the state of
 the game that the other console sends, which goes at a place and is of a
 size; whether it was taken. It is not if the thing is not being sent the
-state of the game. A piece of some size is one more piece (unknown_0006a990);
+state of the game. A piece of some size is one more piece (simulation_world_receive_game_state);
 one of none says that it has all come, so many bytes (unknown_0006aa20). If
 the thing could not take it, the view goes to its first state and is as 5
 says (simulation_view_fail, written here) */
@@ -211,7 +209,7 @@ boolean __attribute__((stdcall)) simulation_view_unknown_00085ed0(
 	}
 	if (size>0)
 	{
-		good= unknown_0006a990(world, offset, size, data);
+		good= simulation_world_receive_game_state(world, offset, size, data);
 	}
 	else
 	{
@@ -251,7 +249,7 @@ boolean __attribute__((stdcall)) simulation_view_unknown_00085dc0(
 		*(long *)(world+SIMULATION_WORLD_UNKNOWN28_OFFSET)= number;
 		if (*(const long *)(world+SIMULATION_WORLD_STATE_OFFSET)==_simulation_world_state3)
 		{
-			unknown_0006ab10(world);
+			simulation_world_clear_updates(world);
 			*(long *)(world+SIMULATION_WORLD_LAST_UPDATE_OFFSET)= (long)((unsigned long)number-1);
 			*(long *)(world+SIMULATION_WORLD_FIRST_UPDATE_OFFSET)= number;
 		}

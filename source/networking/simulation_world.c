@@ -24,16 +24,9 @@ and so are the names of its functions.
 
 /* ---------- prototypes */
 
-/* 0x0006ab90: the thing takes something that came; whether it could.
-0x000860b0: a view of the second kind is given something */
-boolean __attribute__((stdcall)) unknown_0006ab90(byte *world, const long *update);
+/* 0x000860b0: a view of the second kind is given something */
 void unknown_000860b0(byte *view, long unknown);
 
-/* 0x0006ab10: the things that have come and wait are let go of, most
-likely. 0x00069f10: something that the thing does when its first view of the
-first kind or the third is ready */
-void __attribute__((stdcall)) unknown_0006ab10(byte *world);
-void unknown_00069f10(byte *world);
 
 /* 0x000693a0: the views of the thing are done with: what main_game_unload
 ends the game in the network with. 0x0006a560: the thing is given a byte */
@@ -52,6 +45,10 @@ extern long unknown_0051054c;
 /* 0x004ced58, 0x004ced5c: how many times the thing can be on its way to
 going before it gives up, and for how long each time, in milliseconds */
 long unknown_004ced58;
+
+/* 0x004ced4c: how long the thing waits for its first view of the first kind
+or of the third, in milliseconds */
+long unknown_004ced4c;
 long unknown_004ced5c;
 
 /* ---------- code */
@@ -238,7 +235,7 @@ void simulation_world_unknown_00069350(
 /* 0x000698e0: something came for the thing, which starts with
 its number; whether it was taken. One from before the one after the last
 that came is not, and nothing is done. The one after the last is taken
-(unknown_0006ab90) if a number of the thing is 4 or the game is to be brought
+(simulation_world_add_update) if a number of the thing is 4 or the game is to be brought
 up to what has come; and if it could not be, a byte of unknown_004cf770 says
 so. Any other, or that one if not, or whatever comes in the third state with
 something at 0x1200, is not taken, and a byte of the thing says so.
@@ -264,7 +261,7 @@ boolean simulation_world_unknown_000698e0(
 			(*(const long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET)==_simulation_world_unknown18_4 ||
 			world[SIMULATION_WORLD_CATCH_UP_OFFSET]))
 		{
-			if (!unknown_0006ab90(world, update))
+			if (!simulation_world_add_update(world, update))
 			{
 				unknown_004cf770.unknown1[0]= TRUE;
 
@@ -471,7 +468,7 @@ void simulation_world_unknown_00069eb0(
 /* 0x0006b2a0: the thing starts to go, and its count starts over. One that
 was going already is only not to bring the game up to what has come. If
 not: in its third state, the things that have come and wait are done with
-(unknown_0006ab10), and the next one that it waits for is the one of its
+(simulation_world_clear_updates), and the next one that it waits for is the one of its
 number; and it is going. And the number that it has at 0x18 is 4; if it was
 4 already, the time is noted. The game has the time of the network written
 here */
@@ -489,7 +486,7 @@ void simulation_world_unknown_0006b2a0(
 
 		if (*(const long *)(world+SIMULATION_WORLD_STATE_OFFSET)==_simulation_world_state3)
 		{
-			unknown_0006ab10(world);
+			simulation_world_clear_updates(world);
 			*(long *)(world+SIMULATION_WORLD_LAST_UPDATE_OFFSET)= (long)((unsigned long)number-1);
 			*(long *)(world+SIMULATION_WORLD_FIRST_UPDATE_OFFSET)= number;
 		}
@@ -505,7 +502,7 @@ void simulation_world_unknown_0006b2a0(
 /* 0x0006b110: the thing is told something of a view, with a byte: if the
 byte is set, the view is the first of the first kind or of the third that
 the thing has, and the number that the thing has at 0x18 is 3, something
-follows (unknown_00069f10). The game has simulation_world_unknown_0006acb0
+follows (simulation_world_unknown_00069f10). The game has simulation_world_unknown_0006acb0
 written here */
 void __attribute__((stdcall)) simulation_world_unknown_0006b110(
 	byte *world,
@@ -515,14 +512,14 @@ void __attribute__((stdcall)) simulation_world_unknown_0006b110(
 	if (unknown && view==simulation_world_unknown_0006acb0(world) &&
 		*(const long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET)==_simulation_world_unknown18_3)
 	{
-		unknown_00069f10(world);
+		simulation_world_unknown_00069f10(world);
 	}
 }
 
 /* 0x0006b160: the number that the thing has at 0x18 is another. Unless that
 is 4, the thing is not to bring the game up to what has come, and is not
 going; and if it was going, in its third state, the things that have come
-and wait are done with (unknown_0006ab10). From 3, and not to 4: the memory
+and wait are done with (simulation_world_clear_updates). From 3, and not to 4: the memory
 that the texture cache lent for the state of the game is given back, if the
 thing was being sent it, and its count goes on by one. From 4: the time is
 noted. The game has the time of the network written here */
@@ -538,7 +535,7 @@ void simulation_world_set_unknown18(
 			world[SIMULATION_WORLD_GOING_OFFSET]= FALSE;
 			if (*(const long *)(world+SIMULATION_WORLD_STATE_OFFSET)==_simulation_world_state3)
 			{
-				unknown_0006ab10(world);
+				simulation_world_clear_updates(world);
 			}
 		}
 	}
@@ -662,4 +659,122 @@ void __attribute__((stdcall)) simulation_world_unknown_0006b090(
 		}
 		unknown_0006a560(world, TRUE);
 	}
+}
+
+/* 0x0006ab10: the things that have come and wait are done with: the heap of
+the network takes each back, and the thing has none, with NONE for the last
+that came */
+void __attribute__((stdcall)) simulation_world_clear_updates(
+	byte *world)
+{
+	struct simulation_update_node *node= *(struct simulation_update_node **)(world+SIMULATION_WORLD_FIRST_UPDATE_POINTER_OFFSET);
+
+	while (node)
+	{
+		struct simulation_update_node *next= node->next;
+
+		network_heap_free(node);
+		node= next;
+	}
+	*(struct simulation_update_node **)(world+SIMULATION_WORLD_FIRST_UPDATE_POINTER_OFFSET)= NULL;
+	*(struct simulation_update_node **)(world+SIMULATION_WORLD_LAST_UPDATE_POINTER_OFFSET)= NULL;
+	*(long *)(world+SIMULATION_WORLD_UPDATE_COUNT_OFFSET)= 0;
+	*(long *)(world+SIMULATION_WORLD_LAST_UPDATE_OFFSET)= NONE;
+	*(long *)(world+SIMULATION_WORLD_FIRST_UPDATE_OFFSET)= 0;
+}
+
+/* 0x0006ab90: something came for the thing to take, which starts with its
+number: a copy of it, in memory of the heap of the network, goes after the
+last of the ones that wait, and its number is the one of the last that came.
+FALSE, with nothing done, if there is no memory. The game has
+network_heap_allocate written here */
+boolean __attribute__((stdcall)) simulation_world_add_update(
+	byte *world,
+	const long *update)
+{
+	struct simulation_update_node *node= network_heap_allocate(sizeof(struct simulation_update_node));
+	struct simulation_update_node *last;
+
+	if (!node)
+	{
+		return FALSE;
+	}
+	last= *(struct simulation_update_node **)(world+SIMULATION_WORLD_LAST_UPDATE_POINTER_OFFSET);
+	if (last)
+	{
+		last->next= node;
+	}
+	else
+	{
+		*(struct simulation_update_node **)(world+SIMULATION_WORLD_FIRST_UPDATE_POINTER_OFFSET)= node;
+	}
+	node->next= NULL;
+	(*(long *)(world+SIMULATION_WORLD_UPDATE_COUNT_OFFSET))++;
+	*(struct simulation_update_node **)(world+SIMULATION_WORLD_LAST_UPDATE_POINTER_OFFSET)= node;
+	memcpy(node->update, update, sizeof(node->update));
+	*(long *)(world+SIMULATION_WORLD_LAST_UPDATE_OFFSET)= update[0];
+
+	return TRUE;
+}
+
+/* 0x0006a990: a piece of the state of the game came, of a size, that goes at
+a place; whether it was taken. It is if the thing is being sent the state of
+the game, the place is where the bytes that have come end, there is memory
+for it, and the piece is of some size and does not go past 0x40000 bytes: it
+is copied there, and so many more bytes have come */
+boolean __attribute__((stdcall)) simulation_world_receive_game_state(
+	byte *world,
+	long offset,
+	long size,
+	const void *data)
+{
+	boolean result= FALSE;
+
+	if (simulation_world_receiving_game_state(world) &&
+		*(const long *)(world+SIMULATION_WORLD_UNKNOWN1200_OFFSET)==offset)
+	{
+		byte *memory= *(byte **)(world+SIMULATION_WORLD_MEMORY_OFFSET);
+
+		if (memory && offset>=0 && size>0 &&
+			(long)((unsigned long)offset+(unsigned long)size)<=MAXIMUM_SIMULATION_WORLD_GAME_STATE_SIZE)
+		{
+			memcpy(memory+offset, data, size);
+			*(long *)(world+SIMULATION_WORLD_UNKNOWN1200_OFFSET)+= size;
+			result= TRUE;
+		}
+	}
+
+	return result;
+}
+
+/* 0x00069f10: the thing looks at its first view of the first kind or of the
+third. If that one has its byte set, the thing starts to go
+(simulation_world_unknown_0006b2a0). If not, it is waited for as long as the
+game has for it, from the time that the thing noted; after that, or with no
+such view, the thing gives up (simulation_world_unknown_0006b040). The game
+has simulation_world_unknown_0006acb0 and network_time_since written here */
+void simulation_world_unknown_00069f10(
+	byte *world)
+{
+	const byte *view= simulation_world_unknown_0006acb0(world);
+
+	if (view)
+	{
+		long since;
+		long now;
+
+		if (view[SIMULATION_VIEW_UNKNOWN78_OFFSET])
+		{
+			simulation_world_unknown_0006b2a0(world);
+
+			return;
+		}
+		since= *(const long *)(world+SIMULATION_WORLD_UNKNOWN1C_OFFSET);
+		now= unknown_00510548 ? unknown_0051054c : GetTickCount();
+		if ((long)((unsigned long)now-(unsigned long)since)<unknown_004ced4c)
+		{
+			return;
+		}
+	}
+	simulation_world_unknown_0006b040(world);
 }

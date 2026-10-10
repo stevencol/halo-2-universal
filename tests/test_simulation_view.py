@@ -95,7 +95,7 @@ def run(t) -> None:
             Buffer(random_.randbytes(0x80)),
             externals={
                 "simulation_view_set_state": state,
-                "unknown_0006a990": lambda harness, arguments, could=could: (
+                "simulation_world_receive_game_state": lambda harness, arguments, could=could: (
                     could,
                     (harness.normalize(arguments[0]), arguments[1], arguments[2], harness.normalize(arguments[3])),
                 ),
@@ -118,7 +118,7 @@ def run(t) -> None:
             externals={
                 "simulation_view_set_state": state,
                 "unknown_0006a8a0": lambda harness, arguments, could=could: (could, (harness.normalize(arguments[0]),)),
-                "unknown_0006ab10": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "simulation_world_clear_updates": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                 "simulation_world_unknown_00069350": lambda harness, arguments: (0, (arguments[0] & 0xFF, harness.normalize(arguments[1]))),
             },
         )

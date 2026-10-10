@@ -144,7 +144,7 @@ def run(t) -> None:
             externals={
                 "simulation_world_unknown_00069790": waits,
                 "game_tick": ticks(thing),
-                "unknown_0006ab90": lambda harness, arguments, could=could: could,
+                "simulation_world_add_update": lambda harness, arguments, could=could: could,
             },
         )
         view = bytearray(random_.randbytes(0x40))
@@ -239,7 +239,7 @@ def run(t) -> None:
             globals={"unknown_00510548": bytes((kept,)), "unknown_0051054c": now if kept else random_.getrandbits(32)},
             externals={
                 "GetTickCount": lambda harness, arguments, now=now: now,
-                "unknown_0006ab10": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "simulation_world_clear_updates": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
             },
         )
         thing = a_world(random_, 0)
@@ -255,7 +255,7 @@ def run(t) -> None:
             thing,
             random_.choice((0, 1, 1, 1, 0x100)),
             Pointer(thing, of) if of else 0,
-            externals={"unknown_00069f10": lambda harness, arguments: (0, (harness.normalize(arguments[0]),))},
+            externals={"simulation_world_unknown_00069f10": lambda harness, arguments: (0, (harness.normalize(arguments[0]),))},
         )
 
     # ---------- the number that the thing has at 0x18
@@ -272,7 +272,7 @@ def run(t) -> None:
             globals={"unknown_00510548": bytes((kept,)), "unknown_0051054c": now if kept else random_.getrandbits(32)},
             externals={
                 "GetTickCount": lambda harness, arguments, now=now: now,
-                "unknown_0006ab10": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "simulation_world_clear_updates": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                 "texture_cache_return_memory": lambda harness, arguments: 0,
             },
         )
@@ -335,4 +335,101 @@ def run(t) -> None:
             Pointer(thing, of) if of else 0,
             globals={"unknown_004cf770": bytes(there)},
             externals={"unknown_0006a560": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1] & 0xFF))},
+        )
+
+    # ---------- the things that wait are done with, one more comes, a piece of the state of the game, and the first view
+
+    ASKED, ANSWERS, GIVEN = 0x38, 0x3C, 0x40
+
+    def a_heap(room: int = 0) -> Buffer:
+        heap = bytearray(random_.randbytes(GIVEN + room))
+        struct.pack_into("<Ii", heap, HEAP, ALLOCATOR, random_.choice((1, 5, 5000)))
+        struct.pack_into("<I", heap, ALLOCATOR, TABLE)
+        struct.pack_into("<11I", heap, TABLE, mock_address(0), mock_address(1), 0x33, 0x44, 0x55, mock_address(2), 0x77, 0x88, 0x99, 0xAA, mock_address(3))
+        struct.pack_into("<I4B", heap, ASKED, 0, *random_.choice(((1, 1, 1, 1), (1, 1, 1, 1), (0, 1, 1, 1), (0, 0, 0, 0))))
+        return Buffer(bytes(heap), pointers=(HEAP, ALLOCATOR))
+
+    def a_heap_mocks() -> list:
+        def gives(call):
+            mu = t.harness.mu
+            base = call.registers["ecx"] - ALLOCATOR
+            asked = struct.unpack("<I", mu.mem_read(base + ASKED, 4))[0]
+            mu.mem_write(base + ASKED, struct.pack("<I", asked + 1))
+            return base + GIVEN if mu.mem_read(base + ANSWERS + (asked & 3), 1)[0] else 0
+
+        return [
+            Mock(lambda call: 0, stack_arguments=2, registers=("ecx",)),
+            Mock(lambda call, known=random_.choice((0, 1)): known, stack_arguments=2, registers=("ecx",), record=lambda call: (call.registers["ecx"], call.stack[0])),
+            Mock(gives, stack_arguments=3, registers=("ecx",)),
+            Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
+        ]
+
+    for n in range(300):
+        world = bytearray(random_.randbytes(0x1220))
+        pointers = []
+        where = 0x1218
+        for node in range(random_.choice((0, 1, 2, 3))):
+            at = len(world)
+            world += random_.randbytes(NODE)
+            struct.pack_into("<I", world, where, at)
+            pointers.append(where)
+            where = at + 0x4048
+        struct.pack_into("<I", world, where, 0)
+        memory = a_heap()
+        t.check(
+            "simulation_world_clear_updates",
+            Buffer(bytes(world), pointers=tuple(pointers)),
+            extra=[memory],
+            globals={"unknown_004d87f8": Pointer(memory, HEAP)},
+            mocks=a_heap_mocks(),
+        )
+        world = bytearray(random_.randbytes(0x1220))
+        last = random_.choice((True, False))
+        if last:
+            struct.pack_into("<I", world, 0x121C, len(world))
+            world += random_.randbytes(NODE)
+        else:
+            struct.pack_into("<I", world, 0x121C, 0)
+        memory = a_heap(NODE + 4)
+        t.check(
+            "simulation_world_add_update",
+            Buffer(bytes(world), pointers=(0x121C,) if last else ()),
+            Buffer(random_.randbytes(0x4048 + 8)),
+            extra=[memory],
+            globals={"unknown_004d87f8": Pointer(memory, HEAP)},
+            mocks=a_heap_mocks(),
+        )
+
+    for n in range(2500):
+        world = bytearray(random_.randbytes(0x1220))
+        struct.pack_into("<i", world, 0x8, random_.choice((0, 2, 3, 3, 3, 3, 4, 5)))
+        come = random_.choice((-1, 0, 0, 0x40, 0x100))
+        there = random_.choice((True, True, True, False))
+        struct.pack_into("<iI", world, 0x1200, come, 0x1220 if there else 0)
+        world += random_.randbytes(0x300)
+        t.check(
+            "simulation_world_receive_game_state",
+            Buffer(bytes(world), pointers=(0x1204,) if there else ()),
+            random_.choice((come, come, come, come + 1, 0, 0xFFFFFFFF)) & 0xFFFFFFFF,
+            random_.choice((1, 4, 0x33, 0x100, 0, 0xFFFFFFFF, 0x80000000, 0x40001, 0x50000)),
+            Buffer(random_.randbytes(0x104)),
+        )
+        thing = a_world(random_, 0)
+        data = bytearray(thing.data)
+        kept = random_.choice((0, 1, 0x80))
+        now = random_.getrandbits(32)
+        struct.pack_into("<I", data, 0x1C, (now - random_.choice((0, 1, 4999, 5000, 5001, 100000))) & 0xFFFFFFFF)
+        t.check(
+            "simulation_world_unknown_00069f10",
+            Buffer(bytes(data), pointers=thing.pointers),
+            globals={
+                "unknown_00510548": bytes((kept,)),
+                "unknown_0051054c": now if kept else random_.getrandbits(32),
+                "unknown_004ced4c": struct.pack("<i", 5000),
+            },
+            externals={
+                "GetTickCount": lambda harness, arguments, now=now: now,
+                "simulation_world_unknown_0006b2a0": views_done,
+                "simulation_world_unknown_0006b040": views_done,
+            },
         )
