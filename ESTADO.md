@@ -372,3 +372,23 @@ Módulos (funciones hechas / archivo):
   pila: el arnés lo hace por ella.
 - Los mapas del juego están en
   `E:\Datos\Downloads\juegos\roms\xbox\Halo 2`; no se copian ni se tocan.
+
+## Romper líneas: dónde quedó (2026-10-09, tras el hito 440)
+
+- **Hecho:** hitos 415 a 425 y 431 a 433. Todas las líneas rotas se notan,
+  salvo cuatro que no se pueden notar: dos dan lo mismo rotas que enteras
+  (hitos 420 y 432) y dos las pruebas no las pueden ver (un byte que se pone
+  y se quita dentro de la misma función, y pasar un «sí» a 1).
+- **A medias:** las vistas de los hitos 426 a 430. De 46 líneas se
+  probaron las 16 primeras, todas notadas; se paró porque había que apagar.
+  Las 30 que faltan están en `build\line_breaking\mut_view2_rest.txt`.
+- **Pendiente entero:** hitos 434 a 440 (`network_connection.c` desde
+  `network_connection_reset`, `network_message_queue.c`, los dos mensajes
+  del canal y `replication_event_set_data` del hito 421). Hay que escribir
+  sus archivos de líneas.
+- **Cómo se lanza:** `python build\line_breaking\break_lines.py <fuente>
+  <prueba> <funciones,separadas,por,comas> <archivo de líneas> <informe>`.
+  Trabaja en la copia `C:\Users\steve\halo-2-check` (antes, `git checkout
+  -q -f --detach <commit>` ahí). Los informes de las tandas hechas están en
+  la misma carpeta (`batch_report*.txt`). La carpeta `build\` no entra en
+  git.
