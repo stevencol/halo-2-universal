@@ -2182,3 +2182,5 @@ address,name,source,arguments,returns,convention
 00069040,simulation_world_set_local_player_actions,source/networking/simulation_world.c,eax ecx stack,void,stdcall
 000690d0,simulation_world_set_other_unknown14,source/networking/simulation_world.c,ecx edx stack,void,stdcall
 000847d0,unknown_000847d0,,stack stack,void,stdcall
+0014d040,player_action_clear,source/game/player_action.c,edx,void
+00084750,simulation_player_new,source/networking/simulation_player.c,eax ecx edx esi stack stack stack,void,stdcall

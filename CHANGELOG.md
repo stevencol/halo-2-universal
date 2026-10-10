@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Un jugador nuevo en la partida en red
+
+Dos funciones en dos archivos nuevos: `networking/simulation_player.c` y
+`game/player_action.c`, 202 bytes entre las dos. De 1621
+funciones se pasa a 1623, el 14,41 % de las del juego (el 9,557 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_player_new` | `0x00084750` | `networking/simulation_player.c` |
+| `player_action_clear` | `0x0014d040` | `game/player_action.c` |
+
+### Lo que se sabe
+
+- `simulation_player_new` rellena **lo que la partida tiene de un
+  jugador** (cada uno de los dieciséis sitios de `0x88` bytes): tres
+  números, los tres números que identifican al jugador, los seis bytes de
+  su consola, la partida, y lo que hace, que empieza en blanco.
+  - El byte de «cuenta para todos» (`0x25`, hito 467) **empieza puesto en
+    una consola que sigue a otra** (tercer o quinto estado): allí no hay
+    que esperar a que nadie conozca al jugador, porque quien lo decide
+    es la consola que manda.
+- `player_action_clear` deja en blanco **lo que hace un jugador en un
+  tick** (los `0x5C` bytes que van del mando al juego y de consola a
+  consola): todo a cero, salvo unos números que valen `-1` cuando no hay
+  nada (en `0x1E`, `0x20` a `0x24`, `0x2C`, `0x30` y de `0x34` a `0x3C`).
+  Es la primera función del juego propiamente dicho que sale de la red.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos**, y en las de los hitos 441 a
+  480.
+- En este hito se pasaron las pruebas de las dos funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Lo que hacen los jugadores de esta consola
 
 Dos funciones en `networking/simulation_world.c`, 194 bytes entre las dos. De 1619
