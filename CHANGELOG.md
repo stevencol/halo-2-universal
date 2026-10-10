@@ -2,6 +2,56 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — La partida en red, vista desde fuera
+
+Seis funciones en el archivo nuevo `networking/simulation.c`, 463 bytes entre las seis. De 1603
+funciones se pasa a 1609, el 14,28 % de las del juego (el 9,519 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_view_disconnected` | `0x00068550` | `networking/simulation.c` |
+| `simulation_update_encode` | `0x000685f0` | `networking/simulation.c` |
+| `simulation_update_decode` | `0x00068670` | `networking/simulation.c` |
+| `simulation_machine_established` | `0x000686e0` | `networking/simulation.c` |
+| `simulation_fail` | `0x00068750` | `networking/simulation.c` |
+| `simulation_unknown_000687e0` | `0x000687e0` | `networking/simulation.c` |
+
+### Lo que se sabe
+
+- Empieza el archivo de **lo que el resto del juego le pide a la partida
+  en red** (`simulation.c`, de `0x00068090` en adelante), por encima de
+  la partida y sus vistas:
+  - `simulation_update_encode` y `simulation_update_decode` pasan una
+    actualización a bytes y la rehacen (las dos del hito 476): montan un
+    flujo de bits sobre la memoria y llaman a quien la escribe
+    (`0x00087d00`) o la lee (`0x00087e90`).
+  - `simulation_view_disconnected`: el canal de una vista se fue. La
+    vista vuelve al primer estado con el motivo `1` y suelta el canal
+    (`0x00085880`).
+  - `simulation_machine_established` dice si una consola (por sus seis
+    bytes) **está ya dentro de la partida**: esta consola, siempre; otra,
+    si la partida tiene una vista suya con el byte de `0x78` puesto. Sin
+    partida en red contesta que sí.
+  - `simulation_fail`: **la partida en red no puede seguir.** Lo apunta
+    una sola vez, con la hora, en `unknown_004cf770` (su tercer byte, que
+    es el que paraba el ponerse al día en el hito 446), y la partida se
+    da por vencida (hito 453) con su segundo número en 1.
+  - `simulation_unknown_000687e0` pregunta algo a lo que tiene
+    `unknown_004cf780` (`0x00083db0`).
+- Los seis bytes propios de la consola están en `0xD` de la partida.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las seis**, y en las de los hitos 441 a
+  476.
+- En este hito se pasaron las pruebas de `simulation` (6 funciones),
+  `simulation_world` (51) y las dos de `simulation_view` que usan las
+  renombradas.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Lo que pasa mientras se manda el estado del juego
 
 Una función en `networking/simulation_view.c`, de 250 bytes. De 1602

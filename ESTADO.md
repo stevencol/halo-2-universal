@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 476.
+**Última actualización:** 2026-10-08, al terminar el hito 477.
 
 ## Dónde estamos
 
-- **1603 funciones descompiladas de 11.265: el 14,23 % del juego** (el
-  9,502 % de los bytes de código).
-- Las 1603 están comprobadas contra el ejecutable original: las 1390 del
+- **1609 funciones descompiladas de 11.265: el 14,28 % del juego** (el
+  9,519 % de los bytes de código).
+- Las 1609 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a view keeps an update that comes while it sends the game state* (ver `git log`).
+- Último hito: *Decompile six small functions of the simulation's top level* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 558 funciones apuntadas pero sin descompilar (las que el código
-  llama); 456 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 560 funciones apuntadas pero sin descompilar (las que el código
+  llama); 458 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -162,6 +162,11 @@ Módulos (funciones hechas / archivo):
       fue de cada paquete, partir un mensaje en trozos y juntarlos;
       tabla `0x00450db8`; completo; romper líneas pendiente en las
       cinco últimas)
+- [ ] La partida en red, desde fuera — `networking\simulation.c`
+      (6: pasar una actualización a bytes y rehacerla, una consola que
+      ya está dentro, un canal que se va y la partida que no puede
+      seguir; de `0x00068550` a `0x000687e0`; queda el resto, de
+      `0x00068090` a `0x00069300`)
 - [ ] La partida en red y sus vistas — `networking\simulation_world.c`
       (50: llevar una vista hasta el final, la espera a las demás
       consolas, la cola de actualizaciones

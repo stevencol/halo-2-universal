@@ -17,6 +17,7 @@ is a guess, and so are the names of its functions.
 #include "saved games/game_state.h"
 #include "networking/network_channel.h"
 #include "networking/replication_entity_view.h"
+#include "networking/simulation.h"
 #include "networking/simulation_world.h"
 
 #include <string.h>
@@ -50,8 +51,6 @@ size; how many, and whether it could be. 0x00068670: one of the things that come
 from the bytes that were kept of it; whether it could be */
 boolean __attribute__((stdcall)) unknown_001995a0(const void *base, void *buffer, long *size_out, long capacity,
 	long level);
-boolean __attribute__((stdcall)) unknown_000685f0(void *buffer, long capacity, const void *update, long *size_out);
-boolean unknown_00068670(const void *data, long size, void *update);
 
 /* 0x0006a7f0: the thing takes what some players of the other console do, as
 bits say which. 0x0006a990: it takes a piece of the state of the game, of a
@@ -876,7 +875,7 @@ Each thing is taken from the ring: its eight bytes, and what follows them.
 The number that the game goes on from goes in a message of the kind 0x29; a
 piece of the state of the game, in one of the kind 0x2A, with where it goes
 and its size; and anything else is one of the things that came while the
-state was sent: it is made again from its bytes (unknown_00068670) and goes
+state was sent: it is made again from its bytes (simulation_update_decode) and goes
 as they do, in a message of the kind 0x27. If it could not be made, the view
 goes to its first state and is as 5 says (simulation_view_fail, written
 here), and no more goes out */
@@ -955,7 +954,7 @@ void __attribute__((stdcall)) simulation_view_send_game_state(
 			byte update[SIMULATION_VIEW_UPDATE_SIZE];
 
 			memset(update, 0, sizeof(update));
-			if (!unknown_00068670(data, record.size, update))
+			if (!simulation_update_decode(data, record.size, update))
 			{
 				if (*(const long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)==0)
 				{
@@ -980,7 +979,7 @@ void __attribute__((stdcall)) simulation_view_send_game_state(
 
 /* 0x000869a0: one of the things that come while a view is sent the state of
 the game is kept in its ring, to go after it; whether it could be. It is put
-in bytes (unknown_000685f0), and those go into the ring after eight bytes
+in bytes (simulation_update_encode), and those go into the ring after eight bytes
 that say that it is one of those things, how many bytes it is, and its
 number; and the view has one more thing to send. The game has
 ring_buffer_append written here the first time */
@@ -993,7 +992,7 @@ boolean __attribute__((stdcall)) simulation_view_queue_update(
 	struct simulation_view_game_state_record record;
 	long size;
 
-	if (!unknown_000685f0(data, sizeof(data), update, &size))
+	if (!simulation_update_encode(data, sizeof(data), update, &size))
 	{
 		return FALSE;
 	}

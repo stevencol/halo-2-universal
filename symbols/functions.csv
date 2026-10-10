@@ -2158,5 +2158,13 @@ address,name,source,arguments,returns,convention
 00086aa0,simulation_view_reclaim_game_state,source/networking/simulation_view.c,stack stack,void,stdcall
 00086800,simulation_view_queue_game_state,source/networking/simulation_view.c,eax stack stack stack,bool,stdcall
 001995a0,unknown_001995a0,,stack stack stack stack stack,bool,stdcall
-00068670,unknown_00068670,,eax ecx esi,bool
-000685f0,unknown_000685f0,,edx ecx stack stack,bool,stdcall
+00068670,simulation_update_decode,source/networking/simulation.c,eax ecx esi,bool
+000685f0,simulation_update_encode,source/networking/simulation.c,edx ecx stack stack,bool,stdcall
+00068550,simulation_view_disconnected,source/networking/simulation.c,stack,void,stdcall
+000686e0,simulation_machine_established,source/networking/simulation.c,eax,bool
+00068750,simulation_fail,source/networking/simulation.c,,void
+000687e0,simulation_unknown_000687e0,source/networking/simulation.c,,int
+00085880,unknown_00085880,,esi,void
+00087d00,unknown_00087d00,,eax stack,void,stdcall
+00087e90,unknown_00087e90,,eax stack,bool,stdcall
+00083db0,unknown_00083db0,,edi,int

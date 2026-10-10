@@ -443,7 +443,7 @@ def run(t) -> None:
             externals={
                 "simulation_view_set_state": state,
                 "network_observer_channel_send": sends,
-                "unknown_00068670": lambda harness, arguments, made=made: (made, (bytes(harness.mu.mem_read(arguments[0], arguments[1])), arguments[1])),
+                "simulation_update_decode": lambda harness, arguments, made=made: (made, (bytes(harness.mu.mem_read(arguments[0], arguments[1])), arguments[1])),
             },
         )
 
@@ -468,5 +468,5 @@ def run(t) -> None:
             "simulation_view_queue_update",
             Buffer(random_.randbytes(0x40)),
             Buffer(bytes(view) + random_.randbytes(room + 4), pointers=(0xA0,)),
-            externals={"unknown_000685f0": puts},
+            externals={"simulation_update_encode": puts},
         )
