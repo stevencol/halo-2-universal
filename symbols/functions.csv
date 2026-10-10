@@ -2086,7 +2086,13 @@ address,name,source,arguments,returns,convention
 00085e70,unknown_00085e70,,edx ecx eax stack,bool,stdcall
 00085ed0,unknown_00085ed0,,esi ecx eax stack,bool,stdcall
 00085f50,unknown_00085f50,,eax ecx edx edi stack stack,bool,stdcall
-000698e0,unknown_000698e0,,esi edx,void
+000698e0,simulation_world_unknown_000698e0,source/networking/simulation_world.c,esi edx,bool
 00069610,simulation_world_players_clear_unknown25,source/networking/simulation_world.c,eax,void
 0006acb0,simulation_world_unknown_0006acb0,source/networking/simulation_world.c,edi,pointer
 0006aae0,simulation_world_unknown_0006aae0,source/networking/simulation_world.c,edi,void
+00069300,simulation_world_unknown_00069300,source/networking/simulation_world.c,ecx edx,int
+00069350,simulation_world_unknown_00069350,source/networking/simulation_world.c,eax esi,void
+0006a2a0,simulation_world_unknown_0006a2a0,source/networking/simulation_world.c,ecx edx,void
+00069790,unknown_00069790,,eax,int
+0006ab90,unknown_0006ab90,,stack stack,bool,stdcall
+00085a70,unknown_00085a70,,ecx stack stack,void,stdcall

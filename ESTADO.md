@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 445.
+**Última actualización:** 2026-10-08, al terminar el hito 446.
 
 ## Dónde estamos
 
-- **1535 funciones descompiladas de 11.265: el 13,63 % del juego** (el
-  9,158 % de los bytes de código).
-- Las 1535 están comprobadas contra el ejecutable original: las 1390 del
+- **1539 funciones descompiladas de 11.265: el 13,66 % del juego** (el
+  9,168 % de los bytes de código).
+- Las 1539 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile four small functions of the simulation world* (ver `git log`).
+- Último hito: *Decompile how the simulation takes an update and catches the game up* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 556 funciones apuntadas pero sin descompilar (las que el código
-  llama); 454 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 558 funciones apuntadas pero sin descompilar (las que el código
+  llama); 456 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -160,8 +160,9 @@ Módulos (funciones hechas / archivo):
       tabla `0x00450db8`; completo; romper líneas pendiente en las
       cinco últimas)
 - [ ] La partida en red y sus vistas — `networking\simulation_world.c`
-      (6: recorrer las vistas, dar la de un canal, un byte de cada
-      jugador y devolver memoria prestada; es lo de
+      (10: recorrer las vistas, dar la de un canal, un byte de cada
+      jugador, devolver memoria prestada, contar lo que espera, ponerse
+      al día y recibir una actualización; es lo de
       `unknown_004cf770`, y queda casi todo, de `0x00069300` a
       `0x0006ad40`)
 - [ ] A quien se dan los mensajes de las vistas —

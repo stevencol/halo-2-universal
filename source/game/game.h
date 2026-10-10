@@ -303,6 +303,7 @@ long game_unknown_001388a0(void);
 void game_lost(boolean lost);
 void game_finish(void);
 long game_finished_wait_over(void);
+void game_tick(void);
 
 /* ---------- prototypes of functions not decompiled yet */
 

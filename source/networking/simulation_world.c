@@ -12,6 +12,19 @@ name of the file is a guess, and so are the names of its functions.
 #include "simulation_world.h"
 
 #include "cache/texture_cache.h"
+#include "game/game.h"
+#include "main/main_game.h"
+
+#include <limits.h>
+
+/* ---------- prototypes */
+
+/* 0x00069790: how many things wait, for what a view has at 0xC in its second
+state. 0x0006ab90: it takes something that came; whether it could.
+0x00085a70: a view is given two numbers */
+long unknown_00069790(const byte *unknown);
+boolean __attribute__((stdcall)) unknown_0006ab90(byte *unknown, const long *update);
+void __attribute__((stdcall)) unknown_00085a70(byte *view, long unknown, long unknown2);
 
 /* ---------- code */
 
@@ -125,4 +138,160 @@ void simulation_world_unknown_0006aae0(
 	texture_cache_return_memory(*(void **)(unknown+SIMULATION_VIEW_UNKNOWNC_MEMORY_OFFSET));
 	*(void **)(unknown+SIMULATION_VIEW_UNKNOWNC_MEMORY_OFFSET)= NULL;
 	*(long *)(unknown+SIMULATION_VIEW_UNKNOWNC_UNKNOWN1200_OFFSET)= NONE;
+}
+
+/* 0x00069300: how many things wait for what a view has at 0xC to take, and
+whether they were counted here. None if it is not going. In its second state
+it is what unknown_00069790 says; in its third, from the first of the ones
+that have come to the last, and those were counted; in the others, the most
+that there can be. The game has no more states than five in its table */
+long simulation_world_unknown_00069300(
+	const byte *unknown,
+	boolean *counted)
+{
+	*counted= FALSE;
+	if (!unknown[SIMULATION_VIEW_UNKNOWNC_GOING_OFFSET])
+	{
+		return 0;
+	}
+	switch (*(const long *)(unknown+SIMULATION_VIEW_UNKNOWNC_STATE_OFFSET))
+	{
+	case _simulation_view_unknownc_state2:
+		return unknown_00069790(unknown);
+	case _simulation_view_unknownc_state3:
+		*counted= TRUE;
+
+		return (long)(*(const unsigned long *)(unknown+SIMULATION_VIEW_UNKNOWNC_LAST_UPDATE_OFFSET)-
+			*(const unsigned long *)(unknown+SIMULATION_VIEW_UNKNOWNC_FIRST_UPDATE_OFFSET)+1);
+	}
+
+	return LONG_MAX;
+}
+
+/* 0x00069350: what a view has at 0xC is told whether the game is to be
+brought up to what has come; and if so, and while it is going, the game goes
+on a tick for as long as things wait: the game has
+simulation_world_unknown_00069300 written here, so in the states that are
+not the second or the third it goes on until the thing is not going */
+void simulation_world_unknown_00069350(
+	boolean catch_up,
+	byte *unknown)
+{
+	unknown[SIMULATION_VIEW_UNKNOWNC_CATCH_UP_OFFSET]= catch_up;
+	if (!catch_up)
+	{
+		return;
+	}
+	while (unknown[SIMULATION_VIEW_UNKNOWNC_GOING_OFFSET])
+	{
+		long count;
+
+		switch (*(const long *)(unknown+SIMULATION_VIEW_UNKNOWNC_STATE_OFFSET))
+		{
+		case _simulation_view_unknownc_state2:
+			count= unknown_00069790(unknown);
+			break;
+		case _simulation_view_unknownc_state3:
+			count= (long)(*(const unsigned long *)(unknown+SIMULATION_VIEW_UNKNOWNC_LAST_UPDATE_OFFSET)-
+				*(const unsigned long *)(unknown+SIMULATION_VIEW_UNKNOWNC_FIRST_UPDATE_OFFSET)+1);
+			break;
+		default:
+			count= LONG_MAX;
+			break;
+		}
+		if (count<=0)
+		{
+			return;
+		}
+		game_tick();
+	}
+}
+
+/* 0x000698e0: something came for what a view has at 0xC, which starts with
+its number; whether it was taken. One from before the one after the last
+that came is not, and nothing is done. The one after the last is taken
+(unknown_0006ab90) if a number of the thing is 4 or the game is to be brought
+up to what has come; and if it could not be, a byte of unknown_004cf770 says
+so. Any other, or that one if not, or whatever comes in the third state with
+something at 0x1200, is not taken, and a byte of the thing says so.
+
+After one that is taken, if the game is to be brought up to what has come,
+it goes on a tick for as long as things wait
+(simulation_world_unknown_00069300): while there is a game and it is on,
+unknown_004cf770 does not say otherwise with its third byte, and the byte of
+the thing is clear */
+boolean simulation_world_unknown_000698e0(
+	byte *unknown,
+	const long *update)
+{
+	long next= (long)(*(const unsigned long *)(unknown+SIMULATION_VIEW_UNKNOWNC_LAST_UPDATE_OFFSET)+1);
+
+	if (!(*(const long *)(unknown+SIMULATION_VIEW_UNKNOWNC_STATE_OFFSET)==_simulation_view_unknownc_state3 &&
+		*(const long *)(unknown+SIMULATION_VIEW_UNKNOWNC_UNKNOWN1200_OFFSET)!=NONE))
+	{
+		if (update[0]<next)
+		{
+			return FALSE;
+		}
+		if (update[0]==next &&
+			(*(const long *)(unknown+SIMULATION_VIEW_UNKNOWNC_UNKNOWN18_OFFSET)==_simulation_view_unknownc_unknown18_4 ||
+			unknown[SIMULATION_VIEW_UNKNOWNC_CATCH_UP_OFFSET]))
+		{
+			if (!unknown_0006ab90(unknown, update))
+			{
+				unknown_004cf770.unknown1[0]= TRUE;
+
+				return FALSE;
+			}
+			if (unknown[SIMULATION_VIEW_UNKNOWNC_CATCH_UP_OFFSET])
+			{
+				while (main_game_globals && main_game_globals->active &&
+					!(unknown_004cf770.unknown0 && unknown_004cf770.unknown1[1]) &&
+					!unknown[SIMULATION_VIEW_UNKNOWNC_UNKNOWN2C_OFFSET])
+				{
+					boolean counted;
+
+					if (simulation_world_unknown_00069300(unknown, &counted)<=0)
+					{
+						break;
+					}
+					game_tick();
+				}
+			}
+
+			return TRUE;
+		}
+	}
+	unknown[SIMULATION_VIEW_UNKNOWNC_UNKNOWN2C_OFFSET]= TRUE;
+
+	return FALSE;
+}
+
+/* 0x0006a2a0: a view is given two numbers (unknown_00085a70), as a number of
+it says: with 2, nothing; with 1, and another number of it 1 too, 2 and the
+count of something else, which goes on by one; with 1 and not that, nothing;
+and with any other, 1 and NONE */
+void simulation_world_unknown_0006a2a0(
+	byte *view,
+	byte *unknown)
+{
+	long state= *(const long *)(view+SIMULATION_VIEW_UNKNOWN2C_OFFSET);
+
+	if (state==2)
+	{
+		return;
+	}
+	if (state==1)
+	{
+		if (*(const long *)(view+SIMULATION_VIEW_UNKNOWN34_OFFSET)==1)
+		{
+			long count= *(const long *)(unknown+SIMULATION_WORLD_UNKNOWN_0006A2A0_COUNT_OFFSET);
+
+			*(long *)(unknown+SIMULATION_WORLD_UNKNOWN_0006A2A0_COUNT_OFFSET)= (long)((unsigned long)count+1);
+			unknown_00085a70(view, 2, count);
+		}
+
+		return;
+	}
+	unknown_00085a70(view, 1, NONE);
 }

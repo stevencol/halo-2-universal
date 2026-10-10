@@ -21,8 +21,7 @@ it). The name of the file is a guess, and so are the names of its functions.
 
 /* 0x00085b20, 0x00085d00, 0x00085dc0, 0x00085e70, 0x00085ed0 and
 0x00085f50: what a view does with what each message has; whether it could,
-most likely. 0x000698e0: what a view of the first kind has at 0xC is given
-something */
+most likely */
 boolean unknown_00085b20(byte *view, long unknown0, long unknown4);
 boolean __attribute__((stdcall)) unknown_00085d00(byte *view, long unknown0, long unknown4, const long *unknown8);
 boolean __attribute__((stdcall)) unknown_00085dc0(byte *view, long unknown0);
@@ -30,7 +29,6 @@ boolean __attribute__((stdcall)) unknown_00085e70(byte *view, long unknown0, lon
 boolean __attribute__((stdcall)) unknown_00085ed0(byte *view, long unknown0, long unknown4, long unknown);
 boolean __attribute__((stdcall)) unknown_00085f50(byte *view, boolean unknown8, long unknown4, long unknown0,
 	long unknownC, const long *unknown10);
-void unknown_000698e0(byte *unknown, const long *message);
 
 /* ---------- code */
 
@@ -91,7 +89,7 @@ void __attribute__((stdcall)) network_message_handler_unknown_00094990(
 
 		if (unknown[SIMULATION_VIEW_UNKNOWNC_UNKNOWN24_OFFSET])
 		{
-			unknown_000698e0(unknown, message);
+			simulation_world_unknown_000698e0(unknown, message);
 		}
 	}
 }

@@ -2,6 +2,63 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Ponerse al día con lo que llega de la otra consola
+
+Cuatro funciones en `networking/simulation_world.c`. De 1535
+funciones se pasa a 1539, el 13,66 % de las del juego (el 9,168 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_unknown_00069300` | `0x00069300` | `networking/simulation_world.c` |
+| `simulation_world_unknown_00069350` | `0x00069350` | `networking/simulation_world.c` |
+| `simulation_world_unknown_000698e0` | `0x000698e0` | `networking/simulation_world.c` |
+| `simulation_world_unknown_0006a2a0` | `0x0006a2a0` | `networking/simulation_world.c` |
+
+### Lo que se sabe
+
+- Lo que una vista tiene en `0xC` (más de `0x1210` bytes) lleva **una
+  cola de cosas que han llegado y esperan**, numeradas: el número de la
+  primera está en `0x120C` y el de la última en `0x1210`. Tiene también
+  un estado (`0x8`), un byte que dice que está en marcha (`0x24`) y otro
+  que dice que el juego debe **ponerse al día** (`0x25`).
+- `simulation_world_unknown_00069300` cuenta **cuántas esperan**: ninguna
+  si no está en marcha; en el tercer estado, de la primera a la última;
+  en el segundo, lo que diga `0x00069790`; en los demás, «todas las que
+  quepan» (`0x7FFFFFFF`).
+- `simulation_world_unknown_00069350` pone o quita lo de ponerse al día.
+  Al ponerlo, **el juego da ticks (`game_tick`, hito 30) mientras haya
+  cosas esperando**. Es la primera vez que se ve quién llama a
+  `game_tick` fuera del bucle principal: en red, el juego de una consola
+  avanza a golpes hasta alcanzar a la otra.
+- `simulation_world_unknown_000698e0` es **cuando llega una cosa nueva**
+  (la llama `network_message_handler_unknown_00094990`, hito 444):
+  - si su número es anterior al que toca, no se hace caso;
+  - si es justo el que toca, se guarda (`0x0006ab90`) y, si hay que
+    ponerse al día, el juego da ticks mientras haya partida, esté activa
+    y queden cosas;
+  - si es posterior (se perdió alguna), queda apuntado en `0x2C`.
+  - Si no se pudo guardar, lo apunta el segundo byte de
+    `unknown_004cf770`.
+- `simulation_world_unknown_0006a2a0` le da a una vista dos números según
+  cómo esté (`0x00085a70`); es de las que cambian el estado de una vista.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las cuatro**, y en las de los hitos 441
+  a 445.
+- La primera versión de `simulation_world_unknown_00069350` no daba ticks
+  en los estados que no son el segundo ni el tercero; la comparación con
+  el juego lo notó y está corregido.
+- Las tablas de saltos de `0x00069300` y `0x00069350` solo tienen cinco
+  estados; con otro el juego saltaría a cualquier parte. Las pruebas no
+  lo dan.
+- En este hito se pasaron las pruebas de `simulation_world` (10
+  funciones), `network_message_handler` (7) y `game_tick`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Cuatro más de la partida en red
 
 Cuatro funciones en `networking/simulation_world.c`. De 1531

@@ -29,7 +29,7 @@ def run(t) -> None:
         "unknown_00085e70": view_and("number", "number", "pointer"),
         "unknown_00085ed0": view_and("number", "number", "number"),
         "unknown_00085f50": view_and("byte", "number", "number", "number", "pointer"),
-        "unknown_000698e0": view_and("pointer"),
+        "simulation_world_unknown_000698e0": view_and("pointer"),
     }
 
     for n in range(1500):
