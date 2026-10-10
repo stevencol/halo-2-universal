@@ -691,7 +691,6 @@ void __attribute__((stdcall)) network_channel_unknown3c_new(
 with two numbers that it gives, until it says no. 0x000965e0: the next thing
 that happened to one of them, with three numbers; nothing when there is no
 more */
-long __attribute__((stdcall)) unknown_000965e0(byte *unknown10, long *unknown4, long *unknown8, long *unknownC);
 
 /* 0x004cf728, 0x004cf72c: what a number of a thing of unknown_004d87d8 is
 taken times, and what it has more, for the most that something took to be
@@ -761,7 +760,7 @@ struct network_channel_part_object
 /* 0x00088db0: what is done each time with a channel that has one of the
 things of unknown_004d87d8: that does what it does until it says no
 (network_connection_drop_oldest_sent), and each thing that happened to it is seen to
-(unknown_000965e0), by its kind. With 1 and 4: the fifth time of the channel
+(network_connection_next_event), by its kind. With 1 and 4: the fifth time of the channel
 is now; a channel in its fourth state is in the fifth; and the observer that
 has the channel is told, with two of the numbers. With 4, each of the
 channel's things of the kind 4 is told, with the other number. With 1, 2 and
@@ -788,8 +787,8 @@ void network_channel_update_unknown10(
 	while (network_connection_drop_oldest_sent(unknown10, 0, &scratch8, &scratchC))
 	{
 	}
-	for (kind= unknown_000965e0(unknown10, &unknown4, &unknown8, &unknownC); kind!=0;
-		kind= unknown_000965e0(unknown10, &unknown4, &unknown8, &unknownC))
+	for (kind= network_connection_next_event(unknown10, &unknown4, &unknown8, &unknownC); kind!=0;
+		kind= network_connection_next_event(unknown10, &unknown4, &unknown8, &unknownC))
 	{
 		struct network_channel_owner *owner;
 

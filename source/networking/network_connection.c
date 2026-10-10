@@ -30,6 +30,10 @@ of the first packet. 0x004cf6f4: what is waited for an answer more than the
 wait. 0x004cf70c to 0x004cf718: what one of the things starts with: the least
 time, the smoothed one, how much it changes, and the wait */
 long unknown_004cf6e8;
+
+/* 0x004cf6f0: how many packets after one have to be answered for it to be
+one that was not */
+long unknown_004cf6f0;
 long unknown_004cf6f4;
 long unknown_004cf70c;
 long unknown_004cf710;
@@ -379,4 +383,106 @@ void network_connection_window_advance(
 		}
 		window->oldest= sequence;
 	}
+}
+
+/* 0x000965e0: the next thing that happened to a packet that one of the
+things sent, with the number of the packet, its size and a number of it;
+nothing if there is none. First what became of the packet whose turn it is
+(network_connection_next_result). If that is not known yet, the first of the
+packets after it that was answered, and of which that was not said, is said
+now: 4; and that is noted of it */
+long __attribute__((stdcall)) network_connection_next_event(
+	byte *connection,
+	long *sequence_out,
+	long *size,
+	long *unknown8)
+{
+	const struct network_connection_window *sent=
+		(const struct network_connection_window *)(connection+NETWORK_CONNECTION_SENT_WINDOW_OFFSET);
+	long event= 0;
+	long sequence;
+	long newest;
+
+	if (network_connection_next_result(connection, &event, sequence_out, size, unknown8) || sent->newest==sent->oldest)
+	{
+		return event;
+	}
+	newest= sent->newest;
+	for (sequence= *(const long *)(connection+NETWORK_CONNECTION_UNKNOWN44_OFFSET)+1; sequence<newest; sequence++)
+	{
+		struct network_connection_sent_packet *packet= network_connection_get_sent_packet(sequence, connection);
+
+		if ((packet->flags&_network_connection_sent_bit1) && !(packet->flags&_network_connection_sent_bit2))
+		{
+			*sequence_out= sequence;
+			*size= packet->size;
+			*unknown8= packet->unknown8;
+			packet->flags|= _network_connection_sent_bit2;
+
+			return _network_connection_event_answered_early;
+		}
+	}
+
+	return event;
+}
+
+/* 0x00096b00: what became of the packet whose turn it is, which is the one
+after the number that they are counted from: whether it is known. With no
+such packet, it is not. One that was answered: 1, or 2 if that was said
+before. One that was not: if it has been waited for as long as the wait and
+the loss, or if so many packets after it were answered, 3, with how long it
+was; and the loss is more, as network_connection_update_times does. With
+one or the other, the number of the packet, its size and a number of it are
+given, its turn is over, the next one's is, and its size is taken from the
+bytes that were sent */
+boolean __attribute__((stdcall)) network_connection_next_result(
+	byte *connection,
+	long *event,
+	long *sequence_out,
+	long *size,
+	long *unknown8)
+{
+	long sequence= *(const long *)(connection+NETWORK_CONNECTION_UNKNOWN44_OFFSET)+1;
+	struct network_connection_sent_packet *packet= network_connection_get_sent_packet(sequence, connection);
+
+	if (!packet)
+	{
+		return FALSE;
+	}
+	if (packet->flags&_network_connection_sent_bit1)
+	{
+		*event= (packet->flags&_network_connection_sent_bit2) ? _network_connection_event_answered_late :
+			_network_connection_event1;
+		*sequence_out= sequence;
+		*size= packet->size;
+		*unknown8= packet->unknown8;
+		packet->flags|= _network_connection_sent_bit4;
+	}
+	else
+	{
+		long elapsed= network_time_since(packet->time);
+
+		if (elapsed>=(long)(*(const unsigned long *)(connection+NETWORK_CONNECTION_TIMEOUT_OFFSET)+
+			*(const unsigned long *)(connection+NETWORK_CONNECTION_LOSS_OFFSET)) ||
+			(long)(*(const unsigned long *)(connection+NETWORK_CONNECTION_UNKNOWN94C_OFFSET)-(unsigned long)sequence)>=
+			unknown_004cf6f0)
+		{
+			packet->unknown8= elapsed;
+			*event= _network_connection_event_lost;
+			*sequence_out= sequence;
+			*size= packet->size;
+			*unknown8= packet->unknown8;
+			packet->flags|= _network_connection_sent_bit8;
+			network_connection_update_times(_network_connection_event_lost, connection, network_time_since(0), 0, 0);
+		}
+	}
+	if (!(packet->flags&(_network_connection_sent_bit4|_network_connection_sent_bit8)))
+	{
+		return FALSE;
+	}
+	packet->flags|= _network_connection_sent_bit10;
+	*(long *)(connection+NETWORK_CONNECTION_UNKNOWN44_OFFSET)= sequence;
+	*(long *)(connection+NETWORK_CONNECTION_SENT_BYTES_OFFSET)-= packet->size;
+
+	return TRUE;
 }

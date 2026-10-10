@@ -60,7 +60,18 @@ enum
 	NETWORK_CONNECTION_SEQUENCE_RANGE= 0x80,
 	_network_connection_sent_bit1= 0x1,
 	_network_connection_sent_bit4= 0x4,
-	_network_connection_event_dropped= 6
+	_network_connection_event_dropped= 6,
+	/* the other things that can happen to a packet: it was answered, in its
+	turn (1), or in its turn after that was said before it (2); and it was
+	answered before its turn (4). And the other bits of a packet that was
+	sent: that was said before its turn; it was answered, or not, when its
+	turn came (which are the two with which it is not waited for); and its
+	turn is over */
+	_network_connection_event_answered_late= 2,
+	_network_connection_event_answered_early= 4,
+	_network_connection_sent_bit2= 0x2,
+	_network_connection_sent_bit8= 0x8,
+	_network_connection_sent_bit10= 0x10
 };
 
 /* ---------- structures */
@@ -102,6 +113,10 @@ struct network_connection_sent_packet
 /* ---------- prototypes/NETWORK_CONNECTION.C */
 
 void network_connection_reset(byte *connection);
+long __attribute__((stdcall)) network_connection_next_event(byte *connection, long *sequence, long *size,
+	long *unknown8);
+boolean __attribute__((stdcall)) network_connection_next_result(byte *connection, long *event, long *sequence,
+	long *size, long *unknown8);
 long __attribute__((stdcall)) network_connection_new_sequence(byte *connection, long time);
 boolean __attribute__((stdcall)) network_connection_drop_oldest_sent(byte *connection, boolean force, long *event,
 	long *sequence);

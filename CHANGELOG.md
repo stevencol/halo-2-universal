@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Qué fue de cada paquete: contestado, perdido, o contestado antes de tiempo
+
+Dos funciones en `networking/network_connection.c`, 557 bytes entre las dos. De 1499
+funciones se pasa a 1501, el 13,32 % de las del juego (el 8,977 % de sus bytes).
+**Son ya más de 1500 funciones.**
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_connection_next_event` | `0x000965e0` | `networking/network_connection.c` |
+| `network_connection_next_result` | `0x00096b00` | `networking/network_connection.c` |
+
+### Lo que se sabe
+
+- `network_connection_next_result` dice **qué fue del paquete al que le
+  toca** (los paquetes se resuelven en orden):
+  - si fue contestado: 1, o 2 si eso ya se había dicho antes de tiempo;
+  - si no, se da por **perdido** (3) cuando se ha esperado por él el
+    tiempo de espera más la «pérdida» acumulada, **o cuando ya se han
+    contestado tantos paquetes posteriores** (un número del juego, en
+    `0x004cf6f0`): es la retransmisión rápida de TCP. Entonces la pérdida
+    sube, como en el hito 432.
+  - Con una cosa u otra, pasa el turno al siguiente y su tamaño se resta
+    de los bytes mandados sin resolver.
+- `network_connection_next_event` es lo que el canal llama en bucle (hito
+  411): primero lo anterior; y si al paquete que le toca aún no se le
+  sabe nada, **avisa del primer paquete posterior que ya fue contestado**
+  (4), una sola vez por paquete.
+- Con esto se entienden los números que el canal recibía: 1 y 4 son «ha
+  llegado respuesta» (el canal pasa a conectado y apunta la hora), 1 y 2
+  «contestado», 3 «perdido», y 6 «el más viejo se ha soltado» (hito 434).
+- **Todo lo que el canal llama de su pieza principal está ya
+  descompilado.**
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos** y en las cuatro del hito 434.
+  De la comprobación repetida de la tanda anterior, tres de cuatro ya se
+  notan; la que no (devolver el «sí» de la clase sin pasarlo a 1) no la
+  pueden ver las pruebas, que comparan un «sí o no» solo como verdadero o
+  falso.
+- En este hito se pasaron las pruebas de `network_connection` (11
+  funciones) y `network_channel` (25).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — El número de cada paquete que se manda
 
 Cuatro funciones en `networking/network_connection.c`, 596 bytes entre las cuatro. De 1495

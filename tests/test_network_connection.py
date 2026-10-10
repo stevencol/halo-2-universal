@@ -181,3 +181,38 @@ def run(t) -> None:
             externals=setup["externals"],
             mocks=[Mock(lambda call, cannot=random_.choice((0, 0, 0, 1, 0x100)): cannot, stack_arguments=1, registers=("ecx",))],
         )
+
+    # ---------- what became of the packets that were sent
+
+    for n in range(2500):
+        setup, buffer, oldest, newest = sending(random_.random() < 0.2)
+        data = bytearray(buffer)
+        size, _, _, _, start, count = struct.unpack_from("<6i", data, 0x2C)
+        turn = random_.choice((oldest, oldest, oldest, newest, newest - 1, random_.randrange(oldest, newest + 1)))
+        struct.pack_into("<i", data, 0x44, max(turn, oldest))
+        struct.pack_into("<i", data, 0x978, random_.choice((0, 0, 30, 1000)))
+        struct.pack_into("<i", data, 0x94C, random_.choice((turn, turn + 1, turn + 3, turn + 4, turn + 5, newest)))
+        for packet in range(newest - oldest):
+            # answered or not, said before its turn or not, and with other bits
+            place = 0x14C + ((packet + start) % size) * 16
+            struct.pack_into("<H", data, place + 0xE, random_.choice((0, 0, 0, 1, 1, 3, 2, 0x20, 0x21)))
+        globals_ = dict(
+            setup["globals"],
+            unknown_004cf6f0=struct.pack("<i", random_.choice((3, 3, 100))),
+            unknown_004cf71c=struct.pack("<i", random_.choice((0, 10, 100))),
+            unknown_004cf720=struct.pack("<i", random_.choice((50, 1000))),
+        )
+        t.check(
+            "network_connection_next_result",
+            Buffer(bytes(data), pointers=(0,)),
+            *(Buffer(random_.randbytes(4)) for value in range(4)),
+            globals=globals_,
+            externals=setup["externals"],
+        )
+        t.check(
+            "network_connection_next_event",
+            Buffer(bytes(data), pointers=(0,)),
+            *(Buffer(random_.randbytes(4)) for value in range(3)),
+            globals=globals_,
+            externals=setup["externals"],
+        )

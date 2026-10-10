@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 434.
+**Última actualización:** 2026-10-08, al terminar el hito 435.
 
 ## Dónde estamos
 
-- **1499 funciones descompiladas de 11.265: el 13,31 % del juego** (el
-  8,958 % de los bytes de código).
-- Las 1499 están comprobadas contra el ejecutable original: las 1390 del
+- **1501 funciones descompiladas de 11.265: el 13,32 % del juego** (el
+  8,977 % de los bytes de código).
+- Las 1501 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a connection starts over and numbers the packets it sends* (ver `git log`).
+- Último hito: *Decompile how a connection says what became of the packets it sent* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 554 funciones apuntadas pero sin descompilar (las que el código
-  llama); 452 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 553 funciones apuntadas pero sin descompilar (las que el código
+  llama); 451 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -154,12 +154,11 @@ Módulos (funciones hechas / archivo):
       (1: vaciar una vista; quedan 7 de la lista, de `0x000970b0` a
       `0x00097d80`; romper líneas pendiente)
 - [ ] La pieza principal de un canal — `networking\network_connection.c`
-      (9: empezar de cero, el número de cada paquete, dar por perdido
-      el más viejo, el tiempo de ida y vuelta y las ventanas de
-      paquetes llegados y mandados; quedan `0x00095bc0`,
-      `0x00096360`, `0x000965e0` (que el canal llama), `0x00096710`,
-      `0x00096910` y `0x00096b00`; romper líneas pendiente en las 4
-      últimas)
+      (11: empezar de cero, el número de cada paquete, qué fue de
+      cada uno, dar por perdido el más viejo, el tiempo de ida y
+      vuelta y las ventanas de paquetes llegados y mandados; quedan
+      `0x00095bc0`, `0x00096360`, `0x00096710` y `0x00096910`;
+      romper líneas pendiente en las 6 últimas)
 - [ ] Lo que cada cosa es — `networking\simulation_entity_database.c`
       (22, y una en `networking\network_heap.c`: crear una o varias,
       apuntar, activar y quitar cosas, vaciar, pedir su memoria,
