@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Los paquetes llegan
+
+Dos funciones en `networking/network_link.c`. De 1657
+funciones se pasa a 1659, el 14,73 % de las del juego (el 9,753 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_link_receive` | `0x00092f80` | `networking/network_link.c` |
+| `network_link_receive_packet` | `0x000933f0` | `networking/network_link.c` |
+
+### Lo que se sabe
+
+- `network_link_receive` es **lo que `main` llama cada vuelta para leer la
+  red**: mientras alguno de los cuatro enchufes tenga bytes de una
+  dirección que valga (`transport_address_valid`), hace con ellos un
+  paquete de la clase de ese enchufe y, si vale, lo reparte.
+- `network_link_receive_packet` lo reparte:
+  - lo que no viene de esta misma consola se cuenta, con su tamaño y con
+    lo que ocupa en el cable (las cuentas de `0x300` y `0x4B0`);
+  - un paquete de la tercera clase va, como flujo que lo lee, a lo que la
+    lista lleva en `0x1C`, por la primera de sus funciones: es lo que
+    toma los mensajes sin canal;
+  - los demás van al canal de su dirección y su clase, si lo hay: el canal
+    lee el paquete (`network_channel_read_packet`) y la voz toma lo suyo
+    (`game_voice_read_packet`), con el tiempo del canal de cuándo llegó
+    voz por última vez (el sexto).
+
+### Arreglado
+
+- `game_voice_read_packet` (hito anterior de la voz) quita sus dos
+  argumentos de la pila al volver (`ret 8`): estaba apuntada como si no.
+  Se vio porque aquí el juego no los quita tras llamarla. Su prueba pasa
+  igual.
+- `0x00092f80` también los quita (`ret 4`), y `main.c` la llama ya con su
+  nombre y con un puntero.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos**, y en las de los hitos 456 a
+  496.
+- En este hito se pasaron las pruebas de las dos funciones, las de `main`
+  y la de `game_voice_read_packet`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Los paquetes salen
 
 Cuatro funciones en `networking/network_link.c`. De 1653

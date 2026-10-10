@@ -262,7 +262,7 @@ byte *game_voice_get_membership(void);
 void game_voice_library_begin(void);
 void game_voice_library_end(void);
 void game_voice_update_session_source(void);
-void game_voice_read_packet(const byte *packet, long size);
+void __attribute__((stdcall)) game_voice_read_packet(const byte *packet, long size);
 boolean game_voice_has_packet_for_peer(long peer);
 long game_voice_packet_size_for_peer(long peer);
 boolean game_voice_unknown_000549d0(void);

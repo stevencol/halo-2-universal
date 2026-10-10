@@ -16,6 +16,7 @@ Halo 1's main.c.
 #include "cache/texture_cache.h"
 #include "main/main_game.h"
 #include "networking/network_life_cycle.h"
+#include "networking/network_link.h"
 
 #include "cache/cache_files.h"
 #include "input/input.h"
@@ -56,7 +57,6 @@ void unknown_0012bbd0(void);
 void unknown_00163820(void);
 void unknown_001479c3(float seconds);
 void unknown_00155f80(void);
-void unknown_00092f80(long unknown);
 void unknown_0008df50(void);
 void unknown_000680f0(void);
 boolean simulation_in_progress(void);
@@ -406,7 +406,7 @@ void main_loop_body(
 	{
 		unknown_00510548= TRUE;
 		unknown_0051054c= GetTickCount();
-		unknown_00092f80(unknown_00510560);
+		network_link_receive((byte *)unknown_00510560);
 		unknown_00510548= FALSE;
 		unknown_0051054c= GetTickCount();
 	}

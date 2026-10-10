@@ -10,6 +10,7 @@ name of the file is a guess, and so are the names of its functions.
 
 #include "network_link.h"
 
+#include "networking/game_voice.h"
 #include "networking/network_channel.h"
 #include "networking/network_observer.h"
 
@@ -24,6 +25,11 @@ is shut down, and closed; and why the last thing asked of them was not done.
 less than nothing */
 short __attribute__((stdcall)) unknown_000b5110(const struct transport_address *address,
 	struct network_link_socket *socket, const byte *bytes, long size);
+
+/* 0x000b5060: bytes that came for a socket are taken, with the address that
+they came from; how many, and not more than nothing if there are none */
+short __attribute__((stdcall)) unknown_000b5060(struct network_link_socket *socket, byte *bytes, long size,
+	struct transport_address *address);
 
 int __attribute__((stdcall)) shutdown(long socket, long how);
 int __attribute__((stdcall)) closesocket(long socket);
@@ -531,4 +537,124 @@ done:
 	{
 		*wire_size_out= wire_size;
 	}
+}
+
+/* 0x000933f0: a packet that came is given to who it is for. One that did not
+come from this same console is counted, with its own size and with the one
+that it has on the wire. One of the third kind goes, as a stream that reads
+it, to what takes the ones that come by no channel. The others go to the
+channel of their address and kind, if there is one: it reads the packet
+(network_channel_read_packet), and the voice takes what is of it, with the
+channel's time of when voice last came */
+void __attribute__((stdcall)) network_link_receive_packet(
+	const struct network_link_packet *packet,
+	byte *link)
+{
+	long wire_size= network_link_packet_wire_size(packet);
+	struct bitstream stream;
+
+	if (!(packet->address.address_size==sizeof(packet->address.address.ipv4) &&
+		packet->address.address.ipv4==NETWORK_LINK_LOOPBACK_ADDRESS))
+	{
+		network_link_rate_add((struct network_rate *)(link+NETWORK_LINK_RECEIVED_RATE_OFFSET), packet->size);
+		network_link_rate_add((struct network_rate *)(link+NETWORK_LINK_RECEIVED_WIRE_RATE_OFFSET), wire_size);
+	}
+	if (packet->kind>_network_link_packet_kind2)
+	{
+		struct network_link_receiver *receiver;
+
+		stream.data= (unsigned long *)packet->data;
+		stream.size= packet->size;
+		stream.unknown8= 1;
+		stream.unknownC= 0;
+		stream.position= 0;
+		stream.position_count= 0;
+		stream.error= FALSE;
+		receiver= *(struct network_link_receiver **)(link+NETWORK_LINK_RECEIVER_OFFSET);
+		if (receiver)
+		{
+			receiver->functions->receive(receiver, &packet->address, &stream);
+		}
+	}
+	else
+	{
+		long found= network_link_find_channel(link, packet->kind, &packet->address);
+		long channel_index;
+		byte *channel;
+
+		if (found==NONE)
+		{
+			return;
+		}
+		channel_index= ((const struct network_link_channel *)(link+NETWORK_LINK_CHANNELS_OFFSET))[found].channel_index;
+		if (channel_index==NONE)
+		{
+			return;
+		}
+		channel= unknown_004d87d4+channel_index*NETWORK_CHANNEL_SIZE;
+		if (packet->size>0)
+		{
+			stream.data= (unsigned long *)packet->data;
+			stream.size= packet->size;
+			stream.unknown8= 1;
+			stream.unknownC= 0;
+			stream.position= 0;
+			stream.position_count= 0;
+			stream.error= FALSE;
+			network_channel_read_packet(&stream, channel, wire_size, FALSE);
+		}
+		if (packet->voice_size>0)
+		{
+			game_voice_read_packet(packet->voice, packet->voice_size);
+			network_channel_set_time(_network_channel_time_voice_received, channel);
+		}
+	}
+}
+
+/* 0x00092f80: all that came for its sockets is read: while one of the four
+has bytes from an address that is one (transport_address_valid), they are
+made a packet of the kind of that socket (network_link_packet_unpack) and,
+if they are good, given to who they are for (network_link_receive_packet) */
+void __attribute__((stdcall)) network_link_receive(
+	byte *link)
+{
+	struct network_link_socket **sockets= (struct network_link_socket **)(link+NETWORK_LINK_SOCKETS_OFFSET);
+	boolean received;
+
+	do
+	{
+		struct transport_address address;
+		byte bytes[0x1000];
+		long kind= 0;
+		long size= 0;
+		long index;
+
+		received= FALSE;
+		for (index= 0; index<NUMBER_OF_NETWORK_LINK_SOCKETS && !received; index++)
+		{
+			if (sockets[index])
+			{
+				long read= unknown_000b5060(sockets[index], bytes, sizeof(bytes), &address);
+
+				if (read>0 && transport_address_valid(&address))
+				{
+					size= read;
+					kind= index;
+					received= TRUE;
+				}
+			}
+		}
+		if (received)
+		{
+			struct network_link_packet packet;
+
+			memset(&packet, 0, sizeof(packet));
+			packet.kind= kind;
+			packet.address= address;
+			if (network_link_packet_unpack(size, &packet, bytes))
+			{
+				network_link_receive_packet(&packet, link);
+			}
+		}
+	} while (received);
 }

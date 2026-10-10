@@ -491,7 +491,7 @@ address,name,source,arguments,returns,convention
 00163820,unknown_00163820,,,void
 001479c3,unknown_001479c3,,stack,void
 00155f80,unknown_00155f80,,,void
-00092f80,unknown_00092f80,,stack,void
+00092f80,network_link_receive,source/networking/network_link.c,stack,void,stdcall
 0008df50,unknown_0008df50,,,void
 000680f0,unknown_000680f0,,,void
 00068250,simulation_in_progress,source/networking/simulation.c,,bool
@@ -776,7 +776,7 @@ address,name,source,arguments,returns,convention
 000649c0,unknown_000649c0,,,int
 003212c5,_clearfp,,,int
 000547e0,game_voice_update_session_source,source/networking/game_voice.c,,void
-00054810,game_voice_read_packet,source/networking/game_voice.c,stack stack,void
+00054810,game_voice_read_packet,source/networking/game_voice.c,stack stack,void,stdcall
 00054850,game_voice_has_packet_for_peer,source/networking/game_voice.c,stack,bool
 00054990,game_voice_packet_size_for_peer,source/networking/game_voice.c,stack,int
 000549d0,game_voice_unknown_000549d0,source/networking/game_voice.c,,bool
@@ -2218,3 +2218,5 @@ address,name,source,arguments,returns,convention
 00093730,network_link_send_bytes,source/networking/network_link.c,ebx edi stack stack stack,void,stdcall
 000932f0,network_link_send_packet,source/networking/network_link.c,ecx stack,void,stdcall
 000b5110,unknown_000b5110,,esi stack stack stack,short,stdcall
+000933f0,network_link_receive_packet,source/networking/network_link.c,eax stack,void,stdcall
+000b5060,unknown_000b5060,,stack stack stack stack,short,stdcall

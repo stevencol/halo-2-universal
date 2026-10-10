@@ -713,7 +713,7 @@ void game_voice_update_session_source(
 
 /* 0x00054810: takes what another console sent of what its players said
 (voice_queues_read_packet) */
-void game_voice_read_packet(
+void __attribute__((stdcall)) game_voice_read_packet(
 	const byte *packet,
 	long size)
 {

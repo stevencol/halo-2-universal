@@ -3,7 +3,7 @@
 import random
 import struct
 
-from difftest import Buffer
+from difftest import Buffer, Mock, mock_address
 
 NONE = 0xFFFFFFFF
 CHANNEL = 0xF8
@@ -271,4 +271,112 @@ def run(t) -> None:
             random_.choice((Buffer(random_.randbytes(4)), Buffer(random_.randbytes(4)), 0)),
             globals={"unknown_004d87d4": Buffer(bytes(channels))},
             externals={"network_link_send_packet": send_packet},
+        )
+
+    # ---------- packets are read
+
+    from test_async import calls_so_far
+
+    def stream_of(harness, address: int) -> tuple:
+        # what a stream that reads has, up to where the function sets it
+        raw = bytes(harness.mu.mem_read(address, 0x1C))
+        data, size, unknown8, unknownc, position = struct.unpack_from("<5I", raw)
+        return harness.normalize(data), size, unknown8, unknownc, position, raw[0x14], struct.unpack_from("<I", raw, 0x18)[0]
+
+    for n in range(1500):
+        pool = [an_address() for index in range(3)]
+        channels = bytearray(random_.randbytes(CHANNELS * CHANNEL))
+        for index in range(CHANNELS):
+            channels[index * CHANNEL + 0x48] = random_.choice((0, 0x40, 0x80, 0xC0, 0xFF, 0x10))
+            struct.pack_into("<i", channels, index * CHANNEL + 0x54, random_.choice((0, 1, 2, 3, 4, 5, 5)))
+
+        def link(sockets: bool) -> Buffer:
+            data = bytearray(random_.randbytes(0x588))
+            there = []
+            for index in range(4):
+                if sockets and random_.random() < 0.8:
+                    struct.pack_into("<I", data, 0xC + index * 4, 0x500 + index * 0x10)
+                    there.append(0xC + index * 4)
+                else:
+                    struct.pack_into("<I", data, 0xC + index * 4, 0)
+            # what takes the packets of no channel, with its functions, of which the first is asked
+            if random_.random() < 0.8:
+                struct.pack_into("<I", data, 0x1C, 0x560)
+                struct.pack_into("<I", data, 0x560, 0x570)
+                struct.pack_into("<I", data, 0x570, mock_address(0))
+                there += [0x1C, 0x560]
+            else:
+                struct.pack_into("<I", data, 0x1C, 0)
+            struct.pack_into("<i", data, 0x20, random_.choice((0, 1, 5, 16)))
+            for index in range(16):
+                struct.pack_into("<I", data, 0x24 + index * 0x20, random_.randrange(CHANNELS))
+                data[0x30 + index * 0x20:0x44 + index * 0x20] = random_.choice(pool)
+            return Buffer(bytes(data), pointers=tuple(there))
+
+        packet = bytearray(random_.randbytes(0x824))
+        struct.pack_into("<I", packet, 0, random_.choice((0, 1, 2, 3, 3, 4)))
+        packet[8:0x1C] = random_.choice(pool)
+        struct.pack_into("<i", packet, 0x1C, random_.choice((0, 0, 1, 0x123, 0x600, random_.randrange(0x601))))
+        struct.pack_into("<i", packet, 0x620, random_.choice((0, 0, 1, 0x200, random_.randrange(0x201))))
+        t.check(
+            "network_link_receive_packet",
+            Buffer(bytes(packet)),
+            link(False),
+            globals={"unknown_004d87d4": Buffer(bytes(channels))},
+            externals={
+                "network_rate_update": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "network_channel_read_packet": lambda harness, arguments: (
+                    1,
+                    (stream_of(harness, arguments[0]), harness.normalize(arguments[1]), arguments[2], arguments[3]),
+                ),
+                "game_voice_read_packet": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
+                "network_channel_set_time": lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]))),
+            },
+            mocks=[
+                Mock(
+                    lambda call: 0,
+                    stack_arguments=2,
+                    registers=("ecx",),
+                    record=lambda call: (
+                        t.harness.normalize(call.registers["ecx"]),
+                        t.harness.normalize(call.stack[0]),
+                        stream_of(t.harness, call.stack[1]),
+                    ),
+                )
+            ],
+        )
+
+        # what comes for the sockets, one thing each time that one is asked: bytes from an address, or nothing
+        script = []
+        for index in range(random_.choice((0, 1, 2, 3, 6))):
+            own = random_.randrange(0x40)
+            data = struct.pack("<H", random_.choice((own, own, own, 0x700))) + random_.randbytes(own + random_.randrange(0x20))
+            address = bytearray(random_.choice(pool))
+            if random_.random() < 0.2:
+                address[0:4] = bytes(4)
+            if random_.random() < 0.1:
+                address[0:0x10] = bytes(0x10)
+            if random_.random() < 0.1:
+                struct.pack_into("<H", address, 0x12, random_.choice((0xFFFF, 8, 0)))
+            script.append((random_.choice((len(data), len(data), len(data), 1, 0, 0xFFFF, 0xFFFD)), data, bytes(address)))
+
+        def take(harness, arguments, script=script):
+            index = calls_so_far(harness, "unknown_000b5060")
+            if index >= len(script):
+                return 0, (harness.normalize(arguments[0]), arguments[2])
+            count, data, address = script[index]
+            harness.mu.mem_write(arguments[1], data)
+            harness.mu.mem_write(arguments[3], address)
+            return count, (harness.normalize(arguments[0]), arguments[2])
+
+        t.check(
+            "network_link_receive",
+            link(True),
+            externals={
+                "unknown_000b5060": take,
+                "network_link_receive_packet": lambda harness, arguments: (
+                    0,
+                    (read(harness, arguments[0], 0x824), harness.normalize(arguments[1])),
+                ),
+            },
         )

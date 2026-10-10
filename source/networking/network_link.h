@@ -61,7 +61,15 @@ enum
 	_network_link_packet_kind0= 0,
 	_network_link_packet_kind1= 1,
 	_network_link_packet_kind2= 2,
-	NETWORK_LINK_LOOPBACK_ADDRESS= 0x7F000001
+	NETWORK_LINK_LOOPBACK_ADDRESS= 0x7F000001,
+	/* more of it: what takes the packets of the third kind, which come by
+	no channel; and the counts of the packets that it reads and of what they
+	are on the wire. Which of a channel's times is the one of when voice
+	last came */
+	NETWORK_LINK_RECEIVER_OFFSET= 0x1C,
+	NETWORK_LINK_RECEIVED_RATE_OFFSET= 0x300,
+	NETWORK_LINK_RECEIVED_WIRE_RATE_OFFSET= 0x4B0,
+	_network_channel_time_voice_received= 5
 };
 
 /* ---------- structures */
@@ -101,6 +109,22 @@ struct network_link_packet
 
 typedef char verify_network_link_packet_size[sizeof(struct network_link_packet) == 0x824 ? 1 : -1];
 
+/* what takes the packets that come by no channel: the first of its
+functions is given the address that one came from and a stream that reads
+it */
+struct network_link_receiver;
+
+struct network_link_receiver_functions
+{
+	void (__attribute__((thiscall)) *receive)(struct network_link_receiver *receiver,
+		const struct transport_address *address, struct bitstream *stream);
+};
+
+struct network_link_receiver
+{
+	const struct network_link_receiver_functions *functions;
+};
+
 /* ---------- prototypes/NETWORK_LINK.C */
 
 boolean __attribute__((stdcall)) network_link_add_channel(byte *link, long channel_index, long identifier,
@@ -119,6 +143,8 @@ long network_link_packet_wire_size(const struct network_link_packet *packet);
 void __attribute__((stdcall)) network_link_send_bytes(byte *link, long kind, const struct transport_address *address,
 	long size, const byte *bytes);
 void __attribute__((stdcall)) network_link_send_packet(const struct network_link_packet *packet, byte *link);
+void __attribute__((stdcall)) network_link_receive_packet(const struct network_link_packet *packet, byte *link);
+void __attribute__((stdcall)) network_link_receive(byte *link);
 void __attribute__((stdcall)) network_link_send_to_address(const struct transport_address *address,
 	const struct bitstream *stream, byte *link, long *wire_size_out);
 void __attribute__((stdcall)) network_link_send_to_channel(long channel_index, const struct bitstream *stream,

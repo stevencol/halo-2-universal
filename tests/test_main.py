@@ -28,7 +28,7 @@ PLAIN = (
     "main_revert_map_private main_reset_map_private main_switch_structure_bsp_private main_save_map_private "
     "unknown_0012bbd0 main_unknown4E_private input_update input_abstraction_update saved_game_files_find_unit_files global_preferences_flush "
     "font_cache_frame cached_map_file_copy_update unknown_00163820 unknown_001479c3 unknown_00155f80 "
-    "unknown_00092f80 unknown_0008df50 unknown_000680f0 network_life_cycle_update unknown_001870a0 unknown_0008dfc0 "
+    "network_link_receive unknown_0008df50 unknown_000680f0 network_life_cycle_update unknown_001870a0 unknown_0008dfc0 "
     "game_frame unknown_001554b0 unknown_0016f280 unknown_00222a70 unknown_00223240 sound_update "
     "simulation_update unknown_00222d80"
 ).split()
@@ -121,7 +121,7 @@ def run(t) -> None:
     def ran_ticks(harness, arguments):
         return 0, (arguments[0], bytes(harness.mu.mem_read(arguments[1], 4)))
 
-    def unknown_00092f80(harness, arguments):
+    def network_link_receive(harness, arguments):
         # what the game sets around this call
         flag = harness.mu.mem_read(harness.global_addresses["unknown_00510548"], 1)[0]
         tick = bytes(harness.mu.mem_read(harness.global_addresses["unknown_0051054c"], 4))
@@ -178,7 +178,7 @@ def run(t) -> None:
                 "game_state_load_core": load_core,
                 "GetTickCount": tick_counts(123, 6000, pause=paused_later),
                 "simulation_in_progress": lambda harness, arguments, result=random_.choice((1, 1, 0)): result,
-                "unknown_00092f80": unknown_00092f80,
+                "network_link_receive": network_link_receive,
                 "unknown_00146660": lambda harness, arguments, values=values: unknown_00146660(harness, arguments, values),
                 "game_run_ticks": ran_ticks,
             },
