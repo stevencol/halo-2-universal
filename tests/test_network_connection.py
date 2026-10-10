@@ -216,3 +216,39 @@ def run(t) -> None:
             globals=globals_,
             externals=setup["externals"],
         )
+
+    # ---------- what the other console says of the packets
+
+    for n in range(3000):
+        setup, buffer, oldest, newest = sending(random_.random() < 0.3)
+        data = bytearray(buffer)
+        size, _, _, _, start, count = struct.unpack_from("<6i", data, 0x2C)
+        turn = random_.choice((oldest, oldest, newest, random_.randrange(oldest, newest + 1)))
+        struct.pack_into("<i", data, 0x44, turn)
+        for packet in range(newest - oldest):
+            place = 0x14C + ((packet + start) % size) * 16
+            struct.pack_into("<H", data, place + 0xC, random_.choice((0, 1, 5, newest - oldest, 0xFFFF)))
+            struct.pack_into("<H", data, place + 0xE, random_.choice((0, 0, 0, 0, 1, 8, 9, 0x20)))
+        # the answer: of the last one, of one that is kept, of the first, or of one before
+        of = random_.choice((newest, newest, random_.randrange(oldest, newest + 1), oldest + 1, oldest, oldest - 3, oldest - 40, newest - 255, newest + 1))
+        bit_count = random_.choice((0, 0, 1, 8, 32, 33, 64, 128))
+        bits = random_.choice((bytes(16), bytes((0xFF,)) * 16, random_.randbytes(16), random_.randbytes(16)))
+        t.check(
+            "network_connection_acknowledge",
+            Buffer(bytes(data), pointers=(0,)),
+            of & 0xFF,
+            bit_count,
+            Buffer(bits + random_.randbytes(4)),
+            random_.choice((0, 1, 1, 0x100)),
+            globals=dict(
+                setup["globals"],
+                unknown_004cf6ec=struct.pack("<i", random_.choice((0, 5, 5, 0x40))),
+                unknown_004cf6f8=struct.pack("<I", 3),
+                unknown_004cf6fc=struct.pack("<I", 2),
+                unknown_004cf700=struct.pack("<I", 4),
+                unknown_004cf704=struct.pack("<I", random_.choice((0, 50))),
+                unknown_004cf708=struct.pack("<I", random_.choice((0, 100))),
+                unknown_004cf724=struct.pack("<I", random_.choice((0, 10))),
+            ),
+            externals=setup["externals"],
+        )

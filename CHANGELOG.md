@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Lo que la otra consola contesta de los paquetes
+
+Una función en `networking/network_connection.c`, de 483 bytes. De 1501
+funciones se pasa a 1502, el 13,33 % de las del juego (el 8,993 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_connection_acknowledge` | `0x00096910` | `networking/network_connection.c` |
+
+### Lo que se sabe
+
+- `network_connection_acknowledge` es **cómo se entera una conexión de
+  qué paquetes suyos han llegado**. La otra consola manda en cada paquete
+  dos cosas:
+  - **el byte bajo del número del último paquete que recibió.** Con solo
+    ese byte se sabe el número entero: es el último mandado, o anterior,
+    que acaba así. Por eso los números no pueden separarse más de 128
+    (hito 434);
+  - **unos bits de los anteriores**, uno por paquete hacia atrás: un bit
+    puesto dice que ese paquete *no* llegó.
+- Con eso se recorre hacia atrás desde el contestado hasta el primero que
+  se guarda. Cada paquete que llegó y no estaba marcado se marca, se
+  apunta cuánto tardó la respuesta y se pasa al cálculo del tiempo de ida
+  y vuelta (hito 432), con 4, o con 5 si ya se le había dado por perdido.
+- De los paquetes para los que no hay bits, se dan por llegados los
+  posteriores al primero de la cuenta (el de ahora, o el que había cuando
+  se mandó el paquete contestado).
+- Una respuesta de paquetes que ya no se guardan no hace nada; si es de
+  muy atrás, contesta 2.
+- Con esta función está el ciclo entero de la fiabilidad: numerar (434),
+  apuntar lo que llega (433), enterarse de lo que llegó allí (este),
+  medir el tiempo (432) y decir qué fue de cada paquete (435).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente** aquí y en las de los hitos 434 y 435.
+- En este hito se pasaron las pruebas de `network_connection` (12
+  funciones; esta, con 3000 casos).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Qué fue de cada paquete: contestado, perdido, o contestado antes de tiempo
 
 Dos funciones en `networking/network_connection.c`, 557 bytes entre las dos. De 1499

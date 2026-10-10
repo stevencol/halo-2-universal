@@ -2053,3 +2053,4 @@ address,name,source,arguments,returns,convention
 00096c50,network_connection_advance_received,source/networking/network_connection.c,ecx,void
 001a4840,network_connection_window_advance,source/networking/network_connection.c,esi ebx,void
 00096b00,network_connection_next_result,source/networking/network_connection.c,edi stack stack stack stack,bool,stdcall
+00096910,network_connection_acknowledge,source/networking/network_connection.c,eax edx stack stack stack,int,stdcall

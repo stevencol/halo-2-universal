@@ -71,7 +71,9 @@ enum
 	_network_connection_event_answered_early= 4,
 	_network_connection_sent_bit2= 0x2,
 	_network_connection_sent_bit8= 0x8,
-	_network_connection_sent_bit10= 0x10
+	_network_connection_sent_bit10= 0x10,
+	/* what is said of an answer that is of packets too long ago */
+	_network_connection_acknowledge_too_old= 2
 };
 
 /* ---------- structures */
@@ -113,6 +115,8 @@ struct network_connection_sent_packet
 /* ---------- prototypes/NETWORK_CONNECTION.C */
 
 void network_connection_reset(byte *connection);
+long __attribute__((stdcall)) network_connection_acknowledge(byte *connection, long sequence_byte, long bit_count,
+	const unsigned long *bits, boolean unknown);
 long __attribute__((stdcall)) network_connection_next_event(byte *connection, long *sequence, long *size,
 	long *unknown8);
 boolean __attribute__((stdcall)) network_connection_next_result(byte *connection, long *event, long *sequence,

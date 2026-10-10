@@ -31,6 +31,10 @@ wait. 0x004cf70c to 0x004cf718: what one of the things starts with: the least
 time, the smoothed one, how much it changes, and the wait */
 long unknown_004cf6e8;
 
+/* 0x004cf6ec: how many packets before the ones that are kept an answer can
+be of, and nothing be said of it */
+long unknown_004cf6ec;
+
 /* 0x004cf6f0: how many packets after one have to be answered for it to be
 one that was not */
 long unknown_004cf6f0;
@@ -485,4 +489,100 @@ boolean __attribute__((stdcall)) network_connection_next_result(
 	*(long *)(connection+NETWORK_CONNECTION_SENT_BYTES_OFFSET)-= packet->size;
 
 	return TRUE;
+}
+
+/* 0x00096910: one of the things is told what the other console says of the
+packets that it sent: the low byte of the number of the last that came
+there, and some bits of the ones before it, of which the first is of the
+one just before; a bit that is set says that the packet did not come.
+
+The number is the last one that the thing sent, or before, that has that
+byte. An answer of a packet that is not kept any more does nothing, and if
+it is of more than so many before, 2 is what is said. If not, each packet
+from that one back to the first that is kept, that was not answered yet, is
+answered now: that one; the ones before it whose bit is not set; and, of the
+ones that there are no bits for, the ones after the number that they are
+counted from, now or when the packet of the answer was sent. An answered
+packet has the bit of it, and how long the answer took, and the times of the
+thing follow (network_connection_update_times, with 4, or with 5 if the
+packet had been taken for one with no answer).
+
+And if the answer is of the last packet that was sent, and that is the one
+that they are counted from, a byte of the thing is as the last thing given */
+long __attribute__((stdcall)) network_connection_acknowledge(
+	byte *connection,
+	long sequence_byte,
+	long bit_count,
+	const unsigned long *bits,
+	boolean unknown)
+{
+	const struct network_connection_window *sent=
+		(const struct network_connection_window *)(connection+NETWORK_CONNECTION_SENT_WINDOW_OFFSET);
+	const struct network_connection_sent_packet *answered;
+	long result= 0;
+	long difference= (sent->newest&0xFF)-sequence_byte;
+	long answered_sequence;
+	long base;
+
+	if (difference<0)
+	{
+		difference+= 0x100;
+	}
+	answered_sequence= sent->newest-difference;
+	answered= network_connection_get_sent_packet(answered_sequence, connection);
+	base= answered ? answered_sequence-(word)answered->unknownC :
+		*(const long *)(connection+NETWORK_CONNECTION_UNKNOWN44_OFFSET);
+	connection[NETWORK_CONNECTION_UNKNOWN959_OFFSET]= FALSE;
+	if (answered_sequence<=sent->oldest)
+	{
+		if (answered_sequence<sent->oldest-unknown_004cf6ec)
+		{
+			result= _network_connection_acknowledge_too_old;
+		}
+	}
+	else
+	{
+		long sequence;
+		long bit= NONE;
+
+		for (sequence= answered_sequence; sequence>sent->oldest; sequence--, bit++)
+		{
+			struct network_connection_sent_packet *packet= network_connection_get_sent_packet(sequence, connection);
+			boolean came;
+
+			if (packet->flags&_network_connection_sent_bit1)
+			{
+				continue;
+			}
+			if (sequence==answered_sequence)
+			{
+				came= TRUE;
+			}
+			else if (bit<bit_count)
+			{
+				came= !(bits[bit>>5]&(1u<<(bit&31)));
+			}
+			else
+			{
+				came= sequence>*(const long *)(connection+NETWORK_CONNECTION_UNKNOWN44_OFFSET) || sequence>base;
+			}
+			if (came)
+			{
+				long time= packet->time;
+				long event= (packet->flags&_network_connection_sent_bit8) ? _network_connection_event5 :
+					_network_connection_event4;
+
+				packet->flags|= _network_connection_sent_bit1;
+				packet->unknown8= network_time_since(time);
+				network_connection_update_times(event, connection, packet->unknown8, sequence, network_time_since(0));
+			}
+		}
+	}
+	if (answered_sequence==sent->newest && *(const long *)(connection+NETWORK_CONNECTION_UNKNOWN44_OFFSET)==sent->newest &&
+		unknown)
+	{
+		connection[NETWORK_CONNECTION_UNKNOWN959_OFFSET]= TRUE;
+	}
+
+	return result;
 }

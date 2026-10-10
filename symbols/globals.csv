@@ -332,3 +332,4 @@ address,name,source
 004cf714,unknown_004cf714,source/networking/network_connection.c
 004cf718,unknown_004cf718,source/networking/network_connection.c
 004cf6f0,unknown_004cf6f0,source/networking/network_connection.c
+004cf6ec,unknown_004cf6ec,source/networking/network_connection.c
