@@ -51,9 +51,8 @@ enum
 	_simulation_world_state2= 2,
 	_simulation_world_state3= 3,
 	_simulation_world_unknown18_4= 4,
-	/* more of a view: two numbers that unknown_00085a70 is given, and
-	another; and a number of something else that is counted */
-	SIMULATION_VIEW_UNKNOWN2C_OFFSET= 0x2C,
+	/* more of a view: a number that goes with its state (see
+	simulation_view.h); and a number of something else that is counted */
 	SIMULATION_VIEW_UNKNOWN34_OFFSET= 0x34,
 	SIMULATION_WORLD_UNKNOWN_0006A2A0_COUNT_OFFSET= 0x38,
 	/* more of the thing: a number that the ones of its views of the second

@@ -28,16 +28,38 @@ enum
 	/* how long a view can keep the game from going on, in milliseconds, and
 	what it is given and how it is after that */
 	SIMULATION_VIEW_BLOCKED_TIMEOUT= 2000,
-	_simulation_view_unknown28_blocked= 4
+	_simulation_view_unknown28_blocked= 4,
+	/* more of a view: the observer of the network and the channel of it
+	that it talks by, or NONE; and its state, with the number that goes with
+	it */
+	SIMULATION_VIEW_OBSERVER_OFFSET= 0x20,
+	SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET= 0x24,
+	SIMULATION_VIEW_STATE_OFFSET= 0x2C,
+	SIMULATION_VIEW_STATE_NUMBER_OFFSET= 0x30,
+	/* the states that have no number, the one that has any that is not
+	less than nothing, and how a view is after it was given a state that it
+	cannot go to */
+	_simulation_view_state0= 0,
+	_simulation_view_state2= 2,
+	_simulation_view_unknown28_bad_state= 7,
+	/* the kind of the message that says the state of a view, and what it
+	is sent for */
+	_network_message_simulation_view_state= 0x25,
+	SIMULATION_VIEW_SESSION_INDEX= 3
+};
+
+/* ---------- structures */
+
+/* what a view says to the other console when its state is another */
+struct simulation_view_state_message
+{
+	long state;
+	long number;
 };
 
 /* ---------- prototypes/SIMULATION_VIEW.C */
 
 void simulation_view_set_blocked(byte *view, boolean blocked);
-
-/* ---------- prototypes of functions not decompiled yet */
-
-/* 0x00085a70: a view is given two numbers */
-void __attribute__((stdcall)) unknown_00085a70(byte *view, long unknown, long unknown2);
+void __attribute__((stdcall)) simulation_view_set_state(byte *view, long state, long number);
 
 #endif

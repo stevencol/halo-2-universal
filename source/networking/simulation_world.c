@@ -267,15 +267,16 @@ boolean simulation_world_unknown_000698e0(
 	return FALSE;
 }
 
-/* 0x0006a2a0: a view is given two numbers (unknown_00085a70), as a number of
-it says: with 2, nothing; with 1, and another number of it 1 too, 2 and the
-count of something else, which goes on by one; with 1 and not that, nothing;
-and with any other, 1 and NONE */
+/* 0x0006a2a0: a view goes on to its next state (simulation_view_set_state),
+as the one that it is in says: in the third, nothing; in the second, and
+with another number of it 1, to the third, with the count of something else,
+which goes on by one; in the second and not that, nothing; and in any other,
+to the second, with NONE */
 void simulation_world_unknown_0006a2a0(
 	byte *view,
 	byte *other)
 {
-	long state= *(const long *)(view+SIMULATION_VIEW_UNKNOWN2C_OFFSET);
+	long state= *(const long *)(view+SIMULATION_VIEW_STATE_OFFSET);
 
 	if (state==2)
 	{
@@ -288,12 +289,12 @@ void simulation_world_unknown_0006a2a0(
 			long count= *(const long *)(other+SIMULATION_WORLD_UNKNOWN_0006A2A0_COUNT_OFFSET);
 
 			*(long *)(other+SIMULATION_WORLD_UNKNOWN_0006A2A0_COUNT_OFFSET)= (long)((unsigned long)count+1);
-			unknown_00085a70(view, 2, count);
+			simulation_view_set_state(view, 2, count);
 		}
 
 		return;
 	}
-	unknown_00085a70(view, 1, NONE);
+	simulation_view_set_state(view, 1, NONE);
 }
 
 /* 0x00069790: how many things wait for the thing to take, in its second

@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — El estado de una vista, y cómo se lo dice a la otra consola
+
+Una función en `networking/simulation_view.c`, de 161 bytes. De 1542
+funciones se pasa a 1543, el 13,70 % de las del juego (el 9,188 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_view_set_state` | `0x00085a70` | `networking/simulation_view.c` |
+
+### Lo que se sabe
+
+- Los «dos números» que se le daban a una vista (hitos 446 y 447) son
+  **su estado y un número que lo acompaña**. `simulation_view_set_state`
+  pone a una vista en un estado:
+  - a los dos primeros (0 y 1) solo se va sin número (`-1`);
+  - al tercero (2), con un número que no sea negativo;
+  - a los siguientes, solo **de uno en uno** y con el mismo número.
+- Si el cambio no vale, una vista que estaba bien vuelve al primer estado
+  y queda marcada con un `7`. (Con un `4` queda la que frenó la partida
+  dos segundos, hito 447.)
+- Si el cambio es de verdad, **se lo dice a la otra consola**: un mensaje
+  de la clase `0x25` con el estado y el número, por el canal del
+  observador de la vista (`network_observer_channel_send`, hito 373). Y
+  luego se mira qué se sigue de eso (`0x000861c0`, apuntada).
+- Con esto `simulation_world_unknown_0006a2a0` se lee sola: hace avanzar
+  a una vista al estado siguiente.
+- El mensaje `0x25` es, casi seguro, el que recibe
+  `network_message_handler_unknown_00094910` (dos números para una vista
+  de cualquier clase): los estados de las dos puntas de una vista se van
+  siguiendo el uno al otro.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 441 a 447.
+- En este hito se pasaron las pruebas de `simulation_view` (2 funciones)
+  y las de las dos de `simulation_world` que la llaman.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — La vista que frena la partida
 
 Tres funciones: dos en `networking/simulation_world.c` y una en el archivo nuevo

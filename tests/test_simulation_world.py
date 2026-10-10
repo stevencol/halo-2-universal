@@ -150,7 +150,7 @@ def run(t) -> None:
             "simulation_world_unknown_0006a2a0",
             Buffer(bytes(view)),
             Buffer(random_.randbytes(0x40)),
-            externals={"unknown_00085a70": lambda harness, arguments: 0},
+            externals={"simulation_view_set_state": lambda harness, arguments: 0},
         )
 
     # ---------- the things that wait in the second state, and what the views of the second kind are told

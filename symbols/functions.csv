@@ -2095,7 +2095,8 @@ address,name,source,arguments,returns,convention
 0006a2a0,simulation_world_unknown_0006a2a0,source/networking/simulation_world.c,ecx edx,void
 00069790,simulation_world_unknown_00069790,source/networking/simulation_world.c,eax,int
 0006ab90,unknown_0006ab90,,stack stack,bool,stdcall
-00085a70,unknown_00085a70,,ecx stack stack,void,stdcall
+00085a70,simulation_view_set_state,source/networking/simulation_view.c,ecx stack stack,void,stdcall
 00069880,simulation_world_unknown_00069880,source/networking/simulation_world.c,eax stack,void,stdcall
 00086140,simulation_view_set_blocked,source/networking/simulation_view.c,esi ebx,void
 000860b0,unknown_000860b0,,ebx ecx,void
+000861c0,unknown_000861c0,,eax,void
