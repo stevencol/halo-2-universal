@@ -144,7 +144,8 @@ def run(t) -> None:
     HEAP, ALLOCATOR, TABLE, ASKED, ANSWERS, GIVEN, PACKETS, UPDATES, END2 = (END + offset for offset in (0, 8, 0xC, 0x38, 0x3C, 0x40, 0x50, 0x80, 0xE0))
 
     def sending(data: Buffer, entity: int) -> Buffer:
-        raw = bytearray(data.data) + bytearray(random_.randbytes(END2 - END))
+        # and after it all, more memory for the heap to give: a piece of its own each time
+        raw = bytearray(data.data) + bytearray(random_.randbytes(END2 - END + 0x200))
         pointers = [*(pointer for pointer in data.pointers if pointer != VIEW + 0x18), HEAP, ALLOCATOR, VIEW + 0x1C]
         struct.pack_into("<I", raw, CLIENT_TABLE, mock_address(4))
         struct.pack_into("<Ii", raw, HEAP, ALLOCATOR, random_.choice((0, 5)))
@@ -179,7 +180,7 @@ def run(t) -> None:
             base = call.registers["ecx"] - ALLOCATOR
             asked = struct.unpack("<I", mu.mem_read(base + ASKED, 4))[0]
             mu.mem_write(base + ASKED, struct.pack("<I", asked + 1))
-            return base + GIVEN if mu.mem_read(base + ANSWERS + (asked & 3), 1)[0] else 0
+            return base + END2 + (asked & 0x1F) * 0x10 if mu.mem_read(base + ANSWERS + (asked & 3), 1)[0] else 0
 
         def writes(call):
             # what the things are of writes the thing: so many bits, and says which bits of how it is it wrote
@@ -264,6 +265,60 @@ def run(t) -> None:
             Pointer(data, VIEW),
             place,
             random_.getrandbits(32),
+            after,
+            extra=[data],
+            globals=globals_,
+            externals=externals,
+            mocks=made,
+        )
+
+    # ---------- the things that were made at once
+
+    for n in range(700):
+        setup = at_time()
+        base = world(1.0, 0)
+        raw = bytearray(base.data)
+        count = random_.choice((0, 1, 2, 2, 3, 4, 4))
+        places = random_.sample(range(COUNT), max(count, 1))
+        entities = [place | random_.getrandbits(4) << 28 for place in places]
+        for position, place in enumerate(places):
+            struct.pack_into("<IIH", raw, VIEW + 0x24 + place * 20, entities[position], random_.choice((0, 1, random_.getrandbits(32))), random_.choice((0, 1, 1, 2, 3, 3)))
+            struct.pack_into("<I", raw, MANAGER + 0x48 + place * 8, entities[position + 1] if position + 1 < len(places) else NONE)
+        if count == 0:
+            # no thing in the place
+            struct.pack_into("<I", raw, VIEW + 0x24 + places[0] * 20, NONE)
+        data = sending(Buffer(bytes(raw), pointers=base.pointers), entities[-1])
+        globals_ = dict(setup["globals"], unknown_004d87f8=Pointer(data, HEAP))
+        externals = dict(setup["externals"], unknown_000b5650=number)
+
+        def writes(call, bits=random_.choice((0, 3, 20)), bad=random_.choice((NONE, NONE, NONE, entities[-1], entities[0]))):
+            # what the things are of writes each thing, and says which bits it wrote; it says no for one of them
+            mu = t.harness.mu
+            position = struct.unpack("<i", mu.mem_read(call.stack[3] + 0x10, 4))[0]
+            mu.mem_write(call.stack[3] + 0x10, struct.pack("<i", position + bits))
+            mu.mem_write(call.stack[5], struct.pack("<I", call.stack[0] & 0x30))
+            return call.stack[0] != bad
+
+        made = sending_mocks()
+        made[4] = Mock(writes, stack_arguments=6, registers=("ecx",), record=lambda call: (call.registers["ecx"], *call.stack[:5]))
+        after = random_.choice((0, 0, 1, 15, 47, 64))
+        t.check(
+            "replication_entity_view_write_chain_creation",
+            places[0],
+            a_stream(),
+            Pointer(data, VIEW),
+            random_.getrandbits(32),
+            after,
+            extra=[data],
+            globals=globals_,
+            externals=externals,
+            mocks=made,
+        )
+        t.check(
+            "replication_entity_view_write_chain_deletion",
+            places[0],
+            a_stream(),
+            Pointer(data, VIEW),
             after,
             extra=[data],
             globals=globals_,

@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 427.
+**Última actualización:** 2026-10-08, al terminar el hito 428.
 
 ## Dónde estamos
 
-- **1484 funciones descompiladas de 11.265: el 13,17 % del juego** (el
-  8,843 % de los bytes de código).
-- Las 1484 están comprobadas contra el ejecutable original: las 1390 del
+- **1486 funciones descompiladas de 11.265: el 13,19 % del juego** (el
+  8,865 % de los bytes de código).
+- Las 1486 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a view writes creations and deletions and keeps what it sent* (ver `git log`).
+- Último hito: *Decompile how a view writes the creation and deletion of a chain* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 560 funciones apuntadas pero sin descompilar (las que el código
   llama); 458 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -139,13 +139,13 @@ Módulos (funciones hechas / archivo):
       quedarse con lo que hizo otra consola; lo que sigue, de
       `0x00089dc0` a `0x0008a110`, es de otros módulos)
 - [ ] Vistas de las cosas — `networking\replication_entity_view.c`
-      (12: preparar y vaciar una vista, poner una cosa en un estado,
+      (14: preparar y vaciar una vista, poner una cosa en un estado,
       marcarla, avisar de que se borra, recorrer las que hay que
-      anunciar, escribir creaciones y borrados en un paquete y
-      guardar lo mandado; quedan 8 de la lista: `0x00097f00`,
-      `0x00097f30`, `0x00098750`, `0x000988f0`, `0x00098fb0`,
-      `0x000991d0`, `0x000992d0` y `0x000998e0`; romper líneas
-      pendiente en las 9 últimas)
+      anunciar, escribir creaciones y borrados (de una cosa o de
+      una cadena) en un paquete y guardar lo mandado; quedan 6 de la
+      lista: `0x00097f00`, `0x00097f30`, `0x00098fb0`, `0x000991d0`,
+      `0x000992d0` y `0x000998e0`; romper líneas pendiente en las 11
+      últimas)
 - [ ] Lo que pasa en la partida —
       `networking\replication_event_manager.c` (6: la lista de
       sucesos, pedirlos al montón de la red, soltarlos y mandarlos

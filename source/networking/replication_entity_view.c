@@ -514,3 +514,99 @@ void __attribute__((stdcall)) replication_entity_view_sent_update(
 		(*(long *)(view+REPLICATION_ENTITY_VIEW_PENDING_COUNT_OFFSET))--;
 	}
 }
+
+/* 0x00098750: a view writes in a packet that the things that were made at
+once with the one that it has in a place are made: 3 in three bits, how many
+they are less two in two, and for each its number and the thing itself, as
+replication_entity_view_write_creation does. If they all went well and so
+many bits are left, the view keeps what it said of each; if not, the stream
+goes back to where it was. Whether it was written. The game has
+replication_entity_manager_get_chain and bitstream_write_integer_checked
+written here */
+boolean __attribute__((stdcall)) replication_entity_view_write_chain_creation(
+	long index,
+	struct bitstream *stream,
+	byte *view,
+	long unknown,
+	long bits_after)
+{
+	long entities[MAXIMUM_REPLICATION_ENTITY_CHAIN];
+	unsigned long written[MAXIMUM_REPLICATION_ENTITY_CHAIN]= {0};
+	long count= replication_entity_manager_get_chain(replication_entity_view_entity_get(view, index)->entity_index, entities,
+		*(const struct replication_entity_manager **)(view+REPLICATION_ENTITY_VIEW_MANAGER_OFFSET));
+	long place;
+
+	replication_entity_view_push_position(stream);
+	bitstream_write_integer(stream, _replication_entity_view_message_chain_creation, REPLICATION_ENTITY_VIEW_MESSAGE_BITS);
+	bitstream_write_integer_checked((unsigned long)(count-REPLICATION_ENTITY_VIEW_CHAIN_COUNT_LEAST),
+		REPLICATION_ENTITY_VIEW_CHAIN_COUNT_BITS, stream);
+	for (place= 0; place<count; place++)
+	{
+		struct replication_entity_manager *manager;
+		long entity_index= entities[place];
+
+		unknown_000b5650(entity_index, stream);
+		manager= *(struct replication_entity_manager **)(view+REPLICATION_ENTITY_VIEW_MANAGER_OFFSET);
+		if (!manager->client->functions->write_creation(manager->client, entity_index,
+			replication_entity_view_entity_get(view, entity_index&REPLICATION_ENTITY_INDEX_MASK)->pending, unknown, stream,
+			bits_after, &written[place]))
+		{
+			bitstream_pop_position(stream, TRUE);
+
+			return FALSE;
+		}
+	}
+	if ((long)(((unsigned long)stream->size<<3)-(unsigned long)stream->position)<bits_after)
+	{
+		bitstream_pop_position(stream, TRUE);
+
+		return FALSE;
+	}
+	stream->position_count--;
+	for (place= 0; place<count; place++)
+	{
+		replication_entity_view_sent_creation(entities[place], view);
+		if (written[place]!=0)
+		{
+			replication_entity_view_sent_update(entities[place], view, written[place]);
+		}
+	}
+
+	return TRUE;
+}
+
+/* 0x000988f0: and that they are done with: 4 in three bits, how many less
+two, and the number of each; as replication_entity_view_write_deletion */
+boolean __attribute__((stdcall)) replication_entity_view_write_chain_deletion(
+	long index,
+	struct bitstream *stream,
+	byte *view,
+	long bits_after)
+{
+	long entities[MAXIMUM_REPLICATION_ENTITY_CHAIN];
+	long count= replication_entity_manager_get_chain(replication_entity_view_entity_get(view, index)->entity_index, entities,
+		*(const struct replication_entity_manager **)(view+REPLICATION_ENTITY_VIEW_MANAGER_OFFSET));
+	long place;
+
+	replication_entity_view_push_position(stream);
+	bitstream_write_integer(stream, _replication_entity_view_message_chain_deletion, REPLICATION_ENTITY_VIEW_MESSAGE_BITS);
+	bitstream_write_integer_checked((unsigned long)(count-REPLICATION_ENTITY_VIEW_CHAIN_COUNT_LEAST),
+		REPLICATION_ENTITY_VIEW_CHAIN_COUNT_BITS, stream);
+	for (place= 0; place<count; place++)
+	{
+		unknown_000b5650(entities[place], stream);
+	}
+	if ((long)(((unsigned long)stream->size<<3)-(unsigned long)stream->position)<bits_after)
+	{
+		bitstream_pop_position(stream, TRUE);
+
+		return FALSE;
+	}
+	stream->position_count--;
+	for (place= 0; place<count; place++)
+	{
+		replication_entity_view_sent_deletion(view, entities[place]);
+	}
+
+	return TRUE;
+}

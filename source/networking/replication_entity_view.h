@@ -50,7 +50,13 @@ enum
 	REPLICATION_ENTITY_VIEW_NO_MEMORY_OFFSET= 0xA,
 	REPLICATION_ENTITY_VIEW_MESSAGE_BITS= 3,
 	_replication_entity_view_message_creation= 1,
-	_replication_entity_view_message_deletion= 2
+	_replication_entity_view_message_deletion= 2,
+	/* and that some things made at once are made, or done with; how many
+	they are is written less two, in two bits */
+	_replication_entity_view_message_chain_creation= 3,
+	_replication_entity_view_message_chain_deletion= 4,
+	REPLICATION_ENTITY_VIEW_CHAIN_COUNT_BITS= 2,
+	REPLICATION_ENTITY_VIEW_CHAIN_COUNT_LEAST= 2
 };
 
 /* ---------- structures */
@@ -100,6 +106,10 @@ void replication_entity_view_delete_entity(byte *view, long entity_index);
 boolean __attribute__((stdcall)) replication_entity_view_write_creation(struct bitstream *stream, byte *view,
 	long index, long unknown, long bits_after);
 boolean __attribute__((stdcall)) replication_entity_view_write_deletion(long index, struct bitstream *stream,
+	byte *view, long bits_after);
+boolean __attribute__((stdcall)) replication_entity_view_write_chain_creation(long index, struct bitstream *stream,
+	byte *view, long unknown, long bits_after);
+boolean __attribute__((stdcall)) replication_entity_view_write_chain_deletion(long index, struct bitstream *stream,
 	byte *view, long bits_after);
 void replication_entity_view_sent_creation(long entity_index, byte *view);
 void __attribute__((stdcall)) replication_entity_view_sent_deletion(byte *view, long entity_index);

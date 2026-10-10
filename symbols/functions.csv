@@ -2043,3 +2043,5 @@ address,name,source,arguments,returns,convention
 00098b60,replication_entity_view_sent_deletion,source/networking/replication_entity_view.c,edi stack,void,stdcall
 00098bf0,replication_entity_view_sent_update,source/networking/replication_entity_view.c,ebx stack stack,void,stdcall
 000b5650,unknown_000b5650,,eax stack,void,stdcall
+00098750,replication_entity_view_write_chain_creation,source/networking/replication_entity_view.c,eax ecx stack stack stack,bool,stdcall
+000988f0,replication_entity_view_write_chain_deletion,source/networking/replication_entity_view.c,eax ecx stack stack,bool,stdcall

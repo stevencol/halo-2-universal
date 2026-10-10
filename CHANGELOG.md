@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Anunciar de una vez las cosas que se hicieron juntas
+
+Dos funciones en `networking/replication_entity_view.c`, 639 bytes entre las dos. De 1484
+funciones se pasa a 1486, el 13,19 % de las del juego (el 8,865 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `replication_entity_view_write_chain_creation` | `0x00098750` | `networking/replication_entity_view.c` |
+| `replication_entity_view_write_chain_deletion` | `0x000988f0` | `networking/replication_entity_view.c` |
+
+### Lo que se sabe
+
+- Faltaban dos de los anuncios de tres bits del hito 427: **3 es «se han
+  creado estas cosas juntas» y 4 «se han borrado juntas»**. Son las
+  cadenas de hasta cuatro cosas del hito 416.
+  - Detrás de los tres bits va cuántas son menos dos, en dos bits (de 2 a
+    5; el juego nunca hace más de cuatro), y luego cada una como en el
+    anuncio de una sola.
+  - **O van todas o no va ninguna**: si una no se puede escribir, o no
+    quedan los bits pedidos, el paquete vuelve a donde estaba.
+  - Si va, la vista guarda lo mandado de cada una, como en el hito 427.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos** y en las de los hitos 426 y
+  427. Tanda del hito 425 (las tres primeras de las vistas), hecha: 19
+  líneas rotas y las 19 notadas.
+- Una cadena de una sola cosa escribiría «menos uno» en los dos bits; el
+  juego deja escrito un aviso que nadie lee y sigue. Se hace igual.
+- En las pruebas, el montón daba el mismo trozo de memoria cada vez y con
+  dos peticiones seguidas la lista de lo mandado se enlazaba consigo
+  misma: ahora da un trozo distinto cada vez.
+- En este hito se pasaron las pruebas de `replication_entity_view` (14
+  funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Lo que una vista escribe en un paquete, y lo que guarda de ello
 
 Cinco funciones en `networking/replication_entity_view.c`, 823 bytes entre las cinco. De 1479
