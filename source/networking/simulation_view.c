@@ -36,9 +36,6 @@ size, that goes at a place; whether it could. 0x0006aa20: all of the state of
 the game has come, so many bytes: it is the one of the game now; whether it
 could */
 
-/* 0x0006a8a0: the thing makes ready for the game to go; whether it could.
-0x0006ab10: the things that have come and wait are let go of, most likely */
-boolean __attribute__((stdcall)) unknown_0006a8a0(byte *world);
 
 /* ---------- globals */
 
@@ -233,7 +230,8 @@ boolean __attribute__((stdcall)) simulation_view_unknown_00085ed0(
 /* 0x00085dc0: a view of the first kind is told the number that the game
 goes on from; whether that was heeded. It is only if the number that the
 thing has at 0x18 is 3 and the thing is not being sent the state of the
-game. Then the thing makes ready (unknown_0006a8a0); if it could, the number
+game. Then the thing makes ready to be sent the state of the game
+(simulation_world_begin_game_state); if it could, the number
 is the one of the thing, it starts to go as simulation_world_unknown_0006b2a0
 has it (written here), and the game is brought up to what has come
 (simulation_world_unknown_00069350). If it could not, the view goes to its
@@ -249,7 +247,7 @@ boolean __attribute__((stdcall)) simulation_view_unknown_00085dc0(
 	{
 		return FALSE;
 	}
-	if (unknown_0006a8a0(world))
+	if (simulation_world_begin_game_state(world))
 	{
 		world= *(byte *const *)(view+SIMULATION_VIEW_WORLD_OFFSET);
 		*(long *)(world+SIMULATION_WORLD_UNKNOWN28_OFFSET)= number;
@@ -549,4 +547,20 @@ void simulation_view_update_ready(
 		view[SIMULATION_VIEW_UNKNOWN78_OFFSET]= established;
 		simulation_world_unknown_0006b110(*(byte *const *)(view+SIMULATION_VIEW_WORLD_OFFSET), established, view);
 	}
+}
+
+/* 0x00085cb0: whether a view has nothing more to send before the game goes
+on: one of the third kind or of the fourth, as unknown_00086ad0 says; any
+other, if it has no memory of the state of the game or nothing of it left */
+boolean simulation_view_nothing_to_send(
+	byte *view)
+{
+	word kind= *(const word *)(view+SIMULATION_VIEW_KIND_OFFSET);
+
+	if (kind==_simulation_view_kind_3 || kind==_simulation_view_kind_4)
+	{
+		return !unknown_00086ad0(view);
+	}
+
+	return !(*(void *const *)(view+SIMULATION_VIEW_UNKNOWN94_OFFSET) && *(const long *)(view+SIMULATION_VIEW_UNKNOWNAC_OFFSET)>0);
 }

@@ -117,7 +117,7 @@ def run(t) -> None:
             random_.choice((0, 5, 1000, 0x80000000, random_.getrandbits(32))),
             externals={
                 "simulation_view_set_state": state,
-                "unknown_0006a8a0": lambda harness, arguments, could=could: (could, (harness.normalize(arguments[0]),)),
+                "simulation_world_begin_game_state": lambda harness, arguments, could=could: (could, (harness.normalize(arguments[0]),)),
                 "simulation_world_clear_updates": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                 "simulation_world_unknown_00069350": lambda harness, arguments: (0, (arguments[0] & 0xFF, harness.normalize(arguments[1]))),
             },
@@ -237,4 +237,18 @@ def run(t) -> None:
             "simulation_view_unknown_00086590",
             Buffer(bytes(buffer), pointers=(0xC,) if there else ()),
             externals={"texture_cache_return_memory": lambda harness, arguments: 0},
+        )
+
+    # ---------- whether a view has more to send
+
+    for n in range(1500):
+        view = bytearray(random_.randbytes(0xC0))
+        struct.pack_into("<H", view, 2, random_.choice((1, 2, 2, 3, 4, 0x103)))
+        struct.pack_into("<I", view, 0x94, random_.choice((0, 0x5000, 0x5000)))
+        struct.pack_into("<i", view, 0xAC, random_.choice((0, 1, 100, -1)))
+        more = random_.choice((0, 1, 0x100))
+        t.check(
+            "simulation_view_nothing_to_send",
+            Buffer(bytes(view)),
+            externals={"unknown_00086ad0": lambda harness, arguments, more=more: (more, (harness.normalize(arguments[0]),))},
         )

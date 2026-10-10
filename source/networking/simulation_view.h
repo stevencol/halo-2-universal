@@ -80,6 +80,8 @@ enum
 	SIMULATION_VIEW_UNKNOWN9C_OFFSET= 0x9C,
 	SIMULATION_VIEW_UNKNOWNA0_OFFSET= 0xA0,
 	SIMULATION_VIEW_UNKNOWNB0_OFFSET= 0xB0,
+	/* how much of the state of the game a view has left to send */
+	SIMULATION_VIEW_UNKNOWNAC_OFFSET= 0xAC,
 	_simulation_view_kind_1= 1,
 	_simulation_view_kind_2= 2,
 	_simulation_view_kind_3= 3,
@@ -111,5 +113,12 @@ void simulation_view_send_update(byte *view, const void *update);
 boolean simulation_view_handle_remote_state(byte *view, long state, long number);
 void simulation_view_update_ready(byte *view);
 void simulation_view_unknown_00086590(byte *view);
+boolean simulation_view_nothing_to_send(byte *view);
+
+/* ---------- prototypes of functions not decompiled yet */
+
+/* 0x00086ad0: a view of the third kind or of the fourth has something more
+to send, of what it has at 0x8; whether it has */
+boolean unknown_00086ad0(byte *view);
 
 #endif

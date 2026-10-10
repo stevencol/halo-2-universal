@@ -2119,7 +2119,7 @@ address,name,source,arguments,returns,convention
 00069fe0,simulation_world_unknown_00069fe0,source/networking/simulation_world.c,eax,void
 0006b090,simulation_world_unknown_0006b090,source/networking/simulation_world.c,eax ecx stack,void,stdcall
 0006a560,unknown_0006a560,,eax stack,void,stdcall
-0006a8a0,unknown_0006a8a0,,stack,bool,stdcall
+0006a8a0,simulation_world_begin_game_state,source/networking/simulation_world.c,stack,bool,stdcall
 0006a3b0,simulation_world_find_player,source/networking/simulation_world.c,stack stack stack,pointer,stdcall
 00199740,unknown_00199740,,stack stack stack stack,bool,stdcall
 0006a600,simulation_world_players_clear,source/networking/simulation_world.c,eax,void
@@ -2145,5 +2145,5 @@ address,name,source,arguments,returns,convention
 0006a040,simulation_world_advance_view,source/networking/simulation_world.c,eax ecx,int
 00069dd0,simulation_world_unknown_00069dd0,source/networking/simulation_world.c,eax,void
 000862e0,unknown_000862e0,,eax,bool
-00085cb0,unknown_00085cb0,,eax,bool
-00086ad0,unknown_00086ad0,,ebx,void
+00085cb0,simulation_view_nothing_to_send,source/networking/simulation_view.c,eax,bool
+00086ad0,unknown_00086ad0,,ebx,bool

@@ -234,6 +234,7 @@ void simulation_world_unknown_00069d50(byte *world);
 void simulation_world_unknown_00069c80(byte *world);
 long simulation_world_advance_view(byte *view, byte *world);
 void simulation_world_unknown_00069dd0(byte *world);
+boolean __attribute__((stdcall)) simulation_world_begin_game_state(byte *world);
 
 /* whether a view is past the states in which it is made ready: one of the
 second kind from the sixth state on, and any other from the fourth. The game

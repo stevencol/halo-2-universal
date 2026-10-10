@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Memoria para el estado del juego que va a llegar
+
+Dos funciones: una en `networking/simulation_world.c` y otra en
+`networking/simulation_view.c`, 298 bytes entre las dos. De 1586
+funciones se pasa a 1588, el 14,10 % de las del juego (el 9,403 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_begin_game_state` | `0x0006a8a0` | `networking/simulation_world.c` |
+| `simulation_view_nothing_to_send` | `0x00085cb0` | `networking/simulation_view.c` |
+
+### Lo que se sabe
+
+- `simulation_world_begin_game_state` es la preparación del hito 455: la
+  partida **pide prestados `0x40000` bytes a la caché de texturas** para
+  ir guardando el estado del juego que le van a mandar, y pone a cero lo
+  recibido. El juego tiene aquí dentro, entera,
+  `texture_cache_steal_memory` (hito 33) con la espera corta: treinta
+  vueltas de la caché y luego una décima de segundo mirando el reloj.
+- `simulation_view_nothing_to_send` dice si a una vista **no le queda
+  nada por mandar** antes de que la partida siga (hito 464): a una de la
+  tercera clase o la cuarta se lo pregunta a `0x00086ad0`; a las demás,
+  si no tienen memoria del estado del juego o no les queda nada de él
+  (`0xAC`).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos**, y en las de los hitos 441 a
+  464.
+- De `simulation_world_begin_game_state` no se prueba el caso de que la
+  caché no dé la memoria en las treinta primeras vueltas: lo que pasa
+  después depende del reloj del procesador, que no da lo mismo dos veces
+  (igual que en el hito 33).
+- `0x00086ad0` estaba apuntada sin valor de vuelta; devuelve un «sí o
+  no».
+- En este hito se pasaron las pruebas de las dos funciones, las de
+  `simulation_view` (12) y la de `simulation_world_advance_view`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Cómo entra una consola en la partida, estado a estado
 
 Dos funciones en `networking/simulation_world.c`, 812 bytes entre las dos. De 1584

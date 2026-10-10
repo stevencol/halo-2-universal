@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 464.
+**Última actualización:** 2026-10-08, al terminar el hito 465.
 
 ## Dónde estamos
 
-- **1586 funciones descompiladas de 11.265: el 14,08 % del juego** (el
-  9,393 % de los bytes de código).
-- Las 1586 están comprobadas contra el ejecutable original: las 1390 del
+- **1588 funciones descompiladas de 11.265: el 14,10 % del juego** (el
+  9,403 % de los bytes de código).
+- Las 1588 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how the simulation world brings a view on, state by state* (ver `git log`).
+- Último hito: *Decompile how the simulation world borrows memory for the game state* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 562 funciones apuntadas pero sin descompilar (las que el código
-  llama); 460 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 560 funciones apuntadas pero sin descompilar (las que el código
+  llama); 458 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -160,7 +160,7 @@ Módulos (funciones hechas / archivo):
       tabla `0x00450db8`; completo; romper líneas pendiente en las
       cinco últimas)
 - [ ] La partida en red y sus vistas — `networking\simulation_world.c`
-      (46: llevar una vista hasta el final, la espera a las demás
+      (47: llevar una vista hasta el final, la espera a las demás
       consolas, la cola de actualizaciones
       entera, el estado del juego que
       llega, sus jugadores y lo que hacen los de otra consola, sus otras
@@ -172,11 +172,11 @@ Módulos (funciones hechas / archivo):
       `unknown_004cf770`, y queda casi todo, de `0x00069300` a
       `0x0006ad40`)
 - [ ] Las vistas de la partida en red — `networking\simulation_view.c`
-      (11: poner una vista en un estado, seguir el del otro extremo,
+      (12: poner una vista en un estado, seguir el del otro extremo,
       ver si está lista, darla por mala, marcar la que frena la partida, lo que hacen los
       jugadores de la otra consola y cuáles conoce, los trozos del
       estado del juego, desde qué número sigue la partida y pasar una
-      actualización; quedan `0x00085cb0`, `0x00085e70`,
+      actualización; quedan `0x00085e70`,
       `0x00085fc0`, `0x000862e0` y lo que sigue desde `0x000865d0`)
 - [ ] A quien se dan los mensajes de las vistas —
       `networking\network_message_handler.c` (7: de `0x00094910` a

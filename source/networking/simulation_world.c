@@ -38,12 +38,8 @@ ready. 0x000694c0: the thing gets a player of the game */
 void unknown_000c6ef0(byte *unknown14);
 
 /* 0x000862e0: a view of the second kind is sent the state of the game;
-whether it has all of it already. 0x00085cb0: whether a view has nothing
-more to send before the game goes on. 0x00086ad0: something of a view that
-is not of the second kind, when it goes to its sixth state */
+whether it has all of it already */
 boolean unknown_000862e0(byte *view);
-boolean unknown_00085cb0(byte *view);
-void unknown_00086ad0(byte *view);
 
 /* 0x00083bd0: whether what the thing has first has a player, by its place,
 with the three numbers that it is known by */
@@ -1296,7 +1292,7 @@ it, and so long has gone by since it last started. When the view has it all,
 it goes to its fifth state; if not, the time is noted, and a view that has
 been sent it too many times could not be brought on.
 
-In its fifth state: if it has nothing more to send (unknown_00085cb0) and
+In its fifth state: if it has nothing more to send (simulation_view_nothing_to_send) and
 knows of every player, it is there; if not, nothing is said. And one that is
 there, with the number that the thing has at 0x18 being 4, goes to its sixth
 state (one of the second kind gives back its memory first, and any other has
@@ -1371,7 +1367,7 @@ long simulation_world_advance_view(
 	}
 	if (*(const long *)(view+SIMULATION_VIEW_STATE_OFFSET)==4)
 	{
-		if (!(unknown_00085cb0(view) && simulation_world_view_knows_players(view, world)))
+		if (!(simulation_view_nothing_to_send(view) && simulation_world_view_knows_players(view, world)))
 		{
 			return _simulation_world_advance_view_waiting;
 		}
@@ -1434,4 +1430,24 @@ void simulation_world_unknown_00069dd0(
 			simulation_view_set_state(view, _simulation_view_state2, *(const long *)(view+SIMULATION_VIEW_STATE_NUMBER_OFFSET));
 		}
 	}
+}
+
+/* 0x0006a8a0: the thing makes ready to be sent the state of the game: it
+borrows 0x40000 bytes from the texture cache, waiting a little for them, and
+no bytes have come; FALSE if there is no memory. The game has
+texture_cache_steal_memory written here */
+boolean __attribute__((stdcall)) simulation_world_begin_game_state(
+	byte *world)
+{
+	void *memory= texture_cache_steal_memory(_texture_cache_steal_wait_short, MAXIMUM_SIMULATION_WORLD_GAME_STATE_SIZE, 0,
+		NULL, NULL);
+
+	*(void **)(world+SIMULATION_WORLD_MEMORY_OFFSET)= memory;
+	if (!memory)
+	{
+		return FALSE;
+	}
+	*(long *)(world+SIMULATION_WORLD_UNKNOWN1200_OFFSET)= 0;
+
+	return TRUE;
 }

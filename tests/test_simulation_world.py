@@ -674,7 +674,7 @@ def run(t) -> None:
                 "network_time_since": lambda harness, arguments, since=since: (since, (arguments[0],)),
                 "network_time": lambda harness, arguments: 0x4321,
                 "unknown_000862e0": lambda harness, arguments, has_all=has_all: (has_all, (harness.normalize(arguments[0]),)),
-                "unknown_00085cb0": lambda harness, arguments, idle=idle: (idle, (harness.normalize(arguments[0]),)),
+                "simulation_view_nothing_to_send": lambda harness, arguments, idle=idle: (idle, (harness.normalize(arguments[0]),)),
                 "unknown_00086ad0": views_done,
                 "simulation_view_unknown_00086590": views_done,
                 "network_observer_channel_send": channel_sends,
@@ -687,4 +687,23 @@ def run(t) -> None:
             "simulation_world_unknown_00069dd0",
             a_world(random_, 0),
             externals={"network_observer_channel_send": channel_sends, "simulation_view_update_ready": views_done},
+        )
+
+    # ---------- memory for the state of the game that is to come
+
+    for n in range(300):
+        cache = bytearray(random_.randbytes(0x40))
+        struct.pack_into("<i", cache, 0x30, random_.choice((0, 5, 100, 100, 100)))
+        # the cache has room after so many tries, of the thirty that the game makes before it looks at the clock
+        tries = random_.choice((0, 0, 1, 5, 29, 30))
+
+        def steals(harness, arguments, tries=tries):
+            done = sum(1 for call in harness._calls if call[0] == "texture_cache_steal_memory_now")
+            return (0x700000 if done >= tries else 0), tuple(arguments)
+
+        t.check(
+            "simulation_world_begin_game_state",
+            Buffer(random_.randbytes(0x1220)),
+            globals={"texture_cache_globals+0x10": Buffer(bytes(cache))},
+            externals={"texture_cache_steal_memory_now": steals, "texture_cache_idle": lambda harness, arguments: 0},
         )
