@@ -2190,3 +2190,6 @@ address,name,source,arguments,returns,convention
 000825e0,unknown_000825e0,,edi esi,void
 0014d0a0,player_action_valid,source/game/player_action.c,ecx,bool
 00085600,simulation_view_detach,source/networking/simulation_view.c,edi,void
+00085540,simulation_view_new,source/networking/simulation_view.c,eax edx stack stack stack stack,pointer,stdcall
+00068580,simulation_view_create,source/networking/simulation.c,stack stack stack stack,pointer,stdcall
+000821c0,unknown_000821c0,,stack stack,int,stdcall

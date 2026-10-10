@@ -37,6 +37,11 @@ something more, of one of them. 0x000835c0: whether what unknown_004cf780 has
 lets the game go on a tick. 0x000683a0: one of the things that come is given
 to the game */
 void __attribute__((stdcall)) unknown_00084270(byte *unknown);
+
+/* 0x000821c0: a place is taken in the table of the views, and in the one of
+what some of them have at 0x8; the number of the place, or NONE, and where
+the view is and where the other thing is */
+long __attribute__((stdcall)) unknown_000821c0(byte **view_out, byte **data_out);
 void __attribute__((stdcall)) unknown_00069a00(const void *players, byte *world, long unknown8);
 void __attribute__((stdcall)) unknown_00069b50(const void *unknown610, byte *world, long unknown5cc);
 boolean unknown_000835c0(long unknown);
@@ -354,4 +359,45 @@ void __attribute__((stdcall)) simulation_take_unknown_004cf780_change(
 		*changed= TRUE;
 		unknown[SIMULATION_UNKNOWN_004CF780_CHANGED_OFFSET]= FALSE;
 	}
+}
+
+/* 0x00068580: a view of a kind is made, with the six bytes that it is known
+by and a number, and given to the thing that unknown_004cf770 has going; the
+view, or NONE if there is no place for it in the tables (unknown_000821c0).
+It is new (simulation_view_new), and takes the first place among the views
+of the thing that is free, which then has one more; with none free, it is
+of the thing all the same, at a place after the last, and the thing has it
+not. The fourth thing that it is given is not looked at */
+byte *__attribute__((stdcall)) simulation_view_create(
+	long kind,
+	const word *unknown14,
+	long unknown1c,
+	long unused)
+{
+	byte *view;
+	byte *data;
+	byte *world;
+	long datum_index;
+	long index;
+
+	datum_index= unknown_000821c0(&view, &data);
+	if (datum_index==NONE)
+	{
+		return (byte *)NONE;
+	}
+	view= simulation_view_new(view, unknown14, datum_index, kind, data, unknown1c);
+	world= unknown_004cf770.unknownC;
+	for (index= 0; index<NUMBER_OF_SIMULATION_WORLD_VIEWS; index++)
+	{
+		if (!((byte *const *)(world+SIMULATION_WORLD_VIEWS_OFFSET))[index])
+		{
+			((byte **)(world+SIMULATION_WORLD_VIEWS_OFFSET))[index]= view;
+			(*(long *)(world+SIMULATION_WORLD_VIEW_COUNT_OFFSET))++;
+			break;
+		}
+	}
+	*(byte **)(view+SIMULATION_VIEW_WORLD_OFFSET)= world;
+	*(long *)(view+SIMULATION_VIEW_INDEX_OFFSET)= index;
+
+	return view;
 }

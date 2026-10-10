@@ -207,3 +207,33 @@ def run(t) -> None:
                 "unknown_00069110": two,
             },
         )
+
+    # ---------- a view is made
+
+    for n in range(1000):
+        world = bytearray(random_.randbytes(0x80))
+        free = random_.choice((0, 0, 3, 14, None))
+        for index in range(15):
+            struct.pack_into("<I", world, 0x40 + index * 4, 0 if free is not None and index >= free and random_.random() < 0.7 or index == free else 0x1000 + index)
+        struct.pack_into("<i", world, 0x3C, random_.choice((0, 5)))
+        thing = Buffer(bytes(world))
+        made = Buffer(random_.randbytes(0xC0))
+        there = bytearray(random_.randbytes(0x10))
+        struct.pack_into("<I", there, 0xC, 0)
+        place = random_.choice((0x50003, 0x50003, 0x50003, 0xFFFFFFFF))
+
+        def takes(harness, arguments, made=made, place=place):
+            harness.mu.mem_write(arguments[0], struct.pack("<I", made.address))
+            harness.mu.mem_write(arguments[1], struct.pack("<I", 0x12345000))
+            return place, ()
+
+        t.check(
+            "simulation_view_create",
+            random_.choice((1, 2, 3, 4)),
+            Buffer(random_.randbytes(6)),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            extra=[made],
+            globals={"unknown_004cf770": bytes(there), "unknown_004cf770+0xc": thing},
+            externals={"unknown_000821c0": takes},
+        )

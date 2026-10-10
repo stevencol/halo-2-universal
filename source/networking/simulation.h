@@ -68,5 +68,6 @@ void simulation_build_update(long *update);
 void simulation_apply_update(const long *update);
 void simulation_update(void);
 void __attribute__((stdcall)) simulation_take_unknown_004cf780_change(long *change, boolean *changed);
+byte *__attribute__((stdcall)) simulation_view_create(long kind, const word *unknown14, long unknown1c, long unused);
 
 #endif

@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Nace una vista
+
+Dos funciones: una en `networking/simulation_view.c` y otra en
+`networking/simulation.c`, 290 bytes entre las dos. De 1629
+funciones se pasa a 1631, el 14,48 % de las del juego (el 9,614 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_view_new` | `0x00085540` | `networking/simulation_view.c` |
+| `simulation_view_create` | `0x00068580` | `networking/simulation.c` |
+
+### Lo que se sabe
+
+- `simulation_view_new` deja **una vista recién hecha**: su sitio en la
+  tabla de las vistas, su clase, lo que lleva en `0x8`, los seis bytes de
+  la consola de la que es y un número; sin partida, sin canal, en el
+  primer estado y sin número (igual que su otro extremo), y bien. Según
+  la clase pone además a cero lo suyo: los jugadores que conoce (segunda
+  y cuarta), el estado del juego por mandar (segunda), o la cuenta de
+  mensajes (primera). Es el retrato completo de lo que una vista tiene,
+  campo por campo, de los hitos 444 a 486.
+- `simulation_view_create` es **quien la hace**: pide sitio en las dos
+  tablas (`0x000821c0`), la deja nueva y **la mete en el primer hueco de
+  las quince vistas de la partida**, que cuenta una más. Sin sitio en las
+  tablas contesta `-1`.
+- Con esto una vista tiene ya nacimiento (este hito), vida (448 a 476) y
+  final (485, 486).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos**, y en las de los hitos 441 a
+  486.
+- Si la partida no tiene ningún hueco de los quince, el juego deja a la
+  vista apuntando a la partida con el sitio 15, sin que la partida la
+  tenga; se hace igual.
+- El cuarto argumento de `simulation_view_create` no se usa.
+- En este hito se pasaron las pruebas de las dos funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Se acaba la partida en red: fuera todas las vistas
 
 Una función en `networking/simulation_world.c`, de 199 bytes. De 1628

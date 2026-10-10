@@ -503,3 +503,16 @@ def run(t) -> None:
             whole,
             externals={"texture_cache_return_memory": lambda harness, arguments: (0, (arguments[0],))},
         )
+
+    # ---------- a view is new
+
+    for n in range(1500):
+        t.check(
+            "simulation_view_new",
+            Buffer(random_.randbytes(0xC0)),
+            Buffer(random_.randbytes(6)),
+            random_.getrandbits(32),
+            random_.choice((1, 2, 3, 4, 0, 0x10002, 0x22)),
+            0x12345000,
+            random_.getrandbits(32),
+        )

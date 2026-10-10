@@ -246,6 +246,8 @@ void __attribute__((stdcall)) simulation_view_send_game_state(byte *view);
 boolean __attribute__((stdcall)) simulation_view_queue_update(const void *update, byte *view);
 void simulation_view_release_channel(byte *view);
 void simulation_view_detach(byte *view);
+byte *__attribute__((stdcall)) simulation_view_new(byte *view, const word *unknown14, long datum_index, long kind,
+	byte *data, long unknown1c);
 
 /* ---------- globals */
 

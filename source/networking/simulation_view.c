@@ -1096,3 +1096,57 @@ void simulation_view_detach(
 	*(byte **)(view+SIMULATION_VIEW_WORLD_OFFSET)= NULL;
 	*(long *)(view+SIMULATION_VIEW_INDEX_OFFSET)= NONE;
 }
+
+/* 0x00085540: a view is new: its place in the table of the views, its kind,
+what it has at 0x8, the six bytes that it is known by and a number; it is of
+no thing, of no channel, in its first state with no number, as its other end
+is, and well. One of the second kind or the fourth knows of no players; one
+of the second has NONE for what the players of the other console last said,
+no memory, nothing to send, and has not been sent the state of the game; one
+of the first has nothing at 0xB0. The view is what is said */
+byte *__attribute__((stdcall)) simulation_view_new(
+	byte *view,
+	const word *unknown14,
+	long datum_index,
+	long kind,
+	byte *data,
+	long unknown1c)
+{
+	*(long *)(view+SIMULATION_VIEW_DATUM_INDEX_OFFSET)= datum_index;
+	*(byte **)(view+SIMULATION_VIEW_UNKNOWN8_OFFSET)= data;
+	*(word *)(view+SIMULATION_VIEW_KIND_OFFSET)= (word)kind;
+	memcpy(view+SIMULATION_VIEW_UNKNOWN14_OFFSET, unknown14, SIMULATION_VIEW_UNKNOWN14_SIZE);
+	*(long *)(view+SIMULATION_VIEW_UNKNOWN1C_OFFSET)= unknown1c;
+	*(byte **)(view+SIMULATION_VIEW_WORLD_OFFSET)= NULL;
+	*(long *)(view+SIMULATION_VIEW_INDEX_OFFSET)= NONE;
+	*(byte **)(view+SIMULATION_VIEW_OBSERVER_OFFSET)= NULL;
+	*(long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET)= NONE;
+	*(long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)= 0;
+	*(long *)(view+SIMULATION_VIEW_STATE_OFFSET)= _simulation_view_state0;
+	*(long *)(view+SIMULATION_VIEW_STATE_NUMBER_OFFSET)= NONE;
+	*(long *)(view+SIMULATION_VIEW_REMOTE_STATE_OFFSET)= _simulation_view_state0;
+	*(long *)(view+SIMULATION_VIEW_REMOTE_STATE_NUMBER_OFFSET)= NONE;
+	*(long *)(view+SIMULATION_VIEW_CHANNEL_OFFSET)= NONE;
+	*(long *)(view+SIMULATION_VIEW_UNKNOWN40_OFFSET)= NONE;
+	view[SIMULATION_VIEW_UNKNOWN78_OFFSET]= FALSE;
+	if ((1u<<(kind&31))&SIMULATION_VIEW_KINDS_2_AND_4)
+	{
+		*(unsigned long *)(view+SIMULATION_VIEW_PLAYER_MASK_OFFSET)= 0;
+	}
+	if ((word)kind==_simulation_view_kind_2)
+	{
+		*(long *)(view+SIMULATION_VIEW_UNKNOWN80_OFFSET)= NONE;
+		*(long *)(view+SIMULATION_VIEW_UNKNOWN84_OFFSET)= NONE;
+		*(long *)(view+SIMULATION_VIEW_GAME_STATE_SEND_COUNT_OFFSET)= 0;
+		*(void **)(view+SIMULATION_VIEW_UNKNOWN94_OFFSET)= NULL;
+		*(long *)(view+SIMULATION_VIEW_UNKNOWN98_OFFSET)= 0;
+		*(long *)(view+SIMULATION_VIEW_UNKNOWNAC_OFFSET)= 0;
+		view[SIMULATION_VIEW_BLOCKED_OFFSET]= FALSE;
+	}
+	else if ((word)kind==_simulation_view_kind_1)
+	{
+		*(long *)(view+SIMULATION_VIEW_UNKNOWNB0_OFFSET)= 0;
+	}
+
+	return view;
+}
