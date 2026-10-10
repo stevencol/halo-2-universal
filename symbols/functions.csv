@@ -2071,3 +2071,19 @@ address,name,source,arguments,returns,convention
 00094e90,network_message_queue_write,source/networking/network_message_queue.c,ecx stack stack stack stack,bool,stdcall
 000951c0,network_message_queue_read,source/networking/network_message_queue.c,ecx stack stack,int,stdcall
 00095410,network_message_queue_packet_result,source/networking/network_message_queue.c,ecx stack stack,void,stdcall
+00069470,simulation_world_next_view,source/networking/simulation_world.c,esi edi stack,bool,stdcall
+0006adc0,simulation_world_get_channel_view,source/networking/simulation_world.c,eax ebx,pointer
+00094910,network_message_handler_unknown_00094910,source/networking/network_message_handler.c,esi ebx,void
+00094940,network_message_handler_unknown_00094940,source/networking/network_message_handler.c,esi edx,void
+00094990,network_message_handler_unknown_00094990,source/networking/network_message_handler.c,stack ebx,void,stdcall
+000949d0,network_message_handler_unknown_000949d0,source/networking/network_message_handler.c,esi ebx,void
+00094a10,network_message_handler_unknown_00094a10,source/networking/network_message_handler.c,stack ebx,void,stdcall
+00094a50,network_message_handler_unknown_00094a50,source/networking/network_message_handler.c,edi stack stack ebx,void,stdcall
+00094aa0,network_message_handler_unknown_00094aa0,source/networking/network_message_handler.c,esi ebx,void
+00085b20,unknown_00085b20,,eax edx edi,bool
+00085d00,unknown_00085d00,,ebx stack stack stack,bool,stdcall
+00085dc0,unknown_00085dc0,,edi stack,bool,stdcall
+00085e70,unknown_00085e70,,edx ecx eax stack,bool,stdcall
+00085ed0,unknown_00085ed0,,esi ecx eax stack,bool,stdcall
+00085f50,unknown_00085f50,,eax ecx edx edi stack stack,bool,stdcall
+000698e0,unknown_000698e0,,esi edx,void

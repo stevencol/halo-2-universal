@@ -2,6 +2,64 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Los mensajes que van a la vista de un canal
+
+Nueve funciones: dos en el archivo nuevo `networking/simulation_world.c` y siete en el archivo
+nuevo `networking/network_message_handler.c`. De 1522
+funciones se pasa a 1531, el 13,59 % de las del juego (el 9,153 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_next_view` | `0x00069470` | `networking/simulation_world.c` |
+| `simulation_world_get_channel_view` | `0x0006adc0` | `networking/simulation_world.c` |
+| `network_message_handler_unknown_00094910` | `0x00094910` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_00094940` | `0x00094940` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_00094990` | `0x00094990` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_000949d0` | `0x000949d0` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_00094a10` | `0x00094a10` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_00094a50` | `0x00094a50` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_00094aa0` | `0x00094aa0` | `networking/network_message_handler.c` |
+
+### Lo que se sabe
+
+- Lo que `unknown_004cf770` tiene en marcha de una partida en red (lo
+  que `main_game` mira al cargar y descargar un mapa, hito 36) lleva
+  **hasta quince «vistas»**, punteros desde `0x40`: una por cada canal
+  del juego por el que habla. Cada vista dice de qué clase es (en `0x2`)
+  y de qué canal (en `0x3C`).
+- `simulation_world_next_view` recorre las vistas que hay, de las clases
+  que se pidan (un bit por clase), y `simulation_world_get_channel_view`
+  da **la vista de un canal**, o nada.
+- Las siete funciones de `network_message_handler.c` son **a quien se dan
+  los mensajes que llegan por un canal** cuando son para su vista. Todas
+  hacen lo mismo: si hay partida en red y está en marcha, buscan la vista
+  del canal; si es de la clase que toca, le pasan lo que trae el mensaje.
+  Están justo antes de los tres mensajes del canal (hitos 439 y 443).
+  - `0x00094910`: para una vista de cualquier clase;
+  - `0x00094940`: para una de la segunda clase o de la cuarta;
+  - `0x00094990`, `0x00094a10` y `0x00094a50`: para una de la primera;
+  - `0x000949d0`: para una de la segunda;
+  - `0x00094aa0`: para una de la tercera.
+- Aún no se sabe qué es cada mensaje ni cada clase de vista: se sabrá al
+  descompilar lo que las vistas hacen con ellos (`0x00085b20`,
+  `0x00085d00`, `0x00085dc0`, `0x00085e70`, `0x00085ed0`, `0x00085f50` y
+  `0x000698e0`), que quedan apuntadas. Por eso los nombres llevan todavía
+  la dirección.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las nueve**, y en las seis de los hitos
+  441 a 443.
+- Los registros en los que esas siete funciones de las vistas reciben sus
+  argumentos salen de leer cómo empiezan; habrá que revisarlos al
+  descompilarlas.
+- En este hito se pasaron las pruebas de `simulation_world` (2 funciones)
+  y `network_message_handler` (7).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — El mensaje que dice «no hablo contigo»
 
 Una función en `networking/network_channel.c`, de 57 bytes. De 1521
