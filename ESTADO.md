@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 499.
+**Última actualización:** 2026-10-08, al terminar el hito 500.
 
 ## Dónde estamos
 
-- **1674 funciones descompiladas de 11.265: el 14,86 % del juego** (el
+- **1677 funciones descompiladas de 11.265: el 14,89 % del juego** (el
   9,824 % de los bytes de código).
-- Las 1674 están comprobadas contra el ejecutable original: las 1390 del
+- Las 1677 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the rest of the sockets: addresses, open, bind, connect, read from and write to* (ver `git log`).
+- Último hito: *Decompile how the list of channels opens its sockets* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 572 funciones apuntadas pero sin descompilar (las que el código
   llama); 455 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -207,10 +207,10 @@ Módulos (funciones hechas / archivo):
 - [x] Los enchufes del juego — `networking\transport_endpoint.c` (15:
       hacer uno, sus opciones, abrirlo, atarlo, conectarlo, cerrarlo, leer
       y escribir, con dirección y sin ella)
-- [ ] La lista de canales por dirección — `networking\network_link.c`
-      (16: apuntar, quitar, buscar, parar todos, hacerlos avanzar, cerrar
-      sus enchufes, los bytes de un paquete, mandarlos y leerlos; falta
-      abrir los enchufes, antes de `0x00092c70`)
+- [x] La lista de canales por dirección — `networking\network_link.c`
+      (19: abrirla con sus enchufes, apuntar, quitar, buscar, parar todos,
+      hacerlos avanzar, cerrar los enchufes, los bytes de un paquete,
+      mandarlos y leerlos)
 - [ ] Un bloque con suma, versión y tamaño — `networking\network_blob.c`
       (2: la suma y ver si vale; falta quién los usa, de `0x00080e10` a
       `0x00081230`)

@@ -69,7 +69,11 @@ enum
 	NETWORK_LINK_RECEIVER_OFFSET= 0x1C,
 	NETWORK_LINK_RECEIVED_RATE_OFFSET= 0x300,
 	NETWORK_LINK_RECEIVED_WIRE_RATE_OFFSET= 0x4B0,
-	_network_channel_time_voice_received= 5
+	_network_channel_time_voice_received= 5,
+	/* its first byte, which says that it was opened; and over how long each
+	of its four counts is made, in thousandths of a second */
+	NETWORK_LINK_OPENED_OFFSET= 0x0,
+	NETWORK_LINK_RATE_PERIOD= 2000
 };
 
 /* ---------- structures */
@@ -137,6 +141,10 @@ void __attribute__((stdcall)) network_link_send_bytes(byte *link, long kind, con
 void __attribute__((stdcall)) network_link_send_packet(const struct network_link_packet *packet, byte *link);
 void __attribute__((stdcall)) network_link_receive_packet(const struct network_link_packet *packet, byte *link);
 void __attribute__((stdcall)) network_link_receive(byte *link);
+boolean network_link_open(byte *link);
+boolean __attribute__((stdcall)) network_link_open_socket(short type, word port, boolean broadcast,
+	struct transport_endpoint **endpoint_out);
+boolean network_link_open_sockets(byte *link);
 void __attribute__((stdcall)) network_link_send_to_address(const struct transport_address *address,
 	const struct bitstream *stream, byte *link, long *wire_size_out);
 void __attribute__((stdcall)) network_link_send_to_channel(long channel_index, const struct bitstream *stream,

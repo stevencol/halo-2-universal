@@ -2245,3 +2245,6 @@ address,name,source,arguments,returns,convention
 003cd22b,recvfrom,,stack stack stack stack stack stack,int,stdcall
 003cd254,sendto,,stack stack stack stack stack stack,int,stdcall
 003cd1a9,ioctlsocket,,stack stack stack,int,stdcall
+00092a90,network_link_open,source/networking/network_link.c,eax,bool
+00092ae0,network_link_open_socket,source/networking/network_link.c,eax stack stack stack,bool,stdcall
+00092bf0,network_link_open_sockets,source/networking/network_link.c,esi,bool

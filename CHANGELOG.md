@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — La lista de canales se abre
+
+Tres funciones en `networking/network_link.c`, que queda entero. De 1674
+funciones se pasa a 1677, el 14,89 % de las del juego (el 9,824 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_link_open` | `0x00092a90` | `networking/network_link.c` |
+| `network_link_open_socket` | `0x00092ae0` | `networking/network_link.c` |
+| `network_link_open_sockets` | `0x00092bf0` | `networking/network_link.c` |
+
+### Lo que se sabe
+
+- `network_link_open_socket` hace un enchufe de una clase para un puerto
+  de esta consola (dirección `0.0.0.0`), lo ata y le pide que no espere.
+  Con su tercer argumento puede además mandar a todas las consolas a la
+  vez (`SO_BROADCAST`). Si algo falla, lo cierra y suelta su memoria.
+- `network_link_open_sockets` abre los cuatro: el `1000`, el `1005` y el
+  `1006` de la clase VDP, y el `1001`, el de los mensajes sin canal, de
+  la clase UDP y el único que manda a todas: **así se buscan las partidas
+  en la red local**. Si uno no se puede abrir se cierran todos.
+- `network_link_open` pone en marcha las cuatro cuentas (cada una sobre
+  dos segundos) y abre los enchufes; dice que se abrió aunque los enchufes
+  no se pudieran abrir.
+- Con esto **`network_link.c` está entero**: diecinueve funciones, de
+  `0x00092a90` a `0x00093730`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las tres**, y en las de los hitos 456 a
+  499.
+- En este hito se pasaron las pruebas de las tres funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Los enchufes, con dirección
 
 Ocho funciones en `networking/transport_endpoint.c`. De 1666

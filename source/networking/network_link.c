@@ -648,3 +648,96 @@ void __attribute__((stdcall)) network_link_receive(
 		}
 	} while (received);
 }
+
+/* 0x00092a90: it is opened: its four counts start, each over two seconds,
+and its sockets are opened (network_link_open_sockets); it is said to be so
+whether they could be or not */
+boolean network_link_open(
+	byte *link)
+{
+	network_rate_new((struct network_rate *)(link+NETWORK_LINK_SENT_RATE_OFFSET), NETWORK_LINK_RATE_PERIOD);
+	network_rate_new((struct network_rate *)(link+NETWORK_LINK_RECEIVED_RATE_OFFSET), NETWORK_LINK_RATE_PERIOD);
+	network_rate_new((struct network_rate *)(link+NETWORK_LINK_SENT_WIRE_RATE_OFFSET), NETWORK_LINK_RATE_PERIOD);
+	network_rate_new((struct network_rate *)(link+NETWORK_LINK_RECEIVED_WIRE_RATE_OFFSET), NETWORK_LINK_RATE_PERIOD);
+	network_link_open_sockets(link);
+	link[NETWORK_LINK_OPENED_OFFSET]= TRUE;
+
+	return TRUE;
+}
+
+/* 0x00092ae0: a socket of a kind is made for a port of this console, of any
+address of four bytes, and does not wait; whether it could be. With the
+third thing it can also send to every console at once. One that could not be
+is closed and its memory let go of */
+boolean __attribute__((stdcall)) network_link_open_socket(
+	short type,
+	word port,
+	boolean broadcast,
+	struct transport_endpoint **endpoint_out)
+{
+	struct transport_endpoint *endpoint= transport_endpoint_create(type);
+	struct transport_address address;
+	boolean opened= FALSE;
+
+	if (!endpoint)
+	{
+		return FALSE;
+	}
+	address.address_size= TRANSPORT_ENDPOINT_IPV4_SIZE;
+	address.address.ipv4= 0;
+	address.port= port;
+	if (transport_endpoint_bind(&address, endpoint))
+	{
+		opened= transport_endpoint_set_nonblocking(endpoint);
+	}
+	if (broadcast)
+	{
+		if (opened && transport_endpoint_set_option(_transport_endpoint_option2, endpoint, TRUE))
+		{
+			*endpoint_out= endpoint;
+
+			return TRUE;
+		}
+	}
+	else if (opened)
+	{
+		*endpoint_out= endpoint;
+
+		return TRUE;
+	}
+	transport_endpoint_close(endpoint);
+	if (!VirtualFree(endpoint, 0, 0x8000))
+	{
+		GetLastError();
+	}
+
+	return FALSE;
+}
+
+/* 0x00092bf0: its four sockets are opened, each at its port; whether it has
+them. The one of the messages that go by no channel is the only one of the
+second kind, and the only one that can send to every console at once. If one
+cannot be, the ones that were are closed (network_link_close_sockets) */
+boolean network_link_open_sockets(
+	byte *link)
+{
+	struct transport_endpoint **sockets= (struct transport_endpoint **)(link+NETWORK_LINK_SOCKETS_OFFSET);
+
+	if (network_link_open_socket(_transport_endpoint_type_vdp, NETWORK_LINK_SOCKET0_PORT, FALSE,
+			&sockets[_network_link_packet_kind0]) &&
+		network_link_open_socket(_transport_endpoint_type_udp, NETWORK_LINK_SOCKET3_PORT, TRUE,
+			&sockets[_network_link_packet_kind3]) &&
+		network_link_open_socket(_transport_endpoint_type_vdp, NETWORK_LINK_SOCKET1_PORT, FALSE,
+			&sockets[_network_link_packet_kind1]) &&
+		network_link_open_socket(_transport_endpoint_type_vdp, NETWORK_LINK_SOCKET2_PORT, FALSE,
+			&sockets[_network_link_packet_kind2]))
+	{
+		link[NETWORK_LINK_OPEN_OFFSET]= TRUE;
+	}
+	else
+	{
+		network_link_close_sockets(link);
+	}
+
+	return link[NETWORK_LINK_OPEN_OFFSET];
+}

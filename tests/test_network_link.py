@@ -380,3 +380,80 @@ def run(t) -> None:
                 ),
             },
         )
+
+    # ---------- it is opened
+
+    for n in range(1500):
+        normal = lambda harness, arguments: (0, (harness.normalize(arguments[0]), *arguments[1:]))
+        t.check(
+            "network_link_open",
+            Buffer(random_.randbytes(0x588)),
+            externals={
+                "network_rate_new": normal,
+                "network_link_open_sockets": lambda harness, arguments, opened=random_.choice((0, 1)): (
+                    opened,
+                    (harness.normalize(arguments[0]),),
+                ),
+            },
+        )
+
+        opens = random_.choice((4, 4, 0, 1, 2, 3))
+        t.check(
+            "network_link_open_sockets",
+            Buffer(random_.randbytes(0x588)),
+            externals={
+                "network_link_open_socket": lambda harness, arguments, opens=opens: (
+                    calls_so_far(harness, "network_link_open_socket") < opens,
+                    (arguments[0], arguments[1], arguments[2], harness.normalize(arguments[3])),
+                ),
+                "network_link_close_sockets": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+            },
+        )
+
+        made = Buffer(
+            struct.pack(
+                "<IHH",
+                random_.choice((NONE, 5, 0x1234, 0x1234)),
+                random_.choice((0, 0x10, 0x10, 0x51, 0xFFFF)),
+                random_.getrandbits(16),
+            )
+        )
+        port = random_.choice((1000, 1001, 1005, 1006, random_.getrandbits(16)))
+        t.check(
+            "network_link_open_socket",
+            random_.choice((2, 3, 3, 4)),
+            port | random_.choice((0, 0xABCD0000)),
+            random_.choice((0, 0, 1, 0x100, 0x80)),
+            Buffer(random_.randbytes(4), places=(0,)),
+            globals={
+                "unknown_004d8b18": bytes((random_.choice((1, 1, 1, 0)),)),
+                "unknown_004d8b19": bytes((random_.choice((1, 1, 1, 0)),)),
+            },
+            extra=[made],
+            externals={
+                "transport_endpoint_create": lambda harness, arguments, made=made, there=random_.random() < 0.85: (
+                    made.address if there else 0,
+                    (arguments[0],),
+                ),
+                # of the address, only what the function sets: its four bytes, its port and its size
+                "transport_endpoint_bind": lambda harness, arguments, bound=random_.choice((1, 1, 1, 0)): (
+                    bound,
+                    (read(harness, arguments[0], 4), read(harness, arguments[0] + 0x10, 4), harness.normalize(arguments[1])),
+                ),
+                "ioctlsocket": lambda harness, arguments, failed=random_.choice((0, 0, 0, NONE)): (
+                    failed,
+                    (arguments[0], arguments[1], read(harness, arguments[2], 4)),
+                ),
+                "WSAGetLastError": lambda harness, arguments: 10038,
+                "transport_endpoint_set_option": lambda harness, arguments, could=random_.choice((1, 1, 0)): (
+                    could,
+                    (arguments[0], harness.normalize(arguments[1]), arguments[2]),
+                ),
+                "transport_endpoint_close": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "VirtualFree": lambda harness, arguments, freed=random_.choice((1, 1, 0)): (
+                    freed,
+                    (harness.normalize(arguments[0]), arguments[1], arguments[2]),
+                ),
+                "GetLastError": lambda harness, arguments: 5,
+            },
+        )
