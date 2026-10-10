@@ -2,6 +2,50 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Cuándo una vista está lista
+
+Dos funciones en `networking/simulation_view.c`, 297 bytes entre las dos. De 1578
+funciones se pasa a 1580, el 14,03 % de las del juego (el 9,352 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_view_update_ready` | `0x000861c0` | `networking/simulation_view.c` |
+| `simulation_view_unknown_00086590` | `0x00086590` | `networking/simulation_view.c` |
+
+### Lo que se sabe
+
+- `simulation_view_update_ready` es lo que se mira después de cada cambio
+  de estado de una vista o de su otro extremo (hitos 448 y 461). Con el
+  mismo número en las dos puntas:
+  - **la vista está lista** (byte `0x75`) si las dos van por el tercer
+    estado o más allá;
+  - y tiene puesto su byte de `0x78` si las dos van por el sexto. Es el
+    byte que hace que la partida se ponga en marcha (hito 456).
+- Cuando cambia lo de estar lista:
+  - una vista que deja de estarlo **olvida a los jugadores** que conocía
+    (segunda y cuarta clase); la de la segunda olvida además por dónde
+    iba la otra consola y devuelve su memoria prestada;
+  - una de la tercera clase o la cuarta se lo dice a lo que tiene en
+    `0x8` (`0x00086b40`);
+  - y se le dice a la partida (hito 454).
+- Cuando cambia el byte de `0x78`, se le dice a la partida (hito 451).
+- `simulation_view_unknown_00086590`: la vista devuelve a la caché de
+  texturas la memoria que tiene en `0x94`, si tiene.
+- Con esto está **cerrado el circuito de los estados**: mensaje `0x25` →
+  estado del otro extremo → lista o no → la partida arranca o se da por
+  vencida.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos**, y en las de los hitos 441 a
+  461.
+- En este hito se pasaron las pruebas de `simulation_view` (11
+  funciones).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — El apretón de manos de una vista
 
 Dos funciones en `networking/simulation_view.c`, 532 bytes entre las dos. De 1576

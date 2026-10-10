@@ -2099,7 +2099,7 @@ address,name,source,arguments,returns,convention
 00069880,simulation_world_unknown_00069880,source/networking/simulation_world.c,eax stack,void,stdcall
 00086140,simulation_view_set_blocked,source/networking/simulation_view.c,esi ebx,void
 000860b0,simulation_view_send_update,source/networking/simulation_view.c,ebx ecx,void
-000861c0,unknown_000861c0,,eax,void
+000861c0,simulation_view_update_ready,source/networking/simulation_view.c,eax,void
 000862c0,simulation_view_fail,source/networking/simulation_view.c,esi stack,void,stdcall
 0006a7f0,simulation_world_set_player_actions,source/networking/simulation_world.c,stack stack stack stack,void,stdcall
 0006a990,simulation_world_receive_game_state,source/networking/simulation_world.c,edx eax stack stack,bool,stdcall
@@ -2136,3 +2136,5 @@ address,name,source,arguments,returns,convention
 00083bd0,unknown_00083bd0,,ecx edx stack,bool,stdcall
 000869a0,unknown_000869a0,,ecx stack,bool,stdcall
 000865d0,unknown_000865d0,,stack,void,stdcall
+00086590,simulation_view_unknown_00086590,source/networking/simulation_view.c,edi,void
+00086b40,unknown_00086b40,,eax edx,void

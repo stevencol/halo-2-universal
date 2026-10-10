@@ -46,7 +46,7 @@ def run(t) -> None:
                     0,
                     (arguments[0] & 0xFF, arguments[1], arguments[2], arguments[3], arguments[4], arguments[5], bytes(harness.mu.mem_read(arguments[6], 8))),
                 ),
-                "unknown_000861c0": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "simulation_view_update_ready": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
             },
         )
 
@@ -180,7 +180,7 @@ def run(t) -> None:
                 "simulation_view_set_state": state,
                 "simulation_view_fail": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
                 "network_observer_channel_send": sends,
-                "unknown_000861c0": told,
+                "simulation_view_update_ready": told,
             },
         )
 
@@ -202,4 +202,39 @@ def run(t) -> None:
                 "unknown_000869a0": lambda harness, arguments, could=could: (could, (harness.normalize(arguments[0]), harness.normalize(arguments[1]))),
                 "unknown_000865d0": told,
             },
+        )
+
+    # ---------- what follows from the two states of a view
+
+    for n in range(5000):
+        view = a_view()
+        data = bytearray(view.data) + bytearray(random_.randbytes(0x30))
+        there = random_.random() < 0.95
+        struct.pack_into("<I", data, 0xC, VIEW if there else 0)
+        struct.pack_into("<I", data, 0x8, 0x200000)
+        struct.pack_into("<i", data, 0x3C, random_.choice((-1, 0, 0, 0, 0, 3)))
+        struct.pack_into("<H", data, 2, random_.choice((1, 2, 2, 3, 4, 5, 0x102)))
+        struct.pack_into("<2i", data, 0x2C, random_.choice((0, 1, 2, 3, 4, 5, 6)), random_.choice((-1, 7, 7)))
+        struct.pack_into("<2i", data, 0x34, random_.choice((0, 1, 2, 3, 4, 5, 6)), random_.choice((-1, 7, 7, 7)))
+        data[0x75] = random_.choice((0, 1, 1, 0x80))
+        data[0x78] = random_.choice((0, 1, 1, 0x80))
+        buffer = bytearray(data[:VIEW]) + bytearray(random_.randbytes(0x30)) + bytearray(data[VIEW:])
+        # the view is longer here: the thing goes after what it has up to 0xC0
+        struct.pack_into("<I", buffer, 0xC, VIEW + 0x30 if there else 0)
+        struct.pack_into("<I", buffer, 0x94, random_.choice((0, 0x5000, 0x5000)))
+        byte_and = lambda harness, arguments: (0, (arguments[0] & 0xFF, arguments[1]))
+        t.check(
+            "simulation_view_update_ready",
+            Buffer(bytes(buffer), pointers=(0xC,) if there else ()),
+            externals={
+                "texture_cache_return_memory": lambda harness, arguments: 0,
+                "unknown_00086b40": byte_and,
+                "simulation_world_unknown_0006b090": lambda harness, arguments: (0, (arguments[0] & 0xFF, harness.normalize(arguments[1]), harness.normalize(arguments[2]))),
+                "simulation_world_unknown_0006b110": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1] & 0xFF, harness.normalize(arguments[2]))),
+            },
+        )
+        t.check(
+            "simulation_view_unknown_00086590",
+            Buffer(bytes(buffer), pointers=(0xC,) if there else ()),
+            externals={"texture_cache_return_memory": lambda harness, arguments: 0},
         )

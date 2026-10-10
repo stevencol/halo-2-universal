@@ -69,7 +69,21 @@ enum
 	SIMULATION_VIEW_UPDATE_SIZE= 0x4048,
 	_simulation_view_state1= 1,
 	_simulation_view_state5= 5,
-	_simulation_view_unknown28_remote_reset= 6
+	_simulation_view_unknown28_remote_reset= 6,
+	/* more of a view: something that a view of the third kind or of the
+	fourth has, of which unknown_00086b40 is given what is at 0x6060; memory
+	that the texture cache lent, and three numbers that go with it; and a
+	number of a view of the first kind */
+	SIMULATION_VIEW_UNKNOWN8_OFFSET= 0x8,
+	SIMULATION_VIEW_UNKNOWN8_UNKNOWN6060_OFFSET= 0x6060,
+	SIMULATION_VIEW_UNKNOWN98_OFFSET= 0x98,
+	SIMULATION_VIEW_UNKNOWN9C_OFFSET= 0x9C,
+	SIMULATION_VIEW_UNKNOWNA0_OFFSET= 0xA0,
+	SIMULATION_VIEW_UNKNOWNB0_OFFSET= 0xB0,
+	_simulation_view_kind_1= 1,
+	_simulation_view_kind_2= 2,
+	_simulation_view_kind_3= 3,
+	_simulation_view_kind_4= 4
 };
 
 /* ---------- structures */
@@ -95,5 +109,7 @@ boolean __attribute__((stdcall)) simulation_view_set_players(byte *view, unsigne
 	unsigned long valid, const long *identifiers);
 void simulation_view_send_update(byte *view, const void *update);
 boolean simulation_view_handle_remote_state(byte *view, long state, long number);
+void simulation_view_update_ready(byte *view);
+void simulation_view_unknown_00086590(byte *view);
 
 #endif

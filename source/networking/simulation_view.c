@@ -12,6 +12,7 @@ is a guess, and so are the names of its functions.
 #include "simulation_view.h"
 
 #include "networking/network_observer.h"
+#include "cache/texture_cache.h"
 #include "networking/simulation_world.h"
 
 #include <string.h>
@@ -20,9 +21,9 @@ is a guess, and so are the names of its functions.
 
 long GetTickCount(void);
 
-/* 0x000861c0: what follows from the state of a view and the one of the
-other console is seen to */
-void unknown_000861c0(byte *view);
+/* 0x00086b40: what a view of the third kind or of the fourth has at 0x6060
+of what it has at 0x8 is told whether the view is ready */
+void unknown_00086b40(boolean ready, byte *unknown);
 
 /* 0x000869a0: a view takes one of the things that come, with what it has
 at 0x94; whether it could. 0x000865d0: and then something follows */
@@ -79,7 +80,7 @@ goes to its first state, and is then as 7 says.
 With the state and the number that it has already, nothing is done. If not,
 they are the ones of the view; the other console is told, if the view talks
 by a channel of the observer (a message of the kind 0x25, with the two); and
-what follows from it is seen to (unknown_000861c0) */
+what follows from it is seen to (simulation_view_update_ready) */
 void __attribute__((stdcall)) simulation_view_set_state(
 	byte *view,
 	long state,
@@ -126,7 +127,7 @@ void __attribute__((stdcall)) simulation_view_set_state(
 			*(byte *const *)(view+SIMULATION_VIEW_OBSERVER_OFFSET), SIMULATION_VIEW_SESSION_INDEX,
 			_network_message_simulation_view_state, sizeof(message), &message);
 	}
-	unknown_000861c0(view);
+	simulation_view_update_ready(view);
 }
 
 /* 0x000862c0: a view that is well goes to its first state, and is then as a
@@ -375,7 +376,7 @@ says; one before that says its own state again if the other end was in its
 first state and is not any more.
 
 At the end, what follows from the two states is seen to
-(unknown_000861c0) */
+(simulation_view_update_ready) */
 boolean simulation_view_handle_remote_state(
 	byte *view,
 	long state,
@@ -460,7 +461,92 @@ boolean simulation_view_handle_remote_state(
 				_network_message_simulation_view_state, sizeof(message), &message);
 		}
 	}
-	unknown_000861c0(view);
+	simulation_view_update_ready(view);
 
 	return TRUE;
+}
+
+/* 0x00086590: a view gives back the memory that the texture cache lent it,
+if it has some, and has none, with nothing for the numbers that go with it */
+void simulation_view_unknown_00086590(
+	byte *view)
+{
+	if (*(void *const *)(view+SIMULATION_VIEW_UNKNOWN94_OFFSET))
+	{
+		*(long *)(view+SIMULATION_VIEW_UNKNOWN9C_OFFSET)= 0;
+		*(long *)(view+SIMULATION_VIEW_UNKNOWNA0_OFFSET)= 0;
+		texture_cache_return_memory(*(void *const *)(view+SIMULATION_VIEW_UNKNOWN94_OFFSET));
+		*(void **)(view+SIMULATION_VIEW_UNKNOWN94_OFFSET)= NULL;
+		*(long *)(view+SIMULATION_VIEW_UNKNOWN98_OFFSET)= 0;
+	}
+}
+
+/* 0x000861c0: what follows from the state of a view and the one of its
+other end. A view of a thing and of a channel, whose number is the one that
+the other end has, is ready if both are in the third state or past it; and
+it has its byte at 0x78 set if both are in the sixth or past it.
+
+When whether it is ready is another: that is noted. One that is not ready
+any more knows of no players, if it is of the second kind or of the fourth
+(and one of the second has NONE for what the players of the other console
+last said, and gives back its memory); one of the first kind has nothing at
+0xB0. A view of the third kind or of the fourth tells what it has at 0x8
+(unknown_00086b40), and the thing is told (simulation_world_unknown_0006b090).
+
+When the byte at 0x78 is another: that is noted, and the thing is told
+(simulation_world_unknown_0006b110) */
+void simulation_view_update_ready(
+	byte *view)
+{
+	boolean ready= FALSE;
+	boolean established= FALSE;
+	byte was_ready;
+	word kind;
+
+	if (*(void *const *)(view+SIMULATION_VIEW_WORLD_OFFSET) && *(const long *)(view+SIMULATION_VIEW_CHANNEL_OFFSET)!=NONE &&
+		*(const long *)(view+SIMULATION_VIEW_STATE_NUMBER_OFFSET)==*(const long *)(view+SIMULATION_VIEW_REMOTE_STATE_NUMBER_OFFSET))
+	{
+		long own_state= *(const long *)(view+SIMULATION_VIEW_STATE_OFFSET);
+		long remote_state= *(const long *)(view+SIMULATION_VIEW_REMOTE_STATE_OFFSET);
+
+		ready= own_state>=_simulation_view_state2 && remote_state>=_simulation_view_state2;
+		established= own_state>=_simulation_view_state5 && remote_state>=_simulation_view_state5;
+	}
+	was_ready= *(const long *)(view+SIMULATION_VIEW_CHANNEL_OFFSET)!=NONE ? view[SIMULATION_VIEW_READY_OFFSET] : FALSE;
+	if (ready!=was_ready)
+	{
+		view[SIMULATION_VIEW_READY_OFFSET]= ready;
+		if (!ready)
+		{
+			kind= *(const word *)(view+SIMULATION_VIEW_KIND_OFFSET);
+			if ((1u<<(kind&31))&SIMULATION_VIEW_KINDS_2_AND_4)
+			{
+				*(unsigned long *)(view+SIMULATION_VIEW_PLAYER_MASK_OFFSET)= 0;
+				if (kind==_simulation_view_kind_2)
+				{
+					*(long *)(view+SIMULATION_VIEW_UNKNOWN80_OFFSET)= NONE;
+					*(long *)(view+SIMULATION_VIEW_UNKNOWN84_OFFSET)= NONE;
+					if (*(void *const *)(view+SIMULATION_VIEW_UNKNOWN94_OFFSET))
+					{
+						simulation_view_unknown_00086590(view);
+					}
+				}
+			}
+			else if (kind==_simulation_view_kind_1)
+			{
+				*(long *)(view+SIMULATION_VIEW_UNKNOWNB0_OFFSET)= 0;
+			}
+		}
+		kind= *(const word *)(view+SIMULATION_VIEW_KIND_OFFSET);
+		if (kind==_simulation_view_kind_3 || kind==_simulation_view_kind_4)
+		{
+			unknown_00086b40(ready, *(byte *const *)(view+SIMULATION_VIEW_UNKNOWN8_OFFSET)+SIMULATION_VIEW_UNKNOWN8_UNKNOWN6060_OFFSET);
+		}
+		simulation_world_unknown_0006b090(ready, *(byte *const *)(view+SIMULATION_VIEW_WORLD_OFFSET), view);
+	}
+	if (view[SIMULATION_VIEW_UNKNOWN78_OFFSET]!=established)
+	{
+		view[SIMULATION_VIEW_UNKNOWN78_OFFSET]= established;
+		simulation_world_unknown_0006b110(*(byte *const *)(view+SIMULATION_VIEW_WORLD_OFFSET), established, view);
+	}
 }
