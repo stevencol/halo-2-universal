@@ -19,6 +19,8 @@ names of its functions.
 
 #include "math/real_math.h"
 
+#include <string.h>
+
 /* ---------- prototypes */
 
 /* 0x00321379, of the console's libraries: memory is let go of */
@@ -44,6 +46,13 @@ long unknown_004d87c8;
 long unknown_004d87cc;
 void *unknown_00450cb8[1];
 void *unknown_00450d60[1];
+
+/* 0x00450e10, 0x00450e28, 0x00450df8, 0x00450da0: the functions of four
+kinds of thing that the network has */
+void *unknown_00450e10[1];
+void *unknown_00450e28[1];
+void *unknown_00450df8[1];
+void *unknown_00450da0[1];
 
 /* ---------- code */
 
@@ -136,4 +145,90 @@ void network_memory_unknown_00081310(
 	{
 		*(long *)(unknown+0xC+index*4)= 0;
 	}
+}
+
+/* 0x00081440: something more that the network has is made, and given back:
+it gets its functions, and its fifteen things, its group, its two numbers
+and its 0x24 numbers are nothing */
+byte *network_memory_unknown_00081440(
+	byte *unknown)
+{
+	long index;
+
+	*(void **)unknown= unknown_00450e10;
+	for (index= 0; index<NETWORK_MEMORY_UNKNOWN_00081440_THING_COUNT; index++)
+	{
+		byte *thing= unknown+NETWORK_MEMORY_UNKNOWN_00081440_THINGS_OFFSET+index*NETWORK_MEMORY_UNKNOWN_00081440_THING_SIZE;
+		byte *group= thing+NETWORK_MEMORY_UNKNOWN_00081440_THING_GROUP1_OFFSET;
+
+		*(long *)thing= 0;
+		*(long *)(thing+4)= 0;
+		*(real *)(thing+8)= 0.0f;
+		*(long *)group= 0;
+		*(long *)(group+4)= 0;
+		*(real *)(group+8)= 0.0f;
+		*(long *)(thing+NETWORK_MEMORY_UNKNOWN_00081440_THING_UNKNOWN194_OFFSET)= 0;
+		*(long *)(thing+NETWORK_MEMORY_UNKNOWN_00081440_THING_UNKNOWN2A4_OFFSET)= 0;
+	}
+	*(long *)(unknown+NETWORK_MEMORY_UNKNOWN_00081440_GROUP_OFFSET)= 0;
+	*(long *)(unknown+NETWORK_MEMORY_UNKNOWN_00081440_GROUP_OFFSET+4)= 0;
+	*(real *)(unknown+NETWORK_MEMORY_UNKNOWN_00081440_GROUP_OFFSET+8)= 0.0f;
+	*(long *)(unknown+NETWORK_MEMORY_UNKNOWN_00081440_UNKNOWN4_OFFSET)= 0;
+	*(long *)(unknown+NETWORK_MEMORY_UNKNOWN_00081440_UNKNOWNC_OFFSET)= 0;
+	memset(unknown+NETWORK_MEMORY_UNKNOWN_00081440_NUMBERS_OFFSET, 0,
+		NETWORK_MEMORY_UNKNOWN_00081440_NUMBER_COUNT*sizeof(long));
+
+	return unknown;
+}
+
+/* 0x000815e0: all that the network has is made, and given back: what
+network_memory_unknown_00081310 makes, first; the thing with 0x600 bytes of
+its own, with none in use; what network_memory_unknown_00081440 makes; the
+three things of 0x78B8 bytes, of nothing; the game in the network
+(simulation_world_construct); and the two lists, each of nothing */
+byte *network_memory_construct(
+	byte *memory)
+{
+	byte *unknownb28= memory+NETWORK_MEMORY_UNKNOWNB28_OFFSET;
+	long index;
+
+	network_memory_unknown_00081310(memory);
+	*(void **)unknownb28= unknown_00450e28;
+	*(long *)(unknownb28+NETWORK_MEMORY_UNKNOWNB28_UNKNOWN634_OFFSET)= 1;
+	*(long *)(unknownb28+NETWORK_MEMORY_UNKNOWNB28_BYTES_SIZE_OFFSET)= NETWORK_MEMORY_UNKNOWNB28_BYTES_SIZE;
+	*(long *)(unknownb28+NETWORK_MEMORY_UNKNOWNB28_UNKNOWN638_OFFSET)= 0;
+	*(long *)(unknownb28+NETWORK_MEMORY_UNKNOWNB28_UNKNOWN63C_OFFSET)= 0;
+	*(long *)(unknownb28+NETWORK_MEMORY_UNKNOWNB28_UNKNOWN644_OFFSET)= 0;
+	unknownb28[NETWORK_MEMORY_UNKNOWNB28_UNKNOWN640_OFFSET]= FALSE;
+	*(byte **)(unknownb28+NETWORK_MEMORY_UNKNOWNB28_BYTES_POINTER_OFFSET)= unknownb28+NETWORK_MEMORY_UNKNOWNB28_BYTES_OFFSET;
+	*(long *)(unknownb28+NETWORK_MEMORY_UNKNOWNB28_UNKNOWN8_OFFSET)= 0;
+	*(long *)(unknownb28+NETWORK_MEMORY_UNKNOWNB28_UNKNOWNC_OFFSET)= 0;
+	*(long *)(unknownb28+NETWORK_MEMORY_UNKNOWNB28_UNKNOWN10_OFFSET)= 0;
+	unknownb28[NETWORK_MEMORY_UNKNOWNB28_UNKNOWN4_OFFSET]= FALSE;
+	memory[NETWORK_MEMORY_UNKNOWN1188_OFFSET]= FALSE;
+	network_memory_unknown_00081440(memory+NETWORK_MEMORY_UNKNOWN11A0_OFFSET);
+	for (index= 0; index<NETWORK_MEMORY_UNKNOWN60F8_COUNT; index++)
+	{
+		byte *unknown60f8= memory+NETWORK_MEMORY_UNKNOWN60F8_OFFSET+index*NETWORK_MEMORY_UNKNOWN60F8_SIZE;
+
+		*(void **)unknown60f8= unknown_00450df8;
+		*(long *)(unknown60f8+NETWORK_MEMORY_UNKNOWN60F8_UNKNOWN14_OFFSET)= 0;
+		*(long *)(unknown60f8+NETWORK_MEMORY_UNKNOWN60F8_UNKNOWN4_OFFSET)= 0;
+		*(long *)(unknown60f8+NETWORK_MEMORY_UNKNOWN60F8_UNKNOWN18_OFFSET)= NONE;
+		*(long *)(unknown60f8+NETWORK_MEMORY_UNKNOWN60F8_UNKNOWN741C_OFFSET)= NONE;
+		*(long *)(unknown60f8+NETWORK_MEMORY_UNKNOWN60F8_UNKNOWN1C_OFFSET)= 0;
+		*(long *)(unknown60f8+NETWORK_MEMORY_UNKNOWN60F8_UNKNOWN20_OFFSET)= 0;
+		unknown60f8[NETWORK_MEMORY_UNKNOWN60F8_UNKNOWN24_OFFSET]= FALSE;
+	}
+	simulation_world_construct(memory+NETWORK_MEMORY_WORLD_OFFSET);
+	*(long *)(memory+NETWORK_MEMORY_UNKNOWN1DD40_OFFSET+4)= 0;
+	*(long *)(memory+NETWORK_MEMORY_UNKNOWN1DD40_OFFSET+0xC)= 0;
+	*(long *)(memory+NETWORK_MEMORY_UNKNOWN1DD40_OFFSET+8)= 0;
+	*(void **)(memory+NETWORK_MEMORY_UNKNOWN1DD40_OFFSET)= unknown_00450da0;
+	*(long *)(memory+NETWORK_MEMORY_UNKNOWN1E974_OFFSET)= NONE;
+	memset(memory+NETWORK_MEMORY_UNKNOWN1E974_OFFSET+4, 0, NETWORK_MEMORY_LIST_COUNT*sizeof(long));
+	*(long *)(memory+NETWORK_MEMORY_UNKNOWN1E9F8_OFFSET)= NONE;
+	memset(memory+NETWORK_MEMORY_UNKNOWN1E9F8_OFFSET+4, 0, NETWORK_MEMORY_LIST_COUNT*sizeof(long));
+
+	return memory;
 }

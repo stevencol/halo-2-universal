@@ -3,7 +3,7 @@
 import random
 import struct
 
-from difftest import Buffer, GlobalData, Mock, mock_address
+from difftest import Buffer, GlobalData, GlobalRange, Mock, mock_address
 
 NONE = 0xFFFFFFFF
 CHANNEL = 0xF8
@@ -876,4 +876,15 @@ def run(t) -> None:
             Buffer(struct.pack("<2I", random_.choice((mine, mine, mine, mine, mine ^ 1, random_.getrandbits(32))), random_.randrange(8))),
             globals={"unknown_004d87d4": Buffer(bytes(channels))},
             externals={"network_channel_close": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1]))},
+        )
+
+    # ---------- a channel is made
+
+    for n in range(200):
+        setup = at_time()
+        t.check(
+            "network_channel_construct",
+            Buffer(random_.randbytes(0xF8), places=(0x18,)),
+            globals={**setup["globals"], "unknown_00450d40": GlobalRange(4)},
+            externals=setup["externals"],
         )

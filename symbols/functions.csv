@@ -2200,3 +2200,6 @@ address,name,source,arguments,returns,convention
 00081310,network_memory_unknown_00081310,source/networking/network_memory.c,eax,void
 000812a0,network_blob_checksum,source/networking/network_blob.c,eax ecx,int
 00081230,network_blob_verify,source/networking/network_blob.c,ecx edi edx,int
+00081390,network_channel_construct,source/networking/network_channel.c,esi,pointer
+00081440,network_memory_unknown_00081440,source/networking/network_memory.c,edx,pointer
+000815e0,network_memory_construct,source/networking/network_memory.c,esi,pointer

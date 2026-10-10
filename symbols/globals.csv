@@ -358,3 +358,8 @@ address,name,source
 004d87cc,unknown_004d87cc,source/networking/network_memory.c
 00450cb8,unknown_00450cb8,source/networking/network_memory.c
 00450d60,unknown_00450d60,source/networking/network_memory.c
+00450d40,unknown_00450d40,source/networking/network_channel.c
+00450e10,unknown_00450e10,source/networking/network_memory.c
+00450e28,unknown_00450e28,source/networking/network_memory.c
+00450df8,unknown_00450df8,source/networking/network_memory.c
+00450da0,unknown_00450da0,source/networking/network_memory.c

@@ -25,6 +25,11 @@ boolean unknown_00092e00(byte *unknown0, long unknown44);
 
 /* 0x00094bf0: one of the things of unknown_004d87dc is done with */
 
+/* ---------- globals */
+
+/* 0x00450d40: the functions of what a channel has itself at 0x18 */
+void *unknown_00450d40[1];
+
 /* ---------- code */
 
 /* what a channel's own thing of unknown_004d87d8 is, if the channel is in
@@ -1402,4 +1407,36 @@ void network_channel_handle_refused(
 			break;
 		}
 	}
+}
+
+/* 0x00081390: a channel is made: what it has itself at 0x18 gets its
+functions and its two bytes clear; it is of nothing, has none of the things
+of unknown_004d87d8 or unknown_004d87dc, no parts, no numbers and no
+address; it is in no state, and its six times are now. The channel is given
+back */
+byte *network_channel_construct(
+	byte *channel)
+{
+	*(void **)(channel+NETWORK_CHANNEL_UNKNOWN18_OFFSET)= unknown_00450d40;
+	channel[NETWORK_CHANNEL_UNKNOWN1C_OFFSET]= FALSE;
+	channel[NETWORK_CHANNEL_UNKNOWN1D_OFFSET]= FALSE;
+	*(void **)(channel+NETWORK_CHANNEL_UNKNOWN0_OFFSET)= NULL;
+	*(void **)(channel+NETWORK_CHANNEL_GATEWAY_OFFSET)= NULL;
+	*(void **)(channel+NETWORK_CHANNEL_UNKNOWN8_OFFSET)= NULL;
+	*(long *)(channel+NETWORK_CHANNEL_PART_COUNT_OFFSET)= 0;
+	*(long *)(channel+NETWORK_CHANNEL_UNKNOWN10_OFFSET)= NONE;
+	*(long *)(channel+NETWORK_CHANNEL_UNKNOWN14_OFFSET)= NONE;
+	memset(channel+NETWORK_CHANNEL_PARTS_OFFSET, 0, MAXIMUM_NETWORK_CHANNEL_PARTS*sizeof(struct network_channel_part));
+	*(long *)(channel+NETWORK_CHANNEL_UNKNOWN4C_OFFSET)= NONE;
+	*(long *)(channel+NETWORK_CHANNEL_UNKNOWN50_OFFSET)= NONE;
+	*(void **)(channel+NETWORK_CHANNEL_UNKNOWN3C_OFFSET)= NULL;
+	*(long *)(channel+NETWORK_CHANNEL_OBSERVER_OFFSET)= 0;
+	*(long *)(channel+NETWORK_CHANNEL_UNKNOWN48_OFFSET)= 0;
+	*(long *)(channel+NETWORK_CHANNEL_STATE_OFFSET)= _network_channel_state_none;
+	*(long *)(channel+NETWORK_CHANNEL_UNKNOWN58_OFFSET)= 0;
+	memset(channel+NETWORK_CHANNEL_ADDRESS_OFFSET, 0, sizeof(struct transport_address));
+	*(long *)(channel+NETWORK_CHANNEL_UNKNOWN8C_OFFSET)= 0;
+	network_channel_reset_times(channel);
+
+	return channel;
 }

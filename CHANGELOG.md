@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Todo lo de la red, recién hecho
+
+Tres funciones: una en `networking/network_channel.c` y dos en
+`networking/network_memory.c`. De 1639
+funciones se pasa a 1642, el 14,58 % de las del juego (el 9,658 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_channel_construct` | `0x00081390` | `networking/network_channel.c` |
+| `network_memory_unknown_00081440` | `0x00081440` | `networking/network_memory.c` |
+| `network_memory_construct` | `0x000815e0` | `networking/network_memory.c` |
+
+### Lo que se sabe
+
+- `network_channel_construct` deja **un canal recién hecho**: lo que lleva
+  en `0x18` recibe sus funciones (`0x00450d40`), no es de nadie, no tiene
+  ninguna de sus dos cosas propias (`-1`), ni piezas, ni dirección, está
+  en ningún estado y sus seis tiempos son ahora
+  (`network_channel_reset_times`).
+- `network_memory_construct` hace **todo lo que la red tiene**, que mide al
+  menos `0x1EA7C` bytes. De principio a fin:
+  - lo de `network_memory_unknown_00081310` (hito 490);
+  - en `0xB28`, algo con funciones (`0x00450e28`) y `0x600` bytes propios,
+    con un puntero a ellos y su tamaño: por la forma, un paquete;
+  - en `0x11A0`, lo que hace `network_memory_unknown_00081440`: funciones
+    (`0x00450e10`), quince cosas de `0x528` bytes con dos medidores cada
+    una, un medidor más y `0x24` números;
+  - en `0x60F8`, tres cosas de `0x78B8` bytes con funciones
+    (`0x00450df8`);
+  - en `0x1CB20`, la partida en red (`simulation_world_construct`);
+  - en `0x1DD40`, algo con funciones (`0x00450da0`) y tres números;
+  - y dos listas de `0x20` números, cada una tras un `-1`.
+- Las dos funciones que hacen algo lo devuelven: son constructores.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las tres**, y en las de los hitos 456 a
+  491.
+- En este hito se pasaron las pruebas de las tres funciones y las demás de
+  `network_memory`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Un bloque con su suma, su versión y su tamaño
 
 Dos funciones en el archivo nuevo `networking/network_blob.c`. De 1637

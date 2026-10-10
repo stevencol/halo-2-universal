@@ -49,3 +49,24 @@ def run(t) -> None:
 
     for n in range(200):
         t.check("network_memory_unknown_00081310", Buffer(random_.randbytes(0x4E0)))
+
+    for n in range(100):
+        t.check(
+            "network_memory_unknown_00081440",
+            Buffer(random_.randbytes(0x4E58), places=(0,)),
+            globals={"unknown_00450e10": GlobalRange(4)},
+        )
+    for n in range(30):
+        t.check(
+            "network_memory_construct",
+            Buffer(
+                random_.randbytes(0x1EA7C),
+                places=(0xB28, 0x1154, 0x11A0, 0x60F8, 0x60F8 + 0x78B8, 0x60F8 + 2 * 0x78B8, 0x1DD40),
+            ),
+            globals={
+                "unknown_00450e10": GlobalRange(4),
+                "unknown_00450e28": GlobalRange(4),
+                "unknown_00450df8": GlobalRange(4),
+                "unknown_00450da0": GlobalRange(4),
+            },
+        )

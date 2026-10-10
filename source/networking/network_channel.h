@@ -256,6 +256,7 @@ boolean network_channel_flags_valid(unsigned long flags);
 void network_channel_close(byte *channel, long unknown);
 void __attribute__((stdcall)) network_channel_release(byte *game_channel);
 void network_channel_reset_times(byte *channel);
+byte *network_channel_construct(byte *channel);
 void network_channel_set_time(long index, byte *channel);
 void __attribute__((stdcall)) network_channel_send_established(byte *channel, boolean established);
 void __attribute__((stdcall)) network_channel_accept(byte *channel, long identifier);

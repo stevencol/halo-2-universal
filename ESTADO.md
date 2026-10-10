@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 491.
+**Última actualización:** 2026-10-08, al terminar el hito 492.
 
 ## Dónde estamos
 
-- **1639 funciones descompiladas de 11.265: el 14,55 % del juego** (el
-  9,642 % de los bytes de código).
-- Las 1639 están comprobadas contra el ejecutable original: las 1390 del
+- **1642 funciones descompiladas de 11.265: el 14,58 % del juego** (el
+  9,658 % de los bytes de código).
+- Las 1642 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a block with a checksum is verified* (ver `git log`).
+- Último hito: *Decompile the constructors of a channel and of all that the network has* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 562 funciones apuntadas pero sin descompilar (las que el código
   llama); 460 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -207,10 +207,10 @@ Módulos (funciones hechas / archivo):
 - [ ] Un bloque con suma, versión y tamaño — `networking\network_blob.c`
       (2: la suma y ver si vale; falta quién los usa, de `0x00080e10` a
       `0x00081230`)
-- [ ] La memoria de la red — `networking\network_memory.c` (2: soltarla
-      al cerrar un mapa, `0x00081f80`, y un constructor; falta tomarla,
-      `0x00081780`, y lo que la rodea: `0x00081390`, `0x00081440`,
-      `0x000815e0` y `0x000816f0`)
+- [ ] La memoria de la red — `networking\network_memory.c` (4: soltarla
+      al cerrar un mapa, `0x00081f80`, y tres constructores, el de todo
+      entre ellos; falta tomarla, `0x00081780`, y deshacerlo todo,
+      `0x000816f0`, que llama a `0x00092f10` y `0x00092c70`)
 - [x] La pieza principal de un canal — `networking\network_connection.c`
       (18: empezar de cero, el número de cada paquete, escribir y
       leer la cabecera de un paquete, lo que la otra consola
