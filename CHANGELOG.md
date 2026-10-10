@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Qué jugadores conoce cada vista
+
+Tres funciones en `networking/simulation_world.c`, 505 bytes entre las tres. De 1571
+funciones se pasa a 1574, el 13,97 % de las del juego (el 9,314 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_player_delete` | `0x00069580` | `networking/simulation_world.c` |
+| `simulation_world_players_unknown25_mask` | `0x000696f0` | `networking/simulation_world.c` |
+| `simulation_world_players_known_mask` | `0x0006a480` | `networking/simulation_world.c` |
+
+### Lo que se sabe
+
+- Cada vista lleva **un bit por cada jugador del juego que conoce**
+  (`0x7C`).
+- `simulation_world_player_delete`: la partida deja de tener a un
+  jugador, y las vistas de la segunda clase o la cuarta que tienen canal
+  y están listas dejan de conocerlo.
+- `simulation_world_players_known_mask` da los jugadores que la partida
+  tiene **y que conocen todas las vistas que ya pasaron de prepararse**
+  (una de la segunda clase, desde su sexto estado; las demás, desde el
+  cuarto). Es lo que el juego necesita saber antes de contar con un
+  jugador en todas las consolas.
+- `simulation_world_players_unknown25_mask` da, en bits, los jugadores
+  que tienen puesto el byte del hito 445.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las tres**, y en las de los hitos 441 a
+  458.
+- El juego tiene las vueltas de dieciséis jugadores escritas de cuatro en
+  cuatro; aquí van de una en una.
+- En este hito se pasaron las pruebas de `simulation_world` (39
+  funciones) y `network_message_handler` (7).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Los jugadores que la partida lleva, y sus otras dieciséis cosas
 
 Cinco funciones en `networking/simulation_world.c`, 527 bytes entre las cinco. De 1566

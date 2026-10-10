@@ -1035,3 +1035,77 @@ void __attribute__((stdcall)) simulation_world_unknown_0006a770(
 		}
 	}
 }
+
+/* 0x00069580: the thing has a player of the game no more: what it had of it
+has NONE for its three numbers and nothing at 0x20; and each view of the
+second kind or of the fourth that is of a channel and is ready knows of that
+player no more */
+void simulation_world_player_delete(
+	long player,
+	byte *world)
+{
+	struct simulation_view_iterator iterator= {SIMULATION_VIEW_KINDS_2_AND_4, 0};
+	unsigned long index= (unsigned long)player&0xFFFF;
+	byte *player_data_= world+index*SIMULATION_WORLD_PLAYER_SIZE+SIMULATION_WORLD_PLAYERS_OFFSET;
+	byte *view;
+
+	*(long *)(player_data_+SIMULATION_WORLD_PLAYER_UNKNOWN20_OFFSET)= 0;
+	*(long *)player_data_= NONE;
+	*(long *)(player_data_+SIMULATION_WORLD_PLAYER_INDEX_OFFSET)= NONE;
+	*(long *)(player_data_+SIMULATION_WORLD_PLAYER_STATE_OFFSET)= NONE;
+	while (simulation_world_next_view(&iterator, world, &view))
+	{
+		if (*(const long *)(view+SIMULATION_VIEW_CHANNEL_OFFSET)!=NONE && view[SIMULATION_VIEW_READY_OFFSET])
+		{
+			*(unsigned long *)(view+SIMULATION_VIEW_PLAYER_MASK_OFFSET)&= ~(1u<<(index&31));
+		}
+	}
+}
+
+/* 0x000696f0: a bit for each player that the thing has whose byte is set */
+unsigned long simulation_world_players_unknown25_mask(
+	const byte *world)
+{
+	unsigned long mask= 0;
+	long player;
+
+	for (player= 0; player<NUMBER_OF_SIMULATION_WORLD_PLAYERS; player++)
+	{
+		const byte *player_data_= world+player*SIMULATION_WORLD_PLAYER_SIZE+SIMULATION_WORLD_PLAYERS_OFFSET;
+
+		if (*(const long *)player_data_!=NONE && player_data_[SIMULATION_WORLD_PLAYER_UNKNOWN25_OFFSET])
+		{
+			mask|= 1u<<player;
+		}
+	}
+
+	return mask;
+}
+
+/* 0x0006a480: a bit for each player that the thing has and that every view
+of the second kind or of the fourth that is past being made ready knows of */
+unsigned long simulation_world_players_known_mask(
+	const byte *world)
+{
+	struct simulation_view_iterator iterator= {SIMULATION_VIEW_KINDS_2_AND_4, 0};
+	unsigned long mask= 0;
+	long player;
+	byte *view;
+
+	for (player= 0; player<NUMBER_OF_SIMULATION_WORLD_PLAYERS; player++)
+	{
+		if (*(const long *)(world+player*SIMULATION_WORLD_PLAYER_SIZE+SIMULATION_WORLD_PLAYERS_OFFSET)!=NONE)
+		{
+			mask|= 1u<<player;
+		}
+	}
+	while (simulation_world_next_view(&iterator, world, &view))
+	{
+		if (simulation_view_established(view))
+		{
+			mask&= *(const unsigned long *)(view+SIMULATION_VIEW_PLAYER_MASK_OFFSET);
+		}
+	}
+
+	return mask;
+}

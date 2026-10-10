@@ -127,7 +127,9 @@ enum
 	is not to have it, and a number */
 	SIMULATION_PLAYER_DATUM_FLAGS_OFFSET= 0x2,
 	_simulation_player_datum_unknown_bit= 0x2,
-	SIMULATION_PLAYER_DATUM_UNKNOWN2C_OFFSET= 0x2C
+	SIMULATION_PLAYER_DATUM_UNKNOWN2C_OFFSET= 0x2C,
+	/* of a view: a bit for each player of the game that it knows of */
+	SIMULATION_VIEW_PLAYER_MASK_OFFSET= 0x7C
 };
 
 /* ---------- structures */
@@ -199,6 +201,20 @@ void simulation_world_others_clear(byte *world);
 long __attribute__((stdcall)) simulation_world_other_new(long index, byte *world, long unknown4);
 long simulation_world_unknown_000699a0(long index, const byte *world);
 void __attribute__((stdcall)) simulation_world_unknown_0006a770(byte *world);
+void simulation_world_player_delete(long player, byte *world);
+unsigned long simulation_world_players_unknown25_mask(const byte *world);
+unsigned long simulation_world_players_known_mask(const byte *world);
+
+/* whether a view is past the states in which it is made ready: one of the
+second kind from the sixth state on, and any other from the fourth. The game
+has it written wherever it asks */
+static inline __attribute__((always_inline)) boolean simulation_view_established(
+	const byte *view)
+{
+	long state= *(const long *)(view+0x2C);
+
+	return *(const word *)(view+SIMULATION_VIEW_KIND_OFFSET)==2 ? state>=5 : state>=3;
+}
 
 /* ---------- globals */
 

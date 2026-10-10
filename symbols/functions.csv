@@ -2129,3 +2129,6 @@ address,name,source,arguments,returns,convention
 0006a770,simulation_world_unknown_0006a770,source/networking/simulation_world.c,stack,void,stdcall
 000c6ef0,unknown_000c6ef0,,edx,void
 000694c0,unknown_000694c0,,stack stack,void,stdcall
+00069580,simulation_world_player_delete,source/networking/simulation_world.c,eax ecx,void
+000696f0,simulation_world_players_unknown25_mask,source/networking/simulation_world.c,edx,int
+0006a480,simulation_world_players_known_mask,source/networking/simulation_world.c,eax,int

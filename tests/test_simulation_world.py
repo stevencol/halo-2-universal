@@ -10,9 +10,9 @@ VIEW = 0x90
 OTHER = 0x28
 
 
-def a_world(random_, channel: int) -> Buffer:
+def a_world(random_, channel: int, size: int = WORLD) -> Buffer:
     """What the game in the network has going, with some of its fifteen views after it, and after each what it has at 0xC."""
-    data = bytearray(random_.randbytes(WORLD))
+    data = bytearray(random_.randbytes(size))
     struct.pack_into("<I", data, 8, random_.choice((0, 1, 1, 1, 1, 0x1234)))
     struct.pack_into("<i", data, 0x28, random_.choice((0, 5, 100, 1000, 1129, 1130, random_.getrandbits(12))))
     pointers = []
@@ -29,6 +29,7 @@ def a_world(random_, channel: int) -> Buffer:
         struct.pack_into("<I", view, 0x1C, random_.choice((0, 1, 2, 3)))
         view[0x14:0x1A] = bytes((random_.choice((1, 2)),)) * 5 + bytes((random_.choice((1, 2, 3)),))
         struct.pack_into("<i", view, 0x28, random_.choice((0, 0, 0, 4)))
+        struct.pack_into("<i", view, 0x2C, random_.choice((0, 1, 2, 3, 4, 5, 6)))
         view[0x78] = random_.choice((0, 1, 1, 0x80))
         view[0x75] = random_.choice((0, 1, 1, 0x80))
         struct.pack_into("<i", view, 0x84, random_.choice((0, 5, 100, 1000, 1200, random_.getrandbits(12))))
@@ -543,3 +544,17 @@ def run(t) -> None:
             globals={"player_data": players},
             externals={"unknown_000694c0": next_number},
         )
+
+    # ---------- a player leaves the thing, and the players that it has
+
+    for n in range(2000):
+        thing = a_world(random_, 0, 0x8FC)
+        data = bytearray(thing.data)
+        for player in range(16):
+            if random_.random() < 0.4:
+                struct.pack_into("<i", data, 0x7C + player * 0x88, -1)
+            data[0x7C + player * 0x88 + 0x25] = random_.choice((0, 1, 0x80))
+        thing = Buffer(bytes(data), pointers=thing.pointers)
+        t.check("simulation_world_player_delete", random_.randrange(16) | random_.choice((0, 0x30000, 0xFFFF0000)), thing)
+        t.check("simulation_world_players_unknown25_mask", thing)
+        t.check("simulation_world_players_known_mask", thing)
