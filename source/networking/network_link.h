@@ -37,7 +37,15 @@ enum
 	NETWORK_LINK_SOCKETS_OFFSET= 0xC,
 	NUMBER_OF_NETWORK_LINK_SOCKETS= 4,
 	_network_link_socket_connected_bit= 0x1,
-	_network_channel_closed_unknown9= 9
+	_network_channel_closed_unknown9= 9,
+	/* of a packet: what its bytes and its voice can be; the kind whose
+	bytes are sent as they are, with no voice; and what the network puts
+	before a packet on the wire, for that kind and for the others */
+	NETWORK_LINK_PACKET_DATA_SIZE= 0x600,
+	NETWORK_LINK_PACKET_VOICE_SIZE= 0x200,
+	_network_link_packet_kind3= 3,
+	NETWORK_LINK_PACKET_KIND3_WIRE_SIZE= 0x2C,
+	NETWORK_LINK_PACKET_WIRE_SIZE= 0x2D
 };
 
 /* ---------- structures */
@@ -61,6 +69,22 @@ struct network_link_socket
 	word flags;
 };
 
+/* a packet that it sends or has read: its kind, which is the socket that
+it is of; a number; the address that it goes to or came from; and its bytes
+and the ones of the voice, each after their size */
+struct network_link_packet
+{
+	long kind;
+	long unknown4;
+	struct transport_address address;
+	long size;
+	byte data[NETWORK_LINK_PACKET_DATA_SIZE];
+	long voice_size;
+	byte voice[NETWORK_LINK_PACKET_VOICE_SIZE];
+};
+
+typedef char verify_network_link_packet_size[sizeof(struct network_link_packet) == 0x824 ? 1 : -1];
+
 /* ---------- prototypes/NETWORK_LINK.C */
 
 boolean __attribute__((stdcall)) network_link_add_channel(byte *link, long channel_index, long identifier,
@@ -72,5 +96,9 @@ long network_link_channel_of_address(const byte *link, const struct transport_ad
 void __attribute__((stdcall)) network_link_close_channels(byte *link);
 void __attribute__((stdcall)) network_link_close_sockets(byte *link);
 void __attribute__((stdcall)) network_link_update_channels(byte *link);
+void network_link_packet_pack(const struct network_link_packet *packet, byte *bytes, long *size_out);
+boolean __attribute__((stdcall)) network_link_packet_unpack(long size, struct network_link_packet *packet,
+	const byte *bytes);
+long network_link_packet_wire_size(const struct network_link_packet *packet);
 
 #endif

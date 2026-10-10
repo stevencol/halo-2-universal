@@ -264,3 +264,80 @@ void __attribute__((stdcall)) network_link_update_channels(
 		}
 	}
 }
+
+/* 0x00093590: the bytes that are sent for a packet, and how many: its own
+after their size in two bytes, and then the ones of the voice; but only its
+own, as they are, if it is of the third kind */
+void network_link_packet_pack(
+	const struct network_link_packet *packet,
+	byte *bytes,
+	long *size_out)
+{
+	if (packet->kind!=_network_link_packet_kind3)
+	{
+		*(word *)bytes= (word)packet->size;
+		memcpy(bytes+sizeof(word), packet->data, (unsigned long)packet->size);
+		memcpy(bytes+sizeof(word)+packet->size, packet->voice, (unsigned long)packet->voice_size);
+		*size_out= packet->voice_size+packet->size+(long)sizeof(word);
+	}
+	else
+	{
+		memcpy(bytes, packet->data, (unsigned long)packet->size);
+		*size_out= packet->size;
+	}
+}
+
+/* 0x00093610: a packet of a kind gets the bytes that came for it; whether
+they are good. What is after the two bytes of the size and the bytes that it
+says is the voice; neither can be more than a packet has room for. The third
+kind has only its own bytes */
+boolean __attribute__((stdcall)) network_link_packet_unpack(
+	long size,
+	struct network_link_packet *packet,
+	const byte *bytes)
+{
+	if (packet->kind!=_network_link_packet_kind3)
+	{
+		if (size<(long)sizeof(word))
+		{
+			return FALSE;
+		}
+		packet->size= *(const word *)bytes;
+		packet->voice_size= size-packet->size-(long)sizeof(word);
+		if (packet->size<0 || (unsigned long)packet->size>NETWORK_LINK_PACKET_DATA_SIZE || packet->voice_size<0 ||
+			(unsigned long)packet->voice_size>NETWORK_LINK_PACKET_VOICE_SIZE)
+		{
+			return FALSE;
+		}
+		memcpy(packet->data, bytes+sizeof(word), (unsigned long)packet->size);
+		memcpy(packet->voice, bytes+sizeof(word)+packet->size, (unsigned long)packet->voice_size);
+	}
+	else
+	{
+		if ((unsigned long)size>NETWORK_LINK_PACKET_DATA_SIZE)
+		{
+			return FALSE;
+		}
+		packet->size= size;
+		memcpy(packet->data, bytes, (unsigned long)size);
+	}
+
+	return TRUE;
+}
+
+/* 0x000936c0: how many bytes a packet is on the wire, for the counts of
+what is sent and read: its own, made a multiple of eight, the ones of the
+voice, and what the network puts before them */
+long network_link_packet_wire_size(
+	const struct network_link_packet *packet)
+{
+	long size= packet->size;
+
+	if (size%8>0)
+	{
+		size+= 8-size%8;
+	}
+
+	return packet->voice_size+(packet->kind!=_network_link_packet_kind3 ? NETWORK_LINK_PACKET_WIRE_SIZE :
+		NETWORK_LINK_PACKET_KIND3_WIRE_SIZE)+size;
+}

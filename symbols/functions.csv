@@ -2212,3 +2212,6 @@ address,name,source,arguments,returns,convention
 003cd19e,shutdown,,stack stack,int,stdcall
 003cd193,closesocket,,stack,int,stdcall
 003cd718,WSAGetLastError,,,int
+00093590,network_link_packet_pack,source/networking/network_link.c,eax edx ebx,void
+00093610,network_link_packet_unpack,source/networking/network_link.c,ecx edx stack,bool,stdcall
+000936c0,network_link_packet_wire_size,source/networking/network_link.c,edi,int

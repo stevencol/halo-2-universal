@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Un paquete y los bytes que se mandan
+
+Tres funciones en `networking/network_link.c`. De 1650
+funciones se pasa a 1653, el 14,67 % de las del juego (el 9,704 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_link_packet_pack` | `0x00093590` | `networking/network_link.c` |
+| `network_link_packet_unpack` | `0x00093610` | `networking/network_link.c` |
+| `network_link_packet_wire_size` | `0x000936c0` | `networking/network_link.c` |
+
+### Lo que se sabe
+
+- **Un paquete mide `0x824` bytes**: su clase (el enchufe del que es), un
+  número, la dirección, sus bytes (hasta `0x600`) tras su tamaño y los de
+  la voz (hasta `0x200`) tras el suyo.
+- `network_link_packet_pack` hace lo que se manda: el tamaño de lo propio
+  en dos bytes, lo propio y la voz detrás. La tercera clase manda solo lo
+  propio, tal cual, sin voz.
+- `network_link_packet_unpack` hace lo contrario con lo que llega, y dice
+  si vale: la voz es lo que sobra tras lo propio, y ninguna de las dos
+  partes puede pasar de lo que cabe.
+- `network_link_packet_wire_size` da lo que el paquete ocupa en el cable,
+  para las cuentas de lo mandado y lo leído: lo propio hecho múltiplo de
+  ocho, la voz y lo que la red pone delante (`0x2D` bytes; `0x2C` en la
+  tercera clase). El juego tiene además un caso de `0x38` al que no se
+  llega nunca.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las tres**, y en las de los hitos 456 a
+  494.
+- En este hito se pasaron las pruebas de las tres funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — La red se deshace
 
 Tres funciones: dos en `networking/network_link.c` y una en

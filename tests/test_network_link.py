@@ -122,3 +122,43 @@ def run(t) -> None:
                 "network_channel_close": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
             },
         )
+
+    # ---------- a packet, and the bytes that are sent for it
+
+    for n in range(2000):
+        packet = bytearray(random_.randbytes(0x824))
+        struct.pack_into("<I", packet, 0, random_.choice((0, 1, 2, 3, 3, 4, NONE)))
+        struct.pack_into("<I", packet, 0x1C, random_.choice((0, 1, 7, 8, 9, 0x123, 0x5FF, 0x600, random_.randrange(0x601))))
+        struct.pack_into("<I", packet, 0x620, random_.choice((0, 0, 1, 0x1FF, 0x200, random_.randrange(0x201))))
+        t.check("network_link_packet_pack", Buffer(bytes(packet)), Buffer(random_.randbytes(0x810)), Buffer(random_.randbytes(4)))
+        # the size on the wire is asked of any number, a negative one too
+        struct.pack_into("<i", packet, 0x1C, random_.choice((0, 1, 7, 8, 9, 0x600, -1, -8, -9, random_.randrange(-0x700, 0x700))))
+        t.check("network_link_packet_wire_size", Buffer(bytes(packet)))
+
+        data = bytearray(random_.randbytes(0x810))
+        own = random_.choice((0, 1, 0x40, 0x5FF, 0x600, 0x600, 0x601, 0xFFFF, random_.randrange(0x601)))
+        struct.pack_into("<H", data, 0, own)
+        t.check(
+            "network_link_packet_unpack",
+            random_.choice(
+                (
+                    own + 2,
+                    own + 2,
+                    own + 2 + random_.randrange(0x201),
+                    own + 2 + 0x200,
+                    own + 2 + 0x201,
+                    own + 1,
+                    own,
+                    0,
+                    1,
+                    2,
+                    0x600,
+                    0x601,
+                    0xFFFFFFFF,
+                    0x80000000,
+                    random_.randrange(0x810),
+                )
+            ),
+            Buffer(bytes(packet)),
+            Buffer(bytes(data)),
+        )
