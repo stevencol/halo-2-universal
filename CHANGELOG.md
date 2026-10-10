@@ -2,6 +2,55 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — El estado de una cosa en una vista
+
+Cuatro funciones en `networking/replication_entity_view.c`, 636 bytes entre las cuatro. De 1475
+funciones se pasa a 1479, el 13,13 % de las del juego (el 8,816 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `replication_entity_view_new` | `0x00097f60` | `networking/replication_entity_view.c` |
+| `replication_entity_view_next_entity` | `0x00098480` | `networking/replication_entity_view.c` |
+| `replication_entity_view_unknown_00099640` | `0x00099640` | `networking/replication_entity_view.c` |
+| `replication_entity_view_set_entity_state` | `0x00099690` | `networking/replication_entity_view.c` |
+
+### Lo que se sabe
+
+- `replication_entity_view_set_entity_state` es **la función central de
+  una vista: poner una cosa en un estado**. Era la que la tabla de cosas
+  llamaba al crear una cosa (hito 416) sin estar hecha. Lleva las cuentas
+  de la vista al día:
+  - cuántas cosas están en el primer estado (`0x502C`),
+  - de las del tercero, cuántas se están borrando y la vista tiene
+    todavía (`0x503C`), o si no cuántas tienen algo pendiente de contar
+    (`0x5034`).
+  - Una cosa que entra en la vista se pone la primera de **una lista
+    enlazada de las cosas que están en ella** (la cabeza en `0x5024`, y en
+    cada cosa el sitio de la siguiente). Una que sale se quita de la
+    lista, buscándola entre las 1024.
+- `replication_entity_view_new` prepara una vista: de qué tabla es, cuál
+  de las quince es y su bit, y todo vacío.
+- `replication_entity_view_next_entity` da la siguiente cosa que está en
+  el primer o segundo estado (las que aún hay que anunciar a la otra
+  consola).
+- `replication_entity_view_unknown_00099640` dice si una cosa todavía no
+  está creada, o está en el tercer estado y no se está borrando.
+- Con esto el estado 0 es «no está en la vista», el 1 y el 2 «anunciándose»
+  y el 3 «la otra consola ya la tiene».
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las cuatro.** Tanda de los hitos 416 a
+  418 (la tabla de cosas), hecha: 41 líneas rotas y las 41 notadas. La de
+  los hitos 420 a 425 está corriendo.
+- En este hito se pasaron las pruebas de `replication_entity_view` (7
+  funciones) y de `replication_entity_manager` (15).
+- Del módulo quedan 13 en la lista.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Las vistas: lo que otra consola sabe de cada cosa
 
 Tres funciones en un archivo nuevo, `networking/replication_entity_view.c`, 428 bytes entre las tres. De 1472

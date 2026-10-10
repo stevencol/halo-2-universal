@@ -101,5 +101,38 @@ def run(t) -> None:
             Pointer(data, VIEW),
             entity,
             extra=[data],
-            externals={"unknown_00099690": state},
+            externals={"replication_entity_view_set_entity_state": state},
+        )
+
+    # ---------- a view is set up, and the things that are in it
+
+    for n in range(40):
+        t.check("replication_entity_view_new", random_.getrandbits(32), random_.choice((0, 1, 14, 31, 32, 37)), Buffer(random_.randbytes(VIEW_SIZE)))
+    for n in range(300):
+        data = world(random_.choice((0.0, 0.002, 0.01, 0.5)), 0)
+        t.check(
+            "replication_entity_view_next_entity",
+            random_.choice((NONE, 0, 0x3FE, 0x3FF, random_.randrange(COUNT) | random_.getrandbits(22) << 10)),
+            Pointer(data, VIEW),
+            extra=[data],
+        )
+    for n in range(600):
+        data = world(1.0, 0)
+        raw = bytearray(data.data)
+        place = random_.choice((0, 0x3FF, random_.randrange(COUNT)))
+        entity = struct.unpack_from("<I", raw, VIEW + 0x24 + place * 20)[0] if random_.random() < 0.7 else place | random_.getrandbits(22) << 10
+        place = entity & 0x3FF
+        raw[MANAGER + 0x44 + place * 8] = random_.choice((0, 2, 4, 4, 6, 0xFF, 0xFB))
+        struct.pack_into("<H", raw, VIEW + 0x24 + place * 20 + 8, random_.choice((0, 1, 2, 3, 3, 3)))
+        # the first of the things that are in the view: this one, or another
+        if random_.random() < 0.4:
+            struct.pack_into("<I", raw, VIEW + 0x5024, place)
+        data = Buffer(bytes(raw), pointers=data.pointers)
+        t.check("replication_entity_view_unknown_00099640", entity, Pointer(data, VIEW), extra=[data])
+        t.check(
+            "replication_entity_view_set_entity_state",
+            Pointer(data, VIEW),
+            entity,
+            random_.choice((0, 0, 1, 2, 3, 3, 4)),
+            extra=[data],
         )

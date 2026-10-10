@@ -60,13 +60,14 @@ struct replication_entity
 };
 
 /* what a view has of a thing: its number; the bits of what it has to say
-of it; the state that it is in there; and more numbers */
+of it; the state that it is in there; the place of the next of the things
+that are in some state in the view, or NONE; and more numbers */
 struct replication_entity_view_entity
 {
 	long entity_index;
 	unsigned long pending;
 	short state;
-	short unknownA;
+	short next;
 	long unknownC;
 	short unknown10;
 	short unknown12;

@@ -53,7 +53,7 @@ def run(t) -> None:
 
     view_stubs = {
         "replication_entity_view_reset": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
-        "unknown_00099690": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2])),
+        "replication_entity_view_set_entity_state": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], arguments[2])),
         "replication_entity_view_delete_entity": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
     }
 

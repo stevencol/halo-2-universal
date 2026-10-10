@@ -1995,7 +1995,7 @@ address,name,source,arguments,returns,convention
 00089d20,replication_entity_manager_get_chain,source/networking/replication_entity_manager.c,ecx edx esi,int
 00089d50,replication_entity_manager_find_chain,source/networking/replication_entity_manager.c,ebx edx stack,int,stdcall
 00097fe0,replication_entity_view_reset,source/networking/replication_entity_view.c,edi,void
-00099690,unknown_00099690,,eax ecx stack,int,stdcall
+00099690,replication_entity_view_set_entity_state,source/networking/replication_entity_view.c,eax ecx stack,int,stdcall
 000995c0,replication_entity_view_delete_entity,source/networking/replication_entity_view.c,eax ecx,void
 00089570,replication_entity_manager_delete_chain,source/networking/replication_entity_manager.c,eax esi,void
 00089690,replication_entity_manager_delete_entities_now,source/networking/replication_entity_manager.c,ebx stack stack,void,stdcall
@@ -2034,3 +2034,6 @@ address,name,source,arguments,returns,convention
 0008a6f0,simulation_entity_database_decode_creation,source/networking/simulation_entity_database.c,ecx stack stack stack stack stack stack stack,int,stdcall
 0008aac0,simulation_entity_database_decode_update,source/networking/simulation_entity_database.c,ecx stack stack stack stack stack stack,int,stdcall
 00096e90,network_heap_allocate_block,source/networking/network_heap.c,edi,int
+00097f60,replication_entity_view_new,source/networking/replication_entity_view.c,eax ecx edx,void
+00098480,replication_entity_view_next_entity,source/networking/replication_entity_view.c,ecx edi,int
+00099640,replication_entity_view_unknown_00099640,source/networking/replication_entity_view.c,edx edi,bool

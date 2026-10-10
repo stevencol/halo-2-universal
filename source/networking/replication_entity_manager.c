@@ -170,7 +170,7 @@ long replication_entity_manager_allocate_index(
 
 /* 0x00089cc0: the thing of a place is made: it has the bit that says so,
 its place has been used once more (of sixteen), and it has no thing after
-it. Each view that there is is told (unknown_00099690). Its number */
+it. Each view that there is is told (replication_entity_view_set_entity_state). Its number */
 long replication_entity_manager_create_entity(
 	long index,
 	struct replication_entity_manager *manager)
@@ -187,7 +187,7 @@ long replication_entity_manager_create_entity(
 	{
 		if (manager->views[view_index])
 		{
-			unknown_00099690(manager->views[view_index], entity_index, 1);
+			replication_entity_view_set_entity_state(manager->views[view_index], entity_index, 1);
 		}
 	}
 
@@ -314,7 +314,7 @@ void __attribute__((stdcall)) replication_entity_manager_delete_entities_now(
 
 /* 0x000898c0: a view is one of the views, in a place, and the mask has it.
 It is told of each thing that is in use and made and not being done with
-(unknown_00099690), and given what the things are of has of it, by its
+(replication_entity_view_set_entity_state), and given what the things are of has of it, by its
 sixteenth function, if it has something (replication_entity_view_mark_entity) */
 void __attribute__((stdcall)) replication_entity_manager_add_view(
 	byte *view,
@@ -335,7 +335,7 @@ void __attribute__((stdcall)) replication_entity_manager_add_view(
 			long entity_index= (long)((unsigned long)entity->salt<<REPLICATION_ENTITY_SALT_SHIFT|(unsigned long)index);
 			long unknown;
 
-			unknown_00099690(manager->views[view_index], entity_index, 1);
+			replication_entity_view_set_entity_state(manager->views[view_index], entity_index, 1);
 			unknown= manager->client->functions->unknown3C(manager->client, entity_index);
 			if (unknown!=0)
 			{
