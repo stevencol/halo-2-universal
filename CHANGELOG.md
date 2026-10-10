@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Lo que hace un jugador, para el juego
+
+Una función en `networking/simulation_player.c`, de 255 bytes. De 1624
+funciones se pasa a 1625, el 14,43 % de las del juego (el 9,568 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_player_get_action` | `0x00084990` | `networking/simulation_player.c` |
+
+### Lo que se sabe
+
+- `simulation_player_get_action` es lo que **el juego pregunta cada tick
+  de cada jugador de la partida en red**: ¿qué hace? Contesta si hay
+  algo.
+  - Un jugador en su quinto o sexto estado (de otra consola, en las
+    maneras 4 y 5 de jugar, hito 482) lo recibe **por la vista de su
+    consola**: si esa vista tiene algo suyo (`0x0008b7f0`), se
+    desempaqueta (`0x000825e0`: 52 bytes que pasan a los 92 de siempre) y
+    se guarda con la hora del juego.
+  - Lo guardado se le da al juego si **no es demasiado viejo**: tiene que
+    haber llegado hace menos segundos de los que dice el juego
+    (`0x004ced44`), contando ticks por lo que dura un tick. Si un jugador
+    deja de mandar, a los pocos ticks deja de moverse en vez de repetir
+    lo último para siempre.
+  - Y tiene que ser válido (`0x0014d0a0`).
+- Un jugador en su tercer estado nunca da nada por aquí.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 441 a 482.
+- En este hito se pasaron las pruebas de `simulation_player` (3
+  funciones, con la cuenta de segundos comparada bit a bit).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — La partida en red recibe un jugador
 
 Una función en `networking/simulation_world.c`, de 158 bytes. De 1623

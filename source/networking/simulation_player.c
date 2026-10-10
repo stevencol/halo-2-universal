@@ -10,10 +10,27 @@ file is a guess, and so are the names of its functions.
 
 #include "simulation_player.h"
 
+#include "game/game.h"
 #include "game/player_action.h"
+#include "networking/simulation_view.h"
 #include "networking/simulation_world.h"
 
 #include <string.h>
+
+/* ---------- prototypes */
+
+/* 0x0008b7f0: what a view has for the players gives what one of them does,
+packed; whether it has it. 0x000825e0: that is unpacked. 0x0014d0a0: whether
+what a player does is good */
+boolean __attribute__((stdcall)) unknown_0008b7f0(long unknown0, byte *unknown5098, byte *packed);
+void unknown_000825e0(const byte *packed, byte *action);
+boolean unknown_0014d0a0(const byte *action);
+
+/* ---------- globals */
+
+/* 0x004ced44: for how long what a player did goes on being what it does, in
+seconds */
+real unknown_004ced44;
 
 /* ---------- code */
 
@@ -45,4 +62,61 @@ void __attribute__((stdcall)) simulation_player_new(
 	player[SIMULATION_PLAYER_UNKNOWN25_OFFSET]= world_state==3 || world_state==5;
 	*(long *)(player+SIMULATION_PLAYER_ACTION_TIME_OFFSET)= NONE;
 	player_action_clear(player+SIMULATION_PLAYER_ACTION_OFFSET);
+}
+
+/* 0x00084990: what a player of the thing does, for the game; whether there
+is something. One in its fifth state or its sixth has it from the view of
+its console (the one that the thing has with its bytes, or the first of the
+first kind or the third in a thing that follows another): if that has
+something of it (unknown_0008b7f0), it is unpacked (unknown_000825e0) and
+kept, with the time of the game. Then what is kept is given, if the player
+is not in its third state, something came, less time than the game has for
+it has gone by since, and it is good (unknown_0014d0a0) */
+boolean __attribute__((stdcall)) simulation_player_get_action(
+	byte *player,
+	byte *action)
+{
+	long state= *(const long *)(player+SIMULATION_PLAYER_STATE_OFFSET);
+	long time;
+
+	if (state>=_simulation_player_state4 && state<=_simulation_player_state5)
+	{
+		byte *world= *(byte *const *)(player+SIMULATION_PLAYER_WORLD_OFFSET);
+		long world_state= *(const long *)(world+SIMULATION_WORLD_STATE_OFFSET);
+		const byte *view;
+
+		if (world_state!=3 && world_state!=5)
+		{
+			view= simulation_world_get_view_by_unknown14(world, (const word *)(player+SIMULATION_PLAYER_MACHINE_OFFSET));
+		}
+		else
+		{
+			view= simulation_world_unknown_0006acb0(world);
+		}
+		if (view)
+		{
+			byte packed[SIMULATION_PLAYER_PACKED_ACTION_SIZE];
+
+			if (unknown_0008b7f0(*(const long *)(player+SIMULATION_PLAYER_UNKNOWN0_OFFSET),
+				*(byte *const *)(view+SIMULATION_VIEW_UNKNOWN8_OFFSET)+SIMULATION_PLAYER_VIEW_UNKNOWN8_UNKNOWN5098_OFFSET, packed))
+			{
+				byte unpacked[PLAYER_ACTION_SIZE];
+
+				unknown_000825e0(packed, unpacked);
+				memcpy(player+SIMULATION_PLAYER_ACTION_OFFSET, unpacked, PLAYER_ACTION_SIZE);
+				*(unsigned long *)(player+SIMULATION_PLAYER_ACTION_TIME_OFFSET)= game_time_globals->time;
+			}
+		}
+	}
+	time= *(const long *)(player+SIMULATION_PLAYER_ACTION_TIME_OFFSET);
+	if (*(const long *)(player+SIMULATION_PLAYER_STATE_OFFSET)!=_simulation_player_state2 && time!=NONE &&
+		unknown_004ced44>(real)(long)(game_time_globals->time-(unsigned long)time)*game_time_globals->seconds_per_tick &&
+		unknown_0014d0a0(player+SIMULATION_PLAYER_ACTION_OFFSET))
+	{
+		memcpy(action, player+SIMULATION_PLAYER_ACTION_OFFSET, PLAYER_ACTION_SIZE);
+
+		return TRUE;
+	}
+
+	return FALSE;
 }

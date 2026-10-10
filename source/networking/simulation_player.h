@@ -10,6 +10,7 @@ guess, and so are the names of its functions.
 #define __SIMULATION_PLAYER_H
 
 #include "cseries/cseries.h"
+#include "math/real_math.h"
 
 /* ---------- constants */
 
@@ -30,12 +31,25 @@ enum
 	SIMULATION_PLAYER_UNKNOWN24_OFFSET= 0x24,
 	SIMULATION_PLAYER_UNKNOWN25_OFFSET= 0x25,
 	SIMULATION_PLAYER_ACTION_TIME_OFFSET= 0x28,
-	SIMULATION_PLAYER_ACTION_OFFSET= 0x2C
+	SIMULATION_PLAYER_ACTION_OFFSET= 0x2C,
+	/* the states of one whose doings come from the view of its console, and
+	the one of one that is never given them; and what such a view has for it,
+	at 0x5098 of what it has at 0x8, and the size of what that gives */
+	_simulation_player_state2= 2,
+	_simulation_player_state4= 4,
+	_simulation_player_state5= 5,
+	SIMULATION_PLAYER_VIEW_UNKNOWN8_UNKNOWN5098_OFFSET= 0x5098,
+	SIMULATION_PLAYER_PACKED_ACTION_SIZE= 0x34
 };
 
 /* ---------- prototypes/SIMULATION_PLAYER.C */
 
 void __attribute__((stdcall)) simulation_player_new(byte *player, const long *identifier, const word *machine,
 	byte *world, long unknown0, long index, long state);
+boolean __attribute__((stdcall)) simulation_player_get_action(byte *player, byte *action);
+
+/* ---------- globals */
+
+extern real unknown_004ced44;
 
 #endif
