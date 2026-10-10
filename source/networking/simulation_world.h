@@ -151,7 +151,18 @@ enum
 	SIMULATION_VIEW_UNKNOWN8_UNKNOWN39_OFFSET= 0x39,
 	_simulation_world_advance_view_waiting= 0,
 	_simulation_world_advance_view_there= 1,
-	_simulation_world_advance_view_failed= 3
+	_simulation_world_advance_view_failed= 3,
+	/* of what the thing has first: a bit for each player that there is,
+	and what there is of each: the three numbers that it is known by, and a
+	byte that says that it is not to be counted yet. Of what the thing has
+	of a player: a byte that keeps its other byte from being set. Of the
+	thing: a byte that is set while the state of the game is sent */
+	SIMULATION_WORLD_UNKNOWN0_PLAYER_MASK_OFFSET= 0x88,
+	SIMULATION_WORLD_UNKNOWN0_PLAYERS_OFFSET= 0x8C,
+	SIMULATION_WORLD_UNKNOWN0_PLAYER_SIZE= 0xB4,
+	SIMULATION_WORLD_UNKNOWN0_PLAYER_UNKNOWNC_OFFSET= 0xC,
+	SIMULATION_WORLD_PLAYER_UNKNOWN24_OFFSET= 0x24,
+	SIMULATION_WORLD_SENDING_GAME_STATE_OFFSET= 0x11FC
 };
 
 /* ---------- structures */
@@ -235,6 +246,8 @@ void simulation_world_unknown_00069c80(byte *world);
 long simulation_world_advance_view(byte *view, byte *world);
 void simulation_world_unknown_00069dd0(byte *world);
 boolean __attribute__((stdcall)) simulation_world_begin_game_state(byte *world);
+void __attribute__((stdcall)) simulation_world_update_players_unknown25(byte *world);
+void __attribute__((stdcall)) simulation_world_before_send_game_state(byte *world, long *size_out);
 
 /* whether a view is past the states in which it is made ready: one of the
 second kind from the sixth state on, and any other from the fourth. The game

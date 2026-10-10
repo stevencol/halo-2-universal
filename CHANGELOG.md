@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Cuándo un jugador cuenta para todas las consolas
+
+Dos funciones en `networking/simulation_world.c`, 251 bytes entre las dos. De 1589
+funciones se pasa a 1591, el 14,12 % de las del juego (el 9,419 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_update_players_unknown25` | `0x0006a2e0` | `networking/simulation_world.c` |
+| `simulation_world_before_send_game_state` | `0x0006a860` | `networking/simulation_world.c` |
+
+### Lo que se sabe
+
+- Se sabe por fin **qué es el byte `0x25` de cada jugador** (hitos 445 y
+  459): `simulation_world_update_players_unknown25` lo pone cuando el
+  jugador **ya cuenta para todos**:
+  - lo primero que lleva la partida (la lista de jugadores de la sesión:
+    un bit por jugador en `0x88`, y `0xB4` bytes de cada uno desde
+    `0x8C`) lo tiene con los mismos tres números y sin marcar como «aún
+    no»;
+  - **todas las vistas que ya pasaron de prepararse lo conocen** (hito
+    459);
+  - y no tiene puesto otro byte suyo (`0x24`).
+  Es un byte que solo se pone: no se quita aquí. Y es el que una vista
+  tiene que conocer para poder avanzar (hito 464).
+- `simulation_world_before_send_game_state` es el paso previo a mandar el
+  estado del juego a una consola que entra: hace **lo que se hace antes
+  de guardar una partida** (los cuatro avisos del hito 22), marca que se
+  está mandando (`0x11FC`) y da el tamaño, `0x3FE000`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos**, y en las de los hitos 441 a
+  466.
+- En este hito se pasaron las pruebas de las dos funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Una consola manda lo que hacen sus jugadores
 
 Una función en `networking/simulation_view.c`, de 226 bytes. De 1588

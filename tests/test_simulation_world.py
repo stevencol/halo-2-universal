@@ -707,3 +707,39 @@ def run(t) -> None:
             globals={"texture_cache_globals+0x10": Buffer(bytes(cache))},
             externals={"texture_cache_steal_memory_now": steals, "texture_cache_idle": lambda harness, arguments: 0},
         )
+
+    # ---------- the players that all know of, and making ready to send the state of the game
+
+    for n in range(2000):
+        thing = a_world(random_, 0, 0x8FC)
+        data = bytearray(thing.data)
+        at = len(data)
+        other = bytearray(random_.randbytes(0x8C + 16 * 0xB4))
+        struct.pack_into("<I", other, 0x88, random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16))))
+        for player in range(16):
+            place = 0x7C + player * 0x88
+            if random_.random() < 0.2:
+                struct.pack_into("<i", data, place, -1)
+            data[place + 0x24] = random_.choice((0, 0, 0, 1))
+            data[place + 0x25] = random_.choice((0, 0, 0, 1))
+            if random_.random() < 0.8:
+                other[0x8C + player * 0xB4:0x8C + player * 0xB4 + 12] = data[place + 0xC:place + 0x18]
+            other[0x8C + player * 0xB4 + 0xC] = random_.choice((0, 0, 0, 1))
+        data += other
+        struct.pack_into("<I", data, 0, at)
+        known = random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16)))
+        t.check(
+            "simulation_world_update_players_unknown25",
+            Buffer(bytes(data), pointers=thing.pointers + (0,)),
+            externals={"simulation_world_players_known_mask": lambda harness, arguments, known=known: (known, (harness.normalize(arguments[0]),))},
+        )
+
+    for n in range(100):
+        t.check(
+            "simulation_world_before_send_game_state",
+            Buffer(random_.randbytes(0x1220)),
+            Buffer(random_.randbytes(4)),
+            # the four things that are done before a state is saved: each a function that the test stands in for
+            globals={"game_state_before_save_procs": struct.pack("<4I", *(mock_address(index) for index in range(4)))},
+            mocks=[Mock(lambda call: 0, stack_arguments=1) for index in range(4)],
+        )

@@ -1451,3 +1451,56 @@ boolean __attribute__((stdcall)) simulation_world_begin_game_state(
 
 	return TRUE;
 }
+
+/* 0x0006a2e0: the byte of each player that the thing has is set when the
+player is one that all know of: it is not set yet, what the thing has first
+has the player with the same three numbers and is to count it, every view
+that is past being made ready knows of it (simulation_world_players_known_mask),
+and another byte of it is clear */
+void __attribute__((stdcall)) simulation_world_update_players_unknown25(
+	byte *world)
+{
+	unsigned long known= simulation_world_players_known_mask(world);
+	long player;
+
+	for (player= 0; player<NUMBER_OF_SIMULATION_WORLD_PLAYERS; player++)
+	{
+		byte *player_data_= world+player*SIMULATION_WORLD_PLAYER_SIZE+SIMULATION_WORLD_PLAYERS_OFFSET;
+
+		if (*(const long *)player_data_!=NONE && !player_data_[SIMULATION_WORLD_PLAYER_UNKNOWN25_OFFSET])
+		{
+			const byte *unknown0= *(const byte *const *)(world+SIMULATION_WORLD_UNKNOWN0_OFFSET);
+			unsigned long bit= 1u<<player;
+
+			if (bit&*(const unsigned long *)(unknown0+SIMULATION_WORLD_UNKNOWN0_PLAYER_MASK_OFFSET))
+			{
+				const byte *other= unknown0+SIMULATION_WORLD_UNKNOWN0_PLAYERS_OFFSET+player*SIMULATION_WORLD_UNKNOWN0_PLAYER_SIZE;
+
+				if (memcmp(player_data_+SIMULATION_WORLD_PLAYER_IDENTIFIER_OFFSET, other, SIMULATION_PLAYER_IDENTIFIER_SIZE)==0 &&
+					!other[SIMULATION_WORLD_UNKNOWN0_PLAYER_UNKNOWNC_OFFSET] && (known&bit) &&
+					!player_data_[SIMULATION_WORLD_PLAYER_UNKNOWN24_OFFSET])
+				{
+					player_data_[SIMULATION_WORLD_PLAYER_UNKNOWN25_OFFSET]= TRUE;
+				}
+			}
+		}
+	}
+}
+
+/* 0x0006a860: the thing makes ready to send the state of the game: what is
+done before a state is saved is done, a byte of the thing says that it is
+being sent, and its size is given, which is the one of the whole state. The
+game has game_state_call_before_save_procs written here */
+void __attribute__((stdcall)) simulation_world_before_send_game_state(
+	byte *world,
+	long *size_out)
+{
+	long index;
+
+	for (index= 0; index<NUMBER_OF_GAME_STATE_BEFORE_SAVE_PROCS; index++)
+	{
+		game_state_before_save_procs[index](0);
+	}
+	world[SIMULATION_WORLD_SENDING_GAME_STATE_OFFSET]= TRUE;
+	*size_out= SIMULATION_GAME_STATE_SIZE;
+}

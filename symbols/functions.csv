@@ -2148,3 +2148,5 @@ address,name,source,arguments,returns,convention
 00085cb0,simulation_view_nothing_to_send,source/networking/simulation_view.c,eax,bool
 00086ad0,unknown_00086ad0,,ebx,bool
 00085fc0,simulation_view_send_player_actions,source/networking/simulation_view.c,edx stack stack,void,stdcall
+0006a2e0,simulation_world_update_players_unknown25,source/networking/simulation_world.c,stack,void,stdcall
+0006a860,simulation_world_before_send_game_state,source/networking/simulation_world.c,stack stack,void,stdcall
