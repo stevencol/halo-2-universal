@@ -75,7 +75,9 @@ struct replication_entity_view_entity
 };
 
 /* what the things are of: something with functions, of which the first
-writes a thing in a packet for a console that does not have it; the third is
+writes a thing in a packet for a console that does not have it; the eighth is
+told how a thing is, as it came; the twelfth, that the thing of a number is
+to make way for the one of another; the third is
 told that a thing was made by another console, with three things of it; the
 eleventh and the thirteenth, that a thing is being done with, and that it is
 done with; the fourteenth, that a thing that another console made is this
@@ -91,9 +93,13 @@ struct replication_entity_client_functions
 	void *unknown4;
 	void (__attribute__((thiscall)) *created)(struct replication_entity_client *client, long entity, long unknown4,
 		long unknown8, long unknownC, void *unknown10);
-	void *unknownC[7];
+	void *unknownC[4];
+	long (__attribute__((thiscall)) *updated)(struct replication_entity_client *client, long entity, long unknown4,
+		long unknown8, void *update);
+	void *unknown20[2];
 	void (__attribute__((thiscall)) *deleting)(struct replication_entity_client *client, long entity);
-	void *unknown2C;
+	void (__attribute__((thiscall)) *replaced)(struct replication_entity_client *client, long old_entity,
+		long new_entity, long unknown, void *unknown2);
 	void (__attribute__((thiscall)) *deleted)(struct replication_entity_client *client, long entity);
 	boolean (__attribute__((thiscall)) *adopt)(struct replication_entity_client *client, long entity);
 	void (__attribute__((thiscall)) *adopted)(struct replication_entity_client *client);

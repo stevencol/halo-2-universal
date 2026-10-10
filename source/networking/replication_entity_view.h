@@ -56,7 +56,9 @@ enum
 	_replication_entity_view_message_chain_creation= 3,
 	_replication_entity_view_message_chain_deletion= 4,
 	REPLICATION_ENTITY_VIEW_CHAIN_COUNT_BITS= 2,
-	REPLICATION_ENTITY_VIEW_CHAIN_COUNT_LEAST= 2
+	REPLICATION_ENTITY_VIEW_CHAIN_COUNT_LEAST= 2,
+	/* and how a thing is now */
+	_replication_entity_view_message_update= 5
 };
 
 /* ---------- structures */
@@ -90,6 +92,25 @@ struct replication_entity_view_packet
 	struct replication_entity_view_packet *next;
 };
 
+/* what came in a packet of a thing or of some made at once, as it is given
+to a view: which of the five it is; the number of the thing, or of the
+first; how many they are and their numbers; a number of each (its kind,
+when it is made) and another; one more number; and what came with each */
+struct replication_entity_view_message
+{
+	long type;
+	long entity_index;
+	long count;
+	long entities[MAXIMUM_REPLICATION_ENTITY_CHAIN];
+	long unknown1C[MAXIMUM_REPLICATION_ENTITY_CHAIN];
+	long unknown2C[MAXIMUM_REPLICATION_ENTITY_CHAIN];
+	long unknown3C;
+	byte data[MAXIMUM_REPLICATION_ENTITY_CHAIN][REPLICATION_ENTITY_CREATION_DATA_SIZE];
+};
+
+typedef char verify_replication_entity_view_message_size[sizeof(struct replication_entity_view_message) == 0x80 ?
+	1 : -1];
+
 /* the functions of a view, of which the ninth takes back one of the things
 that it has sent, by its number */
 struct replication_entity_view_functions
@@ -111,6 +132,10 @@ boolean __attribute__((stdcall)) replication_entity_view_write_chain_creation(lo
 	byte *view, long unknown, long bits_after);
 boolean __attribute__((stdcall)) replication_entity_view_write_chain_deletion(long index, struct bitstream *stream,
 	byte *view, long bits_after);
+void __attribute__((stdcall)) replication_entity_view_handle_message(byte *view,
+	struct replication_entity_view_message *message);
+boolean __attribute__((stdcall)) replication_entity_view_make_way(long entity_index, byte *view, long unknown,
+	void *unknown2);
 void replication_entity_view_sent_creation(long entity_index, byte *view);
 void __attribute__((stdcall)) replication_entity_view_sent_deletion(byte *view, long entity_index);
 void __attribute__((stdcall)) replication_entity_view_sent_update(long entity_index, byte *view,

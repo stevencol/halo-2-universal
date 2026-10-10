@@ -2,6 +2,55 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — Lo que una vista hace con un anuncio que llega
+
+Dos funciones en `networking/replication_entity_view.c`, 735 bytes entre las dos. De 1486
+funciones se pasa a 1488, el 13,21 % de las del juego (el 8,874 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `replication_entity_view_handle_message` | `0x00098fb0` | `networking/replication_entity_view.c` |
+| `replication_entity_view_make_way` | `0x000991d0` | `networking/replication_entity_view.c` |
+
+### Lo que se sabe
+
+- `replication_entity_view_handle_message` es **el otro lado de los
+  hitos 427 y 428: lo que hace la consola que recibe**, según los cinco
+  anuncios:
+  - 1 y 3, crear (una cosa o una cadena): lo que hubiera en esos sitios
+    se aparta, y las cosas quedan puestas aquí con el mismo número que
+    allí. Para una cadena se usa la función del hito 417; para una sola,
+    lo mismo escrito en línea. Quedan en el estado 3.
+  - 2 y 4, borrar: solo se hace caso si la vista tiene esa cosa con ese
+    número y en el estado 3. Para borrar una cadena tiene que **coincidir
+    entera**: las mismas cosas, con los mismos números y en el mismo orden.
+  - 5, cómo está ahora: se pasa a la función 8 de la tabla `0x00450d60`
+    (hito 423).
+- `replication_entity_view_make_way` decide **si lo que hay en un sitio se
+  aparta para una cosa nueva**. Compara las «veces usado» de los dos
+  números, que dan la vuelta en 16: la nueva tiene que ser la misma o
+  hasta tres más reciente (o estar a cuatro o más por detrás, que es
+  estar lejos por delante dando la vuelta). Si no, se toma por un anuncio
+  viejo que llega tarde y no se hace nada. Si se aparta, se borra ya, sola
+  o con toda su cadena.
+- Con esto el camino entero de una cosa está descompilado: se crea (hito
+  422), se anuncia (427), se recibe y se pone (este), y lo mismo al
+  borrarla.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos** y en las de los hitos 426 a
+  428.
+- Un anuncio con un número fuera del 1 al 5 haría saltar al juego por una
+  tabla de cinco sitios; no se prueba.
+- En este hito se pasaron las pruebas de `replication_entity_view` (16
+  funciones), `replication_entity_manager` (15) y
+  `simulation_entity_database` (23).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Anunciar de una vez las cosas que se hicieron juntas
 
 Dos funciones en `networking/replication_entity_view.c`, 639 bytes entre las dos. De 1484

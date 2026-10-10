@@ -15,6 +15,8 @@ functions.
 #include "networking/network_heap.h"
 #include "networking/network_observer.h"
 
+#include <string.h>
+
 /* ---------- prototypes of functions not decompiled yet */
 
 /* 0x000b5650: the number of a thing is written in a stream */
@@ -607,6 +609,197 @@ boolean __attribute__((stdcall)) replication_entity_view_write_chain_deletion(
 	{
 		replication_entity_view_sent_deletion(view, entities[place]);
 	}
+
+	return TRUE;
+}
+
+/* 0x00098fb0: a view is given what came in a packet of a thing.
+
+That it is made, or that some are: each thing that the view has in one of
+their places makes way (replication_entity_view_make_way), and if one cannot
+no more is done. Then they are here: one, in its place, in use, with the
+count of its place that its number says, and what the things are of is told,
+by its third function; or some at once
+(replication_entity_manager_create_entities_remote). And they are in their
+third state in the view.
+
+That it is done with, which is only heeded of a thing that the view has by
+that number in its third state: one that is not of the ones made at once is
+in no state, and done with now
+(replication_entity_manager_delete_entity_now). Or that some are: the thing
+has to be the first of some, and they the same ones that came, as many and
+with the same numbers; then they are all in no state, and done with now.
+
+How it is now: what the things are of is told, by its eighth function */
+void __attribute__((stdcall)) replication_entity_view_handle_message(
+	byte *view,
+	struct replication_entity_view_message *message)
+{
+	long entity_index= message->entity_index;
+	long index= entity_index&REPLICATION_ENTITY_INDEX_MASK;
+	struct replication_entity_manager *manager;
+	long place;
+
+	switch (message->type)
+	{
+	case _replication_entity_view_message_creation:
+	case _replication_entity_view_message_chain_creation:
+	{
+		boolean made_way= TRUE;
+
+		for (place= 0; place<message->count; place++)
+		{
+			if (!replication_entity_view_make_way(message->entities[place], view, message->unknown1C[place],
+				message->data[place]))
+			{
+				made_way= FALSE;
+			}
+		}
+		if (!made_way)
+		{
+			return;
+		}
+		manager= *(struct replication_entity_manager **)(view+REPLICATION_ENTITY_VIEW_MANAGER_OFFSET);
+		if (message->count==1)
+		{
+			struct replication_entity *entity= &manager->entities[index];
+
+			entity->flags= _replication_entity_used_bit;
+			entity->salt= (byte)((unsigned long)entity_index>>REPLICATION_ENTITY_SALT_SHIFT);
+			entity->unknown2= 0;
+			manager->client->functions->created(manager->client, entity_index, message->unknown1C[0], message->unknown2C[0],
+				message->unknown3C, message->data[0]);
+		}
+		else
+		{
+			replication_entity_manager_create_entities_remote(message->unknown1C, manager, message->count, message->entities,
+				message->unknown2C, message->data[0]);
+		}
+		for (place= 0; place<message->count; place++)
+		{
+			replication_entity_view_set_entity_state(view, message->entities[place], _replication_entity_view_state3);
+		}
+		break;
+	}
+	case _replication_entity_view_message_deletion:
+	case _replication_entity_view_message_chain_deletion:
+	{
+		const struct replication_entity_view_entity *view_entity= replication_entity_view_entity_get(view, index);
+
+		if (view_entity->state==_replication_entity_view_state_none || view_entity->entity_index!=entity_index ||
+			view_entity->state!=_replication_entity_view_state3)
+		{
+			return;
+		}
+		manager= *(struct replication_entity_manager **)(view+REPLICATION_ENTITY_VIEW_MANAGER_OFFSET);
+		if (message->type==_replication_entity_view_message_deletion)
+		{
+			if (manager->entities[index].flags&(_replication_entity_first_bit|_replication_entity_other_bit))
+			{
+				return;
+			}
+			replication_entity_view_set_entity_state(view, entity_index, _replication_entity_view_state_none);
+			replication_entity_manager_delete_entity_now(
+				*(struct replication_entity_manager **)(view+REPLICATION_ENTITY_VIEW_MANAGER_OFFSET), entity_index);
+		}
+		else
+		{
+			long entities[MAXIMUM_REPLICATION_ENTITY_CHAIN];
+			long count;
+
+			if (!(manager->entities[index].flags&_replication_entity_first_bit))
+			{
+				return;
+			}
+			count= replication_entity_manager_get_chain(entity_index, entities, manager);
+			if (message->count!=count || memcmp(message->entities, entities, (unsigned long)count*sizeof(long))!=0)
+			{
+				return;
+			}
+			for (place= 0; place<message->count; place++)
+			{
+				replication_entity_view_set_entity_state(view, message->entities[place], _replication_entity_view_state_none);
+			}
+			replication_entity_manager_delete_entities_now(
+				*(struct replication_entity_manager **)(view+REPLICATION_ENTITY_VIEW_MANAGER_OFFSET), message->count,
+				message->entities);
+		}
+		break;
+	}
+	case _replication_entity_view_message_update:
+		manager= *(struct replication_entity_manager **)(view+REPLICATION_ENTITY_VIEW_MANAGER_OFFSET);
+		manager->client->functions->updated(manager->client, entity_index, message->unknown2C[0], message->unknown3C,
+			message->data[0]);
+		break;
+	}
+}
+
+/* 0x000991d0: the thing that a view has in the place of a number makes way
+for the thing of that number, which came in a packet; whether it could. With
+no thing there, it is so. The counts of the place of the two numbers are
+taken from each other, in sixteen: the new one has to be the same or up to
+three after the old, or four or more before it (which is to be far after it,
+all the way round); if not, nothing is done. What the things are of is told,
+by its twelfth function; and the old thing is in no state in the view and
+done with now: alone, or with the ones that were made at once with it,
+which are found from it if it is the first and from the first if not */
+boolean __attribute__((stdcall)) replication_entity_view_make_way(
+	long entity_index,
+	byte *view,
+	long unknown,
+	void *unknown2)
+{
+	const struct replication_entity_view_entity *view_entity=
+		replication_entity_view_entity_get(view, entity_index&REPLICATION_ENTITY_INDEX_MASK);
+	struct replication_entity_manager *manager;
+	long entities[MAXIMUM_REPLICATION_ENTITY_CHAIN];
+	long old_entity_index;
+	long difference;
+	long count;
+	long place;
+	byte flags;
+
+	if (view_entity->state==_replication_entity_view_state_none)
+	{
+		return TRUE;
+	}
+	old_entity_index= view_entity->entity_index;
+	difference= (long)((unsigned long)entity_index>>REPLICATION_ENTITY_SALT_SHIFT)-
+		(long)((unsigned long)old_entity_index>>REPLICATION_ENTITY_SALT_SHIFT)+REPLICATION_ENTITY_SALT_COUNT;
+	if (difference>REPLICATION_ENTITY_SALT_COUNT/2)
+	{
+		difference-= REPLICATION_ENTITY_SALT_COUNT;
+	}
+	if (!((difference>=0 && difference<4) || difference<=-4))
+	{
+		return FALSE;
+	}
+	manager= *(struct replication_entity_manager **)(view+REPLICATION_ENTITY_VIEW_MANAGER_OFFSET);
+	manager->client->functions->replaced(manager->client, old_entity_index, entity_index, unknown, unknown2);
+	manager= *(struct replication_entity_manager **)(view+REPLICATION_ENTITY_VIEW_MANAGER_OFFSET);
+	flags= manager->entities[old_entity_index&REPLICATION_ENTITY_INDEX_MASK].flags;
+	if (!(flags&_replication_entity_first_bit) && !(flags&_replication_entity_other_bit))
+	{
+		replication_entity_view_set_entity_state(view, old_entity_index, _replication_entity_view_state_none);
+		replication_entity_manager_delete_entity_now(
+			*(struct replication_entity_manager **)(view+REPLICATION_ENTITY_VIEW_MANAGER_OFFSET), old_entity_index);
+
+		return TRUE;
+	}
+	if (flags&_replication_entity_first_bit)
+	{
+		count= replication_entity_manager_get_chain(old_entity_index, entities, manager);
+	}
+	else
+	{
+		count= replication_entity_manager_find_chain(manager, entities, old_entity_index);
+	}
+	for (place= 0; place<count; place++)
+	{
+		replication_entity_view_set_entity_state(view, entities[place], _replication_entity_view_state_none);
+	}
+	replication_entity_manager_delete_entities_now(
+		*(struct replication_entity_manager **)(view+REPLICATION_ENTITY_VIEW_MANAGER_OFFSET), count, entities);
 
 	return TRUE;
 }

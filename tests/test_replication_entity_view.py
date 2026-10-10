@@ -325,3 +325,110 @@ def run(t) -> None:
             externals=externals,
             mocks=made,
         )
+
+    # ---------- what came in a packet of a thing
+
+    def receiving(chains: int = 6) -> tuple:
+        """A view and what keeps the things, in which no thing has one after it but the ones of some chains; the chains."""
+        base = world(random_.choice((0.3, 1.0)), 0)
+        raw = bytearray(base.data)
+        struct.pack_into("<I", raw, CLIENT_TABLE + 8, mock_address(5))
+        struct.pack_into("<I", raw, CLIENT_TABLE + 0x1C, mock_address(6))
+        struct.pack_into("<I", raw, CLIENT_TABLE + 0x28, mock_address(7))
+        struct.pack_into("<I", raw, CLIENT_TABLE + 0x2C, mock_address(8))
+        for place in range(COUNT):
+            raw[MANAGER + 0x44 + place * 8] &= ~0x18 & 0xFF
+            struct.pack_into("<I", raw, MANAGER + 0x48 + place * 8, NONE)
+            # the view has each thing by the number that it has
+            struct.pack_into("<I", raw, VIEW + 0x24 + place * 20, place | (raw[MANAGER + 0x45 + place * 8] & 0xF) << 28)
+        taken = random_.sample(range(COUNT), chains * 4)
+        made = []
+        for chain in range(chains):
+            places = taken[chain * 4 : chain * 4 + random_.choice((2, 3, 4))]
+            entities = [place | (raw[MANAGER + 0x45 + place * 8] & 0xF) << 28 for place in places]
+            for position, place in enumerate(places):
+                raw[MANAGER + 0x44 + place * 8] = 9 if position == 0 else 0x11
+                struct.pack_into("<I", raw, MANAGER + 0x48 + place * 8, entities[position + 1] if position + 1 < len(places) else NONE)
+            made.append(entities)
+        return raw, base.pointers, made
+
+    def receiving_mocks() -> list:
+        return [
+            *sending_mocks(),
+            Mock(lambda call: 0, stack_arguments=5, registers=("ecx",)),
+            Mock(lambda call: 0, stack_arguments=4, registers=("ecx",)),
+            Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
+            Mock(lambda call: 0, stack_arguments=4, registers=("ecx",)),
+        ]
+
+    def with_salt(entity: int, more: int) -> int:
+        return (entity & 0x3FF) | (((entity >> 28) + more) & 0xF) << 28
+
+    for n in range(900):
+        raw, pointers, chains = receiving()
+        # the thing that is there: alone, the first of some, or another of them
+        chain = random_.choice(chains)
+        old = random_.choice((random_.randrange(COUNT), random_.randrange(COUNT), chain[0], chain[-1]))
+        place = old & 0x3FF
+        old = struct.unpack_from("<I", raw, VIEW + 0x24 + place * 20)[0]
+        struct.pack_into("<H", raw, VIEW + 0x24 + place * 20 + 8, random_.choice((0, 1, 2, 3, 3, 3)))
+        data = Buffer(bytes(raw), pointers=pointers)
+        t.check(
+            "replication_entity_view_make_way",
+            with_salt(old, random_.choice((0, 1, 3, 4, 8, 11, 12, 13, 15, random_.randrange(16)))),
+            Pointer(data, VIEW),
+            random_.getrandbits(32),
+            Buffer(random_.randbytes(0x10)),
+            extra=[data],
+            mocks=receiving_mocks(),
+        )
+
+    for n in range(1200):
+        raw, pointers, chains = receiving()
+        kind = random_.choice((1, 1, 2, 2, 3, 3, 4, 4, 5))
+        chain = random_.choice(chains)
+        if kind in (1, 3):
+            # things that are made: in places where there is something or nothing, with numbers after the ones there
+            count = 1 if kind == 1 else random_.choice((2, 3, 4))
+            entities = []
+            for place in random_.sample(range(COUNT), count):
+                there = struct.unpack_from("<I", raw, VIEW + 0x24 + place * 20)[0]
+                entities.append(with_salt(there, random_.choice((0, 1, 1, 2, 5, 13))))
+                struct.pack_into("<H", raw, VIEW + 0x24 + place * 20 + 8, random_.choice((0, 0, 1, 3, 3)))
+            if random_.random() < 0.1:
+                count = random_.choice((0, 1, 2))
+        elif kind == 2:
+            # a thing that is done with: one that is alone, mostly
+            place = random_.choice((random_.randrange(COUNT), random_.randrange(COUNT), chain[0] & 0x3FF, chain[-1] & 0x3FF))
+            entities = [struct.unpack_from("<I", raw, VIEW + 0x24 + place * 20)[0]]
+            if random_.random() < 0.15:
+                entities = [with_salt(entities[0], 1)]
+            struct.pack_into("<H", raw, VIEW + 0x24 + place * 20 + 8, random_.choice((0, 1, 3, 3, 3, 3)))
+            count = 1
+        elif kind == 4:
+            # some that are done with: the ones of a chain, mostly, or fewer, or with another number
+            entities = list(chain)
+            how = random_.choice((0, 0, 0, 1, 2, 3, 4))
+            if how == 1:
+                entities = entities[:-1]
+            elif how == 2:
+                entities[-1] = with_salt(entities[-1], 1)
+            elif how == 3:
+                entities = [random_.randrange(COUNT)] + entities[1:]
+            elif how == 4:
+                entities = entities[1:] + entities[:1]
+            count = len(entities)
+            struct.pack_into("<H", raw, VIEW + 0x24 + (entities[0] & 0x3FF) * 20 + 8, random_.choice((0, 1, 3, 3, 3, 3)))
+        else:
+            entities = [random_.getrandbits(32)]
+            count = random_.choice((0, 1))
+        entities += [random_.getrandbits(32)] * (4 - len(entities))
+        message = struct.pack("<3I4I4I4II", kind, entities[0], count, *entities, *(random_.getrandbits(32) for value in range(8)), random_.choice((2, random_.getrandbits(32)))) + random_.randbytes(0x40)
+        data = Buffer(bytes(raw), pointers=pointers)
+        t.check(
+            "replication_entity_view_handle_message",
+            Pointer(data, VIEW),
+            Buffer(message),
+            extra=[data],
+            mocks=receiving_mocks(),
+        )
