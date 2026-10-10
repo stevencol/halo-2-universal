@@ -542,7 +542,7 @@ def run(t) -> None:
             "simulation_world_unknown_0006a770",
             Buffer(bytes(world)),
             globals={"player_data": players},
-            externals={"unknown_000694c0": next_number},
+            externals={"simulation_world_add_player": next_number},
         )
 
     # ---------- a player leaves the thing, and the players that it has
@@ -794,4 +794,23 @@ def run(t) -> None:
             random_.randrange(16),
             Buffer(random_.randbytes(0x7C)),
             globals={"game_time_globals": Buffer(bytes(time))},
+        )
+
+    # ---------- the thing gets a player of the game
+
+    for n in range(2000):
+        players = bytearray(random_.randbytes(0x4C + 16 * 0x21C))
+        struct.pack_into("<I", players, 0x44, 0x4C)
+        for player in range(16):
+            struct.pack_into("<h", players, 0x4C + player * 0x21C + 0x28, random_.choice((-1, -1, 0, 3)))
+        game = bytearray(random_.randbytes(0x1130))
+        game[0xC] = random_.choice((1, 2, 3, 4, 5))
+        world = bytearray(random_.randbytes(0x1220))
+        struct.pack_into("<i", world, 0x8, random_.choice((1, 2, 3, 4, 5)))
+        t.check(
+            "simulation_world_add_player",
+            Buffer(bytes(world)),
+            random_.randrange(16) | random_.choice((0, 0x12340000, 0xFFFF0000)),
+            globals={"player_data": Buffer(bytes(players), pointers=(0x44,)), "main_game_globals": Buffer(bytes(game))},
+            externals={"unknown_00155710": lambda harness, arguments: 0},
         )

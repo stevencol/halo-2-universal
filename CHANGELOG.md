@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — La partida en red recibe un jugador
+
+Una función en `networking/simulation_world.c`, de 158 bytes. De 1623
+funciones se pasa a 1624, el 14,42 % de las del juego (el 9,559 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_add_player` | `0x000694c0` | `networking/simulation_world.c` |
+
+### Lo que se sabe
+
+- `simulation_world_add_player` apunta en la partida a un jugador del
+  juego (hito 481), con los números y los bytes de consola que el jugador
+  tiene en su tabla (`0x4` y `0x14`).
+- **El estado con el que entra depende de cómo se juega la partida en
+  red** (el byte `0xC` de las opciones del juego, de 1 a 5) **y de si el
+  jugador es de un mando de esta consola** (palabra `0x28` del jugador,
+  `-1` si es de otra):
+
+  | Manera | De esta consola | De otra |
+  | --- | --- | --- |
+  | 1 | 0 | 0 |
+  | 2 y 3 | 0 | 3 |
+  | 4 | 1 | 5 |
+  | 5 | 0 | 4 |
+
+  El 3 es el estado en el que la partida guarda lo que hace un jugador
+  que llega por la red (hito 457).
+- Para un jugador de esta consola se reinicia además algo de su mando
+  (`0x00155710`).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 441 a 481.
+- Con una manera que no sea de 1 a 5 el juego saltaría fuera de su
+  tabla; aquí queda en 0. Las pruebas no lo dan.
+- En este hito se pasaron las pruebas de la función y la de
+  `simulation_world_unknown_0006a770`, que la llama.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Un jugador nuevo en la partida en red
 
 Dos funciones en dos archivos nuevos: `networking/simulation_player.c` y

@@ -22,6 +22,7 @@ and so are the names of its functions.
 #include "networking/network_observer.h"
 #include "networking/network_session.h"
 #include "networking/simulation.h"
+#include "networking/simulation_player.h"
 #include "networking/simulation_view.h"
 
 #include <string.h>
@@ -37,7 +38,7 @@ boolean __attribute__((stdcall)) unknown_00199740(const void *data, long size, v
 /* 0x00083610: the things that happened to what unknown_004cf780 has are
 given, and how many. 0x00069110: what the players do goes into one of the
 things that come. 0x000c6ef0: something of one of the other things of the
-thing is made ready. 0x000694c0: the thing gets a player of the game */
+thing is made ready. 0x00155710: something of a gamepad starts over */
 void __attribute__((stdcall)) unknown_00083610(long unknown, long *count, void *events);
 void __attribute__((stdcall)) unknown_00069110(byte *world, long *update);
 void unknown_000c6ef0(byte *unknown14);
@@ -54,7 +55,7 @@ extern long unknown_004cf780;
 /* 0x00083bd0: whether what the thing has first has a player, by its place,
 with the three numbers that it is known by */
 boolean __attribute__((stdcall)) unknown_00083bd0(long player, const void *unknown, const long *identifier);
-void __attribute__((stdcall)) unknown_000694c0(byte *world, long player);
+void unknown_00155710(long controller);
 
 
 /* 0x000693a0: the views of the thing are done with: what main_game_unload
@@ -1040,7 +1041,7 @@ long simulation_world_unknown_000699a0(
 
 /* 0x0006a770: the thing has the players of the game again: none
 (simulation_world_players_clear), and then each player that there is in the
-game, but for the ones with a bit, is one that it gets (unknown_000694c0).
+game, but for the ones with a bit, is one that it gets (simulation_world_add_player).
 The game has the going through the players written here */
 void __attribute__((stdcall)) simulation_world_unknown_0006a770(
 	byte *world)
@@ -1056,7 +1057,7 @@ void __attribute__((stdcall)) simulation_world_unknown_0006a770(
 
 			if (!(datum[SIMULATION_PLAYER_DATUM_FLAGS_OFFSET]&_simulation_player_datum_unknown_bit))
 			{
-				unknown_000694c0(world, (long)(((unsigned long)(long)*(const short *)datum<<16)|(unsigned long)index));
+				simulation_world_add_player(world, (long)(((unsigned long)(long)*(const short *)datum<<16)|(unsigned long)index));
 			}
 		}
 	}
@@ -1635,4 +1636,45 @@ void __attribute__((stdcall)) simulation_world_set_other_unknown14(
 			memcpy(other+SIMULATION_WORLD_OTHER_UNKNOWN14_OFFSET, unknown14, SIMULATION_WORLD_OTHER_UNKNOWN14_SIZE);
 		}
 	}
+}
+
+/* 0x000694c0: the thing gets a player of the game: what it has of it, at
+the place of the player, is new (simulation_player_new), with the numbers
+and the bytes that the player has. Its state is as the way that the game is
+played in the network says, and whether the player is of a gamepad of this
+console: in the first way, nothing; in the second and the third, nothing for
+one of this console and 3 for another; in the fourth, 1 and 5; in the fifth,
+nothing and 4. And for a player of this console something of its gamepad
+starts over (unknown_00155710). The game has no more ways than five in its
+table */
+void __attribute__((stdcall)) simulation_world_add_player(
+	byte *world,
+	long player)
+{
+	unsigned long index= (unsigned long)player&0xFFFF;
+	const byte *datum= (const byte *)player_data->data+index*SIMULATION_PLAYER_DATUM_SIZE;
+	short controller= *(const short *)(datum+SIMULATION_PLAYER_DATUM_CONTROLLER_OFFSET);
+	boolean local= controller!=NONE;
+	long state= 0;
+
+	switch (*((const char *)main_game_globals+MAIN_GAME_GLOBALS_SIMULATION_OFFSET))
+	{
+	case 2:
+	case 3:
+		state= local ? 0 : 3;
+		break;
+	case 4:
+		state= local ? 1 : 5;
+		break;
+	case 5:
+		state= local ? 0 : 4;
+		break;
+	}
+	if (local)
+	{
+		unknown_00155710(controller);
+	}
+	simulation_player_new(world+index*SIMULATION_WORLD_PLAYER_SIZE+SIMULATION_WORLD_PLAYERS_OFFSET,
+		(const long *)(datum+SIMULATION_PLAYER_DATUM_IDENTIFIER_OFFSET),
+		(const word *)(datum+SIMULATION_PLAYER_DATUM_MACHINE_IDENTIFIER_OFFSET), world, (long)index, player, state);
 }

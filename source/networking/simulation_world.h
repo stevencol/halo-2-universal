@@ -164,7 +164,15 @@ enum
 	SIMULATION_WORLD_PLAYER_UNKNOWN24_OFFSET= 0x24,
 	SIMULATION_WORLD_SENDING_GAME_STATE_OFFSET= 0x11FC,
 	/* the size of what one of the other things of the thing has at 0x14 */
-	SIMULATION_WORLD_OTHER_UNKNOWN14_SIZE= 0x7C
+	SIMULATION_WORLD_OTHER_UNKNOWN14_SIZE= 0x7C,
+	/* of a player of the game: the numbers that it is known by, the bytes of
+	its console, and which gamepad it is of, or NONE for a player of another
+	console. Of the game: the way that it is played in the network, from 1
+	to 5 */
+	SIMULATION_PLAYER_DATUM_IDENTIFIER_OFFSET= 0x4,
+	SIMULATION_PLAYER_DATUM_MACHINE_IDENTIFIER_OFFSET= 0x14,
+	SIMULATION_PLAYER_DATUM_CONTROLLER_OFFSET= 0x28,
+	MAIN_GAME_GLOBALS_SIMULATION_OFFSET= 0xC
 };
 
 /* ---------- structures */
@@ -255,6 +263,7 @@ void simulation_world_build_update(byte *world, long *update);
 void __attribute__((stdcall)) simulation_world_set_local_player_actions(const void *actions, byte *world,
 	unsigned long players);
 void __attribute__((stdcall)) simulation_world_set_other_unknown14(byte *world, long index, const void *unknown14);
+void __attribute__((stdcall)) simulation_world_add_player(byte *world, long player);
 
 /* whether a view is past the states in which it is made ready: one of the
 second kind from the sixth state on, and any other from the fourth. The game
