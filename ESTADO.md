@@ -375,14 +375,13 @@ Módulos (funciones hechas / archivo):
 
 ## Romper líneas: dónde quedó (2026-10-09, tras el hito 440)
 
-- **Hecho:** hitos 415 a 425 y 431 a 433. Todas las líneas rotas se notan,
+- **Hecho:** hitos 415 a 433, completo. Todas las líneas rotas se notan,
   salvo cuatro que no se pueden notar: dos dan lo mismo rotas que enteras
   (hitos 420 y 432) y dos las pruebas no las pueden ver (un byte que se pone
   y se quita dentro de la misma función, y pasar un «sí» a 1).
-- **A medias:** las vistas de los hitos 426 a 430. De 46 líneas se
-  probaron las 16 primeras, todas notadas; se paró porque había que apagar.
-  Las 30 que faltan están en `build\line_breaking\mut_view2_rest.txt`.
-- **Pendiente entero:** hitos 434 a 440 (`network_connection.c` desde
+- Las vistas de los hitos 426 a 430 se terminaron después: 46 líneas
+  rotas, las 46 notadas.
+- **Pendiente, y por donde se sigue:** hitos 434 a 440 (`network_connection.c` desde
   `network_connection_reset`, `network_message_queue.c`, los dos mensajes
   del canal y `replication_event_set_data` del hito 421). Hay que escribir
   sus archivos de líneas.
