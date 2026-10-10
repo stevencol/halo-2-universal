@@ -3,18 +3,18 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 493.
+**Última actualización:** 2026-10-08, al terminar el hito 494.
 
 ## Dónde estamos
 
-- **1647 funciones descompiladas de 11.265: el 14,62 % del juego** (el
-  9,678 % de los bytes de código).
-- Las 1647 están comprobadas contra el ejecutable original: las 1390 del
+- **1650 funciones descompiladas de 11.265: el 14,65 % del juego** (el
+  9,690 % de los bytes de código).
+- Las 1650 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the list of channels by address* (ver `git log`).
+- Último hito: *Decompile how the network is unmade and its sockets closed* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 560 funciones apuntadas pero sin descompilar (las que el código
+- Además hay 563 funciones apuntadas pero sin descompilar (las que el código
   llama); 458 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
@@ -205,15 +205,15 @@ Módulos (funciones hechas / archivo):
       mensaje, de `0x00085b20` a `0x00085f50`, y `0x000698e0`; romper
       líneas pendiente)
 - [ ] La lista de canales por dirección — `networking\network_link.c`
-      (5: apuntar, quitar, buscar y parar todos; faltan sus enchufes,
-      `0x00092c70`, y lo que lee de ellos, `0x00092f80`)
+      (7: apuntar, quitar, buscar, parar todos, hacerlos avanzar y cerrar
+      sus enchufes; falta lo que lee de ellos, `0x00092f80`, y lo que
+      manda, de `0x00093100` a `0x00093610`)
 - [ ] Un bloque con suma, versión y tamaño — `networking\network_blob.c`
       (2: la suma y ver si vale; falta quién los usa, de `0x00080e10` a
       `0x00081230`)
-- [ ] La memoria de la red — `networking\network_memory.c` (4: soltarla
-      al cerrar un mapa, `0x00081f80`, y tres constructores, el de todo
-      entre ellos; falta tomarla, `0x00081780`, y deshacerlo todo,
-      `0x000816f0`, que llama a `0x00092f10` y `0x00092c70`)
+- [ ] La memoria de la red — `networking\network_memory.c` (5: soltarla
+      al cerrar un mapa, `0x00081f80`, tres constructores, el de todo
+      entre ellos, y deshacerlo todo; falta tomarla, `0x00081780`)
 - [x] La pieza principal de un canal — `networking\network_connection.c`
       (18: empezar de cero, el número de cada paquete, escribir y
       leer la cabecera de un paquete, lo que la otra consola

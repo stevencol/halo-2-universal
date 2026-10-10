@@ -70,3 +70,29 @@ def run(t) -> None:
                 "unknown_00450da0": GlobalRange(4),
             },
         )
+
+    # ---------- all of it is unmade
+
+    for n in range(60):
+        data = bytearray(random_.randbytes(0x1EA7C))
+        data[0xB2C] = random_.choice((0, 1, 1, 0x40))
+        has = random_.random() < 0.7
+        struct.pack_into("<I", data, 0xB30, 0x1E000 if has else 0)
+        t.check(
+            "network_memory_destruct",
+            Buffer(
+                bytes(data),
+                pointers=(0xB30,) if has else (),
+                places=(0xB28, 0x11A0, 0x60F8, 0x60F8 + 0x78B8, 0x60F8 + 2 * 0x78B8, 0x1DD40),
+            ),
+            globals={
+                "unknown_00450e10": GlobalRange(4),
+                "unknown_00450e28": GlobalRange(4),
+                "unknown_00450df8": GlobalRange(4),
+                "unknown_00450da0": GlobalRange(4),
+            },
+            externals={
+                "network_link_close_channels": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "network_link_close_sockets": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+            },
+        )

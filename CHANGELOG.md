@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — La red se deshace
+
+Tres funciones: dos en `networking/network_link.c` y una en
+`networking/network_memory.c`. De 1647
+funciones se pasa a 1650, el 14,65 % de las del juego (el 9,690 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_link_close_sockets` | `0x00092c70` | `networking/network_link.c` |
+| `network_link_update_channels` | `0x00093090` | `networking/network_link.c` |
+| `network_memory_destruct` | `0x000816f0` | `networking/network_memory.c` |
+
+### Lo que se sabe
+
+- Aquello de lo que son los canales tiene **cuatro enchufes**, cada uno en
+  memoria propia: el de las bibliotecas de la consola (o `-1`) y sus bits.
+  `network_link_close_sockets` los cierra: si la red está (los dos bytes
+  de `0x004d8b18`), el que tiene su primer bit se apaga antes
+  (`shutdown`) y se cierra (`closesocket`); luego su memoria se suelta
+  (`VirtualFree`). Al final el byte de `0x8`, que dice que los tiene,
+  queda a cero.
+- `network_link_update_channels` hace avanzar cada canal de la lista
+  (`network_channel_update`), y el que tiene puesto su byte en la lista
+  se para con la razón `9` si estaba hablando. Ese byte es el que quedaba
+  sin saber en el hito 493.
+- `network_memory_destruct` **deshace todo lo de la red**: cada cosa con
+  funciones las recibe otra vez, lo de `0xB28` suelta aquello a lo que
+  apunta, todos los canales se paran y los enchufes se cierran.
+- `shutdown`, `closesocket` y `WSAGetLastError` quedan con su nombre en la
+  tabla (estaban en la lista de Ghidra).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las tres**, y en las de los hitos 456 a
+  493.
+- En este hito se pasaron todas las pruebas de `network_link` y de
+  `network_memory`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — La lista de canales por dirección
 
 Cinco funciones en el archivo nuevo `networking/network_link.c`. De 1642

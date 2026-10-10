@@ -15,6 +15,24 @@ name of the file is a guess, and so are the names of its functions.
 
 #include <string.h>
 
+/* ---------- prototypes */
+
+/* 0x003cd19e, 0x003cd193, 0x003cd718, of the console's libraries: a socket
+is shut down, and closed; and why the last thing asked of them was not done.
+0x003312fa and 0x002d1d3e: memory is let go of, and why not */
+int __attribute__((stdcall)) shutdown(long socket, long how);
+int __attribute__((stdcall)) closesocket(long socket);
+int WSAGetLastError(void);
+int VirtualFree(void *address, unsigned long size, unsigned long type);
+unsigned long GetLastError(void);
+
+/* ---------- globals */
+
+/* 0x004d8b18, 0x004d8b19, of network_session.c: the network of the console
+is there, and so is the one of the game */
+extern boolean unknown_004d8b18;
+extern boolean unknown_004d8b19;
+
 /* ---------- code */
 
 /* 0x00092d10: the list has a channel, with the number that it gives what it
@@ -179,4 +197,70 @@ void __attribute__((stdcall)) network_link_close_channels(
 		network_channel_close(unknown_004d87d4+channels[index].channel_index*NETWORK_CHANNEL_SIZE, 1);
 	}
 	*(long *)(link+NETWORK_LINK_CHANNEL_COUNT_OFFSET)= 0;
+}
+
+/* 0x00092c70: its four sockets are closed, and it does not have them any
+more. One that the libraries have is shut down first if its bit says so, and
+closed, if the network is there; and the memory of each is let go of */
+void __attribute__((stdcall)) network_link_close_sockets(
+	byte *link)
+{
+	struct network_link_socket **sockets= (struct network_link_socket **)(link+NETWORK_LINK_SOCKETS_OFFSET);
+	long index;
+
+	for (index= 0; index<NUMBER_OF_NETWORK_LINK_SOCKETS; index++)
+	{
+		struct network_link_socket *socket= sockets[index];
+
+		if (socket)
+		{
+			if (socket->socket!=NONE && unknown_004d8b18 && unknown_004d8b19)
+			{
+				if (socket->flags&_network_link_socket_connected_bit)
+				{
+					if (shutdown(socket->socket, 2))
+					{
+						WSAGetLastError();
+					}
+				}
+				if (closesocket(socket->socket))
+				{
+					WSAGetLastError();
+				}
+			}
+			socket->socket= NONE;
+			socket->flags= 0;
+			if (!VirtualFree(socket, 0, 0x8000))
+			{
+				GetLastError();
+			}
+			sockets[index]= NULL;
+		}
+	}
+	link[NETWORK_LINK_OPEN_OFFSET]= FALSE;
+}
+
+/* 0x00093090: every channel of the list goes on (network_channel_update);
+and one whose byte in the list says so stops, with 9 for a reason, if it
+talks */
+void __attribute__((stdcall)) network_link_update_channels(
+	byte *link)
+{
+	struct network_link_channel *channels= (struct network_link_channel *)(link+NETWORK_LINK_CHANNELS_OFFSET);
+	long index;
+
+	for (index= 0; index<*(const long *)(link+NETWORK_LINK_CHANNEL_COUNT_OFFSET); index++)
+	{
+		byte *channel= unknown_004d87d4+channels[index].channel_index*NETWORK_CHANNEL_SIZE;
+
+		network_channel_update(channel);
+		if (channels[index].unknown8)
+		{
+			if (*(const long *)(channel+NETWORK_CHANNEL_STATE_OFFSET)>_network_channel_state_closed)
+			{
+				network_channel_close(channel, _network_channel_closed_unknown9);
+			}
+			channels[index].unknown8= FALSE;
+		}
+	}
 }

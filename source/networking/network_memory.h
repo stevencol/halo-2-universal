@@ -76,7 +76,12 @@ enum
 	NETWORK_MEMORY_UNKNOWN1DD40_OFFSET= 0x1DD40,
 	NETWORK_MEMORY_UNKNOWN1E974_OFFSET= 0x1E974,
 	NETWORK_MEMORY_UNKNOWN1E9F8_OFFSET= 0x1E9F8,
-	NETWORK_MEMORY_LIST_COUNT= 0x20
+	NETWORK_MEMORY_LIST_COUNT= 0x20,
+	/* of what the thing of 0xB28 points to with its number of 0x8, when its
+	byte of 0x4 says that it has it: a number that is nothing when it is
+	left. And a number of the first thing of all */
+	NETWORK_MEMORY_UNKNOWNB28_UNKNOWN8_UNKNOWN1C_OFFSET= 0x1C,
+	NETWORK_MEMORY_UNKNOWN1C_OFFSET= 0x1C
 };
 
 /* ---------- prototypes/NETWORK_MEMORY.C */
@@ -85,5 +90,6 @@ void network_memory_free(void);
 void network_memory_unknown_00081310(byte *unknown);
 byte *network_memory_unknown_00081440(byte *unknown);
 byte *network_memory_construct(byte *memory);
+void network_memory_destruct(byte *memory);
 
 #endif

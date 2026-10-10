@@ -28,7 +28,16 @@ enum
 	_network_link_channel_kind_bit80= 1,
 	_network_link_channel_kind_bit40= 2,
 	_network_link_channel_bit80= 0x80,
-	_network_link_channel_bit40= 0x40
+	_network_link_channel_bit40= 0x40,
+	/* more of it: a byte that says that it has its sockets, and the four of
+	them. The bit of a socket that says that it is to be shut down before
+	it is closed; and the reason that a channel of the list stops with when
+	its byte says so */
+	NETWORK_LINK_OPEN_OFFSET= 0x8,
+	NETWORK_LINK_SOCKETS_OFFSET= 0xC,
+	NUMBER_OF_NETWORK_LINK_SOCKETS= 4,
+	_network_link_socket_connected_bit= 0x1,
+	_network_channel_closed_unknown9= 9
 };
 
 /* ---------- structures */
@@ -44,6 +53,14 @@ struct network_link_channel
 	struct transport_address address;
 };
 
+/* one of its sockets, in memory of its own: the socket of the console's
+libraries, or NONE, and its bits */
+struct network_link_socket
+{
+	long socket;
+	word flags;
+};
+
 /* ---------- prototypes/NETWORK_LINK.C */
 
 boolean __attribute__((stdcall)) network_link_add_channel(byte *link, long channel_index, long identifier,
@@ -53,5 +70,7 @@ long __attribute__((stdcall)) network_link_find_channel(const byte *link, long k
 	const struct transport_address *address);
 long network_link_channel_of_address(const byte *link, const struct transport_address *address, long kind);
 void __attribute__((stdcall)) network_link_close_channels(byte *link);
+void __attribute__((stdcall)) network_link_close_sockets(byte *link);
+void __attribute__((stdcall)) network_link_update_channels(byte *link);
 
 #endif

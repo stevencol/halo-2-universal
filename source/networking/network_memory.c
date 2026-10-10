@@ -13,6 +13,7 @@ names of its functions.
 
 #include "memory/data.h"
 #include "networking/network_heap.h"
+#include "networking/network_link.h"
 #include "networking/network_observer.h"
 #include "networking/simulation_view.h"
 #include "networking/simulation_world.h"
@@ -231,4 +232,41 @@ byte *network_memory_construct(
 	memset(memory+NETWORK_MEMORY_UNKNOWN1E9F8_OFFSET+4, 0, NETWORK_MEMORY_LIST_COUNT*sizeof(long));
 
 	return memory;
+}
+
+/* 0x000816f0: all that the network has is unmade: each thing with functions
+gets them again; the thing of 0xB28 leaves what it points to, if it has it;
+the list of the channels, which is first, has all of them stop and its
+sockets closed (network_link_close_channels, network_link_close_sockets);
+and a number and the first byte are nothing */
+void network_memory_destruct(
+	byte *memory)
+{
+	byte *unknownb28= memory+NETWORK_MEMORY_UNKNOWNB28_OFFSET;
+	long index;
+
+	*(void **)(memory+NETWORK_MEMORY_UNKNOWN1DD40_OFFSET)= unknown_00450da0;
+	for (index= NETWORK_MEMORY_UNKNOWN60F8_COUNT-1; index>=0; index--)
+	{
+		*(void **)(memory+NETWORK_MEMORY_UNKNOWN60F8_OFFSET+index*NETWORK_MEMORY_UNKNOWN60F8_SIZE)= unknown_00450df8;
+	}
+	*(void **)(memory+NETWORK_MEMORY_UNKNOWN11A0_OFFSET)= unknown_00450e10;
+	*(void **)unknownb28= unknown_00450e28;
+	if (unknownb28[NETWORK_MEMORY_UNKNOWNB28_UNKNOWN4_OFFSET])
+	{
+		byte *unknown8= *(byte **)(unknownb28+NETWORK_MEMORY_UNKNOWNB28_UNKNOWN8_OFFSET);
+
+		if (unknown8)
+		{
+			*(long *)(unknown8+NETWORK_MEMORY_UNKNOWNB28_UNKNOWN8_UNKNOWN1C_OFFSET)= 0;
+			*(byte **)(unknownb28+NETWORK_MEMORY_UNKNOWNB28_UNKNOWN8_OFFSET)= NULL;
+		}
+		*(long *)(unknownb28+NETWORK_MEMORY_UNKNOWNB28_UNKNOWN10_OFFSET)= 0;
+		*(long *)(unknownb28+NETWORK_MEMORY_UNKNOWNB28_UNKNOWNC_OFFSET)= 0;
+		unknownb28[NETWORK_MEMORY_UNKNOWNB28_UNKNOWN4_OFFSET]= FALSE;
+	}
+	network_link_close_channels(memory);
+	network_link_close_sockets(memory);
+	*(long *)(memory+NETWORK_MEMORY_UNKNOWN1C_OFFSET)= 0;
+	memory[0]= FALSE;
 }

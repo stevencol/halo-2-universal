@@ -2206,3 +2206,9 @@ address,name,source,arguments,returns,convention
 00092e50,network_link_find_channel,source/networking/network_link.c,ecx stack stack,int,stdcall
 00092ef0,network_link_channel_of_address,source/networking/network_link.c,esi eax ecx,int
 00092f10,network_link_close_channels,source/networking/network_link.c,stack,void,stdcall
+00092c70,network_link_close_sockets,source/networking/network_link.c,stack,void,stdcall
+00093090,network_link_update_channels,source/networking/network_link.c,stack,void,stdcall
+000816f0,network_memory_destruct,source/networking/network_memory.c,esi,void
+003cd19e,shutdown,,stack stack,int,stdcall
+003cd193,closesocket,,stack,int,stdcall
+003cd718,WSAGetLastError,,,int
