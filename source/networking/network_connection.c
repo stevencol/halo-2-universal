@@ -586,3 +586,190 @@ long __attribute__((stdcall)) network_connection_acknowledge(
 
 	return result;
 }
+
+/* 0x00096360: one of the things reads its own of a packet that came. It is
+its sixth function, the one that a channel calls for each of its things
+(network_channel_read_packet), and what it says is what that takes: well
+(0), or that the packet is not one to read (2), which is also said when the
+thing cannot send, as its second function says.
+
+A bit says whether the packet has a number; then come the low byte of its
+number and a number of seven bits, with which the thing sees to the packets
+that came (network_connection_receive_sequence); what that says, if it is
+not nothing, is said. The number of the packet is given.
+
+Then what the other console says of the packets that it was sent: the low
+byte of the number of the last that came there, and the bits of the ones
+before it, written in one of four ways, as two bits say: none, and one bit
+more that is kept; one bit that is set, by its place in three bits; eight
+bits; or so many bits as seven say (and before them a bit with which nothing
+more is done). With that the thing is told
+(network_connection_acknowledge), and what that says is said.
+
+In a stream that is only looked at, the number that is given is the one of
+the last packet that the thing sent, or NONE, and nothing is done */
+long __attribute__((stdcall)) network_connection_read(
+	byte *connection,
+	long *sequence_out,
+	struct bitstream *stream)
+{
+	unsigned long bits[MAXIMUM_NETWORK_CONNECTION_BITS/32]= {0};
+	boolean unknown= FALSE;
+	long bit_count= 0;
+	long sequence_byte;
+	boolean numbered;
+	long unknown7;
+	boolean first;
+	boolean second;
+	long bit;
+
+	if ((*(const struct network_connection_functions **)connection)->cannot_send(connection, 0))
+	{
+		return _network_connection_read_no;
+	}
+	numbered= bitstream_read_bool(stream);
+	sequence_byte= (long)bitstream_read_integer(stream, NETWORK_CONNECTION_SEQUENCE_BITS);
+	unknown7= (long)bitstream_read_integer(stream, NETWORK_CONNECTION_UNKNOWN_BITS);
+	if (stream->unknownC==_network_connection_stream_look_only)
+	{
+		*sequence_out= numbered ?
+			((const struct network_connection_window *)(connection+NETWORK_CONNECTION_SENT_WINDOW_OFFSET))->newest : NONE;
+	}
+	else
+	{
+		long result= network_connection_receive_sequence(connection, sequence_byte, sequence_out, numbered, unknown7);
+
+		if (result!=_network_connection_read_good)
+		{
+			return result;
+		}
+	}
+	sequence_byte= (long)bitstream_read_integer(stream, NETWORK_CONNECTION_SEQUENCE_BITS);
+	first= bitstream_read_bool(stream);
+	second= bitstream_read_bool(stream);
+	if (!first && !second)
+	{
+		unknown= bitstream_read_bool(stream);
+	}
+	else if (!first)
+	{
+		bit= (long)bitstream_read_integer(stream, NETWORK_CONNECTION_ONE_BIT_BITS);
+		bits[0]|= 1u<<(bit&31);
+		bit_count= bit+1;
+	}
+	else if (!second)
+	{
+		for (bit= 0; bit<NETWORK_CONNECTION_SHORT_BIT_COUNT; bit++)
+		{
+			if (bitstream_read_bool(stream))
+			{
+				bits[0]|= 1u<<bit;
+				bit_count= bit+1;
+			}
+		}
+	}
+	else
+	{
+		if (bitstream_read_bool(stream))
+		{
+			return _network_connection_read_good;
+		}
+		bit_count= (long)bitstream_read_integer(stream, NETWORK_CONNECTION_BIT_COUNT_BITS);
+		for (bit= 0; bit<bit_count; bit++)
+		{
+			if (bitstream_read_bool(stream))
+			{
+				bits[bit>>5]|= 1u<<(bit&31);
+			}
+			else
+			{
+				bits[bit>>5]&= ~(1u<<(bit&31));
+			}
+		}
+	}
+	if (stream->unknownC==_network_connection_stream_look_only)
+	{
+		return _network_connection_read_good;
+	}
+
+	return network_connection_acknowledge(connection, sequence_byte, bit_count, bits, unknown);
+}
+
+/* 0x00096710: one of the things sees to the packets that came, with what a
+packet says: the low byte of its number, whether it has one, and how many
+packets before it the other console does not wait for any more. The first
+time, the packets that came start just before this one.
+
+The number is the one nearest the last that came that has that byte, before
+or after; it is given, or NONE for a packet with no number. A byte of the
+thing says whether the other number is nothing, and the most that the number
+less that has been is kept. The packets that came do not start before that:
+they start over from there if they were all before, or the first ones are
+not kept any more.
+
+What is said: nothing, for a packet after the first that is kept; 2, for one
+before it, or for that very one if it has a number */
+long __attribute__((stdcall)) network_connection_receive_sequence(
+	byte *connection,
+	long sequence_byte,
+	long *sequence_out,
+	boolean numbered,
+	long unknown)
+{
+	struct network_connection_window *received=
+		(struct network_connection_window *)(connection+NETWORK_CONNECTION_RECEIVED_WINDOW_OFFSET);
+	long difference;
+	long sequence;
+	long least;
+
+	if (!received->enabled)
+	{
+		received->newest= sequence_byte-1;
+		received->oldest= sequence_byte-1;
+		received->start= 0;
+		received->count= 0;
+		received->enabled= TRUE;
+	}
+	difference= sequence_byte-(received->newest&0xFF);
+	if (difference>0x80)
+	{
+		difference-= 0x100;
+	}
+	else if (difference<=-0x80)
+	{
+		difference+= 0x100;
+	}
+	sequence= (long)((unsigned long)received->newest+(unsigned long)difference);
+	*sequence_out= numbered ? sequence : NONE;
+	connection[NETWORK_CONNECTION_UNKNOWN958_OFFSET]= unknown==0;
+	least= (long)((unsigned long)sequence-(unsigned long)unknown);
+	if (least>*(const long *)(connection+NETWORK_CONNECTION_UNKNOWN954_OFFSET))
+	{
+		*(long *)(connection+NETWORK_CONNECTION_UNKNOWN954_OFFSET)= least;
+	}
+	if (received->newest<=least)
+	{
+		received->newest= least;
+		received->oldest= least;
+		received->start= 0;
+		received->count= 0;
+		received->enabled= TRUE;
+	}
+	else
+	{
+		while (received->oldest<least)
+		{
+			network_connection_window_advance(received, (long)((unsigned long)received->oldest+1));
+		}
+	}
+	if (sequence>received->oldest)
+	{
+		return _network_connection_read_good;
+	}
+	if (sequence==received->oldest && !numbered)
+	{
+		return _network_connection_read_good;
+	}
+
+	return _network_connection_read_no;
+}

@@ -10,6 +10,7 @@ the file is a guess, and so are the names of its functions.
 #define __NETWORK_CONNECTION_H
 
 #include "cseries/cseries.h"
+#include "networking/bitstream.h"
 
 /* ---------- constants */
 
@@ -73,7 +74,21 @@ enum
 	_network_connection_sent_bit8= 0x8,
 	_network_connection_sent_bit10= 0x10,
 	/* what is said of an answer that is of packets too long ago */
-	_network_connection_acknowledge_too_old= 2
+	_network_connection_acknowledge_too_old= 2,
+	/* what is said of a packet that came: it is good, or it is not one to
+	read (2); and the state of a stream that is only looked at */
+	_network_connection_read_good= 0,
+	_network_connection_read_no= 2,
+	_network_connection_stream_look_only= 4,
+	/* the bits of what a packet has of the thing: the low byte of a number
+	of a packet; a number of seven; the place of one bit, and the most bits
+	that are written one by one */
+	NETWORK_CONNECTION_SEQUENCE_BITS= 8,
+	NETWORK_CONNECTION_UNKNOWN_BITS= 7,
+	NETWORK_CONNECTION_ONE_BIT_BITS= 3,
+	NETWORK_CONNECTION_SHORT_BIT_COUNT= 8,
+	NETWORK_CONNECTION_BIT_COUNT_BITS= 7,
+	MAXIMUM_NETWORK_CONNECTION_BITS= 128
 };
 
 /* ---------- structures */
@@ -115,6 +130,9 @@ struct network_connection_sent_packet
 /* ---------- prototypes/NETWORK_CONNECTION.C */
 
 void network_connection_reset(byte *connection);
+long __attribute__((stdcall)) network_connection_read(byte *connection, long *sequence, struct bitstream *stream);
+long __attribute__((stdcall)) network_connection_receive_sequence(byte *connection, long sequence_byte,
+	long *sequence, boolean numbered, long unknown);
 long __attribute__((stdcall)) network_connection_acknowledge(byte *connection, long sequence_byte, long bit_count,
 	const unsigned long *bits, boolean unknown);
 long __attribute__((stdcall)) network_connection_next_event(byte *connection, long *sequence, long *size,

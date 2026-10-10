@@ -252,3 +252,70 @@ def run(t) -> None:
             ),
             externals=setup["externals"],
         )
+
+    # ---------- the packets that come
+
+    for n in range(2500):
+        data, ((came_oldest, came_newest), sent) = connection()
+        data[0xC] = random_.choice((0, 1, 1, 1, 1, 0x80))
+        # the packet: the next one, mostly; one that came, the first that is kept, one before, or any
+        of = random_.choice((came_newest + 1, came_newest + 1, came_newest, came_oldest, came_oldest + 1, came_oldest - 1, came_newest + 0x7F, came_newest + 0x80, came_newest + 0x81, random_.getrandbits(8)))
+        struct.pack_into("<i", data, 0x954, random_.choice((0, came_oldest, came_newest, 0x7FFFFFFF)))
+        t.check(
+            "network_connection_receive_sequence",
+            Buffer(bytes(data)),
+            of & 0xFF,
+            Buffer(random_.randbytes(4)),
+            random_.choice((0, 1, 1, 0x100)),
+            random_.choice((0, 0, 1, 3, came_newest - came_oldest, came_newest - came_oldest + 1, 0x7F)),
+        )
+
+    def bits_of(values) -> bytes:
+        """So many bits each of some numbers, one after the other, as the game writes them."""
+        whole = position = 0
+        for value, count in values:
+            whole |= (value & ((1 << count) - 1)) << position
+            position += count
+        return whole.to_bytes(40, "little")
+
+    for n in range(3000):
+        setup, buffer, oldest, newest = sending(random_.random() < 0.3)
+        data = bytearray(buffer)
+        data[0xC] = random_.choice((0, 1, 1, 1))
+        came_newest = struct.unpack_from("<i", data, 0x14)[0]
+        struct.pack_into("<i", data, 0x24, came_newest - struct.unpack_from("<i", data, 0x18)[0])
+        struct.pack_into("<i", data, 0x44, random_.choice((oldest, oldest, newest, random_.randrange(oldest, newest + 1))))
+        # the packet, in one of the four ways that the bits of the other packets are written, or any bits
+        way = random_.choice((0, 1, 2, 3, 3, 4))
+        said = [(random_.choice((0, 1, 1)), 1), (random_.choice((came_newest + 1, came_newest + 1, came_newest, random_.getrandbits(8))), 8), (random_.choice((0, 0, 1, 5)), 7)]
+        said.append((random_.choice((newest, newest, random_.randrange(oldest, newest + 1), oldest - 2, random_.getrandbits(8))), 8))
+        if way == 0:
+            said += [(0, 2), (random_.getrandbits(1), 1)]
+        elif way == 1:
+            said += [(2, 2), (random_.getrandbits(3), 3)]
+        elif way == 2:
+            said += [(1, 2), (random_.getrandbits(8), 8)]
+        elif way == 3:
+            count = random_.choice((0, 1, 31, 32, 33, 64, 127))
+            said += [(3, 2), (random_.choice((0, 0, 0, 1)), 1), (count, 7), (random_.getrandbits(128), 128)]
+        packet = random_.randbytes(40) if way == 4 else bits_of(said)
+        size = random_.choice((40, 40, 40, 2, 4))
+        header = struct.pack("<I4iB3x7i", 0x34, size, 1, random_.choice((3, 3, 3, 4)), 0, 0, *(random_.getrandbits(8) for value in range(7)))
+        t.check(
+            "network_connection_read",
+            Buffer(bytes(data), pointers=(0,)),
+            Buffer(random_.randbytes(4)),
+            Buffer(header + packet[:size] + bytes(8), pointers=(0,)),
+            globals=dict(
+                setup["globals"],
+                unknown_004cf6ec=struct.pack("<i", random_.choice((0, 5, 0x40))),
+                unknown_004cf6f8=struct.pack("<I", 3),
+                unknown_004cf6fc=struct.pack("<I", 2),
+                unknown_004cf700=struct.pack("<I", 4),
+                unknown_004cf704=struct.pack("<I", 50),
+                unknown_004cf708=struct.pack("<I", 100),
+                unknown_004cf724=struct.pack("<I", 10),
+            ),
+            externals=setup["externals"],
+            mocks=[Mock(lambda call, cannot=random_.choice((0, 0, 0, 0, 0, 1, 0x100)): cannot, stack_arguments=1, registers=("ecx",))],
+        )

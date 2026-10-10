@@ -2,6 +2,56 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-09 — La cabecera de cada paquete: lo que la conexión lee
+
+Dos funciones en `networking/network_connection.c`, 671 bytes entre las dos. De 1502
+funciones se pasa a 1504, el 13,35 % de las del juego (el 9,016 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_connection_read` | `0x00096360` | `networking/network_connection.c` |
+| `network_connection_receive_sequence` | `0x00096710` | `networking/network_connection.c` |
+
+### Lo que se sabe
+
+- `network_connection_read` es **la cabecera de cada paquete del juego en
+  red, bit a bit**. Es la sexta función de la tabla de esta pieza: la que
+  el canal llama al leer un paquete (hito 414), y de donde salía «el
+  número que las piezas leen». Un paquete trae:
+  - un bit: si lleva número;
+  - 8 bits: el byte bajo de su número;
+  - 7 bits: cuántos paquetes anteriores ya no espera la otra consola;
+  - 8 bits: el byte bajo del último paquete nuestro que le llegó;
+  - 2 bits que dicen **cómo vienen los bits de los anteriores**, de
+    cuatro formas, de la más corta a la más larga: ninguno (y un bit
+    suelto); uno solo, por su sitio en 3 bits; ocho bits; o tantos como
+    digan 7 bits más (hasta 127).
+  Con eso llama a las funciones de los hitos 433 y 436. Es un formato
+  pensado para gastar muy pocos bits cuando todo va bien.
+- `network_connection_receive_sequence` saca el número entero del paquete
+  a partir de su byte bajo (el más cercano al último que llegó, por
+  delante o por detrás), adelanta la ventana de llegados hasta donde la
+  otra consola dice que ya no espera, y **rechaza los repetidos y los
+  viejos** (contesta 2): los que quedan antes del primero que se guarda.
+- Con un paquete que solo se mira (el argumento del hito 414) no se toca
+  nada.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos** y en las de los hitos 434 a
+  436. Tanda de los hitos 432 y 433 (la conexión), hecha: 18 líneas
+  rotas, 17 notadas; la otra es una comparación que da lo mismo con
+  «mayor» que con «mayor o igual».
+- En este hito se pasaron las pruebas de `network_connection` (14
+  funciones; estas dos, con 5500 casos).
+- De la pieza queda en la lista `0x00095bc0`, que es de la otra pieza
+  (la que junta mensajes), y la función que escribe esta cabecera, aún
+  sin localizar.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-09 — Lo que la otra consola contesta de los paquetes
 
 Una función en `networking/network_connection.c`, de 483 bytes. De 1501
