@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 441.
+**Última actualización:** 2026-10-08, al terminar el hito 442.
 
 ## Dónde estamos
 
-- **1519 funciones descompiladas de 11.265: el 13,48 % del juego** (el
-  9,082 % de los bytes de código).
-- Las 1519 están comprobadas contra el ejecutable original: las 1390 del
+- **1521 funciones descompiladas de 11.265: el 13,50 % del juego** (el
+  9,132 % de los bytes de código).
+- Las 1521 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how the message queue writes and reads a packet and takes its result* (ver `git log`).
+- Último hito: *Decompile how the message queue cuts a message in pieces and puts them together* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 552 funciones apuntadas pero sin descompilar (las que el código
-  llama); 450 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 550 funciones apuntadas pero sin descompilar (las que el código
+  llama); 448 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -153,12 +153,12 @@ Módulos (funciones hechas / archivo):
 - [ ] Vistas de los sucesos — `networking\replication_event_view.c`
       (1: vaciar una vista; quedan 7 de la lista, de `0x000970b0` a
       `0x00097d80`; romper líneas pendiente)
-- [ ] La segunda pieza de un canal — `networking\network_message_queue.c`
-      (9: lo que el canal le pregunta, vaciarla, guardar los
-      mensajes que llegan, escribirlos y leerlos en un paquete y qué
-      fue de cada paquete; tabla `0x00450db8`; quedan `0x00095580`
-      (encolar) y `0x00095840` (sacar un mensaje entero); romper
-      líneas pendiente en las tres últimas)
+- [x] La segunda pieza de un canal — `networking\network_message_queue.c`
+      (11: lo que el canal le pregunta, vaciarla, guardar los
+      mensajes que llegan, escribirlos y leerlos en un paquete, qué
+      fue de cada paquete, partir un mensaje en trozos y juntarlos;
+      tabla `0x00450db8`; completo; romper líneas pendiente en las
+      cinco últimas)
 - [x] La pieza principal de un canal — `networking\network_connection.c`
       (18: empezar de cero, el número de cada paquete, escribir y
       leer la cabecera de un paquete, lo que la otra consola

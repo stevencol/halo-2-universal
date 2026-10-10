@@ -2,6 +2,64 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Un mensaje se parte en trozos y se vuelve a juntar
+
+Dos funciones en `networking/network_message_queue.c`, 1 507 bytes entre las dos. De 1519
+funciones se pasa a 1521, el 13,50 % de las del juego (el 9,132 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_message_queue_send` | `0x00095580` | `networking/network_message_queue.c` |
+| `network_message_queue_receive` | `0x00095840` | `networking/network_message_queue.c` |
+
+### Lo que se sabe
+
+- `network_message_queue_send` es **por donde entra un mensaje que tiene
+  que llegar** (la llaman el canal y el observador, hitos 406 y 373):
+  - escribe en un flujo de 65 535 bytes la clase y el tamaño del mensaje y
+    lo que escribe la función de su clase, igual que los mensajes que no
+    van por un canal (hito 398);
+  - le pone delante **una suma de comprobación** (el CRC del juego, hito
+    22) de todo ello;
+  - y lo **parte en trozos de 32 bytes**. Cada trozo es un «mensaje» de
+    los de la ventana de mandar (hito 441), con su copia en el montón de
+    la red y marcado para mandarse.
+- Con esto se entiende el bit de los hitos 440 y 441 que decía si un
+  mensaje «trae sus bits»: **lo trae solo el último trozo.** Los demás
+  miden 256 bits justos, y por eso no hace falta decirlo.
+- Antes de cada trozo pregunta a la pieza si puede seguir. Si la ventana
+  está llena o no hay memoria, la pieza queda como que no puede seguir (y
+  el canal se cerrará con el motivo `0xC`, hito 439).
+- `network_message_queue_receive` es **la otra punta**: mira si desde el
+  primer trozo guardado hay trozos seguidos hasta un último; si los hay
+  los junta, los devuelve al montón y adelanta la ventana; comprueba la
+  suma; y lee la clase, el tamaño y el mensaje con la función de su
+  clase. Contesta si sacó un mensaje. Si la suma no casa, o la clase o el
+  tamaño no valen, la pieza no puede seguir.
+- El canal la llama en bucle al leer un paquete (hito 414) hasta que no
+  queda ninguno entero.
+- `network_message_queue.c` queda **completo**: once funciones, todo lo
+  que hace falta para que un mensaje llegue aunque se pierdan paquetes.
+  De la tabla `0x00450db8` quedan la primera (`0x00099810`) y la séptima
+  (`0x001edf40`), que están en otros módulos.
+
+### Cambiado
+
+- `unknown_00095580` y `unknown_00095840` tienen ya su nombre donde el
+  canal y el observador las llaman, y en sus pruebas.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos** y en las tres del hito 441.
+- Al mandar, el juego deja apuntado en el flujo cuántos bytes ocupó y que
+  ya está escrito; el flujo no sale de la función y no se hace.
+- En este hito se pasaron las pruebas de `network_message_queue` (11
+  funciones), `network_channel` (27) y `network_observer` (74).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Los mensajes que tienen que llegar: cómo van en un paquete
 
 Tres funciones en `networking/network_message_queue.c`, 1 750 bytes entre las tres. De 1516

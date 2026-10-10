@@ -141,7 +141,7 @@ def run(t) -> None:
             Buffer(bytes(data)),
             random_.choice((0, 1, 1, 0x80)),
             globals=things(),
-            externals={"unknown_00095580": message, "network_message_gateway_send": to_address},
+            externals={"network_message_queue_send": message, "network_message_gateway_send": to_address},
         )
 
     for n in range(400):
@@ -563,7 +563,7 @@ def run(t) -> None:
                 network_connection_drop_oldest_sent=lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
                 network_connection_next_event=lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                 network_connection_received=lambda harness, arguments: (0, (arguments[0], harness.normalize(arguments[1]))),
-                unknown_00095840=whole,
+                network_message_queue_receive=whole,
                 unknown_00093aa0=lambda harness, arguments: (
                     0,
                     (bytes(harness.mu.mem_read(arguments[0], 0x20)), arguments[1], arguments[2], arguments[3], arguments[4]),

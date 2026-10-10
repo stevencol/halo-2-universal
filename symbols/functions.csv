@@ -1882,7 +1882,7 @@ address,name,source,arguments,returns,convention
 00075910,network_unknown_00075910,source/networking/network_observer.c,eax,int
 00075930,network_channel_get_address,source/networking/network_observer.c,eax ecx,bool
 000783d0,network_observer_session_get_address,source/networking/network_observer.c,ecx ebx edi eax stack stack stack,bool,stdcall
-00095580,unknown_00095580,,stack stack stack stack,void,stdcall
+00095580,network_message_queue_send,source/networking/network_message_queue.c,stack stack stack stack,void,stdcall
 00077330,network_observer_channel_set_state,source/networking/network_observer.c,eax ecx stack,void,stdcall
 00076f50,network_observer_channel_update_connection,source/networking/network_observer.c,esi edi,void
 000784a0,network_observer_channel_forget_address,source/networking/network_observer.c,eax ecx stack stack,void,stdcall
@@ -1978,7 +1978,7 @@ address,name,source,arguments,returns,convention
 003cd344,XNetUnregisterInAddr,,stack,int,stdcall
 00088750,network_channel_read_packet,source/networking/network_channel.c,ecx edx stack stack,bool,stdcall
 00096860,network_connection_received,source/networking/network_connection.c,eax ecx,void
-00095840,unknown_00095840,,stack stack stack stack,bool,stdcall
+00095840,network_message_queue_receive,source/networking/network_message_queue.c,stack stack stack stack,bool,stdcall
 00093aa0,unknown_00093aa0,,eax ecx edx stack stack,void,stdcall
 000883c0,network_channel_update,source/networking/network_channel.c,eax,void
 00088980,network_channel_write_packet,source/networking/network_channel.c,eax stack stack stack stack stack stack stack stack,void,stdcall

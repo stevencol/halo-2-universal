@@ -59,7 +59,11 @@ enum
 	MAXIMUM_NETWORK_MESSAGE_QUEUE_MESSAGE_BITS= 0x100,
 	/* what reading says of a message whose number is from the one before
 	it, with none before it */
-	_network_message_queue_read_bad= 3
+	_network_message_queue_read_bad= 3,
+	/* where one of them has the kinds of message; and the most bytes of
+	what the function of a kind writes of a message */
+	NETWORK_MESSAGE_QUEUE_TYPES_OFFSET= 0xC,
+	MAXIMUM_NETWORK_MESSAGE_QUEUE_DATA_SIZE= 0xFFFF
 };
 
 /* ---------- structures */
@@ -86,6 +90,15 @@ struct network_message_queue_received
 	void *data;
 };
 
+/* a message as it goes from one console to the other, in pieces: what the
+function of its kind writes of it, after its kind and its size, and before
+all that a checksum of it all */
+struct network_message_queue_packed
+{
+	unsigned long checksum;
+	byte data[MAXIMUM_NETWORK_MESSAGE_QUEUE_DATA_SIZE];
+};
+
 /* ---------- prototypes/NETWORK_MESSAGE_QUEUE.C */
 
 void network_message_queue_reset(byte *queue);
@@ -97,6 +110,8 @@ boolean __attribute__((stdcall)) network_message_queue_write(byte *queue, long s
 long __attribute__((stdcall)) network_message_queue_read(byte *queue, const long *sequence_in,
 	struct bitstream *stream);
 void __attribute__((stdcall)) network_message_queue_packet_result(byte *queue, long sequence, boolean delivered);
+void __attribute__((stdcall)) network_message_queue_send(byte *queue, long type, long size, const void *data);
+boolean __attribute__((stdcall)) network_message_queue_receive(byte *queue, long *type, long *size, void *data);
 
 boolean __attribute__((stdcall)) network_message_queue_closes(const byte *queue, long *reason);
 boolean __attribute__((stdcall)) network_message_queue_has_something(const byte *queue, boolean *urgent);

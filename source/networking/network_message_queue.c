@@ -12,7 +12,9 @@ its functions.
 
 #include "network_message_queue.h"
 
+#include "memory/crc.h"
 #include "networking/network_heap.h"
+#include "networking/network_message_gateway.h"
 
 #include <string.h>
 
@@ -532,4 +534,231 @@ void __attribute__((stdcall)) network_message_queue_packet_result(
 		message->data= NULL;
 		network_connection_window_advance(sent, next);
 	}
+}
+
+/* 0x00095580: a message of a kind and a size is put in what one of the
+things has to send. Its kind and size (network_message_header_write) and
+what the function of its kind writes of it go in a stream of 0xFFFF bytes,
+all zeros before; a checksum of it all goes before, which is counted with
+itself as 0xFFFFFFFF first. That is cut in pieces of 0x20 bytes, and each
+piece is one more message that the thing keeps to send, to be sent now: a
+copy of it, in memory of the heap of the network. The last piece is the one
+that has its number of bits; the others have 0x100.
+
+Before each piece the thing is asked whether it cannot send, as its second
+function says, and then no more is done. With no room for one more in the
+ring, or no memory, the thing could not go on: that is noted, and it is
+asked again.
+
+The game has a stream started for writing and ended, and
+network_heap_allocate, written here */
+void __attribute__((stdcall)) network_message_queue_send(
+	byte *queue,
+	long type,
+	long size,
+	const void *data)
+{
+	struct network_connection_window *sent=
+		(struct network_connection_window *)(queue+NETWORK_MESSAGE_QUEUE_SENT_WINDOW_OFFSET);
+	const struct network_message_type *types;
+	struct network_message_queue_packed packed;
+	struct bitstream stream;
+	const byte *source;
+	long remaining;
+
+	stream.data= (unsigned long *)packed.data;
+	stream.size= MAXIMUM_NETWORK_MESSAGE_QUEUE_DATA_SIZE;
+	stream.unknown8= 1;
+	stream.unknownC= _bitstream_writing;
+	memset(packed.data, 0, sizeof(packed.data));
+	stream.position= 0;
+	stream.position_count= 0;
+	stream.error= FALSE;
+	stream.unknown2C= 0;
+	stream.unknown30= 0;
+	types= *(const struct network_message_type **)(queue+NETWORK_MESSAGE_QUEUE_TYPES_OFFSET);
+	network_message_header_write(&stream, type, size);
+	types[type].encode(&stream, size, data);
+	remaining= stream.position+32;
+	packed.checksum= 0xFFFFFFFF;
+	crc_checksum_buffer(&packed, (remaining+7)/8, &packed.checksum);
+	source= (const byte *)&packed;
+	for (;;)
+	{
+		struct network_message_queue_message *message;
+		long bit_count;
+		boolean last;
+		long piece;
+		void *memory;
+		long next;
+
+		if ((*(const struct network_connection_functions **)queue)->cannot_send(queue, 0))
+		{
+			return;
+		}
+		if (sent->newest-sent->oldest>=sent->size)
+		{
+			queue[NETWORK_MESSAGE_QUEUE_FULL_OFFSET]= TRUE;
+			continue;
+		}
+		if (remaining<=MAXIMUM_NETWORK_MESSAGE_QUEUE_MESSAGE_BITS)
+		{
+			bit_count= remaining;
+			last= TRUE;
+			piece= (remaining+7)/8;
+		}
+		else
+		{
+			bit_count= MAXIMUM_NETWORK_MESSAGE_QUEUE_MESSAGE_BITS;
+			last= FALSE;
+			piece= MAXIMUM_NETWORK_MESSAGE_QUEUE_MESSAGE_BITS/8;
+		}
+		memory= network_heap_allocate(piece);
+		if (!memory)
+		{
+			queue[NETWORK_MESSAGE_QUEUE_FULL_OFFSET]= TRUE;
+			continue;
+		}
+		next= sent->newest+1;
+		if (next>sent->newest)
+		{
+			sent->count+= next-sent->newest;
+			sent->newest= next;
+		}
+		message= (struct network_message_queue_message *)(queue+NETWORK_MESSAGE_QUEUE_SENT_OFFSET)+
+			network_message_queue_window_place(sent, next);
+		memcpy(memory, source, piece);
+		memset(message, 0, sizeof(*message));
+		message->size= (byte)piece;
+		message->packet_sequence= NONE;
+		message->flags= (byte)(_network_message_queue_message_pending_bit|
+			(last ? _network_message_queue_message_sized_bit : 0));
+		message->bit_count= (word)bit_count;
+		message->data= memory;
+		remaining-= MAXIMUM_NETWORK_MESSAGE_QUEUE_MESSAGE_BITS;
+		*(long *)(queue+NETWORK_MESSAGE_QUEUE_SENT_BYTES_OFFSET)+= piece;
+		source+= MAXIMUM_NETWORK_MESSAGE_QUEUE_MESSAGE_BITS/8;
+		if (last)
+		{
+			return;
+		}
+	}
+}
+
+/* 0x00095840: the next message that one of the things has whole, with its
+kind and its size; whether there is one. There is if, of the messages that
+came, from the first that is kept on and with none missing, one has its
+number of bits: the last piece.
+
+The pieces up to that one are put together, each of 0x20 bytes but the last;
+the heap of the network takes each back, its size is taken from the bytes of
+the ones that came, and the ring starts after it. What they make starts with
+a checksum, which has to be the one of it all (counted with itself as
+0xFFFFFFFF); after it, read as a stream, come the kind and the size
+(network_message_header_read) and what the function of the kind reads, into
+the message, all zeros before. If the checksum is another, or the kind or
+the size are not good, or the function says so, the thing could not go on,
+and there is none.
+
+The game has bitstream_begin_reading and network_connection_window_advance
+written here */
+boolean __attribute__((stdcall)) network_message_queue_receive(
+	byte *queue,
+	long *type,
+	long *size,
+	void *data)
+{
+	struct network_connection_window *received=
+		(struct network_connection_window *)(queue+NETWORK_MESSAGE_QUEUE_RECEIVED_WINDOW_OFFSET);
+	const struct network_message_type *types;
+	struct network_message_queue_packed packed;
+	struct bitstream stream;
+	unsigned long checksum;
+	boolean whole= FALSE;
+	boolean last= FALSE;
+	long sequence;
+	long total= 0;
+
+	if (received->newest==received->oldest)
+	{
+		return FALSE;
+	}
+	for (sequence= received->oldest+1; sequence<=received->newest; sequence++)
+	{
+		const struct network_message_queue_received *message= network_message_queue_get_received(sequence, queue);
+
+		if (!message || !(message->flags&_network_message_queue_received_bit))
+		{
+			break;
+		}
+		if (message->flags&_network_message_queue_received_sized_bit)
+		{
+			whole= TRUE;
+		}
+	}
+	if (!whole)
+	{
+		return FALSE;
+	}
+	stream.position= 0;
+	stream.error= FALSE;
+	stream.position_count= 0;
+	stream.unknownC= 0;
+	stream.unknown8= 1;
+	stream.data= (unsigned long *)packed.data;
+	stream.size= MAXIMUM_NETWORK_MESSAGE_QUEUE_DATA_SIZE;
+	for (sequence= received->oldest+1; sequence<=received->newest && !last; sequence++)
+	{
+		struct network_message_queue_received *message=
+			(struct network_message_queue_received *)(queue+NETWORK_MESSAGE_QUEUE_RECEIVED_OFFSET)+
+			network_message_queue_window_place(received, sequence);
+		struct network_heap *heap;
+		void *memory;
+		long piece;
+		long heap_size;
+
+		if (message->flags&_network_message_queue_received_sized_bit)
+		{
+			piece= (message->bit_count+7)/8;
+			last= TRUE;
+		}
+		else
+		{
+			piece= MAXIMUM_NETWORK_MESSAGE_QUEUE_MESSAGE_BITS/8;
+		}
+		memcpy((byte *)&packed+total, message->data, piece);
+		total+= piece;
+		memory= message->data;
+		heap= unknown_004d87f8;
+		heap->allocator->functions->size(heap->allocator, memory, &heap_size);
+		heap= unknown_004d87f8;
+		heap->allocator->functions->free(heap->allocator, memory, NONE);
+		if (memory)
+		{
+			heap->count--;
+		}
+		*(long *)(queue+NETWORK_MESSAGE_QUEUE_RECEIVED_BYTES_OFFSET)-= message->size;
+		network_connection_window_advance(received, sequence);
+	}
+	checksum= packed.checksum;
+	packed.checksum= 0xFFFFFFFF;
+	crc_checksum_buffer(&packed, total, &packed.checksum);
+	if (checksum==packed.checksum)
+	{
+		stream.size= total-(long)sizeof(packed.checksum);
+		stream.data= (unsigned long *)packed.data;
+		bitstream_begin_reading(&stream);
+		types= *(const struct network_message_type **)(queue+NETWORK_MESSAGE_QUEUE_TYPES_OFFSET);
+		if (network_message_header_read(type, &stream, types, size))
+		{
+			memset(data, 0, *size);
+			if (types[*type].decode(&stream, *size, data))
+			{
+				return TRUE;
+			}
+		}
+	}
+	queue[NETWORK_MESSAGE_QUEUE_FULL_OFFSET]= TRUE;
+
+	return FALSE;
 }

@@ -353,7 +353,7 @@ own, for a session; whether it could. 0x00095580: something of a kind and a
 size is put in what a channel of the game has to send */
 boolean __attribute__((stdcall)) network_message_gateway_send(byte *gateway, const struct transport_address *address, long type,
 	long size, const void *data);
-void __attribute__((stdcall)) unknown_00095580(byte *unknown, long type, long size, const void *data);
+void __attribute__((stdcall)) network_message_queue_send(byte *unknown, long type, long size, const void *data);
 
 /* 0x004d87dc: things of 0x2850 bytes, one for each of what the channels of
 the game say at 0x14 */
@@ -442,7 +442,7 @@ void NETWORK_OBSERVER_CALLBACK network_observer_channel_send(
 
 		*(unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_PENDING_OFFSET)&= ~low;
 		*(unsigned long *)(channel+NETWORK_OBSERVER_CHANNEL_PENDING_OFFSET+sizeof(long))&= ~high;
-		unknown_00095580(unknown_004d87dc+*(const long *)(game_channel+NETWORK_CHANNEL_UNKNOWN14_OFFSET)*
+		network_message_queue_send(unknown_004d87dc+*(const long *)(game_channel+NETWORK_CHANNEL_UNKNOWN14_OFFSET)*
 			NETWORK_CHANNEL_UNKNOWN14_SIZE, type, size, data);
 	}
 }

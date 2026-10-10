@@ -235,3 +235,154 @@ def run(t) -> None:
             globals={"unknown_004d87f8": Pointer(memory, HEAP)},
             mocks=heap_mocks(),
         )
+
+    # ---------- a message is cut in pieces to be sent, and the pieces that came are put together
+
+    KINDS = 0x2D
+    PIECES, PIECE = 64, 0x20
+
+    def big_heap() -> Buffer:
+        """The heap of the network, with a piece of memory of its own for each of many things that it gives."""
+        data = bytearray(random_.randbytes(GIVEN + PIECES * PIECE))
+        struct.pack_into("<Ii", data, HEAP, ALLOCATOR, random_.choice((0, 5, 5000)))
+        struct.pack_into("<I", data, ALLOCATOR, TABLE)
+        struct.pack_into("<11I", data, TABLE, mock_address(0), mock_address(1), 0x33, 0x44, 0x55, mock_address(2), 0x77, 0x88, 0x99, 0xAA, mock_address(3))
+        struct.pack_into("<I4B", data, ASKED, 0, *random_.choice(((1, 1, 1, 1), (1, 1, 1, 1), (1, 1, 1, 1), (0, 1, 1, 1), (1, 0, 1, 1), (1, 1, 0, 0), (0, 0, 0, 0))))
+        return Buffer(bytes(data), pointers=(HEAP, ALLOCATOR))
+
+    def big_heap_mocks() -> list:
+        def gives(call):
+            mu = t.harness.mu
+            base = call.registers["ecx"] - ALLOCATOR
+            asked = struct.unpack("<I", mu.mem_read(base + ASKED, 4))[0]
+            mu.mem_write(base + ASKED, struct.pack("<I", asked + 1))
+            return base + GIVEN + (asked % PIECES) * PIECE if mu.mem_read(base + ANSWERS + (asked & 3), 1)[0] else 0
+
+        return [
+            Mock(lambda call: 0, stack_arguments=2, registers=("ecx",)),
+            Mock(lambda call, known=random_.choice((0, 1)): known, stack_arguments=2, registers=("ecx",), record=lambda call: (call.registers["ecx"], call.stack[0])),
+            Mock(gives, stack_arguments=3, registers=("ecx",)),
+            Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
+            # whether one of the things cannot send: what its byte says
+            Mock(lambda call: t.harness.mu.mem_read(call.registers["ecx"] + 5, 1)[0], stack_arguments=1, registers=("ecx",)),
+        ]
+
+    def with_kinds(data: bytearray, kinds=None) -> tuple:
+        """After one of the things, its functions and the kinds of message; what is a pointer."""
+        functions = len(data)
+        data += struct.pack("<2I", 0x11, mock_address(4))
+        table = len(data)
+        for kind in range(KINDS):
+            valid, least, most = kinds[kind] if kinds else (1, 0, 0xFFFF)
+            data += struct.pack("<B3x2i2i3I", valid, 0, 0, least, most, mock_address(5), mock_address(5), 0x33)
+        struct.pack_into("<I", data, 0, functions)
+        struct.pack_into("<I", data, 0xC, table)
+        return (0, 0xC)
+
+    def stream_state(call) -> bytes:
+        return bytes(t.harness.mu.mem_read(call.stack[0] + 4, 0x18))
+
+    for n in range(700):
+        data = bytearray(random_.randbytes(SIZE))
+        size = random_.choice((1, 4, 0x40, 0x100, 0x100))
+        oldest = random_.choice((0, 5, 1000, random_.getrandbits(20)))
+        count = random_.choice((0, 0, 1, size - 1, size, random_.randrange(size + 1)))
+        struct.pack_into("<B3x6i", data, 0x10, 1, size, oldest + count, oldest, size, random_.randrange(size), count)
+        data[5] = random_.choice((0, 0, 0, 0, 0, 1))
+        pointers = with_kinds(data)
+        length = random_.choice((0, 1, 5, 24, 25, 26, 27, 57, 58, 100, 300, 1000))
+        message = Buffer(random_.randbytes(length + 4))
+
+        def encodes(call):
+            """What the function of a kind writes: the message, and some bits more with nothing."""
+            mu = t.harness.mu
+            where, position = struct.unpack("<I12xi", mu.mem_read(call.stack[0], 0x14))
+            mu.mem_write(where + position // 8, bytes(mu.mem_read(call.stack[2], call.stack[1])))
+            mu.mem_write(call.stack[0] + 0x10, struct.pack("<i", position + call.stack[1] * 8 + call.stack[1] % 5))
+            return 0
+
+        memory = big_heap()
+        t.check(
+            "network_message_queue_send",
+            Buffer(bytes(data), pointers=pointers),
+            random_.randrange(KINDS),
+            length,
+            message,
+            extra=[memory],
+            globals={"unknown_004d87f8": Pointer(memory, HEAP)},
+            mocks=big_heap_mocks() + [Mock(encodes, stack_arguments=3, record=lambda call: (stream_state(call), bytes(t.harness.mu.mem_read(call.stack[0] + 0x2C, 8)), call.stack[1], call.stack[2]))],
+        )
+
+    def checksum(data: bytes) -> int:
+        crc = 0xFFFFFFFF
+        for value in data:
+            for bit in range(8):
+                crc = (crc >> 1) ^ (0xEDB88320 if (crc ^ value) & 1 else 0)
+                value >>= 1
+        return crc
+
+    assert checksum(b"123456789") == 0x340BC6D9
+
+    for n in range(1200):
+        data = bytearray(random_.randbytes(SIZE))
+        size = random_.choice((8, 0x40, 0x200))
+        oldest = random_.choice((0, 5, 1000, random_.getrandbits(20)))
+        start = random_.randrange(size)
+        kinds = [(random_.choice((1, 1, 1, 1, 0)), random_.choice((0, 0, 0, 3)), random_.choice((0xFFFF, 0xFFFF, 40))) for kind in range(KINDS)]
+        pieces = []
+        # the messages that came: each a checksum, its kind, its size and its bytes, in pieces
+        for message in range(random_.choice((0, 1, 1, 1, 2, 3))):
+            length = random_.choice((0, 1, 5, 24, 25, 26, 27, 57, 58, 100))
+            kind = random_.choice((random_.randrange(KINDS), random_.randrange(KINDS), random_.randrange(KINDS), KINDS, 0xFF))
+            body = struct.pack("<BH", kind, length) + random_.randbytes(length)
+            bits = len(body) * 8 + 32 - random_.choice((0, 0, 0, 3))
+            packed = struct.pack("<I", checksum(b"\xff\xff\xff\xff" + body)) + body
+            if random_.random() < 0.1:
+                packed = bytearray(packed)
+                packed[random_.randrange(len(packed))] ^= 1 << random_.randrange(8)
+                packed = bytes(packed)
+            while bits > 0x100:
+                pieces.append((packed[:0x20], 0x100, False))
+                packed = packed[0x20:]
+                bits -= 0x100
+            pieces.append((packed, bits, True))
+        pieces = pieces[:size]
+        how = random_.choice((0, 0, 0, 0, 1, 2, 3))
+        pointers = []
+        for index, (piece, bits, last) in enumerate(pieces):
+            place = 0x1848 + ((index + start) % size) * 8
+            flags = (random_.getrandbits(8) & ~3) | 1 | (2 if last else 0)
+            if how == 1 and index == 0 or how == 2 and index == len(pieces) - 1:
+                # one that did not come
+                flags &= ~1
+            if how == 3:
+                # none is the last piece
+                flags &= ~2
+            where = len(data)
+            data += piece.ljust(0x20, b"\xee")
+            struct.pack_into("<BBHI", data, place, flags, random_.getrandbits(8), bits, where)
+            pointers.append(place + 4)
+        struct.pack_into("<B3x6i", data, 0x182C, 1, size, oldest + len(pieces), oldest, size, start, len(pieces))
+        data[5] = random_.choice((0, 0, 1))
+        pointers += with_kinds(data, kinds)
+        good = random_.choice((1, 1, 1, 0))
+
+        def decodes(call, good=good):
+            """What the function of a kind reads: the message is the bytes that there are."""
+            mu = t.harness.mu
+            where, position = struct.unpack("<I12xi", mu.mem_read(call.stack[0], 0x14))
+            mu.mem_write(call.stack[2], bytes(mu.mem_read(where + position // 8, call.stack[1])))
+            mu.mem_write(call.stack[0] + 0x10, struct.pack("<i", position + call.stack[1] * 8))
+            return good
+
+        memory = heap()
+        t.check(
+            "network_message_queue_receive",
+            Buffer(bytes(data), pointers=tuple(pointers)),
+            Buffer(random_.randbytes(4)),
+            Buffer(random_.randbytes(4)),
+            Buffer(random_.randbytes(0x80)),
+            extra=[memory],
+            globals={"unknown_004d87f8": Pointer(memory, HEAP)},
+            mocks=big_heap_mocks() + [Mock(decodes, stack_arguments=3, record=lambda call: (stream_state(call), call.stack[1], call.stack[2], bytes(t.harness.mu.mem_read(call.stack[2], call.stack[1]))))],
+        )

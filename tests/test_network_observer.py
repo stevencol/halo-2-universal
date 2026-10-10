@@ -294,7 +294,7 @@ def run(t) -> None:
                     0,
                     (arguments[0], bytes(harness.mu.mem_read(arguments[1], 0x14)), arguments[2], arguments[3], harness.normalize(arguments[4])),
                 ),
-                "unknown_00095580": lambda harness, arguments: (
+                "network_message_queue_send": lambda harness, arguments: (
                     0,
                     (harness.normalize(arguments[0]), arguments[1], arguments[2], harness.normalize(arguments[3])),
                 ),

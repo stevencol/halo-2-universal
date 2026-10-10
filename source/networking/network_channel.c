@@ -222,7 +222,7 @@ long network_channel_unknown_00089070(
 
 /* 0x00095580: a message of a kind and a size is put in what one of the
 things of unknown_004d87dc has to send */
-void __attribute__((stdcall)) unknown_00095580(byte *unknown14, long type, long size, const void *data);
+void __attribute__((stdcall)) network_message_queue_send(byte *unknown14, long type, long size, const void *data);
 
 /* 0x00089180: a channel says that it talks with the other console (a
 message of the sixth kind, with the two numbers of what it talks with): with
@@ -240,7 +240,7 @@ void __attribute__((stdcall)) network_channel_send_established(
 	{
 		if (established)
 		{
-			unknown_00095580(unknown_004d87dc+*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN14_OFFSET)*
+			network_message_queue_send(unknown_004d87dc+*(const long *)(channel+NETWORK_CHANNEL_UNKNOWN14_OFFSET)*
 				NETWORK_CHANNEL_UNKNOWN14_SIZE, _network_message_connect_established, sizeof(message), &message);
 		}
 	}
@@ -883,7 +883,7 @@ came in a packet. 0x00095840: the next message that one of the things of
 unknown_004d87dc has whole, with its kind and its size; whether there is
 one. 0x00093aa0: a message that came by a channel is given to what it is
 for */
-boolean __attribute__((stdcall)) unknown_00095840(byte *unknown14, long *type, long *size, void *data);
+boolean __attribute__((stdcall)) network_message_queue_receive(byte *unknown14, long *type, long *size, void *data);
 void __attribute__((stdcall)) unknown_00093aa0(const void *data, long unknown44, byte *unknown8, long type, long size);
 
 /* 0x00088750: a packet that came by a channel is read; whether it was good.
@@ -987,7 +987,7 @@ boolean __attribute__((stdcall)) network_channel_read_packet(
 				long type;
 				long size;
 
-				while (unknown_00095840(unknown14, &type, &size, data))
+				while (network_message_queue_receive(unknown14, &type, &size, data))
 				{
 					unknown_00093aa0(data, *(const long *)(channel+NETWORK_CHANNEL_UNKNOWN44_OFFSET),
 						*(byte **)(channel+NETWORK_CHANNEL_UNKNOWN8_OFFSET), type, size);
