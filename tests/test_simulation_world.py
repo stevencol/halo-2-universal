@@ -755,3 +755,43 @@ def run(t) -> None:
             Buffer(bytes(data), pointers=(0,)),
             externals={"simulation_world_unknown_0006b1f0": next_number, "simulation_world_unknown_0006b2a0": views_done},
         )
+
+    # ---------- what the players of this console do, and what one of the other things has
+
+    for n in range(2000):
+        state = random_.choice((1, 2, 3, 3, 4, 5))
+        while True:
+            thing = a_world(random_, 0, 0x1220)
+            data = bytearray(thing.data)
+            views = [struct.unpack_from("<I", data, 0x40 + index * 4)[0] for index in range(15)]
+            # in the third state the game does not look whether there is a view to send by
+            if state != 3 or any(view and 1 << (data[view + 2] & 31) & 0xA for view in views):
+                break
+        struct.pack_into("<i", data, 0x8, state)
+        for index in range(16):
+            if random_.random() < 0.4:
+                struct.pack_into("<i", data, 0x8FC + index * 0x90, -1)
+        thing = Buffer(bytes(data), pointers=thing.pointers)
+
+        def finds(harness, arguments, thing=thing):
+            return (thing.address + 0x7C + arguments[2] * 0x88 if arguments[2] != 2 else 0), (harness.normalize(arguments[0]), harness.normalize(arguments[1]), arguments[2])
+
+        t.check(
+            "simulation_world_set_local_player_actions",
+            Buffer(random_.randbytes(4 * 0x5C)),
+            thing,
+            random_.choice((0xF, random_.getrandbits(4), random_.getrandbits(32))),
+            externals={
+                "simulation_world_find_player": finds,
+                "unknown_000847d0": lambda harness, arguments: (0, (harness.normalize(arguments[0]), harness.normalize(arguments[1]))),
+                "simulation_view_send_player_actions": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1], harness.normalize(arguments[2]))),
+            },
+        )
+        time = bytearray(random_.randbytes(0x10))
+        t.check(
+            "simulation_world_set_other_unknown14",
+            thing,
+            random_.randrange(16),
+            Buffer(random_.randbytes(0x7C)),
+            globals={"game_time_globals": Buffer(bytes(time))},
+        )

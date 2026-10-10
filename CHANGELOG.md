@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Lo que hacen los jugadores de esta consola
+
+Dos funciones en `networking/simulation_world.c`, 194 bytes entre las dos. De 1619
+funciones se pasa a 1621, el 14,39 % de las del juego (el 9,550 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_set_local_player_actions` | `0x00069040` | `networking/simulation_world.c` |
+| `simulation_world_set_other_unknown14` | `0x000690d0` | `networking/simulation_world.c` |
+
+### Lo que se sabe
+
+- `simulation_world_set_local_player_actions` es **por donde entran los
+  mandos en la partida en red**: lo que hacen los (hasta cuatro)
+  jugadores de esta consola.
+  - En una consola que **sigue a otra** (tercer estado) no se aplican
+    aquí: se **mandan** a la que lleva la partida por la vista principal
+    (hito 466). Volverán dentro de una actualización.
+  - En las demás, cada jugador que la partida tiene de esta consola se
+    queda con lo suyo (`0x000847d0`), buscándolo con los seis bytes
+    propios (hito 457).
+- Es el cierre del circuito: mandos → mensaje `0x28` → la consola que
+  manda los guarda (hito 457) → actualización (hito 479) → mensaje `0x27`
+  → todas las consolas la aplican en el mismo tick.
+- `simulation_world_set_other_unknown14` da a una de las otras dieciséis
+  cosas de la partida (hito 458) lo que tiene en `0x14` (124 bytes), con
+  la hora del juego. Por el tamaño y el sitio, son las acciones de algo
+  que no es un jugador.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos**, y en las de los hitos 441 a
+  479.
+- En el tercer estado el juego no mira si hay vista principal; con
+  ninguna leería de la dirección cero. Las pruebas no lo dan.
+- En este hito se pasaron las pruebas de las dos funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — De qué está hecha una actualización
 
 Dos funciones: una en `networking/simulation_world.c` y otra en

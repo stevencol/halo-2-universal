@@ -42,6 +42,9 @@ void __attribute__((stdcall)) unknown_00083610(long unknown, long *count, void *
 void __attribute__((stdcall)) unknown_00069110(byte *world, long *update);
 void unknown_000c6ef0(byte *unknown14);
 
+/* 0x000847d0: what the thing has of a player takes what the player does */
+void __attribute__((stdcall)) unknown_000847d0(byte *player, const void *actions);
+
 /* ---------- more globals */
 
 /* 0x004cf780, of game.c */
@@ -1572,6 +1575,64 @@ void simulation_world_build_update(
 		{
 			bytes[SIMULATION_UPDATE_SAVED_OFFSET]= TRUE;
 			world[SIMULATION_WORLD_SAVED_OFFSET]= FALSE;
+		}
+	}
+}
+
+/* 0x00069040: the thing is given what the players of this console do, as
+four bits say which. In its third state, which follows another console, its
+first view of the first kind or of the third sends it there
+(simulation_view_send_player_actions). In any other, each of those players
+that the thing has (simulation_world_find_player, with the six bytes of this
+console) takes it (unknown_000847d0). The game has
+simulation_world_unknown_0006acb0 written here, and does not look whether
+there is such a view */
+void __attribute__((stdcall)) simulation_world_set_local_player_actions(
+	const void *actions,
+	byte *world,
+	unsigned long players)
+{
+	if (*(const long *)(world+SIMULATION_WORLD_STATE_OFFSET)==_simulation_world_state3)
+	{
+		simulation_view_send_player_actions(simulation_world_unknown_0006acb0(world), players, actions);
+	}
+	else
+	{
+		long index;
+
+		for (index= 0; index<MAXIMUM_SIMULATION_CONSOLE_PLAYERS; index++)
+		{
+			if (players&(1u<<index))
+			{
+				byte *player= simulation_world_find_player(world, (const word *)(world+SIMULATION_WORLD_OWN_UNKNOWN14_OFFSET), index);
+
+				if (player)
+				{
+					unknown_000847d0(player, (const byte *)actions+index*SIMULATION_PLAYER_ACTIONS_SIZE);
+				}
+			}
+		}
+	}
+}
+
+/* 0x000690d0: one of the other things of the thing is given what it has at
+0x14, with the time of the game, if there is such a one; not in the third
+state of the thing nor in the fifth */
+void __attribute__((stdcall)) simulation_world_set_other_unknown14(
+	byte *world,
+	long index,
+	const void *unknown14)
+{
+	long state= *(const long *)(world+SIMULATION_WORLD_STATE_OFFSET);
+
+	if (state!=3 && state!=5)
+	{
+		byte *other= world+index*SIMULATION_WORLD_OTHER_SIZE+SIMULATION_WORLD_OTHERS_OFFSET;
+
+		if (*(const long *)other!=NONE)
+		{
+			*(unsigned long *)(other+SIMULATION_WORLD_OTHER_UNKNOWN10_OFFSET)= game_time_globals->time;
+			memcpy(other+SIMULATION_WORLD_OTHER_UNKNOWN14_OFFSET, unknown14, SIMULATION_WORLD_OTHER_UNKNOWN14_SIZE);
 		}
 	}
 }

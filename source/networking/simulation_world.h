@@ -162,7 +162,9 @@ enum
 	SIMULATION_WORLD_UNKNOWN0_PLAYER_SIZE= 0xB4,
 	SIMULATION_WORLD_UNKNOWN0_PLAYER_UNKNOWNC_OFFSET= 0xC,
 	SIMULATION_WORLD_PLAYER_UNKNOWN24_OFFSET= 0x24,
-	SIMULATION_WORLD_SENDING_GAME_STATE_OFFSET= 0x11FC
+	SIMULATION_WORLD_SENDING_GAME_STATE_OFFSET= 0x11FC,
+	/* the size of what one of the other things of the thing has at 0x14 */
+	SIMULATION_WORLD_OTHER_UNKNOWN14_SIZE= 0x7C
 };
 
 /* ---------- structures */
@@ -250,6 +252,9 @@ void __attribute__((stdcall)) simulation_world_update_players_unknown25(byte *wo
 void __attribute__((stdcall)) simulation_world_before_send_game_state(byte *world, long *size_out);
 void simulation_world_unknown_00069c50(byte *world);
 void simulation_world_build_update(byte *world, long *update);
+void __attribute__((stdcall)) simulation_world_set_local_player_actions(const void *actions, byte *world,
+	unsigned long players);
+void __attribute__((stdcall)) simulation_world_set_other_unknown14(byte *world, long index, const void *unknown14);
 
 /* whether a view is past the states in which it is made ready: one of the
 second kind from the sixth state on, and any other from the fourth. The game
