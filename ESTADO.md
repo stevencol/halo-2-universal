@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 444.
+**Última actualización:** 2026-10-08, al terminar el hito 445.
 
 ## Dónde estamos
 
-- **1531 funciones descompiladas de 11.265: el 13,59 % del juego** (el
-  9,153 % de los bytes de código).
-- Las 1531 están comprobadas contra el ejecutable original: las 1390 del
+- **1535 funciones descompiladas de 11.265: el 13,63 % del juego** (el
+  9,158 % de los bytes de código).
+- Las 1535 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the lookup of a channel's view and seven message handlers* (ver `git log`).
+- Último hito: *Decompile four small functions of the simulation world* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 557 funciones apuntadas pero sin descompilar (las que el código
-  llama); 455 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 556 funciones apuntadas pero sin descompilar (las que el código
+  llama); 454 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -160,9 +160,10 @@ Módulos (funciones hechas / archivo):
       tabla `0x00450db8`; completo; romper líneas pendiente en las
       cinco últimas)
 - [ ] La partida en red y sus vistas — `networking\simulation_world.c`
-      (2: recorrer las vistas y dar la de un canal; es lo de
-      `unknown_004cf770`, y queda casi todo, de `0x000693a0` en
-      adelante)
+      (6: recorrer las vistas, dar la de un canal, un byte de cada
+      jugador y devolver memoria prestada; es lo de
+      `unknown_004cf770`, y queda casi todo, de `0x00069300` a
+      `0x0006ad40`)
 - [ ] A quien se dan los mensajes de las vistas —
       `networking\network_message_handler.c` (7: de `0x00094910` a
       `0x00094aa0`, completo; falta lo que las vistas hacen con cada

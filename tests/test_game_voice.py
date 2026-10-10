@@ -980,7 +980,7 @@ def run(t) -> None:
                                 "main_game_globals": Buffer(bytes(game_data)) if game_there else 0,
                                 "unknown_004cf770+0xC": table if table_there else 0,
                             },
-                            externals={"unknown_000696d0": gives(says)},
+                            externals={"simulation_world_player_unknown25": gives(says)},
                         )
 
         for player in (0, 3, 15, NONE):

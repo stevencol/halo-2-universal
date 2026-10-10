@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Cuatro más de la partida en red
+
+Cuatro funciones en `networking/simulation_world.c`. De 1531
+funciones se pasa a 1535, el 13,63 % de las del juego (el 9,158 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_player_unknown25` | `0x000696d0` | `networking/simulation_world.c` |
+| `simulation_world_players_clear_unknown25` | `0x00069610` | `networking/simulation_world.c` |
+| `simulation_world_unknown_0006acb0` | `0x0006acb0` | `networking/simulation_world.c` |
+| `simulation_world_unknown_0006aae0` | `0x0006aae0` | `networking/simulation_world.c` |
+
+### Lo que se sabe
+
+- Lo que `unknown_004cf770` tiene en marcha lleva también **algo de cada
+  jugador**: dieciséis sitios de `0x88` bytes desde `0x7C`, que empiezan
+  con un número (`-1` si no hay tal jugador) y tienen un byte en `0x25`.
+  - `simulation_world_player_unknown25` da ese byte de un jugador. Es lo
+    que la voz pregunta de cada jugador (hito 276).
+  - `simulation_world_players_clear_unknown25` lo quita de todos.
+- `simulation_world_unknown_0006acb0` da la primera vista de la primera
+  clase o de la tercera.
+- `simulation_world_unknown_0006aae0`: lo que una vista tiene en `0xC`
+  devuelve a la caché de texturas la memoria que le prestó (en
+  `0x1204`), y queda sin ella.
+
+### Corregido
+
+- `unknown_000696d0` estaba apuntada como si recibiera un puntero en
+  `eax`. **Recibe el número del jugador en `ecx` y la partida en `edx`**,
+  y busca ella el sitio del jugador. Quien la llama
+  (`game_voice_unknown_00054df0`, hito 276) dejaba ese puntero en `eax`
+  por casualidad, porque mira antes si hay tal jugador; por eso las
+  pruebas pasaban. Es el aviso de ESTADO.md: lo apuntado de una función
+  sin descompilar sale solo de cómo la llaman.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las cuatro**, y en las de los hitos 441
+  a 444.
+- En este hito se pasaron las pruebas de `simulation_world` (6
+  funciones) y la de `game_voice_unknown_00054df0`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Los mensajes que van a la vista de un canal
 
 Nueve funciones: dos en el archivo nuevo `networking/simulation_world.c` y siete en el archivo

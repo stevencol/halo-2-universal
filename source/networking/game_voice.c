@@ -21,6 +21,7 @@ are the names of its functions.
 #include <stdio.h>
 #include <string.h>
 #include "main/main_game.h"
+#include "networking/simulation_world.h"
 #include "networking/network_life_cycle.h"
 #include "networking/network_session.h"
 #include "saved games/saved_game_files.h"
@@ -35,8 +36,7 @@ long unknown_00332f22(void *engine);
 /* 0x00068250: something of the network game */
 boolean unknown_00068250(void);
 
-/* 0x000696d0: something of what unknown_004cf770 has of a player */
-boolean unknown_000696d0(const byte *unknown);
+/* 0x000696d0 is simulation_world_player_unknown25, of simulation_world.c */
 
 
 /* 0x0005c6d0 is network_session_host_set_chosen_peer, of network_session.c */
@@ -1284,7 +1284,9 @@ void game_voice_update_network_state(
 }
 
 /* 0x00054df0: something of a player, in a game that goes on: what
-unknown_000696d0 says of what unknown_004cf770 has of it */
+simulation_world_player_unknown25 says of what unknown_004cf770 has of it.
+The game looks whether there is such a player before asking, and that
+function looks again */
 boolean game_voice_unknown_00054df0(
 	long player)
 {
@@ -1303,7 +1305,7 @@ boolean game_voice_unknown_00054df0(
 				const byte *unknown= unknown_004cf770.unknownC+index*UNKNOWN_004CF770_PLAYER_SIZE+
 					UNKNOWN_004CF770_PLAYER_OFFSET;
 
-				if (*(const long *)unknown!=NONE && unknown_000696d0(unknown))
+				if (*(const long *)unknown!=NONE && simulation_world_player_unknown25(player, unknown_004cf770.unknownC))
 				{
 					return TRUE;
 				}

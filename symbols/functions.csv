@@ -819,7 +819,7 @@ address,name,source,arguments,returns,convention
 00054e60,game_voice_get_player_datum,source/networking/game_voice.c,esi,int
 00054fe0,game_voice_update_profile,source/networking/game_voice.c,stack,void
 00332f22,unknown_00332f22,,stack,int
-000696d0,unknown_000696d0,,eax,bool
+000696d0,simulation_world_player_unknown25,source/networking/simulation_world.c,ecx edx,bool
 00053610,game_voice_update,source/networking/game_voice.c,,void
 00053c70,game_voice_unknown_00053c70,source/networking/game_voice.c,,int
 00054590,game_voice_update_session_players,source/networking/game_voice.c,,void
@@ -2087,3 +2087,6 @@ address,name,source,arguments,returns,convention
 00085ed0,unknown_00085ed0,,esi ecx eax stack,bool,stdcall
 00085f50,unknown_00085f50,,eax ecx edx edi stack stack,bool,stdcall
 000698e0,unknown_000698e0,,esi edx,void
+00069610,simulation_world_players_clear_unknown25,source/networking/simulation_world.c,eax,void
+0006acb0,simulation_world_unknown_0006acb0,source/networking/simulation_world.c,edi,pointer
+0006aae0,simulation_world_unknown_0006aae0,source/networking/simulation_world.c,edi,void
