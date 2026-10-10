@@ -199,7 +199,7 @@ def run(t) -> None:
             externals={
                 "simulation_view_set_state": state,
                 "network_observer_channel_send": sends,
-                "unknown_000869a0": lambda harness, arguments, could=could: (could, (harness.normalize(arguments[0]), harness.normalize(arguments[1]))),
+                "simulation_view_queue_update": lambda harness, arguments, could=could: (could, (harness.normalize(arguments[0]), harness.normalize(arguments[1]))),
                 "simulation_view_send_game_state": told,
             },
         )
@@ -445,4 +445,28 @@ def run(t) -> None:
                 "network_observer_channel_send": sends,
                 "unknown_00068670": lambda harness, arguments, made=made: (made, (bytes(harness.mu.mem_read(arguments[0], arguments[1])), arguments[1])),
             },
+        )
+
+    # ---------- one of the things that come is kept in the ring of a view
+
+    for n in range(1500):
+        view = bytearray(random_.randbytes(0xC0))
+        room = random_.choice((0x10, 0x40, 0x400, 0x400))
+        kept = random_.choice((0, 0, 8, room // 2, room - 8))
+        struct.pack_into("<iI2i", view, 0x9C, room, 0xC0, random_.randrange(room), kept)
+        struct.pack_into("<i", view, 0xAC, random_.choice((0, 3)))
+        length = random_.choice((0, 1, 0x30, 0x200))
+        put = random_.randbytes(length)
+        could = random_.choice((1, 1, 1, 0, 0x100))
+
+        def puts(harness, arguments, put=put, could=could):
+            harness.mu.mem_write(arguments[0], put)
+            harness.mu.mem_write(arguments[3], struct.pack("<I", len(put)))
+            return could, (arguments[1], harness.normalize(arguments[2]))
+
+        t.check(
+            "simulation_view_queue_update",
+            Buffer(random_.randbytes(0x40)),
+            Buffer(bytes(view) + random_.randbytes(room + 4), pointers=(0xA0,)),
+            externals={"unknown_000685f0": puts},
         )

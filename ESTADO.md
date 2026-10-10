@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 475.
+**Última actualización:** 2026-10-08, al terminar el hito 476.
 
 ## Dónde estamos
 
-- **1602 funciones descompiladas de 11.265: el 14,22 % del juego** (el
-  9,494 % de los bytes de código).
-- Las 1602 están comprobadas contra el ejecutable original: las 1390 del
+- **1603 funciones descompiladas de 11.265: el 14,23 % del juego** (el
+  9,502 % de los bytes de código).
+- Las 1603 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a view sends what its ring keeps, message by message* (ver `git log`).
+- Último hito: *Decompile how a view keeps an update that comes while it sends the game state* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 558 funciones apuntadas pero sin descompilar (las que el código
   llama); 456 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -175,12 +175,12 @@ Módulos (funciones hechas / archivo):
       `unknown_004cf770`, y queda casi todo, de `0x00069300` a
       `0x0006ad40`)
 - [ ] Las vistas de la partida en red — `networking\simulation_view.c`
-      (19: poner una vista en un estado, seguir el del otro extremo,
+      (20: poner una vista en un estado, seguir el del otro extremo,
       ver si está lista, darla por mala, marcar la que frena la partida, lo que hacen los
       jugadores de la otra consola y cuáles conoce, los trozos del
       estado del juego, desde qué número sigue la partida y pasar una
       actualización, y mandar lo que hacen sus jugadores; quedan
-      `0x00085e70`, `0x000869a0` y lo que sigue desde `0x00086bc0`)
+      `0x00085e70` y lo que sigue desde `0x00086bc0`)
 - [ ] A quien se dan los mensajes de las vistas —
       `networking\network_message_handler.c` (7: de `0x00094910` a
       `0x00094aa0`, completo; falta lo que las vistas hacen con cada

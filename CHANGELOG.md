@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Lo que pasa mientras se manda el estado del juego
+
+Una función en `networking/simulation_view.c`, de 250 bytes. De 1602
+funciones se pasa a 1603, el 14,23 % de las del juego (el 9,502 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_view_queue_update` | `0x000869a0` | `networking/simulation_view.c` |
+
+### Lo que se sabe
+
+- `simulation_view_queue_update` es lo que una vista hace con una
+  actualización de la partida **mientras todavía le está mandando el
+  estado del juego a su consola** (lo llama el hito 461): no la manda,
+  la **guarda en el anillo, detrás de lo que queda por salir**. La pone
+  en bytes (`0x000685f0`, la pareja de la `0x00068670` del hito 475) y
+  le pone delante los ocho bytes de «es una actualización», cuánto mide
+  y su número.
+- Con esto el anillo de una vista está entero: tres clases de cosas
+  (desde dónde sigue la partida, trozos del estado, actualizaciones), y
+  quién las mete y quién las saca.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 441 a 475.
+- En este hito se pasaron las pruebas de la función y la de
+  `simulation_view_send_update`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — El estado del juego va saliendo, mensaje a mensaje
 
 Una función en `networking/simulation_view.c`, de 553 bytes. De 1601

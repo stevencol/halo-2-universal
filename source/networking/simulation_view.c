@@ -45,12 +45,12 @@ long GetTickCount(void);
 
 /* 0x001995a0: the state of the game, from where it is, is packed into
 memory of a size; how many bytes it is then, and whether it could be.
-0x000869a0: a view takes one of the things that come, with what it has
-at 0x94; whether it could. 0x00068670: one of the things that come is made
+0x000685f0: one of the things that come is put in bytes, in memory of a
+size; how many, and whether it could be. 0x00068670: one of the things that come is made
 from the bytes that were kept of it; whether it could be */
 boolean __attribute__((stdcall)) unknown_001995a0(const void *base, void *buffer, long *size_out, long capacity,
 	long level);
-boolean __attribute__((stdcall)) unknown_000869a0(const void *update, byte *view);
+boolean __attribute__((stdcall)) unknown_000685f0(void *buffer, long capacity, const void *update, long *size_out);
 boolean unknown_00068670(const void *data, long size, void *update);
 
 /* 0x0006a7f0: the thing takes what some players of the other console do, as
@@ -346,7 +346,7 @@ boolean __attribute__((stdcall)) simulation_view_set_players(
 thing. In its sixth state, it is sent on to the other console as it is (a
 message of the kind 0x27, of 0x4048 bytes), if the view talks by a channel
 of the observer. In any other, and with something at 0x94, the view takes it
-(unknown_000869a0) and something follows (simulation_view_send_game_state); if it could
+(simulation_view_queue_update) and something follows (simulation_view_send_game_state); if it could
 not, the view goes to its first state and is as 5 says (simulation_view_fail,
 written here). The game sends a copy */
 void simulation_view_send_update(
@@ -367,7 +367,7 @@ void simulation_view_send_update(
 	}
 	else if (*(void *const *)(view+SIMULATION_VIEW_UNKNOWN94_OFFSET))
 	{
-		if (unknown_000869a0(update, view))
+		if (simulation_view_queue_update(update, view))
 		{
 			simulation_view_send_game_state(view);
 		}
@@ -976,4 +976,35 @@ void __attribute__((stdcall)) simulation_view_send_game_state(
 		}
 		(*(long *)(view+SIMULATION_VIEW_UNKNOWNAC_OFFSET))--;
 	}
+}
+
+/* 0x000869a0: one of the things that come while a view is sent the state of
+the game is kept in its ring, to go after it; whether it could be. It is put
+in bytes (unknown_000685f0), and those go into the ring after eight bytes
+that say that it is one of those things, how many bytes it is, and its
+number; and the view has one more thing to send. The game has
+ring_buffer_append written here the first time */
+boolean __attribute__((stdcall)) simulation_view_queue_update(
+	const void *update,
+	byte *view)
+{
+	struct ring_buffer *ring= (struct ring_buffer *)(view+SIMULATION_VIEW_RING_OFFSET);
+	byte data[MAXIMUM_SIMULATION_VIEW_PACKED_UPDATE_SIZE];
+	struct simulation_view_game_state_record record;
+	long size;
+
+	if (!unknown_000685f0(data, sizeof(data), update, &size))
+	{
+		return FALSE;
+	}
+	record.type= _simulation_view_game_state_record_update;
+	record.size= (short)size;
+	record.number= *(const long *)update;
+	if (ring_buffer_append(ring, sizeof(record), &record)==NONE || ring_buffer_append(ring, size, data)==NONE)
+	{
+		return FALSE;
+	}
+	(*(long *)(view+SIMULATION_VIEW_UNKNOWNAC_OFFSET))++;
+
+	return TRUE;
 }
