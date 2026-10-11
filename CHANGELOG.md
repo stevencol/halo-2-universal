@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Lo que la simulación tiene en marcha se prepara, se reinicia y se cierra
+
+Tres funciones de `networking/simulation_world.c` (744 bytes), las que el hito 575 dejó
+con nombre provisional. De 1951
+funciones se pasa a 1954, el 17,35 % de las del juego (el 10,895 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_initialize` | `0x00068c00` | `networking/simulation_world.c` |
+| `simulation_world_restart` | `0x00068dc0` | `networking/simulation_world.c` |
+| `simulation_world_dispose` | `0x00068e20` | `networking/simulation_world.c` |
+
+### Lo que se sabe
+
+- `simulation_world_initialize` (antes `unknown_00068c00`) prepara para un
+  mapa nuevo lo que la simulación tiene en marcha. **Su estado sale de la
+  clase de partida**: 1, 3, 2, 5 y 4 para las clases 1 a 5 (el juego no mira
+  ninguna otra: el salto no comprueba el rango). En los estados cuarto y
+  quinto recibe la memoria de `unknown_004d87e8` y enlaza las cuatro cosas
+  que hay en ella: lo que cuenta las cosas que existen (en `0`), lo que
+  cuenta las cosas que pasan (`0x2048`), la base de datos de las cosas
+  (`0x2098`) y la de las cosas que pasan (`0xA0AC`). Al final se queda sin
+  vistas ni consola y con un 2 en `0x18`.
+- `simulation_world_restart` (antes `unknown_00068dc0`) la deja lista para
+  una partida que vuelve a empezar: en los estados cuarto y quinto reinicia
+  esas cosas, y en el tercero tira lo que había llegado y esperaba.
+- `simulation_world_dispose` (antes `unknown_00068e20`) la cierra al irse el
+  mapa: se rinde, acaba con sus vistas **de la última a la primera mientras
+  le queden**, se queda sin jugadores y suelta los enlaces de la memoria.
+- Acabar con una vista estaba escrito dos veces en el juego (aquí y en
+  `simulation_world_delete_views`); ahora las dos usan una misma función
+  en línea, `simulation_world_view_delete`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  576.
+- El nombre `simulation_world_restart` es una suposición.
+- La base de datos de las cosas que pasan (`0xA0AC`) no tiene estructura:
+  solo los cinco campos que estas funciones ponen.
+- En este hito se pasaron las pruebas de las tres funciones, y
+  `test_simulation` (con las de `simulation_world`), `test_main_game`,
+  `test_network_globals` y `test_game_state` enteras.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — La simulación al cargar una partida y lo que vigila fuera de los ticks
 
 Cuatro funciones más de `networking/simulation.c` (487 bytes). De 1947

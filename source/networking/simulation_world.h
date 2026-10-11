@@ -184,7 +184,25 @@ enum
 	SIMULATION_VIEW_DATA_UNKNOWN5070_OFFSET= 0x5070,
 	SIMULATION_VIEW_DATA_UNKNOWN5098_OFFSET= 0x5098,
 	/* a byte of one of the other things of the thing */
-	SIMULATION_WORLD_OTHER_UNKNOWNC_OFFSET= 0xC
+	SIMULATION_WORLD_OTHER_UNKNOWNC_OFFSET= 0xC,
+	/* more of the thing: bytes and numbers that are cleared when it is set up,
+	and a number. In that memory: what tells of the things
+	that are, of the things that happen, what the things are, and what the
+	things that happen are; and of this last, a byte that says that it is
+	set up, the thing, what tells of the things that happen, the kinds and
+	what the things are */
+	SIMULATION_WORLD_UNKNOWNC_OFFSET= 0xC,
+	SIMULATION_WORLD_UNKNOWN2E_OFFSET= 0x2E,
+	SIMULATION_WORLD_UNKNOWN2F_OFFSET= 0x2F,
+	SIMULATION_WORLD_UNKNOWN38_OFFSET= 0x38,
+	SIMULATION_WORLD_MEMORY_EVENT_MANAGER_OFFSET= 0x2048,
+	SIMULATION_WORLD_MEMORY_ENTITY_DATABASE_OFFSET= 0x2098,
+	SIMULATION_WORLD_MEMORY_EVENT_DATABASE_OFFSET= 0xA0AC,
+	SIMULATION_EVENT_DATABASE_INITIALIZED_OFFSET= 0x4,
+	SIMULATION_EVENT_DATABASE_WORLD_OFFSET= 0x8,
+	SIMULATION_EVENT_DATABASE_MANAGER_OFFSET= 0xC,
+	SIMULATION_EVENT_DATABASE_TYPES_OFFSET= 0x10,
+	SIMULATION_EVENT_DATABASE_ENTITY_DATABASE_OFFSET= 0x14
 };
 
 /* ---------- structures */
@@ -206,6 +224,13 @@ struct simulation_update_node
 };
 
 /* ---------- prototypes/SIMULATION_WORLD.C */
+
+struct simulation_type_table;
+
+void __attribute__((stdcall)) simulation_world_initialize(long unknown, byte *memory,
+	struct simulation_type_table *types, byte *world);
+void simulation_world_restart(byte *world);
+void __attribute__((stdcall)) simulation_world_dispose(byte *world);
 
 /* whether the thing is being sent the state of the game: it is in its third
 state and has a count of the bytes that have come. The game has it written

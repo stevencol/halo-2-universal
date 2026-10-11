@@ -55,7 +55,7 @@ def run(t) -> None:
                 "main_game_globals": Buffer(bytes(game)),
             },
             externals={
-                "unknown_00068c00": what,
+                "simulation_world_initialize": what,
                 "simulation_players_reset": what,
                 "unknown_00083000": what,
                 "unknown_00195a40": lambda harness, arguments: (0, ()),
@@ -78,7 +78,7 @@ def run(t) -> None:
                 "unknown_004cf780": players,
             },
             externals={
-                "unknown_00068e20": ends,
+                "simulation_world_dispose": ends,
                 "unknown_00195e90": lambda harness, arguments: (0, ()),
             },
         )

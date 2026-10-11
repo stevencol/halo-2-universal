@@ -18,9 +18,13 @@ and so are the names of its functions.
 #include "main/main_game.h"
 #include "memory/data.h"
 #include "saved games/game_state.h"
+#include "networking/network_globals.h"
 #include "networking/network_heap.h"
 #include "networking/network_observer.h"
 #include "networking/network_session.h"
+#include "networking/replication_entity_manager.h"
+#include "networking/replication_event_manager.h"
+#include "networking/simulation_entity_database.h"
 #include "networking/simulation.h"
 #include "networking/simulation_player.h"
 #include "networking/simulation_view.h"
@@ -1688,6 +1692,39 @@ void __attribute__((stdcall)) simulation_world_add_player(
 		(const word *)(datum+SIMULATION_PLAYER_DATUM_MACHINE_IDENTIFIER_OFFSET), world, (long)index, player, state);
 }
 
+/* a view is done with, as simulation_world_delete_views tells: the game has
+it written in each of the two that do it */
+static inline __attribute__((always_inline)) void simulation_world_view_delete(
+	byte *view)
+{
+	byte *data;
+	long index;
+
+	if (*(const word *)(view+SIMULATION_VIEW_KIND_OFFSET)!=0)
+	{
+		if (*(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET)!=NONE)
+		{
+			simulation_view_release_channel(view);
+		}
+		if (*(void *const *)(view+SIMULATION_VIEW_WORLD_OFFSET))
+		{
+			simulation_view_detach(view);
+		}
+		*(word *)(view+SIMULATION_VIEW_KIND_OFFSET)= 0;
+	}
+	data= *(byte *const *)(view+SIMULATION_VIEW_DATA_OFFSET);
+	index= *(const long *)(view+SIMULATION_VIEW_DATUM_INDEX_OFFSET);
+	datum_delete(unknown_004d87ec, index);
+	if (data)
+	{
+		*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN5098_OFFSET)= unknown_00450c94;
+		*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN5070_OFFSET)= unknown_00450d1c;
+		*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN30_OFFSET)= unknown_00450cd0;
+		*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN4_OFFSET)= unknown_00450cf4;
+		datum_delete(unknown_004d87f0, index);
+	}
+}
+
 /* 0x000693a0: the views of the thing are done with: it is what
 main_game_unload ends the game in the network with. Each view that is of some
 kind lets go of its channel, if it has one of the observer
@@ -1704,36 +1741,11 @@ void __attribute__((stdcall)) simulation_world_delete_views(
 
 	while (simulation_world_next_view(&iterator, world, &view))
 	{
-		byte *data;
-		long index;
-
 		if (!view)
 		{
 			continue;
 		}
-		if (*(const word *)(view+SIMULATION_VIEW_KIND_OFFSET)!=0)
-		{
-			if (*(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET)!=NONE)
-			{
-				simulation_view_release_channel(view);
-			}
-			if (*(void *const *)(view+SIMULATION_VIEW_WORLD_OFFSET))
-			{
-				simulation_view_detach(view);
-			}
-			*(word *)(view+SIMULATION_VIEW_KIND_OFFSET)= 0;
-		}
-		data= *(byte *const *)(view+SIMULATION_VIEW_DATA_OFFSET);
-		index= *(const long *)(view+SIMULATION_VIEW_DATUM_INDEX_OFFSET);
-		datum_delete(unknown_004d87ec, index);
-		if (data)
-		{
-			*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN5098_OFFSET)= unknown_00450c94;
-			*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN5070_OFFSET)= unknown_00450d1c;
-			*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN30_OFFSET)= unknown_00450cd0;
-			*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN4_OFFSET)= unknown_00450cf4;
-			datum_delete(unknown_004d87f0, index);
-		}
+		simulation_world_view_delete(view);
 	}
 }
 
@@ -1767,5 +1779,198 @@ void simulation_world_construct(
 		*(void **)(other+SIMULATION_WORLD_OTHER_WORLD_OFFSET)= NULL;
 		other[SIMULATION_WORLD_OTHER_UNKNOWNC_OFFSET]= FALSE;
 	}
+	*(long *)(world+SIMULATION_WORLD_STATE_OFFSET)= 0;
+}
+
+/* 0x00068c00: the thing is set up for a new map: it gets what
+unknown_004cf780 has, and its state is by the kind of the game (1, 3, 2, 5
+and 4 for the kinds 1 to 5: the game looks at no other); its bytes and
+numbers are cleared, and the time is noted. In its fourth and fifth states
+it gets the memory: what tells of the things that are is made
+(replication_entity_manager_new), what tells of the things that happen is
+emptied, and what the things are and what the things that happen are get
+the thing, the kinds and each other, and are set up. In any other state it
+is not being sent the state of the game. In its third, nothing has come and
+waits. Then it has no views and no console, and the number that it has at
+0x18 is 2 (simulation_world_set_unknown18), with the time. The game has the
+time of the network written here */
+void __attribute__((stdcall)) simulation_world_initialize(
+	long unknown,
+	byte *memory,
+	struct simulation_type_table *types,
+	byte *world)
+{
+	long state;
+
+	*(long *)(world+SIMULATION_WORLD_UNKNOWN0_OFFSET)= unknown;
+	switch (*((const signed char *)main_game_globals+0xC))
+	{
+	case 1:
+		state= _simulation_world_state1;
+		break;
+	case 2:
+		state= _simulation_world_state3;
+		break;
+	case 3:
+		state= _simulation_world_state2;
+		break;
+	case 4:
+		state= _simulation_world_state5;
+		break;
+	case 5:
+		state= _simulation_world_state4;
+		break;
+	default:
+		__builtin_unreachable();
+	}
+	*(long *)(world+SIMULATION_WORLD_STATE_OFFSET)= state;
+	*(long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET)= 0;
+	world[SIMULATION_WORLD_GOING_OFFSET]= FALSE;
+	world[SIMULATION_WORLD_CATCH_UP_OFFSET]= FALSE;
+	world[SIMULATION_WORLD_UNKNOWN2F_OFFSET]= FALSE;
+	world[SIMULATION_WORLD_UNKNOWN2C_OFFSET]= FALSE;
+	*(long *)(world+SIMULATION_WORLD_UNKNOWN28_OFFSET)= 0;
+	world[SIMULATION_WORLD_UNKNOWN2E_OFFSET]= FALSE;
+	*(long *)(world+SIMULATION_WORLD_UNKNOWN30_OFFSET)= 0;
+	*(long *)(world+SIMULATION_WORLD_UNKNOWN34_OFFSET)= unknown_00510548 ? unknown_0051054c : GetTickCount();
+	*(long *)(world+SIMULATION_WORLD_UNKNOWN38_OFFSET)= 0;
+	state= *(const long *)(world+SIMULATION_WORLD_STATE_OFFSET);
+	if (state==_simulation_world_state4 || state==_simulation_world_state5)
+	{
+		struct replication_entity_manager *entity_manager;
+		struct replication_event_manager *event_manager;
+		struct simulation_entity_database *entity_database;
+		byte *event_database;
+
+		*(byte **)(world+SIMULATION_WORLD_UNKNOWN4_OFFSET)= memory;
+		replication_entity_manager_new((struct replication_entity_manager *)memory);
+		memory= *(byte **)(world+SIMULATION_WORLD_UNKNOWN4_OFFSET);
+		event_manager= (struct replication_event_manager *)(memory+SIMULATION_WORLD_MEMORY_EVENT_MANAGER_OFFSET);
+		event_manager->unknown0= (long)memory;
+		event_manager->client= NULL;
+		event_manager->unknown8= 0;
+		memset(event_manager->views, 0, sizeof(event_manager->views));
+		event_manager->event_count= 0;
+		event_manager->events= NULL;
+		entity_manager= *(struct replication_entity_manager **)(world+SIMULATION_WORLD_UNKNOWN4_OFFSET);
+		entity_database= (struct simulation_entity_database *)((byte *)entity_manager+SIMULATION_WORLD_MEMORY_ENTITY_DATABASE_OFFSET);
+		entity_database->resetting= FALSE;
+		entity_database->unknown8= (long)world;
+		entity_database->manager= entity_manager;
+		entity_database->types= (struct simulation_entity_types *)types;
+		entity_manager->client= (struct replication_entity_client *)entity_database;
+		simulation_entity_database_reset(entity_database);
+		entity_database->initialized= TRUE;
+		memory= *(byte **)(world+SIMULATION_WORLD_UNKNOWN4_OFFSET);
+		event_manager= (struct replication_event_manager *)(memory+SIMULATION_WORLD_MEMORY_EVENT_MANAGER_OFFSET);
+		event_database= memory+SIMULATION_WORLD_MEMORY_EVENT_DATABASE_OFFSET;
+		*(void **)(event_database+SIMULATION_EVENT_DATABASE_TYPES_OFFSET)= types;
+		*(void **)(event_database+SIMULATION_EVENT_DATABASE_WORLD_OFFSET)= world;
+		*(void **)(event_database+SIMULATION_EVENT_DATABASE_MANAGER_OFFSET)= event_manager;
+		*(void **)(event_database+SIMULATION_EVENT_DATABASE_ENTITY_DATABASE_OFFSET)=
+			memory+SIMULATION_WORLD_MEMORY_ENTITY_DATABASE_OFFSET;
+		event_manager->client= (struct replication_event_client *)event_database;
+		event_database[SIMULATION_EVENT_DATABASE_INITIALIZED_OFFSET]= TRUE;
+	}
+	else
+	{
+		world[SIMULATION_WORLD_SENDING_GAME_STATE_OFFSET]= FALSE;
+		*(long *)(world+SIMULATION_WORLD_UNKNOWN1200_OFFSET)= NONE;
+		*(long *)(world+SIMULATION_WORLD_MEMORY_OFFSET)= 0;
+		*(long *)(world+SIMULATION_WORLD_GAME_STATE_SEND_TIME_OFFSET)= NONE;
+	}
+	if (*(const long *)(world+SIMULATION_WORLD_STATE_OFFSET)==_simulation_world_state3)
+	{
+		*(long *)(world+SIMULATION_WORLD_UPDATE_COUNT_OFFSET)= 0;
+		*(void **)(world+SIMULATION_WORLD_FIRST_UPDATE_POINTER_OFFSET)= NULL;
+		*(void **)(world+SIMULATION_WORLD_LAST_UPDATE_POINTER_OFFSET)= NULL;
+		simulation_world_clear_updates(world);
+	}
+	*(long *)(world+SIMULATION_WORLD_VIEW_COUNT_OFFSET)= 0;
+	memset(world+SIMULATION_WORLD_VIEWS_OFFSET, 0, NUMBER_OF_SIMULATION_WORLD_VIEWS*sizeof(void *));
+	*(long *)(world+SIMULATION_WORLD_MACHINE_INDEX_OFFSET)= NONE;
+	world[SIMULATION_WORLD_UNKNOWNC_OFFSET]= FALSE;
+	if (*(const long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET)!=_simulation_world_unknown18_2)
+	{
+		simulation_world_set_unknown18(world, _simulation_world_unknown18_2);
+		*(long *)(world+SIMULATION_WORLD_UNKNOWN1C_OFFSET)= unknown_00510548 ? unknown_0051054c : GetTickCount();
+	}
+}
+
+/* 0x00068dc0: the thing is made ready for a game that begins again: three
+of its bytes are cleared; in its fourth and fifth states, what tells of the
+things that are and of the things that happen and what the things are begin
+again, and it has none of its other things; and in its third, the things
+that have come and wait are done with. The name is a guess */
+void simulation_world_restart(
+	byte *world)
+{
+	long state;
+
+	world[SIMULATION_WORLD_CATCH_UP_OFFSET]= FALSE;
+	world[SIMULATION_WORLD_UNKNOWN2C_OFFSET]= FALSE;
+	world[SIMULATION_WORLD_UNKNOWN2E_OFFSET]= FALSE;
+	state= *(const long *)(world+SIMULATION_WORLD_STATE_OFFSET);
+	if (state==_simulation_world_state4 || state==_simulation_world_state5)
+	{
+		replication_entity_manager_reset(*(struct replication_entity_manager **)(world+SIMULATION_WORLD_UNKNOWN4_OFFSET));
+		replication_event_manager_reset_views((struct replication_event_manager *)
+			(*(byte **)(world+SIMULATION_WORLD_UNKNOWN4_OFFSET)+SIMULATION_WORLD_MEMORY_EVENT_MANAGER_OFFSET));
+		simulation_entity_database_reset((struct simulation_entity_database *)
+			(*(byte **)(world+SIMULATION_WORLD_UNKNOWN4_OFFSET)+SIMULATION_WORLD_MEMORY_ENTITY_DATABASE_OFFSET));
+		simulation_world_others_clear(world);
+	}
+	if (*(const long *)(world+SIMULATION_WORLD_STATE_OFFSET)==_simulation_world_state3)
+	{
+		simulation_world_clear_updates(world);
+	}
+}
+
+/* 0x00068e20: the thing ends, when a map goes: it gives up
+(simulation_world_unknown_0006b040); while it has views, the last of them is
+done with as simulation_world_delete_views does; it has no players and none
+of its other things; in its fourth and fifth states, what the things that
+happen are and what the things are let go of what they had, and the second
+begins again first; and the thing has nothing, no memory and no state */
+void __attribute__((stdcall)) simulation_world_dispose(
+	byte *world)
+{
+	long state;
+
+	simulation_world_unknown_0006b040(world);
+	while (*(const long *)(world+SIMULATION_WORLD_VIEW_COUNT_OFFSET)>0)
+	{
+		byte *view= *(byte *const *)(world+SIMULATION_WORLD_VIEWS_OFFSET+
+			(*(const long *)(world+SIMULATION_WORLD_VIEW_COUNT_OFFSET)-1)*sizeof(void *));
+
+		if (view)
+		{
+			simulation_world_view_delete(view);
+		}
+	}
+	simulation_world_players_clear(world);
+	simulation_world_others_clear(world);
+	state= *(const long *)(world+SIMULATION_WORLD_STATE_OFFSET);
+	if (state==_simulation_world_state4 || state==_simulation_world_state5)
+	{
+		byte *event_database= *(byte **)(world+SIMULATION_WORLD_UNKNOWN4_OFFSET)+SIMULATION_WORLD_MEMORY_EVENT_DATABASE_OFFSET;
+		struct simulation_entity_database *entity_database;
+
+		(*(struct replication_event_manager **)(event_database+SIMULATION_EVENT_DATABASE_MANAGER_OFFSET))->client= NULL;
+		*(void **)(event_database+SIMULATION_EVENT_DATABASE_WORLD_OFFSET)= NULL;
+		*(void **)(event_database+SIMULATION_EVENT_DATABASE_MANAGER_OFFSET)= NULL;
+		*(void **)(event_database+SIMULATION_EVENT_DATABASE_TYPES_OFFSET)= NULL;
+		event_database[SIMULATION_EVENT_DATABASE_INITIALIZED_OFFSET]= FALSE;
+		entity_database= (struct simulation_entity_database *)
+			(*(byte **)(world+SIMULATION_WORLD_UNKNOWN4_OFFSET)+SIMULATION_WORLD_MEMORY_ENTITY_DATABASE_OFFSET);
+		simulation_entity_database_reset(entity_database);
+		entity_database->manager->client= NULL;
+		entity_database->initialized= FALSE;
+		entity_database->unknown8= 0;
+		entity_database->manager= NULL;
+		entity_database->types= NULL;
+	}
+	*(long *)(world+SIMULATION_WORLD_UNKNOWN0_OFFSET)= 0;
+	*(void **)(world+SIMULATION_WORLD_UNKNOWN4_OFFSET)= NULL;
 	*(long *)(world+SIMULATION_WORLD_STATE_OFFSET)= 0;
 }

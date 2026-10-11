@@ -52,9 +52,6 @@ what unknown_004cf780 has, for a new map. 0x00195a40, 0x00195e90: what
 something else of the game does for a new map and for one that goes */
 void __attribute__((stdcall)) unknown_00082240(struct simulation_type_table *tables, long *second_count,
 	long *first_count);
-void __attribute__((stdcall)) unknown_00068c00(long unknown, byte *memory, struct simulation_type_table *tables,
-	byte *world);
-void __attribute__((stdcall)) unknown_00068e20(byte *world);
 void __attribute__((stdcall)) unknown_00083000(long unknown);
 void unknown_00195a40(void);
 /* 0x00162060, 0x00162420, 0x000bb7f0, 0x00183f10: what other parts of the
@@ -70,7 +67,6 @@ void unknown_00183f10(void);
 void __attribute__((stdcall)) unknown_00083370(long unknown, unsigned long flags);
 boolean unknown_00083220(long unknown);
 void unknown_00068f30(byte *world);
-void unknown_00068dc0(byte *world);
 void unknown_00195e90(void);
 
 long GetTickCount(void);
@@ -479,7 +475,7 @@ void simulation_dispose(
 
 /* 0x00067ee0: the simulation for a new map, unless unknown_004ed39c is set:
 it has not failed, the thing that is going and what unknown_004cf780 has are
-set up (unknown_00068c00; with what unknown_004d87e8 is, in a game of kind 4
+set up (simulation_world_initialize; with what unknown_004d87e8 is, in a game of kind 4
 or 5), and what unknown_004cf780 has gets the thing and is as when it begins
 (simulation_players_reset, unknown_00083000) */
 void simulation_initialize_for_new_map(
@@ -493,7 +489,7 @@ void simulation_initialize_for_new_map(
 		unknown_004cf770.unknown1[0]= FALSE;
 		unknown_004cf770.unknown1[1]= FALSE;
 		kind= *((const signed char *)main_game_globals+0xC);
-		unknown_00068c00(unknown_004cf780, kind>=4 && kind<=5 ? unknown_004d87e8 : NULL, unknown_004cf784,
+		simulation_world_initialize(unknown_004cf780, kind>=4 && kind<=5 ? unknown_004d87e8 : NULL, unknown_004cf784,
 			unknown_004cf770.unknownC);
 		unknown= (byte *)unknown_004cf780;
 		*(byte **)(unknown+SIMULATION_UNKNOWN_004CF780_WORLD_OFFSET)= unknown_004cf770.unknownC;
@@ -508,7 +504,7 @@ void simulation_initialize_for_new_map(
 
 /* 0x00067f60: the simulation when a map goes, unless unknown_004ed39c is
 set: what unknown_004cf780 has gives up what it had, and has no thing; and
-the thing that is going ends (unknown_00068e20) */
+the thing that is going ends (simulation_world_dispose) */
 void simulation_dispose_from_old_map(
 	void)
 {
@@ -524,7 +520,7 @@ void simulation_dispose_from_old_map(
 		}
 		*(long *)(unknown+SIMULATION_UNKNOWN_004CF780_UNKNOWNC_OFFSET)= 0;
 		*(byte **)(unknown+SIMULATION_UNKNOWN_004CF780_WORLD_OFFSET)= NULL;
-		unknown_00068e20(unknown_004cf770.unknownC);
+		simulation_world_dispose(unknown_004cf770.unknownC);
 		unknown_00195e90();
 	}
 }
@@ -656,13 +652,13 @@ void simulation_idle(
 }
 
 /* 0x000687b0: the game begins again, as was asked: the thing that is going
-is made ready (unknown_00068dc0) and the game restarts (main_game_restart),
+is made ready (simulation_world_restart) and the game restarts (main_game_restart),
 with a byte set meanwhile; and it is asked for no more */
 void simulation_unknown_000687b0(
 	void)
 {
 	unknown_004cf770.unknownA= TRUE;
-	unknown_00068dc0(unknown_004cf770.unknownC);
+	simulation_world_restart(unknown_004cf770.unknownC);
 	main_game_restart();
 	unknown_004cf770.unknown1[8]= FALSE;
 	unknown_004cf770.unknownA= FALSE;
