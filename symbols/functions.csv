@@ -1584,7 +1584,7 @@ address,name,source,arguments,returns,convention
 0021db80,sound_effect_get_source,source/sound/sound_manager.c,eax ebx,void
 0021dd30,sound_effect_definition_get,source/sound/sound_manager.c,edi stack stack,bool,stdcall
 0018d090,unknown_0018d090,,ecx edx,pointer
-0018d170,unknown_0018d170,,ecx,pointer
+0018d170,sound_get_gestalt_unknown30,source/sound/sound_manager.c,ecx,pointer
 0018cbc0,unknown_0018cbc0,,eax ecx,void
 00219070,sound_choose_permutation,source/sound/sound_manager.c,edi stack,short,stdcall
 0021b910,looping_sound_get_or_new_source,source/sound/sound_manager.c,eax esi edi stack stack stack,int,stdcall
@@ -1690,7 +1690,7 @@ address,name,source,arguments,returns,convention
 0037d54e,unknown_0037d54e,,stack stack stack stack stack stack stack stack,void
 00249d10,unknown_00249d10,,eax ecx stack,void
 00249c90,unknown_00249c90,,eax edx stack stack,void
-0018cac0,unknown_0018cac0,,ecx,real:xmm0
+0018cac0,sound_unknown_0018cac0,source/sound/sound_manager.c,ecx,real:xmm0
 0031bc70,unknown_0031bc70,,ecx,pointer
 00221e30,sound_query_compute,source/sound/sound_manager.c,edi stack stack,void,stdcall
 00222150,sound_query_portal_results,source/sound/sound_manager.c,ecx esi ebx stack stack stack,void,stdcall

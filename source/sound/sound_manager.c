@@ -1660,7 +1660,7 @@ clusters of the two sides of an opening and what an opening says, as a real;
 struct sound_query;
 void unknown_00249d10(const byte *structure_bsp, unsigned long *openings, long cluster_index);
 void unknown_00249c90(unsigned long *first, const byte *structure_bsp, long opening_index, unsigned long *second);
-real unknown_0018cac0(long said);
+real sound_unknown_0018cac0(long said);
 void __attribute__((stdcall)) array_construct_elements(void *array, unsigned long size, long count,
 	void *(__attribute__((thiscall)) *constructor)(void *element));
 void *__attribute__((thiscall)) unknown_0031bc70(void *element);
@@ -1779,7 +1779,7 @@ boolean __attribute__((stdcall)) sound_source_unknown_00221da0(long listener_ind
 /* 0x0018d090 and 0x0018d170: what a tag has of the sound effects;
 0x0018cbc0: what the game says of the sound of something */
 const byte *unknown_0018d090(long tag_index, long unknown);
-const byte *unknown_0018d170(long tag_index);
+const byte *sound_get_gestalt_unknown30(long tag_index);
 void unknown_0018cbc0(long unknown, struct sound_source *source);
 
 /* 0x0021d2c0, 0x0021db80 and 0x0021dd30 */
@@ -5404,7 +5404,7 @@ boolean __attribute__((stdcall)) sound_source_unknown_00221da0(
 
 /* 0x0021dd30: what a tag says of a sound effect: the elements of a block of
 what unknown_0018d090 gives for the tag and a number; whether the first has
-anything at 8. FALSE if there is no such block. What unknown_0018d170 gives
+anything at 8. FALSE if there is no such block. What sound_get_gestalt_unknown30 gives
 is only looked at when the number is NONE, and it changes nothing */
 boolean __attribute__((stdcall)) sound_effect_definition_get(
 	long tag_index,
@@ -5412,7 +5412,7 @@ boolean __attribute__((stdcall)) sound_effect_definition_get(
 	const byte **definition)
 {
 	const byte *first= unknown_0018d090(tag_index, unknown);
-	const byte *second= unknown_0018d170(tag_index);
+	const byte *second= sound_get_gestalt_unknown30(tag_index);
 	const byte *elements;
 
 	if (!(first && *(const long *)(first+SOUND_EFFECT_COLLECTION_COUNT_OFFSET)))
@@ -6716,7 +6716,7 @@ long sound_unknown_001914f0(
 }
 
 /* 0x002226b0: what the game gives to start a sound takes two things more
-from the tags, for the sound: what unknown_0018d090 or unknown_0018d170 has
+from the tags, for the sound: what unknown_0018d090 or sound_get_gestalt_unknown30 has
 for it says a tag, and the first element of a block of that tag has a name.
 For one of the names, a number of unknown_00510c90 is taken, if it has one;
 and for the names that sound_unknown_001914f0 knows, its number */
@@ -6727,7 +6727,7 @@ void sound_request_unknown_002226b0(
 	const byte *first= unknown_0018d090(sound_index,
 		*(const unsigned long *)request&FLAG(_sound_request_unknown8_bit) ? *(const long *)(request+SOUND_REQUEST_UNKNOWN98_OFFSET) :
 		NONE);
-	const byte *second= unknown_0018d170(sound_index);
+	const byte *second= sound_get_gestalt_unknown30(sound_index);
 	const byte *chosen= NULL;
 	const byte *elements;
 	const byte *tag;
@@ -7882,7 +7882,7 @@ static inline __attribute__((always_inline)) const byte *sound_block_first_eleme
 	return (long)(*(const unsigned long *)block-1)>=0 ? *(const byte *const *)(block+4) : NULL;
 }
 
-/* whether what unknown_0018d090 or unknown_0018d170 gives has a list for
+/* whether what unknown_0018d090 or sound_get_gestalt_unknown30 gives has a list for
 the console's sound: its first element says a tag and has a block of its
 own with something */
 static inline __attribute__((always_inline)) boolean sound_effect_collection_has_list(
@@ -7894,7 +7894,7 @@ static inline __attribute__((always_inline)) boolean sound_effect_collection_has
 
 /* 0x00222770: what a voice of the console's sound takes of a sound from
 the tags: three things at 0x10, 0x14 and 0x18, the first elements of three
-blocks of what unknown_0018d170 gives for the sound, or of what
+blocks of what sound_get_gestalt_unknown30 gives for the sound, or of what
 unknown_0018d090 gives, where it has them; and at 0x1C, the list that
 sound_unknown_002225a0 makes, with its size at 0x41C: 0 if neither has a
 list. The list is always made from what unknown_0018d090 gives, as in the
@@ -7906,7 +7906,7 @@ void __attribute__((stdcall)) sound_unknown_00222770(
 	byte *result)
 {
 	const byte *first= unknown_0018d090(sound_index, unknown);
-	const byte *second= unknown_0018d170(sound_index);
+	const byte *second= sound_get_gestalt_unknown30(sound_index);
 	const byte *chosen= NULL;
 
 	if (second)
@@ -10443,7 +10443,7 @@ static inline __attribute__((always_inline)) boolean sound_bit_vector_test(
 bsp's openings for the sound, and with it what is worked out of each query
 of that listener (sound_query_compute). Of the openings that the listener's
 cluster has (unknown_00249d10 says which), those that say something
-(unknown_0018cac0 turns what they say into a real) have the clusters of each
+(sound_unknown_0018cac0 turns what they say into a real) have the clusters of each
 of their two sides (unknown_00249c90): if the listener's cluster is on one,
 the clusters on the other are heard with that real, or with the most of
 those of the openings they are behind. The listener's own cluster is never
@@ -10489,7 +10489,7 @@ void __attribute__((stdcall)) sound_listener_compute_queries(
 				{
 					continue;
 				}
-				amount= unknown_0018cac0(said[index]);
+				amount= sound_unknown_0018cac0(said[index]);
 				array_construct_elements(sides, sizeof(sides[0]), 2, unknown_0031bc70);
 				unknown_00249c90(sides[0], structure_bsp, index, sides[1]);
 				cluster_index= listener->cluster_index;
@@ -13316,4 +13316,54 @@ boolean __attribute__((stdcall)) looping_sound_start(
 	looping_sound[LOOPING_SOUND_DATUM_UNKNOWN50_OFFSET+2]= (byte)state;
 
 	return result;
+}
+
+/* of unknown_004ed288: sixteen-bit numbers, one for each of something; and
+of a sound of a map: which of the things of the block of 0x30 of the sounds
+of the map is its own, or NONE. One of those things is 0x34 bytes */
+enum
+{
+	UNKNOWN_004ED288_UNKNOWN28_OFFSET= 0x28,
+	CACHE_FILE_SOUND_UNKNOWND_OFFSET= 0xD,
+	SOUND_GESTALT_UNKNOWN30_SIZE= 0x34
+};
+
+/* 0x0018cac0: one of the sixteen-bit numbers of unknown_004ed288, as a real
+from 0 to 1 */
+real sound_unknown_0018cac0(
+	long said)
+{
+	long value= *(const word *)(unknown_004ed288+UNKNOWN_004ED288_UNKNOWN28_OFFSET+said*sizeof(word));
+
+	if (value==0)
+	{
+		return 0.0f;
+	}
+	if (value>=0xFFFF)
+	{
+		return 1.0f;
+	}
+
+	return ((real)(0xFFFF-value)*0.0f+(real)value)*(1.0f/65535.0f);
+}
+
+/* 0x0018d170: the thing of the block of 0x30 of the sounds of the map that
+a sound has; NULL for NONE, for a tag that is not a sound, and for a sound
+that has none */
+const byte *sound_get_gestalt_unknown30(
+	long tag_index)
+{
+	if (tag_index!=NONE && global_tag_instances[(short)tag_index].group_tag==SOUND_TAG)
+	{
+		const byte *sound= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+		char index= (char)sound[CACHE_FILE_SOUND_UNKNOWND_OFFSET];
+
+		if (index!=NONE)
+		{
+			return (const byte *)(uintptr_t)global_sound_cache_file_gestalt->unknown30[0].address+
+				index*SOUND_GESTALT_UNKNOWN30_SIZE;
+		}
+	}
+
+	return NULL;
 }

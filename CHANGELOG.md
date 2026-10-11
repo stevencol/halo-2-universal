@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Dos funciones cortas del sonido que se llamaban por su dirección
+
+Dos funciones cortas más en `sound/sound_manager.c` (141 bytes). De 1922
+funciones se pasa a 1924, el 17,08 % de las del juego (el 10,789 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_unknown_0018cac0` | `0x0018cac0` | `sound/sound_manager.c` |
+| `sound_get_gestalt_unknown30` | `0x0018d170` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- `sound_unknown_0018cac0` (antes `unknown_0018cac0`) da como real de 0 a 1
+  uno de los números de 16 bits de `0x004ed288`.
+- `sound_get_gestalt_unknown30` (antes `unknown_0018d170`) da, de un sonido
+  del mapa, la cosa suya del bloque de `0x30` de los sonidos del mapa (de
+  `0x34` bytes cada una): el sonido dice cuál con un byte (`+0xD`), y `0xFF`
+  es que no tiene.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  565.
+- En este hito se pasaron las pruebas de las dos funciones (la primera, bit
+  a bit); `test_sound` entera quedó corriendo en segundo plano
+  (`build\line_breaking\test_sound_566.txt`) por las dos funciones que las
+  llaman.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Cuánto baja un sonido con la distancia
 
 Una función corta más en `sound/sound_speakers.c`, de 56 bytes. De 1921

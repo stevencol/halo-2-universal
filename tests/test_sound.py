@@ -2626,7 +2626,7 @@ def run(t) -> None:
             extra=[buffer for buffer in (first, second) if buffer],
             externals={
                 "unknown_0018d090": lambda harness, arguments, first=first: (first.address if first else 0, tuple(arguments)),
-                "unknown_0018d170": lambda harness, arguments, second=second: (second.address if second else 0, tuple(arguments)),
+                "sound_get_gestalt_unknown30": lambda harness, arguments, second=second: (second.address if second else 0, tuple(arguments)),
             },
         )
 
@@ -3544,7 +3544,7 @@ def run(t) -> None:
             extra=[buffer for buffer in (first, second) if buffer],
             externals={
                 "unknown_0018d090": lambda harness, arguments, first=first: (first.address if first else 0, tuple(arguments)),
-                "unknown_0018d170": lambda harness, arguments, second=second: (second.address if second else 0, tuple(arguments)),
+                "sound_get_gestalt_unknown30": lambda harness, arguments, second=second: (second.address if second else 0, tuple(arguments)),
             },
         )
 
@@ -4360,7 +4360,7 @@ def run(t) -> None:
             extra=[buffer for buffer in (first, second) if buffer and (buffer is first or second is not first)],
             externals={
                 "unknown_0018d090": lambda harness, arguments, first=first: (first.address if first else 0, tuple(arguments)),
-                "unknown_0018d170": lambda harness, arguments, second=second: (second.address if second else 0, tuple(arguments)),
+                "sound_get_gestalt_unknown30": lambda harness, arguments, second=second: (second.address if second else 0, tuple(arguments)),
                 "sound_unknown_002225a0": list_,
             },
         )
@@ -6236,7 +6236,7 @@ def run(t) -> None:
             externals={
                 "unknown_00249d10": mine_,
                 "unknown_00249c90": sides_,
-                "unknown_0018cac0": amount_,
+                "sound_unknown_0018cac0": amount_,
                 "array_construct_elements": lambda harness, arguments: (0, (arguments[1], arguments[2])),
                 "sound_query_compute": query_,
             },
