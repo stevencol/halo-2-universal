@@ -78,7 +78,19 @@ enum
 	_online_users_result_unknown1,
 	_online_users_result_unknown2,
 	/* how much is said of what a player is at, to the others */
-	ONLINE_NOTIFICATION_STATE_SIZE= 4
+	ONLINE_NOTIFICATION_STATE_SIZE= 4,
+	/* two more bits of a task: it is to be done with the next time around,
+	and now. More kinds: one that sets a byte when it ends in a way, and
+	the four of the storage. And more that the libraries say of a task that
+	goes on: it has something, and something of the kind 0xD */
+	_online_task_unknown8_bit= 0x8,
+	_online_task_unknown10_bit= 0x10,
+	_online_task_type_d= 0xD,
+	_online_task_type_storage_first= 0x29,
+	_online_task_type_storage_last= 0x2C,
+	ONLINE_TASK_UNKNOWN1500F0= 0x1500F0,
+	ONLINE_TASK_UNKNOWN1500F1= 0x1500F1,
+	ONLINE_TASK_UNKNOWN153101= 0x153101
 };
 
 /* ---------- structures */
@@ -144,6 +156,9 @@ long online_tasks_unknown_0006b550(void);
 void online_tasks_close_all(void);
 void online_tasks_check_address(void);
 long online_task_continue(struct online_task *task);
+long online_task_step(struct online_task *task);
+void online_task_storage_done(long result, long index);
+boolean online_task_update(long index, struct online_task *task);
 long online_tasks_get_logon_state(long index);
 long online_users_get_result(void);
 long online_task_users_get_result(const struct online_task *task);

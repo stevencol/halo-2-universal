@@ -2310,7 +2310,7 @@ address,name,source,arguments,returns,convention
 0006b7e0,online_task_get_type,source/networking/online_tasks.c,eax,int
 0006b800,online_task_find,source/networking/online_tasks.c,ebx stack,int,stdcall
 0006b550,online_tasks_unknown_0006b550,source/networking/online_tasks.c,,int
-0006c560,unknown_0006c560,,eax esi,bool
+0006c560,online_task_update,source/networking/online_tasks.c,eax esi,bool
 0008bf70,unknown_0008bf70,,esi,void
 003a11ae,unknown_003a11ae,,,int
 003a0620,XOnlineTaskContinue,,stack,int,stdcall
@@ -2337,3 +2337,8 @@ address,name,source,arguments,returns,convention
 003ad149,unknown_003ad149,,stack stack stack stack stack stack stack stack stack,int,stdcall
 003ab6db,XOnlineStorageDownload,,stack stack stack stack stack stack stack,int,stdcall
 003ab6b1,unknown_003ab6b1,,stack stack stack stack stack stack stack stack,int,stdcall
+0006c450,online_task_step,source/networking/online_tasks.c,eax,int
+0006c4a0,online_task_storage_done,source/networking/online_tasks.c,eax ecx,void
+0006c2a0,unknown_0006c2a0,,eax stack,bool,stdcall
+0006c360,unknown_0006c360,,eax,bool
+0008cc40,unknown_0008cc40,,,void

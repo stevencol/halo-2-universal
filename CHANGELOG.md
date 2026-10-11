@@ -2,6 +2,50 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Lo que una tarea hace cada vuelta
+
+Tres funciones en `networking/online_tasks.c`. De 1738
+funciones se pasa a 1741, el 15,45 % de las del juego (el 10,174 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_task_step` | `0x0006c450` | `networking/online_tasks.c` |
+| `online_task_storage_done` | `0x0006c4a0` | `networking/online_tasks.c` |
+| `online_task_update` | `0x0006c560` | `networking/online_tasks.c` |
+
+### Lo que se sabe
+
+- `online_task_update` es lo que `online_tasks_update` (hito 510) llama
+  para cada tarea. Una tarea que sigue en marcha hace lo de su clase: la
+  que conecta (`0`) y la que cambia quién está conectado (`1`) tienen lo
+  suyo, aún sin hacer; las demás avanzan un poco (`online_task_step`).
+- `online_task_step` deja en los bits de la tarea cómo le fue: si no pudo,
+  ya no sigue y acabó mal (`0x24`); con `0x1500F1` tiene algo (`0x2`); y
+  con cualquier otra cosa que no sea «nada» o «sin más que hacer», acabó
+  (`0x4`).
+- **Aquí se cierra el círculo de los bloques**: cuando una tarea del
+  almacén (clases `0x29` a `0x2C`) deja de estar en marcha,
+  `online_task_storage_done` pasa lo que dijeron las bibliotecas a los
+  números de siempre y avisa a `network_blob_task_completed` (hito 504).
+- Una tarea acabada con el bit `0x8` lo cambia por el `0x10`, y con el
+  `0x10` se cierra: así pasa una vuelta entre acabar y cerrarse, para que
+  quien la pidió pueda mirar cómo quedó.
+
+### Cambiado
+
+- `unknown_0006c560` tiene su nombre.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las tres**, y en las de los hitos 456 a
+  490 y 501 a 517.
+- En este hito se pasaron las pruebas de las tres funciones y la de
+  `online_tasks_update`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Romper líneas: hitos 491 a 500
 
 Sin funciones nuevas. Tanda de romper líneas de los hitos 491 a 500: 385

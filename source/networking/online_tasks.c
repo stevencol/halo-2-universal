@@ -21,7 +21,16 @@ are guesses.
 0x0006c560: a task does what it has to each time around; whether the others
 are to. 0x0008bf70: and so does what the tasks have of their own */
 void unknown_0008c550(long index);
-boolean unknown_0006c560(long index, struct online_task *task);
+
+/* 0x0006c2a0, 0x0006c360: what the task that signs in, and the one that
+changes who is signed in, do each time around; the first says whether the
+other tasks are to go on. 0x0008cc40: something is told that a task of the
+second kind could not go on. 0x0008e5e0, of network_blob_task.c: what did a
+task of the blocks ended */
+boolean __attribute__((stdcall)) unknown_0006c2a0(struct online_task *task, long index);
+boolean unknown_0006c360(struct online_task *task);
+void unknown_0008cc40(void);
+void __attribute__((stdcall)) network_blob_task_completed(long status, long handle);
 void unknown_0008bf70(byte *unknown);
 
 /* 0x003a11ae, of the console's libraries: something of the service of
@@ -68,6 +77,9 @@ const byte unknown_0043ff84[2][TRANSPORT_SECURITY_ADDRESS_UNKNOWNA_SIZE]=
 	{0x00, 0x50, 0xF2, 0x10, 0x52, 0x20}
 };
 boolean unknown_0050944e;
+
+/* 0x0051055d: a task of the kind 0xD ended in a way of its own */
+boolean unknown_0051055d;
 
 /* 0x00467178: the services that the game asks for when it signs in */
 const struct online_service unknown_00467178[NUMBER_OF_ONLINE_SERVICES]=
@@ -334,7 +346,7 @@ void online_tasks_update(
 			break;
 		}
 		task= (struct online_task *)online_tasks->data+absolute_index;
-		if (!unknown_0006c560((task->identifier<<16)|absolute_index, task))
+		if (!online_task_update((task->identifier<<16)|absolute_index, task))
 		{
 			break;
 		}
@@ -713,4 +725,144 @@ void __attribute__((stdcall)) online_notification_set_state(
 		}
 		XOnlineNotificationSetState(user_index, flags, low, high, ONLINE_NOTIFICATION_STATE_SIZE, state);
 	}
+}
+
+/* 0x0006c450: a task goes on a little, and its bits say how it went: if it
+could not, it is not going on and is done, badly (0x24); with 0x1500F1 it
+has its bit of 0x2; with nothing or 0x1500F2 it is as it was; and with
+anything else it is not going on and is done (0x4). What the libraries said */
+long online_task_step(
+	struct online_task *task)
+{
+	long result= online_task_continue(task);
+
+	if (result<0)
+	{
+		task->flags= (task->flags&~_online_task_unknown1_bit)|_online_task_unknown4_bit|_online_task_unknown20_bit;
+	}
+	else if (result==ONLINE_TASK_UNKNOWN1500F1)
+	{
+		task->flags|= _online_task_unknown2_bit;
+	}
+	else if (result!=0 && result!=ONLINE_TASK_DONE)
+	{
+		task->flags= (task->flags&~_online_task_unknown1_bit)|_online_task_unknown4_bit;
+	}
+
+	return result;
+}
+
+/* 0x0006c4a0: a task of the storage ended, with what the libraries said:
+the task of the blocks that it did is told (network_blob_task_completed) how,
+in the same numbers as when something of the storage cannot start, and
+nothing if it went well */
+void online_task_storage_done(
+	long result,
+	long index)
+{
+	long status;
+
+	switch ((unsigned long)result)
+	{
+	case 0:
+	case ONLINE_TASK_UNKNOWN1500F0:
+		status= 0;
+		break;
+	case 0x8007000E:
+	case 0x80150002:
+	case 0x80150003:
+	case 0x80150005:
+	case 0x80150006:
+	case 0x80150008:
+		status= 2;
+		break;
+	case 0x80150004:
+	case 0x8015C002:
+		status= 3;
+		break;
+	case 0x8015C006:
+	case 0x8015C008:
+	case 0x8015C009:
+		status= 4;
+		break;
+	case 0x8015C004:
+	case 0x8015C007:
+		status= 5;
+		break;
+	default:
+		status= 1;
+		break;
+	}
+	network_blob_task_completed(status, index);
+}
+
+/* 0x0006c560: what a task does each time around; whether the others are to
+go on. One that is going on and not done does what its kind has: the one
+that signs in and the one that changes who is signed in, their own; the
+others go on a little (online_task_step), and then one of the second kind
+tells of it if it could not, one of the kind 0xD sets a byte if it is done
+with 0x153101, and one of the storage that is not going on any more tells
+the task of the blocks. Then a task that is done and has its bit of 0x8 has
+the one of 0x10 instead, and one that has the one of 0x10 is done with: so
+there is one time around between the two */
+boolean online_task_update(
+	long index,
+	struct online_task *task)
+{
+	boolean result= TRUE;
+
+	if ((task->flags&_online_task_unknown1_bit) && !(task->flags&_online_task_unknown4_bit))
+	{
+		long said;
+
+		switch (task->type)
+		{
+		case _online_task_type0:
+			result= unknown_0006c2a0(task, index);
+			break;
+		case _online_task_type1:
+			unknown_0006c360(task);
+			break;
+		case _online_task_type2:
+			said= online_task_step(task);
+			if (said<0 && said!=(long)ONLINE_TASK_NOT_SIGNED_IN)
+			{
+				unknown_0008cc40();
+			}
+			break;
+		case _online_task_type_d:
+			said= online_task_step(task);
+			if ((task->flags&_online_task_unknown4_bit) && said==ONLINE_TASK_UNKNOWN153101)
+			{
+				unknown_0051055d= TRUE;
+			}
+			break;
+		case 0x29:
+		case 0x2A:
+		case 0x2B:
+		case 0x2C:
+			said= online_task_step(task);
+			if (!(task->flags&_online_task_unknown1_bit))
+			{
+				online_task_storage_done(said, index);
+			}
+			break;
+		default:
+			online_task_step(task);
+			break;
+		}
+	}
+	if (task->flags&_online_task_unknown4_bit)
+	{
+		if (task->flags&_online_task_unknown8_bit)
+		{
+			task->flags= (task->flags&~_online_task_unknown8_bit)|_online_task_unknown10_bit;
+		}
+		else if (task->flags&_online_task_unknown10_bit)
+		{
+			online_task_close(index);
+		}
+	}
+
+	return result;
 }

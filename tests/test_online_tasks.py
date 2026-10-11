@@ -199,7 +199,7 @@ def run(t) -> None:
         def does(harness, arguments, stops=stops):
             from test_async import calls_so_far
 
-            return calls_so_far(harness, "unknown_0006c560") != stops, (arguments[0], harness.normalize(arguments[1]))
+            return calls_so_far(harness, "online_task_update") != stops, (arguments[0], harness.normalize(arguments[1]))
 
         tasks, number = table()
         t.check(
@@ -211,7 +211,7 @@ def run(t) -> None:
             },
             externals={
                 "online_tasks_get_logon_state": session(random_.choice((0, 1, 1, 1, 2, NONE))),
-                "unknown_0006c560": does,
+                "online_task_update": does,
                 "unknown_0008bf70": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
             },
         )
@@ -358,5 +358,51 @@ def run(t) -> None:
                     0,
                     (*arguments[:5], harness.normalize(arguments[5])),
                 ),
+            },
+        )
+
+    # ---------- what a task does each time around
+
+    SAID = (0, 0, 0x1500F0, 0x1500F1, 0x1500F2, 0x153101, 5, 0x80004005, 0x80151000, 0x8007000E, 0x80150001, 0x80150002)
+    SAID += (0x80150003, 0x80150004, 0x80150005, 0x80150006, 0x80150007, 0x80150008, 0x8015C002, 0x8015C003, 0x8015C004)
+    SAID += (0x8015C006, 0x8015C007, 0x8015C008, 0x8015C009, 0x8015C00A, NONE)
+
+    def a_task(kinds) -> Buffer:
+        return Buffer(
+            struct.pack(
+                "<HHIIII",
+                random_.getrandbits(16),
+                random_.choice((1, 1, 1, 1, 3, 9, 0x11, 0x15, 0x1D, 5, 0, 4, 0xC, 0x14, random_.getrandbits(16))),
+                random_.choice(kinds),
+                random_.getrandbits(32),
+                0x1234,
+                random_.getrandbits(32),
+            )
+        )
+
+    for n in range(3000):
+        goes = lambda harness, arguments, said=random_.choice(SAID): (said, (harness.normalize(arguments[0]),))
+        t.check("online_task_step", a_task((2, 3)), externals={"online_task_continue": goes})
+        t.check(
+            "online_task_storage_done",
+            random_.choice(SAID),
+            random_.getrandbits(32),
+            externals={"network_blob_task_completed": lambda harness, arguments: (0, tuple(arguments))},
+        )
+        t.check(
+            "online_task_update",
+            random_.getrandbits(32),
+            a_task((0, 1, 2, 2, 0xD, 0xD, 0x29, 0x2A, 0x2B, 0x2C, 0x2C, 3, 0xC, 0x28, 0x2D, NONE)),
+            globals={"unknown_0051055d": bytes((random_.choice((0, 0, 1)),))},
+            externals={
+                "online_task_continue": goes,
+                "unknown_0006c2a0": lambda harness, arguments, others=random_.choice((0, 1, 1)): (
+                    others,
+                    (harness.normalize(arguments[0]), arguments[1]),
+                ),
+                "unknown_0006c360": lambda harness, arguments: (1, (harness.normalize(arguments[0]),)),
+                "unknown_0008cc40": lambda harness, arguments: (0, ()),
+                "network_blob_task_completed": lambda harness, arguments: (0, tuple(arguments)),
+                "online_task_close": lambda harness, arguments: (0, tuple(arguments)),
             },
         )
