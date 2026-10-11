@@ -14,6 +14,7 @@ guess, and so are the names of its functions.
 
 #include "memory/crc.h"
 #include "memory/data.h"
+#include "networking/online_storage.h"
 #include "networking/online_tasks.h"
 
 #include <string.h>
@@ -27,13 +28,10 @@ nothing if it started and why not if it did not. 0x000b45f0: how what read a
 block ended, with how much it read and how much there was */
 long __attribute__((stdcall)) unknown_000b4670(long unknown0, long unknown10, struct network_blob_request request,
 	long unknown4, long unknownC, long *handle_out);
-long __attribute__((stdcall)) unknown_000b42b0(long unknown0, long *handle_out, long unknown10,
-	struct network_blob_request request, long unknown4, void *memory, unsigned long size);
 long __attribute__((stdcall)) unknown_000b4810(long unknown0, long *handle_out, long unknown10,
 	struct network_blob_request request, long unknown4, long unknownC);
 long __attribute__((stdcall)) unknown_000b4450(long unknown0, long unknown10, struct network_blob_request request,
 	long unknown4, void *memory, unsigned long size, long *handle_out);
-long __attribute__((stdcall)) unknown_000b45f0(long handle, unsigned long *read_out, unsigned long *size_out);
 
 /* ---------- globals */
 
@@ -247,7 +245,7 @@ void network_blob_tasks_update(
 				}
 				else
 				{
-					status= unknown_000b42b0(functions->unknown0[0], &handle, blob->unknown10, blob->request,
+					status= online_storage_write_start(functions->unknown0[0], &handle, blob->unknown10, blob->request,
 						functions->unknown0[1], entry->memory, entry->size);
 				}
 			}
@@ -329,7 +327,7 @@ void __attribute__((stdcall)) network_blob_task_completed(
 		NETWORK_BLOB_OPERATION_KIND_OFFSET);
 	if (status==0 && kind==_network_blob_operation_read)
 	{
-		status= unknown_000b45f0(handle, &read, &size);
+		status= online_storage_read_get_results(handle, &read, &size);
 	}
 	switch (status)
 	{

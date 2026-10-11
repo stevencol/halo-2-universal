@@ -113,7 +113,7 @@ def run(t) -> None:
             def stand_in(harness, arguments, pointer=pointer, starts=starts):
                 from test_async import calls_so_far
 
-                total = sum(calls_so_far(harness, name) for name in ("unknown_000b4670", "unknown_000b42b0", "unknown_000b4810", "unknown_000b4450"))
+                total = sum(calls_so_far(harness, name) for name in ("unknown_000b4670", "online_storage_write_start", "unknown_000b4810", "unknown_000b4450"))
                 status, handle = starts[total % len(starts)]
                 harness.mu.mem_write(arguments[pointer], struct.pack("<I", handle))
                 return status, tuple(value for index, value in enumerate(arguments) if index != pointer)
@@ -131,7 +131,7 @@ def run(t) -> None:
             memory=memory,
             externals={
                 "unknown_000b4670": start(7, starts),
-                "unknown_000b42b0": start(1, starts),
+                "online_storage_write_start": start(1, starts),
                 "unknown_000b4810": start(1, starts),
                 "unknown_000b4450": start(8, starts),
                 "network_blob_take_memory": lambda harness, arguments, took=random_.choice((1, 1, 0)): (
@@ -170,7 +170,7 @@ def run(t) -> None:
             globals={"unknown_004d8c28": bytes(table), "online_tasks": Buffer(bytes(operations), pointers=(0x44,))},
             memory=memory,
             externals={
-                "unknown_000b45f0": ended,
+                "online_storage_read_get_results": ended,
                 "network_blob_verify": lambda harness, arguments, said=random_.choice((1, 1, 8, 9, 11)): (said, tuple(arguments)),
                 "network_blob_task_end": lambda harness, arguments: (0, tuple(arguments)),
             },

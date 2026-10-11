@@ -75,7 +75,7 @@ def run(t) -> None:
             Buffer(random_.randbytes(4)),
             globals={"unknown_004d8c28": bytes(table)},
             externals={
-                "unknown_000b49a0": lambda harness, arguments, known=random_.choice((0, 1)): (
+                "online_storage_get_progress": lambda harness, arguments, known=random_.choice((0, 1)): (
                     known,
                     (arguments[0], harness.normalize(arguments[1])),
                 ),

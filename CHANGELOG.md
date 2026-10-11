@@ -2,6 +2,58 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — El almacén del servicio de partidas
+
+Tres funciones en el archivo nuevo `networking/online_storage.c`. De 1731
+funciones se pasa a 1734, el 15,39 % de las del juego (el 10,107 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_storage_write_start` | `0x000b42b0` | `networking/online_storage.c` |
+| `online_storage_read_get_results` | `0x000b45f0` | `networking/online_storage.c` |
+| `online_storage_get_progress` | `0x000b49a0` | `networking/online_storage.c` |
+
+### Lo que se sabe
+
+- Los bloques de `network_blob.c` se guardan en **el almacén del servicio
+  de partidas** (las funciones `XOnlineStorage…` de la consola): por eso
+  cada lectura y escritura es una tarea de «online tasks».
+- `online_storage_write_start` empieza a escribir un bloque: le hace un
+  nombre (`0x000b4120`), toma una tarea nueva (solo si hay alguien
+  conectado) y pide a las bibliotecas que empiecen. La parte del almacén
+  sale del primer número de las funciones de quien tiene el bloque: la
+  cuarta para `0`, la quinta para `1` y la tercera para los demás. Si no
+  empieza, la tarea se cierra y lo que dicen las bibliotecas se pasa a
+  una de cuatro maneras de no poder (de `1` a `4`): son los números que
+  `network_blob_tasks_update` (hito 504) convertía en el final de la tarea.
+- `online_storage_read_get_results` dice cuánto se leyó y cuánto había;
+  si las bibliotecas no lo saben, la tarea recibe su bit `0x20`.
+- `online_storage_get_progress` da el avance, de 0 a 1.
+
+### Arreglado al probar
+
+- El avance se calcula **como lo hace el procesador de la consola**: el
+  número se carga con signo, se le suma `2^32` si salía negativo y se
+  multiplica por `0,01`, redondeando en cada paso a la precisión de un
+  real (la consola tiene el coprocesador en 24 bits). Con la conversión
+  directa de C salía un último bit distinto en números muy grandes.
+
+### Cambiado
+
+- `unknown_000b42b0`, `unknown_000b45f0` y `unknown_000b49a0`, que
+  llamaban `network_blob.c` y `network_blob_task.c`, tienen su nombre.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las tres**, y en las de los hitos 456 a
+  490 y 501 a 513. La tanda de los hitos 491 a 500 está en marcha.
+- En este hito se pasaron las pruebas de las tres funciones y todas las
+  de `network_blob` y `network_blob_task`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — El bloque toma su memoria
 
 Una función en `networking/network_blob.c`, de 278 bytes, que queda entero. De 1730

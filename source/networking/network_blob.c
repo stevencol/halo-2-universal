@@ -13,12 +13,9 @@ are the names of its functions.
 
 #include "cache/texture_cache.h"
 #include "memory/crc.h"
+#include "networking/online_storage.h"
 
 /* ---------- prototypes */
-
-/* 0x000b49a0: how far what does a task is, from 0 to 1; whether it is
-known */
-boolean unknown_000b49a0(long handle, real *progress);
 
 /* ---------- globals */
 
@@ -131,7 +128,7 @@ boolean network_blob_get_progress(
 	handle= unknown_004d8c28[blob->task].handle;
 	if (handle!=NONE)
 	{
-		return unknown_000b49a0(handle, progress);
+		return online_storage_get_progress(handle, progress);
 	}
 	*progress= 0.0f;
 
