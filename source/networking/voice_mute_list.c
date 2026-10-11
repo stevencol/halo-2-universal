@@ -41,7 +41,7 @@ NONE if there is no room, or with no session in its first state.
 more. 0x0006b890: something of a kind that is asked; 0 if nothing is */
 long unknown_0006b730(void);
 byte *unknown_0006b910(long task);
-void unknown_0006b640(long task);
+void online_task_close(long task);
 long __attribute__((stdcall)) unknown_0006b890(long unknown, long kind);
 
 /* ---------- constants */
@@ -180,7 +180,7 @@ void VOICE_MUTE_LIST_CALLBACK voice_mute_list_startup(
 				}
 				else
 				{
-					unknown_0006b640(unknown_004c99c0);
+					online_task_close(unknown_004c99c0);
 					unknown_004c99c0= NONE;
 				}
 			}
@@ -198,7 +198,7 @@ void voice_mute_list_stop(
 
 	if (task!=NONE)
 	{
-		unknown_0006b640(task);
+		online_task_close(task);
 		voice_mute_list_tasks[controller_index]= NONE;
 		game_voice_muted_player_counts[controller_index]= NONE;
 		memset(game_voice_muted_players[controller_index], 0, sizeof(game_voice_muted_players[controller_index]));
@@ -207,7 +207,7 @@ void voice_mute_list_stop(
 	{
 		if (!unknown_0006b890(ONLINE_TASK_ANY_OWNER, _online_task_kind_mute_list_get))
 		{
-			unknown_0006b640(startup_task);
+			online_task_close(startup_task);
 			unknown_004c99c0= NONE;
 		}
 	}
@@ -248,7 +248,7 @@ void voice_mute_list_request(
 	}
 	else
 	{
-		unknown_0006b640(*task);
+		online_task_close(*task);
 		*task= NONE;
 	}
 }

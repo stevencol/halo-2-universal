@@ -71,7 +71,7 @@ def run(t) -> None:
             globals={"unknown_004d8c28": bytes(table), "unknown_004d8ba8": bytes(queues(task))},
             memory={BLOB: Memory(bytes(blob))},
             externals={
-                "unknown_0006b640": lambda harness, arguments: (0, (arguments[0],)),
+                "online_task_close": lambda harness, arguments: (0, (arguments[0],)),
                 "network_blob_task_finished": lambda harness, arguments: (0, tuple(arguments)),
                 "texture_cache_return_memory": lambda harness, arguments: (0, (arguments[0],)),
             },
@@ -167,7 +167,7 @@ def run(t) -> None:
             "network_blob_task_completed",
             random_.choice((0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, NONE)),
             handle,
-            globals={"unknown_004d8c28": bytes(table), "unknown_004cf78c": Buffer(bytes(operations), pointers=(0x44,))},
+            globals={"unknown_004d8c28": bytes(table), "online_tasks": Buffer(bytes(operations), pointers=(0x44,))},
             memory=memory,
             externals={
                 "unknown_000b45f0": ended,

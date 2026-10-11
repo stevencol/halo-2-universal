@@ -1,0 +1,81 @@
+/*
+ONLINE_TASKS.H
+
+The tasks of the service of games by the network: each is something that the
+console's libraries do little by little, which the game keeps a number for.
+The game calls their table "online tasks". The names of the functions are
+guesses.
+*/
+
+#ifndef __ONLINE_TASKS_H
+#define __ONLINE_TASKS_H
+
+#include "cseries/cseries.h"
+#include "memory/data.h"
+
+/* ---------- constants */
+
+enum
+{
+	MAXIMUM_ONLINE_TASKS= 24,
+	/* the bits of a task, of which what it is at is made */
+	_online_task_unknown1_bit= 0x1,
+	_online_task_unknown2_bit= 0x2,
+	_online_task_unknown4_bit= 0x4,
+	_online_task_unknown20_bit= 0x20,
+	/* what a task is at, from its bits; the last is for one that there is
+	not */
+	_online_task_status0= 0,
+	_online_task_status1,
+	_online_task_status2,
+	_online_task_status3,
+	_online_task_status4,
+	_online_task_status_none,
+	/* the kinds of task that are done with in a way of their own; the third
+	is a list of friends. What the libraries say when a task has no more to
+	do */
+	_online_task_type2= 2,
+	_online_task_type_friends= 3,
+	_online_task_type21= 0x21,
+	ONLINE_TASK_DONE= 0x1500F2,
+	/* the size of something of the tasks that starts as nothing */
+	ONLINE_TASKS_UNKNOWN_004771C8_SIZE= 0x2580
+};
+
+/* ---------- structures */
+
+/* a task: its bits, its kind, a number, and what the libraries know it by,
+which is nothing or NONE when they do not */
+struct online_task
+{
+	short identifier;
+	word flags;
+	long type;
+	long unknown8;
+	long handle;
+	long unknown10;
+};
+
+typedef char verify_online_task_size[sizeof(struct online_task) == 0x14 ? 1 : -1];
+
+/* what goes over the tasks: the one that it is at, and where */
+struct online_task_iterator
+{
+	struct online_task *task;
+	struct data_iterator iterator;
+};
+
+/* ---------- prototypes/ONLINE_TASKS.C */
+
+boolean online_task_iterator_next(struct online_task_iterator *iterator);
+void online_tasks_initialize(void);
+void online_tasks_dispose(void);
+long online_task_get_status(long index);
+void online_task_close(long index);
+long online_task_new(void);
+
+/* ---------- globals */
+
+extern struct data_array *online_tasks;
+
+#endif

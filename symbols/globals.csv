@@ -378,7 +378,7 @@ address,name,source
 0055e700,unknown_0055e700,source/networking/network_blob.c
 004d8ba8,unknown_004d8ba8,source/networking/network_blob_task.c
 004402a4,unknown_004402a4,source/networking/network_blob_task.c
-004cf78c,unknown_004cf78c,source/networking/network_blob_task.c
+004cf78c,online_tasks,source/networking/online_tasks.c
 00510568,unknown_00510568,source/networking/network_globals.c
 00510570,unknown_00510570,source/networking/network_globals.c
 00510574,unknown_00510574,source/networking/network_globals.c
@@ -389,3 +389,5 @@ address,name,source
 004d8b40,unknown_004d8b40,source/networking/transport.c
 004d8b80,unknown_004d8b80,source/networking/transport.c
 004d8b60,unknown_004d8b60,source/networking/transport.c
+004771c8,unknown_004771c8,source/networking/online_tasks.c
+00479748,unknown_00479748,source/networking/online_tasks.c

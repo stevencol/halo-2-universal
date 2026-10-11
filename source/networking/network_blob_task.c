@@ -14,13 +14,11 @@ guess, and so are the names of its functions.
 
 #include "memory/crc.h"
 #include "memory/data.h"
+#include "networking/online_tasks.h"
 
 #include <string.h>
 
 /* ---------- prototypes */
-
-/* 0x0006b640: what does a task is told to stop */
-void unknown_0006b640(long handle);
 
 /* 0x00080e10, of network_blob.c: something takes the memory of its block;
 whether it could, and where it is and how much. 0x000b4670, 0x000b42b0: a
@@ -47,10 +45,8 @@ ones that it has first and NONE after them */
 struct network_blob_task unknown_004d8c28[MAXIMUM_NETWORK_BLOB_TASKS];
 long unknown_004d8ba8[NUMBER_OF_NETWORK_BLOB_TASK_QUEUES][MAXIMUM_NETWORK_BLOB_TASK_QUEUE_COUNT];
 
-/* 0x004402a4: how many tasks of each list can go on at once: one.
-0x004cf78c: the things of what does the tasks */
+/* 0x004402a4: how many tasks of each list can go on at once: one */
 long unknown_004402a4[NUMBER_OF_NETWORK_BLOB_TASK_QUEUES]= {1, 1};
-struct data_array *unknown_004cf78c;
 
 /* ---------- code */
 
@@ -72,7 +68,7 @@ void __attribute__((stdcall)) network_blob_task_end(
 	}
 	if (entry->handle!=NONE)
 	{
-		unknown_0006b640(entry->handle);
+		online_task_close(entry->handle);
 	}
 	network_blob_task_finished(entry->blob, result);
 	if (entry->blob->kind==_network_blob_kind4 && entry->blob->task==NONE)
@@ -332,7 +328,7 @@ void __attribute__((stdcall)) network_blob_task_completed(
 		}
 	}
 	entry= &unknown_004d8c28[task];
-	kind= *(const long *)((const byte *)unknown_004cf78c->data+(entry->handle&0xFFFF)*NETWORK_BLOB_OPERATION_SIZE+
+	kind= *(const long *)((const byte *)online_tasks->data+(entry->handle&0xFFFF)*NETWORK_BLOB_OPERATION_SIZE+
 		NETWORK_BLOB_OPERATION_KIND_OFFSET);
 	if (status==0 && kind==_network_blob_operation_read)
 	{

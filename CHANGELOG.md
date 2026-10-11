@@ -2,6 +2,57 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Las tareas del servicio de partidas
+
+Seis funciones en el archivo nuevo `networking/online_tasks.c`. De 1702
+funciones se pasa a 1708, el 15,16 % de las del juego (el 10,011 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_task_iterator_next` | `0x0006b380` | `networking/online_tasks.c` |
+| `online_tasks_initialize` | `0x0006b3e0` | `networking/online_tasks.c` |
+| `online_tasks_dispose` | `0x0006b450` | `networking/online_tasks.c` |
+| `online_task_get_status` | `0x0006b5d0` | `networking/online_tasks.c` |
+| `online_task_close` | `0x0006b640` | `networking/online_tasks.c` |
+| `online_task_new` | `0x0006b6f0` | `networking/online_tasks.c` |
+
+### Lo que se sabe
+
+- Lo que «lleva a cabo» las tareas de los bloques (hito 504) es **una
+  tabla que el juego llama «online tasks»** (`0x004cf78c`): hasta 24
+  tareas del servicio de partidas de la consola, cada una de `0x14`
+  bytes: sus bits, su clase, un número y el identificador con que las
+  bibliotecas la conocen.
+- `online_task_new` da una nueva, sin clase y sin identificador.
+- `online_task_get_status` dice por dónde va, de sus bits: `2` con el bit
+  `0x4` (`3` si además tiene el `0x20`), `1` con el `0x2`, `0` con el
+  `0x1`, `4` sin ninguno, y `5` si la tarea no existe.
+- `online_task_close` acaba con una: si las bibliotecas la conocen, se
+  termina a la manera de su clase (la segunda sigue hasta que no le queda
+  nada que hacer; la tercera, que es **la lista de amigos**, se cierra con
+  `XOnlineFriendsEnumerateFinish`) y se suelta con `XOnlineTaskClose`.
+- `online_tasks_initialize` y `online_tasks_dispose` hacen y deshacen la
+  tabla (el juego tiene dentro `data_new`, `data_make_valid` y
+  `data_dispose`; aquí se llaman).
+
+### Cambiado
+
+- `unknown_0006b640` y `unknown_004cf78c`, que usaban
+  `network_blob_task.c` y `voice_mute_list.c`, tienen su nombre.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las seis**, y en las de los hitos 456 a
+  490 y 501 a 507. La tanda de los hitos 491 a 500 está en marcha.
+- Faltan las demás del archivo, de `0x0006b4a0` a `0x0006cd50`: la que las
+  hace avanzar cada vuelta entre ellas.
+- En este hito se pasaron las pruebas de las seis funciones y las de
+  `network_blob_task` y `voice_mute_list`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — La red de la consola, entera
 
 Cinco funciones en `networking/transport.c`, que queda entero. De 1697

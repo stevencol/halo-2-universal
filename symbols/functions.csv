@@ -901,7 +901,7 @@ address,name,source,arguments,returns,convention
 00058b00,voice_mute_list_stop,source/networking/voice_mute_list.c,esi,void
 0006b730,unknown_0006b730,,,int
 0006b910,unknown_0006b910,,eax,int
-0006b640,unknown_0006b640,,edi,void
+0006b640,online_task_close,source/networking/online_tasks.c,edi,void
 0006b890,unknown_0006b890,,ebx stack,int,stdcall
 003a0841,unknown_003a0841,,stack stack,int
 003a0832,unknown_003a0832,,stack stack stack stack stack stack,int
@@ -2295,3 +2295,14 @@ address,name,source,arguments,returns,convention
 0008d770,transport_register,source/networking/transport.c,ecx stack stack stack,void,stdcall
 0008d7c0,transport_available,source/networking/transport.c,,bool
 0007a840,unknown_0007a840,,,void
+0006b380,online_task_iterator_next,source/networking/online_tasks.c,esi,bool
+0006b3e0,online_tasks_initialize,source/networking/online_tasks.c,,void
+0006b450,online_tasks_dispose,source/networking/online_tasks.c,,void
+0006b5d0,online_task_get_status,source/networking/online_tasks.c,eax,int
+0006b6f0,online_task_new,source/networking/online_tasks.c,,int
+0006bfa0,unknown_0006bfa0,,,void
+0006b950,unknown_0006b950,,,void
+0006c670,unknown_0006c670,,esi,int
+0008c550,unknown_0008c550,,edx,void
+003a07b9,XOnlineFriendsEnumerateFinish,,stack,int,stdcall
+003a062b,XOnlineTaskClose,,stack,int,stdcall

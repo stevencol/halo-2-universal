@@ -76,7 +76,7 @@ enum
 	_network_blob_kind3= 3,
 	_network_blob_task_failed= 2,
 	_network_blob_task_too_big= 9,
-	/* of what does the tasks (unknown_004cf78c): what one of its things is,
+	/* of what does the tasks (online_tasks): what one of its things is,
 	where its kind is, and the kind that reads */
 	NETWORK_BLOB_OPERATION_SIZE= 0x14,
 	NETWORK_BLOB_OPERATION_KIND_OFFSET= 0x4,

@@ -96,7 +96,7 @@ def run(t) -> None:
         return {
             "unknown_0006b730": lambda harness, arguments: new_task,
             "unknown_0006b910": where,
-            "unknown_0006b640": lambda harness, arguments: 0,
+            "online_task_close": lambda harness, arguments: 0,
             **{name: (lambda harness, arguments, result=result: result) for name, result in results.items()},
         }
 
@@ -133,7 +133,7 @@ def run(t) -> None:
                             "game_voice_muted_player_counts": struct.pack("<4I", 5, 6, 7, 8),
                         },
                         externals={
-                            "unknown_0006b640": lambda harness, arguments: 0,
+                            "online_task_close": lambda harness, arguments: 0,
                             "unknown_0006b890": lambda harness, arguments, asked=asked: asked,
                         },
                     )
@@ -179,7 +179,7 @@ def run(t) -> None:
                                 externals={
                                     "unknown_0006b730": lambda harness, arguments, new_task=new_task: new_task,
                                     "unknown_0006b910": where,
-                                    "unknown_0006b640": lambda harness, arguments: 0,
+                                    "online_task_close": lambda harness, arguments: 0,
                                     "unknown_003a0832": get,
                                 },
                                 extra=[old] + ([datum] if datum else []),
