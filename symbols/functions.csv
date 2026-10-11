@@ -2396,7 +2396,7 @@ address,name,source,arguments,returns,convention
 0018f5e3,user_interface_controllers_update_saved_games,source/interface/user_interface_controller.c,,void
 00190eb3,user_interface_controller_update_name,source/interface/user_interface_controller.c,stack,void,stdcall
 00199e2e,unknown_00199e2e,,stack,void,stdcall
-000abc70,unknown_000abc70,,ebx stack,int,stdcall
+000abc70,online_teams_enumerate_start,source/networking/online_teams.c,ebx stack,int,stdcall
 002153dd,unknown_002153dd,,stack stack stack stack,void,stdcall
 0006cc10,online_logon_remove_user,source/networking/online_tasks.c,stack,int,stdcall
 003a065b,XOnlineChangeLogonUsers,,stack stack stack,int,stdcall
@@ -2429,3 +2429,22 @@ address,name,source,arguments,returns,convention
 0019a015,unknown_0019a015,,,bool
 001999d7,unknown_001999d7,,,bool
 001492d6,unknown_001492d6,,eax ecx edi,bool
+000abd00,online_teams_enumerate_get_results,source/networking/online_teams.c,edi ebx stack,void,stdcall
+000abdb0,online_team_get,source/networking/online_teams.c,ebx stack stack,void,stdcall
+000abe60,online_team_unknown_000abe60_start,source/networking/online_teams.c,ebx stack,int,stdcall
+000abf10,online_team_unknown_000abf10_start,source/networking/online_teams.c,ebx stack,int,stdcall
+000abfa0,online_team_unknown_000abfa0_start,source/networking/online_teams.c,ebx stack stack,int,stdcall
+000ac050,online_team_unknown_000ac050_start,source/networking/online_teams.c,eax stack stack,int,stdcall
+000ac110,online_team_members_enumerate_start,source/networking/online_teams.c,ebx stack,int,stdcall
+000ac1b0,online_team_members_enumerate_get_results,source/networking/online_teams.c,edi ebx stack,void,stdcall
+000ac250,online_team_member_get,source/networking/online_teams.c,ebx stack stack,void,stdcall
+003afc26,unknown_003afc26,,stack stack stack stack stack stack,int,stdcall
+003aeba5,unknown_003aeba5,,stack stack stack,int,stdcall
+003afc50,unknown_003afc50,,stack stack stack stack stack,int,stdcall
+003afb80,unknown_003afb80,,stack stack stack stack stack stack,int,stdcall
+003afb8f,unknown_003afb8f,,stack stack stack stack stack stack,int,stdcall
+003a8407,unknown_003a8407,,stack stack stack stack stack stack stack,int,stdcall
+003afbf1,unknown_003afbf1,,stack stack stack stack stack stack stack stack stack,int,stdcall
+003afc76,unknown_003afc76,,stack stack stack stack stack stack stack,int,stdcall
+003aebb0,unknown_003aebb0,,stack stack stack,int,stdcall
+003afca3,unknown_003afca3,,stack stack stack stack stack,int,stdcall

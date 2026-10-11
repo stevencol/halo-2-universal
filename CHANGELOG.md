@@ -2,6 +2,63 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Los equipos del servicio de partidas: diez tareas
+
+Archivo nuevo, `networking/online_teams.c`, con diez funciones (1719 bytes). De 1818
+funciones se pasa a 1828, el 16,23 % de las del juego (el 10,486 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_teams_enumerate_start` | `0x000abc70` | `networking/online_teams.c` |
+| `online_teams_enumerate_get_results` | `0x000abd00` | `networking/online_teams.c` |
+| `online_team_get` | `0x000abdb0` | `networking/online_teams.c` |
+| `online_team_unknown_000abe60_start` | `0x000abe60` | `networking/online_teams.c` |
+| `online_team_unknown_000abf10_start` | `0x000abf10` | `networking/online_teams.c` |
+| `online_team_unknown_000abfa0_start` | `0x000abfa0` | `networking/online_teams.c` |
+| `online_team_unknown_000ac050_start` | `0x000ac050` | `networking/online_teams.c` |
+| `online_team_members_enumerate_start` | `0x000ac110` | `networking/online_teams.c` |
+| `online_team_members_enumerate_get_results` | `0x000ac1b0` | `networking/online_teams.c` |
+| `online_team_member_get` | `0x000ac250` | `networking/online_teams.c` |
+
+### Lo que se sabe
+
+- Siguiendo a `0x000abc70` (la tarea que el hito 528 dejó sin descompilar)
+  salió otro módulo: de `0x000abc70` a `0x000ac360`, **las tareas de los
+  equipos del servicio** — lo que el juego enseña como clanes, casi seguro.
+  Las funciones de las bibliotecas que usa no dicen su nombre
+  (`0x003afc26`, `0x003aeba5`…), así que los nombres salen de cómo las usa
+  `user_interface_controller.c`:
+  - se buscan **los equipos de un jugador** (`online_teams_enumerate_start`,
+    tarea de la clase `0x17`), hasta ocho;
+  - del primero se pide lo que las bibliotecas saben de él
+    (`online_team_get`: los `0x6A2` bytes de `+0x4E0` de cada mando);
+  - se buscan **sus miembros** (`online_team_members_enumerate_start`,
+    clase `0x20`), hasta cien;
+  - y del miembro que es el propio jugador se pide lo suyo
+    (`online_team_member_get`: los `0x92` bytes de `+0xB82`), cuyos bits se
+    resumen en un número de 0 a 3 — su rango en el equipo, por la forma.
+- Otras cuatro tareas (clases `0x18`, `0x19`, `0x1D` y `0x1F`) hacen algo
+  con un equipo y quedan con su dirección por nombre; la de `0x1D` da una
+  respuesta de tres posibles (aceptar, rechazar…).
+- Lo que identifica a un jugador o a un equipo son doce bytes: un número de
+  64 bits y unas banderas (`struct online_xuid`). Son los mismos doce bytes
+  de `+8` de cada mando y del principio de `struct online_user`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  532.
+- En este hito se pasaron las pruebas de las diez funciones y la de
+  `user_interface_controller_restart_tasks`, que llama a la primera.
+- En `online_team_unknown_000abe60_start` el juego da a las bibliotecas un
+  bloque de `0x6C` bytes del que solo pone los seis primeros: las pruebas
+  solo comparan esos.
+- Queda `0x000ac360` (137 bytes y una tabla de saltos).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — En qué está un jugador para el servicio, si puede usar la voz y cómo se ajusta su mando
 
 Seis funciones (826 bytes): cinco en `interface/user_interface_controller.c` y una en el

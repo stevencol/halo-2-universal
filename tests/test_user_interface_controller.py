@@ -136,7 +136,7 @@ def run(t) -> None:
             globals=table,
             externals={
                 "online_task_close": told,
-                "unknown_000abc70": lambda harness, arguments, task=random_.choice((NONE, 0x30001, 0x12340005)): (
+                "online_teams_enumerate_start": lambda harness, arguments, task=random_.choice((NONE, 0x30001, 0x12340005)): (
                     task,
                     (harness.normalize(arguments[0]), arguments[1]),
                 ),

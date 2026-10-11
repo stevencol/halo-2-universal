@@ -37,7 +37,7 @@ static const real look_yaw_rates[PLAYER_PROFILE_LOOK_SENSITIVITY_MAXIMUM]=
 0x000abc70: a task of the service of games starts for a player of it; NONE if
 it could not. 0x002153dd: a profile is written to its file */
 void __attribute__((stdcall)) unknown_00199e2e(long unknown);
-long __attribute__((stdcall)) unknown_000abc70(const struct online_user *user, long index);
+long __attribute__((stdcall)) online_teams_enumerate_start(const struct online_user *user, long index);
 void __attribute__((stdcall)) unknown_002153dd(long index, long saved_game, const struct player_profile *profile,
 	long unknown);
 
@@ -684,7 +684,7 @@ void __attribute__((stdcall)) user_interface_controller_restart_tasks(
 	memset(controller->unknownB82, 0, sizeof(controller->unknownB82));
 	if (((controller->flags>>_user_interface_controller_online_bit)&1) && !user_interface_controller_is_guest(index))
 	{
-		controller->tasks[0]= unknown_000abc70(&controller->user, index);
+		controller->tasks[0]= online_teams_enumerate_start(&controller->user, index);
 	}
 }
 

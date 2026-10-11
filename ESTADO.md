@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 532.
+**Última actualización:** 2026-10-08, al terminar el hito 533.
 
 ## Dónde estamos
 
-- **1818 funciones descompiladas de 11.265: el 16,14 % del juego** (el
-  10,428 % de los bytes de código).
-- Las 1818 están comprobadas contra el ejecutable original: las 1390 del
+- **1828 funciones descompiladas de 11.265: el 16,23 % del juego** (el
+  10,486 % de los bytes de código).
+- Las 1828 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile what a gamepad's player is at for the service, whether it may talk, and how its gamepad is set* (ver `git log`).
+- Último hito: *Decompile the tasks of the teams of the service of games* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 612 funciones apuntadas pero sin descompilar (las que el código
-  llama); 473 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 621 funciones apuntadas pero sin descompilar (las que el código
+  llama); 482 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -218,6 +218,9 @@ Módulos (funciones hechas / archivo):
 - [x] El almacén del servicio de partidas — `networking\online_storage.c`
       (7: el nombre, empezar a escribir y a leer, de memoria o de archivo,
       el resultado de leer y el avance)
+- [ ] Los equipos del servicio de partidas — `networking\online_teams.c`
+      (10: buscar los equipos de un jugador y los miembros de un equipo,
+      lo que se sabe de cada uno, y cuatro tareas más; falta `0x000ac360`)
 - [ ] El jugador de cada mando — `interface\user_interface_controller.c`
       (58 de unas 75, de `0x0018f372` a `0x001910b8`: cuál es, el
       siguiente, si es invitado, contarlos y buscar el que tiene perfil o
