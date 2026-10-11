@@ -2452,3 +2452,5 @@ address,name,source,arguments,returns,convention
 0006bd10,online_task_get_other_string,source/networking/online_tasks.c,eax,int
 0006c8b0,online_logon_add_user,source/networking/online_tasks.c,eax ecx,int
 003a0641,XOnlineLogon,,stack stack stack stack stack,int,stdcall
+0006e0f0,network_session_peers_unknown88_above_2,source/networking/network_session.c,eax ebx,bool
+0018f8b8,user_interface_controller_gamepad_present,source/interface/user_interface_controller.c,stack,bool,stdcall

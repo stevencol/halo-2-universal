@@ -2,6 +2,37 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Dos funciones cortas: si un mando está puesto y qué consolas de la sesión van atrasadas
+
+Dos funciones cortas (81 bytes): una en `interface/user_interface_controller.c` y otra en
+`networking/network_session.c`. De 1831
+funciones se pasa a 1833, el 16,27 % de las del juego (el 10,538 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_peers_unknown88_above_2` | `0x0006e0f0` | `networking/network_session.c` |
+| `user_interface_controller_gamepad_present` | `0x0018f8b8` | `interface/user_interface_controller.c` |
+
+### Lo que se sabe
+
+- `user_interface_controller_gamepad_present` dice si un mando está puesto
+  (la tabla `0x004e61cc` de `game.c`).
+- `network_session_peers_unknown88_above_2` recorre las consolas de una
+  sesión y dice si en todas el número de `+0x88` pasa de 2; a quien se lo
+  pida le da además, en bits, las que no. Es la primera función de la zona
+  que sigue a `online_tasks.c` (`0x0006d380` a `0x0006e400`), que trabaja
+  sobre la sesión de red.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  535.
+- En este hito se pasaron las pruebas de las dos funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Conectar a un jugador al servicio de partidas
 
 Una función en `networking/online_tasks.c`, de 533 bytes, la última que le faltaba. De 1830

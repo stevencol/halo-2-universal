@@ -7803,3 +7803,33 @@ boolean NETWORK_SESSION_CALLBACK network_session_membership_update_received(
 
 	return TRUE;
 }
+
+/* 0x0006e0f0: whether what each peer of a session has at 0x88 is more than
+2 in all of them; and the peers in which it is not, as bits, if they are
+asked for */
+boolean network_session_peers_unknown88_above_2(
+	const byte *session,
+	unsigned long *behind)
+{
+	long peer_count= *(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET);
+	unsigned long mask= 0;
+	boolean all= TRUE;
+	long peer_index;
+
+	for (peer_index= 0; peer_index<peer_count; peer_index++)
+	{
+		const byte *peer= session+NETWORK_SESSION_PEER_ARRAY_OFFSET+peer_index*NETWORK_SESSION_PEER_SIZE;
+
+		if (*(const long *)(peer+NETWORK_SESSION_PEER_UNKNOWN88_OFFSET)<=2)
+		{
+			mask|= 1<<peer_index;
+			all= FALSE;
+		}
+	}
+	if (behind)
+	{
+		*behind= mask;
+	}
+
+	return all;
+}

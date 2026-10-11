@@ -1157,6 +1157,8 @@ boolean NETWORK_SESSION_CALLBACK network_session_use_identifier(byte *session, c
 	long unknown18, const byte *identifier);
 boolean NETWORK_SESSION_CALLBACK network_session_create_identifier(byte *session, long unknown8, long unknown18);
 
+boolean network_session_peers_unknown88_above_2(const byte *session, unsigned long *behind);
+
 /* ---------- globals */
 
 extern long unknown_004cf4a0;

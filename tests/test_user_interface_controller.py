@@ -513,3 +513,9 @@ def run(t) -> None:
             index,
             globals={**table, "input_abstraction_globals": random_.randbytes(0x1BC)},
         )
+
+    # ---------- whether a gamepad is there
+
+    for n in range(200):
+        present = struct.pack("<4I", *(random_.choice((0, 0, 1, 0x100, random_.getrandbits(32))) for other in range(COUNT)))
+        t.check("user_interface_controller_gamepad_present", random_.randrange(COUNT), globals={"unknown_004e61cc": present})

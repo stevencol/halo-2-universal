@@ -184,5 +184,6 @@ void __attribute__((stdcall)) user_interface_controller_update_online_state(long
 boolean user_interface_controller_voice_allowed(long index);
 boolean user_interface_unknown_0018f973(void);
 void user_interface_controller_apply_input_preferences(long index);
+boolean __attribute__((stdcall)) user_interface_controller_gamepad_present(short index);
 
 #endif

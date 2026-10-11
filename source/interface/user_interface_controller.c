@@ -18,6 +18,11 @@ What the game keeps of the player of each gamepad. The names are guesses.
 
 #include <string.h>
 
+/* ---------- globals */
+
+/* 0x004e61cc, of game.c: which gamepads there are */
+extern long unknown_004e61cc[MAXIMUM_CONTROLLERS];
+
 /* ---------- constants */
 
 /* 0x00444bdc, 0x00444c04: how fast a gamepad looks around, up and down and
@@ -1344,4 +1349,11 @@ void user_interface_controller_apply_input_preferences(
 	preferences.unknown8[18]= profile->unknownFC&1;
 	preferences.unknown8[19]= ((unsigned long)profile->unknownFC>>2)&1;
 	input_abstraction_globals.preferences[index]= preferences;
+}
+
+/* 0x0018f8b8: whether a gamepad is there (unknown_004e61cc, of game.c) */
+boolean __attribute__((stdcall)) user_interface_controller_gamepad_present(
+	short index)
+{
+	return unknown_004e61cc[index]!=0;
 }
