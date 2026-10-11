@@ -2,6 +2,66 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — La red toma su memoria
+
+Una función en `networking/network_memory.c`, de 2035 bytes. De 1677
+funciones se pasa a 1678, el 14,90 % de las del juego (el 9,892 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_memory_allocate` | `0x00081780` | `networking/network_memory.c` |
+
+### Lo que se sabe
+
+- `network_memory_allocate` es **la pareja de `network_memory_free`**
+  (hito 489) en la tabla de `0x00453c00`: lo que la red toma al abrir un
+  mapa. Todo sale del extremo alto de la memoria de la consola
+  (`physical_memory_allocate_high`), y tras cada cosa se lleva la cuenta
+  de cuánto va y de dónde a dónde (`0x004d87c4`, `c8` y `cc`).
+- Con un argumento que no pasa de uno hay **quince canales** y lo que las
+  consolas comparten; con más, **un solo canal** y un montón más pequeño
+  (los dos tamaños están en `0x004cf760` y `0x004cf764`).
+- Por orden toma:
+  - los canales del juego (`0xF8` bytes cada uno), y hace cada uno
+    (`network_channel_construct`);
+  - **una conexión por canal** (`0x97C` bytes, funciones en `0x00450dd8`,
+    con sus dos ventanas de `0x80` mensajes) y **una cola de mensajes por
+    canal** (`0x2850` bytes, funciones en `0x00450db8`, ventanas de
+    `0x200`). Con esto se sabe qué son las dos cosas propias de un canal
+    que hasta ahora se llamaban `unknown10` y `unknown14`;
+  - la tabla de las vistas, que el juego llama **«simulation view»**;
+  - con muchos canales, lo que la partida en red lleva en `0x4`
+    (`0xA0C4` bytes) y la tabla de lo que las vistas tienen de ello,
+    **«simulation distributed view»**;
+  - y la memoria del montón, cuya primera página dice dónde empieza y
+    acaba lo que da y cuántas páginas son. Lo que la reparte
+    (`0x0032a850`, con tres tablas de tamaños) y el montón mismo se hacen
+    en memoria de las bibliotecas (`operator new`).
+- Al final el observador toma los canales
+  (`network_observer_take_game_channels`).
+- El juego tiene dentro `data_initialize` y `data_make_valid` para las dos
+  tablas; aquí se llaman.
+
+### Cambiado
+
+- `unknown_00081780` tiene ya su nombre en la tabla de `main_game.c`.
+- El montón de la red (`struct network_heap`) tiene dos campos más: mide
+  `0x10` bytes.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490. La tanda
+  de los hitos 491 a 500 está en marcha.
+- La prueba rellena la memoria de la consola con bytes al azar al tomarla
+  y mira toda entera al final, así que lo que la función no escribe
+  también se compara. No prueba que falte memoria: el juego tampoco lo
+  mira en casi ningún sitio.
+- En este hito se pasaron las pruebas de `network_memory` y de `main_game`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Romper líneas: hitos 441 a 455
 
 Sin funciones nuevas. Tanda de romper líneas de los hitos 441 a 455: 217

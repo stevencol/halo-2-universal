@@ -81,12 +81,37 @@ enum
 	byte of 0x4 says that it has it: a number that is nothing when it is
 	left. And a number of the first thing of all */
 	NETWORK_MEMORY_UNKNOWNB28_UNKNOWN8_UNKNOWN1C_OFFSET= 0x1C,
-	NETWORK_MEMORY_UNKNOWN1C_OFFSET= 0x1C
+	NETWORK_MEMORY_UNKNOWN1C_OFFSET= 0x1C,
+	/* how many channels of the game there are when the first thing that
+	network_memory_allocate is given is not more than one, and when it is;
+	the size of what unknown_004d87e8 is, and more of it: after each of its
+	two things with functions, a byte and some numbers */
+	NETWORK_MEMORY_CHANNEL_COUNT= 15,
+	NETWORK_MEMORY_FEW_CHANNEL_COUNT= 1,
+	NETWORK_MEMORY_UNKNOWN_004D87E8_SIZE= 0xA0C4,
+	NETWORK_MEMORY_UNKNOWN_004D87E8_UNKNOWN209C_OFFSET= 0x209C,
+	NETWORK_MEMORY_UNKNOWN_004D87E8_UNKNOWN20A0_OFFSET= 0x20A0,
+	NETWORK_MEMORY_UNKNOWN_004D87E8_UNKNOWNA0B0_OFFSET= 0xA0B0,
+	NETWORK_MEMORY_UNKNOWN_004D87E8_UNKNOWNA0B4_OFFSET= 0xA0B4,
+	/* how many messages a channel's connection and its queue of messages
+	keep the numbers of; and of the memory of the heap: its first page says
+	where what it gives starts and ends, how many pages that is, and where
+	a number of the heap is, and has functions */
+	NETWORK_MEMORY_CONNECTION_WINDOW_SIZE= 0x80,
+	NETWORK_MEMORY_MESSAGE_QUEUE_WINDOW_SIZE= 0x200,
+	NETWORK_MEMORY_HEAP_PAGE_SIZE= 0x1000,
+	NETWORK_MEMORY_HEAP_START_OFFSET= 0x4,
+	NETWORK_MEMORY_HEAP_END_OFFSET= 0x8,
+	NETWORK_MEMORY_HEAP_PAGE_COUNT_OFFSET= 0xC,
+	NETWORK_MEMORY_HEAP_PAGES_OFFSET= 0x10,
+	NETWORK_MEMORY_HEAP_UNKNOWNFFC_OFFSET= 0xFFC,
+	NETWORK_MEMORY_HEAP_ALLOCATOR_SIZE= 0x34
 };
 
 /* ---------- prototypes/NETWORK_MEMORY.C */
 
 void network_memory_free(void);
+void __attribute__((stdcall)) network_memory_allocate(long unknown);
 void network_memory_unknown_00081310(byte *unknown);
 byte *network_memory_unknown_00081440(byte *unknown);
 byte *network_memory_construct(byte *memory);

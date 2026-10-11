@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 500.
+**Última actualización:** 2026-10-08, al terminar el hito 501.
 
 ## Dónde estamos
 
-- **1677 funciones descompiladas de 11.265: el 14,89 % del juego** (el
-  9,824 % de los bytes de código).
-- Las 1677 están comprobadas contra el ejecutable original: las 1390 del
+- **1678 funciones descompiladas de 11.265: el 14,90 % del juego** (el
+  9,892 % de los bytes de código).
+- Las 1678 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how the list of channels opens its sockets* (ver `git log`).
+- Último hito: *Decompile how the network takes its memory for a map* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 572 funciones apuntadas pero sin descompilar (las que el código
-  llama); 455 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 574 funciones apuntadas pero sin descompilar (las que el código
+  llama); 456 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -214,9 +214,9 @@ Módulos (funciones hechas / archivo):
 - [ ] Un bloque con suma, versión y tamaño — `networking\network_blob.c`
       (2: la suma y ver si vale; falta quién los usa, de `0x00080e10` a
       `0x00081230`)
-- [ ] La memoria de la red — `networking\network_memory.c` (5: soltarla
-      al cerrar un mapa, `0x00081f80`, tres constructores, el de todo
-      entre ellos, y deshacerlo todo; falta tomarla, `0x00081780`)
+- [ ] La memoria de la red — `networking\network_memory.c` (6: tomarla
+      al abrir un mapa, soltarla al cerrarlo, tres constructores, el de
+      todo entre ellos, y deshacerlo todo)
 - [x] La pieza principal de un canal — `networking\network_connection.c`
       (18: empezar de cero, el número de cada paquete, escribir y
       leer la cabecera de un paquete, lo que la otra consola

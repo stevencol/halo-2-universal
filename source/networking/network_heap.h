@@ -42,6 +42,9 @@ struct network_heap
 {
 	struct network_heap_allocator *allocator;
 	long count;
+	/* a byte, and a number that the first page of its memory points to */
+	boolean unknown8;
+	long unknownC;
 };
 
 /* ---------- globals */

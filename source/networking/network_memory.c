@@ -12,6 +12,11 @@ names of its functions.
 #include "network_memory.h"
 
 #include "memory/data.h"
+#include "memory/lruv_cache.h"
+#include "memory/physical_memory.h"
+#include "networking/network_channel.h"
+#include "networking/network_connection.h"
+#include "networking/network_message_queue.h"
 #include "networking/network_heap.h"
 #include "networking/network_link.h"
 #include "networking/network_observer.h"
@@ -24,8 +29,19 @@ names of its functions.
 
 /* ---------- prototypes */
 
-/* 0x00321379, of the console's libraries: memory is let go of */
+/* 0x00321379, of the console's libraries: memory is let go of. 0x003202bb:
+and taken */
 void unknown_00321379(void *memory);
+void *operator_new(unsigned long size);
+
+/* 0x00329d20: the first page of the memory of the heap gets the functions
+that it has before its own. 0x0032a850: what gives the memory of the heap is
+made, with three tables of the sizes of what it gives, some numbers and the
+memory */
+void unknown_00329d20(byte *memory);
+void __attribute__((stdcall)) unknown_0032a850(struct network_heap_allocator *allocator, const void *unknown0,
+	const void *unknown4, long unknown8, long unknownC, long unknown10, long unknown14, const void *unknown18,
+	byte *memory, long unknown20, long unknown24, long unknown28, long unknown2C, long unknown30);
 
 /* ---------- globals */
 
@@ -54,6 +70,23 @@ void *unknown_00450e10[1];
 void *unknown_00450e28[1];
 void *unknown_00450df8[1];
 void *unknown_00450da0[1];
+
+/* 0x004cf760, 0x004cf764: how much memory the heap of the network has, with
+many channels and with few. 0x004d87f4: the one of the two that it has now.
+0x00450dd8, 0x00450db8: the functions of a channel's connection and of its
+queue of messages. 0x00454970, 0x00454980: the ones of the memory of the heap
+and of what gives it. 0x0046e490, 0x0046e690, 0x0046e7a0: three tables of the
+sizes of what the heap gives */
+long unknown_004cf760;
+long unknown_004cf764;
+long unknown_004d87f4;
+void *unknown_00450dd8[1];
+void *unknown_00450db8[1];
+void *unknown_00454970[1];
+void *unknown_00454980[1];
+byte unknown_0046e490[0x200];
+byte unknown_0046e690[0x110];
+byte unknown_0046e7a0[4];
 
 /* ---------- code */
 
@@ -269,4 +302,205 @@ void network_memory_destruct(
 	network_link_close_sockets(memory);
 	*(long *)(memory+NETWORK_MEMORY_UNKNOWN1C_OFFSET)= 0;
 	memory[0]= FALSE;
+}
+
+/* the network has this much more memory, and all of it is from the lowest
+address to the highest. The game has this after each thing that it takes */
+static inline __attribute__((always_inline)) void network_memory_count(
+	const void *memory,
+	long size)
+{
+	unsigned long start= (unsigned long)memory;
+	unsigned long end= start+(unsigned long)size;
+
+	if (unknown_004d87c4==0)
+	{
+		unknown_004d87c8= (long)start;
+		unknown_004d87cc= (long)end;
+	}
+	else
+	{
+		if ((unsigned long)unknown_004d87c8>start)
+		{
+			unknown_004d87c8= (long)start;
+		}
+		if ((unsigned long)unknown_004d87cc<=end)
+		{
+			unknown_004d87cc= (long)end;
+		}
+	}
+	unknown_004d87c4+= size;
+}
+
+/* the numbers of the messages that something keeps are none, of so many */
+static inline __attribute__((always_inline)) void network_memory_window_construct(
+	struct network_connection_window *window,
+	long size)
+{
+	window->enabled= FALSE;
+	window->size= size;
+	window->capacity= size;
+	window->start= 0;
+	window->count= 0;
+}
+
+/* 0x00081780: the network takes what it needs for a map: it is the second
+of the pair that main_game has for it (main_game_memory_users), and
+network_memory_free lets go of it. With a first thing that is not more than
+one there are fifteen channels, and the things that the consoles share; with
+more, one channel and less memory for the heap. All of it is from the high
+end of the console's memory:
+- the channels of the game, each made (network_channel_construct);
+- a connection and a queue of messages for each, no one's;
+- the table of the views of the game in the network;
+- with many channels, what the game in the network has at 0x4, and the table
+  of what the views have of it;
+- and the memory of the heap, whose first page says what it is; what gives
+  it is made in memory of the console's libraries, and so is the heap.
+The observer then takes the channels (network_observer_take_game_channels) */
+void __attribute__((stdcall)) network_memory_allocate(
+	long unknown)
+{
+	struct network_heap *heap;
+	long count;
+	long size;
+	long index;
+
+	if (unknown>1)
+	{
+		count= NETWORK_MEMORY_FEW_CHANNEL_COUNT;
+		unknown_004d87f4= unknown_004cf764;
+		unknown_004d87e4= FALSE;
+	}
+	else
+	{
+		count= NETWORK_MEMORY_CHANNEL_COUNT;
+		unknown_004d87f4= unknown_004cf760;
+		unknown_004d87e4= TRUE;
+	}
+	unknown_004d87d0= count;
+	unknown_004d87e0= count;
+
+	size= count*NETWORK_CHANNEL_SIZE;
+	unknown_004d87d4= (byte *)physical_memory_allocate_high((uint32_t)size);
+	network_memory_count(unknown_004d87d4, size);
+	for (index= 0; index<unknown_004d87d0; index++)
+	{
+		byte *channel= unknown_004d87d4+index*NETWORK_CHANNEL_SIZE;
+
+		if (channel)
+		{
+			network_channel_construct(channel);
+		}
+	}
+
+	size= unknown_004d87d0*NETWORK_CHANNEL_UNKNOWN10_SIZE;
+	unknown_004d87d8= (byte *)physical_memory_allocate_high((uint32_t)size);
+	network_memory_count(unknown_004d87d8, size);
+	for (index= 0; index<unknown_004d87d0; index++)
+	{
+		byte *connection= unknown_004d87d8+index*NETWORK_CHANNEL_UNKNOWN10_SIZE;
+
+		if (connection)
+		{
+			*(void **)connection= unknown_00450dd8;
+			network_memory_window_construct(
+				(struct network_connection_window *)(connection+NETWORK_CONNECTION_RECEIVED_WINDOW_OFFSET),
+				NETWORK_MEMORY_CONNECTION_WINDOW_SIZE);
+			network_memory_window_construct(
+				(struct network_connection_window *)(connection+NETWORK_CONNECTION_SENT_WINDOW_OFFSET),
+				NETWORK_MEMORY_CONNECTION_WINDOW_SIZE);
+			connection[NETWORK_CHANNEL_UNKNOWN10_USED_OFFSET]= FALSE;
+			*(long *)(connection+NETWORK_CHANNEL_UNKNOWN10_OWNER_OFFSET)= 0;
+		}
+	}
+
+	size= unknown_004d87d0*NETWORK_CHANNEL_UNKNOWN14_SIZE;
+	unknown_004d87dc= (byte *)physical_memory_allocate_high((uint32_t)size);
+	network_memory_count(unknown_004d87dc, size);
+	for (index= 0; index<unknown_004d87d0; index++)
+	{
+		byte *queue= unknown_004d87dc+index*NETWORK_CHANNEL_UNKNOWN14_SIZE;
+
+		if (queue)
+		{
+			*(void **)queue= unknown_00450db8;
+			network_memory_window_construct(
+				(struct network_connection_window *)(queue+NETWORK_MESSAGE_QUEUE_SENT_WINDOW_OFFSET),
+				NETWORK_MEMORY_MESSAGE_QUEUE_WINDOW_SIZE);
+			network_memory_window_construct(
+				(struct network_connection_window *)(queue+NETWORK_MESSAGE_QUEUE_RECEIVED_WINDOW_OFFSET),
+				NETWORK_MEMORY_MESSAGE_QUEUE_WINDOW_SIZE);
+			queue[NETWORK_CHANNEL_UNKNOWN14_USED_OFFSET]= FALSE;
+			*(long *)(queue+NETWORK_CHANNEL_UNKNOWN14_OWNER_OFFSET)= 0;
+			*(long *)(queue+NETWORK_CHANNEL_UNKNOWN14_UNKNOWNC_OFFSET)= 0;
+		}
+	}
+
+	size= (long)(unknown_004d87e0*SIMULATION_VIEW_SIZE+
+		BIT_VECTOR_SIZE_IN_LONGS(unknown_004d87e0)*(long)sizeof(unsigned long)+(long)sizeof(struct data_array));
+	unknown_004d87ec= (struct data_array *)physical_memory_allocate_high((uint32_t)size);
+	network_memory_count(unknown_004d87ec, size);
+	data_initialize(unknown_004d87ec, "simulation view", unknown_004d87e0, SIMULATION_VIEW_SIZE, 0, lruv_blocks_allocation);
+	data_make_valid(unknown_004d87ec);
+
+	if (unknown_004d87e4)
+	{
+		byte *shared= (byte *)physical_memory_allocate_high(NETWORK_MEMORY_UNKNOWN_004D87E8_SIZE);
+
+		unknown_004d87e8= shared;
+		network_memory_count(shared, NETWORK_MEMORY_UNKNOWN_004D87E8_SIZE);
+		if (shared)
+		{
+			*(void **)(shared+NETWORK_MEMORY_UNKNOWN_004D87E8_UNKNOWN2098_OFFSET)= unknown_00450d60;
+			shared[NETWORK_MEMORY_UNKNOWN_004D87E8_UNKNOWN209C_OFFSET]= FALSE;
+			memset(shared+NETWORK_MEMORY_UNKNOWN_004D87E8_UNKNOWN20A0_OFFSET, 0, 3*sizeof(long));
+			*(void **)(shared+NETWORK_MEMORY_UNKNOWN_004D87E8_UNKNOWNA0AC_OFFSET)= unknown_00450cb8;
+			shared[NETWORK_MEMORY_UNKNOWN_004D87E8_UNKNOWNA0B0_OFFSET]= FALSE;
+			memset(shared+NETWORK_MEMORY_UNKNOWN_004D87E8_UNKNOWNA0B4_OFFSET, 0, 4*sizeof(long));
+		}
+		size= (long)(unknown_004d87e0*SIMULATION_VIEW_DATA_SIZE+
+			BIT_VECTOR_SIZE_IN_LONGS(unknown_004d87e0)*(long)sizeof(unsigned long)+(long)sizeof(struct data_array));
+		unknown_004d87f0= (struct data_array *)physical_memory_allocate_high((uint32_t)size);
+		network_memory_count(unknown_004d87f0, size);
+		data_initialize(unknown_004d87f0, "simulation distributed view", unknown_004d87e0, SIMULATION_VIEW_DATA_SIZE, 0,
+			lruv_blocks_allocation);
+		data_make_valid(unknown_004d87f0);
+	}
+
+	size= unknown_004d87f4;
+	unknown_004d87fc= physical_memory_allocate_high((uint32_t)size);
+	network_memory_count(unknown_004d87fc, size);
+	heap= (struct network_heap *)operator_new(sizeof(struct network_heap));
+	if (heap)
+	{
+		long heap_size= unknown_004d87f4;
+		byte *memory= (byte *)unknown_004d87fc;
+		struct network_heap_allocator *allocator=
+			(struct network_heap_allocator *)operator_new(NETWORK_MEMORY_HEAP_ALLOCATOR_SIZE);
+
+		if (allocator)
+		{
+			if (memory)
+			{
+				unknown_00329d20(memory);
+				*(byte **)(memory+NETWORK_MEMORY_HEAP_START_OFFSET)= memory+NETWORK_MEMORY_HEAP_PAGE_SIZE;
+				*(byte **)(memory+NETWORK_MEMORY_HEAP_END_OFFSET)= memory+heap_size;
+				*(long **)(memory+NETWORK_MEMORY_HEAP_UNKNOWNFFC_OFFSET)= &heap->unknownC;
+				*(void **)memory= unknown_00454970;
+				memset(memory+NETWORK_MEMORY_HEAP_PAGES_OFFSET, 0,
+					NETWORK_MEMORY_HEAP_UNKNOWNFFC_OFFSET-NETWORK_MEMORY_HEAP_PAGES_OFFSET);
+				*(long *)(memory+NETWORK_MEMORY_HEAP_PAGE_COUNT_OFFSET)= heap_size/NETWORK_MEMORY_HEAP_PAGE_SIZE-1;
+				**(long **)(memory+NETWORK_MEMORY_HEAP_UNKNOWNFFC_OFFSET)= 0;
+			}
+			unknown_0032a850(allocator, unknown_0046e490, unknown_0046e690, 0x800, 0, 0x400, 0x100000, unknown_0046e7a0,
+				memory, 1, 0, 4, 0x400, 0);
+			allocator->functions= (const struct network_heap_allocator_functions *)unknown_00454980;
+		}
+		heap->allocator= allocator;
+		heap->count= 0;
+		heap->unknown8= FALSE;
+	}
+	unknown_004d87f8= heap;
+	network_observer_take_game_channels(unknown_005291a0);
 }

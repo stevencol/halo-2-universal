@@ -364,3 +364,13 @@ address,name,source
 00450df8,unknown_00450df8,source/networking/network_memory.c
 00450da0,unknown_00450da0,source/networking/network_memory.c
 0048480c,unknown_0048480c,source/networking/transport_endpoint.c
+004cf760,unknown_004cf760,source/networking/network_memory.c
+004cf764,unknown_004cf764,source/networking/network_memory.c
+004d87f4,unknown_004d87f4,source/networking/network_memory.c
+00450dd8,unknown_00450dd8,source/networking/network_memory.c
+00450db8,unknown_00450db8,source/networking/network_memory.c
+00454970,unknown_00454970,source/networking/network_memory.c
+00454980,unknown_00454980,source/networking/network_memory.c
+0046e490,unknown_0046e490,source/networking/network_memory.c
+0046e690,unknown_0046e690,source/networking/network_memory.c
+0046e7a0,unknown_0046e7a0,source/networking/network_memory.c

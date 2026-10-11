@@ -646,7 +646,7 @@ address,name,source,arguments,returns,convention
 0018f100,main_game_unknown_0018f100,source/main/main_game.c,stack,bool
 0018f170,main_game_launch_main_menu,source/main/main_game.c,eax stack,void
 00081f80,network_memory_free,source/networking/network_memory.c,,void
-00081780,unknown_00081780,,stack,void,stdcall
+00081780,network_memory_allocate,source/networking/network_memory.c,stack,void,stdcall
 001a479a,user_interface_memory_pool_delete,source/interface/user_interface_memory.c,,void
 001a474c,user_interface_memory_pool_new,source/interface/user_interface_memory.c,stack,void
 00215810,saved_game_files_free_memory,source/saved games/saved_game_files.c,,void
@@ -2248,3 +2248,6 @@ address,name,source,arguments,returns,convention
 00092a90,network_link_open,source/networking/network_link.c,eax,bool
 00092ae0,network_link_open_socket,source/networking/network_link.c,eax stack stack stack,bool,stdcall
 00092bf0,network_link_open_sockets,source/networking/network_link.c,esi,bool
+003202bb,operator_new,,stack,pointer
+00329d20,unknown_00329d20,,ecx,void
+0032a850,unknown_0032a850,,ecx stack stack stack stack stack stack stack stack stack stack stack stack stack,void,stdcall

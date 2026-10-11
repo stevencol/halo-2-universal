@@ -42,7 +42,7 @@ long GetTickCount(void);
 /* those that take memory when a map is loaded: what gives it back, and what
 takes it */
 void network_memory_free(void);
-void unknown_00081780(long configuration);
+void network_memory_allocate(long configuration);
 void unknown_000b3db0(void);
 void unknown_000b3d30(long configuration);
 void unknown_0021ebe0(void);
@@ -141,7 +141,7 @@ struct main_game_load_globals main_game_load_globals;
 that they take it */
 struct main_game_memory_user main_game_memory_users[NUMBER_OF_MAIN_GAME_MEMORY_USERS]=
 {
-	{network_memory_free, (void (MAIN_GAME_CALLBACK *)(long))unknown_00081780},
+	{network_memory_free, (void (MAIN_GAME_CALLBACK *)(long))network_memory_allocate},
 	{user_interface_memory_pool_delete, user_interface_memory_pool_new},
 	{saved_game_files_free_memory, saved_game_files_allocate_memory},
 	{game_voice_pool_delete, game_voice_pool_new},

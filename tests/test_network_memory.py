@@ -96,3 +96,108 @@ def run(t) -> None:
                 "network_link_close_sockets": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
             },
         )
+
+    # ---------- the network takes its memory
+
+    import hashlib
+
+    from test_async import calls_so_far
+    from test_scenario_load import physical_memory
+
+    for n in range(24):
+        unknown = random_.choice((0, 1, 1, 2, 5, 0xFFFFFFFF, 0x80000000))
+        many = unknown <= 1 or unknown >= 0x80000000
+        count = 15 if many else 1
+        heap = Buffer(random_.randbytes(0x10), places=(0,))
+        allocator = Buffer(random_.randbytes(0x34), places=(0,))
+        seed = random_.getrandbits(32)
+        news = random_.choice((2, 2, 2, 2, 1, 0))
+        now = random_.getrandbits(31)
+        while 0x20000000 <= now < 0x21000000:
+            now = random_.getrandbits(31)
+
+        def protect(harness, arguments, seed=seed):
+            # what the console's memory has is not known: the same in the game and in source/, each time
+            index = calls_so_far(harness, "XPhysicalProtect")
+            harness.mu.mem_write(arguments[0], random.Random(seed + index).randbytes(arguments[1]))
+            return 0, tuple(arguments)
+
+        def new(harness, arguments, news=news, heap=heap, allocator=allocator):
+            index = calls_so_far(harness, "operator_new")
+            return ((heap, allocator)[index].address if index < news else 0), (arguments[0],)
+
+        def take(harness, arguments, count=count, many=many):
+            # all the memory that was taken, with what points to the functions of things looked at apart
+            regions = [call[1] for call in harness._calls if call[0] == "XPhysicalProtect"]
+            pointers = [[index * 0xF8 + 0x18 for index in range(count)], [index * 0x97C for index in range(count)], [index * 0x2850 for index in range(count)], []]
+            if many:
+                pointers += [[0x2098, 0xA0AC], []]
+            pointers.append([0, 0xFFC])
+            seen = []
+            for (address, size, _), offsets in zip(regions, pointers):
+                data = bytearray(harness.mu.mem_read(address, size))
+                found = []
+                for offset in offsets:
+                    found.append(harness.normalize(struct.unpack_from("<I", data, offset)[0]))
+                    struct.pack_into("<I", data, offset, 0)
+                seen.append((hashlib.sha1(bytes(data)).hexdigest(), tuple(found)))
+            return 0, (harness.normalize(arguments[0]), len(regions), tuple(seen))
+
+        t.check(
+            "network_memory_allocate",
+            unknown,
+            globals={
+                "physical_memory_globals": physical_memory(random_.randrange(5), 0x100000, 0x700000),
+                "unknown_004cf760": random_.choice((0x20000, 0x40000, 0x21234)),
+                "unknown_004cf764": random_.choice((0x8000, 0x10000, 0x8765)),
+                "unknown_004d87f4": random_.getrandbits(32),
+                "unknown_004d87e4": bytes((random_.choice((0, 1)),)),
+                "unknown_004d87d0": random_.getrandbits(32),
+                "unknown_004d87e0": random_.getrandbits(32),
+                "unknown_004d87d4": random_.getrandbits(32),
+                "unknown_004d87d8": random_.getrandbits(32),
+                "unknown_004d87dc": random_.getrandbits(32),
+                "unknown_004d87ec": random_.getrandbits(32),
+                "unknown_004d87f0": random_.getrandbits(32),
+                "unknown_004d87e8": random_.getrandbits(32),
+                "unknown_004d87fc": random_.getrandbits(32),
+                "unknown_004d87f8": random_.getrandbits(32),
+                "unknown_004d87c4": random_.choice((0, 0, 0x1234)),
+                "unknown_004d87c8": random_.choice((0, 0x80300000, 0x80690000, 0xFFFFFFFF)),
+                "unknown_004d87cc": random_.choice((0, 0x80300000, 0x806FF000, 0xFFFFFFFF)),
+                "lruv_blocks_allocation": random_.choice((0, 0x60F00100)),
+                "unknown_00510548": bytes((random_.choice((0, 0, 1)),)),
+                "unknown_0051054c": struct.pack("<I", now),
+                "unknown_004e6398": random_.randbytes(8),
+                "unknown_005291a0": GlobalRange(4),
+                "unknown_00450d40": GlobalRange(4),
+                "unknown_00450dd8": GlobalRange(4),
+                "unknown_00450db8": GlobalRange(4),
+                "unknown_00450d60": GlobalRange(4),
+                "unknown_00450cb8": GlobalRange(4),
+                "unknown_00454970": GlobalRange(4),
+                "unknown_00454980": GlobalRange(4),
+                "unknown_0046e490": GlobalRange(4),
+                "unknown_0046e690": GlobalRange(4),
+                "unknown_0046e7a0": GlobalRange(4),
+            },
+            extra=[heap, allocator],
+            externals={
+                "XPhysicalProtect": protect,
+                "GetTickCount": lambda harness, arguments, now=now: now,
+                "operator_new": new,
+                "unknown_00329d20": lambda harness, arguments: (0, (arguments[0],)),
+                "unknown_0032a850": lambda harness, arguments: (
+                    0,
+                    (
+                        harness.normalize(arguments[0]),
+                        harness.normalize(arguments[1]),
+                        harness.normalize(arguments[2]),
+                        *arguments[3:7],
+                        harness.normalize(arguments[7]),
+                        *arguments[8:],
+                    ),
+                ),
+                "network_observer_take_game_channels": take,
+            },
+        )

@@ -24,7 +24,7 @@ LANGUAGE_TEXTS_SIZE = 0x1C
 LANGUAGES = 9
 
 MEMORY_USERS = (
-    ("network_memory_free", "unknown_00081780"),
+    ("network_memory_free", "network_memory_allocate"),
     ("user_interface_memory_pool_delete", "user_interface_memory_pool_new"),
     ("saved_game_files_free_memory", "saved_game_files_allocate_memory"),
     ("game_voice_pool_delete", "game_voice_pool_new"),
