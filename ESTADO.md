@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 516.
+**Última actualización:** 2026-10-08, al terminar el hito 517.
 
 ## Dónde estamos
 
-- **1737 funciones descompiladas de 11.265: el 15,42 % del juego** (el
-  10,145 % de los bytes de código).
-- Las 1737 están comprobadas contra el ejecutable original: las 1390 del
+- **1738 funciones descompiladas de 11.265: el 15,43 % del juego** (el
+  10,158 % de los bytes de código).
+- Las 1738 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how blocks of the third kind start to be written and read* (ver `git log`).
+- Último hito: *Decompile how a block is named in the online storage* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 600 funciones apuntadas pero sin descompilar (las que el código
   llama); 465 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -215,10 +215,9 @@ Módulos (funciones hechas / archivo):
       (8: la suma, ver si vale, tomar y devolver su memoria, empezar a
       leerlo y a escribirlo, lo que pasa cuando la tarea acaba y su
       avance)
-- [ ] El almacén del servicio de partidas — `networking\online_storage.c`
-      (6: empezar a escribir y a leer, de memoria o de archivo, el
-      resultado de leer y el avance; falta el nombre, `0x000b4120`, y lo
-      que hay antes, desde `0x000b4020`)
+- [x] El almacén del servicio de partidas — `networking\online_storage.c`
+      (7: el nombre, empezar a escribir y a leer, de memoria o de archivo,
+      el resultado de leer y el avance)
 - [ ] Las tareas del servicio de partidas — `networking\online_tasks.c`
       (28: la tabla, una nueva, por dónde va, acabar con una o con todas,
       recorrerlas, buscar una, volver a empezarla, hacerlas avanzar, en

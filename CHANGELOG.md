@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — El nombre de un bloque en el almacén
+
+Una función en `networking/online_storage.c`, de 400 bytes, que queda entero. De 1737
+funciones se pasa a 1738, el 15,43 % de las del juego (el 10,158 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_storage_make_path` | `0x000b4120` | `networking/online_storage.c` |
+
+### Lo que se sabe
+
+- `online_storage_make_path` hace el nombre con el que algo se guarda en
+  el almacén del servicio. Lo que se guarda **para todos los jugadores**
+  (la cuarta parte del almacén) lleva delante **el número de la versión
+  del juego**: `9809/nombre`. Así cada versión tiene lo suyo. En una
+  consola con una de las dos direcciones del hito 511 lleva `test/` en
+  vez del número: son las consolas de pruebas.
+- Lo que es de un jugador (la tercera parte) se pide con cómo se conoce
+  al jugador; lo demás, con dos números.
+- Con esto se sabe qué son los dos primeros números de las funciones de
+  quien tiene un bloque: en qué parte del almacén va, y su nombre.
+- **`online_storage.c` está entero**: siete funciones, de `0x000b4120` a
+  `0x000b49a0`.
+
+### Arreglado al probar
+
+- Los textos anchos escritos con `L"…"` son de 32 bits por carácter en
+  esta compilación: se escriben con `u"…"`, de 16.
+- La biblioteca de C de las pruebas toma `%s` como texto de 8 bits, así
+  que en la prueba `usnzprintf` se sustituye.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  516. La tanda de los hitos 491 a 500 ha terminado y falta anotarla.
+- En este hito se pasaron todas las pruebas de `online_storage`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Los bloques de la tercera clase
 
 Dos funciones en `networking/online_storage.c`, 749 bytes entre las dos. De 1735

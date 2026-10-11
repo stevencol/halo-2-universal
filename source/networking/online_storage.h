@@ -12,6 +12,7 @@ name of the file is a guess, and so are the names of its functions.
 #include "cseries/cseries.h"
 #include "math/real_math.h"
 #include "networking/network_blob.h"
+#include "text/unicode.h"
 
 /* ---------- constants */
 
@@ -37,11 +38,16 @@ enum
 	_online_task_type_storage_write= 0x29,
 	_online_task_type_storage_read= 0x2A,
 	_online_task_type_storage_file= 0x2C,
-	_online_task_started_bits= 0x1
+	_online_task_started_bits= 0x1,
+	/* the number of the build of the game, which the names of what is kept
+	for all the players start with */
+	ONLINE_STORAGE_BUILD_NUMBER= 9809
 };
 
 /* ---------- prototypes/ONLINE_STORAGE.C */
 
+boolean __attribute__((stdcall)) online_storage_make_path(long unknown0, struct network_blob_request request,
+	const wchar *name, word *path, long *length);
 long __attribute__((stdcall)) online_storage_write_start(long unknown0, long *task_out, long owner,
 	struct network_blob_request request, long unknown4, void *memory, unsigned long size);
 long __attribute__((stdcall)) online_storage_read_start(long unknown0, long owner,

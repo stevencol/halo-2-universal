@@ -396,3 +396,4 @@ address,name,source
 0043ff84,unknown_0043ff84,source/networking/online_tasks.c
 0050944e,unknown_0050944e,source/networking/online_tasks.c
 00467178,unknown_00467178,source/networking/online_tasks.c
+004672dc,unknown_004672dc,source/networking/online_storage.c

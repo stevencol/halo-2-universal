@@ -121,7 +121,7 @@ def run(t) -> None:
             random_.getrandbits(32),
             extra=[task],
             externals={
-                "unknown_000b4120": named,
+                "online_storage_make_path": named,
                 "online_task_new_signed_in": lambda harness, arguments, index=random_.choice((0x80010003, 5, NONE)): index,
                 "online_task_get": lambda harness, arguments, task=task, there=random_.random() < 0.9: (
                     task.address if there else 0,
@@ -197,7 +197,7 @@ def run(t) -> None:
             Buffer(random_.randbytes(4)),
             extra=[task],
             externals={
-                "unknown_000b4120": named,
+                "online_storage_make_path": named,
                 "online_task_new_signed_in": lambda harness, arguments, index=random_.choice((0x80010003, 5, NONE)): index,
                 "online_task_get": lambda harness, arguments, task=task, there=random_.random() < 0.9: (
                     task.address if there else 0,
@@ -242,7 +242,7 @@ def run(t) -> None:
                 *((unknown0, owner, *numbers, out) if last else (unknown0, out, owner, *numbers)),
                 extra=[task],
                 externals={
-                    "unknown_000b4120": named,
+                    "online_storage_make_path": named,
                     "online_task_new_signed_in": lambda harness, arguments, index=random_.choice((0x80010003, 5, NONE)): index,
                     "online_task_get": lambda harness, arguments, task=task, there=random_.random() < 0.9: (
                         task.address if there else 0,
@@ -252,3 +252,57 @@ def run(t) -> None:
                     "online_task_close": lambda harness, arguments: (0, (arguments[0],)),
                 },
             )
+
+    # ---------- the name of something in the storage
+
+    def wide(text: str) -> bytes:
+        return text.encode("utf-16-le") + b"\0\0"
+
+    def wide_at(harness, address: int) -> bytes:
+        # a text, up to where it ends: what is after it is not set
+        raw = read(harness, address, 0x200)
+        for index in range(0, 0x200, 2):
+            if raw[index:index + 2] == b"\0\0":
+                return raw[:index]
+        return raw
+
+    def printed(name: str):
+        """usnzprintf, for the two formats that the function has: the C library of the tests does not take wide texts
+        for %s. The second text of "%s/%s" is the name, which is not one of the arguments that the test is given."""
+
+        def stand_in(harness, arguments, name=name):
+            buffer, count, format_, first = arguments
+            asked = wide_at(harness, format_).decode("utf-16-le")
+            if asked == "%d":
+                text = str(first)
+            else:
+                assert asked == "%s/%s", asked
+                text = wide_at(harness, first).decode("utf-16-le") + "/" + name
+            harness.mu.mem_write(buffer, wide(text[: count - 1]))
+            return 0, (count, asked, text[: count - 1])
+
+        return stand_in
+
+    for n in range(1500):
+        name = "".join(random_.choice("abcXYZ019_/. ") for index in range(random_.choice((0, 1, 5, 20, 20, 0xF8, 0xFF, 0x100, 0x130))))
+        t.check(
+            "online_storage_make_path",
+            random_.choice((0, 0, 1, 2, 5, NONE)),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            Buffer(wide(name) + random_.randbytes(8)),
+            Buffer(random_.randbytes(0x200)),
+            Buffer(struct.pack("<I", 0x100)),
+            globals={
+                "unknown_0050944e": bytes((random_.choice((0, 0, 1)),)),
+                "unknown_004672dc": Buffer(wide(random_.choice(("test", "test", "", "x" * 0x120)))),
+            },
+            externals={
+                "usnzprintf": printed(name),
+                "unknown_003ab6b1": lambda harness, arguments, hr=random_.choice((0, 0, 5, 0x80004005, NONE)): (
+                    hr,
+                    (*arguments[:5], wide_at(harness, arguments[5]), harness.normalize(arguments[6]), harness.normalize(arguments[7])),
+                ),
+            },
+        )

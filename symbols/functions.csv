@@ -2329,10 +2329,11 @@ address,name,source,arguments,returns,convention
 003a0666,XOnlineChangeLogonUsersTaskGetResults,,stack stack,int,stdcall
 003a0636,XOnlineGetUsers,,stack stack,int,stdcall
 003a0774,XOnlineNotificationSetState,,stack stack stack stack stack stack,int,stdcall
-000b4120,unknown_000b4120,,eax stack stack stack stack stack stack,bool,stdcall
+000b4120,online_storage_make_path,source/networking/online_storage.c,eax stack stack stack stack stack stack,bool,stdcall
 003ad176,unknown_003ad176,,stack stack stack stack stack stack stack stack stack stack,int,stdcall
 003ab6f9,unknown_003ab6f9,,stack stack stack stack stack stack,int,stdcall
 003ad1a6,XOnlineStorageGetProgress,,stack stack stack stack,int,stdcall
 003ab6ea,unknown_003ab6ea,,stack stack stack stack stack stack stack stack,int,stdcall
 003ad149,unknown_003ad149,,stack stack stack stack stack stack stack stack stack,int,stdcall
 003ab6db,XOnlineStorageDownload,,stack stack stack stack stack stack stack,int,stdcall
+003ab6b1,unknown_003ab6b1,,stack stack stack stack stack stack stack stack,int,stdcall

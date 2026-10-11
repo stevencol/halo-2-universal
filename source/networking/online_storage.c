@@ -12,12 +12,17 @@ a guess, and so are the names of its functions.
 
 #include "networking/online_tasks.h"
 
+#include <stddef.h>
+
 /* ---------- prototypes */
 
-/* 0x000b4120: the name that something has in the storage, from what it is
-asked with; whether it could be made, and how long it is */
-boolean __attribute__((stdcall)) unknown_000b4120(long unknown0, struct network_blob_request request, long unknown4,
-	word *path, long *length);
+/* 0x003207ed, of the console's libraries: a text is copied, up to so many
+characters. 0x003ab6b1: the name that something has in the storage, from the
+part that it is in, whose it is and its own name; less than nothing if it
+could not be made */
+wchar *wcsncpy(wchar *destination, const wchar *source, size_t count);
+long __attribute__((stdcall)) unknown_003ab6b1(long facility, long unknown4, long unknown8, unsigned long xuid_low,
+	unsigned long xuid_high, const wchar *name, word *path, long *length);
 
 /* 0x003ad176, of the console's libraries: something starts to be written in
 the storage. 0x003ab6ea: and to be read from it. 0x003ab6f9: how reading
@@ -36,6 +41,14 @@ long __attribute__((stdcall)) unknown_003ab6f9(long handle, long *unknown4, unsi
 	unsigned long *read_out, long *unknown10, long *unknown14);
 long __attribute__((stdcall)) XOnlineStorageGetProgress(long handle, unsigned long *percent, long *unknown8,
 	long *unknownC);
+
+/* ---------- globals */
+
+/* 0x0050944e, of online_tasks.c: the console has one of two addresses.
+0x004672dc: what the names of what is kept for all the players start with on
+such a console */
+extern boolean unknown_0050944e;
+const wchar *unknown_004672dc= (const wchar *)u"test";
 
 /* ---------- code */
 
@@ -85,9 +98,75 @@ static inline __attribute__((always_inline)) long online_storage_start_result(
 	return _online_storage_failed;
 }
 
+/* 0x000b4120: the name that something has in the storage, from what it is
+asked with and its own name; whether it could be made, and how long it is.
+What is kept for all the players (the fourth part) has the number of the
+build of the game before its name, or "test" on a console with one of two
+addresses (online_tasks_check_address), so that each build has its own. What
+is a player's own (the third part) is asked for with what the player is
+known by; the rest, with two numbers */
+boolean __attribute__((stdcall)) online_storage_make_path(
+	long unknown0,
+	struct network_blob_request request,
+	const wchar *name,
+	word *path,
+	long *length)
+{
+	wchar prefix[MAXIMUM_ONLINE_STORAGE_PATH_LENGTH];
+	wchar full_name[MAXIMUM_ONLINE_STORAGE_PATH_LENGTH];
+	long facility= online_storage_facility(unknown0);
+	unsigned long xuid_low= 0;
+	unsigned long xuid_high= 0;
+	long unknown4= 0;
+	long unknown8= 0;
+	long prefix_length;
+
+	if (facility==_online_storage_facility4)
+	{
+		if (!unknown_0050944e)
+		{
+			usnzprintf(prefix, MAXIMUM_ONLINE_STORAGE_PATH_LENGTH, (const wchar *)u"%d", ONLINE_STORAGE_BUILD_NUMBER);
+		}
+		else
+		{
+			wcsncpy(prefix, unknown_004672dc, MAXIMUM_ONLINE_STORAGE_PATH_LENGTH-1);
+			prefix[MAXIMUM_ONLINE_STORAGE_PATH_LENGTH-1]= 0;
+		}
+	}
+	else
+	{
+		wcsncpy(prefix, (const wchar *)u"", MAXIMUM_ONLINE_STORAGE_PATH_LENGTH-1);
+		prefix[MAXIMUM_ONLINE_STORAGE_PATH_LENGTH-1]= 0;
+	}
+	for (prefix_length= 0; prefix_length<MAXIMUM_ONLINE_STORAGE_PATH_LENGTH && prefix[prefix_length]; prefix_length++)
+	{
+	}
+	if (prefix_length>0)
+	{
+		usnzprintf(full_name, MAXIMUM_ONLINE_STORAGE_PATH_LENGTH, (const wchar *)u"%s/%s", prefix, name);
+	}
+	else
+	{
+		wcsncpy(full_name, name, MAXIMUM_ONLINE_STORAGE_PATH_LENGTH-1);
+		full_name[MAXIMUM_ONLINE_STORAGE_PATH_LENGTH-1]= 0;
+	}
+	if (facility==_online_storage_facility3)
+	{
+		xuid_low= (unsigned long)request.unknown0[0];
+		xuid_high= (unsigned long)request.unknown0[1];
+	}
+	else
+	{
+		unknown4= request.unknown0[0];
+		unknown8= request.unknown0[1];
+	}
+
+	return unknown_003ab6b1(facility, unknown4, unknown8, xuid_low, xuid_high, full_name, path, length)>=0;
+}
+
 /* 0x000b42b0: a block starts to be written in the storage, from memory, by
 a new task whose number is given; what starting says. It cannot without a
-name for it (unknown_000b4120) or without a task, which there is only if
+name for it (online_storage_make_path) or without a task, which there is only if
 someone is signed in. If the libraries do not start, the task is done with,
 and what they say is one of the ways that it could not */
 long __attribute__((stdcall)) online_storage_write_start(
@@ -120,7 +199,7 @@ long __attribute__((stdcall)) online_storage_write_start(
 		facility= _online_storage_facility3;
 		break;
 	}
-	if (!unknown_000b4120(unknown0, request, unknown4, path, &length))
+	if (!online_storage_make_path(unknown0, request, (const wchar *)unknown4, path, &length))
 	{
 		return _online_storage_failed;
 	}
@@ -202,7 +281,7 @@ long __attribute__((stdcall)) online_storage_read_start(
 		facility= _online_storage_facility3;
 		break;
 	}
-	if (!unknown_000b4120(unknown0, request, unknown4, path, &length))
+	if (!online_storage_make_path(unknown0, request, (const wchar *)unknown4, path, &length))
 	{
 		return _online_storage_failed;
 	}
@@ -248,7 +327,7 @@ long __attribute__((stdcall)) online_storage_write_file_start(
 	long hr;
 
 	*task_out= NONE;
-	if (!unknown_000b4120(unknown0, request, unknown4, path, &length))
+	if (!online_storage_make_path(unknown0, request, (const wchar *)unknown4, path, &length))
 	{
 		return _online_storage_failed;
 	}
@@ -292,7 +371,7 @@ long __attribute__((stdcall)) online_storage_read_file_start(
 	long hr;
 
 	*task_out= NONE;
-	if (!unknown_000b4120(unknown0, request, unknown4, path, &length))
+	if (!online_storage_make_path(unknown0, request, (const wchar *)unknown4, path, &length))
 	{
 		return _online_storage_failed;
 	}
