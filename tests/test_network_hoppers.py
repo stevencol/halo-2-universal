@@ -39,5 +39,36 @@ def run(t) -> None:
         globals_ = {"unknown_0047d8f4": bytes(blob), "network_hoppers": GlobalData(table)}
         good = lambda harness, arguments, so=random_.choice((0, 1, 1)): (so, (harness.normalize(arguments[0]),))
         index = random_.choice((0, 1, 7, 15, 16, 17, NONE, 0x80000000, random_.randrange(16)))
-        t.check("network_hoppers_index_valid", index, globals=globals_, externals={"unknown_001934f0": good})
-        t.check("network_hoppers_get", index, globals=globals_, externals={"unknown_001934f0": good})
+        t.check("network_hoppers_index_valid", index, globals=globals_, externals={"network_hopper_valid": good})
+        t.check("network_hoppers_get", index, globals=globals_, externals={"network_hopper_valid": good})
+
+    # ---------- what one is asked by its kind: the game does not look at whether the kind is one of the five
+
+    for n in range(2500):
+        data = hopper(random_)
+        struct.pack_into("<I", data, 0, random_.randrange(1, 6))
+        struct.pack_into("<3I", data, 0x5EC, random_.choice((1, 1, 2, 4)), random_.choice((1, 2, 3, 4)), random_.choice((1, 2, 3, 4)))
+        struct.pack_into("<I", data, 0x5F8, random_.choice((0, 1, 0x100, 0x1FF, random_.getrandbits(32))))
+        one = Buffer(bytes(data))
+        t.check("network_hopper_get_players_value", one, random_.choice((0, 1, 2, 3, 4, 6, 8, 12, 16, 17, NONE, random_.randrange(18))))
+        for name in (
+            "network_hopper_unknown_00193250",
+            "network_hopper_get_minimum_players",
+            "network_hopper_get_maximum_players",
+            "network_hopper_get_minimum_teams",
+            "network_hopper_get_maximum_teams",
+            "network_hopper_unknown_00193400",
+            "network_hopper_get_team_size",
+        ):
+            t.check(name, one)
+        says = lambda so: (lambda harness, arguments: (so, (bytes(harness.mu.mem_read(arguments[0], 4)),)))
+        t.check(
+            "network_hopper_valid",
+            one,
+            externals={
+                "unknown_00193560": says(random_.choice((0, 1, 1, 1))),
+                "network_hopper_players_valid": says(random_.choice((0, 1))),
+                "unknown_00193630": says(random_.choice((0, 1))),
+                "unknown_001936a0": says(random_.choice((0, 1))),
+            },
+        )

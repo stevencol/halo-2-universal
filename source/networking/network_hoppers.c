@@ -14,8 +14,12 @@ fills. The names are guesses.
 
 /* ---------- prototypes */
 
-/* 0x001934f0: whether one of the list is good, by its kind */
-boolean unknown_001934f0(const struct network_hopper *hopper);
+/* 0x00193560: whether one of the list is good, whatever its kind.
+0x00193630, 0x001936a0: whether one of the fourth kind is, and one of the
+third or the fifth */
+boolean unknown_00193560(const struct network_hopper *hopper);
+boolean unknown_00193630(const struct network_hopper *hopper);
+boolean unknown_001936a0(const struct network_hopper *hopper);
 
 /* ---------- globals */
 
@@ -40,7 +44,7 @@ boolean network_hoppers_index_valid(
 {
 	if (index>=0 && index<MAXIMUM_NETWORK_HOPPERS && network_hoppers_available())
 	{
-		return unknown_001934f0(&network_hoppers[index]);
+		return network_hopper_valid(&network_hoppers[index]);
 	}
 
 	return FALSE;
@@ -54,7 +58,7 @@ struct network_hopper *network_hoppers_get(
 	{
 		struct network_hopper *hopper= &network_hoppers[index];
 
-		if (unknown_001934f0(hopper))
+		if (network_hopper_valid(hopper))
 		{
 			return hopper;
 		}
@@ -135,4 +139,159 @@ boolean network_hopper_players_valid(
 {
 	return hopper->minimum_players>=1 && hopper->maximum_players<=NETWORK_HOPPER_MAXIMUM_PLAYERS &&
 		hopper->minimum_players<=hopper->maximum_players;
+}
+
+/* 0x001932c0: the fewest players that one takes: of the first two kinds,
+what it says; of the others, its fewest teams by the players of a team. The
+game does not look at whether the kind is one of the five, here or in the
+functions after this one */
+long network_hopper_get_minimum_players(
+	const struct network_hopper *hopper)
+{
+	switch (hopper->type)
+	{
+	case _network_hopper_type1:
+	case _network_hopper_type2:
+		return hopper->minimum_players;
+	default:
+		return hopper->maximum_players*hopper->minimum_players;
+	}
+}
+
+/* 0x00193300: the most players that one takes: of the first two kinds,
+what it says; of the others, its most teams by the players of a team */
+long network_hopper_get_maximum_players(
+	const struct network_hopper *hopper)
+{
+	switch (hopper->type)
+	{
+	case _network_hopper_type1:
+	case _network_hopper_type2:
+		return hopper->maximum_players;
+	default:
+		return hopper->unknown5F4*hopper->minimum_players;
+	}
+}
+
+/* 0x001931d0: the number that one has for a number of players: nothing for
+the most that it takes, and a very big number for what it does not take */
+long network_hopper_get_players_value(
+	const struct network_hopper *hopper,
+	long player_count)
+{
+	long maximum= network_hopper_get_maximum_players(hopper);
+	long minimum= network_hopper_get_minimum_players(hopper);
+
+	if (player_count<minimum || player_count>maximum)
+	{
+		return NETWORK_HOPPER_PLAYERS_VALUE_NONE;
+	}
+	if (player_count==maximum)
+	{
+		return 0;
+	}
+
+	return hopper->unknown5A0[player_count];
+}
+
+/* 0x00193250: a number of one, by its kind: its most players for the first
+and the third; 1 for the second; and two numbers of its own for the fourth
+and the fifth */
+long network_hopper_unknown_00193250(
+	const struct network_hopper *hopper)
+{
+	switch (hopper->type)
+	{
+	case _network_hopper_type1:
+		return hopper->maximum_players;
+	case _network_hopper_type2:
+		return 1;
+	case _network_hopper_type3:
+		return hopper->unknown5F4*hopper->minimum_players;
+	case _network_hopper_type4:
+		return hopper->unknown600;
+	default:
+		return hopper->unknown5F4;
+	}
+}
+
+/* 0x00193340: the fewest teams that one takes; 1 for the first two kinds */
+long network_hopper_get_minimum_teams(
+	const struct network_hopper *hopper)
+{
+	switch (hopper->type)
+	{
+	case _network_hopper_type1:
+	case _network_hopper_type2:
+		return 1;
+	default:
+		return hopper->maximum_players;
+	}
+}
+
+/* 0x00193370: the most teams that one takes; 1 for the first two kinds */
+long network_hopper_get_maximum_teams(
+	const struct network_hopper *hopper)
+{
+	switch (hopper->type)
+	{
+	case _network_hopper_type1:
+	case _network_hopper_type2:
+		return 1;
+	default:
+		return hopper->unknown5F4;
+	}
+}
+
+/* 0x00193400: something of one: nothing for the first two kinds; whether
+its byte is set, for the third; and its number, for the others */
+long network_hopper_unknown_00193400(
+	const struct network_hopper *hopper)
+{
+	switch (hopper->type)
+	{
+	case _network_hopper_type1:
+	case _network_hopper_type2:
+		return 0;
+	case _network_hopper_type3:
+		return (byte)hopper->unknown5F8 ? 1 : 0;
+	default:
+		return hopper->unknown5F8;
+	}
+}
+
+/* 0x00193440: how many players a team of one has; NONE for the first two
+kinds, which have no teams */
+long network_hopper_get_team_size(
+	const struct network_hopper *hopper)
+{
+	switch (hopper->type)
+	{
+	case _network_hopper_type1:
+	case _network_hopper_type2:
+		return NONE;
+	default:
+		return hopper->minimum_players;
+	}
+}
+
+/* 0x001934f0: whether one of the list is good: as all are, and as the ones
+of its kind are */
+boolean network_hopper_valid(
+	const struct network_hopper *hopper)
+{
+	if (!unknown_00193560(hopper))
+	{
+		return FALSE;
+	}
+	switch (hopper->type)
+	{
+	case _network_hopper_type1:
+	case _network_hopper_type2:
+		return network_hopper_players_valid(hopper)!=0;
+	case _network_hopper_type4:
+		return unknown_00193630(hopper)!=0;
+	default:
+		return unknown_001936a0(hopper)!=0;
+	}
 }

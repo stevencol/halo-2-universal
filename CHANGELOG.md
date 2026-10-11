@@ -2,6 +2,56 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Lo que se pregunta de una lista del servicio según su clase: nueve funciones
+
+Nueve funciones más en `networking/network_hoppers.c`: las que tienen tabla de saltos. De 1857
+funciones se pasa a 1866, el 16,56 % de las del juego (el 10,571 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_hopper_get_players_value` | `0x001931d0` | `networking/network_hoppers.c` |
+| `network_hopper_unknown_00193250` | `0x00193250` | `networking/network_hoppers.c` |
+| `network_hopper_get_minimum_players` | `0x001932c0` | `networking/network_hoppers.c` |
+| `network_hopper_get_maximum_players` | `0x00193300` | `networking/network_hoppers.c` |
+| `network_hopper_get_minimum_teams` | `0x00193340` | `networking/network_hoppers.c` |
+| `network_hopper_get_maximum_teams` | `0x00193370` | `networking/network_hoppers.c` |
+| `network_hopper_unknown_00193400` | `0x00193400` | `networking/network_hoppers.c` |
+| `network_hopper_get_team_size` | `0x00193440` | `networking/network_hoppers.c` |
+| `network_hopper_valid` | `0x001934f0` | `networking/network_hoppers.c` |
+
+### Lo que se sabe
+
+- Con las tablas de saltos leídas del ejecutable se entiende qué son las
+  cinco clases: **las dos primeras son partidas sin equipos** (dicen cuántos
+  jugadores admiten, de tantos a tantos) y **las otras tres son por
+  equipos** (dicen cuántos jugadores tiene un equipo y cuántos equipos
+  admiten, de tantos a tantos). De ahí salen el mínimo y el máximo de
+  jugadores (`network_hopper_get_minimum_players`,
+  `network_hopper_get_maximum_players`), de equipos, y el tamaño del
+  equipo.
+- `network_hopper_get_players_value` da un número por cada cantidad de
+  jugadores que la lista admite (una tabla de 19 números en `+0x5A0`), nada
+  cuando está llena, y un número enorme para una cantidad que no admite.
+- `network_hopper_valid` (antes `unknown_001934f0`) es la comprobación
+  completa de una de la lista: lo que se pide a todas (`0x00193560`) y lo
+  que se pide a las de su clase.
+- Ninguna de estas funciones mira si la clase es una de las cinco: con otra
+  el juego saltaría a cualquier sitio. Las pruebas solo dan clases de 1 a 5.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  541.
+- En este hito se pasaron las pruebas de las nueve funciones y las de las
+  nueve del hito anterior.
+- La lista de Ghidra da a estas funciones solo los bytes de antes del
+  salto (de 10 a 24 cada una): por eso el porcentaje de bytes casi no se
+  mueve aunque el código descompilado es más.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — La lista de dieciséis cosas que llena un bloque del servicio
 
 Archivo nuevo, `networking/network_hoppers.c`, con nueve funciones cortas (329 bytes). De 1848

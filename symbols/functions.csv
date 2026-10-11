@@ -2467,4 +2467,15 @@ address,name,source,arguments,returns,convention
 001934b0,network_hopper_unknown_001934b0,source/networking/network_hoppers.c,eax,bool
 001934d0,network_hopper_unknown_001934d0,source/networking/network_hoppers.c,ecx,bool
 00193610,network_hopper_players_valid,source/networking/network_hoppers.c,ecx,bool
-001934f0,unknown_001934f0,,eax,bool
+001934f0,network_hopper_valid,source/networking/network_hoppers.c,eax,bool
+001931d0,network_hopper_get_players_value,source/networking/network_hoppers.c,eax esi,int
+00193250,network_hopper_unknown_00193250,source/networking/network_hoppers.c,ecx,int
+001932c0,network_hopper_get_minimum_players,source/networking/network_hoppers.c,ecx,int
+00193300,network_hopper_get_maximum_players,source/networking/network_hoppers.c,ecx,int
+00193340,network_hopper_get_minimum_teams,source/networking/network_hoppers.c,eax,int
+00193370,network_hopper_get_maximum_teams,source/networking/network_hoppers.c,eax,int
+00193400,network_hopper_unknown_00193400,source/networking/network_hoppers.c,ecx,int
+00193440,network_hopper_get_team_size,source/networking/network_hoppers.c,ecx,int
+00193560,unknown_00193560,,eax,bool
+00193630,unknown_00193630,,eax,bool
+001936a0,unknown_001936a0,,eax,bool

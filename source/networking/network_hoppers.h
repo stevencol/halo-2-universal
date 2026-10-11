@@ -26,7 +26,11 @@ enum
 	_network_hopper_type4,
 	_network_hopper_type5,
 	/* the most players that one can take */
-	NETWORK_HOPPER_MAXIMUM_PLAYERS= 16
+	NETWORK_HOPPER_MAXIMUM_PLAYERS= 16,
+	NUMBER_OF_NETWORK_HOPPER_UNKNOWN5A0= 19,
+	/* what network_hopper_get_players_value says of a number of players
+	that one does not take */
+	NETWORK_HOPPER_PLAYERS_VALUE_NONE= 0x7FFFFFFF
 };
 
 /* ---------- structures */
@@ -34,12 +38,19 @@ enum
 struct network_hopper
 {
 	long type;
-	byte unknown4[0x5E8];
-	/* how many players it takes, at least and at most */
+	byte unknown4[0x59C];
+	/* a number for each number of players that it can have */
+	long unknown5A0[NUMBER_OF_NETWORK_HOPPER_UNKNOWN5A0];
+	/* of the first two kinds: how many players it takes, at least and at
+	most. Of the others: how many players a team has, and how many teams it
+	takes, at least and at most */
 	long minimum_players;
 	long maximum_players;
 	long unknown5F4;
-	byte unknown5F8[0xC];
+	/* of the third kind, a byte; of the fourth and fifth, a number */
+	long unknown5F8;
+	byte unknown5FC[4];
+	long unknown600;
 	/* one of the fourth kind has the two numbers after it */
 	boolean unknown604;
 	byte pad605[3];
@@ -61,6 +72,15 @@ boolean network_hopper_unknown_00193490(const struct network_hopper *hopper);
 boolean network_hopper_unknown_001934b0(const struct network_hopper *hopper);
 boolean network_hopper_unknown_001934d0(const struct network_hopper *hopper);
 boolean network_hopper_players_valid(const struct network_hopper *hopper);
+long network_hopper_get_players_value(const struct network_hopper *hopper, long player_count);
+long network_hopper_unknown_00193250(const struct network_hopper *hopper);
+long network_hopper_get_minimum_players(const struct network_hopper *hopper);
+long network_hopper_get_maximum_players(const struct network_hopper *hopper);
+long network_hopper_get_minimum_teams(const struct network_hopper *hopper);
+long network_hopper_get_maximum_teams(const struct network_hopper *hopper);
+long network_hopper_unknown_00193400(const struct network_hopper *hopper);
+long network_hopper_get_team_size(const struct network_hopper *hopper);
+boolean network_hopper_valid(const struct network_hopper *hopper);
 
 /* ---------- globals */
 
