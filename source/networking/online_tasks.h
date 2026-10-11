@@ -131,8 +131,10 @@ typedef char verify_online_user_size[sizeof(struct online_user) == 0x70 ? 1 : -1
 struct online_service
 {
 	unsigned long identifier;
-	long unknown4;
-	long unknown8;
+	/* signing in is no good without it */
+	long required;
+	/* the service of games has it, as was seen when someone signed in */
+	boolean available;
 };
 
 /* what goes over the tasks: the one that it is at, and where */
@@ -166,6 +168,7 @@ void online_task_storage_done(long result, long index);
 boolean online_task_update(long index, struct online_task *task);
 boolean __attribute__((stdcall)) online_task_logon_update(struct online_task *task, long index);
 boolean online_task_change_users_update(struct online_task *task);
+boolean __attribute__((stdcall)) online_logon_complete(struct online_task *task);
 long online_tasks_get_logon_state(long index);
 long online_users_get_result(void);
 long online_task_users_get_result(const struct online_task *task);

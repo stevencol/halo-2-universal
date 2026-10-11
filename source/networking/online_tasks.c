@@ -10,6 +10,8 @@ are guesses.
 
 #include "online_tasks.h"
 
+#include "networking/game_voice.h"
+#include "networking/network_blob.h"
 #include "networking/network_observer.h"
 #include "networking/network_session.h"
 #include "networking/transport.h"
@@ -26,12 +28,18 @@ void unknown_0008c550(long index);
 
 /* 0x0008cc40: something is told that a task of the second kind could not
 go on. 0x0008e5e0, of network_blob_task.c: what did a task of the blocks
-ended. 0x0006bff0: what is done when someone is signed in, of the task that
-did it; whether it could be. 0x0007f410: something of the network is told
-that someone is */
+ended. 0x0007f410: something of the network is told that someone is signed
+in. 0x0006c170, 0x0006c1d0: two things are done with the players that are
+signed in. 0x0018fa94: which of them is the first that something is so of,
+or NONE. 0x0008c660, 0x0008d4d0: two more things that are told that someone
+signed in */
 void unknown_0008cc40(void);
-boolean __attribute__((stdcall)) unknown_0006bff0(struct online_task *task);
 void unknown_0007f410(void);
+void unknown_0006c170(const struct online_user *users);
+void __attribute__((stdcall)) unknown_0006c1d0(const struct online_user *users);
+long __attribute__((stdcall)) unknown_0018fa94(const struct online_user *users);
+void unknown_0008c660(void);
+void unknown_0008d4d0(void);
 void __attribute__((stdcall)) network_blob_task_completed(long status, long handle);
 void unknown_0008bf70(byte *unknown);
 
@@ -52,6 +60,7 @@ changing them went, for each. 0x003a0636: something of the players, by
 number. 0x003a0774: the others are told what a player is at. 0x003314b0: the
 time since the console started */
 const struct online_user *XOnlineGetLogonUsers(void);
+long __attribute__((stdcall)) XOnlineGetServiceInfo(unsigned long identifier, void *info);
 long __attribute__((stdcall)) XOnlineChangeLogonUsersTaskGetResults(long handle, long *results);
 long __attribute__((stdcall)) XOnlineGetUsers(long unknown, long *value);
 long __attribute__((stdcall)) XOnlineNotificationSetState(long user_index, long flags, unsigned long session_low,
@@ -83,13 +92,19 @@ boolean unknown_0050944e;
 /* 0x0051055d: a task of the kind 0xD ended in a way of its own */
 boolean unknown_0051055d;
 
+/* 0x00477058, 0x0047d8f4, 0x00479780: three things that have a block,
+which start to be read when someone signs in */
+struct network_blob unknown_00477058;
+struct network_blob unknown_0047d8f4;
+struct network_blob unknown_00479780;
+
 /* 0x004cf8e4: the observer of the network, for something that measures it.
 0x004cf95c: someone is signed in, for the same thing */
 byte *unknown_004cf8e4;
 boolean unknown_004cf95c;
 
 /* 0x00467178: the services that the game asks for when it signs in */
-const struct online_service unknown_00467178[NUMBER_OF_ONLINE_SERVICES]=
+struct online_service unknown_00467178[NUMBER_OF_ONLINE_SERVICES]=
 {
 	{2, 1, 0}, {4, 1, 0}, {6, 1, 0}, {7, 1, 0}, {8, 1, 0}, {9, 1, 0}, {13, 1, 0}, {15, 1, 0}, {16, 1, 0}, {18, 1, 0},
 	{19, 1, 0}, {20, 1, 0}, {0x4D530064, 0, 0}
@@ -893,7 +908,7 @@ little, and what signing in is at is looked at: when someone is signed in
 for the first time, the observer and something that measures the network
 are told, each thing that asked is told its third thing
 (transport_unknown_0008d730), and what is done then is done
-(unknown_0006bff0): if that cannot be, the task ends, but the others go on */
+(online_logon_complete): if that cannot be, the task ends, but the others go on */
 boolean __attribute__((stdcall)) online_task_logon_update(
 	struct online_task *task,
 	long index)
@@ -926,7 +941,7 @@ boolean __attribute__((stdcall)) online_task_logon_update(
 		unknown_004cf95c= TRUE;
 		unknown_0007f410();
 		transport_unknown_0008d730();
-		if (unknown_0006bff0(task))
+		if (online_logon_complete(task))
 		{
 			task->flags|= _online_task_unknown2_bit;
 		}
@@ -959,7 +974,7 @@ boolean online_task_change_users_update(
 	case ONLINE_TASK_USERS_DONE:
 		task->flags|= _online_task_unknown4_bit;
 		task->unknown10= _online_session_signed_in;
-		if (unknown_0006bff0(task))
+		if (online_logon_complete(task))
 		{
 			return TRUE;
 		}
@@ -988,4 +1003,80 @@ boolean online_task_change_users_update(
 	task->flags|= _online_task_unknown4_bit|_online_task_unknown20_bit;
 
 	return FALSE;
+}
+
+/* 0x0006bff0: what is done when someone is signed in, of the task that did
+it; whether it could be, and the task is at what says so: 5 if no one is
+signed in after all, and 10 if the libraries have no players or the service
+does not have something that the game cannot do without. If signing in ended
+in the second way for a player, the task ends at 2. Each service that the
+game asks for is seen to be there or not; the players are looked at; the
+voice starts (game_voice_start); and, for the task that signs in, the three
+blocks of unknown_00477058, unknown_0047d8f4 and unknown_00479780 start to
+be read, for the first player that something is so of */
+boolean __attribute__((stdcall)) online_logon_complete(
+	struct online_task *task)
+{
+	const struct online_user *users;
+	long state= _online_session_signed_in;
+	long users_result;
+	long index;
+
+	if (!(unknown_00467214!=NONE && online_tasks_get_logon_state(unknown_00467214)==_online_session_signed_in))
+	{
+		state= _online_logon_state5;
+		goto done;
+	}
+	users= XOnlineGetLogonUsers();
+	if (!users)
+	{
+		state= _online_logon_state_none;
+		goto done;
+	}
+	users_result= task->type==_online_task_type0 ? online_users_get_result() : online_task_users_get_result(task);
+	if (users_result==_online_users_result_unknown1)
+	{
+		unknown_0050944f= TRUE;
+	}
+	else if (users_result==_online_users_result_unknown2)
+	{
+		task->flags|= _online_task_unknown20_bit;
+		state= _online_logon_state2;
+		goto done;
+	}
+	for (index= 0; index<NUMBER_OF_ONLINE_SERVICES; index++)
+	{
+		if (XOnlineGetServiceInfo(unknown_00467178[index].identifier, NULL)>=0)
+		{
+			unknown_00467178[index].available= TRUE;
+		}
+		else
+		{
+			unknown_00467178[index].available= FALSE;
+			if (unknown_00467178[index].required)
+			{
+				state= _online_logon_state_none;
+				goto done;
+			}
+		}
+	}
+	unknown_0006c170(users);
+	unknown_0006c1d0(users);
+	game_voice_start();
+	index= unknown_0018fa94(users);
+	unknown_0008c660();
+	if (task->type==_online_task_type0)
+	{
+		struct network_blob_request request= {{0, 0, 0}};
+
+		network_blob_start_read(&unknown_00477058, index, request, 0);
+		network_blob_start_read(&unknown_0047d8f4, index, request, 0);
+		network_blob_start_read(&unknown_00479780, index, request, 0);
+		unknown_0008cc40();
+		unknown_0008d4d0();
+	}
+done:
+	task->unknown10= state;
+
+	return state==_online_session_signed_in;
 }

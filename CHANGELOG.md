@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Cuando alguien se conecta
+
+Una función en `networking/online_tasks.c`, de 382 bytes. De 1743
+funciones se pasa a 1744, el 15,48 % de las del juego (el 10,200 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_logon_complete` | `0x0006bff0` | `networking/online_tasks.c` |
+
+### Lo que se sabe
+
+- `online_logon_complete` es **lo que el juego hace en cuanto hay alguien
+  conectado al servicio de partidas**:
+  - mira cómo les fue a los jugadores; si a alguno le acabó de la segunda
+    manera, la conexión se queda en `2`;
+  - pregunta por cada uno de los trece servicios
+    (`XOnlineGetServiceInfo`) y apunta si está. Los doce primeros son
+    obligatorios: si falta uno, la conexión no vale (`10`). El propio del
+    juego puede faltar;
+  - arranca la voz (`game_voice_start`);
+  - y, si es la tarea que conecta, **empieza a leer tres bloques del
+    almacén** (`0x00477058`, `0x0047d8f4` y `0x00479780`), para el primer
+    jugador que cumple algo (`0x0018fa94`). Son los primeros tres «quien
+    tiene un bloque» que se ven de verdad.
+- La tabla de servicios deja de ser fija: su tercer campo es si el
+  servicio está.
+
+### Cambiado
+
+- `unknown_0006bff0` tiene su nombre.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  519.
+- En este hito se pasaron todas las pruebas de `online_tasks`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — La tarea que conecta, cada vuelta
 
 Dos funciones en `networking/online_tasks.c`, 396 bytes entre las dos. De 1741

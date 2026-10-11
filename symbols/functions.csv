@@ -2342,5 +2342,11 @@ address,name,source,arguments,returns,convention
 0006c2a0,online_task_logon_update,source/networking/online_tasks.c,eax stack,bool,stdcall
 0006c360,online_task_change_users_update,source/networking/online_tasks.c,eax,bool
 0008cc40,unknown_0008cc40,,,void
-0006bff0,unknown_0006bff0,,stack,bool,stdcall
+0006bff0,online_logon_complete,source/networking/online_tasks.c,stack,bool,stdcall
 0007f410,unknown_0007f410,,,void
+0006c170,unknown_0006c170,,edi,void
+0006c1d0,unknown_0006c1d0,,stack,void,stdcall
+0018fa94,unknown_0018fa94,,stack,int,stdcall
+0008c660,unknown_0008c660,,,void
+0008d4d0,unknown_0008d4d0,,,void
+003a067c,XOnlineGetServiceInfo,,stack stack,int,stdcall

@@ -440,7 +440,7 @@ def run(t) -> None:
                 "online_tasks_get_logon_state": session(random_.choice((0, 0, 1, 1, 1, 5, 10))),
                 "unknown_0007f410": told,
                 "transport_unknown_0008d730": told,
-                "unknown_0006bff0": could,
+                "online_logon_complete": could,
             },
         )
         said = random_.choice(
@@ -456,6 +456,56 @@ def run(t) -> None:
                     got,
                     (harness.normalize(arguments[0]),),
                 ),
-                "unknown_0006bff0": could,
+                "online_logon_complete": could,
+            },
+        )
+
+    # ---------- what is done when someone is signed in
+
+    for n in range(3000):
+        there = users()
+        services = bytearray(random_.randbytes(13 * 12))
+        for index in range(13):
+            struct.pack_into("<II", services, index * 12, index + 2, random_.choice((1, 1, 0)))
+        missing = random_.choice((NONE, NONE, NONE, 0, 5, 12))
+        told = lambda harness, arguments: (0, tuple(harness.normalize(value) for value in arguments))
+
+        def service(harness, arguments, missing=missing):
+            from test_async import calls_so_far
+
+            return (0x80004005 if calls_so_far(harness, "XOnlineGetServiceInfo") == missing else 0), tuple(arguments)
+
+        t.check(
+            "online_logon_complete",
+            logon_task(),
+            globals={
+                "unknown_00467214": random_.choice((0, 0, 0, 0, NONE)),
+                "unknown_0050944f": bytes((random_.choice((0, 0, 1)),)),
+                "unknown_00467178": bytes(services),
+                "unknown_00477058": GlobalRange(0x30),
+                "unknown_0047d8f4": GlobalRange(0x30),
+                "unknown_00479780": GlobalRange(0x30),
+            },
+            extra=[there],
+            externals={
+                "online_tasks_get_logon_state": session(random_.choice((1, 1, 1, 1, 0, 5))),
+                "XOnlineGetLogonUsers": lambda harness, arguments, there=there, has=random_.random() < 0.9: there.address if has else 0,
+                "online_users_get_result": lambda harness, arguments, got=random_.choice((0, 0, 1, 2)): got,
+                "online_task_users_get_result": lambda harness, arguments, got=random_.choice((0, 0, 1, 2)): (
+                    got,
+                    (harness.normalize(arguments[0]),),
+                ),
+                "XOnlineGetServiceInfo": service,
+                "unknown_0006c170": told,
+                "unknown_0006c1d0": told,
+                "game_voice_start": told,
+                "unknown_0018fa94": lambda harness, arguments, first=random_.choice((0, 1, 3, NONE)): (
+                    first,
+                    (harness.normalize(arguments[0]),),
+                ),
+                "unknown_0008c660": told,
+                "network_blob_start_read": lambda harness, arguments: (1, tuple(harness.normalize(value) for value in arguments)),
+                "unknown_0008cc40": told,
+                "unknown_0008d4d0": told,
             },
         )
