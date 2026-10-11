@@ -2315,3 +2315,17 @@ address,name,source,arguments,returns,convention
 003a11ae,unknown_003a11ae,,,int
 003a0620,XOnlineTaskContinue,,stack,int,stdcall
 003a0650,XOnlineLogonTaskGetResults,,stack,int,stdcall
+0006c6c0,online_users_get_result,source/networking/online_tasks.c,,int
+0006c750,online_task_users_get_result,source/networking/online_tasks.c,ecx,int
+0006c7a0,online_services_get_identifiers,source/networking/online_tasks.c,ecx,void
+0006c7c0,online_logon_get_state,source/networking/online_tasks.c,stack,bool,stdcall
+0006c7e0,online_signed_in,source/networking/online_tasks.c,,bool
+0006c800,online_unknown_0006c800,source/networking/online_tasks.c,stack,int,stdcall
+0006c830,online_unknown_0006c830,source/networking/online_tasks.c,ecx,bool
+0006c850,online_unknown_0006c850,source/networking/online_tasks.c,eax,byte
+0006ced0,online_get_logon_users,source/networking/online_tasks.c,ebx,void
+0006d040,online_notification_set_state,source/networking/online_tasks.c,esi stack stack stack,void,stdcall
+003a0671,XOnlineGetLogonUsers,,,pointer
+003a0666,XOnlineChangeLogonUsersTaskGetResults,,stack stack,int,stdcall
+003a0636,XOnlineGetUsers,,stack stack,int,stdcall
+003a0774,XOnlineNotificationSetState,,stack stack stack stack stack stack,int,stdcall

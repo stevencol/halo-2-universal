@@ -3,18 +3,18 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 511.
+**Última actualización:** 2026-10-08, al terminar el hito 512.
 
 ## Dónde estamos
 
-- **1720 funciones descompiladas de 11.265: el 15,27 % del juego** (el
-  10,059 % de los bytes de código).
-- Las 1720 están comprobadas contra el ejecutable original: las 1390 del
+- **1730 funciones descompiladas de 11.265: el 15,36 % del juego** (el
+  10,076 % de los bytes de código).
+- Las 1730 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the logon state and how an online task goes on* (ver `git log`).
+- Último hito: *Decompile ten short functions of signing in to the service of games* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 596 funciones apuntadas pero sin descompilar (las que el código
+- Además hay 600 funciones apuntadas pero sin descompilar (las que el código
   llama); 467 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
@@ -216,10 +216,10 @@ Módulos (funciones hechas / archivo):
       pasa cuando la tarea acaba, su avance y devolver su memoria; falta
       tomar su memoria, `0x00080e10`)
 - [ ] Las tareas del servicio de partidas — `networking\online_tasks.c`
-      (18: la tabla, una nueva, por dónde va, acabar con una o con todas,
-      recorrerlas, buscar una, volver a empezarla, hacerlas avanzar y en
-      qué está la conexión; faltan `0x0006b590` y las de `0x0006ba80` a
-      `0x0006d1f0`)
+      (28: la tabla, una nueva, por dónde va, acabar con una o con todas,
+      recorrerlas, buscar una, volver a empezarla, hacerlas avanzar, en
+      qué está la conexión y quién está conectado; faltan `0x0006b590`,
+      las de `0x0006ba80` a `0x0006c560` y cuatro más hasta `0x0006d1f0`)
 - [x] La red de la consola — `networking\transport.c` (8: iniciarla y
       deshacerla, mirar el cable, arrancarla y pararla, apuntar a quién se
       avisa y avisar, y si está)

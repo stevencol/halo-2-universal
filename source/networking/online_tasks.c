@@ -36,6 +36,17 @@ long __attribute__((stdcall)) XOnlineTaskClose(long handle);
 long __attribute__((stdcall)) XOnlineTaskContinue(long handle);
 long __attribute__((stdcall)) XOnlineLogonTaskGetResults(long handle);
 
+/* 0x003a0671: the players that are signed in, or NULL. 0x003a0666: how
+changing them went, for each. 0x003a0636: something of the players, by
+number. 0x003a0774: the others are told what a player is at. 0x003314b0: the
+time since the console started */
+const struct online_user *XOnlineGetLogonUsers(void);
+long __attribute__((stdcall)) XOnlineChangeLogonUsersTaskGetResults(long handle, long *results);
+long __attribute__((stdcall)) XOnlineGetUsers(long unknown, long *value);
+long __attribute__((stdcall)) XOnlineNotificationSetState(long user_index, long flags, unsigned long session_low,
+	unsigned long session_high, long size, byte *state);
+unsigned long GetTickCount(void);
+
 /* ---------- globals */
 
 /* 0x004cf78c: the table of the tasks. 0x004771c8: something of them, and
@@ -57,6 +68,13 @@ const byte unknown_0043ff84[2][TRANSPORT_SECURITY_ADDRESS_UNKNOWNA_SIZE]=
 	{0x00, 0x50, 0xF2, 0x10, 0x52, 0x20}
 };
 boolean unknown_0050944e;
+
+/* 0x00467178: the services that the game asks for when it signs in */
+const struct online_service unknown_00467178[NUMBER_OF_ONLINE_SERVICES]=
+{
+	{2, 1, 0}, {4, 1, 0}, {6, 1, 0}, {7, 1, 0}, {8, 1, 0}, {9, 1, 0}, {13, 1, 0}, {15, 1, 0}, {16, 1, 0}, {18, 1, 0},
+	{19, 1, 0}, {20, 1, 0}, {0x4D530064, 0, 0}
+};
 
 /* ---------- code */
 
@@ -509,4 +527,190 @@ long online_tasks_get_logon_state(
 	}
 
 	return online_tasks_logon_ended(task, _online_logon_state_none);
+}
+
+/* what is said of how signing in went for some players, from what it says
+of each */
+static inline __attribute__((always_inline)) boolean online_users_result_add(
+	long user_result,
+	long *result)
+{
+	if (user_result)
+	{
+		if (user_result==ONLINE_USER_RESULT_UNKNOWN1512F0)
+		{
+			*result= _online_users_result_unknown1;
+		}
+		else if (user_result==(long)ONLINE_USER_RESULT_UNKNOWN80151200)
+		{
+			*result= _online_users_result_unknown2;
+
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x0006c6c0: how signing in went for the players that are signed in: 2 if
+for one of them it ended in the second way, 1 if in the first, and nothing
+if not */
+long online_users_get_result(
+	void)
+{
+	struct online_user users[MAXIMUM_ONLINE_USERS];
+	long result= _online_users_result_none;
+	long index;
+
+	online_get_logon_users(users);
+	for (index= 0; index<MAXIMUM_ONLINE_USERS; index++)
+	{
+		if ((users[index].xuid[0]|users[index].xuid[1]) && online_users_result_add(users[index].result, &result))
+		{
+			break;
+		}
+	}
+
+	return result;
+}
+
+/* 0x0006c750: the same, of the task that changes who is signed in */
+long online_task_users_get_result(
+	const struct online_task *task)
+{
+	long results[MAXIMUM_ONLINE_USERS];
+	long result= _online_users_result_none;
+	long index;
+
+	XOnlineChangeLogonUsersTaskGetResults(task->handle, results);
+	for (index= 0; index<MAXIMUM_ONLINE_USERS; index++)
+	{
+		if (online_users_result_add(results[index], &result))
+		{
+			break;
+		}
+	}
+
+	return result;
+}
+
+/* 0x0006c7a0: the numbers of the services that the game asks for */
+void online_services_get_identifiers(
+	unsigned long *identifiers)
+{
+	long index;
+
+	for (index= 0; index<NUMBER_OF_ONLINE_SERVICES; index++)
+	{
+		identifiers[index]= unknown_00467178[index].identifier;
+	}
+}
+
+/* 0x0006c7c0: what signing in is at, and whether there is a task that signs
+in */
+boolean __attribute__((stdcall)) online_logon_get_state(
+	long *state_out)
+{
+	boolean there= unknown_00467214!=NONE;
+
+	*state_out= online_tasks_get_logon_state(unknown_00467214);
+
+	return there;
+}
+
+/* 0x0006c7e0: whether someone is signed in to the service of games. The
+game has this, and not the call, in most of the places that ask */
+boolean online_signed_in(
+	void)
+{
+	return unknown_00467214!=NONE && online_tasks_get_logon_state(unknown_00467214)==_online_session_signed_in;
+}
+
+/* 0x0006c800: something of the players that the libraries say, by a number;
+nothing if they cannot. The time is asked for before and after, and not
+used */
+long __attribute__((stdcall)) online_unknown_0006c800(
+	long unknown)
+{
+	long value;
+	long result;
+
+	GetTickCount();
+	result= XOnlineGetUsers(unknown, &value);
+	GetTickCount();
+
+	return result<0 ? 0 : value;
+}
+
+/* 0x0006c830: whether something has the first bit of its byte of 0x1C and
+neither of the first two of its byte of 0x8 */
+boolean online_unknown_0006c830(
+	const byte *unknown)
+{
+	return !(unknown[8]&3) && (unknown[0x1C]&1);
+}
+
+/* 0x0006c850: one number for another */
+byte online_unknown_0006c850(
+	byte code)
+{
+	switch (code)
+	{
+	case 2:
+		return 5;
+	case 3:
+		return 6;
+	case 6:
+		return 9;
+	case 7:
+		return 10;
+	case 8:
+		return 1;
+	case 9:
+		return 2;
+	case 10:
+		return 3;
+	case 11:
+		return 4;
+	}
+
+	return 0;
+}
+
+/* 0x0006ced0: the four players that are signed in, as the libraries have
+them; all nothing if they have none */
+void online_get_logon_users(
+	struct online_user *users)
+{
+	const struct online_user *logged;
+
+	memset(users, 0, MAXIMUM_ONLINE_USERS*sizeof(struct online_user));
+	logged= XOnlineGetLogonUsers();
+	if (logged)
+	{
+		memcpy(users, logged, MAXIMUM_ONLINE_USERS*sizeof(struct online_user));
+	}
+}
+
+/* 0x0006d040: the others are told what a player is at, if someone is signed
+in: its number, some bits, the session that it is in, if any, and four bytes
+more */
+void __attribute__((stdcall)) online_notification_set_state(
+	const unsigned long *session_identifier,
+	long user_index,
+	byte *state,
+	long flags)
+{
+	if (unknown_00467214!=NONE && online_tasks_get_logon_state(unknown_00467214)==_online_session_signed_in)
+	{
+		unsigned long low= 0;
+		unsigned long high= 0;
+
+		if (session_identifier)
+		{
+			low= session_identifier[0];
+			high= session_identifier[1];
+		}
+		XOnlineNotificationSetState(user_index, flags, low, high, ONLINE_NOTIFICATION_STATE_SIZE, state);
+	}
 }

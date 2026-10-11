@@ -279,3 +279,84 @@ def run(t) -> None:
                 "XOnlineLogonTaskGetResults": lambda harness, arguments, said=said: (said, tuple(arguments)),
             },
         )
+
+    # ---------- who is signed in
+
+    SERVICES = b"".join(
+        struct.pack("<3I", number, there, 0)
+        for number, there in [(2, 1), (4, 1), (6, 1), (7, 1), (8, 1), (9, 1), (13, 1), (15, 1), (16, 1), (18, 1), (19, 1), (20, 1), (0x4D530064, 0)]
+    )
+    WAYS = (0, 0, 0x1512F0, 0x80151200, 0x80151001, 5)
+
+    def users() -> Buffer:
+        data = bytearray(random_.randbytes(4 * 0x70))
+        for index in range(4):
+            if random_.random() < 0.3:
+                data[index * 0x70:index * 0x70 + 8] = bytes(8)
+            struct.pack_into("<I", data, index * 0x70 + 0x6C, random_.choice(WAYS))
+        return Buffer(bytes(data))
+
+    def logged() -> tuple:
+        there = users()
+        return there, lambda harness, arguments, there=there, has=random_.random() < 0.85: there.address if has else 0
+
+    for n in range(2000):
+        there, get = logged()
+        t.check("online_users_get_result", extra=[there], externals={"XOnlineGetLogonUsers": get})
+        there, get = logged()
+        t.check("online_get_logon_users", Buffer(random_.randbytes(4 * 0x70)), extra=[there], externals={"XOnlineGetLogonUsers": get})
+
+        def changed(harness, arguments, results=struct.pack("<4I", *(random_.choice(WAYS) for index in range(4)))):
+            harness.mu.mem_write(arguments[1], results)
+            return 0, (arguments[0],)
+
+        t.check(
+            "online_task_users_get_result",
+            Buffer(random_.randbytes(0x14)),
+            externals={"XOnlineChangeLogonUsersTaskGetResults": changed},
+        )
+        t.check(
+            "online_services_get_identifiers",
+            Buffer(random_.randbytes(13 * 4)),
+            globals={"unknown_00467178": SERVICES},
+        )
+
+        task = random_.choice((0, 0, 0, 2, NONE))
+        state = session(random_.choice((0, 1, 1, 1, 5, 10)))
+        t.check(
+            "online_logon_get_state",
+            Buffer(random_.randbytes(4)),
+            globals={"unknown_00467214": task},
+            externals={"online_tasks_get_logon_state": state},
+        )
+        t.check("online_signed_in", globals={"unknown_00467214": task}, externals={"online_tasks_get_logon_state": state})
+
+        def got(harness, arguments, value=random_.getrandbits(32), said=random_.choice((0, 0, 1, 0x80004005, NONE))):
+            harness.mu.mem_write(arguments[1], struct.pack("<I", value))
+            return said, (arguments[0],)
+
+        t.check(
+            "online_unknown_0006c800",
+            random_.getrandbits(32),
+            externals={"GetTickCount": lambda harness, arguments: 0x1234, "XOnlineGetUsers": got},
+        )
+        thing = bytearray(random_.randbytes(0x20))
+        thing[8] = random_.choice((0, 0, 4, 1, 2, 3, 0xFC))
+        thing[0x1C] = random_.choice((0, 1, 1, 0xFE, 0xFF))
+        t.check("online_unknown_0006c830", Buffer(bytes(thing)))
+        t.check("online_unknown_0006c850", random_.choice((*range(14), 0xFF, 0x102, 0xABCD08)))
+        t.check(
+            "online_notification_set_state",
+            random_.choice((Buffer(random_.randbytes(8)), Buffer(random_.randbytes(8)), 0)),
+            random_.randrange(4),
+            Buffer(random_.randbytes(4)),
+            random_.getrandbits(32),
+            globals={"unknown_00467214": task},
+            externals={
+                "online_tasks_get_logon_state": state,
+                "XOnlineNotificationSetState": lambda harness, arguments: (
+                    0,
+                    (*arguments[:5], harness.normalize(arguments[5])),
+                ),
+            },
+        )

@@ -2,6 +2,58 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Quién está conectado
+
+Diez funciones en `networking/online_tasks.c`. De 1720
+funciones se pasa a 1730, el 15,36 % de las del juego (el 10,076 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_users_get_result` | `0x0006c6c0` | `networking/online_tasks.c` |
+| `online_task_users_get_result` | `0x0006c750` | `networking/online_tasks.c` |
+| `online_services_get_identifiers` | `0x0006c7a0` | `networking/online_tasks.c` |
+| `online_logon_get_state` | `0x0006c7c0` | `networking/online_tasks.c` |
+| `online_signed_in` | `0x0006c7e0` | `networking/online_tasks.c` |
+| `online_unknown_0006c800` | `0x0006c800` | `networking/online_tasks.c` |
+| `online_unknown_0006c830` | `0x0006c830` | `networking/online_tasks.c` |
+| `online_unknown_0006c850` | `0x0006c850` | `networking/online_tasks.c` |
+| `online_get_logon_users` | `0x0006ced0` | `networking/online_tasks.c` |
+| `online_notification_set_state` | `0x0006d040` | `networking/online_tasks.c` |
+
+### Lo que se sabe
+
+- `online_signed_in` es **la pregunta «¿hay alguien conectado al servicio
+  de partidas?»**. El juego la lleva escrita dentro de casi todos los
+  sitios que la hacen (es la que ya aparecía en `main_game.c`,
+  `voice_mute_list.c` y en las tareas), pero también existe como función.
+- `online_get_logon_users` copia los **cuatro jugadores conectados** tal
+  como los tienen las bibliotecas (`0x70` bytes cada uno: cómo se le
+  conoce y, al final, cómo le fue al conectarse). `online_users_get_result`
+  mira cómo les fue: `2` si a alguno le acabó de la segunda manera
+  (`0x80151200`), `1` si de la primera (`0x001512F0`). La misma cuenta,
+  con lo que dice la tarea que cambia quién está conectado, es
+  `online_task_users_get_result`.
+- `online_services_get_identifiers` da los números de **los trece
+  servicios que el juego pide al conectarse** (`0x00467178`): del 2 al 20
+  y el propio del juego, `0x4D530064`.
+- `online_notification_set_state` avisa a los demás de en qué está un
+  jugador (`XOnlineNotificationSetState`): su número, unos bits, la sesión
+  en la que está y cuatro bytes más.
+- `online_logon_get_state` da el estado de la conexión y dice si hay tarea
+  que conecta. Las otras tres son pequeñas y aún sin nombre.
+- Cuatro funciones más de las bibliotecas quedan con su nombre en la
+  tabla.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las diez**, y en las de los hitos 456 a
+  490 y 501 a 511. La tanda de los hitos 491 a 500 está en marcha.
+- En este hito se pasaron las pruebas de las diez funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Conectarse al servicio de partidas: en qué está
 
 Tres funciones en `networking/online_tasks.c`. De 1717

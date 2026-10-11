@@ -64,7 +64,21 @@ enum
 	_online_logon_state6,
 	_online_logon_state7,
 	_online_logon_state8,
-	_online_logon_state_none= 10
+	_online_logon_state_none= 10,
+	/* how many players can be signed in, and how many services the game
+	asks for when it signs in. What the libraries say of a player whose
+	signing in ended in the two ways that are looked for; and what is said
+	of all of them: nothing, one ended in the first way, or one in the
+	second */
+	MAXIMUM_ONLINE_USERS= 4,
+	NUMBER_OF_ONLINE_SERVICES= 13,
+	ONLINE_USER_RESULT_UNKNOWN1512F0= 0x1512F0,
+	ONLINE_USER_RESULT_UNKNOWN80151200= 0x80151200,
+	_online_users_result_none= 0,
+	_online_users_result_unknown1,
+	_online_users_result_unknown2,
+	/* how much is said of what a player is at, to the others */
+	ONLINE_NOTIFICATION_STATE_SIZE= 4
 };
 
 /* ---------- structures */
@@ -84,6 +98,25 @@ struct online_task
 };
 
 typedef char verify_online_task_size[sizeof(struct online_task) == 0x14 ? 1 : -1];
+
+/* a player that is signed in, as the libraries have it: what it is known
+by, and at the end how signing in went for it */
+struct online_user
+{
+	unsigned long xuid[2];
+	byte unknown8[0x64];
+	long result;
+};
+
+typedef char verify_online_user_size[sizeof(struct online_user) == 0x70 ? 1 : -1];
+
+/* a service of the service of games, as the game asks for it */
+struct online_service
+{
+	unsigned long identifier;
+	long unknown4;
+	long unknown8;
+};
 
 /* what goes over the tasks: the one that it is at, and where */
 struct online_task_iterator
@@ -112,6 +145,17 @@ void online_tasks_close_all(void);
 void online_tasks_check_address(void);
 long online_task_continue(struct online_task *task);
 long online_tasks_get_logon_state(long index);
+long online_users_get_result(void);
+long online_task_users_get_result(const struct online_task *task);
+void online_services_get_identifiers(unsigned long *identifiers);
+boolean __attribute__((stdcall)) online_logon_get_state(long *state_out);
+boolean online_signed_in(void);
+long __attribute__((stdcall)) online_unknown_0006c800(long unknown);
+boolean online_unknown_0006c830(const byte *unknown);
+byte online_unknown_0006c850(byte code);
+void online_get_logon_users(struct online_user *users);
+void __attribute__((stdcall)) online_notification_set_state(const unsigned long *session_identifier, long user_index,
+	byte *state, long flags);
 
 /* ---------- globals */
 
