@@ -22,17 +22,68 @@ boolean __attribute__((stdcall)) unknown_000b4120(long unknown0, struct network_
 /* 0x003ad176, of the console's libraries: something starts to be written in
 the storage. 0x003ab6ea: and to be read from it. 0x003ab6f9: how reading
 something from it went. 0x003ad1a6: how far something of the storage is, in
-hundredths */
+hundredths. 0x003ad149, 0x003ab6db: something starts to be written from
+what the game says of a block of the third kind, and to be read to it */
 long __attribute__((stdcall)) unknown_003ad176(long facility, long owner, const word *path, long unknownC, long unknown10,
 	void *memory, unsigned long size, long unknown1C, long unknown20, long *handle_out);
 long __attribute__((stdcall)) unknown_003ab6ea(long facility, long owner, const word *path, void *memory,
 	unsigned long size, long unknown14, long unknown18, long *handle_out);
+long __attribute__((stdcall)) unknown_003ad149(long facility, long owner, const word *path, long unknownC,
+	long unknown10, long unknown14, long unknown18, long unknown1C, long *handle_out);
+long __attribute__((stdcall)) XOnlineStorageDownload(long facility, long owner, const word *path, long unknownC,
+	long unknown10, long unknown14, long *handle_out);
 long __attribute__((stdcall)) unknown_003ab6f9(long handle, long *unknown4, unsigned long *size_out,
 	unsigned long *read_out, long *unknown10, long *unknown14);
 long __attribute__((stdcall)) XOnlineStorageGetProgress(long handle, unsigned long *percent, long *unknown8,
 	long *unknownC);
 
 /* ---------- code */
+
+/* which part of the storage something is in. The game has this in each
+function that starts something */
+static inline __attribute__((always_inline)) long online_storage_facility(
+	long unknown0)
+{
+	switch (unknown0)
+	{
+	case 0:
+		return _online_storage_facility4;
+	case 1:
+		return _online_storage_facility5;
+	}
+
+	return _online_storage_facility3;
+}
+
+/* what starting says, from what the libraries say when they do not start.
+The game has this in each function that starts something, but the one that
+writes from memory, which has its own */
+static inline __attribute__((always_inline)) long online_storage_start_result(
+	long hr)
+{
+	switch ((unsigned long)hr)
+	{
+	case 0x8007000E:
+	case 0x80150002:
+	case 0x80150003:
+	case 0x80150005:
+	case 0x80150006:
+	case 0x80150008:
+		return _online_storage_unknown2;
+	case 0x80150004:
+	case 0x8015C002:
+		return _online_storage_unknown3;
+	case 0x8015C006:
+	case 0x8015C008:
+	case 0x8015C009:
+		return _online_storage_unknown4;
+	case 0x8015C004:
+	case 0x8015C007:
+		return _online_storage_unknown5;
+	}
+
+	return _online_storage_failed;
+}
 
 /* 0x000b42b0: a block starts to be written in the storage, from memory, by
 a new task whose number is given; what starting says. It cannot without a
@@ -171,33 +222,97 @@ long __attribute__((stdcall)) online_storage_read_start(
 
 		return _online_storage_started;
 	}
-	switch ((unsigned long)hr)
+	result= online_storage_start_result(hr);
+	online_task_close(index);
+
+	return result;
+}
+
+/* 0x000b4670: a block of the third kind starts to be written to the storage,
+by a new task whose number is given; what starting says. It has no memory:
+the libraries are given a number of its functions instead */
+long __attribute__((stdcall)) online_storage_write_file_start(
+	long unknown0,
+	long owner,
+	struct network_blob_request request,
+	long unknown4,
+	long unknownC,
+	long *task_out)
+{
+	word path[MAXIMUM_ONLINE_STORAGE_PATH_LENGTH];
+	long length= MAXIMUM_ONLINE_STORAGE_PATH_LENGTH;
+	struct online_task *task;
+	long facility= online_storage_facility(unknown0);
+	long result;
+	long index;
+	long hr;
+
+	*task_out= NONE;
+	if (!unknown_000b4120(unknown0, request, unknown4, path, &length))
 	{
-	case 0x8007000E:
-	case 0x80150002:
-	case 0x80150003:
-	case 0x80150005:
-	case 0x80150006:
-	case 0x80150008:
-		result= _online_storage_unknown2;
-		break;
-	case 0x80150004:
-	case 0x8015C002:
-		result= _online_storage_unknown3;
-		break;
-	case 0x8015C006:
-	case 0x8015C008:
-	case 0x8015C009:
-		result= _online_storage_unknown4;
-		break;
-	case 0x8015C004:
-	case 0x8015C007:
-		result= _online_storage_unknown5;
-		break;
-	default:
-		result= _online_storage_failed;
-		break;
+		return _online_storage_failed;
 	}
+	index= online_task_new_signed_in();
+	task= online_task_get(index);
+	if (!task)
+	{
+		return _online_storage_failed;
+	}
+	hr= unknown_003ad149(facility, owner, path, 0, 0, unknownC, 0, 0, &task->handle);
+	if (hr>=0)
+	{
+		*task_out= index;
+		task->flags= _online_task_started_bits;
+		task->type= _online_task_type_storage_file;
+		task->owner= owner;
+
+		return _online_storage_started;
+	}
+	result= online_storage_start_result(hr);
+	online_task_close(index);
+
+	return result;
+}
+
+/* 0x000b4810: and starts to be read from it */
+long __attribute__((stdcall)) online_storage_read_file_start(
+	long unknown0,
+	long *task_out,
+	long owner,
+	struct network_blob_request request,
+	long unknown4,
+	long unknownC)
+{
+	word path[MAXIMUM_ONLINE_STORAGE_PATH_LENGTH];
+	long length= MAXIMUM_ONLINE_STORAGE_PATH_LENGTH;
+	struct online_task *task;
+	long facility= online_storage_facility(unknown0);
+	long result;
+	long index;
+	long hr;
+
+	*task_out= NONE;
+	if (!unknown_000b4120(unknown0, request, unknown4, path, &length))
+	{
+		return _online_storage_failed;
+	}
+	index= online_task_new_signed_in();
+	task= online_task_get(index);
+	if (!task)
+	{
+		return _online_storage_failed;
+	}
+	hr= XOnlineStorageDownload(facility, owner, path, unknownC, 0, 0, &task->handle);
+	if (hr>=0)
+	{
+		*task_out= index;
+		task->flags= _online_task_started_bits;
+		task->type= _online_task_type_storage_file;
+		task->owner= owner;
+
+		return _online_storage_started;
+	}
+	result= online_storage_start_result(hr);
 	online_task_close(index);
 
 	return result;

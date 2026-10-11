@@ -36,6 +36,7 @@ enum
 	MAXIMUM_ONLINE_STORAGE_PATH_LENGTH= 0x100,
 	_online_task_type_storage_write= 0x29,
 	_online_task_type_storage_read= 0x2A,
+	_online_task_type_storage_file= 0x2C,
 	_online_task_started_bits= 0x1
 };
 
@@ -45,6 +46,10 @@ long __attribute__((stdcall)) online_storage_write_start(long unknown0, long *ta
 	struct network_blob_request request, long unknown4, void *memory, unsigned long size);
 long __attribute__((stdcall)) online_storage_read_start(long unknown0, long owner,
 	struct network_blob_request request, long unknown4, void *memory, unsigned long size, long *task_out);
+long __attribute__((stdcall)) online_storage_write_file_start(long unknown0, long owner,
+	struct network_blob_request request, long unknown4, long unknownC, long *task_out);
+long __attribute__((stdcall)) online_storage_read_file_start(long unknown0, long *task_out, long owner,
+	struct network_blob_request request, long unknown4, long unknownC);
 long __attribute__((stdcall)) online_storage_read_get_results(long index, unsigned long *read_out,
 	unsigned long *size_out);
 boolean online_storage_get_progress(long index, real *progress);

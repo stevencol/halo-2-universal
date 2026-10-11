@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Los bloques de la tercera clase
+
+Dos funciones en `networking/online_storage.c`, 749 bytes entre las dos. De 1735
+funciones se pasa a 1737, el 15,42 % de las del juego (el 10,145 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_storage_write_file_start` | `0x000b4670` | `networking/online_storage.c` |
+| `online_storage_read_file_start` | `0x000b4810` | `networking/online_storage.c` |
+
+### Lo que se sabe
+
+- Los bloques de la tercera clase **no pasan por la memoria**: lo que se
+  da a las bibliotecas es el cuarto número de las funciones de quien tiene
+  el bloque, y se leen con `XOnlineStorageDownload`, que es la que baja
+  algo del almacén a un archivo. Así que esa clase es la de lo que se sube
+  y se baja como archivo.
+- Las dos funciones son como las de los hitos 514 y 515: nombre, tarea
+  nueva, pedir que empiece, y si no empieza cerrar la tarea y decir por
+  qué. La tarea es de la clase `0x2C` tanto al escribir como al leer.
+- Las tres funciones que empiezan algo, menos la que escribe desde la
+  memoria, pasan igual lo que dicen las bibliotecas a los números de `1` a
+  `5`: aquí es una sola cuenta que comparten.
+
+### Cambiado
+
+- `unknown_000b4670` y `unknown_000b4810`, que llamaba
+  `network_blob_task.c`, tienen su nombre.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos**, y en las de los hitos 456 a
+  490 y 501 a 515. La tanda de los hitos 491 a 500 está en marcha.
+- En este hito se pasaron todas las pruebas de `online_storage` y de
+  `network_blob_task`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Un bloque empieza a leerse del almacén
 
 Una función en `networking/online_storage.c`, de 389 bytes. De 1734

@@ -207,3 +207,48 @@ def run(t) -> None:
                 "online_task_close": lambda harness, arguments: (0, (arguments[0],)),
             },
         )
+
+    # ---------- a block of the third kind starts to be written, and to be read
+
+    for n in range(3000):
+        for function, library, count, last in (
+            ("online_storage_write_file_start", "unknown_003ad149", 9, True),
+            ("online_storage_read_file_start", "XOnlineStorageDownload", 7, False),
+        ):
+            task = Buffer(random_.randbytes(0x14))
+            name = random_.randbytes(0x20)
+
+            def named(harness, arguments, name=name, could=random_.choice((1, 1, 1, 1, 0))):
+                length = read(harness, arguments[6], 4)
+                harness.mu.mem_write(arguments[5], name)
+                return could, (*arguments[:5], length)
+
+            def started(harness, arguments, count=count, hr=random_.choice(RESULTS + (0x8015C004, 0x8015C004)), handle=random_.getrandbits(32)):
+                harness.mu.mem_write(arguments[count - 1], struct.pack("<I", handle))
+                return hr, (
+                    arguments[0],
+                    arguments[1],
+                    read(harness, arguments[2], 0x20),
+                    *arguments[3:count - 1],
+                    harness.normalize(arguments[count - 1]),
+                )
+
+            out = Buffer(random_.randbytes(4))
+            numbers = [random_.getrandbits(32) for index in range(5)]
+            owner = random_.randrange(4)
+            unknown0 = random_.choice((0, 1, 2, 5, NONE))
+            t.check(
+                function,
+                *((unknown0, owner, *numbers, out) if last else (unknown0, out, owner, *numbers)),
+                extra=[task],
+                externals={
+                    "unknown_000b4120": named,
+                    "online_task_new_signed_in": lambda harness, arguments, index=random_.choice((0x80010003, 5, NONE)): index,
+                    "online_task_get": lambda harness, arguments, task=task, there=random_.random() < 0.9: (
+                        task.address if there else 0,
+                        (arguments[0],),
+                    ),
+                    library: started,
+                    "online_task_close": lambda harness, arguments: (0, (arguments[0],)),
+                },
+            )

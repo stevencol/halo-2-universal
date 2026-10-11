@@ -2265,9 +2265,9 @@ address,name,source,arguments,returns,convention
 0008e240,network_blob_tasks_update,source/networking/network_blob_task.c,,void
 0008e5e0,network_blob_task_completed,source/networking/network_blob_task.c,eax stack,void,stdcall
 00080e10,network_blob_take_memory,source/networking/network_blob.c,edi stack stack,bool,stdcall
-000b4670,unknown_000b4670,,eax ecx stack stack stack stack stack stack,int,stdcall
+000b4670,online_storage_write_file_start,source/networking/online_storage.c,eax ecx stack stack stack stack stack stack,int,stdcall
 000b42b0,online_storage_write_start,source/networking/online_storage.c,eax ecx stack stack stack stack stack stack stack,int,stdcall
-000b4810,unknown_000b4810,,eax ebx stack stack stack stack stack stack,int,stdcall
+000b4810,online_storage_read_file_start,source/networking/online_storage.c,eax ebx stack stack stack stack stack stack,int,stdcall
 000b4450,online_storage_read_start,source/networking/online_storage.c,eax stack stack stack stack stack stack stack stack,int,stdcall
 000b45f0,online_storage_read_get_results,source/networking/online_storage.c,eax stack stack,int,stdcall
 0008e090,network_open_sockets,source/networking/network_globals.c,stack,void,stdcall
@@ -2334,3 +2334,5 @@ address,name,source,arguments,returns,convention
 003ab6f9,unknown_003ab6f9,,stack stack stack stack stack stack,int,stdcall
 003ad1a6,XOnlineStorageGetProgress,,stack stack stack stack,int,stdcall
 003ab6ea,unknown_003ab6ea,,stack stack stack stack stack stack stack stack,int,stdcall
+003ad149,unknown_003ad149,,stack stack stack stack stack stack stack stack stack,int,stdcall
+003ab6db,XOnlineStorageDownload,,stack stack stack stack stack stack stack,int,stdcall

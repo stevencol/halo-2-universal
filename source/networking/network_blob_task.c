@@ -26,10 +26,6 @@ block starts to be written, one of the third kind and one of the others;
 0x000b4810, 0x000b4450: and to be read. Each gives what does it, and says
 nothing if it started and why not if it did not. 0x000b45f0: how what read a
 block ended, with how much it read and how much there was */
-long __attribute__((stdcall)) unknown_000b4670(long unknown0, long unknown10, struct network_blob_request request,
-	long unknown4, long unknownC, long *handle_out);
-long __attribute__((stdcall)) unknown_000b4810(long unknown0, long *handle_out, long unknown10,
-	struct network_blob_request request, long unknown4, long unknownC);
 
 /* ---------- globals */
 
@@ -238,7 +234,7 @@ void network_blob_tasks_update(
 			{
 				if (blob->kind==_network_blob_kind3)
 				{
-					status= unknown_000b4670(functions->unknown0[0], blob->unknown10, blob->request, functions->unknown0[1],
+					status= online_storage_write_file_start(functions->unknown0[0], blob->unknown10, blob->request, functions->unknown0[1],
 						functions->unknownC, &handle);
 				}
 				else
@@ -251,7 +247,7 @@ void network_blob_tasks_update(
 			{
 				if (blob->kind==_network_blob_kind3)
 				{
-					status= unknown_000b4810(functions->unknown0[0], &handle, blob->unknown10, blob->request,
+					status= online_storage_read_file_start(functions->unknown0[0], &handle, blob->unknown10, blob->request,
 						functions->unknown0[1], functions->unknownC);
 				}
 				else

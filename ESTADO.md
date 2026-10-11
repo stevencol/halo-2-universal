@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 515.
+**Última actualización:** 2026-10-08, al terminar el hito 516.
 
 ## Dónde estamos
 
-- **1735 funciones descompiladas de 11.265: el 15,40 % del juego** (el
-  10,120 % de los bytes de código).
-- Las 1735 están comprobadas contra el ejecutable original: las 1390 del
+- **1737 funciones descompiladas de 11.265: el 15,42 % del juego** (el
+  10,145 % de los bytes de código).
+- Las 1737 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a block starts to be read from the online storage* (ver `git log`).
+- Último hito: *Decompile how blocks of the third kind start to be written and read* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 600 funciones apuntadas pero sin descompilar (las que el código
-  llama); 466 de ellas solo se conocen por su dirección (`unknown_...`).
+  llama); 465 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -216,9 +216,9 @@ Módulos (funciones hechas / archivo):
       leerlo y a escribirlo, lo que pasa cuando la tarea acaba y su
       avance)
 - [ ] El almacén del servicio de partidas — `networking\online_storage.c`
-      (4: empezar a escribir y a leer, el resultado de leer y el avance;
-      faltan el nombre, `0x000b4120`, y los de la tercera clase,
-      `0x000b4670` y `0x000b4810`)
+      (6: empezar a escribir y a leer, de memoria o de archivo, el
+      resultado de leer y el avance; falta el nombre, `0x000b4120`, y lo
+      que hay antes, desde `0x000b4020`)
 - [ ] Las tareas del servicio de partidas — `networking\online_tasks.c`
       (28: la tabla, una nueva, por dónde va, acabar con una o con todas,
       recorrerlas, buscar una, volver a empezarla, hacerlas avanzar, en

@@ -113,7 +113,7 @@ def run(t) -> None:
             def stand_in(harness, arguments, pointer=pointer, starts=starts):
                 from test_async import calls_so_far
 
-                total = sum(calls_so_far(harness, name) for name in ("unknown_000b4670", "online_storage_write_start", "unknown_000b4810", "online_storage_read_start"))
+                total = sum(calls_so_far(harness, name) for name in ("online_storage_write_file_start", "online_storage_write_start", "online_storage_read_file_start", "online_storage_read_start"))
                 status, handle = starts[total % len(starts)]
                 harness.mu.mem_write(arguments[pointer], struct.pack("<I", handle))
                 return status, tuple(value for index, value in enumerate(arguments) if index != pointer)
@@ -130,9 +130,9 @@ def run(t) -> None:
             },
             memory=memory,
             externals={
-                "unknown_000b4670": start(7, starts),
+                "online_storage_write_file_start": start(7, starts),
                 "online_storage_write_start": start(1, starts),
-                "unknown_000b4810": start(1, starts),
+                "online_storage_read_file_start": start(1, starts),
                 "online_storage_read_start": start(8, starts),
                 "network_blob_take_memory": lambda harness, arguments, took=random_.choice((1, 1, 0)): (
                     took,
