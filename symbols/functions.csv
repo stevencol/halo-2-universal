@@ -2495,3 +2495,14 @@ address,name,source,arguments,returns,convention
 0008cc20,online_unknown_0008cc20,source/networking/online_friends.c,esi eax,void
 0008d1f0,online_friend_get_identity,source/networking/online_friends.c,eax edx,void
 003a075e,XOnlineTitleIdIsSameTitle,,stack,int,stdcall
+0008cf00,online_friend_state_from_library,source/networking/online_friends.c,ebx stack,int,stdcall
+0008cf80,online_friend_state_to_library,source/networking/online_friends.c,ecx,int
+0008ceb0,online_friend_get_state,source/networking/online_friends.c,eax,int
+0008cec0,online_friend_get_summary,source/networking/online_friends.c,edi esi,void
+0008cdf0,online_friend_remove,source/networking/online_friends.c,eax stack,void,stdcall
+0008ce40,online_friend_answer_request,source/networking/online_friends.c,eax edx stack,void,stdcall
+0008d050,online_friend_answer_game_invite,source/networking/online_friends.c,esi stack stack,void,stdcall
+0008d1a0,online_friend_get_title_name,source/networking/online_friends.c,edi esi stack,void,stdcall
+003a07da,XOnlineFriendsRemove,,stack stack,int,stdcall
+003a0806,XOnlineFriendsAnswerRequest,,stack stack stack,int,stdcall
+003a0811,XOnlineFriendsAnswerGameInvite,,stack stack stack,int,stdcall

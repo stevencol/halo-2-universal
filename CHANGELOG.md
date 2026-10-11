@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — En qué está un amigo del servicio y lo que se hace con él: ocho funciones
+
+Ocho funciones más en `networking/online_friends.c` (608 bytes). De 1887
+funciones se pasa a 1895, el 16,82 % de las del juego (el 10,631 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_friend_remove` | `0x0008cdf0` | `networking/online_friends.c` |
+| `online_friend_answer_request` | `0x0008ce40` | `networking/online_friends.c` |
+| `online_friend_get_state` | `0x0008ceb0` | `networking/online_friends.c` |
+| `online_friend_get_summary` | `0x0008cec0` | `networking/online_friends.c` |
+| `online_friend_state_from_library` | `0x0008cf00` | `networking/online_friends.c` |
+| `online_friend_state_to_library` | `0x0008cf80` | `networking/online_friends.c` |
+| `online_friend_answer_game_invite` | `0x0008d050` | `networking/online_friends.c` |
+| `online_friend_get_title_name` | `0x0008d1a0` | `networking/online_friends.c` |
+
+### Lo que se sabe
+
+- Aquí las bibliotecas sí dicen su nombre, así que las funciones lo tienen
+  de verdad: **quitar a un amigo** (`XOnlineFriendsRemove`), **contestar a
+  quien pide serlo** (`XOnlineFriendsAnswerRequest`), **contestar a una
+  invitación a una partida** (`XOnlineFriendsAnswerGameInvite`) y **el
+  nombre del juego al que juega un amigo**
+  (`XOnlineFriendsGetTitleName`). Ninguna hace nada si no hay nadie
+  conectado.
+- El juego no usa los bits de las bibliotecas para saber en qué está un
+  amigo: los pasa a los suyos (`online_friend_state_from_library`) y de
+  vuelta (`online_friend_state_to_library`). Al pasarlos pregunta si el
+  juego del amigo es este mismo, y lo apunta en un bit propio (`0x40`) solo
+  para el amigo que tiene el bit `0x8000000`.
+- `online_friend_get_summary` es lo que el resto del juego ve de un amigo:
+  quién es, en qué está, dos números y su juego (`0x1D` bytes).
+- A las bibliotecas no se les da el amigo tal cual sino una copia en la que,
+  de en qué está, solo queda el bit más alto.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  548.
+- En este hito se pasaron las pruebas de las ocho funciones y las de las
+  siete del hito anterior.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — El archivo del mensaje del día y cinco funciones cortas de los amigos del servicio
 
 Siete funciones cortas (244 bytes) en dos archivos nuevos: `networking/network_motd.c` (2) y
