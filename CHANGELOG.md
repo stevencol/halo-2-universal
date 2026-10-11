@@ -2,6 +2,59 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Lo que la red hace cada vuelta
+
+Cuatro funciones en el archivo nuevo `networking/network_globals.c`. De 1690
+funciones se pasa a 1694, el 15,04 % de las del juego (el 9,974 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_update` | `0x0008df50` | `networking/network_globals.c` |
+| `network_send` | `0x0008dfc0` | `networking/network_globals.c` |
+| `network_open_sockets` | `0x0008e090` | `networking/network_globals.c` |
+| `network_close_sockets` | `0x0008e0b0` | `networking/network_globals.c` |
+
+### Lo que se sabe
+
+- Son las dos funciones de la red que `main` llama cada vuelta, y con
+  ellas se ve **el orden de una vuelta de la red**:
+  1. `network_link_receive` lee lo que llegó (hito 497);
+  2. `network_update` mira la red de la consola y, si hay red, hace once
+     cosas en orden, de las que se conocen la voz (`game_voice_update`) y
+     las tareas de los bloques (`network_blob_tasks_update`, hito 504);
+  3. `network_send`, al final: avanzan las **tres sesiones**
+     (`network_session_update`) y el observador; la partida en red, si
+     está en su cuarto estado y hay partida, manda lo que cambió de lo
+     que las consolas comparten
+     (`simulation_entity_database_flush_updates`); avanzan los canales
+     (`network_link_update_channels`); y sale el paquete de los mensajes
+     sin canal (`network_message_gateway_flush`).
+- Mientras dura cada una, la hora de la red es la de cuando empezó (los
+  dos globales de `0x00510548`).
+- Se sabe ya dónde guarda el juego cada cosa de la red: aquello de lo que
+  son los canales en `0x00510560`, lo que manda los mensajes sin canal en
+  `0x00510568`, el observador en `0x00510570` y las sesiones en
+  `0x00510574`.
+- `network_open_sockets` y `network_close_sockets` abren y cierran los
+  enchufes de la red; al cerrar se paran antes todos los canales. Reciben
+  algo que no miran: por la forma, son avisos de que el cable de red se
+  puso o se quitó.
+
+### Cambiado
+
+- `unknown_0008df50` y `unknown_0008dfc0` tienen ya su nombre en `main.c`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las cuatro**, y en las de los hitos 456 a
+  490 y 501 a 504. La tanda de los hitos 491 a 500 está en marcha.
+- En este hito se pasaron las pruebas de las cuatro funciones y las de
+  `main`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Las tareas se ponen en marcha
 
 Dos funciones en `networking/network_blob_task.c`, 851 bytes entre las dos. De 1688

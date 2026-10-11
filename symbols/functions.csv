@@ -492,12 +492,12 @@ address,name,source,arguments,returns,convention
 001479c3,unknown_001479c3,,stack,void
 00155f80,unknown_00155f80,,,void
 00092f80,network_link_receive,source/networking/network_link.c,stack,void,stdcall
-0008df50,unknown_0008df50,,,void
+0008df50,network_update,source/networking/network_globals.c,,void
 000680f0,unknown_000680f0,,,void
 00068250,simulation_in_progress,source/networking/simulation.c,,bool
 00146660,unknown_00146660,,stack stack stack,void
 001870a0,unknown_001870a0,,stack stack,void
-0008dfc0,unknown_0008dfc0,,,void
+0008dfc0,network_send,source/networking/network_globals.c,,void
 00137ed0,game_frame,source/game/game.c,stack,void,stdcall
 001554b0,unknown_001554b0,,stack,void
 0016f280,unknown_0016f280,,stack,void
@@ -2270,3 +2270,15 @@ address,name,source,arguments,returns,convention
 000b4810,unknown_000b4810,,eax ebx stack stack stack stack stack stack,int,stdcall
 000b4450,unknown_000b4450,,eax stack stack stack stack stack stack stack stack,int,stdcall
 000b45f0,unknown_000b45f0,,eax stack stack,int,stdcall
+0008e090,network_open_sockets,source/networking/network_globals.c,stack,void,stdcall
+0008e0b0,network_close_sockets,source/networking/network_globals.c,stack,void,stdcall
+0008d7e0,unknown_0008d7e0,,,void
+0007f070,unknown_0007f070,,,void
+000b2ea0,unknown_000b2ea0,,,void
+000b3200,unknown_000b3200,,,void
+00063d80,unknown_00063d80,,,void
+0006b4a0,unknown_0006b4a0,,,void
+00074aa0,unknown_00074aa0,,,void
+000755d0,unknown_000755d0,,,void
+00080390,unknown_00080390,,,void
+000b3de0,unknown_000b3de0,,,void

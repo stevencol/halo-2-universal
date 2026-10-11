@@ -16,6 +16,7 @@ Halo 1's main.c.
 #include "cache/texture_cache.h"
 #include "main/main_game.h"
 #include "networking/network_life_cycle.h"
+#include "networking/network_globals.h"
 #include "networking/network_link.h"
 
 #include "cache/cache_files.h"
@@ -57,12 +58,10 @@ void unknown_0012bbd0(void);
 void unknown_00163820(void);
 void unknown_001479c3(float seconds);
 void unknown_00155f80(void);
-void unknown_0008df50(void);
 void unknown_000680f0(void);
 boolean simulation_in_progress(void);
 void unknown_00146660(float seconds, float *unknown_real, long *unknown_long);
 void unknown_001870a0(float seconds, float unknown_real);
-void unknown_0008dfc0(void);
 void unknown_001554b0(float seconds);
 void unknown_0016f280(float seconds);
 void unknown_00222a70(float seconds);
@@ -410,7 +409,7 @@ void main_loop_body(
 		unknown_00510548= FALSE;
 		unknown_0051054c= GetTickCount();
 	}
-	unknown_0008df50();
+	network_update();
 	unknown_000680f0();
 	network_life_cycle_update();
 
@@ -419,7 +418,7 @@ void main_loop_body(
 		unknown_00146660(seconds, &unknown_real, &unknown_long);
 		unknown_001870a0(seconds, unknown_real);
 		game_run_ticks(unknown_long, &unknown_real);
-		unknown_0008dfc0();
+		network_send();
 		game_frame(unknown_real);
 		unknown_001554b0(seconds);
 		unknown_0016f280(seconds);
@@ -430,7 +429,7 @@ void main_loop_body(
 	else
 	{
 		simulation_update();
-		unknown_0008dfc0();
+		network_send();
 		unknown_00222d80();
 		unknown_00223240();
 		sound_update();
