@@ -867,7 +867,7 @@ address,name,source,arguments,returns,convention
 00055b40,voice_queue_add,source/networking/voice_routing.c,ebx stack stack stack stack,void,stdcall
 00056f60,voice_channels_update_ended,source/networking/voice_routing.c,stack,void,stdcall
 00057270,voice_players_can_hear,source/networking/voice_routing.c,eax ecx,bool
-00192950,unknown_00192950,,stack,bool
+00192950,sound_speakers_unknown_00192950,source/sound/sound_speakers.c,stack,bool,stdcall
 000574e0,voice_play_sound_by_number,source/networking/voice_routing.c,ecx ebx stack,void,stdcall
 00057530,voice_play_sound,source/networking/voice_routing.c,ebx stack,void,stdcall
 00189760,unknown_00189760,,esi,void
@@ -886,7 +886,7 @@ address,name,source,arguments,returns,convention
 000583c0,voice_channels_route_player_to_controllers,source/networking/voice_routing.c,edx stack stack,void,stdcall
 00058590,voice_channels_route_player_to_output,source/networking/voice_routing.c,eax edi stack stack,void,stdcall
 000586f0,voice_channels_get_mix_bins,source/networking/voice_routing.c,eax stack stack stack stack,void,stdcall
-00192d40,unknown_00192d40,,ebx stack stack,void,stdcall
+00192d40,sound_speakers_get_gains5,source/sound/sound_speakers.c,ebx stack stack,void,stdcall
 00332e58,unknown_00332e58,,stack stack stack stack stack stack,int
 000589e0,voice_player_unknown_000589e0,source/networking/voice_routing.c,eax,bool
 00057790,voice_channels_time_is_recent,source/networking/voice_routing.c,eax ecx,bool
@@ -1733,7 +1733,7 @@ address,name,source,arguments,returns,convention
 00155760,unknown_00155760,,eax,int
 000caf60,unknown_000caf60,,eax esi,void
 00192d70,unknown_00192d70,,stack stack stack,real:xmm0,stdcall
-00192ce0,unknown_00192ce0,,ebx stack stack,void
+00192ce0,sound_speakers_get_gains4,source/sound/sound_speakers.c,ebx stack stack,void,stdcall
 0005f600,network_session_channel_is_host,source/networking/network_session.c,stack stack,bool,stdcall
 0005f670,network_session_find_peer_by_channel,source/networking/network_session.c,ecx esi,int
 0005f6a0,network_session_find_peer_by_transport_address,source/networking/network_session.c,esi ecx,int

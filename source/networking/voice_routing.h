@@ -103,7 +103,7 @@ enum
 	NUMBER_OF_VOICE_CHANNELS_SPEAKERS= 5,
 	/* how much less of a voice there is for each world unit that it is far,
 	how much less in a place that has none of it, and a byte that
-	unknown_00192d40 is given */
+	sound_speakers_get_gains5 is given */
 	VOICE_CHANNELS_DISTANCE_VOLUME_OFFSET= 0x188,
 	VOICE_CHANNELS_SPEAKER_VOLUME_OFFSET= 0x18C,
 	VOICE_CHANNELS_UNKNOWN190_OFFSET= 0x190,

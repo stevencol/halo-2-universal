@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Cuánto suena cada altavoz para una dirección, y un bit por jugador
+
+Archivo nuevo, `sound/sound_speakers.c`, con tres funciones cortas (162 bytes). De 1871
+funciones se pasa a 1874, el 16,64 % de las del juego (el 10,593 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_speakers_unknown_00192950` | `0x00192950` | `sound/sound_speakers.c` |
+| `sound_speakers_get_gains4` | `0x00192ce0` | `sound/sound_speakers.c` |
+| `sound_speakers_get_gains5` | `0x00192d40` | `sound/sound_speakers.c` |
+
+### Lo que se sabe
+
+- `sound_speakers_get_gains4` y `sound_speakers_get_gains5` (antes
+  `unknown_00192ce0`, la que usa el sonido, y `unknown_00192d40`, la que usa
+  la voz) dan **cuánto suena cada altavoz para un sonido que viene de una
+  dirección**: los cuatro de alrededor, o los cinco. La cuenta de cada
+  altavoz la hace `0x00192b90`, que sigue sin descompilar porque usa la
+  potencia de la biblioteca C del juego (`_CIpow`).
+- `sound_speakers_unknown_00192950` (antes `unknown_00192950`, la que usa
+  `voice_routing.c`) mira uno de dieciséis bits de algo del estado de la
+  partida (`0x00510c9c`): uno por jugador, por cómo se la llama.
+
+### Corregido
+
+- Las dos primeras **quitan sus argumentos de la pila** y en quien las
+  llama estaban declaradas como si no: `unknown_00192950` en
+  `voice_routing.c` y `unknown_00192ce0` en `sound_manager.c`. Mientras
+  estaban sustituidas daba igual (aviso de `ESTADO.md`); ahora que existen
+  en `source\`, las dos declaraciones dicen lo que es.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  544.
+- En este hito se pasaron las pruebas de las tres funciones y
+  `test_voice_routing` entera; `test_sound` entera quedó corriendo en
+  segundo plano (`build\line_breaking\test_sound_545.txt`).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Dos funciones más de las listas del servicio
 
 Dos funciones más en `networking/network_hoppers.c` (135 bytes). De 1869

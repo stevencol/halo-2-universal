@@ -26,7 +26,7 @@ voice.c, from 0x00055960 on.
 
 /* 0x00192d40: how much of a sound that comes from a side is for each of
 five places that it can come out of, by a number */
-void __attribute__((stdcall)) unknown_00192d40(real *gains, const real_vector3d *direction, long unknown);
+void __attribute__((stdcall)) sound_speakers_get_gains5(real *gains, const real_vector3d *direction, long unknown);
 
 /* 0x001896c0: plays a sound, as loud as a number says. 0x00189760: plays a
 sound where what it is given says */
@@ -44,7 +44,7 @@ void unknown_000caf90(long object_index, real_point3d *position);
 
 /* 0x00192950: something of a player, when game_voice_unknown_00053d90 says
 so */
-boolean unknown_00192950(long player_index);
+boolean __attribute__((stdcall)) sound_speakers_unknown_00192950(long player_index);
 
 
 /* ---------- globals */
@@ -1093,7 +1093,7 @@ void VOICE_ROUTING_CALLBACK voice_channels_update_ended(
 /* 0x00057270: whether a player of this console can hear a player of
 another, by the game that is played: always, if game_voice_unknown_00053d40
 says no; if it says so, when the two are of the same team, or, when
-game_voice_unknown_00053d90 says so, when unknown_00192950 says no of both.
+game_voice_unknown_00053d90 says so, when sound_speakers_unknown_00192950 says no of both.
 FALSE if the session does not have the two, or they are not one of this
 console and one of another. The game has game_voice_get_player_array and
 game_voice_get_players in the function itself */
@@ -1134,12 +1134,12 @@ boolean voice_players_can_hear(
 		}
 		if (game_voice_unknown_00053d90())
 		{
-			if (unknown_00192950(local_player_index))
+			if (sound_speakers_unknown_00192950(local_player_index))
 			{
 				return FALSE;
 			}
 
-			return !unknown_00192950(player_index);
+			return !sound_speakers_unknown_00192950(player_index);
 		}
 		else
 		{
@@ -1444,7 +1444,7 @@ long VOICE_ROUTING_CALLBACK voice_channels_get_how(
 		}
 		if (game_voice_unknown_00053d90())
 		{
-			if (!unknown_00192950(local_player_index) && !unknown_00192950(player_index))
+			if (!sound_speakers_unknown_00192950(local_player_index) && !sound_speakers_unknown_00192950(player_index))
 			{
 				return _voice_hears1;
 			}
@@ -1786,7 +1786,7 @@ void VOICE_ROUTING_CALLBACK voice_channels_update_team(
 console that voice_player_unknown_000589e0 says no of, a bit for each player
 of another console that it says no of too and that it can talk with by the
 game that is played: any, if game_voice_unknown_00053d40 says no; those of
-its team, or those that unknown_00192950 says no of when it says no of the
+its team, or those that sound_speakers_unknown_00192950 says no of when it says no of the
 player too, if it says so. It is the third number that who hears whom has
 for each player. Nothing with no session. The game has
 game_voice_get_player_array and game_voice_get_players in the function
@@ -1846,7 +1846,7 @@ void VOICE_ROUTING_CALLBACK voice_channels_update_dead(
 			{
 				if (game_voice_unknown_00053d90())
 				{
-					if (unknown_00192950(local_player_index) || unknown_00192950(player_index))
+					if (sound_speakers_unknown_00192950(local_player_index) || sound_speakers_unknown_00192950(player_index))
 					{
 						continue;
 					}
@@ -2136,7 +2136,7 @@ void VOICE_ROUTING_CALLBACK voice_channels_route_player_to_output(
 /* 0x000586f0: where the voice of what is at a place comes out of, and how
 loud, for a player of this console that hears it: how many pairs, and the
 pairs. The place is seen from the one that hears the sounds of the game for
-the player; unknown_00192d40 says how much there is for each of five places
+the player; sound_speakers_get_gains5 says how much there is for each of five places
 by the side that it comes from, and the one with the least is left out. Each
 of the other four has less the less there is for it, and less the farther the
 place is: much less past how far a voice is heard. If nothing hears for the
@@ -2200,7 +2200,7 @@ void VOICE_ROUTING_CALLBACK voice_channels_get_mix_bins(
 			volume= slope*distance/(range+VOICE_NEAR_EXTRA_DISTANCE);
 		}
 		normalize3d(&direction);
-		unknown_00192d40(gains, &direction, channels[VOICE_CHANNELS_UNKNOWN190_OFFSET]);
+		sound_speakers_get_gains5(gains, &direction, channels[VOICE_CHANNELS_UNKNOWN190_OFFSET]);
 		minimum= gains[0];
 		for (index= 1; index<NUMBER_OF_VOICE_CHANNELS_SPEAKERS; index++)
 		{

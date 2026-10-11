@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 544.
+**Última actualización:** 2026-10-08, al terminar el hito 545.
 
 ## Dónde estamos
 
-- **1871 funciones descompiladas de 11.265: el 16,61 % del juego** (el
-  10,587 % de los bytes de código).
-- Las 1871 están comprobadas contra el ejecutable original: las 1390 del
+- **1874 funciones descompiladas de 11.265: el 16,64 % del juego** (el
+  10,593 % de los bytes de código).
+- Las 1874 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile two more functions of the lists of the service* (ver `git log`).
+- Último hito: *Decompile the two functions that go over the speakers and a bit of each player* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 612 funciones apuntadas pero sin descompilar (las que el código
-  llama); 473 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 609 funciones apuntadas pero sin descompilar (las que el código
+  llama); 470 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -221,10 +221,13 @@ Módulos (funciones hechas / archivo):
 - [ ] **Las funciones pequeñas que ya se llaman**: de las que el código
       llama sin tenerlas, las más cortas son las más fáciles (ya tienen
       nombre de registros y pruebas que las sustituyen). Quedan, por
-      tamaño: `0x00163b60` (28 bytes), `0x00192950`,
-      `0x00161c90`, `0x000d4db0`, `0x00192d40`, `0x000caf60`,
+      tamaño: `0x00163b60` (28 bytes), `0x00161c90`, `0x000d4db0`,
+      `0x000caf60`,
       `0x000caf90`, `0x00063d80`, `0x001565a0`… (hitos 538 y 539; la lista
       la da `build\line_breaking\small_externals.py`)
+- [ ] Los altavoces — `sound\sound_speakers.c` (3, de `0x00192950` a
+      `0x00192d70`; faltan `0x00192970`, `0x00192a30`, `0x00192b20`,
+      `0x00192b90`, que necesita `_CIpow`, y `0x00192d70`)
 - [ ] La lista de partidas del servicio — `networking\network_hoppers.c`
       (23 de unas 30, de `0x00192db0` a `0x001939f0`: la tabla de
       `0x00551ae8`, cuántos jugadores y equipos admite cada una y si es

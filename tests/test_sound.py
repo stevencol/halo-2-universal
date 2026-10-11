@@ -7938,7 +7938,7 @@ def run(t) -> None:
                 "sound_source_get_listener": listener_,
                 "unknown_00192d70": lambda harness, arguments, gain=random_.choice((0.0, 1.0, 0.5, 0.8)): (real_bits(gain), tuple(arguments)),
                 "sound_source_get_position": position_,
-                "unknown_00192ce0": parts_,
+                "sound_speakers_get_gains4": parts_,
                 "looping_sound_delete": lambda harness, arguments: (0, tuple(arguments)),
                 "looping_sound_find_source": lambda harness, arguments, values=(NONE, salts[9], NONE, salts[10]), shift=random_.randrange(4): (
                     values[(calls_so_far(harness, "looping_sound_find_source") + shift) % 4],

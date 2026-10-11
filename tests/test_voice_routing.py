@@ -669,7 +669,7 @@ def run(t) -> None:
                     "game_voice_get_local_players": gives(local),
                     "game_voice_unknown_00053d40": gives(random_.choice((1, 1, 0))),
                     "game_voice_unknown_00053d90": gives(random_.choice((1, 0, 0))),
-                    "unknown_00192950": lambda harness, arguments, says=says: says[arguments[0] & 15],
+                    "sound_speakers_unknown_00192950": lambda harness, arguments, says=says: says[arguments[0] & 15],
                 },
                 extra=[membership],
             )
@@ -875,7 +875,7 @@ def run(t) -> None:
                     "voice_player_unknown_000589e0": lambda harness, arguments, alive=alive: alive[arguments[0] & 15],
                     "game_voice_unknown_00053d40": gives(random_.choice((1, 1, 0))),
                     "game_voice_unknown_00053d90": gives(random_.choice((1, 0, 0))),
-                    "unknown_00192950": lambda harness, arguments, other_thing=other_thing: other_thing[arguments[0] & 15],
+                    "sound_speakers_unknown_00192950": lambda harness, arguments, other_thing=other_thing: other_thing[arguments[0] & 15],
                 },
                 extra=[membership],
             )
@@ -1091,7 +1091,7 @@ def run(t) -> None:
                     "voice_player_unknown_000589e0": lambda harness, arguments, alive=alive: alive >> (arguments[0] & 15) & 1,
                     "game_voice_unknown_00053d40": gives(random_.choice((1, 1, 0))),
                     "game_voice_unknown_00053d90": gives(random_.choice((1, 0, 0))),
-                    "unknown_00192950": lambda harness, arguments, other_thing=other_thing: other_thing[arguments[0] & 15],
+                    "sound_speakers_unknown_00192950": lambda harness, arguments, other_thing=other_thing: other_thing[arguments[0] & 15],
                 },
                 extra=[membership],
             )
@@ -1310,7 +1310,7 @@ def run(t) -> None:
             },
             externals={
                 "game_voice_get_player_datum": lambda harness, arguments, datum=datum, n=n: datum.address if n % 9 else 0,
-                "unknown_00192d40": how_much,
+                "sound_speakers_get_gains5": how_much,
             },
             extra=[datum],
         )

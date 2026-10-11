@@ -1478,7 +1478,7 @@ boolean __attribute__((stdcall)) looping_sound_start(long definition_index, long
 /* 0x00192d70: how loud something is for how far it is; 0x00192ce0: four
 parts of a direction */
 real __attribute__((stdcall)) unknown_00192d70(real minimum_distance, real maximum_distance, real distance);
-void unknown_00192ce0(const real_vector3d *direction, real *parts, long unknown);
+void __attribute__((stdcall)) sound_speakers_get_gains4(const real_vector3d *direction, real *parts, long unknown);
 
 /* 0x0021d360, 0x0021d5a0 and 0x0021da90 */
 void sound_effect_unknown_0021d360(long effect_index);
@@ -12891,7 +12891,7 @@ of the tag and the owner is looked for (looping_sound_find), and made if it
 is to start or go on and is not there; one of a source with a type whose tag
 has the flag 7 is its own: its owner is its tag with the flags 0x6000, and
 each time it is asked for, how it is heard by its listener is added to its
-four gains (unknown_00192d70 and unknown_00192ce0 say how much, for how far
+four gains (unknown_00192d70 and sound_speakers_get_gains4 say how much, for how far
 it is and for where). It is kept for this time (its byte at 0x53), and takes
 what the game says of it unless that has the flag 1.
 
@@ -13026,7 +13026,7 @@ boolean __attribute__((stdcall)) looping_sound_start(
 			{
 				normalize3d((real_vector3d *)&position);
 			}
-			unknown_00192ce0((const real_vector3d *)&position, parts, 1);
+			sound_speakers_get_gains4((const real_vector3d *)&position, parts, 1);
 			for (index= 0; index<NUMBER_OF_LOOPING_SOUND_GAINS; index++)
 			{
 				real part= parts[index]*gain;
