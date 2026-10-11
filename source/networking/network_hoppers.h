@@ -31,6 +31,8 @@ enum
 	NUMBER_OF_NETWORK_HOPPER_UNKNOWN51C= 128,
 	NUMBER_OF_NETWORK_HOPPER_UNKNOWN4= 4,
 	NETWORK_HOPPER_UNKNOWN8_MAXIMUM= 100,
+	/* what network_hoppers_get_unknown4 says of one that is not there */
+	NETWORK_HOPPER_UNKNOWN4_NONE= 3,
 	/* what network_hopper_get_players_value says of a number of players
 	that one does not take */
 	NETWORK_HOPPER_PLAYERS_VALUE_NONE= 0x7FFFFFFF
@@ -95,6 +97,8 @@ boolean network_hopper_valid(const struct network_hopper *hopper);
 boolean network_hopper_header_valid(const struct network_hopper *hopper);
 boolean network_hopper_type4_valid(const struct network_hopper *hopper);
 boolean network_hopper_teams_valid(const struct network_hopper *hopper);
+long network_hopper_unknown_001931a0(long number, const struct network_hopper *hopper);
+long network_hoppers_get_unknown4(long index);
 
 /* ---------- globals */
 

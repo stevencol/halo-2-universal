@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Dos funciones más de las listas del servicio
+
+Dos funciones más en `networking/network_hoppers.c` (135 bytes). De 1869
+funciones se pasa a 1871, el 16,61 % de las del juego (el 10,587 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_hopper_unknown_001931a0` | `0x001931a0` | `networking/network_hoppers.c` |
+| `network_hoppers_get_unknown4` | `0x00192df0` | `networking/network_hoppers.c` |
+
+### Lo que se sabe
+
+- `network_hoppers_get_unknown4` da el primer número de una de las listas
+  (de 0 a 3), `3` para una que no está o no es buena, y hace algo más con
+  las que lo tienen a cero (`0x00194660`).
+- `network_hopper_unknown_001931a0` busca hacia abajo en la tabla de 128
+  bytes de una lista (la del hito 543) el primer sitio cuyo byte anterior
+  es menor que un número.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  543.
+- En este hito se pasaron las pruebas de las dos funciones.
+- En `network_hoppers_get_unknown4` el juego pregunta **tres veces** si la
+  lista es buena y `source\` una: el compilador de `source\` ve que la
+  pregunta no cambia nada y quita las repetidas. Da lo mismo, pero no se
+  puede comparar; en la prueba la pregunta corre de verdad en los dos
+  lados.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Si una lista del servicio es buena: las tres comprobaciones
 
 Tres funciones más en `networking/network_hoppers.c` (337 bytes). De 1866

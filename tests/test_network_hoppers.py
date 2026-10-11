@@ -99,3 +99,31 @@ def run(t) -> None:
         t.check("network_hopper_header_valid", one)
         t.check("network_hopper_type4_valid", one)
         t.check("network_hopper_teams_valid", one)
+
+    # ---------- two more
+
+    for n in range(3000):
+        data = hopper(random_)
+        if random_.random() < 0.7:
+            for index in range(128):
+                data[0x51C + index] = random_.choice((index, index, 0x7F, min(index + 3, 0x7F), max(index - 2, 0), 0x80))
+        t.check("network_hopper_unknown_001931a0", random_.choice((0, 1, 2, 5, 64, 127, 128, NONE, 0x80000000, random_.randrange(129))), Buffer(bytes(data)))
+
+        blob = bytearray(random_.randbytes(0x30))
+        struct.pack_into("<HHH", blob, 4, random_.choice((2, 2, 2, 3, 0, 0xFFFD)), random_.getrandbits(16), random_.choice((0, 1, 1, 4, 0xFFFF)))
+        table = bytearray()
+        for index in range(COUNT):
+            one = hopper(random_)
+            if random_.random() < 0.8:
+                # one that is good: without teams, from 1 to 16 players
+                struct.pack_into("<3I", one, 0, random_.choice((1, 2)), random_.choice((0, 0, 1, 2, 3)), random_.choice((1, 100)))
+                one[0x51C:0x59C] = bytes((0x7F,)) * 128
+                struct.pack_into("<2I", one, 0x5EC, 1, 16)
+            table += one
+        # network_hopper_valid is not stood in: the game asks it three times and source/ once, which is the same
+        t.check(
+            "network_hoppers_get_unknown4",
+            random_.choice((0, 1, 7, 15, 16, NONE, NONE, 0x80000000, random_.randrange(16), random_.randrange(16))),
+            globals={"unknown_0047d8f4": bytes(blob), "network_hoppers": GlobalData(bytes(table))},
+            externals={"unknown_00194660": lambda harness, arguments: (0, tuple(arguments))},
+        )

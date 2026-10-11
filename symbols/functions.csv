@@ -2479,3 +2479,6 @@ address,name,source,arguments,returns,convention
 00193560,network_hopper_header_valid,source/networking/network_hoppers.c,esi,bool
 00193630,network_hopper_type4_valid,source/networking/network_hoppers.c,eax,bool
 001936a0,network_hopper_teams_valid,source/networking/network_hoppers.c,eax,bool
+001931a0,network_hopper_unknown_001931a0,source/networking/network_hoppers.c,ecx edx,int
+00192df0,network_hoppers_get_unknown4,source/networking/network_hoppers.c,edi,int
+00194660,unknown_00194660,,stack,void,stdcall

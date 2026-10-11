@@ -15,6 +15,10 @@ fills. The names are guesses.
 /* ---------- prototypes */
 
 
+/* 0x00194660: something is done with one of the list whose first number
+is nothing */
+void __attribute__((stdcall)) unknown_00194660(long index);
+
 /* ---------- globals */
 
 /* 0x00551ae8 */
@@ -346,4 +350,52 @@ boolean network_hopper_teams_valid(
 
 	return team_size>1 && team_size<=NETWORK_HOPPER_MAXIMUM_PLAYERS && minimum_teams>=1 &&
 		maximum_teams<=NETWORK_HOPPER_MAXIMUM_PLAYERS/team_size && minimum_teams<=maximum_teams;
+}
+
+/* 0x001931a0: from a number down, the first place of the 128 bytes of one
+whose byte before it is less than the number; nothing if there is none, and
+the number itself if it is not more than nothing */
+long network_hopper_unknown_001931a0(
+	long number,
+	const struct network_hopper *hopper)
+{
+	long index= number;
+
+	while (index>0 && hopper->unknown51C[index-1]>=number)
+	{
+		index--;
+	}
+
+	return index;
+}
+
+/* 0x00192df0: the first number of one of the list; nothing for NONE, and 3
+for one that is not there or is not good. Something is done with one whose
+number is nothing (unknown_00194660). The game asks three times whether it
+is good */
+long network_hoppers_get_unknown4(
+	long index)
+{
+	if (index==NONE)
+	{
+		return 0;
+	}
+	if (index>=0 && index<MAXIMUM_NETWORK_HOPPERS && network_hoppers_available())
+	{
+		const struct network_hopper *hopper= &network_hoppers[index];
+
+		if (network_hopper_valid(hopper))
+		{
+			if (network_hopper_valid(hopper) && hopper->unknown4==0)
+			{
+				unknown_00194660(index);
+			}
+			if (network_hopper_valid(hopper))
+			{
+				return hopper->unknown4;
+			}
+		}
+	}
+
+	return NETWORK_HOPPER_UNKNOWN4_NONE;
 }
