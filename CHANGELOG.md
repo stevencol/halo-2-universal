@@ -2,6 +2,36 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Qué jugadores siguen en la partida, y uno que otra consola dice que se fue
+
+Dos funciones más en `networking/simulation_players.c` (289 bytes). De 1933
+funciones se pasa a 1935, el 17,18 % de las del juego (el 10,829 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_players_collection_get_active_mask` | `0x00084be0` | `networking/simulation_players.c` |
+| `simulation_players_update_remove_player` | `0x00084f30` | `networking/simulation_players.c` |
+
+### Lo que se sabe
+
+- `simulation_players_collection_get_active_mask` da, en bits, los jugadores
+  de la colección que están y no se han ido. En el juego el bucle de 16
+  vueltas está desenrollado de cuatro en cuatro.
+- `simulation_players_update_remove_player` aplica lo que dice otra consola
+  de que **un jugador se fue**: si el jugador de la partida que está en ese
+  sitio es quien la consola dice y aún no se había ido, se va
+  (`0x00152df0`).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  568.
+- En este hito se pasaron las pruebas de las dos funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Lo que la simulación tiene de los jugadores sale de los jugadores de la partida
 
 Dos funciones más en `networking/simulation_players.c` (319 bytes). De 1931

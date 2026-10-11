@@ -80,13 +80,17 @@ enum
 	PLAYER_DATUM_MACHINE_OFFSET= 0x14,
 	PLAYER_DATUM_UNKNOWN1C_OFFSET= 0x1C,
 	PLAYER_DATUM_UNKNOWN20_OFFSET= 0x20,
-	PLAYER_DATUM_PROPERTIES_OFFSET= 0xD4
+	PLAYER_DATUM_PROPERTIES_OFFSET= 0xD4,
+	/* of what another console says of a player: its place, and who it is */
+	SIMULATION_PLAYERS_UPDATE_IDENTIFIER_OFFSET= 0x4
 };
 
 /* ---------- prototypes/SIMULATION_PLAYERS.C */
 
 void simulation_players_collection_clear(byte *collection);
 void __attribute__((stdcall)) simulation_players_collection_build(byte *collection);
+unsigned long simulation_players_collection_get_active_mask(const byte *collection);
+boolean simulation_players_update_remove_player(const byte *update);
 void simulation_players_reset(byte *players);
 void simulation_players_refresh(byte *players);
 void simulation_players_mark_player(const byte *players, long player_index);

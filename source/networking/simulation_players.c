@@ -19,6 +19,9 @@ they are on. The names are guesses.
 
 /* ---------- prototypes */
 
+/* 0x00152df0: a player of the game has left */
+void __attribute__((stdcall)) unknown_00152df0(long player_index);
+
 /* ---------- code */
 
 /* 0x00082fa0: the thing starts with nothing: no consoles, no players, and
@@ -266,4 +269,60 @@ void __attribute__((stdcall)) simulation_players_collection_build(
 				SIMULATION_PLAYERS_PLAYER_PROPERTIES_SIZE);
 		}
 	}
+}
+
+/* 0x00084be0: the players of which there is something and that have not
+left, as bits */
+unsigned long simulation_players_collection_get_active_mask(
+	const byte *collection)
+{
+	unsigned long mask= *(const unsigned long *)collection;
+	unsigned long active= 0;
+	long index;
+
+	for (index= 0; index<MAXIMUM_SIMULATION_PLAYERS; index++)
+	{
+		unsigned long bit= 1<<index;
+
+		if (mask&bit)
+		{
+			const byte *player= collection+SIMULATION_PLAYERS_COLLECTION_PLAYERS_OFFSET+
+				index*SIMULATION_PLAYERS_PLAYER_SIZE;
+
+			if (!player[SIMULATION_PLAYERS_PLAYER_LEFT_OFFSET])
+			{
+				active|= bit;
+			}
+			else
+			{
+				active&= ~bit;
+			}
+		}
+	}
+
+	return active;
+}
+
+/* 0x00084f30: another console says that a player left: the player of the
+game in that place leaves, if it is who the console says and has not left
+yet. Whether it did */
+boolean simulation_players_update_remove_player(
+	const byte *update)
+{
+	long absolute_index= *(const long *)update;
+	const byte *datum= (const byte *)datum_try_and_get_absolute(player_data, absolute_index);
+
+	if (!datum)
+	{
+		return FALSE;
+	}
+	if (memcmp(datum+PLAYER_DATUM_IDENTIFIER_OFFSET, update+SIMULATION_PLAYERS_UPDATE_IDENTIFIER_OFFSET,
+		SIMULATION_PLAYERS_PLAYER_IDENTIFIER_SIZE)!=0 ||
+		(datum[PLAYER_DATUM_FLAGS_OFFSET]&FLAG(_player_datum_left_bit)))
+	{
+		return FALSE;
+	}
+	unknown_00152df0(datum_absolute_index_to_index(player_data, absolute_index));
+
+	return TRUE;
 }

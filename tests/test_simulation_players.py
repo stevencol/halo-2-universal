@@ -109,3 +109,31 @@ def run(t) -> None:
             Buffer(random_.randbytes(0xB44)),
             globals={"player_data": Buffer(bytes(data), pointers=(0x44, 0x48))},
         )
+
+    # ---------- which players are still there, and a player that left
+
+    for n in range(1500):
+        collection = bytearray(random_.randbytes(0xB44))
+        struct.pack_into("<I", collection, 0, random_.choice((0, 0xFFFF, random_.getrandbits(16), random_.getrandbits(32))))
+        for index in range(16):
+            collection[4 + index * 0xB4 + 0xC] = random_.choice((0, 0, 1, 0x80))
+        t.check("simulation_players_collection_get_active_mask", Buffer(bytes(collection)))
+
+        data = bytearray(random_.randbytes(BITS + 4))
+        data[0:0x20] = b"players".ljust(0x20, b"\0")
+        there = [random_.random() < 0.6 for index in range(COUNT)]
+        for index in range(COUNT):
+            struct.pack_into("<HH", data, DATUMS + index * DATUM, random_.getrandbits(15) | 0x8000 if there[index] else 0, random_.choice((0, 0, 0, 2, 0xFFFD, 0xFFFF)))
+        struct.pack_into("<ii", data, 0x20, COUNT, DATUM)
+        first_unallocated = random_.choice((COUNT, COUNT, 8))
+        struct.pack_into("<ii", data, 0x34, 0, first_unallocated)
+        struct.pack_into("<II", data, 0x44, DATUMS, BITS)
+        place = random_.choice((*range(COUNT), *range(COUNT), NONE, COUNT, 0x80000000))
+        who = bytes(data[DATUMS + (place % COUNT) * DATUM + 4:DATUMS + (place % COUNT) * DATUM + 16])
+        update = struct.pack("<I", place) + random_.choice((who, who, who, random_.randbytes(12))) + random_.randbytes(8)
+        t.check(
+            "simulation_players_update_remove_player",
+            Buffer(update),
+            globals={"player_data": Buffer(bytes(data), pointers=(0x44, 0x48))},
+            externals={"unknown_00152df0": told},
+        )

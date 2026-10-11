@@ -2541,3 +2541,6 @@ address,name,source,arguments,returns,convention
 00083c20,simulation_players_player_differs,source/networking/simulation_players.c,ecx ebx stack stack stack,bool,stdcall
 00084a90,simulation_players_collection_clear,source/networking/simulation_players.c,edx,void
 00084ad0,simulation_players_collection_build,source/networking/simulation_players.c,stack,void,stdcall
+00084be0,simulation_players_collection_get_active_mask,source/networking/simulation_players.c,ecx,int
+00084f30,simulation_players_update_remove_player,source/networking/simulation_players.c,eax,bool
+00152df0,unknown_00152df0,,stack,void,stdcall
