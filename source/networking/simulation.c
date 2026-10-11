@@ -39,7 +39,7 @@ to the game */
 void __attribute__((stdcall)) unknown_00084270(byte *unknown);
 void __attribute__((stdcall)) unknown_00069a00(const void *players, byte *world, long unknown8);
 void __attribute__((stdcall)) unknown_00069b50(const void *unknown610, byte *world, long unknown5cc);
-boolean unknown_000835c0(long unknown);
+boolean simulation_players_changed(long unknown);
 void __attribute__((stdcall)) unknown_000683a0(long *update);
 
 long GetTickCount(void);
@@ -319,14 +319,14 @@ void simulation_apply_update(
 
 /* 0x000681e0: what the game in the network does each tick of the game: with
 one, a game that is on, nothing said of it not going on, and what
-unknown_004cf780 has letting it (unknown_000835c0), one of the things that
+unknown_004cf780 has letting it (simulation_players_changed), one of the things that
 come is made (simulation_build_update), given to the game (unknown_000683a0)
 and then to the thing (simulation_apply_update) */
 void simulation_update(
 	void)
 {
 	if (unknown_004cf770.unknown0 && main_game_globals && main_game_globals->active && !unknown_004cf770.unknown1[1] &&
-		unknown_000835c0(unknown_004cf780))
+		simulation_players_changed(unknown_004cf780))
 	{
 		long update[SIMULATION_UPDATE_DECODED_SIZE/4];
 

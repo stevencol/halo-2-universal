@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Lo que la simulación guarda de los jugadores y de las consolas: siete funciones
+
+Archivo nuevo, `networking/simulation_players.c`, con siete funciones cortas (572 bytes). De 1924
+funciones se pasa a 1931, el 17,14 % de las del juego (el 10,809 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_players_reset` | `0x00082fa0` | `networking/simulation_players.c` |
+| `simulation_players_refresh` | `0x00083510` | `networking/simulation_players.c` |
+| `simulation_players_mark_player` | `0x00083570` | `networking/simulation_players.c` |
+| `simulation_players_changed` | `0x000835c0` | `networking/simulation_players.c` |
+| `simulation_players_find_machine` | `0x00083b80` | `networking/simulation_players.c` |
+| `simulation_players_has_player` | `0x00083bd0` | `networking/simulation_players.c` |
+| `simulation_players_player_differs` | `0x00083c20` | `networking/simulation_players.c` |
+
+### Lo que se sabe
+
+- De `0x00082fa0` a `0x000846c0` hay un módulo de 19 funciones sobre «lo
+  que tiene `unknown_004cf780`», del que `simulation.c`, `simulation_world.c`
+  y `game.c` ya llamaban a tres por su dirección. Es **lo que la simulación
+  de una partida guarda de sus jugadores y de las consolas en las que
+  están**: hasta 16 consolas (cada una conocida por seis bytes) y hasta 16
+  jugadores (cada uno en `0xB4` bytes), con su mundo y su sesión.
+- Las siete de este hito: dejarlo vacío, ponerlo al día con lo que el juego
+  tiene ahora, marcar a un jugador del mundo, decir si algo cambió
+  (`simulation_players_changed`, antes `unknown_000835c0`), buscar una
+  consola por sus seis bytes, decir si tiene a un jugador
+  (`simulation_players_has_player`, antes `unknown_00083bd0`) y comparar lo
+  que hay de un jugador con lo que dice de él otra consola.
+- `struct players_globals` tiene dos campos nuevos (un número en `+0x2C` y
+  `0x60` bytes en `+0x30`), que este módulo copia.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  566.
+- En este hito se pasaron las pruebas de las siete funciones, y
+  `test_simulation`, `test_simulation_world` y `test_game` enteras (por los
+  tres nombres cambiados).
+- `simulation_players_mark_player` busca al jugador por los 16 bits bajos
+  de su número y escribe con el número entero (el juego también): las
+  pruebas dan números sin parte alta.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Dos funciones cortas del sonido que se llamaban por su dirección
 
 Dos funciones cortas más en `sound/sound_manager.c` (141 bytes). De 1922

@@ -164,7 +164,7 @@ def run(t) -> None:
             "simulation_update",
             globals=globals_,
             externals={
-                "unknown_000835c0": lambda harness, arguments, lets=lets: lets,
+                "simulation_players_changed": lambda harness, arguments, lets=lets: lets,
                 "simulation_build_update": lambda harness, arguments: (0, ()),
                 "unknown_000683a0": lambda harness, arguments: (0, ()),
                 "simulation_apply_update": lambda harness, arguments: (0, ()),

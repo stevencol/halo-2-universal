@@ -429,7 +429,7 @@ def run_players_and_won(t) -> None:
                 "unknown_0014c630": record,
                 "unknown_0014c880": record,
                 "unknown_0014bc00": record,
-                "unknown_00083510": record,
+                "simulation_players_refresh": record,
                 "unknown_001e73b0": record,
             },
         )

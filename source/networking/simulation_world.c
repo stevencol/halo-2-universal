@@ -54,7 +54,7 @@ extern long unknown_004cf780;
 
 /* 0x00083bd0: whether what the thing has first has a player, by its place,
 with the three numbers that it is known by */
-boolean __attribute__((stdcall)) unknown_00083bd0(long player, const void *unknown, const long *identifier);
+boolean __attribute__((stdcall)) simulation_players_has_player(long player, const void *unknown, const long *identifier);
 void unknown_00155710(long controller);
 
 
@@ -1148,7 +1148,7 @@ unsigned long simulation_world_players_known_mask(
 
 /* 0x00069640: whether a player that the thing has, by the low word of its
 number, is the one that three numbers say: they are the ones that the thing
-has of it, and what the thing has first has it with them (unknown_00083bd0).
+has of it, and what the thing has first has it with them (simulation_players_has_player).
 FALSE with no such player */
 boolean __attribute__((stdcall)) simulation_world_player_matches(
 	long player,
@@ -1169,7 +1169,7 @@ boolean __attribute__((stdcall)) simulation_world_player_matches(
 		return FALSE;
 	}
 
-	return unknown_00083bd0((long)index, *(const void *const *)(world+SIMULATION_WORLD_UNKNOWN0_OFFSET), identifier)!=FALSE;
+	return simulation_players_has_player((long)index, *(const void *const *)(world+SIMULATION_WORLD_UNKNOWN0_OFFSET), identifier)!=FALSE;
 }
 
 /* 0x0006b310: the number that the thing has at 0x18 goes on: from 4 to 5,

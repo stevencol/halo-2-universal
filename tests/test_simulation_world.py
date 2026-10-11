@@ -576,7 +576,7 @@ def run(t) -> None:
             player | random_.choice((0, 0x50000)),
             Buffer(bytes(world)),
             Buffer(known_by),
-            externals={"unknown_00083bd0": lambda harness, arguments, has=has: (has, (arguments[0] & 0xFF, arguments[1], harness.normalize(arguments[2])))},
+            externals={"simulation_players_has_player": lambda harness, arguments, has=has: (has, (arguments[0] & 0xFF, arguments[1], harness.normalize(arguments[2])))},
         )
 
     # ---------- the second number goes on, and the views are brought on

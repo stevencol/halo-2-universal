@@ -109,6 +109,9 @@ struct players_globals
 	long local_players[MAXIMUM_LOCAL_PLAYERS];
 	/* the player of each controller; NONE where there is none */
 	long unknown1C[MAXIMUM_LOCAL_PLAYERS];
+	/* a number and 0x60 bytes that the simulation takes a copy of */
+	long unknown2C;
+	byte unknown30[0x60];
 };
 
 /* ---------- prototypes/MAIN.C */

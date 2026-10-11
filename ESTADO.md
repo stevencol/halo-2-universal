@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 566.
+**Última actualización:** 2026-10-08, al terminar el hito 567.
 
 ## Dónde estamos
 
-- **1924 funciones descompiladas de 11.265: el 17,08 % del juego** (el
-  10,789 % de los bytes de código).
-- Las 1924 están comprobadas contra el ejecutable original: las 1390 del
+- **1931 funciones descompiladas de 11.265: el 17,14 % del juego** (el
+  10,809 % de los bytes de código).
+- Las 1931 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile two short functions of the sound that were called by their address* (ver `git log`).
+- Último hito: *Decompile seven short functions of what the simulation keeps of the players and the consoles* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 612 funciones apuntadas pero sin descompilar (las que el código
-  llama); 463 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 611 funciones apuntadas pero sin descompilar (las que el código
+  llama); 462 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -223,6 +223,12 @@ Módulos (funciones hechas / archivo):
       nombre de registros y pruebas que las sustituyen). Quedan, por
       tamaño: `0x00147f4f` (30 bytes), `0x00063d80`, `0x001565a0`… (hitos 538 y 539; la lista
       la da `build\line_breaking\small_externals.py`)
+- [ ] Los jugadores y las consolas de la simulación —
+      `networking\simulation_players.c` (7 de 19, de `0x00082fa0` a
+      `0x000846c0`; faltan las grandes: `0x00083000`, `0x00083220`,
+      `0x00083370`, `0x00083610`, `0x00083a40`, `0x00083c90`,
+      `0x00083db0`, `0x00083f00`, `0x00084270`, `0x000843f0`,
+      `0x00084560`, `0x00084630`)
 - [ ] El mensaje del día y los amigos del servicio —
       `networking\network_motd.c` (4, más dos que están en
       `online_friends.c`), `networking\online_friends.c` (18) y

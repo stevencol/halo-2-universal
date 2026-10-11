@@ -275,7 +275,7 @@ and a player that is made; 0x00083510 and 0x001e73b0 are after them */
 void __attribute__((stdcall)) unknown_0014c630(unsigned long machine_valid_mask, const void *machine_identifiers);
 void __attribute__((stdcall)) unknown_0014c880(const void *local_machine_identifier);
 void unknown_0014bc00(const struct game_player_options *player);
-void unknown_00083510(long unknown);
+void simulation_players_refresh(long unknown);
 void unknown_001e73b0(void);
 
 /* 0x0019043f: told, when the campaign is won, each of four things and the
@@ -916,7 +916,7 @@ void game_create_players(
 	}
 	if (unknown_004cf770.unknown0 && !unknown_004cf770.unknownB)
 	{
-		unknown_00083510(unknown_004cf780);
+		simulation_players_refresh(unknown_004cf780);
 	}
 	unknown_001e73b0();
 }
