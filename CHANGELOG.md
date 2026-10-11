@@ -2,6 +2,39 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Al conectarse, se pide al servicio un bloque de cada jugador
+
+Una función más en `networking/online_tasks.c`, de 283 bytes. De 1912
+funciones se pasa a 1913, el 16,98 % de las del juego (el 10,737 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_users_start_unknown_00479750` | `0x0008c660` | `networking/online_tasks.c` |
+
+### Lo que se sabe
+
+- Era la última de las cosas que `online_logon_complete` (hito 520) hacía
+  llamándola por su dirección (`unknown_0008c660`). Por cada jugador que se
+  conectó bien **empieza a leer del servicio un bloque suyo**, pedido por su
+  identidad: hay un cuarto bloque (`0x00479750`, variable nueva) además de
+  los tres comunes — las listas de partidas, el mensaje del día y el de
+  `0x00477058`.
+- A un invitado no se le pide bloque: su mando queda con el número de
+  `+0x204` a `1`, y si no lo estaba se avisa a la voz
+  (`user_interface_controller_update_voice`). Por cómo se usa, ese número
+  dice **si ya se tiene lo del jugador que hace falta del servicio**.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  557.
+- En este hito se pasaron las pruebas de la función y la de
+  `online_logon_complete`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Leer el mensaje del día de su archivo
 
 Una función más en `networking/network_motd.c`, de 388 bytes. De 1911

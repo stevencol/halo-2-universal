@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 557.
+**Última actualización:** 2026-10-08, al terminar el hito 558.
 
 ## Dónde estamos
 
-- **1912 funciones descompiladas de 11.265: el 16,97 % del juego** (el
-  10,727 % de los bytes de código).
-- Las 1912 están comprobadas contra el ejecutable original: las 1390 del
+- **1913 funciones descompiladas de 11.265: el 16,98 % del juego** (el
+  10,737 % de los bytes de código).
+- Las 1913 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how the message of the day is read from its file* (ver `git log`).
+- Último hito: *Decompile how a block of each player is asked of the service when players sign in* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 619 funciones apuntadas pero sin descompilar (las que el código
-  llama); 470 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 618 funciones apuntadas pero sin descompilar (las que el código
+  llama); 469 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -229,8 +229,8 @@ Módulos (funciones hechas / archivo):
       `networking\network_motd.c` (4, más dos que están en
       `online_friends.c`), `networking\online_friends.c` (18) y
       `networking\online_presence.c` (6), de la zona de `0x0008bf10` a
-      `0x0008d550`, que tiene 35 funciones: quedan 5 (`0x0008bf70`,
-      `0x0008c150`, `0x0008c660`, `0x0008c790`, `0x0008d0b0`)
+      `0x0008d550`, que tiene 35 funciones: quedan 4 (`0x0008bf70`,
+      `0x0008c150`, `0x0008c790`, `0x0008d0b0`)
 - [ ] El mapa que se copia por adelantado — `main\main_map_precache.c`
       (3 de 7, de `0x00163610` a `0x00163b84`; faltan `0x00163610`,
       `0x00163680`, `0x00163890` y `0x00163b20`)

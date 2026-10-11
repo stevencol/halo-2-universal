@@ -504,7 +504,7 @@ def run(t) -> None:
                     first,
                     (harness.normalize(arguments[0]),),
                 ),
-                "unknown_0008c660": told,
+                "online_users_start_unknown_00479750": told,
                 "network_blob_start_read": lambda harness, arguments: (1, tuple(harness.normalize(value) for value in arguments)),
                 "online_friends_startup": told,
                 "online_new_content_check_start": told,
@@ -771,5 +771,32 @@ def run(t) -> None:
                 "online_task_new_signed_in": lambda harness, arguments, number=number: (number, ()),
                 "online_service_unregister_address": lambda harness, arguments: (0, ()),
                 "XOnlineChangeLogonUsers": changed,
+            },
+        )
+
+    # ---------- when players sign in, a block of each is asked of the service
+
+    for n in range(2500):
+        controllers = bytearray(random_.randbytes(4 * 0xC70))
+        for index in range(4):
+            struct.pack_into("<I", controllers, index * 0xC70 + 0x204, random_.choice((0, 0, 0, 1, 2)))
+        users = bytearray(random_.randbytes(4 * 0x70))
+        for index in range(4):
+            if random_.random() < 0.25:
+                users[index * 0x70:index * 0x70 + 8] = bytes(8)
+            users[index * 0x70 + 8] = random_.choice((0, 0, 0, 4, 1, 2, 3))
+            struct.pack_into("<I", users, index * 0x70 + 0x6C, random_.choice((0, 0, 0, 0x1512F0, 0x80151200)))
+        users = Buffer(bytes(users))
+        blob = bytearray(random_.randbytes(0x30))
+        struct.pack_into("<HHHH", blob, 4, random_.getrandbits(16), random_.getrandbits(16), random_.choice((0, 1, 4)), random_.choice((0, 0, 0, 1, 2)))
+
+        t.check(
+            "online_users_start_unknown_00479750",
+            extra=[users],
+            globals={"unknown_0054e8e0": bytes(controllers), "unknown_00479750": bytes(blob)},
+            externals={
+                "XOnlineGetLogonUsers": lambda harness, arguments, there=random_.random() < 0.9: (users.address if there else 0, ()),
+                "network_blob_start_read": lambda harness, arguments: (1, (*arguments[1:5], arguments[5] & 0xFFFF)),
+                "user_interface_controller_update_voice": lambda harness, arguments: (0, tuple(arguments)),
             },
         )

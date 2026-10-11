@@ -408,3 +408,4 @@ address,name,source
 00510c9c,unknown_00510c9c,source/sound/sound_speakers.c
 004672b8,network_motd_file_name,source/networking/network_motd.c
 00547f6f,unknown_00547f6f,source/game/game.c
+00479750,unknown_00479750,source/networking/online_tasks.c

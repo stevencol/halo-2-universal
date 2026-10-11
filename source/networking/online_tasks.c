@@ -37,7 +37,6 @@ signed in */
 void online_friends_startup(void);
 void unknown_0007f410(void);
 long __attribute__((stdcall)) user_interface_controllers_first_online_user(const struct online_user *users);
-void unknown_0008c660(void);
 
 /* 0x00190da5: a gamepad is told that no one is signed in */
 void __attribute__((stdcall)) user_interface_controller_sign_out(long user_index);
@@ -130,6 +129,10 @@ const byte unknown_0043ff84[2][TRANSPORT_SECURITY_ADDRESS_UNKNOWNA_SIZE]=
 	{0x00, 0x50, 0xF2, 0x10, 0x52, 0x20}
 };
 boolean unknown_0050944e;
+
+/* 0x00479750: something that has a block, which is read for a player that
+signs in: by who the player is */
+struct network_blob unknown_00479750;
 
 /* 0x0051055d: a task of the kind 0xD ended in a way of its own */
 boolean unknown_0051055d;
@@ -1131,7 +1134,7 @@ boolean __attribute__((stdcall)) online_logon_complete(
 	online_users_set_state(users);
 	game_voice_start();
 	index= user_interface_controllers_first_online_user(users);
-	unknown_0008c660();
+	online_users_start_unknown_00479750();
 	if (task->type==_online_task_type0)
 	{
 		struct network_blob_request request= {{0, 0, 0}};
@@ -1620,4 +1623,57 @@ long online_new_content_check_start(
 	}
 
 	return task_index;
+}
+
+/* 0x0008c660: for each player that is signed in to the service of games and
+signed in well: the block of unknown_00479750 starts to be read for it, by
+who it is, if its gamepad's number of 0x204 is nothing and the block is not
+doing anything; a guest has no block, and its gamepad's number becomes 1,
+which the voice is told if it was not. The game has it far from the rest of
+this file */
+void online_users_start_unknown_00479750(
+	void)
+{
+	struct online_user users[MAXIMUM_ONLINE_USERS];
+	const struct online_user *signed_in;
+	long index= 0;
+
+	memset(users, 0, sizeof(users));
+	signed_in= XOnlineGetLogonUsers();
+	if (signed_in)
+	{
+		memcpy(users, signed_in, sizeof(users));
+	}
+	do
+	{
+		const struct online_user *user= &users[index];
+
+		if ((user->xuid[0]|user->xuid[1])!=0 && user->result>=0)
+		{
+			struct user_interface_controller *controller= USER_INTERFACE_CONTROLLER(index);
+
+			if (!(user->flags&_online_user_unknown_bits))
+			{
+				if (controller->unknown204==0 && unknown_00479750.state==0)
+				{
+					struct network_blob_request request;
+
+					unknown_00479750.flags&= ~_network_blob_good_bit;
+					memcpy(&request, user, sizeof(request));
+					network_blob_start_read(&unknown_00479750, index, request, 0);
+				}
+			}
+			else
+			{
+				boolean changed= controller->unknown204!=1;
+
+				controller->unknown204= 1;
+				if (changed)
+				{
+					user_interface_controller_update_voice(index);
+				}
+			}
+		}
+		index= user_interface_controller_next(index);
+	} while (index!=NONE);
 }
