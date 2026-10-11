@@ -21,5 +21,7 @@ enum
 /* ---------- prototypes/PLAYERS.C */
 
 void __attribute__((stdcall)) player_identifier_from_controller(byte *identifier, long controller_index);
+long players_first_local_player(void);
+long players_next_local_player(long local_player_index);
 
 #endif

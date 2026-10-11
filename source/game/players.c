@@ -9,6 +9,7 @@ The players of a game. The names are guesses.
 
 #include "players.h"
 
+#include "main/main.h"
 #include "networking/transport_security.h"
 
 #include <string.h>
@@ -35,4 +36,39 @@ void __attribute__((stdcall)) player_identifier_from_controller(
 	value= (value<<16)|(unsigned long long)(long long)controller_index;
 	memcpy(identifier, &value, sizeof(value));
 	memcpy(identifier+sizeof(value), &made, sizeof(made));
+}
+
+/* 0x0014dde0: the first of the four places of this console that has a
+player, or NONE */
+long players_first_local_player(
+	void)
+{
+	long local_player_index;
+
+	for (local_player_index= 0; local_player_index<MAXIMUM_LOCAL_PLAYERS; local_player_index++)
+	{
+		if (players_globals->local_players[local_player_index]!=NONE)
+		{
+			return local_player_index;
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x0014de10: the next of the places of this console that has a player,
+after one; the first after NONE. NONE if there are no more */
+long players_next_local_player(
+	long local_player_index)
+{
+	local_player_index= local_player_index==NONE ? 0 : local_player_index+1;
+	for (; local_player_index<MAXIMUM_LOCAL_PLAYERS; local_player_index++)
+	{
+		if (players_globals->local_players[local_player_index]!=NONE)
+		{
+			return local_player_index;
+		}
+	}
+
+	return NONE;
 }

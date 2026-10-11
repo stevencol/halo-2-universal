@@ -1293,7 +1293,7 @@ void __attribute__((stdcall)) looping_sounds_update(boolean update_sources);
 void sound_sources_update(void);
 void sound_sources_get_channels(void);
 void __attribute__((stdcall)) sound_channels_build_queries(byte *first, byte *second, struct sound_update_listeners *listeners);
-long unknown_0014dde0(void);
+long players_first_local_player(void);
 void __attribute__((stdcall)) sound_listener_compute_queries(long listener_index,
 	struct sound_update_listeners *listeners);
 
@@ -1469,7 +1469,7 @@ void __attribute__((stdcall)) sound_playback_controller_unknown_00219ed0(boolean
 
 /* 0x0014de10: the local player after one; 0x0012a9d0: the Doppler effect
 of a place for a listener; 0x0021d630: of a sound effect */
-long unknown_0014de10(long player_index);
+long players_next_local_player(long player_index);
 long double sound_listener_doppler_pitch(long listener_index, const real_point3d *position);
 void sound_effect_start_sounds(long effect_index, long phase);
 /* 0x0021a250: a looping sound starts, or goes on, or ends */
@@ -1661,7 +1661,7 @@ struct sound_query;
 void unknown_00249d10(const byte *structure_bsp, unsigned long *openings, long cluster_index);
 void unknown_00249c90(unsigned long *first, const byte *structure_bsp, long opening_index, unsigned long *second);
 real unknown_0018cac0(long said);
-void __attribute__((stdcall)) unknown_00020670(void *array, unsigned long size, long count,
+void __attribute__((stdcall)) array_construct_elements(void *array, unsigned long size, long count,
 	void *(__attribute__((thiscall)) *constructor)(void *element));
 void *__attribute__((thiscall)) unknown_0031bc70(void *element);
 void __attribute__((stdcall)) sound_query_compute(struct sound_query *query, const real *heard,
@@ -2930,7 +2930,7 @@ void sound_update(
 			memset(second, 0, sizeof(second));
 			listeners.count= 0;
 			sound_channels_build_queries(first, second, &listeners);
-			for (player_index= unknown_0014dde0(); player_index!=NONE;
+			for (player_index= players_first_local_player(); player_index!=NONE;
 				player_index= sound_next_local_player(player_index))
 			{
 				sound_listener_compute_queries(player_index, &listeners);
@@ -4156,7 +4156,7 @@ void __attribute__((stdcall)) sound_playback_controller_unknown_00219ed0(
 	{
 		long player_index;
 
-		for (player_index= unknown_0014dde0(); player_index!=NONE; player_index= unknown_0014de10(player_index))
+		for (player_index= players_first_local_player(); player_index!=NONE; player_index= players_next_local_player(player_index))
 		{
 			*(real *)(controller+UNKNOWN_0051EBD8_DATUM_UNKNOWNC_OFFSET+player_index*4)=
 				(real)sound_listener_doppler_pitch(player_index, (const real_point3d *)((const byte *)source+SOUND_SOURCE_POSITION_OFFSET));
@@ -9541,7 +9541,7 @@ boolean __attribute__((stdcall)) looping_sound_detail_request(
 
 			*seed= *seed*1664525UL+1013904223UL;
 			pick= (short)(((*seed>>16)*(unsigned long)(long)count)>>16);
-			player_index= unknown_0014dde0();
+			player_index= players_first_local_player();
 			for (; pick>0; pick--)
 			{
 				player_index= sound_next_local_player(player_index);
@@ -10490,7 +10490,7 @@ void __attribute__((stdcall)) sound_listener_compute_queries(
 					continue;
 				}
 				amount= unknown_0018cac0(said[index]);
-				unknown_00020670(sides, sizeof(sides[0]), 2, unknown_0031bc70);
+				array_construct_elements(sides, sizeof(sides[0]), 2, unknown_0031bc70);
 				unknown_00249c90(sides[0], structure_bsp, index, sides[1]);
 				cluster_index= listener->cluster_index;
 				if (sound_bit_vector_test(sides[0], cluster_index))

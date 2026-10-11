@@ -60,7 +60,7 @@ def run(t) -> None:
             Buffer(random_.randbytes(0x5C + 4)),
             globals={"game_time_globals": Buffer(bytes(time)), "unknown_004ced44": struct.pack("<f", 0.5)},
             externals={
-                "unknown_0008b7f0": gives,
+                "simulation_player_actions_take": gives,
                 "unknown_000825e0": unpacks,
                 "player_action_valid": lambda harness, arguments, good=good: (good, (bytes(harness.mu.mem_read(arguments[0], 0x5C)),)),
             },

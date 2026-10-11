@@ -776,7 +776,7 @@ def run(t) -> None:
             },
             memory={MEMORY: Memory(random_.randbytes(MEMORY_SIZE))},
             mocks=[Mock(lambda call: MEMORY, stack_arguments=1, registers=("ecx",))],
-            externals={"unknown_00020670": lambda harness, arguments: 0},
+            externals={"array_construct_elements": lambda harness, arguments: 0},
         )
 
     for _ in range(6):

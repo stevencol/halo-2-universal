@@ -953,7 +953,7 @@ def run(t) -> None:
                 "sound_classes_update": lambda harness, arguments: (0, (arguments[0] & 0xFFFFFFFF,)),
                 "sound_console_update": first_update,
                 "sound_channels_build_queries": tables,
-                "unknown_0014dde0": lambda harness, arguments: first_player,
+                "players_first_local_player": lambda harness, arguments: first_player,
                 "sound_listener_compute_queries": lambda harness, arguments: (0, (arguments[0], stack_bytes(harness, arguments[1], 4))),
                 "sound_channels_unknown_00129380": lambda harness, arguments: (0, (stack_bytes(harness, arguments[0], 16), stack_bytes(harness, arguments[1], 16))),
                 "lruv_wrap_ticks": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
@@ -1854,7 +1854,7 @@ def run(t) -> None:
             random_.choice((0, 1)),
             Buffer(bytes(controller)),
             Buffer(bytes(said)),
-            externals={"unknown_0014dde0": first_player, "unknown_0014de10": next_player, "sound_listener_doppler_pitch": listener_real},
+            externals={"players_first_local_player": first_player, "players_next_local_player": next_player, "sound_listener_doppler_pitch": listener_real},
         )
 
     EFFECTS = 16
@@ -5538,7 +5538,7 @@ def run(t) -> None:
                 "looping_sound_callbacks": GlobalRange(0x20),
             },
             externals={
-                "unknown_0014dde0": lambda harness, arguments, first_player=first_player: first_player,
+                "players_first_local_player": lambda harness, arguments, first_player=first_player: first_player,
                 "scenario_location_from_point": located,
                 "looping_sound_source_unknown0": told__,
             },
@@ -6237,7 +6237,7 @@ def run(t) -> None:
                 "unknown_00249d10": mine_,
                 "unknown_00249c90": sides_,
                 "unknown_0018cac0": amount_,
-                "unknown_00020670": lambda harness, arguments: (0, (arguments[1], arguments[2])),
+                "array_construct_elements": lambda harness, arguments: (0, (arguments[1], arguments[2])),
                 "sound_query_compute": query_,
             },
         )

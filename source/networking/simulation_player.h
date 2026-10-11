@@ -39,7 +39,11 @@ enum
 	_simulation_player_state4= 4,
 	_simulation_player_state5= 5,
 	SIMULATION_PLAYER_VIEW_UNKNOWN8_UNKNOWN5098_OFFSET= 0x5098,
-	SIMULATION_PLAYER_PACKED_ACTION_SIZE= 0x34
+	SIMULATION_PLAYER_PACKED_ACTION_SIZE= 0x34,
+	/* of what a view has for the players: the bits of the players whose
+	action it has, and where the actions are */
+	SIMULATION_PLAYER_ACTIONS_MASK_OFFSET= 0x14,
+	SIMULATION_PLAYER_ACTIONS_OFFSET= 0x18
 };
 
 /* ---------- prototypes/SIMULATION_PLAYER.C */

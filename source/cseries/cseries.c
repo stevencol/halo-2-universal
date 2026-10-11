@@ -281,3 +281,19 @@ float system_ticks_to_seconds(
 
 	return (float)((long double)remainder/(long double)SYSTEM_TICKS_PER_SECOND+(long double)seconds);
 }
+
+/* 0x00020670: a function is called with each of the elements of an array,
+as what makes them: it takes the element in a register. Nothing for an array
+of none */
+void __attribute__((stdcall)) array_construct_elements(
+	void *array,
+	unsigned long size,
+	long count,
+	void *(__attribute__((thiscall)) *constructor)(void *element))
+{
+	while (--count>=0)
+	{
+		constructor(array);
+		array= (byte *)array+size;
+	}
+}

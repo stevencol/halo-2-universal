@@ -103,7 +103,7 @@ void *ALLOCATION_CONVENTION unknown_000531b0(struct allocation *allocation, unsi
 
 /* 0x00020670: calls a function with each of the elements of an array, as
 what makes them */
-void __attribute__((stdcall)) unknown_00020670(void *array, unsigned long size, long count,
+void __attribute__((stdcall)) array_construct_elements(void *array, unsigned long size, long count,
 	void *(ALLOCATION_CONVENTION *constructor)(void *element));
 
 /* 0x004508fc: what the memory of the files is asked of. It gives nothing
@@ -1204,7 +1204,7 @@ void saved_game_files_new(
 
 		((struct built_in_saved_game_files *)files)->count= 0;
 		table->count= 0;
-		unknown_00020670(table->files, sizeof(struct saved_game_file_information), MAXIMUM_SAVED_GAME_FILES_PER_TABLE,
+		array_construct_elements(table->files, sizeof(struct saved_game_file_information), MAXIMUM_SAVED_GAME_FILES_PER_TABLE,
 			(void *(ALLOCATION_CONVENTION *)(void *))saved_game_file_information_new);
 	}
 	else

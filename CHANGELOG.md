@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Cuatro funciones cortas que se llamaban por su dirección
+
+Cuatro funciones cortas (186 bytes): dos en `game/players.c`, una en `cseries/cseries.c` y una en
+`networking/simulation_player.c`. De 1838
+funciones se pasa a 1842, el 16,35 % de las del juego (el 10,548 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `array_construct_elements` | `0x00020670` | `cseries/cseries.c` |
+| `simulation_player_actions_take` | `0x0008b7f0` | `networking/simulation_player.c` |
+| `players_first_local_player` | `0x0014dde0` | `game/players.c` |
+| `players_next_local_player` | `0x0014de10` | `game/players.c` |
+
+### Lo que se sabe
+
+- Son cuatro de las funciones más pequeñas de las 620 que `source\` llama
+  sin tenerlas; salieron de una lista nueva, por tamaño (el guion queda
+  descrito en `ESTADO.md`).
+- `players_first_local_player` y `players_next_local_player` (antes
+  `unknown_0014dde0` y `unknown_0014de10`, las que usa el sonido) recorren
+  **los jugadores de esta consola**: los cuatro sitios de `players_globals`
+  que no están vacíos.
+- `array_construct_elements` (antes `unknown_00020670`) llama a una función
+  con cada elemento de un array; es lo que el compilador del juego pone
+  para construir arrays de objetos.
+- `simulation_player_actions_take` (antes `unknown_0008b7f0`) saca de lo que
+  una vista guarda de los jugadores **lo que hace uno de ellos**,
+  empaquetado en `0x34` bytes, y lo da por entregado.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  537.
+- En este hito se pasaron las pruebas de las cuatro funciones y
+  `test_simulation_player` entera.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Cinco funciones cortas que los mandos preguntan a la partida en red
 
 Cinco funciones cortas (117 bytes): cuatro en el archivo nuevo

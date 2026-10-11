@@ -21,7 +21,7 @@ file is a guess, and so are the names of its functions.
 
 /* 0x0008b7f0: what a view has for the players gives what one of them does,
 packed; whether it has it. 0x000825e0: that is unpacked */
-boolean __attribute__((stdcall)) unknown_0008b7f0(long unknown0, byte *unknown5098, byte *packed);
+boolean __attribute__((stdcall)) simulation_player_actions_take(long unknown0, byte *unknown5098, byte *packed);
 void unknown_000825e0(const byte *packed, byte *action);
 
 /* ---------- globals */
@@ -66,7 +66,7 @@ void __attribute__((stdcall)) simulation_player_new(
 is something. One in its fifth state or its sixth has it from the view of
 its console (the one that the thing has with its bytes, or the first of the
 first kind or the third in a thing that follows another): if that has
-something of it (unknown_0008b7f0), it is unpacked (unknown_000825e0) and
+something of it (simulation_player_actions_take), it is unpacked (unknown_000825e0) and
 kept, with the time of the game. Then what is kept is given, if the player
 is not in its third state, something came, less time than the game has for
 it has gone by since, and it is good (player_action_valid) */
@@ -95,7 +95,7 @@ boolean __attribute__((stdcall)) simulation_player_get_action(
 		{
 			byte packed[SIMULATION_PLAYER_PACKED_ACTION_SIZE];
 
-			if (unknown_0008b7f0(*(const long *)(player+SIMULATION_PLAYER_UNKNOWN0_OFFSET),
+			if (simulation_player_actions_take(*(const long *)(player+SIMULATION_PLAYER_UNKNOWN0_OFFSET),
 				*(byte *const *)(view+SIMULATION_VIEW_UNKNOWN8_OFFSET)+SIMULATION_PLAYER_VIEW_UNKNOWN8_UNKNOWN5098_OFFSET, packed))
 			{
 				byte unpacked[PLAYER_ACTION_SIZE];
@@ -117,4 +117,25 @@ boolean __attribute__((stdcall)) simulation_player_get_action(
 	}
 
 	return FALSE;
+}
+
+/* 0x0008b7f0: what a view has for the players gives what one of them does,
+packed, and does not have it any more; whether it had it */
+boolean __attribute__((stdcall)) simulation_player_actions_take(
+	long player_index,
+	byte *actions,
+	byte *packed)
+{
+	unsigned long bit= 1<<player_index;
+	unsigned long *mask= (unsigned long *)(actions+SIMULATION_PLAYER_ACTIONS_MASK_OFFSET);
+
+	if (!(*mask&bit))
+	{
+		return FALSE;
+	}
+	memcpy(packed, actions+SIMULATION_PLAYER_ACTIONS_OFFSET+player_index*SIMULATION_PLAYER_PACKED_ACTION_SIZE,
+		SIMULATION_PLAYER_PACKED_ACTION_SIZE);
+	*mask&= ~bit;
+
+	return TRUE;
 }
