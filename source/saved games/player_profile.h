@@ -73,10 +73,38 @@ struct player_profile
 	byte unknown102;
 	byte unknown103[0x15];
 	struct player_appearance appearance;
-	byte unknown128[0x29];
+	byte unknown128[0x20];
+	/* what the voice is told of the player's gamepad: the others that it
+	hears, and how it wants the voice */
+	long voice_mask;
+	long voice_setting;
+	byte unknown150;
 	byte unknown151;
 	byte unknown152[0x8E];
 };
+
+/* what the others are told of a player */
+struct player_properties
+{
+	wchar name[PLAYER_PROFILE_NAME_LENGTH+1];
+	struct player_appearance appearance;
+	byte unknown50[0x20];
+	byte unknown70[12];
+	/* from 0 to 16, or NONE */
+	char unknown7C;
+	byte unknown7D;
+	char unknown7E;
+	char unknown7F;
+	byte unknown80;
+	byte unknown81;
+	byte unknown82[2];
+	long unknown84;
+	short unknown88;
+	short unknown8A;
+	long unknown8C;
+};
+
+typedef char verify_player_properties_size[sizeof(struct player_properties) == 0x90 ? 1 : -1];
 
 struct saved_game_file_result;
 
@@ -90,6 +118,7 @@ typedef char verify_player_profile_unknown151_offset[
 /* ---------- prototypes/PLAYER_PROFILE.C */
 
 boolean player_appearance_valid(const struct player_appearance *appearance);
+void player_properties_reset(struct player_properties *properties);
 long player_profile_create(long unused, const wchar *name);
 boolean player_profile_find(struct player_profile *profile, const wchar *name, long *file);
 boolean player_profile_load(struct player_profile *profile, long file);

@@ -18,19 +18,20 @@ What the game keeps of the player of each gamepad. The names are guesses.
 
 /* ---------- prototypes */
 
-/* 0x00190eb3: the name that is shown of a gamepad's player is made again.
-0x00199e2e: something of the interface, after no one is signed in.
+/* 0x00199e2e: something of the interface, after no one is signed in.
 0x000abc70: a task of the service of games starts for a player of it; NONE if
 it could not. 0x002153dd: a profile is written to its file */
-void __attribute__((stdcall)) unknown_00190eb3(long index);
 void __attribute__((stdcall)) unknown_00199e2e(long unknown);
 long __attribute__((stdcall)) unknown_000abc70(const struct online_user *user, long index);
 void __attribute__((stdcall)) unknown_002153dd(long index, long saved_game, const struct player_profile *profile,
 	long unknown);
 
-/* 0x0018fb34: a gamepad's player has a profile, and its file */
-void __attribute__((stdcall)) user_interface_controller_set_profile(long index, const struct player_profile *profile,
-	long saved_game);
+/* 0x0014b410: who the player of a gamepad of this console is, in twelve
+bytes. 0x00190c34: how a gamepad is played with is as its player's profile
+says. 0x0023620d: a text of the game, by number */
+void __attribute__((stdcall)) unknown_0014b410(byte *identifier, long index);
+void unknown_00190c34(long index);
+void unknown_0023620d(long string, wchar *text);
 
 /* ---------- code */
 
@@ -624,7 +625,7 @@ void __attribute__((stdcall)) user_interface_controller_set_online(
 	}
 	if (!online)
 	{
-		unknown_00190eb3(index);
+		user_interface_controller_update_name(index);
 	}
 }
 
@@ -973,4 +974,176 @@ long user_interface_controllers_get_highest_profile_unknownEC(
 	}
 
 	return highest;
+}
+
+/* 0x0018fd94: who a gamepad's player is, in twelve bytes, and what the
+others are told of it; each if it is asked for. What the voice keeps of it
+comes first, and then its name, the looks of its profile, and what else the
+game keeps of it */
+void __attribute__((stdcall)) user_interface_controller_get_properties(
+	long index,
+	byte *identifier,
+	struct player_properties *properties)
+{
+	const struct user_interface_controller *controller= USER_INTERFACE_CONTROLLER(index);
+	boolean has_voice= controller->voice_index>=0 && controller->voice_index<UNKNOWN_004CD904_COUNT;
+
+	if (identifier)
+	{
+		memcpy(identifier, controller->identifier, sizeof(controller->identifier));
+	}
+	if (properties)
+	{
+		long controller_index;
+		unsigned long words;
+
+		player_properties_reset(properties);
+		if (!has_voice ||
+			!game_voice_unknown_004cd904_get(controller->voice_index, &controller_index, &words, (byte *)properties))
+		{
+			player_properties_reset(properties);
+		}
+		ustrnzcpy(properties->name, controller->name, PLAYER_PROFILE_NAME_LENGTH+1);
+		properties->appearance= controller->profile.appearance;
+		if (user_interface_controller_unknown4E0_valid(controller))
+		{
+			memcpy(properties->unknown70, controller->unknown4E0, sizeof(properties->unknown70));
+			memcpy(properties->unknown50, controller->unknown4E0+sizeof(properties->unknown70),
+				sizeof(properties->unknown50));
+		}
+		else
+		{
+			memset(properties->unknown70, 0, sizeof(properties->unknown70));
+			memset(properties->unknown50, 0, sizeof(properties->unknown50));
+		}
+		properties->unknown7D= (byte)controller->unknown200;
+		properties->unknown80= controller->unknown46C;
+		properties->unknown81= (byte)controller->unknown204;
+		if (controller->unknown1FC==NONE)
+		{
+			properties->unknown7C= NONE;
+		}
+		else if (controller->unknown1FC<0)
+		{
+			properties->unknown7C= 0;
+		}
+		else
+		{
+			properties->unknown7C= controller->unknown1FC>PLAYER_PROPERTIES_UNKNOWN7C_MAXIMUM ?
+				PLAYER_PROPERTIES_UNKNOWN7C_MAXIMUM : (char)controller->unknown1FC;
+		}
+	}
+}
+
+/* 0x0018fe9e: what the voice keeps of a gamepad's player is what the game
+has of it now; nothing if the voice keeps nothing of it */
+void user_interface_controller_update_voice(
+	long index)
+{
+	const struct user_interface_controller *controller= USER_INTERFACE_CONTROLLER(index);
+
+	if (controller->voice_index!=NONE)
+	{
+		struct player_properties properties;
+		byte identifier[sizeof(controller->identifier)];
+		unsigned long words;
+
+		user_interface_controller_get_properties(index, identifier, &properties);
+		words= game_voice_controller_player_words(index);
+		game_voice_unknown_004cd904_set(controller->voice_index, index, words, (const byte *)&properties);
+	}
+}
+
+/* 0x0018fee9: a gamepad's player is someone of the service of games: its
+name is made again, and the voice keeps something of it, as of who it is
+there */
+void __attribute__((stdcall)) user_interface_controller_set_online_user(
+	const struct online_user *user,
+	long index)
+{
+	struct user_interface_controller *controller= USER_INTERFACE_CONTROLLER(index);
+
+	controller->user= *user;
+	user_interface_controller_update_name(index);
+	if (controller->voice_index==NONE)
+	{
+		controller->voice_index= game_voice_unknown_004cd904_new(controller->identifier);
+	}
+	memcpy(controller->identifier, &controller->user, sizeof(controller->identifier));
+	game_voice_unknown_004cd904_set_identifier(controller->voice_index, controller->identifier);
+}
+
+/* 0x00190eb3: the name that is shown of a gamepad's player is made again:
+the one of the service of games if it is signed in there, made with a text
+of the game and its number if it is a guest; if not, the one of its profile;
+and nothing without one. The voice is told */
+void __attribute__((stdcall)) user_interface_controller_update_name(
+	long index)
+{
+	struct user_interface_controller *controller= USER_INTERFACE_CONTROLLER(index);
+
+	if ((controller->flags>>_user_interface_controller_online_bit)&1)
+	{
+		if (controller->user.flags&ONLINE_USER_GUEST_MASK)
+		{
+			wchar format[USER_INTERFACE_CONTROLLER_GUEST_NAME_FORMAT_LENGTH];
+			long guest= (char)controller->user.flags&ONLINE_USER_GUEST_MASK;
+
+			format[0]= 0;
+			unknown_0023620d(USER_INTERFACE_CONTROLLER_GUEST_NAME_STRING, format);
+			usnzprintf(controller->name, PLAYER_PROFILE_NAME_LENGTH+1, format, (long)(short)guest,
+				controller->user.name);
+		}
+		else
+		{
+			usnzprintf(controller->name, PLAYER_PROFILE_NAME_LENGTH+1, (const wchar *)u"%hs", controller->user.name);
+		}
+	}
+	else if ((controller->flags>>_user_interface_controller_profile_bit)&1)
+	{
+		ustrnzcpy(controller->name, controller->profile.name, PLAYER_PROFILE_NAME_LENGTH+1);
+	}
+	else
+	{
+		controller->name[0]= 0;
+	}
+	user_interface_controller_update_voice(index);
+}
+
+/* 0x0018fb34: a gamepad's player has a profile, and its file. One that had
+none is someone of this console, and the voice keeps something of it. What
+the game kept of the file of the profile that it had is let go of, and it
+keeps the new file; the gamepad is played with as the profile says, the name
+is made again, and the voice is told what the profile says of it */
+void __attribute__((stdcall)) user_interface_controller_set_profile(
+	long index,
+	const struct player_profile *profile,
+	long saved_game)
+{
+	struct user_interface_controller *controller= USER_INTERFACE_CONTROLLER(index);
+	boolean had_profile= (controller->flags&FLAG(_user_interface_controller_profile_bit))!=0;
+	boolean new_file= !(had_profile && controller->saved_game==saved_game);
+
+	if (!had_profile)
+	{
+		unknown_0014b410(controller->identifier, index);
+		controller->voice_index= game_voice_unknown_004cd904_new(controller->identifier);
+		controller->saved_game= NONE;
+	}
+	if (new_file && controller->saved_game!=NONE)
+	{
+		cached_saved_game_file_delete(controller->saved_game);
+	}
+	controller->profile= *profile;
+	controller->flags|= FLAG(_user_interface_controller_profile_bit);
+	controller->saved_game= saved_game;
+	unknown_00190c34(index);
+	user_interface_controller_update_name(index);
+	if (new_file && controller->saved_game!=NONE)
+	{
+		cached_saved_game_file_count++;
+		cached_saved_game_files[cached_saved_game_file_count-1].file= controller->saved_game;
+	}
+	game_voice_set_controller_mask(profile->voice_mask, index);
+	game_voice_set_controller_setting(index, profile->voice_setting);
 }

@@ -36,7 +36,13 @@ enum
 	_player_profile_unknown0_bit= 0,
 	_player_profile_unknown1_bit= 1,
 	/* from what number on something is so, in user_interface_unknown_001907bf */
-	USER_INTERFACE_UNKNOWN_001907BF_MINIMUM= 250
+	USER_INTERFACE_UNKNOWN_001907BF_MINIMUM= 250,
+	/* the text of the game that the name of a guest is made with, and how
+	long it can be; the most that a number of what the others are told of a
+	player can be */
+	USER_INTERFACE_CONTROLLER_GUEST_NAME_STRING= 0x2D000231,
+	USER_INTERFACE_CONTROLLER_GUEST_NAME_FORMAT_LENGTH= 256,
+	PLAYER_PROPERTIES_UNKNOWN7C_MAXIMUM= 16
 };
 
 /* ---------- structures */
@@ -142,5 +148,12 @@ boolean user_interface_controller_get_profile_flag1(long index);
 long user_interface_controller_get_profile_unknown5C(long index);
 void user_interface_controller_get_profile_unknownEC(long index, long *value, long *which);
 long user_interface_controllers_get_highest_profile_unknownEC(void);
+void __attribute__((stdcall)) user_interface_controller_get_properties(long index, byte *identifier,
+	struct player_properties *properties);
+void user_interface_controller_update_voice(long index);
+void __attribute__((stdcall)) user_interface_controller_set_online_user(const struct online_user *user, long index);
+void __attribute__((stdcall)) user_interface_controller_update_name(long index);
+void __attribute__((stdcall)) user_interface_controller_set_profile(long index, const struct player_profile *profile,
+	long saved_game);
 
 #endif

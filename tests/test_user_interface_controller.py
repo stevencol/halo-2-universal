@@ -128,7 +128,7 @@ def run(t) -> None:
             index,
             random_.choice((0, 1)),
             globals=table,
-            externals={"unknown_00190eb3": told},
+            externals={"user_interface_controller_update_name": told},
         )
         t.check(
             "user_interface_controller_restart_tasks",
@@ -290,4 +290,137 @@ def run(t) -> None:
             "user_interface_controllers_get_highest_profile_unknownEC",
             globals=table,
             externals={"user_interface_controller_get_profile_unknownEC": of_controller},
+        )
+
+    # ---------- a gamepad's player gets a profile and a name; what the voice keeps of it
+
+    def voices() -> bytes:
+        data = bytearray(random_.randbytes(4 * 0xD0))
+        free = random_.randrange(4)
+        for other in range(4):
+            data[other * 0xD0] = 0 if other == free else random_.choice((0, 1, 1))
+        return bytes(data)
+
+    def identified(harness, arguments):
+        # who the player of a gamepad of this console is: from the number of the gamepad alone
+        harness.mu.mem_write(arguments[0], struct.pack("<3I", arguments[1] ^ 0x5A5A5A5A, 0x1234, 0xBAD00000))
+        return 0, (harness.normalize(arguments[0]) if arguments[0] >= 0x400000 else "stack", arguments[1])
+
+    for n in range(1500):
+        index = random_.randrange(COUNT)
+        t.check("player_properties_reset", Buffer(random_.randbytes(0x90)))
+        t.check(
+            "game_voice_unknown_004cd904_new",
+            random_.choice((Buffer(random_.randbytes(12)), 0)),
+            globals={"unknown_004cd904": voices()},
+            externals={"unknown_0014b410": lambda harness, arguments: (identified(harness, arguments)[0], (arguments[1],))},
+        )
+        t.check("game_voice_unknown_004cd904_set_identifier", index, Buffer(random_.randbytes(12)), globals={"unknown_004cd904": voices()})
+        t.check(
+            "game_voice_unknown_004cd904_set",
+            index,
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            Buffer(random_.randbytes(0x90)),
+            globals={"unknown_004cd904": voices()},
+        )
+        t.check(
+            "game_voice_unknown_004cd904_get",
+            index,
+            random_.choice((Buffer(random_.randbytes(4)), 0)),
+            random_.choice((Buffer(random_.randbytes(4)), 0)),
+            random_.choice((Buffer(random_.randbytes(0x90)), 0)),
+            globals={"unknown_004cd904": voices()},
+        )
+
+        data = controllers(random_)
+        for other in range(COUNT):
+            base = other * SIZE
+            struct.pack_into("<I", data, base + VOICE, random_.choice((NONE, 0, 1, 2, 3, 4, 0x80000000)))
+            struct.pack_into("<I", data, base + 0x1FC, random_.choice((NONE, 0, 5, 16, 17, 1000, 0xFFFFFFFB, 0x80000000)))
+            name = bytes(random_.choice(b"Chief xyz") for letter in range(random_.choice((0, 1, 8, 15)))) + bytes(1)
+            data[base + USER + 0xC:base + USER + 0xC + len(name)] = name
+            if random_.random() < 0.5:
+                # a name of the profile that ends
+                start = base + 0x20 + random_.randrange(0, 0x40, 2)
+                data[start:base + 0x60] = bytes(base + 0x60 - start)
+        data = bytes(data)
+        assert len(data) == COUNT * SIZE
+        table = {"unknown_0054e8e0": GlobalData(data)}
+        t.check(
+            "user_interface_controller_get_properties",
+            index,
+            random_.choice((Buffer(random_.randbytes(12)), 0)),
+            random_.choice((Buffer(random_.randbytes(0x90)), Buffer(random_.randbytes(0x90)), 0)),
+            globals={**table, "unknown_004cd904": voices()},
+        )
+
+        def properties_of(harness, arguments, made=random_.randbytes(12 + 0x90)):
+            harness.mu.mem_write(arguments[1], made[:12])
+            harness.mu.mem_write(arguments[2], made[12:])
+            return 0, (arguments[0],)
+
+        t.check(
+            "user_interface_controller_update_voice",
+            index,
+            globals=table,
+            externals={
+                "user_interface_controller_get_properties": properties_of,
+                "game_voice_controller_player_words": lambda harness, arguments, words=random_.getrandbits(32): (words, tuple(arguments)),
+                "game_voice_unknown_004cd904_set": lambda harness, arguments: (
+                    0,
+                    (*arguments[:3], bytes(harness.mu.mem_read(arguments[3], 0x90))),
+                ),
+            },
+        )
+        t.check(
+            "user_interface_controller_set_online_user",
+            Buffer(random_.randbytes(0x70)),
+            index,
+            globals=table,
+            externals={
+                "user_interface_controller_update_name": told,
+                "game_voice_unknown_004cd904_new": lambda harness, arguments, voice=random_.randrange(4): (
+                    voice,
+                    (bytes(harness.mu.mem_read(arguments[0], 12)),),
+                ),
+                "game_voice_unknown_004cd904_set_identifier": lambda harness, arguments: (
+                    0,
+                    (arguments[0], bytes(harness.mu.mem_read(arguments[1], 12))),
+                ),
+            },
+        )
+
+        def text_of(harness, arguments):
+            harness.mu.mem_write(arguments[1], "%d - %hs".encode("utf-16-le") + bytes(2))
+            return 0, (arguments[0],)
+
+        t.check(
+            "user_interface_controller_update_name",
+            index,
+            globals=table,
+            externals={"unknown_0023620d": text_of, "user_interface_controller_update_voice": told},
+        )
+        t.check(
+            "user_interface_controller_set_profile",
+            index,
+            Buffer(random_.randbytes(0x1E0)),
+            random_.choice((NONE, 5, 5, 0x10007)),
+            globals={
+                **table,
+                "cached_saved_game_file_count": random_.randrange(3),
+                "cached_saved_game_files": random_.randbytes(4 * 0x44),
+            },
+            externals={
+                "unknown_0014b410": identified,
+                "game_voice_unknown_004cd904_new": lambda harness, arguments, voice=random_.randrange(4): (
+                    voice,
+                    (bytes(harness.mu.mem_read(arguments[0], 12)),),
+                ),
+                "cached_saved_game_file_delete": told,
+                "unknown_00190c34": told,
+                "user_interface_controller_update_name": told,
+                "game_voice_set_controller_mask": told,
+                "game_voice_set_controller_setting": told,
+            },
         )

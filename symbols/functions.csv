@@ -2394,7 +2394,7 @@ address,name,source,arguments,returns,convention
 00190728,user_interface_controller_restart_tasks,source/interface/user_interface_controller.c,stack,void,stdcall
 00190e71,user_interface_controllers_unknown_00190e71,source/interface/user_interface_controller.c,stack,void,stdcall
 0018f5e3,user_interface_controllers_update_saved_games,source/interface/user_interface_controller.c,,void
-00190eb3,unknown_00190eb3,,stack,void,stdcall
+00190eb3,user_interface_controller_update_name,source/interface/user_interface_controller.c,stack,void,stdcall
 00199e2e,unknown_00199e2e,,stack,void,stdcall
 000abc70,unknown_000abc70,,ebx stack,int,stdcall
 002153dd,unknown_002153dd,,stack stack stack stack,void,stdcall
@@ -2410,4 +2410,15 @@ address,name,source,arguments,returns,convention
 001904ff,user_interface_controller_get_profile_unknown5C,source/interface/user_interface_controller.c,ecx,int
 0019052c,user_interface_controller_get_profile_unknownEC,source/interface/user_interface_controller.c,ecx edi esi,void
 00190565,user_interface_controllers_get_highest_profile_unknownEC,source/interface/user_interface_controller.c,,int
-0018fb34,user_interface_controller_set_profile,,stack stack stack,void,stdcall
+0018fb34,user_interface_controller_set_profile,source/interface/user_interface_controller.c,stack stack stack,void,stdcall
+001537f0,player_properties_reset,source/saved games/player_profile.c,edx,void
+00064610,game_voice_unknown_004cd904_new,source/networking/game_voice.c,stack,int,stdcall
+00064820,game_voice_unknown_004cd904_set_identifier,source/networking/game_voice.c,eax ecx,void
+00064840,game_voice_unknown_004cd904_set,source/networking/game_voice.c,eax ecx edx stack,void,stdcall
+000647d0,game_voice_unknown_004cd904_get,source/networking/game_voice.c,edx ecx ebx stack,bool,stdcall
+0018fd94,user_interface_controller_get_properties,source/interface/user_interface_controller.c,ecx eax stack,void,stdcall
+0018fe9e,user_interface_controller_update_voice,source/interface/user_interface_controller.c,edi,void
+0018fee9,user_interface_controller_set_online_user,source/interface/user_interface_controller.c,eax stack,void,stdcall
+0014b410,unknown_0014b410,,ecx stack,void,stdcall
+00190c34,unknown_00190c34,,eax,void
+0023620d,unknown_0023620d,,eax esi,void

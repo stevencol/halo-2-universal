@@ -78,6 +78,8 @@ enum
 	UNKNOWN_004CD904_UNKNOWN14_OFFSET= 0x14,
 	UNKNOWN_004CD904_UNKNOWN14_SIZE= 0x90,
 	UNKNOWN_004CD904_VOICE_WORDS_OFFSET= 0xA4,
+	UNKNOWN_004CD904_IDENTIFIER_OFFSET= 1,
+	UNKNOWN_004CD904_IDENTIFIER_SIZE= 12,
 	/* in what the game knows of the player of a gamepad: which profile */
 	UNKNOWN_0054E8E0_PROFILE_OFFSET= 4,
 
@@ -327,6 +329,12 @@ extern byte game_voice_session_player_identifiers[GAME_VOICE_SESSION_PLAYER_IDEN
 extern byte unknown_004cd904[UNKNOWN_004CD904_COUNT][UNKNOWN_004CD904_SIZE];
 
 void game_voice_unknown_004cd904_clear(long index);
+long __attribute__((stdcall)) game_voice_unknown_004cd904_new(const byte *identifier);
+void game_voice_unknown_004cd904_set_identifier(long index, const byte *identifier);
+void __attribute__((stdcall)) game_voice_unknown_004cd904_set(long index, long controller_index, unsigned long words,
+	const byte *properties);
+boolean __attribute__((stdcall)) game_voice_unknown_004cd904_get(long index, long *controller_index,
+	unsigned long *words, byte *properties);
 extern byte *unknown_004e9ae8;
 extern long unknown_0055e4d0[UNKNOWN_0055E4D0_COUNT];
 extern long unknown_004c9880;

@@ -349,3 +349,19 @@ boolean player_profile_read(
 
 	return success;
 }
+
+/* 0x001537f0: what the others are told of a player is nothing: no name, no
+looks, and NONE for what it has at the end */
+void player_properties_reset(
+	struct player_properties *properties)
+{
+	memset(properties, 0, sizeof(*properties));
+	properties->unknown7C= 0;
+	properties->unknown7E= NONE;
+	properties->unknown7F= NONE;
+	properties->unknown84= NONE;
+	properties->unknown8C= NONE;
+	properties->unknown88= NONE;
+	properties->unknown8A= NONE;
+	properties->unknown7D= 0;
+}

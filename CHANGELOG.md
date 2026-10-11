@@ -2,6 +2,61 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Dar perfil y nombre al jugador de un mando, y lo que la voz guarda de él
+
+Diez funciones (1225 bytes): cinco en `interface/user_interface_controller.c`, cuatro en
+`networking/game_voice.c` y una en `saved games/player_profile.c`. De 1802
+funciones se pasa a 1812, el 16,09 % de las del juego (el 10,397 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_voice_unknown_004cd904_new` | `0x00064610` | `networking/game_voice.c` |
+| `game_voice_unknown_004cd904_get` | `0x000647d0` | `networking/game_voice.c` |
+| `game_voice_unknown_004cd904_set_identifier` | `0x00064820` | `networking/game_voice.c` |
+| `game_voice_unknown_004cd904_set` | `0x00064840` | `networking/game_voice.c` |
+| `player_properties_reset` | `0x001537f0` | `saved games/player_profile.c` |
+| `user_interface_controller_set_profile` | `0x0018fb34` | `interface/user_interface_controller.c` |
+| `user_interface_controller_get_properties` | `0x0018fd94` | `interface/user_interface_controller.c` |
+| `user_interface_controller_update_voice` | `0x0018fe9e` | `interface/user_interface_controller.c` |
+| `user_interface_controller_set_online_user` | `0x0018fee9` | `interface/user_interface_controller.c` |
+| `user_interface_controller_update_name` | `0x00190eb3` | `interface/user_interface_controller.c` |
+
+### Lo que se sabe
+
+- `user_interface_controller_set_profile` **da un perfil al jugador de un
+  mando**: si no tenía, le hace una identidad de esta consola (`0x0014b410`)
+  y le toma una de las cuatro cosas de la voz; suelta el archivo del perfil
+  anterior y apunta el nuevo entre los que el juego tiene abiertos; ajusta
+  el mando a lo que dice el perfil (`0x00190c34`); rehace el nombre; y le
+  dice a la voz a quién oye y cómo quiere la voz (dos números nuevos del
+  perfil, en `+0x148` y `+0x14C`).
+- `user_interface_controller_update_name` **hace el nombre que se enseña**:
+  el del servicio si está conectado (para un invitado, con un texto del
+  juego y su número de invitado), si no el del perfil, y si no nada.
+- `user_interface_controller_get_properties` junta **lo que se dice a los
+  demás de un jugador**: `struct player_properties`, de `0x90` bytes
+  (nombre, aspecto del perfil y algunos números). Son los `0x90` bytes que
+  ya salían sin nombre en la voz y en la sesión de red.
+- Las cuatro funciones de `game_voice.c` son las de la tabla de
+  `0x004cd904` (cuatro cosas de `0xD0` bytes): tomar una libre, dar o
+  cambiar de quién es, y guardar o leer el mando, lo que se dice del
+  jugador y sus números de la voz.
+- `player_properties_reset` deja uno de esos bloques vacío.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  530.
+- En este hito se pasaron las pruebas de las diez funciones.
+  `usnzprintf` corre de verdad en los dos lados, con los formatos `%hs` y
+  `%d - %hs`.
+- `game_voice_unknown_004cd904_new` no mira si queda alguna libre (el juego
+  tampoco): las pruebas siempre dejan una.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Cambiar el perfil del jugador de un mando: doce funciones
 
 Doce funciones más en `interface/user_interface_controller.c` (889 bytes). De 1790

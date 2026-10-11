@@ -1868,3 +1868,93 @@ void game_voice_unknown_004cd904_clear(
 {
 	memset(unknown_004cd904[index], 0, UNKNOWN_004CD904_SIZE);
 }
+
+/* 0x0014b410: who the player of a gamepad of this console is, in twelve
+bytes */
+void __attribute__((stdcall)) unknown_0014b410(byte *identifier, long controller_index);
+
+/* 0x00064610: the first of the things of unknown_004cd904 that is free is
+taken, for who someone is; without that, for the player of the gamepad of
+the same number. The game does not look at whether there is one free */
+long __attribute__((stdcall)) game_voice_unknown_004cd904_new(
+	const byte *identifier)
+{
+	byte made[UNKNOWN_004CD904_IDENTIFIER_SIZE];
+	long index= NONE;
+	long free_index;
+	byte *profile;
+
+	for (free_index= 0; free_index<UNKNOWN_004CD904_COUNT; free_index++)
+	{
+		if (!unknown_004cd904[free_index][0])
+		{
+			index= free_index;
+			break;
+		}
+	}
+	if (!identifier)
+	{
+		unknown_0014b410(made, index);
+		identifier= made;
+	}
+	profile= unknown_004cd904[index];
+	memset(profile, 0, UNKNOWN_004CD904_SIZE);
+	profile[0]= TRUE;
+	memcpy(profile+UNKNOWN_004CD904_IDENTIFIER_OFFSET, identifier, UNKNOWN_004CD904_IDENTIFIER_SIZE);
+
+	return index;
+}
+
+/* 0x00064820: one of the things of unknown_004cd904 is of someone else */
+void game_voice_unknown_004cd904_set_identifier(
+	long index,
+	const byte *identifier)
+{
+	memcpy(unknown_004cd904[index]+UNKNOWN_004CD904_IDENTIFIER_OFFSET, identifier, UNKNOWN_004CD904_IDENTIFIER_SIZE);
+}
+
+/* 0x00064840: one of the things of unknown_004cd904 gets its gamepad, what
+the others are told of its player, and the numbers of the voice of the
+player */
+void __attribute__((stdcall)) game_voice_unknown_004cd904_set(
+	long index,
+	long controller_index,
+	unsigned long words,
+	const byte *properties)
+{
+	byte *profile= unknown_004cd904[index];
+
+	memcpy(profile+UNKNOWN_004CD904_GAMEPAD_OFFSET, &controller_index, sizeof(controller_index));
+	memcpy(profile+UNKNOWN_004CD904_UNKNOWN14_OFFSET, properties, UNKNOWN_004CD904_UNKNOWN14_SIZE);
+	memcpy(profile+UNKNOWN_004CD904_VOICE_WORDS_OFFSET, &words, sizeof(words));
+}
+
+/* 0x000647d0: what one of the things of unknown_004cd904 has, each if it is
+asked for; whether the thing is taken */
+boolean __attribute__((stdcall)) game_voice_unknown_004cd904_get(
+	long index,
+	long *controller_index,
+	unsigned long *words,
+	byte *properties)
+{
+	const byte *profile= unknown_004cd904[index];
+
+	if (!profile[0])
+	{
+		return FALSE;
+	}
+	if (controller_index)
+	{
+		memcpy(controller_index, profile+UNKNOWN_004CD904_GAMEPAD_OFFSET, sizeof(*controller_index));
+	}
+	if (properties)
+	{
+		memcpy(properties, profile+UNKNOWN_004CD904_UNKNOWN14_OFFSET, UNKNOWN_004CD904_UNKNOWN14_SIZE);
+	}
+	if (words)
+	{
+		memcpy(words, profile+UNKNOWN_004CD904_VOICE_WORDS_OFFSET, sizeof(*words));
+	}
+
+	return TRUE;
+}
