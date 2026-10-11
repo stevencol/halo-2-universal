@@ -137,3 +137,28 @@ def run(t) -> None:
             globals={"player_data": Buffer(bytes(data), pointers=(0x44, 0x48))},
             externals={"unknown_00152df0": told},
         )
+
+    # ---------- two more things that another console says of a player
+
+    for n in range(1500):
+        data = bytearray(random_.randbytes(BITS + 4))
+        data[0:0x20] = b"players".ljust(0x20, b"\0")
+        there = [random_.random() < 0.6 for index in range(COUNT)]
+        for index in range(COUNT):
+            struct.pack_into("<HH", data, DATUMS + index * DATUM, random_.getrandbits(15) | 0x8000 if there[index] else 0, random_.choice((0, 0, 2, 2, 0xFFFD, 0xFFFF)))
+        struct.pack_into("<ii", data, 0x20, COUNT, DATUM)
+        struct.pack_into("<ii", data, 0x34, 0, random_.choice((COUNT, COUNT, 8)))
+        struct.pack_into("<II", data, 0x44, DATUMS, BITS)
+        place = random_.choice((*range(COUNT), *range(COUNT), NONE, COUNT, 0x80000000))
+        who = bytes(data[DATUMS + (place % COUNT) * DATUM + 4:DATUMS + (place % COUNT) * DATUM + 16])
+        update = Buffer(struct.pack("<I", place) + random_.choice((who, who, who, random_.randbytes(12))) + random_.randbytes(0x28 - 16 + 0x90))
+        players = {"player_data": Buffer(bytes(data), pointers=(0x44, 0x48))}
+        t.check("simulation_players_update_unknown_000850c0", update, globals=players, externals={"unknown_0014c540": told})
+        t.check(
+            "simulation_players_update_set_properties",
+            update,
+            globals=players,
+            externals={
+                "unknown_0014be90": lambda harness, arguments: (0, (bytes(harness.mu.mem_read(arguments[0], 0x90)), arguments[1])),
+            },
+        )

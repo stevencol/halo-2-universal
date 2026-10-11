@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Otras dos cosas que otra consola dice de un jugador
+
+Dos funciones más en `networking/simulation_players.c` (244 bytes). De 1935
+funciones se pasa a 1937, el 17,19 % de las del juego (el 10,837 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_players_update_unknown_000850c0` | `0x000850c0` | `networking/simulation_players.c` |
+| `simulation_players_update_set_properties` | `0x000854c0` | `networking/simulation_players.c` |
+
+### Lo que se sabe
+
+- Las dos son hermanas de `simulation_players_update_remove_player` (hito
+  569): miran si el jugador de la partida que está en el sitio que dice la
+  otra consola es quien ella dice, y entonces:
+  - `simulation_players_update_set_properties` le pone **lo que se dice de
+    él a los demás** (los `0x90` bytes, que en el mensaje están en `+0x28`);
+  - `simulation_players_update_unknown_000850c0` hace algo con un jugador
+    que **ya se había ido** (`0x0014c540`).
+- Así que lo que una consola manda de un jugador a las otras son mensajes
+  pequeños de cuatro clases —se fue, cambió lo que se dice de él, y dos
+  más—, cada uno con su sitio y su identidad para comprobar que se habla
+  del mismo jugador.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  569.
+- En este hito se pasaron las pruebas de las dos funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Qué jugadores siguen en la partida, y uno que otra consola dice que se fue
 
 Dos funciones más en `networking/simulation_players.c` (289 bytes). De 1933

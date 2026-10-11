@@ -2544,3 +2544,7 @@ address,name,source,arguments,returns,convention
 00084be0,simulation_players_collection_get_active_mask,source/networking/simulation_players.c,ecx,int
 00084f30,simulation_players_update_remove_player,source/networking/simulation_players.c,eax,bool
 00152df0,unknown_00152df0,,stack,void,stdcall
+000850c0,simulation_players_update_unknown_000850c0,source/networking/simulation_players.c,eax,bool
+000854c0,simulation_players_update_set_properties,source/networking/simulation_players.c,stack,bool,stdcall
+0014c540,unknown_0014c540,,eax,void
+0014be90,unknown_0014be90,,eax stack,void,stdcall

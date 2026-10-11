@@ -19,10 +19,30 @@ they are on. The names are guesses.
 
 /* ---------- prototypes */
 
-/* 0x00152df0: a player of the game has left */
+/* 0x00152df0: a player of the game has left. 0x0014c540: something is done
+with a player that had left. 0x0014be90: what the others are told of a
+player becomes something else */
 void __attribute__((stdcall)) unknown_00152df0(long player_index);
+void unknown_0014c540(long player_index);
+void __attribute__((stdcall)) unknown_0014be90(const byte *properties, long player_index);
 
 /* ---------- code */
+
+/* the player of the game that another console says something of: the one in
+the place that it says, if it is who it says; NULL if not */
+static inline __attribute__((always_inline)) const byte *simulation_players_update_get_player(
+	const byte *update)
+{
+	const byte *datum= (const byte *)datum_try_and_get_absolute(player_data, *(const long *)update);
+
+	if (datum && memcmp(datum+PLAYER_DATUM_IDENTIFIER_OFFSET, update+SIMULATION_PLAYERS_UPDATE_IDENTIFIER_OFFSET,
+		SIMULATION_PLAYERS_PLAYER_IDENTIFIER_SIZE)==0)
+	{
+		return datum;
+	}
+
+	return NULL;
+}
 
 /* 0x00082fa0: the thing starts with nothing: no consoles, no players, and
 its four numbers as NONE */
@@ -323,6 +343,41 @@ boolean simulation_players_update_remove_player(
 		return FALSE;
 	}
 	unknown_00152df0(datum_absolute_index_to_index(player_data, absolute_index));
+
+	return TRUE;
+}
+
+/* 0x000850c0: another console says something of a player that left: the
+player of the game in that place, if it is who the console says and has left,
+has unknown_0014c540 done with it. Whether it had */
+boolean simulation_players_update_unknown_000850c0(
+	const byte *update)
+{
+	const byte *datum= simulation_players_update_get_player(update);
+
+	if (!datum || !(datum[PLAYER_DATUM_FLAGS_OFFSET]&FLAG(_player_datum_left_bit)))
+	{
+		return FALSE;
+	}
+	unknown_0014c540(datum_absolute_index_to_index(player_data, *(const long *)update));
+
+	return TRUE;
+}
+
+/* 0x000854c0: another console says what the others are told of a player:
+the player of the game in that place takes it, if it is who the console says.
+Whether it did */
+boolean __attribute__((stdcall)) simulation_players_update_set_properties(
+	const byte *update)
+{
+	const byte *datum= simulation_players_update_get_player(update);
+
+	if (!datum)
+	{
+		return FALSE;
+	}
+	unknown_0014be90(update+SIMULATION_PLAYERS_UPDATE_PROPERTIES_OFFSET,
+		datum_absolute_index_to_index(player_data, *(const long *)update));
 
 	return TRUE;
 }
