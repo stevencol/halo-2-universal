@@ -30,7 +30,7 @@ def run(t) -> None:
         }
 
     UPDATES = (
-        "transport_global_update unknown_0007f070 unknown_000b2ea0 unknown_000b3200 unknown_00063d80 unknown_0006b4a0 "
+        "transport_global_update unknown_0007f070 unknown_000b2ea0 unknown_000b3200 unknown_00063d80 online_tasks_update "
         "game_voice_update unknown_00074aa0 unknown_000755d0 unknown_00080390 network_blob_tasks_update unknown_000b3de0"
     ).split()
 

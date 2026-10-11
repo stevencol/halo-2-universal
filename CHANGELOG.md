@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Las tareas avanzan, y se acaba con todas
+
+Tres funciones en `networking/online_tasks.c`. De 1714
+funciones se pasa a 1717, el 15,24 % de las del juego (el 10,043 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_tasks_update` | `0x0006b4a0` | `networking/online_tasks.c` |
+| `online_tasks_unknown_0006b550` | `0x0006b550` | `networking/online_tasks.c` |
+| `online_tasks_close_all` | `0x0006b950` | `networking/online_tasks.c` |
+
+### Lo que se sabe
+
+- `online_tasks_update` es otra de las once cosas que `network_update`
+  hace cada vuelta (hito 505): si la sesión del servicio de partidas está,
+  cada tarea hace lo suyo por turno (`0x0006c560`), hasta que una dice que
+  las demás no; y luego lo que las tareas tienen de propio (`0x0008bf70`).
+- `online_tasks_close_all` **acaba con todas las tareas en un orden**:
+  recorre la tabla una y otra vez hasta que queda vacía, y en cada pasada
+  acaba con cada tarea salvo que le toque esperar. La de la clase `0x21`
+  espera a que queden cuatro o menos; la de la segunda, tres; la de la
+  primera, dos; y la de la clase `0` es la última. La de la clase `0xB`
+  espera mientras haya una de la clase `0xC`. Si hubiera dos de la clase
+  `0`, el juego no saldría nunca de ahí.
+- `online_tasks_unknown_0006b550` devuelve algo del servicio que dicen las
+  bibliotecas, de 1 a 3, si hay alguien conectado.
+
+### Cambiado
+
+- `unknown_0006b4a0` y `unknown_0006b950` tienen su nombre en
+  `network_globals.c` y en `online_tasks_dispose`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las tres**, y en las de los hitos 456 a
+  490 y 501 a 509. La tanda de los hitos 491 a 500 está en marcha.
+- En este hito se pasaron todas las pruebas de `online_tasks` y de
+  `network_globals`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Buscar una tarea del servicio de partidas
 
 Seis funciones en `networking/online_tasks.c`. De 1708

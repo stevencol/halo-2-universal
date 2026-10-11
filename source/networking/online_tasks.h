@@ -43,7 +43,13 @@ enum
 	ONLINE_TASK_ANY_OWNER_= 0xFF,
 	_online_session_signed_in= 1,
 	/* the size of something of the tasks that starts as nothing */
-	ONLINE_TASKS_UNKNOWN_004771C8_SIZE= 0x2580
+	ONLINE_TASKS_UNKNOWN_004771C8_SIZE= 0x2580,
+	/* the kinds of task that are done with last when all are, and one that
+	waits for another kind */
+	_online_task_type0= 0,
+	_online_task_type1= 1,
+	_online_task_type_b= 0xB,
+	_online_task_type_c= 0xC
 };
 
 /* ---------- structures */
@@ -84,6 +90,9 @@ long online_task_get_type(long index);
 long __attribute__((stdcall)) online_task_find(long owner, long type);
 long __attribute__((stdcall)) online_task_exists(long owner, long type);
 struct online_task *online_task_get(long index);
+void online_tasks_update(void);
+long online_tasks_unknown_0006b550(void);
+void online_tasks_close_all(void);
 
 /* ---------- globals */
 

@@ -15,13 +15,20 @@ are guesses.
 /* ---------- prototypes */
 
 /* 0x0006bfa0: something of the tasks is looked at when they start.
-0x0006b950: all of them are done with. 0x0006c670: a task goes on a little;
-what the libraries say of it, which is less than nothing if it could not.
-0x0008c550: a task of the kind 0x21 is told that it is done with */
+0x0006c670: a task goes on a little; what the libraries say of it, which is
+less than nothing if it could not. 0x0008c550: a task of the kind 0x21 is
+told that it is done with. 0x0006c560: a task does what it has to each time
+around; whether the others are to. 0x0008bf70: and so does what the tasks
+have of their own */
 void unknown_0006bfa0(void);
-void unknown_0006b950(void);
 long unknown_0006c670(struct online_task *task);
 void unknown_0008c550(long index);
+boolean unknown_0006c560(long index, struct online_task *task);
+void unknown_0008bf70(byte *unknown);
+
+/* 0x003a11ae, of the console's libraries: something of the service of
+games, from 1 to 3 */
+long unknown_003a11ae(void);
 
 /* 0x0006cd50: what the session of the service of games is at */
 long unknown_0006cd50(long session_index);
@@ -66,12 +73,12 @@ void online_tasks_initialize(
 	unknown_00479748= NONE;
 }
 
-/* 0x0006b450: the tasks are all done with (unknown_0006b950), their table
+/* 0x0006b450: the tasks are all done with (online_tasks_close_all), their table
 is let go of, and so is the task of unknown_00479748 */
 void online_tasks_dispose(
 	void)
 {
-	unknown_0006b950();
+	online_tasks_close_all();
 	data_dispose(online_tasks);
 	if (unknown_00479748!=NONE)
 	{
@@ -269,4 +276,117 @@ struct online_task *online_task_get(
 	long index)
 {
 	return (struct online_task *)datum_try_and_get(online_tasks, index);
+}
+
+/* 0x0006b4a0: what the tasks do each time around, if the session of the
+service of games is there and at nothing or signed in: each task in turn,
+until one says that the others are not to; and then what the tasks have of
+their own */
+void online_tasks_update(
+	void)
+{
+	long absolute_index= NONE;
+	long state;
+
+	if (unknown_00467214==NONE)
+	{
+		return;
+	}
+	state= unknown_0006cd50(unknown_00467214);
+	if (state<0 || state>_online_session_signed_in)
+	{
+		return;
+	}
+	for (;;)
+	{
+		struct online_task *task;
+
+		absolute_index= data_next_absolute_index(online_tasks, absolute_index+1);
+		if (absolute_index==NONE)
+		{
+			break;
+		}
+		task= (struct online_task *)online_tasks->data+absolute_index;
+		if (!unknown_0006c560((task->identifier<<16)|absolute_index, task))
+		{
+			break;
+		}
+	}
+	unknown_0008bf70(unknown_004771c8);
+}
+
+/* 0x0006b550: something of the service of games that the libraries say,
+from 1 to 3, if someone is signed in; nothing if not, or if they say
+anything else */
+long online_tasks_unknown_0006b550(
+	void)
+{
+	if (unknown_00467214!=NONE && unknown_0006cd50(unknown_00467214)==_online_session_signed_in)
+	{
+		switch (unknown_003a11ae())
+		{
+		case 1:
+			return 1;
+		case 2:
+			return 2;
+		case 3:
+			return 3;
+		}
+	}
+
+	return 0;
+}
+
+/* 0x0006b950: all the tasks are done with, in an order: the table is gone
+over until it has none, and each time a task is done with unless it has to
+wait. One of the kind 0x21 waits until no more than four are left; of the
+second kind, three; of the first, two; and of the kind 0, until it is the
+only one. One of the kind 0xB waits while there is one of the kind 0xC */
+void online_tasks_close_all(
+	void)
+{
+	while (online_tasks->actual_count>0)
+	{
+		long absolute_index= NONE;
+
+		for (;;)
+		{
+			const struct online_task *task;
+			boolean close;
+			long index;
+
+			absolute_index= data_next_absolute_index(online_tasks, absolute_index+1);
+			if (absolute_index==NONE)
+			{
+				break;
+			}
+			task= (const struct online_task *)online_tasks->data+absolute_index;
+			index= (task->identifier<<16)|absolute_index;
+			switch (task->type)
+			{
+			case _online_task_type0:
+				close= online_tasks->actual_count==1;
+				break;
+			case _online_task_type1:
+				close= online_tasks->actual_count<=2;
+				break;
+			case _online_task_type2:
+				close= online_tasks->actual_count<=3;
+				break;
+			case _online_task_type_b:
+				close= !online_task_exists(ONLINE_TASK_ANY_OWNER_, _online_task_type_c);
+				break;
+			case _online_task_type21:
+				close= online_tasks->actual_count<=4;
+				break;
+			default:
+				close= TRUE;
+				break;
+			}
+			if (close)
+			{
+				online_task_close(index);
+			}
+		}
+	}
 }

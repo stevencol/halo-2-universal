@@ -2277,7 +2277,7 @@ address,name,source,arguments,returns,convention
 000b2ea0,unknown_000b2ea0,,,void
 000b3200,unknown_000b3200,,,void
 00063d80,unknown_00063d80,,,void
-0006b4a0,unknown_0006b4a0,,,void
+0006b4a0,online_tasks_update,source/networking/online_tasks.c,,void
 00074aa0,unknown_00074aa0,,,void
 000755d0,unknown_000755d0,,,void
 00080390,unknown_00080390,,,void
@@ -2301,7 +2301,7 @@ address,name,source,arguments,returns,convention
 0006b5d0,online_task_get_status,source/networking/online_tasks.c,eax,int
 0006b6f0,online_task_new,source/networking/online_tasks.c,,int
 0006bfa0,unknown_0006bfa0,,,void
-0006b950,unknown_0006b950,,,void
+0006b950,online_tasks_close_all,source/networking/online_tasks.c,,void
 0006c670,unknown_0006c670,,esi,int
 0008c550,unknown_0008c550,,edx,void
 003a07b9,XOnlineFriendsEnumerateFinish,,stack,int,stdcall
@@ -2309,3 +2309,7 @@ address,name,source,arguments,returns,convention
 0006b780,online_task_restart,source/networking/online_tasks.c,eax,void
 0006b7e0,online_task_get_type,source/networking/online_tasks.c,eax,int
 0006b800,online_task_find,source/networking/online_tasks.c,ebx stack,int,stdcall
+0006b550,online_tasks_unknown_0006b550,source/networking/online_tasks.c,,int
+0006c560,unknown_0006c560,,eax esi,bool
+0008bf70,unknown_0008bf70,,esi,void
+003a11ae,unknown_003a11ae,,,int

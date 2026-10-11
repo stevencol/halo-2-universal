@@ -3,7 +3,7 @@
 import random
 import struct
 
-from difftest import Buffer, Mock, Pointer, mock_address
+from difftest import Buffer, GlobalRange, Mock, Pointer, mock_address
 
 NONE = 0xFFFFFFFF
 COUNT, TASK = 8, 0x14
@@ -97,7 +97,7 @@ def run(t) -> None:
         t.check(
             "online_tasks_dispose",
             globals={"online_tasks": tasks, "unknown_00479748": random_.choice((NONE, NONE, number))},
-            externals=dict(closes, unknown_0006b950=lambda harness, arguments: (0, ())),
+            externals=dict(closes, online_tasks_close_all=lambda harness, arguments: (0, ())),
             mocks=[Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)) for index in range(2)],
         )
 
@@ -164,3 +164,62 @@ def run(t) -> None:
                     "XOnlineTaskClose": lambda harness, arguments: (0, tuple(arguments)),
                 },
             )
+
+    # ---------- the tasks go on, and are all done with
+
+    def ordered() -> Buffer:
+        """A table of tasks in which no more than one is of each kind that waits for the others, so that all can end."""
+        tasks, number = table()
+        data = bytearray(tasks.data)
+        last = [0, 1, 2, 0x21]
+        random_.shuffle(last)
+        for index in range(COUNT):
+            kind = random_.choice((3, 5, 0xB, 0xB, 0xC, 0x2C, 0x2D, NONE, 0x100))
+            if last and random_.random() < 0.4:
+                kind = last.pop()
+            struct.pack_into("<I", data, TASKS + index * TASK + 4, kind)
+        return Buffer(bytes(data), pointers=tasks.pointers, places=tasks.places)
+
+    session = lambda said: lambda harness, arguments: (said, tuple(arguments))
+
+    for n in range(1500):
+        t.check(
+            "online_tasks_close_all",
+            globals={"online_tasks": ordered()},
+            externals={
+                "unknown_0006c670": lambda harness, arguments: (0x1500F2, (harness.normalize(arguments[0]),)),
+                "XOnlineFriendsEnumerateFinish": lambda harness, arguments: (0, tuple(arguments)),
+                "unknown_0008c550": lambda harness, arguments: (0, tuple(arguments)),
+                "XOnlineTaskClose": lambda harness, arguments: (0, tuple(arguments)),
+            },
+        )
+
+        stops = random_.choice((NONE, NONE, 0, 1, 3))
+
+        def does(harness, arguments, stops=stops):
+            from test_async import calls_so_far
+
+            return calls_so_far(harness, "unknown_0006c560") != stops, (arguments[0], harness.normalize(arguments[1]))
+
+        tasks, number = table()
+        t.check(
+            "online_tasks_update",
+            globals={
+                "online_tasks": tasks,
+                "unknown_00467214": random_.choice((0, 0, 0, 2, NONE)),
+                "unknown_004771c8": GlobalRange(0x2580),
+            },
+            externals={
+                "unknown_0006cd50": session(random_.choice((0, 1, 1, 1, 2, NONE))),
+                "unknown_0006c560": does,
+                "unknown_0008bf70": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+            },
+        )
+        t.check(
+            "online_tasks_unknown_0006b550",
+            globals={"unknown_00467214": random_.choice((0, 0, 0, 2, NONE))},
+            externals={
+                "unknown_0006cd50": session(random_.choice((0, 1, 1, 1, 2))),
+                "unknown_003a11ae": lambda harness, arguments, said=random_.choice((0, 1, 2, 3, 4, NONE)): said,
+            },
+        )

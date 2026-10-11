@@ -19,6 +19,7 @@ a guess, and so are the names of its functions.
 #include "networking/network_message_gateway.h"
 #include "networking/network_observer.h"
 #include "networking/network_session.h"
+#include "networking/online_tasks.h"
 #include "networking/simulation_entity_database.h"
 #include "networking/simulation_view.h"
 #include "networking/simulation_world.h"
@@ -36,7 +37,6 @@ void unknown_0007f070(void);
 void unknown_000b2ea0(void);
 void unknown_000b3200(void);
 void unknown_00063d80(void);
-void unknown_0006b4a0(void);
 void unknown_00074aa0(void);
 void unknown_000755d0(void);
 void unknown_00080390(void);
@@ -62,8 +62,9 @@ byte *unknown_00510574;
 
 /* 0x0008df50: what the network does each time around, after what came is
 read: the cable of the console is looked at (transport_global_update); and, if there is a network,
-ten things in order, of which the voice (game_voice_update) and the tasks of
-the blocks (network_blob_tasks_update) are known. While it does them, the
+ten things in order, of which the tasks of the service of games
+(online_tasks_update), the voice (game_voice_update) and the tasks of the
+blocks (network_blob_tasks_update) are known. While it does them, the
 time of the network is the one of when it started */
 void network_update(
 	void)
@@ -77,7 +78,7 @@ void network_update(
 		unknown_000b2ea0();
 		unknown_000b3200();
 		unknown_00063d80();
-		unknown_0006b4a0();
+		online_tasks_update();
 		game_voice_update();
 		unknown_00074aa0();
 		unknown_000755d0();
