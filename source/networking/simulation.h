@@ -81,6 +81,8 @@ void simulation_initialize(void);
 void simulation_dispose(void);
 void simulation_initialize_for_new_map(void);
 void simulation_dispose_from_old_map(void);
+void simulation_idle(void);
+void simulation_unknown_000687b0(void);
 
 void __attribute__((stdcall)) simulation_view_disconnected(byte *view);
 boolean __attribute__((stdcall)) simulation_update_encode(void *buffer, long capacity, const void *update,

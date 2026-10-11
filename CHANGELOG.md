@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — La simulación al cargar una partida y lo que vigila fuera de los ticks
+
+Cuatro funciones más de `networking/simulation.c` (487 bytes). De 1947
+funciones se pasa a 1951, el 17,32 % de las del juego (el 10,882 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_before_load` | `0x00067fb0` | `networking/simulation.c` |
+| `simulation_after_load` | `0x00067fc0` | `networking/simulation.c` |
+| `simulation_idle` | `0x000680f0` | `networking/simulation.c` |
+| `simulation_unknown_000687b0` | `0x000687b0` | `networking/simulation.c` |
+
+### Lo que se sabe
+
+- `simulation_before_load` y `simulation_after_load` eran las dos entradas
+  sin nombre de la simulación en las listas de lo que se hace antes y
+  después de cargar un estado del juego (`game_state.c`); la tercera,
+  `simulation_before_save`, ya estaba.
+- `simulation_before_load` solo apunta que se está cargando (el byte `0xB`
+  de `unknown_004cf770`); `simulation_after_load` lo quita al acabar.
+- `simulation_after_load`, con el tercer bit: acaba la partida en red
+  (`network_life_cycle_end`) y **la simulación vuelve a empezar como partida
+  de clase 1**. Si ya lo era, lo que está en marcha se rinde y se borran los
+  fallos; si no, hace lo de «se va un mapa» y lo de «mapa nuevo», y antes
+  una partida de clase 4 o 5 se cierra en otras tres partes del juego. Con
+  o sin el bit, lo que está en marcha se queda sin jugadores y se avisa a
+  lo de `unknown_004cf780` (`unknown_00083370`).
+- `simulation_idle` (antes `unknown_000680f0`, la que llama el bucle
+  principal) es lo que la simulación mira fuera de los ticks: hace el fallo
+  o el volver a empezar que se hayan pedido, falla si lo de
+  `unknown_004cf780` no está bien (`unknown_00083220`), deja trabajar a lo
+  que está en marcha (`unknown_00068f30`), y al final manda al menú
+  principal una partida acabada que esta consola gobierna sola.
+- `simulation_unknown_000687b0` es ese volver a empezar: prepara lo que
+  está en marcha (`unknown_00068dc0`) y llama a `main_game_restart`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  575.
+- El nombre `simulation_idle` es una suposición.
+- En este hito se pasaron las pruebas de las cuatro funciones, y
+  `test_game_state`, `test_main` y `test_simulation` enteras.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — La simulación arranca y acaba, con el juego y con cada mapa
 
 Las cuatro funciones que el juego llama de la simulación como parte suya (353 bytes),

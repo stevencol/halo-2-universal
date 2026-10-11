@@ -247,12 +247,12 @@ address,name,source,arguments,returns,convention
 001c3590,unknown_001c3590,,stack,void
 001889d0,unknown_001889d0,,stack,void
 00155f10,unknown_00155f10,,stack,void
-00067fb0,unknown_00067fb0,,stack,void
+00067fb0,simulation_before_load,source/networking/simulation.c,stack,void,stdcall
 001264c0,sound_reset,source/sound/sound_manager.c,stack,void,stdcall
 00188ac0,unknown_00188ac0,,stack,void
 0016f090,unknown_0016f090,,stack,void
 0014b660,unknown_0014b660,,stack,void
-00067fc0,unknown_00067fc0,,stack,void
+00067fc0,simulation_after_load,source/networking/simulation.c,stack,void,stdcall
 00043970,unknown_00043970,,stack,void
 0003d380,unknown_0003d380,,stack,void
 00155360,unknown_00155360,,stack,void
@@ -493,7 +493,7 @@ address,name,source,arguments,returns,convention
 00155f80,unknown_00155f80,,,void
 00092f80,network_link_receive,source/networking/network_link.c,stack,void,stdcall
 0008df50,network_update,source/networking/network_globals.c,,void
-000680f0,unknown_000680f0,,,void
+000680f0,simulation_idle,source/networking/simulation.c,,void
 00068250,simulation_in_progress,source/networking/simulation.c,,bool
 00146660,unknown_00146660,,stack stack stack,void
 001870a0,unknown_001870a0,,stack stack,void
@@ -2558,3 +2558,12 @@ address,name,source,arguments,returns,convention
 00083000,unknown_00083000,,stack,void,stdcall
 00195a40,unknown_00195a40,,,void
 00195e90,unknown_00195e90,,,void
+000687b0,simulation_unknown_000687b0,source/networking/simulation.c,,void
+00162060,unknown_00162060,,,void
+00162420,unknown_00162420,,,void
+000bb7f0,unknown_000bb7f0,,,void
+00183f10,unknown_00183f10,,,void
+00083370,unknown_00083370,,stack stack,void,stdcall
+00083220,unknown_00083220,,eax,bool
+00068f30,unknown_00068f30,,eax,void
+00068dc0,unknown_00068dc0,,esi,void

@@ -67,11 +67,11 @@ void GAME_STATE_PROC unknown_001e6af0(unsigned long flags);
 void GAME_STATE_PROC unknown_001c3590(unsigned long flags);
 void GAME_STATE_PROC unknown_001889d0(unsigned long flags);
 void GAME_STATE_PROC unknown_00155f10(unsigned long flags);
-void GAME_STATE_PROC unknown_00067fb0(unsigned long flags);
+void GAME_STATE_PROC simulation_before_load(unsigned long flags);
 void GAME_STATE_PROC unknown_00188ac0(unsigned long flags);
 void GAME_STATE_PROC unknown_0016f090(unsigned long flags);
 void GAME_STATE_PROC unknown_0014b660(unsigned long flags);
-void GAME_STATE_PROC unknown_00067fc0(unsigned long flags);
+void GAME_STATE_PROC simulation_after_load(unsigned long flags);
 void GAME_STATE_PROC unknown_00043970(unsigned long flags);
 void GAME_STATE_PROC unknown_0003d380(unsigned long flags);
 void GAME_STATE_PROC unknown_00155360(unsigned long flags);
@@ -119,7 +119,7 @@ game_state_proc game_state_before_load_procs[NUMBER_OF_GAME_STATE_BEFORE_LOAD_PR
 	game_state_buffer_protect,
 	unknown_001889d0,
 	unknown_00155f10,
-	unknown_00067fb0
+	simulation_before_load
 };
 
 /* 0x0046e348 */
@@ -131,7 +131,7 @@ game_state_proc game_state_after_load_procs[NUMBER_OF_GAME_STATE_AFTER_LOAD_PROC
 	unknown_00188ac0,
 	unknown_0016f090,
 	unknown_0014b660,
-	unknown_00067fc0,
+	simulation_after_load,
 	unknown_00043970,
 	unknown_0003d380,
 	(game_state_proc)no_operation1,

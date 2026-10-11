@@ -58,7 +58,7 @@ void unknown_0012bbd0(void);
 void main_map_precache_update(void);
 void unknown_001479c3(float seconds);
 void unknown_00155f80(void);
-void unknown_000680f0(void);
+void simulation_idle(void);
 boolean simulation_in_progress(void);
 void unknown_00146660(float seconds, float *unknown_real, long *unknown_long);
 void unknown_001870a0(float seconds, float unknown_real);
@@ -410,7 +410,7 @@ void main_loop_body(
 		unknown_0051054c= GetTickCount();
 	}
 	network_update();
-	unknown_000680f0();
+	simulation_idle();
 	network_life_cycle_update();
 
 	if (simulation_in_progress())

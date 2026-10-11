@@ -15,6 +15,8 @@ and so are the names of its functions.
 #include "main/main_game.h"
 #include "saved games/game_state.h"
 #include "networking/bitstream.h"
+#include "networking/game_voice.h"
+#include "networking/network_life_cycle.h"
 #include "networking/simulation_view.h"
 #include "networking/simulation_world.h"
 
@@ -55,6 +57,20 @@ void __attribute__((stdcall)) unknown_00068c00(long unknown, byte *memory, struc
 void __attribute__((stdcall)) unknown_00068e20(byte *world);
 void __attribute__((stdcall)) unknown_00083000(long unknown);
 void unknown_00195a40(void);
+/* 0x00162060, 0x00162420, 0x000bb7f0, 0x00183f10: what other parts of the
+game do when a game of kind 4 or 5 is no more. 0x00083370: what
+unknown_004cf780 has after a state was loaded, as the bits say.
+0x00083220: whether what unknown_004cf780 has is well. 0x00068f30: the
+thing that is going does its work. 0x00068dc0: the thing that is going,
+for a game that begins again */
+void unknown_00162060(void);
+void unknown_00162420(void);
+void unknown_000bb7f0(void);
+void unknown_00183f10(void);
+void __attribute__((stdcall)) unknown_00083370(long unknown, unsigned long flags);
+boolean unknown_00083220(long unknown);
+void unknown_00068f30(byte *world);
+void unknown_00068dc0(byte *world);
 void unknown_00195e90(void);
 
 long GetTickCount(void);
@@ -511,4 +527,143 @@ void simulation_dispose_from_old_map(
 		unknown_00068e20(unknown_004cf770.unknownC);
 		unknown_00195e90();
 	}
+}
+
+/* 0x00067fb0: a state of the game is about to be loaded: it is noted. It is
+the last of the things that are done before a state is loaded */
+void GAME_STATE_PROC simulation_before_load(
+	unsigned long flags)
+{
+	(void)flags;
+	unknown_004cf770.unknownB= TRUE;
+}
+
+/* 0x00067fc0: a state of the game was loaded, as bits say. With the third
+bit, the game in the network is over (network_life_cycle_end), and the
+simulation begins again for a game of kind 1: if it was one already, the
+thing that is going gives up (simulation_world_unknown_0006b040) and nothing
+has failed; if not, the simulation ends as when a map goes and begins as
+with a new one, and a game of kind 4 or 5 is ended first in other parts of
+the game. Then the thing that is going has no players
+(simulation_world_players_clear), and what unknown_004cf780 has and the
+thing are told (unknown_00083370, simulation_world_unknown_0006a770) */
+void GAME_STATE_PROC simulation_after_load(
+	unsigned long flags)
+{
+	if (flags&4)
+	{
+		network_life_cycle_end();
+		if (*((const char *)main_game_globals+0xC)==1 &&
+			*(const long *)(unknown_004cf770.unknownC+SIMULATION_WORLD_STATE_OFFSET)==1)
+		{
+			simulation_world_unknown_0006b040(unknown_004cf770.unknownC);
+			unknown_004cf770.unknown1[1]= FALSE;
+			unknown_004cf770.unknown1[0]= FALSE;
+		}
+		else
+		{
+			long kind;
+
+			simulation_dispose_from_old_map();
+			if (*((const char *)main_game_globals+0xC)==4)
+			{
+				*((char *)main_game_globals+0xC)= 5;
+				if (unknown_0055e4d0[*(const long *)(unknown_004e9ae8+UNKNOWN_004E9AE8_UNKNOWNC14_OFFSET)])
+				{
+					unknown_00162060();
+				}
+			}
+			kind= *((const signed char *)main_game_globals+0xC);
+			if (kind>=4 && kind<=5)
+			{
+				unknown_00162420();
+				unknown_000bb7f0();
+				unknown_00183f10();
+			}
+			*((char *)main_game_globals+0xC)= 1;
+			simulation_initialize_for_new_map();
+		}
+	}
+	simulation_world_players_clear(unknown_004cf770.unknownC);
+	unknown_00083370(unknown_004cf780, flags);
+	simulation_world_unknown_0006a770(unknown_004cf770.unknownC);
+	unknown_004cf770.unknownB= FALSE;
+}
+
+/* 0x000680f0: what the simulation looks at outside the ticks, with a game in
+the network that has not failed and a game that goes on. A failure that was
+asked for is done (simulation_fail), and a beginning again that was asked
+for (simulation_unknown_000687b0); what unknown_004cf780 has must be well
+(unknown_00083220), or the simulation fails; the thing that is going does
+its work (unknown_00068f30), and fails if it is in its third state or its
+fifth with the byte at 0x2C set. After any of these the rest is left if the
+simulation has failed. At the end, a game that this console rules, that is
+over and that is not one of several consoles goes to the main menu. The
+name is a guess */
+void simulation_idle(
+	void)
+{
+	const byte *world;
+	long state;
+
+	if (!unknown_004cf770.unknown0 || unknown_004cf770.unknown1[1] || !main_game_globals || !main_game_globals->active)
+	{
+		return;
+	}
+	if (unknown_004cf770.unknown1[0])
+	{
+		simulation_fail();
+		if (unknown_004cf770.unknown1[1])
+		{
+			return;
+		}
+	}
+	if (unknown_004cf770.unknown1[8])
+	{
+		simulation_unknown_000687b0();
+		if (unknown_004cf770.unknown1[1])
+		{
+			return;
+		}
+	}
+	if (!unknown_00083220(unknown_004cf780))
+	{
+		simulation_fail();
+	}
+	if (unknown_004cf770.unknown1[1])
+	{
+		return;
+	}
+	unknown_00068f30(unknown_004cf770.unknownC);
+	if (unknown_004cf770.unknown1[1])
+	{
+		return;
+	}
+	world= unknown_004cf770.unknownC;
+	state= *(const long *)(world+SIMULATION_WORLD_STATE_OFFSET);
+	if ((state==3 || state==5) && world[SIMULATION_WORLD_UNKNOWN2C_OFFSET])
+	{
+		simulation_fail();
+		if (unknown_004cf770.unknown1[1])
+		{
+			return;
+		}
+	}
+	if (game_is_authoritative() && (boolean)game_finished_wait_over() && !game_is_distributed())
+	{
+		main_game_goto_main_menu(6);
+	}
+}
+
+/* 0x000687b0: the game begins again, as was asked: the thing that is going
+is made ready (unknown_00068dc0) and the game restarts (main_game_restart),
+with a byte set meanwhile; and it is asked for no more */
+void simulation_unknown_000687b0(
+	void)
+{
+	unknown_004cf770.unknownA= TRUE;
+	unknown_00068dc0(unknown_004cf770.unknownC);
+	main_game_restart();
+	unknown_004cf770.unknown1[8]= FALSE;
+	unknown_004cf770.unknownA= FALSE;
 }
