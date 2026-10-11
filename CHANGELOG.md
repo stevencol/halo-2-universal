@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Si una lista del servicio es buena: las tres comprobaciones
+
+Tres funciones más en `networking/network_hoppers.c` (337 bytes). De 1866
+funciones se pasa a 1869, el 16,59 % de las del juego (el 10,583 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_hopper_header_valid` | `0x00193560` | `networking/network_hoppers.c` |
+| `network_hopper_type4_valid` | `0x00193630` | `networking/network_hoppers.c` |
+| `network_hopper_teams_valid` | `0x001936a0` | `networking/network_hoppers.c` |
+
+### Lo que se sabe
+
+- Son las tres comprobaciones que `network_hopper_valid` (hito 542) dejaba
+  sustituidas; con ellas se sabe **qué exige el juego a lo que llega del
+  servicio** antes de fiarse:
+  - a todas (`network_hopper_header_valid`): clase de 1 a 5, un número de 0
+    a 3, otro de 1 a 100, y una tabla de 128 bytes en la que cada uno vale
+    al menos su posición;
+  - a las de equipos (`network_hopper_teams_valid`): de 2 a 16 jugadores por
+    equipo, al menos un equipo, y no más equipos de los que caben en 16
+    jugadores;
+  - a las de la clase 4 (`network_hopper_type4_valid`): lo mismo con dos
+    equipos como mínimo, y otros tres números de equipos en orden.
+- `network_hopper_header_valid` recibe la lista en `esi`, no en `eax` como
+  se apuntó en el hito 542 al verla llamar (el juego pone los dos): un caso
+  más del aviso de `ESTADO.md` sobre los registros de lo que aún no está
+  descompilado.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  542.
+- En este hito se pasaron las pruebas de las tres funciones y la de
+  `network_hopper_valid`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Lo que se pregunta de una lista del servicio según su clase: nueve funciones
 
 Nueve funciones más en `networking/network_hoppers.c`: las que tienen tabla de saltos. De 1857

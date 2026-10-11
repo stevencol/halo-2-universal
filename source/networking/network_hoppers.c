@@ -14,12 +14,6 @@ fills. The names are guesses.
 
 /* ---------- prototypes */
 
-/* 0x00193560: whether one of the list is good, whatever its kind.
-0x00193630, 0x001936a0: whether one of the fourth kind is, and one of the
-third or the fifth */
-boolean unknown_00193560(const struct network_hopper *hopper);
-boolean unknown_00193630(const struct network_hopper *hopper);
-boolean unknown_001936a0(const struct network_hopper *hopper);
 
 /* ---------- globals */
 
@@ -280,7 +274,7 @@ of its kind are */
 boolean network_hopper_valid(
 	const struct network_hopper *hopper)
 {
-	if (!unknown_00193560(hopper))
+	if (!network_hopper_header_valid(hopper))
 	{
 		return FALSE;
 	}
@@ -290,8 +284,66 @@ boolean network_hopper_valid(
 	case _network_hopper_type2:
 		return network_hopper_players_valid(hopper)!=0;
 	case _network_hopper_type4:
-		return unknown_00193630(hopper)!=0;
+		return network_hopper_type4_valid(hopper)!=0;
 	default:
-		return unknown_001936a0(hopper)!=0;
+		return network_hopper_teams_valid(hopper)!=0;
 	}
+}
+
+/* 0x00193560: whether one of the list is good, whatever its kind: the kind
+is one of the five, its two numbers are what they can be, and each of its
+128 bytes is at least its place among them */
+boolean network_hopper_header_valid(
+	const struct network_hopper *hopper)
+{
+	boolean valid= FALSE;
+	long index;
+
+	if ((hopper->type==_network_hopper_type2 || hopper->type==_network_hopper_type1 ||
+		hopper->type==_network_hopper_type4 || hopper->type==_network_hopper_type3 ||
+		hopper->type==_network_hopper_type5) &&
+		hopper->unknown4>=0 && hopper->unknown4<NUMBER_OF_NETWORK_HOPPER_UNKNOWN4 &&
+		hopper->unknown8>0 && hopper->unknown8<=NETWORK_HOPPER_UNKNOWN8_MAXIMUM)
+	{
+		valid= TRUE;
+	}
+	for (index= 0; index<NUMBER_OF_NETWORK_HOPPER_UNKNOWN51C; index++)
+	{
+		if (hopper->unknown51C[index]<index)
+		{
+			valid= FALSE;
+		}
+	}
+
+	return valid;
+}
+
+/* 0x00193630: whether one of the fourth kind is good: as the ones with
+teams are, but with two teams at least; and its three other numbers of teams
+are right */
+boolean network_hopper_type4_valid(
+	const struct network_hopper *hopper)
+{
+	long team_size= hopper->minimum_players;
+	long minimum_teams= hopper->maximum_players;
+	long maximum_teams= hopper->unknown5F4;
+
+	return team_size>1 && team_size<=NETWORK_HOPPER_MAXIMUM_PLAYERS && minimum_teams>1 &&
+		maximum_teams<=NETWORK_HOPPER_MAXIMUM_PLAYERS/team_size && minimum_teams<=maximum_teams &&
+		hopper->unknown5FC>0 && hopper->unknown600<=maximum_teams && hopper->unknown5FC<=hopper->unknown600 &&
+		hopper->unknown5F8>=0 && hopper->unknown5F8<=maximum_teams-minimum_teams;
+}
+
+/* 0x001936a0: whether one with teams is good: from two to sixteen players
+in a team, one team at least, no more teams than make sixteen players, and
+no more at least than at most */
+boolean network_hopper_teams_valid(
+	const struct network_hopper *hopper)
+{
+	long team_size= hopper->minimum_players;
+	long minimum_teams= hopper->maximum_players;
+	long maximum_teams= hopper->unknown5F4;
+
+	return team_size>1 && team_size<=NETWORK_HOPPER_MAXIMUM_PLAYERS && minimum_teams>=1 &&
+		maximum_teams<=NETWORK_HOPPER_MAXIMUM_PLAYERS/team_size && minimum_teams<=maximum_teams;
 }

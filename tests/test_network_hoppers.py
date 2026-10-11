@@ -66,9 +66,36 @@ def run(t) -> None:
             "network_hopper_valid",
             one,
             externals={
-                "unknown_00193560": says(random_.choice((0, 1, 1, 1))),
+                "network_hopper_header_valid": says(random_.choice((0, 1, 1, 1))),
                 "network_hopper_players_valid": says(random_.choice((0, 1))),
-                "unknown_00193630": says(random_.choice((0, 1))),
-                "unknown_001936a0": says(random_.choice((0, 1))),
+                "network_hopper_type4_valid": says(random_.choice((0, 1))),
+                "network_hopper_teams_valid": says(random_.choice((0, 1))),
             },
         )
+
+    # ---------- the three checks
+
+    SMALL = (0, 1, 1, 2, 2, 3, 4, 8, 16, 17, NONE, 0x80000000)
+    for n in range(6000):
+        data = hopper(random_)
+        struct.pack_into("<3I", data, 0, random_.choice((1, 2, 3, 4, 5, 5, 0, 6)), random_.choice((0, 1, 3, 3, 4, NONE)), random_.choice((1, 50, 100, 100, 101, 0, NONE)))
+        if random_.random() < 0.8:
+            # bytes that are right, but for one now and then
+            for index in range(128):
+                data[0x51C + index] = random_.choice((index, index, 0x7F, min(index + 3, 0x7F)))
+            if random_.random() < 0.3:
+                index = random_.randrange(128)
+                data[0x51C + index] = random_.choice((max(index - 1, 0), 0, 0x80, 0xFF))
+        struct.pack_into("<6I", data, 0x5EC, *(random_.choice(SMALL) for index in range(6)))
+        if random_.random() < 0.5:
+            # numbers of teams that are right, or nearly
+            size = random_.choice((2, 2, 4, 8))
+            most = random_.choice((16 // size, 16 // size, 16 // size + 1, 2))
+            least = random_.choice((1, 2, 2, most, most + 1))
+            second = random_.choice((most, most, 2, most + 1, 1))
+            first = random_.choice((1, 1, second, second + 1, 0))
+            struct.pack_into("<6I", data, 0x5EC, size, least, most, random_.choice((0, 0, 1, max(most - least, 0), max(most - least, 0) + 1, NONE)), first, second)
+        one = Buffer(bytes(data))
+        t.check("network_hopper_header_valid", one)
+        t.check("network_hopper_type4_valid", one)
+        t.check("network_hopper_teams_valid", one)

@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 542.
+**Última actualización:** 2026-10-08, al terminar el hito 543.
 
 ## Dónde estamos
 
-- **1866 funciones descompiladas de 11.265: el 16,56 % del juego** (el
-  10,571 % de los bytes de código).
-- Las 1866 están comprobadas contra el ejecutable original: las 1390 del
+- **1869 funciones descompiladas de 11.265: el 16,59 % del juego** (el
+  10,583 % de los bytes de código).
+- Las 1869 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile nine functions that ask things of a list of the service by its kind* (ver `git log`).
+- Último hito: *Decompile the three checks of a list of the service* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 614 funciones apuntadas pero sin descompilar (las que el código
-  llama); 475 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 611 funciones apuntadas pero sin descompilar (las que el código
+  llama); 472 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -226,10 +226,10 @@ Módulos (funciones hechas / archivo):
       `0x000caf90`, `0x00063d80`, `0x001565a0`… (hitos 538 y 539; la lista
       la da `build\line_breaking\small_externals.py`)
 - [ ] La lista de partidas del servicio — `networking\network_hoppers.c`
-      (18 de unas 30, de `0x00192db0` a `0x001939f0`: la tabla de
+      (21 de unas 30, de `0x00192db0` a `0x001939f0`: la tabla de
       `0x00551ae8`, cuántos jugadores y equipos admite cada una y si es
-      buena; faltan `0x00193560`, `0x00193630`, `0x001936a0` y las
-      grandes)
+      buena; faltan `0x001931a0` y las grandes: `0x00192eb0`,
+      `0x00193010`, `0x001936e0`)
 - [ ] Lo que la interfaz pregunta a la partida en red —
       `interface\user_interface_networking.c` (5, de la zona de
       `0x0019989d` a `0x0019a02c`; falta `0x0019989d`)

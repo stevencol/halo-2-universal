@@ -28,6 +28,9 @@ enum
 	/* the most players that one can take */
 	NETWORK_HOPPER_MAXIMUM_PLAYERS= 16,
 	NUMBER_OF_NETWORK_HOPPER_UNKNOWN5A0= 19,
+	NUMBER_OF_NETWORK_HOPPER_UNKNOWN51C= 128,
+	NUMBER_OF_NETWORK_HOPPER_UNKNOWN4= 4,
+	NETWORK_HOPPER_UNKNOWN8_MAXIMUM= 100,
 	/* what network_hopper_get_players_value says of a number of players
 	that one does not take */
 	NETWORK_HOPPER_PLAYERS_VALUE_NONE= 0x7FFFFFFF
@@ -38,7 +41,13 @@ enum
 struct network_hopper
 {
 	long type;
-	byte unknown4[0x59C];
+	/* from 0 to 3, and from 1 to 100 */
+	long unknown4;
+	unsigned long unknown8;
+	byte unknownC[0x510];
+	/* each is at least its place in the list */
+	char unknown51C[NUMBER_OF_NETWORK_HOPPER_UNKNOWN51C];
+	byte unknown59C[4];
 	/* a number for each number of players that it can have */
 	long unknown5A0[NUMBER_OF_NETWORK_HOPPER_UNKNOWN5A0];
 	/* of the first two kinds: how many players it takes, at least and at
@@ -49,7 +58,9 @@ struct network_hopper
 	long unknown5F4;
 	/* of the third kind, a byte; of the fourth and fifth, a number */
 	long unknown5F8;
-	byte unknown5FC[4];
+	/* of the fourth kind: two numbers of teams, the first no more than the
+	second, and the second no more than the most teams */
+	long unknown5FC;
 	long unknown600;
 	/* one of the fourth kind has the two numbers after it */
 	boolean unknown604;
@@ -81,6 +92,9 @@ long network_hopper_get_maximum_teams(const struct network_hopper *hopper);
 long network_hopper_unknown_00193400(const struct network_hopper *hopper);
 long network_hopper_get_team_size(const struct network_hopper *hopper);
 boolean network_hopper_valid(const struct network_hopper *hopper);
+boolean network_hopper_header_valid(const struct network_hopper *hopper);
+boolean network_hopper_type4_valid(const struct network_hopper *hopper);
+boolean network_hopper_teams_valid(const struct network_hopper *hopper);
 
 /* ---------- globals */
 
