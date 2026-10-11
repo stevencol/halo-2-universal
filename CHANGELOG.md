@@ -2,6 +2,61 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Lo que se pregunta del jugador de un mando: dieciséis funciones
+
+Dieciséis funciones más en `interface/user_interface_controller.c` (834 bytes). De 1762
+funciones se pasa a 1778, el 15,78 % de las del juego (el 10,286 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `user_interface_controller_remove_profile` | `0x0018fc08` | `interface/user_interface_controller.c` |
+| `user_interface_controller_get_profile` | `0x0018fc44` | `interface/user_interface_controller.c` |
+| `user_interface_controllers_have_saved_game` | `0x0018fc75` | `interface/user_interface_controller.c` |
+| `user_interface_controller_get_unknown1FC` | `0x0018fd7c` | `interface/user_interface_controller.c` |
+| `user_interface_controller_get_online_user` | `0x0018ff47` | `interface/user_interface_controller.c` |
+| `user_interface_controller_has_tasks` | `0x0018ff64` | `interface/user_interface_controller.c` |
+| `user_interface_controller_get_unknown4E0` | `0x0018ff88` | `interface/user_interface_controller.c` |
+| `user_interface_controller_get_unknownB82` | `0x0018ffc3` | `interface/user_interface_controller.c` |
+| `user_interface_controllers_count_online_not_guests` | `0x001900be` | `interface/user_interface_controller.c` |
+| `user_interface_controller_count_guests` | `0x001900ff` | `interface/user_interface_controller.c` |
+| `user_interface_controllers_get_profile_mask` | `0x001901fc` | `interface/user_interface_controller.c` |
+| `user_interface_controllers_get_online_mask` | `0x0019022f` | `interface/user_interface_controller.c` |
+| `user_interface_controllers_any_online` | `0x0019028d` | `interface/user_interface_controller.c` |
+| `user_interface_controller_get_name` | `0x001902c1` | `interface/user_interface_controller.c` |
+| `user_interface_controller_get_profile_unknownE4` | `0x001902de` | `interface/user_interface_controller.c` |
+| `user_interface_unknown_001907bf` | `0x001907bf` | `interface/user_interface_controller.c` |
+
+### Lo que se sabe
+
+- `user_interface_controller_remove_profile` **quita el perfil** al jugador
+  de un mando: suelta lo que el juego guardaba de su archivo
+  (`cached_saved_game_file_delete`), pone el perfil a cero y deja el archivo
+  en «ninguno».
+- `user_interface_controller_get_profile` da el perfil y su archivo (nada y
+  «ninguno» si no tiene); la usan casi todas las funciones que cambian algo
+  de un perfil, que vienen en los hitos siguientes.
+- `user_interface_controller_count_guests` cuenta **los invitados de un
+  jugador**: los otros mandos conectados al servicio con la misma identidad.
+- Dos máscaras de bits de los mandos: los que tienen perfil y los que están
+  conectados al servicio.
+- En `struct player_profile` hay un número nuevo, en `+0xE4`
+  (`user_interface_controller_get_profile_unknownE4`).
+- Lo de `+0x4E0` de cada mando (`0x6A2` bytes) empieza por ocho bytes que,
+  por cómo se miran, son la identidad de alguien en el servicio; lo de
+  `+0xB82` (`0x92` bytes) solo vale cuando eso vale.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  526.
+- En este hito se pasaron las pruebas de las dieciséis funciones.
+- `user_interface_unknown_001907bf` se prueba con sus dos argumentos
+  limpios (un byte y un número de 16 bits), como se los dan en el juego.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Lo que el juego guarda del jugador de cada mando: primeras diez funciones
 
 Archivo nuevo, `interface/user_interface_controller.c`, con diez funciones (486 bytes). De 1752

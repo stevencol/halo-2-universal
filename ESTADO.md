@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 526.
+**Última actualización:** 2026-10-08, al terminar el hito 527.
 
 ## Dónde estamos
 
-- **1762 funciones descompiladas de 11.265: el 15,64 % del juego** (el
-  10,258 % de los bytes de código).
-- Las 1762 están comprobadas contra el ejecutable original: las 1390 del
+- **1778 funciones descompiladas de 11.265: el 15,78 % del juego** (el
+  10,286 % de los bytes de código).
+- Las 1778 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the first ten functions of what the game keeps of each gamepad's player* (ver `git log`).
+- Último hito: *Decompile sixteen functions that ask things of a gamepad's player* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 608 funciones apuntadas pero sin descompilar (las que el código
   llama); 470 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -219,9 +219,10 @@ Módulos (funciones hechas / archivo):
       (7: el nombre, empezar a escribir y a leer, de memoria o de archivo,
       el resultado de leer y el avance)
 - [ ] El jugador de cada mando — `interface\user_interface_controller.c`
-      (10 de unas 75, de `0x0018f372` a `0x001910b8`: cuál es, el
+      (26 de unas 75, de `0x0018f372` a `0x001910b8`: cuál es, el
       siguiente, si es invitado, contarlos y buscar el que tiene perfil o
-      está conectado)
+      está conectado, quitarle el perfil, dar su perfil, su nombre, quién
+      es en el servicio y sus invitados)
 - [ ] Las tareas del servicio de partidas — `networking\online_tasks.c`
       (28: la tabla, una nueva, por dónde va, acabar con una o con todas,
       recorrerlas, buscar una, volver a empezarla, hacerlas avanzar, en

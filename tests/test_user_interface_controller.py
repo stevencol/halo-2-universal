@@ -24,6 +24,8 @@ def controllers(random_) -> bytearray:
         elif random_.random() < 0.4 and index:
             data[base + USER:base + USER + 8] = data[USER:USER + 8]
         data[base + USER + 8] = random_.choice((0, 0, 0, 0, 4, 1, 2, 3))
+        if random_.random() < 0.3:
+            data[base + 0x4E0:base + 0x4E8] = bytes(8)
         for task in range(2):
             struct.pack_into("<I", data, base + TASKS + task * 4, random_.choice((NONE, NONE, 0x10002, random_.getrandbits(32))))
     return data
@@ -57,3 +59,42 @@ def run(t) -> None:
             users[index * 0x70 + 0xC] = random_.choice((0, 0x41, 0x41, 0x41))
             struct.pack_into("<I", users, index * 0x70 + 0x6C, random_.choice((0, 0, 0x1512F0, 0x80151200)))
         t.check("user_interface_controllers_first_online_user", Buffer(bytes(users)), globals=table)
+
+    # ---------- what is asked of a gamepad's player
+
+    for n in range(1500):
+        data = bytes(controllers(random_))
+        table = {"unknown_0054e8e0": data}
+        index = random_.randrange(COUNT)
+        t.check(
+            "user_interface_controller_remove_profile",
+            index,
+            globals=table,
+            externals={"cached_saved_game_file_delete": lambda harness, arguments: (0, tuple(arguments))},
+        )
+        t.check(
+            "user_interface_controller_get_profile",
+            random_.choice((0, 1, 2, 3, NONE)),
+            Buffer(random_.randbytes(0x1E0)),
+            Buffer(random_.randbytes(4)),
+            globals=table,
+        )
+        saved_games = [struct.unpack_from("<I", data, other * SIZE + SAVED_GAME)[0] for other in range(COUNT)]
+        t.check("user_interface_controllers_have_saved_game", random_.choice(saved_games + [5, NONE]), globals=table)
+        t.check("user_interface_controller_get_unknown1FC", index, globals=table)
+        t.check("user_interface_controller_get_online_user", index, Buffer(random_.randbytes(0x70)), globals=table)
+        t.check("user_interface_controller_has_tasks", index, globals=table)
+        t.check("user_interface_controller_get_unknown4E0", index, Buffer(random_.randbytes(0x6A2)), globals=table)
+        t.check("user_interface_controller_get_unknownB82", index, Buffer(random_.randbytes(0x92)), globals=table)
+        t.check("user_interface_controllers_count_online_not_guests", globals=table)
+        t.check("user_interface_controller_count_guests", index, globals=table)
+        t.check("user_interface_controllers_get_profile_mask", globals=table)
+        t.check("user_interface_controllers_get_online_mask", globals=table)
+        t.check("user_interface_controllers_any_online", globals=table)
+        t.check("user_interface_controller_get_name", index, globals={"unknown_0054e8e0": GlobalData(data)})
+        t.check("user_interface_controller_get_profile_unknownE4", index, globals=table)
+        t.check(
+            "user_interface_unknown_001907bf",
+            random_.choice((0, 1, 1, 2, 0xFF)),
+            random_.choice((0, 249, 250, 251, 0xFFFF, random_.getrandbits(16))),
+        )

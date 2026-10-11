@@ -59,7 +59,9 @@ struct player_profile
 	byte unknown0[4];
 	unsigned long flags;
 	wchar name[PLAYER_PROFILE_NAME_LENGTH+1];
-	byte unknown48[0xA4];
+	byte unknown48[0x9C];
+	long unknownE4;
+	byte unknownE8[4];
 	long unknownEC[NUMBER_OF_PLAYER_PROFILE_UNKNOWNEC];
 	long unknownFC;
 	byte unknown100;

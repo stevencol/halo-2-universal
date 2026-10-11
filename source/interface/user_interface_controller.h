@@ -27,7 +27,12 @@ enum
 	guest of another, and which */
 	ONLINE_USER_GUEST_MASK= 0x3,
 	/* how many tasks of the service of games a gamepad's player has */
-	NUMBER_OF_USER_INTERFACE_CONTROLLER_TASKS= 2
+	NUMBER_OF_USER_INTERFACE_CONTROLLER_TASKS= 2,
+	/* a file of a profile with this bit is not looked for among the ones
+	that the gamepads' players have */
+	_saved_game_unknown21_bit= 21,
+	/* from what number on something is so, in user_interface_unknown_001907bf */
+	USER_INTERFACE_UNKNOWN_001907BF_MINIMUM= 250
 };
 
 /* ---------- structures */
@@ -93,5 +98,21 @@ long __attribute__((stdcall)) user_interface_controllers_first_profile(long not_
 long __attribute__((stdcall)) user_interface_controllers_first_online_user(const struct online_user *users);
 long user_interface_controllers_get_only_profile(void);
 long user_interface_controllers_get_only_saved_game(void);
+void user_interface_controller_remove_profile(long index);
+void user_interface_controller_get_profile(long index, struct player_profile *profile, long *saved_game);
+boolean __attribute__((stdcall)) user_interface_controllers_have_saved_game(long saved_game);
+long user_interface_controller_get_unknown1FC(long index);
+void user_interface_controller_get_online_user(long index, struct online_user *user);
+boolean user_interface_controller_has_tasks(long index);
+boolean user_interface_controller_get_unknown4E0(long index, byte *unknown);
+boolean user_interface_controller_get_unknownB82(long index, byte *unknown);
+short user_interface_controllers_count_online_not_guests(void);
+short __attribute__((stdcall)) user_interface_controller_count_guests(long index);
+short user_interface_controllers_get_profile_mask(void);
+short user_interface_controllers_get_online_mask(void);
+boolean user_interface_controllers_any_online(void);
+wchar *user_interface_controller_get_name(long index);
+long user_interface_controller_get_profile_unknownE4(long index);
+boolean __attribute__((stdcall)) user_interface_unknown_001907bf(char unknown, word number);
 
 #endif
