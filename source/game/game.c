@@ -48,7 +48,7 @@ void unknown_0019d650(void *unknown);
 or not */
 void __attribute__((stdcall)) unknown_0017bc40(real seconds);
 void unknown_0017d690(void);
-void __attribute__((stdcall)) unknown_000d4db0(real seconds);
+void __attribute__((stdcall)) game_unknown_000d4db0(real seconds);
 void __attribute__((stdcall)) unknown_0018c060(real seconds);
 void unknown_002118c0(void);
 void __attribute__((stdcall)) unknown_00134e00(real seconds);
@@ -761,7 +761,7 @@ void __attribute__((stdcall)) game_frame(
 	{
 		unknown_0017bc40(seconds);
 		unknown_0017d690();
-		unknown_000d4db0(seconds);
+		game_unknown_000d4db0(seconds);
 		unknown_0018c060(seconds);
 		unknown_002118c0();
 		unknown_00134e00(seconds);
@@ -1238,4 +1238,27 @@ long game_variant_unknown_00161c90(
 	}
 
 	return 1;
+}
+
+/* 0x004674b8: three things; each starts with what is called each tick, or
+NULL */
+byte unknown_004674b8[NUMBER_OF_GAME_UNKNOWN_004674B8][GAME_UNKNOWN_004674B8_SIZE];
+
+/* 0x000d4db0: each tick, each of three things that has a function is told
+how long the tick is. The game has it far from the rest of this file */
+void __attribute__((stdcall)) game_unknown_000d4db0(
+	real seconds)
+{
+	long index;
+
+	for (index= 0; index<NUMBER_OF_GAME_UNKNOWN_004674B8; index++)
+	{
+		void (__attribute__((stdcall)) *update)(real seconds)=
+			*(void (__attribute__((stdcall)) *const *)(real))unknown_004674b8[index];
+
+		if (update)
+		{
+			update(seconds);
+		}
+	}
 }

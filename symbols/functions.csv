@@ -1450,7 +1450,7 @@ address,name,source,arguments,returns,convention
 001a1870,file_reference_get_full_path,source/cseries/async.c,eax stack,int
 001a0a70,async_create_file_blocking,source/cseries/async.c,stack stack stack stack stack stack,void
 0017bc40,unknown_0017bc40,,stack,void,stdcall
-000d4db0,unknown_000d4db0,,stack,void,stdcall
+000d4db0,game_unknown_000d4db0,source/game/game.c,stack,void,stdcall
 0018c060,unknown_0018c060,,stack,void,stdcall
 00134e00,unknown_00134e00,,stack,void,stdcall
 00039e50,unknown_00039e50,,stack,void,stdcall

@@ -2,6 +2,32 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — A tres cosas se les dice cuánto dura un tick
+
+Una función corta más en `game/game.c`, de 38 bytes. De 1918
+funciones se pasa a 1919, el 17,04 % de las del juego (el 10,780 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_unknown_000d4db0` | `0x000d4db0` | `game/game.c` |
+
+### Lo que se sabe
+
+- `game_unknown_000d4db0` (antes `unknown_000d4db0`, otra de las cosas de
+  cada tick) recorre una tabla de **tres cosas de `0x38` bytes**
+  (`0x004674b8`, variable nueva) y a cada una que tenga función le dice
+  cuánto dura el tick. Qué son las tres cosas no se sabe todavía.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  562.
+- En este hito se pasaron la prueba de la función y `test_game` entera.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Dos funciones cortas más que se llamaban por su dirección
 
 Dos funciones cortas (104 bytes), en `networking/network_life_cycle.c` y `game/game.c`. De 1916

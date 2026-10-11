@@ -208,6 +208,10 @@ enum
 	_game_difficulty_legendary= 3,
 
 	GAME_DEFAULT_RANDOM_SEED= 0x78A8,
+	/* three things of 0x38 bytes that start with a function to call each
+	tick */
+	NUMBER_OF_GAME_UNKNOWN_004674B8= 3,
+	GAME_UNKNOWN_004674B8_SIZE= 0x38,
 	GAME_DEFAULT_REFRESH_RATE= 60
 };
 
@@ -304,6 +308,7 @@ void game_lost(boolean lost);
 void game_update_lost(void);
 void game_update_finished(void);
 long game_variant_unknown_00161c90(const struct game_variant *variant);
+void __attribute__((stdcall)) game_unknown_000d4db0(float seconds);
 void game_finish(void);
 long game_finished_wait_over(void);
 void game_tick(void);

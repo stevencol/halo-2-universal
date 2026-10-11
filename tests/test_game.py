@@ -65,6 +65,7 @@ def nothing(harness, arguments):
 def run(t) -> None:
     run_players_and_won(t)
     run_lost_and_finished(t)
+    run_tick_procs(t)
     random_ = random.Random(24)
 
     def proc(call):
@@ -537,7 +538,7 @@ def run_players_and_won(t) -> None:
     FRAME_NAMES = (
         "unknown_0017bc40",
         "unknown_0017d690",
-        "unknown_000d4db0",
+        "game_unknown_000d4db0",
         "unknown_0018c060",
         "unknown_002118c0",
         "unknown_00134e00",
@@ -630,4 +631,24 @@ def run_lost_and_finished(t) -> None:
             "game_update_finished",
             globals={"main_game_globals": Buffer(bytes(game)), "game_time_globals": Buffer(bytes(time))},
             externals={"unknown_00188cd0": told},
+        )
+
+
+def run_tick_procs(t) -> None:
+    random_ = random.Random(563)
+
+    for n in range(300):
+        table = bytearray(random_.randbytes(3 * 0x38))
+        mocks = []
+        for index in range(3):
+            if random_.random() < 0.7:
+                struct.pack_into("<I", table, index * 0x38, mock_address(len(mocks)))
+                mocks.append(Mock(lambda call: 0, stack_arguments=1))
+            else:
+                struct.pack_into("<I", table, index * 0x38, 0)
+        t.check(
+            "game_unknown_000d4db0",
+            struct.unpack("<I", struct.pack("<f", random_.choice((1.0 / 30.0, 0.0, 1.0, -2.5))))[0],
+            globals={"unknown_004674b8": bytes(table)},
+            mocks=mocks,
         )

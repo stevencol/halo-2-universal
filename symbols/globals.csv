@@ -409,3 +409,4 @@ address,name,source
 00547f6f,unknown_00547f6f,source/game/game.c
 00479750,unknown_00479750,source/networking/online_tasks.c
 004cf768,unknown_004cf768,source/networking/online_presence.c
+004674b8,unknown_004674b8,source/game/game.c
