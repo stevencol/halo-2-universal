@@ -2,6 +2,31 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Romper líneas: hitos 491 a 500
+
+Sin funciones nuevas. Tanda de romper líneas de los hitos 491 a 500: 385
+líneas rotas, 384 notadas.
+
+### Comprobado
+
+- `network_blob_checksum` y `network_blob_verify` (hito 491): 12 de 12.
+- `network_channel_construct` (hito 492): 21 de 21.
+- `network_memory.c` (hitos 490, 492 y 494, cuatro funciones): 68 de 68.
+- `transport_endpoint.c` (hitos 498 y 499, quince funciones): 103 de 103.
+- `network_link.c` (hitos 493 a 497 y 500, diecinueve funciones): 180 de
+  181. La que no se nota da lo mismo rota que entera: en
+  `network_link_packet_unpack`, mirar si la voz mide menos que nada sobra,
+  porque después se mira, como número sin signo, que no mida más de lo
+  que cabe.
+- No hizo falta corregir código ni pruebas.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en los hitos 456 a 490 y 501 a 517**; sus
+  listas de líneas no están escritas.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — El nombre de un bloque en el almacén
 
 Una función en `networking/online_storage.c`, de 400 bytes, que queda entero. De 1737

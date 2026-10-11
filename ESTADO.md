@@ -449,7 +449,7 @@ Módulos (funciones hechas / archivo):
 - Los mapas del juego están en
   `E:\Datos\Downloads\juegos\roms\xbox\Halo 2`; no se copian ni se tocan.
 
-## Romper líneas: dónde quedó (2026-10-10, tras el hito 500)
+## Romper líneas: dónde quedó (2026-10-10, tras el hito 517)
 
 - **Hecho:** hitos 415 a 455, completo. De los hitos 415 a 433, todas las
   líneas rotas se notan salvo cuatro que no se pueden notar: dos dan lo
@@ -483,8 +483,17 @@ Módulos (funciones hechas / archivo):
   línea; arreglado en el hito 458). No hizo falta corregir código.
   Informes: `build\line_breaking\batch_report7.txt` y
   `batch_report8.txt`.
-- **Pendiente, y por donde se sigue:** hitos 456 a 500. Sus listas de
-  líneas no están escritas todavía.
+- **Hitos 491 a 500** (`network_blob.c` en sus dos primeras funciones,
+  `network_channel_construct`, cuatro de `network_memory.c`,
+  `transport_endpoint.c` y `network_link.c` enteros): 385 líneas rotas,
+  384 notadas. La que no, en `network_link_packet_unpack`, da lo mismo
+  rota que entera: quitar la mirada de si la voz mide menos que nada no
+  cambia nada, porque la siguiente (que no mida más de lo que cabe, como
+  número sin signo) ya la cubre. No hizo falta corregir código ni pruebas.
+  Listas: `build\line_breaking\make_491_500.py`; informe:
+  `batch_report9.txt`.
+- **Pendiente, y por donde se sigue:** hitos 456 a 490 y 501 a 517. Sus
+  listas de líneas no están escritas todavía.
 - **Cómo se lanza una tanda suelta:** `python build\line_breaking\break_lines.py <fuente>
   <prueba> <funciones,separadas,por,comas> <archivo de líneas> <informe>`.
   Trabaja en la copia `C:\Users\steve\halo-2-check` (antes, `git checkout
