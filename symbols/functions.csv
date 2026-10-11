@@ -2528,3 +2528,4 @@ address,name,source,arguments,returns,convention
 003a0890,XOnlineFeedbackSend,,stack stack stack stack stack stack stack stack,int,stdcall
 0008d230,online_friend_get_online_state,source/networking/online_friends.c,edi esi,bool
 003a0769,XOnlineTitleIdIsSamePublisher,,stack,int,stdcall
+0008c900,network_motd_write_file,source/networking/network_motd.c,stack,bool,stdcall

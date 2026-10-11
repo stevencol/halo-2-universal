@@ -246,3 +246,44 @@ def run(t) -> None:
                 "XOnlineTitleIdIsSamePublisher": lambda harness, arguments, so=random_.choice((1, 1, 1, 0, 0x100)): (so, tuple(arguments)),
             },
         )
+
+    # ---------- the message of the day is written
+
+    for n in range(1500):
+        message = Buffer(random_.randbytes(0x40))
+        state = {}
+
+        def created(harness, arguments, so=random_.choice((1, 1, 1, 1, 0))):
+            state["file"] = arguments[0]
+            return so, (bytes(harness.mu.mem_read(arguments[0], 0x30)),)
+
+        def opened(harness, arguments, so=random_.choice((1, 1, 1, 1, 0)), handle=random_.getrandbits(32)):
+            # the file is open: it has what the console knows it by
+            if so:
+                harness.mu.mem_write(arguments[0] + 0x108, struct.pack("<I", handle))
+            harness.mu.mem_write(arguments[2], struct.pack("<I", 0))
+            return so, (arguments[0] == state.get("file"), arguments[1])
+
+        def wrote(harness, arguments, results=[random_.choice((1, 1, 1, 0)) for index in range(2)]):
+            # where in the message, not where the message is
+            calls = sum(1 for call in harness._calls if call[0] == "file_write")
+            return results[calls % 2], (arguments[0] == state.get("file"), arguments[1], arguments[2] - message.address)
+
+        t.check(
+            "network_motd_write_file",
+            message,
+            globals={
+                "network_motd_file_name": Buffer(b"message_of_the_day.dat" + bytes(2)),
+                "global_language": random_.choice((NONE, 0, 1, 3, 8)),
+            },
+            externals={
+                "file_create": created,
+                "file_open": opened,
+                "XGetLanguage": lambda harness, arguments, language=random_.randrange(1, 10): (language, ()),
+                "file_write": wrote,
+                "CloseHandle": lambda harness, arguments, so=random_.choice((1, 1, 0)): (so, tuple(arguments)),
+                "GetLastError": lambda harness, arguments: (5, ()),
+                "SetLastError": lambda harness, arguments: (0, tuple(arguments)),
+                "file_delete": lambda harness, arguments: (1, (arguments[0] == state.get("file"),)),
+            },
+        )

@@ -2,6 +2,37 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Escribir el mensaje del día en su archivo
+
+Una función más en `networking/network_motd.c`, de 250 bytes. De 1910
+funciones se pasa a 1911, el 16,96 % de las del juego (el 10,714 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_motd_write_file` | `0x0008c900` | `networking/network_motd.c` |
+
+### Lo que se sabe
+
+- El mensaje del día llega del servicio **en nueve idiomas a la vez**: nueve
+  títulos de `0x200` bytes y, detrás, nueve textos de `0x4004`.
+  `network_motd_write_file` guarda en `n:\message_of_the_day.dat` **solo
+  los dos del idioma del juego**, y si no puede escribirlos enteros borra
+  el archivo.
+- Si el juego aún no sabe su idioma, lo pregunta aquí a la consola
+  (`XGetLanguage`), como hacen la copia de mapas y los archivos guardados.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  555.
+- En este hito se pasó la prueba de la función; lo que cierra el archivo
+  corre de verdad en los dos lados (en el juego está escrito en el sitio, y
+  en `source\` es `file_close`).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — En qué está un amigo dentro del juego
 
 Una función más en `networking/online_friends.c`, de 406 bytes. De 1909
