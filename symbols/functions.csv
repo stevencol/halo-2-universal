@@ -2272,7 +2272,7 @@ address,name,source,arguments,returns,convention
 000b45f0,unknown_000b45f0,,eax stack stack,int,stdcall
 0008e090,network_open_sockets,source/networking/network_globals.c,stack,void,stdcall
 0008e0b0,network_close_sockets,source/networking/network_globals.c,stack,void,stdcall
-0008d7e0,unknown_0008d7e0,,,void
+0008d7e0,transport_global_update,source/networking/transport.c,,void
 0007f070,unknown_0007f070,,,void
 000b2ea0,unknown_000b2ea0,,,void
 000b3200,unknown_000b3200,,,void
@@ -2282,3 +2282,12 @@ address,name,source,arguments,returns,convention
 000755d0,unknown_000755d0,,,void
 00080390,unknown_00080390,,,void
 000b3de0,unknown_000b3de0,,,void
+0008d840,transport_startup,source/networking/transport.c,,void
+0008d970,transport_shutdown,source/networking/transport.c,,void
+0036c47d,XNetGetEthernetLinkStatus,,,int
+003cd576,XNetStartup,,stack,int,stdcall
+003cd67b,XNetCleanup,,,int
+003cd58d,WSAStartup,,stack stack,int,stdcall
+003cd688,WSACleanup,,,int
+003a0c39,XOnlineStartup,,stack,int,stdcall
+003a0d36,XOnlineCleanup,,,int

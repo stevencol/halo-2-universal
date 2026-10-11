@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — La red de la consola arranca y se para
+
+Tres funciones en el archivo nuevo `networking/transport.c`. De 1694
+funciones se pasa a 1697, el 15,06 % de las del juego (el 9,991 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `transport_global_update` | `0x0008d7e0` | `networking/transport.c` |
+| `transport_startup` | `0x0008d840` | `networking/transport.c` |
+| `transport_shutdown` | `0x0008d970` | `networking/transport.c` |
+
+### Lo que se sabe
+
+- `transport_global_update` es lo primero que hace `network_update` cada
+  vuelta: **mira el cable de red** (`XNetGetEthernetLinkStatus`). Cuando se
+  pone, arranca la red; cuando se quita, la para. Mientras está puesto,
+  pregunta a la consola cómo se la conoce en la red hasta que lo dice.
+- `transport_startup` arranca, por orden, la red de la consola
+  (`XNetStartup`, con cuánto ha de tener de cada cosa), sus enchufes
+  (`WSAStartup`, versión 2) y el servicio de partidas (`XOnlineStartup`).
+  Si uno falla, para los anteriores. Luego deja buena la tabla de los
+  intentos de medir la red y **avisa a cada cosa que pidió que se le
+  avisara** (hasta ocho, en `0x004d8b20`).
+- `transport_shutdown` hace lo contrario: avisa (`0x004d8b40`), acaba con
+  las medidas (`transport_qos_dispose`), quita a la consola las claves de
+  las sesiones (`XNetUnregisterKey`) y para las tres cosas.
+- Los dos bytes de `0x004d8b18` que tantas funciones miran quedan claros:
+  el primero es que la red de la consola está, el segundo (`0x004d8b19`)
+  que **está arrancada**, y un tercero (`0x004d8b1a`) que el cable está
+  puesto.
+- `network_open_sockets` y `network_close_sockets` (hito 505) son dos de
+  esos avisos: por eso reciben algo que no miran.
+- Las siete funciones de las bibliotecas quedan con su nombre en la tabla.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las tres**, y en las de los hitos 456 a
+  490 y 501 a 505. La tanda de los hitos 491 a 500 está en marcha.
+- En este hito se pasaron las pruebas de las tres funciones y las de
+  `network_globals`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Lo que la red hace cada vuelta
 
 Cuatro funciones en el archivo nuevo `networking/network_globals.c`. De 1690

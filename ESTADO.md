@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 505.
+**Última actualización:** 2026-10-08, al terminar el hito 506.
 
 ## Dónde estamos
 
-- **1694 funciones descompiladas de 11.265: el 15,04 % del juego** (el
-  9,974 % de los bytes de código).
-- Las 1694 están comprobadas contra el ejecutable original: las 1390 del
+- **1697 funciones descompiladas de 11.265: el 15,06 % del juego** (el
+  9,991 % de los bytes de código).
+- Las 1697 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile what the network does each time around* (ver `git log`).
+- Último hito: *Decompile how the network of the console is started and stopped* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 589 funciones apuntadas pero sin descompilar (las que el código
-  llama); 471 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 595 funciones apuntadas pero sin descompilar (las que el código
+  llama); 470 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -215,6 +215,8 @@ Módulos (funciones hechas / archivo):
       (7: la suma, ver si vale, empezar a leerlo y a escribirlo, lo que
       pasa cuando la tarea acaba, su avance y devolver su memoria; falta
       tomar su memoria, `0x00080e10`)
+- [ ] La red de la consola — `networking\transport.c` (3: mirar el
+      cable, arrancarla y pararla; falta apuntar a quién se avisa)
 - [ ] Lo que la red hace cada vuelta — `networking\network_globals.c`
       (4: lo de cada vuelta, lo que se manda al final, y abrir y cerrar
       los enchufes; faltan hacerla y deshacerla, `0x0008d840` a

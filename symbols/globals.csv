@@ -382,3 +382,9 @@ address,name,source
 00510568,unknown_00510568,source/networking/network_globals.c
 00510570,unknown_00510570,source/networking/network_globals.c
 00510574,unknown_00510574,source/networking/network_globals.c
+004d8b1a,unknown_004d8b1a,source/networking/transport.c
+0055e704,unknown_0055e704,source/networking/transport.c
+004d8b1c,unknown_004d8b1c,source/networking/transport.c
+004d8b20,unknown_004d8b20,source/networking/transport.c
+004d8b40,unknown_004d8b40,source/networking/transport.c
+004d8b80,unknown_004d8b80,source/networking/transport.c

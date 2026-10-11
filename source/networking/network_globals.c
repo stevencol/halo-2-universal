@@ -22,6 +22,7 @@ a guess, and so are the names of its functions.
 #include "networking/simulation_entity_database.h"
 #include "networking/simulation_view.h"
 #include "networking/simulation_world.h"
+#include "networking/transport.h"
 
 /* ---------- prototypes */
 
@@ -29,10 +30,8 @@ a guess, and so are the names of its functions.
 started, in thousandths of a second */
 unsigned long GetTickCount(void);
 
-/* 0x0008d7e0: something of the network of the console is looked at, before
-all else. The others are what the network does each time around, in order;
-none of them is decompiled yet */
-void unknown_0008d7e0(void);
+/* what the network does each time around, in order; none of them is
+decompiled yet */
 void unknown_0007f070(void);
 void unknown_000b2ea0(void);
 void unknown_000b3200(void);
@@ -62,14 +61,14 @@ byte *unknown_00510574;
 /* ---------- code */
 
 /* 0x0008df50: what the network does each time around, after what came is
-read: the network of the console is looked at; and, if there is a network,
+read: the cable of the console is looked at (transport_global_update); and, if there is a network,
 ten things in order, of which the voice (game_voice_update) and the tasks of
 the blocks (network_blob_tasks_update) are known. While it does them, the
 time of the network is the one of when it started */
 void network_update(
 	void)
 {
-	unknown_0008d7e0();
+	transport_global_update();
 	if (unknown_004d8ba0)
 	{
 		unknown_00510548= TRUE;
