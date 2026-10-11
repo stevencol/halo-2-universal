@@ -2,6 +2,35 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Cuánto baja un sonido con la distancia
+
+Una función corta más en `sound/sound_speakers.c`, de 56 bytes. De 1921
+funciones se pasa a 1922, el 17,06 % de las del juego (el 10,785 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_speakers_distance_gain` | `0x00192d70` | `sound/sound_speakers.c` |
+
+### Lo que se sabe
+
+- `sound_speakers_distance_gain` (antes `unknown_00192d70`, la que usa
+  `sound_manager.c` al repartir un sonido entre los altavoces) da **cuánto
+  baja un sonido por lo lejos que está**: la distancia mínima del sonido
+  partida por la distancia a la que está (sin pasar de 1), por lo que le
+  falta para llegar a la distancia máxima (`sound_interpolation_fraction`),
+  donde ya no se oye.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  564.
+- En este hito se pasó la prueba de la función, bit a bit, con distancias
+  mayores que cero.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Dónde están dos marcas de un objeto
 
 Dos funciones cortas más en `objects/objects.c` (96 bytes). De 1919

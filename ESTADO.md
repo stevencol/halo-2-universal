@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 564.
+**Última actualización:** 2026-10-08, al terminar el hito 565.
 
 ## Dónde estamos
 
-- **1921 funciones descompiladas de 11.265: el 17,05 % del juego** (el
-  10,783 % de los bytes de código).
-- Las 1921 están comprobadas contra el ejecutable original: las 1390 del
+- **1922 funciones descompiladas de 11.265: el 17,06 % del juego** (el
+  10,785 % de los bytes de código).
+- Las 1922 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile where two markers of an object are* (ver `git log`).
+- Último hito: *Decompile how much quieter a sound is by how far it is* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 615 funciones apuntadas pero sin descompilar (las que el código
-  llama); 466 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 614 funciones apuntadas pero sin descompilar (las que el código
+  llama); 465 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -233,9 +233,9 @@ Módulos (funciones hechas / archivo):
 - [ ] El mapa que se copia por adelantado — `main\main_map_precache.c`
       (3 de 7, de `0x00163610` a `0x00163b84`; faltan `0x00163610`,
       `0x00163680`, `0x00163890` y `0x00163b20`)
-- [ ] Los altavoces — `sound\sound_speakers.c` (3, de `0x00192950` a
-      `0x00192d70`; faltan `0x00192970`, `0x00192a30`, `0x00192b20`,
-      `0x00192b90`, que necesita `_CIpow`, y `0x00192d70`)
+- [ ] Los altavoces — `sound\sound_speakers.c` (4, de `0x00192950` a
+      `0x00192d70`; faltan `0x00192970`, `0x00192a30`, `0x00192b20` y
+      `0x00192b90`, que necesita `_CIpow`)
 - [ ] La lista de partidas del servicio — `networking\network_hoppers.c`
       (24 de unas 30, de `0x00192db0` a `0x001939f0`: la tabla de
       `0x00551ae8`, cuántos jugadores y equipos admite cada una, si es

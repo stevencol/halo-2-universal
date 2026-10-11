@@ -1732,7 +1732,7 @@ address,name,source,arguments,returns,convention
 00191420,unknown_00191420,,edi,void
 00155760,unknown_00155760,,eax,int
 000caf60,object_get_marker95_position,source/objects/objects.c,eax esi,void
-00192d70,unknown_00192d70,,stack stack stack,real:xmm0,stdcall
+00192d70,sound_speakers_distance_gain,source/sound/sound_speakers.c,stack stack stack,real:xmm0,stdcall
 00192ce0,sound_speakers_get_gains4,source/sound/sound_speakers.c,ebx stack stack,void,stdcall
 0005f600,network_session_channel_is_host,source/networking/network_session.c,stack stack,bool,stdcall
 0005f670,network_session_find_peer_by_channel,source/networking/network_session.c,ecx esi,int

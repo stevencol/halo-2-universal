@@ -30,3 +30,20 @@ def run(t) -> None:
         unknown = random_.choice((0, 1, 1, 0xFF, random_.getrandbits(32)))
         t.check("sound_speakers_get_gains4", direction, Buffer(random_.randbytes(16 + 8)), unknown, externals={"unknown_00192b90": loud})
         t.check("sound_speakers_get_gains5", Buffer(random_.randbytes(20 + 8)), direction, unknown, externals={"unknown_00192b90": loud})
+
+    # ---------- how much quieter a sound is by how far it is
+
+    DISTANCES = (0.5, 1.0, 1.0, 2.0, 3.5, 10.0, 100.0, 1e-3, 1e6)
+    for n in range(3000):
+        t.check(
+            "sound_speakers_distance_gain",
+            real_bits(random_.choice(DISTANCES)),
+            real_bits(random_.choice(DISTANCES)),
+            real_bits(random_.choice(DISTANCES + (random_.uniform(0.1, 50.0),))),
+            externals={
+                "sound_interpolation_fraction": lambda harness, arguments, fraction=random_.choice((0.0, 1.0, 0.5, 0.25, random_.random())): (
+                    real_bits(fraction),
+                    (*arguments[:3], arguments[3] & 0xFF),
+                ),
+            },
+        )

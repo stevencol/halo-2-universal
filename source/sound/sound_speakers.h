@@ -26,6 +26,7 @@ enum
 boolean __attribute__((stdcall)) sound_speakers_unknown_00192950(long index);
 void __attribute__((stdcall)) sound_speakers_get_gains4(const real_vector3d *direction, real *gains, long unknown);
 void __attribute__((stdcall)) sound_speakers_get_gains5(real *gains, const real_vector3d *direction, long unknown);
+real __attribute__((stdcall)) sound_speakers_distance_gain(real minimum_distance, real maximum_distance, real distance);
 
 /* ---------- globals */
 

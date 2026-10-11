@@ -15,6 +15,10 @@ are guesses.
 /* 0x00192b90: how loud one of the speakers is for a direction */
 real unknown_00192b90(long index, const real_vector3d *direction, long unknown);
 
+/* 0x0012aff0, of sound_manager.c: how far a number is between two others,
+from 0 to 1 */
+real __attribute__((stdcall)) sound_interpolation_fraction(real minimum, real maximum, real value, boolean above);
+
 /* ---------- globals */
 
 /* 0x00510c9c: sixteen bits, one for each of something; of the players, by
@@ -61,4 +65,18 @@ void __attribute__((stdcall)) sound_speakers_get_gains5(
 	{
 		gains[index]= unknown_00192b90(index, direction, unknown);
 	}
+}
+
+/* 0x00192d70: how much quieter a sound is by how far it is: as much as its
+nearest distance is of how far it is, and less the nearer it is to its
+furthest distance, where it is not heard */
+real __attribute__((stdcall)) sound_speakers_distance_gain(
+	real minimum_distance,
+	real maximum_distance,
+	real distance)
+{
+	real fraction= sound_interpolation_fraction(maximum_distance, minimum_distance, distance, FALSE);
+	real furthest= minimum_distance>distance ? minimum_distance : distance;
+
+	return minimum_distance/furthest*fraction;
 }
