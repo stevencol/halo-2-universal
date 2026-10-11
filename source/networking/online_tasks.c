@@ -23,6 +23,9 @@ void unknown_0006b950(void);
 long unknown_0006c670(struct online_task *task);
 void unknown_0008c550(long index);
 
+/* 0x0006cd50: what the session of the service of games is at */
+long unknown_0006cd50(long session_index);
+
 /* 0x003a07b9, 0x003a062b, of the console's libraries: the list of friends
 is done with, and so is a task */
 long __attribute__((stdcall)) XOnlineFriendsEnumerateFinish(long handle);
@@ -35,6 +38,9 @@ long __attribute__((stdcall)) XOnlineTaskClose(long handle);
 struct data_array *online_tasks;
 byte unknown_004771c8[ONLINE_TASKS_UNKNOWN_004771C8_SIZE];
 long unknown_00479748;
+
+/* 0x00467214, of main_game.c: the session of the service of games, or NONE */
+extern long unknown_00467214;
 
 /* ---------- code */
 
@@ -158,9 +164,109 @@ long online_task_new(
 
 		task->handle= 0;
 		task->type= NONE;
-		task->unknown8= NONE;
+		task->owner= NONE;
 		task->flags= 0;
 	}
 
 	return index;
+}
+
+/* 0x0006b730: a new task, if someone is signed in to the service of games;
+NONE if not, or there is no room */
+long online_task_new_signed_in(
+	void)
+{
+	if (unknown_00467214!=NONE && unknown_0006cd50(unknown_00467214)==_online_session_signed_in)
+	{
+		return online_task_new();
+	}
+
+	return NONE;
+}
+
+/* 0x0006b780: a task is done with and is new again, in the same place and
+of the same kind and owner. The game does not look at whether there is such
+a task */
+void online_task_restart(
+	long index)
+{
+	struct online_task *task= (struct online_task *)online_tasks->data+(index&0xFFFF);
+	long type= task->type;
+	long owner= task->owner;
+
+	online_task_close(index);
+	index= datum_new_at_index(online_tasks, index);
+	task= (struct online_task *)online_tasks->data+(index&0xFFFF);
+	task->type= type;
+	task->owner= owner;
+	task->flags= 0;
+}
+
+/* 0x0006b7e0: the kind of a task. The game does not look at whether there
+is such a task */
+long online_task_get_type(
+	long index)
+{
+	return ((const struct online_task *)online_tasks->data)[index&0xFFFF].type;
+}
+
+/* whether a task is of a kind and of an owner: any owner, with NONE or 0xFF */
+static inline __attribute__((always_inline)) boolean online_task_matches(
+	const struct online_task *task,
+	long owner,
+	long type)
+{
+	return task->type==type && (task->owner==owner || owner==NONE || owner==ONLINE_TASK_ANY_OWNER_);
+}
+
+/* 0x0006b800: the first task of a kind and of an owner, or NONE */
+long __attribute__((stdcall)) online_task_find(
+	long owner,
+	long type)
+{
+	long absolute_index= NONE;
+
+	for (;;)
+	{
+		const struct online_task *task;
+
+		absolute_index= data_next_absolute_index(online_tasks, absolute_index+1);
+		if (absolute_index==NONE)
+		{
+			return NONE;
+		}
+		task= (const struct online_task *)online_tasks->data+absolute_index;
+		if (online_task_matches(task, owner, type))
+		{
+			return (task->identifier<<16)|absolute_index;
+		}
+	}
+}
+
+/* 0x0006b890: whether there is a task of a kind and of an owner */
+long __attribute__((stdcall)) online_task_exists(
+	long owner,
+	long type)
+{
+	long absolute_index= NONE;
+
+	for (;;)
+	{
+		absolute_index= data_next_absolute_index(online_tasks, absolute_index+1);
+		if (absolute_index==NONE)
+		{
+			return FALSE;
+		}
+		if (online_task_matches((const struct online_task *)online_tasks->data+absolute_index, owner, type))
+		{
+			return TRUE;
+		}
+	}
+}
+
+/* 0x0006b910: a task, or NULL if there is not one of that number */
+struct online_task *online_task_get(
+	long index)
+{
+	return (struct online_task *)datum_try_and_get(online_tasks, index);
 }

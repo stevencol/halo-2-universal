@@ -94,8 +94,8 @@ def run(t) -> None:
             return datum.address
 
         return {
-            "unknown_0006b730": lambda harness, arguments: new_task,
-            "unknown_0006b910": where,
+            "online_task_new_signed_in": lambda harness, arguments: new_task,
+            "online_task_get": where,
             "online_task_close": lambda harness, arguments: 0,
             **{name: (lambda harness, arguments, result=result: result) for name, result in results.items()},
         }
@@ -134,7 +134,7 @@ def run(t) -> None:
                         },
                         externals={
                             "online_task_close": lambda harness, arguments: 0,
-                            "unknown_0006b890": lambda harness, arguments, asked=asked: asked,
+                            "online_task_exists": lambda harness, arguments, asked=asked: asked,
                         },
                     )
 
@@ -177,8 +177,8 @@ def run(t) -> None:
                                     "game_voice_muted_player_counts": GlobalData(struct.pack("<4I", 5, 6, 7, 8)),
                                 },
                                 externals={
-                                    "unknown_0006b730": lambda harness, arguments, new_task=new_task: new_task,
-                                    "unknown_0006b910": where,
+                                    "online_task_new_signed_in": lambda harness, arguments, new_task=new_task: new_task,
+                                    "online_task_get": where,
                                     "online_task_close": lambda harness, arguments: 0,
                                     "unknown_003a0832": get,
                                 },

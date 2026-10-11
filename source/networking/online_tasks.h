@@ -38,20 +38,25 @@ enum
 	_online_task_type_friends= 3,
 	_online_task_type21= 0x21,
 	ONLINE_TASK_DONE= 0x1500F2,
+	/* what a task is looked for with when it does not matter whose it is,
+	as is so with NONE; and what the session says when someone is signed in */
+	ONLINE_TASK_ANY_OWNER_= 0xFF,
+	_online_session_signed_in= 1,
 	/* the size of something of the tasks that starts as nothing */
 	ONLINE_TASKS_UNKNOWN_004771C8_SIZE= 0x2580
 };
 
 /* ---------- structures */
 
-/* a task: its bits, its kind, a number, and what the libraries know it by,
+/* a task: its bits, its kind, whose it is, and what the libraries know it by,
 which is nothing or NONE when they do not */
 struct online_task
 {
 	short identifier;
 	word flags;
 	long type;
-	long unknown8;
+	/* whose it is: the number of a gamepad */
+	long owner;
 	long handle;
 	long unknown10;
 };
@@ -73,6 +78,12 @@ void online_tasks_dispose(void);
 long online_task_get_status(long index);
 void online_task_close(long index);
 long online_task_new(void);
+long online_task_new_signed_in(void);
+void online_task_restart(long index);
+long online_task_get_type(long index);
+long __attribute__((stdcall)) online_task_find(long owner, long type);
+long __attribute__((stdcall)) online_task_exists(long owner, long type);
+struct online_task *online_task_get(long index);
 
 /* ---------- globals */
 

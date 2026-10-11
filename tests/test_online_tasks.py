@@ -119,3 +119,48 @@ def run(t) -> None:
                 Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
             ],
         )
+
+    # ---------- more of the tasks
+
+    for n in range(2000):
+        session = lambda harness, arguments, said=random_.choice((1, 1, 1, 0, 2)): (said, tuple(arguments))
+        tasks, number = table()
+        t.check(
+            "online_task_new_signed_in",
+            globals={"online_tasks": tasks, "unknown_00467214": random_.choice((0, 0, 0, 2, NONE))},
+            externals={"unknown_0006cd50": session},
+        )
+
+        tasks, number = table()
+        t.check("online_task_get", number, globals={"online_tasks": tasks})
+
+        # of the tasks that there are: the kind and the owner of one, or others
+        data = tasks.data
+        index = random_.randrange(COUNT)
+        kind, owner = struct.unpack_from("<II", data, TASKS + index * TASK + 4)
+        kind = random_.choice((kind, kind, 2, 3, 0x21, 7))
+        owner = random_.choice((owner, owner, NONE, 0xFF, 0, random_.getrandbits(32)))
+        t.check("online_task_find", owner, kind, globals={"online_tasks": tasks})
+        tasks, number = table()
+        t.check("online_task_exists", owner, kind, globals={"online_tasks": tasks})
+
+        # a task that there is, for what does not look
+        tasks, number = table()
+        bits = struct.unpack_from("<I", tasks.data, BITS)[0]
+        there = [index for index in range(COUNT) if bits >> index & 1]
+        if there:
+            index = random_.choice(there)
+            number = struct.unpack_from("<H", tasks.data, TASKS + index * TASK)[0] << 16 | index
+            t.check("online_task_get_type", number, globals={"online_tasks": tasks})
+            tasks = Buffer(tasks.data, pointers=tasks.pointers, places=tasks.places)
+            t.check(
+                "online_task_restart",
+                number,
+                globals={"online_tasks": tasks},
+                externals={
+                    "unknown_0006c670": lambda harness, arguments: (0x1500F2, (harness.normalize(arguments[0]),)),
+                    "XOnlineFriendsEnumerateFinish": lambda harness, arguments: (0, tuple(arguments)),
+                    "unknown_0008c550": lambda harness, arguments: (0, tuple(arguments)),
+                    "XOnlineTaskClose": lambda harness, arguments: (0, tuple(arguments)),
+                },
+            )

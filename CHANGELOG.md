@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Buscar una tarea del servicio de partidas
+
+Seis funciones en `networking/online_tasks.c`. De 1708
+funciones se pasa a 1714, el 15,22 % de las del juego (el 10,028 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_task_new_signed_in` | `0x0006b730` | `networking/online_tasks.c` |
+| `online_task_restart` | `0x0006b780` | `networking/online_tasks.c` |
+| `online_task_get_type` | `0x0006b7e0` | `networking/online_tasks.c` |
+| `online_task_find` | `0x0006b800` | `networking/online_tasks.c` |
+| `online_task_exists` | `0x0006b890` | `networking/online_tasks.c` |
+| `online_task_get` | `0x0006b910` | `networking/online_tasks.c` |
+
+### Lo que se sabe
+
+- El número que faltaba de una tarea es **de quién es**: el del mando.
+- `online_task_find` da la primera tarea de una clase y de un dueño, y
+  `online_task_exists` dice si la hay. Con `-1` o `0xFF` vale cualquier
+  dueño.
+- `online_task_new_signed_in` da una tarea nueva solo si hay alguien
+  conectado al servicio de partidas (lo que dice `0x0006cd50` de la
+  sesión de `0x00467214`).
+- `online_task_restart` acaba con una tarea y la deja nueva en el mismo
+  sitio, con la misma clase y el mismo dueño (`datum_new_at_index`).
+- `online_task_get` y `online_task_get_type` dan una tarea y su clase.
+  La segunda, como `online_task_restart`, no mira si la tarea existe.
+
+### Cambiado
+
+- `unknown_0006b730`, `unknown_0006b890` y `unknown_0006b910`, que usaba
+  `voice_mute_list.c`, tienen su nombre, y ese archivo usa ya la cabecera
+  de las tareas en vez de declararlas él.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las seis**, y en las de los hitos 456 a
+  490 y 501 a 508. La tanda de los hitos 491 a 500 está en marcha.
+- En este hito se pasaron todas las pruebas de `online_tasks` y de
+  `voice_mute_list`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Las tareas del servicio de partidas
 
 Seis funciones en el archivo nuevo `networking/online_tasks.c`. De 1702

@@ -12,6 +12,7 @@ the file is a guess, and so are the names of its functions.
 
 #include "input/input.h"
 #include "main/main_game.h"
+#include "networking/online_tasks.h"
 
 #include <string.h>
 
@@ -39,10 +40,6 @@ long unknown_0006cd50(long session_index);
 NONE if there is no room, or with no session in its first state.
 0x0006b910: where it is; NULL if it is no more. 0x0006b640: it is asked no
 more. 0x0006b890: something of a kind that is asked; 0 if nothing is */
-long unknown_0006b730(void);
-byte *unknown_0006b910(long task);
-void online_task_close(long task);
-long __attribute__((stdcall)) unknown_0006b890(long unknown, long kind);
 
 /* ---------- constants */
 
@@ -61,7 +58,7 @@ enum
 	_online_task_kind_mute_list_get= 0xC,
 	_online_task_mute_list_startup_state= 1,
 	_online_task_mute_list_get_state= 9,
-	/* what unknown_0006b890 is asked with, when the gamepad does not matter */
+	/* what online_task_exists is asked with, when the gamepad does not matter */
 	ONLINE_TASK_ANY_OWNER= 0xFF
 };
 
@@ -163,11 +160,11 @@ void VOICE_MUTE_LIST_CALLBACK voice_mute_list_startup(
 {
 	if (unknown_004c99c0==NONE)
 	{
-		long task= unknown_0006b730();
+		long task= online_task_new_signed_in();
 
 		if (task!=NONE)
 		{
-			byte *datum= unknown_0006b910(task);
+			byte *datum= (byte *)online_task_get(task);
 
 			if (datum)
 			{
@@ -205,7 +202,7 @@ void voice_mute_list_stop(
 	}
 	if (startup_task!=NONE)
 	{
-		if (!unknown_0006b890(ONLINE_TASK_ANY_OWNER, _online_task_kind_mute_list_get))
+		if (!online_task_exists(ONLINE_TASK_ANY_OWNER, _online_task_kind_mute_list_get))
 		{
 			online_task_close(startup_task);
 			unknown_004c99c0= NONE;
@@ -222,16 +219,16 @@ void voice_mute_list_request(
 	long new_task;
 	byte *datum;
 
-	if (*task!=NONE && unknown_0006b910(*task))
+	if (*task!=NONE && online_task_get(*task))
 	{
 		return;
 	}
-	new_task= unknown_0006b730();
+	new_task= online_task_new_signed_in();
 	if (new_task==NONE)
 	{
 		return;
 	}
-	datum= unknown_0006b910(new_task);
+	datum= (byte *)online_task_get(new_task);
 	if (!datum)
 	{
 		return;
