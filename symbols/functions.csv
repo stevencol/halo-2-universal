@@ -510,7 +510,7 @@ address,name,source,arguments,returns,convention
 0024cdaf,hud_messages_unknown_0024cdaf,,,void
 001a0180,unicode_string_list_get_string,source/text/unicode_string_list.c,eax edi stack,void
 0024cbee,hud_print_message,,eax stack,void
-00190e37,unknown_00190e37,,,void
+00190e37,user_interface_controllers_write_changed_profiles,source/interface/user_interface_controller.c,,void
 0016e2c0,unknown_0016e2c0,,eax,void
 00138110,game_options_new_default,source/game/game.c,esi,void
 00137f70,game_run_ticks,source/game/game.c,eax ebx,void
@@ -2355,7 +2355,7 @@ address,name,source,arguments,returns,convention
 003a0798,unknown_003a0798,,stack stack stack,int,stdcall
 0008e750,unknown_0008e750,,stack stack stack,void,stdcall
 0006cb60,online_logoff,source/networking/online_tasks.c,,void
-00190da5,unknown_00190da5,,stack,void,stdcall
+00190da5,user_interface_controller_sign_out,source/interface/user_interface_controller.c,stack,void,stdcall
 0006b590,online_title_get_name,source/networking/online_tasks.c,stack edi esi,void,stdcall
 0006d210,online_get_accepted_game_invite,source/networking/online_tasks.c,eax,bool
 0006d220,online_service_unregister_address,source/networking/online_tasks.c,,void
@@ -2385,3 +2385,16 @@ address,name,source,arguments,returns,convention
 001902c1,user_interface_controller_get_name,source/interface/user_interface_controller.c,ecx,pointer
 001902de,user_interface_controller_get_profile_unknownE4,source/interface/user_interface_controller.c,ecx,int
 001907bf,user_interface_unknown_001907bf,source/interface/user_interface_controller.c,stack stack,bool,stdcall
+00064690,game_voice_unknown_004cd904_clear,source/networking/game_voice.c,edx,void
+00190d0a,user_interface_controller_close_tasks,source/interface/user_interface_controller.c,eax,void
+00190d4b,user_interface_controller_reset,source/interface/user_interface_controller.c,eax,void
+00190186,user_interface_controller_remove_guests,source/interface/user_interface_controller.c,edi,void
+00190074,user_interface_controller_set_online,source/interface/user_interface_controller.c,stack stack,void,stdcall
+001906b4,user_interface_controllers_logoff,source/interface/user_interface_controller.c,,void
+00190728,user_interface_controller_restart_tasks,source/interface/user_interface_controller.c,stack,void,stdcall
+00190e71,user_interface_controllers_unknown_00190e71,source/interface/user_interface_controller.c,stack,void,stdcall
+0018f5e3,user_interface_controllers_update_saved_games,source/interface/user_interface_controller.c,,void
+00190eb3,unknown_00190eb3,,stack,void,stdcall
+00199e2e,unknown_00199e2e,,stack,void,stdcall
+000abc70,unknown_000abc70,,ebx stack,int,stdcall
+002153dd,unknown_002153dd,,stack stack stack stack,void,stdcall

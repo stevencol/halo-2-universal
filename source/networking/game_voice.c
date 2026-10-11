@@ -1861,3 +1861,10 @@ void game_voice_update_session_players(
 		voice_queues_reset(unknown_00525a00);
 	}
 }
+
+/* 0x00064690: one of the things of unknown_004cd904 is nothing */
+void game_voice_unknown_004cd904_clear(
+	long index)
+{
+	memset(unknown_004cd904[index], 0, UNKNOWN_004CD904_SIZE);
+}

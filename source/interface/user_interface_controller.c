@@ -9,9 +9,22 @@ What the game keeps of the player of each gamepad. The names are guesses.
 
 #include "user_interface_controller.h"
 
+#include "networking/game_voice.h"
 #include "saved games/saved_game_files.h"
 
 #include <string.h>
+
+/* ---------- prototypes */
+
+/* 0x00190eb3: the name that is shown of a gamepad's player is made again.
+0x00199e2e: something of the interface, after no one is signed in.
+0x000abc70: a task of the service of games starts for a player of it; NONE if
+it could not. 0x002153dd: a profile is written to its file */
+void __attribute__((stdcall)) unknown_00190eb3(long index);
+void __attribute__((stdcall)) unknown_00199e2e(long unknown);
+long __attribute__((stdcall)) unknown_000abc70(const struct online_user *user, long index);
+void __attribute__((stdcall)) unknown_002153dd(long index, long saved_game, struct player_profile *profile,
+	long unknown);
 
 /* ---------- code */
 
@@ -35,6 +48,18 @@ static inline __attribute__((always_inline)) boolean user_interface_controller_u
 	memcpy(identifier, controller->unknown4E0, sizeof(identifier));
 
 	return (identifier[0]|identifier[1])!=0;
+}
+
+/* whether the players of two gamepads are the same one in the service of
+games */
+static inline __attribute__((always_inline)) boolean user_interface_controllers_same_online_user(
+	long index,
+	long other)
+{
+	const struct online_user *user= &USER_INTERFACE_CONTROLLER(index)->user;
+	const struct online_user *other_user= &USER_INTERFACE_CONTROLLER(other)->user;
+
+	return user->xuid[0]==other_user->xuid[0] && user->xuid[1]==other_user->xuid[1];
 }
 
 /* 0x0018f576: what the game keeps of a gamepad's player; NULL for NONE */
@@ -487,4 +512,213 @@ boolean __attribute__((stdcall)) user_interface_unknown_001907bf(
 	word number)
 {
 	return unknown==1 || number>=USER_INTERFACE_UNKNOWN_001907BF_MINIMUM;
+}
+
+/* 0x00190d0a: the tasks of the service of games of a gamepad's player are
+done with */
+void user_interface_controller_close_tasks(
+	long index)
+{
+	struct user_interface_controller *controller= USER_INTERFACE_CONTROLLER(index);
+	long task;
+
+	for (task= 0; task<NUMBER_OF_USER_INTERFACE_CONTROLLER_TASKS; task++)
+	{
+		if (controller->tasks[task]!=NONE)
+		{
+			online_task_close(controller->tasks[task]);
+			controller->tasks[task]= NONE;
+		}
+	}
+}
+
+/* 0x00190da5: a gamepad's player is not signed in to the service of games
+any more: who it was there is nothing, its tasks are done with, and the name
+that is shown of it is the one of its profile */
+void __attribute__((stdcall)) user_interface_controller_sign_out(
+	long index)
+{
+	struct user_interface_controller *controller= USER_INTERFACE_CONTROLLER(index);
+
+	controller->flags&= ~FLAG(_user_interface_controller_online_bit);
+	controller->unknown204= 0;
+	controller->unknown46C= FALSE;
+	controller->unknown46D= FALSE;
+	memset(&controller->user, 0, sizeof(controller->user));
+	memset(controller->unknown4E0, 0, sizeof(controller->unknown4E0));
+	memset(controller->unknownB82, 0, sizeof(controller->unknownB82));
+	user_interface_controller_close_tasks(index);
+	controller->unknownC65= FALSE;
+	controller->unknownC5C= 0;
+	controller->unknownC64= FALSE;
+	memset(controller->unknownC66, 0, sizeof(controller->unknownC66));
+	memcpy(controller->name, controller->profile.name, sizeof(controller->name));
+}
+
+/* 0x00190d4b: a gamepad has no player: it is signed out, its thing of the
+voice is nothing, and it has no profile */
+void user_interface_controller_reset(
+	long index)
+{
+	struct user_interface_controller *controller= USER_INTERFACE_CONTROLLER(index);
+
+	user_interface_controller_sign_out(index);
+	if (controller->voice_index!=NONE)
+	{
+		game_voice_unknown_004cd904_clear(controller->voice_index);
+		controller->voice_index= NONE;
+	}
+	user_interface_controller_remove_profile(index);
+	controller->voice_index= NONE;
+	controller->flags= 0;
+	memset(controller->identifier, 0, sizeof(controller->identifier));
+	controller->unknown14= NONE;
+	controller->unknown1FC= 0;
+	controller->unknown200= 0;
+	controller->name[0]= 0;
+}
+
+/* 0x00190186: the guests of a gamepad's player are no players any more;
+nothing if it is a guest itself */
+void user_interface_controller_remove_guests(
+	long index)
+{
+	if (!user_interface_controller_is_guest(index))
+	{
+		long other= 0;
+
+		do
+		{
+			if (other!=index &&
+				((USER_INTERFACE_CONTROLLER(other)->flags>>_user_interface_controller_online_bit)&1) &&
+				user_interface_controllers_same_online_user(index, other))
+			{
+				user_interface_controller_reset(other);
+			}
+			other= user_interface_controller_next(other);
+		} while (other!=NONE);
+	}
+}
+
+/* 0x00190074: a gamepad's player is signed in to the service of games, or
+is not; if not, the name that is shown of it is made again */
+void __attribute__((stdcall)) user_interface_controller_set_online(
+	long index,
+	boolean online)
+{
+	struct user_interface_controller *controller= USER_INTERFACE_CONTROLLER(index);
+
+	if (online)
+	{
+		controller->flags|= FLAG(_user_interface_controller_online_bit);
+	}
+	else
+	{
+		controller->flags&= ~FLAG(_user_interface_controller_online_bit);
+	}
+	if (!online)
+	{
+		unknown_00190eb3(index);
+	}
+}
+
+/* 0x001906b4: everyone is signed out of the service of games, and no
+gamepad has a player */
+void user_interface_controllers_logoff(
+	void)
+{
+	long index= 0;
+
+	online_logoff();
+	do
+	{
+		user_interface_controller_reset(index);
+		index= user_interface_controller_next(index);
+	} while (index!=NONE);
+	unknown_00199e2e(0);
+}
+
+/* 0x00190728: the tasks of the service of games of a gamepad's player are
+done with, and what they gave is nothing; if it is signed in and is not a
+guest, the first starts again */
+void __attribute__((stdcall)) user_interface_controller_restart_tasks(
+	long index)
+{
+	struct user_interface_controller *controller= USER_INTERFACE_CONTROLLER(index);
+	long task;
+
+	for (task= 0; task<NUMBER_OF_USER_INTERFACE_CONTROLLER_TASKS; task++)
+	{
+		if (controller->tasks[task]!=NONE)
+		{
+			online_task_close(controller->tasks[task]);
+			controller->tasks[task]= NONE;
+		}
+	}
+	memset(controller->unknown4E0, 0, sizeof(controller->unknown4E0));
+	memset(controller->unknownB82, 0, sizeof(controller->unknownB82));
+	if (((controller->flags>>_user_interface_controller_online_bit)&1) && !user_interface_controller_is_guest(index))
+	{
+		controller->tasks[0]= unknown_000abc70(&controller->user, index);
+	}
+}
+
+/* 0x00190e37: the profiles that changed are written to their files */
+void user_interface_controllers_write_changed_profiles(
+	void)
+{
+	long index= 0;
+
+	do
+	{
+		struct user_interface_controller *controller= USER_INTERFACE_CONTROLLER(index);
+
+		if ((controller->flags&FLAG(_user_interface_controller_profile_bit)) &&
+			(controller->flags&FLAG(_user_interface_controller_profile_changed_bit)))
+		{
+			player_profile_write(controller->saved_game, &controller->profile);
+		}
+		index= user_interface_controller_next(index);
+	} while (index!=NONE);
+}
+
+/* 0x00190e71: the profiles that changed are written to their files, in
+another way (unknown_002153dd) */
+void __attribute__((stdcall)) user_interface_controllers_unknown_00190e71(
+	long unknown)
+{
+	long index= 0;
+
+	do
+	{
+		struct user_interface_controller *controller= USER_INTERFACE_CONTROLLER(index);
+
+		if ((controller->flags&FLAG(_user_interface_controller_profile_bit)) &&
+			(controller->flags&FLAG(_user_interface_controller_profile_changed_bit)))
+		{
+			unknown_002153dd(index, controller->saved_game, &controller->profile, unknown);
+		}
+		index= user_interface_controller_next(index);
+	} while (index!=NONE);
+}
+
+/* 0x0018f5e3: the files that the game knows of are looked at again, and the
+file of each profile is what it is now */
+void user_interface_controllers_update_saved_games(
+	void)
+{
+	long index= 0;
+
+	saved_game_files_update();
+	do
+	{
+		struct user_interface_controller *controller= USER_INTERFACE_CONTROLLER(index);
+
+		if ((controller->flags&FLAG(_user_interface_controller_profile_bit)) && controller->saved_game!=NONE)
+		{
+			controller->saved_game= saved_game_file_get_current_index(controller->saved_game);
+		}
+		index= user_interface_controller_next(index);
+	} while (index!=NONE);
+	saved_game_files_cache_valid= FALSE;
 }

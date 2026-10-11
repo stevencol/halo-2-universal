@@ -39,7 +39,7 @@ long __attribute__((stdcall)) user_interface_controllers_first_online_user(const
 void unknown_0008c660(void);
 
 /* 0x00190da5: a gamepad is told that no one is signed in */
-void __attribute__((stdcall)) unknown_00190da5(long user_index);
+void __attribute__((stdcall)) user_interface_controller_sign_out(long user_index);
 
 /* 0x003a0798, of the console's libraries: what a player of this console is
 at, in twelve bytes: a kind, what something is known by, and some bits;
@@ -1328,7 +1328,7 @@ void online_logoff(
 	}
 	for (index= 0; index<MAXIMUM_ONLINE_USERS; index++)
 	{
-		unknown_00190da5(index);
+		user_interface_controller_sign_out(index);
 	}
 	unknown_004cf8e4[NETWORK_OBSERVER_UNKNOWN4E00_OFFSET]= FALSE;
 	unknown_004cf95c= FALSE;

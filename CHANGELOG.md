@@ -2,6 +2,63 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Desconectar al jugador de un mando y dejar un mando sin jugador
+
+Diez funciones más en `interface/user_interface_controller.c` y una en
+`networking/game_voice.c` (879 bytes). De 1778
+funciones se pasa a 1789, el 15,88 % de las del juego (el 10,315 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_voice_unknown_004cd904_clear` | `0x00064690` | `networking/game_voice.c` |
+| `user_interface_controllers_update_saved_games` | `0x0018f5e3` | `interface/user_interface_controller.c` |
+| `user_interface_controller_set_online` | `0x00190074` | `interface/user_interface_controller.c` |
+| `user_interface_controller_remove_guests` | `0x00190186` | `interface/user_interface_controller.c` |
+| `user_interface_controllers_logoff` | `0x001906b4` | `interface/user_interface_controller.c` |
+| `user_interface_controller_restart_tasks` | `0x00190728` | `interface/user_interface_controller.c` |
+| `user_interface_controller_close_tasks` | `0x00190d0a` | `interface/user_interface_controller.c` |
+| `user_interface_controller_reset` | `0x00190d4b` | `interface/user_interface_controller.c` |
+| `user_interface_controller_sign_out` | `0x00190da5` | `interface/user_interface_controller.c` |
+| `user_interface_controllers_write_changed_profiles` | `0x00190e37` | `interface/user_interface_controller.c` |
+| `user_interface_controllers_unknown_00190e71` | `0x00190e71` | `interface/user_interface_controller.c` |
+
+### Lo que se sabe
+
+- `user_interface_controller_sign_out` (antes `unknown_00190da5`, la que
+  `online_logoff` llama por cada mando) **desconecta del servicio al
+  jugador de un mando**: borra quién era allí, cierra sus dos tareas y
+  vuelve a enseñar el nombre de su perfil.
+- `user_interface_controller_reset` **deja un mando sin jugador**: lo
+  desconecta, borra su cosa de la voz y le quita el perfil.
+- `user_interface_controller_remove_guests` deja sin jugador a los mandos
+  de los **invitados** de uno.
+- `user_interface_controllers_logoff` es salir del servicio del todo:
+  `online_logoff` y los cuatro mandos sin jugador.
+- `user_interface_controllers_write_changed_profiles` (antes
+  `unknown_00190e37`, la que llama `main.c` antes de su mensaje) **escribe
+  en su archivo cada perfil que cambió**. Con esto el bit `6` queda claro:
+  «el perfil cambió y falta escribirlo».
+- `user_interface_controllers_update_saved_games` pone al día el archivo de
+  cada perfil cuando cambia la lista de archivos guardados.
+- `user_interface_controller_restart_tasks` vuelve a empezar la primera
+  tarea del servicio de un jugador conectado que no es invitado
+  (`0x000abc70`, que queda por descompilar).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  527.
+- En este hito se pasaron las pruebas de las once funciones y las de las
+  dos que llaman a las renombradas (`online_logoff` y
+  `main_unknown4E_private`).
+- No se hizo `0x0018f58c` (la que deja la tabla como al arrancar): borra
+  `0x48` bytes más allá de los cuatro mandos, que `source\` aún no tiene
+  como parte de la misma variable.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Lo que se pregunta del jugador de un mando: dieciséis funciones
 
 Dieciséis funciones más en `interface/user_interface_controller.c` (834 bytes). De 1762

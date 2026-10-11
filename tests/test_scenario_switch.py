@@ -223,7 +223,7 @@ def run(t) -> None:
                             "main_unknown4E_private",
                             globals={"main_globals": main_globals(random_, x4E=1), **common, "main_game_globals": game_globals},
                             memory=memory,
-                            externals={"unknown_00190e37": nothing, **messages},
+                            externals={"user_interface_controllers_write_changed_profiles": nothing, **messages},
                         )
                         if source:
                             # the game does not look at whether there is a source of the sound

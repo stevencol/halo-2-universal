@@ -77,7 +77,7 @@ void hud_messages_unknown_0024cdaf(void);
 void hud_print_message(long local_player_index, const wchar *text);
 
 /* 0x00190e37: what main_unknown4E_private does before its message */
-void unknown_00190e37(void);
+void user_interface_controllers_write_changed_profiles(void);
 
 /* 0x001896c0: plays a sound, as loud as it is told */
 void unknown_001896c0(long sound_index, real scale);
@@ -663,7 +663,7 @@ this console that the game was saved, in the campaign */
 void main_unknown4E_private(
 	void)
 {
-	unknown_00190e37();
+	user_interface_controllers_write_changed_profiles();
 	main_globals.unknown4E= FALSE;
 
 	if (main_game_globals && main_game_globals->active &&

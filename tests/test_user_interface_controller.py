@@ -98,3 +98,76 @@ def run(t) -> None:
             random_.choice((0, 1, 1, 2, 0xFF)),
             random_.choice((0, 249, 250, 251, 0xFFFF, random_.getrandbits(16))),
         )
+
+    # ---------- a gamepad's player signs out, and what is done with all of them
+
+    def told(harness, arguments):
+        return 0, tuple(harness.normalize(value) for value in arguments)
+
+    for n in range(1000):
+        data = bytes(controllers(random_))
+        table = {"unknown_0054e8e0": GlobalData(data)}
+        index = random_.randrange(COUNT)
+        t.check("game_voice_unknown_004cd904_clear", index, globals={"unknown_004cd904": random_.randbytes(4 * 0xD0)})
+        t.check("user_interface_controller_close_tasks", index, globals=table, externals={"online_task_close": told})
+        t.check("user_interface_controller_sign_out", index, globals=table, externals={"online_task_close": told})
+        t.check(
+            "user_interface_controller_reset",
+            index,
+            globals={**table, "unknown_004cd904": random_.randbytes(4 * 0xD0)},
+            externals={"online_task_close": told, "cached_saved_game_file_delete": told},
+        )
+        t.check(
+            "user_interface_controller_remove_guests",
+            index,
+            globals=table,
+            externals={"user_interface_controller_reset": told},
+        )
+        t.check(
+            "user_interface_controller_set_online",
+            index,
+            random_.choice((0, 1)),
+            globals=table,
+            externals={"unknown_00190eb3": told},
+        )
+        t.check(
+            "user_interface_controller_restart_tasks",
+            index,
+            globals=table,
+            externals={
+                "online_task_close": told,
+                "unknown_000abc70": lambda harness, arguments, task=random_.choice((NONE, 0x30001, 0x12340005)): (
+                    task,
+                    (harness.normalize(arguments[0]), arguments[1]),
+                ),
+            },
+        )
+        t.check(
+            "user_interface_controllers_write_changed_profiles",
+            globals=table,
+            externals={"player_profile_write": lambda harness, arguments: (random_.choice((0, 1)), told(harness, arguments)[1])},
+        )
+        t.check(
+            "user_interface_controllers_unknown_00190e71",
+            random_.choice((0, 1, random_.getrandbits(32))),
+            globals=table,
+            externals={"unknown_002153dd": told},
+        )
+        current = {}
+
+        def now(harness, arguments):
+            # the same answer in the game and in source/, whatever the order
+            return current.setdefault(arguments[0], (arguments[0] * 7 + 3) & 0xFFFFFFFF), (arguments[0],)
+
+        t.check(
+            "user_interface_controllers_update_saved_games",
+            globals={**table, "saved_game_files_cache_valid": bytes((random_.choice((0, 1)),))},
+            externals={"saved_game_files_update": told, "saved_game_file_get_current_index": now},
+        )
+
+    for n in range(300):
+        t.check(
+            "user_interface_controllers_logoff",
+            globals={"unknown_0054e8e0": GlobalData(bytes(controllers(random_)))},
+            externals={"online_logoff": told, "user_interface_controller_reset": told, "unknown_00199e2e": told},
+        )

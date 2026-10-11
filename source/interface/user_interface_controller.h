@@ -114,5 +114,15 @@ boolean user_interface_controllers_any_online(void);
 wchar *user_interface_controller_get_name(long index);
 long user_interface_controller_get_profile_unknownE4(long index);
 boolean __attribute__((stdcall)) user_interface_unknown_001907bf(char unknown, word number);
+void user_interface_controller_close_tasks(long index);
+void __attribute__((stdcall)) user_interface_controller_sign_out(long index);
+void user_interface_controller_reset(long index);
+void user_interface_controller_remove_guests(long index);
+void __attribute__((stdcall)) user_interface_controller_set_online(long index, boolean online);
+void user_interface_controllers_logoff(void);
+void __attribute__((stdcall)) user_interface_controller_restart_tasks(long index);
+void user_interface_controllers_write_changed_profiles(void);
+void __attribute__((stdcall)) user_interface_controllers_unknown_00190e71(long unknown);
+void user_interface_controllers_update_saved_games(void);
 
 #endif

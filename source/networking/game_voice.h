@@ -325,6 +325,8 @@ extern byte unknown_00527104[UNKNOWN_00527104_SIZE];
 extern byte unknown_00527108[UNKNOWN_00527108_SIZE];
 extern byte game_voice_session_player_identifiers[GAME_VOICE_SESSION_PLAYER_IDENTIFIERS_SIZE];
 extern byte unknown_004cd904[UNKNOWN_004CD904_COUNT][UNKNOWN_004CD904_SIZE];
+
+void game_voice_unknown_004cd904_clear(long index);
 extern byte *unknown_004e9ae8;
 extern long unknown_0055e4d0[UNKNOWN_0055E4D0_COUNT];
 extern long unknown_004c9880;

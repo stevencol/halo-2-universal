@@ -618,7 +618,7 @@ def run(t) -> None:
             externals={
                 "network_blob_task_end": told,
                 "online_tasks_close_all": told,
-                "unknown_00190da5": told,
+                "user_interface_controller_sign_out": told,
                 "unknown_0007f410": told,
             },
             mocks=[Mock(lambda call: 0, stack_arguments=1) for index in range(8)],
