@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — En qué dice el servicio que está un jugador
+
+Una función en `networking/online_tasks.c`, de 365 bytes. De 1747
+funciones se pasa a 1748, el 15,52 % de las del juego (el 10,231 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_user_get_state` | `0x0006d080` | `networking/online_tasks.c` |
+
+### Lo que se sabe
+
+- `online_user_get_state` pregunta a las bibliotecas **en qué está un
+  jugador de esta consola** (`0x003a0798`) y lo deja en `0x4C` bytes: una
+  clase de 1 a 6 (o nada), cómo se conoce a algo, y cuatro bits sueltos
+  de lo que dicen las bibliotecas.
+- Además mira las cosas que el jugador tiene (hasta 125, de `0x40` bytes
+  cada una, `0x0008e750`) y, si una se conoce por lo mismo, la copia
+  entera. Por la forma, son las invitaciones o los amigos del jugador.
+- No se pregunta por un jugador que no es como los demás (los dos bits de
+  lo que el juego guarda de su mando, en `0x0054ed50`), ni si no hay nadie
+  conectado.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  522.
+- En este hito se pasó la prueba de la función.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — En qué está un jugador, en cuatro bytes
 
 Dos funciones en `networking/online_tasks.c`, 482 bytes entre las dos. De 1745

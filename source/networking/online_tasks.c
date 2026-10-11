@@ -37,6 +37,13 @@ void unknown_0008cc40(void);
 void unknown_0007f410(void);
 long __attribute__((stdcall)) unknown_0018fa94(const struct online_user *users);
 void unknown_0008c660(void);
+
+/* 0x003a0798, of the console's libraries: what a player of this console is
+at, in twelve bytes: a kind, what something is known by, and some bits;
+nothing if it is not known. 0x0008e750: the things that a player has, each
+of 0x40 bytes, and how many */
+long __attribute__((stdcall)) unknown_003a0798(long user_index, byte *state, long *unknown);
+void __attribute__((stdcall)) unknown_0008e750(long user_index, byte *entries, long *count);
 void unknown_0008d4d0(void);
 void __attribute__((stdcall)) network_blob_task_completed(long status, long handle);
 void unknown_0008bf70(byte *unknown);
@@ -95,6 +102,9 @@ which start to be read when someone signs in */
 struct network_blob unknown_00477058;
 struct network_blob unknown_0047d8f4;
 struct network_blob unknown_00479780;
+
+/* 0x0054ed50: what the game keeps of each gamepad */
+byte unknown_0054ed50[MAXIMUM_ONLINE_USERS*ONLINE_CONTROLLER_SIZE];
 
 /* 0x004cf8e4: the observer of the network, for something that measures it.
 0x004cf95c: someone is signed in, for the same thing */
@@ -1197,4 +1207,76 @@ void online_state_encode(
 	bytes[3]= kind;
 	*encoded= (*encoded&0x3FFFFFFF)|((unsigned long)state->unknown8<<30);
 	*encoded= (*encoded&~0x30000000UL)|(((unsigned long)state->unknown4<<28)&0x30000000);
+}
+
+/* 0x0006d080: what the service of games says that a player of this console
+is at; whether it is known. Not for a player that is not like the others,
+nor if no one is signed in. Of the things that the player has, the one that
+is known by the same as what the service says is given too, if there is one */
+boolean online_user_get_state(
+	long user_index,
+	struct online_user_state *state)
+{
+	byte entries[MAXIMUM_ONLINE_USER_ENTRIES][ONLINE_USER_ENTRY_SIZE];
+	byte said[12];
+	unsigned long flags;
+	long unknown;
+	long count;
+	long index;
+
+	if (unknown_0054ed50[user_index*ONLINE_CONTROLLER_SIZE+ONLINE_CONTROLLER_FLAGS_OFFSET]&_online_user_unknown_bits)
+	{
+		return FALSE;
+	}
+	if (!(unknown_00467214!=NONE && online_tasks_get_logon_state(unknown_00467214)==_online_session_signed_in))
+	{
+		return FALSE;
+	}
+	if (!unknown_003a0798(user_index, said, &unknown))
+	{
+		return FALSE;
+	}
+	switch (said[0])
+	{
+	case 2:
+		state->kind= 1;
+		break;
+	case 3:
+		state->kind= 2;
+		break;
+	case 4:
+		state->kind= 3;
+		break;
+	case 5:
+		state->kind= 4;
+		break;
+	case 6:
+		state->kind= 5;
+		break;
+	case 7:
+		state->kind= 6;
+		break;
+	default:
+		state->kind= 0;
+		break;
+	}
+	memcpy(&state->identifier, said+1, sizeof(state->identifier));
+	memset(state->entry, 0, sizeof(state->entry));
+	memcpy(&flags, said+5, sizeof(flags));
+	state->unknown48= (flags>>3)&1;
+	state->unknown49= (flags>>2)&1;
+	state->unknown4a= (flags>>8)&1;
+	state->unknown4b= (flags&0xFF000000)!=0;
+	count= MAXIMUM_ONLINE_USER_ENTRIES;
+	unknown_0008e750(user_index, entries[0], &count);
+	for (index= 0; index<count; index++)
+	{
+		if (*(const unsigned long *)(entries[index]+ONLINE_USER_ENTRY_IDENTIFIER_OFFSET)==state->identifier)
+		{
+			memcpy(state->entry, entries[index], sizeof(state->entry));
+			break;
+		}
+	}
+
+	return TRUE;
 }

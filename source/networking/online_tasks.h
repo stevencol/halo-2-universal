@@ -104,7 +104,16 @@ enum
 	and what is added to it for the second of the two times */
 	ONLINE_STATE_SIGNATURE= 0xFCF1,
 	ONLINE_STATE_TIME_MAXIMUM= 126,
-	ONLINE_STATE_SECOND_TIME= 127
+	ONLINE_STATE_SECOND_TIME= 127,
+	/* of what the game keeps of each gamepad (unknown_0054ed50): what one
+	is, and where its bits like the ones of a player that is signed in are.
+	How many things something of a player can have, and what one is and
+	where what it is known by is */
+	ONLINE_CONTROLLER_SIZE= 0xC70,
+	ONLINE_CONTROLLER_FLAGS_OFFSET= 0x8,
+	MAXIMUM_ONLINE_USER_ENTRIES= 125,
+	ONLINE_USER_ENTRY_SIZE= 0x40,
+	ONLINE_USER_ENTRY_IDENTIFIER_OFFSET= 0x20
 };
 
 /* ---------- structures */
@@ -152,6 +161,22 @@ struct online_state
 	short second_time;
 };
 
+/* what the service says that a player of this console is at: a kind, from
+1 to 6 or nothing; what something is known by, and that thing if the player
+has it; and four bits of it */
+struct online_user_state
+{
+	long kind;
+	unsigned long identifier;
+	byte entry[ONLINE_USER_ENTRY_SIZE];
+	boolean unknown48;
+	boolean unknown49;
+	boolean unknown4a;
+	boolean unknown4b;
+};
+
+typedef char verify_online_user_state_size[sizeof(struct online_user_state) == 0x4C ? 1 : -1];
+
 /* a service of the service of games, as the game asks for it */
 struct online_service
 {
@@ -197,6 +222,7 @@ boolean __attribute__((stdcall)) online_logon_complete(struct online_task *task)
 void online_users_start_mute_lists(const struct online_user *users);
 void __attribute__((stdcall)) online_users_set_state(const struct online_user *users);
 void online_state_encode(unsigned long *encoded, const struct online_state *state);
+boolean online_user_get_state(long user_index, struct online_user_state *state);
 long online_tasks_get_logon_state(long index);
 long online_users_get_result(void);
 long online_task_users_get_result(const struct online_task *task);

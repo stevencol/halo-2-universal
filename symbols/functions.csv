@@ -2351,3 +2351,6 @@ address,name,source,arguments,returns,convention
 0008d4d0,unknown_0008d4d0,,,void
 003a067c,XOnlineGetServiceInfo,,stack stack,int,stdcall
 0006cf00,online_state_encode,source/networking/online_tasks.c,esi edi,void
+0006d080,online_user_get_state,source/networking/online_tasks.c,ebx ecx,bool
+003a0798,unknown_003a0798,,stack stack stack,int,stdcall
+0008e750,unknown_0008e750,,stack stack stack,void,stdcall

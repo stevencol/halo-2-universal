@@ -561,3 +561,38 @@ def run(t) -> None:
                 ),
             },
         )
+
+    # ---------- what the service says that a player is at
+
+    for n in range(2000):
+        controllers = bytearray(random_.randbytes(4 * 0xC70))
+        for index in range(4):
+            controllers[index * 0xC70 + 8] = random_.choice((0, 0, 0, 0, 4, 1, 2))
+        known = random_.getrandbits(32)
+        said = bytes((random_.choice((*range(9), 0xFF)),)) + struct.pack("<II", known, random_.choice((0, 4, 8, 0x100, 0x1000000, 0x10C, random_.getrandbits(32)))) + random_.randbytes(3)
+        count = random_.choice((0, 0, 1, 3, 6, 125, NONE))
+        entries = bytearray(random_.randbytes(8 * 0x40))
+        for index in range(8):
+            struct.pack_into("<I", entries, index * 0x40 + 0x20, random_.choice((known, random_.getrandbits(32), random_.getrandbits(32))))
+
+        def says(harness, arguments, said=said, is_known=random_.choice((1, 1, 1, 0, 0x100))):
+            harness.mu.mem_write(arguments[1], said)
+            return is_known, (arguments[0],)
+
+        def has(harness, arguments, count=count, entries=bytes(entries)):
+            asked = bytes(harness.mu.mem_read(arguments[2], 4))
+            harness.mu.mem_write(arguments[1], entries)
+            harness.mu.mem_write(arguments[2], struct.pack("<I", min(count, 8) if count != NONE else NONE))
+            return 0, (arguments[0], asked)
+
+        t.check(
+            "online_user_get_state",
+            random_.randrange(4),
+            Buffer(random_.randbytes(0x4C)),
+            globals={"unknown_0054ed50": bytes(controllers), "unknown_00467214": random_.choice((0, 0, 0, 0, NONE))},
+            externals={
+                "online_tasks_get_logon_state": session(random_.choice((1, 1, 1, 1, 0))),
+                "unknown_003a0798": says,
+                "unknown_0008e750": has,
+            },
+        )
