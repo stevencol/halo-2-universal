@@ -1438,8 +1438,8 @@ address,name,source,arguments,returns,convention
 0015ca10,unknown_0015ca10,,,void
 0014d8b0,unknown_0014d8b0,,,void
 001df500,unknown_001df500,,,void
-00138e40,unknown_00138e40,,,void
-00138eb0,unknown_00138eb0,,,void
+00138e40,game_update_lost,source/game/game.c,,void
+00138eb0,game_update_finished,source/game/game.c,,void
 00226050,unknown_00226050,,,void
 0013c680,unknown_0013c680,,,void
 00225730,unknown_00225730,,,void
@@ -2523,3 +2523,4 @@ address,name,source,arguments,returns,convention
 0008bf10,simulation_player_actions_add,source/networking/simulation_player.c,ecx stack,void,stdcall
 003a07a3,XOnlineFriendsStartup,,stack stack,int,stdcall
 003a069d,XOnlineOfferingIsNewContentAvailable,,stack stack stack,int,stdcall
+00188cd0,unknown_00188cd0,,,void

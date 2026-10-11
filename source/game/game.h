@@ -301,6 +301,8 @@ boolean game_is_authoritative(void);
 boolean game_is_predicted(void);
 long game_unknown_001388a0(void);
 void game_lost(boolean lost);
+void game_update_lost(void);
+void game_update_finished(void);
 void game_finish(void);
 long game_finished_wait_over(void);
 void game_tick(void);

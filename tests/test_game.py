@@ -64,6 +64,7 @@ def nothing(harness, arguments):
 
 def run(t) -> None:
     run_players_and_won(t)
+    run_lost_and_finished(t)
     random_ = random.Random(24)
 
     def proc(call):
@@ -473,8 +474,8 @@ def run_players_and_won(t) -> None:
         "unknown_0015ca10",
         "unknown_0014d8b0",
         "unknown_001df500",
-        "unknown_00138e40",
-        "unknown_00138eb0",
+        "game_update_lost",
+        "game_update_finished",
         "unknown_00226050",
         "unknown_0013c680",
         "animation_cache_idle",
@@ -589,4 +590,44 @@ def run_players_and_won(t) -> None:
             count,
             Buffer(bytes(options)),
             globals={"unknown_004e61cc": struct.pack("<4i", *controllers)},
+        )
+
+
+def run_lost_and_finished(t) -> None:
+    random_ = random.Random(553)
+    told = lambda harness, arguments: (0, tuple(arguments))
+
+    for n in range(3000):
+        game = bytearray(random_.randbytes(GAME_SIZE))
+        struct.pack_into("<I", game, 8, random_.choice((1, 1, 1, 2, 3)))
+        game[0xC] = random_.choice((1, 1, 2, 4, 5))
+        game[0x134] = random_.choice((0, 0, 1))
+        game[0x1121] = random_.choice((0, 1, 1))
+        struct.pack_into("<i", game, 0x1124, random_.choice((0, 1, 2, 30, -1)))
+        game[0x1128] = random_.choice((0, 1, 1, 1))
+        game[0x1129] = random_.choice((0, 0, 1))
+        struct.pack_into("<i", game, 0x112C, random_.choice((0, 1, 2, 59, 60, 61, 62, 90, 0x7FFFFFFF, -1)))
+        players = bytearray(random_.randbytes(0x2C))
+        players[4] = random_.choice((0, 1))
+        players[5] = random_.choice((0, 1))
+        time = bytearray(random_.randbytes(0x20))
+        struct.pack_into("<f", time, 4, random_.choice((1.0 / 30.0, 1.0 / 30.0, 1.0 / 60.0, 0.0, 1.0, float("nan"))))
+
+        t.check(
+            "game_update_lost",
+            globals={
+                "main_game_globals": Buffer(bytes(game)),
+                "players_globals": Buffer(bytes(players)),
+                "unknown_00547f6f": bytes((random_.choice((0, 0, 1)),)),
+            },
+            externals={
+                # only what it can say: source/ knows that it says 0 or 1, the game looks at its low byte
+                "game_unknown_001388a0": lambda harness, arguments, so=random_.choice((0, 1)): (so, ()),
+                "game_lost": lambda harness, arguments: (0, (arguments[0] & 0xFF,)),
+            },
+        )
+        t.check(
+            "game_update_finished",
+            globals={"main_game_globals": Buffer(bytes(game)), "game_time_globals": Buffer(bytes(time))},
+            externals={"unknown_00188cd0": told},
         )

@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Cada tick: la partida perdida y la partida terminada
+
+Dos funciones más en `game/game.c` (196 bytes). De 1906
+funciones se pasa a 1908, el 16,94 % de las del juego (el 10,684 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_update_lost` | `0x00138e40` | `game/game.c` |
+| `game_update_finished` | `0x00138eb0` | `game/game.c` |
+
+### Lo que se sabe
+
+- Son dos de las cosas que `game_tick` hace cada tick llamándolas por su
+  dirección (`unknown_00138e40` y `unknown_00138eb0`).
+- `game_update_lost`: en una campaña, pregunta a los jugadores si la
+  partida está perdida (un byte u otro de `players_globals`, según sea
+  cooperativa) y se lo dice a `game_lost`; **una partida perdida cuenta sus
+  ticks hacia atrás y al llegar a cero pide volver al último punto de
+  control** (un byte nuevo, `0x00547f6f`, vecino del que pide reiniciar el
+  mapa).
+- `game_update_finished`: **una partida terminada cuenta sus ticks hacia
+  atrás**, y cuando quedan dos segundos o menos hace algo una sola vez
+  (`0x00188cd0`; por el momento en que ocurre, el fundido a negro).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  552.
+- En este hito se pasaron las pruebas de las dos funciones y `test_game`
+  entera.
+- En `game_update_lost` el juego mira solo el byte bajo de lo que devuelve
+  `game_unknown_001388a0`, y `source\` sabe que devuelve 0 o 1: la prueba
+  solo da esos dos valores.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Arrancar los amigos, preguntar por contenido nuevo y guardar lo que hace un jugador
 
 Tres funciones (381 bytes), en `networking/online_friends.c`, `networking/online_tasks.c` y

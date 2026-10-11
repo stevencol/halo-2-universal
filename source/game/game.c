@@ -90,8 +90,8 @@ void unknown_000c1400(void);
 void unknown_0015ca10(void);
 void unknown_0014d8b0(void);
 void unknown_001df500(void);
-void unknown_00138e40(void);
-void unknown_00138eb0(void);
+void game_update_lost(void);
+void game_update_finished(void);
 void unknown_00226050(void);
 void unknown_0013c680(void);
 void unknown_00225730(void);
@@ -605,8 +605,8 @@ void game_tick(
 		unknown_0015ca10();
 		unknown_0014d8b0();
 		unknown_001df500();
-		unknown_00138e40();
-		unknown_00138eb0();
+		game_update_lost();
+		game_update_finished();
 		unknown_00226050();
 		unknown_0013c680();
 		animation_cache_idle();
@@ -1154,4 +1154,67 @@ boolean game_options_match(
 	}
 
 	return TRUE;
+}
+
+/* 0x00547f6f: the game that was lost has waited long enough: it is to go
+back to the last checkpoint */
+boolean unknown_00547f6f;
+
+/* 0x00188cd0: something is done two seconds before a game that is over
+ends */
+void unknown_00188cd0(void);
+
+/* 0x00138e40: each tick of a campaign that this console does not predict:
+the game is lost or is not, by what the players say (one thing of theirs, or
+another in a cooperative game that game_unknown_001388a0 says nothing of);
+and a game that is lost counts its ticks down, and at the last one is to go
+back to the checkpoint */
+void game_update_lost(
+	void)
+{
+	struct main_game_globals *globals= main_game_globals;
+
+	if (globals->options.game_mode==_game_mode_campaign && globals->options.simulation!=_game_simulation_predicted)
+	{
+		boolean lost;
+
+		if (globals->options.coop && !(boolean)game_unknown_001388a0())
+		{
+			lost= players_globals->unknown0[5];
+		}
+		else
+		{
+			lost= players_globals->unknown0[4];
+		}
+		game_lost(lost);
+		if (globals->lost)
+		{
+			if (globals->lost_ticks>0)
+			{
+				globals->lost_ticks--;
+			}
+			if (globals->lost_ticks==0)
+			{
+				unknown_00547f6f= TRUE;
+			}
+		}
+	}
+}
+
+/* 0x00138eb0: each tick, a game that is over counts its ticks down; when
+two seconds or less are left, something is done, once */
+void game_update_finished(
+	void)
+{
+	struct main_game_globals *globals= main_game_globals;
+
+	if (globals->finished && globals->finished_ticks>0)
+	{
+		globals->finished_ticks--;
+		if (!globals->unknown1129 && (real)globals->finished_ticks*game_time_globals->seconds_per_tick<=2.0f)
+		{
+			unknown_00188cd0();
+			main_game_globals->unknown1129= TRUE;
+		}
+	}
 }
