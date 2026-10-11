@@ -396,13 +396,66 @@ def run(t) -> None:
             globals={"unknown_0051055d": bytes((random_.choice((0, 0, 1)),))},
             externals={
                 "online_task_continue": goes,
-                "unknown_0006c2a0": lambda harness, arguments, others=random_.choice((0, 1, 1)): (
+                "online_task_logon_update": lambda harness, arguments, others=random_.choice((0, 1, 1)): (
                     others,
                     (harness.normalize(arguments[0]), arguments[1]),
                 ),
-                "unknown_0006c360": lambda harness, arguments: (1, (harness.normalize(arguments[0]),)),
+                "online_task_change_users_update": lambda harness, arguments: (1, (harness.normalize(arguments[0]),)),
                 "unknown_0008cc40": lambda harness, arguments: (0, ()),
                 "network_blob_task_completed": lambda harness, arguments: (0, tuple(arguments)),
                 "online_task_close": lambda harness, arguments: (0, tuple(arguments)),
+            },
+        )
+
+    # ---------- the task that signs in, and the one that changes who is signed in
+
+    def logon_task() -> Buffer:
+        return Buffer(
+            struct.pack(
+                "<HHIIII",
+                random_.getrandbits(16),
+                random_.choice((1, 1, 1, 3, 3, 5, 0x21, 0, random_.getrandbits(16))),
+                random_.choice((0, 1)),
+                random_.getrandbits(32),
+                0x1234,
+                random_.choice((0, 1, 2, 5, 10, random_.getrandbits(32))),
+            )
+        )
+
+    for n in range(3000):
+        could = lambda harness, arguments, did=random_.choice((0, 1, 1)): (did, (harness.normalize(arguments[0]),))
+        told = lambda harness, arguments: (0, tuple(harness.normalize(value) for value in arguments))
+        t.check(
+            "online_task_logon_update",
+            logon_task(),
+            random_.getrandbits(32),
+            globals={
+                "unknown_004d8b18": bytes((random_.choice((1, 1, 1, 0)),)),
+                "unknown_004d8b19": bytes((random_.choice((1, 1, 1, 0)),)),
+                "unknown_004cf8e4": Buffer(random_.randbytes(0x4E04)),
+                "unknown_004cf95c": bytes((random_.choice((0, 1)),)),
+            },
+            externals={
+                "online_task_continue": told,
+                "online_tasks_get_logon_state": session(random_.choice((0, 0, 1, 1, 1, 5, 10))),
+                "unknown_0007f410": told,
+                "transport_unknown_0008d730": told,
+                "unknown_0006bff0": could,
+            },
+        )
+        said = random_.choice(
+            (0, 0x1513F0, 0x1513F1, 0x1513F1, 0x1513F2, 0x80151300, 0x80151300, 0x80151001, 0x80151002, 0x80151003)
+            + (0x80151004, 0x80151005, 0x80151006, 0x80151007, 0x80151000, 0x80151301, 0x80004005, 5, NONE)
+        )
+        t.check(
+            "online_task_change_users_update",
+            logon_task(),
+            externals={
+                "online_task_continue": lambda harness, arguments, said=said: (said, (harness.normalize(arguments[0]),)),
+                "online_task_users_get_result": lambda harness, arguments, got=random_.choice((0, 1, 2, 2)): (
+                    got,
+                    (harness.normalize(arguments[0]),),
+                ),
+                "unknown_0006bff0": could,
             },
         )

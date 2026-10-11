@@ -10,6 +10,8 @@ are guesses.
 
 #include "online_tasks.h"
 
+#include "networking/network_observer.h"
+#include "networking/network_session.h"
 #include "networking/transport.h"
 #include "networking/transport_security.h"
 
@@ -22,14 +24,14 @@ are guesses.
 are to. 0x0008bf70: and so does what the tasks have of their own */
 void unknown_0008c550(long index);
 
-/* 0x0006c2a0, 0x0006c360: what the task that signs in, and the one that
-changes who is signed in, do each time around; the first says whether the
-other tasks are to go on. 0x0008cc40: something is told that a task of the
-second kind could not go on. 0x0008e5e0, of network_blob_task.c: what did a
-task of the blocks ended */
-boolean __attribute__((stdcall)) unknown_0006c2a0(struct online_task *task, long index);
-boolean unknown_0006c360(struct online_task *task);
+/* 0x0008cc40: something is told that a task of the second kind could not
+go on. 0x0008e5e0, of network_blob_task.c: what did a task of the blocks
+ended. 0x0006bff0: what is done when someone is signed in, of the task that
+did it; whether it could be. 0x0007f410: something of the network is told
+that someone is */
 void unknown_0008cc40(void);
+boolean __attribute__((stdcall)) unknown_0006bff0(struct online_task *task);
+void unknown_0007f410(void);
 void __attribute__((stdcall)) network_blob_task_completed(long status, long handle);
 void unknown_0008bf70(byte *unknown);
 
@@ -80,6 +82,11 @@ boolean unknown_0050944e;
 
 /* 0x0051055d: a task of the kind 0xD ended in a way of its own */
 boolean unknown_0051055d;
+
+/* 0x004cf8e4: the observer of the network, for something that measures it.
+0x004cf95c: someone is signed in, for the same thing */
+byte *unknown_004cf8e4;
+boolean unknown_004cf95c;
 
 /* 0x00467178: the services that the game asks for when it signs in */
 const struct online_service unknown_00467178[NUMBER_OF_ONLINE_SERVICES]=
@@ -818,10 +825,10 @@ boolean online_task_update(
 		switch (task->type)
 		{
 		case _online_task_type0:
-			result= unknown_0006c2a0(task, index);
+			result= online_task_logon_update(task, index);
 			break;
 		case _online_task_type1:
-			unknown_0006c360(task);
+			online_task_change_users_update(task);
 			break;
 		case _online_task_type2:
 			said= online_task_step(task);
@@ -865,4 +872,120 @@ boolean online_task_update(
 	}
 
 	return result;
+}
+
+/* the task that signs in, or changes who is, ended and not well: what it
+ended at, if it is not known, is 10 */
+static inline __attribute__((always_inline)) void online_task_logon_failed(
+	struct online_task *task)
+{
+	task->flags|= _online_task_unknown4_bit|_online_task_unknown20_bit;
+	if (task->unknown10==_online_logon_state_going || task->unknown10==_online_session_signed_in)
+	{
+		task->unknown10= _online_logon_state_none;
+	}
+}
+
+/* 0x0006c2a0: what the task that signs in does each time around; whether
+the other tasks are to go on, which they are not when it is done or signing
+in could not be. Without the network of the console it is done. It goes on a
+little, and what signing in is at is looked at: when someone is signed in
+for the first time, the observer and something that measures the network
+are told, each thing that asked is told its third thing
+(transport_unknown_0008d730), and what is done then is done
+(unknown_0006bff0): if that cannot be, the task ends, but the others go on */
+boolean __attribute__((stdcall)) online_task_logon_update(
+	struct online_task *task,
+	long index)
+{
+	long state;
+
+	if (!(unknown_004d8b18 && unknown_004d8b19))
+	{
+		task->flags|= _online_task_unknown4_bit;
+	}
+	if (task->flags&_online_task_unknown4_bit)
+	{
+		return FALSE;
+	}
+	online_task_continue(task);
+	state= online_tasks_get_logon_state(index);
+	if (state==_online_logon_state_going)
+	{
+		return TRUE;
+	}
+	if (state!=_online_session_signed_in)
+	{
+		online_task_logon_failed(task);
+
+		return FALSE;
+	}
+	if (!(task->flags&_online_task_unknown2_bit))
+	{
+		unknown_004cf8e4[NETWORK_OBSERVER_UNKNOWN4E00_OFFSET]= TRUE;
+		unknown_004cf95c= TRUE;
+		unknown_0007f410();
+		transport_unknown_0008d730();
+		if (unknown_0006bff0(task))
+		{
+			task->flags|= _online_task_unknown2_bit;
+		}
+		else
+		{
+			online_task_logon_failed(task);
+		}
+	}
+
+	return TRUE;
+}
+
+/* 0x0006c360: what the task that changes who is signed in does each time
+around; whether it goes on well. It goes on a little: while the libraries
+say that it goes on, it is at nothing; when they say that it is done, it is
+at 1 and what is done when someone is signed in is done; and when they say
+why it could not be, it ends at what that is. With 0x80151300 the players
+are looked at (online_task_users_get_result) */
+boolean online_task_change_users_update(
+	struct online_task *task)
+{
+	long result= online_task_continue(task);
+
+	switch ((unsigned long)result)
+	{
+	case 0:
+	case ONLINE_TASK_USERS_GOING:
+		task->unknown10= _online_logon_state_going;
+		return TRUE;
+	case ONLINE_TASK_USERS_DONE:
+		task->flags|= _online_task_unknown4_bit;
+		task->unknown10= _online_session_signed_in;
+		if (unknown_0006bff0(task))
+		{
+			return TRUE;
+		}
+		online_task_logon_failed(task);
+		return FALSE;
+	case ONLINE_TASK_USERS_LOOK:
+		task->unknown10= online_task_users_get_result(task)==_online_users_result_unknown2 ? _online_logon_state2 :
+			_online_logon_state_none;
+		break;
+	case 0x80151001:
+		task->unknown10= _online_logon_state4;
+		break;
+	case 0x80151002:
+		task->unknown10= _online_logon_state3;
+		break;
+	case 0x80151003:
+		task->unknown10= _online_logon_state8;
+		break;
+	case 0x80151006:
+		task->unknown10= _online_logon_state6;
+		break;
+	default:
+		task->unknown10= _online_logon_state_none;
+		break;
+	}
+	task->flags|= _online_task_unknown4_bit|_online_task_unknown20_bit;
+
+	return FALSE;
 }

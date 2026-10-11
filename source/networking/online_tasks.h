@@ -90,7 +90,12 @@ enum
 	_online_task_type_storage_last= 0x2C,
 	ONLINE_TASK_UNKNOWN1500F0= 0x1500F0,
 	ONLINE_TASK_UNKNOWN1500F1= 0x1500F1,
-	ONLINE_TASK_UNKNOWN153101= 0x153101
+	ONLINE_TASK_UNKNOWN153101= 0x153101,
+	/* what the libraries say of the task that changes who is signed in:
+	it goes on; it is done; and the players have to be looked at */
+	ONLINE_TASK_USERS_GOING= 0x1513F0,
+	ONLINE_TASK_USERS_DONE= 0x1513F1,
+	ONLINE_TASK_USERS_LOOK= 0x80151300
 };
 
 /* ---------- structures */
@@ -159,6 +164,8 @@ long online_task_continue(struct online_task *task);
 long online_task_step(struct online_task *task);
 void online_task_storage_done(long result, long index);
 boolean online_task_update(long index, struct online_task *task);
+boolean __attribute__((stdcall)) online_task_logon_update(struct online_task *task, long index);
+boolean online_task_change_users_update(struct online_task *task);
 long online_tasks_get_logon_state(long index);
 long online_users_get_result(void);
 long online_task_users_get_result(const struct online_task *task);

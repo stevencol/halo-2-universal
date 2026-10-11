@@ -398,3 +398,5 @@ address,name,source
 00467178,unknown_00467178,source/networking/online_tasks.c
 004672dc,unknown_004672dc,source/networking/online_storage.c
 0051055d,unknown_0051055d,source/networking/online_tasks.c
+004cf8e4,unknown_004cf8e4,source/networking/online_tasks.c
+004cf95c,unknown_004cf95c,source/networking/online_tasks.c

@@ -2339,6 +2339,8 @@ address,name,source,arguments,returns,convention
 003ab6b1,unknown_003ab6b1,,stack stack stack stack stack stack stack stack,int,stdcall
 0006c450,online_task_step,source/networking/online_tasks.c,eax,int
 0006c4a0,online_task_storage_done,source/networking/online_tasks.c,eax ecx,void
-0006c2a0,unknown_0006c2a0,,eax stack,bool,stdcall
-0006c360,unknown_0006c360,,eax,bool
+0006c2a0,online_task_logon_update,source/networking/online_tasks.c,eax stack,bool,stdcall
+0006c360,online_task_change_users_update,source/networking/online_tasks.c,eax,bool
 0008cc40,unknown_0008cc40,,,void
+0006bff0,unknown_0006bff0,,stack,bool,stdcall
+0007f410,unknown_0007f410,,,void

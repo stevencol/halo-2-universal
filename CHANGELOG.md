@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — La tarea que conecta, cada vuelta
+
+Dos funciones en `networking/online_tasks.c`, 396 bytes entre las dos. De 1741
+funciones se pasa a 1743, el 15,47 % de las del juego (el 10,187 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_task_logon_update` | `0x0006c2a0` | `networking/online_tasks.c` |
+| `online_task_change_users_update` | `0x0006c360` | `networking/online_tasks.c` |
+
+### Lo que se sabe
+
+- `online_task_logon_update` es lo que hace cada vuelta **la tarea que
+  conecta al servicio de partidas**. Sin la red de la consola, acaba.
+  Mientras conecta, las demás tareas siguen. La primera vez que hay
+  alguien conectado se avisa al observador y a lo que mide la red, cada
+  cosa apuntada en `transport.c` recibe su tercer aviso (así que ese
+  tercero es **«alguien se ha conectado»**), y se hace lo que toca
+  entonces (`0x0006bff0`). Si conectar no pudo ser, la tarea acaba y las
+  demás tareas no siguen esa vuelta.
+- `online_task_change_users_update` es lo mismo para la tarea que cambia
+  quién está conectado: va dejando en la tarea en qué está (`0` mientras
+  sigue, `1` hecha, y de `2` a `10` cuando no pudo, según lo que digan
+  las bibliotecas). Son los mismos números que da
+  `online_tasks_get_logon_state` (hito 511), que para esta clase de tarea
+  se limita a leerlos.
+
+### Cambiado
+
+- `unknown_0006c2a0` y `unknown_0006c360` tienen su nombre.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos**, y en las de los hitos 456 a
+  490 y 501 a 518.
+- En este hito se pasaron las pruebas de las dos funciones y la de
+  `online_task_update`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Lo que una tarea hace cada vuelta
 
 Tres funciones en `networking/online_tasks.c`. De 1738
