@@ -2,6 +2,34 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Lo que otra consola dice de dos sitios de jugadores a la vez
+
+Una función más en `networking/simulation_players.c`, de 272 bytes. De 1937
+funciones se pasa a 1938, el 17,20 % de las del juego (el 10,846 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_players_update_unknown_00084fb0` | `0x00084fb0` | `networking/simulation_players.c` |
+
+### Lo que se sabe
+
+- Es la tercera clase de mensaje de jugadores (hitos 569 y 570): habla de
+  **dos sitios a la vez** — el segundo sitio y su identidad van en `+0xB8`
+  y `+0xBC` del mensaje. Si en cada sitio está quien la otra consola dice
+  (o nadie, donde dice que no hay nadie) y todos los que hay se han ido, se
+  hace `0x0014c320` con los dos sitios: por la forma, **cambiar a un
+  jugador de sitio** o intercambiar dos.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  570.
+- En este hito se pasó la prueba de la función.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Otras dos cosas que otra consola dice de un jugador
 
 Dos funciones más en `networking/simulation_players.c` (244 bytes). De 1935

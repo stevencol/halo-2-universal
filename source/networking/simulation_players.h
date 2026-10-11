@@ -84,7 +84,11 @@ enum
 	/* of what another console says of a player: its place, and who it is */
 	SIMULATION_PLAYERS_UPDATE_IDENTIFIER_OFFSET= 0x4,
 	/* and what the others are told of it */
-	SIMULATION_PLAYERS_UPDATE_PROPERTIES_OFFSET= 0x28
+	SIMULATION_PLAYERS_UPDATE_PROPERTIES_OFFSET= 0x28,
+	/* and, in what it says of two players, the other place and who is
+	there */
+	SIMULATION_PLAYERS_UPDATE_OTHER_INDEX_OFFSET= 0xB8,
+	SIMULATION_PLAYERS_UPDATE_OTHER_IDENTIFIER_OFFSET= 0xBC
 };
 
 /* ---------- prototypes/SIMULATION_PLAYERS.C */
@@ -95,6 +99,7 @@ unsigned long simulation_players_collection_get_active_mask(const byte *collecti
 boolean simulation_players_update_remove_player(const byte *update);
 boolean simulation_players_update_unknown_000850c0(const byte *update);
 boolean __attribute__((stdcall)) simulation_players_update_set_properties(const byte *update);
+boolean __attribute__((stdcall)) simulation_players_update_unknown_00084fb0(const byte *update);
 void simulation_players_reset(byte *players);
 void simulation_players_refresh(byte *players);
 void simulation_players_mark_player(const byte *players, long player_index);

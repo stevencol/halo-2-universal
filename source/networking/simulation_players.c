@@ -26,6 +26,10 @@ void __attribute__((stdcall)) unknown_00152df0(long player_index);
 void unknown_0014c540(long player_index);
 void __attribute__((stdcall)) unknown_0014be90(const byte *properties, long player_index);
 
+/* 0x0014c320: something is done with two places of the players of the
+game */
+void __attribute__((stdcall)) unknown_0014c320(long absolute_index, long other_absolute_index);
+
 /* ---------- code */
 
 /* the player of the game that another console says something of: the one in
@@ -378,6 +382,52 @@ boolean __attribute__((stdcall)) simulation_players_update_set_properties(
 	}
 	unknown_0014be90(update+SIMULATION_PLAYERS_UPDATE_PROPERTIES_OFFSET,
 		datum_absolute_index_to_index(player_data, *(const long *)update));
+
+	return TRUE;
+}
+
+/* 0x00084fb0: another console says something of two places of players at
+once: unknown_0014c320 is done with them, if in each there is who the console
+says (no one, where it says no one) and every player that there is in them
+has left; and there is one in one of them at least. Whether it was done */
+boolean __attribute__((stdcall)) simulation_players_update_unknown_00084fb0(
+	const byte *update)
+{
+	long absolute_index= *(const long *)update;
+	long other_absolute_index= *(const long *)(update+SIMULATION_PLAYERS_UPDATE_OTHER_INDEX_OFFSET);
+	const byte *datum= (const byte *)datum_try_and_get_absolute(player_data, absolute_index);
+	const byte *other_datum= (const byte *)datum_try_and_get_absolute(player_data, other_absolute_index);
+	byte identifier[SIMULATION_PLAYERS_PLAYER_IDENTIFIER_SIZE];
+	byte other_identifier[SIMULATION_PLAYERS_PLAYER_IDENTIFIER_SIZE];
+
+	if (!datum && !other_datum)
+	{
+		return FALSE;
+	}
+	if (datum && !(datum[PLAYER_DATUM_FLAGS_OFFSET]&FLAG(_player_datum_left_bit)))
+	{
+		return FALSE;
+	}
+	if (other_datum && !(other_datum[PLAYER_DATUM_FLAGS_OFFSET]&FLAG(_player_datum_left_bit)))
+	{
+		return FALSE;
+	}
+	memset(identifier, 0, sizeof(identifier));
+	if (datum)
+	{
+		memcpy(identifier, datum+PLAYER_DATUM_IDENTIFIER_OFFSET, sizeof(identifier));
+	}
+	memset(other_identifier, 0, sizeof(other_identifier));
+	if (other_datum)
+	{
+		memcpy(other_identifier, other_datum+PLAYER_DATUM_IDENTIFIER_OFFSET, sizeof(other_identifier));
+	}
+	if (memcmp(identifier, update+SIMULATION_PLAYERS_UPDATE_IDENTIFIER_OFFSET, sizeof(identifier))!=0 ||
+		memcmp(other_identifier, update+SIMULATION_PLAYERS_UPDATE_OTHER_IDENTIFIER_OFFSET, sizeof(other_identifier))!=0)
+	{
+		return FALSE;
+	}
+	unknown_0014c320(absolute_index, other_absolute_index);
 
 	return TRUE;
 }

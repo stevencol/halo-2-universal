@@ -2548,3 +2548,5 @@ address,name,source,arguments,returns,convention
 000854c0,simulation_players_update_set_properties,source/networking/simulation_players.c,stack,bool,stdcall
 0014c540,unknown_0014c540,,eax,void
 0014be90,unknown_0014be90,,eax stack,void,stdcall
+00084fb0,simulation_players_update_unknown_00084fb0,source/networking/simulation_players.c,stack,bool,stdcall
+0014c320,unknown_0014c320,,stack stack,void,stdcall
