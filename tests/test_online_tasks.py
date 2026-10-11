@@ -1,5 +1,6 @@
 # source/networking/online_tasks.c
 
+import dataclasses
 import random
 import struct
 
@@ -710,3 +711,14 @@ def run(t) -> None:
                 "XOnlineChangeLogonUsers": changed,
             },
         )
+
+    # ---------- the two texts of each kind of task
+
+    for n in range(6000):
+        tasks, number = table()
+        data = bytearray(tasks.data)
+        for index in range(COUNT):
+            struct.pack_into("<I", data, TASKS + index * TASK + 4, random_.choice((random_.randrange(0x30), random_.randrange(0x30), 0x28, 0x2D, 0x2E, NONE, random_.getrandbits(32))))
+        tasks = dataclasses.replace(tasks, data=bytes(data))
+        t.check("online_task_get_string", number, globals={"online_tasks": tasks})
+        t.check("online_task_get_other_string", number, globals={"online_tasks": tasks})

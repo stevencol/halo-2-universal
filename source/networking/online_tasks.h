@@ -113,7 +113,9 @@ enum
 	ONLINE_USER_ENTRY_IDENTIFIER_OFFSET= 0x20,
 	/* the service whose address is let go of before who is signed in
 	changes */
-	_online_service14= 0x14
+	_online_service14= 0x14,
+	/* how many kinds of task have texts */
+	NUMBER_OF_ONLINE_TASK_TYPES= 0x2E
 };
 
 /* ---------- structures */
@@ -228,6 +230,8 @@ void __attribute__((stdcall)) online_title_get_name(unsigned long title, wchar *
 boolean online_get_accepted_game_invite(void *invite);
 void online_service_unregister_address(void);
 long __attribute__((stdcall)) online_logon_remove_user(long user_index);
+long online_task_get_string(long index);
+long online_task_get_other_string(long index);
 long online_tasks_get_logon_state(long index);
 long online_users_get_result(void);
 long online_task_users_get_result(const struct online_task *task);

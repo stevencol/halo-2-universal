@@ -144,6 +144,31 @@ struct online_service unknown_00467178[NUMBER_OF_ONLINE_SERVICES]=
 	{19, 1, 0}, {20, 1, 0}, {0x4D530064, 0, 0}
 };
 
+/* 0x0006bc4c, 0x0006bedc, as the two functions have them written out: the
+two texts of the game that go with each kind of task; one kind has none */
+static const long online_task_type_strings[NUMBER_OF_ONLINE_TASK_TYPES]=
+{
+	0x0700061F, 0x14000620, 0x11000621, 0x15000622, 0x10000623, 0x1C000624,
+	0x0E000625, 0x10000626, 0x10000627, 0x16000628, 0x10000629, 0x1200062A,
+	0x1600062B, 0x1900062C, 0x1400062D, 0x1600062E, 0x1200062F, 0x11000630,
+	0x0B000631, 0x0B000632, 0x0D000633, 0x13000634, 0x15000635, 0x11000636,
+	0x0D000637, 0x0D000638, 0x0D000639, 0x1400063A, 0x2100063B, 0x1500063C,
+	0x1F00063D, 0x1400063E, 0x1800063F, 0x0A000640, 0x10000641, 0x0E000642,
+	0x1A000643, 0x1C000644, 0x1A000645, 0x1D000646, NONE, 0x1F000647,
+	0x21000648, 0x20000649, 0x2200064A, 0x0F00064B
+};
+static const long online_task_type_other_strings[NUMBER_OF_ONLINE_TASK_TYPES]=
+{
+	0x0700064C, 0x1400064D, 0x1100064E, 0x1500064F, 0x10000650, 0x1C000651,
+	0x0E000652, 0x10000653, 0x10000654, 0x16000655, 0x10000656, 0x12000657,
+	0x16000658, 0x19000659, 0x1400065A, 0x1600065B, 0x1200065C, 0x1100065D,
+	0x0B00065E, 0x0B00065F, 0x0D000660, 0x13000661, 0x15000662, 0x11000663,
+	0x0D000664, 0x0D000665, 0x0D000666, 0x14000667, 0x21000668, 0x15000669,
+	0x1F00066A, 0x1400066B, 0x1800066C, 0x0A00066D, 0x1000066E, 0x0E00066F,
+	0x1A000670, 0x1C000671, 0x1A000672, 0x1D000673, NONE, 0x1F000674,
+	0x21000675, 0x20000676, 0x22000677, 0x0F000678
+};
+
 /* ---------- code */
 
 /* 0x0006b380: what goes over the tasks goes to the next one; whether there
@@ -1446,4 +1471,42 @@ long __attribute__((stdcall)) online_logon_remove_user(
 	online_task_close(task_index);
 
 	return NONE;
+}
+
+/* 0x0006ba80: the text of the game that goes with a task, by its kind;
+nothing if there is no such task, and NONE for a kind that has none */
+long online_task_get_string(
+	long index)
+{
+	const struct online_task *task= (const struct online_task *)datum_try_and_get(online_tasks, index);
+
+	if (!task)
+	{
+		return 0;
+	}
+	if ((unsigned long)task->type>=NUMBER_OF_ONLINE_TASK_TYPES)
+	{
+		return NONE;
+	}
+
+	return online_task_type_strings[task->type];
+}
+
+/* 0x0006bd10: the other text of the game that goes with a task, as the
+function before this one */
+long online_task_get_other_string(
+	long index)
+{
+	const struct online_task *task= (const struct online_task *)datum_try_and_get(online_tasks, index);
+
+	if (!task)
+	{
+		return 0;
+	}
+	if ((unsigned long)task->type>=NUMBER_OF_ONLINE_TASK_TYPES)
+	{
+		return NONE;
+	}
+
+	return online_task_type_other_strings[task->type];
 }

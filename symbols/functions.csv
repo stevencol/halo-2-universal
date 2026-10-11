@@ -2448,3 +2448,5 @@ address,name,source,arguments,returns,convention
 003afc76,unknown_003afc76,,stack stack stack stack stack stack stack,int,stdcall
 003aebb0,unknown_003aebb0,,stack stack stack,int,stdcall
 003afca3,unknown_003afca3,,stack stack stack stack stack,int,stdcall
+0006ba80,online_task_get_string,source/networking/online_tasks.c,eax,int
+0006bd10,online_task_get_other_string,source/networking/online_tasks.c,eax,int

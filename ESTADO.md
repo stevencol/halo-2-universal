@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 533.
+**Última actualización:** 2026-10-08, al terminar el hito 534.
 
 ## Dónde estamos
 
-- **1828 funciones descompiladas de 11.265: el 16,23 % del juego** (el
-  10,486 % de los bytes de código).
-- Las 1828 están comprobadas contra el ejecutable original: las 1390 del
+- **1830 funciones descompiladas de 11.265: el 16,25 % del juego** (el
+  10,517 % de los bytes de código).
+- Las 1830 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the tasks of the teams of the service of games* (ver `git log`).
+- Último hito: *Decompile the two texts of each kind of online task* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 621 funciones apuntadas pero sin descompilar (las que el código
   llama); 482 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -236,8 +236,8 @@ Módulos (funciones hechas / archivo):
       qué está la conexión, quién está conectado y lo que cada una hace
       cada vuelta, lo que se hace al conectarse y en qué está cada
       jugador, desconectarse, el nombre de un juego, la invitación
-      aceptada y quitar a un jugador de los conectados (43); faltan
-      `0x0006ba80`, `0x0006bd10` y `0x0006c8b0`)
+      aceptada, quitar a un jugador de los conectados y los dos textos
+      de cada clase de tarea (45); falta `0x0006c8b0`)
 - [x] La red de la consola — `networking\transport.c` (8: iniciarla y
       deshacerla, mirar el cable, arrancarla y pararla, apuntar a quién se
       avisa y avisar, y si está)

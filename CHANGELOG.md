@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Los dos textos de cada clase de tarea del servicio
+
+Dos funciones en `networking/online_tasks.c`, de 460 bytes cada una. De 1828
+funciones se pasa a 1830, el 16,25 % de las del juego (el 10,517 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_task_get_string` | `0x0006ba80` | `networking/online_tasks.c` |
+| `online_task_get_other_string` | `0x0006bd10` | `networking/online_tasks.c` |
+
+### Lo que se sabe
+
+- Cada clase de tarea del servicio (hay `0x2E`, de la `0` a la `0x2D`)
+  tiene **dos textos del juego**: `online_task_get_string` da los de
+  `0x…061F` a `0x…064B` y `online_task_get_other_string` los de `0x…064C`
+  a `0x…0678`, seguidos. Por la forma, uno es el mensaje mientras la tarea
+  está en marcha («conectando…», «buscando amigos…») y el otro el de
+  cuando falla. Solo la clase `0x28` no tiene.
+- En el juego las dos son un `switch` de 46 casos; en `source\` son dos
+  tablas, que el guion del hito sacó de las tablas de saltos del ejecutable
+  (`0x0006bc4c` y `0x0006bedc`) en vez de copiarlas a mano.
+- Con esto en `online_tasks.c` solo falta `0x0006c8b0`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  533.
+- En este hito se pasaron las pruebas de las dos funciones, con tareas de
+  todas las clases y de clases que no existen.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Los equipos del servicio de partidas: diez tareas
 
 Archivo nuevo, `networking/online_teams.c`, con diez funciones (1719 bytes). De 1818
