@@ -10,6 +10,7 @@ are guesses.
 
 #include "online_tasks.h"
 
+#include "interface/user_interface_controller.h"
 #include "networking/game_voice.h"
 #include "networking/network_blob.h"
 #include "networking/network_observer.h"
@@ -85,6 +86,10 @@ long __attribute__((stdcall)) XOnlineFriendsGetAcceptedGameInvite(void *invite);
 long __attribute__((stdcall)) XNetUnregisterInAddr(unsigned long in_address);
 wchar *wcsncpy(wchar *destination, const wchar *source, size_t count);
 
+/* 0x003a065b: the players that are signed in become others; a task of the
+libraries does it */
+long __attribute__((stdcall)) XOnlineChangeLogonUsers(const struct online_user *users, long unknown, long *handle);
+
 /* ---------- structures */
 
 /* what the libraries say of a service: what it is, and where it is */
@@ -126,9 +131,6 @@ which start to be read when someone signs in */
 struct network_blob unknown_00477058;
 struct network_blob unknown_0047d8f4;
 struct network_blob unknown_00479780;
-
-/* 0x0054ed50: what the game keeps of each gamepad */
-byte unknown_0054ed50[MAXIMUM_ONLINE_USERS*ONLINE_CONTROLLER_SIZE];
 
 /* 0x004cf8e4: the observer of the network, for something that measures it.
 0x004cf95c: someone is signed in, for the same thing */
@@ -1248,7 +1250,7 @@ boolean online_user_get_state(
 	long count;
 	long index;
 
-	if (unknown_0054ed50[user_index*ONLINE_CONTROLLER_SIZE+ONLINE_CONTROLLER_FLAGS_OFFSET]&_online_user_unknown_bits)
+	if (USER_INTERFACE_CONTROLLER(user_index)->user.flags&_online_user_unknown_bits)
 	{
 		return FALSE;
 	}
@@ -1382,4 +1384,66 @@ void online_service_unregister_address(
 	{
 		XNetUnregisterInAddr(info.address);
 	}
+}
+
+/* 0x0006cc10: the player of a gamepad is taken out of the ones that are
+signed in to the service of games: its list of friends and its tasks are
+done with, and a task starts that signs in the others again without it; the
+task, or NONE if it could not start. If no one else is signed in, everyone
+is signed out. Nothing if no one was signed in */
+long __attribute__((stdcall)) online_logon_remove_user(
+	long user_index)
+{
+	struct online_user users[MAXIMUM_ONLINE_USERS];
+	struct online_task *task;
+	long task_index;
+	long count;
+	long index;
+
+	if (unknown_00467214==NONE)
+	{
+		return NONE;
+	}
+	task_index= online_task_find(user_index, _online_task_type_friends);
+	if (task_index!=NONE)
+	{
+		online_task_close(task_index);
+	}
+	user_interface_controller_close_tasks(user_index);
+	memset(users, 0, sizeof(users));
+	count= 0;
+	for (index= 0; index<MAXIMUM_ONLINE_USERS; index++)
+	{
+		const struct user_interface_controller *controller= USER_INTERFACE_CONTROLLER(index);
+
+		if (index!=user_index && ((controller->flags>>_user_interface_controller_online_bit)&1))
+		{
+			users[index]= controller->user;
+			count++;
+		}
+	}
+	if (count<=0)
+	{
+		online_logoff();
+
+		return NONE;
+	}
+	task_index= online_task_new_signed_in();
+	task= (struct online_task *)datum_try_and_get(online_tasks, task_index);
+	if (!task)
+	{
+		return NONE;
+	}
+	online_service_unregister_address();
+	if (XOnlineChangeLogonUsers(users, 0, &task->handle)>=0)
+	{
+		task->flags= _online_task_unknown1_bit;
+		task->type= _online_task_type1;
+		task->owner= user_index;
+
+		return task_index;
+	}
+	online_task_close(task_index);
+
+	return NONE;
 }

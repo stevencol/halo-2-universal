@@ -106,12 +106,8 @@ enum
 	ONLINE_STATE_SIGNATURE= 0xFCF1,
 	ONLINE_STATE_TIME_MAXIMUM= 126,
 	ONLINE_STATE_SECOND_TIME= 127,
-	/* of what the game keeps of each gamepad (unknown_0054ed50): what one
-	is, and where its bits like the ones of a player that is signed in are.
-	How many things something of a player can have, and what one is and
+	/* how many things something of a player can have, and what one is and
 	where what it is known by is */
-	ONLINE_CONTROLLER_SIZE= 0xC70,
-	ONLINE_CONTROLLER_FLAGS_OFFSET= 0x8,
 	MAXIMUM_ONLINE_USER_ENTRIES= 125,
 	ONLINE_USER_ENTRY_SIZE= 0x40,
 	ONLINE_USER_ENTRY_IDENTIFIER_OFFSET= 0x20,
@@ -231,6 +227,7 @@ void online_logoff(void);
 void __attribute__((stdcall)) online_title_get_name(unsigned long title, wchar *name, long size);
 boolean online_get_accepted_game_invite(void *invite);
 void online_service_unregister_address(void);
+long __attribute__((stdcall)) online_logon_remove_user(long user_index);
 long online_tasks_get_logon_state(long index);
 long online_users_get_result(void);
 long online_task_users_get_result(const struct online_task *task);

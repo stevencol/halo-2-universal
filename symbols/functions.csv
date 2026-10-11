@@ -2398,3 +2398,5 @@ address,name,source,arguments,returns,convention
 00199e2e,unknown_00199e2e,,stack,void,stdcall
 000abc70,unknown_000abc70,,ebx stack,int,stdcall
 002153dd,unknown_002153dd,,stack stack stack stack,void,stdcall
+0006cc10,online_logon_remove_user,source/networking/online_tasks.c,stack,int,stdcall
+003a065b,XOnlineChangeLogonUsers,,stack stack stack,int,stdcall

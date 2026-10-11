@@ -567,7 +567,7 @@ def run(t) -> None:
     for n in range(2000):
         controllers = bytearray(random_.randbytes(4 * 0xC70))
         for index in range(4):
-            controllers[index * 0xC70 + 8] = random_.choice((0, 0, 0, 0, 4, 1, 2))
+            controllers[index * 0xC70 + 0x478] = random_.choice((0, 0, 0, 0, 4, 1, 2))
         known = random_.getrandbits(32)
         said = bytes((random_.choice((*range(9), 0xFF)),)) + struct.pack("<II", known, random_.choice((0, 4, 8, 0x100, 0x1000000, 0x10C, random_.getrandbits(32)))) + random_.randbytes(3)
         count = random_.choice((0, 0, 1, 3, 6, 125, NONE))
@@ -589,7 +589,7 @@ def run(t) -> None:
             "online_user_get_state",
             random_.randrange(4),
             Buffer(random_.randbytes(0x4C)),
-            globals={"unknown_0054ed50": bytes(controllers), "unknown_00467214": random_.choice((0, 0, 0, 0, NONE))},
+            globals={"unknown_0054e8e0": bytes(controllers), "unknown_00467214": random_.choice((0, 0, 0, 0, NONE))},
             externals={
                 "online_tasks_get_logon_state": session(random_.choice((1, 1, 1, 1, 0))),
                 "unknown_003a0798": says,
@@ -675,5 +675,38 @@ def run(t) -> None:
             externals={
                 "XOnlineGetServiceInfo": service,
                 "XNetUnregisterInAddr": lambda harness, arguments: (0, tuple(arguments)),
+            },
+        )
+
+    # ---------- a player is taken out of the ones that are signed in
+
+    for n in range(2000):
+        controllers = bytearray(random_.randbytes(4 * 0xC70))
+        for index in range(4):
+            struct.pack_into("<I", controllers, index * 0xC70, random_.choice((0, 0x20, 0x20, 0x10, 0xFFFFFFDF, 0xFFFFFFFF)))
+        tasks, number = table()
+
+        def changed(harness, arguments, result=random_.choice((0, 0, 0, 1) + FAILED), handle=random_.getrandbits(32)):
+            users = bytes(harness.mu.mem_read(arguments[0], 4 * 0x70))
+            if result < 0x80000000:
+                harness.mu.mem_write(arguments[2], struct.pack("<I", handle))
+            return result, (users, arguments[1])
+
+        t.check(
+            "online_logon_remove_user",
+            random_.choice((0, 1, 2, 3)),
+            globals={
+                "unknown_00467214": random_.choice((0, 0, 0, 0x80010002, NONE)),
+                "unknown_0054e8e0": bytes(controllers),
+                "online_tasks": tasks,
+            },
+            externals={
+                "online_task_find": lambda harness, arguments, found=random_.choice((NONE, NONE, 0x10003, 5)): (found, tuple(arguments)),
+                "online_task_close": lambda harness, arguments: (0, tuple(arguments)),
+                "user_interface_controller_close_tasks": lambda harness, arguments: (0, tuple(arguments)),
+                "online_logoff": lambda harness, arguments: (0, ()),
+                "online_task_new_signed_in": lambda harness, arguments, number=number: (number, ()),
+                "online_service_unregister_address": lambda harness, arguments: (0, ()),
+                "XOnlineChangeLogonUsers": changed,
             },
         )

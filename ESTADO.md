@@ -3,18 +3,18 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 528.
+**Última actualización:** 2026-10-08, al terminar el hito 529.
 
 ## Dónde estamos
 
-- **1789 funciones descompiladas de 11.265: el 15,88 % del juego** (el
-  10,315 % de los bytes de código).
-- Las 1789 están comprobadas contra el ejecutable original: las 1390 del
+- **1790 funciones descompiladas de 11.265: el 15,89 % del juego** (el
+  10,326 % de los bytes de código).
+- Las 1790 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a gamepad's player signs out, loses its guests and has its profile written* (ver `git log`).
+- Último hito: *Decompile how a player is taken out of the ones signed in to the service* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 610 funciones apuntadas pero sin descompilar (las que el código
+- Además hay 611 funciones apuntadas pero sin descompilar (las que el código
   llama); 472 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
@@ -230,9 +230,9 @@ Módulos (funciones hechas / archivo):
       recorrerlas, buscar una, volver a empezarla, hacerlas avanzar, en
       qué está la conexión, quién está conectado y lo que cada una hace
       cada vuelta, lo que se hace al conectarse y en qué está cada
-      jugador, desconectarse, el nombre de un juego y la invitación
-      aceptada (42); faltan `0x0006ba80`, `0x0006bd10`, `0x0006c8b0` y
-      `0x0006cc10`)
+      jugador, desconectarse, el nombre de un juego, la invitación
+      aceptada y quitar a un jugador de los conectados (43); faltan
+      `0x0006ba80`, `0x0006bd10` y `0x0006c8b0`)
 - [x] La red de la consola — `networking\transport.c` (8: iniciarla y
       deshacerla, mirar el cable, arrancarla y pararla, apuntar a quién se
       avisa y avisar, y si está)

@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Quitar a un jugador de los conectados al servicio
+
+Una función en `networking/online_tasks.c`, de 317 bytes, y una corrección. De 1789
+funciones se pasa a 1790, el 15,89 % de las del juego (el 10,326 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_logon_remove_user` | `0x0006cc10` | `networking/online_tasks.c` |
+
+### Lo que se sabe
+
+- `online_logon_remove_user` **saca del servicio al jugador de un mando**
+  sin desconectar a los demás: cierra su lista de amigos y sus tareas,
+  junta a los otros jugadores conectados y pide a las bibliotecas que los
+  conecten de nuevo sin él (`XOnlineChangeLogonUsers`), con una tarea de la
+  clase `1` a nombre del que se va. Antes suelta la dirección del servicio
+  `0x14` (hito 525). Si no queda nadie más, es `online_logoff`.
+
+### Corregido
+
+- `unknown_0054ed50` **no era una variable aparte**: es el trozo `+0x470`
+  de lo que el juego guarda de cada mando (`0x0054e8e0`), es decir, quién
+  es ese jugador en el servicio. Se quitó de `online_tasks.c` y de
+  `symbols\globals.csv`; `online_user_get_state` (hito 523) lo lee ahora de
+  `struct user_interface_controller` y su prueba da la tabla entera.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  528.
+- En este hito se pasaron las pruebas de la función y la de
+  `online_user_get_state`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Desconectar al jugador de un mando y dejar un mando sin jugador
 
 Diez funciones más en `interface/user_interface_controller.c` y una en
