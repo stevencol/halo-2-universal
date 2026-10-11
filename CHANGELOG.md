@@ -2,6 +2,58 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — La simulación arranca y acaba, con el juego y con cada mapa
+
+Las cuatro funciones que el juego llama de la simulación como parte suya (353 bytes),
+en `networking/simulation.c`. De 1943
+funciones se pasa a 1947, el 17,28 % de las del juego (el 10,873 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_initialize` | `0x00067e30` | `networking/simulation.c` |
+| `simulation_dispose` | `0x00067eb0` | `networking/simulation.c` |
+| `simulation_initialize_for_new_map` | `0x00067ee0` | `networking/simulation.c` |
+| `simulation_dispose_from_old_map` | `0x00067f60` | `networking/simulation.c` |
+
+### Lo que se sabe
+
+- Eran las cuatro entradas sin nombre de la simulación en la tabla de
+  partes del juego (`game.c`): al arrancar, al cerrar, con un mapa nuevo y
+  al irse un mapa. El orden en la tabla da los nombres.
+- `simulation_initialize` da su memoria fija a las tres cosas de la
+  simulación: lo que está en marcha (`0x1220` bytes en `0x544b20`), lo que
+  guarda `unknown_004cf780` (`0xC34` bytes en `0x545d40`) y **dos tablas de
+  clases** (`struct simulation_type_table`: una cuenta y 32 punteros, `0x84`
+  bytes cada una, en `0x546974`). Vacía las tablas, las manda llenar
+  (`unknown_00082240`, que pone 17 clases en la primera y 26 en la segunda)
+  y apunta las dos cuentas.
+- `simulation_dispose` solo deja los tres punteros a cero.
+- `simulation_initialize_for_new_map` prepara las dos cosas para el mapa
+  (`unknown_00068c00`; con lo que guarda `unknown_004d87e8` solo si la clase
+  de partida, el byte `0xC` de los datos del juego, es 4 o 5) y deja lo de
+  `unknown_004cf780` como al empezar (`simulation_players_reset`).
+- `simulation_dispose_from_old_map` suelta lo que tuviera lo de
+  `unknown_004cf780` y acaba lo que está en marcha (`unknown_00068e20`).
+- Las dos de mapa no hacen nada si `unknown_004ed39c` está puesto.
+- Variables nuevas: `unknown_004cf784` (puntero a las tablas) y las tres
+  memorias `unknown_00544b20`, `unknown_00545d40`, `unknown_00546974`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  574.
+- `unknown_004cf770` (0x10 bytes), `unknown_004cf780` y `unknown_004cf784`
+  van seguidas y se ponen y se quitan juntas: lo más probable es que sean
+  una sola estructura de 0x18 bytes. Se dejaron como tres variables.
+- Qué son las dos tablas es una suposición por las cuentas (17 y 26) y por
+  quién las recibe; «clases» puede no ser la palabra.
+- En este hito se pasaron las pruebas de las cuatro funciones, y
+  `test_game` y `test_simulation` enteras.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — El búfer estático de la consola toma su memoria
 
 Una función corta más en `shell/shell.c`, de 80 bytes. De 1942

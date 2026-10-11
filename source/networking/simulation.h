@@ -48,10 +48,39 @@ enum
 	SIMULATION_UNKNOWN_004CF780_UNKNOWN1C_OFFSET= 0x1C,
 	SIMULATION_UNKNOWN_004CF780_UNKNOWN24_OFFSET= 0x24,
 	SIMULATION_UNKNOWN_004CF780_UNKNOWN24_SIZE= 0x60,
-	SIMULATION_UNKNOWN_004CF780_CHANGED_OFFSET= 0x84
+	SIMULATION_UNKNOWN_004CF780_CHANGED_OFFSET= 0x84,
+	/* and where it has the thing that is going, something that is given up
+	when a map goes (a number at 0x80 of it is cleared) and a number */
+	SIMULATION_UNKNOWN_004CF780_WORLD_OFFSET= 4,
+	SIMULATION_UNKNOWN_004CF780_UNKNOWN8_OFFSET= 8,
+	SIMULATION_UNKNOWN_004CF780_UNKNOWNC_OFFSET= 0xC,
+	SIMULATION_UNKNOWN_004CF780_UNKNOWN8_UNKNOWN80_OFFSET= 0x80,
+	/* the memory of the thing that is going and of what unknown_004cf780
+	has, and how many kinds a table of kinds has room for */
+	SIMULATION_WORLD_STORAGE_SIZE= 0x1220,
+	SIMULATION_UNKNOWN_004CF780_STORAGE_SIZE= 0xC34,
+	MAXIMUM_SIMULATION_TYPES_PER_TABLE= 32
 };
 
+/* ---------- structures */
+
+/* the kinds of one sort of thing that the simulation tells of: how many,
+and what describes each. There are two tables, one after the other */
+struct simulation_type_table
+{
+	long count;
+	void *types[MAXIMUM_SIMULATION_TYPES_PER_TABLE];
+};
+
+typedef char verify_simulation_type_table_size[
+	sizeof(struct simulation_type_table) == 0x84 ? 1 : -1];
+
 /* ---------- prototypes/SIMULATION.C */
+
+void simulation_initialize(void);
+void simulation_dispose(void);
+void simulation_initialize_for_new_map(void);
+void simulation_dispose_from_old_map(void);
 
 void __attribute__((stdcall)) simulation_view_disconnected(byte *view);
 boolean __attribute__((stdcall)) simulation_update_encode(void *buffer, long capacity, const void *update,

@@ -410,3 +410,7 @@ address,name,source
 00479750,unknown_00479750,source/networking/online_tasks.c
 004cf768,unknown_004cf768,source/networking/online_presence.c
 004674b8,unknown_004674b8,source/game/game.c
+004cf784,unknown_004cf784,source/networking/simulation.c
+00544b20,unknown_00544b20,source/networking/simulation.c
+00545d40,unknown_00545d40,source/networking/simulation.c
+00546974,unknown_00546974,source/networking/simulation.c

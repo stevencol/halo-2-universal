@@ -42,6 +42,21 @@ void __attribute__((stdcall)) unknown_00069b50(const void *unknown610, byte *wor
 boolean simulation_players_changed(long unknown);
 void __attribute__((stdcall)) unknown_000683a0(long *update);
 
+void simulation_players_reset(byte *players);
+/* 0x00082240: fills the two tables of kinds, and tells how many each has.
+0x00068c00: sets up the thing that is going and what unknown_004cf780 has.
+0x00068e20: ends the thing that is going. 0x00083000: something more of
+what unknown_004cf780 has, for a new map. 0x00195a40, 0x00195e90: what
+something else of the game does for a new map and for one that goes */
+void __attribute__((stdcall)) unknown_00082240(struct simulation_type_table *tables, long *second_count,
+	long *first_count);
+void __attribute__((stdcall)) unknown_00068c00(long unknown, byte *memory, struct simulation_type_table *tables,
+	byte *world);
+void __attribute__((stdcall)) unknown_00068e20(byte *world);
+void __attribute__((stdcall)) unknown_00083000(long unknown);
+void unknown_00195a40(void);
+void unknown_00195e90(void);
+
 long GetTickCount(void);
 
 /* ---------- globals */
@@ -51,6 +66,19 @@ kept, and that time. 0x004cf780, of game.c */
 extern boolean unknown_00510548;
 extern long unknown_0051054c;
 extern long unknown_004cf780;
+
+/* 0x004ed39c, of game.c: with it set, the simulation does nothing for a
+map. 0x004d87e8, of network_memory.c */
+extern boolean unknown_004ed39c;
+extern byte *unknown_004d87e8;
+
+/* 0x004cf784: the two tables of kinds. 0x00544b20, 0x00545d40,
+0x00546974: the memory of the thing that is going, of what
+unknown_004cf780 has and of the two tables */
+struct simulation_type_table *unknown_004cf784;
+byte unknown_00544b20[SIMULATION_WORLD_STORAGE_SIZE];
+byte unknown_00545d40[SIMULATION_UNKNOWN_004CF780_STORAGE_SIZE];
+struct simulation_type_table unknown_00546974[2];
 
 /* ---------- code */
 
@@ -395,4 +423,92 @@ byte *__attribute__((stdcall)) simulation_view_create(
 	*(long *)(view+SIMULATION_VIEW_INDEX_OFFSET)= index;
 
 	return view;
+}
+
+/* 0x00067e30: the simulation is set up, when the game starts: the thing that
+is going, what unknown_004cf780 has and the two tables of kinds get their
+memory, and the tables are emptied and then filled (unknown_00082240) */
+void simulation_initialize(
+	void)
+{
+	long first_count, second_count;
+	short index;
+
+	unknown_004cf784= unknown_00546974;
+	unknown_004cf770.unknownC= unknown_00544b20;
+	unknown_004cf780= (long)unknown_00545d40;
+	for (index= 0; index<2; index++)
+	{
+		unknown_00546974[index].count= NONE;
+		memset(unknown_00546974[index].types, 0, sizeof(unknown_00546974[index].types));
+	}
+	unknown_00082240(unknown_004cf784, &second_count, &first_count);
+	unknown_004cf784[0].count= first_count;
+	unknown_004cf784[1].count= second_count;
+	unknown_004cf770.unknown0= TRUE;
+}
+
+/* 0x00067eb0: the simulation that was set up is no more: it has no memory */
+void simulation_dispose(
+	void)
+{
+	if (unknown_004cf770.unknown0)
+	{
+		unknown_004cf770.unknownC= NULL;
+		unknown_004cf780= 0;
+		unknown_004cf784= NULL;
+		unknown_004cf770.unknown0= FALSE;
+	}
+}
+
+/* 0x00067ee0: the simulation for a new map, unless unknown_004ed39c is set:
+it has not failed, the thing that is going and what unknown_004cf780 has are
+set up (unknown_00068c00; with what unknown_004d87e8 is, in a game of kind 4
+or 5), and what unknown_004cf780 has gets the thing and is as when it begins
+(simulation_players_reset, unknown_00083000) */
+void simulation_initialize_for_new_map(
+	void)
+{
+	if (!unknown_004ed39c)
+	{
+		long kind;
+		byte *unknown;
+
+		unknown_004cf770.unknown1[0]= FALSE;
+		unknown_004cf770.unknown1[1]= FALSE;
+		kind= *((const signed char *)main_game_globals+0xC);
+		unknown_00068c00(unknown_004cf780, kind>=4 && kind<=5 ? unknown_004d87e8 : NULL, unknown_004cf784,
+			unknown_004cf770.unknownC);
+		unknown= (byte *)unknown_004cf780;
+		*(byte **)(unknown+SIMULATION_UNKNOWN_004CF780_WORLD_OFFSET)= unknown_004cf770.unknownC;
+		*(long *)(unknown+SIMULATION_UNKNOWN_004CF780_UNKNOWNC_OFFSET)= 0;
+		*(long *)(unknown+SIMULATION_UNKNOWN_004CF780_UNKNOWN8_OFFSET)= 0;
+		simulation_players_reset(unknown);
+		unknown_00083000(unknown_004cf780);
+		unknown_00195a40();
+		unknown_004cf770.unknown1[7]= TRUE;
+	}
+}
+
+/* 0x00067f60: the simulation when a map goes, unless unknown_004ed39c is
+set: what unknown_004cf780 has gives up what it had, and has no thing; and
+the thing that is going ends (unknown_00068e20) */
+void simulation_dispose_from_old_map(
+	void)
+{
+	if (!unknown_004ed39c)
+	{
+		byte *unknown= (byte *)unknown_004cf780;
+		byte **unknown8= (byte **)(unknown+SIMULATION_UNKNOWN_004CF780_UNKNOWN8_OFFSET);
+
+		if (*unknown8)
+		{
+			*(long *)(*unknown8+SIMULATION_UNKNOWN_004CF780_UNKNOWN8_UNKNOWN80_OFFSET)= 0;
+			*unknown8= NULL;
+		}
+		*(long *)(unknown+SIMULATION_UNKNOWN_004CF780_UNKNOWNC_OFFSET)= 0;
+		*(byte **)(unknown+SIMULATION_UNKNOWN_004CF780_WORLD_OFFSET)= NULL;
+		unknown_00068e20(unknown_004cf770.unknownC);
+		unknown_00195e90();
+	}
 }

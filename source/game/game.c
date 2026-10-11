@@ -116,10 +116,10 @@ void unknown_0002b540(void);
 void unknown_0002b5a0(void);
 void unknown_0002b5c0(void);
 void unknown_0003f2b0(void);
-void unknown_00067e30(void);
-void unknown_00067eb0(void);
-void unknown_00067ee0(void);
-void unknown_00067f60(void);
+void simulation_initialize(void);
+void simulation_dispose(void);
+void simulation_initialize_for_new_map(void);
+void simulation_dispose_from_old_map(void);
 void unknown_0008d9f0(void);
 void unknown_0008dd70(void);
 void unknown_000b67c0(void);
@@ -370,7 +370,7 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{unknown_00185ab0, no_operation, unknown_00185b00, no_operation},
 	{unknown_001e6a40, no_operation, unknown_001e6a80, unknown_001e6ae0},
 	{unknown_00157450, no_operation, unknown_001574c0, unknown_00157bb0},
-	{unknown_00067e30, unknown_00067eb0, unknown_00067ee0, unknown_00067f60},
+	{simulation_initialize, simulation_dispose, simulation_initialize_for_new_map, simulation_dispose_from_old_map},
 	{no_operation, no_operation, unknown_0011be20, unknown_0011be40},
 	{unknown_001eb550, unknown_001eb5e0, unknown_001eb5f0, no_operation},
 	{no_operation, no_operation},
