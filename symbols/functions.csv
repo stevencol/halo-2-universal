@@ -2303,7 +2303,7 @@ address,name,source,arguments,returns,convention
 0006bfa0,online_tasks_check_address,source/networking/online_tasks.c,,void
 0006b950,online_tasks_close_all,source/networking/online_tasks.c,,void
 0006c670,online_task_continue,source/networking/online_tasks.c,esi,int
-0008c550,unknown_0008c550,,edx,void
+0008c550,online_presence_unknown_0008c550,source/networking/online_presence.c,edx,void
 003a07b9,XOnlineFriendsEnumerateFinish,,stack,int,stdcall
 003a062b,XOnlineTaskClose,,stack,int,stdcall
 0006b780,online_task_restart,source/networking/online_tasks.c,eax,void
@@ -2510,3 +2510,13 @@ address,name,source,arguments,returns,convention
 0008cd60,online_friends_get_latest,source/networking/online_friends.c,edi stack,short,stdcall
 003a07ae,XOnlineFriendsEnumerate,,stack stack stack,int,stdcall
 003a07c4,XOnlineFriendsGetLatest,,stack stack stack,int,stdcall
+0008c280,online_presence_state_from_library,source/networking/online_presence.c,ebx stack,int,stdcall
+0008c320,online_presence_start,source/networking/online_presence.c,ebx,int
+0008c3a0,online_presence_unknown_0008c3a0,source/networking/online_presence.c,ecx stack stack stack,void,stdcall
+0008c410,online_presence_unknown_0008c410,source/networking/online_presence.c,edx,void
+0008c470,online_presence_get_latest,source/networking/online_presence.c,eax stack stack stack,void,stdcall
+003a8316,unknown_003a8316,,stack stack stack,int,stdcall
+003a695e,unknown_003a695e,,stack stack stack stack,int,stdcall
+003a6f9b,unknown_003a6f9b,,stack,int,stdcall
+003a6fa6,unknown_003a6fa6,,stack stack stack stack,int,stdcall
+003a6969,unknown_003a6969,,stack,int,stdcall

@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Las tareas de la clase 0x21: en qué están otros jugadores del servicio
+
+Archivo nuevo, `networking/online_presence.c`, con seis funciones (732 bytes). De 1897
+funciones se pasa a 1903, el 16,89 % de las del juego (el 10,664 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_presence_state_from_library` | `0x0008c280` | `networking/online_presence.c` |
+| `online_presence_start` | `0x0008c320` | `networking/online_presence.c` |
+| `online_presence_unknown_0008c3a0` | `0x0008c3a0` | `networking/online_presence.c` |
+| `online_presence_unknown_0008c410` | `0x0008c410` | `networking/online_presence.c` |
+| `online_presence_get_latest` | `0x0008c470` | `networking/online_presence.c` |
+| `online_presence_unknown_0008c550` | `0x0008c550` | `networking/online_presence.c` |
+
+### Lo que se sabe
+
+- Las tareas de la clase `0x21`, que `online_tasks.c` cerraba de un modo
+  propio (hito 507) sin saber qué eran, **piden en qué están otros jugadores
+  del servicio aunque no sean amigos**: se les dan unos jugadores
+  (`online_presence_unknown_0008c3a0`) y devuelven de cada uno `0x3D` bytes
+  con quién es, en qué está y a qué juega (`online_presence_get_latest`).
+  Las funciones de las bibliotecas que usan no dicen su nombre; el del
+  archivo es una suposición por lo que hacen.
+- Los bits de «en qué está» se pasan a los del juego igual que los de un
+  amigo (hito 549), con cuatro bits más
+  (`online_presence_state_from_library`).
+- `online_presence_unknown_0008c550` es la que `online_task_close` llamaba
+  por su dirección al cerrar una de estas tareas.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  550.
+- En este hito se pasaron las pruebas de las seis funciones y la de
+  `online_task_close`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — La lista de amigos de un jugador
 
 Dos funciones más en `networking/online_friends.c` (257 bytes). De 1895

@@ -88,7 +88,7 @@ def run(t) -> None:
         closes = {
             "online_task_continue": goes_on,
             "XOnlineFriendsEnumerateFinish": lambda harness, arguments, said=random_.choice((0, 0, 0x80004005)): (said, tuple(arguments)),
-            "unknown_0008c550": lambda harness, arguments: (0, tuple(arguments)),
+            "online_presence_unknown_0008c550": lambda harness, arguments: (0, tuple(arguments)),
             "XOnlineTaskClose": lambda harness, arguments: (0, tuple(arguments)),
         }
         tasks, number = table()
@@ -161,7 +161,7 @@ def run(t) -> None:
                 externals={
                     "online_task_continue": lambda harness, arguments: (0x1500F2, (harness.normalize(arguments[0]),)),
                     "XOnlineFriendsEnumerateFinish": lambda harness, arguments: (0, tuple(arguments)),
-                    "unknown_0008c550": lambda harness, arguments: (0, tuple(arguments)),
+                    "online_presence_unknown_0008c550": lambda harness, arguments: (0, tuple(arguments)),
                     "XOnlineTaskClose": lambda harness, arguments: (0, tuple(arguments)),
                 },
             )
@@ -190,7 +190,7 @@ def run(t) -> None:
             externals={
                 "online_task_continue": lambda harness, arguments: (0x1500F2, (harness.normalize(arguments[0]),)),
                 "XOnlineFriendsEnumerateFinish": lambda harness, arguments: (0, tuple(arguments)),
-                "unknown_0008c550": lambda harness, arguments: (0, tuple(arguments)),
+                "online_presence_unknown_0008c550": lambda harness, arguments: (0, tuple(arguments)),
                 "XOnlineTaskClose": lambda harness, arguments: (0, tuple(arguments)),
             },
         )

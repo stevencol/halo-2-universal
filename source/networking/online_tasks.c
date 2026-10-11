@@ -26,7 +26,7 @@ are guesses.
 /* 0x0008c550: a task of the kind 0x21 is told that it is done with.
 0x0006c560: a task does what it has to each time around; whether the others
 are to. 0x0008bf70: and so does what the tasks have of their own */
-void unknown_0008c550(long index);
+void online_presence_unknown_0008c550(long index);
 
 /* 0x0008cc40: something is told that a task of the second kind could not
 go on. 0x0008e5e0, of network_blob_task.c: what did a task of the blocks
@@ -274,7 +274,7 @@ void online_task_close(
 			}
 			break;
 		case _online_task_type21:
-			unknown_0008c550(index);
+			online_presence_unknown_0008c550(index);
 			break;
 		}
 		XOnlineTaskClose(task->handle);
