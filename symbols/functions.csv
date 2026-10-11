@@ -2251,3 +2251,12 @@ address,name,source,arguments,returns,convention
 003202bb,operator_new,,stack,pointer
 00329d20,unknown_00329d20,,ecx,void
 0032a850,unknown_0032a850,,ecx stack stack stack stack stack stack stack stack stack stack stack stack stack,void,stdcall
+00080f30,network_blob_get_progress,source/networking/network_blob.c,ecx eax,bool
+00080f70,network_blob_start_read,source/networking/network_blob.c,esi eax stack stack stack stack,bool,stdcall
+00080ff0,network_blob_start_write,source/networking/network_blob.c,esi eax stack stack stack stack,bool,stdcall
+00081050,network_blob_task_finished,source/networking/network_blob.c,eax ecx,void
+000812d0,network_blob_memory_stolen,source/networking/network_blob.c,stack stack,void,stdcall
+0008e580,unknown_0008e580,,stack stack stack,int,stdcall
+0008e500,unknown_0008e500,,stack stack eax,int,stdcall
+0008e0f0,unknown_0008e0f0,,stack stack,void,stdcall
+000b49a0,unknown_000b49a0,,eax edi,bool

@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 501.
+**Última actualización:** 2026-10-08, al terminar el hito 502.
 
 ## Dónde estamos
 
-- **1678 funciones descompiladas de 11.265: el 14,90 % del juego** (el
-  9,892 % de los bytes de código).
-- Las 1678 están comprobadas contra el ejecutable original: las 1390 del
+- **1683 funciones descompiladas de 11.265: el 14,94 % del juego** (el
+  9,917 % de los bytes de código).
+- Las 1683 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how the network takes its memory for a map* (ver `git log`).
+- Último hito: *Decompile how a block is read and written by a task* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 574 funciones apuntadas pero sin descompilar (las que el código
-  llama); 456 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 578 funciones apuntadas pero sin descompilar (las que el código
+  llama); 460 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -212,8 +212,9 @@ Módulos (funciones hechas / archivo):
       hacerlos avanzar, cerrar los enchufes, los bytes de un paquete,
       mandarlos y leerlos)
 - [ ] Un bloque con suma, versión y tamaño — `networking\network_blob.c`
-      (2: la suma y ver si vale; falta quién los usa, de `0x00080e10` a
-      `0x00081230`)
+      (7: la suma, ver si vale, empezar a leerlo y a escribirlo, lo que
+      pasa cuando la tarea acaba, su avance y devolver su memoria; falta
+      tomar su memoria, `0x00080e10`, y las tareas, desde `0x0008e0f0`)
 - [ ] La memoria de la red — `networking\network_memory.c` (6: tomarla
       al abrir un mapa, soltarla al cerrarlo, tres constructores, el de
       todo entre ellos, y deshacerlo todo)

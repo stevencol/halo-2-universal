@@ -374,3 +374,5 @@ address,name,source
 0046e490,unknown_0046e490,source/networking/network_memory.c
 0046e690,unknown_0046e690,source/networking/network_memory.c
 0046e7a0,unknown_0046e7a0,source/networking/network_memory.c
+004d8c28,unknown_004d8c28,source/networking/network_blob.c
+0055e700,unknown_0055e700,source/networking/network_blob.c

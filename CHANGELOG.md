@@ -2,6 +2,66 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Un bloque se lee y se escribe con una tarea
+
+Cinco funciones en `networking/network_blob.c`. De 1678
+funciones se pasa a 1683, el 14,94 % de las del juego (el 9,917 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_blob_get_progress` | `0x00080f30` | `networking/network_blob.c` |
+| `network_blob_start_read` | `0x00080f70` | `networking/network_blob.c` |
+| `network_blob_start_write` | `0x00080ff0` | `networking/network_blob.c` |
+| `network_blob_task_finished` | `0x00081050` | `networking/network_blob.c` |
+| `network_blob_memory_stolen` | `0x000812d0` | `networking/network_blob.c` |
+
+### Lo que se sabe
+
+- **Lo que tiene un bloque mide `0x30` bytes**: sus funciones (con la
+  versión en `0x8`), sus bits, los bits con los que se arrancó, su clase,
+  lo que hace (nada, leer o escribir), lo que hizo antes y cómo acabó, con
+  qué se le pidió, su tarea, y la memoria del bloque con su tamaño y lo
+  más que puede medir. Es lo que `network_blob_verify` (hito 491) recibía
+  como «descripción»: ahora usa la estructura.
+- `network_blob_start_read` y `network_blob_start_write` arrancan una
+  tarea (`0x0008e580` y `0x0008e500`) si no hay otra en marcha. Leer no
+  hace falta si el bloque ya vale y no se hizo aquí.
+- `network_blob_task_finished` es **lo que pasa cuando la tarea acaba**:
+  - si acabó bien, un bloque leído vale; uno escrito pierde dos bits;
+  - con `7` se vuelve a empezar lo mismo, salvo que se arrancara con el
+    bit que dice que no;
+  - luego se avisa a la función de «leído» o de «escrito», que puede
+    decir que el bloque no vale;
+  - y si no acabó bien, la quinta función **hace el bloque aquí** (uno
+    por defecto); si tampoco puede, se vuelve a empezar y se cuenta en
+    `0x0055e700`.
+- `network_blob_get_progress` da por dónde va la tarea, de 0 a 1.
+- `network_blob_memory_stolen` es lo que la caché de texturas llama
+  cuando recupera la memoria del bloque: la tarea se entera (`13`) y el
+  bloque se queda sin memoria.
+- No es cosa de la red, aunque esté justo antes: por la forma (versión,
+  suma, uno por defecto si no se puede leer) son **los datos guardados**
+  (perfiles, variantes de partida). El nombre del archivo sigue siendo
+  una suposición.
+
+### Arreglado
+
+- Al escribir la prueba salió que quien tiene el bloque es el **segundo**
+  argumento de `network_blob_memory_stolen`, no el primero.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las cinco**, y en las de los hitos 456 a
+  490 y el 501. La tanda de los hitos 491 a 500 está en marcha.
+- Falta `0x00080e10`, la que toma la memoria del bloque de la caché de
+  texturas: mide el tiempo con el reloj del procesador y espera a la
+  tarjeta gráfica.
+- En este hito se pasaron todas las pruebas de `network_blob`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — La red toma su memoria
 
 Una función en `networking/network_memory.c`, de 2035 bytes. De 1677

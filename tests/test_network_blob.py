@@ -4,7 +4,9 @@ import random
 import struct
 import zlib
 
-from difftest import Buffer
+from difftest import Buffer, Mock, mock_address
+
+NONE = 0xFFFFFFFF
 
 
 def run(t) -> None:
@@ -20,6 +22,7 @@ def run(t) -> None:
         good = zlib.crc32(bytes(blob[4:])) ^ 0xFFFFFFFF
         struct.pack_into("<I", blob, 0, random_.choice((good, good, good, good ^ 1)))
         t.check("network_blob_checksum", Buffer(bytes(blob)), size)
+        # what has the block, with its functions after it: of them, only the version is looked at
         definition = bytearray(random_.randbytes(0x40))
         struct.pack_into("<I", definition, 0, 0x30)
         struct.pack_into("<H", definition, 8, random_.choice((4, 4, 1, 3)))
@@ -30,4 +33,87 @@ def run(t) -> None:
             random_.choice((size, size, size, size, 0xF, 8, 0)),
             Buffer(bytes(blob)),
             Buffer(bytes(definition), pointers=(0,)),
+        )
+
+    # ---------- what has a block reads it and writes it by a task
+
+    def a_blob(state=None, functions=None) -> Buffer:
+        """What has a block, with its functions after it if it has them: each is there or not."""
+        data = bytearray(random_.randbytes(0x50))
+        has = random_.random() < 0.85 if functions is None else functions
+        struct.pack_into("<I", data, 0, 0x30 if has else 0)
+        struct.pack_into(
+            "<4Hh",
+            data,
+            4,
+            random_.getrandbits(16),
+            random_.choice((0, 0, 1, 2, 3, random_.getrandbits(16))),
+            random_.choice((0, 1, 4, 4, 2)),
+            random_.choice((0, 0, 0, 1, 2, 3)) if state is None else state,
+            random_.choice((0, 1, 2, 7)),
+        )
+        struct.pack_into("<I", data, 0x20, random_.choice((NONE, 0, 3, 5)))
+        for index in range(3):
+            struct.pack_into("<I", data, 0x40 + index * 4, mock_address(index) if random_.random() < 0.8 else 0)
+        return Buffer(bytes(data), pointers=(0,) if has else ())
+
+    def tasks() -> dict:
+        started = random_.choice((0, 3, 7, 7, NONE))
+        normal = lambda harness, arguments, started=started: (
+            started,
+            (harness.normalize(arguments[0]), arguments[1], arguments[2]),
+        )
+        return {"unknown_0008e580": normal, "unknown_0008e500": normal}
+
+    for n in range(3000):
+        table = bytearray(random_.randbytes(16 * 0x14))
+        for index in range(16):
+            struct.pack_into("<I", table, index * 0x14 + 4, random_.choice((NONE, NONE, 0x10005, index)))
+        t.check(
+            "network_blob_get_progress",
+            a_blob(),
+            Buffer(random_.randbytes(4)),
+            globals={"unknown_004d8c28": bytes(table)},
+            externals={
+                "unknown_000b49a0": lambda harness, arguments, known=random_.choice((0, 1)): (
+                    known,
+                    (arguments[0], harness.normalize(arguments[1])),
+                ),
+            },
+        )
+        for name in ("network_blob_start_read", "network_blob_start_write"):
+            t.check(
+                name,
+                a_blob(),
+                random_.getrandbits(32),
+                random_.getrandbits(32),
+                random_.getrandbits(32),
+                random_.getrandbits(32),
+                random_.getrandbits(16) | random_.choice((0, 0xABCD0000)),
+                externals=tasks(),
+            )
+        says = [random_.choice((0, 1, 1, 0x100)) for index in range(3)]
+        t.check(
+            "network_blob_task_finished",
+            a_blob(state=random_.choice((1, 1, 2, 2, 0, 3))),
+            random_.choice((1, 1, 1, 6, 7, 7, 0, 5, 0x10001, NONE)),
+            globals={"unknown_0055e700": random_.getrandbits(32)},
+            externals=tasks(),
+            mocks=[
+                Mock(
+                    lambda call, said=said: said,
+                    stack_arguments=1,
+                    record=lambda call: (t.harness.normalize(call.stack[0]),),
+                )
+                for said in says
+            ],
+        )
+        t.check(
+            "network_blob_memory_stolen",
+            random_.getrandbits(32),
+            a_blob(functions=False),
+            externals={
+                "unknown_0008e0f0": lambda harness, arguments: (0, tuple(arguments)),
+                "texture_cache_return_memory": lambda harness, arguments: (0, (arguments[0],)),
+            },
         )
