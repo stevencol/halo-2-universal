@@ -16,20 +16,14 @@ are the names of its functions.
 
 /* ---------- prototypes */
 
-/* 0x0008e580, 0x0008e500: a task starts to read the block of something into
-its memory, and to write it from there; which task, or NONE. 0x0008e0f0: a
-task is told something. 0x000b49a0: how far something of a task is, from 0
-to 1; whether it is known */
-long __attribute__((stdcall)) unknown_0008e580(struct network_blob *blob, void *memory, unsigned long size);
-long __attribute__((stdcall)) unknown_0008e500(struct network_blob *blob, void *memory, unsigned long size);
-void __attribute__((stdcall)) unknown_0008e0f0(long task, long unknown);
-boolean unknown_000b49a0(long unknown, real *progress);
+/* 0x000b49a0: how far what does a task is, from 0 to 1; whether it is
+known */
+boolean unknown_000b49a0(long handle, real *progress);
 
 /* ---------- globals */
 
-/* 0x004d8c28: the tasks. 0x0055e700: how many times something was tried
-again, or left, after it could not be done */
-byte unknown_004d8c28[MAXIMUM_NETWORK_BLOB_TASKS*NETWORK_BLOB_TASK_SIZE];
+/* 0x0055e700: how many times something was tried again, or left, after it
+could not be done */
 long unknown_0055e700;
 
 /* ---------- code */
@@ -85,22 +79,22 @@ long network_blob_verify(
 }
 
 /* 0x00080f30: how far the task of something is, from 0 to 1; whether it is
-known, which it is not without a task. A task with no number of its own is
-at nothing */
+known, which it is not without a task. A task that has not started is at
+nothing */
 boolean network_blob_get_progress(
 	const struct network_blob *blob,
 	real *progress)
 {
-	long unknown4;
+	long handle;
 
 	if (blob->task==NONE)
 	{
 		return FALSE;
 	}
-	unknown4= *(const long *)(unknown_004d8c28+blob->task*NETWORK_BLOB_TASK_SIZE+NETWORK_BLOB_TASK_UNKNOWN4_OFFSET);
-	if (unknown4!=NONE)
+	handle= unknown_004d8c28[blob->task].handle;
+	if (handle!=NONE)
 	{
-		return unknown_000b49a0(unknown4, progress);
+		return unknown_000b49a0(handle, progress);
 	}
 	*progress= 0.0f;
 
@@ -132,7 +126,7 @@ boolean __attribute__((stdcall)) network_blob_start_read(
 	{
 		return TRUE;
 	}
-	blob->task= unknown_0008e580(blob, blob->memory, blob->size);
+	blob->task= network_blob_task_start_read(blob, blob->memory, blob->size);
 	if (blob->task==NONE)
 	{
 		return FALSE;
@@ -161,7 +155,7 @@ boolean __attribute__((stdcall)) network_blob_start_write(
 	blob->unknown10= unknown10;
 	blob->request= request;
 	blob->options= options;
-	blob->task= unknown_0008e500(blob, blob->memory, blob->size);
+	blob->task= network_blob_task_start_write(blob, blob->memory, blob->size);
 	if (blob->task==NONE)
 	{
 		return FALSE;
@@ -294,7 +288,7 @@ void __attribute__((stdcall)) network_blob_memory_stolen(
 	(void)unknown;
 	if (blob->kind!=_network_blob_kind_none && blob->task!=NONE)
 	{
-		unknown_0008e0f0(blob->task, _network_blob_task_no_memory);
+		network_blob_task_end(blob->task, _network_blob_task_no_memory);
 	}
 	if (blob->memory)
 	{

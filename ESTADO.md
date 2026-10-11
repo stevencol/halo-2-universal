@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 502.
+**Última actualización:** 2026-10-08, al terminar el hito 503.
 
 ## Dónde estamos
 
-- **1683 funciones descompiladas de 11.265: el 14,94 % del juego** (el
-  9,917 % de los bytes de código).
-- Las 1683 están comprobadas contra el ejecutable original: las 1390 del
+- **1688 funciones descompiladas de 11.265: el 14,98 % del juego** (el
+  9,935 % de los bytes de código).
+- Las 1688 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a block is read and written by a task* (ver `git log`).
+- Último hito: *Decompile the tasks that read and write the blocks* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 578 funciones apuntadas pero sin descompilar (las que el código
-  llama); 460 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 575 funciones apuntadas pero sin descompilar (las que el código
+  llama); 457 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -214,7 +214,11 @@ Módulos (funciones hechas / archivo):
 - [ ] Un bloque con suma, versión y tamaño — `networking\network_blob.c`
       (7: la suma, ver si vale, empezar a leerlo y a escribirlo, lo que
       pasa cuando la tarea acaba, su avance y devolver su memoria; falta
-      tomar su memoria, `0x00080e10`, y las tareas, desde `0x0008e0f0`)
+      tomar su memoria, `0x00080e10`)
+- [ ] Las tareas de los bloques — `networking\network_blob_task.c` (5:
+      reiniciarlas, la primera libre, empezar a leer y a escribir, y
+      acabar una; faltan ponerlas en marcha, `0x0008e240`, y recibir el
+      resultado, `0x0008e5e0`)
 - [ ] La memoria de la red — `networking\network_memory.c` (6: tomarla
       al abrir un mapa, soltarla al cerrarlo, tres constructores, el de
       todo entre ellos, y deshacerlo todo)

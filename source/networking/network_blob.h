@@ -56,10 +56,18 @@ enum
 	_network_blob_task_unknown6= 6,
 	_network_blob_task_again= 7,
 	_network_blob_task_no_memory= 13,
-	/* of the tasks (unknown_004d8c28): what one is, and a number of it */
-	NETWORK_BLOB_TASK_SIZE= 0x14,
-	NETWORK_BLOB_TASK_UNKNOWN4_OFFSET= 0x4,
-	MAXIMUM_NETWORK_BLOB_TASKS= 16
+	/* how many tasks there can be; the two lists of the ones that wait or
+	go on, the ones that write and the ones that read; and how many each
+	list can have */
+	MAXIMUM_NETWORK_BLOB_TASKS= 32,
+	_network_blob_task_queue_write= 0,
+	_network_blob_task_queue_read,
+	NUMBER_OF_NETWORK_BLOB_TASK_QUEUES,
+	MAXIMUM_NETWORK_BLOB_TASK_QUEUE_COUNT= 16,
+	/* the two kinds whose block gets its checksum when it starts to be
+	written */
+	_network_blob_kind1= 1,
+	_network_blob_kind2= 2
 };
 
 /* ---------- structures */
@@ -116,6 +124,20 @@ struct network_blob
 
 typedef char verify_network_blob_size[sizeof(struct network_blob) == 0x30 ? 1 : -1];
 
+/* a task: whose block it reads or writes, and nothing if it is free; what
+does it once it has started, or NONE; and the size and the memory of the
+block */
+struct network_blob_task
+{
+	struct network_blob *blob;
+	long handle;
+	unsigned long size;
+	void *memory;
+	long unknown10;
+};
+
+typedef char verify_network_blob_task_size[sizeof(struct network_blob_task) == 0x14 ? 1 : -1];
+
 /* ---------- prototypes/NETWORK_BLOB.C */
 
 unsigned long network_blob_checksum(const struct network_blob_header *block, long size);
@@ -127,5 +149,20 @@ boolean __attribute__((stdcall)) network_blob_start_write(struct network_blob *b
 	struct network_blob_request request, word options);
 void network_blob_task_finished(struct network_blob *blob, long result);
 void __attribute__((stdcall)) network_blob_memory_stolen(long unknown, struct network_blob *blob);
+
+/* ---------- prototypes/NETWORK_BLOB_TASK.C */
+
+void __attribute__((stdcall)) network_blob_task_end(long task, long result);
+long network_blob_task_find_free(void);
+void network_blob_tasks_reset(void);
+long __attribute__((stdcall)) network_blob_task_start_write(struct network_blob *blob, void *memory,
+	unsigned long size);
+long __attribute__((stdcall)) network_blob_task_start_read(struct network_blob *blob, void *memory,
+	unsigned long size);
+
+/* ---------- globals */
+
+extern struct network_blob_task unknown_004d8c28[MAXIMUM_NETWORK_BLOB_TASKS];
+extern long unknown_004d8ba8[NUMBER_OF_NETWORK_BLOB_TASK_QUEUES][MAXIMUM_NETWORK_BLOB_TASK_QUEUE_COUNT];
 
 #endif

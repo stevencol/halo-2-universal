@@ -63,11 +63,11 @@ def run(t) -> None:
             started,
             (harness.normalize(arguments[0]), arguments[1], arguments[2]),
         )
-        return {"unknown_0008e580": normal, "unknown_0008e500": normal}
+        return {"network_blob_task_start_read": normal, "network_blob_task_start_write": normal}
 
     for n in range(3000):
-        table = bytearray(random_.randbytes(16 * 0x14))
-        for index in range(16):
+        table = bytearray(random_.randbytes(32 * 0x14))
+        for index in range(32):
             struct.pack_into("<I", table, index * 0x14 + 4, random_.choice((NONE, NONE, 0x10005, index)))
         t.check(
             "network_blob_get_progress",
@@ -113,7 +113,7 @@ def run(t) -> None:
             random_.getrandbits(32),
             a_blob(functions=False),
             externals={
-                "unknown_0008e0f0": lambda harness, arguments: (0, tuple(arguments)),
+                "network_blob_task_end": lambda harness, arguments: (0, tuple(arguments)),
                 "texture_cache_return_memory": lambda harness, arguments: (0, (arguments[0],)),
             },
         )

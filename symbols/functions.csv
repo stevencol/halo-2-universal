@@ -2256,7 +2256,9 @@ address,name,source,arguments,returns,convention
 00080ff0,network_blob_start_write,source/networking/network_blob.c,esi eax stack stack stack stack,bool,stdcall
 00081050,network_blob_task_finished,source/networking/network_blob.c,eax ecx,void
 000812d0,network_blob_memory_stolen,source/networking/network_blob.c,stack stack,void,stdcall
-0008e580,unknown_0008e580,,stack stack stack,int,stdcall
-0008e500,unknown_0008e500,,stack stack eax,int,stdcall
-0008e0f0,unknown_0008e0f0,,stack stack,void,stdcall
+0008e580,network_blob_task_start_read,source/networking/network_blob_task.c,stack stack stack,int,stdcall
+0008e500,network_blob_task_start_write,source/networking/network_blob_task.c,stack stack eax,int,stdcall
+0008e0f0,network_blob_task_end,source/networking/network_blob_task.c,stack stack,void,stdcall
 000b49a0,unknown_000b49a0,,eax edi,bool
+0008e1e0,network_blob_task_find_free,source/networking/network_blob_task.c,,int
+0008e210,network_blob_tasks_reset,source/networking/network_blob_task.c,,void

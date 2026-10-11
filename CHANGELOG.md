@@ -2,6 +2,55 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Las tareas de los bloques
+
+Cinco funciones en el archivo nuevo `networking/network_blob_task.c`. De 1683
+funciones se pasa a 1688, el 14,98 % de las del juego (el 9,935 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_blob_task_end` | `0x0008e0f0` | `networking/network_blob_task.c` |
+| `network_blob_task_find_free` | `0x0008e1e0` | `networking/network_blob_task.c` |
+| `network_blob_tasks_reset` | `0x0008e210` | `networking/network_blob_task.c` |
+| `network_blob_task_start_write` | `0x0008e500` | `networking/network_blob_task.c` |
+| `network_blob_task_start_read` | `0x0008e580` | `networking/network_blob_task.c` |
+
+### Lo que se sabe
+
+- Hay **32 tareas** (`0x004d8c28`, `0x14` bytes cada una): de quién es el
+  bloque, lo que la lleva a cabo una vez empezada (o `-1`), y el tamaño y
+  la memoria del bloque. Y **dos listas de dieciséis** (`0x004d8ba8`): las
+  que escriben y las que leen, por orden de llegada.
+- `network_blob_task_start_read` y `network_blob_task_start_write` toman
+  la primera tarea libre y el primer sitio libre de su lista. El juego no
+  mira si los hay. Al escribir, un bloque de la primera o la segunda clase
+  recibe antes su suma: la de todo él, con `0xFFFFFFFF` donde va la suma
+  (no es la misma cuenta que la de `network_blob_checksum`, que se salta
+  esos cuatro bytes).
+- `network_blob_task_end` acaba una tarea: para lo que la llevaba, avisa a
+  quien tiene el bloque (`network_blob_task_finished`, hito 502), el
+  bloque de la cuarta clase suelta su memoria si no le queda tarea, y la
+  tarea sale de su lista, que se cierra sobre el hueco.
+
+### Cambiado
+
+- `unknown_0008e580`, `unknown_0008e500` y `unknown_0008e0f0`, que
+  llamaba `network_blob.c`, tienen su nombre; la tabla de tareas es ya una
+  estructura y son 32, no 16.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las cinco**, y en las de los hitos 456 a
+  490, 501 y 502. La tanda de los hitos 491 a 500 está en marcha.
+- Faltan la que pone las tareas en marcha cada vuelta (`0x0008e240`, 684
+  bytes) y la que recibe el resultado (`0x0008e5e0`).
+- En este hito se pasaron todas las pruebas de `network_blob` y de
+  `network_blob_task`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Un bloque se lee y se escribe con una tarea
 
 Cinco funciones en `networking/network_blob.c`. De 1678
