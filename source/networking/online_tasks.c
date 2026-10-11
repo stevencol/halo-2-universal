@@ -90,6 +90,11 @@ wchar *wcsncpy(wchar *destination, const wchar *source, size_t count);
 libraries does it */
 long __attribute__((stdcall)) XOnlineChangeLogonUsers(const struct online_user *users, long unknown, long *handle);
 
+/* 0x003a0641: players sign in to the service of games, for some services;
+a task of the libraries does it */
+long __attribute__((stdcall)) XOnlineLogon(const struct online_user *users, const unsigned long *services,
+	long service_count, long unknown, long *handle);
+
 /* ---------- structures */
 
 /* what the libraries say of a service: what it is, and where it is */
@@ -1509,4 +1514,81 @@ long online_task_get_other_string(
 	}
 
 	return online_task_type_other_strings[task->type];
+}
+
+/* 0x0006c8b0: the player of a gamepad signs in to the service of games; the
+task that does it, or NONE if it could not start. If no one was signed in, it
+is a task that signs in, for the services of the game, and it is the task
+that the game keeps (unknown_00467214); if someone was, a task that signs in
+again those that are with this one more. Nothing if the network is not up
+(unknown_004d8b18, unknown_004d8b19) */
+long online_logon_add_user(
+	const struct online_user *user,
+	long user_index)
+{
+	struct online_user users[MAXIMUM_ONLINE_USERS];
+	unsigned long services[NUMBER_OF_ONLINE_SERVICES];
+	struct online_task *task;
+	long task_index;
+	long index;
+
+	if (!unknown_004d8b18 || !unknown_004d8b19)
+	{
+		return NONE;
+	}
+	if (unknown_00467214==NONE)
+	{
+		memset(users, 0, sizeof(users));
+		users[user_index]= *user;
+		unknown_00467214= online_task_new();
+		task= online_task_get(unknown_00467214);
+		if (!task)
+		{
+			return NONE;
+		}
+		online_services_get_identifiers(services);
+		unknown_0050944f= FALSE;
+		if (XOnlineLogon(users, services, NUMBER_OF_ONLINE_SERVICES, 0, &task->handle)>=0)
+		{
+			task->flags= _online_task_unknown1_bit;
+			task->type= _online_task_type0;
+			task->owner= NONE;
+
+			return unknown_00467214;
+		}
+		online_task_close(unknown_00467214);
+		unknown_00467214= NONE;
+
+		return NONE;
+	}
+	memset(users, 0, sizeof(users));
+	users[user_index]= *user;
+	for (index= 0; index<MAXIMUM_ONLINE_USERS; index++)
+	{
+		const struct user_interface_controller *controller= USER_INTERFACE_CONTROLLER(index);
+
+		if (index!=user_index && ((controller->flags>>_user_interface_controller_online_bit)&1))
+		{
+			users[index]= controller->user;
+		}
+	}
+	task_index= online_task_new_signed_in();
+	task= (struct online_task *)datum_try_and_get(online_tasks, task_index);
+	if (!task)
+	{
+		return NONE;
+	}
+	unknown_0050944f= FALSE;
+	online_service_unregister_address();
+	if (XOnlineChangeLogonUsers(users, 0, &task->handle)>=0)
+	{
+		task->flags= _online_task_unknown1_bit;
+		task->type= _online_task_type1;
+		task->owner= user_index;
+
+		return task_index;
+	}
+	online_task_close(task_index);
+
+	return NONE;
 }

@@ -2450,3 +2450,5 @@ address,name,source,arguments,returns,convention
 003afca3,unknown_003afca3,,stack stack stack stack stack,int,stdcall
 0006ba80,online_task_get_string,source/networking/online_tasks.c,eax,int
 0006bd10,online_task_get_other_string,source/networking/online_tasks.c,eax,int
+0006c8b0,online_logon_add_user,source/networking/online_tasks.c,eax ecx,int
+003a0641,XOnlineLogon,,stack stack stack stack stack,int,stdcall

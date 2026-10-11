@@ -722,3 +722,54 @@ def run(t) -> None:
         tasks = dataclasses.replace(tasks, data=bytes(data))
         t.check("online_task_get_string", number, globals={"online_tasks": tasks})
         t.check("online_task_get_other_string", number, globals={"online_tasks": tasks})
+
+    # ---------- a player signs in
+
+    for n in range(2500):
+        controllers = bytearray(random_.randbytes(4 * 0xC70))
+        for index in range(4):
+            struct.pack_into("<I", controllers, index * 0xC70, random_.choice((0, 0x20, 0x20, 0x10, 0xFFFFFFDF, 0xFFFFFFFF)))
+        tasks, number = table()
+        task = Buffer(random_.randbytes(0x14))
+
+        def signs_in(harness, arguments, result=random_.choice((0, 0, 0, 1) + FAILED), handle=random_.getrandbits(32)):
+            users = bytes(harness.mu.mem_read(arguments[0], 4 * 0x70))
+            services = bytes(harness.mu.mem_read(arguments[1], 13 * 4))
+            if result < 0x80000000:
+                harness.mu.mem_write(arguments[4], struct.pack("<I", handle))
+            return result, (users, services, arguments[2], arguments[3])
+
+        def changed(harness, arguments, result=random_.choice((0, 0, 0, 1) + FAILED), handle=random_.getrandbits(32)):
+            users = bytes(harness.mu.mem_read(arguments[0], 4 * 0x70))
+            if result < 0x80000000:
+                harness.mu.mem_write(arguments[2], struct.pack("<I", handle))
+            return result, (users, arguments[1])
+
+        def identifiers(harness, arguments, services=random_.randbytes(13 * 4)):
+            harness.mu.mem_write(arguments[0], services)
+            return 0, ()
+
+        t.check(
+            "online_logon_add_user",
+            Buffer(random_.randbytes(0x70)),
+            random_.randrange(4),
+            extra=[task],
+            globals={
+                "unknown_004d8b18": bytes((random_.choice((1, 1, 1, 1, 1, 0)),)),
+                "unknown_004d8b19": bytes((random_.choice((1, 1, 1, 1, 1, 0)),)),
+                "unknown_00467214": random_.choice((NONE, NONE, 0, 0x80010002)),
+                "unknown_0050944f": bytes((random_.choice((0, 1)),)),
+                "unknown_0054e8e0": bytes(controllers),
+                "online_tasks": tasks,
+            },
+            externals={
+                "online_task_new": lambda harness, arguments, index=random_.choice((0x10003, 5, NONE)): (index, ()),
+                "online_task_get": lambda harness, arguments, there=random_.random() < 0.85: (task.address if there else 0, tuple(arguments)),
+                "online_services_get_identifiers": identifiers,
+                "XOnlineLogon": signs_in,
+                "online_task_close": lambda harness, arguments: (0, tuple(arguments)),
+                "online_task_new_signed_in": lambda harness, arguments, number=number: (number, ()),
+                "online_service_unregister_address": lambda harness, arguments: (0, ()),
+                "XOnlineChangeLogonUsers": changed,
+            },
+        )

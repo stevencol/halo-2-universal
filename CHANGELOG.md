@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Conectar a un jugador al servicio de partidas
+
+Una función en `networking/online_tasks.c`, de 533 bytes, la última que le faltaba. De 1830
+funciones se pasa a 1831, el 16,25 % de las del juego (el 10,535 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_logon_add_user` | `0x0006c8b0` | `networking/online_tasks.c` |
+
+### Lo que se sabe
+
+- `online_logon_add_user` **conecta al servicio al jugador de un mando**, de
+  dos maneras:
+  - si no había nadie conectado, crea la tarea que conecta
+    (`XOnlineLogon`, con los trece servicios del juego) y la deja como *la*
+    tarea de conexión (`0x00467214`), que es por la que todo el módulo sabe
+    si hay alguien conectado;
+  - si ya había alguien, junta a los que estaban con el nuevo y pide a las
+    bibliotecas que cambien la lista (`XOnlineChangeLogonUsers`), igual que
+    `online_logon_remove_user` (hito 529) pero añadiendo.
+  No hace nada si la red de la consola no está arrancada.
+- **`online_tasks.c` está completo**: 46 funciones, de `0x0006b380` a
+  `0x0006d260`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  534.
+- En este hito se pasó la prueba de la función, con los dos caminos.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Los dos textos de cada clase de tarea del servicio
 
 Dos funciones en `networking/online_tasks.c`, de 460 bytes cada una. De 1828

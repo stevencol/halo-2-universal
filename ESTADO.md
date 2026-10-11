@@ -3,18 +3,18 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 534.
+**Última actualización:** 2026-10-08, al terminar el hito 535.
 
 ## Dónde estamos
 
-- **1830 funciones descompiladas de 11.265: el 16,25 % del juego** (el
-  10,517 % de los bytes de código).
-- Las 1830 están comprobadas contra el ejecutable original: las 1390 del
+- **1831 funciones descompiladas de 11.265: el 16,25 % del juego** (el
+  10,535 % de los bytes de código).
+- Las 1831 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the two texts of each kind of online task* (ver `git log`).
+- Último hito: *Decompile how a player signs in to the service of games* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 621 funciones apuntadas pero sin descompilar (las que el código
+- Además hay 622 funciones apuntadas pero sin descompilar (las que el código
   llama); 482 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
@@ -230,14 +230,14 @@ Módulos (funciones hechas / archivo):
       del perfil, darle perfil y nombre, lo que se dice de él a los
       demás y a sus amigos del servicio, y ajustar su mando; falta
       `0x0018f58c` porque borra `0x48` bytes después de la tabla)
-- [ ] Las tareas del servicio de partidas — `networking\online_tasks.c`
+- [x] Las tareas del servicio de partidas — `networking\online_tasks.c`
       (28: la tabla, una nueva, por dónde va, acabar con una o con todas,
       recorrerlas, buscar una, volver a empezarla, hacerlas avanzar, en
       qué está la conexión, quién está conectado y lo que cada una hace
       cada vuelta, lo que se hace al conectarse y en qué está cada
       jugador, desconectarse, el nombre de un juego, la invitación
-      aceptada, quitar a un jugador de los conectados y los dos textos
-      de cada clase de tarea (45); falta `0x0006c8b0`)
+      aceptada, quitar o añadir a un jugador de los conectados y los
+      dos textos de cada clase de tarea (46): completo)
 - [x] La red de la consola — `networking\transport.c` (8: iniciarla y
       deshacerla, mirar el cable, arrancarla y pararla, apuntar a quién se
       avisa y avisar, y si está)
