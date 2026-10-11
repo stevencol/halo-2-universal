@@ -225,3 +225,24 @@ def run(t) -> None:
                 "online_task_close": lambda harness, arguments: (0, tuple(arguments)),
             },
         )
+
+    # ---------- what a friend is at in this game
+
+    for n in range(8000):
+        friend = bytearray(a_friend())
+        struct.pack_into("<I", friend, 0x1C, state_bits() | random_.choice((1, 1, 1, 0)))
+        friend[0x34] = random_.choice((4, 4, 4, 5, 3, 0, 0xFF))
+        friend[0x35:0x37] = random_.choice((b"\xf1\xfc", b"\xf1\xfc", b"\xf1\xfc", b"\xf1\xfc", b"\xf1\xfd", random_.randbytes(2)))
+        friend[0x37] = random_.choice((0, 59, 60, 83, 84, 125, 126, 127, 186, 187, 210, 211, 252, 253, 255, random_.randrange(256)))
+        friend[0x38] = random_.getrandbits(8)
+        t.check(
+            "online_friend_get_online_state",
+            Buffer(bytes(friend)),
+            Buffer(random_.randbytes(0x10)),
+            globals={"unknown_00467214": random_.choice((0, 0, 0, 0, 0x80010002, NONE))},
+            externals={
+                "online_tasks_get_logon_state": lambda harness, arguments, state=random_.choice((1, 1, 1, 1, 0)): (state, tuple(arguments)),
+                "XOnlineTitleIdIsSameTitle": same,
+                "XOnlineTitleIdIsSamePublisher": lambda harness, arguments, so=random_.choice((1, 1, 1, 0, 0x100)): (so, tuple(arguments)),
+            },
+        )

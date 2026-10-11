@@ -3,18 +3,18 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 554.
+**Última actualización:** 2026-10-08, al terminar el hito 555.
 
 ## Dónde estamos
 
-- **1909 funciones descompiladas de 11.265: el 16,95 % del juego** (el
-  10,692 % de los bytes de código).
-- Las 1909 están comprobadas contra el ejecutable original: las 1390 del
+- **1910 funciones descompiladas de 11.265: el 16,96 % del juego** (el
+  10,706 % de los bytes de código).
+- Las 1910 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a player says something of another to the service* (ver `git log`).
+- Último hito: *Decompile how what a friend is at in the game is read from the four bytes that it tells* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 618 funciones apuntadas pero sin descompilar (las que el código
+- Además hay 619 funciones apuntadas pero sin descompilar (las que el código
   llama); 470 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
@@ -226,11 +226,11 @@ Módulos (funciones hechas / archivo):
       `0x000caf90`, `0x00063d80`, `0x001565a0`… (hitos 538 y 539; la lista
       la da `build\line_breaking\small_externals.py`)
 - [ ] El mensaje del día y los amigos del servicio —
-      `networking\network_motd.c` (2), `networking\online_friends.c` (17)
+      `networking\network_motd.c` (2), `networking\online_friends.c` (18)
       y `networking\online_presence.c` (6), de la zona de `0x0008bf10` a
-      `0x0008d550`, que tiene 35 funciones: quedan 8 (`0x0008bf70`,
+      `0x0008d550`, que tiene 35 funciones: quedan 7 (`0x0008bf70`,
       `0x0008c150`, `0x0008c660`, `0x0008c790`, `0x0008c900`,
-      `0x0008ca70`, `0x0008d0b0`, `0x0008d230`)
+      `0x0008ca70`, `0x0008d0b0`)
 - [ ] El mapa que se copia por adelantado — `main\main_map_precache.c`
       (3 de 7, de `0x00163610` a `0x00163b84`; faltan `0x00163610`,
       `0x00163680`, `0x00163890` y `0x00163b20`)

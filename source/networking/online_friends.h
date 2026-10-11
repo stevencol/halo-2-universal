@@ -64,7 +64,12 @@ enum
 	/* what a player can say of another to the service of games, and the
 	kind of the task that says it */
 	NUMBER_OF_ONLINE_FEEDBACK_KINDS= 10,
-	_online_task_type_feedback= 0x16
+	_online_task_type_feedback= 0x16,
+	/* of a friend: how many bytes it tells of what it is at, and where they
+	are; the game tells four */
+	ONLINE_FRIEND_STATE_DATA_SIZE_OFFSET= 0x34,
+	ONLINE_FRIEND_STATE_DATA_OFFSET= 0x35,
+	ONLINE_FRIEND_STATE_DATA_SIZE= 4
 };
 
 /* ---------- structures */
@@ -99,5 +104,6 @@ long online_friends_enumerate_start(long owner);
 short __attribute__((stdcall)) online_friends_get_latest(long task_index, byte *friends);
 long online_friends_startup(void);
 void __attribute__((stdcall)) online_feedback_send(const struct online_xuid *target, long owner, long kind);
+boolean online_friend_get_online_state(const byte *online_friend, struct online_state *state);
 
 #endif

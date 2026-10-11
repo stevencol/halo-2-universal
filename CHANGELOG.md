@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — En qué está un amigo dentro del juego
+
+Una función más en `networking/online_friends.c`, de 406 bytes. De 1909
+funciones se pasa a 1910, el 16,96 % de las del juego (el 10,706 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_friend_get_online_state` | `0x0008d230` | `networking/online_friends.c` |
+
+### Lo que se sabe
+
+- `online_friend_get_online_state` es **la inversa de `online_state_encode`**
+  (hito 522): de los cuatro bytes que un amigo dice de sí mismo saca la
+  clase (de 1 a 6), los dos números de dos bits y los dos tiempos. Con las
+  dos juntas el formato queda cerrado:
+  - dos bytes de firma (`0xFCF1`);
+  - un byte con un tiempo: de 0 a 126 es el primero y de 127 a 255 el
+    segundo, con la misma escala en los dos (de uno en uno hasta 60, de
+    cinco en cinco hasta 180, de diez en diez hasta 600);
+  - un byte con la clase en sus cuatro bits bajos y los dos números en los
+    altos.
+- Solo se lee de un amigo que está jugando a **un juego del mismo editor**
+  (`XOnlineTitleIdIsSamePublisher`), no solo a este: lo que cuenta de sí
+  mismo vale también entre juegos hermanos.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  554.
+- En este hito se pasó la prueba de la función, con 8000 casos que cubren
+  todos los tramos del byte del tiempo.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Lo que un jugador dice de otro al servicio
 
 Una función más en `networking/online_friends.c`, de 256 bytes. De 1908

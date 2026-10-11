@@ -40,6 +40,9 @@ long __attribute__((stdcall)) XOnlineFriendsGetLatest(long owner, long maximum_c
 it */
 long __attribute__((stdcall)) XOnlineFriendsStartup(long unknown, long *handle);
 
+/* 0x003a0769: whether a game is of who made this one */
+long __attribute__((stdcall)) XOnlineTitleIdIsSamePublisher(unsigned long title);
+
 /* 0x003a0890: a player says something of another to the service of games; a
 task of the libraries does it */
 long __attribute__((stdcall)) XOnlineFeedbackSend(long owner, struct online_xuid target, long type,
@@ -446,4 +449,90 @@ void __attribute__((stdcall)) online_feedback_send(
 			online_task_close(task_index);
 		}
 	}
+}
+
+/* 0x0008d230: what a friend is at in its game, from the four bytes that it
+tells (what online_state_encode makes, the other way around); whether it
+tells them. Only for a friend that has the first bit of what it is at and
+plays a game of who made this one, and if someone is signed in. Its two
+numbers of two bits are only given if it tells exactly four bytes */
+boolean online_friend_get_online_state(
+	const byte *online_friend,
+	struct online_state *state)
+{
+	const byte *data= online_friend+ONLINE_FRIEND_STATE_DATA_OFFSET;
+	unsigned long signature= ONLINE_STATE_SIGNATURE;
+	byte code;
+	byte flags;
+
+	state->kind= 0;
+	state->unknown4= 0;
+	state->unknown8= 0;
+	state->time= 0;
+	state->second_time= 0;
+	if (!(online_friend_state_from_library(*(const unsigned long *)(online_friend+ONLINE_FRIEND_STATE_OFFSET),
+		*(const unsigned long *)(online_friend+ONLINE_FRIEND_TITLE_OFFSET))&_online_friend_unknown1) ||
+		!online_friends_signed_in() ||
+		!XOnlineTitleIdIsSamePublisher(*(const unsigned long *)(online_friend+ONLINE_FRIEND_TITLE_OFFSET)) ||
+		online_friend[ONLINE_FRIEND_STATE_DATA_SIZE_OFFSET]<ONLINE_FRIEND_STATE_DATA_SIZE ||
+		memcmp(data, &signature, sizeof(word))!=0)
+	{
+		return FALSE;
+	}
+	code= data[2];
+	if (code<=59)
+	{
+		state->time= code+1;
+	}
+	else if (code>=60 && code<=83)
+	{
+		state->time= (code-47)*5;
+	}
+	else if (code>=84 && code<=125)
+	{
+		state->time= (code-65)*10;
+	}
+	else if (code==ONLINE_STATE_TIME_MAXIMUM)
+	{
+		state->time= 600;
+	}
+	else if (code>=ONLINE_STATE_SECOND_TIME && code<=186)
+	{
+		state->second_time= code-ONLINE_STATE_TIME_MAXIMUM;
+	}
+	else if (code>=187 && code<=210)
+	{
+		state->second_time= (code-174)*5;
+	}
+	else if (code>=211 && code<=252)
+	{
+		state->second_time= (code-192)*10;
+	}
+	else
+	{
+		state->second_time= 600;
+	}
+	flags= data[3];
+	if (flags&0x1)
+	{
+		state->kind= (flags&0x2) ? 6 : 5;
+	}
+	else if (flags&0x4)
+	{
+		state->kind= (flags&0x8) ? 4 : 2;
+	}
+	else
+	{
+		state->kind= (flags&0x8) ? 3 : 1;
+	}
+	if (online_friend[ONLINE_FRIEND_STATE_DATA_SIZE_OFFSET]==ONLINE_FRIEND_STATE_DATA_SIZE)
+	{
+		unsigned long encoded;
+
+		memcpy(&encoded, data, sizeof(encoded));
+		state->unknown4= (encoded>>28)&3;
+		state->unknown8= encoded>>30;
+	}
+
+	return TRUE;
 }

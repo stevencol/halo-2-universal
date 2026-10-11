@@ -2526,3 +2526,5 @@ address,name,source,arguments,returns,convention
 00188cd0,unknown_00188cd0,,,void
 0008d3d0,online_feedback_send,source/networking/online_friends.c,eax stack stack,void,stdcall
 003a0890,XOnlineFeedbackSend,,stack stack stack stack stack stack stack stack,int,stdcall
+0008d230,online_friend_get_online_state,source/networking/online_friends.c,edi esi,bool
+003a0769,XOnlineTitleIdIsSamePublisher,,stack,int,stdcall
