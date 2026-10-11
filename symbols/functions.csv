@@ -1215,7 +1215,7 @@ address,name,source,arguments,returns,convention
 00215880,saved_game_files_new,source/saved games/saved_game_files.c,ecx,void
 00215b40,saved_game_file_information_new,source/saved games/saved_game_files.c,ecx,pointer,thiscall
 00215b50,saved_game_file_get_name,source/saved games/saved_game_files.c,edx esi,pointer
-000531b0,unknown_000531b0,,ecx stack,int,stdcall
+000531b0,physical_memory_allocation_allocate_high,source/memory/physical_memory.c,ecx stack,int,thiscall
 00020670,array_construct_elements,source/cseries/cseries.c,stack stack stack stack,void,stdcall
 0013fb70,usnzprintf,source/text/unicode.c,edi esi stack stack,void
 00215e60,saved_game_file_delete,source/saved games/saved_game_files.c,stack,void
@@ -1697,7 +1697,7 @@ address,name,source,arguments,returns,convention
 0018cfd0,unknown_0018cfd0,,ecx esi stack,int
 0014b240,unknown_0014b240,,eax ecx edx,real:xmm0
 001de630,unknown_001de630,,eax ecx edx xmm0 stack stack stack stack,bool
-00191660,unknown_00191660,,ecx edx,int
+00191660,sound_unknown_00191660,source/sound/sound_manager.c,ecx edx,int
 0013b390,unknown_0013b390,,edi stack stack,real:xmm0
 0037b7b3,unknown_0037b7b3,,stack stack stack stack stack stack stack stack,void
 0037b797,unknown_0037b797,,stack stack,void

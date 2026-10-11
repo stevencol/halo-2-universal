@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Memoria del extremo alto y unos bits por texto: dos funciones cortas
+
+Dos funciones cortas (201 bytes), en `memory/physical_memory.c` y `sound/sound_manager.c`. De 1940
+funciones se pasa a 1942, el 17,24 % de las del juego (el 10,860 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `physical_memory_allocation_allocate_high` | `0x000531b0` | `memory/physical_memory.c` |
+| `sound_unknown_00191660` | `0x00191660` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- `physical_memory_allocation_allocate_high` (antes `unknown_000531b0`, lo
+  que da memoria a la tabla de archivos guardados) **toma páginas enteras
+  del extremo alto de la memoria libre** de la etapa en curso y las deja
+  para leer y escribir (`XPhysicalProtect`). Es la pareja de
+  `physical_memory_allocate_low` (hito 17), con la forma de las funciones
+  que dan memoria a las tablas de datos: recibe en `ecx` a quien pide, y no
+  lo mira.
+- `sound_unknown_00191660` (antes `unknown_00191660`) da unos bits según un
+  texto del juego y un número: `0xF0`, `0xC0`, `0x30` o `2` para cuatro
+  textos, o uno de cuatro bits para el primero de ellos y un número de 0 a
+  3. Por los valores, son máscaras de altavoces.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  572.
+- En este hito se pasaron las pruebas de las dos funciones y
+  `test_saved_game_files` entera.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Las cinco clases de lo que se dice de un jugador
 
 Dos funciones más en `networking/simulation_players.c`. De 1938

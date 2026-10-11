@@ -6439,7 +6439,7 @@ def run(t) -> None:
             Buffer(bytes(inputs)),
             number,
             externals={
-                "unknown_00191660": which_,
+                "sound_unknown_00191660": which_,
                 "unknown_0013b390": function_,
                 "sound_unknown_00222250": directional_,
             },

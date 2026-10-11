@@ -99,7 +99,7 @@ long saved_game_files_next_salt;
 /* ---------- prototypes of functions that are not decompiled */
 
 /* 0x000531b0: takes memory for what the allocation of the files asks */
-void *ALLOCATION_CONVENTION unknown_000531b0(struct allocation *allocation, unsigned long size);
+void *ALLOCATION_CONVENTION physical_memory_allocation_allocate_high(struct allocation *allocation, unsigned long size);
 
 /* 0x00020670: calls a function with each of the elements of an array, as
 what makes them */
@@ -110,7 +110,7 @@ void __attribute__((stdcall)) array_construct_elements(void *array, unsigned lon
 back */
 const struct allocation_functions saved_game_files_allocation_functions=
 {
-	unknown_000531b0,
+	physical_memory_allocation_allocate_high,
 	(void (ALLOCATION_CONVENTION *)(struct allocation *, void *))no_operation1
 };
 

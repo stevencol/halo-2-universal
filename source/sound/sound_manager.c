@@ -1534,7 +1534,7 @@ void sound_effect_entry_build(long *entry, const long *element, const byte *over
 	long number);
 /* 0x00191660: which effects of the console an element is for; 0x0013b390:
 what a function of a tag is of two reals */
-long unknown_00191660(long name, long number);
+long sound_unknown_00191660(long name, long number);
 real unknown_0013b390(const byte *function, real input, real range);
 
 /* 0x0021dc60; 0x0021d9f0, 0x0021da30, 0x0021da50, 0x0021da70 and 0x0021db30:
@@ -10726,7 +10726,7 @@ static inline __attribute__((always_inline)) real sound_effect_function_input(
 
 /* 0x002222c0: an entry of the list for the console's sound, from an element
 of the effects of a tag. It starts with three numbers: which effects of the
-console it is for (unknown_00191660 says, of the element's name and the
+console it is for (sound_unknown_00191660 says, of the element's name and the
 number), and the two that the element has at 8. Then one number for each of
 the element's parameters, after a first one that says which kind of thing
 it is when the element has the flag 0: 10, 4 or NONE, by its name. With that
@@ -10749,7 +10749,7 @@ void sound_effect_entry_build(
 	long index;
 
 	memcpy(entry, &element[1], SOUND_EFFECT_ENTRY_SIZE);
-	entry[0]= unknown_00191660(element[0], number);
+	entry[0]= sound_unknown_00191660(element[0], number);
 	if (*(const byte *)&element[2]&FLAG(_sound_effect_entry_whole_bit))
 	{
 		long kind= NONE;
@@ -13366,4 +13366,35 @@ const byte *sound_get_gestalt_unknown30(
 	}
 
 	return NULL;
+}
+
+/* 0x00191660: some bits, by a text of the game and a number: for NONE, the
+bits of four texts; if not, one of four bits for the first of those texts
+and a number from 0 to 3; nothing for the rest */
+long sound_unknown_00191660(
+	long name,
+	long number)
+{
+	if (number==NONE)
+	{
+		switch (name)
+		{
+		case 0x11000138:
+			return 0xF0;
+		case 0x17000137:
+			return 0xC0;
+		case 0x18000136:
+			return 0x30;
+		case 0x1300012D:
+			return 0x2;
+		}
+
+		return 0;
+	}
+	if (name==0x11000138 && (unsigned long)number<=3)
+	{
+		return 0x10<<number;
+	}
+
+	return 0;
 }

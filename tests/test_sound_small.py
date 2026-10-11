@@ -37,3 +37,21 @@ def run(t) -> None:
                 "global_sound_cache_file_gestalt": Buffer(bytes(gestalt), pointers=(0x34,)),
             },
         )
+
+    # ---------- some bits by a text and a number; and memory from the high end
+
+    NAMES = (0x11000138, 0x11000138, 0x17000137, 0x18000136, 0x1300012D, 0x11000139, 0)
+    for n in range(2000):
+        t.check("sound_unknown_00191660", random_.choice(NAMES), random_.choice((NONE, NONE, 0, 1, 2, 3, 4, 0x80000000)))
+
+        stage = random_.randrange(5)
+        low = [random_.choice((0x61000, 0x100000, 0x7FF000)) for index in range(5)]
+        high = [random_.choice((0x61000, 0x101000, 0x800000, 0x3145000, 0x1000, 0)) for index in range(5)]
+        memory = struct.pack("<3I5I5I", stage, 0x61000, 0x3145000, *low, *high)
+        t.check(
+            "physical_memory_allocation_allocate_high",
+            random_.getrandbits(32),
+            random_.choice((0, 1, 0x1000, 0x1001, 0x40000, 0x700000, 0x4000000)),
+            globals={"physical_memory_globals": memory},
+            externals={"XPhysicalProtect": lambda harness, arguments: (0, tuple(arguments))},
+        )
