@@ -313,7 +313,7 @@ def run(t) -> None:
             "game_voice_unknown_004cd904_new",
             random_.choice((Buffer(random_.randbytes(12)), 0)),
             globals={"unknown_004cd904": voices()},
-            externals={"unknown_0014b410": lambda harness, arguments: (identified(harness, arguments)[0], (arguments[1],))},
+            externals={"player_identifier_from_controller": lambda harness, arguments: (identified(harness, arguments)[0], (arguments[1],))},
         )
         t.check("game_voice_unknown_004cd904_set_identifier", index, Buffer(random_.randbytes(12)), globals={"unknown_004cd904": voices()})
         t.check(
@@ -412,15 +412,104 @@ def run(t) -> None:
                 "cached_saved_game_files": random_.randbytes(4 * 0x44),
             },
             externals={
-                "unknown_0014b410": identified,
+                "player_identifier_from_controller": identified,
                 "game_voice_unknown_004cd904_new": lambda harness, arguments, voice=random_.randrange(4): (
                     voice,
                     (bytes(harness.mu.mem_read(arguments[0], 12)),),
                 ),
                 "cached_saved_game_file_delete": told,
-                "unknown_00190c34": told,
+                "user_interface_controller_apply_input_preferences": told,
                 "user_interface_controller_update_name": told,
                 "game_voice_set_controller_mask": told,
                 "game_voice_set_controller_setting": told,
             },
+        )
+
+    # ---------- what a gamepad's player is at in the service, whether it may talk, how its gamepad is set
+
+    for n in range(1500):
+        index = random_.randrange(COUNT)
+        t.check(
+            "player_identifier_from_controller",
+            Buffer(random_.randbytes(12)),
+            random_.choice((0, 1, 2, 3, NONE, 0x12345, 0x80000000, random_.getrandbits(32))),
+            globals={"unknown_004cf7cc": random_.randbytes(6)},
+        )
+
+        data = controllers(random_)
+        session = Buffer(random_.randbytes(8))
+        for other in range(COUNT):
+            base = other * SIZE
+            data[base + 0xC64] = random_.choice((0, 1, 1))
+            data[base + 0xC65] = random_.choice((0, 0, 1))
+            if random_.random() < 0.5:
+                data[base + 0xC66:base + 0xC6E] = session.data
+            struct.pack_into("<I", data, base + 0xC60, random_.choice((0, 1, 8, 9, 0x12, 0x1B, random_.getrandbits(5))))
+            struct.pack_into("<I", data, base + 0xC5C, random_.choice((0, 0x40000000, 0x80000000, 0x3FFFFFFF, random_.getrandbits(32))))
+            data[base + PROFILE + 0x150] = random_.choice((0, 0, 1, 0xFF))
+            data[base + PROFILE + 0x100] = random_.choice((0, 1, 2, 3, 4, 0xFF))
+            data[base + PROFILE + 0x101] = random_.choice((0, 1, 2, 3, 4, 0xFF))
+            data[base + PROFILE + 0x102] = random_.choice((0, 1, 2, 5, 9, 10, 11, 0x7F, 0x80, 0xFF))
+        data = bytes(data)
+        table = {"unknown_0054e8e0": GlobalData(data)}
+        t.check(
+            "user_interface_controller_set_online_state",
+            index,
+            random_.choice((1, 2, 3, 4, 5, 6, 0, 7)),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            random_.choice((0, 1, 59, 60, 600, 0x7FFF, 0xFFFF, random_.getrandbits(32))),
+            random_.choice((0, 1, 59, 60, 600, 0x7FFF, 0xFFFF, random_.getrandbits(32))),
+            globals=table,
+        )
+
+        def notified(harness, arguments):
+            identifier = bytes(harness.mu.mem_read(arguments[0], 8)) if arguments[0] else None
+            return 0, (identifier, arguments[1], harness.normalize(arguments[2]), arguments[3])
+
+        t.check(
+            "user_interface_controller_update_online_state",
+            index,
+            globals=table,
+            extra=[session],
+            externals={
+                "online_signed_in": lambda harness, arguments, so=random_.choice((0, 1, 1, 1)): (so, ()),
+                "unknown_00064cf0": lambda harness, arguments, there=random_.random() < 0.7: (session.address if there else 0, ()),
+                "unknown_0019a015": lambda harness, arguments, so=random_.choice((0, 1)): (so, ()),
+                "game_voice_controller_can_talk": lambda harness, arguments, so=random_.choice((0, 1)): (so, tuple(arguments)),
+                "online_notification_set_state": notified,
+            },
+        )
+
+        users = bytearray(random_.randbytes(COUNT * 0x70))
+        for other in range(COUNT):
+            if random_.random() < 0.3:
+                users[other * 0x70:other * 0x70 + 8] = bytes(8)
+            struct.pack_into("<I", users, other * 0x70 + 8, random_.choice((0, 0, 0, 1, 2, 0x10000, 0x10001, 0xFFFEFFFC, random_.getrandbits(32))))
+
+        def signed_in(harness, arguments, users=bytes(users)):
+            harness.mu.mem_write(arguments[0], users)
+            return 0, ()
+
+        t.check(
+            "user_interface_controller_voice_allowed",
+            index,
+            externals={
+                "unknown_001999d7": lambda harness, arguments, so=random_.choice((0, 0, 0, 1)): (so, ()),
+                "online_get_logon_users": signed_in,
+            },
+        )
+        t.check(
+            "user_interface_unknown_0018f973",
+            externals={
+                "unknown_001492d6": lambda harness, arguments, which=random_.choice((0x1C, 0x1D, 0x1E, 0x1F, 0, 0)): (
+                    arguments[2] == which,
+                    tuple(arguments),
+                ),
+            },
+        )
+        t.check(
+            "user_interface_controller_apply_input_preferences",
+            index,
+            globals={**table, "input_abstraction_globals": random_.randbytes(0x1BC)},
         )

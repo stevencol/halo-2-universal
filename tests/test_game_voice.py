@@ -753,7 +753,7 @@ def run(t) -> None:
                                     ),
                                     "unknown_0054e8e0": bytes(profiles),
                                 },
-                                externals={"unknown_001906da": gives(says)},
+                                externals={"user_interface_controller_voice_allowed": gives(says)},
                             )
 
             t.check(
@@ -1355,7 +1355,7 @@ def run(t) -> None:
                 "game_voice_player_controller": gives(controller),
                 # the game does not see whether there is a session: there always is one here
                 "game_voice_get_membership": gives_buffer(membership),
-                "unknown_001906da": gives(random_.choice((1, 1, 0))),
+                "user_interface_controller_voice_allowed": gives(random_.choice((1, 1, 0))),
                 "game_voice_controller_can_talk": gives(random_.choice((1, 1, 0))),
                 "game_voice_set_controller_mode": set_mode,
                 "game_voice_get_players": gives(random_.choice((0xFFFF, random_.getrandbits(16), 0))),

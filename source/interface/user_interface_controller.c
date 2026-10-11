@@ -10,11 +10,26 @@ What the game keeps of the player of each gamepad. The names are guesses.
 #include "user_interface_controller.h"
 
 #include "game/game.h"
+#include "game/players.h"
+#include "input/input_abstraction.h"
 #include "main/global_preferences.h"
 #include "networking/game_voice.h"
 #include "saved games/saved_game_files.h"
 
 #include <string.h>
+
+/* ---------- constants */
+
+/* 0x00444bdc, 0x00444c04: how fast a gamepad looks around, up and down and
+to the sides, for each of the ten numbers that a profile can have */
+static const real look_pitch_rates[PLAYER_PROFILE_LOOK_SENSITIVITY_MAXIMUM]=
+{
+	40.0f, 50.0f, 60.0f, 70.0f, 80.0f, 90.0f, 100.0f, 110.0f, 120.0f, 130.0f
+};
+static const real look_yaw_rates[PLAYER_PROFILE_LOOK_SENSITIVITY_MAXIMUM]=
+{
+	80.0f, 100.0f, 120.0f, 140.0f, 160.0f, 180.0f, 200.0f, 220.0f, 240.0f, 260.0f
+};
 
 /* ---------- prototypes */
 
@@ -26,11 +41,14 @@ long __attribute__((stdcall)) unknown_000abc70(const struct online_user *user, l
 void __attribute__((stdcall)) unknown_002153dd(long index, long saved_game, const struct player_profile *profile,
 	long unknown);
 
-/* 0x0014b410: who the player of a gamepad of this console is, in twelve
-bytes. 0x00190c34: how a gamepad is played with is as its player's profile
-says. 0x0023620d: a text of the game, by number */
-void __attribute__((stdcall)) unknown_0014b410(byte *identifier, long index);
-void unknown_00190c34(long index);
+/* 0x0023620d: a text of the game, by number. 0x00064cf0: the game of the
+network that this console is in, as eight bytes, or NULL. 0x0019a015 and
+0x001999d7: two things that the interface says. 0x001492d6: whether
+something of the interface is so, of four things */
+const byte *unknown_00064cf0(void);
+boolean unknown_0019a015(void);
+boolean unknown_001999d7(void);
+boolean unknown_001492d6(long unknown, long unknown2, long index);
 void unknown_0023620d(long string, wchar *text);
 
 /* ---------- code */
@@ -1126,7 +1144,7 @@ void __attribute__((stdcall)) user_interface_controller_set_profile(
 
 	if (!had_profile)
 	{
-		unknown_0014b410(controller->identifier, index);
+		player_identifier_from_controller(controller->identifier, index);
 		controller->voice_index= game_voice_unknown_004cd904_new(controller->identifier);
 		controller->saved_game= NONE;
 	}
@@ -1137,7 +1155,7 @@ void __attribute__((stdcall)) user_interface_controller_set_profile(
 	controller->profile= *profile;
 	controller->flags|= FLAG(_user_interface_controller_profile_bit);
 	controller->saved_game= saved_game;
-	unknown_00190c34(index);
+	user_interface_controller_apply_input_preferences(index);
 	user_interface_controller_update_name(index);
 	if (new_file && controller->saved_game!=NONE)
 	{
@@ -1146,4 +1164,184 @@ void __attribute__((stdcall)) user_interface_controller_set_profile(
 	}
 	game_voice_set_controller_mask(profile->voice_mask, index);
 	game_voice_set_controller_setting(index, profile->voice_setting);
+}
+
+/* 0x0019034d: what a gamepad's player is at, for the others of the service
+of games, becomes something; if that is not what it was, they have to be
+told. Nothing for one that is not signed in */
+void __attribute__((stdcall)) user_interface_controller_set_online_state(
+	long index,
+	long kind,
+	long unknown8,
+	long unknown4,
+	short time,
+	short second_time)
+{
+	struct user_interface_controller *controller= USER_INTERFACE_CONTROLLER(index);
+
+	if ((controller->flags>>_user_interface_controller_online_bit)&1)
+	{
+		struct online_state state;
+		unsigned long encoded;
+
+		memset(&state, 0, sizeof(state));
+		state.kind= kind;
+		state.time= time;
+		state.second_time= second_time;
+		state.unknown8= unknown8;
+		state.unknown4= unknown4;
+		online_state_encode(&encoded, &state);
+		if (controller->unknownC5C!=encoded)
+		{
+			controller->unknownC5C= encoded;
+			controller->unknownC65= TRUE;
+		}
+	}
+}
+
+/* 0x00190f9b: the others of the service of games are told what a gamepad's
+player is at, if it changed: the game of the network that it is in, and some
+bits. Not for a guest, nor if no one is signed in */
+void __attribute__((stdcall)) user_interface_controller_update_online_state(
+	long index)
+{
+	struct user_interface_controller *controller;
+	const byte *session;
+	unsigned long flags;
+
+	if (user_interface_controller_is_guest(index) || !online_signed_in())
+	{
+		return;
+	}
+	controller= USER_INTERFACE_CONTROLLER(index);
+	session= unknown_00064cf0();
+	flags= controller->profile.unknown150==0;
+	if (!session)
+	{
+		if (controller->unknownC64)
+		{
+			memset(controller->unknownC66, 0, sizeof(controller->unknownC66));
+			controller->unknownC64= FALSE;
+			controller->unknownC65= TRUE;
+		}
+	}
+	else
+	{
+		if (!controller->unknownC64 || memcmp(controller->unknownC66, session, sizeof(controller->unknownC66))!=0)
+		{
+			controller->unknownC64= TRUE;
+			memcpy(controller->unknownC66, session, sizeof(controller->unknownC66));
+			controller->unknownC65= TRUE;
+		}
+		if (controller->unknownC5C&ONLINE_STATE_UNKNOWN_MASK)
+		{
+			flags|= FLAG(_online_notification_unknown1_bit);
+		}
+		if (unknown_0019a015())
+		{
+			flags|= FLAG(_online_notification_unknown4_bit);
+		}
+	}
+	if (game_voice_controller_can_talk(index))
+	{
+		flags|= FLAG(_online_notification_voice_bit);
+	}
+	if (controller->unknownC60!=flags)
+	{
+		controller->unknownC60= flags;
+		controller->unknownC65= TRUE;
+	}
+	if (controller->unknownC65)
+	{
+		online_notification_set_state(controller->unknownC64 ? (const unsigned long *)controller->unknownC66 : NULL,
+			index, (byte *)&controller->unknownC5C, controller->unknownC60);
+		controller->unknownC65= FALSE;
+	}
+}
+
+/* 0x001906da: whether the player of a gamepad may use the voice: if
+unknown_001999d7 says so; or if it is signed in to the service of games, is
+not a guest, and the service does not say that it may not */
+boolean user_interface_controller_voice_allowed(
+	long index)
+{
+	struct online_user users[MAXIMUM_ONLINE_USERS];
+	const struct online_user *user;
+	unsigned long flags;
+
+	if (unknown_001999d7())
+	{
+		return TRUE;
+	}
+	online_get_logon_users(users);
+	user= &users[index];
+	if ((user->xuid[0]|user->xuid[1])==0)
+	{
+		return FALSE;
+	}
+	memcpy(&flags, &user->flags, sizeof(flags));
+
+	return !(flags&ONLINE_USER_GUEST_MASK) && !((flags>>_online_user_no_voice_bit)&1);
+}
+
+/* 0x0018f973: whether any of four things of the interface is so */
+boolean user_interface_unknown_0018f973(
+	void)
+{
+	long index;
+
+	for (index= 0; index<USER_INTERFACE_UNKNOWN_0018F973_COUNT; index++)
+	{
+		if (unknown_001492d6(4, 0, USER_INTERFACE_UNKNOWN_0018F973_FIRST+index))
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x00190c34: a gamepad is played with as its player's profile says: how
+fast it looks around, which button does what, and two bits */
+void user_interface_controller_apply_input_preferences(
+	long index)
+{
+	const struct player_profile *profile= &USER_INTERFACE_CONTROLLER(index)->profile;
+	struct input_abstraction_preferences preferences;
+	long sensitivity;
+	word unknown101;
+
+	input_abstraction_preferences_set_defaults((byte *)&preferences);
+	sensitivity= profile->unknown102;
+	if (sensitivity<PLAYER_PROFILE_LOOK_SENSITIVITY_MINIMUM)
+	{
+		sensitivity= PLAYER_PROFILE_LOOK_SENSITIVITY_MINIMUM;
+	}
+	else if (sensitivity>PLAYER_PROFILE_LOOK_SENSITIVITY_MAXIMUM)
+	{
+		sensitivity= PLAYER_PROFILE_LOOK_SENSITIVITY_MAXIMUM;
+	}
+	preferences.unknown4= look_pitch_rates[sensitivity-1];
+	preferences.unknown0= look_yaw_rates[sensitivity-1];
+	unknown101= profile->unknown101>PLAYER_PROFILE_UNKNOWN101_MAXIMUM ? PLAYER_PROFILE_UNKNOWN101_MAXIMUM :
+		profile->unknown101;
+	memcpy(preferences.unknown8+16, &unknown101, sizeof(unknown101));
+	switch (profile->unknown100)
+	{
+	case 1:
+		preferences.unknown8[6]= 7;
+		preferences.unknown8[7]= 6;
+		break;
+	case 2:
+		preferences.unknown8[4]= 6;
+		preferences.unknown8[6]= 1;
+		break;
+	case 3:
+		preferences.unknown8[4]= 15;
+		preferences.unknown8[11]= 1;
+		break;
+	}
+	preferences.unknown8[18]= profile->unknownFC&1;
+	preferences.unknown8[19]= ((unsigned long)profile->unknownFC>>2)&1;
+	input_abstraction_globals.preferences[index]= preferences;
 }

@@ -34,7 +34,7 @@ void unknown_001896c0(long sound_index, real scale);
 void unknown_00189760(const struct voice_sound_request *request);
 
 /* 0x001906da: something of the player of a gamepad: see game_voice.c */
-boolean unknown_001906da(long gamepad_index);
+boolean user_interface_controller_voice_allowed(long gamepad_index);
 
 /* 0x00147da5: something of a player that stops it from talking to its team */
 boolean unknown_00147da5(long unknown);
@@ -1186,7 +1186,7 @@ void VOICE_ROUTING_CALLBACK voice_play_sound_by_number(
 }
 
 /* 0x00057530: plays a sound for a player of this console: not at all if it
-wants no voice, or if unknown_001906da says no of its gamepad. For everybody
+wants no voice, or if user_interface_controller_voice_allowed says no of its gamepad. For everybody
 to hear, if it has the first setting or it has no voice; if not, where only
 the player of its gamepad hears it */
 void VOICE_ROUTING_CALLBACK voice_play_sound(
@@ -1200,7 +1200,7 @@ void VOICE_ROUTING_CALLBACK voice_play_sound(
 		long setting= voice_routing_active() ? game_voice_controller_settings[controller_index] : 0;
 		unsigned long talkers= voice_routing_active() ? game_voice_talkers : 0;
 
-		if (setting!=_game_voice_controller_setting3 && unknown_001906da(controller_index))
+		if (setting!=_game_voice_controller_setting3 && user_interface_controller_voice_allowed(controller_index))
 		{
 			if (setting==_game_voice_controller_setting1 || !(talkers&(1u<<(player_index&0x1F))))
 			{

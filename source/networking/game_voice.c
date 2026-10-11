@@ -43,7 +43,7 @@ boolean simulation_in_progress(void);
 
 
 /* 0x001906da: something of the player of a gamepad */
-boolean unknown_001906da(long gamepad_index);
+boolean user_interface_controller_voice_allowed(long gamepad_index);
 
 /* 0x000649c0: something of the network game; NULL if there is none */
 byte *unknown_000649c0(void);
@@ -969,7 +969,7 @@ unsigned long game_voice_get_talkers(
 
 /* 0x000536b0: whether the player of a controller can talk: the controller
 has a headset, its player does not have the third setting and, with a flag
-of what the game knows of the player, what unknown_001906da says */
+of what the game knows of the player, what user_interface_controller_voice_allowed says */
 boolean game_voice_controller_can_talk(
 	long controller_index)
 {
@@ -983,7 +983,7 @@ boolean game_voice_controller_can_talk(
 		memcpy(&flags, unknown_0054e8e0[controller_index]+UNKNOWN_0054E8E0_FLAGS_OFFSET, sizeof(flags));
 		if ((flags>>_unknown_0054e8e0_unknown5_bit)&1)
 		{
-			allowed= unknown_001906da(controller_index);
+			allowed= user_interface_controller_voice_allowed(controller_index);
 		}
 		if (has_headset && setting_allows && allowed)
 		{
@@ -1690,7 +1690,7 @@ void GAME_VOICE_CALLBACK game_voice_update_local_player(
 		memcpy(&flags, profile+UNKNOWN_0054E8E0_FLAGS_OFFSET, sizeof(flags));
 		if ((flags>>_unknown_0054e8e0_unknown5_bit)&1)
 		{
-			allowed= unknown_001906da(controller_index);
+			allowed= user_interface_controller_voice_allowed(controller_index);
 		}
 		can_talk= game_voice_controller_can_talk(controller_index) && !voice_off && allowed;
 
@@ -1871,7 +1871,7 @@ void game_voice_unknown_004cd904_clear(
 
 /* 0x0014b410: who the player of a gamepad of this console is, in twelve
 bytes */
-void __attribute__((stdcall)) unknown_0014b410(byte *identifier, long controller_index);
+void __attribute__((stdcall)) player_identifier_from_controller(byte *identifier, long controller_index);
 
 /* 0x00064610: the first of the things of unknown_004cd904 that is free is
 taken, for who someone is; without that, for the player of the gamepad of
@@ -1894,7 +1894,7 @@ long __attribute__((stdcall)) game_voice_unknown_004cd904_new(
 	}
 	if (!identifier)
 	{
-		unknown_0014b410(made, index);
+		player_identifier_from_controller(made, index);
 		identifier= made;
 	}
 	profile= unknown_004cd904[index];

@@ -809,7 +809,7 @@ address,name,source,arguments,returns,convention
 00054f90,game_voice_get_controller_setting,source/networking/game_voice.c,stack,int
 00054fc0,game_voice_set_controller_setting,source/networking/game_voice.c,ecx stack,void
 00055060,game_voice_text_printf,source/networking/game_voice.c,esi stack stack stack,string
-001906da,unknown_001906da,,eax,bool
+001906da,user_interface_controller_voice_allowed,source/interface/user_interface_controller.c,eax,bool
 00053580,game_voice_library_update,source/networking/game_voice.c,,void
 00053d40,game_voice_unknown_00053d40,source/networking/game_voice.c,,bool
 00053fb0,game_voice_reset_players,source/networking/game_voice.c,,void
@@ -2419,6 +2419,13 @@ address,name,source,arguments,returns,convention
 0018fd94,user_interface_controller_get_properties,source/interface/user_interface_controller.c,ecx eax stack,void,stdcall
 0018fe9e,user_interface_controller_update_voice,source/interface/user_interface_controller.c,edi,void
 0018fee9,user_interface_controller_set_online_user,source/interface/user_interface_controller.c,eax stack,void,stdcall
-0014b410,unknown_0014b410,,ecx stack,void,stdcall
-00190c34,unknown_00190c34,,eax,void
+0014b410,player_identifier_from_controller,source/game/players.c,ecx stack,void,stdcall
+00190c34,user_interface_controller_apply_input_preferences,source/interface/user_interface_controller.c,eax,void
 0023620d,unknown_0023620d,,eax esi,void
+0019034d,user_interface_controller_set_online_state,source/interface/user_interface_controller.c,eax stack stack stack stack stack,void,stdcall
+00190f9b,user_interface_controller_update_online_state,source/interface/user_interface_controller.c,stack,void,stdcall
+0018f973,user_interface_unknown_0018f973,source/interface/user_interface_controller.c,,bool
+00064cf0,unknown_00064cf0,,,pointer
+0019a015,unknown_0019a015,,,bool
+001999d7,unknown_001999d7,,,bool
+001492d6,unknown_001492d6,,eax ecx edi,bool

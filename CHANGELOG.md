@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — En qué está un jugador para el servicio, si puede usar la voz y cómo se ajusta su mando
+
+Seis funciones (826 bytes): cinco en `interface/user_interface_controller.c` y una en el
+archivo nuevo `game/players.c`. De 1812
+funciones se pasa a 1818, el 16,14 % de las del juego (el 10,428 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `player_identifier_from_controller` | `0x0014b410` | `game/players.c` |
+| `user_interface_unknown_0018f973` | `0x0018f973` | `interface/user_interface_controller.c` |
+| `user_interface_controller_set_online_state` | `0x0019034d` | `interface/user_interface_controller.c` |
+| `user_interface_controller_voice_allowed` | `0x001906da` | `interface/user_interface_controller.c` |
+| `user_interface_controller_apply_input_preferences` | `0x00190c34` | `interface/user_interface_controller.c` |
+| `user_interface_controller_update_online_state` | `0x00190f9b` | `interface/user_interface_controller.c` |
+
+### Lo que se sabe
+
+- `user_interface_controller_apply_input_preferences` **ajusta el mando a
+  lo que dice el perfil**: la sensibilidad (de 1 a 10) elige de dos tablas
+  la velocidad al mirar — de 40 a 130 arriba y abajo y de 80 a 260 a los
+  lados —, y otro número del perfil (de 1 a 3) cambia qué botón hace qué.
+  El resultado va a las preferencias de `input_abstraction.c` (hito 262).
+- `user_interface_controller_set_online_state` y
+  `user_interface_controller_update_online_state` son **lo que ven los
+  amigos del servicio**: la primera guarda en qué está el jugador (los
+  cuatro bytes del hito 522) y la segunda, si algo cambió, lo manda con
+  `online_notification_set_state` junto con la partida de red en la que
+  está y unos bits (entre ellos, si puede hablar).
+- `user_interface_controller_voice_allowed` (antes `unknown_001906da`, la
+  que usan `game_voice.c` y `voice_routing.c`) dice si un jugador **puede
+  usar la voz**: no un invitado, ni uno al que el servicio se lo prohíbe
+  (el bit `16` de sus banderas, que resultan ser de 32 bits).
+- `player_identifier_from_controller` hace **la identidad de un jugador
+  que no es del servicio**: los seis bytes por los que se conoce a la
+  consola, el número del mando y la marca `0xBAD00000`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  531.
+- En este hito se pasaron las pruebas de las seis funciones, y
+  `test_game_voice` y `test_voice_routing` enteras (por el nombre
+  cambiado).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Dar perfil y nombre al jugador de un mando, y lo que la voz guarda de él
 
 Diez funciones (1225 bytes): cinco en `interface/user_interface_controller.c`, cuatro en

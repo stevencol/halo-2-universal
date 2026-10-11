@@ -131,7 +131,7 @@ enum
 	GAME_VOICE_TEXT_SIZE= 0x80,
 
 	/* in what the game knows of the player of a gamepad (unknown_0054e8e0):
-	with this flag, what unknown_001906da says of the gamepad counts */
+	with this flag, what user_interface_controller_voice_allowed says of the gamepad counts */
 	UNKNOWN_0054E8E0_FLAGS_OFFSET= 0,
 	_unknown_0054e8e0_unknown5_bit= 5
 };

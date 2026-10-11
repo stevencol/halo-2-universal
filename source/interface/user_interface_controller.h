@@ -42,7 +42,26 @@ enum
 	player can be */
 	USER_INTERFACE_CONTROLLER_GUEST_NAME_STRING= 0x2D000231,
 	USER_INTERFACE_CONTROLLER_GUEST_NAME_FORMAT_LENGTH= 256,
-	PLAYER_PROPERTIES_UNKNOWN7C_MAXIMUM= 16
+	PLAYER_PROPERTIES_UNKNOWN7C_MAXIMUM= 16,
+	/* the bits of what the others of the service of games are told of a
+	player: its profile's byte of 0x150 is nothing; what it is at has one
+	of its two highest bits; unknown_0019a015 says so; and it can talk */
+	_online_notification_unknown0_bit= 0,
+	_online_notification_unknown1_bit= 1,
+	_online_notification_voice_bit= 3,
+	_online_notification_unknown4_bit= 4,
+	ONLINE_STATE_UNKNOWN_MASK= 0xC0000000,
+	/* the bit of a player of the service of games that says that it may
+	not use the voice */
+	_online_user_no_voice_bit= 16,
+	/* what unknown_001492d6 is asked: four things, from this one on */
+	USER_INTERFACE_UNKNOWN_0018F973_FIRST= 0x1C,
+	USER_INTERFACE_UNKNOWN_0018F973_COUNT= 4,
+	/* how a profile says that its gamepad is played with: from 1 to 10 for
+	how fast it looks around, and up to 3 for something else */
+	PLAYER_PROFILE_LOOK_SENSITIVITY_MINIMUM= 1,
+	PLAYER_PROFILE_LOOK_SENSITIVITY_MAXIMUM= 10,
+	PLAYER_PROFILE_UNKNOWN101_MAXIMUM= 3
 };
 
 /* ---------- structures */
@@ -74,8 +93,12 @@ struct user_interface_controller
 	long tasks[NUMBER_OF_USER_INTERFACE_CONTROLLER_TASKS];
 	/* the name of its profile */
 	wchar name[PLAYER_PROFILE_NAME_LENGTH+1];
+	/* what it is at, as the others of the service of games are told: four
+	bytes (online_state_encode), some bits, and the game of the network that
+	it is in, if there is one. The second byte says that this changed and
+	they have to be told */
 	unsigned long unknownC5C;
-	byte unknownC60[4];
+	unsigned long unknownC60;
 	boolean unknownC64;
 	boolean unknownC65;
 	byte unknownC66[8];
@@ -155,5 +178,11 @@ void __attribute__((stdcall)) user_interface_controller_set_online_user(const st
 void __attribute__((stdcall)) user_interface_controller_update_name(long index);
 void __attribute__((stdcall)) user_interface_controller_set_profile(long index, const struct player_profile *profile,
 	long saved_game);
+void __attribute__((stdcall)) user_interface_controller_set_online_state(long index, long kind, long unknown8,
+	long unknown4, short time, short second_time);
+void __attribute__((stdcall)) user_interface_controller_update_online_state(long index);
+boolean user_interface_controller_voice_allowed(long index);
+boolean user_interface_unknown_0018f973(void);
+void user_interface_controller_apply_input_preferences(long index);
 
 #endif
