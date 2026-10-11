@@ -67,7 +67,20 @@ enum
 	/* the two kinds whose block gets its checksum when it starts to be
 	written */
 	_network_blob_kind1= 1,
-	_network_blob_kind2= 2
+	_network_blob_kind2= 2,
+	/* the kind whose block is read and written in another way, with the
+	fourth number of its functions and no memory. More ways that a task
+	ends: what does it could not start or go on, in four ways and in any
+	other; what was read is more than there is room for; and the block is
+	not all there, which is the way after which it is tried again */
+	_network_blob_kind3= 3,
+	_network_blob_task_failed= 2,
+	_network_blob_task_too_big= 9,
+	/* of what does the tasks (unknown_004cf78c): what one of its things is,
+	where its kind is, and the kind that reads */
+	NETWORK_BLOB_OPERATION_SIZE= 0x14,
+	NETWORK_BLOB_OPERATION_KIND_OFFSET= 0x4,
+	_network_blob_operation_read= 0x2A
 };
 
 /* ---------- structures */
@@ -159,6 +172,8 @@ long __attribute__((stdcall)) network_blob_task_start_write(struct network_blob 
 	unsigned long size);
 long __attribute__((stdcall)) network_blob_task_start_read(struct network_blob *blob, void *memory,
 	unsigned long size);
+void network_blob_tasks_update(void);
+void __attribute__((stdcall)) network_blob_task_completed(long status, long handle);
 
 /* ---------- globals */
 

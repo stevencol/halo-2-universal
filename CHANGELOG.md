@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Las tareas se ponen en marcha
+
+Dos funciones en `networking/network_blob_task.c`, 851 bytes entre las dos. De 1688
+funciones se pasa a 1690, el 15,00 % de las del juego (el 9,964 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_blob_tasks_update` | `0x0008e240` | `networking/network_blob_task.c` |
+| `network_blob_task_completed` | `0x0008e5e0` | `networking/network_blob_task.c` |
+
+### Lo que se sabe
+
+- `network_blob_tasks_update` **pone en marcha las tareas que esperan**,
+  cada vuelta: en cada lista, desde la primera y mientras haya menos en
+  marcha de las que caben (`0x004402a4`: **una** por lista, así que nunca
+  se leen dos bloques a la vez ni se escriben dos).
+  - Las que escriben y las que leen arrancan cada una a su manera
+    (`0x000b42b0` y `0x000b4450`), y el bloque de la tercera clase de
+    otra (`0x000b4670` y `0x000b4810`), sin memoria y con el cuarto
+    número de sus funciones.
+  - El bloque de la cuarta clase toma antes su memoria (`0x00080e10`); si
+    no puede, no se arranca ninguna más de esa lista por ahora.
+  - La que no puede arrancar se acaba con el motivo (de `3` a `6`, o `2`),
+    y tampoco se arranca ninguna más de su lista.
+- `network_blob_task_completed` recibe **cómo acabó lo que llevaba una
+  tarea**. Si fue bien y era una lectura, lo leído no puede ser más de lo
+  que cabe (`9`) ni menos de lo que había (`7`, que es el que hace volver
+  a empezar), y la tarea acaba con lo que diga mirar el bloque
+  (`network_blob_verify`): por eso los resultados de una tarea y los de
+  ver un bloque son los mismos números.
+- El juego no mira si de verdad hay una tarea con lo que acabó.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos**, y en las de los hitos 456 a
+  490 y 501 a 503. La tanda de los hitos 491 a 500 está en marcha.
+- En este hito se pasaron las pruebas de las dos funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Las tareas de los bloques
 
 Cinco funciones en el archivo nuevo `networking/network_blob_task.c`. De 1683

@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 503.
+**Última actualización:** 2026-10-08, al terminar el hito 504.
 
 ## Dónde estamos
 
-- **1688 funciones descompiladas de 11.265: el 14,98 % del juego** (el
-  9,935 % de los bytes de código).
-- Las 1688 están comprobadas contra el ejecutable original: las 1390 del
+- **1690 funciones descompiladas de 11.265: el 15,00 % del juego** (el
+  9,964 % de los bytes de código).
+- Las 1690 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the tasks that read and write the blocks* (ver `git log`).
+- Último hito: *Decompile how the tasks of the blocks are started and completed* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 575 funciones apuntadas pero sin descompilar (las que el código
-  llama); 457 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 581 funciones apuntadas pero sin descompilar (las que el código
+  llama); 463 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -215,10 +215,9 @@ Módulos (funciones hechas / archivo):
       (7: la suma, ver si vale, empezar a leerlo y a escribirlo, lo que
       pasa cuando la tarea acaba, su avance y devolver su memoria; falta
       tomar su memoria, `0x00080e10`)
-- [ ] Las tareas de los bloques — `networking\network_blob_task.c` (5:
-      reiniciarlas, la primera libre, empezar a leer y a escribir, y
-      acabar una; faltan ponerlas en marcha, `0x0008e240`, y recibir el
-      resultado, `0x0008e5e0`)
+- [x] Las tareas de los bloques — `networking\network_blob_task.c` (7:
+      reiniciarlas, la primera libre, empezar a leer y a escribir, acabar
+      una, ponerlas en marcha y recibir el resultado)
 - [ ] La memoria de la red — `networking\network_memory.c` (6: tomarla
       al abrir un mapa, soltarla al cerrarlo, tres constructores, el de
       todo entre ellos, y deshacerlo todo)

@@ -377,3 +377,5 @@ address,name,source
 004d8c28,unknown_004d8c28,source/networking/network_blob_task.c
 0055e700,unknown_0055e700,source/networking/network_blob.c
 004d8ba8,unknown_004d8ba8,source/networking/network_blob_task.c
+004402a4,unknown_004402a4,source/networking/network_blob_task.c
+004cf78c,unknown_004cf78c,source/networking/network_blob_task.c

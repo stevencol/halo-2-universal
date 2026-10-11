@@ -76,3 +76,102 @@ def run(t) -> None:
                 "texture_cache_return_memory": lambda harness, arguments: (0, (arguments[0],)),
             },
         )
+
+    # ---------- the tasks are started, and what each did is taken
+
+    FUNCTIONS = PHYSICAL_ADDRESS + 0x61000
+    BLOCK = 0x80123000
+
+    for n in range(2000):
+        # some tasks, each with what has its block; of them, some in the two lists
+        table = bytearray(random_.randbytes(TASKS * TASK))
+        memory = {FUNCTIONS: Memory(random_.randbytes(0x40))}
+        numbers = random_.sample(range(TASKS), 12)
+        for place, task in enumerate(numbers):
+            blob = bytearray(random_.randbytes(0x30))
+            struct.pack_into("<I", blob, 0, FUNCTIONS)
+            struct.pack_into("<h", blob, 8, random_.choice((0, 1, 2, 3, 3, 4, 4)))
+            memory[BLOB + place * 0x40] = Memory(bytes(blob))
+            struct.pack_into(
+                "<4I",
+                table,
+                task * TASK,
+                BLOB + place * 0x40,
+                random_.choice((NONE, NONE, NONE, 0x10000 + place)),
+                random_.getrandbits(32),
+                BLOCK + place * 0x100,
+            )
+        lists = bytearray()
+        for queue in range(2):
+            count = random_.choice((0, 1, 3, 6))
+            mine = [numbers[queue * 6 + index] for index in range(count)]
+            if mine and random_.random() < 0.2:
+                mine[random_.randrange(len(mine))] = NONE
+            lists += struct.pack("<16I", *(mine + [NONE] * (16 - count)))
+
+        def start(pointer: int, starts: list):
+            def stand_in(harness, arguments, pointer=pointer, starts=starts):
+                from test_async import calls_so_far
+
+                total = sum(calls_so_far(harness, name) for name in ("unknown_000b4670", "unknown_000b42b0", "unknown_000b4810", "unknown_000b4450"))
+                status, handle = starts[total % len(starts)]
+                harness.mu.mem_write(arguments[pointer], struct.pack("<I", handle))
+                return status, tuple(value for index, value in enumerate(arguments) if index != pointer)
+
+            return stand_in
+
+        starts = [(random_.choice((0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, NONE)), random_.getrandbits(32)) for index in range(8)]
+        t.check(
+            "network_blob_tasks_update",
+            globals={
+                "unknown_004d8c28": bytes(table),
+                "unknown_004d8ba8": bytes(lists),
+                "unknown_004402a4": struct.pack("<2i", *random_.choice(((1, 1), (1, 1), (2, 3), (0, 16), (16, 16), (-1, 2)))),
+            },
+            memory=memory,
+            externals={
+                "unknown_000b4670": start(7, starts),
+                "unknown_000b42b0": start(1, starts),
+                "unknown_000b4810": start(1, starts),
+                "unknown_000b4450": start(8, starts),
+                "unknown_00080e10": lambda harness, arguments, took=random_.choice((1, 1, 0)): (
+                    took,
+                    # where the task has the memory of its block and its size: the tasks are not at the same address
+                    (
+                        arguments[0],
+                        arguments[1] - harness.global_addresses["unknown_004d8c28"],
+                        arguments[2] - harness.global_addresses["unknown_004d8c28"],
+                    ),
+                ),
+                "network_blob_task_end": lambda harness, arguments: (0, tuple(arguments)),
+            },
+        )
+
+        # what did one of the tasks ended
+        task = numbers[0]
+        handle = random_.choice((5, 0x10003, 0x20007))
+        size = random_.choice((0x40, 0x100, 0x1000))
+        struct.pack_into("<4I", table, task * TASK, BLOB, handle, size, BLOCK)
+        operations = bytearray(random_.randbytes(0x4C + 8 * 0x14))
+        struct.pack_into("<I", operations, 0x44, 0x4C)
+        struct.pack_into("<I", operations, 0x4C + (handle & 0xFFFF) * 0x14 + 4, random_.choice((0x2A, 0x2A, 0x2A, 0x2B, 0)))
+        read = random_.choice((size, size, size - 8, size + 1, 0))
+        there = random_.choice((read, read, read, read + 1, 0))
+
+        def ended(harness, arguments, said=random_.choice((0, 0, 0, 0, 1, 2, 6, 7)), read=read, there=there):
+            harness.mu.mem_write(arguments[1], struct.pack("<I", read))
+            harness.mu.mem_write(arguments[2], struct.pack("<I", there))
+            return said, (arguments[0],)
+
+        t.check(
+            "network_blob_task_completed",
+            random_.choice((0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, NONE)),
+            handle,
+            globals={"unknown_004d8c28": bytes(table), "unknown_004cf78c": Buffer(bytes(operations), pointers=(0x44,))},
+            memory=memory,
+            externals={
+                "unknown_000b45f0": ended,
+                "network_blob_verify": lambda harness, arguments, said=random_.choice((1, 1, 8, 9, 11)): (said, tuple(arguments)),
+                "network_blob_task_end": lambda harness, arguments: (0, tuple(arguments)),
+            },
+        )
