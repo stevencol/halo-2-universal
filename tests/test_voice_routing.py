@@ -918,7 +918,7 @@ def run(t) -> None:
             externals={
                 "game_voice_unknown_00054df0": lambda harness, arguments, has=has: has[arguments[0] & 15],
                 "game_voice_get_player_datum": datum_of,
-                "unknown_000caf90": where,
+                "object_get_markerBD_position": where,
             },
             extra=[local_datum, other_datum],
         )
@@ -968,7 +968,7 @@ def run(t) -> None:
                     "game_voice_get_local_players": gives(local),
                     "game_voice_unknown_00054df0": lambda harness, arguments, has=has: has >> (arguments[0] & 15) & 1,
                     "game_voice_get_player_datum": datum_of,
-                    "unknown_000caf90": where,
+                    "object_get_markerBD_position": where,
                 },
                 extra=[membership, *datums],
             )
@@ -1240,7 +1240,7 @@ def run(t) -> None:
                 externals={
                     "game_voice_unknown_00054df0": gives(random_.choice((1, 1, 1, 0))),
                     "game_voice_get_player_datum": lambda harness, arguments, datum=datum, n=n: datum.address if n % 6 else 0,
-                    "unknown_000caf90": where,
+                    "object_get_markerBD_position": where,
                     "voice_channels_get_mix_bins": comes_out,
                     "unknown_00332e34": mix_bins,
                     "unknown_00332e58": gives(0),

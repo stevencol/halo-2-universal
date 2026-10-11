@@ -880,7 +880,7 @@ address,name,source,arguments,returns,convention
 00057b60,voice_players_same_team,source/networking/voice_routing.c,eax ecx,int
 00057d60,voice_player_hears,source/networking/voice_routing.c,eax edx stack,int,stdcall
 00057a80,voice_players_get_distance,source/networking/voice_routing.c,eax edi,real:xmm0
-000caf90,unknown_000caf90,,eax esi,void
+000caf90,object_get_markerBD_position,source/objects/objects.c,eax esi,void
 00057c20,voice_channels_get_how,source/networking/voice_routing.c,eax ecx stack stack,int,stdcall
 00057eb0,voice_channels_route_player,source/networking/voice_routing.c,eax stack stack stack,void,stdcall
 000583c0,voice_channels_route_player_to_controllers,source/networking/voice_routing.c,edx stack stack,void,stdcall
@@ -1731,7 +1731,7 @@ address,name,source,arguments,returns,convention
 0012c040,unknown_0012c040,,,void
 00191420,unknown_00191420,,edi,void
 00155760,unknown_00155760,,eax,int
-000caf60,unknown_000caf60,,eax esi,void
+000caf60,object_get_marker95_position,source/objects/objects.c,eax esi,void
 00192d70,unknown_00192d70,,stack stack stack,real:xmm0,stdcall
 00192ce0,sound_speakers_get_gains4,source/sound/sound_speakers.c,ebx stack stack,void,stdcall
 0005f600,network_session_channel_is_host,source/networking/network_session.c,stack stack,bool,stdcall
@@ -2534,3 +2534,4 @@ address,name,source,arguments,returns,convention
 00192eb0,network_hopper_choose_game,source/networking/network_hoppers.c,stack stack stack,bool,stdcall
 001943d0,unknown_001943d0,,eax stack,bool,stdcall
 0019c5f0,unknown_0019c5f0,,stack,pointer,stdcall
+000b8d30,unknown_000b8d30,,ecx ebx stack stack stack,int,stdcall

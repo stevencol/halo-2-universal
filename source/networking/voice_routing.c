@@ -40,7 +40,7 @@ boolean user_interface_controller_voice_allowed(long gamepad_index);
 boolean user_interface_unknown_00147da5(long unknown);
 
 /* 0x000caf90: where an object is */
-void unknown_000caf90(long object_index, real_point3d *position);
+void object_get_markerBD_position(long object_index, real_point3d *position);
 
 /* 0x00192950: something of a player, when game_voice_unknown_00053d90 says
 so */
@@ -1502,7 +1502,7 @@ real voice_players_get_distance(
 			return distance;
 		}
 	}
-	unknown_000caf90(object_index, &position);
+	object_get_markerBD_position(object_index, &position);
 	if (game_voice_unknown_00054df0(player_index))
 	{
 		datum= game_voice_get_player_datum(player_index);
@@ -1515,7 +1515,7 @@ real voice_players_get_distance(
 				processor, which keep what is in between in more room */
 				long double dx, dy, dz, sum;
 
-				unknown_000caf90(object_index, &other_position);
+				object_get_markerBD_position(object_index, &other_position);
 				dx= (long double)other_position.x-position.x;
 				dy= (long double)other_position.y-position.y;
 				dz= (long double)other_position.z-position.z;
@@ -1593,7 +1593,7 @@ void VOICE_ROUTING_CALLBACK voice_channels_update_near(
 		{
 			continue;
 		}
-		unknown_000caf90(object_index, &position);
+		object_get_markerBD_position(object_index, &position);
 		for (player_index= 0; player_index<MAXIMUM_VOICE_ROUTING_PLAYERS; player_index++)
 		{
 			unsigned long bit= 1u<<player_index;
@@ -1616,7 +1616,7 @@ void VOICE_ROUTING_CALLBACK voice_channels_update_near(
 			{
 				continue;
 			}
-			unknown_000caf90(object_index, &other_position);
+			object_get_markerBD_position(object_index, &other_position);
 			dz= other_position.z-position.z;
 			dx= other_position.x-position.x;
 			dy= other_position.y-position.y;
@@ -2123,7 +2123,7 @@ void VOICE_ROUTING_CALLBACK voice_channels_route_player_to_output(
 					struct voice_mix_bin pairs[MAXIMUM_VOICE_CHANNELS_MIX_BINS]= { { 0, 0 } };
 					struct voice_mix_bins mix_bins= { 0, pairs };
 
-					unknown_000caf90(object_index, &position);
+					object_get_markerBD_position(object_index, &position);
 					voice_channels_get_mix_bins(listener_player_index, channels, &mix_bins.count, pairs, &position);
 					voice_remote_talker_unknown_00055250(&voice_globals, player_index, VOICE_CHANNELS_OUTPUT, &mix_bins);
 				}

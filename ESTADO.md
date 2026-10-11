@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 563.
+**Última actualización:** 2026-10-08, al terminar el hito 564.
 
 ## Dónde estamos
 
-- **1919 funciones descompiladas de 11.265: el 17,04 % del juego** (el
-  10,780 % de los bytes de código).
-- Las 1919 están comprobadas contra el ejecutable original: las 1390 del
+- **1921 funciones descompiladas de 11.265: el 17,05 % del juego** (el
+  10,783 % de los bytes de código).
+- Las 1921 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how three things are told how long a tick is* (ver `git log`).
+- Último hito: *Decompile where two markers of an object are* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 616 funciones apuntadas pero sin descompilar (las que el código
-  llama); 467 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 615 funciones apuntadas pero sin descompilar (las que el código
+  llama); 466 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -221,8 +221,7 @@ Módulos (funciones hechas / archivo):
 - [ ] **Las funciones pequeñas que ya se llaman**: de las que el código
       llama sin tenerlas, las más cortas son las más fáciles (ya tienen
       nombre de registros y pruebas que las sustituyen). Quedan, por
-      tamaño: `0x00147f4f` (30 bytes), `0x000caf60`,
-      `0x000caf90`, `0x00063d80`, `0x001565a0`… (hitos 538 y 539; la lista
+      tamaño: `0x00147f4f` (30 bytes), `0x00063d80`, `0x001565a0`… (hitos 538 y 539; la lista
       la da `build\line_breaking\small_externals.py`)
 - [ ] El mensaje del día y los amigos del servicio —
       `networking\network_motd.c` (4, más dos que están en

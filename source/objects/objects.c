@@ -364,3 +364,44 @@ void object_get_location(
 
 	return;
 }
+
+#include <string.h>
+
+/* what the game finds of a marker of an object: 0x70 bytes, with where it is
+at 0x60; and the names of two markers */
+enum
+{
+	OBJECT_MARKER_SIZE= 0x70,
+	OBJECT_MARKER_POSITION_OFFSET= 0x60,
+	_object_marker_name95= 0x4000095,
+	_object_marker_nameBD= 0x40000BD
+};
+
+/* 0x000b8d30: the markers of an object that have a name, up to so many; how
+many it found */
+short __attribute__((stdcall)) unknown_000b8d30(boolean unknown, byte *markers, long object_index, long name,
+	long maximum_count);
+
+/* 0x000caf60: where the marker of an object that has the name of 0x4000095
+is. The game does not look at whether there is one */
+void object_get_marker95_position(
+	long object_index,
+	real_point3d *position)
+{
+	byte marker[OBJECT_MARKER_SIZE];
+
+	unknown_000b8d30(FALSE, marker, object_index, _object_marker_name95, 1);
+	memcpy(position, marker+OBJECT_MARKER_POSITION_OFFSET, sizeof(*position));
+}
+
+/* 0x000caf90: where the marker of an object that has the name of 0x40000BD
+is. The game does not look at whether there is one */
+void object_get_markerBD_position(
+	long object_index,
+	real_point3d *position)
+{
+	byte marker[OBJECT_MARKER_SIZE];
+
+	unknown_000b8d30(FALSE, marker, object_index, _object_marker_nameBD, 1);
+	memcpy(position, marker+OBJECT_MARKER_POSITION_OFFSET, sizeof(*position));
+}

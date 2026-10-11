@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Dónde están dos marcas de un objeto
+
+Dos funciones cortas más en `objects/objects.c` (96 bytes). De 1919
+funciones se pasa a 1921, el 17,05 % de las del juego (el 10,783 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_get_marker95_position` | `0x000caf60` | `objects/objects.c` |
+| `object_get_markerBD_position` | `0x000caf90` | `objects/objects.c` |
+
+### Lo que se sabe
+
+- Las dos piden a `0x000b8d30` **la marca de un objeto que tiene un nombre**
+  y dan dónde está (tres reales, en `+0x60` de los `0x70` bytes de una
+  marca). Los nombres son dos textos del juego por número: `0x4000095` (la
+  que usa el sonido, para saber dónde tiene los oídos quien escucha) y
+  `0x40000BD` (la que usa la voz, para saber de dónde sale la voz de un
+  jugador).
+- `0x000b8d30` es una de las funciones más llamadas del juego que quedan
+  por hacer (buscar marcas en un objeto); aquí queda sustituida.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  563.
+- En este hito se pasaron las pruebas de las dos funciones y
+  `test_voice_routing` entera.
+- Ninguna de las dos mira si el objeto tiene la marca (el juego tampoco):
+  si no la tiene dan lo que hubiera en la pila. En las pruebas siempre la
+  tiene.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — A tres cosas se les dice cuánto dura un tick
 
 Una función corta más en `game/game.c`, de 38 bytes. De 1918

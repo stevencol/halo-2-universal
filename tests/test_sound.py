@@ -7793,7 +7793,7 @@ def run(t) -> None:
             },
             externals={
                 "unknown_00155760": mode_,
-                "unknown_000caf60": head_,
+                "object_get_marker95_position": head_,
                 "object_get_velocities": velocities_,
                 "scenario_location_from_point": location_,
                 "sound_console_set_listener": console_,

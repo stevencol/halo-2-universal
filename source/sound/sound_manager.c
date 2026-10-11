@@ -1287,7 +1287,7 @@ void __attribute__((stdcall)) sound_listeners_update(boolean tell_console);
 /* 0x00155760: something of a listener, 0 or 1 for those that are heard from;
 0x000caf60: where the head of a unit is, most likely */
 long unknown_00155760(long listener_index);
-void unknown_000caf60(long unit_index, real_point3d *point);
+void object_get_marker95_position(long unit_index, real_point3d *point);
 void sound_playback_controllers_update(void);
 void __attribute__((stdcall)) looping_sounds_update(boolean update_sources);
 void sound_sources_update(void);
@@ -12697,7 +12697,7 @@ unknown_004e9c8c says for their player (0x358 bytes each: a place, where it
 is in the structure bsp, a velocity, and which way it faces and which way is
 up). But if the unit of the player is in a seat, and unknown_00155760 gives
 1 for the listener, the listener goes part of the way to the unit
-(unknown_000caf60 says where it is), and turns part of the way to where the
+(object_get_marker95_position says where it is), and turns part of the way to where the
 unit faces: the part that the seat says at 0x40; then it moves as the unit
 does, and is in the structure bsp where its place is.
 
@@ -12764,7 +12764,7 @@ void __attribute__((stdcall)) sound_listeners_update(
 				real_quaternion rotation;
 				real_point3d head;
 
-				unknown_000caf60(unit_index, &head);
+				object_get_marker95_position(unit_index, &head);
 				position.x= (head.x-place[0])**(const real *)(seat+SOUND_UNIT_SEAT_LISTENER_FRACTION_OFFSET)+place[0];
 				position.y= (head.y-place[1])**(const real *)(seat+SOUND_UNIT_SEAT_LISTENER_FRACTION_OFFSET)+place[1];
 				position.z= (head.z-place[2])**(const real *)(seat+SOUND_UNIT_SEAT_LISTENER_FRACTION_OFFSET)+place[2];

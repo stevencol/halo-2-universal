@@ -145,4 +145,9 @@ void object_get_location(long object_index, struct location *location);
 
 extern struct data_array *object_header_data;
 
+/* 0x000caf60, 0x000caf90: where two markers of an object are, by their
+names */
+void object_get_marker95_position(long object_index, real_point3d *position);
+void object_get_markerBD_position(long object_index, real_point3d *position);
+
 #endif

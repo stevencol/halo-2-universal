@@ -490,3 +490,26 @@ def run(t) -> None:
                 globals={"game_time_globals": time},
                 externals=keyframe_externals,
             )
+
+
+def run_markers(t) -> None:
+    import random
+
+    random_ = random.Random(564)
+    for n in range(600):
+
+        def markers(harness, arguments, found=random_.randbytes(0x70)):
+            # the game only sets the low byte of the first
+            harness.mu.mem_write(arguments[1], found)
+            return 1, (arguments[0] & 0xFF, *arguments[2:])
+
+        for name in ("object_get_marker95_position", "object_get_markerBD_position"):
+            t.check(name, random_.getrandbits(32), Buffer(random_.randbytes(12)), externals={"unknown_000b8d30": markers})
+
+
+_run_objects = run
+
+
+def run(t) -> None:
+    _run_objects(t)
+    run_markers(t)
