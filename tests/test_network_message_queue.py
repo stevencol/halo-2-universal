@@ -288,7 +288,10 @@ def run(t) -> None:
         return (0, 0xC)
 
     def stream_state(call) -> bytes:
-        return bytes(t.harness.mu.mem_read(call.stack[0] + 4, 0x18))
+        # but for the number of 0x14 of the stream: the game does not set it before this, so it has what was on the
+        # stack, which is not the same when other tests ran before (the full battery of milestone 533)
+        state = bytes(t.harness.mu.mem_read(call.stack[0] + 4, 0x18))
+        return state[:0x10] + state[0x14:]
 
     for n in range(700):
         data = bytearray(random_.randbytes(SIZE))

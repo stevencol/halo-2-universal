@@ -2,6 +2,28 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Batería completa en el hito 533, y una prueba corregida
+
+Sin funciones nuevas. La batería completa (`python tools\test_functions.py`)
+se pasó entera en la copia de comprobación sobre el hito 533: **1827 de 1828
+funciones pasan**. Tardó casi dos horas de procesador.
+
+### Corregido
+
+- La que falló, `network_message_queue_send` (hito 441), **pasa sola y
+  fallaba solo dentro de la batería**: su prueba comparaba un número del
+  flujo (`+0x14`) que el juego no pone antes de llamar a quien escribe el
+  mensaje, así que valía lo que hubiera dejado en la pila la prueba
+  anterior. Es la misma línea que la comprobación de romper líneas ya había
+  dado por imposible de notar (hitos 441 a 455). La prueba ya no compara
+  ese número. El código no cambia.
+
+### Sin comprobar
+
+- La batería no cubre los hitos 534 a 571, que se probaron función a
+  función y con las pruebas de quien llama a lo renombrado.
+- **Romper líneas, pendiente** en los hitos 456 a 490 y 501 a 571.
+
 ## 2026-10-11 — Lo que otra consola dice de dos sitios de jugadores a la vez
 
 Una función más en `networking/simulation_players.c`, de 272 bytes. De 1937
