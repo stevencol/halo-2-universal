@@ -1057,7 +1057,7 @@ def run(t) -> None:
                     ),
                     "game_voice_unknown_00054df0": lambda harness, arguments, has=has: has >> (arguments[0] & 15) & 1,
                     "game_voice_get_player_datum": datum_of,
-                    "unknown_00147da5": lambda harness, arguments, stopped=stopped: stopped[arguments[0] & 3],
+                    "user_interface_unknown_00147da5": lambda harness, arguments, stopped=stopped: stopped[arguments[0] & 3],
                     "voice_channels_update_team_button": lambda harness, arguments: 0,
                     "voice_channels_time_is_recent": lambda harness, arguments, recent=recent: recent >> (arguments[1] & 15) & 1,
                     "voice_players_can_hear": lambda harness, arguments, can=can: can[arguments[1] & 15] >> (arguments[0] & 15) & 1,

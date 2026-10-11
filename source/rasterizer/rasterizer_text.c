@@ -56,6 +56,13 @@ struct rasterizer_text_bounds rasterizer_text_bounds;
 /* 0x0051080c, 0x00485602: while any of the two is not 0, no text is painted.
 What they are is not known, and their names are guesses */
 boolean rasterizer_text_disabled;
+
+/* 0x004c1a18: characters are being painted: something of the rasterizer has
+to be put back when no more are */
+boolean rasterizer_text_unknown_004c1a18;
+
+/* 0x0001e930: something of the rasterizer is put back */
+void __attribute__((stdcall)) unknown_0001e930(long unknown);
 short rasterizer_text_suspended;
 
 /* 0x004670c0: one more with each text that is painted; nothing is known to
@@ -493,5 +500,17 @@ void DRAW_STRING_CALLBACK rasterizer_draw_character_with_dropshadow(
 			break;
 		}
 		shadow= FALSE;
+	}
+}
+
+/* 0x00036560: no more characters are painted: if any were, something of the
+rasterizer is put back */
+void rasterizer_text_end(
+	void)
+{
+	if (rasterizer_text_unknown_004c1a18)
+	{
+		unknown_0001e930(1);
+		rasterizer_text_unknown_004c1a18= FALSE;
 	}
 }

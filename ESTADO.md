@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 538.
+**Última actualización:** 2026-10-08, al terminar el hito 539.
 
 ## Dónde estamos
 
-- **1842 funciones descompiladas de 11.265: el 16,35 % del juego** (el
-  10,548 % de los bytes de código).
-- Las 1842 están comprobadas contra el ejecutable original: las 1390 del
+- **1845 funciones descompiladas de 11.265: el 16,38 % del juego** (el
+  10,551 % de los bytes de código).
+- Las 1845 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile four short functions that were called by their address* (ver `git log`).
+- Último hito: *Decompile three more short functions that were called by their address* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 616 funciones apuntadas pero sin descompilar (las que el código
-  llama); 476 de ellas solo se conocen por su dirección (`unknown_...`).
+  llama); 477 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -221,10 +221,10 @@ Módulos (funciones hechas / archivo):
 - [ ] **Las funciones pequeñas que ya se llaman**: de las que el código
       llama sin tenerlas, las más cortas son las más fáciles (ya tienen
       nombre de registros y pruebas que las sustituyen). Quedan, por
-      tamaño: `0x00036560` (24 bytes), `0x00147da5`, `0x00193470`,
-      `0x00163b60`, `0x00192950`, `0x00161c90`, `0x001462b0`, `0x000d4db0`,
-      `0x00192d40`, `0x0014a224`, `0x000caf60`, `0x000caf90`, `0x00063d80`,
-      `0x001565a0`… (hito 538)
+      tamaño: `0x00193470` (26 bytes), `0x00163b60`, `0x00192950`,
+      `0x00161c90`, `0x001462b0`, `0x000d4db0`, `0x00192d40`, `0x000caf60`,
+      `0x000caf90`, `0x00063d80`, `0x001565a0`… (hitos 538 y 539; la lista
+      la da `build\line_breaking\small_externals.py`)
 - [ ] Lo que la interfaz pregunta a la partida en red —
       `interface\user_interface_networking.c` (4, de la zona de
       `0x0019989d` a `0x0019a02c`; faltan `0x0019989d` y `0x00199fd6`)

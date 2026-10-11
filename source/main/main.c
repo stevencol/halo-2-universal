@@ -49,7 +49,7 @@ took */
 void unknown_0012b2a0(void);
 
 /* 0x0014a224: something of a game whose mode is 3 */
-boolean unknown_0014a224(void);
+boolean user_interface_unknown_0014a224(void);
 
 /* what a frame calls, in the order that it calls them. Their names are not
 known; the three with a name are what the game asked the loop for */
@@ -252,7 +252,7 @@ float main_time_update(
 		time->unknown32= frame_vblanks;
 		if (main_game_globals->active)
 		{
-			if (main_game_globals->options.game_mode!=_game_mode_3 || unknown_0014a224())
+			if (main_game_globals->options.game_mode!=_game_mode_3 || user_interface_unknown_0014a224())
 			{
 				frame_vblanks= time->unknown32;
 				if (frame_vblanks<=MINIMUM_FRAME_VBLANKS)

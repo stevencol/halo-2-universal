@@ -105,7 +105,7 @@ def run(t) -> None:
             },
             externals={
                 "GetTickCount": tick_counts(123, random_.choice((tick_count - 100, tick_count - 1, tick_count - 2, tick_count + 16)) & NONE),
-                "unknown_0014a224": lambda harness, arguments, result=random_.randrange(2): result,
+                "user_interface_unknown_0014a224": lambda harness, arguments, result=random_.randrange(2): result,
             },
         )
 

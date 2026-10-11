@@ -37,7 +37,7 @@ void unknown_00189760(const struct voice_sound_request *request);
 boolean user_interface_controller_voice_allowed(long gamepad_index);
 
 /* 0x00147da5: something of a player that stops it from talking to its team */
-boolean unknown_00147da5(long unknown);
+boolean user_interface_unknown_00147da5(long unknown);
 
 /* 0x000caf90: where an object is */
 void unknown_000caf90(long object_index, real_point3d *position);
@@ -1754,7 +1754,7 @@ void VOICE_ROUTING_CALLBACK voice_channels_update_team(
 		}
 		gamepad_index= *(const long *)(datum+VOICE_PLAYER_DATUM_GAMEPAD_OFFSET);
 		unknown28= *(const short *)(datum+VOICE_PLAYER_DATUM_LISTENER_OFFSET);
-		if (gamepad_index==NONE || unknown28==NONE || unknown_00147da5(unknown28))
+		if (gamepad_index==NONE || unknown28==NONE || user_interface_unknown_00147da5(unknown28))
 		{
 			continue;
 		}

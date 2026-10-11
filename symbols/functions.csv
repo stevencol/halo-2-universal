@@ -475,7 +475,7 @@ address,name,source,arguments,returns,convention
 00225f80,unknown_00225f80,,,void
 00225fc0,unknown_00225fc0,,,void
 003361a4,unknown_003361a4,,,void
-0014a224,unknown_0014a224,,,bool
+0014a224,user_interface_unknown_0014a224,source/interface/user_interface.c,,bool
 002237d4,unknown_002237d4,,,void
 0018f1c0,main_game_goto_main_menu,source/main/main_game.c,stack,void
 0012bd40,main_switch_structure_bsp_private,source/main/main.c,,void
@@ -873,7 +873,7 @@ address,name,source,arguments,returns,convention
 00189760,unknown_00189760,,esi,void
 00057080,voice_channels_update_near,source/networking/voice_routing.c,stack,void,stdcall
 00057360,voice_channels_update_team,source/networking/voice_routing.c,stack,void,stdcall
-00147da5,unknown_00147da5,,edi,bool
+00147da5,user_interface_unknown_00147da5,source/interface/user_interface.c,edi,bool
 00057620,voice_channels_update_team_button,source/networking/voice_routing.c,eax edi stack,void,stdcall
 000577d0,voice_channels_update_dead,source/networking/voice_routing.c,stack,void,stdcall
 00057960,voice_channels_update_by_team,source/networking/voice_routing.c,stack,void,stdcall
@@ -1320,7 +1320,7 @@ address,name,source,arguments,returns,convention
 0001d5e0,unknown_0001d5e0,,eax stack stack,int,stdcall
 0001f070,rasterizer_draw_characters,source/rasterizer/rasterizer_text.c,eax ecx stack stack stack stack stack stack stack,void,stdcall
 00035b90,rasterizer_text_begin,,stack,void,stdcall
-00036560,rasterizer_text_end,,,void
+00036560,rasterizer_text_end,source/rasterizer/rasterizer_text.c,,void
 00121b00,unknown_00121b00,,,bool
 00121570,unknown_00121570,,stack stack,void,stdcall
 001a1480,async_read_whole_file,source/cseries/async.c,ebx eax ecx stack stack stack stack stack,void
@@ -2457,3 +2457,6 @@ address,name,source,arguments,returns,convention
 001999bf,user_interface_networking_unknown_001999bf,source/interface/user_interface_networking.c,stack,bool,stdcall
 0019989d,unknown_0019989d,,,int
 00199fd6,unknown_00199fd6,,,int
+0001e930,unknown_0001e930,,stack,void,stdcall
+00148e6d,unknown_00148e6d,,stack,bool,stdcall
+00147f4f,unknown_00147f4f,,,int

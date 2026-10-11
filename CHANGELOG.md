@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Tres funciones cortas más que se llamaban por su dirección
+
+Tres funciones cortas (93 bytes): una en `rasterizer/rasterizer_text.c` y dos en el archivo nuevo
+`interface/user_interface.c`. De 1842
+funciones se pasa a 1845, el 16,38 % de las del juego (el 10,551 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `rasterizer_text_end` | `0x00036560` | `rasterizer/rasterizer_text.c` |
+| `user_interface_unknown_00147da5` | `0x00147da5` | `interface/user_interface.c` |
+| `user_interface_unknown_0014a224` | `0x0014a224` | `interface/user_interface.c` |
+
+### Lo que se sabe
+
+- `rasterizer_text_end` cierra el pintado de letras: si se llegó a pintar
+  alguna (un byte nuevo, `0x004c1a18`), devuelve algo del rasterizador a
+  como estaba (`0x0001e930`).
+- `user_interface_unknown_00147da5` (la que usa `voice_routing.c`) busca
+  el mando del jugador que tiene una de las cosas de la voz
+  (`user_interface_controller_find_voice_index`, hito 526) y pregunta algo
+  de ese mando a la interfaz.
+- `user_interface_unknown_0014a224` (la que usa `main.c`) dice si, en una
+  partida de la tercera clase, la interfaz está en `6` o en `9`.
+- Las dos últimas son de otra zona de direcciones sin alinear, de
+  `0x00147000` a `0x0014a300`: es el resto de la interfaz, sin empezar.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  538.
+- En este hito se pasaron las pruebas de las tres funciones, y `test_main`
+  y `test_rasterizer_text` enteras.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Cuatro funciones cortas que se llamaban por su dirección
 
 Cuatro funciones cortas (186 bytes): dos en `game/players.c`, una en `cseries/cseries.c` y una en
