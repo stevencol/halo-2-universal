@@ -623,3 +623,57 @@ def run(t) -> None:
             },
             mocks=[Mock(lambda call: 0, stack_arguments=1) for index in range(8)],
         )
+
+    # ---------- the name of a game, the invitation that was taken, and the address of a service
+
+    FAILED = (0x80004005, 0x80151000, 0xFFFFFFFF)
+
+    for n in range(1500):
+        size = random_.choice((1, 2, 3, 8, 16, 16))
+        text = "".join(random_.choice("Halo 2?x") for index in range(random_.randrange(size)))
+
+        def named(harness, arguments, result=random_.choice((0, 0, 1, 0x7FFFFFFF) + FAILED), text=text):
+            if result < 0x80000000:
+                harness.mu.mem_write(arguments[3], (text + "\0").encode("utf-16-le"))
+            return result, (*arguments[:3], harness.normalize(arguments[3]))
+
+        t.check(
+            "online_title_get_name",
+            random_.getrandbits(32),
+            Buffer(random_.randbytes(size * 2 + 4)),
+            size,
+            externals={"XGetLanguage": lambda harness, arguments, language=random_.randrange(10): (language, ()), "XOnlineFriendsGetTitleName": named},
+        )
+
+        t.check(
+            "online_get_accepted_game_invite",
+            Buffer(random_.randbytes(0x40)),
+            externals={
+                "XOnlineFriendsGetAcceptedGameInvite": lambda harness, arguments, result=random_.choice((0, 0, 1, 0x7FFFFFFF) + FAILED): (
+                    result,
+                    (harness.normalize(arguments[0]),),
+                ),
+            },
+        )
+
+        services = bytearray()
+        for index in range(13):
+            services += struct.pack(
+                "<III",
+                random_.choice((0x14, 0x14, 2, 4, 0x15, 0x4D530064, random_.getrandbits(32))),
+                random_.choice((0, 1)),
+                random_.choice((0, 0, 1, 1, 0x100, random_.getrandbits(32))),
+            )
+
+        def service(harness, arguments, result=random_.choice((0, 0, 0, 1) + FAILED), info=random_.randbytes(12)):
+            harness.mu.mem_write(arguments[1], info)
+            return result, (arguments[0],)
+
+        t.check(
+            "online_service_unregister_address",
+            globals={"unknown_00467178": bytes(services)},
+            externals={
+                "XOnlineGetServiceInfo": service,
+                "XNetUnregisterInAddr": lambda harness, arguments: (0, tuple(arguments)),
+            },
+        )

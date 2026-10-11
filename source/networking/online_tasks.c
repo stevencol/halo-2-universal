@@ -75,6 +75,27 @@ long __attribute__((stdcall)) XOnlineNotificationSetState(long user_index, long 
 	unsigned long session_high, long size, byte *state);
 unsigned long GetTickCount(void);
 
+/* 0x0033039a: the language of the console. 0x003a07cf: the name of a game,
+in a language. 0x003a0827: the invitation to a game that the player took
+before the game started. 0x003cd344: an address of the network is let go
+of */
+long XGetLanguage(void);
+long __attribute__((stdcall)) XOnlineFriendsGetTitleName(unsigned long title, long language, long size, wchar *name);
+long __attribute__((stdcall)) XOnlineFriendsGetAcceptedGameInvite(void *invite);
+long __attribute__((stdcall)) XNetUnregisterInAddr(unsigned long in_address);
+wchar *wcsncpy(wchar *destination, const wchar *source, size_t count);
+
+/* ---------- structures */
+
+/* what the libraries say of a service: what it is, and where it is */
+struct online_service_info
+{
+	unsigned long identifier;
+	unsigned long address;
+	word port;
+	word unknownA;
+};
+
 /* ---------- globals */
 
 /* 0x004cf78c: the table of the tasks. 0x004771c8: something of them, and
@@ -1316,4 +1337,49 @@ void online_logoff(
 	unknown_00479780.flags&= ~_network_blob_good_bit;
 	unknown_0047d8f4.flags&= ~_network_blob_good_bit;
 	unknown_00477058.flags&= ~_network_blob_good_bit;
+}
+
+/* 0x0006b590: the name of a game, in the language of the console, as the
+service of games has it; a question mark if it does not */
+void __attribute__((stdcall)) online_title_get_name(
+	unsigned long title,
+	wchar *name,
+	long size)
+{
+	if (XOnlineFriendsGetTitleName(title, XGetLanguage(), size, name)<0)
+	{
+		wcsncpy(name, (const wchar *)u"?", size-1);
+		name[size-1]= 0;
+	}
+}
+
+/* 0x0006d210: the invitation to a game that the player took before the game
+started; whether there is one */
+boolean online_get_accepted_game_invite(
+	void *invite)
+{
+	return XOnlineFriendsGetAcceptedGameInvite(invite)>=0;
+}
+
+/* 0x0006d220: if the service of games has the service of 0x14, as was seen
+when someone signed in, the address of the network that it has is let go
+of */
+void online_service_unregister_address(
+	void)
+{
+	struct online_service_info info;
+	boolean available= FALSE;
+	long index;
+
+	for (index= 0; index<NUMBER_OF_ONLINE_SERVICES; index++)
+	{
+		if (unknown_00467178[index].identifier==_online_service14)
+		{
+			available= unknown_00467178[index].available;
+		}
+	}
+	if (available && XOnlineGetServiceInfo(_online_service14, &info)>=0)
+	{
+		XNetUnregisterInAddr(info.address);
+	}
 }

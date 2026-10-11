@@ -3,18 +3,18 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 524.
+**Última actualización:** 2026-10-08, al terminar el hito 525.
 
 ## Dónde estamos
 
-- **1749 funciones descompiladas de 11.265: el 15,53 % del juego** (el
-  10,237 % de los bytes de código).
-- Las 1749 están comprobadas contra el ejecutable original: las 1390 del
+- **1752 funciones descompiladas de 11.265: el 15,55 % del juego** (el
+  10,242 % de los bytes de código).
+- Las 1752 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how everyone is signed out of the service* (ver `git log`).
+- Último hito: *Decompile three short functions of the service: a game's name, the invitation taken, a service's address* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 608 funciones apuntadas pero sin descompilar (las que el código
+- Además hay 610 funciones apuntadas pero sin descompilar (las que el código
   llama); 472 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
@@ -223,8 +223,9 @@ Módulos (funciones hechas / archivo):
       recorrerlas, buscar una, volver a empezarla, hacerlas avanzar, en
       qué está la conexión, quién está conectado y lo que cada una hace
       cada vuelta, lo que se hace al conectarse y en qué está cada
-      jugador, y desconectarse (39); faltan `0x0006b590`, `0x0006ba80`,
-      `0x0006bd10`, `0x0006c8b0` y `0x0006cc10`)
+      jugador, desconectarse, el nombre de un juego y la invitación
+      aceptada (42); faltan `0x0006ba80`, `0x0006bd10`, `0x0006c8b0` y
+      `0x0006cc10`)
 - [x] La red de la consola — `networking\transport.c` (8: iniciarla y
       deshacerla, mirar el cable, arrancarla y pararla, apuntar a quién se
       avisa y avisar, y si está)

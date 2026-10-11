@@ -2356,3 +2356,8 @@ address,name,source,arguments,returns,convention
 0008e750,unknown_0008e750,,stack stack stack,void,stdcall
 0006cb60,online_logoff,source/networking/online_tasks.c,,void
 00190da5,unknown_00190da5,,stack,void,stdcall
+0006b590,online_title_get_name,source/networking/online_tasks.c,stack edi esi,void,stdcall
+0006d210,online_get_accepted_game_invite,source/networking/online_tasks.c,eax,bool
+0006d220,online_service_unregister_address,source/networking/online_tasks.c,,void
+003a07cf,XOnlineFriendsGetTitleName,,stack stack stack stack,int,stdcall
+003a0827,XOnlineFriendsGetAcceptedGameInvite,,stack,int,stdcall

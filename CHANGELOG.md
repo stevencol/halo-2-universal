@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — El nombre de un juego, la invitación aceptada y la dirección de un servicio
+
+Tres funciones cortas en `networking/online_tasks.c`, de 131 bytes entre las tres. De 1749
+funciones se pasa a 1752, el 15,55 % de las del juego (el 10,242 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_title_get_name` | `0x0006b590` | `networking/online_tasks.c` |
+| `online_get_accepted_game_invite` | `0x0006d210` | `networking/online_tasks.c` |
+| `online_service_unregister_address` | `0x0006d220` | `networking/online_tasks.c` |
+
+### Lo que se sabe
+
+- `online_title_get_name` pide a las bibliotecas **el nombre de un juego**
+  (`XOnlineFriendsGetTitleName`) en el idioma de la consola; si no lo
+  saben, deja un signo de interrogación. Es lo que se enseña de un amigo
+  que está jugando a otra cosa.
+- `online_get_accepted_game_invite` dice si el jugador **aceptó una
+  invitación antes de arrancar el juego** (`XOnlineFriendsGetAcceptedGameInvite`).
+- `online_service_unregister_address` mira en la tabla de servicios
+  (`0x00467178`) si el servicio `0x14` estaba disponible al conectarse y,
+  si las bibliotecas saben dónde está, **suelta su dirección de red**
+  (`XNetUnregisterInAddr`). La llama `0x0006cc10` justo antes de cambiar
+  quién está conectado.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  524.
+- En este hito se pasaron las pruebas de las tres funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Desconectarse del servicio de partidas
 
 Una función en `networking/online_tasks.c`, de 171 bytes. De 1748

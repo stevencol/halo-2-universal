@@ -12,6 +12,7 @@ guesses.
 
 #include "cseries/cseries.h"
 #include "memory/data.h"
+#include "text/unicode.h"
 
 /* ---------- constants */
 
@@ -113,7 +114,10 @@ enum
 	ONLINE_CONTROLLER_FLAGS_OFFSET= 0x8,
 	MAXIMUM_ONLINE_USER_ENTRIES= 125,
 	ONLINE_USER_ENTRY_SIZE= 0x40,
-	ONLINE_USER_ENTRY_IDENTIFIER_OFFSET= 0x20
+	ONLINE_USER_ENTRY_IDENTIFIER_OFFSET= 0x20,
+	/* the service whose address is let go of before who is signed in
+	changes */
+	_online_service14= 0x14
 };
 
 /* ---------- structures */
@@ -224,6 +228,9 @@ void __attribute__((stdcall)) online_users_set_state(const struct online_user *u
 void online_state_encode(unsigned long *encoded, const struct online_state *state);
 boolean online_user_get_state(long user_index, struct online_user_state *state);
 void online_logoff(void);
+void __attribute__((stdcall)) online_title_get_name(unsigned long title, wchar *name, long size);
+boolean online_get_accepted_game_invite(void *invite);
+void online_service_unregister_address(void);
 long online_tasks_get_logon_state(long index);
 long online_users_get_result(void);
 long online_task_users_get_result(const struct online_task *task);
