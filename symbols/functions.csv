@@ -2506,3 +2506,7 @@ address,name,source,arguments,returns,convention
 003a07da,XOnlineFriendsRemove,,stack stack,int,stdcall
 003a0806,XOnlineFriendsAnswerRequest,,stack stack stack,int,stdcall
 003a0811,XOnlineFriendsAnswerGameInvite,,stack stack stack,int,stdcall
+0008cce0,online_friends_enumerate_start,source/networking/online_friends.c,ebx,int
+0008cd60,online_friends_get_latest,source/networking/online_friends.c,edi stack,short,stdcall
+003a07ae,XOnlineFriendsEnumerate,,stack stack stack,int,stdcall
+003a07c4,XOnlineFriendsGetLatest,,stack stack stack,int,stdcall

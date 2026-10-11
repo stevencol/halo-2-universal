@@ -4,6 +4,7 @@ import random
 import struct
 
 from difftest import Buffer
+from test_online_storage import tasks_table
 
 NONE = 0xFFFFFFFF
 
@@ -106,5 +107,45 @@ def run(t) -> None:
                 "XOnlineTitleIdIsSameTitle": same,
                 "XGetLanguage": lambda harness, arguments, language=random_.randrange(10): (language, ()),
                 "XOnlineFriendsGetTitleName": named,
+            },
+        )
+
+    # ---------- the list of the friends of a player
+
+    FAILED = (0x80004005, 0x80151000, 0xFFFFFFFF)
+    for n in range(2500):
+        tasks, number = tasks_table(random_)
+
+        def starts(harness, arguments, result=random_.choice((0, 0, 0, 1) + FAILED), handle=random_.getrandbits(32)):
+            if result < 0x80000000:
+                harness.mu.mem_write(arguments[2], struct.pack("<I", handle))
+            return result, tuple(arguments[:2])
+
+        t.check(
+            "online_friends_enumerate_start",
+            random_.randrange(4),
+            globals={"online_tasks": tasks},
+            externals={
+                "online_task_new_signed_in": lambda harness, arguments, index=random_.choice((number, number, number, NONE, number ^ 0x10000)): (index, ()),
+                "XOnlineFriendsEnumerate": starts,
+                "online_task_close": lambda harness, arguments: (0, tuple(arguments)),
+            },
+        )
+
+        tasks, number = tasks_table(random_)
+
+        def latest(harness, arguments, count=random_.choice((0, 1, 3, 100, 0x10005))):
+            harness.mu.mem_write(arguments[2], bytes((count & 0xFF,)) * 8)
+            return count, tuple(arguments[:2])
+
+        t.check(
+            "online_friends_get_latest",
+            random_.choice((number, number, number, number, NONE, number ^ 0x10000, number | 0xFFF8)),
+            Buffer(random_.randbytes(0x20)),
+            globals={"online_tasks": tasks, "unknown_00467214": random_.choice((0, 0, 0, 0x80010002, NONE))},
+            externals={
+                "online_tasks_get_logon_state": lambda harness, arguments, state=random_.choice((1, 1, 1, 1, 0, 2)): (state, tuple(arguments)),
+                "online_task_get_status": lambda harness, arguments, status=random_.choice((0, 1, 2, 2, 3, 4, 5)): (status, tuple(arguments)),
+                "XOnlineFriendsGetLatest": latest,
             },
         )

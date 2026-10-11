@@ -30,6 +30,12 @@ long __attribute__((stdcall)) XOnlineFriendsAnswerGameInvite(long owner, const b
 long __attribute__((stdcall)) XOnlineFriendsGetTitleName(unsigned long title, long language, long size, wchar *name);
 long XGetLanguage(void);
 
+/* 0x003a07ae, 0x003a07c4, of the console's libraries: a task starts that
+keeps the list of the friends of a player; and the friends that there are
+now, and how many */
+long __attribute__((stdcall)) XOnlineFriendsEnumerate(long owner, long unknown, long *handle);
+long __attribute__((stdcall)) XOnlineFriendsGetLatest(long owner, long maximum_count, byte *friends);
+
 /* ---------- globals */
 
 /* 0x00467214, of main_game.c: the task that signs in to the service of
@@ -315,4 +321,47 @@ void __attribute__((stdcall)) online_friend_get_title_name(
 			name[0]= 0;
 		}
 	}
+}
+
+/* 0x0008cce0: a task starts that keeps the list of the friends of a player;
+the task, or NONE if it could not start */
+long online_friends_enumerate_start(
+	long owner)
+{
+	long task_index= online_task_new_signed_in();
+	struct online_task *task= (struct online_task *)datum_try_and_get(online_tasks, task_index);
+
+	if (task)
+	{
+		if (XOnlineFriendsEnumerate(owner, 0, &task->handle)<0)
+		{
+			online_task_close(task_index);
+
+			return NONE;
+		}
+		task->flags= _online_task_unknown1_bit;
+		task->type= _online_task_type_friends;
+		task->owner= owner;
+	}
+
+	return task_index;
+}
+
+/* 0x0008cd60: the friends that the player of a task has now, up to a
+hundred, and how many; none if there is no such task, no one is signed in,
+or the task is not at its second or third step */
+short __attribute__((stdcall)) online_friends_get_latest(
+	long task_index,
+	byte *friends)
+{
+	const struct online_task *task= (const struct online_task *)datum_try_and_get(online_tasks, task_index);
+
+	if (task && online_friends_signed_in() &&
+		(online_task_get_status(task_index)==_online_task_status1 ||
+		online_task_get_status(task_index)==_online_task_status2))
+	{
+		return (short)XOnlineFriendsGetLatest(task->owner, MAXIMUM_ONLINE_FRIENDS, friends);
+	}
+
+	return 0;
 }

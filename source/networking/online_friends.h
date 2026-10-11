@@ -55,7 +55,9 @@ enum
 	_online_friend_unknown100= 0x100,
 	_online_friend_unknown400= 0x400,
 	/* the three answers that a friend can be given */
-	NUMBER_OF_ONLINE_FRIEND_ANSWERS= 3
+	NUMBER_OF_ONLINE_FRIEND_ANSWERS= 3,
+	/* how many friends a player can have */
+	MAXIMUM_ONLINE_FRIENDS= 100
 };
 
 /* ---------- structures */
@@ -86,5 +88,7 @@ void __attribute__((stdcall)) online_friend_remove(const byte *online_friend, lo
 void __attribute__((stdcall)) online_friend_answer_request(long answer, const byte *online_friend, long owner);
 void __attribute__((stdcall)) online_friend_answer_game_invite(const byte *online_friend, long owner, long answer);
 void __attribute__((stdcall)) online_friend_get_title_name(wchar *name, const byte *online_friend, short size);
+long online_friends_enumerate_start(long owner);
+short __attribute__((stdcall)) online_friends_get_latest(long task_index, byte *friends);
 
 #endif

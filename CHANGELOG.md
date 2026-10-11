@@ -2,6 +2,36 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — La lista de amigos de un jugador
+
+Dos funciones más en `networking/online_friends.c` (257 bytes). De 1895
+funciones se pasa a 1897, el 16,84 % de las del juego (el 10,640 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_friends_enumerate_start` | `0x0008cce0` | `networking/online_friends.c` |
+| `online_friends_get_latest` | `0x0008cd60` | `networking/online_friends.c` |
+
+### Lo que se sabe
+
+- `online_friends_enumerate_start` arranca **la tarea que mantiene la lista
+  de amigos** de un jugador (`XOnlineFriendsEnumerate`): es la tarea de la
+  clase `3`, la que `online_tasks.c` ya trataba de un modo propio al
+  cerrarla (hito 507) y la que `online_logon_remove_user` cierra al quitar
+  a un jugador (hito 529).
+- `online_friends_get_latest` da **los amigos que hay ahora**, hasta cien
+  (`XOnlineFriendsGetLatest`), y cuántos son.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  549.
+- En este hito se pasaron las pruebas de las dos funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — En qué está un amigo del servicio y lo que se hace con él: ocho funciones
 
 Ocho funciones más en `networking/online_friends.c` (608 bytes). De 1887
