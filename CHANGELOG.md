@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — El archivo del mensaje del día y cinco funciones cortas de los amigos del servicio
+
+Siete funciones cortas (244 bytes) en dos archivos nuevos: `networking/network_motd.c` (2) y
+`networking/online_friends.c` (5). De 1880
+funciones se pasa a 1887, el 16,75 % de las del juego (el 10,611 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_title_is_same_title` | `0x0008c540` | `networking/online_friends.c` |
+| `network_motd_get_file` | `0x0008ca00` | `networking/network_motd.c` |
+| `network_motd_available` | `0x0008ca50` | `networking/network_motd.c` |
+| `online_unknown_0008cc00` | `0x0008cc00` | `networking/online_friends.c` |
+| `online_unknown_0008cc20` | `0x0008cc20` | `networking/online_friends.c` |
+| `online_friend_is_same_title` | `0x0008d190` | `networking/online_friends.c` |
+| `online_friend_get_identity` | `0x0008d1f0` | `networking/online_friends.c` |
+
+### Lo que se sabe
+
+- La zona de `0x0008bf10` a `0x0008d550` (35 funciones, sin empezar) son
+  tres cosas que usan las tareas del servicio, y con este hito se sabe cuáles:
+  - **el mensaje del día**: el tercero de los bloques que se leen del
+    servicio al conectarse (`unknown_00479780`) se guarda en el disco duro
+    como `n:\message_of_the_day.dat` (`network_motd_get_file`), y
+    `network_motd_available` dice si lo hay;
+  - **los amigos**: `online_friend_get_identity` saca de un amigo, como lo
+    dan las bibliotecas, quién es (doce bytes) y su nombre (15 letras);
+    `online_friend_is_same_title` dice si está jugando a este mismo juego
+    (`XOnlineTitleIdIsSameTitle`);
+  - y algo con 32 textos de 255 letras (`online_unknown_0008cc00`,
+    `online_unknown_0008cc20`), que queda sin nombre.
+- Con los hitos 541 y 520 ya se sabe qué son **los tres bloques** que el
+  juego lee al conectarse: las listas de partidas (`0x0047d8f4`), el
+  mensaje del día (`0x00479780`) y uno más (`0x00477058`).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  547.
+- En este hito se pasaron las pruebas de las siete funciones. Además
+  terminó `test_sound` entera, que había quedado corriendo en el hito 545:
+  sus 241 funciones pasan.
+- En `network_motd_get_file` el juego mira un bit que acaba de poner a
+  cero; el compilador de `source\` quita esa comprobación.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — El mapa que se copia por adelantado: tres funciones
 
 Archivo nuevo, `main/main_map_precache.c`, con tres funciones cortas (124 bytes). De 1877

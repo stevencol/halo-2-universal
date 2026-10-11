@@ -3,18 +3,18 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 547.
+**Última actualización:** 2026-10-08, al terminar el hito 548.
 
 ## Dónde estamos
 
-- **1880 funciones descompiladas de 11.265: el 16,69 % del juego** (el
-  10,602 % de los bytes de código).
-- Las 1880 están comprobadas contra el ejecutable original: las 1390 del
+- **1887 funciones descompiladas de 11.265: el 16,75 % del juego** (el
+  10,611 % de los bytes de código).
+- Las 1887 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile three functions of the map that is copied ahead of time* (ver `git log`).
+- Último hito: *Decompile the message of the day's file and five short functions of the friends of the service* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 608 funciones apuntadas pero sin descompilar (las que el código
+- Además hay 609 funciones apuntadas pero sin descompilar (las que el código
   llama); 469 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
@@ -225,6 +225,11 @@ Módulos (funciones hechas / archivo):
       `0x000caf60`,
       `0x000caf90`, `0x00063d80`, `0x001565a0`… (hitos 538 y 539; la lista
       la da `build\line_breaking\small_externals.py`)
+- [ ] El mensaje del día y los amigos del servicio —
+      `networking\network_motd.c` (2) y `networking\online_friends.c` (5),
+      de la zona de `0x0008bf10` a `0x0008d550`, que tiene 35 funciones:
+      quedan 28, entre ellas las que ya se llaman (`0x0008bf70`,
+      `0x0008c550`, `0x0008c660`, `0x0008cc40`, `0x0008d4d0`)
 - [ ] El mapa que se copia por adelantado — `main\main_map_precache.c`
       (3 de 7, de `0x00163610` a `0x00163b84`; faltan `0x00163610`,
       `0x00163680`, `0x00163890` y `0x00163b20`)

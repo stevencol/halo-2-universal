@@ -2487,3 +2487,11 @@ address,name,source,arguments,returns,convention
 00163870,main_map_precache_copy_idle,source/main/main_map_precache.c,,bool
 00163680,unknown_00163680,,stack,bool,stdcall
 00163610,unknown_00163610,,,pointer
+0008ca00,network_motd_get_file,source/networking/network_motd.c,stack,void,stdcall
+0008ca50,network_motd_available,source/networking/network_motd.c,,bool
+0008c540,online_title_is_same_title,source/networking/online_friends.c,eax,bool
+0008d190,online_friend_is_same_title,source/networking/online_friends.c,eax,bool
+0008cc00,online_unknown_0008cc00,source/networking/online_friends.c,eax,void
+0008cc20,online_unknown_0008cc20,source/networking/online_friends.c,esi eax,void
+0008d1f0,online_friend_get_identity,source/networking/online_friends.c,eax edx,void
+003a075e,XOnlineTitleIdIsSameTitle,,stack,int,stdcall

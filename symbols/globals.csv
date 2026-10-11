@@ -406,3 +406,4 @@ address,name,source
 004c1a18,rasterizer_text_unknown_004c1a18,source/rasterizer/rasterizer_text.c
 00551ae8,network_hoppers,source/networking/network_hoppers.c
 00510c9c,unknown_00510c9c,source/sound/sound_speakers.c
+004672b8,network_motd_file_name,source/networking/network_motd.c
