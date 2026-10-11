@@ -43,6 +43,12 @@ typedef void (__attribute__((stdcall)) *transport_user_proc)(long context);
 
 /* ---------- prototypes/TRANSPORT.C */
 
+void transport_initialize(void);
+void transport_dispose(void);
+void transport_unknown_0008d730(void);
+void __attribute__((stdcall)) transport_register(transport_user_proc startup, transport_user_proc shutdown,
+	transport_user_proc unknown, long context);
+boolean transport_available(void);
 void transport_global_update(void);
 void transport_startup(void);
 void transport_shutdown(void);
@@ -53,6 +59,7 @@ extern boolean unknown_004d8b1a;
 extern long unknown_004d8b1c;
 extern transport_user_proc unknown_004d8b20[MAXIMUM_TRANSPORT_USERS];
 extern transport_user_proc unknown_004d8b40[MAXIMUM_TRANSPORT_USERS];
+extern transport_user_proc unknown_004d8b60[MAXIMUM_TRANSPORT_USERS];
 extern long unknown_004d8b80[MAXIMUM_TRANSPORT_USERS];
 
 #endif

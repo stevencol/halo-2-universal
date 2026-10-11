@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — La red de la consola, entera
+
+Cinco funciones en `networking/transport.c`, que queda entero. De 1697
+funciones se pasa a 1702, el 15,11 % de las del juego (el 9,995 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `transport_initialize` | `0x0008d690` | `networking/transport.c` |
+| `transport_dispose` | `0x0008d6d0` | `networking/transport.c` |
+| `transport_unknown_0008d730` | `0x0008d730` | `networking/transport.c` |
+| `transport_register` | `0x0008d770` | `networking/transport.c` |
+| `transport_available` | `0x0008d7c0` | `networking/transport.c` |
+
+### Lo que se sabe
+
+- `transport_initialize` y `transport_dispose` son **uno de los 68 pares
+  de sistemas de `game.c`**: lo que el juego hace con la red de la consola
+  al empezar y al acabar. Al empezar lo deja todo a cero (los globales de
+  `0x004d8b18` a `0x004d8ba0` son en el juego una sola cosa de `0x88`
+  bytes), pone en marcha la seguridad y las medidas y, si el cable está
+  puesto, arranca la red. Al acabar la para y suelta la tabla de los
+  intentos de medir.
+- `transport_register` apunta a alguien a quien avisar: qué llamar cuando
+  la red arranca, cuando se para y para una tercera cosa
+  (`transport_unknown_0008d730`), y con qué. Caben ocho y el juego no mira
+  si queda sitio.
+- `transport_available` dice si la red de la consola está y arrancada: es
+  la pregunta que casi todas las funciones de enchufes llevan dentro.
+- Con esto **`transport.c` está entero**: ocho funciones, de `0x0008d690`
+  a `0x0008d970`.
+
+### Cambiado
+
+- `unknown_0008d690` y `unknown_0008d6d0` tienen ya su nombre en la tabla
+  de sistemas de `game.c`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las cinco**, y en las de los hitos 456 a
+  490 y 501 a 506. La tanda de los hitos 491 a 500 está en marcha.
+- En este hito se pasaron todas las pruebas de `transport` y las de
+  `game`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — La red de la consola arranca y se para
 
 Tres funciones en el archivo nuevo `networking/transport.c`. De 1694

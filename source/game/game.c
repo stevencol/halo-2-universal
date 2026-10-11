@@ -13,6 +13,7 @@ these functions calls the parts by name.
 #include "sound/sound_definitions.h"
 #include "game.h"
 
+#include "networking/transport.h"
 #include "networking/transport_security.h"
 
 #include "input/input_abstraction.h"
@@ -119,8 +120,6 @@ void unknown_00067e30(void);
 void unknown_00067eb0(void);
 void unknown_00067ee0(void);
 void unknown_00067f60(void);
-void unknown_0008d690(void);
-void unknown_0008d6d0(void);
 void unknown_0008d9f0(void);
 void unknown_0008dd70(void);
 void unknown_000b67c0(void);
@@ -348,7 +347,7 @@ boolean unknown_004f55e7;
 are taken down in the opposite order */
 struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 {
-	{unknown_0008d690, unknown_0008d6d0},
+	{transport_initialize, transport_dispose},
 	{no_operation, no_operation},
 	{no_operation, no_operation, unknown_0011cc10, no_operation},
 	{unknown_00146240, no_operation},

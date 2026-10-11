@@ -33,21 +33,118 @@ long WSACleanup(void);
 long __attribute__((stdcall)) XOnlineStartup(const long *parameters);
 long XOnlineCleanup(void);
 
+/* 0x0007a840, of transport_security.c: what the game keeps of the security
+of the network starts */
+void unknown_0007a840(void);
+
 /* ---------- globals */
 
 /* 0x004d8b1a: the network is started as far as the cable goes: it is there.
 0x0055e704: what the console last said of its cable. 0x004d8b1c: how many
 things are told that the network started or stopped. 0x004d8b20,
 0x004d8b40: what each has for when it starts, and for when it stops.
-0x004d8b80: and what each asked to be given */
+0x004d8b60: and for one more thing (transport_unknown_0008d730). 0x004d8b80:
+and what each asked to be given. In the game all of them, with the two bytes
+of network_session.c before them, are one thing of 0x88 bytes */
 boolean unknown_004d8b1a;
 unsigned long unknown_0055e704;
 long unknown_004d8b1c;
 transport_user_proc unknown_004d8b20[MAXIMUM_TRANSPORT_USERS];
 transport_user_proc unknown_004d8b40[MAXIMUM_TRANSPORT_USERS];
+transport_user_proc unknown_004d8b60[MAXIMUM_TRANSPORT_USERS];
 long unknown_004d8b80[MAXIMUM_TRANSPORT_USERS];
 
 /* ---------- code */
+
+/* 0x0008d690: the network of the console is there for the game, from
+nothing: no one is told of it yet, the security and the measuring start, and
+if the cable is in the network is started (transport_startup). The first of
+the pair that game.c has for it */
+void transport_initialize(
+	void)
+{
+	unsigned long status;
+
+	unknown_004d8b18= FALSE;
+	unknown_004d8b19= FALSE;
+	unknown_004d8b1a= FALSE;
+	unknown_004d8b1c= 0;
+	memset(unknown_004d8b20, 0, sizeof(unknown_004d8b20));
+	memset(unknown_004d8b40, 0, sizeof(unknown_004d8b40));
+	memset(unknown_004d8b60, 0, sizeof(unknown_004d8b60));
+	memset(unknown_004d8b80, 0, sizeof(unknown_004d8b80));
+	unknown_0007a840();
+	transport_qos_initialize();
+	unknown_004d8b18= TRUE;
+	status= XNetGetEthernetLinkStatus();
+	if (unknown_0055e704!=status)
+	{
+		unknown_0055e704= status;
+	}
+	if (status&_transport_link_active_bit)
+	{
+		transport_startup();
+	}
+}
+
+/* 0x0008d6d0: the network of the console is not there for the game any
+more: it is stopped, the table of the attempts to measure is let go of
+(data_dispose), and no one is told of it. The second of the pair */
+void transport_dispose(
+	void)
+{
+	if (unknown_004d8b18)
+	{
+		transport_shutdown();
+		transport_qos_dispose();
+		if (transport_qos_attempts)
+		{
+			data_dispose(transport_qos_attempts);
+			transport_qos_attempts= NULL;
+		}
+		unknown_004d8b1c= 0;
+		unknown_004d8b18= FALSE;
+	}
+}
+
+/* 0x0008d730: each thing that asked to be told is told one more thing, the
+third that it gave */
+void transport_unknown_0008d730(
+	void)
+{
+	long index;
+
+	for (index= 0; index<unknown_004d8b1c; index++)
+	{
+		if (unknown_004d8b60[index])
+		{
+			unknown_004d8b60[index](unknown_004d8b80[index]);
+		}
+	}
+}
+
+/* 0x0008d770: one more thing is told when the network starts, when it stops
+and of a third thing, with what it asks to be given. The game does not look
+at whether there is room */
+void __attribute__((stdcall)) transport_register(
+	transport_user_proc startup,
+	transport_user_proc shutdown,
+	transport_user_proc unknown,
+	long context)
+{
+	unknown_004d8b20[unknown_004d8b1c]= startup;
+	unknown_004d8b40[unknown_004d8b1c]= shutdown;
+	unknown_004d8b60[unknown_004d8b1c]= unknown;
+	unknown_004d8b80[unknown_004d8b1c]= context;
+	unknown_004d8b1c++;
+}
+
+/* 0x0008d7c0: whether the network of the console is there and started */
+boolean transport_available(
+	void)
+{
+	return unknown_004d8b18 && unknown_004d8b19;
+}
 
 /* 0x0008d7e0: the cable of the console is looked at, if the network of the
 console is there: when it is put in, the network is started

@@ -23,7 +23,8 @@ def run(t) -> None:
             "unknown_004d8b1c": count,
             "unknown_004d8b20": struct.pack("<8I", *starts),
             "unknown_004d8b40": struct.pack("<8I", *stops),
-            "unknown_004d8b80": random_.randbytes(USERS * 4),
+            # not numbers that are the address of a function of source/, which would be taken for one
+            "unknown_004d8b80": struct.pack("<8I", *(random_.getrandbits(28) for index in range(USERS))),
         }
 
     def mocks() -> list:
@@ -97,4 +98,72 @@ def run(t) -> None:
                 "XNetCleanup": said,
             },
             mocks=mocks(),
+        )
+
+    # ---------- the network of the console for the game, and who is told
+
+    for n in range(1500):
+        every = dict(
+            users(),
+            unknown_004d8b18=bytes((random_.choice((0, 1)),)),
+            unknown_004d8b19=bytes((random_.choice((0, 1)),)),
+            unknown_004d8b1a=bytes((random_.choice((0, 1)),)),
+            unknown_004d8b60=random_.randbytes(USERS * 4),
+            unknown_0055e704=random_.choice((0, 1, 3)),
+        )
+        t.check(
+            "transport_initialize",
+            globals=every,
+            externals={
+                "unknown_0007a840": said,
+                "transport_qos_initialize": said,
+                "XNetGetEthernetLinkStatus": lambda harness, arguments, status=random_.choice((0, 1, 1, 3, 2)): status,
+                "transport_startup": said,
+            },
+        )
+
+        # the table of the attempts, with what gives its memory after it: of its two functions, the second takes it back
+        table = bytearray(random_.randbytes(0x58))
+        has = random_.random() < 0.8
+        struct.pack_into("<I", table, 0x30, 0x4C if has else 0)
+        struct.pack_into("<3I", table, 0x4C, 0x50, mock_address(0), mock_address(1))
+        t.check(
+            "transport_dispose",
+            globals=dict(
+                users(),
+                unknown_004d8b18=bytes((random_.choice((1, 1, 1, 0)),)),
+                transport_qos_attempts=random_.choice(
+                    (Buffer(bytes(table), pointers=(0x30, 0x4C) if has else (0x4C,)),) * 4 + (0,)
+                ),
+            ),
+            externals={"transport_shutdown": said, "transport_qos_dispose": said},
+            mocks=[Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)) for index in range(2)],
+        )
+
+        thirds = [mock_address(index) if random_.random() < 0.7 else 0 for index in range(USERS)]
+        t.check(
+            "transport_unknown_0008d730",
+            globals=dict(users(), unknown_004d8b60=struct.pack("<8I", *thirds)),
+            mocks=mocks(),
+        )
+        t.check(
+            "transport_register",
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            globals={
+                "unknown_004d8b1c": random_.randrange(USERS),
+                "unknown_004d8b20": random_.randbytes(USERS * 4),
+                "unknown_004d8b40": random_.randbytes(USERS * 4),
+                "unknown_004d8b60": random_.randbytes(USERS * 4),
+                "unknown_004d8b80": random_.randbytes(USERS * 4),
+            },
+        )
+        t.check(
+            "transport_available",
+            globals={
+                "unknown_004d8b18": bytes((random_.choice((0, 1, 1, 0x80)),)),
+                "unknown_004d8b19": bytes((random_.choice((0, 1, 1, 0x80)),)),
+            },
         )

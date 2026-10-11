@@ -322,8 +322,8 @@ address,name,source,arguments,returns,convention
 00067eb0,unknown_00067eb0,,,void
 00067ee0,unknown_00067ee0,,,void
 00067f60,unknown_00067f60,,,void
-0008d690,unknown_0008d690,,,void
-0008d6d0,unknown_0008d6d0,,,void
+0008d690,transport_initialize,source/networking/transport.c,,void
+0008d6d0,transport_dispose,source/networking/transport.c,,void
 0008d9f0,unknown_0008d9f0,,,void
 0008dd70,unknown_0008dd70,,,void
 000b67c0,unknown_000b67c0,,,void
@@ -2291,3 +2291,7 @@ address,name,source,arguments,returns,convention
 003cd688,WSACleanup,,,int
 003a0c39,XOnlineStartup,,stack,int,stdcall
 003a0d36,XOnlineCleanup,,,int
+0008d730,transport_unknown_0008d730,source/networking/transport.c,,void
+0008d770,transport_register,source/networking/transport.c,ecx stack stack stack,void,stdcall
+0008d7c0,transport_available,source/networking/transport.c,,bool
+0007a840,unknown_0007a840,,,void
