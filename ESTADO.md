@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 529.
+**Última actualización:** 2026-10-08, al terminar el hito 530.
 
 ## Dónde estamos
 
-- **1790 funciones descompiladas de 11.265: el 15,89 % del juego** (el
-  10,326 % de los bytes de código).
-- Las 1790 están comprobadas contra el ejecutable original: las 1390 del
+- **1802 funciones descompiladas de 11.265: el 16,00 % del juego** (el
+  10,356 % de los bytes de código).
+- Las 1802 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a player is taken out of the ones signed in to the service* (ver `git log`).
+- Último hito: *Decompile twelve functions that change the profile of a gamepad's player* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 611 funciones apuntadas pero sin descompilar (las que el código
-  llama); 472 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 610 funciones apuntadas pero sin descompilar (las que el código
+  llama); 470 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -219,12 +219,13 @@ Módulos (funciones hechas / archivo):
       (7: el nombre, empezar a escribir y a leer, de memoria o de archivo,
       el resultado de leer y el avance)
 - [ ] El jugador de cada mando — `interface\user_interface_controller.c`
-      (36 de unas 75, de `0x0018f372` a `0x001910b8`: cuál es, el
+      (48 de unas 75, de `0x0018f372` a `0x001910b8`: cuál es, el
       siguiente, si es invitado, contarlos y buscar el que tiene perfil o
       está conectado, quitarle el perfil, dar su perfil, su nombre, quién
       es en el servicio y sus invitados, desconectarlo, dejar el mando sin
-      jugador y escribir los perfiles que cambiaron; falta `0x0018f58c`
-      porque borra `0x48` bytes después de la tabla)
+      jugador, escribir los perfiles que cambiaron y cambiar un campo
+      del perfil; falta `0x0018f58c` porque borra `0x48` bytes después de
+      la tabla)
 - [ ] Las tareas del servicio de partidas — `networking\online_tasks.c`
       (28: la tabla, una nueva, por dónde va, acabar con una o con todas,
       recorrerlas, buscar una, volver a empezarla, hacerlas avanzar, en

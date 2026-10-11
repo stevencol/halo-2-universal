@@ -476,7 +476,7 @@ def run(t) -> None:
                 "unknown_0054e8e0": profiles(),
             },
             externals=stand_ins(
-                "unknown_0019040d",
+                "user_interface_controllers_set_profile_unknown5C",
                 "game_state_load_saved_game",
                 user_interface_controllers_get_only_profile=random_.choice((NONE, 0, 1, 2, 3)),
             ),

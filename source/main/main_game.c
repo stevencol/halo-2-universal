@@ -77,7 +77,7 @@ boolean unknown_00149318(void);
 
 /* 0x0019040d, 0x0018fada: of the players' profiles: the second gives the
 one that there is, if there is only one */
-void unknown_0019040d(long unknown);
+void user_interface_controllers_set_profile_unknown5C(long unknown);
 long user_interface_controllers_get_only_profile(void);
 
 /* 0x001c5ca0, 0x000b3ed0: what is told of a game of the campaign to the
@@ -719,7 +719,7 @@ void main_game_campaign_started(
 {
 	if (options->game_mode==_game_mode_campaign && options->unknown18!=NONE)
 	{
-		unknown_0019040d(options->unknown18);
+		user_interface_controllers_set_profile_unknown5C(options->unknown18);
 	}
 	if (!options->coop && unknown_0054e7cc)
 	{

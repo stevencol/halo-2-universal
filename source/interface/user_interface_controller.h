@@ -31,6 +31,10 @@ enum
 	/* a file of a profile with this bit is not looked for among the ones
 	that the gamepads' players have */
 	_saved_game_unknown21_bit= 21,
+	/* the bits of a profile: with the first, its text (unknown48) is not
+	changed; the second is set by user_interface_controller_set_profile_flag1 */
+	_player_profile_unknown0_bit= 0,
+	_player_profile_unknown1_bit= 1,
 	/* from what number on something is so, in user_interface_unknown_001907bf */
 	USER_INTERFACE_UNKNOWN_001907BF_MINIMUM= 250
 };
@@ -124,5 +128,19 @@ void __attribute__((stdcall)) user_interface_controller_restart_tasks(long index
 void user_interface_controllers_write_changed_profiles(void);
 void __attribute__((stdcall)) user_interface_controllers_unknown_00190e71(long unknown);
 void user_interface_controllers_update_saved_games(void);
+void __attribute__((stdcall)) user_interface_controller_write_profile(long index, const struct player_profile *profile,
+	long saved_game);
+void __attribute__((stdcall)) user_interface_controller_update_profile(long index, const struct player_profile *profile,
+	long saved_game);
+void __attribute__((stdcall)) user_interface_controller_set_profile_unknown48(long index, const char *text);
+void __attribute__((stdcall)) user_interface_controller_set_profile_unknownE4(long index, long value);
+void __attribute__((stdcall)) user_interface_controller_set_profile_unknown5C(long value, long index);
+void user_interface_controllers_set_profile_unknown5C(long value);
+void __attribute__((stdcall)) user_interface_controller_raise_profile_unknownEC(long value, long index, long which);
+void __attribute__((stdcall)) user_interface_controller_set_profile_flag1(long index);
+boolean user_interface_controller_get_profile_flag1(long index);
+long user_interface_controller_get_profile_unknown5C(long index);
+void user_interface_controller_get_profile_unknownEC(long index, long *value, long *which);
+long user_interface_controllers_get_highest_profile_unknownEC(void);
 
 #endif

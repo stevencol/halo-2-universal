@@ -37,7 +37,9 @@ struct global_preferences_data
 	there are none. From 0 to 8, as the next one */
 	long language;
 	long unknown8;
-	byte unknownC[0xC];
+	/* what the profiles have as unknown5C, as it was set last */
+	long unknownC;
+	byte unknown10[8];
 	wchar names[GLOBAL_PREFERENCES_NAME_COUNT][GLOBAL_PREFERENCES_NAME_LENGTH+1];
 	wchar name[GLOBAL_PREFERENCES_NAME_LENGTH+1];
 	byte unknown158[4];

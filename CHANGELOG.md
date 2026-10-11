@@ -2,6 +2,64 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Cambiar el perfil del jugador de un mando: doce funciones
+
+Doce funciones más en `interface/user_interface_controller.c` (889 bytes). De 1790
+funciones se pasa a 1802, el 16,00 % de las del juego (el 10,356 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `user_interface_controller_update_profile` | `0x0018fcc4` | `interface/user_interface_controller.c` |
+| `user_interface_controller_write_profile` | `0x0018fd20` | `interface/user_interface_controller.c` |
+| `user_interface_controller_set_profile_unknown48` | `0x00190001` | `interface/user_interface_controller.c` |
+| `user_interface_controller_set_profile_unknownE4` | `0x001902fc` | `interface/user_interface_controller.c` |
+| `user_interface_controller_set_profile_unknown5C` | `0x001903c2` | `interface/user_interface_controller.c` |
+| `user_interface_controllers_set_profile_unknown5C` | `0x0019040d` | `interface/user_interface_controller.c` |
+| `user_interface_controller_raise_profile_unknownEC` | `0x0019043f` | `interface/user_interface_controller.c` |
+| `user_interface_controller_set_profile_flag1` | `0x0019048c` | `interface/user_interface_controller.c` |
+| `user_interface_controller_get_profile_flag1` | `0x001904cb` | `interface/user_interface_controller.c` |
+| `user_interface_controller_get_profile_unknown5C` | `0x001904ff` | `interface/user_interface_controller.c` |
+| `user_interface_controller_get_profile_unknownEC` | `0x0019052c` | `interface/user_interface_controller.c` |
+| `user_interface_controllers_get_highest_profile_unknownEC` | `0x00190565` | `interface/user_interface_controller.c` |
+
+### Lo que se sabe
+
+- Todo cambio de un perfil pasa por `user_interface_controller_update_profile`:
+  **durante una partida** (que no sea de la tercera clase) el perfil nuevo
+  solo se guarda en memoria y se marca como cambiado (bit `6`); **fuera de
+  una partida** va a `user_interface_controller_write_profile`, que además
+  lo escribe en su archivo (`0x002153dd`) y quita la marca. Por eso
+  `main.c` escribe los perfiles cambiados al acabar (hito 528).
+- Las demás funciones siguen todas el mismo patrón: copian el perfil
+  (`user_interface_controller_get_profile`), cambian un campo y llaman a la
+  de arriba. Campos nuevos de `struct player_profile`: un texto de 15
+  letras en `+0x48`, un número en `+0x5C` y los dos primeros bits de sus
+  banderas.
+- Dos funciones que se llamaban por su dirección tienen nombre, y por
+  quién las llama se entiende qué guardan:
+  - `unknown_0019040d` → `user_interface_controllers_set_profile_unknown5C`:
+    `main_game_campaign_started` le da `options->unknown18` al empezar una
+    campaña, y además lo apunta en las preferencias (`+0xC`, campo nuevo de
+    `struct global_preferences_data`). Parece **el último nivel jugado**.
+  - `unknown_0019043f` → `user_interface_controller_raise_profile_unknownEC`:
+    `game.c` le da el mismo número y la dificultad; solo sube. Parece
+    **hasta qué nivel se llegó en cada dificultad** (los cuatro números de
+    `+0xEC`).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  529.
+- En este hito se pasaron las pruebas de las doce funciones, la de
+  `main_game_campaign_started`, y `test_game` y `test_global_preferences`
+  enteras (por los dos nombres cambiados y los campos nuevos).
+- En las pruebas de las dos últimas funciones `player_profile_get_unknownEC`
+  está sustituida: la de verdad pregunta cosas a los tags del juego.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Quitar a un jugador de los conectados al servicio
 
 Una función en `networking/online_tasks.c`, de 317 bytes, y una corrección. De 1789

@@ -445,7 +445,7 @@ def run_players_and_won(t) -> None:
                 )
             },
             externals={
-                "unknown_0019043f": record,
+                "user_interface_controller_raise_profile_unknownEC": record,
                 "main_print_saving_message": record,
                 "main_game_next_map": record,
                 "game_finish": record,

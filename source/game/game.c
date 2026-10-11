@@ -280,7 +280,7 @@ void unknown_001e73b0(void);
 
 /* 0x0019043f: told, when the campaign is won, each of four things and the
 difficulty */
-void __attribute__((stdcall)) unknown_0019043f(long unknown, long index, long difficulty);
+void __attribute__((stdcall)) user_interface_controller_raise_profile_unknownEC(long unknown, long index, long difficulty);
 
 /* ---------- structures */
 
@@ -940,7 +940,7 @@ void game_won(
 
 			do
 			{
-				unknown_0019043f(main_game_globals->options.unknown18, index, main_game_globals->options.difficulty);
+				user_interface_controller_raise_profile_unknownEC(main_game_globals->options.unknown18, index, main_game_globals->options.difficulty);
 				index= (index>=0 && index<GAME_WON_COUNT-1) ? index+1 : NONE;
 			}
 			while (index!=NONE);

@@ -59,7 +59,11 @@ struct player_profile
 	byte unknown0[4];
 	unsigned long flags;
 	wchar name[PLAYER_PROFILE_NAME_LENGTH+1];
-	byte unknown48[0x9C];
+	/* a text of fifteen characters */
+	char unknown48[16];
+	byte unknown58[4];
+	long unknown5C;
+	byte unknown60[0x84];
 	long unknownE4;
 	byte unknownE8[4];
 	long unknownEC[NUMBER_OF_PLAYER_PROFILE_UNKNOWNEC];

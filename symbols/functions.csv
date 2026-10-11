@@ -1047,7 +1047,7 @@ address,name,source,arguments,returns,convention
 00409bdf,XInputSetState,,stack stack,int
 002184a0,input_abstraction_handle_gamepad_changes,source/input/input_abstraction.c,esi,void
 00137400,file_path_split,source/tag_files/files.c,ebx stack stack esi edi stack,void
-0019040d,unknown_0019040d,,eax,void
+0019040d,user_interface_controllers_set_profile_unknown5C,source/interface/user_interface_controller.c,eax,void
 0018fada,user_interface_controllers_get_only_profile,source/interface/user_interface_controller.c,,int
 0018f260,main_game_texture_allocation_allocate,source/main/main_game.c,ecx stack,pointer,thiscall
 0018f350,main_game_texture_allocation_deallocate,source/main/main_game.c,ecx stack,void,thiscall
@@ -1357,7 +1357,7 @@ address,name,source,arguments,returns,convention
 0014bc00,unknown_0014bc00,,ebx,void
 00083510,unknown_00083510,,ebx,void
 001e73b0,unknown_001e73b0,,,void
-0019043f,unknown_0019043f,,esi stack stack,void,stdcall
+0019043f,user_interface_controller_raise_profile_unknownEC,source/interface/user_interface_controller.c,esi stack stack,void,stdcall
 0011cf50,angle_between_vectors3d,source/math/real_math.c,eax ecx,real:xmm0
 0011d090,generate_up_vector3d,source/math/real_math.c,ecx edx,int
 0011f470,quantize_real_to_byte,source/math/real_math.c,stack stack stack,byte
@@ -2400,3 +2400,14 @@ address,name,source,arguments,returns,convention
 002153dd,unknown_002153dd,,stack stack stack stack,void,stdcall
 0006cc10,online_logon_remove_user,source/networking/online_tasks.c,stack,int,stdcall
 003a065b,XOnlineChangeLogonUsers,,stack stack stack,int,stdcall
+0018fd20,user_interface_controller_write_profile,source/interface/user_interface_controller.c,stack stack stack,void,stdcall
+0018fcc4,user_interface_controller_update_profile,source/interface/user_interface_controller.c,stack stack stack,void,stdcall
+00190001,user_interface_controller_set_profile_unknown48,source/interface/user_interface_controller.c,stack stack,void,stdcall
+001902fc,user_interface_controller_set_profile_unknownE4,source/interface/user_interface_controller.c,stack stack,void,stdcall
+001903c2,user_interface_controller_set_profile_unknown5C,source/interface/user_interface_controller.c,esi stack,void,stdcall
+0019048c,user_interface_controller_set_profile_flag1,source/interface/user_interface_controller.c,stack,void,stdcall
+001904cb,user_interface_controller_get_profile_flag1,source/interface/user_interface_controller.c,ecx,bool
+001904ff,user_interface_controller_get_profile_unknown5C,source/interface/user_interface_controller.c,ecx,int
+0019052c,user_interface_controller_get_profile_unknownEC,source/interface/user_interface_controller.c,ecx edi esi,void
+00190565,user_interface_controllers_get_highest_profile_unknownEC,source/interface/user_interface_controller.c,,int
+0018fb34,user_interface_controller_set_profile,,stack stack stack,void,stdcall

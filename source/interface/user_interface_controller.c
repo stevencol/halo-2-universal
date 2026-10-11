@@ -9,6 +9,8 @@ What the game keeps of the player of each gamepad. The names are guesses.
 
 #include "user_interface_controller.h"
 
+#include "game/game.h"
+#include "main/global_preferences.h"
 #include "networking/game_voice.h"
 #include "saved games/saved_game_files.h"
 
@@ -23,8 +25,12 @@ it could not. 0x002153dd: a profile is written to its file */
 void __attribute__((stdcall)) unknown_00190eb3(long index);
 void __attribute__((stdcall)) unknown_00199e2e(long unknown);
 long __attribute__((stdcall)) unknown_000abc70(const struct online_user *user, long index);
-void __attribute__((stdcall)) unknown_002153dd(long index, long saved_game, struct player_profile *profile,
+void __attribute__((stdcall)) unknown_002153dd(long index, long saved_game, const struct player_profile *profile,
 	long unknown);
+
+/* 0x0018fb34: a gamepad's player has a profile, and its file */
+void __attribute__((stdcall)) user_interface_controller_set_profile(long index, const struct player_profile *profile,
+	long saved_game);
 
 /* ---------- code */
 
@@ -721,4 +727,250 @@ void user_interface_controllers_update_saved_games(
 		index= user_interface_controller_next(index);
 	} while (index!=NONE);
 	saved_game_files_cache_valid= FALSE;
+}
+
+/* 0x0018fd20: the profile of a gamepad's player becomes another and is
+written to its file, if it is not the same or had changed already. Nothing
+for a player without a profile */
+void __attribute__((stdcall)) user_interface_controller_write_profile(
+	long index,
+	const struct player_profile *profile,
+	long saved_game)
+{
+	struct user_interface_controller *controller= USER_INTERFACE_CONTROLLER(index);
+
+	if (controller->flags&FLAG(_user_interface_controller_profile_bit))
+	{
+		if ((controller->flags&FLAG(_user_interface_controller_profile_changed_bit)) ||
+			memcmp(&controller->profile, profile, sizeof(controller->profile))!=0)
+		{
+			user_interface_controller_set_profile(index, profile, saved_game);
+			if (saved_game!=NONE)
+			{
+				unknown_002153dd(index, saved_game, profile, 0);
+			}
+			controller->flags&= ~FLAG(_user_interface_controller_profile_changed_bit);
+		}
+	}
+}
+
+/* 0x0018fcc4: the profile of a gamepad's player becomes another. In a game
+that is not of the third kind it is not written to its file: it is only said
+to have changed */
+void __attribute__((stdcall)) user_interface_controller_update_profile(
+	long index,
+	const struct player_profile *profile,
+	long saved_game)
+{
+	if (game_in_progress() && main_game_globals->options.game_mode!=_game_mode_3)
+	{
+		struct user_interface_controller *controller= USER_INTERFACE_CONTROLLER(index);
+
+		if ((controller->flags&FLAG(_user_interface_controller_profile_bit)) &&
+			memcmp(&controller->profile, profile, sizeof(controller->profile))!=0)
+		{
+			user_interface_controller_set_profile(index, profile, saved_game);
+			controller->flags|= FLAG(_user_interface_controller_profile_changed_bit);
+		}
+	}
+	else
+	{
+		user_interface_controller_write_profile(index, profile, saved_game);
+	}
+}
+
+/* 0x00190001: the text of the profile of a gamepad's player becomes
+another; not if the profile has its first bit, or no file */
+void __attribute__((stdcall)) user_interface_controller_set_profile_unknown48(
+	long index,
+	const char *text)
+{
+	const struct user_interface_controller *controller= USER_INTERFACE_CONTROLLER(index);
+	struct player_profile profile;
+	long saved_game;
+
+	if (((controller->flags>>_user_interface_controller_profile_bit)&1) &&
+		!(controller->profile.flags&FLAG(_player_profile_unknown0_bit)))
+	{
+		user_interface_controller_get_profile(index, &profile, &saved_game);
+		if (saved_game!=NONE)
+		{
+			strncpy(profile.unknown48, text, sizeof(profile.unknown48));
+			profile.unknown48[sizeof(profile.unknown48)-1]= 0;
+			user_interface_controller_update_profile(index, &profile, saved_game);
+		}
+	}
+}
+
+/* 0x001902fc: a number of the profile of a gamepad's player becomes
+another */
+void __attribute__((stdcall)) user_interface_controller_set_profile_unknownE4(
+	long index,
+	long value)
+{
+	struct player_profile profile;
+	long saved_game;
+
+	if ((USER_INTERFACE_CONTROLLER(index)->flags>>_user_interface_controller_profile_bit)&1)
+	{
+		user_interface_controller_get_profile(index, &profile, &saved_game);
+		profile.unknownE4= value;
+		user_interface_controller_update_profile(index, &profile, saved_game);
+	}
+}
+
+/* 0x001903c2: another number of the profile of a gamepad's player becomes
+another, if it is not that already; not NONE, nor without a file */
+void __attribute__((stdcall)) user_interface_controller_set_profile_unknown5C(
+	long value,
+	long index)
+{
+	struct player_profile profile;
+	long saved_game;
+
+	if (value!=NONE)
+	{
+		user_interface_controller_get_profile(index, &profile, &saved_game);
+		if (saved_game!=NONE && profile.unknown5C!=value)
+		{
+			profile.unknown5C= value;
+			user_interface_controller_update_profile(index, &profile, saved_game);
+		}
+	}
+}
+
+/* 0x0019040d: that number becomes another in the profiles of all the
+gamepads' players, and in the preferences, which have to be written */
+void user_interface_controllers_set_profile_unknown5C(
+	long value)
+{
+	long index;
+
+	for (index= 0; index!=NONE; index= user_interface_controller_after(index))
+	{
+		user_interface_controller_set_profile_unknown5C(value, index);
+	}
+	global_preferences_globals.current.data.unknownC= value;
+	global_preferences_globals.dirty= TRUE;
+}
+
+/* 0x0019043f: one of four numbers of the profile of a gamepad's player
+becomes a higher one; not NONE, nor without a file */
+void __attribute__((stdcall)) user_interface_controller_raise_profile_unknownEC(
+	long value,
+	long index,
+	long which)
+{
+	struct player_profile profile;
+	long saved_game;
+
+	if (value!=NONE)
+	{
+		user_interface_controller_get_profile(index, &profile, &saved_game);
+		if (saved_game!=NONE && profile.unknownEC[which]<value)
+		{
+			profile.unknownEC[which]= value;
+			user_interface_controller_update_profile(index, &profile, saved_game);
+		}
+	}
+}
+
+/* 0x0019048c: the profile of a gamepad's player gets its second bit; not
+without a file */
+void __attribute__((stdcall)) user_interface_controller_set_profile_flag1(
+	long index)
+{
+	struct player_profile profile;
+	long saved_game;
+
+	user_interface_controller_get_profile(index, &profile, &saved_game);
+	if (saved_game!=NONE)
+	{
+		profile.flags|= FLAG(_player_profile_unknown1_bit);
+		user_interface_controller_update_profile(index, &profile, saved_game);
+	}
+}
+
+/* 0x001904cb: whether the profile of a gamepad's player has its second bit;
+not without a file */
+boolean user_interface_controller_get_profile_flag1(
+	long index)
+{
+	struct player_profile profile;
+	long saved_game;
+
+	user_interface_controller_get_profile(index, &profile, &saved_game);
+	if (saved_game!=NONE)
+	{
+		return (profile.flags>>_player_profile_unknown1_bit)&1;
+	}
+
+	return FALSE;
+}
+
+/* 0x001904ff: the number of the profile of a gamepad's player that
+user_interface_controller_set_profile_unknown5C sets; 1 without a file */
+long user_interface_controller_get_profile_unknown5C(
+	long index)
+{
+	struct player_profile profile;
+	long saved_game;
+	long value= 1;
+
+	user_interface_controller_get_profile(index, &profile, &saved_game);
+	if (saved_game!=NONE)
+	{
+		value= profile.unknown5C;
+	}
+
+	return value;
+}
+
+/* 0x0019052c: the highest of the four numbers of the profile of a gamepad's
+player, and which it is (player_profile_get_unknownEC); NONE and 1 without a
+file */
+void user_interface_controller_get_profile_unknownEC(
+	long index,
+	long *value,
+	long *which)
+{
+	struct player_profile profile;
+	long saved_game;
+
+	user_interface_controller_get_profile(index, &profile, &saved_game);
+	if (saved_game!=NONE)
+	{
+		player_profile_get_unknownEC(&profile, value, which);
+	}
+	else
+	{
+		*value= NONE;
+		*which= 1;
+	}
+}
+
+/* 0x00190565: the highest of those numbers in the profiles of all the
+gamepads' players; NONE if none has a profile */
+long user_interface_controllers_get_highest_profile_unknownEC(
+	void)
+{
+	long highest= NONE;
+	long index;
+
+	for (index= 0; index!=NONE; index= user_interface_controller_after(index))
+	{
+		if ((USER_INTERFACE_CONTROLLER(index)->flags>>_user_interface_controller_profile_bit)&1)
+		{
+			long value;
+			long which;
+
+			user_interface_controller_get_profile_unknownEC(index, &value, &which);
+			if (value>highest)
+			{
+				highest= value;
+			}
+		}
+	}
+
+	return highest;
 }
