@@ -189,3 +189,29 @@ def run(t) -> None:
             globals={"player_data": Buffer(bytes(data), pointers=(0x44, 0x48))},
             externals={"unknown_0014c320": told},
         )
+
+    # ---------- what there is of the players takes what is said of one
+
+    for n in range(4000):
+        collection = bytearray(random_.randbytes(0xB44))
+        struct.pack_into("<I", collection, 0, random_.getrandbits(16))
+        update = bytearray(random_.randbytes(0xC8))
+        struct.pack_into("<I", update, 0, random_.randrange(16))
+        struct.pack_into("<I", update, 0x10, random_.randrange(5))
+        struct.pack_into("<I", update, 0xB8, random_.randrange(16))
+        update[0x24] = random_.choice((0, 0, 1))
+        time = Buffer(random_.randbytes(0x20))
+        t.check(
+            "simulation_players_collection_apply_update",
+            Buffer(bytes(collection)),
+            Buffer(bytes(update)),
+            globals={"game_time_globals": time},
+        )
+        t.check(
+            "simulation_players_collection_swap",
+            Buffer(random_.randbytes(0xC8)),
+            random_.randrange(16),
+            Buffer(bytes(collection)),
+            random_.randrange(16),
+            globals={"game_time_globals": time},
+        )

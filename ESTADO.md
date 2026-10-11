@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 571.
+**Última actualización:** 2026-10-08, al terminar el hito 572.
 
 ## Dónde estamos
 
-- **1938 funciones descompiladas de 11.265: el 17,20 % del juego** (el
-  10,846 % de los bytes de código).
-- Las 1938 están comprobadas contra el ejecutable original: las 1390 del
+- **1940 funciones descompiladas de 11.265: el 17,22 % del juego** (el
+  10,853 % de los bytes de código).
+- Las 1940 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile what another console says of two places of players at once* (ver `git log`).
+- Último hito: *Decompile how what there is of the players takes what is said of one, by its kind* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 613 funciones apuntadas pero sin descompilar (las que el código
   llama); 464 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -224,7 +224,7 @@ Módulos (funciones hechas / archivo):
       tamaño: `0x00147f4f` (30 bytes), `0x00063d80`, `0x001565a0`… (hitos 538 y 539; la lista
       la da `build\line_breaking\small_externals.py`)
 - [ ] Los jugadores y las consolas de la simulación —
-      `networking\simulation_players.c` (14, 7 de las 19 de `0x00082fa0` a
+      `networking\simulation_players.c` (16, 7 de las 19 de `0x00082fa0` a
       `0x000846c0`; faltan las grandes: `0x00083000`, `0x00083220`,
       `0x00083370`, `0x00083610`, `0x00083a40`, `0x00083c90`,
       `0x00083db0`, `0x00083f00`, `0x00084270`, `0x000843f0`,

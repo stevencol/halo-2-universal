@@ -2550,3 +2550,5 @@ address,name,source,arguments,returns,convention
 0014be90,unknown_0014be90,,eax stack,void,stdcall
 00084fb0,simulation_players_update_unknown_00084fb0,source/networking/simulation_players.c,stack,bool,stdcall
 0014c320,unknown_0014c320,,stack stack,void,stdcall
+00084c90,simulation_players_collection_apply_update,source/networking/simulation_players.c,edx stack,void,stdcall
+00084e90,simulation_players_collection_swap,source/networking/simulation_players.c,eax ecx edx stack,void,stdcall

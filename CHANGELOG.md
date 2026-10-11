@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Las cinco clases de lo que se dice de un jugador
+
+Dos funciones más en `networking/simulation_players.c`. De 1938
+funciones se pasa a 1940, el 17,22 % de las del juego (el 10,853 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_players_collection_apply_update` | `0x00084c90` | `networking/simulation_players.c` |
+| `simulation_players_collection_swap` | `0x00084e90` | `networking/simulation_players.c` |
+
+### Lo que se sabe
+
+- `simulation_players_collection_apply_update` aplica a la colección un
+  mensaje de jugador, y con su tabla de saltos quedan claras **las cinco
+  clases** que los hitos 569 a 571 dejaban a medias:
+  - `0`, **se fue**: queda quién era y cuándo se fue (el tiempo de la
+    partida);
+  - `1`, **dos cambian de sitio**: se intercambia todo menos la identidad,
+    que es la que dice el mensaje;
+  - `2`, **ya no está**: su sitio queda libre;
+  - `3`, **es nuevo**: identidad, consola, dos números y lo que se dice de
+    él a los demás;
+  - `4`, **cambió lo que se dice de él**.
+- `simulation_players_collection_swap` hace el mensaje de la clase `1` para
+  dos sitios y lo aplica.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  571.
+- En este hito se pasaron las pruebas de las dos funciones (4000 casos cada
+  una, con las cinco clases).
+- La primera no mira que la clase sea una de las cinco (el juego tampoco).
+  La lista de Ghidra le da solo los 35 bytes de antes del salto.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Batería completa en el hito 533, y una prueba corregida
 
 Sin funciones nuevas. La batería completa (`python tools\test_functions.py`)

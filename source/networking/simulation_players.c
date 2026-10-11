@@ -10,6 +10,7 @@ they are on. The names are guesses.
 
 #include "simulation_players.h"
 
+#include "game/game.h"
 #include "main/main.h"
 #include "memory/data.h"
 #include "networking/network_session.h"
@@ -430,4 +431,139 @@ boolean __attribute__((stdcall)) simulation_players_update_unknown_00084fb0(
 	unknown_0014c320(absolute_index, other_absolute_index);
 
 	return TRUE;
+}
+
+/* 0x00084c90: what there is of the players takes what is said of one of
+them, by its kind. One that left is left with who it was and when it left.
+Two that change places change everything but who they are, which is as it is
+said. The game does not look at whether the kind is one of the five */
+void __attribute__((stdcall)) simulation_players_collection_apply_update(
+	byte *collection,
+	const byte *update)
+{
+	long player_index= *(const long *)update;
+	byte *player= collection+SIMULATION_PLAYERS_COLLECTION_PLAYERS_OFFSET+player_index*SIMULATION_PLAYERS_PLAYER_SIZE;
+	unsigned long *mask= (unsigned long *)collection;
+	unsigned long bit= 1<<player_index;
+
+	switch (*(const long *)(update+SIMULATION_PLAYERS_UPDATE_TYPE_OFFSET))
+	{
+	case _simulation_players_update_left:
+		player[SIMULATION_PLAYERS_PLAYER_LEFT_OFFSET]= TRUE;
+		*(long *)(player+SIMULATION_PLAYERS_PLAYER_UNKNOWN10_OFFSET)= game_time_globals->time;
+		memset(player+SIMULATION_PLAYERS_PLAYER_MACHINE_OFFSET, 0, SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE);
+		*(long *)(player+SIMULATION_PLAYERS_PLAYER_UNKNOWN1C_OFFSET)= NONE;
+		*(long *)(player+SIMULATION_PLAYERS_PLAYER_UNKNOWN20_OFFSET)= NONE;
+		break;
+	case _simulation_players_update_swap:
+		{
+			long other_index= *(const long *)(update+SIMULATION_PLAYERS_UPDATE_OTHER_INDEX_OFFSET);
+			byte *other= collection+SIMULATION_PLAYERS_COLLECTION_PLAYERS_OFFSET+
+				other_index*SIMULATION_PLAYERS_PLAYER_SIZE;
+			unsigned long other_bit= 1<<other_index;
+			boolean left= player[SIMULATION_PLAYERS_PLAYER_LEFT_OFFSET];
+			boolean other_left= other[SIMULATION_PLAYERS_PLAYER_LEFT_OFFSET];
+			long unknown10= *(const long *)(player+SIMULATION_PLAYERS_PLAYER_UNKNOWN10_OFFSET);
+			long other_unknown10= *(const long *)(other+SIMULATION_PLAYERS_PLAYER_UNKNOWN10_OFFSET);
+			boolean there= (*mask&bit)!=0;
+
+			if (*mask&other_bit)
+			{
+				*mask|= bit;
+			}
+			else
+			{
+				*mask&= ~bit;
+			}
+			memcpy(player, update+SIMULATION_PLAYERS_UPDATE_OTHER_IDENTIFIER_OFFSET,
+				SIMULATION_PLAYERS_PLAYER_IDENTIFIER_SIZE);
+			player[SIMULATION_PLAYERS_PLAYER_LEFT_OFFSET]= other_left;
+			*(long *)(player+SIMULATION_PLAYERS_PLAYER_UNKNOWN10_OFFSET)= other_unknown10;
+			if (there)
+			{
+				*mask|= other_bit;
+			}
+			else
+			{
+				*mask&= ~other_bit;
+			}
+			memcpy(other, update+SIMULATION_PLAYERS_UPDATE_IDENTIFIER_OFFSET, SIMULATION_PLAYERS_PLAYER_IDENTIFIER_SIZE);
+			other[SIMULATION_PLAYERS_PLAYER_LEFT_OFFSET]= left;
+			*(long *)(other+SIMULATION_PLAYERS_PLAYER_UNKNOWN10_OFFSET)= unknown10;
+		}
+		break;
+	case _simulation_players_update_remove:
+		*mask&= ~bit;
+		memset(player, 0, SIMULATION_PLAYERS_PLAYER_IDENTIFIER_SIZE);
+		player[SIMULATION_PLAYERS_PLAYER_LEFT_OFFSET]= FALSE;
+		*(long *)(player+SIMULATION_PLAYERS_PLAYER_UNKNOWN10_OFFSET)= NONE;
+		break;
+	case _simulation_players_update_add:
+		if (*mask&bit)
+		{
+			player[SIMULATION_PLAYERS_PLAYER_LEFT_OFFSET]= FALSE;
+			*(long *)(player+SIMULATION_PLAYERS_PLAYER_UNKNOWN10_OFFSET)= NONE;
+		}
+		else
+		{
+			*mask|= bit;
+			memcpy(player, update+SIMULATION_PLAYERS_UPDATE_IDENTIFIER_OFFSET,
+				SIMULATION_PLAYERS_PLAYER_IDENTIFIER_SIZE);
+			if (update[SIMULATION_PLAYERS_UPDATE_NEW_LEFT_OFFSET])
+			{
+				player[SIMULATION_PLAYERS_PLAYER_LEFT_OFFSET]= TRUE;
+				*(long *)(player+SIMULATION_PLAYERS_PLAYER_UNKNOWN10_OFFSET)= game_time_globals->time;
+			}
+		}
+		memcpy(player+SIMULATION_PLAYERS_PLAYER_MACHINE_OFFSET, update+SIMULATION_PLAYERS_UPDATE_NEW_MACHINE_OFFSET,
+			SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE);
+		*(long *)(player+SIMULATION_PLAYERS_PLAYER_UNKNOWN1C_OFFSET)=
+			*(const long *)(update+SIMULATION_PLAYERS_UPDATE_NEW_UNKNOWN1C_OFFSET);
+		*(long *)(player+SIMULATION_PLAYERS_PLAYER_UNKNOWN20_OFFSET)=
+			*(const long *)(update+SIMULATION_PLAYERS_UPDATE_NEW_UNKNOWN20_OFFSET);
+		memcpy(player+SIMULATION_PLAYERS_PLAYER_PROPERTIES_OFFSET, update+SIMULATION_PLAYERS_UPDATE_PROPERTIES_OFFSET,
+			SIMULATION_PLAYERS_PLAYER_PROPERTIES_SIZE);
+		break;
+	case _simulation_players_update_properties:
+		memcpy(player+SIMULATION_PLAYERS_PLAYER_PROPERTIES_OFFSET, update+SIMULATION_PLAYERS_UPDATE_PROPERTIES_OFFSET,
+			SIMULATION_PLAYERS_PLAYER_PROPERTIES_SIZE);
+		break;
+	}
+}
+
+/* 0x00084e90: two players of what there is change places: what says so is
+made, with who is in each place (no one, where there is no one), and is
+taken */
+void __attribute__((stdcall)) simulation_players_collection_swap(
+	byte *update,
+	long player_index,
+	byte *collection,
+	long other_player_index)
+{
+	unsigned long mask= *(const unsigned long *)collection;
+
+	*(long *)(update+SIMULATION_PLAYERS_UPDATE_TYPE_OFFSET)= _simulation_players_update_swap;
+	*(long *)update= player_index;
+	if (mask&(1<<player_index))
+	{
+		memcpy(update+SIMULATION_PLAYERS_UPDATE_IDENTIFIER_OFFSET,
+			collection+SIMULATION_PLAYERS_COLLECTION_PLAYERS_OFFSET+player_index*SIMULATION_PLAYERS_PLAYER_SIZE,
+			SIMULATION_PLAYERS_PLAYER_IDENTIFIER_SIZE);
+	}
+	else
+	{
+		memset(update+SIMULATION_PLAYERS_UPDATE_IDENTIFIER_OFFSET, 0, SIMULATION_PLAYERS_PLAYER_IDENTIFIER_SIZE);
+	}
+	*(long *)(update+SIMULATION_PLAYERS_UPDATE_OTHER_INDEX_OFFSET)= other_player_index;
+	if (mask&(1<<other_player_index))
+	{
+		memcpy(update+SIMULATION_PLAYERS_UPDATE_OTHER_IDENTIFIER_OFFSET,
+			collection+SIMULATION_PLAYERS_COLLECTION_PLAYERS_OFFSET+other_player_index*SIMULATION_PLAYERS_PLAYER_SIZE,
+			SIMULATION_PLAYERS_PLAYER_IDENTIFIER_SIZE);
+	}
+	else
+	{
+		memset(update+SIMULATION_PLAYERS_UPDATE_OTHER_IDENTIFIER_OFFSET, 0, SIMULATION_PLAYERS_PLAYER_IDENTIFIER_SIZE);
+	}
+	simulation_players_collection_apply_update(collection, update);
 }

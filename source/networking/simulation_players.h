@@ -88,7 +88,22 @@ enum
 	/* and, in what it says of two players, the other place and who is
 	there */
 	SIMULATION_PLAYERS_UPDATE_OTHER_INDEX_OFFSET= 0xB8,
-	SIMULATION_PLAYERS_UPDATE_OTHER_IDENTIFIER_OFFSET= 0xBC
+	SIMULATION_PLAYERS_UPDATE_OTHER_IDENTIFIER_OFFSET= 0xBC,
+	/* the kinds of what is said of a player, and where the kind is: it
+	left; it and another change places; it is not there any more; it is
+	new; and what the others are told of it is something else. And of what
+	is said of a new one: whether it has left already, its console and its
+	two numbers */
+	SIMULATION_PLAYERS_UPDATE_TYPE_OFFSET= 0x10,
+	_simulation_players_update_left= 0,
+	_simulation_players_update_swap,
+	_simulation_players_update_remove,
+	_simulation_players_update_add,
+	_simulation_players_update_properties,
+	SIMULATION_PLAYERS_UPDATE_NEW_MACHINE_OFFSET= 0x14,
+	SIMULATION_PLAYERS_UPDATE_NEW_UNKNOWN1C_OFFSET= 0x1C,
+	SIMULATION_PLAYERS_UPDATE_NEW_UNKNOWN20_OFFSET= 0x20,
+	SIMULATION_PLAYERS_UPDATE_NEW_LEFT_OFFSET= 0x24
 };
 
 /* ---------- prototypes/SIMULATION_PLAYERS.C */
@@ -96,6 +111,9 @@ enum
 void simulation_players_collection_clear(byte *collection);
 void __attribute__((stdcall)) simulation_players_collection_build(byte *collection);
 unsigned long simulation_players_collection_get_active_mask(const byte *collection);
+void __attribute__((stdcall)) simulation_players_collection_apply_update(byte *collection, const byte *update);
+void __attribute__((stdcall)) simulation_players_collection_swap(byte *update, long player_index, byte *collection,
+	long other_player_index);
 boolean simulation_players_update_remove_player(const byte *update);
 boolean simulation_players_update_unknown_000850c0(const byte *update);
 boolean __attribute__((stdcall)) simulation_players_update_set_properties(const byte *update);
