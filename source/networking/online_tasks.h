@@ -231,6 +231,7 @@ boolean online_get_accepted_game_invite(void *invite);
 void online_service_unregister_address(void);
 long __attribute__((stdcall)) online_logon_remove_user(long user_index);
 long online_logon_add_user(const struct online_user *user, long user_index);
+long online_new_content_check_start(void);
 long online_task_get_string(long index);
 long online_task_get_other_string(long index);
 long online_tasks_get_logon_state(long index);

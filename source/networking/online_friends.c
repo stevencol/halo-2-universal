@@ -36,6 +36,10 @@ now, and how many */
 long __attribute__((stdcall)) XOnlineFriendsEnumerate(long owner, long unknown, long *handle);
 long __attribute__((stdcall)) XOnlineFriendsGetLatest(long owner, long maximum_count, byte *friends);
 
+/* 0x003a07a3: the friends of the libraries start; a task of theirs does
+it */
+long __attribute__((stdcall)) XOnlineFriendsStartup(long unknown, long *handle);
+
 /* ---------- globals */
 
 /* 0x00467214, of main_game.c: the task that signs in to the service of
@@ -364,4 +368,47 @@ short __attribute__((stdcall)) online_friends_get_latest(
 	}
 
 	return 0;
+}
+
+/* 0x0008cc40: the task of the friends, of the second kind and of no one's:
+if there is one and it is not at its third step, that one; if it is, it
+starts again; and if there is none, a new one starts. The task, or NONE if it
+could not start. The game does not look at whether the task that it found is
+one */
+long online_friends_startup(
+	void)
+{
+	long task_index= online_task_find(ONLINE_FRIENDS_TASK_OWNER, _online_task_type2);
+	struct online_task *task;
+
+	if (task_index!=NONE)
+	{
+		task= (struct online_task *)online_tasks->data+(task_index&0xFFFF);
+		if (!(task->flags&(_online_task_unknown4_bit|_online_task_unknown20_bit)))
+		{
+			return task_index;
+		}
+		online_task_restart(task_index);
+		task= (struct online_task *)online_tasks->data+(task_index&0xFFFF);
+	}
+	else
+	{
+		task_index= online_task_new_signed_in();
+		if (task_index==NONE)
+		{
+			return NONE;
+		}
+		task= (struct online_task *)online_tasks->data+(task_index&0xFFFF);
+	}
+	if (XOnlineFriendsStartup(0, &task->handle)<0)
+	{
+		online_task_close(task_index);
+
+		return NONE;
+	}
+	task->flags= _online_task_unknown1_bit;
+	task->type= _online_task_type2;
+	task->owner= ONLINE_FRIENDS_TASK_OWNER;
+
+	return task_index;
 }

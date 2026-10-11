@@ -43,7 +43,17 @@ enum
 	/* of what a view has for the players: the bits of the players whose
 	action it has, and where the actions are */
 	SIMULATION_PLAYER_ACTIONS_MASK_OFFSET= 0x14,
-	SIMULATION_PLAYER_ACTIONS_OFFSET= 0x18
+	SIMULATION_PLAYER_ACTIONS_OFFSET= 0x18,
+	/* and the bits of the players of which it has something else, of 0x40
+	bytes, and where those are */
+	SIMULATION_PLAYER_ACTIONS_OTHER_MASK_OFFSET= 0x71C,
+	SIMULATION_PLAYER_ACTIONS_OTHER_OFFSET= 0x720,
+	SIMULATION_PLAYER_ACTIONS_OTHER_SIZE= 0x40,
+	/* of what comes of a player: which it is, and where its two things
+	are, each if there is one */
+	SIMULATION_PLAYER_UPDATE_INDEX_OFFSET= 0x4,
+	SIMULATION_PLAYER_UPDATE_ACTION_OFFSET= 0x44,
+	SIMULATION_PLAYER_UPDATE_OTHER_OFFSET= 0x4C
 };
 
 /* ---------- prototypes/SIMULATION_PLAYER.C */

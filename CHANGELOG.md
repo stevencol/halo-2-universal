@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Arrancar los amigos, preguntar por contenido nuevo y guardar lo que hace un jugador
+
+Tres funciones (381 bytes), en `networking/online_friends.c`, `networking/online_tasks.c` y
+`networking/simulation_player.c`. De 1903
+funciones se pasa a 1906, el 16,92 % de las del juego (el 10,677 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_player_actions_add` | `0x0008bf10` | `networking/simulation_player.c` |
+| `online_friends_startup` | `0x0008cc40` | `networking/online_friends.c` |
+| `online_new_content_check_start` | `0x0008d4d0` | `networking/online_tasks.c` |
+
+### Lo que se sabe
+
+- Dos de las cosas que `online_logon_complete` (hito 520) hacía al
+  conectarse llamándolas por su dirección ya tienen nombre:
+  - `online_friends_startup` (antes `unknown_0008cc40`): **arranca los
+    amigos** (`XOnlineFriendsStartup`), con la tarea de la clase `2`, que no
+    es de ningún jugador; si ya había una y va por su tercer paso, la vuelve
+    a empezar;
+  - `online_new_content_check_start` (antes `unknown_0008d4d0`):
+    **pregunta al servicio si hay contenido nuevo para el juego**
+    (`XOnlineOfferingIsNewContentAvailable`), con la tarea de la clase
+    `0xD` — la que al acabar pone el byte `0x0051055d` (hito 519).
+- `simulation_player_actions_add` es la pareja de
+  `simulation_player_actions_take` (hito 538): mete en lo que una vista
+  guarda de los jugadores lo que llega de uno, y marca su bit.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  551.
+- En este hito se pasaron las pruebas de las tres funciones y
+  `test_online_tasks` entera.
+- `online_friends_startup` no mira si la tarea que encuentra existe (el
+  juego tampoco): las pruebas le dan siempre una que sí.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Las tareas de la clase 0x21: en qué están otros jugadores del servicio
 
 Archivo nuevo, `networking/online_presence.c`, con seis funciones (732 bytes). De 1897

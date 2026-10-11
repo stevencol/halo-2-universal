@@ -34,7 +34,7 @@ ended. 0x0007f410: something of the network is told that someone is signed
 in. 0x0018fa94: which of them is the first that something is so of,
 or NONE. 0x0008c660, 0x0008d4d0: two more things that are told that someone
 signed in */
-void unknown_0008cc40(void);
+void online_friends_startup(void);
 void unknown_0007f410(void);
 long __attribute__((stdcall)) user_interface_controllers_first_online_user(const struct online_user *users);
 void unknown_0008c660(void);
@@ -48,7 +48,6 @@ nothing if it is not known. 0x0008e750: the things that a player has, each
 of 0x40 bytes, and how many */
 long __attribute__((stdcall)) unknown_003a0798(long user_index, byte *state, long *unknown);
 void __attribute__((stdcall)) unknown_0008e750(long user_index, byte *entries, long *count);
-void unknown_0008d4d0(void);
 void __attribute__((stdcall)) network_blob_task_completed(long status, long handle);
 void unknown_0008bf70(byte *unknown);
 
@@ -94,6 +93,10 @@ long __attribute__((stdcall)) XOnlineChangeLogonUsers(const struct online_user *
 a task of the libraries does it */
 long __attribute__((stdcall)) XOnlineLogon(const struct online_user *users, const unsigned long *services,
 	long service_count, long unknown, long *handle);
+
+/* 0x003a069d: the service of games is asked whether there is new content
+for the game; a task of the libraries does it */
+long __attribute__((stdcall)) XOnlineOfferingIsNewContentAvailable(long unknown, long unknown2, long *handle);
 
 /* ---------- structures */
 
@@ -913,7 +916,7 @@ boolean online_task_update(
 			said= online_task_step(task);
 			if (said<0 && said!=(long)ONLINE_TASK_NOT_SIGNED_IN)
 			{
-				unknown_0008cc40();
+				online_friends_startup();
 			}
 			break;
 		case _online_task_type_d:
@@ -1136,8 +1139,8 @@ boolean __attribute__((stdcall)) online_logon_complete(
 		network_blob_start_read(&unknown_00477058, index, request, 0);
 		network_blob_start_read(&unknown_0047d8f4, index, request, 0);
 		network_blob_start_read(&unknown_00479780, index, request, 0);
-		unknown_0008cc40();
-		unknown_0008d4d0();
+		online_friends_startup();
+		online_new_content_check_start();
 	}
 done:
 	task->unknown10= state;
@@ -1591,4 +1594,30 @@ long online_logon_add_user(
 	online_task_close(task_index);
 
 	return NONE;
+}
+
+/* 0x0008d4d0: a task starts that asks the service of games whether there is
+new content for the game, of the kind 0xD and of no one's; the task, or NONE
+if it could not start. The game has it far from the rest of this file */
+long online_new_content_check_start(
+	void)
+{
+	long task_index= online_task_new_signed_in();
+	struct online_task *task= (struct online_task *)datum_try_and_get(online_tasks, task_index);
+
+	if (task)
+	{
+		unknown_0051055d= FALSE;
+		if (XOnlineOfferingIsNewContentAvailable(NONE, 0, &task->handle)<0)
+		{
+			online_task_close(task_index);
+
+			return NONE;
+		}
+		task->flags= _online_task_unknown1_bit|_online_task_unknown8_bit;
+		task->type= _online_task_type_d;
+		task->owner= NONE;
+	}
+
+	return task_index;
 }

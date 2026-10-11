@@ -149,3 +149,55 @@ def run(t) -> None:
                 "XOnlineFriendsGetLatest": latest,
             },
         )
+
+    # ---------- the friends start; new content is asked about; a player's action is kept
+
+    for n in range(2500):
+        tasks, number = tasks_table(random_)
+
+        def starts(at: int):
+            def stand_in(harness, arguments, result=random_.choice((0, 0, 0, 1) + FAILED), handle=random_.getrandbits(32)):
+                if result < 0x80000000:
+                    harness.mu.mem_write(arguments[at], struct.pack("<I", handle))
+                return result, tuple(arguments[:at])
+
+            return stand_in
+
+        closed = lambda harness, arguments: (0, tuple(arguments))
+        t.check(
+            "online_friends_startup",
+            globals={"online_tasks": tasks},
+            externals={
+                "online_task_find": lambda harness, arguments, found=random_.choice((number, number, NONE)): (found, tuple(arguments)),
+                "online_task_restart": closed,
+                "online_task_new_signed_in": lambda harness, arguments, index=random_.choice((number, number, NONE)): (index, ()),
+                "XOnlineFriendsStartup": starts(1),
+                "online_task_close": closed,
+            },
+        )
+
+        tasks, number = tasks_table(random_)
+        t.check(
+            "online_new_content_check_start",
+            globals={"online_tasks": tasks, "unknown_0051055d": bytes((random_.choice((0, 1)),))},
+            externals={
+                "online_task_new_signed_in": lambda harness, arguments, index=random_.choice((number, number, number, NONE, number ^ 0x10000)): (index, ()),
+                "XOnlineOfferingIsNewContentAvailable": starts(2),
+                "online_task_close": closed,
+            },
+        )
+
+        update = bytearray(random_.randbytes(0x50 + 0x34 + 0x40))
+        struct.pack_into("<I", update, 4, random_.randrange(16))
+        pointers = []
+        for offset, target in ((0x44, 0x50), (0x4C, 0x84)):
+            if random_.random() < 0.7:
+                struct.pack_into("<I", update, offset, target)
+                pointers.append(offset)
+            else:
+                struct.pack_into("<I", update, offset, 0)
+        t.check(
+            "simulation_player_actions_add",
+            Buffer(random_.randbytes(0x720 + 16 * 0x40)),
+            Buffer(bytes(update), pointers=tuple(pointers)),
+        )

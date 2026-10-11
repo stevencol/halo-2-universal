@@ -2341,14 +2341,14 @@ address,name,source,arguments,returns,convention
 0006c4a0,online_task_storage_done,source/networking/online_tasks.c,eax ecx,void
 0006c2a0,online_task_logon_update,source/networking/online_tasks.c,eax stack,bool,stdcall
 0006c360,online_task_change_users_update,source/networking/online_tasks.c,eax,bool
-0008cc40,unknown_0008cc40,,,void
+0008cc40,online_friends_startup,source/networking/online_friends.c,,int
 0006bff0,online_logon_complete,source/networking/online_tasks.c,stack,bool,stdcall
 0007f410,unknown_0007f410,,,void
 0006c170,online_users_start_mute_lists,source/networking/online_tasks.c,edi,void
 0006c1d0,online_users_set_state,source/networking/online_tasks.c,stack,void,stdcall
 0018fa94,user_interface_controllers_first_online_user,source/interface/user_interface_controller.c,stack,int,stdcall
 0008c660,unknown_0008c660,,,void
-0008d4d0,unknown_0008d4d0,,,void
+0008d4d0,online_new_content_check_start,source/networking/online_tasks.c,,int
 003a067c,XOnlineGetServiceInfo,,stack stack,int,stdcall
 0006cf00,online_state_encode,source/networking/online_tasks.c,esi edi,void
 0006d080,online_user_get_state,source/networking/online_tasks.c,ebx ecx,bool
@@ -2520,3 +2520,6 @@ address,name,source,arguments,returns,convention
 003a6f9b,unknown_003a6f9b,,stack,int,stdcall
 003a6fa6,unknown_003a6fa6,,stack stack stack stack,int,stdcall
 003a6969,unknown_003a6969,,stack,int,stdcall
+0008bf10,simulation_player_actions_add,source/networking/simulation_player.c,ecx stack,void,stdcall
+003a07a3,XOnlineFriendsStartup,,stack stack,int,stdcall
+003a069d,XOnlineOfferingIsNewContentAvailable,,stack stack stack,int,stdcall

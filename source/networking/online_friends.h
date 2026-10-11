@@ -57,7 +57,9 @@ enum
 	/* the three answers that a friend can be given */
 	NUMBER_OF_ONLINE_FRIEND_ANSWERS= 3,
 	/* how many friends a player can have */
-	MAXIMUM_ONLINE_FRIENDS= 100
+	MAXIMUM_ONLINE_FRIENDS= 100,
+	/* the task of the friends is of no one's */
+	ONLINE_FRIENDS_TASK_OWNER= 0xFF
 };
 
 /* ---------- structures */
@@ -90,5 +92,6 @@ void __attribute__((stdcall)) online_friend_answer_game_invite(const byte *onlin
 void __attribute__((stdcall)) online_friend_get_title_name(wchar *name, const byte *online_friend, short size);
 long online_friends_enumerate_start(long owner);
 short __attribute__((stdcall)) online_friends_get_latest(long task_index, byte *friends);
+long online_friends_startup(void);
 
 #endif

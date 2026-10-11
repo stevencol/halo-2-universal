@@ -139,3 +139,27 @@ boolean __attribute__((stdcall)) simulation_player_actions_take(
 
 	return TRUE;
 }
+
+/* 0x0008bf10: what a view has for the players takes what comes of one of
+them: what it does, packed, and something else, each if it comes */
+void __attribute__((stdcall)) simulation_player_actions_add(
+	byte *actions,
+	const byte *update)
+{
+	long player_index= *(const long *)(update+SIMULATION_PLAYER_UPDATE_INDEX_OFFSET);
+	const byte *packed= *(const byte *const *)(update+SIMULATION_PLAYER_UPDATE_ACTION_OFFSET);
+	const byte *other= *(const byte *const *)(update+SIMULATION_PLAYER_UPDATE_OTHER_OFFSET);
+
+	if (packed)
+	{
+		memcpy(actions+SIMULATION_PLAYER_ACTIONS_OFFSET+player_index*SIMULATION_PLAYER_PACKED_ACTION_SIZE, packed,
+			SIMULATION_PLAYER_PACKED_ACTION_SIZE);
+		*(unsigned long *)(actions+SIMULATION_PLAYER_ACTIONS_MASK_OFFSET)|= 1<<player_index;
+	}
+	if (other)
+	{
+		memcpy(actions+SIMULATION_PLAYER_ACTIONS_OTHER_OFFSET+player_index*SIMULATION_PLAYER_ACTIONS_OTHER_SIZE, other,
+			SIMULATION_PLAYER_ACTIONS_OTHER_SIZE);
+		*(unsigned long *)(actions+SIMULATION_PLAYER_ACTIONS_OTHER_MASK_OFFSET)|= 1<<player_index;
+	}
+}

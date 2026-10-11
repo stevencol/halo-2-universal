@@ -402,7 +402,7 @@ def run(t) -> None:
                     (harness.normalize(arguments[0]), arguments[1]),
                 ),
                 "online_task_change_users_update": lambda harness, arguments: (1, (harness.normalize(arguments[0]),)),
-                "unknown_0008cc40": lambda harness, arguments: (0, ()),
+                "online_friends_startup": lambda harness, arguments: (0, ()),
                 "network_blob_task_completed": lambda harness, arguments: (0, tuple(arguments)),
                 "online_task_close": lambda harness, arguments: (0, tuple(arguments)),
             },
@@ -506,8 +506,8 @@ def run(t) -> None:
                 ),
                 "unknown_0008c660": told,
                 "network_blob_start_read": lambda harness, arguments: (1, tuple(harness.normalize(value) for value in arguments)),
-                "unknown_0008cc40": told,
-                "unknown_0008d4d0": told,
+                "online_friends_startup": told,
+                "online_new_content_check_start": told,
             },
         )
 
