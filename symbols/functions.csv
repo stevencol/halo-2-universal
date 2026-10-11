@@ -2344,7 +2344,7 @@ address,name,source,arguments,returns,convention
 0008cc40,unknown_0008cc40,,,void
 0006bff0,online_logon_complete,source/networking/online_tasks.c,stack,bool,stdcall
 0007f410,unknown_0007f410,,,void
-0006c170,unknown_0006c170,,edi,void
+0006c170,online_users_start_mute_lists,source/networking/online_tasks.c,edi,void
 0006c1d0,unknown_0006c1d0,,stack,void,stdcall
 0018fa94,unknown_0018fa94,,stack,int,stdcall
 0008c660,unknown_0008c660,,,void

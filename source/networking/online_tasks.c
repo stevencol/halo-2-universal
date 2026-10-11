@@ -15,6 +15,7 @@ are guesses.
 #include "networking/network_observer.h"
 #include "networking/network_session.h"
 #include "networking/transport.h"
+#include "networking/voice_mute_list.h"
 #include "networking/transport_security.h"
 
 #include <string.h>
@@ -29,13 +30,12 @@ void unknown_0008c550(long index);
 /* 0x0008cc40: something is told that a task of the second kind could not
 go on. 0x0008e5e0, of network_blob_task.c: what did a task of the blocks
 ended. 0x0007f410: something of the network is told that someone is signed
-in. 0x0006c170, 0x0006c1d0: two things are done with the players that are
-signed in. 0x0018fa94: which of them is the first that something is so of,
+in. 0x0006c1d0: something is done with the players that are signed in.
+0x0018fa94: which of them is the first that something is so of,
 or NONE. 0x0008c660, 0x0008d4d0: two more things that are told that someone
 signed in */
 void unknown_0008cc40(void);
 void unknown_0007f410(void);
-void unknown_0006c170(const struct online_user *users);
 void __attribute__((stdcall)) unknown_0006c1d0(const struct online_user *users);
 long __attribute__((stdcall)) unknown_0018fa94(const struct online_user *users);
 void unknown_0008c660(void);
@@ -1060,7 +1060,7 @@ boolean __attribute__((stdcall)) online_logon_complete(
 			}
 		}
 	}
-	unknown_0006c170(users);
+	online_users_start_mute_lists(users);
 	unknown_0006c1d0(users);
 	game_voice_start();
 	index= unknown_0018fa94(users);
@@ -1079,4 +1079,25 @@ done:
 	task->unknown10= state;
 
 	return state==_online_session_signed_in;
+}
+
+/* 0x0006c170: for each player that is signed in well, and is one like the
+others, the list of the players that it has muted starts over and is asked
+for (voice_mute_list_stop, voice_mute_list_startup, voice_mute_list_request) */
+void online_users_start_mute_lists(
+	const struct online_user *users)
+{
+	long index;
+
+	for (index= 0; index<MAXIMUM_ONLINE_USERS; index++)
+	{
+		const struct online_user *user= &users[index];
+
+		if ((user->xuid[0]|user->xuid[1]) && user->name[0] && user->result>=0 && !(user->flags&_online_user_unknown_bits))
+		{
+			voice_mute_list_stop(index);
+			voice_mute_list_startup(index);
+			voice_mute_list_request(index);
+		}
+	}
 }

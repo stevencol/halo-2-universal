@@ -95,7 +95,10 @@ enum
 	it goes on; it is done; and the players have to be looked at */
 	ONLINE_TASK_USERS_GOING= 0x1513F0,
 	ONLINE_TASK_USERS_DONE= 0x1513F1,
-	ONLINE_TASK_USERS_LOOK= 0x80151300
+	ONLINE_TASK_USERS_LOOK= 0x80151300,
+	/* the bits of a player that is signed in that say that it is not one
+	like the others */
+	_online_user_unknown_bits= 0x3
 };
 
 /* ---------- structures */
@@ -121,7 +124,11 @@ by, and at the end how signing in went for it */
 struct online_user
 {
 	unsigned long xuid[2];
-	byte unknown8[0x64];
+	/* two bits that say that it is not a player like the others */
+	byte flags;
+	byte unknown9[3];
+	/* it has a name: the first character of it */
+	char name[0x60];
 	long result;
 };
 
@@ -169,6 +176,7 @@ boolean online_task_update(long index, struct online_task *task);
 boolean __attribute__((stdcall)) online_task_logon_update(struct online_task *task, long index);
 boolean online_task_change_users_update(struct online_task *task);
 boolean __attribute__((stdcall)) online_logon_complete(struct online_task *task);
+void online_users_start_mute_lists(const struct online_user *users);
 long online_tasks_get_logon_state(long index);
 long online_users_get_result(void);
 long online_task_users_get_result(const struct online_task *task);

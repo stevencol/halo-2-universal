@@ -496,7 +496,7 @@ def run(t) -> None:
                     (harness.normalize(arguments[0]),),
                 ),
                 "XOnlineGetServiceInfo": service,
-                "unknown_0006c170": told,
+                "online_users_start_mute_lists": told,
                 "unknown_0006c1d0": told,
                 "game_voice_start": told,
                 "unknown_0018fa94": lambda harness, arguments, first=random_.choice((0, 1, 3, NONE)): (
@@ -508,4 +508,21 @@ def run(t) -> None:
                 "unknown_0008cc40": told,
                 "unknown_0008d4d0": told,
             },
+        )
+
+    # ---------- the lists of muted players
+
+    for n in range(2000):
+        data = bytearray(random_.randbytes(4 * 0x70))
+        for index in range(4):
+            if random_.random() < 0.25:
+                data[index * 0x70:index * 0x70 + 8] = bytes(8)
+            data[index * 0x70 + 8] = random_.choice((0, 0, 0, 4, 1, 2, 0xFC))
+            data[index * 0x70 + 0xC] = random_.choice((0, 0x41, 0x41, 0x41))
+            struct.pack_into("<I", data, index * 0x70 + 0x6C, random_.choice((0, 0, 0x1512F0, 0x80151200, 0x80000000)))
+        told = lambda harness, arguments: (0, tuple(arguments))
+        t.check(
+            "online_users_start_mute_lists",
+            Buffer(bytes(data)),
+            externals={"voice_mute_list_stop": told, "voice_mute_list_startup": told, "voice_mute_list_request": told},
         )

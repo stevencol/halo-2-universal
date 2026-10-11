@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Las listas de silenciados, al conectarse
+
+Una función en `networking/online_tasks.c`, de 90 bytes. De 1744
+funciones se pasa a 1745, el 15,49 % de las del juego (el 10,203 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_users_start_mute_lists` | `0x0006c170` | `networking/online_tasks.c` |
+
+### Lo que se sabe
+
+- `online_users_start_mute_lists` es una de las cosas que
+  `online_logon_complete` (hito 520) hace al conectarse: por cada jugador
+  conectado que vale, **vuelve a empezar y pide su lista de jugadores
+  silenciados** (`voice_mute_list_stop`, `voice_mute_list_startup` y
+  `voice_mute_list_request`, ya hechas).
+- Un jugador conectado «vale» si tiene cómo se le conoce, tiene nombre,
+  no le fue mal al conectarse y no tiene ninguno de los dos primeros bits
+  de su byte de `0x8`. Con eso la estructura de un jugador conectado tiene
+  dos campos más con nombre.
+
+### Cambiado
+
+- `unknown_0006c170` tiene su nombre.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  520.
+- En este hito se pasaron todas las pruebas de `online_tasks`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Cuando alguien se conecta
 
 Una función en `networking/online_tasks.c`, de 382 bytes. De 1743
