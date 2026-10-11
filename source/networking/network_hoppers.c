@@ -19,6 +19,12 @@ fills. The names are guesses.
 is nothing */
 void __attribute__((stdcall)) unknown_00194660(long index);
 
+/* 0x001943d0: the games that one of the list can play; whether there are
+any. 0x0019c5f0: something of a map, by its number, if the console has the
+map; NULL if not */
+boolean __attribute__((stdcall)) unknown_001943d0(long hopper_index, struct network_hopper_game_set *set);
+const byte *__attribute__((stdcall)) unknown_0019c5f0(long map);
+
 /* ---------- globals */
 
 /* 0x00551ae8 */
@@ -398,4 +404,75 @@ long network_hoppers_get_unknown4(
 	}
 
 	return NETWORK_HOPPER_UNKNOWN4_NONE;
+}
+
+/* 0x00192eb0: the game that one of the list plays next: one of its games,
+taken at random by how much each weighs (from 1 to 1000), of the ones whose
+map the console has. Its map and its rules; whether there is one */
+boolean __attribute__((stdcall)) network_hopper_choose_game(
+	long hopper_index,
+	long *map,
+	struct game_variant *variant)
+{
+	struct network_hopper_game_set set;
+	long weights[MAXIMUM_NETWORK_HOPPER_GAMES];
+	unsigned long seed;
+	long chosen= NONE;
+	long total= 0;
+	long running= 0;
+	long index;
+	long pick;
+
+	if (!unknown_001943d0(hopper_index, &set))
+	{
+		return FALSE;
+	}
+	if (set.count<=0)
+	{
+		return FALSE;
+	}
+	index= 0;
+	do
+	{
+		long weight= 0;
+
+		if (unknown_0019c5f0(set.games[index].map))
+		{
+			weight= set.games[index].weight;
+			if (weight<NETWORK_HOPPER_GAME_WEIGHT_MINIMUM)
+			{
+				weight= NETWORK_HOPPER_GAME_WEIGHT_MINIMUM;
+			}
+			else if (weight>NETWORK_HOPPER_GAME_WEIGHT_MAXIMUM)
+			{
+				weight= NETWORK_HOPPER_GAME_WEIGHT_MAXIMUM;
+			}
+		}
+		total+= weight;
+		weights[index]= weight;
+		index++;
+	} while (index<set.count);
+	if (total<=0)
+	{
+		return FALSE;
+	}
+	seed= global_random_seed_reference[1]*0x19660D+0x3C6EF35F;
+	global_random_seed_reference[1]= seed;
+	pick= (short)(((unsigned long)((long)(short)(total+1)-1)*(seed>>16)>>16)+1);
+	for (index= 0; index<set.count && chosen==NONE; index++)
+	{
+		running+= weights[index];
+		if (running>=pick)
+		{
+			chosen= index;
+		}
+	}
+	if (chosen<0 || chosen>=set.count)
+	{
+		return FALSE;
+	}
+	*map= set.games[chosen].map;
+	*variant= set.games[chosen].variant;
+
+	return TRUE;
 }

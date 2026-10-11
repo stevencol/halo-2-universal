@@ -13,6 +13,7 @@ its functions.
 #define __NETWORK_HOPPERS_H
 
 #include "cseries/cseries.h"
+#include "game/game.h"
 
 /* ---------- constants */
 
@@ -33,6 +34,11 @@ enum
 	NETWORK_HOPPER_UNKNOWN8_MAXIMUM= 100,
 	/* what network_hoppers_get_unknown4 says of one that is not there */
 	NETWORK_HOPPER_UNKNOWN4_NONE= 3,
+	/* how many games one of the list can have to choose from, and how much
+	one of them can weigh */
+	MAXIMUM_NETWORK_HOPPER_GAMES= 100,
+	NETWORK_HOPPER_GAME_WEIGHT_MINIMUM= 1,
+	NETWORK_HOPPER_GAME_WEIGHT_MAXIMUM= 1000,
 	/* what network_hopper_get_players_value says of a number of players
 	that one does not take */
 	NETWORK_HOPPER_PLAYERS_VALUE_NONE= 0x7FFFFFFF
@@ -74,6 +80,29 @@ struct network_hopper
 
 typedef char verify_network_hopper_size[sizeof(struct network_hopper) == 0x614 ? 1 : -1];
 
+/* one of the games that one of the list can play: its map, how much it
+weighs when one is taken at random, and its rules */
+struct network_hopper_game
+{
+	byte unknown0[4];
+	long map;
+	byte unknown8[0x240];
+	long weight;
+	struct game_variant variant;
+};
+
+typedef char verify_network_hopper_game_size[sizeof(struct network_hopper_game) == 0x37C ? 1 : -1];
+
+/* the games that one of the list can play */
+struct network_hopper_game_set
+{
+	byte unknown0[0x44];
+	long count;
+	struct network_hopper_game games[MAXIMUM_NETWORK_HOPPER_GAMES];
+};
+
+typedef char verify_network_hopper_game_set_size[sizeof(struct network_hopper_game_set) == 0x15CB8 ? 1 : -1];
+
 /* ---------- prototypes/NETWORK_HOPPERS.C */
 
 boolean network_hoppers_index_valid(long index);
@@ -99,6 +128,8 @@ boolean network_hopper_type4_valid(const struct network_hopper *hopper);
 boolean network_hopper_teams_valid(const struct network_hopper *hopper);
 long network_hopper_unknown_001931a0(long number, const struct network_hopper *hopper);
 long network_hoppers_get_unknown4(long index);
+boolean __attribute__((stdcall)) network_hopper_choose_game(long hopper_index, long *map,
+	struct game_variant *variant);
 
 /* ---------- globals */
 

@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 560.
+**Última actualización:** 2026-10-08, al terminar el hito 561.
 
 ## Dónde estamos
 
-- **1915 funciones descompiladas de 11.265: el 17,00 % del juego** (el
-  10,763 % de los bytes de código).
-- Las 1915 están comprobadas contra el ejecutable original: las 1390 del
+- **1916 funciones descompiladas de 11.265: el 17,01 % del juego** (el
+  10,775 % de los bytes de código).
+- Las 1916 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how what the game remembers of other players is kept up to date* (ver `git log`).
+- Último hito: *Decompile how the next game of a list of the service is taken at random* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 617 funciones apuntadas pero sin descompilar (las que el código
-  llama); 468 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 619 funciones apuntadas pero sin descompilar (las que el código
+  llama); 470 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -239,10 +239,9 @@ Módulos (funciones hechas / archivo):
       `0x00192d70`; faltan `0x00192970`, `0x00192a30`, `0x00192b20`,
       `0x00192b90`, que necesita `_CIpow`, y `0x00192d70`)
 - [ ] La lista de partidas del servicio — `networking\network_hoppers.c`
-      (23 de unas 30, de `0x00192db0` a `0x001939f0`: la tabla de
-      `0x00551ae8`, cuántos jugadores y equipos admite cada una y si es
-      buena; faltan las grandes: `0x00192eb0`, `0x00193010`,
-      `0x001936e0`)
+      (24 de unas 30, de `0x00192db0` a `0x001939f0`: la tabla de
+      `0x00551ae8`, cuántos jugadores y equipos admite cada una, si es
+      buena y qué partida juega; faltan `0x00193010` y `0x001936e0`)
 - [ ] Lo que la interfaz pregunta a la partida en red —
       `interface\user_interface_networking.c` (5, de la zona de
       `0x0019989d` a `0x0019a02c`; falta `0x0019989d`)

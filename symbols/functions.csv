@@ -2531,3 +2531,6 @@ address,name,source,arguments,returns,convention
 0008c900,network_motd_write_file,source/networking/network_motd.c,stack,bool,stdcall
 0008ca70,network_motd_read,source/networking/network_motd.c,stack stack,bool,stdcall
 0008c150,online_presence_names_find,source/networking/online_presence.c,stack stack stack stack stack,bool,stdcall
+00192eb0,network_hopper_choose_game,source/networking/network_hoppers.c,stack stack stack,bool,stdcall
+001943d0,unknown_001943d0,,eax stack,bool,stdcall
+0019c5f0,unknown_0019c5f0,,stack,pointer,stdcall

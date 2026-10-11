@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — La partida siguiente de una lista del servicio, elegida al azar
+
+Una función más en `networking/network_hoppers.c`, de 350 bytes. De 1915
+funciones se pasa a 1916, el 17,01 % de las del juego (el 10,775 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_hopper_choose_game` | `0x00192eb0` | `networking/network_hoppers.c` |
+
+### Lo que se sabe
+
+- Cada lista de partidas del servicio (hito 541) tiene **hasta cien
+  partidas posibles**, cada una con su mapa, sus reglas (un
+  `struct game_variant` entero, de `0x130` bytes) y un peso.
+  `network_hopper_choose_game` **elige una al azar según los pesos** (de 1 a
+  1000 cada uno), y solo entre las de mapas que la consola tiene
+  (`0x0019c5f0`). Da el mapa y las reglas.
+- Usa los números al azar del juego (`global_random_seed_reference`), como
+  el mensaje del día (hito 557). Con esto queda confirmado qué es el módulo:
+  **las listas de emparejamiento** — de dónde sale a qué se juega en una
+  partida igualada.
+- El conjunto de partidas de una lista ocupa `0x15CB8` bytes y la función
+  lo tiene en la pila: casi 90 KB.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  560.
+- En este hito se pasó la prueba de la función, con conjuntos de hasta ocho
+  partidas (las demás del conjunto no se leen).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Poner al día lo que el juego recuerda de otros jugadores: su equipo
 
 Una función más en `networking/online_presence.c`, de 474 bytes, y dos correcciones. De 1914

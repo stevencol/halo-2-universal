@@ -127,3 +127,34 @@ def run(t) -> None:
             globals={"unknown_0047d8f4": bytes(blob), "network_hoppers": GlobalData(bytes(table))},
             externals={"unknown_00194660": lambda harness, arguments: (0, tuple(arguments))},
         )
+
+    # ---------- the game that one of the list plays next
+
+    GAME, GAMES, COUNT_AT = 0x37C, 0x48, 0x44
+    for n in range(3000):
+        count = random_.choice((0, 1, 1, 2, 3, 5, 8, NONE))
+        games = bytearray(random_.randbytes(GAMES + 8 * GAME))
+        struct.pack_into("<I", games, COUNT_AT, count)
+        have = set()
+        for index in range(8):
+            map_ = random_.randrange(1, 40)
+            struct.pack_into("<I", games, GAMES + index * GAME + 4, map_)
+            struct.pack_into("<I", games, GAMES + index * GAME + 0x248, random_.choice((0, 1, 1, 10, 100, 1000, 1001, 30000, NONE, 0x80000000)))
+            if random_.random() < 0.7:
+                have.add(map_)
+
+        def games_of(harness, arguments, so=random_.choice((1, 1, 1, 1, 0)), games=bytes(games)):
+            harness.mu.mem_write(arguments[1], games)
+            return so, (arguments[0],)
+
+        t.check(
+            "network_hopper_choose_game",
+            random_.randrange(16),
+            Buffer(random_.randbytes(4)),
+            Buffer(random_.randbytes(0x130)),
+            globals={"global_random_seed_reference": Buffer(random_.randbytes(8))},
+            externals={
+                "unknown_001943d0": games_of,
+                "unknown_0019c5f0": lambda harness, arguments, have=frozenset(have): (0x12340000 if arguments[0] in have else 0, tuple(arguments)),
+            },
+        )
