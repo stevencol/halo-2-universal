@@ -11,6 +11,8 @@ The name real_seed_random is a guess; real_seed_random_range is Halo 1's.
 
 #include "real_math.h"
 
+#include <stddef.h>
+
 /* ---------- constants */
 
 enum
@@ -19,7 +21,26 @@ enum
 	RANDOM_C= 1013904223L
 };
 
+/* ---------- prototypes */
+
+/* of the C library and of the console's libraries */
+long time(long *timer);
+int rand(void);
+unsigned long GetTickCount(void);
+
 /* ---------- code */
+
+/* 0x001462b0: a number to start random numbers with, from the time, the
+random numbers of the C library and how long the console has been on. The
+game has it far from the rest of this file */
+long random_seed_from_time(
+	void)
+{
+	long now= time(NULL);
+	long random= rand();
+
+	return random^GetTickCount()^now;
+}
 
 /* 0x000259a0: from 0 to 1 */
 real real_seed_random(

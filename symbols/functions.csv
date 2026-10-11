@@ -797,7 +797,7 @@ address,name,source,arguments,returns,convention
 000593e0,network_life_cycle_end,source/networking/network_life_cycle.c,,void
 000594a0,network_life_cycle_unknown_000594a0,source/networking/network_life_cycle.c,stack stack stack,bool,stdcall
 000705f0,unknown_000705f0,,eax stack stack stack,bool,stdcall
-000641f0,unknown_000641f0,,,int
+000641f0,network_life_cycle_session_get_unknown49C8,source/networking/network_life_cycle.c,,int
 00192e60,unknown_00192e60,,eax,int
 00193470,unknown_00193470,,eax,bool
 00054d20,game_voice_get_local_players,source/networking/game_voice.c,,int
@@ -1534,7 +1534,7 @@ address,name,source,arguments,returns,convention
 00219e90,sound_playback_controller_initialize,source/sound/sound_manager.c,eax ecx edx stack,void,stdcall
 00219a90,sound_playback_controller_new,source/sound/sound_manager.c,eax,int
 00219c30,sound_playback_controller_unknown_00219c30,source/sound/sound_manager.c,eax stack,void,stdcall
-001462b0,unknown_001462b0,,,int
+001462b0,random_seed_from_time,source/math/random_math.c,,int
 00219ed0,sound_playback_controller_unknown_00219ed0,source/sound/sound_manager.c,eax edi stack,void,stdcall
 0021d360,sound_effect_unknown_0021d360,source/sound/sound_manager.c,ecx,void
 0021d5a0,sound_effect_unknown_0021d5a0,source/sound/sound_manager.c,ecx,bool
@@ -2456,7 +2456,7 @@ address,name,source,arguments,returns,convention
 0018f8b8,user_interface_controller_gamepad_present,source/interface/user_interface_controller.c,stack,bool,stdcall
 001999bf,user_interface_networking_unknown_001999bf,source/interface/user_interface_networking.c,stack,bool,stdcall
 0019989d,unknown_0019989d,,,int
-00199fd6,unknown_00199fd6,,,int
+00199fd6,user_interface_networking_unknown_00199fd6,source/interface/user_interface_networking.c,,int
 0001e930,unknown_0001e930,,stack,void,stdcall
 00148e6d,unknown_00148e6d,,stack,bool,stdcall
 00147f4f,unknown_00147f4f,,,int

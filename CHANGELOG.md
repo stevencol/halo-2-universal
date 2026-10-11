@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Otras tres funciones cortas que se llamaban por su dirección
+
+Tres funciones cortas (157 bytes), en `networking/network_life_cycle.c`,
+`interface/user_interface_networking.c` y `math/random_math.c`. De 1845
+funciones se pasa a 1848, el 16,40 % de las del juego (el 10,557 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_life_cycle_session_get_unknown49C8` | `0x000641f0` | `networking/network_life_cycle.c` |
+| `random_seed_from_time` | `0x001462b0` | `math/random_math.c` |
+| `user_interface_networking_unknown_00199fd6` | `0x00199fd6` | `interface/user_interface_networking.c` |
+
+### Lo que se sabe
+
+- `user_interface_networking_unknown_00199fd6` dice **cuántos jugadores más
+  caben en la partida en red**: dieciséis menos los que tiene la sesión, si
+  hay una establecida. Con ella se entiende la del hito 537 que la usa
+  (`…_0019a015`): «la sesión está abierta y queda sitio», que es uno de los
+  bits que se dicen a los amigos del servicio — *se le puede invitar o
+  unirse*.
+- `random_seed_from_time` (antes `unknown_001462b0`, la que usa el sonido)
+  hace una semilla de números al azar con la hora, el `rand` de la
+  biblioteca C y el tiempo que lleva encendida la consola.
+- `network_life_cycle_session_get_unknown49C8` da un número de la sesión de
+  la partida en red (o «ninguno» si no está establecida); es hermana de las
+  de los hitos 537 y anteriores.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  539.
+- En este hito se pasaron las pruebas de las tres funciones y
+  `test_network_life_cycle` entera.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Tres funciones cortas más que se llamaban por su dirección
 
 Tres funciones cortas (93 bytes): una en `rasterizer/rasterizer_text.c` y dos en el archivo nuevo

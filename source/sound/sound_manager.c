@@ -1463,7 +1463,7 @@ long sound_playback_controller_acquire(long owner);
 
 /* 0x001462b0: a number from the clocks of the console; 0x00219ed0: of a
 sound playback controller */
-long unknown_001462b0(void);
+long random_seed_from_time(void);
 void __attribute__((stdcall)) sound_playback_controller_unknown_00219ed0(boolean unknown, byte *controller,
 	const struct sound_source *source);
 
@@ -4106,7 +4106,7 @@ long sound_playback_controller_new(
 	{
 		boolean unknown= globals[GAME_SOUND_GLOBALS_UNKNOWN7F_OFFSET]&1;
 
-		sound_playback_controller_initialize(controller, owner, unknown_001462b0(), unknown);
+		sound_playback_controller_initialize(controller, owner, random_seed_from_time(), unknown);
 	}
 
 	return controller_index;

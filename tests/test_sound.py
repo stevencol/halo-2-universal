@@ -1797,7 +1797,7 @@ def run(t) -> None:
             externals={
                 "sound_playback_controller_find": lambda harness, arguments, found=found: (found, tuple(arguments)),
                 "datum_new": lambda harness, arguments, made=made: (made, (harness.normalize(arguments[0]),)),
-                "unknown_001462b0": lambda harness, arguments: 0x13579BDF,
+                "random_seed_from_time": lambda harness, arguments: 0x13579BDF,
                 "sound_playback_controller_initialize": lambda harness, arguments: (
                     0,
                     (harness.normalize(arguments[0]), arguments[1], arguments[2], arguments[3] & 0xFF),

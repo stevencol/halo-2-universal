@@ -112,6 +112,7 @@ boolean NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_unknown_00059890(long unk
 boolean network_life_cycle_in_state5(void);
 boolean network_life_cycle_session_is_open(void);
 const byte *network_life_cycle_session_get_unknown4999(void);
+long network_life_cycle_session_get_unknown49C8(void);
 boolean network_life_cycle_unknown_00063f00(void);
 long NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_unknown_00063e90(long unknown);
 long network_life_cycle_unknown_00063ec0(void);

@@ -43,7 +43,7 @@ boolean __attribute__((stdcall)) unknown_000705f0(byte *unknown, long unknown0, 
 
 /* 0x000641f0: something of the network game; NONE if none. 0x00192e60: what
 there is for it; NULL if nothing. 0x00193470: something of that */
-long unknown_000641f0(void);
+long network_life_cycle_session_get_unknown49C8(void);
 byte *unknown_00192e60(long unknown);
 boolean unknown_00193470(byte *unknown);
 
@@ -473,7 +473,7 @@ boolean NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_unknown_000594a0(
 /* 0x000596d0: the session that goes with what the network game is doing;
 whether there is one. In the first five states, the session; in the last
 three, the other one. In the sixth, the session, or the other one when
-unknown_000641f0 has something that unknown_00193470 says no of and there is
+network_life_cycle_session_get_unknown49C8 has something that unknown_00193470 says no of and there is
 another session: then it says that there is one, and gives it if a place for
 it is given */
 boolean network_life_cycle_get_current_session(
@@ -492,7 +492,7 @@ boolean network_life_cycle_get_current_session(
 		break;
 	case _network_life_cycle_state6:
 		{
-			long unknown= unknown_000641f0();
+			long unknown= network_life_cycle_session_get_unknown49C8();
 
 			result= network_life_cycle_get_session(session);
 			if (unknown!=NONE)
@@ -1025,4 +1025,24 @@ const byte *network_life_cycle_session_get_unknown4999(
 	}
 
 	return NULL;
+}
+
+/* 0x000641f0: the number that the session of the network game has at
+0x49C8; NONE with no network game, or if the session is not in its states
+from the fourth to the ninth. The game looks at the state twice */
+long network_life_cycle_session_get_unknown49C8(
+	void)
+{
+	if (unknown_00527330)
+	{
+		const byte *session= network_life_cycle_session;
+		long state= *(const long *)(session+NETWORK_SESSION_STATE_OFFSET);
+
+		if (state!=_network_session_state_none && state>=_network_session_state3 && state<=_network_session_state8)
+		{
+			return *(const long *)(session+NETWORK_SESSION_UNKNOWN49C8_OFFSET);
+		}
+	}
+
+	return NONE;
 }

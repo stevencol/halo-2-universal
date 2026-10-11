@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 539.
+**Última actualización:** 2026-10-08, al terminar el hito 540.
 
 ## Dónde estamos
 
-- **1845 funciones descompiladas de 11.265: el 16,38 % del juego** (el
-  10,551 % de los bytes de código).
-- Las 1845 están comprobadas contra el ejecutable original: las 1390 del
+- **1848 funciones descompiladas de 11.265: el 16,40 % del juego** (el
+  10,557 % de los bytes de código).
+- Las 1848 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile three more short functions that were called by their address* (ver `git log`).
+- Último hito: *Decompile another three short functions that were called by their address* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 616 funciones apuntadas pero sin descompilar (las que el código
-  llama); 477 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 613 funciones apuntadas pero sin descompilar (las que el código
+  llama); 474 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -222,12 +222,12 @@ Módulos (funciones hechas / archivo):
       llama sin tenerlas, las más cortas son las más fáciles (ya tienen
       nombre de registros y pruebas que las sustituyen). Quedan, por
       tamaño: `0x00193470` (26 bytes), `0x00163b60`, `0x00192950`,
-      `0x00161c90`, `0x001462b0`, `0x000d4db0`, `0x00192d40`, `0x000caf60`,
+      `0x00161c90`, `0x000d4db0`, `0x00192d40`, `0x000caf60`,
       `0x000caf90`, `0x00063d80`, `0x001565a0`… (hitos 538 y 539; la lista
       la da `build\line_breaking\small_externals.py`)
 - [ ] Lo que la interfaz pregunta a la partida en red —
-      `interface\user_interface_networking.c` (4, de la zona de
-      `0x0019989d` a `0x0019a02c`; faltan `0x0019989d` y `0x00199fd6`)
+      `interface\user_interface_networking.c` (5, de la zona de
+      `0x0019989d` a `0x0019a02c`; falta `0x0019989d`)
 - [ ] Los equipos del servicio de partidas — `networking\online_teams.c`
       (10: buscar los equipos de un jugador y los miembros de un equipo,
       lo que se sabe de cada uno, y cuatro tareas más; falta `0x000ac360`)
