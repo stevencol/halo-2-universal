@@ -20,14 +20,11 @@ guess, and so are the names of its functions.
 
 /* ---------- prototypes */
 
-/* 0x00080e10, of network_blob.c: something takes the memory of its block;
-whether it could, and where it is and how much. 0x000b4670, 0x000b42b0: a
+/* 0x000b4670, 0x000b42b0: a
 block starts to be written, one of the third kind and one of the others;
 0x000b4810, 0x000b4450: and to be read. Each gives what does it, and says
 nothing if it started and why not if it did not. 0x000b45f0: how what read a
 block ended, with how much it read and how much there was */
-boolean __attribute__((stdcall)) unknown_00080e10(struct network_blob *blob, void **memory_out,
-	unsigned long *size_out);
 long __attribute__((stdcall)) unknown_000b4670(long unknown0, long unknown10, struct network_blob_request request,
 	long unknown4, long unknownC, long *handle_out);
 long __attribute__((stdcall)) unknown_000b42b0(long unknown0, long *handle_out, long unknown10,
@@ -196,7 +193,7 @@ long __attribute__((stdcall)) network_blob_task_start_read(
 /* 0x0008e240: the tasks that wait are started, in each list from the first
 and while fewer go on than can. The ones that write and the ones that read
 start in their own way, and a block of the third kind in another; one of the
-fourth kind takes its memory first (unknown_00080e10), and if it cannot, no
+fourth kind takes its memory first (network_blob_take_memory), and if it cannot, no
 more of the list are started now. A task that cannot start ends
 (network_blob_task_end), with what says why, and no more of its list are
 started now either */
@@ -263,7 +260,7 @@ void network_blob_tasks_update(
 				}
 				else
 				{
-					if (blob->kind==_network_blob_kind4 && !unknown_00080e10(blob, &entry->memory, &entry->size))
+					if (blob->kind==_network_blob_kind4 && !network_blob_take_memory(blob, &entry->memory, &entry->size))
 					{
 						stopped= TRUE;
 						continue;

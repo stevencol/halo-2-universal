@@ -78,6 +78,43 @@ long network_blob_verify(
 	return network_blob_checksum(block, (long)size)==block->checksum ? _network_blob_good : _network_blob_bad_checksum;
 }
 
+/* 0x00080e10: what has a block takes memory for it from the cache of
+textures, as much as the block can be, waiting for long if it has to
+(texture_cache_steal_memory, which the game has inside); whether it could,
+and where the memory is and how much. Not if the block could not be even its
+first sixteen bytes, or it has memory already. The cache takes the memory
+back with network_blob_memory_stolen */
+boolean __attribute__((stdcall)) network_blob_take_memory(
+	struct network_blob *blob,
+	void **memory_out,
+	unsigned long *size_out)
+{
+	void *memory;
+
+	if ((unsigned long)blob->capacity<NETWORK_BLOB_HEADER_SIZE || blob->memory)
+	{
+		return FALSE;
+	}
+	memory= texture_cache_steal_memory(_texture_cache_steal_wait_long, blob->capacity, (long)blob, NULL,
+		(texture_cache_stolen_memory_proc)network_blob_memory_stolen);
+	blob->memory= memory;
+	if (!memory)
+	{
+		return FALSE;
+	}
+	blob->size= (unsigned long)blob->capacity;
+	if (memory_out)
+	{
+		*memory_out= memory;
+	}
+	if (size_out)
+	{
+		*size_out= (unsigned long)blob->capacity;
+	}
+
+	return TRUE;
+}
+
 /* 0x00080f30: how far the task of something is, from 0 to 1; whether it is
 known, which it is not without a task. A task that has not started is at
 nothing */

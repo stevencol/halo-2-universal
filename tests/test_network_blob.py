@@ -4,7 +4,7 @@ import random
 import struct
 import zlib
 
-from difftest import Buffer, Mock, mock_address
+from difftest import PHYSICAL_ADDRESS, Buffer, Memory, Mock, mock_address
 
 NONE = 0xFFFFFFFF
 
@@ -115,5 +115,48 @@ def run(t) -> None:
             externals={
                 "network_blob_task_end": lambda harness, arguments: (0, tuple(arguments)),
                 "texture_cache_return_memory": lambda harness, arguments: (0, (arguments[0],)),
+            },
+        )
+
+    # ---------- what has a block takes its memory
+
+    from test_async import calls_so_far
+
+    REGISTERS = PHYSICAL_ADDRESS + 0x100000
+    TAKEN = PHYSICAL_ADDRESS + 0x200000
+
+    for n in range(400):
+        blob = bytearray(random_.randbytes(0x30))
+        struct.pack_into("<I", blob, 0x24, random_.choice((0, 0, 0, 0, 0x80123000)))
+        struct.pack_into("<i", blob, 0x2C, random_.choice((0x40, 0x1000, 0x10, 0xF, 0, 0x7FFFFFFF, -1, -0x80000000)))
+        # what the cache has, of which only its count of pages is looked at; and the device, with its registers
+        cache = bytearray(random_.randbytes(0x40))
+        struct.pack_into("<i", cache, 0x30, random_.choice((8, 8, 8, 0, -1)))
+        device = bytearray(random_.randbytes(0x940))
+        struct.pack_into("<I", device, 0x934, REGISTERS)
+        same = random_.getrandbits(32)
+        # how many times the cache has no memory before it has it: not for so long that it gives up
+        fails = random_.choice((0, 0, 1, 5, 89, 90, 91, 95))
+
+        def steal(harness, arguments, fails=fails):
+            taken = calls_so_far(harness, "texture_cache_steal_memory_now") >= fails
+            return (TAKEN if taken else 0), (arguments[0], harness.normalize(arguments[1]), arguments[2], harness.normalize(arguments[3]))
+
+        t.check(
+            "network_blob_take_memory",
+            Buffer(bytes(blob)),
+            random_.choice((Buffer(random_.randbytes(4)), Buffer(random_.randbytes(4)), 0)),
+            random_.choice((Buffer(random_.randbytes(4)), Buffer(random_.randbytes(4)), 0)),
+            globals={
+                "texture_cache_globals": random_.randbytes(0x10) + bytes(4) + random_.randbytes(0x24),
+                "texture_cache_globals+0x10": Buffer(bytes(cache)),
+                "d3d_device": Buffer(bytes(device)),
+            },
+            memory={REGISTERS + 0x3240: Memory(struct.pack("<II", same, random_.choice((same, same ^ 1))))},
+            externals={
+                "texture_cache_steal_memory_now": steal,
+                "texture_cache_idle": lambda harness, arguments: (0, ()),
+                "D3DDevice_KickOff": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "SwitchToThread": lambda harness, arguments: (0, ()),
             },
         )

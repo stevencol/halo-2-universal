@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — El bloque toma su memoria
+
+Una función en `networking/network_blob.c`, de 278 bytes, que queda entero. De 1730
+funciones se pasa a 1731, el 15,37 % de las del juego (el 10,085 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_blob_take_memory` | `0x00080e10` | `networking/network_blob.c` |
+
+### Lo que se sabe
+
+- `network_blob_take_memory` toma de **la caché de texturas** la memoria
+  de un bloque, tanta como el bloque puede medir, y dice dónde está y
+  cuánta es. No lo hace si el bloque no puede medir ni sus dieciséis
+  primeros bytes, o si ya tiene memoria.
+- Lo que parecía difícil de esta función (medir el tiempo con el reloj del
+  procesador, esperar a la tarjeta gráfica) es
+  `texture_cache_steal_memory`, que ya estaba hecha: el juego la lleva
+  dentro, con la espera larga (noventa vueltas de la caché y hasta un
+  segundo). Aquí se llama.
+- Cuando la caché quiere la memoria de vuelta llama a
+  `network_blob_memory_stolen` (hito 502).
+- Con esto **`network_blob.c` está entero**: ocho funciones, de
+  `0x00080e10` a `0x000812d0`.
+
+### Cambiado
+
+- `unknown_00080e10`, que llamaba `network_blob_task.c`, tiene su nombre.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  512. La tanda de los hitos 491 a 500 está en marcha.
+- La prueba no llega al caso en que la caché no da memoria en un segundo:
+  dependería del reloj de verdad.
+- En este hito se pasaron todas las pruebas de `network_blob` y de
+  `network_blob_task`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Quién está conectado
 
 Diez funciones en `networking/online_tasks.c`. De 1720

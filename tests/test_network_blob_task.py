@@ -134,7 +134,7 @@ def run(t) -> None:
                 "unknown_000b42b0": start(1, starts),
                 "unknown_000b4810": start(1, starts),
                 "unknown_000b4450": start(8, starts),
-                "unknown_00080e10": lambda harness, arguments, took=random_.choice((1, 1, 0)): (
+                "network_blob_take_memory": lambda harness, arguments, took=random_.choice((1, 1, 0)): (
                     took,
                     # where the task has the memory of its block and its size: the tasks are not at the same address
                     (

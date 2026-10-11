@@ -162,6 +162,8 @@ boolean __attribute__((stdcall)) network_blob_start_write(struct network_blob *b
 	struct network_blob_request request, word options);
 void network_blob_task_finished(struct network_blob *blob, long result);
 void __attribute__((stdcall)) network_blob_memory_stolen(long unknown, struct network_blob *blob);
+boolean __attribute__((stdcall)) network_blob_take_memory(struct network_blob *blob, void **memory_out,
+	unsigned long *size_out);
 
 /* ---------- prototypes/NETWORK_BLOB_TASK.C */
 

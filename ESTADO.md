@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 512.
+**Última actualización:** 2026-10-08, al terminar el hito 513.
 
 ## Dónde estamos
 
-- **1730 funciones descompiladas de 11.265: el 15,36 % del juego** (el
-  10,076 % de los bytes de código).
-- Las 1730 están comprobadas contra el ejecutable original: las 1390 del
+- **1731 funciones descompiladas de 11.265: el 15,37 % del juego** (el
+  10,085 % de los bytes de código).
+- Las 1731 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile ten short functions of signing in to the service of games* (ver `git log`).
+- Último hito: *Decompile how a block takes its memory from the texture cache* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 600 funciones apuntadas pero sin descompilar (las que el código
-  llama); 467 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 599 funciones apuntadas pero sin descompilar (las que el código
+  llama); 466 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -211,10 +211,10 @@ Módulos (funciones hechas / archivo):
       (19: abrirla con sus enchufes, apuntar, quitar, buscar, parar todos,
       hacerlos avanzar, cerrar los enchufes, los bytes de un paquete,
       mandarlos y leerlos)
-- [ ] Un bloque con suma, versión y tamaño — `networking\network_blob.c`
-      (7: la suma, ver si vale, empezar a leerlo y a escribirlo, lo que
-      pasa cuando la tarea acaba, su avance y devolver su memoria; falta
-      tomar su memoria, `0x00080e10`)
+- [x] Un bloque con suma, versión y tamaño — `networking\network_blob.c`
+      (8: la suma, ver si vale, tomar y devolver su memoria, empezar a
+      leerlo y a escribirlo, lo que pasa cuando la tarea acaba y su
+      avance)
 - [ ] Las tareas del servicio de partidas — `networking\online_tasks.c`
       (28: la tabla, una nueva, por dónde va, acabar con una o con todas,
       recorrerlas, buscar una, volver a empezarla, hacerlas avanzar, en
