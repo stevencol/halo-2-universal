@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Romper líneas: hitos 441 a 455
+
+Sin funciones nuevas. Tanda de romper líneas de los hitos 441 a 455: 217
+líneas rotas, 215 notadas.
+
+### Comprobado
+
+- `network_channel_handle_refused` (hito 442): 4 de 4.
+- `network_message_handler.c` (siete funciones): 13 de 13.
+- `simulation_world.c` (veinticuatro funciones): 95 de 95.
+- `simulation_view.c` (seis funciones): 37 de 37. La que no se notaba en la
+  primera pasada escribía fuera del mundo de la prueba, que era 16 bytes
+  corto (arreglado en el hito 458); comprobada a mano ahora.
+- `network_message_queue.c` (cinco funciones, hitos 441 y 442): 66 de 68.
+  Las dos que no se notan no se pueden notar: un número del flujo propio
+  que nadie lee, y mirar si es nula una memoria de la que se acaba de
+  copiar.
+- No hizo falta corregir código.
+
+### Arreglado en las pruebas
+
+- La prueba de `network_message_queue_read` no daba al flujo el paquete
+  que había preparado: leía siempre ceros, y 13 líneas rotas pasaban sin
+  notarse. Arreglado en el commit `5f526cf`.
+- La misma prueba tiene ahora ventanas anchas (más de `0x80` mensajes), en
+  las que un número a media vuelta del último deja de estar demasiado
+  lejos, y ventanas que empiezan justo antes de cero, en las que `-1` es
+  un número que puede llegar. Con eso nota las tres líneas que quedaban:
+  las dos vueltas del número de diez bits y no guardar nada de un flujo
+  que solo se mira.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en los hitos 456 a 500**; sus listas de líneas
+  no están escritas.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — La lista de canales se abre
 
 Tres funciones en `networking/network_link.c`, que queda entero. De 1674

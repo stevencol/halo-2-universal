@@ -430,9 +430,9 @@ Módulos (funciones hechas / archivo):
 - Los mapas del juego están en
   `E:\Datos\Downloads\juegos\roms\xbox\Halo 2`; no se copian ni se tocan.
 
-## Romper líneas: dónde quedó (2026-10-10, tras el hito 455)
+## Romper líneas: dónde quedó (2026-10-10, tras el hito 500)
 
-- **Hecho:** hitos 415 a 440, completo. De los hitos 415 a 433, todas las
+- **Hecho:** hitos 415 a 455, completo. De los hitos 415 a 433, todas las
   líneas rotas se notan salvo cuatro que no se pueden notar: dos dan lo
   mismo rotas que enteras (hitos 420 y 432) y dos las pruebas no las pueden
   ver (un byte que se pone y se quita dentro de la misma función, y pasar un
@@ -447,13 +447,25 @@ Módulos (funciones hechas / archivo):
     era un hueco de la prueba, porque quien recibe el suceso hace lo mismo
     con los dos. La prueba se reforzó en el hito 450 y ya lo nota.
   No hizo falta corregir código. Informe: `build\line_breaking\batch_report6.txt`.
-- **Pendiente, y por donde se sigue:** hitos 441 a 455
-  (`network_message_queue.c` desde `network_message_queue_write`,
-  `network_channel_handle_refused`, `simulation_world.c`,
-  `simulation_view.c` y `network_message_handler.c`). Sus archivos de
-  líneas están escritos: los genera `build\line_breaking\make_441_450.py`,
-  y `build\line_breaking\run_441_450.py` lanza la tanda entera (informe en
-  `batch_report7.txt`).
+- **Hitos 441 a 455** (`network_message_queue.c` desde
+  `network_message_queue_write`, `network_channel_handle_refused`,
+  `simulation_world.c`, `simulation_view.c` y
+  `network_message_handler.c`): 217 líneas rotas, 215 notadas. Las 2 que
+  no, las dos en `network_message_queue.c`, no se pueden notar:
+  - en `network_message_queue_send`, poner a cero un número del flujo
+    propio que nadie lee antes de escribirlo;
+  - en `network_message_queue_receive`, mirar si la memoria de un trozo
+    es nula justo después de haber copiado de ella.
+  Por el camino salieron cuatro huecos de las pruebas, ya cerrados: la de
+  `network_message_queue_read` no daba al flujo su contenido (13 líneas
+  sin notar; arreglada en el commit `5f526cf`), ni tenía ventanas anchas
+  ni ventanas en las que `-1` fuera un número (3 líneas; reforzada ahora);
+  y el mundo de la prueba de `simulation_view.c` era 16 bytes corto (1
+  línea; arreglado en el hito 458). No hizo falta corregir código.
+  Informes: `build\line_breaking\batch_report7.txt` y
+  `batch_report8.txt`.
+- **Pendiente, y por donde se sigue:** hitos 456 a 500. Sus listas de
+  líneas no están escritas todavía.
 - **Cómo se lanza una tanda suelta:** `python build\line_breaking\break_lines.py <fuente>
   <prueba> <funciones,separadas,por,comas> <archivo de líneas> <informe>`.
   Trabaja en la copia `C:\Users\steve\halo-2-check` (antes, `git checkout

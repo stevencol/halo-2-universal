@@ -69,11 +69,19 @@ def run(t) -> None:
             Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
         ]
 
-    def with_received(data: bytearray) -> tuple:
-        """The messages that came: some, of which some are there; the numbers of the first and the last."""
+    def with_received(data: bytearray, wide: bool = False) -> tuple:
+        """The messages that came: some, of which some are there; the numbers of the first and the last.
+
+        With `wide`, there can be many, so that a number half of all the numbers before the last is not too far
+        before the first; and the first can be just before nothing, so that NONE is a number that can come."""
         size = random_.choice((1, 8, 0x40, 0x200))
         oldest = random_.choice((0, 5, 1000, random_.getrandbits(20)))
         count = random_.randrange(0, min(size, 12) + 1)
+        if wide and random_.random() < 0.3:
+            size = 0x200
+            count = random_.randrange(0x80, 0x200)
+        if wide and random_.random() < 0.2:
+            oldest = -random_.choice((1, 2, 5, 9)) - count
         start = random_.randrange(size)
         struct.pack_into("<B3x6i", data, 0x182C, 1, size, oldest + count, oldest, size, start, count)
         for message in range(count):
@@ -182,7 +190,7 @@ def run(t) -> None:
 
     for n in range(3000):
         data, _, _ = queue()
-        oldest, newest, size = with_received(data)
+        oldest, newest, size = with_received(data, wide=True)
         bits = Bits()
         number = None
         for message in range(random_.choice((0, 1, 1, 2, 3, 6))):
