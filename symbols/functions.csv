@@ -798,8 +798,8 @@ address,name,source,arguments,returns,convention
 000594a0,network_life_cycle_unknown_000594a0,source/networking/network_life_cycle.c,stack stack stack,bool,stdcall
 000705f0,unknown_000705f0,,eax stack stack stack,bool,stdcall
 000641f0,network_life_cycle_session_get_unknown49C8,source/networking/network_life_cycle.c,,int
-00192e60,unknown_00192e60,,eax,int
-00193470,unknown_00193470,,eax,bool
+00192e60,network_hoppers_get,source/networking/network_hoppers.c,eax,pointer
+00193470,network_hopper_unknown_00193470,source/networking/network_hoppers.c,eax,bool
 00054d20,game_voice_get_local_players,source/networking/game_voice.c,,int
 00053750,game_voice_player_is_talking,source/networking/game_voice.c,esi,bool
 00054ec0,game_voice_unknown_00054ec0,source/networking/game_voice.c,,bool
@@ -2460,3 +2460,11 @@ address,name,source,arguments,returns,convention
 0001e930,unknown_0001e930,,stack,void,stdcall
 00148e6d,unknown_00148e6d,,stack,bool,stdcall
 00147f4f,unknown_00147f4f,,,int
+00192db0,network_hoppers_index_valid,source/networking/network_hoppers.c,ecx,bool
+001933a0,network_hopper_get_unknown5F4,source/networking/network_hoppers.c,ecx,int
+001933d0,network_hopper_get_maximum,source/networking/network_hoppers.c,ecx,int
+00193490,network_hopper_unknown_00193490,source/networking/network_hoppers.c,eax,bool
+001934b0,network_hopper_unknown_001934b0,source/networking/network_hoppers.c,eax,bool
+001934d0,network_hopper_unknown_001934d0,source/networking/network_hoppers.c,ecx,bool
+00193610,network_hopper_players_valid,source/networking/network_hoppers.c,ecx,bool
+001934f0,unknown_001934f0,,eax,bool

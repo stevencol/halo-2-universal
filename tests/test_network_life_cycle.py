@@ -268,7 +268,7 @@ def run(t) -> None:
                                 "network_life_cycle_session": session(state),
                                 "network_life_cycle_other_session": session(other_state),
                             },
-                            externals=plain(network_life_cycle_session_get_unknown49C8=unknown, unknown_00192e60=thing, unknown_00193470=says),
+                            externals=plain(network_life_cycle_session_get_unknown49C8=unknown, network_hoppers_get=thing, network_hopper_unknown_00193470=says),
                         )
 
     # ---------- which session

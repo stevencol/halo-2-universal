@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — La lista de dieciséis cosas que llena un bloque del servicio
+
+Archivo nuevo, `networking/network_hoppers.c`, con nueve funciones cortas (329 bytes). De 1848
+funciones se pasa a 1857, el 16,48 % de las del juego (el 10,568 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_hoppers_index_valid` | `0x00192db0` | `networking/network_hoppers.c` |
+| `network_hoppers_get` | `0x00192e60` | `networking/network_hoppers.c` |
+| `network_hopper_get_unknown5F4` | `0x001933a0` | `networking/network_hoppers.c` |
+| `network_hopper_get_maximum` | `0x001933d0` | `networking/network_hoppers.c` |
+| `network_hopper_unknown_00193470` | `0x00193470` | `networking/network_hoppers.c` |
+| `network_hopper_unknown_00193490` | `0x00193490` | `networking/network_hoppers.c` |
+| `network_hopper_unknown_001934b0` | `0x001934b0` | `networking/network_hoppers.c` |
+| `network_hopper_unknown_001934d0` | `0x001934d0` | `networking/network_hoppers.c` |
+| `network_hopper_players_valid` | `0x00193610` | `networking/network_hoppers.c` |
+
+### Lo que se sabe
+
+- Dos de las funciones pequeñas que `network_life_cycle.c` llamaba por su
+  dirección (`unknown_00192e60` y `unknown_00193470`) resultaron ser de un
+  módulo sin empezar, de `0x00192db0` a `0x001939f0`: una **tabla de
+  dieciséis cosas de `0x614` bytes** en `0x00551ae8`, justo detrás de la
+  tabla de los mandos.
+- La tabla solo vale cuando vale uno de los tres bloques que se leen del
+  servicio al conectarse (`unknown_0047d8f4`, hito 520): es decir, **su
+  contenido viene del servicio**. Cada cosa tiene una clase, de 1 a 5, y
+  cuántos jugadores admite como mínimo y como máximo (hasta 16). Por la
+  forma son las listas de partidas que el servicio empareja; el archivo se
+  llama `network_hoppers.c` por eso, y es una suposición.
+- Las siete funciones que miran una de ellas son preguntas por su clase
+  («¿es de la 2, la 4 o la 5?») y dos números que solo tienen las de las
+  clases 4 y 5.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  540.
+- En este hito se pasaron las pruebas de las nueve funciones y
+  `test_network_life_cycle` entera.
+- Queda sustituida `0x001934f0` (si una de la lista es buena, según su
+  clase: tiene tabla de saltos), y sin hacer las demás del módulo que la
+  tienen (`0x001931d0` a `0x00193440`).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Otras tres funciones cortas que se llamaban por su dirección
 
 Tres funciones cortas (157 bytes), en `networking/network_life_cycle.c`,

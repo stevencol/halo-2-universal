@@ -44,8 +44,8 @@ boolean __attribute__((stdcall)) unknown_000705f0(byte *unknown, long unknown0, 
 /* 0x000641f0: something of the network game; NONE if none. 0x00192e60: what
 there is for it; NULL if nothing. 0x00193470: something of that */
 long network_life_cycle_session_get_unknown49C8(void);
-byte *unknown_00192e60(long unknown);
-boolean unknown_00193470(byte *unknown);
+byte *network_hoppers_get(long unknown);
+boolean network_hopper_unknown_00193470(byte *unknown);
 
 /* ---------- globals */
 
@@ -473,7 +473,7 @@ boolean NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_unknown_000594a0(
 /* 0x000596d0: the session that goes with what the network game is doing;
 whether there is one. In the first five states, the session; in the last
 three, the other one. In the sixth, the session, or the other one when
-network_life_cycle_session_get_unknown49C8 has something that unknown_00193470 says no of and there is
+network_life_cycle_session_get_unknown49C8 has something that network_hopper_unknown_00193470 says no of and there is
 another session: then it says that there is one, and gives it if a place for
 it is given */
 boolean network_life_cycle_get_current_session(
@@ -497,9 +497,9 @@ boolean network_life_cycle_get_current_session(
 			result= network_life_cycle_get_session(session);
 			if (unknown!=NONE)
 			{
-				byte *thing= unknown_00192e60(unknown);
+				byte *thing= network_hoppers_get(unknown);
 
-				if (thing && !unknown_00193470(thing))
+				if (thing && !network_hopper_unknown_00193470(thing))
 				{
 					byte *other_session;
 

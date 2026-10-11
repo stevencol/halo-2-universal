@@ -404,3 +404,4 @@ address,name,source
 0047d8f4,unknown_0047d8f4,source/networking/online_tasks.c
 00479780,unknown_00479780,source/networking/online_tasks.c
 004c1a18,rasterizer_text_unknown_004c1a18,source/rasterizer/rasterizer_text.c
+00551ae8,network_hoppers,source/networking/network_hoppers.c
