@@ -41,7 +41,7 @@ static const real look_yaw_rates[PLAYER_PROFILE_LOOK_SENSITIVITY_MAXIMUM]=
 /* 0x00199e2e: something of the interface, after no one is signed in.
 0x000abc70: a task of the service of games starts for a player of it; NONE if
 it could not. 0x002153dd: a profile is written to its file */
-void __attribute__((stdcall)) unknown_00199e2e(long unknown);
+void __attribute__((stdcall)) user_interface_networking_unknown_00199e2e(long unknown);
 long __attribute__((stdcall)) online_teams_enumerate_start(const struct online_user *user, long index);
 void __attribute__((stdcall)) unknown_002153dd(long index, long saved_game, const struct player_profile *profile,
 	long unknown);
@@ -50,9 +50,9 @@ void __attribute__((stdcall)) unknown_002153dd(long index, long saved_game, cons
 network that this console is in, as eight bytes, or NULL. 0x0019a015 and
 0x001999d7: two things that the interface says. 0x001492d6: whether
 something of the interface is so, of four things */
-const byte *unknown_00064cf0(void);
-boolean unknown_0019a015(void);
-boolean unknown_001999d7(void);
+const byte *network_life_cycle_session_get_unknown4999(void);
+boolean user_interface_networking_unknown_0019a015(void);
+boolean user_interface_networking_unknown_001999d7(void);
 boolean unknown_001492d6(long unknown, long unknown2, long index);
 void unknown_0023620d(long string, wchar *text);
 
@@ -665,7 +665,7 @@ void user_interface_controllers_logoff(
 		user_interface_controller_reset(index);
 		index= user_interface_controller_next(index);
 	} while (index!=NONE);
-	unknown_00199e2e(0);
+	user_interface_networking_unknown_00199e2e(0);
 }
 
 /* 0x00190728: the tasks of the service of games of a gamepad's player are
@@ -1219,7 +1219,7 @@ void __attribute__((stdcall)) user_interface_controller_update_online_state(
 		return;
 	}
 	controller= USER_INTERFACE_CONTROLLER(index);
-	session= unknown_00064cf0();
+	session= network_life_cycle_session_get_unknown4999();
 	flags= controller->profile.unknown150==0;
 	if (!session)
 	{
@@ -1242,7 +1242,7 @@ void __attribute__((stdcall)) user_interface_controller_update_online_state(
 		{
 			flags|= FLAG(_online_notification_unknown1_bit);
 		}
-		if (unknown_0019a015())
+		if (user_interface_networking_unknown_0019a015())
 		{
 			flags|= FLAG(_online_notification_unknown4_bit);
 		}
@@ -1265,7 +1265,7 @@ void __attribute__((stdcall)) user_interface_controller_update_online_state(
 }
 
 /* 0x001906da: whether the player of a gamepad may use the voice: if
-unknown_001999d7 says so; or if it is signed in to the service of games, is
+user_interface_networking_unknown_001999d7 says so; or if it is signed in to the service of games, is
 not a guest, and the service does not say that it may not */
 boolean user_interface_controller_voice_allowed(
 	long index)
@@ -1274,7 +1274,7 @@ boolean user_interface_controller_voice_allowed(
 	const struct online_user *user;
 	unsigned long flags;
 
-	if (unknown_001999d7())
+	if (user_interface_networking_unknown_001999d7())
 	{
 		return TRUE;
 	}

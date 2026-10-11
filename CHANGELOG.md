@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Cinco funciones cortas que los mandos preguntan a la partida en red
+
+Cinco funciones cortas (117 bytes): cuatro en el archivo nuevo
+`interface/user_interface_networking.c` y una en `networking/network_life_cycle.c`. De 1833
+funciones se pasa a 1838, el 16,32 % de las del juego (el 10,542 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_life_cycle_session_get_unknown4999` | `0x00064cf0` | `networking/network_life_cycle.c` |
+| `user_interface_networking_unknown_001999bf` | `0x001999bf` | `interface/user_interface_networking.c` |
+| `user_interface_networking_unknown_001999d7` | `0x001999d7` | `interface/user_interface_networking.c` |
+| `user_interface_networking_unknown_00199e2e` | `0x00199e2e` | `interface/user_interface_networking.c` |
+| `user_interface_networking_unknown_0019a015` | `0x0019a015` | `interface/user_interface_networking.c` |
+
+### Lo que se sabe
+
+- Son las funciones que `user_interface_controller.c` llamaba por su
+  dirección (hitos 528 y 532); con ellas ese archivo ya no llama a casi
+  nada sin descompilar de la partida en red.
+- `network_life_cycle_session_get_unknown4999` da **los ocho bytes de la
+  sesión que se dicen a los amigos del servicio** como «la partida en la
+  que está» (o nada, si no hay sesión establecida). Es de la misma forma
+  que `network_life_cycle_session_is_open`.
+- `user_interface_networking_unknown_00199e2e` da el mismo aviso a dos
+  cosas de la partida en red, una tras otra; la segunda llamada es un salto,
+  y con esto se sabe que `0x000593a0` no devuelve nada que se use (era una
+  de las dudas apuntadas en «Avisos»).
+- Las otras tres son preguntas de sí o no que quedan con su dirección por
+  nombre hasta que se descompile lo que hay debajo (`0x0019989d`,
+  `0x00199fd6`).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  536.
+- En este hito se pasaron las pruebas de las cinco funciones y las de las
+  tres de `user_interface_controller.c` que las llaman.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Dos funciones cortas: si un mando está puesto y qué consolas de la sesión van atrasadas
 
 Dos funciones cortas (81 bytes): una en `interface/user_interface_controller.c` y otra en

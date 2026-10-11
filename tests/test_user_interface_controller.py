@@ -169,7 +169,7 @@ def run(t) -> None:
         t.check(
             "user_interface_controllers_logoff",
             globals={"unknown_0054e8e0": GlobalData(bytes(controllers(random_)))},
-            externals={"online_logoff": told, "user_interface_controller_reset": told, "unknown_00199e2e": told},
+            externals={"online_logoff": told, "user_interface_controller_reset": told, "user_interface_networking_unknown_00199e2e": told},
         )
 
     # ---------- the profile of a gamepad's player changes
@@ -474,8 +474,8 @@ def run(t) -> None:
             extra=[session],
             externals={
                 "online_signed_in": lambda harness, arguments, so=random_.choice((0, 1, 1, 1)): (so, ()),
-                "unknown_00064cf0": lambda harness, arguments, there=random_.random() < 0.7: (session.address if there else 0, ()),
-                "unknown_0019a015": lambda harness, arguments, so=random_.choice((0, 1)): (so, ()),
+                "network_life_cycle_session_get_unknown4999": lambda harness, arguments, there=random_.random() < 0.7: (session.address if there else 0, ()),
+                "user_interface_networking_unknown_0019a015": lambda harness, arguments, so=random_.choice((0, 1)): (so, ()),
                 "game_voice_controller_can_talk": lambda harness, arguments, so=random_.choice((0, 1)): (so, tuple(arguments)),
                 "online_notification_set_state": notified,
             },
@@ -495,7 +495,7 @@ def run(t) -> None:
             "user_interface_controller_voice_allowed",
             index,
             externals={
-                "unknown_001999d7": lambda harness, arguments, so=random_.choice((0, 0, 0, 1)): (so, ()),
+                "user_interface_networking_unknown_001999d7": lambda harness, arguments, so=random_.choice((0, 0, 0, 1)): (so, ()),
                 "online_get_logon_users": signed_in,
             },
         )

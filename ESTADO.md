@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 536.
+**Última actualización:** 2026-10-08, al terminar el hito 537.
 
 ## Dónde estamos
 
-- **1833 funciones descompiladas de 11.265: el 16,27 % del juego** (el
-  10,538 % de los bytes de código).
-- Las 1833 están comprobadas contra el ejecutable original: las 1390 del
+- **1838 funciones descompiladas de 11.265: el 16,32 % del juego** (el
+  10,542 % de los bytes de código).
+- Las 1838 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile whether a gamepad is there and which peers of a session are behind* (ver `git log`).
+- Último hito: *Decompile five short functions that the gamepads' players ask of the network game* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 622 funciones apuntadas pero sin descompilar (las que el código
-  llama); 482 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 620 funciones apuntadas pero sin descompilar (las que el código
+  llama); 480 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -218,6 +218,9 @@ Módulos (funciones hechas / archivo):
 - [x] El almacén del servicio de partidas — `networking\online_storage.c`
       (7: el nombre, empezar a escribir y a leer, de memoria o de archivo,
       el resultado de leer y el avance)
+- [ ] Lo que la interfaz pregunta a la partida en red —
+      `interface\user_interface_networking.c` (4, de la zona de
+      `0x0019989d` a `0x0019a02c`; faltan `0x0019989d` y `0x00199fd6`)
 - [ ] Los equipos del servicio de partidas — `networking\online_teams.c`
       (10: buscar los equipos de un jugador y los miembros de un equipo,
       lo que se sabe de cada uno, y cuatro tareas más; falta `0x000ac360`)

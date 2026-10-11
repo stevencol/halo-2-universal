@@ -1003,3 +1003,26 @@ boolean NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_set_unknown4db0(
 		network_session_leader_set_unknown4dac(session, unknown4dac) &&
 		network_session_unknown_0005bf10(session, FALSE, 0, 0, NULL);
 }
+
+/* 0x00064cf0: the eight bytes that the session of the network game has at
+0x4999, which the others of the service of games are told as the game that a
+player is in; NULL with no network game, if the session is not in its states
+from the fourth to the ninth, or if its byte before them is not set. The game
+has it far from the rest of this file */
+const byte *network_life_cycle_session_get_unknown4999(
+	void)
+{
+	if (unknown_00527330)
+	{
+		const byte *session= network_life_cycle_session;
+		long state= *(const long *)(session+NETWORK_SESSION_STATE_OFFSET);
+
+		if (state!=_network_session_state_none && state>=_network_session_state3 && state<=_network_session_state8 &&
+			session[NETWORK_SESSION_UNKNOWN4998_OFFSET])
+		{
+			return session+NETWORK_SESSION_UNKNOWN4999_OFFSET;
+		}
+	}
+
+	return NULL;
+}

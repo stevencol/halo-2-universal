@@ -45,7 +45,7 @@ enum
 	PLAYER_PROPERTIES_UNKNOWN7C_MAXIMUM= 16,
 	/* the bits of what the others of the service of games are told of a
 	player: its profile's byte of 0x150 is nothing; what it is at has one
-	of its two highest bits; unknown_0019a015 says so; and it can talk */
+	of its two highest bits; user_interface_networking_unknown_0019a015 says so; and it can talk */
 	_online_notification_unknown0_bit= 0,
 	_online_notification_unknown1_bit= 1,
 	_online_notification_voice_bit= 3,

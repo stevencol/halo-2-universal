@@ -2395,7 +2395,7 @@ address,name,source,arguments,returns,convention
 00190e71,user_interface_controllers_unknown_00190e71,source/interface/user_interface_controller.c,stack,void,stdcall
 0018f5e3,user_interface_controllers_update_saved_games,source/interface/user_interface_controller.c,,void
 00190eb3,user_interface_controller_update_name,source/interface/user_interface_controller.c,stack,void,stdcall
-00199e2e,unknown_00199e2e,,stack,void,stdcall
+00199e2e,user_interface_networking_unknown_00199e2e,source/interface/user_interface_networking.c,stack,void,stdcall
 000abc70,online_teams_enumerate_start,source/networking/online_teams.c,ebx stack,int,stdcall
 002153dd,unknown_002153dd,,stack stack stack stack,void,stdcall
 0006cc10,online_logon_remove_user,source/networking/online_tasks.c,stack,int,stdcall
@@ -2425,9 +2425,9 @@ address,name,source,arguments,returns,convention
 0019034d,user_interface_controller_set_online_state,source/interface/user_interface_controller.c,eax stack stack stack stack stack,void,stdcall
 00190f9b,user_interface_controller_update_online_state,source/interface/user_interface_controller.c,stack,void,stdcall
 0018f973,user_interface_unknown_0018f973,source/interface/user_interface_controller.c,,bool
-00064cf0,unknown_00064cf0,,,pointer
-0019a015,unknown_0019a015,,,bool
-001999d7,unknown_001999d7,,,bool
+00064cf0,network_life_cycle_session_get_unknown4999,source/networking/network_life_cycle.c,,pointer
+0019a015,user_interface_networking_unknown_0019a015,source/interface/user_interface_networking.c,,bool
+001999d7,user_interface_networking_unknown_001999d7,source/interface/user_interface_networking.c,,bool
 001492d6,unknown_001492d6,,eax ecx edi,bool
 000abd00,online_teams_enumerate_get_results,source/networking/online_teams.c,edi ebx stack,void,stdcall
 000abdb0,online_team_get,source/networking/online_teams.c,ebx stack stack,void,stdcall
@@ -2454,3 +2454,6 @@ address,name,source,arguments,returns,convention
 003a0641,XOnlineLogon,,stack stack stack stack stack,int,stdcall
 0006e0f0,network_session_peers_unknown88_above_2,source/networking/network_session.c,eax ebx,bool
 0018f8b8,user_interface_controller_gamepad_present,source/interface/user_interface_controller.c,stack,bool,stdcall
+001999bf,user_interface_networking_unknown_001999bf,source/interface/user_interface_networking.c,stack,bool,stdcall
+0019989d,unknown_0019989d,,,int
+00199fd6,unknown_00199fd6,,,int
