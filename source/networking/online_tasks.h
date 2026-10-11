@@ -223,6 +223,7 @@ void online_users_start_mute_lists(const struct online_user *users);
 void __attribute__((stdcall)) online_users_set_state(const struct online_user *users);
 void online_state_encode(unsigned long *encoded, const struct online_state *state);
 boolean online_user_get_state(long user_index, struct online_user_state *state);
+void online_logoff(void);
 long online_tasks_get_logon_state(long index);
 long online_users_get_result(void);
 long online_task_users_get_result(const struct online_task *task);

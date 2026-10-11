@@ -38,6 +38,9 @@ void unknown_0007f410(void);
 long __attribute__((stdcall)) unknown_0018fa94(const struct online_user *users);
 void unknown_0008c660(void);
 
+/* 0x00190da5: a gamepad is told that no one is signed in */
+void __attribute__((stdcall)) unknown_00190da5(long user_index);
+
 /* 0x003a0798, of the console's libraries: what a player of this console is
 at, in twelve bytes: a kind, what something is known by, and some bits;
 nothing if it is not known. 0x0008e750: the things that a player has, each
@@ -1279,4 +1282,38 @@ boolean online_user_get_state(
 	}
 
 	return TRUE;
+}
+
+/* 0x0006cb60: no one is signed in to the service of games any more: if
+there was a task that signs in, the tasks of the blocks all end, the online
+tasks are all done with, and there is no such task; each gamepad is told;
+the observer and what measures the network are told; each thing that asked
+is told its third thing (transport_unknown_0008d730, which the game has
+inside); and the three blocks that are read when someone signs in are not
+good any more */
+void online_logoff(
+	void)
+{
+	long index;
+
+	if (unknown_00467214!=NONE)
+	{
+		for (index= 0; index<MAXIMUM_NETWORK_BLOB_TASKS; index++)
+		{
+			network_blob_task_end(index, _network_blob_task_no_memory);
+		}
+		online_tasks_close_all();
+		unknown_00467214= NONE;
+	}
+	for (index= 0; index<MAXIMUM_ONLINE_USERS; index++)
+	{
+		unknown_00190da5(index);
+	}
+	unknown_004cf8e4[NETWORK_OBSERVER_UNKNOWN4E00_OFFSET]= FALSE;
+	unknown_004cf95c= FALSE;
+	unknown_0007f410();
+	transport_unknown_0008d730();
+	unknown_00479780.flags&= ~_network_blob_good_bit;
+	unknown_0047d8f4.flags&= ~_network_blob_good_bit;
+	unknown_00477058.flags&= ~_network_blob_good_bit;
 }

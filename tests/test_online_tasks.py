@@ -596,3 +596,30 @@ def run(t) -> None:
                 "unknown_0008e750": has,
             },
         )
+
+    # ---------- no one is signed in any more
+
+    for n in range(1000):
+        told = lambda harness, arguments: (0, tuple(harness.normalize(value) for value in arguments))
+        t.check(
+            "online_logoff",
+            globals={
+                "unknown_00467214": random_.choice((0, 0x80010002, NONE)),
+                "unknown_004cf8e4": Buffer(random_.randbytes(0x4E04)),
+                "unknown_004cf95c": bytes((random_.choice((0, 1)),)),
+                "unknown_00477058": random_.randbytes(0x30),
+                "unknown_0047d8f4": random_.randbytes(0x30),
+                "unknown_00479780": random_.randbytes(0x30),
+                # who is told: the game has transport_unknown_0008d730 inside
+                "unknown_004d8b1c": random_.choice((0, 1, 3)),
+                "unknown_004d8b60": struct.pack("<8I", *(mock_address(index) if random_.random() < 0.7 else 0 for index in range(8))),
+                "unknown_004d8b80": struct.pack("<8I", *(random_.getrandbits(28) for index in range(8))),
+            },
+            externals={
+                "network_blob_task_end": told,
+                "online_tasks_close_all": told,
+                "unknown_00190da5": told,
+                "unknown_0007f410": told,
+            },
+            mocks=[Mock(lambda call: 0, stack_arguments=1) for index in range(8)],
+        )

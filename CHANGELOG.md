@@ -2,6 +2,37 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Desconectarse del servicio de partidas
+
+Una función en `networking/online_tasks.c`, de 171 bytes. De 1748
+funciones se pasa a 1749, el 15,53 % de las del juego (el 10,237 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_logoff` | `0x0006cb60` | `networking/online_tasks.c` |
+
+### Lo que se sabe
+
+- `online_logoff` es lo contrario de `online_logon_complete` (hito 520):
+  si había tarea que conecta, **acaban todas las tareas de los bloques**
+  (con `13`), se acaba con todas las tareas del servicio y deja de haber
+  tarea que conecta; se avisa a cada mando, al observador y a lo que mide
+  la red; cada cosa apuntada en `transport.c` recibe su tercer aviso; y
+  los tres bloques que se leen al conectarse dejan de valer.
+- Con esto el tercer aviso de `transport.c` queda claro: se da tanto al
+  conectarse como al desconectarse, así que es **«cambió si hay alguien
+  conectado»**.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  523.
+- En este hito se pasó la prueba de la función.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — En qué dice el servicio que está un jugador
 
 Una función en `networking/online_tasks.c`, de 365 bytes. De 1747

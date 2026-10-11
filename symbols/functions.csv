@@ -2354,3 +2354,5 @@ address,name,source,arguments,returns,convention
 0006d080,online_user_get_state,source/networking/online_tasks.c,ebx ecx,bool
 003a0798,unknown_003a0798,,stack stack stack,int,stdcall
 0008e750,unknown_0008e750,,stack stack stack,void,stdcall
+0006cb60,online_logoff,source/networking/online_tasks.c,,void
+00190da5,unknown_00190da5,,stack,void,stdcall
