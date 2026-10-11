@@ -773,7 +773,7 @@ address,name,source,arguments,returns,convention
 00055c40,voice_queue_write,source/networking/voice_routing.c,esi eax edx stack stack stack,int,stdcall
 00055e10,voice_queue_read,source/networking/voice_routing.c,stack stack stack stack,int,stdcall
 00056df0,voice_channels_player_talked,source/networking/voice_routing.c,stack stack stack,void,stdcall
-000649c0,unknown_000649c0,,,int
+000649c0,network_life_cycle_session_get_unknown4DB0,source/networking/network_life_cycle.c,,pointer
 003212c5,_clearfp,,,int
 000547e0,game_voice_update_session_source,source/networking/game_voice.c,,void
 00054810,game_voice_read_packet,source/networking/game_voice.c,stack stack,void,stdcall
@@ -1873,7 +1873,7 @@ address,name,source,arguments,returns,convention
 00064060,network_life_cycle_set_unknown4db0,source/networking/network_life_cycle.c,stack,bool,stdcall
 00066050,unknown_00066050,,eax ecx,int
 0007e100,unknown_0007e100,,eax edx stack stack stack stack,void,stdcall
-00161c90,unknown_00161c90,,ecx,int
+00161c90,game_variant_unknown_00161c90,source/game/game.c,ecx,int
 00089070,network_channel_unknown_00089070,source/networking/network_channel.c,ecx,int
 00088d20,network_channel_reset_times,source/networking/network_channel.c,eax,void
 00088d70,network_channel_set_time,source/networking/network_channel.c,eax esi,void

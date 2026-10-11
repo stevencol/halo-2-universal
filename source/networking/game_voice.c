@@ -46,7 +46,7 @@ boolean simulation_in_progress(void);
 boolean user_interface_controller_voice_allowed(long gamepad_index);
 
 /* 0x000649c0: something of the network game; NULL if there is none */
-byte *unknown_000649c0(void);
+byte *network_life_cycle_session_get_unknown4DB0(void);
 
 /* of the C library: 0x003212d6 and 0x003212c5 */
 unsigned int _control87(unsigned int value, unsigned int mask);
@@ -635,7 +635,7 @@ boolean game_voice_get_session(
 boolean game_voice_unknown_00053d90(
 	void)
 {
-	const byte *unknown= unknown_000649c0();
+	const byte *unknown= network_life_cycle_session_get_unknown4DB0();
 
 	return unknown && *(const long *)(unknown+UNKNOWN_000649C0_STATE_OFFSET)==_unknown_000649c0_state7;
 }
@@ -1182,7 +1182,7 @@ boolean game_voice_unknown_00053d40(
 	{
 		flag= *((const byte *)main_game_globals+MAIN_GAME_GLOBALS_VARIANT_FLAGS_OFFSET)&1;
 	}
-	unknown= unknown_000649c0();
+	unknown= network_life_cycle_session_get_unknown4DB0();
 	state7= unknown && *(const long *)(unknown+UNKNOWN_000649C0_STATE_OFFSET)==_unknown_000649c0_state7;
 
 	return flag || state7;
@@ -1270,7 +1270,7 @@ void game_voice_update_network_state(
 		/* fall through */
 	case _network_game_state7:
 		{
-			const byte *unknown= unknown_000649c0();
+			const byte *unknown= network_life_cycle_session_get_unknown4DB0();
 
 			if (unknown && (unknown[UNKNOWN_000649C0_FLAGS_OFFSET]&1))
 			{

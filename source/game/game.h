@@ -303,6 +303,7 @@ long game_unknown_001388a0(void);
 void game_lost(boolean lost);
 void game_update_lost(void);
 void game_update_finished(void);
+long game_variant_unknown_00161c90(const struct game_variant *variant);
 void game_finish(void);
 long game_finished_wait_over(void);
 void game_tick(void);

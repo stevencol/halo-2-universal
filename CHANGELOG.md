@@ -2,6 +2,39 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Dos funciones cortas más que se llamaban por su dirección
+
+Dos funciones cortas (104 bytes), en `networking/network_life_cycle.c` y `game/game.c`. De 1916
+funciones se pasa a 1918, el 17,03 % de las del juego (el 10,778 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_life_cycle_session_get_unknown4DB0` | `0x000649c0` | `networking/network_life_cycle.c` |
+| `game_variant_unknown_00161c90` | `0x00161c90` | `game/game.c` |
+
+### Lo que se sabe
+
+- `network_life_cycle_session_get_unknown4DB0` (antes `unknown_000649c0`,
+  la que usa tres veces `game_voice.c`) da lo que la sesión de la partida en
+  red tiene en `+0x4DB0`, si está establecida. Por la función siguiente,
+  eso son **las reglas de la partida** (`struct game_variant`).
+- `game_variant_unknown_00161c90` (antes `unknown_00161c90`, la que usa
+  `network_life_cycle.c`) da 1 o 2 según el número de `+0x44` de unas
+  reglas: 1 para el 5 y el 6, 2 para los demás del 1 al 9. Ese número es
+  casi seguro la clase de juego (de nueve), y el resultado si es por
+  equipos o no. En el juego es un `switch` con tabla de saltos.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  561.
+- En este hito se pasaron las pruebas de las dos funciones, y
+  `test_network_life_cycle` y `test_game_voice` enteras.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — La partida siguiente de una lista del servicio, elegida al azar
 
 Una función más en `networking/network_hoppers.c`, de 350 bytes. De 1915

@@ -3508,7 +3508,7 @@ def run(t) -> None:
             Buffer(random_.randbytes(0x130)) if n % 3 else 0,
             globals=setup,
             externals={
-                "unknown_00161c90": says((1, 2, 2)),
+                "game_variant_unknown_00161c90": says((1, 2, 2)),
                 "network_session_leader_set_unknown4db0": says(),
                 "network_session_leader_set_unknown4dac": says(),
                 "network_session_unknown_0005bf10": lambda harness, arguments, value=random_.choice((1, 1, 1, 0x80, 0, 0x100)): (

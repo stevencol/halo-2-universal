@@ -89,3 +89,23 @@ def run(t) -> None:
                 "GetTickCount": lambda harness, arguments, ticks=random_.getrandbits(32): (ticks, ()),
             },
         )
+
+    # ---------- two more short ones
+
+    for n in range(600):
+        session = bytearray(random_.randbytes(0x7420))
+        struct.pack_into("<I", session, 0x741C, random_.choice((0, 1, 2, 3, 4, 8, 9, NONE, 0x80000000)))
+        session = Buffer(bytes(session))
+
+        def state_session(harness, arguments, there=random_.choice((0, 1, 1, 1))):
+            harness.mu.mem_write(arguments[0], struct.pack("<I", session.address))
+            return there, ()
+
+        t.check(
+            "network_life_cycle_session_get_unknown4DB0",
+            extra=[session],
+            externals={"network_life_cycle_get_state_session": state_session},
+        )
+        variant = bytearray(random_.randbytes(0x130))
+        struct.pack_into("<I", variant, 0x44, random_.choice((*range(12), NONE, 0x80000000, random_.getrandbits(32))))
+        t.check("game_variant_unknown_00161c90", Buffer(bytes(variant)))

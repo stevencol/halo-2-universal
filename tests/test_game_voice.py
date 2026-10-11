@@ -518,7 +518,7 @@ def run(t) -> None:
             t.check(
                 "game_voice_unknown_00053d90",
                 externals={
-                    "unknown_000649c0": lambda harness, arguments, thing=thing, there=there: thing.address if there else 0
+                    "network_life_cycle_session_get_unknown4DB0": lambda harness, arguments, thing=thing, there=there: thing.address if there else 0
                 },
                 extra=[thing],
             )
@@ -898,7 +898,7 @@ def run(t) -> None:
                             externals={
                                 "game_in_progress": gives(in_progress),
                                 "simulation_in_progress": gives(other),
-                                "unknown_000649c0": gives_buffer(thing, flags != 0xFE or in_progress),
+                                "network_life_cycle_session_get_unknown4DB0": gives_buffer(thing, flags != 0xFE or in_progress),
                             },
                             extra=[thing],
                         )
@@ -923,7 +923,7 @@ def run(t) -> None:
                             "unknown_0055e4d0": struct.pack("<16I", *table),
                             "main_game_globals": Buffer(bytes(game_data)),
                         },
-                        externals={"unknown_000649c0": gives_buffer(thing, there)},
+                        externals={"network_life_cycle_session_get_unknown4DB0": gives_buffer(thing, there)},
                         extra=[thing],
                     )
 

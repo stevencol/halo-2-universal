@@ -66,7 +66,7 @@ enum
 	_game_voice_network2,
 	_game_voice_network3,
 
-	/* in what unknown_000649c0 gives */
+	/* in what network_life_cycle_session_get_unknown4DB0 gives */
 	UNKNOWN_000649C0_FLAGS_OFFSET= 0x48,
 
 	/* what the game keeps of a profile (0x004cd904): whether it is there,
@@ -187,7 +187,7 @@ enum
 	UNKNOWN_000596D0_UNKNOWN14_OFFSET= 0x14,
 	_unknown_000596d0_unknown14_2= 2,
 
-	/* in what unknown_000649c0 gives, and what it is when
+	/* in what network_life_cycle_session_get_unknown4DB0 gives, and what it is when
 	game_voice_unknown_00053d90 says so */
 	UNKNOWN_000649C0_STATE_OFFSET= 0x44,
 	_unknown_000649c0_state7= 7,

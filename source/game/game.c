@@ -1218,3 +1218,24 @@ void game_update_finished(
 		}
 	}
 }
+
+/* 0x00161c90: a number of the rules of a game, by its number of 0x44: 1 for
+5 and 6, and for what is not from 1 to 9; 2 for the others. The game has it
+far from the rest of this file */
+long game_variant_unknown_00161c90(
+	const struct game_variant *variant)
+{
+	switch (variant->unknown44)
+	{
+	case 1:
+	case 2:
+	case 3:
+	case 4:
+	case 7:
+	case 8:
+	case 9:
+		return 2;
+	}
+
+	return 1;
+}

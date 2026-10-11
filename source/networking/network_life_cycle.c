@@ -935,7 +935,6 @@ says */
 long unknown_00066050(byte *session, long unknown);
 void __attribute__((stdcall)) unknown_0007e100(long peer_index, const byte *membership, long unknown0, long unknown4,
 	long unknown8, long *result);
-long unknown_00161c90(const byte *unknown);
 
 /* 0x00063e90: what unknown_00066050 says of the session of the network game,
 with a number; 1 with no network game, or with a session that has no state */
@@ -972,7 +971,7 @@ long network_life_cycle_unknown_00063ec0(
 
 /* 0x00064060: the thing of 0x4DB0 of the session of the network game is set,
 or asked for, and with it the number of 0x4DAC: 0 in a session whose number
-of 0x18 is zero, 1 with no thing, and if not what unknown_00161c90 says of the thing.
+of 0x18 is zero, 1 with no thing, and if not what game_variant_unknown_00161c90 says of the thing.
 Then network_session_unknown_0005bf10 with nothing. Whether all three could; FALSE if
 network_life_cycle_unknown_00063f00 says no */
 boolean NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_set_unknown4db0(
@@ -996,7 +995,7 @@ boolean NETWORK_LIFE_CYCLE_CALLBACK network_life_cycle_set_unknown4db0(
 	}
 	else
 	{
-		unknown4dac= unknown_00161c90(unknown4db0);
+		unknown4dac= game_variant_unknown_00161c90((const struct game_variant *)unknown4db0);
 	}
 
 	return network_session_leader_set_unknown4db0(unknown4db0, session) &&
@@ -1045,4 +1044,26 @@ long network_life_cycle_session_get_unknown49C8(
 	}
 
 	return NONE;
+}
+
+/* 0x000649c0: what the session of the network game has at 0x4DB0, by the
+session that the state of the network game gives; NULL if there is none, or
+it is not in its states from the fourth to the ninth. The game has it far
+from the rest of this file */
+byte *network_life_cycle_session_get_unknown4DB0(
+	void)
+{
+	byte *session= NULL;
+
+	if (network_life_cycle_get_state_session(&session))
+	{
+		long state= *(const long *)(session+NETWORK_SESSION_STATE_OFFSET);
+
+		if (state>=_network_session_state3 && state<=_network_session_state8)
+		{
+			return session+NETWORK_SESSION_UNKNOWN4DB0_OFFSET;
+		}
+	}
+
+	return NULL;
 }
