@@ -18,12 +18,13 @@ name of the file is a guess, and so are the names of its functions.
 enum
 {
 	/* what starting to read or write says: it started; it could not; and
-	three ways that the service says why not */
+	four ways that the service says why not */
 	_online_storage_started= 0,
 	_online_storage_failed,
 	_online_storage_unknown2,
 	_online_storage_unknown3,
 	_online_storage_unknown4,
+	_online_storage_unknown5,
 	/* which part of the storage something is in, from the first number of
 	the functions of what has a block: the fourth for 0, the fifth for 1,
 	and the third for the others */
@@ -34,6 +35,7 @@ enum
 	the kind of the task that writes; and the bits that it starts with */
 	MAXIMUM_ONLINE_STORAGE_PATH_LENGTH= 0x100,
 	_online_task_type_storage_write= 0x29,
+	_online_task_type_storage_read= 0x2A,
 	_online_task_started_bits= 0x1
 };
 
@@ -41,6 +43,8 @@ enum
 
 long __attribute__((stdcall)) online_storage_write_start(long unknown0, long *task_out, long owner,
 	struct network_blob_request request, long unknown4, void *memory, unsigned long size);
+long __attribute__((stdcall)) online_storage_read_start(long unknown0, long owner,
+	struct network_blob_request request, long unknown4, void *memory, unsigned long size, long *task_out);
 long __attribute__((stdcall)) online_storage_read_get_results(long index, unsigned long *read_out,
 	unsigned long *size_out);
 boolean online_storage_get_progress(long index, real *progress);

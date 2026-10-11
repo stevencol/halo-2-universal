@@ -159,3 +159,51 @@ def run(t) -> None:
             globals={"online_tasks": tasks},
             externals={"XOnlineStorageGetProgress": progress},
         )
+
+    # ---------- a block starts to be read
+
+    for n in range(3000):
+        task = Buffer(random_.randbytes(0x14))
+        name = random_.randbytes(0x20)
+
+        def named(harness, arguments, name=name, could=random_.choice((1, 1, 1, 1, 0))):
+            length = read(harness, arguments[6], 4)
+            harness.mu.mem_write(arguments[5], name)
+            return could, (*arguments[:5], length)
+
+        def started(harness, arguments, hr=random_.choice(RESULTS + (0x8015C004, 0x8015C004)), handle=random_.getrandbits(32)):
+            harness.mu.mem_write(arguments[7], struct.pack("<I", handle))
+            return hr, (
+                arguments[0],
+                arguments[1],
+                read(harness, arguments[2], 0x20),
+                harness.normalize(arguments[3]),
+                arguments[4],
+                arguments[5],
+                arguments[6],
+                harness.normalize(arguments[7]),
+            )
+
+        t.check(
+            "online_storage_read_start",
+            random_.choice((0, 1, 2, 5, NONE)),
+            random_.randrange(4),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            Buffer(random_.randbytes(0x20)),
+            random_.getrandbits(32),
+            Buffer(random_.randbytes(4)),
+            extra=[task],
+            externals={
+                "unknown_000b4120": named,
+                "online_task_new_signed_in": lambda harness, arguments, index=random_.choice((0x80010003, 5, NONE)): index,
+                "online_task_get": lambda harness, arguments, task=task, there=random_.random() < 0.9: (
+                    task.address if there else 0,
+                    (arguments[0],),
+                ),
+                "unknown_003ab6ea": started,
+                "online_task_close": lambda harness, arguments: (0, (arguments[0],)),
+            },
+        )

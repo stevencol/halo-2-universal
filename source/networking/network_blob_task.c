@@ -30,8 +30,6 @@ long __attribute__((stdcall)) unknown_000b4670(long unknown0, long unknown10, st
 	long unknown4, long unknownC, long *handle_out);
 long __attribute__((stdcall)) unknown_000b4810(long unknown0, long *handle_out, long unknown10,
 	struct network_blob_request request, long unknown4, long unknownC);
-long __attribute__((stdcall)) unknown_000b4450(long unknown0, long unknown10, struct network_blob_request request,
-	long unknown4, void *memory, unsigned long size, long *handle_out);
 
 /* ---------- globals */
 
@@ -263,7 +261,7 @@ void network_blob_tasks_update(
 						stopped= TRUE;
 						continue;
 					}
-					status= unknown_000b4450(functions->unknown0[0], blob->unknown10, blob->request, functions->unknown0[1],
+					status= online_storage_read_start(functions->unknown0[0], blob->unknown10, blob->request, functions->unknown0[1],
 						entry->memory, entry->size, &handle);
 				}
 			}

@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 514.
+**Última actualización:** 2026-10-08, al terminar el hito 515.
 
 ## Dónde estamos
 
-- **1734 funciones descompiladas de 11.265: el 15,39 % del juego** (el
-  10,107 % de los bytes de código).
-- Las 1734 están comprobadas contra el ejecutable original: las 1390 del
+- **1735 funciones descompiladas de 11.265: el 15,40 % del juego** (el
+  10,120 % de los bytes de código).
+- Las 1735 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the start of the online storage: write start, read results, progress* (ver `git log`).
+- Último hito: *Decompile how a block starts to be read from the online storage* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 600 funciones apuntadas pero sin descompilar (las que el código
   llama); 466 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -216,9 +216,9 @@ Módulos (funciones hechas / archivo):
       leerlo y a escribirlo, lo que pasa cuando la tarea acaba y su
       avance)
 - [ ] El almacén del servicio de partidas — `networking\online_storage.c`
-      (3: empezar a escribir, el resultado de leer y el avance; faltan el
-      nombre, `0x000b4120`, empezar a leer, `0x000b4450`, y los de la
-      tercera clase, `0x000b4670` y `0x000b4810`)
+      (4: empezar a escribir y a leer, el resultado de leer y el avance;
+      faltan el nombre, `0x000b4120`, y los de la tercera clase,
+      `0x000b4670` y `0x000b4810`)
 - [ ] Las tareas del servicio de partidas — `networking\online_tasks.c`
       (28: la tabla, una nueva, por dónde va, acabar con una o con todas,
       recorrerlas, buscar una, volver a empezarla, hacerlas avanzar, en

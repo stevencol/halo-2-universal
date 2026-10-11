@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Un bloque empieza a leerse del almacén
+
+Una función en `networking/online_storage.c`, de 389 bytes. De 1734
+funciones se pasa a 1735, el 15,40 % de las del juego (el 10,120 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_storage_read_start` | `0x000b4450` | `networking/online_storage.c` |
+
+### Lo que se sabe
+
+- `online_storage_read_start` es la pareja de `online_storage_write_start`
+  (hito 514): hace el nombre del bloque, toma una tarea nueva y pide a las
+  bibliotecas que empiecen a leerlo en la memoria que se le da
+  (`0x003ab6ea`). La tarea que lee es de la clase `0x2A`: la que
+  `network_blob_task_completed` (hito 504) reconocía para mirar cuánto se
+  leyó.
+- Lo que dicen las bibliotecas cuando no empiezan se pasa a los mismos
+  números que al escribir, con uno más (`5`) para dos respuestas
+  (`0x8015C004` y `0x8015C007`) que al escribir no son nada especial.
+
+### Cambiado
+
+- `unknown_000b4450`, que llamaba `network_blob_task.c`, tiene su nombre.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  514. La tanda de los hitos 491 a 500 está en marcha.
+- En este hito se pasaron todas las pruebas de `online_storage` y de
+  `network_blob_task`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — El almacén del servicio de partidas
 
 Tres funciones en el archivo nuevo `networking/online_storage.c`. De 1731

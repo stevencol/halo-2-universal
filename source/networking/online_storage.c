@@ -20,10 +20,13 @@ boolean __attribute__((stdcall)) unknown_000b4120(long unknown0, struct network_
 	word *path, long *length);
 
 /* 0x003ad176, of the console's libraries: something starts to be written in
-the storage. 0x003ab6f9: how reading something from it went. 0x003ad1a6: how
-far something of the storage is, in hundredths */
+the storage. 0x003ab6ea: and to be read from it. 0x003ab6f9: how reading
+something from it went. 0x003ad1a6: how far something of the storage is, in
+hundredths */
 long __attribute__((stdcall)) unknown_003ad176(long facility, long owner, const word *path, long unknownC, long unknown10,
 	void *memory, unsigned long size, long unknown1C, long unknown20, long *handle_out);
+long __attribute__((stdcall)) unknown_003ab6ea(long facility, long owner, const word *path, void *memory,
+	unsigned long size, long unknown14, long unknown18, long *handle_out);
 long __attribute__((stdcall)) unknown_003ab6f9(long handle, long *unknown4, unsigned long *size_out,
 	unsigned long *read_out, long *unknown10, long *unknown14);
 long __attribute__((stdcall)) XOnlineStorageGetProgress(long handle, unsigned long *percent, long *unknown8,
@@ -104,6 +107,92 @@ long __attribute__((stdcall)) online_storage_write_start(
 	case 0x8015C008:
 	case 0x8015C009:
 		result= _online_storage_unknown4;
+		break;
+	default:
+		result= _online_storage_failed;
+		break;
+	}
+	online_task_close(index);
+
+	return result;
+}
+
+/* 0x000b4450: a block starts to be read from the storage, into memory, by a
+new task whose number is given; what starting says. As
+online_storage_write_start, but what the libraries say when they do not
+start is not the same for all that they say */
+long __attribute__((stdcall)) online_storage_read_start(
+	long unknown0,
+	long owner,
+	struct network_blob_request request,
+	long unknown4,
+	void *memory,
+	unsigned long size,
+	long *task_out)
+{
+	word path[MAXIMUM_ONLINE_STORAGE_PATH_LENGTH];
+	long length= MAXIMUM_ONLINE_STORAGE_PATH_LENGTH;
+	struct online_task *task;
+	long facility;
+	long result;
+	long index;
+	long hr;
+
+	*task_out= NONE;
+	switch (unknown0)
+	{
+	case 0:
+		facility= _online_storage_facility4;
+		break;
+	case 1:
+		facility= _online_storage_facility5;
+		break;
+	default:
+		facility= _online_storage_facility3;
+		break;
+	}
+	if (!unknown_000b4120(unknown0, request, unknown4, path, &length))
+	{
+		return _online_storage_failed;
+	}
+	index= online_task_new_signed_in();
+	task= online_task_get(index);
+	if (!task)
+	{
+		return _online_storage_failed;
+	}
+	hr= unknown_003ab6ea(facility, owner, path, memory, size, 0, 0, &task->handle);
+	if (hr>=0)
+	{
+		*task_out= index;
+		task->flags= _online_task_started_bits;
+		task->type= _online_task_type_storage_read;
+		task->owner= owner;
+
+		return _online_storage_started;
+	}
+	switch ((unsigned long)hr)
+	{
+	case 0x8007000E:
+	case 0x80150002:
+	case 0x80150003:
+	case 0x80150005:
+	case 0x80150006:
+	case 0x80150008:
+		result= _online_storage_unknown2;
+		break;
+	case 0x80150004:
+	case 0x8015C002:
+		result= _online_storage_unknown3;
+		break;
+	case 0x8015C006:
+	case 0x8015C008:
+	case 0x8015C009:
+		result= _online_storage_unknown4;
+		break;
+	case 0x8015C004:
+	case 0x8015C007:
+		result= _online_storage_unknown5;
 		break;
 	default:
 		result= _online_storage_failed;
