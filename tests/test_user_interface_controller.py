@@ -502,7 +502,7 @@ def run(t) -> None:
         t.check(
             "user_interface_unknown_0018f973",
             externals={
-                "unknown_001492d6": lambda harness, arguments, which=random_.choice((0x1C, 0x1D, 0x1E, 0x1F, 0, 0)): (
+                "user_interface_unknown_001492d6": lambda harness, arguments, which=random_.choice((0x1C, 0x1D, 0x1E, 0x1F, 0, 0)): (
                     arguments[2] == which,
                     tuple(arguments),
                 ),

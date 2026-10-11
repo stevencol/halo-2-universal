@@ -73,7 +73,7 @@ boolean unknown_00163890(const char *map_name, long two);
 void unknown_0014bac0(void);
 
 /* 0x00149318: whether the change of game has to wait */
-boolean unknown_00149318(void);
+boolean user_interface_unknown_00149318(void);
 
 /* 0x0019040d, 0x0018fada: of the players' profiles: the second gives the
 one that there is, if there is only one */
@@ -573,7 +573,7 @@ void main_game_change_update(
 	{
 		pending= FALSE;
 	}
-	if (!unknown_00149318() && pending)
+	if (!user_interface_unknown_00149318() && pending)
 	{
 		if (main_game_load_globals.change_to_nothing)
 		{

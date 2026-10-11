@@ -54,7 +54,7 @@ enum
 	/* the bit of a player of the service of games that says that it may
 	not use the voice */
 	_online_user_no_voice_bit= 16,
-	/* what unknown_001492d6 is asked: four things, from this one on */
+	/* what user_interface_unknown_001492d6 is asked: four things, from this one on */
 	USER_INTERFACE_UNKNOWN_0018F973_FIRST= 0x1C,
 	USER_INTERFACE_UNKNOWN_0018F973_COUNT= 4,
 	/* how a profile says that its gamepad is played with: from 1 to 10 for

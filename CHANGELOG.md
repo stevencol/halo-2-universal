@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Si la interfaz está enseñando una cosa: tres funciones
+
+Tres funciones más en `interface/user_interface.c` (164 bytes). De 1874
+funciones se pasa a 1877, el 16,66 % de las del juego (el 10,598 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `user_interface_screen_unknown_00149278` | `0x00149278` | `interface/user_interface.c` |
+| `user_interface_unknown_001492d6` | `0x001492d6` | `interface/user_interface.c` |
+| `user_interface_unknown_00149318` | `0x00149318` | `interface/user_interface.c` |
+
+### Lo que se sabe
+
+- Cada parte de la interfaz (se pide por dos números, `0x00148262`) tiene
+  **dos cosas** (`+8` y `+0xC`), que por la forma son la pantalla que se ve
+  y la que entra o sale. `user_interface_unknown_001492d6` dice si alguna de
+  las dos es una pantalla dada (`+0x610`) y está en uno de tres estados
+  (`7`, `8` o `0xF0`, en `+0x70`).
+- `user_interface_unknown_00149318` (antes `unknown_00149318`, la que
+  `main_game.c` usa para saber si el cambio de partida tiene que esperar)
+  pregunta eso mismo de tres pantallas: `0x3A`, `0x23` y `0x38`.
+- Con esto `user_interface_unknown_0018f973` (hito 532) queda entera: son
+  las pantallas `0x1C` a `0x1F`, una por mando — las que avisan de que se
+  ha soltado un mando, por cómo las usa `0x0018f9be`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  545.
+- En este hito se pasaron las pruebas de las tres funciones y
+  `test_main_game` entera.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Cuánto suena cada altavoz para una dirección, y un bit por jugador
 
 Archivo nuevo, `sound/sound_speakers.c`, con tres funciones cortas (162 bytes). De 1871

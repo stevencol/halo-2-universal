@@ -53,7 +53,7 @@ something of the interface is so, of four things */
 const byte *network_life_cycle_session_get_unknown4999(void);
 boolean user_interface_networking_unknown_0019a015(void);
 boolean user_interface_networking_unknown_001999d7(void);
-boolean unknown_001492d6(long unknown, long unknown2, long index);
+boolean user_interface_unknown_001492d6(long unknown, long unknown2, long index);
 void unknown_0023620d(long string, wchar *text);
 
 /* ---------- code */
@@ -1297,7 +1297,7 @@ boolean user_interface_unknown_0018f973(
 
 	for (index= 0; index<USER_INTERFACE_UNKNOWN_0018F973_COUNT; index++)
 	{
-		if (unknown_001492d6(4, 0, USER_INTERFACE_UNKNOWN_0018F973_FIRST+index))
+		if (user_interface_unknown_001492d6(4, 0, USER_INTERFACE_UNKNOWN_0018F973_FIRST+index))
 		{
 			return TRUE;
 		}

@@ -992,7 +992,7 @@ address,name,source,arguments,returns,convention
 0018eaa0,main_game_load_map,source/main/main_game.c,eax,bool
 0018efa0,main_game_load_failed,source/main/main_game.c,,void
 0014bac0,unknown_0014bac0,,,void
-00149318,unknown_00149318,,,bool
+00149318,user_interface_unknown_00149318,source/interface/user_interface.c,,bool
 0018f0a0,main_game_campaign_started,source/main/main_game.c,stack,void
 0012bf90,unknown_0012bf90,,,bool
 001483c3,unknown_001483c3,,stack,void
@@ -2428,7 +2428,7 @@ address,name,source,arguments,returns,convention
 00064cf0,network_life_cycle_session_get_unknown4999,source/networking/network_life_cycle.c,,pointer
 0019a015,user_interface_networking_unknown_0019a015,source/interface/user_interface_networking.c,,bool
 001999d7,user_interface_networking_unknown_001999d7,source/interface/user_interface_networking.c,,bool
-001492d6,unknown_001492d6,,eax ecx edi,bool
+001492d6,user_interface_unknown_001492d6,source/interface/user_interface.c,eax ecx edi,bool
 000abd00,online_teams_enumerate_get_results,source/networking/online_teams.c,edi ebx stack,void,stdcall
 000abdb0,online_team_get,source/networking/online_teams.c,ebx stack stack,void,stdcall
 000abe60,online_team_unknown_000abe60_start,source/networking/online_teams.c,ebx stack,int,stdcall
@@ -2482,3 +2482,5 @@ address,name,source,arguments,returns,convention
 001931a0,network_hopper_unknown_001931a0,source/networking/network_hoppers.c,ecx edx,int
 00192df0,network_hoppers_get_unknown4,source/networking/network_hoppers.c,edi,int
 00194660,unknown_00194660,,stack,void,stdcall
+00149278,user_interface_screen_unknown_00149278,source/interface/user_interface.c,ecx,bool
+00148262,unknown_00148262,,eax ecx,pointer

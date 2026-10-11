@@ -378,7 +378,7 @@ def run(t) -> None:
                 "main_game_configure_memory",
                 "main_game_open_texture_cache",
                 "main_game_change_immediate",
-                unknown_00149318=random_.random() < 0.2,
+                user_interface_unknown_00149318=random_.random() < 0.2,
             ),
         )
 

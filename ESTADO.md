@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 545.
+**Última actualización:** 2026-10-08, al terminar el hito 546.
 
 ## Dónde estamos
 
-- **1874 funciones descompiladas de 11.265: el 16,64 % del juego** (el
-  10,593 % de los bytes de código).
-- Las 1874 están comprobadas contra el ejecutable original: las 1390 del
+- **1877 funciones descompiladas de 11.265: el 16,66 % del juego** (el
+  10,598 % de los bytes de código).
+- Las 1877 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the two functions that go over the speakers and a bit of each player* (ver `git log`).
+- Último hito: *Decompile three functions that say whether the interface shows a thing* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 609 funciones apuntadas pero sin descompilar (las que el código
-  llama); 470 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 608 funciones apuntadas pero sin descompilar (las que el código
+  llama); 469 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
