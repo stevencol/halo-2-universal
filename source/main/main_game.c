@@ -78,7 +78,7 @@ boolean unknown_00149318(void);
 /* 0x0019040d, 0x0018fada: of the players' profiles: the second gives the
 one that there is, if there is only one */
 void unknown_0019040d(long unknown);
-long unknown_0018fada(void);
+long user_interface_controllers_get_only_profile(void);
 
 /* 0x001c5ca0, 0x000b3ed0: what is told of a game of the campaign to the
 network game's server: the first writes it, from the options of the game, and
@@ -724,7 +724,7 @@ void main_game_campaign_started(
 	if (!options->coop && unknown_0054e7cc)
 	{
 		long saved_game= NONE;
-		long profile_index= unknown_0018fada();
+		long profile_index= user_interface_controllers_get_only_profile();
 
 		if (profile_index!=NONE)
 		{

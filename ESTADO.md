@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 525.
+**Última actualización:** 2026-10-08, al terminar el hito 526.
 
 ## Dónde estamos
 
-- **1752 funciones descompiladas de 11.265: el 15,55 % del juego** (el
-  10,242 % de los bytes de código).
-- Las 1752 están comprobadas contra el ejecutable original: las 1390 del
+- **1762 funciones descompiladas de 11.265: el 15,64 % del juego** (el
+  10,258 % de los bytes de código).
+- Las 1762 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile three short functions of the service: a game's name, the invitation taken, a service's address* (ver `git log`).
+- Último hito: *Decompile the first ten functions of what the game keeps of each gamepad's player* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 610 funciones apuntadas pero sin descompilar (las que el código
-  llama); 472 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 608 funciones apuntadas pero sin descompilar (las que el código
+  llama); 470 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -218,6 +218,10 @@ Módulos (funciones hechas / archivo):
 - [x] El almacén del servicio de partidas — `networking\online_storage.c`
       (7: el nombre, empezar a escribir y a leer, de memoria o de archivo,
       el resultado de leer y el avance)
+- [ ] El jugador de cada mando — `interface\user_interface_controller.c`
+      (10 de unas 75, de `0x0018f372` a `0x001910b8`: cuál es, el
+      siguiente, si es invitado, contarlos y buscar el que tiene perfil o
+      está conectado)
 - [ ] Las tareas del servicio de partidas — `networking\online_tasks.c`
       (28: la tabla, una nueva, por dónde va, acabar con una o con todas,
       recorrerlas, buscar una, volver a empezarla, hacerlas avanzar, en

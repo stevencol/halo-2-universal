@@ -2,6 +2,59 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Lo que el juego guarda del jugador de cada mando: primeras diez funciones
+
+Archivo nuevo, `interface/user_interface_controller.c`, con diez funciones (486 bytes). De 1752
+funciones se pasa a 1762, el 15,64 % de las del juego (el 10,258 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `user_interface_controller_get` | `0x0018f576` | `interface/user_interface_controller.c` |
+| `user_interface_controller_find_voice_index` | `0x0018f8ce` | `interface/user_interface_controller.c` |
+| `user_interface_controllers_count_profiles` | `0x0018f911` | `interface/user_interface_controller.c` |
+| `user_interface_controllers_count_profiles_not_guests` | `0x0018f93a` | `interface/user_interface_controller.c` |
+| `user_interface_controllers_first_profile` | `0x0018fa4d` | `interface/user_interface_controller.c` |
+| `user_interface_controllers_first_online_user` | `0x0018fa94` | `interface/user_interface_controller.c` |
+| `user_interface_controllers_get_only_profile` | `0x0018fada` | `interface/user_interface_controller.c` |
+| `user_interface_controllers_get_only_saved_game` | `0x0018fb0d` | `interface/user_interface_controller.c` |
+| `user_interface_controller_is_guest` | `0x001900a5` | `interface/user_interface_controller.c` |
+| `user_interface_controller_next` | `0x00190262` | `interface/user_interface_controller.c` |
+
+### Lo que se sabe
+
+- Al buscar lo que llama `0x0006cc10` (lo que queda de `online_tasks.c`)
+  salió un **módulo entero sin empezar**: unas 75 funciones pequeñas, de
+  `0x0018f372` a `0x001910b8`, que tratan la tabla de `0x0054e8e0`. Esa
+  tabla ya se usaba a ciegas desde `input_xbox.c`, `game_voice.c` y
+  `main_game.c`; ahora tiene estructura: `struct user_interface_controller`
+  (`0xC70` bytes por mando).
+- De cada mando el juego guarda: unos bits (el `4`, **tiene perfil**; el
+  `5`, **está conectado al servicio**; el `6`, el perfil cambió y no se ha
+  escrito), cuál es su cosa de la voz, **el perfil entero** (`0x1E0` bytes,
+  en `+0x18`), el archivo de ese perfil (`+0x1F8`), **quién es en el
+  servicio** (los `0x70` bytes de las bibliotecas, en `+0x470`), dos tareas
+  del servicio (`+0xC14`) y el nombre del perfil (`+0xC1C`).
+- Los dos bits de un jugador del servicio que el hito 523 dejó como «no es
+  como los demás» son **el número de invitado**: `user_interface_controller_is_guest`.
+- Dos funciones que ya se llamaban por su dirección tienen nombre:
+  `unknown_0018fa94` es `user_interface_controllers_first_online_user` y
+  `unknown_0018fada` es `user_interface_controllers_get_only_profile`.
+- El juego recorre los mandos de dos maneras: llamando a
+  `user_interface_controller_next` o con la misma cuenta escrita en el
+  sitio.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  525.
+- En este hito se pasaron las pruebas de las diez funciones y las de las
+  dos que llaman a las renombradas (`online_logon_complete` y
+  `main_game_campaign_started`).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — El nombre de un juego, la invitación aceptada y la dirección de un servicio
 
 Tres funciones cortas en `networking/online_tasks.c`, de 131 bytes entre las tres. De 1749

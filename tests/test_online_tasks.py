@@ -499,7 +499,7 @@ def run(t) -> None:
                 "online_users_start_mute_lists": told,
                 "online_users_set_state": told,
                 "game_voice_start": told,
-                "unknown_0018fa94": lambda harness, arguments, first=random_.choice((0, 1, 3, NONE)): (
+                "user_interface_controllers_first_online_user": lambda harness, arguments, first=random_.choice((0, 1, 3, NONE)): (
                     first,
                     (harness.normalize(arguments[0]),),
                 ),

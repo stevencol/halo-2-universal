@@ -1048,7 +1048,7 @@ address,name,source,arguments,returns,convention
 002184a0,input_abstraction_handle_gamepad_changes,source/input/input_abstraction.c,esi,void
 00137400,file_path_split,source/tag_files/files.c,ebx stack stack esi edi stack,void
 0019040d,unknown_0019040d,,eax,void
-0018fada,unknown_0018fada,,,int
+0018fada,user_interface_controllers_get_only_profile,source/interface/user_interface_controller.c,,int
 0018f260,main_game_texture_allocation_allocate,source/main/main_game.c,ecx stack,pointer,thiscall
 0018f350,main_game_texture_allocation_deallocate,source/main/main_game.c,ecx stack,void,thiscall
 0018e960,main_game_next_map,source/main/main_game.c,,void
@@ -2346,7 +2346,7 @@ address,name,source,arguments,returns,convention
 0007f410,unknown_0007f410,,,void
 0006c170,online_users_start_mute_lists,source/networking/online_tasks.c,edi,void
 0006c1d0,online_users_set_state,source/networking/online_tasks.c,stack,void,stdcall
-0018fa94,unknown_0018fa94,,stack,int,stdcall
+0018fa94,user_interface_controllers_first_online_user,source/interface/user_interface_controller.c,stack,int,stdcall
 0008c660,unknown_0008c660,,,void
 0008d4d0,unknown_0008d4d0,,,void
 003a067c,XOnlineGetServiceInfo,,stack stack,int,stdcall
@@ -2361,3 +2361,11 @@ address,name,source,arguments,returns,convention
 0006d220,online_service_unregister_address,source/networking/online_tasks.c,,void
 003a07cf,XOnlineFriendsGetTitleName,,stack stack stack stack,int,stdcall
 003a0827,XOnlineFriendsGetAcceptedGameInvite,,stack,int,stdcall
+0018f576,user_interface_controller_get,source/interface/user_interface_controller.c,ecx,pointer
+00190262,user_interface_controller_next,source/interface/user_interface_controller.c,eax,int
+001900a5,user_interface_controller_is_guest,source/interface/user_interface_controller.c,eax,bool
+0018f8ce,user_interface_controller_find_voice_index,source/interface/user_interface_controller.c,edi,int
+0018f911,user_interface_controllers_count_profiles,source/interface/user_interface_controller.c,,short
+0018f93a,user_interface_controllers_count_profiles_not_guests,source/interface/user_interface_controller.c,,short
+0018fa4d,user_interface_controllers_first_profile,source/interface/user_interface_controller.c,stack,int,stdcall
+0018fb0d,user_interface_controllers_get_only_saved_game,source/interface/user_interface_controller.c,,int

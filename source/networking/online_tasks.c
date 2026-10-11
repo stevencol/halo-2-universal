@@ -35,7 +35,7 @@ or NONE. 0x0008c660, 0x0008d4d0: two more things that are told that someone
 signed in */
 void unknown_0008cc40(void);
 void unknown_0007f410(void);
-long __attribute__((stdcall)) unknown_0018fa94(const struct online_user *users);
+long __attribute__((stdcall)) user_interface_controllers_first_online_user(const struct online_user *users);
 void unknown_0008c660(void);
 
 /* 0x00190da5: a gamepad is told that no one is signed in */
@@ -1095,7 +1095,7 @@ boolean __attribute__((stdcall)) online_logon_complete(
 	online_users_start_mute_lists(users);
 	online_users_set_state(users);
 	game_voice_start();
-	index= unknown_0018fa94(users);
+	index= user_interface_controllers_first_online_user(users);
 	unknown_0008c660();
 	if (task->type==_online_task_type0)
 	{
