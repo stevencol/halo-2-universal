@@ -306,7 +306,7 @@ address,name,source,arguments,returns,convention
 0012bf40,main_cancel_map_copy_and_wait,source/main/main.c,,void
 0012b450,main_loop_body,source/main/main.c,,void
 0012b0e0,main_time_update,source/main/main.c,,real:xmm0
-00163b60,unknown_00163b60,,,bool
+00163b60,main_map_precache_next_map_not_ready,source/main/main_map_precache.c,,bool
 0012b2a0,unknown_0012b2a0,,,void
 0019d650,unknown_0019d650,,ebx,void
 00022590,unknown_00022590,,,void
@@ -488,7 +488,7 @@ address,name,source,arguments,returns,convention
 002164c0,saved_game_files_find_unit_files,source/saved games/saved_game_files.c,eax stack,void
 00121120,global_preferences_flush,source/main/global_preferences.c,,void
 001406b0,font_cache_frame,source/text/font_cache.c,,void
-00163820,unknown_00163820,,,void
+00163820,main_map_precache_update,source/main/main_map_precache.c,,void
 001479c3,unknown_001479c3,,stack,void
 00155f80,unknown_00155f80,,,void
 00092f80,network_link_receive,source/networking/network_link.c,stack,void,stdcall
@@ -2484,3 +2484,6 @@ address,name,source,arguments,returns,convention
 00194660,unknown_00194660,,stack,void,stdcall
 00149278,user_interface_screen_unknown_00149278,source/interface/user_interface.c,ecx,bool
 00148262,unknown_00148262,,eax ecx,pointer
+00163870,main_map_precache_copy_idle,source/main/main_map_precache.c,,bool
+00163680,unknown_00163680,,stack,bool,stdcall
+00163610,unknown_00163610,,,pointer

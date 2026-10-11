@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — El mapa que se copia por adelantado: tres funciones
+
+Archivo nuevo, `main/main_map_precache.c`, con tres funciones cortas (124 bytes). De 1877
+funciones se pasa a 1880, el 16,69 % de las del juego (el 10,602 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `main_map_precache_update` | `0x00163820` | `main/main_map_precache.c` |
+| `main_map_precache_copy_idle` | `0x00163870` | `main/main_map_precache.c` |
+| `main_map_precache_next_map_not_ready` | `0x00163b60` | `main/main_map_precache.c` |
+
+### Lo que se sabe
+
+- Entre `0x00163610` y `0x00163b84`, justo antes de `crc.c`, está lo que
+  decide **qué mapa copiar al disco duro antes de que haga falta** — el
+  que llama desde fuera a la copia de mapas del hito 20.
+- `main_map_precache_update` (antes `unknown_00163820`, una de las cosas
+  que `main.c` hace cada fotograma) pregunta qué mapa toca (`0x00163680`,
+  la función grande que queda por hacer) y lo pide; hay mapas que solo se
+  piden si aún no se sabe nada de ellos.
+- `main_map_precache_next_map_not_ready` (antes `unknown_00163b60`, la que
+  `game.c` y `main.c` usan para saber si algo está bloqueado) dice si **el
+  mapa siguiente de la campaña** todavía no está en el disco duro.
+- `main_map_precache_copy_idle` dice si no se está copiando ningún mapa.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  546.
+- En este hito se pasaron las pruebas de las tres funciones, y `test_main`
+  y `test_game` enteras.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Si la interfaz está enseñando una cosa: tres funciones
 
 Tres funciones más en `interface/user_interface.c` (164 bytes). De 1874

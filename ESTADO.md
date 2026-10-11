@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 546.
+**Última actualización:** 2026-10-08, al terminar el hito 547.
 
 ## Dónde estamos
 
-- **1877 funciones descompiladas de 11.265: el 16,66 % del juego** (el
-  10,598 % de los bytes de código).
-- Las 1877 están comprobadas contra el ejecutable original: las 1390 del
+- **1880 funciones descompiladas de 11.265: el 16,69 % del juego** (el
+  10,602 % de los bytes de código).
+- Las 1880 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile three functions that say whether the interface shows a thing* (ver `git log`).
+- Último hito: *Decompile three functions of the map that is copied ahead of time* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 608 funciones apuntadas pero sin descompilar (las que el código
   llama); 469 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -221,10 +221,13 @@ Módulos (funciones hechas / archivo):
 - [ ] **Las funciones pequeñas que ya se llaman**: de las que el código
       llama sin tenerlas, las más cortas son las más fáciles (ya tienen
       nombre de registros y pruebas que las sustituyen). Quedan, por
-      tamaño: `0x00163b60` (28 bytes), `0x00161c90`, `0x000d4db0`,
+      tamaño: `0x00161c90` (34 bytes), `0x000d4db0`,
       `0x000caf60`,
       `0x000caf90`, `0x00063d80`, `0x001565a0`… (hitos 538 y 539; la lista
       la da `build\line_breaking\small_externals.py`)
+- [ ] El mapa que se copia por adelantado — `main\main_map_precache.c`
+      (3 de 7, de `0x00163610` a `0x00163b84`; faltan `0x00163610`,
+      `0x00163680`, `0x00163890` y `0x00163b20`)
 - [ ] Los altavoces — `sound\sound_speakers.c` (3, de `0x00192950` a
       `0x00192d70`; faltan `0x00192970`, `0x00192a30`, `0x00192b20`,
       `0x00192b90`, que necesita `_CIpow`, y `0x00192d70`)

@@ -42,7 +42,7 @@ long GetTickCount(void);
 
 /* 0x00163b60: whether something stops the game from going back to a
 checkpoint now */
-boolean unknown_00163b60(void);
+boolean main_map_precache_next_map_not_ready(void);
 
 /* 0x0012b2a0: what Direct3D is given to call; it keeps how long a frame
 took */
@@ -55,7 +55,7 @@ boolean user_interface_unknown_0014a224(void);
 known; the three with a name are what the game asked the loop for */
 void unknown_002237d4(void);
 void unknown_0012bbd0(void);
-void unknown_00163820(void);
+void main_map_precache_update(void);
 void unknown_001479c3(float seconds);
 void unknown_00155f80(void);
 void unknown_000680f0(void);
@@ -386,7 +386,7 @@ void main_loop_body(
 	{
 		cached_map_file_copy_update();
 	}
-	unknown_00163820();
+	main_map_precache_update();
 
 	if (application_paused)
 	{
@@ -705,7 +705,7 @@ void main_revert_map_if_possible_private(
 	{
 		if (unknown_00510c50->unknown22)
 		{
-			possible= !unknown_00163b60();
+			possible= !main_map_precache_next_map_not_ready();
 		}
 		main_globals.revert_map_if_possible= FALSE;
 		if (possible)

@@ -237,7 +237,7 @@ def run(t) -> None:
                     "main_revert_map_if_possible_private",
                     globals={"main_globals": main_globals(random_, x4A=1, x4D=1), "unknown_00510c50": UNKNOWN},
                     memory={UNKNOWN: Memory(bytes(data))},
-                    externals={"unknown_00163b60": lambda harness, arguments, blocked=blocked: blocked},
+                    externals={"main_map_precache_next_map_not_ready": lambda harness, arguments, blocked=blocked: blocked},
                 )
 
     fields = [{}, {"x4B": 1}, {"x46": 1}, {"x47": 1}, {"x4A": 1}, {"x48": 1}, {"x49": 1}, {"x4E": 1}, {"x4C": 1}, {"x03": 1}]

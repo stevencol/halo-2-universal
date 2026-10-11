@@ -27,7 +27,7 @@ PLAIN = (
     "unknown_002237d4 main_game_goto_main_menu main_game_change_update main_revert_map_if_possible_private "
     "main_revert_map_private main_reset_map_private main_switch_structure_bsp_private main_save_map_private "
     "unknown_0012bbd0 main_unknown4E_private input_update input_abstraction_update saved_game_files_find_unit_files global_preferences_flush "
-    "font_cache_frame cached_map_file_copy_update unknown_00163820 unknown_001479c3 unknown_00155f80 "
+    "font_cache_frame cached_map_file_copy_update main_map_precache_update unknown_001479c3 unknown_00155f80 "
     "network_link_receive network_update unknown_000680f0 network_life_cycle_update unknown_001870a0 network_send "
     "game_frame unknown_001554b0 unknown_0016f280 unknown_00222a70 unknown_00223240 sound_update "
     "simulation_update unknown_00222d80"
