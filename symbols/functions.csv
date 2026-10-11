@@ -2539,5 +2539,5 @@ address,name,source,arguments,returns,convention
 00083570,simulation_players_mark_player,source/networking/simulation_players.c,eax edx,void
 00083b80,simulation_players_find_machine,source/networking/simulation_players.c,ecx stack,int,stdcall
 00083c20,simulation_players_player_differs,source/networking/simulation_players.c,ecx ebx stack stack stack,bool,stdcall
-00084a90,unknown_00084a90,,edx,void
-00084ad0,unknown_00084ad0,,stack,void,stdcall
+00084a90,simulation_players_collection_clear,source/networking/simulation_players.c,edx,void
+00084ad0,simulation_players_collection_build,source/networking/simulation_players.c,stack,void,stdcall

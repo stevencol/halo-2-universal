@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Lo que la simulación tiene de los jugadores sale de los jugadores de la partida
+
+Dos funciones más en `networking/simulation_players.c` (319 bytes). De 1931
+funciones se pasa a 1933, el 17,16 % de las del juego (el 10,819 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_players_collection_clear` | `0x00084a90` | `networking/simulation_players.c` |
+| `simulation_players_collection_build` | `0x00084ad0` | `networking/simulation_players.c` |
+
+### Lo que se sabe
+
+- `simulation_players_collection_build` recorre **los jugadores de la
+  partida** (la tabla `player_data`) y copia de cada uno, a su sitio de la
+  colección, lo que la simulación manda a las otras consolas: quién es
+  (doce bytes), en qué consola está (seis), dos números, y **lo que se dice
+  de él a los demás** — los `0x90` bytes de `struct player_properties` del
+  hito 531, que en el jugador de la partida están en `+0xD4`. De un jugador
+  que se fue solo queda quién era y un número.
+- Con esto se conocen los primeros campos del jugador de la partida (el
+  dato de `player_data`): sus banderas (`+2`, con el bit de «se fue»), su
+  identidad (`+4`), su consola (`+0x14`) y sus propiedades (`+0xD4`).
+- `simulation_players_collection_clear` deja la colección vacía.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  567.
+- En este hito se pasaron las pruebas de las dos funciones y las de las dos
+  del hito anterior que las llaman.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Lo que la simulación guarda de los jugadores y de las consolas: siete funciones
 
 Archivo nuevo, `networking/simulation_players.c`, con siete funciones cortas (572 bytes). De 1924

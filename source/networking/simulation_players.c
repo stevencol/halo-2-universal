@@ -11,17 +11,13 @@ they are on. The names are guesses.
 #include "simulation_players.h"
 
 #include "main/main.h"
+#include "memory/data.h"
 #include "networking/network_session.h"
 #include "networking/simulation_world.h"
 
 #include <string.h>
 
 /* ---------- prototypes */
-
-/* 0x00084a90: what there is of the players is nothing. 0x00084ad0: and it is
-what the game has of them now */
-void unknown_00084a90(byte *collection);
-void __attribute__((stdcall)) unknown_00084ad0(byte *collection);
 
 /* ---------- code */
 
@@ -38,7 +34,7 @@ void simulation_players_reset(
 	memset(players+SIMULATION_PLAYERS_MACHINES_OFFSET, 0,
 		MAXIMUM_SIMULATION_PLAYERS_MACHINES*SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE);
 	players[SIMULATION_PLAYERS_CHANGED_OFFSET]= FALSE;
-	unknown_00084a90(players+SIMULATION_PLAYERS_COLLECTION_OFFSET);
+	simulation_players_collection_clear(players+SIMULATION_PLAYERS_COLLECTION_OFFSET);
 	*(long *)(players+SIMULATION_PLAYERS_UNKNOWNBCC_OFFSET)= 0;
 	memset(players+SIMULATION_PLAYERS_UNKNOWNBD0_OFFSET, 0, SIMULATION_PLAYERS_UNKNOWNBD0_SIZE);
 	players[SIMULATION_PLAYERS_UNKNOWNC30_OFFSET]= TRUE;
@@ -53,8 +49,8 @@ void simulation_players_refresh(
 {
 	byte *world;
 
-	unknown_00084a90(players+SIMULATION_PLAYERS_COLLECTION_OFFSET);
-	unknown_00084ad0(players+SIMULATION_PLAYERS_COLLECTION_OFFSET);
+	simulation_players_collection_clear(players+SIMULATION_PLAYERS_COLLECTION_OFFSET);
+	simulation_players_collection_build(players+SIMULATION_PLAYERS_COLLECTION_OFFSET);
 	*(long *)(players+SIMULATION_PLAYERS_UNKNOWNBCC_OFFSET)= players_globals->unknown2C;
 	memcpy(players+SIMULATION_PLAYERS_UNKNOWNBD0_OFFSET, players_globals->unknown30, SIMULATION_PLAYERS_UNKNOWNBD0_SIZE);
 	world= *(byte *const *)(players+SIMULATION_PLAYERS_WORLD_OFFSET);
@@ -202,4 +198,72 @@ boolean __attribute__((stdcall)) simulation_players_player_differs(
 	}
 
 	return TRUE;
+}
+
+/* 0x00084a90: what there is of the players is nothing: no player, and each
+place with its three numbers as NONE */
+void simulation_players_collection_clear(
+	byte *collection)
+{
+	long index;
+
+	memset(collection, 0, SIMULATION_PLAYERS_COLLECTION_SIZE);
+	for (index= 0; index<MAXIMUM_SIMULATION_PLAYERS; index++)
+	{
+		byte *player= collection+SIMULATION_PLAYERS_COLLECTION_PLAYERS_OFFSET+index*SIMULATION_PLAYERS_PLAYER_SIZE;
+
+		player[SIMULATION_PLAYERS_PLAYER_LEFT_OFFSET]= FALSE;
+		*(long *)(player+SIMULATION_PLAYERS_PLAYER_UNKNOWN10_OFFSET)= NONE;
+		*(long *)(player+SIMULATION_PLAYERS_PLAYER_UNKNOWN20_OFFSET)= NONE;
+		*(long *)(player+SIMULATION_PLAYERS_PLAYER_UNKNOWN1C_OFFSET)= NONE;
+	}
+}
+
+/* 0x00084ad0: what there is of the players takes each player of the game,
+in its place: who it is; and of one that left, a number of it; of one that
+did not, its console, two numbers, and what the others are told of it */
+void __attribute__((stdcall)) simulation_players_collection_build(
+	byte *collection)
+{
+	long absolute_index= NONE;
+
+	for (;;)
+	{
+		const byte *datum;
+		byte *player;
+		long player_index;
+
+		absolute_index= data_next_absolute_index(player_data, absolute_index+1);
+		if (absolute_index==NONE)
+		{
+			break;
+		}
+		datum= (const byte *)player_data->data+absolute_index*player_data->size;
+		player_index= ((*(const short *)datum<<16)|absolute_index)&0xFFFF;
+		player= collection+SIMULATION_PLAYERS_COLLECTION_PLAYERS_OFFSET+player_index*SIMULATION_PLAYERS_PLAYER_SIZE;
+		*(unsigned long *)collection|= 1<<player_index;
+		memcpy(player, datum+PLAYER_DATUM_IDENTIFIER_OFFSET, SIMULATION_PLAYERS_PLAYER_IDENTIFIER_SIZE);
+		if (datum[PLAYER_DATUM_FLAGS_OFFSET]&FLAG(_player_datum_left_bit))
+		{
+			player[SIMULATION_PLAYERS_PLAYER_LEFT_OFFSET]= TRUE;
+			*(long *)(player+SIMULATION_PLAYERS_PLAYER_UNKNOWN10_OFFSET)=
+				*(const long *)(datum+PLAYER_DATUM_UNKNOWN10_OFFSET);
+			memset(player+SIMULATION_PLAYERS_PLAYER_MACHINE_OFFSET, 0, SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE);
+			*(long *)(player+SIMULATION_PLAYERS_PLAYER_UNKNOWN20_OFFSET)= NONE;
+			*(long *)(player+SIMULATION_PLAYERS_PLAYER_UNKNOWN1C_OFFSET)= NONE;
+		}
+		else
+		{
+			player[SIMULATION_PLAYERS_PLAYER_LEFT_OFFSET]= FALSE;
+			*(long *)(player+SIMULATION_PLAYERS_PLAYER_UNKNOWN10_OFFSET)= NONE;
+			memcpy(player+SIMULATION_PLAYERS_PLAYER_MACHINE_OFFSET, datum+PLAYER_DATUM_MACHINE_OFFSET,
+				SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE);
+			*(long *)(player+SIMULATION_PLAYERS_PLAYER_UNKNOWN20_OFFSET)=
+				*(const long *)(datum+PLAYER_DATUM_UNKNOWN20_OFFSET);
+			*(long *)(player+SIMULATION_PLAYERS_PLAYER_UNKNOWN1C_OFFSET)=
+				*(const short *)(datum+PLAYER_DATUM_UNKNOWN1C_OFFSET);
+			memcpy(player+SIMULATION_PLAYERS_PLAYER_PROPERTIES_OFFSET, datum+PLAYER_DATUM_PROPERTIES_OFFSET,
+				SIMULATION_PLAYERS_PLAYER_PROPERTIES_SIZE);
+		}
+	}
 }

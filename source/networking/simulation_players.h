@@ -58,11 +58,35 @@ enum
 	SIMULATION_PLAYERS_UPDATE_MACHINE_OFFSET= 0xC,
 	SIMULATION_PLAYERS_UPDATE_UNKNOWN10_OFFSET= 0x10,
 	SIMULATION_PLAYERS_NEW_MACHINE_OFFSET= 0x14,
-	SIMULATION_PLAYERS_NEW_UNKNOWN1C_OFFSET= 0x1C
+	SIMULATION_PLAYERS_NEW_UNKNOWN1C_OFFSET= 0x1C,
+	/* of what there is of the players: the bits of the ones that there
+	are, and of each: who it is; whether it left; a number of one that left;
+	its console; two numbers; and what the others are told of it */
+	SIMULATION_PLAYERS_COLLECTION_SIZE= 0xB44,
+	SIMULATION_PLAYERS_COLLECTION_PLAYERS_OFFSET= 0x4,
+	SIMULATION_PLAYERS_PLAYER_LEFT_OFFSET= 0xC,
+	SIMULATION_PLAYERS_PLAYER_UNKNOWN10_OFFSET= 0x10,
+	SIMULATION_PLAYERS_PLAYER_MACHINE_OFFSET= 0x14,
+	SIMULATION_PLAYERS_PLAYER_UNKNOWN1C_OFFSET= 0x1C,
+	SIMULATION_PLAYERS_PLAYER_UNKNOWN20_OFFSET= 0x20,
+	SIMULATION_PLAYERS_PLAYER_PROPERTIES_OFFSET= 0x24,
+	SIMULATION_PLAYERS_PLAYER_PROPERTIES_SIZE= 0x90,
+	/* of a player of the game: its bits, of which the second says that it
+	left; who it is; and the same things */
+	PLAYER_DATUM_FLAGS_OFFSET= 0x2,
+	_player_datum_left_bit= 1,
+	PLAYER_DATUM_IDENTIFIER_OFFSET= 0x4,
+	PLAYER_DATUM_UNKNOWN10_OFFSET= 0x10,
+	PLAYER_DATUM_MACHINE_OFFSET= 0x14,
+	PLAYER_DATUM_UNKNOWN1C_OFFSET= 0x1C,
+	PLAYER_DATUM_UNKNOWN20_OFFSET= 0x20,
+	PLAYER_DATUM_PROPERTIES_OFFSET= 0xD4
 };
 
 /* ---------- prototypes/SIMULATION_PLAYERS.C */
 
+void simulation_players_collection_clear(byte *collection);
+void __attribute__((stdcall)) simulation_players_collection_build(byte *collection);
 void simulation_players_reset(byte *players);
 void simulation_players_refresh(byte *players);
 void simulation_players_mark_player(const byte *players, long player_index);

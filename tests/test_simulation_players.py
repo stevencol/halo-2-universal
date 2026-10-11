@@ -41,13 +41,13 @@ def run(t) -> None:
         return Buffer(bytes(data), pointers=tuple(pointers))
 
     for n in range(1500):
-        t.check("simulation_players_reset", thing(), externals={"unknown_00084a90": told})
+        t.check("simulation_players_reset", thing(), externals={"simulation_players_collection_clear": told})
         game_players = bytearray(random_.randbytes(0x90))
         t.check(
             "simulation_players_refresh",
             thing(),
             globals={"players_globals": Buffer(bytes(game_players))},
-            externals={"unknown_00084a90": told, "unknown_00084ad0": told, "simulation_world_players_clear_unknown25": told},
+            externals={"simulation_players_collection_clear": told, "simulation_players_collection_build": told, "simulation_world_players_clear_unknown25": told},
         )
         t.check("simulation_players_mark_player", thing(), random_.choice((*range(16), *range(16), 16, 17, 0xFFFF)))
         t.check("simulation_players_changed", thing(world=random_.random() < 0.9, session=random_.random() < 0.8))
@@ -83,4 +83,29 @@ def run(t) -> None:
             Buffer(bytes(machines)),
             random_.choice((0xFFFF, 0xFFFF, random_.getrandbits(16))),
             Buffer(bytes(updates)),
+        )
+
+    # ---------- what there is of the players, from the players of the game
+
+    COUNT, DATUM = 16, 0x170
+    DATUMS = 0x4C
+    BITS = DATUMS + COUNT * DATUM
+    for n in range(1500):
+        t.check("simulation_players_collection_clear", Buffer(random_.randbytes(0xB44 + 8)))
+
+        data = bytearray(random_.randbytes(BITS + 4))
+        data[0:0x20] = b"players".ljust(0x20, b"\0")
+        there = [random_.random() < 0.5 for index in range(COUNT)]
+        bits = 0
+        for index in range(COUNT):
+            struct.pack_into("<HH", data, DATUMS + index * DATUM, random_.getrandbits(15) | 0x8000 if there[index] else 0, random_.choice((0, 0, 2, 3, 0xFFFD, 0xFFFF)))
+            bits |= there[index] << index
+        struct.pack_into("<I", data, BITS, bits)
+        struct.pack_into("<ii", data, 0x20, COUNT, DATUM)
+        struct.pack_into("<ii", data, 0x34, next((index for index in range(COUNT) if not there[index]), COUNT), max((index + 1 for index in range(COUNT) if there[index]), default=0))
+        struct.pack_into("<II", data, 0x44, DATUMS, BITS)
+        t.check(
+            "simulation_players_collection_build",
+            Buffer(random_.randbytes(0xB44)),
+            globals={"player_data": Buffer(bytes(data), pointers=(0x44, 0x48))},
         )
