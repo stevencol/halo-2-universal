@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — En qué está un jugador, en cuatro bytes
+
+Dos funciones en `networking/online_tasks.c`, 482 bytes entre las dos. De 1745
+funciones se pasa a 1747, el 15,51 % de las del juego (el 10,219 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_users_set_state` | `0x0006c1d0` | `networking/online_tasks.c` |
+| `online_state_encode` | `0x0006cf00` | `networking/online_tasks.c` |
+
+### Lo que se sabe
+
+- `online_state_encode` hace **los cuatro bytes que dicen a los amigos en
+  qué está un jugador** (lo que se ve en la lista de amigos):
+  - los dos primeros son siempre `0xF1` y `0xFC`;
+  - el tercero es un tiempo en siete bits: tal cual hasta 60, luego de
+    cinco en cinco hasta 180, de diez en diez hasta 600, y `126` de ahí
+    en adelante. Si no hay primer tiempo se da el segundo con `127` más;
+  - el cuarto lleva un número por la clase (de 1 a 6) en sus bits bajos y
+    dos números de dos bits arriba.
+- `online_users_set_state` dice de cada jugador recién conectado que no
+  está en nada en particular: primera clase, sin sesión y sin primer
+  tiempo. El juego lleva dentro `online_notification_set_state` (hito
+  512); aquí se llama.
+
+### Cambiado
+
+- `unknown_0006c1d0` tiene su nombre.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las dos**, y en las de los hitos 456 a
+  490 y 501 a 521.
+- En este hito se pasaron todas las pruebas de `online_tasks`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Las listas de silenciados, al conectarse
 
 Una función en `networking/online_tasks.c`, de 90 bytes. De 1744

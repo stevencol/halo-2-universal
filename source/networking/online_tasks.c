@@ -30,13 +30,11 @@ void unknown_0008c550(long index);
 /* 0x0008cc40: something is told that a task of the second kind could not
 go on. 0x0008e5e0, of network_blob_task.c: what did a task of the blocks
 ended. 0x0007f410: something of the network is told that someone is signed
-in. 0x0006c1d0: something is done with the players that are signed in.
-0x0018fa94: which of them is the first that something is so of,
+in. 0x0018fa94: which of them is the first that something is so of,
 or NONE. 0x0008c660, 0x0008d4d0: two more things that are told that someone
 signed in */
 void unknown_0008cc40(void);
 void unknown_0007f410(void);
-void __attribute__((stdcall)) unknown_0006c1d0(const struct online_user *users);
 long __attribute__((stdcall)) unknown_0018fa94(const struct online_user *users);
 void unknown_0008c660(void);
 void unknown_0008d4d0(void);
@@ -1061,7 +1059,7 @@ boolean __attribute__((stdcall)) online_logon_complete(
 		}
 	}
 	online_users_start_mute_lists(users);
-	unknown_0006c1d0(users);
+	online_users_set_state(users);
 	game_voice_start();
 	index= unknown_0018fa94(users);
 	unknown_0008c660();
@@ -1100,4 +1098,103 @@ void online_users_start_mute_lists(
 			voice_mute_list_request(index);
 		}
 	}
+}
+
+/* 0x0006c1d0: the others are told that each player that is signed in well,
+and is one like the others, is at nothing in particular: of the first kind,
+in no session, and with no first time (online_notification_set_state, which
+the game has inside) */
+void __attribute__((stdcall)) online_users_set_state(
+	const struct online_user *users)
+{
+	long index;
+
+	for (index= 0; index<MAXIMUM_ONLINE_USERS; index++)
+	{
+		const struct online_user *user= &users[index];
+
+		if ((user->xuid[0]|user->xuid[1]) && user->name[0] && user->result>=0 && !(user->flags&_online_user_unknown_bits))
+		{
+			unsigned long session_identifier[2]= {0, 0};
+			struct online_state state;
+			unsigned long encoded;
+
+			state.kind= 1;
+			state.unknown4= 0;
+			state.unknown8= 0;
+			state.time= 0;
+			state.second_time= 0x7FFF;
+			online_state_encode(&encoded, &state);
+			online_notification_set_state(session_identifier, index, (byte *)&encoded, 0);
+		}
+	}
+}
+
+/* a time as a number of seven bits: itself up to 60, then one more each 5
+up to 180, then one more each 10 up to 600, and 126 from there */
+static inline __attribute__((always_inline)) byte online_state_time(
+	short time)
+{
+	if (time<60)
+	{
+		return (byte)time;
+	}
+	if (time<180)
+	{
+		return (byte)((time-60)/5+60);
+	}
+	if (time<600)
+	{
+		return (byte)((time-180)/10+84);
+	}
+
+	return ONLINE_STATE_TIME_MAXIMUM;
+}
+
+/* 0x0006cf00: what a player is at, as the four bytes that the others are
+told: 0xF1 and 0xFC; the first time, or with none the second and 127 more;
+and a byte with a number for the kind in its low bits, the first number in
+its bits of 0x30 and the second in the ones of 0xC0 */
+void online_state_encode(
+	unsigned long *encoded,
+	const struct online_state *state)
+{
+	byte *bytes= (byte *)encoded;
+	byte time= 0;
+	byte kind= 0;
+
+	*encoded= ONLINE_STATE_SIGNATURE;
+	if (state->time>0)
+	{
+		time= online_state_time(state->time);
+	}
+	else if (state->second_time>0)
+	{
+		time= (byte)(online_state_time(state->second_time)+ONLINE_STATE_SECOND_TIME);
+	}
+	bytes[2]= time;
+	switch (state->kind)
+	{
+	case 1:
+		kind= 0;
+		break;
+	case 2:
+		kind= 4;
+		break;
+	case 3:
+		kind= 8;
+		break;
+	case 4:
+		kind= 12;
+		break;
+	case 5:
+		kind= 1;
+		break;
+	case 6:
+		kind= 3;
+		break;
+	}
+	bytes[3]= kind;
+	*encoded= (*encoded&0x3FFFFFFF)|((unsigned long)state->unknown8<<30);
+	*encoded= (*encoded&~0x30000000UL)|(((unsigned long)state->unknown4<<28)&0x30000000);
 }

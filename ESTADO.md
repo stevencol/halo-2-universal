@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 521.
+**Última actualización:** 2026-10-08, al terminar el hito 522.
 
 ## Dónde estamos
 
-- **1745 funciones descompiladas de 11.265: el 15,49 % del juego** (el
-  10,203 % de los bytes de código).
-- Las 1745 están comprobadas contra el ejecutable original: las 1390 del
+- **1747 funciones descompiladas de 11.265: el 15,51 % del juego** (el
+  10,219 % de los bytes de código).
+- Las 1747 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how the mute lists are asked for when players sign in* (ver `git log`).
+- Último hito: *Decompile how a player's state is encoded for the others* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 606 funciones apuntadas pero sin descompilar (las que el código
-  llama); 470 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 605 funciones apuntadas pero sin descompilar (las que el código
+  llama); 469 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
@@ -222,9 +222,9 @@ Módulos (funciones hechas / archivo):
       (28: la tabla, una nueva, por dónde va, acabar con una o con todas,
       recorrerlas, buscar una, volver a empezarla, hacerlas avanzar, en
       qué está la conexión, quién está conectado y lo que cada una hace
-      cada vuelta, y lo que se hace al conectarse (35); faltan
-      `0x0006b590`, `0x0006ba80`, `0x0006bd10`, `0x0006c1d0` y cuatro más
-      hasta `0x0006d1f0`)
+      cada vuelta, lo que se hace al conectarse y en qué está cada
+      jugador (37); faltan `0x0006b590`, `0x0006ba80`, `0x0006bd10`,
+      `0x0006c8b0`, `0x0006cb60`, `0x0006cc10` y `0x0006d080`)
 - [x] La red de la consola — `networking\transport.c` (8: iniciarla y
       deshacerla, mirar el cable, arrancarla y pararla, apuntar a quién se
       avisa y avisar, y si está)

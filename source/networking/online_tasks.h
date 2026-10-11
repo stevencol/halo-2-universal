@@ -98,7 +98,13 @@ enum
 	ONLINE_TASK_USERS_LOOK= 0x80151300,
 	/* the bits of a player that is signed in that say that it is not one
 	like the others */
-	_online_user_unknown_bits= 0x3
+	_online_user_unknown_bits= 0x3,
+	/* of the four bytes that say what a player is at: the first two, which
+	are always the same; what its third says when a time is 600 or more;
+	and what is added to it for the second of the two times */
+	ONLINE_STATE_SIGNATURE= 0xFCF1,
+	ONLINE_STATE_TIME_MAXIMUM= 126,
+	ONLINE_STATE_SECOND_TIME= 127
 };
 
 /* ---------- structures */
@@ -133,6 +139,18 @@ struct online_user
 };
 
 typedef char verify_online_user_size[sizeof(struct online_user) == 0x70 ? 1 : -1];
+
+/* what a player is at, before it is made four bytes: its kind, from 1 to 6;
+two numbers of two bits; and two times, of which the second is said only
+without the first */
+struct online_state
+{
+	long kind;
+	long unknown4;
+	long unknown8;
+	short time;
+	short second_time;
+};
 
 /* a service of the service of games, as the game asks for it */
 struct online_service
@@ -177,6 +195,8 @@ boolean __attribute__((stdcall)) online_task_logon_update(struct online_task *ta
 boolean online_task_change_users_update(struct online_task *task);
 boolean __attribute__((stdcall)) online_logon_complete(struct online_task *task);
 void online_users_start_mute_lists(const struct online_user *users);
+void __attribute__((stdcall)) online_users_set_state(const struct online_user *users);
+void online_state_encode(unsigned long *encoded, const struct online_state *state);
 long online_tasks_get_logon_state(long index);
 long online_users_get_result(void);
 long online_task_users_get_result(const struct online_task *task);

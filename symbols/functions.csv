@@ -2345,8 +2345,9 @@ address,name,source,arguments,returns,convention
 0006bff0,online_logon_complete,source/networking/online_tasks.c,stack,bool,stdcall
 0007f410,unknown_0007f410,,,void
 0006c170,online_users_start_mute_lists,source/networking/online_tasks.c,edi,void
-0006c1d0,unknown_0006c1d0,,stack,void,stdcall
+0006c1d0,online_users_set_state,source/networking/online_tasks.c,stack,void,stdcall
 0018fa94,unknown_0018fa94,,stack,int,stdcall
 0008c660,unknown_0008c660,,,void
 0008d4d0,unknown_0008d4d0,,,void
 003a067c,XOnlineGetServiceInfo,,stack stack,int,stdcall
+0006cf00,online_state_encode,source/networking/online_tasks.c,esi edi,void

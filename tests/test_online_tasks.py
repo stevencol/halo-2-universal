@@ -497,7 +497,7 @@ def run(t) -> None:
                 ),
                 "XOnlineGetServiceInfo": service,
                 "online_users_start_mute_lists": told,
-                "unknown_0006c1d0": told,
+                "online_users_set_state": told,
                 "game_voice_start": told,
                 "unknown_0018fa94": lambda harness, arguments, first=random_.choice((0, 1, 3, NONE)): (
                     first,
@@ -525,4 +525,39 @@ def run(t) -> None:
             "online_users_start_mute_lists",
             Buffer(bytes(data)),
             externals={"voice_mute_list_stop": told, "voice_mute_list_startup": told, "voice_mute_list_request": told},
+        )
+
+    # ---------- what a player is at
+
+    TIMES = (0, 0, 1, 59, 60, 61, 64, 65, 179, 180, 181, 189, 190, 599, 600, 601, 0x7FFF, -1, -0x8000)
+
+    for n in range(3000):
+        state = struct.pack(
+            "<3I2h",
+            random_.choice((1, 2, 3, 4, 5, 6, 0, 7, NONE)),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            random_.choice(TIMES + (random_.randrange(-0x8000, 0x8000),)),
+            random_.choice(TIMES + (random_.randrange(-0x8000, 0x8000),)),
+        )
+        t.check("online_state_encode", Buffer(random_.randbytes(4)), Buffer(state))
+
+        data = bytearray(random_.randbytes(4 * 0x70))
+        for index in range(4):
+            if random_.random() < 0.25:
+                data[index * 0x70:index * 0x70 + 8] = bytes(8)
+            data[index * 0x70 + 8] = random_.choice((0, 0, 0, 4, 1, 2))
+            data[index * 0x70 + 0xC] = random_.choice((0, 0x41, 0x41, 0x41))
+            struct.pack_into("<I", data, index * 0x70 + 0x6C, random_.choice((0, 0, 0x1512F0, 0x80151200)))
+        t.check(
+            "online_users_set_state",
+            Buffer(bytes(data)),
+            globals={"unknown_00467214": random_.choice((0, 0, 0, NONE))},
+            externals={
+                "online_tasks_get_logon_state": session(random_.choice((1, 1, 1, 0))),
+                "XOnlineNotificationSetState": lambda harness, arguments: (
+                    0,
+                    (*arguments[:5], bytes(harness.mu.mem_read(arguments[5], 4))),
+                ),
+            },
         )
