@@ -37,8 +37,21 @@ enum
 	ONLINE_PRESENCE_NAME_STATE_OFFSET= 0x3C,
 	_online_presence_name_free= 0,
 	_online_presence_name_asked,
-	_online_presence_name_known= 3
+	_online_presence_name_asking,
+	_online_presence_name_known,
+	/* after those things: the task that asks for one of them, or NONE, and
+	which it asks for */
+	ONLINE_PRESENCE_NAMES_TASK_OFFSET= MAXIMUM_ONLINE_PRESENCE_NAMES*ONLINE_PRESENCE_NAME_SIZE,
+	ONLINE_PRESENCE_NAMES_CURRENT_OFFSET= ONLINE_PRESENCE_NAMES_TASK_OFFSET+4,
+	ONLINE_PRESENCE_NAMES_SIZE= ONLINE_PRESENCE_NAMES_CURRENT_OFFSET+4,
+	/* how many teams of a player are asked for */
+	MAXIMUM_ONLINE_PRESENCE_TEAMS= 8
 };
+
+/* ---------- macros */
+
+#define ONLINE_PRESENCE_NAMES_TASK(names) (*(long *)((names)+ONLINE_PRESENCE_NAMES_TASK_OFFSET))
+#define ONLINE_PRESENCE_NAMES_CURRENT(names) (*(byte **)((names)+ONLINE_PRESENCE_NAMES_CURRENT_OFFSET))
 
 /* ---------- prototypes/ONLINE_PRESENCE.C */
 
@@ -52,5 +65,6 @@ void __attribute__((stdcall)) online_presence_get_latest(long task_index, long u
 void online_presence_unknown_0008c550(long task_index);
 boolean __attribute__((stdcall)) online_presence_names_find(byte *names, long unknown, const unsigned long *user,
 	wchar *name, byte *identifier);
+void online_presence_names_update(byte *names);
 
 #endif

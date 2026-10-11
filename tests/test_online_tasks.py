@@ -97,7 +97,7 @@ def run(t) -> None:
         tasks, number = table(allocation=random_.random() < 0.8)
         t.check(
             "online_tasks_dispose",
-            globals={"online_tasks": tasks, "unknown_00479748": random_.choice((NONE, NONE, number))},
+            globals={"online_tasks": tasks, "unknown_004771c8+0x2580": random_.choice((NONE, NONE, number))},
             externals=dict(closes, online_tasks_close_all=lambda harness, arguments: (0, ())),
             mocks=[Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)) for index in range(2)],
         )
@@ -110,8 +110,7 @@ def run(t) -> None:
             globals={
                 "heap_allocation": allocator,
                 "online_tasks": random_.getrandbits(32),
-                "unknown_004771c8": random_.randbytes(0x2580),
-                "unknown_00479748": random_.getrandbits(32),
+                "unknown_004771c8": random_.randbytes(0x2588),
             },
             extra=[made],
             externals={"online_tasks_check_address": lambda harness, arguments: (0, ())},
@@ -208,12 +207,12 @@ def run(t) -> None:
             globals={
                 "online_tasks": tasks,
                 "unknown_00467214": random_.choice((0, 0, 0, 2, NONE)),
-                "unknown_004771c8": GlobalRange(0x2580),
+                "unknown_004771c8": GlobalRange(0x2588),
             },
             externals={
                 "online_tasks_get_logon_state": session(random_.choice((0, 1, 1, 1, 2, NONE))),
                 "online_task_update": does,
-                "unknown_0008bf70": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "online_presence_names_update": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
             },
         )
         t.check(

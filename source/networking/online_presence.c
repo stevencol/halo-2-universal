@@ -10,7 +10,9 @@ games are at. The names are guesses.
 
 #include "online_presence.h"
 
+#include "interface/user_interface_controller.h"
 #include "networking/online_tasks.h"
+#include "networking/online_teams.h"
 
 #include <string.h>
 
@@ -43,6 +45,30 @@ extern boolean unknown_00510548;
 extern unsigned long unknown_0051054c;
 
 /* ---------- code */
+
+/* the time, as the game has it written out where it wants it: the console's,
+or the one that main.c has in its place */
+static inline __attribute__((always_inline)) unsigned long online_presence_time(
+	void)
+{
+	return unknown_00510548 ? unknown_0051054c : GetTickCount();
+}
+
+/* what is being asked for has no team: it is known, as of now, and the task
+is done with */
+static inline __attribute__((always_inline)) void online_presence_names_finish(
+	byte *names)
+{
+	byte *current= ONLINE_PRESENCE_NAMES_CURRENT(names);
+	long task_index;
+
+	*(unsigned long *)(current+ONLINE_PRESENCE_NAME_TIME_OFFSET)= online_presence_time();
+	*(long *)(current+ONLINE_PRESENCE_NAME_STATE_OFFSET)= _online_presence_name_known;
+	task_index= ONLINE_PRESENCE_NAMES_TASK(names);
+	ONLINE_PRESENCE_NAMES_CURRENT(names)= NULL;
+	online_task_close(task_index);
+	ONLINE_PRESENCE_NAMES_TASK(names)= NONE;
+}
 
 /* whether someone is signed in to the service of games, as the game has it
 written out in each function of this file */
@@ -294,4 +320,87 @@ boolean __attribute__((stdcall)) online_presence_names_find(
 	}
 
 	return result;
+}
+
+/* 0x0008bf70: each time around: if a task asks for the teams of one of the
+players that the game remembers, and it has them, the first team and its
+name are kept for the player (nothing if it has none, or the task could not
+go on), and the task is done with; and if no task asks, one starts for the
+first player that waits to be asked for, in the name of the first gamepad
+whose player has a profile and is not a guest */
+void online_presence_names_update(
+	byte *names)
+{
+	if (ONLINE_PRESENCE_NAMES_TASK(names)!=NONE)
+	{
+		long status= online_task_get_status(ONLINE_PRESENCE_NAMES_TASK(names));
+
+		if (status!=_online_task_status0)
+		{
+			byte *current;
+
+			if (status>_online_task_status0 && status<=_online_task_status2)
+			{
+				struct online_xuid teams[MAXIMUM_ONLINE_PRESENCE_TEAMS];
+				byte information[ONLINE_TEAM_SIZE];
+				long count= MAXIMUM_ONLINE_PRESENCE_TEAMS;
+
+				online_teams_enumerate_get_results(ONLINE_PRESENCE_NAMES_TASK(names), &count, teams);
+				if (count>0)
+				{
+					wchar *text;
+
+					online_team_get(ONLINE_PRESENCE_NAMES_TASK(names), &teams[0], information);
+					current= ONLINE_PRESENCE_NAMES_CURRENT(names);
+					text= (wchar *)(current+ONLINE_PRESENCE_NAME_TEXT_OFFSET);
+					wcsncpy(text, (const wchar *)(information+sizeof(struct online_xuid)), ONLINE_PRESENCE_NAME_TEXT_LENGTH);
+					text[ONLINE_PRESENCE_NAME_TEXT_LENGTH]= 0;
+					memcpy(ONLINE_PRESENCE_NAMES_CURRENT(names)+ONLINE_PRESENCE_NAME_IDENTIFIER_OFFSET, &teams[0],
+						ONLINE_PRESENCE_NAME_IDENTIFIER_SIZE);
+				}
+				else
+				{
+					current= ONLINE_PRESENCE_NAMES_CURRENT(names);
+					*(wchar *)(current+ONLINE_PRESENCE_NAME_TEXT_OFFSET)= 0;
+					current= ONLINE_PRESENCE_NAMES_CURRENT(names);
+					memset(current+ONLINE_PRESENCE_NAME_IDENTIFIER_OFFSET, 0, 2*sizeof(long));
+				}
+			}
+			else
+			{
+				current= ONLINE_PRESENCE_NAMES_CURRENT(names);
+				*(wchar *)(current+ONLINE_PRESENCE_NAME_TEXT_OFFSET)= 0;
+				current= ONLINE_PRESENCE_NAMES_CURRENT(names);
+				memset(current+ONLINE_PRESENCE_NAME_IDENTIFIER_OFFSET, 0, 2*sizeof(long));
+			}
+			online_presence_names_finish(names);
+		}
+	}
+	if (ONLINE_PRESENCE_NAMES_TASK(names)==NONE)
+	{
+		long controller_index= user_interface_controllers_first_profile(1);
+
+		if (controller_index>=0 && controller_index<MAXIMUM_GAMEPADS)
+		{
+			long index;
+
+			for (index= 0; index<MAXIMUM_ONLINE_PRESENCE_NAMES; index++)
+			{
+				byte *entry= names+index*ONLINE_PRESENCE_NAME_SIZE;
+
+				if (*(const long *)(entry+ONLINE_PRESENCE_NAME_STATE_OFFSET)==_online_presence_name_asked)
+				{
+					long task_index= online_teams_enumerate_start((const struct online_xuid *)entry, controller_index);
+
+					ONLINE_PRESENCE_NAMES_TASK(names)= task_index;
+					if (task_index!=NONE)
+					{
+						ONLINE_PRESENCE_NAMES_CURRENT(names)= entry;
+						*(long *)(entry+ONLINE_PRESENCE_NAME_STATE_OFFSET)= _online_presence_name_asking;
+					}
+					break;
+				}
+			}
+		}
+	}
 }

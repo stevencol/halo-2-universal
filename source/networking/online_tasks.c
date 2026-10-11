@@ -14,6 +14,7 @@ are guesses.
 #include "networking/game_voice.h"
 #include "networking/network_blob.h"
 #include "networking/network_observer.h"
+#include "networking/online_presence.h"
 #include "networking/network_session.h"
 #include "networking/transport.h"
 #include "networking/voice_mute_list.h"
@@ -48,7 +49,6 @@ of 0x40 bytes, and how many */
 long __attribute__((stdcall)) unknown_003a0798(long user_index, byte *state, long *unknown);
 void __attribute__((stdcall)) unknown_0008e750(long user_index, byte *entries, long *count);
 void __attribute__((stdcall)) network_blob_task_completed(long status, long handle);
-void unknown_0008bf70(byte *unknown);
 
 /* 0x003a11ae, of the console's libraries: something of the service of
 games, from 1 to 3 */
@@ -113,8 +113,7 @@ struct online_service_info
 /* 0x004cf78c: the table of the tasks. 0x004771c8: something of them, and
 0x00479748: a task of its own, or NONE */
 struct data_array *online_tasks;
-byte unknown_004771c8[ONLINE_TASKS_UNKNOWN_004771C8_SIZE];
-long unknown_00479748;
+byte unknown_004771c8[ONLINE_PRESENCE_NAMES_SIZE];
 
 /* 0x00467214, of main_game.c: the task that signs in to the service of
 games, or NONE. 0x00467218: what signing in was last at. 0x0050944f: it
@@ -200,8 +199,8 @@ void online_tasks_initialize(
 	online_tasks= data_new("online tasks", MAXIMUM_ONLINE_TASKS, sizeof(struct online_task), 0, heap_allocation);
 	data_make_valid(online_tasks);
 	online_tasks_check_address();
-	memset(unknown_004771c8, 0, sizeof(unknown_004771c8));
-	unknown_00479748= NONE;
+	memset(unknown_004771c8, 0, ONLINE_TASKS_UNKNOWN_004771C8_SIZE);
+	ONLINE_PRESENCE_NAMES_TASK(unknown_004771c8)= NONE;
 }
 
 /* 0x0006b450: the tasks are all done with (online_tasks_close_all), their table
@@ -211,10 +210,10 @@ void online_tasks_dispose(
 {
 	online_tasks_close_all();
 	data_dispose(online_tasks);
-	if (unknown_00479748!=NONE)
+	if (ONLINE_PRESENCE_NAMES_TASK(unknown_004771c8)!=NONE)
 	{
-		online_task_close(unknown_00479748);
-		unknown_00479748= NONE;
+		online_task_close(ONLINE_PRESENCE_NAMES_TASK(unknown_004771c8));
+		ONLINE_PRESENCE_NAMES_TASK(unknown_004771c8)= NONE;
 	}
 }
 
@@ -443,7 +442,7 @@ void online_tasks_update(
 			break;
 		}
 	}
-	unknown_0008bf70(unknown_004771c8);
+	online_presence_names_update(unknown_004771c8);
 }
 
 /* 0x0006b550: something of the service of games that the libraries say,

@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Poner al día lo que el juego recuerda de otros jugadores: su equipo
+
+Una función más en `networking/online_presence.c`, de 474 bytes, y dos correcciones. De 1914
+funciones se pasa a 1915, el 17,00 % de las del juego (el 10,763 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_presence_names_update` | `0x0008bf70` | `networking/online_presence.c` |
+
+### Lo que se sabe
+
+- `online_presence_names_update` (antes `unknown_0008bf70`, lo que
+  `online_tasks_update` hace cada vuelta con su tabla propia) mantiene la
+  tabla del hito 559, **de uno en uno**: si hay un jugador esperando, pide
+  sus equipos al servicio (`online_teams_enumerate_start`, hito 533) a
+  nombre del primer mando con perfil que no sea invitado; y cuando la tarea
+  acaba, guarda el primer equipo y su nombre.
+
+### Corregido
+
+- Lo que la tabla recuerda de cada jugador **no es su nombre sino su
+  equipo** (su clan): la identidad del equipo y el nombre del equipo, de 15
+  letras. El hito 559 lo dio por el nombre del jugador porque solo se veía
+  que era un texto; los nombres de las funciones (`…_names_…`) se quedan
+  hasta que se cambien todos a la vez.
+- `unknown_00479748` **no era una variable aparte**: es la tarea que está
+  en `+0x2580` de esa misma tabla (`unknown_004771c8`), seguida de cuál de
+  los jugadores se está pidiendo (`+0x2584`). La tabla mide ahora `0x2588`
+  bytes y `unknown_00479748` se quitó de `online_tasks.c` y de
+  `symbols\globals.csv`; las pruebas de `online_tasks_initialize`,
+  `online_tasks_dispose` y `online_tasks_update` dan la tabla entera.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  559.
+- En este hito se pasaron las pruebas de la función y las de las tres de
+  `online_tasks.c` que tocan la tabla.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Los nombres de otros jugadores que el juego recuerda
 
 Una función más en `networking/online_presence.c`, de 303 bytes. De 1913

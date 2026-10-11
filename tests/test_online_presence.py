@@ -126,3 +126,46 @@ def run(t) -> None:
             },
             externals={"GetTickCount": lambda harness, arguments, now=now: (now, ())},
         )
+
+    # ---------- what the game remembers is kept up to date
+
+    for n in range(3000):
+        names = bytearray(random_.randbytes(0x2588))
+        for index in range(150):
+            struct.pack_into("<I", names, index * 0x40 + 0x3C, random_.choice((0, 3, 3, 3, 2)))
+        for index in random_.sample(range(150), random_.choice((0, 0, 1, 3))):
+            struct.pack_into("<I", names, index * 0x40 + 0x3C, 1)
+        current = random_.randrange(150) * 0x40
+        struct.pack_into("<II", names, 0x2580, random_.choice((NONE, NONE, 0x10003, 0x20005)), current)
+        names = Buffer(bytes(names), pointers=(0x2584,))
+
+        def results(harness, arguments, count=random_.choice((0, 0, 1, 3, 8, NONE)), teams=random_.randbytes(96)):
+            asked = struct.unpack("<I", bytes(harness.mu.mem_read(arguments[1], 4)))[0]
+            harness.mu.mem_write(arguments[1], struct.pack("<I", count))
+            harness.mu.mem_write(arguments[2], teams)
+            return 0, (arguments[0], asked)
+
+        def team(harness, arguments, information=random_.randbytes(0x6A2)):
+            harness.mu.mem_write(arguments[2], information)
+            return 0, (arguments[0], bytes(harness.mu.mem_read(arguments[1], 12)))
+
+        t.check(
+            "online_presence_names_update",
+            names,
+            globals={
+                "unknown_00510548": bytes((random_.choice((0, 0, 1)),)),
+                "unknown_0051054c": random_.getrandbits(32),
+            },
+            externals={
+                "online_task_get_status": lambda harness, arguments, status=random_.choice((0, 0, 1, 2, 2, 3, 5, NONE)): (status, tuple(arguments)),
+                "online_teams_enumerate_get_results": results,
+                "online_team_get": team,
+                "GetTickCount": lambda harness, arguments, now=random_.getrandbits(32): (now, ()),
+                "online_task_close": lambda harness, arguments: (0, tuple(arguments)),
+                "user_interface_controllers_first_profile": lambda harness, arguments, index=random_.choice((0, 1, 3, 3, NONE, 4)): (index, tuple(arguments)),
+                "online_teams_enumerate_start": lambda harness, arguments, task=random_.choice((0x30007, 0x30007, NONE)): (
+                    task,
+                    (arguments[0] - names.address, arguments[1]),
+                ),
+            },
+        )

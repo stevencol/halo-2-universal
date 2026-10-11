@@ -390,7 +390,6 @@ address,name,source
 004d8b80,unknown_004d8b80,source/networking/transport.c
 004d8b60,unknown_004d8b60,source/networking/transport.c
 004771c8,unknown_004771c8,source/networking/online_tasks.c
-00479748,unknown_00479748,source/networking/online_tasks.c
 00467218,unknown_00467218,source/networking/online_tasks.c
 0050944f,unknown_0050944f,source/networking/online_tasks.c
 0043ff84,unknown_0043ff84,source/networking/online_tasks.c

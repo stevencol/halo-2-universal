@@ -2311,7 +2311,7 @@ address,name,source,arguments,returns,convention
 0006b800,online_task_find,source/networking/online_tasks.c,ebx stack,int,stdcall
 0006b550,online_tasks_unknown_0006b550,source/networking/online_tasks.c,,int
 0006c560,online_task_update,source/networking/online_tasks.c,eax esi,bool
-0008bf70,unknown_0008bf70,,esi,void
+0008bf70,online_presence_names_update,source/networking/online_presence.c,esi,void
 003a11ae,unknown_003a11ae,,,int
 003a0620,XOnlineTaskContinue,,stack,int,stdcall
 003a0650,XOnlineLogonTaskGetResults,,stack,int,stdcall
