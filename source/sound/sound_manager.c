@@ -1252,7 +1252,7 @@ void unknown_0037b637(void *sound, long output, long unknown);
 void unknown_0037d52a(void *sound, real unknown, long apply);
 void unknown_00379f5b(void);
 boolean unknown_00191300(void *sound);
-void unknown_0012c040(void);
+void xmem_static_buffer_allocate(void);
 void unknown_00191420(void *sound);
 
 /* 0x0021eae0: takes down what sound_console_initialize set up, most likely */
@@ -12560,7 +12560,7 @@ boolean __attribute__((stdcall)) sound_console_initialize(
 	memcpy(listener+SOUND_CONSOLE_LISTENER_FACING_OFFSET+sizeof(real_vector3d), global_up3d, sizeof(real_vector3d));
 	sound_console_set_listener(listener);
 	ok= TRUE;
-	unknown_0012c040();
+	xmem_static_buffer_allocate();
 
 	console= unknown_0051ebe4;
 	*(long *)(unknown_0047f0d0+4)= 0;

@@ -2,6 +2,34 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — El búfer estático de la consola toma su memoria
+
+Una función corta más en `shell/shell.c`, de 80 bytes. De 1942
+funciones se pasa a 1943, el 17,25 % de las del juego (el 10,862 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `xmem_static_buffer_allocate` | `0x0012c040` | `shell/shell.c` |
+
+### Lo que se sabe
+
+- `xmem_static_buffer_allocate` (antes `unknown_0012c040`, la que llama el
+  sonido al arrancar) reserva los `0xCC` bytes del búfer que se presta a
+  las bibliotecas de la consola (hito de `shell.c`), de la memoria que el
+  juego toma al arrancar: en una dirección múltiplo de 16, sumando el
+  tamaño a la cuenta y a su suma de comprobación como hace
+  `shell_memory_allocate`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  573.
+- En este hito se pasó la prueba de la función.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Memoria del extremo alto y unos bits por texto: dos funciones cortas
 
 Dos funciones cortas (201 bytes), en `memory/physical_memory.c` y `sound/sound_manager.c`. De 1940

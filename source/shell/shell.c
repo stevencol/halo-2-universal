@@ -497,3 +497,20 @@ struct data_array *shell_memory_data_new(
 
 	return data;
 }
+
+/* 0x0012c040: the buffer that the console's libraries are given takes its
+memory, of that which the game takes when it starts, at an address that is a
+multiple of 16; and it is not in use. The game has it far from the rest of
+this file */
+void xmem_static_buffer_allocate(
+	void)
+{
+	byte *end= (byte *)shell_memory_globals.memory+shell_memory_globals.size;
+	byte *pointer= (byte *)(((uintptr_t)end+15)&~(uintptr_t)15);
+	long size= (long)(pointer-end)+XMEM_STATIC_BUFFER_SIZE;
+
+	shell_memory_globals.size+= size;
+	crc_checksum_buffer(&size, sizeof(size), &shell_memory_globals.size_checksum);
+	xmem_static_buffer= pointer;
+	xmem_static_buffer_used= FALSE;
+}

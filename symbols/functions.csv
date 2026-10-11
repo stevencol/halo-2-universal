@@ -1728,7 +1728,7 @@ address,name,source,arguments,returns,convention
 0037d52a,unknown_0037d52a,,stack stack stack,void
 00379f5b,unknown_00379f5b,,,void
 00191300,unknown_00191300,,stack,bool
-0012c040,unknown_0012c040,,,void
+0012c040,xmem_static_buffer_allocate,source/shell/shell.c,,void
 00191420,unknown_00191420,,edi,void
 00155760,unknown_00155760,,eax,int
 000caf60,object_get_marker95_position,source/objects/objects.c,eax esi,void

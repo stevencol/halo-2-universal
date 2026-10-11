@@ -7657,7 +7657,7 @@ def run(t) -> None:
                 "unknown_00379f5b": lambda harness, arguments: (0, ()),
                 "unknown_00191300": lambda harness, arguments, fails=fails: ((0 if fails == "unknown_00191300" else 1), tuple(arguments)),
                 "sound_console_set_listener": lambda harness, arguments: (0, (bytes(harness.mu.mem_read(arguments[0], 0x38)),)),
-                "unknown_0012c040": lambda harness, arguments: (0, ()),
+                "xmem_static_buffer_allocate": lambda harness, arguments: (0, ()),
                 "sound_console_voice_create_stream": voice_,
                 "sound_console_slot_create_stream": slot_,
                 "unknown_00191420": result_("unknown_00191420"),
