@@ -2,6 +2,32 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Lo que un jugador dice de otro al servicio
+
+Una función más en `networking/online_friends.c`, de 256 bytes. De 1908
+funciones se pasa a 1909, el 16,95 % de las del juego (el 10,692 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_feedback_send` | `0x0008d3d0` | `networking/online_friends.c` |
+
+### Lo que se sabe
+
+- `online_feedback_send` manda al servicio **lo que un jugador opina de
+  otro** (`XOnlineFeedbackSend`): una de diez cosas del menú, que el juego
+  traduce a los números de las bibliotecas (`5, 6, 0, 1, 2, 3, 4, 12, 11,
+  10`), con una tarea de la clase `0x16`. No manda ningún apodo.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  553.
+- En este hito se pasó la prueba de la función.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Cada tick: la partida perdida y la partida terminada
 
 Dos funciones más en `game/game.c` (196 bytes). De 1906

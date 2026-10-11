@@ -40,6 +40,11 @@ long __attribute__((stdcall)) XOnlineFriendsGetLatest(long owner, long maximum_c
 it */
 long __attribute__((stdcall)) XOnlineFriendsStartup(long unknown, long *handle);
 
+/* 0x003a0890: a player says something of another to the service of games; a
+task of the libraries does it */
+long __attribute__((stdcall)) XOnlineFeedbackSend(long owner, struct online_xuid target, long type,
+	const wchar *nickname, long unknown, long *handle);
+
 /* ---------- globals */
 
 /* 0x00467214, of main_game.c: the task that signs in to the service of
@@ -411,4 +416,34 @@ long online_friends_startup(
 	task->owner= ONLINE_FRIENDS_TASK_OWNER;
 
 	return task_index;
+}
+
+/* 0x0008d3d0: a player says something of another to the service of games:
+one of ten things, each of which is a number of the libraries'. A task of
+the kind 0x16 does it; nothing if it could not start */
+void __attribute__((stdcall)) online_feedback_send(
+	const struct online_xuid *target,
+	long owner,
+	long kind)
+{
+	long types[NUMBER_OF_ONLINE_FEEDBACK_KINDS]= { 5, 6, 0, 1, 2, 3, 4, 12, 11, 10 };
+	wchar nickname[2];
+	long task_index= online_task_new_signed_in();
+	struct online_task *task= (struct online_task *)datum_try_and_get(online_tasks, task_index);
+
+	if (task)
+	{
+		nickname[0]= 0;
+		nickname[1]= 0;
+		if (XOnlineFeedbackSend(owner, *target, types[kind], nickname, 0, &task->handle)>=0)
+		{
+			task->flags= _online_task_unknown1_bit|_online_task_unknown8_bit;
+			task->type= _online_task_type_feedback;
+			task->owner= owner;
+		}
+		else
+		{
+			online_task_close(task_index);
+		}
+	}
 }

@@ -2524,3 +2524,5 @@ address,name,source,arguments,returns,convention
 003a07a3,XOnlineFriendsStartup,,stack stack,int,stdcall
 003a069d,XOnlineOfferingIsNewContentAvailable,,stack stack stack,int,stdcall
 00188cd0,unknown_00188cd0,,,void
+0008d3d0,online_feedback_send,source/networking/online_friends.c,eax stack stack,void,stdcall
+003a0890,XOnlineFeedbackSend,,stack stack stack stack stack stack stack stack,int,stdcall

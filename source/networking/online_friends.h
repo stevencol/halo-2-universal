@@ -10,6 +10,7 @@ its functions.
 #define __ONLINE_FRIENDS_H
 
 #include "cseries/cseries.h"
+#include "networking/online_teams.h"
 #include "text/unicode.h"
 
 /* ---------- constants */
@@ -59,7 +60,11 @@ enum
 	/* how many friends a player can have */
 	MAXIMUM_ONLINE_FRIENDS= 100,
 	/* the task of the friends is of no one's */
-	ONLINE_FRIENDS_TASK_OWNER= 0xFF
+	ONLINE_FRIENDS_TASK_OWNER= 0xFF,
+	/* what a player can say of another to the service of games, and the
+	kind of the task that says it */
+	NUMBER_OF_ONLINE_FEEDBACK_KINDS= 10,
+	_online_task_type_feedback= 0x16
 };
 
 /* ---------- structures */
@@ -93,5 +98,6 @@ void __attribute__((stdcall)) online_friend_get_title_name(wchar *name, const by
 long online_friends_enumerate_start(long owner);
 short __attribute__((stdcall)) online_friends_get_latest(long task_index, byte *friends);
 long online_friends_startup(void);
+void __attribute__((stdcall)) online_feedback_send(const struct online_xuid *target, long owner, long kind);
 
 #endif

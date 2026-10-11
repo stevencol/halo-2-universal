@@ -201,3 +201,27 @@ def run(t) -> None:
             Buffer(random_.randbytes(0x720 + 16 * 0x40)),
             Buffer(bytes(update), pointers=tuple(pointers)),
         )
+
+    # ---------- what a player says of another
+
+    for n in range(2500):
+        tasks, number = tasks_table(random_)
+
+        def said(harness, arguments, result=random_.choice((0, 0, 0, 1) + FAILED), handle=random_.getrandbits(32)):
+            nickname = bytes(harness.mu.mem_read(arguments[5], 4))
+            if result < 0x80000000:
+                harness.mu.mem_write(arguments[7], struct.pack("<I", handle))
+            return result, (*arguments[:5], nickname, arguments[6])
+
+        t.check(
+            "online_feedback_send",
+            Buffer(random_.randbytes(12)),
+            random_.randrange(4),
+            random_.randrange(10),
+            globals={"online_tasks": tasks},
+            externals={
+                "online_task_new_signed_in": lambda harness, arguments, index=random_.choice((number, number, number, NONE, number ^ 0x10000)): (index, ()),
+                "XOnlineFeedbackSend": said,
+                "online_task_close": lambda harness, arguments: (0, tuple(arguments)),
+            },
+        )
