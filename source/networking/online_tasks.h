@@ -49,7 +49,22 @@ enum
 	_online_task_type0= 0,
 	_online_task_type1= 1,
 	_online_task_type_b= 0xB,
-	_online_task_type_c= 0xC
+	_online_task_type_c= 0xC,
+	/* what going on with a task says when the libraries are not asked: there
+	is no such task, and no one is signed in */
+	ONLINE_TASK_NOT_THERE= 0x80004005,
+	ONLINE_TASK_NOT_SIGNED_IN= 0x80151000,
+	/* what signing in is at: going on, done (_online_session_signed_in), and
+	the ways that it ends in when it could not be */
+	_online_logon_state_going= 0,
+	_online_logon_state2= 2,
+	_online_logon_state3,
+	_online_logon_state4,
+	_online_logon_state5,
+	_online_logon_state6,
+	_online_logon_state7,
+	_online_logon_state8,
+	_online_logon_state_none= 10
 };
 
 /* ---------- structures */
@@ -64,6 +79,7 @@ struct online_task
 	/* whose it is: the number of a gamepad */
 	long owner;
 	long handle;
+	/* of the task that signs in: what it ended at */
 	long unknown10;
 };
 
@@ -93,6 +109,9 @@ struct online_task *online_task_get(long index);
 void online_tasks_update(void);
 long online_tasks_unknown_0006b550(void);
 void online_tasks_close_all(void);
+void online_tasks_check_address(void);
+long online_task_continue(struct online_task *task);
+long online_tasks_get_logon_state(long index);
 
 /* ---------- globals */
 

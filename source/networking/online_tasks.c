@@ -10,18 +10,16 @@ are guesses.
 
 #include "online_tasks.h"
 
+#include "networking/transport.h"
+#include "networking/transport_security.h"
+
 #include <string.h>
 
 /* ---------- prototypes */
 
-/* 0x0006bfa0: something of the tasks is looked at when they start.
-0x0006c670: a task goes on a little; what the libraries say of it, which is
-less than nothing if it could not. 0x0008c550: a task of the kind 0x21 is
-told that it is done with. 0x0006c560: a task does what it has to each time
-around; whether the others are to. 0x0008bf70: and so does what the tasks
-have of their own */
-void unknown_0006bfa0(void);
-long unknown_0006c670(struct online_task *task);
+/* 0x0008c550: a task of the kind 0x21 is told that it is done with.
+0x0006c560: a task does what it has to each time around; whether the others
+are to. 0x0008bf70: and so does what the tasks have of their own */
 void unknown_0008c550(long index);
 boolean unknown_0006c560(long index, struct online_task *task);
 void unknown_0008bf70(byte *unknown);
@@ -30,13 +28,13 @@ void unknown_0008bf70(byte *unknown);
 games, from 1 to 3 */
 long unknown_003a11ae(void);
 
-/* 0x0006cd50: what the session of the service of games is at */
-long unknown_0006cd50(long session_index);
-
 /* 0x003a07b9, 0x003a062b, of the console's libraries: the list of friends
-is done with, and so is a task */
+is done with, and so is a task. 0x003a0620: a task goes on a little.
+0x003a0650: how signing in went */
 long __attribute__((stdcall)) XOnlineFriendsEnumerateFinish(long handle);
 long __attribute__((stdcall)) XOnlineTaskClose(long handle);
+long __attribute__((stdcall)) XOnlineTaskContinue(long handle);
+long __attribute__((stdcall)) XOnlineLogonTaskGetResults(long handle);
 
 /* ---------- globals */
 
@@ -46,8 +44,19 @@ struct data_array *online_tasks;
 byte unknown_004771c8[ONLINE_TASKS_UNKNOWN_004771C8_SIZE];
 long unknown_00479748;
 
-/* 0x00467214, of main_game.c: the session of the service of games, or NONE */
+/* 0x00467214, of main_game.c: the task that signs in to the service of
+games, or NONE. 0x00467218: what signing in was last at. 0x0050944f: it
+ended in a way of its own. 0x0043ff84: two addresses of consoles, and
+0x0050944e: this console has one of them */
 extern long unknown_00467214;
+long unknown_00467218= _online_logon_state_none;
+boolean unknown_0050944f;
+const byte unknown_0043ff84[2][TRANSPORT_SECURITY_ADDRESS_UNKNOWNA_SIZE]=
+{
+	{0x00, 0x0D, 0x3A, 0x5D, 0xD1, 0xF1},
+	{0x00, 0x50, 0xF2, 0x10, 0x52, 0x20}
+};
+boolean unknown_0050944e;
 
 /* ---------- code */
 
@@ -68,7 +77,7 @@ void online_tasks_initialize(
 {
 	online_tasks= data_new("online tasks", MAXIMUM_ONLINE_TASKS, sizeof(struct online_task), 0, heap_allocation);
 	data_make_valid(online_tasks);
-	unknown_0006bfa0();
+	online_tasks_check_address();
 	memset(unknown_004771c8, 0, sizeof(unknown_004771c8));
 	unknown_00479748= NONE;
 }
@@ -134,7 +143,7 @@ void online_task_close(
 
 				while (result!=ONLINE_TASK_DONE)
 				{
-					result= unknown_0006c670(task);
+					result= online_task_continue(task);
 					if (result<0)
 					{
 						break;
@@ -145,7 +154,7 @@ void online_task_close(
 		case _online_task_type_friends:
 			if (XOnlineFriendsEnumerateFinish(task->handle)>=0)
 			{
-				unknown_0006c670(task);
+				online_task_continue(task);
 			}
 			break;
 		case _online_task_type21:
@@ -183,7 +192,7 @@ NONE if not, or there is no room */
 long online_task_new_signed_in(
 	void)
 {
-	if (unknown_00467214!=NONE && unknown_0006cd50(unknown_00467214)==_online_session_signed_in)
+	if (unknown_00467214!=NONE && online_tasks_get_logon_state(unknown_00467214)==_online_session_signed_in)
 	{
 		return online_task_new();
 	}
@@ -292,7 +301,7 @@ void online_tasks_update(
 	{
 		return;
 	}
-	state= unknown_0006cd50(unknown_00467214);
+	state= online_tasks_get_logon_state(unknown_00467214);
 	if (state<0 || state>_online_session_signed_in)
 	{
 		return;
@@ -321,7 +330,7 @@ anything else */
 long online_tasks_unknown_0006b550(
 	void)
 {
-	if (unknown_00467214!=NONE && unknown_0006cd50(unknown_00467214)==_online_session_signed_in)
+	if (unknown_00467214!=NONE && online_tasks_get_logon_state(unknown_00467214)==_online_session_signed_in)
 	{
 		switch (unknown_003a11ae())
 		{
@@ -389,4 +398,115 @@ void online_tasks_close_all(
 			}
 		}
 	}
+}
+
+/* 0x0006bfa0: whether what the console is known by in its own network (the
+six bytes of unknown_004cf7cc) is one of two that the game has */
+void online_tasks_check_address(
+	void)
+{
+	boolean found= FALSE;
+	long index;
+
+	for (index= 0; index<2; index++)
+	{
+		if (memcmp(unknown_004cf7cc, unknown_0043ff84[index], sizeof(unknown_0043ff84[index]))==0)
+		{
+			found= TRUE;
+			break;
+		}
+	}
+	unknown_0050944e= found;
+}
+
+/* 0x0006c670: a task goes on a little; what the libraries say of it. They
+are not asked for a task that there is not or that they do not know
+(0x80004005); nor, unless someone is signed in, and for a task of the kind
+0 unless the network of the console is there (0x80151000) */
+long online_task_continue(
+	struct online_task *task)
+{
+	if (!task || task->handle==0 || task->handle==NONE)
+	{
+		return (long)ONLINE_TASK_NOT_THERE;
+	}
+	if ((task->type==_online_task_type0 && transport_available()) ||
+		(unknown_00467214!=NONE && online_tasks_get_logon_state(unknown_00467214)==_online_session_signed_in))
+	{
+		return XOnlineTaskContinue(task->handle);
+	}
+
+	return (long)ONLINE_TASK_NOT_SIGNED_IN;
+}
+
+/* what signing in ended at is kept by its task */
+static inline __attribute__((always_inline)) long online_tasks_logon_ended(
+	struct online_task *task,
+	long state)
+{
+	task->flags|= _online_task_unknown20_bit;
+	task->unknown10= state;
+	unknown_00467218= state;
+
+	return state;
+}
+
+/* 0x0006cd50: what signing in to the service of games is at, from its task:
+nothing while it goes on, 1 when someone is signed in, and from 2 on when it
+ended in another way, which its task keeps. Without a task it is what it was
+last. A task that the libraries do not know is at 10, and without the
+network of the console it ends at 5 */
+long online_tasks_get_logon_state(
+	long index)
+{
+	struct online_task *task= index!=NONE ? online_task_get(index) : NULL;
+	long result;
+
+	if (!task)
+	{
+		return unknown_00467218;
+	}
+	if (task->type==_online_task_type1 || (task->flags&_online_task_unknown20_bit))
+	{
+		return task->unknown10;
+	}
+	if (task->handle==0 || task->handle==NONE)
+	{
+		unknown_00467218= _online_logon_state_none;
+
+		return _online_logon_state_none;
+	}
+	if (!transport_available())
+	{
+		return online_tasks_logon_ended(task, _online_logon_state5);
+	}
+	result= XOnlineLogonTaskGetResults(task->handle);
+	switch ((unsigned long)result)
+	{
+	case 0:
+		unknown_00467218= _online_logon_state_going;
+		return _online_logon_state_going;
+	case 0x1510F0:
+		unknown_00467218= _online_session_signed_in;
+		return _online_session_signed_in;
+	case 0x1512F0:
+		unknown_0050944f= TRUE;
+		break;
+	case 0x80151200:
+		return online_tasks_logon_ended(task, _online_logon_state2);
+	case 0x80151001:
+		return online_tasks_logon_ended(task, _online_logon_state4);
+	case 0x80151002:
+		return online_tasks_logon_ended(task, _online_logon_state3);
+	case 0x80151003:
+		return online_tasks_logon_ended(task, _online_logon_state8);
+	case 0x80151004:
+		return online_tasks_logon_ended(task, _online_logon_state5);
+	case 0x80151005:
+		return online_tasks_logon_ended(task, _online_logon_state7);
+	case 0x80151006:
+		return online_tasks_logon_ended(task, _online_logon_state6);
+	}
+
+	return online_tasks_logon_ended(task, _online_logon_state_none);
 }

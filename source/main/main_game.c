@@ -52,7 +52,7 @@ void unknown_0021ebc0(long configuration);
 void __attribute__((stdcall)) simulation_world_delete_views(void *world); /* of simulation_world.c */
 
 /* 0x0006cd50: the state of a session of the network game */
-long unknown_0006cd50(long session_index);
+long online_tasks_get_logon_state(long session_index);
 
 /* 0x002186f0: before the caches of a map are closed */
 void sound_cache_close(void);
@@ -122,7 +122,7 @@ enum
 	/* where unknown_004cf770 says that a game is on */
 	UNKNOWN_004CF770_ACTIVE_OFFSET= 0x2F,
 
-	_unknown_0006cd50_state1= 1,
+	_online_tasks_get_logon_state_state1= 1,
 
 	/* what unknown_001c5ca0 writes */
 	CAMPAIGN_REPORT_SIZE= 0x33B,
@@ -367,7 +367,7 @@ long main_game_memory_configuration(
 	if (options && options->game_mode==_game_mode_campaign &&
 		!(options->simulation>=_game_simulation_predicted && options->simulation<=_game_simulation_distributed_last))
 	{
-		if (unknown_00467214!=NONE && unknown_0006cd50(unknown_00467214)==_unknown_0006cd50_state1)
+		if (unknown_00467214!=NONE && online_tasks_get_logon_state(unknown_00467214)==_online_tasks_get_logon_state_state1)
 		{
 			return (options->coop!=0)+_main_game_memory_campaign_session;
 		}
@@ -791,7 +791,7 @@ void main_game_next_map(
 	byte report[CAMPAIGN_REPORT_SIZE];
 
 	memcpy(&options, &main_game_globals->options, sizeof(options));
-	if (unknown_00467214!=NONE && unknown_0006cd50(unknown_00467214)==_unknown_0006cd50_state1)
+	if (unknown_00467214!=NONE && online_tasks_get_logon_state(unknown_00467214)==_online_tasks_get_logon_state_state1)
 	{
 		unknown_001c5ca0(&options, report);
 		unknown_000b3ed0(report, sizeof(report), "application/x-halo2campaign");

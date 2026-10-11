@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-10 — Conectarse al servicio de partidas: en qué está
+
+Tres funciones en `networking/online_tasks.c`. De 1717
+funciones se pasa a 1720, el 15,27 % de las del juego (el 10,059 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_tasks_check_address` | `0x0006bfa0` | `networking/online_tasks.c` |
+| `online_task_continue` | `0x0006c670` | `networking/online_tasks.c` |
+| `online_tasks_get_logon_state` | `0x0006cd50` | `networking/online_tasks.c` |
+
+### Lo que se sabe
+
+- `online_tasks_get_logon_state` es la función que media docena de sitios
+  llamaban `unknown_0006cd50`: **en qué está la conexión al servicio de
+  partidas**. Lo que `0x00467214` guarda es la tarea que conecta, y de
+  ella sale el estado: `0` mientras sigue, `1` cuando hay alguien
+  conectado, y de `2` a `8` o `10` cuando acabó de otra manera
+  (`XOnlineLogonTaskGetResults`). Cómo acabó se lo queda la tarea (el bit
+  `0x20` y su último número), así que a las bibliotecas solo se les
+  pregunta hasta que acaba. Sin la red de la consola acaba en `5`.
+- `online_task_continue` hace avanzar un poco una tarea
+  (`XOnlineTaskContinue`). No se pregunta a las bibliotecas si la tarea no
+  existe, ni si no hay nadie conectado; la tarea de la clase `0` (la que
+  conecta) avanza con que la red de la consola esté.
+- `online_tasks_check_address` mira si la dirección de la consola en su
+  propia red (los seis bytes de `0x004cf7cc`, su dirección de tarjeta) es
+  una de dos que el juego lleva dentro: `00:0d:3a:5d:d1:f1` y
+  `00:50:f2:10:52:20`.
+
+### Cambiado
+
+- `unknown_0006cd50`, `unknown_0006c670` y `unknown_0006bfa0` tienen su
+  nombre en `main_game.c`, `voice_mute_list.c`, `online_tasks.c` y sus
+  pruebas.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente en las tres**, y en las de los hitos 456 a
+  490 y 501 a 510. La tanda de los hitos 491 a 500 está en marcha.
+- En este hito se pasaron todas las pruebas de `online_tasks`, de
+  `main_game` y de `voice_mute_list`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-10 — Las tareas avanzan, y se acaba con todas
 
 Tres funciones en `networking/online_tasks.c`. De 1714

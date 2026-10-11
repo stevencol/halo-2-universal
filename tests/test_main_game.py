@@ -191,9 +191,9 @@ def run(t) -> None:
                         "main_game_memory_configuration",
                         options(game_mode, simulation, coop),
                         globals={"unknown_00467214": session},
-                        externals=stand_ins(unknown_0006cd50=state),
+                        externals=stand_ins(online_tasks_get_logon_state=state),
                     )
-    t.check("main_game_memory_configuration", 0, globals={"unknown_00467214": 3}, externals=stand_ins(unknown_0006cd50=1))
+    t.check("main_game_memory_configuration", 0, globals={"unknown_00467214": 3}, externals=stand_ins(online_tasks_get_logon_state=1))
 
     users = stand_ins(*(name for pair in MEMORY_USERS for name in pair))
     for _ in range(150):
@@ -205,7 +205,7 @@ def run(t) -> None:
                 "main_game_load_globals": load_globals(configuration=random_.randint(0, 5)),
                 "physical_memory_globals": memory(),
             },
-            externals={**users, **stand_ins(unknown_0006cd50=random_.choice((0, 1)))},
+            externals={**users, **stand_ins(online_tasks_get_logon_state=random_.choice((0, 1)))},
         )
 
     # ---------- a game starts and ends
@@ -598,7 +598,7 @@ def run(t) -> None:
                 "unknown_0054e8e0": bytes(maps),
             },
             externals={
-                "unknown_0006cd50": lambda harness, arguments, state=random_.choice((0, 1, 1, 2)): state,
+                "online_tasks_get_logon_state": lambda harness, arguments, state=random_.choice((0, 1, 1, 2)): state,
                 "unknown_001c5ca0": write_report,
                 "unknown_000b3ed0": send_report,
                 "unknown_0019c440": lambda harness, arguments, next_=random_.choice((NONE, 0, 1, 7, 7, 7)): next_,

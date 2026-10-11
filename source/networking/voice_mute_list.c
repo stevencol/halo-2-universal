@@ -34,7 +34,7 @@ long unknown_003a0832(long controller_index, long maximum_count, long unknown, l
 /* ---------- prototypes of functions not decompiled yet */
 
 /* 0x0006cd50: what a session of the network game is doing */
-long unknown_0006cd50(long session_index);
+long online_tasks_get_logon_state(long session_index);
 
 /* 0x0006b730: something new that the library of the network is asked;
 NONE if there is no room, or with no session in its first state.
@@ -45,7 +45,7 @@ more. 0x0006b890: something of a kind that is asked; 0 if nothing is */
 
 enum
 {
-	_unknown_0006cd50_state1= 1,
+	_online_tasks_get_logon_state_state1= 1,
 
 	/* something that the library is asked: its state, its kind, who it is
 	for and what the library gave to ask how it goes with */
@@ -96,7 +96,7 @@ static inline __attribute__((always_inline)) void voice_mute_list_change(
 {
 	long count= game_voice_muted_player_counts[controller_index];
 
-	if (unknown_00467214!=NONE && unknown_0006cd50(unknown_00467214)==_unknown_0006cd50_state1 && count!=NONE)
+	if (unknown_00467214!=NONE && online_tasks_get_logon_state(unknown_00467214)==_online_tasks_get_logon_state_state1 && count!=NONE)
 	{
 		if (change(controller_index, *player)>=0)
 		{

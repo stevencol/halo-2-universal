@@ -82,10 +82,10 @@ def run(t) -> None:
         def goes_on(harness, arguments, steps=steps):
             from test_async import calls_so_far
 
-            return steps[min(calls_so_far(harness, "unknown_0006c670"), len(steps) - 1)], (harness.normalize(arguments[0]),)
+            return steps[min(calls_so_far(harness, "online_task_continue"), len(steps) - 1)], (harness.normalize(arguments[0]),)
 
         closes = {
-            "unknown_0006c670": goes_on,
+            "online_task_continue": goes_on,
             "XOnlineFriendsEnumerateFinish": lambda harness, arguments, said=random_.choice((0, 0, 0x80004005)): (said, tuple(arguments)),
             "unknown_0008c550": lambda harness, arguments: (0, tuple(arguments)),
             "XOnlineTaskClose": lambda harness, arguments: (0, tuple(arguments)),
@@ -113,7 +113,7 @@ def run(t) -> None:
                 "unknown_00479748": random_.getrandbits(32),
             },
             extra=[made],
-            externals={"unknown_0006bfa0": lambda harness, arguments: (0, ())},
+            externals={"online_tasks_check_address": lambda harness, arguments: (0, ())},
             mocks=[
                 Mock(lambda call, made=made: made.address, stack_arguments=1, registers=("ecx",)),
                 Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
@@ -128,7 +128,7 @@ def run(t) -> None:
         t.check(
             "online_task_new_signed_in",
             globals={"online_tasks": tasks, "unknown_00467214": random_.choice((0, 0, 0, 2, NONE))},
-            externals={"unknown_0006cd50": session},
+            externals={"online_tasks_get_logon_state": session},
         )
 
         tasks, number = table()
@@ -158,7 +158,7 @@ def run(t) -> None:
                 number,
                 globals={"online_tasks": tasks},
                 externals={
-                    "unknown_0006c670": lambda harness, arguments: (0x1500F2, (harness.normalize(arguments[0]),)),
+                    "online_task_continue": lambda harness, arguments: (0x1500F2, (harness.normalize(arguments[0]),)),
                     "XOnlineFriendsEnumerateFinish": lambda harness, arguments: (0, tuple(arguments)),
                     "unknown_0008c550": lambda harness, arguments: (0, tuple(arguments)),
                     "XOnlineTaskClose": lambda harness, arguments: (0, tuple(arguments)),
@@ -187,7 +187,7 @@ def run(t) -> None:
             "online_tasks_close_all",
             globals={"online_tasks": ordered()},
             externals={
-                "unknown_0006c670": lambda harness, arguments: (0x1500F2, (harness.normalize(arguments[0]),)),
+                "online_task_continue": lambda harness, arguments: (0x1500F2, (harness.normalize(arguments[0]),)),
                 "XOnlineFriendsEnumerateFinish": lambda harness, arguments: (0, tuple(arguments)),
                 "unknown_0008c550": lambda harness, arguments: (0, tuple(arguments)),
                 "XOnlineTaskClose": lambda harness, arguments: (0, tuple(arguments)),
@@ -210,7 +210,7 @@ def run(t) -> None:
                 "unknown_004771c8": GlobalRange(0x2580),
             },
             externals={
-                "unknown_0006cd50": session(random_.choice((0, 1, 1, 1, 2, NONE))),
+                "online_tasks_get_logon_state": session(random_.choice((0, 1, 1, 1, 2, NONE))),
                 "unknown_0006c560": does,
                 "unknown_0008bf70": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
             },
@@ -219,7 +219,63 @@ def run(t) -> None:
             "online_tasks_unknown_0006b550",
             globals={"unknown_00467214": random_.choice((0, 0, 0, 2, NONE))},
             externals={
-                "unknown_0006cd50": session(random_.choice((0, 1, 1, 1, 2))),
+                "online_tasks_get_logon_state": session(random_.choice((0, 1, 1, 1, 2))),
                 "unknown_003a11ae": lambda harness, arguments, said=random_.choice((0, 1, 2, 3, 4, NONE)): said,
+            },
+        )
+
+    # ---------- a task goes on, and what signing in is at
+
+    ADDRESSES = bytes.fromhex("000d3a5dd1f1") + bytes.fromhex("0050f2105220")
+
+    for n in range(2000):
+        t.check(
+            "online_tasks_check_address",
+            globals={
+                "unknown_004cf7cc": random_.choice((ADDRESSES[:6], ADDRESSES[6:], ADDRESSES[:5] + b"\x00", random_.randbytes(6))),
+                "unknown_0043ff84": ADDRESSES,
+                "unknown_0050944e": bytes((random_.choice((0, 1)),)),
+            },
+        )
+
+        task = struct.pack(
+            "<HHIIII",
+            random_.getrandbits(16),
+            random_.getrandbits(16),
+            random_.choice((0, 0, 1, 2, 3)),
+            random_.getrandbits(32),
+            random_.choice((0, NONE, 0x1234, 0x1234, 0x1234)),
+            random_.getrandbits(32),
+        )
+        t.check(
+            "online_task_continue",
+            random_.choice((Buffer(task),) * 6 + (0,)),
+            globals={"unknown_00467214": random_.choice((0, 0, 0, 2, NONE))},
+            externals={
+                "transport_available": lambda harness, arguments, there=random_.choice((0, 1)): there,
+                "online_tasks_get_logon_state": session(random_.choice((0, 1, 1, 5))),
+                "XOnlineTaskContinue": lambda harness, arguments, said=random_.choice((0, 0x1500F2, 0x80004005)): (said, tuple(arguments)),
+            },
+        )
+
+        tasks, number = table()
+        data = bytearray(tasks.data)
+        for index in range(COUNT):
+            struct.pack_into("<I", data, TASKS + index * TASK + 4, random_.choice((1, 0, 0, 0, 2, 5)))
+        said = random_.choice(
+            (0, 0, 0x1510F0, 0x1510F0, 0x1512F0, 0x80151200, 0x80151001, 0x80151002, 0x80151003, 0x80151004, 0x80151005)
+            + (0x80151006, 0x80151007, 0x80151000, 0x80004005, 5, 0x801511FF, 0x80151201, NONE)
+        )
+        t.check(
+            "online_tasks_get_logon_state",
+            number,
+            globals={
+                "online_tasks": Buffer(bytes(data), pointers=tasks.pointers, places=tasks.places),
+                "unknown_00467218": random_.choice((10, 0, 1, 5)),
+                "unknown_0050944f": bytes((random_.choice((0, 0, 1)),)),
+            },
+            externals={
+                "transport_available": lambda harness, arguments, there=random_.choice((1, 1, 1, 0)): there,
+                "XOnlineLogonTaskGetResults": lambda harness, arguments, said=said: (said, tuple(arguments)),
             },
         )

@@ -45,7 +45,7 @@ def run(t) -> None:
                                     "game_voice_muted_player_counts": struct.pack("<4I", *counts),
                                 },
                                 externals={
-                                    "unknown_0006cd50": lambda harness, arguments, doing=doing: doing,
+                                    "online_tasks_get_logon_state": lambda harness, arguments, doing=doing: doing,
                                     "unknown_003a084c": lambda harness, arguments, result=result: result,
                                     "unknown_003a086e": lambda harness, arguments, result=result: result ^ 0x80000000,
                                     "voice_mute_list_request": lambda harness, arguments: 0,

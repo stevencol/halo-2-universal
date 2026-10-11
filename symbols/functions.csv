@@ -959,7 +959,7 @@ address,name,source,arguments,returns,convention
 0021ebe0,unknown_0021ebe0,,,void
 0021ebc0,unknown_0021ebc0,,stack,void,stdcall
 000693a0,simulation_world_delete_views,source/networking/simulation_world.c,stack,void,stdcall
-0006cd50,unknown_0006cd50,,eax,int
+0006cd50,online_tasks_get_logon_state,source/networking/online_tasks.c,eax,int
 001a01e0,language_texts_load,source/text/unicode_string_list.c,edi,void
 002186f0,sound_cache_close,source/sound/sound_manager.c,,void
 0011be50,scenario_unload,source/scenario/scenario.c,,void
@@ -2300,9 +2300,9 @@ address,name,source,arguments,returns,convention
 0006b450,online_tasks_dispose,source/networking/online_tasks.c,,void
 0006b5d0,online_task_get_status,source/networking/online_tasks.c,eax,int
 0006b6f0,online_task_new,source/networking/online_tasks.c,,int
-0006bfa0,unknown_0006bfa0,,,void
+0006bfa0,online_tasks_check_address,source/networking/online_tasks.c,,void
 0006b950,online_tasks_close_all,source/networking/online_tasks.c,,void
-0006c670,unknown_0006c670,,esi,int
+0006c670,online_task_continue,source/networking/online_tasks.c,esi,int
 0008c550,unknown_0008c550,,edx,void
 003a07b9,XOnlineFriendsEnumerateFinish,,stack,int,stdcall
 003a062b,XOnlineTaskClose,,stack,int,stdcall
@@ -2313,3 +2313,5 @@ address,name,source,arguments,returns,convention
 0006c560,unknown_0006c560,,eax esi,bool
 0008bf70,unknown_0008bf70,,esi,void
 003a11ae,unknown_003a11ae,,,int
+003a0620,XOnlineTaskContinue,,stack,int,stdcall
+003a0650,XOnlineLogonTaskGetResults,,stack,int,stdcall
