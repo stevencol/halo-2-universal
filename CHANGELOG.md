@@ -2,6 +2,39 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Los nombres de otros jugadores que el juego recuerda
+
+Una función más en `networking/online_presence.c`, de 303 bytes. De 1913
+funciones se pasa a 1914, el 16,99 % de las del juego (el 10,747 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_presence_names_find` | `0x0008c150` | `networking/online_presence.c` |
+
+### Lo que se sabe
+
+- El juego **recuerda el nombre de hasta 150 jugadores** que no son amigos
+  (cada uno en `0x40` bytes: quién es, quién es para el juego, su nombre de
+  15 letras, cuándo se pidió y en qué está el hueco). Es para lo que sirven
+  las tareas de la clase `0x21` del hito 551.
+- `online_presence_names_find` busca ahí a un jugador:
+  - si está y su nombre se sabe, lo da — salvo que sea demasiado viejo
+    (más segundos que `0x004cf768`), y entonces lo marca para pedirlo otra
+    vez;
+  - si no está, le reserva un hueco para pedirlo: uno libre, o el del nombre
+    más antiguo.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  558.
+- En este hito se pasó la prueba de la función, con tablas llenas, con
+  huecos libres y sin ninguno.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Al conectarse, se pide al servicio un bloque de cada jugador
 
 Una función más en `networking/online_tasks.c`, de 283 bytes. De 1912

@@ -95,3 +95,34 @@ def run(t) -> None:
                 "XOnlineTitleIdIsSameTitle": same,
             },
         )
+
+    # ---------- the names that the game remembers
+
+    for n in range(3000):
+        count = 150
+        names = bytearray(random_.randbytes(count * 0x40))
+        users = []
+        for index in range(count):
+            base = index * 0x40
+            struct.pack_into("<II", names, base + 0x38, random_.choice((100, 5000, 5000, 90000, random_.getrandbits(32))), random_.choice((0, 1, 1, 3, 3, 3, 2)))
+            users.append(bytes(names[base:base + 12]))
+        if random_.random() < 0.3:
+            # no place is free, and none has a name
+            for index in range(count):
+                struct.pack_into("<I", names, index * 0x40 + 0x3C, random_.choice((1, 2)))
+        user = random_.choice((random_.choice(users), random_.choice(users), random_.randbytes(12)))
+        now = random_.choice((5000, 6000, 65000, 100000, 0x80001000))
+        t.check(
+            "online_presence_names_find",
+            Buffer(bytes(names)),
+            random_.choice((0, 0, 0, 1)),
+            Buffer(user),
+            Buffer(random_.randbytes(0x24)),
+            Buffer(random_.randbytes(12)),
+            globals={
+                "unknown_004cf768": random_.choice((0, 1, 60, 60, 86400)),
+                "unknown_00510548": bytes((random_.choice((0, 0, 1)),)),
+                "unknown_0051054c": random_.choice((5000, 70000, 0x90000000)),
+            },
+            externals={"GetTickCount": lambda harness, arguments, now=now: (now, ())},
+        )

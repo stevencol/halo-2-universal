@@ -2530,3 +2530,4 @@ address,name,source,arguments,returns,convention
 003a0769,XOnlineTitleIdIsSamePublisher,,stack,int,stdcall
 0008c900,network_motd_write_file,source/networking/network_motd.c,stack,bool,stdcall
 0008ca70,network_motd_read,source/networking/network_motd.c,stack stack,bool,stdcall
+0008c150,online_presence_names_find,source/networking/online_presence.c,stack stack stack stack stack,bool,stdcall

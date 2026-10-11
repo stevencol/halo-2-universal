@@ -26,12 +26,21 @@ long __attribute__((stdcall)) unknown_003a6969(long handle);
 
 /* 0x003a075e: whether a game is this one, or one that counts as it */
 long __attribute__((stdcall)) XOnlineTitleIdIsSameTitle(unsigned long title);
+wchar *wcsncpy(wchar *destination, const wchar *source, size_t count);
+unsigned long GetTickCount(void);
 
 /* ---------- globals */
 
 /* 0x00467214, of main_game.c: the task that signs in to the service of
 games, or NONE */
 extern long unknown_00467214;
+
+/* 0x004cf768: for how many seconds a name that the game remembers is good.
+0x00510548, 0x0051054c, of main.c: the time is not the console's, and what
+it is */
+long unknown_004cf768;
+extern boolean unknown_00510548;
+extern unsigned long unknown_0051054c;
 
 /* ---------- code */
 
@@ -217,4 +226,72 @@ void online_presence_unknown_0008c550(
 	{
 		unknown_003a6969(task->handle);
 	}
+}
+
+/* 0x0008c150: the name of a player, and who it is as the game has it, from
+what the game remembers; whether it has them. A name that is too old is not
+given, and is to be asked for again; if nothing is remembered of the player,
+the place that has no name or the oldest one is taken for it, to be asked
+for. With the number that is not nothing, an old name is given all the same
+and no place is taken */
+boolean __attribute__((stdcall)) online_presence_names_find(
+	byte *names,
+	long unknown,
+	const unsigned long *user,
+	wchar *name,
+	byte *identifier)
+{
+	byte *entry= names;
+	byte *oldest= NULL;
+	boolean found= FALSE;
+	boolean result= FALSE;
+	long index;
+
+	name[0]= 0;
+	for (index= 0; index<MAXIMUM_ONLINE_PRESENCE_NAMES; index++, entry+= ONLINE_PRESENCE_NAME_SIZE)
+	{
+		if (!oldest || *(const unsigned long *)(entry+ONLINE_PRESENCE_NAME_TIME_OFFSET)<
+			*(const unsigned long *)(oldest+ONLINE_PRESENCE_NAME_TIME_OFFSET))
+		{
+			long state= *(const long *)(entry+ONLINE_PRESENCE_NAME_STATE_OFFSET);
+
+			if (state==_online_presence_name_known || state==_online_presence_name_free)
+			{
+				oldest= entry;
+			}
+		}
+		if (user && user[0]==*(const unsigned long *)entry && user[1]==*(const unsigned long *)(entry+4))
+		{
+			found= TRUE;
+			break;
+		}
+	}
+	if (found && *(const long *)(entry+ONLINE_PRESENCE_NAME_STATE_OFFSET)==_online_presence_name_known)
+	{
+		long maximum_age= unknown_004cf768*1000;
+
+		if (unknown==0)
+		{
+			unsigned long then= *(const unsigned long *)(entry+ONLINE_PRESENCE_NAME_TIME_OFFSET);
+			unsigned long now= unknown_00510548 ? unknown_0051054c : GetTickCount();
+
+			if ((long)(now-then)>maximum_age)
+			{
+				*(long *)(entry+ONLINE_PRESENCE_NAME_STATE_OFFSET)= _online_presence_name_asked;
+
+				return FALSE;
+			}
+		}
+		wcsncpy(name, (const wchar *)(entry+ONLINE_PRESENCE_NAME_TEXT_OFFSET), ONLINE_PRESENCE_NAME_TEXT_LENGTH);
+		name[ONLINE_PRESENCE_NAME_TEXT_LENGTH]= 0;
+		memcpy(identifier, entry+ONLINE_PRESENCE_NAME_IDENTIFIER_OFFSET, ONLINE_PRESENCE_NAME_IDENTIFIER_SIZE);
+		result= TRUE;
+	}
+	if (unknown==0 && !found && oldest)
+	{
+		memcpy(oldest, user, ONLINE_PRESENCE_NAME_IDENTIFIER_SIZE);
+		*(long *)(oldest+ONLINE_PRESENCE_NAME_STATE_OFFSET)= _online_presence_name_asked;
+	}
+
+	return result;
 }

@@ -409,3 +409,4 @@ address,name,source
 004672b8,network_motd_file_name,source/networking/network_motd.c
 00547f6f,unknown_00547f6f,source/game/game.c
 00479750,unknown_00479750,source/networking/online_tasks.c
+004cf768,unknown_004cf768,source/networking/online_presence.c
