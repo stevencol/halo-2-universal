@@ -11,6 +11,8 @@ The message of the day. The names are guesses.
 
 #include "cache/cache_files.h"
 #include "cseries/cseries.h"
+#include "game/game.h"
+#include "networking/online_friends.h"
 #include "networking/network_blob.h"
 
 #include <string.h>
@@ -23,8 +25,10 @@ const char *network_motd_file_name= "message_of_the_day.dat";
 /* 0x00479780, of online_tasks.c: what has the block of the message */
 extern struct network_blob unknown_00479780;
 
-/* 0x0033039a: the language of the console */
+/* 0x0033039a: the language of the console. 0x002d2488: where a file is read
+from becomes another place */
 long XGetLanguage(void);
+unsigned long SetFilePointer(uint32_t handle, long distance, long *distance_high, unsigned long method);
 
 /* ---------- code */
 
@@ -93,4 +97,69 @@ boolean __attribute__((stdcall)) network_motd_write_file(
 	file_delete(&file);
 
 	return FALSE;
+}
+
+/* 0x0008ca70: the message of the day is read from its file: its first
+text, or with 1 one of the texts of the second, taken at random. Whether it
+was; not if there is no file or no message. The game has the going back to
+the start of the file written out here */
+boolean __attribute__((stdcall)) network_motd_read(
+	long which,
+	wchar *text)
+{
+	struct file_reference file;
+	struct network_motd_texts texts;
+	wchar title[NETWORK_MOTD_TITLE_SIZE/sizeof(wchar)];
+	const wchar *source;
+	boolean read= FALSE;
+	long error;
+
+	network_motd_get_file(&file);
+	if (!file_exists(&file) || !network_motd_available())
+	{
+		return FALSE;
+	}
+	if (!file_open(&file, NETWORK_MOTD_FILE_OPEN_READ_FLAGS, &error))
+	{
+		return FALSE;
+	}
+	if (file.position!=0)
+	{
+		file.position= SetFilePointer(file.handle, 0, NULL, 0);
+		if (file.position==(unsigned long)NONE)
+		{
+			goto done;
+		}
+	}
+	if (which==_network_motd_random_text)
+	{
+		unsigned long seed;
+		long index;
+
+		network_motd_texts_clear((byte *)&texts);
+		file_set_position(&file, NETWORK_MOTD_TITLE_SIZE, TRUE);
+		if (!file_read(&file, sizeof(texts), &texts, TRUE) || texts.count>MAXIMUM_NETWORK_MOTD_TEXTS)
+		{
+			goto done;
+		}
+		seed= global_random_seed_reference[1]*0x19660D+0x3C6EF35F;
+		global_random_seed_reference[1]= seed;
+		index= (short)(((seed>>16)*(unsigned long)(long)(short)texts.count)>>16);
+		source= texts.texts[index];
+	}
+	else
+	{
+		memset(title, 0, sizeof(title));
+		if (!file_read(&file, sizeof(title), title, TRUE))
+		{
+			goto done;
+		}
+		source= title;
+	}
+	network_motd_text_copy(text, source);
+	read= TRUE;
+done:
+	file_close(&file);
+
+	return read;
 }

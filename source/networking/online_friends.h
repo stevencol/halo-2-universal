@@ -89,8 +89,8 @@ struct online_friend_summary
 
 boolean online_title_is_same_title(unsigned long title);
 boolean online_friend_is_same_title(const byte *online_friend);
-void online_unknown_0008cc00(byte *unknown);
-void online_unknown_0008cc20(wchar *destination, const wchar *source);
+void network_motd_texts_clear(byte *unknown);
+void network_motd_text_copy(wchar *destination, const wchar *source);
 void online_friend_get_identity(const byte *online_friend, byte *identity);
 long __attribute__((stdcall)) online_friend_state_from_library(unsigned long library_state, unsigned long title);
 unsigned long online_friend_state_to_library(unsigned long state);

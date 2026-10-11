@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Leer el mensaje del día de su archivo
+
+Una función más en `networking/network_motd.c`, de 388 bytes. De 1911
+funciones se pasa a 1912, el 16,97 % de las del juego (el 10,727 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_motd_read` | `0x0008ca70` | `networking/network_motd.c` |
+
+### Lo que se sabe
+
+- `network_motd_read` lee el archivo que escribió la del hito 556 y da una
+  de dos cosas:
+  - **el primer texto** (el de `0x200` bytes), tal cual;
+  - o **uno al azar de los del segundo bloque**, que resulta ser una cuenta
+    y hasta 32 textos de 255 letras. Lo elige con los números al azar del
+    juego (`global_random_seed_reference`).
+  Así que «el mensaje del día» son en realidad un mensaje fijo y una
+  colección de mensajes de los que cada vez sale uno distinto.
+- Con esto las dos funciones del hito 548 que quedaron sin nombre lo tienen:
+  `online_unknown_0008cc00` es `network_motd_texts_clear` (deja vacíos los 32
+  textos) y `online_unknown_0008cc20` es `network_motd_text_copy`. Siguen
+  en `online_friends.c`, donde se pusieron; son de este archivo.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  556.
+- En este hito se pasó la prueba de la función y las de las dos
+  renombradas.
+- La función no mira que la cuenta de textos sea mayor que cero (el juego
+  tampoco): las pruebas dan de 1 en adelante.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Escribir el mensaje del día en su archivo
 
 Una función más en `networking/network_motd.c`, de 250 bytes. De 1910

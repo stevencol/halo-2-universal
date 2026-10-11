@@ -93,7 +93,7 @@ boolean online_friend_is_same_title(
 }
 
 /* 0x0008cc00: the 32 texts of something are nothing */
-void online_unknown_0008cc00(
+void network_motd_texts_clear(
 	byte *unknown)
 {
 	wchar *text= (wchar *)(unknown+ONLINE_UNKNOWN_0008CC00_TEXTS_OFFSET);
@@ -107,7 +107,7 @@ void online_unknown_0008cc00(
 }
 
 /* 0x0008cc20: one of those texts becomes another, cut to what fits */
-void online_unknown_0008cc20(
+void network_motd_text_copy(
 	wchar *destination,
 	const wchar *source)
 {

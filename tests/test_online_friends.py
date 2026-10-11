@@ -18,10 +18,10 @@ def run(t) -> None:
     for n in range(1500):
         t.check("online_title_is_same_title", random_.getrandbits(32), externals={"XOnlineTitleIdIsSameTitle": same})
         t.check("online_friend_is_same_title", Buffer(random_.randbytes(0x40)), externals={"XOnlineTitleIdIsSameTitle": same})
-        t.check("online_unknown_0008cc00", Buffer(random_.randbytes(4 + 32 * 0x200)))
+        t.check("network_motd_texts_clear", Buffer(random_.randbytes(4 + 32 * 0x200)))
         length = random_.choice((0, 1, 20, 254, 255, 256, 300))
         text = "".join(random_.choice("Halo 2 clan") for index in range(length)).encode("utf-16-le") + bytes(2)
-        t.check("online_unknown_0008cc20", Buffer(random_.randbytes(0x200)), Buffer(text + random_.randbytes(8)))
+        t.check("network_motd_text_copy", Buffer(random_.randbytes(0x200)), Buffer(text + random_.randbytes(8)))
         friend = bytearray(random_.randbytes(0x40))
         name = bytes(random_.choice(b"Chief117x") for index in range(random_.choice((0, 1, 8, 15, 16, 20))))
         if len(name) < 16:
@@ -285,5 +285,48 @@ def run(t) -> None:
                 "GetLastError": lambda harness, arguments: (5, ()),
                 "SetLastError": lambda harness, arguments: (0, tuple(arguments)),
                 "file_delete": lambda harness, arguments: (1, (arguments[0] == state.get("file"),)),
+            },
+        )
+
+    # ---------- the message of the day is read
+
+    for n in range(2500):
+        state = {}
+        blob = bytearray(random_.randbytes(0x30))
+        struct.pack_into("<HHH", blob, 4, random_.choice((2, 2, 2, 2, 3, 0)), random_.getrandbits(16), random_.choice((1, 4, 4, 0)))
+
+        def exists(harness, arguments, so=random_.choice((1, 1, 1, 1, 0))):
+            state["file"] = arguments[0]
+            return so, (bytes(harness.mu.mem_read(arguments[0], 0x30)),)
+
+        def opened(harness, arguments, so=random_.choice((1, 1, 1, 1, 0)), handle=random_.getrandbits(32), position=random_.choice((0, 0, 0x200, 5))):
+            if so:
+                harness.mu.mem_write(arguments[0] + 0x108, struct.pack("<II", handle, position))
+            harness.mu.mem_write(arguments[2], struct.pack("<I", 0))
+            return so, (arguments[0] == state.get("file"), arguments[1])
+
+        def was_read(harness, arguments, so=random_.choice((1, 1, 1, 1, 0)), count=random_.choice((1, 2, 5, 0x20, 0x20, 0x21, 0x7FFFFFFF)), seed=n):
+            data = random.Random(seed).randbytes(arguments[1])
+            if arguments[1] == 0x4004:
+                data = struct.pack("<I", count) + data[4:]
+            harness.mu.mem_write(arguments[2], data)
+            return so, (arguments[0] == state.get("file"), arguments[1], arguments[3] & 0xFF)
+
+        t.check(
+            "network_motd_read",
+            random_.choice((0, 1, 1, 2)),
+            Buffer(random_.randbytes(0x200)),
+            globals={
+                "network_motd_file_name": Buffer(b"message_of_the_day.dat" + bytes(2)),
+                "unknown_00479780": bytes(blob),
+                "global_random_seed_reference": Buffer(random_.randbytes(8)),
+            },
+            externals={
+                "file_exists": exists,
+                "file_open": opened,
+                "SetFilePointer": lambda harness, arguments, at=random_.choice((0, 0, 0, NONE, 7)): (at, tuple(arguments)),
+                "file_set_position": lambda harness, arguments: (1, (arguments[0] == state.get("file"), arguments[1], arguments[2] & 0xFF)),
+                "file_read": was_read,
+                "file_close": lambda harness, arguments: (1, (arguments[0] == state.get("file"),)),
             },
         )
