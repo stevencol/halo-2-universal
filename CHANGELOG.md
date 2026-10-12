@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Dos mil funciones: los tipos de un objeto, primer archivo
+
+Una función (101 bytes) en el archivo nuevo `objects/object_types.c`. De 1999
+funciones se pasa a **2000**, el 17,75 % de las del juego (el 11,177 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_types_call_unknown54` | `0x00108e80` | `objects/object_types.c` |
+
+### Lo que se sabe
+
+- `object_types_call_unknown54` (antes `unknown_00108e80`, lo que llama
+  `object_detach_simulation_entity`) avisa a **los tipos de un objeto** de
+  que suelta la cosa que la simulación cuenta de él.
+- Un tipo de objeto (tabla `object_type_definitions`, en `0x468630`, un
+  puntero por tipo) guarda desde `0x84` la lista de los tipos de los que
+  es, del primero a él mismo, acabada en nada: un bípedo es también una
+  unidad y un objeto. La función recorre esa lista y llama a la función
+  que cada uno tenga en `0x54`, si tiene.
+- Es el primer archivo de los tipos de objeto: las demás funciones de la
+  tabla (crear, borrar, actualizar…) seguirán la misma forma.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  598.
+- Cuántos tipos tiene la tabla es una suposición (13); la función no lo
+  dice.
+- El nombre del archivo es una suposición, por el del primer juego.
+- En este hito se pasaron la prueba de la función y `test_objects_simulation`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Los objetos sueltan lo que la simulación cuenta de ellos
 
 Dos funciones de `objects/objects.c` (182 bytes). De 1997

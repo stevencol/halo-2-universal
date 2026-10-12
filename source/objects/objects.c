@@ -6,6 +6,7 @@ gives the address it has there.
 */
 
 #include "objects.h"
+#include "objects/object_types.h"
 
 /* ---------- macros */
 
@@ -428,9 +429,6 @@ void __attribute__((stdcall)) objects_unknown_0003d380(
 	}
 }
 
-/* 0x00108e80: what the type of an object does when the object lets go of
-the thing that the simulation tells of it */
-void unknown_00108e80(long object_index);
 
 enum
 {
@@ -441,13 +439,13 @@ enum
 };
 
 /* 0x000bb7b0: an object lets go of the thing that the simulation tells of
-it: its type is told (unknown_00108e80), and it has none */
+it: its type is told (object_types_call_unknown54), and it has none */
 void object_detach_simulation_entity(
 	long object_index)
 {
 	byte *object= (byte *)((const struct object_header_datum *)object_header_data->data)[object_index&0xFFFF].datum;
 
-	unknown_00108e80(object_index);
+	object_types_call_unknown54(object_index);
 	*(long *)(object+OBJECT_SIMULATION_ENTITY_OFFSET)= NONE;
 	object[OBJECT_SIMULATION_UNKNOWND8_OFFSET]= 0;
 }

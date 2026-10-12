@@ -26,7 +26,7 @@ def run(t) -> None:
             "object_detach_simulation_entity",
             random_.getrandbits(16) << 16 | random_.randrange(COUNT),
             globals=objects,
-            externals={"unknown_00108e80": told},
+            externals={"object_types_call_unknown54": told},
         )
 
         some = random_.sample(range(COUNT), random_.choice((0, 1, 3, COUNT)))
@@ -46,5 +46,5 @@ def run(t) -> None:
         t.check(
             "objects_detach_simulation_entities",
             globals=objects,
-            externals={"object_iterator_next": next_, "unknown_00108e80": told},
+            externals={"object_iterator_next": next_, "object_types_call_unknown54": told},
         )

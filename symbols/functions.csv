@@ -2616,4 +2616,4 @@ address,name,source,arguments,returns,convention
 000a5b40,simulation_object_entity_delete_object,source/networking/simulation_gamestate_entities.c,ecx stack,bool,thiscall
 000bb7b0,object_detach_simulation_entity,source/objects/objects.c,eax,void
 000b8540,unknown_000b8540,,stack,void,stdcall
-00108e80,unknown_00108e80,,ebx,void
+00108e80,object_types_call_unknown54,source/objects/object_types.c,ebx,void
