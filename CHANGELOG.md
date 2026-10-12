@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Meter una cosa en sus zonas del bsp
+
+Dos funciones (474 bytes) en `objects/cluster_partitions.c`. De 2234
+funciones se pasa a 2236, el 19,85 % de las del juego (el 11,565 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `cluster_partition_add` | `0x001cac60` | `objects/cluster_partitions.c` |
+| `structure_bsp_clusters_from_bit_vector` | `0x0014a550` | `objects/cluster_partitions.c` |
+
+### Lo que se sabe
+
+- `cluster_partition_add` (nueve argumentos en la pila y uno en `eax`) es la
+  pareja de `cluster_partition_remove`: apunta una cosa en sus zonas. Las
+  zonas salen de una de tres maneras:
+  - de un vector de bits, si se le da uno;
+  - de las zonas que toca una esfera (`unknown_0014a5b0`), si el radio es
+    mayor que cero;
+  - o solo de la zona en la que está la cosa.
+  Por cada zona añade un elemento a la lista de la cosa y otro a la lista
+  de la zona, con los bytes de más que se le pasen. No toma más de 256
+  zonas, y dice en un byte si había más.
+- `structure_bsp_clusters_from_bit_vector` (bits en `ebx`, total en `edi`)
+  convierte un vector de bits en una lista de zonas: devuelve cuántas caben
+  en la lista y apunta cuántas hay en total.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  676.
+- `unknown_0014a5b0` (las zonas que toca una esfera) no está descompilada.
+  La segunda función está lejos de este archivo en el juego (junto a las
+  del bsp), y los nombres de los argumentos son supuestos.
+- En este hito se pasaron las pruebas de las dos funciones. Hay una
+  batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Tablas de referencias, y sacar una cosa de sus zonas
 
 Dos funciones (unos 250 bytes): una en el archivo nuevo `memory/reference_lists.c` y otra

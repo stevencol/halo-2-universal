@@ -555,3 +555,5 @@ address,name,source
 0047f048,unknown_0047f048,source/physics/havok.c
 0051ecac,unknown_0051ecac,source/physics/havok.c
 004c8798,decal_cache_block_decal_indices,source/effects/decals.c
+004e7414,unknown_004e7414,source/objects/cluster_partitions.c
+004e7411,unknown_004e7411,source/objects/cluster_partitions.c
