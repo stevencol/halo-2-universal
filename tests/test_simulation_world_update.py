@@ -17,7 +17,7 @@ STEPS = (
     "simulation_world_unknown_00069f10",
     "simulation_world_unknown_00069f90",
     "simulation_world_unknown_00069fe0",
-    "unknown_0006a560",
+    "simulation_world_send_players",
 )
 
 

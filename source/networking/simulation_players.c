@@ -567,3 +567,48 @@ void __attribute__((stdcall)) simulation_players_collection_swap(
 	}
 	simulation_players_collection_apply_update(collection, update);
 }
+
+/* 0x00083a40: what there is to tell another console of the players, if
+something of it changed since it was last taken (the byte at 0xC30), or
+always: the consoles and which of them there are, which players there are
+and which of them have not left (simulation_players_collection_get_active_mask),
+and the twelve bytes that each player that there is is known by, with
+nothing for the others. It is taken: the byte is clear. FALSE, with nothing
+written, if there is nothing to tell. The game has the sixteen players
+written four by four */
+boolean __attribute__((stdcall)) simulation_players_take_update(
+	byte *identifiers,
+	byte *machines,
+	boolean always,
+	byte *players,
+	long *machine_mask,
+	long *player_mask,
+	long *active_mask)
+{
+	const unsigned long *collection;
+	long index;
+
+	if (!always && !players[SIMULATION_PLAYERS_UNKNOWNC30_OFFSET])
+	{
+		return FALSE;
+	}
+	*machine_mask= *(const long *)(players+SIMULATION_PLAYERS_MACHINE_MASK_OFFSET);
+	memcpy(machines, players+SIMULATION_PLAYERS_MACHINES_OFFSET,
+		MAXIMUM_SIMULATION_PLAYERS_MACHINES*SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE);
+	collection= (const unsigned long *)(players+SIMULATION_PLAYERS_COLLECTION_OFFSET);
+	*player_mask= *collection;
+	*active_mask= simulation_players_collection_get_active_mask((byte *)collection);
+	memset(identifiers, 0, MAXIMUM_SIMULATION_PLAYERS*SIMULATION_PLAYERS_PLAYER_IDENTIFIER_SIZE);
+	for (index= 0; index<MAXIMUM_SIMULATION_PLAYERS; index++)
+	{
+		if (*collection&(1u<<index))
+		{
+			memcpy(identifiers+index*SIMULATION_PLAYERS_PLAYER_IDENTIFIER_SIZE,
+				players+SIMULATION_PLAYERS_PLAYERS_OFFSET+index*SIMULATION_PLAYERS_PLAYER_SIZE,
+				SIMULATION_PLAYERS_PLAYER_IDENTIFIER_SIZE);
+		}
+	}
+	players[SIMULATION_PLAYERS_UNKNOWNC30_OFFSET]= FALSE;
+
+	return TRUE;
+}

@@ -335,7 +335,7 @@ def run(t) -> None:
             thing,
             Pointer(thing, of) if of else 0,
             globals={"unknown_004cf770": bytes(there)},
-            externals={"unknown_0006a560": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1] & 0xFF))},
+            externals={"simulation_world_send_players": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1] & 0xFF))},
         )
 
     # ---------- the things that wait are done with, one more comes, a piece of the state of the game, and the first view

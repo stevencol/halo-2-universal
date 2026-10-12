@@ -108,6 +108,9 @@ enum
 
 /* ---------- prototypes/SIMULATION_PLAYERS.C */
 
+boolean __attribute__((stdcall)) simulation_players_take_update(byte *identifiers, byte *machines, boolean always,
+	byte *players, long *machine_mask, long *player_mask, long *active_mask);
+
 void simulation_players_collection_clear(byte *collection);
 void __attribute__((stdcall)) simulation_players_collection_build(byte *collection);
 unsigned long simulation_players_collection_get_active_mask(const byte *collection);

@@ -27,6 +27,7 @@ and so are the names of its functions.
 #include "networking/simulation_entity_database.h"
 #include "networking/simulation.h"
 #include "networking/simulation_player.h"
+#include "networking/simulation_players.h"
 #include "networking/simulation_view.h"
 
 #include <string.h>
@@ -58,12 +59,10 @@ extern long unknown_004cf780;
 
 /* 0x00083bd0: whether what the thing has first has a player, by its place,
 with the three numbers that it is known by */
-boolean __attribute__((stdcall)) simulation_players_has_player(long player, const void *unknown, const long *identifier);
 void unknown_00155710(long controller);
 
 
 /* 0x0006a560: the thing is given a byte */
-void __attribute__((stdcall)) unknown_0006a560(byte *world, boolean unknown);
 
 long GetTickCount(void);
 
@@ -690,7 +689,7 @@ void simulation_world_unknown_00069fe0(
 
 /* 0x0006b090: the thing is told that a view is ready, or not: if it is, and
 it is the first view of the first kind or of the third that the thing has,
-the thing is given a set byte (unknown_0006a560). Before that, the ninth
+the thing is given a set byte (simulation_world_send_players). Before that, the ninth
 byte of unknown_004cf770 is cleared if it was set; if it was not, the tenth
 is set. The game has simulation_world_unknown_0006acb0 written here */
 void __attribute__((stdcall)) simulation_world_unknown_0006b090(
@@ -708,7 +707,7 @@ void __attribute__((stdcall)) simulation_world_unknown_0006b090(
 		{
 			unknown_004cf770.unknown1[8]= TRUE;
 		}
-		unknown_0006a560(world, TRUE);
+		simulation_world_send_players(world, TRUE);
 	}
 }
 
@@ -1173,7 +1172,8 @@ boolean __attribute__((stdcall)) simulation_world_player_matches(
 		return FALSE;
 	}
 
-	return simulation_players_has_player((long)index, *(const void *const *)(world+SIMULATION_WORLD_UNKNOWN0_OFFSET), identifier)!=FALSE;
+	return simulation_players_has_player((long)index, *(const byte *const *)(world+SIMULATION_WORLD_UNKNOWN0_OFFSET),
+		(const byte *)identifier)!=FALSE;
 }
 
 /* 0x0006b310: the number that the thing has at 0x18 goes on: from 4 to 5,
@@ -1985,7 +1985,7 @@ simulation_world_unknown_00069dd0), and its players
 a number it starts in another way (simulation_world_unknown_00069eb0); then
 what there is for 3 (simulation_world_unknown_00069f10), for any but 1 and 4
 (simulation_world_unknown_00069f90, which gives up after too long), for 3 to
-6 (simulation_world_unknown_00069fe0), and unknown_0006a560 with a clear
+6 (simulation_world_unknown_00069fe0), and simulation_world_send_players with a clear
 byte. Then each of its views does its work (simulation_view_update) */
 void simulation_world_update(
 	byte *world)
@@ -2038,10 +2038,38 @@ void simulation_world_update(
 		{
 			simulation_world_unknown_00069fe0(world);
 		}
-		unknown_0006a560(world, FALSE);
+		simulation_world_send_players(world, FALSE);
 	}
 	while (simulation_world_next_view(&iterator, world, &view))
 	{
 		simulation_view_update(view);
+	}
+}
+
+/* 0x0006a560: the players are told to the other console, if there is
+something to tell or always (simulation_players_take_update): by the first
+view of the first kind or of the third, if it is ready and has a channel,
+as a message of 0xC8 bytes that goes by the channel of the observer, if it
+has one. What is taken is lost if it has none */
+void __attribute__((stdcall)) simulation_world_send_players(
+	byte *world,
+	boolean always)
+{
+	struct simulation_view_iterator iterator= {SIMULATION_VIEW_KINDS_1_AND_3, 0};
+	byte *view= NULL;
+	struct simulation_players_message message;
+	byte machines[0x60];
+	long machine_mask;
+
+	simulation_world_next_view(&iterator, world, &view);
+	if (view && *(const long *)(view+SIMULATION_VIEW_CHANNEL_OFFSET)!=NONE && view[SIMULATION_VIEW_READY_OFFSET] &&
+		simulation_players_take_update(message.identifiers, machines, always,
+			*(byte *const *)(world+SIMULATION_WORLD_UNKNOWN0_OFFSET), &machine_mask, &message.player_mask,
+			&message.active_mask) &&
+		*(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET)!=NONE)
+	{
+		network_observer_channel_send(FALSE, *(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET),
+			*(byte *const *)(view+SIMULATION_VIEW_OBSERVER_OFFSET), SIMULATION_VIEW_SESSION_INDEX,
+			_network_message_simulation_players, sizeof(message), &message);
 	}
 }

@@ -31,6 +31,6 @@ def run(t) -> None:
             Buffer(bytes(data), pointers=(8,)),
             externals={
                 "simulation_view_set_state": state,
-                "unknown_00086bc0": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "simulation_view_events_update": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
             },
         )

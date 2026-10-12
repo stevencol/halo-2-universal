@@ -414,3 +414,6 @@ address,name,source
 00544b20,unknown_00544b20,source/networking/simulation.c
 00545d40,unknown_00545d40,source/networking/simulation.c
 00546974,unknown_00546974,source/networking/simulation.c
+00510ca0,unknown_00510ca0,source/networking/simulation_view.c
+00510cb1,unknown_00510cb1,source/networking/simulation_view.c
+004ced40,unknown_004ced40,source/networking/simulation_view.c

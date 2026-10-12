@@ -64,6 +64,8 @@ enum
 	_simulation_view_unknown28_9= 9,
 	_simulation_view_unknown28_10= 10,
 	_simulation_view_unknown28_11= 11,
+	/* the kind of the message that the things that happen go in */
+	_network_message_simulation_view_events= 0x2B,
 	/* more of a view: the state of the other end of it and the number that
 	goes with it, as it last said; and something that a view that is not in
 	its sixth state has to take the things that come. The kind of the
@@ -239,6 +241,8 @@ typedef char verify_simulation_view_player_actions_message_size[
 /* ---------- prototypes/SIMULATION_VIEW.C */
 
 void simulation_view_update(byte *view);
+boolean simulation_view_events_message_waiting(const byte *view);
+void simulation_view_events_update(byte *events);
 
 void simulation_view_set_blocked(byte *view, boolean blocked);
 void __attribute__((stdcall)) simulation_view_set_state(byte *view, long state, long number);

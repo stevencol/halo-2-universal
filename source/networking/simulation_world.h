@@ -202,7 +202,11 @@ enum
 	SIMULATION_EVENT_DATABASE_WORLD_OFFSET= 0x8,
 	SIMULATION_EVENT_DATABASE_MANAGER_OFFSET= 0xC,
 	SIMULATION_EVENT_DATABASE_TYPES_OFFSET= 0x10,
-	SIMULATION_EVENT_DATABASE_ENTITY_DATABASE_OFFSET= 0x14
+	SIMULATION_EVENT_DATABASE_ENTITY_DATABASE_OFFSET= 0x14,
+	/* the kinds of view that are told of the players (the first and the
+	third), and the kind of the message that tells them */
+	SIMULATION_VIEW_KINDS_1_AND_3= 0xA,
+	_network_message_simulation_players= 0x26
 };
 
 /* ---------- structures */
@@ -223,6 +227,20 @@ struct simulation_update_node
 	struct simulation_update_node *next;
 };
 
+/* ---------- structures */
+
+/* what tells another console of the players: which there are, which of
+them have not left, and what each is known by */
+struct simulation_players_message
+{
+	long player_mask;
+	long active_mask;
+	byte identifiers[0xC0];
+};
+
+typedef char verify_simulation_players_message_size[
+	sizeof(struct simulation_players_message) == 0xC8 ? 1 : -1];
+
 /* ---------- prototypes/SIMULATION_WORLD.C */
 
 struct simulation_type_table;
@@ -230,6 +248,7 @@ struct simulation_type_table;
 void __attribute__((stdcall)) simulation_world_initialize(long unknown, byte *memory,
 	struct simulation_type_table *types, byte *world);
 void simulation_world_restart(byte *world);
+void __attribute__((stdcall)) simulation_world_send_players(byte *world, boolean always);
 void simulation_world_update(byte *world);
 void __attribute__((stdcall)) simulation_world_dispose(byte *world);
 

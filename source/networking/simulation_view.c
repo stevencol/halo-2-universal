@@ -71,6 +71,13 @@ extern long unknown_0051054c;
 ready */
 boolean unknown_00510ca2;
 
+/* 0x00510ca0: with it clear, nothing of this is sent. 0x00510cb1: with it
+set, what was never sent in full is sent again at once. 0x004ced40: how
+long, in milliseconds, before the same is sent again */
+boolean unknown_00510ca0;
+boolean unknown_00510cb1;
+long unknown_004ced40;
+
 /* 0x004d87e4: whether the views have something at 0x8. 0x00450d14: the
 functions of one more thing that that has */
 boolean unknown_004d87e4;
@@ -1230,14 +1237,12 @@ long __attribute__((stdcall)) simulation_view_allocate(
 	return datum_index;
 }
 
-/* 0x00086bc0: what a view has at 0x6060 of what it has at 0x8 does its work */
-void unknown_00086bc0(byte *unknown6060);
 
 /* 0x000859d0: a view that is well does its work, outside the ticks. One of
 the third kind or the fourth looks at three bytes of what it has at 0x8: the
 first of them that is set makes it fail (simulation_view_fail, written here
 for two of them), as 9, 10 or 11 says. And if it is still well, what it has
-at 0x6060 of that does its work (unknown_00086bc0) */
+at 0x6060 of that does its work (simulation_view_events_update) */
 void simulation_view_update(
 	byte *view)
 {
@@ -1272,6 +1277,63 @@ void simulation_view_update(
 	kind= *(const word *)(view+SIMULATION_VIEW_KIND_OFFSET);
 	if (kind==3 || kind==4)
 	{
-		unknown_00086bc0(*(byte *const *)(view+SIMULATION_VIEW_UNKNOWN8_OFFSET)+SIMULATION_VIEW_UNKNOWN8_UNKNOWN6060_OFFSET);
+		simulation_view_events_update(*(byte *const *)(view+SIMULATION_VIEW_UNKNOWN8_OFFSET)+SIMULATION_VIEW_UNKNOWN8_UNKNOWN6060_OFFSET);
+	}
+}
+
+/* 0x00086c50: what a view has at 0x6060 of what it has at 0x8 is sent, if
+it is not what was sent last */
+void unknown_00086c50(byte *events);
+
+/* 0x000859b0: whether the channel of the observer still has a message of
+the things that happen waiting (network_observer_channel_unknown_000768b0);
+a view with no channel does. The name is a guess */
+boolean simulation_view_events_message_waiting(
+	const byte *view)
+{
+	if (*(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET)==NONE)
+	{
+		return TRUE;
+	}
+
+	return network_observer_channel_unknown_000768b0(*(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET),
+		*(byte *const *)(view+SIMULATION_VIEW_OBSERVER_OFFSET), _network_message_simulation_view_events);
+}
+
+/* 0x00086bc0: what a view has at 0x6060 of what it has at 0x8 does its
+work, for a view of the third kind or of the fourth that has a channel and
+is ready, with its byte at 0x5 set and unknown_00510ca0 set. When it was
+never sent, or it was not sent in full and unknown_00510cb1 is set, or it
+was sent longer ago than unknown_004ced40 says: it is sent
+(unknown_00086c50) unless a message of it still waits
+(simulation_view_events_message_waiting), and then the channel of the
+observer is told to send that one (network_observer_channel_set_pending) */
+void simulation_view_events_update(
+	byte *events)
+{
+	byte *view= *(byte *const *)(events+SIMULATION_VIEW_EVENTS_VIEW_OFFSET);
+	word kind= *(const word *)(view+SIMULATION_VIEW_KIND_OFFSET);
+	long time;
+
+	if ((kind!=3 && kind!=4) || *(const long *)(view+SIMULATION_VIEW_CHANNEL_OFFSET)==NONE ||
+		!view[SIMULATION_VIEW_READY_OFFSET] || !events[SIMULATION_VIEW_EVENTS_UNKNOWN5_OFFSET] || !unknown_00510ca0)
+	{
+		return;
+	}
+	time= *(const long *)(events+SIMULATION_VIEW_EVENTS_UNKNOWN4CCC_OFFSET);
+	if (time!=NONE && (events[SIMULATION_VIEW_EVENTS_DATA_OFFSET] || !unknown_00510cb1) &&
+		network_time_since(time)<=unknown_004ced40)
+	{
+		return;
+	}
+	view= *(byte *const *)(events+SIMULATION_VIEW_EVENTS_VIEW_OFFSET);
+	if (!simulation_view_events_message_waiting(view))
+	{
+		unknown_00086c50(events);
+	}
+	else if (*(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET)!=NONE)
+	{
+		network_observer_channel_set_pending(*(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET),
+			*(byte *const *)(view+SIMULATION_VIEW_OBSERVER_OFFSET), _network_message_simulation_view_events);
 	}
 }

@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Se cuentan los jugadores a la otra consola y se mandan los sucesos de una vista
+
+Cuatro funciones (579 bytes) en tres archivos de `networking/`. De 1956
+funciones se pasa a 1960, el 17,40 % de las del juego (el 10,929 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_players_take_update` | `0x00083a40` | `networking/simulation_players.c` |
+| `simulation_world_send_players` | `0x0006a560` | `networking/simulation_world.c` |
+| `simulation_view_events_message_waiting` | `0x000859b0` | `networking/simulation_view.c` |
+| `simulation_view_events_update` | `0x00086bc0` | `networking/simulation_view.c` |
+
+### Lo que se sabe
+
+- `simulation_players_take_update` saca lo que hay que contar de los
+  jugadores a otra consola, **solo si algo cambió desde la última vez** (el
+  byte `0xC30`) o si se pide siempre: las consolas, qué jugadores hay, cuáles
+  no se han ido y los 12 bytes por los que se conoce a cada uno. Al sacarlo
+  borra el byte.
+- `simulation_world_send_players` (antes `unknown_0006a560`) lo manda por la
+  primera vista del primer o tercer tipo que esté lista: un mensaje de
+  `0xC8` bytes (`struct simulation_players_message`), de la clase `0x26`.
+  De lo que saca, las consolas y su máscara no viajan en el mensaje.
+- `simulation_view_events_update` (antes `unknown_00086bc0`, lo último que
+  hace `simulation_view_update`) decide cuándo se vuelven a mandar los
+  sucesos de una vista: si nunca se mandaron, si no se mandaron enteros y
+  `unknown_00510cb1` está puesto, o si pasó más tiempo que
+  `unknown_004ced40`. Si aún espera un mensaje de esos en el canal
+  (`simulation_view_events_message_waiting`) pide que se mande ese; si no,
+  manda uno nuevo (`unknown_00086c50`).
+- La clase de mensaje de los sucesos es `0x2B`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  578.
+- `unknown_00510ca0` y `unknown_00510cb1` se declararon como variables
+  sueltas; la segunda está dentro de un bloque grande que empieza en
+  `0x510cb0` y que otra parte del juego pone a cero entero.
+- «Sucesos» sale de los nombres que ya tenía ese trozo de la vista
+  (`SIMULATION_VIEW_EVENTS_…`), que eran suposición.
+- En este hito se pasaron las pruebas de las cuatro funciones y todas las
+  de `test_simulation…` (158).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Lo que está en marcha y cada vista hacen su trabajo fuera de los ticks
 
 Dos funciones (406 bytes), en `networking/simulation_world.c` y `networking/simulation_view.c`.

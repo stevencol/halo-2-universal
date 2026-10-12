@@ -2118,7 +2118,7 @@ address,name,source,arguments,returns,convention
 00069f90,simulation_world_unknown_00069f90,source/networking/simulation_world.c,eax,void
 00069fe0,simulation_world_unknown_00069fe0,source/networking/simulation_world.c,eax,void
 0006b090,simulation_world_unknown_0006b090,source/networking/simulation_world.c,eax ecx stack,void,stdcall
-0006a560,unknown_0006a560,,eax stack,void,stdcall
+0006a560,simulation_world_send_players,source/networking/simulation_world.c,eax stack,void,stdcall
 0006a8a0,simulation_world_begin_game_state,source/networking/simulation_world.c,stack,bool,stdcall
 0006a3b0,simulation_world_find_player,source/networking/simulation_world.c,stack stack stack,pointer,stdcall
 00199740,unknown_00199740,,stack stack stack stack,bool,stdcall
@@ -2568,4 +2568,7 @@ address,name,source,arguments,returns,convention
 00068f30,simulation_world_update,source/networking/simulation_world.c,eax,void
 00068dc0,simulation_world_restart,source/networking/simulation_world.c,esi,void
 000859d0,simulation_view_update,source/networking/simulation_view.c,eax,void
-00086bc0,unknown_00086bc0,,eax,void
+00086bc0,simulation_view_events_update,source/networking/simulation_view.c,eax,void
+00083a40,simulation_players_take_update,source/networking/simulation_players.c,eax edx ecx stack stack stack stack,bool,stdcall
+000859b0,simulation_view_events_message_waiting,source/networking/simulation_view.c,ecx,bool
+00086c50,unknown_00086c50,,ebx,void
