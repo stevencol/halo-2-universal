@@ -2892,3 +2892,12 @@ address,name,source,arguments,returns,convention
 00101280,object_definition_get_unknown290,source/units/units.c,eax,short
 001012c0,object_definition_get_unknown12F_bit0,source/units/units.c,ecx,bool
 00101300,object_definition_get_unknown12C_bit28,source/units/units.c,eax,bool
+00101e80,weapon_unknown_00101e80,source/units/units.c,eax,int
+001029d0,weapon_unknown_001029d0,source/units/units.c,eax stack,int
+00102f70,weapon_unknown_00102f70,source/units/units.c,eax ecx,void
+00105be0,weapon_clear_unknown250,source/units/units.c,eax,void
+0010a0b0,object_definition_get_unknownC0,source/units/units.c,eax,short
+0010cf50,object_unknown_0010cf50,source/units/units.c,ecx,bool
+0010f5f0,object_unknown_0010f5f0,source/units/units.c,eax,int
+0010f8f0,object_unknown_0010f8f0,source/units/units.c,eax,int
+00118fe0,object_set_unknown12C_bit0,source/units/units.c,eax ecx,void

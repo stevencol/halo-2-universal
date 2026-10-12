@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Nueve consultas más, casi todas de las armas
+
+Nueve funciones (492 bytes) en `units/units.c`. De 2359
+funciones se pasa a 2368, el 21,02 % de las del juego (el 11,861 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `weapon_unknown_00101e80` | `0x00101e80` | `units/units.c` |
+| `weapon_unknown_001029d0` | `0x001029d0` | `units/units.c` |
+| `weapon_unknown_00102f70` | `0x00102f70` | `units/units.c` |
+| `weapon_clear_unknown250` | `0x00105be0` | `units/units.c` |
+| `object_definition_get_unknownC0` | `0x0010a0b0` | `units/units.c` |
+| `object_unknown_0010cf50` | `0x0010cf50` | `units/units.c` |
+| `object_unknown_0010f5f0` | `0x0010f5f0` | `units/units.c` |
+| `object_unknown_0010f8f0` | `0x0010f8f0` | `units/units.c` |
+| `object_set_unknown12C_bit0` | `0x00118fe0` | `units/units.c` |
+
+### Lo que se sabe
+
+- Cuatro son de las armas (por su sitio en el ejecutable): si un arma está
+  «en reposo» (tres datos a cero), el estado de uno de sus elementos de
+  `0x10` bytes desde `0x224`, un bit de uno de sus dos elementos de `0x34`
+  bytes desde `0x1A4` (¿los gatillos?) y la limpieza de cuatro datos desde
+  `0x250`.
+- Las otras cinco leen datos de un objeto o de su definición, o ponen un
+  bit (`object_set_unknown12C_bit0`, que nunca lo pone en un objeto con el
+  bit 2 de `0x10A`).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  714.
+- Nombres por dirección o desplazamiento, y en `units.c` de forma
+  provisional: el archivo de las armas no está empezado.
+- En este hito se pasaron las pruebas de las nueve funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Once consultas más: de objetos y de sus definiciones
 
 Once funciones (617 bytes) en `units/units.c`. De 2348

@@ -627,3 +627,128 @@ boolean object_definition_get_unknown12C_bit28(
 {
 	return (*(const unsigned long *)(UNIT_DEFINITION_GET(UNIT_OBJECT_GET(object_index))+0x12C)>>28)&1;
 }
+
+/* ---------- of the weapons, by where they are in the game (0x101e80 to
+0x105be0); the file of the weapons is not started */
+
+/* 0x00101e80: whether a weapon has nothing in its bytes at 0x20C and 0x218
+and its number at 0x178 is zero */
+long weapon_unknown_00101e80(
+	long weapon_index)
+{
+	const byte *weapon= UNIT_OBJECT_GET(weapon_index);
+
+	return !weapon[0x20C] && !weapon[0x218] && *(const long *)(weapon+0x178)==0;
+}
+
+/* 0x001029d0: whether the short that starts one of the things of 0x10 bytes
+that a weapon has from 0x224 is 2 */
+long weapon_unknown_001029d0(
+	long weapon_index,
+	short index)
+{
+	return *(const short *)(UNIT_OBJECT_GET(weapon_index)+index*0x10+0x224)==2;
+}
+
+/* 0x00102f70: one of the two things of 0x34 bytes that a weapon has from
+0x1A4 (its triggers, it seems) loses the bit 6 of its byte at 4, unless its
+byte at 1 is 1 */
+void weapon_unknown_00102f70(
+	long weapon_index,
+	short index)
+{
+	if (index>=0 && index<2)
+	{
+		byte *unknown= (byte *)UNIT_OBJECT_GET(weapon_index)+index*0x34+0x1A4;
+
+		if (unknown[1]!=1)
+		{
+			unknown[4]&= ~0x40;
+		}
+	}
+}
+
+/* 0x00105be0: four things that a weapon keeps from 0x250 are as they start:
+NONE, two shorts that are NONE, and a real that is zero */
+void weapon_clear_unknown250(
+	long weapon_index)
+{
+	byte *weapon= (byte *)UNIT_OBJECT_GET(weapon_index);
+
+	*(short *)(weapon+0x254)= NONE;
+	*(short *)(weapon+0x256)= NONE;
+	*(float *)(weapon+0x258)= 0.0f;
+	*(long *)(weapon+0x250)= NONE;
+}
+
+/* 0x0010a0b0: the short at 0xC0 of the definition of an object */
+short object_definition_get_unknownC0(
+	long object_index)
+{
+	return *(const short *)(UNIT_DEFINITION_GET(UNIT_OBJECT_GET(object_index))+0xC0);
+}
+
+/* 0x0010cf50: whether an object has the bit 0 of its byte at 0x12C and not
+the bit 1 */
+boolean object_unknown_0010cf50(
+	long object_index)
+{
+	byte flags= UNIT_OBJECT_GET(object_index)[0x12C];
+
+	return (flags&1) && !((flags>>1)&1);
+}
+
+/* 0x0010f5f0: the number at 0x7C of what an object has at the offset that
+its short at 0x12A gives, if three things of it are not NONE; NONE if not */
+long object_unknown_0010f5f0(
+	long object_index)
+{
+	const byte *object= UNIT_OBJECT_GET(object_index);
+	const byte *unknown= object+*(const short *)(object+0x12A);
+
+	if (*(const long *)(unknown+0x68)!=NONE && *(const long *)unknown!=NONE && *(const short *)(unknown+6)!=NONE)
+	{
+		return *(const long *)(unknown+0x7C);
+	}
+
+	return NONE;
+}
+
+/* 0x0010f8f0: the number at 8 of what an object has at 0x9C of the offset
+that its short at 0x33E gives, if two things of it are not NONE */
+long object_unknown_0010f8f0(
+	long object_index)
+{
+	const byte *object= UNIT_OBJECT_GET(object_index);
+	const byte *unknown= object+*(const short *)(object+0x33E)+0x9C;
+
+	if (*(const long *)unknown!=NONE && *(const short *)(unknown+6)!=NONE)
+	{
+		return *(const long *)(unknown+8);
+	}
+
+	return NONE;
+}
+
+/* 0x00118fe0: the bit 0 of the byte that an object has at 0x12C is set or
+cleared; it is always cleared for an object that has the bit 2 of its byte
+at 0x10A */
+void object_set_unknown12C_bit0(
+	long object_index,
+	boolean value)
+{
+	byte *object= (byte *)UNIT_OBJECT_GET(object_index);
+
+	if ((object[0x10A]>>2)&1)
+	{
+		value= FALSE;
+	}
+	if (value)
+	{
+		object[0x12C]|= 1;
+	}
+	else
+	{
+		object[0x12C]&= ~1;
+	}
+}
