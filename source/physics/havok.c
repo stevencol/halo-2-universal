@@ -35,6 +35,18 @@ long *unknown_0051e9cc;
 /* 0x0051e9b8, of havok_component.c */
 extern struct data_array *havok_component_data;
 
+/* 0x00510c44, of game_unknown_00131ff0.c: 0x452E8 bytes of the console's
+memory, which that part shares between its two things */
+extern byte *unknown_00510c44;
+
+/* 0x0047989c: something that gives memory, made at 0x105410 of the memory
+of unknown_00479888: 0x24 bytes that start with where its functions are
+(0x004576a4, a table of functions of the game). 0x00510c48: set when it is
+made */
+void *unknown_0047989c;
+boolean unknown_00510c48;
+void *unknown_004576a4[1];
+
 /* ---------- prototypes */
 
 void *VirtualAlloc(void *address, unsigned long size, unsigned long type, unsigned long protection);
@@ -43,7 +55,7 @@ uint32_t GetLastError(void);
 
 void havok_unknown_001edbc0(void);
 void havok_unknown_00146b30(void);
-void unknown_00146b80(void);
+void havok_unknown_00146b80(void);
 void unknown_00146de0(void);
 void impacts_initialize(void);
 void impacts_dispose(void);
@@ -63,7 +75,7 @@ void havok_initialize(
 	impacts_initialize();
 	havok_components_initialize();
 	havok_unknown_00146b30();
-	unknown_00146b80();
+	havok_unknown_00146b80();
 }
 
 /* 0x001c2600: the second: unknown_00146de0, the memory of the console is
@@ -130,5 +142,44 @@ void havok_unknown_00146b30(
 		((long *)aligned)[-2]= 0x105470;
 		((long *)aligned)[-1]= (long)(aligned-memory);
 		unknown_00479888= aligned;
+	}
+}
+
+/* 0x00146b80: the thing that gives memory is made, in its place of the
+memory of unknown_00479888, to give the 0x452E8 bytes of unknown_00510c44:
+from the first address that is a multiple of 16, and a size that is a
+multiple of 4. Far from the others too */
+void havok_unknown_00146b80(
+	void)
+{
+	byte *memory= unknown_00510c44;
+	unsigned long size= 0x452E8;
+	byte *thing;
+
+	unknown_00510c48= TRUE;
+	if ((uintptr_t)memory&0xF)
+	{
+		unsigned long padding= (unsigned long)(0-(uintptr_t)memory)&0xF;
+
+		memory+= padding;
+		size-= padding;
+	}
+	thing= (byte *)((uintptr_t)unknown_00479888+0x105410);
+	if (thing)
+	{
+		*(long *)(thing+4)= 1;
+		*(long *)(thing+8)= 0;
+		*(long *)(thing+0xC)= 0;
+		*(long *)(thing+0x10)= 0;
+		*(long *)(thing+0x14)= NONE;
+		*(long *)(thing+0x20)= 0;
+		*(byte **)(thing+0x18)= memory;
+		*(unsigned long *)(thing+0x1C)= size&0x0FFFFFFC;
+		*(void **)thing= unknown_004576a4;
+		unknown_0047989c= thing;
+	}
+	else
+	{
+		unknown_0047989c= NULL;
 	}
 }

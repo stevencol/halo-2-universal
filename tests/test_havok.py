@@ -34,7 +34,7 @@ def run(t) -> None:
                     "impacts_initialize",
                     "havok_components_initialize",
                     "havok_unknown_00146b30",
-                    "unknown_00146b80",
+                    "havok_unknown_00146b80",
                 )
             },
         )

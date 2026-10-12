@@ -2,6 +2,39 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Lo que reparte la segunda memoria de la física
+
+Una función (110 bytes) en `physics/havok.c`. De 2194
+funciones se pasa a 2195, el 19,49 % de las del juego (el 11,390 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_00146b80` | `0x00146b80` | `physics/havok.c` |
+
+### Lo que se sabe
+
+- `havok_unknown_00146b80` construye, en un sitio fijo (`+0x105410`) de la
+  memoria que pidió `havok_unknown_00146b30`, un objeto de `0x24` bytes que
+  reparte memoria: su tabla de funciones (`0x4576a4`), un contador a 1 y la
+  memoria que reparte, que son los `0x452E8` bytes de la parte del hito
+  648, desde la primera dirección múltiplo de 16 y con el tamaño
+  redondeado a múltiplo de 4.
+- Con esto se sabe para qué pide esa parte su memoria: se la queda la
+  física.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  648.
+- La tabla de funciones `0x4576a4` es del juego (¿una clase de Havok?) y
+  no se ha mirado; en `source/` es solo una variable con esa dirección.
+- En este hito se pasaron las pruebas de la función y la de
+  `havok_initialize`. Hay una batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Una parte con dos cosas que comparten memoria de la consola
 
 Dos funciones (unos 240 bytes) en el archivo provisional nuevo

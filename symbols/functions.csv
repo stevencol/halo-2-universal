@@ -2723,7 +2723,7 @@ address,name,source,arguments,returns,convention
 00210e80,unknown_00210e80,,,void
 001edbc0,havok_unknown_001edbc0,source/physics/havok.c,,void
 00146b30,havok_unknown_00146b30,source/physics/havok.c,,void
-00146b80,unknown_00146b80,,,void
+00146b80,havok_unknown_00146b80,source/physics/havok.c,,void
 00146de0,unknown_00146de0,,,void
 00134980,unknown_00134980,,eax ecx ebx,void
 00134b20,unknown_00134b20,,edi,void
