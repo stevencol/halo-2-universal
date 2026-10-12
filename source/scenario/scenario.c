@@ -249,3 +249,64 @@ const byte *scenario_get_unknown348(
 
 	return NULL;
 }
+
+/* 0x0011c800: what one of the things of 0x20 bytes that the scenario has at
+0x11C says: a point (three numbers) and the number after it. Each goes where
+the caller says, if it says where */
+void scenario_get_unknown11C(
+	long index,
+	long *point,
+	long *unknown)
+{
+	const long *element=
+		(const long *)(*(const byte *const *)((const byte *)global_scenario+0x11C)+index*0x20);
+
+	if (point)
+	{
+		point[0]= element[0];
+		point[1]= element[1];
+		point[2]= element[2];
+	}
+	if (unknown)
+	{
+		*unknown= element[3];
+	}
+}
+
+/* 0x002bdd20: the points of those things that something names: it has their
+numbers first and how many they are at 0x60. The game has the function
+before this written in the loop */
+void unknown_get_scenario_unknown11C_points(
+	const long *unknown,
+	long *points)
+{
+	long index;
+
+	for (index= 0; index<unknown[0x18]; index++)
+	{
+		scenario_get_unknown11C(unknown[index], points+index*3, NULL);
+	}
+}
+
+/* 0x002729b0: the tag that one of the things of 8 bytes that the scenario
+has at 0x150 names at 4; the thing is the one that something names with its
+short at 0x20. NULL if the short is not of the block or the thing names no
+tag */
+void *unknown_get_scenario_unknown150_tag(
+	const byte *unknown)
+{
+	const byte *scenario= (const byte *)global_scenario;
+	short index= *(const short *)(unknown+0x20);
+
+	if (index>=0 && index<*(const long *)(scenario+0x150))
+	{
+		long tag_index= *(const long *)(*(const byte *const *)(scenario+0x154)+index*8+4);
+
+		if (tag_index!=NONE)
+		{
+			return (void *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+		}
+	}
+
+	return NULL;
+}

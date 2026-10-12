@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Seis funciones pequeñas que leen el escenario
+
+Seis funciones (376 bytes) en cuatro archivos. De 2391
+funciones se pasa a 2397, el 21,28 % de las del juego (el 11,898 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `scenario_get_unknown11C` | `0x0011c800` | `scenario/scenario.c` |
+| `unknown_get_scenario_unknown11C_points` | `0x002bdd20` | `scenario/scenario.c` |
+| `unknown_get_scenario_unknown150_tag` | `0x002729b0` | `scenario/scenario.c` |
+| `game_unknown_001ec420_clear_bit` | `0x001ec4c0` | `game/game_unknown_001ec420.c` |
+| `game_unknown_00134d90_clear_bits` | `0x00135750` | `game/game_unknown_00134d90.c` |
+| `squad_definition_run_script` | `0x00291740` | `ai/squads.c` |
+
+### Lo que se sabe
+
+- `squad_definition_run_script` hace correr el script que un escuadrón del
+  escenario nombra en `0x4C`: busca el script en el bloque de `0x1BC` del
+  escenario (cosas de 0x28 bytes) y pasa su número de `0x24` a
+  `hs_unknown_002093d0`, que no está decompilada (crea un hilo de script).
+- `scenario_get_unknown11C` da el punto y el número siguiente de una de las
+  cosas de 0x20 bytes del bloque `0x11C`; la segunda función la repite para
+  una lista de números.
+- `game_unknown_001ec420_clear_bit` aclara qué guarda esa parte del juego:
+  sus ocho números son 256 bits, uno por cada cosa que el bloque `0x10C` del
+  escenario nombra en `0x40`.
+- `game_unknown_00134d90_clear_bits` quita el bit 0 a cada una de las cosas
+  de 0x20 bytes de esa otra parte; hay tantas como el escenario cuenta en
+  `0x3C0`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  718.
+- Qué son los bloques `0x10C`, `0x11C`, `0x150` y `0x3C0` del escenario no
+  se sabe; los nombres van por su lugar.
+- En este hito se pasaron las pruebas de las seis funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Nueve funciones pequeñas de varios archivos
 
 Nueve funciones (290 bytes) en seis archivos. De 2382

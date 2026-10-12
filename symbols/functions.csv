@@ -2924,3 +2924,10 @@ address,name,source,arguments,returns,convention
 0019c670,levels_get_campaign_level_data,source/main/levels.c,,pointer
 0019c6a0,levels_get_multiplayer_level_data,source/main/levels.c,,pointer
 000335c0,main_unknown_000335c0,source/main/main.c,,bool
+0011c800,scenario_get_unknown11C,source/scenario/scenario.c,eax ecx edx,void
+002bdd20,unknown_get_scenario_unknown11C_points,source/scenario/scenario.c,esi edx,void
+002729b0,unknown_get_scenario_unknown150_tag,source/scenario/scenario.c,ecx,pointer
+001ec4c0,game_unknown_001ec420_clear_bit,source/game/game_unknown_001ec420.c,eax,void
+00135750,game_unknown_00134d90_clear_bits,source/game/game_unknown_00134d90.c,,void
+00291740,squad_definition_run_script,source/ai/squads.c,eax stack,void
+002093d0,hs_unknown_002093d0,,stack stack,int,stdcall

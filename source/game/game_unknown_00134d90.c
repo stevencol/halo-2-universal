@@ -11,6 +11,7 @@ the file is only the address of its first function.
 #include <string.h>
 
 #include "saved games/game_state.h"
+#include "scenario/scenario.h"
 
 /* ---------- constants */
 
@@ -48,5 +49,25 @@ void game_unknown_00134d90_initialize_for_new_map(
 	if (unknown_004e6740)
 	{
 		memset(unknown_004e6740, 0, GAME_UNKNOWN_00134D90_SIZE);
+	}
+}
+
+/* 0x00135750: the bytes have one thing of 0x20 bytes for each of what the
+scenario counts at 0x3C0, and each loses the bit 0 of its byte at 0x20
+(after the first number of the bytes, its byte at 0x1C). Nothing if the part
+is closed or there is no scenario */
+void game_unknown_00134d90_clear_bits(
+	void)
+{
+	byte *unknown= unknown_004e6740;
+
+	if (unknown && global_scenario)
+	{
+		long index;
+
+		for (index= 0; index<*(const long *)((const byte *)global_scenario+0x3C0); index++)
+		{
+			unknown[0x20+index*0x20]&= ~1;
+		}
 	}
 }

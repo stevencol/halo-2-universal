@@ -315,3 +315,30 @@ const byte *unknown_get_scenario_unknown244(
 
 	return *(const byte *const *)((const byte *)global_scenario+0x244)+index*0x7C;
 }
+
+/* 0x0050242c, of ai.c */
+extern long unknown_0050242c;
+
+/* 0x002093d0, of the scripts: it runs something of a script and gives a
+number. Not decompiled */
+long __attribute__((stdcall)) hs_unknown_002093d0(long expression_index, long unknown);
+
+/* 0x00291740: a squad of the scenario (those of 0x7C bytes at 0x244) that
+names a script with its short at 0x4C has it run: unknown_0050242c takes what
+the caller gives, and hs_unknown_002093d0 the number at 0x24 of the script
+(those of 0x28 bytes that the scenario has at 0x1BC) */
+void squad_definition_run_script(
+	short squad_definition_index,
+	long unknown)
+{
+	const byte *scenario= (const byte *)global_scenario;
+	const byte *squad= *(const byte *const *)(scenario+0x244)+squad_definition_index*0x7C;
+
+	if (*(const short *)(squad+0x4C)!=NONE)
+	{
+		unknown_0050242c= unknown;
+		hs_unknown_002093d0(
+			*(const long *)(*(const byte *const *)(scenario+0x1BC)+*(const short *)(squad+0x4C)*0x28+0x24),
+			0);
+	}
+}

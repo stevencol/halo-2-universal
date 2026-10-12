@@ -10,6 +10,7 @@ the file is only the address of its first function.
 #include "game_unknown_001ec420.h"
 
 #include "saved games/game_state.h"
+#include "scenario/scenario.h"
 
 /* ---------- globals */
 
@@ -55,4 +56,23 @@ void game_unknown_001ec420_dispose_from_old_map(
 	void)
 {
 	game_unknown_001ec420_globals->map_initialized= FALSE;
+}
+
+/* 0x001ec4c0: the eight numbers are 256 bits, and this takes one out: the
+one that one of the things of 0x44 bytes that the scenario has at 0x10C names
+with its short at 0x40. Nothing for NONE, or if the thing names none */
+void game_unknown_001ec420_clear_bit(
+	long index)
+{
+	if (index!=NONE)
+	{
+		const byte *element= *(const byte *const *)((const byte *)global_scenario+0x10C)+index*0x44;
+
+		if (*(const short *)(element+0x40)!=NONE)
+		{
+			long bit= *(const short *)(element+0x40);
+
+			game_unknown_001ec420_globals->unknown0[bit>>5]&= ~(1<<(bit&0x1F));
+		}
+	}
 }
