@@ -8,6 +8,7 @@ the names that the game gives to its tables of data ("swarm").
 #include "cseries/cseries.h"
 #include <stdint.h>
 
+#include "math/real_math.h"
 #include "memory/data.h"
 #include "objects/objects.h"
 #include "saved games/game_state.h"
@@ -82,4 +83,28 @@ void swarms_dispose_from_old_map(
 		}
 	}
 	swarm_data->valid= FALSE;
+}
+
+/* 0x00468788, of sound_manager.c: a point that is all zeros */
+extern const real_point3d *unknown_00468788;
+
+/* 0x0028da50: something of 0x80 bytes or more starts with nothing: a short
+and a byte that are zero, six numbers and a short that are NONE, and two
+points that are the point of zeros. It may be what a creature keeps of its
+swarm, by where the function is; that is a guess */
+void swarm_unknown_0028da50(
+	byte *unknown)
+{
+	*(short *)unknown= 0;
+	*(long *)(unknown+4)= NONE;
+	*(long *)(unknown+0x10)= NONE;
+	*(long *)(unknown+0xC)= NONE;
+	*(long *)(unknown+0x20)= NONE;
+	*(long *)(unknown+8)= NONE;
+	*(real_point3d *)(unknown+0x14)= *unknown_00468788;
+	*(long *)(unknown+0x50)= NONE;
+	unknown[0x56]= 0;
+	*(short *)(unknown+0x66)= 0;
+	*(short *)(unknown+0x64)= NONE;
+	*(real_point3d *)(unknown+0x74)= *unknown_00468788;
 }

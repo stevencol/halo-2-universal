@@ -2727,3 +2727,4 @@ address,name,source,arguments,returns,convention
 00146de0,havok_unknown_00146de0,source/physics/havok.c,,void
 00134980,unknown_00134980,,eax ecx ebx,void
 00134b20,unknown_00134b20,,edi,void
+0028da50,swarm_unknown_0028da50,source/ai/swarms.c,eax,void

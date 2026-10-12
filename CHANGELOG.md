@@ -2,6 +2,36 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Lo que una criatura guarda de su enjambre empieza vacío
+
+Una función (93 bytes) en `ai/swarms.c`. De 2197
+funciones se pasa a 2198, el 19,51 % de las del juego (el 11,400 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `swarm_unknown_0028da50` | `0x0028da50` | `ai/swarms.c` |
+
+### Lo que se sabe
+
+- `swarm_unknown_0028da50` recibe en `eax` algo de al menos `0x80` bytes y
+  lo deja vacío: un `short` y un byte a cero, seis números y un `short` a
+  `NONE`, y dos puntos (`0x14` y `0x74`) copiados del punto de ceros
+  `unknown_00468788`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  651.
+- Qué es lo que vacía es una suposición por su sitio en el ejecutable
+  (entre las funciones de los enjambres): no es un elemento de la tabla
+  `"swarm"`, que solo tiene `0x34` bytes.
+- En este hito se pasaron las pruebas de `test_swarms*`. Hay una batería
+  completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Los enjambres cuando se va un mapa
 
 Una función (126 bytes) en `ai/swarms.c`. De 2196
