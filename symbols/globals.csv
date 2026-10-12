@@ -428,3 +428,9 @@ address,name,source
 0050211c,unknown_0050211c,source/sound/sound_classes.c
 00502120,unknown_00502120,source/sound/sound_manager.c
 0051ebf4,unknown_0051ebf4,source/sound/sound_manager.c
+004ed284,unknown_004ed284,source/sound/sound_manager.c
+004f55ec,unknown_004f55ec,source/game/game_unknown_001df460.c
+004f93b8,unknown_004f93b8,source/game/game_unknown_0011be20.c
+0051e9ec,unknown_0051e9ec,source/game/game_unknown_0020aee0.c
+0051e9f0,unknown_0051e9f0,source/game/game_unknown_0020aee0.c
+0051e9f4,unknown_0051e9f4,source/game/game_unknown_0020aee0.c

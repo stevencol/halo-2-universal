@@ -345,8 +345,8 @@ address,name,source,arguments,returns,convention
 0010a9d0,object_unknown_0010a980_dispose,source/objects/object_unknown_0010a980.c,,void
 0010a9e0,object_unknown_0010a980_initialize_for_new_map,source/objects/object_unknown_0010a980.c,,void
 0010aab0,object_unknown_0010a980_dispose_from_old_map,source/objects/object_unknown_0010a980.c,,void
-0011be20,unknown_0011be20,,,void
-0011be40,unknown_0011be40,,,void
+0011be20,game_unknown_0011be20_initialize_for_new_map,source/game/game_unknown_0011be20.c,,void
+0011be40,game_unknown_0011be20_dispose_from_old_map,source/game/game_unknown_0011be20.c,,void
 0011cc10,unknown_0011cc10,,,void
 00125690,sound_initialize_for_new_map,source/sound/sound_manager.c,,void
 001257b0,sound_dispose_from_old_map,source/sound/sound_manager.c,,void
@@ -409,8 +409,8 @@ address,name,source,arguments,returns,convention
 00183ec0,unknown_00183ec0,,,void
 00183ee0,unknown_00183ee0,,,void
 00183f00,unknown_00183f00,,,void
-00185ab0,unknown_00185ab0,,,void
-00185b00,unknown_00185b00,,,void
+00185ab0,sound_unknown_00185ab0,source/sound/sound_manager.c,,void
+00185b00,sound_unknown_00185b00,source/sound/sound_manager.c,,void
 001887d0,unknown_001887d0,,,void
 00188850,unknown_00188850,,,void
 00188870,unknown_00188870,,,void
@@ -431,8 +431,8 @@ address,name,source,arguments,returns,convention
 001c7b20,unknown_001c7b20,,,void
 001c7bb0,unknown_001c7bb0,,,void
 001c7f60,unknown_001c7f60,,,void
-001df460,unknown_001df460,,,void
-001df4b0,unknown_001df4b0,,,void
+001df460,game_unknown_001df460_initialize,source/game/game_unknown_001df460.c,,void
+001df4b0,game_unknown_001df460_initialize_for_new_map,source/game/game_unknown_001df460.c,,void
 001e6a40,unknown_001e6a40,,,void
 001e6a80,unknown_001e6a80,,,void
 001e6ae0,unknown_001e6ae0,,,void
@@ -450,9 +450,9 @@ address,name,source,arguments,returns,convention
 0020a750,unknown_0020a750,,,void
 0020a7d0,unknown_0020a7d0,,,void
 0020a810,unknown_0020a810,,,void
-0020aee0,unknown_0020aee0,,,void
-0020af50,unknown_0020af50,,,void
-0020af90,unknown_0020af90,,,void
+0020aee0,game_unknown_0020aee0_initialize,source/game/game_unknown_0020aee0.c,,void
+0020af50,game_unknown_0020aee0_dispose,source/game/game_unknown_0020aee0.c,,void
+0020af90,game_unknown_0020aee0_initialize_for_new_map,source/game/game_unknown_0020aee0.c,,void
 00210db0,unknown_00210db0,,,void
 00210df0,unknown_00210df0,,,void
 00210e10,unknown_00210e10,,,void
@@ -2641,3 +2641,5 @@ address,name,source,arguments,returns,convention
 00109050,object_types_call_unknown6C,source/objects/object_types.c,ebx stack stack stack,void,stdcall
 00109390,object_early_movers_add,source/objects/object_early_movers.c,edx,void
 001088e0,object_types_initialize,source/objects/object_types.c,,void
+001872d0,unknown_001872d0,,eax ecx,void
+00211cc0,unknown_00211cc0,,,void

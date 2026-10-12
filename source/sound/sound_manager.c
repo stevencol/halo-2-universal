@@ -13547,3 +13547,48 @@ void sound_unknown_00225a80(
 		unknown[index]= 0;
 	}
 }
+
+enum
+{
+	/* of what unknown_004ed284 points to, 0x264 bytes: a byte that says that
+	a map is loaded, and four numbers that are nothing for a new map */
+	SOUND_UNKNOWN_004ED284_SIZE= 0x264
+};
+
+/* 0x004ed284: one more block of the state of the game, between two globals
+of this file: whether it is of the sound is a guess */
+byte *unknown_004ed284;
+
+/* 0x001872d0: something for each of the four gamepads */
+void unknown_001872d0(long gamepad_index, long unknown);
+
+/* 0x00185ab0: what unknown_004ed284 points to takes its memory of the state
+of the game, and no map is loaded. The game has game_state_malloc written
+here */
+void sound_unknown_00185ab0(
+	void)
+{
+	byte *unknown= game_state_malloc(SOUND_UNKNOWN_004ED284_SIZE);
+
+	unknown_004ed284= unknown;
+	unknown[0]= FALSE;
+}
+
+/* 0x00185b00: for a new map, its four numbers are nothing, each of the four
+gamepads is told (unknown_001872d0, with NONE), and a map is loaded */
+void sound_unknown_00185b00(
+	void)
+{
+	byte *unknown= unknown_004ed284;
+	long gamepad_index;
+
+	*(long *)(unknown+8)= 0;
+	*(long *)(unknown+4)= 0;
+	*(long *)(unknown+0xC)= 0;
+	*(long *)(unknown+0x10)= 0;
+	for (gamepad_index= 0; gamepad_index<4; gamepad_index++)
+	{
+		unknown_001872d0(gamepad_index, NONE);
+	}
+	unknown[0]= TRUE;
+}

@@ -2,6 +2,56 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Cuatro partes más del juego: nueve funciones cortas
+
+Nueve funciones cortas (unos 400 bytes): dos en `sound/sound_manager.c` y siete en tres
+archivos nuevos de `game/`. De 2045
+funciones se pasa a 2054, el 18,23 % de las del juego (el 11,258 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_unknown_00185ab0` | `0x00185ab0` | `sound/sound_manager.c` |
+| `sound_unknown_00185b00` | `0x00185b00` | `sound/sound_manager.c` |
+| `game_unknown_001df460_initialize` | `0x001df460` | `game/game_unknown_001df460.c` |
+| `game_unknown_001df460_initialize_for_new_map` | `0x001df4b0` | `game/game_unknown_001df460.c` |
+| `game_unknown_0011be20_initialize_for_new_map` | `0x0011be20` | `game/game_unknown_0011be20.c` |
+| `game_unknown_0011be20_dispose_from_old_map` | `0x0011be40` | `game/game_unknown_0011be20.c` |
+| `game_unknown_0020aee0_initialize` | `0x0020aee0` | `game/game_unknown_0020aee0.c` |
+| `game_unknown_0020aee0_dispose` | `0x0020af50` | `game/game_unknown_0020aee0.c` |
+| `game_unknown_0020aee0_initialize_for_new_map` | `0x0020af90` | `game/game_unknown_0020aee0.c` |
+
+### Lo que se sabe
+
+- Más partes sin nombre de la tabla de partes del juego (`game.c`), con la
+  misma forma que las de los hitos 603 a 606.
+- La de `0x185ab0` guarda `0x264` bytes del estado del juego; con un mapa
+  nuevo borra cuatro números y **avisa a cada uno de los cuatro mandos**
+  (`unknown_001872d0`, con `NONE`). Por eso podría ser la vibración.
+- La de `0x1df460` guarda `0xE4` bytes; con un mapa nuevo los borra y
+  enciende dieciséis bits en diagonal: una tabla de 16 por 16 en la que
+  cada cosa queda marcada consigo misma.
+- La de `0x11be20` no usa el estado del juego: borra `0xD0C` bytes fijos
+  (`unknown_004f93b8`), marca que hay mapa y llama a `unknown_00211cc0`.
+- La de `0x20aee0` **pide dos memorias del mismo tamaño** (`0x1880`): una
+  del estado del juego y otra de la consola (`VirtualAlloc`), y usa la de
+  la consola. Si la consola no da memoria, pide el código de error y no
+  hace nada con él: sigue con un puntero nulo.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  606.
+- Para qué es cada parte no se sabe; los archivos de `game/` llevan por
+  nombre la dirección de su primera función, y las dos de
+  `sound_manager.c` están ahí solo porque su variable está entre dos de
+  ese archivo.
+- En este hito se pasaron las pruebas de las nueve funciones y `test_game`
+  entera.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Tres partes del sonido: lo que se oye de cada clase y dos bloques más
 
 Nueve funciones cortas (unos 330 bytes), en `sound/sound_classes.c` y `sound/sound_manager.c`.
