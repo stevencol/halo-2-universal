@@ -8,7 +8,9 @@ the name that the game gives to its table of data ("decals").
 #include "cseries/cseries.h"
 #include "memory/data.h"
 #include "memory/lruv_cache.h"
+#include "physics/bsp3d.h"
 #include "saved games/game_state.h"
+#include "scenario/scenario.h"
 
 #include <string.h>
 
@@ -391,6 +393,81 @@ void decals_dispose_from_old_structure_bsp(
 					decal_index= next_index;
 				}
 			}
+		}
+	}
+}
+
+/* 0x0017ce00: a mark is put first in the list of a place: one of the seven
+lists of that place */
+void decal_add_to_place(
+	long decal_index,
+	short place,
+	short list)
+{
+	long *first= &((long *)decal_globals)[(list<<DECAL_PLACES_PER_LIST_BITS)+place];
+	long first_index= *first;
+	byte *decal= DECAL_GET(decal_index);
+
+	*(long *)(decal+DECAL_PREVIOUS_OFFSET)= NONE;
+	*(long *)(decal+DECAL_NEXT_OFFSET)= first_index;
+	*(short *)(decal+DECAL_PLACE_OFFSET)= place;
+	decal[DECAL_LIST_OFFSET]= (byte)list;
+	*(short *)(decal+8)= NONE;
+	if (first_index!=NONE)
+	{
+		*(long *)(DECAL_GET(first_index)+DECAL_PREVIOUS_OFFSET)= decal_index;
+	}
+	*first= decal_index;
+}
+
+/* 0x0017d350: the fifth of the functions of the part (game.c): when a
+structure bsp comes, each mark of no place whose point (at 0xC) is in a leaf
+of the bsp that has a place (the short that the leaves of the bsp start with:
+its cluster, it seems) goes from the list of the marks of no place to that of
+its place */
+void decals_initialize_for_new_structure_bsp(
+	void)
+{
+	if (decal_data->valid)
+	{
+		long decal_index= *(long *)(decal_globals+DECAL_GLOBALS_UNKNOWN3800_OFFSET);
+
+		while (decal_index!=NONE)
+		{
+			byte *decal= DECAL_GET(decal_index);
+			long next_index= *(long *)(decal+DECAL_NEXT_OFFSET);
+
+			if (global_structure_bsp_index!=NONE)
+			{
+				long leaf_index= bsp3d_test_point(global_bsp3d, 0, (const real_point3d *)(decal+0xC));
+
+				if (leaf_index!=NONE)
+				{
+					short place= *(const short *)(*(const byte *const *)((const byte *)global_structure_bsp+0x30)+
+						leaf_index*8);
+
+					if (place!=NONE)
+					{
+						if (next_index!=NONE)
+						{
+							*(long *)(DECAL_GET(next_index)+DECAL_PREVIOUS_OFFSET)=
+								*(long *)(decal+DECAL_PREVIOUS_OFFSET);
+						}
+						if (*(long *)(decal+DECAL_PREVIOUS_OFFSET)!=NONE)
+						{
+							*(long *)(DECAL_GET(*(long *)(decal+DECAL_PREVIOUS_OFFSET))+DECAL_NEXT_OFFSET)=
+								*(long *)(decal+DECAL_NEXT_OFFSET);
+						}
+						else
+						{
+							*(long *)(decal_globals+DECAL_GLOBALS_UNKNOWN3800_OFFSET)=
+								*(long *)(decal+DECAL_NEXT_OFFSET);
+						}
+						decal_add_to_place(decal_index, place, (char)decal[DECAL_LIST_OFFSET]);
+					}
+				}
+			}
+			decal_index= next_index;
 		}
 	}
 }

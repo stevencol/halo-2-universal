@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Los decals encuentran su sitio al llegar un bsp
+
+Dos funciones (328 bytes) en `effects/decals.c`. De 2218
+funciones se pasa a 2220, el 19,71 % de las del juego (el 11,467 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `decals_initialize_for_new_structure_bsp` | `0x0017d350` | `effects/decals.c` |
+| `decal_add_to_place` | `0x0017ce00` | `effects/decals.c` |
+
+### Lo que se sabe
+
+- `decals_initialize_for_new_structure_bsp` (quinta función de la parte,
+  antes `unknown_0017d350`): recorre la lista de los decals «sin sitio»; de
+  cada uno busca en qué hoja del bsp cae su punto (`+0xC`, con
+  `bsp3d_test_point`) y, si la hoja tiene zona (el `short` con que empieza
+  cada hoja), lo saca de esa lista y lo mete en la de su zona.
+- `decal_add_to_place` (decal en `edi`, zona en `bx`, lista en `dl`) pone
+  un decal el primero de una de las siete listas de una zona.
+- Esto **confirma lo supuesto en los hitos 661 y 665**: los 512 «sitios»
+  son las zonas (*clusters*) del bsp. La parte de los decals de la tabla de
+  `game.c` tiene ya sus seis funciones.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  665.
+- Qué distingue a las siete listas de cada zona (¿capas?) no se sabe.
+- En este hito se pasaron las pruebas de las dos funciones. Hay una
+  batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Los decals cuando se va el bsp
 
 Una función (222 bytes) en `effects/decals.c`. De 2217

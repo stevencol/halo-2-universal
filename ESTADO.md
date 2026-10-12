@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 665.
+**Última actualización:** 2026-10-08, al terminar el hito 666.
 
 ## Dónde estamos
 
-- **2218 funciones descompiladas de 11.265: el 19,69 % del juego** (el
-  11,464 % de los bytes de código).
-- Las 2218 están comprobadas contra el ejecutable original: las 1390 del
+- **2220 funciones descompiladas de 11.265: el 19,71 % del juego** (el
+  11,467 % de los bytes de código).
+- Las 2220 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile what the decals do when the structure bsp goes* (ver `git log`).
+- Último hito: *Decompile how the decals find their place when a structure bsp comes* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 534 funciones apuntadas pero sin descompilar (las que el código
-  llama); 385 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 533 funciones apuntadas pero sin descompilar (las que el código
+  llama); 384 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
