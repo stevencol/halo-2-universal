@@ -471,3 +471,17 @@ void decals_initialize_for_new_structure_bsp(
 		}
 	}
 }
+
+void __attribute__((stdcall)) unknown_0023aad0(const unsigned long *old_bits, const unsigned long *new_bits,
+	long bit_count);
+
+/* 0x0017d5e0: the eighth of the functions of the part (game.c), which is
+told when the first and the third sets of bits of the game change: it only
+tells unknown_0023aad0 */
+void __attribute__((stdcall)) decals_activation_changed(
+	const unsigned long *old_bits,
+	const unsigned long *new_bits,
+	long bit_count)
+{
+	unknown_0023aad0(old_bits, new_bits, bit_count);
+}

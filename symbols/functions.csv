@@ -404,7 +404,7 @@ address,name,source,arguments,returns,convention
 0017d330,decals_dispose_from_old_map,source/effects/decals.c,,void
 0017d350,decals_initialize_for_new_structure_bsp,source/effects/decals.c,,void
 0017d440,decals_dispose_from_old_structure_bsp,source/effects/decals.c,,void
-0017d5e0,unknown_0017d5e0,,,void
+0017d5e0,decals_activation_changed,source/effects/decals.c,stack stack stack,void,stdcall
 00183e40,breakable_surfaces_initialize,source/physics/breakable_surfaces.c,,void
 00183ec0,breakable_surfaces_initialize_for_new_map,source/physics/breakable_surfaces.c,,void
 00183ee0,breakable_surfaces_unknown_00183ee0,source/physics/breakable_surfaces.c,,void
@@ -2752,3 +2752,4 @@ address,name,source,arguments,returns,convention
 0017ccd0,unknown_0017ccd0,,eax,bool
 0023aa70,unknown_0023aa70,,,void
 0017ce00,decal_add_to_place,source/effects/decals.c,edi ebx edx,void
+0023aad0,unknown_0023aad0,,stack stack stack,void,stdcall

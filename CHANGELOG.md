@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — La última función de la parte de los decals
+
+Una función (5 bytes) en `effects/decals.c`. De 2220
+funciones se pasa a 2221, el 19,72 % de las del juego (el 11,467 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `decals_activation_changed` | `0x0017d5e0` | `effects/decals.c` |
+
+### Lo que se sabe
+
+- `decals_activation_changed` (antes `unknown_0017d5e0`) es la octava
+  función de la parte de los decals: la que se avisa cuando cambian los
+  bits de activación del juego. Solo salta a `unknown_0023aad0` con los
+  mismos tres argumentos.
+- `game.c` la declaraba sin argumentos y la metía en la tabla con una
+  conversión de tipo; ahora tiene su declaración de verdad.
+- **La parte de los decals de la tabla de `game.c` está completa** (siete
+  funciones).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  666.
+- `unknown_0023aad0` y `unknown_0023aa70` (las dos de `0x23aaxx`, que
+  parecen de quien dibuja los decals) no están descompiladas. El nombre de
+  la función es una suposición.
+- En este hito se pasaron las pruebas de la función y la de
+  `game_initialize`. Hay una batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Los decals encuentran su sitio al llegar un bsp
 
 Dos funciones (328 bytes) en `effects/decals.c`. De 2218
