@@ -66,6 +66,8 @@ enum
 	_simulation_view_unknown28_11= 11,
 	/* the kind of the message that the things that happen go in */
 	_network_message_simulation_view_events= 0x2B,
+	/* how big what goes in that message after its two numbers is */
+	SIMULATION_VIEW_EVENTS_MESSAGE_DATA_SIZE= 0x4FB0,
 	/* more of a view: the state of the other end of it and the number that
 	goes with it, as it last said; and something that a view that is not in
 	its sixth state has to take the things that come. The kind of the
@@ -238,11 +240,26 @@ struct simulation_view_game_state_piece_message
 typedef char verify_simulation_view_player_actions_message_size[
 	sizeof(struct simulation_view_player_actions_message) == 0x180 ? 1 : -1];
 
+/* ---------- structures */
+
+/* the message that the things that happen go in: the number of the state
+of the view, how many times it was sent, and what changed */
+struct simulation_view_events_message
+{
+	long state_number;
+	long count;
+	byte data[SIMULATION_VIEW_EVENTS_MESSAGE_DATA_SIZE];
+};
+
+typedef char verify_simulation_view_events_message_size[
+	sizeof(struct simulation_view_events_message) == 0x4FB8 ? 1 : -1];
+
 /* ---------- prototypes/SIMULATION_VIEW.C */
 
 void simulation_view_update(byte *view);
 boolean simulation_view_events_message_waiting(const byte *view);
 void simulation_view_events_update(byte *events);
+void simulation_view_events_send(byte *events);
 
 void simulation_view_set_blocked(byte *view, boolean blocked);
 void __attribute__((stdcall)) simulation_view_set_state(byte *view, long state, long number);

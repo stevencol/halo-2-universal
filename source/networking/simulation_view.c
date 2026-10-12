@@ -1283,9 +1283,6 @@ void simulation_view_update(
 	}
 }
 
-/* 0x00086c50: what a view has at 0x6060 of what it has at 0x8 is sent, if
-it is not what was sent last */
-void unknown_00086c50(byte *events);
 
 /* 0x000859b0: whether the channel of the observer still has a message of
 the things that happen waiting (network_observer_channel_unknown_000768b0);
@@ -1307,7 +1304,7 @@ work, for a view of the third kind or of the fourth that has a channel and
 is ready, with its byte at 0x5 set and unknown_00510ca0 set. When it was
 never sent, or it was not sent in full and unknown_00510cb1 is set, or it
 was sent longer ago than unknown_004ced40 says: it is sent
-(unknown_00086c50) unless a message of it still waits
+(simulation_view_events_send) unless a message of it still waits
 (simulation_view_events_message_waiting), and then the channel of the
 observer is told to send that one (network_observer_channel_set_pending) */
 void simulation_view_events_update(
@@ -1331,11 +1328,59 @@ void simulation_view_events_update(
 	view= *(byte *const *)(events+SIMULATION_VIEW_EVENTS_VIEW_OFFSET);
 	if (!simulation_view_events_message_waiting(view))
 	{
-		unknown_00086c50(events);
+		simulation_view_events_send(events);
 	}
 	else if (*(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET)!=NONE)
 	{
 		network_observer_channel_set_pending(*(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET),
 			*(byte *const *)(view+SIMULATION_VIEW_OBSERVER_OFFSET), _network_message_simulation_view_events);
 	}
+}
+
+/* 0x00197360: what there is now of the things that happen, 0x4CC0 bytes.
+0x00198540: what changed from one of those to another, for the message.
+0x00510548, 0x0051054c, of main.c: whether the time is the one that was
+kept, and that time */
+void unknown_00197360(byte *data);
+void __attribute__((stdcall)) unknown_00198540(const byte *old, const byte *new_, byte *changes);
+long GetTickCount(void);
+extern boolean unknown_00510548;
+extern long unknown_0051054c;
+
+/* 0x00086c50: what a view has for the things that happen is sent. What
+there is now is taken (unknown_00197360); if it is not what the view has,
+and the first byte of what the view has is clear, the message goes
+(network_observer_channel_send, if the view has a channel of the observer)
+with the number of the state of the view, how many times it was sent and
+what changed (unknown_00198540); the view has what there is now, and was
+sent once more. In any case the time is noted. The game has the time of the
+network written here */
+void simulation_view_events_send(
+	byte *events)
+{
+	byte data[SIMULATION_VIEW_EVENTS_DATA_SIZE];
+	struct simulation_view_events_message message;
+
+	unknown_00197360(data);
+	if (memcmp(data, events+SIMULATION_VIEW_EVENTS_DATA_OFFSET, sizeof(data))!=0 &&
+		!events[SIMULATION_VIEW_EVENTS_DATA_OFFSET])
+	{
+		const byte *view;
+
+		memset(&message, 0, sizeof(message));
+		message.state_number= *(const long *)(*(byte *const *)(events+SIMULATION_VIEW_EVENTS_VIEW_OFFSET)+
+			SIMULATION_VIEW_STATE_NUMBER_OFFSET);
+		message.count= *(const long *)(events+SIMULATION_VIEW_EVENTS_UNKNOWN8_OFFSET);
+		unknown_00198540(events+SIMULATION_VIEW_EVENTS_DATA_OFFSET, data, message.data);
+		view= *(byte *const *)(events+SIMULATION_VIEW_EVENTS_VIEW_OFFSET);
+		if (*(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET)!=NONE)
+		{
+			network_observer_channel_send(FALSE, *(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET),
+				*(byte *const *)(view+SIMULATION_VIEW_OBSERVER_OFFSET), SIMULATION_VIEW_SESSION_INDEX,
+				_network_message_simulation_view_events, sizeof(message), &message);
+		}
+		memcpy(events+SIMULATION_VIEW_EVENTS_DATA_OFFSET, data, sizeof(data));
+		(*(long *)(events+SIMULATION_VIEW_EVENTS_UNKNOWN8_OFFSET))++;
+	}
+	*(long *)(events+SIMULATION_VIEW_EVENTS_UNKNOWN4CCC_OFFSET)= unknown_00510548 ? unknown_0051054c : GetTickCount();
 }

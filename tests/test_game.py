@@ -509,7 +509,7 @@ def run_players_and_won(t) -> None:
             {
                 "_control87": lambda harness, arguments: 0,
                 "simulation_build_update": start,
-                "unknown_000683a0": decide,
+                "simulation_apply_update_changes": decide,
                 "unknown_0014d3a0": with_state,
                 "unknown_00138db0": with_state,
                 "simulation_apply_update": with_state,

@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Los cambios que llegan con cada tick, y el envío de los sucesos de una vista
+
+Dos funciones (511 bytes), en `networking/simulation.c` y `networking/simulation_view.c`.
+De 1976
+funciones se pasa a 1978, el 17,56 % de las del juego (el 11,064 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_apply_update_changes` | `0x000683a0` | `networking/simulation.c` |
+| `simulation_view_events_send` | `0x00086c50` | `networking/simulation_view.c` |
+
+### Lo que se sabe
+
+- `simulation_apply_update_changes` (antes `unknown_000683a0`, lo que el
+  tick del juego llama justo antes de aplicar la actualización) hace los
+  cambios que vienen con un tick: da su parte a cada uno de dieciséis
+  objetos (si siguen siendo un bípedo o un vehículo), avisa de un cambio de
+  consolas, y hace **una por una las cosas que les pasaron a los
+  jugadores**, cada una por su clase (0 a 4). A la primera que no se pueda
+  hacer, o de clase desconocida, la simulación queda marcada para fallar y
+  el resto se deja. Si con el tick se guardó el estado del juego, hace lo
+  de antes y después de guardar. Tiene una tabla de salto.
+- `simulation_view_events_send` (antes `unknown_00086c50`) manda los
+  sucesos de una vista: toma lo que hay ahora (`0x4CC0` bytes), y si no es
+  lo que la vista ya tenía manda el mensaje `0x2B`, de `0x4FB8` bytes
+  (`struct simulation_view_events_message`: el número del estado de la
+  vista, cuántas veces se mandó y lo que cambió). Apunta la hora siempre.
+  Usa casi 40 KB de pila.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  585.
+- El nombre `simulation_apply_update_changes` es una suposición.
+- `simulation_view_events_send` solo manda si el primer byte de lo que la
+  vista tenía es cero; qué dice ese byte no se sabe.
+- En este hito se pasaron las pruebas de las dos funciones, y `test_game`
+  y todas las de `test_simulation…`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — En qué anda la simulación, y los jugadores de las consolas que se fueron
 
 Dos funciones de `networking/simulation_players.c` (623 bytes). De 1974

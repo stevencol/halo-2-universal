@@ -66,7 +66,7 @@ tick does with what it has on the stack, before and after the systems are
 updated; the second says whether they are */
 struct game_tick_state;
 void simulation_build_update(struct game_tick_state *state);
-void __attribute__((stdcall)) unknown_000683a0(struct game_tick_state *state);
+void __attribute__((stdcall)) simulation_apply_update_changes(struct game_tick_state *state);
 void __attribute__((stdcall)) unknown_0014d3a0(struct game_tick_state *state);
 void unknown_00138db0(struct game_tick_state *state);
 void simulation_apply_update(struct game_tick_state *state);
@@ -583,7 +583,7 @@ void game_tick(
 
 	_control87(FLOATING_POINT_CONTROL, FLOATING_POINT_CONTROL_MASK);
 	simulation_build_update(&state);
-	unknown_000683a0(&state);
+	simulation_apply_update_changes(&state);
 	if (state.update)
 	{
 		unknown_0014d3a0(&state);

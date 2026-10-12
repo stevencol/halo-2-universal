@@ -1417,7 +1417,7 @@ address,name,source,arguments,returns,convention
 00224080,unknown_00224080,,ebx stack stack stack,void,stdcall
 001362b0,bitmap_sample,source/bitmaps/bitmaps.c,eax xmm1 stack,int
 000682e0,simulation_build_update,source/networking/simulation.c,eax,void
-000683a0,unknown_000683a0,,stack,void,stdcall
+000683a0,simulation_apply_update_changes,source/networking/simulation.c,stack,void,stdcall
 0014d3a0,unknown_0014d3a0,,stack,void,stdcall
 00138db0,unknown_00138db0,,ebx,void
 000684e0,simulation_apply_update,source/networking/simulation.c,esi,void
@@ -2571,7 +2571,7 @@ address,name,source,arguments,returns,convention
 00086bc0,simulation_view_events_update,source/networking/simulation_view.c,eax,void
 00083a40,simulation_players_take_update,source/networking/simulation_players.c,eax edx ecx stack stack stack stack,bool,stdcall
 000859b0,simulation_view_events_message_waiting,source/networking/simulation_view.c,ecx,bool
-00086c50,unknown_00086c50,,ebx,void
+00086c50,simulation_view_events_send,source/networking/simulation_view.c,ebx,void
 00189fe0,unknown_00189fe0,,eax stack,int,stdcall
 0018d5b0,unknown_0018d5b0,,eax,int
 00067e10,simulation_unknown_00067e10,source/networking/simulation.c,eax,bool
@@ -2587,3 +2587,7 @@ address,name,source,arguments,returns,convention
 00185630,unknown_00185630,,,void
 00196470,unknown_00196470,,,void
 00196780,unknown_00196780,,,void
+000c6de0,unknown_000c6de0,,eax ecx,void
+00085140,unknown_00085140,,stack,bool,stdcall
+00197360,unknown_00197360,,edx,void
+00198540,unknown_00198540,,stack stack stack,void,stdcall

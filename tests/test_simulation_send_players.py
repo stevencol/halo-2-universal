@@ -90,7 +90,7 @@ def run(t) -> None:
             externals={
                 **waiting,
                 "network_time_since": lambda harness, arguments, value=random_.choice((limit - 1, limit, limit + 1, 0, -5)): (value & 0xFFFFFFFF, tuple(arguments)),
-                "unknown_00086c50": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
+                "simulation_view_events_send": lambda harness, arguments: (0, (harness.normalize(arguments[0]),)),
                 "network_observer_channel_set_pending": lambda harness, arguments: (0, tuple(arguments)),
             },
         )

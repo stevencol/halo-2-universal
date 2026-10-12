@@ -12,6 +12,7 @@ and so are the names of its functions.
 #include "simulation.h"
 
 #include "game/game.h"
+#include "objects/objects.h"
 #include "main/main_game.h"
 #include "saved games/game_state.h"
 #include "networking/bitstream.h"
@@ -42,7 +43,6 @@ void __attribute__((stdcall)) simulation_players_machines_changed(byte *unknown)
 void __attribute__((stdcall)) unknown_00069a00(const void *players, byte *world, long unknown8);
 void __attribute__((stdcall)) unknown_00069b50(const void *unknown610, byte *world, long unknown5cc);
 boolean simulation_players_changed(long unknown);
-void __attribute__((stdcall)) unknown_000683a0(long *update);
 
 void simulation_players_reset(byte *players);
 /* 0x00082240: fills the two tables of kinds, and tells how many each has.
@@ -359,7 +359,7 @@ void simulation_apply_update(
 /* 0x000681e0: what the game in the network does each tick of the game: with
 one, a game that is on, nothing said of it not going on, and what
 unknown_004cf780 has letting it (simulation_players_changed), one of the things that
-come is made (simulation_build_update), given to the game (unknown_000683a0)
+come is made (simulation_build_update), given to the game (simulation_apply_update_changes)
 and then to the thing (simulation_apply_update) */
 void simulation_update(
 	void)
@@ -370,7 +370,7 @@ void simulation_update(
 		long update[SIMULATION_UPDATE_DECODED_SIZE/4];
 
 		simulation_build_update(update);
-		unknown_000683a0(update);
+		simulation_apply_update_changes(update);
 		simulation_apply_update(update);
 	}
 }
@@ -672,4 +672,97 @@ boolean simulation_unknown_00067e10(
 	long state= *(const long *)(world+SIMULATION_WORLD_STATE_OFFSET);
 
 	return state!=3 && state!=5;
+}
+
+/* 0x000c6de0: an object is given one of the sixteen things of 0x7C bytes
+that come with a tick. 0x0014c630: the rest of the game is told which
+consoles there are. 0x00084f30, 0x00084fb0, 0x000850c0, 0x00085140,
+0x000854c0: the five kinds of thing that happen to the players, of
+simulation_players.c: FALSE if one cannot be done */
+void unknown_000c6de0(long object_index, const byte *unknown);
+void __attribute__((stdcall)) unknown_0014c630(unsigned long machine_mask, const byte *machines);
+boolean simulation_players_update_remove_player(const byte *update);
+boolean __attribute__((stdcall)) simulation_players_update_unknown_00084fb0(const byte *update);
+boolean simulation_players_update_unknown_000850c0(const byte *update);
+boolean __attribute__((stdcall)) unknown_00085140(const byte *update);
+boolean __attribute__((stdcall)) simulation_players_update_set_properties(const byte *update);
+
+/* 0x000683a0: the changes that come with a tick are done, before the tick
+itself (simulation_update). Each of sixteen objects that the tick has
+something for, if it is still a biped or a vehicle, is given it
+(unknown_000c6de0). A change of the consoles is told to the rest of the
+game (unknown_0014c630). The things that happened to the players are done
+one by one, each by its kind; at the first that cannot be done, or is of no
+kind, the simulation is to fail, and the rest are left. And if the state of
+the game was saved with this tick, a thing in its third state or its fifth
+does what is done before and after a state is saved. The game has
+game_state_call_before_save_procs written here */
+void __attribute__((stdcall)) simulation_apply_update_changes(
+	long *update_)
+{
+	byte *update= (byte *)update_;
+	long index;
+
+	for (index= 0; index<16; index++)
+	{
+		if (*(const unsigned long *)(update+SIMULATION_UPDATE_UNKNOWN5CC_OFFSET)&(1u<<index))
+		{
+			long object_index= *(const long *)(update+SIMULATION_UPDATE_OBJECTS_OFFSET+index*4);
+
+			if (object_try_and_get_and_verify_type(object_index, 3))
+			{
+				unknown_000c6de0(object_index, update+SIMULATION_UPDATE_UNKNOWN610_OFFSET+index*SIMULATION_UPDATE_UNKNOWN610_SIZE);
+			}
+		}
+	}
+	if (update[SIMULATION_UPDATE_CHANGED_OFFSET])
+	{
+		unknown_0014c630(*(const unsigned long *)(update+SIMULATION_UPDATE_CHANGE_OFFSET),
+			update+SIMULATION_UPDATE_CHANGE_OFFSET+4);
+	}
+	for (index= 0; index<*(const long *)(update+SIMULATION_UPDATE_EVENT_COUNT_OFFSET); index++)
+	{
+		const byte *event= update+SIMULATION_UPDATE_EVENTS_OFFSET+index*SIMULATION_UPDATE_EVENT_SIZE;
+		boolean done;
+
+		switch (*(const long *)(event+SIMULATION_UPDATE_EVENT_KIND_OFFSET))
+		{
+		case 0:
+			done= simulation_players_update_remove_player(event);
+			break;
+		case 1:
+			done= simulation_players_update_unknown_00084fb0(event);
+			break;
+		case 2:
+			done= simulation_players_update_unknown_000850c0(event);
+			break;
+		case 3:
+			done= unknown_00085140(event);
+			break;
+		case 4:
+			done= simulation_players_update_set_properties(event);
+			break;
+		default:
+			done= FALSE;
+			break;
+		}
+		if (!done)
+		{
+			unknown_004cf770.unknown1[0]= TRUE;
+			break;
+		}
+	}
+	if (update[SIMULATION_UPDATE_SAVED_OFFSET])
+	{
+		long state= *(const long *)(unknown_004cf770.unknownC+SIMULATION_WORLD_STATE_OFFSET);
+
+		if (state==3 || state==5)
+		{
+			for (index= 0; index<NUMBER_OF_GAME_STATE_BEFORE_SAVE_PROCS; index++)
+			{
+				game_state_before_save_procs[index](0);
+			}
+			game_state_after_save_procs[0](0);
+		}
+	}
 }

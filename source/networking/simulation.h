@@ -59,7 +59,14 @@ enum
 	has, and how many kinds a table of kinds has room for */
 	SIMULATION_WORLD_STORAGE_SIZE= 0x1220,
 	SIMULATION_UNKNOWN_004CF780_STORAGE_SIZE= 0xC34,
-	MAXIMUM_SIMULATION_TYPES_PER_TABLE= 32
+	MAXIMUM_SIMULATION_TYPES_PER_TABLE= 32,
+	/* more of what comes with a tick: the objects that the sixteen things
+	at 0x610 are for, how big each of those is, how big each of the things
+	that happened to the players is, and where it has its kind */
+	SIMULATION_UPDATE_OBJECTS_OFFSET= 0x5D0,
+	SIMULATION_UPDATE_UNKNOWN610_SIZE= 0x7C,
+	SIMULATION_UPDATE_EVENT_SIZE= 0xC8,
+	SIMULATION_UPDATE_EVENT_KIND_OFFSET= 0x10
 };
 
 /* ---------- structures */
@@ -83,6 +90,7 @@ void simulation_dispose(void);
 void simulation_initialize_for_new_map(void);
 void simulation_dispose_from_old_map(void);
 void simulation_idle(void);
+void __attribute__((stdcall)) simulation_apply_update_changes(long *update);
 void simulation_unknown_000687b0(void);
 
 void __attribute__((stdcall)) simulation_view_disconnected(byte *view);
