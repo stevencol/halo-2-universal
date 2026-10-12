@@ -168,3 +168,77 @@ boolean game_team_is_friend(
 
 	return team==other;
 }
+
+/* 0x001df640: whether two sides, which are not the same, are friends and
+not allies: only in the campaign, and for sides from 0 to 15 */
+boolean game_team_is_friend_and_not_ally(
+	short team,
+	short other)
+{
+	if (team!=NONE && other!=NONE && team!=other &&
+		main_game_globals->options.game_mode==_game_mode_campaign &&
+		team>=0 && team<GAME_UNKNOWN_001DF460_ROWS && other>=0 && other<GAME_UNKNOWN_001DF460_ROWS)
+	{
+		long bit= team*GAME_UNKNOWN_001DF460_ROWS+other;
+
+		if (bit_vector_test_flag((const unsigned long *)(unknown_004f55ec+GAME_UNKNOWN_001DF460_FRIEND_BITS_OFFSET), bit) &&
+			!bit_vector_test_flag((const unsigned long *)(unknown_004f55ec+GAME_UNKNOWN_001DF460_BITS_OFFSET), bit))
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x001df6c0: in the campaign, one of the things that are counted down (at
+most eight) is of two sides, in either order: the one that there is of them,
+or a new one. It gets two bytes (at 8 and 9) and two shorts (at 4 and 6: the
+second is where its time starts again from), its counts are zero, the byte at
+0xA is set, unknown_001df9c0 is done with it and the byte at 0xB is cleared */
+void game_team_unknown_001df6c0(
+	short team,
+	short other,
+	byte unknown8,
+	byte unknown9,
+	short unknown4,
+	short unknown6)
+{
+	if (main_game_globals->options.game_mode==_game_mode_campaign)
+	{
+		byte *unknown= unknown_004f55ec;
+		short count= *(short *)unknown;
+		byte *element= unknown+4;
+		short index;
+
+		for (index= 0; index<*(short *)unknown; index++)
+		{
+			if ((*(short *)element==team && *(short *)(element+2)==other) ||
+				(*(short *)(element+2)==team && *(short *)element==other))
+			{
+				break;
+			}
+			element+= 0x14;
+		}
+		if (index>=count && count<8)
+		{
+			index= count;
+			*(short *)unknown= (short)(count+1);
+		}
+		if (index<*(short *)unknown)
+		{
+			element= unknown+4+index*0x14;
+			element[9]= unknown9;
+			element[8]= unknown8;
+			*(short *)element= team;
+			*(short *)(element+2)= other;
+			*(short *)(element+4)= unknown4;
+			*(short *)(element+6)= unknown6;
+			*(short *)(element+0xC)= 0;
+			*(short *)(element+0xE)= 0;
+			element[0xA]= TRUE;
+			unknown_001df9c0(element, 0, 0);
+			element[0xB]= FALSE;
+		}
+	}
+}

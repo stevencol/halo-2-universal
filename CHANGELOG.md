@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Amigos que no son aliados, y los cambios entre dos bandos
+
+Dos funciones (294 bytes) en `game/game_unknown_001df460.c`. De 2247
+funciones se pasa a 2249, el 19,96 % de las del juego (el 11,606 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_team_is_friend_and_not_ally` | `0x001df640` | `game/game_unknown_001df460.c` |
+| `game_team_unknown_001df6c0` | `0x001df6c0` | `game/game_unknown_001df460.c` |
+
+### Lo que se sabe
+
+- `game_team_is_friend_and_not_ally` (bandos en `cx` y `dx`): solo en la
+  campaña, dice si dos bandos distintos tienen el bit de amigos y no el de
+  aliados.
+- `game_team_unknown_001df6c0` (bandos en `di` y `bx`, cuatro argumentos más
+  en la pila): solo en la campaña, busca entre los elementos con
+  temporizador (hito 681; ocho como mucho) el de esos dos bandos, en
+  cualquier orden, o toma uno nuevo; le pone sus datos, deja sus contadores
+  a cero y llama a `unknown_001df9c0`. Cada elemento es, pues, un cambio
+  entre dos bandos que dura un tiempo.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  682.
+- Qué son los dos bytes y los dos `short` de cada cambio (¿umbral de
+  traiciones y duración?) no se sabe. Quedan `0x1df820`, `0x1df950` y
+  `0x1df9c0`.
+- En este hito se pasaron las pruebas de las dos funciones. Hay una
+  batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Si dos bandos son enemigos, o amigos
 
 Dos funciones (218 bytes) en `game/game_unknown_001df460.c`. De 2245

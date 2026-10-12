@@ -2780,3 +2780,5 @@ address,name,source,arguments,returns,convention
 001df560,game_team_is_enemy,source/game/game_unknown_001df460.c,ecx esi,bool
 001df5d0,game_team_is_friend,source/game/game_unknown_001df460.c,ecx esi,bool
 0015e020,unknown_0015e020,,stack stack,bool,stdcall
+001df640,game_team_is_friend_and_not_ally,source/game/game_unknown_001df460.c,ecx edx,bool
+001df6c0,game_team_unknown_001df6c0,source/game/game_unknown_001df460.c,edi ebx stack stack stack stack,void
