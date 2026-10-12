@@ -443,3 +443,63 @@ void light_unknown_000c19f0(
 		*(float *)(unknown+4)= 0.0f;
 	}
 }
+
+void unknown_000c12d0(long light_index);
+
+/* 0x000c15a0: unknown_000c12d0 is done for each light that has the bit 1 of
+its flags. The game has the walk over the table written here, as in the one
+that follows */
+void lights_unknown_000c15a0(
+	void)
+{
+	long absolute_index= NONE;
+
+	for (;;)
+	{
+		const byte *light;
+		long light_index;
+
+		absolute_index= data_next_absolute_index(light_data, absolute_index+1);
+		if (absolute_index==NONE)
+		{
+			break;
+		}
+		light= (const byte *)light_data->data+absolute_index*light_data->size;
+		light_index= (*(const short *)light<<16)|absolute_index;
+		if (((const byte *)light_data->data+(light_index&0xFFFF)*LIGHT_SIZE)[LIGHT_FLAGS_OFFSET]&2)
+		{
+			unknown_000c12d0(light_index);
+		}
+	}
+}
+
+/* 0x000c1670: an object that has the bit 6 of its flags (it has lights on
+it: light_new_at sets it) loses them: unknown_000c3260 is done, with FALSE,
+for each light that is on the object; and the bit is cleared */
+void __attribute__((stdcall)) lights_unknown_000c1670(
+	long object_index)
+{
+	byte *object= (byte *)((struct object_header_datum *)object_header_data->data)[object_index&0xFFFF].datum;
+
+	if ((*(unsigned long *)(object+4)>>6)&1)
+	{
+		long absolute_index= NONE;
+
+		for (;;)
+		{
+			const byte *light;
+
+			absolute_index= data_next_absolute_index(light_data, absolute_index+1);
+			if (absolute_index==NONE)
+			{
+				break;
+			}
+			light= (const byte *)light_data->data+absolute_index*light_data->size;
+			if (*(const long *)(light+LIGHT_UNKNOWN58_OFFSET)==object_index)
+			{
+				unknown_000c3260((*(const short *)light<<16)|absolute_index, FALSE);
+			}
+		}
+	}
+	*(unsigned long *)(object+4)&= ~0x40UL;
+}

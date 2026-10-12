@@ -2,6 +2,39 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Dos recorridos más de las luces
+
+Dos funciones (345 bytes) en `objects/lights.c`. De 2260
+funciones se pasa a 2262, el 20,08 % de las del juego (el 11,681 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `lights_unknown_000c15a0` | `0x000c15a0` | `objects/lights.c` |
+| `lights_unknown_000c1670` | `0x000c1670` | `objects/lights.c` |
+
+### Lo que se sabe
+
+- `lights_unknown_000c15a0` llama a `unknown_000c12d0` con cada luz que tiene
+  el bit 1 de sus banderas.
+- `lights_unknown_000c1670` (un objeto): si el objeto tiene el bit 6 de sus
+  banderas (el que `light_new_at` le pone al colgarle una luz, hito 690),
+  llama a `unknown_000c3260(luz, FALSE)` con cada luz que cuelga de él, y
+  le quita el bit. Es lo que se hace con las luces de un objeto cuando el
+  objeto desaparece, parece.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  692.
+- `unknown_000c12d0` y `unknown_000c3260` no están descompiladas, así que
+  los nombres siguen siendo las direcciones.
+- En este hito se pasaron las pruebas de las dos funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Cómo es una luz: por su definición o por el escenario
 
 Tres funciones (312 bytes) en `objects/lights.c`. De 2257
