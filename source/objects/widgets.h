@@ -29,7 +29,9 @@ struct widget_type_definition
 	void (*initialize_for_new_map)(void);
 	void (*dispose_from_old_map)(void);
 	void *unknown14;
-	void *unknown18;
+	/* a widget of the kind is made for an object, from a tag: what it is in
+	the table of its kind, or NONE */
+	long (__attribute__((stdcall)) *new)(long definition_index, long object_index);
 	/* a widget of the kind is no more: with what the widget is in the table
 	of its kind */
 	void (__attribute__((stdcall)) *delete)(long index);
@@ -61,5 +63,6 @@ void widgets_initialize_for_new_map(void);
 void widgets_dispose_from_old_map(void);
 void __attribute__((stdcall)) widgets_update(float seconds);
 void widgets_delete(long object_index);
+void __attribute__((stdcall)) widgets_new(long object_index);
 
 #endif

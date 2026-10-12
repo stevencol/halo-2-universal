@@ -7,6 +7,10 @@ that the game gives to its table of data ("widget").
 */
 
 #include "cseries/cseries.h"
+
+#include <stdint.h>
+
+#include "cache/cache_files.h"
 #include "memory/data.h"
 #include "objects/objects.h"
 #include "objects/widgets.h"
@@ -116,4 +120,64 @@ void widgets_delete(
 		widget_index= next_widget_index;
 	}
 	*first_widget_index= NONE;
+}
+
+/* 0x000d4900: the widgets of a new object are made: the definition of the
+object (its tag) has at 0x9C so many widgets, each the group of a tag and the
+tag. For each whose group is of one of the kinds, and that has a tag, a
+widget is made in the table, and the kind makes its own; if the kind cannot,
+the widget is no more. The widgets are put first in the list of the object */
+void __attribute__((stdcall)) widgets_new(
+	long object_index)
+{
+	byte *object= (byte *)((struct object_header_datum *)object_header_data->data)[object_index&0xFFFF].datum;
+	const byte *definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)object&0xFFFF].address;
+	long index;
+
+	*(long *)(object+0xDC)= NONE;
+	for (index= 0; (short)index<*(const long *)(definition+0x9C); index++)
+	{
+		const byte *element= *(const byte *const *)(definition+0xA0)+(short)index*8;
+		short type= NONE;
+		short other;
+
+		for (other= 0; other<NUMBER_OF_WIDGET_TYPES; other++)
+		{
+			if (widget_type_definitions[other].group_tag==*(const unsigned long *)element)
+			{
+				type= other;
+				break;
+			}
+		}
+		if (type!=NONE && *(const long *)(element+4)!=NONE)
+		{
+			long widget_index= datum_new(widget_data);
+
+			if (widget_index!=NONE)
+			{
+				struct widget_datum *widget= &((struct widget_datum *)widget_data->data)[widget_index&0xFFFF];
+
+				widget->type= type;
+				if (widget_type_definitions[type].new)
+				{
+					widget->index= widget_type_definitions[type].new(*(const long *)(element+4), object_index);
+					if (widget->index!=NONE)
+					{
+						widget->next_widget_index= *(long *)(object+0xDC);
+						*(long *)(object+0xDC)= widget_index;
+					}
+					else
+					{
+						datum_delete(widget_data, widget_index);
+					}
+				}
+				else
+				{
+					widget->next_widget_index= *(long *)(object+0xDC);
+					*(long *)(object+0xDC)= widget_index;
+					widget->index= NONE;
+				}
+			}
+		}
+	}
 }

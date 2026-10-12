@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Crear los widgets de un objeto
+
+Una función (339 bytes) en `objects/widgets.c`. De 2224
+funciones se pasa a 2225, el 19,75 % de las del juego (el 11,494 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `widgets_new` | `0x000d4900` | `objects/widgets.c` |
+
+### Lo que se sabe
+
+- `widgets_new` crea los widgets de un objeto recién hecho. La definición
+  del objeto (su tag) trae en `0x9C` una lista de widgets: el grupo de un
+  tag y el tag. Por cada uno cuyo grupo es el de alguno de los tres tipos
+  (antena, tela, líquido) y que tiene tag, crea un elemento en la tabla
+  `"widget"` y pide al tipo que cree lo suyo (función de `+0x18` del tipo,
+  que recibe el tag y el objeto). Si el tipo no puede, el elemento se
+  borra; si puede, o si el tipo no tiene esa función, el widget se pone el
+  primero de la lista del objeto.
+- Es la pareja de `widgets_delete` (hito 670); con las dos se conocen seis
+  de las funciones de cada tipo de widget.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  670.
+- Quedan en el archivo `0xd4ae0`, `0xd4bc0` y `0xd4cf0` (esta última dibuja
+  los widgets de un objeto, parece).
+- En este hito se pasaron las pruebas de `test_widgets*` (cinco funciones).
+  Hay una batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Borrar los widgets de un objeto
 
 Una función (124 bytes) en `objects/widgets.c`. De 2223
