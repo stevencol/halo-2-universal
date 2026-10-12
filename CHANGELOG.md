@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Lo que hacen los jugadores y los demás objetos pasa a las vistas del cuarto tipo
+
+Dos funciones de `networking/simulation_world.c` (566 bytes). De 1979
+funciones se pasa a 1981, el 17,59 % de las del juego (el 11,086 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_pass_player_actions` | `0x00069a00` | `networking/simulation_world.c` |
+| `simulation_world_pass_other_actions` | `0x00069b50` | `networking/simulation_world.c` |
+
+### Lo que se sabe
+
+- Son las dos que la actualización de cada tick llama (antes
+  `unknown_00069a00` y `unknown_00069b50`) para repartir a las otras
+  consolas lo que pasó en el tick.
+- `simulation_world_pass_player_actions`: por cada jugador que la máscara
+  nombra, lo que hizo se empaqueta en `0x34` bytes (`unknown_000823d0`) y
+  lo recibe **cada vista del cuarto tipo que no sea la de la consola de
+  ese jugador** (a ella no hace falta contárselo).
+- `simulation_world_pass_other_actions`: lo mismo para los otros dieciséis
+  objetos (`unknown_000824d0`), que reciben todas las vistas del cuarto
+  tipo.
+- Lo que una vista de esas guarda para mandar (en `0x5098` de lo que tiene
+  en `0x8`) son **32 sitios de `0x34` bytes** desde `0x18` (dieciséis de
+  jugadores y dieciséis de los otros objetos) y en `0x10` una máscara de
+  cuáles tienen algo sin mandar.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  587.
+- Los nombres `…_pass_…` son suposiciones.
+- El jugador solo se reparte si el dato del jugador del juego tiene algo en
+  `0x2C`; qué es ese número no se sabe.
+- En este hito se pasaron las pruebas de las dos funciones y las de las
+  tres de `simulation.c` que hacen la actualización de cada tick.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Una vista recibe los sucesos que mandó la otra consola
 
 Una función de `networking/simulation_view.c` (95 bytes), la pareja de la que los manda (hito 586).

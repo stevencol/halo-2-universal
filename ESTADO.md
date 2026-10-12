@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 587.
+**Última actualización:** 2026-10-08, al terminar el hito 588.
 
 ## Dónde estamos
 
-- **1979 funciones descompiladas de 11.265: el 17,57 % del juego** (el
-  11,067 % de los bytes de código).
-- Las 1979 están comprobadas contra el ejecutable original: las 1390 del
+- **1981 funciones descompiladas de 11.265: el 17,59 % del juego** (el
+  11,086 % de los bytes de código).
+- Las 1981 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a view takes the events that the other console sent* (ver `git log`).
+- Último hito: *Decompile how what players and other things do is passed on to the views* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 615 funciones apuntadas pero sin descompilar (las que el código
   llama); 466 de ellas solo se conocen por su dirección (`unknown_...`).

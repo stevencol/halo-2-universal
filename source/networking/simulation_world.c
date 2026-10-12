@@ -2169,3 +2169,102 @@ boolean simulation_world_become_authority(
 		return TRUE;
 	}
 }
+
+/* 0x000823d0: what a player does, made small for a message, with a number
+of the player. 0x000824d0: the same for one of the other things, by its
+object */
+void __attribute__((stdcall)) unknown_000823d0(byte *packed, const byte *actions, long unknown2c);
+void __attribute__((stdcall)) unknown_000824d0(const byte *actions, byte *packed, long object_index);
+
+/* what a view of the fourth kind keeps to send takes one more thing, at a
+place, and is marked there: the game has it written in each of the two */
+static inline __attribute__((always_inline)) void simulation_world_view_set_action(
+	byte *view,
+	long place,
+	const byte *packed)
+{
+	byte *actions= *(byte *const *)(view+SIMULATION_VIEW_DATA_OFFSET)+SIMULATION_VIEW_DATA_UNKNOWN5098_OFFSET;
+
+	if (actions)
+	{
+		memcpy(actions+SIMULATION_VIEW_ACTIONS_OFFSET+place*SIMULATION_VIEW_ACTION_SIZE, packed, SIMULATION_VIEW_ACTION_SIZE);
+		*(unsigned long *)(actions+SIMULATION_VIEW_ACTIONS_PENDING_MASK_OFFSET)|= 1u<<place;
+	}
+}
+
+/* 0x00069a00: what the players did in a tick is passed on to the other
+consoles. For each player that the thing has and that a mask names, what it
+did is made small (unknown_000823d0); and if the player of the game has
+something at 0x2C, each view of the fourth kind that is not of the console
+of that player takes it, at the place of the player */
+void __attribute__((stdcall)) simulation_world_pass_player_actions(
+	const void *actions,
+	byte *world,
+	long player_mask)
+{
+	long index;
+
+	for (index= 0; index<NUMBER_OF_SIMULATION_WORLD_PLAYERS; index++)
+	{
+		const byte *player_data_= world+index*SIMULATION_WORLD_PLAYER_SIZE+SIMULATION_WORLD_PLAYERS_OFFSET;
+
+		if (*(const long *)player_data_!=NONE && ((unsigned long)player_mask&(1u<<index)))
+		{
+			const byte *datum= (const byte *)player_data->data+
+				(*(const unsigned long *)(player_data_+SIMULATION_WORLD_PLAYER_INDEX_OFFSET)&0xFFFF)*SIMULATION_PLAYER_DATUM_SIZE;
+			byte packed[SIMULATION_VIEW_ACTION_SIZE];
+
+			unknown_000823d0(packed, (const byte *)actions+index*SIMULATION_PLAYER_ACTIONS_SIZE,
+				*(const long *)(datum+SIMULATION_PLAYER_DATUM_UNKNOWN2C_OFFSET));
+			if (*(const long *)(datum+SIMULATION_PLAYER_DATUM_UNKNOWN2C_OFFSET)!=NONE)
+			{
+				long place= *(const long *)player_data_;
+				struct simulation_view_iterator iterator= {_simulation_view_kind4_bit, 0};
+				byte machine[SIMULATION_VIEW_UNKNOWN14_SIZE];
+				byte *view;
+
+				memcpy(machine, player_data_+SIMULATION_PLAYER_MACHINE_OFFSET, sizeof(machine));
+				while (simulation_world_next_view(&iterator, world, &view))
+				{
+					if (memcmp(view+SIMULATION_VIEW_UNKNOWN14_OFFSET, machine, sizeof(machine))!=0)
+					{
+						simulation_world_view_set_action(view, place, packed);
+					}
+				}
+			}
+		}
+	}
+}
+
+/* 0x00069b50: what the other things did in a tick is passed on to the other
+consoles. For each of the other things that the thing has and that a mask
+names, what it did is made small (unknown_000824d0), and every view of the
+fourth kind takes it, at its place after those of the players */
+void __attribute__((stdcall)) simulation_world_pass_other_actions(
+	const void *actions,
+	byte *world,
+	long other_mask)
+{
+	long index;
+
+	for (index= 0; index<NUMBER_OF_SIMULATION_WORLD_OTHERS; index++)
+	{
+		const byte *other= world+index*SIMULATION_WORLD_OTHER_SIZE+SIMULATION_WORLD_OTHERS_OFFSET;
+
+		if (*(const long *)other!=NONE && ((unsigned long)other_mask&(1u<<index)))
+		{
+			byte packed[SIMULATION_VIEW_ACTION_SIZE];
+			struct simulation_view_iterator iterator= {_simulation_view_kind4_bit, 0};
+			long place;
+			byte *view;
+
+			unknown_000824d0((const byte *)actions+index*SIMULATION_WORLD_OTHER_UNKNOWN14_SIZE, packed,
+				*(const long *)(other+SIMULATION_WORLD_OTHER_UNKNOWN4_OFFSET));
+			place= *(const long *)other+SIMULATION_VIEW_OTHER_ACTIONS_FIRST;
+			while (simulation_world_next_view(&iterator, world, &view))
+			{
+				simulation_world_view_set_action(view, place, packed);
+			}
+		}
+	}
+}

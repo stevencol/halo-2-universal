@@ -40,8 +40,6 @@ something more, of one of them. 0x000835c0: whether what unknown_004cf780 has
 lets the game go on a tick. 0x000683a0: one of the things that come is given
 to the game */
 void __attribute__((stdcall)) simulation_players_machines_changed(byte *unknown);
-void __attribute__((stdcall)) unknown_00069a00(const void *players, byte *world, long unknown8);
-void __attribute__((stdcall)) unknown_00069b50(const void *unknown610, byte *world, long unknown5cc);
 boolean simulation_players_changed(long unknown);
 
 void simulation_players_reset(byte *players);
@@ -328,7 +326,7 @@ void simulation_build_update(
 /* 0x000684e0: the thing is done with one of the things that come: in its
 second state, each view of the second kind is given it
 (simulation_world_unknown_00069880); in its fourth, what the players do and
-something more of it are passed on (unknown_00069a00, unknown_00069b50); in
+something more of it are passed on (simulation_world_pass_player_actions, simulation_world_pass_other_actions); in
 its third and its fifth, nothing. And the number of the thing is the one
 after it */
 void simulation_apply_update(
@@ -346,9 +344,9 @@ void simulation_apply_update(
 		}
 		else if (state==4)
 		{
-			unknown_00069a00((const byte *)update+SIMULATION_UPDATE_PLAYERS_OFFSET, world,
+			simulation_world_pass_player_actions((const byte *)update+SIMULATION_UPDATE_PLAYERS_OFFSET, world,
 				*(const long *)((const byte *)update+SIMULATION_UPDATE_UNKNOWN8_OFFSET));
-			unknown_00069b50((const byte *)update+SIMULATION_UPDATE_UNKNOWN610_OFFSET, world,
+			simulation_world_pass_other_actions((const byte *)update+SIMULATION_UPDATE_UNKNOWN610_OFFSET, world,
 				*(const long *)((const byte *)update+SIMULATION_UPDATE_UNKNOWN5CC_OFFSET));
 			world= unknown_004cf770.unknownC;
 		}

@@ -154,8 +154,8 @@ def run(t) -> None:
             globals=globals_,
             externals={
                 "simulation_world_unknown_00069880": lambda harness, arguments: (0, (harness.normalize(arguments[0]), harness.normalize(arguments[1]))),
-                "unknown_00069a00": passes,
-                "unknown_00069b50": passes,
+                "simulation_world_pass_player_actions": passes,
+                "simulation_world_pass_other_actions": passes,
             },
         )
         lets = random_.choice((0, 1, 1, 1))

@@ -207,6 +207,15 @@ enum
 	/* the kinds of view that are told of the players (the first and the
 	third), and the kind of the message that tells them */
 	SIMULATION_VIEW_KINDS_1_AND_3= 0xA,
+	/* the kind of view that is passed what the players do (the fourth).
+	Of what such a view has at 0x5098 of what it has at 0x8: which of 32
+	places have something that was not sent yet, and the places, each of
+	0x34 bytes: sixteen for the players and sixteen for the other things */
+	_simulation_view_kind4_bit= 0x10,
+	SIMULATION_VIEW_ACTIONS_PENDING_MASK_OFFSET= 0x10,
+	SIMULATION_VIEW_ACTIONS_OFFSET= 0x18,
+	SIMULATION_VIEW_ACTION_SIZE= 0x34,
+	SIMULATION_VIEW_OTHER_ACTIONS_FIRST= 16,
 	_network_message_simulation_players= 0x26
 };
 
@@ -249,6 +258,9 @@ struct simulation_type_table;
 void __attribute__((stdcall)) simulation_world_initialize(long unknown, byte *memory,
 	struct simulation_type_table *types, byte *world);
 void simulation_world_restart(byte *world);
+void __attribute__((stdcall)) simulation_world_pass_player_actions(const void *actions, byte *world,
+	long player_mask);
+void __attribute__((stdcall)) simulation_world_pass_other_actions(const void *actions, byte *world, long other_mask);
 boolean simulation_world_become_client(byte *world);
 boolean simulation_world_become_authority(byte *world);
 void __attribute__((stdcall)) simulation_world_send_players(byte *world, boolean always);
