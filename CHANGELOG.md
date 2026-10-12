@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Las listas de objetos de los guiones: crear, añadir, quitar y recorrer
+
+Cuatro funciones (297 bytes) en `hs/object_lists.c`. De 2268
+funciones se pasa a 2272, el 20,17 % de las del juego (el 11,730 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_list_new` | `0x001ded60` | `hs/object_lists.c` |
+| `object_list_add` | `0x001dedb0` | `hs/object_lists.c` |
+| `object_list_remove` | `0x001dee00` | `hs/object_lists.c` |
+| `object_list_get_next` | `0x001dee80` | `hs/object_lists.c` |
+
+### Lo que se sabe
+
+- `object_list_new` crea una lista vacía; si no hay sitio, borra antes las
+  listas que nadie usa (hito 699) y lo intenta otra vez.
+- `object_list_add` (lista en `eax`) pone un objeto el primero de una
+  lista. La cuenta de objetos de la lista sube aunque no hubiera sitio para
+  el objeto: una rareza fiel al juego.
+- `object_list_remove` (lista en `eax`, objeto en `ecx`) quita un objeto de
+  una lista y dice si estaba.
+- `object_list_get_next` (el recorrido en `ebx`) da el siguiente objeto de
+  un recorrido y avanza; además pide al procesador por adelantado el
+  elemento siguiente (`prefetch`).
+- La cabecera de una lista queda entera: cuántos la usan (`+4`), cuántos
+  objetos tiene (`+6`) y el primero (`+8`).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  699.
+- Queda en el archivo `0x1defb0` (208 bytes) y la grande de `0x1df080`.
+- En este hito se pasaron las pruebas de las cuatro funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Borrar las listas de objetos que nadie usa
 
 Una función (217 bytes) en `hs/object_lists.c`. De 2267

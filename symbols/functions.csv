@@ -2803,3 +2803,7 @@ address,name,source,arguments,returns,convention
 000c1a80,unknown_000c1a80,,ecx edx stack,void
 00209850,unknown_00209850,,edi,void
 001deed0,object_lists_delete_unused,source/hs/object_lists.c,,void
+001ded60,object_list_new,source/hs/object_lists.c,,int
+001dedb0,object_list_add,source/hs/object_lists.c,eax stack,void
+001dee00,object_list_remove,source/hs/object_lists.c,eax ecx,bool
+001dee80,object_list_get_next,source/hs/object_lists.c,ebx,int

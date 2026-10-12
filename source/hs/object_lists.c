@@ -57,3 +57,107 @@ void object_lists_delete_unused(
 		}
 	}
 }
+
+enum
+{
+	/* of the header of a list: how many use it, how many objects it has (two
+	shorts), and the first of them in the other table, or NONE */
+	OBJECT_LIST_HEADER_SIZE= 0xC,
+	OBJECT_LIST_HEADER_REFERENCE_COUNT_OFFSET= 4,
+	OBJECT_LIST_HEADER_COUNT_OFFSET= 6,
+	OBJECT_LIST_HEADER_FIRST_OFFSET= 8
+};
+
+#define OBJECT_LIST_HEADER_GET(list_index) \
+	((byte *)object_list_header_data->data+((list_index)&0xFFFF)*OBJECT_LIST_HEADER_SIZE)
+
+/* 0x00296330 and 0x00296370, of reference_lists.c */
+void reference_list_remove(long *first_reference_index, long index, struct data_array *references);
+boolean reference_list_contains(const long *first_reference_index, const struct data_array *references, long index);
+
+/* 0x001ded60: a new list, with no objects: its index, or NONE if there is no
+room, even after the lists that nothing uses are deleted. How many use it is
+not set here */
+long object_list_new(
+	void)
+{
+	long list_index= datum_new(object_list_header_data);
+
+	if (list_index==NONE)
+	{
+		object_lists_delete_unused();
+		list_index= datum_new(object_list_header_data);
+	}
+	if (list_index!=NONE)
+	{
+		byte *header= OBJECT_LIST_HEADER_GET(list_index);
+
+		*(short *)(header+OBJECT_LIST_HEADER_COUNT_OFFSET)= 0;
+		*(long *)(header+OBJECT_LIST_HEADER_FIRST_OFFSET)= NONE;
+	}
+
+	return list_index;
+}
+
+/* 0x001dedb0: an object is put first in a list. The list counts one more
+even if there was no room for it in the table */
+void object_list_add(
+	long list_index,
+	long object_index)
+{
+	byte *header= OBJECT_LIST_HEADER_GET(list_index);
+	long reference_index= datum_new(list_object_data);
+
+	if (reference_index!=NONE)
+	{
+		byte *reference= (byte *)list_object_data->data+(reference_index&0xFFFF)*list_object_data->size;
+
+		*(long *)(reference+4)= object_index;
+		*(long *)(reference+8)= *(long *)(header+OBJECT_LIST_HEADER_FIRST_OFFSET);
+		*(long *)(header+OBJECT_LIST_HEADER_FIRST_OFFSET)= reference_index;
+	}
+	(*(short *)(header+OBJECT_LIST_HEADER_COUNT_OFFSET))++;
+}
+
+/* 0x001dee00: an object is taken out of a list; whether it was in it */
+boolean object_list_remove(
+	long list_index,
+	long object_index)
+{
+	byte *header= OBJECT_LIST_HEADER_GET(list_index);
+	long *first= (long *)(header+OBJECT_LIST_HEADER_FIRST_OFFSET);
+
+	if (reference_list_contains(first, list_object_data, object_index))
+	{
+		reference_list_remove(first, object_index, list_object_data);
+		(*(short *)(header+OBJECT_LIST_HEADER_COUNT_OFFSET))--;
+
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+/* 0x001dee80: the next object of a walk over a list, or NONE when it is
+over: the walk is a number that starts as the first of the list. The one
+after is asked of the processor ahead of time */
+long object_list_get_next(
+	long *iterator)
+{
+	const byte *reference;
+	long next_reference_index;
+
+	if (*iterator==NONE)
+	{
+		return NONE;
+	}
+	reference= (const byte *)list_object_data->data+(*iterator&0xFFFF)*list_object_data->size;
+	next_reference_index= *(const long *)(reference+8);
+	if (next_reference_index!=NONE)
+	{
+		__builtin_prefetch((const byte *)list_object_data->data+(next_reference_index&0xFFFF)*list_object_data->size);
+	}
+	*iterator= next_reference_index;
+
+	return *(const long *)(reference+4);
+}
