@@ -347,16 +347,16 @@ void decal_update(
 	}
 }
 
-void unknown_0023aa70(void);
+void decals_unknown_0023aa70(void);
 
 /* 0x0017d440: the sixth of the functions of the part (game.c): when the
-structure bsp goes, after unknown_0023aa70, the marks of every place are of
+structure bsp goes, after decals_unknown_0023aa70, the marks of every place are of
 no place: each list of each place is put, whole, before the list of the
 marks of no place, and is empty */
 void decals_dispose_from_old_structure_bsp(
 	void)
 {
-	unknown_0023aa70();
+	decals_unknown_0023aa70();
 	if (decal_data->valid)
 	{
 		byte *globals= decal_globals;
@@ -484,4 +484,32 @@ void __attribute__((stdcall)) decals_activation_changed(
 	long bit_count)
 {
 	unknown_0023aad0(old_bits, new_bits, bit_count);
+}
+
+/* 0x0017d710: what is done with the marks of a cluster of the structure bsp */
+void __attribute__((stdcall)) unknown_0017d710(long cluster_index);
+
+/* 0x0023aa70: if the structure bsp has something at 0xF4, unknown_0017d710
+is done for each of its clusters (at 0x9C: so many, of 0xB0 bytes) that has a
+short at 0x7C that is not NONE and one at 0x7E that is not zero. In the game
+it is far from the others of this file, so it may be of another */
+void decals_unknown_0023aa70(
+	void)
+{
+	const byte *structure_bsp= global_structure_bsp;
+
+	if (*(const long *)(structure_bsp+0xF4))
+	{
+		long cluster_index;
+
+		for (cluster_index= 0; (short)cluster_index<*(const long *)(structure_bsp+0x9C); cluster_index++)
+		{
+			const byte *cluster= *(const byte *const *)(structure_bsp+0xA0)+(short)cluster_index*0xB0;
+
+			if (*(const short *)(cluster+0x7C)!=NONE && *(const unsigned short *)(cluster+0x7E)>0)
+			{
+				unknown_0017d710(cluster_index);
+			}
+		}
+	}
 }

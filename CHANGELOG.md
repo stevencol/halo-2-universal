@@ -2,6 +2,39 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Las zonas del bsp avisan a los decals
+
+Una función (83 bytes) en `effects/decals.c`. De 2221
+funciones se pasa a 2222, el 19,72 % de las del juego (el 11,470 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `decals_unknown_0023aa70` | `0x0023aa70` | `effects/decals.c` |
+
+### Lo que se sabe
+
+- `decals_unknown_0023aa70` (antes `unknown_0023aa70`) es lo primero que se
+  llama cuando se va el bsp (hito 665): si el bsp tiene algo en `0xF4`,
+  recorre sus zonas (bloque en `0x9C`, elementos de `0xB0` bytes) y llama a
+  `unknown_0017d710` con cada una que tenga un `short` distinto de `NONE`
+  en `0x7C` y uno distinto de cero en `0x7E`.
+- El tamaño `0xB0` de los elementos confirma otra vez que son las zonas
+  (*clusters*) del bsp.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  667.
+- Qué son los dos `short` de la zona (¿el primer decal precalculado y
+  cuántos hay?) y qué hace `unknown_0017d710` no se sabe. La función está
+  lejos del resto de `decals.c`.
+- En este hito se pasaron las pruebas de la función y `test_decals_old_bsp`.
+  Hay una batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — La última función de la parte de los decals
 
 Una función (5 bytes) en `effects/decals.c`. De 2220

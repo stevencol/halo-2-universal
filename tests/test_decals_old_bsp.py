@@ -57,5 +57,5 @@ def run(t) -> None:
                 "decal_data": Buffer(bytes(data), pointers=table.pointers),
                 "decal_globals": Buffer(bytes(globals_)),
             },
-            externals={"unknown_0023aa70": lambda harness, arguments: 0},
+            externals={"decals_unknown_0023aa70": lambda harness, arguments: 0},
         )

@@ -2750,6 +2750,7 @@ address,name,source,arguments,returns,convention
 0017d860,decal_delete,source/effects/decals.c,eax,void
 0017cc60,decal_update,source/effects/decals.c,edx,void
 0017ccd0,unknown_0017ccd0,,eax,bool
-0023aa70,unknown_0023aa70,,,void
+0023aa70,decals_unknown_0023aa70,source/effects/decals.c,,void
 0017ce00,decal_add_to_place,source/effects/decals.c,edi ebx edx,void
 0023aad0,unknown_0023aad0,,stack stack stack,void,stdcall
+0017d710,unknown_0017d710,,stack,void,stdcall
