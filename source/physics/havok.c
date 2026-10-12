@@ -564,3 +564,23 @@ const byte *unknown68_get_tag_unknown18(
 
 	return *(const byte *const *)(UNKNOWN68_TAG_GET(unknown)+0x18)+index*0xC;
 }
+
+/* 0x001dafc0: the tag that one of the things of 0x20 bytes that something
+has at 0x4C names at 4; NULL for a number past the last, or if it names
+none */
+void *unknown4C_get_tag(
+	long index,
+	const byte *unknown)
+{
+	if (index<*(const long *)(unknown+0x4C))
+	{
+		long tag_index= *(const long *)(*(const byte *const *)(unknown+0x50)+index*0x20+4);
+
+		if (tag_index!=NONE)
+		{
+			return (void *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+		}
+	}
+
+	return NULL;
+}

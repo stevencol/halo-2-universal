@@ -235,3 +235,29 @@ void unknown_set_second_player(
 	player= (const byte *)player_data->data+(player_index&0xFFFF)*0x21C;
 	*(long *)(unknown+0x18)= *(const char *)(player+0xC0);
 }
+
+/* 0x0014de50: the whole number of a player from its place in the table:
+the place, and above it what the player has first; NONE for NONE */
+long player_index_from_absolute_index(
+	long absolute_index)
+{
+	if (absolute_index==NONE)
+	{
+		return NONE;
+	}
+
+	return *(const short *)((const byte *)player_data->data+absolute_index*player_data->size)<<16 | absolute_index;
+}
+
+/* 0x0014de70: the player of this console that has a number (0 to 3); NONE
+for NONE */
+long local_player_get_player_index(
+	long local_player_index)
+{
+	if (local_player_index==NONE)
+	{
+		return NONE;
+	}
+
+	return players_globals->local_players[local_player_index];
+}

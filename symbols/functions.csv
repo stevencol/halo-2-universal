@@ -2931,3 +2931,11 @@ address,name,source,arguments,returns,convention
 00135750,game_unknown_00134d90_clear_bits,source/game/game_unknown_00134d90.c,,void
 00291740,squad_definition_run_script,source/ai/squads.c,eax stack,void
 002093d0,hs_unknown_002093d0,,stack stack,int,stdcall
+0014de50,player_index_from_absolute_index,source/game/players.c,ecx,int
+0014de70,local_player_get_player_index,source/game/players.c,ecx,int
+001e8f60,game_unknown_001e6a40_set_unknown195,source/game/game_unknown_001e6a40.c,eax,void
+001e9070,game_unknown_001e6a40_set_unknown19B,source/game/game_unknown_001e6a40.c,eax,void
+0011c080,game_unknown1138_test,source/units/units.c,eax,int
+000fa170,tag_get_unknown164_scaled,source/units/units.c,eax,real:xmm0
+0004cb80,tag_get_unknown28_unknown2C,source/effects/effects.c,ecx edx,int
+001dafc0,unknown4C_get_tag,source/physics/havok.c,ecx edx,pointer

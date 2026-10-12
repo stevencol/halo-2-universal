@@ -878,3 +878,26 @@ void object_unknown_001c3980(
 		(*unknown_0051e9a0)++;
 	}
 }
+
+/* 0x0011c080: whether the bits that the game has at 0x1138 have the one
+that something names with its short at 4 */
+long game_unknown1138_test(
+	const byte *unknown)
+{
+	long bit= *(const short *)(unknown+4);
+
+	return (*(const unsigned long *)((const byte *)main_game_globals+0x1138+(bit>>5)*4)&(1<<(bit&0x1F)))!=0;
+}
+
+/* 0x0051e9c4, of game_unknown_001eb550.c: it starts with a real number */
+extern unsigned long *unknown_0051e9c4;
+
+/* 0x000fa170: the real number at 0x164 of a tag, times that number, with the
+sign turned */
+float tag_get_unknown164_scaled(
+	long tag_index)
+{
+	const byte *tag= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+
+	return 0.0f-*(const float *)(tag+0x164)**(const float *)unknown_0051e9c4;
+}

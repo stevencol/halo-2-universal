@@ -121,3 +121,23 @@ void *tag_get_unknown4_tag(
 
 	return (void *)(uintptr_t)global_tag_instances[*(const long *)(tag+4)&0xFFFF].address;
 }
+
+/* 0x0004cb80: the short at 0x2C of one of the things of 0x5C bytes that a
+tag has at 0x28; NONE for NONE or a tag that is nowhere. It is far from the
+others of this file in the game, and may be of another */
+long tag_get_unknown28_unknown2C(
+	long tag_index,
+	long index)
+{
+	if (tag_index!=NONE)
+	{
+		const byte *tag= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+
+		if (tag)
+		{
+			return *(const short *)(*(const byte *const *)(tag+0x28)+index*0x5C+0x2C);
+		}
+	}
+
+	return NONE;
+}

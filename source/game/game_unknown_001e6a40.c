@@ -8,6 +8,10 @@ the file is only the address of its first function.
 */
 
 #include "cseries/cseries.h"
+
+#include "game/game.h"
+#include "main/main.h"
+#include "memory/data.h"
 #include "saved games/game_state.h"
 
 #include <string.h>
@@ -81,4 +85,34 @@ void GAME_STATE_PROC game_unknown_001e6a40_after_load(
 {
 	(void)flags;
 	unknown_001e75d0(0);
+}
+
+/* what a player names with its short at 0x28: one of the things of 0x1B0
+bytes that this part keeps, or NONE */
+#define PLAYER_UNKNOWN28(player_index) \
+	(*(const short *)((const byte *)player_data->data+((player_index)&0xFFFF)*0x21C+0x28))
+
+/* 0x001e8f60: the thing of a player, if it has one, takes at 0x195 the low
+byte of how many ticks a second has */
+void game_unknown_001e6a40_set_unknown195(
+	long player_index)
+{
+	long index= PLAYER_UNKNOWN28(player_index);
+
+	if (index!=NONE)
+	{
+		unknown_0051e9c0[index*GAME_UNKNOWN_001E6A40_ENTRY_SIZE+0x195]= (byte)game_time_globals->ticks_per_second;
+	}
+}
+
+/* 0x001e9070: the same at 0x19B */
+void game_unknown_001e6a40_set_unknown19B(
+	long player_index)
+{
+	long index= PLAYER_UNKNOWN28(player_index);
+
+	if (index!=NONE)
+	{
+		unknown_0051e9c0[index*GAME_UNKNOWN_001E6A40_ENTRY_SIZE+0x19B]= (byte)game_time_globals->ticks_per_second;
+	}
 }

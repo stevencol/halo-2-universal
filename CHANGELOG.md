@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Ocho funciones pequeñas de jugadores, tags y otras
+
+Ocho funciones (345 bytes) en cinco archivos. De 2397
+funciones se pasa a 2405, el 21,35 % de las del juego (el 11,910 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `player_index_from_absolute_index` | `0x0014de50` | `game/players.c` |
+| `local_player_get_player_index` | `0x0014de70` | `game/players.c` |
+| `game_unknown_001e6a40_set_unknown195` | `0x001e8f60` | `game/game_unknown_001e6a40.c` |
+| `game_unknown_001e6a40_set_unknown19B` | `0x001e9070` | `game/game_unknown_001e6a40.c` |
+| `game_unknown1138_test` | `0x0011c080` | `units/units.c` |
+| `tag_get_unknown164_scaled` | `0x000fa170` | `units/units.c` |
+| `tag_get_unknown28_unknown2C` | `0x0004cb80` | `effects/effects.c` |
+| `unknown4C_get_tag` | `0x001dafc0` | `physics/havok.c` |
+
+### Lo que se sabe
+
+- `player_index_from_absolute_index` arma el número completo de un jugador
+  a partir de su lugar en la tabla; `local_player_get_player_index` da el
+  jugador de esta consola con un número de 0 a 3.
+- Las dos de `game_unknown_001e6a40.c` muestran que cada jugador nombra en
+  `0x28` una de las cosas de 0x1B0 bytes de esa parte, y apuntan en ella el
+  byte bajo de los ticks por segundo.
+- `tag_get_unknown164_scaled` devuelve un número real: el de `0x164` de un
+  tag por el primero de `unknown_0051e9c4`, con el signo cambiado; así se
+  sabe que esa variable empieza con un real.
+- `game_unknown1138_test` mira un bit de los que el juego tiene en `0x1138`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  719.
+- Los nombres son suposiciones y varios archivos, provisionales
+  (`units.c`, `effects.c` y `havok.c` para las cuatro últimas).
+- En este hito se pasaron las pruebas de las ocho funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Seis funciones pequeñas que leen el escenario
 
 Seis funciones (376 bytes) en cuatro archivos. De 2391
