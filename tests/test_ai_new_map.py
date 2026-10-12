@@ -54,7 +54,7 @@ def run(t) -> None:
                 for name in (
                     "ai_unknown_001c8010",
                     "hash_table_clear",
-                    "unknown_00200b30",
+                    "squads_initialize_for_new_map",
                     "vocalizations_initialize_for_new_map",
                 )
             },

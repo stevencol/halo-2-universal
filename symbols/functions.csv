@@ -2695,7 +2695,7 @@ address,name,source,arguments,returns,convention
 001a6d80,unknown_001a6d80,,,void
 00295970,ai_unknown_00295970,source/ai/ai.c,,void
 001c8010,ai_unknown_001c8010,source/ai/ai.c,,void
-00200b30,unknown_00200b30,,,void
+00200b30,squads_initialize_for_new_map,source/ai/squads.c,,void
 0028d9d0,swarms_dispose_from_old_map,source/ai/swarms.c,,void
 00292e00,unknown_00292e00,,,void
 00292f60,unknown_00292f60,,,void
@@ -2757,3 +2757,6 @@ address,name,source,arguments,returns,convention
 000d4a60,widgets_delete,source/objects/widgets.c,eax,void
 000d4900,widgets_new,source/objects/widgets.c,stack,void,stdcall
 000d4ae0,widget_delete,source/objects/widgets.c,eax ecx,void
+00205280,squad_group_add_squad,source/ai/squads.c,eax esi,void
+002009d0,squads_unknown_002009d0,source/ai/squads.c,,void
+00200c20,unknown_00200c20,,eax,void

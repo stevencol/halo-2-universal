@@ -168,7 +168,7 @@ long unknown_00502428;
 long unknown_0050242c;
 
 void ai_unknown_001c8010(void);
-void unknown_00200b30(void);
+void squads_initialize_for_new_map(void);
 void vocalizations_initialize_for_new_map(void);
 
 /* 0x001c79e0: the third of the functions of the part (game.c). In
@@ -191,7 +191,7 @@ void ai_initialize_for_new_map(
 		data_make_valid(prop_data);
 		data_make_valid(prop_ref_data);
 		data_make_valid(tracking_data);
-		unknown_00200b30();
+		squads_initialize_for_new_map();
 		memset(unknown_005044cc, 0, 0x20);
 		data_make_valid(clump_data);
 		data_make_valid(joint_state_data);

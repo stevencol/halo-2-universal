@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Los escuadrones y sus grupos al empezar un mapa
+
+Tres funciones (unos 650 bytes) en `ai/squads.c`. De 2226
+funciones se pasa a 2229, el 19,79 % de las del juego (el 11,522 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `squads_initialize_for_new_map` | `0x00200b30` | `ai/squads.c` |
+| `squads_unknown_002009d0` | `0x002009d0` | `ai/squads.c` |
+| `squad_group_add_squad` | `0x00205280` | `ai/squads.c` |
+
+### Lo que se sabe
+
+- `squads_initialize_for_new_map` (antes `unknown_00200b30`, llamada por
+  `ai_initialize_for_new_map`): vacía las dos tablas, crea un escuadrón por
+  cada escuadrón del escenario (`unknown_00200c20`) y un grupo por cada
+  grupo del escenario, y los enlaza.
+- `squads_unknown_002009d0` hace el enlazado: los grupos forman un árbol
+  (cada grupo tiene padre, primer hijo y siguiente hermano) y cada grupo
+  tiene la lista de sus escuadrones. Los grupos y escuadrones del juego van
+  en el mismo orden que los del escenario.
+- `squad_group_add_squad` (grupo en `eax`, escuadrón en `esi`) añade un
+  escuadrón al final de la lista de su grupo.
+- Del escenario se conocen ahora los bloques de `0x158` (grupos, de `0x24`
+  bytes, con su padre en `+0x20`) y `0x160` (escuadrones, de `0x74` bytes,
+  con su grupo en `+0x26`).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  672.
+- `unknown_00200c20` (lo que crea cada escuadrón, con sus cuentas sobre el
+  tipo de personaje) no está descompilada. `squad_group_add_squad` está
+  lejos del resto del archivo en el juego.
+- En este hito se pasaron las pruebas de las tres funciones y
+  `test_ai_new_map`. Hay una batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Borrar un widget concreto de un objeto
 
 Una función (216 bytes) en `objects/widgets.c`. De 2225
