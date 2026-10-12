@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — La IA se pone a cero y apunta a los jugadores
+
+Dos funciones (298 bytes) en `ai/ai.c`. De 2202
+funciones se pasa a 2204, el 19,57 % de las del juego (el 11,419 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `ai_unknown_001c8010` | `0x001c8010` | `ai/ai.c` |
+| `ai_unknown_001c80f0` | `0x001c80f0` | `ai/ai.c` |
+
+### Lo que se sabe
+
+- `ai_unknown_001c8010` es lo primero que hace `ai_initialize_for_new_map`:
+  pone a cero los `0x374` bytes de `ai_globals`, enciende cuatro bytes
+  (`+0`, `+2`, `+0x20`, `+0x340`), deja nueve números a `NONE`, vacía las
+  dos cosas de `0x1C` bytes y recorre la tabla de jugadores llamando a la
+  otra función con cada uno.
+- `ai_unknown_001c80f0` (el jugador llega en `esi`): solo en la campaña, da
+  al jugador la primera de las dos cosas que esté libre. **Las dos cosas
+  son, por tanto, lo que la IA guarda de cada jugador** (dos, como los
+  jugadores de la campaña en cooperativo): el índice del jugador está en
+  `+0`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  655.
+- Qué más guarda la IA de cada jugador (los otros `0x18` bytes) no se sabe;
+  las funciones conservan su nombre por dirección.
+- En este hito se pasaron las pruebas de las dos funciones y
+  `test_ai_new_map`. Hay una batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — La IA en cada tic
 
 Una función (114 bytes) en `ai/ai.c`. De 2201

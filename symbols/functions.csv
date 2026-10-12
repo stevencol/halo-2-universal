@@ -2694,7 +2694,7 @@ address,name,source,arguments,returns,convention
 00292130,unknown_00292130,,,void
 001a6d80,unknown_001a6d80,,,void
 00295970,ai_unknown_00295970,source/ai/ai.c,,void
-001c8010,unknown_001c8010,,,void
+001c8010,ai_unknown_001c8010,source/ai/ai.c,,void
 00200b30,unknown_00200b30,,,void
 0028d9d0,swarms_dispose_from_old_map,source/ai/swarms.c,,void
 00292e00,unknown_00292e00,,,void
@@ -2742,3 +2742,4 @@ address,name,source,arguments,returns,convention
 0020fb30,unknown_0020fb30,,,void
 00293830,unknown_00293830,,,void
 001e3240,unknown_001e3240,,,void
+001c80f0,ai_unknown_001c80f0,source/ai/ai.c,esi,void

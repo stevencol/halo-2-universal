@@ -52,7 +52,7 @@ def run(t) -> None:
             externals={
                 name: (lambda harness, arguments: 0)
                 for name in (
-                    "unknown_001c8010",
+                    "ai_unknown_001c8010",
                     "hash_table_clear",
                     "unknown_00200b30",
                     "vocalizations_initialize_for_new_map",

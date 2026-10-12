@@ -167,7 +167,7 @@ extern struct data_array *joint_command_script_data;
 long unknown_00502428;
 long unknown_0050242c;
 
-void unknown_001c8010(void);
+void ai_unknown_001c8010(void);
 void unknown_00200b30(void);
 void vocalizations_initialize_for_new_map(void);
 
@@ -184,7 +184,7 @@ void ai_initialize_for_new_map(
 	}
 	else
 	{
-		unknown_001c8010();
+		ai_unknown_001c8010();
 		data_make_valid(actor_data);
 		hash_table_clear(actor_firing_position_owners);
 		data_make_valid(swarm_data);
@@ -310,5 +310,76 @@ void ai_update(
 			unknown_001e3240();
 			ai_globals[2]= FALSE;
 		}
+	}
+}
+
+/* 0x004e8c24, of main.c: the players */
+extern struct data_array *player_data;
+
+/* 0x001c80f0: in the campaign, a player takes the first of the two things
+that has no player (NONE for its first number): the thing is all zeros, but
+for the player, a number that is NONE and a short that is NONE too. So the
+two things are what the minds keep of each player, it seems */
+void ai_unknown_001c80f0(
+	long player_index)
+{
+	if (main_game_globals->options.game_mode==_game_mode_campaign)
+	{
+		byte *unknown= unknown_004f55cc;
+		boolean found= FALSE;
+		long index;
+
+		for (index= 0; index<AI_UNKNOWN_COUNT; index++)
+		{
+			if (*(long *)unknown==NONE && !found)
+			{
+				memset(unknown, 0, AI_UNKNOWN_SIZE);
+				*(short *)(unknown+0xA)= 0;
+				*(long *)unknown= player_index;
+				*(long *)(unknown+4)= NONE;
+				*(short *)(unknown+8)= NONE;
+				found= TRUE;
+			}
+			unknown+= AI_UNKNOWN_SIZE;
+		}
+	}
+}
+
+/* 0x001c8010: for a new map: what the part keeps is all zeros, but for four
+bytes that are set and nine numbers that are NONE; the two things have no
+player (ai_unknown_001c7fe0, written here again), and each player that there
+is takes one (the game has the walk over the table written here) */
+void ai_unknown_001c8010(
+	void)
+{
+	byte *globals= ai_globals;
+	long absolute_index= NONE;
+
+	memset(globals, 0, AI_GLOBALS_SIZE);
+	globals[0]= TRUE;
+	globals[2]= TRUE;
+	*(long *)(globals+0x14)= NONE;
+	globals[0x340]= TRUE;
+	globals[0x20]= TRUE;
+	*(long *)(globals+0x364)= NONE;
+	*(long *)(globals+0x36C)= NONE;
+	*(long *)(globals+0x24)= NONE;
+	*(long *)(globals+0x28)= NONE;
+	*(long *)(globals+0x2C)= NONE;
+	*(long *)(globals+0x30)= NONE;
+	*(long *)(globals+0x34)= NONE;
+	*(long *)(globals+0x38)= NONE;
+	ai_unknown_001c7fe0();
+	for (;;)
+	{
+		const byte *player;
+
+		absolute_index= data_next_absolute_index(player_data, absolute_index+1);
+		if (absolute_index==NONE)
+		{
+			break;
+		}
+		player= (const byte *)player_data->data+absolute_index*player_data->size;
+		ai_unknown_001c80f0((*(const short *)player<<16)|absolute_index);
 	}
 }
