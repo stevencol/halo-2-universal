@@ -14,6 +14,7 @@ is a guess, by the name that the game gives to its table of data ("lights").
 #include "memory/data.h"
 #include "objects/cluster_partitions.h"
 #include "saved games/game_state.h"
+#include "scenario/scenario.h"
 
 /* ---------- constants */
 
@@ -230,4 +231,32 @@ long __attribute__((stdcall)) light_new(
 	}
 
 	return light_index;
+}
+
+/* 0x000c0520: a light of the scenario is made */
+void __attribute__((stdcall)) unknown_000c0520(long placement_index, boolean unknown_mode, const byte *placement);
+
+/* 0x000c09c0: each light that the scenario places (it has them at 0xE8, of
+0x6C bytes each, which start with which of its kinds of light it is, a short)
+is made, if its kind (the scenario has them at 0xF0, of 0x28 bytes) has a tag.
+It is told whether the kind of game is 4 or 5, as light_new looks at */
+void lights_place_scenario_lights(
+	long game_mode)
+{
+	boolean unknown_mode= game_mode==_game_mode_5 || game_mode==_game_mode_4;
+	const byte *scenario= (const byte *)global_scenario;
+	long placement_index;
+
+	for (placement_index= 0; placement_index<*(const long *)(scenario+0xE8); placement_index++)
+	{
+		const byte *placement= *(const byte *const *)(scenario+0xEC)+placement_index*0x6C;
+		long type= *(const short *)placement;
+
+		if (type!=NONE && type>=0 && type<*(const long *)(scenario+0xF0) &&
+			*(const long *)(*(const byte *const *)(scenario+0xF4)+type*0x28+4)!=NONE)
+		{
+			unknown_000c0520(placement_index, unknown_mode, placement);
+			scenario= (const byte *)global_scenario;
+		}
+	}
 }

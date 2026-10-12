@@ -964,7 +964,7 @@ address,name,source,arguments,returns,convention
 002186f0,sound_cache_close,source/sound/sound_manager.c,,void
 0011be50,scenario_unload,source/scenario/scenario.c,,void
 000d5560,unknown_000d5560,,stack,void,stdcall
-000c09c0,unknown_000c09c0,,eax,void
+000c09c0,lights_place_scenario_lights,source/objects/lights.c,eax,void
 00137e40,game_create_players,source/game/game.c,,void
 00158530,unknown_00158530,,,void
 00138f10,unknown_00138f10,,,void
@@ -2790,3 +2790,4 @@ address,name,source,arguments,returns,convention
 00146bf0,unknown_00146bf0,,,void
 001c35f0,unknown_001c35f0,,stack,void,stdcall
 001c50c0,unknown_001c50c0,,,void
+000c0520,unknown_000c0520,,stack stack stack,void,stdcall

@@ -233,7 +233,7 @@ def run(t) -> None:
             externals=stand_ins(
                 "game_initialize_for_new_map",
                 "unknown_000d5560",
-                "unknown_000c09c0",
+                "lights_place_scenario_lights",
                 "game_create_players",
                 "unknown_00158530",
                 "unknown_00138f10",

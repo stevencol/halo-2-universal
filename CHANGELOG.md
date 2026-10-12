@@ -2,6 +2,37 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Colocar las luces del escenario
+
+Una función (133 bytes) en `objects/lights.c`. De 2255
+funciones se pasa a 2256, el 20,03 % de las del juego (el 11,644 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `lights_place_scenario_lights` | `0x000c09c0` | `objects/lights.c` |
+
+### Lo que se sabe
+
+- `lights_place_scenario_lights` (antes `unknown_000c09c0`, la llama
+  `main_game.c` con el modo de juego en `eax`): recorre las luces que el
+  escenario coloca (bloque en `0xE8`, de `0x6C` bytes cada una) y crea cada
+  una cuyo tipo (bloque en `0xF0`, de `0x28` bytes) tiene tag
+  (`unknown_000c0520`). Le pasa si el modo de juego es el 4 o el 5, que es
+  lo que mira `light_new` (hito 640).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  688.
+- `unknown_000c0520` (795 bytes, la que crea la luz a partir de su
+  colocación) no está descompilada. El nombre es una suposición.
+- En este hito se pasaron las pruebas de la función. Hay una batería
+  completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Todos los objetos recuperan su parte de la física
 
 Una función (248 bytes) en `physics/havok.c`. De 2254

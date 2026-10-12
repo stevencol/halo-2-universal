@@ -61,7 +61,7 @@ void sound_cache_close(void);
 
 /* what a new game sets up after its systems */
 void __attribute__((stdcall)) unknown_000d5560(long unknown);
-void unknown_000c09c0(long game_mode);
+void lights_place_scenario_lights(long game_mode);
 void unknown_00158530(void);
 void unknown_00138f10(void);
 void unknown_00200d80(void);
@@ -419,7 +419,7 @@ boolean main_game_start(
 {
 	game_initialize_for_new_map(options);
 	unknown_000d5560(0);
-	unknown_000c09c0(main_game_globals->options.game_mode);
+	lights_place_scenario_lights(main_game_globals->options.game_mode);
 	game_create_players();
 	if (scenario_switch_structure_bsp(options->unknown120, TRUE))
 	{
