@@ -20,6 +20,16 @@ enum
 	of the thing that the simulation tells of it, and the types that the
 	type is of, from the first to itself, with nothing after the last */
 	OBJECT_TYPE_UNKNOWN54_OFFSET= 0x54,
+	/* the group of the tags of the type, and five more functions: for
+	something that starts with a tag, one that every type has to say yes
+	to, two that go on until a type says yes, and one with three things
+	more */
+	OBJECT_TYPE_GROUP_TAG_OFFSET= 0x4,
+	OBJECT_TYPE_UNKNOWN28_OFFSET= 0x28,
+	OBJECT_TYPE_UNKNOWN2C_OFFSET= 0x2C,
+	OBJECT_TYPE_UNKNOWN48_OFFSET= 0x48,
+	OBJECT_TYPE_UNKNOWN4C_OFFSET= 0x4C,
+	OBJECT_TYPE_UNKNOWN68_OFFSET= 0x68,
 	/* six more functions of a type that are given an object and nothing
 	else: what each is for is not known */
 	OBJECT_TYPE_UNKNOWN20_OFFSET= 0x20,
@@ -61,5 +71,13 @@ void __attribute__((stdcall)) object_types_call_unknown5C(long object_index, lon
 void __attribute__((stdcall)) object_types_call_unknown70(long object_index, long unknown0);
 void __attribute__((stdcall)) object_types_call_unknown74(long object_index, long unknown0, long unknown1);
 void __attribute__((stdcall)) object_types_call_unknown7C(long object_index, long unknown0, long unknown1);
+long __attribute__((stdcall)) object_type_from_tag(short tag_index);
+void object_types_call_unknown28(long *placement);
+boolean __attribute__((stdcall)) object_types_call_unknown2C(long object_index, long unknown0, long unknown1);
+boolean __attribute__((stdcall)) object_types_call_unknown48(long object_index, long unknown1, long unknown0);
+boolean __attribute__((stdcall)) object_types_call_unknown4C(float *unknown2, boolean *unknown3, long object_index,
+	long unknown0);
+void __attribute__((stdcall)) object_types_call_unknown68(long object_index, long unknown2, long unknown0,
+	long unknown1);
 
 #endif

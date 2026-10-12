@@ -2631,3 +2631,9 @@ address,name,source,arguments,returns,convention
 001090d0,object_types_call_unknown70,source/objects/object_types.c,ebx stack,void,stdcall
 00109140,object_types_call_unknown74,source/objects/object_types.c,ebx stack stack,void,stdcall
 00109220,object_types_call_unknown7C,source/objects/object_types.c,ebx stack stack,void,stdcall
+001088a0,object_type_from_tag,source/objects/object_types.c,stack,int,stdcall
+00108a40,object_types_call_unknown28,source/objects/object_types.c,ebx,void
+00108a90,object_types_call_unknown2C,source/objects/object_types.c,ebx stack stack,bool,stdcall
+00108d30,object_types_call_unknown48,source/objects/object_types.c,edi ebx stack,bool,stdcall
+00108d90,object_types_call_unknown4C,source/objects/object_types.c,ebx edi stack stack,bool,stdcall
+00109290,object_types_call_unknown68,source/objects/object_types.c,edi ebx stack stack,void,stdcall

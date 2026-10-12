@@ -2,6 +2,50 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — El tipo de un tag, y las funciones de los tipos que devuelven algo
+
+Seis funciones de `objects/object_types.c` (590 bytes). De 2014
+funciones se pasa a 2020, el 17,93 % de las del juego (el 11,243 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_type_from_tag` | `0x001088a0` | `objects/object_types.c` |
+| `object_types_call_unknown28` | `0x00108a40` | `objects/object_types.c` |
+| `object_types_call_unknown2C` | `0x00108a90` | `objects/object_types.c` |
+| `object_types_call_unknown48` | `0x00108d30` | `objects/object_types.c` |
+| `object_types_call_unknown4C` | `0x00108d90` | `objects/object_types.c` |
+| `object_types_call_unknown68` | `0x00109290` | `objects/object_types.c` |
+
+### Lo que se sabe
+
+- `object_type_from_tag` da **el tipo de objeto de un tag**: compara el
+  grupo del tag con el que cada tipo guarda en `0x4`. Confirma que los
+  tipos son **trece** (hasta ahora era una suposición) y da `NONE` si el
+  tag no es de ninguno.
+- `object_types_call_unknown28` es la única que no parte de un objeto sino
+  de un tag: recibe aquello con lo que se va a crear un objeto (que empieza
+  por su tag) y lo pasa a los tipos. El juego no comprueba que el tag sea
+  de algún tipo.
+- Tres devuelven algo, cada una con su regla:
+  - `…unknown2C`: **todos** los tipos tienen que decir que sí; tras un no,
+    a los demás ya no se les pregunta;
+  - `…unknown48`: se pregunta **hasta que uno diga que sí**;
+  - `…unknown4C`: igual, y además recibe dónde dejar un real y un byte, que
+    quedan a cero si ninguno dice que sí.
+- `…unknown68` pasa tres datos de más.
+- El archivo tiene ya 21 funciones.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  601.
+- Para qué es cada función de la tabla sigue sin saberse.
+- En este hito se pasaron las pruebas de las 21 funciones del archivo.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Ocho más de los tipos de objeto, con uno y dos datos de más
 
 Ocho funciones de `objects/object_types.c` (826 bytes). De 2006
