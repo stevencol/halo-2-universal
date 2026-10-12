@@ -11,7 +11,9 @@ is a guess, by the name that the game gives to its table of data ("lights").
 
 #include "cache/cache_files.h"
 #include "game/game.h"
+#include "math/real_math.h"
 #include "memory/data.h"
+#include "objects/objects.h"
 #include "objects/cluster_partitions.h"
 #include "saved games/game_state.h"
 #include "scenario/scenario.h"
@@ -259,4 +261,79 @@ void lights_place_scenario_lights(
 			scenario= (const byte *)global_scenario;
 		}
 	}
+}
+
+/* 0x000c0350: a new light, of a definition (a tag), at a place and turned
+some way (a point and two directions), with a size: its index, or NONE if
+there is no room. With an object the place is said from the object (and from
+one of its markers, a short), and the object gets the bit 6 of its flags;
+with none it is a place of the world, and the light keeps where its first
+direction gets to from it as well. A light of a definition whose real at 0xB0
+is above zero takes the bit 4 */
+long light_new_at(
+	long definition_index,
+	long object_index,
+	short marker_index,
+	const real_vector3d *up,
+	const real_point3d *position,
+	const real_vector3d *forward,
+	real scale)
+{
+	long light_index= datum_new(light_data);
+
+	if (light_index!=NONE)
+	{
+		byte *light= (byte *)light_data->data+(light_index&0xFFFF)*LIGHT_SIZE;
+		const byte *definition= (const byte *)(uintptr_t)global_tag_instances[definition_index&0xFFFF].address;
+
+		*(long *)(light+4)= definition_index;
+		*(short *)(light+LIGHT_FLAGS_OFFSET)= 0;
+		*(long *)(light+0x14)= (long)game_time_globals->time;
+		*(long *)(light+0x50)= 0;
+		*(short *)(light+0x56)= 0;
+		*(long *)(light+8)= NONE;
+		*(long *)(light+LIGHT_UNKNOWN4C_OFFSET)= NONE;
+		*(short *)(light+0x54)= NONE;
+		*(float *)(light+0xD0)= scale;
+		*(float *)(light+0xCC)= scale;
+		*(short *)(light+LIGHT_FLAGS_OFFSET)= 1;
+		if (*(const float *)(definition+0xB0)>0.0f)
+		{
+			*(short *)(light+LIGHT_FLAGS_OFFSET)= 0x11;
+		}
+		else
+		{
+			*(short *)(light+LIGHT_FLAGS_OFFSET)= 1;
+		}
+		*(long *)(light+LIGHT_UNKNOWN10_OFFSET)= NONE;
+		if (object_index==NONE)
+		{
+			real_point3d *end= (real_point3d *)(light+0x90);
+
+			*(real_point3d *)(light+0x84)= *position;
+			end->x= position->x+forward->i;
+			end->y= position->y+forward->j;
+			end->z= position->z+forward->k;
+			*(real_vector3d *)(light+0xAC)= *forward;
+			*(real_vector3d *)(light+0xB8)= *up;
+			*(long *)(light+LIGHT_UNKNOWN58_OFFSET)= NONE;
+			*(short *)(light+0x5C)= NONE;
+		}
+		else
+		{
+			byte *object= (byte *)((struct object_header_datum *)object_header_data->data)[object_index&0xFFFF].datum;
+
+			*(real_point3d *)(light+0x60)= *position;
+			*(real_vector3d *)(light+0x6C)= *forward;
+			*(real_vector3d *)(light+0x78)= *up;
+			*(short *)(light+0x5C)= marker_index;
+			*(long *)(light+LIGHT_UNKNOWN58_OFFSET)= object_index;
+			*(unsigned long *)(object+4)|= 0x40;
+		}
+		unknown_000c0c80(light_index);
+		*(long *)(light+0xC)= unknown_004e0308-1;
+		*(long *)(light+0x10C)= NONE;
+	}
+
+	return light_index;
 }

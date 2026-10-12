@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Una luz nueva en un sitio, o sobre un objeto
+
+Una función (452 bytes) en `objects/lights.c`. De 2256
+funciones se pasa a 2257, el 20,04 % de las del juego (el 11,659 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `light_new_at` | `0x000c0350` | `objects/lights.c` |
+
+### Lo que se sabe
+
+- `light_new_at` (cuatro argumentos en la pila, el punto en `ebx`, la
+  dirección en `edi` y el tamaño en `xmm0`) crea una luz con posición:
+  - **sin objeto**, en un sitio del mundo: guarda el punto (`+0x84`), el
+    punto al que llega su dirección (`+0x90`) y sus dos direcciones;
+  - **con objeto**, la posición se guarda relativa a él (`+0x60`, `+0x6C`,
+    `+0x78`), con el objeto (`+0x58`) y uno de sus marcadores (`+0x5C`), y
+    al objeto se le pone el bit 6 de sus banderas.
+- Con esto se sabe qué son los dos números que miraban los recorridos del
+  hito 639: `+0x4C` y `+0x58` son los objetos de los que cuelga la luz, de
+  dos maneras distintas.
+- La luz toma el bit 4 si el real de `0xB0` de su definición es mayor que
+  cero, y apunta la hora de la partida en `+0x14`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  689.
+- Los nombres de los argumentos son supuestos (cuál de las dos direcciones
+  es «adelante» y cuál «arriba» no se ha comprobado).
+- En este hito se pasaron las pruebas de la función. Hay una batería
+  completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Colocar las luces del escenario
 
 Una función (133 bytes) en `objects/lights.c`. De 2255
