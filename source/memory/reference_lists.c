@@ -61,3 +61,67 @@ void reference_list_set_extra(
 		reference_index= *(long *)(reference+8);
 	}
 }
+
+/* 0x00296330: the one of a thing is taken out of a list and deleted, if it
+is there. (cluster_partition_remove has the same, written in it) */
+void reference_list_remove(
+	long *first_reference_index,
+	long index,
+	struct data_array *references)
+{
+	long *link= first_reference_index;
+
+	while (*link!=NONE)
+	{
+		byte *reference= (byte *)references->data+(*link&0xFFFF)*references->size;
+
+		if (*(long *)(reference+4)==index)
+		{
+			long next_reference_index= *(long *)(reference+8);
+
+			datum_delete(references, *link);
+			*link= next_reference_index;
+			break;
+		}
+		link= (long *)(reference+8);
+	}
+}
+
+/* 0x00296370: whether a thing is in a list */
+boolean reference_list_contains(
+	const long *first_reference_index,
+	const struct data_array *references,
+	long index)
+{
+	long reference_index;
+
+	for (reference_index= *first_reference_index; reference_index!=NONE; )
+	{
+		const byte *reference= (const byte *)references->data+(reference_index&0xFFFF)*references->size;
+
+		if (*(const long *)(reference+4)==index)
+		{
+			return TRUE;
+		}
+		reference_index= *(const long *)(reference+8);
+	}
+
+	return FALSE;
+}
+
+/* 0x002963b0: all of a list are deleted */
+void reference_list_delete_all(
+	long first_reference_index,
+	struct data_array *references)
+{
+	long reference_index= first_reference_index;
+
+	while (reference_index!=NONE)
+	{
+		long next_reference_index= *(const long *)((const byte *)references->data+
+			(reference_index&0xFFFF)*references->size+8);
+
+		datum_delete(references, reference_index);
+		reference_index= next_reference_index;
+	}
+}

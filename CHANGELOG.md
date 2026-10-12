@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Tres funciones más de las listas de referencias
+
+Tres funciones (159 bytes) en `memory/reference_lists.c`. De 2238
+funciones se pasa a 2241, el 19,89 % de las del juego (el 11,576 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `reference_list_remove` | `0x00296330` | `memory/reference_lists.c` |
+| `reference_list_contains` | `0x00296370` | `memory/reference_lists.c` |
+| `reference_list_delete_all` | `0x002963b0` | `memory/reference_lists.c` |
+
+### Lo que se sabe
+
+- `reference_list_remove` (cabeza en `eax`, cosa en `ebx`, tabla en `edx`)
+  saca de una lista el elemento de una cosa y lo borra; es lo mismo que
+  `cluster_partition_remove` tiene escrito dentro (hito 676).
+- `reference_list_contains` (cabeza en `ecx`, tabla en `eax`, cosa en
+  `edi`) dice si una cosa está en una lista.
+- `reference_list_delete_all` (primer elemento en `eax`, tabla en `edx`)
+  borra todos los elementos de una lista.
+- Las tres pasan todos sus argumentos en registros, y cada una en registros
+  distintos: son funciones que el compilador del juego ajustó a quien las
+  llama.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  678.
+- Queda en el archivo `0x2963f0` (287 bytes). Los nombres son supuestos.
+- En este hito se pasaron las pruebas de las tres funciones. Hay una
+  batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Cambiar lo que se guarda con una cosa en las listas de sus zonas
 
 Dos funciones (147 bytes): una en `memory/reference_lists.c` y otra en

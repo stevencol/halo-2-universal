@@ -2766,3 +2766,6 @@ address,name,source,arguments,returns,convention
 0014a5b0,unknown_0014a5b0,,stack stack stack stack stack,short,stdcall
 002962e0,reference_list_set_extra,source/memory/reference_lists.c,eax ecx edx stack stack,void
 001cadf0,cluster_partition_set_extra,source/objects/cluster_partitions.c,eax edi ebx stack stack,void
+00296330,reference_list_remove,source/memory/reference_lists.c,eax ebx edx,void
+00296370,reference_list_contains,source/memory/reference_lists.c,ecx eax edi,bool
+002963b0,reference_list_delete_all,source/memory/reference_lists.c,eax edx,void
