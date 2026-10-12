@@ -505,3 +505,57 @@ void __attribute__((stdcall)) simulation_player_get_rider_weapons(
 		child= *(const long *)(unit+SIMULATION_PLAYER_OBJECT_NEXT_OFFSET);
 	}
 }
+
+/* 0x000a9f70: an object is put at a place, as a number says; what it gives
+goes on to 0x000aa260, which gives the object how it moves, how it faces and
+how it turns */
+long __attribute__((stdcall)) unknown_000a9f70(long object_index, long unknown, const byte *origin);
+void __attribute__((stdcall)) unknown_000aa260(long unknown0, const byte *velocity, long object_index, long unknown,
+	const byte *origin, const byte *forward, const byte *up, const byte *angular_velocity);
+
+/* 0x00082980: where a unit is, taken from a message: the inverse of
+simulation_player_get_unit_state. The unit is the one that the game has for
+the number of the message (unknown_000a58d0), a biped or a vehicle that is
+attached to nothing. It has to be moved by the one that a number says (its
+number at 0x13C, with the third bit of its byte at 0x10A clear), or to be
+ridden (0x248) by a unit that is. Then it is put where the message says
+(unknown_000a9f70, unknown_000aa260) */
+void simulation_player_apply_unit_state(
+	const byte *state,
+	long unknown)
+{
+	const struct object_header_datum *headers;
+	const byte *unit;
+	long unit_index= unknown_000a58d0(*(const long *)state);
+	long placed;
+
+	if (unit_index==NONE)
+	{
+		return;
+	}
+	headers= (const struct object_header_datum *)object_header_data->data;
+	unit= (const byte *)headers[unit_index&0xFFFF].datum;
+	if (!((1u<<unit[SIMULATION_PLAYER_OBJECT_TYPE_OFFSET])&3))
+	{
+		return;
+	}
+	if (*(const long *)(unit+SIMULATION_PLAYER_UNIT_UNKNOWN13C_OFFSET)!=unknown ||
+		((unit[SIMULATION_PLAYER_UNIT_UNKNOWN10A_OFFSET]>>2)&1))
+	{
+		long rider_index= *(const long *)(unit+SIMULATION_PLAYER_UNIT_UNKNOWN248_OFFSET);
+
+		if (rider_index==NONE ||
+			*(const long *)((const byte *)headers[rider_index&0xFFFF].datum+SIMULATION_PLAYER_UNIT_UNKNOWN13C_OFFSET)!=unknown)
+		{
+			return;
+		}
+	}
+	if (*(const long *)(unit+SIMULATION_PLAYER_OBJECT_PARENT_OFFSET)!=NONE)
+	{
+		return;
+	}
+	placed= unknown_000a9f70(unit_index, 2, state+SIMULATION_PLAYER_UNIT_STATE_ORIGIN_OFFSET);
+	unknown_000aa260(placed, state+SIMULATION_PLAYER_UNIT_STATE_VELOCITY_OFFSET, unit_index, 2,
+		state+SIMULATION_PLAYER_UNIT_STATE_ORIGIN_OFFSET, state+SIMULATION_PLAYER_UNIT_STATE_FORWARD_OFFSET,
+		state+SIMULATION_PLAYER_UNIT_STATE_UP_OFFSET, state+SIMULATION_PLAYER_UNIT_STATE_ANGULAR_VELOCITY_OFFSET);
+}

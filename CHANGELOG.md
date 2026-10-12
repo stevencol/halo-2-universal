@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Dónde está una unidad, tomado de un mensaje
+
+Una función de `networking/simulation_player.c` (190 bytes), la inversa de la del hito 592.
+De 1989
+funciones se pasa a 1990, el 17,67 % de las del juego (el 11,140 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_player_apply_unit_state` | `0x00082980` | `networking/simulation_player.c` |
+
+### Lo que se sabe
+
+- `simulation_player_apply_unit_state` coloca una unidad donde dice un
+  mensaje. La unidad es la que el juego tiene para el número del mensaje
+  (`unknown_000a58d0`); tiene que ser un bípedo o un vehículo y no ir
+  sujeta a nada.
+- **Solo se mueve si es de quien el mensaje dice**: su número de `0x13C`
+  tiene que ser el que se le da (y el tercer bit de su byte `0x10A` estar
+  quitado), o tiene que llevarla (`0x248`) una unidad que lo sea.
+- Entonces se coloca (`unknown_000a9f70`) y recibe cómo se mueve, cómo
+  mira y cómo gira (`unknown_000aa260`).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  593.
+- `unknown_000aa260` recibe en `eax` lo que dejó `unknown_000a9f70`; se
+  escribió así, sin saber si es un resultado o un resto.
+- Qué es el número de `0x13C` no se sabe (por el uso, quién gobierna la
+  unidad).
+- La función no se llama todavía desde el código hecho.
+- En este hito se pasó la prueba de la función.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Las armas en mano de quienes van montados con un objeto
 
 Una función de `networking/simulation_player.c` (253 bytes). De 1988
