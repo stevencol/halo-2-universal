@@ -434,3 +434,5 @@ address,name,source
 0051e9ec,unknown_0051e9ec,source/game/game_unknown_0020aee0.c
 0051e9f0,unknown_0051e9f0,source/game/game_unknown_0020aee0.c
 0051e9f4,unknown_0051e9f4,source/game/game_unknown_0020aee0.c
+00502124,unknown_00502124,source/sound/sound_manager.c
+0051e9c0,unknown_0051e9c0,source/game/game_unknown_001e6a40.c

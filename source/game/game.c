@@ -154,9 +154,9 @@ void unknown_0013e5c7(void);
 void unknown_0013e5d6(void);
 void unknown_0013e610(void);
 void unknown_00146240(void);
-void unknown_00146550(void);
-void unknown_001465b0(void);
-void unknown_00146610(void);
+void game_time_initialize(void);
+void game_time_initialize_for_new_map(void);
+void game_time_dispose_from_old_map(void);
 void unknown_001476c7(void);
 void unknown_0014783f(void);
 void unknown_0014784e(void);
@@ -224,9 +224,9 @@ void unknown_001c7bb0(void);
 void unknown_001c7f60(void);
 void game_unknown_001df460_initialize(void);
 void game_unknown_001df460_initialize_for_new_map(void);
-void unknown_001e6a40(void);
-void unknown_001e6a80(void);
-void unknown_001e6ae0(void);
+void game_unknown_001e6a40_initialize(void);
+void game_unknown_001e6a40_initialize_for_new_map(void);
+void game_unknown_001e6a40_dispose_from_old_map(void);
 void unknown_001eb550(void);
 void unknown_001eb5e0(void);
 void unknown_001eb5f0(void);
@@ -245,7 +245,7 @@ void unknown_00210df0(void);
 void unknown_00210e10(void);
 void unknown_00211030(void);
 void unknown_00215690(void);
-void unknown_00215720(void);
+void saved_game_files_dispose_from_old_map(void);
 void unknown_00215730(void);
 void sound_classes_initialize(void);
 void sound_classes_initialize_for_new_map(void);
@@ -254,7 +254,7 @@ void sound_classes_dispose(void);
 void sound_unknown_002229d0(void);
 void sound_unknown_00222a10(void);
 void sound_unknown_00222a60(void);
-void unknown_00225700(void);
+void sound_unknown_00225700(void);
 void sound_unknown_00225a40(void);
 void sound_unknown_00225a80(void);
 void unknown_00225f80(void);
@@ -347,19 +347,19 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{no_operation, no_operation},
 	{no_operation, no_operation},
 	{no_operation, no_operation},
-	{unknown_00215690, unknown_00215730, no_operation, unknown_00215720},
+	{unknown_00215690, unknown_00215730, no_operation, saved_game_files_dispose_from_old_map},
 	{input_abstraction_initialize, input_abstraction_dispose},
 	{unknown_00155ea0, unknown_00155ed0},
 	{no_operation, no_operation},
 	{unknown_0019bcd0, unknown_0019bd50, unknown_0019c190, unknown_0019c1d0},
 	{unknown_00131ff0, unknown_001320b0},
-	{unknown_00225700, no_operation},
+	{sound_unknown_00225700, no_operation},
 	{game_state_initialize, game_state_dispose, game_state_initialize_for_new_map, no_operation, game_state_set_structure_bsp_index, no_operation},
-	{unknown_00146550, no_operation, unknown_001465b0, unknown_00146610},
+	{game_time_initialize, no_operation, game_time_initialize_for_new_map, game_time_dispose_from_old_map},
 	{game_unknown_001df460_initialize, no_operation, game_unknown_001df460_initialize_for_new_map, no_operation},
 	{unknown_0014b4b0, unknown_0014b560, unknown_0014b580, unknown_0014b600, no_operation, no_operation},
 	{sound_unknown_00185ab0, no_operation, sound_unknown_00185b00, no_operation},
-	{unknown_001e6a40, no_operation, unknown_001e6a80, unknown_001e6ae0},
+	{game_unknown_001e6a40_initialize, no_operation, game_unknown_001e6a40_initialize_for_new_map, game_unknown_001e6a40_dispose_from_old_map},
 	{unknown_00157450, no_operation, unknown_001574c0, unknown_00157bb0},
 	{simulation_initialize, simulation_dispose, simulation_initialize_for_new_map, simulation_dispose_from_old_map},
 	{no_operation, no_operation, game_unknown_0011be20_initialize_for_new_map, game_unknown_0011be20_dispose_from_old_map},

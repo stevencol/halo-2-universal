@@ -363,9 +363,9 @@ address,name,source,arguments,returns,convention
 0013e5d6,unknown_0013e5d6,,,void
 0013e610,unknown_0013e610,,,void
 00146240,unknown_00146240,,,void
-00146550,unknown_00146550,,,void
-001465b0,unknown_001465b0,,,void
-00146610,unknown_00146610,,,void
+00146550,game_time_initialize,source/game/game_time.c,,void
+001465b0,game_time_initialize_for_new_map,source/game/game_time.c,,void
+00146610,game_time_dispose_from_old_map,source/game/game_time.c,,void
 001476c7,unknown_001476c7,,,void
 0014783f,unknown_0014783f,,,void
 0014784e,unknown_0014784e,,,void
@@ -433,9 +433,9 @@ address,name,source,arguments,returns,convention
 001c7f60,unknown_001c7f60,,,void
 001df460,game_unknown_001df460_initialize,source/game/game_unknown_001df460.c,,void
 001df4b0,game_unknown_001df460_initialize_for_new_map,source/game/game_unknown_001df460.c,,void
-001e6a40,unknown_001e6a40,,,void
-001e6a80,unknown_001e6a80,,,void
-001e6ae0,unknown_001e6ae0,,,void
+001e6a40,game_unknown_001e6a40_initialize,source/game/game_unknown_001e6a40.c,,void
+001e6a80,game_unknown_001e6a40_initialize_for_new_map,source/game/game_unknown_001e6a40.c,,void
+001e6ae0,game_unknown_001e6a40_dispose_from_old_map,source/game/game_unknown_001e6a40.c,,void
 001eb550,unknown_001eb550,,,void
 001eb5e0,unknown_001eb5e0,,,void
 001eb5f0,unknown_001eb5f0,,,void
@@ -458,7 +458,7 @@ address,name,source,arguments,returns,convention
 00210e10,unknown_00210e10,,,void
 00211030,unknown_00211030,,,void
 00215690,unknown_00215690,,,void
-00215720,unknown_00215720,,,void
+00215720,saved_game_files_dispose_from_old_map,source/saved games/saved_game_files.c,,void
 00215730,unknown_00215730,,,void
 00217bc0,input_abstraction_initialize,source/input/input_abstraction.c,,void
 00217c20,input_abstraction_dispose,source/input/input_abstraction.c,,void
@@ -469,7 +469,7 @@ address,name,source,arguments,returns,convention
 002229d0,sound_unknown_002229d0,source/sound/sound_manager.c,,void
 00222a10,sound_unknown_00222a10,source/sound/sound_manager.c,,void
 00222a60,sound_unknown_00222a60,source/sound/sound_manager.c,,void
-00225700,unknown_00225700,,,void
+00225700,sound_unknown_00225700,source/sound/sound_manager.c,,void
 00225a40,sound_unknown_00225a40,source/sound/sound_manager.c,,void
 00225a80,sound_unknown_00225a80,source/sound/sound_manager.c,,void
 00225f80,unknown_00225f80,,,void
@@ -2643,3 +2643,4 @@ address,name,source,arguments,returns,convention
 001088e0,object_types_initialize,source/objects/object_types.c,,void
 001872d0,unknown_001872d0,,eax ecx,void
 00211cc0,unknown_00211cc0,,,void
+001e75d0,unknown_001e75d0,,stack,void,stdcall

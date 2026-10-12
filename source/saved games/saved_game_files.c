@@ -1729,3 +1729,12 @@ boolean saved_game_file_get_unused_name(
 
 	return name[0]!=0;
 }
+
+/* 0x00215720: when a map goes, no list of texts is being asked for. It is
+the fourth of the functions of the part of the game that the saved games
+are (game.c) */
+void saved_game_files_dispose_from_old_map(
+	void)
+{
+	saved_game_files_string_list_index= NONE;
+}

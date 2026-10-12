@@ -13592,3 +13592,19 @@ void sound_unknown_00185b00(
 	}
 	unknown[0]= TRUE;
 }
+
+/* 0x00502124: four numbers after unknown_00502120: what they are of is not
+known */
+long unknown_00502124[4];
+
+/* 0x00225700: the four numbers are nothing, and then the third is NONE. It
+is the first function of a part of the game that has no other */
+void sound_unknown_00225700(
+	void)
+{
+	unknown_00502124[0]= 0;
+	unknown_00502124[1]= 0;
+	unknown_00502124[2]= 0;
+	unknown_00502124[3]= 0;
+	unknown_00502124[2]= NONE;
+}

@@ -276,7 +276,13 @@ struct game_time_globals
 	float seconds_per_tick;
 	/* in ticks */
 	unsigned long time;
+	/* how fast the time goes: 1 for a new map */
+	float speed;
+	byte unknown10[0x14];
 };
+
+typedef char verify_game_time_globals_size[
+	sizeof(struct game_time_globals) == 0x24 ? 1 : -1];
 
 /* ---------- prototypes/GAME.C */
 

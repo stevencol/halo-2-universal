@@ -2,6 +2,58 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — El tiempo del juego arranca y se para, y cinco funciones cortas más
+
+Ocho funciones cortas (unos 330 bytes): tres en el archivo nuevo `game/game_time.c`, tres en
+otro de `game/`, una en `saved games/saved_game_files.c` y una en `sound/sound_manager.c`.
+De 2054
+funciones se pasa a 2062, el 18,30 % de las del juego (el 11,258 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_time_initialize` | `0x00146550` | `game/game_time.c` |
+| `game_time_initialize_for_new_map` | `0x001465b0` | `game/game_time.c` |
+| `game_time_dispose_from_old_map` | `0x00146610` | `game/game_time.c` |
+| `saved_game_files_dispose_from_old_map` | `0x00215720` | `saved games/saved_game_files.c` |
+| `sound_unknown_00225700` | `0x00225700` | `sound/sound_manager.c` |
+| `game_unknown_001e6a40_initialize` | `0x001e6a40` | `game/game_unknown_001e6a40.c` |
+| `game_unknown_001e6a40_initialize_for_new_map` | `0x001e6a80` | `game/game_unknown_001e6a40.c` |
+| `game_unknown_001e6a40_dispose_from_old_map` | `0x001e6ae0` | `game/game_unknown_001e6a40.c` |
+
+### Lo que se sabe
+
+- Más partes de la tabla de partes del juego (`game.c`). **Una tiene
+  nombre seguro: el tiempo del juego**, porque el bloque que toma es
+  `game_time_globals`, que ya se usaba.
+  - `game_time_initialize` toma `0x24` bytes del estado del juego (la
+    estructura conocida era de 12; ahora está entera) y los pone a cero.
+  - `game_time_initialize_for_new_map` lee de las opciones del juego los
+    ticks por segundo, calcula cuánto dura un tick (1 entre ese número),
+    pone la velocidad a 1 y marca el tiempo como preparado.
+  - `game_time_dispose_from_old_map` quita esa marca.
+- `saved_game_files_dispose_from_old_map` deja en `NONE` la lista de textos
+  que se estaba pidiendo.
+- `sound_unknown_00225700` pone a cero cuatro números y luego el tercero a
+  `NONE` (`unknown_00502124`).
+- La parte de `0x1e6a40` guarda `0x6C8` bytes: cuatro cosas de `0x1B0`
+  bytes, de cada una de las cuales un mapa nuevo deja dos números en
+  `NONE`. Al irse el mapa llama a `unknown_001e75d0` con un 1.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  607.
+- El campo `speed` del tiempo del juego (el real de `0xC`, que empieza en
+  1) es un nombre supuesto; los `0x14` bytes siguientes no tienen nombre.
+- Las cuatro cosas de la parte de `0x1e6a40` podrían ser los cuatro
+  jugadores de una consola; no está comprobado.
+- En este hito se pasaron las pruebas de las ocho funciones y `test_game`
+  entera.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Cuatro partes más del juego: nueve funciones cortas
 
 Nueve funciones cortas (unos 400 bytes): dos en `sound/sound_manager.c` y siete en tres
