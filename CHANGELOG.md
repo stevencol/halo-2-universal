@@ -2,6 +2,37 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — La IA después de cargar la partida
+
+Una función (22 bytes) en `ai/ai.c`. De 2200
+funciones se pasa a 2201, el 19,54 % de las del juego (el 11,405 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `ai_after_load` | `0x001c7f80` | `ai/ai.c` |
+
+### Lo que se sabe
+
+- `ai_after_load` (antes `unknown_001c7f80`, de la lista de funciones que
+  `game_state.c` llama después de leer el estado de la partida) vuelve a
+  poner en la tabla hash de los dueños de los puestos de tiro sus dos
+  funciones (`actor_firing_position_owner_hash` y `..._compare`). La tabla
+  vive en el estado de la partida, así que tras cargarlo los punteros que
+  trae pueden ser de otra ejecución del juego.
+- Esto confirma que las dos funciones de `0x25dd20` son de esa tabla.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  653.
+- En este hito se pasaron las pruebas de la función y la de
+  `game_state_revert`. Hay una batería completa en marcha sobre el hito
+  637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — La física antes y después de guardar o cargar la partida
 
 Dos funciones (165 bytes) en `physics/havok.c`. De 2198

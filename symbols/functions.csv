@@ -257,7 +257,7 @@ address,name,source,arguments,returns,convention
 0003d380,objects_unknown_0003d380,source/objects/objects.c,stack,void,stdcall
 00155360,game_unknown_001552e0_after_load,source/game/game_unknown_001552e0.c,stack,void,stdcall
 0024c829,unknown_0024c829,,stack,void
-001c7f80,unknown_001c7f80,,stack,void
+001c7f80,ai_after_load,source/ai/ai.c,stack,void,stdcall
 0017d190,unknown_0017d190,,stack,void
 0016f0c0,game_unknown_0016efb0_after_load,source/game/game_unknown_0016efb0.c,stack,void,stdcall
 00226030,unknown_00226030,,stack,void

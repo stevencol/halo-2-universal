@@ -256,3 +256,18 @@ void ai_dispose_from_old_structure_bsp(
 		unknown_00292f60();
 	}
 }
+
+/* 0x0025dd20 and 0x0025dd30, of actors.c */
+unsigned long HASH_TABLE_CALLBACK actor_firing_position_owner_hash(long key);
+boolean HASH_TABLE_CALLBACK actor_firing_position_owner_compare(long key, long other);
+
+/* 0x001c7f80: after the state of the game is read (game_state.c), the table
+of who has each place to fire from, which is in that state, gets its two
+functions again: the ones it had may be of another run of the game */
+void __attribute__((stdcall)) ai_after_load(
+	unsigned long flags)
+{
+	(void)flags;
+	actor_firing_position_owners->hash= actor_firing_position_owner_hash;
+	actor_firing_position_owners->compare= actor_firing_position_owner_compare;
+}

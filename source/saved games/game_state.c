@@ -76,7 +76,7 @@ void GAME_STATE_PROC unknown_00043970(unsigned long flags);
 void GAME_STATE_PROC objects_unknown_0003d380(unsigned long flags);
 void GAME_STATE_PROC game_unknown_001552e0_after_load(unsigned long flags);
 void GAME_STATE_PROC unknown_0024c829(unsigned long flags);
-void GAME_STATE_PROC unknown_001c7f80(unsigned long flags);
+void GAME_STATE_PROC ai_after_load(unsigned long flags);
 void GAME_STATE_PROC unknown_0017d190(unsigned long flags);
 void GAME_STATE_PROC game_unknown_0016efb0_after_load(unsigned long flags);
 void GAME_STATE_PROC unknown_00226030(unsigned long flags);
@@ -141,7 +141,7 @@ game_state_proc game_state_after_load_procs[NUMBER_OF_GAME_STATE_AFTER_LOAD_PROC
 	game_unknown_001552e0_after_load,
 	unknown_0024c829,
 	havok_after_save_or_load,
-	unknown_001c7f80,
+	ai_after_load,
 	unknown_0017d190,
 	game_unknown_0016efb0_after_load,
 	unknown_00226030
