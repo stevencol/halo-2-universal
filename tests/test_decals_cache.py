@@ -28,7 +28,7 @@ def run(t) -> None:
             "decal_cache_delete_block",
             block_index,
             globals={"decal_cache_block_decal_indices": table(random_)},
-            externals={"unknown_0017d810": lambda harness, arguments: 0},
+            externals={"decal_delete_chain": lambda harness, arguments: 0},
         )
 
         indices = bytearray(table(random_))

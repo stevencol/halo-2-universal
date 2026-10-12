@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Borrar un decal, y una cadena de decals
+
+Dos funciones (unos 210 bytes) en `effects/decals.c`. De 2211
+funciones se pasa a 2213, el 19,64 % de las del juego (el 11,444 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `decal_delete` | `0x0017d860` | `effects/decals.c` |
+| `decal_delete_chain` | `0x0017d810` | `effects/decals.c` |
+
+### Lo que se sabe
+
+- `decal_delete` saca un decal de su lista doblemente enlazada (anterior en
+  `+0x30`, siguiente en `+0x34`) y lo borra de la tabla. Si era el primero
+  de su lista, actualiza la cabeza, que está en `decal_globals`.
+- Con eso **se entiende `decal_globals`**: sus `0xE00` números son las
+  cabezas de 7 listas × 512 sitios (el byte `+3` del decal dice la lista y
+  su `short` de `+0xA` el sitio), y el número de `0x3800` es la cabeza de
+  la lista de los decals sin sitio (`NONE` en `+0xA`).
+- `decal_delete_chain` (antes `unknown_0017d810`, la que avisa la caché)
+  borra un decal y todos los que cuelgan de él por `+0x3C`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  660.
+- Que los «sitios» sean las zonas (*clusters*) del bsp y las siete listas
+  las capas de los decals es una suposición; los nombres también.
+- En este hito se pasaron las pruebas de `test_decals*` (seis funciones).
+  Hay una batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — La caché de los decals
 
 Cuatro funciones (unos 200 bytes) en `effects/decals.c`. De 2207

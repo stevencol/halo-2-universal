@@ -2746,4 +2746,5 @@ address,name,source,arguments,returns,convention
 00043820,decal_cache_delete_block,source/effects/decals.c,stack,void,stdcall
 00043850,decal_cache_block_locked,source/effects/decals.c,stack,bool,stdcall
 00043990,decals_cache_idle,source/effects/decals.c,,void
-0017d810,unknown_0017d810,,eax,void
+0017d810,decal_delete_chain,source/effects/decals.c,eax,void
+0017d860,decal_delete,source/effects/decals.c,eax,void

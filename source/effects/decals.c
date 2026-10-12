@@ -23,7 +23,19 @@ enum
 	DECAL_GLOBALS_UNKNOWN0_COUNT= 0xE00,
 	DECAL_GLOBALS_UNKNOWN3800_OFFSET= 0x3800,
 	DECAL_GLOBALS_UNKNOWN3804_OFFSET= 0x3804,
-	DECAL_GLOBALS_UNKNOWN3808_OFFSET= 0x3808
+	DECAL_GLOBALS_UNKNOWN3808_OFFSET= 0x3808,
+
+	/* of a mark: which of seven lists it is in (a byte, at 3) and of which
+	of 0x200 places (a short, at 0xA; NONE for the list of the marks of no
+	place); the mark before it and the one after it in the list; and the
+	next of the marks that were made with it. The names are guesses */
+	DECAL_SIZE= 0x40,
+	DECAL_LIST_OFFSET= 3,
+	DECAL_PLACE_OFFSET= 0xA,
+	DECAL_PREVIOUS_OFFSET= 0x30,
+	DECAL_NEXT_OFFSET= 0x34,
+	DECAL_NEXT_OF_CHAIN_OFFSET= 0x3C,
+	DECAL_PLACES_PER_LIST_BITS= 9
 };
 
 /* ---------- globals */
@@ -114,7 +126,7 @@ long decal_cache_block_decal_indices[0x400];
 
 /* 0x0017d810: a mark, and those that follow it in its list, lose what they
 have in the cache */
-void unknown_0017d810(long decal_index);
+void decal_delete_chain(long decal_index);
 
 /* 0x00043820: the first of the two functions of the cache: a block goes, and
 its mark, if it has one, is told */
@@ -125,7 +137,7 @@ void LRUV_CALLBACK decal_cache_delete_block(
 
 	if (*decal_index!=NONE)
 	{
-		unknown_0017d810(*decal_index);
+		decal_delete_chain(*decal_index);
 		*decal_index= NONE;
 	}
 }
@@ -157,4 +169,52 @@ void decals_cache_idle(
 	void)
 {
 	lruv_idle(unknown_00509448);
+}
+
+#define DECAL_GET(decal_index) ((byte *)decal_data->data+((decal_index)&0xFFFF)*DECAL_SIZE)
+
+/* 0x0017d860: a mark is taken out of its list and is no more. The first of
+a list is kept in what decal_globals points to: one of the 0xE00 numbers, by
+the list and the place of the mark, or the number at 0x3800 for a mark of no
+place */
+void decal_delete(
+	long decal_index)
+{
+	byte *decal= DECAL_GET(decal_index);
+
+	if (*(long *)(decal+DECAL_NEXT_OFFSET)!=NONE)
+	{
+		*(long *)(DECAL_GET(*(long *)(decal+DECAL_NEXT_OFFSET))+DECAL_PREVIOUS_OFFSET)=
+			*(long *)(decal+DECAL_PREVIOUS_OFFSET);
+	}
+	if (*(long *)(decal+DECAL_PREVIOUS_OFFSET)!=NONE)
+	{
+		*(long *)(DECAL_GET(*(long *)(decal+DECAL_PREVIOUS_OFFSET))+DECAL_NEXT_OFFSET)=
+			*(long *)(decal+DECAL_NEXT_OFFSET);
+	}
+	else if (*(short *)(decal+DECAL_PLACE_OFFSET)==NONE)
+	{
+		*(long *)(decal_globals+DECAL_GLOBALS_UNKNOWN3800_OFFSET)= *(long *)(decal+DECAL_NEXT_OFFSET);
+	}
+	else
+	{
+		((long *)decal_globals)[((char)decal[DECAL_LIST_OFFSET]<<DECAL_PLACES_PER_LIST_BITS)+
+			*(short *)(decal+DECAL_PLACE_OFFSET)]= *(long *)(decal+DECAL_NEXT_OFFSET);
+	}
+	datum_delete(decal_data, decal_index);
+}
+
+/* 0x0017d810: a mark is deleted, and those that were made with it after it */
+void decal_delete_chain(
+	long decal_index)
+{
+	long next_index= *(long *)(DECAL_GET(decal_index)+DECAL_NEXT_OF_CHAIN_OFFSET);
+
+	decal_delete(decal_index);
+	while (next_index!=NONE)
+	{
+		decal_index= next_index;
+		next_index= *(long *)(DECAL_GET(decal_index)+DECAL_NEXT_OF_CHAIN_OFFSET);
+		decal_delete(decal_index);
+	}
 }
