@@ -12,6 +12,7 @@ gives to its table of data ("actor").
 
 #include "cache/cache_files.h"
 #include "game/game.h"
+#include "math/real_math.h"
 #include "memory/data.h"
 #include "memory/hash_table.h"
 #include "saved games/game_state.h"
@@ -255,4 +256,214 @@ boolean actor_unknown_001f3610(
 	}
 
 	return TRUE;
+}
+
+/* 0x00502418, of props.c: who each actor knows of */
+extern struct data_array *prop_ref_data;
+
+/* 0x0046fbe4, 0x0046fbe8: two numbers that the game keeps with its data,
+0xFFFF and 0xFFFE, and whose low halves (NONE and -2) some functions of the
+actors answer with. What the answers mean is not known */
+long unknown_0046fbe4= 0xFFFF;
+long unknown_0046fbe8= 0xFFFE;
+
+#define ACTOR_PROP_REF_GET(prop_ref_index) \
+	((const byte *)prop_ref_data->data+((prop_ref_index)&0xFFFF)*0x3C)
+
+/* 0x001aeb60: 3 for an actor whose thing of prop_ref_data at 0x338 has 1 for
+its short at 0x18; 0 if it has none, or another number */
+long __attribute__((stdcall)) actor_unknown_001aeb60(
+	long actor_index)
+{
+	long prop_ref_index= *(const long *)(ACTOR_GET(actor_index)+0x338);
+
+	if (prop_ref_index!=NONE && *(const short *)(ACTOR_PROP_REF_GET(prop_ref_index)+0x18)==1)
+	{
+		return 3;
+	}
+
+	return 0;
+}
+
+/* 0x001bca60: 3 if that thing has 2 or more for its byte at 0x26 */
+long __attribute__((stdcall)) actor_unknown_001bca60(
+	long actor_index)
+{
+	long prop_ref_index= *(const long *)(ACTOR_GET(actor_index)+0x338);
+
+	if (prop_ref_index!=NONE && *(const char *)(ACTOR_PROP_REF_GET(prop_ref_index)+0x26)>=2)
+	{
+		return 3;
+	}
+
+	return 0;
+}
+
+/* 0x001c10a0: 3 for an actor that has its byte at 0x22A, not the one at
+0x223, and something at 0x338 */
+long __attribute__((stdcall)) actor_unknown_001c10a0(
+	long actor_index)
+{
+	const byte *actor= ACTOR_GET(actor_index);
+
+	if (actor[0x22A] && !actor[0x223] && *(const long *)(actor+0x338)!=NONE)
+	{
+		return 3;
+	}
+
+	return 0;
+}
+
+/* 0x001b3540: an actor has 1 for its bytes at 0x4AE and 0x484, and, if it
+has something at 0x26C, 0.6 for its real number at 0x4B4 */
+void __attribute__((stdcall)) actor_unknown_001b3540(
+	long actor_index,
+	long unknown1)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	(void)unknown1;
+	actor[0x4AE]= 1;
+	actor[0x484]= 1;
+	if (*(const long *)(actor+0x26C)!=NONE)
+	{
+		*(float *)(actor+0x4B4)= 0.6f;
+	}
+}
+
+/* 0x001bce80: the same, and 1 for its byte at 0x485 too */
+void __attribute__((stdcall)) actor_unknown_001bce80(
+	long actor_index,
+	long unknown1)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	(void)unknown1;
+	actor[0x4AE]= 1;
+	actor[0x484]= 1;
+	actor[0x485]= 1;
+	if (*(const long *)(actor+0x26C)!=NONE)
+	{
+		*(float *)(actor+0x4B4)= 0.6f;
+	}
+}
+
+/* 0x001b8370: an actor has 4 and 2 for its shorts at 0x41C and 0x420, and 1
+for its bytes at 0x449 and 0x44A */
+void __attribute__((stdcall)) actor_unknown_001b8370(
+	long actor_index,
+	long unknown1,
+	long unknown2)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	(void)unknown1;
+	(void)unknown2;
+	*(short *)(actor+0x41C)= 4;
+	*(short *)(actor+0x420)= 2;
+	actor[0x449]= 1;
+	actor[0x44A]= 1;
+}
+
+/* 0x001bcc50: an actor has 3 and 2 for those shorts, and 1 for its bytes at
+0x4AE and 0x488 */
+void __attribute__((stdcall)) actor_unknown_001bcc50(
+	long actor_index,
+	long unknown1)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	(void)unknown1;
+	*(short *)(actor+0x41C)= 3;
+	*(short *)(actor+0x420)= 2;
+	actor[0x4AE]= 1;
+	actor[0x488]= 1;
+}
+
+/* 0x001bd1e0: an actor has 4 and 4 for those shorts, and the vector forward
+at 0x424 */
+void __attribute__((stdcall)) actor_unknown_001bd1e0(
+	long actor_index,
+	long unknown1)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	(void)unknown1;
+	*(short *)(actor+0x41C)= 4;
+	*(short *)(actor+0x420)= 4;
+	*(real_vector3d *)(actor+0x424)= *global_forward3d;
+}
+
+/* 0x001b56b0: an actor that has nothing at 0x344 takes what something names
+at 0x10. The answer is unknown_0046fbe4 if neither has anything, and
+unknown_0046fbe8 if not */
+short __attribute__((stdcall)) actor_unknown_001b56b0(
+	long actor_index,
+	const byte *unknown1,
+	long unknown2)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	(void)unknown2;
+	if (*(const long *)(actor+0x344)==NONE)
+	{
+		if (*(const long *)(unknown1+0x10)==NONE)
+		{
+			return (short)unknown_0046fbe4;
+		}
+		*(long *)(actor+0x344)= *(const long *)(unknown1+0x10);
+	}
+
+	return (short)unknown_0046fbe8;
+}
+
+/* 0x001bc580: unknown_0046fbe4 if something names nothing at 0xC, or the
+actor has NONE for its short at 0x31C; unknown_0046fbe8 if not */
+short __attribute__((stdcall)) actor_unknown_001bc580(
+	long actor_index,
+	const byte *unknown1,
+	long unknown2)
+{
+	(void)unknown2;
+	if (*(const long *)(unknown1+0xC)==NONE || *(const short *)(ACTOR_GET(actor_index)+0x31C)==NONE)
+	{
+		return (short)unknown_0046fbe4;
+	}
+
+	return (short)unknown_0046fbe8;
+}
+
+/* 0x001b1f30: unknown_0046fbe4 if something has its byte at 0x12 and the
+actor has 2 for its short at 0x504; unknown_0046fbe8 if not */
+short __attribute__((stdcall)) actor_unknown_001b1f30(
+	long actor_index,
+	const byte *unknown1,
+	long unknown2)
+{
+	(void)unknown2;
+	if (unknown1[0x12] && *(const short *)(ACTOR_GET(actor_index)+0x504)==2)
+	{
+		return (short)unknown_0046fbe4;
+	}
+
+	return (short)unknown_0046fbe8;
+}
+
+/* 0x001e4220: an actor takes a value for its byte at 0x6D0, and has the bit
+27 of its number at 0x810 if the value is not zero */
+void actor_set_unknown6D0(
+	long actor_index,
+	boolean value)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	actor[0x6D0]= value;
+	if (value)
+	{
+		*(unsigned long *)(actor+0x810)|= 0x8000000;
+	}
+	else
+	{
+		*(unsigned long *)(actor+0x810)&= ~0x8000000;
+	}
 }

@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Doce funciones pequeñas más de los actores
+
+Doce funciones (819 bytes) en `ai/actors.c`. De 2419
+funciones se pasa a 2431, el 21,58 % de las del juego (el 11,918 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `actor_unknown_001aeb60` | `0x001aeb60` | `ai/actors.c` |
+| `actor_unknown_001bca60` | `0x001bca60` | `ai/actors.c` |
+| `actor_unknown_001c10a0` | `0x001c10a0` | `ai/actors.c` |
+| `actor_unknown_001b3540` | `0x001b3540` | `ai/actors.c` |
+| `actor_unknown_001bce80` | `0x001bce80` | `ai/actors.c` |
+| `actor_unknown_001b8370` | `0x001b8370` | `ai/actors.c` |
+| `actor_unknown_001bcc50` | `0x001bcc50` | `ai/actors.c` |
+| `actor_unknown_001bd1e0` | `0x001bd1e0` | `ai/actors.c` |
+| `actor_unknown_001b56b0` | `0x001b56b0` | `ai/actors.c` |
+| `actor_unknown_001bc580` | `0x001bc580` | `ai/actors.c` |
+| `actor_unknown_001b1f30` | `0x001b1f30` | `ai/actors.c` |
+| `actor_set_unknown6D0` | `0x001e4220` | `ai/actors.c` |
+
+### Lo que se sabe
+
+- Lo que un actor tiene en `0x338` es una de las cosas de `prop_ref_data`
+  (a quién conoce): dos funciones dan 3 según un dato de esa cosa.
+- Tres funciones responden con uno de dos números que el juego guarda con
+  sus datos, `unknown_0046fbe4` (-1) y `unknown_0046fbe8` (-2).
+- Cinco ponen datos del actor: los `short` de `0x41C` y `0x420`, bytes
+  sueltos, 0,6 en `0x4B4` o el vector «adelante» en `0x424`.
+- `actor_set_unknown6D0` pone un byte y el bit 27 de `0x810` a la vez.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  721.
+- Los nombres van por dirección; qué significan las respuestas -1, -2 y 3
+  no se sabe (parecen de las funciones de los comportamientos de la IA).
+- Las dos variables nuevas se leen como `short`, pero ocupan cuatro bytes
+  cada una; se declaran como números de cuatro.
+- En este hito se pasaron las pruebas de las doce funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Trece funciones pequeñas de los actores y una del tiempo
 
 Catorce funciones (558 bytes): trece en `ai/actors.c` y una en

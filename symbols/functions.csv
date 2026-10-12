@@ -2953,3 +2953,15 @@ address,name,source,arguments,returns,convention
 001e4260,actor_unknown_001e4260,source/ai/actors.c,eax,void
 001f3610,actor_unknown_001f3610,source/ai/actors.c,eax ecx,bool
 001469f0,game_seconds_to_ticks,source/game/game_time.c,stack,int,stdcall
+001aeb60,actor_unknown_001aeb60,source/ai/actors.c,stack,int,stdcall
+001bca60,actor_unknown_001bca60,source/ai/actors.c,stack,int,stdcall
+001c10a0,actor_unknown_001c10a0,source/ai/actors.c,stack,int,stdcall
+001b3540,actor_unknown_001b3540,source/ai/actors.c,stack stack,void,stdcall
+001bce80,actor_unknown_001bce80,source/ai/actors.c,stack stack,void,stdcall
+001b8370,actor_unknown_001b8370,source/ai/actors.c,stack stack stack,void,stdcall
+001bcc50,actor_unknown_001bcc50,source/ai/actors.c,stack stack,void,stdcall
+001bd1e0,actor_unknown_001bd1e0,source/ai/actors.c,stack stack,void,stdcall
+001b56b0,actor_unknown_001b56b0,source/ai/actors.c,stack stack stack,short,stdcall
+001bc580,actor_unknown_001bc580,source/ai/actors.c,stack stack stack,short,stdcall
+001b1f30,actor_unknown_001b1f30,source/ai/actors.c,stack stack stack,short,stdcall
+001e4220,actor_set_unknown6D0,source/ai/actors.c,eax ecx,void

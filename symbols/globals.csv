@@ -568,3 +568,5 @@ address,name,source
 004b9ed8,unknown_004b9ed8,source/game/game_engine.c
 004de2d0,unknown_004de2d0,source/units/units.c
 00509415,unknown_00509415,source/main/main.c
+0046fbe4,unknown_0046fbe4,source/ai/actors.c
+0046fbe8,unknown_0046fbe8,source/ai/actors.c
