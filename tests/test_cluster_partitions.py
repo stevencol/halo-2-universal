@@ -18,7 +18,7 @@ def run(t) -> None:
         def table(harness, arguments, made=made):
             # the name is on the stack of the function: what is compared is its text
             name = bytes(harness.mu.mem_read(arguments[0], 0x100)).split(b"\0")[0]
-            calls = sum(1 for call in harness._calls if call[0] == "unknown_00296270")
+            calls = sum(1 for call in harness._calls if call[0] == "reference_list_new")
             return made[min(calls, 1)], (name, arguments[1], arguments[2])
 
         allocated = random_.choice((0, 0x40, 0x1288))
@@ -30,5 +30,5 @@ def run(t) -> None:
             random_.choice((0, 4, 0x14, random_.getrandbits(32))),
             globals={"game_state_globals": game_state_globals(random_, base=BASE, cpu_allocation_size=allocated)},
             memory={BASE + allocated: Memory(random_.randbytes(0x800 + 0x10))},
-            externals={"unknown_00296270": table},
+            externals={"reference_list_new": table},
         )

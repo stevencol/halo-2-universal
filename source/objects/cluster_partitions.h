@@ -40,5 +40,6 @@ typedef char verify_cluster_partition_size[
 
 void __attribute__((stdcall)) cluster_partition_initialize(struct cluster_partition *partition, const char *name,
 	long unknown3);
+void cluster_partition_remove(struct cluster_partition *partition, long index, long *first_reference_index);
 
 #endif

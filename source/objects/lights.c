@@ -59,7 +59,6 @@ struct cluster_partition light_cluster_partition;
 
 void __attribute__((stdcall)) cluster_partition_initialize(struct cluster_partition *unknown, const char *name,
 	long unknown3);
-void unknown_001cae40(struct cluster_partition *unknown, long light_index, byte *unknown10);
 void __attribute__((stdcall)) unknown_000c2d00(long light_index);
 void __attribute__((stdcall)) unknown_000c0c80(long light_index);
 void __attribute__((stdcall)) unknown_000c3260(long light_index, boolean unknown);
@@ -124,7 +123,7 @@ void lights_unknown_000c00a0(
 }
 
 /* 0x000c0110: each light whose two numbers are NONE and that has the bits 3
-and 1 is given to unknown_001cae40, with what it has at 0x10, and loses the
+and 1 is given to cluster_partition_remove, with what it has at 0x10, and loses the
 bit 3 */
 void lights_unknown_000c0110(
 	void)
@@ -150,7 +149,7 @@ void lights_unknown_000c0110(
 
 			if (light[LIGHT_FLAGS_OFFSET]&2)
 			{
-				unknown_001cae40(&light_cluster_partition, light_index, light+LIGHT_UNKNOWN10_OFFSET);
+				cluster_partition_remove(&light_cluster_partition, light_index, (long *)(light+LIGHT_UNKNOWN10_OFFSET));
 				light[LIGHT_FLAGS_OFFSET]&= ~8;
 			}
 		}

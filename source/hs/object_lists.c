@@ -19,16 +19,16 @@ extern struct data_array *list_object_data;
 
 /* 0x00296270: a table of data of another make, in the memory of the state of
 the game: by its name and how many things it has room for */
-struct data_array *__attribute__((stdcall)) unknown_00296270(const char *name, long maximum_count, long unknown);
+struct data_array *__attribute__((stdcall)) reference_list_new(const char *name, long maximum_count, long unknown);
 
 /* ---------- code */
 
 /* 0x001ded00: the lists of objects make their two tables, in the memory of
 the state of the game: the lists with data_new, which the game has written
-here, and what is in them with unknown_00296270 */
+here, and what is in them with reference_list_new */
 void object_lists_initialize(
 	void)
 {
 	object_list_header_data= data_new("object list header", 0x30, 0xC, 0, game_state_allocation);
-	list_object_data= unknown_00296270("list object", 0x80, 0);
+	list_object_data= reference_list_new("list object", 0x80, 0);
 }

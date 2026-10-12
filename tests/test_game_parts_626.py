@@ -20,7 +20,7 @@ def run(t) -> None:
             extra=buffers,
             mocks=mocks,
             externals={
-                "unknown_00296270": lambda harness, arguments, made=random_.choice((0, 0x12340000)): (
+                "reference_list_new": lambda harness, arguments, made=random_.choice((0, 0x12340000)): (
                     made,
                     (bytes(harness.mu.mem_read(arguments[0], 12)), arguments[1], arguments[2]),
                 ),

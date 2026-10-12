@@ -27,7 +27,7 @@ def lights(random_) -> Buffer:
 
 
 def given(harness, arguments) -> tuple:
-    """What to compare of a call to unknown_001cae40: that it is given the three things of the lights."""
+    """What to compare of a call to cluster_partition_remove: that it is given the three things of the lights."""
     return 0, (
         arguments[0] == harness.global_addresses["light_cluster_partition"],
         *map(harness.normalize, arguments[1:]),
@@ -46,7 +46,7 @@ def run(t) -> None:
         t.check(
             "lights_unknown_000c0110",
             globals={"light_data": lights(random_), "light_cluster_partition": random_.randbytes(12)},
-            externals={"unknown_001cae40": given},
+            externals={"cluster_partition_remove": given},
         )
         t.check(
             "lights_unknown_000c01c0",

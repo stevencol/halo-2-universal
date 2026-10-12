@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 675.
+**Última actualización:** 2026-10-08, al terminar el hito 676.
 
 ## Dónde estamos
 
-- **2232 funciones descompiladas de 11.265: el 19,81 % del juego** (el
-  11,541 % de los bytes de código).
-- Las 2232 están comprobadas contra el ejecutable original: las 1390 del
+- **2234 funciones descompiladas de 11.265: el 19,83 % del juego** (el
+  11,549 % de los bytes de código).
+- Las 2234 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how a cluster partition is made* (ver `git log`).
+- Último hito: *Decompile how a reference list is made and how a thing leaves its clusters* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 530 funciones apuntadas pero sin descompilar (las que el código
-  llama); 381 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 528 funciones apuntadas pero sin descompilar (las que el código
+  llama); 379 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 

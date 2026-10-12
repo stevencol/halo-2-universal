@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Tablas de referencias, y sacar una cosa de sus zonas
+
+Dos funciones (unos 250 bytes): una en el archivo nuevo `memory/reference_lists.c` y otra
+en `objects/cluster_partitions.c`. De 2232
+funciones se pasa a 2234, el 19,83 % de las del juego (el 11,549 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `reference_list_new` | `0x00296270` | `memory/reference_lists.c` |
+| `cluster_partition_remove` | `0x001cae40` | `objects/cluster_partitions.c` |
+
+### Lo que se sabe
+
+- `reference_list_new` (antes `unknown_00296270`; nombre en `eax`, número
+  máximo en `ebx`): crea en el estado de la partida una tabla llamada
+  `"<nombre> reference"`, con elementos de `0xC` bytes más los que se le
+  pidan; si salen de `0x20` bytes, alineados a `0x20`. La usan las listas
+  de objetos de los guiones y las dos tablas de cada
+  `cluster_partition`.
+- `cluster_partition_remove` (antes `unknown_001cae40`; la estructura llega
+  en `edi`): saca una cosa de todas las zonas en las que está. La cosa
+  tiene una lista de «dónde estoy» en la segunda tabla (zona en `+4`,
+  siguiente en `+8`); por cada elemento, lo borra y busca en la lista de
+  esa zona (primera tabla: cosa en `+4`, siguiente en `+8`; la cabeza de
+  cada zona está en `unknown0`) el elemento de la cosa, y lo borra también.
+- De paso se sabe que una luz guarda en `+0x10` la cabeza de su lista de
+  zonas (es lo que `lights_unknown_000c0110` le pasa).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  675.
+- Los nombres son supuestos. Quedan del módulo `0x1cab80` y `0x1cac60`
+  (añadir una cosa a sus zonas).
+- En este hito se pasaron las pruebas de las dos funciones, `test_lights*`,
+  `test_cluster_partitions` y `test_game_parts_626`. Hay una batería
+  completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Lo que dice qué hay en cada zona del bsp
 
 Una función (159 bytes) en los archivos nuevos `objects/cluster_partitions.{h,c}`.

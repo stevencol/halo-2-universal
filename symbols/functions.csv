@@ -2667,7 +2667,7 @@ address,name,source,arguments,returns,convention
 0018bb80,unknown_0018bb80,,stack,void,stdcall
 0016f4b0,unknown_0016f4b0,,esi,void
 00155a30,unknown_00155a30,,stack,void,stdcall
-00296270,unknown_00296270,,eax ebx stack,pointer,stdcall
+00296270,reference_list_new,source/memory/reference_lists.c,eax ebx stack,pointer,stdcall
 0020a1a0,unknown_0020a1a0,,,void
 000c3a40,liquid_initialize,source/objects/liquid.c,,void
 000c3a80,liquid_initialize_for_new_map,source/objects/liquid.c,,void
@@ -2707,7 +2707,7 @@ address,name,source,arguments,returns,convention
 000c01c0,lights_unknown_000c01c0,source/objects/lights.c,,void
 000c2d00,unknown_000c2d00,,stack,void,stdcall
 000c3260,unknown_000c3260,,stack stack,void,stdcall
-001cae40,unknown_001cae40,,edi stack stack,void
+001cae40,cluster_partition_remove,source/objects/cluster_partitions.c,edi stack stack,void
 000c0230,light_new,source/objects/lights.c,stack stack stack stack stack,int,stdcall
 000c0c80,unknown_000c0c80,,stack,void,stdcall
 000d4830,widgets_initialize,source/objects/widgets.c,,void
