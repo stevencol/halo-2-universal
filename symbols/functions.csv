@@ -2523,7 +2523,7 @@ address,name,source,arguments,returns,convention
 0008bf10,simulation_player_actions_add,source/networking/simulation_player.c,ecx stack,void,stdcall
 003a07a3,XOnlineFriendsStartup,,stack stack,int,stdcall
 003a069d,XOnlineOfferingIsNewContentAvailable,,stack stack stack,int,stdcall
-00188cd0,unknown_00188cd0,,,void
+00188cd0,sound_fade_for_game_end,source/sound/sound_manager.c,,void
 0008d3d0,online_feedback_send,source/networking/online_friends.c,eax stack stack,void,stdcall
 003a0890,XOnlineFeedbackSend,,stack stack stack stack stack stack stack stack,int,stdcall
 0008d230,online_friend_get_online_state,source/networking/online_friends.c,edi esi,bool
@@ -2663,7 +2663,7 @@ address,name,source,arguments,returns,convention
 00208ff0,hs_runtime_initialize,source/hs/hs_runtime.c,,void
 002a09c0,unknown_002a09c0,,,void
 002090a0,unknown_002090a0,,,void
-00188d60,unknown_00188d60,,,void
+00188d60,sound_fade_in_for_new_map,source/sound/sound_manager.c,,void
 0018bb80,unknown_0018bb80,,stack,void,stdcall
 0016f4b0,unknown_0016f4b0,,esi,void
 00155a30,unknown_00155a30,,stack,void,stdcall

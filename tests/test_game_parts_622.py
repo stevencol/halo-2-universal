@@ -30,7 +30,7 @@ def run(t) -> None:
                 "unknown_004ed28c": random_.choice((0, 1, 1, 1)) and Buffer(random_.randbytes(0x4C)),
                 "unknown_004ed288": Buffer(random_.randbytes(0x254)),
             },
-            externals={"data_delete_all": table, "sound_console_set_gains": lambda harness, arguments: (0, (bytes(harness.mu.mem_read(arguments[0], 16)),)), "unknown_00188d60": note},
+            externals={"data_delete_all": table, "sound_console_set_gains": lambda harness, arguments: (0, (bytes(harness.mu.mem_read(arguments[0], 16)),)), "sound_fade_in_for_new_map": note},
         )
         t.check(
             "object_looping_sounds_unknown_00188980",

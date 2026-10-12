@@ -1154,7 +1154,7 @@ boolean unknown_00547f6f;
 
 /* 0x00188cd0: something is done two seconds before a game that is over
 ends */
-void unknown_00188cd0(void);
+void sound_fade_for_game_end(void);
 
 /* 0x00138e40: each tick of a campaign that this console does not predict:
 the game is lost or is not, by what the players say (one thing of theirs, or
@@ -1205,7 +1205,7 @@ void game_update_finished(
 		globals->finished_ticks--;
 		if (!globals->unknown1129 && (real)globals->finished_ticks*game_time_globals->seconds_per_tick<=2.0f)
 		{
-			unknown_00188cd0();
+			sound_fade_for_game_end();
 			main_game_globals->unknown1129= TRUE;
 		}
 	}

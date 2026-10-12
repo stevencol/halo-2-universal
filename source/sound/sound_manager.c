@@ -13673,7 +13673,7 @@ enum
 
 /* 0x00188d60: what more is done for a new map. 0x0018bb80: something that
 the fifth function of the part does first */
-void unknown_00188d60(void);
+void sound_fade_in_for_new_map(void);
 void __attribute__((stdcall)) unknown_0018bb80(long unknown);
 
 /* 0x00188870: for a new map, if the table of the looping sounds of the
@@ -13683,7 +13683,7 @@ nothing for the two after them and for its shorts (a real 0 made a short),
 every bit of its bytes set, 1 for its four reals, 8000 for the number and
 nothing for the last real; and the console is given the four reals
 (sound_console_set_gains). In any case
-unknown_00188d60 is done */
+sound_fade_in_for_new_map is done */
 void object_looping_sounds_initialize_for_new_map(
 	void)
 {
@@ -13713,7 +13713,7 @@ void object_looping_sounds_initialize_for_new_map(
 		*(real *)(unknown+OBJECT_LOOPING_SOUNDS_UNKNOWN23C_OFFSET)= 0.0f;
 		sound_console_set_gains((const real *)(unknown+OBJECT_LOOPING_SOUNDS_REALS_OFFSET));
 	}
-	unknown_00188d60();
+	sound_fade_in_for_new_map();
 }
 
 /* 0x00188980: the fifth of the functions of the part, for when the game
@@ -13726,5 +13726,39 @@ void object_looping_sounds_unknown_00188980(
 	{
 		unknown_0018bb80(0);
 		memset(unknown_004ed288+OBJECT_LOOPING_SOUNDS_SHORTS_OFFSET, 0, OBJECT_LOOPING_SOUNDS_SHORT_COUNT*sizeof(short));
+	}
+}
+
+/* 0x004e9ae8 and 0x0055e4d0, of game_voice.c: what the game engine keeps
+(the kind of game that is played at 0xC14) and, for each kind, what it has */
+extern byte *unknown_004e9ae8;
+extern long unknown_0055e4d0[];
+
+/* 0x00188cd0: two seconds before a game that is over ends (game.c), in a
+kind of game that is played: every class of sound goes down to nothing in a
+second, and the three of what is around to a fifth */
+void sound_fade_for_game_end(
+	void)
+{
+	if (unknown_0055e4d0[*(const long *)(unknown_004e9ae8+0xC14)])
+	{
+		sound_classes_set_decibels("", sound_gain_to_decibels(0.0f), 1.0f);
+		sound_classes_set_decibels("ambient_nature", sound_gain_to_decibels(0.2f), 1.0f);
+		sound_classes_set_decibels("ambient_machinery", sound_gain_to_decibels(0.2f), 1.0f);
+		sound_classes_set_decibels("ambient_computers", sound_gain_to_decibels(0.2f), 1.0f);
+	}
+}
+
+/* 0x00188d60: for a new map, in a kind of game that is played: every class
+of sound is nothing at once and comes up whole in two seconds; what the
+player says in the scripts is whole at once */
+void sound_fade_in_for_new_map(
+	void)
+{
+	if (unknown_0055e4d0[*(const long *)(unknown_004e9ae8+0xC14)])
+	{
+		sound_classes_set_decibels("", sound_gain_to_decibels(0.0f), 0.0f);
+		sound_classes_set_decibels("", sound_gain_to_decibels(1.0f), 2.0f);
+		sound_classes_set_decibels("scripted_dialog_player", sound_gain_to_decibels(1.0f), 0.0f);
 	}
 }

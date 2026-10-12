@@ -630,7 +630,7 @@ def run_lost_and_finished(t) -> None:
         t.check(
             "game_update_finished",
             globals={"main_game_globals": Buffer(bytes(game)), "game_time_globals": Buffer(bytes(time))},
-            externals={"unknown_00188cd0": told},
+            externals={"sound_fade_for_game_end": told},
         )
 
 

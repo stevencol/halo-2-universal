@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — El sonido baja antes de acabar la partida y sube en un mapa nuevo
+
+Dos funciones (233 bytes) en `sound/sound_manager.c`. De 2273
+funciones se pasa a 2275, el 20,20 % de las del juego (el 11,745 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_fade_for_game_end` | `0x00188cd0` | `sound/sound_manager.c` |
+| `sound_fade_in_for_new_map` | `0x00188d60` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- `sound_fade_for_game_end` (antes `unknown_00188cd0`, la que `game.c` llama
+  dos segundos antes de que acabe una partida terminada): baja todas las
+  clases de sonido a cero en un segundo, y las tres de ambiente
+  (`ambient_nature`, `ambient_machinery`, `ambient_computers`) a un quinto.
+- `sound_fade_in_for_new_map` (antes `unknown_00188d60`): en un mapa nuevo
+  pone todo el sonido a cero de golpe y lo sube entero en dos segundos; la
+  clase `scripted_dialog_player` (lo que dice el jugador en los guiones)
+  queda entera desde el principio.
+- Las dos solo actúan si el tipo de partida que se juega tiene motor
+  (`unknown_0055e4d0`).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  701.
+- Los nombres son supuestos.
+- En este hito se pasaron las pruebas de las dos funciones y
+  `test_game_parts_622`. Hay una batería completa en marcha sobre el hito
+  684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Cuántos objetos de una lista cuentan
 
 Una función (208 bytes) en `hs/object_lists.c`. De 2272
