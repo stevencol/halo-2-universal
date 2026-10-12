@@ -2561,7 +2561,7 @@ address,name,source,arguments,returns,convention
 000687b0,simulation_unknown_000687b0,source/networking/simulation.c,,void
 00162060,unknown_00162060,,,void
 00162420,game_voice_unknown_00162420,source/networking/game_voice.c,,void
-000bb7f0,unknown_000bb7f0,,,void
+000bb7f0,objects_detach_simulation_entities,source/objects/objects.c,,void
 00183f10,unknown_00183f10,,,void
 00083370,simulation_players_after_load,source/networking/simulation_players.c,stack stack,void,stdcall
 00083220,simulation_players_update_views,source/networking/simulation_players.c,eax,bool
@@ -2614,5 +2614,6 @@ address,name,source,arguments,returns,convention
 000a5650,simulation_game_event_apply,source/networking/simulation_gamestate_entities.c,stack stack stack stack,bool,stdcall
 0019eb30,unknown_0019eb30,,edi,void
 000a5b40,simulation_object_entity_delete_object,source/networking/simulation_gamestate_entities.c,ecx stack,bool,thiscall
-000bb7b0,unknown_000bb7b0,,eax,void
+000bb7b0,object_detach_simulation_entity,source/objects/objects.c,eax,void
 000b8540,unknown_000b8540,,stack,void,stdcall
+00108e80,unknown_00108e80,,ebx,void

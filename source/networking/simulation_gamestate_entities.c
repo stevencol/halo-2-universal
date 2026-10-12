@@ -236,8 +236,7 @@ boolean __attribute__((stdcall)) simulation_game_event_apply(
 	return TRUE;
 }
 
-/* 0x000bb7b0, 0x000b8540: an object is made ready to go, and goes */
-void unknown_000bb7b0(long object_index);
+/* 0x000b8540: an object goes */
 void __attribute__((stdcall)) unknown_000b8540(long object_index);
 
 /* 0x000a5b40: a thing of the simulation is no more, and neither is its
@@ -254,7 +253,7 @@ boolean __attribute__((thiscall)) simulation_object_entity_delete_object(
 	}
 	if (!(*(simulation_entity_type_object_proc **)type)[SIMULATION_ENTITY_TYPE_KEEP_OBJECT_PROC](type, entity->unknown8))
 	{
-		unknown_000bb7b0(entity->unknown8);
+		object_detach_simulation_entity(entity->unknown8);
 		unknown_000b8540(entity->unknown8);
 	}
 	entity->unknown8= NONE;

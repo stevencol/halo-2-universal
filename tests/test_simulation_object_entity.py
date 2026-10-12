@@ -22,7 +22,7 @@ def run(t) -> None:
             Buffer(bytes(entity)),
             mocks=[Mock(lambda call, value=random_.choice((0, 0, 1, 0x100)): value, stack_arguments=1, registers=("ecx",))],
             externals={
-                "unknown_000bb7b0": lambda harness, arguments: (0, (arguments[0],)),
+                "object_detach_simulation_entity": lambda harness, arguments: (0, (arguments[0],)),
                 "unknown_000b8540": lambda harness, arguments: (0, (arguments[0],)),
             },
         )

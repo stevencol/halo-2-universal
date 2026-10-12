@@ -133,6 +133,8 @@ void *object_get_and_verify_type(long object_index, unsigned long type_mask);
 void object_iterator_new(struct object_iterator *iterator, unsigned long type_mask, byte header_flags);
 long object_get_first_unflagged_ancestor(long object_index);
 void *object_iterator_next(struct object_iterator *iterator);
+void object_detach_simulation_entity(long object_index);
+void objects_detach_simulation_entities(void);
 long object_get_ultimate_parent(long object_index);
 void object_get_origin(long object_index, real_point3d *origin);
 real_point3d *object_get_center_of_mass(long object_index, real_point3d *center);

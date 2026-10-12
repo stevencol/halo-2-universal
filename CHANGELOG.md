@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Los objetos sueltan lo que la simulación cuenta de ellos
+
+Dos funciones de `objects/objects.c` (182 bytes). De 1997
+funciones se pasa a 1999, el 17,75 % de las del juego (el 11,173 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_detach_simulation_entity` | `0x000bb7b0` | `objects/objects.c` |
+| `objects_detach_simulation_entities` | `0x000bb7f0` | `objects/objects.c` |
+
+### Lo que se sabe
+
+- `object_detach_simulation_entity` (antes `unknown_000bb7b0`): un objeto
+  suelta la cosa que la simulación cuenta de él. Se avisa a su tipo
+  (`unknown_00108e80`), y su número de `0xD4` queda en `NONE` y el byte de
+  `0xD8` a cero.
+- `objects_detach_simulation_entities` (antes `unknown_000bb7f0`, una de
+  las cosas que se hacen cuando una partida en red de clase 4 o 5 deja de
+  serlo) hace lo mismo con **todos los objetos que tengan una**. El juego
+  tiene dentro `object_iterator_new` y la función anterior.
+- Con esto, el número de `0xCC` que el hito 581 ponía en `NONE` tras cargar
+  una partida queda como único campo sin nombre de esa zona del objeto;
+  `0xD4` ya lo tiene.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  597.
+- Los nombres son suposiciones.
+- En este hito se pasaron las pruebas de las dos funciones y las de quien
+  las llama (`test_simulation_load`, `test_simulation_object_entity`).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — El objeto de una cosa de la simulación desaparece con ella
 
 Una función de `networking/simulation_gamestate_entities.c` (55 bytes). De 1996

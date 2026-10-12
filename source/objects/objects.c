@@ -427,3 +427,51 @@ void __attribute__((stdcall)) objects_unknown_0003d380(
 		*(long *)(object+0xCC)= NONE;
 	}
 }
+
+/* 0x00108e80: what the type of an object does when the object lets go of
+the thing that the simulation tells of it */
+void unknown_00108e80(long object_index);
+
+enum
+{
+	/* of an object: the thing that the simulation tells of it, or NONE, and
+	a byte that goes with it */
+	OBJECT_SIMULATION_ENTITY_OFFSET= 0xD4,
+	OBJECT_SIMULATION_UNKNOWND8_OFFSET= 0xD8
+};
+
+/* 0x000bb7b0: an object lets go of the thing that the simulation tells of
+it: its type is told (unknown_00108e80), and it has none */
+void object_detach_simulation_entity(
+	long object_index)
+{
+	byte *object= (byte *)((const struct object_header_datum *)object_header_data->data)[object_index&0xFFFF].datum;
+
+	unknown_00108e80(object_index);
+	*(long *)(object+OBJECT_SIMULATION_ENTITY_OFFSET)= NONE;
+	object[OBJECT_SIMULATION_UNKNOWND8_OFFSET]= 0;
+}
+
+/* 0x000bb7f0: every object that has one lets go of the thing that the
+simulation tells of it: it is what is done when a game in the network of
+kind 4 or 5 is no more (simulation_after_load). The game has
+object_iterator_new and object_detach_simulation_entity written here */
+void objects_detach_simulation_entities(
+	void)
+{
+	struct object_iterator iterator;
+	const byte *object;
+
+	iterator.signature= OBJECT_ITERATOR_SIGNATURE;
+	iterator.type_mask= 0xFFFFFFFF;
+	iterator.header_flags= 0;
+	iterator.absolute_index= 0;
+	iterator.index= NONE;
+	while ((object= object_iterator_next(&iterator))!=NULL)
+	{
+		if (*(const long *)(object+OBJECT_SIMULATION_ENTITY_OFFSET)!=NONE)
+		{
+			object_detach_simulation_entity(iterator.index);
+		}
+	}
+}
