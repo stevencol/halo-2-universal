@@ -7,6 +7,9 @@ the name of the file is a guess, by the one that the first game has.
 
 #include "units.h"
 
+#include <stdint.h>
+
+#include "cache/cache_files.h"
 #include "game/game.h"
 #include "objects/objects.h"
 
@@ -505,4 +508,122 @@ void unit_clear_unknown33E_unknown38(
 	{
 		*(long *)(unknown30+8)= NONE;
 	}
+}
+
+/* the definition of an object (its tag): the object starts with which */
+#define UNIT_DEFINITION_GET(object) \
+	((const byte *)(uintptr_t)global_tag_instances[*(const long *)(object)&0xFFFF].address)
+
+/* 0x0009dc90: as unit_clear_unknown2A0, and true */
+boolean __attribute__((stdcall)) unit_unknown_0009dc90(
+	long unit_index)
+{
+	byte *unit= (byte *)UNIT_OBJECT_GET(unit_index);
+
+	*(long *)(unit+0x2A0)= NONE;
+	*(short *)(unit+0x2A4)= NONE;
+	*(long *)(unit+0x2A8)= NONE;
+	*(long *)(unit+0x2AC)= NONE;
+
+	return TRUE;
+}
+
+/* 0x000a09b0: false for an object whose byte at 0xAB is 2 and that has the
+bit 2 of its byte at 0x10A; true for the others */
+boolean __attribute__((stdcall)) object_unknown_000a09b0(
+	long object_index)
+{
+	const byte *object= UNIT_OBJECT_GET(object_index);
+
+	return !(object[0xAB]==2 && ((object[0x10A]>>2)&1));
+}
+
+/* 0x000cc380: whether the object that a unit has at 0x248, or the unit
+itself if it has none, has something at 0x12C */
+long unit_unknown_000cc380(
+	long unit_index)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+
+	if (*(const long *)(unit+0x248)!=NONE)
+	{
+		unit= UNIT_OBJECT_GET(*(const long *)(unit+0x248));
+	}
+
+	return *(const long *)(unit+0x12C)!=NONE;
+}
+
+/* 0x000f0f90: the bit 7 of the number at 0x1EC of the definition of an
+object */
+boolean object_definition_get_unknown1EC_bit7(
+	long object_index)
+{
+	return (*(const unsigned long *)(UNIT_DEFINITION_GET(UNIT_OBJECT_GET(object_index))+0x1EC)>>7)&1;
+}
+
+/* 0x000f12e0: whether the short at 0x1F0 of the definition of an object is
+not 6 */
+boolean object_definition_unknown1F0_is_not_6(
+	long object_index)
+{
+	return *(const short *)(UNIT_DEFINITION_GET(UNIT_OBJECT_GET(object_index))+0x1F0)!=6;
+}
+
+/* 0x000fa9f0: the number that an object keeps at 0x144 is NONE, and the
+short after it, if the number was a given one */
+void __attribute__((stdcall)) unit_clear_unknown144(
+	long unit_index,
+	long unknown)
+{
+	byte *unit= (byte *)UNIT_OBJECT_GET(unit_index);
+
+	if (*(long *)(unit+0x144)==unknown)
+	{
+		*(long *)(unit+0x144)= NONE;
+		*(short *)(unit+0x148)= NONE;
+	}
+}
+
+/* 0x00100fd0: whether the short at 0x1FE of the definition of an object is
+above zero */
+boolean object_definition_has_unknown1FE(
+	long object_index)
+{
+	return *(const short *)(UNIT_DEFINITION_GET(UNIT_OBJECT_GET(object_index))+0x1FE)>0;
+}
+
+/* 0x00101240: the bit 3 of the number at 0x12C of the definition of an
+object (by where these are in the game, the objects are the weapons) */
+boolean object_definition_get_unknown12C_bit3(
+	long object_index)
+{
+	return (*(const unsigned long *)(UNIT_DEFINITION_GET(UNIT_OBJECT_GET(object_index))+0x12C)>>3)&1;
+}
+
+/* 0x00101280: the short at 0x290 of the definition of an object */
+short object_definition_get_unknown290(
+	long object_index)
+{
+	return *(const short *)(UNIT_DEFINITION_GET(UNIT_OBJECT_GET(object_index))+0x290);
+}
+
+/* 0x001012c0: the bit 0 of the byte at 0x12F of the definition of an object;
+false for no object */
+boolean object_definition_get_unknown12F_bit0(
+	long object_index)
+{
+	if (object_index!=NONE)
+	{
+		return UNIT_DEFINITION_GET(UNIT_OBJECT_GET(object_index))[0x12F]&1;
+	}
+
+	return FALSE;
+}
+
+/* 0x00101300: the bit 28 of the number at 0x12C of the definition of an
+object */
+boolean object_definition_get_unknown12C_bit28(
+	long object_index)
+{
+	return (*(const unsigned long *)(UNIT_DEFINITION_GET(UNIT_OBJECT_GET(object_index))+0x12C)>>28)&1;
 }

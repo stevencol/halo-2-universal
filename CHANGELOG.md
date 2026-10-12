@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Once consultas más: de objetos y de sus definiciones
+
+Once funciones (617 bytes) en `units/units.c`. De 2348
+funciones se pasa a 2359, el 20,94 % de las del juego (el 11,850 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unit_unknown_0009dc90` | `0x0009dc90` | `units/units.c` |
+| `object_unknown_000a09b0` | `0x000a09b0` | `units/units.c` |
+| `unit_unknown_000cc380` | `0x000cc380` | `units/units.c` |
+| `object_definition_get_unknown1EC_bit7` | `0x000f0f90` | `units/units.c` |
+| `object_definition_unknown1F0_is_not_6` | `0x000f12e0` | `units/units.c` |
+| `unit_clear_unknown144` | `0x000fa9f0` | `units/units.c` |
+| `object_definition_has_unknown1FE` | `0x00100fd0` | `units/units.c` |
+| `object_definition_get_unknown12C_bit3` | `0x00101240` | `units/units.c` |
+| `object_definition_get_unknown290` | `0x00101280` | `units/units.c` |
+| `object_definition_get_unknown12F_bit0` | `0x001012c0` | `units/units.c` |
+| `object_definition_get_unknown12C_bit28` | `0x00101300` | `units/units.c` |
+
+### Lo que se sabe
+
+- Siete de las once no miran el objeto sino **su definición** (el tag al
+  que apunta su primer número): un bit o un `short` de ella. Por dónde
+  están en el ejecutable (`0x100fd0`–`0x101300`), cinco son de las armas.
+- Las otras cuatro leen o limpian datos del objeto, como en los hitos
+  anteriores.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  713.
+- Qué son los bits y números de las definiciones no se sabe; las funciones
+  llevan el desplazamiento por nombre y están en `units.c` de forma
+  provisional.
+- En este hito se pasaron las pruebas de las once funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Nueve funciones pequeñas más de objetos y unidades
 
 Nueve funciones (483 bytes) en `units/units.c`. De 2339

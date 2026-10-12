@@ -2881,3 +2881,14 @@ address,name,source,arguments,returns,convention
 000ccd20,unit_delete_unknown238,source/units/units.c,eax,void
 000d0980,unit_clear_unknown2A0,source/units/units.c,stack,void,stdcall
 000d0dc0,unit_clear_unknown33E_unknown38,source/units/units.c,eax stack,void
+0009dc90,unit_unknown_0009dc90,source/units/units.c,stack,bool,stdcall
+000a09b0,object_unknown_000a09b0,source/units/units.c,stack,bool,stdcall
+000cc380,unit_unknown_000cc380,source/units/units.c,eax,int
+000f0f90,object_definition_get_unknown1EC_bit7,source/units/units.c,eax,bool
+000f12e0,object_definition_unknown1F0_is_not_6,source/units/units.c,ecx,bool
+000fa9f0,unit_clear_unknown144,source/units/units.c,stack stack,void,stdcall
+00100fd0,object_definition_has_unknown1FE,source/units/units.c,eax,bool
+00101240,object_definition_get_unknown12C_bit3,source/units/units.c,eax,bool
+00101280,object_definition_get_unknown290,source/units/units.c,eax,short
+001012c0,object_definition_get_unknown12F_bit0,source/units/units.c,ecx,bool
+00101300,object_definition_get_unknown12C_bit28,source/units/units.c,eax,bool
