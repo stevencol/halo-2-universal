@@ -1692,39 +1692,6 @@ void __attribute__((stdcall)) simulation_world_add_player(
 		(const word *)(datum+SIMULATION_PLAYER_DATUM_MACHINE_IDENTIFIER_OFFSET), world, (long)index, player, state);
 }
 
-/* a view is done with, as simulation_world_delete_views tells: the game has
-it written in each of the two that do it */
-static inline __attribute__((always_inline)) void simulation_world_view_delete(
-	byte *view)
-{
-	byte *data;
-	long index;
-
-	if (*(const word *)(view+SIMULATION_VIEW_KIND_OFFSET)!=0)
-	{
-		if (*(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET)!=NONE)
-		{
-			simulation_view_release_channel(view);
-		}
-		if (*(void *const *)(view+SIMULATION_VIEW_WORLD_OFFSET))
-		{
-			simulation_view_detach(view);
-		}
-		*(word *)(view+SIMULATION_VIEW_KIND_OFFSET)= 0;
-	}
-	data= *(byte *const *)(view+SIMULATION_VIEW_DATA_OFFSET);
-	index= *(const long *)(view+SIMULATION_VIEW_DATUM_INDEX_OFFSET);
-	datum_delete(unknown_004d87ec, index);
-	if (data)
-	{
-		*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN5098_OFFSET)= unknown_00450c94;
-		*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN5070_OFFSET)= unknown_00450d1c;
-		*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN30_OFFSET)= unknown_00450cd0;
-		*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN4_OFFSET)= unknown_00450cf4;
-		datum_delete(unknown_004d87f0, index);
-	}
-}
-
 /* 0x000693a0: the views of the thing are done with: it is what
 main_game_unload ends the game in the network with. Each view that is of some
 kind lets go of its channel, if it has one of the observer

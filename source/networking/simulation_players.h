@@ -154,7 +154,13 @@ enum
 	SIMULATION_PLAYERS_SESSION_PEER_CHANNEL_SIZE= 0x14,
 	SIMULATION_PLAYERS_SESSION_PEER_CHANNEL_VALID_OFFSET= 0x1,
 	SIMULATION_PLAYERS_SESSION_PEER_CHANNEL_INDEX_OFFSET= 0x4,
-	SIMULATION_PLAYERS_PEER_MACHINE_OFFSET= 0xA
+	SIMULATION_PLAYERS_PEER_MACHINE_OFFSET= 0xA,
+	/* of a view: which console of the session it is of. The states of the
+	life cycle of the network in which there are views */
+	SIMULATION_PLAYERS_VIEW_PEER_INDEX_OFFSET= 0x1C,
+	_simulation_players_life_cycle_state3= 3,
+	_simulation_players_life_cycle_state8= 8,
+	_simulation_players_session_state5= 5
 };
 
 /* ---------- prototypes/SIMULATION_PLAYERS.C */
@@ -162,7 +168,9 @@ enum
 void __attribute__((stdcall)) simulation_players_initialize_for_new_map(byte *players);
 boolean __attribute__((stdcall)) simulation_players_create_view(long channel_index, byte *players, long peer_index,
 	const byte *peer);
-boolean __attribute__((stdcall)) simulation_players_unknown_00084560(byte *players);
+boolean __attribute__((stdcall)) simulation_players_update_views_client(byte *players);
+boolean __attribute__((stdcall)) simulation_players_update_views_host(byte *players, long unused);
+boolean simulation_players_update_views(byte *players);
 void __attribute__((stdcall)) simulation_players_after_load(byte *players, unsigned long flags);
 
 boolean __attribute__((stdcall)) simulation_players_take_update(byte *identifiers, byte *machines, boolean always,

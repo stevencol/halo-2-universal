@@ -93,7 +93,7 @@ def run(t) -> None:
         struct.pack_into("<I", players, 0xC, PLAYERS + world_size)
         pointers = [4, 0xC] + [PLAYERS + offset for offset in thing.pointers]
         t.check(
-            "simulation_players_unknown_00084560",
+            "simulation_players_update_views_client",
             Buffer(bytes(players) + bytes(world) + bytes(session), pointers=tuple(pointers)),
             externals={
                 "simulation_world_unknown_0006b040": note,

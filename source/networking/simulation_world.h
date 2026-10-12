@@ -11,6 +11,7 @@ name of the file is a guess, and so are the names of its functions.
 
 #include "cseries/cseries.h"
 #include "memory/data.h"
+#include "networking/simulation_view.h"
 
 /* ---------- constants */
 
@@ -349,5 +350,40 @@ extern long unknown_004ced50;
 extern long unknown_004ced54;
 extern long unknown_004ced58;
 extern long unknown_004ced5c;
+
+/* ---------- code */
+
+/* a view is done with, as simulation_world_delete_views tells: the game has
+it written in each of the three that do it */
+static inline __attribute__((always_inline)) void simulation_world_view_delete(
+	byte *view)
+{
+	byte *data;
+	long index;
+
+	if (*(const word *)(view+SIMULATION_VIEW_KIND_OFFSET)!=0)
+	{
+		if (*(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET)!=NONE)
+		{
+			simulation_view_release_channel(view);
+		}
+		if (*(void *const *)(view+SIMULATION_VIEW_WORLD_OFFSET))
+		{
+			simulation_view_detach(view);
+		}
+		*(word *)(view+SIMULATION_VIEW_KIND_OFFSET)= 0;
+	}
+	data= *(byte *const *)(view+SIMULATION_VIEW_DATA_OFFSET);
+	index= *(const long *)(view+SIMULATION_VIEW_DATUM_INDEX_OFFSET);
+	datum_delete(unknown_004d87ec, index);
+	if (data)
+	{
+		*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN5098_OFFSET)= unknown_00450c94;
+		*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN5070_OFFSET)= unknown_00450d1c;
+		*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN30_OFFSET)= unknown_00450cd0;
+		*(void **)(data+SIMULATION_VIEW_DATA_UNKNOWN4_OFFSET)= unknown_00450cf4;
+		datum_delete(unknown_004d87f0, index);
+	}
+}
 
 #endif

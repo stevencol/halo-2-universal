@@ -108,7 +108,7 @@ def run(t) -> None:
             "simulation_world_set_unknown18": lambda harness, arguments: (0, (harness.normalize(arguments[0]), arguments[1])),
             "simulation_world_restart": fails_after,
             "main_game_restart": lambda harness, arguments: (0, ()),
-            "unknown_00083220": lambda harness, arguments, well=random_.choice((0, 1, 1, 1, 0x100)): (well, (arguments[0],)),
+            "simulation_players_update_views": lambda harness, arguments, well=random_.choice((0, 1, 1, 1, 0x100)): (well, (arguments[0],)),
             "simulation_world_update": fails_after,
             "game_is_authoritative": lambda harness, arguments, value=random_.choice((0, 1, 1)): value,
             "game_finished_wait_over": lambda harness, arguments, value=random_.choice((0, 1, 1, 0x100)): value,

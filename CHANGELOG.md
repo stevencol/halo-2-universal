@@ -2,6 +2,55 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Las vistas de la simulación se mantienen: la consola que manda y las demás
+
+Dos funciones de `networking/simulation_players.c` (695 bytes). De 1970
+funciones se pasa a 1972, el 17,51 % de las del juego (el 11,009 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_players_update_views` | `0x00083220` | `networking/simulation_players.c` |
+| `simulation_players_update_views_host` | `0x000843f0` | `networking/simulation_players.c` |
+
+### Lo que se sabe
+
+- `simulation_players_update_views` (antes `unknown_00083220`, la que
+  `simulation_idle` llama y cuyo `FALSE` hace fallar la simulación) es la
+  que reparte. Pide una partida en red en el estado 3 u 8 de su ciclo de
+  vida y una sesión con estado; **si la sesión no está bien** (en su estado
+  5 para la consola que la gobierna, establecida para las demás) lo que
+  está en marcha se rinde. Si todo va bien, toma las consolas de la sesión
+  (`unknown_00083f00`) y sigue por la rama de la consola que manda en la
+  partida o por la de las demás.
+- `simulation_players_update_views_host` es la rama de la que manda: acaba
+  con las vistas que fallaron, apunta de qué consolas tiene vista y crea
+  una (`simulation_players_create_view`) para cada consola de la sesión que
+  no sea esta y no tenga.
+- La rama de las demás, del hito 582, pasa a llamarse
+  `simulation_players_update_views_client`.
+- Acabar con una vista está escrito **tres** veces en el juego; la función
+  en línea `simulation_world_view_delete` pasó a `simulation_world.h` para
+  que la usen los dos archivos.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  582.
+- Los nombres `…_update_views…` son suposiciones.
+- El segundo argumento de `simulation_players_update_views_host` (qué
+  consola es esta) no se mira; la prueba de quien la llama no lo compara,
+  porque el compilador no lo pasa.
+- En este hito se pasaron las pruebas de las dos funciones y todas las de
+  `test_simulation…` (165).
+- **La batería completa lanzada sobre el hito 571 (commit `a1cf776`)
+  acabó: 1938 de 1938 funciones pasan**, sin fallos. No cubre los hitos 572
+  en adelante, que solo tienen sus pruebas y las de quien llama a lo
+  renombrado.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Se crea la vista de otra consola, y la que no manda busca la de la que manda
 
 Tres funciones (356 bytes), en `networking/simulation.c` y `networking/simulation_players.c`.

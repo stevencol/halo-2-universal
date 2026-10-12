@@ -2564,7 +2564,7 @@ address,name,source,arguments,returns,convention
 000bb7f0,unknown_000bb7f0,,,void
 00183f10,unknown_00183f10,,,void
 00083370,simulation_players_after_load,source/networking/simulation_players.c,stack stack,void,stdcall
-00083220,unknown_00083220,,eax,bool
+00083220,simulation_players_update_views,source/networking/simulation_players.c,eax,bool
 00068f30,simulation_world_update,source/networking/simulation_world.c,eax,void
 00068dc0,simulation_world_restart,source/networking/simulation_world.c,esi,void
 000859d0,simulation_view_update,source/networking/simulation_view.c,eax,void
@@ -2576,5 +2576,9 @@ address,name,source,arguments,returns,convention
 0018d5b0,unknown_0018d5b0,,eax,int
 00067e10,simulation_unknown_00067e10,source/networking/simulation.c,eax,bool
 00084630,simulation_players_create_view,source/networking/simulation_players.c,eax stack stack stack,bool,stdcall
-00084560,simulation_players_unknown_00084560,source/networking/simulation_players.c,stack,bool,stdcall
+00084560,simulation_players_update_views_client,source/networking/simulation_players.c,stack,bool,stdcall
 00085650,unknown_00085650,,eax ecx esi stack,void,stdcall
+000843f0,simulation_players_update_views_host,source/networking/simulation_players.c,stack stack,bool,stdcall
+0006ae20,unknown_0006ae20,,esi,bool
+0006aee0,unknown_0006aee0,,eax,bool
+00083f00,unknown_00083f00,,edx stack stack stack stack,bool,stdcall

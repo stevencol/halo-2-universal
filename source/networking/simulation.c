@@ -65,7 +65,7 @@ void game_voice_unknown_00162420(void);
 void unknown_000bb7f0(void);
 void unknown_00183f10(void);
 void __attribute__((stdcall)) simulation_players_after_load(long unknown, unsigned long flags);
-boolean unknown_00083220(long unknown);
+boolean simulation_players_update_views(long unknown);
 void unknown_00195e90(void);
 
 long GetTickCount(void);
@@ -589,7 +589,7 @@ void GAME_STATE_PROC simulation_after_load(
 the network that has not failed and a game that goes on. A failure that was
 asked for is done (simulation_fail), and a beginning again that was asked
 for (simulation_unknown_000687b0); what unknown_004cf780 has must be well
-(unknown_00083220), or the simulation fails; the thing that is going does
+(simulation_players_update_views), or the simulation fails; the thing that is going does
 its work (simulation_world_update), and fails if it is in its third state or its
 fifth with the byte at 0x2C set. After any of these the rest is left if the
 simulation has failed. At the end, a game that this console rules, that is
@@ -621,7 +621,7 @@ void simulation_idle(
 			return;
 		}
 	}
-	if (!unknown_00083220(unknown_004cf780))
+	if (!simulation_players_update_views(unknown_004cf780))
 	{
 		simulation_fail();
 	}

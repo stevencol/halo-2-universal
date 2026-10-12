@@ -12,6 +12,7 @@ they are on. The names are guesses.
 
 #include "game/game.h"
 #include "main/main.h"
+#include "main/main_game.h"
 #include "memory/data.h"
 #include "networking/network_life_cycle.h"
 #include "networking/network_observer.h"
@@ -893,7 +894,7 @@ kind or the third, or that view has failed, the thing gives up
 (1 at 0x18). If it has no such view, one is made
 (simulation_players_create_view) for the console that rules the session, by
 the channel of the observer that the session has for it, or NONE */
-boolean __attribute__((stdcall)) simulation_players_unknown_00084560(
+boolean __attribute__((stdcall)) simulation_players_update_views_client(
 	byte *players)
 {
 	byte *world= *(byte *const *)(players+SIMULATION_PLAYERS_WORLD_OFFSET);
@@ -935,4 +936,159 @@ boolean __attribute__((stdcall)) simulation_players_unknown_00084560(
 	}
 
 	return TRUE;
+}
+
+/* 0x0006ae20, 0x0006aee0: something that the thing that is going has to do
+before its views are looked at, for a console that does not rule the session
+and for the one that does. 0x00083f00: the consoles of the session are taken */
+boolean unknown_0006ae20(byte *world);
+boolean unknown_0006aee0(byte *world);
+boolean __attribute__((stdcall)) unknown_00083f00(long peer_count, byte *players, long unknown7618, long membership_number,
+	const byte *peers);
+
+/* 0x000843f0: what the console that rules the game does for its views of
+the others. Each view that has failed is done with
+(simulation_world_view_delete, written here); the consoles of the others
+are noted. FALSE if the thing that is going has failed for good. Then a
+view is made (simulation_players_create_view) for each console of the
+session that is not this one and has none, by the channel of the observer
+that the session has for it, or NONE. The second thing that it is given is
+not looked at */
+boolean __attribute__((stdcall)) simulation_players_update_views_host(
+	byte *players,
+	long unused)
+{
+	struct simulation_view_iterator iterator= {0xFFFFFFFF, 0};
+	unsigned long peer_mask= 0;
+	byte *view;
+	const byte *session;
+	long local_peer;
+	long peer;
+
+	(void)unused;
+	while (simulation_world_next_view(&iterator, *(byte *const *)(players+SIMULATION_PLAYERS_WORLD_OFFSET), &view))
+	{
+		if (*(const long *)(view+SIMULATION_PLAYERS_VIEW_UNKNOWN28_OFFSET)!=0)
+		{
+			simulation_world_view_delete(view);
+		}
+		else
+		{
+			peer_mask|= 1u<<*(const long *)(view+SIMULATION_PLAYERS_VIEW_PEER_INDEX_OFFSET);
+		}
+	}
+	if (*(const long *)(*(byte *const *)(players+SIMULATION_PLAYERS_WORLD_OFFSET)+SIMULATION_PLAYERS_WORLD_UNKNOWN18_OFFSET)==1)
+	{
+		return FALSE;
+	}
+	session= *(byte *const *)(players+SIMULATION_PLAYERS_SESSION_OFFSET);
+	local_peer= *(const long *)(session+SIMULATION_PLAYERS_SESSION_LOCAL_PEER_OFFSET);
+	for (peer= 0; peer<*(const long *)(session+SIMULATION_PLAYERS_SESSION_PEER_COUNT_OFFSET); peer++)
+	{
+		if (peer!=local_peer && !(peer_mask&(1u<<peer)))
+		{
+			const byte *other_session= *(byte *const *)(players+SIMULATION_PLAYERS_SESSION_OFFSET);
+			const byte *peer_channel= other_session+SIMULATION_PLAYERS_SESSION_PEER_CHANNELS_OFFSET+
+				peer*SIMULATION_PLAYERS_SESSION_PEER_CHANNEL_SIZE;
+			long channel_index= NONE;
+
+			if (peer<*(const long *)(other_session+SIMULATION_PLAYERS_SESSION_PEER_COUNT_OFFSET) &&
+				peer_channel[SIMULATION_PLAYERS_SESSION_PEER_CHANNEL_VALID_OFFSET])
+			{
+				channel_index= *(const long *)(peer_channel+SIMULATION_PLAYERS_SESSION_PEER_CHANNEL_INDEX_OFFSET);
+			}
+			simulation_players_create_view(channel_index, players, peer,
+				session+SIMULATION_PLAYERS_SESSION_PEERS_OFFSET+peer*SIMULATION_PLAYERS_MEMBERSHIP_PEER_SIZE);
+		}
+	}
+
+	return TRUE;
+}
+
+/* 0x00083220: the views of the simulation are kept up, outside the ticks;
+FALSE makes the simulation fail. With no thing that is going, FALSE; with
+one in its first state, there is nothing to do. It needs a game in the
+network, in the third state of its life cycle or the eighth, and a session
+in some state. If the session is not well (in its fifth state for the
+console that rules it, established for the others), the thing gives up, and
+that is all. Then: something that the thing has to do first, when the
+console rules the session and the thing does not rule the game or the other
+way round (unknown_0006aee0, unknown_0006ae20); something more of the thing
+if the session says so; the consoles of the session are taken
+(unknown_00083f00); and the views, as the one that rules the game or as
+another (simulation_players_update_views_host, simulation_players_update_views_client) */
+boolean simulation_players_update_views(
+	byte *players)
+{
+	byte *world= *(byte *const *)(players+SIMULATION_PLAYERS_WORLD_OFFSET);
+	byte *session;
+	const byte *membership;
+	boolean host;
+	boolean authority;
+	long local_peer;
+	long host_peer;
+
+	if (!world)
+	{
+		return FALSE;
+	}
+	if (*(const long *)(world+SIMULATION_PLAYERS_WORLD_STATE_OFFSET)==1)
+	{
+		return TRUE;
+	}
+	if (!unknown_00527330 ||
+		(unknown_00527334!=_simulation_players_life_cycle_state3 && unknown_00527334!=_simulation_players_life_cycle_state8))
+	{
+		return FALSE;
+	}
+	session= *(byte *const *)(players+SIMULATION_PLAYERS_SESSION_OFFSET);
+	if (!session || *(const long *)(session+SIMULATION_PLAYERS_SESSION_STATE_OFFSET)==0)
+	{
+		return FALSE;
+	}
+	if (!(network_session_unknown_00058d20(session) ?
+			*(const long *)(session+SIMULATION_PLAYERS_SESSION_STATE_OFFSET)==_simulation_players_session_state5 :
+			network_session_established(session)))
+	{
+		simulation_world_unknown_0006b040(world);
+		return TRUE;
+	}
+	host= network_session_unknown_00058d20(session);
+	authority= simulation_unknown_00067e10(world);
+	if (!host)
+	{
+		if (authority && !unknown_0006ae20(world))
+		{
+			return FALSE;
+		}
+	}
+	else if (!authority && !unknown_0006aee0(world))
+	{
+		return FALSE;
+	}
+	if (network_session_unknown_00058d90(*(byte *const *)(players+SIMULATION_PLAYERS_SESSION_OFFSET)))
+	{
+		if (host)
+		{
+			simulation_world_unknown_0006b310(*(byte *const *)(players+SIMULATION_PLAYERS_WORLD_OFFSET));
+		}
+		else
+		{
+			simulation_world_unknown_0006b350(*(byte *const *)(players+SIMULATION_PLAYERS_WORLD_OFFSET));
+		}
+	}
+	session= *(byte *const *)(players+SIMULATION_PLAYERS_SESSION_OFFSET);
+	membership= network_session_get_membership(&local_peer, session, &host_peer);
+	if (!unknown_00083f00(*(const long *)(membership+SIMULATION_PLAYERS_MEMBERSHIP_PEER_COUNT_OFFSET), players,
+			*(const long *)(session+SIMULATION_PLAYERS_SESSION_UNKNOWN7618_OFFSET), *(const long *)membership,
+			membership+0xC))
+	{
+		return FALSE;
+	}
+	if (simulation_unknown_00067e10(*(byte *const *)(players+SIMULATION_PLAYERS_WORLD_OFFSET)))
+	{
+		return simulation_players_update_views_host(players, local_peer);
+	}
+
+	return simulation_players_update_views_client(players);
 }
