@@ -190,9 +190,9 @@ void contrails_initialize_for_new_map(void);
 void contrails_dispose_from_old_map(void);
 void unknown_0017b940(void);
 void unknown_0017d220(void);
-void unknown_0017d2a0(void);
+void decals_dispose(void);
 void decals_initialize_for_new_map(void);
-void unknown_0017d330(void);
+void decals_dispose_from_old_map(void);
 void unknown_0017d350(void);
 void unknown_0017d440(void);
 void unknown_0017d5e0(void);
@@ -205,11 +205,11 @@ void sound_unknown_00185b00(void);
 void unknown_001887d0(void);
 void object_looping_sounds_dispose(void);
 void unknown_00188870(void);
-void unknown_00188940(void);
+void object_looping_sounds_dispose_from_old_map(void);
 void unknown_00188980(void);
 void unknown_0019bcd0(void);
 void unknown_0019bd50(void);
-void unknown_0019c190(void);
+void levels_initialize_for_new_map(void);
 void levels_dispose_from_old_map(void);
 void unknown_001c25a0(void);
 void unknown_001c2600(void);
@@ -351,7 +351,7 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{input_abstraction_initialize, input_abstraction_dispose},
 	{unknown_00155ea0, unknown_00155ed0},
 	{no_operation, no_operation},
-	{unknown_0019bcd0, unknown_0019bd50, unknown_0019c190, levels_dispose_from_old_map},
+	{unknown_0019bcd0, unknown_0019bd50, levels_initialize_for_new_map, levels_dispose_from_old_map},
 	{unknown_00131ff0, unknown_001320b0},
 	{sound_unknown_00225700, no_operation},
 	{game_state_initialize, game_state_dispose, game_state_initialize_for_new_map, no_operation, game_state_set_structure_bsp_index, no_operation},
@@ -375,7 +375,7 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{breakable_surfaces_initialize, no_operation, breakable_surfaces_initialize_for_new_map, no_operation, breakable_surfaces_unknown_00183ee0, breakable_surfaces_unknown_00183f00},
 	{unknown_001552e0, no_operation, unknown_00155380, unknown_00155490},
 	{unknown_0016efb0, no_operation, unknown_0016f0e0, no_operation, unknown_0016f120, no_operation},
-	{unknown_0017d220, unknown_0017d2a0, decals_initialize_for_new_map, unknown_0017d330, unknown_0017d350, unknown_0017d440, NULL, (game_system_activation_proc)unknown_0017d5e0},
+	{unknown_0017d220, decals_dispose, decals_initialize_for_new_map, decals_dispose_from_old_map, unknown_0017d350, unknown_0017d440, NULL, (game_system_activation_proc)unknown_0017d5e0},
 	{no_operation, no_operation, no_operation, no_operation},
 	{unknown_0017b7b0, contrails_dispose, contrails_initialize_for_new_map, contrails_dispose_from_old_map, unknown_0017b940, no_operation},
 	{unknown_00175b50, effects_dispose, effects_initialize_for_new_map, effects_dispose_from_old_map, unknown_00175d70, no_operation},
@@ -384,7 +384,7 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{sound_classes_initialize, sound_classes_dispose, sound_classes_initialize_for_new_map, sound_classes_dispose_from_old_map},
 	{sound_initialize, sound_dispose, sound_initialize_for_new_map, sound_dispose_from_old_map, sound_initialize_for_new_structure_bsp, no_operation},
 	{game_unknown_0020aee0_initialize, game_unknown_0020aee0_dispose, game_unknown_0020aee0_initialize_for_new_map, no_operation},
-	{unknown_001887d0, object_looping_sounds_dispose, unknown_00188870, unknown_00188940, unknown_00188980, no_operation},
+	{unknown_001887d0, object_looping_sounds_dispose, unknown_00188870, object_looping_sounds_dispose_from_old_map, unknown_00188980, no_operation},
 	{sound_unknown_00225a40, no_operation, sound_unknown_00225a80, no_operation},
 	{sound_unknown_002229d0, no_operation, sound_unknown_00222a10, sound_unknown_00222a60},
 	{unknown_00153870, no_operation, unknown_001538b0, no_operation},

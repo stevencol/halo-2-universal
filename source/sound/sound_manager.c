@@ -13620,3 +13620,24 @@ void object_looping_sounds_dispose(
 		unknown_004ed28c= NULL;
 	}
 }
+
+/* 0x001889d0: the looping sounds of the objects are stopped */
+void __attribute__((stdcall)) unknown_001889d0(unsigned long flags);
+
+/* 0x00188940: when a map goes, if the table of the looping sounds of the
+objects is there and can be used: they are stopped (unknown_001889d0), the
+table cannot be used, and two numbers of what unknown_004ed288 points to
+are nothing */
+void object_looping_sounds_dispose_from_old_map(
+	void)
+{
+	struct data_array *data= unknown_004ed28c;
+
+	if (data && data->valid)
+	{
+		unknown_001889d0(0);
+		data->valid= FALSE;
+		*(long *)(unknown_004ed288+0x20)= 0;
+		*(long *)(unknown_004ed288+0x24)= 0;
+	}
+}

@@ -456,3 +456,5 @@ address,name,source
 004ee4e8,unknown_004ee4e8,source/main/levels.c
 004f93ac,unknown_004f93ac,source/game/game_unknown_001eb550.c
 004f93b0,unknown_004f93b0,source/game/game_unknown_001eb550.c
+00509444,unknown_00509444,source/effects/decals.c
+00509448,unknown_00509448,source/effects/decals.c

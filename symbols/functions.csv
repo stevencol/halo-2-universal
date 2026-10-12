@@ -245,7 +245,7 @@ address,name,source,arguments,returns,convention
 0016eff0,unknown_0016eff0,,stack,void
 001e6af0,unknown_001e6af0,,stack,void
 001c3590,unknown_001c3590,,stack,void
-001889d0,unknown_001889d0,,stack,void
+001889d0,unknown_001889d0,,stack,void,stdcall
 00155f10,unknown_00155f10,,stack,void
 00067fb0,simulation_before_load,source/networking/simulation.c,stack,void,stdcall
 001264c0,sound_reset,source/sound/sound_manager.c,stack,void,stdcall
@@ -399,9 +399,9 @@ address,name,source,arguments,returns,convention
 0017b8a0,contrails_dispose_from_old_map,source/effects/contrails.c,,void
 0017b940,unknown_0017b940,,,void
 0017d220,unknown_0017d220,,,void
-0017d2a0,unknown_0017d2a0,,,void
+0017d2a0,decals_dispose,source/effects/decals.c,,void
 0017d2e0,decals_initialize_for_new_map,source/effects/decals.c,,void
-0017d330,unknown_0017d330,,,void
+0017d330,decals_dispose_from_old_map,source/effects/decals.c,,void
 0017d350,unknown_0017d350,,,void
 0017d440,unknown_0017d440,,,void
 0017d5e0,unknown_0017d5e0,,,void
@@ -414,11 +414,11 @@ address,name,source,arguments,returns,convention
 001887d0,unknown_001887d0,,,void
 00188850,object_looping_sounds_dispose,source/sound/sound_manager.c,,void
 00188870,unknown_00188870,,,void
-00188940,unknown_00188940,,,void
+00188940,object_looping_sounds_dispose_from_old_map,source/sound/sound_manager.c,,void
 00188980,unknown_00188980,,,void
 0019bcd0,unknown_0019bcd0,,,void
 0019bd50,unknown_0019bd50,,,void
-0019c190,unknown_0019c190,,,void
+0019c190,levels_initialize_for_new_map,source/main/levels.c,,void
 0019c1d0,levels_dispose_from_old_map,source/main/levels.c,,void
 001c25a0,unknown_001c25a0,,,void
 001c2600,unknown_001c2600,,,void
@@ -2647,3 +2647,7 @@ address,name,source,arguments,returns,convention
 00185a70,breakable_surfaces_unknown_00185a70,source/physics/breakable_surfaces.c,,void
 000b5920,unknown_000b5920,,eax,void
 001c7fe0,unknown_001c7fe0,,,void
+0019c120,unknown_0019c120,,,void
+0019c6d0,unknown_0019c6d0,,stack stack,void,stdcall
+0019c7e0,unknown_0019c7e0,,stack,void,stdcall
+0017d5f0,unknown_0017d5f0,,stack,void,stdcall

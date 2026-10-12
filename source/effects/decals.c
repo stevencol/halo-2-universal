@@ -7,6 +7,7 @@ the name that the game gives to its table of data ("decals").
 
 #include "cseries/cseries.h"
 #include "memory/data.h"
+#include "memory/lruv_cache.h"
 
 #include <string.h>
 
@@ -49,4 +50,44 @@ void decals_initialize_for_new_map(
 	*(long *)(globals+DECAL_GLOBALS_UNKNOWN3808_OFFSET)= 0;
 	data->valid= TRUE;
 	data_delete_all(data);
+}
+
+/* 0x00509444: something of the console that the marks are drawn with.
+0x00509448: the cache of what they are drawn from */
+void *unknown_00509444;
+struct lruv_cache *unknown_00509448;
+
+/* 0x003fb640: of the libraries of the console. 0x0017d5f0: the marks are
+done away with */
+unsigned long D3DResource_Release(unsigned long resource);
+void __attribute__((stdcall)) unknown_0017d5f0(long unknown);
+
+/* 0x0017d2a0: the marks have no table; what the console had for them is
+given back (D3DResource_Release), and the memory of the cache goes back to
+where it came from */
+void decals_dispose(
+	void)
+{
+	void *resource= unknown_00509444;
+	struct lruv_cache *cache;
+
+	decal_data= NULL;
+	if (resource)
+	{
+		D3DResource_Release((unsigned long)resource);
+		unknown_00509444= NULL;
+	}
+	cache= unknown_00509448;
+	cache->allocation->functions->deallocate(cache->allocation, cache);
+}
+
+/* 0x0017d330: when a map goes, the marks are done away with
+(unknown_0017d5f0), the cache is emptied (lruv_flush), and the table cannot
+be used */
+void decals_dispose_from_old_map(
+	void)
+{
+	unknown_0017d5f0(1);
+	lruv_flush(unknown_00509448);
+	decal_data->valid= FALSE;
 }

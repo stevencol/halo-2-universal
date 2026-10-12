@@ -2,6 +2,50 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Cuatro funciones más de niveles, sonidos en bucle y calcomanías
+
+Cuatro funciones cortas (unos 190 bytes) en tres archivos. De 2084
+funciones se pasa a 2088, el 18,54 % de las del juego (el 11,264 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `levels_initialize_for_new_map` | `0x0019c190` | `main/levels.c` |
+| `object_looping_sounds_dispose_from_old_map` | `0x00188940` | `sound/sound_manager.c` |
+| `decals_dispose` | `0x0017d2a0` | `effects/decals.c` |
+| `decals_dispose_from_old_map` | `0x0017d330` | `effects/decals.c` |
+
+### Lo que se sabe
+
+- `levels_initialize_for_new_map`: las dos tablas de niveles se marcan como
+  usables y se vacían; luego se buscan los niveles que hay
+  (`unknown_0019c120`) y se llena cada tabla (`unknown_0019c6d0`,
+  `unknown_0019c7e0`).
+- `object_looping_sounds_dispose_from_old_map`: si la tabla está y es
+  usable, se paran los sonidos en bucle de los objetos
+  (`unknown_001889d0`), la tabla deja de ser usable y se borran dos
+  números de `unknown_004ed288`.
+- `decals_dispose`: olvida la tabla de calcomanías, devuelve a la consola
+  lo que tenía para dibujarlas (`D3DResource_Release`) y devuelve la
+  memoria de su caché a quien se la dio.
+- `decals_dispose_from_old_map`: acaba con las calcomanías
+  (`unknown_0017d5f0`), vacía la caché (`lruv_flush`) y marca la tabla como
+  no usable.
+- Corrección: `unknown_001889d0` limpia su argumento de la pila; la lista
+  de funciones no lo decía.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  612.
+- Qué es exactamente lo que la consola tenía para las calcomanías
+  (`unknown_00509444`) no se sabe; por la llamada, un recurso de dibujo.
+- En este hito se pasaron las pruebas de las cuatro funciones, y
+  `test_game` y `test_game_state` enteras.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Cinco funciones cortas: jugadores, sonidos en bucle de los objetos y niveles
 
 Cinco funciones cortas (unos 190 bytes) en cuatro archivos, uno nuevo (`main/levels.c`).
