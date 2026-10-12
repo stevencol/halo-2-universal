@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Ocho consultas pequeñas más de objetos y unidades
+
+Ocho funciones (381 bytes) en `units/units.c`. De 2331
+funciones se pasa a 2339, el 20,76 % de las del juego (el 11,823 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_unknown_000a7a30` | `0x000a7a30` | `units/units.c` |
+| `object_get_unknownC4` | `0x000bc190` | `units/units.c` |
+| `unit_unknown_000c8a10` | `0x000c8a10` | `units/units.c` |
+| `unit_get_unknown168` | `0x000cb7e0` | `units/units.c` |
+| `unit_get_free_weapon_index` | `0x000cd620` | `units/units.c` |
+| `unit_has_two_weapons_in_hand` | `0x000cd660` | `units/units.c` |
+| `unit_clear_unknown2A8` | `0x000ceea0` | `units/units.c` |
+| `unit_clear_unknown34C` | `0x000e4300` | `units/units.c` |
+
+### Lo que se sabe
+
+- `unit_get_free_weapon_index` da el primero de los cuatro huecos de armas
+  de una unidad (desde `0x218`) que esté libre, o `NONE`.
+- `unit_has_two_weapons_in_hand` dice si los dos bytes que indican qué arma
+  lleva la unidad en cada mano (`0x212` y `0x213`) tienen arma.
+- `object_get_unknownC4` copia lo que identifica a un objeto (`0xC4`,
+  `0xC8` y el `short` de `0xC2`).
+- Las otras cinco leen o borran datos sueltos (`0xD4`, `0x168`, `0x2A8`,
+  `0x34C`, y un bit de `0x348` solo para los objetos del tipo 0).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  711.
+- Los dos nombres con sentido son supuestos (por lo que ya se sabía de las
+  armas de una unidad, hito 588); los demás llevan su desplazamiento.
+- En este hito se pasaron las pruebas de las ocho funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Nueve consultas pequeñas más de los objetos
 
 Nueve funciones (348 bytes) en `units/units.c`. De 2322

@@ -249,3 +249,114 @@ boolean unit_unknown_0026be60(
 
 	return TRUE;
 }
+
+void __attribute__((stdcall)) unknown_000b58c0(long entity_index, long unknown);
+
+/* 0x000a7a30: unknown_000b58c0 is done with the entity of the simulation of
+an object (at 0xD4), if it has one */
+void object_unknown_000a7a30(
+	long object_index,
+	long unknown)
+{
+	long entity_index= *(const long *)(UNIT_OBJECT_GET(object_index)+0xD4);
+
+	if (entity_index!=NONE)
+	{
+		unknown_000b58c0(entity_index, unknown);
+	}
+}
+
+/* 0x000bc190: what an object is known by: the numbers that it has at 0xC4
+and 0xC8, and its short at 0xC2 */
+void object_get_unknownC4(
+	long object_index,
+	byte *unknown)
+{
+	const byte *object= UNIT_OBJECT_GET(object_index);
+
+	*(long *)(unknown+4)= *(const long *)(object+0xC8);
+	*(long *)unknown= *(const long *)(object+0xC4);
+	*(short *)(unknown+8)= *(const short *)(object+0xC2);
+}
+
+/* 0x000c8a10: the bit 4 of the byte at 0x348 of an object of the type 0;
+false for the others */
+boolean unit_unknown_000c8a10(
+	long unit_index)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+
+	if (unit[0xAA]==0)
+	{
+		return (unit[0x348]>>4)&1;
+	}
+
+	return FALSE;
+}
+
+/* 0x000cb7e0: the three numbers that a unit keeps at 0x168 */
+void unit_get_unknown168(
+	long *unknown,
+	long unit_index)
+{
+	const long *source= (const long *)(UNIT_OBJECT_GET(unit_index)+0x168);
+
+	unknown[0]= source[0];
+	unknown[1]= source[1];
+	unknown[2]= source[2];
+}
+
+/* 0x000cd620: the first of the four places for weapons of a unit (from
+0x218) that has none, or NONE if all have one */
+short unit_get_free_weapon_index(
+	long unit_index)
+{
+	const long *weapons= (const long *)(UNIT_OBJECT_GET(unit_index)+0x218);
+	short index;
+
+	for (index= 0; index<4; index++)
+	{
+		if (weapons[index]==NONE)
+		{
+			return index;
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x000cd660: whether both of the bytes that say which weapons a unit has in
+its hands (0x212 and 0x213) say one */
+boolean unit_has_two_weapons_in_hand(
+	long unit_index)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+
+	return unit[0x212]!=0xFF && unit[0x213]!=0xFF;
+}
+
+/* 0x000ceea0: the number that a unit keeps at 0x2A8 is NONE, if it was a
+given one */
+void __attribute__((stdcall)) unit_clear_unknown2A8(
+	long unit_index,
+	long unknown)
+{
+	byte *unit= (byte *)UNIT_OBJECT_GET(unit_index);
+
+	if (*(long *)(unit+0x2A8)==unknown)
+	{
+		*(long *)(unit+0x2A8)= NONE;
+	}
+}
+
+/* 0x000e4300: the short that an object keeps at 0x34C is NONE, and the two
+bytes after it are zero */
+void unit_clear_unknown34C(
+	long unit_index)
+{
+	byte *unit= (byte *)UNIT_OBJECT_GET(unit_index);
+
+	*(short *)(unit+0x34C)= NONE;
+	unit[0x34E]= 0;
+	unit[0x34F]= 0;
+}

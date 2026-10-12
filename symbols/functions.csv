@@ -2864,3 +2864,11 @@ address,name,source,arguments,returns,convention
 00119250,unit_get_unknown12C,source/units/units.c,eax,pointer
 00207b90,object_set_flag16,source/units/units.c,stack stack stack,bool,stdcall
 0026be60,unit_unknown_0026be60,source/units/units.c,eax,bool
+000a7a30,object_unknown_000a7a30,source/units/units.c,eax stack,void
+000bc190,object_get_unknownC4,source/units/units.c,eax ecx,void
+000c8a10,unit_unknown_000c8a10,source/units/units.c,ecx,bool
+000cb7e0,unit_get_unknown168,source/units/units.c,eax ecx,void
+000cd620,unit_get_free_weapon_index,source/units/units.c,eax,short
+000cd660,unit_has_two_weapons_in_hand,source/units/units.c,eax,bool
+000ceea0,unit_clear_unknown2A8,source/units/units.c,stack stack,void,stdcall
+000e4300,unit_clear_unknown34C,source/units/units.c,eax,void
