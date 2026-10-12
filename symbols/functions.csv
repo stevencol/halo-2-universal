@@ -2799,3 +2799,5 @@ address,name,source,arguments,returns,convention
 000c1670,lights_delete_from_object,source/objects/lights.c,stack,void,stdcall
 000c12d0,unknown_000c12d0,,edx,void
 000c1720,lights_unknown_000c1720,source/objects/lights.c,stack stack stack,int,stdcall
+000c17f0,light_unknown_000c17f0,source/objects/lights.c,eax edx stack,bool
+000c1a80,unknown_000c1a80,,ecx edx stack,void

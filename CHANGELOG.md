@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Si una luz se ve
+
+Una función (237 bytes) en `objects/lights.c`. De 2264
+funciones se pasa a 2265, el 20,11 % de las del juego (el 11,703 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `light_unknown_000c17f0` | `0x000c17f0` | `objects/lights.c` |
+
+### Lo que se sabe
+
+- `light_unknown_000c17f0` (descripción en `eax`, luz en `edx`, una opción
+  en la pila) rellena la descripción de la luz (hito 692), la ajusta a
+  donde está (`unknown_000c1a80`) y dice si la luz se ve.
+- No se ve si las luces están apagadas (byte 8 de `light_globals`), si la
+  luz no tiene el bit 1, o —cuando se pide y su definición no tiene el bit
+  8— si el motor de la partida tiene puesto el bit 1 de su primer número.
+- Y solo se ve si es lo bastante grande: un real de la descripción mayor
+  que 0,0001 (para la clase 0) o ese y la suma de dos cuadrados mayor que
+  10⁻⁸ (para las demás).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  695.
+- `unknown_000c1a80` (773 bytes) no está descompilada. Qué es el bit del
+  motor de la partida que apaga las luces no se sabe.
+- En este hito se pasaron las pruebas de la función. Hay una batería
+  completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Las luces de un objeto: sacarlas de las zonas o actualizarlas
 
 Una función (200 bytes) en `objects/lights.c`. De 2263

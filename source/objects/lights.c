@@ -602,3 +602,62 @@ long __attribute__((stdcall)) lights_unknown_000c1720(
 
 	return count;
 }
+
+/* 0x004e9ae8 and 0x0055e4d0, of game_voice.c: what the game engine keeps
+(the kind of game that is played at 0xC14) and, for each kind, what it has */
+extern byte *unknown_004e9ae8;
+extern long unknown_0055e4d0[];
+
+/* 0x000c1a80: what a light is like is worked out for where it is */
+void unknown_000c1a80(const byte *unknown84, byte *unknown, const byte *definition);
+
+/* 0x000c17f0: what a light is like where it is, and whether it is to be
+seen. It is not if the lights are off (the byte at 8 of light_globals), if
+the light does not have the bit 1 of its flags, or, when it is asked for and
+the definition of the light does not have the bit 8 of its flags, if the game
+engine has the bit 1 of its first number in a kind of game that is played.
+And it is seen only if it is big enough: a real of what it is like (at 0x44
+for the kind 0, at 0x64 and two more for the others) is above very little */
+boolean light_unknown_000c17f0(
+	byte *unknown,
+	long light_index,
+	boolean unknown3)
+{
+	const byte *light= (const byte *)light_data->data+(light_index&0xFFFF)*LIGHT_SIZE;
+	const byte *definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)(light+4)&0xFFFF].address;
+	boolean enabled= TRUE;
+
+	if (!((*(const unsigned long *)definition>>8)&1) && unknown3)
+	{
+		const byte *engine= unknown_004e9ae8;
+
+		if (unknown_0055e4d0[*(const long *)(engine+0xC14)])
+		{
+			enabled= !((*(const unsigned long *)engine>>1)&1);
+		}
+	}
+	if (light_globals[8] && enabled && (light[LIGHT_FLAGS_OFFSET]&2))
+	{
+		light_unknown_000c19f0(light_index, unknown);
+		unknown_000c1a80(light+0x84, unknown, definition);
+		if (*(const short *)unknown==0)
+		{
+			if (*(const float *)(unknown+0x44)>0.0001f)
+			{
+				return TRUE;
+			}
+		}
+		else if (*(const float *)(unknown+0x64)>0.0001f)
+		{
+			float unknown68= *(const float *)(unknown+0x68);
+			float unknown6C= *(const float *)(unknown+0x6C);
+
+			if (unknown68*unknown68+unknown6C*unknown6C>1e-8f)
+			{
+				return TRUE;
+			}
+		}
+	}
+
+	return FALSE;
+}
