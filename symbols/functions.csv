@@ -2915,3 +2915,12 @@ address,name,source,arguments,returns,convention
 001cbd30,unknown68_get_tag_unknownC,source/physics/havok.c,eax,short
 001cbe90,unknown68_get_tag_unknownC_or_zero,source/physics/havok.c,ecx,int
 001cbe20,unknown68_get_tag_unknown18,source/physics/havok.c,eax ecx,pointer
+001318a0,scenario_get_unknown348,source/scenario/scenario.c,ecx,pointer
+00203330,unknown_get_scenario_unknown244,source/ai/squads.c,eax,pointer
+002bbf70,player_clear_unknown1B8,source/game/players.c,stack,void,stdcall
+0019ebe0,unknown_set_first_player,source/game/players.c,eax ecx,void
+0019ec10,unknown_set_second_player,source/game/players.c,eax ecx,void
+00209c60,hs_thread_pop_frame,source/hs/hs_runtime.c,eax,void
+0019c670,levels_get_campaign_level_data,source/main/levels.c,,pointer
+0019c6a0,levels_get_multiplayer_level_data,source/main/levels.c,,pointer
+000335c0,main_unknown_000335c0,source/main/main.c,,bool

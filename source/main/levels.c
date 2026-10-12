@@ -176,3 +176,28 @@ void levels_dispose(
 		campaign_level_data= NULL;
 	}
 }
+
+/* 0x0019c670: the table of the levels of the campaign, or NULL if the globals
+tag says nothing of the levels */
+struct data_array *levels_get_campaign_level_data(
+	void)
+{
+	if (levels_get_definition())
+	{
+		return campaign_level_data;
+	}
+
+	return NULL;
+}
+
+/* 0x0019c6a0: the same for the table of the multiplayer levels */
+struct data_array *levels_get_multiplayer_level_data(
+	void)
+{
+	if (levels_get_definition())
+	{
+		return multiplayer_level_data;
+	}
+
+	return NULL;
+}

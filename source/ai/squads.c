@@ -299,3 +299,19 @@ void squad_new_from_scenario(
 		}
 	}
 }
+
+/* 0x00203330: one of the things of 0x7C bytes that the scenario has at 0x244,
+the one that something names with its short at 0x2A; NULL for NONE. What the
+thing is is not known: the function is far from the others of this file */
+const byte *unknown_get_scenario_unknown244(
+	const byte *unknown)
+{
+	short index= *(const short *)(unknown+0x2A);
+
+	if (index==NONE)
+	{
+		return NULL;
+	}
+
+	return *(const byte *const *)((const byte *)global_scenario+0x244)+index*0x7C;
+}

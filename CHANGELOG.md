@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Nueve funciones pequeñas de varios archivos
+
+Nueve funciones (290 bytes) en seis archivos. De 2382
+funciones se pasa a 2391, el 21,23 % de las del juego (el 11,890 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `scenario_get_unknown348` | `0x001318a0` | `scenario/scenario.c` |
+| `unknown_get_scenario_unknown244` | `0x00203330` | `ai/squads.c` |
+| `player_clear_unknown1B8` | `0x002bbf70` | `game/players.c` |
+| `unknown_set_first_player` | `0x0019ebe0` | `game/players.c` |
+| `unknown_set_second_player` | `0x0019ec10` | `game/players.c` |
+| `hs_thread_pop_frame` | `0x00209c60` | `hs/hs_runtime.c` |
+| `levels_get_campaign_level_data` | `0x0019c670` | `main/levels.c` |
+| `levels_get_multiplayer_level_data` | `0x0019c6a0` | `main/levels.c` |
+| `main_unknown_000335c0` | `0x000335c0` | `main/main.c` |
+
+### Lo que se sabe
+
+- `hs_thread_pop_frame` hace que un hilo de script vuelva al marco anterior:
+  lo que tiene en `0x10` pasa a ser lo primero que ese marco nombra.
+- Las dos de `levels.c` dan la tabla de niveles de campaña o la de
+  multijugador, o nada si el tag de globales no dice nada de los niveles.
+- `scenario_get_unknown348` da una de las cosas de 0x10 bytes del bloque que
+  el escenario tiene en `0x348`, comprobando el número.
+- Las dos `unknown_set_*_player` apuntan en algo un jugador y el byte `0xC0`
+  de ese jugador (¿su equipo?), en `0xC`/`0x10` y en `0x14`/`0x18`.
+- Variable nueva: `unknown_00509415`, un byte.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  717.
+- Los nombres son suposiciones; `unknown_get_scenario_unknown244` y las dos
+  de los jugadores están en sus archivos de forma provisional.
+- En este hito se pasaron las pruebas de las nueve funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Seis funciones pequeñas que van de una cosa a su tag
 
 Seis funciones (205 bytes): dos en `effects/effects.c` y cuatro en `physics/havok.c`.

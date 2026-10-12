@@ -120,7 +120,8 @@ struct unknown_00510c94
 /* 0x00510c50 points to it. What it is is not known */
 struct unknown_00510c50
 {
-	byte unknown0[6];
+	byte unknown0[5];
+	boolean unknown5;
 	boolean unknown6;
 	byte unknown7[0x1B];
 	boolean unknown22;
@@ -164,6 +165,10 @@ long unknown_00510560;
 
 /* 0x00510c50 */
 struct unknown_00510c50 *unknown_00510c50;
+
+/* 0x00509415: what main_unknown_000335c0 gives when unknown_00510c50 has
+its byte at 5 */
+boolean unknown_00509415;
 
 /* 0x004e8c20 */
 struct players_globals *players_globals;
@@ -754,4 +759,17 @@ void main_cancel_map_copy_and_wait(
 		SwitchToThread();
 		sound_idle();
 	}
+}
+
+/* 0x000335c0: unknown_00509415 if there is unknown_00510c50 and it has its
+byte at 5; true if not */
+boolean main_unknown_000335c0(
+	void)
+{
+	if (unknown_00510c50 && unknown_00510c50->unknown5)
+	{
+		return unknown_00509415;
+	}
+
+	return TRUE;
 }

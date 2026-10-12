@@ -201,3 +201,37 @@ boolean local_user_has_player(
 
 	return FALSE;
 }
+
+/* 0x002bbf70: a player has NONE for its number at 0x1B8 */
+void player_clear_unknown1B8(
+	long player_index)
+{
+	byte *player= (byte *)player_data->data+(player_index&0xFFFF)*0x21C;
+
+	*(long *)(player+0x1B8)= NONE;
+}
+
+/* 0x0019ebe0: something takes a player at 0xC and the byte at 0xC0 of that
+player, as a number, at 0x10 */
+void unknown_set_first_player(
+	long player_index,
+	byte *unknown)
+{
+	const byte *player;
+
+	*(long *)(unknown+0xC)= player_index;
+	player= (const byte *)player_data->data+(player_index&0xFFFF)*0x21C;
+	*(long *)(unknown+0x10)= *(const char *)(player+0xC0);
+}
+
+/* 0x0019ec10: the same for a second player, at 0x14 and 0x18 */
+void unknown_set_second_player(
+	long player_index,
+	byte *unknown)
+{
+	const byte *player;
+
+	*(long *)(unknown+0x14)= player_index;
+	player= (const byte *)player_data->data+(player_index&0xFFFF)*0x21C;
+	*(long *)(unknown+0x18)= *(const char *)(player+0xC0);
+}

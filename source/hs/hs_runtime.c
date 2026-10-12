@@ -144,3 +144,13 @@ void hs_runtime_update(
 		object_lists_delete_unused();
 	}
 }
+
+/* 0x00209c60: a thread goes back to the frame before the one it is in: what
+it has at 0x10 becomes what that names first */
+void hs_thread_pop_frame(
+	long thread_index)
+{
+	byte *thread= (byte *)hs_thread_data->data+(thread_index&0xFFFF)*HS_THREAD_SIZE;
+
+	*(void **)(thread+0x10)= **(void ***)(thread+0x10);
+}

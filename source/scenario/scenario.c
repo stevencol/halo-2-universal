@@ -234,3 +234,18 @@ void *structure_bsp_get_unknownC4(
 
 	return NULL;
 }
+
+/* 0x001318a0: one of the things of 0x10 bytes of the block that the scenario
+has at 0x348; NULL with no scenario or for a number that is not of the block */
+const byte *scenario_get_unknown348(
+	long index)
+{
+	const byte *scenario= (const byte *)global_scenario;
+
+	if (scenario && index>=0 && index<*(const long *)(scenario+0x348))
+	{
+		return *(const byte *const *)(scenario+0x34C)+index*0x10;
+	}
+
+	return NULL;
+}
