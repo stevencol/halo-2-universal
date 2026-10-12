@@ -2,6 +2,37 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Borrar un widget concreto de un objeto
+
+Una función (216 bytes) en `objects/widgets.c`. De 2225
+funciones se pasa a 2226, el 19,76 % de las del juego (el 11,501 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `widget_delete` | `0x000d4ae0` | `objects/widgets.c` |
+
+### Lo que se sabe
+
+- `widget_delete` (objeto en `eax`, índice en `ecx`) busca en la lista de
+  widgets del objeto el que tiene ese índice en la tabla de su tipo, lo
+  saca de la lista, avisa a su tipo y lo borra. Si no lo encuentra no hace
+  nada.
+- Curiosidad fiel al juego: para encontrarlo solo compara el índice, sin
+  mirar el tipo, así que si una antena y una tela del mismo objeto tuvieran
+  el mismo índice borraría la primera de la lista.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  671.
+- Quedan en el archivo `0xd4bc0` y `0xd4cf0`.
+- En este hito se pasaron las pruebas de la función. Hay una batería
+  completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Crear los widgets de un objeto
 
 Una función (339 bytes) en `objects/widgets.c`. De 2224

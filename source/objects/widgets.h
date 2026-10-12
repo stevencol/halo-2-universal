@@ -63,6 +63,7 @@ void widgets_initialize_for_new_map(void);
 void widgets_dispose_from_old_map(void);
 void __attribute__((stdcall)) widgets_update(float seconds);
 void widgets_delete(long object_index);
+void widget_delete(long object_index, long index);
 void __attribute__((stdcall)) widgets_new(long object_index);
 
 #endif

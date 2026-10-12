@@ -181,3 +181,49 @@ void __attribute__((stdcall)) widgets_new(
 		}
 	}
 }
+
+/* 0x000d4ae0: the widget of an object that is a given thing in the table of
+its kind is no more: it is taken out of the list of the object, its kind is
+told, and it is deleted. The kind is not looked at to find it */
+void widget_delete(
+	long object_index,
+	long index)
+{
+	if (index!=NONE)
+	{
+		long *first_widget_index= OBJECT_FIRST_WIDGET_INDEX(object_index);
+		long widget_index= *first_widget_index;
+
+		if (widget_index!=NONE)
+		{
+			struct widget_datum *widgets= (struct widget_datum *)widget_data->data;
+			struct widget_datum *widget= &widgets[widget_index&0xFFFF];
+
+			if (widget->index==index)
+			{
+				*first_widget_index= widget->next_widget_index;
+			}
+			else
+			{
+				struct widget_datum *previous;
+
+				do
+				{
+					previous= &widgets[widget_index&0xFFFF];
+					widget_index= previous->next_widget_index;
+					if (widget_index==NONE)
+					{
+						return;
+					}
+					widget= &widgets[widget_index&0xFFFF];
+				} while (widget->index!=index);
+				previous->next_widget_index= widget->next_widget_index;
+			}
+			if (widget->index!=NONE)
+			{
+				widget_type_definitions[widget->type].delete(widget->index);
+			}
+			datum_delete(widget_data, widget_index);
+		}
+	}
+}
