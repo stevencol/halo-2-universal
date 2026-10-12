@@ -2784,3 +2784,4 @@ address,name,source,arguments,returns,convention
 001df6c0,game_team_unknown_001df6c0,source/game/game_unknown_001df460.c,edi ebx stack stack stack stack,void
 001dfaa0,game_team_bit_set,source/game/game_unknown_001df460.c,eax ecx edx,void
 001c9830,unknown_001c9830,,stack stack stack stack,void,stdcall
+001df950,game_team_unknown_001df950,source/game/game_unknown_001df460.c,edi ebx,void

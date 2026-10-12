@@ -293,3 +293,34 @@ void __attribute__((stdcall)) game_team_change_apply(
 		unknown_001c9830(*(unsigned short *)element, *(unsigned short *)(element+2), enemies, not_friends);
 	}
 }
+
+/* 0x001df950: in the campaign, the time of the change of two sides starts
+again (from its short at 6, unless that is NONE), if the change has been
+counted at least once (its short at 0xC). The change is the first that is of
+the two sides, with its byte at 9 set when they are in its order, or its byte
+at 8 when they are the other way round */
+void game_team_unknown_001df950(
+	short team,
+	short other)
+{
+	if (main_game_globals->options.game_mode==_game_mode_campaign)
+	{
+		byte *element= unknown_004f55ec+4;
+		short count= *(short *)unknown_004f55ec;
+		short index;
+
+		for (index= 0; index<count; index++)
+		{
+			if ((*(short *)element==team && *(short *)(element+2)==other && element[9]) ||
+				(*(short *)(element+2)==team && *(short *)element==other && element[8]))
+			{
+				if (*(short *)(element+0xC)>0 && *(short *)(element+6)!=NONE)
+				{
+					*(short *)(element+0xE)= *(short *)(element+6);
+				}
+				break;
+			}
+			element+= 0x14;
+		}
+	}
+}

@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — El temporizador de un cambio entre bandos vuelve a empezar
+
+Una función (104 bytes) en `game/game_unknown_001df460.c`. De 2251
+funciones se pasa a 2252, el 19,99 % de las del juego (el 11,619 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_team_unknown_001df950` | `0x001df950` | `game/game_unknown_001df460.c` |
+
+### Lo que se sabe
+
+- `game_team_unknown_001df950` (bandos en `di` y `bx`): solo en la campaña,
+  busca el cambio de esos dos bandos (con su byte `+9` puesto si van en el
+  orden del cambio, o el `+8` si van al revés) y, si ya se ha contado
+  alguna vez (`+0xC` mayor que cero), vuelve a poner su temporizador en el
+  valor de `+6`.
+- Los bytes `+8` y `+9` de un cambio dicen, pues, en qué sentido vale:
+  del segundo bando hacia el primero y del primero hacia el segundo.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  684.
+- De la parte solo queda `0x1df820` (296 bytes), que redondea un real con
+  la coma flotante antigua (`fistp`) y hay que mirar con cuidado.
+- En este hito se pasaron las pruebas de la función. Hay una batería
+  completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Un cambio entre dos bandos se aplica a los bits
 
 Dos funciones (263 bytes) en `game/game_unknown_001df460.c`. De 2249
