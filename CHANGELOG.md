@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Una parte con dos cosas que comparten memoria de la consola
+
+Dos funciones (unos 240 bytes) en el archivo provisional nuevo
+`game/game_unknown_00131ff0.c`. De 2192
+funciones se pasa a 2194, el 19,48 % de las del juego (el 11,386 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_unknown_00131ff0_initialize` | `0x00131ff0` | `game/game_unknown_00131ff0.c` |
+| `game_unknown_00131ff0_dispose` | `0x001320b0` | `game/game_unknown_00131ff0.c` |
+
+### Lo que se sabe
+
+- `game_unknown_00131ff0_initialize` pide a la consola `0x452E8` bytes
+  (`VirtualAlloc`) y con ellos crea dos cosas de `0x2AE0` bytes
+  (`0x547f88` y `0x54aa68`), cada una con su mitad de la memoria y con
+  seis `short` de parámetros: `{1, 0x80, 0x40, 0x100, 0x180, 0}` y
+  `{6, 0x40, 1, 0x80, 0x60, 0x100}`. Si no hay memoria pide el error y
+  sigue igual.
+- `game_unknown_00131ff0_dispose` cierra las dos cosas y devuelve la
+  memoria.
+- Las dos cosas no se pisan con `main_globals` (`0x547f28`), como se temía.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  647.
+- Qué son las dos cosas no se sabe; `unknown_00134980` (crearlas) y
+  `unknown_00134b20` (cerrarlas) no están descompiladas. `0x146b80`, de la
+  física, usa también esta memoria.
+- En este hito se pasaron las pruebas de las dos funciones. Hay una
+  batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — La memoria de la física y otra parte de una sola función
 
 Tres funciones (unos 160 bytes): dos en `physics/havok.c` y una en el archivo provisional

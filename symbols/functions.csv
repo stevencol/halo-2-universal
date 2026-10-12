@@ -351,8 +351,8 @@ address,name,source,arguments,returns,convention
 00125690,sound_initialize_for_new_map,source/sound/sound_manager.c,,void
 001257b0,sound_dispose_from_old_map,source/sound/sound_manager.c,,void
 00125920,sound_initialize_for_new_structure_bsp,source/sound/sound_manager.c,,void
-00131ff0,unknown_00131ff0,,,void
-001320b0,unknown_001320b0,,,void
+00131ff0,game_unknown_00131ff0_initialize,source/game/game_unknown_00131ff0.c,,void
+001320b0,game_unknown_00131ff0_dispose,source/game/game_unknown_00131ff0.c,,void
 00134d90,game_unknown_00134d90_initialize,source/game/game_unknown_00134d90.c,,void
 00134dd0,game_unknown_00134d90_dispose,source/game/game_unknown_00134d90.c,,void
 00134de0,game_unknown_00134d90_initialize_for_new_map,source/game/game_unknown_00134d90.c,,void
@@ -2725,3 +2725,5 @@ address,name,source,arguments,returns,convention
 00146b30,havok_unknown_00146b30,source/physics/havok.c,,void
 00146b80,unknown_00146b80,,,void
 00146de0,unknown_00146de0,,,void
+00134980,unknown_00134980,,eax ecx ebx,void
+00134b20,unknown_00134b20,,edi,void

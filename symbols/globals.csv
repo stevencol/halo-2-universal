@@ -541,3 +541,6 @@ address,name,source
 00479888,unknown_00479888,source/physics/havok.c
 0051e9cc,unknown_0051e9cc,source/physics/havok.c
 00509438,unknown_00509438,source/game/game_unknown_0003f2b0.c
+00510c44,unknown_00510c44,source/game/game_unknown_00131ff0.c
+00547f88,unknown_00547f88,source/game/game_unknown_00131ff0.c
+0054aa68,unknown_0054aa68,source/game/game_unknown_00131ff0.c

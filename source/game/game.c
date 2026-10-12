@@ -142,8 +142,8 @@ void shell_memory_initialize_for_new_map(void);
 void sound_initialize_for_new_map(void);
 void sound_dispose_from_old_map(void);
 void sound_initialize_for_new_structure_bsp(void);
-void unknown_00131ff0(void);
-void unknown_001320b0(void);
+void game_unknown_00131ff0_initialize(void);
+void game_unknown_00131ff0_dispose(void);
 void game_unknown_00134d90_initialize(void);
 void game_unknown_00134d90_dispose(void);
 void game_unknown_00134d90_initialize_for_new_map(void);
@@ -352,7 +352,7 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{unknown_00155ea0, unknown_00155ed0},
 	{no_operation, no_operation},
 	{levels_initialize, levels_dispose, levels_initialize_for_new_map, levels_dispose_from_old_map},
-	{unknown_00131ff0, unknown_001320b0},
+	{game_unknown_00131ff0_initialize, game_unknown_00131ff0_dispose},
 	{sound_unknown_00225700, no_operation},
 	{game_state_initialize, game_state_dispose, game_state_initialize_for_new_map, no_operation, game_state_set_structure_bsp_index, no_operation},
 	{game_time_initialize, no_operation, game_time_initialize_for_new_map, game_time_dispose_from_old_map},
