@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Un cambio entre dos bandos se aplica a los bits
+
+Dos funciones (263 bytes) en `game/game_unknown_001df460.c`. De 2249
+funciones se pasa a 2251, el 19,98 % de las del juego (el 11,615 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_team_change_apply` | `0x001df9c0` | `game/game_unknown_001df460.c` |
+| `game_team_bit_set` | `0x001dfaa0` | `game/game_unknown_001df460.c` |
+
+### Lo que se sabe
+
+- **La batería completa lanzada sobre el hito 637 terminó limpia: 2159 de
+  2159 funciones.** Cubre los hitos 621 a 637.
+- `game_team_change_apply` (antes `unknown_001df9c0`) aplica un cambio entre
+  dos bandos: los pone como amigos el uno del otro (salvo que se le diga
+  que no) y como aliados (salvo que se le diga que son enemigos), en los
+  dos sentidos; guarda en el cambio si son enemigos, lo marca y avisa a la
+  IA (`unknown_001c9830`). Si el cambio ya decía lo mismo y son amigos, no
+  hace nada.
+- `game_team_bit_set` (vector en `eax`, bit en `ecx`, valor en `dl`) pone o
+  quita un bit.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  683.
+- Los hitos 638 a 684 solo tienen sus propias pruebas y las de quienes
+  llaman a sus funciones; falta otra batería completa.
+- Los nombres son supuestos. Quedan en la parte `0x1df820` y `0x1df950`.
+- En este hito se pasaron las pruebas de las dos funciones y las de
+  `test_game_parts_681` a `683`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Amigos que no son aliados, y los cambios entre dos bandos
 
 Dos funciones (294 bytes) en `game/game_unknown_001df460.c`. De 2247

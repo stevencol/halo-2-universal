@@ -20,5 +20,5 @@ def run(t) -> None:
         t.check(
             "game_unknown_001df460_update",
             globals={"unknown_004f55ec": Buffer(bytes(data))},
-            externals={"unknown_001df9c0": lambda harness, arguments: 0},
+            externals={"game_team_change_apply": lambda harness, arguments: 0},
         )

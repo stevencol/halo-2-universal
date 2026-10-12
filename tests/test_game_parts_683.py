@@ -39,5 +39,5 @@ def run(t) -> None:
             random_.getrandbits(32),
             random_.getrandbits(32),
             globals={"main_game_globals": game(), "unknown_004f55ec": Buffer(bytes(data))},
-            externals={"unknown_001df9c0": lambda harness, arguments: 0},
+            externals={"game_team_change_apply": lambda harness, arguments: 0},
         )

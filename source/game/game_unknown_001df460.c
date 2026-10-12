@@ -64,13 +64,13 @@ void game_unknown_001df460_initialize_for_new_map(
 
 /* 0x001df9c0: what is done with one of the things that are counted down,
 when its time is over for the last time */
-void __attribute__((stdcall)) unknown_001df9c0(byte *element, long unknown2, long unknown3);
+void __attribute__((stdcall)) game_team_change_apply(byte *element, boolean enemies, boolean not_friends);
 
 /* 0x001df500: each tick of the game (game.c). What the part keeps starts
 with how many things it counts down (a short) and has them from 4, of 0x14
 bytes each: a short at 0xE that goes down each tick while it is above zero;
 when it gets to zero, the short at 0xC goes down, and if that is zero too,
-unknown_001df9c0 is done with the thing; if not, the first short starts
+game_team_change_apply is done with the thing; if not, the first short starts
 again from the one at 6. By the sixteen rows of sixteen bits it may be who is
 whose friend, and these the changes of it that last for a time; that is a
 guess */
@@ -93,7 +93,7 @@ void game_unknown_001df460_update(
 			{
 				if (--*(short *)(element+0xC)==0)
 				{
-					unknown_001df9c0(element, 0, 0);
+					game_team_change_apply(element, 0, 0);
 					unknown= unknown_004f55ec;
 				}
 				else
@@ -195,7 +195,7 @@ boolean game_team_is_friend_and_not_ally(
 most eight) is of two sides, in either order: the one that there is of them,
 or a new one. It gets two bytes (at 8 and 9) and two shorts (at 4 and 6: the
 second is where its time starts again from), its counts are zero, the byte at
-0xA is set, unknown_001df9c0 is done with it and the byte at 0xB is cleared */
+0xA is set, game_team_change_apply is done with it and the byte at 0xB is cleared */
 void game_team_unknown_001df6c0(
 	short team,
 	short other,
@@ -237,8 +237,59 @@ void game_team_unknown_001df6c0(
 			*(short *)(element+0xC)= 0;
 			*(short *)(element+0xE)= 0;
 			element[0xA]= TRUE;
-			unknown_001df9c0(element, 0, 0);
+			game_team_change_apply(element, 0, 0);
 			element[0xB]= FALSE;
 		}
+	}
+}
+
+/* 0x001c9830: the minds of the characters are told of a change between two
+sides */
+void __attribute__((stdcall)) unknown_001c9830(long team, long other, boolean enemies, boolean not_friends);
+
+/* 0x001dfaa0: a bit of some is set, or cleared */
+void game_team_bit_set(
+	unsigned long *bits,
+	long bit,
+	boolean value)
+{
+	if (value)
+	{
+		BIT_VECTOR_OR_FLAG(bits, bit);
+	}
+	else
+	{
+		BIT_VECTOR_AND_FLAG(bits, bit);
+	}
+}
+
+/* 0x001df9c0: a change between two sides is put in the rows of bits: the two
+are friends, each of the other, unless the second argument says not, and
+allies unless the first says that they are enemies (only for sides below 16);
+the change keeps the first (at 0xA) and is marked (at 0xB), and the minds of
+the characters are told. If they are friends and the change already said the
+same of enemies, nothing is done */
+void __attribute__((stdcall)) game_team_change_apply(
+	byte *element,
+	boolean enemies,
+	boolean not_friends)
+{
+	if (not_friends || element[0xA]!=enemies)
+	{
+		short team= *(short *)element;
+
+		element[0xA]= enemies;
+		if (team<GAME_UNKNOWN_001DF460_ROWS && *(short *)(element+2)<GAME_UNKNOWN_001DF460_ROWS)
+		{
+			unsigned long *friends= (unsigned long *)(unknown_004f55ec+GAME_UNKNOWN_001DF460_FRIEND_BITS_OFFSET);
+			unsigned long *allies= (unsigned long *)(unknown_004f55ec+GAME_UNKNOWN_001DF460_BITS_OFFSET);
+
+			game_team_bit_set(friends, team*GAME_UNKNOWN_001DF460_ROWS+*(short *)(element+2), !not_friends);
+			game_team_bit_set(friends, *(short *)(element+2)*GAME_UNKNOWN_001DF460_ROWS+*(short *)element, !not_friends);
+			game_team_bit_set(allies, *(short *)element*GAME_UNKNOWN_001DF460_ROWS+*(short *)(element+2), !enemies);
+			game_team_bit_set(allies, *(short *)(element+2)*GAME_UNKNOWN_001DF460_ROWS+*(short *)element, !enemies);
+		}
+		element[0xB]= TRUE;
+		unknown_001c9830(*(unsigned short *)element, *(unsigned short *)(element+2), enemies, not_friends);
 	}
 }
