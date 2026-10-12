@@ -11,6 +11,7 @@ The players of a game. The names are guesses.
 
 #include "main/main.h"
 #include "memory/data.h"
+#include "saved games/game_state.h"
 #include "networking/transport_security.h"
 
 #include <string.h>
@@ -114,6 +115,32 @@ void players_dispose_from_old_map(
 	*(long *)globals= 0;
 	*(short *)(globals+8)= 0;
 	*(short *)(globals+0xA)= 0;
+	for (index= 0; index<4; index++)
+	{
+		*(long *)(globals+0xC+index*4)= NONE;
+	}
+	for (index= 0; index<4; index++)
+	{
+		*(long *)(globals+0x1C+index*4)= NONE;
+	}
+}
+
+/* 0x0014b4b0: the players make their table, in the memory of the state of
+the game (data_new, which the game has written here): sixteen of 0x21C
+bytes. What is kept of them takes 0x130 bytes there (game_state_malloc,
+written here too), with no players: nothing for its two counts and NONE for
+its two lists of four */
+void players_initialize(
+	void)
+{
+	byte *globals;
+	long index;
+
+	player_data= data_new("players", 0x10, 0x21C, 0, game_state_allocation);
+	globals= game_state_malloc(0x130);
+	*(short *)(globals+8)= 0;
+	*(short *)(globals+0xA)= 0;
+	players_globals= (struct players_globals *)globals;
 	for (index= 0; index<4; index++)
 	{
 		*(long *)(globals+0xC+index*4)= NONE;

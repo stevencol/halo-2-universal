@@ -452,8 +452,8 @@ address,name,source
 004ea940,contrail_point_data,source/effects/contrails.c
 004ea950,decal_data,source/effects/decals.c
 004ea94c,decal_globals,source/effects/decals.c
-004ee4e4,unknown_004ee4e4,source/main/levels.c
-004ee4e8,unknown_004ee4e8,source/main/levels.c
+004ee4e4,multiplayer_level_data,source/main/levels.c
+004ee4e8,campaign_level_data,source/main/levels.c
 004f93ac,unknown_004f93ac,source/game/game_unknown_001eb550.c
 004f93b0,unknown_004f93b0,source/game/game_unknown_001eb550.c
 00509444,unknown_00509444,source/effects/decals.c

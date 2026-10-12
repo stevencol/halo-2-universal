@@ -18,7 +18,7 @@ def run(t) -> None:
     for n in range(300):
         t.check(
             "levels_initialize_for_new_map",
-            globals={"unknown_004ee4e4": Buffer(random_.randbytes(0x4C)), "unknown_004ee4e8": Buffer(random_.randbytes(0x4C))},
+            globals={"multiplayer_level_data": Buffer(random_.randbytes(0x4C)), "campaign_level_data": Buffer(random_.randbytes(0x4C))},
             externals={
                 "data_delete_all": table,
                 "unknown_0019c120": note,

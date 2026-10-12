@@ -13641,3 +13641,18 @@ void object_looping_sounds_dispose_from_old_map(
 		*(long *)(unknown_004ed288+0x24)= 0;
 	}
 }
+
+/* 0x00510c2c, of game_state.c: what gives the memory of the state of the
+game */
+extern struct allocation *game_state_allocation;
+
+/* 0x001887d0: the looping sounds of the objects make their table, in the
+memory of the state of the game (data_new, which the game has written
+here): 0x400 of 0x18 bytes; and what unknown_004ed288 points to takes 0x244
+bytes there (game_state_malloc, written here too) */
+void object_looping_sounds_initialize(
+	void)
+{
+	unknown_004ed28c= data_new("object looping sounds", 0x400, 0x18, 0, game_state_allocation);
+	unknown_004ed288= game_state_malloc(0x244);
+}

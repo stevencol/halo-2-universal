@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Niveles, sonidos en bucle y jugadores crean sus tablas de datos
+
+Tres funciones de arranque (unos 400 bytes), en `main/levels.c`, `sound/sound_manager.c` y
+`game/players.c`. De 2091
+funciones se pasa a 2094, el 18,59 % de las del juego (el 11,264 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `levels_initialize` | `0x0019bcd0` | `main/levels.c` |
+| `object_looping_sounds_initialize` | `0x001887d0` | `sound/sound_manager.c` |
+| `players_initialize` | `0x0014b4b0` | `game/players.c` |
+
+### Lo que se sabe
+
+- La misma receta del hito 614: dentro de cada una está `data_new`.
+- `levels_initialize` crea las dos tablas de niveles en memoria del montón
+  (no del estado del juego). **Ya se sabe cuál es cuál**: `"level handles"`
+  son los 20 niveles de la campaña (`campaign_level_data`) y
+  `"multiplayer level handles"` los 50 de las partidas de varios
+  (`multiplayer_level_data`); cada entrada es de 8 bytes.
+- `object_looping_sounds_initialize` crea `"object looping sounds"` (1024
+  de `0x18` bytes) y toma `0x244` bytes más del estado del juego.
+- `players_initialize` crea `"players"` (**16 jugadores de `0x21C`
+  bytes**) y toma los `0x130` bytes de lo que se guarda de ellos, que deja
+  sin jugadores.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  614.
+- En este hito se pasaron las pruebas de las tres funciones (con memoria y
+  sin ella para cada tabla), y `test_game`, `test_players` y
+  `test_game_parts…` enteras.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Efectos, estelas y calcomanías crean sus tablas de datos
 
 Tres funciones (unos 370 bytes), las de arranque de los tres archivos de `effects/`.

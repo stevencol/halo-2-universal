@@ -26,7 +26,7 @@ def run(t) -> None:
         t.check("object_looping_sounds_dispose", globals={"unknown_004ed28c": pointer()})
         t.check(
             "levels_dispose_from_old_map",
-            globals={"unknown_004ee4e4": Buffer(random_.randbytes(0x4C)), "unknown_004ee4e8": Buffer(random_.randbytes(0x4C))},
+            globals={"multiplayer_level_data": Buffer(random_.randbytes(0x4C)), "campaign_level_data": Buffer(random_.randbytes(0x4C))},
         )
         reals = struct.pack(
             "<7f", *(random_.choice((0.0, 1.0, 0.0011, -2.5, 4.17, random_.uniform(-10, 10))) for _ in range(7))

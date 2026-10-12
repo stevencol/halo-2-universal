@@ -370,7 +370,7 @@ address,name,source,arguments,returns,convention
 0014783f,unknown_0014783f,,,void
 0014784e,unknown_0014784e,,,void
 00147920,unknown_00147920,,,void
-0014b4b0,unknown_0014b4b0,,,void
+0014b4b0,players_initialize,source/game/players.c,,void
 0014b560,players_dispose,source/game/players.c,,void
 0014b580,unknown_0014b580,,,void
 0014b600,players_dispose_from_old_map,source/game/players.c,,void
@@ -411,12 +411,12 @@ address,name,source,arguments,returns,convention
 00183f00,breakable_surfaces_unknown_00183f00,source/physics/breakable_surfaces.c,,void
 00185ab0,sound_unknown_00185ab0,source/sound/sound_manager.c,,void
 00185b00,sound_unknown_00185b00,source/sound/sound_manager.c,,void
-001887d0,unknown_001887d0,,,void
+001887d0,object_looping_sounds_initialize,source/sound/sound_manager.c,,void
 00188850,object_looping_sounds_dispose,source/sound/sound_manager.c,,void
 00188870,unknown_00188870,,,void
 00188940,object_looping_sounds_dispose_from_old_map,source/sound/sound_manager.c,,void
 00188980,unknown_00188980,,,void
-0019bcd0,unknown_0019bcd0,,,void
+0019bcd0,levels_initialize,source/main/levels.c,,void
 0019bd50,unknown_0019bd50,,,void
 0019c190,levels_initialize_for_new_map,source/main/levels.c,,void
 0019c1d0,levels_dispose_from_old_map,source/main/levels.c,,void
