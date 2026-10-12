@@ -2702,3 +2702,9 @@ address,name,source,arguments,returns,convention
 000bffa0,lights_initialize,source/objects/lights.c,,void
 000c0040,lights_initialize_for_new_map,source/objects/lights.c,,void
 001cabc0,unknown_001cabc0,,stack stack stack,void,stdcall
+000c00a0,lights_unknown_000c00a0,source/objects/lights.c,,void
+000c0110,lights_unknown_000c0110,source/objects/lights.c,,void
+000c01c0,lights_unknown_000c01c0,source/objects/lights.c,,void
+000c2d00,unknown_000c2d00,,stack,void,stdcall
+000c3260,unknown_000c3260,,stack stack,void,stdcall
+001cae40,unknown_001cae40,,edi stack stack,void

@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Tres recorridos de la tabla de las luces
+
+Tres funciones (375 bytes) en `objects/lights.c`. De 2161
+funciones se pasa a 2164, el 19,21 % de las del juego (el 11,360 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `lights_unknown_000c00a0` | `0x000c00a0` | `objects/lights.c` |
+| `lights_unknown_000c0110` | `0x000c0110` | `objects/lights.c` |
+| `lights_unknown_000c01c0` | `0x000c01c0` | `objects/lights.c` |
+
+### Lo que se sabe
+
+- Las tres recorren todas las luces en uso (el juego tiene el recorrido de
+  la tabla escrito dentro de cada una) y miran dos números de cada luz, en
+  `0x4C` y `0x58`, que valen `NONE` cuando la luz no es de nadie.
+- `lights_unknown_000c00a0` llama a `unknown_000c2d00` para las luces con
+  los dos números a `NONE`.
+- `lights_unknown_000c0110`: a las que además tienen los bits 3 y 1 de su
+  byte de bits (`+2`) las pasa a `unknown_001cae40`, con lo que tienen en
+  `0x10`, y les quita el bit 3.
+- `lights_unknown_000c01c0` llama a `unknown_000c3260(luz, TRUE)` para las
+  que tienen el primer número a `NONE`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  638.
+- Para qué sirve cada recorrido no se sabe: depende de las tres funciones a
+  las que llaman, que no están descompiladas. Los nombres son solo sus
+  direcciones.
+- En este hito se pasaron las pruebas de `test_lights` y
+  `test_lights_walks`. Hay una batería completa en marcha sobre el hito
+  637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Las luces crean su tabla y empiezan un mapa
 
 Dos funciones (unos 240 bytes), en el archivo nuevo `objects/lights.c`.

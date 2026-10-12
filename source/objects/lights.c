@@ -23,7 +23,14 @@ enum
 	LIGHT_GLOBALS_SIZE= 0xC,
 
 	/* of the first thing of unknown_004e0310: 0x200 numbers */
-	LIGHT_UNKNOWN_SIZE= 0x800
+	LIGHT_UNKNOWN_SIZE= 0x800,
+
+	/* of a light: a byte of bits, and two numbers that are NONE in a light
+	that nothing has (of what, is not known) */
+	LIGHT_FLAGS_OFFSET= 2,
+	LIGHT_UNKNOWN10_OFFSET= 0x10,
+	LIGHT_UNKNOWN4C_OFFSET= 0x4C,
+	LIGHT_UNKNOWN58_OFFSET= 0x58
 };
 
 /* ---------- structures */
@@ -52,6 +59,9 @@ struct light_unknown_004e0310 unknown_004e0310;
 
 void __attribute__((stdcall)) unknown_001cabc0(struct light_unknown_004e0310 *unknown, const char *name,
 	long unknown3);
+void unknown_001cae40(struct light_unknown_004e0310 *unknown, long light_index, byte *unknown10);
+void __attribute__((stdcall)) unknown_000c2d00(long light_index);
+void __attribute__((stdcall)) unknown_000c3260(long light_index, boolean unknown);
 
 /* ---------- code */
 
@@ -83,4 +93,91 @@ void lights_initialize_for_new_map(
 	data_make_valid(unknown_004e0310.unknown4);
 	light_globals[0]= FALSE;
 	*(long *)(light_globals+4)= 0;
+}
+
+/* 0x000c00a0: unknown_000c2d00 is done for each light whose two numbers are
+NONE. The game has the walk over the table written here, as in the two that
+follow */
+void lights_unknown_000c00a0(
+	void)
+{
+	long absolute_index= NONE;
+
+	for (;;)
+	{
+		const byte *light;
+		long light_index;
+
+		absolute_index= data_next_absolute_index(light_data, absolute_index+1);
+		if (absolute_index==NONE)
+		{
+			break;
+		}
+		light= (const byte *)light_data->data+absolute_index*light_data->size;
+		light_index= (*(const short *)light<<16)|absolute_index;
+		if (*(const long *)(light+LIGHT_UNKNOWN4C_OFFSET)==NONE && *(const long *)(light+LIGHT_UNKNOWN58_OFFSET)==NONE)
+		{
+			unknown_000c2d00(light_index);
+		}
+	}
+}
+
+/* 0x000c0110: each light whose two numbers are NONE and that has the bits 3
+and 1 is given to unknown_001cae40, with what it has at 0x10, and loses the
+bit 3 */
+void lights_unknown_000c0110(
+	void)
+{
+	long absolute_index= NONE;
+
+	for (;;)
+	{
+		const byte *datum;
+		long light_index;
+
+		absolute_index= data_next_absolute_index(light_data, absolute_index+1);
+		if (absolute_index==NONE)
+		{
+			break;
+		}
+		datum= (const byte *)light_data->data+absolute_index*light_data->size;
+		light_index= (*(const short *)datum<<16)|absolute_index;
+		if (*(const long *)(datum+LIGHT_UNKNOWN4C_OFFSET)==NONE && *(const long *)(datum+LIGHT_UNKNOWN58_OFFSET)==NONE &&
+			(datum[LIGHT_FLAGS_OFFSET]&8))
+		{
+			byte *light= (byte *)light_data->data+(light_index&0xFFFF)*LIGHT_SIZE;
+
+			if (light[LIGHT_FLAGS_OFFSET]&2)
+			{
+				unknown_001cae40(&unknown_004e0310, light_index, light+LIGHT_UNKNOWN10_OFFSET);
+				light[LIGHT_FLAGS_OFFSET]&= ~8;
+			}
+		}
+	}
+}
+
+/* 0x000c01c0: unknown_000c3260 is done, with TRUE, for each light whose
+first number is NONE */
+void lights_unknown_000c01c0(
+	void)
+{
+	long absolute_index= NONE;
+
+	for (;;)
+	{
+		const byte *light;
+		long light_index;
+
+		absolute_index= data_next_absolute_index(light_data, absolute_index+1);
+		if (absolute_index==NONE)
+		{
+			break;
+		}
+		light= (const byte *)light_data->data+absolute_index*light_data->size;
+		light_index= (*(const short *)light<<16)|absolute_index;
+		if (*(const long *)(light+LIGHT_UNKNOWN4C_OFFSET)==NONE)
+		{
+			unknown_000c3260(light_index, TRUE);
+		}
+	}
 }
