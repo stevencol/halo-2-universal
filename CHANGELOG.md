@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Borrar las listas de objetos que nadie usa
+
+Una función (217 bytes) en `hs/object_lists.c`. De 2267
+funciones se pasa a 2268, el 20,13 % de las del juego (el 11,720 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_lists_delete_unused` | `0x001deed0` | `hs/object_lists.c` |
+
+### Lo que se sabe
+
+- `object_lists_delete_unused` (antes `unknown_001deed0`, lo último que hace
+  `hs_runtime_update` en cada tic) recorre las listas de objetos de los
+  guiones y borra las que nadie usa: la cabecera de cada lista (`0xC`
+  bytes) lleva la cuenta de quién la usa en `+4` y su primer objeto en
+  `+8`. Borra sus objetos con `reference_list_delete_all` (hito 679) y
+  luego la cabecera.
+- Encaja con lo sabido: la tabla de objetos de las listas se crea con
+  `reference_list_new` (hito 676).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  698.
+- En este hito se pasaron las pruebas de la función y
+  `test_hs_runtime_update`. Hay una batería completa en marcha sobre el
+  hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Los hilos de los guiones en cada tic
 
 Una función (189 bytes) en `hs/hs_runtime.c`. De 2266

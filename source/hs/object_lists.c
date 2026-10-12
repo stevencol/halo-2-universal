@@ -32,3 +32,28 @@ void object_lists_initialize(
 	object_list_header_data= data_new("object list header", 0x30, 0xC, 0, game_state_allocation);
 	list_object_data= reference_list_new("list object", 0x80, 0);
 }
+
+/* 0x002963b0, of reference_lists.c */
+void reference_list_delete_all(long first_reference_index, struct data_array *references);
+
+/* 0x001deed0: each list of objects that nothing uses (the short at 4 of its
+header counts who does) is deleted: its objects, which are a list of the
+other table from the number at 8 of the header, and its header. It is done
+each tick after the threads of the scripts have run */
+void object_lists_delete_unused(
+	void)
+{
+	long list_index;
+
+	for (list_index= data_next_index(object_list_header_data, NONE); list_index!=NONE;
+		list_index= data_next_index(object_list_header_data, list_index))
+	{
+		const byte *header= (const byte *)object_list_header_data->data+(list_index&0xFFFF)*0xC;
+
+		if (*(const short *)(header+4)==0)
+		{
+			reference_list_delete_all(*(const long *)(header+8), list_object_data);
+			datum_delete(object_list_header_data, list_index);
+		}
+	}
+}

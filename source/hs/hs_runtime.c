@@ -113,11 +113,11 @@ void unknown_00209850(long thread_index);
 
 /* 0x001deed0: what is done after the threads have run (of the lists of
 objects of the scripts, by where it is) */
-void unknown_001deed0(void);
+void object_lists_delete_unused(void);
 
 /* 0x00209310: each tick of the game, while the scripts run (unknown_004f9388:
 a thread can stop them all): each thread that is not of the kind 4 and whose
-time to sleep is over runs. Then unknown_001deed0 */
+time to sleep is over runs. Then object_lists_delete_unused */
 void hs_runtime_update(
 	void)
 {
@@ -141,6 +141,6 @@ void hs_runtime_update(
 				break;
 			}
 		}
-		unknown_001deed0();
+		object_lists_delete_unused();
 	}
 }

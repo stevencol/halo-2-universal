@@ -40,5 +40,5 @@ def run(t) -> None:
                 "game_time_globals": Buffer(bytes(clock)),
                 "hs_thread_data": Buffer(bytes(data), pointers=threads.pointers),
             },
-            externals={"unknown_00209850": runs, "unknown_001deed0": lambda harness, arguments: 0},
+            externals={"unknown_00209850": runs, "object_lists_delete_unused": lambda harness, arguments: 0},
         )

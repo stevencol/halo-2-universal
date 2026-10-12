@@ -2802,4 +2802,4 @@ address,name,source,arguments,returns,convention
 000c17f0,light_unknown_000c17f0,source/objects/lights.c,eax edx stack,bool
 000c1a80,unknown_000c1a80,,ecx edx stack,void
 00209850,unknown_00209850,,edi,void
-001deed0,unknown_001deed0,,,void
+001deed0,object_lists_delete_unused,source/hs/object_lists.c,,void
