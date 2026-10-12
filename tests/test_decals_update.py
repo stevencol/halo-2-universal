@@ -18,7 +18,7 @@ def run(t) -> None:
             "decals_update",
             globals={"decal_data": decals(random_), "unknown_00509448": Buffer(bytes(cache))},
             externals={
-                "unknown_0017cc60": lambda harness, arguments: 0,
+                "decal_update": lambda harness, arguments: 0,
                 "lruv_wrap_ticks": lambda harness, arguments: 0,
             },
         )

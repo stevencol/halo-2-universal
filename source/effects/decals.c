@@ -289,7 +289,10 @@ void __attribute__((stdcall)) decals_clear_flags(
 }
 
 /* 0x0017cc60: what is done with a mark each frame */
-void unknown_0017cc60(long decal_index);
+void decal_update(long decal_index);
+
+/* 0x0017ccd0: the first mark of a chain gets older; whether it is no more */
+boolean unknown_0017ccd0(long decal_index);
 
 /* 0x0017d690: each frame (game.c), if the table can be used: a tick of the
 cache goes by, and each mark is updated */
@@ -311,7 +314,33 @@ void decals_update(
 				break;
 			}
 			decal= (const byte *)decal_data->data+absolute_index*decal_data->size;
-			unknown_0017cc60((*(const short *)decal<<16)|absolute_index);
+			decal_update((*(const short *)decal<<16)|absolute_index);
+		}
+	}
+}
+
+/* 0x0017cc60: a mark that is the first of its chain gets older
+(unknown_0017ccd0), and if it is still there, the others of its chain take
+the highest byte of its colour (at 0x24; how much it shows, it seems) as it
+was before */
+void decal_update(
+	long decal_index)
+{
+	byte *decal= DECAL_GET(decal_index);
+
+	if (*(long *)(decal+0x38)==decal_index)
+	{
+		unsigned long alpha= decal[0x27];
+		long next_index= *(long *)(decal+DECAL_NEXT_OF_CHAIN_OFFSET);
+
+		if (!unknown_0017ccd0(decal_index))
+		{
+			while (next_index!=NONE)
+			{
+				decal= DECAL_GET(next_index);
+				next_index= *(long *)(decal+DECAL_NEXT_OF_CHAIN_OFFSET);
+				*(unsigned long *)(decal+0x24)= (*(unsigned long *)(decal+0x24)&0xFFFFFF)|(alpha<<24);
+			}
 		}
 	}
 }

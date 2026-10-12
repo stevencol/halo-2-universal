@@ -2,6 +2,39 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Un decal en cada fotograma
+
+Una función (105 bytes) en `effects/decals.c`. De 2216
+funciones se pasa a 2217, el 19,68 % de las del juego (el 11,457 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `decal_update` | `0x0017cc60` | `effects/decals.c` |
+
+### Lo que se sabe
+
+- `decal_update` (antes `unknown_0017cc60`, el índice del decal llega en
+  `edx`): solo trabaja con el primer decal de cada cadena. Lo envejece
+  (`unknown_0017ccd0`) y, si sigue vivo, copia a los demás de la cadena el
+  byte más alto de su color (`+0x27`, cuánto se ve).
+- Detalle fiel al juego: el byte que se copia es el que el decal tenía
+  **antes** de envejecer, no el nuevo, así que la cadena va un fotograma
+  por detrás de su cabeza.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  663.
+- `unknown_0017ccd0` (el envejecimiento, con sus cuentas en coma flotante)
+  no está descompilada. Que `+0x24` sea un color con su transparencia es
+  una suposición.
+- En este hito se pasaron las pruebas de la función y `test_decals_update`.
+  Hay una batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Los decals en cada fotograma
 
 Una función (115 bytes) en `effects/decals.c`. De 2215
