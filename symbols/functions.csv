@@ -386,8 +386,8 @@ address,name,source,arguments,returns,convention
 001574c0,unknown_001574c0,,,void
 00157bb0,unknown_00157bb0,,,void
 0016efb0,game_unknown_0016efb0_initialize,source/game/game_unknown_0016efb0.c,,void
-0016f0e0,unknown_0016f0e0,,,void
-0016f120,unknown_0016f120,,,void
+0016f0e0,game_unknown_0016efb0_initialize_for_new_map,source/game/game_unknown_0016efb0.c,,void
+0016f120,game_unknown_0016efb0_unknown_0016f120,source/game/game_unknown_0016efb0.c,,void
 00175b50,effects_initialize,source/effects/effects.c,,void
 00175bd0,effects_dispose,source/effects/effects.c,,void
 00175c10,effects_initialize_for_new_map,source/effects/effects.c,,void
@@ -1446,7 +1446,7 @@ address,name,source,arguments,returns,convention
 00165dc1,unknown_00165dc1,,,void
 00153950,unknown_00153950,,,void
 001917b2,unknown_001917b2,,,void
-0016f200,unknown_0016f200,,,void
+0016f200,game_unknown_0016efb0_unknown_0016f200,source/game/game_unknown_0016efb0.c,,void
 001a1870,file_reference_get_full_path,source/cseries/async.c,eax stack,int
 001a0a70,async_create_file_blocking,source/cseries/async.c,stack stack stack stack stack stack,void
 0017bc40,unknown_0017bc40,,stack,void,stdcall
@@ -2665,3 +2665,4 @@ address,name,source,arguments,returns,convention
 002090a0,unknown_002090a0,,,void
 00188d60,unknown_00188d60,,,void
 0018bb80,unknown_0018bb80,,stack,void,stdcall
+0016f4b0,unknown_0016f4b0,,esi,void

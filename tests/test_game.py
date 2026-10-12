@@ -484,7 +484,7 @@ def run_players_and_won(t) -> None:
         "unknown_00165dc1",
         "unknown_00153950",
         "unknown_001917b2",
-        "unknown_0016f200",
+        "game_unknown_0016efb0_unknown_0016f200",
     ]
 
     def tick_externals(update: int) -> dict:

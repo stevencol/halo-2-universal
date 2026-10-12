@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Tres funciones más de la parte de `0x16efb0`: algo por cada jugador de la consola
+
+Tres funciones de `game/game_unknown_0016efb0.c` (unos 280 bytes). De 2117
+funciones se pasa a 2120, el 18,82 % de las del juego (el 11,287 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_unknown_0016efb0_initialize_for_new_map` | `0x0016f0e0` | `game/game_unknown_0016efb0.c` |
+| `game_unknown_0016efb0_unknown_0016f120` | `0x0016f120` | `game/game_unknown_0016efb0.c` |
+| `game_unknown_0016efb0_unknown_0016f200` | `0x0016f200` | `game/game_unknown_0016efb0.c` |
+
+### Lo que se sabe
+
+- La parte guarda **cuatro cosas de `0x358` bytes, una por jugador de esta
+  consola** (`unknown_004e9bd4`). Cada una tiene un punto en `0xB8` y, en
+  `0xC4`, dónde cae ese punto en el nivel.
+- Con un mapa nuevo cada una se deja como al empezar (`unknown_0016f4b0`) y
+  los cinco números del hito 616 quedan en `NONE`.
+- Cuando el juego pasa a estar activo, se recalcula dónde está el punto de
+  cada jugador que haya (`scenario_location_from_point`), y se pide «la
+  primera de dos cosas» si el tiempo del juego ya pasó de su comienzo.
+- `…_0016f200` (la que `game.c` llama en cada tick) hace esas dos cosas
+  pedidas, una vez cada una: fuera del segundo modo de juego ponen cinco
+  números a 3, 1, 3, 1 y 0, o a 3, 0, 3, 0 y 0.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  622.
+- Para qué es la parte no se sabe. Por lo que guarda (un punto por jugador
+  y su sitio en el nivel) podría ser la cámara de cada jugador; no está
+  comprobado, y el archivo sigue con la dirección por nombre.
+- En este hito se pasaron las pruebas de las tres funciones y `test_game`
+  entera.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Batería completa en el hito 620: 2112 de 2112
 
 La batería completa lanzada sobre el hito 620 (commit `9c592fc`) acabó: **las 2112

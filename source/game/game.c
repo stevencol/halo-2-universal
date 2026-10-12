@@ -101,7 +101,7 @@ void unknown_00225730(void);
 void unknown_00165dc1(void);
 void unknown_00153950(void);
 void unknown_001917b2(void);
-void unknown_0016f200(void);
+void game_unknown_0016efb0_unknown_0016f200(void);
 
 long lrintf(float value);
 
@@ -177,8 +177,8 @@ void game_engine_initialize(void);
 void unknown_001574c0(void);
 void unknown_00157bb0(void);
 void game_unknown_0016efb0_initialize(void);
-void unknown_0016f0e0(void);
-void unknown_0016f120(void);
+void game_unknown_0016efb0_initialize_for_new_map(void);
+void game_unknown_0016efb0_unknown_0016f120(void);
 void effects_initialize(void);
 void effects_dispose(void);
 void effects_initialize_for_new_map(void);
@@ -374,7 +374,7 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{no_operation, no_operation, no_operation, no_operation},
 	{breakable_surfaces_initialize, no_operation, breakable_surfaces_initialize_for_new_map, no_operation, breakable_surfaces_unknown_00183ee0, breakable_surfaces_unknown_00183f00},
 	{game_unknown_001552e0_initialize, no_operation, unknown_00155380, game_unknown_001552e0_dispose_from_old_map},
-	{game_unknown_0016efb0_initialize, no_operation, unknown_0016f0e0, no_operation, unknown_0016f120, no_operation},
+	{game_unknown_0016efb0_initialize, no_operation, game_unknown_0016efb0_initialize_for_new_map, no_operation, game_unknown_0016efb0_unknown_0016f120, no_operation},
 	{decals_initialize, decals_dispose, decals_initialize_for_new_map, decals_dispose_from_old_map, unknown_0017d350, unknown_0017d440, NULL, (game_system_activation_proc)unknown_0017d5e0},
 	{no_operation, no_operation, no_operation, no_operation},
 	{contrails_initialize, contrails_dispose, contrails_initialize_for_new_map, contrails_dispose_from_old_map, unknown_0017b940, no_operation},
@@ -605,7 +605,7 @@ void game_tick(
 		unknown_00165dc1();
 		unknown_00153950();
 		unknown_001917b2();
-		unknown_0016f200();
+		game_unknown_0016efb0_unknown_0016f200();
 		{
 			/* the game takes one away as an unsigned number */
 			long countdown= (long)((unsigned long)unknown_00510c6c->countdown-1);
