@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Ocho más de los tipos de objeto, con uno y dos datos de más
+
+Ocho funciones de `objects/object_types.c` (826 bytes). De 2006
+funciones se pasa a 2014, el 17,88 % de las del juego (el 11,225 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_types_call_unknown40` | `0x00108c60` | `objects/object_types.c` |
+| `object_types_call_unknown44` | `0x00108cd0` | `objects/object_types.c` |
+| `object_types_call_unknown30` | `0x00108b10` | `objects/object_types.c` |
+| `object_types_call_unknown58` | `0x00108ef0` | `objects/object_types.c` |
+| `object_types_call_unknown5C` | `0x00108f60` | `objects/object_types.c` |
+| `object_types_call_unknown70` | `0x001090d0` | `objects/object_types.c` |
+| `object_types_call_unknown74` | `0x00109140` | `objects/object_types.c` |
+| `object_types_call_unknown7C` | `0x00109220` | `objects/object_types.c` |
+
+### Lo que se sabe
+
+- Mismo recorrido que las siete anteriores (los tipos de los que es el
+  tipo del objeto, del primero a él mismo), con otros sitios de la tabla.
+- Dos solo pasan el objeto (`0x40` y `0x44`; cambian en por dónde les
+  llega). Cuatro pasan **un dato más** (`0x30`, `0x58`, `0x5C`, `0x70`) y
+  dos pasan **dos** (`0x74`, `0x7C`).
+- El archivo tiene ya quince de sus unas veintiséis funciones, y la prueba
+  sigue siendo una sola para todas.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  600.
+- Para qué es cada una y qué son los datos de más no se sabe; los nombres
+  son solo el sitio de la tabla.
+- En este hito se pasaron las pruebas de las quince funciones del archivo.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Seis funciones más de los tipos de objeto, todas con la misma forma
 
 Seis funciones de `objects/object_types.c` (606 bytes). De 2000

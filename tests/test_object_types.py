@@ -11,13 +11,15 @@ FIRST = 0x4C + COUNT * 12
 TYPE = 0x84 + 5 * 4
 TYPES = 4
 # where a type has each of the functions that are given an object and nothing else
-OFFSETS = (0x54, 0x20, 0x24, 0x38, 0x3C, 0x50, 0x78)
+OFFSETS = (0x54, 0x20, 0x24, 0x38, 0x3C, 0x50, 0x78, 0x40, 0x44, 0x30, 0x58, 0x5C, 0x70, 0x74, 0x7C)
+# those that are given things after the object, and how many
+MORE = {0x30: 1, 0x58: 1, 0x5C: 1, 0x70: 1, 0x74: 2, 0x7C: 2}
 
 
 def run(t) -> None:
     random_ = random.Random(599)
 
-    for n in range(2100):
+    for n in range(4500):
         offset = OFFSETS[n % len(OFFSETS)]
         # what the types are: a buffer that is no argument, which the harness puts after the table of the objects
         table = some_objects(random_)
@@ -37,10 +39,11 @@ def run(t) -> None:
         t.check(
             f"object_types_call_unknown{offset:X}",
             random_.getrandbits(16) << 16 | random_.randrange(COUNT),
+            *(random_.getrandbits(32) for _ in range(MORE.get(offset, 0))),
             globals={
                 "object_header_data": table,
                 "object_type_definitions": struct.pack("<13I", *(base + index * TYPE for index in range(TYPES)), *range(9)),
             },
             extra=[Buffer(bytes(definitions))],
-            mocks=[Mock(lambda call: 0, stack_arguments=1) for index in range(TYPES)],
+            mocks=[Mock(lambda call: 0, stack_arguments=1 + MORE.get(offset, 0)) for index in range(TYPES)],
         )

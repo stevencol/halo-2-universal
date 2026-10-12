@@ -2623,3 +2623,11 @@ address,name,source,arguments,returns,convention
 00108bf0,object_types_call_unknown3C,source/objects/object_types.c,ebx,void
 00108e10,object_types_call_unknown50,source/objects/object_types.c,ebx,void
 001091b0,object_types_call_unknown78,source/objects/object_types.c,ebx,void
+00108c60,object_types_call_unknown40,source/objects/object_types.c,stack,void,stdcall
+00108cd0,object_types_call_unknown44,source/objects/object_types.c,edi,void
+00108b10,object_types_call_unknown30,source/objects/object_types.c,ebx stack,void,stdcall
+00108ef0,object_types_call_unknown58,source/objects/object_types.c,ebx stack,void,stdcall
+00108f60,object_types_call_unknown5C,source/objects/object_types.c,ebx stack,void,stdcall
+001090d0,object_types_call_unknown70,source/objects/object_types.c,ebx stack,void,stdcall
+00109140,object_types_call_unknown74,source/objects/object_types.c,ebx stack stack,void,stdcall
+00109220,object_types_call_unknown7C,source/objects/object_types.c,ebx stack stack,void,stdcall

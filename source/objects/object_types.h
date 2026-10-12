@@ -28,6 +28,15 @@ enum
 	OBJECT_TYPE_UNKNOWN3C_OFFSET= 0x3C,
 	OBJECT_TYPE_UNKNOWN50_OFFSET= 0x50,
 	OBJECT_TYPE_UNKNOWN78_OFFSET= 0x78,
+	/* two more of those, and six that are given one thing more, or two */
+	OBJECT_TYPE_UNKNOWN40_OFFSET= 0x40,
+	OBJECT_TYPE_UNKNOWN44_OFFSET= 0x44,
+	OBJECT_TYPE_UNKNOWN30_OFFSET= 0x30,
+	OBJECT_TYPE_UNKNOWN58_OFFSET= 0x58,
+	OBJECT_TYPE_UNKNOWN5C_OFFSET= 0x5C,
+	OBJECT_TYPE_UNKNOWN70_OFFSET= 0x70,
+	OBJECT_TYPE_UNKNOWN74_OFFSET= 0x74,
+	OBJECT_TYPE_UNKNOWN7C_OFFSET= 0x7C,
 	OBJECT_TYPE_TYPES_OFFSET= 0x84
 };
 
@@ -44,5 +53,13 @@ void object_types_call_unknown38(long object_index);
 void object_types_call_unknown3C(long object_index);
 void object_types_call_unknown50(long object_index);
 void object_types_call_unknown78(long object_index);
+void __attribute__((stdcall)) object_types_call_unknown40(long object_index);
+void object_types_call_unknown44(long object_index);
+void __attribute__((stdcall)) object_types_call_unknown30(long object_index, long unknown0);
+void __attribute__((stdcall)) object_types_call_unknown58(long object_index, long unknown0);
+void __attribute__((stdcall)) object_types_call_unknown5C(long object_index, long unknown0);
+void __attribute__((stdcall)) object_types_call_unknown70(long object_index, long unknown0);
+void __attribute__((stdcall)) object_types_call_unknown74(long object_index, long unknown0, long unknown1);
+void __attribute__((stdcall)) object_types_call_unknown7C(long object_index, long unknown0, long unknown1);
 
 #endif
