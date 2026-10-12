@@ -59,7 +59,7 @@ def run(t) -> None:
                     "unknown_00162060",
                     "game_voice_unknown_00162420",
                     "objects_detach_simulation_entities",
-                    "unknown_00183f10",
+                    "sound_unknown_00183f10",
                     "simulation_world_initialize",
                     "simulation_players_reset",
                     "simulation_players_initialize_for_new_map",

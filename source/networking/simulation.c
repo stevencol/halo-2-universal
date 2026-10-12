@@ -61,7 +61,7 @@ for a game that begins again */
 void unknown_00162060(void);
 void game_voice_unknown_00162420(void);
 void objects_detach_simulation_entities(void);
-void unknown_00183f10(void);
+void sound_unknown_00183f10(void);
 void __attribute__((stdcall)) simulation_players_after_load(long unknown, unsigned long flags);
 boolean simulation_players_update_views(long unknown);
 void unknown_00195e90(void);
@@ -571,7 +571,7 @@ void GAME_STATE_PROC simulation_after_load(
 			{
 				game_voice_unknown_00162420();
 				objects_detach_simulation_entities();
-				unknown_00183f10();
+				sound_unknown_00183f10();
 			}
 			main_game_globals->options.simulation= 1;
 			simulation_initialize_for_new_map();

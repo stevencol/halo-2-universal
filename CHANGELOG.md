@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Otras dos partes del juego: ocho funciones cortas
+
+Ocho funciones cortas (unos 330 bytes): cinco en `sound/sound_manager.c` y tres en un
+archivo nuevo de `game/`. De 2062
+funciones se pasa a 2070, el 18,38 % de las del juego (el 11,260 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_unknown_00183e40` | `0x00183e40` | `sound/sound_manager.c` |
+| `sound_unknown_00183ec0` | `0x00183ec0` | `sound/sound_manager.c` |
+| `sound_unknown_00183ee0` | `0x00183ee0` | `sound/sound_manager.c` |
+| `sound_unknown_00183f00` | `0x00183f00` | `sound/sound_manager.c` |
+| `sound_unknown_00183f10` | `0x00183f10` | `sound/sound_manager.c` |
+| `game_unknown_001eb550_initialize` | `0x001eb550` | `game/game_unknown_001eb550.c` |
+| `game_unknown_001eb550_dispose` | `0x001eb5e0` | `game/game_unknown_001eb550.c` |
+| `game_unknown_001eb550_initialize_for_new_map` | `0x001eb5f0` | `game/game_unknown_001eb550.c` |
+
+### Lo que se sabe
+
+- La parte de `0x183e40` es de las pocas con seis funciones (las dos
+  últimas se llaman cuando el juego pasa a estar activo y cuando deja de
+  estarlo). Guarda `0x4204` bytes del estado del juego
+  (`unknown_004ed280`); con un mapa nuevo **enciende todos los bits** de
+  los primeros `0x4201`. Al arrancar deja además un número a cero y ocho en
+  `NONE`: eso es `sound_unknown_00183f10`, que el hito 576 llamaba sin
+  tenerla y que el juego tiene escrita dentro del arranque.
+- Sus dos últimas funciones solo llaman a otras tres aún sin hacer
+  (`unknown_00185a30`, `unknown_00185630`, `unknown_00185a70`); la quinta,
+  solo en una partida en red de clase 4 o 5.
+- La parte de `0x1eb550` guarda `0x1C` bytes: tres reales (unos 4,17, 1 y
+  0,0011), un vector que empieza a cero y un número. Arrancar y «mapa
+  nuevo» hacen lo mismo.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  608.
+- Para qué es cada parte no se sabe. La primera está en `sound_manager.c`
+  solo porque su variable está junto a otras de ese archivo.
+- Los reales de la segunda se guardan por sus bits, tal como están en el
+  juego; qué miden no se sabe (el primero, 4,17, podría ser una gravedad).
+- En este hito se pasaron las pruebas de las ocho funciones, `test_game`
+  entera y `test_simulation_load`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — El tiempo del juego arranca y se para, y cinco funciones cortas más
 
 Ocho funciones cortas (unos 330 bytes): tres en el archivo nuevo `game/game_time.c`, tres en
