@@ -473,3 +473,80 @@ void objects_detach_simulation_entities(
 		}
 	}
 }
+
+/* an object as bytes, from its index */
+#define OBJECT_BYTES(object_index) ((byte *)OBJECT_GET(object_index))
+
+/* 0x0009d250: whether an object does not have the bit 2 of its byte at
+0x10A (what object_list_count counts). The game has it far from the rest of
+this file, as most of those that follow */
+long __attribute__((stdcall)) object_unknown_0009d250(
+	long object_index)
+{
+	return !((OBJECT_BYTES(object_index)[0x10A]>>2)&1);
+}
+
+/* 0x000a0930: the object of something (its third number) keeps the first
+number of it at 0xD4, where an object has its entity of the simulation;
+nothing for no object */
+void __attribute__((stdcall)) object_unknown_000a0930(
+	const long *unknown)
+{
+	if (unknown[2]!=NONE)
+	{
+		*(long *)(OBJECT_BYTES(unknown[2])+0xD4)= unknown[0];
+	}
+}
+
+/* 0x000b8bd0: one of the things of 0x34 bytes that an object has at the
+offset that its short at 0x116 gives (its nodes, by the size) */
+byte *object_get_unknown116(
+	long object_index,
+	short index)
+{
+	byte *object= OBJECT_BYTES(object_index);
+
+	return object+*(short *)(object+0x116)+index*0x34;
+}
+
+/* 0x000bf5a0: whether an object has something at the offset that its short
+at 0x12A gives */
+boolean object_has_unknown12A(
+	long object_index)
+{
+	return *(short *)(OBJECT_BYTES(object_index)+0x12A)!=NONE;
+}
+
+/* 0x000bf5d0: the same, for the short at 0x112 */
+boolean object_has_unknown112(
+	long object_index)
+{
+	return *(short *)(OBJECT_BYTES(object_index)+0x112)!=NONE;
+}
+
+/* 0x000bfc90: whether an object, if there is one, has anything in its byte
+at 0xB3 */
+boolean object_unknown_000bfc90(
+	long object_index)
+{
+	if (object_index!=NONE && OBJECT_BYTES(object_index)[0xB3]>0)
+	{
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+/* 0x000d0590: something of four numbers starts for an object: the object,
+NONE, a short that is NONE, and what the object has at 0x10 */
+void object_unknown_000d0590(
+	byte *unknown,
+	long object_index)
+{
+	const byte *object= OBJECT_BYTES(object_index);
+
+	*(long *)unknown= object_index;
+	*(long *)(unknown+4)= NONE;
+	*(short *)(unknown+8)= NONE;
+	*(long *)(unknown+0xC)= *(const long *)(object+0x10);
+}

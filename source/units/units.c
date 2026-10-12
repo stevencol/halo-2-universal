@@ -85,3 +85,48 @@ long unit_get_unknown3DC(
 {
 	return UNIT_OBJECT_GET(unit_index)[0x3DC];
 }
+
+/* 0x000c6f80: a unit keeps two numbers, at 0x1EC and 0x1F0 */
+void unit_set_unknown1EC(
+	long unit_index,
+	long unknown1EC,
+	long unknown1F0)
+{
+	byte *unit= (byte *)UNIT_OBJECT_GET(unit_index);
+
+	*(long *)(unit+0x1EC)= unknown1EC;
+	*(long *)(unit+0x1F0)= unknown1F0;
+}
+
+/* 0x000cdff0: one of the bytes that a unit keeps from 0x23E, as a short;
+zero for NONE */
+short unit_get_unknown23E(
+	long unit_index,
+	short index)
+{
+	if (index==NONE)
+	{
+		return 0;
+	}
+
+	return (char)UNIT_OBJECT_GET(unit_index)[index+0x23E];
+}
+
+/* 0x000def30: what an object keeps at 0x348, which takes the bit 7 of its
+first byte. Of a kind of unit, by how far in it is */
+byte *unit_get_unknown348(
+	long unit_index)
+{
+	byte *unit= (byte *)UNIT_OBJECT_GET(unit_index);
+
+	unit[0x348]|= 0x80;
+
+	return unit+0x348;
+}
+
+/* 0x000e4020: whether an object has anything in its byte at 0x39D */
+long unit_get_unknown39D(
+	long unit_index)
+{
+	return UNIT_OBJECT_GET(unit_index)[0x39D]!=0;
+}

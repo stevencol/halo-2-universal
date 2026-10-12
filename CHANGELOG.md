@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Once consultas pequeñas de objetos y unidades
+
+Once funciones (445 bytes): siete en `objects/objects.c` y cuatro en `units/units.c`.
+De 2311
+funciones se pasa a 2322, el 20,61 % de las del juego (el 11,801 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_unknown_0009d250` | `0x0009d250` | `objects/objects.c` |
+| `object_unknown_000a0930` | `0x000a0930` | `objects/objects.c` |
+| `object_get_unknown116` | `0x000b8bd0` | `objects/objects.c` |
+| `object_has_unknown12A` | `0x000bf5a0` | `objects/objects.c` |
+| `object_has_unknown112` | `0x000bf5d0` | `objects/objects.c` |
+| `object_unknown_000bfc90` | `0x000bfc90` | `objects/objects.c` |
+| `object_unknown_000d0590` | `0x000d0590` | `objects/objects.c` |
+| `unit_set_unknown1EC` | `0x000c6f80` | `units/units.c` |
+| `unit_get_unknown23E` | `0x000cdff0` | `units/units.c` |
+| `unit_get_unknown348` | `0x000def30` | `units/units.c` |
+| `unit_get_unknown39D` | `0x000e4020` | `units/units.c` |
+
+### Lo que se sabe
+
+- Son once funciones de entre 34 y 44 bytes que leen o escriben un dato de
+  un objeto: si no tiene el bit 2 de `0x10A`, su entidad de la simulación
+  (`0xD4`), uno de sus elementos de `0x34` bytes (desde el desplazamiento
+  que da su `short` de `0x116`), si tiene algo en `0x12A` o en `0x112`, su
+  byte de `0xB3`, y varios datos de las unidades (`0x1EC`, `0x23E`,
+  `0x348`, `0x39D`).
+- Cada una recibe el objeto en un registro distinto, como es habitual en
+  las funciones pequeñas de este juego.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  709.
+- No se sabe qué es casi ninguno de esos datos: las funciones llevan el
+  desplazamiento o su dirección por nombre. Sirven sobre todo para que las
+  funciones grandes que las llaman se puedan leer.
+- Un error de compilación curioso: en C `0x23E+index` no es una suma (la
+  `E+` se toma por un exponente); hay que escribir `index+0x23E`.
+- En este hito se pasaron las pruebas de las once funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Siete consultas: cinco de las unidades y dos del bsp
 
 Siete funciones (195 bytes): cinco en `units/units.c` y dos en `scenario/scenario.c`.

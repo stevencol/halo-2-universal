@@ -2844,3 +2844,14 @@ address,name,source,arguments,returns,convention
 000e5670,unit_get_unknown3DC,source/units/units.c,eax,int
 0011bff0,structure_bsp_leaf_get_cluster_index,source/scenario/scenario.c,eax,int
 001fa7f0,structure_bsp_get_unknownC4,source/scenario/scenario.c,,pointer
+0009d250,object_unknown_0009d250,source/objects/objects.c,stack,int,stdcall
+000a0930,object_unknown_000a0930,source/objects/objects.c,stack,void,stdcall
+000b8bd0,object_get_unknown116,source/objects/objects.c,eax stack,pointer
+000bf5a0,object_has_unknown12A,source/objects/objects.c,eax,bool
+000bf5d0,object_has_unknown112,source/objects/objects.c,eax,bool
+000bfc90,object_unknown_000bfc90,source/objects/objects.c,ecx,bool
+000d0590,object_unknown_000d0590,source/objects/objects.c,ecx edx,void
+000c6f80,unit_set_unknown1EC,source/units/units.c,eax stack stack,void
+000cdff0,unit_get_unknown23E,source/units/units.c,eax ecx,short
+000def30,unit_get_unknown348,source/units/units.c,eax,pointer
+000e4020,unit_get_unknown39D,source/units/units.c,eax,int
