@@ -2685,3 +2685,5 @@ address,name,source,arguments,returns,convention
 00226440,impacts_dispose,source/effects/impacts.c,,void
 00200930,squads_initialize,source/ai/squads.c,,void
 0028d930,swarms_initialize,source/ai/swarms.c,,void
+0020b930,vocalizations_initialize,source/ai/vocalizations.c,,void
+0020b9b0,vocalizations_initialize_for_new_map,source/ai/vocalizations.c,,void

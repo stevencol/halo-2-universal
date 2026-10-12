@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Los registros de lo que dicen los personajes
+
+Dos funciones de la IA (unos 190 bytes), en el archivo nuevo `ai/vocalizations.c`.
+De 2147
+funciones se pasa a 2149, el 19,08 % de las del juego (el 11,335 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `vocalizations_initialize` | `0x0020b930` | `ai/vocalizations.c` |
+| `vocalizations_initialize_for_new_map` | `0x0020b9b0` | `ai/vocalizations.c` |
+
+### Lo que se sabe
+
+- `vocalizations_initialize` pide `0xFB8` bytes del estado de la partida
+  (dos cosas de `0x7DC` bytes) y crea `"vocalization records"` (15 de
+  `0x54` bytes).
+- `vocalizations_initialize_for_new_map` pone a cero las dos cosas, deja a
+  `NONE` los dos números con que acaba cada una (`0x7D0` y `0x7D8`; entre
+  ellos hay un `short` a cero) y vacía la tabla (`data_make_valid`).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  632.
+- Qué son las dos cosas de `0x7DC` bytes no se sabe; el nombre del archivo
+  sale solo del texto de la tabla.
+- En este hito se pasaron las pruebas de las dos funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Los escuadrones y los enjambres crean sus tablas
 
 Dos funciones de arranque de la IA (unos 290 bytes), en los archivos nuevos `ai/squads.c` y
