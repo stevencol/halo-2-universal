@@ -2,6 +2,35 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Cuántos objetos de una lista cuentan
+
+Una función (208 bytes) en `hs/object_lists.c`. De 2272
+funciones se pasa a 2273, el 20,18 % de las del juego (el 11,737 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_list_count` | `0x001defb0` | `hs/object_lists.c` |
+
+### Lo que se sabe
+
+- `object_list_count` (lista en `eax`) recorre una lista de objetos y
+  devuelve cuántos no tienen el bit 2 de su byte de `0x10A`; cero si no hay
+  lista. El juego tiene dentro el recorrido (`object_list_get_next`, hito
+  700), salvo la primera llamada.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  700.
+- Qué es ese bit del objeto (¿está muerto?) no se sabe; es lo que cuentan
+  los guiones al preguntar cuántos objetos quedan en una lista.
+- En este hito se pasaron las pruebas de la función. Hay una batería
+  completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Las listas de objetos de los guiones: crear, añadir, quitar y recorrer
 
 Cuatro funciones (297 bytes) en `hs/object_lists.c`. De 2268

@@ -2807,3 +2807,4 @@ address,name,source,arguments,returns,convention
 001dedb0,object_list_add,source/hs/object_lists.c,eax stack,void
 001dee00,object_list_remove,source/hs/object_lists.c,eax ecx,bool
 001dee80,object_list_get_next,source/hs/object_lists.c,ebx,int
+001defb0,object_list_count,source/hs/object_lists.c,eax,short

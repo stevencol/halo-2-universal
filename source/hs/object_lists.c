@@ -8,6 +8,7 @@ tables of data ("object list header", "list object").
 
 #include "cseries/cseries.h"
 #include "memory/data.h"
+#include "objects/objects.h"
 #include "saved games/game_state.h"
 
 /* ---------- globals */
@@ -160,4 +161,30 @@ long object_list_get_next(
 	*iterator= next_reference_index;
 
 	return *(const long *)(reference+4);
+}
+
+/* 0x001defb0: how many objects of a list do not have the bit 2 of their byte
+at 0x10A (the dead, perhaps: it is what a script counts); none for no list */
+short object_list_count(
+	long list_index)
+{
+	short count= 0;
+
+	if (list_index!=NONE)
+	{
+		long iterator= *(const long *)(OBJECT_LIST_HEADER_GET(list_index)+OBJECT_LIST_HEADER_FIRST_OFFSET);
+		long object_index;
+
+		while ((object_index= object_list_get_next(&iterator))!=NONE)
+		{
+			const byte *object= (const byte *)((struct object_header_datum *)object_header_data->data)[object_index&0xFFFF].datum;
+
+			if (!((object[0x10A]>>2)&1))
+			{
+				count++;
+			}
+		}
+	}
+
+	return count;
 }
