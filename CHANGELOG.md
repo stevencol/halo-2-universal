@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Dos recorridos de los decals
+
+Dos funciones (279 bytes) en `effects/decals.c`. De 2213
+funciones se pasa a 2215, el 19,66 % de las del juego (el 11,449 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `decals_after_load_cache_blocks` | `0x0017d190` | `effects/decals.c` |
+| `decals_clear_flags` | `0x0017d5f0` | `effects/decals.c` |
+
+### Lo que se sabe
+
+- `decals_after_load_cache_blocks` (antes `unknown_0017d190`, de la lista de
+  después de cargar de `game_state.c`): la tabla que dice de qué decal es
+  cada bloque de la caché no se guarda con la partida, así que tras cargar
+  se rehace: cada decal que es el primero de su cadena (tiene su propio
+  índice en `+0x38`) apunta su bloque (`+4`).
+- `decals_clear_flags` (antes `unknown_0017d5f0`): quita a todos los decals
+  el bit 0 de su byte de `+2`, y también el bit 1 si se le pide; los
+  contadores de `decal_globals` en `0x3804` y `0x3808` llevan la cuenta de
+  cuántos decals tienen cada bit y bajan con cada uno que se quita.
+- El comentario anterior de `decals.c` decía que esa función «se deshace de
+  los decals»: no es así, solo les quita los bits; está corregido.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  661.
+- Qué significan los dos bits no se sabe (son los mismos que impiden a la
+  caché echar el bloque del decal, hito 660).
+- En este hito se pasaron `test_decals*`, `test_game_parts_613` y la prueba
+  de `game_state_revert`. Hay una batería completa en marcha sobre el hito
+  637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Borrar un decal, y una cadena de decals
 
 Dos funciones (unos 210 bytes) en `effects/decals.c`. De 2211

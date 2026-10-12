@@ -70,10 +70,9 @@ void decals_initialize_for_new_map(
 void *unknown_00509444;
 struct lruv_cache *unknown_00509448;
 
-/* 0x003fb640: of the libraries of the console. 0x0017d5f0: the marks are
-done away with */
+/* 0x003fb640: of the libraries of the console. 0x0017d5f0 is below */
 unsigned long D3DResource_Release(unsigned long resource);
-void __attribute__((stdcall)) unknown_0017d5f0(long unknown);
+void __attribute__((stdcall)) decals_clear_flags(boolean both);
 
 /* 0x0017d2a0: the marks have no table; what the console had for them is
 given back (D3DResource_Release), and the memory of the cache goes back to
@@ -94,13 +93,13 @@ void decals_dispose(
 	cache->allocation->functions->deallocate(cache->allocation, cache);
 }
 
-/* 0x0017d330: when a map goes, the marks are done away with
-(unknown_0017d5f0), the cache is emptied (lruv_flush), and the table cannot
+/* 0x0017d330: when a map goes, the marks lose their two bits
+(decals_clear_flags), the cache is emptied (lruv_flush), and the table cannot
 be used */
 void decals_dispose_from_old_map(
 	void)
 {
-	unknown_0017d5f0(1);
+	decals_clear_flags(1);
 	lruv_flush(unknown_00509448);
 	decal_data->valid= FALSE;
 }
@@ -216,5 +215,75 @@ void decal_delete_chain(
 		decal_index= next_index;
 		next_index= *(long *)(DECAL_GET(decal_index)+DECAL_NEXT_OF_CHAIN_OFFSET);
 		decal_delete(decal_index);
+	}
+}
+
+/* 0x0017d190: after the state of the game is read (game_state.c), the table
+of the mark of each block of the cache, which is not in that state, is made
+again: each mark that is the first of its chain (it has its own index at
+0x38) has its block of the cache at 4. The game has the walk over the table
+written here, as in the one that follows */
+void __attribute__((stdcall)) decals_after_load_cache_blocks(
+	unsigned long flags)
+{
+	(void)flags;
+	if (decal_data->valid)
+	{
+		long absolute_index= NONE;
+
+		for (;;)
+		{
+			const byte *decal;
+			long decal_index;
+
+			absolute_index= data_next_absolute_index(decal_data, absolute_index+1);
+			if (absolute_index==NONE)
+			{
+				break;
+			}
+			decal= (const byte *)decal_data->data+absolute_index*decal_data->size;
+			decal_index= (*(const short *)decal<<16)|absolute_index;
+			decal= DECAL_GET(decal_index);
+			if (*(const long *)(decal+0x38)==decal_index)
+			{
+				decal_cache_block_decal_indices[*(const long *)(decal+4)&0xFFFF]= decal_index;
+			}
+		}
+	}
+}
+
+/* 0x0017d5f0: every mark loses the bit 0 of its byte at 2, and the bit 1
+too if both are asked for; what decal_globals points to counts the marks
+that have each (at 0x3804 and 0x3808), and counts one less for each bit that
+goes */
+void __attribute__((stdcall)) decals_clear_flags(
+	boolean both)
+{
+	if (decal_data->valid)
+	{
+		byte *globals= decal_globals;
+		long absolute_index= NONE;
+
+		for (;;)
+		{
+			byte *decal;
+
+			absolute_index= data_next_absolute_index(decal_data, absolute_index+1);
+			if (absolute_index==NONE)
+			{
+				break;
+			}
+			decal= (byte *)decal_data->data+absolute_index*decal_data->size;
+			if (decal[2]&1)
+			{
+				decal[2]&= ~1;
+				(*(long *)(globals+DECAL_GLOBALS_UNKNOWN3804_OFFSET))--;
+			}
+			if (both && (decal[2]&2))
+			{
+				decal[2]&= ~2;
+				(*(long *)(globals+DECAL_GLOBALS_UNKNOWN3808_OFFSET))--;
+			}
+		}
 	}
 }

@@ -56,5 +56,5 @@ def run(t) -> None:
         t.check(
             "decals_dispose_from_old_map",
             globals={"decal_data": Buffer(random_.randbytes(0x4C)), "unknown_00509448": Buffer(random_.randbytes(0x80))},
-            externals={"unknown_0017d5f0": note, "lruv_flush": note},
+            externals={"decals_clear_flags": note, "lruv_flush": note},
         )
