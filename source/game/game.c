@@ -233,8 +233,8 @@ void game_unknown_001eb550_initialize_for_new_map(void);
 void unknown_001fb2f0(void);
 void unknown_001fb330(void);
 void unknown_001fb350(void);
-void unknown_0020a700(void);
-void unknown_0020a750(void);
+void hs_initialize(void);
+void hs_initialize_for_new_map(void);
 void hs_dispose_from_old_map(void);
 void hs_dispose(void);
 void game_unknown_0020aee0_initialize(void);
@@ -392,7 +392,7 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{unknown_0013e5c7, unknown_003361a4, unknown_0013e5d6, unknown_0013e610},
 	{no_operation, no_operation, no_operation, no_operation},
 	{game_unknown_0013bf00_initialize, no_operation, game_unknown_0013bf00_initialize_for_new_map, game_unknown_0013bf00_dispose_from_old_map},
-	{unknown_0020a700, hs_dispose, unknown_0020a750, hs_dispose_from_old_map},
+	{hs_initialize, hs_dispose, hs_initialize_for_new_map, hs_dispose_from_old_map},
 	{unknown_001fb2f0, no_operation, unknown_001fb330, unknown_001fb350},
 	{no_operation, no_operation, no_operation, no_operation},
 	{unknown_000d4de0, no_operation, unknown_000d4e20, no_operation, unknown_000d4e30, no_operation, (game_system_structure_bsp_proc)unknown_000d4e60},

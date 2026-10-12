@@ -446,8 +446,8 @@ address,name,source,arguments,returns,convention
 001fb2f0,unknown_001fb2f0,,,void
 001fb330,unknown_001fb330,,,void
 001fb350,unknown_001fb350,,,void
-0020a700,unknown_0020a700,,,void
-0020a750,unknown_0020a750,,,void
+0020a700,hs_initialize,source/hs/hs.c,,void
+0020a750,hs_initialize_for_new_map,source/hs/hs.c,,void
 0020a7d0,hs_dispose_from_old_map,source/hs/hs.c,,void
 0020a810,hs_dispose,source/hs/hs.c,,void
 0020aee0,game_unknown_0020aee0_initialize,source/game/game_unknown_0020aee0.c,,void
@@ -2659,3 +2659,7 @@ address,name,source,arguments,returns,convention
 00036ab0,unknown_00036ab0,,,void
 0020a850,unknown_0020a850,,,void
 00209290,unknown_00209290,,,void
+001ded00,unknown_001ded00,,,void
+00208ff0,unknown_00208ff0,,,void
+002a09c0,unknown_002a09c0,,,void
+002090a0,unknown_002090a0,,,void

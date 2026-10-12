@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Los guiones arrancan y se preparan para un mapa
+
+Dos funciones de `hs/hs.c` (unos 190 bytes); con ellas la parte de los guiones tiene sus
+cuatro. De 2112
+funciones se pasa a 2114, el 18,77 % de las del juego (el 11,273 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `hs_initialize` | `0x0020a700` | `hs/hs.c` |
+| `hs_initialize_for_new_map` | `0x0020a750` | `hs/hs.c` |
+
+### Lo que se sabe
+
+- `hs_initialize` crea la tabla de nodos de los guiones de una forma
+  distinta a las demás: **sin elementos propios**. Pide al montón memoria
+  solo para la cabecera y los bits (`0x124C` bytes para 36 864 nodos de
+  `0x14` bytes) con `data_initialize_disconnected`; los nodos son los de
+  cada mapa. Después sigue con lo de «mapa nuevo»: el juego salta dentro de
+  la otra función.
+- `hs_initialize_for_new_map`: si hay escenario, **conecta la tabla con los
+  nodos del escenario** (`data_connect`, bloque en `0x238` del escenario) y,
+  según dos números del escenario, prepara lo que los guiones necesitan del
+  mapa (`unknown_002a09c0`). Luego vacía dos tablas más y sigue con
+  `unknown_002090a0`.
+- Esto explica el hito 619: al irse el mapa la tabla se «desconecta»
+  porque sus elementos eran los del mapa.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  620.
+- Si el montón no da memoria, el juego sigue y lee de una tabla que no
+  existe; la prueba de `hs_initialize` siempre da memoria.
+- En este hito se pasaron las pruebas de las dos funciones, `test_hs` y
+  `test_game` enteras.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Batería completa en el hito 586: 1978 de 1978
 
 La batería completa lanzada sobre el hito 586 (commit `d8ed258`) acabó: **las 1978
