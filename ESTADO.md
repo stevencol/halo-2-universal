@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 728.
+**Última actualización:** 2026-10-08, al terminar el hito 729.
 
 ## Dónde estamos
 
-- **2511 funciones descompiladas de 11.265: el 22,29 % del juego** (el
-  12,045 % de los bytes de código).
-- Las 2511 están comprobadas contra el ejecutable original: las 1390 del
+- **2518 funciones descompiladas de 11.265: el 22,35 % del juego** (el
+  12,051 % de los bytes de código).
+- Las 2518 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile eighteen small functions of props, clumps and other tables* (ver `git log`).
+- Último hito: *Decompile seven functions of the command scripts and the swarms* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 535 funciones apuntadas pero sin descompilar (las que el código
   llama); 385 de ellas solo se conocen por su dirección (`unknown_...`).

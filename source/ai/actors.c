@@ -2174,3 +2174,177 @@ void __attribute__((stdcall)) command_script_unknown_00276990(
 		*(float *)(command_script+8)= 0.0f;
 	}
 }
+
+/* 0x005044c4, of swarms.c */
+extern byte *unknown_005044c4;
+
+/* 0x0046fca8: seven numbers that look like names of the kind that the tags
+use (their top byte is how long the name is); the actors take three like
+them at 0x450 */
+long unknown_0046fca8[7]=
+{
+	0x6000085, 0x6000084, 0x6000086, 0x4000089, 0x7000039, 0x70000C9, 0x700002C
+};
+
+/* the command script of unknown_00502410 */
+#define COMMAND_SCRIPT_CURRENT_GET() \
+	((byte *)command_script_data->data+(unknown_00502410&0xFFFF)*0xD4)
+
+/* what the two functions that follow do, with 2 or 1: the command script of
+unknown_00502410, if there is one, takes a value for its bytes at 0x52 and
+0x46; and if the value is not zero, a kind for its shorts at 0x54 and 0x48,
+a number at 0x58 and 0x4C, and 0 for its byte at 0x51 */
+static inline __attribute__((always_inline)) void command_script_unknown_00276f80_inline(
+	boolean value,
+	long number,
+	short kind)
+{
+	if (unknown_00502410!=NONE)
+	{
+		byte *command_script= COMMAND_SCRIPT_CURRENT_GET();
+
+		command_script[0x52]= value;
+		if (value)
+		{
+			*(short *)(command_script+0x54)= kind;
+			*(long *)(command_script+0x58)= number;
+			command_script[0x51]= 0;
+		}
+		command_script[0x46]= value;
+		if (value)
+		{
+			*(short *)(command_script+0x48)= kind;
+			*(long *)(command_script+0x4C)= number;
+		}
+	}
+}
+
+/* 0x00276f80: that, with 2 */
+void command_script_unknown_00276f80(
+	boolean value,
+	long number)
+{
+	command_script_unknown_00276f80_inline(value, number, 2);
+}
+
+/* 0x00277060: that, with 1 */
+void command_script_unknown_00277060(
+	boolean value,
+	long number)
+{
+	command_script_unknown_00276f80_inline(value, number, 1);
+}
+
+/* 0x00277250: the command script of unknown_00502410, if there is one, has
+0 for its short at 4 and some seconds, in ticks, for its real number at 8 */
+void __attribute__((stdcall)) command_script_unknown_00277250(
+	float seconds)
+{
+	if (unknown_00502410!=NONE)
+	{
+		byte *command_script= COMMAND_SCRIPT_CURRENT_GET();
+
+		*(short *)(command_script+4)= 0;
+		*(float *)(command_script+8)= (float)lrintf((float)game_time_globals->ticks_per_second*seconds);
+	}
+}
+
+/* 0x002775d0: the command script of unknown_00502410, if there is one,
+takes one of the seven numbers of unknown_0046fca8 at 0x94, or NONE for a
+number that is not from 0 to 6 */
+void command_script_unknown_002775d0(
+	short index)
+{
+	if (unknown_00502410!=NONE)
+	{
+		byte *command_script= COMMAND_SCRIPT_CURRENT_GET();
+
+		if (index>=0 && index<7)
+		{
+			*(long *)(command_script+0x94)= unknown_0046fca8[index];
+		}
+		else
+		{
+			*(long *)(command_script+0x94)= NONE;
+		}
+	}
+}
+
+/* 0x00277620: the command script of unknown_00502410, if there is one,
+takes a kind from 0 to 5 for its short at 6, three numbers at 8, 0x28 and
+0x2C, 0x12 for its short at 4 and 1 for its byte at 0x5C. Nothing for
+another kind */
+void command_script_unknown_00277620(
+	short kind,
+	long unknown8,
+	long unknown28,
+	long unknown2C)
+{
+	if (unknown_00502410!=NONE && kind>=0 && kind<6)
+	{
+		byte *command_script= COMMAND_SCRIPT_CURRENT_GET();
+
+		*(short *)(command_script+6)= kind;
+		*(long *)(command_script+8)= unknown8;
+		*(short *)(command_script+4)= 0x12;
+		*(long *)(command_script+0x28)= unknown28;
+		*(long *)(command_script+0x2C)= unknown2C;
+		command_script[0x5C]= 1;
+	}
+}
+
+/* 0x00290b90: unknown_005044c4 starts with five things of 0x50 bytes. Each
+one that names a value first is nothing again: its swarm (0x48), if it has
+one, has 0 for its byte at 0x31, and the thing has NONE first and at 0x48 and
+0 for its short at 0x4C */
+void __attribute__((stdcall)) swarm_unknown_00290b90(
+	long value)
+{
+	byte *element= unknown_005044c4;
+	long count;
+
+	for (count= 5; count>0; count--, element+= 0x50)
+	{
+		if (*(const long *)element==value)
+		{
+			long swarm_index= *(const long *)(element+0x48);
+
+			if (swarm_index!=NONE)
+			{
+				((byte *)swarm_data->data+(swarm_index&0xFFFF)*0x34)[0x31]= 0;
+			}
+			*(long *)element= NONE;
+			*(long *)(element+0x48)= NONE;
+			*(short *)(element+0x4C)= 0;
+		}
+	}
+}
+
+/* 0x00290bf0: the objects of a swarm (from the one at 0x18; each names the
+next at 0xC of what it has at the place that its short at 0x13A says) take a
+value for their short at 0x12E. It stops at an object that has something in
+its number at 0x134, or nothing at that place */
+void swarm_unknown_00290bf0(
+	long swarm_index,
+	short value)
+{
+	long object_index= *(const long *)((const byte *)swarm_data->data+(swarm_index&0xFFFF)*0x34+0x18);
+
+	while (object_index!=NONE)
+	{
+		byte *object= ACTOR_OBJECT_GET(object_index);
+		uintptr_t unknown13A;
+
+		if (*(const long *)(object+0x134))
+		{
+			break;
+		}
+		unknown13A= (uintptr_t)object+*(const short *)(object+0x13A);
+		if (!unknown13A)
+		{
+			break;
+		}
+		*(short *)(object+0x12E)= value;
+		object_index= *(const long *)(unknown13A+0xC);
+	}
+}

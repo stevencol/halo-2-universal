@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Siete funciones de los command scripts y los enjambres
+
+Siete funciones (574 bytes) en `ai/actors.c`. De 2511
+funciones se pasa a 2518, el 22,35 % de las del juego (el 12,051 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `command_script_unknown_00276f80` | `0x00276f80` | `ai/actors.c` |
+| `command_script_unknown_00277060` | `0x00277060` | `ai/actors.c` |
+| `command_script_unknown_00277250` | `0x00277250` | `ai/actors.c` |
+| `command_script_unknown_002775d0` | `0x002775d0` | `ai/actors.c` |
+| `command_script_unknown_00277620` | `0x00277620` | `ai/actors.c` |
+| `swarm_unknown_00290b90` | `0x00290b90` | `ai/actors.c` |
+| `swarm_unknown_00290bf0` | `0x00290bf0` | `ai/actors.c` |
+
+### Lo que se sabe
+
+- Cinco funciones escriben en el «command script» de `unknown_00502410`
+  (parecen las órdenes que un script da a un actor): un plazo en segundos
+  que se guarda en ticks, un tipo de 0 a 5 con tres números, y uno de siete
+  números de una tabla nueva, `unknown_0046fca8`, que parecen nombres de
+  los que usan los tags (¿animaciones?).
+- `swarm_unknown_00290b90` vacía las cinco cosas de 0x50 bytes con que
+  empieza `unknown_005044c4` que nombran un valor.
+- `swarm_unknown_00290bf0` recorre los objetos de un enjambre y les pone un
+  `short` en `0x12E`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  728.
+- Los nombres son suposiciones, y todas están en `actors.c` de forma
+  provisional.
+- En `command_script_unknown_00277060` el juego pone además un 0 en `0x46`
+  que enseguida pisa; en el código no está escrito.
+- En este hito se pasaron las pruebas de las siete funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Dieciocho funciones pequeñas de props, clumps y otras tablas
 
 Dieciocho funciones (1042 bytes) en `ai/actors.c`. De 2493

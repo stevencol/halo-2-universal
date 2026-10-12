@@ -3045,3 +3045,10 @@ address,name,source,arguments,returns,convention
 0026be30,prop_ref_iterator_next,source/ai/actors.c,edx,pointer
 0026e030,dynamic_firing_point_get_point,source/ai/actors.c,stack,pointer,stdcall
 00276990,command_script_unknown_00276990,source/ai/actors.c,stack,void,stdcall
+00276f80,command_script_unknown_00276f80,source/ai/actors.c,edx edi,void
+00277060,command_script_unknown_00277060,source/ai/actors.c,edx edi,void
+00277250,command_script_unknown_00277250,source/ai/actors.c,stack,void,stdcall
+002775d0,command_script_unknown_002775d0,source/ai/actors.c,ecx,void
+00277620,command_script_unknown_00277620,source/ai/actors.c,ecx stack stack stack,void
+00290b90,swarm_unknown_00290b90,source/ai/actors.c,stack,void,stdcall
+00290bf0,swarm_unknown_00290bf0,source/ai/actors.c,eax esi,void
