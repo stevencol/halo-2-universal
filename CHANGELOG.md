@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Cómo es una luz: por su definición o por el escenario
+
+Tres funciones (312 bytes) en `objects/lights.c`. De 2257
+funciones se pasa a 2260, el 20,06 % de las del juego (el 11,669 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `light_unknown_000c1930` | `0x000c1930` | `objects/lights.c` |
+| `light_unknown_000c1980` | `0x000c1980` | `objects/lights.c` |
+| `light_unknown_000c19f0` | `0x000c19f0` | `objects/lights.c` |
+
+### Lo que se sabe
+
+- Las tres rellenan una descripción de `0x7C` bytes de cómo es una luz: su
+  clase (de 0 a 3) y los números que la acompañan.
+- `light_unknown_000c1930` la saca de la definición de la luz (el tag): dos
+  números para la clase 0, cinco para las demás.
+- `light_unknown_000c1980` la saca de la colocación del escenario; para la
+  clase 0 escala el segundo número en la misma proporción que tienen los
+  dos de la definición.
+- `light_unknown_000c19f0` elige: si la luz viene del escenario y su
+  colocación tiene el bit 0 de `+0x3E` (sus propios valores, parece), usa
+  la colocación; si no, la definición. Después pone a cero un número según
+  la clase (1 o 3).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  691.
+- Qué son las clases y los números (¿esfera con radios, foco con ángulos?)
+  no se sabe; los nombres son solo las direcciones.
+- En este hito se pasaron las pruebas de las tres funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Corrección: el tag que faltaba al colocar las luces del escenario
 
 Sin funciones nuevas: una corrección en `objects/lights.c`. Siguen siendo 2257

@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 691.
+**Última actualización:** 2026-10-08, al terminar el hito 692.
 
 ## Dónde estamos
 
-- **2257 funciones descompiladas de 11.265: el 20,04 % del juego** (el
-  11,659 % de los bytes de código).
-- Las 2257 están comprobadas contra el ejecutable original: las 1390 del
+- **2260 funciones descompiladas de 11.265: el 20,06 % del juego** (el
+  11,669 % de los bytes de código).
+- Las 2260 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Pass the tag to the scenario light maker, which takes it in eax* (ver `git log`).
+- Último hito: *Decompile how a light's shape is taken from its definition or its scenario placement* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 536 funciones apuntadas pero sin descompilar (las que el código
   llama); 387 de ellas solo se conocen por su dirección (`unknown_...`).

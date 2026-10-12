@@ -342,3 +342,104 @@ long light_new_at(
 
 	return light_index;
 }
+
+enum
+{
+	/* of what the three functions that follow fill: a number that says what
+	it is like (0 to 3, at least), and what goes with it */
+	LIGHT_UNKNOWN_000C1930_SIZE= 0x7C
+};
+
+/* 0x000c1930: what a light is like, from its definition: its kind (a short
+at 4 of the definition) and, for the kind 0, two numbers of the definition
+(from 0x18); for the others, five (from 0x20) */
+void light_unknown_000c1930(
+	const byte *definition,
+	byte *unknown)
+{
+	memset(unknown, 0, LIGHT_UNKNOWN_000C1930_SIZE);
+	*(long *)unknown= *(const short *)(definition+4);
+	if (*(const short *)(definition+4)==0)
+	{
+		*(long *)(unknown+4)= *(const long *)(definition+0x18);
+		*(long *)(unknown+8)= *(const long *)(definition+0x1C);
+	}
+	else
+	{
+		*(long *)(unknown+4)= *(const long *)(definition+0x20);
+		*(long *)(unknown+8)= *(const long *)(definition+0x24);
+		*(long *)(unknown+0xC)= *(const long *)(definition+0x28);
+		*(long *)(unknown+0x10)= *(const long *)(definition+0x2C);
+		*(long *)(unknown+0x14)= *(const long *)(definition+0x30);
+	}
+}
+
+/* 0x000c1980: the same, from where the scenario places the light: its kind
+is a short at 0x3C there. For the kind 0 the two numbers are the real at 0x68
+of the place, the second by what the second of the definition is of the first
+(unless that second is zero); for the others, the five from 0x58 of the place */
+void light_unknown_000c1980(
+	const byte *placement,
+	byte *unknown,
+	const byte *definition)
+{
+	memset(unknown, 0, LIGHT_UNKNOWN_000C1930_SIZE);
+	*(long *)unknown= *(const short *)(placement+0x3C);
+	if (*(const short *)(placement+0x3C)==0)
+	{
+		*(long *)(unknown+4)= *(const long *)(placement+0x68);
+		*(float *)(unknown+8)= *(const float *)(placement+0x68);
+		if (*(const float *)(definition+0x1C)!=0.0f)
+		{
+			*(float *)(unknown+8)= *(const float *)(definition+0x1C)/ *(const float *)(definition+0x18)*
+				*(const float *)(placement+0x68);
+		}
+	}
+	else
+	{
+		*(long *)(unknown+4)= *(const long *)(placement+0x58);
+		*(long *)(unknown+8)= *(const long *)(placement+0x5C);
+		*(long *)(unknown+0xC)= *(const long *)(placement+0x60);
+		*(long *)(unknown+0x10)= *(const long *)(placement+0x64);
+		*(long *)(unknown+0x14)= *(const long *)(placement+0x68);
+	}
+}
+
+/* 0x000c19f0: what a light is like: from where the scenario places it (the
+light has which at 8), if the place has the bit 0 of its byte at 0x3E; if
+not, from its definition. Then the kind 1 has zero for its third number, and
+the kind 3 for its first */
+void light_unknown_000c19f0(
+	long light_index,
+	byte *unknown)
+{
+	const byte *light= (const byte *)light_data->data+(light_index&0xFFFF)*LIGHT_SIZE;
+	const byte *definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)(light+4)&0xFFFF].address;
+	long placement_index= *(const long *)(light+8);
+	const byte *placement= NULL;
+
+	if (placement_index!=NONE)
+	{
+		placement= *(const byte *const *)((const byte *)global_scenario+0xEC)+placement_index*0x6C;
+		if (!(placement[0x3E]&1))
+		{
+			placement= NULL;
+		}
+	}
+	if (placement)
+	{
+		light_unknown_000c1980(placement, unknown, definition);
+	}
+	else
+	{
+		light_unknown_000c1930(definition, unknown);
+	}
+	if (*(long *)unknown==1)
+	{
+		*(float *)(unknown+0xC)= 0.0f;
+	}
+	else if (*(long *)unknown==3)
+	{
+		*(float *)(unknown+4)= 0.0f;
+	}
+}

@@ -2792,3 +2792,6 @@ address,name,source,arguments,returns,convention
 001c50c0,unknown_001c50c0,,,void
 000c0520,unknown_000c0520,,eax stack stack stack,void
 000c0350,light_new_at,source/objects/lights.c,stack stack stack stack ebx edi xmm0,int
+000c1930,light_unknown_000c1930,source/objects/lights.c,eax edx,void
+000c1980,light_unknown_000c1980,source/objects/lights.c,esi edx ebx,void
+000c19f0,light_unknown_000c19f0,source/objects/lights.c,eax edi,void
