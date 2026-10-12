@@ -422,3 +422,4 @@ address,name,source
 004e9bb8,unknown_004e9bb8,source/networking/simulation_players.c
 00468630,object_type_definitions,source/objects/object_types.c
 005107f0,object_early_movers_globals,source/objects/object_early_movers.c
+004e0330,object_type_definition_list,source/objects/object_types.c

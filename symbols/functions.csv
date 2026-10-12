@@ -2640,3 +2640,4 @@ address,name,source,arguments,returns,convention
 00108fd0,object_types_call_unknown64,source/objects/object_types.c,stack,bool,stdcall
 00109050,object_types_call_unknown6C,source/objects/object_types.c,ebx stack stack stack,void,stdcall
 00109390,object_early_movers_add,source/objects/object_early_movers.c,edx,void
+001088e0,object_types_initialize,source/objects/object_types.c,,void

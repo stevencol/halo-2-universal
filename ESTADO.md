@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 603.
+**Última actualización:** 2026-10-08, al terminar el hito 604.
 
 ## Dónde estamos
 
-- **2027 funciones descompiladas de 11.265: el 17,99 % del juego** (el
-  11,254 % de los bytes de código).
-- Las 2027 están comprobadas contra el ejecutable original: las 1390 del
+- **2028 funciones descompiladas de 11.265: el 18,00 % del juego** (el
+  11,258 % de los bytes de código).
+- Las 2028 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile the objects that move before the others, and two more of the types* (ver `git log`).
+- Último hito: *Decompile how the types of object are made into a list and set up* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 614 funciones apuntadas pero sin descompilar (las que el código
   llama); 465 de ellas solo se conocen por su dirección (`unknown_...`).

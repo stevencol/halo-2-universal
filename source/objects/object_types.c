@@ -19,6 +19,10 @@ typedef void (__attribute__((stdcall)) *object_type_proc)(long object_index);
 /* 0x00468630: what each type of object is */
 byte *object_type_definitions[NUMBER_OF_OBJECT_TYPES];
 
+/* 0x004e0330: the first of the list of all the types, those that no object
+is of by itself too */
+byte *object_type_definition_list;
+
 /* ---------- code */
 
 /* each of the types that the type of an object is of, from the first to
@@ -408,6 +412,54 @@ void __attribute__((stdcall)) object_types_call_unknown6C(
 		if (proc)
 		{
 			proc(object_index, unknown0, unknown1, unknown2);
+		}
+	}
+}
+
+typedef void (*object_type_initialize_proc)(void);
+
+/* 0x001088e0: the types of object are made into a list, and each is set up.
+The thirteen go to the list in their order, each followed by the types that
+it is of that are not in it yet (those that have nothing after them); the
+last has nothing after it. Then each type of the list that has a function
+at 0x10 is set up by it. It is the first function of this file */
+void object_types_initialize(
+	void)
+{
+	byte **link= &object_type_definition_list;
+	byte *definition;
+	long type;
+
+	for (type= 0; type<NUMBER_OF_OBJECT_TYPES; type++)
+	{
+		short index;
+
+		definition= object_type_definitions[type];
+		*link= definition;
+		link= (byte **)(definition+OBJECT_TYPE_NEXT_OFFSET);
+		for (index= 0; index<MAXIMUM_OBJECT_TYPE_TYPES; index++)
+		{
+			byte *other= *(byte **)(definition+OBJECT_TYPE_TYPES_OFFSET+index*sizeof(byte *));
+
+			if (!other)
+			{
+				break;
+			}
+			if (!*(byte **)(other+OBJECT_TYPE_NEXT_OFFSET))
+			{
+				*link= other;
+				link= (byte **)(other+OBJECT_TYPE_NEXT_OFFSET);
+			}
+		}
+	}
+	*link= NULL;
+	for (definition= object_type_definition_list; definition; definition= *(byte **)(definition+OBJECT_TYPE_NEXT_OFFSET))
+	{
+		object_type_initialize_proc proc= *(object_type_initialize_proc *)(definition+OBJECT_TYPE_INITIALIZE_OFFSET);
+
+		if (proc)
+		{
+			proc();
 		}
 	}
 }

@@ -33,6 +33,11 @@ enum
 	/* and two more: one that all the types are asked, and another with
 	three things more */
 	OBJECT_TYPE_UNKNOWN64_OFFSET= 0x64,
+	/* the function that sets a type up, how many types a type can be of,
+	and the type that comes after it in the list of them all */
+	OBJECT_TYPE_INITIALIZE_OFFSET= 0x10,
+	MAXIMUM_OBJECT_TYPE_TYPES= 16,
+	OBJECT_TYPE_NEXT_OFFSET= 0xC4,
 	OBJECT_TYPE_UNKNOWN6C_OFFSET= 0x6C,
 	/* six more functions of a type that are given an object and nothing
 	else: what each is for is not known */
@@ -57,6 +62,7 @@ enum
 /* ---------- globals */
 
 extern byte *object_type_definitions[NUMBER_OF_OBJECT_TYPES];
+extern byte *object_type_definition_list;
 
 /* ---------- prototypes/OBJECT_TYPES.C */
 
@@ -75,6 +81,7 @@ void __attribute__((stdcall)) object_types_call_unknown5C(long object_index, lon
 void __attribute__((stdcall)) object_types_call_unknown70(long object_index, long unknown0);
 void __attribute__((stdcall)) object_types_call_unknown74(long object_index, long unknown0, long unknown1);
 void __attribute__((stdcall)) object_types_call_unknown7C(long object_index, long unknown0, long unknown1);
+void object_types_initialize(void);
 long __attribute__((stdcall)) object_type_from_tag(short tag_index);
 boolean __attribute__((stdcall)) object_types_call_unknown64(long object_index);
 void __attribute__((stdcall)) object_types_call_unknown6C(long object_index, long unknown0, long unknown1,

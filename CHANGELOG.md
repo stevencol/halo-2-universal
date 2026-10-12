@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Los tipos de objeto se ponen en lista y se preparan; el archivo queda entero
+
+Una función de `objects/object_types.c` (124 bytes), la primera del archivo, que con ella
+queda entero (24 funciones). De 2027
+funciones se pasa a 2028, el 18,00 % de las del juego (el 11,258 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_types_initialize` | `0x001088e0` | `objects/object_types.c` |
+
+### Lo que se sabe
+
+- `object_types_initialize` pone **todos los tipos en una lista**
+  (`object_type_definition_list`, en `0x4e0330`; cada tipo guarda el
+  siguiente en `0xC4`): los trece en su orden, y detrás de cada uno los
+  tipos de los que es y que aún no estaban (los que ningún objeto es por sí
+  solo: «objeto», «unidad»…). Luego recorre la lista y llama a la función
+  que prepara cada tipo (`0x10`), si tiene.
+- Un tipo puede ser de hasta 16 tipos.
+- **`object_types.c` queda entero**: las 24 funciones de `0x1088a0` a
+  `0x1092f1`. Las dos de antes (`0x1086e0`, `0x1087c0`) son de otra cosa.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  603.
+- El nombre `object_types_initialize` es una suposición; nadie del código
+  hecho la llama todavía.
+- En este hito se pasó la prueba de la función.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Los objetos que se mueven antes que los demás, y dos más de los tipos
 
 Siete funciones (431 bytes): cinco en el archivo nuevo `objects/object_early_movers.c`
