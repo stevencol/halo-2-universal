@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Contar agravios entre dos bandos hasta hacerlos enemigos
+
+Una función (296 bytes) en `game/game_unknown_001df460.c`, cuya zona del ejecutable
+(`0x1df460`–`0x1dfad2`) queda entera. De 2252
+funciones se pasa a 2253, el 20,00 % de las del juego (el 11,629 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_team_unknown_001df820` | `0x001df820` | `game/game_unknown_001df460.c` |
+
+### Lo que se sabe
+
+- `game_team_unknown_001df820` (bando, otro bando y clase de agravio): solo
+  en la campaña, busca el cambio de esos dos bandos y, si ha pasado más de
+  un quinto de segundo desde el último agravio contado, suma al contador
+  del cambio 1, 3 o −1 según la clase (0, 1 o 2), y reinicia su
+  temporizador. Cuando el contador llega al umbral del cambio (`+4`), los
+  dos bandos pasan a ser enemigos (`game_team_change_apply`), se avisa a la
+  IA y devuelve verdadero.
+- Con esto se entiende el mecanismo entero: es lo que hace que los aliados
+  se vuelvan contra el jugador si les dispara demasiado, y que lo perdonen
+  con el tiempo (hito 681).
+- El quinto de segundo se calcula redondeando con la coma flotante antigua
+  (`fistp`), que en `source/` es `lrintf`.
+- **Las diez funciones de esta zona están descompiladas.**
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  685.
+- La interpretación (agravios, perdón) es una deducción; los nombres con
+  dirección y el del archivo se dejan como están hasta confirmarla con
+  quien llama a estas funciones.
+- En este hito se pasaron las pruebas de la función. Hay una batería
+  completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — El temporizador de un cambio entre bandos vuelve a empezar
 
 Una función (104 bytes) en `game/game_unknown_001df460.c`. De 2251

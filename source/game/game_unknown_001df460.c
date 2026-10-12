@@ -11,6 +11,7 @@ the file is only the address of its first function.
 #include "game/game.h"
 #include "saved games/game_state.h"
 
+#include <math.h>
 #include <string.h>
 
 /* ---------- constants */
@@ -323,4 +324,68 @@ void game_team_unknown_001df950(
 			element+= 0x14;
 		}
 	}
+}
+
+/* 0x001df820: in the campaign, something that one side did to another is
+counted in the change of the two (found as game_team_unknown_001df950 finds
+it), if a fifth of a second has gone by since the last that was counted: 1, 3
+or one less, by its kind (0, 1 or 2). The time of the change starts again;
+and when the count gets to what the change has at 4 (unless that is NONE),
+the two sides are enemies, and it is true */
+boolean __attribute__((stdcall)) game_team_unknown_001df820(
+	short team,
+	short other,
+	short kind)
+{
+	if (main_game_globals->options.game_mode==_game_mode_campaign)
+	{
+		byte *unknown= unknown_004f55ec;
+		byte *element= unknown+4;
+		short index;
+
+		for (index= 0; index<*(short *)unknown; index++)
+		{
+			if ((*(short *)element==team && *(short *)(element+2)==other && element[9]) ||
+				(*(short *)(element+2)==team && *(short *)element==other && element[8]))
+			{
+				long time= (long)game_time_globals->time;
+
+				if (time-*(long *)(element+0x10)>lrintf((float)game_time_globals->ticks_per_second*0.2f))
+				{
+					short amount= 0;
+
+					*(long *)(element+0x10)= time;
+					switch (kind)
+					{
+					case 0:
+						amount= 1;
+						break;
+					case 1:
+						amount= 3;
+						break;
+					case 2:
+						amount= NONE;
+						break;
+					}
+					*(short *)(element+0xC)+= amount;
+					if (*(short *)(element+6)!=NONE)
+					{
+						*(short *)(element+0xE)= *(short *)(element+6);
+					}
+					if (*(short *)(element+4)!=NONE && *(short *)(element+0xC)>=*(short *)(element+4))
+					{
+						game_team_change_apply(element, TRUE, FALSE);
+						unknown_001c9830(*(unsigned short *)element, *(unsigned short *)(element+2), TRUE, FALSE);
+
+						return TRUE;
+					}
+
+					return FALSE;
+				}
+			}
+			element+= 0x14;
+		}
+	}
+
+	return FALSE;
 }
