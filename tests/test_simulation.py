@@ -94,7 +94,7 @@ def run(t) -> None:
         t.check(
             "simulation_unknown_000687e0",
             globals={"unknown_004cf770": bytes(there), "unknown_004cf780": 0x4321},
-            externals={"unknown_00083db0": lambda harness, arguments: random_.choice((7,))},
+            externals={"simulation_players_get_status": lambda harness, arguments: random_.choice((7,))},
         )
 
     # ---------- what the rest of the game asks of the game in the network, and what it does each tick
@@ -182,7 +182,7 @@ def run(t) -> None:
             Buffer(random_.randbytes(0x64)),
             Buffer(random_.randbytes(4)),
             globals={"unknown_004cf780": other},
-            externals={"unknown_00084270": lambda harness, arguments: (0, (harness.normalize(arguments[0]),))},
+            externals={"simulation_players_machines_changed": lambda harness, arguments: (0, (harness.normalize(arguments[0]),))},
         )
         world = bytearray(random_.randbytes(0x1220))
         struct.pack_into("<i", world, 0x8, random_.choice((1, 2, 2, 3, 4, 5)))

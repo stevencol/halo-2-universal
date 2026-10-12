@@ -2167,7 +2167,7 @@ address,name,source,arguments,returns,convention
 00085880,simulation_view_release_channel,source/networking/simulation_view.c,esi,void
 00087d00,unknown_00087d00,,eax stack,void,stdcall
 00087e90,unknown_00087e90,,eax stack,bool,stdcall
-00083db0,unknown_00083db0,,edi,int
+00083db0,simulation_players_get_status,source/networking/simulation_players.c,edi,int
 000680c0,simulation_updates_waiting,source/networking/simulation.c,edx,int
 00068290,simulation_starting,source/networking/simulation.c,,bool
 000682c0,simulation_failed,source/networking/simulation.c,,int
@@ -2176,7 +2176,7 @@ address,name,source,arguments,returns,convention
 00069b50,unknown_00069b50,,eax stack stack,void,stdcall
 000835c0,simulation_players_changed,source/networking/simulation_players.c,edx,bool
 00068350,simulation_take_unknown_004cf780_change,source/networking/simulation.c,eax stack,void,stdcall
-00084270,unknown_00084270,,stack,void,stdcall
+00084270,simulation_players_machines_changed,source/networking/simulation_players.c,stack,void,stdcall
 00083610,unknown_00083610,,stack stack stack,void,stdcall
 00069110,unknown_00069110,,stack stack,void,stdcall
 00069040,simulation_world_set_local_player_actions,source/networking/simulation_world.c,eax ecx stack,void,stdcall

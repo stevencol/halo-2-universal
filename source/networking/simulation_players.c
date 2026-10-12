@@ -10,6 +10,7 @@ they are on. The names are guesses.
 
 #include "simulation_players.h"
 
+#include "cache/cache_files.h"
 #include "game/game.h"
 #include "main/main.h"
 #include "main/main_game.h"
@@ -1089,4 +1090,172 @@ boolean simulation_players_update_views(
 	}
 
 	return simulation_players_update_views_client(players);
+}
+
+/* 0x004e9bb8: the name of a map that is being brought to the disk, or
+nothing */
+const char *unknown_004e9bb8;
+
+/* 0x00083db0: what the simulation is at, as a number from 0 to 13. 0 with
+no thing that is going, 1 with one in its first state, 2 while a map is
+being brought to the disk (cached_map_file_status says neither that it is
+there nor that it failed). 0 with no game in the network, or one that is
+not in the third state of its life cycle or the eighth. Then by the number
+that the thing has at 0x18: 4, 3, 5 and 6 for 3 to 6 when it rules the
+game; 10, 3 and 13 for 3, 4 and 6 when it does not. And with any other, by
+the state of the session, from 1 to 9: 11, 12, 9, 13, 4, 6, 5, 7 and 8 */
+long simulation_players_get_status(
+	const byte *players)
+{
+	const byte *world= *(byte *const *)(players+SIMULATION_PLAYERS_WORLD_OFFSET);
+	const byte *session;
+	long state;
+
+	if (!world)
+	{
+		return 0;
+	}
+	if (*(const long *)(world+SIMULATION_PLAYERS_WORLD_STATE_OFFSET)==1)
+	{
+		return 1;
+	}
+	if (unknown_004e9bb8)
+	{
+		long status= cached_map_file_status(unknown_004e9bb8);
+
+		if (status!=_cached_map_file_status_cached && status!=_cached_map_file_status_failed)
+		{
+			return 2;
+		}
+	}
+	if (!unknown_00527330 ||
+		(unknown_00527334!=_simulation_players_life_cycle_state3 && unknown_00527334!=_simulation_players_life_cycle_state8))
+	{
+		return 0;
+	}
+	world= *(byte *const *)(players+SIMULATION_PLAYERS_WORLD_OFFSET);
+	state= *(const long *)(world+SIMULATION_PLAYERS_WORLD_STATE_OFFSET);
+	if (state!=3 && state!=5)
+	{
+		switch (*(const long *)(world+SIMULATION_PLAYERS_WORLD_UNKNOWN18_OFFSET))
+		{
+		case 3:
+			return 4;
+		case 4:
+			return 3;
+		case 5:
+			return 5;
+		case 6:
+			return 6;
+		}
+	}
+	else
+	{
+		switch (*(const long *)(world+SIMULATION_PLAYERS_WORLD_UNKNOWN18_OFFSET))
+		{
+		case 3:
+			return 10;
+		case 4:
+			return 3;
+		case 6:
+			return 13;
+		}
+	}
+	session= *(byte *const *)(players+SIMULATION_PLAYERS_SESSION_OFFSET);
+	if (!session)
+	{
+		return 0;
+	}
+	switch (*(const long *)(session+SIMULATION_PLAYERS_SESSION_STATE_OFFSET))
+	{
+	case 1:
+		return 11;
+	case 2:
+		return 12;
+	case 3:
+		return 9;
+	case 4:
+		return 13;
+	case 5:
+		return 4;
+	case 6:
+		return 6;
+	case 7:
+		return 5;
+	case 8:
+		return 7;
+	case 9:
+		return 8;
+	}
+
+	return 0;
+}
+
+/* 0x00084270: a change of the consoles was taken by the game. Each player
+that there is and has not left, whose console is none of those that there
+are now, leaves: as an update of the first kind
+(simulation_players_collection_apply_update), and when the thing that is
+going rules the game and has that player, its byte at 0x25 is clear and its
+byte at 0x24 set. Then the copy of the consoles that the game has is the
+one of now, and the number at 0x18 is NONE */
+void __attribute__((stdcall)) simulation_players_machines_changed(
+	byte *players)
+{
+	long index;
+
+	for (index= 0; index<MAXIMUM_SIMULATION_PLAYERS; index++)
+	{
+		const byte *player= players+SIMULATION_PLAYERS_PLAYERS_OFFSET+index*SIMULATION_PLAYERS_PLAYER_SIZE;
+		unsigned long machine_mask;
+		long machine;
+		boolean found= FALSE;
+		byte update[SIMULATION_PLAYERS_UPDATE_SIZE];
+		byte *world;
+		long state;
+
+		if (!(*(const unsigned long *)(players+SIMULATION_PLAYERS_COLLECTION_OFFSET)&(1u<<index)) ||
+			player[SIMULATION_PLAYERS_PLAYER_LEFT_OFFSET])
+		{
+			continue;
+		}
+		machine_mask= *(const unsigned long *)(players+SIMULATION_PLAYERS_MACHINE_MASK_OFFSET);
+		for (machine= 0; machine<MAXIMUM_SIMULATION_PLAYERS_MACHINES; machine++)
+		{
+			if ((machine_mask&(1u<<machine)) &&
+				memcmp(players+SIMULATION_PLAYERS_MACHINES_OFFSET+machine*SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE,
+					player+SIMULATION_PLAYERS_PLAYER_MACHINE_OFFSET, SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE)==0)
+			{
+				found= TRUE;
+				break;
+			}
+		}
+		if (found)
+		{
+			continue;
+		}
+		memcpy(update+SIMULATION_PLAYERS_UPDATE_IDENTIFIER_OFFSET, player, SIMULATION_PLAYERS_PLAYER_IDENTIFIER_SIZE);
+		*(long *)(update+SIMULATION_PLAYERS_UPDATE_TYPE_OFFSET)= _simulation_players_update_left;
+		*(long *)update= index;
+		simulation_players_collection_apply_update(players+SIMULATION_PLAYERS_COLLECTION_OFFSET, update);
+		world= *(byte *const *)(players+SIMULATION_PLAYERS_WORLD_OFFSET);
+		state= *(const long *)(world+SIMULATION_PLAYERS_WORLD_STATE_OFFSET);
+		if (state!=3 && state!=5)
+		{
+			byte *world_player= world+SIMULATION_PLAYERS_WORLD_PLAYERS_OFFSET+index*SIMULATION_PLAYERS_WORLD_PLAYER_SIZE;
+
+			if (*(const long *)world_player!=NONE)
+			{
+				if (world_player[SIMULATION_PLAYERS_WORLD_PLAYER_UNKNOWN25_OFFSET])
+				{
+					world_player[SIMULATION_PLAYERS_WORLD_PLAYER_UNKNOWN25_OFFSET]= FALSE;
+				}
+				world_player[SIMULATION_PLAYERS_WORLD_PLAYER_UNKNOWN24_OFFSET]= TRUE;
+			}
+		}
+	}
+	*(unsigned long *)(players+SIMULATION_PLAYERS_UNKNOWNBCC_OFFSET)=
+		*(const unsigned long *)(players+SIMULATION_PLAYERS_MACHINE_MASK_OFFSET);
+	memcpy(players+SIMULATION_PLAYERS_UNKNOWNBD0_OFFSET, players+SIMULATION_PLAYERS_MACHINES_OFFSET,
+		SIMULATION_PLAYERS_UNKNOWNBD0_SIZE);
+	*(long *)(players+SIMULATION_PLAYERS_UNKNOWN18_OFFSET)= NONE;
 }

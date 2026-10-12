@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — En qué anda la simulación, y los jugadores de las consolas que se fueron
+
+Dos funciones de `networking/simulation_players.c` (623 bytes). De 1974
+funciones se pasa a 1976, el 17,54 % de las del juego (el 11,047 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_players_get_status` | `0x00083db0` | `networking/simulation_players.c` |
+| `simulation_players_machines_changed` | `0x00084270` | `networking/simulation_players.c` |
+
+### Lo que se sabe
+
+- `simulation_players_get_status` (antes `unknown_00083db0`) da **un número
+  de 0 a 13 que dice en qué anda la simulación**: 1 si es una partida sola,
+  2 mientras se copia un mapa al disco, y luego según el número de `0x18`
+  de lo que está en marcha (distinto si manda en la partida o no) y, si ese
+  no dice nada, según el estado de la sesión. Tiene dos tablas de salto.
+- `simulation_players_machines_changed` (antes `unknown_00084270`, lo que
+  se llama cuando el juego ha tomado un cambio de consolas): cada jugador
+  cuya consola ya no está **se va**, como una actualización de la primera
+  clase; y la copia de las consolas que el juego tiene pasa a ser la de
+  ahora.
+- Variable nueva: `unknown_004e9bb8`, el nombre del mapa que se está
+  copiando al disco (o nada).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  584.
+- Qué significa cada uno de los 14 números no se sabe; solo de dónde sale.
+- En este hito se pasaron las pruebas de las dos funciones y las de quien
+  las llama.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Lo que está en marcha cambia de papel cuando cambia quién manda en la sesión
 
 Dos funciones de `networking/simulation_world.c` (519 bytes). De 1972

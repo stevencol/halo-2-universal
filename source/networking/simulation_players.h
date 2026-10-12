@@ -171,6 +171,8 @@ boolean __attribute__((stdcall)) simulation_players_create_view(long channel_ind
 boolean __attribute__((stdcall)) simulation_players_update_views_client(byte *players);
 boolean __attribute__((stdcall)) simulation_players_update_views_host(byte *players, long unused);
 boolean simulation_players_update_views(byte *players);
+void __attribute__((stdcall)) simulation_players_machines_changed(byte *players);
+long simulation_players_get_status(const byte *players);
 void __attribute__((stdcall)) simulation_players_after_load(byte *players, unsigned long flags);
 
 boolean __attribute__((stdcall)) simulation_players_take_update(byte *identifiers, byte *machines, boolean always,

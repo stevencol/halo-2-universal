@@ -31,14 +31,14 @@ whether what was read is good. 0x00083db0: something of what unknown_004cf780
 has */
 void __attribute__((stdcall)) unknown_00087d00(struct bitstream *stream, const void *update);
 boolean __attribute__((stdcall)) unknown_00087e90(struct bitstream *stream, void *update);
-long unknown_00083db0(long unknown);
+long simulation_players_get_status(long unknown);
 
 /* 0x00084270: what unknown_004cf780 has is told that its change was taken.
 0x00069a00, 0x00069b50: the thing passes on what the players do, and
 something more, of one of them. 0x000835c0: whether what unknown_004cf780 has
 lets the game go on a tick. 0x000683a0: one of the things that come is given
 to the game */
-void __attribute__((stdcall)) unknown_00084270(byte *unknown);
+void __attribute__((stdcall)) simulation_players_machines_changed(byte *unknown);
 void __attribute__((stdcall)) unknown_00069a00(const void *players, byte *world, long unknown8);
 void __attribute__((stdcall)) unknown_00069b50(const void *unknown610, byte *world, long unknown5cc);
 boolean simulation_players_changed(long unknown);
@@ -211,14 +211,14 @@ void simulation_fail(
 	}
 }
 
-/* 0x000687e0: something of what unknown_004cf780 has (unknown_00083db0), or
+/* 0x000687e0: something of what unknown_004cf780 has (simulation_players_get_status), or
 nothing with no game in the network */
 long simulation_unknown_000687e0(
 	void)
 {
 	if (unknown_004cf770.unknown0)
 	{
-		return unknown_00083db0(unknown_004cf780);
+		return simulation_players_get_status(unknown_004cf780);
 	}
 
 	return 0;
@@ -377,7 +377,7 @@ void simulation_update(
 
 /* 0x00068350: a change of what unknown_004cf780 has, if there is one that
 was not taken yet: a number and 0x60 bytes of it are given, it is told
-(unknown_00084270), and it has none; whether there was one */
+(simulation_players_machines_changed), and it has none; whether there was one */
 void __attribute__((stdcall)) simulation_take_unknown_004cf780_change(
 	long *change,
 	boolean *changed)
@@ -389,7 +389,7 @@ void __attribute__((stdcall)) simulation_take_unknown_004cf780_change(
 	{
 		change[0]= *(const long *)(unknown+SIMULATION_UNKNOWN_004CF780_UNKNOWN1C_OFFSET);
 		memcpy(&change[1], unknown+SIMULATION_UNKNOWN_004CF780_UNKNOWN24_OFFSET, SIMULATION_UNKNOWN_004CF780_UNKNOWN24_SIZE);
-		unknown_00084270(unknown);
+		simulation_players_machines_changed(unknown);
 		*changed= TRUE;
 		unknown[SIMULATION_UNKNOWN_004CF780_CHANGED_OFFSET]= FALSE;
 	}

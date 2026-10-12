@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 584.
+**Última actualización:** 2026-10-08, al terminar el hito 585.
 
 ## Dónde estamos
 
-- **1974 funciones descompiladas de 11.265: el 17,52 % del juego** (el
-  11,026 % de los bytes de código).
-- Las 1974 están comprobadas contra el ejecutable original: las 1390 del
+- **1976 funciones descompiladas de 11.265: el 17,54 % del juego** (el
+  11,047 % de los bytes de código).
+- Las 1976 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how the simulation's thing changes its part when the session's host changes* (ver `git log`).
+- Último hito: *Decompile the simulation's status number and how players of gone consoles leave* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 614 funciones apuntadas pero sin descompilar (las que el código
-  llama); 465 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 612 funciones apuntadas pero sin descompilar (las que el código
+  llama); 463 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
