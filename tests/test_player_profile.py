@@ -121,7 +121,7 @@ def run(t) -> None:
             Buffer(bytes(data)),
             Buffer(random_.randbytes(4)),
             Buffer(random_.randbytes(4)),
-            externals={"unknown_0019c1f0": lambda harness, arguments, real=real: 0x1234 if real[arguments[0]] else 0},
+            externals={"levels_get_campaign_level": lambda harness, arguments, real=real: 0x1234 if real[arguments[0]] else 0},
         )
 
     # ---------- where a file is read from

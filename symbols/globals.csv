@@ -464,3 +464,4 @@ address,name,source
 004e8c34,unknown_004e8c34,source/game/game_unknown_001552e0.c
 00509434,unknown_00509434,source/game/game_unknown_0002b4a0.c
 00485a80,unknown_00485a80,source/rasterizer/rasterizer.c
+004f55cc,unknown_004f55cc,source/game/game_unknown_001c7fe0.c

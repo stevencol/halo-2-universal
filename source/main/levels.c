@@ -8,6 +8,7 @@ data ("level handles", "multiplayer level handles").
 
 #include "cseries/cseries.h"
 #include "memory/data.h"
+#include "scenario/scenario.h"
 
 /* ---------- globals */
 
@@ -55,4 +56,106 @@ void levels_initialize(
 {
 	campaign_level_data= data_new("level handles", 0x14, 8, 0, heap_allocation);
 	multiplayer_level_data= data_new("multiplayer level handles", 0x32, 8, 0, heap_allocation);
+}
+
+enum
+{
+	/* in the globals tag: the block of what it says of the levels, which
+	has one thing. In that: the block of the levels of the campaign, each of
+	0xB50 bytes with its number at 0x4, and the block of those of the games
+	of several, each of 0xC64 bytes with its number first */
+	GAME_GLOBALS_LEVELS_OFFSET= 0x178,
+	LEVELS_CAMPAIGN_OFFSET= 0x8,
+	LEVELS_CAMPAIGN_LEVEL_SIZE= 0xB50,
+	LEVELS_CAMPAIGN_LEVEL_NUMBER_OFFSET= 0x4,
+	LEVELS_MULTIPLAYER_OFFSET= 0x10,
+	LEVELS_MULTIPLAYER_LEVEL_SIZE= 0xC64
+};
+
+/* a block of a tag: how many things, and where they are */
+struct levels_tag_block
+{
+	long count;
+	byte *address;
+};
+
+/* what the globals tag says of the levels, or nothing */
+static inline __attribute__((always_inline)) const byte *levels_get_definition(
+	void)
+{
+	const struct levels_tag_block *block=
+		(const struct levels_tag_block *)((const byte *)global_game_globals+GAME_GLOBALS_LEVELS_OFFSET);
+
+	return block->count ? block->address : NULL;
+}
+
+/* one of the things of a block of that; the game has the check of the block
+written with it, and with no block it gives a place from nothing */
+static inline __attribute__((always_inline)) const byte *levels_get_element(
+	long block_offset,
+	long index,
+	long size)
+{
+	const byte *definition= levels_get_definition();
+	const byte *elements= NULL;
+
+	if (definition && ((const struct levels_tag_block *)(definition+block_offset))->count>0)
+	{
+		elements= ((const struct levels_tag_block *)(definition+block_offset))->address;
+	}
+
+	return elements+index*size;
+}
+
+/* 0x0019c1f0: what the globals tag says of a level of the campaign, by its
+number; NULL if it says nothing of the levels, or of that one */
+const byte *__attribute__((stdcall)) levels_get_campaign_level(
+	long number)
+{
+	const byte *definition= levels_get_definition();
+	long count;
+	long index;
+
+	if (!definition)
+	{
+		return NULL;
+	}
+	count= ((const struct levels_tag_block *)(definition+LEVELS_CAMPAIGN_OFFSET))->count;
+	for (index= 0; index<count; index++)
+	{
+		const byte *level= levels_get_element(LEVELS_CAMPAIGN_OFFSET, index, LEVELS_CAMPAIGN_LEVEL_SIZE);
+
+		if (*(const long *)(level+LEVELS_CAMPAIGN_LEVEL_NUMBER_OFFSET)==number)
+		{
+			return level;
+		}
+	}
+
+	return NULL;
+}
+
+/* 0x0019c5f0: the same of a level of the games of several */
+const byte *__attribute__((stdcall)) levels_get_multiplayer_level(
+	long number)
+{
+	const byte *definition= levels_get_definition();
+	long count;
+	long index;
+
+	if (!definition)
+	{
+		return NULL;
+	}
+	count= ((const struct levels_tag_block *)(definition+LEVELS_MULTIPLAYER_OFFSET))->count;
+	for (index= 0; index<count; index++)
+	{
+		const byte *level= levels_get_element(LEVELS_MULTIPLAYER_OFFSET, index, LEVELS_MULTIPLAYER_LEVEL_SIZE);
+
+		if (*(const long *)level==number)
+		{
+			return level;
+		}
+	}
+
+	return NULL;
 }

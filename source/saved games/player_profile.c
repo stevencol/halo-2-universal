@@ -39,7 +39,7 @@ int _wcsicmp(const wchar *a, const wchar *b);
 
 /* 0x0019c1f0: of one of four numbers that a profile keeps: 0 if it is not
 of something that there is */
-void *unknown_0019c1f0(long unknown);
+const byte *__attribute__((stdcall)) levels_get_campaign_level(long number);
 
 /* ---------- globals */
 
@@ -267,7 +267,7 @@ void player_profile_get_unknownEC(
 	{
 		long unknown= profile->unknownEC[unknown_index];
 
-		if (unknown!=NONE && unknown_0019c1f0(unknown) && *value<=unknown)
+		if (unknown!=NONE && levels_get_campaign_level(unknown) && *value<=unknown)
 		{
 			*value= unknown;
 			*index= unknown_index;

@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Lo que el tag de globales dice de un nivel, por su número
+
+Tres funciones (275 bytes): dos en `main/levels.c` y una en un archivo nuevo de `game/`.
+De 2102
+funciones se pasa a 2105, el 18,69 % de las del juego (el 11,273 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `levels_get_campaign_level` | `0x0019c1f0` | `main/levels.c` |
+| `levels_get_multiplayer_level` | `0x0019c5f0` | `main/levels.c` |
+| `game_unknown_001c7fe0` | `0x001c7fe0` | `game/game_unknown_001c7fe0.c` |
+
+### Lo que se sabe
+
+- `levels_get_campaign_level` y `levels_get_multiplayer_level` (antes
+  `unknown_0019c1f0` y `unknown_0019c5f0`, que ya llamaban el perfil del
+  jugador y las listas de emparejamiento) buscan **un nivel por su número**
+  en el tag de globales. El tag tiene en `0x178` el bloque de lo que dice
+  de los niveles; dentro, los de la campaña (`0xB50` bytes cada uno, con su
+  número en `0x4`) y los de las partidas de varios (`0xC64` bytes, con su
+  número al principio). Dan `NULL` si no está.
+- `game_unknown_001c7fe0` (lo que para con los jugadores al irse el mapa)
+  deja dos cosas de `0x1C` bytes con `NONE` en sus dos primeros números.
+- Corrección: `levels_get_campaign_level` limpia su argumento de la pila;
+  el perfil del jugador la tenía declarada como si no, y su prueba lo
+  delató en cuanto la función dejó de estar sustituida.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  617.
+- En este hito se pasaron las pruebas de las tres funciones, y
+  `test_player_profile`, `test_network_hoppers` y `test_game_parts_612`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Cuatro funciones cortas de las dos primeras partes de la tabla
 
 Cuatro funciones cortas (unos 60 bytes) en dos archivos nuevos. De 2098

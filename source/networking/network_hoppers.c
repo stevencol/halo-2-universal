@@ -23,7 +23,7 @@ void __attribute__((stdcall)) unknown_00194660(long index);
 any. 0x0019c5f0: something of a map, by its number, if the console has the
 map; NULL if not */
 boolean __attribute__((stdcall)) unknown_001943d0(long hopper_index, struct network_hopper_game_set *set);
-const byte *__attribute__((stdcall)) unknown_0019c5f0(long map);
+const byte *__attribute__((stdcall)) levels_get_multiplayer_level(long map);
 
 /* ---------- globals */
 
@@ -436,7 +436,7 @@ boolean __attribute__((stdcall)) network_hopper_choose_game(
 	{
 		long weight= 0;
 
-		if (unknown_0019c5f0(set.games[index].map))
+		if (levels_get_multiplayer_level(set.games[index].map))
 		{
 			weight= set.games[index].weight;
 			if (weight<NETWORK_HOPPER_GAME_WEIGHT_MINIMUM)

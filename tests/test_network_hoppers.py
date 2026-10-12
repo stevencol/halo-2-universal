@@ -155,6 +155,6 @@ def run(t) -> None:
             globals={"global_random_seed_reference": Buffer(random_.randbytes(8))},
             externals={
                 "unknown_001943d0": games_of,
-                "unknown_0019c5f0": lambda harness, arguments, have=frozenset(have): (0x12340000 if arguments[0] in have else 0, tuple(arguments)),
+                "levels_get_multiplayer_level": lambda harness, arguments, have=frozenset(have): (0x12340000 if arguments[0] in have else 0, tuple(arguments)),
             },
         )
