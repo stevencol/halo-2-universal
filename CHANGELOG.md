@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Seis funciones más de los tipos de objeto, todas con la misma forma
+
+Seis funciones de `objects/object_types.c` (606 bytes). De 2000
+funciones se pasa a 2006, el 17,81 % de las del juego (el 11,197 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_types_call_unknown20` | `0x00108960` | `objects/object_types.c` |
+| `object_types_call_unknown24` | `0x001089d0` | `objects/object_types.c` |
+| `object_types_call_unknown38` | `0x00108b80` | `objects/object_types.c` |
+| `object_types_call_unknown3C` | `0x00108bf0` | `objects/object_types.c` |
+| `object_types_call_unknown50` | `0x00108e10` | `objects/object_types.c` |
+| `object_types_call_unknown78` | `0x001091b0` | `objects/object_types.c` |
+
+### Lo que se sabe
+
+- Las seis son **byte a byte la misma función** que la del hito 599, con
+  otro sitio de la tabla del tipo: recorren los tipos de los que es el tipo
+  del objeto, del primero a él mismo, y llaman a la función que cada uno
+  tenga en `0x20`, `0x24`, `0x38`, `0x3C`, `0x50` o `0x78`, pasándole el
+  objeto.
+- El juego tiene el recorrido escrito en cada una; aquí es una sola función
+  en línea, `object_types_call`, que usan las siete.
+- La prueba es una sola para las siete, con el sitio de la función como
+  dato.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  599.
+- Para qué es cada una (colocar, borrar, mover, actualizar…) no se sabe:
+  nadie del código hecho las llama aún, y los nombres son solo el sitio de
+  la tabla.
+- En este hito se pasaron las pruebas de las siete funciones del archivo.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Dos mil funciones: los tipos de un objeto, primer archivo
 
 Una función (101 bytes) en el archivo nuevo `objects/object_types.c`. De 1999

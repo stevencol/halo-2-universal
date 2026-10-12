@@ -2617,3 +2617,9 @@ address,name,source,arguments,returns,convention
 000bb7b0,object_detach_simulation_entity,source/objects/objects.c,eax,void
 000b8540,unknown_000b8540,,stack,void,stdcall
 00108e80,object_types_call_unknown54,source/objects/object_types.c,ebx,void
+00108960,object_types_call_unknown20,source/objects/object_types.c,ebx,void
+001089d0,object_types_call_unknown24,source/objects/object_types.c,ebx,void
+00108b80,object_types_call_unknown38,source/objects/object_types.c,ebx,void
+00108bf0,object_types_call_unknown3C,source/objects/object_types.c,ebx,void
+00108e10,object_types_call_unknown50,source/objects/object_types.c,ebx,void
+001091b0,object_types_call_unknown78,source/objects/object_types.c,ebx,void
