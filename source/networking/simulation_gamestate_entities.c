@@ -8,12 +8,17 @@ guess, by the one that later games have.
 
 #include "simulation_gamestate_entities.h"
 
+#include "main/main.h"
 #include "main/main_game.h"
+#include "memory/data.h"
+#include "networking/bitstream.h"
 #include "networking/replication_entity_manager.h"
 #include "networking/simulation.h"
 #include "networking/simulation_entity_database.h"
 #include "networking/simulation_world.h"
 #include "objects/objects.h"
+
+#include <string.h>
 
 /* ---------- structures */
 
@@ -51,6 +56,29 @@ static inline __attribute__((always_inline)) long simulation_object_get_entity(
 	}
 
 	return entity_index;
+}
+
+/* a player, by its place among the players of the game: the place with
+what tells it from others that had it; FALSE with a place that is none or
+has no player */
+static inline __attribute__((always_inline)) boolean simulation_game_event_get_player(
+	long absolute_index,
+	long *player_index)
+{
+	short identifier;
+
+	if (absolute_index<0 || absolute_index>=player_data->first_unallocated)
+	{
+		return FALSE;
+	}
+	identifier= *(const short *)((const byte *)player_data->data+player_data->size*absolute_index);
+	if (identifier==0)
+	{
+		return FALSE;
+	}
+	*player_index= ((long)identifier<<16)|absolute_index;
+
+	return TRUE;
 }
 
 /* ---------- code */
@@ -124,4 +152,84 @@ long simulation_object_get_remote_entity(
 	}
 
 	return entity_index;
+}
+
+/* 0x0019eb30: something that happened in the game is done */
+void unknown_0019eb30(const long *event);
+
+/* 0x000a5570: something that happened in the game is read from a message:
+its kind (4 bits), a number (6), five numbers of 4 bits each of which a bit
+can say is NONE, one more number (nothing, 1, or 32 bits, by two bits), and
+for the ninth kind 4 bits, less one. It is one of the functions of a kind
+of thing; always TRUE */
+boolean __attribute__((stdcall)) simulation_game_event_decode(
+	long unused,
+	long *event,
+	struct bitstream *stream)
+{
+	long index;
+
+	(void)unused;
+	event[0]= bitstream_read_integer(stream, 4);
+	event[1]= bitstream_read_integer(stream, 6);
+	for (index= 0; index<SIMULATION_GAME_EVENT_NUMBERS; index++)
+	{
+		event[2+index]= NONE;
+		if (!bitstream_read_bool(stream))
+		{
+			event[2+index]= bitstream_read_integer(stream, 4);
+		}
+	}
+	event[7]= 0;
+	if (!bitstream_read_bool(stream))
+	{
+		event[7]= 1;
+		if (!bitstream_read_bool(stream))
+		{
+			event[7]= bitstream_read_integer(stream, 32);
+		}
+	}
+	if (event[0]==_simulation_game_event_kind9)
+	{
+		*(short *)&event[8]= (short)(bitstream_read_integer(stream, 4)-1);
+	}
+	else
+	{
+		*(short *)&event[8]= 0;
+	}
+
+	return TRUE;
+}
+
+/* 0x000a5650: something that happened in the game, as it came in a message,
+is done (unknown_0019eb30): with its three players as the game knows them
+and not by their places. FALSE, with nothing done, if one of them is at a
+place that has no player. It is one of the functions of a kind of thing */
+boolean __attribute__((stdcall)) simulation_game_event_apply(
+	long unused0,
+	long unused1,
+	long unused2,
+	const long *event)
+{
+	long copy[SIMULATION_GAME_EVENT_SIZE/sizeof(long)];
+
+	(void)unused0;
+	(void)unused1;
+	(void)unused2;
+	memcpy(copy, event, sizeof(copy));
+	if (event[2]!=NONE && !simulation_game_event_get_player(event[2], &copy[2]))
+	{
+		return FALSE;
+	}
+	if (event[3]!=NONE && !simulation_game_event_get_player(event[3], &copy[3]))
+	{
+		return FALSE;
+	}
+	if (event[5]!=NONE && !simulation_game_event_get_player(event[5], &copy[5]))
+	{
+		return FALSE;
+	}
+	unknown_0019eb30(copy);
+
+	return TRUE;
 }

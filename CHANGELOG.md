@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Algo que pasó en la partida, leído de un mensaje y hecho
+
+Dos funciones de `networking/simulation_gamestate_entities.c` (441 bytes). De 1994
+funciones se pasa a 1996, el 17,72 % de las del juego (el 11,165 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_game_event_decode` | `0x000a5570` | `networking/simulation_gamestate_entities.c` |
+| `simulation_game_event_apply` | `0x000a5650` | `networking/simulation_gamestate_entities.c` |
+
+### Lo que se sabe
+
+- Son dos de las funciones de una de las 26 clases de «cosas que pasan» de
+  la simulación (las que se llaman por tabla, con el objeto en `ecx`, que
+  ninguna de las dos mira).
+- `simulation_game_event_decode` lee del mensaje **algo que pasó en la
+  partida**, `0x24` bytes: su clase (4 bits), un número (6 bits), cinco
+  números de 4 bits que un bit puede dejar en `NONE`, un número más (nada,
+  1 o 32 bits según dos bits) y, solo para la clase 9, 4 bits menos uno.
+- `simulation_game_event_apply` lo hace (`unknown_0019eb30`), pero antes
+  convierte **tres de esos números, que son jugadores**, del sitio que
+  ocupan al número completo con que el juego los conoce. Si alguno está en
+  un sitio sin jugador da `FALSE` y no hace nada.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  595.
+- Qué clases de suceso son (muertes, banderas…) no se sabe; «algo que pasó
+  en la partida» sale de que tres de los números son jugadores.
+- En este hito se pasaron las pruebas de las dos funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Los objetos y sus números en los mensajes; la unidad del final de una cadena
 
 Cuatro funciones cortas (324 bytes): tres en el archivo nuevo

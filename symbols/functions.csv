@@ -2610,3 +2610,6 @@ address,name,source,arguments,returns,convention
 00082980,simulation_player_apply_unit_state,source/networking/simulation_player.c,eax ecx,void
 000a9f70,unknown_000a9f70,,stack stack stack,int,stdcall
 000aa260,unknown_000aa260,,eax ecx edx stack stack stack stack stack,void,stdcall
+000a5570,simulation_game_event_decode,source/networking/simulation_gamestate_entities.c,stack stack stack,bool,stdcall
+000a5650,simulation_game_event_apply,source/networking/simulation_gamestate_entities.c,stack stack stack stack,bool,stdcall
+0019eb30,unknown_0019eb30,,edi,void
