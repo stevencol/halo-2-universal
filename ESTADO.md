@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 639.
+**Última actualización:** 2026-10-08, al terminar el hito 640.
 
 ## Dónde estamos
 
-- **2164 funciones descompiladas de 11.265: el 19,21 % del juego** (el
-  11,360 % de los bytes de código).
-- Las 2164 están comprobadas contra el ejecutable original: las 1390 del
+- **2165 funciones descompiladas de 11.265: el 19,22 % del juego** (el
+  11,369 % de los bytes de código).
+- Las 2165 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile three walks over the lights* (ver `git log`).
+- Último hito: *Decompile how a new light is made* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 545 funciones apuntadas pero sin descompilar (las que el código
-  llama); 396 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 546 funciones apuntadas pero sin descompilar (las que el código
+  llama); 397 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 

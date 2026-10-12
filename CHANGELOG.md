@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Una luz nueva
+
+Una función (273 bytes) en `objects/lights.c`. De 2164
+funciones se pasa a 2165, el 19,22 % de las del juego (el 11,369 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `light_new` | `0x000c0230` | `objects/lights.c` |
+
+### Lo que se sabe
+
+- `light_new` crea una luz a partir de su definición (un tag) y devuelve su
+  índice, o `NONE` si no hay sitio en la tabla o si no toca crearla:
+  - una definición con el bit 0 y `NONE` en `0x94` no crea ninguna;
+  - una cuyo `short` en `0xA4` vale 2 solo la crea en los modos de juego 4
+    y 5.
+- La luz nueva guarda el índice de su definición (`+4`), cuatro argumentos
+  más (`0x4C`, `0x50`, `0x54`, `0x56`), dos reales a 1 (`0xCC`, `0xD0`),
+  varios números a `NONE`, y el bit 0 cuando su definición **no** lo tiene.
+  Luego se llama a `unknown_000c0c80` con ella y se anota el contador
+  `0x4e0308` menos uno.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  639.
+- Qué son los cuatro argumentos no se sabe (el primero, en `0x4C`, parece
+  de quién es la luz: las de `NONE` son las que recorren las funciones del
+  hito 639). `unknown_000c0c80` (1607 bytes) no está descompilada.
+- En este hito se pasaron las pruebas de `test_light*` (seis funciones).
+  Hay una batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Tres recorridos de la tabla de las luces
 
 Tres funciones (375 bytes) en `objects/lights.c`. De 2161

@@ -518,3 +518,4 @@ address,name,source
 004e030c,light_data,source/objects/lights.c
 005107e8,light_globals,source/objects/lights.c
 004e0310,unknown_004e0310,source/objects/lights.c
+004e0308,unknown_004e0308,source/objects/lights.c

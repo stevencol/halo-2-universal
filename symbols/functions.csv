@@ -2708,3 +2708,5 @@ address,name,source,arguments,returns,convention
 000c2d00,unknown_000c2d00,,stack,void,stdcall
 000c3260,unknown_000c3260,,stack stack,void,stdcall
 001cae40,unknown_001cae40,,edi stack stack,void
+000c0230,light_new,source/objects/lights.c,stack stack stack stack stack,int,stdcall
+000c0c80,unknown_000c0c80,,stack,void,stdcall

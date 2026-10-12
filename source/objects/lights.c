@@ -9,6 +9,8 @@ is a guess, by the name that the game gives to its table of data ("lights").
 
 #include <string.h>
 
+#include "cache/cache_files.h"
+#include "game/game.h"
 #include "memory/data.h"
 #include "saved games/game_state.h"
 
@@ -53,6 +55,10 @@ and a byte at 8 that is set when the lights start. 0x004e0310: see the
 structure */
 struct data_array *light_data;
 byte *light_globals;
+
+/* 0x004e0308: a number that a new light keeps, less one (a count of the
+times that something has been done to the lights, perhaps) */
+long unknown_004e0308;
 struct light_unknown_004e0310 unknown_004e0310;
 
 /* ---------- prototypes */
@@ -61,6 +67,7 @@ void __attribute__((stdcall)) unknown_001cabc0(struct light_unknown_004e0310 *un
 	long unknown3);
 void unknown_001cae40(struct light_unknown_004e0310 *unknown, long light_index, byte *unknown10);
 void __attribute__((stdcall)) unknown_000c2d00(long light_index);
+void __attribute__((stdcall)) unknown_000c0c80(long light_index);
 void __attribute__((stdcall)) unknown_000c3260(long light_index, boolean unknown);
 
 /* ---------- code */
@@ -180,4 +187,54 @@ void lights_unknown_000c01c0(
 			unknown_000c3260(light_index, TRUE);
 		}
 	}
+}
+
+/* 0x000c0230: a new light, of a definition (a tag): its index, or NONE if
+there is no room, or if it is not to be made: a definition with the bit 0
+and NONE at 0x94 makes none, and one whose short at 0xA4 is 2 makes one only
+in the kinds of game 4 and 5. What the four other arguments are is not known:
+they are kept at 0x4C, 0x54, 0x50 and 0x56. The light takes the bit 0 when
+its definition does not have it */
+long __attribute__((stdcall)) light_new(
+	long definition_index,
+	long unknown4C,
+	short unknown54,
+	long unknown50,
+	short unknown56)
+{
+	const byte *definition= (const byte *)(uintptr_t)global_tag_instances[definition_index&0xFFFF].address;
+	long game_mode= main_game_globals->options.game_mode;
+	long light_index= NONE;
+	boolean unknown_mode= game_mode==_game_mode_5 || game_mode==_game_mode_4;
+	boolean unknown2= *(const short *)(definition+0xA4)==2;
+
+	if ((!(definition[0]&1) || *(const long *)(definition+0x94)!=NONE) && (unknown_mode || !unknown2))
+	{
+		light_index= datum_new(light_data);
+		if (light_index!=NONE)
+		{
+			byte *light= (byte *)light_data->data+(light_index&0xFFFF)*LIGHT_SIZE;
+
+			*(long *)(light+4)= definition_index;
+			*(long *)(light+LIGHT_UNKNOWN4C_OFFSET)= unknown4C;
+			*(short *)(light+LIGHT_FLAGS_OFFSET)= 0;
+			*(short *)(light+0x54)= unknown54;
+			*(long *)(light+0x50)= unknown50;
+			*(long *)(light+0x14)= NONE;
+			*(long *)(light+8)= NONE;
+			*(short *)(light+0x56)= unknown56;
+			*(long *)(light+LIGHT_UNKNOWN58_OFFSET)= NONE;
+			*(short *)(light+0x5C)= NONE;
+			*(float *)(light+0xD0)= 1.0f;
+			*(float *)(light+0xCC)= 1.0f;
+			*(short *)(light+LIGHT_FLAGS_OFFSET)= !(definition[0]&1);
+			light[LIGHT_FLAGS_OFFSET]&= ~0x10;
+			*(long *)(light+LIGHT_UNKNOWN10_OFFSET)= NONE;
+			unknown_000c0c80(light_index);
+			*(long *)(light+0xC)= unknown_004e0308-1;
+			*(long *)(light+0x10C)= NONE;
+		}
+	}
+
+	return light_index;
 }
