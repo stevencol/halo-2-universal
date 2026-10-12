@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 650.
+**Última actualización:** 2026-10-08, al terminar el hito 651.
 
 ## Dónde estamos
 
-- **2196 funciones descompiladas de 11.265: el 19,49 % del juego** (el
-  11,393 % de los bytes de código).
-- Las 2196 están comprobadas contra el ejecutable original: las 1390 del
+- **2197 funciones descompiladas de 11.265: el 19,50 % del juego** (el
+  11,397 % de los bytes de código).
+- Las 2197 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how the things that give the physics its memories are closed* (ver `git log`).
+- Último hito: *Decompile how the swarms let go of a map* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 532 funciones apuntadas pero sin descompilar (las que el código
-  llama); 383 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 531 funciones apuntadas pero sin descompilar (las que el código
+  llama); 382 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 

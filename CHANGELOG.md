@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Los enjambres cuando se va un mapa
+
+Una función (126 bytes) en `ai/swarms.c`. De 2196
+funciones se pasa a 2197, el 19,50 % de las del juego (el 11,397 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `swarms_dispose_from_old_map` | `0x0028d9d0` | `ai/swarms.c` |
+
+### Lo que se sabe
+
+- `swarms_dispose_from_old_map` (antes `unknown_0028d9d0`, llamada por
+  `ai_dispose_from_old_map`) recorre los objetos del tipo 12 con el
+  iterador de objetos; a los que tienen a cero el número de `0x134` les
+  pone a `NONE` tres números de lo que tienen en el desplazamiento que da
+  su `short` de `0x13A` (su enjambre, parece). Al final marca la tabla
+  `"swarm"` como no utilizable.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  650.
+- Que el tipo 12 sean las criaturas y que esos tres números sean el
+  enjambre al que pertenecen es una suposición.
+- En este hito se pasaron las pruebas de la función, `test_ai_old_map` y
+  `test_data_modules_632`. Hay una batería completa en marcha sobre el hito
+  637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — La física cierra sus repartidores de memoria
 
 Una función (74 bytes) en `physics/havok.c`. De 2195

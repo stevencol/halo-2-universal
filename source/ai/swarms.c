@@ -6,7 +6,10 @@ the names that the game gives to its tables of data ("swarm").
 */
 
 #include "cseries/cseries.h"
+#include <stdint.h>
+
 #include "memory/data.h"
+#include "objects/objects.h"
 #include "saved games/game_state.h"
 
 /* ---------- constants */
@@ -47,4 +50,36 @@ void swarms_initialize(
 		*(long *)unknown= NONE;
 		unknown+= SWARM_UNKNOWN_SIZE;
 	}
+}
+
+/* 0x0028d9d0: when a map goes, each object of the type 12 (the creatures, it
+seems) whose number at 0x134 is zero forgets its swarm: what it has at the
+offset that its short at 0x13A gives gets NONE for three numbers. And the
+table cannot be used */
+void swarms_dispose_from_old_map(
+	void)
+{
+	struct object_iterator iterator;
+	byte *object;
+
+	iterator.signature= OBJECT_ITERATOR_SIGNATURE;
+	iterator.type_mask= 0x1000;
+	iterator.header_flags= 0;
+	iterator.absolute_index= 0;
+	iterator.index= NONE;
+	while ((object= object_iterator_next(&iterator))!=NULL)
+	{
+		if (*(long *)(object+0x134)==0)
+		{
+			byte *unknown= (byte *)((uintptr_t)object+*(short *)(object+0x13A));
+
+			if (unknown)
+			{
+				*(long *)(unknown+8)= NONE;
+				*(long *)(unknown+4)= NONE;
+				*(long *)(unknown+0xC)= NONE;
+			}
+		}
+	}
+	swarm_data->valid= FALSE;
 }

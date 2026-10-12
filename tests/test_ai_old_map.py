@@ -35,7 +35,7 @@ def run(t) -> None:
             "ai_dispose_from_old_map",
             globals={**globals_(random_), **{name: Buffer(random_.randbytes(0x4C + 0x10)) for name in TABLES}},
             externals={
-                "unknown_0028d9d0": lambda harness, arguments: 0,
+                "swarms_dispose_from_old_map": lambda harness, arguments: 0,
                 "unknown_00292e00": lambda harness, arguments: 0,
             },
         )

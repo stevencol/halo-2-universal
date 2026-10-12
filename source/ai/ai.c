@@ -216,7 +216,7 @@ extern struct data_array *squad_data;
 extern struct data_array *squad_group_data;
 extern struct data_array *vocalization_record_data;
 
-void unknown_0028d9d0(void);
+void swarms_dispose_from_old_map(void);
 void unknown_00292e00(void);
 void unknown_00292f60(void);
 
@@ -239,7 +239,7 @@ void ai_dispose_from_old_map(
 		prop_ref_data->valid= FALSE;
 		tracking_data->valid= FALSE;
 		actor_data->valid= FALSE;
-		unknown_0028d9d0();
+		swarms_dispose_from_old_map();
 		vocalization_record_data->valid= FALSE;
 		unknown_00292e00();
 		ai_globals[1]= FALSE;

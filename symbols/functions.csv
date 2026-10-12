@@ -2696,7 +2696,7 @@ address,name,source,arguments,returns,convention
 00295970,ai_unknown_00295970,source/ai/ai.c,,void
 001c8010,unknown_001c8010,,,void
 00200b30,unknown_00200b30,,,void
-0028d9d0,unknown_0028d9d0,,,void
+0028d9d0,swarms_dispose_from_old_map,source/ai/swarms.c,,void
 00292e00,unknown_00292e00,,,void
 00292f60,unknown_00292f60,,,void
 000bffa0,lights_initialize,source/objects/lights.c,,void
