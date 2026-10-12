@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Siete funciones pequeñas: la hora de la partida y otras
+
+Siete funciones (182 bytes) en cinco archivos. De 2297
+funciones se pasa a 2304, el 20,45 % de las del juego (el 11,782 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_time_get_seconds` | `0x00146630` | `game/game_time.c` |
+| `game_time_get` | `0x00146650` | `game/game_time.c` |
+| `game_time_get_paused` | `0x00146840` | `game/game_time.c` |
+| `local_user_has_player` | `0x0014ddc0` | `game/players.c` |
+| `swarm_iterator_new` | `0x00290c50` | `ai/swarms.c` |
+| `clump_unknown_00268c60` | `0x00268c60` | `ai/ai.c` |
+| `game_unknown_00240140` | `0x00240140` | `game/game.c` |
+
+### Lo que se sabe
+
+- `game_time_get_seconds` da la hora de la partida en segundos (cero si aún
+  no hay); `game_time_get`, en tics; `game_time_get_paused` dice si está
+  parada.
+- `local_user_has_player` (jugador local en `ecx`) dice si un jugador de
+  esta consola tiene jugador en la partida.
+- `swarm_iterator_new` (en `eax`) prepara un recorrido de los enjambres, si
+  hay IA en el mapa.
+- `clump_unknown_00268c60` (en `eax`) apunta la hora de la partida en un
+  elemento de la tabla `"clump"` (`+0x38`).
+- `game_unknown_00240140` devuelve 9 si el número de `0x180` de la partida
+  es 9, y 1 si no.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  707.
+- Las dos últimas llevan su dirección por nombre porque no se sabe para qué
+  son. Todas salieron de `find_small_users.py`.
+- En este hito se pasaron las pruebas de las siete funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Las dos entidades de red del motor de la partida
 
 Seis funciones (320 bytes) en `game/game_engine.c`. De 2291

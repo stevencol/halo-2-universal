@@ -108,3 +108,21 @@ void swarm_unknown_0028da50(
 	*(short *)(unknown+0x64)= NONE;
 	*(real_point3d *)(unknown+0x74)= *unknown_00468788;
 }
+
+/* 0x004f55d0, of ai.c: what the minds keep; its second byte says whether
+there are minds in this map */
+extern byte *ai_globals;
+
+/* 0x00290c50: a walk over the swarms starts, if there are minds in the map:
+the table, and three numbers that are NONE */
+void swarm_iterator_new(
+	byte *iterator)
+{
+	if (ai_globals[1])
+	{
+		*(struct data_array **)(iterator+4)= swarm_data;
+		*(long *)(iterator+0xC)= NONE;
+		*(long *)(iterator+8)= NONE;
+		*(long *)(iterator+0x10)= NONE;
+	}
+}

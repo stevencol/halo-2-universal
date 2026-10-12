@@ -383,3 +383,11 @@ void ai_unknown_001c8010(
 		ai_unknown_001c80f0((*(const short *)player<<16)|absolute_index);
 	}
 }
+
+/* 0x00268c60: a clump keeps the time of the game, at 0x38 (when it was last
+looked at, perhaps). It is of the file of the clumps, which is not known */
+void clump_unknown_00268c60(
+	long clump_index)
+{
+	*(long *)((byte *)clump_data->data+(clump_index&0xFFFF)*0x50+0x38)= (long)game_time_globals->time;
+}

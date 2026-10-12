@@ -2830,3 +2830,10 @@ address,name,source,arguments,returns,convention
 000a7810,game_engine_unknown_000a7810,source/game/game_engine.c,stack,void,stdcall
 001e98e0,unknown_001e98e0,,stack stack stack,void,stdcall
 000b58c0,unknown_000b58c0,,stack stack,void,stdcall
+00146630,game_time_get_seconds,source/game/game_time.c,,real:xmm0
+00146650,game_time_get,source/game/game_time.c,,int
+00146840,game_time_get_paused,source/game/game_time.c,,bool
+0014ddc0,local_user_has_player,source/game/players.c,ecx,bool
+00290c50,swarm_iterator_new,source/ai/swarms.c,eax,void
+00268c60,clump_unknown_00268c60,source/ai/ai.c,eax,void
+00240140,game_unknown_00240140,source/game/game.c,,int

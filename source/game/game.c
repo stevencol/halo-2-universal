@@ -1232,3 +1232,11 @@ long game_variant_unknown_00161c90(
 	return 1;
 }
 
+
+/* 0x00240140: 9 if the number that the game has at 0x180 is 9, and 1 if
+not. The game has it far from the rest of this file */
+long game_unknown_00240140(
+	void)
+{
+	return *(const long *)((const byte *)main_game_globals+0x180)==9 ? 9 : 1;
+}

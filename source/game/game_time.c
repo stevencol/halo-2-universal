@@ -53,3 +53,32 @@ void game_time_dispose_from_old_map(
 		globals->initialized= FALSE;
 	}
 }
+
+/* 0x00146630: the time of the game in seconds; zero when there is no time
+of the game yet */
+float game_time_get_seconds(
+	void)
+{
+	const struct game_time_globals *globals= game_time_globals;
+
+	if (globals && globals->initialized)
+	{
+		return (float)(long)globals->time*globals->seconds_per_tick;
+	}
+
+	return 0.0f;
+}
+
+/* 0x00146650: the time of the game, in ticks */
+long game_time_get(
+	void)
+{
+	return (long)game_time_globals->time;
+}
+
+/* 0x00146840: whether the time of the game is there and stopped */
+boolean game_time_get_paused(
+	void)
+{
+	return game_time_globals->initialized && game_time_globals->paused;
+}

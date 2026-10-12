@@ -188,3 +188,16 @@ void players_initialize_for_new_map(
 	ai_unknown_001c7fe0();
 	*(long *)((byte *)players_globals+0x98)= NONE;
 }
+
+/* 0x0014ddc0: whether one of the players of this console (0 to 3, or NONE)
+has a player of the game */
+boolean local_user_has_player(
+	long user_index)
+{
+	if (user_index!=NONE)
+	{
+		return *(const long *)((const byte *)players_globals+user_index*4+0xC)!=NONE;
+	}
+
+	return FALSE;
+}
