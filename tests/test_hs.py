@@ -40,5 +40,5 @@ def run(t) -> None:
                 "object_list_header_data": Buffer(random_.randbytes(0x4C)),
                 "list_object_data": Buffer(random_.randbytes(0x4C)),
             },
-            externals={"unknown_0020a850": note, "unknown_00209290": note},
+            externals={"unknown_0020a850": note, "hs_runtime_dispose_from_old_map": note},
         )

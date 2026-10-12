@@ -2658,7 +2658,7 @@ address,name,source,arguments,returns,convention
 0001e1c0,unknown_0001e1c0,,,void
 00036ab0,unknown_00036ab0,,,void
 0020a850,unknown_0020a850,,,void
-00209290,unknown_00209290,,,void
+00209290,hs_runtime_dispose_from_old_map,source/hs/hs_runtime.c,,void
 001ded00,object_lists_initialize,source/hs/object_lists.c,,void
 00208ff0,hs_runtime_initialize,source/hs/hs_runtime.c,,void
 002a09c0,unknown_002a09c0,,,void

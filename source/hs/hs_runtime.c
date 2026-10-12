@@ -54,3 +54,45 @@ void hs_runtime_initialize(
 	}
 	unknown_0020a1a0();
 }
+
+enum
+{
+	/* the globals of the scripts below this one are the game's own; those
+	from it on are of the scripts of the map */
+	HS_FIRST_MAP_GLOBAL_INDEX= 0x41D
+};
+
+/* 0x004f9380, of hs.c: the globals of the scripts */
+extern struct data_array *hs_global_data;
+
+/* 0x004f9388: cleared when the map goes (whether the scripts of the map run,
+perhaps) */
+boolean unknown_004f9388;
+
+/* 0x00209290: when a map goes, the threads cannot be used, the globals of
+the scripts of the map are deleted (the game has the walk over the table
+written here), and the byte is cleared */
+void hs_runtime_dispose_from_old_map(
+	void)
+{
+	long absolute_index= NONE;
+
+	hs_thread_data->valid= FALSE;
+	for (;;)
+	{
+		long global_index;
+
+		absolute_index= data_next_absolute_index(hs_global_data, absolute_index+1);
+		if (absolute_index==NONE)
+		{
+			break;
+		}
+		global_index= (*(const short *)((const byte *)hs_global_data->data+absolute_index*hs_global_data->size)<<16)|
+			absolute_index;
+		if ((global_index&0xFFFF)>=HS_FIRST_MAP_GLOBAL_INDEX)
+		{
+			datum_delete(hs_global_data, global_index);
+		}
+	}
+	unknown_004f9388= FALSE;
+}

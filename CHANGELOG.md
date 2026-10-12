@@ -2,6 +2,36 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — El motor de los guiones cuando se va un mapa
+
+Una función (123 bytes) en `hs/hs_runtime.c`. De 2265
+funciones se pasa a 2266, el 20,12 % de las del juego (el 11,707 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `hs_runtime_dispose_from_old_map` | `0x00209290` | `hs/hs_runtime.c` |
+
+### Lo que se sabe
+
+- `hs_runtime_dispose_from_old_map` (antes `unknown_00209290`, la llama
+  `hs_dispose_from_old_map`): marca la tabla de hilos como no utilizable,
+  borra las variables globales de los guiones cuyo índice es `0x41D` o
+  mayor, y quita una marca (`0x4f9388`).
+- De ahí se deduce que las primeras 1053 globales son las del propio juego
+  (las que existen siempre) y las siguientes las de los guiones del mapa.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  696.
+- Qué dice exactamente la marca de `0x4f9388` no se sabe.
+- En este hito se pasaron las pruebas de `test_hs*` (seis funciones). Hay
+  una batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Si una luz se ve
 
 Una función (237 bytes) en `objects/lights.c`. De 2264

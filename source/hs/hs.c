@@ -40,7 +40,7 @@ struct data_array *list_object_data;
 
 /* 0x0020a850, 0x00209290: what else stops with the scripts when a map goes */
 void unknown_0020a850(void);
-void unknown_00209290(void);
+void hs_runtime_dispose_from_old_map(void);
 
 /* ---------- code */
 
@@ -55,7 +55,7 @@ void hs_dispose(
 
 /* 0x0020a7d0: when a map goes: unknown_0020a850; the table of the nodes,
 unless it had none already, has no elements, as they were those of the map,
-and cannot be used; unknown_00209290; and two more tables cannot be used */
+and cannot be used; hs_runtime_dispose_from_old_map; and two more tables cannot be used */
 void hs_dispose_from_old_map(
 	void)
 {
@@ -69,7 +69,7 @@ void hs_dispose_from_old_map(
 		data->data= NULL;
 		data->valid= FALSE;
 	}
-	unknown_00209290();
+	hs_runtime_dispose_from_old_map();
 	object_list_header_data->valid= FALSE;
 	list_object_data->valid= FALSE;
 }
