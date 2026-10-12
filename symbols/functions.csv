@@ -3027,3 +3027,21 @@ address,name,source,arguments,returns,convention
 002052d0,squad_is_in_group,source/ai/actors.c,ecx esi,bool
 00256790,prop_ref_unknown_00256790,source/ai/actors.c,ecx,bool
 00259e70,command_script_unknown_00259e70,source/ai/actors.c,eax,void
+0025cca0,prop_ref_unknown_0025cca0,source/ai/actors.c,ecx,int
+0025d700,prop_ref_index_get_tracking_unknown70,source/ai/actors.c,ecx,pointer
+0025d740,prop_ref_get_tracking_unknown70,source/ai/actors.c,ecx,pointer
+0025d9b0,prop_ref_unknown_0025d9b0,source/ai/actors.c,ecx,bool
+0025da00,prop_ref_unknown_0025da00,source/ai/actors.c,eax,bool
+0025d970,prop_ref_unknown_0025d970,source/ai/actors.c,eax,bool
+0026add0,prop_unknown_0026add0,source/ai/actors.c,ecx,bool
+0026b8a0,prop_unknown_0026b8a0,source/ai/actors.c,ecx ebx,bool
+0026b230,clump_find_prop,source/ai/actors.c,ecx edi,int
+00268810,clump_unknown_00268810,source/ai/actors.c,eax,void
+0026b630,clump_unknown_0026b630,source/ai/actors.c,stack stack stack,short,stdcall
+0026b660,clump_unknown_0026b660,source/ai/actors.c,stack stack stack,short,stdcall
+0026b750,unknown_0026b750,source/ai/actors.c,stack stack stack,int,stdcall
+0026b770,clump_unknown_0026b770,source/ai/actors.c,eax,void
+0026bda0,clump_unknown_0026bda0,source/ai/actors.c,eax stack,void
+0026be30,prop_ref_iterator_next,source/ai/actors.c,edx,pointer
+0026e030,dynamic_firing_point_get_point,source/ai/actors.c,stack,pointer,stdcall
+00276990,command_script_unknown_00276990,source/ai/actors.c,stack,void,stdcall

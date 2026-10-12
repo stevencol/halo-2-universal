@@ -2,6 +2,58 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Dieciocho funciones pequeñas de props, clumps y otras tablas
+
+Dieciocho funciones (1042 bytes) en `ai/actors.c`. De 2493
+funciones se pasa a 2511, el 22,29 % de las del juego (el 12,045 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `prop_ref_unknown_0025cca0` | `0x0025cca0` | `ai/actors.c` |
+| `prop_ref_index_get_tracking_unknown70` | `0x0025d700` | `ai/actors.c` |
+| `prop_ref_get_tracking_unknown70` | `0x0025d740` | `ai/actors.c` |
+| `prop_ref_unknown_0025d9b0` | `0x0025d9b0` | `ai/actors.c` |
+| `prop_ref_unknown_0025da00` | `0x0025da00` | `ai/actors.c` |
+| `prop_ref_unknown_0025d970` | `0x0025d970` | `ai/actors.c` |
+| `prop_unknown_0026add0` | `0x0026add0` | `ai/actors.c` |
+| `prop_unknown_0026b8a0` | `0x0026b8a0` | `ai/actors.c` |
+| `clump_find_prop` | `0x0026b230` | `ai/actors.c` |
+| `clump_unknown_00268810` | `0x00268810` | `ai/actors.c` |
+| `clump_unknown_0026b630` | `0x0026b630` | `ai/actors.c` |
+| `clump_unknown_0026b660` | `0x0026b660` | `ai/actors.c` |
+| `unknown_0026b750` | `0x0026b750` | `ai/actors.c` |
+| `clump_unknown_0026b770` | `0x0026b770` | `ai/actors.c` |
+| `clump_unknown_0026bda0` | `0x0026bda0` | `ai/actors.c` |
+| `prop_ref_iterator_next` | `0x0026be30` | `ai/actors.c` |
+| `dynamic_firing_point_get_point` | `0x0026e030` | `ai/actors.c` |
+| `command_script_unknown_00276990` | `0x00276990` | `ai/actors.c` |
+
+### Lo que se sabe
+
+- Varias listas más de la IA: un «clump» nombra su primer prop en `0x14` y
+  cada prop el siguiente en `0x14`; un prop nombra su primera cosa de
+  `prop_ref_data` en `0x18` y cada una la siguiente en `0x34` (y otra lista
+  va por `0x2C`).
+- Una cosa de `prop_ref_data` nombra una de `tracking_data` en `0x14`;
+  cinco funciones van a lo que esa tiene en `0x70`.
+- `dynamic_firing_point_get_point` recibe un número con la cosa en la mitad
+  alta y el punto en la baja, y mira un bit de «en uso» antes de darlo.
+- `clump_unknown_0026b660` mira si pasaron más de 30 segundos.
+- Variable nueva: `unknown_00502410`, un «command script» o NONE.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  727.
+- Los nombres son suposiciones, y todas están en `actors.c` de forma
+  provisional.
+- En este hito se pasaron las pruebas de las dieciocho funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Catorce funciones pequeñas de las tablas de la IA
 
 Catorce funciones (1024 bytes) en `ai/actors.c`. De 2479

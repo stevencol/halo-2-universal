@@ -1862,3 +1862,315 @@ void command_script_unknown_00259e70(
 		command_script[0x46]= 0;
 	}
 }
+
+/* 0x00502410: a command script, or NONE. Which one it is is not known (the
+one that is running?) */
+long unknown_00502410;
+
+#define ACTOR_CLUMP_GET(clump_index) ((byte *)clump_data->data+((clump_index)&0xFFFF)*0x50)
+
+/* what a thing of prop_ref_data has of tracking_data: the place 0x70 after
+the one it names at 0x14, or NULL if it names none. The game looks at
+whether the place of the one it names is nothing */
+static inline __attribute__((always_inline)) byte *prop_ref_get_tracking_unknown70_inline(
+	const byte *prop_ref)
+{
+	long tracking_index= *(const long *)(prop_ref+0x14);
+
+	if (tracking_index!=NONE)
+	{
+		uintptr_t tracking= (uintptr_t)tracking_data->data+(tracking_index&0xFFFF)*0x124;
+
+		if (tracking)
+		{
+			return (byte *)(tracking+0x70);
+		}
+	}
+
+	return NULL;
+}
+
+/* 0x0025cca0: 3 for a thing of prop_ref_data that has 3 for its short at
+0x1C; 0 if not */
+long prop_ref_unknown_0025cca0(
+	long prop_ref_index)
+{
+	if (*(const short *)(ACTOR_PROP_REF_GET(prop_ref_index)+0x1C)==3)
+	{
+		return 3;
+	}
+
+	return 0;
+}
+
+/* 0x0025d700: what a thing of prop_ref_data has of tracking_data */
+byte *prop_ref_index_get_tracking_unknown70(
+	long prop_ref_index)
+{
+	return prop_ref_get_tracking_unknown70_inline(ACTOR_PROP_REF_GET(prop_ref_index));
+}
+
+/* 0x0025d740: the same, for a thing and not its number */
+byte *prop_ref_get_tracking_unknown70(
+	const byte *prop_ref)
+{
+	return prop_ref_get_tracking_unknown70_inline(prop_ref);
+}
+
+/* 0x0025d9b0: whether that of a thing of prop_ref_data names something at
+0x50 */
+boolean prop_ref_unknown_0025d9b0(
+	long prop_ref_index)
+{
+	const byte *unknown70= prop_ref_get_tracking_unknown70_inline(ACTOR_PROP_REF_GET(prop_ref_index));
+
+	if (unknown70)
+	{
+		return *(const long *)(unknown70+0x50)!=NONE;
+	}
+
+	return FALSE;
+}
+
+/* 0x0025da00: the byte at 0x88 of that, for a thing of prop_ref_data that
+has 3 or more for its short at 0x24; false if it has less or names none */
+boolean prop_ref_unknown_0025da00(
+	const byte *prop_ref)
+{
+	if (*(const short *)(prop_ref+0x24)>=3)
+	{
+		const byte *unknown70= prop_ref_get_tracking_unknown70_inline(prop_ref);
+
+		if (unknown70)
+		{
+			return unknown70[0x88];
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x0025d970: whether that byte is 0, for the same things; false for the
+others */
+boolean prop_ref_unknown_0025d970(
+	const byte *prop_ref)
+{
+	if (*(const short *)(prop_ref+0x24)>=3)
+	{
+		const byte *unknown70= prop_ref_get_tracking_unknown70_inline(prop_ref);
+
+		if (unknown70)
+		{
+			return !unknown70[0x88];
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x0026add0: whether a prop has 1 or more for its short at 4, or one of
+its things of prop_ref_data (from the one at 0x18, each naming the next at
+0x34) has 1 or more for its short at 0x24 */
+boolean prop_unknown_0026add0(
+	long prop_index)
+{
+	const byte *prop= ACTOR_PROP_GET(prop_index);
+	long prop_ref_index;
+
+	if (*(const short *)(prop+4)>=1)
+	{
+		return TRUE;
+	}
+	for (prop_ref_index= *(const long *)(prop+0x18); prop_ref_index!=NONE; )
+	{
+		const byte *prop_ref= ACTOR_PROP_REF_GET(prop_ref_index);
+
+		if (*(const short *)(prop_ref+0x24)>=1)
+		{
+			return TRUE;
+		}
+		prop_ref_index= *(const long *)(prop_ref+0x34);
+	}
+
+	return FALSE;
+}
+
+/* 0x0026b8a0: whether one of the things of prop_ref_data of a prop has 1 or
+2 for its short at 0x24 and names something other than a value at 4 */
+boolean prop_unknown_0026b8a0(
+	long prop_index,
+	long value)
+{
+	long prop_ref_index= *(const long *)(ACTOR_PROP_GET(prop_index)+0x18);
+
+	while (prop_ref_index!=NONE)
+	{
+		const byte *prop_ref= ACTOR_PROP_REF_GET(prop_ref_index);
+		short unknown24= *(const short *)(prop_ref+0x24);
+
+		prop_ref_index= *(const long *)(prop_ref+0x34);
+		if (unknown24>=1 && unknown24<=2 && *(const long *)(prop_ref+4)!=value)
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x0026b230: the prop of a clump (from the one at 0x14, each naming the
+next at 0x14) that names a value at 8; NONE if none */
+long clump_find_prop(
+	long clump_index,
+	long value)
+{
+	long prop_index= *(const long *)(ACTOR_CLUMP_GET(clump_index)+0x14);
+
+	while (prop_index!=NONE)
+	{
+		const byte *prop= ACTOR_PROP_GET(prop_index);
+
+		if (*(const long *)(prop+8)==value)
+		{
+			return prop_index;
+		}
+		prop_index= *(const long *)(prop+0x14);
+	}
+
+	return NONE;
+}
+
+/* 0x00268810: a clump has 1 for its byte at 0x1C and its short at 0x24 */
+void clump_unknown_00268810(
+	long clump_index)
+{
+	byte *clump= ACTOR_CLUMP_GET(clump_index);
+
+	clump[0x1C]= 1;
+	*(short *)(clump+0x24)= 1;
+}
+
+/* 0x0026b630: a clump has 0 for its short at 0x3E. Always NONE */
+short __attribute__((stdcall)) clump_unknown_0026b630(
+	long clump_index,
+	long unknown1,
+	long unknown2)
+{
+	(void)unknown1;
+	(void)unknown2;
+	*(short *)(ACTOR_CLUMP_GET(clump_index)+0x3E)= 0;
+
+	return NONE;
+}
+
+/* 0x0026b660: if more than 30 seconds have gone by since the time that a
+clump has at 0x28, it has 0 for its byte at 0x30 and the answer is 0; NONE if
+not */
+short __attribute__((stdcall)) clump_unknown_0026b660(
+	long clump_index,
+	long unknown1,
+	long unknown2)
+{
+	byte *clump= ACTOR_CLUMP_GET(clump_index);
+
+	(void)unknown1;
+	(void)unknown2;
+	if ((float)(long)(game_time_globals->time-*(const unsigned long *)(clump+0x28))*game_time_globals->seconds_per_tick>30.0f)
+	{
+		clump[0x30]= 0;
+
+		return 0;
+	}
+
+	return NONE;
+}
+
+/* 0x0026b750: whether something has more than zero for its real number at
+0x14 */
+long __attribute__((stdcall)) unknown_0026b750(
+	long unknown1,
+	long unknown2,
+	const byte *unknown3)
+{
+	(void)unknown1;
+	(void)unknown2;
+
+	return *(const float *)(unknown3+0x14)>0.0f;
+}
+
+/* 0x0026b770: a clump, if there is one, has the time of the game for its
+number at 0x40 */
+void clump_unknown_0026b770(
+	long clump_index)
+{
+	if (clump_index!=NONE)
+	{
+		*(unsigned long *)(ACTOR_CLUMP_GET(clump_index)+0x40)= game_time_globals->time;
+	}
+}
+
+/* 0x0026bda0: a walk takes what a clump names at 0x18 for its second
+number */
+void clump_unknown_0026bda0(
+	long clump_index,
+	long *iterator)
+{
+	iterator[1]= *(const long *)(ACTOR_CLUMP_GET(clump_index)+0x18);
+}
+
+/* 0x0026be30: the next thing of prop_ref_data of a walk, or NULL when there
+are no more: each names the next at 0x2C */
+byte *prop_ref_iterator_next(
+	long *iterator)
+{
+	long prop_ref_index= iterator[1];
+
+	if (prop_ref_index!=NONE)
+	{
+		byte *prop_ref= (byte *)ACTOR_PROP_REF_GET(prop_ref_index);
+
+		iterator[0]= prop_ref_index;
+		iterator[1]= *(const long *)(prop_ref+0x2C);
+
+		return prop_ref;
+	}
+
+	return NULL;
+}
+
+/* 0x0026e030: one of the points of 0x20 bytes of a thing of
+dynamic_firing_point_data. The number has the thing in its high half (15
+bits) and the point in its low one; NULL if the point is not one of those
+that the thing counts at 8, or the thing does not have its bit at 0x40 */
+byte *__attribute__((stdcall)) dynamic_firing_point_get_point(
+	long index)
+{
+	byte *dynamic_firing_point= (byte *)dynamic_firing_point_data->data+((index>>16)&0x7FFF)*0x484;
+	long point= (short)index;
+
+	if (point>=0 && point<*(const short *)(dynamic_firing_point+8))
+	{
+		if (*(const unsigned long *)(dynamic_firing_point+0x40+(point>>5)*4)&(1<<(point&0x1F)))
+		{
+			return dynamic_firing_point+0x44+point*0x20;
+		}
+	}
+
+	return NULL;
+}
+
+/* 0x00276990: the command script of unknown_00502410, if there is one,
+takes a value for its number at 0x28, 1 for its short at 4 and zero for its
+real number at 8 */
+void __attribute__((stdcall)) command_script_unknown_00276990(
+	long value)
+{
+	if (unknown_00502410!=NONE)
+	{
+		byte *command_script= (byte *)command_script_data->data+(unknown_00502410&0xFFFF)*0xD4;
+
+		*(short *)(command_script+4)= 1;
+		*(long *)(command_script+0x28)= value;
+		*(float *)(command_script+8)= 0.0f;
+	}
+}
