@@ -347,7 +347,7 @@ address,name,source,arguments,returns,convention
 0010aab0,object_unknown_0010a980_dispose_from_old_map,source/objects/object_unknown_0010a980.c,,void
 0011be20,game_unknown_0011be20_initialize_for_new_map,source/game/game_unknown_0011be20.c,,void
 0011be40,game_unknown_0011be20_dispose_from_old_map,source/game/game_unknown_0011be20.c,,void
-0011cc10,unknown_0011cc10,,,void
+0011cc10,shell_memory_initialize_for_new_map,source/shell/shell.c,,void
 00125690,sound_initialize_for_new_map,source/sound/sound_manager.c,,void
 001257b0,sound_dispose_from_old_map,source/sound/sound_manager.c,,void
 00125920,sound_initialize_for_new_structure_bsp,source/sound/sound_manager.c,,void
@@ -362,7 +362,7 @@ address,name,source,arguments,returns,convention
 0013e5c7,unknown_0013e5c7,,,void
 0013e5d6,unknown_0013e5d6,,,void
 0013e610,unknown_0013e610,,,void
-00146240,unknown_00146240,,,void
+00146240,random_math_initialize,source/math/random_math.c,,void
 00146550,game_time_initialize,source/game/game_time.c,,void
 001465b0,game_time_initialize_for_new_map,source/game/game_time.c,,void
 00146610,game_time_dispose_from_old_map,source/game/game_time.c,,void
@@ -420,9 +420,9 @@ address,name,source,arguments,returns,convention
 0019bd50,levels_dispose,source/main/levels.c,,void
 0019c190,levels_initialize_for_new_map,source/main/levels.c,,void
 0019c1d0,levels_dispose_from_old_map,source/main/levels.c,,void
-001c25a0,unknown_001c25a0,,,void
-001c2600,unknown_001c2600,,,void
-001c2670,unknown_001c2670,,,void
+001c25a0,havok_initialize,source/physics/havok.c,,void
+001c2600,havok_dispose,source/physics/havok.c,,void
+001c2670,havok_initialize_for_new_map,source/physics/havok.c,,void
 001c2690,unknown_001c2690,,,void
 001c27a0,unknown_001c27a0,,,void
 001c7790,ai_initialize,source/ai/ai.c,,void
@@ -2721,3 +2721,7 @@ address,name,source,arguments,returns,convention
 00210f00,unknown_00210f00,,,void
 00210e20,unknown_00210e20,,,void
 00210e80,unknown_00210e80,,,void
+001edbc0,unknown_001edbc0,,,void
+00146b30,unknown_00146b30,,,void
+00146b80,unknown_00146b80,,,void
+00146de0,unknown_00146de0,,,void

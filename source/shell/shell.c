@@ -514,3 +514,12 @@ void xmem_static_buffer_allocate(
 	xmem_static_buffer= pointer;
 	xmem_static_buffer_used= FALSE;
 }
+
+/* 0x0011cc10: the third function of a part of the game (game.c): for a new
+map, the first byte of what is kept of the shell's memory is set. The game
+has it far from the rest of this file */
+void shell_memory_initialize_for_new_map(
+	void)
+{
+	*(boolean *)&shell_memory_globals.unknown0= TRUE;
+}

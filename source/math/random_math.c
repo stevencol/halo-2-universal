@@ -61,3 +61,23 @@ real real_seed_random_range(
 
 	return (upper_bound-lower_bound)*random + lower_bound;
 }
+
+/* 0x004e7408, of game.c: where the game keeps the number that its random
+numbers come from */
+extern unsigned long *global_random_seed_reference;
+
+void *game_state_malloc(long size);
+
+/* 0x00146240: the first function of a part of the game (game.c): the two
+numbers that the random numbers come from take their memory in the state of
+the game (game_state_malloc, which the game has written here); the first is
+the one that every game starts with (0x78A8, GAME_DEFAULT_RANDOM_SEED of
+game.h), and the second comes from the time (random_seed_from_time, written
+here too) */
+void random_math_initialize(
+	void)
+{
+	global_random_seed_reference= game_state_malloc(2*(long)sizeof(unsigned long));
+	global_random_seed_reference[0]= 0x78A8;
+	global_random_seed_reference[1]= (unsigned long)random_seed_from_time();
+}

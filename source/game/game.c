@@ -138,7 +138,7 @@ void object_placement_initialize_for_new_structure_bsp(void);
 void unknown_000d4e60(void);
 void game_unknown_0011be20_initialize_for_new_map(void);
 void game_unknown_0011be20_dispose_from_old_map(void);
-void unknown_0011cc10(void);
+void shell_memory_initialize_for_new_map(void);
 void sound_initialize_for_new_map(void);
 void sound_dispose_from_old_map(void);
 void sound_initialize_for_new_structure_bsp(void);
@@ -153,7 +153,7 @@ void game_unknown_0013bf00_dispose_from_old_map(void);
 void unknown_0013e5c7(void);
 void unknown_0013e5d6(void);
 void unknown_0013e610(void);
-void unknown_00146240(void);
+void random_math_initialize(void);
 void game_time_initialize(void);
 void game_time_initialize_for_new_map(void);
 void game_time_dispose_from_old_map(void);
@@ -211,9 +211,9 @@ void levels_initialize(void);
 void levels_dispose(void);
 void levels_initialize_for_new_map(void);
 void levels_dispose_from_old_map(void);
-void unknown_001c25a0(void);
-void unknown_001c2600(void);
-void unknown_001c2670(void);
+void havok_initialize(void);
+void havok_dispose(void);
+void havok_initialize_for_new_map(void);
 void unknown_001c2690(void);
 void unknown_001c27a0(void);
 void ai_initialize(void);
@@ -340,8 +340,8 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 {
 	{transport_initialize, transport_dispose},
 	{no_operation, no_operation},
-	{no_operation, no_operation, unknown_0011cc10, no_operation},
-	{unknown_00146240, no_operation},
+	{no_operation, no_operation, shell_memory_initialize_for_new_map, no_operation},
+	{random_math_initialize, no_operation},
 	{unknown_0008d9f0, unknown_0008dd70},
 	{no_operation, no_operation},
 	{no_operation, no_operation},
@@ -397,7 +397,7 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{no_operation, no_operation, no_operation, no_operation},
 	{object_placement_initialize, no_operation, object_placement_initialize_for_new_map, no_operation, object_placement_initialize_for_new_structure_bsp, no_operation, (game_system_structure_bsp_proc)unknown_000d4e60},
 	{ai_initialize, ai_dispose, ai_initialize_for_new_map, ai_dispose_from_old_map, unknown_001c7bb0, ai_dispose_from_old_structure_bsp},
-	{unknown_001c25a0, unknown_001c2600, unknown_001c2670, no_operation, unknown_001c2690, unknown_001c27a0},
+	{havok_initialize, havok_dispose, havok_initialize_for_new_map, no_operation, unknown_001c2690, unknown_001c27a0},
 	{no_operation, no_operation, no_operation, no_operation, unknown_0014b6a0, no_operation},
 	{no_operation, no_operation, no_operation, no_operation, no_operation, no_operation},
 	{no_operation, no_operation, no_operation, no_operation, no_operation, no_operation},

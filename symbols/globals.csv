@@ -537,3 +537,6 @@ address,name,source
 004701ec,unknown_004701ec,source/game/game_unknown_00225f80.c
 004e6740,unknown_004e6740,source/game/game_unknown_00134d90.c
 004f93a4,unknown_004f93a4,source/game/game_unknown_00210db0.c
+0051e9a0,unknown_0051e9a0,source/physics/havok.c
+00479888,unknown_00479888,source/physics/havok.c
+0051e9cc,unknown_0051e9cc,source/physics/havok.c

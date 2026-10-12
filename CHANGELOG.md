@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — La parte de la física arranca y se para; la semilla de los números al azar
+
+Cinco funciones (unos 330 bytes): tres en el archivo nuevo `physics/havok.c`, una en
+`math/random_math.c` y una en `shell/shell.c`. De 2184
+funciones se pasa a 2189, el 19,43 % de las del juego (el 11,382 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_initialize` | `0x001c25a0` | `physics/havok.c` |
+| `havok_dispose` | `0x001c2600` | `physics/havok.c` |
+| `havok_initialize_for_new_map` | `0x001c2670` | `physics/havok.c` |
+| `random_math_initialize` | `0x00146240` | `math/random_math.c` |
+| `shell_memory_initialize_for_new_map` | `0x0011cc10` | `shell/shell.c` |
+
+### Lo que se sabe
+
+- **La parte `unknown_001c25a0` de la tabla de `game.c` es la física**:
+  su arranque llama a `impacts_initialize` y `havok_components_initialize`
+  (hito 630). `havok_initialize` pide además 4 bytes del estado de la
+  partida y llama a tres funciones más; `havok_dispose` devuelve una
+  memoria de la consola (`VirtualFree`), la tabla de componentes y las de
+  los impactos; `havok_initialize_for_new_map` pone 2000 números a `NONE`.
+- `random_math_initialize` (antes `unknown_00146240`) pide del estado de la
+  partida los dos números de los que salen los números al azar: el primero
+  empieza siempre en `0x78A8` y el segundo sale de la hora
+  (`random_seed_from_time`, que el juego tiene escrita dentro).
+- `shell_memory_initialize_for_new_map` (antes `unknown_0011cc10`) pone a
+  uno el primer byte de `shell_memory_globals`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  645.
+- De la parte de la física faltan la quinta y la sexta función
+  (`0x1c2690`, `0x1c27a0`) y las cuatro a las que llaman estas
+  (`0x1edbc0`, `0x146b30`, `0x146b80`, `0x146de0`).
+- Que `0x5107fc` sea de verdad de la memoria del *shell* viene de un hito
+  anterior; esta función solo le pone un byte.
+- En este hito se pasaron las pruebas de `test_havok*`. Hay una batería
+  completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Tres partes pequeñas más de la tabla del juego
 
 Ocho funciones (unos 230 bytes) en tres archivos provisionales nuevos de `game/`.
