@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Ocho funciones pequeñas más de los objetos
+
+Ocho funciones (427 bytes) en `units/units.c`. De 2368
+funciones se pasa a 2376, el 21,09 % de las del juego (el 11,874 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unit_unknown_0011a960` | `0x0011a960` | `units/units.c` |
+| `unit_unknown_002013c0` | `0x002013c0` | `units/units.c` |
+| `object_definition_get_unknown124` | `0x0011ba10` | `units/units.c` |
+| `object_definition_unknown1F0_is_6` | `0x0020bb70` | `units/units.c` |
+| `object_unknown_0015b1e0` | `0x0015b1e0` | `units/units.c` |
+| `object_unknown_001794a0` | `0x001794a0` | `units/units.c` |
+| `object_unknown_001b8c80` | `0x001b8c80` | `units/units.c` |
+| `object_unknown_001c3980` | `0x001c3980` | `units/units.c` |
+
+### Lo que se sabe
+
+- `object_unknown_001b8c80` sube por los objetos sobre los que está montado
+  uno mientras sean del tipo 1 y devuelve el último (¿el vehículo de más
+  arriba?).
+- `object_unknown_001c3980` pone el bit 0 de `0xC0` de un objeto y lo
+  cuenta en el número de `0x51e9a0`, que es el que `havok_initialize` pone
+  a cero: la física lleva la cuenta de los objetos con ese bit.
+- Dos miran el bit 18 de un número de lo que el objeto tiene en `0x346`
+  (y que el objeto no tenga el bit 2 de `0x10A`); dos más leen la
+  definición; y las otras dos combinan datos ya vistos.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  715.
+- Nombres por dirección, y en `units.c` de forma provisional.
+- En este hito se pasaron las pruebas de las ocho funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Nueve consultas más, casi todas de las armas
 
 Nueve funciones (492 bytes) en `units/units.c`. De 2359

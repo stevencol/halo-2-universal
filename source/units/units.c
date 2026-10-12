@@ -752,3 +752,129 @@ void object_set_unknown12C_bit0(
 		object[0x12C]&= ~1;
 	}
 }
+
+/* 0x0011a960: the bit 18 of the number at 8 of what an object has at 0x346,
+for an object that there is and that does not have the bit 2 of its byte at
+0x10A; false for the others */
+boolean unit_unknown_0011a960(
+	long unit_index)
+{
+	if (unit_index!=NONE)
+	{
+		const byte *unit= UNIT_OBJECT_GET(unit_index);
+
+		if (!((unit[0x10A]>>2)&1))
+		{
+			return (*(const unsigned long *)(UNIT_UNKNOWN346(unit)+8)>>18)&1;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x002013c0: whether an object has neither that bit 2 nor that bit 18 */
+boolean unit_unknown_002013c0(
+	long unit_index)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+
+	if ((unit[0x10A]>>2)&1)
+	{
+		return FALSE;
+	}
+	if ((*(const unsigned long *)(UNIT_UNKNOWN346(unit)+8)>>18)&1)
+	{
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+/* 0x0011ba10: the number at 0x124 of the definition of an object */
+long object_definition_get_unknown124(
+	long object_index)
+{
+	return *(const long *)(UNIT_DEFINITION_GET(UNIT_OBJECT_GET(object_index))+0x124);
+}
+
+/* 0x0020bb70: whether the short at 0x1F0 of the definition of an object is 6 */
+boolean object_definition_unknown1F0_is_6(
+	long object_index)
+{
+	return *(const short *)(UNIT_DEFINITION_GET(UNIT_OBJECT_GET(object_index))+0x1F0)==6;
+}
+
+/* 0x0015b1e0: an object has 0xFF for its byte at 0xAF, and, unless this
+console only predicts, one of the things of 8 bytes of a table starts with
+NONE */
+void object_unknown_0015b1e0(
+	long object_index,
+	long *table,
+	long index)
+{
+	byte *object= (byte *)UNIT_OBJECT_GET(object_index);
+
+	if (main_game_globals->options.simulation!=_game_simulation_predicted)
+	{
+		table[index*2]= NONE;
+	}
+	object[0xAF]= 0xFF;
+}
+
+/* 0x001794a0: whether the place of an object in the table has the bit 0 of
+its flags and another object is not as object_unknown_000b9ce0 says */
+boolean object_unknown_001794a0(
+	long object_index,
+	long other_object_index)
+{
+	if (((const struct object_header_datum *)object_header_data->data)[object_index&0xFFFF].flags&1)
+	{
+		if (!object_unknown_000b9ce0(other_object_index))
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x001b8c80: the last of the objects of the type 1, from an object up
+through those that each is on, before one that is not of that type; NONE if
+the first is not */
+long object_unknown_001b8c80(
+	long object_index)
+{
+	long result= NONE;
+
+	while (object_index!=NONE)
+	{
+		const byte *object= UNIT_OBJECT_GET(object_index);
+
+		if (object[0xAA]!=1)
+		{
+			break;
+		}
+		result= object_index;
+		object_index= *(const long *)(object+0x14);
+	}
+
+	return result;
+}
+
+/* 0x0051e9a0, of havok.c: its number counts the objects that have the bit
+0 of their short at 0xC0 */
+extern long *unknown_0051e9a0;
+
+/* 0x001c3980: an object takes the bit 0 of its short at 0xC0, and is counted,
+if it did not have it. It is among those of the physics in the game */
+void object_unknown_001c3980(
+	long object_index)
+{
+	byte *object= (byte *)UNIT_OBJECT_GET(object_index);
+
+	if (!(object[0xC0]&1))
+	{
+		*(short *)(object+0xC0)|= 1;
+		(*unknown_0051e9a0)++;
+	}
+}

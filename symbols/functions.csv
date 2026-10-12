@@ -2901,3 +2901,11 @@ address,name,source,arguments,returns,convention
 0010f5f0,object_unknown_0010f5f0,source/units/units.c,eax,int
 0010f8f0,object_unknown_0010f8f0,source/units/units.c,eax,int
 00118fe0,object_set_unknown12C_bit0,source/units/units.c,eax ecx,void
+0011a960,unit_unknown_0011a960,source/units/units.c,ecx,bool
+002013c0,unit_unknown_002013c0,source/units/units.c,ecx,bool
+0011ba10,object_definition_get_unknown124,source/units/units.c,eax,int
+0020bb70,object_definition_unknown1F0_is_6,source/units/units.c,ecx,bool
+0015b1e0,object_unknown_0015b1e0,source/units/units.c,eax stack stack,void
+001794a0,object_unknown_001794a0,source/units/units.c,eax stack,bool
+001b8c80,object_unknown_001b8c80,source/units/units.c,edx,int
+001c3980,object_unknown_001c3980,source/units/units.c,eax,void
