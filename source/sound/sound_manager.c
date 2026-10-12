@@ -13656,3 +13656,75 @@ void object_looping_sounds_initialize(
 	unknown_004ed28c= data_new("object looping sounds", 0x400, 0x18, 0, game_state_allocation);
 	unknown_004ed288= game_state_malloc(0x244);
 }
+
+enum
+{
+	/* of what unknown_004ed288 points to, 0x244 bytes: eight numbers, two
+	more, 0x80 shorts, 0x100 bytes, four reals, a number and a real */
+	OBJECT_LOOPING_SOUNDS_UNKNOWN20_OFFSET= 0x20,
+	OBJECT_LOOPING_SOUNDS_SHORTS_OFFSET= 0x28,
+	OBJECT_LOOPING_SOUNDS_SHORT_COUNT= 0x80,
+	OBJECT_LOOPING_SOUNDS_BYTES_OFFSET= 0x128,
+	OBJECT_LOOPING_SOUNDS_BYTE_COUNT= 0x100,
+	OBJECT_LOOPING_SOUNDS_REALS_OFFSET= 0x228,
+	OBJECT_LOOPING_SOUNDS_UNKNOWN238_OFFSET= 0x238,
+	OBJECT_LOOPING_SOUNDS_UNKNOWN23C_OFFSET= 0x23C
+};
+
+/* 0x00188d60: what more is done for a new map. 0x0018bb80: something that
+the fifth function of the part does first */
+void unknown_00188d60(void);
+void __attribute__((stdcall)) unknown_0018bb80(long unknown);
+
+/* 0x00188870: for a new map, if the table of the looping sounds of the
+objects is there: it can be used and is empty (data_delete_all), and what
+unknown_004ed288 points to is as it starts: NONE for its eight numbers,
+nothing for the two after them and for its shorts (a real 0 made a short),
+every bit of its bytes set, 1 for its four reals, 8000 for the number and
+nothing for the last real; and the console is given the four reals
+(sound_console_set_gains). In any case
+unknown_00188d60 is done */
+void object_looping_sounds_initialize_for_new_map(
+	void)
+{
+	struct data_array *data= unknown_004ed28c;
+
+	if (data)
+	{
+		byte *unknown;
+		long index;
+
+		data->valid= TRUE;
+		data_delete_all(data);
+		unknown= unknown_004ed288;
+		for (index= 0; index<8; index++)
+		{
+			*(long *)(unknown+index*4)= NONE;
+		}
+		*(long *)(unknown+OBJECT_LOOPING_SOUNDS_UNKNOWN20_OFFSET)= 0;
+		*(long *)(unknown+OBJECT_LOOPING_SOUNDS_UNKNOWN20_OFFSET+4)= 0;
+		memset(unknown+OBJECT_LOOPING_SOUNDS_SHORTS_OFFSET, 0, OBJECT_LOOPING_SOUNDS_SHORT_COUNT*sizeof(short));
+		memset(unknown+OBJECT_LOOPING_SOUNDS_BYTES_OFFSET, 0xFF, OBJECT_LOOPING_SOUNDS_BYTE_COUNT);
+		for (index= 0; index<4; index++)
+		{
+			*(real *)(unknown+OBJECT_LOOPING_SOUNDS_REALS_OFFSET+index*4)= 1.0f;
+		}
+		*(long *)(unknown+OBJECT_LOOPING_SOUNDS_UNKNOWN238_OFFSET)= 8000;
+		*(real *)(unknown+OBJECT_LOOPING_SOUNDS_UNKNOWN23C_OFFSET)= 0.0f;
+		sound_console_set_gains((const real *)(unknown+OBJECT_LOOPING_SOUNDS_REALS_OFFSET));
+	}
+	unknown_00188d60();
+}
+
+/* 0x00188980: the fifth of the functions of the part, for when the game
+becomes active: if there is what unknown_004ed288 points to, unknown_0018bb80
+is done with nothing, and its shorts are nothing */
+void object_looping_sounds_unknown_00188980(
+	void)
+{
+	if (unknown_004ed288)
+	{
+		unknown_0018bb80(0);
+		memset(unknown_004ed288+OBJECT_LOOPING_SOUNDS_SHORTS_OFFSET, 0, OBJECT_LOOPING_SOUNDS_SHORT_COUNT*sizeof(short));
+	}
+}

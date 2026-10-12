@@ -163,7 +163,7 @@ void unknown_0014784e(void);
 void unknown_00147920(void);
 void players_initialize(void);
 void players_dispose(void);
-void unknown_0014b580(void);
+void players_initialize_for_new_map(void);
 void players_dispose_from_old_map(void);
 void unknown_0014b6a0(void);
 void game_unknown_00153870_initialize(void);
@@ -204,9 +204,9 @@ void sound_unknown_00185ab0(void);
 void sound_unknown_00185b00(void);
 void object_looping_sounds_initialize(void);
 void object_looping_sounds_dispose(void);
-void unknown_00188870(void);
+void object_looping_sounds_initialize_for_new_map(void);
 void object_looping_sounds_dispose_from_old_map(void);
-void unknown_00188980(void);
+void object_looping_sounds_unknown_00188980(void);
 void levels_initialize(void);
 void levels_dispose(void);
 void levels_initialize_for_new_map(void);
@@ -357,7 +357,7 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{game_state_initialize, game_state_dispose, game_state_initialize_for_new_map, no_operation, game_state_set_structure_bsp_index, no_operation},
 	{game_time_initialize, no_operation, game_time_initialize_for_new_map, game_time_dispose_from_old_map},
 	{game_unknown_001df460_initialize, no_operation, game_unknown_001df460_initialize_for_new_map, no_operation},
-	{players_initialize, players_dispose, unknown_0014b580, players_dispose_from_old_map, no_operation, no_operation},
+	{players_initialize, players_dispose, players_initialize_for_new_map, players_dispose_from_old_map, no_operation, no_operation},
 	{sound_unknown_00185ab0, no_operation, sound_unknown_00185b00, no_operation},
 	{game_unknown_001e6a40_initialize, no_operation, game_unknown_001e6a40_initialize_for_new_map, game_unknown_001e6a40_dispose_from_old_map},
 	{game_engine_initialize, no_operation, unknown_001574c0, unknown_00157bb0},
@@ -384,7 +384,7 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{sound_classes_initialize, sound_classes_dispose, sound_classes_initialize_for_new_map, sound_classes_dispose_from_old_map},
 	{sound_initialize, sound_dispose, sound_initialize_for_new_map, sound_dispose_from_old_map, sound_initialize_for_new_structure_bsp, no_operation},
 	{game_unknown_0020aee0_initialize, game_unknown_0020aee0_dispose, game_unknown_0020aee0_initialize_for_new_map, no_operation},
-	{object_looping_sounds_initialize, object_looping_sounds_dispose, unknown_00188870, object_looping_sounds_dispose_from_old_map, unknown_00188980, no_operation},
+	{object_looping_sounds_initialize, object_looping_sounds_dispose, object_looping_sounds_initialize_for_new_map, object_looping_sounds_dispose_from_old_map, object_looping_sounds_unknown_00188980, no_operation},
 	{sound_unknown_00225a40, no_operation, sound_unknown_00225a80, no_operation},
 	{sound_unknown_002229d0, no_operation, sound_unknown_00222a10, sound_unknown_00222a60},
 	{game_unknown_00153870_initialize, no_operation, unknown_001538b0, no_operation},

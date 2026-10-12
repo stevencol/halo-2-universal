@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Jugadores y sonidos en bucle, para un mapa nuevo
+
+Tres funciones (unos 400 bytes), en `game/players.c` y `sound/sound_manager.c`. De 2114
+funciones se pasa a 2117, el 18,79 % de las del juego (el 11,280 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `players_initialize_for_new_map` | `0x0014b580` | `game/players.c` |
+| `object_looping_sounds_initialize_for_new_map` | `0x00188870` | `sound/sound_manager.c` |
+| `object_looping_sounds_unknown_00188980` | `0x00188980` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- `players_initialize_for_new_map`, salvo que `unknown_004ed39c` esté
+  puesto: borra los `0x130` bytes de lo que se guarda de los jugadores
+  (con `NONE` en sus dos listas de cuatro y en tres números más), marca la
+  tabla de jugadores como usable y la vacía.
+- `object_looping_sounds_initialize_for_new_map`: si la tabla está, la
+  vacía y deja el bloque de `0x244` bytes como al empezar: ocho números en
+  `NONE`, `0x80` cortos a cero, `0x100` bytes con todos los bits puestos,
+  **cuatro reales a 1 que se pasan a la consola como ganancias**
+  (`sound_console_set_gains`, que ya estaba hecha) y un 8000.
+- `object_looping_sounds_unknown_00188980` es la quinta función de esa
+  parte (cuando el juego pasa a estar activo): llama a `unknown_0018bb80`
+  y borra los cortos.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  621.
+- El 8000 y los cuatro reales no tienen nombre; por la llamada, los reales
+  son ganancias de sonido.
+- En este hito se pasaron las pruebas de las tres funciones, y `test_game`
+  y `test_players` enteras.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Los guiones arrancan y se preparan para un mapa
 
 Dos funciones de `hs/hs.c` (unos 190 bytes); con ellas la parte de los guiones tiene sus

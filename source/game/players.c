@@ -150,3 +150,41 @@ void players_initialize(
 		*(long *)(globals+0x1C+index*4)= NONE;
 	}
 }
+
+/* 0x001c7fe0, of game_unknown_001c7fe0.c */
+void game_unknown_001c7fe0(void);
+
+/* 0x0014b580: for a new map, unless unknown_004ed39c is set: what is kept of
+the players is nothing, with NONE for its two lists of four, for the short
+at 0xA4 and for the numbers at 0xAC and 0x98; the table of the players can
+be used and is empty (data_delete_all); and game_unknown_001c7fe0 is done */
+void players_initialize_for_new_map(
+	void)
+{
+	byte *globals;
+	long index;
+
+	if (unknown_004ed39c)
+	{
+		return;
+	}
+	globals= (byte *)players_globals;
+	memset(globals, 0, 0x130);
+	*(short *)(globals+8)= 0;
+	*(short *)(globals+0xA)= 0;
+	for (index= 0; index<4; index++)
+	{
+		*(long *)(globals+0xC+index*4)= NONE;
+	}
+	for (index= 0; index<4; index++)
+	{
+		*(long *)(globals+0x1C+index*4)= NONE;
+	}
+	*(short *)(globals+0xA4)= NONE;
+	*(long *)(globals+0xAC)= NONE;
+	*(short *)(globals+0x9C)= 0;
+	player_data->valid= TRUE;
+	data_delete_all(player_data);
+	game_unknown_001c7fe0();
+	*(long *)((byte *)players_globals+0x98)= NONE;
+}

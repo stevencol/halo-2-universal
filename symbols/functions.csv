@@ -372,7 +372,7 @@ address,name,source,arguments,returns,convention
 00147920,unknown_00147920,,,void
 0014b4b0,players_initialize,source/game/players.c,,void
 0014b560,players_dispose,source/game/players.c,,void
-0014b580,unknown_0014b580,,,void
+0014b580,players_initialize_for_new_map,source/game/players.c,,void
 0014b600,players_dispose_from_old_map,source/game/players.c,,void
 0014b6a0,unknown_0014b6a0,,,void
 00153870,game_unknown_00153870_initialize,source/game/game_unknown_00153870.c,,void
@@ -413,9 +413,9 @@ address,name,source,arguments,returns,convention
 00185b00,sound_unknown_00185b00,source/sound/sound_manager.c,,void
 001887d0,object_looping_sounds_initialize,source/sound/sound_manager.c,,void
 00188850,object_looping_sounds_dispose,source/sound/sound_manager.c,,void
-00188870,unknown_00188870,,,void
+00188870,object_looping_sounds_initialize_for_new_map,source/sound/sound_manager.c,,void
 00188940,object_looping_sounds_dispose_from_old_map,source/sound/sound_manager.c,,void
-00188980,unknown_00188980,,,void
+00188980,object_looping_sounds_unknown_00188980,source/sound/sound_manager.c,,void
 0019bcd0,levels_initialize,source/main/levels.c,,void
 0019bd50,levels_dispose,source/main/levels.c,,void
 0019c190,levels_initialize_for_new_map,source/main/levels.c,,void
@@ -2663,3 +2663,5 @@ address,name,source,arguments,returns,convention
 00208ff0,unknown_00208ff0,,,void
 002a09c0,unknown_002a09c0,,,void
 002090a0,unknown_002090a0,,,void
+00188d60,unknown_00188d60,,,void
+0018bb80,unknown_0018bb80,,stack,void,stdcall
