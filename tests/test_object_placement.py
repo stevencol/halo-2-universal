@@ -10,7 +10,7 @@ BASE = PHYSICAL_ADDRESS + 0x60000
 
 
 def starts(harness, arguments) -> tuple:
-    """What to compare of a call to unknown_001e95d0: the name as its text."""
+    """What to compare of a call to progress_new: the name as its text."""
     return 0, (bytes(harness.mu.mem_read(arguments[0], 0x20)).split(b"\0")[0],)
 
 
@@ -40,8 +40,8 @@ def run(t) -> None:
             "object_placement_initialize_for_new_structure_bsp",
             globals={"unknown_00510c50": 0 if n % 8 == 0 else Buffer(bytes(unknown))},
             externals={
-                "unknown_001e95d0": starts,
+                "progress_new": starts,
                 "unknown_000d5640": lambda harness, arguments: 0,
-                "unknown_001e9650": lambda harness, arguments: 0,
+                "progress_done": lambda harness, arguments: 0,
             },
         )

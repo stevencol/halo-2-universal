@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Avisar de que un trabajo largo empieza y acaba
+
+Dos funciones (200 bytes), en los archivos nuevos `cseries/progress.{h,c}`.
+De 2171
+funciones se pasa a 2173, el 19,29 % de las del juego (el 11,379 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `progress_new` | `0x001e95d0` | `cseries/progress.c` |
+| `progress_done` | `0x001e9650` | `cseries/progress.c` |
+
+### Lo que se sabe
+
+- Son las dos funciones que `object_placement_initialize_for_new_structure_bsp`
+  (hito 642) llama antes y después de colocar los objetos (antes
+  `unknown_001e95d0` y `unknown_001e9650`).
+- `progress_new` cierra el trabajo que hubiera en marcha, guarda el nombre
+  del nuevo (hasta 255 letras) y avisa a la función que alguien haya
+  puesto; si no hay ninguna, a la de por defecto.
+- `progress_done` avisa del final de la misma manera y marca que ya no hay
+  trabajo en marcha.
+- `progress_globals` (`0x4f55f8`, `0x12C` bytes): dos juegos de funciones
+  con su dato, un byte que lo apaga todo, otro que dice si hay trabajo en
+  marcha, y el nombre.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  642.
+- Los nombres son supuestos (por el módulo equivalente de otros juegos del
+  mismo motor). Quién pone las funciones, y la tercera de cada juego
+  (`+4`), no se ha visto.
+- En este hito se pasaron las pruebas de las dos funciones y
+  `test_object_placement`. Hay una batería completa en marcha sobre el hito
+  637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — La parte que coloca los objetos del escenario
 
 Tres funciones (unos 110 bytes), en el archivo nuevo `objects/object_placement.c`.

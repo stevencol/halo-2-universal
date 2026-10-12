@@ -24,8 +24,8 @@ extern struct unknown_00510c50 *unknown_00510c50;
 
 /* 0x001e95d0 and 0x001e9650: what is being done starts, with its name, and
 ends (they tell whoever shows it, it seems). 0x000d5640 places the objects */
-void __attribute__((stdcall)) unknown_001e95d0(const char *name);
-void unknown_001e9650(void);
+void __attribute__((stdcall)) progress_new(const char *name);
+void progress_done(void);
 void unknown_000d5640(void);
 
 /* ---------- code */
@@ -53,11 +53,11 @@ void object_placement_initialize_for_new_structure_bsp(
 {
 	const byte *unknown;
 
-	unknown_001e95d0("placing objects on bsp");
+	progress_new("placing objects on bsp");
 	unknown= (const byte *)unknown_00510c50;
 	if (!unknown || !unknown[5] || !unknown[7])
 	{
 		unknown_000d5640();
 	}
-	unknown_001e9650();
+	progress_done();
 }

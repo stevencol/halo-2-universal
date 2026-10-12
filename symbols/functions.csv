@@ -2713,5 +2713,5 @@ address,name,source,arguments,returns,convention
 000d4830,widgets_initialize,source/objects/widgets.c,,void
 000d4890,widgets_initialize_for_new_map,source/objects/widgets.c,,void
 000d48d0,widgets_dispose_from_old_map,source/objects/widgets.c,,void
-001e95d0,unknown_001e95d0,,stack,void,stdcall
-001e9650,unknown_001e9650,,,void
+001e95d0,progress_new,source/cseries/progress.c,stack,void,stdcall
+001e9650,progress_done,source/cseries/progress.c,,void
