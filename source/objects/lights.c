@@ -64,7 +64,7 @@ void __attribute__((stdcall)) cluster_partition_initialize(struct cluster_partit
 	long unknown3);
 void __attribute__((stdcall)) unknown_000c2d00(long light_index);
 void __attribute__((stdcall)) unknown_000c0c80(long light_index);
-void __attribute__((stdcall)) unknown_000c3260(long light_index, boolean unknown);
+void __attribute__((stdcall)) light_delete(long light_index, boolean unknown);
 
 /* ---------- code */
 
@@ -159,7 +159,7 @@ void lights_unknown_000c0110(
 	}
 }
 
-/* 0x000c01c0: unknown_000c3260 is done, with TRUE, for each light whose
+/* 0x000c01c0: light_delete is done, with TRUE, for each light whose
 first number is NONE */
 void lights_unknown_000c01c0(
 	void)
@@ -180,7 +180,7 @@ void lights_unknown_000c01c0(
 		light_index= (*(const short *)light<<16)|absolute_index;
 		if (*(const long *)(light+LIGHT_UNKNOWN4C_OFFSET)==NONE)
 		{
-			unknown_000c3260(light_index, TRUE);
+			light_delete(light_index, TRUE);
 		}
 	}
 }
@@ -474,9 +474,9 @@ void lights_unknown_000c15a0(
 }
 
 /* 0x000c1670: an object that has the bit 6 of its flags (it has lights on
-it: light_new_at sets it) loses them: unknown_000c3260 is done, with FALSE,
+it: light_new_at sets it) loses them: light_delete is done, with FALSE,
 for each light that is on the object; and the bit is cleared */
-void __attribute__((stdcall)) lights_unknown_000c1670(
+void __attribute__((stdcall)) lights_delete_from_object(
 	long object_index)
 {
 	byte *object= (byte *)((struct object_header_datum *)object_header_data->data)[object_index&0xFFFF].datum;
@@ -497,9 +497,60 @@ void __attribute__((stdcall)) lights_unknown_000c1670(
 			light= (const byte *)light_data->data+absolute_index*light_data->size;
 			if (*(const long *)(light+LIGHT_UNKNOWN58_OFFSET)==object_index)
 			{
-				unknown_000c3260((*(const short *)light<<16)|absolute_index, FALSE);
+				light_delete((*(const short *)light<<16)|absolute_index, FALSE);
 			}
 		}
 	}
 	*(unsigned long *)(object+4)&= ~0x40UL;
+}
+
+/* 0x000c3260: a light is no more. If it is in the clusters (the bits 3 and 1
+of its flags) it is taken out of them. If it is on an object, and it is asked
+for, the object keeps the bit 6 of its flags only if another light is on it */
+void __attribute__((stdcall)) light_delete(
+	long light_index,
+	boolean update_object)
+{
+	byte *light= (byte *)light_data->data+(light_index&0xFFFF)*LIGHT_SIZE;
+	long object_index;
+
+	if ((light[LIGHT_FLAGS_OFFSET]&8) && (light[LIGHT_FLAGS_OFFSET]&2))
+	{
+		cluster_partition_remove(&light_cluster_partition, light_index, (long *)(light+LIGHT_UNKNOWN10_OFFSET));
+		light[LIGHT_FLAGS_OFFSET]&= ~8;
+	}
+	object_index= *(long *)(light+LIGHT_UNKNOWN58_OFFSET);
+	if (object_index!=NONE && update_object)
+	{
+		byte *object= (byte *)((struct object_header_datum *)object_header_data->data)[object_index&0xFFFF].datum;
+		boolean another= FALSE;
+		long absolute_index= NONE;
+
+		for (;;)
+		{
+			const byte *other;
+
+			absolute_index= data_next_absolute_index(light_data, absolute_index+1);
+			if (absolute_index==NONE)
+			{
+				break;
+			}
+			other= (const byte *)light_data->data+absolute_index*light_data->size;
+			if (((*(const short *)other<<16)|absolute_index)!=light_index &&
+				*(const long *)(other+LIGHT_UNKNOWN58_OFFSET)==object_index)
+			{
+				another= TRUE;
+				break;
+			}
+		}
+		if (another)
+		{
+			*(unsigned long *)(object+4)|= 0x40;
+		}
+		else
+		{
+			*(unsigned long *)(object+4)&= ~0x40UL;
+		}
+	}
+	datum_delete(light_data, light_index);
 }

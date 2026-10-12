@@ -2706,7 +2706,7 @@ address,name,source,arguments,returns,convention
 000c0110,lights_unknown_000c0110,source/objects/lights.c,,void
 000c01c0,lights_unknown_000c01c0,source/objects/lights.c,,void
 000c2d00,unknown_000c2d00,,stack,void,stdcall
-000c3260,unknown_000c3260,,stack stack,void,stdcall
+000c3260,light_delete,source/objects/lights.c,stack stack,void,stdcall
 001cae40,cluster_partition_remove,source/objects/cluster_partitions.c,edi stack stack,void
 000c0230,light_new,source/objects/lights.c,stack stack stack stack stack,int,stdcall
 000c0c80,unknown_000c0c80,,stack,void,stdcall
@@ -2796,5 +2796,5 @@ address,name,source,arguments,returns,convention
 000c1980,light_unknown_000c1980,source/objects/lights.c,esi edx ebx,void
 000c19f0,light_unknown_000c19f0,source/objects/lights.c,eax edi,void
 000c15a0,lights_unknown_000c15a0,source/objects/lights.c,,void
-000c1670,lights_unknown_000c1670,source/objects/lights.c,stack,void,stdcall
+000c1670,lights_delete_from_object,source/objects/lights.c,stack,void,stdcall
 000c12d0,unknown_000c12d0,,edx,void

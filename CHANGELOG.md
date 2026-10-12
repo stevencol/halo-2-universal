@@ -2,6 +2,39 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Borrar una luz
+
+Una función (212 bytes) en `objects/lights.c`. De 2262
+funciones se pasa a 2263, el 20,09 % de las del juego (el 11,688 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `light_delete` | `0x000c3260` | `objects/lights.c` |
+
+### Lo que se sabe
+
+- `light_delete` (antes `unknown_000c3260`) borra una luz: si está apuntada
+  en las zonas del bsp (bits 3 y 1 de sus banderas) la saca de ellas
+  (`cluster_partition_remove`); si cuelga de un objeto y se le pide, mira
+  si al objeto le queda alguna otra luz y le deja o le quita el bit 6 de
+  sus banderas; y borra la luz de la tabla.
+- Con ella se entienden dos recorridos anteriores: `lights_unknown_000c01c0`
+  (hito 639) borra todas las luces que no tienen dueño, y la del hito 693
+  borra las de un objeto, que por eso pasa a llamarse
+  `lights_delete_from_object`.
+- El bit 3 de una luz dice, pues, que está apuntada en las zonas.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  693.
+- En este hito se pasaron las pruebas de `test_light*` (catorce funciones).
+  Hay una batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Dos recorridos más de las luces
 
 Dos funciones (345 bytes) en `objects/lights.c`. De 2260

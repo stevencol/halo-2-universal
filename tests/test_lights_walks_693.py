@@ -34,11 +34,11 @@ def run(t) -> None:
             if random_.random() < 0.4:
                 struct.pack_into("<I", light_bytes, 0x4C + index * 0x110 + 0x58, random_.choice((object_index, object_index, object_index ^ 0x10000)))
         t.check(
-            "lights_unknown_000c1670",
+            "lights_delete_from_object",
             object_index,
             globals={
                 "object_header_data": Buffer(bytes(data), pointers=table.pointers),
                 "light_data": Buffer(bytes(light_bytes[: len(some.data)]), pointers=some.pointers),
             },
-            externals={"unknown_000c3260": lambda harness, arguments: (0, (arguments[0], arguments[1] & 0xFF))},
+            externals={"light_delete": lambda harness, arguments: (0, (arguments[0], arguments[1] & 0xFF))},
         )

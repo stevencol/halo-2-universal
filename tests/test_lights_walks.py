@@ -51,5 +51,5 @@ def run(t) -> None:
         t.check(
             "lights_unknown_000c01c0",
             globals={"light_data": lights(random_)},
-            externals={"unknown_000c3260": lambda harness, arguments: 0},
+            externals={"light_delete": lambda harness, arguments: 0},
         )
