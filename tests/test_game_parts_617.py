@@ -15,7 +15,7 @@ def run(t) -> None:
         t.check(
             "game_unknown_0002b4a0_dispose",
             globals={"unknown_00509434": random_.getrandbits(32)},
-            externals={"unknown_0003b950": note},
+            externals={"game_unknown_0002b4a0_unknown_0003b950": note},
         )
         table = bytearray(random_.randbytes(0x4C))
         table[0x29] = random_.choice((0, 1, 0x80))

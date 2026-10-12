@@ -25,8 +25,8 @@ def run(t) -> None:
         return {
             "global_scenario_index": random_.choice((0xFFFFFFFF, 0x12340000, 0x12340000)),
             "global_scenario": random_.choice((0, 1, 1, 1)) and Buffer(bytes(scenario)),
-            "unknown_004f55d8": Buffer(random_.randbytes(0x4C)),
-            "unknown_004f55d4": Buffer(random_.randbytes(0x4C)),
+            "object_list_header_data": Buffer(random_.randbytes(0x4C)),
+            "list_object_data": Buffer(random_.randbytes(0x4C)),
         }
 
     others = {
@@ -59,5 +59,5 @@ def run(t) -> None:
                 Mock(lambda call, memory=memory: memory, stack_arguments=1, registers=("ecx",)),
                 Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
             ],
-            externals={**others, "unknown_001ded00": note, "unknown_00208ff0": note},
+            externals={**others, "object_lists_initialize": note, "unknown_00208ff0": note},
         )

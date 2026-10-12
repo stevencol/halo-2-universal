@@ -467,8 +467,8 @@ address,name,source
 004f55cc,unknown_004f55cc,source/game/game_unknown_001c7fe0.c
 004f9394,script_node_data,source/hs/hs.c
 004f9380,unknown_004f9380,source/hs/hs.c
-004f55d8,unknown_004f55d8,source/hs/hs.c
-004f55d4,unknown_004f55d4,source/hs/hs.c
+004f55d8,object_list_header_data,source/hs/hs.c
+004f55d4,list_object_data,source/hs/hs.c
 00510c5c,unknown_00510c5c,source/game/game_unknown_00153870.c
 004e9bd4,unknown_004e9bd4,source/game/game_unknown_0016efb0.c
 004ea934,unknown_004ea934,source/game/game_unknown_0016efb0.c
@@ -479,3 +479,6 @@ address,name,source
 004e64a0,unknown_004e64a0,source/game/game_unknown_0016efb0.c
 004e64a4,unknown_004e64a4,source/game/game_unknown_0016efb0.c
 004e64ac,unknown_004e64ac,source/game/game_unknown_0016efb0.c
+004c1a5c,unknown_004c1a5c,source/game/game_unknown_0002b4a0.c
+004c1a74,unknown_004c1a74,source/game/game_unknown_0002b4a0.c
+004c1a8c,unknown_004c1a8c,source/game/game_unknown_0002b4a0.c

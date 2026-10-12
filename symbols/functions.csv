@@ -2653,13 +2653,13 @@ address,name,source,arguments,returns,convention
 0017d5f0,unknown_0017d5f0,,stack,void,stdcall
 00173de0,unknown_00173de0,,,void
 00043890,unknown_00043890,,,void
-0003b950,unknown_0003b950,,,void
+0003b950,game_unknown_0002b4a0_unknown_0003b950,source/game/game_unknown_0002b4a0.c,,void
 00015b70,unknown_00015b70,,,void
 0001e1c0,unknown_0001e1c0,,,void
 00036ab0,unknown_00036ab0,,,void
 0020a850,unknown_0020a850,,,void
 00209290,unknown_00209290,,,void
-001ded00,unknown_001ded00,,,void
+001ded00,object_lists_initialize,source/hs/object_lists.c,,void
 00208ff0,unknown_00208ff0,,,void
 002a09c0,unknown_002a09c0,,,void
 002090a0,unknown_002090a0,,,void
@@ -2667,3 +2667,4 @@ address,name,source,arguments,returns,convention
 0018bb80,unknown_0018bb80,,stack,void,stdcall
 0016f4b0,unknown_0016f4b0,,esi,void
 00155a30,unknown_00155a30,,stack,void,stdcall
+00296270,unknown_00296270,,eax ebx stack,pointer,stdcall

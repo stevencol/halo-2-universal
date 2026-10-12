@@ -37,8 +37,8 @@ def run(t) -> None:
             "hs_dispose_from_old_map",
             globals={
                 "script_node_data": Buffer(bytes(nodes)),
-                "unknown_004f55d8": Buffer(random_.randbytes(0x4C)),
-                "unknown_004f55d4": Buffer(random_.randbytes(0x4C)),
+                "object_list_header_data": Buffer(random_.randbytes(0x4C)),
+                "list_object_data": Buffer(random_.randbytes(0x4C)),
             },
             externals={"unknown_0020a850": note, "unknown_00209290": note},
         )

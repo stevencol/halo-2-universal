@@ -30,12 +30,12 @@ enum
 /* ---------- globals */
 
 /* 0x004f9394: the nodes of the scripts ("script node"). 0x004f9380,
-0x004f55d8, 0x004f55d4: three more tables that stop with the scripts: what
-each is of is not known */
+three more tables that stop with the scripts: one whose use is not known,
+and the two of the lists of objects (object_lists.c) */
 struct data_array *script_node_data;
 struct data_array *unknown_004f9380;
-struct data_array *unknown_004f55d8;
-struct data_array *unknown_004f55d4;
+struct data_array *object_list_header_data;
+struct data_array *list_object_data;
 
 /* 0x0020a850, 0x00209290: what else stops with the scripts when a map goes */
 void unknown_0020a850(void);
@@ -69,14 +69,15 @@ void hs_dispose_from_old_map(
 		data->valid= FALSE;
 	}
 	unknown_00209290();
-	unknown_004f55d8->valid= FALSE;
-	unknown_004f55d4->valid= FALSE;
+	object_list_header_data->valid= FALSE;
+	list_object_data->valid= FALSE;
 }
 
-/* 0x001ded00, 0x00208ff0: what else starts with the scripts. 0x002a09c0:
+/* 0x001ded00, of object_lists.c, and 0x00208ff0: what else starts with the
+scripts. 0x002a09c0:
 what the scripts need of the map is made. 0x002090a0: the rest of what is
 done for a map */
-void unknown_001ded00(void);
+void object_lists_initialize(void);
 void unknown_00208ff0(void);
 void unknown_002a09c0(void);
 void unknown_002090a0(void);
@@ -101,7 +102,7 @@ void hs_initialize(
 			(unsigned long *)(data+1));
 	}
 	script_node_data= data;
-	unknown_001ded00();
+	object_lists_initialize();
 	unknown_00208ff0();
 	hs_initialize_for_new_map();
 }
@@ -132,9 +133,9 @@ void hs_initialize_for_new_map(
 			unknown_002a09c0();
 		}
 	}
-	unknown_004f55d8->valid= TRUE;
-	data_delete_all(unknown_004f55d8);
-	unknown_004f55d4->valid= TRUE;
-	data_delete_all(unknown_004f55d4);
+	object_list_header_data->valid= TRUE;
+	data_delete_all(object_list_header_data);
+	list_object_data->valid= TRUE;
+	data_delete_all(list_object_data);
 	unknown_002090a0();
 }

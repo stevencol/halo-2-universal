@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Las listas de objetos de los guiones crean sus tablas; tres memorias vuelven a la consola
+
+Dos funciones (unos 210 bytes): una en el archivo nuevo `hs/object_lists.c` y otra en
+`game/game_unknown_0002b4a0.c`. De 2124
+funciones se pasa a 2126, el 18,87 % de las del juego (el 11,294 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_lists_initialize` | `0x001ded00` | `hs/object_lists.c` |
+| `game_unknown_0002b4a0_unknown_0003b950` | `0x0003b950` | `game/game_unknown_0002b4a0.c` |
+
+### Lo que se sabe
+
+- `object_lists_initialize` (lo que arranca con los guiones) crea dos
+  tablas con nombre: `"object list header"` (48 listas de `0xC` bytes) y
+  `"list object"` (128). Con eso **dos de las tres tablas sin nombre de
+  `hs.c` ya lo tienen**: `object_list_header_data` y `list_object_data`.
+  La segunda se crea con otra función (`unknown_00296270`), no con
+  `data_new`.
+- `game_unknown_0002b4a0_unknown_0003b950` devuelve a la consola tres
+  memorias (`VirtualFree`), cada una si existe.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  625.
+- El nombre `object_lists.c` sale de los textos de las tablas.
+- En este hito se pasaron las pruebas de las dos funciones, y `test_hs` y
+  `test_game_parts_617` enteras.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Lo que dos partes del juego hacen tras cargar una partida
 
 Dos funciones cortas (unos 40 bytes), en dos archivos de `game/`. De 2122
