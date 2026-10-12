@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Seis funciones pequeñas que van de una cosa a su tag
+
+Seis funciones (205 bytes): dos en `effects/effects.c` y cuatro en `physics/havok.c`.
+De 2376
+funciones se pasa a 2382, el 21,15 % de las del juego (el 11,880 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `effect_definition_get_random_seed` | `0x00177c20` | `effects/effects.c` |
+| `tag_get_unknown4_tag` | `0x0016ddf0` | `effects/effects.c` |
+| `unknown68_get_tag` | `0x001cc2d0` | `physics/havok.c` |
+| `unknown68_get_tag_unknownC` | `0x001cbd30` | `physics/havok.c` |
+| `unknown68_get_tag_unknownC_or_zero` | `0x001cbe90` | `physics/havok.c` |
+| `unknown68_get_tag_unknown18` | `0x001cbe20` | `physics/havok.c` |
+
+### Lo que se sabe
+
+- `effect_definition_get_random_seed` (tag en `eax`) dice de cuál de los dos
+  números del azar (hito 646) tira un efecto: del primero, que es igual en
+  todas las consolas, si su definición tiene el bit 2 de sus banderas; del
+  segundo, que sale de la hora, si no. Así los efectos que importan a la
+  partida son iguales en red y los de adorno no.
+- `tag_get_unknown4_tag` da el tag que otro tag nombra en `+4`.
+- Las cuatro `unknown68_*` van de «algo» que nombra un tag en `0x68` a ese
+  tag o a un dato de él.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  716.
+- Qué es ese «algo» con un tag en `0x68` no se sabe (sus funciones están
+  entre las de la IA y las de la física), ni de qué tipo es el tag de
+  `tag_get_unknown4_tag`; los archivos son provisionales.
+- En este hito se pasaron las pruebas de las seis funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Ocho funciones pequeñas más de los objetos
 
 Ocho funciones (427 bytes) en `units/units.c`. De 2368

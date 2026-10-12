@@ -6,6 +6,10 @@ the name that the game gives to its table of data ("effect", "effect location").
 */
 
 #include "cseries/cseries.h"
+
+#include <stdint.h>
+
+#include "cache/cache_files.h"
 #include "memory/data.h"
 #include "saved games/game_state.h"
 
@@ -86,4 +90,34 @@ void effects_initialize(
 	effect_data= data_new("effect", 0x100, 0x190, 0, game_state_allocation);
 	effect_location_data= data_new("effect location", 0x200, 0x3C, 0, game_state_allocation);
 	particle_systems_initialize();
+}
+
+/* 0x004e7408, of game.c: the two numbers that the random numbers come from */
+extern unsigned long *global_random_seed_reference;
+
+/* 0x00177c20: which of the two numbers that random numbers come from an
+effect uses: the first, which every console has the same, for a definition
+that has the bit 2 of its flags; the second if not */
+unsigned long *effect_definition_get_random_seed(
+	long definition_index)
+{
+	const unsigned long *definition=
+		(const unsigned long *)(uintptr_t)global_tag_instances[definition_index&0xFFFF].address;
+
+	if ((*definition>>2)&1)
+	{
+		return global_random_seed_reference;
+	}
+
+	return global_random_seed_reference+1;
+}
+
+/* 0x0016ddf0: the tag that a tag names at 4. It is far from the others of
+this file in the game, and may be of another */
+void *tag_get_unknown4_tag(
+	long tag_index)
+{
+	const byte *tag= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+
+	return (void *)(uintptr_t)global_tag_instances[*(const long *)(tag+4)&0xFFFF].address;
 }

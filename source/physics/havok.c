@@ -11,6 +11,7 @@ the file is a guess, by what its functions start.
 #include <stdint.h>
 #include <string.h>
 
+#include "cache/cache_files.h"
 #include "cache/texture_cache.h"
 #include "game/game.h"
 #include "memory/data.h"
@@ -511,4 +512,55 @@ void havok_unknown_001c51c0(
 			}
 		}
 	}
+}
+
+/* ---------- something with a tag at 0x68
+
+The four functions that follow (0x1cbd30 to 0x1cc2d0) are between those of
+the minds and those of the components of the physics in the game, and take
+something that names a tag at 0x68. Neither the thing nor the tag is known */
+
+#define UNKNOWN68_TAG_GET(unknown) \
+	((const byte *)(uintptr_t)global_tag_instances[*(const long *)((const byte *)(unknown)+0x68)&0xFFFF].address)
+
+/* 0x001cc2d0: the tag of the thing */
+const byte *unknown68_get_tag(
+	const byte *unknown)
+{
+	return UNKNOWN68_TAG_GET(unknown);
+}
+
+/* 0x001cbd30: the short at 0xC of the tag of the thing */
+short unknown68_get_tag_unknownC(
+	const byte *unknown)
+{
+	return *(const short *)(UNKNOWN68_TAG_GET(unknown)+0xC);
+}
+
+/* 0x001cbe90: the same, as a number; zero if the tag is nowhere */
+long unknown68_get_tag_unknownC_or_zero(
+	const byte *unknown)
+{
+	const byte *tag= UNKNOWN68_TAG_GET(unknown);
+
+	if (tag)
+	{
+		return *(const short *)(tag+0xC);
+	}
+
+	return 0;
+}
+
+/* 0x001cbe20: one of the things of 0xC bytes that the tag of the thing has
+at 0x18; NULL for NONE */
+const byte *unknown68_get_tag_unknown18(
+	long index,
+	const byte *unknown)
+{
+	if (index==NONE)
+	{
+		return NULL;
+	}
+
+	return *(const byte *const *)(UNKNOWN68_TAG_GET(unknown)+0x18)+index*0xC;
 }

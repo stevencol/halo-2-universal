@@ -2909,3 +2909,9 @@ address,name,source,arguments,returns,convention
 001794a0,object_unknown_001794a0,source/units/units.c,eax stack,bool
 001b8c80,object_unknown_001b8c80,source/units/units.c,edx,int
 001c3980,object_unknown_001c3980,source/units/units.c,eax,void
+00177c20,effect_definition_get_random_seed,source/effects/effects.c,eax,pointer
+0016ddf0,tag_get_unknown4_tag,source/effects/effects.c,eax,pointer
+001cc2d0,unknown68_get_tag,source/physics/havok.c,eax,pointer
+001cbd30,unknown68_get_tag_unknownC,source/physics/havok.c,eax,short
+001cbe90,unknown68_get_tag_unknownC_or_zero,source/physics/havok.c,ecx,int
+001cbe20,unknown68_get_tag_unknown18,source/physics/havok.c,eax ecx,pointer
