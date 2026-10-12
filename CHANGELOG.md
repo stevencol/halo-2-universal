@@ -2,6 +2,17 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Batería completa en el hito 620: 2112 de 2112
+
+La batería completa lanzada sobre el hito 620 (commit `9c592fc`) acabó: **las 2112
+funciones que había entonces pasan su prueba contra el juego**, sin ningún fallo.
+
+### Sin comprobar
+
+- No cubre los hitos 621 y 622, que solo tienen sus pruebas y las de quien
+  llama a lo renombrado.
+- **Romper líneas, pendiente** en las de los hitos 456 a 490 y 501 a 622.
+
 ## 2026-10-11 — Jugadores y sonidos en bucle, para un mapa nuevo
 
 Tres funciones (unos 400 bytes), en `game/players.c` y `sound/sound_manager.c`. De 2114
