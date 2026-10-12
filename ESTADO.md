@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 636.
+**Última actualización:** 2026-10-08, al terminar el hito 637.
 
 ## Dónde estamos
 
-- **2157 funciones descompiladas de 11.265: el 19,15 % del juego** (el
+- **2159 funciones descompiladas de 11.265: el 19,17 % del juego** (el
   11,345 % de los bytes de código).
-- Las 2157 están comprobadas contra el ejecutable original: las 1390 del
+- Las 2159 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how the AI gets ready for a new map* (ver `git log`).
+- Último hito: *Decompile how the AI lets go of a map and of a structure bsp* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 540 funciones apuntadas pero sin descompilar (las que el código
-  llama); 391 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 541 funciones apuntadas pero sin descompilar (las que el código
+  llama); 392 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 

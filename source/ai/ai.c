@@ -210,3 +210,49 @@ void ai_initialize_for_new_map(
 		ai_globals[1]= TRUE;
 	}
 }
+
+/* more tables of the others of the folder */
+extern struct data_array *squad_data;
+extern struct data_array *squad_group_data;
+extern struct data_array *vocalization_record_data;
+
+void unknown_0028d9d0(void);
+void unknown_00292e00(void);
+void unknown_00292f60(void);
+
+/* 0x001c7b20: the fourth of the functions of the part. If there were minds
+in the map that goes, their tables cannot be used any more, and there are
+none */
+void ai_dispose_from_old_map(
+	void)
+{
+	if (ai_globals[1])
+	{
+		squad_data->valid= FALSE;
+		squad_group_data->valid= FALSE;
+		clump_data->valid= FALSE;
+		joint_state_data->valid= FALSE;
+		command_script_data->valid= FALSE;
+		joint_command_script_data->valid= FALSE;
+		dynamic_firing_point_data->valid= FALSE;
+		prop_data->valid= FALSE;
+		prop_ref_data->valid= FALSE;
+		tracking_data->valid= FALSE;
+		actor_data->valid= FALSE;
+		unknown_0028d9d0();
+		vocalization_record_data->valid= FALSE;
+		unknown_00292e00();
+		ai_globals[1]= FALSE;
+	}
+}
+
+/* 0x001c7f60: the sixth: when the structure bsp goes, and there are minds,
+unknown_00292f60 is done */
+void ai_dispose_from_old_structure_bsp(
+	void)
+{
+	if (ai_globals[1])
+	{
+		unknown_00292f60();
+	}
+}

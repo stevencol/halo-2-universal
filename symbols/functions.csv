@@ -428,9 +428,9 @@ address,name,source,arguments,returns,convention
 001c7790,ai_initialize,source/ai/ai.c,,void
 001c79c0,ai_dispose,source/ai/ai.c,,void
 001c79e0,ai_initialize_for_new_map,source/ai/ai.c,,void
-001c7b20,unknown_001c7b20,,,void
+001c7b20,ai_dispose_from_old_map,source/ai/ai.c,,void
 001c7bb0,unknown_001c7bb0,,,void
-001c7f60,unknown_001c7f60,,,void
+001c7f60,ai_dispose_from_old_structure_bsp,source/ai/ai.c,,void
 001df460,game_unknown_001df460_initialize,source/game/game_unknown_001df460.c,,void
 001df4b0,game_unknown_001df460_initialize_for_new_map,source/game/game_unknown_001df460.c,,void
 001e6a40,game_unknown_001e6a40_initialize,source/game/game_unknown_001e6a40.c,,void
@@ -2696,3 +2696,6 @@ address,name,source,arguments,returns,convention
 00295970,ai_unknown_00295970,source/ai/ai.c,,void
 001c8010,unknown_001c8010,,,void
 00200b30,unknown_00200b30,,,void
+0028d9d0,unknown_0028d9d0,,,void
+00292e00,unknown_00292e00,,,void
+00292f60,unknown_00292f60,,,void

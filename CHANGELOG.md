@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — La IA cuando se va un mapa
+
+Dos funciones (unos 160 bytes) en `ai/ai.c`. De 2157
+funciones se pasa a 2159, el 19,17 % de las del juego (el 11,345 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `ai_dispose_from_old_map` | `0x001c7b20` | `ai/ai.c` |
+| `ai_dispose_from_old_structure_bsp` | `0x001c7f60` | `ai/ai.c` |
+
+### Lo que se sabe
+
+- `ai_dispose_from_old_map` (cuarta función de la parte, antes
+  `unknown_001c7b20`): si había IA en el mapa (segundo byte de
+  `ai_globals`), marca doce tablas como no utilizables, llama a
+  `unknown_0028d9d0` y `unknown_00292e00`, y pone ese byte a cero.
+- `ai_dispose_from_old_structure_bsp` (sexta, antes `unknown_001c7f60`): si
+  hay IA, llama a `unknown_00292f60`.
+- Con esto la parte de la IA de la tabla de `game.c` tiene cinco de sus
+  seis funciones; falta la quinta (`0x1c7bb0`, 683 bytes).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  636.
+- Las tres funciones a las que llaman no están descompiladas (las dos
+  últimas recorren la tabla `"flocks"`).
+- En este hito se pasaron las pruebas de `test_ai`, `test_ai_new_map` y
+  `test_ai_old_map`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — La IA al empezar un mapa
 
 Dos funciones (unos 380 bytes) en `ai/ai.c`. De 2155
