@@ -9,6 +9,7 @@ game has. What it keeps is declared in game.h, and its global is of game.c.
 #include "game/game.h"
 #include "saved games/game_state.h"
 
+#include <math.h>
 #include <string.h>
 
 /* ---------- code */
@@ -81,4 +82,11 @@ boolean game_time_get_paused(
 	void)
 {
 	return game_time_globals->initialized && game_time_globals->paused;
+}
+
+/* 0x001469f0: how many ticks some seconds are, to the nearest */
+long __attribute__((stdcall)) game_seconds_to_ticks(
+	float seconds)
+{
+	return lrintf((float)game_time_globals->ticks_per_second*seconds);
 }

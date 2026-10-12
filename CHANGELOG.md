@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Trece funciones pequeñas de los actores y una del tiempo
+
+Catorce funciones (558 bytes): trece en `ai/actors.c` y una en
+`game/game_time.c`. De 2405
+funciones se pasa a 2419, el 21,47 % de las del juego (el 11,914 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `actor_unknown_001a8380` | `0x001a8380` | `ai/actors.c` |
+| `actor_unknown_001b2310` | `0x001b2310` | `ai/actors.c` |
+| `actor_unknown_001ab3a0` | `0x001ab3a0` | `ai/actors.c` |
+| `actor_unknown_001c04c0` | `0x001c04c0` | `ai/actors.c` |
+| `actor_unknown_001b5790` | `0x001b5790` | `ai/actors.c` |
+| `actor_unknown_001b5dd0` | `0x001b5dd0` | `ai/actors.c` |
+| `actor_unknown_001b6880` | `0x001b6880` | `ai/actors.c` |
+| `actor_unknown_001be6b0` | `0x001be6b0` | `ai/actors.c` |
+| `actor_unknown_001c1640` | `0x001c1640` | `ai/actors.c` |
+| `actor_unknown_001ad550` | `0x001ad550` | `ai/actors.c` |
+| `actor_unknown_001b2da0` | `0x001b2da0` | `ai/actors.c` |
+| `actor_unknown_001e4260` | `0x001e4260` | `ai/actors.c` |
+| `actor_unknown_001f3610` | `0x001f3610` | `ai/actors.c` |
+| `game_seconds_to_ticks` | `0x001469f0` | `game/game_time.c` |
+
+### Lo que se sabe
+
+- `game_seconds_to_ticks` pasa segundos a ticks: los ticks por segundo por
+  los segundos, redondeado al más cercano.
+- Once de las de los actores reciben por la pila el actor y una o dos cosas
+  más que no usan: parecen funciones que una tabla nombra (¿las de los
+  comportamientos de la IA?), todas con los mismos argumentos. Cada una pone
+  un dato del actor: un `short` en `0x84` (3 o 4, ¿un estado?), la hora del
+  juego en `0x1F4` o `0x1F8`, o un byte.
+- Dos dan 3 si el actor tiene algo en `0x338` o en `0x85C`, y 0 si no.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  720.
+- Los nombres van por dirección: qué es cada dato del actor no se sabe, ni
+  qué son los argumentos que no se usan.
+- En este hito se pasaron las pruebas de las catorce funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Ocho funciones pequeñas de jugadores, tags y otras
 
 Ocho funciones (345 bytes) en cinco archivos. De 2397

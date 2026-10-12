@@ -11,6 +11,7 @@ gives to its table of data ("actor").
 #include <stdint.h>
 
 #include "cache/cache_files.h"
+#include "game/game.h"
 #include "memory/data.h"
 #include "memory/hash_table.h"
 #include "saved games/game_state.h"
@@ -92,4 +93,166 @@ void *character_definition_get_unknown34(
 	}
 
 	return NULL;
+}
+
+/* ---------- small functions of the actors
+
+Most of the functions that follow take, besides the actor, one or two things
+on the stack that they do not use: they look like functions that a table
+names, all with the same arguments. What the things are is not known */
+
+#define ACTOR_GET(actor_index) ((byte *)actor_data->data+((actor_index)&0xFFFF)*ACTOR_SIZE)
+
+/* 0x001a8380: an actor has 4 for its short at 0x84; always true */
+boolean __attribute__((stdcall)) actor_unknown_001a8380(
+	long actor_index,
+	long unknown1)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	(void)unknown1;
+	*(short *)(actor+0x84)= 4;
+
+	return TRUE;
+}
+
+/* 0x001b2310: an actor has 3 for its short at 0x84; always true */
+boolean __attribute__((stdcall)) actor_unknown_001b2310(
+	long actor_index,
+	long unknown1)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	(void)unknown1;
+	*(short *)(actor+0x84)= 3;
+
+	return TRUE;
+}
+
+/* 0x001ab3a0: an actor has the time of the game for its number at 0x1F8 */
+void __attribute__((stdcall)) actor_unknown_001ab3a0(
+	long actor_index,
+	long unknown1)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	(void)unknown1;
+	*(unsigned long *)(actor+0x1F8)= game_time_globals->time;
+}
+
+/* 0x001c04c0: an actor has the time of the game for its number at 0x1F4 */
+void __attribute__((stdcall)) actor_unknown_001c04c0(
+	long actor_index,
+	long unknown1)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	(void)unknown1;
+	*(unsigned long *)(actor+0x1F4)= game_time_globals->time;
+}
+
+/* 0x001b5790: an actor has NONE for its number at 0x344 */
+void __attribute__((stdcall)) actor_unknown_001b5790(
+	long actor_index,
+	long unknown1)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	(void)unknown1;
+	*(long *)(actor+0x344)= NONE;
+}
+
+/* 0x001b5dd0: an actor has zeros for its bytes at 0x220 and 0x221 */
+void __attribute__((stdcall)) actor_unknown_001b5dd0(
+	long actor_index,
+	long unknown1)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	(void)unknown1;
+	actor[0x220]= 0;
+	actor[0x221]= 0;
+}
+
+/* 0x001b6880: an actor has 1 for its byte at 0x4A1 */
+void __attribute__((stdcall)) actor_unknown_001b6880(
+	long actor_index,
+	long unknown1,
+	long unknown2)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	(void)unknown1;
+	(void)unknown2;
+	actor[0x4A1]= 1;
+}
+
+/* 0x001be6b0: an actor has 0 for its byte at 0x228 */
+void __attribute__((stdcall)) actor_unknown_001be6b0(
+	long actor_index,
+	long unknown1)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	(void)unknown1;
+	actor[0x228]= 0;
+}
+
+/* 0x001c1640: an actor has 0 for its byte at 0x354 */
+void __attribute__((stdcall)) actor_unknown_001c1640(
+	long actor_index,
+	long unknown1)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	(void)unknown1;
+	actor[0x354]= 0;
+}
+
+/* 0x001ad550: 3 for an actor that has something at 0x338 (not NONE), 0 if
+not */
+long __attribute__((stdcall)) actor_unknown_001ad550(
+	long actor_index)
+{
+	if (*(const long *)(ACTOR_GET(actor_index)+0x338)!=NONE)
+	{
+		return 3;
+	}
+
+	return 0;
+}
+
+/* 0x001b2da0: the same for what it has at 0x85C */
+long __attribute__((stdcall)) actor_unknown_001b2da0(
+	long actor_index)
+{
+	if (*(const long *)(ACTOR_GET(actor_index)+0x85C)!=NONE)
+	{
+		return 3;
+	}
+
+	return 0;
+}
+
+/* 0x001e4260: an actor takes the bit 1 of its number at 0x810 */
+void actor_unknown_001e4260(
+	long actor_index)
+{
+	*(unsigned long *)(ACTOR_GET(actor_index)+0x810)|= 2;
+}
+
+/* 0x001f3610: the short at 0x61E of an actor is no less than a number:
+it takes the number if it had less. Always true */
+boolean actor_unknown_001f3610(
+	long actor_index,
+	short minimum)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	if (*(const short *)(actor+0x61E)<minimum)
+	{
+		*(short *)(actor+0x61E)= minimum;
+	}
+
+	return TRUE;
 }

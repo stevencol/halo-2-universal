@@ -2939,3 +2939,17 @@ address,name,source,arguments,returns,convention
 000fa170,tag_get_unknown164_scaled,source/units/units.c,eax,real:xmm0
 0004cb80,tag_get_unknown28_unknown2C,source/effects/effects.c,ecx edx,int
 001dafc0,unknown4C_get_tag,source/physics/havok.c,ecx edx,pointer
+001a8380,actor_unknown_001a8380,source/ai/actors.c,stack stack,bool,stdcall
+001b2310,actor_unknown_001b2310,source/ai/actors.c,stack stack,bool,stdcall
+001ab3a0,actor_unknown_001ab3a0,source/ai/actors.c,stack stack,void,stdcall
+001c04c0,actor_unknown_001c04c0,source/ai/actors.c,stack stack,void,stdcall
+001b5790,actor_unknown_001b5790,source/ai/actors.c,stack stack,void,stdcall
+001b5dd0,actor_unknown_001b5dd0,source/ai/actors.c,stack stack,void,stdcall
+001b6880,actor_unknown_001b6880,source/ai/actors.c,stack stack stack,void,stdcall
+001be6b0,actor_unknown_001be6b0,source/ai/actors.c,stack stack,void,stdcall
+001c1640,actor_unknown_001c1640,source/ai/actors.c,stack stack,void,stdcall
+001ad550,actor_unknown_001ad550,source/ai/actors.c,stack,int,stdcall
+001b2da0,actor_unknown_001b2da0,source/ai/actors.c,stack,int,stdcall
+001e4260,actor_unknown_001e4260,source/ai/actors.c,eax,void
+001f3610,actor_unknown_001f3610,source/ai/actors.c,eax ecx,bool
+001469f0,game_seconds_to_ticks,source/game/game_time.c,stack,int,stdcall
