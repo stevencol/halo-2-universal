@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Una vista recibe los sucesos que mandó la otra consola
+
+Una función de `networking/simulation_view.c` (95 bytes), la pareja de la que los manda (hito 586).
+De 1978
+funciones se pasa a 1979, el 17,57 % de las del juego (el 11,067 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_view_events_receive` | `0x00085e70` | `networking/simulation_view.c` |
+
+### Lo que se sabe
+
+- `simulation_view_events_receive` (antes `unknown_00085e70`, lo que el
+  manejador de mensajes llama con el mensaje `0x2B`) recibe el número del
+  estado, la cuenta de envíos y lo que cambió.
+- Si el mensaje es de un estado que la vista ya dejó atrás no hay nada que
+  hacer (`TRUE`); si es de uno al que aún no llegó, `FALSE`.
+- **La cuenta tiene que ser la que la vista espera** (o 0, que empieza de
+  nuevo). Si no lo es, se perdió un mensaje: se pone el byte `0x4` de los
+  sucesos, que es el que hace fallar a la vista con un 11
+  (`simulation_view_update`, hito 578).
+- Si la cuenta casa, lo que cambió se aplica sobre lo que la vista tenía
+  (`unknown_001988e0`), eso pasa a ser lo de ahora (`unknown_001973f0`) y
+  la vista espera el siguiente.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  586.
+- En este hito se pasaron la prueba de la función y
+  `test_network_message_handler` entera.
+- Hay una batería completa corriendo sobre el hito 586 (commit `d8ed258`);
+  su resultado se apuntará cuando acabe.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Los cambios que llegan con cada tick, y el envío de los sucesos de una vista
 
 Dos funciones (511 bytes), en `networking/simulation.c` y `networking/simulation_view.c`.

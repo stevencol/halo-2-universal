@@ -1384,3 +1384,47 @@ void simulation_view_events_send(
 	}
 	*(long *)(events+SIMULATION_VIEW_EVENTS_UNKNOWN4CCC_OFFSET)= unknown_00510548 ? unknown_0051054c : GetTickCount();
 }
+
+/* 0x001988e0: what changed is put on what there was. 0x001973f0: what
+there is now of the things that happen is the one that is given */
+void __attribute__((stdcall)) unknown_001988e0(byte *data, const long *changes);
+void unknown_001973f0(const byte *data);
+
+/* 0x00085e70: a view takes the things that happen that the other console
+sent, with the number of the state that they are of and how many times they
+had been sent. Of a state that the view has left behind, there is nothing
+to do; of one that it has not come to, or with a view of a kind that sends
+them and does not take them, FALSE. If the count is not the one that the
+view waits for (and is not 0, which starts again), one was lost: the view
+is to fail, and FALSE. If not, what changed is put on what the view has
+(unknown_001988e0), that is what there is now (unknown_001973f0), and the
+view waits for the next */
+boolean __attribute__((stdcall)) simulation_view_events_receive(
+	byte *view,
+	long state_number,
+	long count,
+	const long *changes)
+{
+	long number= *(const long *)(view+SIMULATION_VIEW_STATE_NUMBER_OFFSET);
+	byte *events;
+
+	if (state_number!=number)
+	{
+		return state_number<number;
+	}
+	events= *(byte *const *)(view+SIMULATION_VIEW_UNKNOWN8_OFFSET)+SIMULATION_VIEW_UNKNOWN8_UNKNOWN6060_OFFSET;
+	if (!events[SIMULATION_VIEW_EVENTS_UNKNOWN6_OFFSET])
+	{
+		return FALSE;
+	}
+	if (count!=0 && count!=*(const long *)(events+SIMULATION_VIEW_EVENTS_UNKNOWN8_OFFSET))
+	{
+		events[SIMULATION_VIEW_EVENTS_FAILED_OFFSET]= TRUE;
+		return FALSE;
+	}
+	unknown_001988e0(events+SIMULATION_VIEW_EVENTS_DATA_OFFSET, changes);
+	unknown_001973f0(events+SIMULATION_VIEW_EVENTS_DATA_OFFSET);
+	*(long *)(events+SIMULATION_VIEW_EVENTS_UNKNOWN8_OFFSET)= count+1;
+
+	return TRUE;
+}

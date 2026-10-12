@@ -22,7 +22,7 @@ it). The name of the file is a guess, and so are the names of its functions.
 
 /* 0x00085e70: what a view of the third kind does with what its message has;
 whether it could, most likely */
-boolean __attribute__((stdcall)) unknown_00085e70(byte *view, long unknown0, long unknown4, const long *unknown8);
+boolean __attribute__((stdcall)) simulation_view_events_receive(byte *view, long unknown0, long unknown4, const long *unknown8);
 
 /* ---------- code */
 
@@ -149,6 +149,6 @@ void network_message_handler_unknown_00094aa0(
 
 	if (view && *(const word *)(view+SIMULATION_VIEW_KIND_OFFSET)==_simulation_view_kind3)
 	{
-		unknown_00085e70(view, message[0], message[1], &message[2]);
+		simulation_view_events_receive(view, message[0], message[1], &message[2]);
 	}
 }

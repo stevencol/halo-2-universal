@@ -2083,7 +2083,7 @@ address,name,source,arguments,returns,convention
 00085b20,simulation_view_handle_remote_state,source/networking/simulation_view.c,eax edx edi,bool
 00085d00,simulation_view_set_players,source/networking/simulation_view.c,ebx stack stack stack,bool,stdcall
 00085dc0,simulation_view_unknown_00085dc0,source/networking/simulation_view.c,edi stack,bool,stdcall
-00085e70,unknown_00085e70,,edx ecx eax stack,bool,stdcall
+00085e70,simulation_view_events_receive,source/networking/simulation_view.c,edx ecx eax stack,bool,stdcall
 00085ed0,simulation_view_unknown_00085ed0,source/networking/simulation_view.c,esi ecx eax stack,bool,stdcall
 00085f50,simulation_view_unknown_00085f50,source/networking/simulation_view.c,eax ecx edx edi stack stack,bool,stdcall
 000698e0,simulation_world_unknown_000698e0,source/networking/simulation_world.c,esi edx,bool
@@ -2591,3 +2591,5 @@ address,name,source,arguments,returns,convention
 00085140,unknown_00085140,,stack,bool,stdcall
 00197360,unknown_00197360,,edx,void
 00198540,unknown_00198540,,stack stack stack,void,stdcall
+001988e0,unknown_001988e0,,stack stack,void,stdcall
+001973f0,unknown_001973f0,,eax,void

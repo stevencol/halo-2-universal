@@ -68,6 +68,9 @@ enum
 	_network_message_simulation_view_events= 0x2B,
 	/* how big what goes in that message after its two numbers is */
 	SIMULATION_VIEW_EVENTS_MESSAGE_DATA_SIZE= 0x4FB0,
+	/* of what a view has for the things that happen: a byte that says
+	that one of the messages was lost (the view fails by it, as 11 says) */
+	SIMULATION_VIEW_EVENTS_FAILED_OFFSET= 0x4,
 	/* more of a view: the state of the other end of it and the number that
 	goes with it, as it last said; and something that a view that is not in
 	its sixth state has to take the things that come. The kind of the
@@ -260,6 +263,8 @@ void simulation_view_update(byte *view);
 boolean simulation_view_events_message_waiting(const byte *view);
 void simulation_view_events_update(byte *events);
 void simulation_view_events_send(byte *events);
+boolean __attribute__((stdcall)) simulation_view_events_receive(byte *view, long state_number, long count,
+	const long *changes);
 
 void simulation_view_set_blocked(byte *view, boolean blocked);
 void __attribute__((stdcall)) simulation_view_set_state(byte *view, long state, long number);

@@ -26,7 +26,7 @@ def run(t) -> None:
         "simulation_view_handle_remote_state": view_and("number", "number"),
         "simulation_view_set_players": view_and("number", "number", "pointer"),
         "simulation_view_unknown_00085dc0": view_and("number"),
-        "unknown_00085e70": view_and("number", "number", "pointer"),
+        "simulation_view_events_receive": view_and("number", "number", "pointer"),
         "simulation_view_unknown_00085ed0": view_and("number", "number", "number"),
         "simulation_view_unknown_00085f50": view_and("byte", "number", "number", "number", "pointer"),
         "simulation_world_unknown_000698e0": view_and("pointer"),
