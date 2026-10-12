@@ -2988,3 +2988,16 @@ address,name,source,arguments,returns,convention
 001c14b0,actor_unknown_001c14b0,source/ai/actors.c,stack stack,void,stdcall
 001c8440,actor_unknown_001c8440,source/ai/actors.c,ecx edx stack,bool
 001e1fd0,actor_get_object_unknown218,source/ai/actors.c,eax,int
+001e4290,actor_set_unknown810_bit11,source/ai/actors.c,eax stack,void
+001e4650,actor_set_unknown225,source/ai/actors.c,eax edx,void
+001f5560,actor_unknown_001f5560,source/ai/actors.c,eax ecx,bool
+00203fb0,actor_unknown_00203fb0,source/ai/actors.c,edi,void
+00204d30,actor_iterator_new,source/ai/actors.c,eax ecx,void
+00204d70,actor_iterator_next,source/ai/actors.c,edx,pointer
+00255520,actor_unknown_00255520,source/ai/actors.c,stack stack,void,stdcall
+00255660,actor_unknown_00255660,source/ai/actors.c,stack stack,void,stdcall
+00257010,actor_unknown_00257010,source/ai/actors.c,stack stack,void,stdcall
+002562c0,actor_unknown_002562c0,source/ai/actors.c,stack stack,void,stdcall
+002570b0,actor_unknown_002570b0,source/ai/actors.c,stack stack stack,short,stdcall
+00257a40,actor_unknown_00257a40,source/ai/actors.c,stack stack stack,void,stdcall
+0025aba0,actor_unknown_0025aba0,source/ai/actors.c,eax,void

@@ -968,3 +968,279 @@ long actor_get_object_unknown218(
 
 	return NONE;
 }
+
+/* 0x004f55d0 and 0x005047f4, of ai.c; 0x0051e9d8, of squads.c; 0x005044c8,
+of swarms.c */
+extern byte *ai_globals;
+extern byte *unknown_005047f4;
+extern struct data_array *squad_data;
+extern struct data_array *swarm_data;
+
+/* 0x00470c40, 0x00470c44: two more numbers like unknown_0046fbe4 and
+unknown_0046fbe8, with the same values, that the functions from 0x255520 on
+answer with: those are of another file in the game */
+long unknown_00470c40= 0xFFFF;
+long unknown_00470c44= 0xFFFE;
+
+/* 0x001e4290: an actor takes or loses the bit 11 of its number at 0x810.
+It does not take it (and nothing changes) if it has 0 for its byte at 0x229
+and its object of 0x26C has its byte at 0x34C */
+void actor_set_unknown810_bit11(
+	long actor_index,
+	boolean value)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	if (value)
+	{
+		if (!actor[0x229] && *(const long *)(actor+0x26C)!=NONE)
+		{
+			if (ACTOR_OBJECT_GET(*(const long *)(actor+0x26C))[0x34C])
+			{
+				return;
+			}
+		}
+		*(unsigned long *)(actor+0x810)|= 0x800;
+	}
+	else
+	{
+		*(unsigned long *)(actor+0x810)&= ~0x800;
+	}
+}
+
+/* 0x001e4650: an actor takes a value for its byte at 0x225, if it had
+another; and then, unless it has its byte at 7, its object takes or loses
+the bit 5 of its number at 0x134 and the actor has 0 for its byte at 0x226 */
+void actor_set_unknown225(
+	long actor_index,
+	boolean value)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	if (value!=actor[0x225])
+	{
+		actor[0x225]= value;
+		if (!actor[7])
+		{
+			unsigned long *flags= (unsigned long *)(ACTOR_OBJECT_GET(*(const long *)(actor+0x18))+0x134);
+
+			if (value)
+			{
+				*flags|= 0x20;
+			}
+			else
+			{
+				*flags&= ~0x20;
+			}
+			actor[0x226]= 0;
+		}
+	}
+}
+
+/* 0x001f5560: an actor with nothing at 0x26C that has its byte at 0x622
+gives a vector: its real numbers at 0x624 and 0x628 times the one at 0x62C,
+and the one at 0x630. The byte is 0 after, and the answer always true */
+boolean actor_unknown_001f5560(
+	long actor_index,
+	float *vector)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	if (*(const long *)(actor+0x26C)==NONE && actor[0x622])
+	{
+		float scale= *(const float *)(actor+0x62C);
+		float j= *(const float *)(actor+0x628)*scale;
+		float k= *(const float *)(actor+0x630);
+
+		vector[0]= *(const float *)(actor+0x624)*scale;
+		vector[1]= j;
+		vector[2]= k;
+	}
+	actor[0x622]= 0;
+
+	return TRUE;
+}
+
+/* 0x00203fb0: an actor leaves the list of them all, which starts at 0x14 of
+ai_globals and goes on through the number at 0x20 of each: what named it
+names the one after it, and the actor has NONE there and 0 for its bytes at
+0xA and 0xB. Nothing if the byte at 1 of ai_globals is not set */
+void actor_unknown_00203fb0(
+	long actor_index)
+{
+	if (ai_globals[1])
+	{
+		byte *actor= ACTOR_GET(actor_index);
+		long *link= (long *)(ai_globals+0x14);
+
+		while (*link!=actor_index)
+		{
+			link= (long *)(ACTOR_GET(*link)+0x20);
+		}
+		*link= *(const long *)(actor+0x20);
+		actor[0xA]= 0;
+		*(long *)(actor+0x20)= NONE;
+		actor[0xB]= 0;
+	}
+}
+
+/* 0x00204d30: a walk through the actors starts: those of a squad (from the
+one that the squad names at 0x68), or all of them for NONE. Nothing if the
+byte at 1 of ai_globals is not set */
+void actor_iterator_new(
+	long squad_index,
+	long *iterator)
+{
+	if (ai_globals[1])
+	{
+		iterator[0]= squad_index;
+		iterator[1]= NONE;
+		if (squad_index==NONE)
+		{
+			iterator[2]= *(const long *)(ai_globals+0x14);
+		}
+		else
+		{
+			iterator[2]= *(const long *)((const byte *)squad_data->data+(squad_index&0xFFFF)*0x98+0x68);
+		}
+	}
+}
+
+/* 0x00204d70: the next actor of a walk, or NULL when there are no more */
+byte *actor_iterator_next(
+	long *iterator)
+{
+	if (ai_globals[1])
+	{
+		long actor_index= iterator[2];
+
+		if (actor_index!=NONE)
+		{
+			byte *actor= ACTOR_GET(actor_index);
+
+			iterator[1]= actor_index;
+			iterator[2]= *(const long *)(actor+0x20);
+
+			return actor;
+		}
+	}
+
+	return NULL;
+}
+
+/* 0x00255520: the object of an actor loses the bit 21 of its number at
+0x134 */
+void __attribute__((stdcall)) actor_unknown_00255520(
+	long actor_index,
+	long unknown1)
+{
+	(void)unknown1;
+	*(unsigned long *)(ACTOR_OBJECT_GET(*(const long *)(ACTOR_GET(actor_index)+0x18))+0x134)&= ~0x200000;
+}
+
+/* 0x00255660: an actor takes the vector that something has at 0x10 at
+0x458, 0x4000089 for its number at 0x450 and 1 for its byte at 0x456 */
+void __attribute__((stdcall)) actor_unknown_00255660(
+	long actor_index,
+	const byte *unknown1)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	*(real_vector3d *)(actor+0x458)= *(const real_vector3d *)(unknown1+0x10);
+	*(unsigned long *)(actor+0x450)= 0x4000089;
+	actor[0x456]= 1;
+}
+
+/* 0x00257010: an actor takes its own vector at 0x290 at 0x458, 0x6000085
+for its number at 0x450, 0 for its short at 0x454 and 1 for its byte at
+0x456 */
+void __attribute__((stdcall)) actor_unknown_00257010(
+	long actor_index,
+	long unknown1)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	(void)unknown1;
+	*(real_vector3d *)(actor+0x458)= *(const real_vector3d *)(actor+0x290);
+	actor[0x456]= 1;
+	*(unsigned long *)(actor+0x450)= 0x6000085;
+	*(short *)(actor+0x454)= 0;
+}
+
+/* 0x002562c0: the swarm of an actor (0x1C), if it has one, has 0 for its
+short at 0x1C */
+void __attribute__((stdcall)) actor_unknown_002562c0(
+	long actor_index,
+	long unknown1)
+{
+	long swarm_index= *(const long *)(ACTOR_GET(actor_index)+0x1C);
+
+	(void)unknown1;
+	if (swarm_index!=NONE)
+	{
+		*(short *)((byte *)swarm_data->data+(swarm_index&0xFFFF)*0x34+0x1C)= 0;
+	}
+}
+
+/* 0x002570b0: unknown_00470c44 if unknown_005047f4 starts with a short that
+is 1 and the actor has something at 0x338; unknown_00470c40 if not */
+short __attribute__((stdcall)) actor_unknown_002570b0(
+	long actor_index,
+	long unknown1,
+	long unknown2)
+{
+	(void)unknown1;
+	(void)unknown2;
+	if (*(const short *)unknown_005047f4==1 && *(const long *)(ACTOR_GET(actor_index)+0x338)!=NONE)
+	{
+		return (short)unknown_00470c44;
+	}
+
+	return (short)unknown_00470c40;
+}
+
+/* 0x00257a40: the clump of an actor (0x7C), if it has one, has the time of
+the game for its number at 0x4C */
+void __attribute__((stdcall)) actor_unknown_00257a40(
+	long actor_index,
+	long unknown1,
+	long unknown2)
+{
+	long clump_index= *(const long *)(ACTOR_GET(actor_index)+0x7C);
+
+	(void)unknown1;
+	(void)unknown2;
+	if (clump_index!=NONE)
+	{
+		*(unsigned long *)((byte *)clump_data->data+(clump_index&0xFFFF)*0x50+0x4C)= game_time_globals->time;
+	}
+}
+
+/* 0x0025aba0: an actor has 0 for its byte at 0x3B8, and each of the three
+things of 12 bytes that it has at 0x1C4, if it is in use (its first short is
+not NONE), has one less in its short at 8; when that gets to zero the thing
+is free: NONE for its shorts at 0, 4 and 6, and 0 for the one at 10 */
+void actor_unknown_0025aba0(
+	long actor_index)
+{
+	byte *actor= ACTOR_GET(actor_index);
+	long index;
+
+	actor[0x3B8]= 0;
+	for (index= 0; index<3; index++)
+	{
+		short *element= (short *)(actor+0x1C4+index*12);
+
+		if (element[0]!=NONE)
+		{
+			element[4]--;
+			if (element[4]<=0)
+			{
+				element[0]= NONE;
+				element[2]= NONE;
+				element[3]= NONE;
+				element[5]= 0;
+			}
+		}
+	}
+}

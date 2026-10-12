@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Trece funciones más de los actores, con su recorrido
+
+Trece funciones (1030 bytes) en `ai/actors.c`. De 2454
+funciones se pasa a 2467, el 21,90 % de las del juego (el 11,970 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `actor_set_unknown810_bit11` | `0x001e4290` | `ai/actors.c` |
+| `actor_set_unknown225` | `0x001e4650` | `ai/actors.c` |
+| `actor_unknown_001f5560` | `0x001f5560` | `ai/actors.c` |
+| `actor_unknown_00203fb0` | `0x00203fb0` | `ai/actors.c` |
+| `actor_iterator_new` | `0x00204d30` | `ai/actors.c` |
+| `actor_iterator_next` | `0x00204d70` | `ai/actors.c` |
+| `actor_unknown_00255520` | `0x00255520` | `ai/actors.c` |
+| `actor_unknown_00255660` | `0x00255660` | `ai/actors.c` |
+| `actor_unknown_00257010` | `0x00257010` | `ai/actors.c` |
+| `actor_unknown_002562c0` | `0x002562c0` | `ai/actors.c` |
+| `actor_unknown_002570b0` | `0x002570b0` | `ai/actors.c` |
+| `actor_unknown_00257a40` | `0x00257a40` | `ai/actors.c` |
+| `actor_unknown_0025aba0` | `0x0025aba0` | `ai/actors.c` |
+
+### Lo que se sabe
+
+- Los actores están en una lista: empieza en `0x14` de `ai_globals` y sigue
+  por el número de `0x20` de cada actor. `actor_iterator_new` y
+  `actor_iterator_next` la recorren (toda, o la de un escuadrón, que nombra
+  su primer actor en `0x68`), y `actor_unknown_00203fb0` saca un actor de
+  ella.
+- Un actor nombra su enjambre («swarm») en `0x1C`.
+- `actor_unknown_0025aba0` descuenta tres temporizadores de 12 bytes que el
+  actor tiene en `0x1C4` y libera los que llegan a cero.
+- Las funciones desde `0x255520` responden con otra pareja de números (-1 y
+  -2) en `0x470c40`: son de otro archivo del juego que las de `0x1a…`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  724.
+- Los nombres son suposiciones (también los del recorrido), y todas están
+  en `actors.c` aunque en el juego son de dos archivos al menos.
+- En este hito se pasaron las pruebas de las trece funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Trece funciones pequeñas más de los actores
 
 Trece funciones (1131 bytes) en `ai/actors.c`. De 2441

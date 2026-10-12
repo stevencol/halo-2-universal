@@ -570,3 +570,5 @@ address,name,source
 00509415,unknown_00509415,source/main/main.c
 0046fbe4,unknown_0046fbe4,source/ai/actors.c
 0046fbe8,unknown_0046fbe8,source/ai/actors.c
+00470c40,unknown_00470c40,source/ai/actors.c
+00470c44,unknown_00470c44,source/ai/actors.c
