@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 703.
+**Última actualización:** 2026-10-08, al terminar el hito 704.
 
 ## Dónde estamos
 
-- **2276 funciones descompiladas de 11.265: el 20,20 % del juego** (el
-  11,756 % de los bytes de código).
-- Las 2276 están comprobadas contra el ejecutable original: las 1390 del
+- **2278 funciones descompiladas de 11.265: el 20,22 % del juego** (el
+  11,759 % de los bytes de código).
+- Las 2278 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how temporary script threads and nodes are deleted* (ver `git log`).
+- Último hito: *Decompile whether two teams are enemies in multiplayer, and how room is made in the physics world* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 533 funciones apuntadas pero sin descompilar (las que el código
-  llama); 384 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 532 funciones apuntadas pero sin descompilar (las que el código
+  llama); 383 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 

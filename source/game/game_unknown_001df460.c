@@ -108,11 +108,11 @@ void game_unknown_001df460_update(
 }
 
 /* 0x0015e020: whether two teams are enemies, in multiplayer */
-boolean __attribute__((stdcall)) unknown_0015e020(short team, short other);
+boolean __attribute__((stdcall)) game_engine_teams_are_enemies(short team, short other);
 
 /* 0x001df560: whether two sides are enemies; no side is one of everyone.
 In the campaign they are unless their bit of the sixteen rows is set (sides
-that are not from 0 to 15 are); in multiplayer unknown_0015e020 says; in any
+that are not from 0 to 15 are); in multiplayer game_engine_teams_are_enemies says; in any
 other kind of game, two sides that are not the same are. So the rows of this
 part are who is whose ally; the names are guesses */
 boolean game_team_is_enemy(
@@ -135,7 +135,7 @@ boolean game_team_is_enemy(
 	}
 	if (main_game_globals->options.game_mode==_game_mode_multiplayer)
 	{
-		return unknown_0015e020(team, other);
+		return game_engine_teams_are_enemies(team, other);
 	}
 
 	return team!=other;
@@ -164,7 +164,7 @@ boolean game_team_is_friend(
 	}
 	if (main_game_globals->options.game_mode==_game_mode_multiplayer)
 	{
-		return !unknown_0015e020(team, other);
+		return !game_engine_teams_are_enemies(team, other);
 	}
 
 	return team==other;

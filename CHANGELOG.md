@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Enemigos en multijugador, y hacer sitio en el mundo de la física
+
+Dos funciones (100 bytes): una en `game/game_engine.c` y otra en `physics/havok.c`.
+De 2276
+funciones se pasa a 2278, el 20,22 % de las del juego (el 11,759 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_engine_teams_are_enemies` | `0x0015e020` | `game/game_engine.c` |
+| `havok_unknown_001c51c0` | `0x001c51c0` | `physics/havok.c` |
+
+### Lo que se sabe
+
+- `game_engine_teams_are_enemies` (antes `unknown_0015e020`, la que usan
+  las funciones de alianzas del hito 682 en multijugador): pregunta al
+  objeto que lleva el tipo de partida en curso (su función número 28); si
+  no hay ninguno, no son enemigos. La tabla `unknown_0055e4d0` es, pues, de
+  punteros a esos objetos, uno por tipo de partida.
+- `havok_unknown_001c51c0` (un número en `edi`): mientras el mundo de la
+  física tenga más de 846 cuerpos, quita alguno (`unknown_001c4040`); va
+  probando tres pasadas cada vez más agresivas y luego las mismas tres con
+  otra opción.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  703.
+- `unknown_001c4040` (lo que elige qué quitar) no está descompilada. Si
+  nunca pudiera quitar nada, el bucle del juego no acabaría: la prueba
+  hace que al final siempre pueda.
+- En este hito se pasaron las pruebas de las dos funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Borrar los hilos y nodos de guion que no se quedan
 
 Una función (325 bytes) en `hs/hs.c`. De 2275

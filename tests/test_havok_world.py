@@ -75,7 +75,7 @@ def run(t) -> None:
                 "unknown_0047f050": random_.choice((0, 0x351, 0x352, 0x353, 0x1000, 0xFFFFFFFF)),
             },
             externals={
-                "unknown_001c51c0": NOTHING,
+                "havok_unknown_001c51c0": NOTHING,
                 "unknown_0030f2d0": NOTHING,
                 "unknown_0030bc90": NOTHING,
                 "unknown_00278f00": NOTHING,

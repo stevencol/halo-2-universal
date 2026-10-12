@@ -301,7 +301,7 @@ void unknown_0030f800(void *world, byte *removed, void *entity);
 void unknown_0030f2d0(void *world, void *entity);
 void unknown_00278f00(void);
 boolean unknown_00279740(void *object);
-void unknown_001c51c0(long unknown);
+void havok_unknown_001c51c0(long unknown);
 
 /* a thing of Havok's that is counted (a short, at 6): one less has it, and
 if nothing has it, it is no more: unless unknown_00279740 says that it is to
@@ -352,7 +352,7 @@ void havok_unknown_001c2890(
 }
 
 /* 0x001c39c0: a thing is put in the world. When the world has 0x352 things
-or more, unknown_001c51c0 is told first, with what the thing has for the key
+or more, havok_unknown_001c51c0 is told first, with what the thing has for the key
 0x2001 in its list of keys and values (at 0x30; so many at 0x34), or zero.
 With the second argument, a thing whose number at 0x40 of what it has at
 0x44 is 1 has unknown_0030bc90 done to it */
@@ -375,7 +375,7 @@ void __attribute__((stdcall)) havok_unknown_001c39c0(
 				break;
 			}
 		}
-		unknown_001c51c0(value);
+		havok_unknown_001c51c0(value);
 	}
 	unknown_0047f050++;
 	unknown_0030f2d0(unknown_0051e9a4, entity);
@@ -480,4 +480,35 @@ void havok_unknown_001c2a10(
 	}
 	unknown_001c50c0();
 	unknown_0047f054= (long)game_time_globals->time;
+}
+
+/* 0x001c4040: something of the world of the physics is taken out, to make
+room: whether it could */
+boolean unknown_001c4040(boolean unknown, long pass, long unknown3, long unknown4, long unknown5);
+
+/* 0x001c51c0: while the world of the physics has more than 0x34E things,
+room is made (unknown_001c4040): with passes from 0 to 2 that go on when
+nothing could be taken out, and then the same three passes with its first
+argument set */
+void havok_unknown_001c51c0(
+	long unknown)
+{
+	boolean second= FALSE;
+	long pass= 0;
+
+	while (unknown_0047f050>0x34E)
+	{
+		if (!unknown_001c4040(second, pass, 0, 1, unknown))
+		{
+			if (pass<2)
+			{
+				pass++;
+			}
+			else if (!second)
+			{
+				second= TRUE;
+				pass= 0;
+			}
+		}
+	}
 }

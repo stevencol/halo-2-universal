@@ -26,7 +26,7 @@ def run(t) -> None:
                     "unknown_004f55ec": Buffer(random_.randbytes(0xE4 + 0x10)),
                 },
                 externals={
-                    "unknown_0015e020": lambda harness, arguments, enemies=enemies: (
+                    "game_engine_teams_are_enemies": lambda harness, arguments, enemies=enemies: (
                         enemies,
                         (arguments[0] & 0xFFFF, arguments[1] & 0xFFFF),
                     )

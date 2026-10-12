@@ -41,3 +41,25 @@ void game_engine_initialize(
 	unknown_004e9ae8= globals;
 	*(long *)(globals+UNKNOWN_004E9AE8_UNKNOWNC14_OFFSET)= NONE;
 }
+
+/* 0x0055e4d0, of game_voice.c: for each kind of game, what runs it (a thing
+with its functions), or nothing */
+extern long unknown_0055e4d0[];
+
+/* 0x0015e020: whether two teams are enemies, in multiplayer: what runs the
+kind of game that is played says (its 28th function); they are not if nothing
+runs it */
+boolean __attribute__((stdcall)) game_engine_teams_are_enemies(
+	short team,
+	short other)
+{
+	void *engine= (void *)unknown_0055e4d0[*(const long *)(unknown_004e9ae8+0xC14)];
+
+	if (engine)
+	{
+		return ((boolean (__attribute__((thiscall)) *)(void *, short, short))(*(void ***)engine)[27])(engine, team,
+			other);
+	}
+
+	return FALSE;
+}
