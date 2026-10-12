@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Efectos, estelas y calcomanías: carpeta nueva con siete funciones cortas
+
+Siete funciones cortas (unos 330 bytes) en tres archivos de la carpeta nueva `effects/`.
+De 2072
+funciones se pasa a 2079, el 18,46 % de las del juego (el 11,264 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `effects_dispose` | `0x00175bd0` | `effects/effects.c` |
+| `effects_initialize_for_new_map` | `0x00175c10` | `effects/effects.c` |
+| `effects_dispose_from_old_map` | `0x00175c70` | `effects/effects.c` |
+| `contrails_dispose` | `0x0017b850` | `effects/contrails.c` |
+| `contrails_initialize_for_new_map` | `0x0017b870` | `effects/contrails.c` |
+| `contrails_dispose_from_old_map` | `0x0017b8a0` | `effects/contrails.c` |
+| `decals_initialize_for_new_map` | `0x0017d2e0` | `effects/decals.c` |
+
+### Lo que se sabe
+
+- Tres partes más de la tabla de partes del juego, y **esta vez con nombre
+  seguro**, porque el juego pone nombre a sus tablas de datos al crearlas:
+  `"effect"` y `"effect location"`, `"contrail"` y `"contrail point"`,
+  `"decals"`.
+- Los **efectos** tienen seis tablas (256 efectos de `0x190` bytes, 512
+  sitios de `0x3C`, y cuatro más aún sin nombre). Con un mapa nuevo cada
+  tabla se marca como usable y se vacía; al irse el mapa dejan de serlo; al
+  cerrar se olvidan.
+- Las **estelas** tienen dos (256 estelas de `0x48` bytes y 1024 puntos de
+  `0x38`), con las mismas tres funciones.
+- De las **calcomanías** (1024 de `0x40` bytes) solo se hizo la de mapa
+  nuevo: además de vaciar la tabla, borra un bloque de `0x3C2C` bytes del
+  estado del juego y deja en `NONE` sus `0xE00` números.
+- Las funciones de arranque de las tres (las que crean las tablas) quedan
+  pendientes: piden la memoria por una tabla de funciones.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  610.
+- Los nombres de los archivos salen de los textos de las tablas, no de un
+  nombre de archivo; las cuatro tablas sin nombre de los efectos
+  seguramente son de otras cosas que arrancan con ellos.
+- En este hito se pasaron las pruebas de las siete funciones y `test_game`
+  entera.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — La parte del hito 609 son las superficies que se rompen; dos funciones más
 
 Dos funciones nuevas (unos 110 bytes) y cinco que cambian de archivo: todas quedan en el

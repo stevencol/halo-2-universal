@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 610.
+**Última actualización:** 2026-10-08, al terminar el hito 611.
 
 ## Dónde estamos
 
-- **2072 funciones descompiladas de 11.265: el 18,39 % del juego** (el
+- **2079 funciones descompiladas de 11.265: el 18,46 % del juego** (el
   11,264 % de los bytes de código).
-- Las 2072 están comprobadas contra el ejecutable original: las 1390 del
+- Las 2079 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Move a part to its own file, the surfaces that break, and decompile two more of it* (ver `git log`).
+- Último hito: *Decompile seven short functions of the effects, the contrails and the decals* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 575 funciones apuntadas pero sin descompilar (las que el código
-  llama); 426 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 568 funciones apuntadas pero sin descompilar (las que el código
+  llama); 419 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 

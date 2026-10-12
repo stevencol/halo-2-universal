@@ -180,18 +180,18 @@ void unknown_0016efb0(void);
 void unknown_0016f0e0(void);
 void unknown_0016f120(void);
 void unknown_00175b50(void);
-void unknown_00175bd0(void);
-void unknown_00175c10(void);
-void unknown_00175c70(void);
+void effects_dispose(void);
+void effects_initialize_for_new_map(void);
+void effects_dispose_from_old_map(void);
 void unknown_00175d70(void);
 void unknown_0017b7b0(void);
-void unknown_0017b850(void);
-void unknown_0017b870(void);
-void unknown_0017b8a0(void);
+void contrails_dispose(void);
+void contrails_initialize_for_new_map(void);
+void contrails_dispose_from_old_map(void);
 void unknown_0017b940(void);
 void unknown_0017d220(void);
 void unknown_0017d2a0(void);
-void unknown_0017d2e0(void);
+void decals_initialize_for_new_map(void);
 void unknown_0017d330(void);
 void unknown_0017d350(void);
 void unknown_0017d440(void);
@@ -375,10 +375,10 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{breakable_surfaces_initialize, no_operation, breakable_surfaces_initialize_for_new_map, no_operation, breakable_surfaces_unknown_00183ee0, breakable_surfaces_unknown_00183f00},
 	{unknown_001552e0, no_operation, unknown_00155380, unknown_00155490},
 	{unknown_0016efb0, no_operation, unknown_0016f0e0, no_operation, unknown_0016f120, no_operation},
-	{unknown_0017d220, unknown_0017d2a0, unknown_0017d2e0, unknown_0017d330, unknown_0017d350, unknown_0017d440, NULL, (game_system_activation_proc)unknown_0017d5e0},
+	{unknown_0017d220, unknown_0017d2a0, decals_initialize_for_new_map, unknown_0017d330, unknown_0017d350, unknown_0017d440, NULL, (game_system_activation_proc)unknown_0017d5e0},
 	{no_operation, no_operation, no_operation, no_operation},
-	{unknown_0017b7b0, unknown_0017b850, unknown_0017b870, unknown_0017b8a0, unknown_0017b940, no_operation},
-	{unknown_00175b50, unknown_00175bd0, unknown_00175c10, unknown_00175c70, unknown_00175d70, no_operation},
+	{unknown_0017b7b0, contrails_dispose, contrails_initialize_for_new_map, contrails_dispose_from_old_map, unknown_0017b940, no_operation},
+	{unknown_00175b50, effects_dispose, effects_initialize_for_new_map, effects_dispose_from_old_map, unknown_00175d70, no_operation},
 	{no_operation, no_operation, no_operation, no_operation, unknown_0003f2b0, no_operation},
 	{no_operation, no_operation, unknown_00211030, no_operation},
 	{sound_classes_initialize, sound_classes_dispose, sound_classes_initialize_for_new_map, sound_classes_dispose_from_old_map},

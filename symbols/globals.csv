@@ -442,3 +442,13 @@ address,name,source
 004ea960,unknown_004ea960,source/physics/breakable_surfaces.c
 004eaa60,unknown_004eaa60,source/physics/breakable_surfaces.c
 004eca80,unknown_004eca80,source/physics/breakable_surfaces.c
+004ea93c,effect_data,source/effects/effects.c
+004ea938,effect_location_data,source/effects/effects.c
+00510c74,unknown_00510c74,source/effects/effects.c
+0051ec84,unknown_0051ec84,source/effects/effects.c
+0051ec88,unknown_0051ec88,source/effects/effects.c
+0051ec8c,unknown_0051ec8c,source/effects/effects.c
+004ea944,contrail_data,source/effects/contrails.c
+004ea940,contrail_point_data,source/effects/contrails.c
+004ea950,decal_data,source/effects/decals.c
+004ea94c,decal_globals,source/effects/decals.c
