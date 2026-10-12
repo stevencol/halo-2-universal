@@ -1426,7 +1426,7 @@ address,name,source,arguments,returns,convention
 0020b660,unknown_0020b660,,,void
 0015c150,unknown_0015c150,,,void
 00195ed0,unknown_00195ed0,,,void
-00209310,unknown_00209310,,,void
+00209310,hs_runtime_update,source/hs/hs_runtime.c,,void
 00138c10,unknown_00138c10,,,void
 000b6f10,unknown_000b6f10,,,void
 001c3d30,unknown_001c3d30,,,void
@@ -2801,3 +2801,5 @@ address,name,source,arguments,returns,convention
 000c1720,lights_unknown_000c1720,source/objects/lights.c,stack stack stack,int,stdcall
 000c17f0,light_unknown_000c17f0,source/objects/lights.c,eax edx stack,bool
 000c1a80,unknown_000c1a80,,ecx edx stack,void
+00209850,unknown_00209850,,edi,void
+001deed0,unknown_001deed0,,,void

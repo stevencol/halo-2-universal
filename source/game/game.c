@@ -81,7 +81,7 @@ void unknown_001fb510(void);
 void unknown_0020b660(void);
 void unknown_0015c150(void);
 void unknown_00195ed0(void);
-void unknown_00209310(void);
+void hs_runtime_update(void);
 void unknown_00138c10(void);
 void unknown_000b6f10(void);
 void unknown_001c3d30(void);
@@ -585,7 +585,7 @@ void game_tick(
 		unknown_0020b660();
 		unknown_0015c150();
 		unknown_00195ed0();
-		unknown_00209310();
+		hs_runtime_update();
 		unknown_00138c10();
 		unknown_000b6f10();
 		unknown_001c3d30();

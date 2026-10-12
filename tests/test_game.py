@@ -463,7 +463,7 @@ def run_players_and_won(t) -> None:
         "unknown_0020b660",
         "unknown_0015c150",
         "unknown_00195ed0",
-        "unknown_00209310",
+        "hs_runtime_update",
         "unknown_00138c10",
         "unknown_000b6f10",
         "unknown_001c3d30",

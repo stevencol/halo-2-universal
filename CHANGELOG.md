@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Los hilos de los guiones en cada tic
+
+Una función (189 bytes) en `hs/hs_runtime.c`. De 2266
+funciones se pasa a 2267, el 20,12 % de las del juego (el 11,713 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `hs_runtime_update` | `0x00209310` | `hs/hs_runtime.c` |
+
+### Lo que se sabe
+
+- `hs_runtime_update` (antes `unknown_00209310`): en cada tic, mientras los
+  guiones estén en marcha (`0x4f9388`), recorre los hilos y ejecuta
+  (`unknown_00209850`) cada uno que no sea de la clase 4 y cuya hora de
+  despertar ya haya pasado. Un hilo puede parar todos los guiones, y
+  entonces el recorrido se corta. Al final llama a `unknown_001deed0`.
+- Del hilo (`0x418` bytes) se conocen su clase (byte `+2`) y la hora de la
+  partida hasta la que duerme (`+8`; negativa, para siempre).
+- La marca `0x4f9388` del hito 697 es, pues, «los guiones están en marcha».
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  697.
+- `unknown_00209850` (lo que ejecuta un hilo) no está descompilada;
+  `unknown_001deed0` está entre las de las listas de objetos de los
+  guiones.
+- En este hito se pasaron las pruebas de la función. Hay una batería
+  completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — El motor de los guiones cuando se va un mapa
 
 Una función (123 bytes) en `hs/hs_runtime.c`. De 2265

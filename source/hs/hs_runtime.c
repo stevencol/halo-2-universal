@@ -7,6 +7,7 @@ that the game gives to its two tables of data ("hs thread", "hs globals").
 */
 
 #include "cseries/cseries.h"
+#include "game/game.h"
 #include "memory/data.h"
 #include "saved games/game_state.h"
 
@@ -95,4 +96,51 @@ void hs_runtime_dispose_from_old_map(
 		}
 	}
 	unknown_004f9388= FALSE;
+}
+
+enum
+{
+	HS_THREAD_SIZE= 0x418,
+	/* of a thread: its kind, a byte (those of the kind 4 are not run by the
+	tick), and the time of the game that it sleeps until (below zero: for
+	ever) */
+	HS_THREAD_TYPE_OFFSET= 2,
+	HS_THREAD_SLEEP_UNTIL_OFFSET= 8
+};
+
+/* 0x00209850: a thread runs until it sleeps or ends */
+void unknown_00209850(long thread_index);
+
+/* 0x001deed0: what is done after the threads have run (of the lists of
+objects of the scripts, by where it is) */
+void unknown_001deed0(void);
+
+/* 0x00209310: each tick of the game, while the scripts run (unknown_004f9388:
+a thread can stop them all): each thread that is not of the kind 4 and whose
+time to sleep is over runs. Then unknown_001deed0 */
+void hs_runtime_update(
+	void)
+{
+	if (unknown_004f9388)
+	{
+		long time= (long)game_time_globals->time;
+		long thread_index;
+
+		for (thread_index= data_next_index(hs_thread_data, NONE); thread_index!=NONE; )
+		{
+			const byte *thread= (const byte *)hs_thread_data->data+(thread_index&0xFFFF)*HS_THREAD_SIZE;
+
+			if (thread[HS_THREAD_TYPE_OFFSET]!=4 && *(const long *)(thread+HS_THREAD_SLEEP_UNTIL_OFFSET)>=0 &&
+				*(const long *)(thread+HS_THREAD_SLEEP_UNTIL_OFFSET)<=time)
+			{
+				unknown_00209850(thread_index);
+			}
+			thread_index= data_next_index(hs_thread_data, thread_index);
+			if (!unknown_004f9388)
+			{
+				break;
+			}
+		}
+		unknown_001deed0();
+	}
 }
