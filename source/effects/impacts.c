@@ -26,3 +26,14 @@ void impacts_initialize(
 	impact_data= data_new("impacts", 0x20, 0xA0, 0, heap_allocation);
 	impact_array_data= data_new("impact arrarys", 0x20, 0x40, 0, heap_allocation);
 }
+
+/* 0x00226440: the two tables are given back (data_dispose, which the game
+has written here), and there are none */
+void impacts_dispose(
+	void)
+{
+	data_dispose(impact_data);
+	data_dispose(impact_array_data);
+	impact_data= NULL;
+	impact_array_data= NULL;
+}

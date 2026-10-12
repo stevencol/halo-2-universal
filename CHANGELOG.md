@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Primeras funciones de la IA: guiones de mando y lo que los personajes perciben
+
+Tres funciones (unos 430 bytes): dos en la carpeta nueva `ai/` y una en `effects/impacts.c`.
+De 2142
+funciones se pasa a 2145, el 19,04 % de las del juego (el 11,318 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `command_scripts_initialize` | `0x00257d00` | `ai/command_scripts.c` |
+| `props_initialize` | `0x0025c170` | `ai/props.c` |
+| `impacts_dispose` | `0x00226440` | `effects/impacts.c` |
+
+### Lo que se sabe
+
+- **Primeras funciones de la inteligencia artificial**, en una carpeta
+  nueva `ai/`, con nombre por los textos de sus tablas.
+- `command_scripts_initialize` crea `"command scripts"` (40 de `0xD4`
+  bytes) y `"joint command scripts"` (10 de `0x8C`).
+- `props_initialize` crea `"prop"` (256 de `0xC4`), `"prop_ref"` (1024 de
+  `0x3C`) y `"tracking"` (100 de `0x124`): lo que los personajes saben de
+  lo que les rodea.
+- `impacts_dispose` devuelve las dos tablas de los impactos
+  (`data_dispose`, dos veces) y las olvida. No comprueba que existan.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  630.
+- Qué es cada tabla de la IA se deduce solo de su nombre.
+- En este hito se pasaron las pruebas de las tres funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Los componentes de la física y los impactos crean sus tablas
 
 Dos funciones de arranque (unos 190 bytes), en `physics/havok_component.c` y el archivo

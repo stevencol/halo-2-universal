@@ -489,3 +489,8 @@ address,name,source
 004f5724,recorded_animation_data,source/game/recorded_animations.c
 0051ebfc,impact_data,source/effects/impacts.c
 0051ec00,impact_array_data,source/effects/impacts.c
+00502408,command_script_data,source/ai/command_scripts.c
+00502404,joint_command_script_data,source/ai/command_scripts.c
+0050241c,prop_data,source/ai/props.c
+00502418,prop_ref_data,source/ai/props.c
+00502414,tracking_data,source/ai/props.c
