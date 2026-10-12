@@ -129,12 +129,40 @@ enum
 	SIMULATION_PLAYERS_GLOBALS_MACHINE_MASK_OFFSET= 0x2C,
 	SIMULATION_PLAYERS_GLOBALS_MACHINES_OFFSET= 0x30,
 	SIMULATION_PLAYERS_GLOBALS_LOCAL_MACHINE_EXISTS_OFFSET= 0x90,
-	SIMULATION_PLAYERS_GLOBALS_LOCAL_MACHINE_OFFSET= 0x91
+	SIMULATION_PLAYERS_GLOBALS_LOCAL_MACHINE_OFFSET= 0x91,
+	/* more of the thing that is going: a byte that lets views be made, the
+	number that is 1 after it failed, and of a view how it failed. Of the
+	observer of the network: its channels, and in each its state and which
+	channel of the network it is, and the states that a view is made in.
+	Of a session: the console that rules it, and for each console whether
+	it has a channel of the observer and which; and where a console has
+	its six bytes */
+	SIMULATION_PLAYERS_WORLD_UNKNOWN2F_OFFSET= 0x2F,
+	SIMULATION_PLAYERS_WORLD_UNKNOWN18_OFFSET= 0x18,
+	SIMULATION_PLAYERS_VIEW_UNKNOWN28_OFFSET= 0x28,
+	SIMULATION_PLAYERS_OBSERVER_CHANNELS_OFFSET= 0xA8,
+	SIMULATION_PLAYERS_OBSERVER_CHANNEL_SIZE= 0x528,
+	SIMULATION_PLAYERS_OBSERVER_CHANNEL_CHANNEL_OFFSET= 0xC,
+	_simulation_players_observer_channel_state7= 7,
+	SIMULATION_PLAYERS_CHANNEL_SIZE= 0xF8,
+	SIMULATION_PLAYERS_CHANNEL_STATE_OFFSET= 0x54,
+	_simulation_players_channel_state5= 5,
+	SIMULATION_PLAYERS_SESSION_HOST_PEER_OFFSET= 0x40,
+	SIMULATION_PLAYERS_SESSION_PEER_COUNT_OFFSET= 0x54,
+	SIMULATION_PLAYERS_SESSION_PEERS_OFFSET= 0x58,
+	SIMULATION_PLAYERS_SESSION_PEER_CHANNELS_OFFSET= 0x72DC,
+	SIMULATION_PLAYERS_SESSION_PEER_CHANNEL_SIZE= 0x14,
+	SIMULATION_PLAYERS_SESSION_PEER_CHANNEL_VALID_OFFSET= 0x1,
+	SIMULATION_PLAYERS_SESSION_PEER_CHANNEL_INDEX_OFFSET= 0x4,
+	SIMULATION_PLAYERS_PEER_MACHINE_OFFSET= 0xA
 };
 
 /* ---------- prototypes/SIMULATION_PLAYERS.C */
 
 void __attribute__((stdcall)) simulation_players_initialize_for_new_map(byte *players);
+boolean __attribute__((stdcall)) simulation_players_create_view(long channel_index, byte *players, long peer_index,
+	const byte *peer);
+boolean __attribute__((stdcall)) simulation_players_unknown_00084560(byte *players);
 void __attribute__((stdcall)) simulation_players_after_load(byte *players, unsigned long flags);
 
 boolean __attribute__((stdcall)) simulation_players_take_update(byte *identifiers, byte *machines, boolean always,

@@ -14,7 +14,9 @@ they are on. The names are guesses.
 #include "main/main.h"
 #include "memory/data.h"
 #include "networking/network_life_cycle.h"
+#include "networking/network_observer.h"
 #include "networking/network_session.h"
+#include "networking/simulation.h"
 #include "networking/simulation_world.h"
 
 #include <string.h>
@@ -800,4 +802,137 @@ void __attribute__((stdcall)) simulation_players_after_load(
 		players[SIMULATION_PLAYERS_CHANGED_OFFSET]= FALSE;
 		simulation_players_refresh(players);
 	}
+}
+
+/* 0x00085650: a view gets its channel of the observer, for a console of a
+session */
+void __attribute__((stdcall)) unknown_00085650(const byte *peer, byte *observer, byte *view, long channel_index);
+
+/* 0x00084630: a view of another console is made for the simulation, if the
+thing that is going lets it, the console has a channel of the observer that
+the session knows (network_session_has_channel_peer), that channel is in its
+seventh state, and the channel of the network under it is in its fifth. The
+kind of the view is by the state of the thing (2, 1, 4 and 3 for the states
+2 to 5: the game looks at no other); it is made with the six bytes of the
+console and its place in the session (simulation_view_create). Then the view
+that gets the channel (unknown_00085650) is the one with those six bytes, if
+the thing is not in its third state or its fifth
+(simulation_world_get_view_by_unknown14), or the first of the first kind or
+the third (simulation_world_unknown_0006acb0): TRUE if there is one */
+boolean __attribute__((stdcall)) simulation_players_create_view(
+	long channel_index,
+	byte *players,
+	long peer_index,
+	const byte *peer)
+{
+	byte *world= *(byte *const *)(players+SIMULATION_PLAYERS_WORLD_OFFSET);
+	const byte *observer_channel;
+	const byte *channel;
+	word machine[SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE/sizeof(word)];
+	byte *view;
+	long kind;
+
+	if (!world[SIMULATION_PLAYERS_WORLD_UNKNOWN2F_OFFSET] || channel_index==NONE ||
+		!(boolean)network_session_has_channel_peer(*(byte *const *)(players+SIMULATION_PLAYERS_SESSION_OFFSET), channel_index))
+	{
+		return FALSE;
+	}
+	observer_channel= *(byte *const *)(players+SIMULATION_PLAYERS_UNKNOWN8_OFFSET)+
+		channel_index*SIMULATION_PLAYERS_OBSERVER_CHANNEL_SIZE+SIMULATION_PLAYERS_OBSERVER_CHANNELS_OFFSET;
+	if (*(const long *)observer_channel!=_simulation_players_observer_channel_state7)
+	{
+		return FALSE;
+	}
+	channel= unknown_004d87d4+
+		*(const long *)(observer_channel+SIMULATION_PLAYERS_OBSERVER_CHANNEL_CHANNEL_OFFSET)*SIMULATION_PLAYERS_CHANNEL_SIZE;
+	if (*(const long *)(channel+SIMULATION_PLAYERS_CHANNEL_STATE_OFFSET)!=_simulation_players_channel_state5)
+	{
+		return FALSE;
+	}
+	switch (*(const long *)(world+SIMULATION_PLAYERS_WORLD_STATE_OFFSET))
+	{
+	case 2:
+		kind= 2;
+		break;
+	case 3:
+		kind= 1;
+		break;
+	case 4:
+		kind= 4;
+		break;
+	case 5:
+		kind= 3;
+		break;
+	default:
+		__builtin_unreachable();
+	}
+	memcpy(machine, peer+SIMULATION_PLAYERS_PEER_MACHINE_OFFSET, sizeof(machine));
+	simulation_view_create(kind, machine, peer_index, 0);
+	world= *(byte *const *)(players+SIMULATION_PLAYERS_WORLD_OFFSET);
+	if (simulation_unknown_00067e10(world))
+	{
+		view= simulation_world_get_view_by_unknown14(world, machine);
+	}
+	else
+	{
+		view= simulation_world_unknown_0006acb0(world);
+	}
+	if (!view)
+	{
+		return FALSE;
+	}
+	unknown_00085650(peer, *(byte *const *)(players+SIMULATION_PLAYERS_UNKNOWN8_OFFSET), view, channel_index);
+
+	return TRUE;
+}
+
+/* 0x00084560: what a console that does not rule the game does for its view
+of the one that does. If the thing that is going has no view of the first
+kind or the third, or that view has failed, the thing gives up
+(simulation_world_unknown_0006b040). FALSE if the thing has failed for good
+(1 at 0x18). If it has no such view, one is made
+(simulation_players_create_view) for the console that rules the session, by
+the channel of the observer that the session has for it, or NONE */
+boolean __attribute__((stdcall)) simulation_players_unknown_00084560(
+	byte *players)
+{
+	byte *world= *(byte *const *)(players+SIMULATION_PLAYERS_WORLD_OFFSET);
+	struct simulation_view_iterator iterator= {SIMULATION_WORLD_UNKNOWN_0006ACB0_KINDS, 0};
+	byte *view= NULL;
+
+	simulation_world_next_view(&iterator, world, &view);
+	if (!view || *(const long *)(view+SIMULATION_PLAYERS_VIEW_UNKNOWN28_OFFSET)!=0)
+	{
+		simulation_world_unknown_0006b040(world);
+	}
+	world= *(byte *const *)(players+SIMULATION_PLAYERS_WORLD_OFFSET);
+	if (*(const long *)(world+SIMULATION_PLAYERS_WORLD_UNKNOWN18_OFFSET)==1)
+	{
+		return FALSE;
+	}
+	view= NULL;
+	iterator.kind_mask= SIMULATION_WORLD_UNKNOWN_0006ACB0_KINDS;
+	iterator.index= 0;
+	simulation_world_next_view(&iterator, world, &view);
+	if (!view)
+	{
+		const byte *session= *(byte *const *)(players+SIMULATION_PLAYERS_SESSION_OFFSET);
+		long host= *(const long *)(session+SIMULATION_PLAYERS_SESSION_HOST_PEER_OFFSET);
+		long channel_index= NONE;
+
+		if (host>=0 && host<*(const long *)(session+SIMULATION_PLAYERS_SESSION_PEER_COUNT_OFFSET))
+		{
+			const byte *peer_channel= session+SIMULATION_PLAYERS_SESSION_PEER_CHANNELS_OFFSET+
+				host*SIMULATION_PLAYERS_SESSION_PEER_CHANNEL_SIZE;
+
+			if (peer_channel[SIMULATION_PLAYERS_SESSION_PEER_CHANNEL_VALID_OFFSET])
+			{
+				channel_index= *(const long *)(peer_channel+SIMULATION_PLAYERS_SESSION_PEER_CHANNEL_INDEX_OFFSET);
+			}
+		}
+		simulation_players_create_view(channel_index, players, host,
+			session+SIMULATION_PLAYERS_SESSION_PEERS_OFFSET+host*SIMULATION_PLAYERS_MEMBERSHIP_PEER_SIZE);
+	}
+
+	return TRUE;
 }

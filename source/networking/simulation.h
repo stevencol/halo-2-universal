@@ -77,6 +77,7 @@ typedef char verify_simulation_type_table_size[
 
 /* ---------- prototypes/SIMULATION.C */
 
+boolean simulation_unknown_00067e10(const byte *world);
 void simulation_initialize(void);
 void simulation_dispose(void);
 void simulation_initialize_for_new_map(void);

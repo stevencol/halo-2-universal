@@ -662,3 +662,14 @@ void simulation_unknown_000687b0(
 	unknown_004cf770.unknown1[8]= FALSE;
 	unknown_004cf770.unknownA= FALSE;
 }
+
+/* 0x00067e10: whether the thing that is going is not in its third state nor
+in its fifth: the two that simulation_world_update has another way for. It
+is the first function of this file */
+boolean simulation_unknown_00067e10(
+	const byte *world)
+{
+	long state= *(const long *)(world+SIMULATION_WORLD_STATE_OFFSET);
+
+	return state!=3 && state!=5;
+}

@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Se crea la vista de otra consola, y la que no manda busca la de la que manda
+
+Tres funciones (356 bytes), en `networking/simulation.c` y `networking/simulation_players.c`.
+De 1967
+funciones se pasa a 1970, el 17,49 % de las del juego (el 10,986 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_unknown_00067e10` | `0x00067e10` | `networking/simulation.c` |
+| `simulation_players_create_view` | `0x00084630` | `networking/simulation_players.c` |
+| `simulation_players_unknown_00084560` | `0x00084560` | `networking/simulation_players.c` |
+
+### Lo que se sabe
+
+- `simulation_unknown_00067e10` es la primera función de `simulation.c`:
+  dice si lo que está en marcha **no** está en su tercer estado ni en el
+  quinto (los dos que tienen su propio camino en `simulation_world_update`).
+- `simulation_players_create_view` crea la vista de otra consola. Pide
+  cuatro cosas antes: que lo que está en marcha lo permita (byte `0x2F`),
+  que la consola tenga un canal del observador que la sesión conozca, que
+  ese canal esté en su estado 7 y que el canal de red de debajo esté en el
+  5. **El tipo de vista sale del estado**: 2, 1, 4 y 3 para los estados 2 a
+  5. Después le da el canal (`unknown_00085650`) a la vista que encuentra
+  por los seis bytes de la consola, o a la primera del primer o tercer tipo.
+- `simulation_players_unknown_00084560` es lo que hace una consola que no
+  manda en la partida: si no tiene vista de la que manda, o esa vista
+  falló, lo que está en marcha se rinde; y si no tiene vista, la crea para
+  la consola que manda en la sesión (el número de `0x40` de la sesión).
+- De la sesión se sabe ahora: `0x40` es la consola que manda, y desde
+  `0x72DC` hay 0x14 bytes por consola con un byte que dice si tiene canal
+  del observador (`+1`) y cuál (`+4`).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  581.
+- `simulation_players_create_view` no usa la vista que acaba de crear: la
+  vuelve a buscar. Está escrito así en el juego.
+- «La consola que manda» para el número de `0x40` de la sesión es una
+  suposición por cómo se usa aquí.
+- En este hito se pasaron las pruebas de las tres funciones y todas las de
+  `test_simulation…` (163).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Cinco funciones cortas que ya se llamaban
 
 Cinco funciones cortas (386 bytes) en cuatro archivos. De 1962

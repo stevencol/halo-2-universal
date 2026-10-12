@@ -2574,3 +2574,7 @@ address,name,source,arguments,returns,convention
 00086c50,unknown_00086c50,,ebx,void
 00189fe0,unknown_00189fe0,,eax stack,int,stdcall
 0018d5b0,unknown_0018d5b0,,eax,int
+00067e10,simulation_unknown_00067e10,source/networking/simulation.c,eax,bool
+00084630,simulation_players_create_view,source/networking/simulation_players.c,eax stack stack stack,bool,stdcall
+00084560,simulation_players_unknown_00084560,source/networking/simulation_players.c,stack,bool,stdcall
+00085650,unknown_00085650,,eax ecx esi stack,void,stdcall
