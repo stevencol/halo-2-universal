@@ -2777,3 +2777,6 @@ address,name,source,arguments,returns,convention
 00279740,unknown_00279740,,stack,bool
 001c51c0,unknown_001c51c0,,edi,void
 001df9c0,unknown_001df9c0,,stack stack stack,void,stdcall
+001df560,game_team_is_enemy,source/game/game_unknown_001df460.c,ecx esi,bool
+001df5d0,game_team_is_friend,source/game/game_unknown_001df460.c,ecx esi,bool
+0015e020,unknown_0015e020,,stack stack,bool,stdcall

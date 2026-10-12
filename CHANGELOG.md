@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Si dos bandos son enemigos, o amigos
+
+Dos funciones (218 bytes) en `game/game_unknown_001df460.c`. De 2245
+funciones se pasa a 2247, el 19,95 % de las del juego (el 11,596 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_team_is_enemy` | `0x001df560` | `game/game_unknown_001df460.c` |
+| `game_team_is_friend` | `0x001df5d0` | `game/game_unknown_001df460.c` |
+
+### Lo que se sabe
+
+- **Esta parte es la de las alianzas entre bandos**, como se suponía en el
+  hito 681: sus 16 filas de 16 bits dicen qué bandos son aliados, y otras
+  16 filas (en `0xA4`) cuáles son amigos.
+- `game_team_is_enemy` (bandos en `cx` y `si`): un bando `NONE` es enemigo
+  de todos. En la campaña dos bandos son enemigos salvo que tengan puesto
+  su bit de aliados; en multijugador lo dice `unknown_0015e020`; en
+  cualquier otro modo, si son distintos.
+- `game_team_is_friend`: un bando `NONE` no es amigo de nadie. En la
+  campaña lo dice el bit de amigos; en multijugador, que no sean enemigos;
+  en otro modo, que sean el mismo.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  681.
+- Los nombres son supuestos, y el archivo conserva su nombre provisional
+  (`game_unknown_001df460.c`) hasta que haya más de él. Quedan `0x1df640`,
+  `0x1df6c0`, `0x1df820`, `0x1df950` y `0x1df9c0`.
+- En este hito se pasaron las pruebas de las dos funciones. Hay una
+  batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — La parte de las dieciséis filas de bits, en cada tic
 
 Una función (87 bytes) en `game/game_unknown_001df460.c`. De 2244

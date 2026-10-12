@@ -8,6 +8,7 @@ the file is only the address of its first function.
 */
 
 #include "cseries/cseries.h"
+#include "game/game.h"
 #include "saved games/game_state.h"
 
 #include <string.h>
@@ -19,7 +20,10 @@ enum
 	GAME_UNKNOWN_001DF460_SIZE= 0xE4,
 	/* sixteen rows of sixteen bits, and where they are */
 	GAME_UNKNOWN_001DF460_ROWS= 16,
-	GAME_UNKNOWN_001DF460_BITS_OFFSET= 0xC4
+	GAME_UNKNOWN_001DF460_BITS_OFFSET= 0xC4,
+	/* sixteen more rows, before them: of two sides, whether they are friends;
+	the first are whether they are not enemies */
+	GAME_UNKNOWN_001DF460_FRIEND_BITS_OFFSET= 0xA4
 };
 
 /* ---------- globals */
@@ -100,4 +104,67 @@ void game_unknown_001df460_update(
 		}
 		element+= 0x14;
 	}
+}
+
+/* 0x0015e020: whether two teams are enemies, in multiplayer */
+boolean __attribute__((stdcall)) unknown_0015e020(short team, short other);
+
+/* 0x001df560: whether two sides are enemies; no side is one of everyone.
+In the campaign they are unless their bit of the sixteen rows is set (sides
+that are not from 0 to 15 are); in multiplayer unknown_0015e020 says; in any
+other kind of game, two sides that are not the same are. So the rows of this
+part are who is whose ally; the names are guesses */
+boolean game_team_is_enemy(
+	short team,
+	short other)
+{
+	if (team==NONE || other==NONE)
+	{
+		return TRUE;
+	}
+	if (main_game_globals->options.game_mode==_game_mode_campaign)
+	{
+		if (team<0 || team>=GAME_UNKNOWN_001DF460_ROWS || other<0 || other>=GAME_UNKNOWN_001DF460_ROWS)
+		{
+			return TRUE;
+		}
+
+		return !bit_vector_test_flag((const unsigned long *)(unknown_004f55ec+GAME_UNKNOWN_001DF460_BITS_OFFSET),
+			team*GAME_UNKNOWN_001DF460_ROWS+other);
+	}
+	if (main_game_globals->options.game_mode==_game_mode_multiplayer)
+	{
+		return unknown_0015e020(team, other);
+	}
+
+	return team!=other;
+}
+
+/* 0x001df5d0: whether two sides are friends; no side is one of anyone. In
+the campaign their bit of the other sixteen rows says; in multiplayer, that
+they are not enemies; in any other kind of game, that they are the same */
+boolean game_team_is_friend(
+	short team,
+	short other)
+{
+	if (team==NONE || other==NONE)
+	{
+		return FALSE;
+	}
+	if (main_game_globals->options.game_mode==_game_mode_campaign)
+	{
+		if (team<0 || team>=GAME_UNKNOWN_001DF460_ROWS || other<0 || other>=GAME_UNKNOWN_001DF460_ROWS)
+		{
+			return FALSE;
+		}
+
+		return bit_vector_test_flag((const unsigned long *)(unknown_004f55ec+GAME_UNKNOWN_001DF460_FRIEND_BITS_OFFSET),
+			team*GAME_UNKNOWN_001DF460_ROWS+other);
+	}
+	if (main_game_globals->options.game_mode==_game_mode_multiplayer)
+	{
+		return !unknown_0015e020(team, other);
+	}
+
+	return team==other;
 }
