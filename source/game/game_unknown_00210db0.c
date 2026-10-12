@@ -30,7 +30,7 @@ long *unknown_004f93a4;
 
 /* ---------- prototypes */
 
-void unknown_00210f00(void);
+void game_unknown_00210db0_unknown_00210f00(void);
 void game_unknown_00210db0_unknown_00210e20(void);
 void game_unknown_00210db0_unknown_00210e80(void);
 
@@ -45,7 +45,7 @@ void game_unknown_00210db0_initialize(
 }
 
 /* 0x00210df0: the fifth of the functions of the part: for a new structure
-bsp the numbers are NONE, and unknown_00210f00 and game_unknown_00210db0_unknown_00210e20 are done */
+bsp the numbers are NONE, and game_unknown_00210db0_unknown_00210f00 and game_unknown_00210db0_unknown_00210e20 are done */
 void game_unknown_00210db0_initialize_for_new_structure_bsp(
 	void)
 {
@@ -55,7 +55,7 @@ void game_unknown_00210db0_initialize_for_new_structure_bsp(
 	{
 		unknown_004f93a4[index]= NONE;
 	}
-	unknown_00210f00();
+	game_unknown_00210db0_unknown_00210f00();
 	game_unknown_00210db0_unknown_00210e20();
 }
 
@@ -106,6 +106,50 @@ void game_unknown_00210db0_unknown_00210e20(
 		if (element[0x18]&8)
 		{
 			BIT_VECTOR_AND_FLAG((unsigned long *)unknown_004f93a4, index);
+		}
+	}
+}
+
+/* 0x00210f00: the objects of the type 7 forget their two shorts
+(game_unknown_00210db0_unknown_00210e80), and then take them from a list that
+the structure bsp points to at 0x220: so many things of 0xC bytes, each with
+what an object is known by (a number, a short, and two bytes, which the
+object has from 0xA4; the short counts only when the second byte is zero) and
+the two shorts. The first object that is the one of a thing takes them */
+void game_unknown_00210db0_unknown_00210f00(
+	void)
+{
+	const byte *list;
+	long index;
+
+	game_unknown_00210db0_unknown_00210e80();
+	list= *(const byte *const *)((const byte *)global_structure_bsp+0x220);
+	for (index= 0; index<*(const long *)list; index++)
+	{
+		const byte *element= *(const byte *const *)(list+4)+index*0xC;
+		struct object_iterator iterator;
+
+		iterator.signature= OBJECT_ITERATOR_SIGNATURE;
+		iterator.type_mask= 0x80;
+		iterator.header_flags= 0;
+		iterator.absolute_index= 0;
+		iterator.index= NONE;
+		while (object_iterator_next(&iterator)!=NULL)
+		{
+			byte *object= (byte *)((struct object_header_datum *)object_header_data->data)[iterator.index&0xFFFF].datum;
+			boolean same= element[6]==object[0xAA] && element[7]==object[0xAB] &&
+				*(const long *)element==*(const long *)(object+0xA4);
+
+			if (same && element[7]==0)
+			{
+				same= *(const short *)(element+4)==*(const short *)(object+0xA8);
+			}
+			if (same)
+			{
+				*(short *)(object+0x1DA)= *(const short *)(element+8);
+				*(short *)(object+0x1DC)= *(const short *)(element+0xA);
+				break;
+			}
 		}
 	}
 }

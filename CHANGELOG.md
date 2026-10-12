@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Los objetos del tipo 7 toman dos datos de una lista del bsp
+
+Una función (296 bytes) en `game/game_unknown_00210db0.c`, que queda entera. De 2206
+funciones se pasa a 2207, el 19,59 % de las del juego (el 11,433 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_unknown_00210db0_unknown_00210f00` | `0x00210f00` | `game/game_unknown_00210db0.c` |
+
+### Lo que se sabe
+
+- `game_unknown_00210db0_unknown_00210f00` (antes `unknown_00210f00`):
+  primero borra los dos `short` de todos los objetos del tipo 7 (hito 657)
+  y luego recorre una lista a la que apunta el bsp en `0x220` (elementos de
+  `0xC` bytes). Cada elemento trae **la identidad de un objeto** (un
+  número, un `short` y dos bytes, que el objeto guarda desde `0xA4`) y los
+  dos `short` que le tocan; el primer objeto que coincide se los queda.
+- De la identidad, el `short` solo cuenta cuando el segundo byte vale cero.
+- **La parte `game_unknown_00210db0` queda descompilada entera** (seis
+  funciones).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  658.
+- Qué significan los dos `short` (¿a qué zona del bsp pertenece el objeto?)
+  no se sabe. La forma de la identidad (número, bsp de origen, tipo y
+  procedencia) es la de otros juegos del mismo motor, y es una suposición.
+- En este hito se pasaron las pruebas de la función y `test_game_parts_645`.
+  Hay una batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Los dieciséis números eran 512 bits del bsp
 
 Una función (89 bytes) en `game/game_unknown_00210db0.c`. De 2205
