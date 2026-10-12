@@ -8,6 +8,7 @@ gives to its table of data ("actor").
 
 #include "cseries/cseries.h"
 
+#include <math.h>
 #include <stdint.h>
 
 #include "cache/cache_files.h"
@@ -1243,4 +1244,304 @@ void actor_unknown_0025aba0(
 			}
 		}
 	}
+}
+
+/* 0x00502408, of command_scripts.c; 0x0050241c, of props.c; 0x00502424 and
+0x0051eca4, of ai.c */
+extern struct data_array *command_script_data;
+extern struct data_array *prop_data;
+extern struct data_array *joint_state_data;
+extern struct data_array *dynamic_firing_point_data;
+
+/* 0x00470fa0: a NONE that the game keeps with its data */
+long unknown_00470fa0= NONE;
+
+/* the four things of 12 bytes that an actor has at 0x194: a short that is
+NONE for one not in use, another short, and something of joint_state_data */
+#define ACTOR_UNKNOWN194(actor, index) ((actor)+0x194+(index)*12)
+#define ACTOR_JOINT_STATE_GET(joint_index) \
+	((byte *)joint_state_data->data+((joint_index)&0xFFFF)*0xBC)
+
+/* 0x0025bba0: an actor that has 0 or less for its short at 0x684 takes a
+value for its number at 0x68C, a second and a half, in ticks, for its short
+at 0x686, 1 for the one at 0x688 and 0 for the one at 0x684 */
+void actor_unknown_0025bba0(
+	long actor_index,
+	long value)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	if (*(const short *)(actor+0x684)<=0)
+	{
+		*(short *)(actor+0x686)= (short)lrintf((float)game_time_globals->ticks_per_second*1.5f);
+		*(short *)(actor+0x688)= 1;
+		*(long *)(actor+0x68C)= value;
+		*(short *)(actor+0x684)= 0;
+	}
+}
+
+/* 0x00262890: whether a number, other than unknown_00470fa0, is one of the
+four that an actor has every 6 bytes from 0x402 */
+boolean actor_unknown_00262890(
+	long actor_index,
+	long value)
+{
+	const byte *actor= ACTOR_GET(actor_index);
+
+	if (value!=unknown_00470fa0)
+	{
+		short index;
+
+		for (index= 0; index<4; index++)
+		{
+			if (value==*(const long *)(actor+(index+0xAB)*6))
+			{
+				return TRUE;
+			}
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x0026dbd0: an actor takes one of the things of
+dynamic_firing_point_data for its number at 0x3F4, if it had another, and
+the thing has one more in its short at 0xA */
+void actor_set_dynamic_firing_point(
+	long actor_index,
+	long dynamic_firing_point_index)
+{
+	byte *actor= ACTOR_GET(actor_index);
+	byte *dynamic_firing_point=
+		(byte *)dynamic_firing_point_data->data+(dynamic_firing_point_index&0xFFFF)*0x484;
+
+	if (*(const long *)(actor+0x3F4)!=dynamic_firing_point_index)
+	{
+		*(long *)(actor+0x3F4)= dynamic_firing_point_index;
+		(*(short *)(dynamic_firing_point+0xA))++;
+	}
+}
+
+/* 0x0026e9c0: which of the four things at 0x194 of an actor is in use and
+names a thing of joint_state_data; NONE if none */
+short actor_find_unknown194(
+	long actor_index,
+	long joint_index)
+{
+	const byte *actor= ACTOR_GET(actor_index);
+	short index;
+
+	for (index= 0; index<4; index++)
+	{
+		const byte *element= ACTOR_UNKNOWN194(actor, index);
+
+		if (*(const short *)element!=NONE && *(const long *)(element+4)==joint_index)
+		{
+			return index;
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x0026ed40: one of the four things at 0x194 of an actor is not in use
+any more; in its thing of joint_state_data, the place of 12 bytes that its
+second short says has NONE at 4 and 1 for its short at 8. Always true */
+boolean actor_unknown_0026ed40(
+	long actor_index,
+	short index)
+{
+	byte *element= ACTOR_UNKNOWN194(ACTOR_GET(actor_index), index);
+	byte *joint= ACTOR_JOINT_STATE_GET(*(const long *)(element+4));
+
+	*(long *)(joint+*(const short *)(element+2)*12+4)= NONE;
+	*(short *)(joint+*(const short *)(element+2)*12+8)= 1;
+	*(short *)element= NONE;
+
+	return TRUE;
+}
+
+/* 0x0026ecc0: the same thing stops being in use in another way: that place
+has 3 for its short at 8, something takes the second short at 0x18, the
+thing of joint_state_data at 0x10 and 0 for its byte at 0xC, and the thing of
+joint_state_data has one more in its short at 0x7C. Always true */
+boolean actor_unknown_0026ecc0(
+	long actor_index,
+	byte *unknown,
+	short index)
+{
+	byte *element= ACTOR_UNKNOWN194(ACTOR_GET(actor_index), index);
+	short place= *(const short *)(element+2);
+	byte *joint= ACTOR_JOINT_STATE_GET(*(const long *)(element+4));
+
+	*(short *)(joint+place*12+8)= 3;
+	*(short *)(unknown+0x18)= place;
+	unknown[0xC]= 0;
+	*(long *)(unknown+0x10)= *(const long *)(element+4);
+	(*(short *)(joint+0x7C))++;
+	*(short *)element= NONE;
+
+	return TRUE;
+}
+
+/* 0x00275ad0: the actor of an object (0x12C), if the object has one and it
+has its byte at 0xA, takes a value for its byte at 0xB */
+void object_set_actor_unknownB(
+	long object_index,
+	boolean value)
+{
+	if (object_index!=NONE)
+	{
+		long actor_index= *(const long *)(ACTOR_OBJECT_GET(object_index)+0x12C);
+
+		if (actor_index!=NONE)
+		{
+			byte *actor= ACTOR_GET(actor_index);
+
+			if (actor[0xA])
+			{
+				actor[0xB]= value;
+			}
+		}
+	}
+}
+
+/* 0x00298b60: whether an actor has its byte at 0x6F8, 2 or more for its
+short at 0x41C, and for the one at 0x420 either 2, or 1 with the same number
+at 0x424 as at 0x338 */
+boolean actor_unknown_00298b60(
+	long actor_index)
+{
+	const byte *actor= ACTOR_GET(actor_index);
+
+	if (actor[0x6F8] && *(const short *)(actor+0x41C)>=2)
+	{
+		short unknown420= *(const short *)(actor+0x420);
+
+		if (unknown420==2)
+		{
+			return TRUE;
+		}
+		if (unknown420==1 && *(const long *)(actor+0x424)==*(const long *)(actor+0x338))
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* a number that counts down, one less and never under zero; the game does
+it with real numbers */
+static inline __attribute__((always_inline)) long actor_count_down_inline(
+	long count)
+{
+	float less= (float)(count-1);
+
+	if (!(less>0.0f))
+	{
+		less= 0.0f;
+	}
+
+	return (long)less;
+}
+
+/* 0x00297600: the numbers at 0x698 and 0x69C of an actor count down */
+void actor_unknown_00297600(
+	long actor_index)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	*(long *)(actor+0x698)= actor_count_down_inline(*(const long *)(actor+0x698));
+	*(long *)(actor+0x69C)= actor_count_down_inline(*(const long *)(actor+0x69C));
+}
+
+/* 0x0025aad0: the real number at 0x60 of the command script of an actor
+(0x858), if the actor has one and not its byte at 7, the script has 0 or 1
+for its short at 0x30 and the number is more than zero; whether it gave it */
+boolean actor_unknown_0025aad0(
+	long actor_index,
+	float *value)
+{
+	const byte *actor= ACTOR_GET(actor_index);
+	long command_script_index= *(const long *)(actor+0x858);
+
+	if (command_script_index!=NONE && !actor[7])
+	{
+		const byte *command_script=
+			(const byte *)command_script_data->data+(command_script_index&0xFFFF)*0xD4;
+		short unknown30= *(const short *)(command_script+0x30);
+
+		if ((unknown30==0 || unknown30==1) && *(const float *)(command_script+0x60)>0.0f)
+		{
+			*value= *(const float *)(command_script+0x60);
+
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x002687a0: a clump that has its byte at 0x1C looks at its actors (from
+the one at 0x18, each naming the next at 0x80): if one has its byte at 9,
+the clump has the time of the game at 0x20; if none, it has 0 for that byte
+and the tick before at 0x20 */
+void clump_unknown_002687a0(
+	long clump_index)
+{
+	byte *clump= (byte *)clump_data->data+(clump_index&0xFFFF)*0x50;
+
+	if (clump[0x1C])
+	{
+		long actor_index;
+
+		for (actor_index= *(const long *)(clump+0x18); actor_index!=NONE; )
+		{
+			const byte *actor= ACTOR_GET(actor_index);
+
+			actor_index= *(const long *)(actor+0x80);
+			if (actor[9])
+			{
+				*(unsigned long *)(clump+0x20)= game_time_globals->time;
+				return;
+			}
+		}
+		clump[0x1C]= 0;
+		*(unsigned long *)(clump+0x20)= game_time_globals->time-1;
+	}
+}
+
+/* 0x0025da40: something names a prop at 8. If it has something at 0x14:
+true if the prop names no actor at 0x1C; if it names one, false for an actor
+of the type 15, and for the others whether it has 0 for its byte at 0x267 or
+has the one at 0x268. If it has nothing at 0x14: whether the prop has its
+byte at 0x25 and not the one at 0x23 */
+boolean unknown_prop_unknown_0025da40(
+	const byte *unknown)
+{
+	const byte *prop= (const byte *)prop_data->data+(*(const long *)(unknown+8)&0xFFFF)*0xC4;
+
+	if (*(const long *)(unknown+0x14)!=NONE)
+	{
+		long actor_index= *(const long *)(prop+0x1C);
+
+		if (actor_index!=NONE)
+		{
+			const byte *actor= ACTOR_GET(actor_index);
+
+			if (*(const short *)(actor+4)==15)
+			{
+				return FALSE;
+			}
+			if (actor[0x267] && !actor[0x268])
+			{
+				return FALSE;
+			}
+		}
+
+		return TRUE;
+	}
+
+	return prop[0x25] && !prop[0x23];
 }

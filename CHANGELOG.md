@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Doce funciones más de los actores y sus tablas
+
+Doce funciones (1109 bytes) en `ai/actors.c`. De 2467
+funciones se pasa a 2479, el 22,01 % de las del juego (el 12,006 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `actor_unknown_0025bba0` | `0x0025bba0` | `ai/actors.c` |
+| `actor_unknown_00262890` | `0x00262890` | `ai/actors.c` |
+| `actor_set_dynamic_firing_point` | `0x0026dbd0` | `ai/actors.c` |
+| `actor_find_unknown194` | `0x0026e9c0` | `ai/actors.c` |
+| `actor_unknown_0026ed40` | `0x0026ed40` | `ai/actors.c` |
+| `actor_unknown_0026ecc0` | `0x0026ecc0` | `ai/actors.c` |
+| `object_set_actor_unknownB` | `0x00275ad0` | `ai/actors.c` |
+| `actor_unknown_00298b60` | `0x00298b60` | `ai/actors.c` |
+| `actor_unknown_00297600` | `0x00297600` | `ai/actors.c` |
+| `actor_unknown_0025aad0` | `0x0025aad0` | `ai/actors.c` |
+| `clump_unknown_002687a0` | `0x002687a0` | `ai/actors.c` |
+| `unknown_prop_unknown_0025da40` | `0x0025da40` | `ai/actors.c` |
+
+### Lo que se sabe
+
+- Un actor nombra su «command script» en `0x858`, su punto de disparo
+  dinámico en `0x3F4` (que lleva la cuenta de quién lo usa en `0xA`) y hasta
+  cuatro cosas de `joint_state_data` en `0x194`. Un objeto nombra su actor
+  en `0x12C`, y un «prop» el suyo en `0x1C`.
+- Los actores de un «clump» van en otra lista, por el número de `0x80`:
+  `clump_unknown_002687a0` la recorre y apunta la hora en el clump.
+- `actor_unknown_00297600` descuenta dos números sin bajar de cero; el
+  juego lo hace con reales.
+- `actor_unknown_0025bba0` pone un plazo de segundo y medio, en ticks.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  725.
+- Los nombres son suposiciones, y todas están en `actors.c` aunque en el
+  juego son de varios archivos de la IA.
+- En este hito se pasaron las pruebas de las doce funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Trece funciones más de los actores, con su recorrido
 
 Trece funciones (1030 bytes) en `ai/actors.c`. De 2454

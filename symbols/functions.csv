@@ -3001,3 +3001,15 @@ address,name,source,arguments,returns,convention
 002570b0,actor_unknown_002570b0,source/ai/actors.c,stack stack stack,short,stdcall
 00257a40,actor_unknown_00257a40,source/ai/actors.c,stack stack stack,void,stdcall
 0025aba0,actor_unknown_0025aba0,source/ai/actors.c,eax,void
+0025bba0,actor_unknown_0025bba0,source/ai/actors.c,eax stack,void
+00262890,actor_unknown_00262890,source/ai/actors.c,eax stack,bool
+0026dbd0,actor_set_dynamic_firing_point,source/ai/actors.c,ecx edx,void
+0026e9c0,actor_find_unknown194,source/ai/actors.c,ecx esi,short
+0026ed40,actor_unknown_0026ed40,source/ai/actors.c,eax stack,bool
+0026ecc0,actor_unknown_0026ecc0,source/ai/actors.c,eax edx stack,bool
+00275ad0,object_set_actor_unknownB,source/ai/actors.c,eax stack,void
+00298b60,actor_unknown_00298b60,source/ai/actors.c,ecx,bool
+00297600,actor_unknown_00297600,source/ai/actors.c,eax,void
+0025aad0,actor_unknown_0025aad0,source/ai/actors.c,eax stack,bool
+002687a0,clump_unknown_002687a0,source/ai/actors.c,eax,void
+0025da40,unknown_prop_unknown_0025da40,source/ai/actors.c,eax,bool
