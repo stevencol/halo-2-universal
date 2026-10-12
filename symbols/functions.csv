@@ -2699,3 +2699,6 @@ address,name,source,arguments,returns,convention
 0028d9d0,unknown_0028d9d0,,,void
 00292e00,unknown_00292e00,,,void
 00292f60,unknown_00292f60,,,void
+000bffa0,lights_initialize,source/objects/lights.c,,void
+000c0040,lights_initialize_for_new_map,source/objects/lights.c,,void
+001cabc0,unknown_001cabc0,,stack stack stack,void,stdcall

@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Las luces crean su tabla y empiezan un mapa
+
+Dos funciones (unos 240 bytes), en el archivo nuevo `objects/lights.c`.
+De 2159
+funciones se pasa a 2161, el 19,18 % de las del juego (el 11,348 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `lights_initialize` | `0x000bffa0` | `objects/lights.c` |
+| `lights_initialize_for_new_map` | `0x000c0040` | `objects/lights.c` |
+
+### Lo que se sabe
+
+- `lights_initialize` crea `"lights"` (350 de `0x110` bytes) y pide `0xC`
+  bytes del estado de la partida (`light_globals`, nombre supuesto), cuyo
+  byte 8 pone a uno. Si hay tabla, llama a `unknown_001cabc0` con el nombre
+  `"light"` para que rellene tres cosas en `0x4e0310`: un bloque de `0x800`
+  bytes y dos tablas de datos.
+- `lights_initialize_for_new_map` vacía la tabla y las otras dos, pone los
+  512 números del bloque a `NONE` y deja a cero el primer byte y el número
+  de `light_globals`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  637.
+- Qué son las tres cosas de `0x4e0310` no se sabe (quizá en qué zona del
+  mapa está cada luz); `unknown_001cabc0` no está descompilada.
+- En este hito se pasaron las pruebas de las dos funciones. Hay una
+  batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — La IA cuando se va un mapa
 
 Dos funciones (unos 160 bytes) en `ai/ai.c`. De 2157
