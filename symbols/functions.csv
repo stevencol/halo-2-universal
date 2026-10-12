@@ -2683,3 +2683,5 @@ address,name,source,arguments,returns,convention
 00257d00,command_scripts_initialize,source/ai/command_scripts.c,,void
 0025c170,props_initialize,source/ai/props.c,,void
 00226440,impacts_dispose,source/effects/impacts.c,,void
+00200930,squads_initialize,source/ai/squads.c,,void
+0028d930,swarms_initialize,source/ai/swarms.c,,void

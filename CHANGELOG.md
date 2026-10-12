@@ -2,6 +2,39 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Los escuadrones y los enjambres crean sus tablas
+
+Dos funciones de arranque de la IA (unos 290 bytes), en los archivos nuevos `ai/squads.c` y
+`ai/swarms.c`. De 2145
+funciones se pasa a 2147, el 19,06 % de las del juego (el 11,328 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `squads_initialize` | `0x00200930` | `ai/squads.c` |
+| `swarms_initialize` | `0x0028d930` | `ai/swarms.c` |
+
+### Lo que se sabe
+
+- `squads_initialize` pone cinco números a `NONE` (`0x557c74`) y crea
+  `"squad"` (335 de `0x98` bytes) y `"squad group"` (100 de `0x38`), en la
+  memoria del estado de la partida.
+- `swarms_initialize` crea `"swarm"` (32 de `0x34`) y pide `0x190` bytes del
+  estado de la partida para cinco cosas de `0x50` bytes, cada una con un
+  número a `NONE` y un `short` a cero en `0x4C`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  631.
+- Qué son los cinco números de los escuadrones y las cinco cosas de los
+  enjambres no se sabe; los nombres de los archivos salen solo de los
+  textos de las tablas.
+- En este hito se pasaron las pruebas de las dos funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Primeras funciones de la IA: guiones de mando y lo que los personajes perciben
 
 Tres funciones (unos 430 bytes): dos en la carpeta nueva `ai/` y una en `effects/impacts.c`.

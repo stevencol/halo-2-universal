@@ -494,3 +494,8 @@ address,name,source
 0050241c,prop_data,source/ai/props.c
 00502418,prop_ref_data,source/ai/props.c
 00502414,tracking_data,source/ai/props.c
+0051e9d8,squad_data,source/ai/squads.c
+0051e9dc,squad_group_data,source/ai/squads.c
+00557c74,unknown_00557c74,source/ai/squads.c
+005044c8,swarm_data,source/ai/swarms.c
+005044c4,unknown_005044c4,source/ai/swarms.c
