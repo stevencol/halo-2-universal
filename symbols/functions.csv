@@ -2719,7 +2719,7 @@ address,name,source,arguments,returns,convention
 0003b8a0,unknown_0003b8a0,,,void
 000167a0,unknown_000167a0,,,void
 00210f00,unknown_00210f00,,,void
-00210e20,unknown_00210e20,,,void
+00210e20,game_unknown_00210db0_unknown_00210e20,source/game/game_unknown_00210db0.c,,void
 00210e80,game_unknown_00210db0_unknown_00210e80,source/game/game_unknown_00210db0.c,,void
 001edbc0,havok_unknown_001edbc0,source/physics/havok.c,,void
 00146b30,havok_unknown_00146b30,source/physics/havok.c,,void

@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 657.
+**Última actualización:** 2026-10-08, al terminar el hito 658.
 
 ## Dónde estamos
 
-- **2205 funciones descompiladas de 11.265: el 19,57 % del juego** (el
+- **2206 funciones descompiladas de 11.265: el 19,58 % del juego** (el
   11,423 % de los bytes de código).
-- Las 2205 están comprobadas contra el ejecutable original: las 1390 del
+- Las 2206 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how the objects of type 7 forget two shorts when the structure bsp goes* (ver `git log`).
+- Último hito: *Decompile how the part's bits are cleared from a block of the structure bsp* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 539 funciones apuntadas pero sin descompilar (las que el código
-  llama); 390 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 538 funciones apuntadas pero sin descompilar (las que el código
+  llama); 389 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 

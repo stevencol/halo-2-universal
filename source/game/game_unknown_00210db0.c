@@ -14,6 +14,7 @@ the file is only the address of its first function.
 #include "memory/data.h"
 #include "objects/objects.h"
 #include "saved games/game_state.h"
+#include "scenario/scenario.h"
 
 /* ---------- constants */
 
@@ -30,7 +31,7 @@ long *unknown_004f93a4;
 /* ---------- prototypes */
 
 void unknown_00210f00(void);
-void unknown_00210e20(void);
+void game_unknown_00210db0_unknown_00210e20(void);
 void game_unknown_00210db0_unknown_00210e80(void);
 
 /* ---------- code */
@@ -44,7 +45,7 @@ void game_unknown_00210db0_initialize(
 }
 
 /* 0x00210df0: the fifth of the functions of the part: for a new structure
-bsp the numbers are NONE, and unknown_00210f00 and unknown_00210e20 are done */
+bsp the numbers are NONE, and unknown_00210f00 and game_unknown_00210db0_unknown_00210e20 are done */
 void game_unknown_00210db0_initialize_for_new_structure_bsp(
 	void)
 {
@@ -55,7 +56,7 @@ void game_unknown_00210db0_initialize_for_new_structure_bsp(
 		unknown_004f93a4[index]= NONE;
 	}
 	unknown_00210f00();
-	unknown_00210e20();
+	game_unknown_00210db0_unknown_00210e20();
 }
 
 /* 0x00210e10: the sixth: when the structure bsp goes, game_unknown_00210db0_unknown_00210e80 is
@@ -85,5 +86,26 @@ void game_unknown_00210db0_unknown_00210e80(
 
 		*(short *)(object+0x1DA)= NONE;
 		*(short *)(object+0x1DC)= 0;
+	}
+}
+
+/* 0x00210e20: the sixteen numbers are 512 bits, one for each thing of the
+block that the structure bsp has at 0x5C (so many, of 0x24 bytes each): the
+bit of each thing that has the bit 3 of its byte at 0x18 is cleared. What
+the block is of is not known */
+void game_unknown_00210db0_unknown_00210e20(
+	void)
+{
+	const byte *structure_bsp= global_structure_bsp;
+	long index;
+
+	for (index= 0; index<*(const long *)(structure_bsp+0x5C); index++)
+	{
+		const byte *element= *(const byte *const *)(structure_bsp+0x60)+index*0x24;
+
+		if (element[0x18]&8)
+		{
+			BIT_VECTOR_AND_FLAG((unsigned long *)unknown_004f93a4, index);
+		}
 	}
 }

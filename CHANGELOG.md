@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Los dieciséis números eran 512 bits del bsp
+
+Una función (89 bytes) en `game/game_unknown_00210db0.c`. De 2205
+funciones se pasa a 2206, el 19,58 % de las del juego (el 11,423 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_unknown_00210db0_unknown_00210e20` | `0x00210e20` | `game/game_unknown_00210db0.c` |
+
+### Lo que se sabe
+
+- Los 16 números que esta parte pone a `NONE` al llegar un bsp (hito 645)
+  son en realidad **512 bits**, uno por cada elemento del bloque que el bsp
+  tiene en `0x5C` (elementos de `0x24` bytes).
+  `game_unknown_00210db0_unknown_00210e20` (antes `unknown_00210e20`) borra
+  el bit de cada elemento que tiene puesto el bit 3 de su byte de `0x18`.
+- Con esto la parte tiene descompilado todo menos `unknown_00210f00`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  657.
+- De qué es ese bloque del bsp no se sabe (por el tamaño y el tipo 7 de los
+  objetos del hito 657 podría tener que ver con máquinas o puertas, pero es
+  una suposición).
+- En este hito se pasaron las pruebas de la función y `test_game_parts_645`.
+  Hay una batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Los objetos del tipo 7 olvidan dos datos al irse el bsp
 
 Una función (123 bytes) en `game/game_unknown_00210db0.c`. De 2204
