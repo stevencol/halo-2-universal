@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Las luces de un objeto: sacarlas de las zonas o actualizarlas
+
+Una función (200 bytes) en `objects/lights.c`. De 2263
+funciones se pasa a 2264, el 20,10 % de las del juego (el 11,695 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `lights_unknown_000c1720` | `0x000c1720` | `objects/lights.c` |
+
+### Lo que se sabe
+
+- `lights_unknown_000c1720` (un objeto y dos opciones) recorre las luces que
+  cuelgan de un objeto y devuelve cuántas son. Por el camino, si se le
+  pide, saca de las zonas del bsp cada una que tenga el bit 1; y si se le
+  pide, llama a `unknown_000c2d00` con cada una.
+- Detalle: aquí, al sacarla de las zonas, solo mira el bit 1 de la luz, no
+  el bit 3 como hace `light_delete`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  694.
+- Parece lo que se hace con las luces de un objeto cuando el objeto se
+  mueve (sacarlas de donde estaban y volver a colocarlas), pero
+  `unknown_000c2d00` (1027 bytes) no está descompilada y es una suposición.
+- En este hito se pasaron las pruebas de la función. Hay una batería
+  completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Borrar una luz
 
 Una función (212 bytes) en `objects/lights.c`. De 2262

@@ -554,3 +554,51 @@ void __attribute__((stdcall)) light_delete(
 	}
 	datum_delete(light_data, light_index);
 }
+
+/* 0x000c1720: how many lights are on an object. On the way, if it is asked
+for, each that has the bit 1 of its flags is taken out of the clusters; and
+if it is asked for, unknown_000c2d00 is done with each (which puts a light
+where it is, it seems: together they move the lights of an object that moved) */
+long __attribute__((stdcall)) lights_unknown_000c1720(
+	long object_index,
+	boolean remove_from_clusters,
+	boolean update)
+{
+	long count= 0;
+	long absolute_index= NONE;
+
+	for (;;)
+	{
+		const byte *datum;
+		long light_index;
+
+		absolute_index= data_next_absolute_index(light_data, absolute_index+1);
+		if (absolute_index==NONE)
+		{
+			break;
+		}
+		datum= (const byte *)light_data->data+absolute_index*light_data->size;
+		light_index= (*(const short *)datum<<16)|absolute_index;
+		if (*(const long *)(datum+LIGHT_UNKNOWN58_OFFSET)==object_index)
+		{
+			if (remove_from_clusters)
+			{
+				byte *light= (byte *)light_data->data+(light_index&0xFFFF)*LIGHT_SIZE;
+
+				if (light[LIGHT_FLAGS_OFFSET]&2)
+				{
+					cluster_partition_remove(&light_cluster_partition, light_index,
+						(long *)(light+LIGHT_UNKNOWN10_OFFSET));
+					light[LIGHT_FLAGS_OFFSET]&= ~8;
+				}
+			}
+			if (update)
+			{
+				unknown_000c2d00(light_index);
+			}
+			count++;
+		}
+	}
+
+	return count;
+}
