@@ -2872,3 +2872,12 @@ address,name,source,arguments,returns,convention
 000cd660,unit_has_two_weapons_in_hand,source/units/units.c,eax,bool
 000ceea0,unit_clear_unknown2A8,source/units/units.c,stack stack,void,stdcall
 000e4300,unit_clear_unknown34C,source/units/units.c,eax,void
+00030c60,object_get_unknown30,source/units/units.c,eax ecx stack,void
+000a0dd0,object_unknown_000a0dd0,source/units/units.c,stack,bool,stdcall
+000a7670,object_unknown_000a7670,source/units/units.c,eax,bool
+000b8c00,object_get_unknown116_and_count,source/units/units.c,eax stack,pointer
+000b9ce0,object_unknown_000b9ce0,source/units/units.c,ecx,bool
+000bf050,object_unknown_000bf050,source/units/units.c,ecx edx,void
+000ccd20,unit_delete_unknown238,source/units/units.c,eax,void
+000d0980,unit_clear_unknown2A0,source/units/units.c,stack,void,stdcall
+000d0dc0,unit_clear_unknown33E_unknown38,source/units/units.c,eax stack,void

@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Nueve funciones pequeñas más de objetos y unidades
+
+Nueve funciones (483 bytes) en `units/units.c`. De 2339
+funciones se pasa a 2348, el 20,84 % de las del juego (el 11,835 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_get_unknown30` | `0x00030c60` | `units/units.c` |
+| `object_unknown_000a0dd0` | `0x000a0dd0` | `units/units.c` |
+| `object_unknown_000a7670` | `0x000a7670` | `units/units.c` |
+| `object_get_unknown116_and_count` | `0x000b8c00` | `units/units.c` |
+| `object_unknown_000b9ce0` | `0x000b9ce0` | `units/units.c` |
+| `object_unknown_000bf050` | `0x000bf050` | `units/units.c` |
+| `unit_delete_unknown238` | `0x000ccd20` | `units/units.c` |
+| `unit_clear_unknown2A0` | `0x000d0980` | `units/units.c` |
+| `unit_clear_unknown33E_unknown38` | `0x000d0dc0` | `units/units.c` |
+
+### Lo que se sabe
+
+- `object_get_unknown116_and_count` da los elementos de `0x34` bytes de un
+  objeto y cuántos son (su `short` de `0x114` dice cuántos bytes ocupan).
+- `object_unknown_000b9ce0` sube por la cadena de objetos sobre los que
+  está montado uno (`+0x14`) y dice si alguno tiene cierto bit.
+- `unit_delete_unknown238` borra el objeto que una unidad tiene en `0x238`
+  (`unknown_000b8540` es, pues, la que borra un objeto).
+- `object_unknown_000bf050` apunta un objeto en una tabla (`0x4de2d0`) por
+  un `short` que el objeto guarda en `0xAC`.
+- Las otras cinco leen o limpian datos sueltos.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  712.
+- Como en los hitos anteriores, casi todas llevan su desplazamiento o su
+  dirección por nombre y están en `units.c` de forma provisional.
+- En este hito se pasaron las pruebas de las nueve funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Ocho consultas pequeñas más de objetos y unidades
 
 Ocho funciones (381 bytes) en `units/units.c`. De 2331

@@ -7,6 +7,7 @@ the name of the file is a guess, by the one that the first game has.
 
 #include "units.h"
 
+#include "game/game.h"
 #include "objects/objects.h"
 
 /* ---------- code */
@@ -359,4 +360,149 @@ void unit_clear_unknown34C(
 	*(short *)(unit+0x34C)= NONE;
 	unit[0x34E]= 0;
 	unit[0x34F]= 0;
+}
+
+/* 0x004de2d0: a table of objects by a short that each keeps at 0xAC: NONE
+where there is none */
+long *unknown_004de2d0;
+
+/* 0x000b8540: an object is deleted */
+void __attribute__((stdcall)) unknown_000b8540(long object_index);
+
+/* 0x00030c60: the three numbers that an object keeps at 0x30, and the one
+after them */
+void object_get_unknown30(
+	long *unknown,
+	long object_index,
+	long *unknown3C)
+{
+	const byte *object= UNIT_OBJECT_GET(object_index);
+	const long *source= (const long *)(object+0x30);
+
+	unknown[0]= source[0];
+	unknown[1]= source[1];
+	unknown[2]= source[2];
+	*unknown3C= *(const long *)(object+0x3C);
+}
+
+/* 0x000a0dd0: the short that an object keeps at 0x130 is at least 2; false */
+boolean __attribute__((stdcall)) object_unknown_000a0dd0(
+	long object_index)
+{
+	byte *object= (byte *)UNIT_OBJECT_GET(object_index);
+
+	if (*(short *)(object+0x130)<2)
+	{
+		*(short *)(object+0x130)= 2;
+	}
+
+	return FALSE;
+}
+
+/* 0x000a7670: whether an object has an entity of the simulation, in a
+console that only predicts what another rules; false in the others */
+boolean object_unknown_000a7670(
+	long object_index)
+{
+	if (main_game_globals->options.simulation==_game_simulation_predicted)
+	{
+		return *(const long *)(UNIT_OBJECT_GET(object_index)+0xD4)!=NONE;
+	}
+
+	return FALSE;
+}
+
+/* 0x000b8c00: the things of 0x34 bytes that an object has at the offset that
+its short at 0x116 gives, and how many they are: the short at 0x114 is how
+many bytes they take */
+byte *object_get_unknown116_and_count(
+	long object_index,
+	long *count)
+{
+	byte *object= (byte *)UNIT_OBJECT_GET(object_index);
+
+	*count= (long)((unsigned long)(long)*(const short *)(object+0x114)/0x34);
+
+	return object+*(const short *)(object+0x116);
+}
+
+/* 0x000b9ce0: whether an object, or one of those that it is on, up to the
+last, has the bit 4 of the flags of its place in the table or the bit 0 of
+its own */
+boolean object_unknown_000b9ce0(
+	long object_index)
+{
+	for (;;)
+	{
+		const struct object_header_datum *header=
+			&((const struct object_header_datum *)object_header_data->data)[object_index&0xFFFF];
+		const byte *object= (const byte *)header->datum;
+
+		if ((header->flags&0x10) || (object[4]&1))
+		{
+			return TRUE;
+		}
+		object_index= *(const long *)(object+0x14);
+		if (object_index==NONE)
+		{
+			return FALSE;
+		}
+	}
+}
+
+/* 0x000bf050: an object takes a place of the table of unknown_004de2d0, if
+no object has it: the object keeps which at 0xAC */
+void object_unknown_000bf050(
+	short index,
+	long object_index)
+{
+	byte *object= (byte *)UNIT_OBJECT_GET(object_index);
+	long *place= &unknown_004de2d0[index];
+
+	if (*place==NONE)
+	{
+		*place= object_index;
+		*(short *)(object+0xAC)= index;
+	}
+}
+
+/* 0x000ccd20: the object that a unit has at 0x238 is deleted, and the unit
+has none */
+void unit_delete_unknown238(
+	long unit_index)
+{
+	byte *unit= (byte *)UNIT_OBJECT_GET(unit_index);
+
+	if (*(long *)(unit+0x238)!=NONE)
+	{
+		unknown_000b8540(*(long *)(unit+0x238));
+		*(long *)(unit+0x238)= NONE;
+	}
+}
+
+/* 0x000d0980: four things that a unit keeps from 0x2A0 are NONE */
+void __attribute__((stdcall)) unit_clear_unknown2A0(
+	long unit_index)
+{
+	byte *unit= (byte *)UNIT_OBJECT_GET(unit_index);
+
+	*(long *)(unit+0x2A0)= NONE;
+	*(short *)(unit+0x2A4)= NONE;
+	*(long *)(unit+0x2A8)= NONE;
+	*(long *)(unit+0x2AC)= NONE;
+}
+
+/* 0x000d0dc0: the number at 0x38 of what an object has at the offset that
+its short at 0x33E gives is NONE, if it was a given one */
+void unit_clear_unknown33E_unknown38(
+	long unit_index,
+	long unknown)
+{
+	byte *unit= (byte *)UNIT_OBJECT_GET(unit_index);
+	byte *unknown30= unit+*(const short *)(unit+0x33E)+0x30;
+
+	if (*(long *)(unknown30+8)==unknown)
+	{
+		*(long *)(unknown30+8)= NONE;
+	}
 }
