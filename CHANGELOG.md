@@ -2,6 +2,50 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — La parte de los «cached object render states» arranca y empieza un mapa
+
+Tres funciones (unos 310 bytes) en `game/game_unknown_0002b4a0.c`, que ya tiene sus cuatro
+funciones de parte. De 2173
+funciones se pasa a 2176, el 19,32 % de las del juego (el 11,382 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_unknown_0002b4a0_initialize` | `0x0002b4a0` | `game/game_unknown_0002b4a0.c` |
+| `game_unknown_0002b4a0_initialize_for_new_map` | `0x0002b540` | `game/game_unknown_0002b4a0.c` |
+| `cached_object_render_states_initialize` | `0x0003d270` | `game/game_unknown_0002b4a0.c` |
+
+### Lo que se sabe
+
+- La tabla de datos de esta parte (antes `unknown_00509434`) se llama en el
+  juego `"cached object render states"`: 256 elementos de `0x100` bytes.
+  `cached_object_render_states_initialize` la crea.
+- `game_unknown_0002b4a0_initialize` (antes `unknown_0002b4a0`) pone a cero
+  el tiempo de la partida (`game_seconds`) y tres números, deja dos listas
+  de cuatro a `NONE`, llama a `unknown_0003b8a0`, a la función anterior y a
+  `unknown_000167a0`, y pide `0x18` bytes del estado de la partida.
+- `game_unknown_0002b4a0_initialize_for_new_map` (antes `unknown_0002b540`)
+  pone a cero el tiempo, vacía la tabla y limpia dos bloques (`0x30` y
+  `0x6A8` bytes).
+- La parte va justo después del rasterizador en la tabla de `game.c`: puede
+  ser la que dibuja el mundo, pero no hay ningún texto que lo confirme y el
+  archivo conserva su nombre provisional.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  643.
+- Un parche se aplicó a medias (buscaba un comentario que un renombrado
+  acababa de cambiar) y se terminó con un script de arreglo; las pruebas
+  pasaron después.
+- `unknown_0003b8a0` (pide memoria a la consola) y `unknown_000167a0` no
+  están descompiladas.
+- En este hito se pasaron `test_game_parts_644` y `test_game_parts_617`.
+  Hay una batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Avisar de que un trabajo largo empieza y acaba
 
 Dos funciones (200 bytes), en los archivos nuevos `cseries/progress.{h,c}`.

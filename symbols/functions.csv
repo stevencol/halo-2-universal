@@ -313,8 +313,8 @@ address,name,source,arguments,returns,convention
 000226a0,rasterizer_unknown_000226a0,source/rasterizer/rasterizer.c,,void
 000226b0,unknown_000226b0,,,void
 000226c0,rasterizer_dispose_from_old_map,source/rasterizer/rasterizer.c,,void
-0002b4a0,unknown_0002b4a0,,,void
-0002b540,unknown_0002b540,,,void
+0002b4a0,game_unknown_0002b4a0_initialize,source/game/game_unknown_0002b4a0.c,,void
+0002b540,game_unknown_0002b4a0_initialize_for_new_map,source/game/game_unknown_0002b4a0.c,,void
 0002b5a0,game_unknown_0002b4a0_dispose_from_old_map,source/game/game_unknown_0002b4a0.c,,void
 0002b5c0,game_unknown_0002b4a0_dispose,source/game/game_unknown_0002b4a0.c,,void
 0003f2b0,unknown_0003f2b0,,,void
@@ -2715,3 +2715,6 @@ address,name,source,arguments,returns,convention
 000d48d0,widgets_dispose_from_old_map,source/objects/widgets.c,,void
 001e95d0,progress_new,source/cseries/progress.c,stack,void,stdcall
 001e9650,progress_done,source/cseries/progress.c,,void
+0003d270,cached_object_render_states_initialize,source/game/game_unknown_0002b4a0.c,,void
+0003b8a0,unknown_0003b8a0,,,void
+000167a0,unknown_000167a0,,,void

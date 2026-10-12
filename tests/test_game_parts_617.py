@@ -14,14 +14,14 @@ def run(t) -> None:
     for n in range(200):
         t.check(
             "game_unknown_0002b4a0_dispose",
-            globals={"unknown_00509434": random_.getrandbits(32)},
+            globals={"cached_object_render_state_data": random_.getrandbits(32)},
             externals={"game_unknown_0002b4a0_unknown_0003b950": note},
         )
         table = bytearray(random_.randbytes(0x4C))
         table[0x29] = random_.choice((0, 1, 0x80))
         t.check(
             "game_unknown_0002b4a0_dispose_from_old_map",
-            globals={"unknown_00509434": random_.choice((0, 1, 1, 1)) and Buffer(bytes(table))},
+            globals={"cached_object_render_state_data": random_.choice((0, 1, 1, 1)) and Buffer(bytes(table))},
         )
         t.check(
             "rasterizer_dispose_from_old_map",

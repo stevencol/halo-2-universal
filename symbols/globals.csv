@@ -462,7 +462,7 @@ address,name,source
 00510c70,unknown_00510c70,source/game/game_unknown_0016efb0.c
 004e8c38,unknown_004e8c38,source/game/game_unknown_001552e0.c
 004e8c34,unknown_004e8c34,source/game/game_unknown_001552e0.c
-00509434,unknown_00509434,source/game/game_unknown_0002b4a0.c
+00509434,cached_object_render_state_data,source/game/game_unknown_0002b4a0.c
 00485a80,unknown_00485a80,source/rasterizer/rasterizer.c
 004f55cc,unknown_004f55cc,source/ai/ai.c
 004f9394,script_node_data,source/hs/hs.c
@@ -522,3 +522,14 @@ address,name,source
 004e0320,widget_data,source/objects/widgets.c
 004e0324,object_placement_globals,source/objects/object_placement.c
 004f55f8,progress_globals,source/cseries/progress.c
+004c1bd0,unknown_004c1bd0,source/game/game_unknown_0002b4a0.c
+004ba034,unknown_004ba034,source/game/game_unknown_0002b4a0.c
+004ba038,unknown_004ba038,source/game/game_unknown_0002b4a0.c
+004ba03c,unknown_004ba03c,source/game/game_unknown_0002b4a0.c
+004ba054,unknown_004ba054,source/game/game_unknown_0002b4a0.c
+004ba064,unknown_004ba064,source/game/game_unknown_0002b4a0.c
+0050942c,unknown_0050942c,source/game/game_unknown_0002b4a0.c
+004ba134,unknown_004ba134,source/game/game_unknown_0002b4a0.c
+004b9970,unknown_004b9970,source/game/game_unknown_0002b4a0.c
+004c5018,unknown_004c5018,source/game/game_unknown_0002b4a0.c
+005093fc,unknown_005093fc,source/game/game_unknown_0002b4a0.c
