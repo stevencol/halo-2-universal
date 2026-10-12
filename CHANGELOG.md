@@ -2,6 +2,50 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Los objetos y sus números en los mensajes; la unidad del final de una cadena
+
+Cuatro funciones cortas (324 bytes): tres en el archivo nuevo
+`networking/simulation_gamestate_entities.c` y una en `units/units.c`. De 1990
+funciones se pasa a 1994, el 17,70 % de las del juego (el 11,150 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_gamestate_entity_get_object` | `0x000a58d0` | `networking/simulation_gamestate_entities.c` |
+| `simulation_object_get_created_entity` | `0x000a5930` | `networking/simulation_gamestate_entities.c` |
+| `simulation_object_get_remote_entity` | `0x000a5980` | `networking/simulation_gamestate_entities.c` |
+| `unit_get_ultimate_unknown24C` | `0x000c7100` | `units/units.c` |
+
+### Lo que se sabe
+
+- Eran las tres traducciones que los hitos 590 a 594 llamaban sin tener
+  (`unknown_000a58d0`, `unknown_000a5930`, `unknown_000a5980`). Lo que
+  viaja en un mensaje en vez de un objeto es **el número de la «cosa» que
+  la simulación cuenta de él**, que cada objeto guarda en `0xD4`.
+- `simulation_gamestate_entity_get_object` va del número al objeto: mira la
+  cosa de ese sitio en la base de datos (tiene que tener ese mismo número),
+  pregunta a su clase si es de un objeto (la octava de sus funciones) y da
+  el objeto que guarda.
+- `simulation_object_get_created_entity` y
+  `simulation_object_get_remote_entity` van del objeto al número, y solo
+  se distinguen por un bit: la primera lo da si la cosa ya está creada
+  para los demás (la usa la consola que manda) y la segunda si no.
+- `unit_get_ultimate_unknown24C` (antes `unknown_000c7100`) sigue la cadena
+  que las unidades forman con lo que cada una tiene en `0x24C` y da la
+  última; `NONE` si la unidad no tiene nada ahí.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  594.
+- El nombre del archivo nuevo es una suposición, por el que tienen juegos
+  posteriores; y qué es la cadena de `0x24C` no se sabe.
+- En este hito se pasaron las pruebas de las cuatro funciones y todas las
+  de `test_simulation_player…`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Dónde está una unidad, tomado de un mensaje
 
 Una función de `networking/simulation_player.c` (190 bytes), la inversa de la del hito 592.

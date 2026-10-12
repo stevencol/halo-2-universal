@@ -2597,16 +2597,16 @@ address,name,source,arguments,returns,convention
 000824d0,unknown_000824d0,,eax edx stack,void,stdcall
 001a1d55,unknown_001a1d55,,stack,int,stdcall
 00082d20,unknown_00082d20,,eax stack stack,void,stdcall
-000a58d0,unknown_000a58d0,,ecx,int
+000a58d0,simulation_gamestate_entity_get_object,source/networking/simulation_gamestate_entities.c,ecx,int
 00082b30,simulation_player_action_unpack_object,source/networking/simulation_player.c,esi edi,void
 00082ac0,simulation_player_action_pack_object,source/networking/simulation_player.c,edi ebx,void
-000a5930,unknown_000a5930,,ecx,int
-000a5980,unknown_000a5980,,ecx,int
+000a5930,simulation_object_get_created_entity,source/networking/simulation_gamestate_entities.c,ecx,int
+000a5980,simulation_object_get_remote_entity,source/networking/simulation_gamestate_entities.c,ecx,int
 000cbd50,unit_get_weapon,source/units/units.c,eax ecx,int
 00082b70,simulation_player_get_unit_weapons,source/networking/simulation_player.c,ebx stack,void,stdcall
 000828b0,simulation_player_get_unit_state,source/networking/simulation_player.c,eax ebx,bool
 00082c10,simulation_player_get_rider_weapons,source/networking/simulation_player.c,stack stack,void,stdcall
-000c7100,unknown_000c7100,,ecx,int
+000c7100,unit_get_ultimate_unknown24C,source/units/units.c,ecx,int
 00082980,simulation_player_apply_unit_state,source/networking/simulation_player.c,eax ecx,void
 000a9f70,unknown_000a9f70,,stack stack stack,int,stdcall
 000aa260,unknown_000aa260,,eax ecx edx stack stack stack stack stack,void,stdcall

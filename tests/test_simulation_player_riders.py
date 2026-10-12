@@ -48,7 +48,7 @@ def run(t) -> None:
             Buffer(struct.pack("<2I", random_.choice((0xFFFFFFFF, 0xFFFFFFFF, 7)), random_.choice((0xFFFFFFFF, 0xFFFFFFFF, 7)))),
             globals={"object_header_data": Buffer(bytes(headers) + bytes(objects), pointers=tuple(pointers))},
             externals={
-                "unknown_000c7100": lambda harness, arguments, value=random_.choice((object_index, object_index, 0x1234)): (
+                "unit_get_ultimate_unknown24C": lambda harness, arguments, value=random_.choice((object_index, object_index, 0x1234)): (
                     value,
                     (arguments[0],),
                 ),

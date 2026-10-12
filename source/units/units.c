@@ -27,3 +27,21 @@ long unit_get_weapon(
 
 	return ((const long *)((const byte *)header->datum+UNIT_WEAPONS_OFFSET))[weapon_index];
 }
+
+/* 0x000c7100: the last of the chain that the units make by what each has at
+0x24C, from the one after a unit; NONE if the unit has none there */
+long unit_get_ultimate_unknown24C(
+	long unit_index)
+{
+	const struct object_header_datum *headers= (const struct object_header_datum *)object_header_data->data;
+	long next= *(const long *)((const byte *)headers[unit_index&0xFFFF].datum+UNIT_UNKNOWN24C_OFFSET);
+	long last= NONE;
+
+	while (next!=NONE)
+	{
+		last= next;
+		next= *(const long *)((const byte *)headers[last&0xFFFF].datum+UNIT_UNKNOWN24C_OFFSET);
+	}
+
+	return last;
+}

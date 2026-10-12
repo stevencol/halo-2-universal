@@ -35,7 +35,7 @@ def run(t) -> None:
             mover,
             globals={"object_header_data": Buffer(bytes(data), pointers=table.pointers)},
             externals={
-                "unknown_000a58d0": lambda harness, arguments, unit=unit: (unit, (arguments[0],)),
+                "simulation_gamestate_entity_get_object": lambda harness, arguments, unit=unit: (unit, (arguments[0],)),
                 "unknown_000a9f70": note,
                 "unknown_000aa260": note,
             },

@@ -16,6 +16,7 @@ file is a guess, and so are the names of its functions.
 #include "units/units.h"
 #include "main/main.h"
 #include "main/main_game.h"
+#include "networking/simulation_gamestate_entities.h"
 #include "networking/simulation_view.h"
 #include "networking/simulation_world.h"
 
@@ -232,9 +233,6 @@ void __attribute__((stdcall)) simulation_player_action_pack(
 	unknown_00082d20(unit_index, action+SIMULATION_PLAYER_ACTION_UNKNOWN34_OFFSET, packed);
 }
 
-/* 0x000a58d0: a number that came in a message, as the one that the game has
-for it; NONE if it has none */
-long unknown_000a58d0(long unknown);
 
 /* a bit of what a player does is set or clear */
 static inline __attribute__((always_inline)) void simulation_player_action_set_flag(
@@ -253,7 +251,7 @@ nothing (player_action_clear); the sixteen bytes, the four bits, the four
 bytes and the two are put back; six bytes are each a bit (0x40000, 0x80000,
 0x800000, 0x1000000, 0x40000000 and 0x80000000); and the last byte goes to
 0x58. If one of the two reals is more than nothing and the number with them
-is one that the game has (unknown_000a58d0), that, the number after it and
+is one that the game has (simulation_gamestate_entity_get_object), that, the number after it and
 the two reals go too */
 void simulation_player_action_unpack(
 	const byte *packed,
@@ -280,7 +278,7 @@ void simulation_player_action_unpack(
 			*(const real *)(packed+SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN24_OFFSET)>0.0f) &&
 		*(const long *)(packed+SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN28_OFFSET)!=NONE)
 	{
-		long unknown= unknown_000a58d0(*(const long *)(packed+SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN28_OFFSET));
+		long unknown= simulation_gamestate_entity_get_object(*(const long *)(packed+SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN28_OFFSET));
 
 		if (unknown!=NONE)
 		{
@@ -301,13 +299,11 @@ void simulation_player_action_unpack(
 /* 0x000a5930, 0x000a5980: the number that goes in a message for an object,
 when the simulation rules the game and when it does not; NONE if it has
 none */
-long unknown_000a5930(long object_index);
-long unknown_000a5980(long object_index);
 
 /* 0x00082b30: the part of what a player does that names an object, from a
 message: two reals, the number of the object in the message and one more
 number. If one of the reals is more than nothing and the game has an object
-for the number (unknown_000a58d0), the object, the number and the two reals
+for the number (simulation_gamestate_entity_get_object), the object, the number and the two reals
 are put where the player has them. The game has it written again in
 simulation_player_action_unpack */
 void simulation_player_action_unpack_object(
@@ -316,7 +312,7 @@ void simulation_player_action_unpack_object(
 {
 	if ((*(const real *)&packed[0]>0.0f || *(const real *)&packed[1]>0.0f) && packed[2]!=NONE)
 	{
-		long object_index= unknown_000a58d0(packed[2]);
+		long object_index= simulation_gamestate_entity_get_object(packed[2]);
 
 		if (object_index!=NONE)
 		{
@@ -330,8 +326,8 @@ void simulation_player_action_unpack_object(
 
 /* 0x00082ac0: the other way: if one of the reals is more than nothing, the
 object is still there (object_try_and_get_and_verify_type, of any type) and
-there is a number for it to go in a message (unknown_000a5930 if the thing
-that is going is not in its third state nor its fifth, unknown_000a5980 if
+there is a number for it to go in a message (simulation_object_get_created_entity if the thing
+that is going is not in its third state nor its fifth, simulation_object_get_remote_entity if
 it is), that number, the other and the two reals go to the message */
 void simulation_player_action_pack_object(
 	const long *unknown34,
@@ -344,7 +340,7 @@ void simulation_player_action_pack_object(
 		if (object_index!=NONE && object_try_and_get_and_verify_type(object_index, 0xFFFFFFFF))
 		{
 			long state= *(const long *)(unknown_004cf770.unknownC+SIMULATION_WORLD_STATE_OFFSET);
-			long number= state!=3 && state!=5 ? unknown_000a5930(object_index) : unknown_000a5980(object_index);
+			long number= state!=3 && state!=5 ? simulation_object_get_created_entity(object_index) : simulation_object_get_remote_entity(object_index);
 
 			if (number!=NONE)
 			{
@@ -397,7 +393,7 @@ void __attribute__((stdcall)) simulation_player_get_unit_weapons(
 }
 
 /* 0x000828b0: where the unit of a player is, for a message: the number that
-the unit has in a message (unknown_000a5980), where it is, how it faces and
+the unit has in a message (simulation_object_get_remote_entity), where it is, how it faces and
 how it moves. If the unit is attached to something, that has to be a biped
 or a vehicle that has the unit at 0x248, and it is told of in its place.
 FALSE, with nothing written, with no unit, one attached to anything else,
@@ -432,7 +428,7 @@ boolean simulation_player_get_unit_state(
 	{
 		return FALSE;
 	}
-	number= unknown_000a5980(unit_index);
+	number= simulation_object_get_remote_entity(unit_index);
 	if (number==NONE)
 	{
 		return FALSE;
@@ -448,14 +444,12 @@ boolean simulation_player_get_unit_state(
 	return TRUE;
 }
 
-/* 0x000c7100: the object that a unit is of */
-long unknown_000c7100(long unit_index);
 
 /* 0x00082c10: the weapons in hand of the units that ride with an object.
 What the object is attached to in the end is looked at
 (object_get_ultimate_parent, written here), and each thing attached to
 that: a biped or a vehicle that has something at 0x24C and is of the object
-(unknown_000c7100) gives its two weapons in hand, each only where none was
+(unit_get_ultimate_unknown24C) gives its two weapons in hand, each only where none was
 written yet. The game has unit_get_weapon written here */
 void __attribute__((stdcall)) simulation_player_get_rider_weapons(
 	long object_index,
@@ -487,7 +481,7 @@ void __attribute__((stdcall)) simulation_player_get_rider_weapons(
 		const byte *unit= (const byte *)((const struct object_header_datum *)object_header_data->data)[child&0xFFFF].datum;
 
 		if (((1u<<unit[SIMULATION_PLAYER_OBJECT_TYPE_OFFSET])&3) &&
-			*(const long *)(unit+SIMULATION_PLAYER_UNIT_UNKNOWN24C_OFFSET)!=NONE && unknown_000c7100(child)==object_index)
+			*(const long *)(unit+SIMULATION_PLAYER_UNIT_UNKNOWN24C_OFFSET)!=NONE && unit_get_ultimate_unknown24C(child)==object_index)
 		{
 			if (weapons[0]==NONE)
 			{
@@ -515,7 +509,7 @@ void __attribute__((stdcall)) unknown_000aa260(long unknown0, const byte *veloci
 
 /* 0x00082980: where a unit is, taken from a message: the inverse of
 simulation_player_get_unit_state. The unit is the one that the game has for
-the number of the message (unknown_000a58d0), a biped or a vehicle that is
+the number of the message (simulation_gamestate_entity_get_object), a biped or a vehicle that is
 attached to nothing. It has to be moved by the one that a number says (its
 number at 0x13C, with the third bit of its byte at 0x10A clear), or to be
 ridden (0x248) by a unit that is. Then it is put where the message says
@@ -526,7 +520,7 @@ void simulation_player_apply_unit_state(
 {
 	const struct object_header_datum *headers;
 	const byte *unit;
-	long unit_index= unknown_000a58d0(*(const long *)state);
+	long unit_index= simulation_gamestate_entity_get_object(*(const long *)state);
 	long placed;
 
 	if (unit_index==NONE)

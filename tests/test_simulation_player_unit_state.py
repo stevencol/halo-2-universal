@@ -46,7 +46,7 @@ def run(t) -> None:
                 "player_data": Buffer(bytes(array) + bytes(datums), pointers=(0x44,)),
             },
             externals={
-                "unknown_000a5980": lambda harness, arguments, value=random_.choice((-1, 9, 9, 0x4321)): (value & 0xFFFFFFFF, (arguments[0],)),
+                "simulation_object_get_remote_entity": lambda harness, arguments, value=random_.choice((-1, 9, 9, 0x4321)): (value & 0xFFFFFFFF, (arguments[0],)),
                 "object_get_origin": fills(1),
                 "object_get_orientation": fills(2, 3),
                 "object_get_velocities": fills(4, 5),

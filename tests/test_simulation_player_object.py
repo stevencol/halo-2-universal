@@ -24,7 +24,7 @@ def run(t) -> None:
             "simulation_player_action_unpack_object",
             Buffer(packed),
             Buffer(random_.randbytes(0x24)),
-            externals={"unknown_000a58d0": number},
+            externals={"simulation_gamestate_entity_get_object": number},
         )
 
         unknown34 = bytearray(random_.randbytes(0x24))
@@ -43,7 +43,7 @@ def run(t) -> None:
                     there,
                     (arguments[0], arguments[1]),
                 ),
-                "unknown_000a5930": number,
-                "unknown_000a5980": number,
+                "simulation_object_get_created_entity": number,
+                "simulation_object_get_remote_entity": number,
             },
         )

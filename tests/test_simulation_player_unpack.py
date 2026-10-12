@@ -29,6 +29,6 @@ def run(t) -> None:
             Buffer(random_.randbytes(0x5C)),
             externals={
                 "player_action_clear": clears,
-                "unknown_000a58d0": lambda harness, arguments, value=random_.choice((-1, 9, 9, 0x4321)): (value & 0xFFFFFFFF, (arguments[0],)),
+                "simulation_gamestate_entity_get_object": lambda harness, arguments, value=random_.choice((-1, 9, 9, 0x4321)): (value & 0xFFFFFFFF, (arguments[0],)),
             },
         )
