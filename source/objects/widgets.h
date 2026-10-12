@@ -30,7 +30,9 @@ struct widget_type_definition
 	void (*dispose_from_old_map)(void);
 	void *unknown14;
 	void *unknown18;
-	void *unknown1C;
+	/* a widget of the kind is no more: with what the widget is in the table
+	of its kind */
+	void (__attribute__((stdcall)) *delete)(long index);
 	/* each tick, with how long the tick is */
 	void (__attribute__((stdcall)) *update)(float seconds);
 	void *unknown24[5];
@@ -39,11 +41,25 @@ struct widget_type_definition
 typedef char verify_widget_type_definition_size[
 	sizeof(struct widget_type_definition) == 0x38 ? 1 : -1];
 
+/* a widget of an object: its kind, what it is in the table of its kind (or
+NONE), and the next widget of the object (or NONE) */
+struct widget_datum
+{
+	short identifier;
+	short type;
+	long index;
+	long next_widget_index;
+};
+
+typedef char verify_widget_datum_size[
+	sizeof(struct widget_datum) == 0xC ? 1 : -1];
+
 /* ---------- prototypes/WIDGETS.C */
 
 void widgets_initialize(void);
 void widgets_initialize_for_new_map(void);
 void widgets_dispose_from_old_map(void);
 void __attribute__((stdcall)) widgets_update(float seconds);
+void widgets_delete(long object_index);
 
 #endif

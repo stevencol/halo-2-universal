@@ -2,6 +2,39 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Borrar los widgets de un objeto
+
+Una función (124 bytes) en `objects/widgets.c`. De 2223
+funciones se pasa a 2224, el 19,74 % de las del juego (el 11,482 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `widgets_delete` | `0x000d4a60` | `objects/widgets.c` |
+
+### Lo que se sabe
+
+- `widgets_delete` (el objeto llega en `eax`) recorre los widgets de un
+  objeto, avisa al tipo de cada uno para que borre lo suyo y borra el
+  widget de la tabla; al final el objeto queda sin widgets.
+- Con ella se conoce **el elemento de la tabla `"widget"`** (`0xC` bytes,
+  ahora `struct widget_datum`): su tipo (`+2`), su índice en la tabla de su
+  tipo (`+4`, antena, tela o líquido) y el siguiente widget del mismo objeto
+  (`+8`). El objeto guarda el primero en `0xDC`.
+- Y una función más de cada tipo: la de `+0x1C` es la que borra.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  669.
+- Quedan en el archivo `0xd4900` (crear los widgets de un objeto),
+  `0xd4ae0`, `0xd4bc0` y `0xd4cf0`.
+- En este hito se pasaron las pruebas de `test_widgets*`. Hay una batería
+  completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Los decals de una zona sueltan la caché
 
 Una función (247 bytes) en `effects/decals.c`. De 2222

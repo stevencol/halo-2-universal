@@ -2754,3 +2754,4 @@ address,name,source,arguments,returns,convention
 0017ce00,decal_add_to_place,source/effects/decals.c,edi ebx edx,void
 0023aad0,unknown_0023aad0,,stack stack stack,void,stdcall
 0017d710,decals_release_place,source/effects/decals.c,stack,void,stdcall
+000d4a60,widgets_delete,source/objects/widgets.c,eax,void

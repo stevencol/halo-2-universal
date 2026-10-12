@@ -8,6 +8,7 @@ that the game gives to its table of data ("widget").
 
 #include "cseries/cseries.h"
 #include "memory/data.h"
+#include "objects/objects.h"
 #include "objects/widgets.h"
 #include "saved games/game_state.h"
 
@@ -88,4 +89,31 @@ void __attribute__((stdcall)) widgets_update(
 			widget_type_definitions[index].update(seconds);
 		}
 	}
+}
+
+/* an object has its first widget at 0xDC, or NONE */
+#define OBJECT_FIRST_WIDGET_INDEX(object_index) ((long *)((byte *) \
+	((struct object_header_datum *)object_header_data->data)[(object_index)&0xFFFF].datum+0xDC))
+
+/* 0x000d4a60: the widgets of an object are no more: the kind of each is told,
+if the widget is something in the table of its kind, and the object has none */
+void widgets_delete(
+	long object_index)
+{
+	long *first_widget_index= OBJECT_FIRST_WIDGET_INDEX(object_index);
+	long widget_index= *first_widget_index;
+
+	while (widget_index!=NONE)
+	{
+		struct widget_datum *widget= &((struct widget_datum *)widget_data->data)[widget_index&0xFFFF];
+		long next_widget_index= widget->next_widget_index;
+
+		if (widget->index!=NONE)
+		{
+			widget_type_definitions[widget->type].delete(widget->index);
+		}
+		datum_delete(widget_data, widget_index);
+		widget_index= next_widget_index;
+	}
+	*first_widget_index= NONE;
 }
