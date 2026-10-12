@@ -62,10 +62,10 @@ def run(t) -> None:
                     "unknown_00183f10",
                     "simulation_world_initialize",
                     "simulation_players_reset",
-                    "unknown_00083000",
+                    "simulation_players_initialize_for_new_map",
                     "unknown_00195a40",
                     "simulation_world_players_clear",
-                    "unknown_00083370",
+                    "simulation_players_after_load",
                     "simulation_world_unknown_0006a770",
                 )
             },

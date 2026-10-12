@@ -103,10 +103,39 @@ enum
 	SIMULATION_PLAYERS_UPDATE_NEW_MACHINE_OFFSET= 0x14,
 	SIMULATION_PLAYERS_UPDATE_NEW_UNKNOWN1C_OFFSET= 0x1C,
 	SIMULATION_PLAYERS_UPDATE_NEW_UNKNOWN20_OFFSET= 0x20,
-	SIMULATION_PLAYERS_UPDATE_NEW_LEFT_OFFSET= 0x24
+	SIMULATION_PLAYERS_UPDATE_NEW_LEFT_OFFSET= 0x24,
+	/* more of it: something of the game in the network, which gets it
+	at 0x80 and NONE for two numbers after that; and of the thing that is
+	going, a byte that says that it has the six bytes of this console,
+	those bytes, and which console this is */
+	SIMULATION_PLAYERS_UNKNOWN8_OFFSET= 0x8,
+	SIMULATION_PLAYERS_UNKNOWN8_PLAYERS_OFFSET= 0x80,
+	SIMULATION_PLAYERS_UNKNOWN8_UNKNOWN84_OFFSET= 0x84,
+	SIMULATION_PLAYERS_UNKNOWN8_UNKNOWN88_OFFSET= 0x88,
+	SIMULATION_PLAYERS_WORLD_HAS_MACHINE_OFFSET= 0xC,
+	SIMULATION_PLAYERS_WORLD_MACHINE_OFFSET= 0xD,
+	SIMULATION_PLAYERS_WORLD_MACHINE_INDEX_OFFSET= 0x14,
+	/* of a session of the network: its state, the consoles in it (a
+	number, how many, and from 0x16 the six bytes of each, 0x10C bytes
+	from one to the next) and which of them this one is */
+	SIMULATION_PLAYERS_SESSION_STATE_OFFSET= 0x741C,
+	SIMULATION_PLAYERS_SESSION_MEMBERSHIP_OFFSET= 0x4C,
+	SIMULATION_PLAYERS_SESSION_LOCAL_PEER_OFFSET= 0x72D8,
+	SIMULATION_PLAYERS_MEMBERSHIP_PEER_COUNT_OFFSET= 0x8,
+	SIMULATION_PLAYERS_MEMBERSHIP_PEER_MACHINE_OFFSET= 0x16,
+	SIMULATION_PLAYERS_MEMBERSHIP_PEER_SIZE= 0x10C,
+	/* of the players of the game: which consoles there are, the six bytes
+	of each, whether this console is one of them, and its six bytes */
+	SIMULATION_PLAYERS_GLOBALS_MACHINE_MASK_OFFSET= 0x2C,
+	SIMULATION_PLAYERS_GLOBALS_MACHINES_OFFSET= 0x30,
+	SIMULATION_PLAYERS_GLOBALS_LOCAL_MACHINE_EXISTS_OFFSET= 0x90,
+	SIMULATION_PLAYERS_GLOBALS_LOCAL_MACHINE_OFFSET= 0x91
 };
 
 /* ---------- prototypes/SIMULATION_PLAYERS.C */
+
+void __attribute__((stdcall)) simulation_players_initialize_for_new_map(byte *players);
+void __attribute__((stdcall)) simulation_players_after_load(byte *players, unsigned long flags);
 
 boolean __attribute__((stdcall)) simulation_players_take_update(byte *identifiers, byte *machines, boolean always,
 	byte *players, long *machine_mask, long *player_mask, long *active_mask);

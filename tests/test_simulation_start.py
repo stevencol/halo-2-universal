@@ -57,7 +57,7 @@ def run(t) -> None:
             externals={
                 "simulation_world_initialize": what,
                 "simulation_players_reset": what,
-                "unknown_00083000": what,
+                "simulation_players_initialize_for_new_map": what,
                 "unknown_00195a40": lambda harness, arguments: (0, ()),
             },
         )

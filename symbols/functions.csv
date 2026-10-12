@@ -2555,7 +2555,7 @@ address,name,source,arguments,returns,convention
 00082240,unknown_00082240,,eax ecx stack,void,stdcall
 00068c00,simulation_world_initialize,source/networking/simulation_world.c,eax ecx edx stack,void,stdcall
 00068e20,simulation_world_dispose,source/networking/simulation_world.c,stack,void,stdcall
-00083000,unknown_00083000,,stack,void,stdcall
+00083000,simulation_players_initialize_for_new_map,source/networking/simulation_players.c,stack,void,stdcall
 00195a40,unknown_00195a40,,,void
 00195e90,unknown_00195e90,,,void
 000687b0,simulation_unknown_000687b0,source/networking/simulation.c,,void
@@ -2563,7 +2563,7 @@ address,name,source,arguments,returns,convention
 00162420,unknown_00162420,,,void
 000bb7f0,unknown_000bb7f0,,,void
 00183f10,unknown_00183f10,,,void
-00083370,unknown_00083370,,stack stack,void,stdcall
+00083370,simulation_players_after_load,source/networking/simulation_players.c,stack stack,void,stdcall
 00083220,unknown_00083220,,eax,bool
 00068f30,simulation_world_update,source/networking/simulation_world.c,eax,void
 00068dc0,simulation_world_restart,source/networking/simulation_world.c,esi,void

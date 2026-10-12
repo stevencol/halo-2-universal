@@ -13,6 +13,7 @@ they are on. The names are guesses.
 #include "game/game.h"
 #include "main/main.h"
 #include "memory/data.h"
+#include "networking/network_life_cycle.h"
 #include "networking/network_session.h"
 #include "networking/simulation_world.h"
 
@@ -611,4 +612,192 @@ boolean __attribute__((stdcall)) simulation_players_take_update(
 	players[SIMULATION_PLAYERS_UNKNOWNC30_OFFSET]= FALSE;
 
 	return TRUE;
+}
+
+/* 0x0014c630: the rest of the game is told which consoles there are, and
+their six bytes. 0x0014c880: and which of them this one is, by its six
+bytes, or that it is none */
+void __attribute__((stdcall)) unknown_0014c630(unsigned long machine_mask, const byte *machines);
+void __attribute__((stdcall)) unknown_0014c880(const byte *machine);
+
+/* 0x004d8ba0, of main.c, and 0x00527330, of main_game.c: there is a game in
+the network. 0x00527378: something of it, which is given this */
+extern boolean unknown_004d8ba0;
+extern boolean unknown_00527330;
+byte *unknown_00527378;
+
+/* the thing that is going gets the six bytes of this console and which
+console it is: the game has it written in each of the three places */
+static inline __attribute__((always_inline)) void simulation_players_set_world_machine(
+	byte *players)
+{
+	byte *world= *(byte *const *)(players+SIMULATION_PLAYERS_WORLD_OFFSET);
+
+	memcpy(world+SIMULATION_PLAYERS_WORLD_MACHINE_OFFSET,
+		players+SIMULATION_PLAYERS_MACHINES_OFFSET+
+			*(const long *)(players+SIMULATION_PLAYERS_UNKNOWN20_OFFSET)*SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE,
+		SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE);
+	world[SIMULATION_PLAYERS_WORLD_HAS_MACHINE_OFFSET]= TRUE;
+	*(long *)(*(byte *const *)(players+SIMULATION_PLAYERS_WORLD_OFFSET)+SIMULATION_PLAYERS_WORLD_MACHINE_INDEX_OFFSET)=
+		*(const long *)(players+SIMULATION_PLAYERS_UNKNOWN20_OFFSET);
+}
+
+/* 0x00083000: what the simulation has of the players, for a new map. In a
+game of the first mode or the second with a game in the network, it gets
+the session of that (network_life_cycle_get_any_session), if it is in some
+state and has its consoles. With a session: something of the game in the
+network gets this; the consoles are those of the session, this one being
+the one that the session says, and it has changed, for the rest of the game
+and for the other consoles. With none: the consoles are those of the
+options of the game, and this one is the last of them that has the six
+bytes that the options say, if they say any. In both, the thing that is
+going gets this console (which the game does with none found, too, in the
+first) */
+void __attribute__((stdcall)) simulation_players_initialize_for_new_map(
+	byte *players)
+{
+	struct main_game_globals *game= main_game_globals;
+	byte *session;
+	long index;
+
+	if (game->options.game_mode==1 || game->options.game_mode==2)
+	{
+		session= NULL;
+		if (unknown_004d8ba0 && network_life_cycle_get_any_session(&session) &&
+			*(const long *)(session+SIMULATION_PLAYERS_SESSION_STATE_OFFSET)!=0 &&
+			*(const long *)(session+SIMULATION_PLAYERS_SESSION_MEMBERSHIP_OFFSET)!=NONE)
+		{
+			*(byte **)(players+SIMULATION_PLAYERS_SESSION_OFFSET)= session;
+		}
+	}
+	session= *(byte *const *)(players+SIMULATION_PLAYERS_SESSION_OFFSET);
+	if (session)
+	{
+		const byte *membership= NULL;
+		long local_peer= NONE;
+		byte *unknown;
+		long count;
+		unsigned long machine_mask;
+		byte machines[MAXIMUM_SIMULATION_PLAYERS_MACHINES*SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE];
+
+		if (*(const long *)(session+SIMULATION_PLAYERS_SESSION_STATE_OFFSET)!=0 &&
+			*(const long *)(session+SIMULATION_PLAYERS_SESSION_MEMBERSHIP_OFFSET)!=NONE)
+		{
+			local_peer= *(const long *)(session+SIMULATION_PLAYERS_SESSION_LOCAL_PEER_OFFSET);
+			membership= session+SIMULATION_PLAYERS_SESSION_MEMBERSHIP_OFFSET;
+		}
+		unknown= unknown_00527330 ? unknown_00527378 : NULL;
+		*(byte **)(players+SIMULATION_PLAYERS_UNKNOWN8_OFFSET)= unknown;
+		*(byte **)(unknown+SIMULATION_PLAYERS_UNKNOWN8_PLAYERS_OFFSET)= players;
+		*(long *)(unknown+SIMULATION_PLAYERS_UNKNOWN8_UNKNOWN84_OFFSET)= NONE;
+		*(long *)(unknown+SIMULATION_PLAYERS_UNKNOWN8_UNKNOWN88_OFFSET)= NONE;
+		count= *(const long *)(membership+SIMULATION_PLAYERS_MEMBERSHIP_PEER_COUNT_OFFSET);
+		machine_mask= (1u<<count)-1;
+		memset(machines, 0, sizeof(machines));
+		for (index= 0; index<count; index++)
+		{
+			memcpy(machines+index*SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE,
+				membership+SIMULATION_PLAYERS_MEMBERSHIP_PEER_MACHINE_OFFSET+index*SIMULATION_PLAYERS_MEMBERSHIP_PEER_SIZE,
+				SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE);
+		}
+		*(long *)(players+SIMULATION_PLAYERS_UNKNOWN10_OFFSET)=
+			*(const long *)(*(byte *const *)(players+SIMULATION_PLAYERS_SESSION_OFFSET)+SIMULATION_PLAYERS_SESSION_UNKNOWN7618_OFFSET);
+		*(unsigned long *)(players+SIMULATION_PLAYERS_MACHINE_MASK_OFFSET)= machine_mask;
+		*(long *)(players+SIMULATION_PLAYERS_UNKNOWN14_OFFSET)= *(const long *)membership;
+		*(long *)(players+SIMULATION_PLAYERS_UNKNOWN20_OFFSET)= local_peer;
+		memcpy(players+SIMULATION_PLAYERS_MACHINES_OFFSET, machines, sizeof(machines));
+		simulation_players_set_world_machine(players);
+		players[SIMULATION_PLAYERS_CHANGED_OFFSET]= TRUE;
+		players[SIMULATION_PLAYERS_UNKNOWNC30_OFFSET]= TRUE;
+	}
+	else
+	{
+		*(unsigned long *)(players+SIMULATION_PLAYERS_MACHINE_MASK_OFFSET)= game->options.machine_valid_mask;
+		memcpy(players+SIMULATION_PLAYERS_MACHINES_OFFSET, game->options.machine_identifiers,
+			MAXIMUM_SIMULATION_PLAYERS_MACHINES*SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE);
+		players[SIMULATION_PLAYERS_CHANGED_OFFSET]= FALSE;
+		*(long *)(players+SIMULATION_PLAYERS_UNKNOWN20_OFFSET)= NONE;
+		if (game->options.local_machine_exists)
+		{
+			for (index= 0; index<MAXIMUM_SIMULATION_PLAYERS_MACHINES; index++)
+			{
+				if ((*(const unsigned long *)(players+SIMULATION_PLAYERS_MACHINE_MASK_OFFSET)&(1u<<index)) &&
+					memcmp(players+SIMULATION_PLAYERS_MACHINES_OFFSET+index*SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE,
+						main_game_globals->options.local_machine_identifier, SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE)==0)
+				{
+					*(long *)(players+SIMULATION_PLAYERS_UNKNOWN20_OFFSET)= index;
+				}
+			}
+		}
+		if (*(const long *)(players+SIMULATION_PLAYERS_UNKNOWN20_OFFSET)!=NONE)
+		{
+			simulation_players_set_world_machine(players);
+		}
+	}
+}
+
+/* 0x00083370: what the simulation has of the players, after a state of the
+game was loaded, as bits say. Without the third bit: the rest of the game
+is told which console this one is (unknown_0014c880): the last of those of
+the players of the game that has the six bytes that the thing that is going
+has, or none; and it has changed. With it: there is one console, this one,
+with the six bytes that the players of the game have for it, if they have
+any; the thing that is going gets it, the rest of the game is told
+(unknown_0014c630, unknown_0014c880), and it has not changed. Then what it
+has is brought up to date (simulation_players_refresh) */
+void __attribute__((stdcall)) simulation_players_after_load(
+	byte *players,
+	unsigned long flags)
+{
+	const byte *globals= (const byte *)players_globals;
+	byte machine[SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE];
+
+	if (!(flags&4))
+	{
+		unsigned long machine_mask= *(const unsigned long *)(globals+SIMULATION_PLAYERS_GLOBALS_MACHINE_MASK_OFFSET);
+		byte machines[MAXIMUM_SIMULATION_PLAYERS_MACHINES*SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE];
+		long found= NONE;
+		long index;
+
+		memcpy(machine, *(byte *const *)(players+SIMULATION_PLAYERS_WORLD_OFFSET)+SIMULATION_PLAYERS_WORLD_MACHINE_OFFSET,
+			sizeof(machine));
+		memcpy(machines, globals+SIMULATION_PLAYERS_GLOBALS_MACHINES_OFFSET, sizeof(machines));
+		for (index= 0; index<MAXIMUM_SIMULATION_PLAYERS_MACHINES; index++)
+		{
+			if ((machine_mask&(1u<<index)) &&
+				memcmp(machines+index*SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE, machine, sizeof(machine))==0)
+			{
+				found= index;
+			}
+		}
+		unknown_0014c880(found==NONE ? NULL : machines+found*SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE);
+		players[SIMULATION_PLAYERS_CHANGED_OFFSET]= TRUE;
+		simulation_players_refresh(players);
+	}
+	else
+	{
+		boolean exists= globals[SIMULATION_PLAYERS_GLOBALS_LOCAL_MACHINE_EXISTS_OFFSET];
+
+		if (exists)
+		{
+			memcpy(machine, globals+SIMULATION_PLAYERS_GLOBALS_LOCAL_MACHINE_OFFSET, sizeof(machine));
+		}
+		*(unsigned long *)(players+SIMULATION_PLAYERS_MACHINE_MASK_OFFSET)= 1;
+		*(long *)(players+SIMULATION_PLAYERS_UNKNOWN20_OFFSET)= 0;
+		memset(players+SIMULATION_PLAYERS_MACHINES_OFFSET, 0,
+			MAXIMUM_SIMULATION_PLAYERS_MACHINES*SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE);
+		if (exists)
+		{
+			memcpy(players+SIMULATION_PLAYERS_MACHINES_OFFSET+
+					*(const long *)(players+SIMULATION_PLAYERS_UNKNOWN20_OFFSET)*SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE,
+				machine, sizeof(machine));
+		}
+		simulation_players_set_world_machine(players);
+		unknown_0014c630(*(const unsigned long *)(players+SIMULATION_PLAYERS_MACHINE_MASK_OFFSET),
+			players+SIMULATION_PLAYERS_MACHINES_OFFSET);
+		unknown_0014c880(players+SIMULATION_PLAYERS_MACHINES_OFFSET+
+			*(const long *)(players+SIMULATION_PLAYERS_UNKNOWN20_OFFSET)*SIMULATION_PLAYERS_MACHINE_IDENTIFIER_SIZE);
+		players[SIMULATION_PLAYERS_CHANGED_OFFSET]= FALSE;
+		simulation_players_refresh(players);
+	}
 }

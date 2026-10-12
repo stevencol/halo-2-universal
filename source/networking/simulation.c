@@ -52,7 +52,7 @@ what unknown_004cf780 has, for a new map. 0x00195a40, 0x00195e90: what
 something else of the game does for a new map and for one that goes */
 void __attribute__((stdcall)) unknown_00082240(struct simulation_type_table *tables, long *second_count,
 	long *first_count);
-void __attribute__((stdcall)) unknown_00083000(long unknown);
+void __attribute__((stdcall)) simulation_players_initialize_for_new_map(long unknown);
 void unknown_00195a40(void);
 /* 0x00162060, 0x00162420, 0x000bb7f0, 0x00183f10: what other parts of the
 game do when a game of kind 4 or 5 is no more. 0x00083370: what
@@ -64,7 +64,7 @@ void unknown_00162060(void);
 void unknown_00162420(void);
 void unknown_000bb7f0(void);
 void unknown_00183f10(void);
-void __attribute__((stdcall)) unknown_00083370(long unknown, unsigned long flags);
+void __attribute__((stdcall)) simulation_players_after_load(long unknown, unsigned long flags);
 boolean unknown_00083220(long unknown);
 void unknown_00195e90(void);
 
@@ -476,7 +476,7 @@ void simulation_dispose(
 it has not failed, the thing that is going and what unknown_004cf780 has are
 set up (simulation_world_initialize; with what unknown_004d87e8 is, in a game of kind 4
 or 5), and what unknown_004cf780 has gets the thing and is as when it begins
-(simulation_players_reset, unknown_00083000) */
+(simulation_players_reset, simulation_players_initialize_for_new_map) */
 void simulation_initialize_for_new_map(
 	void)
 {
@@ -487,7 +487,7 @@ void simulation_initialize_for_new_map(
 
 		unknown_004cf770.unknown1[0]= FALSE;
 		unknown_004cf770.unknown1[1]= FALSE;
-		kind= *((const signed char *)main_game_globals+0xC);
+		kind= main_game_globals->options.simulation;
 		simulation_world_initialize(unknown_004cf780, kind>=4 && kind<=5 ? unknown_004d87e8 : NULL, unknown_004cf784,
 			unknown_004cf770.unknownC);
 		unknown= (byte *)unknown_004cf780;
@@ -495,7 +495,7 @@ void simulation_initialize_for_new_map(
 		*(long *)(unknown+SIMULATION_UNKNOWN_004CF780_UNKNOWNC_OFFSET)= 0;
 		*(long *)(unknown+SIMULATION_UNKNOWN_004CF780_UNKNOWN8_OFFSET)= 0;
 		simulation_players_reset(unknown);
-		unknown_00083000(unknown_004cf780);
+		simulation_players_initialize_for_new_map(unknown_004cf780);
 		unknown_00195a40();
 		unknown_004cf770.unknown1[7]= TRUE;
 	}
@@ -541,14 +541,14 @@ has failed; if not, the simulation ends as when a map goes and begins as
 with a new one, and a game of kind 4 or 5 is ended first in other parts of
 the game. Then the thing that is going has no players
 (simulation_world_players_clear), and what unknown_004cf780 has and the
-thing are told (unknown_00083370, simulation_world_unknown_0006a770) */
+thing are told (simulation_players_after_load, simulation_world_unknown_0006a770) */
 void GAME_STATE_PROC simulation_after_load(
 	unsigned long flags)
 {
 	if (flags&4)
 	{
 		network_life_cycle_end();
-		if (*((const char *)main_game_globals+0xC)==1 &&
+		if (main_game_globals->options.simulation==1 &&
 			*(const long *)(unknown_004cf770.unknownC+SIMULATION_WORLD_STATE_OFFSET)==1)
 		{
 			simulation_world_unknown_0006b040(unknown_004cf770.unknownC);
@@ -560,27 +560,27 @@ void GAME_STATE_PROC simulation_after_load(
 			long kind;
 
 			simulation_dispose_from_old_map();
-			if (*((const char *)main_game_globals+0xC)==4)
+			if (main_game_globals->options.simulation==4)
 			{
-				*((char *)main_game_globals+0xC)= 5;
+				main_game_globals->options.simulation= 5;
 				if (unknown_0055e4d0[*(const long *)(unknown_004e9ae8+UNKNOWN_004E9AE8_UNKNOWNC14_OFFSET)])
 				{
 					unknown_00162060();
 				}
 			}
-			kind= *((const signed char *)main_game_globals+0xC);
+			kind= main_game_globals->options.simulation;
 			if (kind>=4 && kind<=5)
 			{
 				unknown_00162420();
 				unknown_000bb7f0();
 				unknown_00183f10();
 			}
-			*((char *)main_game_globals+0xC)= 1;
+			main_game_globals->options.simulation= 1;
 			simulation_initialize_for_new_map();
 		}
 	}
 	simulation_world_players_clear(unknown_004cf770.unknownC);
-	unknown_00083370(unknown_004cf780, flags);
+	simulation_players_after_load(unknown_004cf780, flags);
 	simulation_world_unknown_0006a770(unknown_004cf770.unknownC);
 	unknown_004cf770.unknownB= FALSE;
 }

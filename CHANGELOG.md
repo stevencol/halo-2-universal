@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Los jugadores de la simulación con un mapa nuevo y tras cargar una partida
+
+Dos funciones grandes de `networking/simulation_players.c` (931 bytes). De 1960
+funciones se pasa a 1962, el 17,42 % de las del juego (el 10,961 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_players_initialize_for_new_map` | `0x00083000` | `networking/simulation_players.c` |
+| `simulation_players_after_load` | `0x00083370` | `networking/simulation_players.c` |
+
+### Lo que se sabe
+
+- `simulation_players_initialize_for_new_map` (antes `unknown_00083000`)
+  decide **de dónde salen las consolas de la partida**. Con una sesión de
+  red (la que da `network_life_cycle_get_any_session`, en los modos de juego
+  1 y 2): son las de la sesión (seis bytes cada una, `0x10C` bytes de una a
+  otra), y esta consola es la que la sesión dice. Sin sesión: son las de las
+  opciones del juego (`machine_valid_mask`, `machine_identifiers`), y esta
+  consola es la última que tenga los seis bytes de `local_machine_identifier`.
+- `simulation_players_after_load` (antes `unknown_00083370`): sin el tercer
+  bit, busca esta consola entre las de los jugadores del juego y se lo dice
+  al resto (`unknown_0014c880`); con él, deja una sola consola, esta.
+- En las tres ocasiones, lo que está en marcha recibe los seis bytes de
+  esta consola y su número; el juego lo tiene escrito tres veces, aquí es
+  una función en línea (`simulation_players_set_world_machine`).
+- **Limpieza:** la clase de partida que los hitos 575 a 577 leían como «el
+  byte `0xC` de los datos del juego» es el campo `options.simulation`, que
+  ya tenía nombre; ahora se usa.
+- Variable nueva: `unknown_00527378` (algo de la partida en red, que recibe
+  un puntero a esto).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  579.
+- Con sesión pero sin estado o sin consolas, el juego lee de un puntero
+  nulo: la prueba no da esos casos (se pararía igual en los dos lados).
+- `unknown_00527378` está 0x48 bytes después de `unknown_00527330`: lo más
+  probable es que sean campos de una misma estructura.
+- En este hito se pasaron las pruebas de las dos funciones y todas las de
+  `test_simulation…` (160).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Se cuentan los jugadores a la otra consola y se mandan los sucesos de una vista
 
 Cuatro funciones (579 bytes) en tres archivos de `networking/`. De 1956

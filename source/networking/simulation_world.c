@@ -1803,7 +1803,7 @@ void __attribute__((stdcall)) simulation_world_initialize(
 	long state;
 
 	*(long *)(world+SIMULATION_WORLD_UNKNOWN0_OFFSET)= unknown;
-	switch (*((const signed char *)main_game_globals+0xC))
+	switch (main_game_globals->options.simulation)
 	{
 	case 1:
 		state= _simulation_world_state1;
