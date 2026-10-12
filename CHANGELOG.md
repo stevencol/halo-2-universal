@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Seis funciones pequeñas del motor de la partida
+
+Seis funciones (201 bytes) en `game/game_engine.c`. De 2278
+funciones se pasa a 2284, el 20,28 % de las del juego (el 11,766 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_engine_running` | `0x0015dea0` | `game/game_engine.c` |
+| `game_engine_unknown_0015dd10` | `0x0015dd10` | `game/game_engine.c` |
+| `game_engine_unknown_0015ea50` | `0x0015ea50` | `game/game_engine.c` |
+| `game_engine_unknown_0015eaf0` | `0x0015eaf0` | `game/game_engine.c` |
+| `game_engine_unknown_0015fe50` | `0x0015fe50` | `game/game_engine.c` |
+| `game_engine_unknown_0015ff50` | `0x0015ff50` | `game/game_engine.c` |
+
+### Lo que se sabe
+
+- Todas miran lo mismo: si el tipo de partida que se juega tiene un objeto
+  que lo lleve (`unknown_0055e4d0`), y entonces le preguntan o le avisan de
+  algo.
+- `game_engine_running` dice si lo hay.
+- `game_engine_unknown_0015ea50` (un índice en `eax`) y
+  `game_engine_unknown_0015ff50` llaman a las funciones 15 y 36 del objeto.
+- `game_engine_unknown_0015eaf0` devuelve el bit 0 de un byte de las
+  opciones de la partida (`+0x184`), solo si hay objeto.
+- `game_engine_unknown_0015fe50` (un número en `edx`) lo guarda en `0xC04`
+  de lo que guarda el motor, salvo en una consola que solo predice.
+- `game_engine_unknown_0015dd10` pone el bit 5 del primer número del motor
+  y, si hay objeto, llama a `unknown_001e97b0`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  704.
+- Qué hace cada función del objeto no se sabe, y por eso cinco de las seis
+  llevan su dirección por nombre.
+- En este hito se pasaron las pruebas de las seis funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Enemigos en multijugador, y hacer sitio en el mundo de la física
 
 Dos funciones (100 bytes): una en `game/game_engine.c` y otra en `physics/havok.c`.

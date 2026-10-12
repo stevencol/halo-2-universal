@@ -2809,3 +2809,10 @@ address,name,source,arguments,returns,convention
 001dee80,object_list_get_next,source/hs/object_lists.c,ebx,int
 001defb0,object_list_count,source/hs/object_lists.c,eax,short
 001c4040,unknown_001c4040,,eax ecx stack stack stack,bool
+0015dea0,game_engine_running,source/game/game_engine.c,,bool
+0015dd10,game_engine_unknown_0015dd10,source/game/game_engine.c,,void
+0015ea50,game_engine_unknown_0015ea50,source/game/game_engine.c,eax,void
+0015eaf0,game_engine_unknown_0015eaf0,source/game/game_engine.c,,bool
+0015fe50,game_engine_unknown_0015fe50,source/game/game_engine.c,edx,void
+0015ff50,game_engine_unknown_0015ff50,source/game/game_engine.c,stack stack,bool,stdcall
+001e97b0,unknown_001e97b0,,stack,void,stdcall
