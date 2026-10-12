@@ -1229,3 +1229,49 @@ long __attribute__((stdcall)) simulation_view_allocate(
 
 	return datum_index;
 }
+
+/* 0x00086bc0: what a view has at 0x6060 of what it has at 0x8 does its work */
+void unknown_00086bc0(byte *unknown6060);
+
+/* 0x000859d0: a view that is well does its work, outside the ticks. One of
+the third kind or the fourth looks at three bytes of what it has at 0x8: the
+first of them that is set makes it fail (simulation_view_fail, written here
+for two of them), as 9, 10 or 11 says. And if it is still well, what it has
+at 0x6060 of that does its work (unknown_00086bc0) */
+void simulation_view_update(
+	byte *view)
+{
+	word kind;
+
+	if (*(const long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)!=0)
+	{
+		return;
+	}
+	kind= *(const word *)(view+SIMULATION_VIEW_KIND_OFFSET);
+	if (kind==3 || kind==4)
+	{
+		const byte *data= *(byte *const *)(view+SIMULATION_VIEW_UNKNOWN8_OFFSET);
+
+		if (data[SIMULATION_VIEW_UNKNOWN8_UNKNOWN3A_OFFSET])
+		{
+			simulation_view_fail(view, _simulation_view_unknown28_9);
+		}
+		else if (data[SIMULATION_VIEW_UNKNOWN8_UNKNOWN5079_OFFSET])
+		{
+			simulation_view_fail(view, _simulation_view_unknown28_10);
+		}
+		else if (data[SIMULATION_VIEW_UNKNOWN8_UNKNOWN6064_OFFSET])
+		{
+			simulation_view_fail(view, _simulation_view_unknown28_11);
+		}
+	}
+	if (*(const long *)(view+SIMULATION_VIEW_UNKNOWN28_OFFSET)!=0)
+	{
+		return;
+	}
+	kind= *(const word *)(view+SIMULATION_VIEW_KIND_OFFSET);
+	if (kind==3 || kind==4)
+	{
+		unknown_00086bc0(*(byte *const *)(view+SIMULATION_VIEW_UNKNOWN8_OFFSET)+SIMULATION_VIEW_UNKNOWN8_UNKNOWN6060_OFFSET);
+	}
+}

@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Lo que está en marcha y cada vista hacen su trabajo fuera de los ticks
+
+Dos funciones (406 bytes), en `networking/simulation_world.c` y `networking/simulation_view.c`.
+De 1954
+funciones se pasa a 1956, el 17,36 % de las del juego (el 10,908 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_update` | `0x00068f30` | `networking/simulation_world.c` |
+| `simulation_view_update` | `0x000859d0` | `networking/simulation_view.c` |
+
+### Lo que se sabe
+
+- `simulation_world_update` (antes `unknown_00068f30`, la que llama
+  `simulation_idle`) reparte el trabajo según el número que lo que está en
+  marcha guarda en `0x18`, **que cada paso puede cambiar** (se vuelve a leer
+  antes de cada uno). Hay dos caminos: uno para los estados tercero y
+  quinto y otro para el resto; cada camino tiene su manera de empezar, su
+  paso para el 3 y los suyos para el 4, el 5 o «del 3 al 6». Al final cada
+  vista hace su trabajo.
+- `simulation_view_update` (antes `unknown_000859d0`) es ese trabajo de una
+  vista: una del tercer o cuarto tipo mira tres bytes de lo que tiene en
+  `0x8` (`0x3A`, `0x5079`, `0x6064`) y **falla con 9, 10 u 11** por el
+  primero que esté puesto; si sigue bien, trabaja lo que tiene en `0x6060`
+  (`unknown_00086bc0`). El juego tiene `simulation_view_fail` escrita aquí
+  dentro para dos de los tres casos.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  577.
+- Los nombres `…_update` son suposiciones.
+- En este hito se pasaron las pruebas de las dos funciones y todas las de
+  `test_simulation…` (154).
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Lo que la simulación tiene en marcha se prepara, se reinicia y se cierra
 
 Tres funciones de `networking/simulation_world.c` (744 bytes), las que el hito 575 dejó

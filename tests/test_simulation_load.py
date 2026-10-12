@@ -109,7 +109,7 @@ def run(t) -> None:
             "simulation_world_restart": fails_after,
             "main_game_restart": lambda harness, arguments: (0, ()),
             "unknown_00083220": lambda harness, arguments, well=random_.choice((0, 1, 1, 1, 0x100)): (well, (arguments[0],)),
-            "unknown_00068f30": fails_after,
+            "simulation_world_update": fails_after,
             "game_is_authoritative": lambda harness, arguments, value=random_.choice((0, 1, 1)): value,
             "game_finished_wait_over": lambda harness, arguments, value=random_.choice((0, 1, 1, 0x100)): value,
             "game_is_distributed": lambda harness, arguments, value=random_.choice((0, 0, 1)): value,

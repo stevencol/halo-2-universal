@@ -2565,5 +2565,7 @@ address,name,source,arguments,returns,convention
 00183f10,unknown_00183f10,,,void
 00083370,unknown_00083370,,stack stack,void,stdcall
 00083220,unknown_00083220,,eax,bool
-00068f30,unknown_00068f30,,eax,void
+00068f30,simulation_world_update,source/networking/simulation_world.c,eax,void
 00068dc0,simulation_world_restart,source/networking/simulation_world.c,esi,void
+000859d0,simulation_view_update,source/networking/simulation_view.c,eax,void
+00086bc0,unknown_00086bc0,,eax,void

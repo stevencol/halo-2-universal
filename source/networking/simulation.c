@@ -66,7 +66,6 @@ void unknown_000bb7f0(void);
 void unknown_00183f10(void);
 void __attribute__((stdcall)) unknown_00083370(long unknown, unsigned long flags);
 boolean unknown_00083220(long unknown);
-void unknown_00068f30(byte *world);
 void unknown_00195e90(void);
 
 long GetTickCount(void);
@@ -591,7 +590,7 @@ the network that has not failed and a game that goes on. A failure that was
 asked for is done (simulation_fail), and a beginning again that was asked
 for (simulation_unknown_000687b0); what unknown_004cf780 has must be well
 (unknown_00083220), or the simulation fails; the thing that is going does
-its work (unknown_00068f30), and fails if it is in its third state or its
+its work (simulation_world_update), and fails if it is in its third state or its
 fifth with the byte at 0x2C set. After any of these the rest is left if the
 simulation has failed. At the end, a game that this console rules, that is
 over and that is not one of several consoles goes to the main menu. The
@@ -630,7 +629,7 @@ void simulation_idle(
 	{
 		return;
 	}
-	unknown_00068f30(unknown_004cf770.unknownC);
+	simulation_world_update(unknown_004cf770.unknownC);
 	if (unknown_004cf770.unknown1[1])
 	{
 		return;

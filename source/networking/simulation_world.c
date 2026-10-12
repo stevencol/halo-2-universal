@@ -1974,3 +1974,74 @@ void __attribute__((stdcall)) simulation_world_dispose(
 	*(void **)(world+SIMULATION_WORLD_UNKNOWN4_OFFSET)= NULL;
 	*(long *)(world+SIMULATION_WORLD_STATE_OFFSET)= 0;
 }
+
+/* 0x00068f30: the thing does its work, outside the ticks, by the number that
+it has at 0x18, which each step can change. Not in its third state or its
+fifth: with a number that is not 1 nor from 3 to 6 it starts
+(simulation_world_unknown_00069c50); then what there is for 3, for 4 and for
+5 (simulation_world_unknown_00069c80, simulation_world_unknown_00069d50,
+simulation_world_unknown_00069dd0), and its players
+(simulation_world_update_players_unknown25). In those two states: with such
+a number it starts in another way (simulation_world_unknown_00069eb0); then
+what there is for 3 (simulation_world_unknown_00069f10), for any but 1 and 4
+(simulation_world_unknown_00069f90, which gives up after too long), for 3 to
+6 (simulation_world_unknown_00069fe0), and unknown_0006a560 with a clear
+byte. Then each of its views does its work (simulation_view_update) */
+void simulation_world_update(
+	byte *world)
+{
+	struct simulation_view_iterator iterator= {0xFFFFFFFF, 0};
+	byte *view;
+	long state= *(const long *)(world+SIMULATION_WORLD_STATE_OFFSET);
+	long unknown18= *(const long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET);
+
+	if (state!=_simulation_world_state3 && state!=_simulation_world_state5)
+	{
+		if (!(unknown18>=_simulation_world_unknown18_4 && unknown18<=_simulation_world_unknown18_6) &&
+			unknown18!=_simulation_world_unknown18_3 && unknown18!=_simulation_world_unknown18_1)
+		{
+			simulation_world_unknown_00069c50(world);
+		}
+		if (*(const long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET)==_simulation_world_unknown18_3)
+		{
+			simulation_world_unknown_00069c80(world);
+		}
+		if (*(const long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET)==_simulation_world_unknown18_4)
+		{
+			simulation_world_unknown_00069d50(world);
+		}
+		if (*(const long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET)==_simulation_world_unknown18_5)
+		{
+			simulation_world_unknown_00069dd0(world);
+		}
+		simulation_world_update_players_unknown25(world);
+	}
+	else
+	{
+		if (!(unknown18>=_simulation_world_unknown18_4 && unknown18<=_simulation_world_unknown18_6) &&
+			unknown18!=_simulation_world_unknown18_3 && unknown18!=_simulation_world_unknown18_1)
+		{
+			simulation_world_unknown_00069eb0(world);
+		}
+		if (*(const long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET)==_simulation_world_unknown18_3)
+		{
+			simulation_world_unknown_00069f10(world);
+		}
+		unknown18= *(const long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET);
+		if (unknown18!=_simulation_world_unknown18_4 && unknown18!=_simulation_world_unknown18_1)
+		{
+			simulation_world_unknown_00069f90(world);
+		}
+		unknown18= *(const long *)(world+SIMULATION_WORLD_UNKNOWN18_OFFSET);
+		if ((unknown18>=_simulation_world_unknown18_4 && unknown18<=_simulation_world_unknown18_6) ||
+			unknown18==_simulation_world_unknown18_3)
+		{
+			simulation_world_unknown_00069fe0(world);
+		}
+		unknown_0006a560(world, FALSE);
+	}
+	while (simulation_world_next_view(&iterator, world, &view))
+	{
+		simulation_view_update(view);
+	}
+}

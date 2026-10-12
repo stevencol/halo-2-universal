@@ -56,6 +56,14 @@ enum
 	_simulation_view_unknown28_game_state_failed= 5,
 	/* how a view is after it is told of fewer players than it has to know */
 	_simulation_view_unknown28_players_missing= 8,
+	/* three bytes of what a view has at 0x8, each of which says that
+	something in it went wrong, and how the view is after each */
+	SIMULATION_VIEW_UNKNOWN8_UNKNOWN3A_OFFSET= 0x3A,
+	SIMULATION_VIEW_UNKNOWN8_UNKNOWN5079_OFFSET= 0x5079,
+	SIMULATION_VIEW_UNKNOWN8_UNKNOWN6064_OFFSET= 0x6064,
+	_simulation_view_unknown28_9= 9,
+	_simulation_view_unknown28_10= 10,
+	_simulation_view_unknown28_11= 11,
 	/* more of a view: the state of the other end of it and the number that
 	goes with it, as it last said; and something that a view that is not in
 	its sixth state has to take the things that come. The kind of the
@@ -229,6 +237,8 @@ typedef char verify_simulation_view_player_actions_message_size[
 	sizeof(struct simulation_view_player_actions_message) == 0x180 ? 1 : -1];
 
 /* ---------- prototypes/SIMULATION_VIEW.C */
+
+void simulation_view_update(byte *view);
 
 void simulation_view_set_blocked(byte *view, boolean blocked);
 void __attribute__((stdcall)) simulation_view_set_state(byte *view, long state, long number);
