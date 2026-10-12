@@ -175,7 +175,7 @@ void unknown_00155ea0(void);
 void unknown_00155ed0(void);
 void game_engine_initialize(void);
 void unknown_001574c0(void);
-void unknown_00157bb0(void);
+void game_engine_dispose_from_old_map(void);
 void game_unknown_0016efb0_initialize(void);
 void game_unknown_0016efb0_initialize_for_new_map(void);
 void game_unknown_0016efb0_unknown_0016f120(void);
@@ -361,7 +361,7 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{players_initialize, players_dispose, players_initialize_for_new_map, players_dispose_from_old_map, no_operation, no_operation},
 	{sound_unknown_00185ab0, no_operation, sound_unknown_00185b00, no_operation},
 	{game_unknown_001e6a40_initialize, no_operation, game_unknown_001e6a40_initialize_for_new_map, game_unknown_001e6a40_dispose_from_old_map},
-	{game_engine_initialize, no_operation, unknown_001574c0, unknown_00157bb0},
+	{game_engine_initialize, no_operation, unknown_001574c0, game_engine_dispose_from_old_map},
 	{simulation_initialize, simulation_dispose, simulation_initialize_for_new_map, simulation_dispose_from_old_map},
 	{no_operation, no_operation, game_unknown_0011be20_initialize_for_new_map, game_unknown_0011be20_dispose_from_old_map},
 	{game_unknown_001eb550_initialize, game_unknown_001eb550_dispose, game_unknown_001eb550_initialize_for_new_map, no_operation},

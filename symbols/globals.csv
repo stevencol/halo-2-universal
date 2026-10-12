@@ -565,3 +565,4 @@ address,name,source
 0051e9b4,unknown_0051e9b4,source/physics/havok.c
 0047f054,unknown_0047f054,source/physics/havok.c
 004f9388,unknown_004f9388,source/hs/hs_runtime.c
+004b9ed8,unknown_004b9ed8,source/game/game_engine.c

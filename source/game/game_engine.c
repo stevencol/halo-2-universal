@@ -12,6 +12,7 @@ game_voice.c, has something for each).
 #include <stdint.h>
 
 #include "game/game.h"
+#include "main/main.h"
 #include "networking/game_voice.h"
 #include "saved games/game_state.h"
 
@@ -149,6 +150,121 @@ boolean __attribute__((stdcall)) game_engine_unknown_0015ff50(
 	{
 		return ((boolean (__attribute__((thiscall)) *)(void *, long, long))(*(void ***)engine)[35])(engine, unknown,
 			unknown2);
+	}
+
+	return FALSE;
+}
+
+/* 0x004b9ed8: which of the players of this console something is of now, or
+NONE (it is of another part of the game, not known) */
+long unknown_004b9ed8;
+
+/* 0x00157bb0: the fourth of the functions of the part (game.c): when a map
+goes, what runs the game is told (its third function), and no kind of game
+is played */
+void game_engine_dispose_from_old_map(
+	void)
+{
+	void *engine= GAME_ENGINE_GET();
+
+	if (engine)
+	{
+		((void (__attribute__((thiscall)) *)(void *))(*(void ***)engine)[2])(engine);
+		*(long *)(unknown_004e9ae8+0xC14)= NONE;
+	}
+}
+
+/* 0x00157a40: the short that the game engine keeps at 0xA, if something runs
+the game and the byte at 0x184 of the game has its bit 0; if not, zero */
+short game_engine_unknown_00157a40(
+	void)
+{
+	const byte *globals= unknown_004e9ae8;
+
+	if (GAME_ENGINE_GET() && (((const byte *)main_game_globals)[0x184]&1))
+	{
+		return *(const short *)(globals+0xA);
+	}
+
+	return 0;
+}
+
+/* 0x001587b0: the short at 4 of one of the things of 0x1C bytes that the
+game engine keeps from 0x304, if something runs the game; if not, zero */
+long game_engine_unknown_001587b0(
+	long index)
+{
+	const byte *globals= unknown_004e9ae8;
+
+	if (GAME_ENGINE_GET() && (uintptr_t)globals+0x304!=0)
+	{
+		return *(const short *)(globals+0x304+(index&0xFFFF)*0x1C+4);
+	}
+
+	return 0;
+}
+
+/* 0x001595d0: what runs the game is told (its 14th function) of the player
+of this console that unknown_004b9ed8 says, if there is one */
+void game_engine_unknown_001595d0(
+	void)
+{
+	if (unknown_004b9ed8!=NONE)
+	{
+		long player_index= *(const long *)((const byte *)players_globals+unknown_004b9ed8*4+0xC);
+
+		if (player_index!=NONE)
+		{
+			void *engine= GAME_ENGINE_GET();
+
+			if (engine)
+			{
+				((void (__attribute__((thiscall)) *)(void *, long))(*(void ***)engine)[13])(engine, player_index);
+			}
+		}
+	}
+}
+
+/* 0x00162030: what the game engine keeps from 0x304, if something runs the
+game; if not, NULL */
+byte *game_engine_unknown_00162030(
+	void)
+{
+	byte *globals= unknown_004e9ae8;
+
+	if (GAME_ENGINE_GET())
+	{
+		return globals+0x304;
+	}
+
+	return NULL;
+}
+
+/* 0x00163040: whether a bit of the byte that the game engine keeps at 0xF4
+is set, if something runs the game */
+boolean __attribute__((stdcall)) game_engine_unknown_00163040(
+	long bit)
+{
+	const byte *globals= unknown_004e9ae8;
+
+	if (GAME_ENGINE_GET())
+	{
+		return (globals[0xF4]&(byte)(1<<bit))!=0;
+	}
+
+	return FALSE;
+}
+
+/* 0x00163080: the bit 0 of the byte that the game engine keeps at 0xC10, if
+something runs the game */
+boolean game_engine_unknown_00163080(
+	void)
+{
+	const byte *globals= unknown_004e9ae8;
+
+	if (GAME_ENGINE_GET())
+	{
+		return globals[0xC10]&1;
 	}
 
 	return FALSE;

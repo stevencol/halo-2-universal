@@ -384,7 +384,7 @@ address,name,source,arguments,returns,convention
 00155ed0,unknown_00155ed0,,,void
 00157450,game_engine_initialize,source/game/game_engine.c,,void
 001574c0,unknown_001574c0,,,void
-00157bb0,unknown_00157bb0,,,void
+00157bb0,game_engine_dispose_from_old_map,source/game/game_engine.c,,void
 0016efb0,game_unknown_0016efb0_initialize,source/game/game_unknown_0016efb0.c,,void
 0016f0e0,game_unknown_0016efb0_initialize_for_new_map,source/game/game_unknown_0016efb0.c,,void
 0016f120,game_unknown_0016efb0_unknown_0016f120,source/game/game_unknown_0016efb0.c,,void
@@ -2816,3 +2816,9 @@ address,name,source,arguments,returns,convention
 0015fe50,game_engine_unknown_0015fe50,source/game/game_engine.c,edx,void
 0015ff50,game_engine_unknown_0015ff50,source/game/game_engine.c,stack stack,bool,stdcall
 001e97b0,unknown_001e97b0,,stack,void,stdcall
+00157a40,game_engine_unknown_00157a40,source/game/game_engine.c,,short
+001587b0,game_engine_unknown_001587b0,source/game/game_engine.c,ecx,int
+001595d0,game_engine_unknown_001595d0,source/game/game_engine.c,,void
+00162030,game_engine_unknown_00162030,source/game/game_engine.c,,pointer
+00163040,game_engine_unknown_00163040,source/game/game_engine.c,stack,bool,stdcall
+00163080,game_engine_unknown_00163080,source/game/game_engine.c,,bool

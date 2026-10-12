@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Siete funciones pequeñas más del motor de la partida
+
+Siete funciones (322 bytes) en `game/game_engine.c`. De 2284
+funciones se pasa a 2291, el 20,34 % de las del juego (el 11,776 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_engine_dispose_from_old_map` | `0x00157bb0` | `game/game_engine.c` |
+| `game_engine_unknown_00157a40` | `0x00157a40` | `game/game_engine.c` |
+| `game_engine_unknown_001587b0` | `0x001587b0` | `game/game_engine.c` |
+| `game_engine_unknown_001595d0` | `0x001595d0` | `game/game_engine.c` |
+| `game_engine_unknown_00162030` | `0x00162030` | `game/game_engine.c` |
+| `game_engine_unknown_00163040` | `0x00163040` | `game/game_engine.c` |
+| `game_engine_unknown_00163080` | `0x00163080` | `game/game_engine.c` |
+
+### Lo que se sabe
+
+- `game_engine_dispose_from_old_map` es la cuarta función de la parte del
+  motor en la tabla de `game.c` (antes `unknown_00157bb0`): cuando se va el
+  mapa avisa al objeto que lleva la partida (su tercera función) y deja el
+  tipo de partida en `NONE`.
+- Las otras seis son consultas de lo que guarda el motor, que solo valen si
+  hay objeto: un `short` (`+0xA`), un `short` de uno de los elementos de
+  `0x1C` bytes que hay desde `0x304`, la dirección de esos elementos, un
+  bit del byte de `0xF4`, el bit 0 del byte de `0xC10`, y un aviso al
+  objeto (su función 14) con el jugador local que diga `0x4b9ed8`.
+- Para encontrarlas hay una herramienta nueva,
+  `build\line_breaking\find_small_users.py <dirección> [tamaño]`, que
+  lista las funciones pequeñas sin descompilar que usan una variable.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  705.
+- Qué son esos datos del motor no se sabe; seis llevan su dirección por
+  nombre.
+- En este hito se pasaron las pruebas de las siete funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Seis funciones pequeñas del motor de la partida
 
 Seis funciones (201 bytes) en `game/game_engine.c`. De 2278
