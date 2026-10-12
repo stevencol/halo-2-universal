@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Lo que dice qué hay en cada zona del bsp
+
+Una función (159 bytes) en los archivos nuevos `objects/cluster_partitions.{h,c}`.
+De 2231
+funciones se pasa a 2232, el 19,81 % de las del juego (el 11,541 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `cluster_partition_initialize` | `0x001cabc0` | `objects/cluster_partitions.c` |
+
+### Lo que se sabe
+
+- Las «tres cosas» que las luces tenían en `0x4e0310` (hito 638) son una
+  estructura general, `struct cluster_partition`: dice qué cosas de una
+  clase hay en cada zona del bsp. `cluster_partition_initialize` (antes
+  `unknown_001cabc0`) la crea: pide `0x800` bytes del estado de la partida
+  y hace dos tablas de 2048 elementos, que el juego llama
+  `"cluster <nombre>"` y `"<nombre> cluster"` (para las luces,
+  `"cluster light"` y `"light cluster"`).
+- La variable de las luces pasa a llamarse `light_cluster_partition`, y su
+  estructura está ahora en `cluster_partitions.h`.
+- Detalle del compilador: el juego deja en la pila el tercer argumento de
+  cada `csnzprintf` para que sea el argumento de la llamada siguiente.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  674.
+- El nombre del archivo y de la estructura son supuestos (por los nombres
+  de las tablas). `unknown_00296270`, que hace cada tabla, y el resto del
+  módulo (`0x1cab80`, `0x1cac60`, `0x1cae40`) no están descompilados.
+- En este hito se pasaron las pruebas de la función y `test_light*`. Hay
+  una batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Un escuadrón del escenario se convierte en escuadrón del juego
 
 Dos funciones (unos 400 bytes): una en `ai/squads.c` y otra en `ai/actors.c`.

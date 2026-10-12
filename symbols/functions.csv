@@ -2701,7 +2701,7 @@ address,name,source,arguments,returns,convention
 00292f60,unknown_00292f60,,,void
 000bffa0,lights_initialize,source/objects/lights.c,,void
 000c0040,lights_initialize_for_new_map,source/objects/lights.c,,void
-001cabc0,unknown_001cabc0,,stack stack stack,void,stdcall
+001cabc0,cluster_partition_initialize,source/objects/cluster_partitions.c,stack stack stack,void,stdcall
 000c00a0,lights_unknown_000c00a0,source/objects/lights.c,,void
 000c0110,lights_unknown_000c0110,source/objects/lights.c,,void
 000c01c0,lights_unknown_000c01c0,source/objects/lights.c,,void

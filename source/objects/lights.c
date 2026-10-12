@@ -12,6 +12,7 @@ is a guess, by the name that the game gives to its table of data ("lights").
 #include "cache/cache_files.h"
 #include "game/game.h"
 #include "memory/data.h"
+#include "objects/cluster_partitions.h"
 #include "saved games/game_state.h"
 
 /* ---------- constants */
@@ -24,7 +25,7 @@ enum
 	/* of what light_globals points to */
 	LIGHT_GLOBALS_SIZE= 0xC,
 
-	/* of the first thing of unknown_004e0310: 0x200 numbers */
+	/* of the first thing of light_cluster_partition: 0x200 numbers */
 	LIGHT_UNKNOWN_SIZE= 0x800,
 
 	/* of a light: a byte of bits, and two numbers that are NONE in a light
@@ -37,15 +38,8 @@ enum
 
 /* ---------- structures */
 
-/* what unknown_001cabc0 fills for the lights, with the name "light": 0x800
-bytes of the state of the game and two tables of data. It may be where the
-lights are in the world, cluster by cluster, but that is a guess */
-struct light_unknown_004e0310
-{
-	long *unknown0;
-	struct data_array *unknown4;
-	struct data_array *unknown8;
-};
+/* which lights are in each cluster of the structure bsp is kept in a
+struct cluster_partition (cluster_partitions.h) */
 
 /* ---------- globals */
 
@@ -59,13 +53,13 @@ byte *light_globals;
 /* 0x004e0308: a number that a new light keeps, less one (a count of the
 times that something has been done to the lights, perhaps) */
 long unknown_004e0308;
-struct light_unknown_004e0310 unknown_004e0310;
+struct cluster_partition light_cluster_partition;
 
 /* ---------- prototypes */
 
-void __attribute__((stdcall)) unknown_001cabc0(struct light_unknown_004e0310 *unknown, const char *name,
+void __attribute__((stdcall)) cluster_partition_initialize(struct cluster_partition *unknown, const char *name,
 	long unknown3);
-void unknown_001cae40(struct light_unknown_004e0310 *unknown, long light_index, byte *unknown10);
+void unknown_001cae40(struct cluster_partition *unknown, long light_index, byte *unknown10);
 void __attribute__((stdcall)) unknown_000c2d00(long light_index);
 void __attribute__((stdcall)) unknown_000c0c80(long light_index);
 void __attribute__((stdcall)) unknown_000c3260(long light_index, boolean unknown);
@@ -75,7 +69,7 @@ void __attribute__((stdcall)) unknown_000c3260(long light_index, boolean unknown
 /* 0x000bffa0: the table is made, in the memory of the state of the game
 (data_new, which the game has written here), and the 0xC bytes are taken
 there too (game_state_malloc, written here as well). If there is a table,
-unknown_001cabc0 fills the three things */
+cluster_partition_initialize fills the three things */
 void lights_initialize(
 	void)
 {
@@ -84,7 +78,7 @@ void lights_initialize(
 	light_globals[8]= TRUE;
 	if (light_data)
 	{
-		unknown_001cabc0(&unknown_004e0310, "light", 0);
+		cluster_partition_initialize(&light_cluster_partition, "light", 0);
 	}
 }
 
@@ -95,9 +89,9 @@ void lights_initialize_for_new_map(
 {
 	data_make_valid(light_data);
 	light_globals[8]= TRUE;
-	memset(unknown_004e0310.unknown0, 0xFF, LIGHT_UNKNOWN_SIZE);
-	data_make_valid(unknown_004e0310.unknown8);
-	data_make_valid(unknown_004e0310.unknown4);
+	memset(light_cluster_partition.unknown0, 0xFF, LIGHT_UNKNOWN_SIZE);
+	data_make_valid(light_cluster_partition.unknown8);
+	data_make_valid(light_cluster_partition.unknown4);
 	light_globals[0]= FALSE;
 	*(long *)(light_globals+4)= 0;
 }
@@ -156,7 +150,7 @@ void lights_unknown_000c0110(
 
 			if (light[LIGHT_FLAGS_OFFSET]&2)
 			{
-				unknown_001cae40(&unknown_004e0310, light_index, light+LIGHT_UNKNOWN10_OFFSET);
+				unknown_001cae40(&light_cluster_partition, light_index, light+LIGHT_UNKNOWN10_OFFSET);
 				light[LIGHT_FLAGS_OFFSET]&= ~8;
 			}
 		}
