@@ -196,10 +196,10 @@ void unknown_0017d330(void);
 void unknown_0017d350(void);
 void unknown_0017d440(void);
 void unknown_0017d5e0(void);
-void sound_unknown_00183e40(void);
-void sound_unknown_00183ec0(void);
-void sound_unknown_00183ee0(void);
-void sound_unknown_00183f00(void);
+void breakable_surfaces_initialize(void);
+void breakable_surfaces_initialize_for_new_map(void);
+void breakable_surfaces_unknown_00183ee0(void);
+void breakable_surfaces_unknown_00183f00(void);
 void sound_unknown_00185ab0(void);
 void sound_unknown_00185b00(void);
 void unknown_001887d0(void);
@@ -372,7 +372,7 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{unknown_00012560, unknown_000141c0, unknown_00022590, unknown_000226c0, unknown_000226a0, unknown_000226b0},
 	{unknown_0002b4a0, unknown_0002b5c0, unknown_0002b540, unknown_0002b5a0},
 	{no_operation, no_operation, no_operation, no_operation},
-	{sound_unknown_00183e40, no_operation, sound_unknown_00183ec0, no_operation, sound_unknown_00183ee0, sound_unknown_00183f00},
+	{breakable_surfaces_initialize, no_operation, breakable_surfaces_initialize_for_new_map, no_operation, breakable_surfaces_unknown_00183ee0, breakable_surfaces_unknown_00183f00},
 	{unknown_001552e0, no_operation, unknown_00155380, unknown_00155490},
 	{unknown_0016efb0, no_operation, unknown_0016f0e0, no_operation, unknown_0016f120, no_operation},
 	{unknown_0017d220, unknown_0017d2a0, unknown_0017d2e0, unknown_0017d330, unknown_0017d350, unknown_0017d440, NULL, (game_system_activation_proc)unknown_0017d5e0},

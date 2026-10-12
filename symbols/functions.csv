@@ -405,10 +405,10 @@ address,name,source,arguments,returns,convention
 0017d350,unknown_0017d350,,,void
 0017d440,unknown_0017d440,,,void
 0017d5e0,unknown_0017d5e0,,,void
-00183e40,sound_unknown_00183e40,source/sound/sound_manager.c,,void
-00183ec0,sound_unknown_00183ec0,source/sound/sound_manager.c,,void
-00183ee0,sound_unknown_00183ee0,source/sound/sound_manager.c,,void
-00183f00,sound_unknown_00183f00,source/sound/sound_manager.c,,void
+00183e40,breakable_surfaces_initialize,source/physics/breakable_surfaces.c,,void
+00183ec0,breakable_surfaces_initialize_for_new_map,source/physics/breakable_surfaces.c,,void
+00183ee0,breakable_surfaces_unknown_00183ee0,source/physics/breakable_surfaces.c,,void
+00183f00,breakable_surfaces_unknown_00183f00,source/physics/breakable_surfaces.c,,void
 00185ab0,sound_unknown_00185ab0,source/sound/sound_manager.c,,void
 00185b00,sound_unknown_00185b00,source/sound/sound_manager.c,,void
 001887d0,unknown_001887d0,,,void
@@ -2562,7 +2562,7 @@ address,name,source,arguments,returns,convention
 00162060,unknown_00162060,,,void
 00162420,game_voice_unknown_00162420,source/networking/game_voice.c,,void
 000bb7f0,objects_detach_simulation_entities,source/objects/objects.c,,void
-00183f10,sound_unknown_00183f10,source/sound/sound_manager.c,,void
+00183f10,breakable_surfaces_unknown_00183f10,source/physics/breakable_surfaces.c,,void
 00083370,simulation_players_after_load,source/networking/simulation_players.c,stack stack,void,stdcall
 00083220,simulation_players_update_views,source/networking/simulation_players.c,eax,bool
 00068f30,simulation_world_update,source/networking/simulation_world.c,eax,void
@@ -2583,7 +2583,7 @@ address,name,source,arguments,returns,convention
 0006aee0,simulation_world_become_authority,source/networking/simulation_world.c,eax,bool
 00083f00,unknown_00083f00,,edx stack stack stack stack,bool,stdcall
 000d5640,unknown_000d5640,,,void
-00185a30,unknown_00185a30,,,void
+00185a30,breakable_surfaces_unknown_00185a30,source/physics/breakable_surfaces.c,,void
 00185630,unknown_00185630,,,void
 00196470,unknown_00196470,,,void
 00196780,unknown_00196780,,,void
@@ -2644,4 +2644,5 @@ address,name,source,arguments,returns,convention
 001872d0,unknown_001872d0,,eax ecx,void
 00211cc0,unknown_00211cc0,,,void
 001e75d0,unknown_001e75d0,,stack,void,stdcall
-00185a70,unknown_00185a70,,,void
+00185a70,breakable_surfaces_unknown_00185a70,source/physics/breakable_surfaces.c,,void
+000b5920,unknown_000b5920,,eax,void

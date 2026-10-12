@@ -52,7 +52,7 @@ def run(t) -> None:
                     "replication_entity_manager_adopt_entities",
                     "unknown_000d5560",
                     "unknown_000d5640",
-                    "unknown_00185a30",
+                    "breakable_surfaces_unknown_00185a30",
                     "unknown_00185630",
                     "unknown_00162060",
                     "unknown_00196470",

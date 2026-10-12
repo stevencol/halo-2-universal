@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — La parte del hito 609 son las superficies que se rompen; dos funciones más
+
+Dos funciones nuevas (unos 110 bytes) y cinco que cambian de archivo: todas quedan en el
+archivo nuevo `physics/breakable_surfaces.c`. De 2070
+funciones se pasa a 2072, el 18,39 % de las del juego (el 11,264 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `breakable_surfaces_unknown_00185a30` | `0x00185a30` | `physics/breakable_surfaces.c` |
+| `breakable_surfaces_unknown_00185a70` | `0x00185a70` | `physics/breakable_surfaces.c` |
+
+### Corrección
+
+- **El hito 609 puso cinco funciones en `sound_manager.c` y no eran del
+  sonido.** Al hacer las que ellas llaman se ve de qué son: la siguiente
+  (`unknown_00185630`) recorre las superficies de la colisión del nivel que
+  tienen el cuarto bit, y el bloque guarda un bit por cada una de 256
+  superficies de cada estructura. Son **las superficies que se rompen**
+  (los cristales). El sonido solo mira ese bloque.
+- Las cinco pasan a `physics/breakable_surfaces.c` con nombres
+  `breakable_surfaces_…`; las de arranque y mapa nuevo ya tienen nombre
+  propio.
+
+### Lo que se sabe
+
+- `breakable_surfaces_unknown_00185a30`: cada uno de los ocho números que
+  no sea `NONE` se da por terminado (`unknown_000b5920`), salvo en una
+  partida en red de clase 4, y queda en `NONE`.
+- `breakable_surfaces_unknown_00185a70`: tres tablas fijas quedan enteras
+  en `NONE` (256 pares de números, 256 bytes y `0x2000` bytes).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  609.
+- El nombre del archivo es una suposición, bien apoyada pero no
+  comprobada; qué son los ocho números y las tres tablas no se sabe.
+- Las dos del hito 607 que siguen en `sound_manager.c` por la misma razón
+  (`sound_unknown_00185ab0`, `sound_unknown_00185b00`: el bloque de al
+  lado, con los cuatro mandos) quedan igual de dudosas.
+- En este hito se pasaron las pruebas de las siete funciones del archivo,
+  `test_game` entera, `test_simulation_load` y
+  `test_simulation_world_role`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Otras dos partes del juego: ocho funciones cortas
 
 Ocho funciones cortas (unos 330 bytes): cinco en `sound/sound_manager.c` y tres en un

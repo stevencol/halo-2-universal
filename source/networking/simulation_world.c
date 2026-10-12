@@ -2047,7 +2047,7 @@ void __attribute__((stdcall)) simulation_world_send_players(
 a game that it did not */
 void __attribute__((stdcall)) unknown_000d5560(long unknown);
 void unknown_000d5640(void);
-void unknown_00185a30(void);
+void breakable_surfaces_unknown_00185a30(void);
 void unknown_00185630(void);
 void unknown_00162060(void);
 void unknown_00196470(void);
@@ -2117,7 +2117,7 @@ boolean simulation_world_become_authority(
 		simulation_world_unknown_0006a770(world);
 		unknown_000d5560(1);
 		unknown_000d5640();
-		unknown_00185a30();
+		breakable_surfaces_unknown_00185a30();
 		unknown_00185630();
 		if (unknown_0055e4d0[*(const long *)(unknown_004e9ae8+UNKNOWN_004E9AE8_UNKNOWNC14_OFFSET)])
 		{
