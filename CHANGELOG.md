@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Todos los objetos recuperan su parte de la física
+
+Una función (248 bytes) en `physics/havok.c`. De 2254
+funciones se pasa a 2255, el 20,02 % de las del juego (el 11,639 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_001c2a10` | `0x001c2a10` | `physics/havok.c` |
+
+### Lo que se sabe
+
+- `havok_unknown_001c2a10` (antes `unknown_001c2a10`) es la «primera mitad»
+  que `havok_after_save_or_load` vuelve a montar (hito 653): recorre todos
+  los objetos dos veces. En la primera pone a `NONE` lo que cada objeto
+  tiene en la física (`+0xB4`, su componente de Havok); en la segunda crea
+  de nuevo el de cada objeto que no lo tiene (`unknown_001c35f0`). Al final
+  llama a `unknown_001c50c0` y guarda la hora de la partida en `0x47f054`.
+- Así que la primera mitad son los componentes de física de los objetos
+  (que no se guardan con la partida y se rehacen al cargar), y la segunda
+  el mundo y su cuerpo fijo (hito 680).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  687.
+- `unknown_001c35f0`, `unknown_00146bf0` y `unknown_001c50c0` no están
+  descompiladas.
+- En este hito se pasaron las pruebas de la función y
+  `test_havok_save_load`. Hay una batería completa en marcha sobre el hito
+  684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Un usuario de la segunda memoria de la física la suelta
 
 Una función (64 bytes) en `physics/havok.c`. De 2253

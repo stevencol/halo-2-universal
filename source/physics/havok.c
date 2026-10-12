@@ -12,7 +12,9 @@ the file is a guess, by what its functions start.
 #include <string.h>
 
 #include "cache/texture_cache.h"
+#include "game/game.h"
 #include "memory/data.h"
+#include "objects/objects.h"
 #include "saved games/game_state.h"
 
 /* ---------- constants */
@@ -234,7 +236,7 @@ void unknown_001c2b10(void);
 void havok_unknown_001c29d0(void);
 void havok_unknown_001c2890(void);
 void unknown_001c2910(void);
-void unknown_001c2a10(void);
+void havok_unknown_001c2a10(void);
 void __attribute__((stdcall)) havok_unknown_001c39c0(byte *entity, boolean unknown2);
 /* its first argument is in ecx in the game (a method of a class of Havok's) */
 void unknown_0030be40(void *unknown, void *unknown2);
@@ -278,7 +280,7 @@ void __attribute__((stdcall)) havok_after_save_or_load(
 	if (!(flags&1))
 	{
 		unknown_0047f058= TRUE;
-		unknown_001c2a10();
+		havok_unknown_001c2a10();
 	}
 }
 
@@ -430,4 +432,52 @@ void havok_unknown_001cab80(
 			havok_unknown_00146b80();
 		}
 	}
+}
+
+/* 0x0047f054: the time of the game when the objects last got their parts of
+the physics */
+long unknown_0047f054;
+
+void unknown_00146bf0(void);
+void __attribute__((stdcall)) unknown_001c35f0(long object_index);
+void unknown_001c50c0(void);
+
+/* 0x001c2a10: the first half of the physics comes back (after the state of
+the game is written or read): no object has what it is in the physics (a
+number at 0xB4), and then each object that has none gets its own
+(unknown_001c35f0, between two of unknown_00146bf0); and the time is kept. The
+objects are taken from the table by the index that the walk leaves */
+void havok_unknown_001c2a10(
+	void)
+{
+	struct object_iterator iterator;
+
+	iterator.signature= OBJECT_ITERATOR_SIGNATURE;
+	iterator.type_mask= 0xFFFFFFFF;
+	iterator.header_flags= 0;
+	iterator.absolute_index= 0;
+	iterator.index= NONE;
+	while (object_iterator_next(&iterator)!=NULL)
+	{
+		*(long *)((byte *)((struct object_header_datum *)object_header_data->data)[iterator.index&0xFFFF].datum+0xB4)= NONE;
+	}
+	iterator.signature= OBJECT_ITERATOR_SIGNATURE;
+	iterator.type_mask= 0xFFFFFFFF;
+	iterator.header_flags= 0;
+	iterator.absolute_index= 0;
+	iterator.index= NONE;
+	while (object_iterator_next(&iterator)!=NULL)
+	{
+		long object_index= iterator.index;
+
+		if (*(long *)((byte *)((struct object_header_datum *)object_header_data->data)[object_index&0xFFFF].datum+0xB4)==NONE)
+		{
+			unknown_00146bf0();
+			unknown_001c35f0(object_index);
+			unknown_00278f00();
+			unknown_00146bf0();
+		}
+	}
+	unknown_001c50c0();
+	unknown_0047f054= (long)game_time_globals->time;
 }

@@ -2732,7 +2732,7 @@ address,name,source,arguments,returns,convention
 001c29d0,havok_unknown_001c29d0,source/physics/havok.c,,void
 001c2890,havok_unknown_001c2890,source/physics/havok.c,,void
 001c2910,unknown_001c2910,,,void
-001c2a10,unknown_001c2a10,,,void
+001c2a10,havok_unknown_001c2a10,source/physics/havok.c,,void
 001c39c0,havok_unknown_001c39c0,source/physics/havok.c,stack stack,void,stdcall
 0030be40,unknown_0030be40,,ecx stack,void
 001c81c0,unknown_001c81c0,,,void
@@ -2787,3 +2787,6 @@ address,name,source,arguments,returns,convention
 001df950,game_team_unknown_001df950,source/game/game_unknown_001df460.c,edi ebx,void
 001df820,game_team_unknown_001df820,source/game/game_unknown_001df460.c,stack stack stack,bool,stdcall
 001cab80,havok_unknown_001cab80,source/physics/havok.c,edx,void
+00146bf0,unknown_00146bf0,,,void
+001c35f0,unknown_001c35f0,,stack,void,stdcall
+001c50c0,unknown_001c50c0,,,void
