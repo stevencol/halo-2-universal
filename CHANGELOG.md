@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — La caché de los decals
+
+Cuatro funciones (unos 200 bytes) en `effects/decals.c`. De 2207
+funciones se pasa a 2211, el 19,63 % de las del juego (el 11,437 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `decal_cache_delete_block` | `0x00043820` | `effects/decals.c` |
+| `decal_cache_block_locked` | `0x00043850` | `effects/decals.c` |
+| `decals_after_load` | `0x00043970` | `effects/decals.c` |
+| `decals_cache_idle` | `0x00043990` | `effects/decals.c` |
+
+### Lo que se sabe
+
+- La caché `unknown_00509448` de los decals es una caché LRUV de 1024
+  bloques; la tabla `0x4c8798` (ahora `decal_cache_block_decal_indices`)
+  dice de qué decal es cada bloque.
+- `decal_cache_delete_block`: cuando la caché echa un bloque, avisa a su
+  decal (`unknown_0017d810`) y lo desliga.
+- `decal_cache_block_locked`: un bloque no se puede echar si su decal tiene
+  alguno de los dos bits bajos de su byte de `+2`.
+- `decals_after_load` (antes `unknown_00043970`, de la lista de
+  `game_state.c`) vuelve a poner esas dos funciones en la caché después de
+  cargar el estado de la partida, igual que hace la IA con su tabla hash.
+- `decals_cache_idle` hace pasar un tic de la caché (`lruv_idle`).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  659.
+- Las cuatro están en `0x43820`–`0x439d0`, lejos del resto de `decals.c`
+  (`0x17d2xx`): pueden ser de otro archivo del juego (¿el que dibuja los
+  decals?).
+- En este hito se pasaron las pruebas de las cuatro funciones. Hay una
+  batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Los objetos del tipo 7 toman dos datos de una lista del bsp
 
 Una función (296 bytes) en `game/game_unknown_00210db0.c`, que queda entera. De 2206

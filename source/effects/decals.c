@@ -107,3 +107,54 @@ void decals_initialize(
 	decal_globals= game_state_malloc(DECAL_GLOBALS_SIZE);
 	unknown_00043890();
 }
+
+/* 0x004c8798: for each block of the cache, the mark that it is of, or NONE
+(the name is a guess) */
+long decal_cache_block_decal_indices[0x400];
+
+/* 0x0017d810: a mark, and those that follow it in its list, lose what they
+have in the cache */
+void unknown_0017d810(long decal_index);
+
+/* 0x00043820: the first of the two functions of the cache: a block goes, and
+its mark, if it has one, is told */
+void LRUV_CALLBACK decal_cache_delete_block(
+	long block_index)
+{
+	long *decal_index= &decal_cache_block_decal_indices[block_index&0xFFFF];
+
+	if (*decal_index!=NONE)
+	{
+		unknown_0017d810(*decal_index);
+		*decal_index= NONE;
+	}
+}
+
+/* 0x00043850: the second: whether a block cannot go: its mark has one of the
+two lowest bits of its byte at 2 */
+boolean LRUV_CALLBACK decal_cache_block_locked(
+	long block_index)
+{
+	const byte *decal= (const byte *)decal_data->data+
+		(decal_cache_block_decal_indices[block_index&0xFFFF]&0xFFFF)*0x40;
+
+	return (decal[2]&3)!=0;
+}
+
+/* 0x00043970: after the state of the game is read (game_state.c), the
+cache, which is in that state, gets its two functions again */
+void __attribute__((stdcall)) decals_after_load(
+	unsigned long flags)
+{
+	(void)flags;
+	unknown_00509448->delete_block_proc= decal_cache_delete_block;
+	unknown_00509448->locked_block_proc= decal_cache_block_locked;
+}
+
+/* 0x00043990: a tick of the cache goes by (lruv_idle, which the game has
+written here) */
+void decals_cache_idle(
+	void)
+{
+	lruv_idle(unknown_00509448);
+}

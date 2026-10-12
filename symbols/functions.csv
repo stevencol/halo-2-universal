@@ -253,7 +253,7 @@ address,name,source,arguments,returns,convention
 0016f090,game_unknown_0016efb0_before_load,source/game/game_unknown_0016efb0.c,stack,void,stdcall
 0014b660,unknown_0014b660,,stack,void
 00067fc0,simulation_after_load,source/networking/simulation.c,stack,void,stdcall
-00043970,unknown_00043970,,stack,void
+00043970,decals_after_load,source/effects/decals.c,stack,void,stdcall
 0003d380,objects_unknown_0003d380,source/objects/objects.c,stack,void,stdcall
 00155360,game_unknown_001552e0_after_load,source/game/game_unknown_001552e0.c,stack,void,stdcall
 0024c829,unknown_0024c829,,stack,void
@@ -2743,3 +2743,7 @@ address,name,source,arguments,returns,convention
 00293830,unknown_00293830,,,void
 001e3240,unknown_001e3240,,,void
 001c80f0,ai_unknown_001c80f0,source/ai/ai.c,esi,void
+00043820,decal_cache_delete_block,source/effects/decals.c,stack,void,stdcall
+00043850,decal_cache_block_locked,source/effects/decals.c,stack,bool,stdcall
+00043990,decals_cache_idle,source/effects/decals.c,,void
+0017d810,unknown_0017d810,,eax,void

@@ -554,3 +554,4 @@ address,name,source
 0047f059,unknown_0047f059,source/physics/havok.c
 0047f048,unknown_0047f048,source/physics/havok.c
 0051ecac,unknown_0051ecac,source/physics/havok.c
+004c8798,decal_cache_block_decal_indices,source/effects/decals.c
