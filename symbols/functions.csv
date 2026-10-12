@@ -403,7 +403,7 @@ address,name,source,arguments,returns,convention
 0017d2e0,decals_initialize_for_new_map,source/effects/decals.c,,void
 0017d330,decals_dispose_from_old_map,source/effects/decals.c,,void
 0017d350,unknown_0017d350,,,void
-0017d440,unknown_0017d440,,,void
+0017d440,decals_dispose_from_old_structure_bsp,source/effects/decals.c,,void
 0017d5e0,unknown_0017d5e0,,,void
 00183e40,breakable_surfaces_initialize,source/physics/breakable_surfaces.c,,void
 00183ec0,breakable_surfaces_initialize_for_new_map,source/physics/breakable_surfaces.c,,void
@@ -2750,3 +2750,4 @@ address,name,source,arguments,returns,convention
 0017d860,decal_delete,source/effects/decals.c,eax,void
 0017cc60,decal_update,source/effects/decals.c,edx,void
 0017ccd0,unknown_0017ccd0,,eax,bool
+0023aa70,unknown_0023aa70,,,void

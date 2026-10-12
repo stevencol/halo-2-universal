@@ -344,3 +344,53 @@ void decal_update(
 		}
 	}
 }
+
+void unknown_0023aa70(void);
+
+/* 0x0017d440: the sixth of the functions of the part (game.c): when the
+structure bsp goes, after unknown_0023aa70, the marks of every place are of
+no place: each list of each place is put, whole, before the list of the
+marks of no place, and is empty */
+void decals_dispose_from_old_structure_bsp(
+	void)
+{
+	unknown_0023aa70();
+	if (decal_data->valid)
+	{
+		byte *globals= decal_globals;
+		long place;
+
+		for (place= 0; place<(1<<DECAL_PLACES_PER_LIST_BITS); place++)
+		{
+			long list;
+
+			for (list= 0; list<7; list++)
+			{
+				long *first= &((long *)globals)[(list<<DECAL_PLACES_PER_LIST_BITS)+place];
+				long first_index= *first;
+				long decal_index= first_index;
+
+				while (decal_index!=NONE)
+				{
+					byte *decal= DECAL_GET(decal_index);
+					long next_index= *(long *)(decal+DECAL_NEXT_OFFSET);
+
+					*(short *)(decal+DECAL_PLACE_OFFSET)= NONE;
+					if (next_index==NONE)
+					{
+						long *others= (long *)(globals+DECAL_GLOBALS_UNKNOWN3800_OFFSET);
+
+						*(long *)(decal+DECAL_NEXT_OFFSET)= *others;
+						if (*others!=NONE)
+						{
+							*(long *)(DECAL_GET(*others)+DECAL_PREVIOUS_OFFSET)= decal_index;
+						}
+						*others= first_index;
+						*first= NONE;
+					}
+					decal_index= next_index;
+				}
+			}
+		}
+	}
+}

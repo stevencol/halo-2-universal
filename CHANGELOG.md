@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Los decals cuando se va el bsp
+
+Una función (222 bytes) en `effects/decals.c`. De 2217
+funciones se pasa a 2218, el 19,69 % de las del juego (el 11,464 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `decals_dispose_from_old_structure_bsp` | `0x0017d440` | `effects/decals.c` |
+
+### Lo que se sabe
+
+- `decals_dispose_from_old_structure_bsp` (sexta función de la parte de los
+  decals, antes `unknown_0017d440`): tras llamar a `unknown_0023aa70`,
+  recorre los 512 sitios y, en cada uno, las 7 listas. Cada lista pasa
+  entera a la cabeza de la lista de los decals «sin sitio» (`0x3800`), sus
+  decals quedan con `NONE` en su sitio (`+0xA`) y la lista se vacía.
+- Tiene sentido si los sitios son zonas del bsp: al irse el bsp los decals
+  no pertenecen a ninguna hasta que se recoloquen (`unknown_0017d350`, la
+  quinta función, hace lo contrario).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  664.
+- La primera versión de la prueba no acababa: sus decals estaban en varias
+  listas a la vez, cosa que en el juego no pasa, y al juntar listas se
+  formaba un ciclo. La prueba construye ahora listas separadas.
+- `unknown_0023aa70` no está descompilada.
+- En este hito se pasaron las pruebas de la función y la de
+  `game_initialize`. Hay una batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Un decal en cada fotograma
 
 Una función (105 bytes) en `effects/decals.c`. De 2216

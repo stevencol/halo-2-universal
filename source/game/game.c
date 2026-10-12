@@ -194,7 +194,7 @@ void decals_dispose(void);
 void decals_initialize_for_new_map(void);
 void decals_dispose_from_old_map(void);
 void unknown_0017d350(void);
-void unknown_0017d440(void);
+void decals_dispose_from_old_structure_bsp(void);
 void unknown_0017d5e0(void);
 void breakable_surfaces_initialize(void);
 void breakable_surfaces_initialize_for_new_map(void);
@@ -375,7 +375,7 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{breakable_surfaces_initialize, no_operation, breakable_surfaces_initialize_for_new_map, no_operation, breakable_surfaces_unknown_00183ee0, breakable_surfaces_unknown_00183f00},
 	{game_unknown_001552e0_initialize, no_operation, unknown_00155380, game_unknown_001552e0_dispose_from_old_map},
 	{game_unknown_0016efb0_initialize, no_operation, game_unknown_0016efb0_initialize_for_new_map, no_operation, game_unknown_0016efb0_unknown_0016f120, no_operation},
-	{decals_initialize, decals_dispose, decals_initialize_for_new_map, decals_dispose_from_old_map, unknown_0017d350, unknown_0017d440, NULL, (game_system_activation_proc)unknown_0017d5e0},
+	{decals_initialize, decals_dispose, decals_initialize_for_new_map, decals_dispose_from_old_map, unknown_0017d350, decals_dispose_from_old_structure_bsp, NULL, (game_system_activation_proc)unknown_0017d5e0},
 	{no_operation, no_operation, no_operation, no_operation},
 	{contrails_initialize, contrails_dispose, contrails_initialize_for_new_map, contrails_dispose_from_old_map, unknown_0017b940, no_operation},
 	{effects_initialize, effects_dispose, effects_initialize_for_new_map, effects_dispose_from_old_map, unknown_00175d70, no_operation},
