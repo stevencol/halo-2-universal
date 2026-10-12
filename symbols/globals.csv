@@ -533,3 +533,7 @@ address,name,source
 004b9970,unknown_004b9970,source/game/game_unknown_0002b4a0.c
 004c5018,unknown_004c5018,source/game/game_unknown_0002b4a0.c
 005093fc,unknown_005093fc,source/game/game_unknown_0002b4a0.c
+0051ebf8,unknown_0051ebf8,source/game/game_unknown_00225f80.c
+004701ec,unknown_004701ec,source/game/game_unknown_00225f80.c
+004e6740,unknown_004e6740,source/game/game_unknown_00134d90.c
+004f93a4,unknown_004f93a4,source/game/game_unknown_00210db0.c

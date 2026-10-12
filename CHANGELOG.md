@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Tres partes pequeñas más de la tabla del juego
+
+Ocho funciones (unos 230 bytes) en tres archivos provisionales nuevos de `game/`.
+De 2176
+funciones se pasa a 2184, el 19,39 % de las del juego (el 11,382 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_unknown_00225f80_initialize` | `0x00225f80` | `game/game_unknown_00225f80.c` |
+| `game_unknown_00225f80_initialize_for_new_map` | `0x00225fc0` | `game/game_unknown_00225f80.c` |
+| `game_unknown_00134d90_initialize` | `0x00134d90` | `game/game_unknown_00134d90.c` |
+| `game_unknown_00134d90_dispose` | `0x00134dd0` | `game/game_unknown_00134d90.c` |
+| `game_unknown_00134d90_initialize_for_new_map` | `0x00134de0` | `game/game_unknown_00134d90.c` |
+| `game_unknown_00210db0_initialize` | `0x00210db0` | `game/game_unknown_00210db0.c` |
+| `game_unknown_00210db0_initialize_for_new_structure_bsp` | `0x00210df0` | `game/game_unknown_00210db0.c` |
+| `game_unknown_00210db0_dispose_from_old_structure_bsp` | `0x00210e10` | `game/game_unknown_00210db0.c` |
+
+### Lo que se sabe
+
+- `game_unknown_00225f80`: 4 bytes del estado de la partida con un número
+  que vale `NONE` en un mapa nuevo (y otro, en `0x4701ec`, que vale cero).
+- `game_unknown_00134d90`: `0x204` bytes del estado de la partida, que se
+  ponen a cero en un mapa nuevo; al cerrar la parte se olvida el puntero.
+  Es la misma parte que tiene la función por fotograma `unknown_00134e00`.
+- `game_unknown_00210db0`: 16 números del estado de la partida que valen
+  `NONE` cuando llega un bsp nuevo; entonces llama a `unknown_00210f00` y
+  `unknown_00210e20`, y al irse el bsp a `unknown_00210e80`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  644.
+- Para qué sirve cada parte no se sabe; los archivos llevan por nombre la
+  dirección de su primera función.
+- En este hito se pasaron las pruebas de las ocho funciones y las de
+  `game_initialize` y `game_frame`. Hay una batería completa en marcha
+  sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — La parte de los «cached object render states» arranca y empieza un mapa
 
 Tres funciones (unos 310 bytes) en `game/game_unknown_0002b4a0.c`, que ya tiene sus cuatro

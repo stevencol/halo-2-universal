@@ -353,9 +353,9 @@ address,name,source,arguments,returns,convention
 00125920,sound_initialize_for_new_structure_bsp,source/sound/sound_manager.c,,void
 00131ff0,unknown_00131ff0,,,void
 001320b0,unknown_001320b0,,,void
-00134d90,unknown_00134d90,,,void
-00134dd0,unknown_00134dd0,,,void
-00134de0,unknown_00134de0,,,void
+00134d90,game_unknown_00134d90_initialize,source/game/game_unknown_00134d90.c,,void
+00134dd0,game_unknown_00134d90_dispose,source/game/game_unknown_00134d90.c,,void
+00134de0,game_unknown_00134d90_initialize_for_new_map,source/game/game_unknown_00134d90.c,,void
 0013bf00,game_unknown_0013bf00_initialize,source/game/game_unknown_0013bf00.c,,void
 0013bf60,game_unknown_0013bf00_initialize_for_new_map,source/game/game_unknown_0013bf00.c,,void
 0013bfc0,game_unknown_0013bf00_dispose_from_old_map,source/game/game_unknown_0013bf00.c,,void
@@ -453,9 +453,9 @@ address,name,source,arguments,returns,convention
 0020aee0,game_unknown_0020aee0_initialize,source/game/game_unknown_0020aee0.c,,void
 0020af50,game_unknown_0020aee0_dispose,source/game/game_unknown_0020aee0.c,,void
 0020af90,game_unknown_0020aee0_initialize_for_new_map,source/game/game_unknown_0020aee0.c,,void
-00210db0,unknown_00210db0,,,void
-00210df0,unknown_00210df0,,,void
-00210e10,unknown_00210e10,,,void
+00210db0,game_unknown_00210db0_initialize,source/game/game_unknown_00210db0.c,,void
+00210df0,game_unknown_00210db0_initialize_for_new_structure_bsp,source/game/game_unknown_00210db0.c,,void
+00210e10,game_unknown_00210db0_dispose_from_old_structure_bsp,source/game/game_unknown_00210db0.c,,void
 00211030,game_unknown_001eb550_unknown_00211030,source/game/game_unknown_001eb550.c,,void
 00215690,unknown_00215690,,,void
 00215720,saved_game_files_dispose_from_old_map,source/saved games/saved_game_files.c,,void
@@ -472,8 +472,8 @@ address,name,source,arguments,returns,convention
 00225700,sound_unknown_00225700,source/sound/sound_manager.c,,void
 00225a40,sound_unknown_00225a40,source/sound/sound_manager.c,,void
 00225a80,sound_unknown_00225a80,source/sound/sound_manager.c,,void
-00225f80,unknown_00225f80,,,void
-00225fc0,unknown_00225fc0,,,void
+00225f80,game_unknown_00225f80_initialize,source/game/game_unknown_00225f80.c,,void
+00225fc0,game_unknown_00225f80_initialize_for_new_map,source/game/game_unknown_00225f80.c,,void
 003361a4,unknown_003361a4,,,void
 0014a224,user_interface_unknown_0014a224,source/interface/user_interface.c,,bool
 002237d4,unknown_002237d4,,,void
@@ -2718,3 +2718,6 @@ address,name,source,arguments,returns,convention
 0003d270,cached_object_render_states_initialize,source/game/game_unknown_0002b4a0.c,,void
 0003b8a0,unknown_0003b8a0,,,void
 000167a0,unknown_000167a0,,,void
+00210f00,unknown_00210f00,,,void
+00210e20,unknown_00210e20,,,void
+00210e80,unknown_00210e80,,,void
