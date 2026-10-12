@@ -337,10 +337,10 @@ address,name,source,arguments,returns,convention
 000d4e20,unknown_000d4e20,,,void
 000d4e30,unknown_000d4e30,,,void
 000d4e60,unknown_000d4e60,,,void
-00109300,unknown_00109300,,,void
-00109350,unknown_00109350,,,void
-00109360,unknown_00109360,,,void
-00109380,unknown_00109380,,,void
+00109300,object_early_movers_initialize,source/objects/object_early_movers.c,,void
+00109350,object_early_movers_dispose,source/objects/object_early_movers.c,,void
+00109360,object_early_movers_initialize_for_new_map,source/objects/object_early_movers.c,,void
+00109380,object_early_movers_dispose_from_old_map,source/objects/object_early_movers.c,,void
 0010a980,unknown_0010a980,,,void
 0010a9d0,unknown_0010a9d0,,,void
 0010a9e0,unknown_0010a9e0,,,void
@@ -2637,3 +2637,6 @@ address,name,source,arguments,returns,convention
 00108d30,object_types_call_unknown48,source/objects/object_types.c,edi ebx stack,bool,stdcall
 00108d90,object_types_call_unknown4C,source/objects/object_types.c,ebx edi stack stack,bool,stdcall
 00109290,object_types_call_unknown68,source/objects/object_types.c,edi ebx stack stack,void,stdcall
+00108fd0,object_types_call_unknown64,source/objects/object_types.c,stack,bool,stdcall
+00109050,object_types_call_unknown6C,source/objects/object_types.c,ebx stack stack stack,void,stdcall
+00109390,object_early_movers_add,source/objects/object_early_movers.c,edx,void

@@ -12,6 +12,7 @@ these functions calls the parts by name.
 
 #include "sound/sound_definitions.h"
 #include "game.h"
+#include "objects/object_early_movers.h"
 
 #include "networking/transport.h"
 #include "networking/transport_security.h"
@@ -133,10 +134,6 @@ void unknown_000d4de0(void);
 void unknown_000d4e20(void);
 void unknown_000d4e30(void);
 void unknown_000d4e60(void);
-void unknown_00109300(void);
-void unknown_00109350(void);
-void unknown_00109360(void);
-void unknown_00109380(void);
 void unknown_0010a980(void);
 void unknown_0010a9d0(void);
 void unknown_0010a9e0(void);
@@ -375,7 +372,7 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{unknown_001eb550, unknown_001eb5e0, unknown_001eb5f0, no_operation},
 	{no_operation, no_operation},
 	{unknown_000b67c0, unknown_000b68c0, unknown_000b69d0, unknown_000b6ab0, unknown_000b6bb0, unknown_000b6c50, NULL, NULL, (game_system_activation_proc)unknown_000b6df0},
-	{unknown_00109300, unknown_00109350, unknown_00109360, unknown_00109380},
+	{object_early_movers_initialize, object_early_movers_dispose, object_early_movers_initialize_for_new_map, object_early_movers_dispose_from_old_map},
 	{unknown_0010a980, unknown_0010a9d0, unknown_0010a9e0, unknown_0010aab0},
 	{unknown_001ec420, unknown_001ec470, unknown_001ec480, unknown_001ec4b0},
 	{unknown_00012560, unknown_000141c0, unknown_00022590, unknown_000226c0, unknown_000226a0, unknown_000226b0},

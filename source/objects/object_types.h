@@ -30,6 +30,10 @@ enum
 	OBJECT_TYPE_UNKNOWN48_OFFSET= 0x48,
 	OBJECT_TYPE_UNKNOWN4C_OFFSET= 0x4C,
 	OBJECT_TYPE_UNKNOWN68_OFFSET= 0x68,
+	/* and two more: one that all the types are asked, and another with
+	three things more */
+	OBJECT_TYPE_UNKNOWN64_OFFSET= 0x64,
+	OBJECT_TYPE_UNKNOWN6C_OFFSET= 0x6C,
 	/* six more functions of a type that are given an object and nothing
 	else: what each is for is not known */
 	OBJECT_TYPE_UNKNOWN20_OFFSET= 0x20,
@@ -72,6 +76,9 @@ void __attribute__((stdcall)) object_types_call_unknown70(long object_index, lon
 void __attribute__((stdcall)) object_types_call_unknown74(long object_index, long unknown0, long unknown1);
 void __attribute__((stdcall)) object_types_call_unknown7C(long object_index, long unknown0, long unknown1);
 long __attribute__((stdcall)) object_type_from_tag(short tag_index);
+boolean __attribute__((stdcall)) object_types_call_unknown64(long object_index);
+void __attribute__((stdcall)) object_types_call_unknown6C(long object_index, long unknown0, long unknown1,
+	long unknown2);
 void object_types_call_unknown28(long *placement);
 boolean __attribute__((stdcall)) object_types_call_unknown2C(long object_index, long unknown0, long unknown1);
 boolean __attribute__((stdcall)) object_types_call_unknown48(long object_index, long unknown1, long unknown0);

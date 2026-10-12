@@ -365,3 +365,49 @@ void __attribute__((stdcall)) object_types_call_unknown68(
 		}
 	}
 }
+
+typedef boolean (__attribute__((stdcall)) *object_type_bool_proc)(long object_index);
+
+/* 0x00108fd0: whether one of the types of an object says yes to what they
+have at 0x64: all of them are asked */
+boolean __attribute__((stdcall)) object_types_call_unknown64(
+	long object_index)
+{
+	byte *const *types= object_types_get(object_index);
+	boolean result= FALSE;
+	short index;
+
+	for (index= 0; types[index]; index++)
+	{
+		object_type_bool_proc proc= *(object_type_bool_proc *)(types[index]+OBJECT_TYPE_UNKNOWN64_OFFSET);
+
+		if (proc && proc(object_index))
+		{
+			result= TRUE;
+		}
+	}
+
+	return result;
+}
+
+/* 0x00109050: the types of an object do what they have at 0x6C, with three
+things more */
+void __attribute__((stdcall)) object_types_call_unknown6C(
+	long object_index,
+	long unknown0,
+	long unknown1,
+	long unknown2)
+{
+	byte *const *types= object_types_get(object_index);
+	short index;
+
+	for (index= 0; types[index]; index++)
+	{
+		object_type_proc3 proc= *(object_type_proc3 *)(types[index]+OBJECT_TYPE_UNKNOWN6C_OFFSET);
+
+		if (proc)
+		{
+			proc(object_index, unknown0, unknown1, unknown2);
+		}
+	}
+}

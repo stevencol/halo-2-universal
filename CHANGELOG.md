@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Los objetos que se mueven antes que los demás, y dos más de los tipos
+
+Siete funciones (431 bytes): cinco en el archivo nuevo `objects/object_early_movers.c`
+y dos en `objects/object_types.c`. De 2020
+funciones se pasa a 2027, el 17,99 % de las del juego (el 11,254 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_early_movers_initialize` | `0x00109300` | `objects/object_early_movers.c` |
+| `object_early_movers_dispose` | `0x00109350` | `objects/object_early_movers.c` |
+| `object_early_movers_initialize_for_new_map` | `0x00109360` | `objects/object_early_movers.c` |
+| `object_early_movers_dispose_from_old_map` | `0x00109380` | `objects/object_early_movers.c` |
+| `object_early_movers_add` | `0x00109390` | `objects/object_early_movers.c` |
+| `object_types_call_unknown64` | `0x00108fd0` | `objects/object_types.c` |
+| `object_types_call_unknown6C` | `0x00109050` | `objects/object_types.c` |
+
+### Lo que se sabe
+
+- Las cuatro primeras eran una de las partes sin nombre de la tabla de
+  partes del juego (`game.c`): al arrancar, al cerrar, con un mapa nuevo y
+  al irse el mapa. Guardan `0x1D88` bytes en el estado del juego
+  (`struct object_early_movers_globals`): hasta **32 objetos** desde
+  `0x1D00`, cuántos hay en `0x1D80` y un byte que dice que hay mapa.
+- `object_early_movers_add` apunta un objeto en esa lista si lo que el
+  objeto es lo pide (el bit `0x40` del byte `0x2` de su definición) y queda
+  sitio, y le pone el bit `0x8` en `0xC0`.
+- Al arrancar, el juego tiene `game_state_malloc` escrita dentro; aquí se
+  llama.
+- De los tipos de objeto: `…unknown64` pregunta a **todos** los tipos y
+  dice si alguno dijo que sí; `…unknown6C` pasa tres datos de más. El
+  archivo tiene ya 23 funciones; quedan tres (`0x1086e0`, `0x1087c0`,
+  `0x1088e0`).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  602.
+- El nombre del archivo y de la lista («los que se mueven antes») es una
+  suposición, por el de juegos posteriores y por el tamaño de la lista; qué
+  son los primeros `0x1D00` bytes no se sabe.
+- En este hito se pasaron las pruebas de las siete funciones y `test_game`
+  entera.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — El tipo de un tag, y las funciones de los tipos que devuelven algo
 
 Seis funciones de `objects/object_types.c` (590 bytes). De 2014

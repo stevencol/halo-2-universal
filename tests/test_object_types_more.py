@@ -122,3 +122,41 @@ def run(t) -> None:
             extra=[Buffer(some_types(random_, base, 0x4C))],
             mocks=[Mock(lambda call, value=random_.choice((0, 0, 1, 0x100)): value, stack_arguments=4) for index in range(4)],
         )
+
+
+def run_603(t) -> None:
+    random_ = random.Random(603)
+
+    for n in range(1200):
+        table = some_objects(random_)
+        an_object = random_.getrandbits(16) << 16 | random_.randrange(COUNT)
+        base = after(table)
+        globals_ = {
+            "object_header_data": table,
+            "object_type_definitions": struct.pack("<13I", *(base + index * TYPE for index in range(TYPES))),
+        }
+        t.check(
+            "object_types_call_unknown64",
+            an_object,
+            globals=globals_,
+            extra=[Buffer(some_types(random_, base, 0x64))],
+            mocks=[Mock(lambda call, value=random_.choice((0, 0, 1, 0x100)): value, stack_arguments=1) for index in range(4)],
+        )
+        t.check(
+            "object_types_call_unknown6C",
+            an_object,
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            random_.getrandbits(32),
+            globals=globals_,
+            extra=[Buffer(some_types(random_, base, 0x6C))],
+            mocks=[Mock(lambda call: 0, stack_arguments=4) for index in range(4)],
+        )
+
+
+_run_602 = run
+
+
+def run(t) -> None:
+    _run_602(t)
+    run_603(t)
