@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Catorce funciones pequeñas de las tablas de la IA
+
+Catorce funciones (1024 bytes) en `ai/actors.c`. De 2479
+funciones se pasa a 2493, el 22,13 % de las del juego (el 12,017 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `joint_unknown_001b0d10` | `0x001b0d10` | `ai/actors.c` |
+| `joint_unknown_001b68b0` | `0x001b68b0` | `ai/actors.c` |
+| `joint_unknown_001b8460` | `0x001b8460` | `ai/actors.c` |
+| `joint_unknown_001b68f0` | `0x001b68f0` | `ai/actors.c` |
+| `joint_unknown_00257cb0` | `0x00257cb0` | `ai/actors.c` |
+| `joint_unknown_001bb530` | `0x001bb530` | `ai/actors.c` |
+| `joint_unknown_001bdfd0` | `0x001bdfd0` | `ai/actors.c` |
+| `joint_unknown_001b4f10` | `0x001b4f10` | `ai/actors.c` |
+| `joint_unknown_001adce0` | `0x001adce0` | `ai/actors.c` |
+| `prop_unknown_001b6010` | `0x001b6010` | `ai/actors.c` |
+| `prop_unknown_001b6070` | `0x001b6070` | `ai/actors.c` |
+| `squad_is_in_group` | `0x002052d0` | `ai/actors.c` |
+| `prop_ref_unknown_00256790` | `0x00256790` | `ai/actors.c` |
+| `command_script_unknown_00259e70` | `0x00259e70` | `ai/actors.c` |
+
+### Lo que se sabe
+
+- Nueve funciones reciben un actor (que no usan), un «estado» que nombra
+  una cosa de `joint_state_data` en `0x10` y a veces un número: casi todas
+  borran ese número de la cosa (en `0x80`, `0x84` u `0x88`) si lo tenía;
+  parecen avisos de que algo dejó de existir.
+- Un «prop» guarda en un anillo de cinco (en `0x3E`) los últimos números
+  que tuvo en `0x54`: una función mete uno y otra busca en él.
+- `squad_is_in_group` sube por los grupos de escuadrones: el escuadrón
+  nombra su grupo en `0x6C` y cada grupo el suyo en `0x10`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  726.
+- Los nombres son suposiciones («estado» también), y todas están en
+  `actors.c` de forma provisional.
+- En este hito se pasaron las pruebas de las catorce funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Doce funciones más de los actores y sus tablas
 
 Doce funciones (1109 bytes) en `ai/actors.c`. De 2467

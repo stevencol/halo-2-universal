@@ -3013,3 +3013,17 @@ address,name,source,arguments,returns,convention
 0025aad0,actor_unknown_0025aad0,source/ai/actors.c,eax stack,bool
 002687a0,clump_unknown_002687a0,source/ai/actors.c,eax,void
 0025da40,unknown_prop_unknown_0025da40,source/ai/actors.c,eax,bool
+001b0d10,joint_unknown_001b0d10,source/ai/actors.c,stack stack stack,short,stdcall
+001b68b0,joint_unknown_001b68b0,source/ai/actors.c,stack stack stack,void,stdcall
+001b8460,joint_unknown_001b8460,source/ai/actors.c,stack stack stack,void,stdcall
+001b68f0,joint_unknown_001b68f0,source/ai/actors.c,stack stack,void,stdcall
+00257cb0,joint_unknown_00257cb0,source/ai/actors.c,stack stack stack,void,stdcall
+001bb530,joint_unknown_001bb530,source/ai/actors.c,stack stack stack,void,stdcall
+001bdfd0,joint_unknown_001bdfd0,source/ai/actors.c,stack stack stack,void,stdcall
+001b4f10,joint_unknown_001b4f10,source/ai/actors.c,stack stack stack,void,stdcall
+001adce0,joint_unknown_001adce0,source/ai/actors.c,stack stack stack,short,stdcall
+001b6010,prop_unknown_001b6010,source/ai/actors.c,ecx,bool
+001b6070,prop_unknown_001b6070,source/ai/actors.c,ecx stack stack,bool
+002052d0,squad_is_in_group,source/ai/actors.c,ecx esi,bool
+00256790,prop_ref_unknown_00256790,source/ai/actors.c,ecx,bool
+00259e70,command_script_unknown_00259e70,source/ai/actors.c,eax,void

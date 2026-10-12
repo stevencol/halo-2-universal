@@ -1545,3 +1545,320 @@ boolean unknown_prop_unknown_0025da40(
 
 	return prop[0x25] && !prop[0x23];
 }
+
+/* 0x0051e9dc, of squads.c: the groups of squads */
+extern struct data_array *squad_group_data;
+
+/* 0x00471004: another NONE that the game keeps with its data */
+long unknown_00471004= NONE;
+
+/* ---------- functions that take something that names a thing of joint_state_data
+
+Like the ones above, these take an actor first, which they do not use; then
+something that names a thing of joint_state_data at 0x10 (called a state
+here, a guess), and some a number more */
+
+/* 0x001b0d10: unknown_0046fbe4 if the thing of joint_state_data has NONE at
+4; unknown_0046fbe8 if not */
+short __attribute__((stdcall)) joint_unknown_001b0d10(
+	long actor_index,
+	const byte *state,
+	long unknown2)
+{
+	(void)actor_index;
+	(void)unknown2;
+	if (*(const long *)(ACTOR_JOINT_STATE_GET(*(const long *)(state+0x10))+4)==NONE)
+	{
+		return (short)unknown_0046fbe4;
+	}
+
+	return (short)unknown_0046fbe8;
+}
+
+/* 0x001b68b0: the thing of joint_state_data has NONE at 0x84, if it had a
+value there */
+void __attribute__((stdcall)) joint_unknown_001b68b0(
+	long actor_index,
+	const byte *state,
+	long value)
+{
+	byte *joint= ACTOR_JOINT_STATE_GET(*(const long *)(state+0x10));
+
+	(void)actor_index;
+	if (*(const long *)(joint+0x84)==value)
+	{
+		*(long *)(joint+0x84)= NONE;
+	}
+}
+
+/* 0x001b8460: the same at 0x80 */
+void __attribute__((stdcall)) joint_unknown_001b8460(
+	long actor_index,
+	const byte *state,
+	long value)
+{
+	byte *joint= ACTOR_JOINT_STATE_GET(*(const long *)(state+0x10));
+
+	(void)actor_index;
+	if (*(const long *)(joint+0x80)==value)
+	{
+		*(long *)(joint+0x80)= NONE;
+	}
+}
+
+/* 0x001b68f0: the thing of joint_state_data has NONE at 0x84, if it has 1
+for its short at 0x94 */
+void __attribute__((stdcall)) joint_unknown_001b68f0(
+	long actor_index,
+	const byte *state)
+{
+	byte *joint= ACTOR_JOINT_STATE_GET(*(const long *)(state+0x10));
+
+	(void)actor_index;
+	if (*(const short *)(joint+0x94)==1)
+	{
+		*(long *)(joint+0x84)= NONE;
+	}
+}
+
+/* 0x00257cb0: the thing of joint_state_data has NONE at 0x80 and 0x84, if
+it had a value at one of the two */
+void __attribute__((stdcall)) joint_unknown_00257cb0(
+	long actor_index,
+	const byte *state,
+	long value)
+{
+	byte *joint= ACTOR_JOINT_STATE_GET(*(const long *)(state+0x10));
+
+	(void)actor_index;
+	if (*(const long *)(joint+0x80)==value || *(const long *)(joint+0x84)==value)
+	{
+		*(long *)(joint+0x80)= NONE;
+		*(long *)(joint+0x84)= NONE;
+	}
+}
+
+/* 0x001bb530: the state has NONE at 0x1C and the thing of joint_state_data
+at 0x80, if one of the two had a value */
+void __attribute__((stdcall)) joint_unknown_001bb530(
+	long actor_index,
+	byte *state,
+	long value)
+{
+	byte *joint= ACTOR_JOINT_STATE_GET(*(const long *)(state+0x10));
+
+	(void)actor_index;
+	if (*(const long *)(state+0x1C)==value || *(const long *)(joint+0x80)==value)
+	{
+		*(long *)(state+0x1C)= NONE;
+		*(long *)(joint+0x80)= NONE;
+	}
+}
+
+/* 0x001bdfd0: the state has NONE at 0x20 and the thing of joint_state_data
+at 0x80, and the state loses the bits 0 and 4 of its short at 0x1C, if the
+state had a value at 0x20 (and the bit 0) or the thing had it at 0x80 */
+void __attribute__((stdcall)) joint_unknown_001bdfd0(
+	long actor_index,
+	byte *state,
+	long value)
+{
+	byte *joint= ACTOR_JOINT_STATE_GET(*(const long *)(state+0x10));
+	word flags= *(const word *)(state+0x1C);
+
+	(void)actor_index;
+	if (((flags&1) && *(const long *)(state+0x20)==value) || *(const long *)(joint+0x80)==value)
+	{
+		*(long *)(state+0x20)= NONE;
+		*(word *)(state+0x1C)= flags&~0x11;
+		*(long *)(joint+0x80)= NONE;
+	}
+}
+
+/* 0x001b4f10: the state has NONE at 0x24, if it had a value there; and its
+thing of joint_state_data, if it names one, NONE at 0x88 if it had the value
+there */
+void __attribute__((stdcall)) joint_unknown_001b4f10(
+	long actor_index,
+	byte *state,
+	long value)
+{
+	long joint_index;
+
+	(void)actor_index;
+	if (*(const long *)(state+0x24)==value)
+	{
+		*(long *)(state+0x24)= NONE;
+	}
+	joint_index= *(const long *)(state+0x10);
+	if (joint_index!=NONE)
+	{
+		byte *joint= ACTOR_JOINT_STATE_GET(joint_index);
+
+		if (*(const long *)(joint+0x88)==value)
+		{
+			*(long *)(joint+0x88)= NONE;
+		}
+	}
+}
+
+/* 0x001adce0: an answer from the thing of joint_state_data. For a state
+that has its byte at 0xC: unknown_0046fbe8 unless the thing has 1 for its
+short at 2; then unknown_0046fbe4 if it has less than 2 for its short at
+0x7C, and if not it takes 1 for its byte at 0x80 and the answer is 0x46. For
+the others: 0x46 if the thing has its byte at 0x80, unknown_0046fbe4 if it
+has the one at 0x81, unknown_0046fbe8 if neither */
+short __attribute__((stdcall)) joint_unknown_001adce0(
+	long actor_index,
+	const byte *state,
+	long unknown2)
+{
+	byte *joint= ACTOR_JOINT_STATE_GET(*(const long *)(state+0x10));
+
+	(void)actor_index;
+	(void)unknown2;
+	if (state[0xC])
+	{
+		if (*(const short *)(joint+2)!=1)
+		{
+			return (short)unknown_0046fbe8;
+		}
+		if (*(const short *)(joint+0x7C)<2)
+		{
+			return (short)unknown_0046fbe4;
+		}
+		joint[0x80]= 1;
+
+		return 0x46;
+	}
+	if (joint[0x80])
+	{
+		return 0x46;
+	}
+	if (joint[0x81])
+	{
+		return (short)unknown_0046fbe4;
+	}
+
+	return (short)unknown_0046fbe8;
+}
+
+/* ---------- props, squads and command scripts */
+
+#define ACTOR_PROP_GET(prop_index) ((byte *)prop_data->data+((prop_index)&0xFFFF)*0xC4)
+
+/* 0x001b6010: a prop keeps the last five numbers that it had at 0x54, in a
+ring at 0x3E: its byte at 0x52 says where the next goes and the one at 0x53
+how many there are. This puts the number of 0x54 in the ring, unless it is
+unknown_00471004, and leaves NONE for the two shorts there. Always true */
+boolean prop_unknown_001b6010(
+	long prop_index)
+{
+	byte *prop= ACTOR_PROP_GET(prop_index);
+	long value= *(const long *)(prop+0x54);
+
+	if (value!=unknown_00471004)
+	{
+		long count;
+
+		*(long *)(prop+*(const char *)(prop+0x52)*4+0x3E)= value;
+		*(short *)(prop+0x54)= NONE;
+		*(short *)(prop+0x56)= NONE;
+		prop[0x52]= (byte)((*(const char *)(prop+0x52)+1)%5);
+		count= *(const char *)(prop+0x53)+1;
+		if (count>5)
+		{
+			count= 5;
+		}
+		prop[0x53]= (byte)count;
+	}
+
+	return TRUE;
+}
+
+/* 0x001b6070: whether the ring of a prop has a number, which comes as its
+two halves */
+boolean prop_unknown_001b6070(
+	long prop_index,
+	short low,
+	short high)
+{
+	const byte *prop= ACTOR_PROP_GET(prop_index);
+	long value= (word)low | high<<16;
+	short count= *(const char *)(prop+0x53);
+	short index;
+
+	for (index= 0; index<count; index++)
+	{
+		if (value==*(const long *)(prop+index*4+0x3E))
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x002052d0: whether a squad is of a group of squads, or of one of the
+groups that the group is of: the squad names its group at 0x6C and each group
+the one it is of at 0x10 */
+boolean squad_is_in_group(
+	long squad_index,
+	long squad_group_index)
+{
+	long index= *(const long *)((const byte *)squad_data->data+(squad_index&0xFFFF)*0x98+0x6C);
+
+	while (index!=NONE)
+	{
+		if (index==squad_group_index)
+		{
+			return TRUE;
+		}
+		index= *(const long *)((const byte *)squad_group_data->data+(index&0xFFFF)*0x38+0x10);
+	}
+
+	return FALSE;
+}
+
+/* 0x00256790: whether a thing of prop_ref_data has 1 or 2 for its short at
+0x24 and 7 for the one at 0x18, and its object (0x20) has the bit 2 of its
+byte at 0x10A, is of the type 0 and does not have both of the bits 0 and 1
+of its byte at 0x19 */
+boolean prop_ref_unknown_00256790(
+	long prop_ref_index)
+{
+	const byte *prop_ref= ACTOR_PROP_REF_GET(prop_ref_index);
+	short unknown24= *(const short *)(prop_ref+0x24);
+
+	if (unknown24>=1 && unknown24<=2 && *(const short *)(prop_ref+0x18)==7)
+	{
+		const byte *object= ACTOR_OBJECT_GET(*(const long *)(prop_ref+0x20));
+
+		if (((object[0x10A]>>2)&1) && !object[0xAA])
+		{
+			if (!(object[0x19]&1) || !(object[0x19]&2))
+			{
+				return TRUE;
+			}
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x00259e70: a command script that has its byte at 0xAC, or something at
+0xB0, has neither, and 0 for its bytes at 0xD1, 0x52 and 0x46 */
+void command_script_unknown_00259e70(
+	long command_script_index)
+{
+	byte *command_script= (byte *)command_script_data->data+(command_script_index&0xFFFF)*0xD4;
+
+	if (command_script[0xAC] || *(const long *)(command_script+0xB0)!=NONE)
+	{
+		command_script[0xAC]= 0;
+		*(long *)(command_script+0xB0)= NONE;
+		command_script[0xD1]= 0;
+		command_script[0x52]= 0;
+		command_script[0x46]= 0;
+	}
+}
