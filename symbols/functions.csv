@@ -2855,3 +2855,12 @@ address,name,source,arguments,returns,convention
 000cdff0,unit_get_unknown23E,source/units/units.c,eax ecx,short
 000def30,unit_get_unknown348,source/units/units.c,eax,pointer
 000e4020,unit_get_unknown39D,source/units/units.c,eax,int
+000e70b0,unit_get_unknown346_unknown36,source/units/units.c,eax ecx,void
+000e70e0,unit_get_unknown346_unknownC,source/units/units.c,eax,int
+000ea1c0,unit_clear_unknown346_unknown2C,source/units/units.c,stack stack,void,stdcall
+000f8db0,unit_set_unknown144,source/units/units.c,eax ecx,void
+000faa30,unit_raise_unknown130,source/units/units.c,eax ecx,void
+00101f20,unit_get_unknown154,source/units/units.c,eax,int
+00119250,unit_get_unknown12C,source/units/units.c,eax,pointer
+00207b90,object_set_flag16,source/units/units.c,stack stack stack,bool,stdcall
+0026be60,unit_unknown_0026be60,source/units/units.c,eax,bool

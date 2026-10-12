@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Nueve consultas pequeñas más de los objetos
+
+Nueve funciones (348 bytes) en `units/units.c`. De 2322
+funciones se pasa a 2331, el 20,69 % de las del juego (el 11,811 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unit_get_unknown346_unknown36` | `0x000e70b0` | `units/units.c` |
+| `unit_get_unknown346_unknownC` | `0x000e70e0` | `units/units.c` |
+| `unit_clear_unknown346_unknown2C` | `0x000ea1c0` | `units/units.c` |
+| `unit_set_unknown144` | `0x000f8db0` | `units/units.c` |
+| `unit_raise_unknown130` | `0x000faa30` | `units/units.c` |
+| `unit_get_unknown154` | `0x00101f20` | `units/units.c` |
+| `unit_get_unknown12C` | `0x00119250` | `units/units.c` |
+| `object_set_flag16` | `0x00207b90` | `units/units.c` |
+| `unit_unknown_0026be60` | `0x0026be60` | `units/units.c` |
+
+### Lo que se sabe
+
+- Otra tanda de funciones de 34 a 44 bytes que leen o escriben un dato de
+  un objeto. Tres trabajan sobre lo que el objeto tiene en el
+  desplazamiento que da su `short` de `0x346`; las demás, sobre datos
+  sueltos (`0x12C`, `0x130`, `0x144`, `0x154`, `0x348`, `0x3DC`) y sobre el
+  bit 16 de las banderas del objeto.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  710.
+- Están desperdigadas por el ejecutable (`0xe70b0`–`0x26be60`): cada una
+  será del archivo de un tipo de objeto que todavía no se conoce. Se han
+  puesto en `units.c` con su desplazamiento por nombre hasta que se sepa.
+- En este hito se pasaron las pruebas de las nueve funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Once consultas pequeñas de objetos y unidades
 
 Once funciones (445 bytes): siete en `objects/objects.c` y cuatro en `units/units.c`.

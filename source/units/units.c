@@ -130,3 +130,122 @@ long unit_get_unknown39D(
 {
 	return UNIT_OBJECT_GET(unit_index)[0x39D]!=0;
 }
+
+/* ---------- more of what objects keep
+
+The functions that follow are scattered in the game (0xe70b0 to 0x26be60):
+each is of the file of a kind of object that is not known yet. What an object
+has at the offset that its short at 0x346 gives is one of those things */
+
+#define UNIT_UNKNOWN346(unit) ((byte *)(unit)+*(const short *)((const byte *)(unit)+0x346))
+
+/* 0x000e70b0: the short at 0x36 of what the object has at 0x346 */
+void unit_get_unknown346_unknown36(
+	short *value,
+	long unit_index)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+
+	*value= *(const short *)(UNIT_UNKNOWN346(unit)+0x36);
+}
+
+/* 0x000e70e0: the byte at 0xC of it */
+long unit_get_unknown346_unknownC(
+	long unit_index)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+
+	return (char)UNIT_UNKNOWN346(unit)[0xC];
+}
+
+/* 0x000ea1c0: the number at 0x2C of it is NONE */
+void __attribute__((stdcall)) unit_clear_unknown346_unknown2C(
+	long unit_index,
+	long unknown)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+
+	(void)unknown;
+	*(long *)(UNIT_UNKNOWN346(unit)+0x2C)= NONE;
+}
+
+/* 0x000f8db0: an object keeps two numbers, at 0x144 and 0x148 */
+void unit_set_unknown144(
+	long unit_index,
+	const long *unknown)
+{
+	byte *unit= (byte *)UNIT_OBJECT_GET(unit_index);
+
+	*(long *)(unit+0x144)= unknown[0];
+	*(long *)(unit+0x148)= unknown[1];
+}
+
+/* 0x000faa30: the short that an object keeps at 0x130 is at least a given
+one */
+void unit_raise_unknown130(
+	long unit_index,
+	short value)
+{
+	byte *unit= (byte *)UNIT_OBJECT_GET(unit_index);
+
+	if (value>*(short *)(unit+0x130))
+	{
+		*(short *)(unit+0x130)= value;
+	}
+}
+
+/* 0x00101f20: the number that an object keeps at 0x154, if it has the bit 0
+of its byte at 0x12C; if not, NONE */
+long unit_get_unknown154(
+	long unit_index)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+
+	if (unit[0x12C]&1)
+	{
+		return *(const long *)(unit+0x154);
+	}
+
+	return NONE;
+}
+
+/* 0x00119250: what an object keeps at 0x12C, which takes the bit 6 of its
+first byte */
+byte *unit_get_unknown12C(
+	long unit_index)
+{
+	byte *unit= (byte *)UNIT_OBJECT_GET(unit_index);
+
+	unit[0x12C]|= 0x40;
+
+	return unit+0x12C;
+}
+
+/* 0x00207b90: an object takes the bit 16 of its flags; true. (Its two other
+arguments are not used: it is given to something that calls it, it seems) */
+boolean __attribute__((stdcall)) object_set_flag16(
+	long object_index,
+	long unknown2,
+	long unknown3)
+{
+	(void)unknown2;
+	(void)unknown3;
+	*(unsigned long *)((byte *)UNIT_OBJECT_GET(object_index)+4)|= 0x10000;
+
+	return TRUE;
+}
+
+/* 0x0026be60: whether an object whose byte at 0x3DC is 1 does not have the
+bit 0 of its byte at 0x348; true for the others */
+boolean unit_unknown_0026be60(
+	long unit_index)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+
+	if (unit[0x3DC]==1)
+	{
+		return !(unit[0x348]&1);
+	}
+
+	return TRUE;
+}
