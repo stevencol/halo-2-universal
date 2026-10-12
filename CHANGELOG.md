@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Diez funciones pequeñas más de los actores
+
+Diez funciones (971 bytes) en `ai/actors.c`. De 2431
+funciones se pasa a 2441, el 21,67 % de las del juego (el 11,935 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `actor_unknown_001aa6e0` | `0x001aa6e0` | `ai/actors.c` |
+| `actor_unknown_001ac380` | `0x001ac380` | `ai/actors.c` |
+| `actor_unknown_001b09b0` | `0x001b09b0` | `ai/actors.c` |
+| `actor_unknown_001b4330` | `0x001b4330` | `ai/actors.c` |
+| `actor_unknown_001b8540` | `0x001b8540` | `ai/actors.c` |
+| `actor_unknown_001be040` | `0x001be040` | `ai/actors.c` |
+| `actor_unknown_001a9b50` | `0x001a9b50` | `ai/actors.c` |
+| `actor_unknown_001acd30` | `0x001acd30` | `ai/actors.c` |
+| `unknown_get_actor_unknown90` | `0x001b1080` | `ai/actors.c` |
+| `actor_unknown_001b0710` | `0x001b0710` | `ai/actors.c` |
+
+### Lo que se sabe
+
+- Un actor nombra su objeto en `0x18`, su «clump» (grupo) en `0x7C` y otro
+  objeto en `0x5AC`; varias de estas funciones van del actor a ellos.
+- `actor_unknown_001b0710` da dos distancias: 16 si el objeto tiene NONE en
+  `0x1FC` y el actor nada en `0x26C`, 100 si no; y eso por 2,25.
+- `unknown_get_actor_unknown90` da una de las cuatro cosas de 0x40 bytes
+  que un actor tiene en `0x90`, la que dice su `short` de `0x190`.
+- Las demás ponen o miran datos sueltos del actor, como las de los dos
+  hitos anteriores.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  722.
+- Los nombres van por dirección; qué significa cada dato no se sabe.
+- En este hito se pasaron las pruebas de las diez funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Doce funciones pequeñas más de los actores
 
 Doce funciones (819 bytes) en `ai/actors.c`. De 2419

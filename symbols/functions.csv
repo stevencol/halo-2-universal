@@ -2965,3 +2965,13 @@ address,name,source,arguments,returns,convention
 001bc580,actor_unknown_001bc580,source/ai/actors.c,stack stack stack,short,stdcall
 001b1f30,actor_unknown_001b1f30,source/ai/actors.c,stack stack stack,short,stdcall
 001e4220,actor_set_unknown6D0,source/ai/actors.c,eax ecx,void
+001aa6e0,actor_unknown_001aa6e0,source/ai/actors.c,stack stack,void,stdcall
+001ac380,actor_unknown_001ac380,source/ai/actors.c,stack stack,void,stdcall
+001b09b0,actor_unknown_001b09b0,source/ai/actors.c,stack stack,bool,stdcall
+001b4330,actor_unknown_001b4330,source/ai/actors.c,stack,int,stdcall
+001b8540,actor_unknown_001b8540,source/ai/actors.c,stack stack,bool,stdcall
+001be040,actor_unknown_001be040,source/ai/actors.c,stack,int,stdcall
+001a9b50,actor_unknown_001a9b50,source/ai/actors.c,stack stack,short,stdcall
+001acd30,actor_unknown_001acd30,source/ai/actors.c,eax edx,bool
+001b1080,unknown_get_actor_unknown90,source/ai/actors.c,ecx edx,pointer
+001b0710,actor_unknown_001b0710,source/ai/actors.c,eax ecx edx esi,void

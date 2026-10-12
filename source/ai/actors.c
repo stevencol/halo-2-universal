@@ -15,6 +15,7 @@ gives to its table of data ("actor").
 #include "math/real_math.h"
 #include "memory/data.h"
 #include "memory/hash_table.h"
+#include "objects/objects.h"
 #include "saved games/game_state.h"
 
 /* ---------- constants */
@@ -465,5 +466,241 @@ void actor_set_unknown6D0(
 	else
 	{
 		*(unsigned long *)(actor+0x810)&= ~0x8000000;
+	}
+}
+
+/* 0x00502420, of ai.c: the clumps */
+extern struct data_array *clump_data;
+
+/* the object of a whole number, as bytes */
+#define ACTOR_OBJECT_GET(object_index) \
+	((byte *)((const struct object_header_datum *)object_header_data->data)[(object_index)&0xFFFF].datum)
+
+/* the short at 0x36 of what an object has at the place that its short at
+0x346 says */
+#define ACTOR_OBJECT_UNKNOWN346_UNKNOWN36(object) \
+	(*(const short *)((object)+*(const short *)((object)+0x346)+0x36))
+
+/* 0x001aa6e0: an actor has 4 and 2 for its shorts at 0x41C and 0x420 and 0
+for the one at 0x3E0; and 1 for its byte at 0x44D if it has its byte at
+0x50C and 1 for its short at 0x504 */
+void __attribute__((stdcall)) actor_unknown_001aa6e0(
+	long actor_index,
+	long unknown1)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	(void)unknown1;
+	*(short *)(actor+0x41C)= 4;
+	*(short *)(actor+0x420)= 2;
+	*(short *)(actor+0x3E0)= 0;
+	if (actor[0x50C] && *(const short *)(actor+0x504)==1)
+	{
+		actor[0x44D]= 1;
+	}
+}
+
+/* 0x001ac380: an actor has 4 and 2 for those shorts, and 1 for its byte at
+0x488 if its object (0x18) has 7 for that short at 0x36 */
+void __attribute__((stdcall)) actor_unknown_001ac380(
+	long actor_index,
+	long unknown1)
+{
+	byte *actor= ACTOR_GET(actor_index);
+	const byte *object= ACTOR_OBJECT_GET(*(const long *)(actor+0x18));
+
+	(void)unknown1;
+	*(short *)(actor+0x41C)= 4;
+	*(short *)(actor+0x420)= 2;
+	if (ACTOR_OBJECT_UNKNOWN346_UNKNOWN36(object)==7)
+	{
+		actor[0x488]= 1;
+	}
+}
+
+/* 0x001b09b0: an actor has nothing in several places: 0 for its byte at
+0x50C and its shorts at 0x5B4, 0x5B6, 0x4AC and 0x504, and NONE for its number
+at 0x5AC and its short at 0x5B0. Always true */
+boolean __attribute__((stdcall)) actor_unknown_001b09b0(
+	long actor_index,
+	long unknown1)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	(void)unknown1;
+	actor[0x50C]= 0;
+	*(long *)(actor+0x5AC)= NONE;
+	*(short *)(actor+0x5B0)= NONE;
+	*(short *)(actor+0x5B4)= 0;
+	*(short *)(actor+0x5B6)= 0;
+	*(short *)(actor+0x4AC)= 0;
+	*(short *)(actor+0x504)= 0;
+
+	return TRUE;
+}
+
+/* 0x001b4330: 3 for an actor that has its byte at 0x227 and whose clump
+(0x7C) has 1 for its short at 0x26; 0 if not */
+long __attribute__((stdcall)) actor_unknown_001b4330(
+	long actor_index)
+{
+	const byte *actor= ACTOR_GET(actor_index);
+	long clump_index= *(const long *)(actor+0x7C);
+
+	if (clump_index!=NONE && actor[0x227])
+	{
+		if (*(const short *)((const byte *)clump_data->data+(clump_index&0xFFFF)*0x50+0x26)==1)
+		{
+			return 3;
+		}
+	}
+
+	return 0;
+}
+
+/* 0x001b8540: if the thing of prop_ref_data of an actor (0x338) has less
+than 2 for its byte at 0x27, something has zeros for its bytes at 0xC and
+0xD and its short at 0xE, and the answer is true */
+boolean __attribute__((stdcall)) actor_unknown_001b8540(
+	long actor_index,
+	byte *unknown1)
+{
+	long prop_ref_index= *(const long *)(ACTOR_GET(actor_index)+0x338);
+
+	if (prop_ref_index!=NONE && *(const char *)(ACTOR_PROP_REF_GET(prop_ref_index)+0x27)<2)
+	{
+		unknown1[0xC]= 0;
+		unknown1[0xD]= 0;
+		*(short *)(unknown1+0xE)= 0;
+
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+/* 0x001be040: 3 for an actor that has an object at 0x5AC, 6 for its short at
+0x5B0, and whose object has more than zero for its real number at 0xEC */
+long __attribute__((stdcall)) actor_unknown_001be040(
+	long actor_index)
+{
+	const byte *actor= ACTOR_GET(actor_index);
+	long object_index= *(const long *)(actor+0x5AC);
+
+	if (object_index!=NONE && *(const short *)(actor+0x5B0)==6)
+	{
+		if (*(const float *)(ACTOR_OBJECT_GET(object_index)+0xEC)>0.0f)
+		{
+			return 3;
+		}
+	}
+
+	return 0;
+}
+
+/* 0x001a9b50: an actor that did not have 1 for its byte at 0x225 has it;
+and then, unless it has its byte at 7, its object takes the bit 5 of its
+number at 0x134 and the actor 0 for its byte at 0x226. The answer is always
+unknown_0046fbe4 */
+short __attribute__((stdcall)) actor_unknown_001a9b50(
+	long actor_index,
+	long unknown1)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	(void)unknown1;
+	if (actor[0x225]!=1)
+	{
+		actor[0x225]= 1;
+		if (!actor[7])
+		{
+			*(unsigned long *)(ACTOR_OBJECT_GET(*(const long *)(actor+0x18))+0x134)|= 0x20;
+			actor[0x226]= 0;
+		}
+	}
+
+	return (short)unknown_0046fbe4;
+}
+
+/* 0x001acd30: true for an actor that has 12 or more for its short at
+0x328. For the others: if the object of the actor has 5 for that short at
+0x36, whether something has less than 2 for its real number at 0x28; if not,
+whether it has 1 or more for its byte at 0x27 */
+boolean actor_unknown_001acd30(
+	long actor_index,
+	const byte *unknown)
+{
+	const byte *actor= ACTOR_GET(actor_index);
+
+	const byte *object;
+
+	if (*(const short *)(actor+0x328)>=12)
+	{
+		return TRUE;
+	}
+
+	object= ACTOR_OBJECT_GET(*(const long *)(actor+0x18));
+	if (ACTOR_OBJECT_UNKNOWN346_UNKNOWN36(object)==5)
+	{
+		return 2.0f>*(const float *)(unknown+0x28);
+	}
+
+	return *(const char *)(unknown+0x27)>=1;
+}
+
+/* 0x001b1080: something has things of 12 bytes and how many they are in
+its short at 0x7C. If the one with a number names an actor at 4 and has 3 for
+its short at 8, and the actor has from 0 to 3 for its short at 0x190, this
+gives the one of the four things of 0x40 bytes that the actor has at 0x90
+with that number; NULL if not */
+byte *unknown_get_actor_unknown90(
+	short index,
+	const byte *unknown)
+{
+	if (index>=0 && index<*(const short *)(unknown+0x7C))
+	{
+		const byte *element= unknown+index*12;
+		long actor_index= *(const long *)(element+4);
+
+		if (actor_index!=NONE && *(const short *)(element+8)==3)
+		{
+			byte *actor= ACTOR_GET(actor_index);
+			short current= *(const short *)(actor+0x190);
+
+			if (current>=0 && current<4)
+			{
+				return actor+0x90+current*0x40;
+			}
+		}
+	}
+
+	return NULL;
+}
+
+/* 0x001b0710: two distances for an object and an actor: 16 if the object
+has NONE for its short at 0x1FC and the actor nothing at 0x26C, 100 if not;
+and that times 2.25. Each goes where the caller says, if it says where */
+void actor_unknown_001b0710(
+	long object_index,
+	long actor_index,
+	float *first,
+	float *second)
+{
+	float value= 100.0f;
+
+	if (*(const short *)(ACTOR_OBJECT_GET(object_index)+0x1FC)==NONE)
+	{
+		if (*(const long *)(ACTOR_GET(actor_index)+0x26C)==NONE)
+		{
+			value= 16.0f;
+		}
+	}
+	if (first)
+	{
+		*first= value;
+	}
+	if (second)
+	{
+		*second= value*2.25f;
 	}
 }
