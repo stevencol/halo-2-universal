@@ -271,3 +271,44 @@ void __attribute__((stdcall)) ai_after_load(
 	actor_firing_position_owners->hash= actor_firing_position_owner_hash;
 	actor_firing_position_owners->compare= actor_firing_position_owner_compare;
 }
+
+void unknown_001c81c0(void);
+void unknown_00201c80(void);
+void unknown_00268510(void);
+void unknown_001e2f50(void);
+void unknown_0020fb30(void);
+void unknown_00293830(void);
+void unknown_001e3240(void);
+
+/* 0x001c83c0: each tick of the game (game.c), if there are minds in the map
+and this console is not one that only predicts what another rules. With the
+first byte of what the part keeps (the minds are on, it seems) six things are
+done, the short at 0x22 goes down to zero, and the third byte is set; without
+it, and with the third byte, unknown_001e3240 is done once and the byte is
+cleared */
+void ai_update(
+	void)
+{
+	if (ai_globals[1] && main_game_globals->options.simulation!=_game_simulation_predicted)
+	{
+		if (ai_globals[0])
+		{
+			unknown_001c81c0();
+			if (*(short *)(ai_globals+0x22)>0)
+			{
+				(*(short *)(ai_globals+0x22))--;
+			}
+			unknown_00201c80();
+			unknown_00268510();
+			unknown_001e2f50();
+			unknown_0020fb30();
+			unknown_00293830();
+			ai_globals[2]= TRUE;
+		}
+		else if (ai_globals[2])
+		{
+			unknown_001e3240();
+			ai_globals[2]= FALSE;
+		}
+	}
+}

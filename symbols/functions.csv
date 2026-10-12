@@ -1421,7 +1421,7 @@ address,name,source,arguments,returns,convention
 0014d3a0,unknown_0014d3a0,,stack,void,stdcall
 00138db0,unknown_00138db0,,ebx,void
 000684e0,simulation_apply_update,source/networking/simulation.c,esi,void
-001c83c0,unknown_001c83c0,,,void
+001c83c0,ai_update,source/ai/ai.c,,void
 001fb510,unknown_001fb510,,,void
 0020b660,unknown_0020b660,,,void
 0015c150,unknown_0015c150,,,void
@@ -2735,3 +2735,10 @@ address,name,source,arguments,returns,convention
 001c2a10,unknown_001c2a10,,,void
 001c39c0,unknown_001c39c0,,stack stack,void,stdcall
 0030be40,unknown_0030be40,,ecx stack,void
+001c81c0,unknown_001c81c0,,,void
+00201c80,unknown_00201c80,,,void
+00268510,unknown_00268510,,,void
+001e2f50,unknown_001e2f50,,,void
+0020fb30,unknown_0020fb30,,,void
+00293830,unknown_00293830,,,void
+001e3240,unknown_001e3240,,,void

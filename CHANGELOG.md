@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — La IA en cada tic
+
+Una función (114 bytes) en `ai/ai.c`. De 2201
+funciones se pasa a 2202, el 19,55 % de las del juego (el 11,409 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `ai_update` | `0x001c83c0` | `ai/ai.c` |
+
+### Lo que se sabe
+
+- `ai_update` (antes `unknown_001c83c0`) es la que `game_tick` llama en cada
+  tic. No hace nada si no hay IA en el mapa (segundo byte de `ai_globals`)
+  o si esta consola solo predice lo que manda otra
+  (`_game_simulation_predicted`).
+- Con el primer byte de `ai_globals` puesto (la IA encendida, parece) llama
+  a seis funciones de actualización, baja hasta cero el `short` de `0x22` y
+  pone el tercer byte; sin él, y con el tercer byte puesto, llama una vez a
+  `unknown_001e3240` y lo quita.
+- Con esto se conocen tres bytes de `ai_globals`: `+0` encendida, `+1` hay
+  IA en el mapa, `+2` se actualizó en el último tic.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  654.
+- Las siete funciones a las que llama no están descompiladas; qué cuenta el
+  `short` de `0x22` no se sabe.
+- En este hito se pasaron las pruebas de la función y la de `game_tick`.
+  Hay una batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — La IA después de cargar la partida
 
 Una función (22 bytes) en `ai/ai.c`. De 2200

@@ -76,7 +76,7 @@ void simulation_apply_update(struct game_tick_state *state);
 
 /* what is updated in a tick, in this order; animation_cache_idle is between
 the twenty-first and the twenty-second */
-void unknown_001c83c0(void);
+void ai_update(void);
 void unknown_001fb510(void);
 void unknown_0020b660(void);
 void unknown_0015c150(void);
@@ -579,7 +579,7 @@ void game_tick(
 	{
 		unknown_0014d3a0(&state);
 		unknown_00138db0(&state);
-		unknown_001c83c0();
+		ai_update();
 		unknown_001fb510();
 		unknown_0020b660();
 		unknown_0015c150();

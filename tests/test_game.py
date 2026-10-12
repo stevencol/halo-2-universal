@@ -458,7 +458,7 @@ def run_players_and_won(t) -> None:
 
     random_ = random.Random(143)
     UPDATE_NAMES = [
-        "unknown_001c83c0",
+        "ai_update",
         "unknown_001fb510",
         "unknown_0020b660",
         "unknown_0015c150",
