@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Las dos entidades de red del motor de la partida
+
+Seis funciones (320 bytes) en `game/game_engine.c`. De 2291
+funciones se pasa a 2297, el 20,39 % de las del juego (el 11,777 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_engine_entity28_set` | `0x0009ba90` | `game/game_engine.c` |
+| `game_engine_entity28_clear` | `0x0009bad0` | `game/game_engine.c` |
+| `game_engine_entity28_update` | `0x0009bb10` | `game/game_engine.c` |
+| `game_engine_unknown_0009bb70` | `0x0009bb70` | `game/game_engine.c` |
+| `game_engine_entity24_clear` | `0x000a4910` | `game/game_engine.c` |
+| `game_engine_unknown_000a7810` | `0x000a7810` | `game/game_engine.c` |
+
+### Lo que se sabe
+
+- Lo que guarda el motor de la partida tiene dos entidades de la simulación
+  en red, en `0x24` y `0x28` (`NONE` si no hay). Estas seis funciones las
+  ponen, las quitan y las actualizan; por dónde están y cómo reciben sus
+  argumentos, son las que la simulación llama para cada tipo de entidad.
+- `..._entity28_set` la pone; `..._entity28_clear` y `..._entity24_clear`
+  la quitan si es la que se les pasa; `..._entity28_update` la cambia por
+  otra que tenga los mismos diez bits bajos (el mismo sitio en otro
+  momento, parece).
+- `game_engine_unknown_0009bb70` y `..._000a7810` pasan datos del motor a
+  `unknown_001e98e0` y `unknown_000b58c0`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  706.
+- Estas funciones están entre las de las entidades de la simulación
+  (`0x9ba90`–`0xa7840`), no junto al resto de `game_engine.c`: pueden ser
+  de otro archivo. Los nombres son supuestos.
+- En este hito se pasaron las pruebas de las seis funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Siete funciones pequeñas más del motor de la partida
 
 Siete funciones (322 bytes) en `game/game_engine.c`. De 2284

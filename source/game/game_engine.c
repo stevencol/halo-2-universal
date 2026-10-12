@@ -269,3 +269,125 @@ boolean game_engine_unknown_00163080(
 
 	return FALSE;
 }
+
+/* ---------- the two entities of the simulation of the game engine
+
+What the game engine keeps has two entities of the simulation, at 0x24 and
+0x28 (NONE when there is none). The functions that follow are among those of
+the entities of the simulation in the game (0x9ba90 to 0xa7840), and are
+given to it as functions of kinds of entity, it seems: they take their
+arguments off the stack, and most of them are not used. They may be of
+another file */
+
+void __attribute__((stdcall)) unknown_001e98e0(byte *unknown, long unknown2, long unknown3);
+void __attribute__((stdcall)) unknown_000b58c0(long entity_index, long unknown);
+
+/* 0x0009ba90: the entity at 0x28 is a given one. (If something runs the game
+and there was one, it is NONE first, which changes nothing) */
+boolean __attribute__((stdcall)) game_engine_entity28_set(
+	const long *entity_index,
+	long unknown2,
+	long unknown3,
+	long unknown4,
+	long unknown5,
+	long unknown6)
+{
+	byte *globals= unknown_004e9ae8;
+
+	(void)unknown2;
+	(void)unknown3;
+	(void)unknown4;
+	(void)unknown5;
+	(void)unknown6;
+	if (GAME_ENGINE_GET() && *(long *)(globals+0x28)!=NONE)
+	{
+		*(long *)(globals+0x28)= NONE;
+	}
+	*(long *)(globals+0x28)= *entity_index;
+
+	return TRUE;
+}
+
+/* 0x0009bad0: the entity at 0x28 is no more, if it is a given one (or if
+nothing runs the game and NONE is given); whether it was */
+boolean __attribute__((stdcall)) game_engine_entity28_clear(
+	const long *entity_index)
+{
+	byte *globals= unknown_004e9ae8;
+	long current= NONE;
+
+	if (GAME_ENGINE_GET())
+	{
+		current= *(long *)(globals+0x28);
+	}
+	if (*entity_index==current)
+	{
+		*(long *)(globals+0x28)= NONE;
+
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+/* 0x0009bb10: the entity at 0x28 takes a new index, if the lowest ten bits
+of the two are the same (the same place, another time, it seems) */
+void __attribute__((stdcall)) game_engine_entity28_update(
+	const long *entity_index)
+{
+	byte *globals= unknown_004e9ae8;
+
+	if (GAME_ENGINE_GET() && *(long *)(globals+0x28)!=NONE && !((*entity_index^*(long *)(globals+0x28))&0x3FF))
+	{
+		*(long *)(globals+0x28)= *entity_index;
+	}
+}
+
+/* 0x0009bb70: unknown_001e98e0 is done with what the game engine keeps from
+0x304 (NULL if nothing runs the game) and two of the four arguments */
+boolean __attribute__((stdcall)) game_engine_unknown_0009bb70(
+	long unknown,
+	long unknown2,
+	long unknown3,
+	long unknown4)
+{
+	(void)unknown;
+	(void)unknown3;
+	unknown_001e98e0(game_engine_unknown_00162030(), unknown2, unknown4);
+
+	return TRUE;
+}
+
+/* 0x000a4910: as game_engine_entity28_clear, for the entity at 0x24 */
+boolean __attribute__((stdcall)) game_engine_entity24_clear(
+	const long *entity_index)
+{
+	byte *globals= unknown_004e9ae8;
+	long current= NONE;
+
+	if (GAME_ENGINE_GET())
+	{
+		current= *(long *)(globals+0x24);
+	}
+	if (*entity_index==current)
+	{
+		*(long *)(globals+0x24)= NONE;
+
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+/* 0x000a7810: unknown_000b58c0 is done with the entity at 0x24, if there is
+one and something runs the game */
+void __attribute__((stdcall)) game_engine_unknown_000a7810(
+	long unknown)
+{
+	const byte *globals= unknown_004e9ae8;
+
+	if (GAME_ENGINE_GET() && *(const long *)(globals+0x24)!=NONE)
+	{
+		unknown_000b58c0(*(const long *)(globals+0x24), unknown);
+	}
+}
