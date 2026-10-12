@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Los niveles devuelven sus tablas; los guiones se cierran (archivo nuevo)
+
+Tres funciones cortas (unos 190 bytes): una en `main/levels.c` y dos en el archivo nuevo
+`hs/hs.c`. De 2105
+funciones se pasa a 2108, el 18,71 % de las del juego (el 11,273 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `levels_dispose` | `0x0019bd50` | `main/levels.c` |
+| `hs_dispose` | `0x0020a810` | `hs/hs.c` |
+| `hs_dispose_from_old_map` | `0x0020a7d0` | `hs/hs.c` |
+
+### Lo que se sabe
+
+- Otra función que el juego tiene copiada en cada sitio: **`data_dispose`**
+  (borrar la cabecera de una tabla y devolver su memoria a quien la dio).
+  Con ella, `levels_dispose` son dos llamadas, una por tabla.
+- Otra parte de la tabla de partes del juego con nombre por el texto de su
+  tabla de datos: `"script node"`, los **guiones de los niveles**. Sus
+  funciones van al archivo nuevo `hs/hs.c`.
+- `hs_dispose` devuelve la tabla de nodos y marca otra como no usable.
+- `hs_dispose_from_old_map`: la tabla de nodos, si aún tenía elementos, se
+  queda sin ellos (eran los del mapa) y deja de ser usable; dos tablas más
+  dejan de serlo, y se llama a otras dos funciones.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  618.
+- La primera versión de `hs_dispose_from_old_map` marcaba la tabla como no
+  usable siempre; el juego solo lo hace si aún tenía elementos. **La prueba
+  lo detectó** y está corregido antes de confirmar.
+- El nombre `hs.c` es una suposición, por el del primer juego; las otras
+  tres tablas no tienen nombre.
+- En este hito se pasaron las pruebas de las tres funciones y `test_game`
+  entera.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Lo que el tag de globales dice de un nivel, por su número
 
 Tres funciones (275 bytes): dos en `main/levels.c` y una en un archivo nuevo de `game/`.

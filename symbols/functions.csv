@@ -417,7 +417,7 @@ address,name,source,arguments,returns,convention
 00188940,object_looping_sounds_dispose_from_old_map,source/sound/sound_manager.c,,void
 00188980,unknown_00188980,,,void
 0019bcd0,levels_initialize,source/main/levels.c,,void
-0019bd50,unknown_0019bd50,,,void
+0019bd50,levels_dispose,source/main/levels.c,,void
 0019c190,levels_initialize_for_new_map,source/main/levels.c,,void
 0019c1d0,levels_dispose_from_old_map,source/main/levels.c,,void
 001c25a0,unknown_001c25a0,,,void
@@ -448,8 +448,8 @@ address,name,source,arguments,returns,convention
 001fb350,unknown_001fb350,,,void
 0020a700,unknown_0020a700,,,void
 0020a750,unknown_0020a750,,,void
-0020a7d0,unknown_0020a7d0,,,void
-0020a810,unknown_0020a810,,,void
+0020a7d0,hs_dispose_from_old_map,source/hs/hs.c,,void
+0020a810,hs_dispose,source/hs/hs.c,,void
 0020aee0,game_unknown_0020aee0_initialize,source/game/game_unknown_0020aee0.c,,void
 0020af50,game_unknown_0020aee0_dispose,source/game/game_unknown_0020aee0.c,,void
 0020af90,game_unknown_0020aee0_initialize_for_new_map,source/game/game_unknown_0020aee0.c,,void
@@ -2657,3 +2657,5 @@ address,name,source,arguments,returns,convention
 00015b70,unknown_00015b70,,,void
 0001e1c0,unknown_0001e1c0,,,void
 00036ab0,unknown_00036ab0,,,void
+0020a850,unknown_0020a850,,,void
+00209290,unknown_00209290,,,void

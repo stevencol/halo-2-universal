@@ -159,3 +159,20 @@ const byte *__attribute__((stdcall)) levels_get_multiplayer_level(
 
 	return NULL;
 }
+
+/* 0x0019bd50: the levels give their two tables back (data_dispose, which the
+game has written here), each if it is there, and have none */
+void levels_dispose(
+	void)
+{
+	if (multiplayer_level_data)
+	{
+		data_dispose(multiplayer_level_data);
+		multiplayer_level_data= NULL;
+	}
+	if (campaign_level_data)
+	{
+		data_dispose(campaign_level_data);
+		campaign_level_data= NULL;
+	}
+}

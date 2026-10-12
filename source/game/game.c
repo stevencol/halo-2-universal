@@ -208,7 +208,7 @@ void unknown_00188870(void);
 void object_looping_sounds_dispose_from_old_map(void);
 void unknown_00188980(void);
 void levels_initialize(void);
-void unknown_0019bd50(void);
+void levels_dispose(void);
 void levels_initialize_for_new_map(void);
 void levels_dispose_from_old_map(void);
 void unknown_001c25a0(void);
@@ -235,8 +235,8 @@ void unknown_001fb330(void);
 void unknown_001fb350(void);
 void unknown_0020a700(void);
 void unknown_0020a750(void);
-void unknown_0020a7d0(void);
-void unknown_0020a810(void);
+void hs_dispose_from_old_map(void);
+void hs_dispose(void);
 void game_unknown_0020aee0_initialize(void);
 void game_unknown_0020aee0_dispose(void);
 void game_unknown_0020aee0_initialize_for_new_map(void);
@@ -351,7 +351,7 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{input_abstraction_initialize, input_abstraction_dispose},
 	{unknown_00155ea0, unknown_00155ed0},
 	{no_operation, no_operation},
-	{levels_initialize, unknown_0019bd50, levels_initialize_for_new_map, levels_dispose_from_old_map},
+	{levels_initialize, levels_dispose, levels_initialize_for_new_map, levels_dispose_from_old_map},
 	{unknown_00131ff0, unknown_001320b0},
 	{sound_unknown_00225700, no_operation},
 	{game_state_initialize, game_state_dispose, game_state_initialize_for_new_map, no_operation, game_state_set_structure_bsp_index, no_operation},
@@ -392,7 +392,7 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{unknown_0013e5c7, unknown_003361a4, unknown_0013e5d6, unknown_0013e610},
 	{no_operation, no_operation, no_operation, no_operation},
 	{unknown_0013bf00, no_operation, unknown_0013bf60, unknown_0013bfc0},
-	{unknown_0020a700, unknown_0020a810, unknown_0020a750, unknown_0020a7d0},
+	{unknown_0020a700, hs_dispose, unknown_0020a750, hs_dispose_from_old_map},
 	{unknown_001fb2f0, no_operation, unknown_001fb330, unknown_001fb350},
 	{no_operation, no_operation, no_operation, no_operation},
 	{unknown_000d4de0, no_operation, unknown_000d4e20, no_operation, unknown_000d4e30, no_operation, (game_system_structure_bsp_proc)unknown_000d4e60},
