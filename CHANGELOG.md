@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Los actores crean su tabla
+
+Tres funciones de la IA (unos 200 bytes), en el archivo nuevo `ai/actors.c`.
+De 2149
+funciones se pasa a 2152, el 19,10 % de las del juego (el 11,341 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `actors_initialize` | `0x001dfae0` | `ai/actors.c` |
+| `actor_firing_position_owner_hash` | `0x0025dd20` | `ai/actors.c` |
+| `actor_firing_position_owner_compare` | `0x0025dd30` | `ai/actors.c` |
+
+### Lo que se sabe
+
+- `actors_initialize` crea `"actor"` (256 de `0x888` bytes), pide `0x640`
+  bytes del estado de la partida y crea la tabla hash
+  `"actor firing-position owners"` (256 entradas de 4 bytes, 1024 listas),
+  todo en la memoria del estado de la partida.
+- Las dos funciones que se dan a esa tabla: el hash de una clave es su byte
+  más bajo por cuatro, y dos claves son iguales si son el mismo número.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  633.
+- Las dos funciones de la tabla hash están en `0x25dd20`, lejos de
+  `actors_initialize`: pueden ser de otro archivo del juego. Se han puesto
+  en `ai/actors.c` porque solo ella las usa hasta ahora.
+- Qué son los `0x640` bytes no se sabe.
+- En este hito se pasaron las pruebas de las tres funciones y
+  `test_hash_table`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Los registros de lo que dicen los personajes
 
 Dos funciones de la IA (unos 190 bytes), en el archivo nuevo `ai/vocalizations.c`.

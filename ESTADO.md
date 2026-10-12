@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 633.
+**Última actualización:** 2026-10-08, al terminar el hito 634.
 
 ## Dónde estamos
 
-- **2149 funciones descompiladas de 11.265: el 19,08 % del juego** (el
-  11,335 % de los bytes de código).
-- Las 2149 están comprobadas contra el ejecutable original: las 1390 del
+- **2152 funciones descompiladas de 11.265: el 19,10 % del juego** (el
+  11,341 % de los bytes de código).
+- Las 2152 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how the vocalization records are made and start a new map* (ver `git log`).
+- Último hito: *Decompile how the actors make their table and the table of firing-position owners* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 539 funciones apuntadas pero sin descompilar (las que el código
   llama); 390 de ellas solo se conocen por su dirección (`unknown_...`).

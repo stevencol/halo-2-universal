@@ -2687,3 +2687,6 @@ address,name,source,arguments,returns,convention
 0028d930,swarms_initialize,source/ai/swarms.c,,void
 0020b930,vocalizations_initialize,source/ai/vocalizations.c,,void
 0020b9b0,vocalizations_initialize_for_new_map,source/ai/vocalizations.c,,void
+0025dd20,actor_firing_position_owner_hash,source/ai/actors.c,stack,long,stdcall
+0025dd30,actor_firing_position_owner_compare,source/ai/actors.c,stack stack,long,stdcall
+001dfae0,actors_initialize,source/ai/actors.c,,void

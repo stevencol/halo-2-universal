@@ -501,3 +501,6 @@ address,name,source
 005044c4,unknown_005044c4,source/ai/swarms.c
 004f9398,vocalization_record_data,source/ai/vocalizations.c
 004f939c,unknown_004f939c,source/ai/vocalizations.c
+004f55f0,actor_data,source/ai/actors.c
+004f93a0,unknown_004f93a0,source/ai/actors.c
+00557c6c,actor_firing_position_owners,source/ai/actors.c
