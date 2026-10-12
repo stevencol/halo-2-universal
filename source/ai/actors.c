@@ -7,6 +7,10 @@ gives to its table of data ("actor").
 */
 
 #include "cseries/cseries.h"
+
+#include <stdint.h>
+
+#include "cache/cache_files.h"
 #include "memory/data.h"
 #include "memory/hash_table.h"
 #include "saved games/game_state.h"
@@ -66,4 +70,26 @@ void actors_initialize(
 	actor_firing_position_owners= hash_table_new(game_state_allocation, MAXIMUM_ACTORS,
 		"actor firing-position owners", sizeof(long), ACTOR_FIRING_POSITION_OWNER_LIST_COUNT,
 		actor_firing_position_owner_hash, actor_firing_position_owner_compare);
+}
+
+/* 0x001e4990: the first thing of the block that the definition of a
+character (a tag) has at 0x34, or that of the character that it comes from
+(at 8), and so on; NULL if none has one. By the tags of other games of the
+same engine it is what is general of the character: its kind is the short at
+4 of it */
+void *character_definition_get_unknown34(
+	long character_index)
+{
+	while (character_index!=NONE)
+	{
+		const byte *character= (const byte *)(uintptr_t)global_tag_instances[character_index&0xFFFF].address;
+
+		if (*(const long *)(character+0x34)>0)
+		{
+			return *(void *const *)(character+0x38);
+		}
+		character_index= *(const long *)(character+8);
+	}
+
+	return NULL;
 }

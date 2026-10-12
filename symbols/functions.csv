@@ -2759,4 +2759,5 @@ address,name,source,arguments,returns,convention
 000d4ae0,widget_delete,source/objects/widgets.c,eax ecx,void
 00205280,squad_group_add_squad,source/ai/squads.c,eax esi,void
 002009d0,squads_unknown_002009d0,source/ai/squads.c,,void
-00200c20,unknown_00200c20,,eax,void
+00200c20,squad_new_from_scenario,source/ai/squads.c,eax,void
+001e4990,character_definition_get_unknown34,source/ai/actors.c,ecx,pointer

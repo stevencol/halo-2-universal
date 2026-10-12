@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Un escuadrón del escenario se convierte en escuadrón del juego
+
+Dos funciones (unos 400 bytes): una en `ai/squads.c` y otra en `ai/actors.c`.
+De 2229
+funciones se pasa a 2231, el 19,80 % de las del juego (el 11,536 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `squad_new_from_scenario` | `0x00200c20` | `ai/squads.c` |
+| `character_definition_get_unknown34` | `0x001e4990` | `ai/actors.c` |
+
+### Lo que se sabe
+
+- `squad_new_from_scenario` (antes `unknown_00200c20`, el escuadrón del
+  escenario llega en `eax`) crea el escuadrón del juego: lo deja vacío, le
+  copia dos bits de las banderas del escenario, su grupo y **su bando**
+  (byte `+0x76`). El bando es el que dice el escenario; si ahí hay un cero,
+  el de la unidad de su personaje (o de su criatura); y si también es cero,
+  el que corresponde a la clase del personaje según una tabla fija de 20
+  clases (`0x44aee8`).
+- `character_definition_get_unknown34` (el personaje llega en `ecx`) da el
+  primer elemento del bloque que un personaje tiene en `0x34`, o el del
+  personaje del que hereda (`+8`), y así hacia arriba; `NULL` si ninguno lo
+  tiene. De ahí sale la clase del personaje (`short` en `+4`).
+- Con esto **`squads_initialize_for_new_map` y todo lo que llama está
+  descompilado**.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  673.
+- Que el bloque de `0x34` sean las propiedades generales del personaje y
+  `+0x76` el bando es por la forma de los tags de otros juegos del mismo
+  motor; los demás campos del escuadrón no tienen nombre.
+- En este hito se pasaron las pruebas de las dos funciones y
+  `test_squads_new_map`. Hay una batería completa en marcha sobre el hito
+  637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Los escuadrones y sus grupos al empezar un mapa
 
 Tres funciones (unos 650 bytes) en `ai/squads.c`. De 2226

@@ -77,5 +77,5 @@ def run(t) -> None:
         t.check(
             "squads_initialize_for_new_map",
             globals={"global_scenario": scenario(random_, group_count, squad_count), **tables(random_)},
-            externals={"unknown_00200c20": lambda harness, arguments: 0},
+            externals={"squad_new_from_scenario": lambda harness, arguments: 0},
         )

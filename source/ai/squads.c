@@ -6,6 +6,9 @@ the names that the game gives to its tables of data ("squad", "squad group").
 */
 
 #include "cseries/cseries.h"
+#include <stdint.h>
+
+#include "cache/cache_files.h"
 #include "memory/data.h"
 #include "saved games/game_state.h"
 #include "scenario/scenario.h"
@@ -68,8 +71,19 @@ enum
 #define SQUAD_GET(index) ((byte *)squad_data->data+((index)&0xFFFF)*SQUAD_SIZE)
 #define SQUAD_GROUP_GET(index) ((byte *)squad_group_data->data+((index)&0xFFFF)*SQUAD_GROUP_SIZE)
 
-/* 0x00200c20: a squad of the scenario gets its squad of the game */
-void unknown_00200c20(const byte *scenario_squad);
+/* 0x00200c20: a squad of the scenario gets its squad of the game; it is
+below */
+void squad_new_from_scenario(const byte *scenario_squad);
+
+/* 0x001e4990, of actors.c */
+void *character_definition_get_unknown34(long character_index);
+
+/* 0x0044aee8: for each of the 0x14 kinds of character, the side that it is
+on when nothing else says */
+const short unknown_0044aee8[0x14]=
+{
+	3, 7, 3, 3, 3, 3, 1, 2, 2, 4, 4, 4, 5, 5, NONE, 3, 7, 7, 7, 4
+};
 
 /* 0x00205280: a squad is put last in the list of the squads of a group. In
 the game it is far from the others of this file, so it may be of another */
@@ -162,7 +176,7 @@ void squads_unknown_002009d0(
 }
 
 /* 0x00200b30: for a new map the two tables are good to use, with nothing in
-them; each squad of the scenario gets its squad (unknown_00200c20) and each
+them; each squad of the scenario gets its squad (squad_new_from_scenario) and each
 group of the scenario its group, which is of nothing yet; and they are put in
 their lists */
 void squads_initialize_for_new_map(
@@ -175,7 +189,7 @@ void squads_initialize_for_new_map(
 	data_make_valid(squad_group_data);
 	for (index= 0; (short)index<*(const long *)(scenario+SCENARIO_SQUADS_OFFSET); index++)
 	{
-		unknown_00200c20(*(const byte *const *)(scenario+SCENARIO_SQUADS_OFFSET+4)+(short)index*SCENARIO_SQUAD_SIZE);
+		squad_new_from_scenario(*(const byte *const *)(scenario+SCENARIO_SQUADS_OFFSET+4)+(short)index*SCENARIO_SQUAD_SIZE);
 	}
 	for (index= 0; (short)index<*(const long *)(scenario+SCENARIO_SQUAD_GROUPS_OFFSET); index++)
 	{
@@ -198,4 +212,90 @@ void squads_initialize_for_new_map(
 		*(long *)(group+SQUAD_GROUP_NEXT_SIBLING_OFFSET)= NONE;
 	}
 	squads_unknown_002009d0();
+}
+
+#define TAG_GET(tag_index) ((const byte *)(uintptr_t)global_tag_instances[(tag_index)&0xFFFF].address)
+
+/* 0x00200c20: a squad of the scenario gets its squad of the game, with
+nothing in it but two bits of its flags (the bits 8 and 9 of the flags of the
+squad of the scenario, at 0x20), its group, and its side: the one that the
+scenario says (a byte, at 0x24), or if that is zero, the one of the unit of
+its character (the scenario has its characters at 0x178; a character has its
+unit at 0x10, or what else it is at 0x18, and both have their side at 0xC0),
+or if that is zero too, the one of the kind of its character */
+void squad_new_from_scenario(
+	const byte *scenario_squad)
+{
+	byte *squad= SQUAD_GET(datum_new(squad_data));
+	long index;
+
+	*(short *)(squad+2)= 0;
+	*(short *)(squad+2)= (short)((*(const unsigned long *)(scenario_squad+0x20)>>8)&1);
+	if (*(const unsigned long *)(scenario_squad+0x20)&0x200)
+	{
+		squad[2]|= 2;
+	}
+	else
+	{
+		squad[2]&= ~2;
+	}
+	*(long *)(squad+0x68)= NONE;
+	*(long *)(squad+0x70)= NONE;
+	*(long *)(squad+0x78)= NONE;
+	*(short *)(squad+0x7C)= 0;
+	squad[0x26]= 0;
+	*(short *)(squad+0x2A)= NONE;
+	*(short *)(squad+0x62)= NONE;
+	*(short *)(squad+0x64)= NONE;
+	*(long *)(squad+0x80)= NONE;
+	*(long *)(squad+0x2C)= NONE;
+	*(long *)(squad+0x5C)= NONE;
+	*(short *)(squad+0x24)= 0;
+	squad[0x60]= 0;
+	*(long *)(squad+SQUAD_GROUP_INDEX_OFFSET)= *(const short *)(scenario_squad+SCENARIO_SQUAD_GROUP_OFFSET);
+	*(short *)(squad+SQUAD_NEXT_SQUAD_OFFSET)= NONE;
+	*(short *)(squad+0x7E)= NONE;
+	for (index= 0; index<5; index++)
+	{
+		*(long *)(squad+0x84+4*index)= NONE;
+	}
+	squad[0x76]= scenario_squad[0x24];
+	if (!scenario_squad[0x24])
+	{
+		short character= *(const short *)(scenario_squad+0x36);
+		const byte *scenario= (const byte *)global_scenario;
+
+		if (character>=0 && character<*(const long *)(scenario+0x178))
+		{
+			const byte *reference= *(const byte *const *)(scenario+0x17C)+character*8;
+
+			if (*(const long *)(reference+4)!=NONE)
+			{
+				const byte *definition= TAG_GET(*(const long *)(reference+4));
+
+				if (*(const long *)(definition+0x10)!=NONE)
+				{
+					squad[0x76]= TAG_GET(*(const long *)(definition+0x10))[0xC0];
+				}
+				else if (*(const long *)(definition+0x18)!=NONE)
+				{
+					squad[0x76]= TAG_GET(*(const long *)(definition+0x18))[0xC0];
+				}
+				if (!squad[0x76])
+				{
+					const byte *general= character_definition_get_unknown34(*(const long *)(reference+4));
+
+					if (general)
+					{
+						short type= *(const short *)(general+4);
+
+						if (type>=0 && type<0x14)
+						{
+							squad[0x76]= (byte)unknown_0044aee8[type];
+						}
+					}
+				}
+			}
+		}
+	}
 }
