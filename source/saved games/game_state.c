@@ -69,7 +69,7 @@ void GAME_STATE_PROC unknown_001889d0(unsigned long flags);
 void GAME_STATE_PROC unknown_00155f10(unsigned long flags);
 void GAME_STATE_PROC simulation_before_load(unsigned long flags);
 void GAME_STATE_PROC unknown_00188ac0(unsigned long flags);
-void GAME_STATE_PROC unknown_0016f090(unsigned long flags);
+void GAME_STATE_PROC game_unknown_0016efb0_before_load(unsigned long flags);
 void GAME_STATE_PROC unknown_0014b660(unsigned long flags);
 void GAME_STATE_PROC simulation_after_load(unsigned long flags);
 void GAME_STATE_PROC unknown_00043970(unsigned long flags);
@@ -78,7 +78,7 @@ void GAME_STATE_PROC unknown_00155360(unsigned long flags);
 void GAME_STATE_PROC unknown_0024c829(unsigned long flags);
 void GAME_STATE_PROC unknown_001c7f80(unsigned long flags);
 void GAME_STATE_PROC unknown_0017d190(unsigned long flags);
-void GAME_STATE_PROC unknown_0016f0c0(unsigned long flags);
+void GAME_STATE_PROC game_unknown_0016efb0_after_load(unsigned long flags);
 void GAME_STATE_PROC unknown_00226030(unsigned long flags);
 
 /* ---------- globals */
@@ -129,7 +129,7 @@ game_state_proc game_state_after_load_procs[NUMBER_OF_GAME_STATE_AFTER_LOAD_PROC
 	(game_state_proc)no_operation1,
 	sound_reset,
 	unknown_00188ac0,
-	unknown_0016f090,
+	game_unknown_0016efb0_before_load,
 	unknown_0014b660,
 	simulation_after_load,
 	unknown_00043970,
@@ -143,7 +143,7 @@ game_state_proc game_state_after_load_procs[NUMBER_OF_GAME_STATE_AFTER_LOAD_PROC
 	unknown_001c3590,
 	unknown_001c7f80,
 	unknown_0017d190,
-	unknown_0016f0c0,
+	game_unknown_0016efb0_after_load,
 	unknown_00226030
 };
 

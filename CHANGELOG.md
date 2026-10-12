@@ -2,6 +2,36 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — La parte de `0x16efb0` antes y después de cargar una partida
+
+Dos funciones cortas de `game/game_unknown_0016efb0.c` (unos 60 bytes). De 2120
+funciones se pasa a 2122, el 18,84 % de las del juego (el 11,287 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_unknown_0016efb0_before_load` | `0x0016f090` | `game/game_unknown_0016efb0.c` |
+| `game_unknown_0016efb0_after_load` | `0x0016f0c0` | `game/game_unknown_0016efb0.c` |
+
+### Lo que se sabe
+
+- Eran dos entradas sin nombre de las listas de lo que se hace antes y
+  después de cargar un estado del juego (`game_state.c`).
+- Antes de cargar, las cuatro cosas de la parte (una por jugador de la
+  consola) se dejan como al empezar.
+- Después de cargar se pide la segunda de las «dos cosas» del hito 623,
+  salvo en una partida en red de clase 2 a 5.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  623.
+- En este hito se pasaron las pruebas de las cinco funciones del archivo
+  que tienen prueba y `test_game_state` entera.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Tres funciones más de la parte de `0x16efb0`: algo por cada jugador de la consola
 
 Tres funciones de `game/game_unknown_0016efb0.c` (unos 280 bytes). De 2117

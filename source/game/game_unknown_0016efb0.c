@@ -123,3 +123,34 @@ void game_unknown_0016efb0_unknown_0016f200(
 		unknown_004ea936= FALSE;
 	}
 }
+
+/* 0x0016f090: a state of the game is about to be loaded: a map is loaded,
+and each of the four things is as it starts (unknown_0016f4b0). It is one
+of the things that are done before a state is loaded (game_state.c) */
+void GAME_STATE_PROC game_unknown_0016efb0_before_load(
+	unsigned long flags)
+{
+	long index;
+
+	(void)flags;
+	unknown_004ea934= TRUE;
+	for (index= 0; index<4; index++)
+	{
+		unknown_0016f4b0(unknown_004e9bd4[index]);
+	}
+}
+
+/* 0x0016f0c0: a state of the game was loaded: the second of the two things
+is asked for, but not in a game in the network of kind 2 to 5. It is one of
+the things that are done after a state is loaded */
+void GAME_STATE_PROC game_unknown_0016efb0_after_load(
+	unsigned long flags)
+{
+	long simulation= main_game_globals->options.simulation;
+
+	(void)flags;
+	if (simulation<2 || simulation>5)
+	{
+		unknown_004ea936= TRUE;
+	}
+}

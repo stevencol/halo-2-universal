@@ -50,3 +50,30 @@ def run(t) -> None:
                 **{name: random_.getrandbits(32) for name in ("unknown_004e6470", "unknown_004e6474", "unknown_004e64a0", "unknown_004e64a4", "unknown_004e64ac")},
             },
         )
+
+
+def run_624(t) -> None:
+    random_ = random.Random(624)
+
+    for n in range(300):
+        t.check(
+            "game_unknown_0016efb0_before_load",
+            random_.getrandbits(32),
+            globals={"unknown_004e9bd4": GlobalData(random_.randbytes(0xD60)), "unknown_004ea934": bytes((random_.choice((0, 1, 0x80)),))},
+            externals={"unknown_0016f4b0": lambda harness, arguments: (0, (harness.normalize(arguments[0]),))},
+        )
+        game = bytearray(random_.randbytes(0x20))
+        game[0xC] = random_.choice((0, 1, 2, 3, 5, 6, 0x84, 0xFF))
+        t.check(
+            "game_unknown_0016efb0_after_load",
+            random_.getrandbits(32),
+            globals={"main_game_globals": Buffer(bytes(game)), "unknown_004ea936": bytes((random_.choice((0, 1, 0x80)),))},
+        )
+
+
+_run_623 = run
+
+
+def run(t) -> None:
+    _run_623(t)
+    run_624(t)
