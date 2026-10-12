@@ -704,3 +704,267 @@ void actor_unknown_001b0710(
 		*second= value*2.25f;
 	}
 }
+
+/* 0x00502414, of props.c: "tracking" */
+extern struct data_array *tracking_data;
+
+/* what several functions do to an actor, and the game has written in each:
+it has nothing in these places (the same as actor_unknown_001b09b0) */
+static inline __attribute__((always_inline)) void actor_clear_unknown5AC_inline(
+	byte *actor)
+{
+	actor[0x50C]= 0;
+	*(long *)(actor+0x5AC)= NONE;
+	*(short *)(actor+0x5B0)= NONE;
+	*(short *)(actor+0x5B4)= 0;
+	*(short *)(actor+0x5B6)= 0;
+	*(short *)(actor+0x4AC)= 0;
+	*(short *)(actor+0x504)= 0;
+}
+
+/* 0x001f86a0: an actor has nothing in those places */
+void actor_clear_unknown5AC(
+	long actor_index)
+{
+	actor_clear_unknown5AC_inline(ACTOR_GET(actor_index));
+}
+
+/* 0x001b1eb0: something takes 3 for its short at 0x10, unless it has its
+byte at 0xD, and the number at 0x418 of an actor at 0x14; the actor has 0 for
+its byte at 0x3F2 and nothing in those places. Always true */
+boolean __attribute__((stdcall)) actor_unknown_001b1eb0(
+	long actor_index,
+	byte *unknown1)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	if (!unknown1[0xD])
+	{
+		*(short *)(unknown1+0x10)= 3;
+	}
+	*(long *)(unknown1+0x14)= *(const long *)(actor+0x418);
+	actor[0x3F2]= 0;
+	actor_clear_unknown5AC_inline(actor);
+
+	return TRUE;
+}
+
+/* 0x001b3ee0: something has 0 for its byte at 0xC and NONE at 0x10; an
+actor has nothing in those places and takes the bit 0 of its number at 0x314.
+Always true */
+boolean __attribute__((stdcall)) actor_unknown_001b3ee0(
+	long actor_index,
+	byte *unknown1)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	unknown1[0xC]= 0;
+	*(long *)(unknown1+0x10)= NONE;
+	actor_clear_unknown5AC_inline(actor);
+	*(unsigned long *)(actor+0x314)|= 1;
+
+	return TRUE;
+}
+
+/* 0x001c10f0: an actor has nothing in those places; something has 0 for its
+bytes at 0xC and 0x20 and its short at 0x38, and NONE at 0x10. Always true */
+boolean __attribute__((stdcall)) actor_unknown_001c10f0(
+	long actor_index,
+	byte *unknown1)
+{
+	actor_clear_unknown5AC_inline(ACTOR_GET(actor_index));
+	unknown1[0xC]= 0;
+	*(long *)(unknown1+0x10)= NONE;
+	*(short *)(unknown1+0x38)= 0;
+	unknown1[0x20]= 0;
+
+	return TRUE;
+}
+
+/* 0x001b4f60: 0x38 for an actor that has the bit 0 of its byte at 0x6FC;
+unknown_0046fbe4 if not */
+short __attribute__((stdcall)) actor_unknown_001b4f60(
+	long actor_index,
+	long unknown1)
+{
+	(void)unknown1;
+	if (ACTOR_GET(actor_index)[0x6FC]&1)
+	{
+		return 0x38;
+	}
+
+	return (short)unknown_0046fbe4;
+}
+
+/* 0x001b4f90: if an actor has more than 0 for its short at 0x3B0 and
+something at 0x3B4, something else takes that at 0x10, NONE for its short at
+0x14 and 1 for its byte at 0xC, and the answer is 0x38; unknown_0046fbe4 if
+not */
+short __attribute__((stdcall)) actor_unknown_001b4f90(
+	long actor_index,
+	byte *unknown1)
+{
+	const byte *actor= ACTOR_GET(actor_index);
+
+	if (*(const short *)(actor+0x3B0)>0 && *(const long *)(actor+0x3B4)!=NONE)
+	{
+		*(long *)(unknown1+0x10)= *(const long *)(actor+0x3B4);
+		*(short *)(unknown1+0x14)= NONE;
+		unknown1[0xC]= 1;
+
+		return 0x38;
+	}
+
+	return (short)unknown_0046fbe4;
+}
+
+/* 0x001b5a20: 3 for an actor whose thing of prop_ref_data (0x338) names one
+of tracking_data at 0x14 and has 3 or more for its short at 0x24, if that one
+has 0 for its byte at 0xD9; 0 if not. The game looks at whether the place of
+the thing of tracking_data, and the place 0x70 after it, are nothing */
+long __attribute__((stdcall)) actor_unknown_001b5a20(
+	long actor_index)
+{
+	long prop_ref_index= *(const long *)(ACTOR_GET(actor_index)+0x338);
+
+	if (prop_ref_index!=NONE)
+	{
+		const byte *prop_ref= ACTOR_PROP_REF_GET(prop_ref_index);
+		long tracking_index= *(const long *)(prop_ref+0x14);
+
+		if (tracking_index!=NONE)
+		{
+			uintptr_t tracking= (uintptr_t)tracking_data->data+(tracking_index&0xFFFF)*0x124;
+
+			if (tracking && tracking+0x70 && *(const short *)(prop_ref+0x24)>=3)
+			{
+				if (!((const byte *)tracking)[0x70+0x69])
+				{
+					return 3;
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
+/* an actor has two numbers for its shorts at 0x41C and 0x420, and 1 for its
+byte at 0x488, if its thing of prop_ref_data has 1 or 2 for its short at
+0x24 */
+static inline __attribute__((always_inline)) void actor_unknown_001bf360_inline(
+	long actor_index,
+	short first)
+{
+	byte *actor= ACTOR_GET(actor_index);
+	long prop_ref_index= *(const long *)(actor+0x338);
+
+	if (prop_ref_index!=NONE)
+	{
+		short unknown24= *(const short *)(ACTOR_PROP_REF_GET(prop_ref_index)+0x24);
+
+		if (unknown24>=1 && unknown24<=2)
+		{
+			*(short *)(actor+0x41C)= first;
+			*(short *)(actor+0x420)= 2;
+			actor[0x488]= 1;
+		}
+	}
+}
+
+/* 0x001bf360: that, with 3 and 2 */
+void __attribute__((stdcall)) actor_unknown_001bf360(
+	long actor_index,
+	long unknown1)
+{
+	(void)unknown1;
+	actor_unknown_001bf360_inline(actor_index, 3);
+}
+
+/* 0x001c22c0: that, with 4 and 2 */
+void __attribute__((stdcall)) actor_unknown_001c22c0(
+	long actor_index,
+	long unknown1)
+{
+	(void)unknown1;
+	actor_unknown_001bf360_inline(actor_index, 4);
+}
+
+/* 0x001c0230: if something has its byte at 0x1B, an actor has 4 and 4 for
+those shorts and the vector that the thing has at 0x1C at 0x424 */
+void __attribute__((stdcall)) actor_unknown_001c0230(
+	long actor_index,
+	const byte *unknown1)
+{
+	if (unknown1[0x1B])
+	{
+		byte *actor= ACTOR_GET(actor_index);
+
+		*(short *)(actor+0x41C)= 4;
+		*(short *)(actor+0x420)= 4;
+		*(real_vector3d *)(actor+0x424)= *(const real_vector3d *)(unknown1+0x1C);
+	}
+}
+
+/* 0x001c14b0: if an actor has 2 for its short at 0x504 and something has its
+byte at 0x20, the actor has 4 and 4 for those shorts, the vector that the
+thing has at 0x14 at 0x424, and 1 for its byte at 0x44D */
+void __attribute__((stdcall)) actor_unknown_001c14b0(
+	long actor_index,
+	const byte *unknown1)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	if (*(const short *)(actor+0x504)==2 && unknown1[0x20])
+	{
+		*(short *)(actor+0x41C)= 4;
+		*(short *)(actor+0x420)= 4;
+		*(real_vector3d *)(actor+0x424)= *(const real_vector3d *)(unknown1+0x14);
+		actor[0x44D]= 1;
+	}
+}
+
+/* 0x001c8440: a number is made as many times bigger as the real number at
+0x7C0 of an actor says, if there is an actor, something has the bit 3 of its
+byte at 4 and that real number is more than zero; whether it was */
+boolean actor_unknown_001c8440(
+	long actor_index,
+	float *value,
+	const byte *unknown)
+{
+	if (actor_index!=NONE)
+	{
+		const byte *actor= ACTOR_GET(actor_index);
+
+		if ((unknown[4]&8) && *(const float *)(actor+0x7C0)>0.0f)
+		{
+			*value= *value**(const float *)(actor+0x7C0);
+
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x001e1fd0: one of the numbers that the object of an actor has at 0x218,
+the one that its byte at 0x213 says; NONE if the actor has no object or the
+byte is NONE */
+long actor_get_object_unknown218(
+	long actor_index)
+{
+	long object_index= *(const long *)(ACTOR_GET(actor_index)+0x18);
+
+	if (object_index!=NONE)
+	{
+		const byte *object= ACTOR_OBJECT_GET(object_index);
+		short index= *(const char *)(object+0x213);
+
+		if (index!=NONE)
+		{
+			return *(const long *)(object+0x218+index*4);
+		}
+	}
+
+	return NONE;
+}
