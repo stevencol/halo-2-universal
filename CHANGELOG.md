@@ -2,6 +2,37 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — La física cierra sus repartidores de memoria
+
+Una función (74 bytes) en `physics/havok.c`. De 2195
+funciones se pasa a 2196, el 19,49 % de las del juego (el 11,393 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_00146de0` | `0x00146de0` | `physics/havok.c` |
+
+### Lo que se sabe
+
+- `havok_unknown_00146de0` es lo primero que hace `havok_dispose`: cierra
+  los dos objetos que reparten memoria (llamando a la novena función de
+  cada uno, con un cero) y los olvida. El primero es el del hito 649; la
+  memoria del segundo (`0x47988c`) estaba tomada de la caché de texturas y
+  se le devuelve con `texture_cache_return_memory`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  649.
+- Quién crea el segundo objeto y toma la memoria de la caché de texturas no
+  se ha visto. Qué significa el cero que se pasa al cerrar es una
+  suposición.
+- En este hito se pasaron las pruebas de la función y la de
+  `havok_dispose`. Hay una batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Lo que reparte la segunda memoria de la física
 
 Una función (110 bytes) en `physics/havok.c`. De 2194

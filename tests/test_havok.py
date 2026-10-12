@@ -53,7 +53,7 @@ def run(t) -> None:
                 Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
             ],
             externals={
-                "unknown_00146de0": note,
+                "havok_unknown_00146de0": note,
                 "VirtualFree": lambda harness, arguments, freed=freed: freed,
                 "GetLastError": lambda harness, arguments: 5,
                 "impacts_dispose": note,

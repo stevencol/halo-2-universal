@@ -11,6 +11,7 @@ the file is a guess, by what its functions start.
 #include <stdint.h>
 #include <string.h>
 
+#include "cache/texture_cache.h"
 #include "memory/data.h"
 #include "saved games/game_state.h"
 
@@ -56,7 +57,7 @@ uint32_t GetLastError(void);
 void havok_unknown_001edbc0(void);
 void havok_unknown_00146b30(void);
 void havok_unknown_00146b80(void);
-void unknown_00146de0(void);
+void havok_unknown_00146de0(void);
 void impacts_initialize(void);
 void impacts_dispose(void);
 void havok_components_initialize(void);
@@ -78,14 +79,14 @@ void havok_initialize(
 	havok_unknown_00146b80();
 }
 
-/* 0x001c2600: the second: unknown_00146de0, the memory of the console is
+/* 0x001c2600: the second: havok_unknown_00146de0, the memory of the console is
 given back (VirtualFree; if that fails, the error is asked for), and so are
 the table of the components (data_dispose, which the game has written here)
 and those of the impacts */
 void havok_dispose(
 	void)
 {
-	unknown_00146de0();
+	havok_unknown_00146de0();
 	if (!VirtualFree((byte *)unknown_00479888-((long *)unknown_00479888)[-1], 0, 0x8000))
 	{
 		GetLastError();
@@ -181,5 +182,36 @@ void havok_unknown_00146b80(
 	else
 	{
 		unknown_0047989c= NULL;
+	}
+}
+
+/* 0x004798a0: another thing that gives memory, as unknown_0047989c.
+0x0047988c: the memory that it gives, which was taken from the cache of the
+textures */
+void *unknown_004798a0;
+void *unknown_0047988c;
+
+/* the ninth of the functions of a thing that gives memory: it is closed (the
+number is zero here; a guess is that it says whether to free the thing) */
+typedef void (__attribute__((thiscall)) *havok_memory_close_proc)(void *thing, long unknown);
+
+/* 0x00146de0: the two things that give memory are closed, if they are
+there, and there are none; the memory of the second goes back to the cache
+of the textures. Far from the others too */
+void havok_unknown_00146de0(
+	void)
+{
+	if (unknown_0047989c)
+	{
+		((havok_memory_close_proc)(*(void ***)unknown_0047989c)[8])(unknown_0047989c, 0);
+		unknown_0047989c= NULL;
+		unknown_00510c48= FALSE;
+	}
+	if (unknown_004798a0)
+	{
+		((havok_memory_close_proc)(*(void ***)unknown_004798a0)[8])(unknown_004798a0, 0);
+		unknown_004798a0= NULL;
+		texture_cache_return_memory(unknown_0047988c);
+		unknown_0047988c= NULL;
 	}
 }
