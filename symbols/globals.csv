@@ -513,3 +513,5 @@ address,name,source
 0051eca4,dynamic_firing_point_data,source/ai/ai.c
 0051ecb4,flock_data,source/ai/ai.c
 004f5768,unknown_004f5768,source/ai/ai.c
+00502428,unknown_00502428,source/ai/ai.c
+0050242c,unknown_0050242c,source/ai/ai.c

@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — La IA al empezar un mapa
+
+Dos funciones (unos 380 bytes) en `ai/ai.c`. De 2155
+funciones se pasa a 2157, el 19,15 % de las del juego (el 11,345 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `ai_initialize_for_new_map` | `0x001c79e0` | `ai/ai.c` |
+| `ai_unknown_00295970` | `0x00295970` | `ai/ai.c` |
+
+### Lo que se sabe
+
+- `ai_initialize_for_new_map` es la tercera función de la parte de la IA
+  (antes `unknown_001c79e0`). **En multijugador no hay IA**: solo pone a
+  cero el segundo byte de `ai_globals` y sale. En los demás modos vacía las
+  once tablas de la carpeta (`data_make_valid`), limpia la tabla hash de
+  los puestos de tiro, pone a cero los bloques del estado de la partida y
+  deja ese byte a uno.
+- `ai_unknown_00295970` deja vacío el bloque de `0x24` bytes: cuatro
+  `short` a cero, un número a `NONE` y tres parejas de `short` a cero y
+  número a `NONE`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  635.
+- `unknown_001c8010` (lo primero que hace, y que recorre los jugadores) y
+  `unknown_00200b30` (los escuadrones para un mapa nuevo) no están
+  descompiladas.
+- `ai_unknown_00295970` está lejos de las demás en el juego: puede ser de
+  otro archivo (¿las bandadas?).
+- En este hito se pasaron las pruebas de `test_ai` y `test_ai_new_map`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — La IA arranca y se para: `ai/ai.c`
 
 Tres funciones nuevas (unos 630 bytes) en el archivo nuevo `ai/ai.c`, y una cuarta que ya

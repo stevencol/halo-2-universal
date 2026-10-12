@@ -10,6 +10,7 @@ is a guess, by what its functions start.
 
 #include <string.h>
 
+#include "game/game.h"
 #include "memory/data.h"
 #include "memory/hash_table.h"
 #include "saved games/game_state.h"
@@ -129,4 +130,83 @@ void ai_dispose(
 
 	table->allocation->functions->deallocate(table->allocation, table);
 	actor_firing_position_owners= NULL;
+}
+
+/* 0x00295970: what unknown_005047f4 points to has nothing: four shorts of
+its start are zero and the number at 0xC is NONE, and of its three at the end,
+each has a short that is zero (at 0x12) and a number that is NONE (at 0x18).
+In the game it is far from the others of this file, so it may be of another */
+void ai_unknown_00295970(
+	void)
+{
+	byte *unknown= unknown_005047f4;
+	long index;
+
+	*(short *)unknown= 0;
+	*(short *)(unknown+2)= 0;
+	*(short *)(unknown+8)= 0;
+	*(short *)(unknown+6)= 0;
+	*(long *)(unknown+0xC)= NONE;
+	for (index= 0; index<3; index++)
+	{
+		*(short *)(unknown+0x12+2*index)= 0;
+		*(long *)(unknown+0x18+4*index)= NONE;
+	}
+}
+
+/* the tables of the others of the folder */
+extern struct data_array *actor_data;
+extern struct data_array *swarm_data;
+extern struct data_array *prop_data;
+extern struct data_array *prop_ref_data;
+extern struct data_array *tracking_data;
+extern struct data_array *command_script_data;
+extern struct data_array *joint_command_script_data;
+
+/* 0x00502428, 0x0050242c: two numbers that are NONE in a new map */
+long unknown_00502428;
+long unknown_0050242c;
+
+void unknown_001c8010(void);
+void unknown_00200b30(void);
+void vocalizations_initialize_for_new_map(void);
+
+/* 0x001c79e0: the third of the functions of the part (game.c). In
+multiplayer there are no minds: only the second byte of what the part keeps
+says so. Otherwise all the tables are good to use, with nothing in them, the
+blocks of the state of the game are zeros, and that byte is set */
+void ai_initialize_for_new_map(
+	void)
+{
+	if (main_game_globals->options.game_mode==_game_mode_multiplayer)
+	{
+		ai_globals[1]= FALSE;
+	}
+	else
+	{
+		unknown_001c8010();
+		data_make_valid(actor_data);
+		hash_table_clear(actor_firing_position_owners);
+		data_make_valid(swarm_data);
+		data_make_valid(prop_data);
+		data_make_valid(prop_ref_data);
+		data_make_valid(tracking_data);
+		unknown_00200b30();
+		memset(unknown_005044cc, 0, 0x20);
+		data_make_valid(clump_data);
+		data_make_valid(joint_state_data);
+		data_make_valid(dynamic_firing_point_data);
+		data_make_valid(command_script_data);
+		data_make_valid(joint_command_script_data);
+		unknown_00502428= NONE;
+		unknown_0050242c= NONE;
+		vocalizations_initialize_for_new_map();
+		memset(unknown_005044d0, 0, 0x10);
+		data_make_valid(flock_data);
+		ai_unknown_00295970();
+		*(short *)(ai_globals+0x3E)= 0;
+		*(short *)(ai_globals+0x3C)= 0;
+		memset(ai_globals+0x40, 0, 0x300);
+		ai_globals[1]= TRUE;
+	}
 }

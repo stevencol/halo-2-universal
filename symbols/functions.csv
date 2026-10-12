@@ -427,7 +427,7 @@ address,name,source,arguments,returns,convention
 001c27a0,unknown_001c27a0,,,void
 001c7790,ai_initialize,source/ai/ai.c,,void
 001c79c0,ai_dispose,source/ai/ai.c,,void
-001c79e0,unknown_001c79e0,,,void
+001c79e0,ai_initialize_for_new_map,source/ai/ai.c,,void
 001c7b20,unknown_001c7b20,,,void
 001c7bb0,unknown_001c7bb0,,,void
 001c7f60,unknown_001c7f60,,,void
@@ -2693,3 +2693,6 @@ address,name,source,arguments,returns,convention
 001c7fa0,ai_unknown_001c7fa0,source/ai/ai.c,,void
 00292130,unknown_00292130,,,void
 001a6d80,unknown_001a6d80,,,void
+00295970,ai_unknown_00295970,source/ai/ai.c,,void
+001c8010,unknown_001c8010,,,void
+00200b30,unknown_00200b30,,,void
