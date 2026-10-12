@@ -78,7 +78,7 @@ long players_next_local_player(
 /* 0x004ed39c, of game.c: with it set, the players are left as they are when
 a map goes. 0x001c7fe0: something else that stops with the players */
 extern boolean unknown_004ed39c;
-void game_unknown_001c7fe0(void);
+void ai_unknown_001c7fe0(void);
 
 /* 0x0014b560: the players have no table and nothing kept. It is the second
 of the functions of the part of the game that the players are (game.c) */
@@ -96,7 +96,7 @@ void players_dispose(
 }
 
 /* 0x0014b600: when a map goes, unless unknown_004ed39c is set: the table of
-the players cannot be used, game_unknown_001c7fe0 is done, and what is kept of
+the players cannot be used, ai_unknown_001c7fe0 is done, and what is kept of
 them has no players: nothing for its first number and its two counts, and
 NONE for its two lists of four */
 void players_dispose_from_old_map(
@@ -110,7 +110,7 @@ void players_dispose_from_old_map(
 		return;
 	}
 	player_data->valid= FALSE;
-	game_unknown_001c7fe0();
+	ai_unknown_001c7fe0();
 	globals= (byte *)players_globals;
 	*(long *)globals= 0;
 	*(short *)(globals+8)= 0;
@@ -151,13 +151,13 @@ void players_initialize(
 	}
 }
 
-/* 0x001c7fe0, of game_unknown_001c7fe0.c */
-void game_unknown_001c7fe0(void);
+/* 0x001c7fe0, of ai/ai.c */
+void ai_unknown_001c7fe0(void);
 
 /* 0x0014b580: for a new map, unless unknown_004ed39c is set: what is kept of
 the players is nothing, with NONE for its two lists of four, for the short
 at 0xA4 and for the numbers at 0xAC and 0x98; the table of the players can
-be used and is empty (data_delete_all); and game_unknown_001c7fe0 is done */
+be used and is empty (data_delete_all); and ai_unknown_001c7fe0 is done */
 void players_initialize_for_new_map(
 	void)
 {
@@ -185,6 +185,6 @@ void players_initialize_for_new_map(
 	*(short *)(globals+0x9C)= 0;
 	player_data->valid= TRUE;
 	data_delete_all(player_data);
-	game_unknown_001c7fe0();
+	ai_unknown_001c7fe0();
 	*(long *)((byte *)players_globals+0x98)= NONE;
 }

@@ -2,6 +2,53 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — La IA arranca y se para: `ai/ai.c`
+
+Tres funciones nuevas (unos 630 bytes) en el archivo nuevo `ai/ai.c`, y una cuarta que ya
+estaba hecha y se muda a él. De 2152
+funciones se pasa a 2155, el 19,13 % de las del juego (el 11,342 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `ai_initialize` | `0x001c7790` | `ai/ai.c` |
+| `ai_dispose` | `0x001c79c0` | `ai/ai.c` |
+| `ai_unknown_001c7fa0` | `0x001c7fa0` | `ai/ai.c` |
+
+### Lo que se sabe
+
+- `ai_initialize` es la primera función de la parte de la IA en la tabla
+  de partes de `game.c` (antes `unknown_001c7790`). Pide del estado de la
+  partida `0x374` bytes (`ai_globals`, nombre supuesto) y cuatro bloques
+  más (`0x38`, `0x20`, `0x10` y `0x24` bytes); llama a los arranques de
+  actores, enjambres, lo percibido, escuadrones, guiones de mando y voces
+  (hitos 631 a 634), y crea cuatro tablas más: `"clump"` (20 de `0x50`),
+  `"joint state"` (20 de `0xBC`), `"dynamic firing points"` (15 de `0x484`)
+  y `"flocks"` (10 de `0x28`).
+- `ai_dispose` (antes `unknown_001c79c0`) devuelve la tabla hash de los
+  dueños de los puestos de tiro y la olvida; lo demás es del estado de la
+  partida y no se devuelve.
+- `ai_unknown_001c7fa0` pone a cero los `0x374` bytes y deja las dos cosas
+  de `0x1C` bytes como `ai_unknown_001c7fe0`.
+- **El archivo provisional `game/game_unknown_001c7fe0.c` desaparece**: su
+  función es de este módulo (está entre las de la IA y usa su memoria) y
+  ahora se llama `ai_unknown_001c7fe0`, en `ai/ai.c`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  634.
+- Las cuatro tablas que se crean aquí son seguramente de otros archivos
+  del juego (cuyos arranques el compilador metió dentro); sus variables
+  están en `ai.c` hasta que se sepa de cuáles.
+- `unknown_00292130` y `unknown_001a6d80`, a las que llama, no están
+  descompiladas (la primera hace tablas de senos y cosenos).
+- En este hito se pasaron las pruebas de las tres funciones y
+  `test_levels`, `test_game_parts_612` y `test_game_parts_622`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Los actores crean su tabla
 
 Tres funciones de la IA (unos 200 bytes), en el archivo nuevo `ai/actors.c`.

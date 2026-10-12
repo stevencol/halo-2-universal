@@ -20,7 +20,7 @@ def run(t) -> None:
                 "players_globals": Buffer(random_.randbytes(0x130)),
             },
             externals={
-                "game_unknown_001c7fe0": lambda harness, arguments: (0, ()),
+                "ai_unknown_001c7fe0": lambda harness, arguments: (0, ()),
             },
         )
         t.check("object_looping_sounds_dispose", globals={"unknown_004ed28c": pointer()})

@@ -464,7 +464,7 @@ address,name,source
 004e8c34,unknown_004e8c34,source/game/game_unknown_001552e0.c
 00509434,unknown_00509434,source/game/game_unknown_0002b4a0.c
 00485a80,unknown_00485a80,source/rasterizer/rasterizer.c
-004f55cc,unknown_004f55cc,source/game/game_unknown_001c7fe0.c
+004f55cc,unknown_004f55cc,source/ai/ai.c
 004f9394,script_node_data,source/hs/hs.c
 004f9380,hs_global_data,source/hs/hs.c
 004f55d8,object_list_header_data,source/hs/hs.c
@@ -504,3 +504,12 @@ address,name,source
 004f55f0,actor_data,source/ai/actors.c
 004f93a0,unknown_004f93a0,source/ai/actors.c
 00557c6c,actor_firing_position_owners,source/ai/actors.c
+004f55d0,ai_globals,source/ai/ai.c
+005044cc,unknown_005044cc,source/ai/ai.c
+005044d0,unknown_005044d0,source/ai/ai.c
+005047f4,unknown_005047f4,source/ai/ai.c
+00502420,clump_data,source/ai/ai.c
+00502424,joint_state_data,source/ai/ai.c
+0051eca4,dynamic_firing_point_data,source/ai/ai.c
+0051ecb4,flock_data,source/ai/ai.c
+004f5768,unknown_004f5768,source/ai/ai.c

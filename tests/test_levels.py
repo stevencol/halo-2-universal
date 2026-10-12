@@ -1,4 +1,4 @@
-# source/main/levels.c: what the globals tag says of a level; and game/game_unknown_001c7fe0.c
+# source/main/levels.c: what the globals tag says of a level; and a function of ai/ai.c
 
 import random
 import struct
@@ -35,7 +35,7 @@ def run(t) -> None:
         t.check("levels_get_multiplayer_level", number, globals=tag())
 
     for n in range(200):
-        t.check("game_unknown_001c7fe0", globals={"unknown_004f55cc": Buffer(random_.randbytes(0x48))})
+        t.check("ai_unknown_001c7fe0", globals={"unknown_004f55cc": Buffer(random_.randbytes(0x48))})
 
 
 def run_619(t) -> None:

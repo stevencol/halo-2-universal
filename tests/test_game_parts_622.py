@@ -22,7 +22,7 @@ def run(t) -> None:
                 "player_data": Buffer(random_.randbytes(0x4C)),
                 "players_globals": Buffer(random_.randbytes(0x140)),
             },
-            externals={"data_delete_all": table, "game_unknown_001c7fe0": note},
+            externals={"data_delete_all": table, "ai_unknown_001c7fe0": note},
         )
         t.check(
             "object_looping_sounds_initialize_for_new_map",

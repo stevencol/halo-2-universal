@@ -425,8 +425,8 @@ address,name,source,arguments,returns,convention
 001c2670,unknown_001c2670,,,void
 001c2690,unknown_001c2690,,,void
 001c27a0,unknown_001c27a0,,,void
-001c7790,unknown_001c7790,,,void
-001c79c0,unknown_001c79c0,,,void
+001c7790,ai_initialize,source/ai/ai.c,,void
+001c79c0,ai_dispose,source/ai/ai.c,,void
 001c79e0,unknown_001c79e0,,,void
 001c7b20,unknown_001c7b20,,,void
 001c7bb0,unknown_001c7bb0,,,void
@@ -2646,7 +2646,7 @@ address,name,source,arguments,returns,convention
 001e75d0,unknown_001e75d0,,stack,void,stdcall
 00185a70,breakable_surfaces_unknown_00185a70,source/physics/breakable_surfaces.c,,void
 000b5920,unknown_000b5920,,eax,void
-001c7fe0,game_unknown_001c7fe0,source/game/game_unknown_001c7fe0.c,,void
+001c7fe0,ai_unknown_001c7fe0,source/ai/ai.c,,void
 0019c120,unknown_0019c120,,,void
 0019c6d0,unknown_0019c6d0,,stack stack,void,stdcall
 0019c7e0,unknown_0019c7e0,,stack,void,stdcall
@@ -2690,3 +2690,6 @@ address,name,source,arguments,returns,convention
 0025dd20,actor_firing_position_owner_hash,source/ai/actors.c,stack,long,stdcall
 0025dd30,actor_firing_position_owner_compare,source/ai/actors.c,stack stack,long,stdcall
 001dfae0,actors_initialize,source/ai/actors.c,,void
+001c7fa0,ai_unknown_001c7fa0,source/ai/ai.c,,void
+00292130,unknown_00292130,,,void
+001a6d80,unknown_001a6d80,,,void
