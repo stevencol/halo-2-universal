@@ -44,4 +44,4 @@ def run(t) -> None:
             globals={"unknown_004f93a4": Buffer(random_.randbytes(0x40 + 0x10))},
             externals={"unknown_00210f00": note, "unknown_00210e20": note},
         )
-        t.check("game_unknown_00210db0_dispose_from_old_structure_bsp", externals={"unknown_00210e80": note})
+        t.check("game_unknown_00210db0_dispose_from_old_structure_bsp", externals={"game_unknown_00210db0_unknown_00210e80": note})

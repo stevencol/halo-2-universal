@@ -2,6 +2,36 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Los objetos del tipo 7 olvidan dos datos al irse el bsp
+
+Una función (123 bytes) en `game/game_unknown_00210db0.c`. De 2204
+funciones se pasa a 2205, el 19,57 % de las del juego (el 11,423 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_unknown_00210db0_unknown_00210e80` | `0x00210e80` | `game/game_unknown_00210db0.c` |
+
+### Lo que se sabe
+
+- `game_unknown_00210db0_unknown_00210e80` (antes `unknown_00210e80`) es la
+  que la parte llama cuando se va un bsp: recorre los objetos del tipo 7
+  con el iterador de objetos y a cada uno le pone `NONE` en el `short` de
+  `0x1DA` y cero en el de `0x1DC`.
+- Curiosidad: no usa el puntero que devuelve el iterador, sino que vuelve a
+  buscar el objeto en la tabla por el índice que el iterador deja.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  656.
+- Qué objetos son los del tipo 7 y qué son esos dos `short` no se sabe.
+- En este hito se pasaron las pruebas de la función y `test_game_parts_645`.
+  Hay una batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — La IA se pone a cero y apunta a los jugadores
 
 Dos funciones (298 bytes) en `ai/ai.c`. De 2202

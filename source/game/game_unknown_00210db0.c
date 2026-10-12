@@ -11,6 +11,8 @@ the file is only the address of its first function.
 
 #include <string.h>
 
+#include "memory/data.h"
+#include "objects/objects.h"
 #include "saved games/game_state.h"
 
 /* ---------- constants */
@@ -29,7 +31,7 @@ long *unknown_004f93a4;
 
 void unknown_00210f00(void);
 void unknown_00210e20(void);
-void unknown_00210e80(void);
+void game_unknown_00210db0_unknown_00210e80(void);
 
 /* ---------- code */
 
@@ -56,10 +58,32 @@ void game_unknown_00210db0_initialize_for_new_structure_bsp(
 	unknown_00210e20();
 }
 
-/* 0x00210e10: the sixth: when the structure bsp goes, unknown_00210e80 is
+/* 0x00210e10: the sixth: when the structure bsp goes, game_unknown_00210db0_unknown_00210e80 is
 done */
 void game_unknown_00210db0_dispose_from_old_structure_bsp(
 	void)
 {
-	unknown_00210e80();
+	game_unknown_00210db0_unknown_00210e80();
+}
+
+/* 0x00210e80: each object of the type 7 has NONE for its short at 0x1DA and
+zero for the one at 0x1DC. The object is taken from the table by the index
+that the walk leaves, not from what the walk returns */
+void game_unknown_00210db0_unknown_00210e80(
+	void)
+{
+	struct object_iterator iterator;
+
+	iterator.signature= OBJECT_ITERATOR_SIGNATURE;
+	iterator.type_mask= 0x80;
+	iterator.header_flags= 0;
+	iterator.absolute_index= 0;
+	iterator.index= NONE;
+	while (object_iterator_next(&iterator)!=NULL)
+	{
+		byte *object= (byte *)((struct object_header_datum *)object_header_data->data)[iterator.index&0xFFFF].datum;
+
+		*(short *)(object+0x1DA)= NONE;
+		*(short *)(object+0x1DC)= 0;
+	}
 }
