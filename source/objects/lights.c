@@ -235,8 +235,9 @@ long __attribute__((stdcall)) light_new(
 	return light_index;
 }
 
-/* 0x000c0520: a light of the scenario is made */
-void __attribute__((stdcall)) unknown_000c0520(long placement_index, boolean unknown_mode, const byte *placement);
+/* 0x000c0520: a light of the scenario is made, of a definition (a tag, which
+the game gives in eax) */
+void unknown_000c0520(long definition_index, long placement_index, boolean unknown_mode, const byte *placement);
 
 /* 0x000c09c0: each light that the scenario places (it has them at 0xE8, of
 0x6C bytes each, which start with which of its kinds of light it is, a short)
@@ -254,11 +255,15 @@ void lights_place_scenario_lights(
 		const byte *placement= *(const byte *const *)(scenario+0xEC)+placement_index*0x6C;
 		long type= *(const short *)placement;
 
-		if (type!=NONE && type>=0 && type<*(const long *)(scenario+0xF0) &&
-			*(const long *)(*(const byte *const *)(scenario+0xF4)+type*0x28+4)!=NONE)
+		if (type!=NONE && type>=0 && type<*(const long *)(scenario+0xF0))
 		{
-			unknown_000c0520(placement_index, unknown_mode, placement);
-			scenario= (const byte *)global_scenario;
+			long definition_index= *(const long *)(*(const byte *const *)(scenario+0xF4)+type*0x28+4);
+
+			if (definition_index!=NONE)
+			{
+				unknown_000c0520(definition_index, placement_index, unknown_mode, placement);
+				scenario= (const byte *)global_scenario;
+			}
 		}
 	}
 }

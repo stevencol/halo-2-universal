@@ -28,7 +28,7 @@ def run(t) -> None:
             random_.choice((0, 1, 2, 3, 4, 5, 6)),
             globals={"global_scenario": Buffer(bytes(data), pointers=(0xEC, 0xF4))},
             externals={
-                # the second argument is a byte: the rest of it is whatever was on the stack
-                "unknown_000c0520": lambda harness, arguments: (0, (arguments[0], arguments[1] & 0xFF, arguments[2]))
+                # the third argument is a byte: the rest of it is whatever was on the stack
+                "unknown_000c0520": lambda harness, arguments: (0, (arguments[0], arguments[1], arguments[2] & 0xFF, arguments[3]))
             },
         )

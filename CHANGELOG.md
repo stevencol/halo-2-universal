@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Corrección: el tag que faltaba al colocar las luces del escenario
+
+Sin funciones nuevas: una corrección en `objects/lights.c`. Siguen siendo 2257
+funciones, el 20,04 % de las del juego (el 11,659 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+
+
+### Lo que se sabe
+
+- `unknown_000c0520`, la función que crea cada luz del escenario, recibe el
+  tag de la luz en `eax` además de sus tres argumentos de la pila. En el
+  hito 689 la declaré sin ese argumento, y `lights_place_scenario_lights`
+  no se lo pasaba. La prueba no lo notó porque solo comparaba los
+  argumentos que la declaración decía. Ahora se pasa y se compara.
+- Para que no vuelva a ocurrir hay una herramienta nueva,
+  `build\line_breaking\audit_registers.py`: mira cada función externa
+  declarada desde un commit y avisa si lee un registro antes de escribirlo
+  sin que su declaración lo tenga como argumento. Repasadas con ella todas
+  las externas declaradas en esta sesión (hitos 632 a 690), esta era la
+  única que fallaba.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  690.
+- La herramienta solo mira el primer tramo de cada función (hasta su primer
+  salto o llamada) y da algún aviso falso; no sustituye a leer la función.
+  Las externas declaradas en sesiones anteriores no se han repasado con
+  ella.
+- En este hito se pasó `test_lights_scenario`. Hay una batería completa en
+  marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Una luz nueva en un sitio, o sobre un objeto
 
 Una función (452 bytes) en `objects/lights.c`. De 2256
