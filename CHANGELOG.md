@@ -2,6 +2,39 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — La parte de las dieciséis filas de bits, en cada tic
+
+Una función (87 bytes) en `game/game_unknown_001df460.c`. De 2244
+funciones se pasa a 2245, el 19,93 % de las del juego (el 11,589 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_unknown_001df460_update` | `0x001df500` | `game/game_unknown_001df460.c` |
+
+### Lo que se sabe
+
+- `game_unknown_001df460_update` (antes `unknown_001df500`, llamada por
+  `game_tick`): lo que guarda esta parte empieza con una cuenta de
+  elementos de `0x14` bytes. Cada elemento tiene un temporizador (`+0xE`)
+  que baja en cada tic; al llegar a cero baja un contador de repeticiones
+  (`+0xC`) y, si quedan, el temporizador vuelve a empezar desde `+6`; si no
+  quedan, se llama a `unknown_001df9c0` con el elemento.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  680.
+- Por las 16 filas de 16 bits (cada uno «consigo mismo» al empezar un
+  mapa) esta parte podría ser la de las alianzas entre bandos, y estos
+  elementos los cambios de alianza que duran un tiempo; es una suposición y
+  el archivo conserva su nombre provisional.
+- En este hito se pasaron las pruebas de la función y la de `game_tick`.
+  Hay una batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Un cuerpo entra y sale del mundo de la física
 
 Tres funciones (308 bytes) en `physics/havok.c`. De 2241

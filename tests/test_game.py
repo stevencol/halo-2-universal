@@ -474,7 +474,7 @@ def run_players_and_won(t) -> None:
         "unknown_000c1400",
         "unknown_0015ca10",
         "unknown_0014d8b0",
-        "unknown_001df500",
+        "game_unknown_001df460_update",
         "game_update_lost",
         "game_update_finished",
         "unknown_00226050",

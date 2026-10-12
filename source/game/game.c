@@ -92,7 +92,7 @@ void unknown_00176e40(void);
 void unknown_000c1400(void);
 void unknown_0015ca10(void);
 void unknown_0014d8b0(void);
-void unknown_001df500(void);
+void game_unknown_001df460_update(void);
 void game_update_lost(void);
 void game_update_finished(void);
 void unknown_00226050(void);
@@ -596,7 +596,7 @@ void game_tick(
 		unknown_000c1400();
 		unknown_0015ca10();
 		unknown_0014d8b0();
-		unknown_001df500();
+		game_unknown_001df460_update();
 		game_update_lost();
 		game_update_finished();
 		unknown_00226050();

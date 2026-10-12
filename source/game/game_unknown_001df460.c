@@ -57,3 +57,47 @@ void game_unknown_001df460_initialize_for_new_map(
 		bits[bit>>5]|= 1u<<(bit&31);
 	}
 }
+
+/* 0x001df9c0: what is done with one of the things that are counted down,
+when its time is over for the last time */
+void __attribute__((stdcall)) unknown_001df9c0(byte *element, long unknown2, long unknown3);
+
+/* 0x001df500: each tick of the game (game.c). What the part keeps starts
+with how many things it counts down (a short) and has them from 4, of 0x14
+bytes each: a short at 0xE that goes down each tick while it is above zero;
+when it gets to zero, the short at 0xC goes down, and if that is zero too,
+unknown_001df9c0 is done with the thing; if not, the first short starts
+again from the one at 6. By the sixteen rows of sixteen bits it may be who is
+whose friend, and these the changes of it that last for a time; that is a
+guess */
+void game_unknown_001df460_update(
+	void)
+{
+	byte *unknown= unknown_004f55ec;
+	byte *element= unknown+4;
+	short index;
+
+	for (index= 0; index<*(short *)unknown; index++)
+	{
+		short ticks= *(short *)(element+0xE);
+
+		if (ticks>0)
+		{
+			ticks--;
+			*(short *)(element+0xE)= ticks;
+			if (ticks==0)
+			{
+				if (--*(short *)(element+0xC)==0)
+				{
+					unknown_001df9c0(element, 0, 0);
+					unknown= unknown_004f55ec;
+				}
+				else
+				{
+					*(short *)(element+0xE)= *(short *)(element+6);
+				}
+			}
+		}
+		element+= 0x14;
+	}
+}

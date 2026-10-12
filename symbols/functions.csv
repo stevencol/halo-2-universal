@@ -1437,7 +1437,7 @@ address,name,source,arguments,returns,convention
 000c1400,unknown_000c1400,,,void
 0015ca10,unknown_0015ca10,,,void
 0014d8b0,unknown_0014d8b0,,,void
-001df500,unknown_001df500,,,void
+001df500,game_unknown_001df460_update,source/game/game_unknown_001df460.c,,void
 00138e40,game_update_lost,source/game/game.c,,void
 00138eb0,game_update_finished,source/game/game.c,,void
 00226050,unknown_00226050,,,void
@@ -2776,3 +2776,4 @@ address,name,source,arguments,returns,convention
 00278f00,unknown_00278f00,,,void
 00279740,unknown_00279740,,stack,bool
 001c51c0,unknown_001c51c0,,edi,void
+001df9c0,unknown_001df9c0,,stack stack stack,void,stdcall
