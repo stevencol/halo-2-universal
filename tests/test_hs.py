@@ -23,7 +23,7 @@ def run(t) -> None:
             "hs_dispose",
             globals={
                 "script_node_data": Buffer(bytes(data), pointers=(0x30, 0x4C) if given else (0x4C,)),
-                "unknown_004f9380": Buffer(random_.randbytes(0x4C)),
+                "hs_global_data": Buffer(random_.randbytes(0x4C)),
             },
             mocks=[
                 Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),

@@ -466,7 +466,7 @@ address,name,source
 00485a80,unknown_00485a80,source/rasterizer/rasterizer.c
 004f55cc,unknown_004f55cc,source/game/game_unknown_001c7fe0.c
 004f9394,script_node_data,source/hs/hs.c
-004f9380,unknown_004f9380,source/hs/hs.c
+004f9380,hs_global_data,source/hs/hs.c
 004f55d8,object_list_header_data,source/hs/hs.c
 004f55d4,list_object_data,source/hs/hs.c
 00510c5c,unknown_00510c5c,source/game/game_unknown_00153870.c
@@ -482,3 +482,4 @@ address,name,source
 004c1a5c,unknown_004c1a5c,source/game/game_unknown_0002b4a0.c
 004c1a74,unknown_004c1a74,source/game/game_unknown_0002b4a0.c
 004c1a8c,unknown_004c1a8c,source/game/game_unknown_0002b4a0.c
+004f9384,hs_thread_data,source/hs/hs_runtime.c

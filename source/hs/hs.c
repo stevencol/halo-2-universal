@@ -30,10 +30,11 @@ enum
 /* ---------- globals */
 
 /* 0x004f9394: the nodes of the scripts ("script node"). 0x004f9380,
-three more tables that stop with the scripts: one whose use is not known,
-and the two of the lists of objects (object_lists.c) */
+three more tables that stop with the scripts: the variables of the scripts
+("hs globals", hs_runtime.c) and the two of the lists of objects
+(object_lists.c) */
 struct data_array *script_node_data;
-struct data_array *unknown_004f9380;
+struct data_array *hs_global_data;
 struct data_array *object_list_header_data;
 struct data_array *list_object_data;
 
@@ -49,7 +50,7 @@ void hs_dispose(
 	void)
 {
 	data_dispose(script_node_data);
-	unknown_004f9380->valid= FALSE;
+	hs_global_data->valid= FALSE;
 }
 
 /* 0x0020a7d0: when a map goes: unknown_0020a850; the table of the nodes,
@@ -78,7 +79,7 @@ scripts. 0x002a09c0:
 what the scripts need of the map is made. 0x002090a0: the rest of what is
 done for a map */
 void object_lists_initialize(void);
-void unknown_00208ff0(void);
+void hs_runtime_initialize(void);
 void unknown_002a09c0(void);
 void unknown_002090a0(void);
 
@@ -103,7 +104,7 @@ void hs_initialize(
 	}
 	script_node_data= data;
 	object_lists_initialize();
-	unknown_00208ff0();
+	hs_runtime_initialize();
 	hs_initialize_for_new_map();
 }
 

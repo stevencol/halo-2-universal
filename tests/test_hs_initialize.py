@@ -59,5 +59,5 @@ def run(t) -> None:
                 Mock(lambda call, memory=memory: memory, stack_arguments=1, registers=("ecx",)),
                 Mock(lambda call: 0, stack_arguments=1, registers=("ecx",)),
             ],
-            externals={**others, "object_lists_initialize": note, "unknown_00208ff0": note},
+            externals={**others, "object_lists_initialize": note, "hs_runtime_initialize": note},
         )

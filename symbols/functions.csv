@@ -2660,7 +2660,7 @@ address,name,source,arguments,returns,convention
 0020a850,unknown_0020a850,,,void
 00209290,unknown_00209290,,,void
 001ded00,object_lists_initialize,source/hs/object_lists.c,,void
-00208ff0,unknown_00208ff0,,,void
+00208ff0,hs_runtime_initialize,source/hs/hs_runtime.c,,void
 002a09c0,unknown_002a09c0,,,void
 002090a0,unknown_002090a0,,,void
 00188d60,unknown_00188d60,,,void
@@ -2668,3 +2668,4 @@ address,name,source,arguments,returns,convention
 0016f4b0,unknown_0016f4b0,,esi,void
 00155a30,unknown_00155a30,,stack,void,stdcall
 00296270,unknown_00296270,,eax ebx stack,pointer,stdcall
+0020a1a0,unknown_0020a1a0,,,void

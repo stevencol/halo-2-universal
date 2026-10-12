@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Lo que ejecuta los guiones crea sus tablas
+
+Una función (169 bytes) en el archivo nuevo `hs/hs_runtime.c`. De 2126
+funciones se pasa a 2127, el 18,88 % de las del juego (el 11,300 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `hs_runtime_initialize` | `0x00208ff0` | `hs/hs_runtime.c` |
+
+### Lo que se sabe
+
+- `hs_runtime_initialize` crea las dos tablas de lo que ejecuta los
+  guiones: `"hs thread"` (320 hilos de `0x418` bytes) y `"hs globals"`
+  (3072 variables de 8 bytes).
+- **El propio juego llama «hs» a esto**: el nombre de `hs.c`, que era una
+  suposición por el del primer juego, queda confirmado por los textos.
+- Si hay las dos tablas, la de variables se vacía y se crean en sus sitios
+  las **1053 variables que el juego mismo ofrece a los guiones**
+  (`datum_new_at_absolute_index`, una a una).
+- La tercera tabla sin nombre de `hs.c` ya lo tiene: `hs_global_data`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  626.
+- En este hito se pasaron la prueba de la función (con memoria y sin ella
+  para cada tabla) y todas las de `test_hs…`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Las listas de objetos de los guiones crean sus tablas; tres memorias vuelven a la consola
 
 Dos funciones (unos 210 bytes): una en el archivo nuevo `hs/object_lists.c` y otra en
