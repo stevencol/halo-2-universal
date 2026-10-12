@@ -45,3 +45,43 @@ long unit_get_ultimate_unknown24C(
 
 	return last;
 }
+
+/* an object, from its index */
+#define UNIT_OBJECT_GET(object_index) \
+	((const byte *)((struct object_header_datum *)object_header_data->data)[(object_index)&0xFFFF].datum)
+
+/* 0x000c8860: the byte that a unit keeps at 0x240, as a short */
+short unit_get_unknown240(
+	long unit_index)
+{
+	return (char)UNIT_OBJECT_GET(unit_index)[0x240];
+}
+
+/* 0x000cbf40: the bit 0 of what a unit keeps at 0x134 */
+boolean unit_get_unknown134_bit0(
+	long unit_index)
+{
+	return UNIT_OBJECT_GET(unit_index)[0x134]&1;
+}
+
+/* 0x000ccb80: the number that a unit keeps at 0x238 */
+long unit_get_unknown238(
+	long unit_index)
+{
+	return *(const long *)(UNIT_OBJECT_GET(unit_index)+0x238);
+}
+
+/* 0x000ce020: the byte that a unit keeps at 0x23C, as a short */
+short unit_get_unknown23C(
+	long unit_index)
+{
+	return (char)UNIT_OBJECT_GET(unit_index)[0x23C];
+}
+
+/* 0x000e5670: the byte that an object keeps at 0x3DC. It is far from the
+others in the game: of a kind of unit, it seems, by how far in the byte is */
+long unit_get_unknown3DC(
+	long unit_index)
+{
+	return UNIT_OBJECT_GET(unit_index)[0x3DC];
+}

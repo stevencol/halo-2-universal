@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Siete consultas: cinco de las unidades y dos del bsp
+
+Siete funciones (195 bytes): cinco en `units/units.c` y dos en `scenario/scenario.c`.
+De 2304
+funciones se pasa a 2311, el 20,51 % de las del juego (el 11,789 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unit_get_unknown240` | `0x000c8860` | `units/units.c` |
+| `unit_get_unknown134_bit0` | `0x000cbf40` | `units/units.c` |
+| `unit_get_unknown238` | `0x000ccb80` | `units/units.c` |
+| `unit_get_unknown23C` | `0x000ce020` | `units/units.c` |
+| `unit_get_unknown3DC` | `0x000e5670` | `units/units.c` |
+| `structure_bsp_leaf_get_cluster_index` | `0x0011bff0` | `scenario/scenario.c` |
+| `structure_bsp_get_unknownC4` | `0x001fa7f0` | `scenario/scenario.c` |
+
+### Lo que se sabe
+
+- Las cinco de las unidades (el objeto llega en `eax`) devuelven un dato de
+  la unidad: los bytes de `0x240` y `0x23C`, el número de `0x238`, el bit 0
+  de `0x134` y el byte de `0x3DC`.
+- `structure_bsp_leaf_get_cluster_index` (hoja en `eax`) da la zona de una
+  hoja del bsp, o `NONE` si no hay hoja: es lo mismo que
+  `decals_initialize_for_new_structure_bsp` hacía a mano (hito 666).
+- `structure_bsp_get_unknownC4` da el primer elemento del bloque que el bsp
+  tiene en `0xC4`, o `NULL` si está vacío.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  708.
+- Qué son los datos de la unidad no se sabe; las funciones llevan el
+  desplazamiento por nombre. Todas salieron de `find_small_users.py`.
+- En este hito se pasaron las pruebas de las siete funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Siete funciones pequeñas: la hora de la partida y otras
 
 Siete funciones (182 bytes) en cinco archivos. De 2297

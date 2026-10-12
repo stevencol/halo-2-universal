@@ -205,3 +205,32 @@ void scenario_location_from_point(
 		location->cluster_index= NONE;
 	}
 }
+
+/* 0x0011bff0: the cluster of a leaf of the structure bsp (the short that
+each of its leaves, of 8 bytes, starts with; the leaves are at 0x30 of it),
+or NONE for no leaf. The game has it far from the rest of this file */
+long structure_bsp_leaf_get_cluster_index(
+	long leaf_index)
+{
+	if (leaf_index!=NONE)
+	{
+		return *(const short *)(*(const byte *const *)((const byte *)global_structure_bsp+0x30)+leaf_index*8);
+	}
+
+	return NONE;
+}
+
+/* 0x001fa7f0: the first of what the structure bsp has at 0xC4, or NULL if it
+has none. Far from the rest too */
+void *structure_bsp_get_unknownC4(
+	void)
+{
+	const byte *structure_bsp= global_structure_bsp;
+
+	if (*(const long *)(structure_bsp+0xC4)>0)
+	{
+		return *(void *const *)(structure_bsp+0xC8);
+	}
+
+	return NULL;
+}

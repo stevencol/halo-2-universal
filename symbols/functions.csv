@@ -2837,3 +2837,10 @@ address,name,source,arguments,returns,convention
 00290c50,swarm_iterator_new,source/ai/swarms.c,eax,void
 00268c60,clump_unknown_00268c60,source/ai/ai.c,eax,void
 00240140,game_unknown_00240140,source/game/game.c,,int
+000c8860,unit_get_unknown240,source/units/units.c,eax,short
+000cbf40,unit_get_unknown134_bit0,source/units/units.c,eax,bool
+000ccb80,unit_get_unknown238,source/units/units.c,eax,int
+000ce020,unit_get_unknown23C,source/units/units.c,eax,short
+000e5670,unit_get_unknown3DC,source/units/units.c,eax,int
+0011bff0,structure_bsp_leaf_get_cluster_index,source/scenario/scenario.c,eax,int
+001fa7f0,structure_bsp_get_unknownC4,source/scenario/scenario.c,,pointer
