@@ -243,7 +243,7 @@ address,name,source,arguments,returns,convention
 001c3540,unknown_001c3540,,stack,void
 00068090,simulation_before_save,source/networking/simulation.c,stack,void,stdcall
 0016eff0,unknown_0016eff0,,stack,void
-001e6af0,unknown_001e6af0,,stack,void
+001e6af0,game_unknown_001e6a40_after_load,source/game/game_unknown_001e6a40.c,stack,void,stdcall
 001c3590,unknown_001c3590,,stack,void
 001889d0,unknown_001889d0,,stack,void,stdcall
 00155f10,unknown_00155f10,,stack,void
@@ -255,7 +255,7 @@ address,name,source,arguments,returns,convention
 00067fc0,simulation_after_load,source/networking/simulation.c,stack,void,stdcall
 00043970,unknown_00043970,,stack,void
 0003d380,objects_unknown_0003d380,source/objects/objects.c,stack,void,stdcall
-00155360,unknown_00155360,,stack,void
+00155360,game_unknown_001552e0_after_load,source/game/game_unknown_001552e0.c,stack,void,stdcall
 0024c829,unknown_0024c829,,stack,void
 001c7f80,unknown_001c7f80,,stack,void
 0017d190,unknown_0017d190,,stack,void
@@ -2666,3 +2666,4 @@ address,name,source,arguments,returns,convention
 00188d60,unknown_00188d60,,,void
 0018bb80,unknown_0018bb80,,stack,void,stdcall
 0016f4b0,unknown_0016f4b0,,esi,void
+00155a30,unknown_00155a30,,stack,void,stdcall

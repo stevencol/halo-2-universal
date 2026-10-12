@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 624.
+**Última actualización:** 2026-10-08, al terminar el hito 625.
 
 ## Dónde estamos
 
-- **2122 funciones descompiladas de 11.265: el 18,84 % del juego** (el
+- **2124 funciones descompiladas de 11.265: el 18,85 % del juego** (el
   11,287 % de los bytes de código).
-- Las 2122 están comprobadas contra el ejecutable original: las 1390 del
+- Las 2124 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile what the part at 0x16efb0 does around a loaded state* (ver `git log`).
+- Último hito: *Decompile what two parts of the game do after a state is loaded* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 545 funciones apuntadas pero sin descompilar (las que el código
-  llama); 396 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 544 funciones apuntadas pero sin descompilar (las que el código
+  llama); 395 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 

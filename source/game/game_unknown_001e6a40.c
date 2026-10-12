@@ -73,3 +73,12 @@ void game_unknown_001e6a40_dispose_from_old_map(
 {
 	unknown_001e75d0(1);
 }
+
+/* 0x001e6af0: after a state of the game was loaded: unknown_001e75d0, with
+nothing. It is one of the things that are done then (game_state.c) */
+void GAME_STATE_PROC game_unknown_001e6a40_after_load(
+	unsigned long flags)
+{
+	(void)flags;
+	unknown_001e75d0(0);
+}

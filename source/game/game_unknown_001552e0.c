@@ -46,3 +46,19 @@ void game_unknown_001552e0_dispose_from_old_map(
 	memset(unknown_004e8c38, 0, sizeof(unknown_004e8c38));
 	*unknown_004e8c34= 0;
 }
+
+/* 0x00155380: the part for a new map. 0x00155a30: something that is done
+with the byte */
+void unknown_00155380(void);
+void __attribute__((stdcall)) unknown_00155a30(long unknown);
+
+/* 0x00155360: after a state of the game was loaded: the part is as for a new
+map (unknown_00155380), and unknown_00155a30 is done with its byte. It is
+one of the things that are done then (game_state.c) */
+void GAME_STATE_PROC game_unknown_001552e0_after_load(
+	unsigned long flags)
+{
+	(void)flags;
+	unknown_00155380();
+	unknown_00155a30(*unknown_004e8c34);
+}

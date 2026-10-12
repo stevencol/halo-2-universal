@@ -63,7 +63,7 @@ after it reads it. Their names are not known */
 void GAME_STATE_PROC unknown_001c3540(unsigned long flags);
 void GAME_STATE_PROC simulation_before_save(unsigned long flags); /* of simulation.c */
 void GAME_STATE_PROC unknown_0016eff0(unsigned long flags);
-void GAME_STATE_PROC unknown_001e6af0(unsigned long flags);
+void GAME_STATE_PROC game_unknown_001e6a40_after_load(unsigned long flags);
 void GAME_STATE_PROC unknown_001c3590(unsigned long flags);
 void GAME_STATE_PROC unknown_001889d0(unsigned long flags);
 void GAME_STATE_PROC unknown_00155f10(unsigned long flags);
@@ -74,7 +74,7 @@ void GAME_STATE_PROC unknown_0014b660(unsigned long flags);
 void GAME_STATE_PROC simulation_after_load(unsigned long flags);
 void GAME_STATE_PROC unknown_00043970(unsigned long flags);
 void GAME_STATE_PROC objects_unknown_0003d380(unsigned long flags);
-void GAME_STATE_PROC unknown_00155360(unsigned long flags);
+void GAME_STATE_PROC game_unknown_001552e0_after_load(unsigned long flags);
 void GAME_STATE_PROC unknown_0024c829(unsigned long flags);
 void GAME_STATE_PROC unknown_001c7f80(unsigned long flags);
 void GAME_STATE_PROC unknown_0017d190(unsigned long flags);
@@ -103,7 +103,7 @@ game_state_proc game_state_before_save_procs[NUMBER_OF_GAME_STATE_BEFORE_SAVE_PR
 	unknown_001c3540,
 	simulation_before_save,
 	unknown_0016eff0,
-	unknown_001e6af0
+	game_unknown_001e6a40_after_load
 };
 
 /* 0x0046e330 */
@@ -138,7 +138,7 @@ game_state_proc game_state_after_load_procs[NUMBER_OF_GAME_STATE_AFTER_LOAD_PROC
 	(game_state_proc)no_operation1,
 	(game_state_proc)no_operation1,
 	game_state_set_revert_time,
-	unknown_00155360,
+	game_unknown_001552e0_after_load,
 	unknown_0024c829,
 	unknown_001c3590,
 	unknown_001c7f80,

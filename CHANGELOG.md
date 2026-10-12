@@ -2,6 +2,36 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Lo que dos partes del juego hacen tras cargar una partida
+
+Dos funciones cortas (unos 40 bytes), en dos archivos de `game/`. De 2122
+funciones se pasa a 2124, el 18,85 % de las del juego (el 11,287 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_unknown_001e6a40_after_load` | `0x001e6af0` | `game/game_unknown_001e6a40.c` |
+| `game_unknown_001552e0_after_load` | `0x00155360` | `game/game_unknown_001552e0.c` |
+
+### Lo que se sabe
+
+- Dos entradas más de la lista de lo que se hace tras cargar un estado del
+  juego (`game_state.c`).
+- La parte de `0x1e6a40` llama a `unknown_001e75d0` con un 0 (al irse el
+  mapa la llama con un 1).
+- La parte de `0x1552e0` hace lo mismo que con un mapa nuevo
+  (`unknown_00155380`) y luego llama a `unknown_00155a30` con su byte.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  624.
+- En este hito se pasaron las pruebas de las dos funciones, y
+  `test_game_state` y `test_game_parts_608` enteras.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — La parte de `0x16efb0` antes y después de cargar una partida
 
 Dos funciones cortas de `game/game_unknown_0016efb0.c` (unos 60 bytes). De 2120
