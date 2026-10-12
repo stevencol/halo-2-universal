@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Cambiar lo que se guarda con una cosa en las listas de sus zonas
+
+Dos funciones (147 bytes): una en `memory/reference_lists.c` y otra en
+`objects/cluster_partitions.c`. De 2236
+funciones se pasa a 2238, el 19,87 % de las del juego (el 11,570 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `reference_list_set_extra` | `0x002962e0` | `memory/reference_lists.c` |
+| `cluster_partition_set_extra` | `0x001cadf0` | `objects/cluster_partitions.c` |
+
+### Lo que se sabe
+
+- `reference_list_set_extra` (cabeza de la lista en `eax`, cosa en `ecx`,
+  tabla en `edx`): busca en una lista de referencias el elemento de una
+  cosa y le copia los bytes de más que van detrás de sus `0xC` primeros. Si
+  la cosa no está en la lista no hace nada.
+- `cluster_partition_set_extra` (lista de la cosa en `eax`, estructura en
+  `edi`, datos en `ebx`): hace eso mismo en la lista de cada zona en la que
+  está la cosa.
+- Con el hito 677 queda claro para qué son esos bytes de más: lo que cada
+  zona guarda de la cosa (para las luces no hay ninguno).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  677.
+- Los nombres son supuestos. Quedan del módulo `0x1cab80`, `0x1caed0`,
+  `0x1cafc0` y siguientes.
+- En este hito se pasaron las pruebas de `test_reference_lists*` (cuatro
+  funciones). Hay una batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Meter una cosa en sus zonas del bsp
 
 Dos funciones (474 bytes) en `objects/cluster_partitions.c`. De 2234

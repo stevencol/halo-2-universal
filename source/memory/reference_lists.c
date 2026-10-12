@@ -8,6 +8,9 @@ file is a guess, by the name that the game gives to each table
 */
 
 #include "cseries/cseries.h"
+
+#include <string.h>
+
 #include "memory/data.h"
 #include "saved games/game_state.h"
 
@@ -32,4 +35,29 @@ struct data_array *__attribute__((stdcall)) reference_list_new(
 	}
 
 	return data_new(buffer, maximum_count, size, 0, game_state_allocation);
+}
+
+/* 0x002962e0: in a list of a table of references, the one of a thing gets
+what is kept after it: so many bytes. Nothing is done if the thing is not in
+the list */
+void reference_list_set_extra(
+	long *first_reference_index,
+	long index,
+	struct data_array *references,
+	long extra_size,
+	const void *extra)
+{
+	long reference_index= *first_reference_index;
+
+	while (reference_index!=NONE)
+	{
+		byte *reference= (byte *)references->data+(reference_index&0xFFFF)*references->size;
+
+		if (*(long *)(reference+4)==index)
+		{
+			memcpy(reference+0xC, extra, (unsigned long)extra_size);
+			break;
+		}
+		reference_index= *(long *)(reference+8);
+	}
 }

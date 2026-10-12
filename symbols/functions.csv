@@ -2764,3 +2764,5 @@ address,name,source,arguments,returns,convention
 0014a550,structure_bsp_clusters_from_bit_vector,source/objects/cluster_partitions.c,ebx edi stack stack,short
 001cac60,cluster_partition_add,source/objects/cluster_partitions.c,eax stack stack stack stack stack stack stack stack stack,void,stdcall
 0014a5b0,unknown_0014a5b0,,stack stack stack stack stack,short,stdcall
+002962e0,reference_list_set_extra,source/memory/reference_lists.c,eax ecx edx stack stack,void
+001cadf0,cluster_partition_set_extra,source/objects/cluster_partitions.c,eax edi ebx stack stack,void

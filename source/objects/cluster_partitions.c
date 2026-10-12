@@ -220,3 +220,29 @@ void __attribute__((stdcall)) cluster_partition_add(
 		}
 	}
 }
+
+/* 0x002962e0, of reference_lists.c */
+void reference_list_set_extra(long *first_reference_index, long index, struct data_array *references, long extra_size,
+	const void *extra);
+
+/* 0x001cadf0: what is kept with a thing in the list of each of its clusters
+is changed: so many bytes */
+void cluster_partition_set_extra(
+	long first_reference_index,
+	struct cluster_partition *partition,
+	const void *extra,
+	long index,
+	long extra_size)
+{
+	long reference_index;
+
+	for (reference_index= first_reference_index; reference_index!=NONE; )
+	{
+		struct data_array *references= partition->unknown8;
+		const byte *reference= (const byte *)references->data+(reference_index&0xFFFF)*references->size;
+
+		reference_list_set_extra(&partition->unknown0[*(const short *)(reference+4)], index, partition->unknown4,
+			extra_size, extra);
+		reference_index= *(const long *)(reference+8);
+	}
+}
