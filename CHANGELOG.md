@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — La física antes y después de guardar o cargar la partida
+
+Dos funciones (165 bytes) en `physics/havok.c`. De 2198
+funciones se pasa a 2200, el 19,53 % de las del juego (el 11,405 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_before_save_or_load` | `0x001c3540` | `physics/havok.c` |
+| `havok_after_save_or_load` | `0x001c3590` | `physics/havok.c` |
+
+### Lo que se sabe
+
+- Son las funciones `unknown_001c3540` y `unknown_001c3590` de las listas
+  de `game_state.c`: la primera se llama antes de escribir y antes de leer
+  el estado de la partida, la segunda después de escribirlo y después de
+  leerlo.
+- `havok_before_save_or_load`: sin el bit 0 de sus banderas desmonta la
+  primera mitad de la física y vacía las dos tablas de los impactos; con el
+  bit 1 desmonta la segunda. Cuenta en `0x47f04c` cuántas veces se está en
+  ello.
+- `havok_after_save_or_load` lo deshace en orden inverso y descuenta.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  652.
+- Qué es cada «mitad» depende de siete funciones sin descompilar
+  (`0x1c2b10`, `0x1c29d0`, `0x1c2890`, `0x1c2910`, `0x1c2a10`, `0x1c39c0`
+  y un método de Havok en `0x30be40`).
+- La primera prueba de la segunda función falló por cómo se declaraba ese
+  método: una función externa que en el juego recibe `this` en `ecx` se
+  declara en `source/` como una función normal, y en el CSV sin `thiscall`.
+- En este hito se pasaron las pruebas de las dos funciones y las de
+  `game_state_save` y `game_state_revert`. Hay una batería completa en
+  marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Lo que una criatura guarda de su enjambre empieza vacío
 
 Una función (93 bytes) en `ai/swarms.c`. De 2197

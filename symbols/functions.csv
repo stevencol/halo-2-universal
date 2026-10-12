@@ -240,11 +240,11 @@ address,name,source,arguments,returns,convention
 001384a0,game_options_match,source/game/game.c,stack stack,bool
 00138180,game_options_verify,source/game/game.c,stack,bool
 0011c1b0,scenario_switch_structure_bsp,source/scenario/scenario.c,stack stack,bool
-001c3540,unknown_001c3540,,stack,void
+001c3540,havok_before_save_or_load,source/physics/havok.c,stack,void,stdcall
 00068090,simulation_before_save,source/networking/simulation.c,stack,void,stdcall
 0016eff0,unknown_0016eff0,,stack,void
 001e6af0,game_unknown_001e6a40_after_load,source/game/game_unknown_001e6a40.c,stack,void,stdcall
-001c3590,unknown_001c3590,,stack,void
+001c3590,havok_after_save_or_load,source/physics/havok.c,stack,void,stdcall
 001889d0,unknown_001889d0,,stack,void,stdcall
 00155f10,unknown_00155f10,,stack,void
 00067fb0,simulation_before_load,source/networking/simulation.c,stack,void,stdcall
@@ -2728,3 +2728,10 @@ address,name,source,arguments,returns,convention
 00134980,unknown_00134980,,eax ecx ebx,void
 00134b20,unknown_00134b20,,edi,void
 0028da50,swarm_unknown_0028da50,source/ai/swarms.c,eax,void
+001c2b10,unknown_001c2b10,,,void
+001c29d0,unknown_001c29d0,,,void
+001c2890,unknown_001c2890,,,void
+001c2910,unknown_001c2910,,,void
+001c2a10,unknown_001c2a10,,,void
+001c39c0,unknown_001c39c0,,stack stack,void,stdcall
+0030be40,unknown_0030be40,,ecx stack,void

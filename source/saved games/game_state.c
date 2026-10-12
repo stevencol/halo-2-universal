@@ -60,11 +60,11 @@ enum
 
 /* what the game does before and after it writes its state, and before and
 after it reads it. Their names are not known */
-void GAME_STATE_PROC unknown_001c3540(unsigned long flags);
+void GAME_STATE_PROC havok_before_save_or_load(unsigned long flags);
 void GAME_STATE_PROC simulation_before_save(unsigned long flags); /* of simulation.c */
 void GAME_STATE_PROC unknown_0016eff0(unsigned long flags);
 void GAME_STATE_PROC game_unknown_001e6a40_after_load(unsigned long flags);
-void GAME_STATE_PROC unknown_001c3590(unsigned long flags);
+void GAME_STATE_PROC havok_after_save_or_load(unsigned long flags);
 void GAME_STATE_PROC unknown_001889d0(unsigned long flags);
 void GAME_STATE_PROC unknown_00155f10(unsigned long flags);
 void GAME_STATE_PROC simulation_before_load(unsigned long flags);
@@ -100,7 +100,7 @@ const struct allocation_functions game_state_allocation_functions=
 /* 0x0046e320 */
 game_state_proc game_state_before_save_procs[NUMBER_OF_GAME_STATE_BEFORE_SAVE_PROCS]=
 {
-	unknown_001c3540,
+	havok_before_save_or_load,
 	simulation_before_save,
 	unknown_0016eff0,
 	game_unknown_001e6a40_after_load
@@ -109,13 +109,13 @@ game_state_proc game_state_before_save_procs[NUMBER_OF_GAME_STATE_BEFORE_SAVE_PR
 /* 0x0046e330 */
 game_state_proc game_state_after_save_procs[NUMBER_OF_GAME_STATE_AFTER_SAVE_PROCS]=
 {
-	unknown_001c3590
+	havok_after_save_or_load
 };
 
 /* 0x0046e334 */
 game_state_proc game_state_before_load_procs[NUMBER_OF_GAME_STATE_BEFORE_LOAD_PROCS]=
 {
-	unknown_001c3540,
+	havok_before_save_or_load,
 	game_state_buffer_protect,
 	unknown_001889d0,
 	unknown_00155f10,
@@ -140,7 +140,7 @@ game_state_proc game_state_after_load_procs[NUMBER_OF_GAME_STATE_AFTER_LOAD_PROC
 	game_state_set_revert_time,
 	game_unknown_001552e0_after_load,
 	unknown_0024c829,
-	unknown_001c3590,
+	havok_after_save_or_load,
 	unknown_001c7f80,
 	unknown_0017d190,
 	game_unknown_0016efb0_after_load,

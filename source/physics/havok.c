@@ -215,3 +215,69 @@ void havok_unknown_00146de0(
 		unknown_0047988c= NULL;
 	}
 }
+
+/* 0x0051ebfc and 0x0051ec00, of impacts.c */
+extern struct data_array *impact_data;
+extern struct data_array *impact_array_data;
+
+/* 0x0047f04c: how many times the state of the game is being written or read
+(it starts at NONE in the game). 0x0047f058 and 0x0047f059: whether two
+halves of the physics are there. 0x0047f048: something of Havok's (its world,
+perhaps), and 0x0051ecac something that is given to it */
+long unknown_0047f04c;
+boolean unknown_0047f058;
+boolean unknown_0047f059;
+void *unknown_0047f048;
+void *unknown_0051ecac;
+
+void unknown_001c2b10(void);
+void unknown_001c29d0(void);
+void unknown_001c2890(void);
+void unknown_001c2910(void);
+void unknown_001c2a10(void);
+void __attribute__((stdcall)) unknown_001c39c0(void *unknown, long unknown2);
+/* its first argument is in ecx in the game (a method of a class of Havok's) */
+void unknown_0030be40(void *unknown, void *unknown2);
+
+/* 0x001c3540: before the state of the game is written, and before it is
+read (game_state.c). Without the bit 0 the first half of the physics goes,
+and the impacts with it; with the bit 1 the second goes. What the bits say
+is not known */
+void __attribute__((stdcall)) havok_before_save_or_load(
+	unsigned long flags)
+{
+	if (!(flags&1))
+	{
+		unknown_001c2b10();
+		data_delete_all(impact_data);
+		data_delete_all(impact_array_data);
+		unknown_0047f058= FALSE;
+	}
+	if (flags&2)
+	{
+		unknown_001c29d0();
+		unknown_001c2890();
+		unknown_0047f059= FALSE;
+	}
+	unknown_0047f04c++;
+}
+
+/* 0x001c3590: after the state of the game is written, and after it is read:
+the halves come back, the second first */
+void __attribute__((stdcall)) havok_after_save_or_load(
+	unsigned long flags)
+{
+	unknown_0047f04c--;
+	if (flags&2)
+	{
+		unknown_0047f059= TRUE;
+		unknown_001c2910();
+		unknown_001c39c0(unknown_0047f048, 0);
+		unknown_0030be40(unknown_0047f048, unknown_0051ecac);
+	}
+	if (!(flags&1))
+	{
+		unknown_0047f058= TRUE;
+		unknown_001c2a10();
+	}
+}
