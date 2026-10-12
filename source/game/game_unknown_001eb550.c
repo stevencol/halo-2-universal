@@ -30,6 +30,11 @@ enum
 /* 0x0051e9c4: what it keeps */
 unsigned long *unknown_0051e9c4;
 
+/* 0x004f93ac, 0x004f93b0: the second real and the third, each times a
+number: about 118613 */
+float unknown_004f93ac;
+float unknown_004f93b0;
+
 /* ---------- private code */
 
 /* what it keeps is as it starts: the three reals, no vector, and nothing
@@ -69,4 +74,21 @@ void game_unknown_001eb550_initialize_for_new_map(
 	void)
 {
 	game_unknown_001eb550_reset(unknown_0051e9c4);
+}
+
+/* 0x00211030: the second real and the third are kept apart, each times
+about 118613 (0x47E7AAAC, as the game has it). It is what another part of
+the game does for a new map (game.c) */
+void game_unknown_001eb550_unknown_00211030(
+	void)
+{
+	const float *unknown= (const float *)unknown_0051e9c4;
+	union
+	{
+		unsigned long bits;
+		float value;
+	} scale= {0x47E7AAAC};
+
+	unknown_004f93b0= unknown[2]*scale.value;
+	unknown_004f93ac= unknown[1]*scale.value;
 }

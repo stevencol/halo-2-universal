@@ -162,9 +162,9 @@ void unknown_0014783f(void);
 void unknown_0014784e(void);
 void unknown_00147920(void);
 void unknown_0014b4b0(void);
-void unknown_0014b560(void);
+void players_dispose(void);
 void unknown_0014b580(void);
-void unknown_0014b600(void);
+void players_dispose_from_old_map(void);
 void unknown_0014b6a0(void);
 void unknown_00153870(void);
 void unknown_001538b0(void);
@@ -203,14 +203,14 @@ void breakable_surfaces_unknown_00183f00(void);
 void sound_unknown_00185ab0(void);
 void sound_unknown_00185b00(void);
 void unknown_001887d0(void);
-void unknown_00188850(void);
+void object_looping_sounds_dispose(void);
 void unknown_00188870(void);
 void unknown_00188940(void);
 void unknown_00188980(void);
 void unknown_0019bcd0(void);
 void unknown_0019bd50(void);
 void unknown_0019c190(void);
-void unknown_0019c1d0(void);
+void levels_dispose_from_old_map(void);
 void unknown_001c25a0(void);
 void unknown_001c2600(void);
 void unknown_001c2670(void);
@@ -243,7 +243,7 @@ void game_unknown_0020aee0_initialize_for_new_map(void);
 void unknown_00210db0(void);
 void unknown_00210df0(void);
 void unknown_00210e10(void);
-void unknown_00211030(void);
+void game_unknown_001eb550_unknown_00211030(void);
 void unknown_00215690(void);
 void saved_game_files_dispose_from_old_map(void);
 void unknown_00215730(void);
@@ -351,13 +351,13 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{input_abstraction_initialize, input_abstraction_dispose},
 	{unknown_00155ea0, unknown_00155ed0},
 	{no_operation, no_operation},
-	{unknown_0019bcd0, unknown_0019bd50, unknown_0019c190, unknown_0019c1d0},
+	{unknown_0019bcd0, unknown_0019bd50, unknown_0019c190, levels_dispose_from_old_map},
 	{unknown_00131ff0, unknown_001320b0},
 	{sound_unknown_00225700, no_operation},
 	{game_state_initialize, game_state_dispose, game_state_initialize_for_new_map, no_operation, game_state_set_structure_bsp_index, no_operation},
 	{game_time_initialize, no_operation, game_time_initialize_for_new_map, game_time_dispose_from_old_map},
 	{game_unknown_001df460_initialize, no_operation, game_unknown_001df460_initialize_for_new_map, no_operation},
-	{unknown_0014b4b0, unknown_0014b560, unknown_0014b580, unknown_0014b600, no_operation, no_operation},
+	{unknown_0014b4b0, players_dispose, unknown_0014b580, players_dispose_from_old_map, no_operation, no_operation},
 	{sound_unknown_00185ab0, no_operation, sound_unknown_00185b00, no_operation},
 	{game_unknown_001e6a40_initialize, no_operation, game_unknown_001e6a40_initialize_for_new_map, game_unknown_001e6a40_dispose_from_old_map},
 	{unknown_00157450, no_operation, unknown_001574c0, unknown_00157bb0},
@@ -380,11 +380,11 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{unknown_0017b7b0, contrails_dispose, contrails_initialize_for_new_map, contrails_dispose_from_old_map, unknown_0017b940, no_operation},
 	{unknown_00175b50, effects_dispose, effects_initialize_for_new_map, effects_dispose_from_old_map, unknown_00175d70, no_operation},
 	{no_operation, no_operation, no_operation, no_operation, unknown_0003f2b0, no_operation},
-	{no_operation, no_operation, unknown_00211030, no_operation},
+	{no_operation, no_operation, game_unknown_001eb550_unknown_00211030, no_operation},
 	{sound_classes_initialize, sound_classes_dispose, sound_classes_initialize_for_new_map, sound_classes_dispose_from_old_map},
 	{sound_initialize, sound_dispose, sound_initialize_for_new_map, sound_dispose_from_old_map, sound_initialize_for_new_structure_bsp, no_operation},
 	{game_unknown_0020aee0_initialize, game_unknown_0020aee0_dispose, game_unknown_0020aee0_initialize_for_new_map, no_operation},
-	{unknown_001887d0, unknown_00188850, unknown_00188870, unknown_00188940, unknown_00188980, no_operation},
+	{unknown_001887d0, object_looping_sounds_dispose, unknown_00188870, unknown_00188940, unknown_00188980, no_operation},
 	{sound_unknown_00225a40, no_operation, sound_unknown_00225a80, no_operation},
 	{sound_unknown_002229d0, no_operation, sound_unknown_00222a10, sound_unknown_00222a60},
 	{unknown_00153870, no_operation, unknown_001538b0, no_operation},

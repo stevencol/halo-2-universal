@@ -13608,3 +13608,15 @@ void sound_unknown_00225700(
 	unknown_00502124[3]= 0;
 	unknown_00502124[2]= NONE;
 }
+
+/* 0x00188850: the table of the looping sounds of the objects
+(unknown_004ed28c, which the game calls "object looping sounds") is no more.
+It is the second of the functions of a part of the game (game.c) */
+void object_looping_sounds_dispose(
+	void)
+{
+	if (unknown_004ed28c)
+	{
+		unknown_004ed28c= NULL;
+	}
+}

@@ -371,9 +371,9 @@ address,name,source,arguments,returns,convention
 0014784e,unknown_0014784e,,,void
 00147920,unknown_00147920,,,void
 0014b4b0,unknown_0014b4b0,,,void
-0014b560,unknown_0014b560,,,void
+0014b560,players_dispose,source/game/players.c,,void
 0014b580,unknown_0014b580,,,void
-0014b600,unknown_0014b600,,,void
+0014b600,players_dispose_from_old_map,source/game/players.c,,void
 0014b6a0,unknown_0014b6a0,,,void
 00153870,unknown_00153870,,,void
 001538b0,unknown_001538b0,,,void
@@ -412,14 +412,14 @@ address,name,source,arguments,returns,convention
 00185ab0,sound_unknown_00185ab0,source/sound/sound_manager.c,,void
 00185b00,sound_unknown_00185b00,source/sound/sound_manager.c,,void
 001887d0,unknown_001887d0,,,void
-00188850,unknown_00188850,,,void
+00188850,object_looping_sounds_dispose,source/sound/sound_manager.c,,void
 00188870,unknown_00188870,,,void
 00188940,unknown_00188940,,,void
 00188980,unknown_00188980,,,void
 0019bcd0,unknown_0019bcd0,,,void
 0019bd50,unknown_0019bd50,,,void
 0019c190,unknown_0019c190,,,void
-0019c1d0,unknown_0019c1d0,,,void
+0019c1d0,levels_dispose_from_old_map,source/main/levels.c,,void
 001c25a0,unknown_001c25a0,,,void
 001c2600,unknown_001c2600,,,void
 001c2670,unknown_001c2670,,,void
@@ -456,7 +456,7 @@ address,name,source,arguments,returns,convention
 00210db0,unknown_00210db0,,,void
 00210df0,unknown_00210df0,,,void
 00210e10,unknown_00210e10,,,void
-00211030,unknown_00211030,,,void
+00211030,game_unknown_001eb550_unknown_00211030,source/game/game_unknown_001eb550.c,,void
 00215690,unknown_00215690,,,void
 00215720,saved_game_files_dispose_from_old_map,source/saved games/saved_game_files.c,,void
 00215730,unknown_00215730,,,void
@@ -2646,3 +2646,4 @@ address,name,source,arguments,returns,convention
 001e75d0,unknown_001e75d0,,stack,void,stdcall
 00185a70,breakable_surfaces_unknown_00185a70,source/physics/breakable_surfaces.c,,void
 000b5920,unknown_000b5920,,eax,void
+001c7fe0,unknown_001c7fe0,,,void

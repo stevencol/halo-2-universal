@@ -10,6 +10,7 @@ The players of a game. The names are guesses.
 #include "players.h"
 
 #include "main/main.h"
+#include "memory/data.h"
 #include "networking/transport_security.h"
 
 #include <string.h>
@@ -71,4 +72,54 @@ long players_next_local_player(
 	}
 
 	return NONE;
+}
+
+/* 0x004ed39c, of game.c: with it set, the players are left as they are when
+a map goes. 0x001c7fe0: something else that stops with the players */
+extern boolean unknown_004ed39c;
+void unknown_001c7fe0(void);
+
+/* 0x0014b560: the players have no table and nothing kept. It is the second
+of the functions of the part of the game that the players are (game.c) */
+void players_dispose(
+	void)
+{
+	if (player_data)
+	{
+		player_data= NULL;
+	}
+	if (players_globals)
+	{
+		players_globals= NULL;
+	}
+}
+
+/* 0x0014b600: when a map goes, unless unknown_004ed39c is set: the table of
+the players cannot be used, unknown_001c7fe0 is done, and what is kept of
+them has no players: nothing for its first number and its two counts, and
+NONE for its two lists of four */
+void players_dispose_from_old_map(
+	void)
+{
+	byte *globals;
+	long index;
+
+	if (unknown_004ed39c)
+	{
+		return;
+	}
+	player_data->valid= FALSE;
+	unknown_001c7fe0();
+	globals= (byte *)players_globals;
+	*(long *)globals= 0;
+	*(short *)(globals+8)= 0;
+	*(short *)(globals+0xA)= 0;
+	for (index= 0; index<4; index++)
+	{
+		*(long *)(globals+0xC+index*4)= NONE;
+	}
+	for (index= 0; index<4; index++)
+	{
+		*(long *)(globals+0x1C+index*4)= NONE;
+	}
 }

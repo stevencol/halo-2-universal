@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Cinco funciones cortas: jugadores, sonidos en bucle de los objetos y niveles
+
+Cinco funciones cortas (unos 190 bytes) en cuatro archivos, uno nuevo (`main/levels.c`).
+De 2079
+funciones se pasa a 2084, el 18,50 % de las del juego (el 11,264 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `players_dispose` | `0x0014b560` | `game/players.c` |
+| `players_dispose_from_old_map` | `0x0014b600` | `game/players.c` |
+| `object_looping_sounds_dispose` | `0x00188850` | `sound/sound_manager.c` |
+| `levels_dispose_from_old_map` | `0x0019c1d0` | `main/levels.c` |
+| `game_unknown_001eb550_unknown_00211030` | `0x00211030` | `game/game_unknown_001eb550.c` |
+
+### Lo que se sabe
+
+- Más partes de la tabla de partes del juego, con nombre por el texto de
+  sus tablas de datos: `"players"`, `"object looping sounds"`,
+  `"level handles"` y `"multiplayer level handles"`.
+- `players_dispose` olvida la tabla de los jugadores y lo que se guarda de
+  ellos. `players_dispose_from_old_map`, salvo que `unknown_004ed39c` esté
+  puesto, marca la tabla como no usable y deja lo guardado sin jugadores
+  (dos cuentas a cero y dos listas de cuatro en `NONE`).
+- `object_looping_sounds_dispose` olvida la tabla de los sonidos en bucle
+  de los objetos (`unknown_004ed28c`, que así queda identificada).
+- `levels_dispose_from_old_map` marca como no usables las dos tablas de
+  niveles.
+- `game_unknown_001eb550_unknown_00211030` guarda aparte el segundo y el
+  tercer real de la parte del hito 609, cada uno multiplicado por unos
+  118 613.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  611.
+- Cuál de las dos tablas de niveles es cuál no se sabe.
+- En este hito se pasaron las pruebas de las cinco funciones, y `test_game`
+  y `test_players` enteras.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Efectos, estelas y calcomanías: carpeta nueva con siete funciones cortas
 
 Siete funciones cortas (unos 330 bytes) en tres archivos de la carpeta nueva `effects/`.
