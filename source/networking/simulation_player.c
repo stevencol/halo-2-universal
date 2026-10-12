@@ -12,6 +12,7 @@ file is a guess, and so are the names of its functions.
 
 #include "game/game.h"
 #include "game/player_action.h"
+#include "objects/objects.h"
 #include "networking/simulation_view.h"
 #include "networking/simulation_world.h"
 
@@ -162,4 +163,69 @@ void __attribute__((stdcall)) simulation_player_actions_add(
 			SIMULATION_PLAYER_ACTIONS_OTHER_SIZE);
 		*(unsigned long *)(actions+SIMULATION_PLAYER_ACTIONS_OTHER_MASK_OFFSET)|= 1<<player_index;
 	}
+}
+
+/* 0x001a1d55: a byte for a unit. 0x00082d20: the rest of what a player does
+is made small, for a unit or for none */
+byte __attribute__((stdcall)) unknown_001a1d55(long unit_index);
+void __attribute__((stdcall)) unknown_00082d20(long unit_index, const byte *unknown34, byte *packed);
+
+/* 0x000823d0: what a player does is made small for a message, 0x34 bytes
+that start clear. Sixteen bytes go as they are; of its bits, the first two
+and those of 0x800 and 0x4000 are four bits. With a unit, the four bytes
+and the byte that the unit has go too, and what unknown_001a1d55 says of
+it; with none, NONE. The four bytes that the player has take the place of
+those of the unit if the first two of them are the same, and its two bytes
+that of the unit's unless they are NONE; and of the third and fourth of
+the four, the fourth is NONE if it is the same as the third. Then the rest
+(unknown_00082d20) */
+void __attribute__((stdcall)) simulation_player_action_pack(
+	byte *packed,
+	const byte *action,
+	long unit_index)
+{
+	unsigned long flags;
+	byte *packed_flags= packed+SIMULATION_PLAYER_PACKED_ACTION_FLAGS_OFFSET;
+
+	memset(packed, 0, SIMULATION_PLAYER_PACKED_ACTION_SIZE);
+	memcpy(packed, action+SIMULATION_PLAYER_ACTION_UNKNOWN4_OFFSET, SIMULATION_PLAYER_ACTION_UNKNOWN4_SIZE);
+	flags= *(const unsigned long *)(action+SIMULATION_PLAYER_ACTION_FLAGS_OFFSET);
+	*packed_flags= (byte)((*packed_flags&~0xF) | (flags&1 ? 1 : 0) | (flags&2 ? 2 : 0) | (flags&0x800 ? 4 : 0) |
+		(flags&0x4000 ? 8 : 0));
+	if (unit_index!=NONE)
+	{
+		const struct object_header_datum *header=
+			(const struct object_header_datum *)object_header_data->data+(unit_index&0xFFFF);
+		const byte *unit= (const byte *)header->datum;
+
+		*(long *)(packed+SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN12_OFFSET)=
+			*(const long *)(unit+SIMULATION_PLAYER_UNIT_UNKNOWN210_OFFSET);
+		*(short *)(packed+SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN16_OFFSET)=
+			*(const signed char *)(unit+SIMULATION_PLAYER_UNIT_UNKNOWN240_OFFSET);
+		packed[SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN32_OFFSET]= unknown_001a1d55(unit_index);
+	}
+	else
+	{
+		*(short *)(packed+SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN12_OFFSET)= NONE;
+		packed[SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN14_OFFSET]= 0xFF;
+		packed[SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN15_OFFSET]= 0xFF;
+		*(short *)(packed+SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN16_OFFSET)= NONE;
+	}
+	if (*(const short *)(action+SIMULATION_PLAYER_ACTION_UNKNOWN1E_OFFSET)==
+		*(const short *)(packed+SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN12_OFFSET))
+	{
+		*(long *)(packed+SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN12_OFFSET)=
+			*(const long *)(action+SIMULATION_PLAYER_ACTION_UNKNOWN1E_OFFSET);
+	}
+	if (*(const short *)(action+SIMULATION_PLAYER_ACTION_UNKNOWN24_OFFSET)!=NONE)
+	{
+		*(short *)(packed+SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN16_OFFSET)=
+			*(const short *)(action+SIMULATION_PLAYER_ACTION_UNKNOWN24_OFFSET);
+	}
+	if (packed[SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN14_OFFSET]!=0xFF &&
+		packed[SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN14_OFFSET]==packed[SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN15_OFFSET])
+	{
+		packed[SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN15_OFFSET]= 0xFF;
+	}
+	unknown_00082d20(unit_index, action+SIMULATION_PLAYER_ACTION_UNKNOWN34_OFFSET, packed);
 }

@@ -66,7 +66,7 @@ def run(t) -> None:
             Buffer(bytes(data), pointers=tuple(pointers)),
             mask,
             globals={"player_data": players},
-            externals={"unknown_000823d0": packs(0, 1)},
+            externals={"simulation_player_action_pack": packs(0, 1)},
         )
         t.check(
             "simulation_world_pass_other_actions",

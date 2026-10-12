@@ -2173,7 +2173,6 @@ boolean simulation_world_become_authority(
 /* 0x000823d0: what a player does, made small for a message, with a number
 of the player. 0x000824d0: the same for one of the other things, by its
 object */
-void __attribute__((stdcall)) unknown_000823d0(byte *packed, const byte *actions, long unknown2c);
 void __attribute__((stdcall)) unknown_000824d0(const byte *actions, byte *packed, long object_index);
 
 /* what a view of the fourth kind keeps to send takes one more thing, at a
@@ -2194,7 +2193,7 @@ static inline __attribute__((always_inline)) void simulation_world_view_set_acti
 
 /* 0x00069a00: what the players did in a tick is passed on to the other
 consoles. For each player that the thing has and that a mask names, what it
-did is made small (unknown_000823d0); and if the player of the game has
+did is made small (simulation_player_action_pack); and if the player of the game has
 something at 0x2C, each view of the fourth kind that is not of the console
 of that player takes it, at the place of the player */
 void __attribute__((stdcall)) simulation_world_pass_player_actions(
@@ -2214,7 +2213,7 @@ void __attribute__((stdcall)) simulation_world_pass_player_actions(
 				(*(const unsigned long *)(player_data_+SIMULATION_WORLD_PLAYER_INDEX_OFFSET)&0xFFFF)*SIMULATION_PLAYER_DATUM_SIZE;
 			byte packed[SIMULATION_VIEW_ACTION_SIZE];
 
-			unknown_000823d0(packed, (const byte *)actions+index*SIMULATION_PLAYER_ACTIONS_SIZE,
+			simulation_player_action_pack(packed, (const byte *)actions+index*SIMULATION_PLAYER_ACTIONS_SIZE,
 				*(const long *)(datum+SIMULATION_PLAYER_DATUM_UNKNOWN2C_OFFSET));
 			if (*(const long *)(datum+SIMULATION_PLAYER_DATUM_UNKNOWN2C_OFFSET)!=NONE)
 			{

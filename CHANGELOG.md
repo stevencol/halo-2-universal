@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Lo que hace un jugador se empaqueta para un mensaje
+
+Una función de `networking/simulation_player.c` (249 bytes). De 1981
+funciones se pasa a 1982, el 17,59 % de las del juego (el 11,095 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_player_action_pack` | `0x000823d0` | `networking/simulation_player.c` |
+
+### Lo que se sabe
+
+- `simulation_player_action_pack` (antes `unknown_000823d0`, la que usa
+  `simulation_world_pass_player_actions`) convierte los `0x5C` bytes de lo
+  que hace un jugador en los `0x34` que viajan:
+  - dieciséis bytes pasan tal cual;
+  - de sus bits quedan cuatro: los dos primeros y los de `0x800` y
+    `0x4000`;
+  - **con una unidad**, van cuatro bytes y un byte de la unidad (`0x210` y
+    `0x240`) y lo que `unknown_001a1d55` dice de ella; sin unidad, `NONE`;
+  - los cuatro bytes del jugador sustituyen a los de la unidad si los dos
+    primeros coinciden, y sus dos bytes a los de la unidad si no son `NONE`;
+  - el resto lo empaqueta `unknown_00082d20`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  588.
+- Qué son esos campos (probablemente armas y granadas, por la forma) no
+  se ha comprobado: los nombres son solo sus posiciones.
+- La pareja para los otros objetos (`unknown_000824d0`) hace cuentas con
+  ángulos en la pila de reales y queda pendiente.
+- En este hito se pasaron la prueba de la función y
+  `test_simulation_world_pass`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Lo que hacen los jugadores y los demás objetos pasa a las vistas del cuarto tipo
 
 Dos funciones de `networking/simulation_world.c` (566 bytes). De 1979

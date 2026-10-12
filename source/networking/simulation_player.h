@@ -53,7 +53,27 @@ enum
 	are, each if there is one */
 	SIMULATION_PLAYER_UPDATE_INDEX_OFFSET= 0x4,
 	SIMULATION_PLAYER_UPDATE_ACTION_OFFSET= 0x44,
-	SIMULATION_PLAYER_UPDATE_OTHER_OFFSET= 0x4C
+	SIMULATION_PLAYER_UPDATE_OTHER_OFFSET= 0x4C,
+	/* of what a player does (0x5C bytes): bits, sixteen bytes that go as
+	they are, four bytes and two that take the place of those of the unit
+	of the player, and what is made small apart. Of what it is made into
+	(0x34 bytes): the sixteen bytes, four bits, the four bytes (the third
+	and fourth of them, NONE when they are the same), the two, and a byte
+	of the unit. Of a unit: its four bytes and a byte */
+	SIMULATION_PLAYER_ACTION_FLAGS_OFFSET= 0x0,
+	SIMULATION_PLAYER_ACTION_UNKNOWN4_OFFSET= 0x4,
+	SIMULATION_PLAYER_ACTION_UNKNOWN4_SIZE= 0x10,
+	SIMULATION_PLAYER_ACTION_UNKNOWN1E_OFFSET= 0x1E,
+	SIMULATION_PLAYER_ACTION_UNKNOWN24_OFFSET= 0x24,
+	SIMULATION_PLAYER_ACTION_UNKNOWN34_OFFSET= 0x34,
+	SIMULATION_PLAYER_PACKED_ACTION_FLAGS_OFFSET= 0x10,
+	SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN12_OFFSET= 0x12,
+	SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN14_OFFSET= 0x14,
+	SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN15_OFFSET= 0x15,
+	SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN16_OFFSET= 0x16,
+	SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN32_OFFSET= 0x32,
+	SIMULATION_PLAYER_UNIT_UNKNOWN210_OFFSET= 0x210,
+	SIMULATION_PLAYER_UNIT_UNKNOWN240_OFFSET= 0x240
 };
 
 /* ---------- prototypes/SIMULATION_PLAYER.C */
@@ -61,6 +81,7 @@ enum
 void __attribute__((stdcall)) simulation_player_new(byte *player, const long *identifier, const word *machine,
 	byte *world, long unknown0, long index, long state);
 boolean __attribute__((stdcall)) simulation_player_get_action(byte *player, byte *action);
+void __attribute__((stdcall)) simulation_player_action_pack(byte *packed, const byte *action, long unit_index);
 
 /* ---------- globals */
 
