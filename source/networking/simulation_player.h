@@ -73,7 +73,21 @@ enum
 	SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN16_OFFSET= 0x16,
 	SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN32_OFFSET= 0x32,
 	SIMULATION_PLAYER_UNIT_UNKNOWN210_OFFSET= 0x210,
-	SIMULATION_PLAYER_UNIT_UNKNOWN240_OFFSET= 0x240
+	SIMULATION_PLAYER_UNIT_UNKNOWN240_OFFSET= 0x240,
+	/* more of what it is made into: four bytes and two more that are each
+	a bit of what the player does, two reals, a number that is made into
+	another, and a number. And where those go in what the player does */
+	SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN18_OFFSET= 0x18,
+	SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN20_OFFSET= 0x20,
+	SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN24_OFFSET= 0x24,
+	SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN28_OFFSET= 0x28,
+	SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN2C_OFFSET= 0x2C,
+	SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN30_OFFSET= 0x30,
+	SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN31_OFFSET= 0x31,
+	SIMULATION_PLAYER_ACTION_UNKNOWN38_OFFSET= 0x38,
+	SIMULATION_PLAYER_ACTION_UNKNOWN50_OFFSET= 0x50,
+	SIMULATION_PLAYER_ACTION_UNKNOWN54_OFFSET= 0x54,
+	SIMULATION_PLAYER_ACTION_UNKNOWN58_OFFSET= 0x58
 };
 
 /* ---------- prototypes/SIMULATION_PLAYER.C */
@@ -82,6 +96,7 @@ void __attribute__((stdcall)) simulation_player_new(byte *player, const long *id
 	byte *world, long unknown0, long index, long state);
 boolean __attribute__((stdcall)) simulation_player_get_action(byte *player, byte *action);
 void __attribute__((stdcall)) simulation_player_action_pack(byte *packed, const byte *action, long unit_index);
+void simulation_player_action_unpack(const byte *packed, byte *action);
 
 /* ---------- globals */
 

@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Lo que hace un jugador se reconstruye desde un mensaje
+
+Una función de `networking/simulation_player.c` (338 bytes), la inversa de la del hito 589.
+De 1982
+funciones se pasa a 1983, el 17,60 % de las del juego (el 11,106 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_player_action_unpack` | `0x000825e0` | `networking/simulation_player.c` |
+
+### Lo que se sabe
+
+- `simulation_player_action_unpack` (antes `unknown_000825e0`) reconstruye
+  los `0x5C` bytes de lo que hace un jugador a partir de los `0x34` de un
+  mensaje. Empieza de cero (`player_action_clear`) y deshace lo que hace
+  `simulation_player_action_pack`: los dieciséis bytes, los cuatro bits,
+  los cuatro bytes y los dos.
+- **Seis bytes del mensaje son cada uno un bit** de lo que hace el jugador:
+  `0x40000`, `0x80000`, `0x800000`, `0x1000000`, `0x40000000` y
+  `0x80000000`. Esos los empaqueta `unknown_00082d20`, que sigue pendiente.
+- Si uno de los dos reales del mensaje es mayor que cero y el número que
+  los acompaña es uno que el juego conoce (`unknown_000a58d0`), ese número,
+  el siguiente y los dos reales pasan también.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  589.
+- Qué son los campos no se ha comprobado; los nombres son sus posiciones.
+- En este hito se pasaron la prueba de la función y todas las de
+  `test_simulation_player…`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Lo que hace un jugador se empaqueta para un mensaje
 
 Una función de `networking/simulation_player.c` (249 bytes). De 1981

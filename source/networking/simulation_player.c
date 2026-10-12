@@ -23,7 +23,6 @@ file is a guess, and so are the names of its functions.
 /* 0x0008b7f0: what a view has for the players gives what one of them does,
 packed; whether it has it. 0x000825e0: that is unpacked */
 boolean __attribute__((stdcall)) simulation_player_actions_take(long unknown0, byte *unknown5098, byte *packed);
-void unknown_000825e0(const byte *packed, byte *action);
 
 /* ---------- globals */
 
@@ -67,7 +66,7 @@ void __attribute__((stdcall)) simulation_player_new(
 is something. One in its fifth state or its sixth has it from the view of
 its console (the one that the thing has with its bytes, or the first of the
 first kind or the third in a thing that follows another): if that has
-something of it (simulation_player_actions_take), it is unpacked (unknown_000825e0) and
+something of it (simulation_player_actions_take), it is unpacked (simulation_player_action_unpack) and
 kept, with the time of the game. Then what is kept is given, if the player
 is not in its third state, something came, less time than the game has for
 it has gone by since, and it is good (player_action_valid) */
@@ -101,7 +100,7 @@ boolean __attribute__((stdcall)) simulation_player_get_action(
 			{
 				byte unpacked[PLAYER_ACTION_SIZE];
 
-				unknown_000825e0(packed, unpacked);
+				simulation_player_action_unpack(packed, unpacked);
 				memcpy(player+SIMULATION_PLAYER_ACTION_OFFSET, unpacked, PLAYER_ACTION_SIZE);
 				*(unsigned long *)(player+SIMULATION_PLAYER_ACTION_TIME_OFFSET)= game_time_globals->time;
 			}
@@ -228,4 +227,70 @@ void __attribute__((stdcall)) simulation_player_action_pack(
 		packed[SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN15_OFFSET]= 0xFF;
 	}
 	unknown_00082d20(unit_index, action+SIMULATION_PLAYER_ACTION_UNKNOWN34_OFFSET, packed);
+}
+
+/* 0x000a58d0: a number that came in a message, as the one that the game has
+for it; NONE if it has none */
+long unknown_000a58d0(long unknown);
+
+/* a bit of what a player does is set or clear */
+static inline __attribute__((always_inline)) void simulation_player_action_set_flag(
+	byte *action,
+	unsigned long flag,
+	boolean set)
+{
+	unsigned long flags= *(const unsigned long *)(action+SIMULATION_PLAYER_ACTION_FLAGS_OFFSET);
+
+	*(unsigned long *)(action+SIMULATION_PLAYER_ACTION_FLAGS_OFFSET)= set ? flags|flag : flags&~flag;
+}
+
+/* 0x000825e0: what a player does is made whole again from the 0x34 bytes
+of a message: the inverse of simulation_player_action_pack. It starts as
+nothing (player_action_clear); the sixteen bytes, the four bits, the four
+bytes and the two are put back; six bytes are each a bit (0x40000, 0x80000,
+0x800000, 0x1000000, 0x40000000 and 0x80000000); and the last byte goes to
+0x58. If one of the two reals is more than nothing and the number with them
+is one that the game has (unknown_000a58d0), that, the number after it and
+the two reals go too */
+void simulation_player_action_unpack(
+	const byte *packed,
+	byte *action)
+{
+	byte packed_flags;
+
+	player_action_clear(action);
+	memcpy(action+SIMULATION_PLAYER_ACTION_UNKNOWN4_OFFSET, packed, SIMULATION_PLAYER_ACTION_UNKNOWN4_SIZE);
+	packed_flags= packed[SIMULATION_PLAYER_PACKED_ACTION_FLAGS_OFFSET];
+	simulation_player_action_set_flag(action, 1, (packed_flags&1)!=0);
+	simulation_player_action_set_flag(action, 2, (packed_flags&2)!=0);
+	simulation_player_action_set_flag(action, 0x800, (packed_flags&4)!=0);
+	simulation_player_action_set_flag(action, 0x4000, (packed_flags&8)!=0);
+	*(long *)(action+SIMULATION_PLAYER_ACTION_UNKNOWN1E_OFFSET)=
+		*(const long *)(packed+SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN12_OFFSET);
+	*(short *)(action+SIMULATION_PLAYER_ACTION_UNKNOWN24_OFFSET)=
+		*(const short *)(packed+SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN16_OFFSET);
+	simulation_player_action_set_flag(action, 0x40000, packed[SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN18_OFFSET]!=0);
+	simulation_player_action_set_flag(action, 0x80000, packed[SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN18_OFFSET+1]!=0);
+	simulation_player_action_set_flag(action, 0x800000, packed[SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN18_OFFSET+2]!=0);
+	simulation_player_action_set_flag(action, 0x1000000, packed[SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN18_OFFSET+3]!=0);
+	if ((*(const real *)(packed+SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN20_OFFSET)>0.0f ||
+			*(const real *)(packed+SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN24_OFFSET)>0.0f) &&
+		*(const long *)(packed+SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN28_OFFSET)!=NONE)
+	{
+		long unknown= unknown_000a58d0(*(const long *)(packed+SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN28_OFFSET));
+
+		if (unknown!=NONE)
+		{
+			*(long *)(action+SIMULATION_PLAYER_ACTION_UNKNOWN34_OFFSET)= unknown;
+			*(long *)(action+SIMULATION_PLAYER_ACTION_UNKNOWN38_OFFSET)=
+				*(const long *)(packed+SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN2C_OFFSET);
+			*(long *)(action+SIMULATION_PLAYER_ACTION_UNKNOWN50_OFFSET)=
+				*(const long *)(packed+SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN20_OFFSET);
+			*(long *)(action+SIMULATION_PLAYER_ACTION_UNKNOWN54_OFFSET)=
+				*(const long *)(packed+SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN24_OFFSET);
+		}
+	}
+	simulation_player_action_set_flag(action, 0x40000000, packed[SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN30_OFFSET]!=0);
+	simulation_player_action_set_flag(action, 0x80000000, packed[SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN31_OFFSET]!=0);
+	action[SIMULATION_PLAYER_ACTION_UNKNOWN58_OFFSET]= packed[SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN32_OFFSET];
 }
