@@ -443,9 +443,9 @@ address,name,source,arguments,returns,convention
 001ec470,game_unknown_001ec420_dispose,source/game/game_unknown_001ec420.c,,void
 001ec480,game_unknown_001ec420_initialize_for_new_map,source/game/game_unknown_001ec420.c,,void
 001ec4b0,game_unknown_001ec420_dispose_from_old_map,source/game/game_unknown_001ec420.c,,void
-001fb2f0,unknown_001fb2f0,,,void
-001fb330,unknown_001fb330,,,void
-001fb350,unknown_001fb350,,,void
+001fb2f0,recorded_animations_initialize,source/game/recorded_animations.c,,void
+001fb330,recorded_animations_initialize_for_new_map,source/game/recorded_animations.c,,void
+001fb350,recorded_animations_dispose_from_old_map,source/game/recorded_animations.c,,void
 0020a700,hs_initialize,source/hs/hs.c,,void
 0020a750,hs_initialize_for_new_map,source/hs/hs.c,,void
 0020a7d0,hs_dispose_from_old_map,source/hs/hs.c,,void
@@ -2669,3 +2669,12 @@ address,name,source,arguments,returns,convention
 00155a30,unknown_00155a30,,stack,void,stdcall
 00296270,unknown_00296270,,eax ebx stack,pointer,stdcall
 0020a1a0,unknown_0020a1a0,,,void
+000c3a40,liquid_initialize,source/objects/liquid.c,,void
+000c3a80,liquid_initialize_for_new_map,source/objects/liquid.c,,void
+000c3aa0,liquid_dispose_from_old_map,source/objects/liquid.c,,void
+00115d10,antenna_initialize,source/objects/antenna.c,,void
+00115d50,antenna_initialize_for_new_map,source/objects/antenna.c,,void
+00115d70,antenna_dispose_from_old_map,source/objects/antenna.c,,void
+00116a10,cloth_initialize,source/objects/cloth.c,,void
+00116a50,cloth_initialize_for_new_map,source/objects/cloth.c,,void
+00116a70,cloth_dispose_from_old_map,source/objects/cloth.c,,void

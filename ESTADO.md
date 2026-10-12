@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 628.
+**Última actualización:** 2026-10-08, al terminar el hito 629.
 
 ## Dónde estamos
 
-- **2128 funciones descompiladas de 11.265: el 18,89 % del juego** (el
-  11,300 % de los bytes de código).
-- Las 2128 están comprobadas contra el ejecutable original: las 1390 del
+- **2140 funciones descompiladas de 11.265: el 19,00 % del juego** (el
+  11,302 % de los bytes de código).
+- Las 2140 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how the particles make their four tables* (ver `git log`).
+- Último hito: *Decompile four modules with the same three functions: liquid, antenna, cloth, recorded animations* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 542 funciones apuntadas pero sin descompilar (las que el código
-  llama); 393 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 539 funciones apuntadas pero sin descompilar (las que el código
+  llama); 390 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 

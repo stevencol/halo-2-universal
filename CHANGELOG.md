@@ -2,6 +2,57 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Cuatro módulos con el mismo trío: líquido, antena, tela y animaciones grabadas
+
+Doce funciones cortas (unos 430 bytes) en cuatro archivos nuevos. De 2128
+funciones se pasa a 2140, el 19,00 % de las del juego (el 11,302 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `liquid_initialize` | `0x000c3a40` | `objects/liquid.c` |
+| `liquid_initialize_for_new_map` | `0x000c3a80` | `objects/liquid.c` |
+| `liquid_dispose_from_old_map` | `0x000c3aa0` | `objects/liquid.c` |
+| `antenna_initialize` | `0x00115d10` | `objects/antenna.c` |
+| `antenna_initialize_for_new_map` | `0x00115d50` | `objects/antenna.c` |
+| `antenna_dispose_from_old_map` | `0x00115d70` | `objects/antenna.c` |
+| `cloth_initialize` | `0x00116a10` | `objects/cloth.c` |
+| `cloth_initialize_for_new_map` | `0x00116a50` | `objects/cloth.c` |
+| `cloth_dispose_from_old_map` | `0x00116a70` | `objects/cloth.c` |
+| `recorded_animations_initialize` | `0x001fb2f0` | `game/recorded_animations.c` |
+| `recorded_animations_initialize_for_new_map` | `0x001fb330` | `game/recorded_animations.c` |
+| `recorded_animations_dispose_from_old_map` | `0x001fb350` | `game/recorded_animations.c` |
+
+### Lo que se sabe
+
+- Una herramienta nueva, `build\line_breaking\find_data_new.py`, lista
+  **todos los sitios donde el juego crea una tabla de datos**, con el nombre
+  que le da y la variable donde la guarda: 55 sitios, que son un mapa de
+  los módulos del juego con nombre seguro.
+- De esa lista salen cuatro módulos con exactamente las mismas tres
+  funciones (crear la tabla, vaciarla con un mapa nuevo, dejar de usarla al
+  irse el mapa):
+  - `"liquid"`: 64 de `0x110` bytes;
+  - `"antenna"`: 12 de `0x2BC`;
+  - `"cloth"`: 8 de `0x1258`;
+  - `"recorded animations"`: 1 de `0xA0` (esta era una parte sin nombre de
+    la tabla de `game.c`).
+- Líquido, antena y tela son las tres clases de cosa que cuelga de un
+  objeto: la tabla de tres entradas que `game_unknown_000d4db0` recorre
+  (hito 563).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  628.
+- Los nombres de archivo salen de los textos de las tablas; la carpeta
+  (`objects/`, `game/`) es una suposición.
+- En este hito se pasaron las pruebas de las doce funciones y `test_game`
+  entera.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Las partículas crean sus cuatro tablas
 
 Una función (228 bytes) en el archivo nuevo `effects/particle_systems.c`. De 2127

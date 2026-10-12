@@ -483,3 +483,7 @@ address,name,source
 004c1a74,unknown_004c1a74,source/game/game_unknown_0002b4a0.c
 004c1a8c,unknown_004c1a8c,source/game/game_unknown_0002b4a0.c
 004f9384,hs_thread_data,source/hs/hs_runtime.c
+004e031c,liquid_data,source/objects/liquid.c
+004e0334,antenna_data,source/objects/antenna.c
+004e0338,cloth_data,source/objects/cloth.c
+004f5724,recorded_animation_data,source/game/recorded_animations.c
