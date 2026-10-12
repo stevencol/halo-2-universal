@@ -87,7 +87,14 @@ enum
 	SIMULATION_PLAYER_ACTION_UNKNOWN38_OFFSET= 0x38,
 	SIMULATION_PLAYER_ACTION_UNKNOWN50_OFFSET= 0x50,
 	SIMULATION_PLAYER_ACTION_UNKNOWN54_OFFSET= 0x54,
-	SIMULATION_PLAYER_ACTION_UNKNOWN58_OFFSET= 0x58
+	SIMULATION_PLAYER_ACTION_UNKNOWN58_OFFSET= 0x58,
+	/* of an object: what it is attached to and its type. Of a unit: the
+	object that it is of, and the places of the two weapons that it has
+	in hand */
+	SIMULATION_PLAYER_OBJECT_PARENT_OFFSET= 0x14,
+	SIMULATION_PLAYER_OBJECT_TYPE_OFFSET= 0xAA,
+	SIMULATION_PLAYER_UNIT_UNKNOWN24C_OFFSET= 0x24C,
+	SIMULATION_PLAYER_UNIT_WEAPON_INDICES_OFFSET= 0x212
 };
 
 /* ---------- prototypes/SIMULATION_PLAYER.C */
@@ -97,6 +104,9 @@ void __attribute__((stdcall)) simulation_player_new(byte *player, const long *id
 boolean __attribute__((stdcall)) simulation_player_get_action(byte *player, byte *action);
 void __attribute__((stdcall)) simulation_player_action_pack(byte *packed, const byte *action, long unit_index);
 void simulation_player_action_unpack(const byte *packed, byte *action);
+void simulation_player_action_unpack_object(const long *packed, long *unknown34);
+void simulation_player_action_pack_object(const long *unknown34, long *packed);
+void __attribute__((stdcall)) simulation_player_get_unit_weapons(long *weapons, long object_index);
 
 /* ---------- globals */
 

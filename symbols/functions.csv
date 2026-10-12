@@ -2598,3 +2598,9 @@ address,name,source,arguments,returns,convention
 001a1d55,unknown_001a1d55,,stack,int,stdcall
 00082d20,unknown_00082d20,,eax stack stack,void,stdcall
 000a58d0,unknown_000a58d0,,ecx,int
+00082b30,simulation_player_action_unpack_object,source/networking/simulation_player.c,esi edi,void
+00082ac0,simulation_player_action_pack_object,source/networking/simulation_player.c,edi ebx,void
+000a5930,unknown_000a5930,,ecx,int
+000a5980,unknown_000a5980,,ecx,int
+000cbd50,unit_get_weapon,source/units/units.c,eax ecx,int
+00082b70,simulation_player_get_unit_weapons,source/networking/simulation_player.c,ebx stack,void,stdcall

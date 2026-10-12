@@ -2,6 +2,56 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — El objeto y las armas dentro de lo que hace un jugador; primer archivo de las unidades
+
+Cuatro funciones cortas (361 bytes): tres en `networking/simulation_player.c` y una en el
+archivo nuevo `units/units.c`. De 1983
+funciones se pasa a 1987, el 17,64 % de las del juego (el 11,118 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_player_action_unpack_object` | `0x00082b30` | `networking/simulation_player.c` |
+| `simulation_player_action_pack_object` | `0x00082ac0` | `networking/simulation_player.c` |
+| `simulation_player_get_unit_weapons` | `0x00082b70` | `networking/simulation_player.c` |
+| `unit_get_weapon` | `0x000cbd50` | `units/units.c` |
+
+### Lo que se sabe
+
+- `simulation_player_action_unpack_object` y
+  `simulation_player_action_pack_object` llevan del mensaje al jugador, y
+  al revés, la parte de lo que hace un jugador que **nombra un objeto**:
+  dos reales, el objeto y un número más. Solo viaja si uno de los reales es
+  mayor que cero. El objeto no viaja como tal sino como un número que hay
+  que traducir (`unknown_000a58d0` al recibir; `unknown_000a5930` o
+  `unknown_000a5980` al mandar, según mande o no la simulación).
+- `unit_get_weapon` es la primera función de `units/units.c`: **una de las
+  armas que lleva una unidad**, por su sitio (están desde `0x218` de la
+  unidad, cuatro bytes cada una); `NONE` para el sitio `NONE`.
+- `simulation_player_get_unit_weapons` da las dos armas que tiene en mano
+  la unidad de un objeto (los sitios están en `0x212` y `0x213`). La unidad
+  es aquello a lo que el objeto está sujeto al final; tiene que ser un
+  bípedo o un vehículo y tener ese objeto en `0x24C`.
+- Con esto se sabe qué eran los «cuatro bytes de la unidad» del hito 589
+  (`0x210` a `0x213`): los dos últimos son los sitios de las armas en mano.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  590.
+- El nombre del archivo `units.c` es una suposición, por el del primer
+  juego; y que lo de `0x218` sean armas sale de cómo se usa, no de un
+  nombre.
+- La primera de las cuatro está escrita otra vez dentro de
+  `simulation_player_action_unpack` en el juego; aquí también.
+- Ninguna de las tres de `simulation_player.c` se llama todavía desde el
+  código hecho: las usa `unknown_00082d20`, pendiente.
+- En este hito se pasaron las pruebas de las cuatro funciones y todas las
+  de `test_simulation_player…`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Lo que hace un jugador se reconstruye desde un mensaje
 
 Una función de `networking/simulation_player.c` (338 bytes), la inversa de la del hito 589.

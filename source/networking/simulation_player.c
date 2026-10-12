@@ -13,6 +13,8 @@ file is a guess, and so are the names of its functions.
 #include "game/game.h"
 #include "game/player_action.h"
 #include "objects/objects.h"
+#include "units/units.h"
+#include "main/main_game.h"
 #include "networking/simulation_view.h"
 #include "networking/simulation_world.h"
 
@@ -293,4 +295,102 @@ void simulation_player_action_unpack(
 	simulation_player_action_set_flag(action, 0x40000000, packed[SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN30_OFFSET]!=0);
 	simulation_player_action_set_flag(action, 0x80000000, packed[SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN31_OFFSET]!=0);
 	action[SIMULATION_PLAYER_ACTION_UNKNOWN58_OFFSET]= packed[SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN32_OFFSET];
+}
+
+/* 0x000a5930, 0x000a5980: the number that goes in a message for an object,
+when the simulation rules the game and when it does not; NONE if it has
+none */
+long unknown_000a5930(long object_index);
+long unknown_000a5980(long object_index);
+
+/* 0x00082b30: the part of what a player does that names an object, from a
+message: two reals, the number of the object in the message and one more
+number. If one of the reals is more than nothing and the game has an object
+for the number (unknown_000a58d0), the object, the number and the two reals
+are put where the player has them. The game has it written again in
+simulation_player_action_unpack */
+void simulation_player_action_unpack_object(
+	const long *packed,
+	long *unknown34)
+{
+	if ((*(const real *)&packed[0]>0.0f || *(const real *)&packed[1]>0.0f) && packed[2]!=NONE)
+	{
+		long object_index= unknown_000a58d0(packed[2]);
+
+		if (object_index!=NONE)
+		{
+			unknown34[0]= object_index;
+			unknown34[1]= packed[3];
+			unknown34[7]= packed[0];
+			unknown34[8]= packed[1];
+		}
+	}
+}
+
+/* 0x00082ac0: the other way: if one of the reals is more than nothing, the
+object is still there (object_try_and_get_and_verify_type, of any type) and
+there is a number for it to go in a message (unknown_000a5930 if the thing
+that is going is not in its third state nor its fifth, unknown_000a5980 if
+it is), that number, the other and the two reals go to the message */
+void simulation_player_action_pack_object(
+	const long *unknown34,
+	long *packed)
+{
+	if (*(const real *)&unknown34[7]>0.0f || *(const real *)&unknown34[8]>0.0f)
+	{
+		long object_index= unknown34[0];
+
+		if (object_index!=NONE && object_try_and_get_and_verify_type(object_index, 0xFFFFFFFF))
+		{
+			long state= *(const long *)(unknown_004cf770.unknownC+SIMULATION_WORLD_STATE_OFFSET);
+			long number= state!=3 && state!=5 ? unknown_000a5930(object_index) : unknown_000a5980(object_index);
+
+			if (number!=NONE)
+			{
+				packed[2]= number;
+				packed[3]= unknown34[1];
+				packed[0]= unknown34[7];
+				packed[1]= unknown34[8];
+			}
+		}
+	}
+}
+
+/* 0x00082b70: the two weapons that the unit of an object has in hand. The
+unit is what the object is attached to in the end (object_get_ultimate_parent,
+written here); it has to be a biped or a vehicle, and to have the object at
+0x24C. With no object, or a unit that is not so, nothing is written */
+void __attribute__((stdcall)) simulation_player_get_unit_weapons(
+	long *weapons,
+	long object_index)
+{
+	const struct object_header_datum *headers;
+	const byte *unit;
+	long unit_index;
+	long parent;
+
+	if (object_index==NONE)
+	{
+		return;
+	}
+	headers= (const struct object_header_datum *)object_header_data->data;
+	parent= object_index;
+	do
+	{
+		unit_index= parent;
+		parent= *(const long *)((const byte *)headers[unit_index&0xFFFF].datum+SIMULATION_PLAYER_OBJECT_PARENT_OFFSET);
+	} while (parent!=NONE);
+	if (unit_index==NONE)
+	{
+		return;
+	}
+	unit= (const byte *)headers[unit_index&0xFFFF].datum;
+	if (!((1u<<unit[SIMULATION_PLAYER_OBJECT_TYPE_OFFSET])&3) ||
+		*(const long *)(unit+SIMULATION_PLAYER_UNIT_UNKNOWN24C_OFFSET)!=object_index)
+	{
+		return;
+	}
+	weapons[0]= unit_get_weapon(unit_index, *(const signed char *)(unit+SIMULATION_PLAYER_UNIT_WEAPON_INDICES_OFFSET));
+	unit= (const byte *)((const struct object_header_datum *)object_header_data->data)[unit_index&0xFFFF].datum;
+	weapons[1]= unit_get_weapon(unit_index, *(const signed char *)(unit+SIMULATION_PLAYER_UNIT_WEAPON_INDICES_OFFSET+1));
 }

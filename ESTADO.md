@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 590.
+**Última actualización:** 2026-10-08, al terminar el hito 591.
 
 ## Dónde estamos
 
-- **1983 funciones descompiladas de 11.265: el 17,60 % del juego** (el
-  11,106 % de los bytes de código).
-- Las 1983 están comprobadas contra el ejecutable original: las 1390 del
+- **1987 funciones descompiladas de 11.265: el 17,64 % del juego** (el
+  11,118 % de los bytes de código).
+- Las 1987 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how what a player does is made whole again from a message* (ver `git log`).
+- Último hito: *Decompile the object and the weapons in what a player does; first file of the units* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 616 funciones apuntadas pero sin descompilar (las que el código
-  llama); 467 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 618 funciones apuntadas pero sin descompilar (las que el código
+  llama); 469 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
