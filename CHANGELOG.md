@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Dónde está la unidad de un jugador, para un mensaje
+
+Una función de `networking/simulation_player.c` (195 bytes). De 1987
+funciones se pasa a 1988, el 17,65 % de las del juego (el 11,125 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_player_get_unit_state` | `0x000828b0` | `networking/simulation_player.c` |
+
+### Lo que se sabe
+
+- `simulation_player_get_unit_state` escribe en `0x40` bytes **dónde está
+  la unidad de un jugador**: el número que la unidad tiene en un mensaje
+  (`unknown_000a5980`), su posición (`object_get_origin`), cómo mira
+  (`object_get_orientation`, dos vectores) y cómo se mueve
+  (`object_get_velocities`, otros dos).
+- Si la unidad va montada en algo, ese algo tiene que ser un bípedo o un
+  vehículo que la tenga en `0x248`, y es de él de quien se cuenta.
+- Da `FALSE`, sin escribir nada, si el jugador no tiene unidad, si va
+  sujeta a otra cosa o si no tiene número.
+- De paso queda claro qué es el número de `0x2C` del jugador del juego que
+  los hitos 588 y 589 miraban sin nombre: **su unidad**.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  591.
+- Que `0x248` de una unidad sea «quien la monta» sale de cómo se usa aquí.
+- La función no se llama todavía desde el código hecho.
+- En este hito se pasó la prueba de la función.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — El objeto y las armas dentro de lo que hace un jugador; primer archivo de las unidades
 
 Cuatro funciones cortas (361 bytes): tres en `networking/simulation_player.c` y una en el

@@ -14,6 +14,7 @@ file is a guess, and so are the names of its functions.
 #include "game/player_action.h"
 #include "objects/objects.h"
 #include "units/units.h"
+#include "main/main.h"
 #include "main/main_game.h"
 #include "networking/simulation_view.h"
 #include "networking/simulation_world.h"
@@ -393,4 +394,56 @@ void __attribute__((stdcall)) simulation_player_get_unit_weapons(
 	weapons[0]= unit_get_weapon(unit_index, *(const signed char *)(unit+SIMULATION_PLAYER_UNIT_WEAPON_INDICES_OFFSET));
 	unit= (const byte *)((const struct object_header_datum *)object_header_data->data)[unit_index&0xFFFF].datum;
 	weapons[1]= unit_get_weapon(unit_index, *(const signed char *)(unit+SIMULATION_PLAYER_UNIT_WEAPON_INDICES_OFFSET+1));
+}
+
+/* 0x000828b0: where the unit of a player is, for a message: the number that
+the unit has in a message (unknown_000a5980), where it is, how it faces and
+how it moves. If the unit is attached to something, that has to be a biped
+or a vehicle that has the unit at 0x248, and it is told of in its place.
+FALSE, with nothing written, with no unit, one attached to anything else,
+or one with no number */
+boolean simulation_player_get_unit_state(
+	long player_index,
+	byte *state)
+{
+	const struct object_header_datum *headers= (const struct object_header_datum *)object_header_data->data;
+	const byte *player= (const byte *)player_data->data+(player_index&0xFFFF)*SIMULATION_PLAYER_PLAYER_DATUM_SIZE;
+	long unit_index= *(const long *)(player+SIMULATION_PLAYER_PLAYER_UNIT_OFFSET);
+	long parent_index;
+	long number;
+
+	if (unit_index==NONE)
+	{
+		return FALSE;
+	}
+	parent_index= *(const long *)((const byte *)headers[unit_index&0xFFFF].datum+SIMULATION_PLAYER_OBJECT_PARENT_OFFSET);
+	if (parent_index!=NONE)
+	{
+		const byte *parent= (const byte *)headers[parent_index&0xFFFF].datum;
+
+		if (!((1u<<parent[SIMULATION_PLAYER_OBJECT_TYPE_OFFSET])&3) ||
+			*(const long *)(parent+SIMULATION_PLAYER_UNIT_UNKNOWN248_OFFSET)!=unit_index)
+		{
+			return FALSE;
+		}
+		unit_index= parent_index;
+	}
+	if (unit_index==NONE)
+	{
+		return FALSE;
+	}
+	number= unknown_000a5980(unit_index);
+	if (number==NONE)
+	{
+		return FALSE;
+	}
+	memset(state, 0, SIMULATION_PLAYER_UNIT_STATE_SIZE);
+	*(long *)state= number;
+	object_get_origin(unit_index, (real_point3d *)(state+SIMULATION_PLAYER_UNIT_STATE_ORIGIN_OFFSET));
+	object_get_orientation(unit_index, (real_vector3d *)(state+SIMULATION_PLAYER_UNIT_STATE_FORWARD_OFFSET),
+		(real_vector3d *)(state+SIMULATION_PLAYER_UNIT_STATE_UP_OFFSET));
+	object_get_velocities(unit_index, (real_vector3d *)(state+SIMULATION_PLAYER_UNIT_STATE_VELOCITY_OFFSET),
+		(real_vector3d *)(state+SIMULATION_PLAYER_UNIT_STATE_ANGULAR_VELOCITY_OFFSET));
+
+	return TRUE;
 }

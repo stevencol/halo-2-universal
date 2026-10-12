@@ -94,7 +94,20 @@ enum
 	SIMULATION_PLAYER_OBJECT_PARENT_OFFSET= 0x14,
 	SIMULATION_PLAYER_OBJECT_TYPE_OFFSET= 0xAA,
 	SIMULATION_PLAYER_UNIT_UNKNOWN24C_OFFSET= 0x24C,
-	SIMULATION_PLAYER_UNIT_WEAPON_INDICES_OFFSET= 0x212
+	SIMULATION_PLAYER_UNIT_WEAPON_INDICES_OFFSET= 0x212,
+	/* of a player of the game: its unit. Of a unit: the unit that rides
+	it. Of where a unit is, for a message (0x40 bytes): the number of the
+	unit in the message, where it is, how it faces (two vectors) and how
+	it moves (two more) */
+	SIMULATION_PLAYER_PLAYER_UNIT_OFFSET= 0x2C,
+	SIMULATION_PLAYER_PLAYER_DATUM_SIZE= 0x21C,
+	SIMULATION_PLAYER_UNIT_UNKNOWN248_OFFSET= 0x248,
+	SIMULATION_PLAYER_UNIT_STATE_SIZE= 0x40,
+	SIMULATION_PLAYER_UNIT_STATE_ORIGIN_OFFSET= 0x4,
+	SIMULATION_PLAYER_UNIT_STATE_FORWARD_OFFSET= 0x10,
+	SIMULATION_PLAYER_UNIT_STATE_UP_OFFSET= 0x1C,
+	SIMULATION_PLAYER_UNIT_STATE_VELOCITY_OFFSET= 0x28,
+	SIMULATION_PLAYER_UNIT_STATE_ANGULAR_VELOCITY_OFFSET= 0x34
 };
 
 /* ---------- prototypes/SIMULATION_PLAYER.C */
@@ -107,6 +120,7 @@ void simulation_player_action_unpack(const byte *packed, byte *action);
 void simulation_player_action_unpack_object(const long *packed, long *unknown34);
 void simulation_player_action_pack_object(const long *unknown34, long *packed);
 void __attribute__((stdcall)) simulation_player_get_unit_weapons(long *weapons, long object_index);
+boolean simulation_player_get_unit_state(long player_index, byte *state);
 
 /* ---------- globals */
 
