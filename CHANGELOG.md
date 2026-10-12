@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Efectos, estelas y calcomanías crean sus tablas de datos
+
+Tres funciones (unos 370 bytes), las de arranque de los tres archivos de `effects/`.
+De 2088
+funciones se pasa a 2091, el 18,56 % de las del juego (el 11,264 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `effects_initialize` | `0x00175b50` | `effects/effects.c` |
+| `contrails_initialize` | `0x0017b7b0` | `effects/contrails.c` |
+| `decals_initialize` | `0x0017d220` | `effects/decals.c` |
+
+### Lo que se sabe
+
+- Eran las funciones de arranque que el hito 611 dejó pendientes porque
+  «piden la memoria por una tabla de funciones». **Lo que tienen dentro es
+  `data_new`**, que ya estaba hecha: el juego la tiene copiada en cada
+  sitio que crea una tabla. Con eso cada arranque queda en dos o tres
+  líneas.
+- `effects_initialize` crea `"effect"` (256 de `0x190` bytes) y
+  `"effect location"` (512 de `0x3C`) en la memoria del estado del juego, y
+  sigue con lo demás que arranca con los efectos (`unknown_00173de0`).
+- `contrails_initialize` crea `"contrail"` (256 de `0x48`) y
+  `"contrail point"` (1024 de `0x38`). **Si solo hay memoria para una de
+  las dos, se queda sin ninguna.**
+- `decals_initialize` crea `"decals"` (1024 de `0x40`), toma el bloque de
+  `0x3C2C` bytes y llama a `unknown_00043890`.
+- Esta receta vale para el resto de partes de la tabla que crean tablas de
+  datos al arrancar.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  613.
+- En este hito se pasaron las pruebas de las tres funciones (con memoria
+  y sin ella para cada tabla) y `test_game` entera.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Cuatro funciones más de niveles, sonidos en bucle y calcomanías
 
 Cuatro funciones cortas (unos 190 bytes) en tres archivos. De 2084

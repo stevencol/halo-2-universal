@@ -7,6 +7,7 @@ the name that the game gives to its table of data ("contrail", "contrail point")
 
 #include "cseries/cseries.h"
 #include "memory/data.h"
+#include "saved games/game_state.h"
 
 /* ---------- globals */
 
@@ -48,4 +49,29 @@ void contrails_dispose_from_old_map(
 {
 	contrail_point_data->valid= FALSE;
 	contrail_data->valid= FALSE;
+}
+
+/* 0x0017b7b0: the trails make their two tables, in the memory of the state
+of the game (data_new, which the game has written here): 0x100 trails of
+0x48 bytes and 0x400 points of 0x38. If there is memory for only one of
+them, there is neither */
+void contrails_initialize(
+	void)
+{
+	struct data_array *points;
+
+	contrail_data= data_new("contrail", 0x100, 0x48, 0, game_state_allocation);
+	points= data_new("contrail point", 0x400, 0x38, 0, game_state_allocation);
+	contrail_point_data= points;
+	if (contrail_data)
+	{
+		if (!points)
+		{
+			contrail_data= NULL;
+		}
+	}
+	else if (points)
+	{
+		contrail_point_data= NULL;
+	}
 }

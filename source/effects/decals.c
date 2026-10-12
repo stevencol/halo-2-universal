@@ -8,6 +8,7 @@ the name that the game gives to its table of data ("decals").
 #include "cseries/cseries.h"
 #include "memory/data.h"
 #include "memory/lruv_cache.h"
+#include "saved games/game_state.h"
 
 #include <string.h>
 
@@ -90,4 +91,19 @@ void decals_dispose_from_old_map(
 	unknown_0017d5f0(1);
 	lruv_flush(unknown_00509448);
 	decal_data->valid= FALSE;
+}
+
+/* 0x00043890: what more the marks need to start */
+void unknown_00043890(void);
+
+/* 0x0017d220: the marks make their table, in the memory of the state of the
+game (data_new, which the game has written here): 0x400 of 0x40 bytes. What
+else is kept of them takes its memory there too (game_state_malloc, written
+here), and unknown_00043890 is done */
+void decals_initialize(
+	void)
+{
+	decal_data= data_new("decals", 0x400, 0x40, 0, game_state_allocation);
+	decal_globals= game_state_malloc(DECAL_GLOBALS_SIZE);
+	unknown_00043890();
 }

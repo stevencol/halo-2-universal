@@ -388,17 +388,17 @@ address,name,source,arguments,returns,convention
 0016efb0,unknown_0016efb0,,,void
 0016f0e0,unknown_0016f0e0,,,void
 0016f120,unknown_0016f120,,,void
-00175b50,unknown_00175b50,,,void
+00175b50,effects_initialize,source/effects/effects.c,,void
 00175bd0,effects_dispose,source/effects/effects.c,,void
 00175c10,effects_initialize_for_new_map,source/effects/effects.c,,void
 00175c70,effects_dispose_from_old_map,source/effects/effects.c,,void
 00175d70,unknown_00175d70,,,void
-0017b7b0,unknown_0017b7b0,,,void
+0017b7b0,contrails_initialize,source/effects/contrails.c,,void
 0017b850,contrails_dispose,source/effects/contrails.c,,void
 0017b870,contrails_initialize_for_new_map,source/effects/contrails.c,,void
 0017b8a0,contrails_dispose_from_old_map,source/effects/contrails.c,,void
 0017b940,unknown_0017b940,,,void
-0017d220,unknown_0017d220,,,void
+0017d220,decals_initialize,source/effects/decals.c,,void
 0017d2a0,decals_dispose,source/effects/decals.c,,void
 0017d2e0,decals_initialize_for_new_map,source/effects/decals.c,,void
 0017d330,decals_dispose_from_old_map,source/effects/decals.c,,void
@@ -2651,3 +2651,5 @@ address,name,source,arguments,returns,convention
 0019c6d0,unknown_0019c6d0,,stack stack,void,stdcall
 0019c7e0,unknown_0019c7e0,,stack,void,stdcall
 0017d5f0,unknown_0017d5f0,,stack,void,stdcall
+00173de0,unknown_00173de0,,,void
+00043890,unknown_00043890,,,void

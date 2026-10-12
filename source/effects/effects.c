@@ -7,6 +7,7 @@ the name that the game gives to its table of data ("effect", "effect location").
 
 #include "cseries/cseries.h"
 #include "memory/data.h"
+#include "saved games/game_state.h"
 
 /* ---------- globals */
 
@@ -70,4 +71,19 @@ void effects_dispose_from_old_map(
 	unknown_00510c74->valid= FALSE;
 	effect_data->valid= FALSE;
 	effect_location_data->valid= FALSE;
+}
+
+/* 0x00173de0: the other things that start with the effects */
+void unknown_00173de0(void);
+
+/* 0x00175b50: the effects make their two tables, in the memory of the state
+of the game (data_new, which the game has written here): 0x100 effects of
+0x190 bytes and 0x200 places of 0x3C. Then the other things that start with
+them (unknown_00173de0) */
+void effects_initialize(
+	void)
+{
+	effect_data= data_new("effect", 0x100, 0x190, 0, game_state_allocation);
+	effect_location_data= data_new("effect location", 0x200, 0x3C, 0, game_state_allocation);
+	unknown_00173de0();
 }
