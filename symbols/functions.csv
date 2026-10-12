@@ -2678,3 +2678,5 @@ address,name,source,arguments,returns,convention
 00116a10,cloth_initialize,source/objects/cloth.c,,void
 00116a50,cloth_initialize_for_new_map,source/objects/cloth.c,,void
 00116a70,cloth_dispose_from_old_map,source/objects/cloth.c,,void
+001cec30,havok_components_initialize,source/physics/havok_component.c,,void
+002263c0,impacts_initialize,source/effects/impacts.c,,void

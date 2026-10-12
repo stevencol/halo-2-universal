@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Los componentes de la física y los impactos crean sus tablas
+
+Dos funciones de arranque (unos 190 bytes), en `physics/havok_component.c` y el archivo
+nuevo `effects/impacts.c`. De 2140
+funciones se pasa a 2142, el 19,01 % de las del juego (el 11,308 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_components_initialize` | `0x001cec30` | `physics/havok_component.c` |
+| `impacts_initialize` | `0x002263c0` | `effects/impacts.c` |
+
+### Lo que se sabe
+
+- `havok_components_initialize` crea `"havok components"` (512 de `0xA0`
+  bytes) en memoria del montón. Es la única tabla hasta ahora que pide sus
+  elementos **alineados a 16 bytes**. La variable ya existía en
+  `havok_component.c`, donde están las funciones que la usan.
+- `impacts_initialize` crea `"impacts"` (32 de `0xA0`) y `"impact arrarys"`
+  (32 de `0x40`; el texto está escrito así en el juego). Son las dos tablas
+  que las funciones de guardar y cargar partida de `0x1c3540` vacían.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  629.
+- Por un descuido creé un segundo archivo para los componentes de la física
+  cuando ya había uno; el enlazado lo rechazó y la función está en el
+  bueno.
+- En este hito se pasaron las pruebas de las dos funciones y
+  `test_havok_component`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Cuatro módulos con el mismo trío: líquido, antena, tela y animaciones grabadas
 
 Doce funciones cortas (unos 430 bytes) en cuatro archivos nuevos. De 2128

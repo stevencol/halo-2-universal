@@ -396,3 +396,13 @@ void havok_component_set_rigid_body_keyframe(
 	hkKeyFrameUtility_applyHardKeyFrame((const struct havok_vector4 *)transform.translation, &orientation,
 		ticks_per_second, component->rigid_bodies[rigid_body_index].rigid_body);
 }
+
+/* 0x001cec30: the table of what the objects have in the library of the
+physics is made ("havok components": 0x200 of 0xA0 bytes, at addresses that
+are multiples of 16), in memory of the heap (data_new, which the game has
+written here) */
+void havok_components_initialize(
+	void)
+{
+	havok_component_data= data_new("havok components", 0x200, 0xA0, 4, heap_allocation);
+}

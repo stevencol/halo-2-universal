@@ -487,3 +487,5 @@ address,name,source
 004e0334,antenna_data,source/objects/antenna.c
 004e0338,cloth_data,source/objects/cloth.c
 004f5724,recorded_animation_data,source/game/recorded_animations.c
+0051ebfc,impact_data,source/effects/impacts.c
+0051ec00,impact_array_data,source/effects/impacts.c
