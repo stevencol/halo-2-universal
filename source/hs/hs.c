@@ -39,7 +39,7 @@ struct data_array *object_list_header_data;
 struct data_array *list_object_data;
 
 /* 0x0020a850, 0x00209290: what else stops with the scripts when a map goes */
-void unknown_0020a850(void);
+void hs_delete_temporaries(void);
 void hs_runtime_dispose_from_old_map(void);
 
 /* ---------- code */
@@ -53,7 +53,7 @@ void hs_dispose(
 	hs_global_data->valid= FALSE;
 }
 
-/* 0x0020a7d0: when a map goes: unknown_0020a850; the table of the nodes,
+/* 0x0020a7d0: when a map goes: hs_delete_temporaries; the table of the nodes,
 unless it had none already, has no elements, as they were those of the map,
 and cannot be used; hs_runtime_dispose_from_old_map; and two more tables cannot be used */
 void hs_dispose_from_old_map(
@@ -61,7 +61,7 @@ void hs_dispose_from_old_map(
 {
 	struct data_array *data;
 
-	unknown_0020a850();
+	hs_delete_temporaries();
 	data= script_node_data;
 	if (!(data->flags&_hs_data_array_disconnected_bit))
 	{
@@ -139,4 +139,37 @@ void hs_initialize_for_new_map(
 	list_object_data->valid= TRUE;
 	data_delete_all(list_object_data);
 	unknown_002090a0();
+}
+
+/* 0x004f9384 and 0x004f9388, of hs_runtime.c: the threads, and whether the
+scripts run */
+extern struct data_array *hs_thread_data;
+extern boolean unknown_004f9388;
+
+/* 0x0020a850: while the scripts run, the threads of the kind 2 are deleted;
+and, in any case, the nodes that do not have the bit 3 of their byte at 6
+(those that are not of the scripts of the map, it seems: what was typed, or
+made on the way). The game has the walks over the tables written here */
+void hs_delete_temporaries(
+	void)
+{
+	long index;
+
+	if (unknown_004f9388)
+	{
+		for (index= data_next_index(hs_thread_data, NONE); index!=NONE; index= data_next_index(hs_thread_data, index))
+		{
+			if (((const byte *)hs_thread_data->data+(index&0xFFFF)*0x418)[2]==2)
+			{
+				datum_delete(hs_thread_data, index);
+			}
+		}
+	}
+	for (index= data_next_index(script_node_data, NONE); index!=NONE; index= data_next_index(script_node_data, index))
+	{
+		if (!(((const byte *)script_node_data->data+(index&0xFFFF)*0x14)[6]&8))
+		{
+			datum_delete(script_node_data, index);
+		}
+	}
 }

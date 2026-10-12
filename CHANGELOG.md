@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Borrar los hilos y nodos de guion que no se quedan
+
+Una función (325 bytes) en `hs/hs.c`. De 2275
+funciones se pasa a 2276, el 20,20 % de las del juego (el 11,756 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `hs_delete_temporaries` | `0x0020a850` | `hs/hs.c` |
+
+### Lo que se sabe
+
+- `hs_delete_temporaries` (antes `unknown_0020a850`, la llama
+  `hs_dispose_from_old_map`): si los guiones están en marcha, borra los
+  hilos de la clase 2; y siempre borra los nodos de guion que no tienen el
+  bit 3 de su byte de `+6`.
+- Encaja con que los hilos de clase 2 y los nodos sin ese bit sean los que
+  no vienen del mapa (lo tecleado en la consola o creado sobre la marcha),
+  que no deben sobrevivir al mapa.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  702.
+- La interpretación de la clase 2 y del bit 3 es una suposición, y el
+  nombre con ella.
+- En este hito se pasaron las pruebas de `test_hs*` (ocho funciones). Hay
+  una batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — El sonido baja antes de acabar la partida y sube en un mapa nuevo
 
 Dos funciones (233 bytes) en `sound/sound_manager.c`. De 2273
