@@ -80,7 +80,7 @@ void hud_print_message(long local_player_index, const wchar *text);
 void user_interface_controllers_write_changed_profiles(void);
 
 /* 0x001896c0: plays a sound, as loud as it is told */
-void unknown_001896c0(long sound_index, real scale);
+void __attribute__((stdcall)) sound_unknown_001896c0(long sound_index, real scale);
 
 /* ---------- constants */
 
@@ -594,7 +594,7 @@ void main_save_map(
 		hud_messages_unknown_0024cdaf();
 		if (unknown_00510c94->save_sound_index!=NONE)
 		{
-			unknown_001896c0(unknown_00510c94->save_sound_index, 1.0f);
+			sound_unknown_001896c0(unknown_00510c94->save_sound_index, 1.0f);
 		}
 		for (index= 0; index<MAXIMUM_LOCAL_PLAYERS; index++)
 		{

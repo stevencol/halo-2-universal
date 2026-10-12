@@ -13398,3 +13398,68 @@ long sound_unknown_00191660(
 
 	return 0;
 }
+
+/* what says how a sound is to be played: only what these two set is known */
+struct sound_unknown_00189fe0_source
+{
+	word unknown0;
+	byte unknown2;
+	byte unknown3;
+	real scale;
+	long unknown8;
+	byte unknownC[0x38];
+	long unknown44;
+	long unknown48;
+	long unknown4C;
+	long unknown50;
+	long unknown54;
+};
+
+typedef char verify_sound_unknown_00189fe0_source_size[
+	sizeof(struct sound_unknown_00189fe0_source) == 0x58 ? 1 : -1];
+
+/* 0x00189fe0: a sound starts, as that says. 0x0018d5b0: something for an
+output of the voice */
+long __attribute__((stdcall)) unknown_00189fe0(const struct sound_unknown_00189fe0_source *source, long sound_index);
+long unknown_0018d5b0(long output);
+
+/* 0x001896c0: a sound starts, with a scale and nothing else: NONE at 0x44
+and 0x48. The game has it far from the rest of this file */
+void __attribute__((stdcall)) sound_unknown_001896c0(
+	long sound_index,
+	real scale)
+{
+	struct sound_unknown_00189fe0_source source;
+
+	source.unknown2= 0;
+	source.unknown0= 0;
+	source.unknown3= 0;
+	source.unknown8= 0;
+	source.unknown50= 0;
+	source.unknown4C= 0;
+	source.unknown54= 0;
+	source.scale= scale;
+	source.unknown48= NONE;
+	source.unknown44= NONE;
+	unknown_00189fe0(&source, sound_index);
+}
+
+/* 0x00189760: a sound of the voice starts, as four numbers say: its scale,
+and at 0x44 what unknown_0018d5b0 gives for the output */
+void sound_unknown_00189760(
+	const long *request)
+{
+	struct sound_unknown_00189fe0_source source;
+
+	source.unknown2= 0;
+	source.unknown0= 0;
+	source.unknown3= 0;
+	source.scale= *(const real *)&request[2];
+	source.unknown8= 0;
+	source.unknown48= NONE;
+	source.unknown44= unknown_0018d5b0(request[0]);
+	source.unknown50= 0;
+	source.unknown4C= 0;
+	source.unknown54= 0;
+	unknown_00189fe0(&source, request[1]);
+}

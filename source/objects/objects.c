@@ -405,3 +405,25 @@ void object_get_markerBD_position(
 	unknown_000b8d30(FALSE, marker, object_index, _object_marker_nameBD, 1);
 	memcpy(position, marker+OBJECT_MARKER_POSITION_OFFSET, sizeof(*position));
 }
+
+/* 0x0003d380: after a state of the game was loaded, each object has NONE at
+0xCC. It is one of the things that are done after a state is loaded
+(game_state.c); object_iterator_new is written here. The game has it far
+from the rest of this file, and what the number at 0xCC is of is not known */
+void __attribute__((stdcall)) objects_unknown_0003d380(
+	unsigned long flags)
+{
+	struct object_iterator iterator;
+	byte *object;
+
+	(void)flags;
+	iterator.signature= OBJECT_ITERATOR_SIGNATURE;
+	iterator.type_mask= 0xFFFFFFFF;
+	iterator.header_flags= 0;
+	iterator.absolute_index= 0;
+	iterator.index= NONE;
+	while ((object= object_iterator_next(&iterator))!=NULL)
+	{
+		*(long *)(object+0xCC)= NONE;
+	}
+}

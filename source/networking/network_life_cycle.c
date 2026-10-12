@@ -18,7 +18,7 @@ is a guess, and so are the names of its functions.
 /* ---------- prototypes of functions not decompiled yet */
 
 /* 0x00070570: something that unknown_00527500 says, in the sixth state */
-long unknown_00070570(byte *unknown);
+long network_life_cycle_unknown_00070570(byte *unknown);
 
 /* 0x00065770: something that is done with a session that has just started */
 void unknown_00065770(byte *session);
@@ -204,7 +204,7 @@ long network_life_cycle_unknown_00059500(
 	return 1;
 }
 
-/* 0x00059570: what unknown_00070570 says, in the sixth state; 5 in the
+/* 0x00059570: what network_life_cycle_unknown_00070570 says, in the sixth state; 5 in the
 seventh; 0 in the others. The game does not see whether there is a network
 game */
 long network_life_cycle_unknown_00059570(
@@ -212,7 +212,7 @@ long network_life_cycle_unknown_00059570(
 {
 	if (unknown_00527334==_network_life_cycle_state6)
 	{
-		return unknown_00070570(unknown_00527500);
+		return network_life_cycle_unknown_00070570(unknown_00527500);
 	}
 	if (unknown_00527334==_network_life_cycle_state7)
 	{
@@ -1066,4 +1066,42 @@ byte *network_life_cycle_session_get_unknown4DB0(
 	}
 
 	return NULL;
+}
+
+/* 0x00070570: a number from 0 to 4 for what one of the things that the life
+cycle of the network has is in, by the number that the second session of
+what it has at 0x8 keeps at 0x4980: 1 for 6 and 7, 3 for 8 and 9, 2 for 10;
+for 11 to 13, 4 if the first session is in a state from 3 to 8 with its byte
+at 0x49E8 set, and 2 if not; 0 for any other. The game has it far from the
+rest of this file */
+long network_life_cycle_unknown_00070570(
+	byte *unknown)
+{
+	const byte *manager= *(byte *const *)(unknown+8);
+	const byte *session= *(byte *const *)(manager+0x38);
+	const byte *other_session= *(byte *const *)(manager+0x30);
+	long state;
+
+	switch (*(const long *)(other_session+0x4980))
+	{
+	case 6:
+	case 7:
+		return 1;
+	case 8:
+	case 9:
+		return 3;
+	case 10:
+		return 2;
+	case 11:
+	case 12:
+	case 13:
+		state= *(const long *)(session+0x741C);
+		if (state>2 && state<=8 && session[0x49E8])
+		{
+			return 4;
+		}
+		return 2;
+	}
+
+	return 0;
 }

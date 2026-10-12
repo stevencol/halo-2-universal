@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Cinco funciones cortas que ya se llamaban
+
+Cinco funciones cortas (386 bytes) en cuatro archivos. De 1962
+funciones se pasa a 1967, el 17,46 % de las del juego (el 10,974 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_life_cycle_unknown_00070570` | `0x00070570` | `networking/network_life_cycle.c` |
+| `objects_unknown_0003d380` | `0x0003d380` | `objects/objects.c` |
+| `game_voice_unknown_00162420` | `0x00162420` | `networking/game_voice.c` |
+| `sound_unknown_001896c0` | `0x001896c0` | `sound/sound_manager.c` |
+| `sound_unknown_00189760` | `0x00189760` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- `network_life_cycle_unknown_00070570` da un número de 0 a 4 según en qué
+  anda una de las cosas del ciclo de vida de la red: 1 para los estados 6 y
+  7, 3 para 8 y 9, 2 para 10, y para 11 a 13 un 4 si la sesión tiene puesto
+  su byte `0x49E8` (y 2 si no).
+- `objects_unknown_0003d380` es una de las cosas que se hacen tras cargar un
+  estado del juego: **pone `NONE` en `0xCC` de cada objeto**. Recorre los
+  objetos con `object_iterator_next`; el juego tiene `object_iterator_new`
+  escrita dentro.
+- `game_voice_unknown_00162420` pone `NONE` en dieciocho números de lo que
+  apunta `unknown_004e9ae8` (los de `0x24`, `0x28` y dieciséis desde
+  `0x2C`); se llama cuando una partida de clase 4 o 5 deja de serlo.
+- `sound_unknown_001896c0` y `sound_unknown_00189760` arrancan un sonido
+  (`unknown_00189fe0`) con una descripción de `0x58` bytes de la que solo
+  ponen la escala y cinco números; la segunda es la de la voz y pide uno de
+  ellos a `unknown_0018d5b0` según la salida. La primera recibe la escala
+  en `xmm0`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  580.
+- Las cinco están en el juego lejos del resto de su archivo: el archivo de
+  cada una es una suposición (por las variables que tocan o por quién las
+  llama), y los nombres son provisionales.
+- Qué es el número de `0xCC` de un objeto no se sabe.
+- En este hito se pasaron las pruebas de las cinco funciones, y
+  `test_network_life_cycle` (223), `test_voice_routing`, `test_main`,
+  `test_scenario`, `test_game_state` y `test_simulation_load` enteras.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Los jugadores de la simulación con un mapa nuevo y tras cargar una partida
 
 Dos funciones grandes de `networking/simulation_players.c` (931 bytes). De 1960

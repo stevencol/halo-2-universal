@@ -73,7 +73,7 @@ void GAME_STATE_PROC unknown_0016f090(unsigned long flags);
 void GAME_STATE_PROC unknown_0014b660(unsigned long flags);
 void GAME_STATE_PROC simulation_after_load(unsigned long flags);
 void GAME_STATE_PROC unknown_00043970(unsigned long flags);
-void GAME_STATE_PROC unknown_0003d380(unsigned long flags);
+void GAME_STATE_PROC objects_unknown_0003d380(unsigned long flags);
 void GAME_STATE_PROC unknown_00155360(unsigned long flags);
 void GAME_STATE_PROC unknown_0024c829(unsigned long flags);
 void GAME_STATE_PROC unknown_001c7f80(unsigned long flags);
@@ -133,7 +133,7 @@ game_state_proc game_state_after_load_procs[NUMBER_OF_GAME_STATE_AFTER_LOAD_PROC
 	unknown_0014b660,
 	simulation_after_load,
 	unknown_00043970,
-	unknown_0003d380,
+	objects_unknown_0003d380,
 	(game_state_proc)no_operation1,
 	(game_state_proc)no_operation1,
 	(game_state_proc)no_operation1,

@@ -1958,3 +1958,21 @@ boolean __attribute__((stdcall)) game_voice_unknown_004cd904_get(
 
 	return TRUE;
 }
+
+/* 0x00162420: what unknown_004e9ae8 points to has NONE for the two numbers
+at 0x24 and 0x28 and for the sixteen from 0x2C. It is one of the things that
+are done when a game of kind 4 or 5 in the network is no more
+(simulation_after_load). The game has it far from the rest of this file */
+void game_voice_unknown_00162420(
+	void)
+{
+	byte *unknown= unknown_004e9ae8;
+	long index;
+
+	*(long *)(unknown+0x24)= NONE;
+	*(long *)(unknown+0x28)= NONE;
+	for (index= 0; index<16; index++)
+	{
+		*(long *)(unknown+0x2C+index*4)= NONE;
+	}
+}

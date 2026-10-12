@@ -747,8 +747,8 @@ def run(t) -> None:
                                 externals={
                                     "game_voice_player_controller": controller,
                                     "user_interface_controller_voice_allowed": gives(says),
-                                    "unknown_001896c0": lambda harness, arguments: 0,
-                                    "unknown_00189760": request,
+                                    "sound_unknown_001896c0": lambda harness, arguments: 0,
+                                    "sound_unknown_00189760": request,
                                 },
                             )
 

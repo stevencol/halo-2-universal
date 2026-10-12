@@ -30,8 +30,8 @@ void __attribute__((stdcall)) sound_speakers_get_gains5(real *gains, const real_
 
 /* 0x001896c0: plays a sound, as loud as a number says. 0x00189760: plays a
 sound where what it is given says */
-void unknown_001896c0(long sound_index, real scale);
-void unknown_00189760(const struct voice_sound_request *request);
+void __attribute__((stdcall)) sound_unknown_001896c0(long sound_index, real scale);
+void sound_unknown_00189760(const struct voice_sound_request *request);
 
 /* 0x001906da: something of the player of a gamepad: see game_voice.c */
 boolean user_interface_controller_voice_allowed(long gamepad_index);
@@ -1204,7 +1204,7 @@ void VOICE_ROUTING_CALLBACK voice_play_sound(
 		{
 			if (setting==_game_voice_controller_setting1 || !(talkers&(1u<<(player_index&0x1F))))
 			{
-				unknown_001896c0(sound_index, 1.0f);
+				sound_unknown_001896c0(sound_index, 1.0f);
 			}
 			else
 			{
@@ -1217,7 +1217,7 @@ void VOICE_ROUTING_CALLBACK voice_play_sound(
 					request.sound_index= sound_index;
 					request.scale= 1.0f;
 					request.unknownC= 0;
-					unknown_00189760(&request);
+					sound_unknown_00189760(&request);
 				}
 			}
 		}

@@ -57,7 +57,7 @@ def run(t) -> None:
                     "simulation_world_dispose",
                     "unknown_00195e90",
                     "unknown_00162060",
-                    "unknown_00162420",
+                    "game_voice_unknown_00162420",
                     "unknown_000bb7f0",
                     "unknown_00183f10",
                     "simulation_world_initialize",

@@ -97,7 +97,7 @@ def run(t) -> None:
             "network_life_cycle_unknown_00059570",
             globals={"unknown_00527334": life_cycle_state, "unknown_00527500": GlobalRange(0x10)},
             externals={
-                "unknown_00070570": lambda harness, arguments, result=random_.getrandbits(32): (
+                "network_life_cycle_unknown_00070570": lambda harness, arguments, result=random_.getrandbits(32): (
                     result,
                     (harness.normalize(arguments[0]),),
                 )
@@ -246,7 +246,7 @@ def run(t) -> None:
                             "unknown_00527500": GlobalRange(0x10),
                         },
                         externals={
-                            "unknown_00070570": lambda harness, arguments, says=says: (says, (harness.normalize(arguments[0]),)),
+                            "network_life_cycle_unknown_00070570": lambda harness, arguments, says=says: (says, (harness.normalize(arguments[0]),)),
                             "unknown_000705f0": lambda harness, arguments, result=result: (
                                 result,
                                 (harness.normalize(arguments[0]), *arguments[1:]),

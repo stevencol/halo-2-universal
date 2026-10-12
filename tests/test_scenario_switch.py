@@ -231,7 +231,7 @@ def run(t) -> None:
                                 "main_save_map",
                                 globals={"main_globals": main_globals(random_), **common, "main_game_globals": GAME},
                                 memory={**memory, TEXT_SOURCE: sound_source(value)},
-                                externals={"unknown_001896c0": lambda harness, arguments: 0, **messages},
+                                externals={"sound_unknown_001896c0": lambda harness, arguments: 0, **messages},
                             )
                         for index, loaded, asked in ((1, 1, 1), (1, 1, 0), (1, 2, 0), (2, 2, 1), (0, NONE, 0), (-1, 1, 0), (3, 1, 0), (5, 1, 1), (0x10001, 1, 0)):
                             t.check(

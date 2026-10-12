@@ -61,7 +61,7 @@ unknown_004cf780 has after a state was loaded, as the bits say.
 thing that is going does its work. 0x00068dc0: the thing that is going,
 for a game that begins again */
 void unknown_00162060(void);
-void unknown_00162420(void);
+void game_voice_unknown_00162420(void);
 void unknown_000bb7f0(void);
 void unknown_00183f10(void);
 void __attribute__((stdcall)) simulation_players_after_load(long unknown, unsigned long flags);
@@ -571,7 +571,7 @@ void GAME_STATE_PROC simulation_after_load(
 			kind= main_game_globals->options.simulation;
 			if (kind>=4 && kind<=5)
 			{
-				unknown_00162420();
+				game_voice_unknown_00162420();
 				unknown_000bb7f0();
 				unknown_00183f10();
 			}
