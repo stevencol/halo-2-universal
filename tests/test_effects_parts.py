@@ -4,7 +4,7 @@ import random
 
 from difftest import Buffer
 
-EFFECTS = ("effect_data", "effect_location_data", "unknown_00510c74", "unknown_0051ec84", "unknown_0051ec88", "unknown_0051ec8c")
+EFFECTS = ("effect_data", "effect_location_data", "particle_system_data", "particle_data", "particle_emitter_data", "particle_location_data")
 CONTRAILS = ("contrail_data", "contrail_point_data")
 
 

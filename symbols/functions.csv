@@ -2651,7 +2651,7 @@ address,name,source,arguments,returns,convention
 0019c6d0,unknown_0019c6d0,,stack stack,void,stdcall
 0019c7e0,unknown_0019c7e0,,stack,void,stdcall
 0017d5f0,unknown_0017d5f0,,stack,void,stdcall
-00173de0,unknown_00173de0,,,void
+00173de0,particle_systems_initialize,source/effects/particle_systems.c,,void
 00043890,unknown_00043890,,,void
 0003b950,game_unknown_0002b4a0_unknown_0003b950,source/game/game_unknown_0002b4a0.c,,void
 00015b70,unknown_00015b70,,,void

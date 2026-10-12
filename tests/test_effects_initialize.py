@@ -48,7 +48,7 @@ def run(t) -> None:
             },
             extra=buffers,
             mocks=mocks,
-            externals={"unknown_00173de0": note},
+            externals={"particle_systems_initialize": note},
         )
         allocation, buffers, mocks = tables(random_, (0x486C, 0xE0CC))
         t.check(

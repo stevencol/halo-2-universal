@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Las partículas crean sus cuatro tablas
+
+Una función (228 bytes) en el archivo nuevo `effects/particle_systems.c`. De 2127
+funciones se pasa a 2128, el 18,89 % de las del juego (el 11,300 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `particle_systems_initialize` | `0x00173de0` | `effects/particle_systems.c` |
+
+### Lo que se sabe
+
+- `particle_systems_initialize` (lo que `effects_initialize` llama al
+  final) crea las cuatro tablas de las partículas:
+  `"particle_system"` (128 de `0x54` bytes), `"particles"` (1024 de
+  `0x40`), `"particle_emitter"` (256 de `0x4C`) y `"particle_location"`
+  (256 de `0x34`).
+- Eran **las cuatro tablas sin nombre de `effects.c`** (hito 611), que las
+  vacía con cada mapa: ya se llaman `particle_system_data`,
+  `particle_data`, `particle_emitter_data` y `particle_location_data`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  627.
+- El nombre del archivo sale de los textos de las tablas.
+- En este hito se pasaron la prueba de la función y todas las de
+  `test_effects…`.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Lo que ejecuta los guiones crea sus tablas
 
 Una función (169 bytes) en el archivo nuevo `hs/hs_runtime.c`. De 2126
