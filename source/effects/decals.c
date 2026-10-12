@@ -287,3 +287,31 @@ void __attribute__((stdcall)) decals_clear_flags(
 		}
 	}
 }
+
+/* 0x0017cc60: what is done with a mark each frame */
+void unknown_0017cc60(long decal_index);
+
+/* 0x0017d690: each frame (game.c), if the table can be used: a tick of the
+cache goes by, and each mark is updated */
+void decals_update(
+	void)
+{
+	if (decal_data->valid)
+	{
+		long absolute_index= NONE;
+
+		decals_cache_idle();
+		for (;;)
+		{
+			const byte *decal;
+
+			absolute_index= data_next_absolute_index(decal_data, absolute_index+1);
+			if (absolute_index==NONE)
+			{
+				break;
+			}
+			decal= (const byte *)decal_data->data+absolute_index*decal_data->size;
+			unknown_0017cc60((*(const short *)decal<<16)|absolute_index);
+		}
+	}
+}

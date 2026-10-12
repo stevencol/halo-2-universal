@@ -537,7 +537,7 @@ def run_players_and_won(t) -> None:
     random_ = random.Random(145)
     FRAME_NAMES = (
         "unknown_0017bc40",
-        "unknown_0017d690",
+        "decals_update",
         "widgets_update",
         "unknown_0018c060",
         "unknown_002118c0",

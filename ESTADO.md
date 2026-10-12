@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 662.
+**Última actualización:** 2026-10-08, al terminar el hito 663.
 
 ## Dónde estamos
 
-- **2215 funciones descompiladas de 11.265: el 19,66 % del juego** (el
-  11,449 % de los bytes de código).
-- Las 2215 están comprobadas contra el ejecutable original: las 1390 del
+- **2216 funciones descompiladas de 11.265: el 19,67 % del juego** (el
+  11,453 % de los bytes de código).
+- Las 2216 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile two walks over the decals: after a load, and clearing their flags* (ver `git log`).
+- Último hito: *Decompile what the decals do each frame* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 534 funciones apuntadas pero sin descompilar (las que el código
   llama); 385 de ellas solo se conocen por su dirección (`unknown_...`).

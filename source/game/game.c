@@ -50,7 +50,7 @@ void unknown_0019d650(void *unknown);
 0x00039e50 and 0x00176f60: what is updated by the frame, with its seconds
 or not */
 void __attribute__((stdcall)) unknown_0017bc40(real seconds);
-void unknown_0017d690(void);
+void decals_update(void);
 void __attribute__((stdcall)) widgets_update(real seconds);
 void __attribute__((stdcall)) unknown_0018c060(real seconds);
 void unknown_002118c0(void);
@@ -751,7 +751,7 @@ void __attribute__((stdcall)) game_frame(
 	if (seconds>0.0f)
 	{
 		unknown_0017bc40(seconds);
-		unknown_0017d690();
+		decals_update();
 		widgets_update(seconds);
 		unknown_0018c060(seconds);
 		unknown_002118c0();

@@ -2,6 +2,35 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Los decals en cada fotograma
+
+Una función (115 bytes) en `effects/decals.c`. De 2215
+funciones se pasa a 2216, el 19,67 % de las del juego (el 11,453 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `decals_update` | `0x0017d690` | `effects/decals.c` |
+
+### Lo que se sabe
+
+- `decals_update` (antes `unknown_0017d690`, una de las que `game_frame`
+  llama por fotograma): si la tabla de decals se puede usar, hace pasar un
+  tic de su caché (`decals_cache_idle`) y llama a `unknown_0017cc60` con
+  cada decal.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  662.
+- `unknown_0017cc60` (lo que se hace con cada decal: parece que los va
+  desvaneciendo) no está descompilada.
+- En este hito se pasaron las pruebas de la función y la de `game_frame`.
+  Hay una batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Dos recorridos de los decals
 
 Dos funciones (279 bytes) en `effects/decals.c`. De 2213
