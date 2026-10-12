@@ -168,15 +168,15 @@ void players_dispose_from_old_map(void);
 void unknown_0014b6a0(void);
 void unknown_00153870(void);
 void unknown_001538b0(void);
-void unknown_001552e0(void);
+void game_unknown_001552e0_initialize(void);
 void unknown_00155380(void);
-void unknown_00155490(void);
+void game_unknown_001552e0_dispose_from_old_map(void);
 void unknown_00155ea0(void);
 void unknown_00155ed0(void);
-void unknown_00157450(void);
+void game_engine_initialize(void);
 void unknown_001574c0(void);
 void unknown_00157bb0(void);
-void unknown_0016efb0(void);
+void game_unknown_0016efb0_initialize(void);
 void unknown_0016f0e0(void);
 void unknown_0016f120(void);
 void effects_initialize(void);
@@ -360,7 +360,7 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{players_initialize, players_dispose, unknown_0014b580, players_dispose_from_old_map, no_operation, no_operation},
 	{sound_unknown_00185ab0, no_operation, sound_unknown_00185b00, no_operation},
 	{game_unknown_001e6a40_initialize, no_operation, game_unknown_001e6a40_initialize_for_new_map, game_unknown_001e6a40_dispose_from_old_map},
-	{unknown_00157450, no_operation, unknown_001574c0, unknown_00157bb0},
+	{game_engine_initialize, no_operation, unknown_001574c0, unknown_00157bb0},
 	{simulation_initialize, simulation_dispose, simulation_initialize_for_new_map, simulation_dispose_from_old_map},
 	{no_operation, no_operation, game_unknown_0011be20_initialize_for_new_map, game_unknown_0011be20_dispose_from_old_map},
 	{game_unknown_001eb550_initialize, game_unknown_001eb550_dispose, game_unknown_001eb550_initialize_for_new_map, no_operation},
@@ -373,8 +373,8 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{unknown_0002b4a0, unknown_0002b5c0, unknown_0002b540, unknown_0002b5a0},
 	{no_operation, no_operation, no_operation, no_operation},
 	{breakable_surfaces_initialize, no_operation, breakable_surfaces_initialize_for_new_map, no_operation, breakable_surfaces_unknown_00183ee0, breakable_surfaces_unknown_00183f00},
-	{unknown_001552e0, no_operation, unknown_00155380, unknown_00155490},
-	{unknown_0016efb0, no_operation, unknown_0016f0e0, no_operation, unknown_0016f120, no_operation},
+	{game_unknown_001552e0_initialize, no_operation, unknown_00155380, game_unknown_001552e0_dispose_from_old_map},
+	{game_unknown_0016efb0_initialize, no_operation, unknown_0016f0e0, no_operation, unknown_0016f120, no_operation},
 	{decals_initialize, decals_dispose, decals_initialize_for_new_map, decals_dispose_from_old_map, unknown_0017d350, unknown_0017d440, NULL, (game_system_activation_proc)unknown_0017d5e0},
 	{no_operation, no_operation, no_operation, no_operation},
 	{contrails_initialize, contrails_dispose, contrails_initialize_for_new_map, contrails_dispose_from_old_map, unknown_0017b940, no_operation},

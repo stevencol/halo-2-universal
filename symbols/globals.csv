@@ -458,3 +458,7 @@ address,name,source
 004f93b0,unknown_004f93b0,source/game/game_unknown_001eb550.c
 00509444,unknown_00509444,source/effects/decals.c
 00509448,unknown_00509448,source/effects/decals.c
+00502258,unknown_00502258,source/game/game_engine.c
+00510c70,unknown_00510c70,source/game/game_unknown_0016efb0.c
+004e8c38,unknown_004e8c38,source/game/game_unknown_001552e0.c
+004e8c34,unknown_004e8c34,source/game/game_unknown_001552e0.c

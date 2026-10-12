@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — El motor de la partida toma su memoria, y tres arranques más
+
+Cuatro funciones cortas (unos 250 bytes) en tres archivos nuevos de `game/`. De 2094
+funciones se pasa a 2098, el 18,62 % de las del juego (el 11,264 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_engine_initialize` | `0x00157450` | `game/game_engine.c` |
+| `game_unknown_0016efb0_initialize` | `0x0016efb0` | `game/game_unknown_0016efb0.c` |
+| `game_unknown_001552e0_initialize` | `0x001552e0` | `game/game_unknown_001552e0.c` |
+| `game_unknown_001552e0_dispose_from_old_map` | `0x00155490` | `game/game_unknown_001552e0.c` |
+
+### Lo que se sabe
+
+- `game_engine_initialize` aclara de dónde sale `unknown_004e9ae8`, el
+  puntero que desde hace muchos hitos se usaba sin saber qué era: es un
+  bloque de **`0xC9C` bytes del estado del juego** que esta función toma y
+  pone a cero, y cuyo número de `0xC14` (qué clase de partida se juega)
+  empieza en `NONE`. Por eso el archivo se llama `game_engine.c`.
+- La parte de `0x16efb0` guarda cinco números en el estado del juego.
+- La parte de `0x1552e0` guarda `0x50C` bytes fijos, que borra al arrancar
+  y al irse el mapa, más un byte y `0x78` bytes del estado del juego (estos
+  últimos son `unknown_00510c6c`, que `game.c` ya usaba).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  615.
+- «Motor de la partida» es una suposición por cómo se usa el número de
+  `0xC14`; las otras dos partes no tienen nombre.
+- En este hito se pasaron las pruebas de las cuatro funciones y `test_game`
+  entera.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Niveles, sonidos en bucle y jugadores crean sus tablas de datos
 
 Tres funciones de arranque (unos 400 bytes), en `main/levels.c`, `sound/sound_manager.c` y

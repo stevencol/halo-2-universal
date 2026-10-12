@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 615.
+**Última actualización:** 2026-10-08, al terminar el hito 616.
 
 ## Dónde estamos
 
-- **2094 funciones descompiladas de 11.265: el 18,59 % del juego** (el
+- **2098 funciones descompiladas de 11.265: el 18,62 % del juego** (el
   11,264 % de los bytes de código).
-- Las 2094 están comprobadas contra el ejecutable original: las 1390 del
+- Las 2098 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how the levels, the looping sounds and the players make their tables of data* (ver `git log`).
+- Último hito: *Decompile how the engine of the game takes its memory, and three more start functions* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 560 funciones apuntadas pero sin descompilar (las que el código
-  llama); 411 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 556 funciones apuntadas pero sin descompilar (las que el código
+  llama); 407 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 
