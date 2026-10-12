@@ -538,7 +538,7 @@ def run_players_and_won(t) -> None:
     FRAME_NAMES = (
         "unknown_0017bc40",
         "unknown_0017d690",
-        "game_unknown_000d4db0",
+        "widgets_update",
         "unknown_0018c060",
         "unknown_002118c0",
         "unknown_00134e00",
@@ -642,13 +642,13 @@ def run_tick_procs(t) -> None:
         mocks = []
         for index in range(3):
             if random_.random() < 0.7:
-                struct.pack_into("<I", table, index * 0x38, mock_address(len(mocks)))
+                struct.pack_into("<I", table, index * 0x38 + 0x20, mock_address(len(mocks)))
                 mocks.append(Mock(lambda call: 0, stack_arguments=1))
             else:
-                struct.pack_into("<I", table, index * 0x38, 0)
+                struct.pack_into("<I", table, index * 0x38 + 0x20, 0)
         t.check(
-            "game_unknown_000d4db0",
+            "widgets_update",
             struct.unpack("<I", struct.pack("<f", random_.choice((1.0 / 30.0, 0.0, 1.0, -2.5))))[0],
-            globals={"unknown_004674b8": bytes(table)},
+            globals={"widget_type_definitions": bytes(table)},
             mocks=mocks,
         )

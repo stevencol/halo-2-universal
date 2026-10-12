@@ -1450,7 +1450,7 @@ address,name,source,arguments,returns,convention
 001a1870,file_reference_get_full_path,source/cseries/async.c,eax stack,int
 001a0a70,async_create_file_blocking,source/cseries/async.c,stack stack stack stack stack stack,void
 0017bc40,unknown_0017bc40,,stack,void,stdcall
-000d4db0,game_unknown_000d4db0,source/game/game.c,stack,void,stdcall
+000d4db0,widgets_update,source/objects/widgets.c,stack,void,stdcall
 0018c060,unknown_0018c060,,stack,void,stdcall
 00134e00,unknown_00134e00,,stack,void,stdcall
 00039e50,unknown_00039e50,,stack,void,stdcall
@@ -2710,3 +2710,6 @@ address,name,source,arguments,returns,convention
 001cae40,unknown_001cae40,,edi stack stack,void
 000c0230,light_new,source/objects/lights.c,stack stack stack stack stack,int,stdcall
 000c0c80,unknown_000c0c80,,stack,void,stdcall
+000d4830,widgets_initialize,source/objects/widgets.c,,void
+000d4890,widgets_initialize_for_new_map,source/objects/widgets.c,,void
+000d48d0,widgets_dispose_from_old_map,source/objects/widgets.c,,void

@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Los widgets: antenas, telas y líquidos, y la tabla de sus tipos
+
+Tres funciones nuevas (unos 180 bytes) en los archivos nuevos `objects/widgets.{h,c}`, y una
+cuarta que ya estaba hecha y se muda a ellos. De 2165
+funciones se pasa a 2168, el 19,25 % de las del juego (el 11,372 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `widgets_initialize` | `0x000d4830` | `objects/widgets.c` |
+| `widgets_initialize_for_new_map` | `0x000d4890` | `objects/widgets.c` |
+| `widgets_dispose_from_old_map` | `0x000d48d0` | `objects/widgets.c` |
+
+### Lo que se sabe
+
+- **La tabla `unknown_004674b8` de `game.c` era un trozo de otra**: empieza
+  en `0x467498` y son los tres tipos de *widget* del juego, cada uno de
+  `0x38` bytes: el grupo de sus tags (`'ant!'` antenas, `'clwd'` telas,
+  `'tdtl'` líquidos) y sus funciones, que son las de `antenna.c`, `cloth.c`
+  y `liquid.c` (hito 629). Ahora es `widget_type_definitions`, con su
+  estructura en `widgets.h`.
+- `widgets_initialize` crea `"widget"` (64 de `0xC` bytes) y llama al
+  arranque de cada tipo; `widgets_initialize_for_new_map` vacía la tabla y
+  avisa a cada tipo; `widgets_dispose_from_old_map` avisa a cada tipo y
+  marca la tabla como no utilizable.
+- `game_unknown_000d4db0` pasa a llamarse `widgets_update` y se muda a
+  `widgets.c`: es la que en cada tic llama a la función de cada tipo.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  640.
+- De las funciones de cada tipo solo se conocen cuatro (`+8`, `+0xC`,
+  `+0x10`, `+0x20`); las demás no tienen nombre.
+- En este hito se pasaron las pruebas de `test_widgets`, y de `test_game`
+  las de `widgets_update` y `game_frame`. Hay una batería completa en
+  marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Una luz nueva
 
 Una función (273 bytes) en `objects/lights.c`. De 2164

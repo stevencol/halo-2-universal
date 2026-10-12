@@ -409,7 +409,7 @@ address,name,source
 00547f6f,unknown_00547f6f,source/game/game.c
 00479750,unknown_00479750,source/networking/online_tasks.c
 004cf768,unknown_004cf768,source/networking/online_presence.c
-004674b8,unknown_004674b8,source/game/game.c
+00467498,widget_type_definitions,source/objects/widgets.c
 004cf784,unknown_004cf784,source/networking/simulation.c
 00544b20,unknown_00544b20,source/networking/simulation.c
 00545d40,unknown_00545d40,source/networking/simulation.c
@@ -519,3 +519,4 @@ address,name,source
 005107e8,light_globals,source/objects/lights.c
 004e0310,unknown_004e0310,source/objects/lights.c
 004e0308,unknown_004e0308,source/objects/lights.c
+004e0320,widget_data,source/objects/widgets.c
