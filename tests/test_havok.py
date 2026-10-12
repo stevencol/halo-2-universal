@@ -30,10 +30,10 @@ def run(t) -> None:
             externals={
                 name: note
                 for name in (
-                    "unknown_001edbc0",
+                    "havok_unknown_001edbc0",
                     "impacts_initialize",
                     "havok_components_initialize",
-                    "unknown_00146b30",
+                    "havok_unknown_00146b30",
                     "unknown_00146b80",
                 )
             },

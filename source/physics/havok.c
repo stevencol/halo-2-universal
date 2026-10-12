@@ -37,11 +37,12 @@ extern struct data_array *havok_component_data;
 
 /* ---------- prototypes */
 
+void *VirtualAlloc(void *address, unsigned long size, unsigned long type, unsigned long protection);
 int VirtualFree(void *address, unsigned long size, unsigned long type);
 uint32_t GetLastError(void);
 
-void unknown_001edbc0(void);
-void unknown_00146b30(void);
+void havok_unknown_001edbc0(void);
+void havok_unknown_00146b30(void);
 void unknown_00146b80(void);
 void unknown_00146de0(void);
 void impacts_initialize(void);
@@ -58,10 +59,10 @@ void havok_initialize(
 {
 	unknown_0051e9a0= game_state_malloc(sizeof(long));
 	*unknown_0051e9a0= 0;
-	unknown_001edbc0();
+	havok_unknown_001edbc0();
 	impacts_initialize();
 	havok_components_initialize();
-	unknown_00146b30();
+	havok_unknown_00146b30();
 	unknown_00146b80();
 }
 
@@ -92,5 +93,42 @@ void havok_initialize_for_new_map(
 	for (index= 0; index<HAVOK_UNKNOWN_0051E9CC_COUNT; index++)
 	{
 		unknown_0051e9cc[index]= NONE;
+	}
+}
+
+/* 0x001edbc0: the 2000 numbers take their memory in the state of the game
+(game_state_malloc, which the game has written here), if they have none. In
+the game it is far from the others of this file, so it may be of another */
+void havok_unknown_001edbc0(
+	void)
+{
+	if (!unknown_0051e9cc)
+	{
+		unknown_0051e9cc= game_state_malloc(HAVOK_UNKNOWN_0051E9CC_COUNT*(long)sizeof(long));
+	}
+}
+
+/* 0x00146b30: the memory of the console that havok_dispose gives back is
+taken: 0x105470 bytes that start at an address that is a multiple of 0x1000,
+with their size and how far back the memory really starts kept just before
+them; none if there is no memory (and the error is asked for). Far from the
+others too */
+void havok_unknown_00146b30(
+	void)
+{
+	byte *memory= VirtualAlloc(NULL, 0x105470+0x1000, 0x101000, 4);
+
+	if (!memory)
+	{
+		GetLastError();
+		unknown_00479888= NULL;
+	}
+	else
+	{
+		byte *aligned= (byte *)(((uintptr_t)memory+0x1000)&~(uintptr_t)0xFFF);
+
+		((long *)aligned)[-2]= 0x105470;
+		((long *)aligned)[-1]= (long)(aligned-memory);
+		unknown_00479888= aligned;
 	}
 }

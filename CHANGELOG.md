@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — La memoria de la física y otra parte de una sola función
+
+Tres funciones (unos 160 bytes): dos en `physics/havok.c` y una en el archivo provisional
+nuevo `game/game_unknown_0003f2b0.c`. De 2189
+funciones se pasa a 2192, el 19,46 % de las del juego (el 11,386 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_001edbc0` | `0x001edbc0` | `physics/havok.c` |
+| `havok_unknown_00146b30` | `0x00146b30` | `physics/havok.c` |
+| `game_unknown_0003f2b0_initialize_for_new_structure_bsp` | `0x0003f2b0` | `game/game_unknown_0003f2b0.c` |
+
+### Lo que se sabe
+
+- `havok_unknown_001edbc0` pide del estado de la partida los 2000 números
+  que `havok_initialize_for_new_map` pone a `NONE`, si aún no los tiene.
+- `havok_unknown_00146b30` pide a la consola (`VirtualAlloc`) la memoria que
+  `havok_dispose` devuelve: `0x105470` bytes alineados a `0x1000`, con su
+  tamaño y la distancia al comienzo real guardados justo antes. Así se
+  entiende la resta que hace `havok_dispose` antes de `VirtualFree`.
+- `game_unknown_0003f2b0_initialize_for_new_structure_bsp` pone a cero un
+  número (`0x509438`) cuando llega un bsp nuevo; es la única función de su
+  parte en la tabla de `game.c`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  646.
+- Las dos primeras están lejos de `havok_initialize` en el juego: pueden
+  ser de otros archivos. Para qué es la memoria (¿la de Havok?) no se ha
+  visto.
+- En este hito se pasaron las pruebas de las tres funciones y las de
+  `havok_initialize` y `havok_dispose`. Hay una batería completa en marcha
+  sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — La parte de la física arranca y se para; la semilla de los números al azar
 
 Cinco funciones (unos 330 bytes): tres en el archivo nuevo `physics/havok.c`, una en

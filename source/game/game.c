@@ -118,7 +118,7 @@ void game_unknown_0002b4a0_initialize(void);
 void game_unknown_0002b4a0_initialize_for_new_map(void);
 void game_unknown_0002b4a0_dispose_from_old_map(void);
 void game_unknown_0002b4a0_dispose(void);
-void unknown_0003f2b0(void);
+void game_unknown_0003f2b0_initialize_for_new_structure_bsp(void);
 void simulation_initialize(void);
 void simulation_dispose(void);
 void simulation_initialize_for_new_map(void);
@@ -379,7 +379,7 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{no_operation, no_operation, no_operation, no_operation},
 	{contrails_initialize, contrails_dispose, contrails_initialize_for_new_map, contrails_dispose_from_old_map, unknown_0017b940, no_operation},
 	{effects_initialize, effects_dispose, effects_initialize_for_new_map, effects_dispose_from_old_map, unknown_00175d70, no_operation},
-	{no_operation, no_operation, no_operation, no_operation, unknown_0003f2b0, no_operation},
+	{no_operation, no_operation, no_operation, no_operation, game_unknown_0003f2b0_initialize_for_new_structure_bsp, no_operation},
 	{no_operation, no_operation, game_unknown_001eb550_unknown_00211030, no_operation},
 	{sound_classes_initialize, sound_classes_dispose, sound_classes_initialize_for_new_map, sound_classes_dispose_from_old_map},
 	{sound_initialize, sound_dispose, sound_initialize_for_new_map, sound_dispose_from_old_map, sound_initialize_for_new_structure_bsp, no_operation},

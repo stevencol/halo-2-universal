@@ -317,7 +317,7 @@ address,name,source,arguments,returns,convention
 0002b540,game_unknown_0002b4a0_initialize_for_new_map,source/game/game_unknown_0002b4a0.c,,void
 0002b5a0,game_unknown_0002b4a0_dispose_from_old_map,source/game/game_unknown_0002b4a0.c,,void
 0002b5c0,game_unknown_0002b4a0_dispose,source/game/game_unknown_0002b4a0.c,,void
-0003f2b0,unknown_0003f2b0,,,void
+0003f2b0,game_unknown_0003f2b0_initialize_for_new_structure_bsp,source/game/game_unknown_0003f2b0.c,,void
 00067e30,simulation_initialize,source/networking/simulation.c,,void
 00067eb0,simulation_dispose,source/networking/simulation.c,,void
 00067ee0,simulation_initialize_for_new_map,source/networking/simulation.c,,void
@@ -2721,7 +2721,7 @@ address,name,source,arguments,returns,convention
 00210f00,unknown_00210f00,,,void
 00210e20,unknown_00210e20,,,void
 00210e80,unknown_00210e80,,,void
-001edbc0,unknown_001edbc0,,,void
-00146b30,unknown_00146b30,,,void
+001edbc0,havok_unknown_001edbc0,source/physics/havok.c,,void
+00146b30,havok_unknown_00146b30,source/physics/havok.c,,void
 00146b80,unknown_00146b80,,,void
 00146de0,unknown_00146de0,,,void
