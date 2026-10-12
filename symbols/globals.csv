@@ -462,3 +462,5 @@ address,name,source
 00510c70,unknown_00510c70,source/game/game_unknown_0016efb0.c
 004e8c38,unknown_004e8c38,source/game/game_unknown_001552e0.c
 004e8c34,unknown_004e8c34,source/game/game_unknown_001552e0.c
+00509434,unknown_00509434,source/game/game_unknown_0002b4a0.c
+00485a80,unknown_00485a80,source/rasterizer/rasterizer.c

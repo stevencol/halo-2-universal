@@ -310,13 +310,13 @@ address,name,source,arguments,returns,convention
 0012b2a0,unknown_0012b2a0,,,void
 0019d650,unknown_0019d650,,ebx,void
 00022590,unknown_00022590,,,void
-000226a0,unknown_000226a0,,,void
+000226a0,rasterizer_unknown_000226a0,source/rasterizer/rasterizer.c,,void
 000226b0,unknown_000226b0,,,void
-000226c0,unknown_000226c0,,,void
+000226c0,rasterizer_dispose_from_old_map,source/rasterizer/rasterizer.c,,void
 0002b4a0,unknown_0002b4a0,,,void
 0002b540,unknown_0002b540,,,void
-0002b5a0,unknown_0002b5a0,,,void
-0002b5c0,unknown_0002b5c0,,,void
+0002b5a0,game_unknown_0002b4a0_dispose_from_old_map,source/game/game_unknown_0002b4a0.c,,void
+0002b5c0,game_unknown_0002b4a0_dispose,source/game/game_unknown_0002b4a0.c,,void
 0003f2b0,unknown_0003f2b0,,,void
 00067e30,simulation_initialize,source/networking/simulation.c,,void
 00067eb0,simulation_dispose,source/networking/simulation.c,,void
@@ -2653,3 +2653,7 @@ address,name,source,arguments,returns,convention
 0017d5f0,unknown_0017d5f0,,stack,void,stdcall
 00173de0,unknown_00173de0,,,void
 00043890,unknown_00043890,,,void
+0003b950,unknown_0003b950,,,void
+00015b70,unknown_00015b70,,,void
+0001e1c0,unknown_0001e1c0,,,void
+00036ab0,unknown_00036ab0,,,void

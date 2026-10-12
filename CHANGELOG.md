@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Cuatro funciones cortas de las dos primeras partes de la tabla
+
+Cuatro funciones cortas (unos 60 bytes) en dos archivos nuevos. De 2098
+funciones se pasa a 2102, el 18,66 % de las del juego (el 11,264 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `rasterizer_dispose_from_old_map` | `0x000226c0` | `rasterizer/rasterizer.c` |
+| `rasterizer_unknown_000226a0` | `0x000226a0` | `rasterizer/rasterizer.c` |
+| `game_unknown_0002b4a0_dispose` | `0x0002b5c0` | `game/game_unknown_0002b4a0.c` |
+| `game_unknown_0002b4a0_dispose_from_old_map` | `0x0002b5a0` | `game/game_unknown_0002b4a0.c` |
+
+### Lo que se sabe
+
+- La primera parte de la tabla de partes del juego es **la que dibuja**:
+  al irse el mapa vacía la caché del texto que se dibuja
+  (`rasterizer_text_cache_flush`, que ya estaba hecha) y borra un número.
+  Por eso sus dos funciones van a `rasterizer/rasterizer.c`. La otra, la
+  quinta de sus seis, llama a tres más cuando el juego pasa a estar activo.
+- La parte de `0x2b4a0` tiene una tabla de datos (`unknown_00509434`): al
+  cerrar llama a `unknown_0003b950` y la olvida; al irse el mapa la marca
+  como no usable.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  616.
+- El nombre `rasterizer.c` es una suposición apoyada en una sola llamada;
+  la otra parte no tiene nombre.
+- En este hito se pasaron las pruebas de las cuatro funciones y `test_game`
+  entera.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — El motor de la partida toma su memoria, y tres arranques más
 
 Cuatro funciones cortas (unos 250 bytes) en tres archivos nuevos de `game/`. De 2094

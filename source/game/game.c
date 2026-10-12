@@ -111,13 +111,13 @@ last three fields of a part take arguments, which are not given here */
 void unknown_00012560(void);
 void unknown_000141c0(void);
 void unknown_00022590(void);
-void unknown_000226a0(void);
+void rasterizer_unknown_000226a0(void);
 void unknown_000226b0(void);
-void unknown_000226c0(void);
+void rasterizer_dispose_from_old_map(void);
 void unknown_0002b4a0(void);
 void unknown_0002b540(void);
-void unknown_0002b5a0(void);
-void unknown_0002b5c0(void);
+void game_unknown_0002b4a0_dispose_from_old_map(void);
+void game_unknown_0002b4a0_dispose(void);
 void unknown_0003f2b0(void);
 void simulation_initialize(void);
 void simulation_dispose(void);
@@ -369,8 +369,8 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{object_early_movers_initialize, object_early_movers_dispose, object_early_movers_initialize_for_new_map, object_early_movers_dispose_from_old_map},
 	{object_unknown_0010a980_initialize, object_unknown_0010a980_dispose, object_unknown_0010a980_initialize_for_new_map, object_unknown_0010a980_dispose_from_old_map},
 	{game_unknown_001ec420_initialize, game_unknown_001ec420_dispose, game_unknown_001ec420_initialize_for_new_map, game_unknown_001ec420_dispose_from_old_map},
-	{unknown_00012560, unknown_000141c0, unknown_00022590, unknown_000226c0, unknown_000226a0, unknown_000226b0},
-	{unknown_0002b4a0, unknown_0002b5c0, unknown_0002b540, unknown_0002b5a0},
+	{unknown_00012560, unknown_000141c0, unknown_00022590, rasterizer_dispose_from_old_map, rasterizer_unknown_000226a0, unknown_000226b0},
+	{unknown_0002b4a0, game_unknown_0002b4a0_dispose, unknown_0002b540, game_unknown_0002b4a0_dispose_from_old_map},
 	{no_operation, no_operation, no_operation, no_operation},
 	{breakable_surfaces_initialize, no_operation, breakable_surfaces_initialize_for_new_map, no_operation, breakable_surfaces_unknown_00183ee0, breakable_surfaces_unknown_00183f00},
 	{game_unknown_001552e0_initialize, no_operation, unknown_00155380, game_unknown_001552e0_dispose_from_old_map},
