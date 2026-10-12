@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — La parte que coloca los objetos del escenario
+
+Tres funciones (unos 110 bytes), en el archivo nuevo `objects/object_placement.c`.
+De 2168
+funciones se pasa a 2171, el 19,27 % de las del juego (el 11,372 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_placement_initialize` | `0x000d4de0` | `objects/object_placement.c` |
+| `object_placement_initialize_for_new_map` | `0x000d4e20` | `objects/object_placement.c` |
+| `object_placement_initialize_for_new_structure_bsp` | `0x000d4e30` | `objects/object_placement.c` |
+
+### Lo que se sabe
+
+- Es otra parte de la tabla de `game.c` (antes `unknown_000d4de0`,
+  `unknown_000d4e20`, `unknown_000d4e30`). El nombre sale del texto que el
+  propio juego da a lo que hace: `"placing objects on bsp"`.
+- `object_placement_initialize` pide 4 bytes del estado de la partida;
+  `object_placement_initialize_for_new_map` pone su `short` a `NONE`.
+- `object_placement_initialize_for_new_structure_bsp` anuncia el trabajo
+  (`unknown_001e95d0`, con el texto), coloca los objetos
+  (`unknown_000d5640`) salvo que el bloque `unknown_00510c50` tenga sus
+  bytes 5 y 7 puestos, y anuncia el final (`unknown_001e9650`).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  641.
+- Falta la séptima función de la parte (`0xd4e60`, antes de cambiar de
+  bsp) y la que de verdad coloca los objetos (`0xd5640`, 591 bytes).
+- En este hito se pasaron las pruebas de las tres funciones y la de
+  `game_initialize`. Hay una batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Los widgets: antenas, telas y líquidos, y la tabla de sus tipos
 
 Tres funciones nuevas (unos 180 bytes) en los archivos nuevos `objects/widgets.{h,c}`, y una

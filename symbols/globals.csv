@@ -520,3 +520,4 @@ address,name,source
 004e0310,unknown_004e0310,source/objects/lights.c
 004e0308,unknown_004e0308,source/objects/lights.c
 004e0320,widget_data,source/objects/widgets.c
+004e0324,object_placement_globals,source/objects/object_placement.c

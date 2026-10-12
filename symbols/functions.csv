@@ -333,9 +333,9 @@ address,name,source,arguments,returns,convention
 000b6bb0,unknown_000b6bb0,,,void
 000b6c50,unknown_000b6c50,,,void
 000b6df0,unknown_000b6df0,,,void
-000d4de0,unknown_000d4de0,,,void
-000d4e20,unknown_000d4e20,,,void
-000d4e30,unknown_000d4e30,,,void
+000d4de0,object_placement_initialize,source/objects/object_placement.c,,void
+000d4e20,object_placement_initialize_for_new_map,source/objects/object_placement.c,,void
+000d4e30,object_placement_initialize_for_new_structure_bsp,source/objects/object_placement.c,,void
 000d4e60,unknown_000d4e60,,,void
 00109300,object_early_movers_initialize,source/objects/object_early_movers.c,,void
 00109350,object_early_movers_dispose,source/objects/object_early_movers.c,,void
@@ -2713,3 +2713,5 @@ address,name,source,arguments,returns,convention
 000d4830,widgets_initialize,source/objects/widgets.c,,void
 000d4890,widgets_initialize_for_new_map,source/objects/widgets.c,,void
 000d48d0,widgets_dispose_from_old_map,source/objects/widgets.c,,void
+001e95d0,unknown_001e95d0,,stack,void,stdcall
+001e9650,unknown_001e9650,,,void

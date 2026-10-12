@@ -132,9 +132,9 @@ void unknown_000b6ab0(void);
 void unknown_000b6bb0(void);
 void unknown_000b6c50(void);
 void unknown_000b6df0(void);
-void unknown_000d4de0(void);
-void unknown_000d4e20(void);
-void unknown_000d4e30(void);
+void object_placement_initialize(void);
+void object_placement_initialize_for_new_map(void);
+void object_placement_initialize_for_new_structure_bsp(void);
 void unknown_000d4e60(void);
 void game_unknown_0011be20_initialize_for_new_map(void);
 void game_unknown_0011be20_dispose_from_old_map(void);
@@ -395,7 +395,7 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{hs_initialize, hs_dispose, hs_initialize_for_new_map, hs_dispose_from_old_map},
 	{recorded_animations_initialize, no_operation, recorded_animations_initialize_for_new_map, recorded_animations_dispose_from_old_map},
 	{no_operation, no_operation, no_operation, no_operation},
-	{unknown_000d4de0, no_operation, unknown_000d4e20, no_operation, unknown_000d4e30, no_operation, (game_system_structure_bsp_proc)unknown_000d4e60},
+	{object_placement_initialize, no_operation, object_placement_initialize_for_new_map, no_operation, object_placement_initialize_for_new_structure_bsp, no_operation, (game_system_structure_bsp_proc)unknown_000d4e60},
 	{ai_initialize, ai_dispose, ai_initialize_for_new_map, ai_dispose_from_old_map, unknown_001c7bb0, ai_dispose_from_old_structure_bsp},
 	{unknown_001c25a0, unknown_001c2600, unknown_001c2670, no_operation, unknown_001c2690, unknown_001c27a0},
 	{no_operation, no_operation, no_operation, no_operation, unknown_0014b6a0, no_operation},
