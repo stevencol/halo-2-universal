@@ -2,6 +2,18 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Batería completa en el hito 586: 1978 de 1978
+
+La batería completa lanzada sobre el hito 586 (commit `d8ed258`) acabó: **las 1978
+funciones que había entonces pasan su prueba contra el juego**, sin ningún fallo.
+Tardó unas tres horas.
+
+### Sin comprobar
+
+- No cubre los hitos 587 a 620, que solo tienen sus pruebas y las de quien
+  llama a lo renombrado.
+- **Romper líneas, pendiente** en las de los hitos 456 a 490 y 501 a 620.
+
 ## 2026-10-11 — Otras dos partes del juego: cuatro funciones cortas
 
 Cuatro funciones cortas (unos 230 bytes) en dos archivos nuevos de `game/`. De 2108
