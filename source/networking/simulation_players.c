@@ -941,8 +941,6 @@ boolean __attribute__((stdcall)) simulation_players_update_views_client(
 /* 0x0006ae20, 0x0006aee0: something that the thing that is going has to do
 before its views are looked at, for a console that does not rule the session
 and for the one that does. 0x00083f00: the consoles of the session are taken */
-boolean unknown_0006ae20(byte *world);
-boolean unknown_0006aee0(byte *world);
 boolean __attribute__((stdcall)) unknown_00083f00(long peer_count, byte *players, long unknown7618, long membership_number,
 	const byte *peers);
 
@@ -1013,7 +1011,7 @@ in some state. If the session is not well (in its fifth state for the
 console that rules it, established for the others), the thing gives up, and
 that is all. Then: something that the thing has to do first, when the
 console rules the session and the thing does not rule the game or the other
-way round (unknown_0006aee0, unknown_0006ae20); something more of the thing
+way round (simulation_world_become_authority, simulation_world_become_client); something more of the thing
 if the session says so; the consoles of the session are taken
 (unknown_00083f00); and the views, as the one that rules the game or as
 another (simulation_players_update_views_host, simulation_players_update_views_client) */
@@ -1057,12 +1055,12 @@ boolean simulation_players_update_views(
 	authority= simulation_unknown_00067e10(world);
 	if (!host)
 	{
-		if (authority && !unknown_0006ae20(world))
+		if (authority && !simulation_world_become_client(world))
 		{
 			return FALSE;
 		}
 	}
-	else if (!authority && !unknown_0006aee0(world))
+	else if (!authority && !simulation_world_become_authority(world))
 	{
 		return FALSE;
 	}

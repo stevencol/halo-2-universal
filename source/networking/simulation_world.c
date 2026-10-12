@@ -18,6 +18,7 @@ and so are the names of its functions.
 #include "main/main_game.h"
 #include "memory/data.h"
 #include "saved games/game_state.h"
+#include "networking/game_voice.h"
 #include "networking/network_globals.h"
 #include "networking/network_heap.h"
 #include "networking/network_observer.h"
@@ -2038,5 +2039,133 @@ void __attribute__((stdcall)) simulation_world_send_players(
 		network_observer_channel_send(FALSE, *(const long *)(view+SIMULATION_VIEW_OBSERVER_CHANNEL_OFFSET),
 			*(byte *const *)(view+SIMULATION_VIEW_OBSERVER_OFFSET), SIMULATION_VIEW_SESSION_INDEX,
 			_network_message_simulation_players, sizeof(message), &message);
+	}
+}
+
+/* 0x000d5560, 0x000d5640, 0x00185a30, 0x00185630, 0x00162060, 0x00196470,
+0x00196780: what other parts of the game do when this console comes to rule
+a game that it did not */
+void __attribute__((stdcall)) unknown_000d5560(long unknown);
+void unknown_000d5640(void);
+void unknown_00185a30(void);
+void unknown_00185630(void);
+void unknown_00162060(void);
+void unknown_00196470(void);
+void unknown_00196780(void);
+
+/* 0x00510ca0, 0x00510ca1, of simulation_view.c; 0x004cf784, of simulation.c */
+extern boolean unknown_00510ca0;
+extern boolean unknown_00510ca1;
+extern struct simulation_type_table *unknown_004cf784;
+
+/* 0x0006ae20: the thing that ruled the game rules it no more, because
+another console rules the session now. It ends and is set up again
+(simulation_world_dispose, simulation_world_initialize) as the thing of a
+game of kind 2, if it was in its second state, or of kind 4; it keeps what
+unknown_004cf780 has, its memory, the six bytes of this console and which
+console it is, and the byte that lets views be made. Always TRUE */
+boolean simulation_world_become_client(
+	byte *world)
+{
+	long state= *(const long *)(world+SIMULATION_WORLD_STATE_OFFSET);
+	long unknown= *(const long *)(world+SIMULATION_WORLD_UNKNOWN0_OFFSET);
+	byte *memory= *(byte *const *)(world+SIMULATION_WORLD_UNKNOWN4_OFFSET);
+	long machine_index= *(const long *)(world+SIMULATION_WORLD_MACHINE_INDEX_OFFSET);
+	byte machine[SIMULATION_VIEW_UNKNOWN14_SIZE];
+	boolean unknown2f= world[SIMULATION_WORLD_UNKNOWN2F_OFFSET];
+
+	memcpy(machine, world+SIMULATION_WORLD_OWN_UNKNOWN14_OFFSET, sizeof(machine));
+	simulation_world_dispose(world);
+	if (unknown_00510ca0)
+	{
+		unknown_00510ca0= FALSE;
+	}
+	main_game_globals->options.simulation= state!=_simulation_world_state2 ? 4 : 2;
+	unknown_004cf770.unknown1[7]= FALSE;
+	simulation_world_initialize(unknown, memory, unknown_004cf784, world);
+	memcpy(world+SIMULATION_WORLD_OWN_UNKNOWN14_OFFSET, machine, sizeof(machine));
+	world[SIMULATION_WORLD_UNKNOWNC_OFFSET]= TRUE;
+	*(long *)(world+SIMULATION_WORLD_MACHINE_INDEX_OFFSET)= machine_index;
+	simulation_world_unknown_0006a770(world);
+	if (unknown2f)
+	{
+		world[SIMULATION_WORLD_UNKNOWN2F_OFFSET]= TRUE;
+	}
+
+	return TRUE;
+}
+
+/* 0x0006aee0: the thing comes to rule the game, because this console rules
+the session now. From its third state: FALSE, with nothing done, while the
+state of the game is being received; if not, it ends and is set up again as
+the thing of a game of kind 3, keeping what simulation_world_become_client
+keeps, and the number that it has at 0x18 is 3
+(simulation_world_unknown_0006b1f0, simulation_world_unknown_0006b2a0). From
+any other: it gives up (simulation_world_unknown_0006b040), is in its fourth
+state, the game is of kind 5, what tells of the things that are takes those
+of the others (replication_entity_manager_adopt_entities), and other parts
+of the game are told. In both, no beginning again is asked for */
+boolean simulation_world_become_authority(
+	byte *world)
+{
+	if (*(const long *)(world+SIMULATION_WORLD_STATE_OFFSET)!=_simulation_world_state3)
+	{
+		simulation_world_unknown_0006b040(world);
+		*(long *)(world+SIMULATION_WORLD_STATE_OFFSET)= _simulation_world_state4;
+		main_game_globals->options.simulation= 5;
+		replication_entity_manager_adopt_entities(*(struct replication_entity_manager **)(world+SIMULATION_WORLD_UNKNOWN4_OFFSET));
+		simulation_world_unknown_0006a770(world);
+		unknown_000d5560(1);
+		unknown_000d5640();
+		unknown_00185a30();
+		unknown_00185630();
+		if (unknown_0055e4d0[*(const long *)(unknown_004e9ae8+UNKNOWN_004E9AE8_UNKNOWNC14_OFFSET)])
+		{
+			unknown_00162060();
+		}
+		if (unknown_0055e4d0[*(const long *)(unknown_004e9ae8+UNKNOWN_004E9AE8_UNKNOWNC14_OFFSET)])
+		{
+			unknown_00510ca0= TRUE;
+			unknown_00510ca1= FALSE;
+			unknown_00196470();
+			unknown_00196780();
+		}
+		unknown_004cf770.unknown1[8]= FALSE;
+
+		return TRUE;
+	}
+	else
+	{
+		long machine_index;
+		byte *memory;
+		long unknown;
+		byte machine[SIMULATION_VIEW_UNKNOWN14_SIZE];
+		boolean unknown2f;
+
+		if (simulation_world_receiving_game_state(world))
+		{
+			return FALSE;
+		}
+		machine_index= *(const long *)(world+SIMULATION_WORLD_MACHINE_INDEX_OFFSET);
+		memory= *(byte *const *)(world+SIMULATION_WORLD_UNKNOWN4_OFFSET);
+		unknown= *(const long *)(world+SIMULATION_WORLD_UNKNOWN0_OFFSET);
+		unknown2f= world[SIMULATION_WORLD_UNKNOWN2F_OFFSET];
+		memcpy(machine, world+SIMULATION_WORLD_OWN_UNKNOWN14_OFFSET, sizeof(machine));
+		simulation_world_dispose(world);
+		main_game_globals->options.simulation= 3;
+		simulation_world_initialize(unknown, memory, unknown_004cf784, world);
+		memcpy(world+SIMULATION_WORLD_OWN_UNKNOWN14_OFFSET, machine, sizeof(machine));
+		world[SIMULATION_WORLD_UNKNOWNC_OFFSET]= TRUE;
+		*(long *)(world+SIMULATION_WORLD_MACHINE_INDEX_OFFSET)= machine_index;
+		simulation_world_unknown_0006a770(world);
+		if (unknown2f)
+		{
+			world[SIMULATION_WORLD_UNKNOWN2F_OFFSET]= TRUE;
+		}
+		unknown_004cf770.unknown1[8]= FALSE;
+		simulation_world_unknown_0006b1f0(world, 0);
+		simulation_world_unknown_0006b2a0(world);
+
+		return TRUE;
 	}
 }

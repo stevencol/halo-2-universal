@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Lo que está en marcha cambia de papel cuando cambia quién manda en la sesión
+
+Dos funciones de `networking/simulation_world.c` (519 bytes). De 1972
+funciones se pasa a 1974, el 17,52 % de las del juego (el 11,026 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_world_become_client` | `0x0006ae20` | `networking/simulation_world.c` |
+| `simulation_world_become_authority` | `0x0006aee0` | `networking/simulation_world.c` |
+
+### Lo que se sabe
+
+- Son las dos que `simulation_players_update_views` llama cuando el papel
+  de esta consola en la sesión no casa con el de lo que está en marcha.
+- `simulation_world_become_client`: mandaba en la partida y ya no. **Se
+  cierra y se vuelve a preparar** como partida de clase 2 (si estaba en su
+  segundo estado) o 4, guardando lo de `unknown_004cf780`, su memoria, los
+  seis bytes de esta consola, su número y el byte que deja crear vistas.
+- `simulation_world_become_authority`: pasa a mandar. Desde el tercer
+  estado hace lo mismo hacia la clase 3 (y no hace nada, con `FALSE`,
+  mientras se esté recibiendo el estado del juego). Desde cualquier otro no
+  se reinicia: se rinde, pasa al cuarto estado, la partida es de clase 5,
+  lo que cuenta las cosas que existen **adopta las de los demás**
+  (`replication_entity_manager_adopt_entities`) y se avisa a otras siete
+  partes del juego.
+- Corrección: `unknown_000d5560` limpia su argumento de la pila; estaba
+  declarada como si no (en `main_game.c` y en la lista de funciones).
+- Variable nueva: `unknown_00510ca1`.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  583.
+- Los nombres `…_become_client` y `…_become_authority` son suposiciones:
+  salen de qué estados quedan a cada lado.
+- En este hito se pasaron las pruebas de las dos funciones y las de quien
+  las llama.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Las vistas de la simulación se mantienen: la consola que manda y las demás
 
 Dos funciones de `networking/simulation_players.c` (695 bytes). De 1970

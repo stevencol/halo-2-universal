@@ -249,6 +249,8 @@ struct simulation_type_table;
 void __attribute__((stdcall)) simulation_world_initialize(long unknown, byte *memory,
 	struct simulation_type_table *types, byte *world);
 void simulation_world_restart(byte *world);
+boolean simulation_world_become_client(byte *world);
+boolean simulation_world_become_authority(byte *world);
 void __attribute__((stdcall)) simulation_world_send_players(byte *world, boolean always);
 void simulation_world_update(byte *world);
 void __attribute__((stdcall)) simulation_world_dispose(byte *world);

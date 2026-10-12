@@ -963,7 +963,7 @@ address,name,source,arguments,returns,convention
 001a01e0,language_texts_load,source/text/unicode_string_list.c,edi,void
 002186f0,sound_cache_close,source/sound/sound_manager.c,,void
 0011be50,scenario_unload,source/scenario/scenario.c,,void
-000d5560,unknown_000d5560,,stack,void
+000d5560,unknown_000d5560,,stack,void,stdcall
 000c09c0,unknown_000c09c0,,eax,void
 00137e40,game_create_players,source/game/game.c,,void
 00158530,unknown_00158530,,,void
@@ -2579,6 +2579,11 @@ address,name,source,arguments,returns,convention
 00084560,simulation_players_update_views_client,source/networking/simulation_players.c,stack,bool,stdcall
 00085650,unknown_00085650,,eax ecx esi stack,void,stdcall
 000843f0,simulation_players_update_views_host,source/networking/simulation_players.c,stack stack,bool,stdcall
-0006ae20,unknown_0006ae20,,esi,bool
-0006aee0,unknown_0006aee0,,eax,bool
+0006ae20,simulation_world_become_client,source/networking/simulation_world.c,esi,bool
+0006aee0,simulation_world_become_authority,source/networking/simulation_world.c,eax,bool
 00083f00,unknown_00083f00,,edx stack stack stack stack,bool,stdcall
+000d5640,unknown_000d5640,,,void
+00185a30,unknown_00185a30,,,void
+00185630,unknown_00185630,,,void
+00196470,unknown_00196470,,,void
+00196780,unknown_00196780,,,void

@@ -60,7 +60,7 @@ void sound_cache_close(void);
 /* 0x0011be50: after the caches of a map are closed */
 
 /* what a new game sets up after its systems */
-void unknown_000d5560(long unknown);
+void __attribute__((stdcall)) unknown_000d5560(long unknown);
 void unknown_000c09c0(long game_mode);
 void unknown_00158530(void);
 void unknown_00138f10(void);

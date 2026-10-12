@@ -76,6 +76,8 @@ set, what was never sent in full is sent again at once. 0x004ced40: how
 long, in milliseconds, before the same is sent again */
 boolean unknown_00510ca0;
 boolean unknown_00510cb1;
+/* 0x00510ca1: cleared when this console comes to rule the game */
+boolean unknown_00510ca1;
 long unknown_004ced40;
 
 /* 0x004d87e4: whether the views have something at 0x8. 0x00450d14: the
