@@ -425,3 +425,6 @@ address,name,source
 004e0330,object_type_definition_list,source/objects/object_types.c
 005107f4,object_unknown_0010a980_globals,source/objects/object_unknown_0010a980.c
 0051e9c8,game_unknown_001ec420_globals,source/game/game_unknown_001ec420.c
+0050211c,unknown_0050211c,source/sound/sound_classes.c
+00502120,unknown_00502120,source/sound/sound_manager.c
+0051ebf4,unknown_0051ebf4,source/sound/sound_manager.c

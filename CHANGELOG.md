@@ -2,6 +2,55 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Tres partes del sonido: lo que se oye de cada clase y dos bloques más
+
+Nueve funciones cortas (unos 330 bytes), en `sound/sound_classes.c` y `sound/sound_manager.c`.
+De 2036
+funciones se pasa a 2045, el 18,15 % de las del juego (el 11,258 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_classes_initialize` | `0x00221850` | `sound/sound_classes.c` |
+| `sound_classes_dispose` | `0x002218f0` | `sound/sound_classes.c` |
+| `sound_classes_initialize_for_new_map` | `0x002218a0` | `sound/sound_classes.c` |
+| `sound_classes_dispose_from_old_map` | `0x002218e0` | `sound/sound_classes.c` |
+| `sound_unknown_002229d0` | `0x002229d0` | `sound/sound_manager.c` |
+| `sound_unknown_00222a10` | `0x00222a10` | `sound/sound_manager.c` |
+| `sound_unknown_00222a60` | `0x00222a60` | `sound/sound_manager.c` |
+| `sound_unknown_00225a40` | `0x00225a40` | `sound/sound_manager.c` |
+| `sound_unknown_00225a80` | `0x00225a80` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- Otras tres partes sin nombre de la tabla de partes del juego (`game.c`).
+- **Esta vez una tiene nombre seguro**: el bloque que toma es
+  `sound_class_gains`, que ya se conocía (cuatro reales por cada una de las
+  54 clases de sonido), y sus funciones están pegadas a `sound_class_get`.
+  `sound_classes_initialize` toma los `0x360` bytes y los pone a cero;
+  con un mapa nuevo se borran los tres primeros reales de cada clase (el
+  cuarto se deja) y se marca que hay mapa (`unknown_0050211c`).
+- La segunda guarda `0x22C` bytes (`unknown_00502120`): cuatro grupos de
+  ocho cosas de dos números y un real, que un mapa nuevo deja en `NONE`,
+  `NONE` y 1. Al irse el mapa llama a `unknown_00222d80`.
+- La tercera guarda diez números (`unknown_0051ebf4`) que un mapa nuevo
+  deja a cero.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  605.
+- De la segunda y la tercera no se sabe para qué son. La tercera está en
+  `sound_manager.c` solo porque su variable está junto a las del sonido:
+  puede no ser del sonido.
+- Los cuatro grupos de la segunda podrían ser los cuatro jugadores de una
+  consola; no está comprobado.
+- En este hito se pasaron las pruebas de las nueve funciones y `test_game`
+  entera.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Otras dos partes del juego: sus cuatro funciones de arranque y de mapa
 
 Ocho funciones cortas (unos 380 bytes) en dos archivos nuevos. De 2028

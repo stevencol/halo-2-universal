@@ -247,16 +247,16 @@ void unknown_00211030(void);
 void unknown_00215690(void);
 void unknown_00215720(void);
 void unknown_00215730(void);
-void unknown_00221850(void);
-void unknown_002218a0(void);
-void unknown_002218e0(void);
-void unknown_002218f0(void);
-void unknown_002229d0(void);
-void unknown_00222a10(void);
-void unknown_00222a60(void);
+void sound_classes_initialize(void);
+void sound_classes_initialize_for_new_map(void);
+void sound_classes_dispose_from_old_map(void);
+void sound_classes_dispose(void);
+void sound_unknown_002229d0(void);
+void sound_unknown_00222a10(void);
+void sound_unknown_00222a60(void);
 void unknown_00225700(void);
-void unknown_00225a40(void);
-void unknown_00225a80(void);
+void sound_unknown_00225a40(void);
+void sound_unknown_00225a80(void);
 void unknown_00225f80(void);
 void unknown_00225fc0(void);
 void unknown_003361a4(void);
@@ -381,12 +381,12 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{unknown_00175b50, unknown_00175bd0, unknown_00175c10, unknown_00175c70, unknown_00175d70, no_operation},
 	{no_operation, no_operation, no_operation, no_operation, unknown_0003f2b0, no_operation},
 	{no_operation, no_operation, unknown_00211030, no_operation},
-	{unknown_00221850, unknown_002218f0, unknown_002218a0, unknown_002218e0},
+	{sound_classes_initialize, sound_classes_dispose, sound_classes_initialize_for_new_map, sound_classes_dispose_from_old_map},
 	{sound_initialize, sound_dispose, sound_initialize_for_new_map, sound_dispose_from_old_map, sound_initialize_for_new_structure_bsp, no_operation},
 	{unknown_0020aee0, unknown_0020af50, unknown_0020af90, no_operation},
 	{unknown_001887d0, unknown_00188850, unknown_00188870, unknown_00188940, unknown_00188980, no_operation},
-	{unknown_00225a40, no_operation, unknown_00225a80, no_operation},
-	{unknown_002229d0, no_operation, unknown_00222a10, unknown_00222a60},
+	{sound_unknown_00225a40, no_operation, sound_unknown_00225a80, no_operation},
+	{sound_unknown_002229d0, no_operation, sound_unknown_00222a10, sound_unknown_00222a60},
 	{unknown_00153870, no_operation, unknown_001538b0, no_operation},
 	{unknown_001476c7, unknown_0014783f, unknown_0014784e, unknown_00147920},
 	{unknown_0013e5c7, unknown_003361a4, unknown_0013e5d6, unknown_0013e610},

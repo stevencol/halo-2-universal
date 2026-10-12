@@ -13463,3 +13463,87 @@ void sound_unknown_00189760(
 	source.unknown54= 0;
 	unknown_00189fe0(&source, request[1]);
 }
+
+enum
+{
+	/* of what unknown_00502120 points to, 0x22C bytes: four groups, 0x88
+	bytes from one to the next, of eight things of two numbers and a real;
+	and of what unknown_0051ebf4 points to: ten numbers */
+	SOUND_UNKNOWN_00502120_SIZE= 0x22C,
+	SOUND_UNKNOWN_00502120_GROUP_COUNT= 4,
+	SOUND_UNKNOWN_00502120_GROUP_SIZE= 0x88,
+	SOUND_UNKNOWN_00502120_ENTRY_COUNT= 8,
+	SOUND_UNKNOWN_00502120_ENTRY_SIZE= 0xC,
+	SOUND_UNKNOWN_0051EBF4_COUNT= 10
+};
+
+/* 0x00502120, 0x0051ebf4: two blocks of the state of the game: what they
+are of is not known */
+byte *unknown_00502120;
+long *unknown_0051ebf4;
+
+/* 0x00222d80: what is done with what unknown_00502120 points to when a map
+goes. game_state_malloc is of game_state.c */
+void unknown_00222d80(void);
+void *game_state_malloc(long size);
+
+/* 0x002229d0: what unknown_00502120 points to takes its memory of the state
+of the game. It is the first of the four functions of a part of the game
+(game.c). The game has game_state_malloc written here */
+void sound_unknown_002229d0(
+	void)
+{
+	unknown_00502120= game_state_malloc(SOUND_UNKNOWN_00502120_SIZE);
+}
+
+/* 0x00222a10: for a new map, it is nothing, but for the eight things of
+each of its four groups: NONE for the two numbers, and 1 for the real */
+void sound_unknown_00222a10(
+	void)
+{
+	byte *unknown= unknown_00502120;
+	long group;
+	long index;
+
+	memset(unknown, 0, SOUND_UNKNOWN_00502120_SIZE);
+	for (group= 0; group<SOUND_UNKNOWN_00502120_GROUP_COUNT; group++)
+	{
+		for (index= 0; index<SOUND_UNKNOWN_00502120_ENTRY_COUNT; index++)
+		{
+			byte *entry= unknown+group*SOUND_UNKNOWN_00502120_GROUP_SIZE+index*SOUND_UNKNOWN_00502120_ENTRY_SIZE;
+
+			*(long *)entry= NONE;
+			*(long *)(entry+4)= NONE;
+			*(real *)(entry+8)= 1.0f;
+		}
+	}
+}
+
+/* 0x00222a60: when a map goes: unknown_00222d80 */
+void sound_unknown_00222a60(
+	void)
+{
+	unknown_00222d80();
+}
+
+/* 0x00225a40: what unknown_0051ebf4 points to takes its memory of the state
+of the game. It is the first of the two functions of another part of the
+game; whether it is of the sound is a guess, by where the global is */
+void sound_unknown_00225a40(
+	void)
+{
+	unknown_0051ebf4= game_state_malloc(SOUND_UNKNOWN_0051EBF4_COUNT*sizeof(long));
+}
+
+/* 0x00225a80: for a new map, its ten numbers are nothing */
+void sound_unknown_00225a80(
+	void)
+{
+	long *unknown= unknown_0051ebf4;
+	long index;
+
+	for (index= 0; index<SOUND_UNKNOWN_0051EBF4_COUNT; index++)
+	{
+		unknown[index]= 0;
+	}
+}
