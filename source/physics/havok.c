@@ -231,11 +231,11 @@ void *unknown_0047f048;
 void *unknown_0051ecac;
 
 void unknown_001c2b10(void);
-void unknown_001c29d0(void);
-void unknown_001c2890(void);
+void havok_unknown_001c29d0(void);
+void havok_unknown_001c2890(void);
 void unknown_001c2910(void);
 void unknown_001c2a10(void);
-void __attribute__((stdcall)) unknown_001c39c0(void *unknown, long unknown2);
+void __attribute__((stdcall)) havok_unknown_001c39c0(byte *entity, boolean unknown2);
 /* its first argument is in ecx in the game (a method of a class of Havok's) */
 void unknown_0030be40(void *unknown, void *unknown2);
 
@@ -255,8 +255,8 @@ void __attribute__((stdcall)) havok_before_save_or_load(
 	}
 	if (flags&2)
 	{
-		unknown_001c29d0();
-		unknown_001c2890();
+		havok_unknown_001c29d0();
+		havok_unknown_001c2890();
 		unknown_0047f059= FALSE;
 	}
 	unknown_0047f04c++;
@@ -272,7 +272,7 @@ void __attribute__((stdcall)) havok_after_save_or_load(
 	{
 		unknown_0047f059= TRUE;
 		unknown_001c2910();
-		unknown_001c39c0(unknown_0047f048, 0);
+		havok_unknown_001c39c0(unknown_0047f048, 0);
 		unknown_0030be40(unknown_0047f048, unknown_0051ecac);
 	}
 	if (!(flags&1))
@@ -280,4 +280,106 @@ void __attribute__((stdcall)) havok_after_save_or_load(
 		unknown_0047f058= TRUE;
 		unknown_001c2a10();
 	}
+}
+
+/* 0x0051e9a4: the world of the physics, it seems: what the thing of
+0x0047f048 (one of its bodies, then) is put in and taken out of. 0x0047f050:
+how many things are in it. 0x004f55b0: another thing of Havok's that is let
+go of with that one */
+void *unknown_0051e9a4;
+long unknown_0047f050;
+void *unknown_004f55b0;
+
+/* functions of Havok's; the first argument of each is in ecx in the game.
+0x0030bd50 and 0x0030bc90 are of a thing of the world, 0x0030f800 and
+0x0030f2d0 of the world: they take a thing out of it and put it in */
+void unknown_0030bd50(void *entity, void *unknown);
+void unknown_0030bc90(void *entity);
+void unknown_0030f800(void *world, byte *removed, void *entity);
+void unknown_0030f2d0(void *world, void *entity);
+void unknown_00278f00(void);
+boolean unknown_00279740(void *object);
+void unknown_001c51c0(long unknown);
+
+/* a thing of Havok's that is counted (a short, at 6): one less has it, and
+if nothing has it, it is no more: unless unknown_00279740 says that it is to
+stay, its first function is called with 1 */
+static void havok_object_release(
+	void *object)
+{
+	short *count= (short *)((byte *)object+6);
+
+	if (--*count==0)
+	{
+		if (unknown_00279740(object))
+		{
+			*count= 1;
+		}
+		else
+		{
+			((void (__attribute__((thiscall)) *)(void *, long))(*(void ***)object)[0])(object, 1);
+		}
+	}
+}
+
+/* 0x001c29d0: the thing of 0x0047f048 loses what unknown_0051ecac is to it,
+and is taken out of the world */
+void havok_unknown_001c29d0(
+	void)
+{
+	byte removed;
+
+	unknown_0030bd50(unknown_0047f048, unknown_0051ecac);
+	unknown_0047f050--;
+	unknown_0030f800(unknown_0051e9a4, &removed, unknown_0047f048);
+	unknown_00278f00();
+}
+
+/* 0x001c2890: the thing of 0x004f55b0, if there is one, and that of
+0x0047f048 are let go of, and there are none */
+void havok_unknown_001c2890(
+	void)
+{
+	if (unknown_004f55b0)
+	{
+		havok_object_release(unknown_004f55b0);
+		unknown_004f55b0= NULL;
+	}
+	havok_object_release(unknown_0047f048);
+	unknown_0047f048= NULL;
+}
+
+/* 0x001c39c0: a thing is put in the world. When the world has 0x352 things
+or more, unknown_001c51c0 is told first, with what the thing has for the key
+0x2001 in its list of keys and values (at 0x30; so many at 0x34), or zero.
+With the second argument, a thing whose number at 0x40 of what it has at
+0x44 is 1 has unknown_0030bc90 done to it */
+void __attribute__((stdcall)) havok_unknown_001c39c0(
+	byte *entity,
+	boolean unknown2)
+{
+	if (unknown_0047f050>=0x352)
+	{
+		const long *properties= *(const long *const *)(entity+0x30);
+		long count= *(const long *)(entity+0x34);
+		long value= 0;
+		long index;
+
+		for (index= 0; index<count; index++)
+		{
+			if (properties[index*2]==0x2001)
+			{
+				value= properties[index*2+1];
+				break;
+			}
+		}
+		unknown_001c51c0(value);
+	}
+	unknown_0047f050++;
+	unknown_0030f2d0(unknown_0051e9a4, entity);
+	if (unknown2 && *(const long *)(*(const byte *const *)(entity+0x44)+0x40)==1)
+	{
+		unknown_0030bc90(entity);
+	}
+	unknown_00278f00();
 }

@@ -2729,11 +2729,11 @@ address,name,source,arguments,returns,convention
 00134b20,unknown_00134b20,,edi,void
 0028da50,swarm_unknown_0028da50,source/ai/swarms.c,eax,void
 001c2b10,unknown_001c2b10,,,void
-001c29d0,unknown_001c29d0,,,void
-001c2890,unknown_001c2890,,,void
+001c29d0,havok_unknown_001c29d0,source/physics/havok.c,,void
+001c2890,havok_unknown_001c2890,source/physics/havok.c,,void
 001c2910,unknown_001c2910,,,void
 001c2a10,unknown_001c2a10,,,void
-001c39c0,unknown_001c39c0,,stack stack,void,stdcall
+001c39c0,havok_unknown_001c39c0,source/physics/havok.c,stack stack,void,stdcall
 0030be40,unknown_0030be40,,ecx stack,void
 001c81c0,unknown_001c81c0,,,void
 00201c80,unknown_00201c80,,,void
@@ -2769,3 +2769,10 @@ address,name,source,arguments,returns,convention
 00296330,reference_list_remove,source/memory/reference_lists.c,eax ebx edx,void
 00296370,reference_list_contains,source/memory/reference_lists.c,ecx eax edi,bool
 002963b0,reference_list_delete_all,source/memory/reference_lists.c,eax edx,void
+0030bd50,unknown_0030bd50,,ecx stack,void
+0030bc90,unknown_0030bc90,,ecx,void
+0030f800,unknown_0030f800,,ecx stack stack,void
+0030f2d0,unknown_0030f2d0,,ecx stack,void
+00278f00,unknown_00278f00,,,void
+00279740,unknown_00279740,,stack,bool
+001c51c0,unknown_001c51c0,,edi,void

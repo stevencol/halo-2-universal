@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Un cuerpo entra y sale del mundo de la física
+
+Tres funciones (308 bytes) en `physics/havok.c`. De 2241
+funciones se pasa a 2244, el 19,92 % de las del juego (el 11,586 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_001c39c0` | `0x001c39c0` | `physics/havok.c` |
+| `havok_unknown_001c29d0` | `0x001c29d0` | `physics/havok.c` |
+| `havok_unknown_001c2890` | `0x001c2890` | `physics/havok.c` |
+
+### Lo que se sabe
+
+- Son tres de las funciones que llaman los ganchos de guardar y cargar de
+  la física (hito 653). Con ellas se entiende qué son sus variables:
+  `0x51e9a4` es el mundo de Havok, `0x47f048` uno de sus cuerpos (el fijo,
+  seguramente) y `0x47f050` cuántos cuerpos hay en el mundo.
+- `havok_unknown_001c39c0` mete un cuerpo en el mundo. Si el mundo ya tiene
+  850 cuerpos o más, avisa antes a `unknown_001c51c0` con la propiedad
+  `0x2001` del cuerpo (o cero si no la tiene).
+- `havok_unknown_001c29d0` saca el cuerpo de `0x47f048` del mundo.
+- `havok_unknown_001c2890` suelta ese cuerpo y otro objeto de Havok
+  (`0x4f55b0`): les baja la cuenta de referencias y, si llega a cero,
+  llama a su destructor (o los deja con cuenta 1 si `unknown_00279740`
+  dice que son de memoria fija).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  679.
+- Que sean el mundo, un cuerpo y sus métodos es una deducción por cómo se
+  usan; las siete funciones de Havok a las que llaman no tienen nombre.
+- El parche se aplicó a medias por un error mío al escribir una línea del
+  CSV y se terminó con un script de arreglo; las pruebas pasaron después.
+- En este hito se pasaron `test_havok_world` y `test_havok_save_load`. Hay
+  una batería completa en marcha sobre el hito 637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Tres funciones más de las listas de referencias
 
 Tres funciones (159 bytes) en `memory/reference_lists.c`. De 2238

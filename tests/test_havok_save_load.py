@@ -6,11 +6,11 @@ from test_data import array
 
 OTHERS = (
     "unknown_001c2b10",
-    "unknown_001c29d0",
-    "unknown_001c2890",
+    "havok_unknown_001c29d0",
+    "havok_unknown_001c2890",
     "unknown_001c2910",
     "unknown_001c2a10",
-    "unknown_001c39c0",
+    "havok_unknown_001c39c0",
     "unknown_0030be40",
 )
 
