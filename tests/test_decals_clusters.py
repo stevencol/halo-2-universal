@@ -22,5 +22,5 @@ def run(t) -> None:
         t.check(
             "decals_unknown_0023aa70",
             globals={"global_structure_bsp": Buffer(bytes(bsp), pointers=(0xA0,))},
-            externals={"unknown_0017d710": lambda harness, arguments: 0},
+            externals={"decals_release_place": lambda harness, arguments: 0},
         )

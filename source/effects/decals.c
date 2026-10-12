@@ -486,10 +486,11 @@ void __attribute__((stdcall)) decals_activation_changed(
 	unknown_0023aad0(old_bits, new_bits, bit_count);
 }
 
-/* 0x0017d710: what is done with the marks of a cluster of the structure bsp */
-void __attribute__((stdcall)) unknown_0017d710(long cluster_index);
+/* 0x0017d710: what is done with the marks of a cluster of the structure
+bsp; it is below */
+void __attribute__((stdcall)) decals_release_place(short place);
 
-/* 0x0023aa70: if the structure bsp has something at 0xF4, unknown_0017d710
+/* 0x0023aa70: if the structure bsp has something at 0xF4, decals_release_place
 is done for each of its clusters (at 0x9C: so many, of 0xB0 bytes) that has a
 short at 0x7C that is not NONE and one at 0x7E that is not zero. In the game
 it is far from the others of this file, so it may be of another */
@@ -508,7 +509,66 @@ void decals_unknown_0023aa70(
 
 			if (*(const short *)(cluster+0x7C)!=NONE && *(const unsigned short *)(cluster+0x7E)>0)
 			{
-				unknown_0017d710(cluster_index);
+				decals_release_place(cluster_index);
+			}
+		}
+	}
+}
+
+/* 0x0017d710: the marks of a place (of its seven lists; or those of no
+place, with NONE) let go of what they have in the cache: each mark that is
+the first of its chain and has the bit 1 loses it, and so do those of its
+chain, with the count of what decal_globals points to going down for each;
+and its block of the cache is deleted */
+void __attribute__((stdcall)) decals_release_place(
+	short place)
+{
+	if (decal_data->valid)
+	{
+		short list;
+
+		for (list= 0; list<7; list++)
+		{
+			byte *globals= decal_globals;
+			long decal_index;
+
+			if (place==NONE)
+			{
+				if (list!=0)
+				{
+					continue;
+				}
+				decal_index= *(long *)(globals+DECAL_GLOBALS_UNKNOWN3800_OFFSET);
+			}
+			else
+			{
+				decal_index= ((long *)globals)[(list<<DECAL_PLACES_PER_LIST_BITS)+place];
+			}
+			while (decal_index!=NONE)
+			{
+				byte *decal= DECAL_GET(decal_index);
+				long next_index= *(long *)(decal+DECAL_NEXT_OFFSET);
+
+				if ((decal[2]&2) && *(long *)(decal+0x38)==decal_index)
+				{
+					long chain_index;
+
+					decal[2]&= ~2;
+					(*(long *)(decal_globals+DECAL_GLOBALS_UNKNOWN3808_OFFSET))--;
+					for (chain_index= *(long *)(decal+DECAL_NEXT_OF_CHAIN_OFFSET); chain_index!=NONE; )
+					{
+						byte *other= DECAL_GET(chain_index);
+
+						if (other[2]&2)
+						{
+							other[2]&= ~2;
+							(*(long *)(decal_globals+DECAL_GLOBALS_UNKNOWN3808_OFFSET))--;
+						}
+						chain_index= *(long *)(other+DECAL_NEXT_OF_CHAIN_OFFSET);
+					}
+					lruv_block_delete(unknown_00509448, *(long *)(decal+4));
+				}
+				decal_index= next_index;
 			}
 		}
 	}

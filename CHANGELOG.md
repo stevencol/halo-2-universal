@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Los decals de una zona sueltan la caché
+
+Una función (247 bytes) en `effects/decals.c`. De 2222
+funciones se pasa a 2223, el 19,73 % de las del juego (el 11,478 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `decals_release_place` | `0x0017d710` | `effects/decals.c` |
+
+### Lo que se sabe
+
+- `decals_release_place` (antes `unknown_0017d710`) recorre las siete listas
+  de una zona (o la lista «sin sitio», si se le pasa `NONE`). A cada decal
+  que es cabeza de su cadena y tiene el bit 1 se lo quita, y también a los
+  de su cadena, bajando el contador de `0x3808`; y borra su bloque de la
+  caché (`lruv_block_delete`).
+- Con esto **se sabe qué es el bit 1 de un decal**: tiene geometría en la
+  caché. Por eso ese bit impide a la caché echar el bloque (hito 660) y
+  `0x3808` cuenta los decals que la tienen.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  668.
+- El bit 0 (con su contador en `0x3804`) sigue sin saberse qué es. El
+  nombre de la función es una suposición.
+- En este hito se pasaron las pruebas de la función y
+  `test_decals_clusters`. Hay una batería completa en marcha sobre el hito
+  637.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Las zonas del bsp avisan a los decals
 
 Una función (83 bytes) en `effects/decals.c`. De 2221
