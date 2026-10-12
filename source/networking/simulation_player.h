@@ -107,7 +107,11 @@ enum
 	SIMULATION_PLAYER_UNIT_STATE_FORWARD_OFFSET= 0x10,
 	SIMULATION_PLAYER_UNIT_STATE_UP_OFFSET= 0x1C,
 	SIMULATION_PLAYER_UNIT_STATE_VELOCITY_OFFSET= 0x28,
-	SIMULATION_PLAYER_UNIT_STATE_ANGULAR_VELOCITY_OFFSET= 0x34
+	SIMULATION_PLAYER_UNIT_STATE_ANGULAR_VELOCITY_OFFSET= 0x34,
+	/* of an object: the next of those that are attached to the same one,
+	and the first that is attached to it */
+	SIMULATION_PLAYER_OBJECT_NEXT_OFFSET= 0xC,
+	SIMULATION_PLAYER_OBJECT_FIRST_CHILD_OFFSET= 0x10
 };
 
 /* ---------- prototypes/SIMULATION_PLAYER.C */
@@ -121,6 +125,7 @@ void simulation_player_action_unpack_object(const long *packed, long *unknown34)
 void simulation_player_action_pack_object(const long *unknown34, long *packed);
 void __attribute__((stdcall)) simulation_player_get_unit_weapons(long *weapons, long object_index);
 boolean simulation_player_get_unit_state(long player_index, byte *state);
+void __attribute__((stdcall)) simulation_player_get_rider_weapons(long object_index, long *weapons);
 
 /* ---------- globals */
 

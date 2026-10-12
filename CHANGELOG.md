@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Las armas en mano de quienes van montados con un objeto
+
+Una función de `networking/simulation_player.c` (253 bytes). De 1988
+funciones se pasa a 1989, el 17,66 % de las del juego (el 11,133 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_player_get_rider_weapons` | `0x00082c10` | `networking/simulation_player.c` |
+
+### Lo que se sabe
+
+- `simulation_player_get_rider_weapons` completa lo que
+  `simulation_player_get_unit_weapons` (hito 591) no encontró: sube hasta
+  aquello a lo que el objeto está sujeto al final y **recorre todo lo que
+  cuelga de ahí**. Cada bípedo o vehículo que tenga algo en `0x24C` y sea
+  del objeto (`unknown_000c7100`) da sus dos armas en mano, pero solo en
+  los sitios donde aún no había ninguna.
+- De un objeto se sabe ahora: en `0x10` el primero de los que cuelgan de
+  él, y en `0xC` el siguiente de los que cuelgan del mismo.
+- El juego tiene `unit_get_weapon` escrita dentro, dos veces.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  592.
+- El nombre es una suposición; «montados» sale de que son unidades que
+  cuelgan del mismo objeto.
+- La función no se llama todavía desde el código hecho (la usa
+  `unknown_00082d20`, pendiente).
+- En este hito se pasó la prueba de la función.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Dónde está la unidad de un jugador, para un mensaje
 
 Una función de `networking/simulation_player.c` (195 bytes). De 1987

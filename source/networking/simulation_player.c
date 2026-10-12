@@ -447,3 +447,61 @@ boolean simulation_player_get_unit_state(
 
 	return TRUE;
 }
+
+/* 0x000c7100: the object that a unit is of */
+long unknown_000c7100(long unit_index);
+
+/* 0x00082c10: the weapons in hand of the units that ride with an object.
+What the object is attached to in the end is looked at
+(object_get_ultimate_parent, written here), and each thing attached to
+that: a biped or a vehicle that has something at 0x24C and is of the object
+(unknown_000c7100) gives its two weapons in hand, each only where none was
+written yet. The game has unit_get_weapon written here */
+void __attribute__((stdcall)) simulation_player_get_rider_weapons(
+	long object_index,
+	long *weapons)
+{
+	long ultimate_index;
+	long parent;
+	long child;
+
+	if (object_index==NONE)
+	{
+		return;
+	}
+	parent= object_index;
+	do
+	{
+		ultimate_index= parent;
+		parent= *(const long *)((const byte *)((const struct object_header_datum *)object_header_data->data)
+			[ultimate_index&0xFFFF].datum+SIMULATION_PLAYER_OBJECT_PARENT_OFFSET);
+	} while (parent!=NONE);
+	if (ultimate_index==NONE)
+	{
+		return;
+	}
+	child= *(const long *)((const byte *)((const struct object_header_datum *)object_header_data->data)
+		[ultimate_index&0xFFFF].datum+SIMULATION_PLAYER_OBJECT_FIRST_CHILD_OFFSET);
+	while (child!=NONE)
+	{
+		const byte *unit= (const byte *)((const struct object_header_datum *)object_header_data->data)[child&0xFFFF].datum;
+
+		if (((1u<<unit[SIMULATION_PLAYER_OBJECT_TYPE_OFFSET])&3) &&
+			*(const long *)(unit+SIMULATION_PLAYER_UNIT_UNKNOWN24C_OFFSET)!=NONE && unknown_000c7100(child)==object_index)
+		{
+			if (weapons[0]==NONE)
+			{
+				weapons[0]= unit_get_weapon(child, *(const signed char *)((const byte *)
+					((const struct object_header_datum *)object_header_data->data)[child&0xFFFF].datum+
+					SIMULATION_PLAYER_UNIT_WEAPON_INDICES_OFFSET));
+			}
+			if (weapons[1]==NONE)
+			{
+				weapons[1]= unit_get_weapon(child, *(const signed char *)((const byte *)
+					((const struct object_header_datum *)object_header_data->data)[child&0xFFFF].datum+
+					SIMULATION_PLAYER_UNIT_WEAPON_INDICES_OFFSET+1));
+			}
+		}
+		child= *(const long *)(unit+SIMULATION_PLAYER_OBJECT_NEXT_OFFSET);
+	}
+}

@@ -2605,3 +2605,5 @@ address,name,source,arguments,returns,convention
 000cbd50,unit_get_weapon,source/units/units.c,eax ecx,int
 00082b70,simulation_player_get_unit_weapons,source/networking/simulation_player.c,ebx stack,void,stdcall
 000828b0,simulation_player_get_unit_state,source/networking/simulation_player.c,eax ebx,bool
+00082c10,simulation_player_get_rider_weapons,source/networking/simulation_player.c,stack stack,void,stdcall
+000c7100,unknown_000c7100,,ecx,int
