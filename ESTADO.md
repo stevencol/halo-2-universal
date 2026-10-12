@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 686.
+**Última actualización:** 2026-10-08, al terminar el hito 687.
 
 ## Dónde estamos
 
-- **2253 funciones descompiladas de 11.265: el 20,00 % del juego** (el
-  11,629 % de los bytes de código).
-- Las 2253 están comprobadas contra el ejecutable original: las 1390 del
+- **2254 funciones descompiladas de 11.265: el 20,01 % del juego** (el
+  11,631 % de los bytes de código).
+- Las 2254 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how incidents between two sides are counted until they become enemies* (ver `git log`).
+- Último hito: *Decompile how a user of the physics' second memory lets go of it* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 534 funciones apuntadas pero sin descompilar (las que el código
   llama); 385 de ellas solo se conocen por su dirección (`unknown_...`).

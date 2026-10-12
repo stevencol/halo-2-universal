@@ -2786,3 +2786,4 @@ address,name,source,arguments,returns,convention
 001c9830,unknown_001c9830,,stack stack stack stack,void,stdcall
 001df950,game_team_unknown_001df950,source/game/game_unknown_001df460.c,edi ebx,void
 001df820,game_team_unknown_001df820,source/game/game_unknown_001df460.c,stack stack stack,bool,stdcall
+001cab80,havok_unknown_001cab80,source/physics/havok.c,edx,void

@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Un usuario de la segunda memoria de la física la suelta
+
+Una función (64 bytes) en `physics/havok.c`. De 2253
+funciones se pasa a 2254, el 20,01 % de las del juego (el 11,631 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_001cab80` | `0x001cab80` | `physics/havok.c` |
+
+### Lo que se sabe
+
+- `havok_unknown_001cab80` (un número en `edx`): hay dos «usuarios» de la
+  segunda memoria de la física, cada uno con un byte que dice si está y un
+  número que lo identifica (`0x4f55b4`). La función da de baja al que tiene
+  ese número; si no queda ninguno, quita dos marcas y, si `0x51e9b0` tiene
+  algo, vuelve a construir el objeto que reparte esa memoria
+  (`havok_unknown_00146b80`, hito 649).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  686.
+- Quiénes son los dos usuarios (¿quien toma prestada esa memoria mientras
+  la física no la usa?) no se sabe. La función está entre las de
+  `cluster_partitions.c` en el juego, no junto al resto de `havok.c`.
+- En este hito se pasaron las pruebas de la función. Hay una batería
+  completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Contar agravios entre dos bandos hasta hacerlos enemigos
 
 Una función (296 bytes) en `game/game_unknown_001df460.c`, cuya zona del ejecutable

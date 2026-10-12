@@ -383,3 +383,51 @@ void __attribute__((stdcall)) havok_unknown_001c39c0(
 	}
 	unknown_00278f00();
 }
+
+/* 0x004f55b4: two users of the second memory of the physics: whether each is
+there, and what it is known by. 0x0051e9b0 and 0x0051e9b4: something that is
+there, and a byte that is cleared when no user is left */
+struct havok_unknown_004f55b4
+{
+	boolean active;
+	long unknown4;
+	long unknown8;
+};
+
+struct havok_unknown_004f55b4 unknown_004f55b4[2];
+long unknown_0051e9b0;
+boolean unknown_0051e9b4;
+
+/* 0x001cab80: the user that is known by a number is there no more; and when
+none is left, the two bytes are cleared, and if unknown_0051e9b0 is something,
+the thing that gives the memory is made again (havok_unknown_00146b80) */
+void havok_unknown_001cab80(
+	long unknown)
+{
+	long count= 0;
+	long index;
+
+	for (index= 0; index<2; index++)
+	{
+		if (unknown_004f55b4[index].active)
+		{
+			if (unknown_004f55b4[index].unknown4==unknown)
+			{
+				unknown_004f55b4[index].active= FALSE;
+			}
+			else
+			{
+				count++;
+			}
+		}
+	}
+	if (count==0)
+	{
+		unknown_0051e9b4= FALSE;
+		unknown_00510c48= FALSE;
+		if (unknown_0051e9b0)
+		{
+			havok_unknown_00146b80();
+		}
+	}
+}

@@ -560,3 +560,6 @@ address,name,source
 0051e9a4,unknown_0051e9a4,source/physics/havok.c
 0047f050,unknown_0047f050,source/physics/havok.c
 004f55b0,unknown_004f55b0,source/physics/havok.c
+004f55b4,unknown_004f55b4,source/physics/havok.c
+0051e9b0,unknown_0051e9b0,source/physics/havok.c
+0051e9b4,unknown_0051e9b4,source/physics/havok.c
