@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Otras dos partes del juego: cuatro funciones cortas
+
+Cuatro funciones cortas (unos 230 bytes) en dos archivos nuevos de `game/`. De 2108
+funciones se pasa a 2112, el 18,75 % de las del juego (el 11,273 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_unknown_0013bf00_initialize` | `0x0013bf00` | `game/game_unknown_0013bf00.c` |
+| `game_unknown_0013bf00_initialize_for_new_map` | `0x0013bf60` | `game/game_unknown_0013bf00.c` |
+| `game_unknown_0013bf00_dispose_from_old_map` | `0x0013bfc0` | `game/game_unknown_0013bf00.c` |
+| `game_unknown_00153870_initialize` | `0x00153870` | `game/game_unknown_00153870.c` |
+
+### Lo que se sabe
+
+- La parte de `0x13bf00` es la que toma el bloque `unknown_00510c50`, que
+  `main.c` ya miraba (`0x24` bytes). Con un mapa nuevo lo borra, deja
+  cuatro números en `NONE` y, **solo en el primer modo de juego** (la
+  campaña), pone un real a 1 y marca un byte. Al irse el mapa quita tres
+  bytes, y el primero lo conserva en ese mismo modo.
+- La parte de `0x153870` toma `0x2B0` bytes del estado del juego.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  619.
+- Para qué es cada parte no se sabe; los archivos llevan por nombre la
+  dirección de su primera función.
+- En este hito se pasaron las pruebas de las cuatro funciones y `test_game`
+  entera.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Los niveles devuelven sus tablas; los guiones se cierran (archivo nuevo)
 
 Tres funciones cortas (unos 190 bytes): una en `main/levels.c` y dos en el archivo nuevo

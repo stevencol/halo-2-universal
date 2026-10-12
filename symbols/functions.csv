@@ -356,9 +356,9 @@ address,name,source,arguments,returns,convention
 00134d90,unknown_00134d90,,,void
 00134dd0,unknown_00134dd0,,,void
 00134de0,unknown_00134de0,,,void
-0013bf00,unknown_0013bf00,,,void
-0013bf60,unknown_0013bf60,,,void
-0013bfc0,unknown_0013bfc0,,,void
+0013bf00,game_unknown_0013bf00_initialize,source/game/game_unknown_0013bf00.c,,void
+0013bf60,game_unknown_0013bf00_initialize_for_new_map,source/game/game_unknown_0013bf00.c,,void
+0013bfc0,game_unknown_0013bf00_dispose_from_old_map,source/game/game_unknown_0013bf00.c,,void
 0013e5c7,unknown_0013e5c7,,,void
 0013e5d6,unknown_0013e5d6,,,void
 0013e610,unknown_0013e610,,,void
@@ -375,7 +375,7 @@ address,name,source,arguments,returns,convention
 0014b580,unknown_0014b580,,,void
 0014b600,players_dispose_from_old_map,source/game/players.c,,void
 0014b6a0,unknown_0014b6a0,,,void
-00153870,unknown_00153870,,,void
+00153870,game_unknown_00153870_initialize,source/game/game_unknown_00153870.c,,void
 001538b0,unknown_001538b0,,,void
 001552e0,game_unknown_001552e0_initialize,source/game/game_unknown_001552e0.c,,void
 00155380,unknown_00155380,,,void

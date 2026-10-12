@@ -147,9 +147,9 @@ void unknown_001320b0(void);
 void unknown_00134d90(void);
 void unknown_00134dd0(void);
 void unknown_00134de0(void);
-void unknown_0013bf00(void);
-void unknown_0013bf60(void);
-void unknown_0013bfc0(void);
+void game_unknown_0013bf00_initialize(void);
+void game_unknown_0013bf00_initialize_for_new_map(void);
+void game_unknown_0013bf00_dispose_from_old_map(void);
 void unknown_0013e5c7(void);
 void unknown_0013e5d6(void);
 void unknown_0013e610(void);
@@ -166,7 +166,7 @@ void players_dispose(void);
 void unknown_0014b580(void);
 void players_dispose_from_old_map(void);
 void unknown_0014b6a0(void);
-void unknown_00153870(void);
+void game_unknown_00153870_initialize(void);
 void unknown_001538b0(void);
 void game_unknown_001552e0_initialize(void);
 void unknown_00155380(void);
@@ -387,11 +387,11 @@ struct game_system game_systems[NUMBER_OF_GAME_SYSTEMS]=
 	{object_looping_sounds_initialize, object_looping_sounds_dispose, unknown_00188870, object_looping_sounds_dispose_from_old_map, unknown_00188980, no_operation},
 	{sound_unknown_00225a40, no_operation, sound_unknown_00225a80, no_operation},
 	{sound_unknown_002229d0, no_operation, sound_unknown_00222a10, sound_unknown_00222a60},
-	{unknown_00153870, no_operation, unknown_001538b0, no_operation},
+	{game_unknown_00153870_initialize, no_operation, unknown_001538b0, no_operation},
 	{unknown_001476c7, unknown_0014783f, unknown_0014784e, unknown_00147920},
 	{unknown_0013e5c7, unknown_003361a4, unknown_0013e5d6, unknown_0013e610},
 	{no_operation, no_operation, no_operation, no_operation},
-	{unknown_0013bf00, no_operation, unknown_0013bf60, unknown_0013bfc0},
+	{game_unknown_0013bf00_initialize, no_operation, game_unknown_0013bf00_initialize_for_new_map, game_unknown_0013bf00_dispose_from_old_map},
 	{unknown_0020a700, hs_dispose, unknown_0020a750, hs_dispose_from_old_map},
 	{unknown_001fb2f0, no_operation, unknown_001fb330, unknown_001fb350},
 	{no_operation, no_operation, no_operation, no_operation},
