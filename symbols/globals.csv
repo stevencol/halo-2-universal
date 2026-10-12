@@ -423,3 +423,5 @@ address,name,source
 00468630,object_type_definitions,source/objects/object_types.c
 005107f0,object_early_movers_globals,source/objects/object_early_movers.c
 004e0330,object_type_definition_list,source/objects/object_types.c
+005107f4,object_unknown_0010a980_globals,source/objects/object_unknown_0010a980.c
+0051e9c8,game_unknown_001ec420_globals,source/game/game_unknown_001ec420.c

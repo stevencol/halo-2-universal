@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — Otras dos partes del juego: sus cuatro funciones de arranque y de mapa
+
+Ocho funciones cortas (unos 380 bytes) en dos archivos nuevos. De 2028
+funciones se pasa a 2036, el 18,07 % de las del juego (el 11,258 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_unknown_0010a980_initialize` | `0x0010a980` | `objects/object_unknown_0010a980.c` |
+| `object_unknown_0010a980_dispose` | `0x0010a9d0` | `objects/object_unknown_0010a980.c` |
+| `object_unknown_0010a980_initialize_for_new_map` | `0x0010a9e0` | `objects/object_unknown_0010a980.c` |
+| `object_unknown_0010a980_dispose_from_old_map` | `0x0010aab0` | `objects/object_unknown_0010a980.c` |
+| `game_unknown_001ec420_initialize` | `0x001ec420` | `game/game_unknown_001ec420.c` |
+| `game_unknown_001ec420_dispose` | `0x001ec470` | `game/game_unknown_001ec420.c` |
+| `game_unknown_001ec420_initialize_for_new_map` | `0x001ec480` | `game/game_unknown_001ec420.c` |
+| `game_unknown_001ec420_dispose_from_old_map` | `0x001ec4b0` | `game/game_unknown_001ec420.c` |
+
+### Lo que se sabe
+
+- Son dos de las partes sin nombre de la tabla de partes del juego
+  (`game.c`), con la misma forma que los «objetos que se mueven antes» del
+  hito 603: al arrancar toman un bloque del estado del juego, al cerrar lo
+  sueltan, con un mapa nuevo lo dejan como al empezar y marcan que hay
+  mapa, y al irse el mapa quitan la marca.
+- La de `0x10a980` guarda `0x304` bytes: 32 cosas de `0x14` bytes, 32
+  números que un mapa nuevo deja en `NONE`, y la marca.
+- La de `0x1ec420` guarda `0x24` bytes: 8 números que un mapa nuevo deja a
+  cero, y la marca.
+- Ninguna de las dos pone a cero su bloque al arrancar; solo la marca.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  604.
+- **Para qué es cada parte no se sabe**, y por eso los archivos llevan por
+  nombre la dirección de su primera función; habrá que cambiarlo cuando se
+  hagan las funciones que usan esos bloques.
+- En este hito se pasaron las pruebas de las ocho funciones y `test_game`
+  entera.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Los tipos de objeto se ponen en lista y se preparan; el archivo queda entero
 
 Una función de `objects/object_types.c` (124 bytes), la primera del archivo, que con ella
