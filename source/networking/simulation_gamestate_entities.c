@@ -25,6 +25,8 @@ guess, by the one that later games have.
 /* a kind of thing: it has functions, as something made by the game */
 typedef boolean (__attribute__((thiscall)) *simulation_entity_type_proc)(void *type, struct simulation_entity *entity);
 
+typedef boolean (__attribute__((thiscall)) *simulation_entity_type_object_proc)(void *type, long object_index);
+
 /* ---------- globals */
 
 /* 0x004cf784, of simulation.c: the two tables of kinds */
@@ -230,6 +232,32 @@ boolean __attribute__((stdcall)) simulation_game_event_apply(
 		return FALSE;
 	}
 	unknown_0019eb30(copy);
+
+	return TRUE;
+}
+
+/* 0x000bb7b0, 0x000b8540: an object is made ready to go, and goes */
+void unknown_000bb7b0(long object_index);
+void __attribute__((stdcall)) unknown_000b8540(long object_index);
+
+/* 0x000a5b40: a thing of the simulation is no more, and neither is its
+object, unless its kind says that the object stays (the thirty-first of its
+functions); the thing has no object then. FALSE if it had none. It is one
+of the functions of a kind of thing */
+boolean __attribute__((thiscall)) simulation_object_entity_delete_object(
+	void *type,
+	struct simulation_entity *entity)
+{
+	if (entity->unknown8==NONE)
+	{
+		return FALSE;
+	}
+	if (!(*(simulation_entity_type_object_proc **)type)[SIMULATION_ENTITY_TYPE_KEEP_OBJECT_PROC](type, entity->unknown8))
+	{
+		unknown_000bb7b0(entity->unknown8);
+		unknown_000b8540(entity->unknown8);
+	}
+	entity->unknown8= NONE;
 
 	return TRUE;
 }

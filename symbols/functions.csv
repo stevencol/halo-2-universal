@@ -2613,3 +2613,6 @@ address,name,source,arguments,returns,convention
 000a5570,simulation_game_event_decode,source/networking/simulation_gamestate_entities.c,stack stack stack,bool,stdcall
 000a5650,simulation_game_event_apply,source/networking/simulation_gamestate_entities.c,stack stack stack stack,bool,stdcall
 0019eb30,unknown_0019eb30,,edi,void
+000a5b40,simulation_object_entity_delete_object,source/networking/simulation_gamestate_entities.c,ecx stack,bool,thiscall
+000bb7b0,unknown_000bb7b0,,eax,void
+000b8540,unknown_000b8540,,stack,void,stdcall

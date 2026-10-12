@@ -3,19 +3,19 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 596.
+**Última actualización:** 2026-10-08, al terminar el hito 597.
 
 ## Dónde estamos
 
-- **1996 funciones descompiladas de 11.265: el 17,72 % del juego** (el
-  11,165 % de los bytes de código).
-- Las 1996 están comprobadas contra el ejecutable original: las 1390 del
+- **1997 funciones descompiladas de 11.265: el 17,73 % del juego** (el
+  11,167 % de los bytes de código).
+- Las 1997 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile how something that happened in the game is read from a message and done* (ver `git log`).
+- Último hito: *Decompile how the object of a thing of the simulation is done away with* (ver `git log`).
   El árbol de trabajo está limpio.
-- Además hay 618 funciones apuntadas pero sin descompilar (las que el código
-  llama); 469 de ellas solo se conocen por su dirección (`unknown_...`).
+- Además hay 620 funciones apuntadas pero sin descompilar (las que el código
+  llama); 471 de ellas solo se conocen por su dirección (`unknown_...`).
 
 ## Cómo retomar
 

@@ -2,6 +2,35 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-11 — El objeto de una cosa de la simulación desaparece con ella
+
+Una función de `networking/simulation_gamestate_entities.c` (55 bytes). De 1996
+funciones se pasa a 1997, el 17,73 % de las del juego (el 11,167 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_object_entity_delete_object` | `0x000a5b40` | `networking/simulation_gamestate_entities.c` |
+
+### Lo que se sabe
+
+- `simulation_object_entity_delete_object` es otra de las funciones de una
+  clase de cosa (se llama por tabla, con la clase en `ecx`): cuando la cosa
+  deja de existir, **su objeto se va con ella** (`unknown_000bb7b0`,
+  `unknown_000b8540`), salvo que la propia clase diga que el objeto se
+  queda (la función 31 de su tabla). La cosa queda sin objeto.
+- Da `FALSE` si no tenía objeto.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  596.
+- El nombre es una suposición.
+- En este hito se pasó la prueba de la función.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-11 — Algo que pasó en la partida, leído de un mensaje y hecho
 
 Dos funciones de `networking/simulation_gamestate_entities.c` (441 bytes). De 1994

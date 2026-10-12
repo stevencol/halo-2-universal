@@ -20,6 +20,9 @@ enum
 	/* which of the functions of a kind of thing says that one of them is
 	of an object */
 	SIMULATION_ENTITY_TYPE_HAS_OBJECT_PROC= 7,
+	/* and which says that the object of one of them is to be left as it
+	is when the thing is no more */
+	SIMULATION_ENTITY_TYPE_KEEP_OBJECT_PROC= 30,
 	/* of something that happened in the game, as it goes in a message
 	(0x24 bytes): its kind, a number, five numbers that can be NONE (the
 	first, second and fourth of them are players), one more number, and a
@@ -37,6 +40,8 @@ boolean __attribute__((stdcall)) simulation_game_event_decode(long unused, long 
 boolean __attribute__((stdcall)) simulation_game_event_apply(long unused0, long unused1, long unused2,
 	const long *event);
 long simulation_gamestate_entity_get_object(long entity_index);
+struct simulation_entity;
+boolean __attribute__((thiscall)) simulation_object_entity_delete_object(void *type, struct simulation_entity *entity);
 long simulation_object_get_created_entity(long object_index);
 long simulation_object_get_remote_entity(long object_index);
 
