@@ -2,6 +2,71 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Veintiséis funciones que dan a una sesión sus mensajes
+
+Veintiséis funciones (1458 bytes) en `networking/network_message_handler.c`.
+De 2518
+funciones se pasa a 2544, el 22,58 % de las del juego (el 12,099 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_message_handler_unknown_00093f60` | `0x00093f60` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_00094100` | `0x00094100` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_00094270` | `0x00094270` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_000942d0` | `0x000942d0` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_00094310` | `0x00094310` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_00094330` | `0x00094330` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_00094350` | `0x00094350` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_00094380` | `0x00094380` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_000943d0` | `0x000943d0` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_00094420` | `0x00094420` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_00094440` | `0x00094440` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_00094460` | `0x00094460` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_000945d0` | `0x000945d0` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_000945f0` | `0x000945f0` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_00094610` | `0x00094610` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_00094640` | `0x00094640` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_00094680` | `0x00094680` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_000946c0` | `0x000946c0` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_00094700` | `0x00094700` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_00094740` | `0x00094740` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_00094780` | `0x00094780` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_000947c0` | `0x000947c0` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_00094800` | `0x00094800` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_00094830` | `0x00094830` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_00094870` | `0x00094870` | `networking/network_message_handler.c` |
+| `network_message_handler_unknown_000948c0` | `0x000948c0` | `networking/network_message_handler.c` |
+
+### Lo que se sabe
+
+- Son el puente entre los mensajes de red y `network_session.c`: cada una
+  busca la sesión que el mensaje nombra (`network_sessions_find`) y le pasa
+  el mensaje. Con ellas quedan unidas a quien las llama casi todas las
+  funciones de la sesión que ya estaban decompiladas: pedir entrar,
+  cambiar de líder, añadir o quitar jugadores, la hora de la sesión, las
+  actualizaciones que manda el anfitrión…
+- Unas solo actúan si esta consola es el anfitrión (estados 5 a 8 de la
+  sesión) y otras si el mensaje llegó por el canal del anfitrión.
+- Se encontraron con una herramienta nueva,
+  `build/line_breaking/find_easy.py`, que lista las funciones pendientes
+  cuyas llamadas ya tienen todas nombre: hay 1357 de hasta 120 bytes.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  729. En este hito sí se rompieron dos líneas a propósito para ver que
+  las pruebas nuevas lo notan (lo notaron).
+- Los nombres van por dirección; qué es «el dueño» que cada una recibe (lo
+  que tiene la lista de sesiones en `0x14`) no se sabe.
+- Dos funciones tienen en el juego una comprobación más del estado (de 3 a
+  8) que no cambia nada, y no está escrita.
+- En este hito se pasaron las pruebas de las veintiséis funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Siete funciones de los command scripts y los enjambres
 
 Siete funciones (574 bytes) en `ai/actors.c`. De 2511

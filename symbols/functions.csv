@@ -3052,3 +3052,29 @@ address,name,source,arguments,returns,convention
 00277620,command_script_unknown_00277620,source/ai/actors.c,ecx stack stack stack,void
 00290b90,swarm_unknown_00290b90,source/ai/actors.c,stack,void,stdcall
 00290bf0,swarm_unknown_00290bf0,source/ai/actors.c,eax esi,void
+00094310,network_message_handler_unknown_00094310,source/networking/network_message_handler.c,ecx eax stack,void,stdcall
+00094330,network_message_handler_unknown_00094330,source/networking/network_message_handler.c,ecx eax stack,void,stdcall
+00094350,network_message_handler_unknown_00094350,source/networking/network_message_handler.c,eax edi stack,void,stdcall
+00094610,network_message_handler_unknown_00094610,source/networking/network_message_handler.c,eax edi stack,void,stdcall
+00094800,network_message_handler_unknown_00094800,source/networking/network_message_handler.c,eax edi stack,void,stdcall
+00094380,network_message_handler_unknown_00094380,source/networking/network_message_handler.c,eax esi stack,void,stdcall
+00094640,network_message_handler_unknown_00094640,source/networking/network_message_handler.c,eax esi stack,void,stdcall
+00094680,network_message_handler_unknown_00094680,source/networking/network_message_handler.c,eax esi stack,void,stdcall
+000946c0,network_message_handler_unknown_000946c0,source/networking/network_message_handler.c,eax esi stack,void,stdcall
+00094700,network_message_handler_unknown_00094700,source/networking/network_message_handler.c,eax esi stack,void,stdcall
+00094780,network_message_handler_unknown_00094780,source/networking/network_message_handler.c,eax esi stack,void,stdcall
+000947c0,network_message_handler_unknown_000947c0,source/networking/network_message_handler.c,eax esi stack,void,stdcall
+00094830,network_message_handler_unknown_00094830,source/networking/network_message_handler.c,eax esi stack,void,stdcall
+00094870,network_message_handler_unknown_00094870,source/networking/network_message_handler.c,eax esi stack,void,stdcall
+00094420,network_message_handler_unknown_00094420,source/networking/network_message_handler.c,ecx eax stack,void,stdcall
+00094440,network_message_handler_unknown_00094440,source/networking/network_message_handler.c,ecx eax stack,void,stdcall
+00094460,network_message_handler_unknown_00094460,source/networking/network_message_handler.c,ecx eax stack,void,stdcall
+000945d0,network_message_handler_unknown_000945d0,source/networking/network_message_handler.c,ecx eax stack,void,stdcall
+000945f0,network_message_handler_unknown_000945f0,source/networking/network_message_handler.c,eax esi stack,void,stdcall
+00094740,network_message_handler_unknown_00094740,source/networking/network_message_handler.c,eax ecx stack,void,stdcall
+000948c0,network_message_handler_unknown_000948c0,source/networking/network_message_handler.c,eax edi stack,void,stdcall
+000943d0,network_message_handler_unknown_000943d0,source/networking/network_message_handler.c,ecx eax stack,void,stdcall
+00094100,network_message_handler_unknown_00094100,source/networking/network_message_handler.c,esi ecx stack,void,stdcall
+00094270,network_message_handler_unknown_00094270,source/networking/network_message_handler.c,ecx eax stack,void,stdcall
+000942d0,network_message_handler_unknown_000942d0,source/networking/network_message_handler.c,ecx eax stack,void,stdcall
+00093f60,network_message_handler_unknown_00093f60,source/networking/network_message_handler.c,eax stack stack,void,stdcall
