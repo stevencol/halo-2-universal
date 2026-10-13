@@ -576,3 +576,4 @@ address,name,source
 00471004,unknown_00471004,source/ai/actors.c
 00502410,unknown_00502410,source/ai/actors.c
 0046fca8,unknown_0046fca8,source/ai/actors.c
+004de2ec,unknown_004de2ec,source/objects/objects.c

@@ -901,3 +901,130 @@ float tag_get_unknown164_scaled(
 
 	return 0.0f-*(const float *)(tag+0x164)**(const float *)unknown_0051e9c4;
 }
+
+/* 0x00510c6c, of game.c; 0x004c1bd0, of game_unknown_0002b4a0.c */
+struct unknown_00510c6c;
+extern struct unknown_00510c6c *unknown_00510c6c;
+extern long unknown_004c1bd0;
+
+/* 0x0016c2b0: the unit that unknown_00510c6c names at 0x3C, if it has its
+first byte and 4 for its short at 2, and the unit is there; NONE if not */
+long unknown_00510c6c_get_unit(
+	void)
+{
+	const byte *unknown= (const byte *)unknown_00510c6c;
+
+	if (unknown[0] && *(const short *)(unknown+2)==4)
+	{
+		long unit_index= *(const long *)(unknown+0x3C);
+
+		if (object_try_and_get_and_verify_type(unit_index, 3))
+		{
+			return unit_index;
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x0016c6f0: the first of the matrices that an object has at the place that
+its short at 0x116 says (those of its nodes, most likely); the matrix that
+changes nothing if the object is not there */
+void object_get_first_node_matrix(
+	real_matrix4x3 *matrix,
+	long object_index)
+{
+	if (object_try_and_get_and_verify_type(object_index, 0xFFFFFFFF))
+	{
+		const byte *object= UNIT_OBJECT_GET(object_index);
+
+		*matrix= *(const real_matrix4x3 *)(object+*(const short *)(object+0x116));
+	}
+	else
+	{
+		*matrix= *global_identity4x3;
+	}
+}
+
+/* 0x00175f50: whether a biped that has the bit 2 of its byte at 0x10A has a
+time at 0x2E0 that is more than a second old */
+boolean biped_unknown_00175f50(
+	long object_index)
+{
+	const byte *biped= object_try_and_get_and_verify_type(object_index, 1);
+
+	if (biped && ((biped[0x10A]>>2)&1))
+	{
+		long time= *(const long *)(biped+0x2E0);
+
+		if (time!=NONE && game_time_globals->ticks_per_second+time<(long)game_time_globals->time)
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x001518f0: whether the object that something names at 4 is of one of
+some types */
+boolean unknown_object_is_of_types(
+	const byte *unknown,
+	unsigned long type_mask)
+{
+	long object_index= *(const long *)(unknown+4);
+
+	if (object_get_and_verify_type(object_index, 0xFFFFFFFF))
+	{
+		byte type= ((const struct object_header_datum *)object_header_data->data)[object_index&0xFFFF].type;
+
+		return ((1u<<(type&31))&type_mask)!=0;
+	}
+
+	return FALSE;
+}
+
+/* 0x0003d7c0: whether object_unknown_000b9ce0 says no of an object; and, to
+where the caller says, if it says where, whether then the object is
+unknown_004c1bd0 */
+boolean object_unknown_0003d7c0(
+	long object_index,
+	boolean *is_unknown_004c1bd0)
+{
+	boolean result= FALSE;
+	boolean value= FALSE;
+
+	if (!object_unknown_000b9ce0(object_index))
+	{
+		value= object_index==unknown_004c1bd0;
+		result= TRUE;
+	}
+	if (is_unknown_004c1bd0)
+	{
+		*is_unknown_004c1bd0= value;
+	}
+
+	return result;
+}
+
+/* 0x000fa9a0: the first object of the type 5 that there is; whether there
+is one */
+boolean __attribute__((stdcall)) objects_get_first_of_type5(
+	long *object_index)
+{
+	struct object_iterator iterator;
+
+	iterator.signature= OBJECT_ITERATOR_SIGNATURE;
+	iterator.type_mask= 0x20;
+	iterator.header_flags= 0;
+	iterator.absolute_index= 0;
+	iterator.index= NONE;
+	if (object_iterator_next(&iterator))
+	{
+		*object_index= iterator.index;
+
+		return TRUE;
+	}
+
+	return FALSE;
+}

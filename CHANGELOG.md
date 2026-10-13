@@ -2,6 +2,57 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Catorce funciones de objetos que llaman a otras ya conocidas
+
+Catorce funciones (918 bytes) en cinco archivos. De 2559
+funciones se pasa a 2573, el 22,84 % de las del juego (el 12,153 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unit_get_player_index` | `0x0014de90` | `game/players.c` |
+| `unknown_00510c6c_get_unit` | `0x0016c2b0` | `units/units.c` |
+| `object_get_first_node_matrix` | `0x0016c6f0` | `units/units.c` |
+| `biped_unknown_00175f50` | `0x00175f50` | `units/units.c` |
+| `unknown_object_is_of_types` | `0x001518f0` | `units/units.c` |
+| `object_unknown_0003d7c0` | `0x0003d7c0` | `units/units.c` |
+| `objects_get_first_of_type5` | `0x000fa9a0` | `units/units.c` |
+| `effect_unknown_0017afd0` | `0x0017afd0` | `effects/effects.c` |
+| `object_set_unknownD4` | `0x000bb780` | `objects/objects.c` |
+| `objects_call_unknown58` | `0x000bb880` | `objects/objects.c` |
+| `objects_call_unknown5C` | `0x000bb8f0` | `objects/objects.c` |
+| `objects_compact_memory_pool` | `0x000bf360` | `objects/objects.c` |
+| `object_unknown_000be1d0` | `0x000be1d0` | `objects/objects.c` |
+| `light_unknown_000c3220` | `0x000c3220` | `objects/lights.c` |
+
+### Lo que se sabe
+
+- `unit_get_player_index` da el jugador de una unidad (bípedo o vehículo):
+  lo que tiene en `0x13C`. `effect_unknown_0017afd0` lo usa para saber si
+  el objeto de un efecto es de cierto jugador.
+- `object_get_first_node_matrix` copia la primera matriz de las que el
+  objeto tiene donde dice su `short` de `0x116` (las de sus nodos, casi
+  seguro), o la matriz identidad si el objeto no existe.
+- Dos funciones recorren todos los objetos y avisan a su tipo
+  (`object_types_call_unknown58` y `…5C`); otra busca el primer objeto del
+  tipo 5.
+- Variable nueva: `unknown_004de2ec`, un «memory pool» (el de los objetos,
+  casi seguro) que `objects_compact_memory_pool` compacta.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  729.
+- Los nombres son suposiciones; las de `units.c` están ahí de forma
+  provisional.
+- En las pruebas, las funciones que buscan un objeto están simuladas (dan
+  un objeto o nada, y se compara con qué se las llama).
+- En este hito se pasaron las pruebas de las catorce funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Quince funciones pequeñas que leen y escriben cosas de la simulación
 
 Quince funciones (706 bytes) en un archivo nuevo,

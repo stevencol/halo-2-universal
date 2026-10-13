@@ -11,6 +11,7 @@ The players of a game. The names are guesses.
 
 #include "main/main.h"
 #include "memory/data.h"
+#include "objects/objects.h"
 #include "saved games/game_state.h"
 #include "networking/transport_security.h"
 
@@ -260,4 +261,19 @@ long local_player_get_player_index(
 	}
 
 	return players_globals->local_players[local_player_index];
+}
+
+/* 0x0014de90: the player of a unit (a biped or a vehicle): what it has at
+0x13C; NONE if the object is not one, or there is none */
+long unit_get_player_index(
+	long unit_index)
+{
+	const byte *unit= object_try_and_get_and_verify_type(unit_index, 3);
+
+	if (unit)
+	{
+		return *(const long *)(unit+0x13C);
+	}
+
+	return NONE;
 }

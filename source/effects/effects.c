@@ -10,7 +10,9 @@ the name that the game gives to its table of data ("effect", "effect location").
 #include <stdint.h>
 
 #include "cache/cache_files.h"
+#include "main/main.h"
 #include "memory/data.h"
+#include "objects/objects.h"
 #include "saved games/game_state.h"
 
 /* ---------- globals */
@@ -140,4 +142,28 @@ long tag_get_unknown28_unknown2C(
 	}
 
 	return NONE;
+}
+
+/* 0x0017afd0: whether the object of an effect (0x48) is a unit of a player
+that has a number for its short at 0x28 */
+boolean effect_unknown_0017afd0(
+	long effect_index,
+	long value)
+{
+	long object_index= *(const long *)((const byte *)effect_data->data+(effect_index&0xFFFF)*0x190+0x48);
+	const byte *unit= object_try_and_get_and_verify_type(object_index, 3);
+
+	if (unit)
+	{
+		long player_index= *(const long *)(unit+0x13C);
+
+		if (player_index!=NONE)
+		{
+			const byte *player= (const byte *)player_data->data+(player_index&0xFFFF)*0x21C;
+
+			return *(const short *)(player+0x28)==value;
+		}
+	}
+
+	return FALSE;
 }

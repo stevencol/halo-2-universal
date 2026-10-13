@@ -8,6 +8,11 @@ gives the address it has there.
 #include "objects.h"
 #include "objects/object_types.h"
 
+#include <stdint.h>
+
+#include "cache/cache_files.h"
+#include "memory/memory_pool.h"
+
 /* ---------- macros */
 
 /* the header of an object that is known to be there */
@@ -549,4 +554,104 @@ void object_unknown_000d0590(
 	*(long *)(unknown+4)= NONE;
 	*(short *)(unknown+8)= NONE;
 	*(long *)(unknown+0xC)= *(const long *)(object+0x10);
+}
+
+/* 0x004de2ec: a memory pool, most likely the one that the objects are in */
+struct memory_pool *unknown_004de2ec;
+
+/* 0x000b8c00, of units.c */
+byte *object_get_unknown116_and_count(long object_index, long *count);
+
+#define OBJECT_BYTES_GET(object_index) \
+	((byte *)((struct object_header_datum *)object_header_data->data)[(object_index)&0xFFFF].datum)
+
+/* 0x000bb780: an object takes a value for its number at 0xD4, and its type
+is told (object_types_call_unknown50) */
+void object_set_unknownD4(
+	long object_index,
+	long value)
+{
+	*(long *)(OBJECT_BYTES_GET(object_index)+0xD4)= value;
+	object_types_call_unknown50(object_index);
+}
+
+/* 0x000bb880: the type of every object is given a value
+(object_types_call_unknown58) */
+void __attribute__((stdcall)) objects_call_unknown58(
+	long value)
+{
+	struct object_iterator iterator;
+
+	iterator.signature= OBJECT_ITERATOR_SIGNATURE;
+	iterator.type_mask= 0xFFFFFFFF;
+	iterator.header_flags= 0;
+	iterator.absolute_index= 0;
+	iterator.index= NONE;
+	while (object_iterator_next(&iterator))
+	{
+		object_types_call_unknown58(iterator.index, value);
+	}
+}
+
+/* 0x000bb8f0: the same with object_types_call_unknown5C */
+void objects_call_unknown5C(
+	long value)
+{
+	struct object_iterator iterator;
+
+	iterator.signature= OBJECT_ITERATOR_SIGNATURE;
+	iterator.type_mask= 0xFFFFFFFF;
+	iterator.header_flags= 0;
+	iterator.absolute_index= 0;
+	iterator.index= NONE;
+	while (object_iterator_next(&iterator))
+	{
+		object_types_call_unknown5C(iterator.index, value);
+	}
+}
+
+/* 0x000bf360: the memory pool is made compact. It takes six things that it
+does not use, and gives zero: it looks like a function that a table names */
+long __attribute__((stdcall)) objects_compact_memory_pool(
+	long unknown1,
+	long unknown2,
+	long unknown3,
+	long unknown4,
+	long unknown5,
+	long unknown6)
+{
+	(void)unknown1;
+	(void)unknown2;
+	(void)unknown3;
+	(void)unknown4;
+	(void)unknown5;
+	(void)unknown6;
+	memory_pool_compact(unknown_004de2ec);
+
+	return 0;
+}
+
+/* 0x000be1d0: if the tag that the definition of an object names at 0x38
+names two more, at 4 and 0x14, the type of the object is given what the
+object has at the place that its short at 0x116 says, and how many
+(object_types_call_unknown74) */
+void object_unknown_000be1d0(
+	long object_index)
+{
+	const byte *object= OBJECT_BYTES_GET(object_index);
+	const byte *definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)object&0xFFFF].address;
+	long tag_index= *(const long *)(definition+0x38);
+
+	if (tag_index!=NONE)
+	{
+		const byte *tag= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+
+		if (*(const long *)(tag+4)!=NONE && *(const long *)(tag+0x14)!=NONE)
+		{
+			long count;
+			byte *unknown116= object_get_unknown116_and_count(object_index, &count);
+
+			object_types_call_unknown74(object_index, count, (long)(uintptr_t)unknown116);
+		}
+	}
 }

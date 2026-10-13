@@ -3093,3 +3093,17 @@ address,name,source,arguments,returns,convention
 0009ca70,simulation_describe_damage_section_response,source/networking/simulation_encoding.c,stack stack stack stack stack,pointer,stdcall
 000a51f0,simulation_describe_game_engine,source/networking/simulation_encoding.c,stack stack stack stack stack,pointer,stdcall
 000a5780,simulation_describe_game_engine_request_boot_player,source/networking/simulation_encoding.c,stack stack stack stack stack,pointer,stdcall
+0014de90,unit_get_player_index,source/game/players.c,eax,int
+0016c2b0,unknown_00510c6c_get_unit,source/units/units.c,,int
+0016c6f0,object_get_first_node_matrix,source/units/units.c,eax ecx,void
+00175f50,biped_unknown_00175f50,source/units/units.c,eax,bool
+001518f0,unknown_object_is_of_types,source/units/units.c,eax stack,bool
+0003d7c0,object_unknown_0003d7c0,source/units/units.c,esi edi,bool
+000fa9a0,objects_get_first_of_type5,source/units/units.c,stack,bool,stdcall
+0017afd0,effect_unknown_0017afd0,source/effects/effects.c,eax stack,bool
+000bb780,object_set_unknownD4,source/objects/objects.c,eax stack,void
+000bb880,objects_call_unknown58,source/objects/objects.c,stack,void,stdcall
+000bb8f0,objects_call_unknown5C,source/objects/objects.c,esi,void
+000bf360,objects_compact_memory_pool,source/objects/objects.c,stack stack stack stack stack stack,int,stdcall
+000be1d0,object_unknown_000be1d0,source/objects/objects.c,eax,void
+000c3220,light_unknown_000c3220,source/objects/lights.c,eax,void

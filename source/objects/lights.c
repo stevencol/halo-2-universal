@@ -661,3 +661,18 @@ boolean light_unknown_000c17f0(
 
 	return FALSE;
 }
+
+/* 0x000c3220: a light that has the bit 1 is given to
+cluster_partition_remove, with what it has at 0x10, and loses the bit 3 (what
+lights_unknown_000c0110 does to each) */
+void light_unknown_000c3220(
+	long light_index)
+{
+	byte *light= (byte *)light_data->data+(light_index&0xFFFF)*LIGHT_SIZE;
+
+	if (light[LIGHT_FLAGS_OFFSET]&2)
+	{
+		cluster_partition_remove(&light_cluster_partition, light_index, (long *)(light+LIGHT_UNKNOWN10_OFFSET));
+		light[LIGHT_FLAGS_OFFSET]&= ~8;
+	}
+}
