@@ -577,3 +577,12 @@ address,name,source
 00502410,unknown_00502410,source/ai/actors.c
 0046fca8,unknown_0046fca8,source/ai/actors.c
 004de2ec,unknown_004de2ec,source/objects/objects.c
+00510cb0,unknown_00510cb0,source/game/game_results.c
+00510e2c,unknown_00510e2c,source/game/game_results.c
+00510e30,unknown_00510e30,source/game/game_results.c
+00511034,unknown_00511034,source/game/game_results.c
+00511a74,unknown_00511a74,source/game/game_results.c
+00511bf4,unknown_00511bf4,source/game/game_results.c
+00515294,unknown_00515294,source/game/game_results.c
+00515694,unknown_00515694,source/game/game_results.c
+00450aac,unknown_00450aac,source/game/game_results.c

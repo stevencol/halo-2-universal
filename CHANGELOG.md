@@ -2,6 +2,64 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Dieciséis funciones de los resultados de la partida
+
+Dieciséis funciones (963 bytes) en un archivo nuevo, `game/game_results.c`.
+De 2573
+funciones se pasa a 2589, el 22,98 % de las del juego (el 12,186 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_results_get_statistic` | `0x00196960` | `game/game_results.c` |
+| `game_results_get_player_unknown4E` | `0x001969d0` | `game/game_results.c` |
+| `game_results_get_player_unknown2D` | `0x00196a10` | `game/game_results.c` |
+| `game_results_get_player_versus_player` | `0x00196a50` | `game/game_results.c` |
+| `game_results_get_unknown_00510e2c` | `0x00196a90` | `game/game_results.c` |
+| `game_results_set_player_unknownA2` | `0x00196ab0` | `game/game_results.c` |
+| `game_results_set_team_unknown2` | `0x00196b00` | `game/game_results.c` |
+| `game_results_get_player_unknownA2` | `0x00196b70` | `game/game_results.c` |
+| `game_results_get_team_unknown2` | `0x00196bb0` | `game/game_results.c` |
+| `game_results_get_team_unknown1` | `0x00196c60` | `game/game_results.c` |
+| `game_results_get_player_unknownA0` | `0x00196bf0` | `game/game_results.c` |
+| `game_results_get_player_unknown10` | `0x00196ca0` | `game/game_results.c` |
+| `game_results_get_player_unknown2` | `0x00196ce0` | `game/game_results.c` |
+| `game_results_get_player_team` | `0x00196d20` | `game/game_results.c` |
+| `game_results_get_player_unknown98` | `0x00196da0` | `game/game_results.c` |
+| `game_results_get_player_unknown50` | `0x00196d50` | `game/game_results.c` |
+
+### Lo que se sabe
+
+- El juego guarda, en un bloque fijo de memoria, lo que parece el informe
+  de después de la partida: una ficha de 0xA4 bytes por cada uno de 16
+  jugadores (con dos textos, su equipo, una puntuación y un puesto), otra
+  de 0x18 por cada uno de 16 equipos, y tres tablas de números de 15 bits:
+  0x1B5 por jugador, dos por cada pareja de jugadores (¿quién mató a
+  quién?) y 0x2D por equipo.
+- Las dieciséis funciones leen o ponen esos datos; casi todas solo si dos
+  banderas dicen que hay algo que leer.
+- Nueve variables nuevas, todas por dirección.
+
+### La herramienta de pruebas
+
+- `tools/difftest.py` ya no pasa todos los archivos al enlazador en la
+  línea de órdenes: con este archivo nuevo se superó el límite de Windows
+  (32 767 caracteres) y las pruebas dejaron de arrancar. Ahora van en un
+  archivo de respuesta (`build/difftest/link.rsp`).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  729.
+- El nombre del archivo y los de las funciones son inventados; qué es cada
+  número de las tablas no se sabe.
+- La batería completa que corre sobre el hito 684 usa la herramienta de
+  antes del cambio (en su propia copia), así que no lo comprueba.
+- En este hito se pasaron las pruebas de las dieciséis funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Catorce funciones de objetos que llaman a otras ya conocidas
 
 Catorce funciones (918 bytes) en cinco archivos. De 2559

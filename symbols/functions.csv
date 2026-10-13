@@ -3107,3 +3107,19 @@ address,name,source,arguments,returns,convention
 000bf360,objects_compact_memory_pool,source/objects/objects.c,stack stack stack stack stack stack,int,stdcall
 000be1d0,object_unknown_000be1d0,source/objects/objects.c,eax,void
 000c3220,light_unknown_000c3220,source/objects/lights.c,eax,void
+00196960,game_results_get_statistic,source/game/game_results.c,ecx edx esi,int
+001969d0,game_results_get_player_unknown4E,source/game/game_results.c,ecx stack stack,int,stdcall
+00196a10,game_results_get_player_unknown2D,source/game/game_results.c,ecx stack,int,stdcall
+00196a50,game_results_get_player_versus_player,source/game/game_results.c,ecx stack stack,int,stdcall
+00196a90,game_results_get_unknown_00510e2c,source/game/game_results.c,,int
+00196ab0,game_results_set_player_unknownA2,source/game/game_results.c,eax stack stack,void,stdcall
+00196b00,game_results_set_team_unknown2,source/game/game_results.c,eax ecx stack,void,stdcall
+00196b70,game_results_get_player_unknownA2,source/game/game_results.c,ecx,int
+00196bb0,game_results_get_team_unknown2,source/game/game_results.c,ecx,int
+00196c60,game_results_get_team_unknown1,source/game/game_results.c,ecx,int
+00196bf0,game_results_get_player_unknownA0,source/game/game_results.c,ecx,int
+00196ca0,game_results_get_player_unknown10,source/game/game_results.c,ecx,pointer
+00196ce0,game_results_get_player_unknown2,source/game/game_results.c,ecx,pointer
+00196d20,game_results_get_player_team,source/game/game_results.c,ecx,int
+00196da0,game_results_get_player_unknown98,source/game/game_results.c,ecx,int
+00196d50,game_results_get_player_unknown50,source/game/game_results.c,eax ecx,void

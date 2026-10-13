@@ -387,12 +387,14 @@ def build_image() -> Path:
     # that the emulator stops at
     externals = [f"--defsym={name}={external_address(n):#x}" for n, name in enumerate(external_names())]
 
+    # what the linker is told goes in a file: there are too many objects for
+    # a command line of Windows
     image = BUILD / "image.elf"
-    result = subprocess.run(
-        [linker, "-m", "elf_i386", "-static", f"--image-base={IMAGE_ADDRESS:#x}", *externals, "-o", image, *objects],
-        capture_output=True,
-        text=True,
-    )
+    arguments = ["-m", "elf_i386", "-static", f"--image-base={IMAGE_ADDRESS:#x}", *externals, "-o", image.as_posix()]
+    arguments += [target.as_posix() for target in objects]
+    response = BUILD / "link.rsp"
+    response.write_text("\n".join(f'"{argument}"' for argument in arguments) + "\n", encoding="utf-8")
+    result = subprocess.run([linker, f"@{response}"], capture_output=True, text=True)
     if result.returncode != 0:
         raise DifftestError(f"source/ does not link:\n{result.stderr}")
     return image
