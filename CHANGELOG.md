@@ -2,6 +2,62 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Dieciocho funciones pequeñas: bits, tags heredados y listas de pares
+
+Dieciocho funciones (886 bytes) en tres archivos. De 2589
+funciones se pasa a 2607, el 23,14 % de las del juego (el 12,216 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `tag_get_inherited_unknown3C` | `0x001e4a10` | `ai/actors.c` |
+| `tag_get_inherited_unknown44` | `0x001e49d0` | `ai/actors.c` |
+| `tag_get_inherited_unknown54` | `0x001e5160` | `ai/actors.c` |
+| `tag_get_inherited_unknown5C` | `0x001e4a50` | `ai/actors.c` |
+| `tag_get_inherited_unknownB4` | `0x001e4a90` | `ai/actors.c` |
+| `tag_get_inherited_unknownBC` | `0x001e4ad0` | `ai/actors.c` |
+| `tag_get_inherited_unknownC4` | `0x001e4b10` | `ai/actors.c` |
+| `unknown4C_find_pair` | `0x001dadb0` | `physics/havok.c` |
+| `unknown4C_find_pair_above` | `0x001dade0` | `physics/havok.c` |
+| `unknown4C_find_pair0` | `0x001dae20` | `physics/havok.c` |
+| `unknown4C_find_pair1` | `0x001dae50` | `physics/havok.c` |
+| `unknown54_get_first` | `0x001dae80` | `physics/havok.c` |
+| `flags_set_bit` | `0x000bfe20` | `cseries/cseries.c` |
+| `word_flags_set_bit` | `0x000bfe40` | `cseries/cseries.c` |
+| `bit_vector232_not` | `0x000bfe80` | `cseries/cseries.c` |
+| `bit_vector256_clear_from` | `0x000bfed0` | `cseries/cseries.c` |
+| `bit_vector256_is_empty` | `0x000bff10` | `cseries/cseries.c` |
+| `angle_difference` | `0x000bff60` | `cseries/cseries.c` |
+
+### Lo que se sabe
+
+- Siete funciones buscan un bloque en un tag o, si está vacío, en el tag
+  del que hereda (el que nombra en `8`), subiendo hasta encontrarlo: así
+  funcionan los tags de los personajes de la IA, donde cada uno puede ser
+  una variante de otro.
+- `angle_difference` resta dos ángulos y deja el resultado dentro de media
+  vuelta. La vuelta entera y la media las calcula el juego al arrancar y
+  las guarda en `0x547634` y `0x547638` (dos variables nuevas).
+- Cinco funciones de bits: poner o quitar uno en un número de 32 o de 16,
+  invertir un vector de 232, vaciar uno de 256 desde un punto y mirar si
+  está vacío.
+- Cinco leen listas de pares de `short` (clave y valor).
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  729.
+- Los nombres son suposiciones. Qué tag y qué bloques son los de las siete
+  primeras no se sabe (se supone que el de los personajes por dónde están).
+- `bit_vector256_clear_from` con cero bits toca el número anterior al
+  vector (lo lee y lo deja igual), como el juego; ese caso no se prueba
+  porque en el emulador esa memoria no existe.
+- En este hito se pasaron las pruebas de las dieciocho funciones. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Dieciséis funciones de los resultados de la partida
 
 Dieciséis funciones (963 bytes) en un archivo nuevo, `game/game_results.c`.

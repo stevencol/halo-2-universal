@@ -297,3 +297,115 @@ void __attribute__((stdcall)) array_construct_elements(
 		array= (byte *)array+size;
 	}
 }
+
+/* 0x000bfe20: a bit of a number is set or not */
+void flags_set_bit(
+	unsigned long *flags,
+	long bit,
+	boolean value)
+{
+	if (value)
+	{
+		*flags|= 1u<<(bit&31);
+	}
+	else
+	{
+		*flags&= ~(1u<<(bit&31));
+	}
+}
+
+/* 0x000bfe40: the same for a number of 16 bits */
+void __attribute__((stdcall)) word_flags_set_bit(
+	word *flags,
+	long bit,
+	boolean value)
+{
+	if (value)
+	{
+		*flags|= (word)(1u<<(bit&31));
+	}
+	else
+	{
+		*flags&= (word)~(1u<<(bit&31));
+	}
+}
+
+/* 0x000bfe80: each bit of a vector of 232 bits (seven numbers and eight
+bits more) is turned: the bits past the last are left as zeros */
+void bit_vector232_not(
+	unsigned long *vector)
+{
+	long index;
+
+	for (index= 0; index<8; index++)
+	{
+		vector[index]= ~vector[index];
+	}
+	vector[7]&= 0xFF;
+}
+
+/* 0x000bfed0: the bits of a vector of 256 from a number on are zeros. The
+number of the vector that has the last bit that stays is always written,
+with all its bits if it is full: for no bits at all that is the number
+before the vector, which the game reads and writes back as it was */
+void bit_vector256_clear_from(
+	long count,
+	unsigned long *vector)
+{
+	long last= ((count+31)>>5)-1;
+	unsigned long mask= 0xFFFFFFFF;
+	long index;
+
+	for (index= last+1; index<8; index++)
+	{
+		vector[index]= 0;
+	}
+	if (count&31)
+	{
+		mask>>= 32-(count&31);
+	}
+	vector[last]&= mask;
+}
+
+/* 0x000bff10: whether a vector of 256 bits has none */
+boolean bit_vector256_is_empty(
+	const unsigned long *vector)
+{
+	boolean empty= vector[7]==0;
+
+	empty&= vector[6]==0;
+	empty&= vector[5]==0;
+	empty&= vector[4]==0;
+	empty&= vector[3]==0;
+	empty&= vector[2]==0;
+	empty&= vector[1]==0;
+	empty&= vector[0]==0;
+
+	return empty;
+}
+
+/* 0x00547634, 0x00547638: two real numbers that the game works out when it
+starts: a whole turn and half of one, most likely */
+float unknown_00547634;
+float unknown_00547638;
+
+/* 0x000bff60: one angle less another, brought to within half a turn: a whole
+turn less if it is half a turn or more, and a whole turn more if after that
+it is not more than half a turn the other way */
+float __attribute__((stdcall)) angle_difference(
+	float angle,
+	float other)
+{
+	float difference= angle-other;
+
+	if (difference>=unknown_00547638)
+	{
+		difference-= unknown_00547634;
+	}
+	if (!(0.0f-unknown_00547638<difference))
+	{
+		difference= unknown_00547634+difference;
+	}
+
+	return difference;
+}

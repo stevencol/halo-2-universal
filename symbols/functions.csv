@@ -3123,3 +3123,21 @@ address,name,source,arguments,returns,convention
 00196d20,game_results_get_player_team,source/game/game_results.c,ecx,int
 00196da0,game_results_get_player_unknown98,source/game/game_results.c,ecx,int
 00196d50,game_results_get_player_unknown50,source/game/game_results.c,eax ecx,void
+001e4a10,tag_get_inherited_unknown3C,source/ai/actors.c,ecx,pointer
+001e49d0,tag_get_inherited_unknown44,source/ai/actors.c,ecx,pointer
+001e5160,tag_get_inherited_unknown54,source/ai/actors.c,ecx,pointer
+001e4a50,tag_get_inherited_unknown5C,source/ai/actors.c,ecx,pointer
+001e4a90,tag_get_inherited_unknownB4,source/ai/actors.c,ecx,pointer
+001e4ad0,tag_get_inherited_unknownBC,source/ai/actors.c,ecx,pointer
+001e4b10,tag_get_inherited_unknownC4,source/ai/actors.c,ecx,pointer
+001dadb0,unknown4C_find_pair,source/physics/havok.c,ecx esi,short
+001dade0,unknown4C_find_pair_above,source/physics/havok.c,eax edi esi,short
+001dae20,unknown4C_find_pair0,source/physics/havok.c,ecx,short
+001dae50,unknown4C_find_pair1,source/physics/havok.c,ecx,short
+001dae80,unknown54_get_first,source/physics/havok.c,ecx,int
+000bfe20,flags_set_bit,source/cseries/cseries.c,eax ecx edx,void
+000bfe40,word_flags_set_bit,source/cseries/cseries.c,eax ecx stack,void,stdcall
+000bfe80,bit_vector232_not,source/cseries/cseries.c,eax,void
+000bfed0,bit_vector256_clear_from,source/cseries/cseries.c,eax esi,void
+000bff10,bit_vector256_is_empty,source/cseries/cseries.c,ecx,bool
+000bff60,angle_difference,source/cseries/cseries.c,xmm0 stack,real:xmm0,stdcall

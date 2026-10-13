@@ -2348,3 +2348,78 @@ void swarm_unknown_00290bf0(
 		object_index= *(const long *)(unknown13A+0xC);
 	}
 }
+
+/* ---------- what a tag has, or the tag that it takes from
+
+The seven functions that follow are given a tag that names another at 8, the
+one that it takes what it does not have from (the tags of the characters do
+that: each can be a kind of another). Each looks for the first, from the tag
+up, that has something in one of its blocks, and gives where the things of
+the block are; NULL if none has */
+
+static inline __attribute__((always_inline)) void *tag_get_inherited_block_inline(
+	long tag_index,
+	long offset)
+{
+	while (tag_index!=NONE)
+	{
+		const byte *tag= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+
+		if (*(const long *)(tag+offset)>0)
+		{
+			return *(void *const *)(tag+offset+4);
+		}
+		tag_index= *(const long *)(tag+8);
+	}
+
+	return NULL;
+}
+
+/* 0x001e4a10: the block at 0x3C */
+void *tag_get_inherited_unknown3C(
+	long tag_index)
+{
+	return tag_get_inherited_block_inline(tag_index, 0x3C);
+}
+
+/* 0x001e49d0: the block at 0x44 */
+void *tag_get_inherited_unknown44(
+	long tag_index)
+{
+	return tag_get_inherited_block_inline(tag_index, 0x44);
+}
+
+/* 0x001e5160: the block at 0x54 */
+void *tag_get_inherited_unknown54(
+	long tag_index)
+{
+	return tag_get_inherited_block_inline(tag_index, 0x54);
+}
+
+/* 0x001e4a50: the block at 0x5C */
+void *tag_get_inherited_unknown5C(
+	long tag_index)
+{
+	return tag_get_inherited_block_inline(tag_index, 0x5C);
+}
+
+/* 0x001e4a90: the block at 0xB4 */
+void *tag_get_inherited_unknownB4(
+	long tag_index)
+{
+	return tag_get_inherited_block_inline(tag_index, 0xB4);
+}
+
+/* 0x001e4ad0: the block at 0xBC */
+void *tag_get_inherited_unknownBC(
+	long tag_index)
+{
+	return tag_get_inherited_block_inline(tag_index, 0xBC);
+}
+
+/* 0x001e4b10: the block at 0xC4 */
+void *tag_get_inherited_unknownC4(
+	long tag_index)
+{
+	return tag_get_inherited_block_inline(tag_index, 0xC4);
+}

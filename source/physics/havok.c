@@ -584,3 +584,102 @@ void *unknown4C_get_tag(
 
 	return NULL;
 }
+
+/* ---------- lists of pairs of shorts
+
+The five functions that follow (0x1dadb0 to 0x1dae80) take something that
+has at 0x4C a block of pairs of shorts, a key and a value, and at 0x54
+another block. They are next to unknown4C_get_tag in the game, which reads
+the block at 0x4C in another way: the things are not the same */
+
+/* 0x001dadb0: the value of the first pair that has a key; NONE if none */
+short unknown4C_find_pair(
+	const byte *unknown,
+	long key)
+{
+	long count= *(const long *)(unknown+0x4C);
+	const short *pair= *(const short *const *)(unknown+0x50);
+	long index;
+
+	for (index= 0; index<count; index++, pair+= 2)
+	{
+		if (pair[0]==key)
+		{
+			return pair[1];
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x001dade0: the value of the first pair that has a key and a value that
+is more than a number; NONE if none */
+short unknown4C_find_pair_above(
+	const byte *unknown,
+	long key,
+	long minimum)
+{
+	long count= *(const long *)(unknown+0x4C);
+	const short *pair= *(const short *const *)(unknown+0x50);
+	long index;
+
+	for (index= 0; index<count; index++, pair+= 2)
+	{
+		if (pair[0]==key && pair[1]>minimum)
+		{
+			return pair[1];
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x001dae20: the value of the first pair whose key is 0 */
+short unknown4C_find_pair0(
+	const byte *unknown)
+{
+	long count= *(const long *)(unknown+0x4C);
+	const short *pair= *(const short *const *)(unknown+0x50);
+	long index;
+
+	for (index= 0; index<count; index++, pair+= 2)
+	{
+		if (pair[0]==0)
+		{
+			return pair[1];
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x001dae50: the value of the first pair whose key is 1 */
+short unknown4C_find_pair1(
+	const byte *unknown)
+{
+	long count= *(const long *)(unknown+0x4C);
+	const short *pair= *(const short *const *)(unknown+0x50);
+	long index;
+
+	for (index= 0; index<count; index++, pair+= 2)
+	{
+		if (pair[0]==1)
+		{
+			return pair[1];
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x001dae80: the first short of the block at 0x54; NONE if it has none */
+long unknown54_get_first(
+	const byte *unknown)
+{
+	if (*(const long *)(unknown+0x54)>0)
+	{
+		return **(const short *const *)(unknown+0x58);
+	}
+
+	return NONE;
+}
