@@ -3078,3 +3078,18 @@ address,name,source,arguments,returns,convention
 00094270,network_message_handler_unknown_00094270,source/networking/network_message_handler.c,ecx eax stack,void,stdcall
 000942d0,network_message_handler_unknown_000942d0,source/networking/network_message_handler.c,ecx eax stack,void,stdcall
 00093f60,network_message_handler_unknown_00093f60,source/networking/network_message_handler.c,eax stack stack,void,stdcall
+00086e40,simulation_read_world_point,source/networking/simulation_encoding.c,eax stack stack,void,stdcall
+00086f50,simulation_read_relative_point,source/networking/simulation_encoding.c,eax ecx stack,void,stdcall
+00086f10,simulation_write_relative_point,source/networking/simulation_encoding.c,ebx edi stack,void,stdcall
+00086e90,simulation_world_points_are_close,source/networking/simulation_encoding.c,esi stack stack,bool,stdcall
+0009ae80,simulation_decode_unknown_0009ae80,source/networking/simulation_encoding.c,stack stack stack,bool,stdcall
+0009f240,simulation_decode_unknown_0009f240,source/networking/simulation_encoding.c,stack stack stack,bool,stdcall
+0009fa90,simulation_decode_unknown_0009fa90,source/networking/simulation_encoding.c,stack stack stack,bool,stdcall
+0009ec30,simulation_decode_unknown_0009ec30,source/networking/simulation_encoding.c,stack stack stack,bool,stdcall
+0009fd90,simulation_decode_unknown_0009fd90,source/networking/simulation_encoding.c,stack stack stack,bool,stdcall
+0009ceb0,simulation_decode_unknown_0009ceb0,source/networking/simulation_encoding.c,stack stack stack,bool,stdcall
+0009cfa0,simulation_decode_unknown_0009cfa0,source/networking/simulation_encoding.c,stack stack stack stack stack,bool,stdcall
+000b29a0,simulation_decode_unknown_000b29a0,source/networking/simulation_encoding.c,stack stack stack,bool,stdcall
+0009ca70,simulation_describe_damage_section_response,source/networking/simulation_encoding.c,stack stack stack stack stack,pointer,stdcall
+000a51f0,simulation_describe_game_engine,source/networking/simulation_encoding.c,stack stack stack stack stack,pointer,stdcall
+000a5780,simulation_describe_game_engine_request_boot_player,source/networking/simulation_encoding.c,stack stack stack stack stack,pointer,stdcall

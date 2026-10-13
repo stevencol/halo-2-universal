@@ -2,6 +2,59 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-12 — Quince funciones pequeñas que leen y escriben cosas de la simulación
+
+Quince funciones (706 bytes) en un archivo nuevo,
+`networking/simulation_encoding.c`. De 2544
+funciones se pasa a 2559, el 22,72 % de las del juego (el 12,123 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_read_world_point` | `0x00086e40` | `networking/simulation_encoding.c` |
+| `simulation_read_relative_point` | `0x00086f50` | `networking/simulation_encoding.c` |
+| `simulation_write_relative_point` | `0x00086f10` | `networking/simulation_encoding.c` |
+| `simulation_world_points_are_close` | `0x00086e90` | `networking/simulation_encoding.c` |
+| `simulation_decode_unknown_0009ae80` | `0x0009ae80` | `networking/simulation_encoding.c` |
+| `simulation_decode_unknown_0009f240` | `0x0009f240` | `networking/simulation_encoding.c` |
+| `simulation_decode_unknown_0009fa90` | `0x0009fa90` | `networking/simulation_encoding.c` |
+| `simulation_decode_unknown_0009ec30` | `0x0009ec30` | `networking/simulation_encoding.c` |
+| `simulation_decode_unknown_0009fd90` | `0x0009fd90` | `networking/simulation_encoding.c` |
+| `simulation_decode_unknown_0009ceb0` | `0x0009ceb0` | `networking/simulation_encoding.c` |
+| `simulation_decode_unknown_0009cfa0` | `0x0009cfa0` | `networking/simulation_encoding.c` |
+| `simulation_decode_unknown_000b29a0` | `0x000b29a0` | `networking/simulation_encoding.c` |
+| `simulation_describe_damage_section_response` | `0x0009ca70` | `networking/simulation_encoding.c` |
+| `simulation_describe_game_engine` | `0x000a51f0` | `networking/simulation_encoding.c` |
+| `simulation_describe_game_engine_request_boot_player` | `0x000a5780` | `networking/simulation_encoding.c` |
+
+### Lo que se sabe
+
+- Cómo viajan los puntos por la red: cada número se manda con unos pocos
+  bits dentro de una caja. Para los puntos del mapa la caja es la del mapa
+  (`0x34` de `global_structure_bsp`); para los relativos, una de -10 a 10
+  por lado que el juego guarda en `0x440214`.
+- `simulation_world_points_are_close` dice si dos puntos se mandarían casi
+  igual (ningún número a más de uno de distancia): sirve para no mandar lo
+  que apenas cambió.
+- Ocho funciones leen un dato de un evento o de una cosa (5 bits, 2 bits,
+  1 bit, 16, 32) y dicen si es válido; tres dan el nombre de un tipo de
+  evento: «damage section response», «game engine» y «game engine request
+  boot player».
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  729.
+- El archivo y los nombres son inventados: en el juego estas funciones
+  son de varios archivos que no se conocen. Qué evento lee cada
+  `simulation_decode_unknown_*` no se sabe.
+- En este hito se pasaron las pruebas de las quince funciones, con las
+  funciones de los bits y de las cajas de verdad, no simuladas. Hay una
+  batería completa en marcha sobre el hito 684.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Veintiséis funciones que dan a una sesión sus mensajes
 
 Veintiséis funciones (1458 bytes) en `networking/network_message_handler.c`.
