@@ -3141,3 +3141,23 @@ address,name,source,arguments,returns,convention
 000bfed0,bit_vector256_clear_from,source/cseries/cseries.c,eax esi,void
 000bff10,bit_vector256_is_empty,source/cseries/cseries.c,ecx,bool
 000bff60,angle_difference,source/cseries/cseries.c,xmm0 stack,real:xmm0,stdcall
+002243a0,tag_user_set_tag,source/sound/sound_manager.c,ecx stack,void,stdcall
+00224250,tag_user_get_unknown84,source/sound/sound_manager.c,ecx,int
+00224260,tag_user_get_unknown88,source/sound/sound_manager.c,ecx stack,pointer,stdcall
+002242a0,tag_user_get_unknown90,source/sound/sound_manager.c,ecx,int
+00224330,tag_user_get_flag7,source/sound/sound_manager.c,ecx,int
+00224340,tag_user_get_flag8,source/sound/sound_manager.c,ecx,int
+00173b60,unknown_ring_add_short,source/effects/particle_systems.c,eax esi,void
+00173b80,unknown_get_unknown16_bit2,source/effects/particle_systems.c,eax,int
+00173b90,unknown_get_unknownC_bit10,source/effects/particle_systems.c,eax,int
+002470e0,unknown_get_unknown9C,source/effects/particle_systems.c,eax,pointer
+002470f0,unknown_get_unknownA8,source/effects/particle_systems.c,eax,pointer
+00247120,unknown_get_unknown16_bit7,source/effects/particle_systems.c,eax,int
+00247130,unknown_get_unknownC_bit9,source/effects/particle_systems.c,eax,int
+00183d90,unknown_node_get_parent,source/physics/breakable_surfaces.c,ecx,pointer
+00183da0,unknown_node_get_root,source/physics/breakable_surfaces.c,ecx,pointer
+00183e20,unknown_flag_get,source/physics/breakable_surfaces.c,ecx,int
+00183e30,unknown_flag_set,source/physics/breakable_surfaces.c,ecx stack,void,stdcall
+000b6760,unknown_has_unknown0_and_unknown6,source/objects/objects.c,eax,int
+000b6780,unknown_has_unknown0_unknown6_and_unknown68,source/objects/objects.c,eax,int
+000b67a0,unknown_get_unknown18_below_unknown74,source/objects/objects.c,ecx,short

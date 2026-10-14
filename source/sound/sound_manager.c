@@ -13762,3 +13762,63 @@ void sound_fade_in_for_new_map(
 		sound_classes_set_decibels("scripted_dialog_player", sound_gain_to_decibels(1.0f), 0.0f);
 	}
 }
+
+/* 0x00224250 to 0x002243a0: six functions of something that keeps the index
+of a tag at 4 and where the tag is at 8. In the game it is in ecx (a class,
+most likely). Which tag it is, and whether they are of this file, is not
+known: they are here by their addresses */
+
+/* 0x002243a0: the thing takes a tag */
+void __attribute__((stdcall)) tag_user_set_tag(
+	byte *user,
+	long tag_index)
+{
+	*(long *)(user+4)= tag_index;
+	*(unsigned long *)(user+8)= (unsigned long)global_tag_instances[tag_index&0xFFFF].address;
+}
+
+/* 0x00224250: what the tag has at 0x84 */
+long tag_user_get_unknown84(
+	const byte *user)
+{
+	const byte *tag= *(const byte *const *)(user+8);
+
+	return *(const long *)(tag+0x84);
+}
+
+/* 0x00224260: one of the things of 0x38 bytes that the tag has at 0x88 */
+byte *__attribute__((stdcall)) tag_user_get_unknown88(
+	const byte *user,
+	long index)
+{
+	const byte *tag= *(const byte *const *)(user+8);
+
+	return *(byte *const *)(tag+0x88)+index*0x38;
+}
+
+/* 0x002242a0: what the tag has at 0x90 */
+long tag_user_get_unknown90(
+	const byte *user)
+{
+	const byte *tag= *(const byte *const *)(user+8);
+
+	return *(const long *)(tag+0x90);
+}
+
+/* 0x00224330: the bit 7 of the first number of the tag */
+long tag_user_get_flag7(
+	const byte *user)
+{
+	const byte *tag= *(const byte *const *)(user+8);
+
+	return (*(const unsigned long *)tag>>7)&1;
+}
+
+/* 0x00224340: its bit 8 */
+long tag_user_get_flag8(
+	const byte *user)
+{
+	const byte *tag= *(const byte *const *)(user+8);
+
+	return (*(const unsigned long *)tag>>8)&1;
+}

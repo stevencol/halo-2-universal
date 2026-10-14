@@ -655,3 +655,36 @@ void object_unknown_000be1d0(
 		}
 	}
 }
+
+/* three small functions of things that are not known; they are just before
+object_wake in the game */
+
+/* 0x000b6760: whether something has a number at 0 and a short at 6 */
+long unknown_has_unknown0_and_unknown6(
+	const byte *unknown)
+{
+	return *(const long *)unknown!=NONE && *(const short *)(unknown+6)!=NONE;
+}
+
+/* 0x000b6780: and a number at 0x68 too */
+long unknown_has_unknown0_unknown6_and_unknown68(
+	const byte *unknown)
+{
+	return *(const long *)(unknown+0x68)!=NONE && *(const long *)unknown!=NONE &&
+		*(const short *)(unknown+6)!=NONE;
+}
+
+/* 0x000b67a0: the byte that something has at 0x18, if it is not less than
+zero and is less than the number at 0x74; NONE if not */
+short unknown_get_unknown18_below_unknown74(
+	const byte *unknown)
+{
+	signed char index= (signed char)unknown[0x18];
+
+	if (index>=0 && index<*(const long *)(unknown+0x74))
+	{
+		return index;
+	}
+
+	return NONE;
+}

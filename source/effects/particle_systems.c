@@ -32,3 +32,62 @@ void particle_systems_initialize(
 	particle_emitter_data= data_new("particle_emitter", 0x100, 0x4C, 0, game_state_allocation);
 	particle_location_data= data_new("particle_location", 0x100, 0x34, 0, game_state_allocation);
 }
+
+/* seven small functions of things that are not known. The first three are
+just before the particles in the game; the other four are far (0x002470e0),
+but what calls them (0x00247470) calls one of the first too, so they are
+kept together. Whether any is of this file is not known */
+
+/* 0x00173b60: a short is put in a ring of 0x100 of them, which starts at 8;
+the number at 4 says where the next goes */
+void unknown_ring_add_short(
+	byte *ring,
+	short value)
+{
+	long index= *(const long *)(ring+4);
+
+	*(long *)(ring+4)= index+1==0x100 ? 0 : index+1;
+	*(short *)(ring+8+index*2)= value;
+}
+
+/* 0x00173b80: the bit 2 of the byte that something has at 0x16 */
+long unknown_get_unknown16_bit2(
+	const byte *unknown)
+{
+	return (unknown[0x16]>>2)&1;
+}
+
+/* 0x00173b90: the bit 10 of the short that something has at 0xC */
+long unknown_get_unknownC_bit10(
+	const byte *unknown)
+{
+	return (*(const unsigned short *)(unknown+0xC)>>10)&1;
+}
+
+/* 0x002470e0: where something has what it has at 0x9C */
+byte *unknown_get_unknown9C(
+	byte *unknown)
+{
+	return unknown+0x9C;
+}
+
+/* 0x002470f0: and at 0xA8 */
+byte *unknown_get_unknownA8(
+	byte *unknown)
+{
+	return unknown+0xA8;
+}
+
+/* 0x00247120: the bit 7 of the byte at 0x16 */
+long unknown_get_unknown16_bit7(
+	const byte *unknown)
+{
+	return (unknown[0x16]>>7)&1;
+}
+
+/* 0x00247130: the bit 9 of the short at 0xC */
+long unknown_get_unknownC_bit9(
+	const byte *unknown)
+{
+	return (*(const unsigned short *)(unknown+0xC)>>9)&1;
+}

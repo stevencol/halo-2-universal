@@ -2,6 +2,66 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-13 — Veinte funciones pequeñas que no llaman a nada
+
+Veinte funciones (310 bytes) en cuatro archivos. De 2607
+funciones se pasa a 2627, el 23,32 % de las del juego (el 12,226 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `tag_user_set_tag` | `0x002243a0` | `sound/sound_manager.c` |
+| `tag_user_get_unknown84` | `0x00224250` | `sound/sound_manager.c` |
+| `tag_user_get_unknown88` | `0x00224260` | `sound/sound_manager.c` |
+| `tag_user_get_unknown90` | `0x002242a0` | `sound/sound_manager.c` |
+| `tag_user_get_flag7` | `0x00224330` | `sound/sound_manager.c` |
+| `tag_user_get_flag8` | `0x00224340` | `sound/sound_manager.c` |
+| `unknown_ring_add_short` | `0x00173b60` | `effects/particle_systems.c` |
+| `unknown_get_unknown16_bit2` | `0x00173b80` | `effects/particle_systems.c` |
+| `unknown_get_unknownC_bit10` | `0x00173b90` | `effects/particle_systems.c` |
+| `unknown_get_unknown9C` | `0x002470e0` | `effects/particle_systems.c` |
+| `unknown_get_unknownA8` | `0x002470f0` | `effects/particle_systems.c` |
+| `unknown_get_unknown16_bit7` | `0x00247120` | `effects/particle_systems.c` |
+| `unknown_get_unknownC_bit9` | `0x00247130` | `effects/particle_systems.c` |
+| `unknown_node_get_parent` | `0x00183d90` | `physics/breakable_surfaces.c` |
+| `unknown_node_get_root` | `0x00183da0` | `physics/breakable_surfaces.c` |
+| `unknown_flag_get` | `0x00183e20` | `physics/breakable_surfaces.c` |
+| `unknown_flag_set` | `0x00183e30` | `physics/breakable_surfaces.c` |
+| `unknown_has_unknown0_and_unknown6` | `0x000b6760` | `objects/objects.c` |
+| `unknown_has_unknown0_unknown6_and_unknown68` | `0x000b6780` | `objects/objects.c` |
+| `unknown_get_unknown18_below_unknown74` | `0x000b67a0` | `objects/objects.c` |
+
+### Lo que se sabe
+
+- Seis son de algo que guarda el índice de un tag (en `4`) y dónde está el
+  tag (en `8`): una lo pone y cinco leen cosas del tag (dos números, una
+  lista de cosas de `0x38` bytes y dos bits). En el juego ese algo va en
+  `ecx`, como en una clase.
+- `unknown_ring_add_short` mete un `short` en un anillo de 256.
+- `unknown_node_get_root` sube por lo que cada cosa tiene en `0xC` hasta
+  la que no tiene nada: la raíz.
+- Las demás leen un bit, un byte o dan un sitio dentro de algo.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  734.
+- Los nombres son suposiciones, y los archivos también: están puestas por
+  su dirección junto a lo que ya había. Las cuatro de `0x002470e0` están
+  lejos de las de `0x00173b60`, pero quien las llama (`0x00247470`) llama
+  también a una de estas.
+- En este hito se pasaron las pruebas de las veinte funciones.
+- **La batería completa sobre el hito 684 terminó: las 2251 funciones
+  pasan.**
+- Las pruebas hay que pasarlas con el `clang` 19.1.5 de las Build Tools de
+  Visual Studio (`VC\Tools\Llvm\x64\bin`), que es el que se venía usando.
+  Con los `clang` 22 y 23 que también hay en el equipo, `game.c` y
+  `simulation_view.c` no compilan (dos conversiones de punteros que antes
+  eran avisos); queda por arreglar.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-12 — Dieciocho funciones pequeñas: bits, tags heredados y listas de pares
 
 Dieciocho funciones (886 bytes) en tres archivos. De 2589

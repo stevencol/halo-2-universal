@@ -143,3 +143,43 @@ void breakable_surfaces_unknown_00185a70(
 	memset(unknown_004ea960, 0xFF, sizeof(unknown_004ea960));
 	memset(unknown_004eaa60, 0xFF, sizeof(unknown_004eaa60));
 }
+
+/* four small functions that are just before the ones of this file in the
+game; in the game their first argument is in ecx (a class, most likely).
+Whether they are of this file is not known */
+
+/* 0x00183d90: what a thing has at 0xC: the one that it is of */
+byte *unknown_node_get_parent(
+	const byte *node)
+{
+	return *(byte *const *)(node+0xC);
+}
+
+/* 0x00183da0: the one that has none at 0xC, going up from a thing */
+byte *unknown_node_get_root(
+	byte *node)
+{
+	byte *parent;
+
+	while ((parent= *(byte *const *)(node+0xC))!=NULL)
+	{
+		node= parent;
+	}
+
+	return node;
+}
+
+/* 0x00183e20: whether a byte is set */
+long unknown_flag_get(
+	const byte *flag)
+{
+	return *flag!=0;
+}
+
+/* 0x00183e30: the byte takes a value */
+void __attribute__((stdcall)) unknown_flag_set(
+	byte *flag,
+	byte value)
+{
+	*flag= value;
+}
