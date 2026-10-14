@@ -1028,3 +1028,50 @@ boolean __attribute__((stdcall)) objects_get_first_of_type5(
 
 	return FALSE;
 }
+
+/* 0x000bb760: one of the 0x280 numbers of the table of unknown_004de2d0;
+NONE if it is not one of them */
+long unknown_004de2d0_get(
+	short index)
+{
+	if (index>=0 && index<0x280)
+	{
+		return unknown_004de2d0[index];
+	}
+
+	return NONE;
+}
+
+/* 0x00118f70: the bit 1 of the byte that an object has at 0x12C */
+boolean object_get_unknown12C_bit1(
+	long object_index)
+{
+	return (UNIT_OBJECT_GET(object_index)[0x12C]>>1)&1;
+}
+
+/* 0x00114480: the number that an object has at the place that its short at
+0x342 says */
+long object_get_unknown342_first(
+	long object_index)
+{
+	const byte *object= UNIT_OBJECT_GET(object_index);
+
+	return *(const long *)(object+*(const short *)(object+0x342));
+}
+
+/* 0x004ba014: some bits of something */
+unsigned long unknown_004ba014;
+
+/* 0x00030e00: zero if unknown_004ba014 has its bits 0 and 1 and the caller
+says yes; NONE if not. It is after object_get_unknown30 in the game; whether
+it is of this file is not known */
+long __attribute__((stdcall)) unknown_004ba014_unknown_00030e00(
+	boolean value)
+{
+	if ((unknown_004ba014&1) && ((unknown_004ba014>>1)&1) && value)
+	{
+		return 0;
+	}
+
+	return NONE;
+}

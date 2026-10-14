@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 736.
+**Última actualización:** 2026-10-08, al terminar el hito 737.
 
 ## Dónde estamos
 
-- **2649 funciones descompiladas de 11.265: el 23,52 % del juego** (el
-  12,255 % de los bytes de código).
-- Las 2649 están comprobadas contra el ejecutable original: las 1390 del
+- **2671 funciones descompiladas de 11.265: el 23,71 % del juego** (el
+  12,277 % de los bytes de código).
+- Las 2671 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile twenty-two small functions of the AI, of Havok's part and others* (ver `git log`).
+- Último hito: *Decompile twenty-two small functions of objects, lights, the network and others* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 535 funciones apuntadas pero sin descompilar (las que el código
   llama); 385 de ellas solo se conocen por su dirección (`unknown_...`).

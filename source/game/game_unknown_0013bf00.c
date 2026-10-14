@@ -80,3 +80,18 @@ void game_unknown_0013bf00_dispose_from_old_map(
 	unknown[GAME_UNKNOWN_0013BF00_UNKNOWN5_OFFSET]= FALSE;
 	unknown[GAME_UNKNOWN_0013BF00_UNKNOWN22_OFFSET]= FALSE;
 }
+
+/* 0x0013cb40: the byte at 5 of what unknown_00510c50 points to; FALSE if it
+points to nothing */
+byte unknown_00510c50_get_unknown5(
+	void)
+{
+	const byte *unknown= (const byte *)unknown_00510c50;
+
+	if (unknown)
+	{
+		return unknown[5];
+	}
+
+	return FALSE;
+}

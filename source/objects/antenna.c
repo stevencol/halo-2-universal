@@ -41,3 +41,13 @@ void antenna_dispose_from_old_map(
 {
 	antenna_data->valid= FALSE;
 }
+
+/* 0x00115d80: at the end, the table is no more (the name is a guess) */
+void antenna_dispose(
+	void)
+{
+	if (antenna_data)
+	{
+		antenna_data= NULL;
+	}
+}

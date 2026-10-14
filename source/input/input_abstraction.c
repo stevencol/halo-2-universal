@@ -412,3 +412,14 @@ void input_abstraction_update(
 		}
 	}
 }
+
+/* 0x004e9194: a number of the same part as unknown_004e9188 */
+long unknown_004e9194;
+
+/* 0x00155f60: whether both unknown_004e9194 and unknown_004e9188 are set.
+It is far before the others of this file in the game */
+long unknown_004e9194_and_unknown_004e9188(
+	void)
+{
+	return unknown_004e9194 && unknown_004e9188;
+}

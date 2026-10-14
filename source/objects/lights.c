@@ -676,3 +676,20 @@ void light_unknown_000c3220(
 		light[LIGHT_FLAGS_OFFSET]&= ~8;
 	}
 }
+
+/* 0x000c3110: a light takes unknown_004e0308 for its number at 0xC; whether
+it was another */
+boolean light_set_unknownC(
+	long light_index)
+{
+	byte *light= (byte *)light_data->data+(light_index&0xFFFF)*LIGHT_SIZE;
+
+	if (*(const long *)(light+0xC)!=unknown_004e0308)
+	{
+		*(long *)(light+0xC)= unknown_004e0308;
+
+		return TRUE;
+	}
+
+	return FALSE;
+}

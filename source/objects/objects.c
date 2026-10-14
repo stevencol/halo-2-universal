@@ -688,3 +688,14 @@ short unknown_get_unknown18_below_unknown74(
 
 	return NONE;
 }
+
+/* 0x004de2f4: it points to something whose first byte says whether it is
+set */
+byte *unknown_004de2f4;
+
+/* 0x000b8820: whether unknown_004de2f4 points to something that is set */
+long unknown_004de2f4_is_set(
+	void)
+{
+	return unknown_004de2f4 && *unknown_004de2f4;
+}

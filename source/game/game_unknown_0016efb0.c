@@ -154,3 +154,48 @@ void GAME_STATE_PROC game_unknown_0016efb0_after_load(
 		unknown_004ea936= TRUE;
 	}
 }
+
+/* 0x0054e858, 0x0054e85c and 0x0054e860: three reals that the game works
+out when it starts: the least and the most of one range, and the most of
+another */
+float unknown_0054e858;
+float unknown_0054e85c;
+float unknown_0054e860;
+
+/* whether a real is a number (no infinity and no NaN) from one to another */
+static boolean real_is_in_range(
+	float value,
+	float minimum,
+	float maximum)
+{
+	union
+	{
+		float real;
+		unsigned long bits;
+	} as= {value};
+
+	return (as.bits&0x7F800000)!=0x7F800000 && value>=minimum && maximum>=value;
+}
+
+/* 0x001723e0: whether a real is from unknown_0054e858 to unknown_0054e85c.
+The three are after this file in the game; whether they are of it is not
+known */
+boolean real_is_in_range_0054e858(
+	float value)
+{
+	return real_is_in_range(value, unknown_0054e858, unknown_0054e85c);
+}
+
+/* 0x00172420: from zero to unknown_0054e860 */
+boolean real_is_in_range_0054e860(
+	float value)
+{
+	return real_is_in_range(value, 0.0f, unknown_0054e860);
+}
+
+/* 0x00172460: from zero to 3600 */
+boolean real_is_in_range_3600(
+	float value)
+{
+	return real_is_in_range(value, 0.0f, 3600.0f);
+}

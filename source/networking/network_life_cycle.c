@@ -1105,3 +1105,20 @@ long network_life_cycle_unknown_00070570(
 
 	return 0;
 }
+
+/* 0x004cd8f8 and 0x004cd8fc: two numbers of something */
+long unknown_004cd8f8;
+long unknown_004cd8fc;
+
+/* 0x00065280: unknown_004cd8f8; and unknown_004cd8fc to where the caller
+says, if it says where. It is after the others of this file in the game */
+long unknown_004cd8f8_get(
+	long *unknown_004cd8fc_reference)
+{
+	if (unknown_004cd8fc_reference)
+	{
+		*unknown_004cd8fc_reference= unknown_004cd8fc;
+	}
+
+	return unknown_004cd8f8;
+}

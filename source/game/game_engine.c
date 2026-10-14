@@ -391,3 +391,20 @@ void __attribute__((stdcall)) game_engine_unknown_000a7810(
 		unknown_000b58c0(*(const long *)(globals+0x24), unknown);
 	}
 }
+
+/* 0x0009bb50: 0x1B0 bytes of the last of four arguments are left with
+nothing; always true. It is between game_engine_entity28_update and
+game_engine_unknown_0009bb70 in the game */
+boolean __attribute__((stdcall)) game_engine_unknown_0009bb50(
+	long unknown,
+	long unknown2,
+	long unknown3,
+	byte *result)
+{
+	(void)unknown;
+	(void)unknown2;
+	(void)unknown3;
+	memset(result, 0, 0x1B0);
+
+	return TRUE;
+}

@@ -22,3 +22,18 @@ void game_unknown_0003f2b0_initialize_for_new_structure_bsp(
 {
 	unknown_00509438= 0;
 }
+
+/* 0x00040e10: a number from two bytes: 0 if both are set, 1 if only the
+first, 2 if only the second and 3 if none. It is after this file in the
+game */
+long unknown_00040e10(
+	boolean first,
+	boolean second)
+{
+	if (first)
+	{
+		return !second;
+	}
+
+	return second ? 2 : 3;
+}

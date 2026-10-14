@@ -523,3 +523,28 @@ void shell_memory_initialize_for_new_map(
 {
 	*(boolean *)&shell_memory_globals.unknown0= TRUE;
 }
+
+/* 0x00485898: a number of something */
+long unknown_00485898;
+
+/* 0x00016ac0: whether unknown_00485898 is from 5 to 7. The two are far from
+the others of this file in the game */
+long unknown_00485898_is_from_5_to_7(
+	void)
+{
+	return unknown_00485898>=5 && unknown_00485898<=7;
+}
+
+/* 0x00016ae0: the whole number that is not more than a real: its floor */
+long __attribute__((stdcall)) real_floor(
+	float value)
+{
+	long whole= (long)value;
+
+	if ((float)whole!=value && value<0.0f)
+	{
+		whole--;
+	}
+
+	return whole;
+}

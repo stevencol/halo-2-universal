@@ -3183,3 +3183,25 @@ address,name,source,arguments,returns,convention
 001e8d50,unknown_00510c94_get_unknown420,source/game/game_unknown_001e6a40.c,ecx,pointer
 001e8cb0,unknown_00510c94_get_unknown420_first,source/game/game_unknown_001e6a40.c,ecx,int
 001ec3f0,unknown_001ec3f0,source/game/game_unknown_001eb550.c,eax stack,void,stdcall
+000b8820,unknown_004de2f4_is_set,source/objects/objects.c,,int
+000bb760,unknown_004de2d0_get,source/units/units.c,eax,int
+00118f70,object_get_unknown12C_bit1,source/units/units.c,eax,bool
+00114480,object_get_unknown342_first,source/units/units.c,eax,int
+00030e00,unknown_004ba014_unknown_00030e00,source/units/units.c,stack,int,stdcall
+00115d80,antenna_dispose,source/objects/antenna.c,,void
+000c3110,light_set_unknownC,source/objects/lights.c,eax,bool
+00155f60,unknown_004e9194_and_unknown_004e9188,source/input/input_abstraction.c,,int
+00153850,unknown_byte_is_from_none_to_3,source/game/game_unknown_00153870.c,eax,int
+0013cb40,unknown_00510c50_get_unknown5,source/game/game_unknown_0013bf00.c,,byte
+001723e0,real_is_in_range_0054e858,source/game/game_unknown_0016efb0.c,xmm0,bool
+00172420,real_is_in_range_0054e860,source/game/game_unknown_0016efb0.c,xmm0,bool
+00172460,real_is_in_range_3600,source/game/game_unknown_0016efb0.c,xmm0,bool
+00016ac0,unknown_00485898_is_from_5_to_7,source/shell/shell.c,,int
+00016ae0,real_floor,source/shell/shell.c,stack,int,stdcall
+00040e10,unknown_00040e10,source/game/game_unknown_0003f2b0.c,edx ecx,int
+0003ba90,unknown8_lacks_bit,source/game/game_unknown_0002b4a0.c,ecx stack,int,stdcall
+00065280,unknown_004cd8f8_get,source/networking/network_life_cycle.c,eax,int
+0009bb50,game_engine_unknown_0009bb50,source/game/game_engine.c,stack stack stack stack,bool,stdcall
+0009dcd0,simulation_unknown68_set,source/networking/simulation_encoding.c,stack stack stack,void,stdcall
+000a0410,simulation_unknown68_get,source/networking/simulation_encoding.c,stack stack stack,bool,stdcall
+0001fd00,unknown_005093e0_clear_unknownA0,source/rasterizer/rasterizer_text.c,,void

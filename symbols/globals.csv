@@ -588,3 +588,13 @@ address,name,source
 00450aac,unknown_00450aac,source/game/game_results.c
 00547634,unknown_00547634,source/cseries/cseries.c
 00547638,unknown_00547638,source/cseries/cseries.c
+004de2f4,unknown_004de2f4,source/objects/objects.c
+004ba014,unknown_004ba014,source/units/units.c
+004e9194,unknown_004e9194,source/input/input_abstraction.c
+0054e858,unknown_0054e858,source/game/game_unknown_0016efb0.c
+0054e85c,unknown_0054e85c,source/game/game_unknown_0016efb0.c
+0054e860,unknown_0054e860,source/game/game_unknown_0016efb0.c
+00485898,unknown_00485898,source/shell/shell.c
+004cd8f8,unknown_004cd8f8,source/networking/network_life_cycle.c
+004cd8fc,unknown_004cd8fc,source/networking/network_life_cycle.c
+005093e0,unknown_005093e0,source/rasterizer/rasterizer_text.c

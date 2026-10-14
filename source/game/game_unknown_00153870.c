@@ -23,3 +23,11 @@ void game_unknown_00153870_initialize(
 {
 	unknown_00510c5c= game_state_malloc(0x2B0);
 }
+
+/* 0x00153850: whether a byte is from NONE to 3. It is just before this file
+in the game */
+long unknown_byte_is_from_none_to_3(
+	const signed char *value)
+{
+	return *value>=NONE && *value<4;
+}

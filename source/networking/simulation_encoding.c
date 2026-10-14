@@ -14,6 +14,8 @@ so are the names of its functions.
 
 #include "cseries/cseries.h"
 
+#include <string.h>
+
 #include "math/real_math.h"
 #include "networking/bitstream.h"
 #include "scenario/scenario.h"
@@ -299,4 +301,27 @@ char *__attribute__((stdcall)) simulation_describe_game_engine_request_boot_play
 	(void)unknown3;
 
 	return csnzprintf(buffer, size, "game engine request boot player");
+}
+
+/* 0x0009dcd0: the 0x28 bytes that something has at 0x68 are taken from
+somewhere */
+void __attribute__((stdcall)) simulation_unknown68_set(
+	long unknown,
+	byte *thing,
+	const byte *source)
+{
+	(void)unknown;
+	memcpy(thing+0x68, source, 0x28);
+}
+
+/* 0x000a0410: and are given to somewhere; always true */
+boolean __attribute__((stdcall)) simulation_unknown68_get(
+	long unknown,
+	const byte *thing,
+	byte *destination)
+{
+	(void)unknown;
+	memcpy(destination, thing+0x68, 0x28);
+
+	return TRUE;
 }

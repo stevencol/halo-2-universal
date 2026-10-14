@@ -2,6 +2,64 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-13 — Veintidós funciones pequeñas de objetos, luces, la red y otras
+
+Veintidós funciones (645 bytes) en catorce archivos. De 2649
+funciones se pasa a 2671, el 23,71 % de las del juego (el 12,277 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unknown_004de2f4_is_set` | `0x000b8820` | `objects/objects.c` |
+| `unknown_004de2d0_get` | `0x000bb760` | `units/units.c` |
+| `object_get_unknown12C_bit1` | `0x00118f70` | `units/units.c` |
+| `object_get_unknown342_first` | `0x00114480` | `units/units.c` |
+| `unknown_004ba014_unknown_00030e00` | `0x00030e00` | `units/units.c` |
+| `antenna_dispose` | `0x00115d80` | `objects/antenna.c` |
+| `light_set_unknownC` | `0x000c3110` | `objects/lights.c` |
+| `unknown_004e9194_and_unknown_004e9188` | `0x00155f60` | `input/input_abstraction.c` |
+| `unknown_byte_is_from_none_to_3` | `0x00153850` | `game/game_unknown_00153870.c` |
+| `unknown_00510c50_get_unknown5` | `0x0013cb40` | `game/game_unknown_0013bf00.c` |
+| `real_is_in_range_0054e858` | `0x001723e0` | `game/game_unknown_0016efb0.c` |
+| `real_is_in_range_0054e860` | `0x00172420` | `game/game_unknown_0016efb0.c` |
+| `real_is_in_range_3600` | `0x00172460` | `game/game_unknown_0016efb0.c` |
+| `unknown_00485898_is_from_5_to_7` | `0x00016ac0` | `shell/shell.c` |
+| `real_floor` | `0x00016ae0` | `shell/shell.c` |
+| `unknown_00040e10` | `0x00040e10` | `game/game_unknown_0003f2b0.c` |
+| `unknown8_lacks_bit` | `0x0003ba90` | `game/game_unknown_0002b4a0.c` |
+| `unknown_004cd8f8_get` | `0x00065280` | `networking/network_life_cycle.c` |
+| `game_engine_unknown_0009bb50` | `0x0009bb50` | `game/game_engine.c` |
+| `simulation_unknown68_set` | `0x0009dcd0` | `networking/simulation_encoding.c` |
+| `simulation_unknown68_get` | `0x000a0410` | `networking/simulation_encoding.c` |
+| `unknown_005093e0_clear_unknownA0` | `0x0001fd00` | `rasterizer/rasterizer_text.c` |
+
+### Lo que se sabe
+
+- `real_floor` da el entero que no pasa de un número real (su suelo).
+- Tres dicen si un real es un número de verdad (ni infinito ni NaN) y está
+  en un rango: uno que el juego calcula al arrancar, de cero a otro que
+  también calcula, y de cero a 3600.
+- `antenna_dispose` deja la tabla de las antenas en nada, al final.
+- `light_set_unknownC` pone en una luz el número de `unknown_004e0308`
+  y dice si tenía otro.
+- Dos copian los 40 bytes que algo tiene en `0x68`, hacia dentro y hacia
+  fuera; están entre las que leen y escriben la simulación en la red.
+- Las demás leen un bit, un byte o un número de algo.
+- Diez variables nuevas.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  736.
+- Los nombres son suposiciones, y los archivos también (van junto a lo que
+  ya había cerca de su dirección).
+- `real_floor` no se prueba con NaN ni con reales que no caben en 32
+  bits: en C ese caso no está definido.
+- En este hito se pasaron las pruebas de las veintidós funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-13 — Veintidós funciones pequeñas de la IA, de la parte de Havok y otras
 
 Veintidós funciones (862 bytes) en seis archivos. De 2627

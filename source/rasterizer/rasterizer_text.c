@@ -514,3 +514,17 @@ void rasterizer_text_end(
 		rasterizer_text_unknown_004c1a18= FALSE;
 	}
 }
+
+/* 0x005093e0: it points to something of some other part */
+byte *unknown_005093e0;
+
+/* 0x0001fd00: what unknown_005093e0 points to, if there is something, loses
+its byte at 0xA0. It is after the others of this file in the game */
+void unknown_005093e0_clear_unknownA0(
+	void)
+{
+	if (unknown_005093e0)
+	{
+		unknown_005093e0[0xA0]= 0;
+	}
+}

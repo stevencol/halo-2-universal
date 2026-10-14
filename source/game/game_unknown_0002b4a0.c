@@ -160,3 +160,11 @@ void game_unknown_0002b4a0_initialize_for_new_map(
 	*(long *)unknown_004b9970= NONE;
 	unknown_005093fc= 0;
 }
+
+/* 0x0003ba90: whether something lacks a bit in its number at 8 */
+long __attribute__((stdcall)) unknown8_lacks_bit(
+	long bit,
+	const byte *unknown)
+{
+	return !((1u<<(bit&31))&*(const unsigned long *)(unknown+8));
+}
