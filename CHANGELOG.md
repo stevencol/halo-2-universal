@@ -2,6 +2,66 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-13 — Veintidós funciones pequeñas de la IA, de la parte de Havok y otras
+
+Veintidós funciones (862 bytes) en seis archivos. De 2627
+funciones se pasa a 2649, el 23,52 % de las del juego (el 12,255 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `actor_get_unknown50C` | `0x001f8640` | `ai/actors.c` |
+| `actor_unknown504_is_1_with_unknown50C` | `0x001f8660` | `ai/actors.c` |
+| `actor_unknown504_is_2` | `0x001f86f0` | `ai/actors.c` |
+| `actor_unknown504_is_3` | `0x001f8720` | `ai/actors.c` |
+| `actor_set_unknown504_to_3` | `0x001f8750` | `ai/actors.c` |
+| `unknown10_get_element_for_none` | `0x001fa5e0` | `ai/actors.c` |
+| `unknown_times_has_recent` | `0x001e69d0` | `ai/actors.c` |
+| `ai_unknown_find_index` | `0x001c8150` | `ai/ai.c` |
+| `ai_unknown_find` | `0x001c8180` | `ai/ai.c` |
+| `ai_unknown_clear_unknown4` | `0x001c8390` | `ai/ai.c` |
+| `unknown28_get_element` | `0x001c2460` | `physics/havok.c` |
+| `unknown_0047f054_is_recent` | `0x001c58a0` | `physics/havok.c` |
+| `unknown68_find_tag_unknownC` | `0x001cbde0` | `physics/havok.c` |
+| `unknown_get_unknown4_byte` | `0x001ce2e0` | `physics/havok.c` |
+| `unknownC_find_with_flags` | `0x001dd490` | `physics/havok.c` |
+| `unknown_001dd7a0_clear` | `0x001dd7a0` | `physics/havok.c` |
+| `unknown30_find_2001` | `0x001cf280` | `physics/havok_component.c` |
+| `unknown30_find_2002` | `0x001cf300` | `physics/havok_component.c` |
+| `unknown30_find_2003` | `0x001cf380` | `physics/havok_component.c` |
+| `unknown_00510c94_get_unknown420` | `0x001e8d50` | `game/game_unknown_001e6a40.c` |
+| `unknown_00510c94_get_unknown420_first` | `0x001e8cb0` | `game/game_unknown_001e6a40.c` |
+| `unknown_001ec3f0` | `0x001ec3f0` | `game/game_unknown_001eb550.c` |
+
+### Lo que se sabe
+
+- Cinco son de un estado que cada actor tiene en `0x504` (un `short`
+  que vale 1, 2 o 3), con un contador en `0x508` y un byte en `0x50C`:
+  cuatro lo leen y una lo pone a 3.
+- Tres son de las dos cosas de `0x1C` bytes de la IA
+  (`unknown_004f55cc`): buscar una por su primer número (dando cuál es o
+  dónde está) y vaciar las que tienen un número en `4`.
+- `unknown_0047f054_is_recent` dice si ese número es un tiempo de los
+  últimos tres ticks, y `unknown_times_has_recent` si alguno de cuatro
+  pares de tiempo y clave tiene una clave y es más nuevo que unos ticks.
+- Tres buscan las claves `0x2001`, `0x2002` y `0x2003` en una lista
+  de pares de clave y valor.
+- El resto buscan en bloques de tags o dan un sitio dentro de algo.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  735.
+- Los nombres son suposiciones, y los archivos también (van junto a lo que
+  ya había cerca de su dirección).
+- `unknown_00510c94_get_unknown420_first` no se prueba con el bloque en
+  ningún sitio y un índice mayor que cero: el juego lee entonces memoria
+  que en el emulador no existe.
+- En este hito se pasaron las pruebas de las veintidós funciones.
+- Las mutaciones de los hitos 280 a 308, 321 a 353, 355 y 368 están
+  pendientes.
+
 ## 2026-10-13 — Veinte funciones pequeñas que no llaman a nada
 
 Veinte funciones (310 bytes) en cuatro archivos. De 2607

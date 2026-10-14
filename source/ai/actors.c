@@ -2423,3 +2423,83 @@ void *tag_get_inherited_unknownC4(
 {
 	return tag_get_inherited_block_inline(tag_index, 0xC4);
 }
+
+/* 0x001f8640: the byte that an actor has at 0x50C */
+byte actor_get_unknown50C(
+	long actor_index)
+{
+	return ACTOR_GET(actor_index)[0x50C];
+}
+
+/* 0x001f8660: whether an actor has that byte, and 1 for its short at 0x504 */
+boolean actor_unknown504_is_1_with_unknown50C(
+	long actor_index)
+{
+	const byte *actor= ACTOR_GET(actor_index);
+
+	return actor[0x50C] && *(const short *)(actor+0x504)==1;
+}
+
+/* 0x001f86f0: whether an actor has 2 for its short at 0x504 */
+boolean actor_unknown504_is_2(
+	long actor_index)
+{
+	return *(const short *)(ACTOR_GET(actor_index)+0x504)==2;
+}
+
+/* 0x001f8720: whether it has 3 */
+boolean actor_unknown504_is_3(
+	long actor_index)
+{
+	return *(const short *)(ACTOR_GET(actor_index)+0x504)==3;
+}
+
+/* 0x001f8750: an actor takes 3 for that short: it counts one more at 0x508
+and loses the byte at 0x50C */
+void actor_set_unknown504_to_3(
+	long actor_index)
+{
+	byte *actor= ACTOR_GET(actor_index);
+
+	(*(short *)(actor+0x508))++;
+	actor[0x50C]= 0;
+	*(short *)(actor+0x504)= 3;
+}
+
+/* 0x001fa5e0: where one of the numbers that something has at 0x14 is, if
+the last argument is NONE and the number is one of those that there are
+(0x10); nowhere if not */
+long *__attribute__((stdcall)) unknown10_get_element_for_none(
+	long index,
+	const byte *unknown,
+	long value)
+{
+	if (value==NONE && index>=0 && index<*(const long *)(unknown+0x10))
+	{
+		return *(long *const *)(unknown+0x14)+index;
+	}
+
+	return NULL;
+}
+
+/* 0x001e69d0: whether one of four pairs of a time and a key (a short) has a
+key and a time that is less than some ticks old */
+boolean unknown_times_has_recent(
+	const byte *times,
+	long key,
+	long ticks)
+{
+	unsigned long time= game_time_globals->time;
+	long index;
+
+	for (index= 0; index<4; index++)
+	{
+		if (*(const unsigned short *)(times+index*8+4)==key &&
+			(long)(time-*(const unsigned long *)(times+index*8))<ticks)
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}

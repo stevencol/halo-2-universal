@@ -683,3 +683,101 @@ long unknown54_get_first(
 
 	return NONE;
 }
+
+/* six small functions of things that are not known, which are among the
+ones of this file in the game */
+
+/* 0x001c2460: where something has one of its things: of 0x50 bytes, 0x20
+after what it has at 0x2C, if it has a number at 0x28; of 0x80 bytes, 0x30
+after what it has at 0x34, if not */
+byte *unknown28_get_element(
+	const byte *unknown,
+	long index)
+{
+	if (*(const long *)(unknown+0x28))
+	{
+		return *(byte *const *)(unknown+0x2C)+index*0x50+0x20;
+	}
+
+	return *(byte *const *)(unknown+0x34)+index*0x80+0x30;
+}
+
+/* 0x001c58a0: whether unknown_0047f054 is a time of the last three ticks */
+boolean unknown_0047f054_is_recent(
+	void)
+{
+	long value= unknown_0047f054;
+
+	if (value!=NONE)
+	{
+		unsigned long time= game_time_globals->time;
+
+		return value>=(long)(time-3) && value<=(long)time;
+	}
+
+	return FALSE;
+}
+
+/* 0x001cbde0: which of the things of 0x20 bytes of the tag of the thing
+(the block at 0xC) has a number for its first; NONE if none */
+long unknown68_find_tag_unknownC(
+	const byte *unknown,
+	long key)
+{
+	const byte *tag= UNKNOWN68_TAG_GET(unknown);
+	long count= *(const long *)(tag+0xC);
+	const byte *element= *(const byte *const *)(tag+0x10);
+	long index;
+
+	for (index= 0; index<count; index++, element+= 0x20)
+	{
+		if (*(const long *)element==key)
+		{
+			return index;
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x001ce2e0: the byte that something has at 4, to where the caller says.
+In the game the thing is in ecx (a class, most likely) */
+void __attribute__((stdcall)) unknown_get_unknown4_byte(
+	const byte *unknown,
+	byte *value)
+{
+	*value= unknown[4];
+}
+
+/* 0x001dd490: which of the things of 0x20 bytes of a block at 0xC has all
+of some bits in its byte at 0xA; NONE if none */
+long unknownC_find_with_flags(
+	const byte *unknown,
+	unsigned long flags)
+{
+	long count= *(const long *)(unknown+0xC);
+	const byte *element= *(const byte *const *)(unknown+0x10);
+	long index;
+
+	for (index= 0; index<count; index++, element+= 0x20)
+	{
+		if ((element[0xA]&flags)==flags)
+		{
+			return index;
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x001dd7a0: 0x14 bytes of something are left with nothing in them */
+void unknown_001dd7a0_clear(
+	byte *unknown)
+{
+	*(long *)unknown= NONE;
+	*(long *)(unknown+4)= NONE;
+	*(short *)(unknown+8)= NONE;
+	*(short *)(unknown+0xA)= 0;
+	*(long *)(unknown+0xC)= NONE;
+	*(long *)(unknown+0x10)= NONE;
+}

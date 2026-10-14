@@ -3161,3 +3161,25 @@ address,name,source,arguments,returns,convention
 000b6760,unknown_has_unknown0_and_unknown6,source/objects/objects.c,eax,int
 000b6780,unknown_has_unknown0_unknown6_and_unknown68,source/objects/objects.c,eax,int
 000b67a0,unknown_get_unknown18_below_unknown74,source/objects/objects.c,ecx,short
+001f8640,actor_get_unknown50C,source/ai/actors.c,eax,byte
+001f8660,actor_unknown504_is_1_with_unknown50C,source/ai/actors.c,ecx,bool
+001f86f0,actor_unknown504_is_2,source/ai/actors.c,eax,bool
+001f8720,actor_unknown504_is_3,source/ai/actors.c,eax,bool
+001f8750,actor_set_unknown504_to_3,source/ai/actors.c,eax,void
+001fa5e0,unknown10_get_element_for_none,source/ai/actors.c,ecx edx stack,pointer,stdcall
+001e69d0,unknown_times_has_recent,source/ai/actors.c,edx ebx edi,bool
+001c8150,ai_unknown_find_index,source/ai/ai.c,edx,short
+001c8180,ai_unknown_find,source/ai/ai.c,ebx,pointer
+001c8390,ai_unknown_clear_unknown4,source/ai/ai.c,edi,void
+001c2460,unknown28_get_element,source/physics/havok.c,ecx eax,pointer
+001c58a0,unknown_0047f054_is_recent,source/physics/havok.c,,bool
+001cbde0,unknown68_find_tag_unknownC,source/physics/havok.c,eax esi,int
+001ce2e0,unknown_get_unknown4_byte,source/physics/havok.c,ecx stack,void,stdcall
+001dd490,unknownC_find_with_flags,source/physics/havok.c,ecx esi,int
+001dd7a0,unknown_001dd7a0_clear,source/physics/havok.c,eax,void
+001cf280,unknown30_find_2001,source/physics/havok_component.c,ecx,int
+001cf300,unknown30_find_2002,source/physics/havok_component.c,ecx,int
+001cf380,unknown30_find_2003,source/physics/havok_component.c,stack,int
+001e8d50,unknown_00510c94_get_unknown420,source/game/game_unknown_001e6a40.c,ecx,pointer
+001e8cb0,unknown_00510c94_get_unknown420_first,source/game/game_unknown_001e6a40.c,ecx,int
+001ec3f0,unknown_001ec3f0,source/game/game_unknown_001eb550.c,eax stack,void,stdcall

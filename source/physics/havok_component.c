@@ -406,3 +406,47 @@ void havok_components_initialize(
 {
 	havok_component_data= data_new("havok components", 0x200, 0xA0, 4, heap_allocation);
 }
+
+/* three functions that look in the pairs of a key and a value that something
+has at 0x30 (how many, at 0x34). They are among the ones of this file in the
+game; what the thing is is not known */
+
+static long unknown30_find(
+	const byte *unknown,
+	long key)
+{
+	long count= *(const long *)(unknown+0x34);
+	const long *pair= *(const long *const *)(unknown+0x30);
+	long index;
+
+	for (index= 0; index<count; index++, pair+= 2)
+	{
+		if (pair[0]==key)
+		{
+			return pair[1];
+		}
+	}
+
+	return 0;
+}
+
+/* 0x001cf280: the value of the key 0x2001; zero if it is not there */
+long unknown30_find_2001(
+	const byte *unknown)
+{
+	return unknown30_find(unknown, 0x2001);
+}
+
+/* 0x001cf300: of the key 0x2002 */
+long unknown30_find_2002(
+	const byte *unknown)
+{
+	return unknown30_find(unknown, 0x2002);
+}
+
+/* 0x001cf380: of the key 0x2003 */
+long unknown30_find_2003(
+	const byte *unknown)
+{
+	return unknown30_find(unknown, 0x2003);
+}

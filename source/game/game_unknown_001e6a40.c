@@ -116,3 +116,43 @@ void game_unknown_001e6a40_set_unknown19B(
 		unknown_0051e9c0[index*GAME_UNKNOWN_001E6A40_ENTRY_SIZE+0x19B]= (byte)game_time_globals->ticks_per_second;
 	}
 }
+
+/* 0x00510c94, of main.c: it has a block of things of 0x14 bytes at 0x424
+(how many, at 0x420) */
+struct unknown_00510c94;
+extern struct unknown_00510c94 *unknown_00510c94;
+
+/* 0x001e8d50: one of those things; nothing if it is not one of them, or if
+there is no unknown_00510c94 */
+byte *unknown_00510c94_get_unknown420(
+	long index)
+{
+	const byte *unknown= (const byte *)unknown_00510c94;
+
+	if (unknown && index>=0 && index<*(const long *)(unknown+0x420))
+	{
+		return *(byte *const *)(unknown+0x424)+index*0x14;
+	}
+
+	return NULL;
+}
+
+/* 0x001e8cb0: the first number of one of those things; zero if there is
+none */
+long unknown_00510c94_get_unknown420_first(
+	long index)
+{
+	const byte *unknown= (const byte *)unknown_00510c94;
+
+	if (unknown && index>=0 && index<*(const long *)(unknown+0x420))
+	{
+		const byte *element= *(const byte *const *)(unknown+0x424)+index*0x14;
+
+		if (element)
+		{
+			return *(const long *)element;
+		}
+	}
+
+	return 0;
+}

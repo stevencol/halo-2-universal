@@ -391,3 +391,61 @@ void clump_unknown_00268c60(
 {
 	*(long *)((byte *)clump_data->data+(clump_index&0xFFFF)*0x50+0x38)= (long)game_time_globals->time;
 }
+
+/* 0x001c8150: which of the two things of unknown_004f55cc has a number for
+its first; NONE if none */
+short ai_unknown_find_index(
+	long value)
+{
+	const byte *unknown= unknown_004f55cc;
+	short index;
+
+	for (index= 0; index<AI_UNKNOWN_COUNT; index++)
+	{
+		if (*(const long *)(unknown+index*AI_UNKNOWN_SIZE)==value)
+		{
+			return index;
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x001c8180: the same, giving the thing; nothing if none */
+byte *ai_unknown_find(
+	long value)
+{
+	byte *unknown= unknown_004f55cc;
+	short found= NONE;
+	long index;
+
+	for (index= 0; index<AI_UNKNOWN_COUNT; index++)
+	{
+		if (*(const long *)(unknown+index*AI_UNKNOWN_SIZE)==value)
+		{
+			found= (short)index;
+			break;
+		}
+	}
+
+	return found!=NONE ? unknown+found*AI_UNKNOWN_SIZE : NULL;
+}
+
+/* 0x001c8390: each of the two things that has a number at 4 loses it, with
+the shorts at 8 and 0xA */
+void ai_unknown_clear_unknown4(
+	long value)
+{
+	byte *unknown= unknown_004f55cc;
+	long index;
+
+	for (index= 0; index<AI_UNKNOWN_COUNT; index++, unknown+= AI_UNKNOWN_SIZE)
+	{
+		if (*(const long *)(unknown+4)==value)
+		{
+			*(long *)(unknown+4)= NONE;
+			*(short *)(unknown+8)= NONE;
+			*(short *)(unknown+0xA)= 0;
+		}
+	}
+}

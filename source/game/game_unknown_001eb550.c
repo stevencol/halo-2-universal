@@ -92,3 +92,16 @@ void game_unknown_001eb550_unknown_00211030(
 	unknown_004f93b0= unknown[2]*scale.value;
 	unknown_004f93ac= unknown[1]*scale.value;
 }
+
+/* 0x001ec3f0: if something has its byte at 0xBC, and a tenth or more for
+its real at 0xD8, something else takes 4 for its number at 4. It is just
+before the next file in the game; whether it is of this one is not known */
+void __attribute__((stdcall)) unknown_001ec3f0(
+	const byte *unknown,
+	byte *result)
+{
+	if (unknown[0xBC] && *(const float *)(unknown+0xD8)>=0.1f)
+	{
+		*(long *)(result+4)= 4;
+	}
+}
