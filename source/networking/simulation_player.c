@@ -553,3 +553,13 @@ void simulation_player_apply_unit_state(
 		state+SIMULATION_PLAYER_UNIT_STATE_ORIGIN_OFFSET, state+SIMULATION_PLAYER_UNIT_STATE_FORWARD_OFFSET,
 		state+SIMULATION_PLAYER_UNIT_STATE_UP_OFFSET, state+SIMULATION_PLAYER_UNIT_STATE_ANGULAR_VELOCITY_OFFSET);
 }
+/* 0x0008b830: 0x40 bytes go to the place of an index in something (at
+0x720, 0x40 each), and the index's bit is set in its bits at 0x718 */
+void __attribute__((stdcall)) simulation_player_unknown_0008b830(
+	byte *something,
+	long index,
+	const byte *data)
+{
+	memcpy(something+0x720+index*0x40, data, 0x40);
+	*(unsigned long *)(something+0x718)|= 1<<index;
+}

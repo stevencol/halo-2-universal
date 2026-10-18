@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-18 — Ocho funciones pequeñas de la sesión de red, los blobs y los jugadores
+
+Ocho funciones (385 bytes) en cinco archivos. De 2710
+funciones se pasa a 2718, el 24,13 % de las del juego (el 12,368 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_unknown_0006de10` | `0x0006de10` | `networking/network_session.c` |
+| `network_session_unknown_0006df60` | `0x0006df60` | `networking/network_session.c` |
+| `network_life_cycle_unknown_0006fc80` | `0x0006fc80` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_00072140` | `0x00072140` | `networking/network_life_cycle.c` |
+| `network_blob_unknown_00080de0` | `0x00080de0` | `networking/network_blob.c` |
+| `simulation_player_unknown_0008b830` | `0x0008b830` | `networking/simulation_player.c` |
+| `network_blob_task_unknown_0008eeb0` | `0x0008eeb0` | `networking/network_blob_task.c` |
+| `network_blob_task_unknown_0008ef60` | `0x0008ef60` | `networking/network_blob_task.c` |
+
+### Lo que se sabe
+
+- `network_life_cycle_unknown_00072140` dice si todas las consolas de una
+  sesión tienen 2 en `0xEC`, y `network_life_cycle_unknown_0006fc80` hace
+  algo según el estado de una sesión (nada en el segundo).
+- `network_session_unknown_0006de10` busca en una lista 0x24 bytes iguales
+  a los de otra cosa; `network_session_unknown_0006df60` le da a algo un
+  número y unos bytes de su tamaño.
+- `simulation_player_unknown_0008b830` guarda 0x40 bytes en el sitio de un
+  índice y pone su bit.
+- Las de `network_blob.c` y `network_blob_task.c` copian o ponen a cero
+  partes de algo.
+- Ninguna variable nueva.
+
+### Sin comprobar
+
+- Romper líneas de este hito: hecho, `tests\mutations_741.py`, 18
+  mutaciones; ninguna sobrevive. El `return` del segundo estado de
+  `network_life_cycle_unknown_0006fc80` no se puede romper: sin él la
+  función tampoco hace nada en ese estado. Sigue pendiente en las de los
+  hitos 456 a 490 y 501 a 737.
+- Los nombres son suposiciones, y los archivos también (van junto a lo que
+  ya había cerca de su dirección).
+- En este hito se pasaron las pruebas de las ocho funciones.
+
 ## 2026-10-18 — Diez funciones pequeñas de la partida en red y de la voz
 
 Diez funciones (570 bytes) en dos archivos. De 2700

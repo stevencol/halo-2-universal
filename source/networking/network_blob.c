@@ -15,6 +15,8 @@ are the names of its functions.
 #include "memory/crc.h"
 #include "networking/online_storage.h"
 
+#include <string.h>
+
 /* ---------- prototypes */
 
 /* ---------- globals */
@@ -330,4 +332,17 @@ void __attribute__((stdcall)) network_blob_memory_stolen(
 		blob->memory= NULL;
 		blob->size= 0;
 	}
+}
+/* 0x00080de0: 16 bytes from a blob: its number at 0x4C and its four bytes
+at 0x50, and zeros */
+void network_blob_unknown_00080de0(
+	byte *result,
+	const byte *blob)
+{
+	memset(result, 0, 16);
+	*(long *)result= *(const long *)(blob+0x4C);
+	result[4]= blob[0x50];
+	result[5]= blob[0x51];
+	result[6]= blob[0x52];
+	result[7]= blob[0x53];
 }

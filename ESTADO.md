@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 740.
+**Última actualización:** 2026-10-08, al terminar el hito 741.
 
 ## Dónde estamos
 
-- **2710 funciones descompiladas de 11.265: el 24,06 % del juego** (el
-  12,355 % de los bytes de código).
-- Las 2710 están comprobadas contra el ejecutable original: las 1390 del
+- **2718 funciones descompiladas de 11.265: el 24,13 % del juego** (el
+  12,368 % de los bytes de código).
+- Las 2718 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile ten small functions of the network game and the voice* (ver `git log`).
+- Último hito: *Decompile eight small functions of the network session, blobs and players* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 535 funciones apuntadas pero sin descompilar (las que el código
   llama); 385 de ellas solo se conocen por su dirección (`unknown_...`).

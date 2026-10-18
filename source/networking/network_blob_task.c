@@ -356,3 +356,33 @@ void __attribute__((stdcall)) network_blob_task_completed(
 	}
 	network_blob_task_end(task, result);
 }
+/* 0x0008eeb0: something is made ready: zeros, NONE at 0x218 and its first
+byte set. The game writes the short at 0xC twice */
+void network_blob_task_unknown_0008eeb0(
+	byte *something)
+{
+	*(short *)(something+0xC)= 0;
+	*(long *)(something+0x210)= 0;
+	*(long *)(something+0x20C)= 0;
+	*(long *)(something+4)= 0;
+	*(long *)(something+8)= 0;
+	*(long *)(something+0x21C)= 0;
+	*(long *)(something+0x218)= NONE;
+	something[0]= TRUE;
+}
+
+/* 0x0008ef60: three numbers go to something at 0x210, 0x20C and 0x214, if
+the first is less than 0x499A */
+void __attribute__((stdcall)) network_blob_task_unknown_0008ef60(
+	byte *something,
+	long first,
+	long second,
+	long third)
+{
+	if (first<0x499A)
+	{
+		*(long *)(something+0x210)= first;
+		*(long *)(something+0x20C)= second;
+		*(long *)(something+0x214)= third;
+	}
+}

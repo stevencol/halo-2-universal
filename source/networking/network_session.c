@@ -7833,3 +7833,42 @@ boolean network_session_peers_unknown88_above_2(
 
 	return all;
 }
+/* 0x0006de10: whether any of the list that something has at 0xC (each
+points to the next at 0) has at 0x1A0 the 0x24 bytes that other has at
+0x188 */
+boolean network_session_unknown_0006de10(
+	const byte *something,
+	const byte *other)
+{
+	const byte *node= *(byte *const *)(something+0xC);
+	boolean found= FALSE;
+
+	while (node && !found)
+	{
+		if (memcmp(node+0x1A0, other+0x188, 0x24)==0)
+		{
+			found= TRUE;
+		}
+		node= *(byte *const *)node;
+	}
+
+	return found;
+}
+
+/* 0x0006df60: something is given a number and up to its size of bytes, at
+0x4C, 0x50 and 0x54, and its byte at 0x4A is set */
+void __attribute__((stdcall)) network_session_unknown_0006df60(
+	byte *something,
+	long value,
+	long size,
+	const byte *data)
+{
+	something[0x4A]= TRUE;
+	*(long *)(something+0x4C)= value;
+	*(long *)(something+0x50)= size;
+	*(long *)(something+0x54)= 0;
+	if (size>0)
+	{
+		memcpy(something+0x54, data, size);
+	}
+}

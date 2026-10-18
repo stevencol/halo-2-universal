@@ -1288,3 +1288,51 @@ boolean __attribute__((stdcall)) network_life_cycle_unknown_004cd8ca_get(
 
 	return TRUE;
 }
+/* 0x0006fc80: by the state of the session that what something has at 8 has
+at 0x34: nothing in the second; its number at 0x104 is 0x10 if there is no
+state; and its byte at 0xF8 is set in the states from the fourth to the
+ninth */
+void network_life_cycle_unknown_0006fc80(
+	byte *something)
+{
+	const byte *manager= *(byte *const *)(something+8);
+	const byte *session= *(byte *const *)(manager+0x34);
+	long state= *(const long *)(session+NETWORK_SESSION_STATE_OFFSET);
+
+	if (state==_network_session_state1)
+	{
+		return;
+	}
+	if (state==_network_session_state_none)
+	{
+		*(long *)(something+0x104)= 0x10;
+	}
+	else if (state>=_network_session_state3 && state<=_network_session_state8)
+	{
+		something[0xF8]= TRUE;
+	}
+}
+
+/* 0x00072140: whether every console of the session that what something has
+at 8 has at 0x38 has 2 at 0xEC */
+boolean network_life_cycle_unknown_00072140(
+	const byte *something)
+{
+	const byte *manager= *(byte *const *)(something+8);
+	const byte *session= *(byte *const *)(manager+0x38);
+	long peer_count= *(const long *)(session+NETWORK_SESSION_PEER_COUNT_OFFSET);
+	boolean all= TRUE;
+	long peer_index;
+
+	for (peer_index= 0; peer_index<peer_count && all; peer_index++)
+	{
+		const byte *peer= session+NETWORK_SESSION_PEER_ARRAY_OFFSET+peer_index*NETWORK_SESSION_PEER_SIZE;
+
+		if (*(const long *)(peer+NETWORK_SESSION_PEER_UNKNOWNEC_OFFSET)!=2)
+		{
+			all= FALSE;
+		}
+	}
+
+	return all;
+}

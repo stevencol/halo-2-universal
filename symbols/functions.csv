@@ -3244,3 +3244,11 @@ address,name,source,arguments,returns,convention
 000648b0,network_life_cycle_unknown_004cd8ca_get,source/networking/network_life_cycle.c,edx stack stack stack,bool,stdcall
 00063dc0,game_voice_unknown_00063dc0,source/networking/game_voice.c,eax,void
 000647a0,game_voice_unknown_004cd904_get_identifier,source/networking/game_voice.c,ecx edx,bool
+0006de10,network_session_unknown_0006de10,source/networking/network_session.c,eax ebx,bool
+0006df60,network_session_unknown_0006df60,source/networking/network_session.c,eax ecx edx stack,void,stdcall
+0006fc80,network_life_cycle_unknown_0006fc80,source/networking/network_life_cycle.c,ecx,void
+00072140,network_life_cycle_unknown_00072140,source/networking/network_life_cycle.c,eax,bool
+00080de0,network_blob_unknown_00080de0,source/networking/network_blob.c,eax ecx,void
+0008b830,simulation_player_unknown_0008b830,source/networking/simulation_player.c,eax edx stack,void,stdcall
+0008eeb0,network_blob_task_unknown_0008eeb0,source/networking/network_blob_task.c,eax,void
+0008ef60,network_blob_task_unknown_0008ef60,source/networking/network_blob_task.c,eax ecx edx stack,void,stdcall
