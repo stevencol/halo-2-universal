@@ -2,6 +2,35 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-18 — Corrección del hito 738 y de dos funciones de los actores
+
+Sin funciones nuevas: siguen siendo 2688, el 23,86 % de las del juego (el
+12,315 % de sus bytes).
+
+### Corregido
+
+- Las pruebas no comparaban lo que devuelven cuatro funciones del hito 738
+  porque su tipo en `symbols\functions.csv` era `long`, que el arnés no
+  conoce (solo `int`, `bool`, `pointer`…): ahora son `int` y `pointer`.
+  También lo eran `actor_firing_position_owner_hash` y
+  `actor_firing_position_owner_compare` (de un hito antiguo); la segunda
+  solo deja bien el byte bajo, así que es `bool`.
+- `rasterizer_make_texture_format` estaba mal entera: recibe el formato en
+  `eax`, una bandera en `cl`, si la textura es lineal en `dl` y el ancho y
+  el alto en la pila (dos números, `ret 8`), y el formato va en los bits de
+  arriba del resultado.
+- `rasterizer_store_entry` saca su argumento de la pila (`ret 4`): es
+  `stdcall`.
+- La prueba de `rasterizer_primary_table_get` da la tabla entera
+  (`GlobalData`) para que el puntero que devuelve se compare.
+
+### Comprobado
+
+- Romper líneas del hito 738: `tests\mutations_738.py`, 22 mutaciones, una
+  o dos por función; ninguna sobrevive.
+- `AGENTS.md` tiene ahora reglas obligatorias y una lista antes de cada
+  commit, con lo que se rompió en este hito.
+
 ## 2026-10-17 — Diecisiete funciones de la pantalla y las texturas del rasterizador
 
 Diecisiete funciones (1151 bytes) en un archivo nuevo. De 2671

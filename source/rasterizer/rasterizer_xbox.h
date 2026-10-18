@@ -76,7 +76,7 @@ extern long   rasterizer_pitch_table_004670f4;
 
 /* ---------- prototypes/RASTERIZER_XBOX.C */
 
-void    rasterizer_store_entry(long *entry, long arg_ecx, long arg_stack);
+void __attribute__((stdcall)) rasterizer_store_entry(long *entry, long arg_ecx, long arg_stack);
 long    rasterizer_count_since_entry_change(long entry_ptr);
 long    rasterizer_display_entry_get_value(long entry_index, long value_offset);
 void    rasterizer_display_initialize(void);
@@ -86,7 +86,7 @@ void    rasterizer_accumulate_state_flags_group0(void);
 void    rasterizer_accumulate_state_flags_group1(void);
 void    rasterizer_display_tables_initialize(void);
 long    rasterizer_primary_table_get(long raw_index);
-long __attribute__((stdcall)) rasterizer_make_texture_format(byte use_pitch, byte use_mips, long param3, long param4);
+long __attribute__((stdcall)) rasterizer_make_texture_format(long format, byte flag, byte linear, long width, long height);
 byte   *rasterizer_display_entry_get_name(long entry_index);
 byte   *rasterizer_display_entry_get_mip_list(long entry_index);
 byte   *rasterizer_display_entry_get_mip(long entry_index, long mip_index);

@@ -221,28 +221,29 @@ def run(t) -> None:
         # ecx = raw_index
         # ----------------------------------------------------------------
         raw = random_.choice((
-            NONE, 0, 1, 0x0FFFFFFF, 0x10000000,
-            random_.getrandbits(28),
-            random_.getrandbits(32),
+            NONE, 0, 1, 0x9C00 * 4 - 1, 0x10000000, 0x10000100,
+            random_.randrange(0, 0x9C00 * 4),
+            random_.getrandbits(32) & 0xF000FFFF,
         ))
+        # inside the table, the pointer is compared as a place in it
         t.check(
             "rasterizer_primary_table_get",
             raw,
-            globals={"rasterizer_primary_table": random_.randbytes(0x9C00 * 4)},
+            globals={"rasterizer_primary_table": GlobalData(random_.randbytes(0x9C00 * 4))},
         )
 
         # ----------------------------------------------------------------
         # rasterizer_make_texture_format  0x0001d6f0
-        # eax=use_pitch(byte), edx=use_mips(byte), ecx=width, stack=height
+        # eax = format, cl = flag, dl = linear, stack = width, height
         # ----------------------------------------------------------------
-        dims = [(1, 1), (2, 2), (4, 4), (64, 64), (128, 256), (512, 480), (640, 480)]
-        w, h = random_.choice(dims)
+        sizes = (-1, 0, 1, 2, 3, 4, 5, 64, 100, 480, 512, 640, 0x10000)
         t.check(
             "rasterizer_make_texture_format",
-            random_.choice((0, 1)),   # use_pitch (eax = AL)
-            random_.choice((0, 1)),   # use_mips (edx = DL)
-            w,                        # ecx
-            h,                        # stack
+            random_.getrandbits(32),
+            random_.choice((0, 1, 0x100, random_.getrandbits(32))),
+            random_.choice((0, 1, 0x100, random_.getrandbits(32))),
+            random_.choice(sizes + (random_.randrange(1, 0x10000),)),
+            random_.choice(sizes + (random_.randrange(1, 0x10000),)),
         )
 
         # ----------------------------------------------------------------

@@ -140,9 +140,9 @@ long rasterizer_pitch_table_004670f4;
 
 /* 0x00013d50: stores a table entry's two words and two extra arguments into
 four globals; the entry address is in EAX on entry, its first two longs go
-to 005093c0/c4; ecx goes to 005093c8; the stack arg goes to 005093cc.
-EAX is passed as the first arg by the harness (see arguments in CSV). */
-void rasterizer_store_entry(
+to 005093c0/c4; ecx goes to 005093c8; the stack argument, which it pops,
+goes to 005093cc */
+void __attribute__((stdcall)) rasterizer_store_entry(
 	long *entry,
 	long arg_ecx,
 	long arg_stack)
@@ -301,40 +301,43 @@ long rasterizer_primary_table_get(
 	return (long)rasterizer_primary_table + (raw_index & 0x0FFFFFFF);
 }
 
-/* 0x0001d6f0: builds a D3D/NV2A texture-format word.
-   eax = use_pitch (byte AL), edx = use_mips (byte DL),
-   ecx = (unused as input), stack = [param3, param4]; stdcall (ret 8).
-   The asm reads [esp+0xc] (after two pushes) as both width and height, so
-   param3 is used for both; param4 is on the stack but never read.
-   When use_mips != 0: base byte is 0x12 (no pitch) or 0x2e (pitch).
-   When use_mips == 0: base byte is 0x06 or 0x2e, with log2 size fields. */
+/* 0x0001d6f0: builds a D3D/NV2A texture-format word: the format in bits 16
+and up, a byte that depends on the two flags, 0x29, and, when the texture is
+not linear, log2 of the width and the height (at least 1) in bits 20-27 */
 long __attribute__((stdcall)) rasterizer_make_texture_format(
-	byte use_pitch,
-	byte use_mips,
-	long param3,
-	long param4)
+	long format,
+	byte flag,
+	byte linear,
+	long width,
+	long height)
 {
-	long base, result;
-	long w_log, h_log;
+	long result;
+	long width_log;
+	long height_log;
 
-	(void)param4;
-
-	if (use_mips)
-		base = (use_pitch ? 0x1c : 0) + 0x12;
+	if (linear)
+		result = (flag ? 0x1C : 0) + 0x12;
 	else
-		base = (use_pitch ? 0x28 : 0) + 6;
+		result = (flag ? 0x28 : 0) + 6;
+	result = (((format << 8) | result) << 8) | 0x29;
 
-	result = (base << 8) | 0x29;
-
-	if (!use_mips)
+	if (!linear)
 	{
-		w_log = 1;
-		if (param3 > 2)
-			while ((1 << (byte)w_log) < param3) w_log++;
-		h_log = 1;
-		if (param3 > 2)
-			while ((1 << (byte)h_log) < param3) h_log++;
-		result |= ((h_log << 4) | w_log) << 0x14;
+		width_log = 1;
+		if (width > 2)
+		{
+			do
+				width_log++;
+			while ((1 << width_log) < width);
+		}
+		height_log = 1;
+		if (height > 2)
+		{
+			do
+				height_log++;
+			while ((1 << height_log) < height);
+		}
+		result |= ((height_log << 4) | width_log) << 20;
 	}
 	return result;
 }
