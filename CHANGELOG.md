@@ -2,6 +2,75 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-17 — Diecisiete funciones de la pantalla y las texturas del rasterizador
+
+Diecisiete funciones (1151 bytes) en un archivo nuevo. De 2671
+funciones se pasa a 2688, el 23,86 % de las del juego (el 12,315 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `rasterizer_store_entry` | `0x00013d50` | `rasterizer/rasterizer_xbox.c` |
+| `rasterizer_count_since_entry_change` | `0x00014280` | `rasterizer/rasterizer_xbox.c` |
+| `rasterizer_display_entry_get_value` | `0x00015cd0` | `rasterizer/rasterizer_xbox.c` |
+| `rasterizer_display_initialize` | `0x000169f0` | `rasterizer/rasterizer_xbox.c` |
+| `rasterizer_set_clip_coords` | `0x00016a30` | `rasterizer/rasterizer_xbox.c` |
+| `rasterizer_get_display_flag` | `0x00016a90` | `rasterizer/rasterizer_xbox.c` |
+| `rasterizer_accumulate_state_flags_group0` | `0x0001bdf0` | `rasterizer/rasterizer_xbox.c` |
+| `rasterizer_accumulate_state_flags_group1` | `0x0001be50` | `rasterizer/rasterizer_xbox.c` |
+| `rasterizer_display_tables_initialize` | `0x0001d660` | `rasterizer/rasterizer_xbox.c` |
+| `rasterizer_primary_table_get` | `0x0001d6b0` | `rasterizer/rasterizer_xbox.c` |
+| `rasterizer_make_texture_format` | `0x0001d6f0` | `rasterizer/rasterizer_xbox.c` |
+| `rasterizer_display_entry_get_name` | `0x0001dcc0` | `rasterizer/rasterizer_xbox.c` |
+| `rasterizer_display_entry_get_mip_list` | `0x0001dcf0` | `rasterizer/rasterizer_xbox.c` |
+| `rasterizer_display_entry_get_mip` | `0x0001dd20` | `rasterizer/rasterizer_xbox.c` |
+| `rasterizer_display_entry_get_size` | `0x0001dd60` | `rasterizer/rasterizer_xbox.c` |
+| `rasterizer_display_entry_set_size` | `0x0001ddd0` | `rasterizer/rasterizer_xbox.c` |
+| `rasterizer_display_entry_is_active` | `0x0001de20` | `rasterizer/rasterizer_xbox.c` |
+
+### Lo que se sabe
+
+- Hay una tabla de 39 entradas de 0x98 bytes en `0x004b4b58` (pantallas o
+  superficies de dibujo): cada una tiene su tamaño, si está activa, si se
+  ha soltado, la lista de sus mips y la palabra de formato de Direct3D.
+  Siete funciones leen o escriben esas entradas; las que no están activas
+  dan 640 × 480 si son la 0, la 3 o la 24.
+- `rasterizer_display_initialize` copia dos constantes y pone el refresco
+  a 60 si no lo había.
+- `rasterizer_set_clip_coords` calcula ocho números de recorte a partir de
+  640 × 480.
+- `rasterizer_make_texture_format` arma la palabra de formato de una
+  textura; las de los grupos de banderas juntan bits de estado.
+- 54 variables nuevas.
+
+### Hecho con otra herramienta
+
+- El hito lo empezó Kiro, que dejó el C y las pruebas sin commit. Se
+  corrigió antes de guardarlo:
+  - un script suyo reescribió `symbols\functions.csv` y
+    `symbols\globals.csv` enteros y borró `main_vblank_count`,
+    `xbox_video_settings` y `main_game_globals`; se volvieron a dejar como
+    estaban, con solo sus filas nuevas añadidas;
+  - las pruebas daban las tablas de `0x00484dd4` y `0x004b4b58` como un
+    puntero y no como su contenido, así que no comprobaban nada; ahora son
+    tablas de verdad (53 y 39 entradas) y así salieron tres errores más
+    del C: el índice de `rasterizer_display_entry_get_value` se
+    multiplicaba dos veces, `rasterizer_display_entry_get_mip` daba otra
+    dirección y `rasterizer_display_entry_set_size` borraba el formato con
+    la bandera al revés;
+  - `rasterizer_display_initialize` convertía las constantes a entero en
+    vez de copiar sus bits, y `rasterizer_display_entry_get_size` tenía
+    sus dos punteros de salida cambiados de registro.
+
+### Sin comprobar
+
+- **Romper líneas, pendiente**, y en las de los hitos 456 a 490 y 501 a
+  737.
+- Los nombres son suposiciones, y los tamaños de las dos tablas salen del
+  hueco hasta la siguiente variable conocida.
+- En este hito se pasaron las pruebas de las diecisiete funciones.
+
 ## 2026-10-13 — Veintidós funciones pequeñas de objetos, luces, la red y otras
 
 Veintidós funciones (645 bytes) en catorce archivos. De 2649

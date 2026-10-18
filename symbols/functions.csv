@@ -3205,3 +3205,20 @@ address,name,source,arguments,returns,convention
 0009dcd0,simulation_unknown68_set,source/networking/simulation_encoding.c,stack stack stack,void,stdcall
 000a0410,simulation_unknown68_get,source/networking/simulation_encoding.c,stack stack stack,bool,stdcall
 0001fd00,unknown_005093e0_clear_unknownA0,source/rasterizer/rasterizer_text.c,,void
+00013d50,rasterizer_store_entry,source/rasterizer/rasterizer_xbox.c,eax ecx stack,void
+00014280,rasterizer_count_since_entry_change,source/rasterizer/rasterizer_xbox.c,ecx,long
+00015cd0,rasterizer_display_entry_get_value,source/rasterizer/rasterizer_xbox.c,ecx edx,long
+000169f0,rasterizer_display_initialize,source/rasterizer/rasterizer_xbox.c,,void
+00016a30,rasterizer_set_clip_coords,source/rasterizer/rasterizer_xbox.c,xmm0 edx ecx,void
+00016a90,rasterizer_get_display_flag,source/rasterizer/rasterizer_xbox.c,,byte
+0001bdf0,rasterizer_accumulate_state_flags_group0,source/rasterizer/rasterizer_xbox.c,,void
+0001be50,rasterizer_accumulate_state_flags_group1,source/rasterizer/rasterizer_xbox.c,,void
+0001d660,rasterizer_display_tables_initialize,source/rasterizer/rasterizer_xbox.c,,void
+0001d6b0,rasterizer_primary_table_get,source/rasterizer/rasterizer_xbox.c,ecx,long
+0001d6f0,rasterizer_make_texture_format,source/rasterizer/rasterizer_xbox.c,eax edx ecx stack,long,stdcall
+0001dcc0,rasterizer_display_entry_get_name,source/rasterizer/rasterizer_xbox.c,eax,pointer
+0001dcf0,rasterizer_display_entry_get_mip_list,source/rasterizer/rasterizer_xbox.c,eax,pointer
+0001dd20,rasterizer_display_entry_get_mip,source/rasterizer/rasterizer_xbox.c,eax edx,pointer
+0001dd60,rasterizer_display_entry_get_size,source/rasterizer/rasterizer_xbox.c,eax edx ecx,bool
+0001ddd0,rasterizer_display_entry_set_size,source/rasterizer/rasterizer_xbox.c,ecx esi edi,void
+0001de20,rasterizer_display_entry_is_active,source/rasterizer/rasterizer_xbox.c,eax,bool

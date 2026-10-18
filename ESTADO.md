@@ -3,16 +3,16 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-08, al terminar el hito 737.
+**Última actualización:** 2026-10-08, al terminar el hito 738.
 
 ## Dónde estamos
 
-- **2671 funciones descompiladas de 11.265: el 23,71 % del juego** (el
-  12,277 % de los bytes de código).
-- Las 2671 están comprobadas contra el ejecutable original: las 1390 del
+- **2688 funciones descompiladas de 11.265: el 23,86 % del juego** (el
+  12,315 % de los bytes de código).
+- Las 2688 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile twenty-two small functions of objects, lights, the network and others* (ver `git log`).
+- Último hito: *Decompile seventeen functions of the rasterizer's display and textures* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 535 funciones apuntadas pero sin descompilar (las que el código
   llama); 385 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -107,6 +107,8 @@ Módulos (funciones hechas / archivo):
       a `0x0013f700`. Quien pinta de verdad los caracteres está en otro
       archivo, hacia `0x0001f070`)
 - [x] Pintar los caracteres — `rasterizer\rasterizer_text.c` (6: completo)
+- [ ] Pantallas y texturas — `rasterizer\rasterizer_xbox.c` (17: la tabla
+      de 39 entradas de `0x004b4b58` y lo que hay cerca de `0x00013d50`)
 - [ ] Dibujo de depuración — `rasterizer\rasterizer_debug.c` (3: empezar y
       terminar líneas o triángulos; faltan `0x0001e930` y `0x0001eb00`, que
       preparan la consola para dibujar)
