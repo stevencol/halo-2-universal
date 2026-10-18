@@ -468,3 +468,20 @@ boolean rasterizer_display_entry_is_active(
 		return TRUE;
 	return FALSE;
 }
+/* 0x00025960: 20 if the display entry 20 is active, if not 18 if the entry
+18 is, and NONE if neither (rasterizer_display_entry_is_active, written out
+by the compiler) */
+long rasterizer_unknown_00025960(
+	void)
+{
+	if (*(long *)(rasterizer_display_entries[20] + 0x88)!=0 && rasterizer_display_entries[20][0x95]==0)
+	{
+		return 20;
+	}
+	if (*(long *)(rasterizer_display_entries[18] + 0x88)!=0 && rasterizer_display_entries[18][0x95]==0)
+	{
+		return 18;
+	}
+
+	return NONE;
+}

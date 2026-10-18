@@ -652,3 +652,9 @@ address,name,source
 005093c8,rasterizer_unknown_005093c8,source/rasterizer/rasterizer_xbox.c
 005093cc,rasterizer_unknown_005093cc,source/rasterizer/rasterizer_xbox.c
 0055e6b8,rasterizer_last_table_entry,source/rasterizer/rasterizer_xbox.c
+004b6280,unknown_004b6280,source/rasterizer/rasterizer_debug.c
+004b6288,unknown_004b6288,source/rasterizer/rasterizer_debug.c
+004b6291,unknown_004b6291,source/rasterizer/rasterizer_debug.c
+00485648,unknown_00485648,source/rasterizer/rasterizer.c
+004ba04c,unknown_004ba04c,source/rasterizer/rasterizer.c
+00480118,unknown_00480118,source/effects/decals.c

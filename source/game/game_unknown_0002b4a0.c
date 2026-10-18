@@ -161,6 +161,16 @@ void game_unknown_0002b4a0_initialize_for_new_map(
 	unknown_005093fc= 0;
 }
 
+/* 0x000255e0: the table unknown_004b9970 is emptied, as for a new map,
+without the rest */
+void unknown_004b9970_reset(
+	void)
+{
+	memset(unknown_004b9970, 0, sizeof(unknown_004b9970));
+	*(long *)unknown_004b9970= NONE;
+	unknown_005093fc= 0;
+}
+
 /* 0x0003ba90: whether something lacks a bit in its number at 8 */
 long __attribute__((stdcall)) unknown8_lacks_bit(
 	long bit,

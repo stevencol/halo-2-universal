@@ -3222,3 +3222,15 @@ address,name,source,arguments,returns,convention
 0001dd60,rasterizer_display_entry_get_size,source/rasterizer/rasterizer_xbox.c,eax edx ecx,bool
 0001ddd0,rasterizer_display_entry_set_size,source/rasterizer/rasterizer_xbox.c,ecx esi edi,void
 0001de20,rasterizer_display_entry_is_active,source/rasterizer/rasterizer_xbox.c,eax,bool
+0001e2d0,unknown_004b6288_new,source/rasterizer/rasterizer_debug.c,,pointer
+0001e8f0,short_pairs_equal,source/rasterizer/rasterizer_debug.c,stack stack,bool,stdcall
+000226d0,rasterizer_lightmap_matches_structure,source/rasterizer/rasterizer.c,,bool
+00022710,rasterizer_unknown_00022710,source/rasterizer/rasterizer.c,,bool
+00025960,rasterizer_unknown_00025960,source/rasterizer/rasterizer_xbox.c,,int
+000255e0,unknown_004b9970_reset,source/game/game_unknown_0002b4a0.c,,void
+00024550,distance_squared3d,source/math/real_math.c,eax ecx,real:xmm0
+000235a0,matrix4x3_from_rows,source/math/matrix_math.c,eax ecx,void
+00030ca0,unknown_004ba014_set_bit,source/units/units.c,eax ecx,void
+00030cd0,unknown_004ba014_unknown_00030cd0,source/units/units.c,eax stack,int,stdcall
+00040de0,unknown_00040de0,source/game/game_unknown_0003f2b0.c,ecx stack stack,int,stdcall
+00046220,unknown_00480118_get,source/effects/decals.c,,int

@@ -37,3 +37,22 @@ long unknown_00040e10(
 
 	return second ? 2 : 3;
 }
+
+/* 0x00040de0: 0 if there is nothing, 1 if the first byte is set, 2 if only
+the second, and NONE if none. It is before unknown_00040e10 in the game */
+long __attribute__((stdcall)) unknown_00040de0(
+	const void *something,
+	boolean first,
+	boolean second)
+{
+	if (something==NULL)
+	{
+		return 0;
+	}
+	if (first)
+	{
+		return 1;
+	}
+
+	return second ? 2 : NONE;
+}

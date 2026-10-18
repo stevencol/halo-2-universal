@@ -152,3 +152,41 @@ void rasterizer_debug_primitive_end(
 		rasterizer_debug_primitive_type= _rasterizer_debug_primitive_none;
 	}
 }
+/* 0x004b6280, 0x004b6288: how many of the 0x400 entries of 0x70 bytes at
+unknown_004b6288 are taken */
+long unknown_004b6280;
+byte *unknown_004b6288;
+
+/* 0x004b6291: a byte that is cleared when there is no entry left */
+byte unknown_004b6291;
+
+/* 0x0001e2d0: the next entry of unknown_004b6288, with its first long and
+its byte at 0xC zero; NULL when the 0x400 are taken */
+void *unknown_004b6288_new(
+	void)
+{
+	byte *entry;
+
+	if (unknown_004b6280<0x400)
+	{
+		entry= unknown_004b6288 + unknown_004b6280*0x70;
+		unknown_004b6280++;
+		*(long *)entry= 0;
+		entry[0xC]= 0;
+		return entry;
+	}
+	if (unknown_004b6291!=0)
+	{
+		unknown_004b6291= 0;
+	}
+
+	return NULL;
+}
+
+/* 0x0001e8f0: whether two pairs of shorts are the same */
+boolean __attribute__((stdcall)) short_pairs_equal(
+	const short *first,
+	const short *second)
+{
+	return first[1]==second[1] && first[0]==second[0];
+}

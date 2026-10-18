@@ -842,3 +842,20 @@ void matrix3x3_rotation_to_quaternion(
 
 	return;
 }
+/* 0x000235a0: a matrix4x3 of scale 1 from twelve reals in three rows of
+four, a column for each of forward, left, up and the position */
+void matrix4x3_from_rows(
+	real_matrix4x3 *matrix,
+	const real *rows)
+{
+	long column, row;
+
+	for (column= 0; column<4; column++)
+	{
+		for (row= 0; row<3; row++)
+		{
+			matrix->n[column][row]= rows[row*4 + column];
+		}
+	}
+	matrix->scale= 1.0f;
+}

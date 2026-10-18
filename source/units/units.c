@@ -1075,3 +1075,35 @@ long __attribute__((stdcall)) unknown_004ba014_unknown_00030e00(
 
 	return NONE;
 }
+/* 0x00030ca0: sets or clears a bit of unknown_004ba014 */
+void unknown_004ba014_set_bit(
+	boolean value,
+	byte bit)
+{
+	if (value)
+	{
+		unknown_004ba014|= 1<<bit;
+	}
+	else
+	{
+		unknown_004ba014&= ~(1<<bit);
+	}
+}
+
+/* 0x00030cd0: NONE if the first byte is set; if not, 2 if the second is
+not, 0 if unknown_004ba014 has its bit 4 and not its bit 5, and 1 if not */
+long __attribute__((stdcall)) unknown_004ba014_unknown_00030cd0(
+	boolean first,
+	boolean second)
+{
+	if (first)
+	{
+		return NONE;
+	}
+	if (!second)
+	{
+		return 2;
+	}
+
+	return ((unknown_004ba014>>4)&1) && !((unknown_004ba014>>5)&1) ? 0 : 1;
+}

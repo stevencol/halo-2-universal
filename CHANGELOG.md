@@ -2,6 +2,61 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-18 — Doce funciones pequeñas del rasterizador, las matemáticas, las unidades y otras
+
+Doce funciones (612 bytes) en nueve archivos. De 2688
+funciones se pasa a 2700, el 23,97 % de las del juego (el 12,336 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unknown_004b6288_new` | `0x0001e2d0` | `rasterizer/rasterizer_debug.c` |
+| `short_pairs_equal` | `0x0001e8f0` | `rasterizer/rasterizer_debug.c` |
+| `rasterizer_lightmap_matches_structure` | `0x000226d0` | `rasterizer/rasterizer.c` |
+| `rasterizer_unknown_00022710` | `0x00022710` | `rasterizer/rasterizer.c` |
+| `rasterizer_unknown_00025960` | `0x00025960` | `rasterizer/rasterizer_xbox.c` |
+| `unknown_004b9970_reset` | `0x000255e0` | `game/game_unknown_0002b4a0.c` |
+| `distance_squared3d` | `0x00024550` | `math/real_math.c` |
+| `matrix4x3_from_rows` | `0x000235a0` | `math/matrix_math.c` |
+| `unknown_004ba014_set_bit` | `0x00030ca0` | `units/units.c` |
+| `unknown_004ba014_unknown_00030cd0` | `0x00030cd0` | `units/units.c` |
+| `unknown_00040de0` | `0x00040de0` | `game/game_unknown_0003f2b0.c` |
+| `unknown_00480118_get` | `0x00046220` | `effects/decals.c` |
+
+### Lo que se sabe
+
+- `rasterizer_lightmap_matches_structure` dice si el lightmap del mapa va
+  con su estructura: tiene algo, hay estructura y lo que el lightmap
+  señala en `0x84` tiene en 4 lo mismo que la estructura en 8.
+- `rasterizer_unknown_00022710` dice si un rectángulo es la pantalla entera
+  (0, 0, 480, 640) y una cuenta no pasa de 1: puede que sea si se juega a
+  pantalla completa, sin pantalla partida.
+- `rasterizer_unknown_00025960` da 20 si la entrada 20 de la tabla de
+  pantallas del hito 738 está activa, si no 18 si lo está la 18, y NONE.
+- `unknown_004b6288_new` da la siguiente de 0x400 entradas de 0x70 bytes.
+- `distance_squared3d` es el cuadrado de la distancia entre dos puntos (el
+  juego suma primero la z), y `matrix4x3_from_rows` hace una matriz de
+  escala 1 de tres filas de cuatro reales.
+- `unknown_004b9970_reset` vacía la tabla que también se vacía para un mapa
+  nuevo, sin lo demás.
+- Las demás ponen o miran bits y bytes, o leen un número.
+- Seis variables nuevas.
+
+### Sin comprobar
+
+- Romper líneas de este hito: hecho, `tests\mutations_739.py`, 21
+  mutaciones; ninguna sobrevive. Sigue pendiente en las de los hitos 456 a
+  490 y 501 a 737.
+- Los nombres son suposiciones, y los archivos también (van junto a lo que
+  ya había cerca de su dirección).
+- `distance_squared3d` y `matrix4x3_from_rows` se prueban con reales
+  normales, no con NaN.
+- En este hito se pasaron las pruebas de las doce funciones.
+- Este hito lo empezó Kiro dos veces, con las filas de los CSV en otro
+  formato, variables repetidas y pruebas que no son del arnés; se descartó
+  todo y se hizo de nuevo.
+
 ## 2026-10-18 — Corrección del hito 738 y de dos funciones de los actores
 
 Sin funciones nuevas: siguen siendo 2688, el 23,86 % de las del juego (el

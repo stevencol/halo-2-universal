@@ -1228,3 +1228,15 @@ unsigned long vector3d_compress(
 
 	return (unsigned long)(((compressed_k<<11)|compressed_j)<<11)|(unsigned long)compressed_i;
 }
+/* 0x00024550: the square of the distance between two points; the game adds
+z first */
+real distance_squared3d(
+	const real_point3d *a,
+	const real_point3d *b)
+{
+	real x= a->x-b->x;
+	real y= a->y-b->y;
+	real z= a->z-b->z;
+
+	return z*z + x*x + y*y;
+}

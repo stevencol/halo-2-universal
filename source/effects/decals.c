@@ -573,3 +573,13 @@ void __attribute__((stdcall)) decals_release_place(
 		}
 	}
 }
+/* 0x00480118: a number; nothing in this file uses it */
+long unknown_00480118;
+
+/* 0x00046220: unknown_00480118. It is a little after this file in the
+game */
+long unknown_00480118_get(
+	void)
+{
+	return unknown_00480118;
+}
