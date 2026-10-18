@@ -658,3 +658,11 @@ address,name,source
 00485648,unknown_00485648,source/rasterizer/rasterizer.c
 004ba04c,unknown_004ba04c,source/rasterizer/rasterizer.c
 00480118,unknown_00480118,source/effects/decals.c
+004cf968,unknown_004cf968,source/networking/network_life_cycle.c
+004cf96c,unknown_004cf96c,source/networking/network_life_cycle.c
+004cd8ca,unknown_004cd8ca,source/networking/network_life_cycle.c
+004cd8cc,unknown_004cd8cc,source/networking/network_life_cycle.c
+004cd8ec,unknown_004cd8ec,source/networking/network_life_cycle.c
+004cd8f0,unknown_004cd8f0,source/networking/network_life_cycle.c
+004cd8f4,unknown_004cd8f4,source/networking/network_life_cycle.c
+004cdc50,unknown_004cdc50,source/networking/game_voice.c

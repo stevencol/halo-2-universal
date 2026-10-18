@@ -2,6 +2,50 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-18 — Diez funciones pequeñas de la partida en red y de la voz
+
+Diez funciones (570 bytes) en dos archivos. De 2700
+funciones se pasa a 2710, el 24,06 % de las del juego (el 12,355 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_life_cycle_session_get_unknown49A4` | `0x00064160` | `networking/network_life_cycle.c` |
+| `network_life_cycle_session_get_unknown498C` | `0x00064260` | `networking/network_life_cycle.c` |
+| `network_life_cycle_session_get_unknown49A1` | `0x000642d0` | `networking/network_life_cycle.c` |
+| `network_life_cycle_session_get_unknown49AC` | `0x00064a60` | `networking/network_life_cycle.c` |
+| `network_life_cycle_session_get_unknown49B0` | `0x00064ab0` | `networking/network_life_cycle.c` |
+| `network_life_cycle_session_get_unknown18` | `0x00064c40` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_004cd8ca_set` | `0x00064870` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_004cd8ca_get` | `0x000648b0` | `networking/network_life_cycle.c` |
+| `game_voice_unknown_00063dc0` | `0x00063dc0` | `networking/game_voice.c` |
+| `game_voice_unknown_004cd904_get_identifier` | `0x000647a0` | `networking/game_voice.c` |
+
+### Lo que se sabe
+
+- Seis leen algo de la sesión de la partida en red, como
+  `network_life_cycle_session_get_unknown49C8`: solo si hay partida y la
+  sesión está en sus estados del cuarto al noveno; dos más piden también su
+  byte de `0x49A8`. Sin eso dan 0, NULL o NONE según la función.
+- `network_life_cycle_unknown_004cd8ca_set` guarda 0x20 bytes, un número y
+  dos números de la red tal como están; `..._get` los devuelve a donde dice
+  quien llama, si hay algo guardado.
+- `game_voice_unknown_004cd904_get_identifier` copia los 12 bytes que un
+  perfil tiene en 1 (lo que `game_voice_unknown_004cd904_set_identifier`
+  pone), y `game_voice_unknown_00063dc0` borra una de tres cosas en
+  `unknown_004cdc50` y en cada perfil.
+- Ocho variables nuevas.
+
+### Sin comprobar
+
+- Romper líneas de este hito: hecho, `tests\mutations_740.py`, 16
+  mutaciones; ninguna sobrevive. Sigue pendiente en las de los hitos 456 a
+  490 y 501 a 737.
+- Los nombres son suposiciones; que las cosas de `game_voice_unknown_00063dc0`
+  sean tres sale de que sus números están a 12 bytes.
+- En este hito se pasaron las pruebas de las diez funciones.
+
 ## 2026-10-18 — Doce funciones pequeñas del rasterizador, las matemáticas, las unidades y otras
 
 Doce funciones (612 bytes) en nueve archivos. De 2688

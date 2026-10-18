@@ -1976,3 +1976,44 @@ void game_voice_unknown_00162420(
 		*(long *)(unknown+0x2C+index*4)= NONE;
 	}
 }
+/* 0x004cdc50: a number for each of three things, that
+game_voice_unknown_00063dc0 clears with what the profiles keep of it */
+long unknown_004cdc50[3];
+
+/* 0x00063dc0: one of three things is cleared: its number in
+unknown_004cdc50, and in each profile its numbers at 0xA8, 0xB4 and 0xC0 and
+its byte at 0xCC. That there are three is a guess: the numbers of each
+profile are 12 bytes apart */
+void game_voice_unknown_00063dc0(
+	long index)
+{
+	long profile_index;
+
+	unknown_004cdc50[index]= 0;
+	for (profile_index= 0; profile_index<UNKNOWN_004CD904_COUNT; profile_index++)
+	{
+		byte *profile= unknown_004cd904[profile_index];
+
+		*(long *)(profile+0xA8+index*4)= 0;
+		*(long *)(profile+0xB4+index*4)= 0;
+		*(long *)(profile+0xC0+index*4)= 0;
+		profile[0xCC+index]= 0;
+	}
+}
+
+/* 0x000647a0: the 12 bytes that a profile has at 1, to where the caller
+says; FALSE if the profile is not there */
+boolean game_voice_unknown_004cd904_get_identifier(
+	long index,
+	byte *identifier)
+{
+	const byte *profile= unknown_004cd904[index];
+
+	if (!profile[0])
+	{
+		return FALSE;
+	}
+	memcpy(identifier, profile+UNKNOWN_004CD904_IDENTIFIER_OFFSET, UNKNOWN_004CD904_IDENTIFIER_SIZE);
+
+	return TRUE;
+}

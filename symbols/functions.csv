@@ -3234,3 +3234,13 @@ address,name,source,arguments,returns,convention
 00030cd0,unknown_004ba014_unknown_00030cd0,source/units/units.c,eax stack,int,stdcall
 00040de0,unknown_00040de0,source/game/game_unknown_0003f2b0.c,ecx stack stack,int,stdcall
 00046220,unknown_00480118_get,source/effects/decals.c,,int
+00064160,network_life_cycle_session_get_unknown49A4,source/networking/network_life_cycle.c,,int
+00064260,network_life_cycle_session_get_unknown498C,source/networking/network_life_cycle.c,,int
+000642d0,network_life_cycle_session_get_unknown49A1,source/networking/network_life_cycle.c,,pointer
+00064a60,network_life_cycle_session_get_unknown49AC,source/networking/network_life_cycle.c,,int
+00064ab0,network_life_cycle_session_get_unknown49B0,source/networking/network_life_cycle.c,,int
+00064c40,network_life_cycle_session_get_unknown18,source/networking/network_life_cycle.c,,int
+00064870,network_life_cycle_unknown_004cd8ca_set,source/networking/network_life_cycle.c,eax edx,void
+000648b0,network_life_cycle_unknown_004cd8ca_get,source/networking/network_life_cycle.c,edx stack stack stack,bool,stdcall
+00063dc0,game_voice_unknown_00063dc0,source/networking/game_voice.c,eax,void
+000647a0,game_voice_unknown_004cd904_get_identifier,source/networking/game_voice.c,ecx edx,bool

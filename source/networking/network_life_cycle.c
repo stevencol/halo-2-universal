@@ -1122,3 +1122,169 @@ long unknown_004cd8f8_get(
 
 	return unknown_004cd8f8;
 }
+/* 0x00064160: the number that the session of the network game has at
+0x49A4; 0 with no network game, or if the session is not in its states
+from the fourth to the ninth. The game looks at the state twice */
+long network_life_cycle_session_get_unknown49A4(
+	void)
+{
+	if (unknown_00527330)
+	{
+		const byte *session= network_life_cycle_session;
+		long state= *(const long *)(session+NETWORK_SESSION_STATE_OFFSET);
+
+		if (state!=_network_session_state_none && state>=_network_session_state3 && state<=_network_session_state8)
+		{
+			return *(const long *)(session+NETWORK_SESSION_UNKNOWN49A4_OFFSET);
+		}
+	}
+
+	return 0;
+}
+
+/* 0x00064260: the number that the session of the network game has at
+0x498C; 0 with no network game, or if the session is not in its states
+from the fourth to the ninth. The game looks at the state twice */
+long network_life_cycle_session_get_unknown498C(
+	void)
+{
+	if (unknown_00527330)
+	{
+		const byte *session= network_life_cycle_session;
+		long state= *(const long *)(session+NETWORK_SESSION_STATE_OFFSET);
+
+		if (state!=_network_session_state_none && state>=_network_session_state3 && state<=_network_session_state8)
+		{
+			return *(const long *)(session+NETWORK_SESSION_UNKNOWN498C_OFFSET);
+		}
+	}
+
+	return 0;
+}
+
+/* 0x000642d0: where the session of the network game has its thing at
+0x49A1; NULL with no network game, or if the session is not in its states
+from the fourth to the ninth. The game looks at the state twice */
+const byte * network_life_cycle_session_get_unknown49A1(
+	void)
+{
+	if (unknown_00527330)
+	{
+		const byte *session= network_life_cycle_session;
+		long state= *(const long *)(session+NETWORK_SESSION_STATE_OFFSET);
+
+		if (state!=_network_session_state_none && state>=_network_session_state3 && state<=_network_session_state8)
+		{
+			return session+NETWORK_SESSION_UNKNOWN49A1_OFFSET;
+		}
+	}
+
+	return NULL;
+}
+
+/* 0x00064a60: the number that the session of the network game has at
+0x49AC when its byte at 0x49A8 is set; NONE if not, with no network game, or if the session is not in its states
+from the fourth to the ninth. The game looks at the state twice */
+long network_life_cycle_session_get_unknown49AC(
+	void)
+{
+	if (unknown_00527330)
+	{
+		const byte *session= network_life_cycle_session;
+		long state= *(const long *)(session+NETWORK_SESSION_STATE_OFFSET);
+
+		if (state!=_network_session_state_none && state>=_network_session_state3 && state<=_network_session_state8 &&
+			session[NETWORK_SESSION_UNKNOWN49A8_OFFSET])
+		{
+			return *(const long *)(session+NETWORK_SESSION_UNKNOWN49AC_OFFSET);
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x00064ab0: the number that the session of the network game has at
+0x49B0 when its byte at 0x49A8 is set; 0 if not, with no network game, or if the session is not in its states
+from the fourth to the ninth. The game looks at the state twice */
+long network_life_cycle_session_get_unknown49B0(
+	void)
+{
+	if (unknown_00527330)
+	{
+		const byte *session= network_life_cycle_session;
+		long state= *(const long *)(session+NETWORK_SESSION_STATE_OFFSET);
+
+		if (state!=_network_session_state_none && state>=_network_session_state3 && state<=_network_session_state8 &&
+			session[NETWORK_SESSION_UNKNOWN49A8_OFFSET])
+		{
+			return *(const long *)(session+NETWORK_SESSION_UNKNOWN49B0_OFFSET);
+		}
+	}
+
+	return 0;
+}
+
+/* 0x00064c40: the number that the session of the network game has at 0x18;
+NONE with no network game, or if the session is not in its states from the
+fourth to the ninth (looked at once here) */
+long network_life_cycle_session_get_unknown18(
+	void)
+{
+	if (unknown_00527330)
+	{
+		const byte *session= network_life_cycle_session;
+		long state= *(const long *)(session+NETWORK_SESSION_STATE_OFFSET);
+
+		if (state!=_network_session_state_none && state>=_network_session_state3 && state<=_network_session_state8)
+		{
+			return *(const long *)(session+NETWORK_SESSION_UNKNOWN18_OFFSET);
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x004cf968, 0x004cf96c: two numbers of something of the network */
+long unknown_004cf968;
+long unknown_004cf96c;
+
+/* 0x004cd8ca: whether there is something kept in the four below: 0x20
+bytes, a number and the two numbers above as they were */
+byte unknown_004cd8ca;
+byte unknown_004cd8cc[0x20];
+long unknown_004cd8ec;
+long unknown_004cd8f0;
+long unknown_004cd8f4;
+
+/* 0x00064870: keeps 0x20 bytes and a number, with unknown_004cf968 and
+unknown_004cf96c as they are now */
+void network_life_cycle_unknown_004cd8ca_set(
+	long value,
+	const byte *data)
+{
+	unknown_004cd8ca= TRUE;
+	memcpy(unknown_004cd8cc, data, sizeof(unknown_004cd8cc));
+	unknown_004cd8ec= value;
+	unknown_004cd8f0= unknown_004cf968;
+	unknown_004cd8f4= unknown_004cf96c;
+}
+
+/* 0x000648b0: what network_life_cycle_unknown_004cd8ca_set kept, to where
+the caller says; FALSE if nothing is kept */
+boolean __attribute__((stdcall)) network_life_cycle_unknown_004cd8ca_get(
+	byte *data,
+	long *value,
+	long *unknown_004cf968_reference,
+	long *unknown_004cf96c_reference)
+{
+	if (!unknown_004cd8ca)
+	{
+		return FALSE;
+	}
+	memcpy(data, unknown_004cd8cc, sizeof(unknown_004cd8cc));
+	*value= unknown_004cd8ec;
+	*unknown_004cf968_reference= unknown_004cd8f0;
+	*unknown_004cf96c_reference= unknown_004cd8f4;
+
+	return TRUE;
+}
