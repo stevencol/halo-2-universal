@@ -69,7 +69,9 @@ que empezó Kiro: 9 de sus 17 funciones estaban mal aunque sus pruebas decían
      `symbols\functions.csv` (y sus variables a `symbols\globals.csv`).
   3. Casos de prueba en `tests\`; pasar SOLO las funciones nuevas:
      `python tools\test_functions.py test_<archivo> <función> ...`
-  4. Mutaciones de sus líneas (regla 6).
+  4. Mutaciones de sus líneas (regla 6) en `tests\mutations_<hito>.py`, y
+     `python tools\check_milestone.py <hito> --run` hasta que diga
+     `TODO BIEN` (ver «Lista antes de cada commit»).
   5. `python tools\milestone_docs.py build\scratch\spec_<hito>.py`
      actualiza `README.md`, `ESTADO.md` y añade la entrada en español a
      `CHANGELOG.md` (el formato del spec está al principio de
@@ -86,15 +88,32 @@ que empezó Kiro: 9 de sus 17 funciones estaban mal aunque sus pruebas decían
 
 ## Lista antes de cada commit
 
-- [ ] `git diff --stat symbols\` solo muestra líneas AÑADIDAS (`+`), del
-      orden del número de funciones y variables nuevas. Si hay miles de
-      cambios o líneas borradas, algo reescribió el archivo: deshacerlo.
-- [ ] Las pruebas de las funciones nuevas pasan con el clang 19.1.5.
-- [ ] Ninguna mutación sobrevive.
-- [ ] Ninguna tabla global se da como `Buffer` en las pruebas.
-- [ ] Ningún tipo de retorno fuera de la lista de la regla 2
-      (`grep ",long" symbols\functions.csv` no da nada nuevo).
+**Obligatorio: `tools\check_milestone.py`.** Comprueba casi todo lo de
+arriba solo: filas de los CSV solo añadidas y con su formato, variables
+repetidas, tipos de retorno, `ret N` = `stdcall`, ensamblador, pruebas con
+la forma del arnés, tablas dadas como `Buffer`, y las mutaciones. Con
+`--run` además pasa las pruebas y las mutaciones con el clang 19.1.5.
+
+```
+python tools\check_milestone.py <hito> --run > build\scratch\salida.txt 2>&1
+```
+
+Después LEER `build\scratch\check_milestone.txt` (el script lo escribe
+siempre: así da igual que la terminal no muestre la salida). Tiene que
+acabar en `TODO BIEN`. Si dice `ERROR`, corregir lo que dice y volver a
+pasarlo. **Nunca hacer commit con errores** ni decir que pasa sin haber
+leído ese archivo.
+
+**Plantillas:** copiar la forma de los hitos 739, 740 y 741:
+`tests\test_small_741.py` (pruebas), `tests\mutations_741.py`
+(mutaciones), y sus funciones en `source\networking\network_blob_task.c`
+o `source\networking\network_life_cycle.c` (estilo del C).
+
+Además, a mano:
+
 - [ ] `README.md`, `ESTADO.md` y `CHANGELOG.md` actualizados.
+- [ ] Si te lo han pedido (Kiro: siempre, de momento), NO hacer el commit:
+      dejarlo para que se revise.
 
 ## Trampas conocidas
 
