@@ -3,18 +3,18 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-22, al terminar el hito 753.
+**Última actualización:** 2026-10-22, al terminar el hito 754.
 
 ## Dónde estamos
 
-- **2447 funciones descompiladas de 11.265: el 21,72 % del juego** (el
-  12,568 % de los bytes de código). Las 11.265 son las de la lista de
+- **2452 funciones descompiladas de 11.265: el 21,77 % del juego** (el
+  12,589 % de los bytes de código). Las 11.265 son las de la lista de
   Ghidra, y solo se cuentan las que están en ella: hay más descompiladas
-  que Ghidra no separa como funciones propias (2770 en total).
-- Las 2770 están comprobadas contra el ejecutable original: las 1390 del
+  que Ghidra no separa como funciones propias (2775 en total).
+- Las 2775 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile three functions that put the players of the matchmaking in teams* (ver `git log`).
+- Último hito: *Decompile five small functions of the results of a search of games* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 535 funciones apuntadas pero sin descompilar (las que el código
   llama); 385 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -227,6 +227,10 @@ Módulos (funciones hechas / archivo):
       puesto), cuál es el más pequeño y cambiar grupos entre equipos
       hasta que no haya nada mejor, y ponerlos en equipos; de
       `0x00091530` a `0x0009221b`, completo)
+- [ ] Lo que encuentra una búsqueda de partidas del servicio —
+      `networking\network_search.c` (5: los identificadores ya vistos,
+      ver un resultado, contarlos y el mejor; de la zona de
+      `0x00090020` a `0x00091530`)
 - [x] El almacén del servicio de partidas — `networking\online_storage.c`
       (7: el nombre, empezar a escribir y a leer, de memoria o de archivo,
       el resultado de leer y el avance)

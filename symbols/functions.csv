@@ -3304,3 +3304,8 @@ address,name,source,arguments,returns,convention
 00091e30,network_team_balance_assign_difference,source/networking/network_team_balance.c,eax edx stack stack stack stack stack stack stack,bool,stdcall
 00091f00,network_team_balance_fits,source/networking/network_team_balance.c,eax edx ecx stack stack stack stack stack stack stack,bool,stdcall
 00091fc0,network_team_balance_assign,source/networking/network_team_balance.c,stack stack stack stack stack stack stack stack stack stack stack,bool,stdcall
+00091290,network_search_has_identifier,source/networking/network_search.c,ebx stack,bool,stdcall
+000912d0,network_search_result_see,source/networking/network_search.c,eax ecx,void
+00091320,network_search_see,source/networking/network_search.c,ebx stack,void,stdcall
+00091380,network_search_get_counts,source/networking/network_search.c,eax stack stack stack stack,void,stdcall
+00091400,network_search_best_result,source/networking/network_search.c,edx stack,bool,stdcall

@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cinco funciones pequeñas de lo que encuentra una búsqueda de partidas del servicio
+
+Cinco funciones (635 bytes) en un archivo nuevo. De 2447
+funciones se pasa a 2452, el 21,77 % de las del juego (el 12,589 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_search_has_identifier` | `0x00091290` | `networking/network_search.c` |
+| `network_search_result_see` | `0x000912d0` | `networking/network_search.c` |
+| `network_search_see` | `0x00091320` | `networking/network_search.c` |
+| `network_search_get_counts` | `0x00091380` | `networking/network_search.c` |
+| `network_search_best_result` | `0x00091400` | `networking/network_search.c` |
+
+### Lo que se sabe
+
+- Archivo nuevo, `networking\network_search.c`, de la zona de `0x00090020`
+  a `0x00091530`, que usa las tareas en línea y `XOnlineMatchSession...`:
+  una búsqueda de partidas del servicio tiene hasta cincuenta resultados de
+  `0x204` bytes (los copia `0x000902b0` de lo que dan las bibliotecas) y una
+  lista de los identificadores (ocho bytes) ya vistos.
+- `network_search_has_identifier` dice si un identificador está en la
+  lista; `network_search_result_see` ve un resultado una vez y mete su
+  identificador en la lista si no estaba y cabe; `network_search_see` ve
+  el primer resultado cuyos ocho bytes de `0xBC` son los que se le dan.
+- `network_search_get_counts` da dos números de la búsqueda, cuántos
+  resultados tiene y la suma de sus números de `0x48`.
+- `network_search_best_result` da el primer resultado listo con su número
+  de `0x1F8` no menor que el de la búsqueda, si están listos todos, o una
+  cuarta parte y la búsqueda dura más que `unknown_004ce394`.
+- Variable nueva: `unknown_004ce394` (en el ejecutable vale 0: se pone al
+  arrancar).
+
+### Sin comprobar
+
+- Romper líneas de este hito: hecho, `tests\mutations_754.py`, 16
+  mutaciones; ninguna sobrevive. Sigue pendiente en las de los hitos 456 a
+  490 y 501 a 737.
+- Los nombres son suposiciones, y qué es cada parte de un resultado también.
+- En este hito se pasaron las pruebas de las cinco funciones.
+
 ## 2026-10-22 — Tres funciones de los equipos parejos: poner a los jugadores en equipos
 
 Tres funciones (985 bytes) en un archivo. De 2444
