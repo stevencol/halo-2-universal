@@ -3283,3 +3283,9 @@ address,name,source,arguments,returns,convention
 00087c00,simulation_write_unknown_00087c00,source/networking/simulation_encoding.c,ebx stack,void,stdcall
 00087c80,simulation_read_unknown_00087c80,source/networking/simulation_encoding.c,eax stack,bool,stdcall
 0008ffc0,online_task_failed,source/networking/online_tasks.c,eax,bool
+00091540,network_team_balance_group_reset,source/networking/network_team_balance.c,ecx,void
+00091580,network_team_balance_group_add_player,source/networking/network_team_balance.c,edx esi,void
+000917c0,network_team_balance_reset,source/networking/network_team_balance.c,eax edx,void
+00091800,network_team_balance_skill_difference,source/networking/network_team_balance.c,ebx,int
+00091860,network_team_balance_player_difference,source/networking/network_team_balance.c,ebx,int
+000919a0,network_team_balance_smallest_team,source/networking/network_team_balance.c,ebx,int

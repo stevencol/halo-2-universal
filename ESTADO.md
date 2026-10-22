@@ -3,18 +3,18 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-22, al terminar el hito 748.
+**Última actualización:** 2026-10-22, al terminar el hito 749.
 
 ## Dónde estamos
 
-- **2426 funciones descompiladas de 11.265: el 21,54 % del juego** (el
-  12,463 % de los bytes de código). Las 11.265 son las de la lista de
+- **2432 funciones descompiladas de 11.265: el 21,59 % del juego** (el
+  12,478 % de los bytes de código). Las 11.265 son las de la lista de
   Ghidra, y solo se cuentan las que están en ella: hay más descompiladas
-  que Ghidra no separa como funciones propias (2749 en total).
-- Las 2749 están comprobadas contra el ejecutable original: las 1390 del
+  que Ghidra no separa como funciones propias (2755 en total).
+- Las 2755 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile three small functions of the simulation encoding and the online tasks* (ver `git log`).
+- Último hito: *Decompile six small functions of the team balance of the matchmaking* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 535 funciones apuntadas pero sin descompilar (las que el código
   llama); 385 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -219,6 +219,11 @@ Módulos (funciones hechas / archivo):
       (8: la suma, ver si vale, tomar y devolver su memoria, empezar a
       leerlo y a escribirlo, lo que pasa cuando la tarea acaba y su
       avance)
+- [ ] Los equipos parejos del servicio de partidas —
+      `networking\network_team_balance.c` (6: dejar un grupo sin
+      jugadores y meter uno, dejar los equipos sin grupos, cuánto se
+      separan y cuál es el más pequeño; de la zona de `0x00091540` a
+      `0x00092000`)
 - [x] El almacén del servicio de partidas — `networking\online_storage.c`
       (7: el nombre, empezar a escribir y a leer, de memoria o de archivo,
       el resultado de leer y el avance)

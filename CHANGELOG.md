@@ -2,6 +2,54 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Seis funciones pequeñas de los equipos parejos del servicio de partidas
+
+Seis funciones (435 bytes) en un archivo nuevo. De 2426
+funciones se pasa a 2432, el 21,59 % de las del juego (el 12,478 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_team_balance_group_reset` | `0x00091540` | `networking/network_team_balance.c` |
+| `network_team_balance_group_add_player` | `0x00091580` | `networking/network_team_balance.c` |
+| `network_team_balance_reset` | `0x000917c0` | `networking/network_team_balance.c` |
+| `network_team_balance_skill_difference` | `0x00091800` | `networking/network_team_balance.c` |
+| `network_team_balance_player_difference` | `0x00091860` | `networking/network_team_balance.c` |
+| `network_team_balance_smallest_team` | `0x000919a0` | `networking/network_team_balance.c` |
+
+### Lo que se sabe
+
+- Archivo nuevo, `networking\network_team_balance.c`, de la zona de
+  `0x00091540` a `0x00092000`, que no tenía nada. Son hasta cuatro equipos
+  (`0x998` bytes cada uno) de hasta dieciséis grupos de jugadores que van
+  juntos (`0x90` bytes), y cada grupo de hasta dieciséis jugadores con un
+  número cada uno (8 bytes: el número y otra cosa, que se usa para
+  buscarlo), ordenados del número más alto al más bajo. Cada equipo tiene
+  además un grupo con todos sus jugadores, que dice cuántos tiene y la suma
+  de sus números. Parece lo que hace el servicio de partidas para que los
+  equipos queden parejos.
+- `network_team_balance_group_reset` deja un grupo sin jugadores y
+  `network_team_balance_group_add_player` mete uno en su sitio (sin mirar
+  si cabe). `network_team_balance_reset` deja los equipos sin grupos.
+- `network_team_balance_skill_difference` y
+  `network_team_balance_player_difference` dicen cuánto se separan el equipo
+  más alto y el más bajo en la suma de los números y en jugadores, y
+  `network_team_balance_smallest_team` cuál tiene menos jugadores (y, de
+  esos, la suma más baja).
+- Ninguna variable nueva: todo llega por punteros.
+
+### Sin comprobar
+
+- Romper líneas de este hito: hecho, `tests\mutations_749.py`, 15
+  mutaciones; ninguna sobrevive. Cambiar `<=` por `<` (o `>` por `>=`) en
+  las comparaciones del más alto y el más bajo no se puede notar (con dos
+  iguales el resultado es el mismo), y por eso esas mutaciones cambian el
+  sentido de la comparación. Sigue pendiente en las de los hitos 456 a 490
+  y 501 a 737.
+- Los nombres son suposiciones, y qué es el número de cada jugador también.
+- En este hito se pasaron las pruebas de las seis funciones.
+
 ## 2026-10-22 — El porcentaje de funciones cuenta solo las de la lista de Ghidra
 
 El porcentaje de funciones estaba inflado: dividía todas las descompiladas
