@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Seis funciones pequeñas de la partida en red y de su sesión
+
+Seis funciones (532 bytes) en un archivo. De 2452
+funciones se pasa a 2458, el 21,82 % de las del juego (el 12,607 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_life_cycle_set_unknown5dd0` | `0x00064100` | `networking/network_life_cycle.c` |
+| `network_life_cycle_set_unknown49c4` | `0x000643a0` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_00064900` | `0x00064900` | `networking/network_life_cycle.c` |
+| `network_life_cycle_get_unknown4d08` | `0x00064970` | `networking/network_life_cycle.c` |
+| `network_life_cycle_get_unknown5dd0` | `0x00064a10` | `networking/network_life_cycle.c` |
+| `network_life_cycle_get_identifier_and_key` | `0x00064bc0` | `networking/network_life_cycle.c` |
+
+### Lo que se sabe
+
+- `network_life_cycle_set_unknown5dd0` pone los 16 bits de `0x5DD0` de la
+  sesión de la partida en red y luego hace `network_session_unknown_0005bf10`
+  sin nada, como `0x00063ff0` con el mapa; recibe el número en `esi`.
+- `network_life_cycle_set_unknown49c4` pone el byte de `0x49C4` si la
+  partida en red está en su tercer estado y esta consola lleva la sesión.
+- `network_life_cycle_unknown_00064900` hace
+  `network_session_unknown_0005bf10` con los doce bytes de un perfil de
+  `unknown_004cd904`, si está.
+- `network_life_cycle_get_unknown4d08`, `network_life_cycle_get_unknown5dd0`
+  y `network_life_cycle_get_identifier_and_key` preguntan a la sesión que da
+  el estado de la partida en red (`network_life_cycle_get_state_session`):
+  lo de `0x4D08`, los 16 bits de `0x5DD0` (o `NONE`) y su identificador y su
+  clave, si tiene identificador.
+- Ninguna variable nueva.
+
+### Sin comprobar
+
+- Romper líneas de este hito: hecho, `tests\mutations_755.py`, 11
+  mutaciones; ninguna sobrevive. Sigue pendiente en las de los hitos 456 a
+  490 y 501 a 737.
+- Las pruebas simulan `network_life_cycle_get_state_session` y las funciones
+  de la sesión a las que llaman.
+- Los nombres son suposiciones.
+- En este hito se pasaron las pruebas de las seis funciones.
+
 ## 2026-10-22 — Cinco funciones pequeñas de lo que encuentra una búsqueda de partidas del servicio
 
 Cinco funciones (635 bytes) en un archivo nuevo. De 2447

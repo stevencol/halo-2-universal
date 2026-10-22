@@ -1657,3 +1657,160 @@ void __attribute__((stdcall)) network_life_cycle_unknown_00073dc0(
 	unknown_00510518= 0;
 	unknown_00510514= unknown;
 }
+
+/* ---------- more of the session of the network game */
+
+/* 0x004cd904 (game_voice.c): what the game keeps of each profile */
+extern byte unknown_004cd904[4][0xD0];
+
+/* 0x00064100: the 16 bits of 0x5DD0 of the session of the network game are
+set (network_session_leader_set_unknown5dd0), and then
+network_session_unknown_0005bf10 is done with nothing, if
+network_life_cycle_unknown_00063f00 says so; whether both could */
+boolean network_life_cycle_set_unknown5dd0(
+	short unknown5dd0)
+{
+	byte *session;
+
+	if (!network_life_cycle_unknown_00063f00())
+	{
+		return FALSE;
+	}
+	session= network_life_cycle_session_or_null();
+
+	return network_session_leader_set_unknown5dd0(session, unknown5dd0) &&
+		network_session_unknown_0005bf10(session, FALSE, 0, 0, NULL);
+}
+
+/* 0x000643a0: the byte of 0x49C4 of the session of the network game is
+set, or asked for (network_session_leader_set_unknown49c4), if the network
+game is in its third state, the session is in its states from the fourth to
+the ninth and this console runs it; FALSE if not, or if it could not */
+boolean network_life_cycle_set_unknown49c4(
+	void)
+{
+	if (unknown_00527330 && unknown_00527334==_network_life_cycle_state3)
+	{
+		byte *session= network_life_cycle_session;
+		long state= *(const long *)(session+NETWORK_SESSION_STATE_OFFSET);
+
+		if (state!=_network_session_state_none && state>=_network_session_state3 && state<=_network_session_state8 &&
+			*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET)==
+				*(const long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET) &&
+			network_session_leader_set_unknown49c4(session))
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x00064900: network_session_unknown_0005bf10 is done with the session of
+the network game, with what is given and the twelve bytes after the first
+of a profile that is taken, if the session is in its states from the
+fourth to the ninth; whether it could */
+boolean __attribute__((stdcall)) network_life_cycle_unknown_00064900(
+	long profile_index,
+	boolean unknown8,
+	long unknownC,
+	long unknown10)
+{
+	if (unknown_00527330)
+	{
+		byte *session= network_life_cycle_session;
+		long state= *(const long *)(session+NETWORK_SESSION_STATE_OFFSET);
+
+		if (state!=_network_session_state_none && state>=_network_session_state3 && state<=_network_session_state8)
+		{
+			const byte *profile= unknown_004cd904[profile_index];
+
+			if (profile[0] && network_session_unknown_0005bf10(session, unknown8, unknownC, unknown10, profile+1))
+			{
+				return TRUE;
+			}
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x00064970: what network_session_get_unknown4d08 says of the session that
+the state of the network game gives, if it is in its states from the fourth
+to the ninth; FALSE if not */
+boolean __attribute__((stdcall)) network_life_cycle_get_unknown4d08(
+	long *unknown4d08,
+	long *unknown4d0c,
+	const byte **unknown4d10)
+{
+	byte *session= NULL;
+
+	if (network_life_cycle_get_state_session(&session))
+	{
+		long state= *(const long *)(session+NETWORK_SESSION_STATE_OFFSET);
+
+		if (state>=_network_session_state3 && state<=_network_session_state8)
+		{
+			return network_session_get_unknown4d08(session, unknown4d08, unknown4d0c, unknown4d10);
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x00064a10: the 16 bits of 0x5DD0 of the session that the state of the
+network game gives, if it is in its states from the fourth to the ninth;
+NONE if not. The game looks at the state twice */
+short network_life_cycle_get_unknown5dd0(
+	void)
+{
+	byte *session= NULL;
+
+	if (network_life_cycle_get_state_session(&session))
+	{
+		long state= *(const long *)(session+NETWORK_SESSION_STATE_OFFSET);
+
+		if (state>=_network_session_state3 && state<=_network_session_state8)
+		{
+			return *(const short *)(session+NETWORK_SESSION_UNKNOWN5DD0_OFFSET);
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x00064bc0: the eight bytes that the session that the state of the
+network game gives is known by, and its key (16 bytes), each if it is asked
+for; FALSE if there is no such session, it is not in its states from the
+fourth to the ninth or it has no identifier */
+boolean __attribute__((stdcall)) network_life_cycle_get_identifier_and_key(
+	byte *identifier,
+	byte *key)
+{
+	byte *session= NULL;
+
+	if (network_life_cycle_get_state_session(&session))
+	{
+		long state= *(const long *)(session+NETWORK_SESSION_STATE_OFFSET);
+
+		if (state>=_network_session_state3 && state<=_network_session_state8)
+		{
+			if (!session[NETWORK_SESSION_HAS_IDENTIFIER_OFFSET])
+			{
+				return FALSE;
+			}
+			if (identifier)
+			{
+				memcpy(identifier, session+NETWORK_SESSION_IDENTIFIER_OFFSET, 8);
+			}
+			if (key)
+			{
+				memcpy(key, session+NETWORK_SESSION_KEY_OFFSET, 0x10);
+			}
+
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}

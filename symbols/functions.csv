@@ -3309,3 +3309,9 @@ address,name,source,arguments,returns,convention
 00091320,network_search_see,source/networking/network_search.c,ebx stack,void,stdcall
 00091380,network_search_get_counts,source/networking/network_search.c,eax stack stack stack stack,void,stdcall
 00091400,network_search_best_result,source/networking/network_search.c,edx stack,bool,stdcall
+00064100,network_life_cycle_set_unknown5dd0,source/networking/network_life_cycle.c,esi,bool
+000643a0,network_life_cycle_set_unknown49c4,source/networking/network_life_cycle.c,,bool
+00064900,network_life_cycle_unknown_00064900,source/networking/network_life_cycle.c,edx stack stack stack,bool,stdcall
+00064970,network_life_cycle_get_unknown4d08,source/networking/network_life_cycle.c,stack stack stack,bool,stdcall
+00064a10,network_life_cycle_get_unknown5dd0,source/networking/network_life_cycle.c,,short
+00064bc0,network_life_cycle_get_identifier_and_key,source/networking/network_life_cycle.c,stack edi,bool,stdcall
