@@ -7,8 +7,10 @@ detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
 ## Dónde estamos
 
-- **2749 funciones descompiladas de 11.265: el 24,40 % del juego** (el
-  12,463 % de los bytes de código).
+- **2426 funciones descompiladas de 11.265: el 21,54 % del juego** (el
+  12,463 % de los bytes de código). Las 11.265 son las de la lista de
+  Ghidra, y solo se cuentan las que están en ella: hay más descompiladas
+  que Ghidra no separa como funciones propias (2749 en total).
 - Las 2749 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).

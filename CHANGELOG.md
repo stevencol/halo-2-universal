@@ -2,6 +2,22 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — El porcentaje de funciones cuenta solo las de la lista de Ghidra
+
+El porcentaje de funciones estaba inflado: dividía todas las descompiladas
+(2749) entre las 11.265 de la lista de Ghidra, pero 323 de ellas no están en
+esa lista (Ghidra no las separa de otras funciones). Ahora solo cuentan las
+que están en la lista: **2426 de 11.265, el 21,54 %** (antes se decía el
+24,40 %). El porcentaje de bytes no cambia (12,463 %), porque ya contaba solo
+esas.
+
+### Cambiado
+
+- `tools\milestone_docs.py`: el número y el porcentaje de funciones son los
+  de la lista de Ghidra; `{total}` da todas las descompiladas.
+- `tools\test_functions.py`: el resumen final cuenta igual.
+- `README.md` y `ESTADO.md` dicen los dos números.
+
 ## 2026-10-22 — Tres funciones pequeñas: dieciséis cosas de seis bytes en un flujo de bits, y si una tarea en línea falló
 
 Tres funciones (314 bytes) en dos archivos. De 2746

@@ -123,10 +123,12 @@ def main() -> None:
     print(f"\n{len(decompiled)} functions decompiled, {tested} of them checked against the game")
     if GHIDRA_FUNCTIONS.exists():
         with GHIDRA_FUNCTIONS.open(newline="") as f:
-            game = {row["address"]: int(row["size"]) for row in csv.DictReader(f) if row["section"] == ".text"}
-        size = sum(game.get(f"{symbol.address:08x}", 0) for symbol in decompiled.values())
+            game = {row["address"].lower(): int(row["size"]) for row in csv.DictReader(f) if row["section"] == ".text"}
+        # only those of Ghidra's list count: it gives the total
+        listed = [symbol for symbol in decompiled.values() if f"{symbol.address:08x}" in game]
+        size = sum(game[f"{symbol.address:08x}"] for symbol in listed)
         print(
-            f"of the game's code: {len(decompiled) / len(game):.2%} of {len(game)} functions, "
+            f"of the game's code: {len(listed) / len(game):.2%} of {len(game)} functions, "
             f"{size / sum(game.values()):.3%} of {sum(game.values()):,} bytes"
         )
     sys.exit(1 if failed else 0)
