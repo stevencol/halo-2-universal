@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Seis funciones pequeñas de la lista de partidas del servicio: si está, si se lee, y el nombre y el texto de cada una
+
+Seis funciones (449 bytes) en un archivo. De 2461
+funciones se pasa a 2467, el 21,90 % de las del juego (el 12,629 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_hoppers_list_available` | `0x00193f50` | `networking/network_hoppers.c` |
+| `network_hoppers_list_reading` | `0x00193f70` | `networking/network_hoppers.c` |
+| `network_hoppers_get_name` | `0x001944c0` | `networking/network_hoppers.c` |
+| `network_hoppers_get_description` | `0x00194540` | `networking/network_hoppers.c` |
+| `network_hoppers_get_unknown5E4` | `0x001945c0` | `networking/network_hoppers.c` |
+| `network_hoppers_get_unknown5E8` | `0x00194610` | `networking/network_hoppers.c` |
+
+### Lo que se sabe
+
+- `network_hoppers_list_available` dice si hay lista (su bloque es de una
+  clase y está bien) y `network_hoppers_list_reading` si se está leyendo
+  (el bloque en su primer paso), y cuánto va si se le pide.
+- Cada una de la lista tiene desde `0xC` un nombre de 16 bytes en cada
+  idioma (9) y luego un texto de 128 bytes en cada uno, en UTF-8:
+  `network_hoppers_get_name` y `network_hoppers_get_description` los dan en
+  el idioma del juego (`global_language`, que se saca del de la consola la
+  primera vez).
+- `network_hoppers_get_unknown5E4` y `network_hoppers_get_unknown5E8` dan el
+  número de `0x5E4` y el byte de `0x5E8`, que en `network_hoppers.h` son los
+  dos últimos de `unknown5A0`.
+- Ninguna variable nueva.
+
+### Sin comprobar
+
+- Las pruebas (`tests\test_small_757.py`) y las mutaciones
+  (`tests\mutations_757.py`, 12) están escritas pero no se pasaron en este
+  hito: las pasa el usuario. Solo se comprobó que el C compila y
+  `check_milestone.py` sin `--run`.
+- Los nombres son suposiciones.
+
 ## 2026-10-22 — Tres funciones pequeñas de la sesión que la consola ofrece al servicio de partidas
 
 Tres funciones (199 bytes) en un archivo nuevo. De 2458

@@ -10,7 +10,9 @@ fills. The names are guesses.
 
 #include "network_hoppers.h"
 
+#include "cache/cache_files.h"
 #include "networking/network_blob.h"
+#include "text/unicode.h"
 
 /* ---------- prototypes */
 
@@ -475,4 +477,128 @@ boolean __attribute__((stdcall)) network_hopper_choose_game(
 	*variant= set.games[chosen].variant;
 
 	return TRUE;
+}
+
+/* ---------- the list as a whole, and two texts of each one */
+
+enum
+{
+	/* in what one of the list has from 0xC: a name of 16 bytes in each
+	language, and then a text of 128 bytes in each */
+	NETWORK_HOPPER_NAME_SIZE= 0x10,
+	NETWORK_HOPPER_DESCRIPTIONS_OFFSET= 0x90,
+	NETWORK_HOPPER_DESCRIPTION_SIZE= 0x80,
+	/* the number at 0x5E4 and the byte at 0x5E8, which are the last two of
+	unknown5A0 */
+	NETWORK_HOPPER_UNKNOWN5E4_INDEX= 17,
+	NETWORK_HOPPER_UNKNOWN5E8_INDEX= 18
+};
+
+/* 0x0033039a: the language of the console */
+long XGetLanguage(void);
+
+/* the language of the game, worked out once from that of the console. The
+game has this in each function that uses it */
+static inline __attribute__((always_inline)) long network_hoppers_language(
+	void)
+{
+	if (global_language==NONE)
+	{
+		global_language= language_from_xbox_language(XGetLanguage());
+	}
+
+	return global_language;
+}
+
+/* 0x00193f50: whether there is a list (its block is of a kind and is good) */
+boolean network_hoppers_list_available(
+	void)
+{
+	return network_hoppers_available();
+}
+
+/* 0x00193f70: whether the list is being read (its block is of a kind and at
+its first step); how far it went, if it is and that is asked for */
+boolean network_hoppers_list_reading(
+	real *progress)
+{
+	if (unknown_0047d8f4.kind==0 || unknown_0047d8f4.state!=1)
+	{
+		return FALSE;
+	}
+	if (progress)
+	{
+		network_blob_get_progress(&unknown_0047d8f4, progress);
+	}
+
+	return TRUE;
+}
+
+/* 0x001944c0: the name of one of the list, in the language of the game (16
+characters of each language, in UTF-8); FALSE if it is not there or is not
+good */
+boolean __attribute__((stdcall)) network_hoppers_get_name(
+	long index,
+	wchar *name)
+{
+	if (index>=0 && index<MAXIMUM_NETWORK_HOPPERS && network_hoppers_available() &&
+		network_hopper_valid(&network_hoppers[index]))
+	{
+		long language= network_hoppers_language();
+
+		utf8_string_to_wchar_string((const char *)network_hoppers[index].unknownC+language*NETWORK_HOPPER_NAME_SIZE, name,
+			NETWORK_HOPPER_NAME_SIZE);
+
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+/* 0x00194540: the same with the longer text of one of the list (128
+characters of each language) */
+boolean __attribute__((stdcall)) network_hoppers_get_description(
+	long index,
+	wchar *description)
+{
+	if (index>=0 && index<MAXIMUM_NETWORK_HOPPERS && network_hoppers_available() &&
+		network_hopper_valid(&network_hoppers[index]))
+	{
+		long language= network_hoppers_language();
+
+		utf8_string_to_wchar_string((const char *)network_hoppers[index].unknownC+NETWORK_HOPPER_DESCRIPTIONS_OFFSET+
+			language*NETWORK_HOPPER_DESCRIPTION_SIZE, description, NETWORK_HOPPER_DESCRIPTION_SIZE);
+
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+/* 0x001945c0: the number at 0x5E4 of one of the list; nothing if it is not
+there or is not good */
+long network_hoppers_get_unknown5E4(
+	long index)
+{
+	if (index>=0 && index<MAXIMUM_NETWORK_HOPPERS && network_hoppers_available() &&
+		network_hopper_valid(&network_hoppers[index]))
+	{
+		return network_hoppers[index].unknown5A0[NETWORK_HOPPER_UNKNOWN5E4_INDEX];
+	}
+
+	return 0;
+}
+
+/* 0x00194610: the byte at 0x5E8 of one of the list; FALSE if it is not
+there or is not good */
+boolean network_hoppers_get_unknown5E8(
+	long index)
+{
+	if (index>=0 && index<MAXIMUM_NETWORK_HOPPERS && network_hoppers_available() &&
+		network_hopper_valid(&network_hoppers[index]))
+	{
+		return *(const byte *)&network_hoppers[index].unknown5A0[NETWORK_HOPPER_UNKNOWN5E8_INDEX];
+	}
+
+	return FALSE;
 }

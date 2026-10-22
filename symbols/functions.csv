@@ -3318,3 +3318,9 @@ address,name,source,arguments,returns,convention
 0008f390,online_matchmaking_unknown_0008f390,source/networking/online_matchmaking.c,ecx stack,pair,stdcall
 0008f3f0,online_matchmaking_attribute_identifier,source/networking/online_matchmaking.c,eax,int
 0008f450,online_matchmaking_attribute_valid,source/networking/online_matchmaking.c,ecx eax,bool
+00193f50,network_hoppers_list_available,source/networking/network_hoppers.c,,bool
+00193f70,network_hoppers_list_reading,source/networking/network_hoppers.c,ecx,bool
+001944c0,network_hoppers_get_name,source/networking/network_hoppers.c,eax stack,bool,stdcall
+00194540,network_hoppers_get_description,source/networking/network_hoppers.c,eax stack,bool,stdcall
+001945c0,network_hoppers_get_unknown5E4,source/networking/network_hoppers.c,eax,int
+00194610,network_hoppers_get_unknown5E8,source/networking/network_hoppers.c,eax,bool
