@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Seis funciones de una tabla de jugadores en dos listas
+
+Seis funciones (522 bytes) en un archivo nuevo. De 2737
+funciones se pasa a 2743, el 24,35 % de las del juego (el 12,435 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_recent_players_unknown_0007f260` | `0x0007f260` | `networking/network_recent_players.c` |
+| `network_recent_player_make` | `0x0007f8b0` | `networking/network_recent_players.c` |
+| `network_recent_player_remove_first` | `0x0007fd10` | `networking/network_recent_players.c` |
+| `network_recent_player_remove_second` | `0x0007fd80` | `networking/network_recent_players.c` |
+| `network_recent_player_move_to_first` | `0x0007fdf0` | `networking/network_recent_players.c` |
+| `network_recent_player_move_to_second` | `0x0007fe40` | `networking/network_recent_players.c` |
+
+### Lo que se sabe
+
+- Archivo nuevo, `networking\network_recent_players.c`: una tabla de 350
+  jugadores en `0x004cf98c`, de `0x68` bytes cada uno (`0x58` que dicen
+  quién es y los enlaces de dos listas). Cada lista tiene su primero y su
+  último (`0x004cf97c`/`0x004cf980` y `0x004cf984`/`0x004cf988`). Parece
+  la lista de jugadores recientes de Xbox Live, pero el nombre es una
+  suposición.
+- `network_recent_player_remove_first`/`_second` sacan a un jugador de
+  una lista, y `network_recent_player_move_to_first`/`_second` lo ponen el
+  primero. Si la lista estaba vacía, el juego no lo apunta como el último.
+- `network_recent_player_make` arma los `0x58` bytes de un jugador a partir
+  de tres cosas.
+- `network_recent_players_unknown_0007f260` reinicia el observador que
+  mide la red (`network_observer_reset_unknown4e08`) y guarda la hora.
+- Variables nuevas: `unknown_004cf8e0`, `unknown_004cf95d`,
+  `unknown_004cf960`, `unknown_004cf97c`, `unknown_004cf980`,
+  `unknown_004cf984`, `unknown_004cf988`, `unknown_004cf98c`.
+
+### Sin comprobar
+
+- Romper líneas de este hito: hecho, `tests\mutations_746.py`, 19
+  mutaciones; ninguna sobrevive. Sigue pendiente en las de los hitos 456 a
+  490 y 501 a 737.
+- Los nombres son suposiciones.
+- En este hito se pasaron las pruebas de las seis funciones.
+
 ## 2026-10-22 — Cuatro funciones del ciclo de vida de la partida en red que terminan tareas
 
 Cuatro funciones (289 bytes) en un archivo. De 2733
