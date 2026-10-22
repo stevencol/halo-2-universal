@@ -3294,3 +3294,7 @@ address,name,source,arguments,returns,convention
 000916e0,network_team_balance_team_remove_group,source/networking/network_team_balance.c,ebx stack,void,stdcall
 00091760,network_team_balance_team_take_largest_group,source/networking/network_team_balance.c,eax stack,void,stdcall
 000918c0,network_team_balance_place_difference,source/networking/network_team_balance.c,stack,int,stdcall
+00091620,network_team_balance_team_construct,source/networking/network_team_balance.c,stack,pointer,stdcall
+00091a00,network_team_balance_construct,source/networking/network_team_balance.c,ebx,pointer
+00091a30,network_team_balance_distribute,source/networking/network_team_balance.c,stack edx stack stack,void,stdcall
+00091b30,network_team_balance_improvement_construct,source/networking/network_team_balance.c,edi,pointer

@@ -63,7 +63,43 @@ struct network_team_balance_teams
 	struct network_team_balance_team teams[MAXIMUM_NETWORK_TEAM_BALANCE_TEAMS];
 };
 
+/* what puts the groups in the teams */
+struct network_team_balance
+{
+	/* that no team has more players than it can */
+	boolean valid;
+	struct network_team_balance_teams teams;
+	long maximum_players;
+};
+
+/* what makes the teams better by moving groups from one to another */
+struct network_team_balance_improvement
+{
+	struct network_team_balance_teams teams;
+	/* that something better than the teams was found, and what */
+	boolean improved;
+	struct network_team_balance_teams best;
+};
+
+/* ---------- prototypes */
+
+/* 0x00020670 (cseries.c) */
+void __attribute__((stdcall)) array_construct_elements(void *array, unsigned long size, long count,
+	void *(__attribute__((thiscall)) *constructor)(void *element));
+
 /* ---------- code */
+
+/* 0x00091530 (not in Ghidra's list): what makes each player of a group */
+static void *__attribute__((thiscall)) network_team_balance_player_construct(
+	void *element)
+{
+	struct network_team_balance_player *player= element;
+
+	player->skill= NONE;
+	player->identifier= NONE;
+
+	return player;
+}
 
 /* 0x00091540: a group is left with no players: NONE in all of their eight
 bytes, and NONE as its identifier */
@@ -121,6 +157,31 @@ void network_team_balance_group_remove_player(
 		group->players[index]= group->players[index+1];
 	}
 	group->skill_total= (long)((unsigned long)group->skill_total-(unsigned long)player->skill);
+}
+
+/* 0x00091620: a team is made, with no groups. As in
+network_team_balance_reset, the identifier of the group with all the
+players is left at 0 */
+struct network_team_balance_team *__attribute__((stdcall)) network_team_balance_team_construct(
+	struct network_team_balance_team *team)
+{
+	long index;
+
+	for (index= 0; index<MAXIMUM_NETWORK_TEAM_BALANCE_GROUPS; index++)
+	{
+		array_construct_elements(team->groups[index].players, sizeof(team->groups[index].players[0]),
+			MAXIMUM_NETWORK_TEAM_BALANCE_GROUP_PLAYERS, network_team_balance_player_construct);
+		team->groups[index].player_count= 0;
+		team->groups[index].skill_total= 0;
+		team->groups[index].unknown0= FALSE;
+		team->groups[index].identifier= NONE;
+	}
+	network_team_balance_group_reset(&team->total);
+	team->group_count= 0;
+	team->unknown4= 0;
+	team->total.identifier= 0;
+
+	return team;
 }
 
 /* 0x00091690: a group goes into a team, after the others, and its players
@@ -340,4 +401,82 @@ long network_team_balance_smallest_team(
 	}
 
 	return smallest;
+}
+
+/* 0x00091a00: what puts the groups in the teams is made, with no teams */
+struct network_team_balance *network_team_balance_construct(
+	struct network_team_balance *balance)
+{
+	long index;
+
+	for (index= 0; index<MAXIMUM_NETWORK_TEAM_BALANCE_TEAMS; index++)
+	{
+		network_team_balance_team_construct(&balance->teams.teams[index]);
+	}
+	balance->teams.team_count= 0;
+	balance->valid= FALSE;
+
+	return balance;
+}
+
+/* 0x00091a30: the groups of a team (what it is given has them, and its
+group of all the players) are put in so many teams: the one with the most
+players first, each in the team that has the fewest players then. It is
+good if no team ends with more players than it can have */
+void __attribute__((stdcall)) network_team_balance_distribute(
+	struct network_team_balance *balance,
+	long team_count,
+	const struct network_team_balance_team *groups,
+	long maximum_players)
+{
+	struct network_team_balance_teams *teams= &balance->teams;
+	struct network_team_balance_team pending;
+	long most;
+	long index;
+
+	balance->maximum_players= maximum_players;
+	balance->valid= FALSE;
+	network_team_balance_reset(teams, team_count);
+	memcpy(&pending, groups, sizeof(pending));
+	while (pending.group_count>0)
+	{
+		struct network_team_balance_group group;
+
+		network_team_balance_group_reset(&group);
+		network_team_balance_team_take_largest_group(&pending, &group);
+		network_team_balance_team_add_group(&teams->teams[network_team_balance_smallest_team(teams)], &group);
+	}
+	most= teams->teams[0].total.player_count;
+	for (index= 1; index<teams->team_count; index++)
+	{
+		long player_count= teams->teams[index].total.player_count;
+
+		if (most<=player_count)
+		{
+			most= player_count;
+		}
+	}
+	balance->valid= most<=maximum_players;
+}
+
+/* 0x00091b30: what makes the teams better is made, with no teams in either
+of the two that it has */
+struct network_team_balance_improvement *network_team_balance_improvement_construct(
+	struct network_team_balance_improvement *improvement)
+{
+	long index;
+
+	for (index= 0; index<MAXIMUM_NETWORK_TEAM_BALANCE_TEAMS; index++)
+	{
+		network_team_balance_team_construct(&improvement->teams.teams[index]);
+	}
+	improvement->teams.team_count= 0;
+	for (index= 0; index<MAXIMUM_NETWORK_TEAM_BALANCE_TEAMS; index++)
+	{
+		network_team_balance_team_construct(&improvement->best.teams[index]);
+	}
+	improvement->best.team_count= 0;
+	improvement->improved= FALSE;
+
+	return improvement;
 }

@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cuatro funciones de los equipos parejos: hacer los equipos y repartir los grupos
+
+Cuatro funciones (477 bytes) en un archivo. De 2437
+funciones se pasa a 2441, el 21,67 % de las del juego (el 12,513 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_team_balance_team_construct` | `0x00091620` | `networking/network_team_balance.c` |
+| `network_team_balance_construct` | `0x00091a00` | `networking/network_team_balance.c` |
+| `network_team_balance_distribute` | `0x00091a30` | `networking/network_team_balance.c` |
+| `network_team_balance_improvement_construct` | `0x00091b30` | `networking/network_team_balance.c` |
+
+### Lo que se sabe
+
+- `network_team_balance_team_construct` hace un equipo sin grupos: cada
+  jugador de cada grupo lo hace `array_construct_elements` con la función
+  de `0x00091530` (que no está en la lista de Ghidra y se escribe como
+  `static`), y deja a 0 el identificador del grupo de todos los jugadores,
+  como `network_team_balance_reset`.
+- Dos estructuras nuevas: lo que reparte los grupos
+  (`network_team_balance`: si vale, los equipos y cuántos jugadores puede
+  tener cada uno) y lo que los mejora (`network_team_balance_improvement`:
+  los equipos, si se encontró algo mejor y lo mejor encontrado).
+  `network_team_balance_construct` y
+  `network_team_balance_improvement_construct` las hacen.
+- `network_team_balance_distribute` reparte los grupos de un equipo entre
+  tantos equipos: primero el que tiene más jugadores, cada uno al equipo
+  que tiene menos en ese momento. Vale si ningún equipo acaba con más
+  jugadores de los que puede tener. Recibe en `edx` cuántos equipos.
+- Ninguna variable nueva.
+
+### Sin comprobar
+
+- Romper líneas de este hito: hecho, `tests\mutations_751.py`, 17
+  mutaciones; ninguna sobrevive. Sigue pendiente en las de los hitos 456 a
+  490 y 501 a 737.
+- Las pruebas de `network_team_balance_distribute` usan de 1 a 4 equipos:
+  con 0 el juego mete los grupos en el primero sin haberlo vaciado.
+- Los nombres son suposiciones.
+- En este hito se pasaron las pruebas de las cuatro funciones.
+
 ## 2026-10-22 — Cinco funciones de los equipos parejos: quitar jugadores, meter y sacar grupos, y la separación puesto a puesto
 
 Cinco funciones (562 bytes) en un archivo. De 2432
