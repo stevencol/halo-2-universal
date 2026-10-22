@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Seis funciones pequeñas de lo que la interfaz pregunta a la partida en red y a su lista de partidas
+
+Seis funciones (225 bytes) en un archivo. De 2481
+funciones se pasa a 2487, el 22,08 % de las del juego (el 12,666 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `user_interface_networking_unknown_00199df9` | `0x00199df9` | `interface/user_interface_networking.c` |
+| `user_interface_networking_hopper_unknown_00193470` | `0x0019a0c5` | `interface/user_interface_networking.c` |
+| `user_interface_networking_hopper_unknown_00193490` | `0x0019a0e6` | `interface/user_interface_networking.c` |
+| `user_interface_networking_hopper_is_type5` | `0x0019a107` | `interface/user_interface_networking.c` |
+| `user_interface_networking_hopper_unknown_001934b0` | `0x0019a127` | `interface/user_interface_networking.c` |
+| `user_interface_networking_unknown_0019a250` | `0x0019a250` | `interface/user_interface_networking.c` |
+
+### Lo que se sabe
+
+- `user_interface_networking_unknown_00199df9` avisa a la partida en red
+  (`user_interface_networking_unknown_00199e2e`) y hace una de tres cosas
+  según dos bytes: `network_life_cycle_unknown_000591e0`,
+  `network_life_cycle_unknown_000591f0` o
+  `network_life_cycle_unknown_00059890` con 2.
+- Cuatro preguntan por la de la lista de partidas de la sesión de la partida
+  en red (la del número de `0x49C8`): si es de la segunda, cuarta o quinta
+  clase, de la primera o tercera, de la quinta, y de la tercera, cuarta o
+  quinta. `FALSE` si no hay.
+- `user_interface_networking_unknown_0019a250` dice, si hay partida en la
+  red, si lo que hace es nada, la primera, la tercera o la cuarta cosa, o más
+  de la octava.
+- Ninguna variable nueva.
+
+### Sin comprobar
+
+- Las pruebas (`tests\test_small_761.py`) y las mutaciones
+  (`tests\mutations_761.py`, 11) están escritas pero no se pasaron en este
+  hito: las pasa el usuario. Solo se comprobó que el C compila y
+  `check_milestone.py` sin `--run`.
+- Los nombres son suposiciones.
+
 ## 2026-10-22 — Seis funciones pequeñas de lo que la interfaz saca de la partida en red
 
 Seis funciones (168 bytes) en un archivo. De 2475

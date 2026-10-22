@@ -9,6 +9,7 @@ What the interface asks of the network game. The names are guesses.
 
 #include "user_interface_networking.h"
 
+#include "networking/network_hoppers.h"
 #include "networking/network_life_cycle.h"
 #include "networking/network_session.h"
 
@@ -164,4 +165,98 @@ boolean user_interface_networking_unknown18_is_2(
 	void)
 {
 	return network_life_cycle_session_get_unknown18()==2;
+}
+
+/* ---------- the network game and the list of games, for the interface */
+
+/* 0x004d8ba0 (main.c): there is a game in the network */
+extern boolean unknown_004d8ba0;
+
+/* 0x00199df9: the network game is told twice of something
+(user_interface_networking_unknown_00199e2e) and then one of three things
+is done with it, by two bytes: network_life_cycle_unknown_000591e0 with the
+first and not the second, network_life_cycle_unknown_000591f0 with neither,
+and network_life_cycle_unknown_00059890 with 2 and nothing with the second.
+Whether it could */
+boolean __attribute__((stdcall)) user_interface_networking_unknown_00199df9(
+	boolean unknown0,
+	boolean unknown4)
+{
+	user_interface_networking_unknown_00199e2e(TRUE);
+	if (unknown0 && !unknown4)
+	{
+		return network_life_cycle_unknown_000591e0();
+	}
+	if (!unknown0 && !unknown4)
+	{
+		return network_life_cycle_unknown_000591f0();
+	}
+
+	return network_life_cycle_unknown_00059890(2, 0, 0);
+}
+
+/* one of the list of games, the one of the number of 0x49C8 of the session
+of the network game; NULL if there is none. The game has this in each
+function that uses it */
+static inline __attribute__((always_inline)) struct network_hopper *user_interface_networking_hopper(
+	void)
+{
+	long index= network_life_cycle_session_get_unknown49C8();
+
+	return index!=NONE ? network_hoppers_get(index) : NULL;
+}
+
+/* 0x0019a0c5: whether the one of the list of games of the network game is
+of the second, fourth or fifth kind; FALSE if there is none */
+boolean user_interface_networking_hopper_unknown_00193470(
+	void)
+{
+	struct network_hopper *hopper= user_interface_networking_hopper();
+
+	return hopper ? network_hopper_unknown_00193470(hopper) : FALSE;
+}
+
+/* 0x0019a0e6: whether it is of the first or third kind */
+boolean user_interface_networking_hopper_unknown_00193490(
+	void)
+{
+	struct network_hopper *hopper= user_interface_networking_hopper();
+
+	return hopper ? network_hopper_unknown_00193490(hopper) : FALSE;
+}
+
+/* 0x0019a107: whether it is of the fifth kind */
+boolean user_interface_networking_hopper_is_type5(
+	void)
+{
+	struct network_hopper *hopper= user_interface_networking_hopper();
+
+	return hopper ? hopper->type==_network_hopper_type5 : FALSE;
+}
+
+/* 0x0019a127: whether it is of the third, fourth or fifth kind */
+boolean user_interface_networking_hopper_unknown_001934b0(
+	void)
+{
+	struct network_hopper *hopper= user_interface_networking_hopper();
+
+	return hopper ? network_hopper_unknown_001934b0(hopper) : FALSE;
+}
+
+/* 0x0019a250: whether, with a game in the network, the network game is
+doing nothing, the first, third or fourth thing, or more than the eighth.
+FALSE with no game in the network */
+boolean user_interface_networking_unknown_0019a250(
+	void)
+{
+	long state;
+
+	if (!unknown_004d8ba0)
+	{
+		return FALSE;
+	}
+	state= network_life_cycle_get_state();
+
+	return state<=_network_life_cycle_state1 || state==_network_life_cycle_state3 ||
+		state==_network_life_cycle_state4 || state>_network_life_cycle_state8;
 }
