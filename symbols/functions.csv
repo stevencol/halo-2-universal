@@ -3267,3 +3267,7 @@ address,name,source,arguments,returns,convention
 000749b0,online_statistics_set,source/networking/online_statistics.c,eax edx esi ecx,void
 00074a00,online_statistics_add,source/networking/online_statistics.c,eax ecx edx stack,void,stdcall
 00074a60,online_statistics_set_maximum,source/networking/online_statistics.c,eax ecx edx esi,void
+00072d30,network_life_cycle_unknown_00072d30,source/networking/network_life_cycle.c,,void
+00072df0,network_life_cycle_unknown_00072df0,source/networking/network_life_cycle.c,ebx,void
+00073310,network_life_cycle_unknown_00073310,source/networking/network_life_cycle.c,ecx,void
+00073dc0,network_life_cycle_unknown_00073dc0,source/networking/network_life_cycle.c,stack,void,stdcall

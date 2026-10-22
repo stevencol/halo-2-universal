@@ -12,6 +12,8 @@ is a guess, and so are the names of its functions.
 
 #include "main/main_game.h"
 #include "networking/network_session.h"
+#include "networking/online_tasks.h"
+#include "networking/transport_security.h"
 
 #include <string.h>
 
@@ -116,6 +118,15 @@ are set before some things are done */
 long unknown_00510518;
 boolean unknown_0051051c;
 boolean unknown_0051051d;
+
+/* 0x00477088: a byte that is cleared with the tasks of unknown_0047708c and
+unknown_0047712c */
+boolean unknown_00477088;
+
+/* 0x00510514, 0x00510530: a number that is kept when unknown_00510518 is
+cleared, and a task (NONE if none) */
+long unknown_00510514;
+long unknown_00510530;
 
 /* ---------- code */
 
@@ -1559,4 +1570,90 @@ boolean network_life_cycle_unknown_00071f80(
 	*(long *)(something+0x978)= 2;
 
 	return TRUE;
+}
+
+/* the two tasks of something like unknown_0047708c (at 0xC and 0x14, NONE if
+none) are done with, and its byte at 8 is cleared: the game has this in the
+two functions that follow */
+static inline __attribute__((always_inline)) void network_life_cycle_close_tasks(
+	byte *something)
+{
+	long task= *(const long *)(something+0xC);
+
+	if (task!=NONE)
+	{
+		online_task_close(task);
+		*(long *)(something+0xC)= NONE;
+	}
+	task= *(const long *)(something+0x14);
+	if (task!=NONE)
+	{
+		online_task_close(task);
+		*(long *)(something+0x14)= NONE;
+	}
+	something[8]= FALSE;
+}
+
+/* 0x00072d30: the tasks of unknown_0047708c and unknown_0047712c are done
+with, and unknown_00477088 is cleared */
+void network_life_cycle_unknown_00072d30(
+	void)
+{
+	network_life_cycle_close_tasks(unknown_0047708c);
+	network_life_cycle_close_tasks(unknown_0047712c);
+	unknown_00477088= FALSE;
+}
+
+/* 0x00073310: the tasks of something like unknown_0047708c are done with */
+void network_life_cycle_unknown_00073310(
+	byte *something)
+{
+	network_life_cycle_close_tasks(something);
+}
+
+/* 0x00072df0: if the byte at 0xA of something like unknown_0047708c says
+so, its task at 0x14 is done with, the key that its number at 0x2C says is
+let go of (as transport_security_set_key does), and the byte is cleared */
+void network_life_cycle_unknown_00072df0(
+	byte *something)
+{
+	long task;
+	struct network_session_key *key;
+
+	if (!something[0xA])
+	{
+		return;
+	}
+	task= *(const long *)(something+0x14);
+	if (task!=NONE)
+	{
+		online_task_close(task);
+		*(long *)(something+0x14)= NONE;
+	}
+	key= &unknown_004cf7d4[*(const long *)(something+0x2C)];
+	if (key->valid)
+	{
+		XNetUnregisterKey(key->identifier);
+		key->valid= FALSE;
+	}
+	something[0xA]= FALSE;
+}
+
+/* 0x00073dc0: if unknown_00510518 is not 0, the task of unknown_00510530 is
+done with, unknown_00510518 is cleared and what it is given is kept in
+unknown_00510514 */
+void __attribute__((stdcall)) network_life_cycle_unknown_00073dc0(
+	long unknown)
+{
+	if (!unknown_00510518)
+	{
+		return;
+	}
+	if (unknown_00510530!=NONE)
+	{
+		online_task_close(unknown_00510530);
+		unknown_00510530= NONE;
+	}
+	unknown_00510518= 0;
+	unknown_00510514= unknown;
 }

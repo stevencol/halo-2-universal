@@ -669,3 +669,6 @@ address,name,source
 00509470,unknown_00509470,source/networking/online_statistics.c
 0046722c,unknown_0046722c,source/networking/online_statistics.c
 004ce7b4,unknown_004ce7b4,source/networking/online_statistics.c
+00477088,unknown_00477088,source/networking/network_life_cycle.c
+00510514,unknown_00510514,source/networking/network_life_cycle.c
+00510530,unknown_00510530,source/networking/network_life_cycle.c

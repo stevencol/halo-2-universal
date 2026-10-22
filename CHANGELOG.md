@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cuatro funciones del ciclo de vida de la partida en red que terminan tareas
+
+Cuatro funciones (289 bytes) en un archivo. De 2733
+funciones se pasa a 2737, el 24,30 % de las del juego (el 12,417 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_life_cycle_unknown_00072d30` | `0x00072d30` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_00072df0` | `0x00072df0` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_00073310` | `0x00073310` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_00073dc0` | `0x00073dc0` | `networking/network_life_cycle.c` |
+
+### Lo que se sabe
+
+- Las dos cosas que trabajan cada fotograma (`unknown_0047708c` y
+  `unknown_0047712c`, de `0xA0` bytes) tienen dos tareas en línea, en
+  `0xC` y `0x14`, y un byte en 8. `network_life_cycle_unknown_00073310`
+  termina las de una (`online_task_close`) y
+  `network_life_cycle_unknown_00072d30`, las de las dos.
+- `network_life_cycle_unknown_00072df0` termina la tarea de `0x14` de una
+  de ellas y suelta la clave de red que dice su número de `0x2C`
+  (`XNetUnregisterKey`), si su byte de `0xA` lo pide.
+- `network_life_cycle_unknown_00073dc0` termina la tarea de
+  `unknown_00510530`, borra `unknown_00510518` y guarda lo que recibe.
+- Variables nuevas: `unknown_00477088`, `unknown_00510514`,
+  `unknown_00510530`.
+
+### Sin comprobar
+
+- Romper líneas de este hito: hecho, `tests\mutations_745.py`, 14
+  mutaciones; ninguna sobrevive. Sigue pendiente en las de los hitos 456 a
+  490 y 501 a 737.
+- Los nombres son suposiciones.
+- En este hito se pasaron las pruebas de las cuatro funciones.
+
 ## 2026-10-22 — Cinco funciones de los números que la partida en red guarda de sus jugadores
 
 Cinco funciones (394 bytes) en un archivo nuevo. De 2728
