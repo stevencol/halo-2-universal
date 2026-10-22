@@ -3301,3 +3301,6 @@ address,name,source,arguments,returns,convention
 00091b90,network_team_balance_improve,source/networking/network_team_balance.c,eax edx,bool
 00091bd0,network_team_balance_improvement_try_swaps,source/networking/network_team_balance.c,ecx edx stack,void,stdcall
 00091dd0,network_team_balance_improvement_pass,source/networking/network_team_balance.c,ebx,bool
+00091e30,network_team_balance_assign_difference,source/networking/network_team_balance.c,eax edx stack stack stack stack stack stack stack,bool,stdcall
+00091f00,network_team_balance_fits,source/networking/network_team_balance.c,eax edx ecx stack stack stack stack stack stack stack,bool,stdcall
+00091fc0,network_team_balance_assign,source/networking/network_team_balance.c,stack stack stack stack stack stack stack stack stack stack stack,bool,stdcall

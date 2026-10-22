@@ -2,6 +2,56 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Tres funciones de los equipos parejos: poner a los jugadores en equipos
+
+Tres funciones (985 bytes) en un archivo. De 2444
+funciones se pasa a 2447, el 21,72 % de las del juego (el 12,568 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_team_balance_assign_difference` | `0x00091e30` | `networking/network_team_balance.c` |
+| `network_team_balance_fits` | `0x00091f00` | `networking/network_team_balance.c` |
+| `network_team_balance_assign` | `0x00091fc0` | `networking/network_team_balance.c` |
+
+### Lo que se sabe
+
+- `network_team_balance_assign` es lo que usa todo lo de los hitos 749 a
+  752: recibe cuántos equipos, cuántos jugadores caben en cada uno, el
+  grupo y el número de cada jugador, si los grupos de tantos jugadores (de
+  un mínimo a un máximo) se marcan (`unknown0`: solo se cambian entre sí
+  los grupos con la misma marca) y si se buscan cambios; da el equipo de
+  cada jugador, o `FALSE` si no caben. Tiene más de 30 KB de variables (el
+  juego usa `_alloca_probe`).
+- `network_team_balance_assign_difference` lo hace con todos los números a
+  0 y sin cambios, y da cuántos jugadores más tiene el equipo más grande
+  que el más pequeño. `network_team_balance_fits` mete además a los
+  jugadores sin grupo en un grupo para ellos y dice si caben: lo que falta
+  para llenar los equipos no cuenta en esa diferencia (así siempre queda en
+  0 si caben, salvo que la cuenta del sitio dé la vuelta).
+- Ninguna variable nueva.
+
+### Corregido
+
+- `network_team_balance_distribute` (`0x00091a30`, hito 751) devuelve en
+  `al` si vale, y quien la llama lo mira; su fila decía `void`. Ahora es
+  `bool` y el C lo devuelve (commit aparte, con una mutación más en
+  `tests\mutations_751.py`).
+
+### Sin comprobar
+
+- Romper líneas de este hito: hecho, `tests\mutations_753.py`, 16
+  mutaciones; ninguna sobrevive. Tres sobrevivían y se añadieron casos: los
+  grupos marcados justo con el mínimo, todos los jugadores con grupo en el
+  primero y tantos equipos y sitio que la cuenta da la vuelta. Se quitó la
+  de empezar la suma de los números de cada grupo en 1: solo se compara
+  entre grupos y todos tendrían lo mismo de más, así que no se puede notar.
+  Sigue pendiente en las de los hitos 456 a 490 y 501 a 737.
+- Los nombres son suposiciones. Quedan sin ver los que llaman a esto
+  (`0x00071730`, de la partida en red).
+- En este hito se pasaron las pruebas de las tres funciones.
+
 ## 2026-10-22 — Tres funciones de los equipos parejos: cambiar grupos entre equipos hasta que no haya nada mejor
 
 Tres funciones (652 bytes) en un archivo. De 2441

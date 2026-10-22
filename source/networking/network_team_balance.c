@@ -606,3 +606,193 @@ boolean network_team_balance_improvement_pass(
 
 	return improvement->improved;
 }
+
+boolean __attribute__((stdcall)) network_team_balance_assign(long team_count, long maximum_players,
+	boolean mark_groups, long minimum_group_players, long maximum_group_players, boolean grouped,
+	long player_count, const long *player_groups, const long *player_skills, boolean improve,
+	long *player_teams);
+
+/* 0x00091e30: the players are put in teams as network_team_balance_assign
+does, all with the number 0 and with no swaps; how many more players the
+largest team has than the smallest is given. FALSE if they cannot be put */
+boolean __attribute__((stdcall)) network_team_balance_assign_difference(
+	long player_count,
+	const long *player_groups,
+	long team_count,
+	long maximum_players,
+	boolean mark_groups,
+	long minimum_group_players,
+	long maximum_group_players,
+	boolean grouped,
+	long *difference)
+{
+	long counts[MAXIMUM_NETWORK_TEAM_BALANCE_GROUP_PLAYERS];
+	long player_teams[MAXIMUM_NETWORK_TEAM_BALANCE_GROUP_PLAYERS];
+	boolean assigned;
+
+	memset(counts, 0, sizeof(counts));
+	assigned= network_team_balance_assign(team_count, maximum_players, mark_groups, minimum_group_players,
+		maximum_group_players, grouped, player_count, player_groups, counts, FALSE, player_teams);
+	if (assigned)
+	{
+		long highest;
+		long lowest;
+		long index;
+
+		memset(counts, 0, sizeof(counts));
+		for (index= 0; index<player_count; index++)
+		{
+			counts[player_teams[index]]++;
+		}
+		highest= counts[0];
+		lowest= highest;
+		for (index= 1; index<team_count; index++)
+		{
+			if (lowest>counts[index])
+			{
+				lowest= counts[index];
+			}
+			if (highest<=counts[index])
+			{
+				highest= counts[index];
+			}
+		}
+		*difference= highest-lowest;
+	}
+
+	return assigned;
+}
+
+/* 0x00091f00: whether some players fit in so many teams: those with a group
+(from 0) and the others, all in a group after those. The players that the
+teams are short of do not count against the difference in players, which
+has to be no more than the one that is given */
+boolean __attribute__((stdcall)) network_team_balance_fits(
+	long grouped_player_count,
+	long other_player_count,
+	const long *player_groups,
+	long team_count,
+	long maximum_players,
+	boolean mark_groups,
+	long minimum_group_players,
+	long maximum_group_players,
+	boolean grouped,
+	long maximum_difference)
+{
+	long groups[MAXIMUM_NETWORK_TEAM_BALANCE_GROUP_PLAYERS];
+	long player_count= grouped_player_count+other_player_count;
+	long missing= (long)((unsigned long)team_count*(unsigned long)maximum_players-(unsigned long)player_count);
+	long group_count= 0;
+	long difference= NONE;
+	long index;
+
+	for (index= 0; index<grouped_player_count; index++)
+	{
+		long group= player_groups[index];
+
+		if (group_count<=group+1)
+		{
+			group_count= group+1;
+		}
+		groups[index]= group;
+	}
+	for (index= grouped_player_count; index<player_count; index++)
+	{
+		groups[index]= group_count;
+	}
+	if (!network_team_balance_assign_difference(player_count, groups, team_count, maximum_players, mark_groups,
+		minimum_group_players, maximum_group_players, grouped, &difference))
+	{
+		return FALSE;
+	}
+	difference= (long)((unsigned long)difference-(unsigned long)missing);
+	if (difference<0)
+	{
+		difference= 0;
+	}
+
+	return difference<=maximum_difference;
+}
+
+/* 0x00091fc0: so many players, each with its number and (if they are
+grouped) its group, are put in teams: the groups are distributed and, if
+asked, swaps make the teams better. The groups with so many players (from
+the fewest to the most that are given) have unknown0, if asked; only
+groups with the same unknown0 are swapped. The team of each player is
+given. FALSE if the players do not fit */
+boolean __attribute__((stdcall)) network_team_balance_assign(
+	long team_count,
+	long maximum_players,
+	boolean mark_groups,
+	long minimum_group_players,
+	long maximum_group_players,
+	boolean grouped,
+	long player_count,
+	const long *player_groups,
+	const long *player_skills,
+	boolean improve,
+	long *player_teams)
+{
+	struct network_team_balance_group groups[MAXIMUM_NETWORK_TEAM_BALANCE_GROUPS];
+	struct network_team_balance_team team;
+	struct network_team_balance balance;
+	struct network_team_balance_improvement improvement;
+	const struct network_team_balance_teams *teams;
+	long index;
+
+	for (index= 0; index<MAXIMUM_NETWORK_TEAM_BALANCE_GROUPS; index++)
+	{
+		array_construct_elements(groups[index].players, sizeof(groups[index].players[0]), MAXIMUM_NETWORK_TEAM_BALANCE_GROUP_PLAYERS,
+			network_team_balance_player_construct);
+		groups[index].player_count= 0;
+		groups[index].skill_total= 0;
+		groups[index].unknown0= FALSE;
+		groups[index].identifier= NONE;
+	}
+	for (index= 0; index<player_count; index++)
+	{
+		struct network_team_balance_player player;
+
+		player.skill= player_skills[index];
+		player.identifier= index;
+		network_team_balance_group_add_player(&groups[grouped ? player_groups[index] : index], &player);
+	}
+	network_team_balance_team_construct(&team);
+	for (index= 0; index<MAXIMUM_NETWORK_TEAM_BALANCE_GROUPS; index++)
+	{
+		struct network_team_balance_group *group= &groups[index];
+
+		if (group->player_count>0)
+		{
+			group->identifier= index;
+			if (mark_groups && group->player_count>=minimum_group_players && group->player_count<=maximum_group_players)
+			{
+				group->unknown0= TRUE;
+			}
+			network_team_balance_team_add_group(&team, group);
+		}
+	}
+	network_team_balance_construct(&balance);
+	if (!network_team_balance_distribute(&balance, team_count, &team, maximum_players))
+	{
+		return FALSE;
+	}
+	network_team_balance_improvement_construct(&improvement);
+	teams= &balance.teams;
+	if (improve && network_team_balance_improve(&improvement, &balance.teams))
+	{
+		teams= &improvement.teams;
+	}
+	for (index= 0; index<teams->team_count; index++)
+	{
+		const struct network_team_balance_group *total= &teams->teams[index].total;
+		long player_index;
+
+		for (player_index= 0; player_index<total->player_count; player_index++)
+		{
+			player_teams[total->players[player_index].identifier]= index;
+		}
+	}
+
+	return TRUE;
+}

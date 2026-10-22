@@ -3,18 +3,18 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-22, al terminar el hito 752.
+**Última actualización:** 2026-10-22, al terminar el hito 753.
 
 ## Dónde estamos
 
-- **2444 funciones descompiladas de 11.265: el 21,70 % del juego** (el
-  12,534 % de los bytes de código). Las 11.265 son las de la lista de
+- **2447 funciones descompiladas de 11.265: el 21,72 % del juego** (el
+  12,568 % de los bytes de código). Las 11.265 son las de la lista de
   Ghidra, y solo se cuentan las que están en ella: hay más descompiladas
-  que Ghidra no separa como funciones propias (2767 en total).
-- Las 2767 están comprobadas contra el ejecutable original: las 1390 del
+  que Ghidra no separa como funciones propias (2770 en total).
+- Las 2770 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile three functions that improve the teams of the matchmaking* (ver `git log`).
+- Último hito: *Decompile three functions that put the players of the matchmaking in teams* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 535 funciones apuntadas pero sin descompilar (las que el código
   llama); 385 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -219,14 +219,14 @@ Módulos (funciones hechas / archivo):
       (8: la suma, ver si vale, tomar y devolver su memoria, empezar a
       leerlo y a escribirlo, lo que pasa cuando la tarea acaba y su
       avance)
-- [ ] Los equipos parejos del servicio de partidas —
-      `networking\network_team_balance.c` (18: hacer los equipos,
+- [x] Los equipos parejos del servicio de partidas —
+      `networking\network_team_balance.c` (21: hacer los equipos,
       meter y sacar un jugador de un grupo y un grupo de un equipo,
       sacar el grupo más grande, repartir los grupos, dejar los
       equipos sin grupos, cuánto se separan (en total y puesto a
       puesto), cuál es el más pequeño y cambiar grupos entre equipos
-      hasta que no haya nada mejor; de `0x00091540` a `0x00091e2c`;
-      quedan `0x00091e30`, `0x00091f00` y `0x00091fc0`, que lo usan)
+      hasta que no haya nada mejor, y ponerlos en equipos; de
+      `0x00091530` a `0x0009221b`, completo)
 - [x] El almacén del servicio de partidas — `networking\online_storage.c`
       (7: el nombre, empezar a escribir y a leer, de memoria o de archivo,
       el resultado de leer y el avance)
