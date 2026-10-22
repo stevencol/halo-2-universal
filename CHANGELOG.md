@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Seis funciones pequeñas de la sesión de red y de su ciclo de vida
+
+Seis funciones (444 bytes) en dos archivos. De 2718
+funciones se pasa a 2724, el 24,18 % de las del juego (el 12,383 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_unknown_0006de50` | `0x0006de50` | `networking/network_session.c` |
+| `network_session_time_since_start` | `0x00070160` | `networking/network_session.c` |
+| `network_life_cycle_unknown_0006f090` | `0x0006f090` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_0006f1a0` | `0x0006f1a0` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_00070c50` | `0x00070c50` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_00070d20` | `0x00070d20` | `networking/network_life_cycle.c` |
+
+### Lo que se sabe
+
+- `network_session_time_since_start` da los milisegundos desde que empezó
+  una sesión (`0x4984`), con la hora que guarda la red si la está
+  guardando (`unknown_00510548`) o la de la consola si no.
+- `network_session_unknown_0006de50` y `network_life_cycle_unknown_0006f090`
+  preparan dos cosas que crea la inicialización de la red (`0x00058ee0`):
+  ponen a cero lo suyo y les dan sus números. La segunda y lo que recibe
+  quedan apuntándose la una a la otra.
+- `network_life_cycle_unknown_0006f1a0` pone `0xF` o `0xE` en el número de
+  `0x104` según el estado de lo que tiene en 8 y el de su sesión (si no
+  está entre el cuarto y el noveno, o si su consola no es la que hace de
+  anfitrión).
+- `network_life_cycle_unknown_00070c50` y `network_life_cycle_unknown_00070d20`
+  paran dos cronómetros (`0x00070c00` arranca el primero) y, si se les
+  pide, suman el tiempo y cuentan una vez más.
+- Ninguna variable nueva. Se quitó un prototipo suelto de
+  `online_tasks.c` que había quedado sin guardar (para `0x00070160`, con
+  otros argumentos).
+
+### Sin comprobar
+
+- Romper líneas de este hito: hecho, `tests\mutations_742.py`, 15
+  mutaciones; ninguna sobrevive. Sigue pendiente en las de los hitos 456 a
+  490 y 501 a 737.
+- Los nombres son suposiciones, salvo el de
+  `network_session_time_since_start`, y los archivos también.
+- En este hito se pasaron las pruebas de las seis funciones.
+
 ## 2026-10-18 — Ocho funciones pequeñas de la sesión de red, los blobs y los jugadores
 
 Ocho funciones (385 bytes) en cinco archivos. De 2710

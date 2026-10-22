@@ -47,7 +47,15 @@ long network_life_cycle_session_get_unknown49C8(void);
 byte *network_hoppers_get(long unknown);
 boolean network_hopper_unknown_00193470(byte *unknown);
 
+/* the time of the console, in milliseconds */
+long GetTickCount(void);
+
 /* ---------- globals */
+
+/* 0x00510548, 0x0051054c (main.c): whether the network keeps a time of its
+own, and that time */
+extern boolean unknown_00510548;
+extern long unknown_0051054c;
 
 /* 0x00527364, 0x0052736c: the two sessions of the network game */
 byte *network_life_cycle_session;
@@ -102,6 +110,14 @@ boolean unknown_0051051c;
 boolean unknown_0051051d;
 
 /* ---------- code */
+
+/* the time in milliseconds: the one that main.c kept, if it says so. The
+game has this in each function that uses it */
+static inline __attribute__((always_inline)) long network_life_cycle_time(
+	void)
+{
+	return unknown_00510548 ? unknown_0051054c : GetTickCount();
+}
 
 /* 0x00059260 */
 boolean network_life_cycle_in_state5(
@@ -1335,4 +1351,98 @@ boolean network_life_cycle_unknown_00072140(
 	}
 
 	return all;
+}
+
+/* 0x0006f090: something is made ready, for what it is given: each points to
+the other (at 8 of it and at 0x18 of what it is given). Its number at 4 is 5,
+at 0x104 0x10, at 0xF0 and 0xF4 NONE, and the rest that it has is 0 */
+void network_life_cycle_unknown_0006f090(
+	byte *something,
+	byte *manager)
+{
+	*(byte **)(something+8)= manager;
+	*(long *)(something+4)= 5;
+	something[0xD]= TRUE;
+	something[0xC]= FALSE;
+	*(byte **)(manager+0x18)= something;
+	*(long *)(something+0x104)= 0x10;
+	*(long *)(something+0xF0)= NONE;
+	*(long *)(something+0xF4)= NONE;
+	something[0x68]= FALSE;
+	something[0x10]= FALSE;
+	something[0x11]= FALSE;
+	something[0xF8]= FALSE;
+	*(long *)(something+0xE4)= 0;
+	something[0xE8]= FALSE;
+	something[0xF9]= FALSE;
+	something[0xE9]= FALSE;
+	*(long *)(something+0xEC)= 0;
+}
+
+/* 0x0006f1a0: the number of something at 0x104 is 0xF if what it has at 8
+is not in its first, second, fifth or tenth state; and, if it is still 0,
+0xE if the session that that has at 0x30 has a state that is not from the
+fourth to the ninth, or its own console is not the host */
+void network_life_cycle_unknown_0006f1a0(
+	byte *something)
+{
+	const byte *manager= *(byte *const *)(something+8);
+	long manager_state= *(const long *)manager;
+	const byte *session= *(byte *const *)(manager+0x30);
+	long state;
+
+	if (manager_state!=1 && manager_state!=0 && manager_state!=4 && manager_state!=9)
+	{
+		*(long *)(something+0x104)= 0xF;
+	}
+	if (*(const long *)(something+0x104)!=0)
+	{
+		return;
+	}
+	state= *(const long *)(session+NETWORK_SESSION_STATE_OFFSET);
+	if (state==_network_session_state_none)
+	{
+		return;
+	}
+	if (state<_network_session_state3 || state>_network_session_state8 ||
+		*(const long *)(session+NETWORK_SESSION_LOCAL_PEER_OFFSET)!=
+		*(const long *)(session+NETWORK_SESSION_HOST_PEER_OFFSET))
+	{
+		*(long *)(something+0x104)= 0xE;
+	}
+}
+
+/* 0x00070c50: a time that something measures stops (its byte at 0xA78); if
+it is told to, the time since it started (at 0xA7C) is added to the total
+at 0xA94, and the count at 0xA90 goes up */
+void network_life_cycle_unknown_00070c50(
+	boolean count,
+	byte *something)
+{
+	if (count)
+	{
+		long start= *(const long *)(something+0xA7C);
+		long now= network_life_cycle_time();
+
+		(*(long *)(something+0xA90))++;
+		*(long *)(something+0xA94)+= now-start;
+	}
+	something[0xA78]= FALSE;
+}
+
+/* 0x00070d20: the same with another time: it stops at 0xA64, started at
+0xA68, and its count and total are at 0xA84 and 0xA88 */
+void network_life_cycle_unknown_00070d20(
+	boolean count,
+	byte *something)
+{
+	if (count)
+	{
+		long start= *(const long *)(something+0xA68);
+		long now= network_life_cycle_time();
+
+		(*(long *)(something+0xA84))++;
+		*(long *)(something+0xA88)+= now-start;
+	}
+	something[0xA64]= FALSE;
 }

@@ -3252,3 +3252,9 @@ address,name,source,arguments,returns,convention
 0008b830,simulation_player_unknown_0008b830,source/networking/simulation_player.c,eax edx stack,void,stdcall
 0008eeb0,network_blob_task_unknown_0008eeb0,source/networking/network_blob_task.c,eax,void
 0008ef60,network_blob_task_unknown_0008ef60,source/networking/network_blob_task.c,eax ecx edx stack,void,stdcall
+0006de50,network_session_unknown_0006de50,source/networking/network_session.c,eax stack stack stack stack stack stack stack,void,stdcall
+00070160,network_session_time_since_start,source/networking/network_session.c,eax,int
+0006f090,network_life_cycle_unknown_0006f090,source/networking/network_life_cycle.c,eax edx,void
+0006f1a0,network_life_cycle_unknown_0006f1a0,source/networking/network_life_cycle.c,edx,void
+00070c50,network_life_cycle_unknown_00070c50,source/networking/network_life_cycle.c,eax esi,void
+00070d20,network_life_cycle_unknown_00070d20,source/networking/network_life_cycle.c,eax esi,void

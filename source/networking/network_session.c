@@ -7872,3 +7872,39 @@ void __attribute__((stdcall)) network_session_unknown_0006df60(
 		memcpy(something+0x54, data, size);
 	}
 }
+
+/* 0x0006de50: something is made ready: its number at 0 and the ten at 4 are
+0, it is given seven numbers (at 0x40, 0x44 and from 0x2C to 0x3C), and its
+bytes at 0x48, 0x49 and 0x4A are FALSE */
+void __attribute__((stdcall)) network_session_unknown_0006de50(
+	byte *something,
+	long unknown40,
+	long unknown44,
+	long unknown2C,
+	long unknown30,
+	long unknown34,
+	long unknown38,
+	long unknown3C)
+{
+	memset(something+4, 0, 10*sizeof(long));
+	*(long *)(something+0x40)= unknown40;
+	*(long *)(something+0x44)= unknown44;
+	*(long *)(something+0x2C)= unknown2C;
+	*(long *)(something+0x30)= unknown30;
+	*(long *)(something+0x34)= unknown34;
+	*(long *)(something+0x38)= unknown38;
+	*(long *)something= 0;
+	*(long *)(something+0x3C)= unknown3C;
+	something[0x49]= FALSE;
+	something[0x48]= FALSE;
+	something[0x4A]= FALSE;
+}
+
+/* 0x00070160: the milliseconds since the session started */
+long network_session_time_since_start(
+	const byte *session)
+{
+	long start= *(const long *)(session+NETWORK_SESSION_START_TIME_OFFSET);
+
+	return network_session_time()-start;
+}
