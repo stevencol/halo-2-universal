@@ -3280,3 +3280,6 @@ address,name,source,arguments,returns,convention
 0007f930,network_recent_players_initialize,source/networking/network_recent_players.c,,void
 0007fc80,network_recent_players_find,source/networking/network_recent_players.c,stack stack,int,stdcall
 000805e0,network_recent_players_iterate_second,source/networking/network_recent_players.c,eax stack,bool,stdcall
+00087c00,simulation_write_unknown_00087c00,source/networking/simulation_encoding.c,ebx stack,void,stdcall
+00087c80,simulation_read_unknown_00087c80,source/networking/simulation_encoding.c,eax stack,bool,stdcall
+0008ffc0,online_task_failed,source/networking/online_tasks.c,eax,bool

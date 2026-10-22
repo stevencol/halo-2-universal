@@ -1676,3 +1676,15 @@ void online_users_start_unknown_00479750(
 		index= user_interface_controller_next(index);
 	} while (index!=NONE);
 }
+
+/* 0x0008ffc0: whether a task went wrong: it goes on once more
+(online_task_continue, with no task if it is not there any more) and it
+says an error that is not ONLINE_TASK_UNKNOWN80155100 */
+boolean online_task_failed(
+	long index)
+{
+	struct online_task *task= (struct online_task *)datum_try_and_get(online_tasks, index);
+	long result= online_task_continue(task);
+
+	return result<0 && result!=(long)ONLINE_TASK_UNKNOWN80155100;
+}

@@ -325,3 +325,58 @@ boolean __attribute__((stdcall)) simulation_unknown68_get(
 
 	return TRUE;
 }
+
+/* 0x00087c00: sixteen things of six bytes (what is there of each says a
+mask of 16 bits, first of the 0x64 bytes): the mask is written, and each that
+is there. A mask that does not fit has a line of text made for it, which
+nothing is done with */
+void __attribute__((stdcall)) simulation_write_unknown_00087c00(
+	const byte *data,
+	struct bitstream *stream)
+{
+	unsigned long mask= *(const unsigned long *)data;
+	long index;
+
+	if (mask>=0x10000)
+	{
+		char text[256];
+
+		text[0]= 0;
+		csprintf256(text, "%u exceeds max value of %u", mask, 0x10000);
+	}
+	bitstream_write_integer(stream, mask, 16);
+	for (index= 0; index<16; index++)
+	{
+		if (*(const unsigned long *)data&(1<<index))
+		{
+			bitstream_write_bits(stream, data+4+index*6, 0x30);
+		}
+	}
+}
+
+/* 0x00087c80: the same are read; those that are not there are zeros. FALSE
+if the stream went wrong or past its end */
+boolean __attribute__((stdcall)) simulation_read_unknown_00087c80(
+	struct bitstream *stream,
+	byte *data)
+{
+	long index;
+
+	*(unsigned long *)data= bitstream_read_integer(stream, 16);
+	for (index= 0; index<16; index++)
+	{
+		byte *thing= data+4+index*6;
+
+		if (*(const unsigned long *)data&(1<<index))
+		{
+			bitstream_read_bits(stream, thing, 0x30);
+		}
+		else
+		{
+			*(long *)thing= 0;
+			*(short *)(thing+4)= 0;
+		}
+	}
+
+	return !stream->error && stream->position<=(long)((unsigned long)stream->size<<3);
+}

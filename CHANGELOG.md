@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Tres funciones pequeñas: dieciséis cosas de seis bytes en un flujo de bits, y si una tarea en línea falló
+
+Tres funciones (314 bytes) en dos archivos. De 2746
+funciones se pasa a 2749, el 24,40 % de las del juego (el 12,463 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_write_unknown_00087c00` | `0x00087c00` | `networking/simulation_encoding.c` |
+| `simulation_read_unknown_00087c80` | `0x00087c80` | `networking/simulation_encoding.c` |
+| `online_task_failed` | `0x0008ffc0` | `networking/online_tasks.c` |
+
+### Lo que se sabe
+
+- `simulation_write_unknown_00087c00` escribe una máscara de 16 bits y,
+  por cada bit puesto, seis bytes (podrían ser una dirección y un
+  puerto). Si la máscara no cabe, hace el texto de aviso «%u exceeds max
+  value of %u», que no se usa. `simulation_read_unknown_00087c80` lo lee,
+  pone a cero los que no están y dice si el flujo se leyó bien (sin error
+  y sin pasarse del final).
+- `online_task_failed` hace avanzar una tarea en línea una vez más
+  (`online_task_continue`, con `NULL` si la tarea ya no existe) y dice si
+  dio un error que no sea `0x80155100` (`ONLINE_TASK_UNKNOWN80155100`,
+  nuevo en `online_tasks.h`).
+- Ninguna variable nueva.
+
+### Sin comprobar
+
+- Romper líneas de este hito: hecho, `tests\mutations_748.py`, 12
+  mutaciones; ninguna sobrevive (una sobrevivía y se añadió un caso que
+  termina justo al final del flujo). Sigue pendiente en las de los hitos
+  456 a 490 y 501 a 737.
+- Los nombres son suposiciones, y qué son esos seis bytes también.
+- En este hito se pasaron las pruebas de las tres funciones.
+
 ## 2026-10-22 — Tres funciones más de la tabla de jugadores en dos listas
 
 Tres funciones (518 bytes) en un archivo. De 2743

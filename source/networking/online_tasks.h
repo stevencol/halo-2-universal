@@ -55,6 +55,8 @@ enum
 	is no such task, and no one is signed in */
 	ONLINE_TASK_NOT_THERE= 0x80004005,
 	ONLINE_TASK_NOT_SIGNED_IN= 0x80151000,
+	/* an error that online_task_failed does not count */
+	ONLINE_TASK_UNKNOWN80155100= 0x80155100,
 	/* what signing in is at: going on, done (_online_session_signed_in), and
 	the ways that it ends in when it could not be */
 	_online_logon_state_going= 0,
