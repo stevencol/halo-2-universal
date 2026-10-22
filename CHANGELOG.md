@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cuatro funciones pequeñas de la lista de partidas del servicio: los números por jugadores, su archivo y buscar una
+
+Cuatro funciones (389 bytes) en un archivo. De 2467
+funciones se pasa a 2471, el 21,94 % de las del juego (el 12,642 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_hopper_make_players_values` | `0x001939f0` | `networking/network_hoppers.c` |
+| `network_hopper_make_team_values` | `0x00193a50` | `networking/network_hoppers.c` |
+| `network_hoppers_get_file` | `0x00193fa0` | `networking/network_hoppers.c` |
+| `network_hoppers_find_unknown8` | `0x00075790` | `networking/network_hoppers.c` |
+
+### Lo que se sabe
+
+- `network_hopper_make_players_values` y `network_hopper_make_team_values`
+  llenan los dieciséis números de cada número de jugadores (como los que lee
+  `network_hopper_get_players_value`): un número muy grande para lo que no
+  se toma, nada para el máximo y, en medio, una parte de un número que baja
+  con más jugadores (o con más equipos enteros).
+- `network_hoppers_get_file` da el archivo de la lista en el disco duro,
+  `n:\multiplayer_hopper.dat`, como `network_motd_get_file`. Variable nueva:
+  `network_hoppers_file_name` (`0x0046dd5c`).
+- `network_hoppers_find_unknown8` busca la primera buena de la lista con un
+  número de 8. Está en `0x00075790`, lejos de las demás, pero solo usa la
+  lista.
+
+### Sin comprobar
+
+- Las pruebas (`tests\test_small_758.py`) y las mutaciones
+  (`tests\mutations_758.py`, 10) están escritas pero no se pasaron en este
+  hito: las pasa el usuario. Solo se comprobó que el C compila y
+  `check_milestone.py` sin `--run`.
+- Los nombres son suposiciones.
+
 ## 2026-10-22 — Seis funciones pequeñas de la lista de partidas del servicio: si está, si se lee, y el nombre y el texto de cada una
 
 Seis funciones (449 bytes) en un archivo. De 2461

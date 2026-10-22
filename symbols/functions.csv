@@ -3324,3 +3324,7 @@ address,name,source,arguments,returns,convention
 00194540,network_hoppers_get_description,source/networking/network_hoppers.c,eax stack,bool,stdcall
 001945c0,network_hoppers_get_unknown5E4,source/networking/network_hoppers.c,eax,int
 00194610,network_hoppers_get_unknown5E8,source/networking/network_hoppers.c,eax,bool
+001939f0,network_hopper_make_players_values,source/networking/network_hoppers.c,eax stack stack stack,void,stdcall
+00193a50,network_hopper_make_team_values,source/networking/network_hoppers.c,eax ebx esi stack stack,void,stdcall
+00193fa0,network_hoppers_get_file,source/networking/network_hoppers.c,stack,void,stdcall
+00075790,network_hoppers_find_unknown8,source/networking/network_hoppers.c,stack stack,bool,stdcall

@@ -684,3 +684,4 @@ address,name,source
 004cf974,unknown_004cf974,source/networking/network_recent_players.c
 004cf978,unknown_004cf978,source/networking/network_recent_players.c
 004ce394,unknown_004ce394,source/networking/network_search.c
+0046dd5c,network_hoppers_file_name,source/networking/network_hoppers.c

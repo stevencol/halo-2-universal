@@ -12,7 +12,10 @@ fills. The names are guesses.
 
 #include "cache/cache_files.h"
 #include "networking/network_blob.h"
+#include "tag_files/files.h"
 #include "text/unicode.h"
+
+#include <string.h>
 
 /* ---------- prototypes */
 
@@ -601,4 +604,119 @@ boolean network_hoppers_get_unknown5E8(
 	}
 
 	return FALSE;
+}
+
+/* ---------- the numbers for each number of players, the file and one by
+its number */
+
+/* 0x0046dd5c: the name of the file of the list, on the hard disk */
+const char *network_hoppers_file_name= "multiplayer_hopper.dat";
+
+/* 0x001939f0: the numbers of a list for each number of players from 1 to
+16 that do not go by teams: a very big number for what it does not take,
+nothing for the most that it takes, and in between a part of a number,
+less for more players */
+void __attribute__((stdcall)) network_hopper_make_players_values(
+	long scale,
+	long minimum_players,
+	long maximum_players,
+	long *values)
+{
+	unsigned long numerator= (unsigned long)(maximum_players-1)*(unsigned long)scale;
+	long player_count;
+
+	for (player_count= 1; player_count<=NETWORK_HOPPER_MAXIMUM_PLAYERS; player_count++)
+	{
+		long value;
+
+		if (player_count<minimum_players || player_count>maximum_players)
+		{
+			value= NETWORK_HOPPER_PLAYERS_VALUE_NONE;
+		}
+		else if (player_count==maximum_players)
+		{
+			value= 0;
+		}
+		else
+		{
+			value= (long)numerator/(maximum_players-minimum_players);
+		}
+		values[player_count-1]= value;
+		numerator-= (unsigned long)scale;
+	}
+}
+
+/* 0x00193a50: the same for one that goes by teams: from the fewest teams by
+the players of a team to the most, the part goes by how many whole teams
+the players make */
+void __attribute__((stdcall)) network_hopper_make_team_values(
+	long *values,
+	long team_size,
+	long maximum_teams,
+	long minimum_teams,
+	long scale)
+{
+	long maximum_players= (long)((unsigned long)team_size*(unsigned long)maximum_teams);
+	long minimum_players= (long)((unsigned long)team_size*(unsigned long)minimum_teams);
+	long player_count;
+
+	for (player_count= 1; player_count<=NETWORK_HOPPER_MAXIMUM_PLAYERS; player_count++)
+	{
+		long value;
+
+		if (player_count<minimum_players || player_count>maximum_players)
+		{
+			value= NETWORK_HOPPER_PLAYERS_VALUE_NONE;
+		}
+		else if (player_count==maximum_players)
+		{
+			value= 0;
+		}
+		else
+		{
+			value= (long)((unsigned long)(maximum_teams-player_count/team_size)*(unsigned long)scale)/
+				(maximum_teams-minimum_teams);
+		}
+		values[player_count-1]= value;
+	}
+}
+
+/* 0x00193fa0: the file of the list, on the hard disk. The game has the
+making of a file from a path written out here */
+void __attribute__((stdcall)) network_hoppers_get_file(
+	struct file_reference *file)
+{
+	memset(file, 0, sizeof(*file));
+	file->signature= FILE_REFERENCE_SIGNATURE;
+	file->location= NONE;
+	file_path_add_name(file->path, "n:\\");
+	if (file->flags&1)
+	{
+		path_remove_last_element(file->path);
+	}
+	file_path_add_name(file->path, network_hoppers_file_name);
+	file->flags|= 1;
+}
+
+/* 0x00075790: the first of the list (if there is one) that is good and has
+the number of 8 that is given; its place, and whether there is one */
+boolean __attribute__((stdcall)) network_hoppers_find_unknown8(
+	unsigned long unknown8,
+	long *index_reference)
+{
+	boolean found= FALSE;
+	long index;
+
+	for (index= 0; index<MAXIMUM_NETWORK_HOPPERS && !found; index++)
+	{
+		const struct network_hopper *hopper= &network_hoppers[index];
+
+		if (network_hoppers_available() && network_hopper_valid(hopper) && hopper->unknown8==unknown8)
+		{
+			*index_reference= index;
+			found= TRUE;
+		}
+	}
+
+	return found;
 }
