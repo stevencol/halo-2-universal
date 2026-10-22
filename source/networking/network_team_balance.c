@@ -422,8 +422,8 @@ struct network_team_balance *network_team_balance_construct(
 /* 0x00091a30: the groups of a team (what it is given has them, and its
 group of all the players) are put in so many teams: the one with the most
 players first, each in the team that has the fewest players then. It is
-good if no team ends with more players than it can have */
-void __attribute__((stdcall)) network_team_balance_distribute(
+good if no team ends with more players than it can have; whether it is */
+boolean __attribute__((stdcall)) network_team_balance_distribute(
 	struct network_team_balance *balance,
 	long team_count,
 	const struct network_team_balance_team *groups,
@@ -457,6 +457,8 @@ void __attribute__((stdcall)) network_team_balance_distribute(
 		}
 	}
 	balance->valid= most<=maximum_players;
+
+	return balance->valid;
 }
 
 /* 0x00091b30: what makes the teams better is made, with no teams in either

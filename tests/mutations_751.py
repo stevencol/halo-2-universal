@@ -19,6 +19,7 @@ MUTATIONS = [
     (BALANCE, "network_team_balance_team_add_group(&teams->teams[network_team_balance_smallest_team(teams)], &group);", "network_team_balance_team_add_group(&teams->teams[0], &group);"),
     (BALANCE, "\t\tif (most<=player_count)", "\t\tif (most>player_count)"),
     (BALANCE, "\tbalance->valid= most<=maximum_players;", "\tbalance->valid= most<maximum_players;"),
+    (BALANCE, "\treturn balance->valid;", "\treturn TRUE;"),
     (BALANCE, "\t\tnetwork_team_balance_team_construct(&improvement->best.teams[index]);", "\t\tnetwork_team_balance_team_construct(&improvement->best.teams[0]);"),
     (BALANCE, "\timprovement->best.team_count= 0;", "\timprovement->best.team_count= 1;"),
     (BALANCE, "\timprovement->improved= FALSE;\n\n\treturn improvement;", "\timprovement->improved= TRUE;\n\n\treturn improvement;"),
