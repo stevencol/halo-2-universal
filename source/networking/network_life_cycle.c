@@ -50,6 +50,14 @@ boolean network_hopper_unknown_00193470(byte *unknown);
 /* the time of the console, in milliseconds */
 long GetTickCount(void);
 
+/* 0x00321aae: the time of the console, in seconds */
+long time(long *timer);
+
+/* 0x0006df60 (network_session.c): something is given a number and up to its
+size of bytes */
+void __attribute__((stdcall)) network_session_unknown_0006df60(byte *something, long value, long size,
+	const byte *data);
+
 /* ---------- globals */
 
 /* 0x00510548, 0x0051054c (main.c): whether the network keeps a time of its
@@ -1445,4 +1453,110 @@ void network_life_cycle_unknown_00070d20(
 		*(long *)(something+0xA88)+= now-start;
 	}
 	something[0xA64]= FALSE;
+}
+
+/* this console goes out of the session that what something has at 8 has at
+0x38, if it has a state and network_session_unknown_00058d90 says no of it:
+the game has this in the two functions that follow */
+static inline __attribute__((always_inline)) void network_life_cycle_leave_session(
+	const byte *something)
+{
+	const byte *manager= *(byte *const *)(something+8);
+	byte *session= *(byte *const *)(manager+0x38);
+
+	if (*(const long *)(session+NETWORK_SESSION_STATE_OFFSET)!=_network_session_state_none &&
+		!network_session_unknown_00058d90(session))
+	{
+		network_session_leave(session, FALSE);
+	}
+}
+
+/* 0x0006e310: unless its byte at 0xC says not to, this console goes out of
+the session of something; its number at 0x18 is NONE, and those at 0x14 and
+0x1C are 0. The three numbers that it is given are not looked at */
+void __attribute__((stdcall)) network_life_cycle_unknown_0006e310(
+	byte *something,
+	long unknown0,
+	long unknown1,
+	long unknown2)
+{
+	if (!something[0xC])
+	{
+		network_life_cycle_leave_session(something);
+	}
+	*(long *)(something+0x18)= NONE;
+	*(long *)(something+0x14)= 0;
+	*(long *)(something+0x1C)= 0;
+}
+
+/* 0x0006fe20: the same, but the numbers that are 0 are those at 0xFC, 0x100
+and 0x104 */
+void __attribute__((stdcall)) network_life_cycle_unknown_0006fe20(
+	byte *something,
+	long unknown0,
+	long unknown1,
+	long unknown2)
+{
+	if (!something[0xC])
+	{
+		network_life_cycle_leave_session(something);
+	}
+	*(long *)(something+0xFC)= 0;
+	*(long *)(something+0x100)= 0;
+	*(long *)(something+0x104)= 0;
+}
+
+/* 0x00070c00: the session that what something has at 8 has at 0x30 has 7 at
+0x4980 (network_session_host_set_unknown4980); the time in seconds is kept
+at 0x968, and the time that network_life_cycle_unknown_00070c50 stops
+starts (0xA78, 0xA7C), and counts once more at 0xA8C */
+void network_life_cycle_unknown_00070c00(
+	byte *something)
+{
+	const byte *manager= *(byte *const *)(something+8);
+	byte *session= *(byte *const *)(manager+0x30);
+
+	network_session_host_set_unknown4980(session, 7);
+	*(long *)(something+0x968)= time(NULL);
+	*(long *)(something+0xA7C)= network_life_cycle_time();
+	(*(long *)(something+0xA8C))++;
+	something[0xA78]= TRUE;
+}
+
+/* 0x00071f80: if the session that what something has at 8 has at 0x38 is
+from its fourth to its ninth state, network_session_unknown_00058d90 says no
+of it, and its number at 0x4980 is from 2 to 5: what it has at 8 is given 7
+(9 if that number is 5) and nothing else (network_session_unknown_0006df60),
+something has 2 at 0x978, and TRUE. FALSE if not */
+boolean network_life_cycle_unknown_00071f80(
+	byte *something)
+{
+	byte *manager= *(byte *const *)(something+8);
+	const byte *session= *(byte *const *)(manager+0x38);
+	long state= *(const long *)(session+NETWORK_SESSION_STATE_OFFSET);
+	long unknown4980;
+	long value;
+
+	if (state==_network_session_state_none || network_session_unknown_00058d90(session) ||
+		state<_network_session_state3 || state>_network_session_state8)
+	{
+		return FALSE;
+	}
+	unknown4980= *(const long *)(session+NETWORK_SESSION_UNKNOWN4980_OFFSET);
+	if (unknown4980>=2 && unknown4980<=4)
+	{
+		value= 7;
+	}
+	else if (unknown4980==5)
+	{
+		value= 9;
+	}
+	else
+	{
+		return FALSE;
+	}
+	network_session_unknown_0006df60(manager, value, 0, NULL);
+	*(long *)(something+0x978)= 2;
+
+	return TRUE;
 }

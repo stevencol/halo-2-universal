@@ -3258,3 +3258,7 @@ address,name,source,arguments,returns,convention
 0006f1a0,network_life_cycle_unknown_0006f1a0,source/networking/network_life_cycle.c,edx,void
 00070c50,network_life_cycle_unknown_00070c50,source/networking/network_life_cycle.c,eax esi,void
 00070d20,network_life_cycle_unknown_00070d20,source/networking/network_life_cycle.c,eax esi,void
+0006e310,network_life_cycle_unknown_0006e310,source/networking/network_life_cycle.c,ecx stack stack stack,void,stdcall
+0006fe20,network_life_cycle_unknown_0006fe20,source/networking/network_life_cycle.c,ecx stack stack stack,void,stdcall
+00070c00,network_life_cycle_unknown_00070c00,source/networking/network_life_cycle.c,ebx,void
+00071f80,network_life_cycle_unknown_00071f80,source/networking/network_life_cycle.c,ebx,bool

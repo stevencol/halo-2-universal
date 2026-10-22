@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cuatro funciones pequeñas del ciclo de vida de la partida en red
+
+Cuatro funciones (340 bytes) en un archivo. De 2724
+funciones se pasa a 2728, el 24,22 % de las del juego (el 12,394 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_life_cycle_unknown_0006e310` | `0x0006e310` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_0006fe20` | `0x0006fe20` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_00070c00` | `0x00070c00` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_00071f80` | `0x00071f80` | `networking/network_life_cycle.c` |
+
+### Lo que se sabe
+
+- `network_life_cycle_unknown_0006e310` y `network_life_cycle_unknown_0006fe20`
+  hacen salir a esta consola de la sesión de algo (si su byte de `0xC` no
+  lo impide) y ponen a cero tres números suyos. Reciben tres números que no
+  miran (`ret 0xC`).
+- `network_life_cycle_unknown_00070c00` pone 7 en `0x4980` de la sesión,
+  guarda la hora en segundos y arranca el cronómetro que para
+  `network_life_cycle_unknown_00070c50` (hito 742).
+- `network_life_cycle_unknown_00071f80` le da 7 o 9 a lo que tiene en 8,
+  según el número de `0x4980` de la sesión, si la sesión está entre su
+  cuarto y su noveno estado.
+- Ninguna variable nueva.
+
+### Sin comprobar
+
+- Romper líneas de este hito: hecho, `tests\mutations_743.py`, 15
+  mutaciones; ninguna sobrevive. Sigue pendiente en las de los hitos 456 a
+  490 y 501 a 737.
+- En las pruebas, salir de la sesión solo se prueba en los estados en que
+  eso pone un byte o no hace nada; en los demás, el byte de `0x48` lo
+  impide.
+- Los nombres son suposiciones.
+- En este hito se pasaron las pruebas de las cuatro funciones.
+
 ## 2026-10-22 — Seis funciones pequeñas de la sesión de red y de su ciclo de vida
 
 Seis funciones (444 bytes) en dos archivos. De 2718
