@@ -3298,3 +3298,6 @@ address,name,source,arguments,returns,convention
 00091a00,network_team_balance_construct,source/networking/network_team_balance.c,ebx,pointer
 00091a30,network_team_balance_distribute,source/networking/network_team_balance.c,stack edx stack stack,void,stdcall
 00091b30,network_team_balance_improvement_construct,source/networking/network_team_balance.c,edi,pointer
+00091b90,network_team_balance_improve,source/networking/network_team_balance.c,eax edx,bool
+00091bd0,network_team_balance_improvement_try_swaps,source/networking/network_team_balance.c,ecx edx stack,void,stdcall
+00091dd0,network_team_balance_improvement_pass,source/networking/network_team_balance.c,ebx,bool

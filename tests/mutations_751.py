@@ -21,5 +21,5 @@ MUTATIONS = [
     (BALANCE, "\tbalance->valid= most<=maximum_players;", "\tbalance->valid= most<maximum_players;"),
     (BALANCE, "\t\tnetwork_team_balance_team_construct(&improvement->best.teams[index]);", "\t\tnetwork_team_balance_team_construct(&improvement->best.teams[0]);"),
     (BALANCE, "\timprovement->best.team_count= 0;", "\timprovement->best.team_count= 1;"),
-    (BALANCE, "\timprovement->improved= FALSE;", "\timprovement->improved= TRUE;"),
+    (BALANCE, "\timprovement->improved= FALSE;\n\n\treturn improvement;", "\timprovement->improved= TRUE;\n\n\treturn improvement;"),
 ]

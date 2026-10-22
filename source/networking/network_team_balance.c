@@ -480,3 +480,127 @@ struct network_team_balance_improvement *network_team_balance_improvement_constr
 
 	return improvement;
 }
+
+boolean network_team_balance_improvement_pass(struct network_team_balance_improvement *improvement);
+
+/* 0x00091b90: from some teams, swaps are tried until no swap makes them
+better. Whether some did */
+boolean network_team_balance_improve(
+	struct network_team_balance_improvement *improvement,
+	const struct network_team_balance_teams *teams)
+{
+	boolean improved= FALSE;
+
+	memcpy(&improvement->teams, teams, sizeof(improvement->teams));
+	if (network_team_balance_improvement_pass(improvement))
+	{
+		improved= TRUE;
+		while (network_team_balance_improvement_pass(improvement))
+		{
+		}
+	}
+
+	return improved;
+}
+
+/* how good some teams are, the lower the better: seven times how far apart
+the sums of their numbers are and three times how far apart they are place
+by place. The game has this in network_team_balance_improvement_try_swaps */
+static long network_team_balance_score(
+	const struct network_team_balance_teams *teams)
+{
+	return (long)(7*(unsigned long)network_team_balance_skill_difference(teams)+
+		3*(unsigned long)network_team_balance_place_difference(teams));
+}
+
+/* 0x00091bd0: each group of a team is tried in the place of each group of
+another team that has the same unknown0, if that does not take the players
+of the two teams further apart. The teams with the swap are better than
+the best found until then (or than the teams, if none was found yet) if
+they have the players less far apart, or as far apart and a lower score;
+if so they are the best found */
+void __attribute__((stdcall)) network_team_balance_improvement_try_swaps(
+	long first_index,
+	long second_index,
+	struct network_team_balance_improvement *improvement)
+{
+	const struct network_team_balance_team *first= &improvement->teams.teams[first_index];
+	const struct network_team_balance_team *second= &improvement->teams.teams[second_index];
+	long difference= (long)((unsigned long)first->total.player_count-(unsigned long)second->total.player_count);
+	long first_group_index;
+
+	if (difference<0)
+	{
+		difference= (long)(0-(unsigned long)difference);
+	}
+	for (first_group_index= 0; first_group_index<first->group_count; first_group_index++)
+	{
+		const struct network_team_balance_group *first_group= &first->groups[first_group_index];
+		long second_group_index;
+
+		for (second_group_index= 0; second_group_index<second->group_count; second_group_index++)
+		{
+			const struct network_team_balance_group *second_group= &second->groups[second_group_index];
+			long swapped;
+
+			if (first_group->unknown0!=second_group->unknown0)
+			{
+				continue;
+			}
+			swapped= (long)((unsigned long)first->total.player_count-
+				2*((unsigned long)first_group->player_count-(unsigned long)second_group->player_count)-
+				(unsigned long)second->total.player_count);
+			if (swapped<0)
+			{
+				swapped= (long)(0-(unsigned long)swapped);
+			}
+			if (swapped<=difference)
+			{
+				struct network_team_balance_teams trial;
+				const struct network_team_balance_teams *reference;
+				long trial_players;
+				long reference_players;
+
+				memcpy(&trial, &improvement->teams, sizeof(trial));
+				network_team_balance_team_remove_group(&trial.teams[first_index], first_group);
+				network_team_balance_team_remove_group(&trial.teams[second_index], second_group);
+				network_team_balance_team_add_group(&trial.teams[first_index], second_group);
+				network_team_balance_team_add_group(&trial.teams[second_index], first_group);
+				reference= improvement->improved ? &improvement->best : &improvement->teams;
+				trial_players= network_team_balance_player_difference(&trial);
+				reference_players= network_team_balance_player_difference(reference);
+				if (trial_players<reference_players ||
+					(trial_players==reference_players && network_team_balance_score(&trial)<network_team_balance_score(reference)))
+				{
+					improvement->improved= TRUE;
+					memcpy(&improvement->best, &trial, sizeof(trial));
+				}
+			}
+		}
+	}
+}
+
+/* 0x00091dd0: swaps are tried between each two teams; if some were better,
+the best found are the teams from then on. Whether there were */
+boolean network_team_balance_improvement_pass(
+	struct network_team_balance_improvement *improvement)
+{
+	long first_index;
+
+	improvement->improved= FALSE;
+	for (first_index= 0; first_index<improvement->teams.team_count-1; first_index++)
+	{
+		long second_index;
+
+		for (second_index= first_index+1; second_index<improvement->teams.team_count; second_index++)
+		{
+			network_team_balance_improvement_try_swaps(first_index, second_index, improvement);
+		}
+	}
+	if (improvement->improved)
+	{
+		memcpy(&improvement->teams, &improvement->best, sizeof(improvement->teams));
+	}
+
+	return improvement->improved;
+}

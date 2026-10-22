@@ -2,6 +2,62 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Tres funciones de los equipos parejos: cambiar grupos entre equipos hasta que no haya nada mejor
+
+Tres funciones (652 bytes) en un archivo. De 2441
+funciones se pasa a 2444, el 21,70 % de las del juego (el 12,534 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_team_balance_improve` | `0x00091b90` | `networking/network_team_balance.c` |
+| `network_team_balance_improvement_try_swaps` | `0x00091bd0` | `networking/network_team_balance.c` |
+| `network_team_balance_improvement_pass` | `0x00091dd0` | `networking/network_team_balance.c` |
+
+### Lo que se sabe
+
+- `network_team_balance_improvement_try_swaps` prueba a cambiar cada grupo
+  de un equipo por cada grupo de otro que tenga el mismo `unknown0`, si el
+  cambio no separa más a los dos equipos en jugadores. Unos equipos con el
+  cambio son mejores que lo mejor encontrado hasta entonces (o que los
+  equipos, si aún no se encontró nada) si tienen los jugadores menos
+  separados, o igual de separados y menos puntos: siete veces lo que se
+  separan en la suma de los números y tres veces lo que se separan puesto a
+  puesto (`network_team_balance_score`, que en el juego está dentro de la
+  función).
+- `network_team_balance_improvement_pass` lo prueba con cada dos equipos y,
+  si encontró algo mejor, se queda con ello; `network_team_balance_improve`
+  copia unos equipos y repite pasadas hasta que una no encuentra nada.
+- Ninguna variable nueva. La función de `0x00091bd0` usa el `_alloca_probe`
+  de la biblioteca de C del juego (`0x00320560`) porque tiene más de 4 KB
+  de variables; en C no hace falta.
+
+### Cambiado
+
+- `tests\mutations_751.py`: el texto de la mutación de
+  `improvement->improved= FALSE;` lleva la línea siguiente, porque ahora el
+  archivo lo tiene dos veces.
+
+### Sin comprobar
+
+- Romper líneas de este hito: hecho, `tests\mutations_752.py`, 19
+  mutaciones; ninguna sobrevive. Una sobrevivía: copiar 4 bytes menos de
+  lo mejor encontrado a los equipos en
+  `network_team_balance_improvement_pass`. Esos 4 bytes son el
+  identificador del último jugador del cuarto equipo, que solo cuenta con
+  cuatro equipos y 16 jugadores en el último, y las pruebas hacen equipos
+  pequeños para que las pasadas acaben pronto; esa mutación se cambió por
+  copiar al revés. Cuatro mutaciones dejan las pasadas sin fin y se dan por
+  detectadas a los 300 s. Sigue pendiente en las de los hitos 456 a 490 y
+  501 a 737.
+- Las pruebas usan números pequeños: con números muy grandes los puntos se
+  desbordan y las pasadas podrían no terminar, en el juego y aquí.
+- Queda de la zona lo que llama a todo esto (`0x00091e30`, `0x00091f00` y
+  `0x00091fc0`).
+- Los nombres son suposiciones.
+- En este hito se pasaron las pruebas de las tres funciones.
+
 ## 2026-10-22 — Cuatro funciones de los equipos parejos: hacer los equipos y repartir los grupos
 
 Cuatro funciones (477 bytes) en un archivo. De 2437
