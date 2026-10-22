@@ -80,7 +80,10 @@ que empezó Kiro: 9 de sus 17 funciones estaban mal aunque sus pruebas decían
      "Decompile seventeen functions of …".
   7. Decir en el chat **una línea** con el número de funciones y el % (de
      funciones y de bytes) que imprime `milestone_docs.py`. Seguir con el
-     siguiente hito.
+     siguiente hito. Ese número cuenta solo las funciones que están en
+     `ghidra\functions.csv` (las 11.265); el total de descompiladas, que
+     incluye las que Ghidra no separa, es otro número (`{total}` en el
+     spec). No sumar las dos cosas.
 - **La batería completa** (`python tools\test_functions.py`, más de 10
   min) solo en grandes avances, en segundo plano, en el worktree aparte
   `C:\Users\steve\halo-2-check` (hacer checkout del commit allí primero).
@@ -104,10 +107,16 @@ acabar en `TODO BIEN`. Si dice `ERROR`, corregir lo que dice y volver a
 pasarlo. **Nunca hacer commit con errores** ni decir que pasa sin haber
 leído ese archivo.
 
-**Plantillas:** copiar la forma de los hitos 739, 740 y 741:
-`tests\test_small_741.py` (pruebas), `tests\mutations_741.py`
-(mutaciones), y sus funciones en `source\networking\network_blob_task.c`
-o `source\networking\network_life_cycle.c` (estilo del C).
+**Plantillas:** copiar la forma de los hitos 741 a 748:
+`tests\test_small_741.py` … `tests\test_small_748.py` (pruebas),
+`tests\mutations_741.py` … `tests\mutations_748.py` (mutaciones), y sus
+funciones en `source\networking\network_life_cycle.c`,
+`network_recent_players.c` u `online_statistics.c` (estilo del C).
+Ejemplos útiles: funciones de otros simuladas en la prueba
+(`test_small_743.py`, `745`), variables globales que son tablas
+(`744`, `746`), un flujo de bits (`748`) y un spec de documentación
+(`build\scratch\spec_748.py`, si existe; si no, el formato está al
+principio de `tools\milestone_docs.py`).
 
 Además, a mano:
 
@@ -138,3 +147,54 @@ Además, a mano:
   decidir qué rama devuelve TRUE; recontar offsets de pila tras cada push.
 - Funciones saltadas (necesitan tablas estáticas o callees desconocidos):
   ver la lista en las últimas entradas de `CHANGELOG.md` / `ESTADO.md`.
+
+### Aprendido en los hitos 742–748
+
+- **Saltos de línea.** `symbols\functions.csv`, `symbols\globals.csv` y
+  algunos `.c` (por ejemplo `online_tasks.c`) usan CRLF. Las filas nuevas
+  tienen que acabar en `\r\n` como las demás (en Git Bash:
+  `printf '%s\r\n' "fila1" "fila2" >> symbols/functions.csv`). Comprobar
+  con `file <archivo>`: no debe decir «with CRLF, LF» (mezclado).
+- **Simular funciones en las pruebas.** `externals={...}` simula
+  cualquier función de `symbols\functions.csv`, también las ya
+  descompiladas (`online_task_close`, `network_session_leave`…): el
+  handler devuelve `(valor, tupla_de_argumentos_a_comparar)`. Úsalo cuando
+  la función real haría demasiado (tareas, sesiones enteras). Las de la
+  biblioteca (`GetTickCount`, `time`, `XNetUnregisterKey`) siempre se
+  simulan así.
+- **Punteros en los argumentos de una simulación.** Un puntero a un
+  `Buffer` se compara con `harness.normalize(arguments[i])`. Un puntero a
+  una variable global NO: se compara su posición dentro de ella,
+  `arguments[i] - harness.global_addresses["nombre"]`
+  (`test_small_745.py`). Una cadena de formato o un búfer en la pila
+  (`csprintf256`) no se puede comparar: comparar solo los números
+  (`(0, (arguments[2],))`).
+- **Bucles con enlaces.** Si la función recorre una lista enlazada, la
+  prueba tiene que construir listas SIN ciclos (`test_small_747.py`); si no,
+  la función original no termina.
+- **Mutaciones que no se pueden detectar.** Si una línea no cambia nunca el
+  resultado (por ejemplo, una comprobación que el bucle ya hace de otra
+  forma), quitar esa mutación de la lista y ANOTARLO en la sección «Sin
+  comprobar» del `CHANGELOG.md`, explicando por qué. Nunca dejar una
+  mutación que sobrevive.
+- **Mutaciones que sobreviven por falta de casos.** Añadir casos dirigidos
+  al límite: valores iguales al tope, el número justo en la mitad, el
+  flujo que acaba exactamente en su final (`test_small_744.py`,
+  `test_small_748.py`).
+- **Mutación con texto repetido.** El texto de una mutación tiene que estar
+  una sola vez en el archivo: si se repite, añadir la línea siguiente con
+  `\n` (`mutations_748.py`).
+- **Una mutación que deja un bucle infinito** tarda 300 s en darse por
+  detectada: es normal, `check_milestone.py` puede tardar 6 minutos.
+- **`tools\mutation_check.py` reescribe los `.c` con LF** al terminar: es
+  inofensivo (Git usa `autocrlf`), no «arreglarlo».
+- **Escribir archivos desde la terminal.** En un heredoc de Bash o en un
+  `python -` con texto entre comillas, `\t`, `\m`, `\d` se convierten o
+  dan avisos: un `tools\test_functions.py` acabó con un tabulador. Para
+  textos con barras invertidas, usar la herramienta de edición de
+  archivos o cadenas `r"..."`, y releer lo escrito.
+- **`milestone_docs.py` y el `ESTADO` del spec:** los pares de `ESTADO`
+  se aplican DESPUÉS de que la herramienta cambie el número de hito; no
+  usar el número viejo en ellos.
+- **Errores de `online_task_continue`:** `ONLINE_TASK_UNKNOWN80155100`
+  (`online_tasks.h`) es un error que `online_task_failed` no cuenta.
