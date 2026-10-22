@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cinco funciones de los equipos parejos: quitar jugadores, meter y sacar grupos, y la separación puesto a puesto
+
+Cinco funciones (562 bytes) en un archivo. De 2432
+funciones se pasa a 2437, el 21,63 % de las del juego (el 12,496 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_team_balance_group_remove_player` | `0x000915d0` | `networking/network_team_balance.c` |
+| `network_team_balance_team_add_group` | `0x00091690` | `networking/network_team_balance.c` |
+| `network_team_balance_team_remove_group` | `0x000916e0` | `networking/network_team_balance.c` |
+| `network_team_balance_team_take_largest_group` | `0x00091760` | `networking/network_team_balance.c` |
+| `network_team_balance_place_difference` | `0x000918c0` | `networking/network_team_balance.c` |
+
+### Lo que se sabe
+
+- `network_team_balance_group_remove_player` saca de un grupo al jugador
+  con el mismo identificador (sin mirar si está) y resta su número de la
+  suma.
+- `network_team_balance_team_add_group` mete un grupo en un equipo, detrás
+  de los otros, y sus jugadores en el grupo de todos los del equipo;
+  `network_team_balance_team_remove_group` lo saca (el del mismo
+  identificador) y saca sus jugadores. Si el grupo que se le da es uno del
+  propio equipo, los jugadores que saca son los del que queda en ese sitio
+  después de correr los demás: así lo hace el juego.
+- `network_team_balance_team_take_largest_group` da el grupo con más
+  jugadores de un equipo (y, de esos, el de la suma más alta) y lo saca.
+  Toma el primero aunque el equipo no tenga grupos.
+- `network_team_balance_place_difference` suma, puesto a puesto (los
+  jugadores de cada equipo van del número más alto al más bajo), cuánto se
+  separan el número más alto y el más bajo de los equipos en ese puesto (0
+  para el equipo que no tiene jugador ahí).
+- Ninguna variable nueva.
+
+### Sin comprobar
+
+- Romper líneas de este hito: hecho, `tests\mutations_750.py`, 16
+  mutaciones; ninguna sobrevive. Sigue pendiente en las de los hitos 456 a
+  490 y 501 a 737.
+- Las pruebas no dan a `network_team_balance_team_remove_group` un grupo
+  del propio equipo (el caso de arriba); quien lo hace, `0x00091bd0`, aún
+  no está.
+- Los nombres son suposiciones.
+- En este hito se pasaron las pruebas de las cinco funciones.
+
 ## 2026-10-22 — Seis funciones pequeñas de los equipos parejos del servicio de partidas
 
 Seis funciones (435 bytes) en un archivo nuevo. De 2426

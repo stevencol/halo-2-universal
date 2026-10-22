@@ -3289,3 +3289,8 @@ address,name,source,arguments,returns,convention
 00091800,network_team_balance_skill_difference,source/networking/network_team_balance.c,ebx,int
 00091860,network_team_balance_player_difference,source/networking/network_team_balance.c,ebx,int
 000919a0,network_team_balance_smallest_team,source/networking/network_team_balance.c,ebx,int
+000915d0,network_team_balance_group_remove_player,source/networking/network_team_balance.c,edx edi,void
+00091690,network_team_balance_team_add_group,source/networking/network_team_balance.c,ebx stack,void,stdcall
+000916e0,network_team_balance_team_remove_group,source/networking/network_team_balance.c,ebx stack,void,stdcall
+00091760,network_team_balance_team_take_largest_group,source/networking/network_team_balance.c,eax stack,void,stdcall
+000918c0,network_team_balance_place_difference,source/networking/network_team_balance.c,stack,int,stdcall

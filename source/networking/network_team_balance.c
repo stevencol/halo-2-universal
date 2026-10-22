@@ -15,6 +15,8 @@ of its functions and of what they use.
 
 #include "cseries/cseries.h"
 
+#include <string.h>
+
 /* ---------- constants */
 
 enum
@@ -100,6 +102,102 @@ void network_team_balance_group_add_player(
 	group->skill_total= (long)((unsigned long)group->skill_total+(unsigned long)player->skill);
 }
 
+/* 0x000915d0: a player goes out of a group: the one with the same
+identifier (the game does not look whether there is one), and the sum of
+the numbers goes down with the number of the one that it is given */
+void network_team_balance_group_remove_player(
+	struct network_team_balance_group *group,
+	const struct network_team_balance_player *player)
+{
+	long index= 0;
+
+	while (group->players[index].identifier!=player->identifier)
+	{
+		index++;
+	}
+	group->player_count--;
+	for (; index<group->player_count; index++)
+	{
+		group->players[index]= group->players[index+1];
+	}
+	group->skill_total= (long)((unsigned long)group->skill_total-(unsigned long)player->skill);
+}
+
+/* 0x00091690: a group goes into a team, after the others, and its players
+into the group of all the players of the team */
+void __attribute__((stdcall)) network_team_balance_team_add_group(
+	struct network_team_balance_team *team,
+	const struct network_team_balance_group *group)
+{
+	long index;
+
+	memcpy(&team->groups[team->group_count], group, sizeof(*group));
+	team->group_count++;
+	for (index= 0; index<group->player_count; index++)
+	{
+		network_team_balance_group_add_player(&team->total, &group->players[index]);
+	}
+	if (group->unknown0)
+	{
+		team->unknown4++;
+	}
+}
+
+/* 0x000916e0: a group goes out of a team: the one with the same identifier
+(the game does not look whether there is one), and its players out of the
+group of all the players of the team. If the group that it is given is one
+of the team, those are the players of what is there after the others moved
+down */
+void __attribute__((stdcall)) network_team_balance_team_remove_group(
+	struct network_team_balance_team *team,
+	const struct network_team_balance_group *group)
+{
+	long index= 0;
+
+	while (team->groups[index].identifier!=group->identifier)
+	{
+		index++;
+	}
+	team->group_count--;
+	for (; index<team->group_count; index++)
+	{
+		memcpy(&team->groups[index], &team->groups[index+1], sizeof(team->groups[index]));
+	}
+	for (index= 0; index<group->player_count; index++)
+	{
+		network_team_balance_group_remove_player(&team->total, &group->players[index]);
+	}
+	if (group->unknown0)
+	{
+		team->unknown4--;
+	}
+}
+
+/* 0x00091760: the group of a team with the most players (and of those, the
+one with the highest sum of numbers; the first if there are several) is
+given and goes out of the team. The first is taken even if the team has no
+groups */
+void __attribute__((stdcall)) network_team_balance_team_take_largest_group(
+	struct network_team_balance_team *team,
+	struct network_team_balance_group *group)
+{
+	const struct network_team_balance_group *largest= &team->groups[0];
+	long index;
+
+	for (index= 1; index<team->group_count; index++)
+	{
+		const struct network_team_balance_group *other= &team->groups[index];
+
+		if (other->player_count>largest->player_count ||
+			(other->player_count==largest->player_count && other->skill_total>largest->skill_total))
+		{
+			largest= other;
+		}
+	}
+	memcpy(group, largest, sizeof(*group));
+	network_team_balance_team_remove_group(team, group);
+}
+
 /* 0x000917c0: there are to be so many teams, and each has no groups. Of
 the group with all the players only the count, the sum, unknown0 and the
 identifier (0, not NONE) are cleared */
@@ -173,6 +271,52 @@ long network_team_balance_player_difference(
 	}
 
 	return (long)((unsigned long)highest-(unsigned long)lowest);
+}
+
+/* 0x000918c0: the players of each team are in order, from the highest
+number; for each place, as far as the team with the most players goes,
+how far apart are the highest and the lowest number of the teams there (0
+for a team that has no player there), all added */
+long __attribute__((stdcall)) network_team_balance_place_difference(
+	const struct network_team_balance_teams *teams)
+{
+	long team_count= teams->team_count;
+	long most= teams->teams[0].total.player_count;
+	unsigned long sum= 0;
+	long index;
+	long place;
+
+	for (index= 1; index<team_count; index++)
+	{
+		if (most<=teams->teams[index].total.player_count)
+		{
+			most= teams->teams[index].total.player_count;
+		}
+	}
+	for (place= 0; place<most; place++)
+	{
+		const struct network_team_balance_group *first= &teams->teams[0].total;
+		long highest= place<first->player_count ? first->players[place].skill : 0;
+		long lowest= highest;
+
+		for (index= 1; index<team_count; index++)
+		{
+			const struct network_team_balance_group *total= &teams->teams[index].total;
+			long skill= place<total->player_count ? total->players[place].skill : 0;
+
+			if (highest<=skill)
+			{
+				highest= skill;
+			}
+			if (lowest>skill)
+			{
+				lowest= skill;
+			}
+		}
+		sum+= (unsigned long)highest-(unsigned long)lowest;
+	}
+
+	return (long)sum;
 }
 
 /* 0x000919a0: the team with the fewest players, and of those the one with
