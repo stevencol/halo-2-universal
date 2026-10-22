@@ -3,18 +3,18 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-22, al terminar el hito 755.
+**Última actualización:** 2026-10-22, al terminar el hito 756.
 
 ## Dónde estamos
 
-- **2458 funciones descompiladas de 11.265: el 21,82 % del juego** (el
-  12,607 % de los bytes de código). Las 11.265 son las de la lista de
+- **2461 funciones descompiladas de 11.265: el 21,85 % del juego** (el
+  12,614 % de los bytes de código). Las 11.265 son las de la lista de
   Ghidra, y solo se cuentan las que están en ella: hay más descompiladas
-  que Ghidra no separa como funciones propias (2781 en total).
-- Las 2781 están comprobadas contra el ejecutable original: las 1390 del
+  que Ghidra no separa como funciones propias (2784 en total).
+- Las 2784 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile six small functions of the network life cycle* (ver `git log`).
+- Último hito: *Decompile three small functions of the matchmaking session attributes* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 535 funciones apuntadas pero sin descompilar (las que el código
   llama); 385 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -231,6 +231,10 @@ Módulos (funciones hechas / archivo):
       `networking\network_search.c` (5: los identificadores ya vistos,
       ver un resultado, contarlos y el mejor; de la zona de
       `0x00090020` a `0x00091530`)
+- [ ] La sesión que la consola ofrece al servicio de partidas —
+      `networking\online_matchmaking.c` (3: los atributos y ocho
+      bytes de un jugador; de la zona de `0x0008ee00` a `0x0008fa80`,
+      el resto llama a funciones de las bibliotecas sin fila)
 - [x] El almacén del servicio de partidas — `networking\online_storage.c`
       (7: el nombre, empezar a escribir y a leer, de memoria o de archivo,
       el resultado de leer y el avance)

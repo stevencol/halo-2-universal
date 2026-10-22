@@ -2,6 +2,50 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Tres funciones pequeñas de la sesión que la consola ofrece al servicio de partidas
+
+Tres funciones (199 bytes) en un archivo nuevo. De 2458
+funciones se pasa a 2461, el 21,85 % de las del juego (el 12,614 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_matchmaking_unknown_0008f390` | `0x0008f390` | `networking/online_matchmaking.c` |
+| `online_matchmaking_attribute_identifier` | `0x0008f3f0` | `networking/online_matchmaking.c` |
+| `online_matchmaking_attribute_valid` | `0x0008f450` | `networking/online_matchmaking.c` |
+
+### Lo que se sabe
+
+- Archivo nuevo, `networking\online_matchmaking.c`, de la zona de
+  `0x0008ee00` a `0x0008fa80`: una sesión que esta consola ofrece al
+  servicio de partidas y siete clases de atributos que dice de ella.
+- `online_matchmaking_attribute_identifier` da el número de las bibliotecas
+  de cada clase (`0x9C1`, `0x3C2`, `0x4C3`, `0x6C4`, `0x4C5`, `0x581`,
+  `0x681`) y `online_matchmaking_attribute_valid` si un valor vale para una
+  clase. En el juego son dos tablas de saltos (por eso `find_easy.py` no
+  las listaba); en C, dos `switch`.
+- `online_matchmaking_unknown_0008f390` da los ocho bytes de `0x4E0` de lo
+  que el juego sabe del jugador de un mando (`unknown_0054e8e0`) si lo que
+  se le da tiene 2 en 4. El juego copia antes `0x6A2` bytes a su pila, que
+  no usa.
+- Ninguna variable nueva.
+
+### Sin comprobar
+
+- Romper líneas de este hito: hecho, `tests\mutations_756.py`, 9
+  mutaciones; ninguna sobrevive. Sigue pendiente en las de los hitos 456 a
+  490 y 501 a 737.
+- Lo demás de la zona (`0x0008eee0`, `0x0008f070`, `0x0008f4b0`, …) llama a
+  funciones de las bibliotecas que no tienen fila en
+  `symbols\functions.csv` (`0x003a9d8e`, `0x003a9db8`, `0x003a9dc3`), y
+  `check_milestone.py` no deja añadir filas sin archivo: queda para cuando
+  se decida cómo apuntarlas. Igual con las dos tareas de
+  `XOnlineMatchSessionDelete` y `XOnlineMatchSessionFindFromID`
+  (`0x00090020` y `0x000900e0`).
+- Los nombres son suposiciones.
+- En este hito se pasaron las pruebas de las tres funciones.
+
 ## 2026-10-22 — Seis funciones pequeñas de la partida en red y de su sesión
 
 Seis funciones (532 bytes) en un archivo. De 2452

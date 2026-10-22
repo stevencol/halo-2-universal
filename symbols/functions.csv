@@ -3315,3 +3315,6 @@ address,name,source,arguments,returns,convention
 00064970,network_life_cycle_get_unknown4d08,source/networking/network_life_cycle.c,stack stack stack,bool,stdcall
 00064a10,network_life_cycle_get_unknown5dd0,source/networking/network_life_cycle.c,,short
 00064bc0,network_life_cycle_get_identifier_and_key,source/networking/network_life_cycle.c,stack edi,bool,stdcall
+0008f390,online_matchmaking_unknown_0008f390,source/networking/online_matchmaking.c,ecx stack,pair,stdcall
+0008f3f0,online_matchmaking_attribute_identifier,source/networking/online_matchmaking.c,eax,int
+0008f450,online_matchmaking_attribute_valid,source/networking/online_matchmaking.c,ecx eax,bool
