@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cinco funciones de los números que la partida en red guarda de sus jugadores
+
+Cinco funciones (394 bytes) en un archivo nuevo. De 2728
+funciones se pasa a 2733, el 24,26 % de las del juego (el 12,408 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_statistics_unknown_000739a0` | `0x000739a0` | `networking/online_statistics.c` |
+| `online_statistics_level` | `0x00074970` | `networking/online_statistics.c` |
+| `online_statistics_set` | `0x000749b0` | `networking/online_statistics.c` |
+| `online_statistics_add` | `0x00074a00` | `networking/online_statistics.c` |
+| `online_statistics_set_maximum` | `0x00074a60` | `networking/online_statistics.c` |
+
+### Lo que se sabe
+
+- Archivo nuevo, `networking\online_statistics.c` (el nombre es una
+  suposición): una tabla en `0x00509470` con cinco sitios de `0x99C` bytes
+  y, en cada uno, un registro de `0x98` bytes por jugador (un estado, una
+  hora y `0x13` números, cada uno con un byte que dice si está). Todas las
+  funciones las llama `0x000741f0`, que aún no está hecha.
+- `online_statistics_set`, `online_statistics_add` y
+  `online_statistics_set_maximum` ponen, suman o suben un número, siempre
+  entre el mínimo y el máximo de su clase (`0x0046722c`, seis pares que el
+  juego trae escritos).
+- `online_statistics_level` busca el nivel de un número en una tabla de
+  128 comienzos de nivel (`0x004ce7b4`, que se rellena al jugar); en el
+  penúltimo nivel posible redondea hacia arriba pasada la mitad.
+- `online_statistics_unknown_000739a0` pasa los registros de un jugador
+  del estado 3 al 4 y guarda la hora.
+- Variables nuevas: `unknown_00509470`, `unknown_0046722c`,
+  `unknown_004ce7b4`.
+
+### Sin comprobar
+
+- Romper líneas de este hito: hecho, `tests\mutations_744.py`, 15
+  mutaciones; ninguna sobrevive (dos sobrevivían al principio y se
+  añadieron casos a la prueba). Sigue pendiente en las de los hitos 456 a
+  490 y 501 a 737.
+- Qué cuentan esos números no se sabe; los nombres son suposiciones.
+- En este hito se pasaron las pruebas de las cinco funciones.
+
 ## 2026-10-22 — Cuatro funciones pequeñas del ciclo de vida de la partida en red
 
 Cuatro funciones (340 bytes) en un archivo. De 2724

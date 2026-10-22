@@ -666,3 +666,6 @@ address,name,source
 004cd8f0,unknown_004cd8f0,source/networking/network_life_cycle.c
 004cd8f4,unknown_004cd8f4,source/networking/network_life_cycle.c
 004cdc50,unknown_004cdc50,source/networking/game_voice.c
+00509470,unknown_00509470,source/networking/online_statistics.c
+0046722c,unknown_0046722c,source/networking/online_statistics.c
+004ce7b4,unknown_004ce7b4,source/networking/online_statistics.c
