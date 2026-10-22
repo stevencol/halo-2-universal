@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Seis funciones pequeñas de lo que la interfaz saca de la partida en red
+
+Seis funciones (168 bytes) en un archivo. De 2475
+funciones se pasa a 2481, el 22,02 % de las del juego (el 12,658 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `user_interface_networking_unknown_00199d7c` | `0x00199d7c` | `interface/user_interface_networking.c` |
+| `user_interface_networking_unknown_00199e6d` | `0x00199e6d` | `interface/user_interface_networking.c` |
+| `user_interface_networking_get_unknown49A1` | `0x00199eaa` | `interface/user_interface_networking.c` |
+| `user_interface_networking_get_unknown498C` | `0x0019a161` | `interface/user_interface_networking.c` |
+| `user_interface_networking_unknown49B0_is_2` | `0x0019a8ef` | `interface/user_interface_networking.c` |
+| `user_interface_networking_unknown18_is_2` | `0x0019a935` | `interface/user_interface_networking.c` |
+
+### Lo que se sabe
+
+- `user_interface_networking_unknown_00199d7c` pasa lo que hace la partida en
+  red (`network_life_cycle_unknown_000594f0` y, en uno de sus casos,
+  `network_life_cycle_unknown_00059570`) a un número del 0 al 8 para la
+  interfaz.
+- Las otras cinco preguntan una cosa de la sesión de la partida en red y la
+  pasan a lo que quiere la interfaz: si `network_life_cycle_unknown_00063e90`
+  da nada, el byte de `0x49A1`, el número de `0x498C` como 0, 1 o 2, y si los
+  de `0x49B0` y `0x18` son 2.
+- Ninguna variable nueva.
+
+### Sin comprobar
+
+- Las pruebas (`tests\test_small_760.py`) y las mutaciones
+  (`tests\mutations_760.py`, 9) están escritas pero no se pasaron en este
+  hito: las pasa el usuario. Solo se comprobó que el C compila y
+  `check_milestone.py` sin `--run`.
+- Los nombres son suposiciones.
+
 ## 2026-10-22 — Cuatro funciones pequeñas de la partida en red, de su sesión y de los jugadores de una lista
 
 Cuatro funciones (323 bytes) en dos archivos. De 2471
