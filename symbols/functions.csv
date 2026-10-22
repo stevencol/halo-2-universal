@@ -3277,3 +3277,6 @@ address,name,source,arguments,returns,convention
 0007fd80,network_recent_player_remove_second,source/networking/network_recent_players.c,edx,void
 0007fdf0,network_recent_player_move_to_first,source/networking/network_recent_players.c,esi,void
 0007fe40,network_recent_player_move_to_second,source/networking/network_recent_players.c,esi,void
+0007f930,network_recent_players_initialize,source/networking/network_recent_players.c,,void
+0007fc80,network_recent_players_find,source/networking/network_recent_players.c,stack stack,int,stdcall
+000805e0,network_recent_players_iterate_second,source/networking/network_recent_players.c,eax stack,bool,stdcall

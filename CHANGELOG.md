@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Tres funciones más de la tabla de jugadores en dos listas
+
+Tres funciones (518 bytes) en un archivo. De 2743
+funciones se pasa a 2746, el 24,38 % de las del juego (el 12,452 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_recent_players_initialize` | `0x0007f930` | `networking/network_recent_players.c` |
+| `network_recent_players_find` | `0x0007fc80` | `networking/network_recent_players.c` |
+| `network_recent_players_iterate_second` | `0x000805e0` | `networking/network_recent_players.c` |
+
+### Lo que se sabe
+
+- `network_recent_players_initialize` deja vacía la tabla del hito 746:
+  todo a 0, `0xFF` en el byte `0x56` de cada jugador, ninguna lista, 0
+  jugadores y 8 en `unknown_004cf970`.
+- Los jugadores están ordenados por sus doce primeros bytes (lo que dice
+  quién es cada uno) y `unknown_004cf978` dice cuántos hay.
+  `network_recent_players_find` busca por mitades y devuelve el jugador o
+  `NONE`; además da dónde estaría (para meter uno nuevo en su sitio).
+- `network_recent_players_iterate_second` recorre la segunda lista y da
+  el siguiente jugador que cumple unas condiciones (bits de `0x60`, de 8,
+  y que no sea `0xFEFE` ni cero lo de sus primeros ocho bytes).
+- Variables nuevas: `unknown_004cf970`, `unknown_004cf974`,
+  `unknown_004cf978`.
+
+### Sin comprobar
+
+- Romper líneas de este hito: hecho, `tests\mutations_747.py`, 16
+  mutaciones; ninguna sobrevive. La comprobación de «queda uno» del bucle
+  de `network_recent_players_find` no se puede romper: con un solo
+  jugador por mirar, el bucle termina igual. Sigue pendiente en las de los
+  hitos 456 a 490 y 501 a 737.
+- Los nombres son suposiciones.
+- En este hito se pasaron las pruebas de las tres funciones.
+
 ## 2026-10-22 — Seis funciones de una tabla de jugadores en dos listas
 
 Seis funciones (522 bytes) en un archivo nuevo. De 2737

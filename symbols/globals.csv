@@ -680,3 +680,6 @@ address,name,source
 004cf984,unknown_004cf984,source/networking/network_recent_players.c
 004cf988,unknown_004cf988,source/networking/network_recent_players.c
 004cf98c,unknown_004cf98c,source/networking/network_recent_players.c
+004cf970,unknown_004cf970,source/networking/network_recent_players.c
+004cf974,unknown_004cf974,source/networking/network_recent_players.c
+004cf978,unknown_004cf978,source/networking/network_recent_players.c

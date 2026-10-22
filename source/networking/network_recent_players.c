@@ -52,6 +52,13 @@ boolean unknown_004cf8e0;
 boolean unknown_004cf95d;
 long unknown_004cf960;
 
+/* 0x004cf970: 8 when the table is made empty. 0x004cf974: 0 then.
+0x004cf978: how many players there are, from the first, in the order of
+the twelve bytes that say who each is */
+long unknown_004cf970;
+long unknown_004cf974;
+long unknown_004cf978;
+
 /* 0x004cf97c, 0x004cf980: the first and the last of the first list; NONE if
 it has none. 0x004cf984, 0x004cf988: those of the second */
 long unknown_004cf97c;
@@ -224,4 +231,120 @@ void network_recent_player_move_to_second(
 	*(short *)(player+NETWORK_RECENT_PLAYER_SECOND_PREVIOUS_OFFSET)= NONE;
 	*(short *)(player+NETWORK_RECENT_PLAYER_SECOND_NEXT_OFFSET)= (short)unknown_004cf984;
 	unknown_004cf984= index;
+}
+
+/* 0x0007f930: the table is made empty: each player has 0 in all and 0xFF at
+0x56, and is in no list */
+void network_recent_players_initialize(
+	void)
+{
+	long index;
+
+	unknown_004cf974= 0;
+	unknown_004cf978= 0;
+	unknown_004cf970= 8;
+	unknown_004cf980= NONE;
+	unknown_004cf97c= NONE;
+	unknown_004cf984= NONE;
+	unknown_004cf988= NONE;
+	for (index= 0; index<MAXIMUM_NETWORK_RECENT_PLAYERS; index++)
+	{
+		byte *player= network_recent_player_get(index);
+
+		memset(player, 0, NETWORK_RECENT_PLAYER_DATA_SIZE);
+		player[NETWORK_RECENT_PLAYER_DATA_UNKNOWN56_OFFSET]= 0xFF;
+		*(short *)(player+NETWORK_RECENT_PLAYER_FIRST_PREVIOUS_OFFSET)= NONE;
+		*(short *)(player+NETWORK_RECENT_PLAYER_SECOND_PREVIOUS_OFFSET)= NONE;
+		*(short *)(player+NETWORK_RECENT_PLAYER_FIRST_NEXT_OFFSET)= NONE;
+		*(short *)(player+NETWORK_RECENT_PLAYER_SECOND_NEXT_OFFSET)= NONE;
+		*(long *)(player+0x60)= 0;
+		*(long *)(player+0x64)= 0;
+	}
+}
+
+/* 0x0007fc80: the player that the twelve bytes say, looked for by halves;
+NONE if none. Where the search ended is given back, if asked for: where
+the player is, or where it would go */
+long __attribute__((stdcall)) network_recent_players_find(
+	const byte *identifier,
+	long *index_reference)
+{
+	long found= NONE;
+	long first= 0;
+	long last= unknown_004cf978-1;
+	long middle= 0;
+	boolean last_one= FALSE;
+
+	while (!last_one && first<=last)
+	{
+		int difference;
+
+		last_one= first==last;
+		middle= (first+last)>>1;
+		difference= memcmp(identifier, network_recent_player_get(middle), 0xC);
+		if (difference==0)
+		{
+			found= middle;
+		}
+		else if (difference<0)
+		{
+			last= middle-1;
+		}
+		else
+		{
+			middle++;
+			first= middle;
+		}
+		if (found!=NONE)
+		{
+			break;
+		}
+	}
+	if (index_reference)
+	{
+		*index_reference= middle;
+	}
+
+	return found;
+}
+
+/* 0x000805e0: the next player of the second list, from the one that is
+given (which becomes the one after it), that has the bit 0x10 and not the bit
+4 at 0x60, something in its first eight bytes and not 0xFEFE in the last two
+of them, none of the two low bits at 8, and not 0 at 0xC. Its 0x58 bytes
+are given, if asked for. FALSE if there is none */
+boolean __attribute__((stdcall)) network_recent_players_iterate_second(
+	byte *data,
+	long *index_reference)
+{
+	long index= *index_reference;
+
+	if (index==NONE)
+	{
+		return FALSE;
+	}
+	for (;;)
+	{
+		const byte *player= network_recent_player_get(index);
+		long next= *(const short *)(player+NETWORK_RECENT_PLAYER_SECOND_NEXT_OFFSET);
+		unsigned long flags= *(const unsigned long *)(player+0x60);
+		unsigned long high= *(const unsigned long *)(player+4);
+
+		*index_reference= next;
+		if (!(flags&4) && (flags&0x10) && (*(const unsigned long *)player|high) &&
+			(high>>16)!=0xFEFE && !(player[8]&3) && *(const short *)(player+0xC)!=0)
+		{
+			if (data)
+			{
+				memcpy(data, player, NETWORK_RECENT_PLAYER_DATA_SIZE);
+			}
+
+			return TRUE;
+		}
+		if (next==NONE)
+		{
+			return FALSE;
+		}
+		index= next;
+	}
 }
