@@ -11,6 +11,7 @@ the names of its functions.
 #include "network_session.h"
 
 #include "cache/cache_files.h"
+#include "networking/network_hoppers.h"
 #include "networking/network_observer.h"
 #include "text/unicode.h"
 
@@ -2158,6 +2159,39 @@ long network_session_roster_group_maximum_unknown248(
 	}
 
 	return maximum;
+}
+
+/* 0x00063220: the first number of a player of a roster, or, if it is not
+less, where one of the list of games goes down to from the most that its
+group has (network_hopper_unknown_001931a0). The number itself if it is
+NONE, if the one of the list asked for is the first (the game looks at the
+number that it is given, not at what network_hoppers_get gives) or the group
+has no number. The game works out that place twice */
+long __attribute__((stdcall)) network_session_roster_player_unknown_00063220(
+	long player_index,
+	const struct network_session_roster *roster,
+	long hopper_index)
+{
+	long value= roster->player_unknown248[player_index];
+	const struct network_hopper *hopper;
+	long maximum;
+
+	if (value==NONE)
+	{
+		return value;
+	}
+	hopper= network_hoppers_get(hopper_index);
+	if (hopper_index==0)
+	{
+		return value;
+	}
+	maximum= network_session_roster_group_maximum_unknown248(roster, roster->player_groups[player_index]);
+	if (maximum==NONE || value>network_hopper_unknown_001931a0(maximum, hopper))
+	{
+		return value;
+	}
+
+	return network_hopper_unknown_001931a0(maximum, hopper);
 }
 
 /* 0x00063280: which group of a roster is known by twelve bytes: the first

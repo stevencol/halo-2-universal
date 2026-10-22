@@ -1814,3 +1814,99 @@ boolean __attribute__((stdcall)) network_life_cycle_get_identifier_and_key(
 
 	return FALSE;
 }
+
+/* ---------- three more of the network game */
+
+/* 0x004cf95c (online_tasks.c): someone is signed in to the service */
+extern boolean unknown_004cf95c;
+
+/* 0x00074aa0: something of the network that is done each frame too
+(network_globals.c) */
+void unknown_00074aa0(void);
+
+/* 0x000641a0: the number of 0x49C8 of the session of the network game is
+set (network_session_leader_set_unknown49c8), if
+network_life_cycle_unknown_00063f00 says so, and then two things are done
+with the session (unknown_00074aa0 and unknown_00065770); whether it could
+be set */
+boolean network_life_cycle_set_unknown49c8(
+	long unknown49c8)
+{
+	byte *session;
+	boolean set;
+
+	if (!network_life_cycle_unknown_00063f00())
+	{
+		return FALSE;
+	}
+	session= network_life_cycle_session_or_null();
+	set= network_session_leader_set_unknown49c8(session, unknown49c8);
+	unknown_00074aa0();
+	unknown_00065770(session);
+
+	return set;
+}
+
+/* 0x0006dcc0: whether something (whose session is at 4) can go on with one
+of the list of games: the one of the number of 0x49C8 of the session, if it
+is in its states from the fourth to the ninth (NONE if not), has to be
+there, and the number at 0x170 of the other thing has to be no more than
+the one at 0x16C */
+boolean network_life_cycle_unknown_0006dcc0(
+	const byte *thing,
+	const byte *other)
+{
+	const byte *session= *(byte *const *)(thing+4);
+	long state= *(const long *)(session+NETWORK_SESSION_STATE_OFFSET);
+	long hopper_index= NONE;
+
+	if (state>=_network_session_state3 && state<=_network_session_state8)
+	{
+		hopper_index= *(const long *)(session+NETWORK_SESSION_UNKNOWN49C8_OFFSET);
+	}
+	if (!network_hoppers_get(hopper_index))
+	{
+		return FALSE;
+	}
+
+	return *(const long *)(other+0x170)<=*(const long *)(other+0x16C);
+}
+
+/* 0x0006e6b0: whether a session in its states from the sixth to the ninth
+can go on: always if no one is signed in to the service; if not, only in
+its sixth state, and the first time that is asked (the byte that is given
+says so) only if network_session_host_unknown_0005aeb0 could not be done.
+Out of those states the byte is cleared */
+boolean network_life_cycle_unknown_0006e6b0(
+	byte *session,
+	boolean *asked)
+{
+	long state= *(const long *)(session+NETWORK_SESSION_STATE_OFFSET);
+
+	if (state!=_network_session_state5 && state!=_network_session_state6 && state!=_network_session_state7 &&
+		state!=_network_session_state8)
+	{
+		*asked= FALSE;
+
+		return FALSE;
+	}
+	if (!unknown_004cf95c)
+	{
+		return TRUE;
+	}
+	if (state==_network_session_state7 && !session[NETWORK_SESSION_UNKNOWN7420_OFFSET])
+	{
+		return FALSE;
+	}
+	if (state!=_network_session_state5)
+	{
+		return FALSE;
+	}
+	if (*asked)
+	{
+		return TRUE;
+	}
+	*asked= TRUE;
+
+	return !network_session_host_unknown_0005aeb0(session, NONE);
+}

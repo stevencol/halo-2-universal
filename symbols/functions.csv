@@ -3328,3 +3328,7 @@ address,name,source,arguments,returns,convention
 00193a50,network_hopper_make_team_values,source/networking/network_hoppers.c,eax ebx esi stack stack,void,stdcall
 00193fa0,network_hoppers_get_file,source/networking/network_hoppers.c,stack,void,stdcall
 00075790,network_hoppers_find_unknown8,source/networking/network_hoppers.c,stack stack,bool,stdcall
+00063220,network_session_roster_player_unknown_00063220,source/networking/network_session.c,eax ebx stack,int,stdcall
+000641a0,network_life_cycle_set_unknown49c8,source/networking/network_life_cycle.c,esi,bool
+0006dcc0,network_life_cycle_unknown_0006dcc0,source/networking/network_life_cycle.c,eax esi,bool
+0006e6b0,network_life_cycle_unknown_0006e6b0,source/networking/network_life_cycle.c,eax edx,bool

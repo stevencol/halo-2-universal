@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cuatro funciones pequeñas de la partida en red, de su sesión y de los jugadores de una lista
+
+Cuatro funciones (323 bytes) en dos archivos. De 2471
+funciones se pasa a 2475, el 21,97 % de las del juego (el 12,653 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_session_roster_player_unknown_00063220` | `0x00063220` | `networking/network_session.c` |
+| `network_life_cycle_set_unknown49c8` | `0x000641a0` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_0006dcc0` | `0x0006dcc0` | `networking/network_life_cycle.c` |
+| `network_life_cycle_unknown_0006e6b0` | `0x0006e6b0` | `networking/network_life_cycle.c` |
+
+### Lo que se sabe
+
+- `network_session_roster_player_unknown_00063220` da el primer número de un
+  jugador de una lista de jugadores o, si no es menor, hasta dónde baja una
+  de la lista de partidas desde el máximo de su grupo
+  (`network_hopper_unknown_001931a0`). El juego mira el número de la lista
+  que se le da, no lo que devuelve `network_hoppers_get`: con un número que
+  no sea 0 y sin esa de la lista, leería de la dirección 0 (las pruebas no lo
+  hacen).
+- `network_life_cycle_set_unknown49c8` pone el número de `0x49C8` de la
+  sesión de la partida en red (recibe el número en `esi`) y luego hace
+  `unknown_00074aa0` y `unknown_00065770`.
+- `network_life_cycle_unknown_0006dcc0` dice si algo con su sesión en 4 puede
+  seguir con una de la lista de partidas, y
+  `network_life_cycle_unknown_0006e6b0` si una sesión en sus estados del
+  sexto al noveno puede seguir (pregunta una vez a
+  `network_session_host_unknown_0005aeb0`).
+- Ninguna variable nueva.
+
+### Sin comprobar
+
+- Las pruebas (`tests\test_small_759.py`) y las mutaciones
+  (`tests\mutations_759.py`, 13) están escritas pero no se pasaron en este
+  hito: las pasa el usuario. Solo se comprobó que el C compila y
+  `check_milestone.py` sin `--run`.
+- Los nombres son suposiciones.
+
 ## 2026-10-22 — Cuatro funciones pequeñas de la lista de partidas del servicio: los números por jugadores, su archivo y buscar una
 
 Cuatro funciones (389 bytes) en un archivo. De 2467
