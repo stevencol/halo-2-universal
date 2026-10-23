@@ -14,6 +14,7 @@ first function.
 */
 
 #include "cseries/cseries.h"
+#include "networking/transport_security.h"
 
 #include <string.h>
 
@@ -29,13 +30,30 @@ enum
 	and the byte that marks it */
 	GAME_UNKNOWN_001991F0_IDENTIFIER_SIZE= 6,
 	GAME_UNKNOWN_001991F0_VALID_OFFSET= 6,
-	GAME_UNKNOWN_001991F0_UNKNOWN8_OFFSET= 8
+	GAME_UNKNOWN_001991F0_UNKNOWN8_OFFSET= 8,
+	GAME_UNKNOWN_001991F0_UNKNOWN9_OFFSET= 9
 };
+
+/* ---------- prototypes */
+
+long time(long *timer);
 
 /* ---------- globals */
 
+/* 0x00510cb0 (game_results.c): what has the entries of 0x0051e8d4, at
+0xDC24 */
+extern boolean unknown_00510cb0;
+
 /* 0x0051e8d4: sixteen entries */
 byte unknown_0051e8d4[GAME_UNKNOWN_001991F0_ENTRIES][GAME_UNKNOWN_001991F0_ENTRY_SIZE];
+
+/* 0x00511020, 0x00511024: that 0x00199460 was done, and when */
+boolean unknown_00511020;
+long unknown_00511024;
+
+/* 0x00511028, 0x0051102c: that 0x00196430 was done, and when */
+boolean unknown_00511028;
+long unknown_0051102c;
 
 /* ---------- code */
 
@@ -142,4 +160,35 @@ unsigned long __attribute__((stdcall)) game_unknown_001991f0_read_swapped(
 	bytes= *value;
 
 	return bytes<<24 | (bytes&0xFF00)<<8 | (bytes>>8&0xFF00) | bytes>>24;
+}
+
+/* 0x00196430: it is noted that this was done, and when; if no entry of
+0x0051e8d4 is marked, the one of this console (unknown_004cf7cc) is */
+void game_unknown_001991f0_mark_own(
+	void)
+{
+	const byte *data= (const byte *)&unknown_00510cb0;
+	long index= game_unknown_001991f0_find_marked(data);
+
+	unknown_00511028= TRUE;
+	unknown_0051102c= time(NULL);
+	if (index==NONE)
+	{
+		game_unknown_001991f0_mark(game_unknown_001991f0_find(data, unknown_004cf7cc));
+	}
+}
+
+/* 0x00199460: it is noted that this was done, and when, and the byte of 9 of
+the marked entry of 0x0051e8d4 (if one is) is set */
+void game_unknown_001991f0_unknown_00199460(
+	void)
+{
+	long index= game_unknown_001991f0_find_marked((const byte *)&unknown_00510cb0);
+
+	unknown_00511020= TRUE;
+	unknown_00511024= time(NULL);
+	if (index!=NONE)
+	{
+		unknown_0051e8d4[index][GAME_UNKNOWN_001991F0_UNKNOWN9_OFFSET]= TRUE;
+	}
 }

@@ -520,3 +520,42 @@ boolean user_interface_networking_unknown_001999e3(
 {
 	return unknown==4 || unknown==5 || unknown==6;
 }
+
+/* ---------- three more for the interface */
+
+/* 0x001999b3: whether what unknown_0019989d gives is 0 or 1 */
+boolean user_interface_networking_unknown_001999b3(
+	void)
+{
+	return user_interface_networking_unknown_0019999e(unknown_0019989d());
+}
+
+/* 0x0019ad9c: the place of a player of the session that the state of the
+network game gives (user_interface_networking_find_player); NONE if there
+is none */
+long __attribute__((stdcall)) user_interface_networking_find_state_player(
+	const unsigned long *identifier)
+{
+	byte *session= NULL;
+
+	if (!network_life_cycle_get_state_session(&session))
+	{
+		return NONE;
+	}
+
+	return user_interface_networking_find_player(session, identifier);
+}
+
+/* 0x0019adca: the same with the session of the network game */
+long __attribute__((stdcall)) user_interface_networking_find_session_player(
+	const unsigned long *identifier)
+{
+	byte *session= NULL;
+
+	if (!network_life_cycle_get_session(&session))
+	{
+		return NONE;
+	}
+
+	return user_interface_networking_find_player(session, identifier);
+}

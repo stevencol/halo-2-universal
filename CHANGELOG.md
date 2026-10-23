@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cinco funciones pequeñas: la entrada marcada de esta consola y tres preguntas de la interfaz a la partida en red
+
+Cinco funciones (218 bytes) en dos archivos. De 2535
+funciones se pasa a 2540, el 22,55 % de las del juego (el 12,757 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_unknown_001991f0_mark_own` | `0x00196430` | `game/game_unknown_001991f0.c` |
+| `game_unknown_001991f0_unknown_00199460` | `0x00199460` | `game/game_unknown_001991f0.c` |
+| `user_interface_networking_unknown_001999b3` | `0x001999b3` | `interface/user_interface_networking.c` |
+| `user_interface_networking_find_state_player` | `0x0019ad9c` | `interface/user_interface_networking.c` |
+| `user_interface_networking_find_session_player` | `0x0019adca` | `interface/user_interface_networking.c` |
+
+### Lo que se sabe
+
+- `game_unknown_001991f0_mark_own` anota que se hizo y cuándo (`time`) en
+  `unknown_00511028` y `unknown_0051102c`; si ninguna de las dieciséis
+  entradas de `0x0051e8d4` está marcada, marca la de esta consola (la que
+  tiene los seis bytes de `unknown_004cf7cc`).
+- `game_unknown_001991f0_unknown_00199460` anota lo mismo en
+  `unknown_00511020` y `unknown_00511024`, y pone a 1 el byte de `9` de la
+  entrada marcada, si hay una.
+- Las dos pasan `unknown_00510cb0` a las funciones que buscan: las entradas
+  están en su `0xDC24`. La prueba las sustituye y compara que el puntero
+  sea a esa variable.
+- `user_interface_networking_unknown_001999b3`: si lo que da
+  `unknown_0019989d` es 0 o 1.
+- `user_interface_networking_find_state_player` y
+  `user_interface_networking_find_session_player`: el lugar de un jugador
+  (`user_interface_networking_find_player`) en la sesión que da el estado
+  de la partida en red, o en la sesión de la partida en red; `NONE` si no
+  hay.
+- Variables nuevas: `unknown_00511020`, `unknown_00511024`,
+  `unknown_00511028` y `unknown_0051102c`.
+
+### Sin comprobar
+
+- Los nombres son suposiciones; no se sabe para qué sirve la marca.
+
 ## 2026-10-22 — Tres funciones pequeñas: dónde está la cosa de un jugador, una de la quinta clase y una copia de 0x130 bytes
 
 Tres funciones (139 bytes) en dos archivos. De 2532

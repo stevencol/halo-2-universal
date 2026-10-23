@@ -694,3 +694,7 @@ address,name,source
 0054e5e0,unknown_0054e5e0,source/interface/user_interface_text_values.c
 0054d5b8,unknown_0054d5b8,source/interface/user_interface_lists.c
 0046e7b8,unknown_0046e7b8,source/networking/online_unknown_001a2f70.c
+00511020,unknown_00511020,source/game/game_unknown_001991f0.c
+00511024,unknown_00511024,source/game/game_unknown_001991f0.c
+00511028,unknown_00511028,source/game/game_unknown_001991f0.c
+0051102c,unknown_0051102c,source/game/game_unknown_001991f0.c

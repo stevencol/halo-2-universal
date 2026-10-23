@@ -3392,3 +3392,8 @@ address,name,source,arguments,returns,convention
 001994d0,player_get_object_origin,source/game/players.c,ecx stack,bool,stdcall
 0019b70b,levels_unknown_0019b70b,source/main/levels.c,stack,bool,stdcall
 0019d620,levels_unknown_0019d620,source/main/levels.c,eax,void
+00196430,game_unknown_001991f0_mark_own,source/game/game_unknown_001991f0.c,,void
+00199460,game_unknown_001991f0_unknown_00199460,source/game/game_unknown_001991f0.c,,void
+001999b3,user_interface_networking_unknown_001999b3,source/interface/user_interface_networking.c,,bool
+0019ad9c,user_interface_networking_find_state_player,source/interface/user_interface_networking.c,stack,int,stdcall
+0019adca,user_interface_networking_find_session_player,source/interface/user_interface_networking.c,stack,int,stdcall
