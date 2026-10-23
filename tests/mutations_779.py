@@ -16,7 +16,7 @@ MUTATIONS = [
     (MATCHMAKING, "\treturn unknown ? (const char *)(unknown+0xC) : \"\";", "\treturn unknown ? (const char *)(unknown+0x8) : \"\";"),
     (MATCHMAKING, "\treturn unknown ? (const char *)(unknown+0xC) : \"\";", "\treturn unknown ? (const char *)(unknown+0xC) : \"?\";"),
     (TASKS, "\treturn online_task_continue(task)==ONLINE_TASK_UNKNOWN8015B108;", "\treturn online_task_continue(task)!=ONLINE_TASK_UNKNOWN8015B108;"),
-    (TASKS, "\tstruct online_task *task= index!=NONE ? online_task_get(index) : NULL;\n\n\treturn online_task_continue", "\tstruct online_task *task= online_task_get(index);\n\n\treturn online_task_continue"),
+    (TASKS, "\tstruct online_task *task= index!=NONE ? online_task_get(index) : NULL;\n\n\treturn online_task_continue", "\tstruct online_task *task= index!=NONE ? online_task_get(index&0xFFFF) : NULL;\n\n\treturn online_task_continue"),
     (ENGINE, "\tif ((*flags&4) && least>6)", "\tif ((*flags&4) && least>7)"),
     (ENGINE, "\t\tleast= 21;", "\t\tleast= 20;"),
     (ENGINE, "\treturn least==0x7FFFFFFF ? 0 : least;", "\treturn least;"),
