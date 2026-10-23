@@ -3,18 +3,18 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-22, al terminar el hito 765.
+**Última actualización:** 2026-10-22, al terminar el hito 766.
 
 ## Dónde estamos
 
-- **2507 funciones descompiladas de 11.265: el 22,25 % del juego** (el
-  12,703 % de los bytes de código). Las 11.265 son las de la lista de
+- **2511 funciones descompiladas de 11.265: el 22,29 % del juego** (el
+  12,712 % de los bytes de código). Las 11.265 son las de la lista de
   Ghidra, y solo se cuentan las que están en ella: hay más descompiladas
-  que Ghidra no separa como funciones propias (2830 en total).
-- Las 2830 están comprobadas contra el ejecutable original: las 1390 del
+  que Ghidra no separa como funciones propias (2834 en total).
+- Las 2834 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile five small functions of sixteen entries known by six bytes* (ver `git log`).
+- Último hito: *Decompile four small functions of the levels and the gamepads* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 535 funciones apuntadas pero sin descompilar (las que el código
   llama); 385 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -273,7 +273,7 @@ Módulos (funciones hechas / archivo):
       (10: buscar los equipos de un jugador y los miembros de un equipo,
       lo que se sabe de cada uno, y cuatro tareas más; falta `0x000ac360`)
 - [ ] El jugador de cada mando — `interface\user_interface_controller.c`
-      (59 de unas 75, de `0x0018f372` a `0x001910b8`: cuál es, el
+      (60 de unas 75, de `0x0018f372` a `0x001910b8`, y `0x0019b3e3`: cuál es, el
       siguiente, si es invitado, contarlos y buscar el que tiene perfil o
       está conectado, quitarle el perfil, dar su perfil, su nombre, quién
       es en el servicio y sus invitados, desconectarlo, dejar el mando sin

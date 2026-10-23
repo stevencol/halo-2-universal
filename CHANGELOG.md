@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cuatro funciones pequeñas de los niveles y de los mandos: un bloque con su suma, el número más bajo, el orden de dos niveles y cuántos perfiles hay
+
+Cuatro funciones (274 bytes) en dos archivos. De 2507
+funciones se pasa a 2511, el 22,29 % de las del juego (el 12,712 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `levels_unknown_0019bdc0_valid` | `0x0019bdc0` | `main/levels.c` |
+| `levels_get_lowest_multiplayer_level_number` | `0x0019c580` | `main/levels.c` |
+| `levels_multiplayer_level_compare` | `0x0019c9a0` | `main/levels.c` |
+| `user_interface_controllers_count_profiles_long` | `0x0019b3e3` | `interface/user_interface_controller.c` |
+
+### Lo que se sabe
+
+- `levels_unknown_0019bdc0_valid` (recibe en `esi` algo de `0x2D3FC` bytes)
+  dice si es de la versión 2 y su suma (`crc_checksum_buffer` desde
+  `CRC_NEW`, con la suma de `0x4` a 0 mientras se calcula) es la que tiene.
+  Deja la suma como estaba. Está entre `levels_dispose` y el resto de
+  `levels.c`; de qué es no se sabe.
+- `levels_get_lowest_multiplayer_level_number` da el número más bajo, sin
+  contar `NONE`, de los niveles de las partidas de varios del tag de los
+  globales; `NONE` si no hay.
+- `levels_multiplayer_level_compare` es para ordenar niveles de partidas de
+  varios por su número de `0xC4C` (`levels_get_multiplayer_level` de cada
+  número): 1, 0 o -1. No mira si los niveles existen.
+- `user_interface_controllers_count_profiles_long` es lo mismo que
+  `user_interface_controllers_count_profiles`, que el juego tiene otra vez
+  aquí, pero da un `long`.
+- Ninguna variable nueva.
+
+### Sin comprobar
+
+- Las pruebas (`tests\test_small_766.py`) y las mutaciones
+  (`tests\mutations_766.py`, 12) están escritas pero no se pasaron en este
+  hito: las pasa el usuario. Solo se comprobó que el C compila y
+  `check_milestone.py` sin `--run`.
+- Los nombres son suposiciones.
+
 ## 2026-10-22 — Cinco funciones pequeñas de dieciséis entradas conocidas por seis bytes, y un número con sus bytes al revés
 
 Cinco funciones (358 bytes) en un archivo nuevo. De 2502

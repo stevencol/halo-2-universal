@@ -1357,3 +1357,26 @@ boolean __attribute__((stdcall)) user_interface_controller_gamepad_present(
 {
 	return unknown_004e61cc[index]!=0;
 }
+
+/* 0x0019b3e3: how many gamepads have a player with a profile, as a long; the
+same as user_interface_controllers_count_profiles, which the game has
+again here */
+long user_interface_controllers_count_profiles_long(
+	void)
+{
+	long profile_count= 0;
+	long index= 0;
+
+	do
+	{
+		const struct user_interface_controller *counted= USER_INTERFACE_CONTROLLER(index);
+
+		if ((counted->flags>>_user_interface_controller_profile_bit)&1)
+		{
+			profile_count++;
+		}
+		index= user_interface_controller_next(index);
+	} while (index!=NONE);
+
+	return profile_count;
+}

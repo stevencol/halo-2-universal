@@ -201,3 +201,91 @@ struct data_array *levels_get_multiplayer_level_data(
 
 	return NULL;
 }
+
+/* ---------- more of the levels */
+
+#include "memory/crc.h"
+
+enum
+{
+	/* something of 0x2D3FC bytes that starts with its version, 2, and the
+	checksum of all of it with the checksum as 0 */
+	LEVELS_UNKNOWN_0019BDC0_SIZE= 0x2D3FC,
+	LEVELS_UNKNOWN_0019BDC0_VERSION= 2,
+	LEVELS_UNKNOWN_0019BDC0_CHECKSUM_OFFSET= 0x4,
+	/* of a level of the games of several: a number that they are put in
+	order by */
+	LEVELS_MULTIPLAYER_LEVEL_UNKNOWNC4C_OFFSET= 0xC4C
+};
+
+/* 0x0019bdc0: whether something of 0x2D3FC bytes is of the second version and
+its checksum (crc_checksum_buffer, from CRC_NEW, with the checksum as 0) is
+the one that it has; the checksum is put back */
+boolean levels_unknown_0019bdc0_valid(
+	byte *data)
+{
+	unsigned long checksum;
+	unsigned long crc;
+
+	if (*(const long *)data!=LEVELS_UNKNOWN_0019BDC0_VERSION)
+	{
+		return FALSE;
+	}
+	checksum= *(const unsigned long *)(data+LEVELS_UNKNOWN_0019BDC0_CHECKSUM_OFFSET);
+	*(unsigned long *)(data+LEVELS_UNKNOWN_0019BDC0_CHECKSUM_OFFSET)= 0;
+	crc= CRC_NEW;
+	crc_checksum_buffer(data, LEVELS_UNKNOWN_0019BDC0_SIZE, &crc);
+	*(unsigned long *)(data+LEVELS_UNKNOWN_0019BDC0_CHECKSUM_OFFSET)= checksum;
+
+	return checksum==crc;
+}
+
+/* 0x0019c580: the lowest of the numbers of the levels of the games of several
+that are not NONE; NONE if there is none, or if the globals tag says nothing
+of the levels */
+long levels_get_lowest_multiplayer_level_number(
+	void)
+{
+	const byte *definition= levels_get_definition();
+	long lowest= NONE;
+	long count;
+	long index;
+
+	if (!definition)
+	{
+		return NONE;
+	}
+	count= ((const struct levels_tag_block *)(definition+LEVELS_MULTIPLAYER_OFFSET))->count;
+	for (index= 0; index<count; index++)
+	{
+		long number= *(const long *)levels_get_element(LEVELS_MULTIPLAYER_OFFSET, index, LEVELS_MULTIPLAYER_LEVEL_SIZE);
+
+		if (number!=NONE && (lowest==NONE || number<lowest))
+		{
+			lowest= number;
+		}
+	}
+
+	return lowest;
+}
+
+/* 0x0019c9a0: for putting levels of the games of several in order, by their
+numbers: 1, 0 or -1 as the number of 0xC4C of the first (by
+levels_get_multiplayer_level) is more than, the same as or less than that of
+the second. The game does not look at whether there are levels */
+long levels_multiplayer_level_compare(
+	const long *number0,
+	const long *number1)
+{
+	const byte *level0= levels_get_multiplayer_level(*number0);
+	const byte *level1= levels_get_multiplayer_level(*number1);
+	long value0= *(const long *)(level0+LEVELS_MULTIPLAYER_LEVEL_UNKNOWNC4C_OFFSET);
+	long value1= *(const long *)(level1+LEVELS_MULTIPLAYER_LEVEL_UNKNOWNC4C_OFFSET);
+
+	if (value0>value1)
+	{
+		return 1;
+	}
+
+	return value0>=value1 ? 0 : -1;
+}

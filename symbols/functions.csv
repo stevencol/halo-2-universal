@@ -3364,3 +3364,7 @@ address,name,source,arguments,returns,convention
 00199290,game_unknown_001991f0_find_marked,source/game/game_unknown_001991f0.c,edx,int
 001994a0,game_unknown_001991f0_mark,source/game/game_unknown_001991f0.c,esi,void
 00199560,game_unknown_001991f0_read_swapped,source/game/game_unknown_001991f0.c,ecx stack,int,stdcall
+0019bdc0,levels_unknown_0019bdc0_valid,source/main/levels.c,esi,bool
+0019c580,levels_get_lowest_multiplayer_level_number,source/main/levels.c,,int
+0019c9a0,levels_multiplayer_level_compare,source/main/levels.c,stack stack,int
+0019b3e3,user_interface_controllers_count_profiles_long,source/interface/user_interface_controller.c,,int
