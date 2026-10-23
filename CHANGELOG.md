@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cinco funciones pequeñas: un bit del juego, un punto, el idioma, la carpeta de las fuentes y el punto de un jugador local
+
+Cinco funciones (222 bytes) en cuatro archivos. De 2574
+funciones se pasa a 2579, el 22,89 % de las del juego (el 12,844 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_unknown1178_test` | `0x0011c050` | `game/game.c` |
+| `game_unknown_0011c7d0` | `0x0011c7d0` | `game/game.c` |
+| `get_current_language` | `0x0011cae0` | `cseries/cseries.c` |
+| `fonts_get_folder` | `0x00121730` | `text/fonts.c` |
+| `game_unknown_0016efb0_get_point` | `0x0016f3a0` | `game/game_unknown_0016efb0.c` |
+
+### Lo que se sabe
+
+- `game_unknown1178_test`: si está el bit del segundo de los tres grupos
+  de bits de `main_game_globals` (los que se borran con cada structure bsp)
+  que algo dice en `4`.
+- `game_unknown_0011c7d0`: el punto que algo tiene al principio y el número
+  de detrás, cada uno si se pide.
+- `get_current_language`: el idioma del juego, sacado una vez del de la
+  consola. Muchas funciones del juego llevan esto copiado dentro.
+- `fonts_get_folder`: la carpeta de las fuentes, `d:\maps\fonts\`, como
+  referencia de archivo. Antes guarda en `unknown_0055e718` la carpeta de
+  los mapas.
+- `game_unknown_0016efb0_get_point`: el punto de un jugador local (en `0xB8`
+  de lo suyo de `unknown_004e9bd4`), si hay structure bsp.
+- Variable nueva: `unknown_0055e718`.
+
+### Sin comprobar
+
+- En la prueba de `fonts_get_folder`, `unknown_0055e718` apunta a un texto
+  que no está en la misma dirección en el juego y aquí: se compara el texto
+  desde la función que sustituye a `csnzprintf`.
+- No se sabe a qué archivo es `game_unknown_0011c7d0`.
+
 ## 2026-10-22 — Cinco funciones pequeñas: la seguridad de la red empieza, un texto, una tarea, unas banderas y un punto
 
 Cinco funciones (362 bytes) en cinco archivos. De 2569

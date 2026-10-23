@@ -199,3 +199,16 @@ boolean real_is_in_range_3600(
 {
 	return real_is_in_range(value, 0.0f, 3600.0f);
 }
+
+/* 0x0016f3a0: the point of a local player (at 0xB8 of its thing), if there
+is a structure bsp; NULL if not, or for NONE */
+real_point3d *game_unknown_0016efb0_get_point(
+	long local_player_index)
+{
+	if (local_player_index==NONE || global_structure_bsp_index==NONE)
+	{
+		return NULL;
+	}
+
+	return (real_point3d *)(unknown_004e9bd4[local_player_index]+0xB8);
+}

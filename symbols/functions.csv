@@ -3429,3 +3429,8 @@ address,name,source,arguments,returns,convention
 00092750,online_task_unknown_00092750,source/networking/online_tasks.c,eax,bool
 000a4950,game_engine_unknown_000a4950,source/game/game_engine.c,eax,int
 000a7570,valid_real_point3d,source/math/real_math.c,eax,bool
+0011c050,game_unknown1178_test,source/game/game.c,eax,bool
+0011cae0,get_current_language,source/cseries/cseries.c,,int
+00121730,fonts_get_folder,source/text/fonts.c,ebx,void
+0016f3a0,game_unknown_0016efb0_get_point,source/game/game_unknown_0016efb0.c,ecx,pointer
+0011c7d0,game_unknown_0011c7d0,source/game/game.c,eax ecx edx,void

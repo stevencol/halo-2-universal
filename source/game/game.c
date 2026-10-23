@@ -1240,3 +1240,30 @@ long game_unknown_00240140(
 {
 	return *(const long *)((const byte *)main_game_globals+0x180)==9 ? 9 : 1;
 }
+
+/* 0x0011c050: whether the bit of the second set of main_game_globals that
+something says at 4 is set */
+boolean game_unknown1178_test(
+	const byte *unknown)
+{
+	long index= *(const short *)(unknown+4);
+
+	return (main_game_globals->unknown1178[index>>5]&(1u<<(index&31)))!=0;
+}
+
+/* 0x0011c7d0: the point that something has at its start, and the number
+after it, each if it is asked for */
+void game_unknown_0011c7d0(
+	real_point3d *point,
+	long *unknownC,
+	const byte *unknown)
+{
+	if (point)
+	{
+		*point= *(const real_point3d *)unknown;
+	}
+	if (unknownC)
+	{
+		*unknownC= *(const long *)(unknown+0xC);
+	}
+}

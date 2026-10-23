@@ -31,6 +31,14 @@ unsigned long GetLastError(void);
 /* 0x003303f3 */
 void GetSystemTimeAsFileTime(struct file_time *time);
 
+/* 0x0033039a: the language of the console */
+long XGetLanguage(void);
+
+/* ---------- globals */
+
+/* 0x0047ff38 (cache_files.c): the language of the game, or NONE */
+extern long global_language;
+
 /* ---------- code */
 
 /* 0x00072c70: does nothing; takes an argument off the stack. The game puts
@@ -408,4 +416,17 @@ float __attribute__((stdcall)) angle_difference(
 	}
 
 	return difference;
+}
+
+/* 0x0011cae0: the language of the game, worked out once from that of the
+console */
+long get_current_language(
+	void)
+{
+	if (global_language==NONE)
+	{
+		global_language= language_from_xbox_language(XGetLanguage());
+	}
+
+	return global_language;
 }

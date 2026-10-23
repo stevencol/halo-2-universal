@@ -705,3 +705,4 @@ address,name,source
 005107e0,unknown_005107e0,source/networking/online_unknown_000b36c0.c
 005107e4,unknown_005107e4,source/networking/online_unknown_000b36c0.c
 004672e0,unknown_004672e0,source/networking/online_storage.c
+0055e718,unknown_0055e718,source/text/fonts.c

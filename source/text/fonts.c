@@ -16,6 +16,7 @@ functions are guesses.
 #include "main/main_game.h"
 #include "main/main.h"
 #include "text/draw_string.h"
+#include "tag_files/files.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -455,4 +456,23 @@ long font_character_decode_pixels(
 	}
 
 	return count;
+}
+
+/* ---------- the folder of the fonts */
+
+/* 0x0055e718: the folder of the maps, for that of the fonts */
+const char *unknown_0055e718;
+
+/* 0x00121730: the folder of the fonts, in the folder of the maps */
+void fonts_get_folder(
+	struct file_reference *folder)
+{
+	char path[0x100];
+
+	unknown_0055e718= "d:\\maps\\";
+	csnzprintf(path, sizeof(path), "%sfonts\\", "d:\\maps\\");
+	memset(folder, 0, sizeof(*folder));
+	folder->signature= FILE_REFERENCE_SIGNATURE;
+	folder->location= NONE;
+	file_path_add_name(folder->path, path);
 }
