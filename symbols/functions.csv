@@ -3379,3 +3379,9 @@ address,name,source,arguments,returns,convention
 0022d68f,user_interface_text_profile_name,source/interface/user_interface_text_values.c,stack stack,void,stdcall
 0022d6ee,user_interface_text_online_name,source/interface/user_interface_text_values.c,stack stack,void,stdcall
 002b505c,user_interface_controller_voice_unavailable,source/interface/user_interface_controller.c,stack,bool,stdcall
+0022e37f,user_interface_unknown4_valid,source/interface/user_interface_lists.c,eax,bool
+0022eb43,user_interface_list_remove,source/interface/user_interface_lists.c,eax edx,void
+0022eeee,user_interface_tree_deepest_first_child,source/interface/user_interface_lists.c,edx,pointer
+0022f0b7,user_interface_link_append,source/interface/user_interface_lists.c,ecx edx,void
+0022f0d2,user_interface_link_remove,source/interface/user_interface_lists.c,eax esi,void
+0022f0ff,user_interface_flags42_unknown_0022f0ff,source/interface/user_interface_lists.c,eax,bool

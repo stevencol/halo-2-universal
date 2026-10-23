@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Seis funciones pequeñas de las listas de la interfaz: sacar y poner en listas que van en los dos sentidos, bajar por un árbol y dos preguntas
+
+Seis funciones (221 bytes) en un archivo nuevo. De 2522
+funciones se pasa a 2528, el 22,44 % de las del juego (el 12,738 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `user_interface_unknown4_valid` | `0x0022e37f` | `interface/user_interface_lists.c` |
+| `user_interface_list_remove` | `0x0022eb43` | `interface/user_interface_lists.c` |
+| `user_interface_tree_deepest_first_child` | `0x0022eeee` | `interface/user_interface_lists.c` |
+| `user_interface_link_append` | `0x0022f0b7` | `interface/user_interface_lists.c` |
+| `user_interface_link_remove` | `0x0022f0d2` | `interface/user_interface_lists.c` |
+| `user_interface_flags42_unknown_0022f0ff` | `0x0022f0ff` | `interface/user_interface_lists.c` |
+
+### Lo que se sabe
+
+- `user_interface_list_remove` saca una cosa de una lista (la primera en
+  `0x14`; en cada cosa la siguiente en `0x18` y la anterior en `0x1C`) si
+  está en ella: une las de al lado, cambia la primera si era ella y borra
+  sus enlaces, lo de `0x10` y su número de `0xC` (a `NONE`).
+- `user_interface_link_append` y `user_interface_link_remove` ponen al final
+  y sacan una cosa de otra clase de lista (anterior, siguiente y la lista,
+  cuyo primer campo es la primera).
+- `user_interface_tree_deepest_first_child` baja por los primeros hijos (en
+  `0x10`) hasta el último; sin hijos, da la cosa si no tiene nada en `4`, y
+  `NULL` si tiene.
+- `user_interface_unknown4_valid` dice si el número de `4` va de 0 a 5, y
+  `user_interface_flags42_unknown_0022f0ff` si el byte de `0x42` tiene su
+  primer o su segundo bit.
+- Ninguna variable nueva.
+
+### Sin comprobar
+
+- Las pruebas (`tests\test_small_769.py`) y las mutaciones
+  (`tests\mutations_769.py`, 12) están escritas pero no se pasaron en este
+  hito: las pasa el usuario. Solo se comprobó que el C compila y
+  `check_milestone.py` sin `--run`.
+- Los nombres son suposiciones, y no se sabe qué son las cosas de estas
+  listas (pantallas o sus partes, seguramente). Es la primera vez que una
+  prueba usa `Pointer` para dar un sitio dentro de un búfer.
+
 ## 2026-10-22 — Seis funciones pequeñas de los textos que piden las pantallas de la interfaz, y si no se puede oír al jugador de un mando
 
 Seis funciones (349 bytes) en dos archivos, uno nuevo. De 2516
