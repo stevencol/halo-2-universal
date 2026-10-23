@@ -3434,3 +3434,8 @@ address,name,source,arguments,returns,convention
 00121730,fonts_get_folder,source/text/fonts.c,ebx,void
 0016f3a0,game_unknown_0016efb0_get_point,source/game/game_unknown_0016efb0.c,ecx,pointer
 0011c7d0,game_unknown_0011c7d0,source/game/game.c,eax ecx edx,void
+00175ee0,effect_unknown_00175ee0_new,source/effects/effects.c,edx,void
+00178ad0,effect_clear_pairs,source/effects/effects.c,eax,void
+00178af0,effect_has_free_pair,source/effects/effects.c,eax,bool
+00178b30,effect_add_pair,source/effects/effects.c,eax stack stack,void,stdcall
+00187420,sound_unknown_00187420,source/sound/sound_manager.c,eax,real:xmm0

@@ -8,6 +8,7 @@ the name that the game gives to its table of data ("effect", "effect location").
 #include "cseries/cseries.h"
 
 #include <stdint.h>
+#include <string.h>
 
 #include "cache/cache_files.h"
 #include "main/main.h"
@@ -166,4 +167,97 @@ boolean effect_unknown_0017afd0(
 	}
 
 	return FALSE;
+}
+
+/* ---------- sixteen pairs of an effect, and something of 0x60 bytes */
+
+enum
+{
+	/* in an effect: sixteen pairs of numbers, free when they are 0 and
+	NONE */
+	EFFECT_PAIRS_OFFSET= 0x110,
+	NUMBER_OF_EFFECT_PAIRS= 16
+};
+
+/* the sixteen pairs of an effect */
+static inline __attribute__((always_inline)) long *effect_get_pairs(
+	long effect_index)
+{
+	return (long *)((byte *)effect_data->data+(effect_index&0xFFFF)*0x190+EFFECT_PAIRS_OFFSET);
+}
+
+/* 0x00175ee0: something of 0x60 bytes is made: zeros, NONE in five numbers
+and two shorts, 1 in two reals and a color at 0x54 and 0x58 */
+void effect_unknown_00175ee0_new(
+	byte *unknown)
+{
+	memset(unknown, 0, 0x60);
+	*(long *)(unknown+0x4)= NONE;
+	*(short *)(unknown+0x18)= NONE;
+	*(long *)(unknown+0x8)= NONE;
+	*(long *)(unknown+0x10)= NONE;
+	*(long *)(unknown+0xC)= NONE;
+	*(short *)(unknown+0x14)= NONE;
+	*(long *)(unknown+0x34)= 0;
+	*(long *)(unknown+0x38)= 0;
+	*(real *)(unknown+0x40)= 1.0f;
+	*(real *)(unknown+0x44)= 1.0f;
+	*(short *)(unknown+0x3C)= 0;
+	*(long *)(unknown+0x30)= 0;
+	*(unsigned long *)(unknown+0x54)= 0xFF808080;
+	*(unsigned long *)(unknown+0x58)= 0xFF808080;
+	*(long *)(unknown+0x5C)= 0;
+}
+
+/* 0x00178ad0: the sixteen pairs of an effect are free */
+void effect_clear_pairs(
+	byte *effect)
+{
+	long *pairs= (long *)(effect+EFFECT_PAIRS_OFFSET);
+	long index;
+
+	for (index= 0; index<NUMBER_OF_EFFECT_PAIRS; index++)
+	{
+		pairs[2*index]= 0;
+		pairs[2*index+1]= NONE;
+	}
+}
+
+/* 0x00178af0: whether an effect has a free pair */
+boolean effect_has_free_pair(
+	long effect_index)
+{
+	const long *pairs= effect_get_pairs(effect_index);
+	long index;
+
+	for (index= 0; index<NUMBER_OF_EFFECT_PAIRS; index++)
+	{
+		if (pairs[2*index+1]==NONE && pairs[2*index]==0)
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x00178b30: two numbers go in the first free pair of an effect, if it has
+one */
+void __attribute__((stdcall)) effect_add_pair(
+	long effect_index,
+	long first,
+	long second)
+{
+	long *pairs= effect_get_pairs(effect_index);
+	long index;
+
+	for (index= 0; index<NUMBER_OF_EFFECT_PAIRS; index++)
+	{
+		if (pairs[2*index+1]==NONE && pairs[2*index]==0)
+		{
+			pairs[2*index+1]= second;
+			pairs[2*index]= first;
+			return;
+		}
+	}
 }

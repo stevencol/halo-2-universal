@@ -2,6 +2,39 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cinco funciones pequeñas: los dieciséis pares de un efecto, algo de 0x60 bytes y un real del sonido
+
+Cinco funciones (282 bytes) en dos archivos. De 2579
+funciones se pasa a 2584, el 22,94 % de las del juego (el 12,853 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `effect_unknown_00175ee0_new` | `0x00175ee0` | `effects/effects.c` |
+| `effect_clear_pairs` | `0x00178ad0` | `effects/effects.c` |
+| `effect_has_free_pair` | `0x00178af0` | `effects/effects.c` |
+| `effect_add_pair` | `0x00178b30` | `effects/effects.c` |
+| `sound_unknown_00187420` | `0x00187420` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- Cada efecto (`effect_data`, `0x190` bytes) tiene en `0x110` dieciséis
+  pares de números, libres cuando son 0 y `NONE`.
+  `effect_clear_pairs` los deja libres, `effect_has_free_pair` dice si hay
+  uno libre y `effect_add_pair` pone dos números en el primero libre.
+- `effect_unknown_00175ee0_new` prepara algo de `0x60` bytes: ceros,
+  `NONE` en cinco números y dos shorts, 1 en dos reales y un color gris
+  (`0xFF808080`) en `0x54` y `0x58`.
+- `sound_unknown_00187420`: el mayor de dos reales (`0x74` y `0x78`) de lo
+  que `unknown_004ed284` tiene para un mando (`0x94` bytes cada uno); el
+  segundo si alguno no es un número.
+- Ninguna variable nueva.
+
+### Sin comprobar
+
+- Qué son los pares y lo de `0x60` bytes.
+
 ## 2026-10-22 — Cinco funciones pequeñas: un bit del juego, un punto, el idioma, la carpeta de las fuentes y el punto de un jugador local
 
 Cinco funciones (222 bytes) en cuatro archivos. De 2574

@@ -13822,3 +13822,14 @@ long tag_user_get_flag8(
 
 	return (*(const unsigned long *)tag>>8)&1;
 }
+
+/* 0x00187420: the greater of two reals (0x74 and 0x78) of what
+unknown_004ed284 has for a gamepad (0x94 bytes each); the second if either is
+not a number */
+real sound_unknown_00187420(
+	long gamepad_index)
+{
+	const real *values= (const real *)(unknown_004ed284+gamepad_index*0x94+0x74);
+
+	return values[0]>values[1] ? values[0] : values[1];
+}
