@@ -686,3 +686,7 @@ address,name,source
 004ce394,unknown_004ce394,source/networking/network_search.c
 0046dd5c,network_hoppers_file_name,source/networking/network_hoppers.c
 0051e8d4,unknown_0051e8d4,source/game/game_unknown_001991f0.c
+0046e7bc,unknown_0046e7bc,source/networking/online_unknown_001a2f70.c
+0046e7d4,unknown_0046e7d4,source/networking/online_unknown_001a2f70.c
+0046e814,unknown_0046e814,source/networking/online_unknown_001a2f70.c
+0046eeb6,unknown_0046eeb6,source/networking/online_unknown_001a2f70.c

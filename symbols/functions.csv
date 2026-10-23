@@ -3368,3 +3368,8 @@ address,name,source,arguments,returns,convention
 0019c580,levels_get_lowest_multiplayer_level_number,source/main/levels.c,,int
 0019c9a0,levels_multiplayer_level_compare,source/main/levels.c,stack stack,int
 0019b3e3,user_interface_controllers_count_profiles_long,source/interface/user_interface_controller.c,,int
+001a2f70,online_unknown_001a2f70_end_task,source/networking/online_unknown_001a2f70.c,ebx,void
+001a3230,online_unknown_001a3230_task_going_on,source/networking/online_unknown_001a2f70.c,,bool
+001a325a,online_unknown_001a325a_get_byte,source/networking/online_unknown_001a2f70.c,,byte
+001a3269,online_unknown_001a3269_get,source/networking/online_unknown_001a2f70.c,eax,bool
+001a3294,online_unknown_001a3294_clear,source/networking/online_unknown_001a2f70.c,,void

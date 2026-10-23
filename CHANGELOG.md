@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cinco funciones pequeñas de algo que usa las tareas del servicio de partidas y guarda una cosa de 0x6A2 bytes
+
+Cinco funciones (194 bytes) en un archivo nuevo. De 2511
+funciones se pasa a 2516, el 22,33 % de las del juego (el 12,719 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_unknown_001a2f70_end_task` | `0x001a2f70` | `networking/online_unknown_001a2f70.c` |
+| `online_unknown_001a3230_task_going_on` | `0x001a3230` | `networking/online_unknown_001a2f70.c` |
+| `online_unknown_001a325a_get_byte` | `0x001a325a` | `networking/online_unknown_001a2f70.c` |
+| `online_unknown_001a3269_get` | `0x001a3269` | `networking/online_unknown_001a2f70.c` |
+| `online_unknown_001a3294_clear` | `0x001a3294` | `networking/online_unknown_001a2f70.c` |
+
+### Lo que se sabe
+
+- `online_unknown_001a2f70_end_task` recibe en `ebx` algo con una tarea en
+  `0x61C`: si la hay, la hace seguir una vez (`online_task_continue`, o
+  `ONLINE_TASK_NOT_THERE` si `online_task_get` no la encuentra), guarda lo
+  que dice en `0x620`, la cierra y la olvida.
+- `online_unknown_001a3230_task_going_on` dice si la tarea de `0x0046e7d4`
+  está en marcha (estado 1 o 2), si la hay y `0x0046e7bc` no es 0.
+- Las otras tres usan una cosa de `0x6A2` bytes en `0x0046e814` y, justo
+  detrás, un byte que dice que está y otro que va con ella: darlo (o 1),
+  copiarla (o ceros) y borrarla.
+- Variables nuevas: `unknown_0046e7bc`, `unknown_0046e7d4` (empieza en
+  `NONE`), `unknown_0046e814` (`0x6A2` bytes) y `unknown_0046eeb6` (2 bytes).
+
+### Sin comprobar
+
+- Las pruebas (`tests\test_small_767.py`) y las mutaciones
+  (`tests\mutations_767.py`, 10) están escritas pero no se pasaron en este
+  hito: las pasa el usuario. Solo se comprobó que el C compila y
+  `check_milestone.py` sin `--run`.
+- Los nombres son suposiciones. `0x001a353a`, de la misma zona, se dejó: pasa
+  a `online_title_get_name` el `esi` de quien la llama, que no se ve.
+
 ## 2026-10-22 — Cuatro funciones pequeñas de los niveles y de los mandos: un bloque con su suma, el número más bajo, el orden de dos niveles y cuántos perfiles hay
 
 Cuatro funciones (274 bytes) en dos archivos. De 2507
