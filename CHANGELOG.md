@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cinco funciones pequeñas que piden a las cachés lo que se va a dibujar
+
+Cinco funciones (443 bytes) en un archivo nuevo. De 2554
+funciones se pasa a 2559, el 22,72 % de las del juego (el 12,800 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `render_model_predict_geometry` | `0x0016e770` | `structures/structure_lightmap_predict.c` |
+| `structure_lightmap_predict_bitmap_2c` | `0x0016e7b0` | `structures/structure_lightmap_predict.c` |
+| `structure_lightmap_predict_bitmap_4c` | `0x0016e820` | `structures/structure_lightmap_predict.c` |
+| `structure_lightmap_predict_geometry_64` | `0x0016e890` | `structures/structure_lightmap_predict.c` |
+| `structure_lightmap_predict_geometry_54` | `0x0016e8f0` | `structures/structure_lightmap_predict.c` |
+
+### Lo que se sabe
+
+- Las cuatro del mapa de luces miran primero si hay mapa de luces
+  (`global_structure_lightmap`) con grupos, si hay structure bsp y si el
+  primer grupo es de ella (su número de `4` es el de `8` de la bsp) y tiene
+  tag de bitmaps. Si no, devuelven `TRUE` sin pedir nada.
+- `structure_lightmap_predict_bitmap_2c` y `_4c` piden a la caché de
+  texturas (`texture_cache_bitmap_predict`) el bitmap que dice un lugar del
+  bloque de `0x2C` o de `0x4C` del grupo, si no es `NONE`.
+- `structure_lightmap_predict_geometry_64` y `_54` piden a la caché de
+  geometría (`geometry_cache_block_predict`) el bloque que dice un lugar
+  del bloque de `0x64` o de `0x54`.
+- `render_model_predict_geometry` pide la geometría de una parte de un
+  modelo: la sección que dice la parte en `0x34`.
+- Ninguna variable nueva.
+
+### Sin comprobar
+
+- El archivo y los nombres son suposiciones (el modelo podría ser de otra
+  clase de tag); no se sabe qué son los cuatro bloques del grupo.
+
 ## 2026-10-22 — Cuatro funciones más de lo que se guarda por jugador local, y dos arreglos de check_milestone.py
 
 Cuatro funciones (464 bytes) en `game_unknown_001a1c8e.c`. De 2550

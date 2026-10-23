@@ -3410,3 +3410,8 @@ address,name,source,arguments,returns,convention
 001a1c3e,game_unknown_001a1c8e_add_first_value,source/game/game_unknown_001a1c8e.c,eax stack,void,stdcall
 001a1cb5,game_unknown_001a1c8e_remove_value,source/game/game_unknown_001a1c8e.c,eax edx,void
 001a2084,game_unknown_001a1c8e_object_unknown_001a2084,source/game/game_unknown_001a1c8e.c,eax,bool
+0016e770,render_model_predict_geometry,source/structures/structure_lightmap_predict.c,eax ecx,bool
+0016e7b0,structure_lightmap_predict_bitmap_2c,source/structures/structure_lightmap_predict.c,stack,bool,stdcall
+0016e820,structure_lightmap_predict_bitmap_4c,source/structures/structure_lightmap_predict.c,stack,bool,stdcall
+0016e890,structure_lightmap_predict_geometry_64,source/structures/structure_lightmap_predict.c,edx,bool
+0016e8f0,structure_lightmap_predict_geometry_54,source/structures/structure_lightmap_predict.c,edx,bool
