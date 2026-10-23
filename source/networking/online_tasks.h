@@ -57,6 +57,8 @@ enum
 	ONLINE_TASK_NOT_SIGNED_IN= 0x80151000,
 	/* an error that online_task_failed does not count */
 	ONLINE_TASK_UNKNOWN80155100= 0x80155100,
+	/* an error that online_task_unknown_00092750 looks for */
+	ONLINE_TASK_UNKNOWN8015B108= 0x8015B108,
 	/* what signing in is at: going on, done (_online_session_signed_in), and
 	the ways that it ends in when it could not be */
 	_online_logon_state_going= 0,

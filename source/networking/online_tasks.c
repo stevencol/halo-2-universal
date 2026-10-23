@@ -1688,3 +1688,13 @@ boolean online_task_failed(
 
 	return result<0 && result!=(long)ONLINE_TASK_UNKNOWN80155100;
 }
+
+/* 0x00092750: whether a task (or what online_task_continue says with none,
+if it is not there) says ONLINE_TASK_UNKNOWN8015B108 when it goes on */
+boolean online_task_unknown_00092750(
+	long index)
+{
+	struct online_task *task= index!=NONE ? online_task_get(index) : NULL;
+
+	return online_task_continue(task)==ONLINE_TASK_UNKNOWN8015B108;
+}

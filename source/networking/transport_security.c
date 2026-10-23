@@ -11,6 +11,8 @@ functions: the game has them from 0x0007a8a0 on.
 
 #include "transport_security.h"
 
+#include "networking/transport.h"
+
 #include <string.h>
 
 /* ---------- prototypes of functions of the console's libraries */
@@ -500,4 +502,22 @@ boolean TRANSPORT_SECURITY_CALLBACK transport_address_equal(
 	}
 
 	return FALSE;
+}
+
+/* 0x0007a840: what is known of this console in the network is cleared, the
+network says when this console stops being known (and of a third thing)
+with transport_security_forget_address, and the console's library makes
+the bytes at random */
+void transport_security_initialize(
+	void)
+{
+	unknown_004cf790= FALSE;
+	unknown_004cf791= FALSE;
+	unknown_004cf792= FALSE;
+	memset(unknown_004cf793, 0, sizeof(unknown_004cf793));
+	memset(&unknown_004cf7b8, 0, sizeof(unknown_004cf7b8));
+	memset(unknown_004cf7cc, 0, sizeof(unknown_004cf7cc));
+	memset(unknown_004cf7d4, 0, sizeof(unknown_004cf7d4));
+	transport_register(NULL, transport_security_forget_address, transport_security_forget_address, 0);
+	unknown_004cf790= TRUE;
 }

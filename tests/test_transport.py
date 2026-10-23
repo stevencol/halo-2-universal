@@ -115,7 +115,7 @@ def run(t) -> None:
             "transport_initialize",
             globals=every,
             externals={
-                "unknown_0007a840": said,
+                "transport_security_initialize": said,
                 "transport_qos_initialize": said,
                 "XNetGetEthernetLinkStatus": lambda harness, arguments, status=random_.choice((0, 1, 1, 3, 2)): status,
                 "transport_startup": said,

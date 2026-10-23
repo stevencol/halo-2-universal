@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cinco funciones pequeñas: la seguridad de la red empieza, un texto, una tarea, unas banderas y un punto
+
+Cinco funciones (362 bytes) en cinco archivos. De 2569
+funciones se pasa a 2574, el 22,85 % de las del juego (el 12,836 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `transport_security_initialize` | `0x0007a840` | `networking/transport_security.c` |
+| `online_matchmaking_unknown_0008ebc0` | `0x0008ebc0` | `networking/online_matchmaking.c` |
+| `online_task_unknown_00092750` | `0x00092750` | `networking/online_tasks.c` |
+| `game_engine_unknown_000a4950` | `0x000a4950` | `game/game_engine.c` |
+| `valid_real_point3d` | `0x000a7570` | `math/real_math.c` |
+
+### Lo que se sabe
+
+- `transport_security_initialize` (antes `unknown_0007a840`, sin archivo,
+  que llama `transport.c`): borra lo que se sabe de esta consola en la red
+  (el juego borra de un golpe los `0x144` bytes desde `0x004cf790`; aquí
+  se borra cada variable), registra `transport_security_forget_address`
+  para cuando la red se para (`transport_register`) y deja que los bytes al
+  azar los haga la biblioteca de la consola.
+- `online_matchmaking_unknown_0008ebc0`: el texto de `0xC` de algo, o uno
+  vacío si no hay nada.
+- `online_task_unknown_00092750`: si una tarea (o lo que dice
+  `online_task_continue` sin ninguna, si no está) dice `0x8015B108` al
+  seguir. Constante nueva: `ONLINE_TASK_UNKNOWN8015B108`.
+- `game_engine_unknown_000a4950`: el menor de los números de las banderas
+  que tiene algo (`0x4A`, 7, 6, 10 y 21 para las cinco primeras); 0 si no
+  tiene ninguna. La usa `replication_entity_view.c`.
+- `valid_real_point3d`: si cada coordenada de un punto es un número (ni
+  infinito ni NaN).
+- Ninguna variable nueva.
+
+### Sin comprobar
+
+- Los nombres de las tres del medio son suposiciones.
+
 ## 2026-10-22 — Cinco funciones pequeñas del servicio de juegos: un servicio, una llave de la red, un texto, los errores y una copia
 
 Cinco funciones (305 bytes) en dos archivos, uno nuevo. De 2564

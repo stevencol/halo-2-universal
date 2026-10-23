@@ -2294,7 +2294,7 @@ address,name,source,arguments,returns,convention
 0008d730,transport_unknown_0008d730,source/networking/transport.c,,void
 0008d770,transport_register,source/networking/transport.c,ecx stack stack stack,void,stdcall
 0008d7c0,transport_available,source/networking/transport.c,,bool
-0007a840,unknown_0007a840,,,void
+0007a840,transport_security_initialize,source/networking/transport_security.c,,void
 0006b380,online_task_iterator_next,source/networking/online_tasks.c,esi,bool
 0006b3e0,online_tasks_initialize,source/networking/online_tasks.c,,void
 0006b450,online_tasks_dispose,source/networking/online_tasks.c,,void
@@ -3425,3 +3425,7 @@ address,name,source,arguments,returns,convention
 000b3cf0,online_unknown_000b36c0_string_length,source/networking/online_unknown_000b36c0.c,ecx,int
 000b4a20,online_error_get_message,source/networking/online_storage.c,edx,int
 000b4a40,online_copy_low_halves,source/networking/online_storage.c,eax ecx,void
+0008ebc0,online_matchmaking_unknown_0008ebc0,source/networking/online_matchmaking.c,ecx,string
+00092750,online_task_unknown_00092750,source/networking/online_tasks.c,eax,bool
+000a4950,game_engine_unknown_000a4950,source/game/game_engine.c,eax,int
+000a7570,valid_real_point3d,source/math/real_math.c,eax,bool

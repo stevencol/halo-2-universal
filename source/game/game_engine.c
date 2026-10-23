@@ -408,3 +408,34 @@ boolean __attribute__((stdcall)) game_engine_unknown_0009bb50(
 
 	return TRUE;
 }
+
+/* 0x000a4950: the least of the numbers of the flags that something has (0x4A,
+7, 6, 10 and 21 for the first five); 0 if it has none of them */
+long game_engine_unknown_000a4950(
+	const unsigned long *flags)
+{
+	long least= 0x7FFFFFFF;
+
+	if (*flags&1)
+	{
+		least= 0x4A;
+	}
+	if ((*flags&2) && least>7)
+	{
+		least= 7;
+	}
+	if ((*flags&4) && least>6)
+	{
+		least= 6;
+	}
+	if ((*flags&8) && least>10)
+	{
+		least= 10;
+	}
+	if ((*flags&0x10) && least>21)
+	{
+		least= 21;
+	}
+
+	return least==0x7FFFFFFF ? 0 : least;
+}

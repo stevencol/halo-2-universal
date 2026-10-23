@@ -35,7 +35,7 @@ long XOnlineCleanup(void);
 
 /* 0x0007a840, of transport_security.c: what the game keeps of the security
 of the network starts */
-void unknown_0007a840(void);
+void transport_security_initialize(void);
 
 /* ---------- globals */
 
@@ -73,7 +73,7 @@ void transport_initialize(
 	memset(unknown_004d8b40, 0, sizeof(unknown_004d8b40));
 	memset(unknown_004d8b60, 0, sizeof(unknown_004d8b60));
 	memset(unknown_004d8b80, 0, sizeof(unknown_004d8b80));
-	unknown_0007a840();
+	transport_security_initialize();
 	transport_qos_initialize();
 	unknown_004d8b18= TRUE;
 	status= XNetGetEthernetLinkStatus();

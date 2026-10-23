@@ -105,3 +105,11 @@ boolean online_matchmaking_attribute_valid(
 		return FALSE;
 	}
 }
+
+/* 0x0008ebc0: the text at 0xC of something; an empty one if there is
+nothing */
+const char *online_matchmaking_unknown_0008ebc0(
+	const byte *unknown)
+{
+	return unknown ? (const char *)(unknown+0xC) : "";
+}

@@ -1240,3 +1240,25 @@ real distance_squared3d(
 
 	return z*z + x*x + y*y;
 }
+
+/* 0x000a7570: whether each coordinate of a point is a number (not infinite
+and not NaN) */
+unsigned char valid_real_point3d(
+	const real_point3d *point)
+{
+	const real *coordinates= &point->x;
+	long index;
+
+	for (index= 0; index<3; index++)
+	{
+		uint32_t bits;
+
+		memcpy(&bits, &coordinates[index], sizeof(bits));
+		if ((bits&0x7F800000)==0x7F800000)
+		{
+			return 0;
+		}
+	}
+
+	return 1;
+}
