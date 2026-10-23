@@ -11,3 +11,7 @@ build/
 .ninja_deps
 .ninja_log
 __pycache__/
+
+# the settings of the editor
+.idea/
+*.iml
