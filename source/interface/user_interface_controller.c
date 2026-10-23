@@ -1380,3 +1380,27 @@ long user_interface_controllers_count_profiles_long(
 
 	return profile_count;
 }
+
+/* 0x002b505c: whether the player of a gamepad cannot be heard: TRUE for a
+guest; if not, FALSE if its voice is allowed or anyone is signed in to the
+service (the game asks both) */
+boolean __attribute__((stdcall)) user_interface_controller_voice_unavailable(
+	long index)
+{
+	boolean unavailable= TRUE;
+
+	if (user_interface_controller_is_guest(index))
+	{
+		return TRUE;
+	}
+	if (user_interface_controller_voice_allowed(index))
+	{
+		unavailable= FALSE;
+	}
+	if (online_signed_in())
+	{
+		unavailable= FALSE;
+	}
+
+	return unavailable;
+}

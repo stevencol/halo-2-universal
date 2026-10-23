@@ -3373,3 +3373,9 @@ address,name,source,arguments,returns,convention
 001a325a,online_unknown_001a325a_get_byte,source/networking/online_unknown_001a2f70.c,,byte
 001a3269,online_unknown_001a3269_get,source/networking/online_unknown_001a2f70.c,eax,bool
 001a3294,online_unknown_001a3294_clear,source/networking/online_unknown_001a2f70.c,,void
+0022d52e,user_interface_text_hopper_name,source/interface/user_interface_text_values.c,stack stack,void,stdcall
+0022d566,user_interface_text_hopper_description,source/interface/user_interface_text_values.c,stack stack,void,stdcall
+0022d67c,user_interface_text_unknown_0022d67c,source/interface/user_interface_text_values.c,stack stack,void,stdcall
+0022d68f,user_interface_text_profile_name,source/interface/user_interface_text_values.c,stack stack,void,stdcall
+0022d6ee,user_interface_text_online_name,source/interface/user_interface_text_values.c,stack stack,void,stdcall
+002b505c,user_interface_controller_voice_unavailable,source/interface/user_interface_controller.c,stack,bool,stdcall

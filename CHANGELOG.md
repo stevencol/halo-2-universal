@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Seis funciones pequeñas de los textos que piden las pantallas de la interfaz, y si no se puede oír al jugador de un mando
+
+Seis funciones (349 bytes) en dos archivos, uno nuevo. De 2516
+funciones se pasa a 2522, el 22,39 % de las del juego (el 12,730 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `user_interface_text_hopper_name` | `0x0022d52e` | `interface/user_interface_text_values.c` |
+| `user_interface_text_hopper_description` | `0x0022d566` | `interface/user_interface_text_values.c` |
+| `user_interface_text_unknown_0022d67c` | `0x0022d67c` | `interface/user_interface_text_values.c` |
+| `user_interface_text_profile_name` | `0x0022d68f` | `interface/user_interface_text_values.c` |
+| `user_interface_text_online_name` | `0x0022d6ee` | `interface/user_interface_text_values.c` |
+| `user_interface_controller_voice_unavailable` | `0x002b505c` | `interface/user_interface_controller.c` |
+
+### Lo que se sabe
+
+- Cinco reciben el número de un texto y dónde escribirlo (`stdcall`, dos
+  argumentos), y escriben: el nombre o la descripción de la partida de la
+  lista de la partida en red (o de la última, que se guarda en
+  `0x0055c2e0`), el texto `0x060000B8` de la interfaz
+  (`unknown_0023620d`), el nombre del perfil del mando del texto (de
+  `0xE40F` a `0xE412`; si no, el texto de `0x0054e5e0`) y el nombre del
+  jugador del servicio del mando del texto (de `0xE429` a `0xE42B`, y el
+  cuarto para cualquier otro), pasado a letras de dos bytes.
+- `user_interface_controller_voice_unavailable` dice `TRUE` para un
+  invitado y, si no, `FALSE` si su voz está permitida o hay alguien
+  conectado al servicio (el juego pregunta las dos cosas).
+- Variables nuevas: `unknown_0055c2e0` y `unknown_0054e5e0` (un texto, de
+  `0x1EC` bytes hasta lo siguiente conocido).
+
+### Sin comprobar
+
+- Las pruebas (`tests\test_small_768.py`) y las mutaciones
+  (`tests\mutations_768.py`, 10) están escritas pero no se pasaron en este
+  hito: las pasa el usuario. Solo se comprobó que el C compila y
+  `check_milestone.py` sin `--run`.
+- Los nombres son suposiciones; también el tamaño de `unknown_0054e5e0`, y
+  que estas funciones no devuelvan nada (dejan en `eax` lo de la última
+  llamada).
+
 ## 2026-10-22 — Cinco funciones pequeñas de algo que usa las tareas del servicio de partidas y guarda una cosa de 0x6A2 bytes
 
 Cinco funciones (194 bytes) en un archivo nuevo. De 2511
