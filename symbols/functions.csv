@@ -3359,3 +3359,8 @@ address,name,source,arguments,returns,convention
 0019997f,user_interface_networking_unknown_0019997f,source/interface/user_interface_networking.c,eax,bool
 0019999e,user_interface_networking_unknown_0019999e,source/interface/user_interface_networking.c,stack,bool,stdcall
 001999e3,user_interface_networking_unknown_001999e3,source/interface/user_interface_networking.c,eax,bool
+001991f0,game_unknown_001991f0_new,source/game/game_unknown_001991f0.c,edx edi,int
+00199250,game_unknown_001991f0_find,source/game/game_unknown_001991f0.c,edx stack,int,stdcall
+00199290,game_unknown_001991f0_find_marked,source/game/game_unknown_001991f0.c,edx,int
+001994a0,game_unknown_001991f0_mark,source/game/game_unknown_001991f0.c,esi,void
+00199560,game_unknown_001991f0_read_swapped,source/game/game_unknown_001991f0.c,ecx stack,int,stdcall

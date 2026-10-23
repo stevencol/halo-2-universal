@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cinco funciones pequeñas de dieciséis entradas conocidas por seis bytes, y un número con sus bytes al revés
+
+Cinco funciones (358 bytes) en un archivo nuevo. De 2502
+funciones se pasa a 2507, el 22,25 % de las del juego (el 12,703 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_unknown_001991f0_new` | `0x001991f0` | `game/game_unknown_001991f0.c` |
+| `game_unknown_001991f0_find` | `0x00199250` | `game/game_unknown_001991f0.c` |
+| `game_unknown_001991f0_find_marked` | `0x00199290` | `game/game_unknown_001991f0.c` |
+| `game_unknown_001991f0_mark` | `0x001994a0` | `game/game_unknown_001991f0.c` |
+| `game_unknown_001991f0_read_swapped` | `0x00199560` | `game/game_unknown_001991f0.c` |
+
+### Lo que se sabe
+
+- Hay dieciséis entradas de `0xB` bytes: seis por los que se conoce cada una
+  (la dirección de una tarjeta de red, seguramente), un byte en `6` que dice
+  que está en uso y otro en `8` que la marca. Tres funciones reciben en `edx`
+  lo que las tiene, en `0xDC24`; otra usa las de `0x0051e8d4`, que es justo
+  donde estarían en algo que empezara en `0x00510cb0`.
+- `game_unknown_001991f0_new` toma la primera libre, la vacía, la marca en
+  uso y le da los seis bytes de `edi`; `game_unknown_001991f0_find` busca la
+  primera en uso con esos seis bytes, y `game_unknown_001991f0_find_marked`
+  la primera en uso y marcada. `NONE` si no hay.
+- `game_unknown_001991f0_mark` marca, de las de `0x0051e8d4` que están en
+  uso, la de un puesto, y desmarca las demás.
+- `game_unknown_001991f0_read_swapped` da los cuatro bytes que se le dan como
+  un número con los bytes al revés, o 0 si son menos de cuatro.
+- Una variable nueva: `unknown_0051e8d4` (las dieciséis entradas, 176 bytes).
+
+### Sin comprobar
+
+- Las pruebas (`tests\test_small_765.py`) y las mutaciones
+  (`tests\mutations_765.py`, 8) están escritas pero no se pasaron en este
+  hito: las pasa el usuario. Solo se comprobó que el C compila y
+  `check_milestone.py` sin `--run`.
+- Los nombres son suposiciones, y también que estas funciones vayan juntas
+  en un archivo.
+
 ## 2026-10-22 — Cinco funciones pequeñas de lo que la interfaz hace con sus números de la partida en red
 
 Cinco funciones (100 bytes) en un archivo. De 2497
