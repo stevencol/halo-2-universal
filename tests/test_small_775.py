@@ -57,10 +57,14 @@ def run(t) -> None:
             table[objects_at + index * OBJECT : objects_at + (index + 1) * OBJECT] = some_object()
         globals_ = bytearray(random_.randbytes(0x240))
         struct.pack_into("<I", globals_, 0x134, 0x200)
-        struct.pack_into("<f", globals_, 0x23C, random_.choice((0.0, 2.0, 4.0, 9.0, float("nan"))))
+        minimum = random_.choice((0.0, 2.0, 4.0, 9.0, float("nan")))
+        struct.pack_into("<f", globals_, 0x23C, minimum)
         other = bytearray(random_.randbytes(0x298))
         struct.pack_into("<f", other, 0x294, random_.choice((0.0, 1.0, 4.0, 9.0, float("nan"))))
         velocity = struct.pack("<fff", real(), real(), real())
+        if random_.random() < 0.3:
+            # just faster than the number of the globals, but not by 1.05
+            velocity = struct.pack("<fff", minimum * 1.02, 0.0, 0.0)
 
         def velocities(harness, arguments, velocity=velocity):
             harness.mu.mem_write(arguments[1], velocity)

@@ -10,7 +10,7 @@ MUTATIONS = [
     (FILE, "\t\t\tplayer->value_count--;\n\t\t}\n\t}\n\tplayer->values[player->unknown2E8]= value;", "\t\t}\n\t}\n\tplayer->values[player->unknown2E8]= value;"),
     (FILE, "\tif (index<0)\n\t{\n\t\treturn;\n\t}\n\tfirst_count", "\tfirst_count"),
     (FILE, "\tif (index>=total)", "\tif (index>total)"),
-    (FILE, "\t\tif (index!=first_count-1)", "\t\tif (TRUE)"),
+    (FILE, "\t\tif (index!=first_count-1)", "\t\tif (index!=first_count-2)"),
     (FILE, "player->values[player->unknown2E8+player->value_count-1];", "player->values[player->unknown2E8+player->value_count];"),
     (FILE, "\t\t\tplayer->values[index]= player->values[total-1];", "\t\t\tplayer->values[index]= player->values[total-2];"),
     (FILE, "\tif (!(object[0xC1]&1))", "\tif (!(object[0xC1]&2))"),

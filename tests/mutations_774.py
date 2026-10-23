@@ -14,6 +14,6 @@ MUTATIONS = [
     (FILE, "\tunknown_0051e994->unknownBC4= 0;", "\tunknown_0051e994->unknownBC0= 0;"),
     (FILE, "\t\tplayer->entries[index].unknown40= 0;", "\t\tplayer->entries[index].unknown0[0]= 0;"),
     (FILE, "\tplayer->unknown2E8= 0;\n", ""),
-    (FILE, "\tif (flags&2)", "\tif (flags&3)"),
+    (FILE, "\tif (flags&2)", "\tif (flags&8)"),
     (FILE, "\treturn flags&8 ? 3 : NONE;", "\treturn flags&8 ? 3 : 0;"),
 ]
