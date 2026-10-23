@@ -9,7 +9,7 @@ MUTATIONS = [
     (SESSION, "\tlong value= roster->player_unknown248[player_index];", "\tlong value= roster->player_unknown288[player_index];"),
     (SESSION, "\tif (hopper_index==0)\n\t{\n\t\treturn value;", "\tif (hopper_index==1)\n\t{\n\t\treturn value;"),
     (SESSION, "network_session_roster_group_maximum_unknown248(roster, roster->player_groups[player_index]);", "network_session_roster_group_maximum_unknown248(roster, player_index);"),
-    (SESSION, "\tif (maximum==NONE || value>network_hopper_unknown_001931a0(maximum, hopper))", "\tif (maximum==NONE || value>=network_hopper_unknown_001931a0(maximum, hopper))"),
+    (SESSION, "\tif (maximum==NONE || value>network_hopper_unknown_001931a0(maximum, hopper))", "\tif (maximum==NONE || value<network_hopper_unknown_001931a0(maximum, hopper))"),
     (SESSION, "\treturn network_hopper_unknown_001931a0(maximum, hopper);\n}", "\treturn network_hopper_unknown_001931a0(maximum-1, hopper);\n}"),
     (LIFE, "\tset= network_session_leader_set_unknown49c8(session, unknown49c8);", "\tset= network_session_leader_set_unknown49c8(session, 0);"),
     (LIFE, "\tunknown_00074aa0();\n\tunknown_00065770(session);", "\tunknown_00065770(session);"),
