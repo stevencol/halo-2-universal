@@ -34,6 +34,9 @@ enum
 
 /* ---------- globals */
 
+/* 0x0046e7b8: the gamepad whose player this is for, or NONE */
+long unknown_0046e7b8= NONE;
+
 /* 0x0046e7bc: whether the task of 0x0046e7d4 counts. 0x0046e7d4: a task */
 long unknown_0046e7bc;
 long unknown_0046e7d4= NONE;

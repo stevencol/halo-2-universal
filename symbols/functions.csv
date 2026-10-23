@@ -3385,3 +3385,7 @@ address,name,source,arguments,returns,convention
 0022f0b7,user_interface_link_append,source/interface/user_interface_lists.c,ecx edx,void
 0022f0d2,user_interface_link_remove,source/interface/user_interface_lists.c,eax esi,void
 0022f0ff,user_interface_flags42_unknown_0022f0ff,source/interface/user_interface_lists.c,eax,bool
+0022e3b4,user_interface_thing_unknown_0022e3b4,source/interface/user_interface_lists.c,ecx,bool
+0022e9aa,user_interface_thing_get_offset_z,source/interface/user_interface_lists.c,eax,real:xmm0
+0022e9c6,user_interface_thing_get_bounds,source/interface/user_interface_lists.c,ecx eax,void
+0022e0df,user_interface_text_unknownB82_kind,source/interface/user_interface_text_values.c,stack stack,void,stdcall

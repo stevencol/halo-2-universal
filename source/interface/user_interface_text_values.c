@@ -173,3 +173,54 @@ void __attribute__((stdcall)) user_interface_text_online_name(
 	user_interface_controller_get_online_user(controller_index, &user);
 	ascii_string_to_wchar_string(user.name, text, USER_INTERFACE_TEXT_ONLINE_NAME_LENGTH);
 }
+
+/* ---------- the text of what the player of a gamepad has */
+
+/* 0x0046e7b8 (online_unknown_001a2f70.c): a gamepad, or NONE */
+extern long unknown_0046e7b8;
+
+enum
+{
+	/* of the 0x92 bytes of user_interface_controller_get_unknownB82: eight
+	bytes that are not all 0 when there is something, and a kind of it at
+	0x1C, from 0 to 3; and the texts of the interface of each kind */
+	USER_INTERFACE_TEXT_UNKNOWNB82_SIZE= 0x94,
+	USER_INTERFACE_TEXT_UNKNOWNB82_KIND_OFFSET= 0x1C,
+	USER_INTERFACE_TEXT_UNKNOWNB82_KIND0= 0x040002C6,
+	USER_INTERFACE_TEXT_UNKNOWNB82_KIND1= 0x060002C7,
+	USER_INTERFACE_TEXT_UNKNOWNB82_KIND2= 0x0D0002C8,
+	USER_INTERFACE_TEXT_UNKNOWNB82_KIND3= 0x090002C9
+};
+
+/* 0x0022e0df: the text of the interface for the kind of what the player of
+the gamepad of 0x0046e7b8 has (user_interface_controller_get_unknownB82);
+the text 0 if it has nothing, or of no kind that is known */
+void __attribute__((stdcall)) user_interface_text_unknownB82_kind(
+	long text_index,
+	wchar *text)
+{
+	byte unknown[USER_INTERFACE_TEXT_UNKNOWNB82_SIZE];
+	long kind_text= 0;
+
+	(void)text_index;
+	if (user_interface_controller_get_unknownB82(unknown_0046e7b8, unknown) &&
+		(*(const unsigned long *)unknown || *(const unsigned long *)(unknown+4)))
+	{
+		switch (*(const long *)(unknown+USER_INTERFACE_TEXT_UNKNOWNB82_KIND_OFFSET))
+		{
+		case 0:
+			kind_text= USER_INTERFACE_TEXT_UNKNOWNB82_KIND0;
+			break;
+		case 1:
+			kind_text= USER_INTERFACE_TEXT_UNKNOWNB82_KIND1;
+			break;
+		case 2:
+			kind_text= USER_INTERFACE_TEXT_UNKNOWNB82_KIND2;
+			break;
+		case 3:
+			kind_text= USER_INTERFACE_TEXT_UNKNOWNB82_KIND3;
+			break;
+		}
+	}
+	unknown_0023620d(kind_text, text);
+}

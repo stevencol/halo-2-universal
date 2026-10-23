@@ -11,6 +11,9 @@ of one, most likely) is not known, and the names are guesses.
 */
 
 #include "cseries/cseries.h"
+#include "math/real_math.h"
+
+#include <string.h>
 
 /* ---------- constants */
 
@@ -175,4 +178,63 @@ boolean user_interface_flags42_unknown_0022f0ff(
 	byte flags= thing[USER_INTERFACE_FLAGS42_OFFSET];
 
 	return ((flags>>1)&1) || (flags&1);
+}
+
+/* ---------- more of the things of the interface */
+
+enum
+{
+	/* of a thing: two bytes that both have to be set, and a number that
+	can be no more than that of 0x0054d5b8 */
+	USER_INTERFACE_THING_UNKNOWN6D_OFFSET= 0x6D,
+	USER_INTERFACE_THING_UNKNOWN6E_OFFSET= 0x6E,
+	USER_INTERFACE_THING_UNKNOWN50_OFFSET= 0x50,
+	/* of a thing: its place, as four shorts at 0x20, and three reals at
+	0x58 that move it */
+	USER_INTERFACE_THING_BOUNDS_OFFSET= 0x20,
+	USER_INTERFACE_THING_OFFSET_OFFSET= 0x58
+};
+
+/* 0x0054d5b8: a number that the number of 0x50 of a thing can reach */
+unsigned long unknown_0054d5b8;
+
+/* 0x0022e3b4: whether a thing has its two bytes of 0x6D and 0x6E, and its
+number of 0x50 is no more than that of 0x0054d5b8 */
+boolean user_interface_thing_unknown_0022e3b4(
+	const byte *thing)
+{
+	return thing[USER_INTERFACE_THING_UNKNOWN6D_OFFSET] && thing[USER_INTERFACE_THING_UNKNOWN6E_OFFSET] &&
+		*(const unsigned long *)(thing+USER_INTERFACE_THING_UNKNOWN50_OFFSET)<=unknown_0054d5b8;
+}
+
+/* 0x0022e9aa: the third of the three reals of 0x58 of a thing */
+real user_interface_thing_get_offset_z(
+	const byte *thing)
+{
+	real offset[3];
+
+	memcpy(offset, thing+USER_INTERFACE_THING_OFFSET_OFFSET, sizeof(offset));
+
+	return offset[2];
+}
+
+/* 0x0022e9c6: the place of a thing, as four shorts, moved by the first two
+reals of 0x58 (cut to whole numbers): the second goes to the first and the
+third short, and the first to the second and the fourth */
+void user_interface_thing_get_bounds(
+	const byte *thing,
+	short *bounds)
+{
+	real offset[3];
+	short x;
+	short y;
+
+	memcpy(bounds, thing+USER_INTERFACE_THING_BOUNDS_OFFSET, 4*sizeof(short));
+	memcpy(offset, thing+USER_INTERFACE_THING_OFFSET_OFFSET, sizeof(offset));
+	y= (short)(long)offset[1];
+	x= (short)(long)offset[0];
+	bounds[1]+= x;
+	bounds[3]+= x;
+	bounds[0]+= y;
+	bounds[2]+= y;
 }

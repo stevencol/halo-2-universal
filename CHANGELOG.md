@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cuatro funciones pequeñas de las cosas de la interfaz y del texto de lo que tiene el jugador de un mando
+
+Cuatro funciones (215 bytes) en dos archivos. De 2528
+funciones se pasa a 2532, el 22,48 % de las del juego (el 12,745 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `user_interface_thing_unknown_0022e3b4` | `0x0022e3b4` | `interface/user_interface_lists.c` |
+| `user_interface_thing_get_offset_z` | `0x0022e9aa` | `interface/user_interface_lists.c` |
+| `user_interface_thing_get_bounds` | `0x0022e9c6` | `interface/user_interface_lists.c` |
+| `user_interface_text_unknownB82_kind` | `0x0022e0df` | `interface/user_interface_text_values.c` |
+
+### Lo que se sabe
+
+- `user_interface_thing_unknown_0022e3b4` dice si una cosa tiene sus bytes
+  de `0x6D` y `0x6E` y su número de `0x50` no pasa del de `0x0054d5b8` (sin
+  signo).
+- `user_interface_thing_get_offset_z` da el tercero de los tres reales de
+  `0x58` de una cosa (en `xmm0`), y `user_interface_thing_get_bounds` su
+  sitio (cuatro `short` de `0x20`) movido por los dos primeros, cortados a
+  enteros.
+- `user_interface_text_unknownB82_kind` escribe el texto de la interfaz
+  (`unknown_0023620d`) de la clase (de 0 a 3, en `0x1C`) de lo que tiene el
+  jugador del mando de `0x0046e7b8`
+  (`user_interface_controller_get_unknownB82`), o el texto 0.
+- Los `0x6A2` bytes de `0x0046e814` (hito 767) son del tamaño de
+  `unknown4E0` de cada mando: seguramente una copia de eso.
+- Variables nuevas: `unknown_0054d5b8` y `unknown_0046e7b8` (empieza en
+  `NONE`; está junto a las del hito 767).
+
+### Sin comprobar
+
+- Las pruebas (`tests\test_small_770.py`) y las mutaciones
+  (`tests\mutations_770.py`, 9) están escritas pero no se pasaron en este
+  hito: las pasa el usuario. Solo se comprobó que el C compila y
+  `check_milestone.py` sin `--run`.
+- Los nombres son suposiciones.
+
 ## 2026-10-22 — Seis funciones pequeñas de las listas de la interfaz: sacar y poner en listas que van en los dos sentidos, bajar por un árbol y dos preguntas
 
 Seis funciones (221 bytes) en un archivo nuevo. De 2522
