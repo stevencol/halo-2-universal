@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cinco funciones pequeñas de lo que la interfaz pregunta a la partida en red y a sus dos sesiones
+
+Cinco funciones (248 bytes) en un archivo. De 2487
+funciones se pasa a 2492, el 22,12 % de las del juego (el 12,674 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `user_interface_networking_unknown_00199dc9` | `0x00199dc9` | `interface/user_interface_networking.c` |
+| `user_interface_networking_get_player_count` | `0x00199ebc` | `interface/user_interface_networking.c` |
+| `user_interface_networking_get_other_player_count` | `0x00199ef8` | `interface/user_interface_networking.c` |
+| `user_interface_networking_get_membership_unknown8` | `0x00199f34` | `interface/user_interface_networking.c` |
+| `user_interface_networking_set_unknown49c4` | `0x0019a1bd` | `interface/user_interface_networking.c` |
+
+### Lo que se sabe
+
+- `user_interface_networking_unknown_00199dc9` hace
+  `network_life_cycle_unknown_000594a0` con sus tres números si lo que hace
+  la partida en red es, para la interfaz, lo cuarto o lo sexto
+  (`user_interface_networking_unknown_00199d7c`, que pregunta dos veces si la
+  primera no da 4).
+- `user_interface_networking_get_player_count` y
+  `user_interface_networking_get_other_player_count` dan cuántos jugadores
+  tiene la sesión de la partida en red (o la otra), y
+  `user_interface_networking_get_membership_unknown8` el número de `0x8` de
+  quién está en ella; 0 si no hay o no está establecida.
+- `user_interface_networking_set_unknown49c4` hace
+  `network_life_cycle_set_unknown49c4` si esta consola lleva la partida.
+- Ninguna variable nueva.
+
+### Sin comprobar
+
+- Las pruebas (`tests\test_small_762.py`) y las mutaciones
+  (`tests\mutations_762.py`, 6) están escritas pero no se pasaron en este
+  hito: las pasa el usuario. Solo se comprobó que el C compila y
+  `check_milestone.py` sin `--run`.
+- Los nombres son suposiciones.
+
 ## 2026-10-22 — Seis funciones pequeñas de lo que la interfaz pregunta a la partida en red y a su lista de partidas
 
 Seis funciones (225 bytes) en un archivo. De 2481

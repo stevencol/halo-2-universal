@@ -260,3 +260,97 @@ boolean user_interface_networking_unknown_0019a250(
 	return state<=_network_life_cycle_state1 || state==_network_life_cycle_state3 ||
 		state==_network_life_cycle_state4 || state>_network_life_cycle_state8;
 }
+
+/* ---------- the two sessions of the network game, for the interface */
+
+/* 0x000643a0 (network_life_cycle.c) */
+boolean network_life_cycle_set_unknown49c4(void);
+
+enum
+{
+	/* a number of who is in a session, after two others */
+	USER_INTERFACE_NETWORKING_MEMBERSHIP_UNKNOWN8_OFFSET= 0x8
+};
+
+/* 0x00199dc9: network_life_cycle_unknown_000594a0 with three numbers, if what
+the network game is doing is the fourth or the sixth for the interface;
+FALSE if not */
+boolean __attribute__((stdcall)) user_interface_networking_unknown_00199dc9(
+	long unknown0,
+	long unknown4,
+	long unknown8)
+{
+	if (user_interface_networking_unknown_00199d7c()==4 || user_interface_networking_unknown_00199d7c()==6)
+	{
+		return network_life_cycle_unknown_000594a0(unknown0, unknown4, unknown8);
+	}
+
+	return FALSE;
+}
+
+/* 0x00199ebc: how many players the session of the network game has; 0 if
+there is none or it is not established */
+long user_interface_networking_get_player_count(
+	void)
+{
+	byte *session= NULL;
+	long player_count= 0;
+
+	if (network_life_cycle_get_session(&session) && network_session_established(session))
+	{
+		long local_peer;
+		long host_peer;
+		const byte *membership= network_session_get_membership(&local_peer, session, &host_peer);
+
+		player_count= *(const long *)(membership+NETWORK_SESSION_MEMBERSHIP_PLAYER_COUNT_OFFSET);
+	}
+
+	return player_count;
+}
+
+/* 0x00199ef8: the same, of the other session of the network game */
+long user_interface_networking_get_other_player_count(
+	void)
+{
+	byte *session= NULL;
+	long player_count= 0;
+
+	if (network_life_cycle_get_other_session(&session) && network_session_established(session))
+	{
+		long local_peer;
+		long host_peer;
+		const byte *membership= network_session_get_membership(&local_peer, session, &host_peer);
+
+		player_count= *(const long *)(membership+NETWORK_SESSION_MEMBERSHIP_PLAYER_COUNT_OFFSET);
+	}
+
+	return player_count;
+}
+
+/* 0x00199f34: the number at 8 of who is in the session of the network game;
+0 if there is none or it is not established */
+long user_interface_networking_get_membership_unknown8(
+	void)
+{
+	byte *session= NULL;
+	long unknown8= 0;
+
+	if (network_life_cycle_get_session(&session) && network_session_established(session))
+	{
+		long local_peer;
+		long host_peer;
+		const byte *membership= network_session_get_membership(&local_peer, session, &host_peer);
+
+		unknown8= *(const long *)(membership+USER_INTERFACE_NETWORKING_MEMBERSHIP_UNKNOWN8_OFFSET);
+	}
+
+	return unknown8;
+}
+
+/* 0x0019a1bd: network_life_cycle_set_unknown49c4, if this console runs the
+network game; FALSE if not */
+boolean user_interface_networking_set_unknown49c4(
+	void)
+{
+	return network_life_cycle_local_peer_is_host() ? network_life_cycle_set_unknown49c4() : FALSE;
+}
