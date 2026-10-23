@@ -3389,3 +3389,6 @@ address,name,source,arguments,returns,convention
 0022e9aa,user_interface_thing_get_offset_z,source/interface/user_interface_lists.c,eax,real:xmm0
 0022e9c6,user_interface_thing_get_bounds,source/interface/user_interface_lists.c,ecx eax,void
 0022e0df,user_interface_text_unknownB82_kind,source/interface/user_interface_text_values.c,stack stack,void,stdcall
+001994d0,player_get_object_origin,source/game/players.c,ecx stack,bool,stdcall
+0019b70b,levels_unknown_0019b70b,source/main/levels.c,stack,bool,stdcall
+0019d620,levels_unknown_0019d620,source/main/levels.c,eax,void

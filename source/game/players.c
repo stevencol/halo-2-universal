@@ -277,3 +277,25 @@ long unit_get_player_index(
 
 	return NONE;
 }
+
+/* 0x001994d0: where the thing of a player is (object_get_origin): its unit
+at 0x2C or, if it has none, what it has at 0x30; FALSE if it has neither */
+boolean __attribute__((stdcall)) player_get_object_origin(
+	long player_index,
+	real_point3d *origin)
+{
+	const byte *player= (const byte *)player_data->data+(player_index&0xFFFF)*0x21C;
+	long object_index= *(const long *)(player+0x2C);
+
+	if (object_index==NONE)
+	{
+		object_index= *(const long *)(player+0x30);
+		if (object_index==NONE)
+		{
+			return FALSE;
+		}
+	}
+	object_get_origin(object_index, origin);
+
+	return TRUE;
+}

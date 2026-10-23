@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Tres funciones pequeñas: dónde está la cosa de un jugador, una de la quinta clase y una copia de 0x130 bytes
+
+Tres funciones (139 bytes) en dos archivos. De 2532
+funciones se pasa a 2535, el 22,50 % de las del juego (el 12,750 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `player_get_object_origin` | `0x001994d0` | `game/players.c` |
+| `levels_unknown_0019b70b` | `0x0019b70b` | `main/levels.c` |
+| `levels_unknown_0019d620` | `0x0019d620` | `main/levels.c` |
+
+### Lo que se sabe
+
+- `player_get_object_origin` da dónde está (`object_get_origin`) la unidad
+  de un jugador (`0x2C`) o, si no tiene, lo que tiene en `0x30`; `FALSE` si
+  no tiene ninguna de las dos.
+- `levels_unknown_0019b70b` dice si algo es de la quinta clase y su número
+  de `8` es 1, 3 o 13.
+- `levels_unknown_0019d620` copia `0x130` bytes (las opciones de una
+  partida de varios, seguramente) y pasa la copia a `unknown_0019d650`.
+- Ninguna variable nueva.
+
+### Sin comprobar
+
+- Las pruebas (`tests\test_small_771.py`) y las mutaciones
+  (`tests\mutations_771.py`, 6) están escritas pero no se pasaron en este
+  hito: las pasa el usuario. Solo se comprobó que el C compila y
+  `check_milestone.py` sin `--run`.
+- Los nombres son suposiciones. Las dos últimas se pusieron en `levels.c`
+  porque están cerca de sus funciones (`0x0019b70b` justo antes de
+  `levels_initialize`, `0x0019d620` después de lo último de los niveles),
+  pero no se sabe si son de ese archivo.
+
 ## 2026-10-22 — Cuatro funciones pequeñas de las cosas de la interfaz y del texto de lo que tiene el jugador de un mando
 
 Cuatro funciones (215 bytes) en dos archivos. De 2528

@@ -289,3 +289,48 @@ long levels_multiplayer_level_compare(
 
 	return value0>=value1 ? 0 : -1;
 }
+
+/* ---------- two more near the levels */
+
+#include <string.h>
+
+/* 0x0019d650 (game.c): sets up a part of the options of a multiplayer game */
+void unknown_0019d650(void *unknown);
+
+enum
+{
+	/* something that 0x0019b70b looks at: its kind first, and a number at 8
+	that it cares about for the fifth kind */
+	LEVELS_UNKNOWN_0019B70B_KIND= 5,
+	LEVELS_UNKNOWN_0019B70B_NUMBER_OFFSET= 0x8,
+	/* the size of what 0x0019d620 copies: the options of a game of
+	several (the variant), most likely */
+	LEVELS_UNKNOWN_0019D620_SIZE= 0x130
+};
+
+/* 0x0019b70b: whether something is of the fifth kind, with 1, 3 or 13 for
+its number of 8 */
+boolean __attribute__((stdcall)) levels_unknown_0019b70b(
+	const long *unknown)
+{
+	long number;
+
+	if (*unknown!=LEVELS_UNKNOWN_0019B70B_KIND)
+	{
+		return FALSE;
+	}
+	number= *(const long *)((const byte *)unknown+LEVELS_UNKNOWN_0019B70B_NUMBER_OFFSET);
+
+	return number==1 || number==3 || number==13;
+}
+
+/* 0x0019d620: unknown_0019d650 with a copy of 0x130 bytes, which is not
+kept */
+void levels_unknown_0019d620(
+	const byte *unknown)
+{
+	byte copy[LEVELS_UNKNOWN_0019D620_SIZE];
+
+	memcpy(copy, unknown, sizeof(copy));
+	unknown_0019d650(copy);
+}
