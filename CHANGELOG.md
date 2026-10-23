@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cinco funciones pequeñas del servicio de juegos: un servicio, una llave de la red, un texto, los errores y una copia
+
+Cinco funciones (305 bytes) en dos archivos, uno nuevo. De 2564
+funciones se pasa a 2569, el 22,81 % de las del juego (el 12,824 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `online_unknown_000b36c0_service_available` | `0x000b36c0` | `networking/online_unknown_000b36c0.c` |
+| `online_unknown_000b36c0_unregister` | `0x000b3b10` | `networking/online_unknown_000b36c0.c` |
+| `online_unknown_000b36c0_string_length` | `0x000b3cf0` | `networking/online_unknown_000b36c0.c` |
+| `online_error_get_message` | `0x000b4a20` | `networking/online_storage.c` |
+| `online_copy_low_halves` | `0x000b4a40` | `networking/online_storage.c` |
+
+### Lo que se sabe
+
+- `online_unknown_000b36c0_service_available`: si hay alguien conectado y
+  el servicio de juegos tiene el servicio `0x4D530064` (el último de
+  `unknown_00467178` con ese número lo dice).
+- `online_unknown_000b36c0_unregister`: la de las ocho de
+  `unknown_00510588` que está en uso (`unknown_005107dc`) se olvida: su
+  dirección de la red (`XNetUnregisterInAddr`), si la tiene, y su llave
+  (`XNetUnregisterKey`), y cuenta una menos.
+- `online_unknown_000b36c0_string_length`: lo largo de un texto, hasta
+  `0xFFF` caracteres. El juego mira cinco por vuelta.
+- `online_error_get_message`: lo que se dice de un error del servicio de
+  juegos (un número de la interfaz, parece), de una tabla de 40
+  (`unknown_004672e0`, copiada del juego); `0x6F` si no está.
+- `online_copy_low_halves`: siete números de 64 bits como siete de 32 (la
+  mitad baja). La usan la búsqueda de partidas y el matchmaking.
+- Variables nuevas: `unknown_00510588`, `unknown_005107dc`,
+  `unknown_005107e0`, `unknown_005107e4` y `unknown_004672e0`.
+
+### Sin comprobar
+
+- Las dos últimas se pusieron en `online_storage.c` porque están justo
+  detrás de sus funciones, pero no se sabe si son de ese archivo.
+
 ## 2026-10-22 — Cinco funciones pequeñas: una bandera de los jugadores recientes y cuatro de algo que busca en la red
 
 Cinco funciones (423 bytes) en dos archivos, uno nuevo. De 2559

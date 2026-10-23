@@ -3420,3 +3420,8 @@ address,name,source,arguments,returns,convention
 000b31b0,network_unknown_000b2e30_stop,source/networking/network_unknown_000b2e30.c,,void
 000b3500,network_unknown_000b2e30_fill_entry,source/networking/network_unknown_000b2e30.c,eax ebx,void
 000b35e0,network_unknown_000b2e30_get_entry,source/networking/network_unknown_000b2e30.c,ecx,pointer
+000b36c0,online_unknown_000b36c0_service_available,source/networking/online_unknown_000b36c0.c,,int
+000b3b10,online_unknown_000b36c0_unregister,source/networking/online_unknown_000b36c0.c,,void
+000b3cf0,online_unknown_000b36c0_string_length,source/networking/online_unknown_000b36c0.c,ecx,int
+000b4a20,online_error_get_message,source/networking/online_storage.c,edx,int
+000b4a40,online_copy_low_halves,source/networking/online_storage.c,eax ecx,void

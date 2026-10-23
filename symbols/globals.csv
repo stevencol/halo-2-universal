@@ -700,3 +700,8 @@ address,name,source
 0051102c,unknown_0051102c,source/game/game_unknown_001991f0.c
 0051e994,unknown_0051e994,source/game/game_unknown_001a1c8e.c
 004d8eb4,unknown_004d8eb4,source/networking/network_unknown_000b2e30.c
+00510588,unknown_00510588,source/networking/online_unknown_000b36c0.c
+005107dc,unknown_005107dc,source/networking/online_unknown_000b36c0.c
+005107e0,unknown_005107e0,source/networking/online_unknown_000b36c0.c
+005107e4,unknown_005107e4,source/networking/online_unknown_000b36c0.c
+004672e0,unknown_004672e0,source/networking/online_storage.c

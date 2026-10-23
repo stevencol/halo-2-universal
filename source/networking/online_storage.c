@@ -446,3 +446,69 @@ boolean online_storage_get_progress(
 
 	return TRUE;
 }
+
+/* ---------- two helpers of the service of games that are after these */
+
+enum
+{
+	NUMBER_OF_ONLINE_ERROR_MESSAGES= 40,
+	/* what is said for an error that is not in the table */
+	ONLINE_ERROR_MESSAGE_DEFAULT= 0x6F
+};
+
+struct online_error_message
+{
+	unsigned long error;
+	long message;
+};
+
+/* 0x004672e0: what is said for each error of the service of games (a number
+of the interface, it seems) */
+const struct online_error_message unknown_004672e0[NUMBER_OF_ONLINE_ERROR_MESSAGES]=
+{
+	{0x80152100, 0x5E}, {0x80152101, 0x5F}, {0x80152102, 0x60}, {0x80152103, 0x61},
+	{0x80152104, 0x62}, {0x80152105, 0x63}, {0x80152106, 0x64}, {0x80152108, 0x65},
+	{0x80152109, 0x66}, {0x8015210A, 0x67}, {0x8015210B, 0x68}, {0x8015210C, 0x5D},
+	{0x8015210D, 0x69}, {0x8015210E, 0x6A}, {0x8015210F, 0x6B}, {0x80152110, 0x6C},
+	{0x80152111, 0x5C}, {0x80152112, 0x6D}, {0x80152002, 0x8F}, {0x80152003, 0x90},
+	{0x80152004, 0x91}, {0x80152006, 0x92}, {0x80152007, 0x93}, {0x80152008, 0x94},
+	{0x80152009, 0xB6}, {0x8015200A, 0x95}, {0x80151000, 0x23}, {0x80151001, 0x23},
+	{0x80151002, 0x24}, {0x80151003, 0x25}, {0x80151004, 0x38}, {0x80151005, 0x26},
+	{0x80151006, 0x9A}, {0x80151101, 0x9B}, {0x001512F0, 0x28}, {0x80151200, 0x27},
+	{0x8015B004, 0x9E}, {0x8015B005, 0x9F}, {0x8015B006, 0xA0}, {0x80151300, 0x9B}
+};
+
+/* 0x000b4a20: what is said for an error of the service of games */
+long online_error_get_message(
+	unsigned long error)
+{
+	long index;
+
+	for (index= 0; index<NUMBER_OF_ONLINE_ERROR_MESSAGES; index++)
+	{
+		if (unknown_004672e0[index].error==error)
+		{
+			return unknown_004672e0[index].message;
+		}
+	}
+
+	return ONLINE_ERROR_MESSAGE_DEFAULT;
+}
+
+/* 0x000b4a40: seven numbers of 64 bits as seven of 32 (the low half of
+each) */
+void online_copy_low_halves(
+	unsigned long *destination,
+	const unsigned long *source)
+{
+	long index;
+
+	for (index= 0; index<7; index++)
+	{
+		destination[index]= 0;
+	}
+	for (index= 0; index<7; index++)
+	{
+		destination[index]= source[2*index];
+	}
+}
