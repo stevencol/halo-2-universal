@@ -170,18 +170,18 @@ void __attribute__((stdcall)) simulation_player_actions_add(
 
 /* 0x001a1d55: a byte for a unit. 0x00082d20: the rest of what a player does
 is made small, for a unit or for none */
-byte __attribute__((stdcall)) unknown_001a1d55(long unit_index);
+boolean __attribute__((stdcall)) game_unknown_001a1c8e_object_fast_enough(long object_index);
 void __attribute__((stdcall)) unknown_00082d20(long unit_index, const byte *unknown34, byte *packed);
 
 /* 0x000823d0: what a player does is made small for a message, 0x34 bytes
 that start clear. Sixteen bytes go as they are; of its bits, the first two
 and those of 0x800 and 0x4000 are four bits. With a unit, the four bytes
-and the byte that the unit has go too, and what unknown_001a1d55 says of
-it; with none, NONE. The four bytes that the player has take the place of
-those of the unit if the first two of them are the same, and its two bytes
-that of the unit's unless they are NONE; and of the third and fourth of
-the four, the fourth is NONE if it is the same as the third. Then the rest
-(unknown_00082d20) */
+and the byte that the unit has go too, and whether it goes fast enough
+(game_unknown_001a1c8e_object_fast_enough); with none, NONE. The four
+bytes that the player has take the place of those of the unit if the
+first two of them are the same, and its two bytes that of the unit's
+unless they are NONE; and of the third and fourth of the four, the fourth
+is NONE if it is the same as the third. Then the rest (unknown_00082d20) */
 void __attribute__((stdcall)) simulation_player_action_pack(
 	byte *packed,
 	const byte *action,
@@ -205,7 +205,7 @@ void __attribute__((stdcall)) simulation_player_action_pack(
 			*(const long *)(unit+SIMULATION_PLAYER_UNIT_UNKNOWN210_OFFSET);
 		*(short *)(packed+SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN16_OFFSET)=
 			*(const signed char *)(unit+SIMULATION_PLAYER_UNIT_UNKNOWN240_OFFSET);
-		packed[SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN32_OFFSET]= unknown_001a1d55(unit_index);
+		packed[SIMULATION_PLAYER_PACKED_ACTION_UNKNOWN32_OFFSET]= game_unknown_001a1c8e_object_fast_enough(unit_index);
 	}
 	else
 	{

@@ -61,6 +61,20 @@ def added_rows(path: str, base: str) -> tuple[list[str], list[str]]:
     """The rows of a file of symbols/ in the commit, and those added at its end."""
     old = git("show", f"{base}:{path}").replace("\r\n", "\n")
     new = text_of(ROOT / path)
+    # a row of a function that had no source can be completed where it is,
+    # with the same address: it counts as one added
+    completed = []
+    old_lines, new_lines = old.split("\n"), new.split("\n")
+    for n, (a, b) in enumerate(zip(old_lines, new_lines)):
+        a_fields, b_fields = a.split(","), b.split(",")
+        if a != b and len(a_fields) >= 3 and a_fields[2] == "" and len(b_fields) >= 3 and a_fields[0] == b_fields[0] and b_fields[2]:
+            completed.append((n, a, b))
+    for n, a, b in completed:
+        new_lines[n] = a
+    new = "\n".join(new_lines)
+    if completed:
+        old = "\n".join(line for n, line in enumerate(old_lines) if n not in {c[0] for c in completed})
+        new = "\n".join(line for n, line in enumerate(new_lines) if n not in {c[0] for c in completed})
     if not new.startswith(old.rstrip("\n")):
         old_lines, new_lines = old.split("\n"), new.split("\n")
         for n, (a, b) in enumerate(zip(old_lines, new_lines)):
@@ -70,7 +84,7 @@ def added_rows(path: str, base: str) -> tuple[list[str], list[str]]:
         else:
             error(f"{path}: se borraron filas del final")
         return old_lines, []
-    return old.split("\n"), [row for row in new[len(old.rstrip("\n")) :].split("\n") if row.strip()]
+    return old.split("\n"), [b for n, a, b in completed] + [row for row in new[len(old.rstrip("\n")) :].split("\n") if row.strip()]
 
 
 def disassembly_returns(address: str) -> list[int]:
@@ -161,7 +175,9 @@ def array_globals() -> set[str]:
     names = set()
     for row in csv.DictReader(open(ROOT / "symbols" / "globals.csv", encoding="utf-8", newline="")):
         path = ROOT / row["source"]
-        if row["source"] and path.exists() and re.search(rf"^[^/*\n(]*\b{row['name']}\s*\[", text_of(path), re.M):
+        # a table is declared at the start of a line (not in a function,
+        # where a pointer can be used as global_tag_instances[...])
+        if row["source"] and path.exists() and re.search(rf"^[A-Za-z_][^/*\n(=;]*\b{row['name']}\s*\[", text_of(path), re.M):
             names.add(row["name"])
     return names
 

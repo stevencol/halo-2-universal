@@ -2595,7 +2595,7 @@ address,name,source,arguments,returns,convention
 001973f0,unknown_001973f0,,eax,void
 000823d0,simulation_player_action_pack,source/networking/simulation_player.c,esi stack stack,void,stdcall
 000824d0,unknown_000824d0,,eax edx stack,void,stdcall
-001a1d55,unknown_001a1d55,,stack,int,stdcall
+001a1d55,game_unknown_001a1c8e_object_fast_enough,source/game/game_unknown_001a1c8e.c,stack,bool,stdcall
 00082d20,unknown_00082d20,,eax stack stack,void,stdcall
 000a58d0,simulation_gamestate_entity_get_object,source/networking/simulation_gamestate_entities.c,ecx,int
 00082b30,simulation_player_action_unpack_object,source/networking/simulation_player.c,esi edi,void
@@ -3407,3 +3407,6 @@ address,name,source,arguments,returns,convention
 001a1dfe,game_unknown_001a1c8e_reals_to_bytes,source/game/game_unknown_001a1c8e.c,eax ecx,void
 001a221d,game_unknown_001a1c8e_reset_player,source/game/game_unknown_001a1c8e.c,eax,void
 001a2c81,game_unknown_001a1c8e_flag_index,source/game/game_unknown_001a1c8e.c,eax,int
+001a1c3e,game_unknown_001a1c8e_add_first_value,source/game/game_unknown_001a1c8e.c,eax stack,void,stdcall
+001a1cb5,game_unknown_001a1c8e_remove_value,source/game/game_unknown_001a1c8e.c,eax edx,void
+001a2084,game_unknown_001a1c8e_object_unknown_001a2084,source/game/game_unknown_001a1c8e.c,eax,bool

@@ -46,7 +46,7 @@ def run(t) -> None:
             unit_index,
             globals={"object_header_data": Buffer(bytes(headers) + bytes(units), pointers=tuple(pointers))},
             externals={
-                "unknown_001a1d55": lambda harness, arguments, value=random_.getrandbits(32): (value, (arguments[0],)),
+                "game_unknown_001a1c8e_object_fast_enough": lambda harness, arguments, value=random_.getrandbits(32): (value, (arguments[0],)),
                 "unknown_00082d20": rest,
             },
         )

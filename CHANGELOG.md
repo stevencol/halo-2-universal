@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cuatro funciones más de lo que se guarda por jugador local, y dos arreglos de check_milestone.py
+
+Cuatro funciones (464 bytes) en `game_unknown_001a1c8e.c`. De 2550
+funciones se pasa a 2554, el 22,67 % de las del juego (el 12,785 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_unknown_001a1c8e_add_first_value` | `0x001a1c3e` | `game/game_unknown_001a1c8e.c` |
+| `game_unknown_001a1c8e_remove_value` | `0x001a1cb5` | `game/game_unknown_001a1c8e.c` |
+| `game_unknown_001a1c8e_object_fast_enough` | `0x001a1d55` | `game/game_unknown_001a1c8e.c` |
+| `game_unknown_001a1c8e_object_unknown_001a2084` | `0x001a2084` | `game/game_unknown_001a1c8e.c` |
+
+### Lo que se sabe
+
+- Los dieciséis valores de cada jugador local son dos partes: los primeros
+  `unknown2E8` y los `value_count` siguientes.
+  `game_unknown_001a1c8e_add_first_value` pone uno al final de la primera
+  parte y, para hacer sitio, pasa el primero de la segunda al final (o se
+  pierde el último si no cabe). `game_unknown_001a1c8e_remove_value` quita
+  el de un lugar poniendo en él el último de su parte.
+- `game_unknown_001a1c8e_object_fast_enough` (antes `unknown_001a1d55`, sin
+  archivo, que usa `simulation_player_action_pack`): si un objeto va lo
+  bastante rápido. Su velocidad con un tercio de lo que sube (0 si tiene la
+  primera bandera de `0xC1`); para un bípedo o un vehículo con algo en
+  `0x13C`, un poco más (×1,05) que un número de los globales del juego;
+  para lo demás, el número de `0x294` de `unknown_00510c94`.
+- `game_unknown_001a1c8e_object_unknown_001a2084`: si un objeto se puede
+  coger (parece): un bípedo o un vehículo sin nada en `0x13C`, o uno de la
+  clase 13 cuya definición no tiene la séptima bandera de `0xBC`; y en los
+  dos casos sin la tercera bandera de `0x10A`.
+
+### check_milestone.py
+
+- Una fila de `symbols/functions.csv` sin archivo ya se puede completar en
+  su sitio (con la misma dirección): cuenta como añadida. Antes pedía
+  completarla y a la vez daba error por cambiarla.
+- Una variable global solo se toma por tabla si se declara con `[` al
+  principio de una línea. `global_tag_instances` es un puntero y se usaba
+  con `[...]` dentro de funciones, así que pedía darla como `GlobalData`.
+
+### Sin comprobar
+
+- Para qué son los valores y qué significan las banderas.
+
 ## 2026-10-22 — Cinco funciones pequeñas de algo de 0x2F0 bytes por jugador local
 
 Cinco funciones (217 bytes) en un archivo nuevo. De 2545
