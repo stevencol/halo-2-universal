@@ -88,3 +88,11 @@ void user_interface_memory_free(
 {
 	memory_pool_block_free(user_interface_memory_pool, &memory);
 }
+
+/* 0x001a47fd: memory of the pool (user_interface_memory_allocate), with 0
+for the other two */
+void *__attribute__((stdcall)) user_interface_memory_allocate_simple(
+	long size)
+{
+	return user_interface_memory_allocate(size, 0, 0);
+}

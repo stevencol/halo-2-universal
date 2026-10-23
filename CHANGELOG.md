@@ -2,6 +2,45 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cinco funciones pequeñas que llaman a otras ya descompiladas
+
+Cinco funciones (139 bytes) en cuatro archivos. De 2540
+funciones se pasa a 2545, el 22,59 % de las del juego (el 12,762 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_results_get_statistic_if_readable` | `0x001969a0` | `game/game_results.c` |
+| `levels_unknown_0019c970` | `0x0019c970` | `main/levels.c` |
+| `online_unknown_001a2f70_clear_and_end_task` | `0x001a2fb4` | `networking/online_unknown_001a2f70.c` |
+| `online_unknown_001a2f70_get_title_name` | `0x001a353a` | `networking/online_unknown_001a2f70.c` |
+| `user_interface_memory_allocate_simple` | `0x001a47fd` | `interface/user_interface_memory.c` |
+
+### Lo que se sabe
+
+- `game_results_get_statistic_if_readable`: `game_results_get_statistic`
+  si hay algo que leer (`unknown_00510cb0` y `unknown_00510cb1`); `NONE` si
+  no. Recibe el jugador en la pila y el equipo y el número en `edx` y `esi`,
+  que pasa tal cual.
+- `levels_unknown_0019c970`: sin campaña (`NONE`), lo que hay en `0xB4C`
+  del nivel de varios jugadores (`levels_get_multiplayer_level`); con
+  campaña, lo que hay en `8` de lo que da `unknown_0019c270`. `NULL` si no
+  hay nivel.
+- `online_unknown_001a2f70_clear_and_end_task`: pone a 0 el número de
+  `0x610` y termina la tarea (`online_unknown_001a2f70_end_task`).
+- `online_unknown_001a2f70_get_title_name`: deja vacío el nombre y, si se
+  da un juego, pide su nombre (`online_title_get_name`). El tamaño llega en
+  `esi`, que pasa tal cual.
+- `user_interface_memory_allocate_simple`: `user_interface_memory_allocate`
+  con 0 en los otros dos.
+- Ninguna variable nueva.
+
+### Sin comprobar
+
+- Los nombres son suposiciones; no se sabe qué hay en `0xB4C` del nivel ni
+  en `0x610` de lo que tiene la tarea.
+
 ## 2026-10-22 — Cinco funciones pequeñas: la entrada marcada de esta consola y tres preguntas de la interfaz a la partida en red
 
 Cinco funciones (218 bytes) en dos archivos. De 2535

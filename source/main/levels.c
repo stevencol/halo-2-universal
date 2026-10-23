@@ -334,3 +334,29 @@ void levels_unknown_0019d620(
 	memcpy(copy, unknown, sizeof(copy));
 	unknown_0019d650(copy);
 }
+
+/* ---------- something of a level */
+
+/* 0x0019c270 (main_game.c) */
+const char *unknown_0019c270(long campaign, long map);
+
+/* 0x0019c970: something at 0xB4C of a multiplayer level, if no campaign is
+given, or at 8 of what unknown_0019c270 gives of a level of a campaign;
+NULL if there is no such level */
+const byte *levels_unknown_0019c970(
+	long campaign,
+	long map)
+{
+	if (campaign==NONE)
+	{
+		const byte *level= levels_get_multiplayer_level(map);
+
+		return level ? level+0xB4C : NULL;
+	}
+	else
+	{
+		const byte *level= (const byte *)unknown_0019c270(campaign, map);
+
+		return level ? level+8 : NULL;
+	}
+}

@@ -415,3 +415,18 @@ void game_results_get_player_unknown50(
 		unknown50[3]= 0;
 	}
 }
+
+/* 0x001969a0: one of the numbers of a team or of a player
+(game_results_get_statistic), if there is something to read; NONE if not */
+long __attribute__((stdcall)) game_results_get_statistic_if_readable(
+	long player_index,
+	long team_index,
+	long statistic)
+{
+	if (!game_results_readable())
+	{
+		return NONE;
+	}
+
+	return game_results_get_statistic(player_index, team_index, statistic);
+}

@@ -116,3 +116,26 @@ void online_unknown_001a3294_clear(
 	unknown_0046eeb6[0]= FALSE;
 	memset(unknown_0046e814, 0, ONLINE_UNKNOWN_0046E814_SIZE);
 }
+
+/* 0x001a2fb4: the number of 0x610 of something is cleared, and its task
+ended (online_unknown_001a2f70_end_task) */
+void online_unknown_001a2f70_clear_and_end_task(
+	byte *data)
+{
+	*(long *)(data+0x610)= 0;
+	online_unknown_001a2f70_end_task(data);
+}
+
+/* 0x001a353a: the name of a game (online_title_get_name), or nothing if no
+game is given */
+void __attribute__((stdcall)) online_unknown_001a2f70_get_title_name(
+	wchar *name,
+	unsigned long title,
+	long size)
+{
+	name[0]= 0;
+	if (title)
+	{
+		online_title_get_name(title, name, size);
+	}
+}

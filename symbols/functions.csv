@@ -3397,3 +3397,8 @@ address,name,source,arguments,returns,convention
 001999b3,user_interface_networking_unknown_001999b3,source/interface/user_interface_networking.c,,bool
 0019ad9c,user_interface_networking_find_state_player,source/interface/user_interface_networking.c,stack,int,stdcall
 0019adca,user_interface_networking_find_session_player,source/interface/user_interface_networking.c,stack,int,stdcall
+001969a0,game_results_get_statistic_if_readable,source/game/game_results.c,stack edx esi,int,stdcall
+0019c970,levels_unknown_0019c970,source/main/levels.c,eax ecx,pointer
+001a2fb4,online_unknown_001a2f70_clear_and_end_task,source/networking/online_unknown_001a2f70.c,eax,void
+001a353a,online_unknown_001a2f70_get_title_name,source/networking/online_unknown_001a2f70.c,eax stack esi,void,stdcall
+001a47fd,user_interface_memory_allocate_simple,source/interface/user_interface_memory.c,stack,pointer,stdcall
