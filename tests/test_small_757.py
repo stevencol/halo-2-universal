@@ -42,6 +42,10 @@ def run(t) -> None:
         for _ in range(COUNT):
             one = hopper(random_)
             texts(random_, one)
+            # the byte of 0x5E8 and the one after it, often 0: only whether
+            # it is 0 is compared
+            one[0x5E8] = random_.choice((0, 0, 1, 0xFF))
+            one[0x5E9] = random_.choice((0, 0, 1, 0xFF))
             table += one
         globals_ = {"unknown_0047d8f4": blob(random_), "network_hoppers": GlobalData(bytes(table))}
         good = lambda harness, arguments, so=random_.choice((0, 1, 1)): (so, (harness.normalize(arguments[0]),))
