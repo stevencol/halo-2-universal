@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cinco funciones pequeñas de lo que la interfaz pregunta a la partida en red: si puede seguir, tres números y los jugadores de sus sesiones
+
+Cinco funciones (396 bytes) en un archivo. De 2492
+funciones se pasa a 2497, el 22,17 % de las del juego (el 12,687 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `user_interface_networking_unknown_0019a203` | `0x0019a203` | `interface/user_interface_networking.c` |
+| `user_interface_networking_get_unknown4d08` | `0x0019a84e` | `interface/user_interface_networking.c` |
+| `user_interface_networking_has_player` | `0x0019a951` | `interface/user_interface_networking.c` |
+| `user_interface_networking_other_has_player` | `0x0019a9b4` | `interface/user_interface_networking.c` |
+| `user_interface_networking_find_player` | `0x0019ad39` | `interface/user_interface_networking.c` |
+
+### Lo que se sabe
+
+- `user_interface_networking_unknown_0019a203` dice, con partida en la red y
+  si esta consola la lleva, si la partida en red puede seguir: no en sus
+  estados primero, tercero, sexto, séptimo y octavo, y en el noveno solo si
+  `user_interface_networking_hopper_unknown_00193470` dice que no.
+- `user_interface_networking_get_unknown4d08` da dos de los tres números de
+  `network_life_cycle_get_unknown4d08`; el tercero lo escribe en el sitio
+  de su segundo argumento en la pila, y no se guarda.
+- `user_interface_networking_has_player` y
+  `user_interface_networking_other_has_player` dicen si la sesión de la
+  partida en red (o la otra) tiene un jugador en el puesto de los 16 bits
+  bajos de un número; `FALSE` con `NONE`, un puesto de 16 o más o sin
+  sesión establecida.
+- `user_interface_networking_find_player` da el puesto del primer jugador de
+  una sesión que se conoce por los doce bytes que se le dan
+  (`network_player_identifier_equal` con sus marcas), o `NONE`.
+- Ninguna variable nueva.
+
+### Sin comprobar
+
+- Las pruebas (`tests\test_small_763.py`) y las mutaciones
+  (`tests\mutations_763.py`, 10) están escritas pero no se pasaron en este
+  hito: las pasa el usuario. Solo se comprobó que el C compila y
+  `check_milestone.py` sin `--run`.
+- Los nombres son suposiciones.
+
 ## 2026-10-22 — Cinco funciones pequeñas de lo que la interfaz pregunta a la partida en red y a sus dos sesiones
 
 Cinco funciones (248 bytes) en un archivo. De 2487

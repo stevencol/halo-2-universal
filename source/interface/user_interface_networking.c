@@ -354,3 +354,132 @@ boolean user_interface_networking_set_unknown49c4(
 {
 	return network_life_cycle_local_peer_is_host() ? network_life_cycle_set_unknown49c4() : FALSE;
 }
+
+/* ---------- more that the interface asks of the network game */
+
+/* 0x00064970 (network_life_cycle.c) */
+boolean __attribute__((stdcall)) network_life_cycle_get_unknown4d08(long *unknown4d08, long *unknown4d0c,
+	const byte **unknown4d10);
+
+/* 0x0019a203: whether, with a game in the network that this console runs,
+the network game can go on: it cannot in its first, third, sixth, seventh
+and eighth states, and in its ninth only if
+user_interface_networking_hopper_unknown_00193470 says no. FALSE with no
+game in the network, or if this console does not run it */
+boolean user_interface_networking_unknown_0019a203(
+	void)
+{
+	if (!unknown_004d8ba0 || !network_life_cycle_local_peer_is_host())
+	{
+		return FALSE;
+	}
+
+	switch (network_life_cycle_get_state())
+	{
+	case _network_life_cycle_state_none:
+	case _network_life_cycle_state2:
+	case _network_life_cycle_state5:
+	case _network_life_cycle_state6:
+	case _network_life_cycle_state7:
+		return FALSE;
+	case _network_life_cycle_state8:
+		return !user_interface_networking_hopper_unknown_00193470();
+	default:
+		return TRUE;
+	}
+}
+
+/* 0x0019a84e: two of the three numbers of network_life_cycle_get_unknown4d08;
+the third is given a place of its own and is not kept */
+boolean __attribute__((stdcall)) user_interface_networking_get_unknown4d08(
+	long *unknown4d08,
+	long *unknown4d0c)
+{
+	const byte *unknown4d10;
+
+	return network_life_cycle_get_unknown4d08(unknown4d08, unknown4d0c, &unknown4d10);
+}
+
+/* 0x0019a951: whether the session of the network game has a player in the
+place of the low sixteen bits of a number; FALSE for NONE, a place of 16 or
+more, or no established session */
+boolean user_interface_networking_has_player(
+	long player_index)
+{
+	byte *session= NULL;
+	long local_peer;
+	long host_peer;
+	const byte *membership;
+	unsigned long players;
+	long index;
+
+	if (player_index==NONE)
+	{
+		return FALSE;
+	}
+	index= player_index&0xFFFF;
+	if (!network_life_cycle_get_session(&session) || !network_session_established(session))
+	{
+		return FALSE;
+	}
+	membership= network_session_get_membership(&local_peer, session, &host_peer);
+	players= *(const unsigned long *)(membership+NETWORK_SESSION_MEMBERSHIP_PLAYERS_OFFSET);
+
+	return index<MAXIMUM_NETWORK_SESSION_PLAYERS && (players&(1u<<index))!=0;
+}
+
+/* 0x0019a9b4: the same, of the other session of the network game */
+boolean user_interface_networking_other_has_player(
+	long player_index)
+{
+	byte *session= NULL;
+	long local_peer;
+	long host_peer;
+	const byte *membership;
+	unsigned long players;
+	long index;
+
+	if (player_index==NONE)
+	{
+		return FALSE;
+	}
+	index= player_index&0xFFFF;
+	if (!network_life_cycle_get_other_session(&session) || !network_session_established(session))
+	{
+		return FALSE;
+	}
+	membership= network_session_get_membership(&local_peer, session, &host_peer);
+	players= *(const unsigned long *)(membership+NETWORK_SESSION_MEMBERSHIP_PLAYERS_OFFSET);
+
+	return index<MAXIMUM_NETWORK_SESSION_PLAYERS && (players&(1u<<index))!=0;
+}
+
+/* 0x0019ad39: the place of the first player of who is in a session that is
+known by the twelve bytes that are given (network_player_identifier_equal,
+with its flags); NONE if there is none, if the session or the bytes are
+NULL, or if the session is not established */
+long __attribute__((stdcall)) user_interface_networking_find_player(
+	const byte *session,
+	const unsigned long *identifier)
+{
+	long found= NONE;
+
+	if (session && identifier && network_session_established(session))
+	{
+		const byte *membership= session+NETWORK_SESSION_MEMBERSHIP_OFFSET;
+		unsigned long players= *(const unsigned long *)(membership+NETWORK_SESSION_MEMBERSHIP_PLAYERS_OFFSET);
+		const byte *player= membership+NETWORK_SESSION_MEMBERSHIP_PLAYER_ARRAY_OFFSET;
+		long index;
+
+		for (index= 0; index<MAXIMUM_NETWORK_SESSION_PLAYERS; index++, player+= NETWORK_SESSION_PLAYER_SIZE)
+		{
+			if ((players&(1u<<index)) && network_player_identifier_equal((const unsigned long *)player, identifier, TRUE))
+			{
+				found= index;
+				break;
+			}
+		}
+	}
+
+	return found;
+}
