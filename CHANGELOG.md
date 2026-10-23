@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cinco funciones pequeñas: una bandera de los jugadores recientes y cuatro de algo que busca en la red
+
+Cinco funciones (423 bytes) en dos archivos, uno nuevo. De 2559
+funciones se pasa a 2564, el 22,76 % de las del juego (el 12,814 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_recent_players_unknown_00080d70` | `0x00080d70` | `networking/network_recent_players.c` |
+| `network_unknown_000b2e30_start` | `0x000b2e30` | `networking/network_unknown_000b2e30.c` |
+| `network_unknown_000b2e30_stop` | `0x000b31b0` | `networking/network_unknown_000b2e30.c` |
+| `network_unknown_000b2e30_fill_entry` | `0x000b3500` | `networking/network_unknown_000b2e30.c` |
+| `network_unknown_000b2e30_get_entry` | `0x000b35e0` | `networking/network_unknown_000b2e30.c` |
+
+### Lo que se sabe
+
+- `network_recent_players_unknown_00080d70` recorre unas cosas de `0x18`
+  bytes. A las que tienen `0x61` en `0xC`, 4 en `0x10` y otras cuatro (en
+  `0x14`) con 4, 1, 1 y 1, les quita la primera bandera de `0x60` a su
+  jugador de la tabla de jugadores recientes, si está
+  (`network_recent_players_find`).
+- `unknown_004d8eb4` son dos cosas de `0x50` bytes (la segunda en
+  `0x004d8f04`) que buscan algo en la red. Tienen una tarea del servicio
+  de juegos, una medida de la red (`transport_qos`) y entradas de `0x784`
+  bytes que da quien las usa.
+- `network_unknown_000b2e30_start`: la primera empieza, si no lo ha hecho y
+  `unknown_004d8b18` y `unknown_004d8b19` lo dicen. Toma un identificador
+  propio (`transport_security_random_identifier`) y las entradas, que deja
+  a cero; devuelve si está en marcha.
+- `network_unknown_000b2e30_stop`: cierra la tarea y la medida de la
+  primera, si las tiene, y pone a cero tres cosas suyas.
+- `network_unknown_000b2e30_fill_entry`: llena una entrada con lo
+  encontrado (en uso, la hora y `0x10` y `0x24` bytes de ello).
+- `network_unknown_000b2e30_get_entry`: una entrada de la segunda, si está
+  en uso y su número de `0x72` es 0.
+- Variable nueva: `unknown_004d8eb4`.
+
+### Sin comprobar
+
+- Que las dos cosas sean del mismo tipo es una suposición: la primera
+  función usa la primera y la última, la segunda.
+- Parece la búsqueda de partidas en la red local, pero no se ha
+  comprobado; el nombre del archivo es solo la dirección de su primera
+  función.
+
 ## 2026-10-22 — Cinco funciones pequeñas que piden a las cachés lo que se va a dibujar
 
 Cinco funciones (443 bytes) en un archivo nuevo. De 2554

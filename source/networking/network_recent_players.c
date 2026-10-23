@@ -348,3 +348,49 @@ boolean __attribute__((stdcall)) network_recent_players_iterate_second(
 		index= next;
 	}
 }
+
+/* 0x00080d70: of some things (0x18 bytes each), those that have 0x61 at 0xC
+and 4 at 0x10, and four more things (at 0x14) with 4, 1, 1 and 1, take the
+first flag of 0x60 from their player (by the twelve bytes at the start),
+if there is one */
+void network_recent_players_unknown_00080d70(
+	long count,
+	const byte *things)
+{
+	long index;
+
+	for (index= 0; index<count; index++)
+	{
+		const byte *thing= things+index*0x18;
+		long player_index;
+		long place;
+
+		if (*(const long *)(thing+0xC)==0x61 && *(const long *)(thing+0x10)==4 &&
+			(player_index= network_recent_players_find(thing, &place))!=NONE)
+		{
+			const byte *more= *(const byte *const *)(thing+0x14);
+			long matching= 0;
+
+			if (*(const long *)(more+0x4)==4)
+			{
+				matching++;
+			}
+			if (*(const long *)(more+0x14)==1)
+			{
+				matching++;
+			}
+			if (*(const long *)(more+0x24)==1)
+			{
+				matching++;
+			}
+			if (*(const long *)(more+0x34)==1)
+			{
+				matching++;
+			}
+			if (matching==4)
+			{
+				*(unsigned long *)(network_recent_player_get(player_index)+0x60)&= ~1u;
+			}
+		}
+	}
+}

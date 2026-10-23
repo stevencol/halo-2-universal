@@ -3415,3 +3415,8 @@ address,name,source,arguments,returns,convention
 0016e820,structure_lightmap_predict_bitmap_4c,source/structures/structure_lightmap_predict.c,stack,bool,stdcall
 0016e890,structure_lightmap_predict_geometry_64,source/structures/structure_lightmap_predict.c,edx,bool
 0016e8f0,structure_lightmap_predict_geometry_54,source/structures/structure_lightmap_predict.c,edx,bool
+00080d70,network_recent_players_unknown_00080d70,source/networking/network_recent_players.c,eax ecx,void
+000b2e30,network_unknown_000b2e30_start,source/networking/network_unknown_000b2e30.c,eax esi,bool
+000b31b0,network_unknown_000b2e30_stop,source/networking/network_unknown_000b2e30.c,,void
+000b3500,network_unknown_000b2e30_fill_entry,source/networking/network_unknown_000b2e30.c,eax ebx,void
+000b35e0,network_unknown_000b2e30_get_entry,source/networking/network_unknown_000b2e30.c,ecx,pointer
