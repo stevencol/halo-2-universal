@@ -483,3 +483,40 @@ long __attribute__((stdcall)) user_interface_networking_find_player(
 
 	return found;
 }
+
+/* ---------- what the interface makes of its numbers of the network game */
+
+/* 0x00199951: whether a number is 1, 3 or 5 */
+boolean user_interface_networking_unknown_00199951(
+	long unknown)
+{
+	return unknown==1 || unknown==3 || unknown==5;
+}
+
+/* 0x00199971: whether what the network game is at, for the interface, is 6 */
+boolean user_interface_networking_unknown_00199971(
+	void)
+{
+	return unknown_0019989d()==6;
+}
+
+/* 0x0019997f: whether a number is 0, 2 or 4 */
+boolean user_interface_networking_unknown_0019997f(
+	long unknown)
+{
+	return unknown==0 || unknown==2 || unknown==4;
+}
+
+/* 0x0019999e: whether a number is 0 or 1 */
+boolean __attribute__((stdcall)) user_interface_networking_unknown_0019999e(
+	long unknown)
+{
+	return unknown==0 || unknown==1;
+}
+
+/* 0x001999e3: whether a number is 4, 5 or 6 */
+boolean user_interface_networking_unknown_001999e3(
+	long unknown)
+{
+	return unknown==4 || unknown==5 || unknown==6;
+}

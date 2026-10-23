@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cinco funciones pequeñas de lo que la interfaz hace con sus números de la partida en red
+
+Cinco funciones (100 bytes) en un archivo. De 2497
+funciones se pasa a 2502, el 22,21 % de las del juego (el 12,691 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `user_interface_networking_unknown_00199951` | `0x00199951` | `interface/user_interface_networking.c` |
+| `user_interface_networking_unknown_00199971` | `0x00199971` | `interface/user_interface_networking.c` |
+| `user_interface_networking_unknown_0019997f` | `0x0019997f` | `interface/user_interface_networking.c` |
+| `user_interface_networking_unknown_0019999e` | `0x0019999e` | `interface/user_interface_networking.c` |
+| `user_interface_networking_unknown_001999e3` | `0x001999e3` | `interface/user_interface_networking.c` |
+
+### Lo que se sabe
+
+- Cuatro dicen si un número es uno de unos pocos: 1, 3 o 5
+  (`0x00199951`, en `eax`), 0, 2 o 4 (`0x0019997f`, en `eax`), 0 o 1
+  (`0x0019999e`, en la pila) y 4, 5 o 6 (`0x001999e3`, en `eax`). Son de los
+  números que la interfaz saca de la partida en red, como el de
+  `unknown_0019989d`.
+- `user_interface_networking_unknown_00199971` dice si `unknown_0019989d`
+  da 6.
+- Ninguna variable nueva.
+
+### Sin comprobar
+
+- Las pruebas (`tests\test_small_764.py`) y las mutaciones
+  (`tests\mutations_764.py`, 5) están escritas pero no se pasaron en este
+  hito: las pasa el usuario. Solo se comprobó que el C compila y
+  `check_milestone.py` sin `--run`.
+- Los nombres son suposiciones.
+
 ## 2026-10-22 — Cinco funciones pequeñas de lo que la interfaz pregunta a la partida en red: si puede seguir, tres números y los jugadores de sus sesiones
 
 Cinco funciones (396 bytes) en un archivo. De 2492

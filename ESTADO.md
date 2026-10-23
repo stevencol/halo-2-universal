@@ -3,18 +3,18 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-22, al terminar el hito 763.
+**Última actualización:** 2026-10-22, al terminar el hito 764.
 
 ## Dónde estamos
 
-- **2497 funciones descompiladas de 11.265: el 22,17 % del juego** (el
-  12,687 % de los bytes de código). Las 11.265 son las de la lista de
+- **2502 funciones descompiladas de 11.265: el 22,21 % del juego** (el
+  12,691 % de los bytes de código). Las 11.265 son las de la lista de
   Ghidra, y solo se cuentan las que están en ella: hay más descompiladas
-  que Ghidra no separa como funciones propias (2820 en total).
-- Las 2820 están comprobadas contra el ejecutable original: las 1390 del
+  que Ghidra no separa como funciones propias (2825 en total).
+- Las 2825 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile five small functions of the interface and the players of the network game* (ver `git log`).
+- Último hito: *Decompile five small functions of what the interface makes of the network game* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 535 funciones apuntadas pero sin descompilar (las que el código
   llama); 385 de ellas solo se conocen por su dirección (`unknown_...`).
@@ -267,7 +267,7 @@ Módulos (funciones hechas / archivo):
       `0x00551ae8`, cuántos jugadores y equipos admite cada una, si es
       buena y qué partida juega; faltan `0x00193010` y `0x001936e0`)
 - [ ] Lo que la interfaz pregunta a la partida en red —
-      `interface\user_interface_networking.c` (27, de la zona de
+      `interface\user_interface_networking.c` (32, de la zona de
       `0x0019989d` a `0x0019ad99`; falta `0x0019989d`)
 - [ ] Los equipos del servicio de partidas — `networking\online_teams.c`
       (10: buscar los equipos de un jugador y los miembros de un equipo,
