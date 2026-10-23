@@ -2,6 +2,44 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-22 — Cinco funciones pequeñas de algo de 0x2F0 bytes por jugador local
+
+Cinco funciones (217 bytes) en un archivo nuevo. De 2545
+funciones se pasa a 2550, el 22,64 % de las del juego (el 12,769 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_unknown_001a1c8e_add_value` | `0x001a1c8e` | `game/game_unknown_001a1c8e.c` |
+| `game_unknown_001a1c8e_initialize` | `0x001a1d45` | `game/game_unknown_001a1c8e.c` |
+| `game_unknown_001a1c8e_reals_to_bytes` | `0x001a1dfe` | `game/game_unknown_001a1c8e.c` |
+| `game_unknown_001a1c8e_reset_player` | `0x001a221d` | `game/game_unknown_001a1c8e.c` |
+| `game_unknown_001a1c8e_flag_index` | `0x001a2c81` | `game/game_unknown_001a1c8e.c` |
+
+### Lo que se sabe
+
+- `unknown_0051e994` apunta a `0xBC8` bytes de la memoria del estado del
+  juego (`game_unknown_001a1c8e_initialize`, con `game_state_malloc`):
+  cuatro de `0x2F0`, uno por jugador local, y dos números. Cada uno tiene
+  diez entradas de `0x44` bytes, dieciséis valores y dos cuentas.
+- `game_unknown_001a1c8e_add_value` pone un valor detrás de los que hay, si
+  cabe entre los dieciséis.
+- `game_unknown_001a1c8e_reset_player` deja a 0 las cuentas de un jugador,
+  el último número de cada entrada y `unknownBC4`. La llama una función de
+  los jugadores cuando un jugador local tiene unidad (`0x0014f2e0`).
+- `game_unknown_001a1c8e_reals_to_bytes`: dos reales de 0 a 64 como dos
+  bytes.
+- `game_unknown_001a1c8e_flag_index`: cuál de cuatro banderas de `8` tiene
+  algo (0 a 3), o `NONE`.
+- Variable nueva: `unknown_0051e994`.
+
+### Sin comprobar
+
+- No se sabe para qué es; el nombre del archivo es solo la dirección de su
+  primera función. Las dos últimas están cerca pero no usan
+  `unknown_0051e994`, así que puede que sean de otro archivo.
+
 ## 2026-10-22 — Cinco funciones pequeñas que llaman a otras ya descompiladas
 
 Cinco funciones (139 bytes) en cuatro archivos. De 2540
