@@ -3633,3 +3633,12 @@ address,name,source,arguments,returns,convention
 001c6340,havok_unknown_001c6340,source/physics/havok.c,eax,void
 001c63f0,havok_unknown_001c63f0,source/physics/havok.c,eax,void
 001cb0a0,havok_unknown_001cb0a0,source/physics/havok.c,eax,void
+001d8f00,tag_unknown_001d8f00,source/cache/tag_unknown_0016d180.c,ecx edi,int
+001d9320,unit_counter_update,source/units/units.c,ecx,bool
+001d9430,unit_counter_seconds,source/units/units.c,ecx,real:xmm0
+001dac00,unit_unknown_001dac00,source/units/units.c,eax,bool
+001dac40,unit_unknown_001dac40,source/units/units.c,eax ecx,int
+001e67a0,unit_unknown_001e67a0,source/units/units.c,eax ecx stack stack,void,stdcall
+001e6850,unit_unknown_001e6850,source/units/units.c,eax ecx edx xmm0 stack,void,stdcall
+001e6980,unit_unknown_001e6980,source/units/units.c,eax stack stack,void,stdcall
+001e6a00,unit_unknown_001e6a00,source/units/units.c,eax ecx edx,void

@@ -2193,3 +2193,172 @@ boolean unit_unknown_0011b930(
 
 	return UNIT_UNKNOWN12A_IS(UNIT_UNKNOWN12A(UNIT_OBJECT_GET(unit_index)), 0x0E0000C2);
 }
+
+/* 0x001d9320: a counter (its byte at 0x00, up to the one at 0x01) goes one
+up with the bit 0x01 of its byte at 0x03, or one down without it, and gets
+the bit 0x02 when it reaches the end; FALSE when it has no end or already
+reached it */
+boolean unit_counter_update(
+	signed char *counter)
+{
+	signed char maximum= counter[1];
+
+	if (!maximum || (counter[3]&2))
+	{
+		return FALSE;
+	}
+	if (counter[3]&1)
+	{
+		counter[0]++;
+		if (counter[0]>=maximum)
+		{
+			counter[0]= maximum;
+			counter[3]|= 2;
+		}
+	}
+	else
+	{
+		counter[0]--;
+		if (counter[0]<=0)
+		{
+			counter[0]= 0;
+			counter[3]|= 2;
+		}
+	}
+
+	return TRUE;
+}
+
+/* 0x001d9430: what is left of it, in seconds: up to the end going up, or
+down to 0 going down; 0.0 without an end */
+real unit_counter_seconds(
+	const signed char *counter)
+{
+	if (!counter[1])
+	{
+		return 0.0f;
+	}
+	if (counter[3]&1)
+	{
+		return (real)(counter[1]-counter[0])*game_time_globals->seconds_per_tick;
+	}
+
+	return (real)counter[0]*game_time_globals->seconds_per_tick;
+}
+
+/* whether an object is of the kind 0 and has 6 at 0x3DC */
+#define UNIT_KIND0_STATE6(header) \
+	(((1UL<<((header)->type&0x1F))&1) && ((const byte *)(header)->datum)[0x3DC]==6)
+
+/* 0x001dac00: whether it is not */
+boolean unit_unknown_001dac00(
+	long object_index)
+{
+	const struct object_header_datum *header= (const struct object_header_datum *)object_header_data->data+(object_index&0xFFFF);
+
+	return !UNIT_KIND0_STATE6(header);
+}
+
+/* 0x001dac40: whether neither of two objects is */
+long unit_unknown_001dac40(
+	long first_index,
+	long second_index)
+{
+	const struct object_header_datum *headers= (const struct object_header_datum *)object_header_data->data;
+
+	return !UNIT_KIND0_STATE6(&headers[first_index&0xFFFF]) && !UNIT_KIND0_STATE6(&headers[second_index&0xFFFF]);
+}
+
+/* 0x001e67a0: something gets at 0xAC the point at 0x10 of another (or
+global_up3d, without its byte at 0x1D), two bytes at 0xB8 and 1 at 0x04 */
+void __attribute__((stdcall)) unit_unknown_001e67a0(
+	const byte *source,
+	byte *data,
+	byte first,
+	byte second)
+{
+	const unsigned long *point= source[0x1D] ? (const unsigned long *)(source+0x10) : (const unsigned long *)global_up3d;
+
+	((unsigned long *)(data+0xAC))[0]= point[0];
+	((unsigned long *)(data+0xAC))[1]= point[1];
+	((unsigned long *)(data+0xAC))[2]= point[2];
+	data[0xB8]= first;
+	data[0xB9]= second;
+	data[0x04]= 1;
+}
+
+/* 0x001e6850: something gets a byte at 0xBC, two points at 0xC0 and 0xCC,
+a real at 0xD8 and 1 at 0x04 */
+void __attribute__((stdcall)) unit_unknown_001e6850(
+	byte *data,
+	const unsigned long *second,
+	byte value,
+	real number,
+	const unsigned long *first)
+{
+	data[0xBC]= value;
+	((unsigned long *)(data+0xC0))[0]= first[0];
+	((unsigned long *)(data+0xC0))[1]= first[1];
+	((unsigned long *)(data+0xC0))[2]= first[2];
+	((unsigned long *)(data+0xCC))[0]= second[0];
+	((unsigned long *)(data+0xCC))[1]= second[1];
+	((unsigned long *)(data+0xCC))[2]= second[2];
+	*(real *)(data+0xD8)= number;
+	data[0x04]= 1;
+}
+
+/* 0x001e6980: the oldest of four entries (8 bytes: a time, a short and a
+byte) gets the game's time, a short and a byte */
+void __attribute__((stdcall)) unit_unknown_001e6980(
+	long *entries,
+	short value,
+	byte flags)
+{
+	long oldest= entries[0];
+	long which= 0;
+
+	if (entries[2]<oldest)
+	{
+		which= 1;
+		oldest= entries[2];
+	}
+	if (entries[4]<oldest)
+	{
+		which= 2;
+		oldest= entries[4];
+	}
+	if (entries[6]<oldest)
+	{
+		which= 3;
+	}
+	entries[which*2]= game_time_globals->time;
+	*(short *)&entries[which*2+1]= value;
+	*((unsigned short *)&entries[which*2+1]+1)= flags;
+}
+
+/* 0x001e6a00: a bit of two longs is set or cleared by the bits 0x01 and
+0x02 of a value */
+void unit_unknown_001e6a00(
+	unsigned long value,
+	byte bit,
+	unsigned long *bits)
+{
+	unsigned long mask= 1UL<<(bit&0x1F);
+
+	if (value&1)
+	{
+		bits[0]|= mask;
+	}
+	else
+	{
+		bits[0]&= ~mask;
+	}
+	if ((value>>1)&1)
+	{
+		bits[1]|= mask;
+	}
+	else
+	{
+		bits[1]&= ~mask;
+	}
+}

@@ -138,3 +138,28 @@ long tag_unknown_0016da90(
 
 	return NONE;
 }
+
+/* 0x001d8f00: which element (0x0C bytes, of the block at 0x58) of a tag
+starts with a name; NONE if none, or for NONE or no name */
+long tag_unknown_001d8f00(
+	long tag_index,
+	long name)
+{
+	const byte *tag;
+	long index;
+
+	if (tag_index==NONE || name==NONE || !name)
+	{
+		return NONE;
+	}
+	tag= TAG_ADDRESS(tag_index);
+	for (index= 0; index<*(const long *)(tag+0x58); index++)
+	{
+		if (*(const long *)(*(const byte *const *)(tag+0x5C)+index*0x0C)==name)
+		{
+			return index;
+		}
+	}
+
+	return NONE;
+}

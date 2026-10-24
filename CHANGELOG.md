@@ -2,6 +2,39 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Nueve funciones pequeñas: un nombre en un tag, un contador y su tiempo, objetos de clase 0, dos cosas con puntos, la más vieja de cuatro entradas y un bit
+
+Nueve funciones (641 bytes) en dos archivos. De 2778 funciones se pasa
+a 2787, el 24,74 % de las del juego (el 13,376 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `tag_unknown_001d8f00` | `0x001d8f00` | `cache/tag_unknown_0016d180.c` |
+| `unit_counter_update` | `0x001d9320` | `units/units.c` |
+| `unit_counter_seconds` | `0x001d9430` | `units/units.c` |
+| `unit_unknown_001dac00` | `0x001dac00` | `units/units.c` |
+| `unit_unknown_001dac40` | `0x001dac40` | `units/units.c` |
+| `unit_unknown_001e67a0` | `0x001e67a0` | `units/units.c` |
+| `unit_unknown_001e6850` | `0x001e6850` | `units/units.c` |
+| `unit_unknown_001e6980` | `0x001e6980` | `units/units.c` |
+| `unit_unknown_001e6a00` | `0x001e6a00` | `units/units.c` |
+
+### Lo que se sabe
+
+- Qué elemento del bloque 0x58 de un tag empieza por un nombre.
+- Un contador de cuatro bytes que sube o baja hasta su fin, y lo que le falta
+  en segundos (`game_time_globals`); los nombres son supuestos.
+- Si uno o dos objetos son de clase 0 con 6 en 0x3DC; dos cosas que reciben
+  puntos (`global_up3d`), bytes y un real; la más vieja de cuatro entradas
+  recibe el tiempo del juego; y un bit de dos longs.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 30 de `make_mutations.py`, 0 sin notar (con un caso más: un contador que baja desde 2).
+
 ## 2026-10-24 — Ocho funciones pequeñas de Havok: bits bajo una máscara, si hay sitio, dos cabeceras y cosas que se vacían
 
 Ocho funciones (513 bytes) en `havok.c`. De 2770 funciones se pasa
