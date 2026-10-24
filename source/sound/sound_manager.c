@@ -14050,3 +14050,35 @@ boolean sound_unknown_0018d670(
 
 	return FALSE;
 }
+
+/* 0x0054e854: a real (kept as its bits) */
+unsigned long unknown_0054e854;
+
+/* 0x0016f3c0: something of 0x48 bytes is made: the point of unknown_00468788,
+NONE, the structure bsp, the zero, forward and up vectors of real_math.c, a
+real of unknown_0054e854 and two zeros */
+void sound_unknown_0016f3c0(
+	unsigned long *data)
+{
+	const unsigned long *point= (const unsigned long *)unknown_00468788;
+
+	data[0]= point[0];
+	data[1]= point[1];
+	data[2]= point[2];
+	*(short *)((byte *)data+0x12)= global_structure_bsp_index;
+	data[3]= NONE;
+	*(short *)&data[4]= NONE;
+	data[5]= ((const unsigned long *)global_zero_vector3d)[0];
+	data[6]= ((const unsigned long *)global_zero_vector3d)[1];
+	data[7]= ((const unsigned long *)global_zero_vector3d)[2];
+	data[8]= ((const unsigned long *)global_forward3d)[0];
+	data[9]= ((const unsigned long *)global_forward3d)[1];
+	data[10]= ((const unsigned long *)global_forward3d)[2];
+	data[11]= ((const unsigned long *)global_up3d)[0];
+	data[12]= ((const unsigned long *)global_up3d)[1];
+	data[13]= ((const unsigned long *)global_up3d)[2];
+	data[14]= unknown_0054e854;
+	*(real *)&data[16]= 0.0f;
+	*(real *)&data[17]= 0.0f;
+}
+

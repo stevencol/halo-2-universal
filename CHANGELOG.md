@@ -2,6 +2,31 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Cinco funciones medianas del camino al menú: algo del sonido, dos tags de un objeto, bytes de un objeto, dos reales por Havok y las banderas del rasterizador
+
+Cinco funciones medianas (762 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2804 funciones se pasa a 2809, el 24,94 % de
+las del juego (el 13,476 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_unknown_0016f3c0` | `0x0016f3c0` | `sound/sound_manager.c` |
+| `object_unknown_000bf9a0` | `0x000bf9a0` | `objects/objects.c` |
+| `object_unknown_00113870` | `0x00113870` | `objects/objects.c` |
+| `havok_unknown_001cf8b0` | `0x001cf8b0` | `physics/havok.c` |
+| `rasterizer_unknown_0001bd50` | `0x0001bd50` | `rasterizer/rasterizer_xbox.c` |
+
+### Lo que se sabe
+
+- algo de 0x48 bytes del sonido con los vectores de `real_math.c`; dos tags que nombra la definición de un objeto; veinte bytes de un objeto; dos reales según un componente de havok; y las banderas de estado del rasterizador con un grupo nuevo de diez.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 20 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-24 — Cuatro funciones medianas del camino al menú: algo de la IA, lo que guarda una sesión de red, un estado de una unidad y un real por un nombre
 
 Cuatro funciones medianas (564 bytes) en 3 archivos, de las que el juego ejecuta

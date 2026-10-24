@@ -3659,3 +3659,8 @@ address,name,source,arguments,returns,convention
 000656e0,network_session_unknown_000656e0,source/networking/network_life_cycle.c,edx esi edi ebx stack stack stack stack stack stack,bool,stdcall
 00113260,unit_unknown_00113260,source/units/units.c,eax,bool
 0014ccf0,unit_unknown_0014ccf0,source/units/units.c,eax ecx edx,bool
+0016f3c0,sound_unknown_0016f3c0,source/sound/sound_manager.c,eax,void
+000bf9a0,object_unknown_000bf9a0,source/objects/objects.c,ecx stack stack,bool,stdcall
+00113870,object_unknown_00113870,source/objects/objects.c,eax,void
+001cf8b0,havok_unknown_001cf8b0,source/physics/havok.c,eax esi edi,void
+0001bd50,rasterizer_unknown_0001bd50,source/rasterizer/rasterizer_xbox.c,eax,void

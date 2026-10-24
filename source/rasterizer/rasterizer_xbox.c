@@ -561,3 +561,34 @@ void __attribute__((stdcall)) rasterizer_unknown_0001c620(
 	}
 	*(long *)(data+0x2D0)= index+1;
 }
+
+/* 0x00485a58: the last value given to rasterizer_unknown_0001bd50.
+0x00485060 .. 0x004850c0: two more longs of each of five groups of flags */
+long unknown_00485a58;
+long rasterizer_flags_group2_00485060;
+long rasterizer_flags_group2_00485068;
+long rasterizer_flags_group2_0048507c;
+long rasterizer_flags_group2_00485080;
+long rasterizer_flags_group2_0048508c;
+long rasterizer_flags_group2_00485090;
+long rasterizer_flags_group2_004850ac;
+long rasterizer_flags_group2_004850b0;
+long rasterizer_flags_group2_004850bc;
+long rasterizer_flags_group2_004850c0;
+
+/* 0x0001bd50: for a value other than the last (or 0), the five state flags
+get those flags too */
+void rasterizer_unknown_0001bd50(
+	long value)
+{
+	if (unknown_00485a58==value && value)
+	{
+		return;
+	}
+	unknown_00485a58= value;
+	rasterizer_state_flags_00485b78|= rasterizer_flags_group2_0048508c|rasterizer_flags_group2_0048507c;
+	rasterizer_state_flags_00485b7c|= rasterizer_flags_group2_00485090|rasterizer_flags_group2_00485080;
+	rasterizer_state_flags_00485b80|= rasterizer_flags_group2_004850bc|rasterizer_flags_group2_004850ac;
+	rasterizer_state_flags_00485b84|= rasterizer_flags_group2_004850c0|rasterizer_flags_group2_004850b0;
+	rasterizer_state_flags_00485b88|= rasterizer_flags_group2_00485068|rasterizer_flags_group2_00485060;
+}

@@ -737,3 +737,15 @@ address,name,source
 0051f409,unknown_0051f409,source/cseries/unknown_0051f40c.c
 005234b0,unknown_005234b0,source/cseries/unknown_0051f40c.c
 004686a4,unknown_004686a4,source/units/units.c
+0054e854,unknown_0054e854,source/sound/sound_manager.c
+00485a58,unknown_00485a58,source/rasterizer/rasterizer_xbox.c
+00485060,rasterizer_flags_group2_00485060,source/rasterizer/rasterizer_xbox.c
+00485068,rasterizer_flags_group2_00485068,source/rasterizer/rasterizer_xbox.c
+0048507c,rasterizer_flags_group2_0048507c,source/rasterizer/rasterizer_xbox.c
+00485080,rasterizer_flags_group2_00485080,source/rasterizer/rasterizer_xbox.c
+0048508c,rasterizer_flags_group2_0048508c,source/rasterizer/rasterizer_xbox.c
+00485090,rasterizer_flags_group2_00485090,source/rasterizer/rasterizer_xbox.c
+004850ac,rasterizer_flags_group2_004850ac,source/rasterizer/rasterizer_xbox.c
+004850b0,rasterizer_flags_group2_004850b0,source/rasterizer/rasterizer_xbox.c
+004850bc,rasterizer_flags_group2_004850bc,source/rasterizer/rasterizer_xbox.c
+004850c0,rasterizer_flags_group2_004850c0,source/rasterizer/rasterizer_xbox.c

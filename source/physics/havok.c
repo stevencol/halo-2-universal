@@ -971,3 +971,32 @@ boolean __attribute__((stdcall)) havok_unknown_001c6470(
 	data[0x10]= (byte)(flags>>14)&2;
 	return TRUE;
 }
+
+/* 0x001cf8b0: two reals of something (0x08, 0x0C) from two of another (0x3C,
+0x40); the first is 0.0 when the object of a havok component is of the kind
+1 with the bit 19 of the long at 0x1EC of its definition, and something at
+0x248 or the bit 0x02 of its flags at 0x134 */
+void havok_unknown_001cf8b0(
+	long havok_component_index,
+	unsigned long *result,
+	const unsigned long *values)
+{
+	long object_index= *(const long *)((const byte *)havok_component_data->data+(havok_component_index&0xFFFF)*0xA0+8);
+	const struct object_header_datum *header= (const struct object_header_datum *)object_header_data->data+(object_index&0xFFFF);
+
+	if (((1UL<<(header->type&0x1F))&2))
+	{
+		const byte *object= (const byte *)header->datum;
+		const byte *definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)object&0xFFFF].address;
+
+		if (((*(const unsigned long *)(definition+0x1EC)>>19)&1)
+			&& (*(const long *)(object+0x248)!=NONE || ((*(const unsigned long *)(object+0x134)>>1)&1)))
+		{
+			*(real *)&result[2]= 0.0f;
+			result[3]= values[0x40/4];
+			return;
+		}
+	}
+	result[2]= values[0x3C/4];
+	result[3]= values[0x40/4];
+}

@@ -1147,3 +1147,53 @@ boolean __attribute__((stdcall)) object_unknown_000b6d60(
 
 	return (cluster_bits[header->cluster_index>>5]&(1UL<<(header->cluster_index&0x1F)))!=0;
 }
+
+/* 0x000bf9a0: the tag (and the long at 0x0C) that the tag the definition of
+an object names at 0x38 names at 0x04; TRUE if that tag has something in
+its blocks at 0x74 and 0x7C. FALSE without them */
+boolean __attribute__((stdcall)) object_unknown_000bf9a0(
+	long object_index,
+	long *tag_index,
+	long *value)
+{
+	const byte *definition= (const byte *)(uintptr_t)
+		global_tag_instances[*(const long *)OBJECT_DATA(object_index)&0xFFFF].address;
+	const byte *first;
+	const byte *second;
+	long first_index= *(const long *)(definition+0x38);
+
+	if (first_index==NONE)
+	{
+		return FALSE;
+	}
+	first= (const byte *)(uintptr_t)global_tag_instances[first_index&0xFFFF].address;
+	if (*(const long *)(first+0x04)==NONE || *(const long *)(first+0x0C)==NONE)
+	{
+		return FALSE;
+	}
+	second= (const byte *)(uintptr_t)global_tag_instances[*(const long *)(first+0x04)&0xFFFF].address;
+	*tag_index= *(const long *)(first+0x04);
+	*value= *(const long *)(first+0x0C);
+
+	return *(const long *)(second+0x74)>0 && *(const long *)(second+0x7C)>0;
+}
+
+/* 0x00113870: twenty bytes from 0x80 of what an object keeps at its short at
+0x33E: zeros, and 1, 1, 2, 1 and 1 at 0x82, 0x86, 0x8A, 0x8E and 0x92 */
+void object_unknown_00113870(
+	long object_index)
+{
+	byte *object= OBJECT_DATA(object_index);
+	byte *data= object+*(const short *)(object+0x33E);
+	long index;
+
+	for (index= 0x80; index<0x94; index++)
+	{
+		data[index]= 0;
+	}
+	data[0x82]= 1;
+	data[0x86]= 1;
+	data[0x8A]= 2;
+	data[0x8E]= 1;
+	data[0x92]= 1;
+}
