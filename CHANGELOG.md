@@ -2,6 +2,30 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Cuatro funciones medianas del camino al menú: cosas de Havok, los jugadores en uso, un número de un tag y una entrada nueva
+
+Cuatro funciones medianas (500 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2787 funciones se pasa a 2791, el 24,78 % de
+las del juego (el 13,392 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_001ccc50` | `0x001ccc50` | `physics/havok.c` |
+| `players_unknown_00152340` | `0x00152340` | `main/main.c` |
+| `tag_unknown_00137590` | `0x00137590` | `game/game_unknown_00134d90.c` |
+| `game_unknown_00131ff0_new_entry` | `0x00134300` | `game/game_unknown_00131ff0.c` |
+
+### Lo que se sabe
+
+- dos cosas de 0x20 bytes de Havok vaciadas; las globales de los jugadores según los jugadores en uso; un número de un elemento de un tag; y una entrada nueva (0x10 bytes de bits) de las cosas de `game_unknown_00131ff0.c`.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 14 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-24 — Nueve funciones pequeñas: un nombre en un tag, un contador y su tiempo, objetos de clase 0, dos cosas con puntos, la más vieja de cuatro entradas y un bit
 
 Nueve funciones (641 bytes) en dos archivos. De 2778 funciones se pasa

@@ -3642,3 +3642,7 @@ address,name,source,arguments,returns,convention
 001e6850,unit_unknown_001e6850,source/units/units.c,eax ecx edx xmm0 stack,void,stdcall
 001e6980,unit_unknown_001e6980,source/units/units.c,eax stack stack,void,stdcall
 001e6a00,unit_unknown_001e6a00,source/units/units.c,eax ecx edx,void
+001ccc50,havok_unknown_001ccc50,source/physics/havok.c,eax,void
+00152340,players_unknown_00152340,source/main/main.c,,void
+00137590,tag_unknown_00137590,source/game/game_unknown_00134d90.c,ecx stack edi,int,stdcall
+00134300,game_unknown_00131ff0_new_entry,source/game/game_unknown_00131ff0.c,edx stack,int,stdcall

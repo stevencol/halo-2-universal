@@ -143,3 +143,49 @@ long tag_unknown_00137650(
 
 	return count;
 }
+
+/* 0x00137590: a number from the element (0x3C bytes, of the block at 0x3C) of
+a tag that a number names (around): a value around its short at 0x22 plus
+its short at 0x20, or the short of the value's entry (0x20 bytes) of its
+block at 0x34; the value itself when that is NONE or there is no block. 0
+for a tag without elements, NONE for NONE or a tag that is not loaded */
+long __attribute__((stdcall)) tag_unknown_00137590(
+	long tag_index,
+	short which,
+	short value)
+{
+	const byte *tag;
+	const byte *element;
+	long count;
+	long result;
+
+	if (tag_index==NONE)
+	{
+		return NONE;
+	}
+	tag= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+	if (!tag)
+	{
+		return NONE;
+	}
+	count= *(const long *)(tag+0x3C);
+	if (count<=0)
+	{
+		return 0;
+	}
+	element= *(const byte *const *)(tag+0x40)+(which%count)*0x3C;
+	if (*(const short *)(element+0x22)>0)
+	{
+		result= value%*(const short *)(element+0x22)+*(const short *)(element+0x20);
+	}
+	else
+	{
+		if (!*(const long *)(element+0x34))
+		{
+			return value;
+		}
+		result= *(const short *)(*(const byte *const *)(element+0x38)+value*0x20);
+	}
+
+	return result==NONE ? value : result;
+}

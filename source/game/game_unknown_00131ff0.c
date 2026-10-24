@@ -148,3 +148,28 @@ void game_unknown_00131ff0_clear(
 	*(short *)(thing+0xA5E)= 0;
 	memset(thing+0x1C, 0xFF, 0x80*4);
 }
+
+/* 0x00134300: a new entry (0x10 bytes from 0xA60, as many taken as at 0xA5E;
+0x200 at most) of a thing gets only one of its 128 bits; its index, or 0
+when there is no room */
+long __attribute__((stdcall)) game_unknown_00131ff0_new_entry(
+	byte *thing,
+	short bit)
+{
+	unsigned short index= *(const unsigned short *)(thing+0xA5E);
+	unsigned long *bits;
+
+	*(unsigned short *)(thing+0xA5E)= (unsigned short)(index+1);
+	if (index>=0x200)
+	{
+		*(unsigned short *)(thing+0xA5E)= 0x200;
+		return 0;
+	}
+	bits= (unsigned long *)(thing+index*0x10+0xA60);
+	bits[3]= 0;
+	bits[2]= 0;
+	bits[1]= 0;
+	bits[0]= 0;
+	bits[bit>>5]|= 1UL<<(bit&0x1F);
+	return index;
+}

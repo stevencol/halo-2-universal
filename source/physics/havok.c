@@ -925,3 +925,12 @@ void havok_unknown_001cb0a0(
 		entry[0x10]= 0;
 	}
 }
+
+/* 0x001ccc50: two of those things of 0x20 bytes (at 0x20 and 0x40) of
+something are made nothing */
+void havok_unknown_001ccc50(
+	byte *data)
+{
+	havok_unknown_clear(data+0x20);
+	havok_unknown_clear(data+0x40);
+}

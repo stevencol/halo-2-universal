@@ -990,3 +990,35 @@ boolean unknown_004e9148_empty(
 
 	return empty;
 }
+
+/* 0x00152340: the players' globals get at 0x04 whether no player in use has
+a unit (0x2C) or the bit 0x08 of its byte at 0x02, and at 0x05 whether any
+player has neither */
+void players_unknown_00152340(
+	void)
+{
+	byte *globals= (byte *)players_globals;
+	const struct data_array *players= player_data;
+	long index;
+
+	globals[4]= TRUE;
+	globals[5]= FALSE;
+	for (index= 0; index>=0 && index<players->first_unallocated; index++)
+	{
+		const byte *player;
+
+		if (!(players->in_use_bit_vector[index>>5]&(1UL<<(index&0x1F))))
+		{
+			continue;
+		}
+		player= (const byte *)players->data+index*players->size;
+		if (*(const long *)(player+0x2C)!=NONE || (player[2]&8))
+		{
+			globals[4]= FALSE;
+		}
+		else
+		{
+			globals[5]= TRUE;
+		}
+	}
+}
