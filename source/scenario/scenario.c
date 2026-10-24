@@ -389,3 +389,49 @@ short __attribute__((stdcall)) scenario_unknown_0011c0b0(
 
 	return NONE;
 }
+
+/* 0x0016e150: a row of bits (one for each cluster, at 0x9C) of the bits at
+0x58 of a structure bsp; after the first square of them when the bits (0x54
+bytes) have room for more */
+unsigned long *structure_bsp_unknown_0016e150(
+	short row,
+	const byte *bsp)
+{
+	long clusters= *(const long *)(bsp+0x9C);
+	long longs= (clusters+0x1F)>>5;
+	long square= clusters*longs;
+
+	if ((unsigned long)(square*4)<*(const unsigned long *)(bsp+0x54))
+	{
+		return *(unsigned long *const *)(bsp+0x58)+row*longs+square;
+	}
+
+	return *(unsigned long *const *)(bsp+0x58)+((clusters+0x1F)>>5)*row;
+}
+
+/* 0x0016e1b0: which element (0x48 bytes) of a block has an index in its
+range (from its short at 0x06, as many as at 0x08), and the index in it;
+NONE if none. The long first given is cleared */
+void __attribute__((stdcall)) structure_bsp_unknown_0016e1b0(
+	long index,
+	const long *block,
+	long *cleared,
+	long *element,
+	long *offset)
+{
+	long which;
+
+	*cleared= 0;
+	for (which= 0; which<block[0]; which++)
+	{
+		const byte *entry= (const byte *)(uintptr_t)block[1]+which*0x48;
+		long first= *(const unsigned short *)(entry+0x06);
+
+		if (first<=index && first+*(const unsigned short *)(entry+0x08)>index)
+		{
+			*offset= index-first;
+			break;
+		}
+	}
+	*element= which!=block[0] ? which : NONE;
+}

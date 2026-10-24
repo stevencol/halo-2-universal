@@ -328,3 +328,94 @@ byte *__attribute__((stdcall)) unknown_0004dc60(
 
 	return NULL;
 }
+
+/* 0x00173b00: a short goes first in the list of an index: what was first
+before is its next (0x440, NONE for the first one, by the bits at 0x00) */
+void effect_unknown_00173b00(
+	short index,
+	short value,
+	byte *data)
+{
+	unsigned long *bits= (unsigned long *)data+(index>>5);
+
+	if (!(*bits&(1UL<<(index&0x1F))))
+	{
+		((short *)(data+0x440))[value]= NONE;
+		((short *)(data+0x40))[index]= value;
+		*bits|= 1UL<<(index&0x1F);
+		return;
+	}
+	((short *)(data+0x440))[value]= ((const short *)(data+0x40))[index];
+	((short *)(data+0x40))[index]= value;
+}
+
+/* 0x00176330: something of 0x38 bytes from a point: the point at 0x00 and
+0x1C, global_down3d at 0x0C, global_up3d at 0x28 and two names (0x070000C0
+and 0x020000CA) */
+void effect_unknown_00176330(
+	unsigned long *data,
+	const unsigned long *point)
+{
+	const unsigned long *down= (const unsigned long *)global_down3d;
+	const unsigned long *up= (const unsigned long *)global_up3d;
+
+	data[3]= down[0];
+	data[4]= down[1];
+	data[5]= down[2];
+	data[0]= point[0];
+	data[1]= point[1];
+	data[2]= point[2];
+	data[6]= 0x070000C0;
+	data[10]= up[0];
+	data[11]= up[1];
+	data[12]= up[2];
+	data[7]= point[0];
+	data[8]= point[1];
+	data[9]= point[2];
+	data[13]= 0x020000CA;
+}
+
+/* 0x00468710 (player_profile.c) */
+extern const unsigned long *player_color_default;
+
+/* 0x00178240: something gets two reals at 0x6C and 0x70, a colour at 0x24
+(the default for none) and a vector at 0x3C (none: 0.0 at 0x40 and 0x44) */
+void __attribute__((stdcall)) effect_unknown_00178240(
+	byte *data,
+	const unsigned long *color,
+	const unsigned long *vector,
+	real first,
+	real second)
+{
+	*(real *)(data+0x6C)= first;
+	if (!color)
+	{
+		color= player_color_default;
+	}
+	*(real *)(data+0x70)= second;
+	((unsigned long *)(data+0x24))[0]= color[0];
+	((unsigned long *)(data+0x24))[1]= color[1];
+	((unsigned long *)(data+0x24))[2]= color[2];
+	if (vector)
+	{
+		((unsigned long *)(data+0x3C))[0]= vector[0];
+		((unsigned long *)(data+0x3C))[1]= vector[1];
+		((unsigned long *)(data+0x3C))[2]= vector[2];
+		return;
+	}
+	*(unsigned long *)(data+0x40)= 0;
+	*(unsigned long *)(data+0x44)= 0;
+}
+
+/* 0x0017b750: 32 longs get a value */
+void effect_unknown_0017b750(
+	unsigned long value,
+	unsigned long *values)
+{
+	long index;
+
+	for (index= 0; index<32; index++)
+	{
+		values[index]= value;
+	}
+}

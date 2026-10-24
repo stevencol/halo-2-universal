@@ -2,6 +2,37 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Seis funciones pequeñas: filas de bits de los clusters, el elemento de un bloque por un índice, una lista de shorts y dos cosas hechas de puntos y colores
+
+Seis funciones (559 bytes) en dos archivos. De 2742 funciones se pasa
+a 2748, el 24,39 % de las del juego (el 13,286 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `structure_bsp_unknown_0016e150` | `0x0016e150` | `scenario/scenario.c` |
+| `structure_bsp_unknown_0016e1b0` | `0x0016e1b0` | `scenario/scenario.c` |
+| `effect_unknown_00173b00` | `0x00173b00` | `effects/effects.c` |
+| `effect_unknown_00176330` | `0x00176330` | `effects/effects.c` |
+| `effect_unknown_00178240` | `0x00178240` | `effects/effects.c` |
+| `effect_unknown_0017b750` | `0x0017b750` | `effects/effects.c` |
+
+### Lo que se sabe
+
+- Una fila de los bits de los clusters de la estructura bsp (0x58), tras el
+  primer cuadrado si caben más; qué elemento de 0x48 bytes tiene un índice en
+  su rango.
+- Un short que pasa a ser el primero de la lista de un índice (con un bit
+  por índice); algo de 0x38 bytes con un punto, `global_down3d`,
+  `global_up3d` y dos nombres; dos reales, un color (o el de
+  `player_color_default`) y un vector; y 32 longs con un valor.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 21 de `make_mutations.py`, 0 sin notar. Se quitó una que escribe un long más allá del buffer de la prueba (no se compara).
+
 ## 2026-10-24 — Diez funciones pequeñas: una lista de cuatro arrays del motor de juego, tres bytes, seis bits y buscar por nombre en los bloques de un tipo de tag
 
 Diez funciones (666 bytes) en dos archivos, uno nuevo. De 2732 funciones se pasa

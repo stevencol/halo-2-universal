@@ -3597,3 +3597,9 @@ address,name,source,arguments,returns,convention
 0016d220,tag_unknown_0016d220,source/cache/tag_unknown_0016d180.c,ecx edx edi,int
 0016d890,tag_unknown_0016d890,source/cache/tag_unknown_0016d180.c,eax edi,int
 0016da90,tag_unknown_0016da90,source/cache/tag_unknown_0016d180.c,ecx edi,int
+0016e150,structure_bsp_unknown_0016e150,source/scenario/scenario.c,eax edx,pointer
+0016e1b0,structure_bsp_unknown_0016e1b0,source/scenario/scenario.c,ecx ebx eax stack stack,void,stdcall
+00173b00,effect_unknown_00173b00,source/effects/effects.c,eax esi edx,void
+00176330,effect_unknown_00176330,source/effects/effects.c,eax ecx,void
+00178240,effect_unknown_00178240,source/effects/effects.c,eax ecx edx xmm0 stack,void,stdcall
+0017b750,effect_unknown_0017b750,source/effects/effects.c,eax ecx,void
