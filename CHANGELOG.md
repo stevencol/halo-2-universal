@@ -2,6 +2,39 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Ocho funciones pequeñas: las superficies que se rompen, dos entradas de unknown_004ed284 y un elemento de las globales del juego
+
+Ocho funciones (533 bytes) en dos archivos. De 2748 funciones se pasa
+a 2756, el 24,47 % de las del juego (el 13,304 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `breakable_surfaces_unknown_00183f50` | `0x00183f50` | `physics/breakable_surfaces.c` |
+| `breakable_surfaces_get_bits` | `0x00183fc0` | `physics/breakable_surfaces.c` |
+| `breakable_surfaces_test` | `0x00184000` | `physics/breakable_surfaces.c` |
+| `breakable_surfaces_unknown_00184400` | `0x00184400` | `physics/breakable_surfaces.c` |
+| `sound_unknown_00187450` | `0x00187450` | `sound/sound_manager.c` |
+| `sound_unknown_00187a40` | `0x00187a40` | `sound/sound_manager.c` |
+| `sound_unknown_001885f0` | `0x001885f0` | `sound/sound_manager.c` |
+| `sound_unknown_00188690` | `0x00188690` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- De las superficies que se rompen: si una superficie de una colisión (la del
+  nivel o la de un elemento de la estructura bsp) tiene el bit 0x08 y un byte;
+  dónde están sus bits por estructura bsp; si una tiene su bit; y el número
+  de `unknown_004eca60` que nombra el byte de una superficie.
+- El jugador que nombra una entrada de `unknown_004ed284` (si es válido) y su
+  short de 0x42; qué elemento de 0xB4 bytes de un tag empieza por un long; y
+  ese elemento de las globales del juego.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 22 de `make_mutations.py`, 0 sin notar.
+
 ## 2026-10-24 — Seis funciones pequeñas: filas de bits de los clusters, el elemento de un bloque por un índice, una lista de shorts y dos cosas hechas de puntos y colores
 
 Seis funciones (559 bytes) en dos archivos. De 2742 funciones se pasa

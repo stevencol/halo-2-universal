@@ -10,6 +10,7 @@ fourth bit.
 #include "cseries/cseries.h"
 #include "game/game.h"
 #include "saved games/game_state.h"
+#include "scenario/scenario.h"
 
 #include <string.h>
 
@@ -182,4 +183,83 @@ void __attribute__((stdcall)) unknown_flag_set(
 	byte value)
 {
 	*flag= value;
+}
+
+/* 0x00183f50: whether a surface (8 bytes, of the list at 0x2C, as many as at
+0x28) of a collision has the bit 0x08 at 0x04 and a byte at 0x05; the
+collision is that of the level for NONE, or that (0xC8 bytes, after 0x70,
+of the list at 0x13C) of an element (0x58 bytes, at 0x140) of the structure
+bsp, whose short at 0x34 names it */
+boolean __attribute__((stdcall)) breakable_surfaces_unknown_00183f50(
+	long element,
+	long surface,
+	unsigned long value)
+{
+	const byte *collision;
+
+	if (element==NONE)
+	{
+		collision= (const byte *)global_collision_bsp;
+	}
+	else
+	{
+		const byte *bsp= (const byte *)global_structure_bsp;
+
+		if (element<0 || element>=*(const long *)(bsp+0x140))
+		{
+			return FALSE;
+		}
+		collision= *(const byte *const *)(bsp+0x13C)
+			+*(const short *)(*(const byte *const *)(bsp+0x144)+element*0x58+0x34)*0xC8+0x70;
+	}
+	if (!collision || surface<0 || surface>=*(const long *)(collision+0x28))
+	{
+		return FALSE;
+	}
+
+	return ((*(const byte *const *)(collision+0x2C))[surface*8+4]&8)
+		&& (*(const byte *const *)(collision+0x2C))[surface*8+5]==value;
+}
+
+/* the bits of the surfaces of the level (32 bytes for each structure bsp,
+from 0x01) or of an element (0x400 bytes for each structure bsp, from 0x201) */
+#define BREAKABLE_SURFACES_BITS(element) \
+	((element)==NONE ? unknown_004ed280+global_structure_bsp_index*0x20+1 \
+		: unknown_004ed280+global_structure_bsp_index*0x400+0x201+(element))
+
+/* 0x00183fc0: those bits */
+byte *breakable_surfaces_get_bits(
+	long element)
+{
+	return BREAKABLE_SURFACES_BITS(element);
+}
+
+/* 0x00184000: whether a surface has its bit; TRUE for NONE */
+long breakable_surfaces_test(
+	long surface,
+	long element)
+{
+	if (surface==NONE)
+	{
+		return TRUE;
+	}
+
+	return (((const unsigned long *)BREAKABLE_SURFACES_BITS(element))[surface>>5]&(1UL<<(surface&0x1F)))!=0;
+}
+
+/* 0x00184400: the number of unknown_004eca60 that the byte of a surface (of
+the level, or of an element) names by its high three bits; that of 0xFF for
+NONE */
+long breakable_surfaces_unknown_00184400(
+	long surface,
+	long element)
+{
+	byte index= 0xFF;
+
+	if (surface!=NONE)
+	{
+		index= element==NONE ? unknown_004ea960[surface] : unknown_004eaa60[element*8+surface];
+	}
+
+	return unknown_004eca60[index>>5];
 }

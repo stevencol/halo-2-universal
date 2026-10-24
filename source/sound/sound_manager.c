@@ -13833,3 +13833,73 @@ real sound_unknown_00187420(
 
 	return values[0]>values[1] ? values[0] : values[1];
 }
+
+/* 0x00187450: the player that an entry (0x94 bytes) of unknown_004ed284 names
+at 0x60, if it is a valid one (its index below the first unused, the salt
+right) with something at 0x2C; NONE if not */
+long sound_unknown_00187450(
+	long index)
+{
+	long player_index= *(const long *)(unknown_004ed284+index*0x94+0x60);
+	const byte *player;
+
+	if (player_index==NONE || (player_index&0xFFFF)>=player_data->first_unallocated)
+	{
+		return NONE;
+	}
+	player= (const byte *)player_data->data+(player_index&0xFFFF)*player_data->size;
+	if (!*(const short *)player || *(const short *)player!=player_index>>16 || *(const long *)(player+0x2C)==NONE)
+	{
+		return NONE;
+	}
+
+	return player_index;
+}
+
+/* 0x00187a40: the short at 0x42 of an entry of unknown_004ed284; NONE for
+NONE */
+short sound_unknown_00187a40(
+	long index)
+{
+	if (index==NONE)
+	{
+		return NONE;
+	}
+
+	return *(const short *)(unknown_004ed284+index*0x94+0x42);
+}
+
+/* 0x001885f0: which element (0xB4 bytes, of the block at 0x150 of a tag)
+starts with a long; NONE if none */
+void sound_unknown_001885f0(
+	const byte *tag,
+	long value,
+	short *result)
+{
+	long index;
+
+	for (index= 0; index<*(const long *)(tag+0x150); index++)
+	{
+		if (value==*(const long *)(*(const byte *const *)(tag+0x154)+index*0xB4))
+		{
+			*result= (short)index;
+			return;
+		}
+	}
+	*result= NONE;
+}
+
+/* 0x00188690: that element of the game globals; nothing for one that is not
+there */
+byte *__attribute__((stdcall)) sound_unknown_00188690(
+	short index)
+{
+	const byte *globals= (const byte *)global_game_globals;
+
+	if (index==NONE || index<0 || index>=*(const long *)(globals+0x150))
+	{
+		return NULL;
+	}
+
+	return *(byte *const *)(globals+0x154)+index*0xB4;
+}

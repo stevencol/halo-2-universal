@@ -3603,3 +3603,11 @@ address,name,source,arguments,returns,convention
 00176330,effect_unknown_00176330,source/effects/effects.c,eax ecx,void
 00178240,effect_unknown_00178240,source/effects/effects.c,eax ecx edx xmm0 stack,void,stdcall
 0017b750,effect_unknown_0017b750,source/effects/effects.c,eax ecx,void
+00183f50,breakable_surfaces_unknown_00183f50,source/physics/breakable_surfaces.c,ecx esi stack,bool,stdcall
+00183fc0,breakable_surfaces_get_bits,source/physics/breakable_surfaces.c,eax,pointer
+00184000,breakable_surfaces_test,source/physics/breakable_surfaces.c,eax ecx,int
+00184400,breakable_surfaces_unknown_00184400,source/physics/breakable_surfaces.c,edx esi,int
+00187450,sound_unknown_00187450,source/sound/sound_manager.c,eax,int
+00187a40,sound_unknown_00187a40,source/sound/sound_manager.c,ecx,short
+001885f0,sound_unknown_001885f0,source/sound/sound_manager.c,ecx ebx eax,void
+00188690,sound_unknown_00188690,source/sound/sound_manager.c,stack,pointer,stdcall
