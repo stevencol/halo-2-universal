@@ -5,7 +5,7 @@
 # its lines (a comparison turned around, a constant one more, an && made ||,
 # an assignment taken out)
 #
-# make_mutations.py <milestone> --base <commit> [--tests <name>] [--each <n>]
+# make_mutations.py <milestone> --base <commit> [--tests <name>] [--each <n>] [--out <file>]
 #
 # The file is written as tests/mutations_<milestone>.py. Mutations of the
 # kind only a person thinks of (the size of an entry, a loop one short) can
@@ -103,6 +103,7 @@ def main() -> None:
     parser.add_argument("--base", required=True)
     parser.add_argument("--tests")
     parser.add_argument("--each", type=int, default=4, help="mutations for each function")
+    parser.add_argument("--out", help="where to write it (to not cover a list written by hand)")
     arguments = parser.parse_args()
 
     random_ = random.Random(arguments.milestone)
@@ -143,7 +144,7 @@ def main() -> None:
     out += ["", "MUTATIONS = ["]
     out += [f"    ({files[path]}, {old!r}, {new!r})," for path, old, new in mutations]
     out += ["]", ""]
-    target = ROOT / "tests" / f"mutations_{arguments.milestone}.py"
+    target = Path(arguments.out) if arguments.out else ROOT / "tests" / f"mutations_{arguments.milestone}.py"
     target.write_text("\n".join(out), encoding="utf-8", newline="\n")
     print(f"{target.name}: {len(mutations)} mutations of {len(added_functions(arguments.base))} functions")
 
