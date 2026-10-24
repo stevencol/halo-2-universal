@@ -2109,3 +2109,87 @@ long unit_unknown_0010eea0(
 
 	return (*(const unsigned long *)(*(const byte *const *)data+place)&(1UL<<(bit&0x1F)))!=0;
 }
+
+/* 0x00110fc0: whether the name at 0xA4 of what an object has at its short at
+0x33E is 0x0A000066, 0x09000008, 0x09000009 or 0x0F00067F */
+boolean unit_unknown_00110fc0(
+	long object_index)
+{
+	long name= *(const long *)(UNIT_UNKNOWN33E(UNIT_OBJECT_GET(object_index))+0xA4);
+
+	return name==0x0A000066 || (name>=0x09000008 && name<=0x09000009) || name==0x0F00067F;
+}
+
+/* 0x00113da0: whether the byte at 0x89 of that is not set, or the byte at
+0x8B has the bit 0x02 and not 0x01 */
+long unit_unknown_00113da0(
+	long object_index)
+{
+	const byte *data= UNIT_UNKNOWN33E(UNIT_OBJECT_GET(object_index));
+
+	return !data[0x89] || (!(data[0x8B]&1) && (data[0x8B]&2));
+}
+
+/* 0x00113df0: whether it is set and the byte at 0x8B has both */
+long unit_unknown_00113df0(
+	long object_index)
+{
+	const byte *data= UNIT_UNKNOWN33E(UNIT_OBJECT_GET(object_index));
+
+	return data[0x89] && (data[0x8B]&1) && (data[0x8B]&2);
+}
+
+/* 0x00114440: the long at 0x14 of the tag that an object names at the
+offset that its short at 0x342 gives; 0 for NONE */
+long unit_unknown_00114440(
+	long object_index)
+{
+	const byte *object= UNIT_OBJECT_GET(object_index);
+	long tag_index= *(const long *)(object+*(const short *)(object+0x342));
+
+	if (tag_index==NONE)
+	{
+		return 0;
+	}
+
+	return *(const long *)((const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address+0x14);
+}
+
+/* 0x00118f90: something of 0x30 bytes is made, with two names (0x06000086
+and 0x0400000C), global_forward3d at 0x18 and global_up3d at 0x24 */
+void unit_unknown_00118f90(
+	unsigned long *data)
+{
+	memset(data, 0, 0x30);
+	data[0]= 0x06000086;
+	data[1]= 0x0400000C;
+	data[6]= ((const unsigned long *)global_forward3d)[0];
+	data[7]= ((const unsigned long *)global_forward3d)[1];
+	data[8]= ((const unsigned long *)global_forward3d)[2];
+	data[9]= ((const unsigned long *)global_up3d)[0];
+	data[10]= ((const unsigned long *)global_up3d)[1];
+	data[11]= ((const unsigned long *)global_up3d)[2];
+}
+
+/* 0x00119bc0: whether an object does not have the bit 2 of its byte at 0x10A
+and has the bit 5 or 4 of that at 0x12C */
+boolean unit_unknown_00119bc0(
+	long object_index)
+{
+	const byte *object= UNIT_OBJECT_GET(object_index);
+
+	return !((object[0x10A]>>2)&1) && ((object[0x12C]>>5)&1 || (object[0x12C]>>4)&1);
+}
+
+/* 0x0011b930: whether what a unit has at its short at 0x12A is set with the
+name 0x0E0000C2; FALSE for NONE */
+boolean unit_unknown_0011b930(
+	long unit_index)
+{
+	if (unit_index==NONE)
+	{
+		return FALSE;
+	}
+
+	return UNIT_UNKNOWN12A_IS(UNIT_UNKNOWN12A(UNIT_OBJECT_GET(unit_index)), 0x0E0000C2);
+}

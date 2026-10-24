@@ -2,6 +2,46 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Once funciones pequeñas: nombres y bytes de lo que guardan los objetos en su short de 0x33E, sitios y clusters de la estructura bsp y un nombre de una lista
+
+Once funciones (799 bytes) en dos archivos. De 2688 funciones se
+pasa a 2699, el 23,96 % de las del juego (el 13,159 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unit_unknown_00110fc0` | `0x00110fc0` | `units/units.c` |
+| `unit_unknown_00113da0` | `0x00113da0` | `units/units.c` |
+| `unit_unknown_00113df0` | `0x00113df0` | `units/units.c` |
+| `unit_unknown_00114440` | `0x00114440` | `units/units.c` |
+| `unit_unknown_00118f90` | `0x00118f90` | `units/units.c` |
+| `unit_unknown_00119bc0` | `0x00119bc0` | `units/units.c` |
+| `unit_unknown_0011b930` | `0x0011b930` | `units/units.c` |
+| `scenario_location_from_leaf` | `0x0011be90` | `scenario/scenario.c` |
+| `scenario_location_unknown_0011bf30` | `0x0011bf30` | `scenario/scenario.c` |
+| `structure_bsp_unknown_0011c010` | `0x0011c010` | `scenario/scenario.c` |
+| `scenario_unknown_0011c0b0` | `0x0011c0b0` | `scenario/scenario.c` |
+
+### Lo que se sabe
+
+- Lo que un objeto guarda en su short de 0x33E: un nombre en 0xA4 (uno de
+  cuatro) y los bytes de 0x89 y 0x8B.
+- El long de 0x14 del tag que un objeto nombra en su short de 0x342; algo de
+  0x30 bytes con dos nombres, `global_forward3d` y `global_up3d`; los bits 4
+  y 5 del byte de 0x12C; y el nombre `0x0E0000C2` en lo que una unidad
+  guarda en su short de 0x12A.
+- `scenario_location_from_leaf` (nombre como en Halo 1): el cluster de una
+  hoja de la estructura bsp; un bit del tag de un elemento que nombra el
+  cluster de un sitio; un bit de las filas de bits (una por cluster) en 0x58
+  de la estructura bsp; y qué nombre de una lista de 0x24 bytes es un texto.
+
+### Sin comprobar
+
+- Para qué sirven casi todas; solo `scenario_location_from_leaf` tiene
+  nombre de Halo 1.
+- Mutaciones: 30 de `make_mutations.py`, 0 sin notar.
+
 ## 2026-10-24 — Doce funciones pequeñas: nombres y sitio de las armas, lo que guardan los objetos en su short de 0x33E, bits y dos listas de objetos
 
 Doce funciones (1034 bytes) en tres archivos. De 2676 funciones se

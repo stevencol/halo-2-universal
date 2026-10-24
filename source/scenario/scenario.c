@@ -310,3 +310,82 @@ void *unknown_get_scenario_unknown150_tag(
 
 	return NULL;
 }
+
+/* 0x0011be90: a place in a leaf of the structure bsp: its cluster is the
+first short of the leaf (8 bytes, of the list at 0x30) */
+void scenario_location_from_leaf(
+	struct scenario_location *location,
+	long leaf_index)
+{
+	location->leaf_index= leaf_index;
+	if (leaf_index!=NONE)
+	{
+		location->cluster_index= *(const short *)(*(const byte *const *)((const byte *)global_structure_bsp+0x30)+leaf_index*8);
+		location->structure_bsp_index= global_structure_bsp_index;
+		return;
+	}
+	location->cluster_index= NONE;
+	location->structure_bsp_index= global_structure_bsp_index;
+}
+
+/* 0x0011bf30: the bit 0x01 of the first byte of the tag of the element (0x64
+bytes, of the block at 0xD4 of the structure bsp) that the cluster (0xB0
+bytes, at 0xA0) of a place names at 0x72; FALSE if there is none */
+boolean scenario_location_unknown_0011bf30(
+	const struct scenario_location *location)
+{
+	const byte *bsp= (const byte *)global_structure_bsp;
+	short index= *(const short *)(*(const byte *const *)(bsp+0xA0)+location->cluster_index*0xB0+0x72);
+	long tag_index;
+
+	if (index==NONE || index>=*(const long *)(bsp+0xD4))
+	{
+		return FALSE;
+	}
+	tag_index= *(const long *)(*(const byte *const *)(bsp+0xD8)+index*0x64+0x24);
+	if (tag_index==NONE)
+	{
+		return FALSE;
+	}
+
+	return *(const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address&1;
+}
+
+/* 0x0011c010: a bit of the rows of bits at 0x58 of the structure bsp, one
+row for each of its clusters (0x9C) */
+long __attribute__((stdcall)) structure_bsp_unknown_0011c010(
+	short column,
+	short row)
+{
+	const byte *bsp= (const byte *)global_structure_bsp;
+	const unsigned long *bits= *(const unsigned long *const *)(bsp+0x58);
+
+	return (bits[((*(const long *)(bsp+0x9C)+0x1F)>>5)*row+(column>>5)]&(1UL<<(column&0x1F)))!=0;
+}
+
+/* 0x0011c0b0: which of the names (0x24 bytes, of the block at 0x48 of
+something) is a text; NONE if none */
+short __attribute__((stdcall)) scenario_unknown_0011c0b0(
+	const byte *data,
+	const char *name)
+{
+	short index;
+
+	for (index= 0; index<*(const long *)(data+0x48); index++)
+	{
+		const char *entry= (const char *)(*(const byte *const *)(data+0x4C)+index*0x24);
+		const char *other= name;
+
+		while (*entry==*other && *entry)
+		{
+			entry++;
+			other++;
+		}
+		if (*entry==*other)
+		{
+			return index;
+		}
+	}
+
+	return NONE;
+}

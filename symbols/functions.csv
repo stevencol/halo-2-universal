@@ -3543,3 +3543,14 @@ address,name,source,arguments,returns,convention
 0010eea0,unit_unknown_0010eea0,source/units/units.c,ecx edx,int
 00109fd0,object_early_movers_unknown_00109fd0,source/objects/object_early_movers.c,stack edi,bool,stdcall
 0010ace0,object_unknown_0010a980_remove,source/objects/object_unknown_0010a980.c,edx,void
+00110fc0,unit_unknown_00110fc0,source/units/units.c,eax,bool
+00113da0,unit_unknown_00113da0,source/units/units.c,eax,int
+00113df0,unit_unknown_00113df0,source/units/units.c,eax,int
+00114440,unit_unknown_00114440,source/units/units.c,ecx,int
+00118f90,unit_unknown_00118f90,source/units/units.c,edx,void
+00119bc0,unit_unknown_00119bc0,source/units/units.c,eax,bool
+0011b930,unit_unknown_0011b930,source/units/units.c,ecx,bool
+0011be90,scenario_location_from_leaf,source/scenario/scenario.c,eax ecx,void
+0011bf30,scenario_location_unknown_0011bf30,source/scenario/scenario.c,eax,bool
+0011c010,structure_bsp_unknown_0011c010,source/scenario/scenario.c,ecx stack,int,stdcall
+0011c0b0,scenario_unknown_0011c0b0,source/scenario/scenario.c,ecx stack,short,stdcall
