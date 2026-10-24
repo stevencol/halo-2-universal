@@ -2,6 +2,51 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Once funciones pequeñas de los objetos y los líquidos
+
+Once funciones (759 bytes) en tres archivos. De 2618 funciones se
+pasa a 2629, el 23,34 % de las del juego (el 12,971 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_unknown_000b9d20` | `0x000b9d20` | `objects/objects.c` |
+| `object_unknown_000ba690` | `0x000ba690` | `objects/objects.c` |
+| `object_unknown_000bad50` | `0x000bad50` | `objects/objects.c` |
+| `object_unknown_000bafb0` | `0x000bafb0` | `objects/objects.c` |
+| `object_unknown_000bbf40` | `0x000bbf40` | `objects/objects.c` |
+| `object_unknown_000be650` | `0x000be650` | `objects/objects.c` |
+| `object_unknown_000bec70` | `0x000bec70` | `objects/objects.c` |
+| `object_unknown_000bf830` | `0x000bf830` | `objects/objects.c` |
+| `unknown_004de2d0_remove` | `0x000bf090` | `units/units.c` |
+| `liquid_unknown_000c4210` | `0x000c4210` | `objects/liquid.c` |
+| `liquid_unknown_000c4250` | `0x000c4250` | `objects/liquid.c` |
+
+### Lo que se sabe
+
+- De los objetos: el bit 0x40 de la cabecera del último padre; las décimas
+  partes de algo que guardan en su short de 0x11A; una entrada de la segunda
+  mitad de lo que guardan en su short de 0x126; si un objeto es otro o uno de
+  sus padres; el bit 0x80000 de sus opciones; sacar un objeto de una lista
+  (siguiente en 0x0C); una marca por vez (`unknown_004de2fc`,
+  `unknown_004de300`); y un real en 0xF0 con un short en 0x104 (de 0 a
+  0x7FFE).
+- `unknown_004de2d0_remove` quita un objeto de `unknown_004de2d0` (tantos
+  como dice el escenario en 0x48).
+- Dos de los líquidos: una parte de 0x50 bytes y el long de 0x0C de cada
+  uno, si la tabla está activa (0x29).
+- Variables nuevas: `unknown_004de2fc`, `unknown_004de300`.
+
+### Sin comprobar
+
+- Para qué sirven; todos los nombres son direcciones.
+- Mutaciones: 32 de `make_mutations.py`, 0 sin notar (con un caso más:
+  `object_unknown_000bafb0` de `NONE` con el otro 0). Se quitaron tres que no
+  cambian nada: `parent_index= 0` (solo cambia con `NONE`, que el juego lee
+  como la cabecera 0xFFFF), `number>=0x7FFE` y `number<=0` (ponen el mismo
+  valor).
+
 ## 2026-10-24 — Trece funciones pequeñas: ángulos válidos, textos, los objetos de cada cluster, bits de objetos y un hijo del objeto de una cosa de la simulación
 
 Trece funciones (1071 bytes) en cinco archivos. De 2605 funciones se

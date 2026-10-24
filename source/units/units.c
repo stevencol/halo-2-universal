@@ -12,6 +12,7 @@ the name of the file is a guess, by the one that the first game has.
 #include "cache/cache_files.h"
 #include "game/game.h"
 #include "objects/objects.h"
+#include "scenario/scenario.h"
 
 /* ---------- code */
 
@@ -1136,4 +1137,26 @@ long __attribute__((stdcall)) unknown_004ba014_unknown_00030da0(
 	}
 
 	return 3;
+}
+
+/* 0x000bf090: an object with a short at 0xAC is taken out of unknown_004de2d0
+(as many as the scenario says at 0x48), and its short is NONE */
+void unknown_004de2d0_remove(
+	long object_index)
+{
+	byte *object= (byte *)((const struct object_header_datum *)object_header_data->data)[object_index&0xFFFF].datum;
+	short index;
+
+	if (*(const short *)(object+0xAC)==NONE)
+	{
+		return;
+	}
+	*(short *)(object+0xAC)= NONE;
+	for (index= 0; index<*(const long *)((const byte *)global_scenario+0x48); index++)
+	{
+		if (unknown_004de2d0[index]==object_index)
+		{
+			unknown_004de2d0[index]= NONE;
+		}
+	}
 }

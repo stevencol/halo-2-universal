@@ -3473,3 +3473,14 @@ address,name,source,arguments,returns,convention
 000b8890,object_unknown_000b8890,source/objects/objects.c,stack,void,stdcall
 000b8c40,object_unknown_000b8c40,source/objects/objects.c,ecx eax,int
 000a3a20,simulation_unknown_000a3a20,source/networking/simulation_gamestate_entities.c,stack stack stack stack stack,int,stdcall
+000b9d20,object_unknown_000b9d20,source/objects/objects.c,eax,int
+000ba690,object_unknown_000ba690,source/objects/objects.c,eax esi edi ebx stack,void,stdcall
+000bad50,object_unknown_000bad50,source/objects/objects.c,eax edi esi,bool
+000bafb0,object_unknown_000bafb0,source/objects/objects.c,eax esi,int
+000bbf40,object_unknown_000bbf40,source/objects/objects.c,eax stack,void,stdcall
+000be650,object_unknown_000be650,source/objects/objects.c,edx edi,void
+000bec70,object_unknown_000bec70,source/objects/objects.c,eax,bool
+000bf830,object_unknown_000bf830,source/objects/objects.c,eax xmm0 stack,void,stdcall
+000bf090,unknown_004de2d0_remove,source/units/units.c,edi,void
+000c4210,liquid_unknown_000c4210,source/objects/liquid.c,ecx esi,pointer
+000c4250,liquid_unknown_000c4250,source/objects/liquid.c,ecx,int

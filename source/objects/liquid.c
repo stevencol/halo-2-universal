@@ -41,3 +41,30 @@ void liquid_dispose_from_old_map(
 {
 	liquid_data->valid= FALSE;
 }
+
+/* 0x000c4210: the which-th part (0x50 bytes, after 0x20) of a liquid
+(0x110 bytes); nothing without the table, when it is not on (0x29), or for
+NONE */
+byte *liquid_unknown_000c4210(
+	long liquid_index,
+	long which)
+{
+	if (!liquid_data || !*((const byte *)liquid_data+0x29) || liquid_index==NONE)
+	{
+		return NULL;
+	}
+
+	return (byte *)liquid_data->data+(liquid_index&0xFFFF)*0x110+0x20+which*0x50;
+}
+
+/* 0x000c4250: the long at 0x0C of a liquid; NONE as before */
+long liquid_unknown_000c4250(
+	long liquid_index)
+{
+	if (!liquid_data || !*((const byte *)liquid_data+0x29) || liquid_index==NONE)
+	{
+		return NONE;
+	}
+
+	return *(const long *)((const byte *)liquid_data->data+(liquid_index&0xFFFF)*0x110+0x0C);
+}

@@ -840,3 +840,181 @@ long object_unknown_000b8c40(
 
 	return NONE;
 }
+
+/* the object of an index, without a salt check, as bytes */
+#define OBJECT_DATA(object_index) \
+	((byte *)((const struct object_header_datum *)object_header_data->data)[(object_index)&0xFFFF].datum)
+
+/* 0x000b9d20: the bit 0x40 of the flags (0x02) of the header of the last
+parent of an object (or of itself, without one) */
+long object_unknown_000b9d20(
+	long object_index)
+{
+	const struct object_header_datum *headers= (const struct object_header_datum *)object_header_data->data;
+	long parent_index= NONE;
+
+	while (object_index!=NONE)
+	{
+		parent_index= object_index;
+		object_index= *(const long *)(OBJECT_DATA(object_index)+0x14);
+	}
+
+	return (headers[parent_index&0xFFFF].flags>>6)&1;
+}
+
+/* 0x000ba690: of what an object has at its short at 0x11A, of a size in
+its short at 0x118: a tenth of the size, and where it starts and its first
+and second tenths are (each if asked) */
+void __attribute__((stdcall)) object_unknown_000ba690(
+	long object_index,
+	long *count,
+	byte **first,
+	byte **second,
+	byte **third)
+{
+	byte *object= OBJECT_DATA(object_index);
+	byte *data= object+*(const short *)(object+0x11A);
+
+	*count= *(const short *)(object+0x118)/10;
+	if (first)
+	{
+		*first= data;
+	}
+	if (second)
+	{
+		*second= data+*count;
+	}
+	if (third)
+	{
+		*third= data+*count*2;
+	}
+}
+
+/* 0x000bad50: the index-th of the second half of the twelve-byte entries
+that an object has at its short at 0x126 (of a size in its short at 0x124);
+FALSE for one that is not there */
+boolean object_unknown_000bad50(
+	long object_index,
+	long index,
+	unsigned long *result)
+{
+	const byte *object= OBJECT_DATA(object_index);
+	const unsigned long *entry;
+	long count= (long)((unsigned long)(long)*(const short *)(object+0x124)/12)/2;
+
+	if (index<0 || index>=count)
+	{
+		return FALSE;
+	}
+	entry= (const unsigned long *)(object+*(const short *)(object+0x126))+(count+index)*3;
+	result[0]= entry[0];
+	result[1]= entry[1];
+	result[2]= entry[2];
+	return TRUE;
+}
+
+/* 0x000bafb0: whether an object is the other or one of its parents (not
+for NONE) */
+long object_unknown_000bafb0(
+	long object_index,
+	long other_index)
+{
+	long previous_index= NONE;
+
+	while (object_index!=NONE && previous_index!=other_index)
+	{
+		previous_index= object_index;
+		object_index= *(const long *)(OBJECT_DATA(object_index)+0x14);
+	}
+
+	return other_index!=NONE && previous_index==other_index;
+}
+
+/* 0x000bbf40: the bit 0x80000 of the flags (0x04) of an object is set or
+cleared; nothing for NONE */
+void __attribute__((stdcall)) object_unknown_000bbf40(
+	long object_index,
+	boolean set)
+{
+	if (object_index!=NONE)
+	{
+		unsigned long *flags= (unsigned long *)(OBJECT_DATA(object_index)+0x04);
+
+		if (set)
+		{
+			*flags|= 0x80000;
+		}
+		else
+		{
+			*flags&= ~0x80000UL;
+		}
+	}
+}
+
+/* 0x000be650: an object is taken out of a list where each has the next at
+0x0C, from where the first is said */
+void object_unknown_000be650(
+	long *link,
+	long object_index)
+{
+	byte *object;
+
+	if (*link==NONE)
+	{
+		return;
+	}
+	for (;;)
+	{
+		object= OBJECT_DATA(*link);
+		if (*link==object_index)
+		{
+			break;
+		}
+		link= (long *)(object+0x0C);
+		if (*link==NONE)
+		{
+			return;
+		}
+	}
+	*link= *(const long *)(object+0x0C);
+	*(long *)(object+0x0C)= NONE;
+}
+
+/* 0x004de2fc: a number for each time. 0x004de300: the number of the last
+time each was marked */
+unsigned long unknown_004de2fc;
+unsigned long unknown_004de300[0x800];
+
+/* 0x000bec70: whether something was not marked this time yet; it is marked */
+boolean object_unknown_000bec70(
+	long index)
+{
+	if (unknown_004de300[index&0xFFFF]==unknown_004de2fc)
+	{
+		return FALSE;
+	}
+	unknown_004de300[index&0xFFFF]= unknown_004de2fc;
+	return TRUE;
+}
+
+/* 0x000bf830: an object gets a real at 0xF0 and a short at 0x104 (0 if
+below zero, no more than 0x7FFE) */
+void __attribute__((stdcall)) object_unknown_000bf830(
+	long object_index,
+	real value,
+	short number)
+{
+	byte *object= OBJECT_DATA(object_index);
+
+	*(real *)(object+0xF0)= value;
+	if (number<0)
+	{
+		*(short *)(object+0x104)= 0;
+		return;
+	}
+	if (number>0x7FFE)
+	{
+		number= 0x7FFE;
+	}
+	*(short *)(object+0x104)= number;
+}
