@@ -727,3 +727,4 @@ address,name,source
 004de2e0,collideable_object_cluster_partition,source/objects/objects.c
 004de2fc,unknown_004de2fc,source/objects/objects.c
 004de300,unknown_004de300,source/objects/objects.c
+00467430,unknown_00467430,source/units/units.c

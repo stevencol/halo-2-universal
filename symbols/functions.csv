@@ -3484,3 +3484,16 @@ address,name,source,arguments,returns,convention
 000bf090,unknown_004de2d0_remove,source/units/units.c,edi,void
 000c4210,liquid_unknown_000c4210,source/objects/liquid.c,ecx esi,pointer
 000c4250,liquid_unknown_000c4250,source/objects/liquid.c,ecx,int
+000c7070,unit_unknown_000c7070,source/units/units.c,ecx,bool
+000c8f60,unit_unknown_000c8f60,source/units/units.c,eax stack,int,stdcall
+000cbe60,unit_unknown_000cbe60,source/units/units.c,eax,int
+000cc3c0,unit_unknown_000cc3c0,source/units/units.c,ecx,bool
+000cc410,unit_unknown_000cc410,source/units/units.c,eax,int
+000cc750,unit_unknown_000cc750,source/units/units.c,eax ecx,bool
+000cc7b0,unit_unknown_000cc7b0,source/units/units.c,eax ecx,bool
+000cccd0,unit_unknown_000cccd0,source/units/units.c,eax edx stack,short,stdcall
+000cd5c0,unit_unknown_000cd5c0,source/units/units.c,eax stack,bool,stdcall
+000cfe40,unit_unknown_000cfe40,source/units/units.c,ecx,short
+000d05c0,unit_iterator_next,source/units/units.c,esi,pointer
+000d0930,unit_unknown_000d0930,source/units/units.c,ecx eax,void
+000c48f0,unit_unknown_000c48f0,source/units/units.c,ecx,bool

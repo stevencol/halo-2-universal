@@ -1160,3 +1160,242 @@ void unknown_004de2d0_remove(
 		}
 	}
 }
+
+/* whether an object is of the first two kinds (its byte at 0xAA), the bit
+of its kind in 3 as the processor shifts it */
+#define UNIT_OBJECT_IS_UNIT(object) ((1UL<<(*((const byte *)(object)+0xAA)&0x1F))&3)
+
+/* what a unit has at its short at 0x12A: whether it is set (its longs at 0x68
+and 0x00 and its short at 0x06 are not NONE) and has a name (0x7C) */
+#define UNIT_UNKNOWN12A(unit) ((const byte *)(unit)+*(const short *)((const byte *)(unit)+0x12A))
+#define UNIT_UNKNOWN12A_IS(data, name) \
+	(*(const long *)((data)+0x68)!=NONE && *(const long *)(data)!=NONE && *(const short *)((data)+0x06)!=NONE \
+		&& *(const unsigned long *)((data)+0x7C)==(name))
+
+/* 0x00467430: five names */
+unsigned long unknown_00467430[5];
+
+/* 0x000c7070: whether the name at 0x7C of what a unit has at its short at
+0x12A is one of unknown_00467430 */
+boolean unit_unknown_000c7070(
+	long unit_index)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+	unsigned long name= *(const unsigned long *)(UNIT_UNKNOWN12A(unit)+0x7C);
+	const unsigned long *entry;
+
+	for (entry= unknown_00467430; entry<unknown_00467430+5; entry++)
+	{
+		if (*entry==name)
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x000c8f60: the first child of an object that is a unit with the short
+at 0x1FC; NONE if there is none */
+long __attribute__((stdcall)) unit_unknown_000c8f60(
+	long object_index,
+	short number)
+{
+	long child_index= *(const long *)(UNIT_OBJECT_GET(object_index)+0x10);
+
+	while (child_index!=NONE)
+	{
+		const byte *child= UNIT_OBJECT_GET(child_index);
+
+		if (UNIT_OBJECT_IS_UNIT(child) && *(const short *)(child+0x1FC)==number)
+		{
+			break;
+		}
+		child_index= *(const long *)(child+0x0C);
+	}
+
+	return child_index;
+}
+
+/* 0x000cbe60: the first weapon of a unit that is not in either of its hands
+(0x212 and 0x213); NONE if there is none */
+long unit_unknown_000cbe60(
+	long unit_index)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+	long index;
+
+	for (index= 0; index<4; index++)
+	{
+		if (index!=(signed char)unit[0x212] && index!=(signed char)unit[0x213]
+			&& ((const long *)(unit+UNIT_WEAPONS_OFFSET))[index]!=NONE)
+		{
+			return ((const long *)(unit+UNIT_WEAPONS_OFFSET))[index];
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x000cc3c0: whether what a unit has at its short at 0x12A is set and has
+the name 0x0600008C */
+boolean unit_unknown_000cc3c0(
+	long unit_index)
+{
+	return UNIT_UNKNOWN12A_IS(UNIT_UNKNOWN12A(UNIT_OBJECT_GET(unit_index)), 0x0600008C);
+}
+
+/* 0x000cc410: the same, with the name 0x0D000042 or 0x0C000043 */
+long unit_unknown_000cc410(
+	long unit_index)
+{
+	const byte *data= UNIT_UNKNOWN12A(UNIT_OBJECT_GET(unit_index));
+
+	return UNIT_UNKNOWN12A_IS(data, 0x0D000042) || UNIT_UNKNOWN12A_IS(data, 0x0C000043);
+}
+
+/* the first long of an element (0xB0 bytes) of the block at 0x1C8 of the
+definition of a unit */
+#define UNIT_DEFINITION_UNKNOWN1C8(definition, index) \
+	(*(const unsigned long *)(*(const byte *const *)((definition)+0x1CC)+(index)*0xB0))
+
+/* 0x000cc750: the bit 2 of an element of the block at 0x1C8 of the
+definition of a unit; FALSE for one that is not there */
+boolean unit_unknown_000cc750(
+	long unit_index,
+	short index)
+{
+	const byte *definition= UNIT_DEFINITION_GET(UNIT_OBJECT_GET(unit_index));
+
+	return index>=0 && index<*(const long *)(definition+0x1C8) && (UNIT_DEFINITION_UNKNOWN1C8(definition, index)>>2)&1;
+}
+
+/* 0x000cc7b0: the bit 3 */
+boolean unit_unknown_000cc7b0(
+	long unit_index,
+	short index)
+{
+	const byte *definition= UNIT_DEFINITION_GET(UNIT_OBJECT_GET(unit_index));
+
+	return index>=0 && index<*(const long *)(definition+0x1C8) && (UNIT_DEFINITION_UNKNOWN1C8(definition, index)>>3)&1;
+}
+
+/* 0x000cccd0: one of the bytes from 0x23E of a unit gets a number more, its
+index goes in the bytes at 0x23C and 0x23D, and the byte is returned */
+short __attribute__((stdcall)) unit_unknown_000cccd0(
+	long unit_index,
+	short index,
+	signed char amount)
+{
+	signed char *unit= (signed char *)UNIT_OBJECT_GET(unit_index);
+
+	unit[index+0x23E]+= amount;
+	unit[0x23D]= (signed char)index;
+	unit[0x23C]= (signed char)index;
+	return unit[index+0x23E];
+}
+
+/* 0x000cd5c0: whether a unit has a weapon of a tag */
+boolean __attribute__((stdcall)) unit_unknown_000cd5c0(
+	long unit_index,
+	long tag_index)
+{
+	const long *weapons= (const long *)(UNIT_OBJECT_GET(unit_index)+UNIT_WEAPONS_OFFSET);
+	long index;
+
+	for (index= 0; index<4; index++)
+	{
+		if (weapons[index]!=NONE && *(const long *)UNIT_OBJECT_GET(weapons[index])==tag_index)
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x000cfe40: the first weapon of a unit whose definition has the bit 3 of
+its long at 0x12C; NONE if none has */
+short unit_unknown_000cfe40(
+	long unit_index)
+{
+	const long *weapons= (const long *)(UNIT_OBJECT_GET(unit_index)+UNIT_WEAPONS_OFFSET);
+	short index;
+
+	for (index= 0; index<4; index++)
+	{
+		if (weapons[index]!=NONE
+			&& (*(const unsigned long *)(UNIT_DEFINITION_GET(UNIT_OBJECT_GET(weapons[index]))+0x12C)>>3)&1)
+		{
+			return index;
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x000d05c0: the next of a list of objects (each has the next at 0x0C;
+the next of the iterator is at 0x0C) that is a unit: its index goes at
+0x04 of the iterator and its short at 0x1FC at 0x08, and it is returned;
+nothing after the last */
+byte *unit_iterator_next(
+	byte *iterator)
+{
+	while (*(const long *)(iterator+0x0C)!=NONE)
+	{
+		long object_index= *(const long *)(iterator+0x0C);
+		byte *object= (byte *)UNIT_OBJECT_GET(object_index);
+
+		*(long *)(iterator+0x0C)= *(const long *)(object+0x0C);
+		if (UNIT_OBJECT_IS_UNIT(object))
+		{
+			*(long *)(iterator+0x04)= object_index;
+			*(short *)(iterator+0x08)= *(const short *)(object+0x1FC);
+			return object;
+		}
+	}
+
+	return NULL;
+}
+
+/* 0x000d0930: a unit gets a point (or vector) at 0x15C and at 0x180 */
+void unit_unknown_000d0930(
+	long unit_index,
+	const unsigned long *point)
+{
+	unsigned long *unit= (unsigned long *)UNIT_OBJECT_GET(unit_index);
+
+	unit[0x15C/4]= point[0];
+	unit[0x15C/4+1]= point[1];
+	unit[0x15C/4+2]= point[2];
+	unit[0x180/4]= point[0];
+	unit[0x180/4+1]= point[1];
+	unit[0x180/4+2]= point[2];
+}
+
+/* 0x000c48f0: whether the parent of an object is a unit whose definition
+has the bit 6 in the element of the block at 0x1C8 that the object says at
+0x1FC; FALSE for NONE or without one */
+boolean unit_unknown_000c48f0(
+	long object_index)
+{
+	const byte *object;
+	const byte *parent;
+
+	if (object_index==NONE)
+	{
+		return FALSE;
+	}
+	object= UNIT_OBJECT_GET(object_index);
+	if (*(const long *)(object+0x14)==NONE)
+	{
+		return FALSE;
+	}
+	parent= UNIT_OBJECT_GET(*(const long *)(object+0x14));
+	if (!UNIT_OBJECT_IS_UNIT(parent))
+	{
+		return FALSE;
+	}
+
+	return (UNIT_DEFINITION_UNKNOWN1C8(UNIT_DEFINITION_GET(parent), *(const short *)(object+0x1FC))>>6)&1;
+}

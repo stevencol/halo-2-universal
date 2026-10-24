@@ -2,6 +2,49 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Trece funciones pequeñas de las unidades: nombres, hijos, armas, bits de su definición y una lista
+
+Trece funciones (1119 bytes) en `units.c`. De 2629 funciones se pasa a
+2642, el 23,45 % de las del juego (el 13,009 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unit_unknown_000c48f0` | `0x000c48f0` | `units/units.c` |
+| `unit_unknown_000c7070` | `0x000c7070` | `units/units.c` |
+| `unit_unknown_000c8f60` | `0x000c8f60` | `units/units.c` |
+| `unit_unknown_000cbe60` | `0x000cbe60` | `units/units.c` |
+| `unit_unknown_000cc3c0` | `0x000cc3c0` | `units/units.c` |
+| `unit_unknown_000cc410` | `0x000cc410` | `units/units.c` |
+| `unit_unknown_000cc750` | `0x000cc750` | `units/units.c` |
+| `unit_unknown_000cc7b0` | `0x000cc7b0` | `units/units.c` |
+| `unit_unknown_000cccd0` | `0x000cccd0` | `units/units.c` |
+| `unit_unknown_000cd5c0` | `0x000cd5c0` | `units/units.c` |
+| `unit_unknown_000cfe40` | `0x000cfe40` | `units/units.c` |
+| `unit_iterator_next` | `0x000d05c0` | `units/units.c` |
+| `unit_unknown_000d0930` | `0x000d0930` | `units/units.c` |
+
+### Lo que se sabe
+
+- Lo que una unidad guarda en su short de 0x12A tiene un nombre en 0x7C
+  (`0x0600008C`, `0x0D000042`, `0x0C000043` o uno de los cinco de
+  `unknown_00467430`).
+- El primer hijo que es unidad con un short en 0x1FC; la primera arma que no
+  está en ninguna mano; si tiene un arma de un tag; la primera arma cuya
+  definición tiene el bit 3 de 0x12C.
+- Los bits 2, 3 y 6 del primer long de los elementos (0xB0 bytes) del bloque
+  en 0x1C8 de la definición de una unidad.
+- Un byte de los de 0x23E que suma un número; el siguiente de una lista de
+  objetos que es unidad (`unit_iterator_next`); un punto en 0x15C y 0x180.
+- Variable nueva: `unknown_00467430`.
+
+### Sin comprobar
+
+- Qué son los nombres (parecen `string_id`) y para qué sirven las funciones.
+- Mutaciones: 37 de `make_mutations.py`, 0 sin notar. Se quitó una que no
+  cambia nada: `0x181/4` es el mismo índice que `0x180/4`.
+
 ## 2026-10-24 — Once funciones pequeñas de los objetos y los líquidos
 
 Once funciones (759 bytes) en tres archivos. De 2618 funciones se
