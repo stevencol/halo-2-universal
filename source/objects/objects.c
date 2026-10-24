@@ -1018,3 +1018,105 @@ void __attribute__((stdcall)) object_unknown_000bf830(
 	}
 	*(short *)(object+0x104)= number;
 }
+
+/* the entries of eight bytes that an object has at its short at 0x11E, as
+many as its short at 0x11C says in bytes */
+#define OBJECT_UNKNOWN11E(object) ((byte *)(object)+*(const short *)((const byte *)(object)+0x11E))
+#define OBJECT_UNKNOWN11E_COUNT(object) \
+	((long)((unsigned long)(long)*(const short *)((const byte *)(object)+0x11C)>>3))
+
+/* 0x000fd410: the long of the entry that an object names at 0x14C, if the
+entry is there and of kind 3; NONE if not */
+long object_unknown_000fd410(
+	long object_index)
+{
+	const byte *object= OBJECT_DATA(object_index);
+	long index= *(const long *)(object+0x14C);
+
+	if (index!=NONE && index>=0 && index<OBJECT_UNKNOWN11E_COUNT(object) && OBJECT_UNKNOWN11E(object)[index*8]==3)
+	{
+		return *(const long *)(OBJECT_UNKNOWN11E(object)+index*8+4);
+	}
+
+	return NONE;
+}
+
+/* 0x000fd460: that entry, if it is there, gets the kind 3 and a long */
+void __attribute__((stdcall)) object_unknown_000fd460(
+	long object_index,
+	long value)
+{
+	byte *object= OBJECT_DATA(object_index);
+	long index= *(const long *)(object+0x14C);
+
+	if (index!=NONE && index>=0 && index<OBJECT_UNKNOWN11E_COUNT(object))
+	{
+		OBJECT_UNKNOWN11E(object)[index*8]= 3;
+		*(long *)(OBJECT_UNKNOWN11E(object)+*(const long *)(object+0x14C)*8+4)= value;
+	}
+}
+
+/* 0x000edfa0: an object without a parent gets two reals at 0x70, 0.0 at
+0x78 and global_up3d at 0x7C */
+void object_unknown_000edfa0(
+	long object_index,
+	const unsigned long *values)
+{
+	unsigned long *object= (unsigned long *)OBJECT_DATA(object_index);
+
+	if (object[0x14/4]==NONE)
+	{
+		unsigned long first= values[0];
+
+		object[0x74/4]= values[1];
+		object[0x70/4]= first;
+		*(real *)&object[0x78/4]= 0.0f;
+		object[0x7C/4]= ((const unsigned long *)global_up3d)[0];
+		object[0x80/4]= ((const unsigned long *)global_up3d)[1];
+		object[0x84/4]= ((const unsigned long *)global_up3d)[2];
+	}
+}
+
+/* 0x000fbfd0: an object gets at 0x170 the real at 0x178 of its definition
+with the bit 3 of its flags, and that at 0x16C without */
+void object_unknown_000fbfd0(
+	long object_index)
+{
+	unsigned long *object= (unsigned long *)OBJECT_DATA(object_index);
+	const byte *definition= (const byte *)(uintptr_t)global_tag_instances[object[0]&0xFFFF].address;
+
+	if ((object[1]>>3)&1)
+	{
+		object[0x170/4]= *(const unsigned long *)(definition+0x178);
+		return;
+	}
+	object[0x170/4]= *(const unsigned long *)(definition+0x16C);
+}
+
+/* 0x001896c0: a sound is played */
+void __attribute__((stdcall)) sound_unknown_001896c0(long sound_index, real scale);
+
+/* 0x000f8160: the sound that a definition names at 0x138, if any */
+void object_definition_unknown_000f8160(
+	long definition_index)
+{
+	long sound_index= *(const long *)((const byte *)(uintptr_t)global_tag_instances[definition_index&0xFFFF].address+0x138);
+
+	if (sound_index!=NONE)
+	{
+		sound_unknown_001896c0(sound_index, 1.0f);
+	}
+}
+
+/* 0x000f8110: the same, of the definition of an object */
+void object_unknown_000f8110(
+	long object_index)
+{
+	long sound_index= *(const long *)((const byte *)(uintptr_t)
+		global_tag_instances[*(const long *)OBJECT_DATA(object_index)&0xFFFF].address+0x138);
+
+	if (sound_index!=NONE)
+	{
+		sound_unknown_001896c0(sound_index, 1.0f);
+	}
+}

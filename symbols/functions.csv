@@ -3511,3 +3511,14 @@ address,name,source,arguments,returns,convention
 000e5980,unit_unknown_000e5980,source/units/units.c,eax,int
 000e6800,unit_unknown_000e6800,source/units/units.c,eax,bool
 000e6fe0,unit_unknown_000e6fe0,source/units/units.c,eax ecx,int
+000fd410,object_unknown_000fd410,source/objects/objects.c,eax,int
+000fd460,object_unknown_000fd460,source/objects/objects.c,eax stack,void,stdcall
+000edfa0,object_unknown_000edfa0,source/objects/objects.c,eax ecx,void
+000fbfd0,object_unknown_000fbfd0,source/objects/objects.c,eax,void
+000f8160,object_definition_unknown_000f8160,source/objects/objects.c,eax,void
+000f8110,object_unknown_000f8110,source/objects/objects.c,eax,void
+000ee8a0,unit_unknown_000ee8a0,source/units/units.c,ecx stack,bool,stdcall
+000f06c0,unit_unknown_000f06c0,source/units/units.c,eax,void
+000f1320,unit_unknown_000f1320,source/units/units.c,eax,bool
+000f1c80,unit_unknown_000f1c80,source/units/units.c,eax edx,void
+000f5d10,unit_unknown_000f5d10,source/units/units.c,eax ecx stack,bool,stdcall

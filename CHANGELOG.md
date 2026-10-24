@@ -2,6 +2,47 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Once funciones pequeñas de los objetos y las unidades: entradas, el vector hacia arriba, sonidos, armas en las manos y bits
+
+Once funciones (814 bytes) en dos archivos. De 2656 funciones se
+pasa a 2667, el 23,68 % de las del juego (el 13,070 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_unknown_000edfa0` | `0x000edfa0` | `objects/objects.c` |
+| `object_unknown_000f8110` | `0x000f8110` | `objects/objects.c` |
+| `object_definition_unknown_000f8160` | `0x000f8160` | `objects/objects.c` |
+| `object_unknown_000fbfd0` | `0x000fbfd0` | `objects/objects.c` |
+| `object_unknown_000fd410` | `0x000fd410` | `objects/objects.c` |
+| `object_unknown_000fd460` | `0x000fd460` | `objects/objects.c` |
+| `unit_unknown_000ee8a0` | `0x000ee8a0` | `units/units.c` |
+| `unit_unknown_000f06c0` | `0x000f06c0` | `units/units.c` |
+| `unit_unknown_000f1320` | `0x000f1320` | `units/units.c` |
+| `unit_unknown_000f1c80` | `0x000f1c80` | `units/units.c` |
+| `unit_unknown_000f5d10` | `0x000f5d10` | `units/units.c` |
+
+### Lo que se sabe
+
+- De los objetos: dos reales, 0.0 y `global_up3d` en 0x70 a un objeto sin
+  padre; un real de su definición (0x178 o 0x16C según el bit 3 de sus
+  opciones) en 0x170; el sonido que nombra su definición en 0x138
+  (`sound_unknown_001896c0` con 1.0); y una entrada de ocho bytes de las que
+  tiene en su short de 0x11E, la que nombra en 0x14C (leer su long si es de
+  clase 3, o ponerla de clase 3 con un long).
+- De las unidades: si el arma de una mano tiene el bit 1 y no el 2 de su
+  byte en 0x16C; dieciséis shorts a `NONE`; la clase de su definición (5, o
+  4 con 1 en 0x218); un long en 0x37C y el byte de 0x387; y un bit del long
+  de 0x3B4.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones.
+- Mutaciones: 34 de `make_mutations.py`, 0 sin notar. Se quitaron dos que
+  no cambian nada: `0x81/4` y `0x171/4` son los mismos índices que `0x80/4` y
+  `0x170/4`.
+
 ## 2026-10-24 — Catorce funciones pequeñas cerca de las unidades: clases de objetos, el tag que nombra una definición en 0x38, algo de 0x88 bytes, un número por un nombre y bytes de las unidades
 
 Catorce funciones (1013 bytes) en `units.c`. De 2642 funciones se pasa

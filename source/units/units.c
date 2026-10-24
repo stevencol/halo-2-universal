@@ -1660,3 +1660,101 @@ long unit_unknown_000e6fe0(
 
 	return (bits[bit>>5]&(1UL<<(bit&0x1F)))!=0;
 }
+
+/* 0x000ee8a0: whether the weapon in a hand of a unit (0x212 or 0x213) has
+the bit 1 and not the bit 2 of its byte at 0x16C */
+boolean __attribute__((stdcall)) unit_unknown_000ee8a0(
+	long unit_index,
+	long hand)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+	short weapon= (signed char)unit[0x212+hand];
+	long weapon_index;
+	byte flags;
+
+	if (weapon==NONE || (weapon_index= ((const long *)(unit+UNIT_WEAPONS_OFFSET))[weapon])==NONE)
+	{
+		return FALSE;
+	}
+	flags= UNIT_OBJECT_GET(weapon_index)[0x16C];
+
+	return (flags>>1)&1 && !((flags>>2)&1);
+}
+
+/* 0x000f06c0: the shorts at 0xBC0 of sixteen entries of 0xD8 bytes of
+something are NONE */
+void unit_unknown_000f06c0(
+	byte *data)
+{
+	long index;
+
+	for (index= 0; index<16; index++)
+	{
+		*(short *)(data+index*0xD8+0xBC0)= NONE;
+	}
+}
+
+/* 0x000f1320: whether an object has the bit 2 of its byte at 0x10A and its
+definition the short 5 at 0x1F0, or 4 with 1 at 0x218 */
+boolean unit_unknown_000f1320(
+	long object_index)
+{
+	const byte *object= UNIT_OBJECT_GET(object_index);
+	const byte *definition= UNIT_DEFINITION_GET(object);
+	short kind;
+
+	if (!((object[0x10A]>>2)&1))
+	{
+		return FALSE;
+	}
+	kind= *(const short *)(definition+0x1F0);
+
+	return (kind==4 && *(const short *)(definition+0x218)==1) || kind==5;
+}
+
+/* 0x000f1c80: a unit gets the long at 0x70 of something; and its byte at
+0x387 is cleared unless one of the entries (0xD8 bytes, as many as the long
+at 0x44 of what it points to at 0x04) has its byte at 0xB90 set */
+void unit_unknown_000f1c80(
+	long unit_index,
+	const byte *data)
+{
+	byte *unit= (byte *)UNIT_OBJECT_GET(unit_index);
+	long count;
+	long index;
+
+	*(long *)(unit+0x37C)= *(const long *)(data+0x70);
+	count= *(const long *)(*(const byte *const *)(data+0x04)+0x44);
+	for (index= 0; index<count; index++)
+	{
+		if (data[index*0xD8+0xB90])
+		{
+			return;
+		}
+	}
+	unit[0x387]= 0;
+}
+
+/* 0x000f5d10: a bit (0 to 31) of the long at 0x3B4 of a unit is set or
+cleared; FALSE for another */
+boolean __attribute__((stdcall)) unit_unknown_000f5d10(
+	long unit_index,
+	long bit,
+	boolean set)
+{
+	unsigned long *flags= (unsigned long *)(UNIT_OBJECT_GET(unit_index)+0x3B4);
+
+	if (bit<0 || bit>=32)
+	{
+		return FALSE;
+	}
+	if (set)
+	{
+		*flags|= 1UL<<bit;
+	}
+	else
+	{
+		*flags&= ~(1UL<<bit);
+	}
+	return TRUE;
+}
