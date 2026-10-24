@@ -734,3 +734,5 @@ address,name,source
 004e9bc8,unknown_004e9bc8,source/game/game_engine.c
 00510ca4,unknown_00510ca4,source/networking/simulation_view.c
 00515c34,unknown_00515c34,source/networking/simulation_view.c
+0051f409,unknown_0051f409,source/cseries/unknown_0051f40c.c
+005234b0,unknown_005234b0,source/cseries/unknown_0051f40c.c

@@ -497,3 +497,38 @@ unsigned long cseries_unknown_000b6720(
 		}
 	}
 }
+
+/* 0x00044690: the next bit that is set of a list of longs (as many as the
+first short; the second is the one being looked at, and the long after it
+what is left of it), and it is cleared there; FALSE after the last */
+boolean __attribute__((stdcall)) bit_vector_iterator_next(
+	byte *iterator,
+	long *bit)
+{
+	short *count= (short *)iterator;
+	short *index= (short *)(iterator+2);
+	unsigned long *bits= (unsigned long *)(iterator+4);
+	long which;
+
+	if (!*bits)
+	{
+		do
+		{
+			(*index)++;
+			if (*index>=*count)
+			{
+				break;
+			}
+			*bits= (*(const unsigned long *const *)(iterator+8))[*index];
+		}
+		while (!*bits);
+	}
+	if (*index>=*count)
+	{
+		return FALSE;
+	}
+	which= __builtin_ctz(*bits);
+	*bit= *index*32+which;
+	*bits&= ~(1UL<<which);
+	return TRUE;
+}

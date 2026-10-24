@@ -79,3 +79,44 @@ void unknown_0051f40c_clear(
 	memset(entry, 0, 8*sizeof(unsigned long));
 	entry[1]|= 0xFF80;
 }
+
+/* 0x0051f409: whether the display is of a kind other than 4 to 7 (of
+unknown_00485898). 0x005234b0: the number of the display when the table
+was last made ready */
+byte unknown_0051f409;
+long unknown_005234b0;
+
+/* 0x00485aa0 (rasterizer_xbox.c) and 0x00485898 (shell.c) */
+extern long rasterizer_display_initialized;
+extern long unknown_00485898;
+
+/* 0x000206a0: the table is made ready again (every entry loses the bit 0x02
+of its second long) when the display has been made since it last was, or
+with a kind of 4 to 7 and the same display, or for the first one; it is in
+use only then, and it is never ready afterwards */
+void unknown_0051f40c_update(
+	void)
+{
+	long display= rasterizer_display_initialized;
+	long kind= unknown_00485898;
+
+	if (display>=0
+		&& ((kind>=4 && kind<=7 && display==unknown_005234b0) || display>unknown_005234b0 || !unknown_005234b0))
+	{
+		long index;
+		boolean special;
+
+		for (index= 0; index<0x3FE0/0x20; index++)
+		{
+			unknown_0051f40c[index*8+1]&= ~2UL;
+		}
+		unknown_005234b0= display;
+		unknown_0051f408= TRUE;
+		special= kind>=4 && kind<=7;
+		unknown_0051f409= !special;
+		unknown_005234c4= NONE;
+		return;
+	}
+	unknown_0051f408= FALSE;
+	unknown_005234c4= NONE;
+}

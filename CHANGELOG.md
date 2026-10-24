@@ -2,6 +2,31 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Cinco funciones medianas del camino al menú: la tabla de unknown_0051f40c, el rasterizador, un iterador de bits y la lista de los sistemas de partículas
+
+Cinco funciones medianas (644 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2791 funciones se pasa a 2796, el 24,82 % de
+las del juego (el 13,414 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unknown_0051f40c_update` | `0x000206a0` | `cseries/unknown_0051f40c.c` |
+| `rasterizer_unknown_0001c620` | `0x0001c620` | `rasterizer/rasterizer_xbox.c` |
+| `bit_vector_iterator_next` | `0x00044690` | `cseries/cseries.c` |
+| `particle_system_list_add` | `0x00175070` | `effects/effects.c` |
+| `particle_system_list_remove` | `0x00175100` | `effects/effects.c` |
+
+### Lo que se sabe
+
+- la tabla de `unknown_0051f40c` se prepara de nuevo según la pantalla; una entrada más del rasterizador; el siguiente bit puesto de una lista; y un sistema de partículas que entra y sale de una lista (anterior en 0x3C, siguiente en 0x38).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 16 de `make_mutations.py`, 0 sin cazar; 2 que no cambia nada, quitada.
+
 ## 2026-10-24 — Cuatro funciones medianas del camino al menú: cosas de Havok, los jugadores en uso, un número de un tag y una entrada nueva
 
 Cuatro funciones medianas (500 bytes) en 4 archivos, de las que el juego ejecuta

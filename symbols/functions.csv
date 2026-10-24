@@ -3646,3 +3646,8 @@ address,name,source,arguments,returns,convention
 00152340,players_unknown_00152340,source/main/main.c,,void
 00137590,tag_unknown_00137590,source/game/game_unknown_00134d90.c,ecx stack edi,int,stdcall
 00134300,game_unknown_00131ff0_new_entry,source/game/game_unknown_00131ff0.c,edx stack,int,stdcall
+000206a0,unknown_0051f40c_update,source/cseries/unknown_0051f40c.c,,void
+0001c620,rasterizer_unknown_0001c620,source/rasterizer/rasterizer_xbox.c,ecx eax edi stack stack,void,stdcall
+00044690,bit_vector_iterator_next,source/cseries/cseries.c,eax stack,bool,stdcall
+00175070,particle_system_list_add,source/effects/effects.c,esi ebx stack,void,stdcall
+00175100,particle_system_list_remove,source/effects/effects.c,ecx ebx stack,void,stdcall

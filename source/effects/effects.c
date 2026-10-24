@@ -419,3 +419,63 @@ void effect_unknown_0017b750(
 		values[index]= value;
 	}
 }
+
+/* the index of an element (0x54 bytes) of the particle systems, with its salt */
+#define PARTICLE_SYSTEM_INDEX(element) \
+	((long)*(const short *)(element)<<16 | (long)((element)-(const byte *)particle_system_data->data)/0x54)
+#define PARTICLE_SYSTEM_GET(index) ((byte *)particle_system_data->data+((index)&0xFFFF)*0x54)
+
+/* 0x00175070: a particle system goes last in a list (its first and last are
+said; each has the one before at 0x3C and the one after at 0x38) */
+void __attribute__((stdcall)) particle_system_list_add(
+	byte *element,
+	long *last,
+	long *first)
+{
+	long index= PARTICLE_SYSTEM_INDEX(element);
+
+	*(long *)(element+0x38)= NONE;
+	if (*first==NONE)
+	{
+		*first= index;
+	}
+	if (*last!=NONE)
+	{
+		byte *other= PARTICLE_SYSTEM_GET(*last);
+
+		*(long *)(other+0x38)= index;
+		*(long *)(element+0x3C)= PARTICLE_SYSTEM_INDEX(other);
+		*last= index;
+		return;
+	}
+	*last= index;
+	*(long *)(element+0x3C)= NONE;
+}
+
+/* 0x00175100: it is taken out of the list */
+void __attribute__((stdcall)) particle_system_list_remove(
+	byte *element,
+	long *last,
+	long *first)
+{
+	long index= PARTICLE_SYSTEM_INDEX(element);
+
+	if (*(const long *)(element+0x38)!=NONE)
+	{
+		*(long *)(PARTICLE_SYSTEM_GET(*(const long *)(element+0x38))+0x3C)= *(const long *)(element+0x3C);
+	}
+	if (*(const long *)(element+0x3C)!=NONE)
+	{
+		*(long *)(PARTICLE_SYSTEM_GET(*(const long *)(element+0x3C))+0x38)= *(const long *)(element+0x38);
+	}
+	if (*last==index)
+	{
+		*last= *(const long *)(element+0x38);
+	}
+	if (*first==index)
+	{
+		*first= *(const long *)(element+0x3C);
+	}
+	*(long *)(element+0x38)= NONE;
+	*(long *)(element+0x3C)= NONE;
+}

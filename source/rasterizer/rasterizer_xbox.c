@@ -533,3 +533,31 @@ unsigned long rasterizer_unknown_0001cb70(
 
 	return bits;
 }
+
+/* 0x0001c620: one more of the three longs (from 0x210) and the long (from
+0x8C) of those of 0x0001c6b0, as many as at 0x2D0; the bytes at 0x2D4 and
+0x20C say that the three longs or the long (by the one at 0xCC) changed */
+void __attribute__((stdcall)) rasterizer_unknown_0001c620(
+	byte *data,
+	long second,
+	long first,
+	long third,
+	long fourth)
+{
+	long index= *(const long *)(data+0x2D0);
+	long *three= (long *)(data+0x210)+3*index;
+
+	if (three[1]!=second || three[0]!=first || three[2]!=third)
+	{
+		three[2]= third;
+		three[1]= second;
+		three[0]= first;
+		data[0x2D4]= TRUE;
+	}
+	((long *)(data+0x8C))[index]= fourth;
+	if (((const long *)(data+0xCC))[index]!=fourth)
+	{
+		data[0x20C]= TRUE;
+	}
+	*(long *)(data+0x2D0)= index+1;
+}
