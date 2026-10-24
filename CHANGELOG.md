@@ -2,6 +2,30 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Cuatro funciones medianas del camino al menú: un efecto sale de su objeto, un punto del mundo, una cosa de Havok y si un objeto se ve
+
+Cuatro funciones medianas (525 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2796 funciones se pasa a 2800, el 24,86 % de
+las del juego (el 13,432 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `effect_unknown_00177590` | `0x00177590` | `effects/effects.c` |
+| `valid_world_real_point3d` | `0x00172350` | `math/real_math.c` |
+| `havok_unknown_001c6470` | `0x001c6470` | `physics/havok.c` |
+| `object_unknown_000b6d60` | `0x000b6d60` | `objects/objects.c` |
+
+### Lo que se sabe
+
+- un efecto se quita de las entradas de su objeto; si un punto está entre -50000 y 50000 (nombre supuesto, como los de Halo 1); una cosa de 0x20 bytes de Havok hecha con sus valores; y si unos clusters ven un objeto.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 15 de `make_mutations.py`, 0 sin cazar; 1 que no cambia nada, quitada.
+
 ## 2026-10-24 — Cinco funciones medianas del camino al menú: la tabla de unknown_0051f40c, el rasterizador, un iterador de bits y la lista de los sistemas de partículas
 
 Cinco funciones medianas (644 bytes) en 4 archivos, de las que el juego ejecuta

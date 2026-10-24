@@ -3651,3 +3651,7 @@ address,name,source,arguments,returns,convention
 00044690,bit_vector_iterator_next,source/cseries/cseries.c,eax stack,bool,stdcall
 00175070,particle_system_list_add,source/effects/effects.c,esi ebx stack,void,stdcall
 00175100,particle_system_list_remove,source/effects/effects.c,ecx ebx stack,void,stdcall
+00177590,effect_unknown_00177590,source/effects/effects.c,esi,void
+00172350,valid_world_real_point3d,source/math/real_math.c,eax,bool
+001c6470,havok_unknown_001c6470,source/physics/havok.c,eax ecx edx stack stack stack stack stack,bool,stdcall
+000b6d60,object_unknown_000b6d60,source/objects/objects.c,eax stack,bool,stdcall

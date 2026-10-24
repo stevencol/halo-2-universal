@@ -934,3 +934,40 @@ void havok_unknown_001ccc50(
 	havok_unknown_clear(data+0x20);
 	havok_unknown_clear(data+0x40);
 }
+
+/* 0x001c6470: one of those things of 0x20 bytes is made from two longs (not
+NONE, the second not NONE in its high short), a long at 0x08, a short at
+0x12 (whose bit 15 becomes the bit 0x02 at 0x10), three bytes and 1.0;
+FALSE if it cannot be */
+boolean __attribute__((stdcall)) havok_unknown_001c6470(
+	byte *data,
+	long first,
+	unsigned long flags,
+	long second,
+	long third,
+	byte value0C,
+	byte value0D,
+	signed char value0E)
+{
+	if (first==NONE || (short)((unsigned long)second>>16)==NONE)
+	{
+		return FALSE;
+	}
+	*(short *)(data+0x04)= NONE;
+	*(short *)(data+0x06)= NONE;
+	data[0x10]= 0;
+	data[0x11]= 0;
+	*(short *)(data+0x14)= 0;
+	*(short *)(data+0x16)= 0;
+	*(long *)(data+0x08)= third;
+	data[0x0C]= value0C;
+	*(short *)(data+0x12)= (short)flags;
+	data[0x0D]= value0D;
+	*(long *)data= first;
+	*(real *)(data+0x1C)= 0.0f;
+	*(long *)(data+0x04)= second;
+	*(real *)(data+0x18)= 1.0f;
+	*(short *)(data+0x0E)= value0E;
+	data[0x10]= (byte)(flags>>14)&2;
+	return TRUE;
+}

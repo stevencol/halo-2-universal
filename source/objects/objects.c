@@ -1120,3 +1120,30 @@ void object_unknown_000f8110(
 		sound_unknown_001896c0(sound_index, 1.0f);
 	}
 }
+
+/* 0x000b6d60: whether an object is seen by a list of bits of clusters: TRUE
+with the bit 0x02 of its flags; for the kind 7, what object_types_call_unknown48
+says when it says something; else the bit of its cluster (FALSE for none) */
+boolean __attribute__((stdcall)) object_unknown_000b6d60(
+	long object_index,
+	const unsigned long *cluster_bits)
+{
+	const struct object_header_datum *header= (const struct object_header_datum *)object_header_data->data+(object_index&0xFFFF);
+	boolean result= FALSE;
+
+	if ((((const unsigned long *)header->datum)[1]>>1)&1)
+	{
+		return TRUE;
+	}
+	if ((signed char)(byte)(1UL<<(header->type&0x1F))<0
+		&& object_types_call_unknown48(object_index, (long)(uintptr_t)&result, (long)(uintptr_t)cluster_bits))
+	{
+		return result;
+	}
+	if (header->cluster_index==NONE)
+	{
+		return result;
+	}
+
+	return (cluster_bits[header->cluster_index>>5]&(1UL<<(header->cluster_index&0x1F)))!=0;
+}

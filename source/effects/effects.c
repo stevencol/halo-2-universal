@@ -479,3 +479,41 @@ void __attribute__((stdcall)) particle_system_list_remove(
 	*(long *)(element+0x38)= NONE;
 	*(long *)(element+0x3C)= NONE;
 }
+
+/* 0x00177590: a valid effect (its index and salt right) is taken out of the
+entries of the object that it names at 0x48 (those of the object's short at
+0x11E, of kind 2, with the effect's index) */
+void effect_unknown_00177590(
+	long effect_index)
+{
+	const byte *effect;
+	byte *object;
+	byte *entries;
+	unsigned long count;
+	unsigned long index;
+
+	if (effect_index==NONE || (effect_index&0xFFFF)>=effect_data->first_unallocated)
+	{
+		return;
+	}
+	effect= (const byte *)effect_data->data+(effect_index&0xFFFF)*effect_data->size;
+	if (!*(const short *)effect || *(const short *)effect!=effect_index>>16)
+	{
+		return;
+	}
+	object= (byte *)object_try_and_get_and_verify_type(*(const long *)(effect+0x48), 0xFFFFFFFF);
+	if (!object)
+	{
+		return;
+	}
+	entries= object+*(const short *)(object+0x11E);
+	count= (unsigned long)(long)*(const short *)(object+0x11C)>>3;
+	for (index= 0; (long)index<(long)count; index++)
+	{
+		if (*(const long *)(entries+index*8+4)==effect_index && entries[index*8]==2)
+		{
+			*(long *)(entries+index*8+4)= NONE;
+			return;
+		}
+	}
+}

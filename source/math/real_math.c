@@ -1324,3 +1324,25 @@ unsigned char valid_real_euler_angles2d(
 
 	return angles[0]>=0.0f && 6.2831855f>=angles[0] && angles[1]>=-1.5707964f && 1.5707964f>=angles[1];
 }
+
+/* 0x00172350: whether the three reals of a point are numbers (not infinite
+nor NaN by their bits) from -50000 to 50000. The name is a guess, as those
+of Halo 1 */
+unsigned char valid_world_real_point3d(
+	const real *point)
+{
+	long index;
+
+	for (index= 0; index<3; index++)
+	{
+		unsigned long bits;
+
+		memcpy(&bits, &point[index], sizeof(bits));
+		if ((bits&0x7F800000)==0x7F800000 || !(point[index]>=-50000.0f) || !(50000.0f>=point[index]))
+		{
+			return 0;
+		}
+	}
+
+	return 1;
+}
