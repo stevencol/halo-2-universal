@@ -8,6 +8,7 @@ the name of the file is a guess, by the one that the first game has.
 #include "units.h"
 
 #include <stdint.h>
+#include <string.h>
 
 #include "cache/cache_files.h"
 #include "game/game.h"
@@ -1398,4 +1399,264 @@ boolean unit_unknown_000c48f0(
 	}
 
 	return (UNIT_DEFINITION_UNKNOWN1C8(UNIT_DEFINITION_GET(parent), *(const short *)(object+0x1FC))>>6)&1;
+}
+
+/* the tag that the definition of an object names at 0x38; NULL for NONE */
+#define UNIT_DEFINITION_UNKNOWN38(definition) \
+	(*(const long *)((definition)+0x38)==NONE ? NULL \
+		: (const byte *)(uintptr_t)global_tag_instances[*(const long *)((definition)+0x38)&0xFFFF].address)
+
+/* 0x000d5990: whether a kind of object is one of 0, 1, 2, 3, 4, 7, 8, 11 and
+12 (the bits of 0x199F, by the shift of the processor); for 6, whether the
+tag that the definition names at 0x38 has a block at 0x60 with something in
+it (not for a definition that is not loaded) */
+boolean unit_unknown_000d5990(
+	byte kind,
+	long tag_index)
+{
+	unsigned long bit= 1UL<<(kind&0x1F);
+	const byte *definition;
+	const byte *tag;
+
+	if (bit&0x199F)
+	{
+		return TRUE;
+	}
+	if (!(bit&0x40))
+	{
+		return FALSE;
+	}
+	definition= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+	if (!definition || !(tag= UNIT_DEFINITION_UNKNOWN38(definition)))
+	{
+		return FALSE;
+	}
+
+	return *(const long *)(tag+0x60)>0;
+}
+
+/* 0x000d5a70: a number by the bytes at 0x30 and 0x2F of something: 2, 1, 0
+or NONE */
+long unit_unknown_000d5a70(
+	const byte *data)
+{
+	switch ((signed char)data[0x30])
+	{
+	case 0:
+		break;
+	case 1:
+		return 0;
+	case 2:
+		return 2;
+	default:
+		return NONE;
+	}
+	switch ((signed char)data[0x2F])
+	{
+	case 0:
+		return 1;
+	case 1:
+		if (*(const short *)(data+0x2C)==NONE || (1UL<<(data[0x2E]&0x1F))&0x181F)
+		{
+			return 0;
+		}
+		return 1;
+	default:
+		return NONE;
+	}
+}
+
+/* 0x000d5b60: the long at 0x64 of the tag that the definition of an object
+names at 0x38, if its long at 0x60 is above zero; 0 if not or for NONE */
+long unit_unknown_000d5b60(
+	long object_index)
+{
+	const byte *tag;
+
+	if (object_index==NONE)
+	{
+		return 0;
+	}
+	tag= UNIT_DEFINITION_UNKNOWN38(UNIT_DEFINITION_GET(UNIT_OBJECT_GET(object_index)));
+	if (!tag || *(const long *)(tag+0x60)<=0)
+	{
+		return 0;
+	}
+
+	return *(const long *)(tag+0x64);
+}
+
+/* 0x0047d8e0: a short that is NONE when the game starts */
+short unknown_0047d8e0;
+
+/* 0x000d6660: something of 0x88 bytes is made, with a number at 0x00, NONE
+in most of what it has, the structure bsp at 0x22 and 1.0 three times */
+void __attribute__((stdcall)) unit_unknown_000d6660(
+	byte *data,
+	long number)
+{
+	memset(data, 0, 0x88);
+	*(long *)(data+0x00)= number;
+	*(short *)(data+0x7C)= unknown_0047d8e0;
+	*(long *)(data+0x0C)= NONE;
+	*(long *)(data+0x08)= NONE;
+	*(short *)(data+0x10)= NONE;
+	*(long *)(data+0x14)= NONE;
+	*(long *)(data+0x1C)= NONE;
+	*(short *)(data+0x20)= NONE;
+	*(short *)(data+0x22)= global_structure_bsp_index;
+	*(long *)(data+0x18)= NONE;
+	*(real *)(data+0x54)= 1.0f;
+	*(real *)(data+0x58)= 1.0f;
+	*(real *)(data+0x5C)= 1.0f;
+	*(short *)(data+0x7E)= NONE;
+	data[0x84]= 0;
+}
+
+/* 0x000d74b0: whether any of the elements (0x60 bytes) of the block at 0x70
+of something points at 0x40 to something with a byte set at 0x40 */
+boolean unit_unknown_000d74b0(
+	const byte *data)
+{
+	const byte *element= *(const byte *const *)(data+0x70);
+	long index;
+
+	for (index= 0; index<*(const long *)(data+0x74); index++)
+	{
+		if ((*(const byte *const *)(element+index*0x60+0x40))[0x40])
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x000d8ae0: the short at 0x10 of an element (0x14 bytes) of the block at
+0x5C of the tag that the definition of an object names at 0x38;
+unknown_0047d8e0 for NONE or without the tag */
+void unit_unknown_000d8ae0(
+	long object_index,
+	short *result,
+	long index)
+{
+	const byte *tag;
+
+	if (object_index!=NONE
+		&& (tag= UNIT_DEFINITION_UNKNOWN38(UNIT_DEFINITION_GET(UNIT_OBJECT_GET(object_index)))))
+	{
+		*result= *(const short *)(*(const byte *const *)(tag+0x5C)+index*0x14+0x10);
+		return;
+	}
+	*result= unknown_0047d8e0;
+}
+
+/* 0x000dd300: a number by a name (they look like string ids): 0 for
+0x0400000C, 0x0900000E and 0x0A00000F; 1 for 0x0800001E, 0x09000015,
+0x09000016, 0x0A000014, 0x0A000017 and 0x0D000042; 2 for the others */
+byte unit_unknown_000dd300(
+	long name)
+{
+	switch (name)
+	{
+	case 0x0400000C:
+	case 0x0900000E:
+	case 0x0A00000F:
+		return 0;
+	case 0x0800001E:
+	case 0x09000015:
+	case 0x09000016:
+	case 0x0A000014:
+	case 0x0A000017:
+	case 0x0D000042:
+		return 1;
+	default:
+		return 2;
+	}
+}
+
+/* 0x000ddf60: whether a unit has NONE at 0x35C and 0x360 and something at
+0x354 that has the bit 0x01 in the byte at 0x04 of its entry (8 bytes) of
+the list at 0x2C of the collision bsp */
+boolean unit_unknown_000ddf60(
+	long unit_index)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+	long index= *(const long *)(unit+0x354);
+
+	if (*(const long *)(unit+0x35C)!=NONE || index==NONE || *(const long *)(unit+0x360)!=NONE)
+	{
+		return FALSE;
+	}
+
+	return (*(const byte *const *)((const byte *)global_collision_bsp+0x2C))[index*8+4]&1;
+}
+
+/* 0x000dfd70: the six longs from 0x350 of a unit are NONE */
+void unit_unknown_000dfd70(
+	long unit_index)
+{
+	long *unit= (long *)UNIT_OBJECT_GET(unit_index);
+
+	unit[0x354/4]= NONE;
+	unit[0x358/4]= NONE;
+	unit[0x35C/4]= NONE;
+	unit[0x360/4]= NONE;
+	unit[0x364/4]= NONE;
+	unit[0x350/4]= NONE;
+}
+
+/* 0x000e0dc0: whether a unit has 6 at 0x3DC, something at 0x3F8 and the bit
+13 of its short at 0x348 */
+boolean unit_unknown_000e0dc0(
+	long unit_index)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+
+	return unit[0x3DC]==6 && unit[0x3F8] && (*(const unsigned short *)(unit+0x348)>>13)&1;
+}
+
+/* 0x000e58e0: whether a unit has something at 0x3E8 and either the bit 1
+or 2 of its byte at 0xC0, or the same at 0x3E4 */
+boolean unit_unknown_000e58e0(
+	long unit_index)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+	long value= *(const long *)(unit+0x3E8);
+
+	return value!=NONE && ((unit[0xC0]>>1)&1 || (unit[0xC0]>>2)&1 || value==*(const long *)(unit+0x3E4));
+}
+
+/* 0x000e5980: 3 with the bit 2 of the byte at 0x10A of an object; else 2
+with the bit 4 of the long at 0x264 of its definition and 1 without */
+long unit_unknown_000e5980(
+	long object_index)
+{
+	const byte *object= UNIT_OBJECT_GET(object_index);
+
+	if ((object[0x10A]>>2)&1)
+	{
+		return 3;
+	}
+
+	return ((*(const unsigned long *)(UNIT_DEFINITION_GET(object)+0x264)>>4)&1)+1;
+}
+
+/* 0x000e6800: FALSE if something has the bit 0x01 of its byte at 0x12 and
+neither 0x01 nor 0x08 of that at 0x11 */
+boolean unit_unknown_000e6800(
+	const byte *data)
+{
+	return !((data[0x12]&1) && !(data[0x11]&9));
+}
+
+/* 0x000e6fe0: a bit of the bits after the long at 0x04 of what a unit has
+at its short at 0x346 */
+long unit_unknown_000e6fe0(
+	long unit_index,
+	long bit)
+{
+	const unsigned long *bits= (const unsigned long *)(UNIT_UNKNOWN346(UNIT_OBJECT_GET(unit_index))+0x04);
+
+	return (bits[bit>>5]&(1UL<<(bit&0x1F)))!=0;
 }

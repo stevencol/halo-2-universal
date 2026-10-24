@@ -2,6 +2,52 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Catorce funciones pequeñas cerca de las unidades: clases de objetos, el tag que nombra una definición en 0x38, algo de 0x88 bytes, un número por un nombre y bytes de las unidades
+
+Catorce funciones (1013 bytes) en `units.c`. De 2642 funciones se pasa
+a 2656, el 23,58 % de las del juego (el 13,043 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unit_unknown_000d5990` | `0x000d5990` | `units/units.c` |
+| `unit_unknown_000d5a70` | `0x000d5a70` | `units/units.c` |
+| `unit_unknown_000d5b60` | `0x000d5b60` | `units/units.c` |
+| `unit_unknown_000d6660` | `0x000d6660` | `units/units.c` |
+| `unit_unknown_000d74b0` | `0x000d74b0` | `units/units.c` |
+| `unit_unknown_000d8ae0` | `0x000d8ae0` | `units/units.c` |
+| `unit_unknown_000dd300` | `0x000dd300` | `units/units.c` |
+| `unit_unknown_000ddf60` | `0x000ddf60` | `units/units.c` |
+| `unit_unknown_000dfd70` | `0x000dfd70` | `units/units.c` |
+| `unit_unknown_000e0dc0` | `0x000e0dc0` | `units/units.c` |
+| `unit_unknown_000e58e0` | `0x000e58e0` | `units/units.c` |
+| `unit_unknown_000e5980` | `0x000e5980` | `units/units.c` |
+| `unit_unknown_000e6800` | `0x000e6800` | `units/units.c` |
+| `unit_unknown_000e6fe0` | `0x000e6fe0` | `units/units.c` |
+
+### Lo que se sabe
+
+- Si una clase de objeto es una de nueve (los bits de `0x199F`), o la 6 con
+  algo en el bloque 0x60 del tag que su definición nombra en 0x38; el long
+  0x64 de ese tag; y el short 0x10 de un elemento de su bloque 0x5C (o
+  `unknown_0047d8e0`, un short nuevo).
+- Un número 2, 1, 0 o `NONE` por dos bytes de algo; algo de 0x88 bytes con
+  la estructura bsp y tres veces 1.0; si un elemento de una lista apunta a
+  algo con un byte puesto; un número 0, 1 o 2 por un nombre (parecen
+  `string_id`).
+- De las unidades: los seis longs desde 0x350 a `NONE`, una entrada de la
+  lista 0x2C de la colisión bsp, bytes de 0x3DC, 0x3F8, 0x3E4/0x3E8 y bits
+  de 0x10A, 0x348 y de lo que guardan en su short de 0x346.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones.
+- Mutaciones: 36 de `make_mutations.py`, 0 sin notar. Se quitaron cinco que
+  no cambian nada: `bit&0x41` (el bit 0x01 ya devolvió cierto), `data[0x85]`
+  (el `memset` ya borró los dos) y `0x35d/4`, `0x365/4`, `0x351/4` (el mismo
+  índice que `0x35C/4`, `0x364/4`, `0x350/4`).
+
 ## 2026-10-24 — Trece funciones pequeñas de las unidades: nombres, hijos, armas, bits de su definición y una lista
 
 Trece funciones (1119 bytes) en `units.c`. De 2629 funciones se pasa a

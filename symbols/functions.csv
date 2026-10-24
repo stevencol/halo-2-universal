@@ -3497,3 +3497,17 @@ address,name,source,arguments,returns,convention
 000d05c0,unit_iterator_next,source/units/units.c,esi,pointer
 000d0930,unit_unknown_000d0930,source/units/units.c,ecx eax,void
 000c48f0,unit_unknown_000c48f0,source/units/units.c,ecx,bool
+000d5990,unit_unknown_000d5990,source/units/units.c,ecx edx,bool
+000d5a70,unit_unknown_000d5a70,source/units/units.c,edx,int
+000d5b60,unit_unknown_000d5b60,source/units/units.c,ecx,int
+000d6660,unit_unknown_000d6660,source/units/units.c,edx stack,void,stdcall
+000d74b0,unit_unknown_000d74b0,source/units/units.c,ecx,bool
+000d8ae0,unit_unknown_000d8ae0,source/units/units.c,ecx eax esi,void
+000dd300,unit_unknown_000dd300,source/units/units.c,ecx,byte
+000ddf60,unit_unknown_000ddf60,source/units/units.c,eax,bool
+000dfd70,unit_unknown_000dfd70,source/units/units.c,eax,void
+000e0dc0,unit_unknown_000e0dc0,source/units/units.c,eax,bool
+000e58e0,unit_unknown_000e58e0,source/units/units.c,eax,bool
+000e5980,unit_unknown_000e5980,source/units/units.c,eax,int
+000e6800,unit_unknown_000e6800,source/units/units.c,eax,bool
+000e6fe0,unit_unknown_000e6fe0,source/units/units.c,eax ecx,int
