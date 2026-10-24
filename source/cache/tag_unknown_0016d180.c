@@ -163,3 +163,36 @@ long tag_unknown_001d8f00(
 
 	return NONE;
 }
+
+/* 0x001eaf30: an element of one of the blocks of a tag by a kind (0 to 6, 14
+and 15: a block, a size and where in the element it starts); nothing for
+the others */
+byte *tag_unknown_001eaf30(
+	short kind,
+	short index,
+	const byte *tag)
+{
+	switch (kind)
+	{
+	case 0:
+		return *(byte *const *)(tag+0x4C)+index*0x80+0x30;
+	case 1:
+		return *(byte *const *)(tag+0x5C)+index*0x50+0x20;
+	case 2:
+		return *(byte *const *)(tag+0x64)+index*0x90+0x40;
+	case 3:
+		return *(byte *const *)(tag+0x6C)+index*0x60+0x20;
+	case 4:
+		return *(byte *const *)(tag+0x74)+index*0x100+0x20;
+	case 5:
+		return *(byte *const *)(tag+0x54)+index*0xB0+0x20;
+	case 6:
+		return *(byte *const *)(tag+0x10C)+index*0x20;
+	case 14:
+		return *(byte *const *)(tag+0x94)+index*0x38;
+	case 15:
+		return *(byte *const *)(tag+0xA4)+index*0x14;
+	default:
+		return NULL;
+	}
+}

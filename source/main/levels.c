@@ -360,3 +360,32 @@ const byte *levels_unknown_0019c970(
 		return level ? level+8 : NULL;
 	}
 }
+
+/* 0x0019c4e0: the highest number (0x04, not NONE) of the elements (0x108
+bytes, of the block at 0x170 of the game globals) that have a value at
+0x00; NONE if none, or without a scenario */
+long __attribute__((stdcall)) levels_unknown_0019c4e0(
+	long value)
+{
+	const byte *globals= (const byte *)global_game_globals;
+	const long *block= global_scenario && globals && *(const long *)(globals+0x170)
+		? *(const long *const *)(globals+0x174) : NULL;
+	long highest= NONE;
+	long index;
+
+	if (!block)
+	{
+		return NONE;
+	}
+	for (index= 0; index<block[0]; index++)
+	{
+		const long *element= (const long *)(*(const byte *const *)&block[1]+index*0x108);
+
+		if (element[0]==value && element[1]!=NONE && highest<=element[1])
+		{
+			highest= element[1];
+		}
+	}
+
+	return highest;
+}

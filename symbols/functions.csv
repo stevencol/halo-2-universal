@@ -3668,3 +3668,7 @@ address,name,source,arguments,returns,convention
 001db070,ai_unknown_001db070,source/ai/actors.c,ecx stack stack stack stack stack stack stack stack stack,void,stdcall
 000b7740,object_unknown_000b7740,source/objects/objects.c,eax ecx edi stack,void,stdcall
 00138ab0,main_game_unknown_00138ab0,source/main/main.c,,short
+001eaf30,tag_unknown_001eaf30,source/cache/tag_unknown_0016d180.c,esi ecx edx,pointer
+001332f0,game_unknown_00131ff0_flags_from,source/game/game_unknown_00131ff0.c,edx stack,int,stdcall
+001cb680,havok_unknown_001cb680,source/physics/havok.c,eax,void
+0019c4e0,levels_unknown_0019c4e0,source/main/levels.c,stack,int,stdcall

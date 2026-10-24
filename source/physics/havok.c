@@ -1000,3 +1000,43 @@ void havok_unknown_001cf8b0(
 	result[2]= values[0x3C/4];
 	result[3]= values[0x40/4];
 }
+
+/* 0x0046fbf4: a byte that is TRUE when the game starts */
+byte unknown_0046fbf4= TRUE;
+
+/* 0x001cb680: of the two parts (0x00 and 0x20) of something, one gets the
+bits 0x380 of its short at 0x12 and the other loses them, by its real at
+0x80 (below 0.45, or above 0.55; between, nothing changes), and the bit
+0x20 of its byte at 0x6C says which; a part that is NONE keeps its short */
+void havok_unknown_001cb680(
+	byte *data)
+{
+	unsigned short first= *(const unsigned short *)(data+0x12);
+	unsigned short second= *(const unsigned short *)(data+0x32);
+	real value= *(const real *)(data+0x80);
+
+	if (!unknown_0046fbf4 || *(const long *)(data+0x20)==NONE || *(const short *)(data+0x26)==NONE || 0.45f>value)
+	{
+		data[0x6C]&= ~0x20;
+		first&= 0xFC7F;
+		second|= 0x380;
+	}
+	else if (value>0.55f)
+	{
+		data[0x6C]|= 0x20;
+		first|= 0x380;
+		second&= 0xFC7F;
+	}
+	else
+	{
+		return;
+	}
+	if (*(const long *)data!=NONE && *(const short *)(data+0x06)!=NONE)
+	{
+		*(unsigned short *)(data+0x12)= first;
+	}
+	if (*(const long *)(data+0x20)!=NONE && *(const short *)(data+0x26)!=NONE)
+	{
+		*(unsigned short *)(data+0x32)= second;
+	}
+}

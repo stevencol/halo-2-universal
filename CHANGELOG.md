@@ -2,6 +2,30 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Cuatro funciones medianas del camino al menú: un elemento de un tag por su clase, banderas movidas, dos partes por un real y el número más alto
+
+Cuatro funciones medianas (610 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2813 funciones se pasa a 2817, el 25,01 % de
+las del juego (el 13,515 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `tag_unknown_001eaf30` | `0x001eaf30` | `cache/tag_unknown_0016d180.c` |
+| `game_unknown_00131ff0_flags_from` | `0x001332f0` | `game/game_unknown_00131ff0.c` |
+| `havok_unknown_001cb680` | `0x001cb680` | `physics/havok.c` |
+| `levels_unknown_0019c4e0` | `0x0019c4e0` | `main/levels.c` |
+
+### Lo que se sabe
+
+- un elemento de los bloques de un tag según su clase; banderas movidas desde otras (cuatro variables nuevas); los bits de dos partes de algo por un real (0.45 y 0.55); y el número más alto de unos elementos de las globales del juego.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 16 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-24 — Cuatro funciones medianas del camino al menú: un punto en un polígono, una búsqueda por ocho valores, dos puntos de un objeto y el cluster de las globales
 
 Cuatro funciones medianas (552 bytes) en 3 archivos, de las que el juego ejecuta

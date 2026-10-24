@@ -749,3 +749,8 @@ address,name,source
 004850b0,rasterizer_flags_group2_004850b0,source/rasterizer/rasterizer_xbox.c
 004850bc,rasterizer_flags_group2_004850bc,source/rasterizer/rasterizer_xbox.c
 004850c0,rasterizer_flags_group2_004850c0,source/rasterizer/rasterizer_xbox.c
+004b9ef0,unknown_004b9ef0,source/game/game_unknown_00131ff0.c
+004b9f8c,unknown_004b9f8c,source/game/game_unknown_00131ff0.c
+004b9ffc,unknown_004b9ffc,source/game/game_unknown_00131ff0.c
+004ba004,unknown_004ba004,source/game/game_unknown_00131ff0.c
+0046fbf4,unknown_0046fbf4,source/physics/havok.c

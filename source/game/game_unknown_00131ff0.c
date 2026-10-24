@@ -8,6 +8,7 @@ the file is only the address of its first function.
 */
 
 #include "cseries/cseries.h"
+#include "cache/cache_files.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -172,4 +173,42 @@ long __attribute__((stdcall)) game_unknown_00131ff0_new_entry(
 	bits[0]= 0;
 	bits[bit>>5]|= 1UL<<(bit&0x1F);
 	return index;
+}
+
+/* 0x004b9ef0: a kind (3 is looked at). 0x004b9f8c: a tag, or NONE.
+0x004b9ffc: a real. 0x004ba004: a byte */
+long unknown_004b9ef0;
+long unknown_004b9f8c;
+float unknown_004b9ffc;
+byte unknown_004ba004;
+
+/* 0x001332f0: some flags from others (the bits 9, 11, 13 and 14 moved), with
+0x01 when a thing has the bit 7 of its byte at 0x2A60; for the kind 3 also
+0x100 when the tag of 0x004b9f8c has not the bit 0x02 of its first byte,
+0x004b9ffc is 0.0 and the bit 10 is not set, and 0x80 when 0x004ba004 is not
+set or the bit 10 is */
+unsigned long __attribute__((stdcall)) game_unknown_00131ff0_flags_from(
+	unsigned short flags,
+	const byte *thing)
+{
+	unsigned long result= (((flags>>2)&0x2C00)|(flags&0x4000))>>9 | (flags&0x200)<<5;
+
+	if ((signed char)thing[0x2A60]<0)
+	{
+		result|= 1;
+	}
+	if (unknown_004b9ef0==3)
+	{
+		if (unknown_004b9f8c!=NONE && unknown_004b9ffc==0.0f && !(flags&0x400)
+			&& !(*(const byte *)(uintptr_t)global_tag_instances[unknown_004b9f8c&0xFFFF].address&2))
+		{
+			result|= 0x100;
+		}
+		if (!unknown_004ba004 || (flags&0x400))
+		{
+			result|= 0x80;
+		}
+	}
+
+	return result;
 }
