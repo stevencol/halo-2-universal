@@ -14,6 +14,7 @@ game_voice.c, has something for each).
 #include "game/game.h"
 #include "cache/cache_files.h"
 #include "main/main.h"
+#include "objects/objects.h"
 #include "networking/game_voice.h"
 #include "saved games/game_state.h"
 #include "scenario/scenario.h"
@@ -540,4 +541,140 @@ void __attribute__((stdcall)) game_engine_unknown_0007f720(
 	result[0]= value[0];
 	result[1]= value[1];
 	result[2]= value[2];
+}
+
+/* a long of the game globals (main_game_globals), by its offset */
+#define MAIN_GAME_GLOBALS_LONG(offset) (*(const long *)((const byte *)main_game_globals+(offset)))
+
+/* the player of an index of the players' globals (at 0x0C, four of them) */
+#define PLAYERS_GLOBALS_PLAYER(index) (*(const long *)((const byte *)players_globals+0x0C+(index)*4))
+
+/* a player (0x21C bytes) */
+#define PLAYER_DATA(player_index) ((byte *)player_data->data+((player_index)&0xFFFF)*0x21C)
+
+/* 0x001584c0: an index (0 to 3, of the players' globals) gets 1.0 at 0xE4
+and its bit at 0xF4 of what the engine keeps, and its player the long at
+0x1BC of the game globals at 0x170 */
+void game_engine_unknown_001584c0(
+	long index)
+{
+	long player_index= index!=NONE ? PLAYERS_GLOBALS_PLAYER(index) : NONE;
+
+	((real *)(unknown_004e9ae8+0xE4))[index]= 1.0f;
+	unknown_004e9ae8[0xF4]|= (byte)(1<<(index&0x1F));
+	if (player_index!=NONE)
+	{
+		*(long *)(PLAYER_DATA(player_index)+0x170)= MAIN_GAME_GLOBALS_LONG(0x1BC);
+	}
+}
+
+/* 0x00158850: 2 if the game globals have something at 0x190 and 1 if not,
+and the short at 0xE0 of what the engine keeps (0 if it is not above 0) */
+void game_engine_unknown_00158850(
+	long *kind,
+	long *count)
+{
+	short value;
+
+	*kind= MAIN_GAME_GLOBALS_LONG(0x190) ? 2 : 1;
+	value= *(const short *)(unknown_004e9ae8+0xE0);
+	*count= value>0 ? value : 0;
+}
+
+/* 0x00159610: with a kind of game, whether the index of unknown_004b9ed8
+(NONE for none) has 1.0 or more at 0xE4 and no player with a unit (0x2C) */
+boolean game_engine_unknown_00159610(
+	void)
+{
+	real value;
+	long player_index;
+
+	if (!GAME_ENGINE_GET())
+	{
+		return FALSE;
+	}
+	value= unknown_004b9ed8!=NONE ? ((const real *)(unknown_004e9ae8+0xE4))[unknown_004b9ed8] : 1.0f;
+	if (!(value>=1.0f))
+	{
+		return FALSE;
+	}
+	player_index= unknown_004b9ed8!=NONE ? PLAYERS_GLOBALS_PLAYER(unknown_004b9ed8) : NONE;
+
+	return player_index==NONE || *(const long *)(PLAYER_DATA(player_index)+0x2C)==NONE;
+}
+
+/* 0x00159d40: by the kind of game at 0x180 of the game globals (1 or 9: the
+bit 4 of the long at 0x22C, 3: its bit 0), whether that bit is not set;
+FALSE for other kinds */
+boolean game_engine_unknown_00159d40(
+	void)
+{
+	long kind= MAIN_GAME_GLOBALS_LONG(0x180);
+
+	if (kind==1 || kind==9)
+	{
+		return !((MAIN_GAME_GLOBALS_LONG(0x22C)>>4)&1);
+	}
+	if (kind==3)
+	{
+		return !(MAIN_GAME_GLOBALS_LONG(0x22C)&1);
+	}
+
+	return FALSE;
+}
+
+/* 0x00159d80: the opposite */
+boolean game_engine_unknown_00159d80(
+	void)
+{
+	long kind= MAIN_GAME_GLOBALS_LONG(0x180);
+
+	if (kind==1 || kind==9)
+	{
+		return (MAIN_GAME_GLOBALS_LONG(0x22C)>>4)&1;
+	}
+	if (kind==3)
+	{
+		return MAIN_GAME_GLOBALS_LONG(0x22C)&1;
+	}
+
+	return TRUE;
+}
+
+/* 0x00510c9c (sound_speakers.c) */
+extern word *unknown_00510c9c;
+
+/* 0x00159dd0: with a kind of game, whether the game is of the kind 7, the
+short that unknown_00510c9c points to has the bit of an index, and the long
+at 0x22C of the game globals the bit 0x20 */
+boolean __attribute__((stdcall)) game_engine_unknown_00159dd0(
+	byte index)
+{
+	return GAME_ENGINE_GET() && MAIN_GAME_GLOBALS_LONG(0x180)==7 && (*unknown_00510c9c&(1UL<<(index&0x1F)))
+		&& (MAIN_GAME_GLOBALS_LONG(0x22C)&0x20);
+}
+
+/* 0x0015b220: an object gets 0xFF at 0xAF and, unless the game globals have
+4 at 0x0C, the long of an index (8 bytes from 0x7DC) of what the engine
+keeps is NONE */
+void __attribute__((stdcall)) game_engine_unknown_0015b220(
+	long object_index,
+	long index)
+{
+	byte *object= (byte *)((const struct object_header_datum *)object_header_data->data)[object_index&0xFFFF].datum;
+
+	if (*((const byte *)main_game_globals+0x0C)!=4)
+	{
+		*(long *)(unknown_004e9ae8+0x7DC+index*8)= NONE;
+	}
+	object[0xAF]= 0xFF;
+}
+
+/* 0x0015b2f0: with a kind of game, whether what the engine keeps has 1 at
+its short at 0x6C and the game globals 4 at 0x0C, or it 1 at 0xC04 */
+boolean game_engine_unknown_0015b2f0(
+	void)
+{
+	return GAME_ENGINE_GET() && *(const short *)(unknown_004e9ae8+0x6C)==1
+		&& (*((const byte *)main_game_globals+0x0C)==4 || *(const long *)(unknown_004e9ae8+0xC04)==1);
 }

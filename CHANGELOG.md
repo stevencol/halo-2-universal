@@ -2,6 +2,37 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Ocho funciones pequeñas del motor de juego: tiempos y bits por jugador, clases de juego y una lista de 0x7DC
+
+Ocho funciones (648 bytes) en `game_engine.c`. De 2714 funciones se pasa
+a 2722, el 24,16 % de las del juego (el 13,220 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_engine_unknown_001584c0` | `0x001584c0` | `game/game_engine.c` |
+| `game_engine_unknown_00158850` | `0x00158850` | `game/game_engine.c` |
+| `game_engine_unknown_00159610` | `0x00159610` | `game/game_engine.c` |
+| `game_engine_unknown_00159d40` | `0x00159d40` | `game/game_engine.c` |
+| `game_engine_unknown_00159d80` | `0x00159d80` | `game/game_engine.c` |
+| `game_engine_unknown_00159dd0` | `0x00159dd0` | `game/game_engine.c` |
+| `game_engine_unknown_0015b220` | `0x0015b220` | `game/game_engine.c` |
+| `game_engine_unknown_0015b2f0` | `0x0015b2f0` | `game/game_engine.c` |
+
+### Lo que se sabe
+
+- De lo que guarda el motor (`unknown_004e9ae8`): 1.0 en 0xE4 y un bit en
+  0xF4 por índice de jugador; el short de 0xE0; el long de 0x7DC de un índice.
+- Condiciones con la clase de juego de las globales del juego (0x180: 1, 3,
+  7, 9) y sus bits en 0x22C, 0x184, 0x190, `unknown_00510c9c` y
+  `unknown_004b9ed8`.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 24 de `make_mutations.py`, 0 sin notar.
+
 ## 2026-10-24 — Ocho funciones pequeñas: el cluster de un punto del escenario, un long de un tag, sumas de Havok, entradas por jugador y si una lista está vacía
 
 Ocho funciones (612 bytes) en `main.c`. De 2706 funciones se pasa

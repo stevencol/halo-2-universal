@@ -3569,3 +3569,11 @@ address,name,source,arguments,returns,convention
 00153b80,unknown_00510c5c_clear_entry,source/main/main.c,eax,void
 00153cd0,player_unknown_00153cd0,source/main/main.c,eax,void
 00156690,unknown_004e9148_empty,source/main/main.c,,bool
+001584c0,game_engine_unknown_001584c0,source/game/game_engine.c,esi,void
+00158850,game_engine_unknown_00158850,source/game/game_engine.c,eax ecx,void
+00159610,game_engine_unknown_00159610,source/game/game_engine.c,,bool
+00159d40,game_engine_unknown_00159d40,source/game/game_engine.c,,bool
+00159d80,game_engine_unknown_00159d80,source/game/game_engine.c,,bool
+00159dd0,game_engine_unknown_00159dd0,source/game/game_engine.c,stack,bool,stdcall
+0015b220,game_engine_unknown_0015b220,source/game/game_engine.c,eax stack,void,stdcall
+0015b2f0,game_engine_unknown_0015b2f0,source/game/game_engine.c,,bool
