@@ -2452,3 +2452,66 @@ long unit_unknown_00101fb0(
 
 	return parent_index;
 }
+
+/* 0x000c7750: a speed and a distance go on for a time through three phases
+of something (unless its first byte is set): speeding up (by 0x0C, for up
+to 0x10), steady (for up to 0x14) and speeding up again (by 0x18, for up to
+0x1C); whether time is left after them (or that first byte) */
+boolean __attribute__((stdcall)) unit_unknown_000c7750(
+	const byte *data,
+	float *speed_result,
+	float time,
+	float speed,
+	float distance,
+	float *distance_result)
+{
+	boolean result= data[0];
+	float new_distance= distance;
+	float new_speed= speed;
+
+	if (!result && time>0.0f)
+	{
+		float length= *(const float *)(data+0x10);
+
+		if (length>0.0f)
+		{
+			float step= time>length ? length : time;
+			float gain= *(const float *)(data+0x0C)*step;
+
+			new_distance= (gain*0.5f + speed)*step + distance;
+			new_speed= gain + speed;
+			time-= step;
+		}
+		if (time>0.0f)
+		{
+			length= *(const float *)(data+0x14);
+			if (length>0.0f)
+			{
+				float step= time>length ? length : time;
+
+				new_distance= step*new_speed + new_distance;
+				time-= step;
+			}
+			if (time>0.0f)
+			{
+				length= *(const float *)(data+0x1C);
+				if (length>0.0f)
+				{
+					float step= time>length ? length : time;
+					float gain= *(const float *)(data+0x18)*step;
+
+					new_distance= (gain*0.5f + new_speed)*step + new_distance;
+					new_speed= gain + new_speed;
+					time-= step;
+				}
+				if (time>0.0f)
+				{
+					result= TRUE;
+				}
+			}
+		}
+	}
+	*distance_result= new_distance;
+	*speed_result= new_speed;
+	return result;
+}

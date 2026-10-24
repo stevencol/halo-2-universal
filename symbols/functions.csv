@@ -3680,3 +3680,7 @@ address,name,source,arguments,returns,convention
 00101fb0,unit_unknown_00101fb0,source/units/units.c,eax,int
 0010aac0,object_unknown_0010a980_get_real,source/objects/object_unknown_0010a980.c,ebx stack stack stack,bool,stdcall
 000350e0,rasterizer_unknown_000350e0,source/rasterizer/rasterizer_xbox.c,eax ecx edx stack,void,stdcall
+000bb950,object_unknown_000bb950,source/objects/objects.c,eax stack stack,void,stdcall
+00130f60,scenario_unknown_00130f60,source/scenario/scenario.c,eax ebx,int
+001cafc0,havok_unknown_001cafc0,source/physics/havok.c,eax,void
+000c7750,unit_unknown_000c7750,source/units/units.c,ecx edx xmm3 xmm4 xmm5 stack,bool,stdcall

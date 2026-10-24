@@ -2,6 +2,30 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Cuatro funciones medianas del camino al menú: una lista de objetos con tiempo, una entrada del escenario, algo de 0x84 bytes y una velocidad en tres fases
+
+Cuatro funciones medianas (851 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2825 funciones se pasa a 2829, el 25,11 % de
+las del juego (el 13,594 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_unknown_000bb950` | `0x000bb950` | `objects/objects.c` |
+| `scenario_unknown_00130f60` | `0x00130f60` | `scenario/scenario.c` |
+| `havok_unknown_001cafc0` | `0x001cafc0` | `physics/havok.c` |
+| `unit_unknown_000c7750` | `0x000c7750` | `units/units.c` |
+
+### Lo que se sabe
+
+- un objeto entra y sale de la lista de `unknown_004de2f4` con un tiempo; la entrada del escenario que algo nombra; algo de 0x84 bytes vaciado; y una velocidad y una distancia a lo largo de tres fases.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 16 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-24 — Cuatro funciones medianas del camino al menú: un iterador de la IA, quién sostiene un objeto, un real por el tiempo y cuatro reales de profundidad
 
 Cuatro funciones medianas (717 bytes) en 4 archivos, de las que el juego ejecuta

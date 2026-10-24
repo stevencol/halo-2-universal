@@ -1040,3 +1040,27 @@ void havok_unknown_001cb680(
 		*(unsigned short *)(data+0x32)= second;
 	}
 }
+
+/* 0x001cafc0: something of 0x84 bytes is made nothing: three of those things
+of 0x20 bytes, and then NONE and zeros */
+void havok_unknown_001cafc0(
+	byte *data)
+{
+	havok_unknown_clear(data);
+	havok_unknown_clear(data+0x20);
+	havok_unknown_clear(data+0x40);
+	*(short *)(data+0x6C)= 0;
+	*(short *)(data+0x6E)= 0;
+	*(long *)(data+0x68)= NONE;
+	data[0x65]= 0;
+	data[0x64]= 0;
+	data[0x67]= 0;
+	data[0x61]= 0;
+	data[0x60]= 0;
+	data[0x63]= 0;
+	*(long *)(data+0x70)= NONE;
+	*(long *)(data+0x7C)= NONE;
+	*(long *)(data+0x74)= NONE;
+	*(long *)(data+0x78)= NONE;
+	*(long *)(data+0x80)= 0;
+}

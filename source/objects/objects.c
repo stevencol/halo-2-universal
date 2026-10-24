@@ -11,6 +11,7 @@ gives the address it has there.
 #include <stdint.h>
 
 #include "cache/cache_files.h"
+#include "game/game.h"
 #include "memory/memory_pool.h"
 #include "objects/cluster_partitions.h"
 
@@ -1308,5 +1309,58 @@ void __attribute__((stdcall)) object_unknown_0004c0d0(
 		signed char entry= (signed char)element[index+4];
 
 		values[index]= entry==NONE ? 0 : *(const short *)(*(const byte *const *)(element+0x18)+entry*0x14+0x10);
+	}
+}
+
+/* 0x000bb950: an object goes in the list that unknown_004de2f4 keeps (first
+at 0x08, the next of each at 0x1C, how many with the bit 0x01 of their
+header's flags at 0x04) and gets a time at 0x20 (the later of the one it has
+and the game's plus some), or it is taken out of it; its bit 14 says it is
+in, and with its bit 15 it is not put in */
+void __attribute__((stdcall)) object_unknown_000bb950(
+	long object_index,
+	boolean add,
+	long time)
+{
+	const struct object_header_datum *header= (const struct object_header_datum *)object_header_data->data+(object_index&0xFFFF);
+	byte *object= (byte *)header->datum;
+	unsigned long flags= *(const unsigned long *)(object+4);
+	byte *list= unknown_004de2f4;
+
+	if (add)
+	{
+		if (!((flags>>14)&1) && !((flags>>15)&1))
+		{
+			*(long *)(object+0x1C)= *(const long *)(list+8);
+			*(long *)(list+8)= object_index;
+			*(unsigned long *)(object+4)|= 0x4000;
+			if (header->flags&1)
+			{
+				(*(short *)(list+4))++;
+			}
+		}
+		time+= game_time_globals->time;
+		if (*(const long *)(object+0x20)>time)
+		{
+			time= *(const long *)(object+0x20);
+		}
+		*(long *)(object+0x20)= time;
+		return;
+	}
+	if ((flags>>14)&1)
+	{
+		long *link= (long *)(list+8);
+
+		while (*link!=object_index)
+		{
+			link= (long *)(OBJECT_DATA(*link)+0x1C);
+		}
+		*link= *(const long *)(object+0x1C);
+		*(long *)(object+0x1C)= NONE;
+		*(unsigned long *)(object+4)&= ~0x4000UL;
+		if (header->flags&1)
+		{
+			(*(short *)(list+4))--;
+		}
 	}
 }

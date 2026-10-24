@@ -435,3 +435,52 @@ void __attribute__((stdcall)) structure_bsp_unknown_0016e1b0(
 	}
 	*element= which!=block[0] ? which : NONE;
 }
+
+/* 0x00130f60: the second long of an entry (8 bytes, of the block at 0x08 of
+the scenario) that something names (its byte at 0x6C, or at 0x6E when that
+is NONE, for a tag without the bit 0x10 of its byte at 0x10), or the one
+the element (0x44 bytes, at 0x214) of the structure bsp names at 0x40 when
+it has the bit 0x01 at 0x3C; and which it is. NONE if none */
+long scenario_unknown_00130f60(
+	const byte *data,
+	long *index)
+{
+	const byte *scenario= (const byte *)global_scenario;
+	long count= *(const long *)(scenario+0x08);
+	const long *entries= *(const long *const *)(scenario+0x0C);
+	signed char which= (signed char)data[0x6C];
+	const byte *element;
+	short other;
+
+	*index= NONE;
+	if (which!=NONE)
+	{
+		if (which>=0 && which<count)
+		{
+			*index= which;
+			return entries[which*2+1];
+		}
+	}
+	else
+	{
+		which= (signed char)data[0x6E];
+		if (which!=NONE && which>=0 && which<count && entries[which*2+1]!=NONE
+			&& !(((const byte *)(uintptr_t)global_tag_instances[entries[which*2+1]&0xFFFF].address)[0x10]&0x10))
+		{
+			*index= which;
+			return entries[which*2+1];
+		}
+	}
+	element= *(const byte *const *)(scenario+0x214)+global_structure_bsp_index*0x44;
+	if (!(element[0x3C]&1))
+	{
+		return NONE;
+	}
+	other= *(const short *)(element+0x40);
+	if (other==NONE || other<0 || other>=count || entries[other*2+1]==NONE)
+	{
+		return NONE;
+	}
+	*index= other;
+	return entries[other*2+1];
+}
