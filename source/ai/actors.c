@@ -2702,3 +2702,46 @@ boolean __attribute__((stdcall)) ai_point_near_polygon2d(
 
 	return TRUE;
 }
+
+/* 0x001e46c0: the next element in use of a data array of an iterator (at
+0x04; the element at 0x00, its index with the salt at 0x08 and without at
+0x0C), skipping those without their byte at 0x09 when the iterator asks
+(0x10); the index is copied at 0x14. Nothing at the end, or without the
+AI's globals on (their byte at 0x01) */
+byte *ai_iterator_next_unknown_001e46c0(
+	byte *iterator)
+{
+	if (!((const byte *)ai_globals)[1])
+	{
+		return NULL;
+	}
+	for (;;)
+	{
+		const struct data_array *data= *(const struct data_array *const *)(iterator+0x04);
+		long index= *(const long *)(iterator+0x0C)+1;
+		byte *element= NULL;
+
+		for (; index>=0 && index<data->first_unallocated; index++)
+		{
+			if (data->in_use_bit_vector[index>>5]&(1UL<<(index&0x1F)))
+			{
+				element= (byte *)data->data+data->size*index;
+				*(long *)(iterator+0x0C)= index;
+				*(long *)(iterator+0x08)= (long)*(const short *)element<<16 | index;
+				break;
+			}
+		}
+		if (!element)
+		{
+			*(long *)(iterator+0x0C)= data->maximum_count;
+			*(long *)(iterator+0x08)= NONE;
+		}
+		*(byte **)iterator= element;
+		if (!element || !iterator[0x10] || element[9])
+		{
+			*(long *)(iterator+0x14)= *(const long *)(iterator+0x08);
+			return element;
+		}
+	}
+}
+

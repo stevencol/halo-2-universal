@@ -2418,3 +2418,37 @@ boolean unit_unknown_0014ccf0(
 
 	return TRUE;
 }
+
+/* 0x00101fb0: who holds what an object is held by (its parent, of the kinds
+of 3): the parent's own holder at 0x24C, or for a parent whose definition
+has the bit 26 at 0xBC and that is held by a unit, that unit's holder (or
+the unit); the parent itself when it says nothing, NONE without a parent */
+long unit_unknown_00101fb0(
+	long object_index)
+{
+	long parent_index= *(const long *)(UNIT_OBJECT_GET(object_index)+0x14);
+	const byte *parent;
+
+	if (parent_index==NONE || !(parent= (const byte *)object_try_and_get_and_verify_type(parent_index, 3)))
+	{
+		return NONE;
+	}
+	if (((*(const unsigned long *)(UNIT_DEFINITION_GET(parent)+0xBC)>>26)&1) && *(const long *)(parent+0x14)!=NONE)
+	{
+		const struct object_header_datum *header= (const struct object_header_datum *)object_header_data->data
+			+(*(const long *)(parent+0x14)&0xFFFF);
+
+		if ((1UL<<(header->type&0x1F))&3)
+		{
+			long holder= *(const long *)((const byte *)header->datum+0x24C);
+
+			return holder!=NONE ? holder : *(const long *)(parent+0x14);
+		}
+	}
+	if (*(const long *)(parent+0x24C)!=NONE)
+	{
+		return *(const long *)(parent+0x24C);
+	}
+
+	return parent_index;
+}

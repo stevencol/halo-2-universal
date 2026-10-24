@@ -11,6 +11,7 @@ the file is only the address of its first function.
 
 #include "saved games/game_state.h"
 #include "objects/objects.h"
+#include "game/game.h"
 
 /* ---------- globals */
 
@@ -83,4 +84,52 @@ void object_unknown_0010a980_remove(
 		}
 	}
 	object[0xC1]&= ~0x02;
+}
+
+/* 0x005107f4 (object_unknown_0010a980_globals) has, from 0x00, 32 entries of 0x14 bytes: a value, two reals
+(from and to), a time and a length of time */
+
+/* 0x0010aac0: the real of the entry of an object (in the list at 0x280) with
+a value: between its two reals by the time gone (of game_time_globals), or
+the last after its length; FALSE and NONE when there is none */
+boolean __attribute__((stdcall)) object_unknown_0010a980_get_real(
+	long object_index,
+	long value,
+	real *result,
+	long *index)
+{
+	const struct object_unknown_0010a980_globals *globals;
+	long which;
+
+	*index= NONE;
+	if (object_index==NONE)
+	{
+		return FALSE;
+	}
+	globals= object_unknown_0010a980_globals;
+	for (which= 0; which<OBJECT_UNKNOWN_0010A980_COUNT; which++)
+	{
+		const long *entry= (const long *)(globals->unknown0+which*0x14);
+
+		if (globals->unknown280[which]==object_index && entry[0]==value)
+		{
+			long length= entry[4];
+			long gone= game_time_globals->time-entry[3];
+			real from= ((const real *)entry)[1];
+			real to= ((const real *)entry)[2];
+
+			if (gone<length && length)
+			{
+				*result= (real)gone/(real)length*(to-from)+from;
+			}
+			else
+			{
+				*result= to;
+			}
+			*index= which;
+			return TRUE;
+		}
+	}
+
+	return FALSE;
 }

@@ -2,6 +2,30 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Cuatro funciones medianas del camino al menú: un iterador de la IA, quién sostiene un objeto, un real por el tiempo y cuatro reales de profundidad
+
+Cuatro funciones medianas (717 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2821 funciones se pasa a 2825, el 25,08 % de
+las del juego (el 13,565 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `ai_iterator_next_unknown_001e46c0` | `0x001e46c0` | `ai/actors.c` |
+| `unit_unknown_00101fb0` | `0x00101fb0` | `units/units.c` |
+| `object_unknown_0010a980_get_real` | `0x0010aac0` | `objects/object_unknown_0010a980.c` |
+| `rasterizer_unknown_000350e0` | `0x000350e0` | `rasterizer/rasterizer_xbox.c` |
+
+### Lo que se sabe
+
+- el siguiente elemento de un iterador de la IA; quién sostiene lo que sostiene a un objeto; un real de un objeto entre dos según el tiempo; y cuatro reales de dos rangos y una profundidad (0 a 0xFFFFFF).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 15 de `make_mutations.py`, 0 sin cazar; 1 que no cambia nada, quitada.
+
 ## 2026-10-24 — Cuatro funciones medianas del camino al menú: bits de un objeto, shorts de un tag, un punto cerca de un polígono y los ajustes de una clase
 
 Cuatro funciones medianas (766 bytes) en 3 archivos, de las que el juego ejecuta

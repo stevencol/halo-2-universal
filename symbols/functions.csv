@@ -3676,3 +3676,7 @@ address,name,source,arguments,returns,convention
 0004c0d0,object_unknown_0004c0d0,source/objects/objects.c,eax ecx stack,void,stdcall
 0023a160,ai_point_near_polygon2d,source/ai/actors.c,ecx edi xmm0 stack,bool,stdcall
 0002c490,game_unknown_0002b4a0_set_kind,source/game/game_unknown_0002b4a0.c,eax,void
+001e46c0,ai_iterator_next_unknown_001e46c0,source/ai/actors.c,esi,pointer
+00101fb0,unit_unknown_00101fb0,source/units/units.c,eax,int
+0010aac0,object_unknown_0010a980_get_real,source/objects/object_unknown_0010a980.c,ebx stack stack stack,bool,stdcall
+000350e0,rasterizer_unknown_000350e0,source/rasterizer/rasterizer_xbox.c,eax ecx edx stack,void,stdcall

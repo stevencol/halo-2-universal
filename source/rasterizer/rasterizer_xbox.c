@@ -592,3 +592,42 @@ void rasterizer_unknown_0001bd50(
 	rasterizer_state_flags_00485b84|= rasterizer_flags_group2_004850c0|rasterizer_flags_group2_004850b0;
 	rasterizer_state_flags_00485b88|= rasterizer_flags_group2_00485068|rasterizer_flags_group2_00485060;
 }
+
+/* 0x000350e0: four reals from two ranges and two values, and a depth (by
+the near and far of 0x00485ad4 and 0x00485ad8, from 0 to 0xFFFFFF, twice) */
+void __attribute__((stdcall)) rasterizer_unknown_000350e0(
+	const real *ranges,
+	real *result,
+	const real *values,
+	real depth)
+{
+	const real maximum= 16777215.0f;
+	real far= *(const real *)&rasterizer_unknown_00485ad8;
+	real near= *(const real *)&rasterizer_unknown_00485ad4;
+	real scale;
+	real value;
+
+	result[0]= (ranges[1]-ranges[0])*values[0]+ranges[0];
+	result[1]= (ranges[3]-ranges[2])*values[1]+ranges[2];
+	scale= far/(far-near);
+	value= (scale*depth - near*scale)/depth*maximum;
+	if (0.0f>value)
+	{
+		value= 0.0f;
+	}
+	else if (value>maximum)
+	{
+		value= maximum;
+	}
+	result[2]= value;
+	value= depth/far*maximum;
+	if (0.0f>value)
+	{
+		value= 0.0f;
+	}
+	else if (value>maximum)
+	{
+		value= maximum;
+	}
+	result[3]= value;
+}
