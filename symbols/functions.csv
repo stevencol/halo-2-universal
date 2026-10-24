@@ -3449,3 +3449,14 @@ address,name,source,arguments,returns,convention
 0002f640,screen_split_get_position,source/interface/screen_split.c,eax ecx edx stack stack stack,void,stdcall
 00030da0,unknown_004ba014_unknown_00030da0,source/units/units.c,stack stack,int,stdcall
 0003eb20,unknown_004b9eec_matches,source/game/game_unknown_0003f2b0.c,edx,bool
+0003f3f0,unknown_0003f3f0,source/game/game_unknown_0003f2b0.c,,void
+0003fd20,unknown_0003fd20,source/game/game_unknown_0003f2b0.c,eax edx xmm0,bool
+000461c0,point_in_sphere,source/math/real_math.c,eax ecx stack,int,stdcall
+00048e70,real_ceiling_to_long,source/math/real_math.c,stack,int,stdcall
+0004cbb0,tag_unknown_0004cbb0,source/effects/effects.c,eax ecx,int
+0004dc60,unknown_0004dc60,source/effects/effects.c,ecx edx ebx stack,pointer,stdcall
+0007f720,game_engine_unknown_0007f720,source/game/game_engine.c,eax stack,void,stdcall
+0009a150,game_engine_unknown_0009a150,source/game/game_engine.c,stack stack stack,void,stdcall
+0009a2c0,game_engine_unknown_0009a2c0,source/game/game_engine.c,stack stack stack,void,stdcall
+0009a600,game_engine_unknown_0009a600,source/game/game_engine.c,stack stack stack,void,stdcall
+0009aa00,game_engine_unknown_0009aa00,source/game/game_engine.c,stack stack stack,void,stdcall

@@ -8,6 +8,7 @@ the file is only the address of its function.
 
 #include "cseries/cseries.h"
 #include "scenario/scenario.h"
+#include "math/real_math.h"
 #include <stdint.h>
 
 /* ---------- globals */
@@ -78,6 +79,53 @@ boolean unknown_004b9eec_matches(
 		((const short *)(uintptr_t)*(const unsigned long *)(structure_bsp+0xB0))[unknown_004b9eec]==value)
 	{
 		return TRUE;
+	}
+
+	return FALSE;
+}
+
+/* 0x00547f88: the first of the two things of game_unknown_00131ff0.c; its
+first long points to what 0x0003f3f0 reads */
+extern byte unknown_00547f88[];
+
+/* 0x004c56c0: 512 bits, cleared by 0x0002b5d0 */
+unsigned long unknown_004c56c0[16];
+
+/* 0x0003f3f0: for each of the entries (0x1A bytes) at 0xA6E of what the
+first thing points to (as many as its short at 0xA6C), the bit named by the
+entry's first short is set in unknown_004c56c0 */
+void unknown_0003f3f0(
+	void)
+{
+	const byte *data= *(const byte *const *)unknown_00547f88;
+	long index;
+
+	for (index= 0; index<*(const short *)(data+0xA6C); index++)
+	{
+		short bit= *(const short *)(data+index*0x1A+0xA6E);
+
+		unknown_004c56c0[bit>>5]|= 1UL<<(bit&0x1F);
+	}
+}
+
+/* 0x0003fd20: whether a sphere is in front of any of six planes by at least
+its radius times the square root of three (the half diagonal of a cube) */
+boolean unknown_0003fd20(
+	const real_plane3d *planes,
+	const real_point3d *center,
+	real radius)
+{
+	real distance= radius*1.7320508f;
+	long index;
+
+	for (index= 0; index<6; index++)
+	{
+		const real_plane3d *plane= planes+index;
+
+		if (plane->n.i*center->x + plane->n.k*center->z + plane->n.j*center->y - plane->d>=distance)
+		{
+			return TRUE;
+		}
 	}
 
 	return FALSE;

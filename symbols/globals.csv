@@ -716,3 +716,5 @@ address,name,source
 005233ec,unknown_005233ec,source/cseries/unknown_0051f40c.c
 005233f0,unknown_005233f0,source/cseries/unknown_0051f40c.c
 005234c4,unknown_005234c4,source/cseries/unknown_0051f40c.c
+004c56c0,unknown_004c56c0,source/game/game_unknown_0003f2b0.c
+00468734,unknown_00468734,source/game/game_engine.c

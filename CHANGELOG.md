@@ -2,6 +2,56 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Once funciones pequeñas: bits de una lista, una esfera y planos, el techo de un real, dos de tags y números de las opciones del motor de juego
+
+Once funciones (859 bytes) en cuatro archivos. De 2594 funciones se
+pasa a 2605, el 23,12 % de las del juego (el 12,910 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unknown_0003f3f0` | `0x0003f3f0` | `game/game_unknown_0003f2b0.c` |
+| `unknown_0003fd20` | `0x0003fd20` | `game/game_unknown_0003f2b0.c` |
+| `point_in_sphere` | `0x000461c0` | `math/real_math.c` |
+| `real_ceiling_to_long` | `0x00048e70` | `math/real_math.c` |
+| `tag_unknown_0004cbb0` | `0x0004cbb0` | `effects/effects.c` |
+| `unknown_0004dc60` | `0x0004dc60` | `effects/effects.c` |
+| `game_engine_unknown_0007f720` | `0x0007f720` | `game/game_engine.c` |
+| `game_engine_unknown_0009a150` | `0x0009a150` | `game/game_engine.c` |
+| `game_engine_unknown_0009a2c0` | `0x0009a2c0` | `game/game_engine.c` |
+| `game_engine_unknown_0009a600` | `0x0009a600` | `game/game_engine.c` |
+| `game_engine_unknown_0009aa00` | `0x0009aa00` | `game/game_engine.c` |
+
+### Lo que se sabe
+
+- `unknown_0003f3f0` pone en `unknown_004c56c0` (512 bits, que borra
+  `0x0002b5d0`) el bit que nombra cada entrada de una lista de lo que apunta
+  la primera cosa de `game_unknown_00131ff0.c`.
+- `unknown_0003fd20`: si una esfera está delante de alguno de seis planos a
+  más de su radio por la raíz de tres.
+- `point_in_sphere` (como en Halo 1) y `real_ceiling_to_long`, el menor
+  entero que no está por debajo de un real, sacado de sus bits.
+- `tag_unknown_0004cbb0` mira un número de un elemento de un tag;
+  `unknown_0004dc60` pone dos veces un short (por cuatro o por tres según si
+  un texto empieza por punto) en lo que nombra una entrada de dos listas.
+- Cuatro funciones del motor de juego, llamadas por una tabla, que dan el
+  número de `game_engine_unknown_000a4950` más 0, 2, 0x11 o 1, con topes según
+  las opciones; `game_engine_unknown_0007f720` da tres longs (un color) de un
+  tag que nombran las globales del juego en `0x16C`, o los de
+  `unknown_00468734` si no hay.
+- Variables nuevas: `unknown_004c56c0`, `unknown_00468734`.
+
+### Sin comprobar
+
+- Para qué sirven casi todas; `real_ceiling_to_long` es un nombre supuesto.
+- Mutaciones: 34 de `make_mutations.py` y dos a mano (el resultado de
+  `0x0009a150` uno más y el tamaño de cada elemento de `0x0004cbb0`); 0 sin
+  notar. Se quitó una generada que ninguna prueba puede notar (`value>23` en
+  vez de `value>=23` en `0x0009a2c0`: 23 se cambia por 23), y se añadieron a
+  las pruebas las opciones `0x21`, `0x41`, `0x50` y `0x200001`, sin las que
+  tres mutaciones de `0x0009a600` pasaban.
+
 ## 2026-10-24 — Diez funciones pequeñas: bits del renderizador, una tabla de entradas, cómo se divide la pantalla y un short de la estructura bsp
 
 Diez funciones (819 bytes) en siete archivos, dos de ellos nuevos. De 2584

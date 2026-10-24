@@ -1262,3 +1262,43 @@ unsigned char valid_real_point3d(
 
 	return 1;
 }
+
+/* 0x000461c0: whether a point is no farther from a centre than a radius. As
+in Halo 1 */
+long __attribute__((stdcall)) point_in_sphere(
+	const real_point3d *point,
+	const real_point3d *center,
+	real radius)
+{
+	real x= point->x-center->x;
+	real z= point->z-center->z;
+	real y= point->y-center->y;
+
+	return radius*radius>=x*x + z*z + y*y;
+}
+
+/* 0x00048e70: the least whole number that is not below a real, worked out
+from its bits (the shift is that of the processor, by the low five bits).
+The name is a guess */
+long __attribute__((stdcall)) real_ceiling_to_long(
+	real value)
+{
+	long bits;
+	long exponent;
+	long shift;
+	long sign;
+	long result;
+
+	memcpy(&bits, &value, sizeof(bits));
+	exponent= ((bits>>23)&0xFF)-0x7F;
+	shift= (0x96-((bits>>23)&0xFF))&0x1F;
+	sign= bits>>31;
+	result= ((((bits&0x7FFFFF)|0x800000)>>shift)^sign)-sign;
+	result&= ~(exponent>>31);
+	if (!sign && bits && (exponent<0 || (((1UL<<shift)-1)&(unsigned long)bits&0x7FFFFF)))
+	{
+		result++;
+	}
+
+	return result;
+}

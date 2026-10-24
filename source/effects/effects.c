@@ -261,3 +261,70 @@ void __attribute__((stdcall)) effect_add_pair(
 		}
 	}
 }
+
+/* 0x0004cbb0: whether the element (0x1C bytes) of a tag that starts with a
+count (0x04) and its elements (0x08) has, in the long at 0x0C, a number
+above 0xF; not for NONE or an element that is not there */
+long tag_unknown_0004cbb0(
+	long tag_index,
+	unsigned long index)
+{
+	if (tag_index!=NONE)
+	{
+		const byte *tag= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+
+		if (index<*(const unsigned long *)(tag+0x04)
+			&& *(const long *)(*(const byte *const *)(tag+0x08)+index*0x1C+0x0C)>>4!=0)
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x0004dc60: an entry (0x0C bytes) of one of two lists of something (at
+0x54, or at 0x64 and then the other-th of its shorts) names an element (0x38
+bytes) of the list at 0x44; if that has the bit 0x02, what it points to
+gets the entry's short twice, times four if its text starts with a dot and
+times three if not, and the text is returned. Otherwise nothing */
+byte *__attribute__((stdcall)) unknown_0004dc60(
+	long index,
+	const byte *data,
+	boolean first,
+	long other)
+{
+	const byte *entry;
+	const unsigned short *value;
+	const byte *element;
+
+	if (first)
+	{
+		entry= *(const byte *const *)(data+0x54)+index*0x0C;
+		value= *(const unsigned short *const *)(entry+0x08);
+	}
+	else
+	{
+		entry= *(const byte *const *)(data+0x64)+index*0x0C;
+		value= *(const unsigned short *const *)(entry+0x08)+other;
+	}
+	element= *(const byte *const *)(data+0x44)+*(const unsigned short *)(entry+0x02)*0x38;
+	if (*element&0x02)
+	{
+		byte *text= *(byte *const *)(*(const byte *const *)(element+0x34)+0x04)+0x20;
+
+		if (text[0]=='.')
+		{
+			((long *)(text+0x04))[0]= *value<<2;
+			((long *)(text+0x04))[1]= *value<<2;
+		}
+		else
+		{
+			((long *)(text+0x04))[0]= *value*3;
+			((long *)(text+0x04))[1]= *value*3;
+		}
+		return text;
+	}
+
+	return NULL;
+}

@@ -12,9 +12,11 @@ game_voice.c, has something for each).
 #include <stdint.h>
 
 #include "game/game.h"
+#include "cache/cache_files.h"
 #include "main/main.h"
 #include "networking/game_voice.h"
 #include "saved games/game_state.h"
+#include "scenario/scenario.h"
 
 #include <string.h>
 
@@ -438,4 +440,104 @@ long game_engine_unknown_000a4950(
 	}
 
 	return least==0x7FFFFFFF ? 0 : least;
+}
+
+/* 0x0009a150: the least of the numbers of the flags (game_engine_unknown_000a4950),
+given back where the third says. It is called through a table */
+void __attribute__((stdcall)) game_engine_unknown_0009a150(
+	long unused,
+	const unsigned long *flags,
+	long *result)
+{
+	*result= game_engine_unknown_000a4950(flags);
+}
+
+/* 0x0009a2c0: as 0x0009a150, plus two; no more than 11 with the flag 0x20
+and no more than 23 with 0x40 */
+void __attribute__((stdcall)) game_engine_unknown_0009a2c0(
+	long unused,
+	const unsigned long *flags,
+	long *result)
+{
+	unsigned long bits= *flags;
+	long value= game_engine_unknown_000a4950(flags)+2;
+
+	if ((bits&0x20) && value>=11)
+	{
+		value= 11;
+	}
+	if ((bits&0x40) && value>=23)
+	{
+		value= 23;
+	}
+	*result= value;
+}
+
+/* 0x0009a600: as 0x0009a150, plus 0x11; no more than 0x3E with the flag
+0x20 and no more than 0x20 with any of the sixteen flags from 0x40 */
+void __attribute__((stdcall)) game_engine_unknown_0009a600(
+	long unused,
+	const unsigned long *flags,
+	long *result)
+{
+	unsigned long bits= *flags;
+	long value= game_engine_unknown_000a4950(flags)+0x11;
+	long index;
+
+	if ((bits&0x20) && value>=0x3E)
+	{
+		value= 0x3E;
+	}
+	for (index= 0; index<16; index++)
+	{
+		if ((bits&(1UL<<(index+6))) && value>=0x20)
+		{
+			value= 0x20;
+		}
+	}
+	*result= value;
+}
+
+/* 0x0009aa00: as 0x0009a150, plus one; no more than 0x16 with the flag 0x20 */
+void __attribute__((stdcall)) game_engine_unknown_0009aa00(
+	long unused,
+	const unsigned long *flags,
+	long *result)
+{
+	long value= game_engine_unknown_000a4950(flags)+1;
+
+	if ((*(const byte *)flags&0x20) && value>=0x16)
+	{
+		value= 0x16;
+	}
+	*result= value;
+}
+
+/* 0x00468734: points to the three longs given when the game globals have
+none */
+const unsigned long *unknown_00468734;
+
+/* 0x0007f720: three longs (a colour, by its size) of the element of the
+block at 0x10 of the first element of the tag that the game globals name at
+0x16C; those of unknown_00468734 if there is no tag or no such element */
+void __attribute__((stdcall)) game_engine_unknown_0007f720(
+	unsigned long *result,
+	short index)
+{
+	const unsigned long *value= unknown_00468734;
+	long tag_index= global_game_globals->unknown16C;
+
+	if (tag_index!=NONE)
+	{
+		const byte *tag= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+		const byte *element= *(const byte *const *)(tag+0x04);
+
+		if (index>=0 && index<*(const long *)(element+0x10))
+		{
+			value= *(const unsigned long *const *)(element+0x14)+3*index;
+		}
+	}
+	result[0]= value[0];
+	result[1]= value[1];
+	result[2]= value[2];
 }
