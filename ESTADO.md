@@ -376,6 +376,25 @@ Módulos (funciones hechas / archivo):
 - [ ] Memoria física — `memory\physical_memory.c` (1)
 - [ ] Varios — `cseries\cseries.c` (10)
 
+## Fase menú: llegar al menú principal (desde 2026-10-24)
+
+Objetivo: descompilar todo lo que el juego ejecuta desde que arranca hasta el
+menú principal, solo a mano (sin xboxrecomp).
+
+- La lista sale de jugar en xemu con `xemu.exe -d in_asm -D <log>` hasta el
+  menú, navegando por él y dejando que salgan los vídeos de espera, y de
+  `python tools\menu_path.py read <log>`. Está en `symbols\menu_path.csv`
+  (3520 funciones de `.text`).
+- Cuenta solo el código propio del juego (direcciones alineadas a 16 por
+  debajo de `0x2b0000`): **2158 funciones; hechas 980 (45,41 %), el 25,00 %
+  de sus bytes**. Las otras 1362 son librerías enlazadas (CRT, XDK, Havok),
+  que en un port se sustituyen en vez de descompilarse.
+- `python tools\menu_path.py report` da el % actual; `python
+  tools\menu_path.py next 40` las más pequeñas que faltan, para elegir los
+  hitos.
+- Después del código vendrá la capa de PC (gráficos, mando); para ejecutar
+  un `.exe` propio habrá que resolver lo de Smart App Control.
+
 ## Siguiente paso (por orden de recomendación)
 
 - [x] ~~Acciones del bucle: guardar, cambiar de bsp y `0x0012bdf0`~~ (hito
