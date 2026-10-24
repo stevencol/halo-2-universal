@@ -1302,3 +1302,25 @@ long __attribute__((stdcall)) real_ceiling_to_long(
 
 	return result;
 }
+
+/* 0x000aba40: whether two angles are numbers (not infinite nor NaN by their
+bits), the first from 0 to two pi and the second from minus to plus half
+pi. The name is a guess, as those of Halo 1 */
+unsigned char valid_real_euler_angles2d(
+	const real *angles)
+{
+	unsigned long bits;
+
+	memcpy(&bits, &angles[0], sizeof(bits));
+	if ((bits&0x7F800000)==0x7F800000)
+	{
+		return 0;
+	}
+	memcpy(&bits, &angles[1], sizeof(bits));
+	if ((bits&0x7F800000)==0x7F800000)
+	{
+		return 0;
+	}
+
+	return angles[0]>=0.0f && 6.2831855f>=angles[0] && angles[1]>=-1.5707964f && 1.5707964f>=angles[1];
+}

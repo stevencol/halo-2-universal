@@ -718,3 +718,10 @@ address,name,source
 005234c4,unknown_005234c4,source/cseries/unknown_0051f40c.c
 004c56c0,unknown_004c56c0,source/game/game_unknown_0003f2b0.c
 00468734,unknown_00468734,source/game/game_engine.c
+00510580,unknown_00510580,source/networking/online_unknown_000b36c0.c
+00510584,unknown_00510584,source/networking/online_unknown_000b36c0.c
+005107d8,unknown_005107d8,source/networking/online_unknown_000b36c0.c
+0054761c,unknown_0054761c,source/networking/online_unknown_000b36c0.c
+00547620,unknown_00547620,source/networking/online_unknown_000b36c0.c
+004de2d4,noncollideable_object_cluster_partition,source/objects/objects.c
+004de2e0,collideable_object_cluster_partition,source/objects/objects.c

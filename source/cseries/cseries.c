@@ -430,3 +430,70 @@ long get_current_language(
 
 	return global_language;
 }
+
+/* 0x000b6190: whether two texts are the same, as strcmp(...)==0 written
+two characters at a time. It is before csprintf in the game */
+boolean cseries_unknown_000b6190(
+	const char *first,
+	const char *second)
+{
+	for (;;)
+	{
+		if (first[0]!=second[0])
+		{
+			return FALSE;
+		}
+		if (!first[0])
+		{
+			return TRUE;
+		}
+		if (first[1]!=second[1])
+		{
+			return FALSE;
+		}
+		if (!first[1])
+		{
+			return TRUE;
+		}
+		first+= 2;
+		second+= 2;
+	}
+}
+
+/* 0x000b6720: how long a text is, five characters at a time, up to 0xFF.
+It is after csprintf256 in the game */
+unsigned long cseries_unknown_000b6720(
+	const char *string)
+{
+	unsigned long length= 0;
+
+	for (;;)
+	{
+		if (!string[0])
+		{
+			return length;
+		}
+		if (!string[1])
+		{
+			return length+1;
+		}
+		if (!string[2])
+		{
+			return length+2;
+		}
+		if (!string[3])
+		{
+			return length+3;
+		}
+		if (!string[4])
+		{
+			return length+4;
+		}
+		string+= 5;
+		length+= 5;
+		if (length>=0xFF)
+		{
+			return length;
+		}
+	}
+}

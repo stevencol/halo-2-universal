@@ -3460,3 +3460,16 @@ address,name,source,arguments,returns,convention
 0009a2c0,game_engine_unknown_0009a2c0,source/game/game_engine.c,stack stack stack,void,stdcall
 0009a600,game_engine_unknown_0009a600,source/game/game_engine.c,stack stack stack,void,stdcall
 0009aa00,game_engine_unknown_0009aa00,source/game/game_engine.c,stack stack stack,void,stdcall
+000aba40,valid_real_euler_angles2d,source/math/real_math.c,eax,bool
+000b4020,online_unknown_000b36c0_unknown_000b4020,source/networking/online_unknown_000b36c0.c,,void
+000b4050,online_unknown_000b36c0_unknown_000b4050,source/networking/online_unknown_000b36c0.c,,void
+000b6190,cseries_unknown_000b6190,source/cseries/cseries.c,eax ecx,bool
+000b6720,cseries_unknown_000b6720,source/cseries/cseries.c,ecx,int
+000b8940,cluster_get_first_collideable_object,source/objects/objects.c,ebx stack stack,int,stdcall
+000b89b0,cluster_get_next_collideable_object,source/objects/objects.c,ebx stack,int,stdcall
+000b8a10,cluster_get_first_noncollideable_object,source/objects/objects.c,ebx stack stack,int,stdcall
+000b8b20,object_get_next_cluster,source/objects/objects.c,ebx,short
+000b8840,object_unknown_000b8840,source/objects/objects.c,eax,void
+000b8890,object_unknown_000b8890,source/objects/objects.c,stack,void,stdcall
+000b8c40,object_unknown_000b8c40,source/objects/objects.c,ecx eax,int
+000a3a20,simulation_unknown_000a3a20,source/networking/simulation_gamestate_entities.c,stack stack stack stack stack,int,stdcall

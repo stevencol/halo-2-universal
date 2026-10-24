@@ -2,6 +2,63 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Trece funciones pequeñas: ángulos válidos, textos, los objetos de cada cluster, bits de objetos y un hijo del objeto de una cosa de la simulación
+
+Trece funciones (1071 bytes) en cinco archivos. De 2605 funciones se
+pasa a 2618, el 23,24 % de las del juego (el 12,946 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `valid_real_euler_angles2d` | `0x000aba40` | `math/real_math.c` |
+| `online_unknown_000b36c0_unknown_000b4020` | `0x000b4020` | `networking/online_unknown_000b36c0.c` |
+| `online_unknown_000b36c0_unknown_000b4050` | `0x000b4050` | `networking/online_unknown_000b36c0.c` |
+| `cseries_unknown_000b6190` | `0x000b6190` | `cseries/cseries.c` |
+| `cseries_unknown_000b6720` | `0x000b6720` | `cseries/cseries.c` |
+| `cluster_get_first_collideable_object` | `0x000b8940` | `objects/objects.c` |
+| `cluster_get_next_collideable_object` | `0x000b89b0` | `objects/objects.c` |
+| `cluster_get_first_noncollideable_object` | `0x000b8a10` | `objects/objects.c` |
+| `object_get_next_cluster` | `0x000b8b20` | `objects/objects.c` |
+| `object_unknown_000b8840` | `0x000b8840` | `objects/objects.c` |
+| `object_unknown_000b8890` | `0x000b8890` | `objects/objects.c` |
+| `object_unknown_000b8c40` | `0x000b8c40` | `objects/objects.c` |
+| `simulation_unknown_000a3a20` | `0x000a3a20` | `networking/simulation_gamestate_entities.c` |
+
+### Lo que se sabe
+
+- `valid_real_euler_angles2d`: dos ángulos que son números, el primero de 0
+  a dos pi y el segundo de menos a más medio pi.
+- Dos funciones que terminan algo de `online_unknown_000b36c0.c` (olvidan la
+  clave en uso y cierran su tarea), la segunda tras tres veces
+  `unknown_005107d8` actualizaciones.
+- `cseries_unknown_000b6190` (dos textos iguales) y
+  `cseries_unknown_000b6720` (largo de un texto, hasta 0xFF), junto a
+  `csprintf`.
+- Las dos particiones de los objetos por cluster
+  (`collideable_object_cluster_partition` en `0x004de2e0` y
+  `noncollideable_object_cluster_partition` en `0x004de2d4`, nombres como en
+  Halo 1, elegidas por el bit 9 de las opciones del objeto) y sus
+  iteradores: el primer objeto de un cluster, el siguiente y el siguiente
+  cluster de un objeto (`object_get_next_cluster`).
+- `object_unknown_000b8840`/`000b8890` quitan y ponen el bit 0x40 del byte
+  0xC0 de un objeto, avisando a su componente de havok;
+  `object_unknown_000b8c40` lee un elemento del bloque en 0x94 de su tag.
+- `simulation_unknown_000a3a20`: el primer hijo del objeto de una cosa de la
+  simulación con un tag y sin cosa propia.
+- Variables nuevas: `unknown_00510580`, `unknown_00510584`,
+  `unknown_005107d8`, `unknown_0054761c`, `unknown_00547620` y las dos
+  particiones.
+
+### Sin comprobar
+
+- Los nombres de las particiones y de los iteradores vienen de Halo 1; el
+  resto son direcciones.
+- Mutaciones: 41 de `make_mutations.py` y dos a mano, 0 sin notar. Se
+  quitaron tres generadas que ninguna prueba puede notar: sin mirar los bits
+  de los ángulos (o sin su `memcpy`), un ángulo infinito o NaN falla igual
+  en las comparaciones que siguen.
+
 ## 2026-10-24 — Once funciones pequeñas: bits de una lista, una esfera y planos, el techo de un real, dos de tags y números de las opciones del motor de juego
 
 Once funciones (859 bytes) en cuatro archivos. De 2594 funciones se

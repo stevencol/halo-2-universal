@@ -260,3 +260,38 @@ boolean __attribute__((thiscall)) simulation_object_entity_delete_object(
 
 	return TRUE;
 }
+
+/* 0x000a3a20: of the children of the object of a thing (its number at
+0x10), the first that has the tag at 0x04 and no thing of the simulation
+(0xD4); NONE if there is none. Of its five arguments only the second is
+looked at */
+long __attribute__((stdcall)) simulation_unknown_000a3a20(
+	long unknown0,
+	const byte *data,
+	long unknown2,
+	long unknown3,
+	long unknown4)
+{
+	struct object_header_datum *headers= (struct object_header_datum *)object_header_data->data;
+	long found= NONE;
+	long object_index= simulation_gamestate_entity_get_object(*(const long *)(data+0x10));
+
+	if (object_index!=NONE)
+	{
+		long child= *(const long *)((const byte *)headers[object_index&0xFFFF].datum+0x10);
+
+		while (child!=NONE)
+		{
+			const byte *object= (const byte *)headers[child&0xFFFF].datum;
+
+			if (*(const long *)object==*(const long *)(data+0x04) && *(const long *)(object+0xD4)==NONE
+				&& found==NONE)
+			{
+				found= child;
+			}
+			child= *(const long *)(object+0x0C);
+		}
+	}
+
+	return found;
+}

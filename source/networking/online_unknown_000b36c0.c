@@ -116,3 +116,53 @@ long online_unknown_000b36c0_string_length(
 
 	return length;
 }
+
+/* 0x00510580: whether something is going on. 0x00510584: its task, or
+NONE. 0x005107d8: so many (three times as many updates end it).
+0x0054761c: a byte that goes with it. 0x00547620: how many updates it has
+been going on */
+byte unknown_00510580;
+long unknown_00510584;
+long unknown_005107d8;
+byte unknown_0054761c;
+long unknown_00547620;
+
+/* 0x000b4020: it ends: the one in use is forgotten
+(online_unknown_000b36c0_unregister) and its task closed */
+void online_unknown_000b36c0_unknown_000b4020(
+	void)
+{
+	unknown_0054761c= FALSE;
+	online_unknown_000b36c0_unregister();
+	if (unknown_00510584!=NONE)
+	{
+		online_task_close(unknown_00510584);
+		unknown_00510584= NONE;
+	}
+	unknown_00510580= FALSE;
+}
+
+/* 0x000b4050: one update more; after three times unknown_005107d8 of them
+(or at once if nothing is going on) it ends as in 0x000b4020 */
+void online_unknown_000b36c0_unknown_000b4050(
+	void)
+{
+	long count= 0;
+
+	unknown_00547620++;
+	if (unknown_00510580)
+	{
+		count= unknown_005107d8;
+	}
+	if (unknown_00547620>=count*3)
+	{
+		online_unknown_000b36c0_unregister();
+		if (unknown_00510584!=NONE)
+		{
+			online_task_close(unknown_00510584);
+			unknown_00510584= NONE;
+		}
+		unknown_00510580= FALSE;
+		unknown_0054761c= FALSE;
+	}
+}

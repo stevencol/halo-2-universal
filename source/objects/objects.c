@@ -12,6 +12,7 @@ gives the address it has there.
 
 #include "cache/cache_files.h"
 #include "memory/memory_pool.h"
+#include "objects/cluster_partitions.h"
 
 /* ---------- macros */
 
@@ -698,4 +699,144 @@ long unknown_004de2f4_is_set(
 	void)
 {
 	return unknown_004de2f4 && *unknown_004de2f4;
+}
+
+/* 0x004de2d4 and 0x004de2e0: the objects of each cluster, those whose bit 9
+of the flags at 0x04 is not set and those whose is. The names are as in
+Halo 1 */
+struct cluster_partition noncollideable_object_cluster_partition;
+struct cluster_partition collideable_object_cluster_partition;
+
+/* an object and the rest of the reference of a list of the first table of a
+partition, and the next of the list */
+static inline __attribute__((always_inline)) long object_cluster_reference_next(
+	const struct cluster_partition *partition,
+	long *reference_index,
+	void **data)
+{
+	const struct data_array *references= partition->unknown4;
+	byte *reference= (byte *)references->data+(*reference_index&0xFFFF)*references->size;
+
+	*data= reference+0x0C;
+	*reference_index= *(const long *)(reference+0x08);
+	return *(const long *)(reference+0x04);
+}
+
+/* 0x000b8940: the first object in a cluster of the collideable ones; what
+its reference has after 0x0C, and the next reference. NONE if there is none */
+long __attribute__((stdcall)) cluster_get_first_collideable_object(
+	long *reference_index,
+	short cluster_index,
+	void **data)
+{
+	*reference_index= collideable_object_cluster_partition.unknown0[cluster_index];
+	if (*reference_index==NONE)
+	{
+		return NONE;
+	}
+
+	return object_cluster_reference_next(&collideable_object_cluster_partition, reference_index, data);
+}
+
+/* 0x000b89b0: the next one */
+long __attribute__((stdcall)) cluster_get_next_collideable_object(
+	long *reference_index,
+	void **data)
+{
+	if (*reference_index==NONE)
+	{
+		return NONE;
+	}
+
+	return object_cluster_reference_next(&collideable_object_cluster_partition, reference_index, data);
+}
+
+/* 0x000b8a10: as 0x000b8940, of the ones that are not collideable */
+long __attribute__((stdcall)) cluster_get_first_noncollideable_object(
+	long *reference_index,
+	short cluster_index,
+	void **data)
+{
+	*reference_index= noncollideable_object_cluster_partition.unknown0[cluster_index];
+	if (*reference_index==NONE)
+	{
+		return NONE;
+	}
+
+	return object_cluster_reference_next(&noncollideable_object_cluster_partition, reference_index, data);
+}
+
+/* where an object is: its partition and its next reference of the second
+table */
+struct object_cluster_iterator
+{
+	const struct cluster_partition *partition;
+	long reference_index;
+};
+
+/* 0x000b8b20: the next cluster of an object, NONE after the last. As in
+Halo 1 */
+short object_get_next_cluster(
+	struct object_cluster_iterator *iterator)
+{
+	const struct data_array *references= iterator->partition->unknown8;
+	const byte *reference;
+
+	if (iterator->reference_index==NONE)
+	{
+		return NONE;
+	}
+	reference= (const byte *)references->data+(iterator->reference_index&0xFFFF)*references->size;
+	iterator->reference_index= *(const long *)(reference+0x08);
+	return *(const short *)(reference+0x04);
+}
+
+/* 0x001d1260 and 0x001d1540: something of a havok component */
+void unknown_001d1260(struct havok_component *component);
+void unknown_001d1540(struct havok_component *component);
+
+/* 0x000b8840: the bit 0x40 of the byte at 0xC0 of an object is cleared,
+after unknown_001d1260 of its havok component if it has one */
+void object_unknown_000b8840(
+	long object_index)
+{
+	byte *object= OBJECT_BYTES(object_index);
+	long havok_component_index= *(const long *)(object+0xB4);
+
+	if (havok_component_index!=NONE)
+	{
+		unknown_001d1260(HAVOK_COMPONENT_GET(havok_component_index));
+	}
+	object[0xC0]&= ~0x40;
+}
+
+/* 0x000b8890: the bit is set, after unknown_001d1540 */
+void __attribute__((stdcall)) object_unknown_000b8890(
+	long object_index)
+{
+	byte *object= OBJECT_BYTES(object_index);
+	long havok_component_index= *(const long *)(object+0xB4);
+
+	if (havok_component_index!=NONE)
+	{
+		unknown_001d1540(HAVOK_COMPONENT_GET(havok_component_index));
+	}
+	object[0xC0]|= 0x40;
+}
+
+/* 0x000b8c40: a long (0x08) of an element (0x18 bytes) of the block at 0x94
+of the tag of an object; NONE for one that is not there */
+long object_unknown_000b8c40(
+	long object_index,
+	short index)
+{
+	const byte *tag= (const byte *)(uintptr_t)
+		global_tag_instances[*(const long *)OBJECT_BYTES(object_index)&0xFFFF].address;
+
+	if (index>=0 && index<*(const long *)(tag+0x94))
+	{
+		return *(const long *)(*(const byte *const *)(tag+0x98)+index*0x18+0x08);
+	}
+
+	return NONE;
 }
