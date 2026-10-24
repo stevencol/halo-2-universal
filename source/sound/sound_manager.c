@@ -13903,3 +13903,150 @@ byte *__attribute__((stdcall)) sound_unknown_00188690(
 
 	return *(byte *const *)(globals+0x154)+index*0xB4;
 }
+
+/* 0x00189010: whether a sound tag has the bit 0x40 of its first byte and an
+object is of the kind 2 (its header's type, by the shift of the processor) */
+boolean sound_unknown_00189010(
+	long object_index,
+	long tag_index)
+{
+	byte type;
+
+	if (tag_index==NONE
+		|| !(*(const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address&0x40)
+		|| object_index==NONE)
+	{
+		return FALSE;
+	}
+	type= ((const struct object_header_datum *)object_header_data->data)[object_index&0xFFFF].type;
+
+	return ((1UL<<(type&0x1F))&4)!=0;
+}
+
+/* the byte at 0x04 of an element (0x18 bytes) of unknown_004ed28c */
+#define UNKNOWN_004ED28C_FLAGS(index) \
+	((byte *)unknown_004ed28c->data+((index)&0xFFFF)*0x18+4)
+
+/* 0x0018a5e0: an element gets the bit 0x02, and that byte is returned */
+byte *unknown_004ed28c_set_bit1(
+	long index)
+{
+	byte *flags= UNKNOWN_004ED28C_FLAGS(index);
+
+	*flags|= 0x02;
+	return flags;
+}
+
+/* 0x0018a720: an element gets or loses the bit 0x10 */
+void __attribute__((stdcall)) unknown_004ed28c_set_bit4(
+	long index,
+	boolean set)
+{
+	byte *flags= UNKNOWN_004ED28C_FLAGS(index);
+
+	if (set)
+	{
+		*flags|= 0x10;
+		return;
+	}
+	*flags&= ~0x10;
+}
+
+/* 0x0018c960: whether ten longs are the same as ten others */
+boolean __attribute__((stdcall)) sound_unknown_0018c960(
+	const unsigned long *first,
+	const unsigned long *second)
+{
+	long index;
+
+	for (index= 0; index<10; index++)
+	{
+		if (first[index]!=second[index])
+		{
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+/* 0x0018d360: whether any element (0x58 bytes, of the block at 0x1C) of a tag
+names at 0x20 a tag whose byte at 0x02 is 0x20 or 0x26 */
+boolean sound_unknown_0018d360(
+	long tag_index)
+{
+	const byte *tag= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+	short index;
+
+	for (index= 0; index<*(const long *)(tag+0x1C); index++)
+	{
+		long other= *(const long *)(*(const byte *const *)(tag+0x20)+index*0x58+0x20);
+
+		if (other!=NONE)
+		{
+			signed char kind= *(const signed char *)((const byte *)(uintptr_t)global_tag_instances[other&0xFFFF].address+2);
+
+			if (kind==0x20 || kind==0x26)
+			{
+				return TRUE;
+			}
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x0018d630: which element (0x38 bytes, of the block at 0x00) of a tag
+starts with a name; NONE if none */
+long sound_unknown_0018d630(
+	long tag_index,
+	long name)
+{
+	const byte *tag;
+	long index;
+
+	if (tag_index==NONE)
+	{
+		return NONE;
+	}
+	tag= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+	for (index= 0; index<*(const long *)tag; index++)
+	{
+		if (*(const long *)(*(const byte *const *)(tag+4)+index*0x38)==name)
+		{
+			return index;
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x0018d670: whether a point is within a radius of the point (at 0xB8) of
+any of the four entries (0x48 bytes, from 0x78) of the game's sound globals
+that are on (their byte at 0x8E) */
+boolean sound_unknown_0018d670(
+	const real *point,
+	real radius)
+{
+	real squared= radius*radius;
+	long index;
+
+	for (index= 0; index<4; index++)
+	{
+		const byte *entry= game_sound_globals+0xC0+index*0x48;
+
+		if (entry[-0x32])
+		{
+			real x= ((const real *)entry)[-2]-point[0];
+			real y= ((const real *)entry)[-1]-point[1];
+			real z= ((const real *)entry)[0]-point[2];
+
+			if (squared>=x*x + y*y + z*z)
+			{
+				return TRUE;
+			}
+		}
+	}
+
+	return FALSE;
+}

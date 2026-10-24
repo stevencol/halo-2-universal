@@ -3611,3 +3611,10 @@ address,name,source,arguments,returns,convention
 00187a40,sound_unknown_00187a40,source/sound/sound_manager.c,ecx,short
 001885f0,sound_unknown_001885f0,source/sound/sound_manager.c,ecx ebx eax,void
 00188690,sound_unknown_00188690,source/sound/sound_manager.c,stack,pointer,stdcall
+00189010,sound_unknown_00189010,source/sound/sound_manager.c,ecx edx,bool
+0018a5e0,unknown_004ed28c_set_bit1,source/sound/sound_manager.c,eax,pointer
+0018a720,unknown_004ed28c_set_bit4,source/sound/sound_manager.c,eax stack,void,stdcall
+0018c960,sound_unknown_0018c960,source/sound/sound_manager.c,stack stack,bool,stdcall
+0018d360,sound_unknown_0018d360,source/sound/sound_manager.c,ecx,bool
+0018d630,sound_unknown_0018d630,source/sound/sound_manager.c,ecx edi,int
+0018d670,sound_unknown_0018d670,source/sound/sound_manager.c,esi xmm3,bool

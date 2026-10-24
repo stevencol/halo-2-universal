@@ -2,6 +2,37 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Siete funciones pequeñas del sonido: un tag y la clase de un objeto, dos bits de unknown_004ed28c, diez longs, tags en un bloque y un punto cerca de los sonidos
+
+Siete funciones (433 bytes) en `sound_manager.c`. De 2756 funciones se pasa
+a 2763, el 24,53 % de las del juego (el 13,318 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_unknown_00189010` | `0x00189010` | `sound/sound_manager.c` |
+| `unknown_004ed28c_set_bit1` | `0x0018a5e0` | `sound/sound_manager.c` |
+| `unknown_004ed28c_set_bit4` | `0x0018a720` | `sound/sound_manager.c` |
+| `sound_unknown_0018c960` | `0x0018c960` | `sound/sound_manager.c` |
+| `sound_unknown_0018d360` | `0x0018d360` | `sound/sound_manager.c` |
+| `sound_unknown_0018d630` | `0x0018d630` | `sound/sound_manager.c` |
+| `sound_unknown_0018d670` | `0x0018d670` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- Si un tag de sonido tiene el bit 0x40 y un objeto es de la clase 2; los
+  bits 0x02 y 0x10 de los elementos de `unknown_004ed28c`; si diez longs son
+  iguales a otros diez.
+- Si algún elemento de un tag nombra un tag de clase 0x20 o 0x26; qué
+  elemento empieza por un nombre; y si un punto está dentro de un radio de
+  alguna de las cuatro entradas encendidas de `game_sound_globals`.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 20 de `make_mutations.py`, 0 sin notar (con un caso más: un punto justo en el borde, con radio 0).
+
 ## 2026-10-24 — Ocho funciones pequeñas: las superficies que se rompen, dos entradas de unknown_004ed284 y un elemento de las globales del juego
 
 Ocho funciones (533 bytes) en dos archivos. De 2748 funciones se pasa
