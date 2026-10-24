@@ -1,0 +1,81 @@
+/*
+UNKNOWN_0051F40C.C
+
+a table of entries of 0x20 bytes, with three lists of bits for them; the
+second long of each entry keeps another entry's index in its bits 7 to 15.
+Worked out from halo2ship.exe; what it is for is not known.
+*/
+
+#include "cseries/cseries.h"
+
+#include <string.h>
+
+/* ---------- globals */
+
+/* 0x0051f408: whether the table is in use */
+byte unknown_0051f408;
+
+/* 0x0051f40c: the entries, eight longs each */
+unsigned long unknown_0051f40c[0x3FE0/4];
+
+/* 0x005233ec: how many entries there are */
+long unknown_005233ec;
+
+/* 0x005233f0: three lists of bits of the entries, sixteen longs each */
+unsigned long unknown_005233f0[0xD4/4];
+
+/* 0x005234c4: NONE when the table is not ready */
+long unknown_005234c4;
+
+/* ---------- code */
+
+/* 0x00020b40: keeps an entry's index (or NONE) in another entry, if the table
+is in use and both are entries of it */
+void unknown_0051f40c_set_other(
+	long index,
+	long other)
+{
+	long last;
+	unsigned long *entry;
+
+	if (!unknown_0051f408 || unknown_005234c4==NONE)
+	{
+		return;
+	}
+	last= index<0 ? 0 : unknown_005233ec-1;
+	if ((index<0 || index>last) && last!=index)
+	{
+		return;
+	}
+	last= other<0 ? 0 : unknown_005233ec-1;
+	if ((other<0 || other>last) && last!=other && other!=NONE)
+	{
+		return;
+	}
+
+	entry= &unknown_0051f40c[8*index];
+	if (other==NONE)
+	{
+		entry[1]|= 0xFF80;
+	}
+	else
+	{
+		entry[1]^= ((unsigned long)other<<7^entry[1])&0xFF80;
+	}
+}
+
+/* 0x00020e50: an entry is taken out of the three lists of bits and cleared,
+with NONE as its other entry */
+void unknown_0051f40c_clear(
+	long index)
+{
+	unsigned long *entry= &unknown_0051f40c[8*index];
+	long list;
+
+	for (list= 0; list<3; list++)
+	{
+		unknown_005233f0[16*list+(index>>5)]&= ~(1UL<<(index&31));
+	}
+	memset(entry, 0, 8*sizeof(unsigned long));
+	entry[1]|= 0xFF80;
+}

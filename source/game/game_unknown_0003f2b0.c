@@ -7,6 +7,8 @@ the file is only the address of its function.
 */
 
 #include "cseries/cseries.h"
+#include "scenario/scenario.h"
+#include <stdint.h>
 
 /* ---------- globals */
 
@@ -55,4 +57,28 @@ long __attribute__((stdcall)) unknown_00040de0(
 	}
 
 	return second ? 2 : NONE;
+}
+
+/* 0x004b9ee9 and 0x004b9eec: a byte that says yes, and an index of the list
+of shorts at 0xB0 of the structure bsp */
+byte unknown_004b9ee9;
+long unknown_004b9eec;
+
+/* 0x0003eb20: whether the short of the structure bsp that unknown_004b9eec
+names is this number; FALSE if any of them is not there. It is before
+game_unknown_0003f2b0_initialize_for_new_structure_bsp in the game; whether it
+is of this file is not known */
+boolean unknown_004b9eec_matches(
+	long value)
+{
+	const byte *structure_bsp= global_structure_bsp;
+
+	if (value!=NONE && unknown_004b9ee9 && unknown_004b9eec!=NONE && global_structure_bsp_index!=NONE &&
+		*(const long *)(structure_bsp+0xAC)>0 &&
+		((const short *)(uintptr_t)*(const unsigned long *)(structure_bsp+0xB0))[unknown_004b9eec]==value)
+	{
+		return TRUE;
+	}
+
+	return FALSE;
 }

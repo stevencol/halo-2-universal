@@ -2,6 +2,62 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Diez funciones pequeñas: bits del renderizador, una tabla de entradas, cómo se divide la pantalla y un short de la estructura bsp
+
+Diez funciones (819 bytes) en siete archivos, dos de ellos nuevos. De 2584
+funciones se pasa a 2594, el 23,03 % de las del juego (el 12,881 % de sus bytes).
+Primer hito con el nuevo plan: más funciones por hito y las mutaciones escritas
+por `tools\make_mutations.py` en vez de a mano.
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `rasterizer_unknown_0001c6b0` | `0x0001c6b0` | `rasterizer/rasterizer_xbox.c` |
+| `rasterizer_unknown_0001cb70` | `0x0001cb70` | `rasterizer/rasterizer_xbox.c` |
+| `unknown_005093e0_clear` | `0x0001fcd0` | `rasterizer/rasterizer_text.c` |
+| `unknown_0051f40c_set_other` | `0x00020b40` | `cseries/unknown_0051f40c.c` |
+| `unknown_0051f40c_clear` | `0x00020e50` | `cseries/unknown_0051f40c.c` |
+| `rasterizer_unknown_00023540` | `0x00023540` | `rasterizer/rasterizer.c` |
+| `screen_split_get_grid` | `0x0002f600` | `interface/screen_split.c` |
+| `screen_split_get_position` | `0x0002f640` | `interface/screen_split.c` |
+| `unknown_004ba014_unknown_00030da0` | `0x00030da0` | `units/units.c` |
+| `unknown_004b9eec_matches` | `0x0003eb20` | `game/game_unknown_0003f2b0.c` |
+
+### Lo que se sabe
+
+- `rasterizer_unknown_0001c6b0` limpia algo de `0x2D8` bytes (tres listas de
+  dieciséis) y `rasterizer_unknown_0001cb70` junta en una máscara los bits
+  que nombra el primer byte de cada entrada de un bloque de un tag.
+- `unknown_005093e0_clear` pone a cero los `0xFF` longs de
+  `unknown_005093e0` y marca `unknown_004b569d`.
+- Nuevo `cseries/unknown_0051f40c.c`: una tabla de entradas de `0x20` bytes
+  (`unknown_0051f40c`, cuántas en `unknown_005233ec`) con tres listas de bits
+  (`unknown_005233f0`); el segundo long de cada entrada guarda el índice de
+  otra en sus bits 7 a 15 (`NONE` = todos a uno).
+- Nuevo `interface/screen_split.c`: columnas y filas para tantos jugadores, y
+  la celda y el tamaño de cada uno (el primero ocupa dos si sobran celdas).
+- `rasterizer_unknown_00023540`: sumas de una lista de entradas (cada valor
+  limitado a 2) por un tamaño.
+- `unknown_004ba014_unknown_00030da0` devuelve 0–4 según los bits de
+  `unknown_004ba014`; `unknown_004b9eec_matches` compara un short de la
+  estructura bsp.
+- Variables nuevas: `unknown_004b5690`, `unknown_004b569d`,
+  `unknown_004858c4`, `unknown_004b9ee9`, `unknown_004b9eec`,
+  `unknown_0051f408`, `unknown_0051f40c`, `unknown_005233ec`,
+  `unknown_005233f0`, `unknown_005234c4`.
+
+### Sin comprobar
+
+- Para qué sirven la tabla de `0x0051f40c` y la lista de `0x00023540`; los
+  nombres de `screen_split.c` son supuestos.
+- Tres mutaciones generadas se quitaron porque ninguna prueba puede notarlas:
+  `data[0x20C]` se vuelve a poner después del bucle; `other<=0` solo cambia
+  algo sin entradas, cuando el índice ya hizo salir; y sin `columns= 1` el
+  bucle de `screen_split_get_grid` acaba en la misma rejilla.
+- Mutaciones: 36 de `make_mutations.py` y una a mano (el tamaño de cada
+  elemento, `0x1C`).
+
 ## 2026-10-22 — Cinco funciones pequeñas: los dieciséis pares de un efecto, algo de 0x60 bytes y un real del sonido
 
 Cinco funciones (282 bytes) en dos archivos. De 2579

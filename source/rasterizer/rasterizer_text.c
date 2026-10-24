@@ -528,3 +528,23 @@ void unknown_005093e0_clear_unknownA0(
 		unknown_005093e0[0xA0]= 0;
 	}
 }
+
+/* 0x004b5690 and 0x004b569d: something of the text, and a byte set when what
+unknown_005093e0 points to is cleared */
+long unknown_004b5690;
+byte unknown_004b569d;
+
+/* 0x0001fcd0: clears the 0xFF longs that unknown_005093e0 points to, if it
+points to something, and then marks unknown_004b569d if unknown_004b5690 is set */
+void unknown_005093e0_clear(
+	void)
+{
+	if (unknown_005093e0)
+	{
+		memset(unknown_005093e0, 0, 0xFF*sizeof(long));
+		if (unknown_004b5690 && !unknown_004b569d)
+		{
+			unknown_004b569d= TRUE;
+		}
+	}
+}

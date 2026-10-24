@@ -1107,3 +1107,33 @@ long __attribute__((stdcall)) unknown_004ba014_unknown_00030cd0(
 
 	return ((unknown_004ba014>>4)&1) && !((unknown_004ba014>>5)&1) ? 0 : 1;
 }
+
+/* 0x004858c4: points to a byte whose bit 0x20 is examined */
+const byte *unknown_004858c4;
+
+/* 0x00030da0: one of five numbers, by the bits of unknown_004ba014, the bit
+0x20 of what unknown_004858c4 points to and what the caller says. It is
+before object_get_unknown30's neighbours in the game */
+long __attribute__((stdcall)) unknown_004ba014_unknown_00030da0(
+	boolean first,
+	boolean second)
+{
+	if (unknown_004ba014&1)
+	{
+		return 1;
+	}
+	if (*unknown_004858c4&0x20)
+	{
+		return 4;
+	}
+	if (((unknown_004ba014>>1)&1) && first)
+	{
+		return 0;
+	}
+	if (((unknown_004ba014>>2)&1) && second)
+	{
+		return 2;
+	}
+
+	return 3;
+}

@@ -3439,3 +3439,13 @@ address,name,source,arguments,returns,convention
 00178af0,effect_has_free_pair,source/effects/effects.c,eax,bool
 00178b30,effect_add_pair,source/effects/effects.c,eax stack stack,void,stdcall
 00187420,sound_unknown_00187420,source/sound/sound_manager.c,eax,real:xmm0
+0001c6b0,rasterizer_unknown_0001c6b0,source/rasterizer/rasterizer_xbox.c,edx,void
+0001cb70,rasterizer_unknown_0001cb70,source/rasterizer/rasterizer_xbox.c,ecx edx,int
+0001fcd0,unknown_005093e0_clear,source/rasterizer/rasterizer_text.c,,void
+00020b40,unknown_0051f40c_set_other,source/cseries/unknown_0051f40c.c,ecx eax,void
+00020e50,unknown_0051f40c_clear,source/cseries/unknown_0051f40c.c,eax,void
+00023540,rasterizer_unknown_00023540,source/rasterizer/rasterizer.c,ecx ebx stack stack,void,stdcall
+0002f600,screen_split_get_grid,source/interface/screen_split.c,esi edx edi,void
+0002f640,screen_split_get_position,source/interface/screen_split.c,eax ecx edx stack stack stack,void,stdcall
+00030da0,unknown_004ba014_unknown_00030da0,source/units/units.c,stack stack,int,stdcall
+0003eb20,unknown_004b9eec_matches,source/game/game_unknown_0003f2b0.c,edx,bool

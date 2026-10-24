@@ -13,9 +13,12 @@ functions belong to it is a guess, and so are their names.
 #include "rasterizer/rasterizer_xbox.h"
 
 #include "cache/texture_cache.h"
+#include "cache/cache_files.h"
 #include "main/main.h"
 #include "shell/shell.h"
 #include "game/game.h"
+#include <stdint.h>
+#include <string.h>
 
 /* ---------- globals */
 
@@ -484,4 +487,49 @@ long rasterizer_unknown_00025960(
 	}
 
 	return NONE;
+}
+
+/* 0x0001c6b0: clears something of 0x2D8 bytes: three lists of sixteen at 0x8C,
+0xCC and 0x210 (three longs each), and sets the bytes at 0x20C and 0x2D4 */
+void rasterizer_unknown_0001c6b0(
+	byte *data)
+{
+	long index;
+
+	*(long *)(data+0x2D0)= 0;
+	data[0x2D4]= TRUE;
+	data[0x20C]= TRUE;
+	for (index= 0; index<16; index++)
+	{
+		long *three= (long *)(data+0x210)+3*index;
+
+		three[2]= 0;
+		three[1]= 0;
+		three[0]= 0;
+	}
+	data[0x20C]= TRUE;
+	memset(data+0xCC, 0, 16*sizeof(long));
+	memset(data+0x8C, 0, 16*sizeof(long));
+}
+
+/* 0x0001cb70: the bits named by the first byte of each two-byte entry of a
+block of an element (0x1C bytes) of the block at 0x08 of a tag */
+unsigned long rasterizer_unknown_0001cb70(
+	long element_index,
+	long tag_index)
+{
+	const byte *tag= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+	const byte *element= (const byte *)(uintptr_t)*(const unsigned long *)(tag+0x08)+element_index*0x1C;
+	unsigned long count= *(const unsigned long *)(element+0x04);
+	const byte *entry= (const byte *)(uintptr_t)*(const unsigned long *)(element+0x08);
+	unsigned long bits= 0;
+
+	while (count)
+	{
+		bits|= 1UL<<(entry[0]&31);
+		entry+= 2;
+		count--;
+	}
+
+	return bits;
 }

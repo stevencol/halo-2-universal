@@ -706,3 +706,13 @@ address,name,source
 005107e4,unknown_005107e4,source/networking/online_unknown_000b36c0.c
 004672e0,unknown_004672e0,source/networking/online_storage.c
 0055e718,unknown_0055e718,source/text/fonts.c
+004b5690,unknown_004b5690,source/rasterizer/rasterizer_text.c
+004b569d,unknown_004b569d,source/rasterizer/rasterizer_text.c
+004858c4,unknown_004858c4,source/units/units.c
+004b9ee9,unknown_004b9ee9,source/game/game_unknown_0003f2b0.c
+004b9eec,unknown_004b9eec,source/game/game_unknown_0003f2b0.c
+0051f408,unknown_0051f408,source/cseries/unknown_0051f40c.c
+0051f40c,unknown_0051f40c,source/cseries/unknown_0051f40c.c
+005233ec,unknown_005233ec,source/cseries/unknown_0051f40c.c
+005233f0,unknown_005233f0,source/cseries/unknown_0051f40c.c
+005234c4,unknown_005234c4,source/cseries/unknown_0051f40c.c

@@ -75,3 +75,31 @@ boolean rasterizer_unknown_00022710(
 	return unknown_00485648[1]==0 && unknown_00485648[0]==0 && unknown_00485648[3]==640
 		&& unknown_00485648[2]==480 && unknown_004ba04c<=1;
 }
+
+/* 0x00023540: for each of so many entries of four bytes, its short at 0x02
+(no more than 2) goes in a byte at 0x4C of the result, and the sum of those
+before it, times a size, in a long at 0x0C. It is before matrix4x3_from_rows
+in the game */
+void __attribute__((stdcall)) rasterizer_unknown_00023540(
+	const byte *entries,
+	short count,
+	byte *result,
+	long size)
+{
+	long sum= 0;
+	long index;
+
+	for (index= 0; index<count; index++)
+	{
+		unsigned long value;
+
+		((long *)(result+0x0C))[index]= (long)((unsigned long)sum*(unsigned long)size);
+		value= *(const unsigned short *)(entries+0x06+4*index);
+		if (value>2)
+		{
+			value= 2;
+		}
+		sum+= value;
+		result[0x4C+index]= (byte)value;
+	}
+}
