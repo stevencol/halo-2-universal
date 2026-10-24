@@ -847,3 +847,100 @@ void game_engine_unknown_001630b0(
 		values[index]= value;
 	}
 }
+
+/* a list of four arrays that the engine keeps: how many it can hold, how
+many it has, and a short, a long, a long and a short for each */
+struct game_engine_list
+{
+	long maximum_count;
+	unsigned short count;
+	short pad6;
+	short *shorts8;
+	unsigned long *longsC;
+	unsigned long *longs10;
+	short *shorts14;
+};
+
+/* 0x00163c80: one more in a list, if it has room for it and one more */
+boolean __attribute__((stdcall)) game_engine_list_add(
+	struct game_engine_list *list,
+	unsigned long valueC,
+	short value8,
+	unsigned long value10,
+	short value14)
+{
+	if (list->count>=list->maximum_count-1)
+	{
+		return FALSE;
+	}
+	list->longsC[list->count]= valueC;
+	list->shorts8[list->count]= value8;
+	list->longs10[list->count]= value10;
+	list->shorts14[list->count]= value14;
+	list->count++;
+	return TRUE;
+}
+
+/* 0x00163d20: which of a list has a long; NONE if none */
+short game_engine_list_find(
+	const struct game_engine_list *list,
+	unsigned long valueC)
+{
+	long index;
+
+	for (index= 0; index<list->count; index++)
+	{
+		if (list->longsC[index]==valueC)
+		{
+			return (short)index;
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x00163d50: two of a list change places */
+void game_engine_list_swap(
+	short first,
+	short second,
+	struct game_engine_list *list)
+{
+	unsigned long value;
+	short other;
+
+	value= list->longsC[first];
+	list->longsC[first]= list->longsC[second];
+	list->longsC[second]= value;
+	other= list->shorts8[first];
+	list->shorts8[first]= list->shorts8[second];
+	list->shorts8[second]= other;
+	value= list->longs10[first];
+	list->longs10[first]= list->longs10[second];
+	list->longs10[second]= value;
+	other= list->shorts14[first];
+	list->shorts14[first]= list->shorts14[second];
+	list->shorts14[second]= other;
+}
+
+/* 0x004e9bc8: a block of the state of the game, of entries of 0x20CC bytes */
+byte *unknown_004e9bc8;
+
+/* 0x00166cb0: three bytes of a part (0x1010 bytes, after 0x78) of an entry
+of unknown_004e9bc8 are cleared */
+void unknown_004e9bc8_clear(
+	long index,
+	long part)
+{
+	byte *data= unknown_004e9bc8+index*0x20CC+part*0x1010+0x78;
+
+	data[1]= 0;
+	data[0]= 0;
+	data[3]= 0;
+}
+
+/* 0x00168ae0: the bits 23 to 28 of something as the bits 0 to 5 */
+unsigned long game_engine_unknown_00168ae0(
+	unsigned long flags)
+{
+	return (flags>>23)&0x3F;
+}

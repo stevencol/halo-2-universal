@@ -3587,3 +3587,13 @@ address,name,source,arguments,returns,convention
 00161eb0,game_engine_unknown_00161eb0,source/game/game_engine.c,ecx,int
 00162b10,game_engine_unknown_00162b10,source/game/game_engine.c,ecx,bool
 001630b0,game_engine_unknown_001630b0,source/game/game_engine.c,eax ecx,void
+00163c80,game_engine_list_add,source/game/game_engine.c,ecx stack stack stack stack,bool,stdcall
+00163d20,game_engine_list_find,source/game/game_engine.c,edx esi,short
+00163d50,game_engine_list_swap,source/game/game_engine.c,eax ecx edx,void
+00166cb0,unknown_004e9bc8_clear,source/game/game_engine.c,eax ecx,void
+00168ae0,game_engine_unknown_00168ae0,source/game/game_engine.c,ecx,int
+0016d180,tag_unknown_0016d180,source/cache/tag_unknown_0016d180.c,ecx edi,int
+0016d1d0,tag_unknown_0016d1d0,source/cache/tag_unknown_0016d180.c,ecx edi,int
+0016d220,tag_unknown_0016d220,source/cache/tag_unknown_0016d180.c,ecx edx edi,int
+0016d890,tag_unknown_0016d890,source/cache/tag_unknown_0016d180.c,eax edi,int
+0016da90,tag_unknown_0016da90,source/cache/tag_unknown_0016d180.c,ecx edi,int

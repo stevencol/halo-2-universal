@@ -2,6 +2,40 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Diez funciones pequeñas: una lista de cuatro arrays del motor de juego, tres bytes, seis bits y buscar por nombre en los bloques de un tipo de tag
+
+Diez funciones (666 bytes) en dos archivos, uno nuevo. De 2732 funciones se pasa
+a 2742, el 24,34 % de las del juego (el 13,267 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_engine_list_add` | `0x00163c80` | `game/game_engine.c` |
+| `game_engine_list_find` | `0x00163d20` | `game/game_engine.c` |
+| `game_engine_list_swap` | `0x00163d50` | `game/game_engine.c` |
+| `unknown_004e9bc8_clear` | `0x00166cb0` | `game/game_engine.c` |
+| `game_engine_unknown_00168ae0` | `0x00168ae0` | `game/game_engine.c` |
+| `tag_unknown_0016d180` | `0x0016d180` | `cache/tag_unknown_0016d180.c` |
+| `tag_unknown_0016d1d0` | `0x0016d1d0` | `cache/tag_unknown_0016d180.c` |
+| `tag_unknown_0016d220` | `0x0016d220` | `cache/tag_unknown_0016d180.c` |
+| `tag_unknown_0016d890` | `0x0016d890` | `cache/tag_unknown_0016d180.c` |
+| `tag_unknown_0016da90` | `0x0016da90` | `cache/tag_unknown_0016d180.c` |
+
+### Lo que se sabe
+
+- Una lista con cuántos caben, cuántos hay y cuatro arrays (short, long,
+  long, short): añadir, buscar por el long y cambiar dos de sitio.
+- Tres bytes de una entrada de `unknown_004e9bc8` (variable nueva) y los
+  bits 23 a 28 de algo como 0 a 5.
+- Nuevo `cache/tag_unknown_0016d180.c`: buscar por nombre (parecen
+  `string_id`) en los bloques 0x50, 0x70, 0x78 de un tipo de tag.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 35 de `make_mutations.py`, 0 sin notar.
+
 ## 2026-10-24 — Diez funciones pequeñas del motor de juego: un jugador sin unidad, una entrada por un short, clases de juego, un par de un tag y bits de 0x0C y 0x0E
 
 Diez funciones (733 bytes) en `game_engine.c`. De 2722 funciones se pasa
