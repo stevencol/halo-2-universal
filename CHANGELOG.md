@@ -2,6 +2,38 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Ocho funciones pequeñas de Havok: bits bajo una máscara, si hay sitio, dos cabeceras y cosas que se vacían
+
+Ocho funciones (513 bytes) en `havok.c`. De 2770 funciones se pasa
+a 2778, el 24,66 % de las del juego (el 13,354 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_001c2330` | `0x001c2330` | `physics/havok.c` |
+| `havok_unknown_001c3930` | `0x001c3930` | `physics/havok.c` |
+| `havok_unknown_001c5e80` | `0x001c5e80` | `physics/havok.c` |
+| `havok_unknown_001c61c0` | `0x001c61c0` | `physics/havok.c` |
+| `havok_unknown_001c62f0` | `0x001c62f0` | `physics/havok.c` |
+| `havok_unknown_001c6340` | `0x001c6340` | `physics/havok.c` |
+| `havok_unknown_001c63f0` | `0x001c63f0` | `physics/havok.c` |
+| `havok_unknown_001cb0a0` | `0x001cb0a0` | `physics/havok.c` |
+
+### Lo que se sabe
+
+- Los longs de tantos bits de una lista con una máscara; si hay sitio para
+  un tag de ciertas clases (en `unknown_0051e9a0` o en los componentes de
+  havok).
+- Dos cabeceras de 0x10 bytes (`papb`…`pape` y `nocb`…`noce`); tres copias
+  de la misma función que deja algo de 0x20 bytes en nada; tres entradas
+  borradas.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 17 de `make_mutations.py`, 0 sin notar. Se quitó una que no cambia nada: `header[1]= 0` en vez de `header[0]= 0` (`header[0]` se vuelve a escribir después).
+
 ## 2026-10-24 — Siete funciones pequeñas: un anillo de la vista de la simulación, shorts que copian bits, las páginas de un rango y tres de los actores
 
 Siete funciones (551 bytes) en tres archivos. De 2763 funciones se pasa

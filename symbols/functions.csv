@@ -3625,3 +3625,11 @@ address,name,source,arguments,returns,convention
 001a58b0,actor_unknown_001a58b0,source/ai/actors.c,eax,bool
 001a6d30,actor_unknown_001a6d30,source/ai/actors.c,ecx,bool
 001a7ad0,actor_unknown_001a7ad0,source/ai/actors.c,eax,int
+001c2330,havok_unknown_001c2330,source/physics/havok.c,eax ecx edx stack,void,stdcall
+001c3930,havok_unknown_001c3930,source/physics/havok.c,ecx,bool
+001c5e80,havok_unknown_001c5e80,source/physics/havok.c,eax ecx,void
+001c61c0,havok_unknown_001c61c0,source/physics/havok.c,eax ecx,void
+001c62f0,havok_unknown_001c62f0,source/physics/havok.c,ecx,void
+001c6340,havok_unknown_001c6340,source/physics/havok.c,eax,void
+001c63f0,havok_unknown_001c63f0,source/physics/havok.c,eax,void
+001cb0a0,havok_unknown_001cb0a0,source/physics/havok.c,eax,void

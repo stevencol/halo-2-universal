@@ -16,6 +16,7 @@ the file is a guess, by what its functions start.
 #include "game/game.h"
 #include "memory/data.h"
 #include "objects/objects.h"
+#include "physics/havok_component.h"
 #include "saved games/game_state.h"
 
 /* ---------- constants */
@@ -780,4 +781,147 @@ void unknown_001dd7a0_clear(
 	*(short *)(unknown+0xA)= 0;
 	*(long *)(unknown+0xC)= NONE;
 	*(long *)(unknown+0x10)= NONE;
+}
+
+/* 0x001c2330: the longs for so many bits of a list are those of another
+and a mask */
+void __attribute__((stdcall)) havok_unknown_001c2330(
+	const unsigned long *mask,
+	long count,
+	const unsigned long *bits,
+	unsigned long *result)
+{
+	long longs= (count+0x1F)>>5;
+	long index;
+
+	for (index= 0; index<longs; index++)
+	{
+		result[index]= bits[index]&mask[index];
+	}
+}
+
+/* 0x001c3930: TRUE unless the first byte of a tag is a kind of 0, 1, 7, 11
+or 12 (the bits of 0x1883, by the shift of the processor); then whether
+there is room: unknown_0051e9a0 below 0x200 without unknown_0047f058, or
+fewer havok components than they can be */
+boolean havok_unknown_001c3930(
+	long tag_index)
+{
+	byte kind= *(const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+
+	if (!((1UL<<(kind&0x1F))&0x1883))
+	{
+		return TRUE;
+	}
+	if (!unknown_0047f058)
+	{
+		return *(const long *)unknown_0051e9a0<0x200;
+	}
+
+	return havok_component_data->actual_count<havok_component_data->maximum_count;
+}
+
+/* 0x001c5e80: a header of 0x10 bytes ('papb' ... 'pape') with the eight
+bytes of something, or zeros for none */
+void havok_unknown_001c5e80(
+	unsigned long *header,
+	const byte *data)
+{
+	if (!data)
+	{
+		header[0]= 0;
+		header[1]= 0;
+		header[2]= 0;
+		header[3]= 0;
+	}
+	else
+	{
+		header[1]= *(const unsigned long *)data;
+		((byte *)header)[8]= data[4];
+		((byte *)header)[9]= data[5];
+		((byte *)header)[10]= data[6];
+		((byte *)header)[11]= data[7];
+	}
+	header[0]= 0x62706170;
+	header[3]= 0x65706170;
+}
+
+/* 0x001c61c0: the same with 'nocb' ... 'noce' and seven bytes */
+void havok_unknown_001c61c0(
+	byte *header,
+	const byte *data)
+{
+	if (!data)
+	{
+		memset(header, 0, 0x0F);
+	}
+	else
+	{
+		*(unsigned long *)(header+4)= *(const unsigned long *)data;
+		header[8]= data[4];
+		header[9]= data[5];
+		header[10]= data[6];
+	}
+	*(unsigned long *)header= 0x62636F6E;
+	*(unsigned long *)(header+0x0B)= 0x65636F6E;
+}
+
+/* something of 0x20 bytes that is nothing: NONE in its long and shorts,
+zeros, 1.0 and 0.0 */
+static inline __attribute__((always_inline)) void havok_unknown_clear(
+	byte *data)
+{
+	*(long *)data= NONE;
+	*(short *)(data+0x04)= NONE;
+	*(short *)(data+0x06)= NONE;
+	*(real *)(data+0x1C)= 0.0f;
+	data[0x10]= 0;
+	data[0x11]= 0;
+	*(short *)(data+0x12)= 0;
+	*(real *)(data+0x18)= 1.0f;
+	*(short *)(data+0x14)= 0;
+	*(short *)(data+0x16)= 0;
+	*(long *)(data+0x08)= NONE;
+	*(short *)(data+0x0E)= NONE;
+	data[0x0C]= 0xFF;
+	data[0x0D]= 0xFF;
+}
+
+/* 0x001c62f0, 0x001c6340 and 0x001c63f0: it is made nothing (three copies
+of the same in the game) */
+void havok_unknown_001c62f0(
+	byte *data)
+{
+	havok_unknown_clear(data);
+}
+
+void havok_unknown_001c6340(
+	byte *data)
+{
+	havok_unknown_clear(data);
+}
+
+void havok_unknown_001c63f0(
+	byte *data)
+{
+	havok_unknown_clear(data);
+}
+
+/* 0x001cb0a0: three entries of 0x20 bytes get NONE in their longs at 0x00
+and 0x08 and their shorts at 0x04 and 0x06, and 0 at 0x10 */
+void havok_unknown_001cb0a0(
+	byte *data)
+{
+	long index;
+
+	for (index= 2; index>=0; index--)
+	{
+		byte *entry= data+index*0x20;
+
+		*(long *)entry= NONE;
+		*(short *)(entry+0x04)= NONE;
+		*(short *)(entry+0x06)= NONE;
+		*(long *)(entry+0x08)= NONE;
+		entry[0x10]= 0;
+	}
 }
