@@ -3554,3 +3554,10 @@ address,name,source,arguments,returns,convention
 0011bf30,scenario_location_unknown_0011bf30,source/scenario/scenario.c,eax,bool
 0011c010,structure_bsp_unknown_0011c010,source/scenario/scenario.c,ecx stack,int,stdcall
 0011c0b0,scenario_unknown_0011c0b0,source/scenario/scenario.c,ecx stack,short,stdcall
+0012b3c0,main_unknown_0012b3c0,source/main/main.c,,bool
+001321f0,game_unknown_00131ff0_test_bit,source/game/game_unknown_00131ff0.c,edx stack,int,stdcall
+00132b10,game_unknown_00131ff0_flags,source/game/game_unknown_00131ff0.c,eax ecx edx stack stack stack stack,int,stdcall
+001332b0,game_unknown_00131ff0_allocate_bits,source/game/game_unknown_00131ff0.c,ecx edx,pointer
+001348e0,game_unknown_00131ff0_clear,source/game/game_unknown_00131ff0.c,edx,void
+00134d20,game_unknown_00134d90_find,source/game/game_unknown_00134d90.c,eax ebx,pointer
+00137650,tag_unknown_00137650,source/game/game_unknown_00134d90.c,eax edx ebx,int

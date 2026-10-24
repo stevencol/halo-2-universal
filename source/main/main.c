@@ -773,3 +773,17 @@ boolean main_unknown_000335c0(
 
 	return TRUE;
 }
+
+/* 0x0012b3c0: FALSE unless the display settings have frames to wait for
+and a game is active; then TRUE, or the second byte of the time globals when
+their first is set */
+boolean main_unknown_0012b3c0(
+	void)
+{
+	if (!display_settings.frame_vblanks || !main_game_globals || !main_game_globals->active)
+	{
+		return FALSE;
+	}
+
+	return main_time_globals.unknown0 ? main_time_globals.unknown1 : TRUE;
+}

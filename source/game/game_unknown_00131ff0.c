@@ -10,6 +10,7 @@ the file is only the address of its first function.
 #include "cseries/cseries.h"
 
 #include <stdint.h>
+#include <string.h>
 
 /* ---------- constants */
 
@@ -81,4 +82,69 @@ void game_unknown_00131ff0_dispose(
 		}
 		unknown_00510c44= NULL;
 	}
+}
+
+/* 0x001321f0: one of the 512 bits at 0x21C of a thing */
+long __attribute__((stdcall)) game_unknown_00131ff0_test_bit(
+	long bit,
+	const byte *thing)
+{
+	return (((const unsigned long *)(thing+0x21C))[bit>>5]&(1UL<<(bit&0x1F)))!=0;
+}
+
+/* 0x00132b10: seven bits from 0x0200 to 0x8000, by seven bytes */
+long __attribute__((stdcall)) game_unknown_00131ff0_flags(
+	boolean flag4000,
+	boolean flag8000,
+	boolean flag0800,
+	boolean flag1000,
+	boolean flag2000,
+	boolean flag0400,
+	boolean flag0200)
+{
+	return (flag4000 ? 0x4000 : 0) | (flag2000 ? 0x2000 : 0) | (flag1000 ? 0x1000 : 0) | (flag0800 ? 0x800 : 0)
+		| (flag0400 ? 0x400 : 0) | (flag0200 ? 0x200 : 0) | (flag8000 ? 0x8000 : 0);
+}
+
+/* 0x001332b0: room for so many bits in the longs at 0x25C of a thing (0x200
+of them, how many are taken at 0xA5C); the first long if there is no more
+room, and nothing for no bits */
+unsigned long *game_unknown_00131ff0_allocate_bits(
+	long count,
+	byte *thing)
+{
+	unsigned short used;
+	long longs;
+
+	if (count<=0)
+	{
+		return NULL;
+	}
+	used= *(const unsigned short *)(thing+0xA5C);
+	longs= (count+0x1F)>>5;
+	if (used+longs>=0x200)
+	{
+		return (unsigned long *)(thing+0x25C);
+	}
+	*(unsigned short *)(thing+0xA5C)= (unsigned short)(used+longs);
+	return (unsigned long *)(thing+0x25C)+used;
+}
+
+/* 0x001348e0: a thing is emptied: the shorts at 0x04 of the four things it
+points to, its bits at 0x21C, the longs taken at 0x25C and the shorts at
+0xA5C and 0xA5E are 0, and its 0x80 longs at 0x1C are NONE */
+void game_unknown_00131ff0_clear(
+	byte *thing)
+{
+	long index;
+
+	for (index= 0; index<4; index++)
+	{
+		*(short *)(*(byte *const *)(thing+0x0C+index*4)+0x04)= 0;
+	}
+	memset(thing+0x21C, 0, 0x40);
+	memset(thing+0x25C, 0, *(const unsigned short *)(thing+0xA5C)*4);
+	*(short *)(thing+0xA5C)= 0;
+	*(short *)(thing+0xA5E)= 0;
+	memset(thing+0x1C, 0xFF, 0x80*4);
 }

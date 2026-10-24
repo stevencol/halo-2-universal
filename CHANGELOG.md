@@ -2,6 +2,42 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Siete funciones pequeñas: si se esperan fotogramas, los bits y la memoria de las cosas de game_unknown_00131ff0.c, una entrada por un número del escenario y una cuenta de un tag
+
+Siete funciones (565 bytes) en cuatro archivos. De 2699 funciones se
+pasa a 2706, el 24,02 % de las del juego (el 13,178 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `main_unknown_0012b3c0` | `0x0012b3c0` | `main/main.c` |
+| `game_unknown_00131ff0_test_bit` | `0x001321f0` | `game/game_unknown_00131ff0.c` |
+| `game_unknown_00131ff0_flags` | `0x00132b10` | `game/game_unknown_00131ff0.c` |
+| `game_unknown_00131ff0_allocate_bits` | `0x001332b0` | `game/game_unknown_00131ff0.c` |
+| `game_unknown_00131ff0_clear` | `0x001348e0` | `game/game_unknown_00131ff0.c` |
+| `game_unknown_00134d90_find` | `0x00134d20` | `game/game_unknown_00134d90.c` |
+| `tag_unknown_00137650` | `0x00137650` | `game/game_unknown_00134d90.c` |
+
+### Lo que se sabe
+
+- `main_unknown_0012b3c0`: falso salvo que los ajustes de pantalla esperen
+  fotogramas y haya un juego activo; entonces cierto, o el segundo byte de
+  `main_time_globals` si el primero está puesto.
+- De las cosas de 0x2AE0 bytes de `game_unknown_00131ff0.c`: uno de sus 512
+  bits en 0x21C; sitio para tantos bits en sus 0x200 longs de 0x25C (los
+  usados en 0xA5C); y vaciarla. Además siete opciones de 0x0200 a 0x8000
+  por siete bytes.
+- `game_unknown_00134d90_find`: la entrada de 0x20 bytes de
+  `unknown_004e6740` para la entrada del escenario (0x18 bytes, en 0x3C0)
+  que empieza por un número.
+- `tag_unknown_00137650`: una cuenta de un tag con sus elementos.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son supuestos o direcciones.
+- Mutaciones: 22 de `make_mutations.py`, 0 sin notar.
+
 ## 2026-10-24 — Once funciones pequeñas: nombres y bytes de lo que guardan los objetos en su short de 0x33E, sitios y clusters de la estructura bsp y un nombre de una lista
 
 Once funciones (799 bytes) en dos archivos. De 2688 funciones se
