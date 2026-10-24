@@ -2,6 +2,30 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Cuatro funciones medianas del camino al menú: algo de la IA, lo que guarda una sesión de red, un estado de una unidad y un real por un nombre
+
+Cuatro funciones medianas (564 bytes) en 3 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2800 funciones se pasa a 2804, el 24,89 % de
+las del juego (el 13,451 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `ai_unknown_002055f0` | `0x002055f0` | `ai/actors.c` |
+| `network_session_unknown_000656e0` | `0x000656e0` | `networking/network_life_cycle.c` |
+| `unit_unknown_00113260` | `0x00113260` | `units/units.c` |
+| `unit_unknown_0014ccf0` | `0x0014ccf0` | `units/units.c` |
+
+### Lo que se sabe
+
+- algo de 0x40 bytes de la IA hecho con sus valores; lo que guarda una sesión de red en los estados 3 a 8; si una unidad está en cierto estado (`unknown_004686a4`, nueva); y un real por un nombre (parecen `string_id`).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 12 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-24 — Cuatro funciones medianas del camino al menú: un efecto sale de su objeto, un punto del mundo, una cosa de Havok y si un objeto se ve
 
 Cuatro funciones medianas (525 bytes) en 4 archivos, de las que el juego ejecuta

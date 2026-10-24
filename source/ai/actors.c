@@ -2559,3 +2559,44 @@ unsigned long actor_unknown_001a7ad0(
 
 	return (1UL<<(actor[0x86]&0x1F))|((1UL<<which)<<10);
 }
+
+/* 0x002055f0: something of 0x40 bytes is made from a byte, longs and shorts,
+two points (0x1C and 0x28) and a long that can be given at 0x3A (NONE in
+its two shorts when it is not) */
+void __attribute__((stdcall)) ai_unknown_002055f0(
+	byte *data,
+	const unsigned long *second_point,
+	byte value00,
+	long value04,
+	long value08,
+	short value0C,
+	long value10,
+	long value14,
+	short value18,
+	const unsigned long *first_point,
+	long value34,
+	const unsigned long *value3A)
+{
+	data[0x00]= value00;
+	*(long *)(data+0x04)= value04;
+	*(long *)(data+0x08)= value08;
+	*(short *)(data+0x0C)= value0C;
+	*(long *)(data+0x10)= value10;
+	*(long *)(data+0x14)= value14;
+	*(short *)(data+0x18)= value18;
+	((unsigned long *)(data+0x1C))[0]= first_point[0];
+	((unsigned long *)(data+0x1C))[1]= first_point[1];
+	((unsigned long *)(data+0x1C))[2]= first_point[2];
+	((unsigned long *)(data+0x28))[0]= second_point[0];
+	((unsigned long *)(data+0x28))[1]= second_point[1];
+	((unsigned long *)(data+0x28))[2]= second_point[2];
+	*(long *)(data+0x34)= value34;
+	data[0x38]= 0;
+	if (!value3A)
+	{
+		*(short *)(data+0x3A)= NONE;
+		*(short *)(data+0x3C)= NONE;
+		return;
+	}
+	*(unsigned long *)(data+0x3A)= *value3A;
+}

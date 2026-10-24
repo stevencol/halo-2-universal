@@ -1910,3 +1910,63 @@ boolean network_life_cycle_unknown_0006e6b0(
 
 	return !network_session_host_unknown_0005aeb0(session, NONE);
 }
+
+/* 0x000656e0: when a session is in a state from 3 to 8 (0x741C), what it
+keeps at 0x4C, 0x72D8, 0x40, 0x50, 0x54, 0x1118 and 0x111C, and where it
+keeps 0x58 and 0x1120, each where asked; FALSE in other states */
+boolean __attribute__((stdcall)) network_session_unknown_000656e0(
+	const byte *session,
+	unsigned long *value4C,
+	unsigned long *value72D8,
+	unsigned long *value40,
+	unsigned long *value50,
+	unsigned long *value54,
+	const byte **place58,
+	unsigned long *value1118,
+	unsigned long *value111C,
+	const byte **place1120)
+{
+	long state= *(const long *)(session+0x741C);
+
+	if (state<=2 || state>8)
+	{
+		return FALSE;
+	}
+	if (value4C)
+	{
+		*value4C= *(const unsigned long *)(session+0x4C);
+	}
+	if (value72D8)
+	{
+		*value72D8= *(const unsigned long *)(session+0x72D8);
+	}
+	if (value40)
+	{
+		*value40= *(const unsigned long *)(session+0x40);
+	}
+	if (value50)
+	{
+		*value50= *(const unsigned long *)(session+0x50);
+	}
+	if (value54)
+	{
+		*value54= *(const unsigned long *)(session+0x54);
+	}
+	if (place58)
+	{
+		*place58= session+0x58;
+	}
+	if (value1118)
+	{
+		*value1118= *(const unsigned long *)(session+0x1118);
+	}
+	if (value111C)
+	{
+		*value111C= *(const unsigned long *)(session+0x111C);
+	}
+	if (place1120)
+	{
+		*place1120= session+0x1120;
+	}
+	return TRUE;
+}

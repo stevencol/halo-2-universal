@@ -3655,3 +3655,7 @@ address,name,source,arguments,returns,convention
 00172350,valid_world_real_point3d,source/math/real_math.c,eax,bool
 001c6470,havok_unknown_001c6470,source/physics/havok.c,eax ecx edx stack stack stack stack stack,bool,stdcall
 000b6d60,object_unknown_000b6d60,source/objects/objects.c,eax stack,bool,stdcall
+002055f0,ai_unknown_002055f0,source/ai/actors.c,eax ecx edx stack stack stack stack stack stack stack stack stack,void,stdcall
+000656e0,network_session_unknown_000656e0,source/networking/network_life_cycle.c,edx esi edi ebx stack stack stack stack stack stack,bool,stdcall
+00113260,unit_unknown_00113260,source/units/units.c,eax,bool
+0014ccf0,unit_unknown_0014ccf0,source/units/units.c,eax ecx edx,bool

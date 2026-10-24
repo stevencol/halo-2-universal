@@ -2362,3 +2362,59 @@ void unit_unknown_001e6a00(
 		bits[1]&= ~mask;
 	}
 }
+
+/* 0x004686a4: a byte that is TRUE when the game starts */
+byte unknown_004686a4= TRUE;
+
+/* 0x00113260: whether a unit whose definition does not have the bit 11 of
+its long at 0xBC has what it keeps at its short at 0x12A set, with
+unknown_004686a4, the bit 15 of its long at 0x148 or the bit 0x01 of its
+byte at 0x137, and one of its bytes at 0x1F6 and 0x1F7 not NONE */
+boolean unit_unknown_00113260(
+	long unit_index)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+	const byte *data= UNIT_UNKNOWN12A(unit);
+
+	return !((*(const unsigned long *)(UNIT_DEFINITION_GET(unit)+0xBC)>>11)&1)
+		&& *(const long *)(data+0x68)!=NONE && *(const long *)data!=NONE && *(const short *)(data+0x06)!=NONE
+		&& unknown_004686a4
+		&& ((signed char)unit[0x149]<0 || (unit[0x137]&1))
+		&& ((signed char)unit[0x1F6]!=NONE || (signed char)unit[0x1F7]!=NONE);
+}
+
+/* 0x0014ccf0: a real of something by a name (they look like string ids): 1.0,
+-1.0 or 0.0 by its bits at 0x07, or its bytes at 0x05 and 0x06 in 64ths and
+32nds; 0.0 for other names */
+boolean unit_unknown_0014ccf0(
+	long name,
+	const byte *data,
+	float *value)
+{
+	switch (name)
+	{
+	case 0x180005FC:
+		*value= (data[7]&1) ? 0.0f : 1.0f;
+		break;
+	case 0x0D0005FF:
+		*value= 1.0f;
+		break;
+	case 0x170005FA:
+		*value= (float)data[5]*0.015625f;
+		break;
+	case 0x170005FB:
+		*value= (float)data[6]*0.03125f;
+		break;
+	case 0x1D0005FD:
+		*value= (data[7]&2) ? 1.0f : -1.0f;
+		break;
+	case 0x1D0005FE:
+		*value= (data[7]&4) ? 1.0f : -1.0f;
+		break;
+	default:
+		*value= 0.0f;
+		break;
+	}
+
+	return TRUE;
+}
