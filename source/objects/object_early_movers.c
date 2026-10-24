@@ -77,3 +77,33 @@ void object_early_movers_add(
 	globals->object_indices[globals->count]= object_index;
 	globals->count++;
 }
+
+/* 0x00109fd0: the three longs at 0x24 of the entry (0xE8 bytes) of an early
+mover; FALSE for NONE or one that is not one */
+boolean __attribute__((stdcall)) object_early_movers_unknown_00109fd0(
+	long object_index,
+	unsigned long *result)
+{
+	const struct object_early_movers_globals *globals;
+	long index;
+
+	if (object_index==NONE)
+	{
+		return FALSE;
+	}
+	globals= object_early_movers_globals;
+	for (index= 0; index<globals->count; index++)
+	{
+		if (globals->object_indices[index]==object_index)
+		{
+			const unsigned long *values= (const unsigned long *)(globals->unknown0+index*0xE8+0x24);
+
+			result[0]= values[0];
+			result[1]= values[1];
+			result[2]= values[2];
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}

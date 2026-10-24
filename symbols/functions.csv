@@ -3531,3 +3531,15 @@ address,name,source,arguments,returns,convention
 00101340,weapon_unknown_00101340,source/units/units.c,ecx,bool
 00101440,weapon_unknown_00101440,source/units/units.c,ecx,bool
 00101640,weapon_unknown_00101640,source/units/units.c,eax,bool
+00101b10,weapon_unknown_00101b10,source/units/units.c,ecx edx,int
+00101f50,weapon_unknown_00101f50,source/units/units.c,esi,int
+00106400,weapon_unknown_00106400,source/units/units.c,eax stack,bool,stdcall
+0010db60,unit_unknown_0010db60,source/units/units.c,eax,int
+0010edd0,unit_unknown_0010edd0,source/units/units.c,eax,bool
+0010f820,unit_unknown_0010f820,source/units/units.c,eax,bool
+0010f890,unit_unknown_0010f890,source/units/units.c,eax,bool
+0010f630,unit_unknown_0010f630,source/units/units.c,eax esi edx,bool
+0010ee70,unit_unknown_0010ee70,source/units/units.c,edx,int
+0010eea0,unit_unknown_0010eea0,source/units/units.c,ecx edx,int
+00109fd0,object_early_movers_unknown_00109fd0,source/objects/object_early_movers.c,stack edi,bool,stdcall
+0010ace0,object_unknown_0010a980_remove,source/objects/object_unknown_0010a980.c,edx,void

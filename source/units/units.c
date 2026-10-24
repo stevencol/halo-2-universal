@@ -1924,3 +1924,188 @@ boolean weapon_unknown_00101640(
 
 	return (flags>>22)&1 || (flags>>23)&1;
 }
+
+/* 0x00101b10: a name (it looks like a string id) of one of the first two
+entries (0xEC bytes) of the block at 0x2D0 of the definition of a weapon, at
+0x30; 0x0F0000DB or 0x110000DC when it has none there, and 0 for another */
+long weapon_unknown_00101b10(
+	long index,
+	long weapon_index)
+{
+	const byte *definition;
+	long name;
+
+	if (index<0 || index>=2)
+	{
+		return 0;
+	}
+	definition= UNIT_DEFINITION_GET(UNIT_OBJECT_GET(weapon_index));
+	name= index ? 0x110000DC : 0x0F0000DB;
+	if (index<*(const long *)(definition+0x2D0))
+	{
+		long value= *(const long *)(*(const byte *const *)(definition+0x2D4)+index*0xEC+0x30);
+
+		if (value && value!=NONE)
+		{
+			name= value;
+		}
+	}
+
+	return name;
+}
+
+/* 0x00101f50: which of the weapons of the unit that has a weapon (0x154,
+with the bit 0 of its byte at 0x12C) it is; NONE if none */
+long weapon_unknown_00101f50(
+	long weapon_index)
+{
+	const byte *weapon= UNIT_OBJECT_GET(weapon_index);
+	long unit_index= (weapon[0x12C]&1) ? *(const long *)(weapon+0x154) : NONE;
+	long index;
+
+	if (unit_index==NONE)
+	{
+		return NONE;
+	}
+	for (index= 0; index<4; index++)
+	{
+		if (((const long *)(UNIT_OBJECT_GET(unit_index)+UNIT_WEAPONS_OFFSET))[index]==weapon_index)
+		{
+			return index;
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x00106400: whether the first element (0x40 bytes) of the block at 0x2C8
+of the definition of a weapon has 2 at 0x06 and 1 at 0x18, when asked or
+when the first byte of 0x20C of the weapon is 2 */
+boolean __attribute__((stdcall)) weapon_unknown_00106400(
+	long weapon_index,
+	boolean always)
+{
+	const byte *weapon= UNIT_OBJECT_GET(weapon_index);
+	const byte *definition= UNIT_DEFINITION_GET(weapon);
+	const byte *element;
+
+	if (*(const long *)(definition+0x2C8)<=0)
+	{
+		return FALSE;
+	}
+	element= *(const byte *const *)(definition+0x2CC);
+
+	return (always || weapon[0x20C]==2) && *(const short *)(element+0x06)==2 && *(const short *)(element+0x18)==1;
+}
+
+/* what an object has at the offset that its short at 0x33E gives */
+#define UNIT_UNKNOWN33E(object) ((const byte *)(object)+*(const short *)((const byte *)(object)+0x33E))
+
+/* 0x0010db60: whether what an object has at its short at 0x33E has a short
+at 0x36, and a real of 0.0001 or more at 0x40 or a byte from 1 to 6 at 0x02 */
+long unit_unknown_0010db60(
+	long object_index)
+{
+	const byte *data= UNIT_UNKNOWN33E(UNIT_OBJECT_GET(object_index));
+	boolean enough= *(const real *)(data+0x40)>=0.0001f;
+	boolean kind= data[0x02]>0 && data[0x02]<7;
+
+	return *(const short *)(data+0x36)!=NONE && (enough || kind);
+}
+
+/* 0x0010edd0: whether it has something in the high short at 0x5C and one of
+the thirteen bytes from 0x6E set */
+boolean unit_unknown_0010edd0(
+	long object_index)
+{
+	const byte *data= UNIT_UNKNOWN33E(UNIT_OBJECT_GET(object_index));
+	long index;
+
+	if ((short)(*(const unsigned long *)(data+0x5C)>>16)==NONE)
+	{
+		return FALSE;
+	}
+	for (index= 0; index<13; index++)
+	{
+		if (data[index+0x6E])
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* whether three things from an offset of what an object has at its short at
+0x33E (its long, the short 6 after and the byte 0x12 after) say that it is
+set: not NONE, the bit 0x01 of the last and not 0x01 or 0x08 of the one
+before it */
+#define UNIT_UNKNOWN33E_SET(data, offset) \
+	(*(const long *)((data)+(offset))!=NONE && *(const short *)((data)+(offset)+0x06)!=NONE \
+		&& ((data)[(offset)+0x12]&1) && !((data)[(offset)+0x11]&9))
+
+/* 0x0010f820: whether the one at 0x9C or that at 0xBC is set */
+boolean unit_unknown_0010f820(
+	long object_index)
+{
+	const byte *data= UNIT_UNKNOWN33E(UNIT_OBJECT_GET(object_index));
+
+	return UNIT_UNKNOWN33E_SET(data, 0x9C) || UNIT_UNKNOWN33E_SET(data, 0xBC);
+}
+
+/* 0x0010f890: whether the one at 0xDC is set, with the bit 7 of the first
+byte */
+boolean unit_unknown_0010f890(
+	long object_index)
+{
+	const byte *data= UNIT_UNKNOWN33E(UNIT_OBJECT_GET(object_index));
+
+	return UNIT_UNKNOWN33E_SET(data, 0xDC) && (data[0]>>7)&1;
+}
+
+/* 0x0010f630: the longs at 0x70 and 0x7C of what a unit has at its short at
+0x12A when it is set; NONE and FALSE if not */
+boolean unit_unknown_0010f630(
+	long unit_index,
+	long *first,
+	long *second)
+{
+	const byte *data= UNIT_UNKNOWN12A(UNIT_OBJECT_GET(unit_index));
+
+	if (*(const long *)(data+0x68)!=NONE && *(const long *)data!=NONE && *(const short *)(data+0x06)!=NONE)
+	{
+		*first= *(const long *)(data+0x70);
+		*second= *(const long *)(data+0x7C);
+		return TRUE;
+	}
+	*first= NONE;
+	*second= NONE;
+	return FALSE;
+}
+
+/* where the bits of something are: from its first long, after the bytes
+that the long at 0x0C and the short at 0x06 of what it points to at 0x04,
+and its first byte, say, and the longs for as many bits as its byte at 0x08
+(rounded down to four bytes) */
+#define UNIT_BITS_OFFSET(data) \
+	((((long)*(const byte *)((data)+0x08)+0x1F)>>3&~3L) + *(const short *)(*(const byte *const *)((data)+0x04)+0x06) \
+		+ *(const long *)(*(const byte *const *)((data)+0x04)+0x0C) + *(const signed char *)*(const byte *const *)((data)+0x04) \
+		+ *(const long *)(data))
+
+/* 0x0010ee70: that place */
+long unit_unknown_0010ee70(
+	const byte *data)
+{
+	return UNIT_BITS_OFFSET(data);
+}
+
+/* 0x0010eea0: one of the bits after it */
+long unit_unknown_0010eea0(
+	short bit,
+	const byte *data)
+{
+	long place= ((((long)data[0x08]+0x1F)>>3&~3L) + (bit>>5)*4 + *(const short *)(*(const byte *const *)(data+0x04)+0x06)
+		+ *(const long *)(*(const byte *const *)(data+0x04)+0x0C) + *(const signed char *)*(const byte *const *)(data+0x04));
+
+	return (*(const unsigned long *)(*(const byte *const *)data+place)&(1UL<<(bit&0x1F)))!=0;
+}

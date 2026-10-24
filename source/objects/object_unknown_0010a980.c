@@ -10,6 +10,7 @@ the file is only the address of its first function.
 #include "object_unknown_0010a980.h"
 
 #include "saved games/game_state.h"
+#include "objects/objects.h"
 
 /* ---------- globals */
 
@@ -55,4 +56,31 @@ void object_unknown_0010a980_dispose_from_old_map(
 	void)
 {
 	object_unknown_0010a980_globals->map_initialized= FALSE;
+}
+
+/* 0x0010ace0: an object with the bit 9 of its flags at 0xC0 is taken out of
+the list at 0x280, and the bit is cleared */
+void object_unknown_0010a980_remove(
+	long object_index)
+{
+	byte *object;
+	long index;
+
+	if (object_index==NONE)
+	{
+		return;
+	}
+	object= (byte *)((const struct object_header_datum *)object_header_data->data)[object_index&0xFFFF].datum;
+	if (!((*(const unsigned short *)(object+0xC0)>>9)&1))
+	{
+		return;
+	}
+	for (index= 0; index<OBJECT_UNKNOWN_0010A980_COUNT; index++)
+	{
+		if (object_unknown_0010a980_globals->unknown280[index]==object_index)
+		{
+			object_unknown_0010a980_globals->unknown280[index]= NONE;
+		}
+	}
+	object[0xC1]&= ~0x02;
 }

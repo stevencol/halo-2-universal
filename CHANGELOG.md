@@ -2,6 +2,48 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Doce funciones pequeñas: nombres y sitio de las armas, lo que guardan los objetos en su short de 0x33E, bits y dos listas de objetos
+
+Doce funciones (1034 bytes) en tres archivos. De 2676 funciones se
+pasa a 2688, el 23,86 % de las del juego (el 13,132 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `weapon_unknown_00101b10` | `0x00101b10` | `units/units.c` |
+| `weapon_unknown_00101f50` | `0x00101f50` | `units/units.c` |
+| `weapon_unknown_00106400` | `0x00106400` | `units/units.c` |
+| `object_early_movers_unknown_00109fd0` | `0x00109fd0` | `objects/object_early_movers.c` |
+| `object_unknown_0010a980_remove` | `0x0010ace0` | `objects/object_unknown_0010a980.c` |
+| `unit_unknown_0010db60` | `0x0010db60` | `units/units.c` |
+| `unit_unknown_0010edd0` | `0x0010edd0` | `units/units.c` |
+| `unit_unknown_0010ee70` | `0x0010ee70` | `units/units.c` |
+| `unit_unknown_0010eea0` | `0x0010eea0` | `units/units.c` |
+| `unit_unknown_0010f630` | `0x0010f630` | `units/units.c` |
+| `unit_unknown_0010f820` | `0x0010f820` | `units/units.c` |
+| `unit_unknown_0010f890` | `0x0010f890` | `units/units.c` |
+
+### Lo que se sabe
+
+- De las armas: un nombre (parece un `string_id`) de las dos primeras
+  entradas de 0xEC bytes de su definición, con `0x0F0000DB` y `0x110000DC`
+  si no tienen; qué arma de su unidad es (0x154); y una condición de su
+  primer elemento de 0x2C8.
+- Lo que un objeto guarda en su short de 0x33E: un short en 0x36 con un real
+  o un byte; algo en 0x5C con alguno de trece bytes; y tres grupos (0x9C,
+  0xBC, 0xDC) que están «puestos» con el bit 0x01 de su byte 0x12 y sin 0x01
+  ni 0x08 en el de 0x11.
+- Los longs 0x70 y 0x7C de lo que una unidad guarda en su short de 0x12A.
+- Dónde están unos bits de algo y uno de ellos (0x10ee70, 0x10eea0).
+- Tres longs de un objeto de `object_early_movers` y sacar un objeto de la
+  lista de `object_unknown_0010a980`.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones.
+- Mutaciones: 35 de `make_mutations.py`, 0 sin notar.
+
 ## 2026-10-24 — Nueve funciones pequeñas de las armas: bits de sus entradas, cargadores, gatillos y su definición
 
 Nueve funciones (797 bytes) en `units.c`, junto a las otras de las armas.
