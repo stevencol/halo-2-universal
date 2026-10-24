@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Ocho funciones pequeñas: el cluster de un punto del escenario, un long de un tag, sumas de Havok, entradas por jugador y si una lista está vacía
+
+Ocho funciones (612 bytes) en `main.c`. De 2706 funciones se pasa
+a 2714, el 24,09 % de las del juego (el 13,198 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `main_game_unknown_00138a40` | `0x00138a40` | `main/main.c` |
+| `tag_unknown_0013da30` | `0x0013da30` | `main/main.c` |
+| `havok_unknown_00147090` | `0x00147090` | `main/main.c` |
+| `player_unknown_001520f0` | `0x001520f0` | `main/main.c` |
+| `player_unknown_00152240` | `0x00152240` | `main/main.c` |
+| `unknown_00510c5c_clear_entry` | `0x00153b80` | `main/main.c` |
+| `player_unknown_00153cd0` | `0x00153cd0` | `main/main.c` |
+| `unknown_004e9148_empty` | `0x00156690` | `main/main.c` |
+
+### Lo que se sabe
+
+- `main_game_unknown_00138a40`: las globales del juego guardan en 0x11FA y
+  0x11FC el cluster de un punto del escenario (`scenario_location_from_point`).
+- Un long de un tag que nombra otro; la suma de los segundos longs de los
+  pares de dos cosas de Havok (`unknown_0047989c`, `unknown_004798a0`).
+- Por jugador (su short en 0x28 o su unidad en 0x2C): entradas de
+  `unknown_004ed284` y `unknown_00502120`, y bits y 0.25 en su unidad, avisando
+  a su cosa de la simulación (`unknown_000b58c0`).
+- Una entrada de `unknown_00510c5c` borrada y si los `unknown_00510c64`
+  longs de `unknown_004e9148` están a cero (variables nuevas).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 25 de `make_mutations.py`, 0 sin notar.
+
 ## 2026-10-24 — Siete funciones pequeñas: si se esperan fotogramas, los bits y la memoria de las cosas de game_unknown_00131ff0.c, una entrada por un número del escenario y una cuenta de un tag
 
 Siete funciones (565 bytes) en cuatro archivos. De 2699 funciones se

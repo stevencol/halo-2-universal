@@ -3561,3 +3561,11 @@ address,name,source,arguments,returns,convention
 001348e0,game_unknown_00131ff0_clear,source/game/game_unknown_00131ff0.c,edx,void
 00134d20,game_unknown_00134d90_find,source/game/game_unknown_00134d90.c,eax ebx,pointer
 00137650,tag_unknown_00137650,source/game/game_unknown_00134d90.c,eax edx ebx,int
+00138a40,main_game_unknown_00138a40,source/main/main.c,eax,void
+0013da30,tag_unknown_0013da30,source/main/main.c,ecx,int
+00147090,havok_unknown_00147090,source/main/main.c,,int
+001520f0,player_unknown_001520f0,source/main/main.c,eax,void
+00152240,player_unknown_00152240,source/main/main.c,eax stack,void,stdcall
+00153b80,unknown_00510c5c_clear_entry,source/main/main.c,eax,void
+00153cd0,player_unknown_00153cd0,source/main/main.c,eax,void
+00156690,unknown_004e9148_empty,source/main/main.c,,bool

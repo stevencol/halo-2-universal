@@ -28,6 +28,7 @@ Halo 1's main.c.
 #include "saved games/game_state.h"
 #include "scenario/scenario.h"
 #include "scenario/scenario_definitions.h"
+#include "objects/objects.h"
 #include "shell/shell.h"
 #include "tag_files/tag_groups.h"
 #include "text/font_cache.h"
@@ -786,4 +787,206 @@ boolean main_unknown_0012b3c0(
 	}
 
 	return main_time_globals.unknown0 ? main_time_globals.unknown1 : TRUE;
+}
+
+/* 0x00138a40: the game globals get at 0x11FA and 0x11FC the cluster of the
+point at 0x28 of an element (0x40 bytes, of the block at 0x1EC) of the
+scenario: 2 and the cluster, or 0 for NONE or a point in no cluster */
+void main_game_unknown_00138a40(
+	short index)
+{
+	struct scenario_location location;
+
+	if (index==NONE)
+	{
+		main_game_globals->unknown11FA= 0;
+		return;
+	}
+	scenario_location_from_point(&location,
+		(const real_point3d *)(*(const byte *const *)((const byte *)global_scenario+0x1EC)+index*0x40+0x28));
+	if (location.cluster_index==NONE)
+	{
+		main_game_globals->unknown11FA= 0;
+		return;
+	}
+	main_game_globals->unknown11FA= 2;
+	*(short *)main_game_globals->unknown11FC= location.cluster_index;
+}
+
+/* 0x0013da30: the long of the element (0x0C bytes, of the block at 0x08)
+that the first short of what the block at 0x60 points to names, of the tag
+that the tag named at 0x0C of something names at 0x24; NONE without it */
+long tag_unknown_0013da30(
+	const byte *data)
+{
+	const byte *tag;
+	short index;
+
+	if (!data || *(const long *)(data+0x0C)==NONE)
+	{
+		return NONE;
+	}
+	tag= *(const byte *const *)((const byte *)(uintptr_t)global_tag_instances[*(const long *)(data+0x0C)&0xFFFF].address+0x24);
+	index= **(const short *const *)(tag+0x60);
+	if (index==NONE)
+	{
+		return NONE;
+	}
+
+	return *(const long *)(*(const byte *const *)(tag+0x08)+index*0x0C);
+}
+
+/* 0x0047989c and 0x004798a0 (havok.c): two things of Havok */
+extern void *unknown_0047989c;
+extern void *unknown_004798a0;
+
+/* the sum of the second longs of the pairs that a thing of Havok has (as
+many as at 0x20, at 0x18 plus 0x1C, from the last) */
+static inline __attribute__((always_inline)) long havok_unknown_sum(
+	const byte *thing)
+{
+	long sum= 0;
+
+	if (thing)
+	{
+		long count= *(const long *)(thing+0x20);
+		const long *pair= (const long *)(*(const byte *const *)(thing+0x1C)+*(const long *)(thing+0x18)-4);
+
+		for (; count>0; count--)
+		{
+			sum+= *pair;
+			pair-= 2;
+		}
+	}
+
+	return sum;
+}
+
+/* 0x00147090: those sums of the two */
+long havok_unknown_00147090(
+	void)
+{
+	long first= havok_unknown_sum((const byte *)unknown_0047989c);
+
+	return havok_unknown_sum((const byte *)unknown_004798a0)+first;
+}
+
+/* 0x004ed284 and 0x00502120 (sound_manager.c): two blocks of the state of
+the game */
+extern byte *unknown_004ed284;
+extern byte *unknown_00502120;
+
+/* the short at 0x28 of a player (0x21C bytes) */
+#define PLAYER_UNKNOWN28(player_index) \
+	(*(const short *)((const byte *)player_data->data+(player_index&0xFFFF)*0x21C+0x28))
+
+/* 0x001520f0: the entry (0x94 bytes) of unknown_004ed284 that a player names
+at 0x28 gets NONE at 0x3C, and 1 at 0xA3 if its byte at 0xA2 is set */
+void player_unknown_001520f0(
+	long player_index)
+{
+	short index= PLAYER_UNKNOWN28(player_index);
+
+	if (index!=NONE)
+	{
+		byte *entry= unknown_004ed284+index*0x94+0x14;
+
+		if (entry[0x8E])
+		{
+			entry[0x8F]= 1;
+		}
+		*(short *)(entry+0x28)= NONE;
+	}
+}
+
+/* 0x000b58c0: something of a simulation entity */
+void __attribute__((stdcall)) unknown_000b58c0(long entity_index, unsigned long flags);
+
+/* 0x00152240: with 0, the unit of a player (0x2C) gets the bit 0x08 at 0x134
+and 0.25 at 0x2B8, and its simulation entity (0xD4) is told of 0x800000 */
+void __attribute__((stdcall)) player_unknown_00152240(
+	long player_index,
+	short value)
+{
+	byte *unit;
+	long unit_index;
+
+	if (value)
+	{
+		return;
+	}
+	unit_index= *(const long *)((const byte *)player_data->data+(player_index&0xFFFF)*0x21C+0x2C);
+	unit= (byte *)((const struct object_header_datum *)object_header_data->data)[unit_index&0xFFFF].datum;
+	*(unsigned long *)(unit+0x134)|= 8;
+	*(real *)(unit+0x2B8)= 0.25f;
+	if (*(const long *)(unit+0xD4)!=NONE)
+	{
+		unknown_000b58c0(*(const long *)(unit+0xD4), 0x800000);
+	}
+}
+
+/* 0x00510c5c (game_unknown_00153870.c) */
+extern byte *unknown_00510c5c;
+
+/* 0x00153b80: eight longs from 0x48 of an entry (0xA0 bytes, after 0x30)
+of unknown_00510c5c, its short at 0xAE and the bit 0x01 of its byte at 0xB8
+are cleared; nothing for NONE */
+void unknown_00510c5c_clear_entry(
+	long index)
+{
+	byte *entry;
+
+	if (index==NONE)
+	{
+		return;
+	}
+	entry= unknown_00510c5c+index*0xA0+0x30;
+	{
+		long index_;
+
+		for (index_= 0; index_<8; index_++)
+		{
+			((long *)(entry+0x18))[index_]= 0;
+		}
+	}
+	*(short *)(entry+0x7E)= 0;
+	entry[0x88]&= ~1;
+}
+
+/* 0x00153cd0: the entry (0x88 bytes) of unknown_00502120 that a player names
+at 0x28 gets 0.0 at 0x80 and 0x84 */
+void player_unknown_00153cd0(
+	long player_index)
+{
+	short index= PLAYER_UNKNOWN28(player_index);
+
+	if (index!=NONE)
+	{
+		byte *entry= unknown_00502120+index*0x88;
+
+		*(real *)(entry+0x80)= 0.0f;
+		*(real *)(entry+0x84)= 0.0f;
+	}
+}
+
+/* 0x00510c64: how many of unknown_004e9148 there are */
+long unknown_00510c64;
+unsigned long unknown_004e9148[16];
+
+/* 0x00156690: whether none of them is set */
+boolean unknown_004e9148_empty(
+	void)
+{
+	boolean empty= TRUE;
+	short index;
+
+	for (index= 0; index<unknown_00510c64; index++)
+	{
+		if (unknown_004e9148[index])
+		{
+			empty= FALSE;
+		}
+	}
+
+	return empty;
 }
