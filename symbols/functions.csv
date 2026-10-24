@@ -3664,3 +3664,7 @@ address,name,source,arguments,returns,convention
 00113870,object_unknown_00113870,source/objects/objects.c,eax,void
 001cf8b0,havok_unknown_001cf8b0,source/physics/havok.c,eax esi edi,void
 0001bd50,rasterizer_unknown_0001bd50,source/rasterizer/rasterizer_xbox.c,eax,void
+0023a220,ai_point_in_polygon2d,source/ai/actors.c,ebx edx stack stack,bool,stdcall
+001db070,ai_unknown_001db070,source/ai/actors.c,ecx stack stack stack stack stack stack stack stack stack,void,stdcall
+000b7740,object_unknown_000b7740,source/objects/objects.c,eax ecx edi stack,void,stdcall
+00138ab0,main_game_unknown_00138ab0,source/main/main.c,,short

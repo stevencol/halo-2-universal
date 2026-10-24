@@ -2600,3 +2600,71 @@ void __attribute__((stdcall)) ai_unknown_002055f0(
 	}
 	*(unsigned long *)(data+0x3A)= *value3A;
 }
+
+/* 0x0023a220: whether a point is inside a polygon of so many points (two
+reals each), going around it: on the inner side of each edge, or out of it
+by no more than a tolerance */
+boolean __attribute__((stdcall)) ai_point_in_polygon2d(
+	const real *point,
+	const real *points,
+	short count,
+	real tolerance)
+{
+	real limit= 0.0f-tolerance;
+	short index;
+
+	for (index= 0; index<count; index++)
+	{
+		long next= index+1>=count ? 0 : index+1;
+		real cross= (point[1]-points[index*2+1])*(points[next*2]-points[index*2])
+			- (point[0]-points[index*2])*(points[next*2+1]-points[index*2+1]);
+
+		if (limit>cross)
+		{
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+/* 0x001db070: the long at 0x10 of the entry (0x14 bytes) that matches a long
+and five bytes, in the entries of the element (0x14 bytes, of the block at
+0x1C) that matches a long and two bytes; NONE if none */
+void __attribute__((stdcall)) ai_unknown_001db070(
+	const byte *data,
+	long *result,
+	long value04,
+	char value0A,
+	char value0B,
+	long entry04,
+	long entry08,
+	char entry0E,
+	char entry0F,
+	char entry0C)
+{
+	long index;
+
+	for (index= 0; index<*(const long *)(data+0x1C); index++)
+	{
+		const byte *element= *(const byte *const *)(data+0x20)+index*0x14;
+
+		if (*(const long *)(element+0x04)==value04 && (char)element[0x0A]==value0A && (char)element[0x0B]==value0B)
+		{
+			long other;
+
+			for (other= 0; other<*(const long *)(element+0x0C); other++)
+			{
+				const byte *entry= *(const byte *const *)(element+0x10)+other*0x14;
+
+				if (*(const long *)(entry+0x04)==entry04 && *(const long *)(entry+0x08)==entry08
+					&& (char)entry[0x0E]==entry0E && (char)entry[0x0F]==entry0F && (char)entry[0x0C]==entry0C)
+				{
+					*result= *(const long *)(entry+0x10);
+					return;
+				}
+			}
+		}
+	}
+	*result= NONE;
+}

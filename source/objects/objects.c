@@ -1197,3 +1197,37 @@ void object_unknown_00113870(
 	data[0x8E]= 1;
 	data[0x92]= 1;
 }
+
+/* 0x000b58c0: something of the simulation entity of an object */
+void __attribute__((stdcall)) unknown_000b58c0(long entity_index, unsigned long flags);
+
+/* 0x000b7740: an object gets a point at 0x88 and one at 0x94, those that are
+given; its simulation entity is told which (0x10, 0x20) unless asked not to */
+void __attribute__((stdcall)) object_unknown_000b7740(
+	long object_index,
+	const unsigned long *first,
+	const unsigned long *second,
+	boolean quiet)
+{
+	unsigned long *object= (unsigned long *)OBJECT_DATA(object_index);
+	unsigned long flags= 0;
+
+	if (first)
+	{
+		object[0x88/4]= first[0];
+		object[0x8C/4]= first[1];
+		object[0x90/4]= first[2];
+		flags= 0x10;
+	}
+	if (second)
+	{
+		object[0x94/4]= second[0];
+		object[0x98/4]= second[1];
+		object[0x9C/4]= second[2];
+		flags|= 0x20;
+	}
+	if (!quiet && flags && (long)object[0xD4/4]!=NONE)
+	{
+		unknown_000b58c0(object[0xD4/4], flags);
+	}
+}

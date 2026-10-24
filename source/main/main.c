@@ -1022,3 +1022,39 @@ void players_unknown_00152340(
 		}
 	}
 }
+
+/* 0x00138ab0: the cluster the game globals keep (0x11FA: 2 and the cluster
+at 0x11FC), or, with 1 and an object at 0x11FC, the short at 0x2C of its
+last parent when that has the bit 8 of its flags; the object is forgotten
+(0) when it is not there. NONE otherwise */
+short main_game_unknown_00138ab0(
+	void)
+{
+	byte *globals= (byte *)main_game_globals;
+	short state= *(const short *)(globals+0x11FA);
+	long object_index;
+	const byte *object;
+
+	if (state==2)
+	{
+		return *(const short *)(globals+0x11FC);
+	}
+	if (state!=1)
+	{
+		return NONE;
+	}
+	object_index= *(const long *)(globals+0x11FC);
+	if (!object_try_and_get_and_verify_type(object_index, 0xFFFFFFFF))
+	{
+		*(short *)(globals+0x11FA)= 0;
+		return NONE;
+	}
+	object= (const byte *)((const struct object_header_datum *)object_header_data->data)
+		[object_get_ultimate_parent(object_index)&0xFFFF].datum;
+	if (((*(const unsigned long *)(object+4)>>8)&1) && *(const short *)(object+0x2C)!=NONE)
+	{
+		return *(const short *)(object+0x2C);
+	}
+
+	return NONE;
+}

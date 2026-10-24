@@ -2,6 +2,30 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Cuatro funciones medianas del camino al menú: un punto en un polígono, una búsqueda por ocho valores, dos puntos de un objeto y el cluster de las globales
+
+Cuatro funciones medianas (552 bytes) en 3 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2809 funciones se pasa a 2813, el 24,97 % de
+las del juego (el 13,495 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `ai_point_in_polygon2d` | `0x0023a220` | `ai/actors.c` |
+| `ai_unknown_001db070` | `0x001db070` | `ai/actors.c` |
+| `object_unknown_000b7740` | `0x000b7740` | `objects/objects.c` |
+| `main_game_unknown_00138ab0` | `0x00138ab0` | `main/main.c` |
+
+### Lo que se sabe
+
+- si un punto está dentro de un polígono (con tolerancia); un long buscado por ocho valores; dos puntos de un objeto avisando a su cosa de la simulación; y el cluster que guardan las globales del juego.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 14 de `make_mutations.py`, 0 sin cazar; 2 que no cambia nada, quitada.
+
 ## 2026-10-24 — Cinco funciones medianas del camino al menú: algo del sonido, dos tags de un objeto, bytes de un objeto, dos reales por Havok y las banderas del rasterizador
 
 Cinco funciones medianas (762 bytes) en 4 archivos, de las que el juego ejecuta
