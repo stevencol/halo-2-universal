@@ -2668,3 +2668,37 @@ void __attribute__((stdcall)) ai_unknown_001db070(
 	}
 	*result= NONE;
 }
+
+/* 0x0023a160: whether a point is within a distance of the inner side of each
+edge (not of length 0) of a polygon of so many points */
+boolean __attribute__((stdcall)) ai_point_near_polygon2d(
+	const real *points,
+	const real *point,
+	real distance,
+	short count)
+{
+	real squared= distance*distance;
+	short index;
+
+	for (index= 0; index<count; index++)
+	{
+		long next= index+1>=count ? 0 : index+1;
+		real x= point[0]-points[index*2];
+		real y= point[1]-points[index*2+1];
+		real edge_x= points[next*2]-points[index*2];
+		real edge_y= points[next*2+1]-points[index*2+1];
+		real length= edge_x*edge_x + edge_y*edge_y;
+
+		if (length!=0.0f)
+		{
+			real cross= x*edge_y - y*edge_x;
+
+			if (cross>0.0f && cross*cross>length*squared)
+			{
+				return FALSE;
+			}
+		}
+	}
+
+	return TRUE;
+}

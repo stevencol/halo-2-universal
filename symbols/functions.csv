@@ -3672,3 +3672,7 @@ address,name,source,arguments,returns,convention
 001332f0,game_unknown_00131ff0_flags_from,source/game/game_unknown_00131ff0.c,edx stack,int,stdcall
 001cb680,havok_unknown_001cb680,source/physics/havok.c,eax,void
 0019c4e0,levels_unknown_0019c4e0,source/main/levels.c,stack,int,stdcall
+0016b430,object_unknown_0016b430,source/objects/objects.c,eax,int
+0004c0d0,object_unknown_0004c0d0,source/objects/objects.c,eax ecx stack,void,stdcall
+0023a160,ai_point_near_polygon2d,source/ai/actors.c,ecx edi xmm0 stack,bool,stdcall
+0002c490,game_unknown_0002b4a0_set_kind,source/game/game_unknown_0002b4a0.c,eax,void

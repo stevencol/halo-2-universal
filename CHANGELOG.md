@@ -2,6 +2,30 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Cuatro funciones medianas del camino al menú: bits de un objeto, shorts de un tag, un punto cerca de un polígono y los ajustes de una clase
+
+Cuatro funciones medianas (766 bytes) en 3 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2817 funciones se pasa a 2821, el 25,04 % de
+las del juego (el 13,541 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_unknown_0016b430` | `0x0016b430` | `objects/objects.c` |
+| `object_unknown_0004c0d0` | `0x0004c0d0` | `objects/objects.c` |
+| `ai_point_near_polygon2d` | `0x0023a160` | `ai/actors.c` |
+| `game_unknown_0002b4a0_set_kind` | `0x0002c490` | `game/game_unknown_0002b4a0.c` |
+
+### Lo que se sabe
+
+- bits de cómo es un objeto; los shorts de un elemento del tag de un objeto; si un punto está cerca del lado interior de un polígono; y los ajustes de una clase (diez variables nuevas).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 16 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-24 — Cuatro funciones medianas del camino al menú: un elemento de un tag por su clase, banderas movidas, dos partes por un real y el número más alto
 
 Cuatro funciones medianas (610 bytes) en 4 archivos, de las que el juego ejecuta

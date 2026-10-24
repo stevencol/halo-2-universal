@@ -1231,3 +1231,82 @@ void __attribute__((stdcall)) object_unknown_000b7740(
 		unknown_000b58c0(object[0xD4/4], flags);
 	}
 }
+
+/* 0x0016b430: some bits of how an object is: 0x01 with the bit 0x10 of its
+header's flags or the bit 0x01 of its own, 0x02 with its bit 20, 0x04
+without its bit 22, 0x08 without its bit 31; for the kind 0, 0x10 with the
+bit 2 of its byte at 0x10A and 0x20 with the bit 3 of that at 0x348; for the
+kind 11, 0x40 with the bit 1 of its long at 0x12C */
+long object_unknown_0016b430(
+	long object_index)
+{
+	const struct object_header_datum *header= (const struct object_header_datum *)object_header_data->data+(object_index&0xFFFF);
+	const byte *object= (const byte *)header->datum;
+	unsigned long flags= *(const unsigned long *)(object+4);
+	signed char kind= (signed char)object[0xAA];
+	long result= 0;
+
+	if ((header->flags&0x10) || (object[4]&1))
+	{
+		result= 1;
+	}
+	if ((flags>>20)&1)
+	{
+		result|= 2;
+	}
+	if (!((flags>>22)&1))
+	{
+		result|= 4;
+	}
+	if (!((flags>>31)&1))
+	{
+		result|= 8;
+	}
+	if (kind==0)
+	{
+		if ((object[0x10A]>>2)&1)
+		{
+			result|= 0x10;
+		}
+		if ((object[0x348]>>3)&1)
+		{
+			result|= 0x20;
+		}
+	}
+	else if (kind==11 && ((*(const unsigned long *)(object+0x12C)>>1)&1))
+	{
+		result|= 0x40;
+	}
+
+	return result;
+}
+
+/* 0x0004c0d0: the shorts from 0xC2 of something get, from the element (0x38
+bytes, of the block at 0x54) of the tag the definition of an object names at
+0x38 that the object's byte at 0xB1 names, the short at 0x10 of each entry
+(0x14 bytes) its bytes from 0x04 name (0 for NONE), as many as the tag has
+at 0x70; all 0xA0 bytes are zeros without that element or for another kind */
+void __attribute__((stdcall)) object_unknown_0004c0d0(
+	long object_index,
+	byte *data,
+	long kind)
+{
+	const byte *object= OBJECT_DATA(object_index);
+	const byte *definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)object&0xFFFF].address;
+	const byte *tag= (const byte *)(uintptr_t)global_tag_instances[*(const long *)(definition+0x38)&0xFFFF].address;
+	short *values= (short *)(data+0xC2);
+	long index;
+
+	if ((signed char)object[0xB1]==NONE || kind!=1)
+	{
+		memset(data+0xC2, 0, 0x28*4);
+		return;
+	}
+	for (index= 0; index<*(const long *)(tag+0x70); index++)
+	{
+		const byte *element= *(const byte *const *)(tag+0x54)+(signed char)object[0xB1]*0x38;
+		signed char entry= (signed char)element[index+4];
+
+		values[index]= entry==NONE ? 0 : *(const short *)(*(const byte *const *)(element+0x18)+entry*0x14+0x10);
+	}
+}

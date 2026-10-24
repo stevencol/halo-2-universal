@@ -178,3 +178,55 @@ long __attribute__((stdcall)) unknown8_lacks_bit(
 {
 	return !((1u<<(bit&31))&*(const unsigned long *)(unknown+8));
 }
+
+/* 0x004670e4, 0x004ba01c .. 0x004ba02c: some settings that a kind sets */
+float unknown_004670e4= 0.85f;
+long unknown_004ba01c;
+byte unknown_004ba020;
+byte unknown_004ba021;
+byte unknown_004ba022;
+byte unknown_004ba023;
+byte unknown_004ba024;
+byte unknown_004ba025;
+float unknown_004ba028;
+float unknown_004ba02c;
+
+/* 0x0002c490: the settings of a kind: 2 and 3, 4, or the others */
+void game_unknown_0002b4a0_set_kind(
+	long kind)
+{
+	byte others;
+
+	if (kind==2 || kind==3)
+	{
+		unknown_004670e4= 0.3f;
+		unknown_004ba02c= 0.5f;
+		unknown_004ba01c= 3;
+		unknown_004ba028= 0.8f;
+		others= FALSE;
+		unknown_004ba021= TRUE;
+	}
+	else if (kind==4)
+	{
+		unknown_004670e4= 0.25f;
+		unknown_004ba02c= 0.25f;
+		unknown_004ba01c= 2;
+		unknown_004ba028= 0.7f;
+		others= FALSE;
+		unknown_004ba021= TRUE;
+	}
+	else
+	{
+		unknown_004670e4= 0.85f;
+		others= TRUE;
+		unknown_004ba021= FALSE;
+		unknown_004ba02c= 1.0f;
+		unknown_004ba01c= 4;
+		unknown_004ba028= 1.0f;
+	}
+	unknown_004ba020= others;
+	unknown_004ba022= others;
+	unknown_004ba024= others;
+	unknown_004ba023= others;
+	unknown_004ba025= others;
+}
