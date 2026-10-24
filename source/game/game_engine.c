@@ -678,3 +678,172 @@ boolean game_engine_unknown_0015b2f0(
 	return GAME_ENGINE_GET() && *(const short *)(unknown_004e9ae8+0x6C)==1
 		&& (*((const byte *)main_game_globals+0x0C)==4 || *(const long *)(unknown_004e9ae8+0xC04)==1);
 }
+
+/* 0x0015db30: whether the game globals have something at 0x1B8 and a player
+has no unit (0x2C) and 0 at its short at 0x1AC */
+boolean game_engine_unknown_0015db30(
+	long player_index)
+{
+	const byte *player;
+
+	if (MAIN_GAME_GLOBALS_LONG(0x1B8)<=0)
+	{
+		return FALSE;
+	}
+	player= PLAYER_DATA(player_index);
+
+	return *(const long *)(player+0x2C)==NONE && *(const short *)(player+0x1AC)==0;
+}
+
+/* 0x0015e410: with a kind of game, the entry (0x10 bytes from 0xC1C, as
+many as at 0xC18) of what the engine keeps with a short at 0x04; nothing if
+there is none */
+byte *game_engine_unknown_0015e410(
+	short value)
+{
+	long index;
+
+	if (!GAME_ENGINE_GET())
+	{
+		return NULL;
+	}
+	for (index= 0; index<*(const long *)(unknown_004e9ae8+0xC18); index++)
+	{
+		if (*(const short *)(unknown_004e9ae8+0xC20+index*0x10)==value)
+		{
+			return unknown_004e9ae8+0xC1C+index*0x10;
+		}
+	}
+
+	return NULL;
+}
+
+/* 0x0015eb20: TRUE without a kind of game or for NONE; for the kind 7 with
+the bit of the index in what unknown_00510c9c points to and the bit 0x02 at
+0x22C of the game globals, TRUE; else whether they do not have 1 at 0x1C4 */
+boolean game_engine_unknown_0015eb20(
+	long index)
+{
+	if (!GAME_ENGINE_GET() || index==NONE)
+	{
+		return TRUE;
+	}
+	if (MAIN_GAME_GLOBALS_LONG(0x180)==7 && (*unknown_00510c9c&(1UL<<(index&0x1F)))
+		&& (MAIN_GAME_GLOBALS_LONG(0x22C)&2))
+	{
+		return TRUE;
+	}
+
+	return MAIN_GAME_GLOBALS_LONG(0x1C4)!=1;
+}
+
+/* 0x0015eb80: which pair (8 bytes, of the block at 0x68 of the first element
+of the block at 0x08 of the tag that the game globals name at 0x16C) has a
+long at 0x04; NONE if none */
+long game_engine_unknown_0015eb80(
+	long value)
+{
+	const byte *tag= (const byte *)(uintptr_t)global_tag_instances[global_game_globals->unknown16C&0xFFFF].address;
+	const byte *element= *(const byte *const *)(tag+0x0C);
+	long index;
+
+	for (index= 0; index<*(const long *)(element+0x68); index++)
+	{
+		if (value==*(const long *)(*(const byte *const *)(element+0x6C)+index*8+4))
+		{
+			return index;
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x0015fef0: TRUE without a kind of game; for the kind 7 with the bit of
+the index in what unknown_00510c9c points to, the bit 0x01 at 0x22C of the
+game globals; else their bit 0x02 at 0x184 */
+boolean __attribute__((stdcall)) game_engine_unknown_0015fef0(
+	byte index)
+{
+	if (!GAME_ENGINE_GET())
+	{
+		return TRUE;
+	}
+	if (MAIN_GAME_GLOBALS_LONG(0x180)==7 && (*unknown_00510c9c&(1UL<<(index&0x1F))))
+	{
+		return MAIN_GAME_GLOBALS_LONG(0x22C)&1;
+	}
+
+	return (MAIN_GAME_GLOBALS_LONG(0x184)>>1)&1;
+}
+
+/* 0x00161e10: with a kind of game and the bit 0x01 at 0x184 of the game
+globals, the bit of an index (0 to 7) of the short at 0x0C of what the
+engine keeps */
+boolean game_engine_unknown_00161e10(
+	long index)
+{
+	return GAME_ENGINE_GET() && (MAIN_GAME_GLOBALS_LONG(0x184)&1) && index>=0 && index<8
+		&& (*(const unsigned short *)(unknown_004e9ae8+0x0C)&(1UL<<index));
+}
+
+/* 0x00161e60: the same of the short at 0x0E */
+boolean game_engine_unknown_00161e60(
+	long index)
+{
+	return GAME_ENGINE_GET() && (MAIN_GAME_GLOBALS_LONG(0x184)&1) && index>=0 && index<8
+		&& (*(const unsigned short *)(unknown_004e9ae8+0x0E)&(1UL<<index));
+}
+
+/* 0x00161eb0: the next of the eight bits of the short at 0x0C of what the
+engine keeps that is set, after an index and around; NONE if none of the
+other seven is */
+long game_engine_unknown_00161eb0(
+	long index)
+{
+	unsigned short bits= *(const unsigned short *)(unknown_004e9ae8+0x0C);
+	long tries;
+
+	for (tries= 0; tries<7; tries++)
+	{
+		index++;
+		if (index==8)
+		{
+			index= 0;
+		}
+		if (bits&(1UL<<(index&0x1F)))
+		{
+			return index;
+		}
+	}
+
+	return NONE;
+}
+
+/* 0x00162b10: whether the game is of the kind 9 and the definition of an
+object has 1 at its short at 0x290 */
+boolean game_engine_unknown_00162b10(
+	long object_index)
+{
+	const byte *object;
+
+	if (MAIN_GAME_GLOBALS_LONG(0x180)!=9 || object_index==NONE)
+	{
+		return FALSE;
+	}
+	object= (const byte *)((const struct object_header_datum *)object_header_data->data)[object_index&0xFFFF].datum;
+
+	return *(const short *)((const byte *)(uintptr_t)global_tag_instances[*(const long *)object&0xFFFF].address+0x290)==1;
+}
+
+/* 0x001630b0: sixteen longs get a value */
+void game_engine_unknown_001630b0(
+	unsigned long value,
+	unsigned long *values)
+{
+	long index;
+
+	for (index= 0; index<16; index++)
+	{
+		values[index]= value;
+	}
+}

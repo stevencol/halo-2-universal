@@ -2,6 +2,41 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Diez funciones pequeñas del motor de juego: un jugador sin unidad, una entrada por un short, clases de juego, un par de un tag y bits de 0x0C y 0x0E
+
+Diez funciones (733 bytes) en `game_engine.c`. De 2722 funciones se pasa
+a 2732, el 24,25 % de las del juego (el 13,245 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_engine_unknown_0015db30` | `0x0015db30` | `game/game_engine.c` |
+| `game_engine_unknown_0015e410` | `0x0015e410` | `game/game_engine.c` |
+| `game_engine_unknown_0015eb20` | `0x0015eb20` | `game/game_engine.c` |
+| `game_engine_unknown_0015eb80` | `0x0015eb80` | `game/game_engine.c` |
+| `game_engine_unknown_0015fef0` | `0x0015fef0` | `game/game_engine.c` |
+| `game_engine_unknown_00161e10` | `0x00161e10` | `game/game_engine.c` |
+| `game_engine_unknown_00161e60` | `0x00161e60` | `game/game_engine.c` |
+| `game_engine_unknown_00161eb0` | `0x00161eb0` | `game/game_engine.c` |
+| `game_engine_unknown_00162b10` | `0x00162b10` | `game/game_engine.c` |
+| `game_engine_unknown_001630b0` | `0x001630b0` | `game/game_engine.c` |
+
+### Lo que se sabe
+
+- Un jugador sin unidad; la entrada de 0x10 bytes (desde 0xC1C) con un
+  short; qué par del tag que las globales del juego nombran en 0x16C tiene
+  un long.
+- Condiciones de la clase de juego (7 y 9) con los bits de
+  `unknown_00510c9c` y de las globales; los ocho bits de los shorts 0x0C y
+  0x0E de lo que guarda el motor, y el siguiente puesto.
+- Dieciséis longs con un valor.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 32 de `make_mutations.py`, 0 sin notar. Se quitó una que escribe un long más allá del buffer de la prueba (no se compara).
+
 ## 2026-10-24 — Ocho funciones pequeñas del motor de juego: tiempos y bits por jugador, clases de juego y una lista de 0x7DC
 
 Ocho funciones (648 bytes) en `game_engine.c`. De 2714 funciones se pasa
