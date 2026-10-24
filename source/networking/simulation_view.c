@@ -1428,3 +1428,72 @@ boolean __attribute__((stdcall)) simulation_view_events_receive(
 
 	return TRUE;
 }
+
+/* 0x00510ca4: where the next goes. 0x00515c34: a ring of 1000 entries of
+0x24 bytes */
+unsigned long unknown_00510ca4;
+unsigned long unknown_00515c34[1000][9];
+
+/* 0x00197120: when unknown_00510ca0 is set and unknown_00510ca1 is not, an
+entry of 0x24 bytes goes in the ring */
+void simulation_view_unknown_00197120(
+	const unsigned long *entry)
+{
+	long index;
+
+	if (!unknown_00510ca0 || unknown_00510ca1)
+	{
+		return;
+	}
+	for (index= 0; index<9; index++)
+	{
+		unknown_00515c34[unknown_00510ca4][index]= entry[index];
+	}
+	unknown_00510ca4= (unknown_00510ca4+1)%1000;
+}
+
+/* 0x001984e0: so many shorts get the low fifteen bits of others and their
+high bit set where those differ from a third list, which clears it where
+they do not; whether any differed */
+boolean __attribute__((stdcall)) simulation_view_unknown_001984e0(
+	long count,
+	unsigned short *shorts,
+	const unsigned short *values,
+	const unsigned short *others)
+{
+	boolean changed= FALSE;
+	long index;
+
+	for (index= 0; index<count; index++)
+	{
+		if ((others[index]^values[index])&0x7FFF)
+		{
+			shorts[index]= (unsigned short)(0x8000|(values[index]&0x7FFF));
+			changed= TRUE;
+		}
+		else
+		{
+			shorts[index]&= 0x7FFF;
+		}
+	}
+
+	return changed;
+}
+
+/* 0x0019ebb0: something of 0x24 bytes is made: two longs, five NONE, 0 and
+a short NONE */
+void simulation_view_unknown_0019ebb0(
+	long *data,
+	long first,
+	long second)
+{
+	data[0]= first;
+	data[1]= second;
+	data[2]= NONE;
+	data[3]= NONE;
+	data[4]= NONE;
+	data[5]= NONE;
+	data[6]= NONE;
+	data[7]= 0;
+	*(short *)&data[8]= NONE;
+}

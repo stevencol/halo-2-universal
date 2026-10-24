@@ -732,3 +732,5 @@ address,name,source
 00510c64,unknown_00510c64,source/main/main.c
 004e9148,unknown_004e9148,source/main/main.c
 004e9bc8,unknown_004e9bc8,source/game/game_engine.c
+00510ca4,unknown_00510ca4,source/networking/simulation_view.c
+00515c34,unknown_00515c34,source/networking/simulation_view.c

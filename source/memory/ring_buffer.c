@@ -90,3 +90,24 @@ void __attribute__((stdcall)) ring_buffer_read(
 		memcpy((byte *)destination+first, ring->data, rest);
 	}
 }
+
+/* 0x001a1a00: the pages (0x1000 bytes) of a range of something that starts
+at its long at 0x04 lose their bits (at 0x10), and the count that it points
+to at 0xFFC goes down by them */
+void __attribute__((stdcall)) memory_unknown_001a1a00(
+	byte *data,
+	long address,
+	long size,
+	long unused)
+{
+	long offset= address-*(const long *)(data+0x04);
+	long first= offset/0x1000;
+	long last= (offset+size+0xFFF)/0x1000;
+	long page;
+
+	for (page= first; page<last; page++)
+	{
+		((unsigned long *)(data+0x10))[page>>5]&= ~(1UL<<(page&0x1F));
+	}
+	**(long *const *)(data+0xFFC)+= first-last;
+}

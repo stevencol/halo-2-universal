@@ -13,6 +13,7 @@ gives to its table of data ("actor").
 
 #include "cache/cache_files.h"
 #include "game/game.h"
+#include "main/main.h"
 #include "math/real_math.h"
 #include "memory/data.h"
 #include "memory/hash_table.h"
@@ -2502,4 +2503,59 @@ boolean unknown_times_has_recent(
 	}
 
 	return FALSE;
+}
+
+/* 0x001a58b0: whether an object is of the kinds 0, 1 or 7, without the bit
+0x10 of its header's flags nor the bit 0x01 of its byte at 0x04, and for
+the kinds 0 and 1 with less than 1.0 at 0x2B0 */
+boolean actor_unknown_001a58b0(
+	long object_index)
+{
+	const struct object_header_datum *header= (const struct object_header_datum *)object_header_data->data+(object_index&0xFFFF);
+	const byte *object= (const byte *)header->datum;
+	unsigned long kind= 1UL<<(header->type&0x1F);
+
+	if (!(kind&0x83) || (header->flags&0x10) || (object[0x04]&1))
+	{
+		return FALSE;
+	}
+
+	return !(kind&3) || 1.0f>*(const real *)(object+0x2B0);
+}
+
+/* 0x001a6d30: FALSE when the unit of a player has no parent or NONE at its
+short at 0x1FC; TRUE without a unit */
+boolean actor_unknown_001a6d30(
+	long player_index)
+{
+	long unit_index= *(const long *)((const byte *)player_data->data+(player_index&0xFFFF)*0x21C+0x2C);
+	const byte *unit;
+
+	if (unit_index==NONE)
+	{
+		return TRUE;
+	}
+	unit= (const byte *)((const struct object_header_datum *)object_header_data->data)[unit_index&0xFFFF].datum;
+
+	return *(const long *)(unit+0x14)!=NONE && *(const short *)(unit+0x1FC)!=NONE;
+}
+
+/* 0x001a7ad0: the bit of the byte at 0x86 of an actor (0x888 bytes), and
+from the bit 10 one of three by its bytes at 0x267 and 0x266 */
+unsigned long actor_unknown_001a7ad0(
+	long actor_index)
+{
+	const byte *actor= (const byte *)actor_data->data+(actor_index&0xFFFF)*0x888;
+	long which= 0;
+
+	if (actor[0x267])
+	{
+		which= 2;
+	}
+	else if (actor[0x266])
+	{
+		which= 1;
+	}
+
+	return (1UL<<(actor[0x86]&0x1F))|((1UL<<which)<<10);
 }

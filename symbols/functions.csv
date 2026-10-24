@@ -3618,3 +3618,10 @@ address,name,source,arguments,returns,convention
 0018d360,sound_unknown_0018d360,source/sound/sound_manager.c,ecx,bool
 0018d630,sound_unknown_0018d630,source/sound/sound_manager.c,ecx edi,int
 0018d670,sound_unknown_0018d670,source/sound/sound_manager.c,esi xmm3,bool
+00197120,simulation_view_unknown_00197120,source/networking/simulation_view.c,edx,void
+001984e0,simulation_view_unknown_001984e0,source/networking/simulation_view.c,eax ecx edx stack,bool,stdcall
+0019ebb0,simulation_view_unknown_0019ebb0,source/networking/simulation_view.c,eax ecx edx,void
+001a1a00,memory_unknown_001a1a00,source/memory/ring_buffer.c,ecx stack stack stack,void,stdcall
+001a58b0,actor_unknown_001a58b0,source/ai/actors.c,eax,bool
+001a6d30,actor_unknown_001a6d30,source/ai/actors.c,ecx,bool
+001a7ad0,actor_unknown_001a7ad0,source/ai/actors.c,eax,int

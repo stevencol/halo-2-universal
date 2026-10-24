@@ -11,8 +11,8 @@ con Halo: Combat Evolved.
 **Estado: muy temprano.** El juego no arranca ni está cerca de hacerlo. Hoy
 el proyecto abre los mapas del juego, lista su contenido y exporta los
 niveles y los modelos con su textura principal. Del código del ejecutable
-hay descompiladas 2763 funciones de las 11.265 que lista Ghidra (el 24,53 %), y
-3086 en total contando las que Ghidra no separa de otras; todas
+hay descompiladas 2770 funciones de las 11.265 que lista Ghidra (el 24,59 %), y
+3093 en total contando las que Ghidra no separa de otras; todas
 comprobadas contra el original. Consulta
 [ESTADO.md](ESTADO.md) para la lista de lo hecho y lo que falta, y
 [CHANGELOG.md](CHANGELOG.md) para el detalle de cada paso.

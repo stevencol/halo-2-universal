@@ -2,6 +2,37 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Siete funciones pequeñas: un anillo de la vista de la simulación, shorts que copian bits, las páginas de un rango y tres de los actores
+
+Siete funciones (551 bytes) en tres archivos. De 2763 funciones se pasa
+a 2770, el 24,59 % de las del juego (el 13,337 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `simulation_view_unknown_00197120` | `0x00197120` | `networking/simulation_view.c` |
+| `simulation_view_unknown_001984e0` | `0x001984e0` | `networking/simulation_view.c` |
+| `simulation_view_unknown_0019ebb0` | `0x0019ebb0` | `networking/simulation_view.c` |
+| `memory_unknown_001a1a00` | `0x001a1a00` | `memory/ring_buffer.c` |
+| `actor_unknown_001a58b0` | `0x001a58b0` | `ai/actors.c` |
+| `actor_unknown_001a6d30` | `0x001a6d30` | `ai/actors.c` |
+| `actor_unknown_001a7ad0` | `0x001a7ad0` | `ai/actors.c` |
+
+### Lo que se sabe
+
+- Un anillo de 1000 entradas de 0x24 bytes (`unknown_00515c34`, variables
+  nuevas) donde va una entrada cuando la vista de la simulación lo permite;
+  shorts que toman 15 bits de otros y marcan si cambiaron; algo de 0x24 bytes.
+- Las páginas de 0x1000 bytes de un rango pierden sus bits.
+- De los actores: si un objeto de clase 0, 1 o 7 cumple unas condiciones; si
+  la unidad de un jugador tiene padre; dos bits de un actor.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 28 de `make_mutations.py`, 0 sin notar.
+
 ## 2026-10-24 — Siete funciones pequeñas del sonido: un tag y la clase de un objeto, dos bits de unknown_004ed28c, diez longs, tags en un bloque y un punto cerca de los sonidos
 
 Siete funciones (433 bytes) en `sound_manager.c`. De 2756 funciones se pasa
