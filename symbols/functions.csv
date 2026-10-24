@@ -3522,3 +3522,12 @@ address,name,source,arguments,returns,convention
 000f1320,unit_unknown_000f1320,source/units/units.c,eax,bool
 000f1c80,unit_unknown_000f1c80,source/units/units.c,eax edx,void
 000f5d10,unit_unknown_000f5d10,source/units/units.c,eax ecx stack,bool,stdcall
+00100390,weapon_unknown_00100390,source/units/units.c,eax ecx,bool
+001003e0,weapon_unknown_001003e0,source/units/units.c,eax ecx,bool
+00100880,weapon_unknown_00100880,source/units/units.c,eax ebx,bool
+00100f00,weapon_unknown_00100f00,source/units/units.c,eax,bool
+00101160,weapon_unknown_00101160,source/units/units.c,eax,bool
+001011d0,weapon_unknown_001011d0,source/units/units.c,eax,bool
+00101340,weapon_unknown_00101340,source/units/units.c,ecx,bool
+00101440,weapon_unknown_00101440,source/units/units.c,ecx,bool
+00101640,weapon_unknown_00101640,source/units/units.c,eax,bool

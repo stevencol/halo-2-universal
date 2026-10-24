@@ -1758,3 +1758,169 @@ boolean __attribute__((stdcall)) unit_unknown_000f5d10(
 	}
 	return TRUE;
 }
+
+/* 0x00100390: the bit 0x04 of the byte at 0x1A8 of one of the entries
+(0x34 bytes) of a weapon, if its definition has that many at 0x2D0 */
+boolean weapon_unknown_00100390(
+	long weapon_index,
+	long index)
+{
+	byte *weapon= (byte *)UNIT_OBJECT_GET(weapon_index);
+
+	if (*(const long *)(UNIT_DEFINITION_GET(weapon)+0x2D0)<=index)
+	{
+		return FALSE;
+	}
+	weapon[index*0x34+0x1A8]|= 0x04;
+	return TRUE;
+}
+
+/* 0x001003e0: the same with the bit 0x20 */
+boolean weapon_unknown_001003e0(
+	long weapon_index,
+	long index)
+{
+	byte *weapon= (byte *)UNIT_OBJECT_GET(weapon_index);
+
+	if (*(const long *)(UNIT_DEFINITION_GET(weapon)+0x2D0)<=index)
+	{
+		return FALSE;
+	}
+	weapon[index*0x34+0x1A8]|= 0x20;
+	return TRUE;
+}
+
+/* 0x00100880: whether one of the entries (0x10 bytes, from 0x220) of a
+weapon, as many as its definition has at 0x2C0, has a short at 0x04 from 1
+to 6; of all of them for NONE, or of only one */
+boolean weapon_unknown_00100880(
+	long weapon_index,
+	long which)
+{
+	const byte *weapon= UNIT_OBJECT_GET(weapon_index);
+	long count= *(const long *)(UNIT_DEFINITION_GET(weapon)+0x2C0);
+	long index;
+
+	for (index= 0; index<count; index++)
+	{
+		if (which==NONE || which==index)
+		{
+			short value= *(const short *)(weapon+(short)index*0x10+0x224);
+
+			if (value>0 && value<=6)
+			{
+				return TRUE;
+			}
+		}
+	}
+
+	return FALSE;
+}
+
+/* 0x00100f00: FALSE when the real at 0x184 of a weapon is 1.0 or more, or
+when its definition has entries at 0x2C0 whose first has a short above 0
+at 0x0A and the weapon has 0 in its shorts at 0x22C and 0x22A */
+boolean weapon_unknown_00100f00(
+	long weapon_index)
+{
+	const byte *weapon= UNIT_OBJECT_GET(weapon_index);
+	const byte *definition= UNIT_DEFINITION_GET(weapon);
+
+	if (*(const real *)(weapon+0x184)>=1.0f)
+	{
+		return FALSE;
+	}
+
+	return *(const long *)(definition+0x2C0)<=0 || *(const short *)(*(const byte *const *)(definition+0x2C4)+0x0A)<=0
+		|| *(const short *)(weapon+0x22C)!=0 || *(const short *)(weapon+0x22A)!=0;
+}
+
+/* 0x00101160: whether any of the bytes from 0x20C (each 0x0C bytes, as many
+as the definition has at 0x2C8) of a weapon is 3, 5, 6 or 7, or 2 with a
+short at 0x294 of its definition */
+boolean weapon_unknown_00101160(
+	long weapon_index)
+{
+	const byte *weapon= UNIT_OBJECT_GET(weapon_index);
+	const byte *definition= UNIT_DEFINITION_GET(weapon);
+	boolean result= FALSE;
+	long index;
+
+	for (index= 0; index<*(const long *)(definition+0x2C8); index++)
+	{
+		byte state= weapon[index*0x0C+0x20C];
+
+		if (state==3 || state==7 || state==5 || state==6 || (state==2 && *(const short *)(definition+0x294)))
+		{
+			result= TRUE;
+		}
+	}
+
+	return result;
+}
+
+/* 0x001011d0: whether any of those bytes is 0 with 5 at the short at 0x06
+of its element (0x40 bytes) of the block at 0x2C8 of the definition */
+boolean weapon_unknown_001011d0(
+	long weapon_index)
+{
+	const byte *weapon= UNIT_OBJECT_GET(weapon_index);
+	const byte *definition= UNIT_DEFINITION_GET(weapon);
+	boolean result= FALSE;
+	long index;
+
+	for (index= 0; index<*(const long *)(definition+0x2C8); index++)
+	{
+		if (!weapon[index*0x0C+0x20C] && *(const short *)(*(const byte *const *)(definition+0x2CC)+index*0x40+0x06)==5)
+		{
+			result= TRUE;
+		}
+	}
+
+	return result;
+}
+
+/* 0x00101340: the bit 18 of the long at 0x12C of the definition of an
+object; FALSE for NONE */
+boolean weapon_unknown_00101340(
+	long weapon_index)
+{
+	if (weapon_index==NONE)
+	{
+		return FALSE;
+	}
+
+	return (*(const unsigned long *)(UNIT_DEFINITION_GET(UNIT_OBJECT_GET(weapon_index))+0x12C)>>18)&1;
+}
+
+/* 0x00101440: TRUE when the long at 0x178 of a weapon is from 5 to 10, and
+else the bit 6 of the long at 0x12C of its definition; FALSE for NONE */
+boolean weapon_unknown_00101440(
+	long weapon_index)
+{
+	const byte *weapon;
+	long value;
+
+	if (weapon_index==NONE)
+	{
+		return FALSE;
+	}
+	weapon= UNIT_OBJECT_GET(weapon_index);
+	value= *(const long *)(weapon+0x178);
+	if (value>=5 && value<=10)
+	{
+		return TRUE;
+	}
+
+	return (*(const unsigned long *)(UNIT_DEFINITION_GET(weapon)+0x12C)>>6)&1;
+}
+
+/* 0x00101640: whether the long at 0x12C of the definition of an object has
+the bit 22 or 23 */
+boolean weapon_unknown_00101640(
+	long weapon_index)
+{
+	unsigned long flags= *(const unsigned long *)(UNIT_DEFINITION_GET(UNIT_OBJECT_GET(weapon_index))+0x12C);
+
+	return (flags>>22)&1 || (flags>>23)&1;
+}

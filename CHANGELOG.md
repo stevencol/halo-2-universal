@@ -2,6 +2,43 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Nueve funciones pequeñas de las armas: bits de sus entradas, cargadores, gatillos y su definición
+
+Nueve funciones (797 bytes) en `units.c`, junto a las otras de las armas.
+De 2667 funciones se pasa a 2676, el 23,75 % de las del juego (el
+13,097 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `weapon_unknown_00100390` | `0x00100390` | `units/units.c` |
+| `weapon_unknown_001003e0` | `0x001003e0` | `units/units.c` |
+| `weapon_unknown_00100880` | `0x00100880` | `units/units.c` |
+| `weapon_unknown_00100f00` | `0x00100f00` | `units/units.c` |
+| `weapon_unknown_00101160` | `0x00101160` | `units/units.c` |
+| `weapon_unknown_001011d0` | `0x001011d0` | `units/units.c` |
+| `weapon_unknown_00101340` | `0x00101340` | `units/units.c` |
+| `weapon_unknown_00101440` | `0x00101440` | `units/units.c` |
+| `weapon_unknown_00101640` | `0x00101640` | `units/units.c` |
+
+### Lo que se sabe
+
+- Los bits 0x04 y 0x20 del byte 0x1A8 de una de las entradas (0x34 bytes)
+  de un arma, tantas como dice su definición en 0x2D0.
+- Si alguna de sus entradas de 0x10 bytes (las de los cargadores, por la
+  definición en 0x2C0) tiene un short de 1 a 6; una condición con el real de
+  0x184 y el primer cargador.
+- Los estados de sus gatillos (bytes cada 0x0C desde 0x20C, tantos como la
+  definición en 0x2C8): 3, 5, 6, 7 o 2; o 0 con 5 en el elemento.
+- Bits 6, 18, 22 y 23 del long de 0x12C de la definición.
+
+### Sin comprobar
+
+- Que 0x2C0 y 0x2C8 sean cargadores y gatillos es una suposición por cómo
+  se usan; los nombres son direcciones.
+- Mutaciones: 33 de `make_mutations.py`, 0 sin notar.
+
 ## 2026-10-24 — Once funciones pequeñas de los objetos y las unidades: entradas, el vector hacia arriba, sonidos, armas en las manos y bits
 
 Once funciones (814 bytes) en dos archivos. De 2656 funciones se
