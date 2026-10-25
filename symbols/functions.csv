@@ -3788,3 +3788,5 @@ address,name,source,arguments,returns,convention
 000460d0,unknown_000460d0,source/game/game_unknown_0002b4a0.c,eax ebx stack,bool,stdcall
 001317a0,unknown_001317a0,source/main/main.c,eax edx ecx xmm0 stack stack stack stack,void,stdcall
 0016e210,game_unknown_0016e210,source/game/game_unknown_0016efb0.c,ecx edi,bool
+000cb6d0,unit_unknown_000cb6d0,source/units/units.c,eax,int
+001cc2f0,havok_unknown_001cc2f0,source/physics/havok.c,eax ecx edx esi stack stack,void,stdcall

@@ -2859,3 +2859,53 @@ void __attribute__((stdcall)) unit_counter_start(
 	counter[0]= (signed char)(up ? 1 : ticks-1);
 	counter[3]= up!=0;
 }
+
+/* 0x000cb6d0: who drives a unit in a seat (0x1FC) of its parent: the
+parent, when the seat has the bit 0 or 3 of its flags, or the first unit
+of those under the parent (from its 0x10, each to the next at 0x0C) whose
+definition has the bit 27 at 0xBC and that has the bit 26 at 0x04; the unit
+itself otherwise */
+long unit_unknown_000cb6d0(
+	long unit_index)
+{
+	const byte *unit;
+	long parent_index;
+	short seat;
+	const byte *parent;
+	unsigned long flags;
+	long result= unit_index;
+	long child_index;
+
+	if (unit_index==NONE)
+	{
+		return NONE;
+	}
+	unit= UNIT_OBJECT_GET(unit_index);
+	parent_index= *(const long *)(unit+0x14);
+	if (parent_index==NONE)
+	{
+		return unit_index;
+	}
+	seat= *(const short *)(unit+0x1FC);
+	if (seat==NONE)
+	{
+		return unit_index;
+	}
+	parent= UNIT_OBJECT_GET(parent_index);
+	flags= *(const unsigned long *)(*(const byte *const *)(UNIT_DEFINITION_GET(parent)+0x1CC)+seat*0xB0);
+	if ((flags&1) || ((flags>>3)&1))
+	{
+		result= parent_index;
+	}
+	for (child_index= *(const long *)(parent+0x10); child_index!=NONE; child_index= *(const long *)(UNIT_OBJECT_GET(child_index)+0x0C))
+	{
+		const byte *child= (const byte *)object_try_and_get_and_verify_type(child_index, 3);
+
+		if (child && ((*(const unsigned long *)(UNIT_DEFINITION_GET(child)+0xBC)>>27)&1) && ((*(const unsigned long *)(child+0x04)>>26)&1))
+		{
+			return child_index;
+		}
+	}
+
+	return result;
+}

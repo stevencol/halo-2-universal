@@ -2,6 +2,28 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Dos funciones del camino al menú: quién lleva a una unidad en un asiento y cuatro nombres de algo con sus valores por defecto
+
+Dos funciones medianas (498 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2938 funciones se pasa a 2940, el 26,10 % de
+las del juego (el 14,029 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unit_unknown_000cb6d0` | `0x000cb6d0` | `units/units.c` |
+| `havok_unknown_001cc2f0` | `0x001cc2f0` | `physics/havok.c` |
+
+### Lo que se sabe
+
+- quién lleva a una unidad en un asiento de su padre; y cuatro nombres de algo, con los de su dueño y los de por defecto.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 8 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Dos funciones del camino al menú: un peso de dos vectores y cuatro reales sumado y si un cluster es de algo
 
 Dos funciones medianas (367 bytes) en 2 archivos, de las que el juego ejecuta

@@ -1414,3 +1414,72 @@ void havok_unknown_001cf950(
 	*(unsigned long *)(data+0x98)= 0;
 	*(unsigned long *)(data+0x9C)= 0;
 }
+
+/* 0x001cc2f0: four names of something (0x07000101 for those of its owner,
+at 0x70 to 0x7C; 0x07000001 and NONE for the defaults 0x06000086,
+0x07000083, 0x030000D9 and 0x0400000C), the second from the block at 0x54
+of the definition of the owner (0x68) by the third, unless it is
+0x0400054B */
+void __attribute__((stdcall)) havok_unknown_001cc2f0(
+	unsigned long first,
+	unsigned long second,
+	unsigned long third,
+	unsigned long *names,
+	const byte *owner,
+	unsigned long fourth)
+{
+	const byte *found;
+	unsigned long name;
+
+	names[0]= first;
+	names[1]= second;
+	names[2]= third;
+	names[3]= fourth;
+	if (first==0x07000101)
+	{
+		names[0]= *(const unsigned long *)(owner+0x70);
+		if (names[0]==NONE)
+		{
+			names[0]= 0x06000086;
+		}
+	}
+	if (names[0]==0x07000001)
+	{
+		names[0]= 0x06000086;
+	}
+	if (second==0x07000101)
+	{
+		names[1]= *(const unsigned long *)(owner+0x74);
+	}
+	if (names[1]==0x07000001 || names[1]==NONE)
+	{
+		names[1]= 0x07000083;
+	}
+	if (third==0x07000101)
+	{
+		names[2]= *(const unsigned long *)(owner+0x78);
+	}
+	if (names[2]==0x07000001 || names[2]==NONE)
+	{
+		names[2]= 0x030000D9;
+	}
+	name= names[1];
+	found= havok_unknown_001dd560((const byte *)(uintptr_t)global_tag_instances[*(const long *)(owner+0x68)&0xFFFF].address+0x54, (long)names[2], 8);
+	if (found && *(const unsigned long *)(found+4)!=NONE && *(const unsigned long *)(found+4)!=0x030000D9 && name!=0x0400054B)
+	{
+		name= *(const unsigned long *)(found+4);
+	}
+	names[1]= name;
+	if (fourth==0x07000101)
+	{
+		names[3]= *(const unsigned long *)(owner+0x7C);
+		if (names[3]==NONE)
+		{
+			names[3]= 0x0400000C;
+		}
+	}
+	if (names[3]==0x07000001)
+	{
+		names[3]= 0x0400000C;
+	}
+}
