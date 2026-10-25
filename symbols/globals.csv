@@ -783,3 +783,8 @@ address,name,source
 00470a3c,unknown_00470a3c,source/main/main.c
 004c1bd4,unknown_004c1bd4,source/objects/objects.c
 0054e898,unknown_0054e898,source/physics/havok.c
+004c6700,unknown_004c6700,source/game/game_unknown_0003f2b0.c
+004c8740,unknown_004c8740,source/game/game_unknown_0003f2b0.c
+0050943c,unknown_0050943c,source/game/game_unknown_0003f2b0.c
+00509440,unknown_00509440,source/game/game_unknown_0003f2b0.c
+004e9af0,unknown_004e9af0,source/networking/game_voice.c

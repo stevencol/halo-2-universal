@@ -2017,3 +2017,54 @@ boolean game_voice_unknown_004cd904_get_identifier(
 
 	return TRUE;
 }
+
+/* 0x004e9af0: a count of ticks for each of four */
+byte unknown_004e9af0[4];
+
+/* 0x001591e0: one less what one of the four has counted (by four seconds,
+from 0 to 1), when unknown_0055e4d0 has something for the number of
+unknown_004e9ae8; 1 otherwise */
+real game_voice_unknown_001591e0(
+	long index)
+{
+	real value;
+
+	if (!unknown_0055e4d0[*(const long *)(unknown_004e9ae8+UNKNOWN_004E9AE8_UNKNOWNC14_OFFSET)])
+	{
+		return 1.0f;
+	}
+	value= (real)unknown_004e9af0[index]*game_time_globals->seconds_per_tick*4.0f;
+	if (0.0f>value)
+	{
+		value= 0.0f;
+	}
+	else if (value>1.0f)
+	{
+		value= 1.0f;
+	}
+
+	return 1.0f-value;
+}
+
+/* 0x00161b60: whether a player has not counted a whole (as
+game_voice_unknown_001591e0, by the short at 0x28 of the player); TRUE
+when there is nothing to count */
+boolean game_voice_unknown_00161b60(
+	long player_index)
+{
+	short index;
+	real value;
+
+	if (!unknown_0055e4d0[*(const long *)(unknown_004e9ae8+UNKNOWN_004E9AE8_UNKNOWNC14_OFFSET)] || player_index==NONE)
+	{
+		return TRUE;
+	}
+	index= *(const short *)((const byte *)player_data->data+(player_index&0xFFFF)*0x21C+0x28);
+	if (index==NONE)
+	{
+		return TRUE;
+	}
+	value= (real)unknown_004e9af0[index]*game_time_globals->seconds_per_tick*4.0f;
+
+	return !(value>=1.0f);
+}

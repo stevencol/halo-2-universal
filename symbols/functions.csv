@@ -3739,3 +3739,7 @@ address,name,source,arguments,returns,convention
 001ee410,unknown_001ee410,source/physics/havok.c,eax edx,void
 0004efb0,real_math_unknown_0004efb0,source/math/real_math.c,ecx,pointer
 00248d90,particle_location_list_add,source/effects/effects.c,esi edi stack,void,stdcall
+0003fd70,unknown_0003fd70,source/game/game_unknown_0003f2b0.c,,void
+000e4050,unit_unknown_000e4050,source/units/units.c,eax,bool
+001591e0,game_voice_unknown_001591e0,source/networking/game_voice.c,edx,real:xmm0
+00161b60,game_voice_unknown_00161b60,source/networking/game_voice.c,ecx,bool

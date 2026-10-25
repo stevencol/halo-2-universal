@@ -9,6 +9,7 @@ the name of the file is a guess, by the one that the first game has.
 
 #include <stdint.h>
 #include <string.h>
+#include <math.h>
 
 #include "cache/cache_files.h"
 #include "game/game.h"
@@ -2645,4 +2646,28 @@ boolean unit_unknown_000c4970(
 	}
 
 	return !unit_unknown_000c48f0(unit_index);
+}
+
+/* 0x000e4050: whether a unit without the bit 0 at 0xC1, with the bit 0 at
+0x348, has counted (its byte at 0x399) 0.18 of a second, is in the state 1
+or 3 (0x3DC) and has no parent */
+boolean unit_unknown_000e4050(
+	long unit_index)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+
+	if ((unit[0xC1]&1) || !(unit[0x348]&1))
+	{
+		return FALSE;
+	}
+	if ((signed char)unit[0x399]<lrintf((real)game_time_globals->ticks_per_second*0.18f))
+	{
+		return FALSE;
+	}
+	if (unit[0x3DC]!=1 && unit[0x3DC]!=3)
+	{
+		return FALSE;
+	}
+
+	return *(const long *)(unit+0x14)==NONE;
 }

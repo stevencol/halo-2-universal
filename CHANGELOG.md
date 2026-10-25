@@ -2,6 +2,30 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Cuatro funciones pequeñas del camino al menú: unas tablas vaciadas, si una unidad esperó bastante y cuánto queda de una cuenta de la voz
+
+Cuatro funciones pequeñas (475 bytes) en 3 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2887 funciones se pasa a 2891, el 25,66 % de
+las del juego (el 13,796 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unknown_0003fd70` | `0x0003fd70` | `game/game_unknown_0003f2b0.c` |
+| `unit_unknown_000e4050` | `0x000e4050` | `units/units.c` |
+| `game_voice_unknown_001591e0` | `0x001591e0` | `networking/game_voice.c` |
+| `game_voice_unknown_00161b60` | `0x00161b60` | `networking/game_voice.c` |
+
+### Lo que se sabe
+
+- dieciséis números y ocho cosas de 0x408 bytes vaciados; si una unidad esperó 0.18 de segundo; y cuánto le queda a una de cuatro cuentas de la voz (cinco variables nuevas).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 12 de `make_mutations.py`, 0 sin cazar; 4 que no cambia nada, quitada.
+
 ## 2026-10-24 — Cinco funciones pequeñas del camino al menú: una búsqueda binaria, un short de un tag o del bsp, un vector de largo uno, si una dirección está en la caché y un lugar de partículas en una lista
 
 Cinco funciones pequeñas (470 bytes) en 4 archivos, de las que el juego ejecuta

@@ -130,3 +130,30 @@ boolean unknown_0003fd20(
 
 	return FALSE;
 }
+
+/* 0x004c6700: eight of something of 0x408 bytes (a long at 0x400 and a
+short at 0x404). 0x004c8740: sixteen numbers. 0x0050943c and 0x00509440:
+two more */
+byte unknown_004c6700[8*0x408];
+long unknown_004c8740[16];
+long unknown_0050943c;
+long unknown_00509440;
+
+/* 0x0003fd70: the sixteen are NONE, and the eight have NONE and 0 */
+void unknown_0003fd70(
+	void)
+{
+	long index;
+
+	for (index= 0; index<16; index++)
+	{
+		unknown_004c8740[index]= NONE;
+	}
+	unknown_0050943c= 0;
+	for (index= 0; index<8; index++)
+	{
+		*(long *)(unknown_004c6700+index*0x408+0x400)= NONE;
+		*(short *)(unknown_004c6700+index*0x408+0x404)= 0;
+	}
+	unknown_00509440= 0;
+}
