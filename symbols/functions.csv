@@ -3698,3 +3698,9 @@ address,name,source,arguments,returns,convention
 00165bc0,game_engine_unknown_00165bc0,source/game/game_engine.c,eax ecx stack stack stack stack,void,stdcall
 00155810,unit_unknown_00155810,source/units/units.c,ebx stack,short,stdcall
 0003d4f0,object_unknown_0003d4f0,source/objects/objects.c,eax ebx stack stack stack stack stack stack,void,stdcall
+0001c1a0,real_math_unknown_0001c1a0,source/math/real_math.c,stack,real
+001473b0,havok_unknown_001473b0,source/physics/havok.c,,pointer
+002365e0,havok_unknown_002365e0,source/physics/havok.c,ecx,int
+0013ac42,game_unknown_0013ac42,source/game/game_unknown_0013bf00.c,edx,void
+0013ac30,game_unknown_0013ac30,source/game/game_unknown_0013bf00.c,,void
+00278e60,unknown_00278e60,source/main/main.c,stack,void

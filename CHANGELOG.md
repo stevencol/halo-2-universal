@@ -2,6 +2,32 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Seis funciones pequeñas del camino al menú: un real sin signo, dónde está algo de Havok, dos números por una clase, cuatro cosas vaciadas y un número guardado
+
+Seis funciones pequeñas (143 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2843 funciones se pasa a 2849, el 25,29 % de
+las del juego (el 13,701 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `real_math_unknown_0001c1a0` | `0x0001c1a0` | `math/real_math.c` |
+| `havok_unknown_001473b0` | `0x001473b0` | `physics/havok.c` |
+| `havok_unknown_002365e0` | `0x002365e0` | `physics/havok.c` |
+| `game_unknown_0013ac42` | `0x0013ac42` | `game/game_unknown_0013bf00.c` |
+| `game_unknown_0013ac30` | `0x0013ac30` | `game/game_unknown_0013bf00.c` |
+| `unknown_00278e60` | `0x00278e60` | `main/main.c` |
+
+### Lo que se sabe
+
+- el valor absoluto de un real; dónde está algo de Havok; dos números según una clase; cuatro cosas de 0x270 bytes vaciadas; y un número guardado con lo que da `havok_unknown_00147090` (cuatro variables nuevas).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 11 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-24 — Tres funciones medianas del camino al menú: dos listas del motor llenadas, qué es una unidad en el asiento de su padre y dónde están las cosas de un objeto
 
 Tres funciones medianas (781 bytes) en 3 archivos, de las que el juego ejecuta

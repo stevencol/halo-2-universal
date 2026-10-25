@@ -1346,3 +1346,10 @@ unsigned char valid_world_real_point3d(
 
 	return 1;
 }
+
+/* 0x0001c1a0: how big a real is, without its sign */
+real real_math_unknown_0001c1a0(
+	real value)
+{
+	return fabsf(value);
+}

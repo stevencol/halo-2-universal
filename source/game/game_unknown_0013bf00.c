@@ -95,3 +95,32 @@ byte unknown_00510c50_get_unknown5(
 
 	return FALSE;
 }
+
+/* 0x004e69d0: four of something of 0x270 bytes */
+byte unknown_004e69d0[4*0x270];
+
+/* 0x0013ac42: one of those four is zeros, with its first seven longs NONE */
+void game_unknown_0013ac42(
+	long index)
+{
+	long *entry= (long *)(unknown_004e69d0+index*0x270);
+	long slot;
+
+	memset(entry, 0, 0x270);
+	for (slot= 0; slot<7; slot++)
+	{
+		entry[slot]= NONE;
+	}
+}
+
+/* 0x0013ac30: all four are made so */
+void game_unknown_0013ac30(
+	void)
+{
+	long index;
+
+	for (index= 0; index<4; index++)
+	{
+		game_unknown_0013ac42(index);
+	}
+}

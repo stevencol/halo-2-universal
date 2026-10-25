@@ -769,3 +769,7 @@ address,name,source
 00485618,unknown_00485618,source/rasterizer/rasterizer_debug.c
 00485624,unknown_00485624,source/rasterizer/rasterizer_debug.c
 004c1bd8,unknown_004c1bd8,source/objects/objects.c
+004798b0,unknown_004798b0,source/physics/havok.c
+004e69d0,unknown_004e69d0,source/game/game_unknown_0013bf00.c
+0055e504,unknown_0055e504,source/main/main.c
+0055e508,unknown_0055e508,source/main/main.c

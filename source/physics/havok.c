@@ -1122,3 +1122,28 @@ void havok_unknown_001caed0(
 	memset(data+0x60, 0, 8);
 	havok_unknown_001cafc0(data);
 }
+
+/* 0x004798b0: something of Havok that only its address is asked of */
+byte unknown_004798b0[0x10];
+
+/* 0x001473b0: where that is */
+void *havok_unknown_001473b0(
+	void)
+{
+	return unknown_004798b0;
+}
+
+/* 0x002365e0: two numbers by a kind (0 and 1); NONE for another */
+long havok_unknown_002365e0(
+	long kind)
+{
+	switch (kind)
+	{
+	case 0:
+		return 0x070002FF;
+	case 1:
+		return 0x08000300;
+	default:
+		return NONE;
+	}
+}

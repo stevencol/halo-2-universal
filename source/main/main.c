@@ -1092,3 +1092,16 @@ boolean __attribute__((stdcall)) player_unknown_00162c50(
 	*result= other_index;
 	return TRUE;
 }
+
+/* 0x0055e504 and 0x0055e508: what havok_unknown_00147090 gave and a number
+it was asked with */
+long unknown_0055e504;
+long unknown_0055e508;
+
+/* 0x00278e60: the number is kept and what havok_unknown_00147090 gives */
+void unknown_00278e60(
+	long value)
+{
+	unknown_0055e508= value;
+	unknown_0055e504= havok_unknown_00147090();
+}
