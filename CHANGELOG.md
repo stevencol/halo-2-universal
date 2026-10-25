@@ -2,6 +2,29 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Tres funciones del camino al menú: las animaciones de un grafo y los que hereda, cómo están los miembros de la sesión y bits de los números de los actores
+
+Tres funciones medianas (481 bytes) en 3 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2980 funciones se pasa a 2983, el 26,48 % de
+las del juego (el 14,202 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_001ddd00` | `0x001ddd00` | `physics/havok.c` |
+| `network_session_get_members_status` | `0x000652a0` | `networking/network_life_cycle.c` |
+| `ai_unknown_001c9b50` | `0x001c9b50` | `ai/actors.c` |
+
+### Lo que se sabe
+
+- las animaciones de un modo de un grafo y de los que hereda pedidas; cómo están los miembros de la sesión (0 a 4) y su menor progreso; y los bits de los números de los actores. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 8 de `make_mutations.py`, 0 sin cazar; 4 que no cambia nada o no se puede ver, quitada.
+
 ## 2026-10-25 — Siete funciones del camino al menú: un jugador para las entradas, los recursos de un grafo y los que hereda, el objeto de un componente de Havok, un botón de un mando, lo que guarda la partición de un objeto, bloques de geometría cargados y un objeto que mezcla
 
 Siete funciones medianas (621 bytes) en 4 archivos, de las que el juego ejecuta

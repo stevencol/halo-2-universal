@@ -1797,3 +1797,33 @@ void havok_unknown_001c4a20(
 		object_unknown_000bba20(*(const long *)(component+0x08));
 	}
 }
+
+/* 0x001ddd00: havok_unknown_001ddc70 for a graph and each graph it inherits
+from (as havok_unknown_001ddaf0 finds them) */
+void __attribute__((stdcall)) havok_unknown_001ddd00(
+	const byte *graph,
+	long mode,
+	long weapon_class,
+	long weapon_type,
+	boolean first_list,
+	boolean second_list)
+{
+	long index;
+
+	if (!first_list && !second_list)
+	{
+		return;
+	}
+	havok_unknown_001ddc70(first_list, graph, mode, weapon_class, weapon_type, second_list);
+	for (index= 0; index<*(const long *)(graph+0x4C); index++)
+	{
+		long tag= *(const long *)(*(const byte *const *)(graph+0x50)+index*0x20+0x04);
+		const byte *inherited= NULL;
+
+		if (tag!=NONE)
+		{
+			inherited= (const byte *)(uintptr_t)global_tag_instances[tag&0xFFFF].address;
+		}
+		havok_unknown_001ddc70(first_list, inherited, mode, weapon_class, weapon_type, second_list);
+	}
+}

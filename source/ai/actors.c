@@ -7,6 +7,7 @@ gives to its table of data ("actor").
 */
 
 #include "cseries/cseries.h"
+#include <string.h>
 
 #include <math.h>
 #include <stdint.h>
@@ -2745,3 +2746,33 @@ byte *ai_iterator_next_unknown_001e46c0(
 	}
 }
 
+/* 0x001c9b50: bits of the numbers (at 0x254, below a count) of the actors,
+with the AI on; TRUE */
+boolean __attribute__((stdcall)) ai_unknown_001c9b50(
+	unsigned long *bits,
+	short count)
+{
+	byte iterator[0x18];
+	const byte *actor;
+
+	memset(bits, 0, (unsigned long)(((long)count+31)>>5)*4);
+	if (!((const byte *)ai_globals)[1])
+	{
+		return TRUE;
+	}
+	*(struct data_array **)(iterator+0x04)= actor_data;
+	*(long *)(iterator+0x0C)= NONE;
+	*(long *)(iterator+0x08)= NONE;
+	iterator[0x10]= TRUE;
+	while ((actor= ai_iterator_next_unknown_001e46c0(iterator))!=NULL)
+	{
+		short number= *(const short *)(actor+0x254);
+
+		if (number>=0 && number<count)
+		{
+			bits[number>>5]|= 1UL<<(number&0x1F);
+		}
+	}
+
+	return TRUE;
+}

@@ -2084,3 +2084,57 @@ void network_life_cycle_unknown_00072c80(
 	}
 	unknown_00477088= TRUE;
 }
+
+/* 0x000652a0: how the members of the session (0x10C bytes from 0xE0, as
+many as at 0x54) are, in the states 3 to 8: 1 when one is 1, else 2 when
+one is 2 (with the lowest of their progress), 3 when one is 3, 4 when all
+are 4; 0 out of those states. The progress (100 for none) when asked */
+long __attribute__((stdcall)) network_session_get_members_status(
+	long *progress)
+{
+	byte *session= NULL;
+	long status= 0;
+	long lowest= 0;
+
+	if (network_life_cycle_get_state_session(&session)
+		&& *(const long *)(session+0x741C)>2 && *(const long *)(session+0x741C)<=8)
+	{
+		long count= *(const long *)(session+0x54);
+		long index;
+
+		status= 4;
+		lowest= 100;
+		for (index= 0; index<count; index++)
+		{
+			const long *member= (const long *)(session+0xE0+index*0x10C);
+
+			if (member[0]==1)
+			{
+				status= 1;
+				lowest= 0;
+				break;
+			}
+			if (member[0]==3)
+			{
+				if (status==4)
+				{
+					status= 3;
+				}
+			}
+			else if (member[0]==2)
+			{
+				status= 2;
+				if (lowest>member[1])
+				{
+					lowest= member[1];
+				}
+			}
+		}
+	}
+	if (progress)
+	{
+		*progress= lowest;
+	}
+
+	return status;
+}
