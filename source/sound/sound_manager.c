@@ -14211,3 +14211,28 @@ long sound_unknown_0018a5a0(
 
 	return index;
 }
+
+/* 0x004687a8, of real_math.c */
+extern const real_vector3d *global_forward3d;
+
+/* 0x0016f4b0: something of a local player as it starts: forward and up at
+0x134 and 0x140 and again at 0x34 and 0x40 (in 0xAC bytes of zeros from
+0x08), unknown_0054e854 at 0x130 and 0x30, its sound state (0xB8), 'rad!' at
+0x00 and 0x354 */
+void unknown_0016f4b0(
+	byte *player)
+{
+	*(real_vector3d *)(player+0x134)= *global_forward3d;
+	*(real_vector3d *)(player+0x140)= *global_up3d;
+	*(unsigned long *)(player+0x130)= unknown_0054e854;
+	sound_unknown_0016f3c0(player+0xB8);
+	memset(player+0x08, 0, 0xAC);
+	*(real_vector3d *)(player+0x34)= *global_forward3d;
+	*(real_vector3d *)(player+0x40)= *global_up3d;
+	*(unsigned long *)(player+0x30)= unknown_0054e854;
+	*(unsigned long *)(player+0x354)= 0x72616421;
+	*(unsigned long *)player= 0x72616421;
+	player[0xB4]= 1;
+	player[0xB5]= 0;
+	player[0xB6]= 0;
+}

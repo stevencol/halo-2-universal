@@ -10,6 +10,8 @@ the file is only the address of its first function.
 #include "cseries/cseries.h"
 #include "saved games/game_state.h"
 #include "game/game.h"
+#include "math/real_math.h"
+#include "scenario/scenario.h"
 
 #include <string.h>
 
@@ -138,4 +140,74 @@ void game_unknown_00139130(
 	unknown_00510c4c= game_state_malloc(0x1E4);
 	memset(unknown_004e6950, 0, sizeof(unknown_004e6950));
 	game_unknown_0013ac30();
+}
+
+/* 0x0013c680: the timer (0x18 and 0x1C) of unknown_00510c50 runs down; it
+fades in or out (a real at 0x00 by the byte at 0x04); and its four titles
+(an index and ticks, from 0x08) are done after the up and fade-in times of
+their definition (0x24 bytes at 0x1F4 of the scenario, as many as at 0x1F0) */
+void unknown_0013c680(
+	void)
+{
+	byte *data= (byte *)unknown_00510c50;
+	const struct game_time_globals *time= game_time_globals;
+	const byte *scenario= (const byte *)global_scenario;
+	short *title;
+	long count;
+
+	if (*(const long *)(data+0x18))
+	{
+		*(real *)(data+0x1C)-= time->seconds_per_tick;
+		if (!(0.0f<*(const real *)(data+0x1C)))
+		{
+			*(long *)(data+0x18)= 0;
+			*(long *)(data+0x1C)= 0;
+		}
+	}
+	if (!data)
+	{
+		return;
+	}
+	if (data[4] || *(const real *)data>0.0f)
+	{
+		real fade;
+
+		if (data[4])
+		{
+			fade= time->seconds_per_tick+*(const real *)data;
+			*(real *)data= fade;
+			if (fade>1.0f)
+			{
+				fade= 1.0f;
+			}
+		}
+		else
+		{
+			fade= *(const real *)data-time->seconds_per_tick;
+			*(real *)data= fade;
+			if (!(fade>0.0f))
+			{
+				fade= 0.0f;
+			}
+		}
+		*(real *)data= fade;
+	}
+	title= (short *)(data+0x08);
+	for (count= 0; count<4; count++, title+= 2)
+	{
+		long last= *(const long *)(scenario+0x1F0)-1;
+		long pinned= title[0]<0 ? 0 : title[0]>last ? last : title[0];
+
+		if (pinned==title[0])
+		{
+			const real *definition= (const real *)(*(const byte *const *)(scenario+0x1F4)+title[0]*0x24);
+
+			title[1]++;
+			if ((real)title[1]*time->seconds_per_tick>=definition[8]+definition[7])
+			{
+				title[0]= NONE;
+				title[1]= NONE;
+			}
+		}
+	}
 }

@@ -2,6 +2,29 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Tres funciones del camino al menú: un jugador local que empieza, los títulos en pantalla con su fundido y el siguiente par de un iterador de animaciones
+
+Tres funciones medianas (693 bytes) en 3 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2970 funciones se pasa a 2973, el 26,39 % de
+las del juego (el 14,165 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unknown_0016f4b0` | `0x0016f4b0` | `sound/sound_manager.c` |
+| `unknown_0013c680` | `0x0013c680` | `game/game_unknown_0013bf00.c` |
+| `havok_unknown_001dcfa0` | `0x001dcfa0` | `physics/havok.c` |
+
+### Lo que se sabe
+
+- algo de un jugador local como empieza ('rad!'); el temporizador, el fundido y los cuatro títulos de `unknown_00510c50`; y el siguiente par de un iterador por las animaciones de un modo. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 11 de `make_mutations.py`, 0 sin cazar; 1 que no cambia nada, quitada.
+
 ## 2026-10-25 — Cuatro funciones del camino al menú: las animaciones de un arma pedidas, una mezcla que empieza, un color de matiz, saturación y valor, y una entrada de un objeto
 
 Cuatro funciones medianas (554 bytes) en 3 archivos, de las que el juego ejecuta

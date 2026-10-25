@@ -1699,3 +1699,50 @@ boolean __attribute__((stdcall)) havok_unknown_001cb5f0(
 
 	return TRUE;
 }
+
+/* 0x001dcfa0: the next pair (8 bytes) of an iterator over the animations of
+a mode of a graph (the iterator: the pair at 0x00, its index at 0x08, a step
+at 0x0A, the mode at 0x0C and a weapon class at 0x10), trying the mode and
+class, then the default name (0x030000D9) for each, in four steps; FALSE
+when there are no more */
+boolean havok_unknown_001dcfa0(
+	byte *iterator,
+	const byte *graph)
+{
+	long index= *(const short *)(iterator+0x08)+1;
+	short *step= (short *)(iterator+0x0A);
+
+	for (;;)
+	{
+		const byte *entry= NULL;
+
+		while (*step<4 && !entry)
+		{
+			short current= *step;
+			long mode= current<2 ? *(const long *)(iterator+0x0C) : 0x030000D9;
+			long weapon_class= current==0 || current==2 ? *(const long *)(iterator+0x10) : 0x030000D9;
+			const byte *mode_entry= havok_unknown_001dd560(graph+0x34, mode, 0x14);
+
+			entry= mode_entry ? havok_unknown_001dd560(mode_entry+4, weapon_class, 0x14) : NULL;
+			if (!entry)
+			{
+				*step= current+1;
+				index= 0;
+			}
+		}
+		if (!entry)
+		{
+			return FALSE;
+		}
+		if (index<*(const long *)(entry+0x0C))
+		{
+			const unsigned long *pair= (const unsigned long *)(*(const byte *const *)(entry+0x10)+index*8);
+
+			*(unsigned long *)iterator= pair[0];
+			*(unsigned long *)(iterator+4)= pair[1];
+			*(short *)(iterator+0x08)= (short)index;
+			return TRUE;
+		}
+		(*step)++;
+	}
+}

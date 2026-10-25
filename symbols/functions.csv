@@ -1441,7 +1441,7 @@ address,name,source,arguments,returns,convention
 00138e40,game_update_lost,source/game/game.c,,void
 00138eb0,game_update_finished,source/game/game.c,,void
 00226050,unknown_00226050,,,void
-0013c680,unknown_0013c680,,,void
+0013c680,unknown_0013c680,source/game/game_unknown_0013bf00.c,,void
 00225730,unknown_00225730,,,void
 00165dc1,unknown_00165dc1,,,void
 00153950,unknown_00153950,,,void
@@ -2665,7 +2665,7 @@ address,name,source,arguments,returns,convention
 002090a0,unknown_002090a0,,,void
 00188d60,sound_fade_in_for_new_map,source/sound/sound_manager.c,,void
 0018bb80,unknown_0018bb80,,stack,void,stdcall
-0016f4b0,unknown_0016f4b0,,esi,void
+0016f4b0,unknown_0016f4b0,source/sound/sound_manager.c,esi,void
 00155a30,unknown_00155a30,,stack,void,stdcall
 00296270,reference_list_new,source/memory/reference_lists.c,eax ebx stack,pointer,stdcall
 0020a1a0,unknown_0020a1a0,,,void
@@ -3822,3 +3822,4 @@ address,name,source,arguments,returns,convention
 001cb5f0,havok_unknown_001cb5f0,source/physics/havok.c,eax stack stack stack stack,bool,stdcall
 00131a00,real_math_hsv_to_rgb,source/math/real_math.c,edx ecx,pointer
 000bacc0,object_unknown_000bacc0,source/objects/objects.c,stack esi edi,bool,stdcall
+001dcfa0,havok_unknown_001dcfa0,source/physics/havok.c,esi ebx,bool
