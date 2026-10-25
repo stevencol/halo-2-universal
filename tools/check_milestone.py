@@ -31,7 +31,7 @@ RETURNS = {"void", "int", "bool", "byte", "short", "pointer", "pair", "string", 
 ARGUMENTS = {"eax", "ebx", "ecx", "edx", "esi", "edi", "ebp", "stack", "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7"}
 CONVENTIONS = {"", "stdcall", "thiscall"}
 
-FUNCTION_ROW = re.compile(r"^([0-9a-f]{8}),([A-Za-z_][A-Za-z0-9_]*),(source/[^,]+\.c),([a-z0-9 ]*),([a-z0-9:]*)(?:,([a-z]*))?$")
+FUNCTION_ROW = re.compile(r"^([0-9a-f]{8}),([A-Za-z_][A-Za-z0-9_]*),(source/[^,]+\.c|),([a-z0-9 ]*),([a-z0-9:]*)(?:,([a-z]*))?$")
 GLOBAL_ROW = re.compile(r"^([0-9a-f]{8}),([A-Za-z_][A-Za-z0-9_]*),(source/[^,]+\.c)$")
 
 lines: list[str] = []
@@ -133,7 +133,10 @@ def check_functions(rows: list[str], old: list[str]) -> list[str]:
         if convention not in CONVENTIONS:
             error(f"symbols/functions.csv: {name}: convención {convention!r} desconocida (vale: stdcall, thiscall o nada)")
         path = ROOT / source
-        if not path.exists():
+        if not source:
+            # a function of a library that the harness only stands in for
+            pass
+        elif not path.exists():
             error(f"{name}: {source} no existe")
         elif not re.search(rf"\b{name}\s*\(", text_of(path)):
             error(f"{name}: no está escrita en {source}")
@@ -165,7 +168,10 @@ def check_globals(rows: list[str], old: list[str]) -> None:
         if name in old_names:
             error(f"symbols/globals.csv: el nombre {name} ya existe")
         path = ROOT / source
-        if not path.exists():
+        if not source:
+            # a function of a library that the harness only stands in for
+            pass
+        elif not path.exists():
             error(f"{name}: {source} no existe")
         elif not re.search(rf"\b{name}\s*(\[|;|=)", text_of(path)):
             error(f"{name}: no está declarada en {source}")
