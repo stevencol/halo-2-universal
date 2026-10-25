@@ -18,6 +18,7 @@ the file is a guess, by what its functions start.
 #include "objects/objects.h"
 #include "physics/havok_component.h"
 #include "saved games/game_state.h"
+#include "scenario/scenario.h"
 
 /* ---------- constants */
 
@@ -1255,4 +1256,72 @@ real havok_unknown_00246eb0(
 	}
 
 	return value;
+}
+
+/* 0x001dd560: in a block (how many at 0x00, the elements at 0x04, so many
+bytes each), sorted by their first long, the one with a long; NULL if
+none */
+void *__attribute__((stdcall)) havok_unknown_001dd560(
+	const byte *block,
+	long key,
+	long size)
+{
+	long low= 0;
+	long high= *(const long *)block-1;
+	byte *found= NULL;
+	boolean last= FALSE;
+
+	while (!last && low<=high)
+	{
+		long middle= (low+high)>>1;
+		byte *element= *(byte *const *)(block+0x04)+middle*size;
+
+		last= low==high;
+		if (*(const long *)element==key)
+		{
+			found= element;
+		}
+		else if (*(const long *)element>key)
+		{
+			high= middle-1;
+		}
+		else
+		{
+			low= middle+1;
+		}
+		if (found)
+		{
+			break;
+		}
+	}
+
+	return found;
+}
+
+/* 0x0054e898: the short of 0x001ee410 for none */
+short unknown_0054e898;
+
+/* 0x001ee410: a short of something: of an element (0x14 bytes, by its short
+at 0x18) of the block at 0x5C of the definition of its tag (0x1C), or, with
+no tag, of the structure bsp (at 0x10); unknown_0054e898 with neither */
+void unknown_001ee410(
+	short *result,
+	const byte *data)
+{
+	long tag= *(const long *)(data+0x1C);
+	short index= *(const short *)(data+0x18);
+
+	if (tag!=NONE)
+	{
+		const byte *definition= (const byte *)(uintptr_t)global_tag_instances[tag&0xFFFF].address;
+
+		*result= *(const short *)(*(const byte *const *)(definition+0x5C)+index*0x14+0x10);
+		return;
+	}
+	if (index!=NONE)
+	{
+		*result= *(const short *)(*(const byte *const *)((const byte *)global_structure_bsp+0x10)+index*0x14+0x08);
+		return;
+	}
+	*result= unknown_0054e898;
 }

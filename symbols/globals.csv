@@ -782,3 +782,4 @@ address,name,source
 0054e7fc,unknown_0054e7fc,source/interface/user_interface.c
 00470a3c,unknown_00470a3c,source/main/main.c
 004c1bd4,unknown_004c1bd4,source/objects/objects.c
+0054e898,unknown_0054e898,source/physics/havok.c

@@ -2774,7 +2774,7 @@ address,name,source,arguments,returns,convention
 0030f800,unknown_0030f800,,ecx stack stack,void
 0030f2d0,unknown_0030f2d0,,ecx stack,void
 00278f00,unknown_00278f00,,,void
-00279740,unknown_00279740,,stack,bool
+00279740,unknown_00279740,source/cache/cache_files.c,stack,bool
 001c51c0,havok_unknown_001c51c0,source/physics/havok.c,edi,void
 001df9c0,game_team_change_apply,source/game/game_unknown_001df460.c,stack stack stack,void,stdcall
 001df560,game_team_is_enemy,source/game/game_unknown_001df460.c,ecx esi,bool
@@ -3735,3 +3735,7 @@ address,name,source,arguments,returns,convention
 0003d3e0,object_unknown_0003d3e0,source/objects/objects.c,eax ecx,short
 001c6bb0,havok_unknown_001c6bb0,source/physics/havok.c,ecx,pointer
 00246eb0,havok_unknown_00246eb0,source/physics/havok.c,eax,real:xmm0
+001dd560,havok_unknown_001dd560,source/physics/havok.c,stack stack stack,pointer,stdcall
+001ee410,unknown_001ee410,source/physics/havok.c,eax edx,void
+0004efb0,real_math_unknown_0004efb0,source/math/real_math.c,ecx,pointer
+00248d90,particle_location_list_add,source/effects/effects.c,esi edi stack,void,stdcall

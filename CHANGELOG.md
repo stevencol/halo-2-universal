@@ -2,6 +2,31 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Cinco funciones pequeñas del camino al menú: una búsqueda binaria, un short de un tag o del bsp, un vector de largo uno, si una dirección está en la caché y un lugar de partículas en una lista
+
+Cinco funciones pequeñas (470 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2882 funciones se pasa a 2887, el 25,63 % de
+las del juego (el 13,780 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_001dd560` | `0x001dd560` | `physics/havok.c` |
+| `unknown_001ee410` | `0x001ee410` | `physics/havok.c` |
+| `real_math_unknown_0004efb0` | `0x0004efb0` | `math/real_math.c` |
+| `unknown_00279740` | `0x00279740` | `cache/cache_files.c` |
+| `particle_location_list_add` | `0x00248d90` | `effects/effects.c` |
+
+### Lo que se sabe
+
+- una búsqueda binaria por el primer long; un short de un tag o del bsp (`unknown_0054e898`, nueva); un vector de largo uno; si una dirección está desde 0x80061000 hasta lo que dice la caché; y un lugar de partículas al final de una lista.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 17 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-24 — Seis funciones pequeñas del camino al menú: ocho números, si un jugador puede, un short de la tabla o de un objeto, la definición de un tag o de un elemento, un vector y unas cuentas
 
 Seis funciones pequeñas (489 bytes) en 4 archivos, de las que el juego ejecuta

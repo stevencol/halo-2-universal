@@ -1757,3 +1757,16 @@ byte *__attribute__((stdcall)) unknown_002afd70(
 {
 	return table+(cache_files_language()<<6)+0x0C;
 }
+
+/* 0x00279740: whether an address is from 0x80061000 on, to as far as the
+long at 0x24 of the cache file globals when their first byte is set */
+boolean unknown_00279740(
+	void *object)
+{
+	const byte *globals= (const byte *)&cache_file_globals;
+	long last= 0x80061000+(globals[0] ? *(const long *)(globals+0x24) : 0);
+
+	long address= (long)(uintptr_t)object;
+
+	return address>=(long)0x80061000 && address<=last;
+}

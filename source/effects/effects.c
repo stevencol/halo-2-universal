@@ -655,3 +655,24 @@ void effect_unknown_0017af80(
 	particle_system_list_remove(PARTICLE_SYSTEM_GET(particle_system_index), (long *)(effect+0xFC), (long *)(effect+0x100));
 	effect_unknown_00178b80(effect_index, particle_system_index);
 }
+
+/* 0x00248d90: a particle location (0x34 bytes) goes last in a list (its
+first and last are given; each to the next at 0x0C) */
+void __attribute__((stdcall)) particle_location_list_add(
+	byte *location,
+	long *first,
+	long *last)
+{
+	long index= (long)*(const short *)location<<16 | (long)(location-(byte *)particle_location_data->data)/0x34;
+
+	*(long *)(location+0x0C)= NONE;
+	if (*first==NONE)
+	{
+		*first= index;
+	}
+	if (*last!=NONE)
+	{
+		*(long *)((byte *)particle_location_data->data+(*last&0xFFFF)*0x34+0x0C)= index;
+	}
+	*last= index;
+}

@@ -1391,3 +1391,21 @@ long __attribute__((stdcall)) real_math_unknown_000a0200(
 
 	return 0.001f>fabsf(difference);
 }
+
+/* 0x0004efb0: a vector made one long, unless it is zero; the vector */
+real *real_math_unknown_0004efb0(
+	real *vector)
+{
+	real square= vector[0]*vector[0]+vector[1]*vector[1]+vector[2]*vector[2];
+
+	if (square!=0.0f)
+	{
+		long double scale= 1.0L/__builtin_sqrtl((long double)square);
+
+		vector[0]= (real)(scale*vector[0]);
+		vector[1]= (real)(scale*vector[1]);
+		vector[2]= (real)(scale*vector[2]);
+	}
+
+	return vector;
+}
