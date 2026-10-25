@@ -2750,3 +2750,44 @@ real __attribute__((stdcall)) unit_unknown_001137b0(
 
 	return value>minimum ? value : minimum;
 }
+
+/* 0x000d1490: how far a unit has counted with a weapon (its byte at 0x1FB
+for the one in its hand, 0x1FA for another; by 0.3 of a second), from 0 to
+1; 1 without a unit or a weapon */
+real unit_unknown_000d1490(
+	long unit_index,
+	long weapon_index)
+{
+	const byte *unit;
+	short slot;
+	long held= NONE;
+	byte count;
+	real value;
+
+	if (unit_index==NONE || weapon_index==NONE)
+	{
+		return 1.0f;
+	}
+	unit= UNIT_OBJECT_GET(unit_index);
+	slot= (signed char)unit[0x212];
+	if (slot!=NONE)
+	{
+		held= *(const long *)(unit+0x218+slot*4);
+	}
+	count= held==weapon_index ? unit[0x1FB] : unit[0x1FA];
+	if (!count)
+	{
+		return 0.0f;
+	}
+	value= (real)count*game_time_globals->seconds_per_tick*3.3333333f;
+	if (0.0f>value)
+	{
+		return 0.0f;
+	}
+	if (value>1.0f)
+	{
+		return 1.0f;
+	}
+
+	return value;
+}

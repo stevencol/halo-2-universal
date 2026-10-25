@@ -2,6 +2,29 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Tres funciones pequeñas del camino al menú: cuánto ha contado una unidad con un arma, las dos tareas del ciclo de vida de la red y un valor de una tabla
+
+Tres funciones pequeñas (496 bytes) en 3 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2915 funciones se pasa a 2918, el 25,90 % de
+las del juego (el 13,911 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unit_unknown_000d1490` | `0x000d1490` | `units/units.c` |
+| `network_life_cycle_unknown_00072c80` | `0x00072c80` | `networking/network_life_cycle.c` |
+| `sound_unknown_00185b30` | `0x00185b30` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- cuánto ha contado una unidad con un arma, de 0 a 1; las dos tareas del ciclo de vida de la red al empezar; y un valor de una tabla de reales entre sus dos más cercanos.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 9 de `make_mutations.py`, 0 sin cazar; 3 que no cambia nada, quitada.
+
 ## 2026-10-25 — Cuatro funciones pequeñas del camino al menú: si dos vectores son de largo uno y perpendiculares, un real por dos números, las letras de un idioma y una entrada más de una tabla
 
 Cuatro funciones pequeñas (697 bytes) en 4 archivos, de las que el juego ejecuta

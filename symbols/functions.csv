@@ -3765,3 +3765,6 @@ address,name,source,arguments,returns,convention
 001137b0,unit_unknown_001137b0,source/units/units.c,eax ecx edx stack stack,real:xmm0,stdcall
 0011cb00,language_get_code,source/cseries/cseries.c,edx,string
 00172bb0,particle_systems_unknown_00172bb0,source/effects/particle_systems.c,eax ebx stack stack,short,stdcall
+000d1490,unit_unknown_000d1490,source/units/units.c,eax esi,real:xmm0
+00072c80,network_life_cycle_unknown_00072c80,source/networking/network_life_cycle.c,edx esi,void
+00185b30,sound_unknown_00185b30,source/sound/sound_manager.c,eax esi stack,real:xmm0,stdcall

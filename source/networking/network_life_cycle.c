@@ -2051,3 +2051,36 @@ void __attribute__((stdcall)) network_life_cycle_unknown_000645d0(
 	wcsncpy(unknown_004cd88a, second, 31);
 	unknown_004cd88a[31]= 0;
 }
+
+/* 0x00072c80: the two tasks start (a number at 0x04, NONE and zeros, the
+kinds 4 and 3 at 0x2C), the first with something at 0x9C */
+void network_life_cycle_unknown_00072c80(
+	long number,
+	long owner)
+{
+	byte *tasks[2]= {unknown_0047708c, unknown_0047712c};
+	long index;
+
+	for (index= 0; index<2; index++)
+	{
+		byte *task= tasks[index];
+
+		*(long *)(task+0x04)= number;
+		task[0x0A]= 0;
+		*(long *)(task+0x0C)= NONE;
+		*(long *)(task+0x10)= 0;
+		*(long *)(task+0x14)= NONE;
+		*(long *)(task+0x18)= 0;
+		*(long *)(task+0x1C)= NONE;
+		*(long *)(task+0x20)= 0;
+		*(long *)(task+0x2C)= index ? 3 : 4;
+		task[0x30]= 0;
+		task[0x09]= 0;
+		task[0x08]= 1;
+		if (!index)
+		{
+			*(long *)(task+0x9C)= owner;
+		}
+	}
+	unknown_00477088= TRUE;
+}

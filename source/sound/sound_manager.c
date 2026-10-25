@@ -14082,3 +14082,39 @@ void sound_unknown_0016f3c0(
 	*(real *)&data[17]= 0.0f;
 }
 
+/* 0x00185b30: a value of a table of reals (as many as given) at a real from
+-1 to 1, between its two nearest; the sign of the real is kept */
+real __attribute__((stdcall)) sound_unknown_00185b30(
+	short count,
+	const real *table,
+	real value)
+{
+	boolean negative= 0.0f>value;
+	long last= count-1;
+	real place= fabsf(value)*(real)last;
+	short index;
+	long next;
+	real result;
+
+	if (0.0f>place)
+	{
+		place= 0.0f;
+	}
+	else if (place>(real)count-1.0f)
+	{
+		place= (real)count-1.0f;
+	}
+	index= (short)(long)place;
+	if (index<0)
+	{
+		index= 0;
+	}
+	else if (index>last)
+	{
+		index= (short)last;
+	}
+	next= index+1<=last ? index+1 : last;
+	result= (table[(short)next]-table[index])*(place-(real)index)+table[index];
+
+	return negative ? 0.0f-result : result;
+}
