@@ -3815,3 +3815,6 @@ address,name,source,arguments,returns,convention
 0010a040,scenery_get_pathfinding_policy,source/objects/objects.c,ecx stack,short,stdcall
 000bfcc0,object_unknown_000bfcc0,source/objects/objects.c,,void
 000bba20,object_unknown_000bba20,source/objects/objects.c,eax,void
+0002b720,unknown_0002b720,source/game/game_unknown_0003f2b0.c,edx edi stack,bool,stdcall
+00106030,weapon_unknown_00106030,source/units/units.c,eax,bool
+000bc280,object_header_new,source/objects/objects.c,stack,int,stdcall

@@ -9,6 +9,7 @@ the file is only the address of its function.
 #include "cseries/cseries.h"
 #include "scenario/scenario.h"
 #include "math/real_math.h"
+#include "physics/bsp3d.h"
 #include <stdint.h>
 
 /* ---------- globals */
@@ -156,4 +157,32 @@ void unknown_0003fd70(
 		*(short *)(unknown_004c6700+index*0x408+0x404)= 0;
 	}
 	unknown_00509440= 0;
+}
+
+/* 0x0002b720: the leaf of the structure bsp (in its bsp3d at 0x18) where a
+point is, and its cluster (the short of the leaf, 8 bytes, at 0x30); when
+there is none, a leaf and cluster kept from before stay if they are good
+(below the counts at 0x2C and 0x9C), and are NONE otherwise. Whether there
+was a leaf */
+boolean __attribute__((stdcall)) unknown_0002b720(
+	const real_point3d *point,
+	long *leaf_index,
+	long *cluster_index)
+{
+	const byte *bsp= (const byte *)global_structure_bsp;
+	long index= bsp3d_test_point(*(const struct bsp3d *const *)(bsp+0x18), 0, point);
+
+	if (index!=NONE)
+	{
+		*leaf_index= index;
+		*cluster_index= *(const short *)(*(const byte *const *)(bsp+0x30)+index*8);
+		return TRUE;
+	}
+	if (*leaf_index<0 || *leaf_index>=*(const long *)(bsp+0x2C) || *cluster_index<0 || *cluster_index>=*(const long *)(bsp+0x9C))
+	{
+		*leaf_index= NONE;
+		*cluster_index= NONE;
+	}
+
+	return FALSE;
 }

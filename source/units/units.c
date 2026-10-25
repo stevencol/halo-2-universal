@@ -2909,3 +2909,29 @@ long unit_unknown_000cb6d0(
 
 	return result;
 }
+
+boolean __attribute__((stdcall)) game_engine_unknown_00159dd0(byte index);
+
+/* 0x00106030: in a game of the kind 2, whether a weapon (with the bit 0 at
+0x12C) is held by a unit (0x154) of a player (0x13C) that
+game_engine_unknown_00159dd0 says so of */
+boolean weapon_unknown_00106030(
+	long weapon_index)
+{
+	const byte *weapon;
+	long unit_index;
+	long player_index;
+
+	if (*(const long *)((const byte *)main_game_globals+0x08)!=2)
+	{
+		return FALSE;
+	}
+	weapon= UNIT_OBJECT_GET(weapon_index);
+	if (!(weapon[0x12C]&1) || (unit_index= *(const long *)(weapon+0x154))==NONE)
+	{
+		return FALSE;
+	}
+	player_index= *(const long *)(UNIT_OBJECT_GET(unit_index)+0x13C);
+
+	return player_index!=NONE && game_engine_unknown_00159dd0((byte)player_index);
+}

@@ -1690,3 +1690,27 @@ void object_unknown_000bba20(
 	}
 	object_unknown_000bc7b0(object_index);
 }
+
+/* 0x000bc280: a new object header with a block of a size (zeros) of the
+memory of the objects; NONE when there is no room */
+long __attribute__((stdcall)) object_header_new(
+	short size)
+{
+	long index= datum_new(object_header_data);
+	struct object_header_datum *header;
+
+	if (index==NONE)
+	{
+		return NONE;
+	}
+	header= &((struct object_header_datum *)object_header_data->data)[index&0xFFFF];
+	if (!memory_pool_block_allocate(unknown_004de2ec, (void **)&header->datum, size, 0, 0))
+	{
+		datum_delete(object_header_data, index);
+		return NONE;
+	}
+	header->data_size= size;
+	memset(header->datum, 0, size);
+
+	return index;
+}

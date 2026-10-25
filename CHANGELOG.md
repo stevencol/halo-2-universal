@@ -2,6 +2,29 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Tres funciones del camino al menú: la hoja y el cluster de un punto, si un arma la lleva un jugador y una cabecera de objeto nueva
+
+Tres funciones medianas (321 bytes) en 3 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2963 funciones se pasa a 2966, el 26,33 % de
+las del juego (el 14,123 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unknown_0002b720` | `0x0002b720` | `game/game_unknown_0003f2b0.c` |
+| `weapon_unknown_00106030` | `0x00106030` | `units/units.c` |
+| `object_header_new` | `0x000bc280` | `objects/objects.c` |
+
+### Lo que se sabe
+
+- la hoja y el cluster del bsp de un punto, conservando los de antes si son buenos; si un arma la lleva la unidad de un jugador; y una cabecera de objeto nueva con su bloque de memoria en ceros. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 12 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Seis funciones del camino al menú: un sonido en bucle de un objeto, un bitmap de un grupo, las entradas de un objeto, cómo se recorre un escenario, una función para cada objeto y un objeto despierto
 
 Seis funciones medianas (450 bytes) en 4 archivos, de las que el juego ejecuta
