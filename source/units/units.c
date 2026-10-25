@@ -3712,3 +3712,73 @@ long __attribute__((stdcall)) weapon_unknown_001008f0(
 
 	return rounds;
 }
+
+/* 0x004f55dc, of ai.c; 0x004f55ec, of game_unknown_001df460.c */
+extern byte unknown_004f55dc[0x10];
+extern byte *unknown_004f55ec;
+
+/* 0x000c6810: two reals of a unit go a tick toward 1 or 0: the one at
+0x2B0 by its rate at 0x2B8, up with the bit 3 of 0x134 (which an actor's
+unit gets in a game of the state 1, with the byte at 0x004f55de, when its
+team is none or not one of the bits from 0x10 at 0xC4 of unknown_004f55ec),
+and its thing at 0xD4 told of it when it gets to its end; the one at 0x2B4
+by a third a second, up with the bit 4 */
+void unit_unknown_000c6810(
+	long unit_index)
+{
+	byte *unit= (byte *)UNIT_OBJECT_GET(unit_index);
+	real seconds;
+
+	if (*(const long *)(unit+0x12C)!=NONE && *(const long *)((const byte *)main_game_globals+0x08)==1 && unknown_004f55dc[2])
+	{
+		short team= *(const short *)(unit+0x138);
+
+		if (team==NONE || team<0 || team>=0x10
+			|| !bit_vector_test_flag((const unsigned long *)(unknown_004f55ec+0xC4), team+0x10))
+		{
+			*(unsigned long *)(unit+0x134)|= 8;
+		}
+	}
+	seconds= game_time_globals->seconds_per_tick;
+	if ((*(const unsigned long *)(unit+0x134)>>3)&1)
+	{
+		*(real *)(unit+0x2B0)= *(const real *)(unit+0x2B8)*seconds + *(const real *)(unit+0x2B0);
+		if (*(const real *)(unit+0x2B0)>1.0f)
+		{
+			*(real *)(unit+0x2B0)= 1.0f;
+			goto told;
+		}
+	}
+	else
+	{
+		*(real *)(unit+0x2B0)= *(const real *)(unit+0x2B0)-*(const real *)(unit+0x2B8)*seconds;
+		if (0.0f>*(const real *)(unit+0x2B0))
+		{
+			*(real *)(unit+0x2B0)= 0.0f;
+			goto told;
+		}
+	}
+	goto other;
+told:
+	if (*(const long *)(UNIT_OBJECT_GET(unit_index)+0xD4)!=NONE)
+	{
+		unknown_000b58c0(*(const long *)(UNIT_OBJECT_GET(unit_index)+0xD4), 0x800000);
+	}
+other:
+	if ((*(const unsigned long *)(unit+0x134)>>4)&1)
+	{
+		*(real *)(unit+0x2B4)= seconds*(1.0f/3.0f) + *(const real *)(unit+0x2B4);
+		if (*(const real *)(unit+0x2B4)>1.0f)
+		{
+			*(real *)(unit+0x2B4)= 1.0f;
+		}
+	}
+	else
+	{
+		*(real *)(unit+0x2B4)= *(const real *)(unit+0x2B4)-seconds*(1.0f/3.0f);
+		if (0.0f>*(const real *)(unit+0x2B4))
+		{
+			*(real *)(unit+0x2B4)= 0.0f;
+		}
+	}
+}

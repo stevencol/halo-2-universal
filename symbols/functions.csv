@@ -3905,3 +3905,5 @@ address,name,source,arguments,returns,convention
 00132b80,unknown_00132b80,source/game/game_unknown_00131ff0.c,ecx ebx stack stack stack stack stack stack stack stack stack,int,stdcall
 000c85c0,unit_unknown_000c85c0,source/units/units.c,eax,bool
 001008f0,weapon_unknown_001008f0,source/units/units.c,eax stack stack,int,stdcall
+000c6810,unit_unknown_000c6810,source/units/units.c,eax,void
+0012e960,scenario_unknown_0012e960,source/scenario/scenario.c,eax stack stack,int,stdcall

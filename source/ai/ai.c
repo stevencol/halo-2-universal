@@ -449,3 +449,7 @@ void ai_unknown_clear_unknown4(
 		}
 	}
 }
+
+/* 0x004f55dc: 16 bytes of the part, of which the third says something is
+on (the name is the address) */
+byte unknown_004f55dc[0x10];

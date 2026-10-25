@@ -2,6 +2,28 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Dos funciones del camino al menú: dos reales de una unidad que van un tick hacia 1 o 0, y los clusters de la bsp cerca de un punto
+
+Dos funciones medianas (793 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 3056 funciones se pasa a 3058, el 27,15 % de
+las del juego (el 14,744 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unit_unknown_000c6810` | `0x000c6810` | `units/units.c` |
+| `scenario_unknown_0012e960` | `0x0012e960` | `scenario/scenario.c` |
+
+### Lo que se sabe
+
+- dos reales de una unidad van un tick hacia 1 o 0 (uno por su ritmo, según el bit 3 que recibe la unidad de un actor sin equipo de los bits de la IA, avisando a su cosa de la simulación al llegar; el otro un tercio por segundo, según el bit 4); y los clusters de la bsp a menos de 10 de un punto, desde su cluster por los portales, cada uno con la distancia de su portal más cercano. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 8 de `make_mutations.py`, 0 sin cazar; 1 que no cambia nada, quitada.
+
 ## 2026-10-25 — Dos funciones del camino al menú: si una unidad puede hacer algo y las balas de un cargador de un arma y de las demás de su unidad
 
 Dos funciones medianas (870 bytes) en 1 archivo, de las que el juego ejecuta

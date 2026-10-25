@@ -16,6 +16,8 @@ Halo 1's scenario.c.
 #include "physics/bsp3d.h"
 #include "scenario/scenario_definitions.h"
 
+#include <string.h>
+
 /* ---------- prototypes of functions not decompiled yet */
 
 /* 0x0016e2c0: does something with each element of a block of a structure
@@ -564,4 +566,81 @@ long __attribute__((stdcall)) unknown_0019c440(
 	}
 
 	return result;
+}
+
+/* 0x0014b240, of the structure bsp */
+real unknown_0014b240(const byte *structure_bsp, const byte *portal, const real_point3d *position);
+
+/* 0x0012e960: the clusters of the structure bsp near a point, from its
+cluster through the portals (0x24 bytes each, at 0x60: the clusters at
+both sides; those of a cluster, of 0xB0 bytes at 0xA0, in the shorts at 0x90,
+as many as at 0x8C): each (0x18 bytes: the cluster, the distance of its
+nearest portal, by unknown_0014b240, and NONE at 0x14) less than 10 away,
+in the order they are reached; how many */
+long __attribute__((stdcall)) scenario_unknown_0012e960(
+	long cluster_index,
+	const real_point3d *point,
+	byte *clusters)
+{
+	const byte *structure_bsp= global_structure_bsp;
+	unsigned long visited[512/32];
+	short indices[512];
+	long current= 0;
+	long count= 1;
+
+	memset(visited, 0, sizeof(visited));
+	indices[cluster_index]= 0;
+	visited[cluster_index>>5]|= 1UL<<(cluster_index&31);
+	*(long *)clusters= cluster_index;
+	*(real *)(clusters+0x04)= 0.0f;
+	*(long *)(clusters+0x14)= NONE;
+	do
+	{
+		const byte *entry= clusters+current*0x18;
+		const byte *cluster= *(const byte *const *)(structure_bsp+0xA0)+*(const long *)entry*0xB0;
+		long portal_index;
+
+		current++;
+		for (portal_index= 0; portal_index<*(const long *)(cluster+0x8C); portal_index++)
+		{
+			const byte *portal= *(const byte *const *)(structure_bsp+0x60)
+				+*(const short *)(*(const byte *const *)(cluster+0x90)+portal_index*2)*0x24;
+			long other= *(const short *)portal;
+			real distance;
+
+			if (other==*(const long *)entry)
+			{
+				other= *(const short *)(portal+0x02);
+			}
+			if (other==NONE)
+			{
+				continue;
+			}
+			distance= unknown_0014b240(structure_bsp, portal, point);
+			if (visited[other>>5]&(1UL<<(other&31)))
+			{
+				byte *existing= clusters+indices[other]*0x18;
+
+				if (distance>*(const real *)(existing+0x04))
+				{
+					distance= *(const real *)(existing+0x04);
+				}
+				*(real *)(existing+0x04)= distance;
+			}
+			else if (10.0f>distance)
+			{
+				byte *added= clusters+count*0x18;
+
+				indices[other]= (short)count;
+				*(long *)added= other;
+				*(real *)(added+0x04)= distance;
+				*(long *)(added+0x14)= NONE;
+				count++;
+				visited[other>>5]|= 1UL<<(other&31);
+			}
+		}
+	}
+	while (current<count);
+
+	return count;
 }
