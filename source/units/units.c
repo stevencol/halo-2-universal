@@ -3182,3 +3182,58 @@ boolean __attribute__((stdcall)) unit_unknown_000d5910(
 
 	return placed || named;
 }
+
+/* 0x0054764c: what a byte of the vibrations is worth */
+real unknown_0054764c;
+
+/* 0x0010eaf0: the thirteen vibrations (bytes at 0x6E) of what is at the
+short at 0x33E of an object go a tick toward the one at 0x6C, which goes to
+the real at 0x68, while the rate at 0x60 is above zero (the ticks at 0x64);
+when they are there, the rate and the ticks are zero. Whether they moved */
+boolean unit_unknown_0010eaf0(
+	long object_index)
+{
+	byte *data= (byte *)UNIT_UNKNOWN33E(UNIT_OBJECT_GET(object_index));
+	real blend;
+	real inverse;
+	long index;
+
+	if (!(*(const real *)(data+0x60)>0.0f))
+	{
+		return FALSE;
+	}
+	*(real *)(data+0x64)+= 1.0f;
+	blend= *(const real *)(data+0x60)**(const real *)(data+0x64);
+	if (0.0f>blend)
+	{
+		blend= 0.0f;
+	}
+	else if (blend>1.0f)
+	{
+		blend= 1.0f;
+	}
+	inverse= 1.0f-blend;
+	for (index= 0; index<13; index++)
+	{
+		real value= (real)data[index+0x6E]*unknown_0054764c;
+		unsigned long whole;
+
+		if (index==*(const short *)(data+0x6C))
+		{
+			value= (*(const real *)(data+0x68)-value)*blend + value;
+		}
+		else
+		{
+			value= value*inverse;
+		}
+		whole= (unsigned long)(long)(value*128.0f);
+		data[index+0x6E]= whole>0xFF ? 0xFF : (byte)whole;
+	}
+	if (fabsf(blend-1.0f)<0.0001f)
+	{
+		*(real *)(data+0x60)= 0.0f;
+		*(real *)(data+0x64)= 0.0f;
+	}
+
+	return TRUE;
+}

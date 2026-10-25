@@ -3874,3 +3874,5 @@ address,name,source,arguments,returns,convention
 001c6d00,havok_unknown_001c6d00,source/physics/havok.c,ecx edi stack,void,stdcall
 001318d0,real_rgb_color_to_real_hsv_color,source/math/real_math.c,ecx edx,pointer
 000b7a40,object_unknown_000b7a40,source/objects/objects.c,stack stack,pointer,stdcall
+0016dce0,unknown_0016dce0,source/math/random_math.c,edx ebx,int
+0010eaf0,unit_unknown_0010eaf0,source/units/units.c,eax,bool

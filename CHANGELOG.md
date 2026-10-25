@@ -2,6 +2,28 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Dos funciones del camino al menú: una de varias opciones elegida al azar por sus pesos, y las vibraciones de un objeto que van un tick hacia una
+
+Dos funciones medianas (532 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 3025 funciones se pasa a 3027, el 26,87 % de
+las del juego (el 14,431 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unknown_0016dce0` | `0x0016dce0` | `math/random_math.c` |
+| `unit_unknown_0010eaf0` | `0x0010eaf0` | `units/units.c` |
+
+### Lo que se sabe
+
+- una de varias opciones (0x1C bytes cada una) elegida al azar por sus pesos, con los números al azar del juego (el número por la suma, con la precisión del x87); y las trece vibraciones de un objeto, que van un tick hacia la elegida mientras su ritmo es positivo. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 8 de `make_mutations.py`, 0 sin cazar; 1 que ninguna prueba puede ver (una variable sin valor inicial), quitada.
+
 ## 2026-10-25 — Cuatro funciones del camino al menú: las diecisiete máscaras de puntos, lo rápido que se mueve un canal de animaciones, un color como tono, saturación y valor, y el dato de un identificador de una colocación
 
 Cuatro funciones medianas (916 bytes) en 4 archivos, de las que el juego ejecuta

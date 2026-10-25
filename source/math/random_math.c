@@ -9,6 +9,7 @@ with the same two constants, and the high 16 bits of the seed are the number.
 The name real_seed_random is a guess; real_seed_random_range is Halo 1's.
 */
 
+#include "cseries/cseries.h"
 #include "real_math.h"
 
 #include <stddef.h>
@@ -99,4 +100,48 @@ real_vector3d *seed_random_direction3d(
 	*direction= random_directions[index];
 
 	return direction;
+}
+
+/* 0x0016dce0: one of some choices (0x1C bytes each) picked at random by
+their weights (the reals at 0x18), with the random numbers of the game: the
+first whose weight and those before it reach the number; NONE for none. The
+game takes the number times the sum in the x87's precision */
+long unknown_0016dce0(
+	long count,
+	const byte *choices)
+{
+	real total= 0.0f;
+	real random;
+	real sum;
+	long index;
+
+	if (count==0)
+	{
+		return NONE;
+	}
+	if (count==1)
+	{
+		return 0;
+	}
+	if (count<0)
+	{
+		return NONE;
+	}
+	for (index= 0; index<count; index++)
+	{
+		total= *(const real *)(choices+index*0x1C+0x18)+total;
+	}
+	*global_random_seed_reference= *global_random_seed_reference*RANDOM_A + RANDOM_C;
+	random= (real)((long double)(*global_random_seed_reference>>16)*(1.0f/65535.0f)*total);
+	sum= 0.0f;
+	for (index= 0; index<count; index++)
+	{
+		sum= *(const real *)(choices+index*0x1C+0x18)+sum;
+		if (sum>=random || index==count-1)
+		{
+			return index;
+		}
+	}
+
+	return NONE;
 }
