@@ -14236,3 +14236,45 @@ void unknown_0016f4b0(
 	player[0xB5]= 0;
 	player[0xB6]= 0;
 }
+
+boolean geometry_cache_block_predict(void *block);
+
+/* 0x0016e950: whether the geometry blocks of a tag are predicted: of all
+its sections (0x5C bytes, as many as at 0x24, at 0x28; the block at 0x38),
+or for the mode 1 those of the parts (0x10 bytes, the section at 0x04) of
+its groups (0x10 bytes, the parts at 0x08 and 0x0C; as many as at 0x1C, at
+0x20) */
+boolean __attribute__((stdcall)) unknown_0016e950(
+	long tag_index,
+	short mode)
+{
+	const byte *definition= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+	boolean result= TRUE;
+	long index;
+
+	if (mode!=1)
+	{
+		for (index= 0; index<*(const long *)(definition+0x24); index++)
+		{
+			boolean predicted= geometry_cache_block_predict(*(byte *const *)(definition+0x28)+index*0x5C+0x38);
+
+			result= result && predicted;
+		}
+		return result;
+	}
+	for (index= 0; index<*(const long *)(definition+0x1C); index++)
+	{
+		const byte *group= *(const byte *const *)(definition+0x20)+index*0x10;
+		long part;
+
+		for (part= 0; part<*(const long *)(group+0x08); part++)
+		{
+			short section= *(const short *)(*(const byte *const *)(group+0x0C)+part*0x10+0x04);
+			boolean predicted= geometry_cache_block_predict(*(byte *const *)(definition+0x28)+section*0x5C+0x38);
+
+			result= result && predicted;
+		}
+	}
+
+	return result;
+}

@@ -2,6 +2,30 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Cuatro funciones del camino al menú: los textos de los nodos de los scripts, la geometría de una de dieciséis cosas, si la geometría de un tag está predicha y si un bípedo se mueve
+
+Cuatro funciones medianas (875 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2983 funciones se pasa a 2987, el 26,52 % de
+las del juego (el 14,231 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unknown_002a09c0` | `0x002a09c0` | `hs/hs_runtime.c` |
+| `unknown_000449e0` | `0x000449e0` | `game/game_unknown_0002b4a0.c` |
+| `unknown_0016e950` | `0x0016e950` | `sound/sound_manager.c` |
+| `biped_unknown_000ddfb0` | `0x000ddfb0` | `units/units.c` |
+
+### Lo que se sabe
+
+- los nodos de cadenas de los scripts apuntan a su texto; la geometría de una de dieciséis cosas cuando su bloque está cargado; si los bloques de un tag están predichos; y si un bípedo se mueve. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 16 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Tres funciones del camino al menú: las animaciones de un grafo y los que hereda, cómo están los miembros de la sesión y bits de los números de los actores
 
 Tres funciones medianas (481 bytes) en 3 archivos, de las que el juego ejecuta

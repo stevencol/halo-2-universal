@@ -189,3 +189,28 @@ long __attribute__((stdcall)) hs_thread_new(
 
 	return thread_index;
 }
+
+/* 0x004f9394, of the scripts: their nodes */
+extern struct data_array *script_node_data;
+
+/* 0x002a09c0: the nodes of the scripts (0x14 bytes) of strings (the type 9
+at 0x04) point at their text (their offset at 0x0C, in the string data of
+the scenario at 0x1B4) */
+void unknown_002a09c0(
+	void)
+{
+	long strings= *(const long *)((const byte *)global_scenario+0x1B4);
+	struct data_array *data= script_node_data;
+	long absolute_index= data_next_absolute_index(data, 0);
+
+	while (absolute_index!=NONE)
+	{
+		byte *node= (byte *)data->data+absolute_index*0x14;
+
+		if (*(const short *)(node+0x04)==9)
+		{
+			*(long *)(node+0x10)= *(const long *)(node+0x0C)+strings;
+		}
+		absolute_index= data_next_absolute_index(data, absolute_index+1);
+	}
+}

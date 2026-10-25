@@ -2935,3 +2935,60 @@ boolean weapon_unknown_00106030(
 
 	return player_index!=NONE && game_engine_unknown_00159dd0((byte)player_index);
 }
+
+boolean unit_unknown_000e4050(long unit_index);
+
+/* 0x000ddfb0: whether a biped (without its byte at 0x34B) moves: in the
+state 6, or with a control vector (0x1B0) that is not zero, in the states
+4 or 5, or as unit_unknown_000e4050 says; otherwise (and in the state 3)
+whether its havok component is active and not still */
+boolean biped_unknown_000ddfb0(
+	long biped_index)
+{
+	const byte *biped= UNIT_OBJECT_GET(biped_index);
+	boolean resting= FALSE;
+	long component_index;
+	byte state;
+
+	if (biped[0x34B])
+	{
+		return FALSE;
+	}
+	component_index= *(const long *)(biped+0xB4);
+	if (component_index!=NONE)
+	{
+		const byte *component= (const byte *)havok_component_data->data+(component_index&0xFFFF)*0xA0;
+
+		if ((*(const byte *const *)(component+0x70))[0x44] && !((*(const unsigned long *)(component+0x04)>>18)&1))
+		{
+			resting= TRUE;
+		}
+	}
+	state= biped[0x3DC];
+	if (state==6)
+	{
+		return TRUE;
+	}
+	if (state==3)
+	{
+		return resting;
+	}
+	{
+		const real *control= (const real *)(biped+0x1B0);
+		long double i= control[0];
+		long double j= control[1];
+		long double k= control[2];
+		long double square= i*i+j*j+k*k;
+
+		if (!(0.0001L>(square<0 ? -square : square)))
+		{
+			return TRUE;
+		}
+	}
+	if (state==4 || state==5 || unit_unknown_000e4050(biped_index))
+	{
+		return TRUE;
+	}
+
+	return resting;
+}

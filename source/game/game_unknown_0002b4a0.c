@@ -379,3 +379,49 @@ void __attribute__((stdcall)) cached_object_render_state_unknown_0003dd10(
 		}
 	}
 }
+
+boolean geometry_cache_block_load(void *block, long kind);
+
+/* 0x000449e0: the geometry of one of those sixteen (as unknown_00044940
+finds its place: at 0x34 of a section of its tag, or at 0x50 of a cluster
+or instance of the structure bsp), when its block is loaded or need not
+be; NULL otherwise */
+void *__attribute__((stdcall)) unknown_000449e0(
+	short index,
+	boolean load,
+	boolean instance)
+{
+	const byte *entry= unknown_004ba138+index*0x20;
+	unsigned long place= *(const unsigned long *)(entry+0x0C);
+	long tag= *(const long *)(entry+0x04);
+	const byte *bsp= (const byte *)global_structure_bsp;
+	byte *section;
+
+	if (tag!=NONE)
+	{
+		const byte *definition= (const byte *)(uintptr_t)global_tag_instances[tag&0xFFFF].address;
+
+		section= *(byte *const *)(definition+0x28)+((place>>9)&0x1FF)*0x5C;
+		if (load && !geometry_cache_block_load(section+0x38, 3))
+		{
+			return NULL;
+		}
+		return *(void *const *)(section+0x34);
+	}
+	if (!instance)
+	{
+		section= *(byte *const *)(bsp+0xA0)+((place>>9)&0x1FF)*0xB0;
+	}
+	else
+	{
+		short definition_index= *(const short *)(*(const byte *const *)(bsp+0x144)+((place>>18)&0x7FF)*0x58+0x34);
+
+		section= *(byte *const *)(bsp+0x13C)+definition_index*0xC8;
+	}
+	if (load && !geometry_cache_block_load(section+0x28, 3))
+	{
+		return NULL;
+	}
+
+	return *(void *const *)(section+0x50);
+}

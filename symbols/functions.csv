@@ -2661,7 +2661,7 @@ address,name,source,arguments,returns,convention
 00209290,hs_runtime_dispose_from_old_map,source/hs/hs_runtime.c,,void
 001ded00,object_lists_initialize,source/hs/object_lists.c,,void
 00208ff0,hs_runtime_initialize,source/hs/hs_runtime.c,,void
-002a09c0,unknown_002a09c0,,,void
+002a09c0,unknown_002a09c0,source/hs/hs_runtime.c,,void
 002090a0,unknown_002090a0,,,void
 00188d60,sound_fade_in_for_new_map,source/sound/sound_manager.c,,void
 0018bb80,unknown_0018bb80,,stack,void,stdcall
@@ -3833,3 +3833,6 @@ address,name,source,arguments,returns,convention
 001ddd00,havok_unknown_001ddd00,source/physics/havok.c,ebx eax stack stack stack stack,void,stdcall
 000652a0,network_session_get_members_status,source/networking/network_life_cycle.c,stack,int,stdcall
 001c9b50,ai_unknown_001c9b50,source/ai/actors.c,ebx stack,bool,stdcall
+000449e0,unknown_000449e0,source/game/game_unknown_0002b4a0.c,eax edx stack,pointer,stdcall
+0016e950,unknown_0016e950,source/sound/sound_manager.c,eax stack,bool,stdcall
+000ddfb0,biped_unknown_000ddfb0,source/units/units.c,esi,bool
