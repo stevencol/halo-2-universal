@@ -2,6 +2,27 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Una función del camino al menú: si un punto cae en un polígono de un plano
+
+Una función mediana (481 bytes) en 1 archivo, de las que el juego ejecuta
+hasta el menú principal. De 3072 funciones se pasa a 3073, el 27,28 % de
+las del juego (el 14,871 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `real_math_unknown_00173910` | `0x00173910` | `math/real_math.c` |
+
+### Lo que se sabe
+
+- si un punto cae en un polígono: el punto llevado a su plano y los dos como puntos 2D del plano (por los ejes de su proyección), con `ai_point_in_polygon2d` y una tolerancia de 0.0001. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirve; el nombre es la dirección.
+- Mutaciones: 3 de `make_mutations.py` y 5 a mano, 0 sin cazar; 1 que no cambia nada, quitada.
+
 ## 2026-10-25 — Una función del camino al menú: la matriz de un componente de havok desde su cuerpo principal o su objeto
 
 Una función pequeña (102 bytes) en 1 archivo, de las que el juego ejecuta

@@ -3921,3 +3921,4 @@ address,name,source,arguments,returns,convention
 001ce180,havok_unknown_001ce180,source/physics/havok.c,edi stack ecx edx stack stack,void,stdcall
 00156ab0,input_unknown_00156ab0,source/input/input_xbox.c,,bool
 001d4360,havok_unknown_001d4360,source/physics/havok.c,edi stack,void,stdcall
+00173910,real_math_unknown_00173910,source/math/real_math.c,eax stack,bool,stdcall

@@ -5,6 +5,7 @@ Decompiled from halo2ship.exe (Xbox, build 02.09.27.09809). Each function
 gives the address it has there.
 */
 
+#include "cseries/cseries.h"
 #include "real_math.h"
 
 #include <limits.h>
@@ -1696,4 +1697,44 @@ real *__attribute__((stdcall)) real_math_unknown_00131d60(
 	}
 
 	return result;
+}
+
+/* 0x0023a220, of actors.c */
+boolean __attribute__((stdcall)) ai_point_in_polygon2d(const real *point, const real *points, short count,
+	real tolerance);
+
+/* 0x00173910: whether a point (at 0x60 of what is at 0x08 of something)
+falls in a polygon (its plane at 0x04, of those at 0x0C of what is at 0x04
+of the something, and its points, 12 bytes each, at 0x20, as many as at
+0x1C): the point moved onto the plane and both as 2D points of it, by
+ai_point_in_polygon2d with a tolerance of 0.0001 */
+boolean __attribute__((stdcall)) real_math_unknown_00173910(
+	const byte *context,
+	const byte *polygon)
+{
+	const real *plane= (const real *)(*(const byte *const *)(*(const byte *const *)(context+0x04)+0x0C)
+		+*(const long *)(polygon+0x04)*16);
+	const real *origin= (const real *)(*(const byte *const *)(context+0x08)+0x60);
+	short axis= projection_from_vector3d((const real_vector3d *)plane);
+	const short *axes= projection_axes[axis][plane[axis]>0.0f];
+	real distance= 0.0f-(origin[2]*plane[2] + origin[1]*plane[1] + origin[0]*plane[0] - plane[3]);
+	real projected[3];
+	real point[2];
+	real points[128][2];
+	long index;
+
+	projected[0]= plane[0]*distance + origin[0];
+	projected[1]= distance*plane[1] + origin[1];
+	projected[2]= plane[2]*distance + origin[2];
+	point[0]= projected[axes[0]];
+	point[1]= projected[axes[1]];
+	for (index= 0; index<*(const long *)(polygon+0x1C); index++)
+	{
+		const real *vertex= (const real *)(*(const byte *const *)(polygon+0x20)+index*12);
+
+		memcpy(&points[index][0], &vertex[axes[0]], sizeof(real));
+		memcpy(&points[index][1], &vertex[axes[1]], sizeof(real));
+	}
+
+	return ai_point_in_polygon2d(point, &points[0][0], (short)*(const long *)(polygon+0x1C), 0.0001f)!=FALSE;
 }
