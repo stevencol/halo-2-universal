@@ -3783,3 +3783,6 @@ address,name,source,arguments,returns,convention
 00248620,particle_location_new,source/effects/effects.c,,int
 001773a0,effect_unknown_001773a0,source/effects/effects.c,eax,void
 0020fe20,vocalization_records_unknown_0020fe20,source/ai/vocalizations.c,stack,void,stdcall
+000137a0,unknown_000137a0,source/main/main.c,stack stack,void,stdcall
+001d9240,unit_counter_start,source/units/units.c,ecx ebx stack,void,stdcall
+000460d0,unknown_000460d0,source/game/game_unknown_0002b4a0.c,eax ebx stack,bool,stdcall

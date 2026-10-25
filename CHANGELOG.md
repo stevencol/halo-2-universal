@@ -2,6 +2,29 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Tres funciones del camino al menú: dos reales en un tiempo, un contador que empieza y si una de dieciséis cosas tiene un bit puesto
+
+Tres funciones medianas (653 bytes) en 3 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2933 funciones se pasa a 2936, el 26,06 % de
+las del juego (el 14,000 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unknown_000137a0` | `0x000137a0` | `main/main.c` |
+| `unit_counter_start` | `0x001d9240` | `units/units.c` |
+| `unknown_000460d0` | `0x000460d0` | `game/game_unknown_0002b4a0.c` |
+
+### Lo que se sabe
+
+- dos reales entre dos pares según un tiempo (dos variables nuevas); un contador que empieza a subir o bajar en unos segundos; y si una de las dieciséis cosas tiene un bit puesto para su lugar.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 12 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Tres funciones del camino al menú: un lugar de partículas nuevo, los lugares de un efecto borrados y unos registros de vocalización borrados
 
 Tres funciones medianas (509 bytes) en 2 archivos, de las que el juego ejecuta

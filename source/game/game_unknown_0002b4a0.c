@@ -289,3 +289,54 @@ byte *__attribute__((stdcall)) unknown_00044940(
 
 	return *(byte *const *)(bsp+0x13C)+*(const short *)(*(const byte *const *)(bsp+0x144)+((bits>>18)&0x7FF)*0x58+0x34)*0xC8;
 }
+
+/* 0x000460d0: whether one of those sixteen (by the bit 0x40 of its flags,
+TRUE without it) has a bit set among bits for its place (as
+unknown_00044940 finds it: the list at 0x34 or 0x50 there, 0x48 bytes by
+a number, its first at 0x0A and how many at 0x0C) */
+boolean __attribute__((stdcall)) unknown_000460d0(
+	long number,
+	const unsigned long *bits,
+	short index)
+{
+	const byte *entry= unknown_004ba138+index*0x20;
+	unsigned long flags= *(const unsigned long *)entry;
+	unsigned long place= *(const unsigned long *)(entry+0x0C);
+	long tag= *(const long *)(entry+0x04);
+	const byte *bsp= (const byte *)global_structure_bsp;
+	const byte *list;
+	const byte *element;
+	long first;
+	long last;
+	boolean result= FALSE;
+
+	if (!(flags&0x40))
+	{
+		return TRUE;
+	}
+	if (tag!=NONE)
+	{
+		const byte *definition= (const byte *)(uintptr_t)global_tag_instances[tag&0xFFFF].address;
+
+		list= *(const byte *const *)(*(const byte *const *)(definition+0x28)+((place>>9)&0x1FF)*0x5C+0x34);
+	}
+	else if (!((flags>>12)&1))
+	{
+		list= *(const byte *const *)(*(const byte *const *)(bsp+0xA0)+((place>>9)&0x1FF)*0xB0+0x50);
+	}
+	else
+	{
+		short cluster= *(const short *)(*(const byte *const *)(bsp+0x144)+((place>>18)&0x7FF)*0x58+0x34);
+
+		list= *(const byte *const *)(*(const byte *const *)(bsp+0x13C)+cluster*0xC8+0x50);
+	}
+	element= *(const byte *const *)(list+0x04)+number*0x48;
+	first= *(const short *)(element+0x0A);
+	last= *(const short *)(element+0x0C)+first;
+	for (; first<last && !result; first++)
+	{
+		result= (bits[first>>5]&(1UL<<(first&0x1F)))!=0;
+	}
+
+	return result;
+}

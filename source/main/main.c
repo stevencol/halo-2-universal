@@ -1278,3 +1278,41 @@ void __attribute__((stdcall)) unknown_00132fd0(
 	*in_front= TRUE;
 	*behind= TRUE;
 }
+
+/* 0x0050934c: something with two sets of ranges (from 0x04, and from 0x1C
+with its first byte); 0x004858a0: a time, as a double */
+byte *unknown_0050934c;
+double unknown_004858a0;
+
+/* 0x000137a0: two reals at that time: from the first or the second of each
+of two pairs (0x0C and 0x14 past the set), or between them as the time is
+between the two of the range */
+void __attribute__((stdcall)) unknown_000137a0(
+	real *first,
+	real *second)
+{
+	const byte *set= unknown_0050934c[0] ? unknown_0050934c+0x1C : unknown_0050934c+0x04;
+	const real *range= (const real *)set;
+	const real *a= (const real *)(set+0x08);
+	const real *b= (const real *)(set+0x10);
+	real time= (real)unknown_004858a0;
+	real length;
+	real fraction;
+
+	if (range[0]>=time)
+	{
+		*first= a[0];
+		*second= b[0];
+		return;
+	}
+	length= range[1]-range[0];
+	if (time>range[1] || !(length>0.0001f))
+	{
+		*first= a[1];
+		*second= b[1];
+		return;
+	}
+	fraction= (time-range[0])/length;
+	*second= (b[1]-b[0])*fraction+b[0];
+	*first= (a[1]-a[0])*fraction+a[0];
+}

@@ -2809,3 +2809,53 @@ boolean unit_unknown_00113910(
 
 	return result;
 }
+
+/* 0x001d9240: a counter starts to go up or down over some seconds (1 to 127
+ticks; fewer than two stop it), keeping where it was in the new length when
+it was going */
+void __attribute__((stdcall)) unit_counter_start(
+	signed char *counter,
+	boolean up,
+	real seconds)
+{
+	long ticks= lrintf((real)game_time_globals->ticks_per_second*seconds);
+
+	if (ticks<1)
+	{
+		ticks= 1;
+	}
+	else if (ticks>0x7F)
+	{
+		ticks= 0x7F;
+	}
+	ticks--;
+	if (ticks<=0)
+	{
+		counter[1]= 0;
+		counter[0]= 0;
+		counter[3]= 0;
+		return;
+	}
+	if (counter[1] && (byte)up==(counter[3]&1) && ticks==counter[1])
+	{
+		return;
+	}
+	if (counter[1])
+	{
+		real length= (real)counter[1];
+		real value;
+
+		if (!(length>1.0f))
+		{
+			length= 1.0f;
+		}
+		value= (real)counter[0]/length*(real)(ticks-1);
+		counter[1]= (signed char)ticks;
+		counter[0]= (signed char)(long)value;
+		counter[3]= up!=0;
+		return;
+	}
+	counter[1]= (signed char)ticks;
+	counter[0]= (signed char)(up ? 1 : ticks-1);
+	counter[3]= up!=0;
+}

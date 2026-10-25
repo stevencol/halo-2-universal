@@ -797,3 +797,5 @@ address,name,source
 004ba138,unknown_004ba138,source/game/game_unknown_0002b4a0.c
 00485b28,unknown_00485b28,source/rasterizer/rasterizer_xbox.c
 005093e4,unknown_005093e4,source/rasterizer/rasterizer_text.c
+0050934c,unknown_0050934c,source/main/main.c
+004858a0,unknown_004858a0,source/main/main.c
