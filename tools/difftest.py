@@ -659,13 +659,20 @@ class Harness:
                     cleanup = self._external_cleanup[name]
                 else:
                     count = len(symbol.arguments)
-                    arguments = list(struct.unpack(f"<{count}I", mu.mem_read(esp + 4, 4 * count)))
-                    # a function that is not decompiled and that source/ calls
-                    # through a pointer to a function that takes its arguments
-                    # off the stack ("stdcall" in symbols/functions.csv) does so
-                    cleanup = self._external_cleanup_ours.get(
-                        name, 4 * count if symbol.convention == "stdcall" else 0
-                    )
+                    if symbol.convention == "thiscall":
+                        # source/ gives the first in ecx and the rest on the
+                        # stack, which the function takes off
+                        rest = list(struct.unpack(f"<{count - 1}I", mu.mem_read(esp + 4, 4 * (count - 1))))
+                        arguments = [mu.reg_read(x86.UC_X86_REG_ECX) & 0xFFFFFFFF] + rest
+                        cleanup = self._external_cleanup_ours.get(name, 4 * (count - 1))
+                    else:
+                        arguments = list(struct.unpack(f"<{count}I", mu.mem_read(esp + 4, 4 * count)))
+                        # a function that is not decompiled and that source/ calls
+                        # through a pointer to a function that takes its arguments
+                        # off the stack ("stdcall" in symbols/functions.csv) does so
+                        cleanup = self._external_cleanup_ours.get(
+                            name, 4 * count if symbol.convention == "stdcall" else 0
+                        )
                 try:
                     result = self._external_handlers[name](self, arguments)
                 except StopCall:

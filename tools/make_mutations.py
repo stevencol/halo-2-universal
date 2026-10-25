@@ -30,7 +30,7 @@ WORDS = {"TRUE": "FALSE", "FALSE": "TRUE", "NONE": "0"}
 def added_functions(base: str) -> list[tuple[str, str]]:
     diff = subprocess.run(["git", "diff", base, "--", "symbols/functions.csv"], cwd=ROOT, capture_output=True, text=True, check=True).stdout
     rows = [line[1:].split(",") for line in diff.splitlines() if line.startswith("+") and not line.startswith("+++")]
-    return [(row[1], row[2]) for row in rows if len(row) > 2]
+    return [(row[1], row[2]) for row in rows if len(row) > 2 and row[2]]
 
 
 def added_tests(base: str) -> str:
