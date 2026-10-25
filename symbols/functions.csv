@@ -3862,3 +3862,6 @@ address,name,source,arguments,returns,convention
 00100f70,weapon_unknown_00100f70,source/units/units.c,eax,bool
 00111590,unit_unknown_00111590,source/units/units.c,eax stack,bool,stdcall
 001ddb40,havok_unknown_001ddb40,source/physics/havok.c,edi stack stack,void,stdcall
+000dd8e0,biped_unknown_000dd8e0,source/units/units.c,edi stack,bool,stdcall
+001c36f0,havok_unknown_001c36f0,source/physics/havok.c,stack stack,void,stdcall
+0018cb10,sound_unknown_0018cb10,source/sound/sound_manager.c,,void

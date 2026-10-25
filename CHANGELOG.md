@@ -2,6 +2,29 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Tres funciones del camino al menú: cuánto cambia la altura de un bípedo, los componentes de havok de un objeto y sus hijos, y los clusters que oyen los oyentes
+
+Tres funciones medianas (457 bytes) en 3 archivos, de las que el juego ejecuta
+hasta el menú principal. De 3013 funciones se pasa a 3016, el 26,77 % de
+las del juego (el 14,355 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `biped_unknown_000dd8e0` | `0x000dd8e0` | `units/units.c` |
+| `havok_unknown_001c36f0` | `0x001c36f0` | `physics/havok.c` |
+| `sound_unknown_0018cb10` | `0x0018cb10` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- cuánto cambia la altura de un bípedo en un tick (las dos alturas de su definición, por los ticks de un segundo y por lo que da `biped_unknown_000dd7d0`); un objeto sin componente de havok lo recibe, y también sus hijos; y el bit de cada cluster de la bsp que algún oyente tiene a menos de 256. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 12 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Cuatro funciones del camino al menú: si un dato del escenario hace un objeto, si un arma tiene una cuenta, si las animaciones de una unidad tienen un bit y lo que se quiere de una animación
 
 Cuatro funciones medianas (488 bytes) en 2 archivos, de las que el juego ejecuta

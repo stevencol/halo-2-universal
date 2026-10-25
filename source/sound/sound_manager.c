@@ -14311,3 +14311,36 @@ real __attribute__((stdcall)) unknown_0013bb90(
 
 	return (*(const real *)(data+8)-*(const real *)(data+4))*value + *(const real *)(data+4);
 }
+
+/* 0x0054e8a0: a bit for each cluster of the structure bsp */
+unsigned long unknown_0054e8a0[16];
+
+/* 0x0018cb10: the clusters of the structure bsp (as many as at 0x9C) that
+some listener (the four of 0x48 bytes from 0x8C of game_sound_globals, with
+the byte at 0x02 and a cluster in the short at 0x00) has nearer than 256 by
+unknown_00249d60 have their bit */
+void sound_unknown_0018cb10(
+	void)
+{
+	const byte *structure_bsp= global_structure_bsp;
+	const byte *listener= game_sound_globals+0x8C;
+	long listener_index;
+
+	memset(unknown_0054e8a0, 0, ((*(const long *)(structure_bsp+0x9C)+31)>>5)*4);
+	for (listener_index= 0; listener_index<4; listener_index++, listener+= 0x48)
+	{
+		long cluster_index;
+
+		if (!listener[0x02] || *(const short *)listener==NONE)
+		{
+			continue;
+		}
+		for (cluster_index= 0; cluster_index<*(const long *)(structure_bsp+0x9C); cluster_index++)
+		{
+			if (unknown_00249d60(cluster_index, *(const short *)listener, structure_bsp)<256.0f)
+			{
+				unknown_0054e8a0[cluster_index>>5]|= 1UL<<(cluster_index&31);
+			}
+		}
+	}
+}

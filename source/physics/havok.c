@@ -2005,3 +2005,34 @@ void __attribute__((stdcall)) havok_unknown_001ddb40(
 	data[0x09]= animation[0x11];
 	*(short *)(data+0x0A)= *(const short *)(animation+0x14);
 }
+
+/* 0x001c36f0: an object without a havok component (NONE at 0xB4) gets
+one (unknown_001c35f0, between unknown_00146bf0 and unknown_00278f00), and
+so do its children (from 0x10, each to the next at 0x0C), up to the one that
+is the parent given */
+void __attribute__((stdcall)) havok_unknown_001c36f0(
+	long parent_index,
+	long object_index)
+{
+	const byte *object= (const byte *)((const struct object_header_datum *)object_header_data->data)[object_index&0xFFFF].datum;
+	long child_index= *(const long *)(object+0x10);
+
+	if (*(const long *)(object+0xB4)==NONE)
+	{
+		unknown_00146bf0();
+		unknown_001c35f0(object_index);
+		unknown_00278f00();
+		unknown_00146bf0();
+	}
+	while (child_index!=NONE)
+	{
+		const byte *child= (const byte *)((const struct object_header_datum *)object_header_data->data)[child_index&0xFFFF].datum;
+
+		if (child_index==parent_index)
+		{
+			break;
+		}
+		havok_unknown_001c36f0(parent_index, child_index);
+		child_index= *(const long *)(child+0x0C);
+	}
+}

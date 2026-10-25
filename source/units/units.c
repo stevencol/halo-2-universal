@@ -3126,3 +3126,33 @@ boolean __attribute__((stdcall)) unit_unknown_00111590(
 
 	return result;
 }
+
+/* 0x000dd8e0: how much the height of a biped changes in a tick (the two
+heights at 0x268 and 0x26C of its definition, times the ticks of a second
+and what biped_unknown_000dd7d0 gives), when its definition has not the bit
+1 at 0x264, unit_unknown_000e4050 or unit_unknown_000e0dc0 says so and it
+changes at all; whether it does */
+boolean __attribute__((stdcall)) biped_unknown_000dd8e0(
+	long biped_index,
+	real *height_change)
+{
+	const byte *definition= UNIT_DEFINITION_GET(UNIT_OBJECT_GET(biped_index));
+	real change= biped_unknown_000dd7d0(biped_index);
+
+	if ((*(const unsigned long *)(definition+0x264)>>1)&1)
+	{
+		return FALSE;
+	}
+	if (!unit_unknown_000e4050(biped_index) && !unit_unknown_000e0dc0(biped_index))
+	{
+		return FALSE;
+	}
+	if (change==0.0f)
+	{
+		return FALSE;
+	}
+	*height_change= (*(const real *)(definition+0x268)-*(const real *)(definition+0x26C))
+		*(real)game_time_globals->ticks_per_second*change;
+
+	return TRUE;
+}
