@@ -2036,3 +2036,73 @@ void __attribute__((stdcall)) havok_unknown_001c36f0(
 		child_index= *(const long *)(child+0x0C);
 	}
 }
+
+/* 0x001dd0b0: the id (as havok_unknown_001dd9d0 takes it) of the animation
+of a name (the long at 0x00 of each) in a graph or, after it, in those it
+inherits from, in order; its resources are asked for. NONE for none */
+void __attribute__((stdcall)) havok_unknown_001dd0b0(
+	const byte *graph,
+	unsigned long *id,
+	long name)
+{
+	const byte *current= graph;
+	long graph_index= NONE;
+
+	if (!graph)
+	{
+		*id= NONE;
+		return;
+	}
+	while (current)
+	{
+		long index;
+
+		for (index= 0; index<*(const long *)(current+0x2C); index++)
+		{
+			if (*(const long *)(*(const byte *const *)(current+0x30)+index*0x6C)==name)
+			{
+				unsigned long found= (unsigned short)graph_index|(unsigned long)index<<16;
+
+				havok_unknown_001dd9d0(graph, found);
+				*id= found;
+				return;
+			}
+		}
+		graph_index++;
+		if (graph_index>=*(const long *)(graph+0x4C))
+		{
+			break;
+		}
+		current= unknown4C_get_tag(graph_index, graph);
+	}
+	*id= NONE;
+}
+
+/* 0x0020aa70, of units.c */
+void __attribute__((stdcall)) unit_unknown_0020aa70(unsigned long *last, unsigned long *point, const byte *data, short index);
+
+/* 0x001c6dc0: how a channel of animations moves at a frame: by what is
+wanted of its animation (havok_unknown_001ddb40), unit_unknown_0020aa70
+gives a vector and a real; zeros for no animation */
+void __attribute__((stdcall)) havok_unknown_001c6dc0(
+	const byte *channel,
+	real *vector,
+	real *value,
+	long frame)
+{
+	byte data[12];
+
+	vector[0]= 0.0f;
+	vector[1]= 0.0f;
+	vector[2]= 0.0f;
+	*value= 0.0f;
+	if (*(const short *)(channel+0x06)==NONE)
+	{
+		return;
+	}
+	memset(data, 0, 10);
+	havok_unknown_001ddb40(data,
+		(const byte *)(uintptr_t)global_tag_instances[*(const long *)channel&0xFFFF].address,
+		*(const unsigned long *)(channel+0x04));
+	unit_unknown_0020aa70((unsigned long *)value, (unsigned long *)vector, data, (short)frame);
+}

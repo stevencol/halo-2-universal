@@ -2,6 +2,31 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Cinco funciones del camino al menú: si un dato del escenario se hace ahora, el valor de una rampa del escenario (de dos maneras), la animación de un nombre y cómo se mueve un canal
+
+Cinco funciones medianas (816 bytes) en 3 archivos, de las que el juego ejecuta
+hasta el menú principal. De 3016 funciones se pasa a 3021, el 26,82 % de
+las del juego (el 14,382 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unit_unknown_000d5910` | `0x000d5910` | `units/units.c` |
+| `game_unknown_00134fe0` | `0x00134fe0` | `game/game_unknown_00134d90.c` |
+| `game_unknown_00134fc0` | `0x00134fc0` | `game/game_unknown_00134d90.c` |
+| `havok_unknown_001dd0b0` | `0x001dd0b0` | `physics/havok.c` |
+| `havok_unknown_001c6dc0` | `0x001c6dc0` | `physics/havok.c` |
+
+### Lo que se sabe
+
+- si un dato del escenario se hace ahora (por la bsp en la que está o las de sus bits, su nombre o si hace un objeto); el valor de una rampa del escenario, por su función y escalado por otra rampa, y el mismo con lo que guarda; el id de la animación de un nombre en un grafo o en los que hereda; y cómo se mueve un canal de animaciones en un frame. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 17 de `make_mutations.py`, 0 sin cazar; 2 que no cambian nada, quitadas.
+
 ## 2026-10-25 — Tres funciones del camino al menú: cuánto cambia la altura de un bípedo, los componentes de havok de un objeto y sus hijos, y los clusters que oyen los oyentes
 
 Tres funciones medianas (457 bytes) en 3 archivos, de las que el juego ejecuta

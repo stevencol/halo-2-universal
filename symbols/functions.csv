@@ -3865,3 +3865,8 @@ address,name,source,arguments,returns,convention
 000dd8e0,biped_unknown_000dd8e0,source/units/units.c,edi stack,bool,stdcall
 001c36f0,havok_unknown_001c36f0,source/physics/havok.c,stack stack,void,stdcall
 0018cb10,sound_unknown_0018cb10,source/sound/sound_manager.c,,void
+000d5910,unit_unknown_000d5910,source/units/units.c,eax stack,bool,stdcall
+00134fe0,game_unknown_00134fe0,source/game/game_unknown_00134d90.c,stack stack,real:xmm0,stdcall
+00134fc0,game_unknown_00134fc0,source/game/game_unknown_00134d90.c,ecx,real:xmm0
+001dd0b0,havok_unknown_001dd0b0,source/physics/havok.c,edx stack stack,void,stdcall
+001c6dc0,havok_unknown_001c6dc0,source/physics/havok.c,eax esi ebx stack,void,stdcall

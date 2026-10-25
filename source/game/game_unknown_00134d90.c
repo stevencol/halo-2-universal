@@ -212,3 +212,80 @@ void *game_unknown_00137610(
 
 	return *(byte *const *)(group+0x48)+index*0x74;
 }
+
+/* 0x0013b390 and 0x0013bb90, of the functions of tags */
+real unknown_0013b390(const byte *function, real input, real range);
+real __attribute__((stdcall)) unknown_0013bb90(const byte *function, real input, real range);
+
+/* 0x00134fe0: the value of a ramp of the scenario (24 bytes each, at 0x3C4,
+as many as at 0x3C0) at a value, plus what it keeps of its own at 0x18 (of
+its 32 bytes from 0x04 of unknown_004e6740): by its function at 0x0C; one
+scaled by another ramp (the short at 0x16) has it times the value of that
+one, which has to have no scale itself (0 if it has), and then taken to 0..1
+and to its bounds, unless the function says not to */
+real __attribute__((stdcall)) game_unknown_00134fe0(
+	long index,
+	real value)
+{
+	const byte *state= unknown_004e6740+index*32+4;
+	const byte *scenario= (const byte *)global_scenario;
+	const byte *ramps= *(const byte *const *)(scenario+0x3C4);
+	const byte *ramp= ramps+index*24;
+	short scale_index= *(const short *)(ramp+0x16);
+	long clamped;
+	real output;
+	real result;
+	const byte *data;
+
+	if (!state)
+	{
+		return 0.0f;
+	}
+	value+= *(const real *)(state+0x18);
+	clamped= scale_index<0 ? 0 : scale_index>*(const long *)(scenario+0x3C0)-1 ? *(const long *)(scenario+0x3C0)-1 : scale_index;
+	if (clamped!=scale_index)
+	{
+		return unknown_0013bb90(ramp+0x0C, value, 0.0f);
+	}
+	if (*(const short *)(ramps+scale_index*24+0x16)!=NONE)
+	{
+		return 0.0f;
+	}
+	output= unknown_0013b390(ramp+0x0C, value, 0.0f);
+	result= 0.0f;
+	if (unknown_004e6740+scale_index*32+4)
+	{
+		result= game_unknown_00134fe0(scale_index, *(const real *)(unknown_004e6740+scale_index*32+4));
+	}
+	result*= output;
+	data= *(const byte *const *)(ramp+0x0C+4);
+	if (data[1]&0xF0)
+	{
+		return result;
+	}
+	if (0.0f>result)
+	{
+		result= 0.0f;
+	}
+	else if (result>1.0f)
+	{
+		result= 1.0f;
+	}
+
+	return (*(const real *)(data+8)-*(const real *)(data+4))*result + *(const real *)(data+4);
+}
+
+/* 0x00134fc0: the value of a ramp of the scenario at what it keeps at 0x00
+of its own */
+real game_unknown_00134fc0(
+	long index)
+{
+	const byte *state= unknown_004e6740+index*32+4;
+
+	if (!state)
+	{
+		return 0.0f;
+	}
+
+	return game_unknown_00134fe0(index, *(const real *)state);
+}

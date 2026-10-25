@@ -3156,3 +3156,29 @@ boolean __attribute__((stdcall)) biped_unknown_000dd8e0(
 
 	return TRUE;
 }
+
+/* 0x000d5910: whether a datum of the scenario is made now: one that makes
+an object (or any, when forced), and by the byte at 0x30: for 2, whether the
+structure bsp is one of the bits of the short at 0x26; otherwise, whether it
+is of no bsp or of this one (the short at 0x2C), or has a name or makes an
+object (unit_unknown_000d59f0) */
+boolean __attribute__((stdcall)) unit_unknown_000d5910(
+	const byte *datum,
+	boolean force)
+{
+	boolean placed;
+	boolean named;
+
+	if ((datum[0x04]&1) && !(force&1))
+	{
+		return FALSE;
+	}
+	if (datum[0x30]==2)
+	{
+		return (*(const unsigned short *)(datum+0x26)&(1UL<<(global_structure_bsp_index&31)))!=0;
+	}
+	placed= *(const short *)(datum+0x2C)==NONE || *(const short *)(datum+0x2C)==global_structure_bsp_index;
+	named= *(const short *)(datum+0x02)!=NONE || unit_unknown_000d59f0(datum);
+
+	return placed || named;
+}
