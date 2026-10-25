@@ -1448,3 +1448,11 @@ long real_math_unknown_000a74c0(
 
 	return real_math_unknown_000a0200(up[2]*forward[2] + up[1]*forward[1] + forward[0]*up[0], 0.0f) ? 1 : 0;
 }
+
+/* 0x0013d9f0: whether a type (of a part of a geometry) is 4 or 5 (among the
+functions of the geometry in the game) */
+long real_math_unknown_0013d9f0(
+	long type)
+{
+	return type==4 || type==5;
+}

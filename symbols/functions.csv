@@ -3803,3 +3803,9 @@ address,name,source,arguments,returns,convention
 001cf2b0,unknown30_set_2001,source/physics/havok_component.c,esi stack,void,stdcall
 001cf330,unknown30_set_2002,source/physics/havok_component.c,esi stack,void,stdcall
 001cf3b0,unknown30_set_2003,source/physics/havok_component.c,esi stack,void,stdcall
+001dd840,havok_unknown_001dd840,source/physics/havok.c,eax edx,void
+001ddab0,havok_unknown_001ddab0,source/physics/havok.c,edi,void
+001cd4e0,havok_unknown_001cd4e0,source/physics/havok.c,esi,bool
+0013d9f0,real_math_unknown_0013d9f0,source/math/real_math.c,eax,bool
+001565e0,input_abstraction_unknown_001565e0,source/input/input_abstraction.c,,void
+001753f0,particle_system_unknown_001753f0,source/effects/effects.c,ebx,void

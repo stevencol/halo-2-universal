@@ -2,6 +2,32 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Seis funciones del camino al menú: los recursos de las animaciones de un grafo, dos contadores de un estado de animación, un tipo de una parte, memoria permanente devuelta y los lugares de un sistema de partículas
+
+Seis funciones medianas (301 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2951 funciones se pasa a 2957, el 26,25 % de
+las del juego (el 14,097 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_001dd840` | `0x001dd840` | `physics/havok.c` |
+| `havok_unknown_001ddab0` | `0x001ddab0` | `physics/havok.c` |
+| `havok_unknown_001cd4e0` | `0x001cd4e0` | `physics/havok.c` |
+| `real_math_unknown_0013d9f0` | `0x0013d9f0` | `math/real_math.c` |
+| `input_abstraction_unknown_001565e0` | `0x001565e0` | `input/input_abstraction.c` |
+| `particle_system_unknown_001753f0` | `0x001753f0` | `effects/effects.c` |
+
+### Lo que se sabe
+
+- el recurso de una animación pedido pronto, o todos los de un grafo; los dos contadores de un estado de animación; si un tipo de parte es 4 o 5; la memoria permanente de una textura devuelta (tres variables nuevas); y los lugares de partículas de un sistema borrados. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 20 de `make_mutations.py`, 0 sin cazar; 1 que no cambia nada, quitada.
+
 ## 2026-10-25 — Cuatro funciones pequeñas del camino al menú: un procedimiento para las entradas de una lista y tres claves de una entidad de Havok
 
 Cuatro funciones pequeñas (285 bytes) en 2 archivos, de las que el juego ejecuta

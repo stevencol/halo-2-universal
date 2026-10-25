@@ -1582,3 +1582,64 @@ void __attribute__((stdcall)) havok_unknown_001ddb90(
 		}
 	}
 }
+
+/* 0x001dd840: the animation (0x6C bytes, by an index, of the block at 0x30
+of a graph), when it is streamed (bit 4 of its byte at 0x16), has its
+resource (0x14 bytes, by its long at 0x24, of the block at 0xB0) asked for
+soon, when it has one */
+void havok_unknown_001dd840(
+	long animation_index,
+	const byte *graph)
+{
+	const byte *animation= animation_index==NONE ? NULL : *(const byte *const *)(graph+0x30)+animation_index*0x6C;
+	struct cached_animation *resource;
+
+	if (!(animation[0x16]&0x10))
+	{
+		return;
+	}
+	resource= (struct cached_animation *)(*(byte *const *)(graph+0xB0)+*(const long *)(animation+0x24)*0x14);
+	if (((const byte *)resource)[0x10])
+	{
+		animation_cache_predict(resource, TRUE);
+	}
+}
+
+/* 0x001ddab0: all the resources of a graph (0x14 bytes, as many as at 0xAC,
+at 0xB0) that are streamed are asked for, not soon */
+void havok_unknown_001ddab0(
+	const byte *graph)
+{
+	long index;
+
+	for (index= 0; index<*(const long *)(graph+0xAC); index++)
+	{
+		struct cached_animation *resource= (struct cached_animation *)(*(byte *const *)(graph+0xB0)+index*0x14);
+
+		if (((const byte *)resource)[0x10])
+		{
+			animation_cache_predict(resource, FALSE);
+		}
+	}
+}
+
+boolean unit_counter_update(signed char *counter);
+
+/* 0x001cd4e0: the two counters of an animation state (0x64, then 0x60) are
+updated; the first is cleared when it reached its end; whether either says
+so */
+boolean havok_unknown_001cd4e0(
+	byte *state)
+{
+	boolean result= unit_counter_update((signed char *)(state+0x64));
+
+	if (state[0x67]&2)
+	{
+		state[0x65]= 0;
+		state[0x64]= 0;
+		state[0x67]= 0;
+	}
+	result|= unit_counter_update((signed char *)(state+0x60));
+
+	return result;
+}

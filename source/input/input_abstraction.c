@@ -14,6 +14,7 @@ The name of the file and those of its functions are guesses.
 #include "main/main.h"
 #include "memory/data.h"
 #include "objects/objects.h"
+#include "cache/texture_cache.h"
 
 #include <math.h>
 #include <stdint.h>
@@ -422,4 +423,24 @@ long unknown_004e9194_and_unknown_004e9188(
 	void)
 {
 	return unknown_004e9194 && unknown_004e9188;
+}
+
+/* 0x004e91a0, 0x004e925c and 0x004e9264: a texture, the permanent memory it
+was in, and its size */
+void *unknown_004e91a0;
+void *unknown_004e925c;
+long unknown_004e9264;
+
+/* 0x001565e0: with unknown_004e9188, the permanent memory is given back to
+the texture cache, and they are cleared */
+void input_abstraction_unknown_001565e0(
+	void)
+{
+	if (unknown_004e9188 && unknown_004e925c)
+	{
+		texture_cache_return_memory(unknown_004e925c);
+		unknown_004e925c= NULL;
+		unknown_004e91a0= NULL;
+		unknown_004e9264= 0;
+	}
 }

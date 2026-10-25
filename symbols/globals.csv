@@ -801,3 +801,6 @@ address,name,source
 004858a0,unknown_004858a0,source/main/main.c
 004e64c8,unknown_004e64c8,source/game/game_unknown_0016efb0.c
 00479898,unknown_00479898,source/physics/havok.c
+004e91a0,unknown_004e91a0,source/input/input_abstraction.c
+004e925c,unknown_004e925c,source/input/input_abstraction.c
+004e9264,unknown_004e9264,source/input/input_abstraction.c

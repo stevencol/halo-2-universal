@@ -934,3 +934,21 @@ void effect_unknown_001773a0(
 		*first= NONE;
 	}
 }
+
+/* 0x001753f0: a particle system loses its particle locations (from its
+0x30, each to the next at 0x0C) */
+void particle_system_unknown_001753f0(
+	byte *system)
+{
+	long index= *(const long *)(system+0x30);
+
+	while (index!=NONE)
+	{
+		long next= *(const long *)((const byte *)particle_location_data->data+(index&0xFFFF)*0x34+0x0C);
+
+		particle_location_delete(index);
+		index= next;
+	}
+	*(long *)(system+0x30)= NONE;
+	*(long *)(system+0x34)= NONE;
+}
