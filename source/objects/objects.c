@@ -2098,3 +2098,66 @@ boolean __attribute__((stdcall)) object_unknown_000beb30(
 
 	return FALSE;
 }
+
+/* 0x002960e0: the objects of the datums of the scenario, by their places
+(NONE for none, as many as there is room for): those of the type 6 at the
+index of their datum (b7a40 of their identifier at 0xA4), those of the type
+7 after the count at 0x50, and NONE for as many as the structure bsp has at
+0x140 after the counts at 0x50 and 0xA8; how many there are */
+long __attribute__((stdcall)) object_unknown_002960e0(
+	const byte *counts,
+	long *objects,
+	long maximum_count)
+{
+	struct object_iterator iterator;
+	byte *object;
+	short extra_count;
+	short index;
+
+	memset(objects, 0xFF, maximum_count*sizeof(long));
+	object_iterator_new(&iterator, 0x40, 0);
+	while ((object= object_iterator_next(&iterator)))
+	{
+		long datum_index= NONE;
+
+		if (object_unknown_000b7a40(object+0xA4, &datum_index))
+		{
+			short slot= (short)datum_index;
+
+			if (slot>=maximum_count)
+			{
+				break;
+			}
+			objects[slot]= iterator.index;
+		}
+	}
+	object_iterator_new(&iterator, 0x80, 0);
+	while ((object= object_iterator_next(&iterator)))
+	{
+		long datum_index= NONE;
+
+		if (object_unknown_000b7a40(object+0xA4, &datum_index))
+		{
+			short slot= (short)(*(const short *)(counts+0x50)+(short)datum_index);
+
+			if (slot>=maximum_count)
+			{
+				break;
+			}
+			objects[slot]= iterator.index;
+		}
+	}
+	extra_count= *(const short *)((const byte *)global_structure_bsp+0x140);
+	for (index= 0; index<extra_count; index++)
+	{
+		short slot= (short)(*(const short *)(counts+0x50)+*(const short *)(counts+0xA8)+index);
+
+		if (slot>=maximum_count)
+		{
+			break;
+		}
+		objects[slot]= NONE;
+	}
+
+	return *(const long *)(counts+0x50)+*(const long *)(counts+0xA8)+extra_count;
+}

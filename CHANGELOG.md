@@ -2,6 +2,28 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Dos funciones del camino al menú: los objetos de los datos del escenario por sus sitios y una unidad que deja de hacer zoom
+
+Dos funciones medianas (697 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 3041 funciones se pasa a 3043, el 27,01 % de
+las del juego (el 14,554 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_unknown_002960e0` | `0x002960e0` | `objects/objects.c` |
+| `unit_unknown_000c86e0` | `0x000c86e0` | `units/units.c` |
+
+### Lo que se sabe
+
+- los objetos de los datos del escenario por sus sitios: los del tipo 6 en el índice de su dato, los del tipo 7 después de la cuenta en 0x50, y NONE para tantos como la bsp tiene en 0x140; y una unidad que deja de hacer zoom (salvo que guarde el de un arma que lo hace), con el sonido de quitar el zoom del arma o el del juego para la unidad de un usuario que lo tenía. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 8 de `make_mutations.py`, 0 sin cazar; 2 que no cambian nada, quitadas.
+
 ## 2026-10-25 — Tres funciones del camino al menú: cómo está la geometría de algo, si un objeto es de un jugador y las matrices de los nodos de un modelo
 
 Tres funciones medianas (927 bytes) en 3 archivos, de las que el juego ejecuta

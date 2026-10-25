@@ -3890,3 +3890,5 @@ address,name,source,arguments,returns,convention
 0002d000,unknown_0002d000,source/game/game_unknown_0003f2b0.c,eax edx ecx,int
 000beb30,object_unknown_000beb30,source/objects/objects.c,stack,bool,stdcall
 001376c0,unknown_001376c0,source/game/game_unknown_00134d90.c,eax edx stack,int,stdcall
+002960e0,object_unknown_002960e0,source/objects/objects.c,esi ebx stack,int,stdcall
+000c86e0,unit_unknown_000c86e0,source/units/units.c,eax stack,void,stdcall

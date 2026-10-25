@@ -3319,3 +3319,78 @@ void unit_unknown_0010dbc0(
 	*(long *)(control+0x38)= NONE;
 	*(unsigned long *)(control+0x30)= id;
 }
+
+/* 0x004ed284 and 0x001896c0, of sound_manager.c; 0x004e8c24, of main.c */
+extern byte *unknown_004ed284;
+extern struct data_array *player_data;
+void __attribute__((stdcall)) sound_unknown_001896c0(long sound_index, real scale);
+
+/* 0x000c86e0: a unit stops zooming (NONE in the bytes at 0x240 and 0x241, 0
+at 0x26C, and NONE in the entry of its user at 0x004ed284), unless it keeps
+the zoom of a weapon that zooms (weapon_unknown_00100f70); a unit of a user
+that was zoomed then hears the sound of zooming out of the weapon (at 0x278
+of its definition) when it does not keep it, or the game's */
+void __attribute__((stdcall)) unit_unknown_000c86e0(
+	long unit_index,
+	boolean keep)
+{
+	byte *unit= (byte *)UNIT_OBJECT_GET(unit_index);
+	const byte *as_unit= object_try_and_get_and_verify_type(unit_index, 3);
+	const byte *object;
+	long user_index= NONE;
+	long weapon_index= NONE;
+	boolean zoomed= FALSE;
+	boolean was_zoomed= FALSE;
+	long sound_index;
+
+	if (as_unit && *(const long *)(as_unit+0x13C)!=NONE)
+	{
+		const byte *again= object_try_and_get_and_verify_type(unit_index, 3);
+		long player_index= again ? *(const long *)(again+0x13C) : NONE;
+
+		user_index= *(const short *)((const byte *)player_data->data+(player_index&0xFFFF)*0x21C+0x28);
+	}
+	object= UNIT_OBJECT_GET(unit_index);
+	if ((signed char)object[0x212]!=NONE)
+	{
+		weapon_index= *(const long *)(object+0x218+(signed char)object[0x212]*4);
+		if (weapon_index!=NONE)
+		{
+			zoomed= weapon_unknown_00100f70(weapon_index);
+		}
+	}
+	if (!keep || !zoomed)
+	{
+		was_zoomed= unit[0x240]!=0xFF;
+		unit[0x240]= 0xFF;
+		unit[0x241]= 0xFF;
+		*(real *)(unit+0x26C)= 0.0f;
+		if (user_index!=NONE)
+		{
+			byte *entry= unknown_004ed284+user_index*0x94+0x14;
+
+			*(short *)(entry+0x2E)= NONE;
+			entry[0x89]= 0;
+		}
+	}
+	if (user_index==NONE || !was_zoomed)
+	{
+		return;
+	}
+	if (zoomed && !keep)
+	{
+		if (weapon_index==NONE)
+		{
+			return;
+		}
+		sound_index= *(const long *)(UNIT_DEFINITION_GET(UNIT_OBJECT_GET(weapon_index))+0x278);
+	}
+	else
+	{
+		sound_index= *(const long *)(*(const byte *const *)((const byte *)global_game_globals+0x134)+0xD0);
+	}
+	if (sound_index!=NONE)
+	{
+		sound_unknown_001896c0(sound_index, 1.0f);
+	}
+}
