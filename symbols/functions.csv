@@ -3887,3 +3887,6 @@ address,name,source,arguments,returns,convention
 0010e920,unit_unknown_0010e920,source/units/units.c,eax,void
 0010dbc0,unit_unknown_0010dbc0,source/units/units.c,eax,void
 00131c20,real_math_unknown_00131c20,source/math/real_math.c,ecx esi eax xmm5 edi,pointer
+0002d000,unknown_0002d000,source/game/game_unknown_0003f2b0.c,eax edx ecx,int
+000beb30,object_unknown_000beb30,source/objects/objects.c,stack,bool,stdcall
+001376c0,unknown_001376c0,source/game/game_unknown_00134d90.c,eax edx stack,int,stdcall

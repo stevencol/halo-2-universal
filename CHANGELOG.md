@@ -2,6 +2,29 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Tres funciones del camino al menú: cómo está la geometría de algo, si un objeto es de un jugador y las matrices de los nodos de un modelo
+
+Tres funciones medianas (927 bytes) en 3 archivos, de las que el juego ejecuta
+hasta el menú principal. De 3038 funciones se pasa a 3041, el 27,00 % de
+las del juego (el 14,531 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unknown_0002d000` | `0x0002d000` | `game/game_unknown_0003f2b0.c` |
+| `object_unknown_000beb30` | `0x000beb30` | `objects/objects.c` |
+| `unknown_001376c0` | `0x001376c0` | `game/game_unknown_00134d90.c` |
+
+### Lo que se sabe
+
+- cómo está la geometría de algo (0 a 3), por el lightmap de la bsp, la sección de su instancia y si está cargada; si un objeto es de un jugador, o uno de sus hijos o padres, o es de los tipos 2 a 4 con un bit; y las matrices (3 filas de 4) de los nodos de un modelo, cada nodo por la inversa del nodo del modelo. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 12 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Seis funciones del camino al menú: el ritmo de una partícula, la animación de un nombre en el grafo de un estado, dos partes de las animaciones de una unidad, un color entre dos y los objetos de los datos del escenario
 
 Seis funciones medianas (882 bytes) en 4 archivos, de las que el juego ejecuta

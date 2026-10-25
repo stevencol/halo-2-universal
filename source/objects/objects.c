@@ -2055,3 +2055,46 @@ void __attribute__((stdcall)) object_unknown_000b7930(
 	*(long *)(placement+0x10)= NONE;
 	placement[0xB8]= 0;
 }
+
+/* 0x000beb30: whether an object belongs to a player (0x13C of it as a
+unit), or one of its children does, or one of its parents (a unit there is)
+does, or it is of the types 2 to 4 with the bit 3 at 0x12C */
+boolean __attribute__((stdcall)) object_unknown_000beb30(
+	long object_index)
+{
+	const byte *object= OBJECT_DATA(object_index);
+	const byte *unit= object_try_and_get_and_verify_type(object_index, 3);
+	long index;
+
+	if ((unit ? *(const long *)(unit+0x13C) : NONE)!=NONE)
+	{
+		return TRUE;
+	}
+	for (index= *(const long *)(object+0x10); index!=NONE; )
+	{
+		const byte *child= OBJECT_DATA(index);
+
+		if (object_unknown_000beb30(index))
+		{
+			return TRUE;
+		}
+		index= *(const long *)(child+0x0C);
+	}
+	for (index= *(const long *)(object+0x14); index!=NONE; )
+	{
+		const byte *parent= OBJECT_DATA(index);
+		const byte *parent_unit= object_try_and_get_and_verify_type(index, 3);
+
+		if (parent_unit && *(const long *)(parent_unit+0x13C)!=NONE)
+		{
+			return TRUE;
+		}
+		index= *(const long *)(parent+0x14);
+	}
+	if (((1UL<<(object[0xAA]&31))&0x1C) && ((object[0x12C]>>3)&1))
+	{
+		return TRUE;
+	}
+
+	return FALSE;
+}

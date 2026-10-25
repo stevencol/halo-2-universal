@@ -289,3 +289,40 @@ real game_unknown_00134fc0(
 
 	return game_unknown_00134fe0(index, *(const real *)state);
 }
+
+/* 0x001376c0: the matrices (3 rows of 4 reals) of the nodes of a render
+model: each node's (13 reals: a scale, forward, left, up and a point) times
+the inverse at 0x28 of the model's node (0x60 bytes each, at 0x4C, as many
+as at 0x48), its axes scaled as columns and its point the last column; how
+many there are */
+long __attribute__((stdcall)) unknown_001376c0(
+	long model_index,
+	real *matrices,
+	const real *nodes)
+{
+	const byte *model= (const byte *)(uintptr_t)global_tag_instances[model_index&0xFFFF].address;
+	long node_index;
+
+	for (node_index= 0; node_index<*(const long *)(model+0x48); node_index++)
+	{
+		real matrix[13];
+		real *out= matrices+node_index*12;
+
+		matrix4x3_multiply((const real_matrix4x3 *)(nodes+node_index*13),
+			(const real_matrix4x3 *)(*(const byte *const *)(model+0x4C)+node_index*0x60+0x28), (real_matrix4x3 *)matrix);
+		out[0]= matrix[0]*matrix[1];
+		out[1]= matrix[4]*matrix[0];
+		out[2]= matrix[7]*matrix[0];
+		out[4]= matrix[2]*matrix[0];
+		out[5]= matrix[5]*matrix[0];
+		out[6]= matrix[8]*matrix[0];
+		out[8]= matrix[3]*matrix[0];
+		out[9]= matrix[6]*matrix[0];
+		out[10]= matrix[9]*matrix[0];
+		out[3]= matrix[10];
+		out[7]= matrix[11];
+		out[11]= matrix[12];
+	}
+
+	return *(const long *)(model+0x48);
+}

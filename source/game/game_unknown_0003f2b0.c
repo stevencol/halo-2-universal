@@ -8,6 +8,9 @@ the file is only the address of its function.
 
 #include "cseries/cseries.h"
 #include "scenario/scenario.h"
+#include "cache/cache_files.h"
+#include "cache/geometry_cache.h"
+#include "objects/objects.h"
 #include "math/real_math.h"
 #include "physics/bsp3d.h"
 #include <stdint.h>
@@ -185,4 +188,66 @@ boolean __attribute__((stdcall)) unknown_0002b720(
 	}
 
 	return FALSE;
+}
+
+/* 0x0002d000: how the geometry of something is (an instance 0x7FF is
+none): with a lightmap of the structure bsp (the first of its count at
+0x80, at 0x84, with a bitmap at 0x1C and the same tag at 0x04 as at 0x08 of
+the bsp), for a tag 1 when the geometry of its section (by the instance, at
+0x5C and 0x64) is loaded, for no tag whether that of the instance (at 0x54)
+is and the bsp's instance has a short at 0x56 (0 or 1); 2 for an instance
+0x7FF or, without a lightmap, an object with the bit 0 at 0x07; 3 otherwise */
+long unknown_0002d000(
+	long object_index,
+	long tag_index,
+	long instance)
+{
+	const byte *lightmaps= global_structure_lightmap;
+	const byte *bsp= global_structure_bsp;
+	const byte *lightmap;
+
+	if (!lightmaps || *(const long *)(lightmaps+0x80)<=0 || !bsp
+		|| *(const long *)((lightmap= *(const byte *const *)(lightmaps+0x84))+0x1C)==NONE
+		|| *(const long *)(lightmap+0x04)!=*(const long *)(bsp+0x08))
+	{
+		const byte *object;
+
+		if (tag_index!=NONE && object_index!=NONE
+			&& (object= object_try_and_get_and_verify_type(object_index, NONE)) && (object[0x07]&1))
+		{
+			return 2;
+		}
+		return 3;
+	}
+	if (tag_index!=NONE)
+	{
+		const byte *data;
+
+		if (instance==0x7FF)
+		{
+			return 2;
+		}
+		data= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+		if (*(const long *)(data+0x08)!=*(const long *)(*(const byte *const *)(lightmap+0x5C)+instance*12+8))
+		{
+			return 3;
+		}
+		if (!geometry_cache_block_load((struct geometry_block_info *)(*(byte *const *)(lightmap+0x44)
+			+*(const unsigned short *)(*(const byte *const *)(lightmap+0x64)+instance*12+2)*0x38+0x0C), 3))
+		{
+			return 3;
+		}
+		return 1;
+	}
+	if (instance==0x7FF)
+	{
+		return 0;
+	}
+	if (!geometry_cache_block_load((struct geometry_block_info *)(*(byte *const *)(lightmap+0x44)
+		+*(const unsigned short *)(*(const byte *const *)(lightmap+0x54)+instance*12+2)*0x38+0x0C), 3))
+	{
+		return 3;
+	}
+
+	return *(const short *)(*(const byte *const *)(bsp+0x144)+instance*0x58+0x56)!=0;
 }
