@@ -3870,3 +3870,7 @@ address,name,source,arguments,returns,convention
 00134fc0,game_unknown_00134fc0,source/game/game_unknown_00134d90.c,ecx,real:xmm0
 001dd0b0,havok_unknown_001dd0b0,source/physics/havok.c,edx stack stack,void,stdcall
 001c6dc0,havok_unknown_001c6dc0,source/physics/havok.c,eax esi ebx stack,void,stdcall
+0001c1b0,rasterizer_unknown_0001c1b0,source/rasterizer/rasterizer_xbox.c,,void
+001c6d00,havok_unknown_001c6d00,source/physics/havok.c,ecx edi stack,void,stdcall
+001318d0,real_rgb_color_to_real_hsv_color,source/math/real_math.c,ecx edx,pointer
+000b7a40,object_unknown_000b7a40,source/objects/objects.c,stack stack,pointer,stdcall

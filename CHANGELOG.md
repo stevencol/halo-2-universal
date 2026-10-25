@@ -2,6 +2,30 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Cuatro funciones del camino al menú: las diecisiete máscaras de puntos, lo rápido que se mueve un canal de animaciones, un color como tono, saturación y valor, y el dato de un identificador de una colocación
+
+Cuatro funciones medianas (916 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 3021 funciones se pasa a 3025, el 26,85 % de
+las del juego (el 14,413 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `rasterizer_unknown_0001c1b0` | `0x0001c1b0` | `rasterizer/rasterizer_xbox.c` |
+| `havok_unknown_001c6d00` | `0x001c6d00` | `physics/havok.c` |
+| `real_rgb_color_to_real_hsv_color` | `0x001318d0` | `math/real_math.c` |
+| `object_unknown_000b7a40` | `0x000b7a40` | `objects/objects.c` |
+
+### Lo que se sabe
+
+- las diecisiete máscaras de 32 por 32 bits de `unknown_00487288`, con los primeros n puntos de una tabla en cada cuadrado de 4 por 4; lo rápido que se mueve un canal de animaciones (su movimiento en su frame por 30 veces su ritmo); un color como tono, saturación y valor (`real_rgb_color_to_real_hsv_color`, el nombre de Halo 1); y el dato del escenario de un identificador de una colocación, con su índice. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 16 de `make_mutations.py`, 0 sin cazar; 3 que no cambian nada, quitadas.
+
 ## 2026-10-25 — Cinco funciones del camino al menú: si un dato del escenario se hace ahora, el valor de una rampa del escenario (de dos maneras), la animación de un nombre y cómo se mueve un canal
 
 Cinco funciones medianas (816 bytes) en 3 archivos, de las que el juego ejecuta

@@ -2106,3 +2106,34 @@ void __attribute__((stdcall)) havok_unknown_001c6dc0(
 		*(const unsigned long *)(channel+0x04));
 	unit_unknown_0020aa70((unsigned long *)value, (unsigned long *)vector, data, (short)frame);
 }
+
+/* 0x004687a4, of real_math.c */
+extern const real_vector3d *global_zero_vector3d;
+
+/* 0x001c6d00: how fast a channel of animations moves: what
+havok_unknown_001c6dc0 gives at its frame (the real at 0x1C, truncated),
+times 30 times its rate (the real at 0x18); zeros for no animation */
+void __attribute__((stdcall)) havok_unknown_001c6d00(
+	const byte *channel,
+	real *vector,
+	real *value)
+{
+	real movement[3];
+	real movement_value;
+	long frame;
+	real scale;
+
+	*(real_vector3d *)vector= *global_zero_vector3d;
+	*value= 0.0f;
+	if (*(const short *)(channel+0x06)==NONE)
+	{
+		return;
+	}
+	frame= (long)*(const real *)(channel+0x1C);
+	scale= *(const real *)(channel+0x18)*30.0f;
+	havok_unknown_001c6dc0(channel, movement, &movement_value, frame);
+	vector[0]= movement[0]*scale;
+	vector[1]= movement[1]*scale;
+	vector[2]= movement[2]*scale;
+	*value= movement_value*scale;
+}

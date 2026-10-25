@@ -1940,3 +1940,49 @@ void object_unknown_000b8b70(
 	cluster_partition_set_extra(*(const long *)(object+0x60), &collideable_object_cluster_partition, record, object_index,
 		sizeof(record));
 }
+
+/* 0x000b7a40: the datum of the scenario (of the block of its object type,
+by the type's offset at 0x0A and size at 0x0E) of an identifier of a
+placement (a long, a short, the type and where it is from, 0 or 1): the one
+with the same identifier at 0x28 (the short only when it is from 0), and its
+index; NULL for none */
+void *__attribute__((stdcall)) object_unknown_000b7a40(
+	const byte *identifier,
+	long *index_out)
+{
+	signed char source= (signed char)identifier[7];
+	signed char type= (signed char)identifier[6];
+	const byte *definition;
+	const byte *block;
+	long size;
+	long index;
+
+	if (source!=1 && source!=0)
+	{
+		return NULL;
+	}
+	definition= object_type_definitions[type];
+	if (*(const short *)(definition+0x0A)==NONE)
+	{
+		return NULL;
+	}
+	size= *(const short *)(definition+0x0E);
+	block= (const byte *)global_scenario+*(const short *)(definition+0x0A);
+	for (index= 0; index<*(const long *)block; index++)
+	{
+		byte *element= *(byte *const *)(block+4)+index*size;
+		const byte *current= element+0x28;
+
+		if (*(const long *)current==*(const long *)identifier && current[6]==(byte)type && current[7]==(byte)source
+			&& (current[7] || *(const short *)(current+4)==*(const short *)(identifier+4)))
+		{
+			if (index_out)
+			{
+				*index_out= index;
+			}
+			return element;
+		}
+	}
+
+	return NULL;
+}

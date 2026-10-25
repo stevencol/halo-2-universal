@@ -1521,3 +1521,43 @@ real_rgb_color *real_math_hsv_to_rgb(
 
 	return rgb;
 }
+
+/* 0x001318d0: a color as hue, saturation and value, all from 0 to 1, as
+Halo 1's real_rgb_color_to_real_hsv_color */
+real *real_rgb_color_to_real_hsv_color(
+	const real *rgb,
+	real *hsv)
+{
+	real maximum= rgb[0]>(rgb[1]>rgb[2] ? rgb[1] : rgb[2]) ? rgb[0] : rgb[1]>rgb[2] ? rgb[1] : rgb[2];
+	real minimum= rgb[0]>(rgb[1]>rgb[2] ? rgb[2] : rgb[1]) ? (rgb[1]>rgb[2] ? rgb[2] : rgb[1]) : rgb[0];
+	real delta= maximum-minimum;
+	real saturation;
+
+	hsv[2]= maximum;
+	saturation= maximum==0.0f ? 0.0f : delta/maximum;
+	hsv[1]= saturation;
+	if (saturation==0.0f)
+	{
+		hsv[0]= 0.0f;
+		return hsv;
+	}
+	if (rgb[0]==maximum)
+	{
+		hsv[0]= (rgb[1]-rgb[2])/delta;
+	}
+	else if (rgb[1]==maximum)
+	{
+		hsv[0]= (rgb[2]-rgb[0])/delta + 2.0f;
+	}
+	else
+	{
+		hsv[0]= (rgb[0]-rgb[1])/delta + 4.0f;
+	}
+	hsv[0]*= 1.0f/6.0f;
+	if (0.0f>hsv[0])
+	{
+		hsv[0]+= 1.0f;
+	}
+
+	return hsv;
+}

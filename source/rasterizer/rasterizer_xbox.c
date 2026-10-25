@@ -826,3 +826,40 @@ boolean __attribute__((stdcall)) rasterizer_unknown_000143c0(
 
 	return TRUE;
 }
+
+/* 0x0043f188: sixteen points (x and y shorts) of a 32 by 32 square */
+short unknown_0043f188[16*2];
+
+/* 0x0001c1b0: the seventeen of unknown_00487288, each a mask of 32 by 32
+bits: the n-th has the first n points of unknown_0043f188 set in each 4 by
+4 square of its 8 by 8 */
+void rasterizer_unknown_0001c1b0(
+	void)
+{
+	long count;
+
+	memset(unknown_00487288, 0, sizeof(unknown_00487288));
+	for (count= 0; count<=16; count++)
+	{
+		unsigned long *mask= (unsigned long *)(unknown_00487288+count*0x80);
+		long x;
+
+		for (x= 0; x<32; x+= 4)
+		{
+			long base= x;
+			long rows;
+
+			for (rows= 8; rows>0; rows--, base+= 128)
+			{
+				long index;
+
+				for (index= 0; index<count; index++)
+				{
+					long bit= unknown_0043f188[index*2+1]*32+base+unknown_0043f188[index*2];
+
+					mask[bit/32]|= 1UL<<(bit%32);
+				}
+			}
+		}
+	}
+}
