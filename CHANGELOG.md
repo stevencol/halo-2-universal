@@ -2,6 +2,31 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Cinco funciones pequeñas del camino al menú: si un vector es de largo uno, unos bits de banderas, la cuenta de la voz de un jugador, cuánto hay de algo en un valor y algo que empieza
+
+Cinco funciones pequeñas (542 bytes) en 5 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2900 funciones se pasa a 2905, el 25,79 % de
+las del juego (el 13,848 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `real_math_unknown_000a0190` | `0x000a0190` | `math/real_math.c` |
+| `unknown_0016b500` | `0x0016b500` | `main/main.c` |
+| `game_voice_unknown_00159170` | `0x00159170` | `networking/game_voice.c` |
+| `unknown_00249bb0` | `0x00249bb0` | `effects/effects.c` |
+| `unit_unknown_001f03e0` | `0x001f03e0` | `units/units.c` |
+
+### Lo que se sabe
+
+- si un vector está a menos de 0.001 de largo uno; seis bits de unas banderas reordenados; si un jugador no ha contado un entero de la voz; cuánto hay de algo en un valor, subiendo y bajando; y algo de 0x74 bytes como empieza.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 14 de `make_mutations.py`, 0 sin cazar; 5 que no cambia nada, quitada.
+
 ## 2026-10-24 — Cinco funciones pequeñas del camino al menú: tres búsquedas una en otra, un lugar de partículas borrado, un estado de una unidad, el elemento de un tag de un objeto y el número de un jugador
 
 Cinco funciones pequeñas (414 bytes) en 5 archivos, de las que el juego ejecuta

@@ -1409,3 +1409,20 @@ real *real_math_unknown_0004efb0(
 
 	return vector;
 }
+
+/* 0x000a0190: whether a vector is less than 0.001 from being one long (its
+square, and the difference is a number) */
+long real_math_unknown_000a0190(
+	const real *vector)
+{
+	real difference= vector[0]*vector[0]+vector[1]*vector[1]+vector[2]*vector[2]-1.0f;
+	unsigned long bits;
+
+	memcpy(&bits, &difference, sizeof(bits));
+	if ((bits&0x7F800000)==0x7F800000)
+	{
+		return 0;
+	}
+
+	return 0.001f>fabsf(difference);
+}

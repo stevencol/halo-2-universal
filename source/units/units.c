@@ -2690,3 +2690,22 @@ boolean unit_unknown_000c70b0(
 
 	return number==0x080000C4 || number==0x0400004A || number==0x050000C3;
 }
+
+/* 0x001f03e0: something of 0x74 bytes as it starts: at the zero point, up,
+with the identity matrix at 0x24, NONE at 0x0C, 0x1C, 0x20, 0x58 and 0x5C,
+and unknown_0047d8e0 at 0x60 */
+void unit_unknown_001f03e0(
+	byte *data)
+{
+	*(long *)(data+0x0C)= NONE;
+	memcpy(data, global_zero_vector3d, 12);
+	data[0x62]= 0;
+	memcpy(data+0x64, global_up3d, 12);
+	*(short *)(data+0x60)= unknown_0047d8e0;
+	*(long *)(data+0x58)= NONE;
+	*(long *)(data+0x5C)= NONE;
+	*(long *)(data+0x1C)= NONE;
+	*(long *)(data+0x20)= NONE;
+	*(real *)(data+0x70)= 0.0f;
+	memcpy(data+0x24, global_identity4x3, 0x34);
+}

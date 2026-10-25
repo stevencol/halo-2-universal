@@ -2068,3 +2068,20 @@ boolean game_voice_unknown_00161b60(
 
 	return !(value>=1.0f);
 }
+
+/* 0x00159170: as game_voice_unknown_00161b60, for a player that is one */
+boolean game_voice_unknown_00159170(
+	long player_index)
+{
+	short index;
+	real value;
+
+	if (!unknown_0055e4d0[*(const long *)(unknown_004e9ae8+UNKNOWN_004E9AE8_UNKNOWNC14_OFFSET)])
+	{
+		return TRUE;
+	}
+	index= *(const short *)((const byte *)player_data->data+(player_index&0xFFFF)*0x21C+0x28);
+	value= (real)unknown_004e9af0[index]*game_time_globals->seconds_per_tick*4.0f;
+
+	return !(value>=1.0f);
+}

@@ -695,3 +695,36 @@ void __attribute__((stdcall)) particle_location_delete(
 	}
 	datum_delete(particle_location_data, location_index);
 }
+
+/* 0x00510c50, of main.c */
+extern struct unknown_00510c50 *unknown_00510c50;
+
+/* 0x00249bb0: how much of something there is at a value: 0 out of its range
+(0x18 to 0x24), rising (by 0x20) for 0x1C past its start, falling (by 0x2C)
+for 0x28 before its end, and 1 between, or with the byte at 0x05 of
+unknown_00510c50 */
+real unknown_00249bb0(
+	const byte *data,
+	real value)
+{
+	const real *values= (const real *)(data+0x18);
+
+	if (unknown_00510c50 && ((const byte *)unknown_00510c50)[5])
+	{
+		return 1.0f;
+	}
+	if (!(value>values[0]) || !(values[3]>value))
+	{
+		return 0.0f;
+	}
+	if (values[1]+values[0]>value)
+	{
+		return (value-values[0])*values[2];
+	}
+	if (value>values[3]-values[4])
+	{
+		return (values[3]-value)*values[5];
+	}
+
+	return 1.0f;
+}

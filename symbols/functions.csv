@@ -3750,3 +3750,8 @@ address,name,source,arguments,returns,convention
 000c70b0,unit_unknown_000c70b0,source/units/units.c,eax,bool
 000ba540,object_unknown_000ba540,source/objects/objects.c,eax ecx,void
 0014f270,player_unknown_0014f270,source/main/main.c,stack stack,void,stdcall
+000a0190,real_math_unknown_000a0190,source/math/real_math.c,eax,int
+0016b500,unknown_0016b500,source/main/main.c,ecx,int
+00159170,game_voice_unknown_00159170,source/networking/game_voice.c,ecx,bool
+00249bb0,unknown_00249bb0,source/effects/effects.c,eax xmm1,real:xmm0
+001f03e0,unit_unknown_001f03e0,source/units/units.c,eax,void

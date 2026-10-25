@@ -1227,3 +1227,18 @@ void __attribute__((stdcall)) player_unknown_0014f270(
 	*(long *)(globals+0x1C+number*4)= player_index;
 	(*(short *)(globals+0x0A))++;
 }
+
+/* 0x0016b500: some bits of flags (19, 18, 30, 20, 22 and 21) as the bits 1
+to 6 of a number whose bit 0 is set */
+unsigned long unknown_0016b500(
+	unsigned long flags)
+{
+	unsigned long result= ((flags&0x80000)|0x40000)>>18;
+
+	result= flags&0x40000 ? result|4 : result&0xFFFB;
+	result= flags&0x40000000 ? result|8 : result&0xFFF7;
+	result= flags&0x100000 ? result|0x10 : result&0xFFEF;
+	result= flags&0x400000 ? result|0x20 : result&0xFFDF;
+
+	return flags&0x200000 ? result|0x40 : result&0xFFBF;
+}
