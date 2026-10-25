@@ -2709,3 +2709,44 @@ void unit_unknown_001f03e0(
 	*(real *)(data+0x70)= 0.0f;
 	memcpy(data+0x24, global_identity4x3, 0x34);
 }
+
+/* 0x001137b0: a real for two numbers (of the names of two things, it seems):
+0.1335 for three of the first, 0.267 otherwise and with either flag or for
+some pairs; at least another */
+real __attribute__((stdcall)) unit_unknown_001137b0(
+	unsigned long first,
+	unsigned long second,
+	boolean flag,
+	boolean other_flag,
+	real minimum)
+{
+	real value= 0.267f;
+	boolean pair;
+
+	if (first==0x09000020 || first==0x0900001F || first==0x090006B2)
+	{
+		value= 0.1335f;
+	}
+	if (flag || other_flag)
+	{
+		value= 0.267f;
+	}
+	if (second==0x0400000C)
+	{
+		pair= first==0x0A000014 || first==0x09000015 || first==0x09000016 || first==0x0A000017;
+	}
+	else if (second==0x0A000014 || second==0x09000015 || second==0x09000016 || second==0x0A000017)
+	{
+		pair= first==0x0A000014 || first==0x09000015 || first==0x09000016 || first==0x0A000017 || first==0x0400000C;
+	}
+	else
+	{
+		pair= FALSE;
+	}
+	if (pair)
+	{
+		value= 0.267f;
+	}
+
+	return value>minimum ? value : minimum;
+}

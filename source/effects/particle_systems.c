@@ -9,6 +9,7 @@ file is a guess, by the names that the game gives to its four tables of data
 #include "cseries/cseries.h"
 #include "memory/data.h"
 #include "saved games/game_state.h"
+#include <string.h>
 
 /* ---------- globals */
 
@@ -110,6 +111,39 @@ short particle_systems_unknown_00173350(
 		}
 		index= *(const short *)(entry+0x08);
 	}
+
+	return index;
+}
+
+/* 0x00172bb0: one more entry (0x6C bytes, from 0x04; how many at 0x00) of a
+table: a number and a short, NONE for the rest, the 16 bytes at 0xA0 of
+something and its pairs (as many as at 0x198, from 0x19C) copied to the
+end of those of the table (from 0x6C08; how many at 0x6C04); its index */
+short __attribute__((stdcall)) particle_systems_unknown_00172bb0(
+	byte *table,
+	const byte *data,
+	short kind,
+	long number)
+{
+	short index= (short)*(const long *)table;
+	byte *entry= table+4+index*0x6C;
+	long count= *(const long *)(data+0x198);
+	long first= *(const long *)(table+0x6C04);
+
+	*(long *)table= *(const long *)table+1;
+	*(long *)entry= number;
+	*(short *)(entry+0x04)= NONE;
+	*(short *)(entry+0x06)= NONE;
+	*(short *)(entry+0x0A)= NONE;
+	*(long *)(entry+0x28)= NONE;
+	*(short *)(entry+0x08)= kind;
+	memcpy(entry+0x0C, data+0xA0, 16);
+	*(long *)(table+0x6C04)= count+first;
+	*(byte **)(entry+0x20)= table+0x6C08+first*8;
+	memcpy(table+0x6C08+first*8, data+0x19C, (unsigned long)count*8);
+	*(short *)(entry+0x1C)= (short)count;
+	*(float *)(entry+0x24)= 0.0f;
+	memset(entry+0x2C, 0, 0x40);
 
 	return index;
 }

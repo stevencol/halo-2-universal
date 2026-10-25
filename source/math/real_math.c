@@ -1426,3 +1426,25 @@ long real_math_unknown_000a0190(
 
 	return 0.001f>fabsf(difference);
 }
+
+/* 0x000a74c0: whether two vectors are one long each and perpendicular (each
+less than 0.001 away) */
+long real_math_unknown_000a74c0(
+	const real *forward,
+	const real *up)
+{
+	real difference= forward[0]*forward[0]+forward[1]*forward[1]+forward[2]*forward[2]-1.0f;
+	unsigned long bits;
+
+	memcpy(&bits, &difference, sizeof(bits));
+	if ((bits&0x7F800000)==0x7F800000 || !(0.001f>fabsf(difference)))
+	{
+		return 0;
+	}
+	if (!real_math_unknown_000a0190(up))
+	{
+		return 0;
+	}
+
+	return real_math_unknown_000a0200(up[2]*forward[2] + up[1]*forward[1] + forward[0]*up[0], 0.0f) ? 1 : 0;
+}

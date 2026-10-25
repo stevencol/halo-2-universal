@@ -2,6 +2,30 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Cuatro funciones pequeñas del camino al menú: si dos vectores son de largo uno y perpendiculares, un real por dos números, las letras de un idioma y una entrada más de una tabla
+
+Cuatro funciones pequeñas (697 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2911 funciones se pasa a 2915, el 25,88 % de
+las del juego (el 13,895 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `real_math_unknown_000a74c0` | `0x000a74c0` | `math/real_math.c` |
+| `unit_unknown_001137b0` | `0x001137b0` | `units/units.c` |
+| `language_get_code` | `0x0011cb00` | `cseries/cseries.c` |
+| `particle_systems_unknown_00172bb0` | `0x00172bb0` | `effects/particle_systems.c` |
+
+### Lo que se sabe
+
+- si dos vectores son de largo uno y perpendiculares; un real (0.1335 o 0.267) por dos números; las letras de un idioma ("", jpn, de, fr, sp, it, kor, cht, pt); y una entrada más de una tabla con sus pares copiados al final.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 10 de `make_mutations.py`, 0 sin cazar; 4 que no cambia nada, quitada.
+
 ## 2026-10-24 — Seis funciones pequeñas del camino al menú: algo de un efecto que empieza, sistemas de partículas de dos clases, entradas de unas cosas, el siguiente lugar de un efecto, cosas de un componente de Havok y los lados de un plano
 
 Seis funciones pequeñas (692 bytes) en 3 archivos, de las que el juego ejecuta

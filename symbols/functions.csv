@@ -3761,3 +3761,7 @@ address,name,source,arguments,returns,convention
 0017ae50,effect_location_unknown_0017ae50,source/effects/effects.c,stack stack stack,pointer,stdcall
 001c4fc0,havok_component_unknown_001c4fc0,source/physics/havok.c,eax,void
 00132fd0,unknown_00132fd0,source/main/main.c,eax ecx edx esi stack,void,stdcall
+000a74c0,real_math_unknown_000a74c0,source/math/real_math.c,esi edi,int
+001137b0,unit_unknown_001137b0,source/units/units.c,eax ecx edx stack stack,real:xmm0,stdcall
+0011cb00,language_get_code,source/cseries/cseries.c,edx,string
+00172bb0,particle_systems_unknown_00172bb0,source/effects/particle_systems.c,eax ebx stack stack,short,stdcall

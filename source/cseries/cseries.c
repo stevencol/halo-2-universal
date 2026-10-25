@@ -532,3 +532,37 @@ boolean __attribute__((stdcall)) bit_vector_iterator_next(
 	*bits&= ~(1UL<<which);
 	return TRUE;
 }
+
+/* 0x0011cb00: the letters of a language (as language_from_xbox_language
+gives them); none for English or another */
+const char *language_get_code(
+	long language)
+{
+	static const struct
+	{
+		long language;
+		const char *code;
+	} codes[]=
+	{
+		{0, ""},
+		{1, "jpn"},
+		{2, "de"},
+		{3, "fr"},
+		{4, "sp"},
+		{5, "it"},
+		{6, "kor"},
+		{7, "cht"},
+		{8, "pt"},
+	};
+	unsigned long index;
+
+	for (index= 0; index<9; index++)
+	{
+		if (codes[index].language==language)
+		{
+			return codes[index].code;
+		}
+	}
+
+	return "";
+}
