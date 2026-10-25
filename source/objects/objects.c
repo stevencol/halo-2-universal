@@ -1448,3 +1448,17 @@ void __attribute__((stdcall)) object_unknown_0003d4f0(
 		*first= object_index;
 	}
 }
+
+/* 0x000ba3d0: three bytes (0x00, 0x01 and 0x03) of the place at 0x64 past
+the short at 0x12A of an object are cleared, and the object wakes */
+void object_unknown_000ba3d0(
+	long object_index)
+{
+	byte *object= OBJECT_DATA(object_index);
+	byte *place= object+*(const short *)(object+0x12A)+0x64;
+
+	place[1]= 0;
+	place[0]= 0;
+	place[3]= 0;
+	object_wake(object_index);
+}

@@ -2034,3 +2034,20 @@ boolean network_life_cycle_unknown_000642a0(
 
 	return network_session_leader_set_unknown49a1(network_life_cycle_session, unknown49a1);
 }
+
+wchar *wcsncpy(wchar *destination, const wchar *source, size_t count);
+
+/* 0x004cd86a and 0x004cd88a: two names (15 and 31 characters at most) */
+wchar unknown_004cd86a[16];
+wchar unknown_004cd88a[32];
+
+/* 0x000645d0: the two names are set */
+void __attribute__((stdcall)) network_life_cycle_unknown_000645d0(
+	const wchar *first,
+	const wchar *second)
+{
+	wcsncpy(unknown_004cd86a, first, 15);
+	unknown_004cd86a[15]= 0;
+	wcsncpy(unknown_004cd88a, second, 31);
+	unknown_004cd88a[31]= 0;
+}

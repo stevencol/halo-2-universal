@@ -517,3 +517,22 @@ void effect_unknown_00177590(
 		}
 	}
 }
+
+/* 0x00248d50: the shorts at 0x02 of the particle emitters (0x4C bytes) of
+something, from the one at its 0x04, each to the next at 0x08, added */
+long particle_unknown_00248d50(
+	const byte *data)
+{
+	long emitter_index= *(const long *)(data+0x04);
+	long total= 0;
+
+	while (emitter_index!=NONE)
+	{
+		const byte *emitter= (const byte *)particle_emitter_data->data+(emitter_index&0xFFFF)*0x4C;
+
+		total+= *(const unsigned short *)(emitter+0x02);
+		emitter_index= *(const long *)(emitter+0x08);
+	}
+
+	return total;
+}

@@ -3710,3 +3710,7 @@ address,name,source,arguments,returns,convention
 00278e80,unknown_00278e80,source/main/main.c,stack,void
 000642a0,network_life_cycle_unknown_000642a0,source/networking/network_life_cycle.c,esi,bool
 001c55b0,havok_unknown_001c55b0,source/physics/havok.c,edx,int
+000ba3d0,object_unknown_000ba3d0,source/objects/objects.c,eax,void
+00248d50,particle_unknown_00248d50,source/effects/effects.c,eax,int
+0022cb90,havok_unknown_0022cb90,source/physics/havok.c,eax,real:xmm0
+000645d0,network_life_cycle_unknown_000645d0,source/networking/network_life_cycle.c,eax stack,void,stdcall

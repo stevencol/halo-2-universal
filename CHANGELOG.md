@@ -2,6 +2,30 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Cuatro funciones pequeñas del camino al menú: tres bytes de un objeto, los shorts de una cadena de emisores, dieciséis diferencias y dos nombres
+
+Cuatro funciones pequeñas (204 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2855 funciones se pasa a 2859, el 25,38 % de
+las del juego (el 13,716 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_unknown_000ba3d0` | `0x000ba3d0` | `objects/objects.c` |
+| `particle_unknown_00248d50` | `0x00248d50` | `effects/effects.c` |
+| `havok_unknown_0022cb90` | `0x0022cb90` | `physics/havok.c` |
+| `network_life_cycle_unknown_000645d0` | `0x000645d0` | `networking/network_life_cycle.c` |
+
+### Lo que se sabe
+
+- tres bytes de un objeto borrados antes de despertarlo; los shorts de una cadena de emisores de partículas sumados; dieciséis diferencias por dieciséis números; y dos nombres (dos variables nuevas).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 14 de `make_mutations.py`, 0 sin cazar; 2 que no cambia nada o no termina, quitada.
+
 ## 2026-10-24 — Dos funciones pequeñas del camino al menú: un byte de la sesión en algunos de sus estados y un long de una lista antes de una marca
 
 Dos funciones pequeñas (89 bytes) en 2 archivos, de las que el juego ejecuta

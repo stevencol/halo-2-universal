@@ -1167,3 +1167,22 @@ long havok_unknown_001c55b0(
 
 	return *(const byte *const *)(node+0x0C) ? *(const long *)(node+0x04) : NONE;
 }
+
+/* 0x0022cb90: sixteen differences of longs (from 0xF0348 to 0xF0384 less
+those 0x44 after them) by longs (from 0x6C to 0xA8), added, as a real
+scaled by 1.0344942e-06 */
+real havok_unknown_0022cb90(
+	const byte *data)
+{
+	const long *at= (const long *)(data+0xF0384);
+	long total= 0;
+	long index;
+
+	for (index= 0; index<16; index++)
+	{
+		total+= (at[0]-at[0x44/4])*at[-0xF02DC/4];
+		at--;
+	}
+
+	return (real)total*1.0344942e-06f;
+}
