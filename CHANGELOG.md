@@ -2,6 +2,28 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Dos funciones del camino al menú: los eventos de la animación de un canal y las secciones de los grupos de un tag para las variantes pedidas
+
+Dos funciones medianas (913 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 3049 funciones se pasa a 3051, el 27,08 % de
+las del juego (el 14,658 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_001c69b0` | `0x001c69b0` | `physics/havok.c` |
+| `unknown_0004c2b0` | `0x0004c2b0` | `game/game_unknown_0003f2b0.c` |
+
+### Lo que se sabe
+
+- los eventos de la animación de un canal entre su frame y el final ponen los bits de sus tipos en el short 0x16; y las secciones de los grupos de un tag para las variantes pedidas: las de geometría cargada se toman y pasan a ser las actuales, y para las demás la actual si su geometría está cargada (un recurso), o ninguna. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 8 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Dos funciones del camino al menú: la variante del modelo de una unidad por un nombre y el rectángulo de una celda de una cuadrícula
 
 Dos funciones medianas (664 bytes) en 2 archivos, de las que el juego ejecuta

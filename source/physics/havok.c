@@ -2201,3 +2201,54 @@ void havok_unknown_001edc10(
 		}
 	}
 }
+
+/* 0x001c69b0: the events of the animation of a channel (4 bytes each, at
+0x50, as many as at 0x4C: a type and a frame in the short at 0x02) between
+its frame (0x1C) and the end (the frames at 0x14 and one more, when its rate
+at 0x18 is above zero, or 0) have the bits of their types in the short at
+0x16; the frame itself counts when it is the end, not when it is the start */
+void havok_unknown_001c69b0(
+	byte *channel)
+{
+	const byte *animation;
+	real end= 0.0f;
+	real position;
+	real lower;
+	real upper;
+	long index;
+
+	*(unsigned short *)(channel+0x16)= 0;
+	if (*(const short *)(channel+0x06)==NONE)
+	{
+		return;
+	}
+	animation= havok_unknown_001daea0(
+		(const byte *)(uintptr_t)global_tag_instances[*(const long *)channel&0xFFFF].address,
+		*(const unsigned long *)(channel+0x04));
+	position= *(const real *)(channel+0x1C);
+	if (*(const real *)(channel+0x18)>0.0f)
+	{
+		end= (real)*(const short *)(animation+0x14)+1.0f;
+	}
+	lower= position>end ? end : position;
+	upper= position>end ? position : end;
+	for (index= 0; index<*(const long *)(animation+0x4C); index++)
+	{
+		const byte *event= *(const byte *const *)(animation+0x50)+index*4;
+		real frame= (real)*(const short *)(event+0x02);
+		boolean set;
+
+		if (lower==*(const real *)(channel+0x1C))
+		{
+			set= frame>lower && upper>=frame;
+		}
+		else
+		{
+			set= frame>=lower && upper>frame;
+		}
+		if (set)
+		{
+			*(unsigned short *)(channel+0x16)|= (unsigned short)(1UL<<(event[0]&31));
+		}
+	}
+}

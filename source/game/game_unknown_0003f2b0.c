@@ -251,3 +251,84 @@ long unknown_0002d000(
 
 	return *(const short *)(*(const byte *const *)(bsp+0x144)+instance*0x58+0x56)!=0;
 }
+
+/* 0x0004c2b0: the sections (one byte each) of the groups of a tag (0x10
+bytes each, at 0x20, as many as at 0x1C; with variants of 0x10 bytes at
+0x0C, as many as at 0x08, each with a section for each level from 0x04)
+for the variants wanted: those whose geometry is loaded (or asked for) are
+taken, and become the current ones; for others, the current variant's when
+its geometry is loaded, which is a fallback, or none (NONE, a fallback too,
+when there is no current one). Whether no current one was missing */
+boolean __attribute__((stdcall)) unknown_0004c2b0(
+	long tag_index,
+	const byte *wanted,
+	signed char *current,
+	long level,
+	boolean request,
+	signed char *sections,
+	boolean *fallback)
+{
+	const byte *definition= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+	unsigned short available= 0;
+	boolean result= TRUE;
+	long index;
+
+	*fallback= FALSE;
+	for (index= 0; index<*(const long *)(definition+0x1C); index++)
+	{
+		const byte *group= *(const byte *const *)(definition+0x20)+index*0x10;
+		long selection= wanted[index];
+
+		if (selection<*(const long *)(group+0x08))
+		{
+			short section= *(const short *)(*(const byte *const *)(group+0x0C)+selection*0x10+0x04+level*2);
+			struct geometry_block_info *block=
+				(struct geometry_block_info *)(*(byte *const *)(definition+0x28)+section*0x5C+0x38);
+
+			if (geometry_cache_block_load(block, request ? 3 : 0))
+			{
+				available|= (unsigned short)(1UL<<(index&31));
+			}
+		}
+	}
+	for (index= 0; index<*(const long *)(definition+0x1C); index++)
+	{
+		const byte *variants= *(const byte *const *)(*(const byte *const *)(definition+0x20)+index*0x10+0x0C);
+
+		if (available&(1UL<<(index&31)))
+		{
+			sections[index]= (signed char)variants[(signed char)wanted[index]*0x10+0x04+level*2];
+			current[index]= (signed char)wanted[index];
+		}
+		else if (wanted[index]!=0xFF)
+		{
+			if (current[index]!=NONE)
+			{
+				const byte *variant= variants+current[index]*0x10;
+				struct geometry_block_info *block= (struct geometry_block_info *)(*(byte *const *)(definition+0x28)
+					+*(const short *)(variant+0x04+level*2)*0x5C+0x38);
+
+				if (geometry_cache_block_load(block, 0))
+				{
+					sections[index]= (signed char)variant[0x04+level*2];
+					*fallback= TRUE;
+				}
+				else
+				{
+					result= FALSE;
+				}
+			}
+			else
+			{
+				*fallback= TRUE;
+				sections[index]= NONE;
+			}
+		}
+		else
+		{
+			sections[index]= NONE;
+		}
+	}
+
+	return result;
+}
