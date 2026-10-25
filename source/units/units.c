@@ -3237,3 +3237,42 @@ boolean unit_unknown_0010eaf0(
 
 	return TRUE;
 }
+
+/* 0x00111490: whether a unit with a parent (0x14) and a short at 0x1FC is
+in a state of its animations (the long at 0x7C of what is at the short at
+0x12A) that is none of twenty, without unit_unknown_000c7070, and its
+animations have not the bit 2 (unit_unknown_00111590) */
+boolean unit_unknown_00111490(
+	long unit_index)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+	boolean result= TRUE;
+
+	if (*(const long *)(unit+0x14)==NONE || *(const short *)(unit+0x1FC)==NONE)
+	{
+		return FALSE;
+	}
+	if (unit_unknown_000c7070(unit_index))
+	{
+		result= FALSE;
+	}
+	else
+	{
+		switch (*(const long *)(UNIT_UNKNOWN12A(unit)+0x7C))
+		{
+		case 0x0400004A: case 0x0400076C: case 0x0400076D:
+		case 0x050000C3: case 0x05000768: case 0x05000769: case 0x0500076A: case 0x0500076B:
+		case 0x0600008C: case 0x0700076E: case 0x080000C4: case 0x0800076F:
+		case 0x0A000767: case 0x0C000043: case 0x0D00002B: case 0x0D000042:
+		case 0x0E00002A: case 0x0E00003B: case 0x0E0000C3: case 0x0F00003A:
+			result= FALSE;
+			break;
+		}
+	}
+	if (!unit_unknown_00111590(unit_index, 2))
+	{
+		return FALSE;
+	}
+
+	return result;
+}

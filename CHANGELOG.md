@@ -2,6 +2,29 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Tres funciones del camino al menú: si una unidad está en algún estado de sus animaciones, la colocación de un objeto preparada y si un efecto se hace
+
+Tres funciones medianas (796 bytes) en 3 archivos, de las que el juego ejecuta
+hasta el menú principal. De 3029 funciones se pasa a 3032, el 26,92 % de
+las del juego (el 14,470 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unit_unknown_00111490` | `0x00111490` | `units/units.c` |
+| `object_unknown_000b7930` | `0x000b7930` | `objects/objects.c` |
+| `effect_unknown_00176210` | `0x00176210` | `effects/effects.c` |
+
+### Lo que se sabe
+
+- si una unidad con padre está en un estado de sus animaciones que no es ninguno de veinte (y sin el bit 2 en ellas); la colocación de un objeto de un tag preparada (ceros, adelante y arriba, escala 1, NONE, y lo del objeto del que viene y su dueño); y si un efecto se hace, por la distancia al jugador local más cercano y los bits de los clusters. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 12 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Dos funciones del camino al menú: el valor de una propiedad de una partícula y el color de un sistema de partículas
 
 Dos funciones medianas (367 bytes) en 1 archivo, de las que el juego ejecuta

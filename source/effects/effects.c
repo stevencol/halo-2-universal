@@ -952,3 +952,70 @@ void particle_system_unknown_001753f0(
 	*(long *)(system+0x30)= NONE;
 	*(long *)(system+0x34)= NONE;
 }
+
+/* 0x0016f3a0, of game_unknown_0016efb0.c; 0x004c56c0, of
+game_unknown_0003f2b0.c */
+real *game_unknown_0016efb0_get_point(long local_player_index);
+extern unsigned long unknown_004c56c0[16];
+
+/* 0x00176210: whether an effect (its tag at 0x04, and where it comes from at
+0x5C: a point at 0x08 and a cluster in the short at 0x20) is to be made:
+yes without a tag or where, with the byte at 0x05 of unknown_00510c50, or
+when its definition has no distances (0x28 and 0x2C); otherwise the nearest
+local player has to be nearer than the second, and nearer than the first
+or the cluster has to be one of the bits of unknown_004c56c0 */
+boolean effect_unknown_00176210(
+	const byte *parameters)
+{
+	const byte *source= *(const byte *const *)(parameters+0x5C);
+	const byte *definition;
+	real lower;
+	real upper;
+	real minimum= 3.4028235e38f;
+	long index;
+	short cluster_index;
+
+	if (*(const long *)(parameters+0x04)==NONE || !source || *(const short *)(source+0x20)==NONE)
+	{
+		return TRUE;
+	}
+	if (unknown_00510c50 && ((const byte *)unknown_00510c50)[5])
+	{
+		return TRUE;
+	}
+	definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)(parameters+0x04)&0xFFFF].address;
+	lower= *(const real *)(definition+0x28);
+	upper= *(const real *)(definition+0x2C);
+	if (lower==0.0f || upper==0.0f)
+	{
+		return TRUE;
+	}
+	for (index= 0; index<4; index++)
+	{
+		const real *point= game_unknown_0016efb0_get_point(index);
+
+		if (point)
+		{
+			real dx= *(const real *)(source+0x08)-point[0];
+			real dy= *(const real *)(source+0x0C)-point[1];
+			real dz= *(const real *)(source+0x10)-point[2];
+			real distance= dx*dx+dy*dy+dz*dz;
+
+			if (minimum>distance)
+			{
+				minimum= distance;
+			}
+		}
+	}
+	if (lower*lower>minimum)
+	{
+		return TRUE;
+	}
+	if (minimum>upper*upper)
+	{
+		return FALSE;
+	}
+	cluster_index= *(const short *)(source+0x20);
+
+	return (unknown_004c56c0[cluster_index>>5]&(1UL<<(cluster_index&31)))!=0;
+}

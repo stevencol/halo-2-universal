@@ -1986,3 +1986,72 @@ void *__attribute__((stdcall)) object_unknown_000b7a40(
 
 	return NULL;
 }
+
+/* 0x004687a8 and 0x004687b0, of real_math.c */
+extern const real_vector3d *global_forward3d;
+extern const real_vector3d *global_up3d;
+
+/* 0x000b7930: the placement of an object of a tag (0xC4 bytes) made ready:
+zeros, forward and up, a scale of 1 and NONE for the rest; with the object
+it comes from (if there is one of that index) at 0x60 with its bit 2 of
+0xC0 as the flag 5 of 0x18, and for a unit its player (0x13C) and team
+(0x138); and an owner of three longs, or NONE */
+void __attribute__((stdcall)) object_unknown_000b7930(
+	byte *placement,
+	long tag_index,
+	long object_index,
+	const byte *owner)
+{
+	const byte *object;
+
+	memset(placement, 0, 0xC4);
+	*(long *)placement= tag_index;
+	*(long *)(placement+0x0C)= 0;
+	*(unsigned long *)(placement+0x18)= 0;
+	*(real_vector3d *)(placement+0x28)= *global_forward3d;
+	*(real_vector3d *)(placement+0x34)= *global_up3d;
+	*(real *)(placement+0x58)= 1.0f;
+	*(long *)(placement+0x74)= 0;
+	*(short *)(placement+0xB4)= NONE;
+	placement[0x14]= 0;
+	object= object_try_and_get_and_verify_type(object_index, NONE);
+	*(long *)(placement+0x64)= NONE;
+	*(long *)(placement+0x5C)= NONE;
+	if (object)
+	{
+		*(long *)(placement+0x60)= object_index;
+		if ((object[0xC0]>>2)&1)
+		{
+			*(unsigned long *)(placement+0x18)|= 0x20;
+		}
+		else
+		{
+			*(unsigned long *)(placement+0x18)&= ~0x20UL;
+		}
+		if ((1UL<<(object[0xAA]&31))&3)
+		{
+			*(long *)(placement+0x5C)= *(const long *)(object+0x13C);
+			*(long *)(placement+0x64)= *(const short *)(object+0x138);
+		}
+	}
+	else
+	{
+		*(long *)(placement+0x60)= NONE;
+	}
+	if (owner)
+	{
+		memcpy(placement+0x68, owner, 12);
+	}
+	else
+	{
+		*(long *)(placement+0x6C)= NONE;
+		*(long *)(placement+0x68)= NONE;
+		*(short *)(placement+0x70)= NONE;
+	}
+	placement[0x0A]= 0xFF;
+	placement[0x0B]= 0xFF;
+	*(short *)(placement+0x08)= NONE;
+	*(long *)(placement+0x04)= NONE;
+	*(long *)(placement+0x10)= NONE;
+	placement[0xB8]= 0;
+}
