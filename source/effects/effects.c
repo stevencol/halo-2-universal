@@ -676,3 +676,22 @@ void __attribute__((stdcall)) particle_location_list_add(
 	}
 	*last= index;
 }
+
+/* 0x002486e0: a particle location is deleted, with its emitters (from its
+0x04, each to the next at 0x08) and their particles */
+void __attribute__((stdcall)) particle_location_delete(
+	long location_index)
+{
+	long emitter_index= *(const long *)((const byte *)particle_location_data->data+(location_index&0xFFFF)*0x34+0x04);
+
+	while (emitter_index!=NONE)
+	{
+		byte *emitter= (byte *)particle_emitter_data->data+(emitter_index&0xFFFF)*0x4C;
+		long next= *(const long *)(emitter+0x08);
+
+		particle_unknown_002483b0(emitter);
+		datum_delete(particle_emitter_data, emitter_index);
+		emitter_index= next;
+	}
+	datum_delete(particle_location_data, location_index);
+}

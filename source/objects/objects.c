@@ -1499,3 +1499,22 @@ short object_unknown_0003d3e0(
 
 	return *(const long *)(definition+0x04)!=NONE;
 }
+
+long tag_unknown_0016d180(long tag_index, long name);
+
+/* 0x000ba540: an object keeps at 0xB1 which element of the tag at 0x38 of
+its definition has a name (the one given, or that at 0x30 of the
+definition) */
+void object_unknown_000ba540(
+	long object_index,
+	long name)
+{
+	byte *object= OBJECT_DATA(object_index);
+	const byte *definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)object&0xFFFF].address;
+
+	if (!name)
+	{
+		name= *(const long *)(definition+0x30);
+	}
+	object[0xB1]= (byte)tag_unknown_0016d180(*(const long *)(definition+0x38), name);
+}

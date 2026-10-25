@@ -3745,3 +3745,8 @@ address,name,source,arguments,returns,convention
 00161b60,game_voice_unknown_00161b60,source/networking/game_voice.c,ecx,bool
 0002cb30,unknown_0002cb30,source/game/game_unknown_0002b4a0.c,,void
 00044940,unknown_00044940,source/game/game_unknown_0002b4a0.c,eax stack,pointer,stdcall
+001db120,havok_unknown_001db120,source/physics/havok.c,ecx eax stack stack,pointer,stdcall
+002486e0,particle_location_delete,source/effects/effects.c,stack,void,stdcall
+000c70b0,unit_unknown_000c70b0,source/units/units.c,eax,bool
+000ba540,object_unknown_000ba540,source/objects/objects.c,eax ecx,void
+0014f270,player_unknown_0014f270,source/main/main.c,stack stack,void,stdcall

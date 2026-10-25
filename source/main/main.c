@@ -1199,3 +1199,31 @@ boolean unknown_0017b270(
 
 	return TRUE;
 }
+
+/* 0x0014f270: a player gets a number (0x24, NONE for none) and the players
+globals the player for it (at 0x1C) and how many have one (0x0A); one that
+had another first leaves it */
+void __attribute__((stdcall)) player_unknown_0014f270(
+	long player_index,
+	long number)
+{
+	byte *player= (byte *)player_data->data+(player_index&0xFFFF)*0x21C;
+	byte *globals= (byte *)players_globals;
+	long old= *(const long *)(player+0x24);
+
+	if (old==number)
+	{
+		return;
+	}
+	if (number==NONE)
+	{
+		*(long *)(globals+0x1C+old*4)= NONE;
+		(*(short *)(globals+0x0A))--;
+		*(long *)(player+0x24)= NONE;
+		return;
+	}
+	player_unknown_0014f270(player_index, NONE);
+	*(long *)(player+0x24)= number;
+	*(long *)(globals+0x1C+number*4)= player_index;
+	(*(short *)(globals+0x0A))++;
+}

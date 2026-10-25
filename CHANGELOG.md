@@ -2,6 +2,31 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Cinco funciones pequeñas del camino al menú: tres búsquedas una en otra, un lugar de partículas borrado, un estado de una unidad, el elemento de un tag de un objeto y el número de un jugador
+
+Cinco funciones pequeñas (414 bytes) en 5 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2895 funciones se pasa a 2900, el 25,74 % de
+las del juego (el 13,830 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_001db120` | `0x001db120` | `physics/havok.c` |
+| `particle_location_delete` | `0x002486e0` | `effects/effects.c` |
+| `unit_unknown_000c70b0` | `0x000c70b0` | `units/units.c` |
+| `object_unknown_000ba540` | `0x000ba540` | `objects/objects.c` |
+| `player_unknown_0014f270` | `0x0014f270` | `main/main.c` |
+
+### Lo que se sabe
+
+- tres búsquedas binarias una dentro de otra; un lugar de partículas borrado con sus emisores y partículas; si una unidad está en ciertos estados; el elemento del tag que guarda un objeto en 0xB1; y el número de un jugador con las globales de los jugadores.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 18 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-24 — Cuatro funciones pequeñas del camino al menú: la semilla al azar movida por dieciséis cosas, el menor número sobre otro, unos números vaciados y un lugar de una de dieciséis cosas
 
 Cuatro funciones pequeñas (576 bytes) en 3 archivos, de las que el juego ejecuta

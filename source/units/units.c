@@ -2671,3 +2671,22 @@ boolean unit_unknown_000e4050(
 
 	return *(const long *)(unit+0x14)==NONE;
 }
+
+/* 0x000c70b0: whether unit_unknown_000c7070 says so of a unit, or its
+number at 0x7C (past its short at 0x12A) is 0x080000C4, 0x0400004A or
+0x050000C3 */
+boolean unit_unknown_000c70b0(
+	long unit_index)
+{
+	const byte *unit;
+	unsigned long number;
+
+	if (unit_unknown_000c7070(unit_index))
+	{
+		return TRUE;
+	}
+	unit= UNIT_OBJECT_GET(unit_index);
+	number= *(const unsigned long *)(unit+*(const short *)(unit+0x12A)+0x7C);
+
+	return number==0x080000C4 || number==0x0400004A || number==0x050000C3;
+}

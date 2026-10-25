@@ -1325,3 +1325,28 @@ void unknown_001ee410(
 	}
 	*result= unknown_0054e898;
 }
+
+/* 0x001db120: three searches (as havok_unknown_001dd560) one inside the
+other: by a long in the block at 0x34 of something, then by a second in the
+block of what it found (0x14 bytes each), then by a third (0x34 bytes);
+NULL if one fails */
+void *__attribute__((stdcall)) havok_unknown_001db120(
+	const byte *data,
+	long first,
+	long second,
+	long third)
+{
+	const byte *found= havok_unknown_001dd560(data+0x34, first, 0x14);
+
+	if (!found)
+	{
+		return NULL;
+	}
+	found= havok_unknown_001dd560(found+4, second, 0x14);
+	if (!found)
+	{
+		return NULL;
+	}
+
+	return havok_unknown_001dd560(found+4, third, 0x34);
+}
