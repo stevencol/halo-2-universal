@@ -3684,3 +3684,7 @@ address,name,source,arguments,returns,convention
 00130f60,scenario_unknown_00130f60,source/scenario/scenario.c,eax ebx,int
 001cafc0,havok_unknown_001cafc0,source/physics/havok.c,eax,void
 000c7750,unit_unknown_000c7750,source/units/units.c,ecx edx xmm3 xmm4 xmm5 stack,bool,stdcall
+001ccba0,havok_unknown_001ccba0,source/physics/havok.c,eax,void
+0014b360,scenario_unknown_0014b360,source/scenario/scenario.c,ecx edx ebx edi,void
+00162c50,player_unknown_00162c50,source/main/main.c,eax stack,bool,stdcall
+00101690,unit_unknown_00101690,source/units/units.c,stack,bool,stdcall

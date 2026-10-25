@@ -1058,3 +1058,37 @@ short main_game_unknown_00138ab0(
 
 	return NONE;
 }
+
+/* 0x00162c50: for a player without a unit, the player it follows (0x1B0)
+when that one is valid, has something at 0xC4, nothing at its short at 0x28
+and not the bit 0x02 at 0x02, for ten seconds from when it started (the bit
+12 of the player's flags and the time at 0x190); FALSE, and the bit and the
+time cleared, when not */
+boolean __attribute__((stdcall)) player_unknown_00162c50(
+	long player_index,
+	long *result)
+{
+	byte *player= (byte *)player_data->data+(player_index&0xFFFF)*0x21C;
+	long other_index= *(const long *)(player+0x1B0);
+	const byte *other;
+
+	if (*(const long *)(player+0x2C)!=NONE || other_index==NONE
+		|| !(other= (const byte *)datum_try_and_get(player_data, other_index))
+		|| !other[0xC4] || *(const short *)(other+0x28)!=NONE || (other[2]&2))
+	{
+		player[3]&= ~0x10;
+		*(long *)(player+0x190)= 0;
+		return FALSE;
+	}
+	if (!(*(const unsigned short *)(player+2)&0x1000))
+	{
+		*(unsigned short *)(player+2)|= 0x1000;
+		*(long *)(player+0x190)= game_time_globals->time;
+	}
+	if ((long)(game_time_globals->time-*(const long *)(player+0x190))>=game_time_globals->ticks_per_second*10)
+	{
+		return FALSE;
+	}
+	*result= other_index;
+	return TRUE;
+}

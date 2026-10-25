@@ -484,3 +484,50 @@ long scenario_unknown_00130f60(
 	*index= other;
 	return entries[other*2+1];
 }
+
+/* 0x0014b360: the entry of the scenario (its block at 0x08) that a cluster
+of the structure bsp names (its byte at 0x6E, or 0 with the bit 0x02 at 0x12
+of the scenario), and the point at 0xA0 of its tag when that has something
+at 0x04 and the bit 0x20 of its byte at 0x10 */
+void scenario_unknown_0014b360(
+	long cluster_index,
+	long *index,
+	boolean *found,
+	unsigned long *point)
+{
+	const byte *scenario= (const byte *)global_scenario;
+	long count= *(const long *)(scenario+0x08);
+	short which;
+	long tag_index= NONE;
+	const byte *tag;
+
+	*found= FALSE;
+	*index= NONE;
+	if (cluster_index==NONE)
+	{
+		return;
+	}
+	*index= (signed char)(*(const byte *const *)((const byte *)global_structure_bsp+0xA0))[cluster_index*0xB0+0x6E];
+	if (*index==NONE && (scenario[0x12]&2) && count>0)
+	{
+		*index= 0;
+	}
+	which= (short)*index;
+	if (which>=0 && which<count)
+	{
+		tag_index= (*(const long *const *)(scenario+0x0C))[which*2+1];
+	}
+	if (tag_index==NONE)
+	{
+		return;
+	}
+	tag= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+	if (!tag || *(const long *)(tag+0x04)==NONE || !(tag[0x10]&0x20))
+	{
+		return;
+	}
+	point[0]= ((const unsigned long *)(tag+0xA0))[0];
+	point[1]= ((const unsigned long *)(tag+0xA0))[1];
+	point[2]= ((const unsigned long *)(tag+0xA0))[2];
+	*found= TRUE;
+}

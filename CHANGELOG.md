@@ -2,6 +2,30 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Cuatro funciones medianas del camino al menú: tres cosas de Havok vaciadas, la entrada del escenario de un cluster, el jugador al que sigue otro y si un objeto es un arma en una mano
+
+Cuatro funciones medianas (685 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2829 funciones se pasa a 2833, el 25,15 % de
+las del juego (el 13,617 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_001ccba0` | `0x001ccba0` | `physics/havok.c` |
+| `scenario_unknown_0014b360` | `0x0014b360` | `scenario/scenario.c` |
+| `player_unknown_00162c50` | `0x00162c50` | `main/main.c` |
+| `unit_unknown_00101690` | `0x00101690` | `units/units.c` |
+
+### Lo que se sabe
+
+- tres cosas de 0x20 bytes de Havok vaciadas; la entrada del escenario del cluster de algo; el jugador al que sigue un jugador sin unidad; y si un objeto es un arma en una mano.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 14 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-24 — Cuatro funciones medianas del camino al menú: una lista de objetos con tiempo, una entrada del escenario, algo de 0x84 bytes y una velocidad en tres fases
 
 Cuatro funciones medianas (851 bytes) en 4 archivos, de las que el juego ejecuta

@@ -2515,3 +2515,25 @@ boolean __attribute__((stdcall)) unit_unknown_000c7750(
 	*speed_result= new_speed;
 	return result;
 }
+
+/* 0x00101690: whether an object is one of the two weapons in the hands of
+the unit that holds it */
+boolean __attribute__((stdcall)) unit_unknown_00101690(
+	long object_index)
+{
+	long unit_index= *(const long *)(UNIT_OBJECT_GET(object_index)+0x14);
+	const byte *unit;
+
+	if (unit_index==NONE || !UNIT_OBJECT_IS_UNIT(UNIT_OBJECT_GET(unit_index)) || !unit_has_two_weapons_in_hand(unit_index))
+	{
+		return FALSE;
+	}
+	unit= UNIT_OBJECT_GET(*(const long *)(UNIT_OBJECT_GET(object_index)+0x14));
+	if (object_index==unit_get_weapon(*(const long *)(UNIT_OBJECT_GET(object_index)+0x14), (signed char)unit[0x212]))
+	{
+		return TRUE;
+	}
+	unit= UNIT_OBJECT_GET(*(const long *)(UNIT_OBJECT_GET(object_index)+0x14));
+
+	return object_index==unit_get_weapon(*(const long *)(UNIT_OBJECT_GET(object_index)+0x14), (signed char)unit[0x213]);
+}

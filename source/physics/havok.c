@@ -1064,3 +1064,13 @@ void havok_unknown_001cafc0(
 	*(long *)(data+0x78)= NONE;
 	*(long *)(data+0x80)= 0;
 }
+
+/* 0x001ccba0: three of those things of 0x20 bytes (at 0x00, 0x20 and 0x40)
+are made nothing */
+void havok_unknown_001ccba0(
+	byte *data)
+{
+	havok_unknown_clear(data);
+	havok_unknown_clear(data+0x20);
+	havok_unknown_clear(data+0x40);
+}
