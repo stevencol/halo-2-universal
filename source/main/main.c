@@ -11,6 +11,7 @@ Halo 1's main.c.
 
 #include "text/unicode_string_list.h"
 #include "main.h"
+#include <string.h>
 
 #include "cache/geometry_cache.h"
 #include "cache/texture_cache.h"
@@ -1121,4 +1122,32 @@ void unknown_00278e80(
 		data[0xAE]= TRUE;
 		unknown_0055e4fc= TRUE;
 	}
+}
+
+/* 0x00052020: 0x50 bytes are copied (the second argument is not used);
+TRUE */
+boolean __attribute__((stdcall)) unknown_00052020(
+	void *destination,
+	long unused,
+	const void *source)
+{
+	(void)unused;
+	memcpy(destination, source, 0x50);
+	return TRUE;
+}
+
+/* 0x0024c5d0: in the list of something (at 0x14, each to the next at
+0x18), the first whose long at 0x70 is a number; NULL if none */
+byte *__attribute__((stdcall)) unknown_0024c5d0(
+	const byte *data,
+	long value)
+{
+	byte *node= *(byte *const *)(data+0x14);
+
+	while (node && *(const long *)(node+0x70)!=value)
+	{
+		node= *(byte *const *)(node+0x18);
+	}
+
+	return node;
 }

@@ -91,3 +91,25 @@ long unknown_get_unknownC_bit9(
 {
 	return (*(const unsigned short *)(unknown+0xC)>>9)&1;
 }
+
+/* 0x00173350: in a chain of entries (0x6C bytes, each to the next by its
+short at 0x08), from one, the first whose short at 0x0A is a number; NONE
+if none */
+short particle_systems_unknown_00173350(
+	short index,
+	const byte *entries,
+	short value)
+{
+	while (index!=NONE)
+	{
+		const byte *entry= entries+index*0x6C;
+
+		if (*(const short *)(entry+0x0A)==value)
+		{
+			break;
+		}
+		index= *(const short *)(entry+0x08);
+	}
+
+	return index;
+}

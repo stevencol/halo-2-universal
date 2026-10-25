@@ -3721,3 +3721,8 @@ address,name,source,arguments,returns,convention
 000a0200,real_math_unknown_000a0200,source/math/real_math.c,xmm0 stack,int,stdcall
 0001c290,rasterizer_unknown_0001c290,source/rasterizer/rasterizer_xbox.c,xmm0,pointer
 000c4970,unit_unknown_000c4970,source/units/units.c,ecx,bool
+00052020,unknown_00052020,source/main/main.c,stack stack stack,bool,stdcall
+0024c5d0,unknown_0024c5d0,source/main/main.c,eax stack,pointer,stdcall
+00173350,particle_systems_unknown_00173350,source/effects/particle_systems.c,eax esi edx,short
+00139130,game_unknown_00139130,source/game/game_unknown_0013bf00.c,,void
+0014a250,user_interface_unknown_0014a250,source/interface/user_interface.c,,bool

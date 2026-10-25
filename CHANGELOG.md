@@ -2,6 +2,31 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Cinco funciones pequeñas del camino al menú: 0x50 bytes copiados, un nodo de una lista, una entrada de una cadena, memoria del estado del juego y un tiempo de la interfaz
+
+Cinco funciones pequeñas (162 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2866 funciones se pasa a 2871, el 25,49 % de
+las del juego (el 13,736 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unknown_00052020` | `0x00052020` | `main/main.c` |
+| `unknown_0024c5d0` | `0x0024c5d0` | `main/main.c` |
+| `particle_systems_unknown_00173350` | `0x00173350` | `effects/particle_systems.c` |
+| `game_unknown_00139130` | `0x00139130` | `game/game_unknown_0013bf00.c` |
+| `user_interface_unknown_0014a250` | `0x0014a250` | `interface/user_interface.c` |
+
+### Lo que se sabe
+
+- 0x50 bytes copiados; el nodo de una lista por el long de 0x70; la entrada de una cadena por un short; 0x1E4 bytes del estado del juego y 0x80 vaciados; y si pasaron 200 de un tiempo de la interfaz (tres variables nuevas).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 11 de `make_mutations.py`, 0 sin cazar; 1 que no cambia nada, quitada.
+
 ## 2026-10-24 — Tres funciones pequeñas del camino al menú: si dos reales están cerca, una de diecisiete cosas por un real y algo de una unidad en un asiento
 
 Tres funciones pequeñas (197 bytes) en 3 archivos, de las que el juego ejecuta

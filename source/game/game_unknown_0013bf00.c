@@ -124,3 +124,18 @@ void game_unknown_0013ac30(
 		game_unknown_0013ac42(index);
 	}
 }
+
+/* 0x00510c4c: 0x1E4 bytes of the state of the game. 0x004e6950: 0x80
+bytes */
+byte *unknown_00510c4c;
+byte unknown_004e6950[0x80];
+
+/* 0x00139130: the 0x1E4 bytes take their memory, the 0x80 are zeros, and
+the four of game_unknown_0013ac30 are made empty */
+void game_unknown_00139130(
+	void)
+{
+	unknown_00510c4c= game_state_malloc(0x1E4);
+	memset(unknown_004e6950, 0, sizeof(unknown_004e6950));
+	game_unknown_0013ac30();
+}

@@ -115,3 +115,15 @@ boolean user_interface_unknown_00149318(
 
 	return found;
 }
+
+/* 0x0054e7fc: a time of the interface */
+unsigned long unknown_0054e7fc;
+extern unsigned long unknown_0054d5b8;
+
+/* 0x0014a250: whether user_interface_unknown_0014a224 says no and 200 have
+passed since that time */
+boolean user_interface_unknown_0014a250(
+	void)
+{
+	return !user_interface_unknown_0014a224() && unknown_0054d5b8-unknown_0054e7fc>=200;
+}
