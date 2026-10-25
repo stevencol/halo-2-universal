@@ -2,6 +2,29 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Tres funciones del camino al menú: cuánto se agacha un bípedo, un adelante y un arriba perpendiculares y los colores de un jugador
+
+Tres funciones medianas (770 bytes) en 3 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2987 funciones se pasa a 2990, el 26,54 % de
+las del juego (el 14,257 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `biped_unknown_000dd7d0` | `0x000dd7d0` | `units/units.c` |
+| `object_unknown_000b91d0` | `0x000b91d0` | `objects/objects.c` |
+| `game_engine_player_colors` | `0x0007f790` | `game/game_engine.c` |
+
+### Lo que se sabe
+
+- cuánto se agacha un bípedo en un tick; un adelante y un arriba hechos perpendiculares y de largo uno (o los del objeto); y los cuatro colores de un jugador, con los de su equipo o por defecto. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 11 de `make_mutations.py`, 0 sin cazar; 1 que no cambia nada o no se puede ver, quitada.
+
 ## 2026-10-25 — Cuatro funciones del camino al menú: los textos de los nodos de los scripts, la geometría de una de dieciséis cosas, si la geometría de un tag está predicha y si un bípedo se mueve
 
 Cuatro funciones medianas (875 bytes) en 4 archivos, de las que el juego ejecuta

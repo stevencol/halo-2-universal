@@ -1139,3 +1139,40 @@ void __attribute__((stdcall)) game_engine_list_iterate(
 		}
 	}
 }
+
+void player_color_get(real_rgb_color *color, long index);
+
+/* 0x00468710, of player_profile.c */
+extern const real_rgb_color *player_color_default;
+
+/* 0x0007f790: the four colors of a player (by the four bytes of its
+appearance); the first two the default ones, or the first that of its team
+and the second its first */
+void __attribute__((stdcall)) game_engine_player_colors(
+	const signed char *appearance,
+	real_rgb_color *colors,
+	short team_index,
+	boolean use_default)
+{
+	real_rgb_color color;
+	long index;
+
+	for (index= 0; index<4; index++)
+	{
+		player_color_get(&color, appearance[index]);
+		colors[index]= color;
+	}
+	if (use_default)
+	{
+		colors[0]= *player_color_default;
+		colors[1]= *player_color_default;
+		return;
+	}
+	if (team_index!=NONE)
+	{
+		game_engine_unknown_0007f720((unsigned long *)&color, team_index);
+		colors[0]= color;
+		player_color_get(&color, appearance[0]);
+		colors[1]= color;
+	}
+}

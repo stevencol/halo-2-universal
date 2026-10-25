@@ -1809,3 +1809,37 @@ void __attribute__((stdcall)) object_unknown_000ba350(
 		object+*(const short *)(object+0x10E), object+*(const short *)(object+0x112));
 	object_wake(object_index);
 }
+
+/* 0x000b91d0: a forward and an up made perpendicular (up from the cross of
+the cross), and one long; those of the object (0x70 and 0x7C) for a
+forward that is zero, and a made-up up for an up that is */
+void object_unknown_000b91d0(
+	long object_index,
+	real *forward,
+	real *up)
+{
+	real left_x= up[2]*forward[1]-forward[2]*up[1];
+	real left_y= forward[2]*up[0]-up[2]*forward[0];
+	real left_z= forward[0]*up[1]-up[0]*forward[1];
+	real up_x= forward[2]*left_y-left_z*forward[1];
+	real up_y= forward[0]*left_z-forward[2]*left_x;
+	real up_z= left_x*forward[1]-forward[0]*left_y;
+
+	up[0]= up_x;
+	up[1]= up_y;
+	up[2]= up_z;
+	if (normalize3d((real_vector3d *)forward)>0.0f)
+	{
+		if (!(normalize3d((real_vector3d *)up)>0.0f))
+		{
+			generate_up_vector3d((const real_vector3d *)forward, (real_vector3d *)up);
+		}
+		return;
+	}
+	{
+		const byte *object= OBJECT_DATA(object_index);
+
+		memcpy(forward, object+0x70, 12);
+		memcpy(up, object+0x7C, 12);
+	}
+}

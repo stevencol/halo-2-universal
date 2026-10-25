@@ -3836,3 +3836,6 @@ address,name,source,arguments,returns,convention
 000449e0,unknown_000449e0,source/game/game_unknown_0002b4a0.c,eax edx stack,pointer,stdcall
 0016e950,unknown_0016e950,source/sound/sound_manager.c,eax stack,bool,stdcall
 000ddfb0,biped_unknown_000ddfb0,source/units/units.c,esi,bool
+000dd7d0,biped_unknown_000dd7d0,source/units/units.c,eax,real:xmm0
+000b91d0,object_unknown_000b91d0,source/objects/objects.c,eax esi edi,void
+0007f790,game_engine_player_colors,source/game/game_engine.c,edi esi stack stack,void,stdcall

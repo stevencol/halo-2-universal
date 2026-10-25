@@ -2992,3 +2992,47 @@ boolean biped_unknown_000ddfb0(
 
 	return resting;
 }
+
+boolean actor_unknown_0025aad0(long actor_index, real *speed);
+extern struct data_array *actor_data;
+
+/* 0x000dd7d0: how much a biped crouches in a tick (its speed at 0x250 of
+its definition, which its actor may change): up to 1 with the bit 23 at
+0x134, down to 0 otherwise (its crouch at 0x2C4); all the rest, at most 1,
+in the state 6 with the byte at 0x3F8 and the bit 13 at 0x348 */
+real biped_unknown_000dd7d0(
+	long biped_index)
+{
+	const byte *biped= UNIT_OBJECT_GET(biped_index);
+	real speed= *(const real *)(UNIT_DEFINITION_GET(biped)+0x250);
+	long actor_index= *(const long *)(biped+0x12C);
+	real crouch= *(const real *)(biped+0x2C4);
+	real change;
+
+	if (actor_index!=NONE && *(const long *)((const byte *)actor_data->data+(actor_index&0xFFFF)*0x888+0x858)!=NONE)
+	{
+		actor_unknown_0025aad0(actor_index, &speed);
+	}
+	change= game_time_globals->seconds_per_tick*speed;
+	if ((*(const unsigned long *)(biped+0x134)>>23)&1)
+	{
+		if (change>1.0f-crouch)
+		{
+			change= 1.0f-crouch;
+		}
+	}
+	else
+	{
+		change= 0.0f-(change>crouch ? crouch : change);
+	}
+	if (biped[0x3DC]==6 && biped[0x3F8] && ((*(const unsigned short *)(biped+0x348)>>13)&1))
+	{
+		change= 1.0f-crouch;
+		if (!(1.0f>change))
+		{
+			change= 1.0f;
+		}
+	}
+
+	return change;
+}
