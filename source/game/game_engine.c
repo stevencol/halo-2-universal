@@ -1120,3 +1120,22 @@ void __attribute__((stdcall)) game_engine_unknown_00134240(
 		kept++;
 	}
 }
+
+/* 0x00163cd0: a procedure is called for each of a list whose short (0x08)
+has a bit of a mask, or for all with the mask 0xFFFF, with its long (0x0C)
+and the mask */
+void __attribute__((stdcall)) game_engine_list_iterate(
+	const struct game_engine_list *list,
+	unsigned long mask,
+	void (__attribute__((stdcall)) *procedure)(unsigned long value, unsigned long mask))
+{
+	long index;
+
+	for (index= 0; index<list->count; index++)
+	{
+		if (((long)(short)mask&(unsigned short)list->shorts8[index]) || (mask&0xFFFF)==0xFFFF)
+		{
+			procedure(list->longsC[index], mask);
+		}
+	}
+}

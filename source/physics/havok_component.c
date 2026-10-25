@@ -450,3 +450,69 @@ long unknown30_find_2003(
 {
 	return unknown30_find(unknown, 0x2003);
 }
+
+/* 0x003123a0 and 0x00312530, of Havok: a key of those pairs is taken out
+(what was there is given back through a place), and a key is put with a
+value */
+void *__attribute__((thiscall)) hkEntity_property_erase(void *entity, unsigned long *removed, long key);
+void __attribute__((thiscall)) hkEntity_property_put(void *entity, long key, unsigned long value);
+
+/* whether those pairs have a key */
+static boolean unknown30_has(
+	const byte *unknown,
+	long key)
+{
+	long count= *(const long *)(unknown+0x34);
+	const long *pair= *(const long *const *)(unknown+0x30);
+	long index;
+
+	for (index= 0; index<count; index++, pair+= 2)
+	{
+		if (pair[0]==key)
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/* a key gets a value: the one it had is taken out first */
+static void unknown30_set(
+	byte *unknown,
+	long key,
+	unsigned long value)
+{
+	unsigned long removed;
+
+	if (unknown30_has(unknown, key))
+	{
+		hkEntity_property_erase(unknown, &removed, key);
+	}
+	hkEntity_property_put(unknown, key, value);
+}
+
+/* 0x001cf2b0: the key 0x2001 (the havok component of the thing) gets a
+value */
+void __attribute__((stdcall)) unknown30_set_2001(
+	byte *unknown,
+	unsigned long value)
+{
+	unknown30_set(unknown, 0x2001, value);
+}
+
+/* 0x001cf330: the key 0x2002 */
+void __attribute__((stdcall)) unknown30_set_2002(
+	byte *unknown,
+	unsigned long value)
+{
+	unknown30_set(unknown, 0x2002, value);
+}
+
+/* 0x001cf3b0: the key 0x2003 */
+void __attribute__((stdcall)) unknown30_set_2003(
+	byte *unknown,
+	unsigned long value)
+{
+	unknown30_set(unknown, 0x2003, value);
+}

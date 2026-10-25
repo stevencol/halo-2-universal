@@ -2,6 +2,30 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Cuatro funciones pequeñas del camino al menú: un procedimiento para las entradas de una lista y tres claves de una entidad de Havok
+
+Cuatro funciones pequeñas (285 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2947 funciones se pasa a 2951, el 26,20 % de
+las del juego (el 14,087 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_engine_list_iterate` | `0x00163cd0` | `game/game_engine.c` |
+| `unknown30_set_2001` | `0x001cf2b0` | `physics/havok_component.c` |
+| `unknown30_set_2002` | `0x001cf330` | `physics/havok_component.c` |
+| `unknown30_set_2003` | `0x001cf3b0` | `physics/havok_component.c` |
+
+### Lo que se sabe
+
+- un procedimiento llamado para las entradas de una lista cuya máscara coincide; y las claves 0x2001 a 0x2003 de una entidad de Havok puestas (quitando antes la que había). Guiado por halo2-decompiled (CC0); el banco de pruebas aprende las funciones `thiscall` no descompiladas.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 5 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Dos funciones del camino al menú: las animaciones de lo que encuentran tres búsquedas y un bloque al final de un objeto
 
 Dos funciones medianas (452 bytes) en 2 archivos, de las que el juego ejecuta

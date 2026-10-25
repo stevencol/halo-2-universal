@@ -3797,3 +3797,9 @@ address,name,source,arguments,returns,convention
 00146fd0,havok_unknown_00146fd0,source/physics/havok.c,,int
 001ddb90,havok_unknown_001ddb90,source/physics/havok.c,ebx stack stack stack stack stack,void,stdcall
 000bc380,object_header_block_allocate,source/objects/objects.c,eax stack stack stack,bool,stdcall
+00163cd0,game_engine_list_iterate,source/game/game_engine.c,edi ebx stack,void,stdcall
+003123a0,hkEntity_property_erase,,ecx stack stack,pointer,thiscall
+00312530,hkEntity_property_put,,ecx stack stack,void,thiscall
+001cf2b0,unknown30_set_2001,source/physics/havok_component.c,esi stack,void,stdcall
+001cf330,unknown30_set_2002,source/physics/havok_component.c,esi stack,void,stdcall
+001cf3b0,unknown30_set_2003,source/physics/havok_component.c,esi stack,void,stdcall
