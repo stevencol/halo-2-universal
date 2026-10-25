@@ -2627,3 +2627,22 @@ short __attribute__((stdcall)) unit_unknown_00155810(
 
 	return result;
 }
+
+/* 0x000c4970: TRUE when a unit has NONE at 0x13C, or when it has a parent
+and unit_unknown_000c48f0 says no */
+boolean unit_unknown_000c4970(
+	long unit_index)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+
+	if (*(const long *)(unit+0x13C)==NONE)
+	{
+		return TRUE;
+	}
+	if (*(const long *)(unit+0x14)==NONE)
+	{
+		return FALSE;
+	}
+
+	return !unit_unknown_000c48f0(unit_index);
+}

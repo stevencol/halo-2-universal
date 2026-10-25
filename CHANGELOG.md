@@ -2,6 +2,29 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Tres funciones pequeñas del camino al menú: si dos reales están cerca, una de diecisiete cosas por un real y algo de una unidad en un asiento
+
+Tres funciones pequeñas (197 bytes) en 3 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2863 funciones se pasa a 2866, el 25,44 % de
+las del juego (el 13,731 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `real_math_unknown_000a0200` | `0x000a0200` | `math/real_math.c` |
+| `rasterizer_unknown_0001c290` | `0x0001c290` | `rasterizer/rasterizer_xbox.c` |
+| `unit_unknown_000c4970` | `0x000c4970` | `units/units.c` |
+
+### Lo que se sabe
+
+- si dos reales están a menos de 0.001; una de diecisiete cosas de 0x80 bytes por un real (en dieciseisavos, `unknown_00487288` nueva); y algo de una unidad en un asiento.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 8 de `make_mutations.py`, 0 sin cazar; 3 que no cambia nada o no termina, quitada.
+
 ## 2026-10-24 — Cuatro funciones pequeñas del camino al menú: las partículas de una cadena de lugares, una cadena de partículas borrada, un par de un efecto y 3t²-2t³
 
 Cuatro funciones pequeñas (236 bytes) en 2 archivos, de las que el juego ejecuta

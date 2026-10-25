@@ -776,3 +776,4 @@ address,name,source
 0055e4fc,unknown_0055e4fc,source/main/main.c
 004cd86a,unknown_004cd86a,source/networking/network_life_cycle.c
 004cd88a,unknown_004cd88a,source/networking/network_life_cycle.c
+00487288,unknown_00487288,source/rasterizer/rasterizer_xbox.c

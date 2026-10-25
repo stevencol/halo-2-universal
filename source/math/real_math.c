@@ -1373,3 +1373,21 @@ real real_math_unknown_0010e8e0(
 
 	return value;
 }
+
+/* 0x000a0200: whether two reals are less than 0.001 apart (and their
+difference is a number) */
+long __attribute__((stdcall)) real_math_unknown_000a0200(
+	real a,
+	real b)
+{
+	real difference= a-b;
+	unsigned long bits;
+
+	memcpy(&bits, &difference, sizeof(bits));
+	if ((bits&0x7F800000)==0x7F800000)
+	{
+		return 0;
+	}
+
+	return 0.001f>fabsf(difference);
+}

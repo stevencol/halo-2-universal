@@ -17,6 +17,7 @@ functions belong to it is a guess, and so are their names.
 #include "main/main.h"
 #include "shell/shell.h"
 #include "game/game.h"
+#include <math.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -630,4 +631,26 @@ void __attribute__((stdcall)) rasterizer_unknown_000350e0(
 		value= maximum;
 	}
 	result[3]= value;
+}
+
+/* 0x00487288: seventeen of something of 0x80 bytes */
+byte unknown_00487288[17*0x80];
+
+/* 0x0001c290: the one of those seventeen of a real from 0 to 1 (by
+sixteenths) */
+byte *rasterizer_unknown_0001c290(
+	real value)
+{
+	long index= lrintf(value*16.0f);
+
+	if (index<0)
+	{
+		index= 0;
+	}
+	else if (index>16)
+	{
+		index= 16;
+	}
+
+	return unknown_00487288+(index<<7);
 }
