@@ -3849,3 +3849,43 @@ boolean unit_unknown_0010dc70(
 
 	return result;
 }
+
+/* 0x0016da90, of tag_unknown_0016d180.c; 0x00113870, of objects.c */
+long tag_unknown_0016da90(long tag_index, long name);
+void object_unknown_00113870(long object_index);
+
+/* 0x0010f260: the animations of a unit start over: its weapon state
+(weapon_unknown_0010f040), what is at its short at 0x33E (NONE at 0x28, 0x94
+and 0x98, zeros at 0x00 to 0x24, the entries of the names 0x080001A2 and
+0x090001A3 of the model of its definition at 0x7C and 0x7E), NONE at 0x74
+and 0x78 of what is at its short at 0x12A, and its blend and periodic
+layer */
+void __attribute__((stdcall)) unit_unknown_0010f260(
+	long unit_index)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+	byte *control= (byte *)UNIT_UNKNOWN33E(unit);
+	const byte *definition;
+	byte *state;
+
+	weapon_unknown_0010f040(unit_index);
+	*(long *)(control+0x28)= NONE;
+	*(short *)control= 0;
+	memset(control+0x04, 0, 0x20);
+	control[0x02]= 0;
+	control[0x03]= 0;
+	definition= UNIT_DEFINITION_GET(unit);
+	*(short *)(control+0x7C)= (short)tag_unknown_0016da90(*(const long *)(definition+0x38), 0x080001A2);
+	*(short *)(control+0x7E)= (short)tag_unknown_0016da90(*(const long *)(definition+0x38), 0x090001A3);
+	state= (byte *)UNIT_UNKNOWN12A(unit);
+	if (state)
+	{
+		*(long *)(state+0x74)= NONE;
+		*(long *)(state+0x78)= NONE;
+	}
+	unit_unknown_0010e920(unit_index);
+	unit_unknown_0010dbc0(unit_index);
+	object_unknown_00113870(unit_index);
+	*(long *)(control+0x94)= NONE;
+	*(long *)(control+0x98)= NONE;
+}

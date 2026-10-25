@@ -3917,3 +3917,4 @@ address,name,source,arguments,returns,convention
 00173ee0,particle_systems_unknown_00173ee0,source/effects/effects.c,,void
 001c6560,havok_unknown_001c6560,source/physics/havok.c,eax stack,void,stdcall
 00131d60,real_math_unknown_00131d60,source/math/real_math.c,ecx stack stack ebx eax xmm7,pointer,stdcall
+0010f260,unit_unknown_0010f260,source/units/units.c,stack,void,stdcall

@@ -2,6 +2,27 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Una función del camino al menú: las animaciones de una unidad que vuelven a empezar
+
+Una función mediana (218 bytes) en 1 archivo, de las que el juego ejecuta
+hasta el menú principal. De 3068 funciones se pasa a 3069, el 27,24 % de
+las del juego (el 14,844 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unit_unknown_0010f260` | `0x0010f260` | `units/units.c` |
+
+### Lo que se sabe
+
+- las animaciones de una unidad vuelven a empezar: el estado de su arma, lo que hay en su short 0x33E (NONE, ceros y las entradas de dos nombres del modelo de su definición), NONE en lo que hay en su short 0x12A, y su mezcla y su capa periódica. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirve; el nombre es la dirección.
+- Mutaciones: 4 de `make_mutations.py` y 5 a mano, 0 sin cazar.
+
 ## 2026-10-25 — Dos funciones del camino al menú: un canal de animaciones que va a un frame y un color entre dos teñido
 
 Dos funciones medianas (415 bytes) en 2 archivos, de las que el juego ejecuta
