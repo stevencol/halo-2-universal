@@ -3714,3 +3714,7 @@ address,name,source,arguments,returns,convention
 00248d50,particle_unknown_00248d50,source/effects/effects.c,eax,int
 0022cb90,havok_unknown_0022cb90,source/physics/havok.c,eax,real:xmm0
 000645d0,network_life_cycle_unknown_000645d0,source/networking/network_life_cycle.c,eax stack,void,stdcall
+001753a0,particle_unknown_001753a0,source/effects/effects.c,eax,int
+002483b0,particle_unknown_002483b0,source/effects/effects.c,edi,void
+00178b80,effect_unknown_00178b80,source/effects/effects.c,eax edx,void
+0010e8e0,real_math_unknown_0010e8e0,source/math/real_math.c,xmm2,real:xmm0

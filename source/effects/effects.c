@@ -536,3 +536,61 @@ long particle_unknown_00248d50(
 
 	return total;
 }
+
+/* 0x001753a0: what particle_unknown_00248d50 gives for each of the particle
+locations (0x34 bytes) of something, from the one at its 0x30, each to the
+next at 0x0C, added */
+long particle_unknown_001753a0(
+	const byte *data)
+{
+	long location_index= *(const long *)(data+0x30);
+	long total= 0;
+
+	while (location_index!=NONE)
+	{
+		const byte *location= (const byte *)particle_location_data->data+(location_index&0xFFFF)*0x34;
+
+		total+= particle_unknown_00248d50(location);
+		location_index= *(const long *)(location+0x0C);
+	}
+
+	return total;
+}
+
+/* 0x002483b0: the particles (0x40 bytes) of something, from the one at its
+0x04, each to the next at 0x04, are deleted; it has none (0 at 0x02) */
+void particle_unknown_002483b0(
+	byte *data)
+{
+	long particle_index= *(const long *)(data+0x04);
+
+	while (particle_index!=NONE)
+	{
+		long next= *(const long *)((const byte *)particle_data->data+(particle_index&0xFFFF)*0x40+0x04);
+
+		datum_delete(particle_data, particle_index);
+		particle_index= next;
+	}
+	*(short *)(data+0x02)= 0;
+	*(long *)(data+0x04)= NONE;
+}
+
+/* 0x00178b80: of the sixteen pairs at 0x110 of an effect (0x190 bytes), the
+first whose second long is a number gets NONE and 0 */
+void effect_unknown_00178b80(
+	long effect_index,
+	long value)
+{
+	long *pair= (long *)((byte *)effect_data->data+(effect_index&0xFFFF)*0x190+0x110);
+	unsigned long index;
+
+	for (index= 0; index<16; index++, pair+= 2)
+	{
+		if (pair[1]==value)
+		{
+			pair[1]= NONE;
+			pair[0]= 0;
+			return;
+		}
+	}
+}

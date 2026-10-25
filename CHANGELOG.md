@@ -2,6 +2,30 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Cuatro funciones pequeñas del camino al menú: las partículas de una cadena de lugares, una cadena de partículas borrada, un par de un efecto y 3t²-2t³
+
+Cuatro funciones pequeñas (236 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2859 funciones se pasa a 2863, el 25,42 % de
+las del juego (el 13,724 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `particle_unknown_001753a0` | `0x001753a0` | `effects/effects.c` |
+| `particle_unknown_002483b0` | `0x002483b0` | `effects/effects.c` |
+| `effect_unknown_00178b80` | `0x00178b80` | `effects/effects.c` |
+| `real_math_unknown_0010e8e0` | `0x0010e8e0` | `math/real_math.c` |
+
+### Lo que se sabe
+
+- las partículas de una cadena de lugares sumadas; una cadena de partículas borrada; un par de un efecto vaciado; y 3t²-2t³ entre 0 y 1.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 10 de `make_mutations.py`, 0 sin cazar; 4 que no cambia nada o no termina, quitada.
+
 ## 2026-10-24 — Cuatro funciones pequeñas del camino al menú: tres bytes de un objeto, los shorts de una cadena de emisores, dieciséis diferencias y dos nombres
 
 Cuatro funciones pequeñas (204 bytes) en 4 archivos, de las que el juego ejecuta

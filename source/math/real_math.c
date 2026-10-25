@@ -1353,3 +1353,23 @@ real real_math_unknown_0001c1a0(
 {
 	return fabsf(value);
 }
+
+/* 0x0010e8e0: 3t^2-2t^3, from 0 to 1 (among the functions of the units in
+the game) */
+real real_math_unknown_0010e8e0(
+	real t)
+{
+	real square= t*t;
+	real value= square*3.0f-square*t*2.0f;
+
+	if (0.0f>value)
+	{
+		return 0.0f;
+	}
+	if (value>1.0f)
+	{
+		return 1.0f;
+	}
+
+	return value;
+}
