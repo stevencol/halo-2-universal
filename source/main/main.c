@@ -1316,3 +1316,38 @@ void __attribute__((stdcall)) unknown_000137a0(
 	*second= (b[1]-b[0])*fraction+b[0];
 	*first= (a[1]-a[0])*fraction+a[0];
 }
+
+/* 0x001317a0: a weight (from 0 to 1) of two vectors and four reals is added
+to a sum of twelve (the eleventh adds the weight, the twelfth is taken one
+less the weight of) */
+void __attribute__((stdcall)) unknown_001317a0(
+	real *sum,
+	const real *first,
+	const real *second,
+	real weight,
+	real a,
+	real b,
+	real c,
+	real d)
+{
+	if (0.0f>weight)
+	{
+		weight= 0.0f;
+	}
+	else if (weight>1.0f)
+	{
+		weight= 1.0f;
+	}
+	sum[0]= weight*first[0]+sum[0];
+	sum[1]= first[1]*weight+sum[1];
+	sum[2]= first[2]*weight+sum[2];
+	sum[3]= second[0]*weight+sum[3];
+	sum[4]= second[1]*weight+sum[4];
+	sum[5]= second[2]*weight+sum[5];
+	sum[6]= a*weight+sum[6];
+	sum[7]= b*weight+sum[7];
+	sum[8]= c*weight+sum[8];
+	sum[9]= d*weight+sum[9];
+	sum[11]= (1.0f-weight)*sum[11];
+	sum[10]= sum[10]+weight;
+}

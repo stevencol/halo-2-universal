@@ -2,6 +2,28 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Dos funciones del camino al menú: un peso de dos vectores y cuatro reales sumado y si un cluster es de algo
+
+Dos funciones medianas (367 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2936 funciones se pasa a 2938, el 26,08 % de
+las del juego (el 14,012 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unknown_001317a0` | `0x001317a0` | `main/main.c` |
+| `game_unknown_0016e210` | `0x0016e210` | `game/game_unknown_0016efb0.c` |
+
+### Lo que se sabe
+
+- un peso (0 a 1) de dos vectores y cuatro reales sumado a doce; y si un cluster del bsp es de algo del escenario (`unknown_004e64c8`, nueva).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 8 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Tres funciones del camino al menú: dos reales en un tiempo, un contador que empieza y si una de dieciséis cosas tiene un bit puesto
 
 Tres funciones medianas (653 bytes) en 3 archivos, de las que el juego ejecuta

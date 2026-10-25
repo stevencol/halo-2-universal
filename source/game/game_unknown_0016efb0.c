@@ -241,3 +241,52 @@ boolean game_unknown_001724a0(
 		&& real_is_in_range_0054e858(*(const float *)(camera+0x28))
 		&& real_is_in_range_3600(*(const float *)(camera+0x88));
 }
+
+/* 0x004e64c8: some flags */
+unsigned long unknown_004e64c8;
+
+/* 0x0016e210: whether a cluster of the structure bsp (0xB0 bytes, at 0xA0)
+is of something: by its byte at 0x70 (with the high bit, through a short
+of the block at 0x68, 0x18 bytes), the thing at 0x08 of an element of the
+block at 0x34C of the scenario (0x10 bytes); TRUE with the bit 4 of the
+flags, or for NONE */
+boolean game_unknown_0016e210(
+	long cluster_index,
+	long thing)
+{
+	const byte *bsp= (const byte *)global_structure_bsp;
+	signed char value;
+	long index;
+
+	if (!global_scenario || !bsp || cluster_index==NONE)
+	{
+		return FALSE;
+	}
+	if ((unknown_004e64c8>>4)&1)
+	{
+		return TRUE;
+	}
+	value= *(const signed char *)(*(const byte *const *)(bsp+0xA0)+cluster_index*0xB0+0x70);
+	if (value==NONE)
+	{
+		return FALSE;
+	}
+	if (thing==NONE)
+	{
+		return TRUE;
+	}
+	if (value<0)
+	{
+		index= *(const short *)(*(const byte *const *)(bsp+0x68)+(value&0x7F)*0x18);
+	}
+	else
+	{
+		index= value&0x7F;
+	}
+	if (index==NONE)
+	{
+		return FALSE;
+	}
+
+	return *(const long *)(*(const byte *const *)((const byte *)global_scenario+0x34C)+index*0x10+0x08)==thing;
+}
