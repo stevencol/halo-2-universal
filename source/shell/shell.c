@@ -548,3 +548,18 @@ long __attribute__((stdcall)) real_floor(
 
 	return whole;
 }
+
+/* 0x0001cfb0 and 0x0003bcb0: the texture of a bitmap as
+shell_bitmap_get_texture has it, with other flags (7 and 0x0E) and no mip
+bias */
+struct d3d_texture *shell_unknown_0001cfb0(
+	struct bitmap_data *bitmap)
+{
+	return shell_bitmap_texture(bitmap, 7, 0.0f);
+}
+
+struct d3d_texture *shell_unknown_0003bcb0(
+	struct bitmap_data *bitmap)
+{
+	return shell_bitmap_texture(bitmap, 0x0E, 0.0f);
+}

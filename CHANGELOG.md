@@ -2,6 +2,30 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Cuatro funciones del camino al menú: la textura de un bitmap con otras dos banderas, un objeto que suelta lo que la simulación dice de él y lo que la partición de clusters guarda de uno
+
+Cuatro funciones pequeñas (326 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 3001 funciones se pasa a 3005, el 26,68 % de
+las del juego (el 14,309 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `shell_unknown_0001cfb0` | `0x0001cfb0` | `shell/shell.c` |
+| `shell_unknown_0003bcb0` | `0x0003bcb0` | `shell/shell.c` |
+| `object_unknown_000a7a60` | `0x000a7a60` | `objects/objects.c` |
+| `object_unknown_000b8b70` | `0x000b8b70` | `objects/objects.c` |
+
+### Lo que se sabe
+
+- la textura de un bitmap como la da `shell_bitmap_get_texture`, con las banderas 7 y 0x0E y sin sesgo de mip; un objeto con algo de la simulación lo suelta después de avisar a `unknown_000b5920`; y lo que la partición de clusters de los que chocan guarda de un objeto, cambiado. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 6 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Cinco funciones del camino al menú: la entrada de la paleta de un dato del escenario, un bitmap de un grupo pedido en una etapa, una animación de un grafo y sus datos, y el valor de una función de un tag
 
 Cinco funciones medianas (567 bytes) en 4 archivos, de las que el juego ejecuta

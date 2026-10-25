@@ -1900,3 +1900,43 @@ void *__attribute__((stdcall)) object_unknown_000d58a0(
 
 	return *(byte *const *)(block+4)+index*0x28;
 }
+
+/* 0x000a7a60: an object that has a thing that the simulation tells of it
+lets go of it, after unknown_000b5920 is told of it */
+void unknown_000b5920(long unknown);
+
+void object_unknown_000a7a60(
+	long object_index)
+{
+	long entity= *(const long *)(OBJECT_DATA(object_index)+OBJECT_SIMULATION_ENTITY_OFFSET);
+
+	if (entity==NONE)
+	{
+		return;
+	}
+	unknown_000b5920(entity);
+	object_detach_simulation_entity(object_index);
+}
+
+/* 0x001cadf0, of cluster_partitions.c */
+void cluster_partition_set_extra(long first_reference_index, struct cluster_partition *partition, const void *extra,
+	long index, long extra_size);
+
+/* 0x000b8b70: an object in the collideable cluster partition (the bit 0x40
+of the flags of its header) that has the bit 9 at 0x04 has what the
+partition keeps of it (object_unknown_000b88e0) changed, from its first
+reference at 0x60 */
+void object_unknown_000b8b70(
+	long object_index)
+{
+	const byte *object= OBJECT_DATA(object_index);
+	byte record[0x14];
+
+	if (!(OBJECT_HEADER_GET(object_index)->flags&0x40) || !((*(const unsigned long *)(object+0x04)>>9)&1))
+	{
+		return;
+	}
+	object_unknown_000b88e0(object_index, record);
+	cluster_partition_set_extra(*(const long *)(object+0x60), &collideable_object_cluster_partition, record, object_index,
+		sizeof(record));
+}
