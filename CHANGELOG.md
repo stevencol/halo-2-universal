@@ -2,6 +2,29 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Tres funciones del camino al menú: un lugar de partículas nuevo, los lugares de un efecto borrados y unos registros de vocalización borrados
+
+Tres funciones medianas (509 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2930 funciones se pasa a 2933, el 26,04 % de
+las del juego (el 13,978 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `particle_location_new` | `0x00248620` | `effects/effects.c` |
+| `effect_unknown_001773a0` | `0x001773a0` | `effects/effects.c` |
+| `vocalization_records_unknown_0020fe20` | `0x0020fe20` | `ai/vocalizations.c` |
+
+### Lo que se sabe
+
+- un lugar de partículas nuevo con un byte al azar; los lugares de cada ranura de un efecto borrados; y los registros de vocalización marcados de algo borrados, y su unidad los olvida.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 12 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Cinco funciones del camino al menú: dos cosas que toman memoria del estado del juego, un hilo nuevo de los scripts, el objeto que tiene a otro y las matrices de un árbol
 
 Cinco funciones medianas (621 bytes) en 4 archivos, de las que el juego ejecuta

@@ -863,3 +863,74 @@ void __attribute__((stdcall)) unknown_0016d8d0(
 		child= *(const short *)(node+0x08);
 	}
 }
+
+/* 0x00468788, of sound_manager.c: a point. 0x004ba034, of
+game_unknown_0002b4a0.c: a number */
+extern const real_point3d *unknown_00468788;
+extern long unknown_004ba034;
+
+/* 0x00248620: a new particle location (0x34 bytes): NONE for its three
+indices, that point twice (0x10 and 0x20), 1 at 0x1C, 0.5 at 0x2C, the
+number at 0x30 and a random byte at 0x03; its index, NONE without room */
+long particle_location_new(
+	void)
+{
+	long index= datum_new(particle_location_data);
+	byte *location;
+	unsigned long seed;
+
+	if (index==NONE)
+	{
+		return NONE;
+	}
+	location= (byte *)particle_location_data->data+(index&0xFFFF)*0x34;
+	*(long *)(location+0x04)= NONE;
+	*(long *)(location+0x08)= NONE;
+	*(long *)(location+0x0C)= NONE;
+	*(real_point3d *)(location+0x10)= *unknown_00468788;
+	*(real_point3d *)(location+0x20)= *unknown_00468788;
+	*(real *)(location+0x2C)= 0.5f;
+	*(real *)(location+0x1C)= 1.0f;
+	*(long *)(location+0x30)= unknown_004ba034;
+	seed= global_random_seed_reference[1]*0x19660D+0x3C6EF35F;
+	global_random_seed_reference[1]= seed;
+	location[3]= (byte)(((seed>>16)*0xFF)>>16);
+
+	return index;
+}
+
+/* 0x001773a0: an effect (if it is one) loses its effect locations (0x3C
+bytes, each to the next at 0x04): those of each of the slots from 0x7C, as
+many as at 0x0C of its definition */
+void effect_unknown_001773a0(
+	long effect_index)
+{
+	const byte *effect;
+	const byte *definition;
+	long slot;
+
+	if (effect_index==NONE || (effect_index&0xFFFF)>=effect_data->first_unallocated)
+	{
+		return;
+	}
+	effect= (const byte *)effect_data->data+effect_data->size*(effect_index&0xFFFF);
+	if (!*(const short *)effect || *(const short *)effect!=(effect_index>>16))
+	{
+		return;
+	}
+	definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)(effect+0x04)&0xFFFF].address;
+	for (slot= 0; slot<*(const long *)(definition+0x0C); slot++)
+	{
+		long *first= (long *)(effect+0x7C+slot*4);
+		long index= *first;
+
+		while (index!=NONE)
+		{
+			long next= *(const long *)((const byte *)effect_location_data->data+(index&0xFFFF)*0x3C+0x04);
+
+			datum_delete(effect_location_data, index);
+			index= next;
+		}
+		*first= NONE;
+	}
+}

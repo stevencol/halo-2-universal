@@ -12,6 +12,7 @@ data ("vocalization records").
 
 #include "memory/data.h"
 #include "saved games/game_state.h"
+#include "objects/objects.h"
 
 /* ---------- constants */
 
@@ -63,5 +64,45 @@ void vocalizations_initialize_for_new_map(
 		*(short *)(unknown+VOCALIZATION_UNKNOWN_UNKNOWN7D4_OFFSET)= 0;
 		*(long *)(unknown+VOCALIZATION_UNKNOWN_UNKNOWN7D8_OFFSET)= NONE;
 		unknown+= VOCALIZATION_UNKNOWN_SIZE;
+	}
+}
+
+/* 0x0020fe20: of the vocalization records (0x54 bytes) of something (from
+0x7D0, each to the next at 0x50; how many at 0x7D4), those with the byte at
+0x48 are deleted, and their unit (0x04) forgets them (at 0x1C past its
+short at 0x342) */
+void __attribute__((stdcall)) vocalization_records_unknown_0020fe20(
+	byte *owner)
+{
+	long *link= (long *)(owner+0x7D0);
+
+	while (*link!=NONE)
+	{
+		long index= *link;
+		byte *record= (byte *)vocalization_record_data->data+(index&0xFFFF)*0x54;
+
+		if (record[0x48])
+		{
+			long next= *(const long *)(record+0x50);
+			long unit_index= *(const long *)(record+0x04);
+
+			if (unit_index!=NONE)
+			{
+				byte *unit= (byte *)((const struct object_header_datum *)object_header_data->data)[unit_index&0xFFFF].datum;
+				byte *place= unit+*(const short *)(unit+0x342);
+
+				if (*(const long *)(place+0x1C)==index)
+				{
+					*(long *)(place+0x1C)= NONE;
+				}
+			}
+			datum_delete(vocalization_record_data, index);
+			*link= next;
+			(*(short *)(owner+0x7D4))--;
+		}
+		else
+		{
+			link= (long *)(record+0x50);
+		}
 	}
 }
